@@ -1,0 +1,7 @@
+vsim -novopt work.tb_cdv
+view wave
+
+add wave -hexadecimal sim:/tb_cdv/dramarb/*
+add wave -divider
+add wave -hexadecimal sim:/tb_cdv/dramko/*
+
