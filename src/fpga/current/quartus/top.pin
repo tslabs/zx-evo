@@ -1,4 +1,4 @@
- -- Copyright (C) 1991-2008 Altera Corporation
+ -- Copyright (C) 1991-2006 Altera Corporation
  -- Your use of Altera Corporation's design tools, logic functions 
  -- and other software and tools, and its AMPP partner logic 
  -- functions, and any output files from any of the foregoing 
@@ -37,7 +37,7 @@
  ------------------------------------------------------------------------------
 
 
-Quartus II Version 8.0 Build 231 07/10/2008 Service Pack 1 SJ Web Edition
+Quartus II Version 6.1 Build 201 11/27/2006 SJ Web Edition
 CHIP  "top"  ASSIGNED TO AN: EP1K50QC208-3
 
 Pin Name/Usage               : Location  : Dir.   : I/O Standard      : Voltage : I/O Bank  : User Assignment

@@ -1,7 +1,7 @@
 ==============================================================================
 31.01.2010, DDp:
 ~~~~~~~~~~
---- TV Horisintal ---
+--- TV Horizontal ---
                     (  0)
 h.front porch    10
                     ( 10)
@@ -23,7 +23,7 @@ h.visible  52+256+52=360
 Interrupt           (443)
 
 
---- VGA Horisintal ---
+--- VGA Horizontal ---
                     (  0)
 h.sync.pulse    106             3.785 us
                     (106)                 (3.785 us)
