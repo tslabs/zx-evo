@@ -42,6 +42,8 @@ module zports(
 	output ay_bdir,
 	output ay_bc1,
 
+	output reg [7:0] psd0,psd1,psd2,psd3,
+
 	output [7:0] p7ffd,
 	output [7:0] peff7,
 
@@ -84,6 +86,13 @@ module zports(
 	localparam NIDEC8 = 8'hC8;
 
 	localparam PORTFD = 8'hFD;
+
+	localparam SD0	  = 8'h0F;
+	localparam SD1	  = 8'h1F;
+	localparam SD2	  = 8'h4F;
+	localparam SD3	  = 8'h5F;
+	localparam CVX1   = 8'hFB;
+	localparam CVX2   = 8'hDD;
 
 	localparam VGCOM  = 8'h1F;
 	localparam VGTRK  = 8'h3F;
@@ -136,7 +145,9 @@ module zports(
 		    ( (loa==VGCOM)&&dos ) || ( (loa==VGTRK)&&dos ) || ( (loa==VGSEC)&&dos ) || ( (loa==VGDAT)&&dos ) ||
 		    ( (loa==VGSYS)&&dos ) || ( (loa==KJOY)&&(!dos) ) ||
 
-		    (loa==KMOUSE) || (loa==SDCFG) || (loa==SDDAT) )
+		    ( (loa==SD0)&&(!dos) ) || ( (loa==SD1)&&(!dos) ) || ( (loa==SD2)&&(!dos) ) || ( (loa==SD3)&&(!dos) ) || (loa==CVX1) || (loa==CVX2) || 
+			
+			(loa==KMOUSE) || (loa==SDCFG) || (loa==SDDAT) )
 
 			porthit = 1'b1;
 		else
@@ -224,6 +235,8 @@ module zports(
 	assign portfd_wr    = ( (loa==PORTFD) && port_wr);
 	assign portf7_wr    = ( (loa==PORTF7) && port_wr);
 	assign portf7_rd    = ( (loa==PORTF7) && port_rd);
+	assign portcv_wr    = ( ((loa==CVX1) || (loa==CVX2)) && port_wr);
+	assign portsd_wr    = ( ((loa==SD0) || (loa==SD1) || (loa==SD2) || (loa==SD3)) && port_wr && (!dos));
 
 	assign ideout_hi_wr = ( (loa==NIDE11) && port_wr);
 	assign idein_lo_rd  = ( (loa==NIDE10) && port_rd);
@@ -301,7 +314,7 @@ module zports(
 
 
 	// 7FFD port
-	reg [7:0] p7ffd_int,peff7_int;
+	reg [7:0] p7ffd_int;
 	reg p7ffd_rom_int;
 	wire block7ffd;
 	wire block1m;
@@ -326,6 +339,8 @@ module zports(
 	assign block7ffd=p7ffd_int[5] & block1m;
 
 	// EFF7 port
+	reg [7:0] peff7_int;
+
 	always @(posedge clk, negedge rst_n)
 	begin
 		if( !rst_n )
@@ -358,11 +373,34 @@ module zports(
 		end
 	end
 
+	
+	//FB,0f,1f,4f,5f - Covox/Soundrive ports
+	always @(posedge clk)
+	
+	begin
 
+	if (portcv_wr || portsd_wr)
+		case( loa )
+			SD0:
+				psd0 <= din[7:0];
+			SD1:
+				psd1 <= din[7:0];
+			SD2:
+				psd2 <= din[7:0];
+			SD3:
+				psd3 <= din[7:0];
+			default:
+			begin
+				psd0 <= din[7:0];
+				psd1 <= din[7:0];
+				psd2 <= din[7:0];
+				psd3 <= din[7:0];
+			end
+			endcase
 
+	end
 
-
-
+	
 	// write to wait registers
 	always @(posedge clk)
 	begin
@@ -422,8 +460,6 @@ module zports(
 		rstsync1<=~rst_n;
 		rstsync2<=rstsync1;
 	end
-
-
 
 
 // SD card (z-control¸r compatible)
