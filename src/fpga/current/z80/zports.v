@@ -34,7 +34,7 @@ module zports(
 	input [4:0] kj_in,
 
 	output reg [2:0] border,
-	output reg beep,
+	output reg beep_b,
 
 	output reg dos,
 
@@ -249,7 +249,7 @@ module zports(
 	begin
 		if( portfe_wr )
 		begin
-			beep <= din[4];
+			beep_b <= din[4];
 			border <= din[2:0];
 		end
 	end
