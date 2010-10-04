@@ -269,7 +269,7 @@ module top(
 	wire ena_ports;
 
 
-	wire [2:0] border;
+	wire [5:0] border;
 
 	wire drive_ff;
 
@@ -456,7 +456,7 @@ module top(
 				   
 	covox covox(	.fclk(fclk),
 					.beep(beep),
-					.psd0(psd0), .psd1(psd1), .psd2(psd2), .psd3(psd3),
+					.psd0(psd0), .psd1(psd1), .psd2(psd2), .psd3(psd3)
 	               );
 
 				   
