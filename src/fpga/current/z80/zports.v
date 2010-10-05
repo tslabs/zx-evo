@@ -33,7 +33,7 @@ module zports(
 	input [7:0] mus_in,  // mouse (xxDF)
 	input [4:0] kj_in,
 
-	output reg [2:0] border,
+	output reg [5:0] border,
 	output reg beep_b,
 
 	output reg dos,
@@ -70,6 +70,9 @@ module zports(
 
 	reg rstsync1,rstsync2;
 
+	reg xt_en, xt_cl;
+	localparam xt_msb = 8		//Reduce it to actual bitwidth used!!!
+	reg [xt_msb-1:0] xt_addr;
 
 	localparam PORTFE = 8'hFE;
 	localparam PORTF7 = 8'hF7;
@@ -93,6 +96,8 @@ module zports(
 	localparam SD3	  = 8'h5F;
 	localparam CVX1   = 8'hFB;
 	localparam CVX2   = 8'hDD;
+	
+	localparam XT 	  = 16'h55FF;
 
 	localparam VGCOM  = 8'h1F;
 	localparam VGTRK  = 8'h3F;
@@ -106,6 +111,8 @@ module zports(
 	localparam SDCFG  = 8'h77;
 	localparam SDDAT  = 8'h57;
 
+//PortXT Regs Declaration
+	localparam ExtBorder  = 8'h00;
 
 	reg external_port;
 
@@ -145,9 +152,12 @@ module zports(
 		    ( (loa==VGCOM)&&dos ) || ( (loa==VGTRK)&&dos ) || ( (loa==VGSEC)&&dos ) || ( (loa==VGDAT)&&dos ) ||
 		    ( (loa==VGSYS)&&dos ) || ( (loa==KJOY)&&(!dos) ) ||
 
-		    ( (loa==SD0)&&(!dos) ) || ( (loa==SD1)&&(!dos) ) || ( (loa==SD2)&&(!dos) ) || ( (loa==SD3)&&(!dos) ) || (loa==CVX1) || (loa==CVX2) || 
+		    ( (loa==SD0)&&(!dos) ) || ( (loa==SD1)&&(!dos) ) || ( (loa==SD2)&&(!dos) ) || ( (loa==SD3)&&(!dos) ) ||
+			(loa==CVX1) || (loa==CVX2) || 
 			
-			(loa==KMOUSE) || (loa==SDCFG) || (loa==SDDAT) )
+			(loa==KMOUSE) || (loa==SDCFG) || (loa==SDDAT) ||
+			
+			a[15:0]==XT)
 
 			porthit = 1'b1;
 		else
@@ -189,6 +199,18 @@ module zports(
 	// dout data
 	always @*
 	begin
+		if ( (a[15:0] == XT) && xt_en && xt_cl ) 	//portXT read
+		begin
+		case (xt_addr)								//XT Regs are read here !!!
+		ExtBorder:
+			dout = border;
+				
+		default:
+			dout = 8'hFF;
+		endcase
+		end
+		
+		else
 		case( loa )
 		PORTFE:
 			dout = { 1'b1, 1'b0/*tape_in*/, 1'b0, keys_in };
@@ -216,12 +238,13 @@ module zports(
 			dout = sd_dataout;
 
 
-		PORTF7: begin
+		PORTF7:
+			begin
 			if( !a[14] && gluclock_on ) // $BFF7 - data i/o
 				dout = wait_read;
 			else // any other $xxF7 port
 				dout = 8'hFF;
-		end
+			end
 
 
 		default:
@@ -237,6 +260,8 @@ module zports(
 	assign portf7_rd    = ( (loa==PORTF7) && port_rd);
 	assign portcv_wr    = ( ((loa==CVX1) || (loa==CVX2)) && port_wr);
 	assign portsd_wr    = ( ((loa==SD0) || (loa==SD1) || (loa==SD2) || (loa==SD3)) && port_wr && (!dos));
+	assign portxt_wr    = ( (a[15:0]==XT) && port_wr);
+	assign portxt_rd    = ( (a[15:0]==XT) && port_rd);
 
 	assign ideout_hi_wr = ( (loa==NIDE11) && port_wr);
 	assign idein_lo_rd  = ( (loa==NIDE10) && port_rd);
@@ -250,7 +275,7 @@ module zports(
 		if( portfe_wr )
 		begin
 			beep_b <= din[4];
-			border <= din[2:0];
+			border <= {din[1],1'b0,din[2],1'b0,din[0],1'b0};
 		end
 	end
 
@@ -376,9 +401,7 @@ module zports(
 	
 	//FB,0f,1f,4f,5f - Covox/Soundrive ports
 	always @(posedge clk)
-	
 	begin
-
 	if (portcv_wr || portsd_wr)
 		case( loa )
 			SD0:
@@ -397,8 +420,56 @@ module zports(
 				psd3 <= din[7:0];
 			end
 			endcase
+	end
+
+			
+	//#55FF - portXT
+
+	//#55FF lock managing
+	always @(posedge clk, negedge rst_n)
+	begin
+		if( !rst_n )
+			begin
+			xt_en <= 1'b0;		//on ~RES portXT <= disabled
+			end
+
+		else if( portxt_wr && (!xt_en) && (din[7:0]==8'hAA )	//if out(#55ff),#aa
+			begin
+			xt_en <= 1'b1;		//portXT <= enabled
+			xt_cl <= 1'b0;		//cycle <= AddrLatch
+			end
+
+		else if( portxt_wr && xt_en && (!xt_cl) )				//if out(#55ff) when portXT enabled and cycle = AddrLatch
+			begin
+			xt_addr <= din[7:0];
+			xt_cl <= 1'b1;		// cycle <= DataLatch
+			end
+
+		else if( portxt_wr && xt_en && xt_cl )					//if out(#55ff) when portXT enabled and cycle = DataLatch
+			begin
+			xt_en <= 1'b0;			//portXT disabled
+			end
+
+		else if( portxt_rd && xt_en && xt_cl )					//if in(#55ff) when portXT enabled and cycle = DataLatch
+			begin
+			xt_en <= 1'b0;		//portXT disabled
+			end
+	end
+
+	//#55FF Write to Regs
+	always @(posedge clk)
+	begin
+		if ( portxt_wr && xt_en && xt_cl )			//portXT write
+		begin
+		case (xt_addr)								//XT Regs are written here !!!
+
+		ExtBorder:
+			border <= din[5:0];
+
+		endcase
 
 	end
+
 
 	
 	// write to wait registers
@@ -421,13 +492,10 @@ module zports(
 			wait_rnw <= 1'b1;
 	end
 
-
-
-
+	
 
 	// VG93 control
 	assign vg_cs_n =  (~dos) | iorq_n | (rd_n & wr_n) | ( ~((loa==VGCOM)|(loa==VGTRK)|(loa==VGSEC)|(loa==VGDAT)) );
-
 
 
 	// dos on-off
