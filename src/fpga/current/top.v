@@ -420,7 +420,8 @@ module top(
 
 
 	videoout vidia( .clk(fclk), .pixel(pixel),
-					.border({ border[1],1'b0,border[2],1'b0,border[0],1'b0 }),
+//					.border({ border[1],1'b0,border[2],1'b0,border[0],1'b0 }),
+					.border(border),
 	                .hblank(hblank), .vblank(vblank), .hpix(hpix), .vpix(vpix), .hsync(hsync), .vsync(vsync),
 	                .vred(vred), .vgrn(vgrn), .vga_hsync(vga_hsync), .vblu(vblu),
 	                .vhsync(vhsync), .vvsync(vvsync), .vcsync(vcsync), .hsync_start(hsync_start),
