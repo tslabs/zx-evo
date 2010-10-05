@@ -34,8 +34,7 @@ module zports(
 	input [4:0] kj_in,
 
 	output reg [5:0] border,
-	output reg beep_b,
-
+	
 	output reg dos,
 
 
@@ -68,12 +67,6 @@ module zports(
 );
 
 
-	reg rstsync1,rstsync2;
-
-	reg xt_en, xt_cl;
-	localparam xt_msb = 8		//Reduce it to actual bitwidth used!!!
-	reg [xt_msb-1:0] xt_addr;
-
 	localparam PORTFE = 8'hFE;
 	localparam PORTF7 = 8'hF7;
 
@@ -98,6 +91,7 @@ module zports(
 	localparam CVX2   = 8'hDD;
 	
 	localparam XT 	  = 16'h55FF;
+	localparam XTRD	  = 8'hEF;
 
 	localparam VGCOM  = 8'h1F;
 	localparam VGTRK  = 8'h3F;
@@ -111,38 +105,40 @@ module zports(
 	localparam SDCFG  = 8'h77;
 	localparam SDDAT  = 8'h57;
 
-//PortXT Regs Declaration
+	//PortXT Regs
 	localparam ExtBorder  = 8'h00;
+
+
+	reg rstsync1,rstsync2;
+
+	reg xt_en, xt_cl;
+	localparam xt_msb = 8;		//Reduce it to actual bitwidth used!!!
+	reg [xt_msb-1:0] xt_addr;
 
 	reg external_port;
 
 	reg port_wr;
 	reg port_rd;
 
-      reg iowr_reg;
-      reg iord_reg;
+    reg iowr_reg;
+    reg iord_reg;
 
 	wire [7:0] loa;
 
 
 	wire portfe_wr;
 
-
 	wire ideout_hi_wr;
 	wire idein_lo_rd;
 	reg [7:0] idehiin;
 	reg ide_ports; // ide ports selected
 
-
 	reg pre_bc1,pre_bdir;
-
 
 	wire gluclock_on;
 
-
-
 	assign loa=a[7:0];
-
+	
 	always @*
 	begin
 		if( (loa==PORTFE) || (loa==PORTFD) || (loa==PORTF7) || (loa==NIDE10) || (loa==NIDE11) || (loa==NIDE30) ||
@@ -157,7 +153,7 @@ module zports(
 			
 			(loa==KMOUSE) || (loa==SDCFG) || (loa==SDDAT) ||
 			
-			a[15:0]==XT)
+			(loa == XTRD) || (a[15:0]==XT) )
 
 			porthit = 1'b1;
 		else
@@ -167,7 +163,7 @@ module zports(
 	always @*
 	begin
 		if( ((loa==PORTFD) && (a[15:14]==2'b11)) || // 0xFFFD ports
-		    (( (loa==VGCOM)&&dos ) || ( (loa==VGTRK)&&dos ) || ( (loa==VGSEC)&&dos ) || ( (loa==VGDAT)&&dos )) ) // vg93 ports
+		    (( (loa==VGCOM) && dos ) || ( (loa==VGTRK) && dos ) || ( (loa==VGSEC) && dos ) || ( (loa==VGDAT) && dos )) ) // vg93 ports
 			external_port = 1'b1;
 		else
 			external_port = 1'b0;
@@ -196,33 +192,29 @@ module zports(
 	end
 
 
-	// dout data
+		// dout data
 	always @*
 	begin
-		if ( (a[15:0] == XT) && xt_en && xt_cl ) 	//portXT read
+		case( loa )
+
+		XTRD:
+			dout = border;
+			
+		/*
 		begin
 		case (xt_addr)								//XT Regs are read here !!!
 		ExtBorder:
 			dout = border;
-				
-		default:
-			dout = 8'hFF;
 		endcase
 		end
-		
-		else
-		case( loa )
+*/
 		PORTFE:
 			dout = { 1'b1, 1'b0/*tape_in*/, 1'b0, keys_in };
-
 
 		NIDE10,NIDE30,NIDE50,NIDE70,NIDE90,NIDEB0,NIDED0,NIDEF0,NIDEC8:
 			dout = idein[7:0];
 		NIDE11:
 			dout = idehiin;
-
-
-		//PORTFD:
 
 		VGSYS:
 			dout = { vg_intrq, vg_drq, 6'b111111 };
@@ -260,24 +252,14 @@ module zports(
 	assign portf7_rd    = ( (loa==PORTF7) && port_rd);
 	assign portcv_wr    = ( ((loa==CVX1) || (loa==CVX2)) && port_wr);
 	assign portsd_wr    = ( ((loa==SD0) || (loa==SD1) || (loa==SD2) || (loa==SD3)) && port_wr && (!dos));
-	assign portxt_wr    = ( (a[15:0]==XT) && port_wr);
-	assign portxt_rd    = ( (a[15:0]==XT) && port_rd);
+	assign portxt_wr    = ( (a[15:0]==XT) && port_wr );
+	assign portxt_rd    = ( (loa ==XT) && port_rd );
 
 	assign ideout_hi_wr = ( (loa==NIDE11) && port_wr);
 	assign idein_lo_rd  = ( (loa==NIDE10) && port_rd);
 
 	assign vg_wrFF = ( ( (loa==VGSYS)&&dos ) && port_wr);
 
-
-	//port FE beep/border bit
-	always @(posedge clk)
-	begin
-		if( portfe_wr )
-		begin
-			beep_b <= din[4];
-			border <= {din[1],1'b0,din[2],1'b0,din[0],1'b0};
-		end
-	end
 
 
 	// IDE ports
@@ -399,10 +381,54 @@ module zports(
 	end
 
 	
-	//FB,0f,1f,4f,5f - Covox/Soundrive ports
+			
+	//#55FF - portXT
+
+	//#55FF lock managing
+	always @(posedge clk, negedge rst_n)
+	begin
+		if( !rst_n )
+			begin
+			xt_en <= 1'b0;		//on ~RES portXT <= disabled
+			end
+
+		else if( portxt_wr && (din[7:0]==8'hAA ))	//if out(#55ff),#aa
+			begin
+			xt_en <= 1'b1;		//portXT <= enabled
+			xt_cl <= 1'b0;		//cycle <= AddrLatch
+			end
+
+		else if( portxt_wr && xt_en && (!xt_cl) )				//if out(#55ff) when portXT enabled and cycle = AddrLatch
+			begin
+			xt_addr <= din[7:0];
+			xt_cl <= 1'b1;		// cycle <= DataLatch
+			end
+
+		else if( ( portxt_wr && xt_en && xt_cl ) || (port_wr && !(a[15:0]==XT)))	//if last cycle or write to other port then XT disable
+			begin
+			xt_en <= 1'b0;			//portXT disabled
+			end
+	end
+
+	//#55FF Write to XT Regs and allied ports
 	always @(posedge clk)
 	begin
-	if (portcv_wr || portsd_wr)
+		if	((portxt_wr && xt_en && xt_cl) ||
+			portfe_wr || portcv_wr || portsd_wr)
+		begin
+
+		//port FE beep/border bit
+		if (portfe_wr)
+		begin
+			psd0 <= {din[4],din[4],din[4],din[4],din[4],din[4],din[4],din[4]};
+			psd1 <= {din[4],din[4],din[4],din[4],din[4],din[4],din[4],din[4]};
+			psd2 <= {din[4],din[4],din[4],din[4],din[4],din[4],din[4],din[4]};
+			psd3 <= {din[4],din[4],din[4],din[4],din[4],din[4],din[4],din[4]};
+			border <= {din[1],1'b0,din[2],1'b0,din[0],1'b0};
+		end
+
+		//FB,DD,0F,1F,4F,5F - Covox/Soundrive ports
+		if (portcv_wr || portsd_wr)
 		case( loa )
 			SD0:
 				psd0 <= din[7:0];
@@ -419,54 +445,14 @@ module zports(
 				psd2 <= din[7:0];
 				psd3 <= din[7:0];
 			end
-			endcase
-	end
-
-			
-	//#55FF - portXT
-
-	//#55FF lock managing
-	always @(posedge clk, negedge rst_n)
-	begin
-		if( !rst_n )
-			begin
-			xt_en <= 1'b0;		//on ~RES portXT <= disabled
-			end
-
-		else if( portxt_wr && (!xt_en) && (din[7:0]==8'hAA )	//if out(#55ff),#aa
-			begin
-			xt_en <= 1'b1;		//portXT <= enabled
-			xt_cl <= 1'b0;		//cycle <= AddrLatch
-			end
-
-		else if( portxt_wr && xt_en && (!xt_cl) )				//if out(#55ff) when portXT enabled and cycle = AddrLatch
-			begin
-			xt_addr <= din[7:0];
-			xt_cl <= 1'b1;		// cycle <= DataLatch
-			end
-
-		else if( portxt_wr && xt_en && xt_cl )					//if out(#55ff) when portXT enabled and cycle = DataLatch
-			begin
-			xt_en <= 1'b0;			//portXT disabled
-			end
-
-		else if( portxt_rd && xt_en && xt_cl )					//if in(#55ff) when portXT enabled and cycle = DataLatch
-			begin
-			xt_en <= 1'b0;		//portXT disabled
-			end
-	end
-
-	//#55FF Write to Regs
-	always @(posedge clk)
-	begin
-		if ( portxt_wr && xt_en && xt_cl )			//portXT write
-		begin
+		endcase
+		
+		if	(portxt_wr && xt_en && xt_cl)
 		case (xt_addr)								//XT Regs are written here !!!
-
 		ExtBorder:
 			border <= din[5:0];
-
 		endcase
+		end
 
 	end
 
@@ -480,7 +466,7 @@ module zports(
 			wait_write <= din;
 	end
 
-	// wait from wait registers
+	// write from wait registers
 	assign wait_start_gluclock = ( gluclock_on && !a[14] && (portf7_rd || portf7_wr) ); // $BFF7 - gluclock r/w
 
 	always @(posedge clk) // wait rnw - only meanful during wait

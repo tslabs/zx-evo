@@ -463,7 +463,8 @@ module top(
 				   
 	zports porty( .clk(zclk), .fclk(fclk), .rst_n(rst_n), .din(d), .dout(dout_ports), .dataout(ena_ports),
 	              .a(a), .iorq_n(iorq_n), .rd_n(rd_n), .wr_n(wr_n), .porthit(porthit),
-	              .ay_bdir(ay_bdir), .ay_bc1(ay_bc1), .border(border), .beep_b(beep_b),
+	              .ay_bdir(ay_bdir), .ay_bc1(ay_bc1), .border(border),
+//				  .beep_b(beep_b),
 				  .psd0(psd0), .psd1(psd1), .psd2(psd2), .psd3(psd3), 
 	              .p7ffd(p7ffd), .peff7(peff7), .mreq_n(mreq_n), .m1_n(m1_n), .dos(dos),
 	              .rstrom(rstrom), .vg_intrq(intrq), .vg_drq(drq), .vg_wrFF(vg_wrFF),
