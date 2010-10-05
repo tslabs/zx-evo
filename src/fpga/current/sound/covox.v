@@ -3,7 +3,7 @@
 // PentEvo project (c) NedoPC 2010
 //
 // generates PWM on BEEP pin
-// PWM parameters: 27,34375 kHz(28000/1024) 10 bit
+// PWM parameters: 27,34375 kHz (28000/1024) 10 bit
 
 module covox(
 	input fclk,  // global FPGA clock, 28MHz
