@@ -4,6 +4,13 @@
 //
 //Sprite Processor
 //
+//Written by TS-Labs inc.
+//
+//
+//TV Line Cycles - 448:
+//HBlank - 64, Left Border - 64, ZX Pixels - 256, Right Border - 64
+//Visible Area - 384
+
 
 module sprites(
 
