@@ -2,6 +2,8 @@
 
 // PentEvo project (c) NedoPC 2010
 //
+//Written by TS-Labs inc.
+//
 // generates PWM on BEEP pin
 // PWM parameters: 27,34375 kHz (28000/1024) 10 bit
 

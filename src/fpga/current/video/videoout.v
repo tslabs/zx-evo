@@ -2,6 +2,8 @@
 
 // PentEvo project (c) NedoPC 2008-2009
 //
+//Modified by TS-Labs inc.
+//
 // resyncs and outs video data to the DAC plus syncs
 
 module videoout(
