@@ -8,27 +8,35 @@
 module sprites(
 
 	input wire clk,
-	input wire vcfg,
+	input wire spr_en,
 	
-	output [5:0] spixel,
-	output wire spx_en
+	output reg [5:0] spixel,
+	output reg spx_en
 	
 
 	);
 
-	reg [7:0] cnt;
+	reg [10:0] cnt;
 	
 	always @(posedge clk)
-	
-//	if vcfg[6]
-	begin
-		cnt <= cnt + 6'b1;
-	end
+	if (spr_en)
 
-	assign spx_en = cnt [7];
-	assign spixel = 6'd53;
+	begin
+
+		cnt <= cnt + 6'b1;
+
+		spx_en <= cnt [10];
+		spixel <= cnt [9:4];
+
+
+	end
 	
-	
+	else spx_en <= 1'b0;
+
+endmodule
+
+
+
 /*
 module spbuf(
 
@@ -56,5 +64,3 @@ module spbuf(
 	end
 endmodule
 */
-
-endmodule
