@@ -1,5 +1,10 @@
 `include "../include/tune.v"
 
+// PentEvo project (c) NedoPC 2008-2009
+//
+//Ports handling
+//
+
 module zports(
 
 	input clk,   // z80 clock
@@ -37,7 +42,6 @@ module zports(
 	
 	output reg dos,
 
-
 	output ay_bdir,
 	output ay_bc1,
 
@@ -63,7 +67,11 @@ module zports(
 	output wire        wait_start_gluclock, // begin wait from some ports
 	output reg         wait_rnw,   // whether it was read(=1) or write(=0)
 	output reg  [ 7:0] wait_write,
-	input  wire [ 7:0] wait_read
+	input  wire [ 7:0] wait_read,
+	
+	//XT
+	output reg [7:0] vcfg
+	
 );
 
 
@@ -106,8 +114,8 @@ module zports(
 	localparam SDDAT  = 8'h57;
 
 	//PortXT Regs
-	localparam ExtBorder  = 8'h00;
-
+	localparam xborder  = 8'h00;
+	localparam vconfig  = 8'h08;
 
 	reg rstsync1,rstsync2;
 
@@ -197,17 +205,15 @@ module zports(
 	begin
 		case( loa )
 
+		//XT Regs are read here !!!
 		XTRD:
-			dout = border;
-			
-		/*
 		begin
-		case (xt_addr)								//XT Regs are read here !!!
-		ExtBorder:
+		case (xt_addr)
+		xborder:
 			dout = border;
 		endcase
 		end
-*/
+
 		PORTFE:
 			dout = { 1'b1, 1'b0/*tape_in*/, 1'b0, keys_in };
 
@@ -392,7 +398,7 @@ module zports(
 			xt_en <= 1'b0;		//on ~RES portXT <= disabled
 			end
 
-		else if( portxt_wr && (din[7:0]==8'hAA ))	//if out(#55ff),#aa
+		else if( portxt_wr && (din[7:0]==8'hAA ) && (!xt_en) )	//if out(#55ff),#aa
 			begin
 			xt_en <= 1'b1;		//portXT <= enabled
 			xt_cl <= 1'b0;		//cycle <= AddrLatch
@@ -411,7 +417,14 @@ module zports(
 	end
 
 	//#55FF Write to XT Regs and allied ports
-	always @(posedge clk)
+	always @(posedge clk, negedge rst_n)
+	
+	if( !rst_n )
+		begin
+			vcfg <= 8'b0;
+		end
+		else
+	
 	begin
 		if	((portxt_wr && xt_en && xt_cl) ||
 			portfe_wr || portcv_wr || portsd_wr)
@@ -449,8 +462,10 @@ module zports(
 		
 		if	(portxt_wr && xt_en && xt_cl)
 		case (xt_addr)								//XT Regs are written here !!!
-		ExtBorder:
+		xborder:
 			border <= din[5:0];
+		vconfig:
+			vcfg <= din[7:0];
 		endcase
 		end
 
