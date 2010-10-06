@@ -259,7 +259,7 @@ module zports(
 	assign portcv_wr    = ( ((loa==CVX1) || (loa==CVX2)) && port_wr);
 	assign portsd_wr    = ( ((loa==SD0) || (loa==SD1) || (loa==SD2) || (loa==SD3)) && port_wr && (!dos));
 	assign portxt_wr    = ( (a[15:0]==XT) && port_wr );
-	assign portxt_rd    = ( (loa ==XT) && port_rd );
+//	assign portxt_rd    = ( (loa ==XT) && port_rd );
 
 	assign ideout_hi_wr = ( (loa==NIDE11) && port_wr);
 	assign idein_lo_rd  = ( (loa==NIDE10) && port_rd);

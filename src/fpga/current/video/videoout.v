@@ -9,8 +9,10 @@ module videoout(
 	input clk,
 
 	input [5:0] pixel,  // this data has format: { red[1:0], green[1:0], blue[1:0] }
+	input [5:0] spixel,  //
 	input [5:0] border, //
 
+	input spx_en,
 	input hblank,
 	input vblank,
 
@@ -47,9 +49,6 @@ module videoout(
 	
 	//	assign color = (hblank | vblank) ? 6'd0 : (  (hpix & vpix) ? pixel : border  );
 	assign color = (hblank | vblank) ? 6'd0 :  ( spx_en ? (spixel) : ((hpix & vpix) ? pixel : border ));
-
-	sprites sprites	(	.clk(clk), .vcfg(vcfg),
-						.spixel(spixel), .spx_en(spx_en) );
 
 
 	vga_double vga_double( .clk(clk),

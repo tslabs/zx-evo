@@ -149,17 +149,13 @@ module top(
 	wire [7:0] gluclock_addr;
 	wire [6:0] waits;
 
-
-
-
 	// config signals
 	wire [7:0] not_used;
 	wire cfg_vga_on;
 	wire set_nmi;
 
-
-
-
+	wire [7:0] vcfg;
+	
 	wire tape_in;
 
 	wire [15:0] ideout;
@@ -170,21 +166,15 @@ module top(
 	wire [7:0] zmem_dout;
 	wire zmem_dataout;
 
-
-
 	reg [3:0] ayclk_gen;
-
 
 	wire [7:0] received;
 	wire [7:0] tobesent;
-
 
 	wire intrq,drq;
 	wire vg_wrFF;
 
 	wire [1:0] rstrom;
-
-
 
 
 	assign zclk = clkz_in;
@@ -417,10 +407,14 @@ module top(
 	              .video_strobe(video_strobe), .video_next(video_next), .go(go), .bw(bw), .pixel(pixel) );
 
 
+	wire [5:0] spixel;
+	wire spx_en;
+	
+	sprites sprites	(	.clk(fclk), .spr_en(vcfg[6]),
+						.spixel(spixel), .spx_en(spx_en) );
 
 
-	videoout vidia( .clk(fclk), .pixel(pixel),
-					.vcfg(vcfg),
+	videoout vidia( .clk(fclk), .pixel(pixel), .spixel(spixel), .spx_en(spx_en),
 					.border(border),
 	                .hblank(hblank), .vblank(vblank), .hpix(hpix), .vpix(vpix), .hsync(hsync), .vsync(vsync),
 	                .vred(vred), .vgrn(vgrn), .vga_hsync(vga_hsync), .vblu(vblu),
