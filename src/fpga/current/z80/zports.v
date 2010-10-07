@@ -252,7 +252,12 @@ module zports(
 		endcase
 	end
 
-
+	wire portxt_wr;
+	wire portfd_wr;
+	wire portsd_wr;
+	wire portf7_wr;
+	wire portf7_rd;
+	wire portcv_wr;
 
 	assign portfe_wr    = ( (loa==PORTFE) && port_wr);
 	assign portfd_wr    = ( (loa==PORTFD) && port_wr);
