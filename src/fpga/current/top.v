@@ -318,7 +318,7 @@ module top(
 	wire [15:0] dwrdata;
 	wire [1:0] dbsel;
 
-
+	wire drrdy;
 
 
 	dram dramko( .clk(fclk),
