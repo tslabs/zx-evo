@@ -95,7 +95,6 @@ module synch(
 		else if( hcount==HBLNK_END )
 			hblank <= 1'b0;
 
-
 		if( hcount==HSYNC_BEG )
 			hsync <= 1'b1;
 		else if( hcount==HSYNC_END )

@@ -20,6 +20,9 @@ module syncv(
 
 	output reg vblank,
 	output reg vsync,
+	output reg pre_vline,
+	output reg s_reload,
+
 
 	output reg int_start, // one-shot positive pulse marking beginning of INT for Z80
 
@@ -30,8 +33,8 @@ module syncv(
 
 
 
-	localparam VBLNK_BEG = 9'd00;
-	localparam VSYNC_BEG = 9'd08;
+	localparam VBLNK_BEG = 9'd0;
+	localparam VSYNC_BEG = 9'd8;
 	localparam VSYNC_END = 9'd11;
 	localparam VBLNK_END = 9'd32;
 
@@ -76,6 +79,21 @@ module syncv(
 	end
 
 
+	always @(posedge line_start)
+	begin
+
+		if (vcount == (VBLNK_END))
+			pre_vline <= 1'b1;
+		else
+			pre_vline <= 1'b0;
+			
+		if (vcount == (VBLNK_END+102))
+			s_reload <= 1'b1;
+		else
+			s_reload <= 1'b0;
+	
+	end
+	
 	always @(posedge clk)
 	begin
 		if( (vcount==VSYNC_BEG) && hsync_start )

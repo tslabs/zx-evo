@@ -391,10 +391,12 @@ module top(
 
 
 	wire vblank,vsync,int_start,vpix;
+	wire pre_vline,s_reload;
 
 	syncv vert_sync( .clk(fclk), .hsync_start(hsync_start), .line_start(line_start),
 	                 .vblank(vblank), .vsync(vsync), .int_start(int_start),
-	                 .vpix(vpix), .hint_start(hint_start) );
+	                 .s_reload(s_reload), .pre_vline(pre_vline),
+					 .vpix(vpix), .hint_start(hint_start) );
 
 	vga_synch vga_synch( .clk(fclk), .hsync_start(hsync_start), .vga_hsync(vga_hsync), .scanout_start(scanout_start) );
 
@@ -410,7 +412,10 @@ module top(
 	wire [5:0] spixel;
 	wire spx_en;
 	
-	sprites sprites	(	.clk(fclk), .spr_en(vcfg[6]),
+	sprites sprites	(	.clk(fclk), .spr_en(vcfg[6]), .hblank(hblank), .vblank(vblank),
+						.cend(cend),
+						.line_start(line_start),
+						.s_reload(s_reload), .pre_vline(pre_vline),
 						.spixel(spixel), .spx_en(spx_en) );
 
 
