@@ -8,7 +8,7 @@
 //
 //
 //TV Line Cycles - 448:
-//Visible Area  - 360 pixels:
+//Visible Area  - 360 * 288 pixels:
 //52 - border
 //256 - pixels
 //52 - border
@@ -16,7 +16,7 @@
 
 module sprites(
 
-	input clk, spr_en, hblank, vblank, cend, line_start,
+	input clk, spr_en, hblank, vblank, cend, pre_cend, line_start,
 	input pre_vline, s_reload,
 	
 	output reg [5:0] spixel,
@@ -24,40 +24,39 @@ module sprites(
 
 	);
 
-//	reg [8:0] sl_adr;
 	reg [8:0] vline;
-//	reg l_sel;
+	reg [8:0] r_adr, w_adr;
+	reg l_sel, w_stb0, w_stb1;
+	reg [6:0] w_dat0, w_dat1;
+	wire [6:0] r_dat0, r_dat1;
 
-sline sline(	.clk(clk), 
-				.w_sel(w_sel), .w_adr(w_adr), .w_dat(w_dat), .w_stb(w_stb),
-				.r_sel(r_sel), .r_adr(r_adr), .r_dat(r_dat)
-			);
-
-		
-	//hcount
-	always @(posedge clk) if (cend)
+	initial
 	begin
-	if (line_start)
-	r_adr <= 9'b0;
-	else
-	r_adr <= r_adr + 9'b1;
+//	r_adr = 9'b111111111;
+	end
+	
+	//hcount
+	always @(posedge clk, posedge line_start)
+	begin
+		if (line_start)
+			r_adr <= 9'b0;
+		else if (pre_cend)
+			r_adr <= r_adr + 9'b1;
 	end
 	
 	//vcount
-	always @(posedge clk) if (line_start)
+	always @(posedge line_start)
 	begin
-	if (pre_vline)
-	begin
-		vline <= 9'b0;
-		r_sel <= 1'b0;
-		w_sel <= 1'b1;
-	end
-	else
-	begin
-		vline <= vline + 9'b1;
-		r_sel <= ~r_sel;
-		w_sel <= ~w_sel;
-	end
+		if (pre_vline)
+		begin
+			vline <= 9'b0;
+			l_sel <= 1'b0;
+		end
+		else
+		begin
+			vline <= vline + 9'b1;
+			l_sel <= ~l_sel;
+		end
 	end
 	
 	always @(posedge clk)
@@ -66,24 +65,31 @@ sline sline(	.clk(clk),
 	begin
 
 	//sline read
-	if (cend)
-	begin
-		spixel <= r_dat[5:0];
-		spx_en <= r_dat[6];
+		if (l_sel)
+		begin
+			spixel <= r_dat0[5:0];
+			spx_en <= r_dat0[6];
+		end
+		else
+		begin
+			spixel <= r_dat1[5:0];
+			spx_en <= r_dat1[6];
 	end
 	
 	//sline write
 	
-	wr_stb <= ~wr_stb;
+	if (!l_sel)
+		w_stb0 <= clk;
+	else
+		w_stb1 <= clk;
 
 	if (cend)
 	begin
 		w_adr <= r_adr;
-		w_adr[7:2] => w_dat[5:0];
-		w_adr[8] => w_dat[6];
 	end
 	
 	//sprites file reload
+/*
 		if  (s_reload)
 		begin
 //			spx_en <= 1;
@@ -99,43 +105,66 @@ sline sline(	.clk(clk),
 		
 		else
 			spx_en <= 0;
-	end
+*/
+			end
 	
 //	else spx_en <= 1'b0;
 
+
+sline0 sline0(	.clk(clk), 
+				.w_adr(9'd52), .w_dat(7'b1110000), .w_stb(w_stb0),
+				.r_adr(r_adr), .r_dat(r_dat0)
+			);
+
+sline1 sline1(	.clk(clk), 
+				.w_adr(9'd0), .w_dat(7'b1001100), .w_stb(w_stb1),
+				.r_adr(r_adr), .r_dat(r_dat1)
+			);
+		
 endmodule
 
 
-module sline(
+module sline0(
 
 	input  wire        clk,
-
-	input  wire w_sel,
+	input  wire w_sel, w_stb,
 	input  wire [8:0] w_adr,
 	input  wire [6:0] w_dat,
-	input  wire w_stb,
-
-	input  wire r_sel,
 	input  wire [8:0] r_adr,
 	output reg  [6:0] r_dat
 );
-
-	reg [6:0] sln0 [0:359];
-	reg [6:0] sln1 [0:359];
+	reg [6:0] mem [0:359];
 
 	always @(posedge clk)
 	begin
-		if (w_stb)
+	if (w_stb)
 		begin
-			if (!w_sel)
-			sln0[w_adr] <= w_dat;
-			else
-			sln1[w_adr] <= w_dat;
+			mem[w_adr] <= w_dat;
 		end
-
-		if (!r_sel)
-			r_dat <= sln0[r_adr];
-		else
-			r_dat <= sln1[r_adr];
+			r_dat <= mem[r_adr];
 	end
-endmodule
+
+	endmodule
+
+	
+module sline1(
+
+	input  wire        clk,
+	input  wire w_sel, w_stb,
+	input  wire [8:0] w_adr,
+	input  wire [6:0] w_dat,
+	input  wire [8:0] r_adr,
+	output reg  [6:0] r_dat
+);
+	reg [6:0] mem [0:359];
+
+	always @(posedge clk)
+	begin
+	if (w_stb)
+		begin
+			mem[w_adr] <= w_dat;
+		end
+			r_dat <= mem[r_adr];
+	end
+
+	endmodule
