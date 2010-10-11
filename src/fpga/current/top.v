@@ -413,7 +413,7 @@ module top(
 	wire spx_en;
 	
 	sprites sprites	(	.clk(fclk), .spr_en(vcfg[6]), .hblank(hblank), .vblank(vblank),
-						.cend(cend),
+						.cend(cend), .pre_cend(pre_cend),
 						.line_start(line_start),
 						.s_reload(s_reload), .pre_vline(pre_vline),
 						.spixel(spixel), .spx_en(spx_en) );
