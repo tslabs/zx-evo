@@ -8,6 +8,15 @@
  *
  * @subsection current Current version.
  *
+ * - "F9","F10","F11" on PS/2 keyboard not used for reset function.
+ * - "F12" on PS/2 keyboard soft/hard reset. Short press (<5sec) - soft reset, long press (5sec) - hard reset.
+ * - "Ctrl-Alt-Del" on PS/2 keyboard reset ZX (hard reset). If all keys is mapped to ZX keyboard - function not work.
+ * - Create translating map (PS/2 to ZX keyboard) in eeprom (default in progmem).
+ * - Fix PS/2 mouse and keyboard send mode (without 'delay' function).
+ * - Support load from tape input.
+ *
+ * @subsection ver_2010_03_30 Version 30.03.2010
+ *
  * - Fix fpga load and ZX part init (optimize).
  *
  * @subsection ver_2010_03_28 Version 28.03.2010
@@ -56,6 +65,10 @@ extern volatile UBYTE flags_register;
 #define FLAG_PS2KEYBOARD_DIRECTION  0x10
 /** Version type (0 - BaseConf /1 - BootLoader). */
 #define FLAG_VERSION_TYPE       0x20
+/** Last tape in bit value. */
+#define FLAG_LAST_TAPE_VALUE    0x40
+/** Hard reset flag (1 - enable hard reset). */
+#define FLAG_HARD_RESET         0x80
 
 /** Common modes register. */
 extern volatile UBYTE modes_register;

@@ -1,4 +1,4 @@
-// PentEvo project (c) NedoPC 2008-2009
+// PentEvo project (c) NedoPC 2008-2010
 //
 // Z80 clocking module, also contains some wait-stating when 14MHz
 //
@@ -38,6 +38,7 @@ module zclock(
 	output reg zneg,
 
 
+	input  wire zclk_stall,
 	input [1:0] turbo, // 2'b00 -  3.5 MHz
 	                   // 2'b01 -  7.0 MHz
 	                   // 2'b1x - 14.0 MHz
@@ -60,6 +61,7 @@ module zclock(
 
 
 
+	wire pre_zpos,pre_zneg;
 `ifdef SIMULATE
 	initial // simulation...
 	begin
@@ -95,24 +97,23 @@ module zclock(
 			int_turbo <= turbo;
 	end
 
-/*	always @(posedge fclk) if( h_precend_1 )
-		int_turbo <= turbo;
-*/
+	// take every other pulse of pre_cend (make half pre_cend)
+	always @(posedge fclk) if( pre_cend )
+		precend_cnt <= ~precend_cnt;
 
+	assign h_precend_1 =  precend_cnt && pre_cend;
+	assign h_precend_2 = !precend_cnt && pre_cend;
+
+	assign pre_zpos = (pre_cend && int_turbo[0]) || (h_precend_2 && !int_turbo[0]);
+	assign pre_zneg = (cbeg && int_turbo[0]) || (h_precend_1 && !int_turbo[0]);
 	always @(posedge fclk)
 	begin
-		if( (pre_cend && int_turbo[0]) || (h_precend_2 && !int_turbo[0]) )
-			zpos <= 1'b1;
-		else
-			zpos <= 1'b0;
+		zpos <= (~zclk_stall) & pre_zpos;
 	end
 
 	always @(posedge fclk)
 	begin
-		if( (cbeg && int_turbo[0]) || (h_precend_1 && !int_turbo[0]) )
-			zneg <= 1'b1;
-		else
-			zneg <= 1'b0;
+		zneg <= (~zclk_stall) & pre_zneg;
 	end
 
 

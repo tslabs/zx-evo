@@ -8,7 +8,7 @@ OBJECT = make_fw.o
 all: $(TARGET)
 
 ## Compile
-$(OBJECT): ../source/MAKE_FW.c
+$(OBJECT): ../source/make_fw.c
 	$(CC) $(CFLAGS) -o $(OBJECT) -c $<
 
 ##Link

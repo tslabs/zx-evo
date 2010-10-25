@@ -14,7 +14,7 @@ typedef unsigned long LONGWORD;
 BYTE      checksum;
 WORD      col, row;
 LONGWORD  err;
-BYTE      s[256], s1[256];
+BYTE      s[256], s1[256], target[256];
 
 //-----------------------------------------------------------------------------
 
@@ -191,7 +191,7 @@ int main(int argc,char*argv[])
  FILE*      f;
 
  printf("ZX EVO project:  HEX to BIN + CRC + Header\n");
- if (argc<4) { printf("usage: MAKE_FW <HexFileName> <EepFileName> <VersionFileName>\n"); return 2; }
+ if (argc<5) { printf("usage: make_fw <HexFileName> <EepFileName> <OutputFileName> <VersionFileName>\n"); return 2; }
 
  header[0]='Z';
  header[1]='X';
@@ -202,13 +202,13 @@ int main(int argc,char*argv[])
  for (ih=0x06; ih<0x80; ih++) header[ih]=0;
  ih=6;
  o=0;
- if (argc==5)
+ if (argc==6)
   {
-   strncpy(s1,argv[4],1);
+   strncpy(s1,argv[5],1);
    if (s1[0]=='o') o=0x80;
   }
 
- strncpy(s1,argv[3],255);
+ strncpy(s1,argv[4],255);
  f=fopen(s1,"rt");
  vs[0]=0;
  if (f)
@@ -223,11 +223,7 @@ int main(int argc,char*argv[])
     break;
    }
  i=strlen(vs);
- if (!i)
-  {
-   strcpy(vs, "No info");
-   o=0;
-  }
+ if (!i) strcpy(vs, "No info");
 
  strcpy(&header[ih], vs);
  ih=strlen(header);
@@ -240,7 +236,7 @@ int main(int argc,char*argv[])
  readhex(f,fbuff,0x1e000);
  fclose(f);
  printf("Close.\n");
- if (err) { printf("Total %d error(s)!\n",err); return 3; }
+ if (err) { printf("Total %u error(s)!\n",err); return 3; }
 
  strncpy(s1,argv[2],255);
  printf("Open file %s... ",s1);
@@ -253,7 +249,7 @@ int main(int argc,char*argv[])
    readhex(f,ebuff,4096);
    fclose(f);
    printf("Close.\n");
-   if (err) { printf("Total %d error(s)!\n",err); return 3; }
+   if (err) { printf("Total %u error(s)!\n",err); return 3; }
   }
 
  // comments place
@@ -297,7 +293,8 @@ int main(int argc,char*argv[])
  header[0x7e]=crc>>8;
  header[0x7f]=crc&0xff;
 
- f=fopen("ZXEVO_FW.BIN","wb");
+ strncpy(target,argv[3],255);
+ f=fopen(target,"wb");
  if (!f) { printf("Can't create output file!\n"); return 1; }
  fwrite(header,1,0x80,f);
  adr=0;
@@ -317,6 +314,6 @@ int main(int argc,char*argv[])
  }
  while (adr<4096);
  fclose(f);
- printf("Created file ZXEVO_FW.BIN\n");
+ printf("Created file %s\n",target);
  return 0;
 }

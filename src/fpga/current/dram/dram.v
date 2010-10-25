@@ -96,6 +96,17 @@ module dram(
 	end
 
 
+`ifdef SIMULATE
+	always @(posedge clk)
+	begin
+		if( req && !rnw && (state==RD4 || state==WR4 || state==RFSH4) )
+		begin
+			$display("written word %x mask %x to address %x",wrdata&{ {8{bsel[1]}}, {8{bsel[0]}} },{ {8{bsel[1]}}, {8{bsel[0]}} },addr);
+		end
+	end
+`endif
+
+
 	always @(posedge clk)
 	begin
 		state <= next_state;

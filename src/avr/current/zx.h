@@ -24,59 +24,6 @@
 #define PRESS_BIT  7
 #define PRESS_MASK 128
 #define KEY_MASK   127
-//
-#define KEY_SP	0
-#define KEY_EN	1
-#define KEY_P	2
-#define KEY_0	3
-#define KEY_1	4
-#define KEY_Q	5
-#define KEY_A	6
-#define KEY_CS	7
-//
-#define KEY_SS	8
-#define KEY_L	9
-#define KEY_O  10
-#define KEY_9  11
-#define KEY_2  12
-#define KEY_W  13
-#define KEY_S  14
-#define KEY_Z  15
-//
-#define KEY_M  16
-#define KEY_K  17
-#define KEY_I  18
-#define KEY_8  19
-#define KEY_3  20
-#define KEY_E  21
-#define KEY_D  22
-#define KEY_X  23
-//
-#define KEY_N  24
-#define KEY_J  25
-#define KEY_U  26
-#define KEY_7  27
-#define KEY_4  28
-#define KEY_R  29
-#define KEY_F  30
-#define KEY_C  31
-//
-#define KEY_B  32
-#define KEY_H  33
-#define KEY_Y  34
-#define KEY_6  35
-#define KEY_5  36
-#define KEY_T  37
-#define KEY_G  38
-#define KEY_V  39
-//
-#define NO_KEY 0x7F
-#define RST_48 0x7E
-#define RST128 0x7D
-#define RSTRDS 0x7C
-#define RSTSYS 0x7B
-#define CLRKYS 0x7A
-//
 
 
 /** ZX keyboard data. */
@@ -101,12 +48,15 @@
 #define SPI_CONFIG_REG   0x50
 /** ZX NMI bit flag of configuration register. */
 #define SPI_CONFIG_NMI_FLAG 0x02
+/** ZX $FE.D6 (tape in) bit flag of configuration register. */
+#define SPI_TAPE_FLAG 0x04
 
-/** ZX Gluk address register. */
-#define SPI_GLUK_ADDR 0x41
 /** ZX all data for wait registers. */
-#define SPI_WAIT_DATA 0x40
-
+#define SPI_WAIT_DATA  0x40
+/** ZX Gluk address register. */
+#define SPI_GLUK_ADDR  0x41
+/** ZX Kondratiev's rs232 address register. */
+#define SPI_RS232_ADDR 0x42
 
 /** Send/recv data for spi registers. */
 UBYTE zx_spi_send(UBYTE addr, UBYTE data, UBYTE mask);
@@ -114,7 +64,7 @@ UBYTE zx_spi_send(UBYTE addr, UBYTE data, UBYTE mask);
 
 /** Pause between (CS|SS) and not(CS|SS). */
 #define SHIFT_PAUSE 8
-/** */
+/** Pause between (CS|SS) and not(CS|SS) counter. */
 extern volatile UBYTE shift_pause;
 
 // real keys bitmap. send order: LSbit first, from [4] to [0]
@@ -128,6 +78,20 @@ extern UBYTE zx_realkbd[11];
 	UBYTE reset_type;
 };*/
 
+/** PS/2 keyboard CTRL key status. */
+#define KB_CTRL_MASK   0x01
+/** PS/2 keyboard ALT key status. */
+#define KB_ALT_MASK    0x02
+/** PS/2 keyboard LEFT SHIFT key status. */
+#define KB_LSHIFT_MASK 0x04
+/** PS/2 keyboard RIGHT SHIFT key status. */
+#define KB_RSHIFT_MASK 0x08
+/** PS/2 keyboard F12 key status. */
+#define KB_F12_MASK    0x10
+/** PS/2 keyboard CTRL,ALT,DEL mapped status (set = mapped all keys). */
+#define KB_CTRL_ALT_DEL_MAPPED_MASK 0x80
+/** PS/2 keyboard control keys status (for additional functons). */
+extern volatile UBYTE kb_status;
 
 
 #define ZX_TASK_INIT 0
@@ -182,8 +146,11 @@ void zx_mouse_reset(UBYTE enable);
 void zx_mouse_task(void);
 
 
-/** Gluk clock port. */
-#define ZXW_GLUK_CLOCK 0x01
+/** Gluk clock ZX port out. */
+#define ZXW_GLUK_CLOCK  0x01
+
+/** Kondratiev's modem ZX port out. */
+#define ZXW_KONDR_RS232 0x02
 
 /**
  * Work with WAIT ports.

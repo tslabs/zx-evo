@@ -28,12 +28,12 @@ module fetch(
 
 
 	// controlling data fetch (go to dram/arbiter.v)
-	output reg [20:0] video_addr,
-	input [15:0] video_data,
-	input video_strobe,
-	input video_next,
-	output [1:0] bw,
-	output reg go,
+	output reg  [20:0] video_addr,
+	input       [15:0] video_data,
+	input              video_strobe,
+	input              video_next,
+	output      [ 1:0] bw,
+	output reg         go,
 
 
 
@@ -238,13 +238,13 @@ module fetch(
 	always @(posedge clk) if( wordsync )
 	begin
 		shift[0] <= fbuf[0][15:8];
-		shift[1] <= fbuf[0][7:0];
+		shift[1] <= fbuf[0][ 7:0];
 		shift[2] <= fbuf[1][15:8];
-		shift[3] <= fbuf[1][7:0];
+		shift[3] <= fbuf[1][ 7:0];
 		shift[4] <= fbuf[2][15:8];
-		shift[5] <= fbuf[2][7:0];
+		shift[5] <= fbuf[2][ 7:0];
 		shift[6] <= fbuf[3][15:8];
-		shift[7] <= fbuf[3][7:0];
+		shift[7] <= fbuf[3][ 7:0];
 	end
 
 	// count pixels to be out

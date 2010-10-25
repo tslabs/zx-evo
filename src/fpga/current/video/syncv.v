@@ -2,6 +2,8 @@
 
 // PentEvo project (c) NedoPC 2008-2009
 //
+//Modified by TS-Labs inc.
+//
 // vertical blank, sync and window. H is period of horizontal sync;
 // from the last non-blanked line:
 // 3H is pre-blank,
@@ -33,8 +35,8 @@ module syncv(
 
 
 
-	localparam VBLNK_BEG = 9'd0;
-	localparam VSYNC_BEG = 9'd8;
+	localparam VBLNK_BEG = 9'd00;
+	localparam VSYNC_BEG = 9'd08;
 	localparam VSYNC_END = 9'd11;
 	localparam VBLNK_END = 9'd32;
 

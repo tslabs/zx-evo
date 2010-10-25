@@ -4,6 +4,7 @@
 #include "pins.h"
 #include "mytypes.h"
 
+#include "main.h"
 #include "atx.h"
 #include "rs232.h"
 #include "zx.h"
@@ -50,17 +51,27 @@ void wait_for_atx_power(void)
 	atx_counter = 0;
 }
 
-UBYTE atx_power_task(void)
+void atx_power_task(void)
 {
 	static UWORD last_count = 0;
 	UBYTE j = 50;
 
 	if ( atx_counter > 1700 )
 	{
-		//atx power off button pressed (~5 sec)
 
-		//switch off atx power
-		ATXPWRON_PORT &= ~(1<<ATXPWRON);
+
+		if ( ( SOFTRES_PIN & (1<<SOFTRES) ) == 0 )
+		{
+			//atx power off button pressed (~5 sec)
+
+			//switch off atx power
+			ATXPWRON_PORT &= ~(1<<ATXPWRON);
+		}
+		else
+		{
+			//enable hard reset
+			flags_register |= FLAG_HARD_RESET;
+		}
 	}
 
 	if ( ( last_count > 0 ) && ( atx_counter == 0 ) )
@@ -84,7 +95,8 @@ UBYTE atx_power_task(void)
 		do _delay_ms(20); while(--j);
 
 		last_count = 0;
-	}
 
-	return j;
+		//enable hard reset
+		flags_register |= FLAG_HARD_RESET;
+	}
 }

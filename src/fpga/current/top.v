@@ -118,6 +118,7 @@ module top(
 
 	wire zclk; // z80 clock for short
 
+	wire zpos,zneg;
 	wire rst_n; // global reset
 
 	wire rrdy;
@@ -145,8 +146,10 @@ module top(
 	wire [7:0] wait_read,wait_write;
 	wire wait_rnw;
 	wire wait_start_gluclock;
+	wire wait_start_comport;
 	wire wait_end;
 	wire [7:0] gluclock_addr;
+	wire [2:0] comport_addr;
 	wire [6:0] waits;
 
 	// config signals
@@ -211,6 +214,8 @@ module top(
 
 	wire [7:0] peff7;
 	wire [7:0] p7ffd;
+	wire romrw_en;
+	wire cpm_n;
 
 
 
@@ -227,6 +232,7 @@ module top(
 	wire [7:0] sd_dataout,sd_datain;
 
 
+	wire tape_read;
 
 //AY control
 	always @(posedge fclk)
@@ -240,7 +246,17 @@ module top(
 
 
 
-
+	// fix ATM2-style ROM addressing for PENT-like ROM layout.
+	// this causes compications when writing to the flashROM from Z80
+	// and need to split and re-build old ATM romfiles before burning in
+	// flash
+//	wire [1:0] adr_fix;
+//	assign adr_fix = ~{ rompg[0], rompg[1] };
+//	assign rompg0_n = ~adr_fix[0];
+//	assign dos_n    =  adr_fix[1];
+//	assign rompg2   =  1'b0;//rompg[2];
+//	assign rompg3   =  1'b0;//rompg[3];
+//	assign rompg4   =  1'b0;//rompg[4];
 
 	assign rompg0_n = ~rompg[0];
 	assign dos_n    =  rompg[1];
@@ -248,8 +264,11 @@ module top(
 	assign rompg3   =  rompg[3];
 	assign rompg4   =  rompg[4];
 
-	zclock z80clk( .fclk(fclk), .rst_n(rst_n), .zclk(zclk), .rfsh_n(rfsh_n), .zclk_out(clkz_out),
-	               .turbo( {1'b0,~(peff7[4]|dos)} ), .pre_cend(pre_cend), .cbeg(cbeg) );
+	wire [3:0] zclk_stall;
+	zclock zclock( .fclk(fclk), .rst_n(rst_n), .zclk(zclk), .rfsh_n(rfsh_n), .zclk_out(clkz_out),
+	               .zpos(zpos), .zneg(zneg),
+	               .turbo( {1'b0,~(peff7[4] /*|dos*/ )} ), .pre_cend(pre_cend), .cbeg(cbeg),
+	               .zclk_stall( |zclk_stall ) );
 
 
 
@@ -275,23 +294,78 @@ module top(
 
 
 
-	zmem z80mem( .fclk(fclk), .rst_n(rst_n), .zpos(1'b0), .zneg(1'b0),
+	/////////////////////////////////////
+	// ATM memory pagers instantiation //
+	/////////////////////////////////////
+	wire pager_off;
+	wire        pent1m_ROM;
+	wire [ 5:0] pent1m_page;
+	wire        pent1m_ram0_0;
+	wire        pent1m_1m_on;
+	wire atmF7_wr_fclk;
+	wire [3:0] dos_turn_off,
+	           dos_turn_on;
+	wire [ 7:0] page [0:3];
+	wire [ 3:0] romnram;
+	generate
+		genvar i;
+		for(i=0;i<4;i=i+1)
+		begin : instantiate_atm_pagers
+			atm_pager #( .ADDR(i) )
+			          atm_pager( .rst_n(rst_n),
+			                     .fclk (fclk),
+			                     .zpos (zpos),
+			                     .zneg (zneg),
+			                     .za(a),
+			                     .zd(d),
+			                     .mreq_n(mreq_n),
+			                     .rd_n  (rd_n),
+			                     .m1_n  (m1_n),
+			                     .pager_off(pager_off),
+			                     .pent1m_ROM   (pent1m_ROM),
+			                     .pent1m_page  (pent1m_page),
+			                     .pent1m_ram0_0(pent1m_ram0_0),
+			                     .pent1m_1m_on (pent1m_1m_on),
+			                     .atmF7_wr(atmF7_wr_fclk),
+			                     .dos(dos),
+			                     .dos_turn_on (dos_turn_on[i]),
+			                     .dos_turn_off(dos_turn_off[i]),
+			                     .zclk_stall(zclk_stall[i]),
+			                     .page   (page[i]),
+			                     .romnram(romnram[i])
+			                   );
+		end
+	endgenerate
+	///////////////////////////
+	// DOS signal controller //
+	///////////////////////////
+	zdos zdos( .rst_n(rst_n),
+	           .fclk(fclk),
+	           .dos_turn_on ( |dos_turn_on  ),
+	           .dos_turn_off( |dos_turn_off ),
+	           .cpm_n(cpm_n),
+	           .dos(dos)
+	         );
+	///////////////////////////
+	// Z80 memory controller //
+	///////////////////////////
+	zmem z80mem( .fclk(fclk), .rst_n(rst_n), .zpos(zpos), .zneg(zneg),
 	             .cend(cend), .pre_cend(pre_cend), .za(a), .zd_in(d),
 	             .zd_out(dout_ram), .zd_ena(ena_ram), .m1_n(m1_n),
 	             .rfsh_n(rfsh_n), .iorq_n(iorq_n), .mreq_n(mreq_n),
 	             .rd_n(rd_n), .wr_n(wr_n),
 
-	.win0_romnram(~peff7[3]), // was 1'b1
-	.win1_romnram(1'b0),
-	.win2_romnram(1'b0),
-	.win3_romnram(1'b0),
+	             .win0_romnram(romnram[0]),
+	             .win1_romnram(romnram[1]),
+	             .win2_romnram(romnram[2]),
+	             .win3_romnram(romnram[3]),
 
-	.win0_page( peff7[3] ? 8'd0 : {6'd0,~dos,p7ffd[4]} ),
-	.win1_page(8'd5),
-	.win2_page(8'd2),
-	.win3_page( {2'd0,p7ffd[7:5],p7ffd[2:0]} ),
+	             .win0_page(page[0]),
+	             .win1_page(page[1]),
+	             .win2_page(page[2]),
+	             .win3_page(page[3]),
 
-	.dos(dos),
+	             .romrw_en(romrw_en),
 
 	.rompg(rompg),
 	.romoe_n(romoe_n),
@@ -304,7 +378,8 @@ module top(
 	.cpu_strobe(cpu_strobe),
 	.cpu_addr(cpu_addr),
 	.cpu_wrdata(cpu_wrdata),
-	.cpu_rddata(cpu_rddata) );
+	.cpu_rddata(cpu_rddata)
+	           );
 
 
 
@@ -318,10 +393,10 @@ module top(
 	wire [15:0] dwrdata;
 	wire [1:0] dbsel;
 
-	wire drrdy;
 
 
-	dram dramko( .clk(fclk),
+
+	dram dram( .clk(fclk),
 	             .rst_n(rst_n),
 
 	             .addr(daddr),
@@ -339,7 +414,8 @@ module top(
 	             .rucas_n(rucas_n),
 	             .rlcas_n(rlcas_n),
 	             .rras0_n(rras0_n),
-	             .rras1_n(rras1_n) );
+	           .rras1_n(rras1_n)
+	         );
 
 
 	wire [1:0] bw;
@@ -396,7 +472,7 @@ module top(
 	syncv vert_sync( .clk(fclk), .hsync_start(hsync_start), .line_start(line_start),
 	                 .vblank(vblank), .vsync(vsync), .int_start(int_start),
 	                 .s_reload(s_reload), .pre_vline(pre_vline),
-					 .vpix(vpix), .hint_start(hint_start) );
+			 .vpix(vpix), .hint_start(hint_start) );
 
 	vga_synch vga_synch( .clk(fclk), .hsync_start(hsync_start), .vga_hsync(vga_hsync), .scanout_start(scanout_start) );
 
@@ -412,15 +488,15 @@ module top(
 	wire [5:0] spixel;
 	wire spx_en;
 	
-	sprites sprites	(	.clk(fclk), .spr_en(vcfg[6]), .hblank(hblank), .vblank(vblank),
-						.cend(cend), .pre_cend(pre_cend),
-						.line_start(line_start),
-						.s_reload(s_reload), .pre_vline(pre_vline),
-						.spixel(spixel), .spx_en(spx_en) );
+	sprites sprites	( .clk(fclk), .spr_en(vcfg[6]), .hblank(hblank), .vblank(vblank),
+			.cend(cend), .pre_cend(pre_cend),
+			.line_start(line_start),
+			.s_reload(s_reload), .pre_vline(pre_vline),
+			.spixel(spixel), .spx_en(spx_en) );
 
 
-	videoout vidia( .clk(fclk), .pixel(pixel), .spixel(spixel), .spx_en(spx_en),
-					.border(border),
+	videoout vidia( .clk(fclk), .pixel(pixel),.border(border),
+			.spixel(spixel), .spx_en(spx_en)
 	                .hblank(hblank), .vblank(vblank), .hpix(hpix), .vpix(vpix), .hsync(hsync), .vsync(vsync),
 	                .vred(vred), .vgrn(vgrn), .vga_hsync(vga_hsync), .vblu(vblu),
 	                .vhsync(vhsync), .vvsync(vvsync), .vcsync(vcsync), .hsync_start(hsync_start),
@@ -437,11 +513,12 @@ module top(
 	                   .mus_xstb(mus_xstb), .mus_ystb(mus_ystb),
 	                   .mus_btnstb(mus_btnstb), .kj_stb(kj_stb),
 	                   .gluclock_addr(gluclock_addr),
+			   .comport_addr (comport_addr),
 	                   .wait_write(wait_write),
 	                   .wait_read(wait_read),
 	                   .wait_rnw(wait_rnw),
 	                   .wait_end(wait_end),
-	                   .config0( { not_used[7:2], set_nmi, cfg_vga_on} )
+	                   .config0( { not_used[7:3], tape_read, set_nmi, cfg_vga_on} )
 	                 );
 
 	zkbdmus zkbdmus( .fclk(fclk), .rst_n(rst_n),
@@ -460,10 +537,11 @@ module top(
 	               );
 
 				   
-	zports porty( .clk(zclk), .fclk(fclk), .rst_n(rst_n), .din(d), .dout(dout_ports), .dataout(ena_ports),
+	zports zports( .zclk(zclk), .fclk(fclk), .rst_n(rst_n), .zpos(zpos), .zneg(zneg),
+	              .din(d), .dout(dout_ports), .dataout(ena_ports),
 	              .a(a), .iorq_n(iorq_n), .rd_n(rd_n), .wr_n(wr_n), .porthit(porthit),
 	              .ay_bdir(ay_bdir), .ay_bc1(ay_bc1), .border(border),
-				  .psd0(psd0), .psd1(psd1), .psd2(psd2), .psd3(psd3), 
+		      .psd0(psd0), .psd1(psd1), .psd2(psd2), .psd3(psd3), 
 	              .p7ffd(p7ffd), .peff7(peff7), .mreq_n(mreq_n), .m1_n(m1_n), .dos(dos),
 	              .rstrom(rstrom), .vg_intrq(intrq), .vg_drq(drq), .vg_wrFF(vg_wrFF),
 	              .vg_cs_n(vg_cs_n), .sd_start(sd_start), .sd_dataout(sd_dataout),
@@ -472,17 +550,31 @@ module top(
 	              .ide_a(ide_a), .ide_cs0_n(ide_cs0_n), .ide_cs1_n(ide_cs1_n),
 	              .ide_wr_n(ide_wr_n), .ide_rd_n(ide_rd_n),
 
-				  .vcfg(vcfg),
+		      .vcfg(vcfg),
 				  
 	              .keys_in(kbd_port_data),
 	              .mus_in(mus_port_data),
 	              .kj_in(kj_port_data),
 
+	               .tape_read(tape_read),
 	              .gluclock_addr(gluclock_addr),
+		      .comport_addr (comport_addr),
 	              .wait_start_gluclock(wait_start_gluclock),
+	              .wait_start_comport (wait_start_comport),
 	              .wait_rnw(wait_rnw),
 	              .wait_write(wait_write),
 	              .wait_read(wait_read)
+	               .atmF7_wr_fclk(atmF7_wr_fclk),
+	               .atm_scr_mode(),
+	               .atm_turbo   (),
+	               .atm_pen     (pager_off),
+	               .atm_cpm_n   (cpm_n),
+	               .atm_pen2    (),
+	               .romrw_en(romrw_en),
+	               .pent1m_ram0_0(pent1m_ram0_0),
+	               .pent1m_1m_on (pent1m_1m_on),
+	               .pent1m_page  (pent1m_page),
+	               .pent1m_ROM   (pent1m_ROM)
 	            );
 
 
@@ -492,13 +584,14 @@ module top(
 
 
 	zwait zwait( .wait_start_gluclock(wait_start_gluclock),
+	             .wait_start_comport (wait_start_comport),
 	             .wait_end(wait_end),
 	             .rst_n(rst_n),
 	             .wait_n(wait_n),
 	             .waits(waits),
 	             .spiint_n(spiint_n) );
 
-	assign wait_n = 1'bZ;
+//	assign wait_n = 1'bZ; // WTF??? FIXME,FIXME,FIXME,FIXME,FIXME,FIXME,FIXME,FIXME,FIXME,FIXME,FIXME,FIXME,FIXME
 
 
 

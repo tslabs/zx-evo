@@ -29,6 +29,7 @@ module slavespi(
 
 
 	input  wire [ 7:0] gluclock_addr,
+	input  wire [ 2:0] comport_addr,
 
 	input  wire [ 7:0] wait_write,
 	output wire [ 7:0] wait_read,
@@ -41,6 +42,14 @@ module slavespi(
 	output wire       genrst, // positive pulse, causes Z80 reset
 	output wire [1:0] rstrom  // number of ROM page to reset to
 );
+
+`ifdef SIMULATE
+	initial
+	begin
+		force wait_read = 8'hFF;
+	end
+`endif
+
 
 	// re-synchronize SPI
 	//
@@ -76,7 +85,7 @@ module slavespi(
 
 	// register selectors
 	wire sel_kbdreg, sel_kbdstb, sel_musxcr, sel_musycr, sel_musbtn, sel_kj;
-	wire sel_rstreg, sel_waitreg, sel_gluadr, sel_cfg0;
+	wire sel_rstreg, sel_waitreg, sel_gluadr, sel_comadr, sel_cfg0;
 
 	// keyboard register
 	reg [39:0] kbd_reg;
@@ -98,8 +107,8 @@ module slavespi(
 `ifdef SIMULATE
 	initial
 	begin
-		rstrom = 2'b00;
-		genrst = 1'b0;
+		rst_reg[5:4] = 2'b00;
+		cfg0_reg_out[7:0] = 8'd0;
 	end
 `endif
 
@@ -124,9 +133,11 @@ module slavespi(
 	always @*
 	begin
 		if( sel_waitreg )
-			data_in = wait_write; // TODO: add here selection of different input registers
+			data_in = wait_write;
 		else if( sel_gluadr )
 			data_in = gluclock_addr;
+		else if( sel_comadr )
+			data_in = comport_addr;
 		else data_in = 8'hFF;
 	end
 	//
@@ -157,8 +168,9 @@ module slavespi(
 	//
 	assign sel_rstreg = ( (regnum[7:4]==4'h3) ) ; // $30
 	//
-	assign sel_waitreg = ( (regnum[7:4]==4'h4) && !regnum[0] ); // $40
-	assign sel_gluadr  = ( (regnum[7:4]==4'h4) &&  regnum[0] ); // $41
+	assign sel_waitreg = ( (regnum[7:4]==4'h4) && (regnum[1:0]==2'b00) ); // $40
+	assign sel_gluadr  = ( (regnum[7:4]==4'h4) && (regnum[1:0]==2'b01) ); // $41
+	assign sel_comadr  = ( (regnum[7:4]==4'h4) && (regnum[1:0]==2'b10) ); // $42
 	//
 	assign sel_cfg0 = (regnum[7:4]==4'h5); // $50
 
@@ -171,7 +183,7 @@ module slavespi(
 			kbd_reg[39:0] <= { sdo, kbd_reg[39:1] };
 
 		if( !scs_n && (sel_musxcr || sel_musycr || sel_musbtn || sel_kj) && sck_01 )
-            mouse_buf[7:0] <= { sdo, mouse_buf[7:1] };
+			mouse_buf[7:0] <= { sdo, mouse_buf[7:1] };
 
 		if( !scs_n && sel_rstreg && sck_01 )
 			rst_reg[7:0] <= { sdo, rst_reg[7:1] };

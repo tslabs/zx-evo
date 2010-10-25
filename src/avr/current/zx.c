@@ -5,6 +5,7 @@
 
 #include "mytypes.h"
 #include "zx.h"
+#include "kbmap.h"
 #include "pins.h"
 #include "getfaraddress.h"
 #include "main.h"
@@ -21,6 +22,9 @@ volatile UBYTE zx_mouse_button;
 volatile UBYTE zx_mouse_x;
 volatile UBYTE zx_mouse_y;
 
+// PS/2 keyboard control keys status (for additional functons)
+volatile UBYTE kb_status;
+
 #define ZX_FIFO_SIZE 256 /* do not change this since it must be exactly byte-wise */
 
 UBYTE zx_fifo[ZX_FIFO_SIZE];
@@ -31,192 +35,9 @@ UBYTE zx_fifo_out_ptr;
 UBYTE zx_counters[40]; // filter ZX keystrokes here to assure every is pressed and released only once
 UBYTE zx_map[5]; // keys bitmap. send order: LSbit first, from [4] to [0]
 
-
 volatile UBYTE shift_pause;
 
 UBYTE zx_realkbd[11];
-
-
-
-
-const UBYTE kmap[] PROGMEM =
-{
-NO_KEY,NO_KEY, // 00
-RST_48,NO_KEY, // 01  F9
-NO_KEY,NO_KEY, // 02
-NO_KEY,NO_KEY, // 03
-NO_KEY,NO_KEY, // 04
-NO_KEY,NO_KEY, // 05
-NO_KEY,NO_KEY, // 06
-RSTSYS,NO_KEY, // 07 F12
-NO_KEY,NO_KEY, // 08
-RST128,NO_KEY, // 09 F10
-NO_KEY,NO_KEY, // 0A
-NO_KEY,NO_KEY, // 0B
-NO_KEY,NO_KEY, // 0C
-KEY_CS,KEY_SP, // 0D TAB
-KEY_CS,KEY_1 , // 0E ~
-NO_KEY,NO_KEY, // 0F
-
-NO_KEY,NO_KEY, // 10
-NO_KEY,NO_KEY, // 11
-KEY_CS,NO_KEY, // 12 LSHIFT
-NO_KEY,NO_KEY, // 13
-NO_KEY,NO_KEY, // 14
-KEY_Q ,NO_KEY, // 15 Q
-KEY_1 ,NO_KEY, // 16 1
-NO_KEY,NO_KEY, // 17
-NO_KEY,NO_KEY, // 18
-NO_KEY,NO_KEY, // 19
-KEY_Z ,NO_KEY, // 1A Z
-KEY_S ,NO_KEY, // 1B S
-KEY_A ,NO_KEY, // 1C A
-KEY_W ,NO_KEY, // 1D W
-KEY_2 ,NO_KEY, // 1E 2
-NO_KEY,NO_KEY, // 1F
-
-NO_KEY,NO_KEY, // 20
-KEY_C ,NO_KEY, // 21 C
-KEY_X ,NO_KEY, // 22 X
-KEY_D ,NO_KEY, // 23 D
-KEY_E ,NO_KEY, // 24 E
-KEY_4 ,NO_KEY, // 25 4
-KEY_3 ,NO_KEY, // 26 3
-NO_KEY,NO_KEY, // 27
-NO_KEY,NO_KEY, // 28
-KEY_SP,NO_KEY, // 29 SPACE
-KEY_V ,NO_KEY, // 2A V
-KEY_F ,NO_KEY, // 2B F
-KEY_T ,NO_KEY, // 2C T
-KEY_R ,NO_KEY, // 2D R
-KEY_5 ,NO_KEY, // 2E 5
-NO_KEY,NO_KEY, // 2F
-
-NO_KEY,NO_KEY, // 30
-KEY_N ,NO_KEY, // 31 N
-KEY_B ,NO_KEY, // 32 B
-KEY_H ,NO_KEY, // 33 H
-KEY_G ,NO_KEY, // 34 G
-KEY_Y ,NO_KEY, // 35 Y
-KEY_6 ,NO_KEY, // 36 6
-NO_KEY,NO_KEY, // 37
-NO_KEY,NO_KEY, // 38
-NO_KEY,NO_KEY, // 39
-KEY_M ,NO_KEY, // 3A M
-KEY_J ,NO_KEY, // 3B J
-KEY_U ,NO_KEY, // 3C U
-KEY_7 ,NO_KEY, // 3D 7
-KEY_8 ,NO_KEY, // 3E 8
-NO_KEY,NO_KEY, // 3F
-
-NO_KEY,NO_KEY, // 40
-KEY_SS,KEY_N , // 41 ,
-KEY_K ,NO_KEY, // 42 K
-KEY_I ,NO_KEY, // 43 I
-KEY_O ,NO_KEY, // 44 O
-KEY_0 ,NO_KEY, // 45 0
-KEY_9 ,NO_KEY, // 46 9
-NO_KEY,NO_KEY, // 47
-NO_KEY,NO_KEY, // 48
-KEY_SS,KEY_M , // 49 .
-KEY_SS,KEY_C , // 4A /
-KEY_L ,NO_KEY, // 4B L
-KEY_SS,KEY_Z , // 4C :
-KEY_P ,NO_KEY, // 4D P
-KEY_SS,KEY_J , // 4E -
-NO_KEY,NO_KEY, // 4F
-
-NO_KEY,NO_KEY, // 50
-NO_KEY,NO_KEY, // 51
-KEY_SS,KEY_P , // 52 "
-NO_KEY,NO_KEY, // 53
-KEY_SS,KEY_8 , // 54 [
-KEY_SS,KEY_K , // 55 +
-NO_KEY,NO_KEY, // 56
-NO_KEY,NO_KEY, // 57
-KEY_CS,KEY_2 , // 58 CAPSLOCK
-KEY_SS,NO_KEY, // 59 RSHIFT
-KEY_EN,NO_KEY, // 5A ENTER
-KEY_SS,KEY_9 , // 5B ]
-NO_KEY,NO_KEY, // 5C
-KEY_SS,KEY_CS, // 5D backslash
-NO_KEY,NO_KEY, // 5E
-NO_KEY,NO_KEY, // 5F
-
-NO_KEY,NO_KEY, // 60
-KEY_SS,KEY_CS, // 61 backslash
-NO_KEY,NO_KEY, // 62
-NO_KEY,NO_KEY, // 63
-NO_KEY,NO_KEY, // 64
-NO_KEY,NO_KEY, // 65
-KEY_CS,KEY_0 , // 66 BACKSPACE
-NO_KEY,NO_KEY, // 67
-NO_KEY,NO_KEY, // 68
-KEY_1 ,NO_KEY, // 69 keypad 1
-NO_KEY,NO_KEY, // 6A
-KEY_4 ,NO_KEY, // 6B keypad 4
-KEY_7 ,NO_KEY, // 6C keypad 7
-NO_KEY,NO_KEY, // 6D
-NO_KEY,NO_KEY, // 6E
-NO_KEY,NO_KEY, // 6F
-
-KEY_0 ,NO_KEY, // 70 keypad 0
-KEY_SS,KEY_M , // 71 keypad .
-KEY_2 ,NO_KEY, // 72 keypad 2
-KEY_5 ,NO_KEY, // 73 keypad 5
-KEY_6 ,NO_KEY, // 74 keypad 6
-KEY_8 ,NO_KEY, // 75 keypad 8
-CLRKYS,NO_KEY, // 76 ESC
-NO_KEY,NO_KEY, // 77
-RSTRDS,NO_KEY, // 78 F11
-KEY_SS,KEY_K , // 79 keypad +
-KEY_3 ,NO_KEY, // 7A keypad 3
-KEY_SS,KEY_J , // 7B keypad -
-KEY_SS,KEY_B , // 7C keypad *
-KEY_9 ,NO_KEY, // 7D keypad 9
-NO_KEY,NO_KEY, // 7E Scroll Lock
-NO_KEY,NO_KEY  // 7F
-};
-
-
-
-const UBYTE kmap_E0[] PROGMEM =
-{
-NO_KEY,NO_KEY, // 60
-NO_KEY,NO_KEY, // 61
-NO_KEY,NO_KEY, // 62
-NO_KEY,NO_KEY, // 63
-NO_KEY,NO_KEY, // 64
-NO_KEY,NO_KEY, // 65
-NO_KEY,NO_KEY, // 66
-NO_KEY,NO_KEY, // 67
-NO_KEY,NO_KEY, // 68
-KEY_SS,KEY_E , // 69 END
-NO_KEY,NO_KEY, // 6A
-KEY_CS,KEY_5 , // 6B LEFT
-KEY_SS,KEY_Q , // 6C HOME
-NO_KEY,NO_KEY, // 6D
-NO_KEY,NO_KEY, // 6E
-NO_KEY,NO_KEY, // 6F
-
-KEY_SS,KEY_W , // 70 INS
-KEY_CS,KEY_9 , // 71 DEL
-KEY_CS,KEY_6 , // 72 DOWN
-NO_KEY,NO_KEY, // 73
-KEY_CS,KEY_8 , // 74 RIGHT
-KEY_CS,KEY_7 , // 75 UP
-CLRKYS,NO_KEY, // 76 ESC
-NO_KEY,NO_KEY, // 77
-NO_KEY,NO_KEY, // 78
-NO_KEY,NO_KEY, // 79
-KEY_CS,KEY_4 , // 7A PGDN
-NO_KEY,NO_KEY, // 7B
-NO_KEY,NO_KEY, // 7C Print Screen
-KEY_CS,KEY_3 , // 7D PGUP
-NO_KEY,NO_KEY, // 7E
-NO_KEY,NO_KEY  // 7F
-};
-
 
 void zx_init(void)
 {
@@ -224,18 +45,7 @@ void zx_init(void)
 
 	zx_task(ZX_TASK_INIT);
 
-//	nSPICS_DDR	|= (1<<nSPICS);
-//	nSPICS_PORT &= ~(1<<nSPICS);
-//	_delay_us(10);
-//	nSPICS_PORT |= (1<<nSPICS);
-//	_delay_us(10);
-//	spi_send(0xE2); // send specific reset
-//	_delay_us(10);
-//	nSPICS_PORT &= ~(1<<nSPICS);
-//	_delay_us(10);
-//	nSPICS_PORT |= (1<<nSPICS);
-
-	//на всякий случай сбрасываем комп
+	//reset Z80
 	zx_spi_send(SPI_RST_REG, 0, 0);
 }
 
@@ -256,7 +66,6 @@ UBYTE zx_spi_send(UBYTE addr, UBYTE data, UBYTE mask)
 	return ret;
 }
 
-
 void zx_task(UBYTE operation) // zx task, tracks when there is need to send new keymap to the fpga
 {
 	static UBYTE prev_code;
@@ -266,7 +75,7 @@ void zx_task(UBYTE operation) // zx task, tracks when there is need to send new 
 	UBYTE was_data;
 	UBYTE code,keynum,keybit;
 
-	if(operation==ZX_TASK_INIT)
+	if ( operation==ZX_TASK_INIT )
 	{
 		reset_type = 0;
 		prev_code = KEY_V+1; // impossible scancode
@@ -274,6 +83,20 @@ void zx_task(UBYTE operation) // zx task, tracks when there is need to send new 
 		shift_pause = 0;
 
 		zx_clr_kb();
+
+		//detect if CTRL-ALT-DEL keys mapped
+		if ( ((kbmap[0x14*2] == NO_KEY) && (kbmap[0x14*2+1] == NO_KEY)) ||
+			 ((kbmap[0x11*2] == NO_KEY) && (kbmap[0x11*2+1] == NO_KEY)) ||
+			 ((kbmap_E0[0x11*2] == NO_KEY) && (kbmap[0x11*2+1] == NO_KEY)) )
+		{
+			//not mapped
+			kb_status &= ~KB_CTRL_ALT_DEL_MAPPED_MASK;
+		}
+		else
+		{
+			//mapped
+			kb_status |= KB_CTRL_ALT_DEL_MAPPED_MASK;
+		}
 	}
 	else /*if(operation==ZX_TASK_WORK)*/
 
@@ -308,24 +131,24 @@ void zx_task(UBYTE operation) // zx task, tracks when there is need to send new 
 
 					break; // flush changes immediately to the fpga
 				}
-				else if( (code&KEY_MASK) >= RSTSYS )
-				{
-					was_data = 1; // we've got something!
+//				else if( (code&KEY_MASK) >= RSTSYS )
+//				{
+//					was_data = 1; // we've got something!
 
-					zx_fifo_get(); // remove byte from fifo
+//					zx_fifo_get(); // remove byte from fifo
 
-					if( code&PRESS_MASK ) // reset key pressed
-					{
-						reset_type	= 0x30 & ((code+1)<<4);
-						reset_type += 2;
+//					if( code&PRESS_MASK ) // reset key pressed
+//					{
+//						reset_type	= 0x30 & ((code+1)<<4);
+//						reset_type += 2;
 
-						break; // flush immediately
-					}
-					else // reset key released
-					{
-						reset_type = 0;
-					}
-				}
+//						break; // flush immediately
+//					}
+//					else // reset key released
+//					{
+//						reset_type = 0;
+//					}
+//				}
 				else /*if( (code&KEY_MASK) < 40 )*/
 				{
 					if( shift_pause ) // if we inside pause interval and need checking
@@ -383,7 +206,7 @@ void zx_task(UBYTE operation) // zx task, tracks when there is need to send new 
 
 			if( was_data ) // initialize transfer
 			{
-				task_state = 7;
+				task_state = 6;
 			}
 		}
 		else // sending bytes one by one in each state
@@ -396,20 +219,21 @@ void zx_task(UBYTE operation) // zx task, tracks when there is need to send new 
 	to_log(log_task_state);
 #endif
 
-			if( task_state==6 ) // send (or not) reset
-			{
-				if( reset_type )
-				{
-					zx_spi_send(SPI_RST_REG, reset_type, 0x7F);
-#ifdef LOGENABLE
-	char log_reset_type[] = "TR..\r\n";
-	log_reset_type[2] = ((reset_type >> 4) <= 9 )?'0'+(reset_type >> 4):'A'+(reset_type >> 4)-10;
-	log_reset_type[3] = ((reset_type & 0x0F) <= 9 )?'0'+(reset_type & 0x0F):'A'+(reset_type & 0x0F)-10;
-	to_log(log_reset_type);
-#endif
-				}
-			}
-			else if( task_state>0 )// task_state==5..1
+//			if( task_state==6 ) // send (or not) reset
+//			{
+//				if( reset_type )
+//				{
+//					zx_spi_send(SPI_RST_REG, reset_type, 0x7F);
+//#ifdef LOGENABLE
+//	char log_reset_type[] = "TR..\r\n";
+//	log_reset_type[2] = ((reset_type >> 4) <= 9 )?'0'+(reset_type >> 4):'A'+(reset_type >> 4)-10;
+//	log_reset_type[3] = ((reset_type & 0x0F) <= 9 )?'0'+(reset_type & 0x0F):'A'+(reset_type & 0x0F)-10;
+//	to_log(log_reset_type);
+//#endif
+//				}
+//			}
+//			else
+			if( task_state>0 )// task_state==5..1
 			{
 				UBYTE key_data;
 				key_data = zx_map[task_state-1] | ~zx_realkbd[task_state-1];
@@ -460,41 +284,57 @@ void zx_clr_kb(void)
 	{
 		zx_counters[i] = 0;
 	}
-}
 
+	kb_status = 0;
+}
 
 void to_zx(UBYTE scancode, UBYTE was_E0, UBYTE was_release)
 {
-	ULONG tbldisp,tblptr;
+	ULONG tbldisp;
+	UBYTE* tblptr;
 	UBYTE tbl1,tbl2;
-
 
 	tbl1=tbl2=NO_KEY;
 
 	if( was_E0 )
 	{
-		if( scancode==0x4A ) // keypad /
-		{
-			tbl1 = KEY_SS;
-			tbl2 = KEY_V;
-		}
-		else if( scancode==0x5A ) // keypad enter
-		{
-			tbl1 = KEY_EN;
-		}
-		else if( (scancode>=0x60) && (scancode<=0x7F) )
+		if( (scancode>=0x60) && (scancode<=0x7F) )
 		{
 			tbldisp = (scancode-0x60)*2;
-			tblptr = tbldisp + GET_FAR_ADDRESS(kmap_E0);
-
-			tbl1 = pgm_read_byte_far( tblptr++ );
-			tbl2 = pgm_read_byte_far( tblptr );
+			tblptr = kbmap_E0 + tbldisp;
+			tbl1 = *( tblptr++ );
+			tbl2 = *( tblptr );
 		}
 
-		if ( scancode == 0x7C ) //Print Screen
+		//additional functionality from ps/2 keyboard
+		switch( scancode )
 		{
-			//set/reset NMI
-			zx_set_config( (was_release==0)? SPI_CONFIG_NMI_FLAG : 0 );
+			// keypad /
+			case 0x4A:
+				tbl1 = KEY_SS;
+				tbl2 = KEY_V;
+				break;
+			// keypad enter
+			case 0x5A:
+				tbl1 = KEY_EN;
+				break;
+			//Print Screen
+			case 0x7C:
+				//set/reset NMI
+				zx_set_config( (was_release==0)? SPI_CONFIG_NMI_FLAG : 0 );
+				break;
+			//Del
+			case 0x71:
+				//Ctrl-Alt-Del pressed
+				if ( ( !was_release ) &&
+				     ( !(kb_status & KB_CTRL_ALT_DEL_MAPPED_MASK) ) &&
+					 ( (kb_status & (KB_CTRL_MASK|KB_ALT_MASK)) == (KB_CTRL_MASK|KB_ALT_MASK) ) )
+				{
+					//hard reset
+					flags_register |= FLAG_HARD_RESET;
+					tbl1=tbl2=NO_KEY;
+				}
+				break;
 		}
 	}
 	else
@@ -502,14 +342,45 @@ void to_zx(UBYTE scancode, UBYTE was_E0, UBYTE was_release)
 		if( scancode<=0x7F )
 		{
 			tbldisp = scancode*2;
-			tblptr = tbldisp + GET_FAR_ADDRESS(kmap);
-
-			tbl1 = pgm_read_byte_far( tblptr++ );
-			tbl2 = pgm_read_byte_far( tblptr );
+			tblptr = kbmap + tbldisp;
+			tbl1 = *( tblptr++ );
+			tbl2 = *( tblptr );
 		}
 
-		//check key of vga mode switcher
-		if ( ( scancode == 0x7E ) && !was_release) zx_vga_switcher();
+		//additional functionality from ps/2 keyboard
+		switch( scancode )
+		{
+			//Scroll Lock
+			case 0x7E:
+				//check key of vga mode switcher
+				if ( !was_release ) zx_vga_switcher();
+				break;
+		   	//Left Shift
+		   	case  0x12:
+				if ( !was_release ) kb_status |= KB_LSHIFT_MASK;
+				else kb_status &= ~KB_LSHIFT_MASK;
+				break;
+		   	//Right Shift
+		   	case  0x59:
+				if ( !was_release ) kb_status |= KB_RSHIFT_MASK;
+				else kb_status &= ~KB_RSHIFT_MASK;
+				break;
+		   	//Ctrl
+		   	case  0x14:
+				if ( !was_release ) kb_status |= KB_CTRL_MASK;
+				else kb_status &= ~KB_CTRL_MASK;
+				break;
+		   	//Alt
+		   	case  0x11:
+				if ( !was_release ) kb_status |= KB_ALT_MASK;
+				else kb_status &= ~KB_ALT_MASK;
+				break;
+			//F12
+			case  0x07:
+				if ( !was_release ) kb_status |= KB_F12_MASK;
+				else kb_status &= ~KB_F12_MASK;
+				break;
+		}
 	}
 
 	if( tbl1!=NO_KEY )
@@ -519,8 +390,6 @@ void to_zx(UBYTE scancode, UBYTE was_E0, UBYTE was_release)
 		if( tbl2!=NO_KEY ) update_keys(tbl2,was_release);
 	}
 }
-
-
 
 void update_keys(UBYTE zxcode, UBYTE was_release)
 {
@@ -564,7 +433,6 @@ void update_keys(UBYTE zxcode, UBYTE was_release)
 	}
 }
 
-
 void zx_fifo_put(UBYTE input)
 {
 	zx_fifo[zx_fifo_in_ptr++] = input;
@@ -575,7 +443,6 @@ UBYTE zx_fifo_isfull(void)
 	//always one byte unused, to distinguish between totally full fifo and empty fifo
 	return( (zx_fifo_in_ptr+1)==zx_fifo_out_ptr );
 }
-
 
 UBYTE zx_fifo_isempty(void)
 {
@@ -591,8 +458,6 @@ UBYTE zx_fifo_copy(void)
 {
 	return zx_fifo[zx_fifo_out_ptr]; // get byte but leave it in fifo
 }
-
-
 
 void zx_mouse_reset(UBYTE enable)
 {
@@ -637,7 +502,6 @@ void zx_mouse_task(void)
 	}
 }
 
-
 void zx_wait_task(UBYTE status)
 {
 	UBYTE addr = 0;
@@ -655,6 +519,12 @@ void zx_wait_task(UBYTE status)
 			if ( status&0x80 ) data = gluk_get_reg(addr);
 			break;
 		}
+	case ZXW_KONDR_RS232:
+		{
+			addr = zx_spi_send(SPI_RS232_ADDR, data, 0);
+			if ( status&0x80 ) data = rs232_zx_read(addr);
+			break;
+		}
 	}
 
 	if ( status&0x80 ) zx_spi_send(SPI_WAIT_DATA, data, 0);
@@ -668,6 +538,11 @@ void zx_wait_task(UBYTE status)
 		case ZXW_GLUK_CLOCK:
 			{
 				gluk_set_reg(addr, data);
+				break;
+			}
+		case ZXW_KONDR_RS232:
+			{
+				rs232_zx_write(addr, data);
 				break;
 			}
 		}

@@ -42,24 +42,24 @@ module zmem(
 
 
 
-	input win0_romnram, // four windows, each 16k,
-	input win1_romnram, // ==1 - there is rom,
-	input win2_romnram, // ==0 - there is ram
-	input win3_romnram, //
+	input  wire        win0_romnram, // four windows, each 16k,
+	input  wire        win1_romnram, // ==1 - there is rom,
+	input  wire        win2_romnram, // ==0 - there is ram
+	input  wire        win3_romnram, //
 
-	input [7:0] win0_page, // which 16k page is in given window
-	input [7:0] win1_page, //
-	input [7:0] win2_page, //
-	input [7:0] win3_page, //
+	input  wire [ 7:0] win0_page, // which 16k page is in given window
+	input  wire [ 7:0] win1_page, //
+	input  wire [ 7:0] win2_page, //
+	input  wire [ 7:0] win3_page, //
 
 
+	input  wire        romrw_en,
 
-	input dos, // for lame TR-DOS rom switching
 
-	output reg [4:0] rompg, // output for ROM paging
-	output romoe_n,
-	output romwe_n,
-	output csrom,
+	output reg  [ 4:0] rompg, // output for ROM paging
+	output wire        romoe_n,
+	output wire        romwe_n,
+	output wire        csrom,
 
 
 	output cpu_req,
@@ -89,51 +89,40 @@ module zmem(
 	assign win[1:0] = za[15:14];
 
 	always @*
-	begin
-		case( win )
-		2'b00:
-		begin
+	case( win )
+		2'b00: begin
 			page    = win0_page;
 			romnram = win0_romnram;
 		end
 
-		2'b01:
-		begin
+		2'b01: begin
 			page    = win1_page;
 			romnram = win1_romnram;
 		end
 
-		2'b10:
-		begin
+		2'b10: begin
 			page    = win2_page;
 			romnram = win2_romnram;
 		end
 
-		2'b11:
-		begin
+		2'b11: begin
 			page    = win3_page;
 			romnram = win3_romnram;
 		end
-		endcase
-	end
+	endcase
 
 
-	// rom paging
+	// rom paging - only half a megabyte addressing.
 	always @*
 	begin
-		rompg[4:2] = page[4:2];
-
-//		if( dos ) // ATM rom model
-//			rompg[1:0] = 2'b01;
-//		else
-			rompg[1:0] = page[1:0];
+		rompg[4:0] = page[4:0];
 	end
 
 
 
 
-	assign romwe_n = 1'b1;  // no rom write support for now
-	assign romoe_n = rd_n | mreq_n; // temporary
+	assign romwe_n = wr_n | mreq_n | (~romrw_en);
+	assign romoe_n = rd_n | mreq_n;
 
 	assign csrom = romnram; // positive polarity!
 
