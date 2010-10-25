@@ -83,7 +83,7 @@ module zports(
 	input  wire [ 7:0] wait_read,
 	
 	//XT
-	output reg [7:0] vcfg
+	output reg [7:0] vcfg,
 	
 	output wire        atmF7_wr_fclk, // used in atm_pager.v
 	output reg  [ 2:0] atm_scr_mode, // RG0..RG2 in docs
@@ -211,10 +211,10 @@ module zports(
 			
 		    ( (loa==ATMF7)&&shadow ) || ( (loa==ATM77)&&shadow ) ||
 	
-		    ( loa==ZXEVBF ) || ( loa==COMPORT )
+		    ( loa==ZXEVBF ) || ( loa==COMPORT ) ||
 
 		    ( (loa==SD0)&&(!shadow) ) || ( (loa==SD1)&&(!shadow) ) || ( (loa==SD2)&&(!shadow) ) || ( (loa==SD3)&&(!shadow) ) ||
-		    (loa==CVX1) || (loa==CVX2) || 
+		    (loa==CVX1) || (loa==CVX2)
 
 		  )
 
