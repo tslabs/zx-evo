@@ -94,6 +94,15 @@
 /** RS232 TXD direction register. */
 #define RS232TXD_DDR  DDRD
 
+/** Tape in pin number. */
+#define TAPEIN PD4
+/** Tape port register. */
+#define TAPEIN_PORT PORTD
+/** Tape pins register. */
+#define TAPEIN_PIN  PIND
+/** Tape direction register. */
+#define TAPEIN_DDR  DDRD
+
 /** nSPICS fpga pin number. */
 #define nSPICS      PB0
 /** nSPICS fpga port register. */

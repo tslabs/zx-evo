@@ -2,6 +2,8 @@
 //
 // MUXes mouse and kbd data in two single databusses for zports
 
+`include "../include/tune.v"
+
 module zkbdmus(
 
 	input  wire        fclk,
@@ -33,6 +35,17 @@ module zkbdmus(
 	reg [4:0] kout; // wire AND
 
 
+`ifdef SIMULATE
+	initial
+	begin
+//		force kbd_data = 5'b11111;
+		force mus_data = 8'hFF;
+		force kj_data  = 5'b00000;
+
+		kbd = 40'd0;
+	end
+`endif
+
 
 	// store data from slavespi
 	//
@@ -57,14 +70,14 @@ module zkbdmus(
 
 	// make keys
 	//
-	assign keys[0][4:0] = { kbd[00],kbd[08],kbd[16],kbd[24],kbd[32] };
-	assign keys[1][4:0] = { kbd[01],kbd[09],kbd[17],kbd[25],kbd[33] };
-	assign keys[2][4:0] = { kbd[02],kbd[10],kbd[18],kbd[26],kbd[34] };
-	assign keys[3][4:0] = { kbd[03],kbd[11],kbd[19],kbd[27],kbd[35] };
-	assign keys[4][4:0] = { kbd[04],kbd[12],kbd[20],kbd[28],kbd[36] };
-	assign keys[5][4:0] = { kbd[05],kbd[13],kbd[21],kbd[29],kbd[37] };
-	assign keys[6][4:0] = { kbd[06],kbd[14],kbd[22],kbd[30],kbd[38] };
-	assign keys[7][4:0] = { kbd[07],kbd[15],kbd[23],kbd[31],kbd[39] };
+	assign keys[0]={kbd[00],kbd[08],kbd[16],kbd[24],kbd[32]};// v  c  x  z  CS
+	assign keys[1]={kbd[01],kbd[09],kbd[17],kbd[25],kbd[33]};// g  f  d  s  a
+	assign keys[2]={kbd[02],kbd[10],kbd[18],kbd[26],kbd[34]};// t  r  e  w  q
+	assign keys[3]={kbd[03],kbd[11],kbd[19],kbd[27],kbd[35]};// 5  4  3  2  1
+	assign keys[4]={kbd[04],kbd[12],kbd[20],kbd[28],kbd[36]};// 6  7  8  9  0
+	assign keys[5]={kbd[05],kbd[13],kbd[21],kbd[29],kbd[37]};// y  u  i  o  p 
+	assign keys[6]={kbd[06],kbd[14],kbd[22],kbd[30],kbd[38]};// h  j  k  l  EN
+	assign keys[7]={kbd[07],kbd[15],kbd[23],kbd[31],kbd[39]};// b  n  m  SS SP
 	//
 	always @*
 	begin

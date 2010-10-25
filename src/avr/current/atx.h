@@ -19,9 +19,7 @@ void wait_for_atx_power(void);
 
 /**
  * Check for atx power off switch.
- * @return 0 - if atx power off
- *         >0 - if atx power on
  */
-UBYTE atx_power_task(void);
+void atx_power_task(void);
 
 #endif //__ATX_H__

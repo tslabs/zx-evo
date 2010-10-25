@@ -35,14 +35,18 @@ HEX_EEPROM_FLAGS += --change-section-lma .eeprom=0 --no-change-warnings
 
 
 ## Objects that must be built in order to link
-OBJECTS = zx.o interrupts.o main.o ps2.o spi.o depacker_dirty.o rs232.o rtc.o atx.o joystick.o version.o
+OBJECTS = zx.o interrupts.o main.o ps2.o spi.o depacker_dirty.o rs232.o rtc.o atx.o joystick.o version.o tape.o kbmap.o
 
 ## Objects explicitly added by the user
 #LINKONLYOBJECTS = fpga.o
 FPGACORE = top.o
 
 ## Build
-all: $(TARGET) core.hex core.eep core.lss size zxevo_fw.bin
+all: $(TARGET) core.hex core.eep core.lss size zxevo_beta.bin
+	mv zxevo_beta.bin zxevo_fw.bin
+
+release: $(TARGET) core.hex core.eep core.lss size zxevo_release.bin
+	mv zxevo_release.bin zxevo_fw.bin
 
 ## Compile
 zx.o: ../zx.c ../zx.h
@@ -78,6 +82,12 @@ joystick.o: ../joystick.c ../joystick.h
 version.o: ../version.c ../version.h
 	$(CC) $(INCLUDES) $(CFLAGS) -c  $<
 
+tape.o: ../tape.c ../tape.h
+	$(CC) $(INCLUDES) $(CFLAGS) -c  $<
+
+kbmap.o: ../kbmap.c ../kbmap.h
+	$(CC) $(INCLUDES) $(CFLAGS) -c  $<
+
 ##Link
 $(TARGET): $(OBJECTS) $(FPGACORE)
 	 $(CC) $(LDFLAGS) $(OBJECTS) $(FPGACORE) $(LIBDIRS) $(LIBS) -o $(TARGET)
@@ -102,13 +112,16 @@ size: ${TARGET}
 	@echo
 	@avr-size -C --mcu=${MCU} ${TARGET}
 
-zxevo_fw.bin: core.hex core.eep
-	../../../tools/make_fw/make_fw core.hex core.eep version.txt
+zxevo_beta.bin: core.hex core.eep
+	../../../tools/make_fw/make_fw core.hex core.eep zxevo_beta.bin version.txt
+
+zxevo_release.bin: core.hex core.eep
+	../../../tools/make_fw/make_fw core.hex core.eep zxevo_release.bin version.txt o
 
 ## Clean target
 .PHONY: clean
 clean:
-	-rm -rf $(OBJECTS) $(FPGACORE) core.* dep/* top.* ZXEVO_FW.BIN
+	-rm -rf $(OBJECTS) $(FPGACORE) core.* dep/* top.* zxevo_*.bin
 
 ## program chip
 pgm: core.hex
@@ -118,4 +131,3 @@ pgm: core.hex
 
 ## Other dependencies
 -include $(shell mkdir dep 2>/dev/null) $(wildcard dep/*)
-

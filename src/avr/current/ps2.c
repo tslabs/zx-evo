@@ -279,8 +279,8 @@ void ps2keyboard_parse(UBYTE recbyte)
 
 	if( !was_release )
 	{
-                last_scancode = recbyte;
-                last_scancode_E0 = was_E0;
+		last_scancode = recbyte;
+		last_scancode_E0 = was_E0;
 	}
 
 	if( (recbyte==0x12) && was_E0 ) // skip E0 12
@@ -528,4 +528,3 @@ void ps2mouse_task(void)
 
 	ps2mouse_release_clk();
 }
-

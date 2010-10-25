@@ -27,7 +27,7 @@ module zint(
 		intctr = 7'b0100000;
 	//	int_n = 1'b1;
 
-		force int_n = 1'b1;
+	//	force int_n = 1'b1;
 	end
 `endif
 
