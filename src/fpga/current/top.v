@@ -488,7 +488,7 @@ module top(
 	wire [5:0] spixel;
 	wire spx_en;
 	
-	sprites sprites	( .clk(fclk), .spr_en(vcfg[6]), .hblank(hblank), .vblank(vblank),
+	sprites sprites( .clk(fclk), .spr_en(vcfg[6]), .hblank(hblank), .vblank(vblank),
 			.cend(cend), .pre_cend(pre_cend),
 			.line_start(line_start),
 			.s_reload(s_reload), .pre_vline(pre_vline),
@@ -496,11 +496,11 @@ module top(
 
 
 	videoout vidia( .clk(fclk), .pixel(pixel),.border(border),
-			.spixel(spixel), .spx_en(spx_en)
-	                .hblank(hblank), .vblank(vblank), .hpix(hpix), .vpix(vpix), .hsync(hsync), .vsync(vsync),
-	                .vred(vred), .vgrn(vgrn), .vga_hsync(vga_hsync), .vblu(vblu),
-	                .vhsync(vhsync), .vvsync(vvsync), .vcsync(vcsync), .hsync_start(hsync_start),
-	                .scanin_start(scanin_start), .scanout_start(scanout_start), .cfg_vga_on(cfg_vga_on) );
+			.spixel(spixel), .spx_en(spx_en),
+	        .hblank(hblank), .vblank(vblank), .hpix(hpix), .vpix(vpix), .hsync(hsync), .vsync(vsync),
+	        .vred(vred), .vgrn(vgrn), .vga_hsync(vga_hsync), .vblu(vblu),
+	        .vhsync(vhsync), .vvsync(vvsync), .vcsync(vcsync), .hsync_start(hsync_start),
+	        .scanin_start(scanin_start), .scanout_start(scanout_start), .cfg_vga_on(cfg_vga_on) );
 
 
 
@@ -563,7 +563,8 @@ module top(
 	              .wait_start_comport (wait_start_comport),
 	              .wait_rnw(wait_rnw),
 	              .wait_write(wait_write),
-	              .wait_read(wait_read)
+	              .wait_read(wait_read),
+
 	               .atmF7_wr_fclk(atmF7_wr_fclk),
 	               .atm_scr_mode(),
 	               .atm_turbo   (),

@@ -71,13 +71,6 @@ module zclock(
 	end
 `endif
 
-	// take every other pulse of pre_cend (make half pre_cend)
-	always @(posedge fclk) if( pre_cend )
-		precend_cnt <= ~precend_cnt;
-
-	assign h_precend_1 =  precend_cnt && pre_cend;
-	assign h_precend_2 = !precend_cnt && pre_cend;
-
 /*	// phase zcount to take from it proper 3.5 or 7 MHz clock
 	always @(posedge fclk)
 	begin
