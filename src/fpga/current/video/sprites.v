@@ -18,6 +18,7 @@ module sprites(
 
 	input clk, spr_en, hblank, vblank, cend, pre_cend, line_start,
 	input pre_vline, s_reload,
+	input [7:0] din,
 	
 	output reg [5:0] spixel,
 	output reg spx_en
@@ -32,7 +33,7 @@ module sprites(
 	reg [7:0] w_sf;
 	wire [6:0] r_dat0, r_dat1;
 	wire [7:0] r_sf;
-
+	
 	initial
 	begin
 //	r_adr = 9'b111111111;
@@ -72,32 +73,48 @@ module sprites(
 		end
 	end
 	
+	/*
+	//For 1/25 color boost
+	reg fld;
+	always @(posedge vblank)
+	begin
+		fld <= !fld;
+	end
+	*/
+	
 	always @(posedge clk)
 	if (!spr_en)
 
 	begin
 
 	//sline read
-		if (l_sel)
-		begin
-			spixel <= r_dat0[5:0];
-			spx_en <= r_dat0[6];
-		end
-		
-		else
-		begin
-			spixel <= r_dat1[5:0];
-			spx_en <= r_dat1[6];
-		end
+	case (l_sel)
+	0:
+	begin
+		spixel <= r_dat0[5:0];
+		spx_en <= r_dat0[6];
+	end
+	1:
+	begin
+		spixel <= r_dat1[5:0];
+		spx_en <= r_dat1[6];
+	end
+	endcase
 	
 	//sline write
 	
-	if (!l_sel)
-//		w_stb0 <= clk;
+	case (l_sel)
+	0:
+	begin
+		w_stb1 <= clk;
 		w_stb0 <= 1'b0;
-	else
-//		w_stb1 <= clk;
+	end
+	1:
+	begin
+		w_stb0 <= clk;
 		w_stb1 <= 1'b0;
+	end
+	endcase
 
 	if (cend)
 	begin
@@ -127,11 +144,11 @@ module sprites(
 //	else spx_en <= 1'b0;
 
 
-sline0 sline0(	.wraddress(9'd52), .data(7'b1110000), .wren(1'b0),
+sline0 sline0(	.wraddress(w_adr), .data(din), .wren(w_stb0),
 				.rdaddress(r_adr), .q(r_dat0)
 			);
 
-sline1 sline1(	.wraddress(9'd0), .data(7'b1001100), .wren(1'b0),
+sline1 sline1(	.wraddress(w_adr), .data(din), .wren(w_stb1),
 				.rdaddress(r_adr), .q(r_dat1)
 			);
 			
