@@ -70,11 +70,12 @@ module sprites(
 			spixel <= r_dat0[5:0];
 			spx_en <= r_dat0[6];
 		end
+		
 		else
 		begin
 			spixel <= r_dat1[5:0];
 			spx_en <= r_dat1[6];
-	end
+		end
 	
 	//sline write
 	
@@ -111,60 +112,12 @@ module sprites(
 //	else spx_en <= 1'b0;
 
 
-sline0 sline0(	.clk(clk), 
-				.w_adr(9'd52), .w_dat(7'b1110000), .w_stb(w_stb0),
-				.r_adr(r_adr), .r_dat(r_dat0)
+sline0 sline0(	.wraddress(9'd52), .data(7'b1110000), .wren(w_stb0),
+				.rdaddress(r_adr), .q(r_dat0)
 			);
 
-sline1 sline1(	.clk(clk), 
-				.w_adr(9'd0), .w_dat(7'b1001100), .w_stb(w_stb1),
-				.r_adr(r_adr), .r_dat(r_dat1)
+sline1 sline1(	.wraddress(9'd0), .data(7'b1001100), .wren(w_stb1),
+				.rdaddress(r_adr), .q(r_dat1)
 			);
-		
+			
 endmodule
-
-
-module sline0(
-
-	input  wire        clk,
-	input  wire w_sel, w_stb,
-	input  wire [8:0] w_adr,
-	input  wire [6:0] w_dat,
-	input  wire [8:0] r_adr,
-	output reg  [6:0] r_dat
-);
-	reg [6:0] mem [0:359];
-
-	always @(posedge clk)
-	begin
-	if (w_stb)
-		begin
-			mem[w_adr] <= w_dat;
-		end
-			r_dat <= mem[r_adr];
-	end
-
-	endmodule
-
-	
-module sline1(
-
-	input  wire        clk,
-	input  wire w_sel, w_stb,
-	input  wire [8:0] w_adr,
-	input  wire [6:0] w_dat,
-	input  wire [8:0] r_adr,
-	output reg  [6:0] r_dat
-);
-	reg [6:0] mem [0:359];
-
-	always @(posedge clk)
-	begin
-	if (w_stb)
-		begin
-			mem[w_adr] <= w_dat;
-		end
-			r_dat <= mem[r_adr];
-	end
-
-	endmodule
