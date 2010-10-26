@@ -2,16 +2,16 @@
 
 // PentEvo project (c) NedoPC 2008-2009
 //
-//Sprite Processor
+// Sprite Processor
 //
-//Written by TS-Labs inc.
+// Written by TS-Labs inc.
 //
 //
-//TV Line Cycles - 448:
-//Visible Area  - 360 * 288 pixels:
-//52 - border
-//256 - pixels
-//52 - border
+// TV Line Cycles - 448:
+// Visible Area  - 360 * 288 pixels:
+// 52 - border
+// 256 - pixels
+// 52 - border
 
 
 module sprites(
@@ -26,14 +26,27 @@ module sprites(
 
 	reg [8:0] vline;
 	reg [8:0] r_adr, w_adr;
-	reg l_sel, w_stb0, w_stb1;
+	reg [7:0] r_adrsf, w_adrsf;
+	reg l_sel, w_stb0, w_stb1, w_stbsf;
 	reg [6:0] w_dat0, w_dat1;
+	reg [7:0] w_sf;
 	wire [6:0] r_dat0, r_dat1;
+	wire [7:0] r_sf;
 
 	initial
 	begin
 //	r_adr = 9'b111111111;
 	end
+	
+/*
+	initial 
+	begin 
+		for (k = 0; k < 359 ; k = k + 1) 
+		begin 
+		mem[k] = 8'h40; 
+		end 
+	end
+*/
 	
 	//hcount
 	always @(posedge clk, posedge line_start)
@@ -80,9 +93,11 @@ module sprites(
 	//sline write
 	
 	if (!l_sel)
-		w_stb0 <= clk;
+//		w_stb0 <= clk;
+		w_stb0 <= 1'b0;
 	else
-		w_stb1 <= clk;
+//		w_stb1 <= clk;
+		w_stb1 <= 1'b0;
 
 	if (cend)
 	begin
@@ -112,12 +127,16 @@ module sprites(
 //	else spx_en <= 1'b0;
 
 
-sline0 sline0(	.wraddress(9'd52), .data(7'b1110000), .wren(w_stb0),
+sline0 sline0(	.wraddress(9'd52), .data(7'b1110000), .wren(1'b0),
 				.rdaddress(r_adr), .q(r_dat0)
 			);
 
-sline1 sline1(	.wraddress(9'd0), .data(7'b1001100), .wren(w_stb1),
+sline1 sline1(	.wraddress(9'd0), .data(7'b1001100), .wren(1'b0),
 				.rdaddress(r_adr), .q(r_dat1)
+			);
+			
+sfile sfile(	.wraddress(8'd0), .data(8'b1001100), .wren(1'b0),
+				.rdaddress(8'd0), .q(r_sf)
 			);
 			
 endmodule
