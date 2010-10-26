@@ -242,10 +242,6 @@ module top(
 
 	assign ay_clk = ayclk_gen[3];
 
-
-
-
-
 	// fix ATM2-style ROM addressing for PENT-like ROM layout.
 	// this causes compications when writing to the flashROM from Z80
 	// and need to split and re-build old ATM romfiles before burning in
@@ -346,6 +342,8 @@ module top(
 	           .cpm_n(cpm_n),
 	           .dos(dos)
 	         );
+	
+	
 	///////////////////////////
 	// Z80 memory controller //
 	///////////////////////////
@@ -491,6 +489,7 @@ module top(
 	sprites sprites( .clk(fclk), .spr_en(vcfg[6]), .hblank(hblank), .vblank(vblank),
 			.cend(cend), .pre_cend(pre_cend),
 			.line_start(line_start),
+			.din(d),
 			.s_reload(s_reload), .pre_vline(pre_vline),
 			.spixel(spixel), .spx_en(spx_en) );
 
