@@ -38,6 +38,7 @@ module pram (
                 lpm_ram_dp_component.lpm_width = 6,
                 lpm_ram_dp_component.lpm_widthad = 8,
                 lpm_ram_dp_component.lpm_numwords = 256,
+                lpm_ram_dp_component.lpm_file = "spram.mif",
                 lpm_ram_dp_component.lpm_wraddress_control = "UNREGISTERED",
                 lpm_ram_dp_component.rden_used = "FALSE",
                 lpm_ram_dp_component.use_eab = "ON";

@@ -33,6 +33,7 @@ module sline0 (
                 lpm_ram_dp_component.intended_device_family = "ACEX1K",
                 lpm_ram_dp_component.lpm_indata = "UNREGISTERED",
                 lpm_ram_dp_component.lpm_outdata = "UNREGISTERED",
+//                lpm_ram_dp_component.lpm_file = "SLINE.MIF",
                 lpm_ram_dp_component.lpm_rdaddress_control = "UNREGISTERED",
                 lpm_ram_dp_component.lpm_type = "LPM_RAM_DP",
                 lpm_ram_dp_component.lpm_width = 7,
@@ -81,6 +82,7 @@ module sline1 (
                 lpm_ram_dp_component.lpm_width = 7,
                 lpm_ram_dp_component.lpm_widthad = 9,
                 lpm_ram_dp_component.lpm_numwords = 360,
+                lpm_ram_dp_component.lpm_file = "sline.mif",
                 lpm_ram_dp_component.lpm_wraddress_control = "UNREGISTERED",
                 lpm_ram_dp_component.rden_used = "FALSE",
                 lpm_ram_dp_component.use_eab = "ON";
