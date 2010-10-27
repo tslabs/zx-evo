@@ -486,14 +486,36 @@ module top(
 	wire [5:0] spixel;
 	wire spx_en;
 	
-	sprites sprites( .clk(fclk), .spr_en(vcfg[6]), .hblank(hblank), .vblank(vblank),
+sprites sprites( .clk(fclk), .spr_en(vcfg[6]), .hblank(hblank), .vblank(vblank),
 			.cend(cend), .pre_cend(pre_cend),
 			.line_start(line_start),
 			.din(d),
 			.s_reload(s_reload), .pre_vline(pre_vline),
-			.spixel(spixel), .spx_en(spx_en) );
+			.spixel(spixel), .spx_en(spx_en),
+			.sf_ra(sf_ra), .sf_rd(sf_rd), 
+			.sp_ra(sp_ra), .sp_rd(sp_rd)
+			);
 
 
+	wire [7:0] sf_ra, sf_wa;
+	wire [7:0] sf_wd, sf_rd;
+	wire sf_ws;
+
+sfile sfile(	.wraddress(sf_wa), .data(sf_wd), .wren(sf_ws),
+				.rdaddress(sf_ra), .q(sf_rd)
+			);
+
+			
+	wire [7:0] sp_ra, sp_wa;
+	wire [5:0] sp_wd, sp_rd;
+	wire sp_ws;
+
+spram spram(	.wraddress(sp_wa), .data(sp_wd), .wren(sp_ws),
+				.rdaddress(sp_ra), .q(sp_rd)
+			);
+			
+	
+			
 	videoout vidia( .clk(fclk), .pixel(pixel),.border(border),
 			.spixel(spixel), .spx_en(spx_en),
 	        .hblank(hblank), .vblank(vblank), .hpix(hpix), .vpix(vpix), .hsync(hsync), .vsync(vsync),
@@ -549,7 +571,9 @@ module top(
 	              .ide_a(ide_a), .ide_cs0_n(ide_cs0_n), .ide_cs1_n(ide_cs1_n),
 	              .ide_wr_n(ide_wr_n), .ide_rd_n(ide_rd_n),
 
-		      .vcfg(vcfg),
+				.vcfg(vcfg),
+				.sf_wa(sf_wa), .sf_wd(sf_wd),  .sf_ws(sf_ws), 
+				.sp_wa(sp_wa), .sp_wd(sp_wd),  .sp_ws(sp_ws), 
 				  
 	              .keys_in(kbd_port_data),
 	              .mus_in(mus_port_data),
@@ -557,7 +581,7 @@ module top(
 
 	               .tape_read(tape_read),
 	              .gluclock_addr(gluclock_addr),
-		      .comport_addr (comport_addr),
+				.comport_addr (comport_addr),
 	              .wait_start_gluclock(wait_start_gluclock),
 	              .wait_start_comport (wait_start_comport),
 	              .wait_rnw(wait_rnw),

@@ -13,7 +13,7 @@ module sline0 (
         input   [8:0]  rdaddress;
         input   [8:0]  wraddress;
         input     wren;
-        output  [6:0]  q;
+        output [6:0]  q;
 
         wire [7:0] sub_wire0;
         wire [7:0] q = sub_wire0[7:0];
