@@ -95,7 +95,7 @@ module fetch(
 		wcnt = 4'd0;
 		fcnt = 5'd0;
 		pixnumber = 4'd0;
-		flashctr = 6'd0;
+		flashctr = 5'd0;
 	end
 
 

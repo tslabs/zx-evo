@@ -84,6 +84,10 @@ module zports(
 	
 	//XT
 	output reg [7:0] vcfg,
+	output reg [7:0] sf_wa, sp_wa,
+	output reg [7:0] sf_wd,
+	output reg [5:0] sp_wd,
+	output reg sf_ws, sp_ws,
 	
 	output wire        atmF7_wr_fclk, // used in atm_pager.v
 	output reg  [ 2:0] atm_scr_mode, // RG0..RG2 in docs
@@ -148,8 +152,19 @@ module zports(
 
 
 	//Port XT Regs
-	localparam xborder  = 8'h00;
-	localparam vconfig  = 8'h08;
+	parameter XBorder  = 8'h00;
+	parameter SysConfig  = 8'h01;
+	parameter ROMConfig  = 8'h02;
+	parameter VPage  = 8'h03;
+	parameter Page00  = 8'h04;
+	parameter Page01  = 8'h05;
+	parameter Page10  = 8'h06;
+	parameter Page11  = 8'h07;
+	parameter VConfig  = 8'h08;
+	parameter PalAddr  = 8'h09;
+	parameter PalData  = 8'h0a;
+	parameter SFAddr  = 8'h0b;
+	parameter SFData  = 8'h0c;
 
 	reg xt_en, xt_cl;
 	localparam xt_msb = 8;
@@ -283,7 +298,7 @@ module zports(
 		XTRD:
 		begin
 		case (xt_addr)
-		xborder:
+		XBorder:
 			dout = border;
 		endcase
 		end
@@ -602,12 +617,31 @@ module zports(
 		endcase
 		
 		if	(portxt_wr && xt_en && xt_cl)
-		case (xt_addr)								//XT Regs are written here !!!
-		xborder:
+	case (xt_addr)								//XT Regs are written here !!!
+	XBorder:
 			border <= din[5:0];
-		vconfig:
+	VConfig:
 			vcfg <= din[7:0];
-		endcase
+	PalAddr:
+			sp_wa <= din[7:0];
+	PalData:
+		begin
+			sp_wd <= din[5:0];
+			sp_ws <= 1'b1;
+		end
+	SFAddr:
+			sf_wa <= din[7:0];
+	SFData:
+		begin
+			sf_wd <= din[7:0];
+			sf_ws <= 1'b1;
+		end
+	default:
+		begin
+			sf_ws <= 1'b0;			
+			sp_ws <= 1'b0;			
+		end
+	endcase
 		end
 
 	end
