@@ -483,20 +483,6 @@ module top(
 	              .video_strobe(video_strobe), .video_next(video_next), .go(go), .bw(bw), .pixel(pixel) );
 
 
-	wire [5:0] spixel;
-	wire spx_en;
-	
-sprites sprites( .clk(fclk), .spr_en(vcfg[6]), .hblank(hblank), .vblank(vblank),
-			.cend(cend), .pre_cend(pre_cend),
-			.line_start(line_start),
-			.din(d),
-			.s_reload(s_reload), .pre_vline(pre_vline),
-			.spixel(spixel), .spx_en(spx_en),
-			.sf_ra(sf_ra), .sf_rd(sf_rd), 
-			.sp_ra(sp_ra), .sp_rd(sp_rd)
-			);
-
-
 	wire [7:0] sf_ra, sf_wa;
 	wire [7:0] sf_wd, sf_rd;
 	wire sf_ws;
@@ -515,6 +501,23 @@ spram spram(	.wraddress(sp_wa), .data(sp_wd), .wren(sp_ws),
 			);
 			
 	
+	wire [5:0] spixel;
+	wire [15:0] sp_addr;
+	wire [15:0] sp_dat;
+	wire spx_en, sp_mrq, sp_drdy;
+	
+sprites sprites( .clk(fclk), .spr_en(vcfg[6]), .hblank(hblank), .vblank(vblank),
+			.cend(cend), .pre_cend(pre_cend),
+			.line_start(line_start),
+			.din(d),
+			.pre_vline(pre_vline),
+			.spixel(spixel), .spx_en(spx_en),
+			.sf_ra(sf_ra), .sf_rd(sf_rd), 
+			.sp_ra(sp_ra), .sp_rd(sp_rd),
+			.sp_addr(sp_addr), .sp_mrq(sp_mrq), .sp_drdy(1'b1), .sp_dat({8'b0, d})
+			);
+
+
 			
 	videoout vidia( .clk(fclk), .pixel(pixel),.border(border),
 			.spixel(spixel), .spx_en(spx_en),
