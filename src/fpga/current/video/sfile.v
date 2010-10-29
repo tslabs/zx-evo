@@ -2,92 +2,136 @@
 `timescale 1 ps / 1 ps
 // synopsys translate_on
 
+// SFILE: Sprites description file
+// 2048 bit = Write: 256x8, Read: 32x64
+
 module sfile (
-        data,
-        wraddress,
-        wren,
-        rdaddress,
-        q);
+	input  wire clk,
+	input  wire [7:0] wa,
+	input  wire [7:0] wd,
+	input  wire we,
+	input  wire [4:0] ra,
+	output reg [63:0] rd
+);
 
-        input   [7:0]  data;
-        input   [7:0]  rdaddress;
-        input   [7:0]  wraddress;
-        input     wren;
-        output  [7:0]  q;
-
-        wire [7:0] sub_wire0;
-        wire [7:0] q = sub_wire0[7:0];
-
-        lpm_ram_dp      lpm_ram_dp_component (
-                                .wren (wren),
-                                .data (data),
-                                .rdaddress (rdaddress),
-                                .wraddress (wraddress),
-                                .q (sub_wire0),
-                                .rdclken (1'b1),
-                                .rdclock (1'b1),
-                                .rden (1'b1),
-                                .wrclken (1'b1),
-                                .wrclock (1'b1));
-        defparam
-                lpm_ram_dp_component.intended_device_family = "ACEX1K",
-                lpm_ram_dp_component.lpm_indata = "UNREGISTERED",
-                lpm_ram_dp_component.lpm_outdata = "UNREGISTERED",
-                lpm_ram_dp_component.lpm_rdaddress_control = "UNREGISTERED",
-                lpm_ram_dp_component.lpm_type = "LPM_RAM_DP",
-                lpm_ram_dp_component.lpm_width = 8,
-                lpm_ram_dp_component.lpm_widthad = 8,
-                lpm_ram_dp_component.lpm_numwords = 256,
-                lpm_ram_dp_component.lpm_file = "sfile.mif",
-                lpm_ram_dp_component.lpm_wraddress_control = "UNREGISTERED",
-                lpm_ram_dp_component.rden_used = "FALSE",
-                lpm_ram_dp_component.use_eab = "ON";
-
-
+sfile0 sfile0 (.clk(clk),.wa(wa[4:0]), .wd(wd), .we(we && (wa[7:5] == 3'd0)), .ra(ra), .rd(rd[7:0]));
+sfile1 sfile1 (.clk(clk),.wa(wa[4:0]), .wd(wd), .we(we && (wa[7:5] == 3'd1)), .ra(ra), .rd(rd[15:8]));
+sfile2 sfile2 (.clk(clk),.wa(wa[4:0]), .wd(wd), .we(we && (wa[7:5] == 3'd2)), .ra(ra), .rd(rd[23:16]));
+sfile3 sfile3 (.clk(clk),.wa(wa[4:0]), .wd(wd), .we(we && (wa[7:5] == 3'd3)), .ra(ra), .rd(rd[31:24]));
+sfile4 sfile4 (.clk(clk),.wa(wa[4:0]), .wd(wd), .we(we && (wa[7:5] == 3'd4)), .ra(ra), .rd(rd[39:32]));
+sfile5 sfile5 (.clk(clk),.wa(wa[4:0]), .wd(wd), .we(we && (wa[7:5] == 3'd5)), .ra(ra), .rd(rd[47:40]));
+sfile6 sfile6 (.clk(clk),.wa(wa[4:0]), .wd(wd), .we(we && (wa[7:5] == 3'd6)), .ra(ra), .rd(rd[55:48]));
+sfile7 sfile7 (.clk(clk),.wa(wa[4:0]), .wd(wd), .we(we && (wa[7:5] == 3'd7)), .ra(ra), .rd(rd[63:56]));
 endmodule
 
-//counters for sprite address
-//32 x 14 bit (sprite can occupy max 128 words x 128 lines = 16kwords)
-module sacnt (
-        data,
-        wraddress,
-        wren,
-        rdaddress,
-        q);
 
-        input   [13:0]  data;
-        input   [4:0]  rdaddress;
-        input   [4:0]  wraddress;
-        input     wren;
-        output  [13:0]  q;
+module sfile0(	input wire clk, we,
+				input wire [7:0] wa, wd,
+				input wire [4:0] ra,
+				output reg [7:0] rd );
 
-        wire [13:0] sub_wire0;
-        wire [13:0] q = sub_wire0[13:0];
-
-        lpm_ram_dp      lpm_ram_dp_component (
-                                .wren (wren),
-                                .data (data),
-                                .rdaddress (rdaddress),
-                                .wraddress (wraddress),
-                                .q (sub_wire0),
-                                .rdclken (1'b1),
-                                .rdclock (1'b1),
-                                .rden (1'b1),
-                                .wrclken (1'b1),
-                                .wrclock (1'b1));
-        defparam
-                lpm_ram_dp_component.intended_device_family = "ACEX1K",
-                lpm_ram_dp_component.lpm_indata = "UNREGISTERED",
-                lpm_ram_dp_component.lpm_outdata = "UNREGISTERED",
-                lpm_ram_dp_component.lpm_rdaddress_control = "UNREGISTERED",
-                lpm_ram_dp_component.lpm_type = "LPM_RAM_DP",
-                lpm_ram_dp_component.lpm_width = 14,
-                lpm_ram_dp_component.lpm_widthad = 5,
-                lpm_ram_dp_component.lpm_numwords = 32,
-                lpm_ram_dp_component.lpm_file = "sfile.mif",
-                lpm_ram_dp_component.lpm_wraddress_control = "UNREGISTERED",
-                lpm_ram_dp_component.rden_used = "FALSE",
-                lpm_ram_dp_component.use_eab = "ON";
+	reg [7:0] mem [0:31];
+	always @(posedge clk)
+	begin
+		if(we) mem [wa] <= wd;
+		rd <= mem[ra];
+	end
+endmodule
 
 
+module sfile1(	input wire clk, we,
+				input wire [7:0] wa, wd,
+				input wire [4:0] ra,
+				output reg [7:0] rd );
+
+	reg [7:0] mem [0:31];
+	always @(posedge clk)
+	begin
+		if(we) mem [wa] <= wd;
+		rd <= mem[ra];
+	end
+endmodule
+
+
+module sfile2(	input wire clk, we,
+				input wire [7:0] wa, wd,
+				input wire [4:0] ra,
+				output reg [7:0] rd );
+
+	reg [7:0] mem [0:31];
+	always @(posedge clk)
+	begin
+		if(we) mem [wa] <= wd;
+		rd <= mem[ra];
+	end
+endmodule
+
+
+module sfile3(	input wire clk, we,
+				input wire [7:0] wa, wd,
+				input wire [4:0] ra,
+				output reg [7:0] rd );
+
+	reg [7:0] mem [0:31];
+	always @(posedge clk)
+	begin
+		if(we) mem [wa] <= wd;
+		rd <= mem[ra];
+	end
+endmodule
+
+
+module sfile4(	input wire clk, we,
+				input wire [7:0] wa, wd,
+				input wire [4:0] ra,
+				output reg [7:0] rd );
+
+	reg [7:0] mem [0:31];
+	always @(posedge clk)
+	begin
+		if(we) mem [wa] <= wd;
+		rd <= mem[ra];
+	end
+endmodule
+
+
+module sfile5(	input wire clk, we,
+				input wire [7:0] wa, wd,
+				input wire [4:0] ra,
+				output reg [7:0] rd );
+
+	reg [7:0] mem [0:31];
+	always @(posedge clk)
+	begin
+		if(we) mem [wa] <= wd;
+		rd <= mem[ra];
+	end
+endmodule
+
+
+module sfile6(	input wire clk, we,
+				input wire [7:0] wa, wd,
+				input wire [4:0] ra,
+				output reg [7:0] rd );
+
+	reg [7:0] mem [0:31];
+	always @(posedge clk)
+	begin
+		if(we) mem [wa] <= wd;
+		rd <= mem[ra];
+	end
+endmodule
+
+
+module sfile7(	input wire clk, we,
+				input wire [7:0] wa, wd,
+				input wire [4:0] ra,
+				output reg [7:0] rd );
+
+	reg [7:0] mem [0:31];
+	always @(posedge clk)
+	begin
+		if(we) mem [wa] <= wd;
+		rd <= mem[ra];
+	end
 endmodule
