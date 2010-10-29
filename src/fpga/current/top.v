@@ -506,16 +506,14 @@ spram spram(	.wraddress(sp_wa), .data(sp_wd), .wren(sp_ws),
 	wire [15:0] sp_dat;
 	wire spx_en, sp_mrq, sp_drdy;
 	
-sprites sprites( .clk(fclk), .spr_en(vcfg[6]), .hblank(hblank), .vblank(vblank),
-			.sync_px(pre_cend),
+sprites sprites( .clk(fclk), .spr_en(vcfg[6]),
 			.line_start(line_start),
-			.din(d),
 			.pre_vline(pre_vline),
 			.spixel(spixel), .spx_en(spx_en),
 			.sf_ra(sf_ra), .sf_rd(sf_rd), 
 			.sp_ra(sp_ra), .sp_rd(sp_rd),
 			.test(test), .sp_mc(sp_mc),
-			.sp_addr(sp_addr), .sp_mrq(sp_mrq), .sp_drdy(1'b1), .sp_dat({d, d})
+			.sp_addr(sp_addr), .sp_mrq(sp_mrq), .sp_drdy(1'b1), .sp_dat(16'h1234)
 			);
 
 
