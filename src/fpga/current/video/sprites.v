@@ -115,7 +115,7 @@ module sprites(
 	reg [13:0] sa_offs; //offset from sprite address, words
 	reg [8:0] sl_wa;
 	reg [6:0] sl_wd;
-	reg sl_ws;
+	reg sl_ws, sl_we;
 
 // sfile
 	reg sp_act;
@@ -128,7 +128,6 @@ module sprites(
 
 // *** DIE MASCHINE *** !!!
 	
-	reg sl_we;
 	always @*
 	begin
 		if (!clk)
@@ -151,7 +150,7 @@ module sprites(
 		sp_num <= 5'd0;
 		sa_ws <= 1'b0;
 		sp_mrq <= 1'b0;
-		sl_ws <= 1'b0;
+		sl_we <= 1'b0;
 		sp_mc <= 6'd1;
 	end
 
@@ -256,70 +255,44 @@ module sprites(
 	end
 
 	14: //wait for data from DRAM
-		//set addr for SPRAM of pixel-1
+		//write pixel-1
 	if (sp_drdy)
 	begin
-		sp_ra[3:0] <= sp_dat[15:12];
 		sp_mrq <= 1'b0;
+ 		sp_ra[3:0] <= sp_dat[15:12];
+		sl_wd = {!(sp_dat[15:12] == 4'b0), sp_rd[5:0]};
+		sl_we <= 1'b1;
 		sp_mc <= 6'd16;
 	end
 
-	16: //write pixel-1
+	16: //write pixel-2
 	begin
-		sl_wd <= {!(sp_dat[15:12] == 4'b0), sp_rd[5:0]};
-		sl_ws <= 1'b1;
-		sp_mc <= 6'd17;
-	end
-
-	17:	//set addr for SPRAM of pixel-2, inc sl_wa
-	begin
-		sl_ws <= 1'b0;
-		sp_ra[3:0] <= sp_dat[11:8];
 		sl_wa <= sl_wa + 9'b1;
+		sp_ra[3:0] <= sp_dat[11:8];
+		sl_wd = {!(sp_dat[11:8] == 4'b0), sp_rd[5:0]};
 		sp_mc <= 6'd18;
 	end
 
-	18: //write pixel-2
+	18: //write pixel-3
 	begin
-		sl_wd <= {!(sp_dat[11:8] == 4'b0), sp_rd[5:0]};
-		sl_ws <= 1'b1;
-		sp_mc <= 6'd19;
-	end
-
-	19:	//set addr for SPRAM of pixel-3, inc sl_wa
-	begin
-		sl_ws <= 1'b0;
-		sp_ra[3:0] <= sp_dat[7:4];
 		sl_wa <= sl_wa + 9'b1;
+		sp_ra[3:0] <= sp_dat[7:4];
+		sl_wd = {!(sp_dat[7:4] == 4'b0), sp_rd[5:0]};
 		sp_mc <= 6'd20;
 	end
 
-	20: //write pixel-3
+	20: //write pixel-4
 	begin
-		sl_wd <= {!(sp_dat[7:4] == 4'b0), sp_rd[5:0]};
-		sl_ws <= 1'b1;
+		sl_wa <= sl_wa + 9'b1;
+		sp_ra[3:0] <= sp_dat[3:0];
+		sl_wd = {!(sp_dat[3:0] == 4'b0), sp_rd[5:0]};
 		sp_mc <= 6'd21;
 	end
 
-	21:	//set addr for SPRAM of pixel-4, inc sl_wa
+	21:	//end of writes to sline, inc sa_offs, dec sp_xsz
 	begin
-		sl_ws <= 1'b0;
-		sp_ra[3:0] <= sp_dat[3:0];
 		sl_wa <= sl_wa + 9'b1;
-		sp_mc <= 6'd22;
-	end
-
-	22: //write pixel-4
-	begin
-		sl_wd <= {!(sp_dat[3:0] == 4'b0), sp_rd[5:0]};
-		sl_ws <= 1'b1;
-		sp_mc <= 6'd23;
-	end
-
-	23:	//inc sl_wa, inc sa_offs, dec sp_xsz
-	begin
-		sl_ws <= 1'b0;
-		sl_wa <= sl_wa + 9'b1;
+		sl_we <= 1'b0;
 		sa_offs <= sa_offs + 14'b1;
 		sp_xsz <= sp_xsz - 7'b1;
 		sp_mc <= 6'd24;
