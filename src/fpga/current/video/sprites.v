@@ -13,10 +13,15 @@
 // 		256 - pixels
 // 		52 - border
 
+// to do
+// 2. Code reads from DRAM
+// 3. Fix jerking while write to sfile
+// 4. Optimize SPU SM steps
+
 
 module sprites(
 
-	input clk, spr_en, hblank, vblank, cend, pre_cend, line_start, pre_vline,
+	input clk, spr_en, hblank, vblank, sync_px, line_start, pre_vline,
 	input [7:0] din,
 	
 	output reg [7:0] sf_ra, sp_ra,
@@ -28,21 +33,14 @@ module sprites(
 	output reg [20:0] sp_addr,
 	input [15:0] sp_dat,
 	output reg sp_mrq,
-	input sp_drdy
+	input sp_drdy,
+	
+	output reg test,
+	output reg [5:0] sp_mc
 	);
 
 	reg [8:0] vline;
-	reg l_sel, sl_ws;
-	
-	
-//hcount
-	always @(posedge clk, posedge line_start)
-	begin
-		if (line_start)
-			sl_ra <= 9'b0;
-		else if (pre_cend)
-			sl_ra <= sl_ra + 9'b1;
-	end
+	reg l_sel;
 	
 	
 //vcount
@@ -61,25 +59,51 @@ module sprites(
 	end
 
 	
-//read from sline
+// read/null sline
+	reg [1:0] rsst;
+	reg [8:0] sl_ra;
+	reg sl_wsn;
+	
 	always @(posedge clk)
-	if (!spr_en)
+//	if (!spr_en)
 	begin
-	case (l_sel)
-	0:
+
+	if (line_start)
 	begin
-		spixel <= sl_rd0[5:0];
-		spx_en <= sl_rd0[6];
+		sl_ra <= 9'b0;
+		sl_wsn <= 1'b0;
+		rsst <= 2'd0;
 	end
-	1:
+	else
+
+	case (rsst)
+
+0:	//read pixel, set null strobe
 	begin
-		spixel <= sl_rd1[5:0];
-		spx_en <= sl_rd1[6];
+		spixel <= !l_sel ? sl_rd0[5:0] : sl_rd1[5:0];
+		spx_en <= !l_sel ? sl_rd0[6] : sl_rd1[6];
+		sl_wsn <= 1'b1;
+		rsst <= 2'd1;
 	end
+
+1:	//reset null strobe
+	begin
+		sl_wsn <= 1'b0;
+		rsst <= 2'd2;
+	end
+
+2:	//inc sl_ra
+	begin
+		sl_ra <= sl_ra + 9'b1;
+		rsst <= 2'd3;
+	end
+
+3:	//dummy, go to step 0
+		rsst <= 2'd0;
+
 	endcase
 	end	
 
-	
 	
 // Marlezonskiy balet, part II
 // *** DIE MASCHINE *** !!!
@@ -87,8 +111,11 @@ module sprites(
 	localparam VLINES = 9'd288;
 	
 	reg [4:0] sp_num;	//number of currently processed sprite
-	reg [7:0] sp_mc;	//current state of state-machine
+//	reg [5:0] sp_mc;	//current state of state-machine
 	reg [13:0] sa_offs; //offset from sprite address, words
+	reg [8:0] sl_wa;
+	reg [6:0] sl_wd;
+	reg sl_ws;
 
 // sfile
 	reg sp_act;
@@ -100,31 +127,29 @@ module sprites(
 
 
 // Sprites processing
-	always @(posedge clk, posedge line_start)
+	always @(posedge clk)
 	if (line_start)
-		sp_mc <= 6'b0;
+		sp_mc <= 6'd0;
 	else
-	
 	begin
+
 	case (sp_mc)
 
 	0:	// SPU reset
 		//set sprite number to 0
 	begin
+		test <= 1'b1;
 		sp_num <= 5'd0;
 		sa_ws <= 1'b0;
 		sp_mrq <= 1'b0;
+		sl_ws <= 1'b0;
 		sp_mc <= 6'd1;
-		sl_ws0 <= 1'b0;
-		sl_ws1 <= 1'b0;
 	end
 
 	1:	// Begin of sprite[sp_num] processing
-		//set sa_ra, sa_wa, addr for SPReg0
+		//addr for SPReg0
 	begin
-		sa_ra <= sp_num;
-		sa_wa <= sp_num;
-		sf_ra <= {sp_num[4:0], 3'd0};
+		sf_ra <= {sp_num, 3'd0};
 		sp_mc <= 6'd2;		
 	end
 
@@ -133,7 +158,7 @@ module sprites(
 		sp_act <= sf_rd[7];
 		sp_cres <= sf_rd[6];
 		sp_ra[7:2] <= sf_rd[5:0];
-		sf_ra <= {sp_num[4:0], 3'd6};
+		sf_ra <= {sp_num, 3'd6};
 		sp_mc <= 6'd3;
 	end
 
@@ -142,20 +167,20 @@ module sprites(
 		//yes: read SPReg6, set addr for SPReg7
 	begin
 		sp_ypos[7:0] <= sf_rd[7:0];
-		sf_ra <= {sp_num[4:0], 3'd7};
+		sf_ra <= {sp_num, 3'd7};
 		sp_mc <= 6'd4;
 	end
 	else
-		//no: go to next sprite processing (step ??)
+		//no: go to next sprite processing (step 25)
 	begin
-		sp_mc <= 6'd??;
+		sp_mc <= 6'd25;
 	end
 
 	4: //read SPReg7, set addr for SPReg1
 	begin
 		sp_ypos[8] <= sf_rd[0];
 		sp_ysz[6:0] <= sf_rd[7:1];
-		sf_ra <= {sp_num[4:0], 3'd1};
+		sf_ra <= {sp_num, 3'd1};
 		sp_mc <= 6'd5;
 	end
 
@@ -164,13 +189,13 @@ module sprites(
 		//yes: read SPReg1, set addr for SPReg2
 	begin
 		sp_adr[7:0] <= sf_rd[7:0];
-		sf_ra <= {sp_num[4:0], 3'd2};
+		sf_ra <= {sp_num, 3'd2};
 		sp_mc <= 6'd6;		
 	end
 	else
-		//no: go to next sprite processing (step ??)
+		//no: go to next sprite processing (step 25)
 	begin
-		sp_mc <= 6'd??;
+		sp_mc <= 6'd25;
 	end
 
 	6: //read SPReg2, set addr for SPReg3, null sa_offs
@@ -183,14 +208,14 @@ module sprites(
 			sa_ws <= 1'b1;
 		end
 		sp_adr[15:8] <= sf_rd[7:0];
-		sf_ra <= {sp_num[4:0], 3'd3};
+		sf_ra <= {sp_num, 3'd3};
 		sp_mc <= 6'd7;
 	end
 
 	7: //read SPReg3, set addr for SPReg4, end of sa_ws
 	begin
 		sp_adr[20:16] <= sf_rd[4:0];
-		sf_ra <= {sp_num[4:0], 3'd4};
+		sf_ra <= {sp_num, 3'd4};
 		sa_ws <= 1'b0;
 		sp_mc <= 6'd8;
 	end
@@ -198,7 +223,7 @@ module sprites(
 	8: //read SPReg4, set addr for SPReg5, read sa_offs
 	begin
 		sl_wa[7:0] <= sf_rd[7:0];
-		sf_ra <= {sp_num[4:0], 3'd5};
+		sf_ra <= {sp_num, 3'd5};
 		sa_offs <= sa_rd;
 		sp_mc <= 6'd9;
 	end
@@ -207,10 +232,10 @@ module sprites(
 	begin
 		sl_wa[8] <= sf_rd[0];
 		sp_xsz[6:0] <= sf_rd[7:1];
-	if (sp_cres)
+	if (!sp_cres)
 		sp_mc <= 6'd12;
 	else
-		sp_mc <= 6'd13;
+		sp_mc <= 6'd25;
 	end
 	
 	12: // Begin of horizontal loop for 16c
@@ -226,28 +251,20 @@ module sprites(
 	if (sp_drdy)
 	begin
 		sp_ra[3:0] <= sp_dat[15:12];
+		sp_mrq <= 1'b0;
 		sp_mc <= 6'd16;
 	end
 
 	16: //write pixel-1
 	begin
-		if (l_sel)
-		begin
-			sl_wd1 <= {!(sp_dat[15:12] == 4'b0), sp_rd[5:0]};
-			sl_ws1 <= 1'b1;
-		end
-		else
-		begin
-			sl_wd0 <= {!(sp_dat[15:12] == 4'b0), sp_rd[5:0]};
-			sl_ws0 <= 1'b1;
-		end
+		sl_wd <= {!(sp_dat[15:12] == 4'b0), sp_rd[5:0]};
+		sl_ws <= 1'b1;
 		sp_mc <= 6'd17;
 	end
 
 	17:	//set addr for SPRAM of pixel-2, inc sl_wa
 	begin
-		sl_ws0 <= 1'b0;
-		sl_ws1 <= 1'b0;
+		sl_ws <= 1'b0;
 		sp_ra[3:0] <= sp_dat[11:8];
 		sl_wa <= sl_wa + 9'b1;
 		sp_mc <= 6'd18;
@@ -255,23 +272,14 @@ module sprites(
 
 	18: //write pixel-2
 	begin
-		if (l_sel)
-		begin
-			sl_wd1 <= {!(sp_dat[11:8] == 4'b0), sp_rd[5:0]};
-			sl_ws1 <= 1'b1;
-		end
-		else
-		begin
-			sl_wd0 <= {!(sp_dat[11:8] == 4'b0), sp_rd[5:0]};
-			sl_ws0 <= 1'b1;
-		end
+		sl_wd <= {!(sp_dat[11:8] == 4'b0), sp_rd[5:0]};
+		sl_ws <= 1'b1;
 		sp_mc <= 6'd19;
 	end
 
 	19:	//set addr for SPRAM of pixel-3, inc sl_wa
 	begin
-		sl_ws0 <= 1'b0;
-		sl_ws1 <= 1'b0;
+		sl_ws <= 1'b0;
 		sp_ra[3:0] <= sp_dat[7:4];
 		sl_wa <= sl_wa + 9'b1;
 		sp_mc <= 6'd20;
@@ -279,23 +287,14 @@ module sprites(
 
 	20: //write pixel-3
 	begin
-		if (l_sel)
-		begin
-			sl_wd1 <= {!(sp_dat[7:4] == 4'b0), sp_rd[5:0]};
-			sl_ws1 <= 1'b1;
-		end
-		else
-		begin
-			sl_wd0 <= {!(sp_dat[7:4] == 4'b0), sp_rd[5:0]};
-			sl_ws0 <= 1'b1;
-		end
+		sl_wd <= {!(sp_dat[7:4] == 4'b0), sp_rd[5:0]};
+		sl_ws <= 1'b1;
 		sp_mc <= 6'd21;
 	end
 
 	21:	//set addr for SPRAM of pixel-4, inc sl_wa
 	begin
-		sl_ws0 <= 1'b0;
-		sl_ws1 <= 1'b0;
+		sl_ws <= 1'b0;
 		sp_ra[3:0] <= sp_dat[3:0];
 		sl_wa <= sl_wa + 9'b1;
 		sp_mc <= 6'd22;
@@ -303,23 +302,14 @@ module sprites(
 
 	22: //write pixel-4
 	begin
-		if (l_sel)
-		begin
-			sl_wd1 <= {!(sp_dat[3:0] == 4'b0), sp_rd[5:0]};
-			sl_ws1 <= 1'b1;
-		end
-		else
-		begin
-			sl_wd0 <= {!(sp_dat[3:0] == 4'b0), sp_rd[5:0]};
-			sl_ws0 <= 1'b1;
-		end
+		sl_wd <= {!(sp_dat[3:0] == 4'b0), sp_rd[5:0]};
+		sl_ws <= 1'b1;
 		sp_mc <= 6'd23;
 	end
 
 	23:	//inc sl_wa, inc sa_offs, dec sp_xsz
 	begin
-		sl_ws0 <= 1'b0;
-		sl_ws1 <= 1'b0;
+		sl_ws <= 1'b0;
 		sl_wa <= sl_wa + 9'b1;
 		sa_offs <= sa_offs + 14'b1;
 		sp_xsz <= sp_xsz - 7'b1;
@@ -337,7 +327,7 @@ module sprites(
 			sp_mc <= 6'd25;
 		end
 		else
-		//no: go to begin of 16c loop
+		//no: go to begin of 16c loop (step 12)
 		begin
 			sp_mc <= 6'd12;
 		end
@@ -354,10 +344,13 @@ module sprites(
 	begin
 		if (sp_num == 5'b0)
 		//yes: halt
+		begin
+			test <= 1'b0;
 			sp_mc <= 6'd63;
+		end
 		else
-		//no: go to begin of sprite processing
-			sp_mc <= 6'd26;
+		//no: go to begin of sprite processing (step 1)
+			sp_mc <= 6'd1;
 	end
 
 	endcase
@@ -375,27 +368,33 @@ module sprites(
 	*/
 
 
-	reg [8:0] sl_ra, sl_wa;
-	reg [6:0] sl_wd0, sl_wd1;
 	wire [6:0] sl_rd0, sl_rd1;
+	reg sl_ws0, sl_ws1;
 
-	reg [4:0] sa_ra, sa_wa;
-	reg [13:0] sa_wd;
+	sline0 sline0(	.wraddress(l_sel ? sl_wa : sl_ra),
+					.data(l_sel ? sl_wd : 7'b0),
+					.wren(l_sel ? sl_ws : sl_wsn),
+					.rdaddress(sl_ra),
+					.q(sl_rd0)
+				);
+
+	sline1 sline1(	.wraddress(!l_sel ? sl_wa : sl_ra),
+					.data(!l_sel ? sl_wd : 7'b0),
+					.wren(!l_sel ? sl_ws : sl_wsn),
+					.rdaddress(sl_ra),
+					.q(sl_rd1)
+				);
+
+				
 	wire [13:0] sa_rd;
+	reg [13:0] sa_wd;
+	reg sa_ws;
 
-	reg sl_ws0, sl_ws1, sa_ws;
-
-	
-	sline0 sline0(	.wraddress(sl_wa), .data(din), .wren(sl_ws0),
-				.rdaddress(sl_ra), .q(sl_rd0)
-			);
-
-	sline1 sline1(	.wraddress(sl_wa), .data(din), .wren(sl_ws1),
-				.rdaddress(sl_ra), .q(sl_rd1)
-			);
-			
-	sacnt sacnt(	.wraddress(sa_wa), .data(sa_wd), .wren(sa_ws),
-				.rdaddress(sa_ra), .q(sa_rd)
-			);
+	sacnt sacnt(	.wraddress(sp_num),
+					.data(sa_wd),
+					.wren(sa_ws),
+					.rdaddress(sp_num),
+					.q(sa_rd)
+				);
 			
 endmodule
