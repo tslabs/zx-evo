@@ -13,10 +13,17 @@ module sfile (
 	input  wire [4:0] ra,
 	output reg [63:0] rd
 );
-	reg [63:0] mem [0:31];
+	reg [7:0] mem [0:255];
+	reg [15:0] rd1, rd2, rd3, rd4;
+	
 	always @(posedge clk)
 	begin
-		if(we) mem [(wa[7:3])][(wa[2:0]*8+7)-:(wa[2:0]*8)] <= wd;
-		rd <= mem[ra];
+		if(we) 
+		mem [wa] <= wd;
+		rd1 = {mem[{ra, 3'd7}], mem[{ra, 3'd6}]};
+		rd2 = {mem[{ra, 3'd5}], mem[{ra, 3'd4}]};
+		rd3 = {mem[{ra, 3'd3}], mem[{ra, 3'd2}]};
+		// rd4 = {mem[{ra, 3'd1}], mem[{ra, 3'd0}]};
+		rd = {rd1, rd2};
 	end
 endmodule
