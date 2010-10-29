@@ -42,16 +42,19 @@ module videoout(
 
 	input  wire cfg_vga_on,
 	
-	input wire vcfg
+	input wire vcfg,
+	
+	input wire [5:0] sp_mc,
+	input wire test
 );
 
 
 	wire [5:0] color, vga_color;
 
 	
-	//	assign color = (hblank | vblank) ? 6'd0 : (  (hpix & vpix) ? pixel : border  );
-	assign color = (hblank | vblank) ? 6'd0 :  ( spx_en ? (spixel) : ((hpix & vpix) ? pixel : border ));
-
+//	assign color = (hblank | vblank) ? 6'd0 : (  (hpix & vpix) ? pixel : border  );
+//	assign color = (hblank | vblank) ? 6'd0 :  ( spx_en ? (spixel) : ((hpix & vpix) ? pixel : border ));
+	assign color = (hblank | vblank) ? 6'd0 :  !test ? ( spx_en ? (spixel) : ((hpix & vpix) ? pixel : border )) : sp_mc;
 
 	vga_double vga_double( .clk(clk),
 
@@ -66,6 +69,7 @@ module videoout(
 
 	always @(posedge clk)
 	begin
+//		vred[1:0] <= (hblank | vblank) ? 2'b0 : sp_mc[1:0];
 		vred[1:0] <= cfg_vga_on ? vga_color[5:4] : color[5:4];
 		vgrn[1:0] <= cfg_vga_on ? vga_color[3:2] : color[3:2];
 		vblu[1:0] <= cfg_vga_on ? vga_color[1:0] : color[1:0];

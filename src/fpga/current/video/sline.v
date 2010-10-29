@@ -3,27 +3,19 @@
 // synopsys translate_on
 
 module sline0 (
-        data,
-        wraddress,
-        wren,
-        rdaddress,
-        q);
-
-        input   [6:0]  data;
-        input   [8:0]  rdaddress;
-        input   [8:0]  wraddress;
-        input     wren;
-        output [6:0]  q;
-
-        wire [7:0] sub_wire0;
-        wire [7:0] q = sub_wire0[7:0];
+        input   [6:0]  data,
+        input   [8:0]  rdaddress,
+        input   [8:0]  wraddress,
+        input   		wren,
+        output  [6:0]  q
+);
 
         lpm_ram_dp      lpm_ram_dp_component (
                                 .wren (wren),
                                 .data (data),
                                 .rdaddress (rdaddress),
                                 .wraddress (wraddress),
-                                .q (sub_wire0),
+                                .q (q),
                                 .rdclken (1'b1),
                                 .rdclock (1'b1),
                                 .rden (1'b1),
@@ -47,27 +39,19 @@ module sline0 (
 endmodule
 
 module sline1 (
-        data,
-        wraddress,
-        wren,
-        rdaddress,
-        q);
-
-        input   [6:0]  data;
-        input   [8:0]  rdaddress;
-        input   [8:0]  wraddress;
-        input     wren;
-        output  [6:0]  q;
-
-        wire [7:0] sub_wire0;
-        wire [7:0] q = sub_wire0[7:0];
+        input   [6:0]  data,
+        input   [8:0]  rdaddress,
+        input   [8:0]  wraddress,
+        input   		wren,
+        output  [6:0]  q
+);
 
         lpm_ram_dp      lpm_ram_dp_component (
                                 .wren (wren),
                                 .data (data),
                                 .rdaddress (rdaddress),
                                 .wraddress (wraddress),
-                                .q (sub_wire0),
+                                .q (q),
                                 .rdclken (1'b1),
                                 .rdclock (1'b1),
                                 .rden (1'b1),

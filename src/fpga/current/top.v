@@ -465,11 +465,11 @@ module top(
 
 
 	wire vblank,vsync,int_start,vpix;
-	wire pre_vline,s_reload;
+	wire pre_vline;
 
 	syncv vert_sync( .clk(fclk), .hsync_start(hsync_start), .line_start(line_start),
 	                 .vblank(vblank), .vsync(vsync), .int_start(int_start),
-	                 .s_reload(s_reload), .pre_vline(pre_vline),
+	                 .pre_vline(pre_vline),
 			 .vpix(vpix), .hint_start(hint_start) );
 
 	vga_synch vga_synch( .clk(fclk), .hsync_start(hsync_start), .vga_hsync(vga_hsync), .scanout_start(scanout_start) );
@@ -501,20 +501,21 @@ spram spram(	.wraddress(sp_wa), .data(sp_wd), .wren(sp_ws),
 			);
 			
 	
-	wire [5:0] spixel;
-	wire [15:0] sp_addr;
+	wire [5:0] spixel, sp_mc;
+	wire [20:0] sp_addr;
 	wire [15:0] sp_dat;
 	wire spx_en, sp_mrq, sp_drdy;
 	
 sprites sprites( .clk(fclk), .spr_en(vcfg[6]), .hblank(hblank), .vblank(vblank),
-			.cend(cend), .pre_cend(pre_cend),
+			.sync_px(pre_cend),
 			.line_start(line_start),
 			.din(d),
 			.pre_vline(pre_vline),
 			.spixel(spixel), .spx_en(spx_en),
 			.sf_ra(sf_ra), .sf_rd(sf_rd), 
 			.sp_ra(sp_ra), .sp_rd(sp_rd),
-			.sp_addr(sp_addr), .sp_mrq(sp_mrq), .sp_drdy(1'b1), .sp_dat({8'b0, d})
+			.test(test), .sp_mc(sp_mc),
+			.sp_addr(sp_addr), .sp_mrq(sp_mrq), .sp_drdy(1'b1), .sp_dat({d, d})
 			);
 
 
@@ -524,6 +525,8 @@ sprites sprites( .clk(fclk), .spr_en(vcfg[6]), .hblank(hblank), .vblank(vblank),
 	        .hblank(hblank), .vblank(vblank), .hpix(hpix), .vpix(vpix), .hsync(hsync), .vsync(vsync),
 	        .vred(vred), .vgrn(vgrn), .vga_hsync(vga_hsync), .vblu(vblu),
 	        .vhsync(vhsync), .vvsync(vvsync), .vcsync(vcsync), .hsync_start(hsync_start),
+			.test(test),
+			.sp_mc(sp_mc),
 	        .scanin_start(scanin_start), .scanout_start(scanout_start), .cfg_vga_on(cfg_vga_on) );
 
 

@@ -15,8 +15,8 @@ module spram (
         input     wren;
         output  [5:0]  q;
 
-        wire [7:0] sub_wire0;
-        wire [7:0] q = sub_wire0[7:0];
+        wire [5:0] sub_wire0;
+        wire [5:0] q = sub_wire0[5:0];
 
         lpm_ram_dp      lpm_ram_dp_component (
                                 .wren (wren),

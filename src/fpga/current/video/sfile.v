@@ -61,8 +61,8 @@ module sacnt (
         input     wren;
         output  [13:0]  q;
 
-        wire [15:0] sub_wire0;
-        wire [15:0] q = sub_wire0[7:0];
+        wire [13:0] sub_wire0;
+        wire [13:0] q = sub_wire0[13:0];
 
         lpm_ram_dp      lpm_ram_dp_component (
                                 .wren (wren),
