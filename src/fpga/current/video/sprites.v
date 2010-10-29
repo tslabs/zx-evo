@@ -21,7 +21,7 @@
 
 module sprites(
 
-	input clk, spr_en, hblank, vblank, sync_px, line_start, pre_vline,
+	input clk, spr_en, line_start, pre_vline,
 	input [7:0] din,
 	
 	output reg [7:0] sf_ra, sp_ra,
@@ -106,7 +106,7 @@ module sprites(
 
 	
 // Marlezonskiy balet, part II
-// *** DIE MASCHINE *** !!!
+// Sprites processing
 
 	localparam VLINES = 9'd288;
 	
@@ -126,13 +126,22 @@ module sprites(
 	reg [6:0] sp_ysz;
 
 
-// Sprites processing
+// *** DIE MASCHINE *** !!!
+	
+	reg sl_we;
+	always @*
+	begin
+		if (!clk)
+			sl_ws <= sl_we;
+		else
+			sl_ws <= 1'b0;
+	end
+
 	always @(posedge clk)
+
 	if (line_start)
 		sp_mc <= 6'd0;
 	else
-	begin
-
 	case (sp_mc)
 
 	0:	// SPU reset
@@ -354,7 +363,6 @@ module sprites(
 	end
 
 	endcase
-	end
 	
 
 
