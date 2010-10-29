@@ -289,7 +289,7 @@ module sprites(
 		sp_mc <= 6'd21;
 	end
 
-	21:	//end of writes to sline, inc sa_offs, dec sp_xsz
+	21:	//end of write to sline, inc sa_offs, dec sp_xsz
 	begin
 		sl_wa <= sl_wa + 9'b1;
 		sl_we <= 1'b0;
