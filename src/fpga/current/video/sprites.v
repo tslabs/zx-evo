@@ -7,16 +7,24 @@
 // Written by TS-Labs inc.
 //
 //
-// TV Line Cycles - 448:
+// TV Horizontal Line Cycles - 448:
 // Visible Area  - 360 * 288 pixels:
-// 		52 - border
-// 		256 - pixels
-// 		52 - border
+//
+// 		|		 48	|
+//	---------------------
+// 	52	| 256		|  52
+// 		|  			|
+// 		|  		192	|
+//	---------------------
+//		|		 48	|
 
 // to do
-// 2. Code reads from DRAM
-// 3. Fix jerking while write to sfile
-// 4. Optimize SPU SM steps
+//
+// . Fix wrong pal reading
+// . Refactor all FRAM files and access algos
+// . Fix jerking while write to sfile
+// . Optimize SPU SM steps
+// . Code reads from DRAM
 
 
 module sprites(
