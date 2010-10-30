@@ -483,35 +483,24 @@ module top(
 	              .video_strobe(video_strobe), .video_next(video_next), .go(go), .bw(bw), .pixel(pixel) );
 
 
-// SFILE: Sprites description file
-// 2048 bit = Write: 256x8, Read: 32x64
-
-	wire [7:0] sf_wa;
-	wire [7:0] sf_wd;
-	wire [4:0] sf_ra;
-	wire [63:0] sf_rd;
+	wire [7:0] sf_ra, sf_wa;
+	wire [7:0] sf_wd, sf_rd;
 	wire sf_ws;
 
-sfile sfile(	.wa(sf_wa), .wd(sf_wd), .we(sf_ws),
-				.ra(sf_ra), .rd(sf_rd),
-				.clk(zclk)
+sfile sfile(	.wraddress(sf_wa), .data(sf_wd), .wren(sf_ws),
+				.rdaddress(sf_ra), .q(sf_rd)
 			);
 
 			
-// SPRAM: Palette file
-// 1536 bit = Write: 256x6, Read: 256x6
-
-	wire [7:0] sp_wa;
-	wire [5:0] sp_wd;
-	wire [7:0] sp_ra;
-	wire [5:0] sp_rd;
+	wire [7:0] sp_ra, sp_wa;
+	wire [5:0] sp_wd, sp_rd;
 	wire sp_ws;
 
 spram spram(	.wraddress(sp_wa), .data(sp_wd), .wren(sp_ws),
 				.rdaddress(sp_ra), .q(sp_rd)
 			);
 			
-	
+
 	wire [5:0] spixel, sp_mc;
 	wire [20:0] sp_addr;
 	wire [15:0] sp_dat;
@@ -521,10 +510,10 @@ sprites sprites( .clk(fclk), .spr_en(vcfg[6]),
 			.line_start(line_start),
 			.pre_vline(pre_vline),
 			.spixel(spixel), .spx_en(spx_en),
-			.sp_num(sf_ra), .sf_rd(sf_rd), 
+			.sf_ra(sf_ra), .sf_rd(sf_rd), 
 			.sp_ra(sp_ra), .sp_rd(sp_rd),
 			.test(test), .mc(sp_mc),
-			.sp_addr(sp_addr), .sp_mrq(sp_mrq), .sp_drdy(1'b1), .sp_dat(16'h1234)
+			.spr_addr(spr_addr), .spr_mrq(spr_mrq), .spr_drdy(1'b1), .spr_dat(16'h1234)
 			);
 
 
