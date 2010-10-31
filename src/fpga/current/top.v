@@ -485,24 +485,22 @@ module top(
 
 	wire [7:0] sf_ra, sf_wa;
 	wire [7:0] sf_wd, sf_rd;
-	wire sf_ws;
+	wire sf_we;
 
-sfile sfile(	.wraddress(sf_wa), .data(sf_wd), .wren(sf_ws),
-				.rdaddress(sf_ra), .q(sf_rd)
-			);
+sfile sfile(	.wraddress(sf_wa), .data(sf_wd), .rdaddress(sf_ra), .q(sf_rd), .wrclock(fclk), .wren(sf_we) );
 
 			
 	wire [7:0] sp_ra, sp_wa;
 	wire [5:0] sp_wd, sp_rd;
-	wire sp_ws;
+	wire sp_we;
 
-spram spram(	.wraddress(sp_wa), .data(sp_wd), .wren(sp_ws),
-				.rdaddress(sp_ra), .q(sp_rd)
-			);
+spram spram(	.wraddress(sp_wa), .data(sp_wd), .rdaddress(sp_ra), .q(sp_rd),
+				.wrclock(fclk),
+				.wren(sp_we) );
 			
 
 	wire [5:0] spixel, sp_mc;
-	wire [20:0] sp_addr;
+	wire [20:0] spr_addr;
 	wire [15:0] sp_dat;
 	wire spx_en, sp_mrq, sp_drdy;
 	
@@ -578,8 +576,8 @@ sprites sprites( .clk(fclk), .spr_en(vcfg[6]),
 	              .ide_wr_n(ide_wr_n), .ide_rd_n(ide_rd_n),
 
 				.vcfg(vcfg),
-				.sf_wa(sf_wa), .sf_wd(sf_wd),  .sf_ws(sf_ws), 
-				.sp_wa(sp_wa), .sp_wd(sp_wd),  .sp_ws(sp_ws), 
+				.sf_wa(sf_wa), .sf_wd(sf_wd),  .sf_we(sf_we), 
+				.sp_wa(sp_wa), .sp_wd(sp_wd),  .sp_we(sp_we), 
 				  
 	              .keys_in(kbd_port_data),
 	              .mus_in(mus_port_data),

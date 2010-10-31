@@ -71,10 +71,11 @@ module zports(
 
 //	PortXT
 	output reg [7:0] vcfg,
-	output reg [7:0] sf_wa, sp_wa,
+	output reg [7:0] sf_wa,
 	output reg [7:0] sf_wd,
+	output reg [7:0] sp_wa,
 	output reg [5:0] sp_wd,
-	output reg sf_ws, sp_ws,
+	output reg sf_we, sp_we,
 
 
 	// WAIT-ports related
@@ -575,6 +576,7 @@ module zports(
 		endcase
 	end
 
+	
 	//#55FF Write to XT Regs and allied ports
 	always @(posedge zclk, negedge rst_n)
 	
@@ -583,7 +585,7 @@ module zports(
 			vcfg <= 8'b0;
 		end
 	else
-		begin
+	begin
 		if	((portxt_wr && (xt_st == 2'd2)) ||
 			portfe_wr || portcv_wr || portsd_wr)
 		begin
@@ -629,18 +631,21 @@ module zports(
 	PalData:
 		begin
 			sp_wd <= din[5:0];
-			sp_ws = portxt_wr;
+			sp_we <= 1'b1;
 		end
 	SFAddr:
 			sf_wa <= din[7:0];
 	SFData:
 		begin
 			sf_wd <= din[7:0];
-			sf_ws = portxt_wr;
+			sf_we <= 1'b1;
 		end
 	
 		endcase
 		end
+		else
+//		sp_we <= 1'b0;
+		sf_we <= 1'b0;
 
 	end
 

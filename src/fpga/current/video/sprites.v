@@ -512,6 +512,7 @@ module sprites(
 		end
 	end
 
+	
 	sline0 sline0(	.wraddress(l_sel ? sl_wa : sl_ra),
 					.data(l_sel ? {1'b1, (cres == 2'b11 ? pix : sp_rd[5:0])} : 7'b0),
 					.wren(l_sel ? sl_ws : sl_wsn),
@@ -536,6 +537,116 @@ module sprites(
 					.rdaddress(num),
 					.q(sa_rd)
 				);
+endmodule
+
+
+// SFILE: Sprites description file
+// 2048 bit = 256x8
+
+module sfile (
+	data,
+	rdaddress,
+	wraddress,
+	wrclock,
+	wren,
+	q);
+
+	input	[7:0]  data;
+	input	[7:0]  rdaddress;
+	input	[7:0]  wraddress;
+	input	  wrclock;
+	input	  wren;
+	output	[7:0]  q;
+
+	wire [7:0] sub_wire0;
+	wire [7:0] q = sub_wire0[7:0];
+
+	altdpram	altdpram_component (
+				.wren (wren),
+				.inclock (wrclock),
+				.data (data),
+				.rdaddress (rdaddress),
+				.wraddress (wraddress),
+				.q (sub_wire0),
+				.aclr (1'b0),
+				.byteena (1'b1),
+				.inclocken (1'b1),
+				.outclock (1'b1),
+				.outclocken (1'b1),
+				.rdaddressstall (1'b0),
+				.rden (1'b1),
+				.wraddressstall (1'b0));
+	defparam
+		altdpram_component.indata_aclr = "OFF",
+		altdpram_component.indata_reg = "UNREGISTERED",
+		altdpram_component.intended_device_family = "ACEX1K",
+		altdpram_component.lpm_type = "altdpram",
+		altdpram_component.outdata_aclr = "OFF",
+		altdpram_component.outdata_reg = "UNREGISTERED",
+		altdpram_component.rdaddress_aclr = "OFF",
+		altdpram_component.rdaddress_reg = "UNREGISTERED",
+		altdpram_component.rdcontrol_aclr = "OFF",
+		altdpram_component.rdcontrol_reg = "UNREGISTERED",
+		altdpram_component.width = 8,
+		altdpram_component.widthad = 8,
+		altdpram_component.wraddress_aclr = "OFF",
+		altdpram_component.wraddress_reg = "UNREGISTERED",
+		altdpram_component.wrcontrol_aclr = "OFF",
+		altdpram_component.wrcontrol_reg = "INCLOCK";
+endmodule
+
+
+//palette SRAM for sprites 256x6
+module spram (
+	data,
+	rdaddress,
+	wraddress,
+	wrclock,
+	wren,
+	q);
+
+	input	[5:0]  data;
+	input	[7:0]  rdaddress;
+	input	[7:0]  wraddress;
+	input	  wrclock;
+	input	  wren;
+	output	[5:0]  q;
+
+	wire [5:0] sub_wire0;
+	wire [5:0] q = sub_wire0[5:0];
+
+	altdpram	altdpram_component (
+				.wren (wren),
+				.inclock (wrclock),
+				.data (data),
+				.rdaddress (rdaddress),
+				.wraddress (wraddress),
+				.q (sub_wire0),
+				.aclr (1'b0),
+				.byteena (1'b1),
+				.inclocken (1'b1),
+				.outclock (1'b1),
+				.outclocken (1'b1),
+				.rdaddressstall (1'b0),
+				.rden (1'b1),
+				.wraddressstall (1'b0));
+	defparam
+		altdpram_component.indata_aclr = "OFF",
+		altdpram_component.indata_reg = "UNREGISTERED",
+		altdpram_component.intended_device_family = "ACEX1K",
+		altdpram_component.lpm_type = "altdpram",
+		altdpram_component.outdata_aclr = "OFF",
+		altdpram_component.outdata_reg = "UNREGISTERED",
+		altdpram_component.rdaddress_aclr = "OFF",
+		altdpram_component.rdaddress_reg = "UNREGISTERED",
+		altdpram_component.rdcontrol_aclr = "OFF",
+		altdpram_component.rdcontrol_reg = "UNREGISTERED",
+		altdpram_component.width = 6,
+		altdpram_component.widthad = 8,
+		altdpram_component.wraddress_aclr = "OFF",
+		altdpram_component.wraddress_reg = "UNREGISTERED",
+		altdpram_component.wrcontrol_aclr = "OFF",
+		altdpram_component.wrcontrol_reg = "INCLOCK";
 endmodule
 
 
@@ -578,12 +689,9 @@ module sacnt (
                 lpm_ram_dp_component.lpm_width = 14,
                 lpm_ram_dp_component.lpm_widthad = 5,
                 lpm_ram_dp_component.lpm_numwords = 32,
-                lpm_ram_dp_component.lpm_file = "sfile.mif",
                 lpm_ram_dp_component.lpm_wraddress_control = "UNREGISTERED",
                 lpm_ram_dp_component.rden_used = "FALSE",
                 lpm_ram_dp_component.use_eab = "ON";
-
-
 endmodule
 
 
@@ -611,7 +719,6 @@ module sline0 (
                 lpm_ram_dp_component.intended_device_family = "ACEX1K",
                 lpm_ram_dp_component.lpm_indata = "UNREGISTERED",
                 lpm_ram_dp_component.lpm_outdata = "UNREGISTERED",
-//                lpm_ram_dp_component.lpm_file = "SLINE.MIF",
                 lpm_ram_dp_component.lpm_rdaddress_control = "UNREGISTERED",
                 lpm_ram_dp_component.lpm_type = "LPM_RAM_DP",
                 lpm_ram_dp_component.lpm_width = 7,
@@ -620,8 +727,6 @@ module sline0 (
                 lpm_ram_dp_component.lpm_wraddress_control = "UNREGISTERED",
                 lpm_ram_dp_component.rden_used = "FALSE",
                 lpm_ram_dp_component.use_eab = "ON";
-
-
 endmodule
 
 
@@ -654,102 +759,7 @@ module sline1 (
                 lpm_ram_dp_component.lpm_width = 7,
                 lpm_ram_dp_component.lpm_widthad = 9,
                 lpm_ram_dp_component.lpm_numwords = 360,
-                lpm_ram_dp_component.lpm_file = "sline.mif",
                 lpm_ram_dp_component.lpm_wraddress_control = "UNREGISTERED",
                 lpm_ram_dp_component.rden_used = "FALSE",
                 lpm_ram_dp_component.use_eab = "ON";
-
-
-endmodule
-
-
-//sprite descripting array
-module sfile (
-        data,
-        wraddress,
-        wren,
-        rdaddress,
-        q);
-
-        input   [7:0]  data;
-        input   [7:0]  rdaddress;
-        input   [7:0]  wraddress;
-        input     wren;
-        output  [7:0]  q;
-
-        wire [7:0] sub_wire0;
-        wire [7:0] q = sub_wire0[7:0];
-
-        lpm_ram_dp      lpm_ram_dp_component (
-                                .wren (wren),
-                                .data (data),
-                                .rdaddress (rdaddress),
-                                .wraddress (wraddress),
-                                .q (sub_wire0),
-                                .rdclken (1'b1),
-                                .rdclock (1'b1),
-                                .rden (1'b1),
-                                .wrclken (1'b1),
-                                .wrclock (1'b1));
-        defparam
-                lpm_ram_dp_component.intended_device_family = "ACEX1K",
-                lpm_ram_dp_component.lpm_indata = "UNREGISTERED",
-                lpm_ram_dp_component.lpm_outdata = "UNREGISTERED",
-                lpm_ram_dp_component.lpm_rdaddress_control = "UNREGISTERED",
-                lpm_ram_dp_component.lpm_type = "LPM_RAM_DP",
-                lpm_ram_dp_component.lpm_width = 8,
-                lpm_ram_dp_component.lpm_widthad = 8,
-                lpm_ram_dp_component.lpm_numwords = 256,
-                lpm_ram_dp_component.lpm_file = "sfile.mif",
-                lpm_ram_dp_component.lpm_wraddress_control = "UNREGISTERED",
-                lpm_ram_dp_component.rden_used = "FALSE",
-                lpm_ram_dp_component.use_eab = "ON";
-
-
-endmodule
-
-
-//palette SRAM for sprites
-module spram (
-        data,
-        wraddress,
-        wren,
-        rdaddress,
-        q);
-
-        input   [5:0]  data;
-        input   [7:0]  rdaddress;
-        input   [7:0]  wraddress;
-        input     wren;
-        output  [5:0]  q;
-
-        wire [5:0] sub_wire0;
-        wire [5:0] q = sub_wire0[5:0];
-
-        lpm_ram_dp      lpm_ram_dp_component (
-                                .wren (wren),
-                                .data (data),
-                                .rdaddress (rdaddress),
-                                .wraddress (wraddress),
-                                .q (sub_wire0),
-                                .rdclken (1'b1),
-                                .rdclock (1'b1),
-                                .rden (1'b1),
-                                .wrclken (1'b1),
-                                .wrclock (1'b1));
-        defparam
-                lpm_ram_dp_component.intended_device_family = "ACEX1K",
-                lpm_ram_dp_component.lpm_indata = "UNREGISTERED",
-                lpm_ram_dp_component.lpm_outdata = "UNREGISTERED",
-                lpm_ram_dp_component.lpm_rdaddress_control = "UNREGISTERED",
-                lpm_ram_dp_component.lpm_type = "LPM_RAM_DP",
-                lpm_ram_dp_component.lpm_width = 6,
-                lpm_ram_dp_component.lpm_widthad = 8,
-                lpm_ram_dp_component.lpm_numwords = 256,
-                lpm_ram_dp_component.lpm_file = "spram.mif",
-                lpm_ram_dp_component.lpm_wraddress_control = "UNREGISTERED",
-                lpm_ram_dp_component.rden_used = "FALSE",
-                lpm_ram_dp_component.use_eab = "ON";
-
-
 endmodule
