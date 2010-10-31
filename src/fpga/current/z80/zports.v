@@ -69,6 +69,14 @@ module zports(
 	output wire [ 7:0] sd_datain,
 	input  wire [ 7:0] sd_dataout,
 
+//	PortXT
+	output reg [7:0] vcfg,
+	output reg [7:0] sf_wa, sp_wa,
+	output reg [7:0] sf_wd,
+	output reg [5:0] sp_wd,
+	output reg sf_ws, sp_ws,
+
+
 	// WAIT-ports related
 	//
 	output reg  [ 7:0] gluclock_addr,
@@ -81,13 +89,6 @@ module zports(
 	output reg         wait_rnw,   // whether it was read(=1) or write(=0)
 	output reg  [ 7:0] wait_write,
 	input  wire [ 7:0] wait_read,
-	
-	//XT
-	output reg [7:0] vcfg,
-	output reg [7:0] sf_wa, sp_wa,
-	output reg [7:0] sf_wd,
-	output reg [5:0] sp_wd,
-	output reg sf_ws, sp_ws,
 	
 	output wire        atmF7_wr_fclk, // used in atm_pager.v
 	output reg  [ 2:0] atm_scr_mode, // RG0..RG2 in docs
@@ -165,10 +166,6 @@ module zports(
 	parameter PalData  = 8'h0a;
 	parameter SFAddr  = 8'h0b;
 	parameter SFData  = 8'h0c;
-
-	reg xt_en, xt_cl;
-	localparam xt_msb = 8;
-	reg [xt_msb-1:0] xt_addr;
 
 	reg external_port;
 
@@ -343,12 +340,12 @@ module zports(
 		endcase
 	end
 
-	wire portxt_wr;
 	wire portfd_wr;
 	wire portsd_wr;
 	wire portf7_wr;
 	wire portf7_rd;
 	wire portcv_wr;
+	wire portxt_wr;
 
 	assign portfe_wr    = ( (loa==PORTFE) && port_wr);
 	assign portfd_wr    = ( (loa==PORTFD) && port_wr);
@@ -546,43 +543,48 @@ module zports(
 			
 	//#55FF - portXT
 
+	reg [1:0] xt_st;
+	localparam xt_msb = 8;
+	reg [xt_msb-1:0] xt_addr;
+
 	//#55FF lock managing
 	always @(posedge zclk, negedge rst_n)
 	begin
-		if( !rst_n )
-			begin
-			xt_en <= 1'b0;		//on ~RES portXT <= disabled
-			end
 
-		else if( portxt_wr && (din[7:0]==8'hAA ) && (!xt_en) )	//if out(#55ff),#aa
-			begin
-			xt_en <= 1'b1;		//portXT <= enabled
-			xt_cl <= 1'b0;		//cycle <= AddrLatch
-			end
+		if (!rst_n)						//on ~RES portXT is OFF
+			xt_st <= 2'd0;
 
-		else if( portxt_wr && xt_en && (!xt_cl) )				//if out(#55ff) when portXT enabled and cycle = AddrLatch
+		else if (port_wr && !(a[15:0] == XT))
+			xt_st <= 2'd0;				//on ANY other port write portXT is OFF
+
+		else if (portxt_wr)
+		case (xt_st)
+		0:
+			if (din[7:0]==8'hAA)		//if out(#55ff),#aa, port XT is ON
+			xt_st <= 2'd1;				//next must be AddrLatch
+
+		1:
 			begin
 			xt_addr <= din[7:0];
-			xt_cl <= 1'b1;		// cycle <= DataLatch
+			xt_st <= 2'd2;				//next must be DataLatch
 			end
 
-		else if( ( portxt_wr && xt_en && xt_cl ) || (port_wr && !(a[15:0]==XT)))	//if last cycle or write to other port then XT disable
-			begin
-			xt_en <= 1'b0;			//portXT disabled
-			end
+		2:
+			xt_st <= 1'd0;				//end of show, portXT is OFF
+		
+		endcase
 	end
 
 	//#55FF Write to XT Regs and allied ports
 	always @(posedge zclk, negedge rst_n)
 	
-	if( !rst_n )
+	if (!rst_n)
 		begin
 			vcfg <= 8'b0;
 		end
-		else
-	
-	begin
-		if	((portxt_wr && xt_en && xt_cl) ||
+	else
+		begin
+		if	((portxt_wr && (xt_st == 2'd2)) ||
 			portfe_wr || portcv_wr || portsd_wr)
 		begin
 
@@ -598,7 +600,7 @@ module zports(
 
 		//FB,DD,0F,1F,4F,5F - Covox/Soundrive ports
 		if (portcv_wr || portsd_wr)
-		case( loa )
+		case (loa)
 			SD0:
 				psd0 <= din[7:0];
 			SD1:
@@ -616,8 +618,8 @@ module zports(
 			end
 		endcase
 		
-		if	(portxt_wr && xt_en && xt_cl)
-	case (xt_addr)								//XT Regs are written here !!!
+		if	(portxt_wr)
+		case (xt_addr)								//XT Regs are written here !!!
 	XBorder:
 			border <= din[5:0];
 	VConfig:
@@ -627,25 +629,20 @@ module zports(
 	PalData:
 		begin
 			sp_wd <= din[5:0];
-			sp_ws <= 1'b1;
+			sp_ws = portxt_wr;
 		end
 	SFAddr:
 			sf_wa <= din[7:0];
 	SFData:
 		begin
 			sf_wd <= din[7:0];
-			sf_ws <= 1'b1;
+			sf_ws = portxt_wr;
 		end
-	default:
-		begin
-			sf_ws <= 1'b0;			
-			sp_ws <= 1'b0;			
-		end
-	endcase
+	
+		endcase
 		end
 
 	end
-
 
 	
 	// write to wait registers
