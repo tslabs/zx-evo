@@ -14,9 +14,10 @@
 // 		52 - border
 
 // to do
-// 2. Code reads from DRAM
-// 3. Fix jerking while write to sfile
-// 4. Optimize SPU SM steps
+// - optimize usage of summators
+// - check spr_en and turn off SPU at VBLANK
+// - Read spr_dat from DRAM
+// - Fix jerking while write to sfile
 
 
 module sprites(
@@ -36,9 +37,9 @@ module sprites(
 	
 //dram
 	output reg [20:0] spr_addr,
-	input [15:0] spr_dat,
+//	input [15:0] spr_dat,
 	output reg spr_mrq,
-	input spr_drdy,
+//	input spr_drdy,
 
 //video
 	output reg [5:0] spixel,
@@ -48,7 +49,7 @@ module sprites(
 
 	reg [8:0] vline;
 	reg l_sel;
-	
+
 	
 //vcount
 	always @(posedge line_start)
@@ -120,29 +121,57 @@ module sprites(
 	reg [4:0] num;		//number of currently processed sprite
 //	reg [5:0] mc;		//current state of state-machine
 	reg [13:0] offs;	//offset from sprite address, words
-
-// sfile
-	reg cres, en;
-	reg [20:0] adr;	//word address!!! 2MB x 16bit
+	reg [5:0] pix;
+//	reg en;
+	reg [1:0] cres;
+	reg [20:0] adr;		//word address!!! 2MB x 16bit
 	reg [6:0] xsz;
 	reg [8:0] ypos;
 
+
+	//#debug!!!
+	reg [15:0] spr_dat;
+	reg [13:0] sdbuf;
+	reg spr_drdy;
+	reg [3:0] mrq;
+	reg [15:0] mdat;
+	
+	initial
+	begin
+		mrq <= 4'd0;
+	end
+	
+	always @(posedge clk)
+	case (mrq)
+	0:	if (spr_mrq)
+		begin
+			spr_drdy <= 1'b0;
+			mdat <= spr_addr[15:0];
+			mrq <= 4'd1;
+		end
+	1:	mrq <= 4'd2;
+	2:	mrq <= 4'd3;
+	3:	mrq <= 4'd4;
+	4:	mrq <= 4'd5;
+	5:	mrq <= 4'd6;
+	6:	mrq <= 4'd8;
+	8:	begin
+			spr_dat <= mdat;
+			spr_drdy <= 1'b1;
+			mrq <= 4'd9;
+		end
+	9:	if (!spr_mrq)
+			mrq <= 4'd0;
+	endcase
+	
 	
 // *** DIE MASCHINE ***
 // JA, JA! DAS IST FANTASTISCH !!!
 	
-	always @*
-	begin
-		if (!clk)
-			sl_ws <= sl_we;
-		else
-			sl_ws <= 1'b0;
-	end
-
 	always @(posedge clk)
 
 	if (line_start)
-		mc <= 6'd0;
+		mc <= 5'd0;
 
 	else
 
@@ -151,25 +180,25 @@ module sprites(
 	0:	// SPU reset
 	begin
 		test <= 1'b1;
-		sa_ws <= 1'b0;
-		spr_mrq <= 1'b0;
+		sa_we <= 1'b0;
 		sl_we <= 1'b0;
+		spr_mrq <= 1'b0;
 
 		num <= 5'd0;			//set sprite number to 0
 		sf_ra <= 8'd4;			//set addr for reg4
-		mc <= 6'd2;
+		mc <= 5'd2;
 	end
 
 	2:	// Begin of sprite[num] processing
 	begin
 		//check if sprite is active
-		if (sf_rd[7])
+		if (!(sf_rd[7:6] == 2'b0))
 		//yes:
 		begin
-			cres <= sf_rd[6];			//read CRES
-			sp_ra[7:2] <= sf_rd[5:0];	//read PAL[5:0]
+			cres <= sf_rd[7:6];			//get CRES
+			sp_ra[7:2] <= sf_rd[5:0];	//get PAL[5:0]
 			sf_ra[2:0] <= 3'd2;			//set addr for reg2
-			mc <= 6'd3;
+			mc <= 5'd3;
 		end
 
 		else
@@ -180,35 +209,33 @@ module sprites(
 		//yes: halt
 			begin
 				test <= 1'b0;
-				mc <= 6'd63;
+				mc <= 5'd31;
 			end
-
 			else
-
 		//no: next sprite processing
 			begin
 			num <= num + 5'b1;
-			sf_ra <= {(num + 5'b1), 3'd4};	//inc spnum, set addr for reg4
+			sf_ra <= {(num + 5'b1), 3'd4};	//inc sprite num, set addr for reg4
 			end
 		end
 	end
 
 	3:
 	begin
-		ypos[7:0] <= sf_rd[7:0];	//read YPOS[7:0]
+		ypos[7:0] <= sf_rd[7:0];	//get YPOS[7:0]
 		sf_ra[2:0] <= 3'd3;			//set addr for reg3
-		mc <= 6'd4;
+		mc <= 5'd4;
 	end
 
 	4:
 	begin
-		ypos[8] <= sf_rd[0];
+		ypos[8] <= sf_rd[0];		//get YPOS[8]
 		//check if sprite is visible on this line
 		if ((vline >= {sf_rd[0], ypos[7:0]}) && (vline < ({sf_rd[0], ypos[7:0]} + sf_rd[7:1])))
 		//yes
 		begin
 			sf_ra[2:0] <= 3'd5;			//set addr for reg5
-			mc <= 6'd5;
+			mc <= 5'd5;
 		end
 		else
 		//no
@@ -217,146 +244,237 @@ module sprites(
 			//yes: halt
 			begin
 				test <= 1'b0;
-				mc <= 6'd63;
+				mc <= 5'd31;
 			end
 			else
 			//no: next sprite processing
 			begin
 				num <= num + 5'b1;
-				sf_ra <= {(num + 5'b1), 3'd4};	//inc spnum, set addr for reg4
-				mc <= 6'd2;
+				sf_ra <= {(num + 5'b1), 3'd4};	//inc sprite num, set addr for reg4
+				mc <= 5'd2;
 			end
 		end
 	end
 
 	5: 
 	begin
-		adr[7:0] <= sf_rd[7:0];		//read ADR[7:0]
+		adr[7:0] <= sf_rd[7:0];		//get ADR[7:0]
 		sf_ra[2:0] <= 3'd6;			//set addr for reg6
-
 		if (ypos == vline)			//check if 1st line of sprite
 			offs <= 14'b0;			//yes: null offs
 		else
-			offs <= sa_rd;			//no: read offs
-
-		mc <= 6'd6;
+			offs <= sa_rd;			//no: get offs from sacnt
+		mc <= 5'd6;
 	end
 
 	6:
 	begin
-		adr[15:8] <= sf_rd[7:0];	//read ADR[15:8]
+		adr[15:8] <= sf_rd[7:0];	//get ADR[15:8]
 		sf_ra[2:0] <= 3'd7;			//set addr for reg7
-		mc <= 6'd7;
+		mc <= 5'd7;
 	end
 
 	7:
 	begin
-		adr[20:16] <= sf_rd[4:0];	//read ADR[20:16]
+		adr[20:16] <= sf_rd[4:0];	//get ADR[20:16]
 		sf_ra[2:0] <= 3'd0;			//set addr for reg0
-		mc <= 6'd8;
+		mc <= 5'd8;
 	end
 
 	8:
 	begin
-		sl_wa[7:0] <= sf_rd[7:0];	//read XPOS[7:0]
+		sl_wa[7:0] <= sf_rd[7:0];	//get XPOS[7:0]
 		sf_ra[2:0] <= 3'd1;			//set addr for reg1
-		mc <= 6'd9;
+		spr_addr <= (adr + offs);	//set spr_addr
+
+		spr_mrq <= 1'b1;			//assert spr_mrq
+		offs <= offs + 14'b1;		//inc offs
+		sa_wd <= offs + 14'b1;		//write offs
+		sa_we <= 1'b1;
+
+		mc <= 5'd1;
 	end
 
-	9:
+	1:
 	begin
-		sl_wa[8] <= sf_rd[0];		//read XPOS[8]
-		xsz[6:0] <= sf_rd[7:1];		//read XSZ[6:0]
-	
-	if (!cres)
-		mc <= 6'd12;	//use 16c
-	else
-		mc <= 6'd25;	//use 4c
+		sa_we <= 1'b0;
+		sl_wa[8] <= sf_rd[0];		//get XPOS[8]
+		xsz[6:0] <= sf_rd[7:1];		//get XSZ[6:0]
+		mc <= 5'd12;
 	end
 	
-	12: // Begin of horizontal loop for 16c
-		//set spr_addr, assert spr_mrq
-	begin
-		spr_addr <= (adr + offs);
-		spr_mrq <= 1'b1;
-		mc <= 6'd14;
-	end
-
-	14: //wait for data from DRAM
+	12: //wait for data from DRAM
 	if (spr_drdy)
+	begin
+		spr_mrq <= 1'b0;			//deassert spr_mrq
+		sdbuf <= spr_dat[13:0];
 		//write pix0
-	begin
-		spr_mrq <= 1'b0;
- 		sp_ra[3:0] <= spr_dat[15:12];		//set paladdr for pix0
-		en <= !(spr_dat[15:12] == 4'b0);	//set transparency for pix0
-		sl_we <= 1'b1;
-		mc <= 6'd16;
+		case (cres)
+
+		1:	begin	//4c
+				sp_ra[1:0] <= spr_dat[15:14];		//set paladdr for pix0
+				sl_we <= !(spr_dat[15:14] == 2'b0);	//set transparency for pix0
+				mc <= 5'd10;
+			end
+	
+		2:	begin	//16c
+				sp_ra[3:0] <= spr_dat[15:12];		//set paladdr for pix0
+				sl_we <= !(spr_dat[15:12] == 4'b0);	//set transparency for pix0
+				mc <= 5'd16;
+			end
+		
+		3:	begin	//true color
+				pix <= spr_dat[13:8];				//set pix0
+				sl_we <= spr_dat[15];				//set transparency for pix0
+				mc <= 5'd9;
+			end
+
+		endcase
 	end
 
-	16: //write pix1
+	9:	//write pix1@true
+	begin
+	if (!((xsz - 7'b1) == 7'b0))
+	begin
+		spr_addr <= (adr + offs);	//set spr_addr
+		spr_mrq <= 1'b1;			//assert spr_mrq
+		offs <= offs + 14'b1;		//inc offs
+		sa_wd <= offs + 14'b1;		//write offs
+		sa_we <= 1'b1;
+	end
+		sl_wa <= sl_wa + 9'b1;
+		pix <= sdbuf[5:0];				//set pix1
+		sl_we <= sdbuf[7];				//set transparency for pix1
+		mc <= 5'd21;
+	end
+
+	10:	//write pix1@4c
+	begin
+	if (!((xsz - 7'b1) == 7'b0))
+	begin
+		spr_addr <= (adr + offs);	//set spr_addr
+		spr_mrq <= 1'b1;			//assert spr_mrq
+		offs <= offs + 14'b1;		//inc offs
+		sa_wd <= offs + 14'b1;		//write offs
+		sa_we <= 1'b1;
+	end
+		sl_wa <= sl_wa + 9'b1;
+		sp_ra[1:0] <= sdbuf[13:12];		//set paladdr for pix1
+		sl_we <= !(sdbuf[13:12] == 2'b0);	//set transparency for pix1
+		mc <= 5'd11;
+	end
+
+	11:	//write pix2@4c
+	begin
+		sa_we <= 1'b0;
+		sl_wa <= sl_wa + 9'b1;
+		sp_ra[1:0] <= sdbuf[11:10];		//set paladdr for pix2
+		sl_we <= !(sdbuf[11:10] == 2'b0);	//set transparency for pix2
+		mc <= 5'd19;
+	end
+
+	19:	//write pix3@4c
 	begin
 		sl_wa <= sl_wa + 9'b1;
-		sp_ra[3:0] <= spr_dat[11:8];		//set paladdr for pix1
-		en <= !(spr_dat[11:8] == 4'b0);	//set transparency for pix1
-		mc <= 6'd18;
+		sp_ra[1:0] <= sdbuf[9:8];			//set paladdr for pix3
+		sl_we <= !(sdbuf[9:8] == 2'b0);		//set transparency for pix3
+		mc <= 5'd13;
 	end
 
-	18: //write pix2
+	13:	//write pix4@4c
 	begin
 		sl_wa <= sl_wa + 9'b1;
-		sp_ra[3:0] <= spr_dat[7:4];		//set paladdr for pix2
-		en <= !(spr_dat[7:4] == 4'b0);	//set transparency for pix2
-		mc <= 6'd20;
+		sp_ra[1:0] <= sdbuf[7:6];			//set paladdr for pix4
+		sl_we <= !(sdbuf[7:6] == 2'b0);		//set transparency for pix4
+		mc <= 5'd14;
 	end
 
-	20: //write pix3
+	14:	//write pix5@4c
 	begin
 		sl_wa <= sl_wa + 9'b1;
-		sp_ra[3:0] <= spr_dat[3:0];		//set paladdr for pix3
-		en <= !(spr_dat[3:0] == 4'b0);	//set transparency for pix3
-		mc <= 6'd21;
+		sp_ra[1:0] <= sdbuf[5:4];			//set paladdr for pix5
+		sl_we <= !(sdbuf[5:4] == 2'b0);		//set transparency for pix5
+		mc <= 5'd15;
 	end
 
-	21:	//end of write to sline, inc offs, dec xsz
+	15:	//write pix6@4c
 	begin
+		sl_wa <= sl_wa + 9'b1;
+		sp_ra[1:0] <= sdbuf[3:2];			//set paladdr for pix6
+		sl_we <= !(sdbuf[3:2] == 2'b0);		//set transparency for pix6
+		mc <= 5'd17;
+	end
+
+	17:	//write pix7@4c
+	begin
+		sl_wa <= sl_wa + 9'b1;
+		sp_ra[1:0] <= sdbuf[1:0];				//set paladdr for pix7
+		sl_we <= !(sdbuf[1:0] == 2'b0);		//set transparency for pix7
+		mc <= 5'd21;
+	end
+
+	16: //write pix1@16c
+	begin
+	if (!((xsz - 7'b1) == 7'b0))
+	begin
+		spr_addr <= (adr + offs);	//set spr_addr
+		spr_mrq <= 1'b1;			//assert spr_mrq
+		offs <= offs + 14'b1;		//inc offs
+		sa_wd <= offs + 14'b1;		//write offs
+		sa_we <= 1'b1;
+	end
+		sl_wa <= sl_wa + 9'b1;
+		sp_ra[3:0] <= sdbuf[11:8];		//set paladdr for pix1
+		sl_we <= !(sdbuf[11:8] == 4'b0);	//set transparency for pix1
+		mc <= 5'd18;
+	end
+
+	18: //write pix2@16c
+	begin
+		sa_we <= 1'b0;
+		sl_wa <= sl_wa + 9'b1;
+		sp_ra[3:0] <= sdbuf[7:4];			//set paladdr for pix2
+		sl_we <= !(sdbuf[7:4] == 4'b0);	//set transparency for pix2
+		mc <= 5'd20;
+	end
+
+	20: //write pix3@16c
+	begin
+		sl_wa <= sl_wa + 9'b1;
+		sp_ra[3:0] <= sdbuf[3:0];			//set paladdr for pix3
+		sl_we <= !(sdbuf[3:0] == 4'b0);	//set transparency for pix3
+		mc <= 5'd21;
+	end
+
+	21:	//end of write to sline
+	begin
+		sa_we <= 1'b0;
 		sl_we <= 1'b0;
 		sl_wa <= sl_wa + 9'b1;
-		offs <= offs + 14'b1;
-		xsz <= xsz - 7'b1;
-		mc <= 6'd24;
-	end
-	
-	24:	// End of horizonal loop 16c
-	begin
+
 		//check if xsz=0
-		if (xsz == 7'b0)
-		//yes: write offs
+		if ((xsz - 7'b1) == 7'b0)
+		//yes:
 		begin
-			sa_wd <= offs;
-			sa_ws <= 1'b1;
-			mc <= 6'd25;
-		end
-		else
-		//no: go to begin of 16c loop (step 12)
-		begin
-			mc <= 6'd12;
-		end
-	end
-	
-	25:
-	begin
-		if ((num + 5'b1) == 5'b0)	//check if all 32 sprites done
-	//yes: halt
+		if ((num + 5'b1) == 5'b0)		//check if all 32 sprites done
+		//yes: halt
 		begin
 			test <= 1'b0;
-			mc <= 6'd63;
+			mc <= 5'd31;
 		end
 		else
-	//no: next sprite processing
+		//no: next sprite processing
 		begin
 			num <= num + 5'b1;
 			sf_ra <= {(num + 5'b1), 3'd4};	//inc spnum, set addr for reg4
-			mc <= 6'd2;
+			mc <= 5'd2;
+		end
+		end
+		else
+		//no: go to begin of loop (step 12)
+		begin
+		xsz <= xsz - 7'b1;
+		mc <= 5'd12;
 		end
 	end
 
@@ -380,16 +498,29 @@ module sprites(
 	wire [6:0] sl_rd0, sl_rd1;
 	reg sl_ws0, sl_ws1;
 
+	always @*
+	begin
+	if (!clk)
+		begin
+			sl_ws <= sl_we;
+			sa_ws <= sa_we;
+		end
+	else
+		begin
+			sl_ws <= 1'b0;
+			sa_ws <= 1'b0;
+		end
+	end
 
 	sline0 sline0(	.wraddress(l_sel ? sl_wa : sl_ra),
-					.data(l_sel ? {en, sp_rd[5:0]} : 7'b0),
+					.data(l_sel ? {1'b1, (cres == 2'b11 ? pix : sp_rd[5:0])} : 7'b0),
 					.wren(l_sel ? sl_ws : sl_wsn),
 					.rdaddress(sl_ra),
 					.q(sl_rd0)
 				);
 
 	sline1 sline1(	.wraddress(!l_sel ? sl_wa : sl_ra),
-					.data(!l_sel ? {en, sp_rd[5:0]} : 7'b0),
+					.data(!l_sel ? {1'b1, (cres == 2'b11 ? pix : sp_rd[5:0])} : 7'b0),
 					.wren(!l_sel ? sl_ws : sl_wsn),
 					.rdaddress(sl_ra),
 					.q(sl_rd1)
@@ -397,7 +528,7 @@ module sprites(
 
 	wire [13:0] sa_rd;
 	reg [13:0] sa_wd;
-	reg sa_ws;
+	reg sa_ws, sa_we;
 
 	sacnt sacnt(	.wraddress(num),
 					.data(sa_wd),
