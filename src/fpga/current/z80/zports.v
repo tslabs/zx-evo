@@ -595,8 +595,8 @@ module zports(
 		begin
 			psd0 <= {din[4],din[4],din[4],din[4],din[4],din[4],din[4],din[4]};
 			psd1 <= {din[4],din[4],din[4],din[4],din[4],din[4],din[4],din[4]};
-			psd2 <= {din[4],din[4],din[4],din[4],din[4],din[4],din[4],din[4]};
-			psd3 <= {din[4],din[4],din[4],din[4],din[4],din[4],din[4],din[4]};
+			psd2 <= {din[3],din[3],din[3],din[3],din[3],din[3],din[3],din[3]};
+			psd3 <= {din[3],din[3],din[3],din[3],din[3],din[3],din[3],din[3]};
 			border <= {din[1],1'b0,din[2],1'b0,din[0],1'b0};
 		end
 
