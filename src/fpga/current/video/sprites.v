@@ -7,11 +7,16 @@
 // Written by TS-Labs inc.
 //
 //
-// TV Line Cycles - 448:
+// TV Horizontal Line Cycles - 448:
 // Visible Area  - 360 * 288 pixels:
-// 		52 - border
-// 		256 - pixels
-// 		52 - border
+//
+// 		|		 48	|
+//	---------------------
+// 	52	| 256		|  52
+// 		|  			|
+// 		|  		192	|
+//	---------------------
+//		|		 48	|
 
 // to do
 // - optimize usage of summators
