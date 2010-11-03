@@ -491,8 +491,8 @@ sfile sfile(	.wraddress(sf_wa), .data(sf_wd), .rdaddress(sf_ra), .q(sf_rd), .wrc
 
 
 // #debug!!!
-	wire [7:0] sm_ra, sm_wa;
-	wire [7:0] sm_wd, sm_rd;
+	wire [8:0] sm_ra, sm_wa;
+	wire [15:0] sm_wd, sm_rd;
 	wire sm_we;
 
 smem smem(	.wraddress(sm_wa), .data(sm_wd), .rdaddress(sm_ra), .q(sm_rd), .wrclock(fclk), .wren(sm_we) );

@@ -73,6 +73,11 @@ module zports(
 	output reg [7:0] vcfg,
 	output reg [7:0] sf_wa,
 	output reg [7:0] sf_wd,
+//debug!!!
+	output reg [9:0] sm_wa,
+	output reg [15:0] sm_wd,
+	output reg sm_we,
+	
 	output reg [7:0] sp_wa,
 	output reg [5:0] sp_wd,
 	output reg sf_we, sp_we,
@@ -578,7 +583,6 @@ module zports(
 
 
 	reg [15:0] sm_wdat; //debug!!!
-	reg [7:0] sm_wadr; //debug!!!
 	
 	//#55FF Write to XT Regs and allied ports
 	always @(posedge zclk, negedge rst_n)
@@ -657,13 +661,13 @@ module zports(
 		
 	18:	//write LSB of smadr
 		begin
-			sm_wadr[7:0] <= din[7:0];
+			sm_wa[7:0] <= din[7:0];
 		end
 		
 	19:	//write LSB of smadr, smem
 		begin
 			sm_wd <= sm_wdat;
-			sm_wa <= {din[1:0], sm_wadr};
+			sm_wa[8] <= din[0];
 			sm_we <= 1'b1;
 		end
 		

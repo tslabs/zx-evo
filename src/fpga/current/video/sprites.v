@@ -555,7 +555,7 @@ endmodule
 // 16384 bit = 1024x16
 // #debug!!!
 
-module sfile (
+module smem (
 	data,
 	rdaddress,
 	wraddress,
@@ -564,8 +564,8 @@ module sfile (
 	q);
 
 	input	[15:0]  data;
-	input	[9:0]  rdaddress;
-	input	[9:0]  wraddress;
+	input	[8:0]  rdaddress;
+	input	[8:0]  wraddress;
 	input	  wrclock;
 	input	  wren;
 	output	[15:0]  q;
@@ -600,7 +600,7 @@ module sfile (
 		altdpram_component.rdcontrol_aclr = "OFF",
 		altdpram_component.rdcontrol_reg = "UNREGISTERED",
 		altdpram_component.width = 16,
-		altdpram_component.widthad = 10,
+		altdpram_component.widthad = 9,
 		altdpram_component.wraddress_aclr = "OFF",
 		altdpram_component.wraddress_reg = "UNREGISTERED",
 		altdpram_component.wrcontrol_aclr = "OFF",
