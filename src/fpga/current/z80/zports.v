@@ -576,6 +576,9 @@ module zports(
 		endcase
 	end
 
+
+	reg [15:0] sm_wdat; //debug!!!
+	reg [7:0] sm_wadr; //debug!!!
 	
 	//#55FF Write to XT Regs and allied ports
 	always @(posedge zclk, negedge rst_n)
@@ -595,7 +598,7 @@ module zports(
 		begin
 			psd0 <= {din[4],din[4],din[4],din[4],din[4],din[4],din[4],din[4]};
 			psd1 <= {din[4],din[4],din[4],din[4],din[4],din[4],din[4],din[4]};
-			psd2 <= {din[3],din[3],din[3],din[3],din[3],din[3],din[3],din[3]};
+			psd2 <= {din[4],din[3],din[3],din[3],din[3],din[3],din[3],din[3]};
 			psd3 <= {din[3],din[3],din[3],din[3],din[3],din[3],din[3],din[3]};
 			border <= {din[1],1'b0,din[2],1'b0,din[0],1'b0};
 		end
@@ -641,10 +644,35 @@ module zports(
 			sf_we <= 1'b1;
 		end
 	
+// debug!!!
+	16:	//write LSB of smdat
+		begin
+			sm_wdat[7:0] <= din[7:0];
+		end
+		
+	17:	//write MSB of smdat
+		begin
+			sm_wdat[15:8] <= din[7:0];
+		end
+		
+	18:	//write LSB of smadr
+		begin
+			sm_wadr[7:0] <= din[7:0];
+		end
+		
+	19:	//write LSB of smadr, smem
+		begin
+			sm_wd <= sm_wdat;
+			sm_wa <= {din[1:0], sm_wadr};
+			sm_we <= 1'b1;
+		end
+		
+	
 		endcase
 		end
 		else
 //		sp_we <= 1'b0;
+//		sm_we <= 1'b1;
 		sf_we <= 1'b0;
 
 	end

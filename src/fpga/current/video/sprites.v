@@ -36,6 +36,10 @@ module sprites(
 	output reg [7:0] sf_ra,
 	input [7:0] sf_rd,
 
+//smem	//#debug!!!
+	output reg [9:0] sm_ra,
+	input [15:0] sm_rd,
+	
 //spram
 	output reg [7:0] sp_ra,
 	input [5:0] sp_rd,
@@ -151,10 +155,13 @@ module sprites(
 	0:	if (spr_mrq)
 		begin
 			spr_drdy <= 1'b0;
-			mdat <= spr_addr[15:0];
+			sm_ra <= spr_addr[9:0];
 			mrq <= 4'd1;
 		end
-	1:	mrq <= 4'd2;
+	1:	begin
+			mdat <= sm_rd;
+			mrq <= 4'd2;
+		end
 	2:	mrq <= 4'd3;
 	3:	mrq <= 4'd4;
 	4:	mrq <= 4'd5;
@@ -542,6 +549,62 @@ module sprites(
 					.rdaddress(num),
 					.q(sa_rd)
 				);
+endmodule
+
+// SMEM: Sprites memory file
+// 16384 bit = 1024x16
+// #debug!!!
+
+module sfile (
+	data,
+	rdaddress,
+	wraddress,
+	wrclock,
+	wren,
+	q);
+
+	input	[15:0]  data;
+	input	[9:0]  rdaddress;
+	input	[9:0]  wraddress;
+	input	  wrclock;
+	input	  wren;
+	output	[15:0]  q;
+
+	wire [15:0] sub_wire0;
+	wire [15:0] q = sub_wire0[15:0];
+
+	altdpram	altdpram_component (
+				.wren (wren),
+				.inclock (wrclock),
+				.data (data),
+				.rdaddress (rdaddress),
+				.wraddress (wraddress),
+				.q (sub_wire0),
+				.aclr (1'b0),
+				.byteena (1'b1),
+				.inclocken (1'b1),
+				.outclock (1'b1),
+				.outclocken (1'b1),
+				.rdaddressstall (1'b0),
+				.rden (1'b1),
+				.wraddressstall (1'b0));
+	defparam
+		altdpram_component.indata_aclr = "OFF",
+		altdpram_component.indata_reg = "UNREGISTERED",
+		altdpram_component.intended_device_family = "ACEX1K",
+		altdpram_component.lpm_type = "altdpram",
+		altdpram_component.outdata_aclr = "OFF",
+		altdpram_component.outdata_reg = "UNREGISTERED",
+		altdpram_component.rdaddress_aclr = "OFF",
+		altdpram_component.rdaddress_reg = "UNREGISTERED",
+		altdpram_component.rdcontrol_aclr = "OFF",
+		altdpram_component.rdcontrol_reg = "UNREGISTERED",
+		altdpram_component.width = 16,
+		altdpram_component.widthad = 10,
+		altdpram_component.wraddress_aclr = "OFF",
+		altdpram_component.wraddress_reg = "UNREGISTERED",
+		altdpram_component.wrcontrol_aclr = "OFF",
+		altdpram_component.wrcontrol_reg = "INCLOCK";
 endmodule
 
 
