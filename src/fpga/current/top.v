@@ -489,6 +489,14 @@ module top(
 
 sfile sfile(	.wraddress(sf_wa), .data(sf_wd), .rdaddress(sf_ra), .q(sf_rd), .wrclock(fclk), .wren(sf_we) );
 
+
+// #debug!!!
+	wire [7:0] sm_ra, sm_wa;
+	wire [7:0] sm_wd, sm_rd;
+	wire sm_we;
+
+smem smem(	.wraddress(sm_wa), .data(sm_wd), .rdaddress(sm_ra), .q(sm_rd), .wrclock(fclk), .wren(sm_we) );
+
 			
 	wire [7:0] sp_ra, sp_wa;
 	wire [5:0] sp_wd, sp_rd;
@@ -509,6 +517,7 @@ sprites sprites( .clk(fclk), .spr_en(vcfg[6]),
 			.pre_vline(pre_vline),
 			.spixel(spixel), .spx_en(spx_en),
 			.sf_ra(sf_ra), .sf_rd(sf_rd), 
+			.sm_ra(sm_ra), .sm_rd(sm_rd), //#debug!!!
 			.sp_ra(sp_ra), .sp_rd(sp_rd),
 			.test(test), .mc(sp_mc),
 			.spr_addr(spr_addr), .spr_mrq(spr_mrq),
@@ -577,6 +586,7 @@ sprites sprites( .clk(fclk), .spr_en(vcfg[6]),
 
 				.vcfg(vcfg),
 				.sf_wa(sf_wa), .sf_wd(sf_wd),  .sf_we(sf_we), 
+				.sm_wa(sm_wa), .sm_wd(sm_wd),  .sm_we(sm_we), //#debug!!!
 				.sp_wa(sp_wa), .sp_wd(sp_wd),  .sp_we(sp_we), 
 				  
 	              .keys_in(kbd_port_data),
