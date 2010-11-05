@@ -1,16 +1,19 @@
 
 #include "ball.h"
 
-main()
+void main(void)
 {
-	unsigned int i = 0;
+	int i = 0;
 	unsigned char d;
 
 	while(i<=1024)
 	{
-		d=ball[i];
+		d+=ball[i]*13607;
+
+        
 		i++;
 	}
+
 }
 
 	
