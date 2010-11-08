@@ -33,7 +33,7 @@ begin
 	else if (saw == 9'h1ff)
 	begin
 		beep <= 1'b1;	//BEEP is set on the begin of PWM duty cycle
-		pwm <= (psd0 + psd1 + psd2 + psd3)[8:0];	//pwm reloaded from registers
+		pwm <= (psd0 + psd1 + psd2 + psd3); 	//pwm reloaded from registers
 	end
 end
 
