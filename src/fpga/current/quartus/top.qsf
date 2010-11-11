@@ -233,3 +233,24 @@ set_global_assignment -name VERILOG_FILE ../dram/arbiter.v
 set_global_assignment -name VERILOG_FILE ../common/spi2.v
 set_global_assignment -name VERILOG_FILE ../common/resetter.v
 set_global_assignment -name VERILOG_FILE ../top.v
+set_global_assignment -name REMOVE_REDUNDANT_LOGIC_CELLS OFF
+set_global_assignment -name SAFE_STATE_MACHINE OFF
+set_global_assignment -name STATE_MACHINE_PROCESSING AUTO
+set_global_assignment -name REMOVE_DUPLICATE_REGISTERS ON
+set_global_assignment -name ALLOW_POWER_UP_DONT_CARE ON
+set_global_assignment -name SUPPRESS_REG_MINIMIZATION_MSG ON
+set_global_assignment -name NOT_GATE_PUSH_BACK ON
+set_global_assignment -name IGNORE_VERILOG_INITIAL_CONSTRUCTS OFF
+set_global_assignment -name IGNORE_CARRY_BUFFERS OFF
+set_global_assignment -name IGNORE_CASCADE_BUFFERS OFF
+set_global_assignment -name IGNORE_GLOBAL_BUFFERS OFF
+set_global_assignment -name IGNORE_ROW_GLOBAL_BUFFERS OFF
+set_global_assignment -name IGNORE_LCELL_BUFFERS OFF
+set_global_assignment -name EXTRACT_VERILOG_STATE_MACHINES ON
+set_global_assignment -name CASCADE_CHAIN_LENGTH 2
+set_global_assignment -name AUTO_RESOURCE_SHARING OFF
+set_global_assignment -name AUTO_IMPLEMENT_IN_ROM OFF
+set_global_assignment -name ADD_PASS_THROUGH_LOGIC_TO_INFERRED_RAMS ON
+set_global_assignment -name OPTIMIZE_HOLD_TIMING OFF
+set_global_assignment -name FITTER_EFFORT "STANDARD FIT"
+set_global_assignment -name AUTO_PACKED_REGISTERS "MINIMIZE AREA"
