@@ -519,7 +519,7 @@ sprites sprites( .clk(fclk), .spr_en(vcfg[6]),
 			.sf_ra(sf_ra), .sf_rd(sf_rd), 
 			.sm_ra(sm_ra), .sm_rd(sm_rd), //#debug!!!
 			.sp_ra(sp_ra), .sp_rd(sp_rd),
-			.test(test), .mc(sp_mc),
+			.test(test), .mcd(sp_mc),
 			.spr_addr(spr_addr), .spr_mrq(spr_mrq),
 //			.spr_drdy(1'b1),
 //			.spr_dat(16'h8184)
