@@ -82,7 +82,7 @@ module syncv(
 	always @(posedge line_start)
 	begin
 
-		pre_vline <= (vcount == (VBLNK_END - 1));
+		pre_vline <= (vcount == VBLNK_END);
 			
 	end
 	
