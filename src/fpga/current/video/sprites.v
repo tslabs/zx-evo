@@ -21,9 +21,13 @@
 // to do
 // - optimize usage of summators
 // - check spr_en and turn off SPU at VBLANK
+// - no MRQ should be asserted at HBLANK
 // - Read spr_dat from DRAM
 // - Fix jerking while write to sfile
-
+// - use SFILE instead of SACNT
+// - use bit7 of PRAM for transparency
+// - swap CRES and PALs (as in datasheet)
+// - code Z80_EN and ZX_EN
 
 module sprites(
 
