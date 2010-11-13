@@ -74,12 +74,10 @@ module zports(
 
 //SPRAM
 	output reg [7:0] sp_wa,
-	output reg [7:0] sp_wd,
 	output sp_we,
 
 //SFile	
 	output reg [7:0] sf_wa,
-	output reg [7:0] sf_wd,
 	output sf_we,
 
 	//debug!!!
@@ -616,12 +614,8 @@ module zports(
 			vcfg <= din[7:0];
 	PalAddr:
 			sp_wa <= din[7:0];
-	PalData:
-			sp_wd <= din[7:0];
 	SFAddr:
 			sf_wa <= din[7:0];
-	SFData:
-			sf_wd <= din[7:0];
 	
 // debug!!!
 	16:	//write LSB of smdat
