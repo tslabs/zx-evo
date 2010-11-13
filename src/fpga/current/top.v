@@ -499,7 +499,7 @@ smem smem(	.wraddress(sm_wa), .data(sm_wd), .rdaddress(sm_ra), .q(sm_rd), .wrclo
 
 			
 	wire [7:0] sp_ra, sp_wa;
-	wire [5:0] sp_wd, sp_rd;
+	wire [7:0] sp_wd, sp_rd;
 	wire sp_we;
 
 spram spram(	.wraddress(sp_wa), .data(sp_wd), .rdaddress(sp_ra), .q(sp_rd),
@@ -520,7 +520,7 @@ sprites sprites( .clk(fclk), .spr_en(vcfg[6]),
 			.sm_ra(sm_ra), .sm_rd(sm_rd), //#debug!!!
 			.sp_ra(sp_ra), .sp_rd(sp_rd),
 			.test(test), .mcd(sp_mc),
-			.spr_addr(spr_addr), .spr_mrq(spr_mrq),
+			.spr_addr(spr_addr), .spr_mrq(spr_mrq)
 //			.spr_drdy(1'b1),
 //			.spr_dat(16'h8184)
 			);
