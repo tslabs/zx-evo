@@ -122,6 +122,8 @@ module sprites(
 3:	//dummy, go to step 0
 		rsst <= 2'd0;
 
+default:	rsst <= 2'd0;
+
 	endcase
 	end	
 
@@ -180,7 +182,7 @@ module sprites(
 
 	assign mcd = ms;
 	
-// Marlezonskiy balet, part I
+// Marlezonskiy balet
 
 	reg [5:0] ms;		//current and next states of FSM
 
