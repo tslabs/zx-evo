@@ -74,12 +74,12 @@ module zports(
 	output reg [7:0] sf_wa,
 	output reg [7:0] sf_wd,
 //debug!!!
-	output reg [9:0] sm_wa,
+	output reg [8:0] sm_wa,
 	output reg [15:0] sm_wd,
 	output reg sm_we,
 	
 	output reg [7:0] sp_wa,
-	output reg [5:0] sp_wd,
+	output reg [7:0] sp_wd,
 	output reg sf_we, sp_we,
 
 
@@ -637,7 +637,7 @@ module zports(
 			sp_wa <= din[7:0];
 	PalData:
 		begin
-			sp_wd <= din[5:0];
+			sp_wd <= din[7:0];
 			sp_we <= 1'b1;
 		end
 	SFAddr:
