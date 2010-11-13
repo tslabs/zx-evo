@@ -3,7 +3,6 @@
 // #debug!!!
 
 module smem (
-	input	  clock,
 	input	[15:0]  data,
 	input	[8:0]  rdaddress,
 	input	[8:0]  wraddress,
@@ -14,7 +13,7 @@ module smem (
 
 	altdpram	altdpram_component (
 				.wren (wren),
-				.inclock (clock),
+				.inclock (wrclock),
 				.data (data),
 				.rdaddress (rdaddress),
 				.wraddress (wraddress),
@@ -51,7 +50,6 @@ endmodule
 // 2048 bit = 256x8
 
 module sfile (
-	input	  clock,
 	input	[7:0]  data,
 	input	[7:0]  rdaddress,
 	input	[7:0]  wraddress,
@@ -62,7 +60,7 @@ module sfile (
 
 	altdpram	altdpram_component (
 				.wren (wren),
-				.inclock (clock),
+				.inclock (wrclock),
 				.data (data),
 				.rdaddress (rdaddress),
 				.wraddress (wraddress),
@@ -97,7 +95,6 @@ endmodule
 
 //palette SRAM for sprites 256x8
 module spram (
-	input	  clock,
 	input	[7:0]  data,
 	input	[7:0]  rdaddress,
 	input	[7:0]  wraddress,
@@ -108,7 +105,7 @@ module spram (
 
 	altdpram	altdpram_component (
 				.wren (wren),
-				.inclock (clock),
+				.inclock (wrclock),
 				.data (data),
 				.rdaddress (rdaddress),
 				.wraddress (wraddress),
@@ -143,7 +140,6 @@ endmodule
 
 //sprite video buffer0
 module sline0 (
-	input	  clock,
 	input	[6:0]  data,
 	input	[8:0]  rdaddress,
 	input	[8:0]  wraddress,
@@ -154,7 +150,7 @@ module sline0 (
 
 	altdpram	altdpram_component (
 				.wren (wren),
-				.inclock (clock),
+				.inclock (wrclock),
 				.data (data),
 				.rdaddress (rdaddress),
 				.wraddress (wraddress),
@@ -189,7 +185,6 @@ module sline0 (
 
 //sprite video buffer1
 module sline1 (
-	input	  clock,
 	input	[6:0]  data,
 	input	[8:0]  rdaddress,
 	input	[8:0]  wraddress,
@@ -200,7 +195,7 @@ module sline1 (
 
 	altdpram	altdpram_component (
 				.wren (wren),
-				.inclock (clock),
+				.inclock (wrclock),
 				.data (data),
 				.rdaddress (rdaddress),
 				.wraddress (wraddress),

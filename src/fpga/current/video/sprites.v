@@ -19,14 +19,13 @@
 //		|		 48	|
 
 // to do
+//
 // - optimize usage of summators
 // - check spr_en and turn off SPU at VBLANK
 // - no MRQ should be asserted at HBLANK
 // - Read spr_dat from DRAM
-// - Fix jerking while write to sfile
 // - use SFILE instead of SACNT
 // - code Z80_EN and ZX_EN
-// - make order with WSs on FRAMs (use sync)
 
 module sprites(
 
@@ -547,22 +546,16 @@ default:	rsst <= 2'd0;
 	
 	always @*
 		if (!clk)
-		begin
-//			sl_ws <= sl_wss;
 			sa_ws <= sa_we;
-		end
 		else
-		begin
-//			sl_ws <= 1'b0;
 			sa_ws <= 1'b0;
-		end
 
 	sline0 sline0(	.wraddress(l_sel ? sl_wa : sl_ra),
 					.data(l_sel ? sl_wds : 7'b0),
 					.wren(l_sel ? sl_wss : sl_wsn),
 					.rdaddress(sl_ra),
 					.q(sl_rd0),
-					.clock(clk)
+					.wrclock(clk)
 				);
 
 	sline1 sline1(	.wraddress(!l_sel ? sl_wa : sl_ra),
@@ -570,7 +563,7 @@ default:	rsst <= 2'd0;
 					.wren(!l_sel ? sl_wss : sl_wsn),
 					.rdaddress(sl_ra),
 					.q(sl_rd1),
-					.clock(clk)
+					.wrclock(clk)
 				);
 
 
