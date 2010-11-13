@@ -483,23 +483,8 @@ module top(
 	              .video_strobe(video_strobe), .video_next(video_next), .go(go), .bw(bw), .pixel(pixel) );
 
 
-	wire [7:0] sf_ra, sf_wa;
-	wire [7:0] sf_wd, sf_rd;
-	wire sf_we;
-
-sfile sfile(	.wraddress(sf_wa), .data(sf_wd), .rdaddress(sf_ra), .q(sf_rd), .wrclock(fclk), .wren(sf_we) );
-
-
-// #debug!!!
-	wire [8:0] sm_ra, sm_wa;
-	wire [15:0] sm_wd, sm_rd;
-	wire sm_we;
-
-smem smem(	.wraddress(sm_wa), .data(sm_wd), .rdaddress(sm_ra), .q(sm_rd), .wrclock(fclk), .wren(sm_we) );
-
-			
 	wire [7:0] sp_ra, sp_wa;
-	wire [7:0] sp_wd, sp_rd;
+	wire [7:0] sp_rd, sp_wd;
 	wire sp_we;
 
 spram spram(	.wraddress(sp_wa), .data(sp_wd), .rdaddress(sp_ra), .q(sp_rd),
@@ -507,6 +492,21 @@ spram spram(	.wraddress(sp_wa), .data(sp_wd), .rdaddress(sp_ra), .q(sp_rd),
 				.wren(sp_we) );
 			
 
+	wire [7:0] sf_ra, sf_wa;
+	wire [7:0] sf_rd, sf_wd;
+	wire sf_we;
+
+sfile sfile(	.wraddress(sf_wa), .data(sf_wd), .rdaddress(sf_ra), .q(sf_rd), .wrclock(fclk), .wren(1'b1) );
+
+
+// #debug!!!
+	wire [8:0] sm_ra, sm_wa;
+	wire [15:0] sm_rd, sm_wd;
+	wire sm_we;
+
+smem smem(	.wraddress(sm_wa), .data(sm_wd), .rdaddress(sm_ra), .q(sm_rd), .wrclock(fclk), .wren(sm_we) );
+
+			
 	wire [5:0] spixel, sp_mc;
 	wire [20:0] spr_addr;
 	wire [15:0] sp_dat;

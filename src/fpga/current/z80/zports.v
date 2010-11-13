@@ -69,19 +69,24 @@ module zports(
 	output wire [ 7:0] sd_datain,
 	input  wire [ 7:0] sd_dataout,
 
-//	PortXT
+//	PortXT outputs
 	output reg [7:0] vcfg,
-	output reg [7:0] sf_wa,
-	output reg [7:0] sf_wd,
-//debug!!!
-	output reg [8:0] sm_wa,
-	output reg [15:0] sm_wd,
-	output reg sm_we,
-	
+
+//SPRAM
 	output reg [7:0] sp_wa,
 	output reg [7:0] sp_wd,
-	output reg sf_we, sp_we,
+	output sp_we,
 
+//SFile	
+	output reg [7:0] sf_wa,
+	output reg [7:0] sf_wd,
+	output sf_we,
+
+	//debug!!!
+	output reg [8:0] sm_wa,
+	output reg [15:0] sm_wd,
+	output sm_we,
+	
 
 	// WAIT-ports related
 	//
@@ -135,7 +140,8 @@ module zports(
 	localparam CVX1   = 8'hFB;
 	localparam CVX2   = 8'hDD;
 	
-	localparam XT 	  = 16'h55FF;
+	localparam XT1 	  = 16'h55FF;
+	localparam XT2 	  = 16'h56FF;
 	localparam XTRD	  = 8'hEF;
 
 	localparam VGCOM  = 8'h1F;
@@ -232,12 +238,10 @@ module zports(
 		    ( loa==ZXEVBF ) || ( loa==COMPORT ) ||
 
 		    ( (loa==SD0)&&(!shadow) ) || ( (loa==SD1)&&(!shadow) ) || ( (loa==SD2)&&(!shadow) ) || ( (loa==SD3)&&(!shadow) ) ||
-		    (loa==CVX1) || (loa==CVX2)
+		    (loa==CVX1) || (loa==CVX2) ||
 
+		    (loa==XT1) || (loa==XT2)
 		  )
-
-
-
 			porthit = 1'b1;
 		else
 			porthit = 1'b0;
@@ -298,14 +302,14 @@ module zports(
 		case( loa )
 
 		//XT Regs are read here !!!
-		XTRD:
+/*		XTRD:
 		begin
 		case (xt_addr)
 		XBorder:
 			dout = border;
 		endcase
 		end
-
+*/
 		PORTFE:
 			dout = { 1'b1, tape_read, 1'b0, keys_in };
 
@@ -351,7 +355,8 @@ module zports(
 	wire portf7_wr;
 	wire portf7_rd;
 	wire portcv_wr;
-	wire portxt_wr;
+	wire portxt1_wr;
+	wire portxt2_wr;
 
 	assign portfe_wr    = ( (loa==PORTFE) && port_wr);
 	assign portfd_wr    = ( (loa==PORTFD) && port_wr);
@@ -364,7 +369,8 @@ module zports(
 
 	assign portcv_wr    = ( ((loa==CVX1) || (loa==CVX2)) && port_wr);
 	assign portsd_wr    = ( ((loa==SD0) || (loa==SD1) || (loa==SD2) || (loa==SD3)) && port_wr && (!shadow));
-	assign portxt_wr    = ( (a[15:0]==XT) && port_wr );
+	assign portxt1_wr    = ( (a[15:0]==XT1) && port_wr );
+	assign portxt2_wr    = ( (a[15:0]==XT2) && port_wr );
 //	assign portxt_rd    = ( (loa ==XT) && port_rd );
 
 	// IDE ports
@@ -548,53 +554,28 @@ module zports(
 
 			
 	//#55FF - portXT
-
-	reg [1:0] xt_st;
 	localparam xt_msb = 8;
 	reg [xt_msb-1:0] xt_addr;
 
-	//#55FF lock managing
-	always @(posedge zclk, negedge rst_n)
-	begin
+	assign sp_we = (portxt2_wr && (xt_addr == PalData));
+	assign sf_we = (portxt2_wr && (xt_addr == SFData));
+	assign sm_we = (portxt2_wr && (xt_addr == 8'd19));		//debug!!!
 
-		if (!rst_n)						//on ~RES portXT is OFF
-			xt_st <= 2'd0;
-
-		else if (port_wr && !(a[15:0] == XT))
-			xt_st <= 2'd0;				//on ANY other port write portXT is OFF
-
-		else if (portxt_wr)
-		case (xt_st)
-		0:
-			if (din[7:0]==8'hAA)		//if out(#55ff),#aa, port XT is ON
-			xt_st <= 2'd1;				//next must be AddrLatch
-
-		1:
-			begin
-			xt_addr <= din[7:0];
-			xt_st <= 2'd2;				//next must be DataLatch
-			end
-
-		2:
-			xt_st <= 1'd0;				//end of show, portXT is OFF
-		
-		endcase
-	end
-
-
-	reg [15:0] sm_wdat; //debug!!!
-	
 	//#55FF Write to XT Regs and allied ports
 	always @(posedge zclk, negedge rst_n)
-	
+
 	if (!rst_n)
 		begin
+			//here set up RESET XT defaults
 			vcfg <= 8'b0;
 		end
 	else
+
 	begin
-		if	((portxt_wr && (xt_st == 2'd2)) ||
-			portfe_wr || portcv_wr || portsd_wr)
+		if (portxt1_wr)
+			xt_addr <= din[7:0];
+
+		else if (portxt2_wr || portfe_wr || portcv_wr || portsd_wr)
 		begin
 
 		//port FE beep/border bit
@@ -627,7 +608,7 @@ module zports(
 			end
 		endcase
 		
-		if	(portxt_wr)
+		if	(portxt2_wr)
 		case (xt_addr)								//XT Regs are written here !!!
 	XBorder:
 			border <= din[5:0];
@@ -636,27 +617,21 @@ module zports(
 	PalAddr:
 			sp_wa <= din[7:0];
 	PalData:
-		begin
 			sp_wd <= din[7:0];
-			sp_we <= 1'b1;
-		end
 	SFAddr:
 			sf_wa <= din[7:0];
 	SFData:
-		begin
 			sf_wd <= din[7:0];
-			sf_we <= 1'b1;
-		end
 	
 // debug!!!
 	16:	//write LSB of smdat
 		begin
-			sm_wdat[7:0] <= din[7:0];
+			sm_wd[7:0] <= din[7:0];
 		end
 		
 	17:	//write MSB of smdat
 		begin
-			sm_wdat[15:8] <= din[7:0];
+			sm_wd[15:8] <= din[7:0];
 		end
 		
 	18:	//write LSB of smadr
@@ -666,19 +641,12 @@ module zports(
 		
 	19:	//write LSB of smadr, smem
 		begin
-			sm_wd <= sm_wdat;
 			sm_wa[8] <= din[0];
-			sm_we <= 1'b1;
 		end
 		
 	
 		endcase
 		end
-		else
-//		sp_we <= 1'b0;
-//		sm_we <= 1'b1;
-		sf_we <= 1'b0;
-
 	end
 
 	
