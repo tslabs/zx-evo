@@ -21,15 +21,18 @@
 // to do
 //
 // - optimize usage of summators
-// - check spr_en and turn off SPU at VBLANK
+// - check spu_en and turn off SPU at VBLANK
 // - no MRQ should be asserted at HBLANK
-// - Read spr_dat from DRAM
+// - Read spu_data from DRAM
 // - use SFILE instead of SACNT
 // - code Z80_EN and ZX_EN
+// - make YSZ=0 to be 128
+// - make PRAM for use in ZX
+
 
 module sprites(
 
-	input clk, spr_en, line_start, pre_vline,
+	input clk, spu_en, line_start, pre_vline,
 	input [7:0] din,
 	output reg test,
 	output wire [5:0] mcd,
@@ -38,19 +41,15 @@ module sprites(
 	output reg [7:0] sf_ra,
 	input [7:0] sf_rd,
 
-//smem	//#debug!!!
-	output reg [8:0] sm_ra,
-	input [15:0] sm_rd,
-	
 //spram
 	output reg [7:0] sp_ra,
 	input [7:0] sp_rd,
 	
 //dram
-	output reg [20:0] spr_addr,
-//	input [15:0] spr_dat,
-	output reg spr_mrq,
-//	input spr_drdy,
+	output reg [20:0] spu_addr,
+	input [15:0] spu_data,
+	output reg spu_req,
+	input spu_strobe,
 
 //video
 	output reg [5:0] spixel,
@@ -85,7 +84,7 @@ module sprites(
 	reg sl_wsn;
 	
 	always @(posedge clk)
-//	if (!spr_en)
+//	if (!spu_en)
 	begin
 
 	if (line_start)
@@ -128,48 +127,6 @@ default:	rsst <= 2'd0;
 
 	
 // Sprites processing
-
-	//#debug!!!
-	reg [15:0] spr_dat;
-	reg [13:0] sdbuf;
-	reg spr_drdy;
-	reg [3:0] mrq;
-	reg [15:0] mdat;
-	
-	initial
-	begin
-		mrq <= 4'd0;
-	end
-	
-	always @(posedge clk)
-	case (mrq)
-	0:	if (spr_mrq)
-		begin
-			spr_drdy <= 1'b0;
-			sm_ra <= spr_addr[8:0];
-			mrq <= 4'd1;
-		end
-	1:	begin
-			mdat <= sm_rd;
-			mrq <= 4'd8;
-		end
-	2:	mrq <= 4'd3;
-	3:	mrq <= 4'd4;
-	4:	mrq <= 4'd5;
-	5:	mrq <= 4'd6;
-	6:	mrq <= 4'd8;
-	8:	begin
-			spr_dat <= mdat;
-			spr_drdy <= 1'b1;
-			mrq <= 4'd9;
-		end
-	9:	if (!spr_mrq)
-			mrq <= 4'd0;
-		else mrq <= 4'd9;
-	default: mrq <= 4'd0;
-	endcase
-	
-	
 	localparam VLINES = 9'd288;
 	
 	reg [4:0] num;		//number of currently processed sprite
@@ -178,6 +135,8 @@ default:	rsst <= 2'd0;
 	reg [20:0] adr;		//word address!!! 2MB x 16bit
 	reg [6:0] xsz;
 	reg [8:0] ypos;
+
+	reg [13:0] sdbuf;
 
 	assign mcd = ms;
 	
@@ -206,7 +165,10 @@ default:	rsst <= 2'd0;
 	localparam ms_16c2 = 5'd18;
 	localparam ms_16c3 = 5'd19;
 	localparam ms_tc1 = 5'd20;
-	localparam ms_eow = 5'd21;
+	localparam ms_tw1 = 5'd21;
+	localparam ms_tw2 = 5'd22;
+	localparam ms_tw3 = 5'd23;
+	localparam ms_eow = 5'd24;
 	localparam ms_halt = 5'd31;
 
 	wire s_vis, s_last, s_act, s_eox;
@@ -238,7 +200,7 @@ default:	rsst <= 2'd0;
 	begin
 		test <= 1'b1;
 		sa_we <= 1'b0;
-		spr_mrq <= 1'b0;
+		spu_req <= 1'b0;
 
 		num <= 5'd0;			//set sprite number to 0
 		sf_ra <= 8'd4;			//set addr for reg4
@@ -332,9 +294,10 @@ default:	rsst <= 2'd0;
 	begin
 		sl_wa[7:0] <= sf_rd[7:0];	//get XPOS[7:0]
 		sf_ra[2:0] <= 3'd1;			//set addr for reg1
-		spr_addr <= adr_offs;		//set spr_addr
 
-		spr_mrq <= 1'b1;			//assert spr_mrq
+		spu_addr <= adr_offs;		//set spu_addr
+		spu_req <= 1'b1;			//assert spu_req
+
 		offs <= offs_next;			//inc offs
 		sa_wd <= offs_next;			//write next offs
 		sa_we <= 1'b1;
@@ -351,29 +314,28 @@ default:	rsst <= 2'd0;
 	
 	ms_lbeg: //begin of loop
 	//wait for data from DRAM
-	if (!spr_drdy)
+	if (!spu_strobe)
 		ms <= ms_lbeg;
 	else
 	begin
-		spr_mrq <= 1'b0;			//deassert spr_mrq
-		sdbuf <= spr_dat[13:0];
+//		spu_req <= 1'b0;
+		spu_addr <= adr_offs;	//set spu_addr
+		sdbuf <= spu_data[13:0];
+		sl_we <= 1'b1;
 		//write pix0
 		case (cres)
 
 		1:	begin	//4c
-				sp_ra[1:0] <= spr_dat[15:14];		//set paladdr for pix0
-				sl_we <= 1'b1;
+				sp_ra[1:0] <= spu_data[15:14];		//set paladdr for pix0
 				ms <= ms_4c1;
 			end
 	
 		2:	begin	//16c
-				sp_ra[3:0] <= spr_dat[15:12];		//set paladdr for pix0
-				sl_we <= 1'b1;
+				sp_ra[3:0] <= spu_data[15:12];		//set paladdr for pix0
 				ms <= ms_16c1;
 			end
 		
 		3:	begin	//true color
-				sl_we <= 1'b1;
 				ms <= ms_tc1;
 			end
 
@@ -384,8 +346,8 @@ default:	rsst <= 2'd0;
 	begin
 	if (!s_eox)
 	begin
-		spr_addr <= adr_offs;	//set spr_addr
-		spr_mrq <= 1'b1;			//assert spr_mrq
+//		spu_req <= 1'b1;		//assert spu_req
+//		spu_addr <= adr_offs;	//set spu_addr
 		offs <= offs_next;		//inc offs
 		sa_wd <= offs_next;		//write offs
 		sa_we <= 1'b1;
@@ -442,8 +404,8 @@ default:	rsst <= 2'd0;
 	begin
 	if (!s_eox)
 	begin
-		spr_addr <= adr_offs;	//set spr_addr
-		spr_mrq <= 1'b1;			//assert spr_mrq
+//		spu_addr <= adr_offs;	//set spu_addr
+//		spu_req <= 1'b1;		//assert spu_req
 		offs <= offs_next;		//inc offs
 		sa_wd <= offs_next;		//write offs
 		sa_we <= 1'b1;
@@ -472,16 +434,22 @@ default:	rsst <= 2'd0;
 	begin
 	if (!s_eox)
 		begin
-			spr_addr <= adr_offs;		//set spr_addr
-			spr_mrq <= 1'b1;			//assert spr_mrq
+//			spu_addr <= adr_offs;		//set spu_addr
+//			spu_req <= 1'b1;			//assert spu_req
 			offs <= offs_next;			//inc offs
 			sa_wd <= offs_next;			//write offs
 			sa_we <= 1'b1;
 		end
 		sl_wa <= sl_wa + 9'b1;
-		ms <= ms_eow;
+		ms <= ms_tw1;	//FIXME!!!!!	Fucking dirty hack!
 	end
 
+	ms_tw1:	//dummy cycle
+		ms <= ms_tw2;
+	
+	ms_tw2:	//dummy cycle
+		ms <= ms_eow;
+	
 	ms_eow:	//end of write to sline
 	begin
 		sl_we <= 1'b0;
@@ -498,6 +466,7 @@ default:	rsst <= 2'd0;
 		else
 		//yes:
 		begin
+		spu_req <= 1'b0;
 		if (!s_last)		//check if all 32 sprites done
 		//no: next sprite processing
 		begin
@@ -519,7 +488,7 @@ default:	rsst <= 2'd0;
 			test <= 1'b0;
 			ms <= ms_halt;
 			sa_we <= 1'b0;
-			spr_mrq <= 1'b0;
+			spu_req <= 1'b0;
 		end
 
 	default: //idle state
@@ -538,10 +507,10 @@ default:	rsst <= 2'd0;
 	wire [6:0] sl_wds;
 
 	assign pixs = (ms == ms_tc1);
-	assign pixt = pixs ? !spr_dat[15] : !sdbuf[7];
-	assign pixc = pixs ? spr_dat[13:8] : sdbuf[5:0];
+	assign pixt = pixs ? !spu_data[14] : !sdbuf[6];
+	assign pixc = pixs ? spu_data[13:8] : sdbuf[5:0];
 	assign tcol = (cres == 2'b11);
-	assign sl_wss = (tcol ? pixt : !sp_rd[7]) && sl_we;
+	assign sl_wss = (tcol ? pixt : !sp_rd[6]) && sl_we;
 	assign sl_wds = {1'b1, (tcol ? pixc : sp_rd[5:0])};
 	
 	always @*
