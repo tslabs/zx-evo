@@ -423,6 +423,11 @@ module top(
 	wire video_strobe;
 	wire video_next;
 
+	wire [20:0] spu_addr;
+	wire [15:0] spu_data;
+	wire spu_strobe;
+	wire spu_next;
+
 	arbiter dramarb( .clk(fclk),
 	                 .rst_n(rst_n),
 
@@ -445,6 +450,12 @@ module top(
 	                 .video_data(video_data),
 	                 .video_strobe(video_strobe),
 	                 .video_next(video_next),
+
+	                 .spu_addr(spu_addr),
+	                 .spu_data(spu_data),
+	                 .spu_strobe(spu_strobe),
+	                 .spu_next(spu_next),
+					 .spu_req(spu_req),
 
 	                 //.cpu_waitcyc(cpu_waitcyc),
 	                 //.cpu_stall(cpu_stall),
@@ -499,30 +510,20 @@ spram spram(	.wraddress(sp_wa), .data(d), .rdaddress(sp_ra), .q(sp_rd),
 sfile sfile(	.wraddress(sf_wa), .data(d), .rdaddress(sf_ra), .q(sf_rd), .wrclock(fclk), .wren(sf_we) );
 
 
-// #debug!!!
-	wire [8:0] sm_ra, sm_wa;
-	wire [15:0] sm_rd, sm_wd;
-	wire sm_we;
 
-smem smem(	.wraddress(sm_wa), .data(sm_wd), .rdaddress(sm_ra), .q(sm_rd), .wrclock(fclk), .wren(sm_we) );
-
-			
 	wire [5:0] spixel, sp_mc;
-	wire [20:0] spr_addr;
-	wire [15:0] sp_dat;
-	wire spx_en, sp_mrq, sp_drdy;
+	wire spx_en, spu_req;
+
 	
-sprites sprites( .clk(fclk), .spr_en(vcfg[6]),
+sprites sprites( .clk(fclk), .spu_en(vcfg[6]),
 			.line_start(line_start),
 			.pre_vline(pre_vline),
 			.spixel(spixel), .spx_en(spx_en),
 			.sf_ra(sf_ra), .sf_rd(sf_rd), 
-			.sm_ra(sm_ra), .sm_rd(sm_rd), //#debug!!!
 			.sp_ra(sp_ra), .sp_rd(sp_rd),
 			.test(test), .mcd(sp_mc),
-			.spr_addr(spr_addr), .spr_mrq(spr_mrq)
-//			.spr_drdy(1'b1),
-//			.spr_dat(16'h8184)
+			.spu_addr(spu_addr), .spu_data(spu_data), 
+			.spu_req(spu_req), .spu_strobe(spu_strobe)
 			);
 
 
@@ -532,7 +533,7 @@ sprites sprites( .clk(fclk), .spr_en(vcfg[6]),
 	        .hblank(hblank), .vblank(vblank), .hpix(hpix), .vpix(vpix), .hsync(hsync), .vsync(vsync),
 	        .vred(vred), .vgrn(vgrn), .vga_hsync(vga_hsync), .vblu(vblu),
 	        .vhsync(vhsync), .vvsync(vvsync), .vcsync(vcsync), .hsync_start(hsync_start),
-			.test(test),
+			.test(test), .tst(spu_req),
 			.sp_mc(sp_mc),
 	        .scanin_start(scanin_start), .scanout_start(scanout_start), .cfg_vga_on(cfg_vga_on) );
 
@@ -586,7 +587,7 @@ sprites sprites( .clk(fclk), .spr_en(vcfg[6]),
 
 				.vcfg(vcfg),
 				.sf_wa(sf_wa), .sf_we(sf_we), 
-				.sm_wa(sm_wa), .sm_wd(sm_wd),  .sm_we(sm_we), //#debug!!!
+//				.sm_wa(sm_wa), .sm_wd(sm_wd),  .sm_we(sm_we), //#debug!!!
 				.sp_wa(sp_wa), .sp_we(sp_we), 
 				  
 	              .keys_in(kbd_port_data),

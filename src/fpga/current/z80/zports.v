@@ -81,10 +81,11 @@ module zports(
 	output sf_we,
 
 	//debug!!!
+/*
 	output reg [8:0] sm_wa,
 	output reg [15:0] sm_wd,
 	output sm_we,
-	
+*/	
 
 	// WAIT-ports related
 	//
@@ -557,7 +558,7 @@ module zports(
 
 	assign sp_we = (portxt2_wr && (xt_addr == PalData));
 	assign sf_we = (portxt2_wr && (xt_addr == SFData));
-	assign sm_we = (portxt2_wr && (xt_addr == 8'd19));		//debug!!!
+//	assign sm_we = (portxt2_wr && (xt_addr == 8'd19));		//debug!!!
 
 	//#55FF Write to XT Regs and allied ports
 	always @(posedge zclk, negedge rst_n)
@@ -618,6 +619,7 @@ module zports(
 			sf_wa <= din[7:0];
 	
 // debug!!!
+/*
 	16:	//write LSB of smdat
 		begin
 			sm_wd[7:0] <= din[7:0];
@@ -637,7 +639,7 @@ module zports(
 		begin
 			sm_wa[8] <= din[0];
 		end
-		
+*/		
 	
 		endcase
 		end

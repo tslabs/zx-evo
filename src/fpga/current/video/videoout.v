@@ -14,6 +14,8 @@ module videoout(
 	input [5:0] spixel,  //
 	input [5:0] border, //
 
+	input tst,			//debug!!!
+	
 	input spx_en,
 	input hblank,
 	input vblank,
@@ -53,8 +55,9 @@ module videoout(
 
 	
 //	assign color = (hblank | vblank) ? 6'd0 : (  (hpix & vpix) ? pixel : border  );
-//	assign color = (hblank | vblank) ? 6'd0 :  ( spx_en ? (spixel) : ((hpix & vpix) ? pixel : border ));
-	assign color = (hblank | vblank) ? 6'd0 :  !test ? ( spx_en ? (spixel) : ((hpix & vpix) ? pixel : border )) : sp_mc;
+	assign color = (hblank | vblank) ? 6'd0 :  ( spx_en ? (spixel) : ((hpix & vpix) ? pixel : border ));
+//	assign color = (hblank | vblank) ? 6'd0 :  ((!test ? ( spx_en ? (spixel) : ((hpix & vpix) ? pixel : border )) : sp_mc) | {1'b0, tst, 4'b0});
+//	assign color = (hblank | vblank) ? 6'd0 :  ((!test ? ( spx_en ? (spixel) : ((hpix & vpix) ? pixel : border )) : sp_mc));
 
 	vga_double vga_double( .clk(clk),
 
