@@ -238,21 +238,18 @@ module sacnt (
         rdaddress,
         q);
 
-        input   [13:0]  data;
+        input   [15:0]  data;
         input   [4:0]  rdaddress;
         input   [4:0]  wraddress;
         input     wren;
-        output  [13:0]  q;
-
-        wire [13:0] sub_wire0;
-        wire [13:0] q = sub_wire0[13:0];
+        output  [15:0]  q;
 
         lpm_ram_dp      lpm_ram_dp_component (
                                 .wren (wren),
                                 .data (data),
                                 .rdaddress (rdaddress),
                                 .wraddress (wraddress),
-                                .q (sub_wire0),
+                                .q (q),
                                 .rdclken (1'b1),
                                 .rdclock (1'b1),
                                 .rden (1'b1),
@@ -264,7 +261,7 @@ module sacnt (
                 lpm_ram_dp_component.lpm_outdata = "UNREGISTERED",
                 lpm_ram_dp_component.lpm_rdaddress_control = "UNREGISTERED",
                 lpm_ram_dp_component.lpm_type = "LPM_RAM_DP",
-                lpm_ram_dp_component.lpm_width = 14,
+                lpm_ram_dp_component.lpm_width = 16,
                 lpm_ram_dp_component.lpm_widthad = 5,
                 lpm_ram_dp_component.lpm_numwords = 32,
                 lpm_ram_dp_component.lpm_wraddress_control = "UNREGISTERED",
