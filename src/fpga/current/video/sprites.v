@@ -5,7 +5,7 @@
 // Sprite Processor
 //
 // Written by TS-Labs inc.
-// ver. 2.0
+// ver. 1.0
 //
 // TV Horizontal Line Cycles - 448:
 // Visible Area  - 360 * 288 pixels:
@@ -130,7 +130,7 @@ default:	rsst <= 2'd0;
 	localparam VLINES = 9'd288;
 	
 	reg [4:0] num;		//number of currently processed sprite
-	reg [13:0] offs;	//offset from sprite address, words
+	reg [15:0] offs;	//offset from sprite address, words
 	reg [1:0] cres;
 	reg [20:0] adr;		//word address!!! 2MB x 16bit
 	reg [6:0] xsz;
@@ -174,14 +174,18 @@ default:	rsst <= 2'd0;
 	wire s_vis, s_last, s_act, s_eox;
 	wire [4:0] s_next;
 	wire [20:0] adr_offs;
-	wire [13:0] offs_next;
+	wire [15:0] offs_next;
 	wire [6:0] s_decx;
+	wire [8:0] ypos1;
+	wire [8:0] ysz1;
 	assign s_act = !(sf_rd[1:0] == 2'b0);
 	assign s_next = num + 5'd1;
 	assign s_last = (s_next == 5'd0);
-	assign s_vis = ((vline >= {sf_rd[7], ypos[7:0]}) && (vline < ({sf_rd[7], ypos[7:0]} + sf_rd[6:0])));
+	assign ypos1 = {sf_rd[7], ypos[7:0]};
+	assign ysz1 = {sf_rd[6:0], 2'b0};
+	assign s_vis = ((vline >= ypos1) && (vline < (ypos1 + ysz1)));
 	assign adr_offs = adr + offs;
-	assign offs_next = offs + 14'b1;
+	assign offs_next = offs + 16'b1;
 	assign s_decx = xsz - 7'd1;
 	assign s_eox = (s_decx == 7'b0);
 
@@ -270,7 +274,7 @@ default:	rsst <= 2'd0;
 		adr[7:0] <= sf_rd[7:0];		//get ADR[7:0]
 		sf_ra[2:0] <= 3'd6;			//set addr for reg6
 		if (ypos == vline)			//check if 1st line of sprite
-			offs <= 14'b0;			//yes: null offs
+			offs <= 16'b0;			//yes: null offs
 		else
 			offs <= sa_rd;			//no: get offs from sacnt
 		ms <= ms_st5;
@@ -536,8 +540,8 @@ default:	rsst <= 2'd0;
 				);
 
 
-	wire [13:0] sa_rd;
-	reg [13:0] sa_wd;
+	wire [15:0] sa_rd;
+	reg [15:0] sa_wd;
 	reg sa_ws, sa_we;
 
 	sacnt sacnt(	.wraddress(num),
