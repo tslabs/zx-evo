@@ -157,21 +157,6 @@ module zports(
 	localparam COMPORT = 8'hEF; // F8EF..FFEF - rs232 ports
 
 
-	//Port XT Regs
-	parameter xborder  = 8'h00;
-	parameter sysconfig  = 8'h01;
-	parameter romconfig  = 8'h02;
-	parameter vpage  = 8'h03;
-	parameter page00  = 8'h04;
-	parameter page01  = 8'h05;
-	parameter page10  = 8'h06;
-	parameter page11  = 8'h07;
-	parameter vconfig  = 8'h08;
-	parameter paladdr  = 8'h09;
-	parameter paldata  = 8'h0a;
-	parameter sfnum  = 8'h0f;
-	parameter sfreg  = 8'h10;		//reserved values #10-#17 (!!!)
-
 	reg external_port;
 
 	reg port_wr;
@@ -547,13 +532,27 @@ module zports(
 
 			
 	//#55FF - portXT
-	localparam xt_msb = 8;
-	reg [xt_msb-1:0] xt_addr;
+	reg [7:0] xt_addr;
 	reg [5:0] snum;
+
+	//Port XT Regs
+	parameter xborder  = 8'h00;
+	parameter sysconfig  = 8'h01;
+	parameter romconfig  = 8'h02;
+	parameter vpage  = 8'h03;
+	parameter page00  = 8'h04;
+	parameter page01  = 8'h05;
+	parameter page10  = 8'h06;
+	parameter page11  = 8'h07;
+	parameter vconfig  = 8'h08;
+	parameter paladdr  = 8'h09;
+	parameter paldata  = 8'h0a;
+	parameter sfnum  = 8'h0f;
+	parameter sfreg  = 8'h10;		//reserved values #10-#17 (!!!)
 
 	assign sp_we = (portxt2_wr && (xt_addr == paldata));
 	assign sf_we = (portxt2_wr && (xt_addr[7:3] == sfreg[7:3]));
-	assign sf_wa = {snum, a[2:0]};
+	assign sf_wa = {snum, xt_addr[2:0]};
 
 	//#55FF Write to XT Regs and allied ports
 	always @(posedge zclk, negedge rst_n)
