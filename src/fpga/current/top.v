@@ -428,9 +428,12 @@ module top(
 	wire spu_strobe;
 	wire spu_next;
 
+	wire [5:0] dcyc;			//debug!!!
+	
 	arbiter dramarb( .clk(fclk),
 	                 .rst_n(rst_n),
 
+					 .dcyc(dcyc),			//debug!!!
 	                 .dram_addr(daddr),
 	                 .dram_req(dreq),
 	                 .dram_rnw(drnw),
@@ -533,8 +536,7 @@ sprites sprites( .clk(fclk), .spu_en(vcfg[6]),
 	        .hblank(hblank), .vblank(vblank), .hpix(hpix), .vpix(vpix), .hsync(hsync), .vsync(vsync),
 	        .vred(vred), .vgrn(vgrn), .vga_hsync(vga_hsync), .vblu(vblu),
 	        .vhsync(vhsync), .vvsync(vvsync), .vcsync(vcsync), .hsync_start(hsync_start),
-			.test(test), .tst(spu_req),
-			.sp_mc(sp_mc),
+			.test(test), .tst(spu_req), .sp_mc(sp_mc), .dcyc(dcyc),		//debug!!!
 	        .scanin_start(scanin_start), .scanout_start(scanout_start), .cfg_vga_on(cfg_vga_on) );
 
 
