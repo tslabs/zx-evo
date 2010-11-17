@@ -77,15 +77,9 @@ module zports(
 	output sp_we,
 
 //SFile	
-	output reg [7:0] sf_wa,
+	output [8:0] sf_wa,
 	output sf_we,
 
-	//debug!!!
-/*
-	output reg [8:0] sm_wa,
-	output reg [15:0] sm_wd,
-	output sm_we,
-*/	
 
 	// WAIT-ports related
 	//
@@ -164,19 +158,19 @@ module zports(
 
 
 	//Port XT Regs
-	parameter XBorder  = 8'h00;
-	parameter SysConfig  = 8'h01;
-	parameter ROMConfig  = 8'h02;
-	parameter VPage  = 8'h03;
-	parameter Page00  = 8'h04;
-	parameter Page01  = 8'h05;
-	parameter Page10  = 8'h06;
-	parameter Page11  = 8'h07;
-	parameter VConfig  = 8'h08;
-	parameter PalAddr  = 8'h09;
-	parameter PalData  = 8'h0a;
-	parameter SFAddr  = 8'h0b;
-	parameter SFData  = 8'h0c;
+	parameter xborder  = 8'h00;
+	parameter sysconfig  = 8'h01;
+	parameter romconfig  = 8'h02;
+	parameter vpage  = 8'h03;
+	parameter page00  = 8'h04;
+	parameter page01  = 8'h05;
+	parameter page10  = 8'h06;
+	parameter page11  = 8'h07;
+	parameter vconfig  = 8'h08;
+	parameter paladdr  = 8'h09;
+	parameter paldata  = 8'h0a;
+	parameter sfnum  = 8'h0f;
+	parameter sfreg  = 8'h10;		//reserved values #10-#17 (!!!)
 
 	reg external_port;
 
@@ -304,7 +298,7 @@ module zports(
 /*		XTRD:
 		begin
 		case (xt_addr)
-		XBorder:
+		xborder:
 			dout = border;
 		endcase
 		end
@@ -555,10 +549,11 @@ module zports(
 	//#55FF - portXT
 	localparam xt_msb = 8;
 	reg [xt_msb-1:0] xt_addr;
+	reg [5:0] snum;
 
-	assign sp_we = (portxt2_wr && (xt_addr == PalData));
-	assign sf_we = (portxt2_wr && (xt_addr == SFData));
-//	assign sm_we = (portxt2_wr && (xt_addr == 8'd19));		//debug!!!
+	assign sp_we = (portxt2_wr && (xt_addr == paldata));
+	assign sf_we = (portxt2_wr && (xt_addr[7:3] == sfreg[7:3]));
+	assign sf_wa = {snum, a[2:0]};
 
 	//#55FF Write to XT Regs and allied ports
 	always @(posedge zclk, negedge rst_n)
@@ -609,37 +604,15 @@ module zports(
 		
 		if	(portxt2_wr)
 		case (xt_addr)								//XT Regs are written here !!!
-	XBorder:
+	xborder:
 			border <= din[5:0];
-	VConfig:
+	vconfig:
 			vcfg <= din[7:0];
-	PalAddr:
+	paladdr:
 			sp_wa <= din[7:0];
-	SFAddr:
-			sf_wa <= din[7:0];
+	sfnum:
+			snum <= din[5:0];
 	
-// debug!!!
-/*
-	16:	//write LSB of smdat
-		begin
-			sm_wd[7:0] <= din[7:0];
-		end
-		
-	17:	//write MSB of smdat
-		begin
-			sm_wd[15:8] <= din[7:0];
-		end
-		
-	18:	//write LSB of smadr
-		begin
-			sm_wa[7:0] <= din[7:0];
-		end
-		
-	19:	//write LSB of smadr, smem
-		begin
-			sm_wa[8] <= din[0];
-		end
-*/		
 	
 		endcase
 		end

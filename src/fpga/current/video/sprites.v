@@ -21,13 +21,16 @@
 // to do
 //
 // - optimize usage of summators
-// - check spu_en and turn off SPU at VBLANK
-// - no MRQ should be asserted at HBLANK
-// - Read spu_data from DRAM
 // - use SFILE instead of SACNT
 // - code Z80_EN and ZX_EN
-// - make YSZ=0 to be 128
 // - make PRAM for use in ZX
+
+// Optimization guidelines
+//
+// - no spu_req should be asserted at HBLANK
+// - check spu_en and turn off SPU at VBLANK
+// - make less DRAM accesses in fetch.v
+// - refactor spu_req handling
 
 
 module sprites(
@@ -38,7 +41,7 @@ module sprites(
 	output wire [5:0] mcd,
 
 //sfile	
-	output reg [7:0] sf_ra,
+	output reg [8:0] sf_ra,
 	input [7:0] sf_rd,
 
 //spram
@@ -129,7 +132,7 @@ default:	rsst <= 2'd0;
 // Sprites processing
 	localparam VLINES = 9'd288;
 	
-	reg [4:0] num;		//number of currently processed sprite
+	reg [5:0] num;		//number of currently processed sprite
 	reg [15:0] offs;	//offset from sprite address, words
 	reg [1:0] cres;
 	reg [20:0] adr;		//word address!!! 2MB x 16bit
@@ -172,14 +175,14 @@ default:	rsst <= 2'd0;
 	localparam ms_halt = 5'd31;
 
 	wire s_vis, s_last, s_act, s_eox;
-	wire [4:0] s_next;
+	wire [5:0] s_next;
 	wire [20:0] adr_offs;
 	wire [15:0] offs_next;
 	wire [6:0] s_decx;
 	wire [8:0] ypos1;
 	wire [8:0] ysz1;
 	assign s_act = !(sf_rd[1:0] == 2'b0);
-	assign s_next = num + 5'd1;
+	assign s_next = num + 6'd1;
 	assign s_last = (s_next == 5'd0);
 	assign ypos1 = {sf_rd[7], ypos[7:0]};
 	assign ysz1 = {sf_rd[6:0], 2'b0};
@@ -206,7 +209,7 @@ default:	rsst <= 2'd0;
 		sa_we <= 1'b0;
 		spu_req <= 1'b0;
 
-		num <= 5'd0;			//set sprite number to 0
+		num <= 6'd0;			//set sprite number to 0
 		sf_ra <= 8'd4;			//set addr for reg4
 		ms <= ms_beg;
 	end
