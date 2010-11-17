@@ -503,7 +503,7 @@ spram spram(	.wraddress(sp_wa), .data(d), .rdaddress(sp_ra), .q(sp_rd),
 				.wren(sp_we) );
 			
 
-	wire [7:0] sf_ra, sf_wa;
+	wire [8:0] sf_ra, sf_wa;
 	wire [7:0] sf_rd;
 	wire sf_we;
 
@@ -587,7 +587,6 @@ sprites sprites( .clk(fclk), .spu_en(vcfg[6]),
 
 				.vcfg(vcfg),
 				.sf_wa(sf_wa), .sf_we(sf_we), 
-//				.sm_wa(sm_wa), .sm_wd(sm_wd),  .sm_we(sm_we), //#debug!!!
 				.sp_wa(sp_wa), .sp_we(sp_we), 
 				  
 	              .keys_in(kbd_port_data),
