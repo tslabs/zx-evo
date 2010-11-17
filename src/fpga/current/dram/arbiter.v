@@ -52,7 +52,9 @@ module arbiter(
 	input      [15:0] dram_rddata, // data just read
 	output     [15:0] dram_wrdata, // data to be written
 
-
+//debug!!!
+	output [5:0] dcyc,
+	
 	output reg cend,      // regenerates this signal: end of DRAM cycle. cend is one-cycle positive pulse just before cbeg pulse
 	output reg pre_cend,  // one clock earlier cend
 	output reg post_cbeg, // one more earlier
@@ -72,7 +74,7 @@ module arbiter(
 	                            // if there is video_strobe, it coincides with cend signal
 	output reg    video_next,   // on this signal you can change video_addr; it is one clock leading the video_strobe
 
-	
+//SPU	
 	input  [20:0] spu_addr,   
 	output [15:0] spu_data,
 	input spu_req,
@@ -134,7 +136,7 @@ module arbiter(
 	end
 
 
-
+	assign dcyc = (curr_cycle == CYC_SPU) ? 6'b110000 : ((curr_cycle == CYC_CPU) ? 6'b000011 : ((curr_cycle == CYC_VIDEO) ? 6'b001100 : 6'b0));
 
 	assign cbeg = dram_cbeg; // just alias
 
