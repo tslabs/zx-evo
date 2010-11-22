@@ -136,7 +136,7 @@ default:	rsst <= 2'd0;
 	reg [15:0] offs;	//offset from sprite address, words
 	reg [1:0] cres;
 	reg [20:0] adr;		//word address!!! 2MB x 16bit
-	reg [6:0] xsz;
+	reg [7:0] xsz;
 	reg [8:0] ypos;
 
 	reg [13:0] sdbuf;
@@ -178,9 +178,10 @@ default:	rsst <= 2'd0;
 	wire [5:0] s_next;
 	wire [20:0] adr_offs;
 	wire [15:0] offs_next;
-	wire [6:0] s_decx;
+	wire [7:0] s_decx;
 	wire [8:0] ypos1;
 	wire [8:0] ysz1;
+	wire [7:0] xszc;
 	assign s_act = !(sf_rd[1:0] == 2'b0);
 	assign s_next = num + 6'd1;
 	assign s_last = (s_next == 5'd0);
@@ -189,9 +190,9 @@ default:	rsst <= 2'd0;
 	assign s_vis = ((vline >= ypos1) && (vline < (ypos1 + ysz1)));
 	assign adr_offs = adr + offs;
 	assign offs_next = offs + 16'b1;
-	assign s_decx = xsz - 7'd1;
-	assign s_eox = (s_decx == 7'b0);
-
+	assign s_decx = xsz - 8'd1;
+	assign s_eox = (s_decx == 8'b0);
+	assign xszc = (cres == 2'b11) ? {sf_rd[6:0], 1'b0} : {1'b0, sf_rd[6:0]};
 	
 	initial 
 	ms = ms_res;
@@ -315,7 +316,7 @@ default:	rsst <= 2'd0;
 	begin
 		sa_we <= 1'b0;
 		sl_wa[8] <= sf_rd[7];		//get XPOS[8]
-		xsz[6:0] <= sf_rd[6:0];		//get XSZ[6:0]
+		xsz <= xszc;
 		ms <= ms_lbeg;
 	end
 	
