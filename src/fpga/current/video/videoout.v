@@ -56,8 +56,8 @@ module videoout(
 
 	
 //	assign color = (hblank | vblank) ? 6'd0 : (  (hpix & vpix) ? pixel : border  );
-//	assign color = (hblank | vblank) ? 6'd0 :  ( spx_en ? (spixel) : ((hpix & vpix) ? pixel : border ));
-	assign color = (hblank | vblank) ? 6'd0 :  (dcyc != 6'b0) ? dcyc : ( spx_en ? (spixel) : ((hpix & vpix) ? pixel : border ));
+	assign color = (hblank | vblank) ? 6'd0 :  ( spx_en ? (spixel) : ((hpix & vpix) ? pixel : border ));
+//	assign color = (hblank | vblank) ? 6'd0 :  (dcyc != 6'b0) ? dcyc : ( spx_en ? (spixel) : ((hpix & vpix) ? pixel : border ));
 //	assign color = (hblank | vblank) ? 6'd0 :  ((!test ? ( spx_en ? (spixel) : ((hpix & vpix) ? pixel : border )) : sp_mc) | {1'b0, tst, 4'b0});
 //	assign color = (hblank | vblank) ? 6'd0 :  ((!test ? ( spx_en ? (spixel) : ((hpix & vpix) ? pixel : border )) : sp_mc));
 
