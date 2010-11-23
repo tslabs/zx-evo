@@ -212,6 +212,7 @@ default:	rsst <= 2'd0;
 	begin
 		test <= 1'b1;
 		spu_req <= 1'b0;
+		sl_we <= 1'b0;
 
 		num <= 6'd0;			//set sprite number to 0
 		sf_sa <= 3'd4;			//set addr for reg4
@@ -483,6 +484,7 @@ default:	rsst <= 2'd0;
 			test <= 1'b0;
 			ms <= ms_halt;
 			spu_req <= 1'b0;
+			sl_we <= 1'b0;
 		end
 
 	default: //idle state
