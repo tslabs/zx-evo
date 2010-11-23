@@ -50,7 +50,7 @@ module zwait(
 
 	always @(posedge wait_end) // just dummy for future extensions
 	begin
-		waits[6:2] <= 6'd0;
+		waits[6:2] <= 5'd0;
 	end
 
 

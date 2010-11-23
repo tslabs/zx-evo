@@ -134,12 +134,10 @@ default:	rsst <= 2'd0;
 	
 	reg [5:0] num;		//number of currently processed sprite
 	reg [2:0] sf_sa;	//sub-address for SFILE
-	reg [15:0] offs;	//offset from sprite address, words
 	reg [1:0] cres;
-	reg [20:0] adr;		//word address!!! 2MB x 16bit
 	reg [7:0] xsz;
-	reg [8:0] ypos;
-
+	reg [7:0] ypos;
+	reg [8:0] lofs;
 	reg [13:0] sdbuf;
 
 	assign mcd = ms;
@@ -177,24 +175,28 @@ default:	rsst <= 2'd0;
 
 	wire s_vis, s_last, s_act, s_eox;
 	wire [5:0] s_next;
-	wire [20:0] adr_offs;
-	wire [15:0] offs_next;
-	wire [7:0] s_decx;
-	wire [8:0] ypos1;
-	wire [8:0] ysz1;
+	wire [20:0] adr_next;
+	wire [20:0] adr_ofs;
+	wire [7:0] dec_xsz;
+	wire [8:0] yposc;
+	wire [8:0] yszc;
 	wire [7:0] xszc;
+	wire [8:0] lofsc;
+	wire [8:0] sl_next;
 	assign sf_ra = {num, sf_sa};
 	assign s_act = !(sf_rd[1:0] == 2'b0);
 	assign s_next = num + 6'd1;
 	assign s_last = (s_next == 5'd0);
-	assign ypos1 = {sf_rd[7], ypos[7:0]};
-	assign ysz1 = {sf_rd[6:0], 2'b0};
-	assign s_vis = ((vline >= ypos1) && (vline < (ypos1 + ysz1)));
-	assign adr_offs = adr + offs;
-	assign offs_next = offs + 16'b1;
-	assign s_decx = xsz - 8'd1;
-	assign s_eox = (s_decx == 8'b0);
+	assign yposc = {sf_rd[7], ypos};
+	assign yszc = {sf_rd[6:0], 2'b0};
+	assign s_vis = ((vline >= yposc) && (vline < (yposc + yszc)));
+	assign adr_next = spu_addr + 21'b1;
+	assign dec_xsz = xsz - 8'd1;
+	assign s_eox = (dec_xsz == 8'b0);
 	assign xszc = (cres == 2'b11) ? {sf_rd[6:0], 1'b0} : {1'b0, sf_rd[6:0]};
+	assign lofsc = (vline - yposc);
+	assign adr_ofs = {sf_rd[4:0], spu_addr[15:0]} + (xsz * lofs);
+	assign sl_next = sl_wa + 9'b1;
 	
 	initial 
 	ms = ms_res;
@@ -209,7 +211,6 @@ default:	rsst <= 2'd0;
 	ms_res:	// SPU reset
 	begin
 		test <= 1'b1;
-		sa_we <= 1'b0;
 		spu_req <= 1'b0;
 
 		num <= 6'd0;			//set sprite number to 0
@@ -222,6 +223,7 @@ default:	rsst <= 2'd0;
 		//check if sprite is active
 		if (s_act)
 		begin
+			//read SPReg4
 			cres <= sf_rd[1:0];			//get CRES
 			sp_ra[7:2] <= sf_rd[7:2];	//get PAL[5:0]
 			sf_sa <= 3'd2;			//set addr for reg2
@@ -244,19 +246,21 @@ default:	rsst <= 2'd0;
 
 	ms_st2:
 	begin
-		ypos[7:0] <= sf_rd[7:0];	//get YPOS[7:0]
+		//read SPReg2
+		ypos <= sf_rd[7:0];	//get ypos
 		sf_sa <= 3'd3;			//set addr for reg3
 		ms <= ms_st3;
 	end
 
 	ms_st3:
 	begin
-		ypos[8] <= sf_rd[7];		//get YPOS[8]
 		//check if sprite is visible on this line
 		if (s_vis)
 		//yes
 		begin
-			sf_sa <= 3'd5;			//set addr for reg5
+			//read SPReg3
+			lofs <= lofsc;
+			sf_sa <= 3'd1;
 			ms <= ms_st4;
 		end
 		else
@@ -277,51 +281,45 @@ default:	rsst <= 2'd0;
 
 	ms_st4: 
 	begin
-		adr[7:0] <= sf_rd[7:0];		//get ADR[7:0]
-		sf_sa <= 3'd6;			//set addr for reg6
-		if (ypos == vline)			//check if 1st line of sprite
-			offs <= 16'b0;			//yes: null offs
-		else
-			offs <= sa_rd;			//no: get offs from sacnt
+		//read SPReg1
+		sl_wa[8] <= sf_rd[7];		//get XPOS[8]
+		xsz <= xszc;
+		sf_sa <= 3'd5;
 		ms <= ms_st5;
 	end
-
+		
 	ms_st5:
 	begin
-		adr[15:8] <= sf_rd[7:0];	//get ADR[15:8]
-		sf_sa <= 3'd7;			//set addr for reg7
+		//read SPReg5
+		spu_addr[7:0] <= sf_rd[7:0];		//get ADR[7:0]
+		sf_sa <= 3'd6;
 		ms <= ms_st6;
 	end
 
 	ms_st6:
 	begin
-		adr[20:16] <= sf_rd[4:0];	//get ADR[20:16]
-		sf_sa <= 3'd0;			//set addr for reg0
+		//read SPReg6
+		spu_addr[15:8] <= sf_rd[7:0];	//get ADR[15:8]
+		sf_sa <= 3'd7;
 		ms <= ms_st7;
 	end
 
 	ms_st7:
 	begin
-		sl_wa[7:0] <= sf_rd[7:0];	//get XPOS[7:0]
-		sf_sa <= 3'd1;			//set addr for reg1
-
-		spu_addr <= adr_offs;		//set spu_addr
-		spu_req <= 1'b1;			//assert spu_req
-
-		offs <= offs_next;			//inc offs
-		sa_wd <= offs_next;			//write next offs
-		sa_we <= 1'b1;
+		//read SPReg7
+		spu_addr <= adr_ofs;
+		spu_req <= 1'b1;
+		sf_sa <= 3'd0;
 		ms <= ms_st8;
 	end
 
 	ms_st8:
 	begin
-		sa_we <= 1'b0;
-		sl_wa[8] <= sf_rd[7];		//get XPOS[8]
-		xsz <= xszc;
+		//read SPReg0
+		sl_wa[7:0] <= sf_rd[7:0];	//get XPOS[7:0]
 		ms <= ms_lbeg;
 	end
-	
+
 	ms_lbeg: //begin of loop
 	//wait for data from DRAM
 	if (!spu_strobe)
@@ -329,7 +327,7 @@ default:	rsst <= 2'd0;
 	else
 	begin
 //		spu_req <= 1'b0;
-		spu_addr <= adr_offs;	//set spu_addr
+		spu_addr <= adr_next;	//set spu_addr
 		sdbuf <= spu_data[13:0];
 		sl_we <= 1'b1;
 		//write pix0
@@ -357,55 +355,51 @@ default:	rsst <= 2'd0;
 	if (!s_eox)
 	begin
 //		spu_req <= 1'b1;		//assert spu_req
-//		spu_addr <= adr_offs;	//set spu_addr
-		offs <= offs_next;		//inc offs
-		sa_wd <= offs_next;		//write offs
-		sa_we <= 1'b1;
+//		spu_addr <= adr_next;	//set spu_addr
 	end
-		sl_wa <= sl_wa + 9'b1;
+		sl_wa <= sl_next;
 		sp_ra[1:0] <= sdbuf[13:12];		//set paladdr for pix1
 		ms <= ms_4c2;
 	end
 
 	ms_4c2:	//write pix2@4c
 	begin
-		sa_we <= 1'b0;
-		sl_wa <= sl_wa + 9'b1;
+		sl_wa <= sl_next;
 		sp_ra[1:0] <= sdbuf[11:10];		//set paladdr for pix2
 		ms <= ms_4c3;
 	end
 
 	ms_4c3:	//write pix3@4c
 	begin	
-		sl_wa <= sl_wa + 9'b1;
+		sl_wa <= sl_next;
 		sp_ra[1:0] <= sdbuf[9:8];			//set paladdr for pix3
 		ms <= ms_4c4;
 	end
 
 	ms_4c4:	//write pix4@4c
 	begin
-		sl_wa <= sl_wa + 9'b1;
+		sl_wa <= sl_next;
 		sp_ra[1:0] <= sdbuf[7:6];			//set paladdr for pix4
 		ms <= ms_4c5;
 	end
 
 	ms_4c5:	//write pix5@4c
 	begin
-		sl_wa <= sl_wa + 9'b1;
+		sl_wa <= sl_next;
 		sp_ra[1:0] <= sdbuf[5:4];			//set paladdr for pix5
 		ms <= ms_4c6;
 	end
 
 	ms_4c6:	//write pix6@4c
 	begin
-		sl_wa <= sl_wa + 9'b1;
+		sl_wa <= sl_next;
 		sp_ra[1:0] <= sdbuf[3:2];			//set paladdr for pix6
 		ms <= ms_4c7;
 	end
 
 	ms_4c7:	//write pix7@4c
 	begin
-		sl_wa <= sl_wa + 9'b1;
+		sl_wa <= sl_next;
 		sp_ra[1:0] <= sdbuf[1:0];				//set paladdr for pix7
 		ms <= ms_eow;
 	end
@@ -414,28 +408,24 @@ default:	rsst <= 2'd0;
 	begin
 	if (!s_eox)
 	begin
-//		spu_addr <= adr_offs;	//set spu_addr
+//		spu_addr <= adr_next;	//set spu_addr
 //		spu_req <= 1'b1;		//assert spu_req
-		offs <= offs_next;		//inc offs
-		sa_wd <= offs_next;		//write offs
-		sa_we <= 1'b1;
 	end
-		sl_wa <= sl_wa + 9'b1;
+		sl_wa <= sl_next;
 		sp_ra[3:0] <= sdbuf[11:8];		//set paladdr for pix1
 		ms <= ms_16c2;
 	end
 
 	ms_16c2: //write pix2@16c
 	begin
-		sa_we <= 1'b0;
-		sl_wa <= sl_wa + 9'b1;
+		sl_wa <= sl_next;
 		sp_ra[3:0] <= sdbuf[7:4];			//set paladdr for pix2
 		ms <= ms_16c3;
 	end
 
 	ms_16c3: //write pix3@16c
 	begin
-		sl_wa <= sl_wa + 9'b1;
+		sl_wa <= sl_next;
 		sp_ra[3:0] <= sdbuf[3:0];			//set paladdr for pix3
 		ms <= ms_eow;
 	end
@@ -444,13 +434,10 @@ default:	rsst <= 2'd0;
 	begin
 	if (!s_eox)
 		begin
-//			spu_addr <= adr_offs;		//set spu_addr
+//			spu_addr <= adr_next;		//set spu_addr
 //			spu_req <= 1'b1;			//assert spu_req
-			offs <= offs_next;			//inc offs
-			sa_wd <= offs_next;			//write offs
-			sa_we <= 1'b1;
 		end
-		sl_wa <= sl_wa + 9'b1;
+		sl_wa <= sl_next;
 		ms <= ms_tw1;	//FIXME!!!!!	Fucking dirty hack!
 	end
 
@@ -463,14 +450,13 @@ default:	rsst <= 2'd0;
 	ms_eow:	//end of write to sline
 	begin
 		sl_we <= 1'b0;
-		sa_we <= 1'b0;
-		sl_wa <= sl_wa + 9'b1;
+		sl_wa <= sl_next;
 
 		//check if xsz=0
 		if (!s_eox)
 		//no: go to begin of loop
 		begin
-		xsz <= s_decx;
+		xsz <= dec_xsz;
 		ms <= ms_lbeg;
 		end
 		else
@@ -487,7 +473,6 @@ default:	rsst <= 2'd0;
 		else
 		//yes: halt
 		begin
-			test <= 1'b0;
 			ms <= ms_halt;
 		end
 		end
@@ -497,7 +482,6 @@ default:	rsst <= 2'd0;
 		begin
 			test <= 1'b0;
 			ms <= ms_halt;
-			sa_we <= 1'b0;
 			spu_req <= 1'b0;
 		end
 
@@ -523,12 +507,6 @@ default:	rsst <= 2'd0;
 	assign sl_wss = (tcol ? pixt : !sp_rd[6]) && sl_we;
 	assign sl_wds = {1'b1, (tcol ? pixc : sp_rd[5:0])};
 	
-	always @*
-		if (!clk)
-			sa_ws <= sa_we;
-		else
-			sa_ws <= 1'b0;
-
 	sline0 sline0(	.wraddress(l_sel ? sl_wa : sl_ra),
 					.data(l_sel ? sl_wds : 7'b0),
 					.wren(l_sel ? sl_wss : sl_wsn),
@@ -544,17 +522,4 @@ default:	rsst <= 2'd0;
 					.q(sl_rd1),
 					.wrclock(clk)
 				);
-
-
-	wire [15:0] sa_rd;
-	reg [15:0] sa_wd;
-	reg sa_ws, sa_we;
-
-	sacnt sacnt(	.wraddress(num),
-					.data(sa_wd),
-					.wren(sa_ws),
-					.rdaddress(num),
-					.q(sa_rd)
-				);
 endmodule
-
