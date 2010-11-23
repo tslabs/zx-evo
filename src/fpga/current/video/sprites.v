@@ -41,7 +41,7 @@ module sprites(
 	output wire [5:0] mcd,
 
 //sfile	
-	output reg [8:0] sf_ra,
+	output wire [8:0] sf_ra,
 	input [7:0] sf_rd,
 
 //spram
@@ -133,6 +133,7 @@ default:	rsst <= 2'd0;
 	localparam VLINES = 9'd288;
 	
 	reg [5:0] num;		//number of currently processed sprite
+	reg [2:0] sf_sa;	//sub-address for SFILE
 	reg [15:0] offs;	//offset from sprite address, words
 	reg [1:0] cres;
 	reg [20:0] adr;		//word address!!! 2MB x 16bit
@@ -182,6 +183,7 @@ default:	rsst <= 2'd0;
 	wire [8:0] ypos1;
 	wire [8:0] ysz1;
 	wire [7:0] xszc;
+	assign sf_ra = {num, sf_sa};
 	assign s_act = !(sf_rd[1:0] == 2'b0);
 	assign s_next = num + 6'd1;
 	assign s_last = (s_next == 5'd0);
@@ -211,7 +213,7 @@ default:	rsst <= 2'd0;
 		spu_req <= 1'b0;
 
 		num <= 6'd0;			//set sprite number to 0
-		sf_ra <= 8'd4;			//set addr for reg4
+		sf_sa <= 3'd4;			//set addr for reg4
 		ms <= ms_beg;
 	end
 
@@ -222,7 +224,7 @@ default:	rsst <= 2'd0;
 		begin
 			cres <= sf_rd[1:0];			//get CRES
 			sp_ra[7:2] <= sf_rd[7:2];	//get PAL[5:0]
-			sf_ra[2:0] <= 3'd2;			//set addr for reg2
+			sf_sa <= 3'd2;			//set addr for reg2
 			ms <= ms_st2;
 		end
 		else
@@ -231,7 +233,7 @@ default:	rsst <= 2'd0;
 		//no: next sprite processing
 			begin
 			num <= s_next;
-			sf_ra <= {s_next, 3'd4};	//next sprite num, set addr for reg4
+			sf_sa <= 3'd4;			//set addr for reg4
 			ms <= ms_beg;
 			end
 			else
@@ -243,7 +245,7 @@ default:	rsst <= 2'd0;
 	ms_st2:
 	begin
 		ypos[7:0] <= sf_rd[7:0];	//get YPOS[7:0]
-		sf_ra[2:0] <= 3'd3;			//set addr for reg3
+		sf_sa <= 3'd3;			//set addr for reg3
 		ms <= ms_st3;
 	end
 
@@ -254,7 +256,7 @@ default:	rsst <= 2'd0;
 		if (s_vis)
 		//yes
 		begin
-			sf_ra[2:0] <= 3'd5;			//set addr for reg5
+			sf_sa <= 3'd5;			//set addr for reg5
 			ms <= ms_st4;
 		end
 		else
@@ -264,7 +266,7 @@ default:	rsst <= 2'd0;
 		//no: next sprite processing
 			begin
 				num <= s_next;
-				sf_ra <= {s_next, 3'd4};	//inc sprite num, set addr for reg4
+				sf_sa <= 3'd4;	//inc sprite num, set addr for reg4
 				ms <= ms_beg;
 			end
 			else
@@ -276,7 +278,7 @@ default:	rsst <= 2'd0;
 	ms_st4: 
 	begin
 		adr[7:0] <= sf_rd[7:0];		//get ADR[7:0]
-		sf_ra[2:0] <= 3'd6;			//set addr for reg6
+		sf_sa <= 3'd6;			//set addr for reg6
 		if (ypos == vline)			//check if 1st line of sprite
 			offs <= 16'b0;			//yes: null offs
 		else
@@ -287,21 +289,21 @@ default:	rsst <= 2'd0;
 	ms_st5:
 	begin
 		adr[15:8] <= sf_rd[7:0];	//get ADR[15:8]
-		sf_ra[2:0] <= 3'd7;			//set addr for reg7
+		sf_sa <= 3'd7;			//set addr for reg7
 		ms <= ms_st6;
 	end
 
 	ms_st6:
 	begin
 		adr[20:16] <= sf_rd[4:0];	//get ADR[20:16]
-		sf_ra[2:0] <= 3'd0;			//set addr for reg0
+		sf_sa <= 3'd0;			//set addr for reg0
 		ms <= ms_st7;
 	end
 
 	ms_st7:
 	begin
 		sl_wa[7:0] <= sf_rd[7:0];	//get XPOS[7:0]
-		sf_ra[2:0] <= 3'd1;			//set addr for reg1
+		sf_sa <= 3'd1;			//set addr for reg1
 
 		spu_addr <= adr_offs;		//set spu_addr
 		spu_req <= 1'b1;			//assert spu_req
@@ -479,7 +481,7 @@ default:	rsst <= 2'd0;
 		//no: next sprite processing
 		begin
 			num <= s_next;
-			sf_ra <= {s_next, 3'd4};	//inc spnum, set addr for reg4
+			sf_sa <= 3'd4;	//inc spnum, set addr for reg4
 			ms <= ms_beg;
 		end
 		else
