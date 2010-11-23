@@ -50,7 +50,7 @@ parameter RST_CNT_SIZE = 4;
 
 		if( rst2_n && !rst_cnt[RST_CNT_SIZE] )
 		begin
-			rst_cnt <= rst_cnt + 1;
+			rst_cnt <= rst_cnt + 7'b1;
 		end
 
 		if( rst_cnt[RST_CNT_SIZE] )
