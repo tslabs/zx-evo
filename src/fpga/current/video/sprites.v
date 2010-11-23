@@ -5,7 +5,7 @@
 // Sprite Processor
 //
 // Written by TS-Labs inc.
-// ver. 1.0
+// ver. 1.3
 //
 // TV Horizontal Line Cycles - 448:
 // Visible Area  - 360 * 288 pixels:
