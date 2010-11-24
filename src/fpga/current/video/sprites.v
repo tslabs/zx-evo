@@ -204,7 +204,7 @@ default:	rsst <= 2'd0;
 	assign dec_xs = xs - 8'd1;
 	assign s_eox = (dec_xs == 8'b0);
 	assign xsc = (cres == 2'b11) ? {sf_rd[6:0], 1'b0} : {1'b0, sf_rd[6:0]};
-	assign lofsc = (vline - ypc);
+	assign lofsc = sf_rd[6] ? (ypc - vline + ysc - 1) : (vline - ypc);
 	assign adr_ofs = {sf_rd[7:0], spu_addr[12:0]} + (xs * lofs);
 	assign sl_next = sl_wa + 9'b1;
 	
