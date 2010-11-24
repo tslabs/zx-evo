@@ -139,6 +139,7 @@ default:	rsst <= 2'd0;
 	reg [7:0] yp;
 	reg [8:0] lofs;
 	reg [13:0] sdbuf;
+	reg flipx;
 
 	assign mcd = ms;
 	
@@ -193,6 +194,7 @@ default:	rsst <= 2'd0;
 	wire [7:0] xsv;
 	wire [8:0] lofsc;
 	wire [8:0] sl_next;
+	wire [8:0] xc;
 	assign sf_ra = {num, sf_sa};
 	assign s_act = !(sf_rd[1:0] == 2'b0);
 	assign s_next = num + 6'd1;
@@ -206,7 +208,8 @@ default:	rsst <= 2'd0;
 	assign xsc = (cres == 2'b11) ? {sf_rd[6:0], 1'b0} : {1'b0, sf_rd[6:0]};
 	assign lofsc = sf_rd[6] ? (ypc - vline + ysc - 1) : (vline - ypc);
 	assign adr_ofs = {sf_rd[7:0], spu_addr[12:0]} + (xs * lofs);
-	assign sl_next = sl_wa + 9'b1;
+	assign sl_next = flipx ? (sl_wa - 9'b1) : (sl_wa + 9'b1);
+	assign xc = flipx ? ({sl_wa[8], sf_rd[7:0]} + xs - 1) : {sl_wa[8], sf_rd[7:0]};
 	
 	initial 
 	ms = ms_res;
@@ -270,7 +273,7 @@ default:	rsst <= 2'd0;
 		//yes
 		begin
 			//read SPReg3
-			lofs <= lofsc;		//set number of line within sprite (0-xxx)
+			lofs <= lofsc;		//set number of line within sprite (0-xxx), flipped is necessary
 			sf_sa <= r_xs;
 			ms <= ms_st4;
 		end
@@ -319,6 +322,7 @@ default:	rsst <= 2'd0;
 	begin
 		//read SPReg7
 		xs <= xsc;					//get XSV[7:0]
+		flipx <= sf_rd[7];			//get FLIPX
 		sf_sa <= r_xp;
 		ms <= ms_st8;
 	end
@@ -326,7 +330,7 @@ default:	rsst <= 2'd0;
 	ms_st8:
 	begin
 		//read SPReg0
-		sl_wa[7:0] <= sf_rd[7:0];	//get X[7:0]
+		sl_wa[8:0] <= xc;		//get X[7:0], flipped if necessary
 		ms <= ms_lbeg;
 	end
 
