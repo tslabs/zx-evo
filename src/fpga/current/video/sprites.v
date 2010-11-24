@@ -195,6 +195,7 @@ default:	rsst <= 2'd0;
 	wire [8:0] lofsc;
 	wire [8:0] sl_next;
 	wire [8:0] xc;
+	wire [10:0] xsf;
 	assign sf_ra = {num, sf_sa};
 	assign s_act = !(sf_rd[1:0] == 2'b0);
 	assign s_next = num + 6'd1;
@@ -209,7 +210,8 @@ default:	rsst <= 2'd0;
 	assign lofsc = sf_rd[6] ? (ypc - vline + ysc - 1) : (vline - ypc);
 	assign adr_ofs = {sf_rd[7:0], spu_addr[12:0]} + (xs * lofs);
 	assign sl_next = flipx ? (sl_wa - 9'b1) : (sl_wa + 9'b1);
-	assign xc = flipx ? ({sl_wa[8], sf_rd[7:0]} + xs - 1) : {sl_wa[8], sf_rd[7:0]};
+	assign xsf = (cres == 2'b11) ? (xs * 2) : ((cres == 2'b10) ? (xs * 4) : (xs * 8));
+	assign xc = flipx ? ({sl_wa[8], sf_rd[7:0]} + xsf - 1) : {sl_wa[8], sf_rd[7:0]};
 	
 	initial 
 	ms = ms_res;
