@@ -135,8 +135,8 @@ default:	rsst <= 2'd0;
 	reg [5:0] num;		//number of currently processed sprite
 	reg [2:0] sf_sa;	//sub-address for SFILE
 	reg [1:0] cres;
-	reg [7:0] xsz;
-	reg [7:0] ypos;
+	reg [7:0] xs;
+	reg [7:0] yp;
 	reg [8:0] lofs;
 	reg [13:0] sdbuf;
 
@@ -172,30 +172,40 @@ default:	rsst <= 2'd0;
 	localparam ms_tw3 = 5'd23;
 	localparam ms_eow = 5'd24;
 	localparam ms_halt = 5'd31;
+	
+	localparam r_xp = 3'd0;
+	localparam r_xs = 3'd1;
+	localparam r_xv = 3'd2;
+	localparam r_yp = 3'd3;
+	localparam r_ys = 3'd4;
+	localparam r_cr = 3'd5;
+	localparam r_al = 3'd6;
+	localparam r_ah = 3'd7;
 
 	wire s_vis, s_last, s_act, s_eox;
 	wire [5:0] s_next;
 	wire [20:0] adr_next;
 	wire [20:0] adr_ofs;
-	wire [7:0] dec_xsz;
-	wire [8:0] yposc;
-	wire [8:0] yszc;
-	wire [7:0] xszc;
+	wire [7:0] dec_xs;
+	wire [8:0] ypc;
+	wire [8:0] ysc;
+	wire [7:0] xsc;
+	wire [7:0] xsv;
 	wire [8:0] lofsc;
 	wire [8:0] sl_next;
 	assign sf_ra = {num, sf_sa};
 	assign s_act = !(sf_rd[1:0] == 2'b0);
 	assign s_next = num + 6'd1;
 	assign s_last = (s_next == 5'd0);
-	assign yposc = {sf_rd[7], ypos};
-	assign yszc = {sf_rd[6:0], 2'b0};
-	assign s_vis = ((vline >= yposc) && (vline < (yposc + yszc)));
+	assign ypc = {sf_rd[7], yp};
+	assign ysc = {sf_rd[5:0], 3'b0};
+	assign s_vis = ((vline >= ypc) && (vline < (ypc + ysc)));
 	assign adr_next = spu_addr + 21'b1;
-	assign dec_xsz = xsz - 8'd1;
-	assign s_eox = (dec_xsz == 8'b0);
-	assign xszc = (cres == 2'b11) ? {sf_rd[6:0], 1'b0} : {1'b0, sf_rd[6:0]};
-	assign lofsc = (vline - yposc);
-	assign adr_ofs = {sf_rd[4:0], spu_addr[15:0]} + (xsz * lofs);
+	assign dec_xs = xs - 8'd1;
+	assign s_eox = (dec_xs == 8'b0);
+	assign xsc = (cres == 2'b11) ? {sf_rd[6:0], 1'b0} : {1'b0, sf_rd[6:0]};
+	assign lofsc = (vline - ypc);
+	assign adr_ofs = {sf_rd[7:0], spu_addr[12:0]} + (xs * lofs);
 	assign sl_next = sl_wa + 9'b1;
 	
 	initial 
@@ -214,8 +224,8 @@ default:	rsst <= 2'd0;
 		spu_req <= 1'b0;
 		sl_we <= 1'b0;
 
-		num <= 6'd0;			//set sprite number to 0
-		sf_sa <= 3'd4;			//set addr for reg4
+		num <= 6'd0;
+		sf_sa <= r_cr;
 		ms <= ms_beg;
 	end
 
@@ -225,9 +235,9 @@ default:	rsst <= 2'd0;
 		if (s_act)
 		begin
 			//read SPReg4
-			cres <= sf_rd[1:0];			//get CRES
+			cres <= sf_rd[1:0];			//get CRES[1:0]
 			sp_ra[7:2] <= sf_rd[7:2];	//get PAL[5:0]
-			sf_sa <= 3'd2;			//set addr for reg2
+			sf_sa <= r_yp;
 			ms <= ms_st2;
 		end
 		else
@@ -236,7 +246,7 @@ default:	rsst <= 2'd0;
 		//no: next sprite processing
 			begin
 			num <= s_next;
-			sf_sa <= 3'd4;			//set addr for reg4
+			sf_sa <= r_cr;
 			ms <= ms_beg;
 			end
 			else
@@ -248,20 +258,20 @@ default:	rsst <= 2'd0;
 	ms_st2:
 	begin
 		//read SPReg2
-		ypos <= sf_rd[7:0];	//get ypos
-		sf_sa <= 3'd3;			//set addr for reg3
+		yp <= sf_rd[7:0];	//get Y[7:0]
+		sf_sa <= r_ys;
 		ms <= ms_st3;
 	end
 
 	ms_st3:
 	begin
 		//check if sprite is visible on this line
-		if (s_vis)
+		if (s_vis)	//get Y[8], YS[5:0]
 		//yes
 		begin
 			//read SPReg3
-			lofs <= lofsc;
-			sf_sa <= 3'd1;
+			lofs <= lofsc;		//set number of line within sprite (0-xxx)
+			sf_sa <= r_xs;
 			ms <= ms_st4;
 		end
 		else
@@ -271,7 +281,7 @@ default:	rsst <= 2'd0;
 		//no: next sprite processing
 			begin
 				num <= s_next;
-				sf_sa <= 3'd4;	//inc sprite num, set addr for reg4
+				sf_sa <= r_cr;	//inc sprite num, set addr for reg4
 				ms <= ms_beg;
 			end
 			else
@@ -282,42 +292,41 @@ default:	rsst <= 2'd0;
 
 	ms_st4: 
 	begin
-		//read SPReg1
-		sl_wa[8] <= sf_rd[7];		//get XPOS[8]
-		xsz <= xszc;
-		sf_sa <= 3'd5;
+		sl_wa[8] <= sf_rd[7];		//get X[8]
+		xs <= xsc;					//get XS[7:0]
+		sf_sa <= r_al;
 		ms <= ms_st5;
 	end
 		
 	ms_st5:
 	begin
 		//read SPReg5
-		spu_addr[7:0] <= sf_rd[7:0];		//get ADR[7:0]
-		sf_sa <= 3'd6;
+		spu_addr[12:0] <= {sf_rd[7:0], 5'b0};		//get ADR[12:0]
+		sf_sa <= r_ah;
 		ms <= ms_st6;
 	end
 
 	ms_st6:
 	begin
 		//read SPReg6
-		spu_addr[15:8] <= sf_rd[7:0];	//get ADR[15:8]
-		sf_sa <= 3'd7;
+		spu_addr <= adr_ofs;		// get ADR[20:13], ADR = ADR + LOFS * XS - now we get an addr for 1st word of sprite line
+		spu_req <= 1'b1;			// now we can assert MRQ
+		sf_sa <= r_xv;
 		ms <= ms_st7;
 	end
 
 	ms_st7:
 	begin
 		//read SPReg7
-		spu_addr <= adr_ofs;
-		spu_req <= 1'b1;
-		sf_sa <= 3'd0;
+		xs <= xsc;					//get XSV[7:0]
+		sf_sa <= r_xp;
 		ms <= ms_st8;
 	end
 
 	ms_st8:
 	begin
 		//read SPReg0
-		sl_wa[7:0] <= sf_rd[7:0];	//get XPOS[7:0]
+		sl_wa[7:0] <= sf_rd[7:0];	//get X[7:0]
 		ms <= ms_lbeg;
 	end
 
@@ -453,11 +462,11 @@ default:	rsst <= 2'd0;
 		sl_we <= 1'b0;
 		sl_wa <= sl_next;
 
-		//check if xsz=0
+		//check if xs=0
 		if (!s_eox)
 		//no: go to begin of loop
 		begin
-		xsz <= dec_xsz;
+		xs <= dec_xs;
 		ms <= ms_lbeg;
 		end
 		else
@@ -468,7 +477,7 @@ default:	rsst <= 2'd0;
 		//no: next sprite processing
 		begin
 			num <= s_next;
-			sf_sa <= 3'd4;	//inc spnum, set addr for reg4
+			sf_sa <= r_cr;	//inc spnum, set addr for reg4
 			ms <= ms_beg;
 		end
 		else
