@@ -36,6 +36,7 @@
 module sprites(
 
 	input clk, spu_en, line_start, pre_vline,
+	input cbeg, post_cbeg,
 	input [7:0] din,
 	output reg test,
 	output wire [5:0] mcd,
@@ -82,7 +83,6 @@ module sprites(
 
 	
 // read/null sline
-	reg [1:0] rsst;
 	reg [8:0] sl_ra;
 	reg sl_wsn;
 	
@@ -94,38 +94,22 @@ module sprites(
 	begin
 		sl_ra <= 9'b0;
 		sl_wsn <= 1'b0;
-		rsst <= 2'd0;
 	end
 	else
 
-	case (rsst)
-
-0:	//read pixel, set null strobe
+	if (cbeg)
 	begin
-		spixel <= !l_sel ? sl_rd0[5:0] : sl_rd1[5:0];
+		spixel <= !l_sel ? sl_rd0[5:0] : sl_rd1[5:0];	//read pixel
 		spx_en <= !l_sel ? sl_rd0[6] : sl_rd1[6];
-		sl_wsn <= 1'b1;
-		rsst <= 2'd1;
+		sl_wsn <= 1'b1;			//set nulling write strobe
 	end
 
-1:	//reset null strobe
+	if (post_cbeg)
 	begin
-		sl_wsn <= 1'b0;
-		rsst <= 2'd2;
+		sl_wsn <= 1'b0;			//reset nulling write strobe
+		sl_ra <= sl_ra + 9'b1;	//inc sl_ra
 	end
 
-2:	//inc sl_ra
-	begin
-		sl_ra <= sl_ra + 9'b1;
-		rsst <= 2'd3;
-	end
-
-3:	//dummy, go to step 0
-		rsst <= 2'd0;
-
-default:	rsst <= 2'd0;
-
-	endcase
 	end	
 
 	

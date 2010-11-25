@@ -255,3 +255,4 @@ set_global_assignment -name VERILOG_FILE ../dram/arbiter.v
 set_global_assignment -name VERILOG_FILE ../common/spi2.v
 set_global_assignment -name VERILOG_FILE ../common/resetter.v
 set_global_assignment -name VERILOG_FILE ../top.v
+set_global_assignment -name FLEX10K_OPTIMIZATION_TECHNIQUE AREA

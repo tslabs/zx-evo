@@ -445,6 +445,7 @@ module top(
 
 	                 .cend(cend),
 	                 .pre_cend(pre_cend),
+					 .post_cbeg(post_cbeg),
 
 	                 .go(go),
 	                 .bw(bw),
@@ -521,6 +522,7 @@ sfile sfile(	.wraddress(sf_wa), .data(d), .rdaddress(sf_ra), .q(sf_rd), .wrclock
 sprites sprites( .clk(fclk), .spu_en(vcfg[6]),
 			.line_start(line_start),
 			.pre_vline(pre_vline),
+			.post_cbeg(post_cbeg), .cbeg(cbeg),
 			.spixel(spixel), .spx_en(spx_en),
 			.sf_ra(sf_ra), .sf_rd(sf_rd), 
 			.sp_ra(sp_ra), .sp_rd(sp_rd),
