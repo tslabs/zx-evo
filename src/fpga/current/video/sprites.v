@@ -29,8 +29,7 @@
 //
 // - no spu_req should be asserted at HBLANK
 // - check spu_en and turn off SPU at VBLANK
-// - make less DRAM accesses in fetch.v
-// - refactor spu_req handling
+// - tune spu_next on 16c and 4c modes
 
 
 module sprites(
@@ -53,7 +52,7 @@ module sprites(
 	output reg [20:0] spu_addr,
 	input [15:0] spu_data,
 	output reg spu_req,
-	input spu_strobe,
+	input spu_strobe, spu_next,
 
 //video
 	output reg [5:0] spixel,
@@ -152,10 +151,7 @@ module sprites(
 	localparam ms_16c2 = 5'd18;
 	localparam ms_16c3 = 5'd19;
 	localparam ms_tc1 = 5'd20;
-	localparam ms_tw1 = 5'd21;
-	localparam ms_tw2 = 5'd22;
-	localparam ms_tw3 = 5'd23;
-	localparam ms_eow = 5'd24;
+	localparam ms_eow = 5'd21;
 	localparam ms_halt = 5'd31;
 	
 	localparam r_xp = 3'd0;
@@ -322,12 +318,14 @@ module sprites(
 
 	ms_lbeg: //begin of loop
 	//wait for data from DRAM
+	begin
+	if (spu_next)
+		spu_addr <= adr_next;	//set spu_addr
 	if (!spu_strobe)
 		ms <= ms_lbeg;
 	else
 	begin
 //		spu_req <= 1'b0;
-		spu_addr <= adr_next;	//set spu_addr
 		sdbuf <= spu_data[13:0];
 		sl_we <= 1'b1;
 		//write pix0
@@ -348,6 +346,7 @@ module sprites(
 			end
 
 		endcase
+	end
 	end
 
 	ms_4c1:	//write pix1@4c
@@ -408,8 +407,6 @@ module sprites(
 	begin
 	if (!s_eox)
 	begin
-//		spu_addr <= adr_next;	//set spu_addr
-//		spu_req <= 1'b1;		//assert spu_req
 	end
 		sl_wa <= sl_next;
 		sp_ra[3:0] <= sdbuf[11:8];		//set paladdr for pix1
@@ -434,18 +431,10 @@ module sprites(
 	begin
 	if (!s_eox)
 		begin
-//			spu_addr <= adr_next;		//set spu_addr
-//			spu_req <= 1'b1;			//assert spu_req
 		end
 		sl_wa <= sl_next;
-		ms <= ms_tw1;	//FIXME!!!!!	Fucking dirty hack!
-	end
-
-	ms_tw1:	//dummy cycle
-		ms <= ms_tw2;
-	
-	ms_tw2:	//dummy cycle
 		ms <= ms_eow;
+	end
 	
 	ms_eow:	//end of write to sline
 	begin
