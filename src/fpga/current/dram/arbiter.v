@@ -136,7 +136,7 @@ module arbiter(
 	end
 
 
-	assign dcyc = (curr_cycle == CYC_SPU) ? 6'b110000 : ((curr_cycle == CYC_CPU) ? 6'b000011 : ((curr_cycle == CYC_VIDEO) ? 6'b001100 : 6'b0));
+	assign dcyc = (curr_cycle == CYC_SPU) ? 6'b100000 : ((curr_cycle == CYC_CPU) ? 6'b000001 : ((curr_cycle == CYC_VIDEO) ? 6'b000100 : 6'b0));
 
 	assign cbeg = dram_cbeg; // just alias
 

@@ -528,7 +528,7 @@ sprites sprites( .clk(fclk), .spu_en(vcfg[6]),
 			.sp_ra(sp_ra), .sp_rd(sp_rd),
 			.test(test), .mcd(sp_mc),
 			.spu_addr(spu_addr), .spu_data(spu_data), 
-			.spu_req(spu_req), .spu_strobe(spu_strobe)
+			.spu_req(spu_req), .spu_strobe(spu_strobe), .spu_next(spu_next)
 			);
 
 
