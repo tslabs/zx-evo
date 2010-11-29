@@ -122,7 +122,7 @@ module sprites(
 	reg [7:0] yp;
 	reg [8:0] lofs;
 	reg [13:0] sdbuf;
-	reg flipx;
+	reg flipx, flipy;
 
 	assign mcd = ms;
 	
@@ -132,6 +132,7 @@ module sprites(
 
 	localparam ms_res = 5'd0;
 	localparam ms_beg = 5'd1;
+	localparam ms_st1 = 5'd22;
 	localparam ms_st2 = 5'd2;
 	localparam ms_st3 = 5'd3;
 	localparam ms_st4 = 5'd4;
@@ -156,11 +157,11 @@ module sprites(
 	
 	localparam r_xp = 3'd0;
 	localparam r_xs = 3'd1;
-	localparam r_xv = 3'd2;
-	localparam r_yp = 3'd3;
-	localparam r_ys = 3'd4;
-	localparam r_cr = 3'd5;
-	localparam r_al = 3'd6;
+	localparam r_yp = 3'd2;
+	localparam r_ys = 3'd3;
+	localparam r_cr = 3'd4;
+	localparam r_al = 3'd5;
+	localparam r_am = 3'd6;
 	localparam r_ah = 3'd7;
 
 	wire s_vis, s_last, s_act, s_eox;
@@ -181,13 +182,13 @@ module sprites(
 	assign s_next = num + 6'd1;
 	assign s_last = (s_next == 5'd0);
 	assign ypc = {sf_rd[7], yp};
-	assign ysc = {sf_rd[5:0], 3'b0};
+	assign ysc = {sf_rd[6:0], 2'b0};
 	assign s_vis = ((vline >= ypc) && (vline < (ypc + ysc)));
 	assign adr_next = spu_addr + 21'b1;
 	assign dec_xs = xs - 8'd1;
 	assign s_eox = (dec_xs == 8'b0);
 	assign xsc = (cres == 2'b11) ? {sf_rd[6:0], 1'b0} : {1'b0, sf_rd[6:0]};
-	assign lofsc = sf_rd[6] ? (ypc - vline + ysc - 1) : (vline - ypc);
+	assign lofsc = flipy ? (ypc - vline + ysc - 1) : (vline - ypc);
 	assign adr_ofs = {sf_rd[7:0], spu_addr[12:0]} + (xs * lofs);
 	assign sl_next = flipx ? (sl_wa - 9'b1) : (sl_wa + 9'b1);
 	assign xsf = (cres == 2'b11) ? (xs * 2) : ((cres == 2'b10) ? (xs[6:0] * 4) : (xs[5:0] * 8));
@@ -219,11 +220,10 @@ module sprites(
 		//check if sprite is active
 		if (s_act)
 		begin
-			//read SPReg4
 			cres <= sf_rd[1:0];			//get CRES[1:0]
 			sp_ra[7:2] <= sf_rd[7:2];	//get PAL[5:0]
-			sf_sa <= r_yp;
-			ms <= ms_st2;
+			sf_sa <= r_am;
+			ms <= ms_st1;
 		end
 		else
 		begin
@@ -240,10 +240,18 @@ module sprites(
 		end
 	end
 
+	ms_st1:		//fucking obsolete cycle, if sprite invisible!!!!!!!!
+	begin
+		spu_addr[12:7] <= sf_rd[5:0];	//get ADR[13:8]
+		flipx <= sf_rd[6];				//get FLIPX
+		flipy <= sf_rd[7];				//get FLIPY
+		sf_sa <= r_yp;
+		ms <= ms_st2;
+	end
+	
 	ms_st2:
 	begin
-		//read SPReg2
-		yp <= sf_rd[7:0];	//get Y[7:0]
+		yp <= sf_rd[7:0];			//get Y[7:0]
 		sf_sa <= r_ys;
 		ms <= ms_st3;
 	end
@@ -251,10 +259,9 @@ module sprites(
 	ms_st3:
 	begin
 		//check if sprite is visible on this line
-		if (s_vis)	//get Y[8], YS[5:0]
+		if (s_vis)	//get Y[8], YS[6:0]
 		//yes
 		begin
-			//read SPReg3
 			lofs <= lofsc;		//set number of line within sprite (0-xxx), flipped is necessary
 			sf_sa <= r_xs;
 			ms <= ms_st4;
@@ -278,7 +285,7 @@ module sprites(
 	ms_st4: 
 	begin
 		sl_wa[8] <= sf_rd[7];		//get X[8]
-		xs <= xsc;					//get XS[7:0]
+		xs <= xsc;					//get XS[6:0]
 		sf_sa <= r_al;
 		ms <= ms_st5;
 	end
@@ -286,7 +293,7 @@ module sprites(
 	ms_st5:
 	begin
 		//read SPReg5
-		spu_addr[12:0] <= {sf_rd[7:0], 5'b0};		//get ADR[12:0]
+		spu_addr[6:0] <= sf_rd[7:1];		//get ADR[7:1]
 		sf_sa <= r_ah;
 		ms <= ms_st6;
 	end
@@ -296,22 +303,13 @@ module sprites(
 		//read SPReg6
 		spu_addr <= adr_ofs;		// get ADR[20:13], ADR = ADR + LOFS * XS - now we get an addr for 1st word of sprite line
 		spu_req <= 1'b1;			// now we can assert MRQ
-		sf_sa <= r_xv;
+		sf_sa <= r_xp;
 		ms <= ms_st7;
 	end
 
 	ms_st7:
 	begin
 		//read SPReg7
-		xs <= xsc;					//get XSV[7:0]
-		flipx <= sf_rd[7];			//get FLIPX
-		sf_sa <= r_xp;
-		ms <= ms_st8;
-	end
-
-	ms_st8:
-	begin
-		//read SPReg0
 		sl_wa[8:0] <= xc;		//get X[7:0], flipped if necessary
 		ms <= ms_lbeg;
 	end
