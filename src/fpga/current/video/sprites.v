@@ -86,7 +86,6 @@ module sprites(
 	reg sl_wsn;
 	
 	always @(posedge clk)
-//	if (!spu_en)
 	begin
 
 	if (line_start)
@@ -184,12 +183,12 @@ module sprites(
 	assign ypc = {sf_rd[7], yp};
 	assign ysc = {sf_rd[6:0], 2'b0};
 	assign s_vis = ((vline >= ypc) && (vline < (ypc + ysc)));
-	assign adr_next = spu_addr + 21'b1;
 	assign dec_xs = xs - 8'd1;
 	assign s_eox = (dec_xs == 8'b0);
 	assign xsc = (cres == 2'b11) ? {sf_rd[6:0], 1'b0} : {1'b0, sf_rd[6:0]};
 	assign lofsc = flipy ? (ypc - vline + ysc - 1) : (vline - ypc);
 	assign adr_ofs = {sf_rd[7:0], spu_addr[12:0]} + (xs * lofs);
+	assign adr_next = spu_addr + 21'b1;
 	assign sl_next = flipx ? (sl_wa - 9'b1) : (sl_wa + 9'b1);
 	assign xsf = (cres == 2'b11) ? (xs * 2) : ((cres == 2'b10) ? (xs[6:0] * 4) : (xs[5:0] * 8));
 	assign xc = flipx ? ({sl_wa[8], sf_rd[7:0]} + xsf - 1) : {sl_wa[8], sf_rd[7:0]};
@@ -212,7 +211,7 @@ module sprites(
 
 		num <= 6'd0;
 		sf_sa <= r_cr;
-		ms <= ms_beg;
+		ms <= spu_en ? ms_beg : ms_halt;
 	end
 
 	ms_beg:	// Begin of sprite[num] processing
