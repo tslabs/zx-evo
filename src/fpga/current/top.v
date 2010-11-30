@@ -534,7 +534,7 @@ sprites sprites( .clk(fclk), .spu_en(vcfg[6]),
 
 			
 	videoout vidia( .clk(fclk), .pixel(pixel),.border(border),
-			.spixel(spixel), .spx_en(spx_en),
+			.spixel(spixel), .spx_en(spx_en), .zxg_en(vcfg[5]), .spu_en(vcfg[6]),
 	        .hblank(hblank), .vblank(vblank), .hpix(hpix), .vpix(vpix), .hsync(hsync), .vsync(vsync),
 	        .vred(vred), .vgrn(vgrn), .vga_hsync(vga_hsync), .vblu(vblu),
 	        .vhsync(vhsync), .vvsync(vvsync), .vcsync(vcsync), .hsync_start(hsync_start),

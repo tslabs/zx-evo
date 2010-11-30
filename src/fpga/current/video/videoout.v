@@ -17,7 +17,7 @@ module videoout(
 	input tst,			//debug!!!
 	input [5:0] dcyc,
 	
-	input spx_en,
+	input spx_en, spu_en, zxg_en,
 	input hblank,
 	input vblank,
 
@@ -45,8 +45,6 @@ module videoout(
 
 	input  wire cfg_vga_on,
 	
-	input wire vcfg,
-	
 	input wire [5:0] sp_mc,
 	input wire test
 );
@@ -56,7 +54,7 @@ module videoout(
 
 	
 //	assign color = (hblank | vblank) ? 6'd0 : (  (hpix & vpix) ? pixel : border  );
-	assign color = (hblank | vblank) ? 6'd0 :  ( spx_en ? (spixel) : ((hpix & vpix) ? pixel : border ));
+	assign color = (hblank | vblank) ? 6'd0 :  ( spx_en ? (spixel) : ((hpix & vpix & (!zxg_en)) ? pixel : border ));
 //	assign color = (hblank | vblank) ? 6'd0 :  (dcyc != 6'b0) ? dcyc : ( spx_en ? (spixel) : ((hpix & vpix) ? pixel : border ));
 //	assign color = (hblank | vblank) ? 6'd0 :  ((!test ? ( spx_en ? (spixel) : ((hpix & vpix) ? pixel : border )) : sp_mc) | {1'b0, tst, 4'b0});
 //	assign color = (hblank | vblank) ? 6'd0 :  ((!test ? ( spx_en ? (spixel) : ((hpix & vpix) ? pixel : border )) : sp_mc));
