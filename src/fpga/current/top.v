@@ -506,14 +506,12 @@ spram spram(	.wraddress(sp_wa), .data(d), .rdaddress(sp_ra), .q(sp_rd),
 				.wrclock(fclk),
 				.wren(sp_we) );
 			
-
 	wire [8:0] sf_ra, sf_wa;
 	wire [7:0] sf_rd;
 	wire sf_we;
 
+	
 sfile sfile(	.wraddress(sf_wa), .data(d), .rdaddress(sf_ra), .q(sf_rd), .wrclock(fclk), .wren(sf_we) );
-
-
 
 	wire [5:0] spixel, sp_mc;
 	wire spx_en, spu_req;
@@ -560,7 +558,21 @@ sprites sprites( .clk(fclk), .spu_en(vcfg[6]),
 	                   .config0( { not_used[7:3], tape_read, set_nmi, cfg_vga_on} )
 	                 );
 
-	zkbdmus zkbdmus( .fclk(fclk), .rst_n(rst_n),
+	
+	hus	hus(	.clk(fclk), .covox_stb(covox_stb),
+				.hus_addr(hus_addr), .hus_data(hus_data), .hus_req(hus_req), .hus_strobe(hus_strobe), .hus_next(hus_next),
+				.hf_ra(hf_ra), .hf_rd(hf_rd)
+			);
+	
+	
+	wire [8:0] hf_ra, hf_wa;
+	wire [7:0] hf_rd;
+	wire hf_we;
+
+	hfile hfile(	.wraddress(hf_wa), .data(d), .rdaddress(hf_ra), .q(hf_rd), .wrclock(fclk), .wren(hf_we) );
+
+
+zkbdmus zkbdmus( .fclk(fclk), .rst_n(rst_n),
 	                 .kbd_in(kbd_data), .kbd_stb(kbd_stb),
 	                 .mus_in(mus_data), .mus_xstb(mus_xstb),
 	                 .mus_ystb(mus_ystb), .mus_btnstb(mus_btnstb),
@@ -570,8 +582,8 @@ sprites sprites( .clk(fclk), .spu_en(vcfg[6]),
 	               );
 
 				   
-	covox covox(	.fclk(fclk),
-					.beep(beep),
+	covox covox(	.clk(fclk),
+					.beep(beep), .covox_stb(covox_stb),
 					.psd0(psd0), .psd1(psd1), .psd2(psd2), .psd3(psd3)
 	               );
 
