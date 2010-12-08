@@ -17,11 +17,13 @@ module	hus(
 	output reg hus_req,
 	input hus_strobe, hus_next,
 	
-//sfile
+//hfile
 	output wire [8:0] hf_ra,
 	input [7:0] hf_rd,
+	output wire [8:0] hf_hwa,
+	output reg hf_hwe,
 	
-//svol
+//hvol
 	output wire [5:0] hv_ra,
 	input [7:0] hv_rd,
 	
@@ -31,14 +33,14 @@ module	hus(
 	
 	);
 	
-	assign hf_ra = {dac_n, hfr};
-	assign hv_ra = {dac_n, lr};
-
+	assign hf_ra = {hnum, hfr};
+	assign hv_ra = {hnum, lr};
+	assign hf_hwa = {hnum, 4'b0};
 	
 	
 //State Machine
 
-	reg [4:0] dac_n;		//num of current channel
+	reg [4:0] hnum;		//num of current channel
 	reg [3:0] hfr;			//reg of HFILE
 	reg [1:0] cfr;			//reg of HCNT
 	reg lr;					//reg of HVOL
@@ -80,19 +82,19 @@ module	hus(
 	localparam c_ah = 2'd2;
 	localparam c_ii = 2'd3;
 
-	wire [4:0] dac_next;
+	wire [4:0] hnumext;
 	wire dac_last;
 	wire act;
 	
 	assign act = hf_rd[7];
-	assign dac_next = dac_n + 5'b1;
-	assign dac_last = (dac_next == 5'b0);
+	assign hnumext = hnum + 5'b1;
+	assign dac_last = (hnumext == 5'b0);
 	
 always @(posedge clk)
 	if (dac_stb)
 	begin
 //initialization of HUS vars by reset
-		dac_n <= 0;			//number of channel <= 0
+		hnum <= 0;			//number of channel <= 0
 		ldac <= 13'd0;		//DAC summators <= 0
 		rdac <= 13'd0;
 		//HFILE
@@ -126,7 +128,7 @@ mc_beg:
 		if (!dac_last)
 		//there are also channels to process
 		begin
-			dac_n <= dac_next;
+			hnum <= hnumext;
 			mc = mc_beg;
 		end
 		else
@@ -151,7 +153,7 @@ default:
 	wire [15:0] hc_rd, hc_wd;
 	wire hc_we;
 
-	hcnt hcnt(	.wraddress({dac_n, cfr}), .data(hc_wd), .rdaddress({dac_n, cfr}), .q(hc_rd), .wrclock(fclk), .wren(hc_we) );
+	hcnt hcnt(	.wraddress({hnum, cfr}), .data(hc_wd), .rdaddress({hnum, cfr}), .q(hc_rd), .wrclock(fclk), .wren(hc_we) );
 
 endmodule
 

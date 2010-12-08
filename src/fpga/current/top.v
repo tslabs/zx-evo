@@ -568,16 +568,22 @@ sprites sprites( .clk(fclk), .spu_en(vcfg[6]),
 	
 	hus	hus(	.clk(fclk), .dac_stb(dac_stb), .ldac(ldac), .rdac(rdac), .hus_en(hus_en), .li_en(li_en),
 				.hus_addr(hus_addr), .hus_data(hus_data), .hus_req(hus_req), .hus_strobe(hus_strobe), .hus_next(hus_next),
-				.hf_ra(hf_ra), .hf_rd(hf_rd),
+				.hf_ra(hf_ra), .hf_rd(hf_rd), .hf_hwa(hf_hwa), .hf_hwe(hf_hwe),
 				.hv_ra(hv_ra), .hv_rd(hv_rd)
 			);
 	
 	
-	wire [8:0] hf_ra, hf_wa;
+	wire [8:0] hf_ra, hf_wa, hf_hwa;
 	wire [7:0] hf_rd;
-	wire hf_we;
+	wire hf_we, hf_hwe;
 
-	hfile hfile(	.wraddress(hf_wa), .data(d), .rdaddress(hf_ra), .q(hf_rd), .wrclock(fclk), .wren(hf_we) );
+	hfile hfile(	.wraddress(hf_hwe ? hf_hwa : hf_wa),		//if null Reload bit from HUS, write addr = hnum, hreg0
+					.data(hf_hwe ? {hf_rd[7:1], 1'b0} : d),		//data = hf_rd & 0xFE
+					.rdaddress(hf_hwe ? hf_hwa : hf_ra),		//read addr = hnum, hreg0
+					.q(hf_rd),
+					.wrclock(fclk),
+					.wren(hf_hwe || hf_we)
+				);
 
 
 	wire [5:0] hv_ra, hv_wa;
