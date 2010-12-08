@@ -14,7 +14,7 @@ module covox(
 	output reg beep, dac_stb
 	);
 
-	localparam bits = 10;
+	localparam bits = 10; 	//kinda crutch
 	reg [bits-1:0] saw;
 	reg [bits-1:0] pwm;
 
