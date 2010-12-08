@@ -430,10 +430,9 @@ module top(
 
 	wire [20:0] hus_addr;
 	wire [15:0] hus_data;
-	wire hus_strobe;
-	wire hus_next, hus_req;
+	wire hus_strobe, hus_next, hus_req;
 
-	wire [5:0] dcyc;			//debug!!!
+	wire [5:0] dcyc;						//debug!!!
 	
 	arbiter dramarb( .clk(fclk),
 	                 .rst_n(rst_n),
@@ -465,6 +464,12 @@ module top(
 	                 .spu_strobe(spu_strobe),
 	                 .spu_next(spu_next),
 					 .spu_req(spu_req),
+
+	                 .hus_addr(hus_addr),
+	                 .hus_data(hus_data),
+	                 .hus_strobe(hus_strobe),
+	                 .hus_next(hus_next),
+					 .hus_req(hus_req),
 
 	                 //.cpu_waitcyc(cpu_waitcyc),
 	                 //.cpu_stall(cpu_stall),
