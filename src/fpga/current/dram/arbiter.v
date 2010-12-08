@@ -81,6 +81,13 @@ module arbiter(
 	output reg    spu_strobe, 
 	output reg    spu_next,   
 
+//HUS
+	input  [20:0] hus_addr,   
+	output [15:0] hus_data,
+	input hus_req,
+	output reg    hus_strobe, 
+	output reg    hus_next,   
+
 
 
 	input cpu_req,cpu_rnw,
@@ -112,8 +119,9 @@ module arbiter(
 
 
 	localparam CYC_CPU   = 4'b0001; //   not     since     are   dependencies
-	localparam CYC_FREE  = 4'b0010; 
+	localparam CYC_FREE  = 4'b0010; //
 	localparam CYC_SPU   = 4'b0100; //      alter             bit
+	localparam CYC_HUS   = 4'b0101; //
 	localparam CYC_VIDEO = 4'b1000; // do             there
 
 	reg [3:0] curr_cycle; // type of the cycle in progress
@@ -136,7 +144,7 @@ module arbiter(
 	end
 
 
-	assign dcyc = (curr_cycle == CYC_SPU) ? 6'b100000 : ((curr_cycle == CYC_CPU) ? 6'b000001 : ((curr_cycle == CYC_VIDEO) ? 6'b000100 : 6'b0));
+	assign dcyc = (curr_cycle == CYC_HUS) ? 6'b110000 : ((curr_cycle == CYC_CPU) ? 6'b000001 : ((curr_cycle == CYC_VIDEO) ? 6'b000100 : 6'b0));
 
 	assign cbeg = dram_cbeg; // just alias
 
@@ -210,6 +218,9 @@ module arbiter(
 				if( cpu_req )
 					next_cycle = CYC_CPU;
 				else
+				if( hus_req )
+					next_cycle = CYC_HUS;
+				else
 				if( spu_req )
 					next_cycle = CYC_SPU;
 				else
@@ -230,6 +241,9 @@ module arbiter(
 					else
 						if( !(vid_rem==3'd0) )
 							next_cycle = CYC_VIDEO;
+						else
+							if( hus_req )
+								next_cycle = CYC_HUS;
 						else
 							if( spu_req )
 								next_cycle = CYC_SPU;
@@ -256,11 +270,11 @@ module arbiter(
 	assign dram_bsel[1:0] = { ~cpu_wrbsel, cpu_wrbsel };
 
 	//select address source for next cycle
-	assign dram_addr = next_cycle[0] ? cpu_addr : (next_cycle[2] ? spu_addr : video_addr);
+	assign dram_addr = next_cycle[0] ? cpu_addr : (next_cycle[2] ? (next_cycle[0] ? hus_addr : spu_addr) : video_addr);
 
 	assign cpu_rddata = dram_rddata;
 	assign spu_data = dram_rddata;
-//	assign spu_data = 16'h1234;
+	assign hus_data = dram_rddata;
 	assign video_data = dram_rddata;
 
 	always @*
@@ -301,15 +315,25 @@ module arbiter(
 		else
 			video_strobe <= 1'b0;
 
-		if( (curr_cycle==CYC_SPU) && pre_cend )
-			spu_strobe <= 1'b1;
-		else
-			spu_strobe <= 1'b0;
-
 		if( (curr_cycle==CYC_VIDEO) && post_cbeg )
 			video_next <= 1'b1;
 		else
 			video_next <= 1'b0;
+
+		if( (curr_cycle==CYC_HUS) && pre_cend )
+			hus_strobe <= 1'b1;
+		else
+			hus_strobe <= 1'b0;
+
+		if( (curr_cycle==CYC_HUS) && post_cbeg )
+			hus_next <= 1'b1;
+		else
+			hus_next <= 1'b0;
+
+		if( (curr_cycle==CYC_SPU) && pre_cend )
+			spu_strobe <= 1'b1;
+		else
+			spu_strobe <= 1'b0;
 
 		if( (curr_cycle==CYC_SPU) && post_cbeg )
 			spu_next <= 1'b1;
