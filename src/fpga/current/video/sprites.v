@@ -478,17 +478,17 @@ module sprites(
 
 	reg sl_we;
 	wire sl_wss, pixt, pixs, tcol;
-	wire [5:0] pixc;
+	wire [6:0] pixc;
 	reg [8:0] sl_wa;
 	wire [6:0] sl_rd0, sl_rd1;
 	wire [6:0] sl_wds;
 
 	assign pixs = (ms == ms_tc1);
 	assign pixt = pixs ? !spu_data[14] : !sdbuf[6];
-	assign pixc = pixs ? spu_data[13:8] : sdbuf[5:0];
+	assign pixc = pixs ? {!spu_data[15], spu_data[13:8]} : {!sdbuf[7], sdbuf[5:0]};
 	assign tcol = (cres == 2'b11);
 	assign sl_wss = (tcol ? pixt : !sp_rd[6]) && sl_we;
-	assign sl_wds = {1'b1, (tcol ? pixc : sp_rd[5:0])};
+	assign sl_wds = tcol ? pixc : {!sp_rd[7], sp_rd[5:0]};
 	
 	sline0 sline0(	.wraddress(l_sel ? sl_wa : sl_ra),
 					.data(l_sel ? sl_wds : 7'b0),
