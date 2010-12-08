@@ -63,7 +63,9 @@ module sprites(
 	reg [8:0] vline;
 	reg l_sel;
 
-	
+	wire vvis;
+	assign vvis = !(vline == 288);
+
 //vcount
 	always @(posedge clk)
 	if (line_start)
@@ -74,13 +76,13 @@ module sprites(
 			l_sel <= 1'b0;
 		end
 		else
+		if (vvis)
 		begin
 			vline <= vline + 9'b1;
 			l_sel <= ~l_sel;
 		end
 	end
 
-	
 // read/null sline
 	reg [8:0] sl_ra;
 	reg sl_wsn;
@@ -203,7 +205,7 @@ module sprites(
 		sl_we <= 1'b0;
 		num <= 6'd0;
 		sf_sa <= r_cr;
-		ms <= spu_en ? ms_beg : ms_halt;
+		ms <= (spu_en && vvis) ? ms_beg : ms_halt;
 	end
 	else
 	case (ms)
