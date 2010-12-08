@@ -563,9 +563,10 @@ sprites sprites( .clk(fclk), .spu_en(vcfg[6]),
 	                   .config0( { not_used[7:3], tape_read, set_nmi, cfg_vga_on} )
 	                 );
 
-	wire dac_stb;
+	wire dac_stb, hus_en, li_en;
+	wire [15:0] ldac, rdac;
 	
-	hus	hus(	.clk(fclk), .dac_stb(dac_stb),
+	hus	hus(	.clk(fclk), .dac_stb(dac_stb), .ldac(ldac), .rdac(rdac), .hus_en(hus_en), .li_en(li_en),
 				.hus_addr(hus_addr), .hus_data(hus_data), .hus_req(hus_req), .hus_strobe(hus_strobe), .hus_next(hus_next),
 				.hf_ra(hf_ra), .hf_rd(hf_rd),
 				.hv_ra(hv_ra), .hv_rd(hv_rd)
@@ -596,7 +597,7 @@ zkbdmus zkbdmus( .fclk(fclk), .rst_n(rst_n),
 	               );
 
 				   
-	covox covox(	.clk(fclk),
+	covox covox(	.clk(fclk), .hus_en(hus_en), .ldac(ldac), .rdac(rdac),
 					.beep(beep), .dac_stb(dac_stb),
 					.psd0(psd0), .psd1(psd1), .psd2(psd2), .psd3(psd3)
 	               );
@@ -615,9 +616,11 @@ zkbdmus zkbdmus( .fclk(fclk), .rst_n(rst_n),
 	              .ide_a(ide_a), .ide_cs0_n(ide_cs0_n), .ide_cs1_n(ide_cs1_n),
 	              .ide_wr_n(ide_wr_n), .ide_rd_n(ide_rd_n),
 
-				.vcfg(vcfg),
+				.vcfg(vcfg), .hus_en(hus_en), .li_en(li_en),
 				.sf_wa(sf_wa), .sf_we(sf_we), 
 				.sp_wa(sp_wa), .sp_we(sp_we), 
+				.hf_wa(hf_wa), .hf_we(hf_we), 
+				.hv_wa(hv_wa), .hv_we(hv_we), 
 				  
 	              .keys_in(kbd_port_data),
 	              .mus_in(mus_port_data),

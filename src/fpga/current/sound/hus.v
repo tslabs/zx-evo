@@ -9,7 +9,7 @@
 
 module	hus(
 
-	input clk,
+	input clk, hus_en, li_en,
 		
 //dram
 	output reg [20:0] hus_addr,
@@ -26,7 +26,8 @@ module	hus(
 	input [7:0] hv_rd,
 	
 //DAC
-	input dac_stb
+	input dac_stb,
+	output reg [15:0] ldac, rdac		//summators for L_AUDIO & R_AUDIO
 	
 	);
 	
@@ -42,7 +43,6 @@ module	hus(
 	reg [1:0] cfr;			//reg of HCNT
 	reg lr;					//reg of HVOL
 	reg [4:0] mc;
-	reg [12:0] ldac, rdac;	//summators for L_AUDIO & R_AUDIO
 	reg [1:0] lmode;		//current loop mode
 	reg a0, reload;
 	

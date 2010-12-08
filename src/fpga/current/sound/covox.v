@@ -8,8 +8,9 @@
 // PWM parameters: (28000/1024)kHz, 10 bit
 
 module covox(
-	input clk,  // global FPGA clock, 28MHz
+	input clk, hus_en,
 	input [7:0] psd0, psd1, psd2, psd3,
+	input [15:0] ldac, rdac,
 	output reg beep, dac_stb
 	);
 
@@ -29,7 +30,7 @@ always @(posedge clk)
 if (saw == 10'hffff)
 	begin
 		dac_stb = 1'b1;
-		pwm <= (psd0[7:0] + psd1[7:0] + psd2[7:0] + psd3[7:0]); 	//pwm reloaded from registers
+		pwm <= hus_en ? (ldac[15:7] + rdac[15:7]) : (psd0[7:0] + psd1[7:0] + psd2[7:0] + psd3[7:0]); 	//pwm reloaded from registers
 	end
 else
 	dac_stb = 1'b0;
