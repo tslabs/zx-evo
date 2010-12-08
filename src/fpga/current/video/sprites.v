@@ -129,7 +129,6 @@ module sprites(
 
 	reg [5:0] ms;		//current and next states of FSM
 
-	localparam ms_res = 5'd0;
 	localparam ms_beg = 5'd1;
 	localparam ms_st1 = 5'd22;
 	localparam ms_st2 = 5'd2;
@@ -152,7 +151,7 @@ module sprites(
 	localparam ms_16c3 = 5'd19;
 	localparam ms_tc1 = 5'd20;
 	localparam ms_eow = 5'd21;
-	localparam ms_halt = 5'd31;
+	localparam ms_halt = 5'd0;
 	
 	localparam r_xp = 3'd0;
 	localparam r_xs = 3'd1;
@@ -193,27 +192,22 @@ module sprites(
 	assign xsf = (cres == 2'b11) ? (xs * 2) : ((cres == 2'b10) ? (xs[6:0] * 4) : (xs[5:0] * 8));
 	assign xc = flipx ? ({sl_wa[8], sf_rd[7:0]} + xsf - 1) : {sl_wa[8], sf_rd[7:0]};
 	
-	initial 
-	ms = ms_res;
 
 // Here the states are processed on CLK event
-	always @(posedge clk, posedge line_start)
+	always @(posedge clk)
 	if (line_start)
-		ms = ms_res;
-	else
-	case (ms)
-	
-	ms_res:	// SPU reset
+	//SPU reset
 	begin
 		test <= 1'b1;
 		spu_req <= 1'b0;
 		sl_we <= 1'b0;
-
 		num <= 6'd0;
 		sf_sa <= r_cr;
 		ms <= spu_en ? ms_beg : ms_halt;
 	end
-
+	else
+	case (ms)
+	
 	ms_beg:	// Begin of sprite[num] processing
 	begin
 		//check if sprite is active
