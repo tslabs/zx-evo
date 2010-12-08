@@ -10,7 +10,7 @@
 module covox(
 	input clk,  // global FPGA clock, 28MHz
 	input [7:0] psd0, psd1, psd2, psd3,
-	output reg beep, covox_stb
+	output reg beep, dac_stb
 	);
 
 	localparam bits = 10;
@@ -28,11 +28,11 @@ end
 always @(posedge clk)
 if (saw == 10'hffff)
 	begin
-		covox_stb = 1'b1;
+		dac_stb = 1'b1;
 		pwm <= (psd0[7:0] + psd1[7:0] + psd2[7:0] + psd3[7:0]); 	//pwm reloaded from registers
 	end
 else
-	covox_stb = 1'b0;
+	dac_stb = 1'b0;
 	
 	
 //'Saw' counter for PWM
@@ -43,7 +43,7 @@ always @(posedge clk)
 //Output managing
 always @(posedge clk)
 begin
-	if (covox_stb)
+	if (dac_stb)
 		beep <= 1'b1;	//BEEP is set on the begin of PWM duty cycle
 
 	else if (saw == pwm)

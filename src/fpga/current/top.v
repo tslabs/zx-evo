@@ -428,6 +428,11 @@ module top(
 	wire spu_strobe;
 	wire spu_next;
 
+	wire [20:0] hus_addr;
+	wire [15:0] hus_data;
+	wire hus_strobe;
+	wire hus_next, hus_req;
+
 	wire [5:0] dcyc;			//debug!!!
 	
 	arbiter dramarb( .clk(fclk),
@@ -558,10 +563,12 @@ sprites sprites( .clk(fclk), .spu_en(vcfg[6]),
 	                   .config0( { not_used[7:3], tape_read, set_nmi, cfg_vga_on} )
 	                 );
 
+	wire dac_stb;
 	
-	hus	hus(	.clk(fclk), .covox_stb(covox_stb),
+	hus	hus(	.clk(fclk), .dac_stb(dac_stb),
 				.hus_addr(hus_addr), .hus_data(hus_data), .hus_req(hus_req), .hus_strobe(hus_strobe), .hus_next(hus_next),
-				.hf_ra(hf_ra), .hf_rd(hf_rd)
+				.hf_ra(hf_ra), .hf_rd(hf_rd),
+				.hv_ra(hv_ra), .hv_rd(hv_rd)
 			);
 	
 	
@@ -570,6 +577,13 @@ sprites sprites( .clk(fclk), .spu_en(vcfg[6]),
 	wire hf_we;
 
 	hfile hfile(	.wraddress(hf_wa), .data(d), .rdaddress(hf_ra), .q(hf_rd), .wrclock(fclk), .wren(hf_we) );
+
+
+	wire [5:0] hv_ra, hv_wa;
+	wire [7:0] hv_rd;
+	wire hv_we;
+
+	hvol hvol(	.wraddress(hv_wa), .data(d), .rdaddress(hv_ra), .q(hv_rd), .wrclock(fclk), .wren(hv_we) );
 
 
 zkbdmus zkbdmus( .fclk(fclk), .rst_n(rst_n),
@@ -583,7 +597,7 @@ zkbdmus zkbdmus( .fclk(fclk), .rst_n(rst_n),
 
 				   
 	covox covox(	.clk(fclk),
-					.beep(beep), .covox_stb(covox_stb),
+					.beep(beep), .dac_stb(dac_stb),
 					.psd0(psd0), .psd1(psd1), .psd2(psd2), .psd3(psd3)
 	               );
 
