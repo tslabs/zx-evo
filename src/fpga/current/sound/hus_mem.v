@@ -93,15 +93,15 @@ endmodule
 
 
 // HCNT: DACs description file
-// 128x16 (32x4x16)
+// 256x8 (32x8x8)
 
 module hcnt (
-	input	[15:0]  data,
+	input	[7:0]  data,
 	input	[6:0]  rdaddress,
 	input	[6:0]  wraddress,
 	input	  wrclock,
 	input	  wren,
-	output	[15:0]  q
+	output	[7:0]  q
 );
 
 	altdpram	altdpram_component (
@@ -130,8 +130,8 @@ module hcnt (
 		altdpram_component.rdaddress_reg = "UNREGISTERED",
 		altdpram_component.rdcontrol_aclr = "OFF",
 		altdpram_component.rdcontrol_reg = "UNREGISTERED",
-		altdpram_component.width = 16,
-		altdpram_component.widthad = 7,
+		altdpram_component.width = 8,
+		altdpram_component.widthad = 8,
 		altdpram_component.wraddress_aclr = "OFF",
 		altdpram_component.wraddress_reg = "INCLOCK",
 		altdpram_component.wrcontrol_aclr = "OFF",

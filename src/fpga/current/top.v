@@ -583,7 +583,7 @@ sprites sprites( .clk(fclk), .spu_en(vcfg[6]),
 	wire hf_we, hf_hwe;
 
 	hfile hfile(	.wraddress(hf_hwe ? hf_hwa : hf_wa),		//if null Reload bit from HUS, write addr = hnum, hreg0
-					.data(hf_hwe ? {hf_rd[7:1], 1'b0} : d),		//data = hf_rd & 0xFE
+					.data(hf_hwe ? (hf_rd[7:0] & 8'b10111111) : d),
 					.rdaddress(hf_hwe ? hf_hwa : hf_ra),		//read addr = hnum, hreg0
 					.q(hf_rd),
 					.wrclock(fclk),
