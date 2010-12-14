@@ -225,7 +225,7 @@ module zports(
 		    ( loa==ZXEVBF ) || ( loa==COMPORT ) ||
 
 		    ( (loa==SD0)&&(!shadow) ) || ( (loa==SD1)&&(!shadow) ) || ( (loa==SD2)&&(!shadow) ) || ( (loa==SD3)&&(!shadow) ) ||
-		    (loa==CVX1) || (loa==CVX2) ||
+		    (loa==CVX1) || (loa==CVX2)
 		  )
 			porthit = 1'b1;
 		else
