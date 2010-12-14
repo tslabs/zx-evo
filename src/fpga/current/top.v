@@ -568,10 +568,13 @@ sprites sprites( .clk(fclk), .spu_en(vcfg[6]),
 	                   .config0( { not_used[7:3], tape_read, set_nmi, cfg_vga_on} )
 	                 );
 
-	wire dac_stb, hus_en, li_en;
+//	wire dac_stb;
+	wire hus_en, li_en;
 	wire [15:0] ldac, rdac;
 	
-	hus	hus(	.clk(fclk), .dac_stb(dac_stb), .ldac(ldac), .rdac(rdac), .hus_en(hus_en), .li_en(li_en),
+	hus	hus(	.clk(fclk),
+//				.dac_stb(dac_stb),
+				.ldac(ldac), .rdac(rdac), .hus_en(hus_en), .li_en(li_en),
 				.hus_addr(hus_addr), .hus_data(hus_data), .hus_req(hus_req), .hus_strobe(hus_strobe), .hus_next(hus_next),
 				.hf_ra(hf_ra), .hf_rd(hf_rd), .hf_hwa(hf_hwa), .hf_hwe(hf_hwe),
 				.hv_ra(hv_ra), .hv_rd(hv_rd)
@@ -609,7 +612,8 @@ zkbdmus zkbdmus( .fclk(fclk), .rst_n(rst_n),
 
 				   
 	covox covox(	.clk(fclk), .hus_en(hus_en), .ldac(ldac), .rdac(rdac),
-					.beep(beep), .dac_stb(dac_stb),
+					.beep(beep),
+//					.dac_stb(dac_stb),
 					.psd0(psd0), .psd1(psd1), .psd2(psd2), .psd3(psd3)
 	               );
 
