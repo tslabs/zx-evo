@@ -28,7 +28,7 @@ module	hus(
 	input [7:0] hv_rd,
 	
 //DAC
-	input dac_stb,
+//	input dac_stb,
 	output reg [15:0] ldac, rdac		//summators for L_AUDIO & R_AUDIO
 	
 	);
@@ -82,11 +82,11 @@ module	hus(
 	localparam c_ii = 3'd6;
 	localparam c_dp = 3'd7;
 
-	assign hf_ra = {hnum, hfr};
-	assign hv_ra = {hnum, lr};
-	assign hf_hwa = {hnum, 4'b0};
-	assign hus_addr = adr[21:1];
+	localparam int = 11'd1024;	//period of DAC_STB in clk's (1024 = ~27.3 kHz)
+	localparam int_adder = 11'd1;
+	localparam int_null = 11'd0;
 	
+	reg [10:0] int_cnt;		//counter for dac_stb (max. 2047)
 	reg [23:0] adr;
 	reg [15:0] sadr;
 	reg [7:0] samp;
@@ -98,6 +98,7 @@ module	hus(
 	reg [1:0] lmode;		//current loop mode
 	reg reload;
 	
+	wire dac_stb;
 	wire [4:0] hnumext;
 	wire dac_last;
 	wire act;
@@ -107,6 +108,14 @@ module	hus(
 	wire [16:0] mul;
 	wire mms, mmi, mmv;
 	
+//Addresses
+	assign hf_ra = {hnum, hfr};
+	assign hv_ra = {hnum, lr};
+	assign hf_hwa = {hnum, 4'b0};
+	assign hus_addr = adr[21:1];
+	
+//Maths
+	assign dac_stb = (int_cnt == int);
 	assign mul = mul1 * mul2;
 	assign mms = ((mc == mc_ms_l) | (mc == mc_ms_r));
 	assign mmi = ((mc == mc_mi_l) | (mc == mc_mi_r));
@@ -118,6 +127,12 @@ module	hus(
 	assign dac_last = (hnum_next == 5'b0);
 	assign adrc = reload ? hc_rd[7:0] : hf_rd[7:0];
 	
+
+always @(posedge clk)		//counter for dac_stb
+	if (dac_stb)
+		int_cnt <= int_null;
+	else
+		int_cnt <= int + int_adder;
 
 always @(posedge clk)
 	if (dac_stb)
