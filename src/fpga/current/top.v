@@ -469,7 +469,7 @@ module top(
 	                 .hus_data(hus_data),
 	                 .hus_strobe(hus_strobe),
 	                 .hus_next(hus_next),
-					 .hus_req(hus_req),
+					 .hus_req(1'b0),
 
 	                 //.cpu_waitcyc(cpu_waitcyc),
 	                 //.cpu_stall(cpu_stall),
