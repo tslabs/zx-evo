@@ -198,6 +198,8 @@ mc_mem:
 			mc <= mc_mem;
 		else
 			mc <= mc_mem2;
+	end
+
 mc_mem2:
 	begin
 		samp <= adr[0] ? hus_data[15:8] : hus_data[7:0];
@@ -218,6 +220,8 @@ mc_end:
 
 mc_out:
 	begin
+		mc <= mc_out;
+	
 	end
 	
 mc_halt:
