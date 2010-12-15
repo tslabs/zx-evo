@@ -4,4 +4,16 @@ ptn_Child1=Frames
 ptn_Child1=ChildFrames
 [ProjectWorkspace.Frames.ChildFrames]
 ptn_Child1=Document-0
-ptn_Child2=Document-1
+[ProjectWorkspace.Frames.ChildFrames.Document-0]
+ptn_Child1=ViewFrame-0
+[ProjectWorkspace.Frames.ChildFrames.Document-0.ViewFrame-0]
+DocPathName=s:/_soft/altera/quartus_6_1/quartus/bin/pin_planner.ppl
+DocumentCLSID={428be327-2a68-4a16-a2c9-0502a8811afc}
+WindowPlacement=MCAAAAAACAAAAAAADAAAAAAAPPPPPPPPPPPPPPPPMPPPPPPPJOPPPPPPAAAAAAAAAAAAAAAALHEAAAAAJLBAAAAA
+IsChildFrameDetached=False
+IsActiveChildFrame=True
+ptn_Child1=StateMap
+[ProjectWorkspace.Frames.ChildFrames.Document-0.ViewFrame-0.StateMap]
+AFC_CMP_AP_NAME=top
+AFC_PROJ_DB_PATH=d:/_heap/Work/SVN/ZXEvo/src/fpga/current/quartus/db/pentevo.quartus_db
+AFC_IN_REPORT=False

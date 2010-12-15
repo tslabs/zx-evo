@@ -97,8 +97,8 @@ endmodule
 
 module hcnt (
 	input	[7:0]  data,
-	input	[6:0]  rdaddress,
-	input	[6:0]  wraddress,
+	input	[7:0]  rdaddress,
+	input	[7:0]  wraddress,
 	input	  wrclock,
 	input	  wren,
 	output	[7:0]  q
