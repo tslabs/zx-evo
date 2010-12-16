@@ -82,7 +82,7 @@ module	hus(
 	localparam c_ii = 3'd6;
 	localparam c_dp = 3'd7;
 
-	localparam int = 11'd1024;	//period of DAC_STB in clk's (1024 = ~27.3 kHz)
+	localparam intp = 11'd1024;	//period of DAC_STB in clk's (1024 = ~27.3 kHz)
 	localparam int_adder = 11'd1;
 	localparam int_null = 11'd0;
 	
@@ -115,7 +115,7 @@ module	hus(
 	assign hus_addr = adr[21:1];
 	
 //Maths
-	assign dac_stb = (int_cnt == int);
+	assign dac_stb = (int_cnt == intp);
 	assign mul = mul1 * mul2;
 	assign mms = ((mc == mc_ms_l) | (mc == mc_ms_r));
 	assign mmi = ((mc == mc_mi_l) | (mc == mc_mi_r));
@@ -132,7 +132,7 @@ always @(posedge clk)		//counter for dac_stb
 	if (dac_stb)
 		int_cnt <= int_null;
 	else
-		int_cnt <= int + int_adder;
+		int_cnt <= intp + int_adder;
 
 always @(posedge clk)
 	if (dac_stb)
