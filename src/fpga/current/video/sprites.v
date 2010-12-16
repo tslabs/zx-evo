@@ -61,10 +61,12 @@ module sprites(
 	);
 
 	reg [8:0] vline;
-	reg l_sel;
 
+	wire l_sel;
 	wire vvis;
+
 	assign vvis = !(vline == 9'd288);
+	assign l_sel = vline[0];
 
 //vcount
 	always @(posedge clk)
@@ -79,7 +81,7 @@ module sprites(
 		if (vvis)
 		begin
 			vline <= vline + 9'b1;
-			l_sel <= ~l_sel;
+//			l_sel <= ~l_sel;
 		end
 	end
 
