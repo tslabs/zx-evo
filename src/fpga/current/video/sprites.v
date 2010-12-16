@@ -187,12 +187,12 @@ module sprites(
 	assign dec_xs = xs - 8'd1;
 	assign s_eox = (dec_xs == 8'b0);
 	assign xsc = (cres == 2'b11) ? {sf_rd[6:0], 1'b0} : {1'b0, sf_rd[6:0]};
-	assign lofsc = flipy ? (ypc - vline + ysc - 1) : (vline - ypc);
+	assign lofsc = flipy ? (ypc - vline + ysc - 9'd1) : (vline - ypc);
 	assign adr_ofs = {sf_rd[7:0], spu_addr[12:0]} + (xs * lofs);
 	assign adr_next = spu_addr + 21'b1;
-	assign sl_next = flipx ? (sl_wa - 9'b1) : (sl_wa + 9'b1);
-	assign xsf = (cres == 2'b11) ? (xs * 2) : ((cres == 2'b10) ? (xs[6:0] * 4) : (xs[5:0] * 8));
-	assign xc = flipx ? ({sl_wa[8], sf_rd[7:0]} + xsf - 1) : {sl_wa[8], sf_rd[7:0]};
+	assign sl_next = flipx ? (sl_wa - 9'd1) : (sl_wa + 9'd1);
+	assign xsf = (cres == 2'b11) ? (xs * 9'd2) : ((cres == 2'b10) ? (xs[6:0] * 9'd4) : (xs[5:0] * 9'd8));
+	assign xc = flipx ? ({sl_wa[8], sf_rd[7:0]} + xsf - 9'd1) : {sl_wa[8], sf_rd[7:0]};
 	
 
 // Here the states are processed on CLK event
