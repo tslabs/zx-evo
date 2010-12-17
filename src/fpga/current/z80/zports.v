@@ -51,7 +51,7 @@ module zports(
 	output wire        ay_bdir,
 	output wire        ay_bc1,
 
-	output reg [7:0] psd0,psd1,psd2,psd3,
+	output reg [5:0] psd0,psd1,psd2,psd3,
 
 	output wire [ 7:0] p7ffd,
 	output wire [ 7:0] peff7,
@@ -590,30 +590,30 @@ module zports(
 		//port FE beep/border bit
 		if (portfe_wr)
 		begin
-			psd0 <= {din[4],din[4],din[4],din[4],din[4],din[4],din[4],din[4]};
-			psd1 <= {din[4],din[4],din[4],din[4],din[4],din[4],din[4],din[4]};
-			psd2 <= {din[4],din[3],din[3],din[3],din[3],din[3],din[3],din[3]};
-			psd3 <= {din[3],din[3],din[3],din[3],din[3],din[3],din[3],din[3]};
-			border <= {din[1],1'b0,din[2],1'b0,din[0],1'b0};
+			psd0 <= {6{din[4]}};
+			psd1 <= {6{din[4]}};
+			psd2 <= {din[4], {5{din[3]}}};
+			psd3 <= {6{din[3]}};
+			border <= {din[1], 1'b0, din[2], 1'b0, din[0], 1'b0};
 		end
 
 		//FB,DD,0F,1F,4F,5F - Covox/Soundrive ports
 		if (portcv_wr || portsd_wr)
 		case (loa)
 			SD0:
-				psd0 <= din[7:0];
+				psd0 <= din[7:2];
 			SD1:
-				psd1 <= din[7:0];
+				psd1 <= din[7:2];
 			SD2:
-				psd2 <= din[7:0];
+				psd2 <= din[7:2];
 			SD3:
-				psd3 <= din[7:0];
+				psd3 <= din[7:2];
 			default:
 			begin
-				psd0 <= din[7:0];
-				psd1 <= din[7:0];
-				psd2 <= din[7:0];
-				psd3 <= din[7:0];
+				psd0 <= din[7:2];
+				psd1 <= din[7:2];
+				psd2 <= din[7:2];
+				psd3 <= din[7:2];
 			end
 		endcase
 		

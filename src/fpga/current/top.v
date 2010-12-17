@@ -210,7 +210,7 @@ module top(
 
 
 
-	wire [7:0] psd0,psd1,psd2,psd3;
+	wire [5:0] psd0,psd1,psd2,psd3;
 
 	wire [7:0] peff7;
 	wire [7:0] p7ffd;
