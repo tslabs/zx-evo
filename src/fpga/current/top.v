@@ -241,6 +241,7 @@ module top(
 	end
 
 	assign ay_clk = ayclk_gen[3];
+	assign dsm_clk = ayclk_gen[0];
 
 	// fix ATM2-style ROM addressing for PENT-like ROM layout.
 	// this causes compications when writing to the flashROM from Z80
@@ -613,7 +614,7 @@ zkbdmus zkbdmus( .fclk(fclk), .rst_n(rst_n),
 	               );
 
 				   
-	covox covox(	.clk(fclk), .hus_en(hus_en), .ldac(ldac), .rdac(rdac),
+	covox covox(	.clk(dsm_clk), .hus_en(hus_en), .ldac(ldac), .rdac(rdac),
 					.beep(beep),
 //					.dac_stb(dac_stb),
 					.psd0(psd0), .psd1(psd1), .psd2(psd2), .psd3(psd3)
