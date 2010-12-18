@@ -65,7 +65,7 @@ module sprites(
 	wire l_sel;
 	wire vvis;
 
-	assign vvis = !(vline == 9'd288);
+	assign vvis = !(vline[8:5] == 4'b1001);			//lines numbered 288..319
 	assign l_sel = vline[0];
 
 //vcount
@@ -73,16 +73,9 @@ module sprites(
 	if (line_start)
 	begin
 		if (pre_vline)
-		begin
 			vline <= 9'b0;
-//			l_sel <= 1'b0;
-		end
 		else
-		if (vvis)
-		begin
 			vline <= vline + 9'b1;
-//			l_sel <= ~l_sel;
-		end
 	end
 
 // read/null sline
@@ -116,7 +109,6 @@ module sprites(
 
 	
 // Sprites processing
-	localparam VLINES = 9'd288;
 	
 	reg [5:0] num;		//number of currently processed sprite
 	reg [2:0] sf_sa;	//sub-address for SFILE
