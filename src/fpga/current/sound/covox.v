@@ -14,13 +14,13 @@ module covox(
 	output beep
 	);
 
-	reg [8:0] acc;
+	reg [7:0] acc;
 	wire [7:0] pwm;
 	
-	assign beep = acc[8];
 	assign pwm = hus_en ? (ldac[15:9] + rdac[15:9]) : (psd0[5:0] + psd1[5:0] + psd2[5:0] + psd3[5:0]);
+	assign beep = (acc < pwm);
 	
 always @(posedge clk)
-		acc <= acc[7:0] + pwm;
+		acc <= acc + 8'b1;
 
 endmodule
