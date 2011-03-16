@@ -1,0 +1,32 @@
+
+		DEVICE ZXSPECTRUM48
+
+SIZE_PAGE	EQU #80				;€‡Œ… Ž˜ˆ‚€…ŒŽ‰ ‘’€ˆ–› ‚ ‘…Š’Ž€• Ž 512 €‰’
+NUM_PAGE=0
+
+		ORG #0000
+
+		DW END_ZAG			;2 „‹ˆ€ ‡€ƒŽ‹Ž‚Š€ …‡ CRC16
+		DB "EVOF"			;4 ’…Š‘’
+		DW 24|05<<5|10<<9|#8000		;2 ‡€ŠŽ„ˆŽ‚€€Ÿ „€’€
+
+		DW 0				;2 ”‹€ƒˆ ˆ ŽŒ… Ž˜ˆ‚€…ŒŽ‰ ‘’€ˆ–›
+		DW 1+SIZE_PAGE*NUM_PAGE		;2 ‘Œ…™…ˆ… ‚ ‘…Š’Ž€• (Ž 512 €‰’) Ž˜ˆ‚€…ŒŽ‰ ‘’€ˆ–›
+		DW SIZE_PAGE			;2 €‡Œ… ‚ ‘…Š’Ž€• (Ž 512 €‰’) Ž˜ˆ‚€…ŒŽ‰ ‘’€ˆ–›
+		INCBIN "crc_pen.bin"		;2 CRC16 Ž˜ˆ‚€…ŒŽ‰ ‘’€ˆ–›
+		DB "PENROM"			;4 ’ˆ€ ˆŒŸ Ž˜ˆ‚Šˆ ‘’€ˆ–›
+		DW 24|05<<5|10<<9|#8000		;2 ‡€ŠŽ„ˆŽ‚€€Ÿ „€’€
+NUM_PAGE=NUM_PAGE+1
+
+		DW 7
+		DW 1+SIZE_PAGE*NUM_PAGE
+		DW SIZE_PAGE
+		INCBIN "crc_atm.bin"
+		DB "ATMROM"
+		DW 24|05<<5|10<<9|#8000
+NUM_PAGE=NUM_PAGE+1
+
+END_ZAG 
+		ds #1FE-$			;? ‡€ˆ‚Š€ •‚Ž‘’€ “‹”Œˆ
+
+		SAVEBIN "header.rom",#0000,#01FE

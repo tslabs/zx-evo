@@ -1,0 +1,17 @@
+06.12.2009, ddp:
+
+Fix Lock48K
+Variant for Lock128K ("koe's style" string in zports.v)
+
+
+06.12.2009, lvd:
+
+simulation model up to date,
+probably fixed NMOS bug
+
+
+--older--, lvd:
+
+Now CS'es for IDE are generated from address only, so they come earlier than
+RD/WR strobes. Old WD drives work better now.
+

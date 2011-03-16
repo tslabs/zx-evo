@@ -8,10 +8,26 @@
  *
  * @subsection current Current version.
  *
+ * - Fix RTC PC8583 dayweek 0..6 convert to DS12788 dayweek 1..7 and vice versa.
+ *
+ * @subsection ver_2010_12_07 Version 07.12.2010
+ *
+ * - Keyboard mapping without using RAM.
+ * - Add setting resolution for PS/2 mouse [1..4]
+ *   (left and right mouse buttons and pad'*' - default [1], pad'+' - increment, pad'-' - decrement).
+ * - Add PS/2 mouse resolution saving to RTC register.
+ *
+ * @subsection ver_2010_11_29 Version 29.11.2010
+ *
+ * - "NumLock" switch mode to beeper/pwm or tapeout ("NumLock" led light on tapeout mode).
+ * - Create full translation map (0x00-0x7f for extended scan codes).
+ *
+ * @subsection ver_2010_10_17 Version 17.10.2010
+ *
  * - "F9","F10","F11" on PS/2 keyboard not used for reset function.
  * - "F12" on PS/2 keyboard soft/hard reset. Short press (<5sec) - soft reset, long press (5sec) - hard reset.
  * - "Ctrl-Alt-Del" on PS/2 keyboard reset ZX (hard reset). If all keys is mapped to ZX keyboard - function not work.
- * - Create translating map (PS/2 to ZX keyboard) in eeprom (default in progmem).
+ * - Create translation map (PS/2 to ZX keyboard) in eeprom (default in progmem).
  * - Fix PS/2 mouse and keyboard send mode (without 'delay' function).
  * - Support load from tape input.
  *
@@ -70,10 +86,19 @@ extern volatile UBYTE flags_register;
 /** Hard reset flag (1 - enable hard reset). */
 #define FLAG_HARD_RESET         0x80
 
+/** Common flag register. */
+extern volatile UBYTE flags_ex_register;
+/** Ps2 mouse command (0 - not/1 - process). */
+#define FLAG_EX_PS2MOUSE_CMD    0x01
+/** Ps2 keyboard map (0 - default/1 - user). */
+#define FLAG_EX_PS2KEYBOARD_MAP 0x02
+
 /** Common modes register. */
 extern volatile UBYTE modes_register;
 /** VGA mode (0 - not set/1 - set). */
 #define MODE_VGA 0x01
+/** Tapeout mode (0 - beeper or pwm mode/1 - tapeout). */
+#define MODE_TAPEOUT 0x02
 
 /** Data buffer. */
 extern UBYTE dbuf[];

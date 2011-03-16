@@ -1,0 +1,291 @@
+
+;        ORG     0X6000
+
+        ; rom programming example for PENTEVO
+        ; contains 2 parts: example and working procedures
+
+
+        ; prepare hardware
+
+;        DI 
+
+;        LD      A,3
+;        OUT     (0XBF),A ; enable shadow ports, enable ROM write
+
+
+        ; write byte
+;
+ ;      LD      E,0X04
+  ;     LD      HL,0X0001
+   ;    LD      A,0X55
+    ;   CALL    PGM_BYTE
+
+     ;  LD      HL,0X0123
+      ; LD      A,0XAA
+       ;CALL    PGM_BYTE
+
+
+        ; erase 64Kb block
+
+;       LD      E,0X04
+ ;      LD      HL,0X0000
+  ;     CALL    ERASE_BLK
+
+
+        ; program 16k of shit
+
+;       LD      E,0X04
+ ;      LD      HL,0X0000
+  ;     LD      IX,0X8000
+   ;    LD      BC,0X4000
+
+;L2
+    ;   LD      A,(IX)
+     ;  CALL    PGM_BYTE
+
+      ; INC     IX
+       ;CALL    INC_EHL
+;       DEC     BC
+ ;      LD      A,B
+  ;     OR      C
+   ;    JR      NZ,L2
+
+        ; read page
+
+;        LD      E,0X04
+;        LD      HL,0X0000
+;        LD      IX,0X8000
+;        LD      BC,0X4000
+;L1
+;        CALL    RDBYTE
+;        LD      (IX),A
+
+;        CALL    INC_EHL
+;        INC     IX
+;        DEC     BC
+;        LD      A,B
+;        OR      C
+;        JR      NZ,L1
+
+;        LD      BC,0XFFF7 ;return RAM to 0XC000..0XFFFF
+;        LD      A,0XFF
+;        OUT     (C),A
+
+;        LD      A,0
+;        OUT     (0XBF),A ; disable ports, disable ROM write
+
+;        EI 
+;        RET 
+
+
+
+
+
+;INC_EHL
+;        INC     L
+;        RET     NZ
+;        INC     H
+;        RET     NZ
+;        INC     E
+;        RET 
+
+
+
+PGM_BYTE
+        ; programs byte to the given location
+        ; address in EHL (512kB only)
+        ; byte in A
+
+        ; preserves BC,DE,HL
+
+        ; returns carry=1 if error
+
+        PUSH    DE
+        PUSH    HL
+        PUSH    AF
+
+        LD      E,0X00
+        LD      HL,0X0555
+        LD      A,0XAA
+        CALL    WRBYTE
+
+        LD      HL,0X2AA
+        LD      A,0X55
+        CALL    WRBYTE
+
+        LD      HL,0X555
+        LD      A,0XA0
+        CALL    WRBYTE
+
+        POP     AF
+        POP     HL
+        POP     DE
+        CALL    WRBYTE
+
+        JR      ERR_END ; wait for end/error as always
+
+
+ERASE_BLK
+        ; erases 64kB block of ROM.
+        ; block address is given in EHL (any addr in block)
+
+        ; returns carry=1 if error
+
+        ; BC,DE,HL are preserved
+
+
+        PUSH    DE
+        PUSH    HL
+
+        LD      E,0X00
+        LD      HL,0X0555
+        LD      A,0XAA
+        CALL    WRBYTE
+
+        LD      HL,0X2AA
+        LD      A,0X55
+        CALL    WRBYTE
+
+        LD      HL,0X555
+        LD      A,0X80
+        CALL    WRBYTE
+
+        LD      A,0XAA
+        CALL    WRBYTE
+
+        LD      HL,0X2AA
+        LD      A,0X55
+        CALL    WRBYTE
+
+        POP     HL
+        POP     DE
+        LD      A,0X30
+        CALL    WRBYTE
+
+        ;now wait 100uS @ 14MHz to start actual block erase
+
+        LD      A,87
+        DEC     A
+        JR      NZ,$-1
+
+        ; then wait for erase end
+ERR_END
+        CALL    WAIT_END
+
+        RET     NC ; if no error - return
+
+        ; send read/reset command to ROM
+
+        LD      A,0XF0
+        CALL    WRBYTE
+
+        ;then wait 10uS @ 14MHz
+
+        LD      A,9
+        DEC     A
+        JR      NZ,$-1
+
+        SCF 
+        RET ; set error condition
+
+WAIT_END;wait for ROM to end op or to indicate error
+
+        PUSH    BC
+
+WE_REPEAT
+        CALL    RDBYTE
+        LD      B,A
+
+        CALL    RDBYTE
+        XOR     B
+
+        BIT     6,A
+        JR      Z,WE_END ; no toggle - end! (carry is clear)
+
+        BIT     5,A
+        JR      NZ,WE_REPEAT ; if toggle and error bit toggles -
+                             ; repeat reading
+
+        BIT     5,B ; toggle, error bit is set - error!
+        JR      Z,WE_REPEAT ; otherwise - just toggle, wait more
+
+;WE_ERROR
+        SCF 
+
+WE_END  POP     BC
+        RET 
+
+WRBYTE  ; writes given in A byte to rom at address EHL
+        ; in a range 0..512kB
+
+        ; assumes shadow ports are on
+        ; uses paging in 0XC000..0XFFFF window
+
+        ; preserves A,BC,DE,HL
+
+        PUSH    BC
+        PUSH    AF
+
+        LD      A,E
+        AND     7 ; 512kB only
+        LD      B,A
+
+        LD      A,H
+        AND     0XC0
+        OR      B
+
+        RLCA 
+        RLCA 
+
+        CPL 
+        AND     0X3F
+;;;;;;;;OR      0X00
+
+        LD      BC,0XFFF7
+        OUT     (C),A    ; page is done
+
+        LD      A,H
+        OR      0XC0
+        LD      B,A
+        LD      A,L
+        LD      C,A
+
+        POP     AF
+        LD      (BC),A
+
+        POP     BC
+        RET 
+
+RDBYTE  ; read byte (same as WRBYTE), reads in A
+
+        PUSH    BC
+
+
+        LD      A,E
+        AND     7 ; 512kB only
+        LD      B,A
+
+        LD      A,H
+        AND     0XC0
+        OR      B
+
+        RLCA 
+        RLCA 
+
+        CPL 
+        AND     0X3F
+;;;;;;;;OR      0X00
+
+        LD      BC,0XFFF7
+        OUT     (C),A    ; page is done
+
+        LD      A,H
+        OR      0XC0
+        LD      B,A
+        LD      A,L
+        LD      C,A
+
+        LD      A,(BC)
+
+        POP     BC
+        RET 

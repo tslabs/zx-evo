@@ -1,0 +1,127 @@
+D:/d/pentevo/fpga/_ver0.00/dram/dram.v {1 {vlog -work work -vopt D:/d/pentevo/fpga/_ver0.00/dram/dram.v
+Model Technology ModelSim SE vlog 6.2k Compiler 2007.12 Dec 13 2007
+-- Compiling module dram
+
+Top level modules:
+	dram
+
+} {} {}} D:/d/pentevo/fpga/_ver0.00/video/fetch.v {1 {vlog -work work -vopt D:/d/pentevo/fpga/_ver0.00/video/fetch.v
+Model Technology ModelSim SE vlog 6.2k Compiler 2007.12 Dec 13 2007
+-- Compiling module fetch
+
+Top level modules:
+	fetch
+
+} {} {}} D:/d/pentevo/fpga/_ver0.00/sim_models/T80_MCode.vhd {1 {vcom -work work -2002 -explicit -vopt D:/d/pentevo/fpga/_ver0.00/sim_models/T80_MCode.vhd
+Model Technology ModelSim SE vcom 6.2k Compiler 2007.12 Dec 13 2007
+-- Loading package standard
+-- Loading package std_logic_1164
+-- Loading package numeric_std
+-- Loading package t80_pack
+-- Compiling entity t80_mcode
+-- Compiling architecture rtl of t80_mcode
+
+} {} {}} D:/d/pentevo/fpga/_ver0.00/dram/arbiter.v {1 {vlog -work work -vopt D:/d/pentevo/fpga/_ver0.00/dram/arbiter.v
+Model Technology ModelSim SE vlog 6.2k Compiler 2007.12 Dec 13 2007
+-- Compiling module arbiter
+
+Top level modules:
+	arbiter
+
+} {} {}} D:/d/pentevo/fpga/_ver0.00/sim_models/T80a.vhd {1 {vcom -work work -2002 -explicit -vopt D:/d/pentevo/fpga/_ver0.00/sim_models/T80a.vhd
+Model Technology ModelSim SE vcom 6.2k Compiler 2007.12 Dec 13 2007
+-- Loading package standard
+-- Loading package std_logic_1164
+-- Loading package numeric_std
+-- Loading package t80_pack
+-- Compiling entity t80a
+-- Compiling architecture rtl of t80a
+
+} {} {}} D:/d/pentevo/fpga/_ver0.00/sim_models/T80_ALU.vhd {1 {vcom -work work -2002 -explicit -vopt D:/d/pentevo/fpga/_ver0.00/sim_models/T80_ALU.vhd
+Model Technology ModelSim SE vcom 6.2k Compiler 2007.12 Dec 13 2007
+-- Loading package standard
+-- Loading package std_logic_1164
+-- Loading package numeric_std
+-- Compiling entity t80_alu
+-- Compiling architecture rtl of t80_alu
+
+} {} {}} D:/d/pentevo/fpga/_ver0.00/video/videoout.v {1 {vlog -work work -vopt D:/d/pentevo/fpga/_ver0.00/video/videoout.v
+Model Technology ModelSim SE vlog 6.2k Compiler 2007.12 Dec 13 2007
+-- Compiling module videoout
+
+Top level modules:
+	videoout
+
+} {} {}} D:/d/pentevo/fpga/_ver0.00/sim_models/drammem.v {1 {vlog -work work -vopt D:/d/pentevo/fpga/_ver0.00/sim_models/drammem.v
+Model Technology ModelSim SE vlog 6.2k Compiler 2007.12 Dec 13 2007
+-- Compiling module drammem
+
+Top level modules:
+	drammem
+
+} {} {}} D:/d/pentevo/fpga/_ver0.00/z80/zclock.v {1 {vlog -work work -vopt D:/d/pentevo/fpga/_ver0.00/z80/zclock.v
+Model Technology ModelSim SE vlog 6.2k Compiler 2007.12 Dec 13 2007
+-- Compiling module zclock
+
+Top level modules:
+	zclock
+
+} {} {}} D:/d/pentevo/fpga/_ver0.00/sim_models/T80_Reg.vhd {1 {vcom -work work -2002 -explicit -vopt D:/d/pentevo/fpga/_ver0.00/sim_models/T80_Reg.vhd
+Model Technology ModelSim SE vcom 6.2k Compiler 2007.12 Dec 13 2007
+-- Loading package standard
+-- Loading package std_logic_1164
+-- Loading package numeric_std
+-- Compiling entity t80_reg
+-- Compiling architecture rtl of t80_reg
+
+} {} {}} D:/d/pentevo/fpga/_ver0.00/video/syncv.v {1 {vlog -work work -vopt D:/d/pentevo/fpga/_ver0.00/video/syncv.v
+Model Technology ModelSim SE vlog 6.2k Compiler 2007.12 Dec 13 2007
+-- Compiling module syncv
+
+Top level modules:
+	syncv
+
+} {} {}} D:/d/pentevo/fpga/_ver0.00/sim_models/T80_Pack.vhd {1 {vcom -work work -2002 -explicit -vopt D:/d/pentevo/fpga/_ver0.00/sim_models/T80_Pack.vhd
+Model Technology ModelSim SE vcom 6.2k Compiler 2007.12 Dec 13 2007
+-- Loading package standard
+-- Loading package std_logic_1164
+-- Compiling package t80_pack
+
+} {} {}} D:/d/pentevo/fpga/_ver0.00/sim_models/rom.v {1 {vlog -work work -vopt D:/d/pentevo/fpga/_ver0.00/sim_models/rom.v
+Model Technology ModelSim SE vlog 6.2k Compiler 2007.12 Dec 13 2007
+-- Compiling module rom
+
+Top level modules:
+	rom
+
+} {} {}} D:/d/pentevo/fpga/_ver0.00/sim_cdv/tb.v {1 {vlog -work work -vopt D:/d/pentevo/fpga/_ver0.00/sim_cdv/tb.v
+Model Technology ModelSim SE vlog 6.2k Compiler 2007.12 Dec 13 2007
+-- Compiling module tb_cdv
+
+Top level modules:
+	tb_cdv
+
+} {} {}} D:/d/pentevo/fpga/_ver0.00/z80/zmem.v {1 {vlog -work work -vopt D:/d/pentevo/fpga/_ver0.00/z80/zmem.v
+Model Technology ModelSim SE vlog 6.2k Compiler 2007.12 Dec 13 2007
+-- Compiling module zmem
+
+Top level modules:
+	zmem
+
+} {} {}} D:/d/pentevo/fpga/_ver0.00/video/synch.v {1 {vlog -work work -vopt D:/d/pentevo/fpga/_ver0.00/video/synch.v
+Model Technology ModelSim SE vlog 6.2k Compiler 2007.12 Dec 13 2007
+-- Compiling module synch
+
+Top level modules:
+	synch
+
+} {} {}} D:/d/pentevo/fpga/_ver0.00/sim_models/T80.vhd {1 {vcom -work work -2002 -explicit -vopt D:/d/pentevo/fpga/_ver0.00/sim_models/T80.vhd
+Model Technology ModelSim SE vcom 6.2k Compiler 2007.12 Dec 13 2007
+-- Loading package standard
+-- Loading package std_logic_1164
+-- Loading package numeric_std
+-- Loading package t80_pack
+-- Compiling entity t80
+-- Compiling architecture rtl of t80
+
+} {} {}}

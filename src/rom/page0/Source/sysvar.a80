@@ -1,0 +1,180 @@
+SYSVAR
+  ;для выхода через RST8, а не RET
+  ;предварительно CLEAR? не надо
+;1.стандартный стек 24 байта
+;2.RAMTOP=SP+23 и ERR_SP=RAMTOP-3
+;3.цвета
+;4.K_SCAN FF,3*0,FF,3*0 и параметры клавы
+;5.флаги
+;6.CHARS=3C00
+;7.DF_SZ=2
+;8.начало бейсика:PROG=0X5D3B,там 0X80
+;9.VARS=0X5D3B,E_LINE=VARS+1,WORKSP=VARS+3,STKBOT=STKEND=VARS+15
+;A.потоки и каналы
+;B.перем.DOS(CALL 15649)
+
+;1..A - скопировать из ПЗУ 0X1200..1291?
+         ;не нужно
+        ;нужно
+       ;хз
+   ;старый бейсик
+       DB	-1,0,0,0,-1,0,0,0
+        DB	0,16,1 ;LAST_K,REPDEL,REPPER
+         DW	0 ;DEFADD
+         DB	0 ;K_DATA
+         DW	0&0X11 ;TVDATA
+        DW	1,6,11,1,1,6,16 ;STRMS
+SYS1LN	EQU $-SYSVAR
+        ;пропускаем резидент аласма
+SYSVAR2
+        PHASE	23606
+
+        DW	0X3C00 ;CHARS
+        DB	0X40,0 ;RASP,PIP
+        DB	-1,0XCC,1 ;ERR_NR,FLAGS,TV_FLAG
+        DW	0X5FFC ;ERR_SP
+         DW	0 ;LIST_SP
+       DB	0 ;MODE
+         DW	0&1 ;NEWPPC
+         DB	0&0XFF ;NSPPS
+       DW	0&0XFFFE ;PPC
+         DB	0&1 ;SUBPPC
+        DB	7 ;BORDCR
+         DW	0&3 ;E_PPC
+   DW	0X5D3B ;VARS
+         DW	0 ;DEST
+        DW	0X5D26 ;CHANS
+         DW	0&0X5D26 ;CURCHL
+   DW	0X5D3B ;PROG
+       DW	0X5D48 ;NXTLIN
+       DW	0X5D3A ;DATADD
+   DW	0X5D3C ;E_LINE
+       DW	0X5D41 ;K_CUR
+        DW	TRUNCH;0X5D47 ;CH_ADD
+         DW	0&0XB9 ;X_PTR
+   DW	0X5D3E,0X5D4A,0X5D4A ;WORKSP,STKBOT,STKEND
+         DB	0&45 ;BREG
+        DW	23698 ;MEM
+        DB	0;не 0X18 ;FLAGS2
+        DB	2 ;DF_SZ
+         DW	0,0&3 ;S_TOP,OLDPPC
+         DB	0&4 ;OSPCC
+         DB	0 ;FLAGX
+         DW	0 ;STRLEN
+         DW	0&0X1AB6 ;T_ADDR
+         DW	0 ;SEED
+         DB	0,0,0 ;FRAMES
+        DW	0XFF58 ;UDG
+         DW	0 ;COORDS
+       DB	33 ;P_POSN
+        DW	0X5B00 ;PR_CC
+         DW	0&0X1721 ;ECHO_E
+         DW	0&0X4000 ;DF_CC
+       DW	0X50E0 ;DFCCL
+       DB	33,24 ;S_POSN
+       DB	33,23 ;SPOSNL
+       DB	1 ;STR_CT
+
+        DB	7,0 ;ATTR_P,MASK_P
+        DB	7,0 ;ATTR_T,MASK_T
+
+        DB	0 ;P_FLAG
+         DUPL	30,0
+         DW	0 ;NMIADD
+        DW	0X5FFF,0XFFFF ;RAMTOP,P_RAMT
+
+        DB	0XF4 ;некий признак наличия переменных TR-DOS
+SYS2L1	EQU $-23606
+     ;;; DS 11
+        ;DB 9,0XA8,0X10,"K",0XF4,9,0XC4,0X15,"S",0X81,0XF
+     ;;;DB 0XC9
+
+     ;;; DS 2 ;DW ONERR запарывается GLURD1F'ом
+        ;DB 0X15,"R"
+
+     ;;; DS 3
+        ;DB 0XF4,9,0XC4
+        DEPHASE
+     PHASE	0X5CC8
+SYS2P2
+        DB	-1,-1,-1,-1
+        DB	0,0,0
+SYS2L2	EQU $-SYS2P2
+     ;;; DW 0&0XE37
+     ;;; DB 0,0,0&0XED,0,0
+     DEPHASE
+     PHASE	0X5CD6
+SYS2P3
+        DB	0
+         DW	0&0X5CDB
+         DW	0&0X5D3D
+         DW	0&0XD6
+        DB	"noname  C" ;нечто символьное, для отлаж-мых прог
+         DW	0&0XD1,0&0XD1
+
+         DB	0,0,0
+        ;DB 47,5,4
+
+         DW	0
+        DB	0
+         DB	0,0,0,0
+         DW	0&0X909
+        DB	0
+         DB	0,0,0
+        DB	8,8,8,8
+         DB	0&0X80
+         DB	0&8
+         DW	0&0XFF00
+         DW	0&0X5D3D
+         DW	0&0X31C6
+        DB	9
+SYS2L3	EQU $-SYS2P3
+     ;;; DB 0,0,0,0,0
+     DEPHASE
+     PHASE	0X5D0C
+SYS2P4
+        DB	0XFF
+         DB	0
+       DB	0
+        DW	0
+         DW	0&0X5D3C
+       DW	0X5FFD
+        DB	0
+        DB	0&0X2C
+       DB	0XAA
+       DB	0
+        DB	0
+       DW	0X2CB
+       DW	0X5FE7
+         DB	0&1,0
+SYS2L4	EQU $-SYS2P4
+    ;;;  DB 0,0,0
+        ;DB 0XFE,0XD,0X80
+
+    ;;;DB 0,0,0XFF
+    DEPHASE
+     PHASE	0X5D26
+SYS2P5
+        DW	0X9F4,0X10A8
+        DB	"K"
+        DW	0X9F4,0X15C4
+        DB	"S"
+        DW	0XF81,0X15C4
+        DB	"R"
+        DW	0X9F4,0X15C4
+        DB	"P"
+        DB	0X80
+;бейсик желательно убивать опционально!
+        DB	0X80
+TRUNCH  DB	0XEA ;REM
+        DB	":"
+        DB	0XF7 ;RUN
+        DB	0X22
+TRUNNM  DUPL	8,0
+        DB	0X22
+        DB	0XD
+        DB	0X80
+TRUNEN
+SYS2L5	EQU $-SYS2P5
+
+        DEPHASE

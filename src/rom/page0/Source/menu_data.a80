@@ -1,0 +1,525 @@
+
+;LAST UPDATE: 22.01.2011 savelij
+
+;”ŽŒ€’ ”‹€ƒŽ‚ŽƒŽ €‰’€ ŽŠ€
+;X,Y,V,H,C,C
+;IX+8
+;7-1-ˆ†ˆ‰ ‡€ƒŽ‹Ž‚ŽŠ
+;6-0-‘ €ŒŠŽ‰,1-…‡ €ŒŠˆ
+;5-1-‚…•ˆ‰ ‡€ƒŽ‹Ž‚ŽŠ
+;4-0-’…Š‘’ ŽŠ€,1-…‡ ’…Š‘’€
+;3
+;2-0-FILE,1-*.TRD
+;1-0-MENU,1-FILES
+;0-0-TRDOS,1-MSDOS
+
+;Žˆ‘€’…‹œ ŽŠ€ (€„…‘ ‚ IX)
+;+00 X
+;+01 Y
+;+02 V
+;+03 H
+;+04 C
+;+05 C
+;+06 | €„…‘€
+;+07 | Ž„Žƒ€ŒŒ
+;+08 F
+;+09 X
+;+0A Y
+;+0B V
+;+0C H
+;+0D | €„…‘
+;+0E | ’…Š‘’€
+;+0F : ŽŒ… “Š’€ ‚ ŽŠ…
+;+10 : ŠŽ‹ˆ—…‘’‚Ž
+;+11 : “Š’Ž‚ Œ…ž
+;+12 "C" ’…Š“™ˆ‰
+;+13 "B" “Š’ Œ…ž
+;+14 | €„…‘ ‘ˆ‘Š€ €Š’ˆ‚›•
+;+15 | ‡Ž „‹Ÿ Œ›˜ˆ
+
+;€‘Š‹€„Š€ €‰’ ‚›„…‹…ˆ‰
+;IX+0 ”‹€ƒŽ‚›‰
+;    7 ˆ €Š’ˆ‚Ž‘’ˆ “‘’€Ž‚‹…
+;    6 “‘’€Ž‚‹…, … ‚›„…‹Ÿ…’‘Ÿ
+;    5 “‘’€Ž‚‹…, ‚›‡Ž‚ ‚…Š’Ž€
+;    4
+;    3 \
+;    2  } ”ŽŒ€ Š“‘Ž€
+;    1  } ˆ Ž€„€ˆˆ
+;    0 /
+;IX+1 X ŠŽŽ„ˆ€’€
+;IX+2 Y ŠŽŽ„ˆ€’€
+;IX+3 V ‚›‘Ž’€
+;IX+4 H ˜ˆˆ€
+;IX+5 K ŠŽ„ Š‹€‚ˆ˜ˆ
+
+;===============—ˆ‘‹€=====================
+;ŽŒ…€ ‘…Š’ŽŽ‚ „‹Ÿ ”ŽŒ€’ˆ‹Šˆ 
+SeCS		DB 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,1
+;SeCS=8121
+;SLOW=8121 ¢¥§¤¥
+
+;========================Œ›˜ˆ›‰ Š“‘Ž ‚ „‚“• ‚ˆ„€•=====================
+SPRAR		DB 0X3F,0X00,0X1F,0X40,0X0F,0X60,0X07,0X50,0X03,0X48,0X01,0X4C,0X01,0X70,0X07,0X00
+SPRAR2		DB 0X3F,0X00,0X1F,0X40,0X0F,0X60,0X07,0X70,0X03,0X78,0X01,0X7C,0X01,0X70,0X07,0X00
+;========================Œ›˜ˆ›‰ Š“‘Ž ‚ „‚“• ‚ˆ„€•=====================
+	
+;=========================Œ…ž „ˆ‘ŠŽ‚Ž‰ Ž˜ˆŠˆ========================
+DSK_ERR		;X,Y,V,H,C,C,ADR_CODE*2,F,X,Y,V,H,ADR_TXT*2,TEK_WIN,KOL_NUM*2,TEK_NUMF*2
+		DB 0X08,0X08,LOW ((D_ERR2-D_ERR1)/2)+2,0X11,0X17,0X3A
+		DW D_ERR1
+		DB %00100000,0,0,0,0
+		DW DSKERRTXT
+		DB 0
+		DW ((D_ERR2-D_ERR1)/2),0,0
+DSKERRTXT	DB 0X14,1,"DOS MEDITATE!",0X14,0
+		DB 0X0D," R.Retry:  "
+NUM_TRK_TXT	DB "  /"
+NUM_SEC_TXT	DB "  /"
+SIDE_DISK	DB " "				;r
+		DB 0X0D," I.Ignore sector"	;i
+		DB 0X0D," B.Break",0		;b
+		DB LOW (D_ERR1-$-1),"rib"
+
+D_ERR1		DW _RETRY
+		DW _IGNORE
+		DW _STUPID
+D_ERR2
+;=========================Œ…ž „ˆ‘ŠŽ‚Ž‰ Ž˜ˆŠˆ========================
+
+;=============Œ…ž ‡€—ˆ‘’Šˆ ‘’€ˆ– ˆ ŠŽˆŽ‚€ˆŸ „ˆ‘Š…’==============
+MKILLS		;X,Y,V,H,C,C,ADR_CODE*2,F,X,Y,V,H,ADR_TXT*2,TEK_WIN,KOL_NUM*2,TEK_NUMF*2
+		DB 0X08,0X0A,LOW ((KILL2-KILL1)/2)+2,0X12,0X0F,0X1F
+		DW KILL1
+		DB %00100000,0,0,0,0
+		DW MKILLSTXT
+		DB 0
+		DW ((KILL2-KILL1)/2),0,0
+MKILLSTXT	DB 0X14,1,"Services",0X14,0
+		DB 0X0D," R.Reset NeoGS"		;r
+;		DB 0X0D," P.Reset pages 128K"		;p
+;		DB 0X0D," G.Reset all pages"		;g
+;		DB 0X0D," S.Format ramdisk 512k"	;s
+		DB 0X0D," K.Format ramdisk 640k"	;k
+;		DB 0X0D," D.Format ramdisk 768k"	;d
+		DB 0X0D," I.Format ramdisk 896k"	;i
+;		DB 0X0D," Y.Copy diskette"		;y
+		DB 0X0D," F.Fast update ROM"		;f
+		DB 0X0D," C.Image to RAMDISK",0		;c
+		DB LOW (KILL1-$-1),"rkifc"
+
+KILL1		DW RESETNGS
+;		DW KIPGS		
+;		DW KIALPGS
+;		DW RAM_508
+		DW RAM_640
+;		DW RAM_764
+		DW RAM_892
+;		DW COPYDISK
+		DW LOAD4FLASH
+		DW COPYIMAGE
+KILL2
+;==============Œ…ž ‡€—ˆ‘’Šˆ ‘’€ˆ– ˆ ŠŽˆŽ‚€ˆŸ „ˆ‘Š…’==============
+
+;=====================‚›Ž FAT “‘’Ž‰‘’‚€=============================
+SEL_FAT_DEV	;X,Y,V,H,C,C,ADR_CODE*2,F,X,Y,V,H,ADR_TXT*2,TEK_WIN,KOL_NUM*2,TEK_NUMF*2
+		DB 0X0C,0X05,0X00,0X14,0X0F,0X1F
+SELFATDEVEXE	DW 0
+		DB %00100000,0,0,0,0
+		DW SEL_FAT_DRV
+		DB 0
+		DW 0,0,0
+TXT_FAT_SEL	DB 0X14,1,"Select FAT device",0X14,0
+ETXT_FAT_SEL
+;=====================‚›Ž FAT “‘’Ž‰‘’‚€=============================
+
+;=========================ƒ‹€‚Ž… Œ…ž===============================
+MAINMENU	;X,Y,V,H,C,C,ADR_CODE*2,F,X,Y,V,H,ADR_TXT*2,TEK_WIN,KOL_NUM*2,TEK_NUMF*2
+		DB 0X11,0X06,LOW ((MAIN2-MAIN1)/2)+2,0X0C,0X0F,0X1F
+		DW MAIN1
+		DB %00100000,0,0,0,0
+		DW MAINTXT
+		DB 0
+		DW ((MAIN2-MAIN1)/2),0,MAIN_ZONE
+
+MAINTXT		DB 0X17,0XFF,0X14,1,"Main menu",0X14,0
+		DB 0X0D," Z.TR-DOS boot"	;z
+		DB 0X0D," F.FAT boot"		;f
+		DB 0X0D," T.Tape load"		;t
+		DB 0X0D," B.HDD boot"		;b
+		DB 0X0D," D.CD boot"		;d
+		DB 0X0D," S.TR-DOS"		;s
+		DB 0X0D," I.48k basic"		;i
+		DB 0X0D," U.128k menu"		;u
+		DB 0X0D," R.Service",0		;r
+		DB LOW (MAIN1-$-1),"zftbdsiurwm123489vyh"
+	
+MAIN1		DW GLUBOOT			;z „ˆ‘Š…’Ž‡€ƒ“‡—ˆŠ
+		DW FATBOOT			;f ‡€ƒ“‡—ˆŠ ‘ ”€’€
+		DW TAPELOAD			;t ‡€ƒ“‡Š€ ‘ ‹…’›
+		DW HDD_BOOT			;b ‘’€›‰ ‡€ƒ“‡—ˆŠ ‘ ‚ˆ’€
+		DW CDBOOT			;d ‘’€›‰ ‡€ƒ“‡—ˆŠ ‘ ‘ˆ„žŠ€
+		DW DOS128			;s ……•Ž„ ‚ TR-DOS
+		DW BAS48			;i ……•Ž„ ‚ …‰‘ˆŠ 48
+		DW BAS128			;u ……•Ž„ ‚ …‰‘ˆŠ 128
+		DW _KILLS			;r ‘…‚ˆ‘ Œ…ž
+MAIN2		DW CHNGTURBO			;w
+		DW CHNGMODE			;m
+		DW SELDRV			;1
+		DW SELDRV			;2
+		DW SELDRV			;3
+		DW SELDRV			;4
+		DW MOUSE_ONOFF			;8
+		DW CMOS_ONOFF			;9
+		DW NEXTDRIVE			;v
+		DW NEXTVIRT			;y
+		DW VIEW_HELP			;h
+;=========================ƒ‹€‚Ž… Œ…ž================================
+
+;========================„‹Ÿ ‡€ƒ“‡Šˆ ‘ ‹…’›=========================
+BAS4TAPE	BINCLUDE "BAS4TAPE.BIN"
+EBAS4TAPE
+
+;„‹Ÿ ‡€ƒ“‡Šˆ ‘ ‹…’›
+TAPE_LDT	;X,Y,V,H,C,C,ADR_CODE*2,F,X,Y,V,H,ADR_TXT*2,TEK_WIN,KOL_NUM*2,TEK_NUMF*2
+		DB 0X06,0X08,0X04,0X14,0X0E,0X0F
+		DW 0
+		DB 0,0,0,0,0
+		DW TAPELDTTXT
+		DB 0
+		DW 0,0,0
+TAPELDTTXT	DB 0X0D,3,"Tape loading..."
+		DB 0X0D,3,"Press PLAY on tape",0
+;========================„‹Ÿ ‡€ƒ“‡Šˆ ‘ ‹…’›=========================
+
+;========================… TR-DOS „ˆ‘Š===============================
+NONETRDOS	;X,Y,V,H,C,C,ADR_CODE*2,F,X,Y,V,H,ADR_TXT*2,TEK_WIN,KOL_NUM*2,TEK_NUMF*2
+		DB 0X06,0X08,0X03,0X16,0X16,0X0F
+		DW 0
+		DB 0,0,0,0,0
+		DW TXT_NONETRDOS
+		DB 0
+		DW 0,0,0
+TXT_NONETRDOS	DB 0X0D,3,"Not TR-DOS disk",0 
+;========================… TR-DOS „ˆ‘Š===============================
+
+;=================ŽŠŽ ‚›‚Ž„€ €‰„…›• ”€‰‹Ž‚ TR-DOS=================
+WIN_FILES	;X,Y,V,H,C,C,ADR_CODE*2,F,X,Y,V,H,ADR_TXT*2,TEK_WIN,KOL_NUM*2,TEK_NUMF*2
+		DB 0X00,0X00,0X00,0X0C,0X0F,0X1F
+		DW WFILES1
+		DB %00010010,0,0,0,0
+		DW SEL_FAT_DRV
+		DB 0
+		DW 0,0,0
+WFILES1		REPT H_FILE
+		DW RUNFILE
+		ENDM
+;=================ŽŠŽ ‚›‚Ž„€ €‰„…›• ”€‰‹Ž‚ TR-DOS=================
+
+;=================ŽŠŽ ‚›‚Ž„€ €‰„…›• ”€‰‹Ž‚ FAT====================
+FAT_FILES	;X,Y,V,H,C,C,ADR_CODE*2,F,X,Y,V,H,ADR_TXT*2,TEK_WIN,KOL_NUM*2,TEK_NUMF*2
+		DB 0X00,0X00,0X00,0X0C,0X0F,0X1F
+		DW FATFILES1
+		DB %00010010,0,0,0,0
+		DW SEL_FAT_DRV
+		DB 0
+		DW 0,0,0
+FATFILES1	REPT H_FILE
+		DW RUN_HOB
+		ENDM
+;=================ŽŠŽ ‚›‚Ž„€ €‰„…›• ”€‰‹Ž‚ FAT====================
+
+;========================…’ …‰‘ˆŠ ”€‰‹Ž‚============================
+NOBASIC		;X,Y,V,H,C,C,ADR_CODE*2,F,X,Y,V,H,ADR_TXT*2,TEK_WIN,KOL_NUM*2,TEK_NUMF*2
+		DB 0X00,0X00,0X03,0X0C,0X0F,0X27
+		DW ADRNOBAS
+		DB 0,0,0,0,0
+		DW TXTNOBASIC
+		DB 0
+		DW 0,0,0
+TXTNOBASIC	DB 0X0D,3,"No Progs",0
+ADRNOBAS	DW RESTART
+;========================…’ …‰‘ˆŠ ”€‰‹Ž‚============================
+
+;=========================HDD … €‰„…===============================
+HDDBOOT_ERROR	;X,Y,V,H,C,C,ADR_CODE*2,F,X,Y,V,H,ADR_TXT*2,TEK_WIN,KOL_NUM*2,TEK_NUMF*2
+		DB 0X08,0X08,0X04,0X10,0X17,0X00
+		DW 0
+		DB 0,0,0,0,0
+		DW TXT_HDDBOOTERR
+		DB 0
+		DW 0,0,0
+TXT_HDDBOOTERR	DB 0X0D,3,"HDD not found",0X0D,3,"Press any key",0
+;=========================HDD … €‰„…===============================
+
+;=========================IMAGE FDI ERROR=============================
+LDFDIERROR	;X,Y,V,H,C,C,ADR_CODE*2,F,X,Y,V,H,ADR_TXT*2,TEK_WIN,KOL_NUM*2,TEK_NUMF*2
+		DB  0X08,0X08,0X04,0X10,0X17,0X00
+		DW 0
+		DB 0,0,0,0,0
+		DW TXT_LDFDIERR
+		DB 0
+		DW 0,0,0
+TXT_LDFDIERR	DB 0X0D,3,"FDI image error",0X0D,3,"Press any key",0
+;=========================IMAGE FDI ERROR=============================
+
+;=========================FILE NOT FOUND==============================
+FILENONE	;X,Y,V,H,C,C,ADR_CODE*2,F,X,Y,V,H,ADR_TXT*2,TEK_WIN,KOL_NUM*2,TEK_NUMF*2
+		DB 0X08,0X08,0X04,0X10,0X17,0X00
+		DW 0
+		DB 0,0,0,0,0
+		DW TXT_FILENONE
+		DB 0
+		DW 0,0,0
+TXT_FILENONE	DB 0X0D,3,"File not found",0X0D,3,"Press any key",0
+;=========================FILE NOT FOUND==============================
+
+;============================VIRTUAL ERROR============================
+ERR_VIRTUAL	;X,Y,V,H,C,C,ADR_CODE*2,F,X,Y,V,H,ADR_TXT*2,TEK_WIN,KOL_NUM*2,TEK_NUMF*2
+		DB 0X05,0X08,0X04,0X18,0X17,0X00
+		DW 0
+		DB 0,0,0,0,0
+		DW TXT_ERRVIRTUAL
+		DB 0
+		DW 0,0,0
+TXT_ERRVIRTUAL	DB 0X0D,3,"Virtual drive not formatted"
+		DB 0X0D,3,"or image not loading",0
+;============================VIRTUAL ERROR============================
+
+;==============================UPDATE ROM=============================
+UPDATE_WIN	;X,Y,V,H,C,C,ADR_CODE*2,F,X,Y,V,H,ADR_TXT*2,TEK_WIN,KOL_NUM*2,TEK_NUMF*2
+		DB 0X0A,0X08,0X0B,0X12,0X17,0X00
+		DW 0
+		DB %00100000,0,0,0,0
+		DW TXT_UPDATEWIN
+		DB 0
+		DW 0,0,0
+TXT_UPDATEWIN	DB 0X14,1,"Update FLASH ROM",0X14,0,0X0D
+		DB 0X0D,3,"Page 0"
+		DB 0X0D,3,"Page 1"
+		DB 0X0D,3,"Page 2"
+		DB 0X0D,3,"Page 3"
+		DB 0X0D,3,"Page 4"
+		DB 0X0D,3,"Page 5"
+		DB 0X0D,3,"Page 6"
+		DB 0X0D,3,"Page 7",0
+;==============================UPDATE ROM=============================
+
+;===============================ERASE ROM=============================
+ERASE_ROM	;X,Y,V,H,C,C,ADR_CODE*2,F,X,Y,V,H,ADR_TXT*2,TEK_WIN,KOL_NUM*2,TEK_NUMF*2
+		DB 0X0C,0X0A,0X05,0X0A,0X17,0X00
+		DW 0
+		DB 0,0,0,0,0
+		DW TXT_ERASEROM
+		DB 0
+		DW 0,0,0
+TXT_ERASEROM	DB 0X0D,3,"Erase FLASH",0
+;===============================ERASE ROM=============================
+
+;=============================PRESSED MAGIC KEY=======================
+PRESSED_NMI	;X,Y,V,H,C,C,ADR_CODE*2,F,X,Y,V,H,ADR_TXT*2,TEK_WIN,KOL_NUM*2,TEK_NUMF*2
+		DB 0X06,0X08,0X03,0X14,0X17,0X00
+		DW 0
+		DB 0,0,0,0,0
+		DW TXTPRESSNMI
+		DB 0
+		DW 0,0,0
+TXTPRESSNMI	DB 0X0D,3,"Pressed MAGIC!!! Code:  ",0
+CODE_NMI	EQU $-2
+;=============================PRESSED MAGIC KEY=======================
+
+;============================‘’€ˆ–€ ŽŒŽ™ˆ==========================
+WIN_HELP	;X,Y,V,H,C,C,ADR_CODE*2,F,X,Y,V,H,ADR_TXT*2,TEK_WIN,KOL_NUM*2,TEK_NUMF*2
+		DB 0X01,0X03,0X013,0X1A,0X0F,0X00
+		DW 0
+		DB %00100000,0,0,0,0
+		DW TXT_WINHELP
+		DB 0
+		DW 0,0,0
+TXT_WINHELP	DB 0X14,1,"Help",0X14,0
+		DB 0X0D," Key+RESET:"
+		DB 0X0D," Space=TRDOS"
+		DB 0X0D," CS=Basic128"
+		DB 0X0D," SS=Basic48"
+		DB 0X0D," D=Grass!512b(PSB^Halloween CC04)"
+		DB 0X0D," C=ColorTable+border keys+COVOX"
+		DB 0X0D," S=CMOS SetUp"
+		DB 0X0D,"----------------------------------"
+		DB 0X0D," In main menu:"
+		DB 0X0D," 1-4=TR-DOS drive"
+		DB 0X0D," V=TR-DOS drive"
+		DB 0X0D," Y=Virtual drive"
+		DB 0X0D," M=memory mode"
+		DB 0X0D," W=on/off turbo"
+		DB 0X0D," 8=on/off mouse"
+		DB 0X0D," 9=on/off time"
+		DB 0X0D," & uppercased option keys.",0
+;============================‘’€ˆ–€ ŽŒŽ™ˆ==========================
+
+;***************’…Š‘’› ˆ Ž—€Ÿ ”ˆƒŸ********************
+
+TXTFULLSCR	DB 0X14,0,0X16,0X00,0X00,0X17,4,"EVO Reset Service v",VERSBIOS
+		DB 0X16,0X08,0X00,0X17,6,"ZX-Evolution 4096 Kb "
+		DB 0X16,0X10,0X00,0x17,0X45,"www.nedopc.com "	;forum.nedopc.com "
+		DB 0X16,0X18,0X00,0X17,5,"Baseconf: ",0X17,0XFF
+VERS_CONF	DB "NONE                            "
+		DB 0X16,0X20,0X00,0X17,5,"AVR Boot: ",0X17,0XFF
+		;   12345678901234567890123456789012
+VERS_BOOT	DB "NONE                            "
+		DB 0X16,0XB8,0X00,0X17,0X43,"H.Help ",0X17,0XFF,0
+;		DB 0X16,0XA8,0X00,0X17,3,"Press ",0X17,0X43,"1/2/3/4 ",0X17,3,"choose TR-DOS boot drive "
+;		DB 0X16,0XB0,0X00,0X17,3,"Press ",0X17,0X43,"V ",0X17,3,"TR-DOS drive,",0X17,0X43," Y ",0X17,3,"virtual drive"
+;		DB 0X16,0XB8,0X00,0X17,0X43,"W ",0X17,3,"Turbo on/off,",0X17,0X43," M ",0X17,3,"Memory lock 48/128/off",0X17,0XFF,0
+
+TRDDRV_MODE	DB 0X16,0X30,0X00,0X17,3,"1-4.TR-DOS Drive: ",0X17,0XFF,"A",0
+TXT_DRIVE	EQU $-2
+SPEED_MODE	DB 0X16,0X38,0X00,0X17,3,"W.Turbo Mode:   ",0X17,0XFF," off",0
+TXT_SPEED	EQU $-3
+MEM_MODE	DB 0X16,0X40,0X00,0X17,3,"M.Memory Lock:  ",0X17,0XFF," "
+TXT_MEM		DB "128",0
+VIRTUAL_DRIVE	DB 0X16,0X48,0X00,0X17,3,"Y.Virtual Drive: ",0X17,0XFF," A",0
+VIRT_DRIVE	EQU $-2
+
+BUFF_TIME	DB 0X16,0X00,0XD0,0X17,0X4E
+TXT_TIME	DB "00:00:00",0X16,0X08,0XD0
+TXT_DATA	DB "00.00.00",0X17,0XFF,0
+
+TIME_OFF	DB 0X16,0X00,0XD0,0X17,7,"        ",0X16,0X08,0XD0,"        ",0X17,0XFF,0
+
+HOT_KEYS	DB 0X0D,8,3," .",0
+HOT_KEY		EQU $-3
+
+;‘ˆ‘ŽŠ Š‹€‚ˆ˜ Ž‚…Ÿ…Œ›• ‚‘…ƒ„€
+MAIN_KEYS	DB LOW (EMAIN_KEYS-$-1),"qaop ",0X07,0X08,0X09,0X0A,0X0B,0X0D
+EMAIN_KEYS
+
+MAIN_ZONE	DB 0,0X00,0X06,0X01,0X10,"v"
+		DB 0,0X00,0X07,0X01,0X10,"w"
+		DB 0,0X00,0X08,0X01,0X10,"m"
+		DB 0,0X00,0X09,0X01,0X10,"y"
+		DB 0,0X00,0X17,0X01,0X05,"h",0XFF
+
+ADREXEKEYS	DW UP		;q
+		DW DOWN		;a
+		DW LEFT		;o
+		DW RIGHT	;p
+		DW ENTER	;SPACE
+		DW RESTART	;EDIT
+		DW LEFT		;0X08
+		DW RIGHT	;0X09
+		DW DOWN		;0X0A
+		DW UP		;0X0B
+		DW ENTER	;0X0D
+EADREXEKEYS
+
+SIGN_SCL	DB "SINCLAIR"
+IMAGES		DB "TRDSCLFDI",0
+HOBETA		DB "$C ",0
+ROMS		DB "ROM",0
+
+;’…Š‘’ „‹Ÿ Ž’Ž€†…ˆŸ €‰„…›• €‡„…‹Ž‚, Ž 16 €‰’ ‘’ŽŠ€
+TXT4MENU_DEVICE	   ;1234567890123456
+		DB ".ZContr  SDCard:"	;4
+		DB ".NeoGS   SDCard:"	;5
+		DB ".HDDNemo MASTER:"	;6-MASTER
+		DB ".HDDSmuc MASTER:"	;7-SLAVE
+		DB ".HDDNemo  SLAVE:"	;6-MASTER
+		DB ".HDDSmuc  SLAVE:"	;7-SLAVE
+
+;’ˆ €‡„…‹€
+TXT4MENU_TYPE	DB "FAT12"
+		DB "FAT16"
+		DB "FAT32"
+
+;„…”Ž‹’›… ‡€—…ˆŸ „‹Ÿ ‚ ŠŒŽ‘
+CMOS_DEFAULT	DB 0X20,0X02,0X00,0X80,0X00,0X00,0X00,0XAA
+
+;ˆ”€ „‹Ÿ ‘Ž‡„€ˆŸ 9 ‘…Š’Ž€ Ž‚ŽƒŽ „ˆ‘Š€
+DSKINFO		DB 0		;+0XE1-ŽŒ… …‚ŽƒŽ ‘‚ŽŽ„ŽƒŽ ‘…Š’Ž€
+		DB 1		;+0XE2-ŽŒ… …‚ŽƒŽ ‘‚ŽŽ„ŽƒŽ ’…Š€
+		DB 0X16		;+0XE3-’ˆ „ˆ‘Š…’›
+		DB 0		;+0XE4-ŠŽ‹ˆ—…‘’‚Ž ”€‰‹Ž‚ € „ˆ‘Š…’…
+SECFREE		DW 2544		;+0XE5-ŠŽ‹ˆ—…‘’‚Ž ‘‚ŽŽ„›• ‘…Š’ŽŽ‚
+		DB 0X10		;+0XE7-ˆ„…’ˆ”ˆŠ€–ˆŽ›‰ ŠŽ„ TRDOS
+		DW 0		;+0XE8-2 €‰’€ 0
+		DUPL 9,0X20	;+0XEA-9 €‰’ 0X20
+		DB 0		;+0XF3-1 €‰’ 0
+		DB 0		;+0XF4-ŠŽ‹ˆ—…‘’‚Ž “„€‹…›• ”€‰‹Ž‚
+		DB "RAMDISKO"	;+0XF5-ˆŒŸ „ˆ‘Š…’›
+DSK_END
+
+;„‹Ÿ Œ…ž ‚›Ž€ ŠŽˆŽ‚€ˆŸ „ˆ‘Š…’
+mINSOUT		DB 7-WIDE,0X0C
+		DB 1+2
+		DB 21-1
+		DB 7+32
+		DC "INSERT OUTPUT 1-4"
+		DB 0XFF
+
+		DUPL 0X10,0
+DSTUPID		DW _STUPID
+
+MSTUPID		DB 3,8,3,26,0XEA
+		DC "GO SLEEP,STUPID USER!!!"
+		DB 0XFF
+
+TXT_BETA	DB " beta"
+
+T_ALL		DB "off"	;0
+T_128		DB "128"	;2
+T_48		DB " 48"	;1
+
+DRV_SYM		DB 0	;ŽŒ… ‚›€ŽƒŽ „ˆ‘ŠŽ‚Ž„€
+yIKNOW		DB 0	;0=­¥â I KNOW ;???
+OLD_1F		DB 0	;¤«ï BOOT
+MEMMODE		DB 0	;…†ˆŒ €ŒŸ’ˆ
+SYSREG1		DB 0	;ŠŽˆŸ „‹Ÿ ‚›‚Ž„€ ‚ Ž’ EFF7
+FLAGS		DB 0	;BIT 7
+			;BIT 6
+			;BIT 5
+			;BIT 4
+			;BIT 3-=1-‡€“‘Š ‘ ”€’€, =0-‡€“‘Š ‘ „ˆ‘Š…’›
+			;BIT 2-=1-—€‘› €‰„…›, =0-…’
+			;BIT 1-=1-Œ›˜œ …‘’œ, =0-…’
+			;BIT 0-Š€ŠŽ‰ Š“‘Ž ˆ‘Ž‚€’œ, „‹Ÿ Œˆƒ€ˆŸ
+
+RUN_BASIC	DW 1					;ŽŒ… ‘’ŽŠˆ …‰‘ˆŠ Žƒˆ
+		DW ERUN_BASIC-RUN_BASIC-5		;„‹ˆ€ …‰‘ˆŠ ‘’ŽŠˆ
+		DB 0XFD,0XB0,0X22,"65368",0X22,0X3A
+		DB 0XF9,0XC0,0XB0,0X22,"15619"
+		DB 0X22,0X3A,0XEA,0X3A,0XF7,0X22
+RUNNAM		DUPL 8,0				;Œ…‘’Ž Ž„ 8 ‘ˆŒ‚Ž‹Ž‚ ˆŒ…ˆ „‹Ÿ ‡€“‘Š€ ”€‰‹€
+		DB 0X22,0X0D,0X80
+ERUN_BASIC
+
+RUN_CODE	DW 0X100
+		DW ERUN_CODE-RUN_CODE-5
+		DB 0XF9,0XC0,"0",0X0E,0,0,0,0,0,0X0D,0X80
+ERUN_CODE
+
+;“ŒŠ€‹Š€ ‚ AY
+DIN		DW 0X10
+		DUPL 4,0
+		DB 0X0F
+		DB 0X36
+		DB 0XF0
+		DB 0
+		DB 0
+		DW 0X100
+gFenv		EQU $-1
+		DB 9
+
+;***********************************
+
+;……Œ…›… „‹Ÿ ŠŽ˜€Š€
+WAITINGH	DW 0		;‘—…’—ˆŠ Ž†ˆ„€ˆŸ €†€’›• Š‹€‚ˆ˜ ˆ‹ˆ „‚ˆ†…ˆŸ Œ›˜ˆ
+WAITINGL	DB 0		;‘—…’—ˆŠ €“‡› ……ˆ‘Ž‚Šˆ ”€‡› ŠŽ˜€Š€
+NUMKOSHAK	DB 0		;ŽŒ… ‚›‚Ž„ˆŒŽƒŽ ‘€‰’€ ŠŽ˜€Š€
+
+KOSHAK		BINCLUDE kot_anim.bin,9
+
+BAS_VAR		BINCLUDE bas_var.bin
+EBAS_VAR
+
+MICROBOOT	BINCLUDE micro_boot_fat.rom
+END_MICROBOOT

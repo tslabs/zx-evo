@@ -1,0 +1,1 @@
+copy /B /Y page0\services.rom+page1\dos6_12e_patch.rom+page2\*.rom+page3\*.rom zxevo_pen.rom

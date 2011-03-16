@@ -23,6 +23,8 @@
 #define RTC_YEAR_ADD_REG     0xFF
 /** Register for common modes. */
 #define RTC_COMMON_MODE_REG  0xFE
+/** Register for ps2mouse resolution. */
+#define RTC_PS2MOUSE_RES_REG 0xFD
 
 /** Init RTC.*/
 void rtc_init(void);

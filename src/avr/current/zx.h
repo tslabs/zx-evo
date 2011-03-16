@@ -50,6 +50,8 @@
 #define SPI_CONFIG_NMI_FLAG 0x02
 /** ZX $FE.D6 (tape in) bit flag of configuration register. */
 #define SPI_TAPE_FLAG 0x04
+/** ZX tapeout mode bit flag of configuration register. */
+#define SPI_TAPEOUT_MODE_FLAG 0x08
 
 /** ZX all data for wait registers. */
 #define SPI_WAIT_DATA  0x40
@@ -159,8 +161,11 @@ void zx_mouse_task(void);
  */
 void zx_wait_task(UBYTE status);
 
-/** Switch vga mode on ZX */
-void zx_vga_switcher(void);
+/**
+ * Switch mode on ZX.
+ * @param mode - mode flag
+ */
+void zx_mode_switcher(UBYTE mode);
 
 /**
  * Set configuration register on zx.

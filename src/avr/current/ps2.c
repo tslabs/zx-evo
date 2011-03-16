@@ -10,6 +10,7 @@
 #include "pins.h"
 #include "spi.h"
 #include "rs232.h"
+#include "rtc.h"
 
 //if want Log than comment next string
 #undef LOGENABLE
@@ -116,7 +117,7 @@ void ps2keyboard_task(void)
 		//if need send led data on current stage
 		if ( ((ps2keyboard_cmd_count == 2)&&(ps2keyboard_cmd == PS2KEYBOARD_CMD_SETLED)) )
 		{
-			b = PS2KEYBOARD_LED_SCROLLOCK&modes_register;
+			b = (PS2KEYBOARD_LED_SCROLLOCK|PS2KEYBOARD_LED_NUMLOCK)&modes_register;
 			ps2keyboard_send(b);
 			ps2keyboard_cmd_count--;
 		}
@@ -304,8 +305,9 @@ volatile UBYTE ps2mouse_count;
 volatile UBYTE ps2mouse_timeout;
 volatile UBYTE ps2mouse_initstep;
 volatile UBYTE ps2mouse_resp_count;
+volatile UBYTE ps2mouse_cmd;
 
-UBYTE ps2mouse_init_sequence[] =
+const UBYTE ps2mouse_init_sequence[] =
  	"\xFF"      //
 	"\xFF"      // reset
 	"\xFF"      //
@@ -338,6 +340,15 @@ static void ps2mouse_release_clk(void)
 
 void ps2mouse_send(UBYTE data)
 {
+#ifdef LOGENABLE
+{
+	UBYTE b=data;
+	char log_ps2mouse_parse[] = "MS>..\r\n";
+	log_ps2mouse_parse[3] = ((b >> 4) <= 9 )?'0'+(b >> 4):'A'+(b >> 4)-10;
+	log_ps2mouse_parse[4] = ((b & 0x0F) <= 9 )?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
+	to_log(log_ps2mouse_parse);
+}
+#endif
 	ps2mouse_shifter = ps2_encode(data); //prepare data
 	flags_register |= FLAG_PS2MOUSE_DIRECTION; //set send mode
 	PS2MSCLK_PORT &= ~(1<<PS2MSCLK); //bring ps2 mouse clk pin -
@@ -348,17 +359,51 @@ void ps2mouse_task(void)
 {
 	UBYTE b;
 
-	if ( ( ps2mouse_count == 12 ) &&
-		 ( ps2mouse_resp_count == 0) &&
-		 ( ps2mouse_init_sequence[ps2mouse_initstep] != 0 ) )
+	if (  ps2mouse_count == 12  )
 	{
-		//delay need for pause between release and hold clk pin
-		_delay_us(200);
+		if (  ps2mouse_init_sequence[ps2mouse_initstep] != 0  )
+		{
+		 	if ( ps2mouse_resp_count == 0 )
+			{
+				//delay need for pause between release and hold clk pin
+				_delay_us(200);
 
-		//initialization not complete
-		//send next command to mouse
-		ps2mouse_send(ps2mouse_init_sequence[ps2mouse_initstep]);
-		ps2mouse_resp_count++;
+				//initialization not complete
+				//send next command to mouse
+				ps2mouse_send(ps2mouse_init_sequence[ps2mouse_initstep]);
+				ps2mouse_resp_count++;
+			}
+		}
+		else if ( ps2mouse_cmd != 0 )
+		{
+		 	if ( ps2mouse_resp_count == 0 )
+			{
+				//delay need for pause between release and hold clk pin
+				_delay_us(200);
+
+				//start command
+				flags_ex_register |= FLAG_EX_PS2MOUSE_CMD;
+				ps2mouse_send(ps2mouse_cmd);
+				ps2mouse_resp_count++;
+			}
+			else if( flags_ex_register & FLAG_EX_PS2MOUSE_CMD )
+			{
+				switch( ps2mouse_cmd )
+				{
+					case PS2MOUSE_CMD_SET_RESOLUTION:
+						if ( ps2mouse_resp_count == 2 )
+						{
+							//delay need for pause between release and hold clk pin
+							_delay_us(200);
+
+							//send resolution
+							ps2mouse_send(rtc_read(RTC_PS2MOUSE_RES_REG));
+							ps2mouse_resp_count++;
+						}
+						break;
+				}
+			}
+		}
 	}
 
 	if ( ( ps2mouse_count<12 ) &&
@@ -411,11 +456,13 @@ void ps2mouse_task(void)
 }
 #endif
 
-		switch( ps2mouse_init_sequence[ps2mouse_initstep] )
+		//if command proceed than command code
+		//if initialization proceed than current init code
+		//else 0
+		switch( (flags_ex_register&FLAG_EX_PS2MOUSE_CMD)?ps2mouse_cmd:ps2mouse_init_sequence[ps2mouse_initstep] )
 		{
 			//initialization complete - working mode
 			case 0:
-				//TODO: send to ZX here
 				ps2mouse_resp_count++;
 				switch( ps2mouse_resp_count )
 				{
@@ -446,14 +493,23 @@ void ps2mouse_task(void)
 				break;
 
 			//reset command
-			case 0xFF:
+			case PS2MOUSE_CMD_RESET:
 				if ( ps2mouse_resp_count==1 )
 				{
 					//must be acknowledge
 					if ( b != 0xFA )
 					{
-						//reset initialization
-						ps2mouse_initstep = 0;
+						if( flags_ex_register&FLAG_EX_PS2MOUSE_CMD )
+						{
+							//reset command
+							ps2mouse_cmd = 0;
+							flags_ex_register &= ~FLAG_EX_PS2MOUSE_CMD;
+						}
+						else
+						{
+							//reset initialization
+							ps2mouse_initstep = 0;
+						}
 						ps2mouse_resp_count = 0;
 						break;
 					}
@@ -462,20 +518,39 @@ void ps2mouse_task(void)
 				if ( ps2mouse_resp_count >= 4 )
 				{
 					ps2mouse_resp_count = 0;
-					ps2mouse_initstep++;
+					if( flags_ex_register&FLAG_EX_PS2MOUSE_CMD )
+					{
+						//reset command
+						ps2mouse_cmd = 0;
+						flags_ex_register &= ~FLAG_EX_PS2MOUSE_CMD;
+					}
+					else
+					{
+						//next initialization stage
+						ps2mouse_initstep++;
+					}
 				}
 				break;
 
 			//get device type
-			case 0xF2:
+			case PS2MOUSE_CMD_GET_TYPE:
 				if ( ps2mouse_resp_count==1 )
 				{
 					ps2mouse_resp_count++;
 					//must be acknowledge
 					if ( b != 0xFA )
 					{
-						//reset initialization
-						ps2mouse_initstep = 0;
+						if( flags_ex_register&FLAG_EX_PS2MOUSE_CMD )
+						{
+							//reset command
+							ps2mouse_cmd = 0;
+							flags_ex_register &= ~FLAG_EX_PS2MOUSE_CMD;
+						}
+						else
+						{
+							//reset initialization
+							ps2mouse_initstep = 0;
+						}
 						ps2mouse_resp_count = 0;
 					}
 					break;
@@ -483,7 +558,17 @@ void ps2mouse_task(void)
 				else
 				{
 					ps2mouse_resp_count = 0;
-					ps2mouse_initstep++;
+					if( flags_ex_register&FLAG_EX_PS2MOUSE_CMD )
+					{
+						//reset command
+						ps2mouse_cmd = 0;
+						flags_ex_register &= ~FLAG_EX_PS2MOUSE_CMD;
+					}
+					else
+					{
+						//next initialization stage
+						ps2mouse_initstep++;
+					}
 
 					if ( b > 0 )
 					{
@@ -496,21 +581,72 @@ void ps2mouse_task(void)
 				}
 				break;
 
-			//other commands
-			default:
-				if ( ps2mouse_resp_count==1 )
+			//set resolution
+			case PS2MOUSE_CMD_SET_RESOLUTION:
+				//must be acknowledge
+				if ( b != 0xFA )
 				{
-					//must be acknowledge
-					if ( b != 0xFA )
+					if( flags_ex_register&FLAG_EX_PS2MOUSE_CMD )
+					{
+						//reset command
+						ps2mouse_cmd = 0;
+						flags_ex_register &= ~FLAG_EX_PS2MOUSE_CMD;
+					}
+					else
 					{
 						//reset initialization
 						ps2mouse_initstep = 0;
+					}
+					ps2mouse_resp_count = 0;
+				}
+				else
+				{
+					if( flags_ex_register&FLAG_EX_PS2MOUSE_CMD )
+					{
+						if( ps2mouse_resp_count >= 3 )
+						{
+							ps2mouse_resp_count = 0;
+							//reset command
+							ps2mouse_cmd = 0;
+							flags_ex_register &= ~FLAG_EX_PS2MOUSE_CMD;
+						}
+						else
+						{
+							ps2mouse_resp_count ++;
+						}
+					}
+					else
+					{
+						//next initialization stage
 						ps2mouse_resp_count = 0;
-						break;
+						ps2mouse_initstep++;
+					}
+				}
+				break;
+
+			//other commands
+			default:
+				if( flags_ex_register&FLAG_EX_PS2MOUSE_CMD )
+				{
+					//reset command
+					ps2mouse_cmd = 0;
+					flags_ex_register &= ~FLAG_EX_PS2MOUSE_CMD;
+				}
+				else
+				{
+					//next initialization stage
+					ps2mouse_initstep++;
+					if ( ps2mouse_resp_count==1 )
+					{
+						//must be acknowledge
+						if ( b != 0xFA )
+						{
+							//reset initialization
+							ps2mouse_initstep = 0;
+						}
 					}
 				}
 				ps2mouse_resp_count = 0;
-				ps2mouse_initstep++;
 			  	break;
 		}
 	}
@@ -527,4 +663,67 @@ void ps2mouse_task(void)
 //#endif
 
 	ps2mouse_release_clk();
+}
+
+void ps2mouse_set_resolution(UBYTE code)
+{
+#ifdef LOGENABLE
+{
+	UBYTE b = zx_mouse_button;
+	char log_ps2mouse_parse[] = "SS:..-..\r\n";
+	log_ps2mouse_parse[3] = ((b >> 4) <= 9 )?'0'+(b >> 4):'A'+(b >> 4)-10;
+	log_ps2mouse_parse[4] = ((b & 0x0F) <= 9 )?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
+	b = code;
+	log_ps2mouse_parse[6] = ((b >> 4) <= 9 )?'0'+(b >> 4):'A'+(b >> 4)-10;
+	log_ps2mouse_parse[7] = ((b & 0x0F) <= 9 )?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
+	to_log(log_ps2mouse_parse);
+}
+#endif
+
+	//if pressed left and right buttons on mouse
+	if ( (zx_mouse_button & 0x03) == 0 )
+	{
+		switch( code )
+		{
+			//keypad '*' - set default resolution
+			case 0x7C:
+				rtc_write(RTC_PS2MOUSE_RES_REG,0x00);
+				ps2mouse_cmd = PS2MOUSE_CMD_SET_RESOLUTION;
+			   	break;
+
+			//keypad '+' - inc resolution
+			case 0x79:
+			{
+				UBYTE data = rtc_read(RTC_PS2MOUSE_RES_REG);
+				if( data < 0x03 )
+				{
+					data++;
+				}
+				else
+				{
+					data=0x03;
+				}
+				rtc_write(RTC_PS2MOUSE_RES_REG,data);
+				ps2mouse_cmd = PS2MOUSE_CMD_SET_RESOLUTION;
+			    break;
+			}
+
+			//keypad '-' - dec resolution
+			case 0x7B:
+			{
+				UBYTE data = rtc_read(RTC_PS2MOUSE_RES_REG);
+				if( ( data > 0 ) && (data <= 0x03 ) )
+				{
+					data--;
+				}
+				else
+				{
+					data=0;
+				}
+				rtc_write(RTC_PS2MOUSE_RES_REG,data);
+				ps2mouse_cmd = PS2MOUSE_CMD_SET_RESOLUTION;
+			    break;
+			}
+		}
+	}
 }

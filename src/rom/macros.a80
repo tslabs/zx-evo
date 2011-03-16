@@ -1,0 +1,58 @@
+
+		RELAXED ON
+		CPU Z80UNDOC
+
+DZ		MACRO DEFZ
+		DB DEFZ,0
+		ENDM 
+
+DC		MACRO DEFC
+		IF STRLEN(DEFC)>1
+		DB SUBSTR(DEFC,0,STRLEN(DEFC)-1)
+		ENDIF
+		IF STRLEN(DEFC)>0
+		DB CHARFROMSTR(DEFC,STRLEN(DEFC)-1)|80H
+		ENDIF
+		ENDM
+
+SUM_HOB		MACRO STR,AA,BB,CC
+		DB STR
+		DW AA
+		DW BB
+		DW CC
+$$I := 0
+$$S := 0
+		REPT 9
+$$N := CHARFROMSTR (STR,STRLEN(STR)+$$S-9)
+$$I := ($$I+$$S+$$N+($$N*256))&0XFFFF
+$$S := $$S+1
+		ENDM
+$$I := ($$I+$$S+LOW (AA)+(LOW (AA)*0X100))&0XFFFF
+$$S := $$S+1
+$$I := ($$I+$$S+HIGH (AA)+(HIGH (AA)*0X100))&0XFFFF
+$$S := $$S+1
+$$I := ($$I+$$S+LOW (BB)+(LOW (BB)*0X100))&0XFFFF
+$$S := $$S+1
+$$I := ($$I+$$S+HIGH (BB)+(HIGH (BB)*0X100))&0XFFFF
+$$S := $$S+1
+$$I := ($$I+$$S+LOW (CC)+(LOW (CC)*0X100))&0XFFFF
+$$S := $$S+1
+$$I := ($$I+$$S+HIGH (CC)+(HIGH (CC)*0X100))&0XFFFF
+$$S := $$S+1
+		DW $$I
+		ENDM
+
+DUPL		MACRO LEN,FILL
+DUPL:
+$$N		EQU (LEN) / 1024
+$$M		EQU (LEN) # 1024
+		REPT $$N
+		DB 1024 DUP(FILL)
+		ENDM
+		IF $$M <> 0
+		DB $$M DUP(FILL)
+		ENDIF
+		ENDM
+
+HIGH		FUNCTION X,((X >> 8) & 0XFF)
+LOW		FUNCTION X,(X & 0XFF)

@@ -1,0 +1,10 @@
+	
+		DEVICE ZXSPECTRUM48
+
+		ORG #0000
+		incbin "../dos6_10e.rom"
+
+		include "patch.a80"
+	
+		SAVEBIN "../dos6_12e_patch.rom",0,#4000
+	

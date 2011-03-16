@@ -18,7 +18,7 @@ int main(int argc,char*argv[])
  FILE*      f;
 
  printf("BinnaryFile_To_AVRAssmFile Converter\n");
- if (argc==1) { printf("usage: BIN2AVR <FileName> [0]\n"); return 2; }
+ if (argc==1) { printf("usage: bin2avr <FileName> [0]\n"); return 2; }
  az=0;
  if (argc==3)
  {
@@ -64,7 +64,7 @@ int main(int argc,char*argv[])
     fputc('\n',f);
    else
     if (i<z) fputc(',',f);
-  l=(++l)&0x07;
+  l++; l&=0x07;
  }
  while (i<z);
  fputc('\n',f);
