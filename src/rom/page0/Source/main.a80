@@ -1,0 +1,580 @@
+
+;LAST UPDATE: 25.02.2011 savelij
+
+;VERSION
+VERSBIOS	EQU "0.33 "
+
+;BIT 4,(IY+55)
+;BIT 3,(IY+55)-0-‡€…’ €€– €€, 1-€‡………
+;BIT 2,(IY+55)-0-”€‰‹‚ ……… ‚›‘’› €, 1-‹…
+;BIT 0,(IY+55)
+
+TO_DOS4BAS	EQU 0X3D13
+TO_DOS		EQU 0X3D2F
+
+ADR_CAT		EQU 0XC000			;€„…‘ “”…€ „‹ „‘…’›  €‰„…›• ”€‰‹‚ € FAT
+DRV_VAR		EQU ADR_CAT+0X1100		;€„…‘ €—€‹€ ………›• ”€’€
+
+ADRTBLDIRL	EQU 0XF5FF			;‘’… ‘•€… „€›•  •†„…  „€
+BUFTSC		EQU 0XF600			;’€‹–€ €„…‘‚ ‘’ €€
+MOUSE_BUFF	EQU BUFTSC+0X0180		;“”… ‘•€… „ ›
+COLBUF		EQU MOUSE_BUFF+0X10		;“”… ‘•€… –‚…’€
+CHARS		EQU 0XF800			;€„…‘ ‹ƒ ”’€
+
+V_FILE		EQU 12				;€ € „‹ ‚›‚„€ ”€‰‹‚
+H_FILE		EQU 24				;‚›‘’€ € „‹ ‚›‚„€ ”€‰‹‚
+WIDE		EQU 1				;¤Ά  ―ΰ®΅¥«  α ΅®ª®Ά
+
+CMOS_ON		EQU 0X80
+CMOS_OFF	EQU 0
+
+		DI
+		CALL CLEAR_128K
+		XOR A
+		CALL SET_EFF7			;‚‹—…… ’“›  ‹‰ €’
+		LD A,0X10
+		CALL SET_7FFD			;‚‹—… €‘€48  ‘’€–› 0
+		CALL ADRTSC			;‘‡„€… ’€‹–› €„…‘‚ ‘’ €€
+		EI
+		HALT
+		DI
+		LD H,0
+		CALL READCMOS			;—’…… ‘…“„ „‹ …„…‹… €‹— ‘
+		INC L
+		LD HL,FLAGS
+		JR NZ,START2			;…‘‹ —’€‹‘ 0XFF,’
+		RES 2,(HL)			;‘ … €‰„…
+		JR START1
+
+START2		SET 2,(HL)			;‘ €‰„…
+		LD H,0X11
+		CALL READCMOS			;—’€… ‘…™…… 0X11 ‚ ‘…
+		CP 0X55
+		JR Z,START4			;’€†…… —€‘‚ ‚›‹—…? 
+		CP 0XAA
+		JR Z,START4			;’€†…… —€‘‚ ‚‹—…?
+		CALL SET_CMOS_DEFAULT		;…‘‹ ‚ —…‰… 0X11 … 0X55  … 0XAA, ’ ‡€‘ ‚ ‘ „…”‹’›• ‡€—…‰
+START4		CALL SET_MODES
+START1		CALL DETECTMOUSE		;…„…‹…… €‹— ›
+		CALL GLUDIN			;““‹ ‚ AY
+		CALL MOUSE			;‘ ›
+		LD HL,0X6FCC
+		LD (ARXY),HL			;“‘’€‚€ „…”‹’‰ ‡– ›  ‘’€’…
+		CALL DISK_NONE
+RESTART		DI
+		XOR A
+		CALL SET_EFF7
+		LD A,0X10
+		CALL SET_7FFD			;‚‹—‹ €‘48  ‘’€—“ 0
+		CALL SYSTEM
+		RES 3,(IY+55)
+		LD SP,0X6000
+		LD HL,0X3E00
+		PUSH HL
+		LD HL,0X1303
+		PUSH HL				;‘”‚€‹ „ ‘’…€
+		LD (0X5C3D),SP			;‡€…‘‹ ’…“™‰ €„…‘ ‚ ………›… €‘€
+		LD (TEK_SP),SP
+		CALL RESET_VG			;‘‘ ‚ƒ
+		XOR A
+		LD (yIKNOW),A
+		CALL S_FACE			;‚›‚„ € € ‘‚ƒ ‚„€
+;		LD HL,PRESS_NMI
+;		LD (0X5CB0),HL
+		LD IX,MAINMENU
+		CALL WINW			;’‘‚€ ‘‚ƒ …
+;		RST 8
+;		DB 0X40
+;‚•„ ‚ ƒ‹€‚›‰ –‹ ‘€ “€‚‹…
+_RULILKA	EI	
+		LD A,(FLAGS)
+		AND 2				;‚…€ €‹— ›
+		JR Z,_RULNMO
+;FIX ‹…‘ ›
+MKEYPR		EI
+		HALT
+		LD A,0XFA
+		IN A,(0XDF)
+		CPL
+		AND 7
+		JR NZ,MKEYPR
+_RULNMO		CALL SAVE2X2			;…‘‹ … €…—€’€‹ ‚…• ‘’…‹
+		CALL SET_ADR_ATR		;“‘’€‚€ ‚ƒ €„…‘€ „‹ –‚…’‰ ‹‘
+		RES 5,(IY+1)			;€ ‹€‚€’“… —…ƒ … €†€’
+		JR MAINLOP
+
+;€†€’€ ‘’…‹€ ‚‚…•
+UP		CALL CURSOR_UP			;‘…‹ ’…“™‰ “’ € -1
+		JR SET_POS1			
+
+;€†€’€ ‘’…‹€ ‚€‚
+RIGHT		BIT 1,(IX+8)			;‚…€ ‘’ … ‹ ”€‰‹‚…
+		PUSH AF				;‘•€‹ …‡“‹’€’ ‚…
+		CALL NZ,PAGEDN			;…‘‹ ”€‰‹‚…, ’ ‹‘’€… ‘’€—…
+		POP AF				;‚‘‘’€‚‹ …‡“‹’€’ ‚…
+		JR NZ,SET_POS1			;…‘‹ ”€‰‹‚… „‹†€…
+		LD A,(IX+0X10)
+		AND A
+		JR Z,SET_POS
+		DEC A				;€—… ……•„ “‘€ € ‘‹…„‰ “’
+		JR SET_POS			;‡…… ‹†…… “‘€  „‹†€…
+
+;€†€’€ ‘’…‹€ ‚‡
+DOWN		CALL CURSOR_DOWN		;‘…‹ ’…“™‰ “’ € +1
+		JR SET_POS1
+
+;€†€’€ ‘’…‹€ ‚‹…‚
+LEFT		BIT 1,(IX+8)			;‚…€ ‘’ … ‹ ”€‰‹‚…
+		PUSH AF				;‘•€‹ …‡“‹’€’ ‚…
+		CALL NZ,PAGEUP			;…‘‹ ”€‰‹‚…, ’ ‹‘’€… ‘’€—…
+		POP AF				;‚‘‘’€‚‹ …‡“‹’€’ ‚…
+		JR NZ,SET_POS1			;…‘‹ ”€‰‹‚… „‹†€…
+		XOR A				;€—… ……•„ “‘€ € …‚›‰ “’
+SET_POS		LD (IX+0X0F),A			;‡…‹ ‡– “‘€
+		LD (IX+0X12),A
+		LD (IX+0X13),0			;‡…‹ … ‚›€ƒ “’€
+SET_POS1	CALL COLOR_CURSOR		;……‘‚€ –‚…’‰ ‹‘ …
+SET_POS2	CALL GLUDIN			;““‹ ‚ AY
+MAINLOP		RES 5,(IY+1)			;‘‘ €†€’›• 
+;		CALL G1FKNOW
+		LD A,(FLAGS)
+		AND 2				;‚…€ €‹— ›
+		JP Z,MAINNMO
+		LD HL,(ARXY)			;‘’€€ „€’€ ›
+		PUSH HL
+		CALL MOUSE			;‘ ’‚ ›
+		POP BC
+		AND A
+		SBC HL,BC
+		JR Z,NO_SELECT			;… ›‹ „‚†… ›
+		CALL RESTORE_KOSHAK		;›‹ „‚†…… ›, ‘‘ ‘—…’—‚ €€
+		CALL MOUOPT			;‚…€ €‚…„… › € ‡€„€… 
+NO_SELECT	LD BC,0XFADF
+		IN A,(C)			;‘ €†€’  ›
+		AND 7
+		CP 6
+		JR Z,PRESS_MOUSE		;…‘‹ €†€’€ ‹…‚€ € ›
+		CP 5
+		JP Z,RESTART			;…‘‹ €†€’€ €‚€ € ›
+		CALL PRINTTIME			;‚‹ ‚… …‘‹ ‡…‹‘
+		EI
+		HALT
+		CALL REST2X2			;‚‘‘’€‚‹ “‘ €€€ „ ›
+		CALL DRAW_MOUSE			;€‘‚€‹ “‘ ›
+		JR MAINQMO			;„‹†…… ‘€
+
+PRESS_MOUSE	CALL OPMSPL
+		AND A
+		JR Z,CP_MOUSE4
+		LD (0X5C08),A
+		CALL TIMELP
+		JR SELECT_KEY
+
+CP_MOUSE4	CALL MOUOPT			;‚…€ €„€ › ‚ …„…‹› ’…“™…ƒ €
+		JR C,MAINNMO			;… €‹  …„… „€‹……
+		LD HL,(PRESSEDKEY)		;€„…‘ ‘‘€ •’……‚ ’…“™…ƒ €
+		LD A,H
+		OR L
+		JR Z,ENTER			;‘‘€ •’……‚ …’, ……•„  …“ “’€
+		LD E,(IX+0X0F)			;‚‡‹ … “’€ “„€ €‹ ›
+		LD D,0
+		ADD HL,DE			;€„…‘ •’… ‚›€ƒ “’€
+		LD DE,0X5C08
+		LDI				;’€– €†€’ ‡€„€‰ 
+		JR ENTER
+		
+MAINNMO		CALL PRINTTIME			;‚‹…… ‚……, …‘‹ ‚  ‚‹‘
+		EI
+		HALT
+MAINQMO		BIT 5,(IY+1)			;‚…€ €†€’  ‹€‚€’“›
+		CALL Z,CP_TIME_KOSHAK		;…‘‹ … €†€’ —…ƒ, ‚…… ‘—…’— €€
+		JP Z,MAINLOP			;„‹†€… ‘ “€‚‹…
+		CALL 0X1F54			;‚…€ € BREAK
+		JP NC,RESTART			;…‘‹ BREAK €†€’ ……‡€“‘€…‘
+SELECT_KEY 	CALL RESTORE_KOSHAK		;€†€’ …—’ € ‹€‚…, ‘‘ ‘—…’—€ €€
+		LD HL,0X5C08
+		LD A,(HL)			;‚‡‹ €†€’“ ‹€‚“
+		LD B,0
+		LD HL,MAIN_KEYS
+		LD C,(HL)			;‹—…‘’‚ „‘’“›• 
+		LD D,C
+		INC HL
+		CPIR
+		JR NZ,NOMAINKEYS		;—…ƒ … €‹, „€‹…… ‘’  ’…“™…ƒ €
+						;€†€’ —’-’ ‡ ƒ‹€‚›• , „‘’“›• ‚‘…ƒ„€
+		LD HL,ADREXEKEYS
+		LD A,D				;‹—…‘’‚  ‚ ’€‹–… -1
+		SUB C				;‹“—‹ ‚›€›‰ …
+		DEC A
+		JR JUMP2HL
+
+;‚…€ •’……‚ ‚ ’…“™… …
+NOMAINKEYS	LD HL,0
+PRESSEDKEY	EQU $-2				;€„…‘ ‘‘€ €†€’›•  ’…“™…ƒ €
+		LD C,A
+		LD A,H
+		OR L
+		JP Z,MAINLOP			;…‘‹ ‘‘€ …’, „‹†€… ‘
+		LD A,C
+		LD C,(IX+2)
+		LD E,(HL)
+		INC HL
+		DEC C				;‹—…‘’‚ 
+		DEC C				;‚›‘’€ € -2
+		LD D,C
+		LD B,0
+		CPIR				;‘€‚€… ‘‘€ ‡€„€›• ‹€‚
+		JR NZ,OSTAT_KEYS
+		LD A,D				;‚›‘’€ €
+		SUB C
+		DEC A				;‹“—‹ … €†€’‰   -1
+		LD (IX+0X0F),A			;… “’€ ‚ …
+		LD (IX+0X12),A			;… €†€’‰ ‹€‚  “€‡€“ ‘‘“
+ENTER		LD A,(FLAGS)
+		AND 2
+		CALL NZ,TIMELP			;‚‹…… ‚…… …‘‹  ‡…‹‘	
+		CALL REST2X2			;‘’…‹ “‘ ›
+		CALL GLUDIN			;““‹ ‚ AY
+		LD A,(IX+0X0F)			;… ‡ ‘‘€ ’›‰ ‚›‡‚€’
+JUMP2HL1	LD L,(IX+6)
+		LD H,(IX+7)			;‚‡‹ ‘‘ €„…‘‚ 1 ‡ ’›• “„… ‚›‡›‚€’
+JUMP2HL		ADD A,A
+		ADD A,L
+		JR NC,$+3
+		INC H
+		LD L,A
+		LD A,(HL)
+		INC HL
+		LD H,(HL)
+		LD L,A
+		JP (HL)
+
+OSTAT_KEYS	EX AF,AF'
+		LD A,E
+		SUB D
+		JP Z,MAINLOP
+		LD C,A
+		EX AF,AF'
+		CPIR
+		JP NZ,MAINLOP
+		LD A,E
+		SUB C
+		DEC A
+		JR JUMP2HL1
+
+;‡……… …†€ €’
+CHNGMODE	LD HL,MEMMODE
+		DEC (HL)			;‘…‹ …† €’
+		JP P,CHNGMODEY
+		LD (HL),2			;…‘‹ ……‹ —……‡ 0, ’ ‚›‘’€‚‹ …† 48
+CHNGMODEY	LD A,(FLAGS)
+		AND 4				;‚…€ €‹— ‘€
+		RET Z
+		LD A,(MEMMODE)
+		LD L,A
+		LD A,(SYSREG1)
+		AND 0X10
+		RLCA
+		RLCA
+		RLCA
+		OR L
+		LD L,A
+		LD H,0X0E
+		CALL WRITECMOS			;‘•€‹ ‚ ‘ ‡……›‰ …†
+		CALL REST2X2
+		CALL SET_MODES
+		CALL PRT_MODES
+		LD A,(FLAGS)
+		AND 2
+		JP Z,MAINLOP
+		CALL DRAW_MOUSE
+		CALL TIMELP
+		JP MAINLOP
+
+;‚‹—……/‚›‹—…E ’€†… —€‘‚
+CMOS_ONOFF	LD A,(FLAGS)
+		AND 4				;‚…€ €‹— ‘€
+		JP Z,MAINLOP
+		LD H,0X11
+		CALL READCMOS
+		CPL
+		LD L,A
+		PUSH AF
+		LD H,0X11
+		CALL WRITECMOS
+		POP AF
+		CP 0X55
+		LD HL,TIME_OFF
+		JP NZ,MAINLOP
+;		CALL Z,NEXT
+		RST 8
+		DB 0X41
+		JP MAINLOP
+
+;‚‹—……/‚›‹—…… “‘€ ›
+MOUSE_ONOFF	LD HL,FLAGS
+		LD A,(HL)
+		XOR 2				;‚…‘ ’€†… ›
+		LD (HL),A
+		AND 2
+		CALL NZ,DETECTMOUSE		;…‘‹ ‚‹—‹, ‚…… €‹—…
+		CALL NC,REST2X2			;…‘‹ › … €‰„…€, ’ ‚›‹—€… ’€†……
+		JP MAINLOP
+
+;‡……… …†€ ’“
+CHNGTURBO	LD HL,SYSREG1
+		LD A,(HL)
+		XOR 0X10			;‚…‘ ’€ ’“…†€
+		LD (HL),A
+		JR CHNGMODEY
+
+;†„€… €†€’ —…ƒ-“„ ‘‹… 
+EXIT4ERROR	RES 5,(IY+1)
+		LD BC,0XFADF
+		IN D,(C)
+E4E1		CALL PRINTTIME
+		EI
+		HALT
+		BIT 5,(IY+1)
+		JR NZ,E4E3
+		LD A,(FLAGS)
+		AND 2
+		JR Z,E4E1
+		LD A,0XFA
+		IN A,(0XDF)
+		CP D
+		JR Z,E4E1
+E4E2		EX AF,AF'
+		CALL TIMELP
+		EX AF,AF'
+		RRA
+		RET
+
+E4E3		XOR A
+		IN A,(0XFE)
+		CPL
+		AND 0X1F
+		JR NZ,E4E3
+		LD (0X5C08),A
+		RES 5,(IY+1)
+		RET
+;		LD A,(IY-0X32)
+;		CP 0X0D
+;		RET Z
+;		SCF
+;		RET
+
+;…—€’ ’…“™…ƒ ‚›€ƒ „‘‚„€
+PRT_DRV_SYM	LD A,(0X5CF8)
+		ADD A,"A"
+		LD (TXT_DRIVE),A
+		LD HL,TRDDRV_MODE
+;		JP NEXT
+		RST 8
+		DB 0X41
+		RET
+
+;€‘…—€’€ ’…“™…ƒ …†€
+PRT_MODES	LD HL,SPEED_MODE
+;		CALL NEXT
+		RST 8
+		DB 0X41
+		LD HL,MEM_MODE
+;		JP NEXT
+		RST 8
+		DB 0X41
+		RET
+
+;€‘…—€’€ ’…“™…ƒ ‚’“€‹ƒ „‘‚„€
+PRT_VIRTDRV	LD H,0X0F
+		CALL READCMOS
+		ADD A,"A"
+		LD (VIRT_DRIVE),A
+		LD HL,VIRTUAL_DRIVE
+;		JP NEXT
+		RST 8
+		DB 0X41
+		RET
+
+;‚›‚„ ‘‚ƒ …  €„‘…‰
+S_FACE		LD A,7
+		CALL CLS
+		LD HL,TXTFULLSCR
+;		CALL NEXT
+		RST 8
+		DB 0X41
+		CALL PRT_DRV_SYM		;…—€’ ’…“™…ƒ „‘‚„€
+		CALL PRT_MODES			;…—€’ ’…“™…ƒ …†€
+		CALL PRT_VIRTDRV
+		XOR A
+		JP DRAW_KOSHAK			;‚›‚„ 0 ”€‡› €€
+
+SET_EFF7_A_	LD A,(SYSREG1)
+SET_EFF7	LD BC,0XEFF7
+		OUT (C),A
+		RET
+
+SET_7FFD_0	LD A,0X10
+SET_7FFD	PUSH BC
+		LD BC,0X7FFD
+		OUT (C),A
+		POP BC
+		RET
+
+MEMSET		LD A,(MEMMODE)
+		AND A
+		JR Z,SET_EFF7_A_
+		DEC A
+		JR Z,MEMORY48
+
+ON_BIT128	LD A,(SYSREG1)
+		AND 0X10
+		ADD A,4
+		CALL SET_EFF7
+		JR SET_7FFD_0
+
+MEMORY48	CALL ON_BIT128
+		LD A,0X30
+		JR SET_7FFD
+
+;‡……… ‘™…‰ „‹ ‚›‚„€ € €  “‘’€‚‹…›• …†€•
+SET_MODES	LD H,0X0E
+		CALL READCMOS
+		AND 0X80
+		RRCA
+		RRCA
+		RRCA
+		LD (SYSREG1),A			;‘„…†… „‹ ‡€‘ ‚ ’ EFF7
+		LD A,L
+		AND 3
+		LD (MEMMODE),A			;‚›€›‰ …† €’
+		LD A,(SYSREG1)
+		AND 0X10
+		LD DE,"n "
+		JR Z,SETMODES2
+		LD DE,"ff"
+SETMODES2	LD HL,TXT_SPEED			;‚‹. ‹ ‚›‹. ’“ …†
+		LD (HL),D
+		INC HL
+		LD (HL),E
+		LD A,(MEMMODE)
+		AND A
+		LD HL,T_ALL
+		JR Z,SETMODES01			;ALL MEMORY
+		LD HL,T_48
+		DEC A
+		JR Z,SETMODES01			;48K
+		LD HL,T_128			;128K
+SETMODES01	LD DE,TXT_MEM			;…† €’
+		LD C,3
+		LDIR
+		LD A,(FLAGS)
+		AND 4
+		RET Z
+		LD DE,VERS_CONF
+		LD L,0
+		CALL GET_VERS_EVO		;‚…‘ €‡‚‰ ”ƒ“€–
+		LD DE,VERS_BOOT
+		LD L,1
+		JP GET_VERS_EVO			;‚…‘ AVRBOOT
+
+CLEAR_128K	DI
+		LD HL,0
+		LD A,0X11
+		CALL CLEAR128K0
+		LD A,0X13
+		CALL CLEAR128K0
+		LD A,0X14
+		CALL CLEAR128K0
+		LD A,0X16
+		CALL CLEAR128K0
+		LD A,0X17
+CLEAR128K0	LD (TEMP_SAVE_SP),SP
+		LD BC,0X7FFD
+		OUT (C),A
+		LD SP,0
+		LD B,0X80
+CLEAR128K1	REPT 64
+		PUSH HL
+		ENDM
+		DJNZ CLEAR128K1
+		LD SP,0
+TEMP_SAVE_SP	EQU $-2
+		RET
+
+;“‘’€‚€ ………›• €‘€  ’›„‘€, “‘’€‚€ ‚›€ƒ „‘‚„€
+SYSTEM		LD HL,BAS_VAR
+		LD DE,0X5C00
+		LD BC,EBAS_VAR-BAS_VAR
+		LDIR				;“‘’€‚€ ‘’€„€’›• ………›• BASIC  TR-DOS
+GET_DRV_SYM	LD A,(FLAGS)			;‚…… €‹—… ‘€
+		AND 4
+		JR Z,SET_DRIVE
+		LD H,0X10
+		CALL READCMOS
+		AND 3
+		LD (DRV_SYM),A			;“‘’€‚€ ‚›€ƒ „‘‚„€
+SET_DRIVE	LD A,(DRV_SYM)			;‡……… ‘‘’…›• ………›• „‹ „‘€
+		LD (0X5D19),A
+		LD (0X5CF6),A
+		LD L,A
+		LD H,A
+		LD (0X5CF8),HL
+		OR 0X3C
+		LD (0X5D16),A
+		RET
+
+GLUDIN		LD HL,DIN+0X0D
+		LD A,0X0D
+GLUDIN1		LD BC,0XFFFD
+		OUT (C),A
+		LD B,0XBF
+		OUTD
+		SUB 1
+		JR NC,GLUDIN1
+		RET
+
+SHUT2AY		LD DE,0X0E00
+SHUT2AY1	DEC D
+		LD H,D
+		LD L,E
+		CALL SHUT2AY2
+		JR NZ,SHUT2AY1			;¤«ο ―¥ΰΆλε ­¨ªΰ®­®Ά
+		LD HL,0X073F
+SHUT2AY2	LD BC,0XFFFD
+		OUT (C),H
+		LD B,0XBF
+		OUT (C),L
+		RET
+
+TIMELP		CALL PRINTTIME
+		LD A,0XFA
+		IN A,(0XDF)			; ›
+		CPL
+		AND 7
+		JR NZ,TIMELP			;€ … ’“‘’’
+		RET
+
+		include mouse.a80
+		include menu_data.a80
+		include menu_execute.a80
+		include window.a80
+		include call_cmos.a80
+		include call_trdos.a80
+		include koshak.a80
+
+		include flasher.a80
+
+		include fat/ports_ngs.a80
+		include fat/sdcomand.a80
+COM_DEV		equ $+6
+TO_DRV		include fat/dev_drv.a80
+COMSDG		include fat/ngs_sd_drv.a80
+COMSDZ		include fat/z_sd_drv.a80
+COMHDDN		include fat/nemo_drv.a80
+COMHDDS		include fat/smuc_drv.a80
+
+COM_FAT		include fat/read_fat.a80
+		include fat/fat_boot.a80
+
+SEL_FAT_DRV	;€„…‘ ‘‡„€ ’…‘’€, €„…‘‚ ‚›‡›‚‚  ‘‘€ ƒ—• ‹€‚ … ‚›€ €‡„…‹‚ FAT

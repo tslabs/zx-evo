@@ -86,9 +86,28 @@ extern volatile UBYTE ps2mouse_timeout;
 extern volatile UBYTE ps2mouse_initstep;
 /** Counter of PS/2 mouse response bytes. */
 extern volatile UBYTE ps2mouse_resp_count;
+/** Current PS/2 keyboard command (0 - none). */
+extern volatile UBYTE ps2mouse_cmd;
+
+/** Command to reset PS2 mouse. */
+#define PS2MOUSE_CMD_RESET          0xFF
+/** Command get type of PS2 mouse. */
+#define PS2MOUSE_CMD_GET_TYPE       0xF2
+/** Command to set resolution PS2 mouse. */
+#define PS2MOUSE_CMD_SET_RESOLUTION 0xE8
 
 /** PS/2 mouse task. */
 void ps2mouse_task(void);
+
+/**
+ * Set PS/2 mouse resolution.
+ * If left and right mouse buttons and some keyboard button pressed then resolution set.
+ * @param code [in] - control codes:
+ *        <B>0x7C</B> (keypad '*') - set default resolution;
+ *        <B>0x79</B> (keypad '+') - inc resolution;
+ *        <B>0x7B</B> (keypad '-') - dec resolution.
+ */
+void ps2mouse_set_resolution(UBYTE code);
 
 #endif //PS2_H
 

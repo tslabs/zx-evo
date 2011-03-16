@@ -1,0 +1,1263 @@
+
+;LAST UPDATE: 25.08.2010 savelij
+
+;”ŽŒ€’ ”‹€ƒŽ‚ŽƒŽ €‰’€ ŽŠ€
+;X,Y,V,H,C,C
+;IX+8
+;7-1-ˆ†ˆ‰ ‡€ƒŽ‹Ž‚ŽŠ
+;6-0-‘ €ŒŠŽ‰,1-…‡ €ŒŠˆ
+;5-1-‚…•ˆ‰ ‡€ƒŽ‹Ž‚ŽŠ
+;4-0-’…Š‘’ ŽŠ€,1-…‡ ’…Š‘’€
+;3
+;2-0-FILE,1-*.TRD
+;1-0-MENU,1-FILES
+;0-0-TRDOS,1-MSDOS
+
+;Žˆ‘€’…‹œ ŽŠ€ (€„…‘ ‚ IX)
+;+00 X
+;+01 Y
+;+02 V
+;+03 H
+;+04 C
+;+05 C
+;+06 | €„…‘€
+;+07 | Ž„Žƒ€ŒŒ
+;+08 F
+;+09 X
+;+0A Y
+;+0B V
+;+0C H
+;+0D | €„…‘
+;+0E | ’…Š‘’€
+;+0F : ŽŒ… “Š’€ ‚ ŽŠ…
+;+10 : ŠŽ‹ˆ—…‘’‚Ž
+;+11 : “Š’Ž‚ Œ…ž
+;+12 "C" ’…Š“™ˆ‰
+;+13 "B" “Š’ Œ…ž
+
+;Š€’ŠŽ… ‘Ž„…†ˆŒŽ… Žˆ‘€’…‹Ÿ ŽŠ€, *2-‘‹Ž‚Ž, Ž‘’€‹œŽ… €‰’›
+;X,Y,V,H,C,C,ADR_CODE*2,F,X,Y,V,H,ADR_TXT*2,TEK_WIN,KOL_NUM*2,TEK_NUMF*2
+
+;…‡ ŠŽŒ…’€ˆ…‚, ‘ŠŽˆŽ‚€Ž ˆ‡ FATALL
+WINW		BIT 6,(IX+8)
+		LD HL,0X8001
+		LD B,0XFF
+		JR Z,WINW1
+		LD HL,0
+		LD B,L
+WINW1		LD A,H
+		LD (RAMK0),A
+		LD A,L
+		LD (RAMK1),A
+		LD A,B
+		LD (RAMK3),A
+		LD (RAMK2),A
+		LD L,(IX+0)
+		LD H,(IX+1)
+		LD C,(IX+2)
+		LD B,(IX+3)
+		LD A,(IX+4)
+		CALL WINOUT
+		BIT 5,(IX+8)
+		JR Z,W_NIZ
+		LD HL,LDIST+1
+		DEC (HL)
+		DEC (HL)
+		PUSH IX
+		LD C,(IX)
+		LD B,8
+		LD L,(IX+1)
+		LD H,0
+		LD IX,BUFTSC
+		ADD HL,HL
+		ADD HL,HL
+		ADD HL,HL
+		ADD HL,HL
+		EX DE,HL
+		ADD IX,DE
+		CALL INWERT
+		POP IX
+W_NIZ		BIT 7,(IX+8)
+		JR Z,RASCH
+		PUSH IX
+		LD C,(IX)
+		LD B,8
+		LD A,(IX+1)
+		ADD A,(IX+2)
+		DEC A
+		LD L,A
+		LD H,0
+		ADD HL,HL
+		ADD HL,HL
+		ADD HL,HL
+		ADD HL,HL
+		LD IX,BUFTSC
+		EX DE,HL
+		ADD IX,DE
+		CALL INWERT
+		POP IX
+RASCH		LD A,(IX)
+		ADD A,A
+		ADD A,A
+		ADD A,A
+		INC A
+		LD D,A
+		LD (XNEW+1),A
+		LD (EX2+1),A
+		LD A,(IX+1)
+		ADD A,A
+		ADD A,A
+		ADD A,A
+		LD E,A
+		LD (ADRSTR+1),DE
+		LD A,(IX+3)
+		ADD A,A
+		ADD A,A
+		ADD A,A
+		LD (EX1+1),A
+		BIT 5,(IX+8)
+		CALL NZ,RADUGA
+		LD HL,0
+		BIT 4,(IX+8)
+		JR NZ,WINW2
+		LD L,(IX+0X0D)
+		LD H,(IX+0X0E)
+		CALL NEXT
+WINW2		LD (PRESSEDKEY),HL
+		RET
+
+ADRTSC		LD B,0X18
+		LD DE,0X4000
+		LD HL,BUFTSC
+ADRTSC2		LD C,8
+ADRTSC1		LD (HL),E
+		INC HL
+		LD (HL),D
+		INC HL
+		INC D
+		DEC C
+		JR NZ,ADRTSC1
+		LD A,0X20
+		ADD A,E
+		LD E,A
+		JR C,ADRTSC3
+		LD A,D
+		SUB 8
+		LD D,A
+ADRTSC3		DJNZ ADRTSC2
+		RET
+
+WTABL		LD L,(IX+6)
+		LD H,(IX+7)
+		ADD A,A
+		LD D,0
+		LD E,A
+		ADD HL,DE
+		LD E,(HL)
+		INC HL
+		LD D,(HL)
+		EX DE,HL
+		LD A,L
+		OR H
+		RET Z
+		JP (HL)
+
+CLS		LD HL,0
+		LD D,H
+		LD E,L
+		ADD HL,SP
+		LD B,0X60
+		LD SP,0X5800
+CLS1		REPT 0X20
+		PUSH DE
+		ENDM
+		DJNZ CLS1
+		LD SP,HL
+CLSSCR		LD HL,0
+		LD D,A
+		LD E,A
+		ADD HL,SP
+		LD SP,0X5B00
+		LD B,12
+CLS2		REPT 0X20
+		PUSH DE
+		ENDM
+		DJNZ CLS2
+		LD SP,HL
+		RRCA
+		RRCA
+		RRCA
+		AND 7
+		OUT (0XFE),A
+		RET
+
+INWERT		LD A,(IX)
+		INC IX
+		ADD A,C
+		LD L,A
+		LD H,(IX)
+		INC IX
+		LD D,H
+		LD E,L
+		INC E
+		LD (HL),0XFF
+		PUSH BC
+		CALL LDIST
+		POP BC
+		DJNZ INWERT
+		RET
+
+;X-L,Y-H,H-B,V-C
+WINOUT		PUSH HL
+		PUSH BC
+		PUSH IX
+		PUSH AF
+		LD A,0X22
+		SUB B
+		ADD A,A
+		LD (LDIST+1),A
+				PUSH BC
+		LD A,C
+		RLCA
+		RLCA
+		RLCA
+		DEC A
+		DEC A
+		LD B,A
+		LD IX,BUFTSC
+		EX DE,HL
+		LD L,D
+		LD H,0
+		ADD HL,HL
+		ADD HL,HL
+		ADD HL,HL
+		ADD HL,HL
+		EX DE,HL
+		ADD IX,DE
+				PUSH IX
+		LD C,L
+POWT1		INC IX
+		INC IX
+		LD E,(IX)
+		LD D,(IX+1)
+		LD A,C
+		ADD A,E
+		LD E,A
+		EX DE,HL
+		LD (HL),0X80
+RAMK0		EQU $-1
+		INC HL
+		LD (HL),0
+		LD D,H
+		LD E,L
+		INC E
+				PUSH BC
+		CALL LDIST
+				POP BC
+		LD (HL),1
+RAMK1		EQU $-1
+		DJNZ POWT1
+		LD E,(IX)
+		LD D,(IX+1)
+		INC D
+		LD A,C
+		ADD A,E
+		LD E,A
+		EX DE,HL
+		LD (HL),0XFF
+RAMK2		EQU $-1
+		LD D,H
+		LD E,L
+		INC E
+				PUSH BC
+		CALL LDIST
+		LDI
+				POP BC
+				POP IX
+		LD E,(IX)
+		LD D,(IX+1)
+		LD A,C
+		ADD A,E
+		LD E,A
+		EX DE,HL
+		LD (HL),0XFF
+RAMK3		EQU $-1
+		LD D,H
+		LD E,L
+		INC E
+				PUSH BC
+		CALL LDIST
+		LDI
+				POP BC
+		LD A,(IX)
+		ADD A,C
+		LD E,A
+		LD A,(IX+1)
+		RRA
+		RRA
+		RRA
+		AND 0X0F
+		OR 0X50
+		LD D,A
+		EX DE,HL
+				POP DE
+		LD B,E
+				POP AF
+POWT2		PUSH HL
+		LD D,H
+		LD E,L
+		INC E
+		LD (HL),A
+				PUSH BC
+		CALL LDIST
+		LDI
+				POP BC
+				POP HL
+		LD DE,0X20
+		ADD HL,DE
+		DJNZ POWT2
+		POP IX
+		POP BC
+		POP HL
+		RET
+
+SCRUP		PUSH BC
+		PUSH IX
+		LD L,(IX+1)
+		INC L
+		CALL USTAN
+SCRUP1		LD A,(IX+0X10)
+		ADD A,C
+		LD L,A
+		LD H,(IX+0X11)
+		LD A,(IX)
+		ADD A,C
+		LD E,A
+		LD D,(IX+1)
+		CALL SHIFT
+		LD DE,0X10
+		ADD IX,DE
+		DJNZ SCRUP1
+		POP IX
+		POP BC
+		RET
+
+SCRDN		PUSH BC
+		PUSH IX
+		LD A,(IX+2)
+		ADD A,(IX+1)
+		SUB 3
+		LD L,A
+		CALL USTAN
+SCRDN1		LD A,(IX)
+		ADD A,C
+		LD L,A
+		LD H,(IX+1)
+		LD A,(IX+0X10)
+		ADD A,C
+		LD E,A
+		LD D,(IX+0X11)
+		CALL SHIFT
+		LD DE,0XFFF0
+		ADD IX,DE
+		DJNZ SCRDN1
+		POP IX
+		POP BC
+		RET
+
+SHIFT		PUSH BC
+		REPT 8
+		PUSH HL
+		PUSH DE
+		CALL LDIST
+		POP DE
+		POP HL
+		INC H
+		INC D
+		ENDM
+		POP BC
+		RET
+
+LDIST		JR $
+		REPT 32
+		LDI
+		ENDM
+		RET
+
+USTAN		LD A,0X20
+		SUB (IX+3)
+		ADD A,A
+		LD (LDIST+1),A
+		LD C,(IX)		;‘Œ…™…ˆ… Ž X
+		LD B,(IX+2)		;‚›‘Ž’€ ‚ ‡€ŠŽŒ…‘’€•
+		DEC B
+		DEC B
+		DEC B
+		LD H,0
+		ADD HL,HL
+		ADD HL,HL
+		ADD HL,HL
+		LD IX,BUFTSC
+		EX DE,HL
+		ADD IX,DE
+		ADD IX,DE
+		RET
+
+RADUGA		LD A,(IX+0)
+		ADD A,(IX+3)
+		LD H,A
+		LD L,(IX+1)
+		CALL ADRDIS
+		EX DE,HL
+		LD A,(IX+4)
+		AND 0X47
+		LD C,A
+		AND 0X40
+		LD B,A
+		DEC L
+		LD A,C
+		ADD A,5*8
+		LD (HL),A	;5*8+7
+		DEC L
+		LD A,4*8+5
+		OR B
+		LD (HL),A	;4*8+5
+		DEC L
+		LD A,6*8+4
+		OR B
+		LD (HL),A	;6*8+4
+		DEC L
+		LD A,2*8+6
+		OR B
+		LD (HL),A	;2*8+6
+		DEC L
+		LD A,C
+		AND 7
+		RLCA
+		RLCA
+		RLCA
+		OR B
+		ADD A,2
+		LD (HL),A	;7*8+2
+		EX DE,HL
+		DEC L
+		LD B,8
+		XOR A
+		LD C,L
+RADUGA1		SCF
+		RLA
+		LD (HL),A
+		DEC L
+		LD (HL),A
+		DEC L
+		LD (HL),A
+		DEC L
+		LD (HL),A
+		DEC L
+		LD (HL),A
+		LD L,C
+		INC H
+		DJNZ RADUGA1
+		RET		
+
+INC_H		INC H
+		LD A,H
+		AND 7
+		RET NZ
+		LD A,L
+		ADD A,0X20
+		LD L,A
+		RET C
+UMEHL1		LD A,H
+		SUB 8
+		LD H,A
+		RET	
+
+DEC_H		DEC H
+		LD A,H
+		AND 7
+		CP 7
+		RET NZ
+		LD A,L
+		SUB 0X20
+		LD L,A
+		RET C
+UVEHL1		LD A,H
+		ADD A,8
+		LD H,A
+		RET
+
+UVEHL		LD A,0X20
+		ADD A,L
+		LD L,A
+		RET NC
+		JR UVEHL1
+
+UMEHL		LD A,L
+		SUB 0X20
+		LD L,A
+		RET NC
+		JR UMEHL1
+
+NEXT		LD A,(HL)
+		INC HL
+		AND A
+		RET Z
+		CALL PRINT
+		JR NEXT
+
+PRINT		CP 0X20
+		JP NC,PRINTA
+		CP 3
+		JR NZ,COD9
+CENTR		LD B,0		;–…’Ž‚Š€ ‘’ŽŠˆ ‚ ŽŠ…
+		PUSH HL
+CEN2		LD A,(HL)
+		CP 0X20
+		JR C,EX1
+		LD A,6
+		ADD A,B
+		LD B,A
+		INC HL
+		JR CEN2
+
+EX1		LD A,0
+		SUB B
+		SRL A
+		DEC A
+EX2		ADD A,0
+		LD (ADRSTR+2),A
+		POP HL
+		RET
+
+COD9		CP 9
+		JR NZ,COD13
+		LD A,(HL)		;’€“‹Ÿ–ˆŸ € N Ž‡ˆ–ˆ‰
+		INC HL
+		LD B,A
+		ADD A,A
+		ADD A,B
+		ADD A,A
+		LD B,A
+		LD A,(ADRSTR+2)
+		ADD A,B
+		LD (ADRSTR+2),A
+		RET
+
+COD13		CP 0X0D
+		JR NZ,COD14
+XNEW		LD A,0			;……‚Ž„ ‘’ŽŠˆ 
+		LD (ADRSTR+2),A
+		LD A,(ADRSTR+1)
+		ADD A,8
+		LD (ADRSTR+1),A
+		RET
+
+COD14		CP 0X14
+		JR NZ,COD16
+		LD A,(HL)		;‚Š‹/‚›Š‹ ˆ‚…‘ˆˆ …—€’ˆ
+		INC HL
+		AND A
+		JR Z,$+4
+		LD A,0XFC
+		LD (NO_INW+1),A
+		RET
+
+COD16		CP 0X16
+		JR NZ,COD17
+		LD E,(HL)		;…—€’œ ‚ “Š€‡€Ž‰ Ž‡ˆ–ˆˆ
+		INC HL
+		LD D,(HL)
+		INC HL
+		LD (ADRSTR+1),DE
+		RET
+
+COD17		CP 0X17
+		JR NZ,COD8
+		LD A,(HL)
+		INC HL
+		LD (COLOR4SYM),A
+		RET
+
+COD8		CP 8
+		JR NZ,COD1
+		LD A,(ADRSTR+2)
+		ADD A,(HL)
+		INC HL
+		LD (ADRSTR+2),A
+		RET
+
+COD1		CP 1
+		RET NZ
+		LD D,(IX+0)
+		LD E,(IX+1)
+		EX DE,HL
+		ADD HL,HL
+		ADD HL,HL
+		ADD HL,HL
+		INC H
+		LD (ADRSTR+1),HL
+		EX DE,HL
+		RET
+
+;…—€’œ ‘ˆŒ‚Ž‹€ ‚ "A"
+PRINTA		PUSH HL
+		PUSH DE
+		LD DE,CHARS
+		LD L,A
+		XOR A
+		LD H,A
+		ADD HL,HL
+		ADD HL,HL
+		ADD HL,HL
+		ADD HL,DE
+		EXX
+ADRSTR		LD HL,0			;H=X L=Y
+		LD D,A
+		LD A,H
+		AND 0XF8
+		LD B,A
+		LD A,H
+		AND 7
+		LD C,A
+		LD A,6
+		ADD A,H
+		LD H,A
+		LD (ADRSTR+1),HL
+		LD E,L
+		LD A,B
+		LD HL,BUFTSC
+		LD B,D
+		ADD HL,DE
+		ADD HL,DE
+		RRCA
+		RRCA
+		RRCA
+		ADD A,(HL)
+		INC HL
+		LD E,A
+		LD D,(HL)
+		LD A,21
+		SUB C
+		SUB C
+		SUB C
+		LD (SKOLKO+1),A
+		LD HL,BUFMSK
+		ADD HL,BC
+		ADD HL,BC
+		LD A,(HL)
+		INC HL
+		LD H,(HL)
+		LD L,A
+		EX DE,HL
+		LD A,8
+SLEDU		EX AF,AF'
+		EXX
+		LD A,(HL)
+		INC HL
+		EXX
+NO_INW		XOR 0
+		LD C,A
+		XOR A
+SKOLKO		JR $+21
+		REPT 7
+		SRL C	;8
+		RRA	;4
+		ENDM
+		LD B,A
+		LD A,(HL)
+		AND E
+		OR C
+		LD (HL),A
+		INC L
+		LD A,(HL)
+		AND D
+		OR B
+		LD (HL),A
+		DEC L
+		INC H
+		EX AF,AF'
+		DEC A
+		JP NZ,SLEDU
+		LD E,0
+COLOR4SYM	EQU $-1
+		INC E
+		JR Z,PRINTA1
+		DEC H
+		DEC E
+		LD A,H
+		RRCA
+		RRCA
+		RRCA
+		AND 3
+		OR 0X58
+		LD H,A
+		LD (HL),E
+PRINTA1		EXX
+		POP DE
+		POP HL
+		RET
+
+BUFMSK		DB 0X03,0XFF
+		DB 0X81,0XFF
+		DB 0XC0,0XFF
+		DB 0XE0,0X7F
+		DB 0XF0,0X3F
+		DB 0XF8,0X1F
+		DB 0XFC,0X0F
+		DB 0XFE,0X07
+
+PAG_128		PUSH BC
+		LD BC,0X7FFD
+		OR 0X10
+		OUT (C),A
+		POP BC
+		RET
+
+DRAWWIN		LD C,(IX)		;X
+		LD B,(IX+1)		;Y
+	        EX DE,HL
+		LD A,C
+		ADD A,A
+		ADD A,A
+		ADD A,A
+		LD C,A
+		LD A,B
+		ADD A,A
+		ADD A,A
+		ADD A,A
+		CALL 0X22B0
+		EX DE,HL
+		PUSH IX
+		POP HL
+		INC HL
+		INC HL
+		INC HL
+		LD B,(HL)		;˜ˆˆ€-1
+		INC HL
+		DEC B
+		LD A,(HL)
+		INC HL
+		LD (COL_SYM),A		;–‚…’ ŽŠ€
+		PUSH DE
+		LD C,B
+		CALL PR32
+		DEC C
+		JR NZ,$-4
+		CALL PR3232
+		POP DE
+		PUSH DE
+		CALL NXCOLLN	;C=0
+		CALL PRTX
+		INC HL
+		LD (PRESSEDKEY),HL	;Ž‹Ž†ˆ’œ €„…‘ ‘ˆ‘Š€ ŠŽŽŠ ’…Š“™…ƒŽ Œ…ž
+		PUSH BC
+		CALL PR32
+		DJNZ $-3
+		POP BC
+		LD A,C			;€…—€’€Ž ‘’ŽŠ
+		ADD A,A
+		ADD A,A
+		ADD A,A
+		ADD A,6+8
+		LD D,A
+		LD A,B
+		ADD A,A
+		ADD A,A
+		ADD A,A
+		ADD A,0X10*WIDE+0X0D-0X10
+		LD E,A
+		POP HL
+		INC H
+		LD C,0X40
+		PUSH BC
+		PUSH HL
+		LD B,E
+		CALL HORLN
+		LD B,D
+		CALL VERLN
+		POP HL
+		POP BC
+		LD B,D
+		CALL VERLN
+		LD B,E
+HORLN		LD A,(HL)
+HORLN0		OR C
+		RRC C
+		JR NC,$+5
+		LD (HL),A
+		INC L
+		LD A,(HL)
+		DJNZ HORLN0
+		OR C
+		LD (HL),A
+		RET
+	
+VERLN0		CALL INC_H
+VERLN		LD A,(HL)
+		OR C
+		LD (HL),A
+		DJNZ VERLN0
+		RET
+	
+NXCOLLN		LD A,E
+		ADD A,0X20
+		LD E,A
+		RET NC
+		LD A,D
+		ADD A,8
+		LD D,A
+		RET
+	
+PRSP0		LD A,(HL)
+		INC HL
+		PUSH DE
+		PUSH HL
+		LD H,(HL)
+		LD L,A
+		CALL PRT_HL_
+		POP HL
+		POP DE
+		INC HL
+		CALL NXCOLLN
+		DJNZ PRSP0
+		RET	
+
+PRT_HL_		LD A,H
+		CALL PRT_A_
+		LD A,L
+PRT_A_ 		PUSH AF
+		RRCA
+		RRCA
+		RRCA
+		RRCA
+		CALL $+4
+		POP AF
+		AND 0X0F
+		CP 0X0A
+		CCF
+		ADC A,"0"
+		DAA
+PRSN		AND 0X7F
+PRSYM		CP 0X20
+		JR NC,PRSYM1
+		CP 0X80
+		JR C,PRSYM1
+		LD A,"."
+PRSYM1		PUSH DE
+		PUSH BC
+		PUSH HL
+		ADD A,A
+		LD L,A
+		LD H,0X0F
+		ADD HL,HL
+		ADD HL,HL
+		LD B,4
+PRSN0		LD A,(HL)
+		RRCA
+		OR (HL)
+		INC L
+		EX DE,HL
+		LD (HL),A
+		INC H
+		EX DE,HL
+		LD A,(HL)
+		RRCA
+		OR (HL)
+		INC L
+		EX DE,HL
+		LD (HL),A
+		INC H
+		EX DE,HL
+		DJNZ PRSN0
+		POP HL
+PR32Q		POP BC
+		LD A,D
+		RRCA
+		RRCA
+		RRCA
+		ADD A,0X4F
+		LD D,A
+		LD A,7
+COL_SYM		EQU $-1		;–‚…’ ‘ˆŒ‚Ž‹€
+		LD (DE),A
+		POP DE
+		INC E
+		RET NZ
+		LD A,D
+		ADD A,8
+		LD D,A
+		RET
+
+PR3232		CALL PR32
+PR32		PUSH DE
+		PUSH BC
+		XOR A
+		REPT 4
+		LD (DE),A
+		INC D
+		LD (DE),A
+		INC D
+		ENDM
+		JR PR32Q
+
+PRCR		CALL PR3232
+PRCRDE		LD DE,0
+		CALL NXCOLLN
+		INC C
+PRTX		LD (PRCRDE+1),DE
+		CALL PR3232
+PRTX0		LD A,(HL)
+		CP 0XFF
+		RET Z
+		CALL PRSN
+		BIT 7,(HL)
+		INC HL
+		JR Z,PRTX0
+		JR PRCR
+
+PRINT_MSG	PUSH HL
+		LD A,D
+		CALL 0X0E9E	;HL=ADRLN,D:=A
+		LD A,E
+		ADD A,L
+		LD L,A
+		EX DE,HL
+		POP HL
+PRTXT		LD A,(HL)
+		INC HL
+		CP 0XFF
+		RET Z
+		CALL PRSN
+		JR PRTXT
+
+REST_COLOR	LD DE,(COL_CURSOR)
+		LD HL,COLBUF
+		LD C,(IX+3)
+		BIT 2,(IY+55)		;”€‰‹Ž‚ Ž‹œ˜… ‚›‘Ž’› ŽŠ€?
+		JR Z,RESTCOL1
+		DEC C			;–‚…’€Ÿ Ž‹Ž‘Š€ € 1 ŠŽŽ—…
+RESTCOL1	LD B,0
+		LDIR
+		RET
+
+;ˆ‘Ž‚€‹Š€ –‚…’Ž‰ Ž‹Ž‘Šˆ ‚ Œ…ž
+COLOR_CURSOR	LD DE,0
+COL_CURSOR	EQU $-2
+		LD HL,COLBUF
+		LD C,(IX+3)
+;		BIT 2,(IY+55)		;”€‰‹Ž‚ Ž‹œ˜… ‚›‘Ž’› ŽŠ€?
+;		JR Z,COLCURS1
+;		DEC C			;–‚…’€Ÿ Ž‹Ž‘Š€ € 1 ŠŽŽ—…
+COLCURS1	LD B,0
+		LDIR
+SET_ADR_ATR	LD A,(IX+0X0F)
+		LD B,A
+		LD H,(IX)
+		LD L,(IX+1)
+		ADD A,L
+		LD L,A
+		INC L
+		CALL ADRDIS
+		EX DE,HL
+		LD (COL_CURSOR),HL	;Ž‹Ž†ˆ‹ˆ €„…‘ „‹Ÿ ‚Ž‘‘’€Ž‚‹…ˆŸ –‚…’€
+		LD DE,COLBUF
+		LD B,(IX+3)
+;		BIT 2,(IY+55)		;”€‰‹Ž‚ Ž‹œ˜… ‚›‘Ž’› ŽŠ€?
+;		JR Z,COLCURS2
+;		DEC B			;–‚…’€Ÿ Ž‹Ž‘Š€ € 1 ŠŽŽ—…
+COLCURS2	LD C,(IX+5)
+		LD A,(HL)
+		LD (DE),A
+		LD (HL),C
+		INC L
+		INC E
+		DJNZ $-5
+		RET
+
+PRTSYMALT	PUSH HL
+		PUSH DE
+		EX DE,HL
+		CALL ADRDIS
+		EX DE,HL
+		PUSH BC
+		LD BC,CHARS
+		LD L,A
+		LD H,0
+		ADD HL,HL
+		ADD HL,HL
+		ADD HL,HL
+		ADD HL,BC
+		POP BC
+		REPT 8
+		LD A,(HL)
+		LD (DE),A
+		INC L
+		INC D
+		ENDM
+		POP DE
+		POP HL
+		INC D
+		RET
+
+PRT_SYM		PUSH HL
+		PUSH DE
+		EX DE,HL
+		CALL ADRDIS
+		EX DE,HL
+		ADD A,A
+		LD L,A
+		LD H,0X0F
+		ADD HL,HL
+		ADD HL,HL
+		REPT 8
+		LD A,(HL)
+		RRCA
+		OR (HL)
+		LD (DE),A
+		INC L
+		INC D
+		ENDM
+		POP DE
+		POP HL
+		INC D
+		RET
+
+CURSOR_UP	LD C,(IX+0X12)
+		LD B,(IX+0X13)
+		LD A,B
+		OR C
+		RET Z
+		DEC BC
+		LD (IX+0X12),C
+		LD (IX+0X13),B
+		LD A,(IX+0X0F)
+		AND A
+		JR Z,CURSOR_UP1
+		DEC (IX+0X0F)
+		JP COLOR_CURSOR
+
+CURSOR_UP1	CALL REST2X2
+		CALL SCRDN
+		LD E,(IX+1)
+		INC E
+DOWN1		LD D,(IX+0)
+		INC D
+		INC D
+		LD HL,FLAGS
+		BIT 3,(HL)
+		LD L,(IX+0X12)
+		LD H,(IX+0X13)
+		LD BC,ADR_CAT
+		JR NZ,DOWN3
+		ADD HL,HL
+		ADD HL,HL
+		ADD HL,HL
+		ADD HL,HL
+		ADD HL,BC
+DOWN4		LD B,8
+DOWN2		LD A,(HL)
+		INC HL
+		CALL PRT_SYM
+		DJNZ DOWN2
+		JP DRAW_MOUSE
+
+DOWN3		ADD HL,HL
+		ADD HL,BC
+		LD C,(HL)
+		INC HL
+		LD B,(HL)
+		PUSH DE
+		LD A,6
+		CALL COM_FAT
+		DB Positf
+		CALL COM_FAT
+		DB Getfzap
+		LD BC,0X0B
+		ADD HL,BC
+		LD A,(HL)
+		SBC HL,BC
+		AND 0X10
+		LD A,0
+		JR NZ,DOWN5
+		LD A,1
+DOWN5		POP DE
+		CALL PRTSYMALT
+		JR DOWN4
+
+CURSOR_DOWN	LD C,(IX+0X12)
+		LD B,(IX+0X13)
+		LD L,(IX+0X10)
+		LD H,(IX+0X11)
+		LD A,H
+		OR L
+		RET Z
+		SCF
+		SBC HL,BC
+		RET Z
+		INC BC
+		LD (IX+0X12),C
+		LD (IX+0X13),B
+		LD A,(IX+2)
+		SUB 3
+		CP (IX+0X0F)
+		JR Z,CURSOR_DOWN1
+		INC (IX+0X0F)
+		JP COLOR_CURSOR
+
+CURSOR_DOWN1	CALL REST2X2
+		CALL SCRUP
+		LD A,(IX+1)
+		ADD A,(IX+2)
+		SUB 2
+		LD E,A
+		JP DOWN1
+
+GET_XY		LD E,(IX+0X10)
+		LD D,(IX+0X11)		;ŠŽ‹-‚Ž
+		LD L,(IX+0X12)
+		LD H,(IX+0X13)		;ŽŒ…
+		LD A,(IX+2)
+		SUB 3
+		LD C,A
+		LD B,0
+		LD A,D
+		OR E
+		LD A,C
+		RET
+
+;……Œ…™…ˆ… € ‘’€ˆ–“ ‚‚…•
+PAGEUP		CALL GET_XY
+		RET Z
+		XOR A
+		SBC HL,BC
+		EX DE,HL
+		JR NC,PDUN0
+PDU0		LD D,A
+		LD E,A
+		JR PDUN0
+
+;……Œ…™…ˆ… € ‘’€ˆ–“ ‚ˆ‡
+PAGEDN		CALL GET_XY
+		RET Z
+		EX DE,HL
+		AND A
+		SBC HL,BC
+		ADD HL,BC
+		EX DE,HL
+		JR NC,PDN00
+		DEC DE
+		LD A,E
+		JR PDUN0
+
+PDN00		ADD HL,BC
+		EX DE,HL
+		SBC HL,DE
+		ADD HL,DE
+		JR Z,PDUN1
+		JR NC,PDUN0
+PDUN1		EX DE,HL
+		DEC DE
+PDUN0		LD (IX+0X0F),A
+		LD (IX+0X12),E
+		LD (IX+0X13),D
+		CALL REST2X2
+		CALL OUT_TEK_DIR
+		JP DRAW_MOUSE
+
+;…‘‹ˆ €‰„…Ž Ž‹œ˜… ‚›‘Ž’› ŽŠ€ -2, ’Ž ˆ‘“…Œ ŽŠŽ‚“˜Š“
+RIGHT_SIDE	LD A,(IX+0)
+		ADD A,(IX+3)
+		SUB 2
+		LD H,A
+		LD L,0
+		CALL ADRDIS
+		PUSH HL
+		LD A,(IX+2)
+		ADD A,A
+		ADD A,A
+		ADD A,A
+		SUB 2
+		LD B,A
+		INC H
+SCROLLER1	LD (HL),1
+		CALL INC_H
+		DJNZ SCROLLER1
+		LD A,H
+		SUB 7
+		LD H,A
+		INC L
+		LD DE,0X19*8+CHARS
+		REPT 7
+		LD A,(DE)
+		CPL
+		LD (HL),A
+		INC H
+		INC E
+		ENDM
+		POP HL
+		INC L
+		LD DE,0X18*8+CHARS+1
+		REPT 7
+		INC H
+		LD A,(DE)
+		CPL
+		LD (HL),A
+		INC E
+		ENDM	
+		RET
+
+;H-X, L-Y
+ADRDIS		LD (ASD+1),A
+		LD A,L
+		AND 0X18
+		OR 0X40
+		EX AF,AF'
+		LD A,L
+		AND 7
+		RRCA
+		RRCA
+		RRCA
+		ADD A,H
+		LD L,A
+		EX AF,AF'
+		LD H,A
+		LD E,L
+ADRATR		LD A,H
+		RRCA
+		RRCA
+		RRCA
+		AND 3
+		OR 0X58
+		LD D,A
+ASD		LD A,0
+		RET
+
+;“‘’€Ž‚Š€ €„…‘€ ˆ‘Ž‚€ˆŸ ˆ„ˆŠ€’ŽŽ‰ Ž‹Ž‘Šˆ
+SETWIN_INDICAT	PUSH HL
+		PUSH DE
+		LD H,(IX)
+		INC H
+		ADD A,(IX+1)
+		LD L,A
+		CALL ADRDIS
+		LD (ADRSTARTIND),DE
+		POP DE
+		POP HL
+		RET
+
+;ˆ‘Ž‚€ˆ… ‘‹…„“ž™…ƒŽ –‚…’ŽƒŽ Š‚€„€’ˆŠ€
+INC_INDICAT	PUSH HL
+		LD BC,0X77F7
+		LD A,0XFA
+		OUT (C),A
+		LD HL,0
+ADRSTARTIND	EQU $-2
+		LD (HL),0X39
+		INC HL
+		LD (ADRSTARTIND),HL
+		POP HL
+		EX AF,AF'
+		OUT (C),A
+		EX AF,AF'
+		RET

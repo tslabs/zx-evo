@@ -1,0 +1,6 @@
+v0.01
+
+ + added initial (quick-n-dirty) IDE support.
+ + fixed bug in source code that lead to incorrect phase of Z80 clock (it only affected Z-controller SD-card)
+
+

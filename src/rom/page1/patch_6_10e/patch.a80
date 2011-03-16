@@ -1,0 +1,27 @@
+
+		ORG #0373
+		DB "2"			;ˆ‡Œ……ˆ… ŽŒ…€ ‚…‘ˆˆ
+;---------------------------------------
+		ORG #1D0C		;“‘’€ˆ… €ƒ€ “‘’€…ƒŽ VELESOFT (‚Ž‘‘’€Ž‚‹…ˆ… HL'=#2758)
+		EXX			
+		LD HL,#2758
+		EXX
+		DEC HL
+		LD A,#12
+		CP (HL)
+		RET NZ
+		DEC HL
+		JP #235
+;---------------------------------------
+		ORG #122B		;“‘’€…ˆ… ƒ‹žŠ€ OUT OF MEMORY ˆ LIST
+		CALL #3BF6		;Ž„‘ŒŽ’…Ž ‚ —…˜‘ŠŽ‰ ‚…‘ˆˆ TR-DOS 5.05
+
+		ORG #3BF6		;Ž‹…Œ€ … “‘’€Ÿ…’‘Ÿ Ž‹Ž‘’œž, ’Ž‹œŠŽ “‚…‹ˆ—ˆ‚€…’‘Ÿ ‚Ž‡ŒŽ†Ž…
+		LD HL,#5E06		;ŠŽ‹ˆ—…‘’‚Ž ŠŽŒ€„ LIST
+		LD A,#FF		;ˆ Ž‹…Œ€ … ‚ Ž‘‚ŽŽ†„…ˆˆ ‚›„…‹…Ž‰ €ŒŸ’ˆ, € ‚ … ‚Ž‘‘’€Ž‚‹…ˆˆ
+		LD (#5D0E),A		;……Œ…Ž‰ WORKSP (#5C61)
+		RET
+;---------------------------------------
+		ORG #3D39		;‚‘’€‚Š€ 2 “‹…‰. “‘’€…ˆ… "‹…‚Ž‰" ‡€ˆ‘ˆ ‚ Ž’ #F7
+		DS 2			;ˆ‡-‡€ —…ƒŽ ‘€‘›‚€‹ˆ‘œ “‘’€Ž‚‹…›… …†ˆŒ› Ž’€ #EFF7
+;---------------------------------------

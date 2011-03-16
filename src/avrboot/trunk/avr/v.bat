@@ -1,1 +1,0 @@
-avreal32.exe -ab -p1 +ATMEGA128 -e -w zxevo_bl.hex -f_low=3F,_high=88,_ext=FF,_lock=EF -v

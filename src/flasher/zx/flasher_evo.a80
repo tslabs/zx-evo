@@ -1,0 +1,97 @@
+
+;”‹…˜… „‹Ÿ ƒ‘
+
+;“‘’€Ž‚Š€ €„…‘€ ‡€ˆ‘ˆ
+;HL-Œ‹€„˜ˆ… 16 ˆ’ €„…‘
+;A-‘’€˜ˆ… 8 ˆ’ €„…‘€
+SET_ADR		LD (ADR_LOW),HL
+		LD (ADR_HIGH),A
+		RET
+
+;‘’ˆ€ˆ… ‹ŽŠ€ 64Š
+;€ ‚•Ž„…:
+;A-ŽŒ… ‹ŽŠ€ „‹Ÿ ‘’ˆ€ˆŸ (0...7)
+ERA_BLK		LD B,A
+		XOR A
+		OUT (MPAG),A
+		LD A,#10
+		OUT (GSCFG0),A
+
+		LD A,#AA
+		LD (#0555+#8000),A	;555,AA
+		LD A,#55
+		LD (#02AA+#8000),A	;2AA,55
+		LD A,#80
+		LD (#0555+#8000),A	;555,80
+		LD A,#AA
+		LD (#0555+#8000),A	;555,AA
+		LD A,#55
+		LD (#02AA+#8000),A	;2AA,55
+
+		LD A,B
+		AND 7
+		ADD A,A
+		OUT (MPAG),A
+
+		LD A,#30
+		LD (#8000),A		;BA,30
+
+;50uS pause (@12MHz)
+		LD B,50
+		DJNZ $
+
+WCMP		LD A,(#8000)
+		LD B,A
+		LD A,(#8000)
+		XOR B
+		AND #40
+		JR NZ,WCMP
+		LD A,#11
+		OUT (GSCFG0),A
+		RET
+
+;‡€ˆ‘œ €‰’€ ‚Ž ”‹…˜œ
+WR_BYTE		LD B,A
+		XOR A
+		OUT (MPAG),A
+		LD A,#10
+		OUT (GSCFG0),A
+
+		LD HL,ADR_LOW
+		LD E,(HL)
+		INC HL
+		LD D,(HL)
+		INC HL
+		LD C,(HL)
+
+		LD A,#AA
+		LD (#0555+#8000),A	;555,AA
+		LD A,#55
+		LD (#02AA+#8000),A	;2AA,55
+		LD A,#A0
+		LD (#0555+#8000),A	;555,A0
+
+		LD A,D
+		RLA
+		LD A,C
+		ADC A,A
+		AND #0F
+		OUT (MPAG),A
+
+		LD H,D
+		LD L,E
+		SET 7,H
+
+		LD (HL),B
+		INC DE
+		LD A,D
+		OR E
+		JR NZ,$+3
+		INC C
+		LD HL,ADR_LOW
+		LD (HL),E
+		INC HL
+		LD (HL),D
+		INC HL
+		LD (HL),C
+		JR WCMP

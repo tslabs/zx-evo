@@ -90,7 +90,7 @@ int main(int argc,char*argv[])
 
  o=0;
  printf("ZX EVO project:  Calc CRC for bootloader\n");
- if (argc<3) { printf("usage: CRCBLDR <HexFileName> [<VersionFileName>]\n"); return 2; }
+ if (argc<3) { printf("usage: crcbldr <HexFileName> [<VersionFileName>]\n"); return 2; }
 
  for (adr=0;adr<0x2000;adr++) buff[adr]=0xff;
  if (argc==4)
@@ -175,7 +175,7 @@ int main(int argc,char*argv[])
  }
  fclose(f);
 
- if (err) { printf("Total %d error(s)!\n",err); return 3; }
+ if (err) { printf("Total %d error(s)!\n",(int)err); return 3; }
 
  for (i=0;i<256;i++)
  {
@@ -210,7 +210,7 @@ int main(int argc,char*argv[])
 
 // - - - - - - - -
 
- f=fopen("ZXEVO_BL.HEX","wt");
+ f=fopen("zxevo_bl.hex","wt");
  if (!f) { printf("Can't create output file!\n"); return 1; }
 
  fputs(":020000020000FC\n:01000000FF00\n:020000021000EC\n",f);
@@ -251,7 +251,7 @@ int main(int argc,char*argv[])
  fputs(":00000001FF\n",f);
  fclose(f);
 
- printf("Created file ZXEVO_BL.HEX\n");
+ printf("Created file zxevo_bl.hex\n");
 
 // - - - - - - - -
 
@@ -304,7 +304,7 @@ int main(int argc,char*argv[])
  E2Phead[0x96]=crc&0xff;
  E2Phead[0x97]=crc>>8;
 
- f=fopen("ZXEVO_BL.E2P","wb");
+ f=fopen("zxevo_bl.e2p","wb");
  if (!f) { printf("Can't create output file!\n"); return 1; }
  fwrite(E2Phead,1,0x98,f);
  for (adr=0;adr<256;adr++) s1[adr]=0xff;
@@ -313,7 +313,7 @@ int main(int argc,char*argv[])
  for (adr=0;adr<0x10;adr++) fwrite(s1,1,256,f);
  fclose(f);
 
- printf("Created file ZXEVO_BL.E2P\n");
+ printf("Created file zxevo_bl.e2p\n");
 
  return 0;
 }

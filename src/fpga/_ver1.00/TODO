@@ -1,0 +1,10 @@
+31.12.2009, lvd:
+
+14mhz turbo mode
+
+vga scan-doubling
+
+atm video+memory modes
+
+clarify SPI (fpga<->avr) protocol, write new code (fpga + avr)
+
