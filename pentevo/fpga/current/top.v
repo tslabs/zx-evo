@@ -210,7 +210,7 @@ module top(
 
 
 
-	wire [5:0] psd0,psd1,psd2,psd3;
+	wire [7:0] cvx;
 
 	wire [7:0] peff7;
 	wire [7:0] p7ffd;
@@ -616,7 +616,7 @@ zkbdmus zkbdmus( .fclk(fclk), .rst_n(rst_n),
 	covox covox(	.clk(fclk), .hus_en(hus_en), .ldac(ldac), .rdac(rdac),
 					.beep(beep),
 //					.dac_stb(dac_stb),
-					.psd0(psd0), .psd1(psd1), .psd2(psd2), .psd3(psd3)
+					.cvx(cvx)
 	               );
 
 				   
@@ -624,7 +624,7 @@ zkbdmus zkbdmus( .fclk(fclk), .rst_n(rst_n),
 	              .din(d), .dout(dout_ports), .dataout(ena_ports),
 	              .a(a), .iorq_n(iorq_n), .rd_n(rd_n), .wr_n(wr_n), .porthit(porthit),
 	              .ay_bdir(ay_bdir), .ay_bc1(ay_bc1), .border(border),
-		      .psd0(psd0), .psd1(psd1), .psd2(psd2), .psd3(psd3), 
+			      .cvx(cvx),
 	              .p7ffd(p7ffd), .peff7(peff7), .mreq_n(mreq_n), .m1_n(m1_n), .dos(dos),
 	              .rstrom(rstrom), .vg_intrq(intrq), .vg_drq(drq), .vg_wrFF(vg_wrFF),
 	              .vg_cs_n(vg_cs_n), .sd_start(sd_start), .sd_dataout(sd_dataout),
