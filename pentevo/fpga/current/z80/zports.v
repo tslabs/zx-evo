@@ -51,7 +51,7 @@ module zports(
 	output wire        ay_bdir,
 	output wire        ay_bc1,
 
-	output reg [5:0] psd0,psd1,psd2,psd3,
+	output reg [7:0] cvx,
 
 	output wire [ 7:0] p7ffd,
 	output wire [ 7:0] peff7,
@@ -135,10 +135,6 @@ module zports(
 
 	localparam PORTFD = 8'hFD;
 
-	localparam SD0	  = 8'h0F;
-	localparam SD1	  = 8'h1F;
-	localparam SD2	  = 8'h4F;
-	localparam SD3	  = 8'h5F;
 	localparam CVX1   = 8'hFB;
 	localparam CVX2   = 8'hDD;
 	
@@ -224,8 +220,7 @@ module zports(
 	
 		    ( loa==ZXEVBF ) || ( loa==COMPORT ) ||
 
-		    ( (loa==SD0)&&(!shadow) ) || ( (loa==SD1)&&(!shadow) ) || ( (loa==SD2)&&(!shadow) ) || ( (loa==SD3)&&(!shadow) ) ||
-		    (loa==CVX1) || (loa==CVX2)
+		    (loa==CVX1)
 		  )
 			porthit = 1'b1;
 		else
@@ -336,7 +331,6 @@ module zports(
 	end
 
 	wire portfd_wr;
-	wire portsd_wr;
 	wire portf7_wr;
 	wire portf7_rd;
 	wire portcv_wr;
@@ -352,8 +346,7 @@ module zports(
 	assign comport_wr   = ( (loa==COMPORT) && port_wr);
 	assign comport_rd   = ( (loa==COMPORT) && port_rd);
 
-	assign portcv_wr    = ( ((loa==CVX1) || (loa==CVX2)) && port_wr);
-	assign portsd_wr    = ( ((loa==SD0) || (loa==SD1) || (loa==SD2) || (loa==SD3)) && port_wr && (!shadow));
+	assign portcv_wr    = ( ((loa==CVX1) ) && port_wr);
 	assign portxt1_wr    = ( (a[15:0]==XT1) && port_wr );
 	assign portxt2_wr    = ( (a[15:0]==XT2) && port_wr );
 //	assign portxt_rd    = ( (loa ==XT) && port_rd );
@@ -584,38 +577,19 @@ module zports(
 		if (portxt1_wr)
 			xt_addr <= din[7:0];
 
-		else if (portxt2_wr || portfe_wr || portcv_wr || portsd_wr)
+		else if (portxt2_wr || portfe_wr || portcv_wr)
 		begin
 
 		//port FE beep/border bit
 		if (portfe_wr)
 		begin
-			psd0 <= {6{din[4]}};
-			psd1 <= {6{din[4]}};
-			psd2 <= {din[4], {5{din[3]}}};
-			psd3 <= {6{din[3]}};
+			cvx <= {din[4], {7{din[3]}}};
 			border <= {din[1], 1'b0, din[2], 1'b0, din[0], 1'b0};
 		end
 
 		//FB,DD,0F,1F,4F,5F - Covox/Soundrive ports
-		if (portcv_wr || portsd_wr)
-		case (loa)
-			SD0:
-				psd0 <= din[7:2];
-			SD1:
-				psd1 <= din[7:2];
-			SD2:
-				psd2 <= din[7:2];
-			SD3:
-				psd3 <= din[7:2];
-			default:
-			begin
-				psd0 <= din[7:2];
-				psd1 <= din[7:2];
-				psd2 <= din[7:2];
-				psd3 <= din[7:2];
-			end
-		endcase
+		if (portcv_wr)
+			cvx <= din[7:0];
 		
 		if	(portxt2_wr)
 		case (xt_addr)								//XT Regs are written here !!!
