@@ -613,7 +613,7 @@ zkbdmus zkbdmus( .fclk(fclk), .rst_n(rst_n),
 	               );
 
 				   
-	covox covox(	.clk(fclk), .hus_en(hus_en), .ldac(ldac), .rdac(rdac),
+	covox covox(	.clk(ayclk_gen[0]), .hus_en(hus_en), .ldac(ldac), .rdac(rdac),
 					.beep(beep),
 //					.dac_stb(dac_stb),
 					.cvx(cvx)
