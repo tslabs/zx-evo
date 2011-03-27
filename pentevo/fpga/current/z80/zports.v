@@ -138,9 +138,8 @@ module zports(
 	localparam CVX1   = 8'hFB;
 	localparam CVX2   = 8'hDD;
 	
-	localparam XT1 	  = 16'h55FF;
-	localparam XT2 	  = 16'h56FF;
-	localparam XTRD	  = 8'hEF;
+	localparam XT 	  = 8'h6F;
+	localparam XTRD	  = 8'h6F;
 
 	localparam VGCOM  = 8'h1F;
 	localparam VGTRK  = 8'h3F;
@@ -334,8 +333,7 @@ module zports(
 	wire portf7_wr;
 	wire portf7_rd;
 	wire portcv_wr;
-	wire portxt1_wr;
-	wire portxt2_wr;
+	wire portxt_wr;
 
 	assign portfe_wr    = ( (loa==PORTFE) && port_wr);
 	assign portfd_wr    = ( (loa==PORTFD) && port_wr);
@@ -346,9 +344,8 @@ module zports(
 	assign comport_wr   = ( (loa==COMPORT) && port_wr);
 	assign comport_rd   = ( (loa==COMPORT) && port_rd);
 
-	assign portcv_wr    = ( ((loa==CVX1) ) && port_wr);
-	assign portxt1_wr    = ( (a[15:0]==XT1) && port_wr );
-	assign portxt2_wr    = ( (a[15:0]==XT2) && port_wr );
+	assign portcv_wr    = ( (loa==CVX1) && port_wr);
+	assign portxt_wr    = ( (loa==XT) && port_wr );
 //	assign portxt_rd    = ( (loa ==XT) && port_rd );
 
 	// IDE ports
@@ -532,7 +529,7 @@ module zports(
 
 			
 	//#55FF - portXT
-	reg [7:0] xt_addr;
+	wire [7:0] xt_addr;
 	reg [5:0] snum;
 	reg [4:0] hnum;
 
@@ -549,18 +546,19 @@ module zports(
 	parameter paladdr  = 8'h09;
 	parameter paldata  = 8'h0a;
 	parameter sfnum  = 8'h0f;
-	parameter sfreg  = 8'h10;		//reserved values #10-#17
+	parameter sfreg  = 8'h10;		//values #10-#17
 	parameter hconfig  = 8'h1c;
 	parameter hfnum  = 8'h1d;
-	parameter hvol  = 8'h1e;		//reserved values #1e-#1f
-	parameter hfreg  = 8'h20;		//reserved values #20-#2f
+	parameter hvol  = 8'h1e;		//values #1e-#1f
+	parameter hfreg  = 8'h20;		//values #20-#2f
 
-	assign sp_we = (portxt2_wr && (xt_addr == paldata));
-	assign sf_we = (portxt2_wr && (xt_addr[7:3] == sfreg[7:3]));
+	assign xt_addr = a[15:8];
+	assign sp_we = (portxt_wr && (xt_addr == paldata));
+	assign sf_we = (portxt_wr && (xt_addr[7:3] == sfreg[7:3]));
 	assign sf_wa = {snum, xt_addr[2:0]};
-	assign hf_we = (portxt2_wr && (xt_addr[7:4] == hfreg[7:4]));
+	assign hf_we = (portxt_wr && (xt_addr[7:4] == hfreg[7:4]));
 	assign hf_wa = {hnum, xt_addr[3:0]};
-	assign hv_we = (portxt2_wr && (xt_addr[7:1] == hvol[7:1]));
+	assign hv_we = (portxt_wr && (xt_addr[7:1] == hvol[7:1]));
 	assign hv_wa = {hnum, xt_addr[0]};
 
 	//#55FF Write to XT Regs and allied ports
@@ -574,10 +572,7 @@ module zports(
 	else
 
 	begin
-		if (portxt1_wr)
-			xt_addr <= din[7:0];
-
-		else if (portxt2_wr || portfe_wr || portcv_wr)
+		if (portxt_wr || portfe_wr || portcv_wr)
 		begin
 
 		//port FE beep/border bit
@@ -591,7 +586,7 @@ module zports(
 		if (portcv_wr)
 			cvx <= din[7:0];
 		
-		if	(portxt2_wr)
+		if	(portxt_wr)
 		case (xt_addr)								//XT Regs are written here !!!
 	xborder:
 			border <= din[5:0];
