@@ -14,11 +14,11 @@ module covox(
 	output beep
 	);
 
-	reg [6:0] acc;
+	reg [7:0] acc;
 	
-	assign beep = ({acc[6:0], clk} < cvx);
+	assign beep = (acc[7:0] < cvx);
 	
 always @(posedge clk)
-		acc <= acc + 7'b1;
+		acc <= acc + 8'b1;
 
 endmodule
