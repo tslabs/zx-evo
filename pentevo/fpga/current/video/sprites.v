@@ -119,6 +119,7 @@ module sprites(
 	reg [13:0] sdbuf;
 	reg flipx, flipy;
 	reg [2:0] pxn;
+	reg [1:0] pri;
 
 	assign mcd = ms;
 	
@@ -168,12 +169,12 @@ module sprites(
 	assign s_act = !(sf_rd[1:0] == 2'b0);
 	assign s_next = num + 6'd1;
 	assign s_last = (s_next == 5'd0);
-	assign ypc = {sf_rd[7], yp};
-	assign ysc = {sf_rd[6:0], 2'b0};
+	assign ypc = {sf_rd[0], yp};
+	assign ysc = {sf_rd[7:1], 2'b0};
 	assign s_vis = ((vline >= ypc) && (vline < (ypc + ysc)));
 	assign dec_xs = xs - 8'd1;
 	assign s_eox = (dec_xs == 8'b0);
-	assign xsc = (cres == 2'b11) ? {sf_rd[6:0], 1'b0} : {1'b0, sf_rd[6:0]};
+	assign xsc = (cres == 2'b11) ? {sf_rd[7:1], 1'b0} : {1'b0, sf_rd[7:1]};
 	assign lofsc = flipy ? (ypc - vline + ysc - 9'd1) : (vline - ypc);
 	assign adr_ofs = {sf_rd[7:0], spu_addr[12:0]} + (xs * lofs);
 	assign adr_next = spu_addr + 21'b1;
@@ -203,7 +204,8 @@ module sprites(
 		if (s_act)
 		begin
 			cres <= sf_rd[1:0];			//get CRES[1:0]
-			sp_ra[7:2] <= sf_rd[7:2];	//get PAL[5:0]
+			pri <= sf_rd[3:2];			//get PRI[1:0]
+			sp_ra[7:4] <= sf_rd[7:4];	//get PAL[3:0]
 			sf_sa <= r_am;
 			ms <= ms_st1;
 		end
@@ -266,7 +268,7 @@ module sprites(
 
 	ms_st4: 
 	begin
-		sl_wa[8] <= sf_rd[7];		//get X[8]
+		sl_wa[8] <= sf_rd[0];		//get X[8]
 		xs <= xsc;					//get XS[6:0]
 		sf_sa <= r_al;
 		ms <= ms_st5;
@@ -309,23 +311,20 @@ module sprites(
 		sdbuf <= spu_data[13:0];
 		sl_we <= 1'b1;
 		pxn <= 3'b0;
-		//write pix0
-		case (cres)
+		sp_ra[3:0] <= (cres[1] == 1'b0) ? {2'b0, spu_data[15:14]} : spu_data[15:12];		//set paladdr for pix0
 
+		case (cres)
 		1:	begin	//4c
-				sp_ra[1:0] <= spu_data[15:14];		//set paladdr for pix0
 				ms <= ms_4c1;
 			end
 	
 		2:	begin	//16c
-				sp_ra[3:0] <= spu_data[15:12];		//set paladdr for pix0
 				ms <= ms_16c1;
 			end
 		
 		3:	begin	//true color
 				ms <= ms_tc1;
 			end
-
 		endcase
 	end
 	end
