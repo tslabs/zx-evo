@@ -73,7 +73,6 @@ module zports(
 
 //	PortXT outputs
 	output reg [7:0] vcfg,
-//	output reg hus_en, li_en,
 
 //SPRAM
 	output reg [7:0] sp_wa,
@@ -84,12 +83,13 @@ module zports(
 	output sf_we,
 
 //HFile	
-	output [8:0] hf_wa,
-	output hf_we,
+	// output [8:0] hf_wa,
+	// output hf_we,
 
 //HVol
-	output [5:0] hv_wa,
-	output hv_we,
+	// output [5:0] hv_wa,
+	// output hv_we,
+	//	output reg hus_en, li_en,
 
 
 	// WAIT-ports related
