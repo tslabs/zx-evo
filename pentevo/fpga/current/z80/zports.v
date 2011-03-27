@@ -1,6 +1,11 @@
-// PentEvo project (c) NedoPC 2008-2010
+`include "../include/tune.v"
+
+// PentEvo project (c) NedoPC 2008-2009
 //
-// most of pentevo ports are here
+//Modified by TS-Labs inc.
+//
+//Ports handling
+//
 
 `include "../include/tune.v"
 
@@ -12,10 +17,8 @@ module zports(
 
 	input  wire        zpos,
 	input  wire        zneg,
-
-
 	input  wire [ 7:0] din,
-	output reg  [ 7:0] dout,
+	output reg [7:0] dout,
 	output wire        dataout,
 	input  wire [15:0] a,
 
@@ -25,7 +28,7 @@ module zports(
 	input  wire        rd_n,
 	input  wire        wr_n,
 
-	output reg         porthit, // when internal port hit occurs, this is 1, else 0; used for iorq1_n iorq2_n on zxbus
+	output reg porthit, // when internal port hit occurs, this is 1, else 0; used for iorq1_n iorq2_n on zxbus
 
 	output wire [15:0] ideout,
 	input  wire [15:0] idein,
@@ -41,20 +44,19 @@ module zports(
 	input  wire [ 7:0] mus_in,  // mouse (xxDF)
 	input  wire [ 4:0] kj_in,
 
-	output reg  [ 3:0] border,
-
-
+	output reg [5:0] border,
+	
 	input  wire        dos,
-
 
 	output wire        ay_bdir,
 	output wire        ay_bc1,
+
+	output reg [5:0] psd0,psd1,psd2,psd3,
 
 	output wire [ 7:0] p7ffd,
 	output wire [ 7:0] peff7,
 
 	input  wire [ 1:0] rstrom,
-
 	input  wire        tape_read,
 
 	output wire        vg_cs_n,
@@ -62,10 +64,31 @@ module zports(
 	input  wire        vg_drq, // from vg93 module - drq + irq read
 	output wire        vg_wrFF,        // write strobe of #FF port
 
-	output reg         sdcs_n,
+	output reg sdcs_n,
 	output wire        sd_start,
 	output wire [ 7:0] sd_datain,
 	input  wire [ 7:0] sd_dataout,
+
+//	PortXT outputs
+	output reg [7:0] vcfg,
+	output reg hus_en, li_en,
+
+//SPRAM
+	output reg [7:0] sp_wa,
+	output sp_we,
+
+//SFile	
+	output [8:0] sf_wa,
+	output sf_we,
+
+//HFile	
+	output [8:0] hf_wa,
+	output hf_we,
+
+//HVol
+	output [5:0] hv_wa,
+	output hv_we,
+
 
 	// WAIT-ports related
 	//
@@ -79,39 +102,24 @@ module zports(
 	output reg         wait_rnw,   // whether it was read(=1) or write(=0)
 	output reg  [ 7:0] wait_write,
 	input  wire [ 7:0] wait_read,
-
-
+	
 	output wire        atmF7_wr_fclk, // used in atm_pager.v
-
-
 	output reg  [ 2:0] atm_scr_mode, // RG0..RG2 in docs
 	output reg         atm_turbo,    // turbo mode ON
 	output reg         atm_pen,      // pager_off in atm_pager.v, NOT inverted!!!
 	output reg         atm_cpm_n,    // permanent dos on
 	output reg         atm_pen2,     // PEN2 - fucking palette mode, NOT inverted!!!
-
 	output wire        romrw_en, // from port BF
-
-
 	output wire        pent1m_ram0_0, // d3.eff7
 	output wire        pent1m_1m_on,  // d2.eff7
 	output wire [ 5:0] pent1m_page,   // full 1 meg page number
-	output wire        pent1m_ROM,     // d4.7ffd
-
-
-	output wire        atm_palwr,   // palette write strobe
-	output wire [ 5:0] atm_paldata, // palette write data
-
-	output wire        covox_wr,
-	output wire        beeper_wr
+	output wire        pent1m_ROM     // d4.7ffd
 );
-
-
 	reg rstsync1,rstsync2;
 
 
+
 	localparam PORTFE = 8'hFE;
-	localparam PORTF6 = 8'hF6;
 	localparam PORTF7 = 8'hF7;
 
 	localparam NIDE10 = 8'h10;
@@ -126,6 +134,17 @@ module zports(
 	localparam NIDEC8 = 8'hC8;
 
 	localparam PORTFD = 8'hFD;
+
+	localparam SD0	  = 8'h0F;
+	localparam SD1	  = 8'h1F;
+	localparam SD2	  = 8'h4F;
+	localparam SD3	  = 8'h5F;
+	localparam CVX1   = 8'hFB;
+	localparam CVX2   = 8'hDD;
+	
+	localparam XT1 	  = 16'h55FF;
+	localparam XT2 	  = 16'h56FF;
+	localparam XTRD	  = 8'hEF;
 
 	localparam VGCOM  = 8'h1F;
 	localparam VGTRK  = 8'h3F;
@@ -147,32 +166,22 @@ module zports(
 	localparam COMPORT = 8'hEF; // F8EF..FFEF - rs232 ports
 
 
-	localparam COVOX   = 8'hFB;
-
-
-
-
 	reg external_port;
 
 	reg port_wr;
 	reg port_rd;
 
-	reg iowr_reg;
-	reg iord_reg;
-
+    reg iowr_reg;
+    reg iord_reg;
 
 	reg port_wr_fclk,
 	    port_rd_fclk;
-
 	reg [1:0] iowr_reg_fclk,
 	          iord_reg_fclk;
-
-
 	wire [7:0] loa;
 
+
 	wire portfe_wr;
-
-
 
 	wire ideout_hi_wr;
 	wire idein_lo_rd;
@@ -182,66 +191,42 @@ module zports(
 
 	reg ide_rd_trig; // nemo-divide read trigger
 	reg ide_rd_latch; // to save state of trigger during read cycle
-
 	reg ide_wrlo_trig,  ide_wrhi_trig;  // nemo-divide write triggers
 	reg ide_wrlo_latch, ide_wrhi_latch; // save state during write cycles
-
-
-
 	reg  [15:0] idewrreg; // write register, either low or high part is pre-written here,
 	                      // while other part is out directly from Z80 bus
-
 	wire [ 7:0] iderdeven; // to control read data from "even" ide ports (all except #11)
 	wire [ 7:0] iderdodd;  // read data from "odd" port (#11)
-
-
-
 	reg pre_bc1,pre_bdir;
 
 	wire gluclock_on;
 
-
-
 	reg  shadow_en_reg; //bit0.xxBF
 	reg   romrw_en_reg; //bit1.xxBF
-
 	wire shadow;
-
-
-
-
-
 	assign shadow = dos || shadow_en_reg;
-
-
-
-
-
-
 	assign loa=a[7:0];
-
+	
 	always @*
 	begin
-		if( (loa==PORTFE) || (loa==PORTF6) ||
+		if( (loa==PORTFE) ||
 		    (loa==PORTFD) ||
-
 		    (loa==NIDE10) || (loa==NIDE11) || (loa==NIDE30) || (loa==NIDE50) || (loa==NIDE70) ||
 		    (loa==NIDE90) || (loa==NIDEB0) || (loa==NIDED0) || (loa==NIDEF0) || (loa==NIDEC8) ||
-
 		    (loa==KMOUSE) ||
 
 		    ( (loa==VGCOM)&&shadow ) || ( (loa==VGTRK)&&shadow ) || ( (loa==VGSEC)&&shadow ) || ( (loa==VGDAT)&&shadow ) ||
 		    ( (loa==VGSYS)&&shadow ) || ( (loa==KJOY)&&(!shadow) ) ||
 
 		    ( (loa==PORTF7)&&(!shadow) ) || ( (loa==SDCFG)&&(!shadow) ) || ( (loa==SDDAT) ) ||
-
+			
 		    ( (loa==ATMF7)&&shadow ) || ( (loa==ATM77)&&shadow ) ||
+	
+		    ( loa==ZXEVBF ) || ( loa==COMPORT ) ||
 
-		    ( loa==ZXEVBF ) || ( loa==COMPORT )
+		    ( (loa==SD0)&&(!shadow) ) || ( (loa==SD1)&&(!shadow) ) || ( (loa==SD2)&&(!shadow) ) || ( (loa==SD3)&&(!shadow) ) ||
+		    (loa==CVX1) || (loa==CVX2)
 		  )
-
-
-
 			porthit = 1'b1;
 		else
 			porthit = 1'b0;
@@ -279,8 +264,6 @@ module zports(
 	end
 
 
-
-
 	// fclk-synchronous stobes
 	//
 	always @(posedge fclk) if( zpos )
@@ -288,40 +271,37 @@ module zports(
 		iowr_reg_fclk[0] <= ~(iorq_n | wr_n);
 		iord_reg_fclk[0] <= ~(iorq_n | rd_n);
 	end
-
 	always @(posedge fclk)
 	begin
 		iowr_reg_fclk[1] <= iowr_reg_fclk[0];
 		iord_reg_fclk[1] <= iord_reg_fclk[0];
 	end
-
 	always @(posedge fclk)
 	begin
 		port_wr_fclk <= iowr_reg_fclk[0] && (!iowr_reg_fclk[1]);
 		port_rd_fclk <= iord_reg_fclk[0] && (!iord_reg_fclk[1]);
 	end
-
-
-
-
-
-	// dout data
+		// dout data
 	always @*
 	begin
 		case( loa )
+
+		//XT Regs are read here !!!
+/*		XTRD:
+		begin
+		case (xt_addr)
+		xborder:
+			dout = border;
+		endcase
+		end
+*/
 		PORTFE:
 			dout = { 1'b1, tape_read, 1'b0, keys_in };
-		PORTF6:
-			dout = { 1'b1, tape_read, 1'b0, keys_in };
-
 
 		NIDE10,NIDE30,NIDE50,NIDE70,NIDE90,NIDEB0,NIDED0,NIDEF0,NIDEC8:
 			dout = iderdeven;
 		NIDE11:
 			dout = iderdodd;
-
-
-		//PORTFD:
 
 		VGSYS:
 			dout = { vg_intrq, vg_drq, 6'b111111 };
@@ -337,60 +317,48 @@ module zports(
 			dout = sd_dataout;
 
 
-		PORTF7: begin
-			if( !a[14] && (a[8]^shadow) && gluclock_on ) // $BFF7 - data i/o
+		PORTF7:
+		begin
+			if( !a[14] && gluclock_on ) // $BFF7 - data i/o
 				dout = wait_read;
 			else // any other $xxF7 port
 				dout = 8'hFF;
 		end
 
-		COMPORT: begin
+		COMPORT:
+		begin
 			dout = wait_read; // $F8EF..$FFEF
 		end
-
-
 
 		default:
 			dout = 8'hFF;
 		endcase
 	end
 
+	wire portfd_wr;
+	wire portsd_wr;
+	wire portf7_wr;
+	wire portf7_rd;
+	wire portcv_wr;
+	wire portxt1_wr;
+	wire portxt2_wr;
 
-
-	assign portfe_wr    = (((loa==PORTFE) || (loa==PORTF6)) && port_wr);
+	assign portfe_wr    = ( (loa==PORTFE) && port_wr);
 	assign portfd_wr    = ( (loa==PORTFD) && port_wr);
-
-	// F7 ports (like EFF7) are accessible in shadow mode but at addresses like EEF7, DEF7, BEF7 so that
-	// there are no conflicts in shadow mode with ATM xFF7 and x7F7 ports
-	assign portf7_wr    = ( (loa==PORTF7) && (a[8]==1'b1) && port_wr && (!shadow) ) ||
-	                      ( (loa==PORTF7) && (a[8]==1'b0) && port_wr &&   shadow  ) ;
-
-	assign portf7_rd    = ( (loa==PORTF7) && (a[8]==1'b1) && port_rd && (!shadow) ) ||
-	                      ( (loa==PORTF7) && (a[8]==1'b0) && port_rd &&   shadow  ) ;
-
+	assign portf7_wr    = ( (loa==PORTF7) && port_wr && (!shadow) );
+	assign portf7_rd    = ( (loa==PORTF7) && port_rd && (!shadow) );
 	assign vg_wrFF = ( ( (loa==VGSYS)&&shadow ) && port_wr);
 
 	assign comport_wr   = ( (loa==COMPORT) && port_wr);
 	assign comport_rd   = ( (loa==COMPORT) && port_rd);
 
-
-
-	//border port FE
-	wire portwe_wr_fclk;
-
-	assign portfe_wr_fclk = (((loa==PORTFE) || (loa==PORTF6)) && port_wr_fclk);
-
-	always @(posedge fclk)
-	if( portfe_wr_fclk )
-		border <= { ~a[3], din[2:0] };
-
-
-
-
-
+	assign portcv_wr    = ( ((loa==CVX1) || (loa==CVX2)) && port_wr);
+	assign portsd_wr    = ( ((loa==SD0) || (loa==SD1) || (loa==SD2) || (loa==SD3)) && port_wr && (!shadow));
+	assign portxt1_wr    = ( (a[15:0]==XT1) && port_wr );
+	assign portxt2_wr    = ( (a[15:0]==XT2) && port_wr );
+//	assign portxt_rd    = ( (loa ==XT) && port_rd );
 
 	// IDE ports
-
 	// IDE physical ports (that go to IDE device)
 	always @(loa)
 		case( loa )
@@ -398,9 +366,7 @@ module zports(
 		default: ide_ports = 1'b0;
 		endcase
 
-
 	assign idein_lo_rd  = port_rd && (loa==NIDE10) && (!ide_rd_trig);
-
 	// control read & write triggers, which allow nemo-divide mod to work.
 	//
 	// read trigger:
@@ -426,46 +392,31 @@ module zports(
 		else
 			ide_wrlo_trig <= 1'b0;
 	end
-
 	// normal read: #10(low), #11(high)
 	// divide read: #10(low), #10(high)
 	//
 	// normal write: #11(high), #10(low)
 	// divide write: #10(low),  #10(high)
-
-
 	always @(posedge zclk)
 	begin
 		if( port_wr && (loa==NIDE11) )
 			idewrreg[15:8] <= din;
-
 		if( port_wr && (loa==NIDE10) && !ide_wrlo_trig )
 			idewrreg[ 7:0] <= din;
 	end
-
-
-
-
 	always @(posedge zclk)
 	if( idein_lo_rd )
 			idehiin <= idein[15:8];
-
-
 	assign ide_a = a[7:5];
-
-
 	// This is unknown shit... Probably need more testing with old WD
 	// drives WITHOUT this commented fix.
 	//
 	// trying to fix old WD drives...
-	//assign ide_cs0_n = iorq_n | (rd_n&wr_n) | (~ide_ports) | (~(loa!=NIDEC8));
-	//assign ide_cs1_n = iorq_n | (rd_n&wr_n) | (~ide_ports) | (~(loa==NIDEC8));
+//	assign ide_cs0_n = iorq_n | (rd_n&wr_n) | (~ide_ports) | (~(loa!=NIDEC8));
+//	assign ide_cs1_n = iorq_n | (rd_n&wr_n) | (~ide_ports) | (~(loa==NIDEC8));
 	// fix ends...
-
-
 	assign ide_cs0_n = (~ide_ports) | (~(loa!=NIDEC8));
 	assign ide_cs1_n = (~ide_ports) | (~(loa==NIDEC8));
-
 
 	// generate read cycles for IDE as usual, except for reading #10
 	// instead of #11 for high byte (nemo-divide). I use additional latch
@@ -473,35 +424,22 @@ module zports(
 	always @* if( rd_n ) ide_rd_latch <= ide_rd_trig;
 	//
 	assign ide_rd_n = iorq_n | rd_n | (~ide_ports) | (ide_rd_latch && (loa==NIDE10));
-
 	always @* if( wr_n ) ide_wrlo_latch <= ide_wrlo_trig; // same for write triggers
 	always @* if( wr_n ) ide_wrhi_latch <= ide_wrhi_trig; //
 	//
 	assign ide_wr_n = iorq_n | wr_n | (~ide_ports) | ( (loa==NIDE10) && !ide_wrlo_latch && !ide_wrhi_latch );
 	                                          // do NOT generate IDE write, if neither of ide_wrhi|lo latches
 	                                          // set and writing to NIDE10
-
-
-
 	assign idedataout = ide_rd_n;
-
-
-
 	// data read by Z80 from IDE
 	//
 	assign iderdodd[ 7:0] = idehiin[ 7:0];
 	//
 	assign iderdeven[ 7:0] = (ide_rd_latch && (loa==NIDE10)) ? idehiin[ 7:0] : idein[ 7:0];
-
 	// data written to IDE from Z80
 	//
 	assign ideout[15:8] = ide_wrhi_latch ? idewrreg[15:8] : din[ 7:0];
 	assign ideout[ 7:0] = ide_wrlo_latch ? idewrreg[ 7:0] : din[ 7:0];
-
-
-
-
-
 
 
 	// AY control
@@ -552,15 +490,16 @@ module zports(
 			p7ffd_rom_int <= din[4];
 	end
 
+
 	assign block7ffd=p7ffd_int[5] & block1m;
 
-
 	// EFF7 port
+
 	always @(posedge zclk, negedge rst_n)
 	begin
 		if( !rst_n )
 			peff7_int <= 8'h00;
-		else if( !a[12] && portf7_wr && (!shadow) ) // EEF7 in shadow mode is abandoned!
+		else if( !a[12] && portf7_wr )
 			peff7_int <= din; // 4 - turbooff, 0 - p16c on, 2 - block1meg
 	end
 	assign block1m = peff7_int[2];
@@ -574,14 +513,9 @@ module zports(
 	assign pent1m_page[5:0] = { p7ffd_int[7:5], p7ffd_int[2:0] };
 	assign pent1m_1m_on     = ~peff7_int[2];
 	assign pent1m_ram0_0    = peff7_int[3];
-
-
-
-
 	// gluclock ports (bit7:eff7 is above)
 
-	assign gluclock_on = peff7_int[7] || shadow; // in shadow mode EEF7 is abandoned: instead, gluclock access
-	                                             // is ON forever in shadow mode.
+	assign gluclock_on = peff7_int[7];
 
 	always @(posedge zclk)
 	begin
@@ -594,7 +528,7 @@ module zports(
 		end
 	end
 
-
+	
 	// comports
 
 	always @(posedge zclk)
@@ -603,8 +537,109 @@ module zports(
 			comport_addr <= a[10:8 ];
 	end
 
+			
+	//#55FF - portXT
+	reg [7:0] xt_addr;
+	reg [5:0] snum;
+	reg [4:0] hnum;
 
+	//Port XT Regs
+	parameter xborder  = 8'h00;
+	parameter sysconfig  = 8'h01;
+	parameter romconfig  = 8'h02;
+	parameter vpage  = 8'h03;
+	parameter page00  = 8'h04;
+	parameter page01  = 8'h05;
+	parameter page10  = 8'h06;
+	parameter page11  = 8'h07;
+	parameter vconfig  = 8'h08;
+	parameter paladdr  = 8'h09;
+	parameter paldata  = 8'h0a;
+	parameter sfnum  = 8'h0f;
+	parameter sfreg  = 8'h10;		//reserved values #10-#17
+	parameter hconfig  = 8'h1c;
+	parameter hfnum  = 8'h1d;
+	parameter hvol  = 8'h1e;		//reserved values #1e-#1f
+	parameter hfreg  = 8'h20;		//reserved values #20-#2f
 
+	assign sp_we = (portxt2_wr && (xt_addr == paldata));
+	assign sf_we = (portxt2_wr && (xt_addr[7:3] == sfreg[7:3]));
+	assign sf_wa = {snum, xt_addr[2:0]};
+	assign hf_we = (portxt2_wr && (xt_addr[7:4] == hfreg[7:4]));
+	assign hf_wa = {hnum, xt_addr[3:0]};
+	assign hv_we = (portxt2_wr && (xt_addr[7:1] == hvol[7:1]));
+	assign hv_wa = {hnum, xt_addr[0]};
+
+	//#55FF Write to XT Regs and allied ports
+	always @(posedge zclk, negedge rst_n)
+
+	if (!rst_n)
+		begin
+			//here set up RESET XT defaults
+			vcfg <= 8'b0;
+		end
+	else
+
+	begin
+		if (portxt1_wr)
+			xt_addr <= din[7:0];
+
+		else if (portxt2_wr || portfe_wr || portcv_wr || portsd_wr)
+		begin
+
+		//port FE beep/border bit
+		if (portfe_wr)
+		begin
+			psd0 <= {6{din[4]}};
+			psd1 <= {6{din[4]}};
+			psd2 <= {din[4], {5{din[3]}}};
+			psd3 <= {6{din[3]}};
+			border <= {din[1], 1'b0, din[2], 1'b0, din[0], 1'b0};
+		end
+
+		//FB,DD,0F,1F,4F,5F - Covox/Soundrive ports
+		if (portcv_wr || portsd_wr)
+		case (loa)
+			SD0:
+				psd0 <= din[7:2];
+			SD1:
+				psd1 <= din[7:2];
+			SD2:
+				psd2 <= din[7:2];
+			SD3:
+				psd3 <= din[7:2];
+			default:
+			begin
+				psd0 <= din[7:2];
+				psd1 <= din[7:2];
+				psd2 <= din[7:2];
+				psd3 <= din[7:2];
+			end
+		endcase
+		
+		if	(portxt2_wr)
+		case (xt_addr)								//XT Regs are written here !!!
+	xborder:
+			border <= din[5:0];
+	vconfig:
+			vcfg <= din[7:0];
+	paladdr:
+			sp_wa <= din[7:0];
+	sfnum:
+			snum <= din[5:0];
+	hfnum:
+			hnum <= din[4:0];
+	hconfig:
+		begin
+			hus_en <= din[7];
+			li_en <= din[6];
+		end
+	
+		endcase
+		end
+	end
+
+	
 	// write to wait registers
 	always @(posedge zclk)
 	begin
@@ -620,7 +655,7 @@ module zports(
 	//
 	// ACHTUNG!!!! here portxx_wr are ON Z80 CLOCK! logic must change when moving to fclk strobes
 	//
-	assign wait_start_gluclock = ( gluclock_on && !a[14] && (portf7_rd || portf7_wr) ); // $BFF7 - gluclock r/w
+	assign wait_start_gluclock = ( (!shadow) && gluclock_on && !a[14] && (portf7_rd || portf7_wr) ); // $BFF7 - gluclock r/w
 	//
 	assign wait_start_comport = ( comport_rd || comport_wr );
 	//
@@ -634,12 +669,11 @@ module zports(
 			wait_rnw <= 1'b1;
 	end
 
-
-
-
+	
 
 	// VG93 control
 	assign vg_cs_n =  (~shadow) | iorq_n | (rd_n & wr_n) | ( ~((loa==VGCOM)|(loa==VGTRK)|(loa==VGSEC)|(loa==VGDAT)) );
+
 
 
 
@@ -654,19 +688,15 @@ module zports(
 	end
 
 
-
-
 // SD card (z-control¸r compatible)
 
 	wire sdcfg_wr,sddat_wr,sddat_rd;
 
 	assign sdcfg_wr = ( (loa==SDCFG) && port_wr && (!shadow) )                  ||
 	                  ( (loa==SDDAT) && port_wr &&   shadow  && (a[15]==1'b1) ) ;
-
 	assign sddat_wr = ( (loa==SDDAT) && port_wr && (!shadow) )                  ||
 	                  ( (loa==SDDAT) && port_wr &&   shadow  && (a[15]==1'b0) ) ;
-
-	assign sddat_rd = ( (loa==SDDAT) && port_rd              );
+	assign sddat_rd = ( (loa==SDDAT) && port_rd);
 
 	// SDCFG write - sdcs_n control
 	always @(posedge zclk, negedge rst_n)
@@ -701,25 +731,15 @@ module zports(
 
 
 
-
-
-
-
 /////////////////////////////////////////////////////////////////////////////////////////////////
-
 	///////////////
 	// ATM ports //
 	///////////////
-
 	wire atm77_wr_fclk;
 	wire zxevbf_wr_fclk;
-
-	assign atmF7_wr_fclk = ( (loa==ATMF7) && (a[8]==1'b1) && shadow && port_wr_fclk ); // xFF7 and x7F7 ports, NOT xEF7!
+	assign atmF7_wr_fclk = ( (loa==ATMF7) && shadow && port_wr_fclk );
 	assign atm77_wr_fclk = ( (loa==ATM77) && shadow && port_wr_fclk );
-
 	assign zxevbf_wr_fclk = ( (loa==ZXEVBF) && port_wr_fclk );
-
-
 	// port BF write
 	//
 	always @(posedge fclk, negedge rst_n)
@@ -733,22 +753,15 @@ module zports(
 		shadow_en_reg <= din[0];
 		romrw_en_reg  <= din[1];
 	end
-
 	assign romrw_en = romrw_en_reg;
-
-
-
 	// port xx77 write
 	always @(posedge fclk, negedge rst_n)
 	if( !rst_n )
 	begin
 		atm_scr_mode = 3'b011;
 		atm_turbo    = 1'b1;
-
-		atm_pen =   1'b1; // no manager,
-		atm_cpm_n = 1'b0; // permanent dosen (shadow ports on)
-
-
+		atm_pen      = 1'b0; // UNLIKE ATM - reset with normal ROMs! (TEMPORARY???)
+		atm_cpm_n    = 1'b1; // no permanent dos
 		atm_pen2     = 1'b0;
 	end
 	else if( atm77_wr_fclk )
@@ -759,28 +772,4 @@ module zports(
 		atm_cpm_n    <=  a[9];
 		atm_pen2     <= ~a[14];
 	end
-
-
-	// atm palette strobe and data
-	wire vg_wrFF_fclk;
-
-	assign vg_wrFF_fclk = ( ( (loa==VGSYS)&&shadow ) && port_wr_fclk);
-
-
-	assign atm_palwr = vg_wrFF_fclk & atm_pen2;
-
-	assign atm_paldata = { ~din[4], ~din[7], ~din[1], ~din[6], ~din[0], ~din[5] };
-
-
-
-
-
-
-	// covox/beeper writes
-
-	assign beeper_wr = (loa==PORTFE) && portfe_wr_fclk;
-	assign covox_wr  = (loa==COVOX) && port_wr_fclk;
-
-
 endmodule
-

@@ -118,36 +118,29 @@ module sprites(
 	reg [8:0] lofs;
 	reg [13:0] sdbuf;
 	reg flipx, flipy;
+	reg [2:0] pxn;
 
 	assign mcd = ms;
 	
 // Marlezonskiy balet
 
-	reg [5:0] ms;		//current and next states of FSM
+	reg [3:0] ms;		//current state of FSM
 
-	localparam ms_beg = 5'd1;
-	localparam ms_st1 = 5'd22;
-	localparam ms_st2 = 5'd2;
-	localparam ms_st3 = 5'd3;
-	localparam ms_st4 = 5'd4;
-	localparam ms_st5 = 5'd5;
-	localparam ms_st6 = 5'd6;
-	localparam ms_st7 = 5'd7;
-	localparam ms_st8 = 5'd8;
-	localparam ms_lbeg = 5'd9;
-	localparam ms_4c1 = 5'd10;
-	localparam ms_4c2 = 5'd11;
-	localparam ms_4c3 = 5'd12;
-	localparam ms_4c4 = 5'd13;
-	localparam ms_4c5 = 5'd14;
-	localparam ms_4c6 = 5'd15;
-	localparam ms_4c7 = 5'd16;
-	localparam ms_16c1 = 5'd17;
-	localparam ms_16c2 = 5'd18;
-	localparam ms_16c3 = 5'd19;
-	localparam ms_tc1 = 5'd20;
-	localparam ms_eow = 5'd21;
-	localparam ms_halt = 5'd0;
+	localparam ms_halt = 4'd0;
+	localparam ms_beg = 4'd1;
+	localparam ms_st1 = 4'd2;
+	localparam ms_st2 = 4'd3;
+	localparam ms_st3 = 4'd4;
+	localparam ms_st4 = 4'd5;
+	localparam ms_st5 = 4'd6;
+	localparam ms_st6 = 4'd7;
+	localparam ms_st7 = 4'd8;
+	localparam ms_st8 = 4'd9;
+	localparam ms_lbeg = 4'd10;
+	localparam ms_4c1 = 4'd11;
+	localparam ms_16c1 = 4'd12;
+	localparam ms_tc1 = 4'd13;
+	localparam ms_eow = 4'd14;
 	
 	localparam r_xp = 3'd0;
 	localparam r_xs = 3'd1;
@@ -315,6 +308,7 @@ module sprites(
 //		spu_req <= 1'b0;
 		sdbuf <= spu_data[13:0];
 		sl_we <= 1'b1;
+		pxn <= 3'b0;
 		//write pix0
 		case (cres)
 
@@ -340,54 +334,11 @@ module sprites(
 	begin
 	if (!s_eox)
 	begin
-//		spu_req <= 1'b1;		//assert spu_req
-//		spu_addr <= adr_next;	//set spu_addr
 	end
 		sl_wa <= sl_next;
-		sp_ra[1:0] <= sdbuf[13:12];		//set paladdr for pix1
-		ms <= ms_4c2;
-	end
-
-	ms_4c2:	//write pix2@4c
-	begin
-		sl_wa <= sl_next;
-		sp_ra[1:0] <= sdbuf[11:10];		//set paladdr for pix2
-		ms <= ms_4c3;
-	end
-
-	ms_4c3:	//write pix3@4c
-	begin	
-		sl_wa <= sl_next;
-		sp_ra[1:0] <= sdbuf[9:8];			//set paladdr for pix3
-		ms <= ms_4c4;
-	end
-
-	ms_4c4:	//write pix4@4c
-	begin
-		sl_wa <= sl_next;
-		sp_ra[1:0] <= sdbuf[7:6];			//set paladdr for pix4
-		ms <= ms_4c5;
-	end
-
-	ms_4c5:	//write pix5@4c
-	begin
-		sl_wa <= sl_next;
-		sp_ra[1:0] <= sdbuf[5:4];			//set paladdr for pix5
-		ms <= ms_4c6;
-	end
-
-	ms_4c6:	//write pix6@4c
-	begin
-		sl_wa <= sl_next;
-		sp_ra[1:0] <= sdbuf[3:2];			//set paladdr for pix6
-		ms <= ms_4c7;
-	end
-
-	ms_4c7:	//write pix7@4c
-	begin
-		sl_wa <= sl_next;
-		sp_ra[1:0] <= sdbuf[1:0];				//set paladdr for pix7
-		ms <= ms_eow;
+		sp_ra[1:0] <= {sdbuf[(13-pxn*2)], sdbuf[(12-pxn*2)]};		//set paladdr for pix1
+		pxn <= pxn + 3'b1;
+		ms <= (pxn == 3'd6) ? ms_eow : ms_4c1;
 	end
 
 	ms_16c1: //write pix1@16c
@@ -396,22 +347,9 @@ module sprites(
 	begin
 	end
 		sl_wa <= sl_next;
-		sp_ra[3:0] <= sdbuf[11:8];		//set paladdr for pix1
-		ms <= ms_16c2;
-	end
-
-	ms_16c2: //write pix2@16c
-	begin
-		sl_wa <= sl_next;
-		sp_ra[3:0] <= sdbuf[7:4];			//set paladdr for pix2
-		ms <= ms_16c3;
-	end
-
-	ms_16c3: //write pix3@16c
-	begin
-		sl_wa <= sl_next;
-		sp_ra[3:0] <= sdbuf[3:0];			//set paladdr for pix3
-		ms <= ms_eow;
+		sp_ra[3:0] <= {sdbuf[11-pxn*4], sdbuf[10-pxn*4], sdbuf[9-pxn*4], sdbuf[8-pxn*4]};		//set paladdr for pix1
+		pxn <= pxn + 3'b1;
+		ms <= (pxn == 3'd2) ? ms_eow : ms_16c1;
 	end
 
 	ms_tc1:	//write pix1@true
