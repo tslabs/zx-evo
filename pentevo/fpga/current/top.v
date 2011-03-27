@@ -428,9 +428,9 @@ module top(
 	wire spu_strobe;
 	wire spu_next;
 
-	wire [20:0] hus_addr;
-	wire [15:0] hus_data;
-	wire hus_strobe, hus_next, hus_req;
+	// wire [20:0] hus_addr;
+	// wire [15:0] hus_data;
+	// wire hus_strobe, hus_next, hus_req;
 
 	wire [5:0] dcyc;						//debug!!!
 	
@@ -465,11 +465,11 @@ module top(
 	                 .spu_next(spu_next),
 					 .spu_req(spu_req),
 
-	                 .hus_addr(hus_addr),
-	                 .hus_data(hus_data),
-	                 .hus_strobe(hus_strobe),
-	                 .hus_next(hus_next),
-					 .hus_req(1'b0),
+	                 // .hus_addr(hus_addr),
+	                 // .hus_data(hus_data),
+	                 // .hus_strobe(hus_strobe),
+	                 // .hus_next(hus_next),
+					 // .hus_req(1'b0),
 
 	                 //.cpu_waitcyc(cpu_waitcyc),
 	                 //.cpu_stall(cpu_stall),
@@ -571,36 +571,36 @@ sprites sprites( .clk(fclk), .spu_en(vcfg[6]),
 	                 );
 
 //	wire dac_stb;
-	wire hus_en, li_en;
-	wire [15:0] ldac, rdac;
+//	wire hus_en, li_en;
+//	wire [15:0] ldac, rdac;
 	
-	hus	hus(	.clk(fclk),
+	// hus	hus(	.clk(fclk),
 //				.dac_stb(dac_stb),
-				.ldac(ldac), .rdac(rdac), .hus_en(hus_en), .li_en(li_en),
-				.hus_addr(hus_addr), .hus_data(hus_data), .hus_req(hus_req), .hus_strobe(hus_strobe), .hus_next(hus_next),
-				.hf_ra(hf_ra), .hf_rd(hf_rd), .hf_hwa(hf_hwa), .hf_hwe(hf_hwe),
-				.hv_ra(hv_ra), .hv_rd(hv_rd)
-			);
+				// .ldac(ldac), .rdac(rdac), .hus_en(0), .li_en(0),
+				// .hus_addr(hus_addr), .hus_data(hus_data), .hus_req(hus_req), .hus_strobe(hus_strobe), .hus_next(hus_next),
+				// .hf_ra(hf_ra), .hf_rd(hf_rd), .hf_hwa(hf_hwa), .hf_hwe(hf_hwe),
+				// .hv_ra(hv_ra), .hv_rd(hv_rd)
+			// );
 	
 	
-	wire [8:0] hf_ra, hf_wa, hf_hwa;
-	wire [7:0] hf_rd;
-	wire hf_we, hf_hwe;
+	// wire [8:0] hf_ra, hf_wa, hf_hwa;
+	// wire [7:0] hf_rd;
+	// wire hf_we, hf_hwe;
 
-	hfile hfile(	.wraddress(hf_hwe ? hf_hwa : hf_wa),		//if null Reload bit from HUS, write addr = hnum, hreg0
-					.data(hf_hwe ? (hf_rd[7:0] & 8'b10111111) : d),
-					.rdaddress(hf_hwe ? hf_hwa : hf_ra),		//read addr = hnum, hreg0
-					.q(hf_rd),
-					.wrclock(fclk),
-					.wren(hf_hwe || hf_we)
-				);
+	// hfile hfile(	.wraddress(hf_hwe ? hf_hwa : hf_wa),		//if null Reload bit from HUS, write addr = hnum, hreg0
+					// .data(hf_hwe ? (hf_rd[7:0] & 8'b10111111) : d),
+					// .rdaddress(hf_hwe ? hf_hwa : hf_ra),		//read addr = hnum, hreg0
+					// .q(hf_rd),
+					// .wrclock(fclk),
+					// .wren(hf_hwe || hf_we)
+				// );
 
 
-	wire [5:0] hv_ra, hv_wa;
-	wire [7:0] hv_rd;
-	wire hv_we;
+	// wire [5:0] hv_ra, hv_wa;
+	// wire [7:0] hv_rd;
+	// wire hv_we;
 
-	hvol hvol(	.wraddress(hv_wa), .data(d), .rdaddress(hv_ra), .q(hv_rd), .wrclock(fclk), .wren(hv_we) );
+	// hvol hvol(	.wraddress(hv_wa), .data(d), .rdaddress(hv_ra), .q(hv_rd), .wrclock(fclk), .wren(hv_we) );
 
 
 zkbdmus zkbdmus( .fclk(fclk), .rst_n(rst_n),
@@ -613,7 +613,8 @@ zkbdmus zkbdmus( .fclk(fclk), .rst_n(rst_n),
 	               );
 
 				   
-	covox covox(	.clk(ayclk_gen[0]), .hus_en(hus_en), .ldac(ldac), .rdac(rdac),
+	covox covox(	.clk(ayclk_gen[0]),
+//	.hus_en(hus_en), .ldac(ldac), .rdac(rdac),
 					.beep(beep),
 //					.dac_stb(dac_stb),
 					.cvx(cvx)
@@ -633,11 +634,12 @@ zkbdmus zkbdmus( .fclk(fclk), .rst_n(rst_n),
 	              .ide_a(ide_a), .ide_cs0_n(ide_cs0_n), .ide_cs1_n(ide_cs1_n),
 	              .ide_wr_n(ide_wr_n), .ide_rd_n(ide_rd_n),
 
-				.vcfg(vcfg), .hus_en(hus_en), .li_en(li_en),
+				.vcfg(vcfg),
+				// .hus_en(hus_en), .li_en(li_en),
 				.sf_wa(sf_wa), .sf_we(sf_we), 
 				.sp_wa(sp_wa), .sp_we(sp_we), 
-				.hf_wa(hf_wa), .hf_we(hf_we), 
-				.hv_wa(hv_wa), .hv_we(hv_we), 
+				// .hf_wa(hf_wa), .hf_we(hf_we), 
+				// .hv_wa(hv_wa), .hv_we(hv_we), 
 				  
 	              .keys_in(kbd_port_data),
 	              .mus_in(mus_port_data),

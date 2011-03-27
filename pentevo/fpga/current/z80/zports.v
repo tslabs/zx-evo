@@ -51,8 +51,10 @@ module zports(
 	output wire        ay_bdir,
 	output wire        ay_bc1,
 
+//	Covox
 	output reg [7:0] cvx,
 
+//	Pages, Video
 	output wire [ 7:0] p7ffd,
 	output wire [ 7:0] peff7,
 
@@ -71,7 +73,7 @@ module zports(
 
 //	PortXT outputs
 	output reg [7:0] vcfg,
-	output reg hus_en, li_en,
+//	output reg hus_en, li_en,
 
 //SPRAM
 	output reg [7:0] sp_wa,
@@ -596,13 +598,13 @@ module zports(
 			sp_wa <= din[7:0];
 	sfnum:
 			snum <= din[5:0];
-	hfnum:
-			hnum <= din[4:0];
-	hconfig:
-		begin
-			hus_en <= din[7];
-			li_en <= din[6];
-		end
+	// hfnum:
+			// hnum <= din[4:0];
+	// hconfig:
+		// begin
+			// hus_en <= din[7];
+			// li_en <= din[6];
+		// end
 	
 		endcase
 		end
