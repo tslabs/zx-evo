@@ -231,8 +231,6 @@ set_global_assignment -name OPTIMIZE_HOLD_TIMING OFF
 set_global_assignment -name FITTER_EFFORT "STANDARD FIT"
 set_global_assignment -name AUTO_PACKED_REGISTERS "MINIMIZE AREA"
 set_global_assignment -name FLEX10K_OPTIMIZATION_TECHNIQUE AREA
-set_global_assignment -name VERILOG_FILE ../sound/hus_mem.v
-set_global_assignment -name VERILOG_FILE ../sound/hus.v
 set_global_assignment -name VERILOG_FILE ../video/spu_mem.v
 set_global_assignment -name VERILOG_FILE ../sound/covox.v
 set_global_assignment -name VERILOG_FILE ../video/sprites.v
