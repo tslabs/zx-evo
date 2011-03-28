@@ -45,7 +45,7 @@ module sprites(
 	input [7:0] sf_rd,
 
 //spram
-	output reg [7:0] sp_ra,
+	output reg [8:0] sp_ra,
 	input [7:0] sp_rd,
 	
 //dram
@@ -206,6 +206,7 @@ module sprites(
 			cres <= sf_rd[1:0];			//get CRES[1:0]
 			pri <= sf_rd[3:2];			//get PRI[1:0]
 			sp_ra[7:4] <= sf_rd[7:4];	//get PAL[3:0]
+			sp_ra[8] <= 1'b0;				//FIX ME
 			sf_sa <= r_am;
 			ms <= ms_st1;
 		end

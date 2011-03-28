@@ -89,7 +89,7 @@ module arbiter(
 	output reg    hus_next,   
 
 
-
+//CPU
 	input cpu_req,cpu_rnw,
 	input  [20:0] cpu_addr,
 	input   [7:0] cpu_wrdata,

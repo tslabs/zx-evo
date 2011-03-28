@@ -508,7 +508,7 @@ module top(
 	              .video_strobe(video_strobe), .video_next(video_next), .go(go), .bw(bw), .pixel(pixel) );
 
 
-	wire [7:0] sp_ra, sp_wa;
+	wire [8:0] sp_ra, sp_wa;
 	wire [7:0] sp_rd;
 	wire sp_we;
 
@@ -633,12 +633,9 @@ zkbdmus zkbdmus( .fclk(fclk), .rst_n(rst_n),
 	              .ide_a(ide_a), .ide_cs0_n(ide_cs0_n), .ide_cs1_n(ide_cs1_n),
 	              .ide_wr_n(ide_wr_n), .ide_rd_n(ide_rd_n),
 
-				.vcfg(vcfg),
-				// .hus_en(hus_en), .li_en(li_en),
-				.sf_wa(sf_wa), .sf_we(sf_we), 
-				.sp_wa(sp_wa), .sp_we(sp_we), 
-				// .hf_wa(hf_wa), .hf_we(hf_we), 
-				// .hv_wa(hv_wa), .hv_we(hv_we), 
+					.vcfg(vcfg),
+					// .hus_en(hus_en), .li_en(li_en),
+					.fp(fp), .fa(fa), .tp(tp),
 				  
 	              .keys_in(kbd_port_data),
 	              .mus_in(mus_port_data),
@@ -667,6 +664,25 @@ zkbdmus zkbdmus( .fclk(fclk), .rst_n(rst_n),
 	            );
 
 
+	wire [7:0]	fp;
+	wire [1:0]	fa;
+	wire [7:0]	tp;
+				
+zmaps zmaps(
+					.cpu_req(cpu_req),
+					.cpu_rnw(cpu_rnw),
+					.cpu_addr({cpu_addr, cpu_wrbsel}),
+
+					.fp(fp), .fa(fa),
+					
+					.sf_wa(sf_wa), .sf_we(sf_we), 
+					.sp_wa(sp_wa), .sp_we(sp_we), 
+					// .hf_wa(hf_wa), .hf_we(hf_we), 
+					// .hv_wa(hv_wa), .hv_we(hv_we), 
+
+				);
+
+				
 	zint preryv( .fclk(fclk), .zclk(zclk), .int_start(int_start), .iorq_n(iorq_n), .m1_n(m1_n),
 	             .int_n(int_n) );
 
