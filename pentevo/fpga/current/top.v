@@ -512,9 +512,13 @@ module top(
 	wire [7:0] sp_rd;
 	wire sp_we;
 
-spram spram(	.wraddress(sp_wa), .data(d), .rdaddress(sp_ra), .q(sp_rd),
-				.wrclock(fclk),
-				.wren(sp_we) );
+spram spram(	.wraddress(sp_wa), .data(d), .rdaddress(sp_ra), .q(sp_rd), .wrclock(fclk), .wren(sp_we) );
+			
+	wire [6:0] tp_ra, tp_wa;
+	wire [7:0] tp_rd;
+	wire tp_we;
+
+tpram tpram(	.wraddress(tp_wa), .data(d), .rdaddress(tp_ra), .q(tp_rd), .wrclock(fclk), .wren(tp_we) );
 			
 	wire [8:0] sf_ra, sf_wa;
 	wire [7:0] sf_rd;
