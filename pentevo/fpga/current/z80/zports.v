@@ -73,6 +73,13 @@ module zports(
 
 //	PortXT outputs
 	output reg [7:0] vcfg,
+	output reg [8:0] hs0,
+	output reg [8:0] hs1,
+	output reg [8:0] vs0,
+	output reg [8:0] vs1,
+	output reg [2:0] fa,
+	output reg [7:0] fp,
+	output reg [7:0] tp,
 
 //SPRAM
 	output reg [7:0] sp_wa,
