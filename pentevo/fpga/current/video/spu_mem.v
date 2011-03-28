@@ -48,8 +48,8 @@ endmodule
 //palette SRAM for sprites 256x8
 module spram (
 	input	[7:0]  data,
-	input	[7:0]  rdaddress,
-	input	[7:0]  wraddress,
+	input	[8:0]  rdaddress,
+	input	[8:0]  wraddress,
 	input	  wrclock,
 	input	  wren,
 	output	[7:0]  q
@@ -82,7 +82,7 @@ module spram (
 		altdpram_component.rdcontrol_aclr = "OFF",
 		altdpram_component.rdcontrol_reg = "UNREGISTERED",
 		altdpram_component.width = 8,
-		altdpram_component.widthad = 8,
+		altdpram_component.widthad = 9,
 		altdpram_component.wraddress_aclr = "OFF",
 		altdpram_component.wraddress_reg = "INCLOCK",
 		altdpram_component.wrcontrol_aclr = "OFF",

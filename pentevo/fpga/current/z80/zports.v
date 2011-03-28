@@ -77,26 +77,9 @@ module zports(
 	output reg [8:0] hs1,
 	output reg [8:0] vs0,
 	output reg [8:0] vs1,
-	output reg [2:0] fa,
 	output reg [7:0] fp,
+	output reg [1:0] fa,
 	output reg [7:0] tp,
-
-//SPRAM
-	output reg [7:0] sp_wa,
-	output sp_we,
-
-//SFile	
-	output [8:0] sf_wa,
-	output sf_we,
-
-//HFile	
-	// output [8:0] hf_wa,
-	// output hf_we,
-
-//HVol
-	// output [5:0] hv_wa,
-	// output hv_we,
-	//	output reg hus_en, li_en,
 
 
 	// WAIT-ports related
@@ -547,29 +530,24 @@ module zports(
 	parameter sysconfig  = 8'h01;
 	parameter romconfig  = 8'h02;
 	parameter vpage  = 8'h03;
-	parameter page00  = 8'h04;
-	parameter page01  = 8'h05;
-	parameter page10  = 8'h06;
-	parameter page11  = 8'h07;
+	parameter page0  = 8'h04;
+	parameter page1  = 8'h05;
+	parameter page2  = 8'h06;
+	parameter page3  = 8'h07;
 	parameter vconfig  = 8'h08;
-	parameter paladdr  = 8'h09;
-	parameter paldata  = 8'h0a;
-	parameter sfnum  = 8'h0f;
-	parameter sfreg  = 8'h10;		//values #10-#17
-	parameter hconfig  = 8'h1c;
-	parameter hfnum  = 8'h1d;
-	parameter hvol  = 8'h1e;		//values #1e-#1f
-	parameter hfreg  = 8'h20;		//values #20-#2f
+	parameter fpage  = 8'h09;
+	parameter faddr  = 8'h0a;
+	parameter tpage  = 8'h0b;
+	parameter hs0l  = 8'h10;
+	parameter hs0h  = 8'h11;
+	parameter vs0l  = 8'h12;
+	parameter vs0h  = 8'h13;
+	parameter hs1l  = 8'h14;
+	parameter hs1h  = 8'h15;
+	parameter vs1l  = 8'h16;
+	parameter vs1h  = 8'h17;
 
 	assign xt_addr = a[15:8];
-	assign sp_we = (portxt_wr && (xt_addr == paldata));
-	assign sf_we = (portxt_wr && (xt_addr[7:3] == sfreg[7:3]));
-	assign sf_wa = {snum, xt_addr[2:0]};
-	assign hf_we = (portxt_wr && (xt_addr[7:4] == hfreg[7:4]));
-	assign hf_wa = {hnum, xt_addr[3:0]};
-	assign hv_we = (portxt_wr && (xt_addr[7:1] == hvol[7:1]));
-	assign hv_wa = {hnum, xt_addr[0]};
-
 	//#55FF Write to XT Regs and allied ports
 	always @(posedge zclk, negedge rst_n)
 
@@ -601,18 +579,28 @@ module zports(
 			border <= din[5:0];
 	vconfig:
 			vcfg <= din[7:0];
-	paladdr:
-			sp_wa <= din[7:0];
-	sfnum:
-			snum <= din[5:0];
-	// hfnum:
-			// hnum <= din[4:0];
-	// hconfig:
-		// begin
-			// hus_en <= din[7];
-			// li_en <= din[6];
-		// end
-	
+	fpage:
+			fp <= din[7:0];
+	faddr:
+			fa <= din[1:0];
+	tpage:
+			tp <= din[7:0];
+	hs0l:
+			hs0[7:0] <= din[7:0];
+	hs0h:
+			hs0[8] <= din[0];
+	vs0l:
+			vs0[7:0] <= din[7:0];
+	vs0h:
+			vs0[8] <= din[0];
+	hs1l:
+			hs1[7:0] <= din[7:0];
+	hs1h:
+			hs1[8] <= din[0];
+	vs1l:
+			vs1[7:0] <= din[7:0];
+	vs1h:
+			vs1[8] <= din[0];
 		endcase
 		end
 	end
