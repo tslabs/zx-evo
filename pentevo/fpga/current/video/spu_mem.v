@@ -92,12 +92,12 @@ endmodule
 
 //sprite video buffer0
 module sline0 (
-	input	[6:0]  data,
+	input	[7:0]  data,
 	input	[8:0]  rdaddress,
 	input	[8:0]  wraddress,
 	input	  wrclock,
 	input	  wren,
-	output	[6:0]  q
+	output	[7:0]  q
 );
 
 	altdpram	altdpram_component (
@@ -126,7 +126,7 @@ module sline0 (
 		altdpram_component.rdaddress_reg = "UNREGISTERED",
 		altdpram_component.rdcontrol_aclr = "OFF",
 		altdpram_component.rdcontrol_reg = "UNREGISTERED",
-		altdpram_component.width = 7,
+		altdpram_component.width = 8,
 		altdpram_component.widthad = 9,
 		altdpram_component.wraddress_aclr = "OFF",
 		altdpram_component.wraddress_reg = "INCLOCK",
@@ -137,12 +137,12 @@ module sline0 (
 
 //sprite video buffer1
 module sline1 (
-	input	[6:0]  data,
+	input	[7:0]  data,
 	input	[8:0]  rdaddress,
 	input	[8:0]  wraddress,
 	input	  wrclock,
 	input	  wren,
-	output	[6:0]  q
+	output	[7:0]  q
 );
 
 	altdpram	altdpram_component (
@@ -171,7 +171,7 @@ module sline1 (
 		altdpram_component.rdaddress_reg = "UNREGISTERED",
 		altdpram_component.rdcontrol_aclr = "OFF",
 		altdpram_component.rdcontrol_reg = "UNREGISTERED",
-		altdpram_component.width = 7,
+		altdpram_component.width = 8,
 		altdpram_component.widthad = 9,
 		altdpram_component.wraddress_aclr = "OFF",
 		altdpram_component.wraddress_reg = "INCLOCK",
