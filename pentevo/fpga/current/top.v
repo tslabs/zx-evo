@@ -527,7 +527,7 @@ sfile sfile(	.wraddress(sf_wa), .data(d), .rdaddress(sf_ra), .q(sf_rd), .wrclock
 	wire spx_en, spu_req;
 
 	
-sprites sprites( .clk(fclk), .spu_en(vcfg[6]),
+sprites sprites( .clk(fclk), .spu_en(vcfg[3]),
 			.line_start(line_start),
 			.pre_vline(pre_vline),
 			.post_cbeg(post_cbeg), .cbeg(cbeg),
@@ -540,11 +540,10 @@ sprites sprites( .clk(fclk), .spu_en(vcfg[6]),
 			);
 
 
-			
 	videoout vidia( .clk(fclk), .pixel(pixel),
 //			.border(beep ? 6'd63 : 6'd0),
 			.border(border),
-			.spixel(spixel), .spx_en(spx_en), .zxg_en(vcfg[5]), .spu_en(vcfg[6]),
+			.spixel(spixel), .spx_en(spx_en), .zxg_en(vcfg[2:0] != 3'b001), .spu_en(vcfg[3]),
 	        .hblank(hblank), .vblank(vblank), .hpix(hpix), .vpix(vpix), .hsync(hsync), .vsync(vsync),
 	        .vred(vred), .vgrn(vgrn), .vga_hsync(vga_hsync), .vblu(vblu),
 	        .vhsync(vhsync), .vvsync(vvsync), .vcsync(vcsync), .hsync_start(hsync_start),
