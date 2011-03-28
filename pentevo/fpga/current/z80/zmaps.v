@@ -15,6 +15,7 @@ module zmaps(
 	
 	input [7:0] fp,
 	input [1:0] fa,
+	input fwd,
 	
 //SPRAM
 	output [8:0] sp_wa,
@@ -40,7 +41,7 @@ module zmaps(
 	parameter hscrl1 = 3'b011;
 	
 	assign fhit = (cpu_addr[21:14] == fp) && (cpu_addr[13:12] == fa);
-	assign cpu_w = (cpu_req && ~cpu_rnw);
+	assign cpu_w = (cpu_req && ~cpu_rnw && ~fwd);
 
 	assign sf_we = (cpu_w && (cpu_addr[11:9] == sfile) && fhit);
 	assign sf_wa = cpu_addr[8:0];

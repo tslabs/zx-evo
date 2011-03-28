@@ -79,6 +79,7 @@ module zports(
 	output reg [8:0] vs1,
 	output reg [7:0] fp,
 	output reg [1:0] fa,
+	output reg fwd,
 	output reg [7:0] tp,
 	output reg [5:0] tgp0,
 	output reg [5:0] tgp1,
@@ -559,6 +560,7 @@ module zports(
 		begin
 			//here set up RESET XT defaults
 			vcfg <= 8'b0;
+			fwd <= 1'b1;
 		end
 	else
 
@@ -586,7 +588,10 @@ module zports(
 	fpage:
 			fp <= din[7:0];
 	faddr:
+		begin
 			fa <= din[1:0];
+			fwd <= din[7];
+		end
 	tpage:
 			tp <= din[7:0];
 	tgpage0:
