@@ -80,6 +80,8 @@ module zports(
 	output reg [7:0] fp,
 	output reg [1:0] fa,
 	output reg [7:0] tp,
+	output reg [5:0] tgp0,
+	output reg [5:0] tgp1,
 
 
 	// WAIT-ports related
@@ -538,6 +540,8 @@ module zports(
 	parameter fpage  = 8'h09;
 	parameter faddr  = 8'h0a;
 	parameter tpage  = 8'h0b;
+	parameter tgpage0  = 8'h0c;
+	parameter tgpage1  = 8'h0d;
 	parameter hs0l  = 8'h10;
 	parameter hs0h  = 8'h11;
 	parameter vs0l  = 8'h12;
@@ -585,6 +589,10 @@ module zports(
 			fa <= din[1:0];
 	tpage:
 			tp <= din[7:0];
+	tgpage0:
+			tgp0 <= din[5:0];
+	tgpage1:
+			tgp1 <= din[5:0];
 	hs0l:
 			hs0[7:0] <= din[7:0];
 	hs0h:
