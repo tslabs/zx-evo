@@ -407,7 +407,7 @@ module sprites(
 	wire sl_wss, pixt, pixs, tcol;
 	wire [6:0] pixc;
 	reg [8:0] sl_wa;
-	wire [6:0] sl_rd0, sl_rd1;
+	wire [7:0] sl_rd0, sl_rd1;
 	wire [6:0] sl_wds;
 
 	assign pixs = (ms == ms_tc1);
@@ -418,7 +418,7 @@ module sprites(
 	assign sl_wds = tcol ? pixc : {!sp_rd[7], sp_rd[5:0]};
 	
 	sline0 sline0(	.wraddress(l_sel ? sl_wa : sl_ra),
-					.data(l_sel ? sl_wds : 7'b0),
+					.data(l_sel ? sl_wds : 8'b0),
 					.wren(l_sel ? sl_wss : sl_wsn),
 					.rdaddress(sl_ra),
 					.q(sl_rd0),
@@ -426,7 +426,7 @@ module sprites(
 				);
 
 	sline1 sline1(	.wraddress(!l_sel ? sl_wa : sl_ra),
-					.data(!l_sel ? sl_wds : 7'b0),
+					.data(!l_sel ? sl_wds : 8'b0),
 					.wren(!l_sel ? sl_wss : sl_wsn),
 					.rdaddress(sl_ra),
 					.q(sl_rd1),
