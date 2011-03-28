@@ -636,6 +636,7 @@ zkbdmus zkbdmus( .fclk(fclk), .rst_n(rst_n),
 					.vcfg(vcfg),
 					// .hus_en(hus_en), .li_en(li_en),
 					.fp(fp), .fa(fa), .tp(tp),
+					.fwd(fwd),
 				  
 	              .keys_in(kbd_port_data),
 	              .mus_in(mus_port_data),
@@ -667,6 +668,7 @@ zkbdmus zkbdmus( .fclk(fclk), .rst_n(rst_n),
 	wire [7:0]	fp;
 	wire [1:0]	fa;
 	wire [7:0]	tp;
+	wire fwd;
 				
 zmaps zmaps(
 					.cpu_req(cpu_req),
@@ -674,6 +676,7 @@ zmaps zmaps(
 					.cpu_addr({cpu_addr, cpu_wrbsel}),
 
 					.fp(fp), .fa(fa),
+					.fwd(fwd),
 					
 					.sf_wa(sf_wa), .sf_we(sf_we), 
 					.sp_wa(sp_wa), .sp_we(sp_we), 
