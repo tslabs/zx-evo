@@ -165,6 +165,7 @@ module sprites(
 	wire [8:0] sl_next;
 	wire [8:0] xc;
 	wire [8:0] xsf;
+	
 	assign sf_ra = {num, sf_sa};
 	assign s_act = !(sf_rd[1:0] == 2'b0);
 	assign s_next = num + 6'd1;
@@ -332,9 +333,6 @@ module sprites(
 
 	ms_4c1:	//write pix1@4c
 	begin
-	if (!s_eox)
-	begin
-	end
 		sl_wa <= sl_next;
 		sp_ra[1:0] <= {sdbuf[(13-pxn*2)], sdbuf[(12-pxn*2)]};		//set paladdr for pix1
 		pxn <= pxn + 3'b1;
@@ -343,9 +341,6 @@ module sprites(
 
 	ms_16c1: //write pix1@16c
 	begin
-	if (!s_eox)
-	begin
-	end
 		sl_wa <= sl_next;
 		sp_ra[3:0] <= {sdbuf[11-pxn*4], sdbuf[10-pxn*4], sdbuf[9-pxn*4], sdbuf[8-pxn*4]};		//set paladdr for pix1
 		pxn <= pxn + 3'b1;
