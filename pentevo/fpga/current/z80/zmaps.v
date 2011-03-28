@@ -35,10 +35,11 @@ module zmaps(
 	//	output reg hus_en, li_en,
 );
 
-	parameter sfile = 3'b000;
-	parameter spram = 3'b001;
-	parameter hscrl0 = 3'b010;
-	parameter hscrl1 = 3'b011;
+	parameter sfile = 3'd0;
+	parameter spram = 3'd1;
+	parameter tpram = 3'd2;	
+	parameter hscrl0 = 3'd4;
+	parameter hscrl1 = 3'd6;
 	
 	assign fhit = (cpu_addr[21:14] == fp) && (cpu_addr[13:12] == fa);
 	assign cpu_w = (cpu_req && ~cpu_rnw && ~fwd);
