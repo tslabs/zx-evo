@@ -531,7 +531,7 @@ sfile sfile(	.wraddress(sf_wa), .data(d), .rdaddress(sf_ra), .q(sf_rd), .wrclock
 	wire spx_en, spu_req;
 
 	
-sprites sprites( .clk(fclk), .spu_en(vcfg[3]),
+sprites sprites( .clk(fclk), .spu_en(vcfg[6]),
 			.line_start(line_start),
 			.pre_vline(pre_vline),
 			.post_cbeg(post_cbeg), .cbeg(cbeg),
@@ -547,7 +547,7 @@ sprites sprites( .clk(fclk), .spu_en(vcfg[3]),
 	videoout vidia( .clk(fclk), .pixel(pixel),
 //			.border(beep ? 6'd63 : 6'd0),
 			.border(border),
-			.spixel(spixel), .spx_en(spx_en), .zxg_en(vcfg[2:0] != 3'b001), .spu_en(vcfg[3]),
+			.spixel(spixel), .spx_en(spx_en), .zxg_en(vcfg[2:0] != 3'b111), .spu_en(vcfg[3]),
 	        .hblank(hblank), .vblank(vblank), .hpix(hpix), .vpix(vpix), .hsync(hsync), .vsync(vsync),
 	        .vred(vred), .vgrn(vgrn), .vga_hsync(vga_hsync), .vblu(vblu),
 	        .vhsync(vhsync), .vvsync(vvsync), .vcsync(vcsync), .hsync_start(hsync_start),
@@ -641,6 +641,8 @@ zkbdmus zkbdmus( .fclk(fclk), .rst_n(rst_n),
 					// .hus_en(hus_en), .li_en(li_en),
 					.fp(fp), .fa(fa), .tp(tp),
 					.fwd(fwd),
+					.hs0(hs0), .hs1(hs1),
+					.vs0(vs0), .vs1(vs1),
 				  
 	              .keys_in(kbd_port_data),
 	              .mus_in(mus_port_data),
@@ -673,6 +675,7 @@ zkbdmus zkbdmus( .fclk(fclk), .rst_n(rst_n),
 	wire [1:0]	fa;
 	wire [7:0]	tp;
 	wire fwd;
+	wire [8:0] hs0, hs1, vs0, vs1;
 				
 zmaps zmaps(
 					.cpu_req(cpu_req),

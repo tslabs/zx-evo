@@ -1,4 +1,5 @@
-//TPRAM
+//VSTP
+//Y scroll table 
 //palette RAM for tiles 128x8
 module tpram (
 	input	[7:0]  data,
@@ -44,9 +45,9 @@ module tpram (
 endmodule
 
 
-//TILES
-//tiles array buffer 256x16 (2 buffers x 2 tile planes x 64 tiles)
-module tiles (
+//TBUF
+//tiles array buffer 384x16 (3 buffers x 2 tile planes x 64 tiles)
+module tbuf (
 	input	[15:0]  data,
 	input	[8:0]  rdaddress,
 	input	[8:0]  wraddress,
