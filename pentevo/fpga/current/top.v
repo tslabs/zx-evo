@@ -157,7 +157,16 @@ module top(
 	wire cfg_vga_on;
 	wire set_nmi;
 
+	//XT
 	wire [7:0] vcfg;
+	wire [7:0]	fp;
+	wire [1:0]	fa;
+	wire [7:0]	tp;
+	wire fwd;
+	wire [7:0] tgp0,
+	wire [7:0] tgp1,
+	wire [7:0] tmctrl,
+	wire [7:0] hsint,
 	
 	wire tape_in;
 
@@ -512,26 +521,28 @@ module top(
 	wire [7:0] sp_rd;
 	wire sp_we;
 
-spram spram(	.wraddress(sp_wa), .data(d), .rdaddress(sp_ra), .q(sp_rd), .wrclock(fclk), .wren(sp_we) );
-			
-	wire [6:0] tp_ra, tp_wa;
-	wire [7:0] tp_rd;
-	wire tp_we;
+	spram spram(	.wraddress(sp_wa), .data(d), .rdaddress(sp_ra), .q(sp_rd), .wrclock(fclk), .wren(sp_we) );
 
-tpram tpram(	.wraddress(tp_wa), .data(d), .rdaddress(tp_ra), .q(tp_rd), .wrclock(fclk), .wren(tp_we) );
 			
+	wire [8:0] yt_ra, yt_wa;
+	wire [7:0] yt_rd;
+	wire yt_we;
+	
+	ystp ystp(	.wraddress(yt_wa), .data(d), .rdaddress(yt_ra), .q(yt_rd), .wrclock(fclk), .wren(yt_we) );
+
+
 	wire [8:0] sf_ra, sf_wa;
 	wire [7:0] sf_rd;
 	wire sf_we;
-
 	
-sfile sfile(	.wraddress(sf_wa), .data(d), .rdaddress(sf_ra), .q(sf_rd), .wrclock(fclk), .wren(sf_we) );
+	sfile sfile(	.wraddress(sf_wa), .data(d), .rdaddress(sf_ra), .q(sf_rd), .wrclock(fclk), .wren(sf_we) );
+
 
 	wire [5:0] spixel, sp_mc;
 	wire spx_en, spu_req;
-
 	
-sprites sprites( .clk(fclk), .spu_en(vcfg[6]),
+	sprites sprites(
+			.clk(fclk), .spu_en(vcfg[6]),
 			.line_start(line_start),
 			.pre_vline(pre_vline),
 			.post_cbeg(post_cbeg), .cbeg(cbeg),
@@ -543,7 +554,20 @@ sprites sprites( .clk(fclk), .spu_en(vcfg[6]),
 			.spu_req(spu_req), .spu_strobe(spu_strobe), .spu_next(spu_next)
 			);
 
+	wire [20:0] t_addr;
+	wire [15:0] t_data;
+	
+	tiles tiles(
+			.fclk(fclk),
+			.t_addr(t_addr), .t_data(t_data),
+			.yt_ra(yt_ra), .yt_rd(yt_rd),
+			.vcfg(vcfg),
+			.tp(tp),
+			.tgp0(tgp0), .tgp1(tgp1),
+			.tmctrl(tmctrl), .hsint(hsint)
+			);
 
+			
 	videoout vidia( .clk(fclk), .pixel(pixel),
 //			.border(beep ? 6'd63 : 6'd0),
 			.border(border),
@@ -638,11 +662,9 @@ zkbdmus zkbdmus( .fclk(fclk), .rst_n(rst_n),
 	              .ide_wr_n(ide_wr_n), .ide_rd_n(ide_rd_n),
 
 					.vcfg(vcfg),
-					// .hus_en(hus_en), .li_en(li_en),
-					.fp(fp), .fa(fa), .tp(tp),
-					.fwd(fwd),
-					.hs0(hs0), .hs1(hs1),
-					.vs0(vs0), .vs1(vs1),
+					.fp(fp), .fa(fa), .tp(tp), .fwd(fwd),
+					.tgp0(tgp0), .tgp1(tgp1),
+					.tmctrl(tmctrl), .hsint(hsint),
 				  
 	              .keys_in(kbd_port_data),
 	              .mus_in(mus_port_data),
@@ -671,12 +693,6 @@ zkbdmus zkbdmus( .fclk(fclk), .rst_n(rst_n),
 	            );
 
 
-	wire [7:0]	fp;
-	wire [1:0]	fa;
-	wire [7:0]	tp;
-	wire fwd;
-	wire [8:0] hs0, hs1, vs0, vs1;
-				
 zmaps zmaps(
 					.cpu_req(cpu_req),
 					.cpu_rnw(cpu_rnw),
@@ -685,10 +701,9 @@ zmaps zmaps(
 					.fp(fp), .fa(fa),
 					.fwd(fwd),
 					
+					.yt_wa(yt_wa), .yt_we(yt_we), 
 					.sf_wa(sf_wa), .sf_we(sf_we), 
 					.sp_wa(sp_wa), .sp_we(sp_we), 
-					// .hf_wa(hf_wa), .hf_we(hf_we), 
-					// .hv_wa(hv_wa), .hv_we(hv_we), 
 
 				);
 
