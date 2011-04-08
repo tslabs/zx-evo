@@ -17,38 +17,38 @@ module zmaps(
 	input [1:0] fa,
 	input fwd,
 	
+//VSTP
+	output [8:0] yt_wa,
+	output yt_we,
+	
 //SPRAM
 	output [8:0] sp_wa,
 	output sp_we,
 
-//SFile	
+//SFILE
 	output [8:0] sf_wa,
 	output sf_we
 
-//HFile	
-	// output [8:0] hf_wa,
-	// output hf_we,
 
-//HVol
-	// output [5:0] hv_wa,
-	// output hv_we,
-	//	output reg hus_en, li_en,
+	
 );
 
-	parameter sfile = 3'd0;
-	parameter spram = 3'd1;
-	parameter tpram = 3'd2;	
-	parameter hscrl0 = 3'd4;
-	parameter hscrl1 = 3'd6;
+	parameter hscrl0 = 3'b00x;		//not
+	parameter hscrl1 = 3'b01x;		//used
+	parameter vstp = 3'b100;
+	parameter spram = 3'b101;
+	parameter sfile = 3'b110;	
 	
-	assign fhit = (cpu_addr[21:14] == fp) && (cpu_addr[13:12] == fa);
+	assign fmhit = (cpu_addr[21:14] == fp) && (cpu_addr[13:12] == fa);
 	assign cpu_w = (cpu_req && ~cpu_rnw && ~fwd);
 
-	assign sf_we = (cpu_w && (cpu_addr[11:9] == sfile) && fhit);
-	assign sf_wa = cpu_addr[8:0];
+	assign yt_we = (cpu_w && (cpu_addr[11:9] == vstp) && fmhit);
+	assign sp_we = (cpu_w && (cpu_addr[11:9] == spram) && fmhit);
+	assign sf_we = (cpu_w && (cpu_addr[11:9] == sfile) && fmhit);
 
-	assign sp_we = (cpu_w && (cpu_addr[11:9] == spram) && fhit);
+	assign yt_wa = cpu_addr[8:0];
 	assign sp_wa = cpu_addr[8:0];
+	assign sf_wa = cpu_addr[8:0];
 
 
 endmodule

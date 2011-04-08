@@ -152,7 +152,7 @@ module sprites(
 	localparam r_am = 3'd6;
 	localparam r_ah = 3'd7;
 
-	wire s_vis, s_last, s_act, s_eox;
+//	wire s_vis, s_last, s_act, s_eox;
 	wire [5:0] s_next;
 	wire [20:0] adr_next;
 	wire [20:0] adr_ofs;

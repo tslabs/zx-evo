@@ -1,10 +1,10 @@
-//VSTP
-//Y scroll table 
-//palette RAM for tiles 128x8
-module tpram (
+//YSTP 512x8
+//Y scroll table 256x8
+//palette RAM for tiles 256x8
+module ystp (
 	input	[7:0]  data,
-	input	[6:0]  rdaddress,
-	input	[6:0]  wraddress,
+	input	[8:0]  rdaddress,
+	input	[8:0]  wraddress,
 	input	  wrclock,
 	input	  wren,
 	output	[7:0]  q
@@ -37,7 +37,7 @@ module tpram (
 		altdpram_component.rdcontrol_aclr = "OFF",
 		altdpram_component.rdcontrol_reg = "UNREGISTERED",
 		altdpram_component.width = 8,
-		altdpram_component.widthad = 7,
+		altdpram_component.widthad = 9,
 		altdpram_component.wraddress_aclr = "OFF",
 		altdpram_component.wraddress_reg = "INCLOCK",
 		altdpram_component.wrcontrol_aclr = "OFF",

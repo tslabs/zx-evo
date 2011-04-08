@@ -72,17 +72,15 @@ module zports(
 	input  wire [ 7:0] sd_dataout,
 
 //	PortXT outputs
-	output reg [7:0] vcfg,
-	output reg [8:0] hs0,
-	output reg [8:0] hs1,
-	output reg [8:0] vs0,
-	output reg [8:0] vs1,
-	output reg [7:0] fp,
-	output reg [1:0] fa,
+	output reg [7:0] vcfg,		//#08
+	output reg [1:0] fa,		//#09
 	output reg fwd,
-	output reg [7:0] tp,
-	output reg [5:0] tgp0,
-	output reg [5:0] tgp1,
+	output reg [7:0] fp,		//#0A
+	output reg [7:0] tp,		//#0B
+	output reg [7:0] tgp0,		//#0C
+	output reg [7:0] tgp1,		//#0D
+	output reg [7:0] tmctrl,	//#0E
+	output reg [7:0] hsint,		//#0F
 
 
 	// WAIT-ports related
@@ -538,19 +536,13 @@ module zports(
 	parameter page2  = 8'h06;
 	parameter page3  = 8'h07;
 	parameter vconfig  = 8'h08;
-	parameter fpage  = 8'h09;
-	parameter faddr  = 8'h0a;
+	parameter faddr  = 8'h09;
+	parameter fpage  = 8'h0a;
 	parameter tpage  = 8'h0b;
 	parameter tgpage0  = 8'h0c;
 	parameter tgpage1  = 8'h0d;
-	parameter hs0l  = 8'h10;
-	parameter hs0h  = 8'h11;
-	parameter vs0l  = 8'h12;
-	parameter vs0h  = 8'h13;
-	parameter hs1l  = 8'h14;
-	parameter hs1h  = 8'h15;
-	parameter vs1l  = 8'h16;
-	parameter vs1h  = 8'h17;
+	parameter tmctrl  = 8'h0e;
+	parameter hsint  = 8'h0f;
 
 	assign xt_addr = a[15:8];
 	//#55FF Write to XT Regs and allied ports
@@ -582,38 +574,26 @@ module zports(
 		if	(portxt_wr)
 		case (xt_addr)								//XT Regs are written here !!!
 	xborder:
-			border <= din[5:0];
+			border <= din[5:0];		//#00
 	vconfig:
-			vcfg <= din[7:0];
-	fpage:
-			fp <= din[7:0];
+			vcfg <= din[7:0];		//#08
 	faddr:
 		begin
-			fa <= din[1:0];
+			fa <= din[1:0];			//#09
 			fwd <= din[7];
 		end
+	fpage:
+			fp <= din[7:0];			//#0A
 	tpage:
-			tp <= din[7:0];
+			tp <= din[7:0];			//#0B
 	tgpage0:
-			tgp0 <= din[5:0];
+			tgp0 <= din[7:0];		//#0C
 	tgpage1:
-			tgp1 <= din[5:0];
-	hs0l:
-			hs0[7:0] <= din[7:0];
-	hs0h:
-			hs0[8] <= din[0];
-	vs0l:
-			vs0[7:0] <= din[7:0];
-	vs0h:
-			vs0[8] <= din[0];
-	hs1l:
-			hs1[7:0] <= din[7:0];
-	hs1h:
-			hs1[8] <= din[0];
-	vs1l:
-			vs1[7:0] <= din[7:0];
-	vs1h:
-			vs1[8] <= din[0];
+			tgp1 <= din[7:0];		//#0D
+	tmctrl:
+			tmctrl[7:0] <= din[7:0];	//#0E
+	hsint:
+			hsint[7:0] <= din[7:0];	//#0F
 		endcase
 		end
 	end
