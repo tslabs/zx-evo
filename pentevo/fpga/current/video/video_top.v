@@ -5,7 +5,7 @@
 // top module for video output.
 //
 //
-// note: the only bandwidths currently in use are 1/8 and 1/4.
+// refactored by TS-Labs
 
 module video_top(
 
@@ -26,17 +26,17 @@ module video_top(
 
 
 	// config inputs
-	input  wire [ 1:0] pent_vmode, // 2'b00 - standard ZX
-	                               // 2'b01 - hardware multicolor
-	                               // 2'b10 - pentagon 16 colors
-	                               // 2'b11 - not defined yet
-
-	input  wire [ 2:0] atm_vmode,  // 3'b011 - zx modes (pent_vmode is active)
-	                               // 3'b010 - 640x200 hardware multicolor
-	                               // 3'b000 - 320x200 16 colors
-	                               // 3'b110 - 80x25 text mode
-	                               // 3'b??? (others) - not defined yet
-
+	input  wire [ 7:0] vcfg,		// bits 2-0 - vmode:
+									//				3'b000 - zx
+									//				3'b001 - tiles hi-res
+									//				3'b010 - tiles0
+									//				3'b011 - tiles0&1
+									//				3'b111 - no gfx/border
+									// bits 4-3 - raster
+									//				2'b0x - 256x192
+									//				2'b10 - 320x240
+									//				2'b11 - 360x288
+									// other bits are described somewhere else
 
 
 	input  wire        scr_page,   // screen page (bit 3 of 7FFD)
@@ -60,24 +60,16 @@ module video_top(
 	output wire        video_go,
 
 
-	// atm palette write strobe adn data
-	input  wire        atm_palwr,
-	input  wire [ 5:0] atm_paldata,
-
-
 	output wire        int_start
 );
 
 	// these decoded in video_modedecode.v
-	wire mode_atm_n_pent;
 	wire mode_zx;
-	wire mode_p_16c;
-	wire mode_p_hmclr;
-	wire mode_a_hmclr;
-	wire mode_a_16c;
-	wire mode_a_text;
+	wire mode_tm0_en;
+	wire mode_tm1_en;
+	wire mode_brd;
 	wire mode_pixf_14;
-
+	wire [1:0] rres;
 
 
 	// synchronization
@@ -124,25 +116,18 @@ module video_top(
 	// decode video modes
 	video_modedecode video_modedecode(
 
-		.clk(clk),
+		.vcfg			(vcfg),
 
-		.pent_vmode(pent_vmode),
-		.atm_vmode (atm_vmode),
+		.mode_zx		(mode_zx),
+		.mode_tm0_en	(mode_tm0_en),
+		.mode_tm1_en	(mode_tm1_en),
+		.mode_brd		(mode_brd),
 
-		.mode_atm_n_pent(mode_atm_n_pent),
+		.rres			(rres),
 
-		.mode_zx     (mode_zx),
+		.mode_pixf_14	(mode_pixf_14),
 
-		.mode_p_16c  (mode_p_16c),
-		.mode_p_hmclr(mode_p_hmclr),
-
-		.mode_a_hmclr(mode_a_hmclr),
-		.mode_a_16c  (mode_a_16c),
-		.mode_a_text (mode_a_text),
-
-		.mode_pixf_14(mode_pixf_14),
-
-		.mode_bw(video_bw)
+		.mode_bw		(video_bw)
 	);
 
 
@@ -204,26 +189,22 @@ module video_top(
 	// address generation
 	video_addrgen video_addrgen(
 
-		.clk(clk),
+		.clk			(clk),
 
-		.video_addr(video_addr),
-		.video_next(video_next),
+		.video_addr		(video_addr),
+		.video_next		(video_next),
 
-		.line_start(hsync_start),
-		.int_start (int_start ),
-		.vpix      (vpix      ),
+		.line_start		(hsync_start),
+		.int_start		(int_start),
+		.vpix			(vpix),
 
-		.scr_page(scr_page),
+		.scr_page		(scr_page),
 
-		.typos(typos),
+		.typos			(typos),
 
-		.mode_atm_n_pent(mode_atm_n_pent),
-		.mode_zx        (mode_zx        ),
-		.mode_p_16c     (mode_p_16c     ),
-		.mode_p_hmclr   (mode_p_hmclr   ),
-		.mode_a_hmclr   (mode_a_hmclr   ),
-		.mode_a_16c     (mode_a_16c     ),
-		.mode_a_text    (mode_a_text    )
+		.mode_zx		(mode_zx),
+		.mode_tm0_en	(mode_tm0_en),
+		.mode_tm1_en	(mode_tm1_en),
 	);
 
 

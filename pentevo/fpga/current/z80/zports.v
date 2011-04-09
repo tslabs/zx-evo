@@ -80,7 +80,7 @@ module zports(
 	output reg [7:0] tgp0,		//#0C
 	output reg [7:0] tgp1,		//#0D
 	output reg [7:0] tmctrl,	//#0E
-	output reg [7:0] hsint,		//#0F
+	output reg [7:0] ysint,		//#0F
 
 
 	// WAIT-ports related
@@ -541,7 +541,7 @@ module zports(
 	parameter tpage  = 8'h0b;
 	parameter tgpage0  = 8'h0c;
 	parameter tgpage1  = 8'h0d;
-	parameter tmctrl  = 8'h0e;
+	parameter tmctr  = 8'h0e;
 	parameter hsint  = 8'h0f;
 
 	assign xt_addr = a[15:8];
@@ -590,10 +590,10 @@ module zports(
 			tgp0 <= din[7:0];		//#0C
 	tgpage1:
 			tgp1 <= din[7:0];		//#0D
-	tmctrl:
+	tmctr:
 			tmctrl[7:0] <= din[7:0];	//#0E
 	hsint:
-			hsint[7:0] <= din[7:0];	//#0F
+			ysint[7:0] <= din[7:0];	//#0F
 		endcase
 		end
 	end
