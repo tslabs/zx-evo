@@ -18,14 +18,14 @@ module video_modedecode(
 	
 	output wire         mode_pixf_14, // 14MHz pixelclock on (default is 7MHz).
 
-	output wire  [1:0]	rres;		//raster resolution 256/320/360
+	output wire  [1:0]	rres,		//raster resolution 256/320/360
 
-	output wire  [ 1:0] mode_bw 	// required bandwidth: 2'b00 - 1/8, 2'b01 - 1/4,
+	output wire  [1:0] 	mode_bw 	// required bandwidth: 2'b00 - 1/8, 2'b01 - 1/4,
 									//                     2'b10 - 1/2, 2'b11 - 1
 );
 
-	wire [2:0] vmode = vcfg[2:0];	//just alias
-	wire [1:0] rres = vcfg[4:3];	//raster mode isn't decoded, just clipped from vconfig
+	wire [2:0] vmode = vcfg[2:0];
+	assign rres = vcfg[4:3];		//raster mode isn't decoded, just clipped from vconfig
 
 
 //video mode decode
@@ -44,6 +44,7 @@ module video_modedecode(
 	
 //bandwidth decode
 	
+	always @ *
 	begin
 		if (tm1 | tmhr)
 			assign mode_bw = 2'b10; 	// 1/2
@@ -56,6 +57,7 @@ module video_modedecode(
 			
 //pixel frequency decode
 
+	always @ *
 	begin
 		if (tmhr)
 			assign mode_pixf_14 = 1'b1;

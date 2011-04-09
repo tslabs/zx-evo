@@ -3,6 +3,9 @@
 // Pentevo project (c) NedoPC 2011
 //
 // address generation module for video data fetching
+//
+// refactored by TS-Labs
+
 
 module video_addrgen(
 
@@ -12,22 +15,15 @@ module video_addrgen(
 	output reg  [20:0] video_addr, // DRAM arbiter signals
 	input  wire        video_next, //
 
-
 	input  wire        line_start, // some video sync signals
 	input  wire        int_start,  //
 	input  wire        vpix,       //
 
 	input  wire        scr_page, // which screen to use
 
-
-	input  wire        mode_atm_n_pent, // decoded modes
-	input  wire        mode_zx,         //
-	input  wire        mode_p_16c,      //
-	input  wire        mode_p_hmclr,    //
-	                                    //
-	input  wire        mode_a_hmclr,    //
-	input  wire        mode_a_16c,      //
-	input  wire        mode_a_text,     //
+	input  wire        mode_zx,			// decoded modes
+	input  wire        mode_tm0_en,     //
+	input  wire        mode_tm1_en,     //
 
 	output wire [ 2:0] typos // Y position in text mode symbols
 );

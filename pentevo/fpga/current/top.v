@@ -163,10 +163,10 @@ module top(
 	wire [1:0]	fa;
 	wire [7:0]	tp;
 	wire fwd;
-	wire [7:0] tgp0,
-	wire [7:0] tgp1,
-	wire [7:0] tmctrl,
-	wire [7:0] hsint,
+	wire [7:0] tgp0;
+	wire [7:0] tgp1;
+	wire [7:0] tmctrl;
+	wire [7:0] hsint;
 	
 	wire tape_in;
 

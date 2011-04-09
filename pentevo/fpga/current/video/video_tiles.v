@@ -26,7 +26,7 @@ module tiles(
 	
 //YSTP
 	output [8:0] yt_ra,
-	input [7:0] yt_rd,
+	input [7:0] yt_rd
 
 );
 
@@ -61,7 +61,6 @@ module tiles(
 	assign tm_en = (vcfg[2:0] == 3'b001) || (vcfg[2:0] == 3'b01x);
 	assign tm1_en = (vcfg[2:0] == 3'b011);
 	assign tmhr = (vcfg[2:0] == 3'b001);
-	assign 
 	
 //addresses
 	wire [20:0] tp_addr;
