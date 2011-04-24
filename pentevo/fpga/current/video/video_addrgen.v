@@ -5,6 +5,16 @@
 // address generation module for video data fetching
 //
 // refactored by TS-Labs
+//
+//
+// Which addresses for GFX could be?
+// zx:
+//	- gfx
+//	- attr
+// tm:
+//	- gfx
+//	- ttab
+//	- yscr
 
 
 module video_addrgen(
@@ -23,15 +33,9 @@ module video_addrgen(
 
 	input  wire        mode_zx,			// decoded modes
 	input  wire        mode_tm0_en,     //
-	input  wire        mode_tm1_en,     //
+	input  wire        mode_tm1_en     //
 
-	output wire [ 2:0] typos // Y position in text mode symbols
 );
-
-	wire mode_ag;
-
-	assign mode_ag = mode_a_16c | mode_a_hmclr;
-
 
 
 	wire line_init, frame_init;
@@ -42,6 +46,8 @@ module video_addrgen(
 	reg frame_init_r;
 	reg line_init_r;
 
+	wire mode_tm = (mode_tm0_en || mode_tm1_en);
+	
 	always @(posedge clk)
 		line_start_r <= line_start;
 
@@ -49,9 +55,6 @@ module video_addrgen(
 	assign frame_init = int_start;
 
 	reg [13:0] gctr;
-
-	reg [7:0] tyctr; // text Y counter
-	reg [6:0] txctr; // text X counter
 
 
 	always @(posedge clk)
@@ -62,10 +65,15 @@ module video_addrgen(
 
 
 	assign gnext = video_next | frame_init_r;
-	assign tnext = video_next | line_init_r;
-	assign ldaddr = mode_a_text ? tnext : gnext;
+	assign ldaddr = gnext;
+
 
 	// gfx counter
+	// zx mode:
+	// [0] - attr or pix
+	// [4:1] - horiz pos 0..15 (words)
+	// [12:5] - vert pos
+
 	always @(posedge clk)
 	if( frame_init )
 		gctr <= 0;
@@ -73,70 +81,52 @@ module video_addrgen(
 		gctr <= gctr + 1;
 
 
-	// text counters
-	always @(posedge clk)
-	if( frame_init )
-		tyctr <= 8'b0011_0111;
-	else if( line_init )
-		tyctr <= tyctr + 1;
+	// tile counters
+	//
+	// we start reading tile tabs 16 lines before pix area
+	//
+	// we read 64(128) tiles for each tiles row (8 lines by 8(16) tiles)
+	// thus we need 8 or 16 DRAM cycles per line at the beginning of HBLANK
+	// at the b/w of 1/2 it takes us 32 7MHz clocks (pix)
+	// also, we need 1(2) cycle(s) to read YSCRL(s)
+	//
+	//	7MHz
+	// |  00 |  01 |  02 | ~~~ |  28 |  29 |  30 |  31 |  32 |  33 |  34 |
+	// |t0-00| ... |t1-00| ~~~ |t0-07| ... |t1-07| ... | ys0 | ... | ys1 |
+	//
+	// we must read whole gfx for both planes 8 pix before it's visible area
+	//
+	//	7MHz
+	// |  80 |  81 |  82 |  83 |  84 |  85 |  86 | ~~~ | 438 | 439 | 440 |
+	// |g0-00| ... |g1-00| ... |g0-01| ... |g1-01| ~~~ |g0-44| ... |g1-44|
 
-	always @(posedge clk)
-	if( line_init )
-		txctr <= 7'b000_0000;
-	else if( tnext )
-		txctr <= txctr + 1;
+	// tm mode:
+	// [0] - tiles0/1
+	// []
 
-
-	assign typos = tyctr[2:0];
-
-
-// zx mode:
-// [0] - attr or pix
-// [4:1] - horiz pos 0..15 (words)
-// [12:5] - vert pos
 
 	wire [20:0] addr_zx;   // standard zx mode
-	wire [20:0] addr_phm;  // pentagon hardware multicolor
-	wire [20:0] addr_p16c; // pentagon 16c
-
-	wire [20:0] addr_ag; // atm gfx: 16c (x320) or hard multicolor (x640) - same sequence!
-
-	wire [20:0] addr_at; // atm text
+	wire [20:0] addr_tm;   // tiles mode
 
 	wire [11:0] addr_zx_pix;
 	wire [11:0] addr_zx_attr;
-	wire [11:0] addr_zx_p16c;
+
+	wire [11:0] addr_tm_gfx;
+	wire [11:0] addr_tm_ttab;
+	wire [11:0] addr_tm_yscr;
 
 
 	assign addr_zx_pix  = { gctr[12:11], gctr[7:5], gctr[10:8], gctr[4:1] };
-
 	assign addr_zx_attr = { 3'b110, gctr[12:8], gctr[4:1] };
 
-	assign addr_zx_p16c = { gctr[13:12], gctr[8:6], gctr[11:9], gctr[5:2] };
-
-
 	assign addr_zx =   { 6'b000001, scr_page, 2'b10, ( gctr[0] ? addr_zx_attr : addr_zx_pix ) };
-
-	assign addr_phm =  { 6'b000001, scr_page, 1'b1, gctr[0], addr_zx_pix };
-
-	assign addr_p16c = { 6'b000001, scr_page, ~gctr[0], gctr[1], addr_zx_p16c };
-
-
-	assign addr_ag = { 5'b00000, ~gctr[0], scr_page, 1'b1, gctr[1], gctr[13:2] };
-
-//	assign addr_at = { 5'b00000, ~txctr[0], scr_page, 1'b1, (^txctr[1:0]), 2'b00, tyctr[7:3], txctr[6:2] };
-	assign addr_at = { 5'b00000, ~txctr[0], scr_page, 1'b1, txctr[1], 2'b00, tyctr[7:3], txctr[6:2] };
 
 
 	always @(posedge clk) if( ldaddr )
 	begin
 		video_addr <=
-			( {21{mode_zx     }} & addr_zx  )  |
-			( {21{mode_p_16c  }} & addr_p16c)  |
-			( {21{mode_p_hmclr}} & addr_phm )  |
-			( {21{mode_ag     }} & addr_ag  )  |
-			( {21{mode_a_text }} & addr_at  )  ;
-
+			( {21{mode_zx	}} & addr_zx  )	|
+			( {21{mode_tm	}} & addr_tm  )	;
 	end
 
 

@@ -22,7 +22,7 @@ module video_top(
 
 
 	// aux video inputs
-	input  wire [ 3:0] zxborder, // border zxcolor
+	input  wire [ 5:0] zxborder, // border true color
 
 
 	// config inputs
@@ -52,14 +52,14 @@ module video_top(
 
 
 	// memory arbiter video port connection
-	input  wire        video_strobe,
-	input  wire        video_next,
+	output wire        video_go,
+	output wire [ 1:0] video_bw,
 	output wire [20:0] video_addr,
 	input  wire [15:0] video_data,
-	output wire [ 1:0] video_bw,
-	output wire        video_go,
+	input  wire        video_strobe,
+	input  wire        video_next,
 
-
+	
 	output wire        int_start
 );
 
@@ -132,15 +132,12 @@ module video_top(
 
 
 
-
-
-
 	// vertical sync generator
 	video_sync_v video_sync_v(
 
 		.clk(clk),
 
-		.mode_atm_n_pent(mode_atm_n_pent),
+		.rres			(rres),
 
 		.hsync_start(hsync_start),
 		.line_start(line_start),
@@ -159,9 +156,7 @@ module video_top(
 
 		.clk(clk),
 
-		.mode_atm_n_pent(mode_atm_n_pent),
-		.mode_a_text    (mode_a_text),
-
+		.rres			(rres),
 
 		.init(1'b0),
 
@@ -200,12 +195,11 @@ module video_top(
 
 		.scr_page		(scr_page),
 
-		.typos			(typos),
-
 		.mode_zx		(mode_zx),
 		.mode_tm0_en	(mode_tm0_en),
 		.mode_tm1_en	(mode_tm1_en),
-	);
+
+		);
 
 
 	// data fetch
@@ -249,14 +243,10 @@ module video_top(
 
 		.mode_atm_n_pent(mode_atm_n_pent),
 		.mode_zx        (mode_zx        ),
-		.mode_p_16c     (mode_p_16c     ),
-		.mode_p_hmclr   (mode_p_hmclr   ),
-		.mode_a_hmclr   (mode_a_hmclr   ),
-		.mode_a_16c     (mode_a_16c     ),
-		.mode_a_text    (mode_a_text    ),
+		.mode_p_16c     (mode_tm0_en	),
+		.mode_p_16c     (mode_tm1_en	),
+		
 		.mode_pixf_14   (mode_pixf_14   ),
-
-		.typos(typos),
 
 		.pixels(pixels)
 	);

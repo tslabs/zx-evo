@@ -18,7 +18,8 @@
 // t3-t2 = 41 clocks, then video starts
 //
 // repetition period = 448 clocks
-
+//
+// refactored by TS-Labs
 
 module video_sync_h(
 
@@ -31,11 +32,7 @@ module video_sync_h(
 	input  wire        cend,     // working strobes from DRAM controller (7MHz)
 	input  wire        pre_cend,
 
-
-	// modes inputs
-	input  wire        mode_atm_n_pent,
-	input  wire        mode_a_text,
-
+	input  wire [1:0]  rres,	//raster X resolution 00=256/01=320/10=320/11=360
 
 	output reg         hblank,
 	output reg         hsync,
@@ -62,19 +59,23 @@ module video_sync_h(
 	localparam HSYNC_END = 9'd43;
 	localparam HBLNK_END = 9'd88;
 
-	// pentagon (x256)
-	localparam HPIX_BEG_PENT = 9'd140; // 52 cycles from line_start to pixels beginning
-	localparam HPIX_END_PENT = 9'd396;
+	// 256	=>	88-52-256-52
+	localparam HPIX_BEG_256 = 9'd140;
+	localparam HPIX_END_256 = 9'd396;
 
-	// atm (x320)
-	localparam HPIX_BEG_ATM = 9'd108; // 52 cycles from line_start to pixels beginning
-	localparam HPIX_END_ATM = 9'd428;
+	// 320	=>	88-20-320-20
+	localparam HPIX_BEG_320 = 9'd108;
+	localparam HPIX_END_320 = 9'd428;
+
+	// 360	=>	88-0-360-0
+	localparam HPIX_BEG_360 = 9'd88;
+	localparam HPIX_END_360 = 9'd448;
 
 
 	localparam FETCH_FOREGO = 9'd18; // consistent with older go_start in older fetch.v:
 	                                 // actual data starts fetching 2 dram cycles after
-					 // 'go' goes to 1, screen output starts another
-					 // 16 cycles after 1st data bundle is fetched
+									// 'go' goes to 1, screen output starts another
+									// 16 cycles after 1st data bundle is fetched
 
 
 	localparam SCANIN_BEG = 9'd88; // when scan-doubler starts pixel storing
@@ -87,6 +88,34 @@ module video_sync_h(
 
 	reg [8:0] hcount;
 
+	reg [8:0] hp_beg, hp_end;
+	
+	always @*
+	begin
+		case (rres)
+		2'b00 : begin
+					assign hp_beg = HPIX_BEG_256;
+					assign hp_end = HPIX_END_256;
+				end
+		2'b01 : begin
+					assign hp_beg = HPIX_BEG_320;
+					assign hp_end = HPIX_END_320;
+				end
+		2'b10 : begin
+					assign hp_beg = HPIX_BEG_320;
+					assign hp_end = HPIX_END_320;
+				end
+		2'b11 : begin
+					assign hp_beg = HPIX_BEG_360;
+					assign hp_end = HPIX_END_360;
+				end
+		default : begin
+					assign hp_beg = HPIX_BEG_256;
+					assign hp_end = HPIX_END_256;
+				end
+		endcase
+	end
+	
 
 	// for simulation only
 	//
@@ -99,8 +128,6 @@ module video_sync_h(
 		hsync_start = 1'b0;
 		hpix = 1'b0;
 	end
-
-
 
 
 	always @(posedge clk) if( cend )
@@ -140,17 +167,6 @@ module video_sync_h(
 
 			if( hcount==SCANIN_BEG )
 				scanin_start <= 1'b1;
-
-
-//			if( hcount == (  mode_atm_n_pent             ?
-//			                (HPIX_BEG_ATM -FETCH_FOREGO) :
-//			                (HPIX_BEG_PENT-FETCH_FOREGO) ) )
-//				fetch_start <= 1'b1;
-
-//			if( hcount == (  mode_atm_n_pent             ?
-//			                (HPIX_END_ATM -FETCH_FOREGO) :
-//			                (HPIX_END_PENT-FETCH_FOREGO) ) )
-//				fetch_end <= 1'b1;
 		end
 		else
 		begin
@@ -164,20 +180,22 @@ module video_sync_h(
 
 
 
-	wire fetch_start_time, fetch_start_condition;
-	wire fetch_end_condition;
+	wire	fetch_start_time,
+			fetch_start_condition,
+			fetch_end_condition;
 
 	reg [3:0] fetch_start_wait;
 
 
-	assign fetch_start_time = (mode_atm_n_pent                  ?
-	                          (HPIX_BEG_ATM -FETCH_FOREGO-9'd4) :
-	                          (HPIX_BEG_PENT-FETCH_FOREGO-9'd4) ) == hcount;
+	//Ovdje i napred treba sve uraditi odnova!!!
+
+	assign fetch_start_time =	(hp_beg - FETCH_FOREGO - 9'd4) == hcount;
+
 
 	always @(posedge clk) if( cend )
 		fetch_start_wait[3:0] <= { fetch_start_wait[2:0], fetch_start_time };
 
-	assign fetch_start_condition = mode_a_text ? fetch_start_time  : fetch_start_wait[3];
+	assign fetch_start_condition = fetch_start_wait[3];
 
 	always @(posedge clk)
 	if( pre_cend && fetch_start_condition )
@@ -188,9 +206,7 @@ module video_sync_h(
 
 
 
-	assign fetch_end_time = (mode_atm_n_pent             ?
-	                        (HPIX_END_ATM -FETCH_FOREGO) :
-	                        (HPIX_END_PENT-FETCH_FOREGO) ) == hcount;
+	assign fetch_end_time = (hp_end - FETCH_FOREGO) == hcount;
 
 	always @(posedge clk)
 	if( pre_cend && fetch_end_time )
@@ -213,13 +229,11 @@ module video_sync_h(
 
 	always @(posedge clk) if( cend )
 	begin
-		if( hcount==(mode_atm_n_pent ? HPIX_BEG_ATM : HPIX_BEG_PENT) )
+		if (hcount == hp_beg)
 			hpix <= 1'b1;
-		else if( hcount==(mode_atm_n_pent ? HPIX_END_ATM : HPIX_END_PENT) )
+		else if (hcount == hp_end)
 			hpix <= 1'b0;
 	end
-
-
 
 
 
