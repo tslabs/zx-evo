@@ -7,6 +7,9 @@
 // 3H is pre-blank,
 // 2.xxH is vertical sync (slightly more than 2H, all hsync edges preserved)
 // vblank is total of 25H
+//
+// refactored by TS-Labs
+
 
 module video_sync_v(
 
@@ -17,12 +20,7 @@ module video_sync_v(
 
 	input  wire        hint_start,
 
-
-
-	// atm video mode input
-	input  wire        mode_atm_n_pent,
-
-
+	input  wire [1:0]  rres,	//raster Y resolution 00=192/01=200/10=240/11=288
 
 	output reg         vblank,
 	output reg         vsync,
@@ -43,20 +41,55 @@ module video_sync_v(
 
 	localparam INT_BEG = 9'd0;
 
-	// pentagon (x192)
-	localparam VPIX_BEG_PENT = 9'd080;//9'd064;
-	localparam VPIX_END_PENT = 9'd272;//9'd256;
+	// 192	=>	32-48-192-32
+	localparam VPIX_BEG_192 = 9'd080;
+	localparam VPIX_END_192 = 9'd272;
 
-	// ATM (x200)
-	localparam VPIX_BEG_ATM = 9'd076;//9'd060;
-	localparam VPIX_END_ATM = 9'd276;//9'd260;
+	// 200	=>	32-44-200-44
+	localparam VPIX_BEG_200 = 9'd076;
+	localparam VPIX_END_200 = 9'd276;
+
+	// 240	=>	32-24-240-24
+	localparam VPIX_BEG_240 = 9'd056;
+	localparam VPIX_END_240 = 9'd296;
+
+	// 288	=>	32-0-288-0
+	localparam VPIX_BEG_288 = 9'd032;
+	localparam VPIX_END_288 = 9'd320;
 
 	localparam VPERIOD = 9'd320; // pentagono foreva!
 
 
 	reg [8:0] vcount;
 
-
+	reg [8:0] vp_beg, vp_end;
+	
+	always @*
+	begin
+		case (rres)
+		2'b00 : begin
+					assign vp_beg = VPIX_BEG_192;
+					assign vp_end = VPIX_END_192;
+				end
+		2'b01 : begin
+					assign vp_beg = VPIX_BEG_200;
+					assign vp_end = VPIX_END_200;
+				end
+		2'b10 : begin
+					assign vp_beg = VPIX_BEG_240;
+					assign vp_end = VPIX_END_240;
+				end
+		2'b11 : begin
+					assign vp_beg = VPIX_BEG_288;
+					assign vp_end = VPIX_END_288;
+				end
+		default : begin
+					assign vp_beg = VPIX_BEG_192;
+					assign vp_end = VPIX_END_192;
+				end
+		endcase
+	end
+	
 
 
 	initial
@@ -108,9 +141,9 @@ module video_sync_v(
 
 	always @(posedge clk) if( hsync_start )
 	begin
-		if( vcount==(mode_atm_n_pent ? VPIX_BEG_ATM : VPIX_BEG_PENT) )
+		if (vcount == vp_beg)
 			vpix <= 1'b1;
-		else if( vcount==(mode_atm_n_pent ? VPIX_END_ATM : VPIX_END_PENT) )
+		else if (vcount == vp_end)
 			vpix <= 1'b0;
 	end
 

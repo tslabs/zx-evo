@@ -1,5 +1,8 @@
 `include "../include/tune.v"
 
+// Pentevo project (c) NedoPC 2008-2011
+//
+// top-level
 module top(
 
 	// clocks
@@ -122,7 +125,6 @@ module top(
 	wire rst_n; // global reset
 
 	wire rrdy;
-	wire cbeg;
 	wire [15:0] rddata;
 
 	wire [4:0] rompg;
@@ -234,14 +236,15 @@ module top(
 	wire [7:0] cpu_wrdata;
 
 
-	wire cend,pre_cend,go;
+	wire cbeg,post_cbeg,pre_cend,cend;
 
+	wire go;
 
 	wire sd_start;
 	wire [7:0] sd_dataout,sd_datain;
 
 
-	wire tape_read;
+	wire tape_read; // data for tapein
 
 //AY control
 	always @(posedge fclk)
@@ -456,9 +459,9 @@ module top(
 	                 .dram_rddata(drddata),
 	                 .dram_wrdata(dwrdata),
 
-	                 .cend(cend),
+	                 .post_cbeg(post_cbeg),
 	                 .pre_cend(pre_cend),
-					 .post_cbeg(post_cbeg),
+	                 .cend     (cend     ),
 
 	                 .go(go),
 	                 .bw(bw),
@@ -490,31 +493,39 @@ module top(
 	                 .cpu_rddata(cpu_rddata),
 	                 .cpu_strobe(cpu_strobe) );
 
+	video_top video_top(
 
-	wire vga_hsync,hsync,hblank,hpix,hsync_start,line_start,hint_start,scanin_start,scanout_start;
+		.clk(fclk),
 
-	synch horiz_sync( .clk(fclk), .init(1'b0), .cend(cend), .pre_cend(pre_cend),
-	                  .hsync(hsync), .hblank(hblank), .hpix(hpix), .hsync_start(hsync_start),
-	                  .line_start(line_start), .hint_start(hint_start), .scanin_start(scanin_start) );
+		.vred(vred),
+		.vgrn(vgrn),
+		.vblu(vblu),
+		.vhsync(vhsync),
+		.vvsync(vvsync),
+		.vcsync(vcsync),
 
+		.zxborder(border),
 
-	wire vblank,vsync,int_start,vpix;
-	wire pre_vline;
+		.vcfg(vcfg),
+		.scr_page(p7ffd[3]),
 
-	syncv vert_sync( .clk(fclk), .hsync_start(hsync_start), .line_start(line_start),
-	                 .vblank(vblank), .vsync(vsync), .int_start(int_start),
-	                 .pre_vline(pre_vline),
-			 .vpix(vpix), .hint_start(hint_start) );
+		.vga_on(cfg_vga_on),
 
-	vga_synch vga_synch( .clk(fclk), .hsync_start(hsync_start), .vga_hsync(vga_hsync), .scanout_start(scanout_start) );
+		.cbeg     (cbeg     ),
+		.post_cbeg(post_cbeg),
+		.pre_cend (pre_cend ),
+		.cend     (cend     ),
 
+		.video_go    (go          ),
+		.video_bw    (bw          ),
+		.video_addr  (video_addr  ),
+		.video_data  (video_data  ),
+		.video_strobe(video_strobe),
+		.video_next  (video_next  ),
 
+		.int_start(int_start)
 
-	wire [5:0] pixel;
-
-	fetch fecher( .clk(fclk), .cend(cend), .line_start(line_start), .vpix(vpix), .int_start(int_start),
-	              .vmode( {peff7[0],peff7[5]} ), .screen(p7ffd[3]), .video_addr(video_addr), .video_data(video_data),
-	              .video_strobe(video_strobe), .video_next(video_next), .go(go), .bw(bw), .pixel(pixel) );
+	);
 
 
 	wire [8:0] sp_ra, sp_wa;
@@ -523,7 +534,6 @@ module top(
 
 	spram spram(	.wraddress(sp_wa), .data(d), .rdaddress(sp_ra), .q(sp_rd), .wrclock(fclk), .wren(sp_we) );
 
-			
 	wire [8:0] yt_ra, yt_wa;
 	wire [7:0] yt_rd;
 	wire yt_we;
@@ -537,53 +547,15 @@ module top(
 	
 	sfile sfile(	.wraddress(sf_wa), .data(d), .rdaddress(sf_ra), .q(sf_rd), .wrclock(fclk), .wren(sf_we) );
 
-
-	wire [5:0] spixel, sp_mc;
-	wire spx_en, spu_req;
 	
-	sprites sprites(
-			.clk(fclk), .spu_en(vcfg[6]),
-			.line_start(line_start),
-			.pre_vline(pre_vline),
-			.post_cbeg(post_cbeg), .cbeg(cbeg),
-			.spixel(spixel), .spx_en(spx_en),
-			.sf_ra(sf_ra), .sf_rd(sf_rd), 
-			.sp_ra(sp_ra), .sp_rd(sp_rd),
-			.test(test), .mcd(sp_mc),
-			.spu_addr(spu_addr), .spu_data(spu_data), 
-			.spu_req(spu_req), .spu_strobe(spu_strobe), .spu_next(spu_next)
-			);
-
-	wire [20:0] t_addr;
-	wire [15:0] t_data;
-	
-	tiles tiles(
-			.fclk(fclk),
-			.t_addr(t_addr), .t_data(t_data),
-			.yt_ra(yt_ra), .yt_rd(yt_rd),
-			.vcfg(vcfg),
-			.tp(tp),
-			.tgp0(tgp0), .tgp1(tgp1),
-			.tmctrl(tmctrl), .hsint(hsint)
-			);
-
-			
-	videoout vidia( .clk(fclk), .pixel(pixel),
-//			.border(beep ? 6'd63 : 6'd0),
-			.border(border),
-			.spixel(spixel), .spx_en(spx_en), .zxg_en(vcfg[2:0] != 3'b111), .spu_en(vcfg[3]),
-	        .hblank(hblank), .vblank(vblank), .hpix(hpix), .vpix(vpix), .hsync(hsync), .vsync(vsync),
-	        .vred(vred), .vgrn(vgrn), .vga_hsync(vga_hsync), .vblu(vblu),
-	        .vhsync(vhsync), .vvsync(vvsync), .vcsync(vcsync), .hsync_start(hsync_start),
-			.test(test), .tst(spu_req), .sp_mc(sp_mc), .dcyc(dcyc),		//debug!!!
-	        .scanin_start(scanin_start), .scanout_start(scanout_start), .cfg_vga_on(cfg_vga_on) );
 
 
 
-					slavespi slavespi( .fclk(fclk), .rst_n(rst_n),
+	slavespi slavespi(
+		.fclk(fclk), .rst_n(rst_n),
 	                   .spics_n(spics_n), .spidi(spidi),
 	                   .spido(spido), .spick(spick),
-	                   .status_in({wait_rnw, waits[6:0]}), .genrst(genrst),
+		.status_in({/* wait_rnw */ wr_n, waits[6:0]}), .genrst(genrst),
 	                   .rstrom(rstrom), .kbd_out(kbd_data),
 	                   .kbd_stb(kbd_stb), .mus_out(mus_data),
 	                   .mus_xstb(mus_xstb), .mus_ystb(mus_ystb),
@@ -680,18 +652,18 @@ zkbdmus zkbdmus( .fclk(fclk), .rst_n(rst_n),
 	              .wait_read(wait_read),
 
 	               .atmF7_wr_fclk(atmF7_wr_fclk),
-	               .atm_scr_mode(),
+	               .atm_scr_mode(atm_scr_mode),
 	               .atm_turbo   (),
 	               .atm_pen     (pager_off),
 	               .atm_cpm_n   (cpm_n),
-	               .atm_pen2    (),
+	               .atm_pen2    (atm_pen2),
 	               .romrw_en(romrw_en),
 	               .pent1m_ram0_0(pent1m_ram0_0),
 	               .pent1m_1m_on (pent1m_1m_on),
 	               .pent1m_page  (pent1m_page),
-	               .pent1m_ROM   (pent1m_ROM)
-	            );
+	               .pent1m_ROM   (pent1m_ROM),
 
+				);
 
 zmaps zmaps(
 					.cpu_req(cpu_req),
@@ -743,5 +715,16 @@ zmaps zmaps(
 	spi2 zspi( .clock(fclk), .sck(sdclk), .sdo(sddo), .sdi(sddi), .start(sd_start),
 	           .speed(2'b00), .din(sd_datain), .dout(sd_dataout) );
 
+	  //////////////////////////////////////
+	 // sound: beeper, tapeout and covox //
+	//////////////////////////////////////
+	sound sound(
+		.clk(fclk),
+		.din(d),
+		.beeper_wr(beeper_wr),
+		.covox_wr (covox_wr ),
+		.beeper_mux(beeper_mux),
+		.sound_bit(beep)
+	);
 endmodule
 
