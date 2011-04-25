@@ -25,9 +25,10 @@ module video_addrgen(
 	output reg  [20:0] video_addr, // DRAM arbiter signals
 	input  wire        video_next, //
 
-	input  wire        line_start, // some video sync signals
-	input  wire        int_start,  //
-	input  wire        vpix,       //
+	input  wire        line_start,
+	input  wire        int_start,
+	input  wire        vpix,
+	input  wire        tpref,
 
 	input  wire        scr_page, // which screen to use
 
@@ -46,8 +47,6 @@ module video_addrgen(
 	reg frame_init_r;
 	reg line_init_r;
 
-	wire mode_tm = (mode_tm || mode_tp1en);
-	
 	always @(posedge clk)
 		line_start_r <= line_start;
 

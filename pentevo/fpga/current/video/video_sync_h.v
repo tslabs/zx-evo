@@ -53,7 +53,7 @@ module video_sync_h(
 
 	                                // these signals turn on and turn off 'go' signal
 	output reg         fetch_start, // 18/10 cycles earlier than hpix, coincide with cend
-	output reg         fetch_end
+	output reg         fetch_end,
 	output reg         tfetch_start, //at the hsync, starts fetching Yscrolls
 	output reg         tfetch_end
 
@@ -193,7 +193,7 @@ module video_sync_h(
 
 	//fetcher
 	wire	fetch_start_cond,
-			fetch_end_cond;
+			fetch_end_cond,
 			tfetch_start_cond,
 			tfetch_end_cond;
 
