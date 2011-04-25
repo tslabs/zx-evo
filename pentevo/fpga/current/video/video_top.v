@@ -181,7 +181,7 @@ module video_top(
 		.scanin_start	(scanin_start),
 
 		.fetch_start	(fetch_start),
-		.fetch_end		(fetch_end)
+		.fetch_end		(fetch_end),
 		.tfetch_start	(tfetch_start),
 		.tfetch_end		(tfetch_end)
 
@@ -219,9 +219,12 @@ module video_top(
 		.cend     (cend    ),
 
 		.vpix(vpix),
+		.tpref			(tpref),
 
 		.fetch_start(fetch_start),
 		.fetch_end  (fetch_end  ),
+		.tfetch_start	(tfetch_start),
+		.tfetch_end		(tfetch_end),
 
 		.fetch_sync (fetch_sync ),
 

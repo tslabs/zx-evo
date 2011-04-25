@@ -138,9 +138,9 @@ module video_sync_v(
 	//tpref
 	always @(posedge clk) if( hsync_start )
 	begin
-		if (vcount == (vp_beg - 9'd16)
+		if (vcount == (vp_beg - 9'd16))
 			tpref <= 1'b1;
-		else if (vcount == (vp_end - 9'd8)
+		else if (vcount == (vp_end - 9'd8))
 			tpref <= 1'b0;
 	end
 

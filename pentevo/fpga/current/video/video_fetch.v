@@ -13,9 +13,12 @@ module video_fetch(
 	input  wire        pre_cend, //        synchronization
 
 	input  wire        vpix, // vertical window
+	input  wire        tpref,
 
 	input  wire        fetch_start, // fetching start and stop
 	input  wire        fetch_end,   //
+	input  wire        tfetch_start, // fetching start and stop
+	input  wire        tfetch_end,   //
 
 	output reg         fetch_sync,     // 1 cycle after cend
 
