@@ -65,8 +65,8 @@ module video_top(
 
 	// these decoded in video_modedecode.v
 	wire mode_zx;
-	wire mode_tm0_en;
-	wire mode_tm1_en;
+	wire mode_tm;
+	wire mode_tp1en;
 	wire mode_brd;
 	wire mode_pixf_14;
 	wire [1:0] rres;
@@ -119,8 +119,8 @@ module video_top(
 		.vcfg			(vcfg),
 
 		.mode_zx		(mode_zx),
-		.mode_tm0_en	(mode_tm0_en),
-		.mode_tm1_en	(mode_tm1_en),
+		.mode_tm		(mode_tm),
+		.mode_tp1en		(mode_tp1en),
 		.mode_brd		(mode_brd),
 
 		.rres			(rres),
@@ -146,6 +146,7 @@ module video_top(
 		.vblank(vblank),
 		.vsync(vsync),
 		.vpix(vpix),
+		.tpref(tpref),
 
 		.int_start(int_start)
 	);
@@ -156,27 +157,33 @@ module video_top(
 
 		.clk(clk),
 
+		.mode_zx		(mode_zx),
+		.mode_tm		(mode_tm),
+		.mode_brd		(mode_brd),
+
 		.rres			(rres),
 
-		.init(1'b0),
+		.init			(1'b0),
 
-		.pre_cend(pre_cend),
-		.cend    (cend    ),
+		.pre_cend		(pre_cend),
+		.cend   	 	(cend),
 
 
-		.hblank(hblank),
-		.hsync(hsync),
-		.hpix(hpix),
+		.hblank			(hblank),
+		.hsync			(hsync),
+		.hpix			(hpix),
 
-		.line_start(line_start),
-		.hsync_start(hsync_start),
+		.line_start		(line_start),
+		.hsync_start	(hsync_start),
 
-		.hint_start(hint_start),
+		.hint_start		(hint_start),
 
-		.scanin_start(scanin_start),
+		.scanin_start	(scanin_start),
 
-		.fetch_start(fetch_start),
-		.fetch_end  (fetch_end  )
+		.fetch_start	(fetch_start),
+		.fetch_end		(fetch_end)
+		.tfetch_start	(tfetch_start),
+		.tfetch_end		(tfetch_end)
 
 	);
 
@@ -192,12 +199,13 @@ module video_top(
 		.line_start		(hsync_start),
 		.int_start		(int_start),
 		.vpix			(vpix),
+		.tpref			(tpref),
 
 		.scr_page		(scr_page),
 
 		.mode_zx		(mode_zx),
-		.mode_tm0_en	(mode_tm0_en),
-		.mode_tm1_en	(mode_tm1_en),
+		.mode_tm		(mode_tm),
+		.mode_tp1en		(mode_tp1en),
 
 		);
 
@@ -243,8 +251,8 @@ module video_top(
 
 		.mode_atm_n_pent(mode_atm_n_pent),
 		.mode_zx        (mode_zx        ),
-		.mode_p_16c     (mode_tm0_en	),
-		.mode_p_16c     (mode_tm1_en	),
+		.mode_p_16c     (mode_tm	),
+		.mode_p_16c     (mode_tp1en	),
 		
 		.mode_pixf_14   (mode_pixf_14   ),
 

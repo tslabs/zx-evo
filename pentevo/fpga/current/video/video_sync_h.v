@@ -32,6 +32,10 @@ module video_sync_h(
 	input  wire        cend,     // working strobes from DRAM controller (7MHz)
 	input  wire        pre_cend,
 
+	input wire         mode_zx,		// standard ZX mode
+	input wire         mode_tm,		// tiles mode
+	input wire         mode_brd,	// no linear gfx - only border color
+
 	input  wire [1:0]  rres,	//raster X resolution 00=256/01=320/10=320/11=360
 
 	output reg         hblank,
@@ -48,8 +52,10 @@ module video_sync_h(
 	output reg         hpix, // marks gate during which pixels are outting
 
 	                                // these signals turn on and turn off 'go' signal
-	output reg         fetch_start, // 18 cycles earlier than hpix, coincide with cend
-	output reg         fetch_end    // --//--
+	output reg         fetch_start, // 18/10 cycles earlier than hpix, coincide with cend
+	output reg         fetch_end
+	output reg         tfetch_start, //at the hsync, starts fetching Yscrolls
+	output reg         tfetch_end
 
 );
 
@@ -72,10 +78,13 @@ module video_sync_h(
 	localparam HPIX_END_360 = 9'd448;
 
 
-	localparam FETCH_FOREGO = 9'd18; // consistent with older go_start in older fetch.v:
+	localparam FETCH_PRE_ZX = 9'd18;
+	localparam FETCH_PRE_TM = 9'd10;
 	                                 // actual data starts fetching 2 dram cycles after
 									// 'go' goes to 1, screen output starts another
-									// 16 cycles after 1st data bundle is fetched
+									// 16/8 cycles after 1st data bundle is fetched
+
+	localparam TFETCH_PRE = 9'd36;	//16 cycles for tiles and 2 cycles for Xscrolls
 
 
 	localparam SCANIN_BEG = 9'd88; // when scan-doubler starts pixel storing
@@ -88,7 +97,7 @@ module video_sync_h(
 
 	reg [8:0] hcount;
 
-	reg [8:0] hp_beg, hp_end;
+	reg [8:0] hp_beg, hp_end, f_pre;
 	
 	always @*
 	begin
@@ -115,8 +124,11 @@ module video_sync_h(
 				end
 		endcase
 	end
-	
 
+
+	assign f_pre = mode_tm ? FETCH_PRE_TM : FETCH_PRE_ZX;
+
+	
 	// for simulation only
 	//
 	initial
@@ -130,6 +142,7 @@ module video_sync_h(
 	end
 
 
+	//hor counter
 	always @(posedge clk) if( cend )
 	begin
             if( init || (hcount==(HPERIOD-9'd1)) )
@@ -139,7 +152,7 @@ module video_sync_h(
 	end
 
 
-
+	//hblank & hsync
 	always @(posedge clk) if( cend )
 	begin
 		if( hcount==HBLNK_BEG )
@@ -154,7 +167,8 @@ module video_sync_h(
 			hsync <= 1'b0;
 	end
 
-
+	
+	//
 	always @(posedge clk)
 	begin
 		if( pre_cend )
@@ -173,51 +187,48 @@ module video_sync_h(
 			hsync_start  <= 1'b0;
 			line_start   <= 1'b0;
 			scanin_start <= 1'b0;
-//			fetch_start  <= 1'b0;
-//			fetch_end    <= 1'b0;
 		end
 	end
 
 
+	//fetcher
+	wire	fetch_start_cond,
+			fetch_end_cond;
+			tfetch_start_cond,
+			tfetch_end_cond;
 
-	wire	fetch_start_time,
-			fetch_start_condition,
-			fetch_end_condition;
-
-	reg [3:0] fetch_start_wait;
-
-
-	//Ovdje i napred treba sve uraditi odnova!!!
-
-	assign fetch_start_time =	(hp_beg - FETCH_FOREGO - 9'd4) == hcount;
-
-
-	always @(posedge clk) if( cend )
-		fetch_start_wait[3:0] <= { fetch_start_wait[2:0], fetch_start_time };
-
-	assign fetch_start_condition = fetch_start_wait[3];
+	assign fetch_start_cond = hcount == (hp_beg - f_pre);
+	assign fetch_end_cond = hcount == (hp_end - f_pre);
+	assign tfetch_start_cond = hcount == (HSYNC_BEG + 9'd2);
+	assign tfetch_end_cond = hcount == (HSYNC_BEG + TFETCH_PRE + 9'd2);
 
 	always @(posedge clk)
-	if( pre_cend && fetch_start_condition )
+	if (pre_cend && fetch_start_cond && !mode_brd)		//if no pixel GFX - fetch will never start
 		fetch_start <= 1'b1;
 	else
 		fetch_start <= 1'b0;
 
-
-
-
-	assign fetch_end_time = (hp_end - FETCH_FOREGO) == hcount;
-
 	always @(posedge clk)
-	if( pre_cend && fetch_end_time )
+	if (pre_cend && fetch_end_cond)
 		fetch_end <= 1'b1;
 	else
 		fetch_end <= 1'b0;
 
+	always @(posedge clk)
+	if (pre_cend && tfetch_start_cond && mode_tm)
+		tfetch_start <= 1'b1;
+	else
+		tfetch_start <= 1'b0;
+
+	always @(posedge clk)
+	if (pre_cend && tfetch_end_cond)
+		tfetch_end <= 1'b1;
+	else
+		tfetch_end <= 1'b0;
 
 
 
-
+	//INT
 	always @(posedge clk)
 	begin
 		if( pre_cend && (hcount==HINT_BEG) )
@@ -227,6 +238,7 @@ module video_sync_h(
 	end
 
 
+	//pixel field
 	always @(posedge clk) if( cend )
 	begin
 		if (hcount == hp_beg)

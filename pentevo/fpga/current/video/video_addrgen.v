@@ -32,8 +32,8 @@ module video_addrgen(
 	input  wire        scr_page, // which screen to use
 
 	input  wire        mode_zx,			// decoded modes
-	input  wire        mode_tm0_en,     //
-	input  wire        mode_tm1_en     //
+	input  wire        mode_tm,     //
+	input  wire        mode_tp1en     //
 
 );
 
@@ -42,11 +42,11 @@ module video_addrgen(
 
 	wire gnext,tnext,ldaddr;
 
-	reg line_start_r;
+	reg line_start_r;	//right after HBLANK
 	reg frame_init_r;
 	reg line_init_r;
 
-	wire mode_tm = (mode_tm0_en || mode_tm1_en);
+	wire mode_tm = (mode_tm || mode_tp1en);
 	
 	always @(posedge clk)
 		line_start_r <= line_start;
@@ -83,12 +83,12 @@ module video_addrgen(
 
 	// tile counters
 	//
-	// we start reading tile tabs 16 lines before pix area
+	// start reading tiles 16 lines before pix area
 	//
-	// we read 64(128) tiles for each tiles row (8 lines by 8(16) tiles)
-	// thus we need 8 or 16 DRAM cycles per line at the beginning of HBLANK
+	// read 64(128) tiles for each tiles row (8 lines by 8(16) tiles)
+	// thus need 8 or 16 DRAM cycles per line at the beginning of HBLANK
 	// at the b/w of 1/2 it takes us 32 7MHz clocks (pix)
-	// also, we need 1(2) cycle(s) to read YSCRL(s)
+	// also, need 1(2) cycle(s) to read YSCRL(s)
 	//
 	//	7MHz
 	// |  00 |  01 |  02 | ~~~ |  28 |  29 |  30 |  31 |  32 |  33 |  34 |

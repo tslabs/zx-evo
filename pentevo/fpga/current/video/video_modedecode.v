@@ -12,8 +12,8 @@ module video_modedecode(
 	input  wire [ 7:0] vcfg,	   // videoconfig
 
 	output wire         mode_zx,		// standard ZX mode
-	output wire         mode_tm0_en,	// tiles0 enabled
-	output wire         mode_tm1_en,	// tiles1 enabled
+	output wire         mode_tm,		// tiles mode
+	output wire         mode_tp1en,	// tiles1 enabled
 	output wire         mode_brd,		// no linear gfx - only border color
 	
 	output wire         mode_pixf_14,	// 14MHz pixelclock on (default is 7MHz).
@@ -37,8 +37,8 @@ module video_modedecode(
 	wire brd =	(vmode == 3'b111);
 
 	assign mode_zx = zx;
-	assign mode_tm0_en = (tm0 | tm1 | tmhr);
-	assign mode_tm1_en = (tm1 | tmhr);
+	assign mode_tm = (tm0 | tm1 | tmhr);
+	assign mode_tp1en = (tm1 | tmhr);
 	assign mode_brd = brd;
 
 	
