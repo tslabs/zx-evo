@@ -13,119 +13,113 @@
 //	- attr
 // tm:
 //	- gfx
-//	- ttab
+//	- tile
 //	- yscr
 
 
 module video_addrgen(
 
-	input  wire        clk, // 28 MHz clock
+	input  wire        clk,			// 28 MHz clock
 
 
-	output reg  [20:0] video_addr, // DRAM arbiter signals
-	input  wire        video_next, //
+	output reg  [20:0] video_addr,	// DRAM arbiter signals
+	input  wire        video_next,	//
 
-	input  wire        line_start,
 	input  wire        int_start,
+	input  wire        hsync_start,
+	input  wire        line_start,
+	input  wire        ycnt_init,
 	input  wire        vpix,
-	input  wire        tpref,
+	input  wire        htfetch,
 
-	input  wire        scr_page, // which screen to use
-
+	input  wire        scr_page,
+	input  wire [7:0]  tp, tgp0, tgp1, fp,
+	input  wire	[1:0]  fa,
 	input  wire        mode_zx,			// decoded modes
-	input  wire        mode_tm,     //
-	input  wire        mode_tp1en     //
+	input  wire        mode_tm,
+	input  wire        mode_tp1en
+	
+	input wire         fetch_gfx,     //gfx fetching window
+	input wire         fetch_tile,    //tiles/Xscrolls fetching window
+
 
 );
 
+	//gfx counters
+	reg [12:0] zxcnt;
+	reg [8:0] ycnt;
+	reg [7:0] xcnt;
 
-	wire line_init, frame_init;
-
-	wire gnext,tnext,ldaddr;
-
-	reg line_start_r;	//right after HBLANK
-	reg frame_init_r;
-	reg line_init_r;
-
-	always @(posedge clk)
-		line_start_r <= line_start;
-
-	assign line_init  = line_start_r & vpix;
-	assign frame_init = int_start;
-
-	reg [13:0] gctr;
-
-
-	always @(posedge clk)
-		frame_init_r <= frame_init;
-
-	always @(posedge clk)
-		line_init_r <= line_init;
-
-
-	assign gnext = video_next | frame_init_r;
-	assign ldaddr = gnext;
-
-
-	// gfx counter
 	// zx mode:
 	// [0] - attr or pix
 	// [4:1] - horiz pos 0..15 (words)
 	// [12:5] - vert pos
 
 	always @(posedge clk)
-	if( frame_init )
-		gctr <= 0;
-	else if( gnext )
-		gctr <= gctr + 1;
+	if (int_start)
+		zxcnt <= 0;
+	else if (video_next)
+		zxcnt <= zxcnt + 1;
 
-
-	// tile counters
+	// tile mode:
 	//
-	// start reading tiles 16 lines before pix area
+	// xcnt (at tiles fetching):
+	// [0] - tile plane 0 or 1
+	// [3:1] - tile count to fetch in current line
+	// [4] - 0-tiles or 1-Xsrolls fetching
 	//
-	// read 64(128) tiles for each tiles row (8 lines by 8(16) tiles)
-	// thus need 8 or 16 DRAM cycles per line at the beginning of HBLANK
-	// at the b/w of 1/2 it takes us 32 7MHz clocks (pix)
-	// also, need 1(2) cycle(s) to read YSCRL(s)
+	// xcnt (at GFX fetching):
+	// [0] - tile plane 0 or 1
+	// [1] - word 0 or 1 of tile
+	// [7:2] = tx[2:0]
+	// note: {1'b0, xcnt[7:1]} should be added by xs[8:2]
+	// to obtain physical word pointer in tile
 	//
-	//	7MHz
-	// |  00 |  01 |  02 | ~~~ |  28 |  29 |  30 |  31 |  32 |  33 |  34 |
-	// |t0-00| ... |t1-00| ~~~ |t0-07| ... |t1-07| ... | ys0 | ... | ys1 |
+	// ycnt (at tiles fetching):
+	// [2:0] = tx[5:3] - higher 3 bits in tile X coordinate
 	//
-	// we must read whole gfx for both planes 8 pix before it's visible area
+	// ycnt (at GFX fetching):
+	// [8:0] - Y line number
 	//
-	//	7MHz
-	// |  80 |  81 |  82 |  83 |  84 |  85 |  86 | ~~~ | 438 | 439 | 440 |
-	// |g0-00| ... |g1-00| ... |g0-01| ... |g1-01| ~~~ |g0-44| ... |g1-44|
+	// note: Xscrolls should be taken from ycnt-16 lines
+	
+	
+	always @(posedge clk) if (hsync_start)
+	if (ycnt_init)
+		ycnt <= 0;
+	else
+		ycnt <= ycnt + 1;
+	
+	always @(posedge clk)
+	if (hsync_start || line_start)
+		xcnt <= 0;
+	else if (video_next)
+		xcnt <= xctr + (mode_tp1en ? 2'b1 : 2'b2);
 
-	// tm mode:
-	// [0] - tiles0/1
-	// []
+		
+	wire tpn;
+	wire [10:0] tnum = ~tpn ? tn0 : tn1;
+	wire [7:0] tgp = (~tpn ? tgp0 : tgp1) + tnum[10:9];
+	wire [3:0] tptr;
+	
+	wire [11:0] addr_zx_pix  = { zxcnt[12:11], zxcnt[7:5], zxcnt[10:8], zxcnt[4:1] };
+	wire [11:0] addr_zx_attr = { 3'b110, zxcnt[12:8], zxcnt[4:1] };
 
+	wire [20:0] addr_zx = { 6'b000001, scr_page, 2'b10, ( zxcnt[0] ? addr_zx_attr : addr_zx_pix ) };
 
-	wire [20:0] addr_zx;   // standard zx mode
-	wire [20:0] addr_tm;   // tiles mode
+	wire 
+	wire [20:0] addr_tm_gfx = {tgp, tnum[8:0], tptr};		// 8.9.4
+	wire [20:0] addr_tm_tile = {tp, ty, tx, tpn}; 			// 8.6.6.1
+	wire [20:0] addr_tm_xs = {fp, fa, 1'b0, tpn, ycnt};		// 8.2.1.1.9
 
-	wire [11:0] addr_zx_pix;
-	wire [11:0] addr_zx_attr;
+	wire [20:0] addr_tm =	( {21{fetch_gfx	}} & addr_tm_gfx	)|
+							( {21{fetch_tile}} & addr_tm_tile	)|
+							( {21{fetch_xs	}} & addr_tm_xs		);
 
-	wire [11:0] addr_tm_gfx;
-	wire [11:0] addr_tm_ttab;
-	wire [11:0] addr_tm_yscr;
-
-
-	assign addr_zx_pix  = { gctr[12:11], gctr[7:5], gctr[10:8], gctr[4:1] };
-	assign addr_zx_attr = { 3'b110, gctr[12:8], gctr[4:1] };
-
-	assign addr_zx =   { 6'b000001, scr_page, 2'b10, ( gctr[0] ? addr_zx_attr : addr_zx_pix ) };
-
-
-	always @(posedge clk) if( ldaddr )
+	always @(posedge clk) if (ldaddr)
 	begin
-		video_addr <=
-			( {21{mode_zx	}} & addr_zx  )	|
-			( {21{mode_tm	}} & addr_tm  )	;
+		video_addr <= 	( {21{mode_zx	}} & addr_zx  )	|
+						( {21{mode_tm	}} & addr_tm  )	;
 	end
 
 

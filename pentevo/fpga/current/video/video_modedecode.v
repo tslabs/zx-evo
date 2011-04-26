@@ -13,19 +13,24 @@ module video_modedecode(
 
 	output wire         mode_zx,		// standard ZX mode
 	output wire         mode_tm,		// tiles mode
-	output wire         mode_tp1en,	// tiles1 enabled
+	output wire         mode_tp1en,		// tiles1 enabled
 	output wire         mode_brd,		// no linear gfx - only border color
 	
 	output wire         mode_pixf_14,	// 14MHz pixelclock on (default is 7MHz).
 
-	output wire  [1:0]	rres,			//raster resolution 0x=256/10=320/11=360
-
-	output wire  [1:0] 	mode_bw 	// required bandwidth: 2'b00 - 1/8, 2'b01 - 1/4,
-									//                     2'b10 - 1/2, 2'b11 - 1
+	output wire  [1:0]	rres,			// raster resolution
+										//  00 - 256x192
+										//  01 - 320x200
+										//  10 - 320x240
+										//  11 - 360x288
+	
+	output wire  [1:0] 	mode_bw 		// required bandwidth:
+										//  2'b00 - 1/8, 2'b01 - 1/4,
+										//  2'b10 - 1/2, 2'b11 - 1/1
 );
 
 	wire [2:0] vmode = vcfg[2:0];
-	assign rres = vcfg[4:3];		//raster mode isn't decoded, just clipped from vconfig
+	assign rres = vcfg[4:3];
 
 
 //video mode decode

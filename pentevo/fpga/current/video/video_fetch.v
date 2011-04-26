@@ -9,29 +9,23 @@ module video_fetch(
 	input  wire        clk, // 28 MHz clock
 
 
-	input  wire        cend,     // general
-	input  wire        pre_cend, //        synchronization
+	// working strobes from DRAM controller (7MHz)
+	input  wire        cend,
+	input  wire        pre_cend,
 
-	input  wire        vpix, // vertical window
-	input  wire        tpref,
-
-	input  wire        fetch_start, // fetching start and stop
-	input  wire        fetch_end,   //
-	input  wire        tfetch_start, // fetching start and stop
-	input  wire        tfetch_end,   //
+	input wire         fetch_gfx,     //gfx fetching window
+	input wire         fetch_tile,    //tiles fetching window
 
 	output reg         fetch_sync,     // 1 cycle after cend
 
+	input wire         mode_zx,		// standard ZX mode
+	input wire         mode_tm,		// tiles mode
 
 	input  wire [15:0] video_data,   // video data receiving from dram arbiter
 	input  wire        video_strobe, //
-	output reg         video_go, // indicates need for data
+	output wire        video_go,	 // indicates need for data
 
-	output reg  [63:0] pic_bits // picture bits -- data for renderer
-
-	// currently, video_fetch assigns that there are only 1/8 and 1/4
-	// bandwidth. !!needs correction for higher bandwidths!!
-
+	output reg [15:0]  pic_bits [5:0] // picture bits -- data for renderer
 
 );
 	reg [3:0] fetch_sync_ctr; // generates fetch_sync to synchronize
@@ -42,15 +36,8 @@ module video_fetch(
 	reg       fetch_ptr_clr; // clears fetch_ptr
 
 
-	reg [15:0] fetch_data [0:3]; // stores data fetched from memory
-
-	// fetch window
-	always @(posedge clk)
-		if( fetch_start && vpix )
-			video_go <= 1'b1;
-		else if( fetch_end )
-			video_go <= 1'b0;
-
+	// fetch windows
+	assign video_go = fetch_gfx || fetch_tile;
 
 
 	// fetch sync counter
@@ -69,7 +56,6 @@ module video_fetch(
 			fetch_sync <= 1'b1;
 		else
 			fetch_sync <= 1'b0;
-
 
 
 	// fetch_ptr clear signal

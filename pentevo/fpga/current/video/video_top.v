@@ -146,7 +146,7 @@ module video_top(
 		.vblank(vblank),
 		.vsync(vsync),
 		.vpix(vpix),
-		.tpref(tpref),
+		.vtfetch(vtfetch),
 
 		.int_start(int_start)
 	);
@@ -199,7 +199,7 @@ module video_top(
 		.line_start		(hsync_start),
 		.int_start		(int_start),
 		.vpix			(vpix),
-		.tpref			(tpref),
+		.tfetch			(tfetch),
 
 		.scr_page		(scr_page),
 
@@ -219,7 +219,7 @@ module video_top(
 		.cend     (cend    ),
 
 		.vpix(vpix),
-		.tpref			(tpref),
+		.tfetch			(tfetch),
 
 		.fetch_start(fetch_start),
 		.fetch_end  (fetch_end  ),

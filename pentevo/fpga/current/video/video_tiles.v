@@ -44,24 +44,11 @@ module tiles(
 	reg [8:0] xscrl;	//X scroll
 	reg [8:0] yscrl;	//Y scroll
 
-//config bits
-	wire [1:0] rres;
-	wire [2:0] vmode;
-	
 	assign rres = vcfg[4:3];
 	assign tpals = tmctrl[0];
 	assign xss = tmctrl[1];
 	assign yss = tmctrl[2];
-//	assign xsm0 = tmctrl[4];
-//	assign xsm1 = tmctrl[5];
-//	assign ysm0 = tmctrl[6];
-//	assign ysm1 = tmctrl[7];
 
-//logics
-	assign tm_en = (vcfg[2:0] == 3'b001) || (vcfg[2:0] == 3'b01x);
-	assign tm1_en = (vcfg[2:0] == 3'b011);
-	assign tmhr = (vcfg[2:0] == 3'b001);
-	
 //addresses
 	wire [20:0] tp_addr;
 	wire [20:0] tg_addr;
@@ -69,9 +56,6 @@ module tiles(
 	wire [8:0] ys_addr;
 	wire [8:0] p_addr;
 	
-	assign tp_addr = {tp, tpy, tpx, tpsel};			//tile plane DRAM
-	assign tg_addr = {tgp, tnum[8:0], tcnt};		//tile gfx DRAM
-	assign tgp = (~tpsel ? tgp0 : tgp1) + tnum[10:9];
 	assign ys_addr = {1'b0, tpsel, tpx, ys_lh};		//Y scroll FPRAM
 	assign p_addr = {1'b1, tpals, tpal, tpix};		//tile palette FPRAM
 	

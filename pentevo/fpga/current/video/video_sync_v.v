@@ -25,9 +25,10 @@ module video_sync_v(
 	output reg         vblank,
 	output reg         vsync,
 
-	output reg         tpref,	//starts 16 lines before vpix to prefetch tiles & Xscrolls
-								//end 8 lines before end of vpix
-
+	output reg         vtfetch,	//starts 16 lines before vpix to prefetch tiles & Xscrolls
+								//ends 8 lines before end of vpix
+	
+	output wire        ycnt_init,  // marks line 0 of ycnt
 	output reg         int_start, // one-shot positive pulse marking beginning of INT for Z80
 
 	output reg         vpix // vertical picture marker: active when there is line with pixels in it, not just a border. changes with hsync edge
@@ -104,6 +105,7 @@ module video_sync_v(
 		int_start = 1'b0;
 	end
 
+	assign ycnt_init = vcount == (vp_beg - 9'd16)
 		
 	//vert counter
 	always @(posedge clk) if( hsync_start )
@@ -135,13 +137,13 @@ module video_sync_v(
 	end
 
 
-	//tpref
+	//vtfetch
 	always @(posedge clk) if( hsync_start )
 	begin
 		if (vcount == (vp_beg - 9'd16))
-			tpref <= 1'b1;
+			vtfetch <= 1'b1;
 		else if (vcount == (vp_end - 9'd8))
-			tpref <= 1'b0;
+			vtfetch <= 1'b0;
 	end
 
 
