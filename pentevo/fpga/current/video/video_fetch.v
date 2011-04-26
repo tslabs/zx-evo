@@ -37,7 +37,7 @@ module video_fetch(
 
 
 	// fetch windows
-	assign video_go = fetch_gfx || fetch_tile;
+	assign video_go = fetch_gfx || fetch_tile || fetch_xs;
 
 
 	// fetch sync counter

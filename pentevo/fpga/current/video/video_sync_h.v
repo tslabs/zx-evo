@@ -59,6 +59,7 @@ module video_sync_h(
 	// these signals turn on and turn off 'go' signal, coincide with cend
 	output reg         fetch_gfx,	// 18/10 cycles earlier than hpix
 	output reg         fetch_tile,  // 2 cycles after hsync
+	output reg         fetch_xs, 	// 32 cycles after tiles fetch
 
 );
 
@@ -200,7 +201,10 @@ module video_sync_h(
 	wire fetch_end_cond = hcount == (hp_end - f_pre);
 
 	wire tfetch_start_cond = hcount == (HSYNC_BEG + 9'd2);
-	wire tfetch_end_cond = hcount == (HSYNC_BEG + TFETCH_LEN + XSFETCH_LEN + 9'd2);
+	wire tfetch_end_cond = hcount == (HSYNC_BEG + TFETCH_LEN + 9'd2);
+	
+	wire xsfetch_start_cond = tfetch_end_cond;
+	wire xsetch_end_cond = hcount == (HSYNC_BEG + TFETCH_LEN + XSFETCH_LEN + 9'd2);
 
 	//GFX fetch
 	always @(posedge clk)
@@ -213,7 +217,14 @@ module video_sync_h(
 	always @(posedge clk)
 	if (cend && tfetch_start_cond && vtfetch && mode_tm)	//only in TM
 		fetch_tile <= 1'b1;
-	else
+	else if (cend && tfetch_end_cond)
+		fetch_tile <= 1'b0;
+
+	//Xscrolls fetch
+	always @(posedge clk)
+	if (cend && xsfetch_start_cond && (mode_tm || xints_en))		//used in TM or when X_INT's are enabled
+		fetch_tile <= 1'b1;
+	else if (cend && xsfetch_end_cond)
 		fetch_tile <= 1'b0;
 
 		
