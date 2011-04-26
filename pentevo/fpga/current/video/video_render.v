@@ -3,6 +3,9 @@
 // Pentevo project (c) NedoPC 2011
 //
 // renders fetched video data to the pixels
+//
+// refactored by TS-Labs
+
 
 module video_render(
 
@@ -24,8 +27,8 @@ module video_render(
 	output wire [ 3:0] pixels, // output pixels
 
 	input  wire        mode_zx,         // modes
-	input  wire        mode_tm0_en,
-	input  wire        mode_tm1_en,
+	input  wire        mode_tm,
+	input  wire        mode_tp1_en,
 	
 	input  wire        mode_pixf_14
 );
@@ -125,28 +128,7 @@ module video_render(
 	assign apix = ( pixbit^(modes_zxattr & flash & attrbyte[7]) ) ? pix1 : pix0;
 
 	assign pixels = apix;
-
-
-
-
-	wire rom_ena;
-
-	assign rom_ena = ena_pix & ginc;
-
-	video_fontrom video_fontrom(
-
-		.clock(clk),
-		.enable(rom_ena),
-
-		.data(8'd0),
-		.wraddress(11'd0),
-		.wren(1'b0),
-
-		.rdaddress( {pixbyte, typos} ),
-		.rden(1'b1),
-		.q( symbyte )
-	);
-
+	
 
 endmodule
 
