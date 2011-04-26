@@ -14,7 +14,7 @@
 // tm:
 //	- gfx
 //	- tile
-//	- yscr
+//	- xs
 
 
 module video_addrgen(
@@ -28,7 +28,7 @@ module video_addrgen(
 	input  wire        int_start,
 	input  wire        hsync_start,
 	input  wire        line_start,
-	input  wire        ycnt_init,
+	input  wire        yctr_init,
 	input  wire        vpix,
 	input  wire        htfetch,
 
@@ -40,15 +40,17 @@ module video_addrgen(
 	input  wire        mode_tp1en
 	
 	input wire         fetch_gfx,     //gfx fetching window
-	input wire         fetch_tile,    //tiles/Xscrolls fetching window
+	input wire         fetch_tile,    //tiles fetching window
+	input wire         fetch_xs,    //Xscrolls fetching window
 
 
 );
 
 	//gfx counters
-	reg [12:0] zxcnt;
-	reg [8:0] ycnt;
-	reg [7:0] xcnt;
+	reg [12:0] zxctr;
+	reg [7:0] xctr;
+	reg [8:0] yctr;
+	reg [1:0] tbuf;
 
 	// zx mode:
 	// [0] - attr or pix
@@ -57,65 +59,85 @@ module video_addrgen(
 
 	always @(posedge clk)
 	if (int_start)
-		zxcnt <= 0;
+		zxctr <= 0;
 	else if (video_next)
-		zxcnt <= zxcnt + 1;
+		zxctr <= zxctr + 1;
 
 	// tile mode:
 	//
-	// xcnt (at tiles fetching):
+	// xctr (at tiles fetching):
 	// [0] - tile plane 0 or 1
-	// [3:1] - tile count to fetch in current line
+	// [3:1] - tx[2:0];
 	// [4] - 0-tiles or 1-Xsrolls fetching
 	//
-	// xcnt (at GFX fetching):
+	// xctr (at GFX fetching):
 	// [0] - tile plane 0 or 1
-	// [1] - word 0 or 1 of tile
-	// [7:2] = tx[2:0]
-	// note: {1'b0, xcnt[7:1]} should be added by xs[8:2]
-	// to obtain physical word pointer in tile
+	// [7:1] - adder to xcnt
 	//
-	// ycnt (at tiles fetching):
+	// xs:
+	// [1:0] - pixel select
+	// [8:2] - adder to xctr
+	//
+	// xcnt (at GFX fetching):
+	// [0] - word select 0 or 1 of tile
+	// [6:1] - tx;
+	//
+	// yctr (at tiles fetching):
 	// [2:0] = tx[5:3] - higher 3 bits in tile X coordinate
 	//
-	// ycnt (at GFX fetching):
+	// yctr (at GFX fetching):
 	// [8:0] - Y line number
-	//
-	// note: Xscrolls should be taken from ycnt-16 lines
-	
 	
 	always @(posedge clk) if (hsync_start)
-	if (ycnt_init)
-		ycnt <= 0;
+	if (yctr_init)
+	begin
+		yctr <= 9'd0;
+		tbuf <= 2'b0;
+	end
 	else
-		ycnt <= ycnt + 1;
+	begin
+		yctr <= yctr + 9'd1;
+		if (yctr[2:0] == 3'd7)
+			tbuf <= tbuf_next;
+	end
 	
 	always @(posedge clk)
-	if (hsync_start || line_start)
-		xcnt <= 0;
+	if (line_start)		//begin of GFX
+		xctr <= 0;
+	if (hsync_start)	//begin of tfetch
+		xctr <= (vtfetch && mode_tm || line_start) ? 8'd0 : 8'd16;	//if tiles aren't read, counter is set right to Xs.
 	else if (video_next)
-		xcnt <= xctr + (mode_tp1en ? 2'b1 : 2'b2);
+		xctr <= xctr + (mode_tp1en ? 2'b1 : 2'b2);		//if 2nd tiles plane is off, counter skips bit0
 
 		
+	wire [1:0] tbuf_next = 	({2{tbuf == 2'd0}} & 2'd1) |
+							({2{tbuf == 2'd1}} & 2'd2) |
+							({2{tbuf == 2'd2}} & 2'd0) ;
+	
+	wire [8:0] ty = ys[8:3] + yctr[8:3];
+	wire [6:0] xcnt = xctr[7:1] + xs[8:2];
+	
 	wire tpn;
 	wire [10:0] tnum = ~tpn ? tn0 : tn1;
 	wire [7:0] tgp = (~tpn ? tgp0 : tgp1) + tnum[10:9];
 	wire [3:0] tptr;
 	
-	wire [11:0] addr_zx_pix  = { zxcnt[12:11], zxcnt[7:5], zxcnt[10:8], zxcnt[4:1] };
-	wire [11:0] addr_zx_attr = { 3'b110, zxcnt[12:8], zxcnt[4:1] };
+	wire [11:0] addr_zx_pix  = { zxctr[12:11], zxctr[7:5], zxctr[10:8], zxctr[4:1] };
+	wire [11:0] addr_zx_attr = { 3'b110, zxctr[12:8], zxctr[4:1] };
 
-	wire [20:0] addr_zx = { 6'b000001, scr_page, 2'b10, ( zxcnt[0] ? addr_zx_attr : addr_zx_pix ) };
+	wire [20:0] addr_zx = { 6'b000001, scr_page, 2'b10, ( zxctr[0] ? addr_zx_attr : addr_zx_pix ) };
 
 	wire 
 	wire [20:0] addr_tm_gfx = {tgp, tnum[8:0], tptr};		// 8.9.4
 	wire [20:0] addr_tm_tile = {tp, ty, tx, tpn}; 			// 8.6.6.1
-	wire [20:0] addr_tm_xs = {fp, fa, 1'b0, tpn, ycnt};		// 8.2.1.1.9
+	wire [20:0] addr_tm_xs = {fp, fa, 1'b0, tpn, yctr};		// 8.2.1.1.9
 
 	wire [20:0] addr_tm =	( {21{fetch_gfx	}} & addr_tm_gfx	)|
 							( {21{fetch_tile}} & addr_tm_tile	)|
 							( {21{fetch_xs	}} & addr_tm_xs		);
 
+	wire ldaddr = video_next;	//FIX IT!!!!!!! no address for the 1st fetch is NOW latched!!!
+	
 	always @(posedge clk) if (ldaddr)
 	begin
 		video_addr <= 	( {21{mode_zx	}} & addr_zx  )	|

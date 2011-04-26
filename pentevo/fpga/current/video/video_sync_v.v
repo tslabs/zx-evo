@@ -28,15 +28,14 @@ module video_sync_v(
 	output reg         vtfetch,	//starts 16 lines before vpix to prefetch tiles & Xscrolls
 								//ends 8 lines before end of vpix
 	
-	output wire        ycnt_init,  // marks line 0 of ycnt
+	output wire        yctr_init,  // marks line 0 of yctr
 	output reg         int_start, // one-shot positive pulse marking beginning of INT for Z80
 
-	output reg         vpix // vertical picture marker: active when there is line with pixels in it, not just a border. changes with hsync edge
+	output reg         vpix // vertical picture marker: active when there is line with pixels in it,
+							//not just a border. changes with hsync edge
+	output reg [8:0]   vcount;
+							
 );
-
-
-
-
 
 	localparam VBLNK_BEG = 9'd00;
 	localparam VSYNC_BEG = 9'd08;
@@ -63,8 +62,6 @@ module video_sync_v(
 
 	localparam VPERIOD = 9'd320; // pentagono foreva!
 
-
-	reg [8:0] vcount;
 
 	reg [8:0] vp_beg, vp_end;
 	
@@ -105,7 +102,7 @@ module video_sync_v(
 		int_start = 1'b0;
 	end
 
-	assign ycnt_init = vcount == (vp_beg - 9'd16)
+	assign yctr_init = vcount == (vp_beg - 9'd16)
 		
 	//vert counter
 	always @(posedge clk) if( hsync_start )
