@@ -57,9 +57,12 @@ module video_sync_h(
 	output reg         hpix,		// marks window during which pixels are outting
 
 	// these signals turn on and turn off 'go' signal, coincide with cend
-	output reg         fetch_gfx,	// 18/10 cycles earlier than hpix
-	output reg         fetch_tile,  // 2 cycles after hsync
-	output reg         fetch_xs, 	// 32 cycles after tiles fetch
+	output reg		   fetch_start,		// 18/10 cycles earlier than hpix
+	output reg		   fetch_end,       
+	output reg		   tfetch_start,	// 2 cycles after hsync
+	output reg		   tfetch_end,
+	output reg		   xsfetch_start,   // 32 cycles after tiles fetch
+	output reg		   xsfetch_end,
 
 );
 
@@ -88,8 +91,10 @@ module video_sync_h(
 									// 'go' goes to 1, screen output starts another
 									// 16/8 cycles after 1st data bundle is fetched
 
-	localparam TFETCH_LEN = 9'd32;	//16 words for tiles
-	localparam XSFETCH_LEN = 9'd4;	//2 words for Xscrolls
+	localparam TFETCH_BEG = 9'd2;	// start for tiles fetch
+	localparam TFETCH_END = 9'd34;	// 16 words for tiles
+	localparam XSFETCH_BEG = 9'd40;	// start for Xscrolls fetch
+	localparam XSFETCH_END = 9'd44;	// 2 words for Xscrolls
 
 
 	localparam SCANIN_BEG = 9'd88; // when scan-doubler starts pixel storing
@@ -200,32 +205,50 @@ module video_sync_h(
 	wire fetch_start_cond = hcount == (hp_beg - f_pre);
 	wire fetch_end_cond = hcount == (hp_end - f_pre);
 
-	wire tfetch_start_cond = hcount == (HSYNC_BEG + 9'd2);
-	wire tfetch_end_cond = hcount == (HSYNC_BEG + TFETCH_LEN + 9'd2);
+	wire tfetch_start_cond = hcount == (HSYNC_BEG + TFETCH_BEG);
+	wire tfetch_end_cond = hcount == (HSYNC_BEG + TFETCH_END);
 	
-	wire xsfetch_start_cond = tfetch_end_cond;
-	wire xsetch_end_cond = hcount == (HSYNC_BEG + TFETCH_LEN + XSFETCH_LEN + 9'd2);
+	wire xsfetch_start_cond = hcount == (HSYNC_BEG + XSFETCH_BEG);
+	wire xsfetch_end_cond = hcount == (HSYNC_BEG + XSFETCH_END);
 
 	//GFX fetch
 	always @(posedge clk)
-	if (cend && fetch_start_cond && vpix && !mode_brd)	//if no pixel GFX - fetch will never start
-		fetch_gfx <= 1'b1;
-	else if (cend && fetch_end_cond)
-		fetch_gfx <= 1'b0;
+	if (post_cbeg && fetch_start_cond)
+		fetch_start <= 1'b1;
+	else
+		fetch_start <= 1'b0;
+		
+	always @(posedge clk)
+	if (pre_cend && fetch_end_cond)
+		fetch_end <= 1'b1;
+	else
+		fetch_end <= 1'b0;
 
 	//tiles fetch
 	always @(posedge clk)
-	if (cend && tfetch_start_cond && vtfetch && mode_tm)	//only in TM
-		fetch_tile <= 1'b1;
-	else if (cend && tfetch_end_cond)
-		fetch_tile <= 1'b0;
+	if (post_cbeg && tfetch_start_cond)
+		tfetch_start <= 1'b1;
+	else
+		tfetch_start <= 1'b0;
+		
+	always @(posedge clk)
+	if (pre_cend && tfetch_end_cond)
+		tfetch_end <= 1'b1;
+	else
+		tfetch_end <= 1'b0;
 
 	//Xscrolls fetch
 	always @(posedge clk)
-	if (cend && xsfetch_start_cond && (mode_tm || xints_en))		//used in TM or when X_INT's are enabled
-		fetch_tile <= 1'b1;
-	else if (cend && xsfetch_end_cond)
-		fetch_tile <= 1'b0;
+	if (post_cbeg && xsfetch_start_cond)
+		xsfetch_start <= 1'b1;
+	else
+		xsfetch_start <= 1'b0;
+		
+	always @(posedge clk)
+	if (pre_cend && xsfetch_end_cond)
+		xsfetch_end <= 1'b1;
+	else
+		xsfetch_end <= 1'b0;
 
 		
 	//INT

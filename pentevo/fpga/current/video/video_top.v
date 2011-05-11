@@ -337,8 +337,19 @@ module video_top(
 	);
 
 
+	//TFIFO
+	wire [8:0] tf_ra, tf_wa;
+	wire [15:0] tf_rd;
+	wire tf_we;
 
-
+	tfifo tfifo(
+		.wraddress(tf_wa),
+		.data(video_data),
+		.rdaddress(tf_ra),
+		.q(tf_rd),
+		.wrclock(fclk),
+		.wren(tf_we)
+	);
 
 
 endmodule

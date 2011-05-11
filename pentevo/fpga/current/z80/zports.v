@@ -522,9 +522,7 @@ module zports(
 
 			
 	//#55FF - portXT
-	wire [7:0] xt_addr;
 	reg [5:0] snum;
-	reg [4:0] hnum;
 
 	//Port XT Regs
 	parameter xborder  = 8'h00;
@@ -544,7 +542,7 @@ module zports(
 	parameter tmctr  = 8'h0e;
 	parameter hsint  = 8'h0f;
 
-	assign xt_addr = a[15:8];
+	wire [7:0] xt_addr = a[15:8];
 	//#55FF Write to XT Regs and allied ports
 	always @(posedge zclk, negedge rst_n)
 

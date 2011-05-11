@@ -64,12 +64,6 @@ module tiles(
 	assign t_addr = tp_n_tg ? tp_addr : tg_addr;
 
 	
-//TBUF
-	wire [8:0] tb_ra, tb_wa;
-	wire [7:0] tb_rd;
-	wire tb_we;
-
-	tbuf tbuf(	.wraddress(tb_wa), .data(d), .rdaddress(tb_ra), .q(tb_rd), .wrclock(fclk), .wren(tb_we) );
 			
 endmodule
 

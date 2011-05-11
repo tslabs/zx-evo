@@ -1,7 +1,7 @@
-//YSTP 512x8
+//yscrl_tpal 512x8
 //Y scroll table 256x8
 //palette RAM for tiles 256x8
-module ystp (
+module yscrl_tpal (
 	input	[7:0]  data,
 	input	[8:0]  rdaddress,
 	input	[8:0]  wraddress,
@@ -45,9 +45,9 @@ module ystp (
 endmodule
 
 
-//TBUF
-//tiles array buffer 384x16 (3 buffers x 2 tile planes x 64 tiles)
-module tbuf (
+//TFIFO
+//tiles FIFO 512x16 (4 buffers x 2 tile planes x 64 tiles)
+module tfifo (
 	input	[15:0]  data,
 	input	[8:0]  rdaddress,
 	input	[8:0]  wraddress,
