@@ -24,9 +24,13 @@ module video_modedecode(
 										//  10 - 320x240
 										//  11 - 360x288
 	
+	input wire			video_xs,		// tunes BW for xscrolls fetcher
+	
 	output wire  [1:0] 	mode_bw 		// required bandwidth:
-										//  2'b00 - 1/8, 2'b01 - 1/4,
-										//  2'b10 - 1/2, 2'b11 - 1/1
+										//  2'b00 - 1/8
+										//  2'b01 - 1/4
+										//  2'b10 - 1/2
+										//  2'b11 - 1/1
 );
 
 	wire [2:0] vmode = vcfg[2:0];
@@ -42,17 +46,18 @@ module video_modedecode(
 	wire brd =	(vmode == 3'b111);
 
 	assign mode_zx = zx;
-	assign mode_tm = (tm0 | tm1 | tmhr);
-	assign mode_tp1en = (tm1 | tmhr);
+	assign mode_tm = (tm0 || tm1 || tmhr);
+	assign mode_tp1en = (tm1 || tmhr);
 	assign mode_brd = brd;
 
 	
 //bandwidth decode
 	
-	assign mode_bw =	(tm1 | tmhr) ? 2'b10 : 	// 1/2
-						(tm0) 		 ? 2'b01 :	// 1/4
-									   2'b00;	// 1/8
-
+	wire tm_bw_norm = (tm1 || tmhr) ? 2'b10 : 2'b01;	// 1/2 or 1/4
+	wire tm_bw_xs = (tm1 || tmhr) ? 2'b01 : 2'b00;		// 1/4 or 1/8
+	wire tm_bw = bw_xs ? tm_bw_xs : tm_bw_norm;
+	
+	assign mode_bw = mode_zx ? tm_bw : 2'b00;			// 1/8
 			
 //pixel frequency decode
 

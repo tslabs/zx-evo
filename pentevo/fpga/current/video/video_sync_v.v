@@ -135,7 +135,7 @@ module video_sync_v(
 
 
 	//vtfetch
-	always @(posedge clk) if( hsync_start )
+	always @(posedge clk) if (hsync_start)
 	begin
 		if (vcount == (vp_beg - 9'd16))
 			vtfetch <= 1'b1;
@@ -144,6 +144,16 @@ module video_sync_v(
 	end
 
 
+	//vpix
+	always @(posedge clk) if (hsync_start)
+	begin
+		if (vcount == vp_beg)
+			vpix <= 1'b1;
+		else if (vcount == vp_end)
+			vpix <= 1'b0;
+	end
+
+	
 	//INT
 	always @(posedge clk)
 	begin
@@ -153,16 +163,6 @@ module video_sync_v(
 			int_start <= 1'b0;
 	end
 
-
-	//vpix
-	always @(posedge clk) if( hsync_start )
-	begin
-		if (vcount == vp_beg)
-			vpix <= 1'b1;
-		else if (vcount == vp_end)
-			vpix <= 1'b0;
-	end
-
-
+	
 endmodule
 

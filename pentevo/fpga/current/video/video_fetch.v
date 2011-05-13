@@ -13,9 +13,9 @@ module video_fetch(
 	input  wire        cend,
 	input  wire        pre_cend,
 
-	input wire         fetch_gfx,     //gfx fetching window
-	input wire         fetch_tile,    //tiles fetching window
-	input wire         fetch_xs,    //tiles fetching window
+	input wire         fetch_gfx,  	  	//gfx fetching window
+	input wire         fetch_tile, 	  	//tiles fetching window
+	input wire         fetch_xs,    	//xscrolls fetching window
 
 	output reg         fetch_sync,     // 1 cycle after cend
 
@@ -24,16 +24,22 @@ module video_fetch(
 
 	input  wire [15:0] video_data,   // video data receiving from dram arbiter
 	input  wire        video_strobe, //
-	output reg         video_go,	 // indicates need for data
+	output wire        video_go,	 // indicates need for data
 
 	output reg [15:0]  pic_bits [5:0] // picture bits -- data for renderer
 
-	input wire		   fetch_start,	    //gfx fetching
-	input wire		   fetch_end,   
+	input wire		   gfetch_start,	    //gfx fetching
+	input wire		   gfetch_end,   
 	input wire		   tfetch_start,    //tiles fetching
     input wire		   tfetch_end,
     input wire		   xsfetch_start, 	//Xscrolls fetching
 	input wire		   xsfetch_end,
+	
+	output reg		   video_gfx,
+	output reg		   video_tile,
+	output reg		   video_xs,
+
+	
 );
 
 
@@ -46,15 +52,31 @@ module video_fetch(
 
 
 	// fetch windows
-	always @(posedge clk)
-		if ( 	(fetch_start && vpix && !mode_brd) ||
-				(tfetch_start && vtfetch && mode_tm) ||
-				(xsfetch_start && (mode_tm || xints_en))
-			)
-			video_go <= 1'b1;
-		else if (fetch_end || tfetch_end || xsfetch_end)
-			video_go <= 1'b0;
+	wire gfetch_go = gfetch_start && vpix && !mode_brd;		// gfx fetch window: at gfx window and no BM
+	wire tfetch_go = tfetch_start && vtfetch && mode_tm;	// tiles: 16 lines before start and 8 before end of gfx in TM
+	wire xsfetch_go = xsfetch_start && ((vpix && mode_tm) || xints_en);		// Xscrolls: at gfx in TM or when xints on
 
+	assign video_go = video_gfx || video_tile || video_xs;
+	
+	always @(posedge clk)
+	begin
+		if (gfetch_go)
+			video_gfx <= 1'b1;
+			
+		if (tfetch_go)
+			video_tile <= 1'b1;
+			
+		if (xsfetch_go)
+			video_xs <= 1'b1;
+			
+		if (gfetch_end || tfetch_end || xsfetch_end || xs_stop)
+		begin
+			video_gfx <= 1'b0;
+			video_tile <= 1'b0;
+			video_xs <= 1'b0;
+		end
+	end
+	
 			
 	// fetch sync counter
 	always @(posedge clk) if( cend )
