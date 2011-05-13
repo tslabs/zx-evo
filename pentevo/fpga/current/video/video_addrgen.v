@@ -36,9 +36,8 @@ module video_addrgen(
 	input  wire	[1:0]  fa,
 	input  wire        mode_zx,			// decoded modes
 	input  wire        mode_tm,
-	input  wire        mode_tp1en
+	input  wire        mode_tp1en,
 	
-
 );
 
 
@@ -48,7 +47,13 @@ module video_addrgen(
 	reg [8:0] yctr;		//ver counter for tiles and tile gfx
 	reg [1:0] tfsel;	//tile FIFO select
 
+	wire fetch_start = gfetch_start || tfetch_start || xsfetch_start;
+	reg fetch_start_r;
 	
+	always @(posedge clk);
+		fetch_start_r <= fetch_start;
+
+
 	// zx mode:
 	// [0] - attr or pix
 	// [4:1] - horiz pos 0..15 (words)
@@ -62,28 +67,36 @@ module video_addrgen(
 
 
 	// tile mode:
-	//
-	// xctr (at tiles fetching):                   	xctr (at GFX fetching):
-	// [0] - tile plane 0 or 1                     	[0] - tile plane 0 or 1
-	// [3:1] - tx[2:0];                            	[7:1] - adder to xcnt
-	// [4] - 0-tiles or 1-Xsrolls fetching
 
-	// xs:
+	// xctr (at tiles fetching):               	xctr (at gfx fetching):			xctr (at xscrolls fetching):   
+	// [0] - tile plane		                 	[0] - tile plane		     	[0] - tile plane
+	// [3:1] - posx[2:0];                      	[7:1] - adder to x
+
+	// xs:	data from xscrolls array
 	// [1:0] - pixel select
-	// [8:2] - adder to xctr
-	//
-	// xcnt (at GFX fetching):
-	// [0] - word select 0 or 1 of tile
-	// [6:1] - tx;
+	// [8:2] - adder to xctr[7:1]
 
-	// yctr (at tiles fetching):					yctr (at GFX fetching):
-	// [2:0] = tx[5:3] - 3 MSBs in tile X coord    	[8:0] - Y line number
+	// x:	sum of xctr & xs
+	// [0] - tile word select
+	// [6:1] - posx;
+
+	// yctr (at tiles fetching):
+	// [2:0] = posx[5:3]				    
+	// [8:3] - adder to ys[8:3]
+	
+	// ys:	data from yscrolls array
+	// [1:0] - pixel select
+	// [8:2] - adder to xctr[7:1]
+
+	// y:	sum of yctr & ys
+	// [2:0] - tile line select
+	// [8:3] - posy[5:0]
 
 	always @(posedge clk)
-	if (hsync_start || line_start)
-		xctr <= ((vtfetch && mode_tm) || line_start) ? 8'd0 : 8'd16;	//if tiles aren't read, counter is set right to Xs.
+	if (fetch_start)
+		xctr <= xsfetch_start ? 8'd16 : 8'd0;
 	else if (video_next)
-		xctr <= xctr + (mode_tp1en ? 2'b1 : 2'b2);		//if 2nd tiles plane is off, counter skips over bit0
+		xctr <= xctr + (mode_tp1en ? 2'd1 : 2'd2);		//if 2nd tiles plane is off, counter skips over bit0
 
 	always @(posedge clk) if (hsync_start)
 	if (yctr_init)
@@ -99,20 +112,23 @@ module video_addrgen(
 	end
 	
 
-	wire [8:0] ty = ys[8:3] + yctr[8:3];
-	wire [6:0] xcnt = xctr[7:1] + xs[8:2];
+	wire [8:0] ty = ys[8:3] + yctr[8:3];		// tile pos Y
+	wire [6:0] x = xctr[7:1] + xs[8:2];
 	
 	wire tpn;
 	wire [10:0] tnum = ~tpn ? tn0 : tn1;
 	wire [7:0] tgp = (~tpn ? tgp0 : tgp1) + tnum[10:9];
 	wire [3:0] tptr;
 	
+
+	// zx mode addresses
 	wire [11:0] addr_zx_pix  = { zxctr[12:11], zxctr[7:5], zxctr[10:8], zxctr[4:1] };
 	wire [11:0] addr_zx_attr = { 3'b110, zxctr[12:8], zxctr[4:1] };
 
 	wire [20:0] addr_zx = { 6'b000001, scr_page, 2'b10, ( zxctr[0] ? addr_zx_attr : addr_zx_pix ) };
 
-	wire 
+	
+	// tile mode addresses
 	wire [20:0] addr_tm_gfx = {tgp, tnum[8:0], tptr};		// 8.9.4
 	wire [20:0] addr_tm_tile = {tp, ty, tx, tpn}; 			// 8.6.6.1
 	wire [20:0] addr_tm_xs = {fp, fa, 1'b0, tpn, yctr};		// 8.2.1.1.9
@@ -121,10 +137,8 @@ module video_addrgen(
 							( {21{video_tile}} & addr_tm_tile	)|
 							( {21{video_xs	}} & addr_tm_xs		);
 
-	wire ldaddr = 	video_next ||
-					(mode_zx && int_start) ||
-					(mode_tm && )
-					;	//ATTENTION!!!!!!! address for the 1st fetch latched!!!
+							
+	wire ldaddr = (video_next || xfetch_start_r);
 	
 	always @(posedge clk) if (ldaddr)
 	begin
