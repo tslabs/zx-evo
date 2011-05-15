@@ -38,6 +38,8 @@ module video_fetch(
 	output reg		   video_gfx,
 	output reg		   video_tile,
 	output reg		   video_xs,
+	
+	output reg [15:0]  xs	[0:1]
 
 	
 );

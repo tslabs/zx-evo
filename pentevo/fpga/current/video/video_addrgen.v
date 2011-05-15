@@ -38,6 +38,9 @@ module video_addrgen(
 	input  wire        mode_tm,
 	input  wire        mode_tp1en,
 	
+	input  wire	[15:0] xs [0:1],
+	input  wire [15:0] 
+	
 );
 
 
@@ -66,13 +69,21 @@ module video_addrgen(
 		zxctr <= zxctr + 1;
 
 
+	// zx mode addresses
+	
+	wire [11:0] addr_zx_pix  = { zxctr[12:11], zxctr[7:5], zxctr[10:8], zxctr[4:1] };
+	wire [11:0] addr_zx_attr = { 3'b110, zxctr[12:8], zxctr[4:1] };
+
+	wire [20:0] addr_zx = { 6'b000001, scr_page, 2'b10, ( zxctr[0] ? addr_zx_attr : addr_zx_pix ) };
+
+
 	// tile mode:
 
 	// xctr (at tiles fetching):               	xctr (at gfx fetching):			xctr (at xscrolls fetching):   
 	// [0] - tile plane		                 	[0] - tile plane		     	[0] - tile plane
 	// [3:1] - posx[2:0];                      	[7:1] - adder to x
 
-	// xs:	data from xscrolls array
+	// xs:	data from xscrolls
 	// [1:0] - pixel select
 	// [8:2] - adder to xctr[7:1]
 
@@ -84,9 +95,9 @@ module video_addrgen(
 	// [2:0] = posx[5:3]				    
 	// [8:3] - adder to ys[8:3]
 	
-	// ys:	data from yscrolls array
-	// [1:0] - pixel select
-	// [8:2] - adder to xctr[7:1]
+	// ys:	data from yscrolls (at tiles fetching)
+	// [2:0] - start line number
+	// [8:3] - adder to yctr[8:3]
 
 	// y:	sum of yctr & ys
 	// [2:0] - tile line select
@@ -112,26 +123,24 @@ module video_addrgen(
 	end
 	
 
-	wire [8:0] ty = ys[8:3] + yctr[8:3];		// tile pos Y
+	// tile mode addresses
+
+	wire tpn = xctr[0];
 	wire [6:0] x = xctr[7:1] + xs[8:2];
-	
-	wire tpn;
+	wire [8:0] y = {yctr[8:3] + ys[8:3], ys[2:0]};
+
 	wire [10:0] tnum = ~tpn ? tn0 : tn1;
 	wire [7:0] tgp = (~tpn ? tgp0 : tgp1) + tnum[10:9];
 	wire [3:0] tptr;
 	
-
-	// zx mode addresses
-	wire [11:0] addr_zx_pix  = { zxctr[12:11], zxctr[7:5], zxctr[10:8], zxctr[4:1] };
-	wire [11:0] addr_zx_attr = { 3'b110, zxctr[12:8], zxctr[4:1] };
-
-	wire [20:0] addr_zx = { 6'b000001, scr_page, 2'b10, ( zxctr[0] ? addr_zx_attr : addr_zx_pix ) };
-
+	// Y Scroll Table Address							
+	wire [8:0] ys_addr_tile = {1'b0, tpn, yctr[2:0], xctr[3:1], h_n_l};
+	wire [8:0] ys_addr_gfx = {1'b0, tpn, x[6:1], h_n_l};
+	wire [8:0] ys_addr = video_gfx ? ys_addr_gfx : ys_addr_tile;
 	
-	// tile mode addresses
-	wire [20:0] addr_tm_gfx = {tgp, tnum[8:0], tptr};		// 8.9.4
-	wire [20:0] addr_tm_tile = {tp, ty, tx, tpn}; 			// 8.6.6.1
-	wire [20:0] addr_tm_xs = {fp, fa, 1'b0, tpn, yctr};		// 8.2.1.1.9
+	wire [20:0] addr_tm_tile = {tp, posy, yctr[2:0], xctr[3:1], tpn};	//Address for Tile Planes 																		
+	wire [20:0] addr_tm_gfx = {tgp, tnum[8:0], tptr};
+	wire [20:0] addr_tm_xs = {fp, fa, 1'b0, tpn, yctr};
 
 	wire [20:0] addr_tm =	( {21{video_gfx	}} & addr_tm_gfx	)|
 							( {21{video_tile}} & addr_tm_tile	)|
