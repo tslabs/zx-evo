@@ -1,9 +1,0 @@
-vsim -novopt work.tb_cdv
-view wave
-
-add wave sim:/tb_cdv/horiz_sync/*
-add wave -divider
-add wave sim:/tb_cdv/vert_sync/*
-add wave -divider
-add wave -unsigned -decimal sim:/tb_cdv/fecher/*
-

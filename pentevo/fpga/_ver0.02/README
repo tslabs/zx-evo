@@ -1,3 +1,0 @@
-Now CS'es for IDE are generated from address only, so they come earlier than
-RD/WR strobes. Old WD drives work better now.
-

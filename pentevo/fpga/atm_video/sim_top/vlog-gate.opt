@@ -1,8 +1,0 @@
-+define+GATE
-tb_top.v
-gate/top.vo
-gate/flex10ke_atoms.v
-../sim_models/drammem.v
-rom_top.v
-testrom.v
-
