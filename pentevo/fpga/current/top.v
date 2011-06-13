@@ -164,7 +164,7 @@ module top(
 	wire [7:0]	fp;
 	wire [1:0]	fa;
 	wire [7:0]	tp;
-	wire fwd;
+	wire zmaps_wr_disable;
 	wire [7:0] tgp0;
 	wire [7:0] tgp1;
 	wire [7:0] tmctrl;
@@ -634,7 +634,7 @@ zkbdmus zkbdmus( .fclk(fclk), .rst_n(rst_n),
 	              .ide_wr_n(ide_wr_n), .ide_rd_n(ide_rd_n),
 
 					.vcfg(vcfg),
-					.fp(fp), .fa(fa), .tp(tp), .fwd(fwd),
+					.fp(fp), .fa(fa), .tp(tp), .zmaps_wr_disable(zmaps_wr_disable),
 					.tgp0(tgp0), .tgp1(tgp1),
 					.tmctrl(tmctrl), .hsint(hsint),
 				  
@@ -671,7 +671,7 @@ zmaps zmaps(
 					.cpu_addr({cpu_addr, cpu_wrbsel}),
 
 					.fp(fp), .fa(fa),
-					.fwd(fwd),
+					.zmaps_wr_disable(zmaps_wr_disable),
 					
 					.yt_wa(yt_wa), .yt_we(yt_we), 
 					.sf_wa(sf_wa), .sf_we(sf_we), 

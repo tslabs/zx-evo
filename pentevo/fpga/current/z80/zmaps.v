@@ -13,42 +13,22 @@ module zmaps(
 	input cpu_rnw,
 	input [21:0] cpu_addr,
 	
-	input [7:0] fp,
-	input [1:0] fa,
-	input fwd,
+	input [7:0] zmaps_page,
+	input [1:0] zmaps_addr,
+	input zmaps_wr_disable,
 	
-//VSTP
-	output [8:0] yt_wa,
-	output yt_we,
-	
-//SPRAM
-	output [8:0] sp_wa,
-	output sp_we,
-
-//SFILE
-	output [8:0] sf_wa,
-	output sf_we
-
-
+	output ys_tp_we,
+	output sf_sp_we,
+	output apu_code_we
 	
 );
 
-	parameter hscrl0 = 3'b00x;		//not
-	parameter hscrl1 = 3'b01x;		//used
-	parameter vstp = 3'b100;
-	parameter spram = 3'b101;
-	parameter sfile = 3'b110;	
+	assign zmaps_hit = (cpu_addr[21:14] == zmaps_page) && (cpu_addr[13:12] == zmaps_addr);
+	assign cpu_w = (cpu_req && ~cpu_rnw && ~zmaps_wr_disable);
+
+	assign ys_tp_we = (cpu_w && (cpu_addr[11:9] == 3'b100) && zmaps_hit);		// YScrolls + Tile Palette
+	assign sf_sp_we = (cpu_w && (cpu_addr[11:9] == 3'b101) && zmaps_hit);		// SPU File + Palette
+	assign apu_code_we = (cpu_w && (cpu_addr[11:9] == 3'b110) && zmaps_hit);	// APU Code
+
 	
-	assign fmhit = (cpu_addr[21:14] == fp) && (cpu_addr[13:12] == fa);
-	assign cpu_w = (cpu_req && ~cpu_rnw && ~fwd);
-
-	assign yt_we = (cpu_w && (cpu_addr[11:9] == vstp) && fmhit);
-	assign sp_we = (cpu_w && (cpu_addr[11:9] == spram) && fmhit);
-	assign sf_we = (cpu_w && (cpu_addr[11:9] == sfile) && fmhit);
-
-	assign yt_wa = cpu_addr[8:0];
-	assign sp_wa = cpu_addr[8:0];
-	assign sf_wa = cpu_addr[8:0];
-
-
 endmodule
