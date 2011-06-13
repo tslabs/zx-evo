@@ -72,15 +72,15 @@ module zports(
 	input  wire [ 7:0] sd_dataout,
 
 //	PortXT outputs
-	output reg [7:0] vcfg,		//#08
-	output reg [1:0] fa,		//#09
-	output reg fwd,
-	output reg [7:0] fp,		//#0A
-	output reg [7:0] tp,		//#0B
-	output reg [7:0] tgp0,		//#0C
-	output reg [7:0] tgp1,		//#0D
-	output reg [7:0] tmctrl,	//#0E
-	output reg [7:0] ysint,		//#0F
+	output reg [7:0] vcfg,			//#08
+	output reg [1:0] zmaps_addr,	//#09
+	output reg zmaps_wr_disable,
+	output reg [7:0] zmaps_page,	//#0A
+	output reg [7:0] tile_page,		//#0B
+	output reg [7:0] tile_gfx_page0,	//#0C
+	output reg [7:0] tile_gfx_page1,	//#0D
+	output reg [7:0] tmctrl,		//#0E
+	output reg [7:0] ysint,			//#0F
 
 
 	// WAIT-ports related
@@ -534,8 +534,8 @@ module zports(
 	parameter page2  = 8'h06;
 	parameter page3  = 8'h07;
 	parameter vconfig  = 8'h08;
-	parameter faddr  = 8'h09;
-	parameter fpage  = 8'h0a;
+	parameter zaddr  = 8'h09;
+	parameter zpage  = 8'h0a;
 	parameter tpage  = 8'h0b;
 	parameter tgpage0  = 8'h0c;
 	parameter tgpage1  = 8'h0d;
@@ -550,7 +550,7 @@ module zports(
 		begin
 			//here set up RESET XT defaults
 			vcfg <= 8'b0;
-			fwd <= 1'b1;
+			zmaps_wr_disable <= 1'b1;
 		end
 	else
 
@@ -575,19 +575,19 @@ module zports(
 			border <= din[5:0];		//#00
 	vconfig:
 			vcfg <= din[7:0];		//#08
-	faddr:
+	zaddr:
 		begin
-			fa <= din[1:0];			//#09
-			fwd <= din[7];
+			zmaps_addr <= din[1:0];			//#09
+			zmaps_wr_disable <= din[7];
 		end
-	fpage:
-			fp <= din[7:0];			//#0A
+	zpage:
+			zmaps_page <= din[7:0];			//#0A
 	tpage:
-			tp <= din[7:0];			//#0B
+			tile_page <= din[7:0];			//#0B
 	tgpage0:
-			tgp0 <= din[7:0];		//#0C
+			tile_gfx_page0 <= din[7:0];		//#0C
 	tgpage1:
-			tgp1 <= din[7:0];		//#0D
+			tile_gfx_page1 <= din[7:0];		//#0D
 	tmctr:
 			tmctrl[7:0] <= din[7:0];	//#0E
 	hsint:
