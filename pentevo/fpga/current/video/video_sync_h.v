@@ -18,8 +18,6 @@
 // t3-t2 = 41 clocks, then video starts
 //
 // repetition period = 448 clocks
-//
-// refactored by TS-Labs
 
 
 module video_sync_h(
@@ -30,41 +28,31 @@ module video_sync_h(
 	                         // this is mainly for phasing with CPU clock 3.5/7 MHz
 	                         // still not used, but this may change anytime
 
-    // working strobes from DRAM controller (7MHz)
-	input  wire        cend,
+	input  wire        cend,     // working strobes from DRAM controller (7MHz)
 	input  wire        pre_cend,
 
-	input wire         mode_tm,		// tiles mode
-	input wire         mode_brd,	// no linear gfx - only border color
 
-	input  wire [1:0]  rres,		//raster X resolution 00=256/01=320/10=320/11=360
+	// modes inputs
+	input  wire        mode_atm_n_pent,
+	input  wire        mode_a_text,
 
-	input  wire        vpix,		// vertical gfx window
-	input  wire        vtfetch,		// vertical tiles fetch window
 
 	output reg         hblank,
 	output reg         hsync,
 
 	output reg         line_start,  // 1 video cycle prior to actual start of visible line
-	output reg         hsync_start, // 1 cycle prior to beginning of hsync:
-									// used in frame sync/blank generation
+	output reg         hsync_start, // 1 cycle prior to beginning of hsync: used in frame sync/blank generation
 	                                // these signals coincide with cend
 
 	output reg         hint_start, // horizontal position of INT start, for fine tuning
 
 	output reg         scanin_start,
-	
-	output reg         hpix,		// marks window during which pixels are outting
 
-	// these signals turn on and turn off 'go' signal
-	// start coincides with post_cbeg
-	// end coincides with cend
-	output wire		   gfetch_start,		// 18/10 cycles earlier than hpix
-	output wire		   gfetch_end,       
-	output wire		   tfetch_start,	// 2 cycles after hsync
-	output wire		   tfetch_end,
-	output wire		   xsfetch_start,   // 32 cycles after tiles fetch
-	output wire		   xsfetch_end,
+	output reg         hpix, // marks gate during which pixels are outting
+
+	                                // these signals turn on and turn off 'go' signal
+	output reg         fetch_start, // 18 cycles earlier than hpix, coincide with cend
+	output reg         fetch_end    // --//--
 
 );
 
@@ -74,34 +62,24 @@ module video_sync_h(
 	localparam HSYNC_END = 9'd43;
 	localparam HBLNK_END = 9'd88;
 
-	// 256	=>	88-52-256-52
-	localparam HPIX_BEG_256 = 9'd140;
-	localparam HPIX_END_256 = 9'd396;
+	// pentagon (x256)
+	localparam HPIX_BEG_PENT = 9'd140; // 52 cycles from line_start to pixels beginning
+	localparam HPIX_END_PENT = 9'd396;
 
-	// 320	=>	88-20-320-20
-	localparam HPIX_BEG_320 = 9'd108;
-	localparam HPIX_END_320 = 9'd428;
-
-	// 360	=>	88-0-360-0
-	localparam HPIX_BEG_360 = 9'd88;
-	localparam HPIX_END_360 = 9'd448;
+	// atm (x320)
+	localparam HPIX_BEG_ATM = 9'd108; // 52 cycles from line_start to pixels beginning
+	localparam HPIX_END_ATM = 9'd428;
 
 
-	localparam FETCH_PRE_ZX = 9'd18;
-	localparam FETCH_PRE_TM = 9'd10;
+	localparam FETCH_FOREGO = 9'd18; // consistent with older go_start in older fetch.v:
 	                                 // actual data starts fetching 2 dram cycles after
-									// 'go' goes to 1, screen output starts another
-									// 16/8 cycles after 1st data bundle is fetched
+					 // 'go' goes to 1, screen output starts another
+					 // 16 cycles after 1st data bundle is fetched
 
-	localparam TFETCH_BEG = HSYNC_BEG + 9'd12;	// start for tiles fetch
-	localparam TFETCH_END = HSYNC_BEG + 9'd44;	// 16 (8) words for tiles (32 cycles at BW 1/2 (1/4))
-	localparam XSFETCH_BEG = HSYNC_BEG + 9'd50;	// start for Xscrolls fetch
-	localparam XSFETCH_END = HSYNC_BEG + 9'd58;	// 2 (1) words for Xscrolls (8 cycles at BW 1/4 (1/8))
-	// arbitrary values, must start at least 1 cycle after HSYNC_BEG and end before 70th cycle from HBLNK_BEG
 
 	localparam SCANIN_BEG = 9'd88; // when scan-doubler starts pixel storing
 
-	localparam HINT_BEG = 9'd445;
+	localparam HINT_BEG = 9'd2;
 
 
 	localparam HPERIOD = 9'd448;
@@ -109,38 +87,7 @@ module video_sync_h(
 
 	reg [8:0] hcount;
 
-	reg [8:0] hp_beg, hp_end, f_pre;
-	
-	always @*
-	begin
-		case (rres)
-		2'b00 : begin
-					assign hp_beg = HPIX_BEG_256;
-					assign hp_end = HPIX_END_256;
-				end
-		2'b01 : begin
-					assign hp_beg = HPIX_BEG_320;
-					assign hp_end = HPIX_END_320;
-				end
-		2'b10 : begin
-					assign hp_beg = HPIX_BEG_320;
-					assign hp_end = HPIX_END_320;
-				end
-		2'b11 : begin
-					assign hp_beg = HPIX_BEG_360;
-					assign hp_end = HPIX_END_360;
-				end
-		default : begin
-					assign hp_beg = HPIX_BEG_256;
-					assign hp_end = HPIX_END_256;
-				end
-		endcase
-	end
 
-
-	assign f_pre = mode_tm ? FETCH_PRE_TM : FETCH_PRE_ZX;
-
-	
 	// for simulation only
 	//
 	initial
@@ -154,7 +101,8 @@ module video_sync_h(
 	end
 
 
-	//horiz counter
+
+
 	always @(posedge clk) if( cend )
 	begin
             if( init || (hcount==(HPERIOD-9'd1)) )
@@ -164,7 +112,7 @@ module video_sync_h(
 	end
 
 
-	//hblank & hsync
+
 	always @(posedge clk) if( cend )
 	begin
 		if( hcount==HBLNK_BEG )
@@ -179,7 +127,6 @@ module video_sync_h(
 			hsync <= 1'b0;
 	end
 
-	
 
 	always @(posedge clk)
 	begin
@@ -193,6 +140,7 @@ module video_sync_h(
 
 			if( hcount==SCANIN_BEG )
 				scanin_start <= 1'b1;
+
 		end
 		else
 		begin
@@ -203,23 +151,45 @@ module video_sync_h(
 	end
 
 
-	//fetcher windows
-	wire gfetch_start_cond = hcount == (hp_beg - f_pre);
-	wire gfetch_end_cond = hcount == (hp_end - f_pre);
-	wire ttfetch_start_cond = hcount == TFETCH_BEG;
-	wire tfetch_end_cond = hcount == TFETCH_END;
-	wire xsfetch_start_cond = hcount == XSFETCH_BEG;
-	wire xsfetch_end_cond = hcount == XSFETCH_END;
 
-	assign gfetch_start = cbeg && gfetch_start_cond;
-	assign gfetch_end = pre_cend && gfetch_end_cond;
-	assign tfetch_start = cbeg && tfetch_start_cond;
-	assign tfetch_end = pre_cend && tfetch_end_cond;
-	assign xsfetch_start = cbeg && xsfetch_start_cond;
-	assign xsfetch_end = pre_cend && xsfetch_end_cond;
+	wire fetch_start_time, fetch_start_condition;
+	wire fetch_end_condition;
 
-		
-	//INT
+	reg [3:0] fetch_start_wait;
+
+
+	assign fetch_start_time = (mode_atm_n_pent                  ?
+	                          (HPIX_BEG_ATM -FETCH_FOREGO-9'd4) :
+	                          (HPIX_BEG_PENT-FETCH_FOREGO-9'd4) ) == hcount;
+
+	always @(posedge clk) if( cend )
+		fetch_start_wait[3:0] <= { fetch_start_wait[2:0], fetch_start_time };
+
+	assign fetch_start_condition = mode_a_text ? fetch_start_time  : fetch_start_wait[3];
+
+	always @(posedge clk)
+	if( pre_cend && fetch_start_condition )
+		fetch_start <= 1'b1;
+	else
+		fetch_start <= 1'b0;
+
+
+
+
+	assign fetch_end_time = (mode_atm_n_pent             ?
+	                        (HPIX_END_ATM -FETCH_FOREGO) :
+	                        (HPIX_END_PENT-FETCH_FOREGO) ) == hcount;
+
+	always @(posedge clk)
+	if( pre_cend && fetch_end_time )
+		fetch_end <= 1'b1;
+	else
+		fetch_end <= 1'b0;
+
+
+
+
+
 	always @(posedge clk)
 	begin
 		if( pre_cend && (hcount==HINT_BEG) )
@@ -229,14 +199,15 @@ module video_sync_h(
 	end
 
 
-	//pixel field
 	always @(posedge clk) if( cend )
 	begin
-		if (hcount == hp_beg)
+		if( hcount==(mode_atm_n_pent ? HPIX_BEG_ATM : HPIX_BEG_PENT) )
 			hpix <= 1'b1;
-		else if (hcount == hp_end)
+		else if( hcount==(mode_atm_n_pent ? HPIX_END_ATM : HPIX_END_PENT) )
 			hpix <= 1'b0;
 	end
+
+
 
 
 

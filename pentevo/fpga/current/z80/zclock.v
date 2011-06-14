@@ -1,4 +1,4 @@
-// PentEvo project (c) NedoPC 2008-2010
+// PentEvo project (c) NedoPC 2008-2011
 //
 // Z80 clocking module, also contains some wait-stating when 14MHz
 //
@@ -101,6 +101,8 @@ module zclock(
 	assign pre_zneg = (cbeg && int_turbo[0]) || (h_precend_1 && !int_turbo[0]);
 
 
+	// probably have here fix for not pulsing again zneg,
+	// if zpos was blocked by zclk_stall, and vice versa
 	always @(posedge fclk)
 	begin
 		zpos <= (~zclk_stall) & pre_zpos;

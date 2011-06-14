@@ -3,156 +3,144 @@
 // Pentevo project (c) NedoPC 2011
 //
 // address generation module for video data fetching
-//
-// refactored by TS-Labs
-//
-//
-// Which addresses for GFX could be?
-// zx:
-//	- gfx
-//	- attr
-// tm:
-//	- gfx
-//	- tile
-//	- xs
-
 
 module video_addrgen(
 
-	input  wire        clk,			// 28 MHz clock
+	input  wire        clk, // 28 MHz clock
 
 
-	output reg  [20:0] video_addr,	// DRAM arbiter signals
-	input  wire        video_next,	//
+	output reg  [20:0] video_addr, // DRAM arbiter signals
+	input  wire        video_next, //
 
-	input  wire        int_start,
-	input  wire        hsync_start,
-	input  wire        line_start,
-	input  wire        yctr_init,
-	input  wire        vpix,
 
-	input  wire        scr_page,
-	input  wire [7:0]  tp, tgp0, tgp1, fp,
-	input  wire	[1:0]  fa,
-	input  wire        mode_zx,			// decoded modes
-	input  wire        mode_tm,
-	input  wire        mode_tp1en,
-	
-	input  wire	[15:0] xs [0:1],
-	input  wire [15:0] 
-	
+	input  wire        line_start, // some video sync signals
+	input  wire        int_start,  //
+	input  wire        vpix,       //
+
+	input  wire        scr_page, // which screen to use
+
+
+	input  wire        mode_atm_n_pent, // decoded modes
+	input  wire        mode_zx,         //
+	input  wire        mode_p_16c,      //
+	input  wire        mode_p_hmclr,    //
+	                                    //
+	input  wire        mode_a_hmclr,    //
+	input  wire        mode_a_16c,      //
+	input  wire        mode_a_text,     //
+
+	output wire [ 2:0] typos // Y position in text mode symbols
 );
 
+	wire mode_ag;
 
-	//gfx counters
-	reg [12:0] zxctr;	//zx_mode
-	reg [7:0] xctr;		//hor counter for tiles and tile gfx
-	reg [8:0] yctr;		//ver counter for tiles and tile gfx
-	reg [1:0] tfsel;	//tile FIFO select
-
-	wire fetch_start = gfetch_start || tfetch_start || xsfetch_start;
-	reg fetch_start_r;
-	
-	always @(posedge clk);
-		fetch_start_r <= fetch_start;
+	assign mode_ag = mode_a_16c | mode_a_hmclr;
 
 
-	// zx mode:
-	// [0] - attr or pix
-	// [4:1] - horiz pos 0..15 (words)
-	// [12:5] - vert pos
+
+	wire line_init, frame_init;
+
+	wire gnext,tnext,ldaddr;
+
+	reg line_start_r;
+	reg frame_init_r;
+	reg line_init_r;
 
 	always @(posedge clk)
-	if (int_start)
-		zxctr <= 0;
-	else if (video_next)
-		zxctr <= zxctr + 1;
+		line_start_r <= line_start;
 
+	assign line_init  = line_start_r & vpix;
+	assign frame_init = int_start;
 
-	// zx mode addresses
-	
-	wire [11:0] addr_zx_pix  = { zxctr[12:11], zxctr[7:5], zxctr[10:8], zxctr[4:1] };
-	wire [11:0] addr_zx_attr = { 3'b110, zxctr[12:8], zxctr[4:1] };
+	reg [13:0] gctr;
 
-	wire [20:0] addr_zx = { 6'b000001, scr_page, 2'b10, ( zxctr[0] ? addr_zx_attr : addr_zx_pix ) };
+	reg [7:0] tyctr; // text Y counter
+	reg [6:0] txctr; // text X counter
 
-
-	// tile mode:
-
-	// xctr (at tiles fetching):               	xctr (at gfx fetching):			xctr (at xscrolls fetching):   
-	// [0] - tile plane		                 	[0] - tile plane		     	[0] - tile plane
-	// [3:1] - posx[2:0];                      	[7:1] - adder to x
-
-	// xs:	data from xscrolls
-	// [1:0] - pixel select
-	// [8:2] - adder to xctr[7:1]
-
-	// x:	sum of xctr & xs
-	// [0] - tile word select
-	// [6:1] - posx;
-
-	// yctr (at tiles fetching):
-	// [2:0] = posx[5:3]				    
-	// [8:3] - adder to ys[8:3]
-	
-	// ys:	data from yscrolls (at tiles fetching)
-	// [2:0] - start line number
-	// [8:3] - adder to yctr[8:3]
-
-	// y:	sum of yctr & ys
-	// [2:0] - tile line select
-	// [8:3] - posy[5:0]
 
 	always @(posedge clk)
-	if (fetch_start)
-		xctr <= xsfetch_start ? 8'd16 : 8'd0;
-	else if (video_next)
-		xctr <= xctr + (mode_tp1en ? 2'd1 : 2'd2);		//if 2nd tiles plane is off, counter skips over bit0
+		frame_init_r <= frame_init;
 
-	always @(posedge clk) if (hsync_start)
-	if (yctr_init)
+	always @(posedge clk)
+		line_init_r <= line_init;
+
+
+	assign gnext = video_next | frame_init_r;
+	assign tnext = video_next | line_init_r;
+	assign ldaddr = mode_a_text ? tnext : gnext;
+
+	// gfx counter
+	always @(posedge clk)
+	if( frame_init )
+		gctr <= 0;
+	else if( gnext )
+		gctr <= gctr + 1;
+
+
+	// text counters
+	always @(posedge clk)
+	if( frame_init )
+		tyctr <= 8'b0011_0111;
+	else if( line_init )
+		tyctr <= tyctr + 1;
+
+	always @(posedge clk)
+	if( line_init )
+		txctr <= 7'b000_0000;
+	else if( tnext )
+		txctr <= txctr + 1;
+
+
+	assign typos = tyctr[2:0];
+
+
+// zx mode:
+// [0] - attr or pix
+// [4:1] - horiz pos 0..15 (words)
+// [12:5] - vert pos
+
+	wire [20:0] addr_zx;   // standard zx mode
+	wire [20:0] addr_phm;  // pentagon hardware multicolor
+	wire [20:0] addr_p16c; // pentagon 16c
+
+	wire [20:0] addr_ag; // atm gfx: 16c (x320) or hard multicolor (x640) - same sequence!
+
+	wire [20:0] addr_at; // atm text
+
+	wire [11:0] addr_zx_pix;
+	wire [11:0] addr_zx_attr;
+	wire [11:0] addr_zx_p16c;
+
+
+	assign addr_zx_pix  = { gctr[12:11], gctr[7:5], gctr[10:8], gctr[4:1] };
+
+	assign addr_zx_attr = { 3'b110, gctr[12:8], gctr[4:1] };
+
+	assign addr_zx_p16c = { gctr[13:12], gctr[8:6], gctr[11:9], gctr[5:2] };
+
+
+	assign addr_zx =   { 6'b000001, scr_page, 2'b10, ( gctr[0] ? addr_zx_attr : addr_zx_pix ) };
+
+	assign addr_phm =  { 6'b000001, scr_page, 1'b1, gctr[0], addr_zx_pix };
+
+	assign addr_p16c = { 6'b000001, scr_page, ~gctr[0], gctr[1], addr_zx_p16c };
+
+
+	assign addr_ag = { 5'b00000, ~gctr[0], scr_page, 1'b1, gctr[1], gctr[13:2] };
+
+//	assign addr_at = { 5'b00000, ~txctr[0], scr_page, 1'b1, (^txctr[1:0]), 2'b00, tyctr[7:3], txctr[6:2] };
+	assign addr_at = { 5'b00000, ~txctr[0], scr_page, 1'b1, txctr[1], 2'b00, tyctr[7:3], txctr[6:2] };
+
+
+	always @(posedge clk) if( ldaddr )
 	begin
-		yctr <= 9'd0;
-		tbuf <= 2'b0;
-	end
-	else
-	begin
-		yctr <= yctr + 9'd1;
-		if (yctr[2:0] == 3'd7)
-			tbuf <= tbuf + 2'b1;
-	end
-	
+		video_addr <=
+			( {21{mode_zx     }} & addr_zx  )  |
+			( {21{mode_p_16c  }} & addr_p16c)  |
+			( {21{mode_p_hmclr}} & addr_phm )  |
+			( {21{mode_ag     }} & addr_ag  )  |
+			( {21{mode_a_text }} & addr_at  )  ;
 
-	// tile mode addresses
-
-	wire tpn = xctr[0];
-	wire [6:0] x = xctr[7:1] + xs[8:2];
-	wire [8:0] y = {yctr[8:3] + ys[8:3], ys[2:0]};
-
-	wire [10:0] tnum = ~tpn ? tn0 : tn1;
-	wire [7:0] tgp = (~tpn ? tgp0 : tgp1) + tnum[10:9];
-	wire [3:0] tptr;
-	
-	// Y Scroll Table Address							
-	wire [8:0] ys_addr_tile = {1'b0, tpn, yctr[2:0], xctr[3:1], h_n_l};
-	wire [8:0] ys_addr_gfx = {1'b0, tpn, x[6:1], h_n_l};
-	wire [8:0] ys_addr = video_gfx ? ys_addr_gfx : ys_addr_tile;
-	
-	wire [20:0] addr_tm_tile = {tp, posy, yctr[2:0], xctr[3:1], tpn};	//Address for Tile Planes 																		
-	wire [20:0] addr_tm_gfx = {tgp, tnum[8:0], tptr};
-	wire [20:0] addr_tm_xs = {fp, fa, 1'b0, tpn, yctr};
-
-	wire [20:0] addr_tm =	( {21{video_gfx	}} & addr_tm_gfx	)|
-							( {21{video_tile}} & addr_tm_tile	)|
-							( {21{video_xs	}} & addr_tm_xs		);
-
-							
-	wire ldaddr = (video_next || xfetch_start_r);
-	
-	always @(posedge clk) if (ldaddr)
-	begin
-		video_addr <= 	( {21{mode_zx	}} & addr_zx  )	|
-						( {21{mode_tm	}} & addr_tm  )	;
 	end
 
 

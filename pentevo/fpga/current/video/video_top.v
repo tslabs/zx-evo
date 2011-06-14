@@ -5,7 +5,7 @@
 // top module for video output.
 //
 //
-// refactored by TS-Labs
+// note: the only bandwidths currently in use are 1/8 and 1/4.
 
 module video_top(
 
@@ -22,21 +22,21 @@ module video_top(
 
 
 	// aux video inputs
-	input  wire [ 5:0] zxborder, // border true color
+	input  wire [ 3:0] zxborder, // border zxcolor
 
 
 	// config inputs
-	input  wire [ 7:0] vcfg,		// bits 2-0 - vmode:
-									//				3'b000 - zx
-									//				3'b001 - tiles hi-res
-									//				3'b010 - tiles0
-									//				3'b011 - tiles0&1
-									//				3'b111 - no gfx/border
-									// bits 4-3 - raster
-									//				2'b0x - 256x192
-									//				2'b10 - 320x240
-									//				2'b11 - 360x288
-									// other bits are described somewhere else
+	input  wire [ 1:0] pent_vmode, // 2'b00 - standard ZX
+	                               // 2'b01 - hardware multicolor
+	                               // 2'b10 - pentagon 16 colors
+	                               // 2'b11 - not defined yet
+
+	input  wire [ 2:0] atm_vmode,  // 3'b011 - zx modes (pent_vmode is active)
+	                               // 3'b010 - 640x200 hardware multicolor
+	                               // 3'b000 - 320x200 16 colors
+	                               // 3'b110 - 80x25 text mode
+	                               // 3'b??? (others) - not defined yet
+
 
 
 	input  wire        scr_page,   // screen page (bit 3 of 7FFD)
@@ -52,24 +52,40 @@ module video_top(
 
 
 	// memory arbiter video port connection
-	output wire        video_go,
-	output wire [ 1:0] video_bw,
-	output wire [20:0] video_addr,
-	input  wire [15:0] video_data,
 	input  wire        video_strobe,
 	input  wire        video_next,
+	output wire [20:0] video_addr,
+	input  wire [15:0] video_data,
+	output wire [ 1:0] video_bw,
+	output wire        video_go,
 
-	
-	output wire        int_start
+
+	// atm palette write strobe adn data
+	input  wire        atm_palwr,
+	input  wire [ 5:0] atm_paldata,
+
+
+	output wire        int_start,
+
+
+
+	input  wire [10:0] fnt_a,
+	input  wire [ 7:0] fnt_d,
+	input  wire        fnt_wr,
+
+	output wire [ 5:0] palcolor // for palette readback
 );
 
 	// these decoded in video_modedecode.v
+	wire mode_atm_n_pent;
 	wire mode_zx;
-	wire mode_tm;
-	wire mode_tp1en;
-	wire mode_brd;
+	wire mode_p_16c;
+	wire mode_p_hmclr;
+	wire mode_a_hmclr;
+	wire mode_a_16c;
+	wire mode_a_text;
 	wire mode_pixf_14;
-	wire [1:0] rres;
+
 
 
 	// synchronization
@@ -116,19 +132,29 @@ module video_top(
 	// decode video modes
 	video_modedecode video_modedecode(
 
-		.vcfg			(vcfg),
+		.clk(clk),
 
-		.mode_zx		(mode_zx),
-		.mode_tm		(mode_tm),
-		.mode_tp1en		(mode_tp1en),
-		.mode_brd		(mode_brd),
+		.pent_vmode(pent_vmode),
+		.atm_vmode (atm_vmode),
 
-		.rres			(rres),
+		.mode_atm_n_pent(mode_atm_n_pent),
 
-		.mode_pixf_14	(mode_pixf_14),
+		.mode_zx     (mode_zx),
 
-		.mode_bw		(video_bw)
+		.mode_p_16c  (mode_p_16c),
+		.mode_p_hmclr(mode_p_hmclr),
+
+		.mode_a_hmclr(mode_a_hmclr),
+		.mode_a_16c  (mode_a_16c),
+		.mode_a_text (mode_a_text),
+
+		.mode_pixf_14(mode_pixf_14),
+
+		.mode_bw(video_bw)
 	);
+
+
+
 
 
 
@@ -137,7 +163,7 @@ module video_top(
 
 		.clk(clk),
 
-		.rres			(rres),
+		.mode_atm_n_pent(mode_atm_n_pent),
 
 		.hsync_start(hsync_start),
 		.line_start(line_start),
@@ -146,7 +172,6 @@ module video_top(
 		.vblank(vblank),
 		.vsync(vsync),
 		.vpix(vpix),
-		.vtfetch(vtfetch),
 
 		.int_start(int_start)
 	);
@@ -157,33 +182,29 @@ module video_top(
 
 		.clk(clk),
 
-		.mode_zx		(mode_zx),
-		.mode_tm		(mode_tm),
-		.mode_brd		(mode_brd),
-
-		.rres			(rres),
-
-		.init			(1'b0),
-
-		.pre_cend		(pre_cend),
-		.cend   	 	(cend),
+		.mode_atm_n_pent(mode_atm_n_pent),
+		.mode_a_text    (mode_a_text),
 
 
-		.hblank			(hblank),
-		.hsync			(hsync),
-		.hpix			(hpix),
+		.init(1'b0),
 
-		.line_start		(line_start),
-		.hsync_start	(hsync_start),
+		.pre_cend(pre_cend),
+		.cend    (cend    ),
 
-		.hint_start		(hint_start),
 
-		.scanin_start	(scanin_start),
+		.hblank(hblank),
+		.hsync(hsync),
+		.hpix(hpix),
 
-		.fetch_start	(fetch_start),
-		.fetch_end		(fetch_end),
-		.tfetch_start	(tfetch_start),
-		.tfetch_end		(tfetch_end)
+		.line_start(line_start),
+		.hsync_start(hsync_start),
+
+		.hint_start(hint_start),
+
+		.scanin_start(scanin_start),
+
+		.fetch_start(fetch_start),
+		.fetch_end  (fetch_end  )
 
 	);
 
@@ -191,23 +212,27 @@ module video_top(
 	// address generation
 	video_addrgen video_addrgen(
 
-		.clk			(clk),
+		.clk(clk),
 
-		.video_addr		(video_addr),
-		.video_next		(video_next),
+		.video_addr(video_addr),
+		.video_next(video_next),
 
-		.line_start		(hsync_start),
-		.int_start		(int_start),
-		.vpix			(vpix),
-		.tfetch			(tfetch),
+		.line_start(hsync_start),
+		.int_start (int_start ),
+		.vpix      (vpix      ),
 
-		.scr_page		(scr_page),
+		.scr_page(scr_page),
 
-		.mode_zx		(mode_zx),
-		.mode_tm		(mode_tm),
-		.mode_tp1en		(mode_tp1en),
+		.typos(typos),
 
-		);
+		.mode_atm_n_pent(mode_atm_n_pent),
+		.mode_zx        (mode_zx        ),
+		.mode_p_16c     (mode_p_16c     ),
+		.mode_p_hmclr   (mode_p_hmclr   ),
+		.mode_a_hmclr   (mode_a_hmclr   ),
+		.mode_a_16c     (mode_a_16c     ),
+		.mode_a_text    (mode_a_text    )
+	);
 
 
 	// data fetch
@@ -219,12 +244,9 @@ module video_top(
 		.cend     (cend    ),
 
 		.vpix(vpix),
-		.tfetch			(tfetch),
 
 		.fetch_start(fetch_start),
 		.fetch_end  (fetch_end  ),
-		.tfetch_start	(tfetch_start),
-		.tfetch_end		(tfetch_end),
 
 		.fetch_sync (fetch_sync ),
 
@@ -254,12 +276,21 @@ module video_top(
 
 		.mode_atm_n_pent(mode_atm_n_pent),
 		.mode_zx        (mode_zx        ),
-		.mode_p_16c     (mode_tm	),
-		.mode_p_16c     (mode_tp1en	),
-		
+		.mode_p_16c     (mode_p_16c     ),
+		.mode_p_hmclr   (mode_p_hmclr   ),
+		.mode_a_hmclr   (mode_a_hmclr   ),
+		.mode_a_16c     (mode_a_16c     ),
+		.mode_a_text    (mode_a_text    ),
 		.mode_pixf_14   (mode_pixf_14   ),
 
-		.pixels(pixels)
+		.typos(typos),
+
+		.pixels(pixels),
+
+
+		.fnt_a (fnt_a ),
+		.fnt_d (fnt_d ),
+		.fnt_wr(fnt_wr)
 	);
 
 
@@ -280,7 +311,9 @@ module video_top(
 		.atm_palwr  (atm_palwr  ),
 		.atm_paldata(atm_paldata),
 
-		.color(color)
+		.color(color),
+
+		.palcolor(palcolor) // palette readback
 	);
 
 
@@ -337,19 +370,8 @@ module video_top(
 	);
 
 
-	//TFIFO
-	wire [8:0] tf_ra, tf_wa;
-	wire [15:0] tf_rd;
-	wire tf_we;
 
-	tfifo tfifo(
-		.wraddress(tf_wa),
-		.data(video_data),
-		.rdaddress(tf_ra),
-		.q(tf_rd),
-		.wrclock(fclk),
-		.wren(tf_we)
-	);
+
 
 
 endmodule

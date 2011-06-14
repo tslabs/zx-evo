@@ -52,9 +52,7 @@ module arbiter(
 	input      [15:0] dram_rddata, // data just read
 	output     [15:0] dram_wrdata, // data to be written
 
-//debug!!!
-	output [5:0] dcyc,
-	
+
 	output reg cend,      // regenerates this signal: end of DRAM cycle. cend is one-cycle positive pulse just before cbeg pulse
 	output reg pre_cend,  // one clock earlier cend
 	output reg post_cbeg, // one more earlier
@@ -74,22 +72,8 @@ module arbiter(
 	                            // if there is video_strobe, it coincides with cend signal
 	output reg    video_next,   // on this signal you can change video_addr; it is one clock leading the video_strobe
 
-//SPU	
-	input  [20:0] spu_addr,   
-	output [15:0] spu_data,
-	input spu_req,
-	output reg    spu_strobe, 
-	output reg    spu_next,   
-
-//HUS
-	input  [20:0] hus_addr,   
-	output [15:0] hus_data,
-	input hus_req,
-	output reg    hus_strobe, 
-	output reg    hus_next,   
 
 
-//CPU
 	input cpu_req,cpu_rnw,
 	input  [20:0] cpu_addr,
 	input   [7:0] cpu_wrdata,
@@ -118,14 +102,12 @@ module arbiter(
 
 
 
-	localparam CYC_CPU   = 4'b0001; //   not     since     are   dependencies
-	localparam CYC_FREE  = 4'b0010; //
-	localparam CYC_SPU   = 4'b0100; //      alter             bit
-	localparam CYC_HUS   = 4'b0101; //
-	localparam CYC_VIDEO = 4'b1000; // do             there
+	localparam CYC_VIDEO = 2'b00; // do             there
+	localparam CYC_CPU   = 2'b01; //   not     since     are   dependencies
+	localparam CYC_FREE  = 2'b10; //      alter             bit
 
-	reg [3:0] curr_cycle; // type of the cycle in progress
-	reg [3:0] next_cycle; // type of the next cycle
+	reg [1:0] curr_cycle; // type of the cycle in progress
+	reg [1:0] next_cycle; // type of the next cycle
 
 
 
@@ -144,7 +126,7 @@ module arbiter(
 	end
 
 
-	assign dcyc = (curr_cycle == CYC_HUS) ? 6'b110000 : ((curr_cycle == CYC_CPU) ? 6'b000001 : ((curr_cycle == CYC_VIDEO) ? 6'b000100 : 6'b0));
+
 
 	assign cbeg = dram_cbeg; // just alias
 
@@ -218,12 +200,6 @@ module arbiter(
 				if( cpu_req )
 					next_cycle = CYC_CPU;
 				else
-				if( hus_req )
-					next_cycle = CYC_HUS;
-				else
-				if( spu_req )
-					next_cycle = CYC_SPU;
-				else
 					next_cycle = CYC_FREE;
 			end
 		end
@@ -239,16 +215,10 @@ module arbiter(
 					if( cpu_req )
 						next_cycle = CYC_CPU;
 					else
-						if( !(vid_rem==3'd0) )
+						if( vid_rem==3'd0 )
+							next_cycle = CYC_FREE;
+						else
 							next_cycle = CYC_VIDEO;
-						else
-							if( hus_req )
-								next_cycle = CYC_HUS;
-						else
-							if( spu_req )
-								next_cycle = CYC_SPU;
-							else
-								next_cycle = CYC_FREE;
 			end
 		end
 	end
@@ -269,12 +239,9 @@ module arbiter(
 	assign dram_wrdata[15:0] = { cpu_wrdata[7:0], cpu_wrdata[7:0] };
 	assign dram_bsel[1:0] = { ~cpu_wrbsel, cpu_wrbsel };
 
-	//select address source for next cycle
-	assign dram_addr = next_cycle[0] ? cpu_addr : (next_cycle[2] ? (next_cycle[0] ? hus_addr : spu_addr) : video_addr);
+	assign dram_addr = next_cycle[0] ? cpu_addr : video_addr;
 
 	assign cpu_rddata = dram_rddata;
-	assign spu_data = dram_rddata;
-	assign hus_data = dram_rddata;
 	assign video_data = dram_rddata;
 
 	always @*
@@ -319,27 +286,6 @@ module arbiter(
 			video_next <= 1'b1;
 		else
 			video_next <= 1'b0;
-
-		if( (curr_cycle==CYC_HUS) && pre_cend )
-			hus_strobe <= 1'b1;
-		else
-			hus_strobe <= 1'b0;
-
-		if( (curr_cycle==CYC_HUS) && post_cbeg )
-			hus_next <= 1'b1;
-		else
-			hus_next <= 1'b0;
-
-		if( (curr_cycle==CYC_SPU) && pre_cend )
-			spu_strobe <= 1'b1;
-		else
-			spu_strobe <= 1'b0;
-
-		if( (curr_cycle==CYC_SPU) && post_cbeg )
-			spu_next <= 1'b1;
-		else
-			spu_next <= 1'b0;
-
 	end
 
 
