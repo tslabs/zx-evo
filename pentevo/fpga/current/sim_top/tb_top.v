@@ -25,11 +25,11 @@ module tb;
 	reg iorq_n,mreq_n,rd_n,wr_n; // has some delays relative to z*_n (below)
 	reg m1_n,rfsh_n;             //
 
-	wire int_n,res;                    //
+	wire res;                    //
 	tri1 ziorq_n,zmreq_n,zrd_n,zwr_n,zm1_n,zrfsh_n; // connected to Z80
 
-	tri1 wait_n,nmi_n;
-	wire zwait_n,znmi_n;
+	tri1 int_n,wait_n,nmi_n;
+	wire zint_n,zwait_n,znmi_n;
 
 	wire [15:0] za;
 	wire [7:0] zd;
@@ -37,6 +37,7 @@ module tb;
 
 	wire csrom, romoe_n, romwe_n;
 	wire rompg0_n, dos_n;
+	wire rompg2,rompg3,rompg4;
 
 	wire [15:0] rd;
 	wire [9:0] ra;
@@ -46,9 +47,18 @@ module tb;
 	tri1 [15:0] ide_d;
 
 
+	wire hsync,vsync;
+	wire [1:0] red,grn,blu;
+
+
+
 
 	assign zwait_n = (wait_n==1'b0) ? 1'b0 : 1'b1;
 	assign znmi_n = (nmi_n==1'b0) ? 1'b0 : 1'b1;
+	assign zint_n = (int_n==1'b0) ? 1'b0 : 1'b1;
+
+
+
 
 
 
@@ -94,6 +104,9 @@ module tb;
 	         .romwe_n(romwe_n),
 	         .rompg0_n(rompg0_n),
 	         .dos_n(dos_n),
+		 .rompg2(rompg2),
+		 .rompg3(rompg3),
+ 		 .rompg4(rompg4),
 
 	         // DRAM
 	         .rd(rd),
@@ -129,7 +142,13 @@ module tb;
 	         // ATmega SPI
 	         .spics_n(1'b1),
 	         .spick(1'b0),
-	         .spido(1'b1)
+	         .spido(1'b1),
+
+		 .vhsync(hsync),
+		 .vvsync(vsync),
+		 .vred(red),
+		 .vgrn(grn),
+		 .vblu(blu)
 
 	       );
 
@@ -139,7 +158,7 @@ module tb;
 	T80a z80( .RESET_n(zrst_n),
 	          .CLK_n(clkz_in),
 	          .WAIT_n(zwait_n),
-	          .INT_n(int_n),
+	          .INT_n(zint_n),
 	          .NMI_n(znmi_n),
 	          .M1_n(zm1_n),
 	          .RFSH_n(zrfsh_n),
@@ -223,7 +242,7 @@ module tb;
 
 	// ROM model
 	rom romko(
-	           .addr( {dos_n, (~rompg0_n), za[13:0]} ),
+	           .addr( {rompg4,rompg3,rompg2,dos_n, (~rompg0_n), za[13:0]} ),
 	           .data(zd),
 	           .ce_n( romoe_n | (~csrom) )
 	         );
@@ -262,7 +281,7 @@ module tb;
 
 	always @(rma14 or rma15)
 	begin
-		$display("at time %t us",$time/10000);
+		$display("at time %t us",$time/1000000);
 
 		case( {rma15, rma14} )
 
@@ -285,7 +304,7 @@ module tb;
 
 	always @(rpag)
 	begin
-		$display("at time %t us",$time/10000);
+		$display("at time %t us",$time/1000000);
 
 		$display("RAM page is %d",rpag);
 
@@ -294,28 +313,98 @@ module tb;
 
 
 
-	// emulate key presses
+	// key presses/nmi/whatsoever
 	initial
 	begin
+		#1;
 		tb.DUT.zkbdmus.kbd = 40'd0;
-		
-		#600000000;
-
+		tb.DUT.zkbdmus.kbd[36] = 1'b1;
 		@(negedge int_n);
-
-		tb.DUT.zkbdmus.kbd[13] = 1'b1;
-
-		@(negedge int_n);
-		@(negedge int_n);
-
-		tb.DUT.zkbdmus.kbd[13] = 1'b0;
-		
-//		$stop;
+		tb.DUT.zkbdmus.kbd[36] = 1'b0;
 	end
 
+	initial
+	begin : gen_nmi
+
+		reg [21:0] a;
+
+		#1000000000;
+
+		a = 22'h3FC066;	
+
+		put_byte(a,8'hF5); a=a+1;
+		put_byte(a,8'hC5); a=a+1;
+		put_byte(a,8'hD5); a=a+1;
+		put_byte(a,8'hE5); a=a+1;
+
+		put_byte(a,8'h10); a=a+1;
+		put_byte(a,8'hFE); a=a+1;
+
+		put_byte(a,8'h14); a=a+1;
+
+		put_byte(a,8'h01); a=a+1;
+		put_byte(a,8'hFE); a=a+1;
+		put_byte(a,8'h7F); a=a+1;
+
+		put_byte(a,8'hED); a=a+1;
+		put_byte(a,8'h51); a=a+1;
+
+		put_byte(a,8'hED); a=a+1;
+		put_byte(a,8'h78); a=a+1;
+
+		put_byte(a,8'h1F); a=a+1;
+		
+		put_byte(a,8'hDA); a=a+1;
+		put_byte(a,8'h6A); a=a+1;
+		put_byte(a,8'h00); a=a+1;
+
+		put_byte(a,8'hE1); a=a+1;
+		put_byte(a,8'hD1); a=a+1;
+		put_byte(a,8'hC1); a=a+1;
+		put_byte(a,8'hF1); a=a+1;
+
+		put_byte(a,8'hD3); a=a+1;
+		put_byte(a,8'hBE); a=a+1;
+
+		put_byte(a,8'hED); a=a+1;
+		put_byte(a,8'h45); a=a+1;
 
 
+		@(posedge fclk);
+		tb.DUT.slavespi.cfg0_reg_out[1] = 1'b1;
+		@(posedge fclk);
+		tb.DUT.slavespi.cfg0_reg_out[1] = 1'b0;
+
+		#64000000;
+
+		tb.DUT.zkbdmus.kbd[39] = 1'b1;
+		@(negedge int_n);
+		tb.DUT.zkbdmus.kbd[39] = 1'b0;
+
+	end
 `endif
+
+
+
+
+
+
+
+
+
+	// picture out
+	pixer pixer
+	(
+		.clk(fclk),
+
+		.vsync(vsync),
+		.hsync(hsync),
+		.red(red),
+		.grn(grn),
+		.blu(blu)
+	);
+
+
 
 
 	// time ticks
@@ -334,6 +423,37 @@ module tb;
 
 
 
+
+
+
+
+
+
+
+	task put_byte;
+
+		input [21:0] addr;
+		input [ 7:0] data;
+
+
+		
+		reg [19:0] arraddr;
+
+		begin
+
+			arraddr = { addr[21:12], addr[11:2] };
+
+			case( addr[1:0] ) // chipsel, bytesel
+
+			2'b00: tb.dramko1.array[arraddr][15:8] = data;
+			2'b01: tb.dramko1.array[arraddr][ 7:0] = data;
+			2'b10: tb.dramko2.array[arraddr][15:8] = data;
+			2'b11: tb.dramko2.array[arraddr][ 7:0] = data;
+
+			endcase
+		end
+
+	endtask
 
 
 

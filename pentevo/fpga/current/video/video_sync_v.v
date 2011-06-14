@@ -7,9 +7,6 @@
 // 3H is pre-blank,
 // 2.xxH is vertical sync (slightly more than 2H, all hsync edges preserved)
 // vblank is total of 25H
-//
-// refactored by TS-Labs
-
 
 module video_sync_v(
 
@@ -20,22 +17,24 @@ module video_sync_v(
 
 	input  wire        hint_start,
 
-	input  wire [1:0]  rres,	//raster Y resolution 00=192/01=200/10=240/11=288
+
+
+	// atm video mode input
+	input  wire        mode_atm_n_pent,
+
+
 
 	output reg         vblank,
 	output reg         vsync,
 
-	output reg         vtfetch,	//starts 16 lines before vpix to prefetch tiles & Xscrolls
-								//ends 8 lines before end of vpix
-	
-	output wire        yctr_init,  // marks line 0 of yctr
 	output reg         int_start, // one-shot positive pulse marking beginning of INT for Z80
 
-	output reg         vpix // vertical picture marker: active when there is line with pixels in it,
-							//not just a border. changes with hsync edge
-	output reg [8:0]   vcount;
-							
+	output reg         vpix // vertical picture marker: active when there is line with pixels in it, not just a border. changes with hsync edge
 );
+
+
+
+
 
 	localparam VBLNK_BEG = 9'd00;
 	localparam VSYNC_BEG = 9'd08;
@@ -44,55 +43,22 @@ module video_sync_v(
 
 	localparam INT_BEG = 9'd0;
 
-	// 192	=>	32-48-192-32
-	localparam VPIX_BEG_192 = 9'd080;
-	localparam VPIX_END_192 = 9'd272;
+	// pentagon (x192)
+	localparam VPIX_BEG_PENT = 9'd080;//9'd064;
+	localparam VPIX_END_PENT = 9'd272;//9'd256;
 
-	// 200	=>	32-44-200-44
-	localparam VPIX_BEG_200 = 9'd076;
-	localparam VPIX_END_200 = 9'd276;
-
-	// 240	=>	32-24-240-24
-	localparam VPIX_BEG_240 = 9'd056;
-	localparam VPIX_END_240 = 9'd296;
-
-	// 288	=>	32-0-288-0
-	localparam VPIX_BEG_288 = 9'd032;
-	localparam VPIX_END_288 = 9'd320;
+	// ATM (x200)
+	localparam VPIX_BEG_ATM = 9'd076;//9'd060;
+	localparam VPIX_END_ATM = 9'd276;//9'd260;
 
 	localparam VPERIOD = 9'd320; // pentagono foreva!
 
 
-	reg [8:0] vp_beg, vp_end;
-	
-	always @*
-	begin
-		case (rres)
-		2'b00 : begin
-					assign vp_beg = VPIX_BEG_192;
-					assign vp_end = VPIX_END_192;
-				end
-		2'b01 : begin
-					assign vp_beg = VPIX_BEG_200;
-					assign vp_end = VPIX_END_200;
-				end
-		2'b10 : begin
-					assign vp_beg = VPIX_BEG_240;
-					assign vp_end = VPIX_END_240;
-				end
-		2'b11 : begin
-					assign vp_beg = VPIX_BEG_288;
-					assign vp_end = VPIX_END_288;
-				end
-		default : begin
-					assign vp_beg = VPIX_BEG_192;
-					assign vp_end = VPIX_END_192;
-				end
-		endcase
-	end
-	
+	reg [8:0] vcount;
 
-	//simulation
+
+
+
 	initial
 	begin
 		vcount = 9'd0;
@@ -102,9 +68,6 @@ module video_sync_v(
 		int_start = 1'b0;
 	end
 
-	assign yctr_init = vcount == (vp_beg - 9'd16)
-		
-	//vert counter
 	always @(posedge clk) if( hsync_start )
 	begin
 		if( vcount==(VPERIOD-9'd1) )
@@ -113,8 +76,8 @@ module video_sync_v(
 			vcount <= vcount + 9'd1;
 	end
 
-	
-	//vblank
+
+
 	always @(posedge clk) if( hsync_start )
 	begin
 		if( vcount==VBLNK_BEG )
@@ -123,8 +86,7 @@ module video_sync_v(
 			vblank <= 1'b0;
 	end
 
-	
-	//vsync
+
 	always @(posedge clk)
 	begin
 		if( (vcount==VSYNC_BEG) && hsync_start )
@@ -134,27 +96,6 @@ module video_sync_v(
 	end
 
 
-	//vtfetch
-	always @(posedge clk) if (hsync_start)
-	begin
-		if (vcount == (vp_beg - 9'd16))
-			vtfetch <= 1'b1;
-		else if (vcount == (vp_end - 9'd8))
-			vtfetch <= 1'b0;
-	end
-
-
-	//vpix
-	always @(posedge clk) if (hsync_start)
-	begin
-		if (vcount == vp_beg)
-			vpix <= 1'b1;
-		else if (vcount == vp_end)
-			vpix <= 1'b0;
-	end
-
-	
-	//INT
 	always @(posedge clk)
 	begin
 		if( (vcount==INT_BEG) && hint_start )
@@ -163,6 +104,16 @@ module video_sync_v(
 			int_start <= 1'b0;
 	end
 
-	
+
+
+	always @(posedge clk) if( hsync_start )
+	begin
+		if( vcount==(mode_atm_n_pent ? VPIX_BEG_ATM : VPIX_BEG_PENT) )
+			vpix <= 1'b1;
+		else if( vcount==(mode_atm_n_pent ? VPIX_END_ATM : VPIX_END_PENT) )
+			vpix <= 1'b0;
+	end
+
+
 endmodule
 

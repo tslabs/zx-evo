@@ -9,42 +9,28 @@ module video_fetch(
 	input  wire        clk, // 28 MHz clock
 
 
-	// strobes from DRAM controller (7MHz)
-	input  wire        cend,
-	input  wire        pre_cend,
+	input  wire        cend,     // general
+	input  wire        pre_cend, //        synchronization
 
-	input wire         fetch_gfx,  	  	//gfx fetching window
-	input wire         fetch_tile, 	  	//tiles fetching window
-	input wire         fetch_xs,    	//xscrolls fetching window
+	input  wire        vpix, // vertical window
+
+	input  wire        fetch_start, // fetching start and stop
+	input  wire        fetch_end,   //
 
 	output reg         fetch_sync,     // 1 cycle after cend
 
-	input wire         mode_zx,		// standard ZX mode
-	input wire         mode_tm,		// tiles mode
 
 	input  wire [15:0] video_data,   // video data receiving from dram arbiter
 	input  wire        video_strobe, //
-	output wire        video_go,	 // indicates need for data
+	output reg         video_go, // indicates need for data
 
-	output reg [15:0]  pic_bits [5:0] // picture bits -- data for renderer
+	output reg  [63:0] pic_bits // picture bits -- data for renderer
 
-	input wire		   gfetch_start,	    //gfx fetching
-	input wire		   gfetch_end,   
-	input wire		   tfetch_start,    //tiles fetching
-    input wire		   tfetch_end,
-    input wire		   xsfetch_start, 	//Xscrolls fetching
-	input wire		   xsfetch_end,
-	
-	output reg		   video_gfx,
-	output reg		   video_tile,
-	output reg		   video_xs,
-	
-	output reg [15:0]  xs	[0:1]
+	// currently, video_fetch assigns that there are only 1/8 and 1/4
+	// bandwidth. !!needs correction for higher bandwidths!!
 
-	
+
 );
-
-
 	reg [3:0] fetch_sync_ctr; // generates fetch_sync to synchronize
 	                          // fetch cycles (each 16 dram cycles long)
 	                          // fetch_sync coincides with cend
@@ -53,33 +39,17 @@ module video_fetch(
 	reg       fetch_ptr_clr; // clears fetch_ptr
 
 
-	// fetch windows
-	wire gfetch_go = gfetch_start && vpix && !mode_brd;		// gfx fetch window: at gfx window and no BM
-	wire tfetch_go = tfetch_start && vtfetch && mode_tm;	// tiles: 16 lines before start and 8 before end of gfx in TM
-	wire xsfetch_go = xsfetch_start && ((vpix && mode_tm) || xints_en);		// Xscrolls: at gfx in TM or when xints on
+	reg [15:0] fetch_data [0:3]; // stores data fetched from memory
 
-	assign video_go = video_gfx || video_tile || video_xs;
-	
+	// fetch window
 	always @(posedge clk)
-	begin
-		if (gfetch_go)
-			video_gfx <= 1'b1;
-			
-		if (tfetch_go)
-			video_tile <= 1'b1;
-			
-		if (xsfetch_go)
-			video_xs <= 1'b1;
-			
-		if (gfetch_end || tfetch_end || xsfetch_end || xs_stop)
-		begin
-			video_gfx <= 1'b0;
-			video_tile <= 1'b0;
-			video_xs <= 1'b0;
-		end
-	end
-	
-			
+		if( fetch_start && vpix )
+			video_go <= 1'b1;
+		else if( fetch_end )
+			video_go <= 1'b0;
+
+
+
 	// fetch sync counter
 	always @(posedge clk) if( cend )
 	begin
@@ -96,6 +66,7 @@ module video_fetch(
 			fetch_sync <= 1'b1;
 		else
 			fetch_sync <= 1'b0;
+
 
 
 	// fetch_ptr clear signal

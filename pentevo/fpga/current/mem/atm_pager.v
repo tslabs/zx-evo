@@ -32,6 +32,9 @@ module atm_pager(
 	input  wire        pent1m_ram0_0, // RAM0 to the window 0 from pentagon1024 mode
 	input  wire        pent1m_1m_on,  // 1 meg addressing of pent1m mode on
 
+	input  wire        in_nmi, // when we are in nmi, in 0000-3FFF must be last (FFth)
+	                           // RAM page. analoguous to pent1m_ram0_0
+				   // but has higher priority
 
 	input  wire        atmF7_wr, // write strobe for the xxF7 ATM port
 
@@ -45,7 +48,13 @@ module atm_pager(
 	output wire        zclk_stall, // stall Z80 clock during DOS turning on
 
 	output reg  [ 7:0] page,
-	output reg         romnram
+	output reg         romnram,
+
+	// output for xxBE port read
+	output wire	[ 7:0] rd_page0,
+	output wire	[ 7:0] rd_page1,
+	output wire [ 1:0] rd_dos7ffd,
+	output wire [ 1:0] rd_ramnrom
 );
 	parameter ADDR = 2'b00;
 
@@ -63,6 +72,16 @@ module atm_pager(
 	reg [2:0] stall_count;
 
 
+
+	// output data for port xxBE
+	assign rd_page0 = pages[0];
+	assign rd_page1 = pages[1];
+	//
+	assign rd_dos7ffd = dos_7ffd;
+	assign rd_ramnrom = ramnrom;
+
+
+
 	// paging function, does not set pages, ramnrom, dos_7ffd
 	//
 	always @(posedge fclk)
@@ -74,10 +93,18 @@ module atm_pager(
 		end
 		else // pager on
 		begin
-			if( pent1m_ram0_0 && (ADDR==2'b00) ) // shortcut for pentagon ram0
+			if( (ADDR==2'b00) && (pent1m_ram0_0 || in_nmi) ) // pent ram0 OR nmi
 			begin
-				romnram <= 1'b0;
-				page    <= 8'd0;
+				if( in_nmi )
+				begin
+					romnram <= 1'b0;
+					page    <= 8'hFF;
+				end
+				else // if( pent1m_ram0_0 )
+				begin
+					romnram <= 1'b0;
+					page    <= 8'd0;
+				end
 			end
 			else
 			begin

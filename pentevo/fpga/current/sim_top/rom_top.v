@@ -1,7 +1,7 @@
 // full zxevo ROM here. ATM paging: bas48(0)/trdos(1)/bas128(2)/gluk(3)
 
 module rom(
-	input [15:0] addr,
+	input [18:0] addr,
 	output reg [7:0] data,
 	input ce_n
 );

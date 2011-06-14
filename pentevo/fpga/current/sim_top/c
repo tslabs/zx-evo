@@ -1,5 +1,5 @@
 #!/bin/bash
 
 vcom -novopt -f vcom.opt
-vlog -novopt -incr -f vlog.opt
+vlog -sv -novopt -incr -f vlog.opt
 

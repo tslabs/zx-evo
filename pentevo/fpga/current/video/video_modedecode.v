@@ -2,68 +2,128 @@
 
 // Pentevo project (c) NedoPC 2010
 //
-// decoding video modes: mode, raster, bandwidth, pixel freq
-//
-// refactored by TS-Labs
-
+// decoding mode setup: which border, which modes in one-hot style coding
 
 module video_modedecode(
 
-	input  wire [ 7:0] vcfg,	   // videoconfig
+	input  wire        clk,
 
-	output wire         mode_zx,		// standard ZX mode
-	output wire         mode_tm,		// tiles mode
-	output wire         mode_tp1en,		// tiles1 enabled
-	output wire         mode_brd,		// no linear gfx - only border color
-	
-	output wire         mode_pixf_14,	// 14MHz pixelclock on (default is 7MHz).
+	input  wire [ 1:0] pent_vmode, // inputs as set by Z80 environment
+	input  wire [ 2:0] atm_vmode,  //
 
-	output wire  [1:0]	rres,			// raster resolution
-										//  00 - 256x192
-										//  01 - 320x200
-										//  10 - 320x240
-										//  11 - 360x288
-	
-	input wire			video_xs,		// tunes BW for xscrolls fetcher
-	
-	output wire  [1:0] 	mode_bw 		// required bandwidth:
-										//  2'b00 - 1/8
-										//  2'b01 - 1/4
-										//  2'b10 - 1/2
-										//  2'b11 - 1/1
+
+	output reg         mode_atm_n_pent, // =1 - atm modes, =0 - pentagon modes (mainly for border and visible area changing)
+
+
+	output reg         mode_zx, // standard ZX mode
+
+	output reg         mode_p_16c,   // pentagon 16 colors
+	output reg         mode_p_hmclr, // pentagon hardware multicolor
+
+
+	output reg         mode_a_hmclr, // 640x200 atm hardware multicolor
+	output reg         mode_a_16c,   // 320x200 atm 16 colors
+	output reg         mode_a_text,  // 640x200 (80x25 symbols) atm text mode
+
+
+	output reg         mode_pixf_14, // =1: 14MHz pixelclock on (default is 7MHz).
+
+
+	output reg  [ 1:0] mode_bw // required bandwidth: 2'b00 - 1/8, 2'b01 - 1/4,
+	                           //                     2'b10 - 1/2, 2'b11 - 1
 );
 
-	wire [2:0] vmode = vcfg[2:0];
-	assign rres = vcfg[4:3];
+// values for pent_vmode and atm_vmode:
+
+// pent:
+// 2'b00 - standard ZX
+// 2'b01 - hardware multicolor
+// 2'b10 - pentagon 16 colors
+// 2'b11 - not defined yet
+
+// atm:
+// 3'b011 - zx modes (pent_vmode is active)
+// 3'b010 - 640x200 hardware multicolor
+// 3'b000 - 320x200 16 colors
+// 3'b110 - 80x25 text mode
+// 3'b??? (others) - not defined yet
 
 
-//video mode decode
-
-	wire zx =	(vmode == 3'b000);
-	wire tmhr =	(vmode == 3'b001);
-	wire tm0 =	(vmode == 3'b010);
-	wire tm1 =	(vmode == 3'b011);
-	wire brd =	(vmode == 3'b111);
-
-	assign mode_zx = zx;
-	assign mode_tm = (tm0 || tm1 || tmhr);
-	assign mode_tp1en = (tm1 || tmhr);
-	assign mode_brd = brd;
-
-	
-//bandwidth decode
-	
-	wire tm_bw_norm = (tm1 || tmhr) ? 2'b10 : 2'b01;	// 1/2 or 1/4
-	wire tm_bw_xs = (tm1 || tmhr) ? 2'b01 : 2'b00;		// 1/4 or 1/8
-	wire tm_bw = bw_xs ? tm_bw_xs : tm_bw_norm;
-	
-	assign mode_bw = mode_zx ? tm_bw : 2'b00;			// 1/8
-			
-//pixel frequency decode
-
-	assign mode_pixf_14 = (tmhr) ? 1'b1 : 1'b0;
 
 
+	always @(posedge clk)
+	begin
+		case( atm_vmode )
+			3'b010:  mode_atm_n_pent <= 1'b1;
+			3'b000:  mode_atm_n_pent <= 1'b1;
+			3'b110:  mode_atm_n_pent <= 1'b1;
+
+			3'b011:  mode_atm_n_pent <= 1'b0;
+			default: mode_atm_n_pent <= 1'b0;
+		endcase
+
+
+		case( atm_vmode )
+			3'b010: mode_zx <= 1'b0;
+			3'b000: mode_zx <= 1'b0;
+			3'b110: mode_zx <= 1'b0;
+
+			default: begin
+				if( (pent_vmode==2'b00) || (pent_vmode==2'b11) )
+					mode_zx <= 1'b1;
+				else
+					mode_zx <= 1'b0;
+			end
+		endcase
+
+
+		
+		if( (atm_vmode==3'b011) && (pent_vmode==2'b10) )
+			mode_p_16c <= 1'b1;
+		else
+			mode_p_16c <= 1'b0;
+
+
+		if( (atm_vmode==3'b011) && (pent_vmode==2'b01) )
+			mode_p_hmclr <= 1'b1;
+		else
+			mode_p_hmclr <= 1'b0;
+
+
+		if( atm_vmode==3'b010 )
+			mode_a_hmclr <= 1'b1;
+		else
+			mode_a_hmclr <= 1'b0;
+		
+
+		if( atm_vmode==3'b000 )
+			mode_a_16c <= 1'b1;
+		else
+			mode_a_16c <= 1'b0;
+		
+
+		if( atm_vmode==3'b110 )
+			mode_a_text <= 1'b1;
+		else
+			mode_a_text <= 1'b0;
+		
+
+
+		if( (atm_vmode==3'b010) || (atm_vmode==3'b110) )
+			mode_pixf_14 <= 1'b1;
+		else
+			mode_pixf_14 <= 1'b0;
+
+
+
+
+		if( (atm_vmode==3'b011) && (pent_vmode!=2'b10) )
+			mode_bw <= 2'b00; // 1/8
+		else
+			mode_bw <= 2'b01; // 1/4
+
+
+	end
 
 endmodule
 

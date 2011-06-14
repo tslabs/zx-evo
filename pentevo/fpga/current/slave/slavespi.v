@@ -46,7 +46,7 @@ module slavespi(
 `ifdef SIMULATE
 	initial
 	begin
-		force wait_read = 8'hFF;
+		force wait_read = 8'h00;
 	end
 `endif
 

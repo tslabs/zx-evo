@@ -95,7 +95,7 @@ module dram(
 		rfsh_alt = 1'b0;
 	end
 
-
+/*
 `ifdef SIMULATE
 	always @(posedge clk)
 	begin
@@ -105,7 +105,7 @@ module dram(
 		end
 	end
 `endif
-
+*/
 
 	always @(posedge clk)
 	begin

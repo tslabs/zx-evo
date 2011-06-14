@@ -4,9 +4,6 @@
 //
 // mix up border and pixels, add palette and blanks
 //
-//
-// refactored by TS-Labs
-
 
 module video_palframe(
 
@@ -19,16 +16,21 @@ module video_palframe(
 	input  wire        hblank,
 	input  wire        vblank,
 
-	input  wire [ 5:0] pixels,
-	input  wire [ 5:0] border,
+	input  wire [ 3:0] pixels,
+	input  wire [ 3:0] border,
+
+
+	input  wire        atm_palwr,
+	input  wire [ 5:0] atm_paldata,
+
+
+	output reg  [ 5:0] palcolor, // just for palette readback
 
 	output wire [ 5:0] color
 );
 
 
 	wire [ 3:0] zxcolor;
-
-	reg  [ 5:0] palcolor;
 
 
 	reg       win;
