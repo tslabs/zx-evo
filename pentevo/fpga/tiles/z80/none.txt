@@ -1,0 +1,11 @@
+порты #BFF7, #DFF7 и #EFF7
+
+bit.12=0 EFF7[7] - clock ports on
+bit.14=0 BFF7 - data reg (rw)
+bit.13=0 DFF7 - addr reg (wo)
+
+
+
+рс232 по-модемному: порты F8EF..FFEF - порты 16550,
+A11 - если 1, прерывания запрещены, если 1 - разрешены.
+
