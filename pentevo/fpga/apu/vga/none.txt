@@ -1,0 +1,43 @@
+развертка в тв:
+
+гориз.
+// =\                  /=========||...
+// ==\                /==========||...
+// ====---     -------===========||...
+//    |  \   / |      |
+//    |   ---  |      |
+//    |  |   | |      |
+//    0  t1  | t3     t4
+//           t2
+// at 0, video ends and blank begins
+//    t1 = 10 clocks (@7MHz), 1.429 us
+// t2-t1 = 33 clocks          4.714 us
+// t3-t2 = 41 clocks,         5.857 us, then video starts
+
+t1: 1.429 us,
+t2: 6.143 us,
+t3: 12    us
+//
+// repetition period = 448 clocks @7MHz
+
+верт.
++3H - blank begins,
++4H - hsync,
++18H  blank continues. total hblank is 25H
+
+
+в вга:
+[*User-Defined_mode,(736X615)]
+PIXEL_CLK   =   28000
+H_DISP   =   736
+H_FPORCH   =   16
+H_SYNC   =   96
+H_BPORCH   =   48
+H_SYNC_POL   =   0
+V_DISP   =   615
+V_FPORCH   =   3
+V_SYNC   =   4
+V_BPORCH   =   18
+V_SYNC_POL   =   0
+INTERLACE_ENABLE  =  0
+
