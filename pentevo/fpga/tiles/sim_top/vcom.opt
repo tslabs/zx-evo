@@ -1,0 +1,7 @@
+../sim_models/T80_Pack.vhd
+../sim_models/T80_Reg.vhd
+../sim_models/T80_ALU.vhd
+../sim_models/T80_MCode.vhd
+../sim_models/T80.vhd
+../sim_models/T80a.vhd
+
