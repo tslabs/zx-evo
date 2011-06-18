@@ -73,6 +73,7 @@ module apu_code (
 		altdpram_component.indata_aclr = "OFF",
 		altdpram_component.indata_reg = "INCLOCK",
 		altdpram_component.intended_device_family = "ACEX1K",
+		altdpram_component.lpm_file = "../apu/mc.mif",
 		altdpram_component.lpm_type = "altdpram",
 		altdpram_component.outdata_aclr = "OFF",
 		altdpram_component.outdata_reg = "UNREGISTERED",
@@ -100,7 +101,7 @@ endmodule
 // Retrieval info: PRIVATE: BYTE_ENABLE_A NUMERIC "0"
 // Retrieval info: PRIVATE: BYTE_ENABLE_B NUMERIC "0"
 // Retrieval info: PRIVATE: BYTE_SIZE NUMERIC "1"
-// Retrieval info: PRIVATE: BlankMemory NUMERIC "1"
+// Retrieval info: PRIVATE: BlankMemory NUMERIC "0"
 // Retrieval info: PRIVATE: CLOCK_ENABLE_INPUT_A NUMERIC "0"
 // Retrieval info: PRIVATE: CLOCK_ENABLE_INPUT_B NUMERIC "0"
 // Retrieval info: PRIVATE: CLOCK_ENABLE_OUTPUT_A NUMERIC "0"
@@ -126,7 +127,7 @@ endmodule
 // Retrieval info: PRIVATE: MAXIMUM_DEPTH NUMERIC "256"
 // Retrieval info: PRIVATE: MEMSIZE NUMERIC "4096"
 // Retrieval info: PRIVATE: MEM_IN_BITS NUMERIC "0"
-// Retrieval info: PRIVATE: MIFfilename STRING "../video/atm.mif"
+// Retrieval info: PRIVATE: MIFfilename STRING "../apu/mc.mif"
 // Retrieval info: PRIVATE: OPERATION_MODE NUMERIC "2"
 // Retrieval info: PRIVATE: OUTDATA_ACLR_B NUMERIC "0"
 // Retrieval info: PRIVATE: OUTDATA_REG_B NUMERIC "1"
@@ -155,6 +156,7 @@ endmodule
 // Retrieval info: CONSTANT: INDATA_ACLR STRING "OFF"
 // Retrieval info: CONSTANT: INDATA_REG STRING "INCLOCK"
 // Retrieval info: CONSTANT: INTENDED_DEVICE_FAMILY STRING "ACEX1K"
+// Retrieval info: CONSTANT: LPM_FILE STRING "../apu/mc.mif"
 // Retrieval info: CONSTANT: LPM_TYPE STRING "altdpram"
 // Retrieval info: CONSTANT: OUTDATA_ACLR STRING "OFF"
 // Retrieval info: CONSTANT: OUTDATA_REG STRING "UNREGISTERED"

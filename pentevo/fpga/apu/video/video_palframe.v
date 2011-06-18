@@ -18,6 +18,8 @@ module video_palframe(
 
 	input  wire [ 3:0] pixels,
 	input  wire [ 3:0] border,
+	input  wire [ 5:0] apuborder,
+	input  wire 	   zx_n_apu_brd,
 
 
 	input  wire        atm_palwr,
@@ -57,7 +59,7 @@ module video_palframe(
 		if( atm_palwr )
 			palette[zxcolor] <= atm_paldata;
 
-		palcolor <= palette[zxcolor];
+		palcolor <= !(hpix&vpix)&zx_n_apu_brd ? apuborder : palette[zxcolor];
 	end
 
 

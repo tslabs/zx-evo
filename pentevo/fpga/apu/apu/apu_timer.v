@@ -16,7 +16,7 @@ module	apu_timer(
 	output reg [15:0]	ctr,		//current value of counter
 	output reg	cnt_end				//is set to 1 when current == limit, then counter is set to 0
 
-		)
+		);
 
 
 	reg [15:0] ctr_data;

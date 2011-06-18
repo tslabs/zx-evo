@@ -23,7 +23,9 @@ module video_top(
 
 	// aux video inputs
 	input  wire [ 3:0] zxborder, // border zxcolor
-
+	input  wire [ 5:0] apuborder, // border APU
+	input  wire 	   zx_n_apu_brd,
+	
 
 	// config inputs
 	input  wire [ 1:0] pent_vmode, // 2'b00 - standard ZX
@@ -73,7 +75,10 @@ module video_top(
 	input  wire [ 7:0] fnt_d,
 	input  wire        fnt_wr,
 
-	output wire [ 5:0] palcolor // for palette readback
+	output wire [ 5:0] palcolor, // for palette readback
+
+	output wire hsync_start,
+	output wire line_start
 );
 
 	// these decoded in video_modedecode.v
@@ -89,8 +94,6 @@ module video_top(
 
 
 	// synchronization
-	wire hsync_start;
-	wire line_start;
 	wire hint_start;
 
 
@@ -307,6 +310,8 @@ module video_top(
 
 		.pixels(pixels),
 		.border(zxborder),
+		.apuborder(apu_border),
+		.zx_n_apu_brd(zx_n_apu_brd),
 
 		.atm_palwr  (atm_palwr  ),
 		.atm_paldata(atm_paldata),
