@@ -1,0 +1,2 @@
+pcmac test.asm
+pause

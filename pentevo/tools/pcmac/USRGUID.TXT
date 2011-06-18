@@ -1,0 +1,2894 @@
+                           PCMAC USERS GUIDE
+                   PCMAC Universal Macro Assembler for
+               the IBM PC XT\AT\PS2 and Compatible Computers
+		 
+               What Is PCMAC ?
+               ---------------
+               PCMAC is a two pass, symbolic cross assembler  for  the  IBM
+         PC\XT\AT\PS2 computers. This assembler is a special  one,  because
+         it is not dedicated to any processor. The user of PCMAC can decide
+         what kind of assembly language to use, and what kind  of  code  he
+         wants to be generated. Therefore a very special macro language  is
+         supported in PCMAC that is powerful enough to define any  assembly
+         language  like  Z80  or  MC68000.  The  assembler  supports   many
+         possibilities to maintain  big  assembly  programs.  Some  of  the
+         features:
+              - special string and character expressions
+              - full C language like expressions
+              - powerful  primitive  commands  to  build  up  higher  level
+                assembly instruction
+              - directive and command line option driven listing
+              - symbol table listing
+              - fully compiled binary or linkable object code output chosen
+                by the user
+         On the distribution disk you have the PCMAC  assembler,  a  linker
+         that links the object file output of the assembler, and some other
+         files.
+            Why You Need It
+            ---------------
+            You need PCMAC if you intend to develop  assembly  programs  on
+         your PC for some rarely used  processor  for  which  there  is  no
+         assembler.
+            Mr.  Developer  bought  a  seven-a-half-bit  processor   called
+         BRXX7.5 none heard of it before. He had documentation for it,  and
+         he decided to use it in a control  circuit.  He  built  a  control
+         system driven by the BRXX7.5 and he tried to develop a program for
+         it. At first he thought to develop the program  in  a  high  level
+         language but there was no compiler targeting the BRXX7.5. Then  he
+         tried to develop the program in assembly language, but even before
+         the first pass of the compilation an error message appeared:
+                No assembler present for your processor.
+         Mr. Developer decided to have an assembler written. He  asked  Mr.
+         Lazy, a programmer, to  write  an  assembler  for  him.  Mr.  Lazy
+         accepted the job, and said to have done the assembler in six month
+         for 2000 bucks. Of course the assembler won't be very easy to use,
+         and may generate false code in the first versions, but  any  times
+         such a problem arises Mr. Developer can phone him, and he will fix
+         the bug in two weeks.
+            Well, this is not the story that  makes  Mr.  Developer  happy.
+         Then he decided to buy the new PCMAC assembler. He  did  it,  read
+         the users guide through and defined his special assembly  language
+         in two days. He made some mistakes in his first version, but PCMAC
+         once warned him, when it could, and in another time he  found  the
+         bug himself looking at the highly readable listing of his program.
+         He could find the bug in the macro definition in two  minutes  and
+         also could correct it immediately.
+            Mr. Developer  had  an  assembler  that  compiled  his  special
+         assembly language. But many times  he  wrote  the  instruction  EX
+         DE,HL that changed two registers  into  the  form  EX  HL,DE.  The
+         assembler pointed out that it could not  compile  the  instruction
+         many times
+         . Then Mr. Developer included this  instruction,  as  a
+         new form of the other one,  and  PCMAC,  since  that  time,  could
+         compile the programs. If he had an ordinary assembler he  couldn't
+         do that.
+            Finally Mr. Developer finished up his work soon  and  his  boss
+         was very great to give him a salary raise.
+            This is the story of Mr. Developper and it can be the story  of
+         you.
+            How to Use?
+            -----------
+            It is very easy to use. You have to prepare a  text  containing
+         your assembly program. There are many good editors  for  the  PCs.
+         You can use any of them. Suppose you prepared an assembly  program
+         and the program is now in the file MYFIRST.ASM. Now  type  at  the
+         DOS prompt:
+         PCMAC MYFIRST.ASM
+         The word PCMAC on the start  of  the  line  is  the  name  of  the
+         assembler and typing it invokes DOS to start PCMAC.  The  rest  of
+         the line is the name  of  the  program  that  you  want  PCMAC  to
+         compile. PCMAC having been loaded reads the name of  the  assembly
+         program and tries to compile it. It writes some text to the screen
+         that says that there were errors in your assembly file   and  does
+         not generate output. After correcting the bugs  in  your  assembly
+         program you should type the same line again for the DOS promt, and
+         happily read that there was no error in your  assembly  file,  and
+         the compilation was successful. Now list the directory, where  you
+         work, with the DOS command 'dir', and see that  there  is  a  file
+         named: MYFIRST.TSK. This file contains the compiled code  of  your
+         program. Try to load into your target machine and start. Well this
+         is the point where we can not  give  you  any  advice  how  to  do
+         because it can vary from user to user. External machines are often
+         connected to the RS232C channel, and you can  use  a  program  was
+         written in 80X86 assembly, in C, in PASCAL or in any language that
+         loads the code into the external machine.
+            The Assembly Language
+            ---------------------
+            It is difficult to speak about the assembly language  of  PCMAC
+         because every user defines his own  assembly.  However  there  are
+         some main rules that stand for every user defined assembly syntax.
+            An assembly program consists of lines, and every line  contains
+         at most one instruction. The instructions are  terminated  by  the
+         new line character at the end of the line or by a semicolon ; that
+         can be followed by comment. Every line  contains  two  parts.  The
+         first part is the label and the second  is  the  instruction.  The
+         labels start in the first column of the line and are terminated by
+         a space or tabulator. The instructions start at any position,  but
+         a space or tabulator character has to precede them. Many  case  it
+         is neccesary to start a label not in the first column. It  can  be
+         for the sake of the readability. In such case the label has to  be
+         terminated by a colon. Any part of a line can be missing.  A  line
+         can contain only instruction without label, only a label  or  only
+         comment or even no comment. So a line  can  even  be  empty.  Some
+         examples:
+         1.)
+         LABEL_IN_THE_FIRST_COLUMN LD A,B ;COMMENT
+         The label LABEL_IN_THE_FIRST_COLUMN is a long label  that  starts
+         in the first column and  separated  from  the  instruction  by  a
+         space. It could be separated by many spaces. Many spaces  in  this
+         case work like one. The command is LD A,B and  terminated  by  the
+         semicolon ;. The rest of the line is comment. Another example:
+         2.)
+          LABEL_NOT_IN_THE_FIRST_COLUMN :
+         This line contains only a label that has to  be  terminated  by  a
+         colon, even if there is no instruction following. A label  has  to
+         start with a letter or  with  the  underscore  character  and  can
+         contain letters, numbers and the underscore character. A label can
+         be as long as you want but should not exceed the maximal length of
+         a line that is 500 character. This is an exceptable limit.  It  is
+         regarded to use  long  labels  that  tell  you  the  meaning.  The
+         assembly format of PCMAC always pays attention to the  possibility
+         of readable programming.
+         3.)
+         Well, this example is difficult to typeset. The line  above  wants
+         to present an empty line.
+         4.)
+         ;This text is comment
+         This line contains only a comment.
+         5.)
+         LABEL LD a,B ;Comment
+         This is a line  that  contains  a  label  starting  in  the  first
+         column, instruction separated by a space and comment.
+            A line can contain a directive. Directives start in  the  first
+         column with a sharp # character. This looks like in  C  language,
+         but PCMAC has much more directives than C language. As a matter of
+         fact PCMAC currently has 28 kinds  of  directives.  You  can  read
+         about directives in details in a separate chapter. Example:
+         #dw hl
+         This line is a directive that tells PCMAC  to  generate  words  on
+         order: higher byte, lower byte. Some line looks:
+         #dw lh ; Usual convention
+         that changes the order to the usual and the line contains comment.
+                  How PCMAC Generates the Code
+                  ----------------------------
+                  The main reason to use PCMAC to  generate    binary  file
+         from a text file. The text file can be read easy by  human,  while
+         the binary file can be read by some program or machine.  From  the
+         point of view  of  code  generation  the  assembly  lines  can  be
+         grouped into two groups. Instructions of the first group generate
+         code, while the instructions of the second group do not.
+                  PCMAC reads the lines twice. One going through the  lines
+         is usually called PASS. This is why PCMAC is  called  a  two  pass
+         assembler. In the first pass  PCMAC  decides  how  big  memory  is
+         needed for the code, and the second pass generates the code. After
+         the first pass PCMAC reserves place to store the code. When a line
+         containing instruction  that  generates  code  encounters  in  the
+         second pass PCMAC stores the code in the reserved area at a  place
+         that is shown by the variable $. This  variable  is  a  predefined
+         variable of PCMAC that you even can reference  in  your  assembly.
+         This variable in  other  assemblers  is  usually  called  Location
+         Counter. PCMAC increments this variable after generating  a  byte.
+         If you set this variable to a certain value  than  the  next  byte
+         would be generated to the location that is pointed by  the  value.
+         If you set this variable to point a location where  PCMAC  already
+         had generated a byte then PCMAC will overwrite the old value  with
+         the next byte. Some assemblers do not allow to generate bytes with
+         descending addresses. However in some cases it is neccessary to do
+         so.
+                  Primitives
+                  ----------
+            Primitives  are  instructions  that  are  known  by  the  PCMAC
+         assembler itself. They are primitive, but they has to be  used  to
+         build up macros, assembly language. These primitives are the  same
+         as they are in any other assembly language. These primitives are:
+                 DB,DW,DD,DRB,DRW,DRD,VAR,EQU,EXTERN,EXTRN,PUBLIC
+         The first six directives generate code  the  others  do  not.  The
+         instructions in details:
+                 DB       Abbreviation of Define Byte. The syntax  of  this
+                          instruction is:
+                          DB expression1,expression2,...,expressionN
+                                                 or
+                          DB string
+                          The instruction generates so many bytes  as  many
+                          expressions there are after the keyword DB. PCMAC
+                          first evaluates  the  expressions  and  generates
+                          successive bytes to hold the values. If  a  value
+                          does not fit into the  interval  [-128,255]  then
+                          PCMAC generates an error message.  This  interval
+                          allows you to treat a byte as  signed  value.  In
+                          that case the assembler  generates  a  byte  that
+                          contains the value in two's complement  code.  In
+                          other words: if the value is less than zero  then
+                          the assembler adds 256 to it  before  generation.
+                          This instruction can  also  be  used  to  declare
+                          strings. From the  point  of  view  of  the  code
+                          generation a string is nothing else then  a  byte
+                          vector. Every character of a string  is  a  byte,
+                          and these bytes are  generated  succesively  when
+                          using a string  instead  of  an  expression.  The
+                          syntax of strings is detailed in a later chapter.
+                 DW       Abbreviation of Define Word. The syntax  of  this
+                          instruction is:
+                          DW expression1,expression2,...,expressionN
+                          The instruction generates  two  bytes  for  every
+                          expression. The expressions are treated as  words
+                          ie: two byte values. If a value does not fit into
+                          the interval [-32768,65535]  PCMAC  generates  an
+                          error message. This interval allows you to  treat
+                          a  word  as  signed  value.  In  that  case   the
+                          assembler generates  a  word  that  contains  the
+                          value in two's complement code. In  other  words:
+                          if the value is less than zero then the assembler
+                          adds 65536 to it before generation. The order  of
+                          the bytes in a word is: lower byte,  higher  byte
+                          by default. This ordering can be redefined by the
+                          #DW directive. String can not take place  between
+                          the expressions.
+                 DD       Abbreviation of Define Doubleword. The syntax  of
+                          this instruction is:
+                          DD expression1,expression2,...,expressionN
+                          The instruction generates four  bytes  for  every
+                          expression. There is no limit for the value of an
+                          expression, because PCMAC uses 32 bit  arithmetic
+                          and it makes impossible to be out of the interval
+                          of doubleword. The generation takes place in  two
+                          steps. PCMAC splits up the  doubleword  into  two
+                          words and generates words. The order of the  word
+                          generation  is:  lower  word,  higher   word   by
+                          default. This ordering can be  redefined  by  the
+                          #DD directive. The order of the bytes between the
+                          words is the same as if the words were  generated
+                          by  DW  primitives.  They  go  through  the  same
+                          ordering  procedure.   In   other   words   PCMAC
+                          generates two DW instructions for a  DD.  Strings
+                          can not take place among the expressions.
+                 DRB      Abbreviation of Define Relative Byte. The  syntax
+                          of the instruction is:
+                          DRB expression1,expression2,...,expressionN
+                          The expressions are treated as 32 bit values, and
+                          the  generated  value  is  the   value   of   the
+                          expression minus the value of the variable $  plus
+                          one.  At  first  glance  this   procedure   seems
+                          sophisticated and  useless.  The  power  of  this
+                          primitive   is   that   many   instructions    of
+                          microprocessors refer to relative  addresses  and
+                          this is the way those addresses are treated  when
+                          byte offset is given. The generated  bytes  added
+                          to the address of the next  byte  will  give  the
+                          target address. PCMAC  will  generate  a  warning
+                          message  if  some  of  the  expressions  is   not
+                          relocatable. PCMAC will generate error message if
+                          the  modified  value  is   not   in   the   range
+                          [-128,127]. A string can not take place among the
+                          expressions.
+                 DRW      Abbreviation of Define Relative Word. The  syntax
+                          of the instruction is:
+                          DRW expression1,expression2,...,expressionN
+                          The expressions are treated as 32 bit values, and
+                          are modified the same way as in  the  instruction
+                          DRB. A main difference is that  the  modificating
+                          value is the value of the  variable  $  plus  two
+                          because this  instruction  generates  two  bytes.
+                          This primitive is useful when relative addressing
+                          takes place with  word  offset.  PCMAC  generates
+                          warning  message  if   an   expression   is   not
+                          relocatable and will generate  error  message  if
+                          the modified value is not  between  the  interval
+                          [-32768,32767]. A string can not take place among
+                          the expressions.
+                 DRD      Abbreviation of Define Relative  Doubleword.  The
+                          syntax of the instruction is:
+                          DRD expression1,expression2,...,expressionN
+                          The expression are treated as 32 bit  values  and
+                          are modified the same way as in the  instructions
+                          DRW  or  DRB.  A  main  difference  is  that  the
+                          modificating value is the value of the variable $
+                          plus 4 because this  instruction  generates  four
+                          bytes. PCMAC generates warning message if any  of
+                          the expressions is not relocatable.
+         EXAMPLES:
+         Let us look at the next program!
+         ;Program to demonstrate the primitives DB,DW,DD,DRB,DRW and DRD
+         ;Set the variable $ to zero
+         ;This instruction is useless because this is the default.
+           $ := 0
+         ; Generate byte 11h
+           DB  11h
+         ; The next instruction generates byte 0FEh because
+         ; now $=1, $+1=2 and 0-2=-2 equals to 0FEh in two's complement.
+         ; NOTE: This instruction makes PCMAC to give a
+         ;       warning message because the expression 0 is not
+         ;       relocatable.
+           DRB 0
+         ; The following instruction generates two bytes.
+         ; The generated bytes are 0FFh and 00h
+         LABEL1
+           DRB LABEL1,LABEL2
+         LABEL2
+           DW 1234h     ; The generated bytes are 34h and 12h respectively.
+           DD 12345678h ; The generated bytes are
+                        ; 78h, 56h, 34h, 12h respectively
+           DRW LABEL3   ; The generated bytes are zeroes
+         LABEL3 DRD LABEL3 ; The generated bytes accord to the value -4
+                           ; -4=0FFFFFFFCh in two's complement,
+                           ; so the generated bytes are 0FCh,0FFh,0FFh
+                           ; and 0FFh
+         ;End of EXAMPLE PROGRAM
+                 VAR      This instruction declares variables.
+                          The syntax of the instruction is:
+                          VAR identifier1,identifier2,...,identifierN
+                          The  identifiers   are   treated   as   variables
+         following the instruction. If an identifier appears  on  the  left
+         hand side of an assignment  that  was  not  declared  with  a  VAR
+         instruction then PCMAC generates a warning  message.  The  initial
+         value of a variable is definitily zero.
+                 EQU      This is a  special  instruction  that  assigns  a
+                          value to a label. The syntax of  the  instruction
+                          is:
+                          label  EQU  expression
+                            label : EQU expression
+                          The label has to appear on the place of labels in
+                          the line as it was mentioned earlier.  The  value
+                          is assigned  to  the  label.  This  is  the  only
+                          exception when a value that is not the  value  of
+                          the variable $ is assigned to  a  label.  In  any
+                          other case if a label stands  on  the  left  hand
+                          side of a line the value that is assigned  to  it
+                          is the value of the variable $ when PCMAC  starts
+                          to read the line.
+                 EXTERN
+                 EXTRN    These instructions are the same, so we  refer  to
+                          it as one instruction. This instruction only  has
+                          two different forms because it is often  mistyped
+                          by  assembly  programmers.  The  syntax  of   the
+                          instruction is:
+                          EXTERN label1,label2,...,labelN
+                          This  instruction  declares  the  labels  to   be
+                          external.  It  means  that  there  is  no   value
+                          assigned to the label in the assembly program and
+                          this is because it is defined in  an  other  part
+                          that is compiled separately. Such  a  label  must
+                          not appear in an expression. The  only  exception
+                          is when the label itself forms an expression. For
+                          example we can write:
+                                 DW external_label
+                          where external_label is an  external  label.  The
+                          instruction can  only  be  used  when  PCMAC  was
+                          invoked with the -o option.  This  option  forces
+                          PCMAC  to  generate  object   file   instead   of
+                          executable task file. The references can  not  be
+                          resolved by PCMAC. The assembler only generates a
+                          note for the linker about the unsolved reference.
+                          When  the  linker  reads  the  note  solves   the
+                          reference. If  nor  the  option  -o  neither  the
+                          option -t is  present  then  PCMAC  generates  an
+                          error message when an EXTERN or EXTRN instruction
+                          appears.
+                 PUBLIC   This instruction declares a label to  be  public.
+                          This instruction can only be used  if  PCMAC  was
+                          invoked with  the  option  -o.  This  instruction
+                          means that PCMAC makes a note about the label  in
+                          the object file, and the  linker  can  solve  the
+                          references to this  label  that  are  present  in
+                          other modules. The instructions EXTERN and PUBLIC
+                          are as husband and wife. If nor  the  -o  neither
+                          the option -t is present when invoking PCMAC then
+                          PCMAC  generates  a  warning   message   if   the
+                          instruction appears.
+         EXAMPLE:
+         Here we present two simple programs. Assume that the programs  are
+         stored  in  the  files  TTHL.ASM  and  HL2.ASM.  The   first   one
+         (TTHL.ASM):
+         ;A program that multiplies HL by two
+         TWO_TIMES_HL
+                 ADD HL,HL
+                 RET
+                 PUBLIC TWO_TIMES_HL
+         The other program (HL2.ASM):
+         ;Program that calls TWO_TIMES_HL
+                 EXTERN  TWO_TIMES_HL
+                 CALL TWO_TIMES_HL
+         The user can compile these programs with the DOS commands:
+                 PCMAC -o TTHL.ASM
+                 PCMAN -o HL2.ASM
+                 LINK TTHL.O HL2.ASM
+         The first two commands compile the  assembly  files  and  generate
+         object files. The last command links the files together.
+              Directives
+              ----------
+              The current version of PCMAC knows 28 directives of 8  group.
+         A directive always appears on the start of a line  preceded  by  a
+         sharp character #. The directives:
+         1. include, macros, lib
+         2. fatal, error, warning, message, pause, list, ilist
+         3. if, endif, else, elsif, ifdef, ifndef
+         4. octal, decimal, char
+         5. dw, dd
+         6. macarg, macnum
+         7. stack, pop, push, clostack
+         8. while, wend, repeat, until
+         Collecting the directives into groups accords  to  their  effects.
+         Here we present all the directives with some text that can work as
+         short reminder.
+         1. Including directives.
+             include  includes assembly file,
+             macros   includes assembly file while the first pass
+             lib      includes compiled macro library
+         2. Listing directives.
+             fatal    generates an error message and stops PCMAC
+             error    generates an error message
+             warning  generates a warning message
+             message  generates a message
+             pause    supresses compilation until ENTER is pressed.
+             list     switches the listing on and off
+             ilist    switches the listing of include files on and off
+         3. Conditional directives.
+             ifdef
+             ifndef
+             if       switches the compilation on or off.
+             endif    closes a block that was opened with some if...
+             else
+             elsif    switches the compilation on or off.
+         4. String option setting directives.
+             octal    changes string radix octal.
+             decimal  changes string radix decimal.
+             char     redefines character code.
+         5. Code ordering directives.
+             dw       sets ordering of bytes in a word.
+             dd       sets ordering of words in a doubleword.
+         6. Macro option setting directives.
+             macarg   redefines the macro argumentum character.
+             macnum   redefines the macro number character.
+         7. Compilation stack handling directives.
+             stack    opens a stack.
+             pop      pops a value from the top of the stack.
+             push     pushes a value onto the stack.
+             clostack closes a stack.
+         8. Loop directives.
+            !!!!! These directives can ONLY be used inside of a macro. !!!
+             while    start a while loop
+             wend     end a while loop
+             repeat   start a repeat loop
+             until    end a repeat loop
+         The rest of this chapter tells you the effect  and  usage  of  all
+         directives. However there are some definition  that  you  can  not
+         understand until you are not familiar with string and  macros.  We
+         recommand you to skip the definition of group 4  if  you  are  not
+         familiar with strings and groups 6 and 8 if you are  not  familiar
+         with macros. Having learnt what PCMAC call string  and  macro  you
+         can return to this chapter.
+         Group No 1.
+         #include "file name" or #include <file name>
+                 This directive makes PCMAC to suppress reading the  actual
+         file and open the file that is named following the directive. This
+         directive has the same effect as if the file was copied  into  the
+         place of the directive into the current file.  The  directive  has
+         two forms. In the first case the name  of  the  file  is  enclosed
+         between "s. In the second case between < and >. If the  file  name
+         is enclosed between "s then PCMAC searches the file in the current
+         DOS directory if not path presents in the file name. If  the  file
+         name enclosed between < and > then PCMAC searches the file in  the
+         directory that is pointed by the environment  variable  INCLUDE.  A
+         file that is included from an other one can also include.  Include
+         directives can be nested into 5 level deep.
+         EXAMPLE:
+         Assume that we have set  the  environment  variable  with  the  DOS
+         command:
+         SET INCLUDE=C:\PCMAC\INCLUDE
+         or
+         SET INCLUDE=C:\PCMAC\INCLUDE\
+         There is no difference between the two settings from the point  of
+         view  of   PCMAC.   Assume   that   the   current   directory   is
+         C:\PCMAC\SOURCE. The directive:
+         #include "DECL.ASM"
+         will include the file C:\PCMAC\SOURCE\DECL.ASM. The directive
+         #include <DECL.ASM>
+         will include the file C:\PCMAC\INCLUDE\DECL.ASM. The directive
+         #include <SYS\MACROS.ASM>
+         will  include  the   file   C:\PCMAC\INCLUDE\SYS\MACROS.ASM.   The
+         directive
+         #include <C:\ROOT.ASM>
+         forces  PCMAC  to  try   to   open   and   read   a   file   named
+         C:\PCMAC\INCLUDE\C:\ROOT.ASM. It is an invalid file name so  PCMAC
+         will fail trying to read, and generates an error  message.  If  we
+         use the directive
+         #include "C:\ROOT.ASM"
+         PCMAC will include the file "ROOT.ASM" from the root directory  of
+         the drive C.
+         macros "file name" or macros <file name>
+                 This directive has almost the same effect as an  #include.
+         The difference is that this directive is neglected in  the  second
+         pass. This is useful to collect the  macro  definitions,  the  EQU
+         primitives into a file  and  to  include  it  with  the  directive
+         macros. These  lines  are  skipped  while  the  second  pass.  The
+         directive is called macros, because usually macros  are  collected
+         in a file that is included only in the first pass. The meaning  of
+         the delimiters of the file name is the same  as  in  case  of  the
+         #include directive. One can say that
+         #macros "file"
+         can be used instead of the three lines:
+         #if PASS = 1
+         #include "file"
+         #endif
+         A file that was included with the directive macros can  contain  a
+         macros directive or even #include directive.  Obviously  the  file
+         that is included into a  file  that  is  included  with  a  macros
+         directive will only be  included  only  in  the  first  pass.  The
+         nesting of their directive can be 5 level deep together  with  the
+         opened files of the directive include.
+         #lib "file name" or #lib <file name>
+                 This directive forces PCMAC to open and read a  file  that
+         was generated  by  PCMAC  and  containing  only  compressed  macro
+         definitions. If a file contains only  macro  definitions,  and  no
+         line generating code, then this program can be compiled  with  the
+         -K option. If PCMAC was invoked with the -K option  it  only  goes
+         through one pass, and finishing  the  pass  creates  a  file  that
+         contains  the  macros  that  were  defined.  If  we  have  a  file
+         MACROS.ASM containing only macros  and  we  compile  it  with  the
+         command line:
+         PCMAC MACROS.ASM MACROS.LIB -K
+         then including the result file MACROS.LIB with the  directive  lib
+         has the same effect as including the original file MACROS.ASM with
+         the directive macros or include. The difference is that  including
+         a compressed lib file is much faster  because  PCMAC  checked  the
+         syntax in an earlier compilation. The  delimiters  have  the  same
+         meaning as in the case of macros or include.
+         Group No 2.
+         #fatal   string
+         #error   string
+         #warning string
+         #message string
+                 These directives generate message that appears  on  screen
+         and in the listing file if it exists. These directives are useful,
+         when creating macros. An example can be  seen  in  the  Z80  macro
+         definition file:
+         macro("LD\  *,*",_SS,_SS)
+         #if     #0 == 6 && #1 == 6
+         #error  "LD (HL),(HL) is invalid."
+         #else
+                 DB      40h+(#0<<3)+#1
+         #endif
+         endm
+         This macro defines the instructions that load 8bit from a register
+         to a register, or from the memory location addressed by  HL  to  a
+         register or backward. However to load  from  the  memory  location
+         pointed by HL to the same memory location is invalid.  If  a  code
+         encounters that  would  accord  to  the  assembly  instruction  LD
+         (HL),(HL) then the processor Z80 gets into a halt state. There  is
+         a separated instruction for this purpose, HALT. In other words, if
+         the programmer writes the line:
+                 LD (HL),(HL)
+         then he probably wants something else than HALT. This  macro  does
+         not compile this line, but generates an error message instead. The
+         message appears on the same place where the  errors  generated  by
+         PCMAC appear, and PCMAC treats the message  as  an  error  message
+         generated by itself. Continues the compilation to  discover  other
+         mistakes, but having finished the two  passes  does  not  generate
+         object nor task file.
+                 One could define the macro in the following way:
+         macro("LD\  *,*",_SS,_SS)
+         #if     #0 == 6 && #1 == 6
+         #fatal "LD (HL),(HL) is invalid."
+         #endif
+                 DB      40h+(#0<<3)+#1
+         endm
+         In this case the compilation halts having  put  out  the  message.
+         This is a very strong wake up for the programmer,  and  the  fatal
+         directive is regarded to be in use when  a  really  serious  error
+         appeared. PCMAC generates fatal errors e.g. when it can not open a
+         file.
+                 One could define the macro in the following way as well:
+         macro("LD\  *,*",_SS,_SS)
+         #if     #0 == 6 && #1 == 6
+         #warning "LD (HL),(HL) is invalid."
+         #endif
+                 DB      40h+(#0<<3)+#1
+         endm
+         If a line LD (HL),(HL) encounters and  this  macro  definition  is
+         valid, then the message appears as warning and PCMAC treats  as  a
+         warning. The compilation goes on,  and  having  finished  the  two
+         passes PCMAC writes out the object or task file.
+                 The  last  of  this  three  directives  is  message.  This
+         directive generates a message appearing on the screen, and in  the
+         list file, but this event  is  treated  neither  an  error  nor  a
+         warning. This is only a message. PCMAC puts it out and forgets all
+         about it. You can use it if you  run  PCMAC  on  a  two-disk-drive
+         machine and you compile very large files. In  this  case  you  can
+         create a main file that contains only  directives  on  one  floppy
+         disk, and the other files on other  floppy  disks.  You  start  to
+         compile the main file (eg. MAIN.ASM ) on drive A, and include  the
+         files containing the program fragments on  drive  B.  The  program
+         MAIN.ASM can look like this:
+         ;MAIN.ASM includer of a very large program
+         #message "Put the disk containing SUB1.ASM into the drive B:"
+         #message "and press RETURN!"
+         #pause
+         #include "B:SUB1.ASM"
+         #message "Put the disk containing SUB2.ASM into the drive B:"
+         #message "and press RETURN!"
+         #pause
+         #include "B:SUB2.ASM"
+         #message "Put the disk containing SUB3.ASM into the drive B:"
+         #message "and press RETURN!"
+         #pause
+         #include "B:SUB3.ASM"
+         ;End of file MAIN.ASM
+         You should not forget to use the pause directive before the  first
+         #include, because finishing the first pass the disk that  contains
+         SUB3.ASM but not SUB1.ASM is in the drive B.
+         #pause
+                 This directive makes PCMAC to stop until one  presses  the
+         key ENTER. The usage of  this  directive  was  described  for  the
+         directives just above.
+         #list  expression
+         #ilist expression
+                 These directives switches the listing of the  compilation.
+         They have only effect if the command line option -l was  given  on
+         invocation of PCMAC. If the expression is true (not zero) then the
+         listing will be on following the directive, if the  expression  is
+         false (zero) then the listing will be  off.  The  directive  #list
+         switches the listing  of  all  the  files.  The  directive  #ilist
+         switches the listing only of the include files. The listing of the
+         include files is off by default. This means  that  if  you  invoke
+         PCMAC with the command line:
+         PCMAC -l MAIN.ASM
+         then you will get a listing on the screen, but no lines  of  files
+         SUB1.ASM, SUB2.ASM and SUB3.ASM  will  appear.  (See  the  example
+         above!) The directives #list and #ilist have effect  only  if  the
+         compilation is on. It means that the lines:
+         #if 0
+         #list on
+         #endif
+         will not switch the listing on.
+         Group No 3.
+         #if expression
+                 This is a directive to switch the compilation off. If  the
+         expression is true (non zero) then the compilation remains on,  if
+         the expression is false (zero) then the compilation is turned off.
+         However the expression will be evaluated if  the  compilation  was
+         on. In other words this directive opens a conditional  block  that
+         has to be ended with the directive  #endif.  Such  blocks  can  be
+         nested as deep as you want.
+         #ifdef  identifier
+         #ifndef identifier
+                 These directives are similar to the  directive  #if.  They
+         switch the  compilation  off  according  to  the  identifier.  The
+         directive #ifdef turns the compilation off if the  identifier  was
+         not defined. The directive #ifndef turns the  compilation  off  if
+         the identifier was defined. These directives have the same  effect
+         as the lines:
+         #if isdef(identifier)
+         #if !isdef(identifier)
+         #endif
+                 This directive closes a  conditional  block.  If  the  the
+         compilation was on before the block started it will be  on  again,
+         and if it was off then it will be off.
+         #else
+                 This directive splits  up  a  conditional  block.  If  the
+         expression  following  the  directive  #if  was  true,  then   the
+         compilation is turned off at the point of the directive  else.  If
+         the expression was false then the compilation  will  be  on  again
+         unless  the whole conditional block is  in  a  larger  conditional
+         block that switched off the compilation.
+         #elsif expression
+                 This  directive  the  mixture  of  #else  and   #if.   The
+         expression will be evaluated if the directive #if switched off the
+         compilation, and the compilation switches on if the expression  is
+         true. Using this directive it is possible to  separate  more  than
+         two cases. To make it clear let us look at an  example!  The  next
+         program demonstrates how the directives of this group work.
+         ;CONDEMO.ASM
+         ;Program to demonstrate
+         ;the directives
+         ;#if
+         ;#ifdef
+         ;#ifndef
+         ;#else
+         ;#elsif
+         ;#endif
+         ;Some simple examples first:
+         #if 1
+         #message "The expression 1 is true"
+         #endif
+         #if 0
+         #message "No matter what this string is,"
+         #message "because it won't appear on the screen."
+         #endif
+         ;Some more complex
+         var variable
+         variable := 1
+         #ifdef variable
+         #message "The identifier variable is defined."
+         #if variable
+         #message "The value of variable is true."
+         #else
+         #message "The value of variable is false."
+         #endif
+         #else
+         #message "The identifier variable is not defined."
+         #endif
+         ;Three different cases to separate
+         variable := 3
+         #if variable = 1
+         #message "Variable = one."
+         #elsif variable =2
+         #message "Variable = two."
+         #else
+         #message "Variable greater than two."
+         #endif
+         ;End of file CONDEMO.ASM
+         If we compile this program invoking PCMAC with the command line:
+         PCMAC condemo.asm
+         we will get the messages on the screen:
+         MESSAGE **** The expression 1 is true
+         MESSAGE **** The identifier variable is defined.
+         MESSAGE **** The value of variable is true.
+         MESSAGE **** Variable greater than two.
+         MESSAGE **** The expression 1 is true
+         MESSAGE **** The identifier variable is defined.
+         MESSAGE **** The value of variable is true.
+         MESSAGE **** Variable greater than two.
+         We will get every messages twice because of  the  two  compilation
+         passes. Try to  compile  the  file  CONDEMO.ASM  that  is  on  the
+         distribution disk.
+         Group No 4.
+                 You can understand this group of  directives  if  you  are
+         familiar with strings, and the way how PCMAC deals with strings.
+         #octal
+                 This directive sets the radix of the string escape numbers
+         to be eight. The numbers will be evaluated  as  octal  numbers  in
+         string escape sequences, and any non  octal  character  terminates
+         them even the digits '8' and '9'.  The  radix  for  string  escape
+         numbers is octal by default,  but  it  can  be  changed  in  later
+         version of PCMAC. It  is  regarded  to  use  explicitly  octal  or
+         decimal in your program if you use string escape numbers.
+         #decimal
+                 This directive sets the radix of the string escape numbers
+         to be ten. The numbers will be evaluated  as  decimal  numbers  in
+         string escape sequences.
+                 This is a good style of programming to use the directive
+         decimal or octal at the start of every file, and to use after  the
+         #include or macros directives.
+                 Well, the best way is to use only one  of  them  in  every
+         program.
+         #char expression1,expression2
+                 This directive  is  useful  when  writing  program  for  a
+         machine that uses non ASCII character set.  When  PCMAC  starts  a
+         pass fills up a table with numbers from 0 to 255. When a character
+         appears in a string or in a character  constans  it  represents  a
+         number according to the ASCII coding standard. PCMAC changes  this
+         value according to the table. If  the  character  'A'  appears  it
+         represented by the code 65 in ASCII. PCMAC changes this code  with
+         the code that is in the table at the location 65. By default it is
+         65, because PCMAC sets the location i to hold the value i for  any
+         i=0 to 255.
+                 The directive #char changes the table.  It  evaluates  the
+         expressions and then changes the location pointed by the first one
+         to hold the value of the second one. The order of  this  event  is
+         important. Let us look an example:
+         ;CHARDEMO.ASM
+         ;Demo program for the char directive
+                 DB "AAA\n\r"
+         #char 'A','a'
+                 DB "AAA\n\r"
+         #char 'A','A'
+                 DB "AAA\n\r"
+         #char 65,'A'
+                 DB "AAA\n\r"
+         #char 65,65
+                 DB "AAA\n\r"
+         #char 'A','a'
+         ;End of the file CHARDEMO.ASM
+         If you compile this program with the command line:
+         PCMAC CHARDEMO.ASM
+         the resulting file CHARDEMO.TSK will be an ASCII file that you can
+         type. Try to compile this assembly file,  and  then  use  the  dos
+         command:
+         TYPE CHARDEMO.TSK
+         You will see the following lines:
+         AAA
+         aaa
+         aaa
+         aaa
+         AAA
+         These bytes were generated by the assembly program above. Why?
+                 The first DB primitive generated three capital  case  'A's
+         and carriage return and new line. The second DB primitive generated
+         three lower case 'a's, because the char directive changed the code
+         of the character 'A' from 65 to 97. The second char directive does
+         nothing. The value of the first expression is 97 at this time, and
+         the table at the location 97 contains the value 97 because of  the
+         default setting. Therefore the third DB  primitive  generates  the
+         same code as the previous one. What does the next #char  directive
+         do? It changes the location 65 of the table to hold  the  code  of
+         the character 'A'. But this time it is 97  because  of  the  first
+         char directive. This directive does not change the table again and
+         the fourth DB primitive generates three lower case 'a's again. The
+         fourth char directive is clear how to interpret. The  location  65
+         changed to hold the value 65.  The  last  DB  primitive  generates
+         three capital case 'A's.  The  last  char  directive  is  only  to
+         demonstrate that PCMAC really fills up the table at the  start  of
+         every pass. This is because you may wish to change  the  character
+         set more than once in one  file.  An  example  when  you  have  an
+         assembly program that sends messages to  the  screen  and  to  the
+         printer as well. In this case your  program  will  look  something
+         like this:
+         ;Program skeleton for multiple character set usage
+         START   ;start of the executable code
+                         .
+                         .
+                         .
+                 Executable code
+                 LD      A,'a' ; This is standard ASCII code
+                         .
+                         .
+                         .
+         ;Character table setting for the screen
+         #char 'a',1
+         #char 'b',2
+                .
+                .
+                .
+         #char 'z',26
+         ;messages to send to the screen
+         scr_mes1    DB "message number one"
+         scr_mes2    DB "message number two"
+                      .
+                      .
+                      .
+         scr_mesN   DB "message number many"
+         ;Character table setting for the printer
+         #char 'a',65
+         #char 'b',66
+                .
+                .
+                .
+         #char 'z',90
+         ;messages to send to the printer
+         prt_mes1    DB "message number one"
+         prt_mes2    DB "message number two"
+                      .
+                      .
+                      .
+         prt_mesN   DB "message number many"
+         ;End of program skeleton
+         The instruction LD A,'a' will load into the accumulator the  value
+         97 because the default setting of the table is ASCII,  and  it  is
+         reloaded at the start of the second pass.
+                 You can redefine non printable  code  with  the  directive
+         char but there is no use of it. All the escape  sequences  in  the
+         strings and in the character constants are treated as they are. So
+         if you have a character constans '\65' in  decimal  mode  then  it
+         will mean the value 65 no matter  what  kind  of  char  directives
+         preceded it. The other escape sequences as '\n' or '\r' will  also
+         not be changed.
+                 Remember that PCMAC refills the table at the start of  the
+         second pass! If you collect all the char directives in a file then
+         you have to include it using the directive #include and  not  the
+         directive macros!
+         Group No 5.
+         #dw hl    or     #dw lh
+         #dd hl    or     #dd lh
+                 These directives change the byte and word generating order
+         of the DW and DD primitives. By default DW generates a word in the
+         way that the lower significant byte is the first  and  the  higher
+         significant byte is the second. The DD generates a doubleword in a
+         similar way: the lower significant word is on  the  lower  address
+         and the higher significant word is on the higher address.
+                 This ordering method can be changed with this  directives.
+         The directive dw changes the ordering of  the  primitive  DW.  The
+         letter pairs hl and lh means the order of  the  bytes.  hl  means:
+         higher byte on the lower address lower byte on the higher address.
+         lh means backward. The directive dd changes the word  ordering  in
+         the same way. The meaning of the letter pairs  are  the  same  for
+         words instead of bytes. These letter are not predefined labels  or
+         variables. They are  keywords.  You  can  use  both  as  label  or
+         variable. You  can  find  a  demonstration  program  in  the  file
+         ORDEMO.ASM. Here it is:
+         ;ORDEMO.ASM
+         ;Demo program for the dw and dd directives
+                         dw      1234h
+                         dd      12345678h
+         #dw hl
+                         dw      1234h
+                         dd      12345678h
+         #dd hl
+                         dw      1234h
+                         dd      12345678h
+         #dw     lh
+                         dw      1234h
+                         dd      12345678h
+         #dd lh
+                         dw      1234h
+                         dd      12345678h
+         ;End of the file ORDEMO.ASM
+         The easiest way to see what codes were generated is to look at the
+         list file. Here is the list:
+         Versoft macro assembler.
+         V 1.0
+         Pass2
+         +               ;ORDEMO.ASM
+         +               ;Demo program for the dw and dd directives
+         0000 34 12                      dw      1234h
+         0002 78 56 34                   dd      12345678h
+         0005 12
+         +               #dw hl
+         0006 12 34                      dw      1234h
+         0008 56 78 12                   dd      12345678h
+         000B 34
+         +               #dd hl
+         000C 12 34                      dw      1234h
+         000E 12 34 56                   dd      12345678h
+         0011 78
+         +               #dw     lh
+         0012 34 12                      dw      1234h
+         0014 34 12 78                   dd      12345678h
+         0017 56
+         +               #dd lh
+         0018 34 12                      dw      1234h
+         001A 78 56 34                   dd      12345678h
+         001D 12
+         +               ;End of the file ORDEMO.ASM
+         Error    : 0
+         Warning  : 0
+         PCMAC gives a listing for all the passes. Here we  presented  only
+         the listing of the second pass. You can see that the primitive  DD
+         generates the bytes  in  the  same  order  between  the  words  as
+         primitive DW.
+         Group No 6.
+                 You can understand this group of  directives  if  you  are
+         familiar with macros, and the way how PCMAC deals with macros.
+         #macarg expression
+         #macnum expression
+                 A macro definition consists of syntax definition and macro
+         body. You can and  probably  want  to  use  the  macro  argumentum
+         character and sometimes the macro numbering character in the macro
+         body as normal characters. The macro argumentum character  is  the
+         character #, the macro numbering character is the character  @  by
+         default. It can happen that some macro that you want to  refer  to
+         in a macro body contains the # or the @ character. Assume that  we
+         have an instruction defined by the macro:
+         macro("MOV ACC,#*",NUMBER)
+         ;The macro body is not interesting here
+         endm
+         and we want to reference this  instruction  in  the  body  of  the
+         following macro:
+         ;Wrong macro definition
+         macro("CLRJP *",LABEL)
+                 MOV ACC,#0
+                 JUMP    #0
+         endm
+         PCMAC will think that you want to have the  actual  value  of  the
+         argument in the first line. If we used this macro definition  then
+         PCMAC would extend it when reading the line
+                 CLRJP   LABEL1
+         to the lines:
+                 MOV ACC,LABEL1
+                 JUMP    LABEL1
+         This is actually not the wanted effect. What we want is:
+                 MOV ACC,#0
+                 JUMP    LABEL1
+         The correct definition for this can be:
+         ;A possible solution
+         #macarg '&'
+         macro("CLRJP *",LABEL)
+                 MOV ACC,#0
+                 JUMP    &0
+         endm
+         The directive #macarg changes the macro argument character to '&'.
+         When  PCMAC  works  up  the  macro  definition  it  remembers  the
+         locations of the references to the macro argument  and  it  stores
+         this  information.  The  later  change  of  the  macro  argumentum
+         character does not disturb PCMAC  when  it  extends  a  macro.  In
+         other words: it is  not  interesting  for  PCMAC  what  the  macro
+         argumentum  character  was  when  the  definition  of  the   macro
+         is finished. Another possibility for this macro definition is:
+         ;Another possible solution
+         macro("CLRJP *",LABEL)
+         #macarg 0 ;any value not equal to '#'
+                 MOV ACC,#0
+         #macarg '#'
+                 JUMP    #0
+         endm
+         The macro numbering character is @, but using the directive macnum
+         you  can  redefine  it  the  same  way  as  redefining  the  macro
+         argumentum character.
+                 Be care when using any of the directive macnum and  macarg
+         together with the directive char. If you redefine the code of the
+         character '&' and  you  use  it  as  a  macro  argument  or  macro
+         numbering character then writing the line
+         #macarg '&'
+         will set the macro argumentum character to a  value  you  did  not
+         expect. The new value of the macro argumentum character will equal
+         the new code of the character '&', because PCMAC changed the ASCII
+         code evaluating the expression. However PCMAC does not change  the
+         ASCII code when it reads the source. The directive char influences
+         only the string and character constants and not the source. If you
+         write the lines:
+         #char '&',')'
+         macarg '&'
+         then a reference to the first macro argumentum will be )0  instead
+         of &0. The same holds for the macro numbering character.
+         Group No 7.
+                 This group is useful for creating macros  for  high  level
+         assembly language. These features are not common in assemblers.
+                 Stack in assembly language is well known. These directives
+         handle compile time stacks, and you must not confuse this with the
+         conventional stacks. These stacks exists  during  the  compilation
+         and not during the program run. You can use these stacks to  store
+         32 bit values during the compilation. You can push values onto the
+         stack, you can drop a value from the stack you can open new stacks
+         and close stack. A stack can contain many values. The value on the
+         top of the stack is the value that was pushed to the  top  of  the
+         stack last. When you push a value to the top of the stack then the
+         new value pushes the previous value one level  down.  Every  value
+         will get into one level deeper. When you  pop  a  value  from  the
+         stack then you remove the value from the  top  of  the  stack  and
+         every value that were pushed onto the stack  will  get  one  level
+         higher. The top of the stack is the value of  the  highest  level.
+         The location, top of the stack, is often called TOS.
+         #stack variable
+                 This directive opens a stack, and the number of the  stack
+         will be held by the variable. You can use this variable  to  refer
+         the stack. Of course, you can transfer the  identifier  number  of
+         the stack into another variable and you can use the other variable
+         to refer the stack. Onehundred stacks can be opened at a time.  If
+         you want to open more then onehundred stacks PCMAC  will  generate
+         an error message.
+         #pop expression
+                 This directive drops one value from the stack  denoted  by
+         the value of the expression. It is possible to use any  expression
+         following the directive, but as a good programming  style,  it  is
+         regarded to use a single variable that the value was  assigned  to
+         by the directive #stack. Using this directive you can  not  access
+         the value that you drop from the stack. If you refer  to  a  stack
+         that was not opened or to a stack that is empty  then  PCMAC  will
+         generate an error message.
+         #push expression1,expression2
+                 This directive pushes the value of the  second  expression
+         to the stack  that  is  identified  by  the  value  of  the  first
+         expression. It is possible to use  any  expression  following  the
+         directive, but as a good programming style, it is regarded to  use
+         a single variable that the value was assigned to by the  directive
+         stack. If you refer to a stack that  was  not  opened  PCMAC  will
+         generate an error message. You can push so many items onto a stack
+         as many memory there are in your computer.
+         #clostack expression
+                 This directive releases the stack identified by the  value
+         of the expression.  It is possible to use any expression following
+         the directive, but as a good programming style, it is regarded  to
+         use a single variable that  the  value  was  assigned  to  by  the
+         directive stack. When a stack has been closed it is emptied and is
+         released and can be opened with the directive stack.
+                 Here we present some examples  how  to  use  these  stacks
+         handling directives. However, to read this text  you  have  to  be
+         familiar a little bit with expressions.
+                 Let us define an instruction pair for  the  Z80  processor
+         (that is an 8-bit machine), that creates an infinite loop. One can
+         of course break this loop with jump instruction. We want to write:
+                 LOOP
+                  .
+                  .
+                  .
+              body of the loop
+                  .
+                  .
+                  .
+                 ENDLOOP
+         The simplest way is to use a variable that contains the address of
+         the LOOP instruction, and make jump to that address in the body of
+         the macro ENDLOOP. The definitions look like this:
+         ;LOOP macro definition
+         macro("LOOP")
+         #ifndef loop_address
+         var loop_address
+         #endif
+         loop_address := $
+         endm
+         ;ENDLOOP macro definition
+         macro("ENDLOOP")
+                 JP      loop_address
+         endm
+         This is very simple and we even needed not to use any compile time
+         stack operation. The disadvantage of  this  solution  is  that  we
+         should not nest the loops.  If  we  write  a  program  that  looks
+         something like this:
+                 LOOP
+                  .
+                 LOOP
+                  .
+                  .
+             body of the inner loop
+                  .
+                  .
+                 ENDLOOP
+                  .
+                 ENDLOOP
+         then both of the ENLOOPs will jump back to the  second  LOOP.  The
+         solution is to open a stack by the directive stack, and  push  the
+         jump-back address onto the stack. When closing a loop we  can  pop
+         the address from the TOS. The macro  definitions  then  look  like
+         this:
+         ;LOOP macro definition nestable
+         macro("LOOP")
+         #ifndef loop_stack
+         var loop_stack
+         #stack loop_stack
+         #endif
+         #push loop_stack , $
+         endm
+         ;ENDLOOP macro definition nestable
+         macro("ENDLOOP")
+                 JP      pop(loop_stack)
+         endm
+         When the first macro is extended then it checks  if  the  variable
+         loop_stack is already defined or not. If not then it  defines  and
+         opens a stack to hold the jump-back addresses.  The  rest  of  the
+         macro pushes  the  address  onto  the  stack.  The  macro  of  the
+         instruction ENDLOOP generates an instruction  that  jumps  to  the
+         address that was taken from the stack. Now you can see  that  this
+         kind of stack has no relation to the  usual  machine  stack.  This
+         stack stores values while compilation time, and helps you to  keep
+         tracing back information.
+                 Let us look a more sophisticated solution, when we want to
+         implement the instruction BREAK that breaks the deepest  loop.  In
+         this case when a BREAK instruction encounters we have to  generate
+         a jump to the end of the loop. The  macro  definitions  will  look
+         like this:
+         ;LOOP macro definition nestable with break
+         macro("LOOP")
+         #ifndef loop_stack
+         var loop_stack,code_counter_store,address
+         #stack loop_stack
+         #endif
+         #push loop_stack , NONADDRESS ;Any value that can not represent address
+         #push loop_stack , $
+         endm
+         ;BREAK macro definition
+         macro("BREAK")
+                 JP      0 ; We do not know the address now
+         #push loop_stack , $-2  ;Store the address of
+                                 ;the second byte of the instruction
+         endm
+         ;ENDLOOP macro definition that fills in the BREAK jumps
+         macro("ENDLOOP")
+         code_counter_store := $
+         address := pop(loop_stack)
+         #while tos(loop_stack) != NONADDRESS
+         $ := address
+                 DW code_counter+3 ; 3 is the length of
+                                   ; the jump-back instruction
+         address := pop(loop_stack)
+         #wend
+         $ := code_counter_store
+                 JP      address
+         #pop    loop_stack
+         endm
+                 Well, the last macro is really  sophisticated,  and  needs
+         some explanation how it works. Let  us  look  the  list  that  was
+         generated by PCMAC when it compiled the file STACK.ASM.
+         Versoft macro assembler.
+         V 1.0
+         Pass1
+         +               ;STACK.ASM
+         +               ;Demonstration program for the usage of stack directives
+         +
+         FFFF            NONADDRESS EQU  -1 ;Any value that can not
+         +                                  ;       represent address
+         +
+         Error    : 0
+         Warning  : 0
+         Start of the code : 0
+         End   of the code : 23
+         Pass2
+         +               #list on
+         +               #endif
+         +
+         +                       LOOP      ;*  loop #1
+         +                       LOOP      ; * loop #2
+         0000 C3 00 00           BREAK
+         0003 C3 00 00           BREAK
+                                 ENDLOOP   ; * endloop #2
+         0004 09 00
+         0001 09 00
+         0006 C3 00 00
+         0009 C3 00 00           BREAK
+         +                       LOOP      ; * loop #3
+         000C C3 00 00           BREAK
+                                 ENDLOOP   ; * endloop #3
+         000D 12 00 C3
+         0010 0C 00
+         0012 C3 00 00           BREAK
+                                 ENDLOOP   ;* endloop #1
+         0013 18 00
+         000A 18 00
+         0015 C3 00 00
+         +               ;End of file STACK.ASM
+         Error    : 0
+         Warning  : 0
+                 You can see that the LOOP  instructions  do  not  generate
+         code. It is shown by the sign '+' on the start of the  line.  This
+         sign means that the  line  did  not  generate  code  although  the
+         compilation was not switched. If the compilation is  switched  off
+         then a sing '-' appears on the start of the line. The  instruction
+         LOOP only stores the address in a  stack.  The  instruction  BREAK
+         generates three bytes, but these bytes later have to  be  updated.
+         The main code generation work is done by the instruction  ENDLOOP.
+         This macro pops out the addresses of the BREAK  instructions,  and
+         fills up the address space of the jump instruction, and  generates
+         a jump instruction that jumps back to the start of the  loop.  The
+         value NONADDRESS is to separate the nested stack space. It can  be
+         -1 because the processor Z80 we assumed in this example  is  an  8
+         bit machine and -1 equals to 0FFFFFFFFh for PCMAC.
+         Group No 8.
+                 This is a special group of directives  that  can  only  be
+         used inside of a macro definition. These instruction make possible
+         to define macros like ENDLOOP  in  the  example  of  the  previous
+         group. However these macros could be neglected  and  even  ENDLOOP
+         could be defined recursively. The point to use these directives is
+         to save up memory and speed up the compilation. Linear recursivity
+         always needs a lot of memory, and a recursive macro needs a  macro
+         extension in every loop.
+         #while expression
+         #wend
+                 If these directive pairs surround a block of  lines  in  a
+         macro body then PCMAC will extend and repeat the lines so long  as
+         the expression is TRUE (non zero). If the expression becames FALSE
+         (zero) then the lines between the directives will be  skipped.  If
+         the expression is false at start then the  lines  will  totaly  be
+         neglected  and  won't  be  extended  at  all.  The  expression  is
+         evaluated before the body of the loop.
+         #repeat
+         #until expression
+                 If these directives surround a block of lines in  a  macro
+         body then PCMAC will extend and repeat the lines so  long  as  the
+         expression  is  false.  The  expression  is  evaluated  after  the
+         extension of the loop body, so the lines  between  the  directives
+         will be extended at least once.
+                 These directives can  be  used  only  inside  of  a  macro
+         definition because PCMAC stores the macro bodies  in  the  memory.
+         When a loop directive encounters PCMAC has to track  back  to  the
+         start of it. It is not possible to track back in  a  file,  or  at
+         least it would be very slow. The real power of these directives is
+         the usage inside of a macro.
+                 Example:
+         ;LOOP.ASM
+         ;Demo program for looping directives
+         macro("DEFS *",NUMERIC)
+         #ifndef defs
+                 var defs
+         #endif
+         defs := #0
+         #while defs>0
+                 DB 0
+                 defs := defs - 1
+         #wend
+         endm
+         macro("SKIP *",NUMERIC)
+         #ifndef skip
+                 var skip
+         #endif
+         skip := #0
+         #repeat
+                 DB 0
+                 skip := skip - 1
+         #until skip=0
+         endm
+                 DEFS    10
+                 SKIP    10
+                 DEFS    0
+                 SKIP    0
+         ;End of file LOOP.ASM
+                 This example can be found in  the  file  LOOP.ASM  on  the
+         distribution discette. You can try to compile it, but use  the  -l
+         or the -m option and keep your hands  over  the  control  and  the
+         break (scroll lock) key. The DEFS 10 and the SKIP 10  instructions
+         generate the same  bytes:  ten  zeroes.  The  instruction  DEFS  0
+         generates nothing because the  condition  of  the  while  loop  is
+         false. The instruction SKIP 0 generates a lot of  zeroes,  because
+         it generates at  least  one  byte.  Having  defined  the  byte  it
+         decreases the variable 'skip' which  is  now  becames  0FFFFFFFFh.
+         This instruction generates 100000000h bytes. So you should be very
+         carefully using these instructions. In debugging your  macros  you
+         can use the -m directive of the compiler.
+                 You could see in these examples in this chapter some macro
+         definitions   that   used   conditional    directives,    variable
+         declarations. A macro can be extended many times  and  it  has  to
+         define a variable only the first time.  This  is  the  reason  for
+         which we used the construction:
+         #ifndef variable ;If the variable is not defined
+          var variable    ; then define the variable
+         #endif
+         We used this construction for the sake of simplicity.  For  larger
+         macro libraries it is a better way to collect the  macros  into  a
+         file eg. MACROS.ASM and the variable and label  declarations  into
+         another file  eg.  MACROS.H.  Then  the  file  MACROS.ASM  can  be
+         compiled with the -K option of PCMAC and can be included with  the
+         lines
+         #lib    "MACROS.LIB"
+         #macros "MACROS.H"
+         In this case the macros do not  check  every  time  if  they  were
+         extended first time or not. They only do the work they really have
+         to, and the variables and labels  are  defined  in  the  separated
+         file. You can use the  directive  #macros,  because  the  variable
+         declarations are skipped in the second pass.
+              Identifiers
+              -----------
+              An identifier is a character literal. The first letter can be
+         an alpha character that are the letters from 'a' to 'z'  and  from
+         'A' to 'Z' or can be one of the letters '_', '$', '@'.  The  other
+         letters of the  identifier  can  be  alpha  character  of  numeric
+         characters. The numeric characters are the digits: '0', '1',  '2',
+         '3', '4', '5', '6', '7', '8', '9'. The number of the letters in an
+         identifier is not limited, but any label has to fit into  a  line.
+         The maximal length of a line is 500 characters, because PCMAC uses
+         a 500 bytes long buffer to store the lines. All the characters  of
+         an identifier are significant and PCMAC  always  treat  lower  and
+         upper  case  letters  in  identifiers   as   different.   Do   not
+         misunderstand the usage of the -c option!
+              Labels
+              ------
+              A label  identifies  a  constant  of  the  range  from  0  to
+         0FFFFFFFFh. A label in  the  source  code  is  represented  by  an
+         identifier. A label is defined when it stands  on  the  left  hand
+         side of a line. You can assign a value to a  label  with  the  EQU
+         primitive. If the line stands on the left hand side that  contains
+         not an EQU directive then the value of the predefined  variable  $
+         is assigned to it. This value represents the address of the  first
+         byte that is generated according to the line. If the line does not
+         generate code then the variable $ does not change and the value of
+         it is not ambiguous. There can be assigned a value to a label only
+         once while a compilation. The labels  has  to  get  usually  their
+         value in the first pass. If a value is assigned to  a  label  with
+         the EQU primitive then the expression on the right hand  side  has
+         to be defined. It means that all the  labels  and  variables  that
+         appear in the expression have to be defined. So you  have  to  pay
+         attention on the ordering of the EQU directives. You can not write
+         into a file:
+         A       EQU     B
+         B       EQU     12
+         because B is not defined when it is referenced. You can  say  that
+         easy to see that B will get the value 12 later,  and  PCMAC  could
+         assign the value  to A when B is determined. Do  not  forget  that
+         there can be expression on the right of the EQU directive, and  if
+         PCMAC wanted to remember what value to assign to a label  then  it
+         would have to store all the expressions that  stand  on  EQUs  and
+         sort them after the first pass into an order they could be solved.
+         Such a scheduler is not built into PCMAC to save up speed, program
+         size and memory. You can easy sort the  EQU  primitives  into  the
+         order:
+         B       EQU     12
+         A       EQU     B
+         It is usually not a problem programming in assembly language. Some
+         programmers collect the EQU directives to the end  of  the  source
+         because when the assembler reaches the last code  generating  line
+         it determined all the address dependent values and they can  stand
+         in expression.
+                 PCMAC does not skip the label definitions  in  the  second
+         pass. It checks if the label gets the same value  or  not.  If  it
+         gets some other value then PCMAC gives an error message. It should
+         not happen when you compile an errorless assembly program. It  can
+         happen only if you use the conditional directives referring to the
+         predefined variable pass incorrectly.
+              Variables
+              ---------
+                 Variables  identify  values  of  the  range  from  0   to
+         0FFFFFFFFh. A variable  is  defined  when  it  appears  in  a  VAR
+         primitive or when appears on the left hand side of  an  assignment
+         instruction. PCMAC generates a warning message on the second case.
+                 The main difference between variables and labels  is  that
+         the variables can have different  values  while  the  compilation.
+         Their value can change. They are necessary  in  macros  like  the
+         examples  in  the  chapters  above.  Variables   can   appear   in
+         expressions. However variables can not be public, because they  do
+         not represent a value. They represent a  lot  of  values  as  they
+         change during the compilation. With the same assingment a variable
+         can  get  different  values  in  the  first  and  in  the   second
+         compilation. A very simple example is:
+         VARIABLE := pass
+         In this instruction the variable gets the value  1  in  the  first
+         pass and gets the value 2 in the second pass. PCMAC does not  care
+         about it.
+              Assignment Instruction
+              ----------------------
+                 An assignment instruction assignes a value to a  variable.
+         A variable has to stand on the left hand side of the line.  It  is
+         not necessary to start the name  of  the  variable  on  the  first
+         column. The mnemonic of the assignment is the sign pair ':='.  To
+         the right of it an expression has to stand that must  not  contain
+         undefined label or variable. Some examples:
+         pass2   := pass = 2
+         Having executed this instruction the variable pass2 will  be  true
+         during the second pass and false  during  the  first  pass.  Don't
+         forget that the value of the variable pass2 will be  false  during
+         the second pass so long as this instruction was not executed.
+         BIT :=( defined(Z80) || defined(I8080) )*8
+                      + ( defined(I8086) || defined(M68000) )*16
+         The variable BIT gets the value if one of the identifiers Z80  and
+         I8080 is defined. The variable gets the value 16  if  one  of  the
+         identifiers I8086 and M68000 is defined. If one of the identifiers
+         Z80 and I8080 and one of the  identifiers  I8086  and  M68000  are
+         defined at the same time then the variable BIT will get the  value
+         24.
+                 Warning!!! This example is written into two lines  because
+         of the limits of the typesetting. In an assembly program it has to
+         fit into one line.
+              Predefined Labels and Variables
+              -------------------------------
+                 The assembler has some variables that you need not define.
+         They are defined before the assembler starts reading  the  source.
+         These variables are different from  the  other  variables  because
+         some of them change the value automatic. These variables:
+         $       The dollar sign.  This  variable  represents  the  current
+                 address  of  the  code  generator.  This  variable  always
+                 contains the address where the  next  byte  gets.  If  the
+                 source program changes the value of this variable then the
+                 next byte will be generated to the new  address.  See  the
+                 definition of the ORG instruction in the Z80 macro library
+                 file. Here it is:
+         macro("ORG *",NUMERIC)
+                 $ := #0
+         endm
+                 The value of the variable $ is relocatable.
+         pass    The value of this variable is set to 1  before  the  first
+                 pass and is set to 2  before  the  second  pass.  You  can
+                 assign a value to this variable  but  the  value  will  be
+                 updated between the passes. The value is not relocatable.
+         line    This variable contains the number of the lines  that  were
+                 worked up in the actual file. This value can be  redefined
+                 and it will be incremented finishing each line. The  value
+                 is not relocatable.
+         tline   This variable contains the number of the lines  that  were
+                 worked up in the actual pass. This value can be  redefined
+                 but it will be updated the same way as the  value  of  the
+                 variable  line.  The  value  of  this  variable   is   not
+                 relocatable.
+         on      This is a variable that is defined by  the  assembler  and
+                 the  value  of  it  is  set  to  1.  This  value  is   not
+                 relocatable.
+         off     This variable is defined by the assembler before the first
+                 pass and the value of it set to zero.  The  value  is  not
+                 relocatable.
+                 All the predefined variables can be assigned to, but it is
+         not a good style to monkey with them. Do reassignment only when it
+         is really necessary and increases the readability.
+              Expressions
+              -----------
+                 We  were  talking  about  expressions  in   the   previous
+         chapters, but until now we did not define what they are.
+                 An expression consists of  labels,  variables,  functions,
+         operators, brackets and strings. Every expression has a value that
+         is a number between the interval from 0  to  0FFFFFFFFh  and  this
+         value is  relocatable  or  not  relocatable.  The  relocation  has
+         meaning only in case when PCMAC generates object code  instead  of
+         task file.
+              Numbers
+              -------
+                 The simplest expression is  a  number.  A  number  can  be
+         written in decimal, hexadecimal, binary, octal or ASCII form.  The
+         first four type can be positive or negative.
+                 DECIMAL NUMBER
+                 A decimal is the sequence of decimal digits. These are  0,
+         1, 2, 3, 4, 5, 6, 7, 8, 9. A decimal number  has  no  postfix  but
+         PCMAC can accept the 'd' or the 'D' postfix. A decimal number  can
+         be positive in the range from 0 to 4294967295, or can be  negative
+         in the range from -1 to -2147483648.
+         Examples:
+                 123         one-hundred and twenty three
+                 2000        twenty hundred (two thousand)
+                 -1          minus one. This value is the same as
+                 4294967295
+                 33d         thirty three with a 'd' decimal postfix
+                 HEXADECIMAL NUMBER
+                 A hexadecimal number is a sequence of hexadecimal  digits.
+         The hexadecimal digits are: 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, A, B, C,
+         D, E, F. The letters can be written in lower case as a, b,  c,  d,
+         e, f. These letters stand for the values: 10, 11, 12, 13,  14  and
+         15. Hexadecimal numbers has to be followed by a letter 'H' or 'h'.
+         This is called hexadecimal postfix. A  hexadecimal  number  always
+         has to start with a decimal digit. If eventually it  started  with
+         some of the hexadecimal digits from  A  to  F  then  you  have  to
+         precede it with the digit 0. In  order  to  get  the  value  of  a
+         hexadecimal number you have to count the digits from right to left
+         from zero up to the number of the digits minus one.  You  have  to
+         summ up the  digits  multiplying  each  with  16  powered  by  the
+         position of the digit. Hexadecimal numbers are important when  you
+         want to  see  how  many  bytes  are  occupied  by  a  number.  One
+         hexadecimal digit occupies exactly half byte that  is  four  bits.
+         Two digit hexadecimal numbers occupy exactly one byte, four  digit
+         hexadecimal numbers occupy exactly two bytes and so on.
+         Examples:
+                 1h      one
+                 0Fh     fifteen. As you see it starts with the letter '0'.
+                         If we wrote Fh PCMAC would think that this  is  an
+                         identifier.
+                 1Fh     1*16+15=31 in decimal form.
+                 8E3aH   8*16*16*16+14*16*16+3*16+10=36410 You see that the
+                         case of the letters is not important in this case.
+                 BINARY NUMBERS
+                 Binary numbers consist of binary digits that are 0 and  1.
+         Binary numbers are followed by the  binary  postfix  that  is  the
+         letter 'B' or 'b'. Each digit represents one bit. The  calculation
+         of the value of  a  binary  number  is  almost  the  same  as  the
+         calculation of hexadecimal numbers. The  difference  is  that  the
+         digits have to be multiplied by the powers of  2  instead  of  16.
+         Binary numbers are important when we want to write a number  in  a
+         form that shows which bit is set to one and which is zeroed.
+         Examples:
+                 1b      one
+                 10b     two
+                 10B     also two
+                 11B     three
+                 1010b   ten
+                 OCTAL NUMBERS
+                 Octal numers are sequences of octal digits. These  are  0,
+         1, 2, 3, 4, 5, 6 and 7. An octal number is followed with the octal
+         postfix letter 'O' or 'o'. Do not mix it with  the  digit  0  that
+         stands for the value  zero.  The  reason  why  PCMAC  knows  octal
+         numbers is that the first generation of computer programmers  used
+         to write numbers in octal form. Some of  them  still  loves  octal
+         numbers. The value of an octal number can be calculated  the  same
+         way as the value of a hexadecimal or binary number. Here the radix
+         is eight, in other words you have to multiply the digits with  the
+         powers of 8.
+         Examples:
+                 1o      one and not ten!
+                 1O      one and still not ten!( 1O is not the same as 10)
+                 22o     2*8+2 = 18
+                 25442o  2*8*8*8*8+5*8*8*8+4*8*8+4*8+2 = 1142
+                 ASCII NUMBERS
+                 Ascii numbers start with the character ' and end with  it.
+         There has to be at least one and at most four characters  between.
+         Each character represents its code. The code is usually the  ASCII
+         code, but it can be  redefined  with  the  #char  directive.  Each
+         character code has to multiplied with the value 256 powered by the
+         position of the character.
+                 There are special characters  that  could  not  appear  in
+         character constants. One of them is the ' sign.  This  is  because
+         that sign terminates the ascii number. If you want to include  the
+         character ' into an ascii number then you have to replace it  with
+         the character pair \'. Generally saying every character but digits
+         and the letters t,n,r following the backslash \  character  in  an
+         ascii number means itself  and  nothing  else.  So  the  backslash
+         character has  to  be  written  \\.  If  some  digits  follow  the
+         backslash character then they are  treated  as  octal  or  decimal
+         numbers. They are treated as  decimal  numbers  if  the  directive
+         #decimal was used, and they are treated if  the  directive  #octal
+         was used or  if  none  these  directives  were  used.  The  escape
+         sequence can be three digit long.
+         Examples: (We assume that no #char directive was used.)
+                 '0'      48
+                 '00'     48*256+48=12336
+                 '0\0'    48*256+0 =12288
+                 '0\0000' 48*256*256+0*256+48=3145776
+                          This is because the escape  sequence  means  zero
+                          and terminates after three digits. There  is  one
+                          more digit left that represents its ASCII code.
+                 'A\19'   65*256+19=16659
+                          or
+                          65*256*256+1*256+57=4260153
+                          depending on what the ASCII escape radix  is.  If
+                          the  directive  #decimal  was   used   then   the
+                          character '9'  following  the  character  '1'  is
+                          member of the escape sequence and  the  value  of
+                          the escape  sequence  is  19.  If  the  directive
+                          #decimal was not used then the character '9'  can
+                          not be member of the escape sequence  because  it
+                          is not an octal digit. In this  case  the  escape
+                          sequence  consists   of   two   characters:   the
+                          backslash character and the digit 1. The value of
+                          the escape sequence in this case is one  and  the
+                          character '9' represents its ASCII code.
+         If the ASCII radix is octal  and  a  digit  terminates  an  escape
+         sequence then PCMAC generates a warning message.  There  are  some
+         other special escape sequences for codes that  often  happen.  The
+         letter t,n,r following the backslash character  means  the  values
+         9,10 and 13, respectively. These are special codes  in  the  ASCII
+         standard. The meaning of them are:
+         '\t'    tabulator character.
+         '\n'    new line character.
+         '\r'    carriage return character.
+         All other characters have the same meaning as they stand after the
+         character \ or not.
+                 ASCII character are useful when a number  represents  some
+         character code in the assembly. If you see the assembly lines:
+                 LD      A,65
+                 CALL    1601h
+         you probably won't know what it means. If you can read the lines
+                 LD      A,'A'
+                 CALL    PRTCHAR
+         you will  find  out  the  meaning.  The  program  prints  out  the
+         character 'A'. You need not  search  the  ASCII  code  table  that
+         always is in your way  but  when  you  need  it.  There  are  more
+         advantages of ASCII numbers. Assume that you calculated  the  code
+         of the character for your machine in a wrong way and that  is  not
+         56 but 57. If you did not use character constants when  you  refer
+         to the code of the letter A then  you  have  to  replace  all  the
+         appearance of the digits 56 to 57. It is for sure that doing it by
+         hand you will forget to change some of them. If you used some text
+         editor command for automatic replace it  will  change  the  number
+         56738 to 57738. You should use ASCII numbers  instead  and  change
+         only the directive
+         #char 'A' , 56
+         to
+         #char 'A' , 57.
+                 Let  us  turn  back  to  expressions.  Using  numbers  and
+         operators we can build up compound expressions. If you  wrote  1+1
+         it would means the  same  as  if  you  wrote  2.  There  are  many
+         operators PCMAC knows. Here is a table containing them:
+         Precedence          The operator           Meaning
+         --------------------------------------------------------------
+          1.                 ||    OR               Logical or
+         --------------------------------------------------------------
+          2.                 &&    AND              Logical and
+         --------------------------------------------------------------
+          3.                     |                  Bitwise or
+         --------------------------------------------------------------
+          4.                     ^                  Bitwise xor
+         --------------------------------------------------------------
+          5.                     &                  Bitwise and
+         --------------------------------------------------------------
+          6.                     <>                 Non equality
+                             ==     =               Equality
+         --------------------------------------------------------------
+          7.                     <                  Less than
+                                 >                  Greater than
+                                 <=                 Less or equal
+                                 >=                 Greater or equal
+         --------------------------------------------------------------
+          8.                 <<      SHL            Shift left
+                             >>      SHR            Shift right
+         --------------------------------------------------------------
+          9.                     +                  Addition
+                                 -                  Substraction
+         --------------------------------------------------------------
+         10.                     *                  Multiplication
+                                 /                  Division
+                              %       MOD           Remainder
+         --------------------------------------------------------------
+         11.                  !       NOT           Logical not
+                                 ~                  Bitwise not
+                                 -                  Unary minus
+                                 +                  Unary plus
+         --------------------------------------------------------------
+         The higher the precedence of some operator is  the  earlier  PCMAC
+         performs it. Examine the expression:
+         !12+5*3-7%4<<1  = 6*3 ^ 2 && +1 > 1+12
+         PCMAC reduces this expression into a number in 11 steps. First  it
+         looks for unary operators. It finds the subexpressions !12 and +1.
+         PCMAC replaces them by their value. !12  equals  to  zero  and  +1
+         equals to one. The expression after the first step:
+         0+5*3-7%4<<1  = 6*3 ^ 2 && 1 > 1+12
+         Now PCMAC looks for the  operators  multiplication,  division  and
+         remainder. It finds the  subexpressions  5*3,  7%4  and  6*3.  The
+         values for these are 15, 3, 18. Substituting:
+         0+15-3<<1  = 18 ^ 2 && 1 > 1+12
+         PCMAC now looks for addition and substraction. There are some,  so
+         the expression gets the form:
+         12<<1  = 18 ^ 2 && 1 > 13
+         The next step is to perform the operation 12<<1 that is 24:
+         24  = 18 ^ 2 && 1 > 13
+         The next is to calculate the value  1 > 13. The  value  of  it  is
+         FALSE. The numerical value of FALSE is zero.
+         24  = 18 ^ 2 && 0
+         Now to perform the operation 24 = 18 that is FALSE==0.
+         0 ^ 2 && 0
+         The next operation is the bitwise or 0^2=2
+         2 && 0
+         The last step is to perform the operation && that  is  1  if  both
+         arguments are not zero and the result is zero if any  of  them  is
+         zero. Finally the value of the expression is zero.
+         0
+         To be honest the evaluation of an  expression  is  not  really  so
+         simple and later we will discuss it more detailed. Now we turn for
+         the operations in detail.
+         Logical OR  || OR
+         ----------
+                 This operator is written as two bars || or  the  word  OR.
+         The first version is common in the language C and can easy be read
+         by C programmers. The second form is common in many languages  and
+         can easy be read by anyone. You can use any of them you wish.  You
+         can even mix them in an expression. The formal definition of  this
+         operation is:
+         argument1 OR argument2
+         The result of the operation is  1  if  any  of  the  arguments  is
+         non-zero.  If  argument1  is  not  zero  then  argument2  is   not
+         evaluated, so in this case  argument2  can  contain  undefined  or
+         external identifiers. The line:
+         !isdef(alpha) || alpha > 1
+         will never cause the error: Undefined  label  in  the  expression!
+         However argument2 must be syntactically correct.
+         Logical AND     && AND
+         -----------
+                 This operator is written as two et signs &&  or  the  word
+         AND. The first form is common in the language C, the second one is
+         common in any other language. You can use any of  them  you  wish.
+         You can even mix them in an expression. The formal  definition  of
+         this operation is:
+         argument1 AND argument2
+         The result of this operation is 1 if both of the  argumentums  are
+         non-zero. If argument1 is zero then argument2  is  not  evaluated.
+         The line:
+         isdef(alpha) && alpha > 1
+         will never cause the error: Undefined  label  in  the  expression!
+         However argument2 must be syntactically correct.
+                 This kind of evaluation when  the  logical  arguments  are
+         evaluated  if  it  is  necessary  is  usually  called  short   cut
+         evaluation.
+         Bitwise OR     |
+         ----------
+                 This  operator  is  written  as  one  bar  |.  The  formal
+         definition of this operation is:
+         argument1 | argument2
+         The result of this operator is the number what is created  setting
+         all the bits that are in a position for which the bit of argument1
+         or argument2 is set. So 2|1 is 3, 3|1 is also 3 and 2|4 is 6.
+         Bitwise xor   ^
+         -----------
+                 This operator is denoted by the character caret ^. This is
+         usually on your keyboard over the number 6 on the  same  key.  The
+         formal definition of this operation is:
+         argument1 ^ argument2
+         The result of this operation is the number that we get setting all
+         the bits that are in a position in which one and only one  of  the
+         bits of argument1 and argument2 is set.
+         Bitwise and  &
+         -----------
+                 This operator is denoted  by  the  character  &.  This  is
+         usually on your keyboard over the number 7. The formal  definition
+         of this operation is:
+         argument1 & argument2
+         The result of this operator is the number that we get setting  all
+         the bits that are in a position for which both bits  of  argument1
+         and argument2 are set.
+         Nonequality, equality = ==, <>
+         ---------------------
+                 The equality operator has to  form.  One  is  a  single  =
+         character. The other one is a double = that is ==. Any of them can
+         be used. The inequality operator is <>. The formal definition is:
+         argument1 = argument2
+         is 1 if argument1  has  the  same  value  as  argument2  and  zero
+         otherwise. The inequality
+         argument1 <> argument2
+         is the opposite of  equality.  It  is  1  if  the  arguments  have
+         different values and 0 if they are the same.
+         Comparing operators  <, >, <=, >=
+         -------------------
+                 These  operators  are  <,  >,  <=  and  >=.   The   formal
+         definitions are:
+         argument1 <  argument 2
+         It is 1 if the value of  argument1  is  less  than  the  value  of
+         argument2 and is 0 otherwise.
+         argument1 <= argument 2
+         It is 1 if argument1 is less  or  equal  to  argument2  and  is  0
+         otherwise.
+         argument1 >= argument 2
+         It is 1 if argument2 is less  or  equal  to  argument1  and  is  0
+         otherwise.
+         argument1 >  argument 2
+         It is 1 if the value of  argument2  is  less  than  the  value  of
+         argument1 and is 0 otherwise.
+         Shift operators  >> SHR, << SHL
+         ---------------
+                 These operators are denoted the same  as  they  are  in  C
+         language. The lexeme << means the shift left, the lexeme >>  means
+         the sift right. The words SHL and SHR can also be used. The formal
+         definitions are:
+         argument1 << argument2
+         The result of the operation is the value  of  the  first  argument
+         multiplied by 2 powered by argument2. This can be  interpreted  as
+         the binary form of argument1 shifted to the left argument2 times.
+         argument1 >> argument2
+         The result of the operation is the value of argument1 divided by 2
+         powered by  argument2.  Only  the  integer  part  is  taken.  This
+         operation can be interpreted as if the binary  form  of  argument1
+         was shifted to the right argument2 times.
+         Addition, Substraction   +, -
+         ----------------------
+                 The sign of these operations is + and -. The  operation  +
+         adds argument1 and argument2, the operator - substracts  argument2
+         from argument1. The formal definitions are:
+         argument1 + argument2
+         argument1 - argument2
+         Multiplication, Division, Remainder *, /, % MOD
+         -----------------------------------
+                 The operator * generates the argument1 times argument2 for
+         argument1 * argument2.
+         The operator  /  generates  argument1  divided  by  argument2  and
+         truncating to be integer.
+         argument1 / argumnet2
+         The operator % creates  the  remainder  of  argument1  divided  by
+         argument2.
+         argument1 % argument2
+         The operator % has another form, the word MOD. Any of these can be
+         used.
+         Unary operators  ! NOT , ~ , - , +
+         ---------------
+                 These operators are unary. It means that  they  have  only
+         one argument. The formal definitions of these operations are:
+         ! argument    or     NOT argument
+         ~argument
+         -argument
+         +argument
+                 The result of the  operation  Logical  Not  is  1  if  the
+         argument is zero. The result is zero if the argument is not zero.
+                 The result of the Bitwise Not is the number  that  we  get
+         setting all the bits that are cleared in the argument and clearing
+         all the bits that are set in the argument.
+                 The result of the operation unary minus is the opposite of
+         the argument.
+                 The result of the operation unary plus is the value of the
+         argument itself.
+                 The last operator seems useless. However it  is  not.  You
+         can use brackets to change the order of the evaluation.  For  this
+         purpose you can use the () brackets and the [] brackets.  This  is
+         because some assembly language  uses  the  ()  brackets  to  refer
+         memory location, other uses  the  []  brackets  for  it.  If  your
+         assembly uses one of these for that purpose then use the other one
+         to close the subexpressions. It is the easiest way not to  confuse
+         the different brackets. The only problem is that  PCMAC  does  not
+         know which type of brackets is used in expressions and which  type
+         of brackets is used to refer memory location. How can PCMAC decide
+         what the instruction
+                         LD      A,(63)
+         means. At first glance it seems to be an  instruction  that  loads
+         the value of the memory location 63 into the register  A.  At  the
+         same time this instruction could mean to load the  value  63  into
+         the  register  A.  This  is  because  the  string  '(63)'  can  be
+         interpreted as an expression in brackets, or an expression without
+         brackets because the brackets can be part of the expression.
+                 The solution is that PCMAC does not allow you to start  an
+         expression with bracket. If you really have an expression that has
+         to start with bracket then put + sign before it. An example is:
+                                  (#0<<3)*(#1>>1)
+         This line can appear in  a  macro  body.  You  can  not  sort  the
+         expression to start with no bracket. You have to write:
+                                 +(#0<<3)*(#1>>1)
+         The + sign will tell PCMAC that this is an expression.
+                 Sometimes very  complex  expressions  can  appear  and  it
+         happens that the number of the closing brackets is  the  same  but
+         they are not paired the way you wanted. PCMAC  helps  to  maintain
+         sophisticated expression by its rigour. PCMAC does not  allow  you
+         to pair a ( bracket with a ] one or vice versa. You should use the
+         same type of brackets. So you can write:
+                                 +[#0<<3]*(#1>>1) ,
+         but you are not allowed to write
+                                 +[#0<<3)*(#1>>1] .
+                 Some words more about how PCMAC evaluates  an  expression.
+         PCMAC always evaluates an expression from the left to  the  right,
+         and if an operation can be executed it executes immediately.  When
+         PCMAC sees the expression:
+                        6*3+5*2
+         when reaches the sign + it knows that the  multiplication  can  be
+         done. No matter what follows the + sign. The subexpression
+                        6*3+...
+         is equivalent to the expression
+                        18+...
+         The three dots mean that the expression  continues.  If  the  left
+         argument of an operator determines the result then PCMAC does  not
+         evaluate the right argument. However the right  argument  must  be
+         syntactically correct because PCMAC has to parse it to know  where
+         it ends.
+                 Expressions can contain some functions. These are:
+         isdef( identifier )  The result of  this  function  is  1  if  the
+                               identifier was defined and 0 otherwise.
+         strlen( string )     The result of this function is the length  of
+                              the string. This is the number of  the  bytes
+                              that would be generated if the  string  stood
+                              after a DB primitive.
+         pop( expression )    The value of the function is the value of the
+                              top element of the stack that is  denoted  by
+                              the  expression.  As  a  side   effect   this
+                              function also removes the  element  from  the
+                              given stack.
+         tos( expression )    This function returns the same value as  pop,
+                              that is the top value of the stack given  but
+                              it does not remove the  top  element  of  the
+                              stack.
+         isreloc(expression)  The result  of  the  function  is  1  if  the
+                              expression is relocatable and 0 otherwise.
+         doreloc(expression)  The result of this function is  the  same  as
+                              the value of the expression.  The  difference
+                              is that this value is relocatable  no  matter
+                              if the value of the  expression  was  or  not
+                              relocatable.
+         doureloc(expression) The result of this function is  the  same  as
+                              the value of the expression.  The  difference
+                              is that this  value  is  not  relocatable  no
+                              matter if the value of the expression was  or
+                              not relocatable.
+                 Relocation
+                 ----------
+                 When writing a large program it is good to split  up  into
+         modules and link  them  together.  Assume  a  large  program  that
+         consists of the modules MAIN.ASM and PART.ASM. We have to  compile
+         these files with the command lines:
+         PCMAC -o MAIN.ASM
+         and
+         PCMAC -o PART.ASM
+         The resulting files will be:
+         MAIN.O
+         and
+         PART.O.
+         To generate executable code we have to link  them  together  with
+         the command line:
+         LINK MAIN.O PART.O
+         The resulting file MAIN.TSK is executable fix code. When we  wrote
+         the assembly lines PART.ASM we did not know where this part of the
+         program will start in the memory. It is not a problem. You can say
+         any address. PCMAC remembers  the  addresses  and  when  you  link
+         programs PCMAC relocates the program automatic. The address of the
+         first byte of the program PART is the length of the program  MAIN.
+         PCMAC links them together.
+         MAIN +-----------------------+START
+              |                       |
+              |       MAIN            |
+              |                       |END
+         PART +-----------------------+START
+              |                       |
+              |       PART            |
+              |                       |END
+              +-----------------------+
+         Relocation means that all the words and double words that refer to
+         addresses that varies with the start of the module are  corrected.
+         If we wrote an assembly program that starts at  the  address  100H
+         and it is linked and gets to the location 101H then all  the  jump
+         instructions and other instructions that refer to memory  location
+         in the program will be corrected adding one to them.
+                 The  predefined  variable  $  has  relocatable  value.  An
+         expression has relocatable value if it is a  relocatable  variable
+         or  label,  or  if  it  is  the  sum  of  a  relocatable   and   a
+         nonrelocatable value. The difference of two relocatable  value  is
+         not relocatable. You need not care the ordering of an  expression.
+         There won't be difference. If all the variables A,  B  and  C  are
+         relocatable, then the following expressions are all relocatable:
+                                  A-C+B
+                                  A+B-C
+                                  B-C+A
+         The result of any other operation is nonrelocatable no matter what
+         the   arguments   were.   The   exceptions   is    the    function
+         doreloc(expression) that generates always relocatable value.
+                 Strings
+                 -------
+                 Strings can appear after the DB primitive  in  expressions
+         and as actual macro argument. A string starts and  ends  with  the
+         sign  ".  There  can  be  any  character  between  them  with  the
+         exceptions that were discussed in the chapter  of  ASCII  numbers.
+         The sign ' can appear in a string without \ but the "  has  to  be
+         preceded  with  the  backslash  character.  The  \n,\t,\r   escape
+         sequences can be used, and the three-digit octal or decimal escape
+         sequences work as well. The directives #decimal and #octal do  for
+         the strings as well.
+                 Macro definitions
+                 -----------------
+                 PCMAC could not do without  macros.  Macros  are  used  to
+         define the assembly language. You can read  and  study  the  files
+         Z80.MAC and EZ80.MAC that are on the distribution  disk  to  avoid
+         reading this chapter. However this contains  detailed  information
+         that you can not find out only reading the files.
+                 The syntax definition of macros
+                 -------------------------------
+                 Each macro definitio contains two parts. The first part is
+         the syntax definition. This is one line and looks like this:
+         macro(syntax string , symbolic constans list)
+         The keyword macro tells PCMAC  that  the  line  contains  a  macro
+         definition. The string that was called syntax string  tells  PCMAC
+         how the main syntax of  the  macro  looks  like.  This  string  is
+         special. The escape sequences  are  treated  other  than  ordirary
+         strings, and  the  character  asterisk  has  special  meaning.  An
+         assembly line is treated as a  macro  if  it  matches  the  syntax
+         string. If we have the syntax string "LD A , ( H L )"  it  can  be
+         matched by any of the lines:
+                 LD A,(HL)
+                 LD           A,(H        L)      ;Comment
+         label   LD A     ,(HL)
+                 LDA,(HL)
+         But the line
+                 L D A,(HL)
+         does not match the definition. You can see that  labels, comments,
+         trailing and leading spaces do not disturb PCMAC. A  line  matches
+         the syntax string if cutting off these parts  all  the  characters
+         matches. The space character is  a  special  one.  In  the  syntax
+         definition a space works as a hundred. One space matches zero, one
+         or more spaces. If you want to force PCMAC to look for exactly one
+         space after the keyword LD you have to use the syntax  definition:
+         "LD\ A , ( H L  )"  The  character  pair  backslash-space  matches
+         exactly one space. In this case only the first  and  the  labeled
+         match the syntax definition. Let us require  at  least  one  space
+         after the keyword LD using the syntax definition: "LD\  A , ( H  L
+         )". After the backslash  there  are  two  spaces.  The  first  one
+         matches exactly one space and the second one matches zero or more.
+         Generally saying  all  the  characters  but  space  backslash  and
+         asterisk matches the same character. Space matches  zero  or  more
+         spaces (tabulators as well). Asterisk matches a symbolic  constans
+         that has to be defined earlier. The  backslash  character  is  the
+         escape character in the syntax string. Any character following the
+         backslash character matches the same character  and  there  is  no
+         exception. So \\ matches one  \  character.  If  we  look  at  the
+         previous example we will see  that  the  macro  matches  only  the
+         instruction that loads the memory location pointed by  HL  to  the
+         accumulator. However the value of that location can be loaded into
+         any register  that  the  Z80  has.  So  we  have  to  define  this
+         instruction in the following way:
+         const   _SS     :=      (B,C,D,E,H,L,(HL\),A)
+         macro("LD *,(HL)",_SS)
+         The part  of  the  syntax  definition  that  was  called  symbolic
+         constans list now contains only one symbolic  constans,  _SS.  The
+         asterisk in the  syntax  string  can  match  any  element  of  the
+         symbolic constans _SS. These are the letters B,C,E,H,L,A  and  the
+         four letter character literal (HL). The definition of the symbolic
+         constans is
+         const identifier := ( literal list )
+         The keyword const tells PCMAC that the line  contains  a  symbolic
+         constant definition.  The  identifier  is  used  to  identify  the
+         constant. The literal list is  a  list  of  the  elements  of  the
+         symbolic constant. Every element is a character sequence that must
+         not contain comma(,), backslash (\) and closing  bracket  ()).  If
+         some has to contain any of these then  the  character  has  to  be
+         preceded with a backslash character, as you saw  in  the  example.
+         The elements are separated by commas. The symbolic  constant  list
+         has to contain so many symbolic constant  name  as  many  asterisk
+         there are  in  the  syntax  string  (not  counting  the  asterisks
+         following backslashes). The  first  asterisk  will  match  the
+         members of the first symbolic constant in  the  list,  the  second
+         asterisk will match those of the second one and so on.
+                 What Are Symbolic Constants
+                 ---------------------------
+                 The symbolic constants  are  those  parts  of  the  syntax
+         definition that are not stable, that can vary. As you see  in  the
+         previous example there was a place in the line where not only  one
+         character could stand but a great number  of  different  literals.
+         The  literals  have  to  be  defined  earlier.  There  are   three
+         predefined  symbolic  constants:  STRING,  NUMERIC,   LABEL.   The
+         asterisks that are related to these constants will match a string,
+         any expression and any identifier, respectively.
+                 Referencing a Macro
+                 -------------------
+                 Referencing a macro is the easiest to do. You only have to
+         write a line that matches a macro. If you did and PCMAC finds  the
+         line then PCMAC replaces it with the  lines  of  the  macro  body.
+         These lines stand between  the  macro  syntax  definition  and  the
+         keyword endm. These lines can contain macro referencing lines, but
+         no  macro  definitions.  So  macros  can  be  nested   but   macro
+         definitions can not.
+                 When a macro matches a  line  PCMAC  collects  the  actual
+         value of the symbolic constants, and replaces  the  references  to
+         them in the macro body. A special character # is used to reference
+         the argumentums. #0 refers to the first argumentum, #1  refers  to
+         the second one and so on. (The character # can be redefined by the
+         directive #macarg.) If we have the macro definition:
+         macro("LD\  *,*",_SS,_SS)
+         #if     #0 == 6 && #1 == 6
+         #error  "LD (HL),(HL) is invalid."
+         #endif
+                 DB      40h+(#0<<3)+#1
+         endm
+         then writing the line
+                 LD   A,B
+         is the same as we wrote the lines:
+         #if 7 == 6 && 0 == 6
+         #error "LD (HL),(HL) is invalid."
+         #endif
+                 DB      40h+(7<<3)+0
+         You can see that the user defined symbolic constants are  replaced
+         by the position number of the literal that stands at the place  of
+         the argument. This position number starts with  zero  and  not  1.
+         This is more comfortable in many cases. This  makes  you  easy  to
+         define assembly instructions. According to this in the example:
+         const   _SS     :=      (B,C,D,E,H,L,(HL\),A)
+         the value of B is zero, the value of C is 1, ... , the value of  A
+         is 7. The #nn references that refer to a STRING type argument will
+         be replaced by the string itself. If a #nn references  a  NUMBERIC
+         type argument then it will be replaced by the actual value of  the
+         expression. If a #nn references a LABEL type argument then it will
+         be replaced by the label itself instead of the value of the label.
+         It makes you possible to define macros that  can  accept  external
+         labels. Here are three examples:
+         1.)
+         macro("JP *",LABEL)
+                 DB 0c3H
+                 DW #0
+         endm
+         The line
+                 JP      J1
+         will be replaced by
+                 DB 0c3h
+                 DW J1   .
+         2.)
+         macro("ASCII *",STRING)
+                 DB strlen(#0),#0
+         endm
+         The line
+                 ASCII "Udvozlet mindenkinek."
+         will be replaced by the line:
+                DB strlen("Udvozlet mindenkinek."),"Udvozlet mindenkinek."
+         3.)
+         macro("JP *",NUMERIC)
+                 DB 0c3h
+                 DW #0
+         endm
+         The line
+                 JP      J1
+         will be replaced by the lines
+                 DB 0c3h
+                 DW 1601
+         assuming that the value of the label J1 is 1601.
+                 To examine how macros are extended you can use the -m option
+         of PCMAC. This option forces PCMAC to list all the lines, not only
+         the source but every lines that were generated extending a macro.
+                 There is another special character that is extended in the
+         macro body, not only the # character. This character is the @.  If
+         this  character  appears  anywhere  but  inside  of  a  string  or
+         character constant in the  macro  body  it  is  treated  as  macro
+         numbering character. When extending a macro this character will be
+         replaced by the decimal form of the number  that  shows  how  many
+         times the actual macro was extended in the pass. If there are  two
+         of these characters close to each other then they will be replaced
+         by the decimal form of  the  number  that  shows  how  many  macro
+         extension were in the actual pass. You can examine  how  it  works
+         using the -m option of the assembler. This character also  can  be
+         redefined with the directive #macnum.
+                 Some Fine Points of Macros
+                 --------------------------
+                 Assume that you want to use the jump instruction referring
+         to external labels, but sometimes you want to specify  the  target
+         address using expressions. What to do? The macro definition
+         macro("JP *",NUMERIC)
+         won't accept external variable and the definition
+         macro("JP *",LABEL)
+         won't accept sophisticated expressions. The  solution  is  to  use
+         both. You have to define two different  jump  instruction  in  the
+         same macro definition system.
+         macro("JP *",LABEL)
+                 db      0c3h
+                 dw      #0
+         endm
+         macro("JP *",NUMERIC)
+                 db      0c3h
+                 dw      #0
+         endm
+         The body of these macros obviously is the same. It is important to
+         order of the definitions. PCMAC stores the macro definitions in  a
+         list in the same order as they  were  defined.  If  you  have  the
+         macros:
+         macro("JP *",NUMERIC)
+                 db      0c3h
+                 dw      #0
+         endm
+         macro("JP *",LABEL)
+                 db      0c3h
+                 dw      #0
+         endm
+         then writing the line
+                 JP      EXTERNAL_LABEL
+         will cause error message if EXTERNAL_LABEL is really  an  external
+         label. This is because the  first  macro  matches  the  line,  and
+         accepts it. Using this  ordering  all  the  lines  that  could  be
+         accepted by the second definition will be accepted  by  the  first
+         one and so the second one plays no role.
+                 Sometimes ordering is not so important. If  you  have  the
+         macro definitions:
+         macro("JP *",NUMERIC)
+                 DB 0c3h
+                 DW #0
+         endm
+         macro("JP RESET")
+                 DB 0c3h
+                 DW 0
+         endm
+         then the line
+                 JP      RESET
+         will be accepted always by the  macro  definition  that  is  fully
+         static. This is because PCMAC tries to accept a line in two  pass.
+         First it only tries the macro definitions  that  have  no  NUMERIC
+         argument, and tries these only if the first try was unsuccessful.
+                 Some macro definitions are unmatchable. This is  the  case
+         if a macro definition ends with a '\ ' forced space  that  matches
+         exactly one space. No line will end with one space  because  PCMAC
+         cuts off the trailing spaces before trying to interpret as  macro.
+         Some simple cases are discovered  by  PCMAC  and  it  generates  a
+         warning message.  However  the  problem  to  discover  unmatchable
+         syntax definitions is very difficult, and PCMAC sometimes thinks a
+         syntax definition to be matchable when it is not. Some example is:
+         macro("Artificial *+(3)",NUMERIC)
+         endm
+         This macro will never be matched. If we want to refer to it a line
+         like
+                 Artificial  1+(3)
+         PCMAC will think that all the characters  '1+(3)'  belong  to  the
+         expression and won't find the characters '+(3)'.
+                 Command Line Options
+                 --------------------
+                 If you start PCMAC with the  command  line  that  contains
+         only the name of the program, that is PCMAC if you did not  rename
+         it, then PCMAC will print out the following lines:
+         Macro assembler (C) Versoft Ltd. Hungary.
+         Usage: pcmac ['-' options ] filename
+          Options:
+         l list on
+         ln&name listfilename+list on
+         m list macro extension(+list).
+         mn&name listfilename+macro listing+listing.
+         s symbol table
+         c case sensitivity
+         n&outfilename
+         K to make library.
+         o generate object.
+         t don't care publics and externals.
+         h generate header file.
+         v version number.
+         & means: write the name without any space!
+         A command line that invokes PCMAC has to start with its name.  You
+         can freely rename the file with the standard DOS  command  rename.
+         This name tells the DOS what program to start.  The  rest  of  the
+         line is read by the program. PCMAC parses the rest of the  command
+         line and every argument starting with the sign  -  is  treated  as
+         option. Options can appear anywhere on the  line.  The  file  name
+         that appears on the line is the file that contains the  source  of
+         the assembly program. The full file name has to be written because
+         PCMAC makes no default extension. If no file names present in  the
+         -n option then PCMAC generates a name for the output. It cuts  off
+         the extension of the name of the input file and adds the extension
+         .o if generates object file or .tsk if generates task file or  the
+         extension .lib if the option -K was given or the extension  .h  if
+         the option -h was given. If the extension of the input file is  .o
+         and the option -o was given then  PCMAC  gives  the  .q  extension
+         under MSDOS and .O under UNIX. If another file  name  presents  on
+         the command line in the option -n then that  is  taken  as  output
+         file name. Let us go through the options in details:
+         l list on
+                 If this option is given then the assembler generates  list
+                 of the compilation to the screen.
+         ln&name listfilename+list on
+                 If this option is given then PCMAC generates list  of  the
+                 compilation into the file
+         m list  macro extension(+list).
+                 If this option is given then PCMAC generates a  list  that
+                 contains each line that  is  compiled.  If  you  use  this
+                 option then you can see in the list file  how  the  macros
+                 are extended.
+         mn&name listfilename+macro listing+listing.
+                 This option is similar to the -ln option. You can  specify
+                 a  listing  file.  PCMAC  will  generate  a  list  of  the
+                 compilation to the specified list  file  and  the  listing
+                 will contain the macro extensions.
+         s symbol table
+                         If you use this option then PCMAC will generate  a
+                 symbol table finishing the second pass. The  symbol  table
+                 listing is highly readable and appears on the end  of  the
+                 list file.
+         c case sensitivity
+                 By default PCMAC does not care the case of letters in  the
+                 macro definitions, so any character matches it lower  case
+                 or upper case pair. If you specify this option then  PCMAC
+                 won't  treat  upper  and  lower  case  letters  in   macro
+                 definitions as same.
+         n&outfilename
+                 You can use this option to specify the name of the file to
+                 be generated.
+         K to make library.
+                 You can use this option to generate a macro library  file.
+                 Such a file usually has the  extension  .lib  and  can  be
+                 included with the directive #lib. Only such files  can  be
+                 compiled with this  option  that  do  not  contain    code
+                 generation instructions. The generated macro library  file
+                 will contain the macro definitions and the byte  and  word
+                 ordering, but will  not  contain  any  variable  or  label
+                 declaration.
+         o generate object.
+                 Using this option PCMAC will  generate  object  code.  The
+                 generated object code will contain the  code,  information
+                 how to link it to other object files, which code fragments
+                 to relocate and so on.
+         t don't care publics and externals.
+                 Sometimes you want to  compile  a  file  that  is  usually
+                 compiled using the -o option. If  you  don't  use  the  -o
+                 option then PCMAC  will  generate  error  message  when  a
+                 public or extern primitive appears. This option  supresses
+                 this messages.
+         h generate header file.
+                 If you use this option then  PCMAC  will  stop  after  the
+                 first  pass  and  generates  a  readable  text  file  that
+                 contains EQU primitives that assigns  the  values  to  the
+                 labels that appeared in the source. Using this option  you
+                 can avoid using the linker if you really want to.  However
+                 using the linker is much powerful.
+         v version number.
+                 If you specified this option then PCMAC would neglect  all
+                 other options and filename, if any, and writes out a short
+                 text on the original owner of the copy. If this text names
+                 any person then your copy is a pirate one.  Some  Hungarian
+                 men got copies for debugging purposes.  All  those  copies
+                 contain the name of the owner and it is  written  out  for
+                 the -v option. What is more: these copies are not the last
+                 versions of  the  assembler,  these  copies  do  not  work
+                 properly and there is no guarantee that such a  copy  will
+                 not damage your files or hardware. If you have such a copy
+                 connect the firm ???????????????????.
+                 The Linker
+                 ----------
+                 The linker is a separated program that  links  the  object
+         files were generated by PCMAC to task  file.  You  can  start  the
+         linker with the command line:
+         link
+         If no argument  is  given  then  the  linker  prints  out  a  sort
+         remainder about its usage:
+         Usage: link [options] input_file_name_list
+         Options: -B[x]nnnn base address. (if x then in hex.)
+         n&name change default (a.tsk) outfilename
+         w reverse word order.
+         d reverse long word order.
+         The & means: write the name without space.
+         The word link is the name of the file containing the  linker.  You
+         can change it if you want with the standard  DOS  command  rename.
+         Many different linkers have the name: link. You can choose a  name
+         that is good for you as pcmaclnk or  linkpcmc  or  any  else.  The
+         first word on the command line has to be  the  name  of  the  file
+         containing the program. The rest of the line is read by the linker
+         itself. Every argument that starts with the character - is treated
+         option. The arguments that start with some character that is not -
+         is treated as file name that the linker has to read  and  link  to
+         the others. The PCMAC  linker  has  much  less  options  than  the
+         assembler. The most important option is the -B option. Using  this
+         option you can specify the base address of the task code. This  is
+         the address where you want to load the program.  The  linker  will
+         relocate the addresses that are relocatable in the object file  so
+         that your program will start on the address you specified with the
+         option -B. This option must contain  a  number.  If  you  have  an
+         object file named MYFIRST.o then using the command line:
+         link MYFIRST.o -B32000
+         will generate a task file called a.tsk that contains code that you
+         can load into your target machine to the address  32000.  You  can
+         specify the base address in hexadecimal form. In such a  case  you
+         have to use the option -Bx. So the command line:
+         link MYFIRST.o -Bx7d00
+         has the same effect as the previous one.
+                 The linker has to know how to  treat  the  words  and  the
+         double words. If the the words contain the bytes in normal  order,
+         that is lower address lower significant byte, then you should  not
+         use the -w option. This option says that  the  words  have  to  be
+         dealt with in reverse order. This is the case for the code of  the
+         MOTOROLA processors. The option -d  says  that  the  double  words
+         contain the words in reverse order.
+                 The default file name for the generated code is a.tsk.  If
+         you want to change this then you have to use the  -n  option.  You
+         can use it the same way as the option -n of the assembler PCMAC.
+                 The Format of the Object Code
+                 -----------------------------
+                 This chapter is not necesary to be read for  using  PCMAC
+         assembler and linker. This chapter is included  here  to  save  up
+         time of heavy hackers who would  investigate  the  format  of  the
+         object format of PCMAC. By the way, it  is  not  secret.  You  can
+         write your own programs that generate PCMAC  object  format  file,
+         and you can link them together with the PCMAC linker. If you do so
+         then do not  depend  on  features  that  you  found  scanning  the
+         generated object files but which  are  not  declared  here.  Later
+         versions of PCMAC may generate different format.  In  the  current
+         version all the public and external label declarations are at  the
+         end of the file. This feature is NOT declared  and  later  can  be
+         changed.
+                 The format of the PCMAC object code is  different  to  the
+         standard Microsoft object format. This is because:
+         1.) When the development of PCMAC stated  the  developers  had  no
+             information on that format.
+         2.) The Microsoft object format is too sophisticated.  Using  that
+             format would have caused a slower assembler and linker.
+                 Here we present the definition of the format of the  PCMAC
+         object file. All the codes are written in hexadecimal form.
+                 PCMAC object file starts with the  bytes  55  and  AA.  If
+         these bytes are missing then the linker stops  with  error.  These
+         bytes make possible for the linker to find out if the file is not
+         a PCMAC object file with the probability  99.99847412%.  Following
+         this magic word the object file consists of  blocks.  Every  block
+         starts with an identifier byte. These are:
+                 81       CODE
+                 82       RELOC
+                 83       PUB
+                 84       EXTDEF
+                 85       EXTREF
+         The names here present as reference names. The developers of PCMAC
+         used  these  names.  Following  this  byte  there  are  two  bytes
+         containing the length of the body of the block. The body is follow
+         by one byte check sum. The format of the body of a  block  depends
+         on the type of the block. Here is the format  of  the  bodies  and
+         some comment on their contents.
+          81  CODE   4ADDRESS 1NRofBYTES bytes
+               These blocks contain generated code. The first four bytes of
+             contains the address where  the  code  has  to  be  put.  This
+             address will be modified by the  linker.  The  following  byte
+             contains the number of the bytes that are  in  the  body.  The
+             rest of the block body is the list of the bytes.
+          82  RELOC  1NRofITEMS ITEMS( 1SIZE[0W F0D] 4ADDRESS)
+               These  block  bodies  contain  the  information  about   the
+             addresses that have to be relocated. The  first  byte  of  the
+             body is the number of the items that are  in  the  block.  The
+             rest of the block body is the items. Every item is five bytes.
+             The first byte is zero if the address  points  to  a  word  to
+             relocate and contains F0 if the address  points  to  a  double
+             word to relocate. The last four bytes of the item presents the
+             address.
+          83  PUB    1(0=NREL F0=REL) name \0 4VALUE
+               These block define the public symbols that  are  defined  as
+             external  symbols  in  other  files.  These  symbols  can   be
+             referenced in other files. The first byte of the block body is
+             zero if the value of the symbol is absolute and is F0  if  the
+             value of the symbol is relocatable. This byte is  followed  by
+             the identifier of the  symbol.  Any  character  sequence  that
+             contains no zero byte and is shorter  than  100  bytes  is  an
+             identifier for the PCMAC linker. The name is terminated with a
+             zero byte. The last four byte of the block body is  the  value
+             of the symbol.
+          84  EXTDEF name \0 2IDTFNUM
+               These blocks define an external symbol. The body starts with
+             the the name of the  external  symbol.  The  name  has  to  be
+             shorter than 100 bytes and must be terminated by a zero  byte.
+             The last two bytes of the block body contain  the  identifying
+             number of the symbol. This identifying number is used  in  the
+             blocks EXTREF. Such an identifying number is unique within one
+             object file. Different object  files  for  different  external
+             identifiers can have the same identifying number and different
+             object  files  for  the  same  external  identifier  can  have
+             different identifying number.
+          85  EXTREF 1NRofITEMS ITEMS(2IDTFNUM 1TYPE[
+                        1BYTE 2WORD 4DWORD feRBYTE fdRWORD fbRDWORD] 4ADDRESS)
+               These blocks contain the information of  the  holes  of  the
+             code that have to be filled up with the values of  the  global
+             symbols. The first byte contains the number of  the  items  of
+             the block. Every item is seven bytes long. The first two bytes
+             contain the identifying number that has to  be  defined  in  a
+             EXTDEF block. The next byte is the type of the location  where
+             the address points to. This byte can be:
+             01          The value has to fit into a byte.
+             02          The value has to fit into a word.
+             04          The value has to fit into a double word.
+             FE          The value has to be converted relative
+                         and fit into a byte.
+             FD          The value has to be converted relative
+                         and fit into a word.
+             FB          The value has to be converted relative
+                         and fit into a double word.
+             The last four bytes of the item contain the address of the value.
+                 Error messages of the assembler
+                 -------------------------------
+           The assembler handles five different type of errors. These types
+         are:
+         MESSAGE
+         WARNING
+         NORMAL
+         FATAL
+         INTERNAL
+           A MESSAGE type error  message  appears  in  the  list,  that  is
+         usually the  screen,  when  the  assembly  program  contains  some
+         #message directive. This is not really an error.  It  is  a  simle
+         message. The assembler writes it out and forgets all about it. The
+         assembler itself does not generate such type of messages.
+           A WARNING type message warns the user if he  made  some  mistake
+         which is not too serious and the assembler can correct it. However
+         in many cases it is very useful to pay attention  to  the  warning
+         messages.
+           A NORMAL type error message appears in the list if  PCMAC  finds
+         some error in the source that is too  serious  to  decide  how  to
+         solve  it.  After  such  an  error  message  PCMAC  continues  the
+         compilation but it is only for  the  discovery  of  later  errors.
+         PCMAC does not generate code if  any  NORMAL  type  error  message
+         appeared. PCMAC starts the second pass even  if  there  were  some
+         NORMAL type error messages in the first pass, and can happen  that
+         there is no such error in the second  pass.  In  this  case  PCMAC
+         warns you at the end of the list that there were error messages in
+         the first pass.
+           A FATAL type error message appears if  PCMAC  finds  some  error
+         that prevents PCMAC to continue the compilation. If such an  error
+         encounters PCMAC stops the compilation immediately.
+           An INTERNAL type error appearance means that there is some error
+         in the assembler itself. You can do  nothing  to  recover  it  but
+         report it to the firm who released your version of  PCMAC  and  to
+         wait for the next release. However you  can  try  to  change  your
+         assembly file in some way but  there  is  no  guarantee  that  you
+         succeed.
+           The error messages appear in the list file and on the screen. If
+         the list file is the screen itself  then the error message appears
+         only once. The messages appear in the list file following the list
+         of the line where the errors were detected. The  assembler  writes
+         out the type of the error and the message. This  message  is  some
+         short remainder in case of WARNING, NORMAL, and FATAL messages. In
+         case of INTERNAL message the text is only a three digit number. In
+         case of MESSAGE type the text is determined by the assembly  file.
+         The next chapter contains the messages that are generated  by  the
+         assembler itself. The messages are sorted into alphabetical order.
+                 The list of the error messages
+                 ------------------------------
+           The items of the  list  contain  the  error  messages  and  some
+         explanation and advises how to recover if such  an  error  appear.
+         The first character of the line means the type of the messages.  W
+         for WARNING,N for NORMAL, F  for  FATAL.  An  item  contains  more
+         messages if the same explanation describes them.
+         N   #ifdef needs an identifier
+         N   #ifndef needs an identifier
+           The directives #ifdef and #ifndef need an identifier in the same
+         line. These directives switch the compilation on and  off  if  the
+         identifier was declared or if was not.
+         N   #stack needs variable
+           The directive #stack needs a variable in the same line. Get sure
+         that you wrote the identifier of a variable and not a label in the
+         line of the directive.
+         N   #until for an outer #repeat
+           PCMAC found some #until directive for which it can not find  the
+         directive  #repeat.  The  directive   pairs   #repeat,#until   and
+         #while,#wend can be nested but not overlapped. Remember that these
+         directives can be used only in macro definitions.
+         N   #until without #repeat
+           PCMAC found some #until directive for which it can not find  the
+         directive #repeat. You forgot to write the #repeat for the pointed
+         #until or you used two different #until directives  for  the  same
+         #repeat. Remember that these directives can be used only in  macro
+         definitions.
+         N   #wend for an outer #while
+           PCMAC found some #wend directive for which the directive  #while
+         was not declared before an unclosed #repeat. The  directive  pairs
+         #repeat,#until and #while,#wend can be nested but not  overlapped.
+         Remember  that  these  directives  can  be  used  only  in   macro
+         definitions.
+         N   #wend without #while
+           PCMAC found a directive #wend for which  it  can  not  find  the
+         directive #while. You forgot to write the directive #while or  you
+         used two #wend directives for the same #while. Remember that these
+         directives can be used only in macro definitions.
+         N   #while has no #wend in the macro
+           PCMAC reached the end of a macro definition and found  a  #while
+         for which there was no closing #wend. Remember that all the #while
+         directives have to have their pairs. The same holds for  #repeats.
+         Remember  that  these  directives  can  be used  only   in   macro
+         definitions.
+         N   ( missing in the macro definition
+           Starting a macro definition PCMAC found the  keyword  macro  but
+         the character ( is missing after it.
+         N   ( expected!
+           PCMAC found an expression  in  which  a  function  name  is  not
+         followed by a left brace. Remember that the characters ( and [ can
+         be used in expression to close  subexpressions,  but  argument  of
+         predefined functions can only closed between ( and ).
+         N   ) missing after the const definition.
+           PCMAC found the end of the line following a const definition but
+         the definition was not close with the character ).
+         N   , missing between the expressions
+           In expression lists you have to separate  the  expressions  with
+         commas. You separated the expressions with some  spaces  or  you
+         made some syntactical mistake in the first  expression  and  PCMAC
+         thinks that the separating comma is missing.
+         N   := expected
+           You forgot to use  the  sign  :=  in  a  const  definition.  You
+         probably wrote spaces or a single = sign.
+         N   ASCII code out of range
+           The value of an expression following the directive #char is  not
+         between the interval 0..255. Try to calculate  the  value  of  the
+         expression by hand and get sure that the value is really valid.
+         W   ASCII number is too long
+           An ASCII number starts and ends with an  apostrof  (')  and  can
+         contain at most four characters between. You wrote more than  four
+         characters or only forgot to type the closing apostrof.
+         N   Assign for a non variable symbol
+           The assignment can be used only to assign value to  a  variable.
+         The Identifier that stands in the line was declared as label.  Use
+         some other identifier.
+         F   Bad macro library file
+           PCMAC tried to include a file as a macro library file,  but  the
+         file, of which the name was given following the directive #lib, is
+         not a macro library file. The file might damaged. In this case you
+         have to recompile it with PCMAC using the command line option  -K.
+         Be sure that you named the compiled file following  the  directive
+         #lib and not the original macro definition file. If you  mixed  up
+         the two files than you have to change  the  file  name  after  the
+         directive #lib or you can use the directive #macros.
+         W   Character not terminated
+           You forget to write out the terminating apostrof of a  character
+         constant before the end  of  the  line.  Terminate  the  character
+         constants with the character (')!
+         N   Code generating error !
+           PCMAC tried to generate a byte for an address that is lower than
+         the lowest address of the first pass or higher  then  the  highest
+         byte of the  first  pass.  It  means  that  the  different  passes
+         generate different code. It is hard to recover of this  error.  It
+         is usually caused by conditional compilation that depends  on  the
+         variable pass. Get sure that the blocks that are not  compiled  in
+         one of the passes do not generate code.
+         N   Dangling #endif
+           A line containing a directive #endif encountered and  PCMAC  can
+         not find the directive #if, #ifdef or #ifndef. You forgot to write
+         the line that contains that directive or used two different #endif
+         directives for the same #if??? directive.
+         N   Empty syntax definition
+           You specified an empty string as syntax definition of  a  macro.
+         This macro definition can not be matched by any  line,  so  such  a
+         macro definition is out of use. Do not do it.
+         F   End of memory!
+           Well, this error is a very unconfortable one. You get  an  error
+         message though you made no  mistakes.  Only  the  memory  of  your
+         computer is to small. Buy some more memory if possible. A  cheaper
+         solution is to split up the assembly program into more  files  and
+         compile it with the option -o and link the object files. Use  less
+         variables, labels and macros.
+         N   Error in the file name
+           A directive #include, #macros or #lib is followed by a file name
+         that is closed between " or <> pairs. You should not  mix  up  the
+         different terminators. If you start a file name with  <  then  you
+         have to terminate it with > and if you opened a file name  with  "
+         then you have to close it with ".
+         N   Expression must be predefined
+           The expression standing on the right hand side of an command  :=
+         or equ is not evaluateable.  This  is  because  some  label  is  not
+         defined yet. An expression like that has to be evaluatable.
+         N   External can not be public
+           You declared a label as public and as external. It is no use and
+         impossible.
+         N   External in an expression
+           A variable that is declared as external can not be  used  in  an
+         expression. Use two macro definitions with the same syntax  string
+         for the same instruction if you  want  to  refer  expressions  and
+         external labels as macro arguments.
+         N   External with no -o option
+         N   Public with no -o option
+           You tried to compile a program that  contains  external  labels.
+         This is a mistake. You probably forgot to use the  option  -o.  If
+         you really want to generate a tsk file immediately then use the -t
+         option, but be sure that all the external labels get value.
+         N   Identifier expected after public
+           There must be one or more identifiers  following  the    keyword
+         public. The identifiers must be separated by commas.
+         N   Identifier expected in the CONST!
+           You forgot to specify an identifier for the  symbolic  constant.
+         Without this name you can not reference the constans so no use to
+         declare literals without name. Insert a name between the  sign  :=
+         and the  keyword 'const'.
+         N   Identifier missing as a const definition
+           This message appears if the assembler does  not  find  the  next
+         literal following a comma. You probably deleted the  last  literal
+         of the list but forgot to delete the separating comma or you  just
+         simply mistyped something.
+         W   Inconsistent options -o -h
+         F   Inconsistent options -o -K
+         W   Inconsistent options -o -t
+           The options -h, -K and -t can or may not be used with the option
+         -o. Read through the chapter that tells you what are caused by the
+         options.
+         W   Input file name *.o
+           The extension of the input file name is the letter o that is the
+         default extension of the  generated  file  if  the  -o  option  is
+         present. Do not use the .o extension  for  source  files.  If  you
+         compile a file with the  extension  .o  to  object  file  and  you
+         do not specify output file name then the assembler  will  put  the
+         object code into a file that is named with the same  name  as  the
+         input but the extension will be .q  for  MSDOS  or  .O  for  UNIX.
+         (This is because MSDOS treats .o and .O the same.)
+         N   Invalid case suboption
+           The option -c has no suboption so it has to  be  followed  by  a
+         space. You should not specify UNIX style options. E.g.: You should
+         write -c -K instead of -cK.
+         N   Invalid list suboption.
+           The option -l can be followed by the character  n.  This  letter
+         tells PCMAC that the name of the list file follows.  You  can  not
+         specify any other sub option.
+         N   Invalid option
+           You specified an option letter that is not used  by  PCMAC.  You
+         probably wrote -k instead of -K.
+         N   Invalid const number
+           You used a number following the  macro  argument  character  for
+         which there is no argument for. Do not forget that  the  numbering
+         of the arguments start with zero instead of 1.
+         N   Macro definition nesting is not allowed
+         N   Macro definition not terminated
+           Macros can not be nested.  This  speeds  up  the  assembler  and
+         prevents the user to generate memory  vasting  constructions.  All
+         neccessary definitions can be made without nesting. If you do  not
+         know what we are talking about because you did not  want  to  nest
+         any macro into another then you probably forgot to write the  line
+         endm. It can be the case even if you got the first error  message
+         because PCMAC does not know whether you forgot to close  a  macro
+         or wanted them to be nested.
+         F   No more stacks
+           At most 100 stack can be opened at a time. It must be enough for
+         every development. You tried to open the 101. stack. It can happen
+         if open a stack inside of a macro in a loop or  if  the  macro  is
+         recursive.
+         N   No label whom assign the value to
+         N   No variable whom assign the value to
+           The mnemonic equ or the sign := is not preceeded by  identifier.
+         These instructions are  to  assign  value  to  a  label  or  to  a
+         variable.
+         N   Non ascii character for macro number
+         N   Non ascii character for macro prefix
+           The value of the expression following the directive  #macarg  or
+         #macnum is not between the interval 0..255. Try to  calculate  the
+         value of the expression by hand and get sure  that  the  value  is
+         really valid.
+         W   Non octal character in string number
+           This is a very dangerous warning.  This  is  generated  if  a  \
+         character in a string is followed by the character 8 or 9. This is
+         dangerous because you can think that the assembler generates bytes
+         with the value 8 or 9. However the assembler generates bytes  that
+         hold the ASCII code of the characters '8'  or  '9'.  This  warning
+         message will not appear if the ASCII radix is set to decimal  with
+         the directive #decimal. In that case the assembler will generate a
+         byte whith he value 8 or 9.
+         W   Non relocatable for byte offset
+         W   Non relocatable for word offset
+         W   Non relocatable for dword offset
+           The expression following the drb, drw  or  drd  command  is  not
+         relocatable. This is probably wrong.
+         N   Not 16 bit value for a word
+           The value of the expression following the directive dw is not  a
+         16  bit  value.  The  assembler  does  not  truncate  the   values
+         automatic.  You  have  to  declare  the  truncation   and   write:
+         '(expression)&0FFFFh' instead of 'expression'.
+         N   Not closed loop in the macro
+           PCMAC reached the end of  a  macro  definition  and  found  some
+         unclosed loop. It can either  be  #repeat,#until  or  #while,#wend
+         loop. Read the macro definition and correct it.
+         F   Not only macros for macro library
+           You tried to compile a file with the option  -K  that  contained
+         code generating instructions. These instructions can  not  be  put
+         into a macro library file. Eliminate these lines or do not compile
+         this file but include it with the directive #macros.
+         N   Not used user stack free
+           You specified a stack in the directive #clostack which  was  not
+         opened with the directive #stack. You tried  to  close  the  stack
+         twice or you close the stack in  a  macro  that  is  recursive  or
+         contains loop.
+         W   Octal number terminated by digit
+           This is a dangerous warning and never  skip  it!  You  used  an
+         escape sequence in a string and the octal numbers were  terminated
+         by a non octal digit that is 8 or 9. You can easy  read  it  as  a
+         digit that belongs to the octal  number  and  interpret  it  as  a
+         decimal number. Be  sure  that  you  really  want  a  nonprintable
+         character followed by the character 8 or 9. This message will  not
+         appear if the radix of the ascii numbers is set  to  decimal  with
+         the directive #decimal.
+         N   Poping an empty stack
+         N   Reading the TOS of an empty stack
+           The assembly program wants to fetch a value from a compile time
+         stack that is empty. In the current version of the assembler there
+         is no way to check if a stack is empty.
+         N   Public symbol was not defined
+           You declared a variable as public but it got no value during the
+         passes.
+         N   External with no -o option
+         N   Public with no -o option
+           You tried to compile a program that  contains  external  labels.
+         This is a mistake. You probably forgot to use the  option  -o.  If
+         you really want to generate a tsk file immediately then use the -t
+         option, but be sure that all the external labels get value.
+         N   Redefining a label
+         N   Redefining a symbol
+         N   Redefining an identifier
+           A label may appear only once on the left hand side of a line.  A
+         literal can stand in different definitions, but  the  const  names
+         has to be different. An identifier  can  be  used  to  identify  a
+         label, a variable, const name, but only one at a time.
+           Many programmers cause the first error message  forgetting  that
+         the l;abels inside of a macro are not local. They will  appear  as
+         labels so many times as many  times  the  macro  is  extended.  To
+         generate  local  labels  you  have  to  use  the  macro  numbering
+         characters with which you can extend your labels with numbers.
+         W   Relocatable data for byte
+           The assembler does not relocate byte values. If a byte value  is
+         relocatable then a mistake is very probable.
+         N   Relocatable value for ASCII code
+         W   Relocatable value for list switching
+         N   Relocatable value for macro number
+         N   Relocatable value for macro prefix
+         N   Relocatable value for stack number
+           The value of an expression is relocatable, but the way of  usage
+         is not. If you really want to  use  relocatable  values  at  these
+         places then use the doureloc function.
+         N   Right bracket missing in the expression
+           You can use () and [] characters to close  subexpressions  inside
+         of an expression. The subexpressions can be nested any level  deep,
+         but all '('s have to have the pair ')' and the same  is  true  for
+         the '['s. You can not close a subexpression opened with '(' with a
+         ']' and vice versa. It is a good style to use one of the  brackets
+         to close  subexpressions.  Some  assembly  languages  use  the  ()
+         brackets to refer to memory and other use the [] brackets. You  do
+         use the other one to close subexpressions. Do not forget that  the
+         arguments of the predefined functions should be closed with ().
+         N   Const definition can not be inside of a macro
+           A const definition can only be global in an assembly program and
+         can not be localised for a macro. That is the reason for which you
+         can not define a const definition inside of a macro.  If  you  get
+         this error message, but you did not wan to declare const inside of
+         a macro then you probably forgot to close the previous  macro.  It
+         is a good style to collect all the const macro definitions to  the
+         start of the file before the macro definitions.
+         N   Syntax error in the expression
+           The assembler found an expression that it can not understand.
+         N   String not terminated
+           The closing " is missing at the end of the string. Unlike  in  C
+         language you can not continue a string in the next line using a  \
+         to close the line.
+         F   Too deep include in the file system
+           An included file may include another one but  the  nesting  must
+         not exceed the number 5. This deepness is enough for the  most  of
+         the applications. Deeper include appears if you probably  made
+         a loop and the files recursively include each other.
+         N   Too few const definition
+           The syntax definition string contains more  asterisks  than  the
+         number of the consts on the end of the syntax  definition  line  of
+         the macro. In this case the assembler does not know what  kind  of
+         arguments should be excepted. If you wanted to have  an  asterisks
+         in the line then do not forget to preceede it with a  backslash  in
+         the syntax definition string.
+         F   Unable to open the library file
+         F   Unable to open the object file
+         F   Unable to open the output file
+         N   Unable to open the list file
+           The assembler can not open one of the files. It  can  happen  if
+         you specified a wrong directory or mistyped the name of the file.
+         It also can happen that the assembler wants  to  open  the  output
+         file but it  already  exists  and  protected.  In  this  case  the
+         assembler can not delete the old file to open the new one with the
+         same name. The assembler was developed to be a very safe tool and
+         it will not damage your file system.
+         N   Unbalanced #ifs
+           The assembler found a directive  #if  for  which  there  is  not
+         #endif. Get sure that you closed all the #ifs. The directive pairs
+         #if\#endif, #ifdef\#endif and #ifndef\#endif  can  be  nested  any
+         level deep but each has to have its pair.
+         N   Undefined label in the expression
+           One of the labels in the expression is not defined. It also  can
+         happen that you try to compile a  file  with  the  option  -t  and
+         forgot to include some of the files that define the value  of  the
+         variables.
+         N   Unexpected characters on the end of the line
+           The assembler found some characters on the end of the line  with
+         which it can not do anything. You probably forgot to  preceede  the
+         comment with a ; character or mistyped something.
+         N   Unknown byte order in the #dw directive
+         N   Unknown word order in the #dd directive
+           The directives #dw and #dd should be followed with the character
+         pairs lh or hl. Nothing else can stand on that place.
+         N   Unmatchable syntax definition
+           The assembler generates this error message if it found a  syntax
+         definition string that is not matchable. The  assembler  does  not
+         discover the unmatchability of the syntax string so:  if  you  get
+         this error message then there is no line accepted by this   syntax
+         definition, if you did not get  this  message  then  there  is  no
+         guarantee that there is line.
+         N   Variable can not be public
+           An identifier that was declared as public is used  as  variable.
+         Only labels can be public. Variables are tools to  be  used  while
+         compile time and not while link time.
+         W   Variable was not explicitly declared
+           A variable has to be declared in the instruction  'var'.  If  an
+         identifier was not declared as variable and  stands  on  the  left
+         hand side of a assignment then the assembler automaticly  declares
+         the it as a variable but sends the warning message.
+         N   Wrong binary number
+         N   Wrong octal number
+         N   Wrong decimal number
+         N   Wrong hexadecimal number
+           The assembler found a mistyped number. You  can  get  the  third
+         error message for hexadecimal numbers if the number ends with  the
+         hexadecimal digit 'D' or  'd'  and  you  forgot  to  use  the  'h'
+         postfix. This is because in this case the  assembler  thinks  that
+         you used the optional decimal postfix 'd'.
+         N   Wrong stack number
+           The assembler generates this error message if the program refers
+         to a stack that was not opened or is closed yet.
+         N   " missing after the macro definition
+           The  assembler  generates  this  error  message  if  the   macro
+         definition string is not terminated with a ".
+         N   " missing in the macro definition
+           A macro syntax definition is closed between ( and ).  The  first
+         member of the definition is the syntax string that  starts  with  a
+         character ". The assembler can not find this character.
+         N   " missing after the message in an 'message' directive
+         N   " missing after the message in an 'warning' directive
+         N   " missing after the message in an 'error' directive
+         N   " missing after the message in an 'fatal' directive
+            The assembler generates  this  error  message  if  the  message
+         string following the directive is not terminated before the end of
+         the line.
+         N   " missing after the 'message' directive
+         N   " missing after the 'warning' directive
+         N   " missing after the 'error' directive
+         N   " missing after the 'fatal' directive
+           The directives #message, #warning, #error and #fatal has  to  be
+         followed with a string.

@@ -1,0 +1,206 @@
+
+;*******************************************************
+;*                                                     *
+;*             APU MACRO DEFINITION                    *
+;*             ====================                    *
+;*                                                     *
+;*  Defined by TS-Labs                                 *
+;*                                                     *
+;*                                                     *
+;*******************************************************
+
+
+; Size constants
+const	_SZ	:=	(8, 16, 24, 32) 
+
+; Condition constants
+
+
+; Instruction constants
+
+
+;--- Pseudo op macro definitions ------------------------------
+
+macro("ORG\  *",NUMERIC)
+$	:=doreloc(#0)
+endm
+
+macro("DS\  *",NUMERIC)
+$	:=	doreloc($+#0)
+endm
+
+
+;--- Instructions ---------------------------------------------
+
+;-- LD ------------------------
+
+; ld dst, src
+macro("LD\  R*, R*", NUMERIC, NUMERIC)
+	DB	00h + #1, 60h + #0
+endm
+
+; ld dst, imm8
+macro("LD\  R*, *", NUMERIC, NUMERIC)
+	DB	#1, 00h + #0
+endm
+
+; ld sz, dst, src
+macro("LD\  *, R*, R*", NUMERIC, NUMERIC, NUMERIC)
+#if	#0 & 7 || #0 > 32
+#error	"SZ parameter must be 8, 16, 24 or 32."
+#endif 
+	DB	00h + #2 + ((#0-8)<<1), 60h + #1
+endm
+
+
+;-- AND -----------------------
+
+; and dst, src
+macro("AND\  R*, R*", NUMERIC, NUMERIC)
+	DB	40h + #1, 60h + #0
+endm
+
+; and dst, imm8
+macro("AND\  R*, *", NUMERIC, NUMERIC)
+	DB	#1, 10h + #0
+endm
+
+; and sz, dst, src
+macro("AND\  *, R*, R*", NUMERIC, NUMERIC, NUMERIC)
+#if	#0 & 7 || #0 > 32
+#error	"SZ parameter must be 8, 16, 24 or 32."
+#endif 
+	DB	40h + #2 + ((#0-8)<<1), 60h + #1
+endm
+
+
+;-- XOR -----------------------
+
+; xor dst, src
+macro("XOR\  R*, R*", NUMERIC, NUMERIC)
+	DB	C0h + #1, 60h + #0
+endm
+
+; xor dst, imm8
+macro("XOR\  R*, *", NUMERIC, NUMERIC)
+	DB	#1, 30h + #0
+endm
+
+; xor sz, dst, src
+macro("XOR\  *, R*, R*", NUMERIC, NUMERIC, NUMERIC)
+#if	#0 & 7 || #0 > 32
+#error	"SZ parameter must be 8, 16, 24 or 32."
+#endif 
+	DB	C0h + #2 + ((#0-8)<<1), 60h + #1
+endm
+
+
+;-- OR ------------------------
+
+; or dst, src
+macro("OR\  R*, R*", NUMERIC, NUMERIC)
+	DB	80h + #1, 60h + #0
+endm
+
+; or dst, imm8
+macro("OR\  R*, *", NUMERIC, NUMERIC)
+	DB	#1, 20h + #0
+endm
+
+; or sz, dst, src
+macro("OR\  *, R*, R*", NUMERIC, NUMERIC, NUMERIC)
+#if	#0 & 7 || #0 > 32
+#error	"SZ parameter must be 8, 16, 24 or 32."
+#endif 
+	DB	80h + #2 + ((#0-8)<<1), 60h + #1
+endm
+
+
+;-- ADD -----------------------
+
+; add dst, src
+macro("ADD\  R*, R*", NUMERIC, NUMERIC)
+	DB	00h + #1, 70h + #0
+endm
+
+; add dst, imm8
+macro("ADD\  R*, *", NUMERIC, NUMERIC)
+	DB	#1, 40h + #0
+endm
+
+; add sz, dst, src
+macro("ADD\  *, R*, R*", NUMERIC, NUMERIC, NUMERIC)
+#if	#0 & 7 || #0 > 32
+#error	"SZ parameter must be 8, 16, 24 or 32."
+#endif 
+	DB	00h + #2 + ((#0-8)<<1), 70h + #1
+endm
+
+
+;-- SUB -----------------------
+
+; sub dst, src
+macro("SUB\  R*, R*", NUMERIC, NUMERIC)
+	DB	40h + #1, 70h + #0
+endm
+
+; sub dst, imm8
+macro("SUB\  R*, *", NUMERIC, NUMERIC)
+	DB	#1, 50h + #0
+endm
+
+; sub sz, dst, src
+macro("SUB\  *, R*, R*", NUMERIC, NUMERIC, NUMERIC)
+#if	#0 & 7 || #0 > 32
+#error	"SZ parameter must be 8, 16, 24 or 32."
+#endif 
+	DB	40h + #2 + ((#0-8)<<1), 70h + #1
+endm
+
+;-- CMP -----------------------
+
+; cmp dst, src
+macro("CMP\  R*, R*", NUMERIC, NUMERIC)
+	DB	80h + #1, 70h + #0
+endm
+
+; cmp sz, dst, src
+macro("CMP\  *, R*, R*", NUMERIC, NUMERIC, NUMERIC)
+#if	#0 & 7 || #0 > 32
+#error	"SZ parameter must be 8, 16, 24 or 32."
+#endif 
+	DB	80h + #2 + ((#0-8)<<1), 70h + #1
+endm
+
+
+;-- TST -----------------------
+
+; tst dst, src
+macro("TST\  R*, R*", NUMERIC, NUMERIC)
+	DB	C0h + #1, 70h + #0
+endm
+
+; tst sz, dst, src
+macro("TST\  *, R*, R*", NUMERIC, NUMERIC, NUMERIC)
+#if	#0 & 7 || #0 > 32
+#error	"SZ parameter must be 8, 16, 24 or 32."
+#endif 
+	DB	C0h + #2 + ((#0-8)<<1), 70h + #1
+endm
+
+
+;-- INC -----------------------
+
+; inc src
+macro("INC\  R*", NUMERIC)
+	DB	00h + #0, F0h
+endm
+
+; inc sz, src
+macro("INC\  *, R*", NUMERIC, NUMERIC)
+#if	#0 & 7 || #0 > 32
+#error	"SZ parameter must be 8, 16, 24 or 32."
+#endif 
+	DB	00h + #1 + ((#0-8)<<1), F0h
+endm
+
