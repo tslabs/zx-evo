@@ -211,6 +211,11 @@ set_global_assignment -name MESSAGE_SUPPRESSION_RULE_FILE top.srf
 set_global_assignment -name SMART_RECOMPILE OFF
 set_global_assignment -name VERILOG_INPUT_VERSION SYSTEMVERILOG_2005
 set_global_assignment -name VERILOG_SHOW_LMF_MAPPING_MESSAGES OFF
+set_global_assignment -name AUTO_PACKED_REGISTERS "MINIMIZE AREA"
+
+set_global_assignment -name VERILOG_FILE ../apu/apu.v
+set_global_assignment -name VERILOG_FILE ../apu/apu_code.v
+set_global_assignment -name VERILOG_FILE ../apu/apu_timer.v
 set_global_assignment -name VERILOG_FILE ../z80/znmi.v
 set_global_assignment -name VERILOG_FILE ../sound/sound.v
 set_global_assignment -name VERILOG_FILE ../video/video_fontrom.v
@@ -242,4 +247,3 @@ set_global_assignment -name VERILOG_FILE ../common/spi2.v
 set_global_assignment -name VERILOG_FILE ../common/resetter.v
 set_global_assignment -name VERILOG_FILE ../top.v
 set_global_assignment -name MIF_FILE ../video/r0bat_font.mif
-set_global_assignment -name AUTO_PACKED_REGISTERS "MINIMIZE AREA"

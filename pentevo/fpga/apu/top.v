@@ -319,6 +319,7 @@ module top(
 
 
 	wire [3:0] border;
+	wire [5:0] apu_border;
 
 	wire drive_ff;
 
@@ -562,6 +563,8 @@ module top(
 		.vcsync(vcsync),
 
 		.zxborder(border),
+		.apuborder(apu_border),
+		.zx_n_apu_brd(zx_n_apu_brd),
 
 		.pent_vmode( {peff7[0],peff7[5]} ),
 		.atm_vmode (atm_scr_mode),
@@ -591,7 +594,11 @@ module top(
 		.fnt_d (d      ),
 		.fnt_wr(fnt_wr ),
 
-		.palcolor(palcolor)
+		.palcolor(palcolor),
+		
+		.hsync_start(hsync_start),
+		.line_start(line_start),
+
 	);
 
 
@@ -628,6 +635,8 @@ module top(
 	               .din(d), .dout(dout_ports), .dataout(ena_ports),
 	               .a(a), .iorq_n(iorq_n), .rd_n(rd_n), .wr_n(wr_n), .porthit(porthit),
 	               .ay_bdir(ay_bdir), .ay_bc1(ay_bc1), .border(border),
+				   .zx_n_apu_brd(zx_n_apu_brd), 
+				   .apu_border_we(apu_border_we	),
 	               .p7ffd(p7ffd), .peff7(peff7), .mreq_n(mreq_n), .m1_n(m1_n), .dos(dos),
 	               .rstrom(rstrom), .vg_intrq(intrq), .vg_drq(drq), .vg_wrFF(vg_wrFF),
 	               .vg_cs_n(vg_cs_n), .sd_start(sd_start), .sd_dataout(sd_dataout),
@@ -675,6 +684,7 @@ module top(
 	               .covox_wr (covox_wr ),
 
 				   .fnt_wr(fnt_wr),
+				   .apu_wr(apu_wr),
 
 				   .clr_nmi(clr_nmi),
 
@@ -687,7 +697,8 @@ module top(
 				   .ramnroms( rd_ramnrom ),
 				   .dos7ffds( rd_dos7ffd ),
 
-				   .palcolor(palcolor)
+				   .palcolor(palcolor),
+				   .mem_wr_fclk(mem_wr_fclk)
 	             );
 
 
@@ -776,5 +787,49 @@ module top(
 	);
 
 
+	apu apu(
+
+		.clk			(fclk			),
+		.apu_halt		(apu_halt		),
+//		.apu_rdy		(apu_rdy		),
+		.code_wen		(apu_wr			),
+		.code_wdata		(d				),
+		.code_waddr		(a[8:0]			),
+//		.apu_addr		(apu_addr		),
+//		.apu_data_w		(apu_data_w		),
+//		.apu_data_r		(apu_data_r		),
+//		.apu_req		(apu_req		),
+//		.apu_dram_rnw	(apu_dram_rnw	),
+//		.apu_dram_bsel	(apu_dram_bsel	),
+//		.apu_strobe		(apu_strobe		),
+		.apu_border		(apu_border		),
+		.apu_border_we	(apu_border_we	),
+//		.apu_covox		(apu_covox		),
+//		.apu_covox_we	(apu_covox_we	),
+//		.hcnt			(hcnt			),
+//		.vcnt			(vcnt			),
+		.hsync_start	(hsync_start	),
+		.line_start		(line_start		),
+//		.vsync			(vsync			),
+//		.hblank			(hblank			),
+//		.vblank			(vblank			)
+			
+	);
+	
+	
+	zmaps zmaps(
+	
+		.cpu_req		(cpu_req		),
+		.cpu_rnw		(cpu_rnw		),
+		.cpu_addr		(cpu_addr		),
+		.zmaps_page		(zmaps_page		),
+		.zmaps_addr		(zmaps_addr		),
+		.zmaps_wr_en	(zmaps_wr_en	),
+		.ys_tp_we		(ys_tp_we		),
+		.sf_sp_we		(sf_sp_we		),
+		.apu_code_we	(apu_code_we	)
+	
+	);
+	
 endmodule
 

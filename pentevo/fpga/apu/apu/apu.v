@@ -39,7 +39,8 @@ module apu(
 // Video
 	input wire	[8:0]	hcnt,
 	input wire	[8:0]	vcnt,
-	input wire			hsync,
+	input wire			hsync_start,
+	input wire			line_start,
 	input wire			vsync,
 	input wire			hblank,
 	input wire			vblank
@@ -307,7 +308,7 @@ default:
 //- Pins in decoding ------------------------------------------
 	localparam p_timer_end	= 5'h0;
 	localparam p_apu_strobe	= 5'h1;
-	localparam p_hsync		= 5'h2;
+	localparam p_hsync_start= 5'h2;
 	localparam p_hblank		= 5'h3;
 	localparam p_vsync		= 5'h4;
 	localparam p_vblank		= 5'h5;

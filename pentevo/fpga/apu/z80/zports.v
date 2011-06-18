@@ -6,115 +6,119 @@
 
 module zports(
 
-	input  wire        zclk,   // z80 clock
-	input  wire        fclk,  // global FPGA clock
-	input  wire        rst_n, // system reset
-
-	input  wire        zpos,
-	input  wire        zneg,
-
-
-	input  wire [ 7:0] din,
-	output reg  [ 7:0] dout,
-	output wire        dataout,
-	input  wire [15:0] a,
-
-	input  wire        iorq_n,
-	input  wire        mreq_n,
-	input  wire        m1_n,
-	input  wire        rd_n,
-	input  wire        wr_n,
-
-	output reg         porthit, // when internal port hit occurs, this is 1, else 0; used for iorq1_n iorq2_n on zxbus
-
-	output wire [15:0] ideout,
-	input  wire [15:0] idein,
-	output wire        idedataout, // IDE must IN data from IDE device when idedataout=0, else it OUTs
-	output wire [ 2:0] ide_a,
-	output wire        ide_cs0_n,
-	output wire        ide_cs1_n,
-	output wire        ide_rd_n,
-	output wire        ide_wr_n,
-
-
-	input  wire [ 4:0] keys_in, // keys (port FE)
-	input  wire [ 7:0] mus_in,  // mouse (xxDF)
-	input  wire [ 4:0] kj_in,
-
-	output reg  [ 3:0] border,
-
-
-	input  wire        dos,
-
-
-	output wire        ay_bdir,
-	output wire        ay_bc1,
-
-	output wire [ 7:0] p7ffd,
-	output wire [ 7:0] peff7,
-
-	input  wire [ 1:0] rstrom,
-
-	input  wire        tape_read,
-
-	output wire        vg_cs_n,
-	input  wire        vg_intrq,
-	input  wire        vg_drq, // from vg93 module - drq + irq read
-	output wire        vg_wrFF,        // write strobe of #FF port
-
-	output reg         sdcs_n,
-	output wire        sd_start,
-	output wire [ 7:0] sd_datain,
-	input  wire [ 7:0] sd_dataout,
-
-	// WAIT-ports related
-	//
-	output reg  [ 7:0] gluclock_addr,
-	//
-	output reg  [ 2:0] comport_addr,
-	//
-	output wire        wait_start_gluclock, // begin wait from some ports
-	output wire        wait_start_comport,  //
-	//
-	output reg         wait_rnw,   // whether it was read(=1) or write(=0)
-	output reg  [ 7:0] wait_write,
-	input  wire [ 7:0] wait_read,
-
-
-	output wire        atmF7_wr_fclk, // used in atm_pager.v
-
-
-	output reg  [ 2:0] atm_scr_mode, // RG0..RG2 in docs
-	output reg         atm_turbo,    // turbo mode ON
-	output reg         atm_pen,      // pager_off in atm_pager.v, NOT inverted!!!
-	output reg         atm_cpm_n,    // permanent dos on
-	output reg         atm_pen2,     // PEN2 - fucking palette mode, NOT inverted!!!
-
-	output wire        romrw_en, // from port BF
-
-
-	output wire        pent1m_ram0_0, // d3.eff7
-	output wire        pent1m_1m_on,  // d2.eff7
-	output wire [ 5:0] pent1m_page,   // full 1 meg page number
-	output wire        pent1m_ROM,     // d4.7ffd
-
-
-	output wire        atm_palwr,   // palette write strobe
-	output wire [ 5:0] atm_paldata, // palette write data
-
-	output wire        covox_wr,
-	output wire        beeper_wr,
-
-	output wire        clr_nmi,
-
-	output wire        fnt_wr,		// write to font_ram enabled
-
-	// inputs from atm_pagers, to read back its config
-	input  wire [63:0] pages,
-	input  wire [ 7:0] ramnroms,
-	input  wire [ 7:0] dos7ffds,
-
-	input  wire [ 5:0] palcolor
+	input  wire        	zclk,   // z80 clock
+	input  wire        	fclk,  // global FPGA clock
+	input  wire        	rst_n, // system reset
+	
+	input  wire        	zpos,
+	input  wire        	zneg,
+	
+	
+	input  wire [ 7:0] 	din,
+	output reg  [ 7:0] 	dout,
+	output wire        	dataout,
+	input  wire [15:0] 	a,
+	
+	input  wire        	iorq_n,
+	input  wire        	mreq_n,
+	input  wire        	m1_n,
+	input  wire        	rd_n,
+	input  wire        	wr_n,
+	
+	output reg         	porthit, // when internal port hit occurs, this is 1, else 0; used for iorq1_n iorq2_n on zxbus
+	
+	output wire [15:0] 	ideout,
+	input  wire [15:0] 	idein,
+	output wire        	idedataout, // IDE must IN data from IDE device when idedataout=0, else it OUTs
+	output wire [ 2:0] 	ide_a,
+	output wire        	ide_cs0_n,
+	output wire        	ide_cs1_n,
+	output wire        	ide_rd_n,
+	output wire        	ide_wr_n,
+	
+	
+	input  wire [ 4:0] 	keys_in, // keys (port FE)
+	input  wire [ 7:0] 	mus_in,  // mouse (xxDF)
+	input  wire [ 4:0] 	kj_in,
+	
+	output reg  [ 3:0] 	border,
+	output reg		   	zx_n_apu_brd,
+	input wire		   	apu_border_we,
+	
+	
+	input  wire        	dos,
+	
+	
+	output wire        	ay_bdir,
+	output wire        	ay_bc1,
+	
+	output wire [ 7:0] 	p7ffd,
+	output wire [ 7:0] 	peff7,
+	
+	input  wire [ 1:0] 	rstrom,
+	
+	input  wire        	tape_read,
+	
+	output wire        	vg_cs_n,
+	input  wire        	vg_intrq,
+	input  wire        	vg_drq, // from vg93 module - drq + irq read
+	output wire        	vg_wrFF,        // write strobe of #FF port
+	
+	output reg         	sdcs_n,
+	output wire        	sd_start,
+	output wire [ 7:0] 	sd_datain,
+	input  wire [ 7:0] 	sd_dataout,
+	
+	// WAIT-ports relat	ed
+	//	
+	output reg  [ 7:0] 	gluclock_addr,
+	//	
+	output reg  [ 2:0] 	comport_addr,
+	//	
+	output wire        	wait_start_gluclock, // begin wait from some ports
+	output wire        	wait_start_comport,  //
+	//	
+	output reg         	wait_rnw,   // whether it was read(=1) or write(=0)
+	output reg  [ 7:0] 	wait_write,
+	input  wire [ 7:0] 	wait_read,
+	
+	
+	output wire        	atmF7_wr_fclk, // used in atm_pager.v
+	
+	
+	output reg  [ 2:0] 	atm_scr_mode, // RG0..RG2 in docs
+	output reg         	atm_turbo,    // turbo mode ON
+	output reg         	atm_pen,      // pager_off in atm_pager.v, NOT inverted!!!
+	output reg         	atm_cpm_n,    // permanent dos on
+	output reg         	atm_pen2,     // PEN2 - fucking palette mode, NOT inverted!!!
+	
+	output wire        	romrw_en, // from port BF
+	
+	
+	output wire        	pent1m_ram0_0, // d3.eff7
+	output wire        	pent1m_1m_on,  // d2.eff7
+	output wire [ 5:0] 	pent1m_page,   // full 1 meg page number
+	output wire        	pent1m_ROM,     // d4.7ffd
+	
+	
+	output wire        	atm_palwr,   // palette write strobe
+	output wire [ 5:0] 	atm_paldata, // palette write data
+	
+	output wire        	covox_wr,
+	output wire        	beeper_wr,
+	
+	output wire        	clr_nmi,
+	
+	output wire        	fnt_wr,		// write to font_ram enabled
+	output wire        	apu_wr,		// write to font_ram enabled
+	
+	// inputs from atm_	pagers, to read back its config
+	input  wire [63:0] 	pages,
+	input  wire [ 7:0] 	ramnroms,
+	input  wire [ 7:0] 	dos7ffds,
+	
+	input  wire [ 5:0] 	palcolor
+	
 );
 
 
@@ -220,6 +224,7 @@ module zports(
 	reg  shadow_en_reg; //bit0.xxBF
 	reg   romrw_en_reg; //bit1.xxBF
 	reg  fntw_en_reg; 	//bit2.xxBF
+	reg  acw_en_reg; 	//bit3.xxBF
 
 	wire shadow;
 
@@ -373,7 +378,7 @@ module zports(
 		end
 
 		ZXEVBF: begin
-			dout = { 5'b00000, fntw_en_reg, romrw_en_reg, shadow_en_reg };
+			dout = { 4'b0000, acw_en_reg, fntw_en_reg, romrw_en_reg, shadow_en_reg };
 		end
 
 		ZXEVBE: begin
@@ -413,8 +418,12 @@ module zports(
 
 	always @(posedge fclk)
 	if( portfe_wr_fclk )
+	begin
 		border <= { ~a[3], din[2:0] };
-
+		zx_n_apu_brd <= 1'b1;
+	end
+	else if (apu_border_we)
+		zx_n_apu_brd <= 1'b0;
 
 
 
@@ -759,12 +768,14 @@ module zports(
 		shadow_en_reg = 1'b0;
 		romrw_en_reg  = 1'b0;
 		fntw_en_reg   = 1'b0;
+		acw_en_reg   = 1'b0;
 	end
 	else if( zxevbf_wr_fclk )
 	begin
 		shadow_en_reg <= din[0];
 		romrw_en_reg  <= din[1];
 		fntw_en_reg   <= din[2];
+		acw_en_reg   <= din[3];
 	end
 
 	assign romrw_en = romrw_en_reg;
@@ -821,6 +832,10 @@ module zports(
 
 	// font write enable
 	assign fnt_wr = fntw_en_reg && mem_wr_fclk;
+
+	
+	// APU write enable
+	assign apu_wr = acw_en_reg && mem_wr_fclk;
 
 
 
