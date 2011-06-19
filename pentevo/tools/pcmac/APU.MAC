@@ -178,6 +178,7 @@ macro("SUB\  * R*, R*", NUMERIC, NUMERIC, NUMERIC)
 	DB	40h + #2 + ((#0-8)<<1), 90h + #1
 endm
 
+
 ;-- CMP -----------------------
 
 ; cmp dst, src
