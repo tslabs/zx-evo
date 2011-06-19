@@ -2,15 +2,15 @@
 
 		org     0
 
-		out 0 (0), r0
-		out 1 (0), r0
-		out 3 (0), r0
-		out 0 (15), r0
-		out 0 (15), r15
+		out 0 (apu_border), r0
+		out 1 (apu_covox), r0
+		out 3 (apu_data_w), r0
+		out 0 (apu_addr), r0
+		out 0 (sram_addr), r15
 l2:
 
-		wait for 10h
-		wait not 10h
+		wait for cend
+		wait not cbeg
 
 		jr l2
 		jr equal l1
@@ -18,9 +18,9 @@ l2:
 		jr not_equal l1
 		jr nz l1
 		
-		wait for 10h
+		wait for vsync
 l1:
-		wait not 10h
+		wait not hsync_start
 		
 		halt
 		

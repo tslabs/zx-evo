@@ -19,8 +19,21 @@ const	_JCF1 := (P, SL, SLE, SG, SGE, H, NH, NEVER)
 const	_JCC0 := (ALWAYS, EQUAL, LESS, NOT_EQUAL, GREATER, LESS_EQUAL, GREATER_EQUAL, NEGATIVE)
 const	_JCC1 := (POSITIVE, SIGNED_LESS, SIGNED_LESS_EQUAL, SIGNED_GREATER, SIGNED_GREATER_EQUAL, HALF_CARRY, NOT_HALF_CARRY, NEVER)
 
+; Port constants
+const	_PRW0 := (sram_addr, sram_data_w, apu_addr, apu_data_w, timer_data_w, apu_covox, apu_border)
+const	_PRW1 := (none)
+const	_PRR0 := (sram_data_r, apu_data_r, timer_data_r, hcnt, vcnt)
+const	_PRR1 := (none)
 
-; Instruction constants
+; Pin constants
+const	_PNW0 := (apu_req, apu_dram_bsel0, apu_dram_bsel1, apu_dram_rnw)
+const	_PNW1 := (none)
+const	_PNW2 := (none)
+const	_PNW3 := (none)
+const	_PNR0 := (timer_end, apu_strobe, hsync_start, hblank, vsync, vblank, cbeg, post_cbeg)
+const	_PNR1 := (pre_cend, cend, line_start)
+const	_PNR2 := (none)
+const	_PNR3 := (none)
 
 
 ;--- Pseudo op macro definitions ------------------------------
@@ -245,9 +258,20 @@ endm
 ;-- WAIT ----------------------
 
 ; wait for|not pin
-;macro("WAIT\  * *", _WI, _PORT)
-macro("WAIT\  * *", _WI, NUMERIC)
-	DB	00h | #1 + (#0<<5), 0FAh
+macro("WAIT\  * *", _WI, _PNR0)
+	DB	00h | #1 | (#0<<5), 0FAh
+endm
+
+macro("WAIT\  * *", _WI, _PNR1)
+	DB	08h | #1 | (#0<<5), 0FAh
+endm
+
+macro("WAIT\  * *", _WI, _PNR2)
+	DB	10h | #1 | (#0<<5), 0FAh
+endm
+
+macro("WAIT\  * *", _WI, _PNR3)
+	DB	18h | #1 | (#0<<5), 0FAh
 endm
 
 
@@ -259,25 +283,23 @@ macro("JR\  *", LABEL)
 	DB	0D0h
 endm
 
-; jr jcf0 rel8
+; jr jcf rel8
 macro("JR\  * *", _JCF0, LABEL)
 	DB	doureloc(#1 - $>>1)
 	DB	0D0h + #0
 endm
 
-; jr jcf1 rel8
 macro("JR\  * *", _JCF1, LABEL)
 	DB	doureloc(#1 - $>>1)
 	DB	0D8h + #0
 endm
 
-; jr jcc0 rel8
+; jr jcc rel8
 macro("JR\  * *", _JCC0, LABEL)
 	DB	doureloc(#1 - $>>1)
 	DB	0D0h + #0
 endm
 
-; jr jcc1 rel8
 macro("JR\  * *", _JCC1, LABEL)
 	DB	doureloc(#1 - $>>1)
 	DB	0D8h + #0
@@ -287,14 +309,21 @@ endm
 ;-- OUT -----------------------
 
 ; out (port), reg
-; macro("OUT\  (*), R*", _PORT, NUMERIC)
-macro("OUT\  (*), R*", NUMERIC, NUMERIC)
-	DB	80h + 30h + #0, 0C0h + #1
+macro("OUT\  (*), R*", _PRW0, NUMERIC)
+	DB	80h | 30h + #0, 0C0h + #1
+endm
+
+macro("OUT\  (*), R*", _PRW1, NUMERIC)
+	DB	88h | 30h + #0, 0C0h + #1
 endm
 
 ; out sz (port), reg
 ; macro("OUT\  * (*), R*", _PP, _PORT, NUMERIC)
-macro("OUT\  * (*), R*", NUMERIC, NUMERIC, NUMERIC)
-	DB	80h + (#0<<4) + #1, 0C0h + #2
+macro("OUT\  * (*), R*", NUMERIC, _PRW0, NUMERIC)
+	DB	80h | (#0<<4) + #1, 0C0h + #2
+endm
+
+macro("OUT\  * (*), R*", NUMERIC, _PRW1, NUMERIC)
+	DB	88h | (#0<<4) + #1, 0C0h + #2
 endm
 
