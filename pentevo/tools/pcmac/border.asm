@@ -7,14 +7,14 @@
 		
 		org 0
 		
-l1:
-		ld r0, 0
-		wait for 10		;line_start
-
-l2:
-		out (6), r0		;apu_border		0/4/8 - 7MHz pixels
-		inc r0			;				1
-		tst r0, 64		;				2
-		jr z l2			;				3
+l1:		ld r0, 0
+		wait for line_start
+								;		tacts count
+l2:		out (apu_border), r0	;	0/4/8 - 7MHz pixels
+		inc r0					;	1
+		tst r0, 64				;	2
+		jr z l2					;	3
 		
 		jr l1
+		
+		
