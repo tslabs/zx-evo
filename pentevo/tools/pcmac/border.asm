@@ -8,9 +8,9 @@
 		org 0
 		
 l1:		ld r0, 0
-		wait for line_start
+		wait line_start
 								;		tacts count
-l2:		out (apu_border), r0	;	0/4/8 - 7MHz pixels
+l2:		out (border), r0	;	0/4/8 - 7MHz pixels
 		inc r0					;	1
 		tst r0, 64				;	2
 		jr z l2					;	3

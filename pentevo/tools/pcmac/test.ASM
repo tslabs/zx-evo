@@ -2,15 +2,20 @@
 
 		org     0
 
-		out 0 (apu_border), r0
-		out 1 (apu_covox), r0
-		out 3 (apu_data_w), r0
-		out 0 (apu_addr), r0
+		in r0, (sram_data)
+		in r0, (vcnt)
+		in 0 r0, (sram_data)
+		in 3 r0, (sram_data)
+		
+		out 0 (border), r0
+		out 1 (covox), r0
+		out 3 (dram_data), r0
+		out 0 (dram_addr), r0
 		out 0 (sram_addr), r15
 l2:
 
-		wait for cend
-		wait not cbeg
+		wait for none
+		wait not none
 
 		jr l2
 		jr equal l1
@@ -24,16 +29,6 @@ l1:
 		
 		halt
 		
-		dec r0
-		dec r15
-		dec 8 r0
-		dec 32 r0
-
-		inc r0
-		inc r15
-		inc 8 r0
-		inc 32 r0
-
 		xor r0, r0
 		xor 32 r0, r0
 		tst r0, r0
@@ -64,4 +59,64 @@ l1:
 		xor r9, 7
 		sub r10, 100
 		or r0, 255
+		
+		wait cbeg
+		wait post_cbeg
+		wait pre_cend
+		wait cend
+		
+		wait hblank
+		wait hblank, cbeg
+		wait for hblank, cbeg
+		wait not hblank, cbeg
+		
+		inc r0
+		inc r15
+		inc 8 r0
+		inc 32 r0
+
+		dec r0
+		dec r15
+		dec 8 r0
+		dec 32 r0
+
+		cpl r0
+		cpl 8 r0
+		cpl 32 r0
+		cpl r15
+		
+		neg r0
+		neg 8 r0
+		neg 32 r0
+		neg r15
+		
+		cmp r0, 0
+		cmp r0, 255
+
+		tst r0, 0
+		tst r0, 255
+		
+		halt
+		
+		wait (hcnt) r0
+		wait (vcnt) r0
+		wait (vcnt) r15
+		wait 0 (vcnt) r15
+		wait 1 (vcnt) r15
+
+		wait (vcnt) is r0
+		wait (vcnt) less r0
+		wait (vcnt) greater r0
+		wait (vcnt) not r0
+		
+		wait 0 (vcnt) is r0
+		wait 0 (vcnt) less r0
+		wait 0 (vcnt) greater r0
+		wait 0 (vcnt) not r0
+		wait 1 (vcnt) not r0
+		wait 2 (vcnt) not r0
+		wait 3 (vcnt) not r0
+		
+		
+		
 		
