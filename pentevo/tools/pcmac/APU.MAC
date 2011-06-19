@@ -10,10 +10,14 @@
 ;*******************************************************
 
 
-; Size constants
-const	_SZ	:=	(8, 16, 24, 32) 
+; Wait conditions
+const	_WI	:=	(FOR, NOT) 
 
 ; Condition constants
+const	_JCF0 := (ALWAYS, Z, C, NZ, G, LE, GE, N)
+const	_JCF1 := (P, SL, SLE, SG, SGE, H, NH, NEVER)
+const	_JCC0 := (ALWAYS, EQUAL, LESS, NOT_EQUAL, GREATER, LESS_EQUAL, GREATER_EQUAL, NEGATIVE)
+const	_JCC1 := (POSITIVE, SIGNED_LESS, SIGNED_LESS_EQUAL, SIGNED_GREATER, SIGNED_GREATER_EQUAL, HALF_CARRY, NOT_HALF_CARRY, NEVER)
 
 
 ; Instruction constants
@@ -36,7 +40,7 @@ endm
 
 ; ld dst, src
 macro("LD\  R*, R*", NUMERIC, NUMERIC)
-	DB	00h + #1, 60h + #0
+	DB	00h + #1, 80h + #0
 endm
 
 ; ld dst, imm8
@@ -45,11 +49,11 @@ macro("LD\  R*, *", NUMERIC, NUMERIC)
 endm
 
 ; ld sz, dst, src
-macro("LD\  *, R*, R*", NUMERIC, NUMERIC, NUMERIC)
+macro("LD\  * R*, R*", NUMERIC, NUMERIC, NUMERIC)
 #if	#0 & 7 || #0 > 32
 #error	"SZ parameter must be 8, 16, 24 or 32."
 #endif 
-	DB	00h + #2 + ((#0-8)<<1), 60h + #1
+	DB	00h + #2 + ((#0-8)<<1), 80h + #1
 endm
 
 
@@ -57,7 +61,7 @@ endm
 
 ; and dst, src
 macro("AND\  R*, R*", NUMERIC, NUMERIC)
-	DB	40h + #1, 60h + #0
+	DB	40h + #1, 80h + #0
 endm
 
 ; and dst, imm8
@@ -66,32 +70,11 @@ macro("AND\  R*, *", NUMERIC, NUMERIC)
 endm
 
 ; and sz, dst, src
-macro("AND\  *, R*, R*", NUMERIC, NUMERIC, NUMERIC)
+macro("AND\  * R*, R*", NUMERIC, NUMERIC, NUMERIC)
 #if	#0 & 7 || #0 > 32
 #error	"SZ parameter must be 8, 16, 24 or 32."
 #endif 
-	DB	40h + #2 + ((#0-8)<<1), 60h + #1
-endm
-
-
-;-- XOR -----------------------
-
-; xor dst, src
-macro("XOR\  R*, R*", NUMERIC, NUMERIC)
-	DB	C0h + #1, 60h + #0
-endm
-
-; xor dst, imm8
-macro("XOR\  R*, *", NUMERIC, NUMERIC)
-	DB	#1, 30h + #0
-endm
-
-; xor sz, dst, src
-macro("XOR\  *, R*, R*", NUMERIC, NUMERIC, NUMERIC)
-#if	#0 & 7 || #0 > 32
-#error	"SZ parameter must be 8, 16, 24 or 32."
-#endif 
-	DB	C0h + #2 + ((#0-8)<<1), 60h + #1
+	DB	40h + #2 + ((#0-8)<<1), 80h + #1
 endm
 
 
@@ -99,7 +82,7 @@ endm
 
 ; or dst, src
 macro("OR\  R*, R*", NUMERIC, NUMERIC)
-	DB	80h + #1, 60h + #0
+	DB	80h + #1, 80h + #0
 endm
 
 ; or dst, imm8
@@ -108,11 +91,32 @@ macro("OR\  R*, *", NUMERIC, NUMERIC)
 endm
 
 ; or sz, dst, src
-macro("OR\  *, R*, R*", NUMERIC, NUMERIC, NUMERIC)
+macro("OR\  * R*, R*", NUMERIC, NUMERIC, NUMERIC)
 #if	#0 & 7 || #0 > 32
 #error	"SZ parameter must be 8, 16, 24 or 32."
 #endif 
-	DB	80h + #2 + ((#0-8)<<1), 60h + #1
+	DB	80h + #2 + ((#0-8)<<1), 80h + #1
+endm
+
+
+;-- XOR -----------------------
+
+; xor dst, src
+macro("XOR\  R*, R*", NUMERIC, NUMERIC)
+	DB	0C0h + #1, 80h + #0
+endm
+
+; xor dst, imm8
+macro("XOR\  R*, *", NUMERIC, NUMERIC)
+	DB	#1, 30h + #0
+endm
+
+; xor sz, dst, src
+macro("XOR\  * R*, R*", NUMERIC, NUMERIC, NUMERIC)
+#if	#0 & 7 || #0 > 32
+#error	"SZ parameter must be 8, 16, 24 or 32."
+#endif 
+	DB	0C0h + #2 + ((#0-8)<<1), 80h + #1
 endm
 
 
@@ -120,7 +124,7 @@ endm
 
 ; add dst, src
 macro("ADD\  R*, R*", NUMERIC, NUMERIC)
-	DB	00h + #1, 70h + #0
+	DB	00h + #1, 90h + #0
 endm
 
 ; add dst, imm8
@@ -129,11 +133,11 @@ macro("ADD\  R*, *", NUMERIC, NUMERIC)
 endm
 
 ; add sz, dst, src
-macro("ADD\  *, R*, R*", NUMERIC, NUMERIC, NUMERIC)
+macro("ADD\  * R*, R*", NUMERIC, NUMERIC, NUMERIC)
 #if	#0 & 7 || #0 > 32
 #error	"SZ parameter must be 8, 16, 24 or 32."
 #endif 
-	DB	00h + #2 + ((#0-8)<<1), 70h + #1
+	DB	00h + #2 + ((#0-8)<<1), 90h + #1
 endm
 
 
@@ -141,7 +145,7 @@ endm
 
 ; sub dst, src
 macro("SUB\  R*, R*", NUMERIC, NUMERIC)
-	DB	40h + #1, 70h + #0
+	DB	40h + #1, 90h + #0
 endm
 
 ; sub dst, imm8
@@ -150,26 +154,31 @@ macro("SUB\  R*, *", NUMERIC, NUMERIC)
 endm
 
 ; sub sz, dst, src
-macro("SUB\  *, R*, R*", NUMERIC, NUMERIC, NUMERIC)
+macro("SUB\  * R*, R*", NUMERIC, NUMERIC, NUMERIC)
 #if	#0 & 7 || #0 > 32
 #error	"SZ parameter must be 8, 16, 24 or 32."
 #endif 
-	DB	40h + #2 + ((#0-8)<<1), 70h + #1
+	DB	40h + #2 + ((#0-8)<<1), 90h + #1
 endm
 
 ;-- CMP -----------------------
 
 ; cmp dst, src
 macro("CMP\  R*, R*", NUMERIC, NUMERIC)
-	DB	80h + #1, 70h + #0
+	DB	80h + #1, 90h + #0
+endm
+
+; cmp dst, imm8
+macro("CMP\  R*, *", NUMERIC, NUMERIC)
+	DB	#1, 60h + #0
 endm
 
 ; cmp sz, dst, src
-macro("CMP\  *, R*, R*", NUMERIC, NUMERIC, NUMERIC)
+macro("CMP\  * R*, R*", NUMERIC, NUMERIC, NUMERIC)
 #if	#0 & 7 || #0 > 32
 #error	"SZ parameter must be 8, 16, 24 or 32."
 #endif 
-	DB	80h + #2 + ((#0-8)<<1), 70h + #1
+	DB	80h + #2 + ((#0-8)<<1), 90h + #1
 endm
 
 
@@ -177,15 +186,20 @@ endm
 
 ; tst dst, src
 macro("TST\  R*, R*", NUMERIC, NUMERIC)
-	DB	C0h + #1, 70h + #0
+	DB	0C0h + #1, 90h + #0
+endm
+
+; tst dst, imm8
+macro("TST\  R*, *", NUMERIC, NUMERIC)
+	DB	#1, 70h + #0
 endm
 
 ; tst sz, dst, src
-macro("TST\  *, R*, R*", NUMERIC, NUMERIC, NUMERIC)
+macro("TST\  * R*, R*", NUMERIC, NUMERIC, NUMERIC)
 #if	#0 & 7 || #0 > 32
 #error	"SZ parameter must be 8, 16, 24 or 32."
 #endif 
-	DB	C0h + #2 + ((#0-8)<<1), 70h + #1
+	DB	0C0h + #2 + ((#0-8)<<1), 90h + #1
 endm
 
 
@@ -193,14 +207,94 @@ endm
 
 ; inc src
 macro("INC\  R*", NUMERIC)
-	DB	00h + #0, F0h
+	DB	00h + #0, 0F0h
 endm
 
 ; inc sz, src
-macro("INC\  *, R*", NUMERIC, NUMERIC)
+macro("INC\  * R*", NUMERIC, NUMERIC)
 #if	#0 & 7 || #0 > 32
 #error	"SZ parameter must be 8, 16, 24 or 32."
 #endif 
-	DB	00h + #1 + ((#0-8)<<1), F0h
+	DB	00h + #1 + ((#0-8)<<1), 0F0h
+endm
+
+
+;-- DEC -----------------------
+
+; dec src
+macro("DEC\  R*", NUMERIC)
+	DB	40h + #0, 0F0h
+endm
+
+; dec sz, src
+macro("DEC\  * R*", NUMERIC, NUMERIC)
+#if	#0 & 7 || #0 > 32
+#error	"SZ parameter must be 8, 16, 24 or 32."
+#endif 
+	DB	40h + #1 + ((#0-8)<<1), 0F0h
+endm
+
+
+;-- HALT ----------------------
+
+macro("HALT")
+	DB 0FFh, 0FFh
+endm
+
+
+;-- WAIT ----------------------
+
+; wait for|not pin
+;macro("WAIT\  * *", _WI, _PORT)
+macro("WAIT\  * *", _WI, NUMERIC)
+	DB	00h | #1 + (#0<<5), 0FAh
+endm
+
+
+;-- JMP -----------------------
+
+; jr rel8
+macro("JR\  *", LABEL)
+	DB	doureloc(#0 - $>>1)
+	DB	0D0h
+endm
+
+; jr jcf0 rel8
+macro("JR\  * *", _JCF0, LABEL)
+	DB	doureloc(#1 - $>>1)
+	DB	0D0h + #0
+endm
+
+; jr jcf1 rel8
+macro("JR\  * *", _JCF1, LABEL)
+	DB	doureloc(#1 - $>>1)
+	DB	0D8h + #0
+endm
+
+; jr jcc0 rel8
+macro("JR\  * *", _JCC0, LABEL)
+	DB	doureloc(#1 - $>>1)
+	DB	0D0h + #0
+endm
+
+; jr jcc1 rel8
+macro("JR\  * *", _JCC1, LABEL)
+	DB	doureloc(#1 - $>>1)
+	DB	0D8h + #0
+endm
+
+
+;-- OUT -----------------------
+
+; out (port), reg
+; macro("OUT\  (*), R*", _PORT, NUMERIC)
+macro("OUT\  (*), R*", NUMERIC, NUMERIC)
+	DB	80h + 30h + #0, 0C0h + #1
+endm
+
+; out sz (port), reg
+; macro("OUT\  * (*), R*", _PP, _PORT, NUMERIC)
+macro("OUT\  * (*), R*", NUMERIC, NUMERIC, NUMERIC)
+	DB	80h + (#0<<4) + #1, 0C0h + #2
 endm
 
