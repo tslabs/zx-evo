@@ -70,23 +70,18 @@ module apu(
 	wire [3:0]	ih		= instr[15:12];					// instruction class 4
 	wire [3:0]	im		= instr[11:8];					// instruction sub-class 4
 
-	wire [2:0]	a1fh		= instr[14:12];				// ALU1 function class 4
-	wire [2:0]	a1fm		= {instr[12], instr[7:6]};	// ALU1 function sub-class 4
-	wire [1:0]	a2fm		= {instr[7:6]};				// ALU2 function sub-class 4
-	wire [1:0]	a3fm		= {instr[5:4]};				// ALU3 function sub-class 4
-	wire [2:0]	a4fm		= {instr[8:6]};				// ALU4 function sub-class 4
-						
+	wire [2:0]	a1fh	= instr[14:12];					// ALU1 function class 4
+	wire [2:0]	a1fm	= {instr[12], instr[7:6]};		// ALU1 function sub-class 4
+	wire [1:0]	a2fm	= {instr[7:6]};					// ALU2 function sub-class 4
+	wire [1:0]	a3fm	= {instr[5:4]};					// ALU3 function sub-class 4
+	wire [2:0]	bfm		= {instr[8:6]};					// Barrel function sub-class 4
+
 	wire [7:0]	imm		= instr[7:0];					// immediate 8
 
 	wire [15:0]	rel		= {{8{instr[7]}}, instr[7:0]};	// relative addr 16
 	
-	wire [3:0]	src8	= instr[3:0];					// source reg8 4
-	wire [3:0]	src16	= {instr[3:1], 1'b0};			// source reg16 4
-	wire [3:0]	src32	= {instr[3:2], 2'b0};			// source reg32 4
-
-	wire [3:0]	dst8	= instr[11:8];					// destination reg8 4
-	wire [3:0]	dst16	= {instr[11:9], 1'b0};			// destination reg16 4
-	wire [3:0]	dst32	= {instr[11:10], 2'b0};			// destination reg32 4
+	wire [3:0]	src		= instr[3:0];					// source reg8 4
+	wire [3:0]	dst		= instr[11:8];					// destination reg8 4
 
 	wire [1:0]	sz		= instr[5:4];					// sizeness 2
 
@@ -102,24 +97,29 @@ module apu(
 //- Instructions decoding -------------------------------------
 
 //- ALU arguments decoding ------------------------------------
+// input:	ih 4
+// output:	ih_arg1 - 1st argument (dst)
+// 			ih_arg1 - 2nd argument (src)
+// used in:	ALU1, ALU2, ALU3, Barrel
+
 	wire [31:0] ih_arg1[0:15];		// first argument for main class
 	wire [31:0] ih_arg2[0:15];		// second argument for main class
 	
 	assign ih_arg1[4'b0000] = 32'hXXXX;
-	assign ih_arg1[4'b0001] = gpr_dst_sz[sz];
-	assign ih_arg1[4'b0010] = gpr_dst_sz[sz];
-	assign ih_arg1[4'b0011] = gpr_dst_sz[sz];
-	assign ih_arg1[4'b0100] = gpr_dst_sz[sz];
-	assign ih_arg1[4'b0101] = gpr_dst_sz[sz];
-	assign ih_arg1[4'b0110] = gpr_dst_sz[sz];
-	assign ih_arg1[4'b0111] = gpr_dst_sz[sz];
-	assign ih_arg1[4'b1000] = gpr_dst_sz[sz];
-	assign ih_arg1[4'b1001] = gpr_dst_sz[sz];
+	assign ih_arg1[4'b0001] = dst_sz[sz];
+	assign ih_arg1[4'b0010] = dst_sz[sz];
+	assign ih_arg1[4'b0011] = dst_sz[sz];
+	assign ih_arg1[4'b0100] = dst_sz[sz];
+	assign ih_arg1[4'b0101] = dst_sz[sz];
+	assign ih_arg1[4'b0110] = dst_sz[sz];
+	assign ih_arg1[4'b0111] = dst_sz[sz];
+	assign ih_arg1[4'b1000] = dst_sz[sz];
+	assign ih_arg1[4'b1001] = dst_sz[sz];
 	assign ih_arg1[4'b1010] = 32'hXXXX;
 	assign ih_arg1[4'b1011] = port_r_sz[sz];
 	assign ih_arg1[4'b1100] = 32'hXXXX;
 	assign ih_arg1[4'b1101] = 32'hXXXX;
-	assign ih_arg1[4'b1110] = gpr_dst_sz[sz];
+	assign ih_arg1[4'b1110] = dst_sz[sz];
 	assign ih_arg1[4'b1111] = 32'hXXXX;
 
 	assign ih_arg2[4'b0000] = {24'b0, imm};
@@ -130,17 +130,39 @@ module apu(
 	assign ih_arg2[4'b0101] = {24'b0, imm};
 	assign ih_arg2[4'b0110] = {24'b0, imm};
 	assign ih_arg2[4'b0111] = {24'b0, imm};
-	assign ih_arg2[4'b1000] = gpr_src_sz[sz];
-	assign ih_arg2[4'b1001] = gpr_src_sz[sz];
+	assign ih_arg2[4'b1000] = src_sz[sz];
+	assign ih_arg2[4'b1001] = src_sz[sz];
 	assign ih_arg2[4'b1010] = 32'hXXXX;
-	assign ih_arg2[4'b1011] = gpr_src_sz[sz];
+	assign ih_arg2[4'b1011] = src_sz[sz];
 	assign ih_arg2[4'b1100] = 32'hXXXX;
 	assign ih_arg2[4'b1101] = 32'hXXXX;
-	assign ih_arg2[4'b1110] = gpr_dst_sz[sz];
-	assign ih_arg2[4'b1111] = gpr_src_sz[sz];
+	assign ih_arg2[4'b1110] = dst_sz[sz];
+	assign ih_arg2[4'b1111] = src_sz[sz];
 
 
 //- GPR Sizeness decoding -------------------------------------
+// input:	sz 2
+// output:	src_sz, dst_sz - number of 1st GPR in cluster
+// used in:	ALU arguments
+// notice:	used to aline gpr pairs and quads, just to minimize number of muxes
+
+	wire [3:0] src_sz[0:3];
+	wire [3:0] dst_sz[0:3];
+	
+	assign src_sz[2'b00] = src;
+	assign src_sz[2'b01] = {src[3:1], 1'b0};
+	assign src_sz[2'b10] = {src[3:2], 2'b0};
+	assign src_sz[2'b11] = {src[3:2], 2'b0};
+
+	assign dst_sz[2'b00] = dst;
+	assign dst_sz[2'b01] = {dst[3:1], 1'b0};
+	assign dst_sz[2'b10] = {dst[3:2], 2'b0};
+	assign dst_sz[2'b11] = {dst[3:2], 2'b0};
+
+
+// input:	sz 2
+// output:	gpr_src_sz - "src" instruction argument, coerced to 
+
 	wire [31:0] gpr_src_sz[0:3];
 	
 	assign gpr_src_sz[2'b00] = {24'b0, gpr[src8]};
@@ -192,6 +214,10 @@ module apu(
 							gpr[src8][6], gpr[src8][7]};	// flip
 
 	
+//- Barrel fuctions ---------------------------------------------
+	wire [31:0] bfunc[0:15];
+
+
 //- Jump Condition decoding -----------------------------------
 	wire jcond[0:15];
 
