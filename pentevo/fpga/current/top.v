@@ -687,10 +687,21 @@ module top(
 				   .ramnroms( rd_ramnrom ),
 				   .dos7ffds( rd_dos7ffd ),
 
-				   .palcolor(palcolor)
+				   .palcolor(palcolor),
+				   
+				   .portfe_wr_fclk(portfe_wr_fclk),
+				   .dtest(dout_test),
 	             );
 
+	wire [7:0] dout_test;
 
+	test test(
+				   .portfe_wr_fclk(portfe_wr_fclk),
+				   .din(d), .dout(dout_test),
+	               .a(a),
+				   .clk(fclk)
+			);
+				 
 	zint zint(
 		.fclk(fclk),
 		.zpos(zpos),

@@ -114,8 +114,13 @@ module zports(
 	input  wire [ 7:0] ramnroms,
 	input  wire [ 7:0] dos7ffds,
 
-	input  wire [ 5:0] palcolor
-);
+	input  wire [ 5:0] palcolor,
+
+	input  wire [ 7:0] dtest,
+	
+	output wire portfe_wr_fclk
+	
+	);
 
 
 	reg rstsync1,rstsync2;
@@ -328,7 +333,6 @@ module zports(
 		mem_wr_fclk <= memwr_reg_fclk[0] && (!memwr_reg_fclk[1]);
 
 
-
 	// dout data
 	always @*
 	begin
@@ -336,7 +340,7 @@ module zports(
 		PORTFE:
 			dout = { 1'b1, tape_read, 1'b0, keys_in };
 		PORTF6:
-			dout = { 1'b1, tape_read, 1'b0, keys_in };
+			dout = dtest;
 
 
 		NIDE10,NIDE30,NIDE50,NIDE70,NIDE90,NIDEB0,NIDED0,NIDEF0,NIDEC8:
@@ -411,9 +415,6 @@ module zports(
 
 	assign portfe_wr_fclk = (((loa==PORTFE) || (loa==PORTF6)) && port_wr_fclk);
 
-	always @(posedge fclk)
-	if( portfe_wr_fclk )
-		border <= { ~a[3], din[2:0] };
 
 
 
