@@ -95,6 +95,14 @@ module apu(
 
 
 //- Instructions decoding -------------------------------------
+	wire inst[0:15]
+	
+	generate
+		genvar i;
+		for(i=0;i<16;i=i+1)
+		assign inst[i] = ih == i;
+	endgenerate
+
 
 //- ALU arguments decoding ------------------------------------
 // input:	ih 4
