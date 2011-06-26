@@ -114,8 +114,14 @@ module zports(
 	input  wire [ 7:0] ramnroms,
 	input  wire [ 7:0] dos7ffds,
 
-	input  wire [ 5:0] palcolor
-);
+	input  wire [ 5:0] palcolor,
+
+	input  wire [ 15:0] alu_in,
+
+	output reg [15:0] alu_src,
+	output reg [15:0] alu_arg
+
+	);
 
 
 	reg rstsync1,rstsync2;
@@ -328,15 +334,14 @@ module zports(
 		mem_wr_fclk <= memwr_reg_fclk[0] && (!memwr_reg_fclk[1]);
 
 
-
 	// dout data
 	always @*
 	begin
 		case( loa )
 		PORTFE:
-			dout = { 1'b1, tape_read, 1'b0, keys_in };
+			dout = alu_in[15:8];
 		PORTF6:
-			dout = { 1'b1, tape_read, 1'b0, keys_in };
+			dout = alu_in[7:0];
 
 
 		NIDE10,NIDE30,NIDE50,NIDE70,NIDE90,NIDEB0,NIDED0,NIDEF0,NIDEC8:
@@ -407,13 +412,20 @@ module zports(
 
 
 	//border port FE
-	wire portwe_wr_fclk;
 
-	assign portfe_wr_fclk = (((loa==PORTFE) || (loa==PORTF6)) && port_wr_fclk);
-
+	
 	always @(posedge fclk)
-	if( portfe_wr_fclk )
-		border <= { ~a[3], din[2:0] };
+	if (((loa==PORTFE)) && port_wr_fclk)
+	begin
+		alu_src <= {a[15:8], din};
+	end
+	
+	always @(posedge fclk)
+	if (((loa==PORTF6)) && port_wr_fclk)
+	begin
+		alu_arg <= {a[15:8], din};
+	end
+	
 
 
 
@@ -814,7 +826,6 @@ module zports(
 
 	// covox/beeper writes
 
-	assign beeper_wr = (loa==PORTFE) && portfe_wr_fclk;
 	assign covox_wr  = (loa==COVOX) && port_wr_fclk;
 
 
