@@ -1,6 +1,6 @@
 `include "../include/tune.v"
 
-// PentEvo project (c) NedoPC 2008-2009
+// PentEvo project (c) NedoPC 2008-2011
 //
 // APU ALU
 //
@@ -16,21 +16,21 @@ module	apu_alu(
 	input wire	[3:0]	func,
 	input wire	[1:0]	sz,
 
-	output wire	[31:0]	dst,
+	output wire	[31:0]	res,
 	output wire			fz,
 	output wire			fs,
 	output wire			fc,
-	output wire			fv,
+	output wire			fv
 	
 		);
 
-	wire [31:0]	res[0:15];
+	wire [31:0]	rs[0:15];
 	wire		zf[0:3];
 	wire		sf[0:3];
 	wire		cf[0:15];
 	wire		vf[0:15];
 
-	assign dst = res[func];
+	assign res = rs[func];
 	assign fz = zf[sz];
 	assign fs = sf[sz];
 	assign fc = cf[func];
@@ -87,15 +87,15 @@ module	apu_alu(
 	wire v_nul[0:3];
 	wire v_mul[0:3];
 	
-	assign zf [2'b00] = dst[ 7:0] == 8'b0;
-	assign zf [2'b01] = dst[15:0] == 16'b0;
-	assign zf [2'b10] = dst[23:0] == 24'b0;
-	assign zf [2'b11] = dst[31:0] == 32'b0;
+	assign zf [2'b00] = res[ 7:0] == 8'b0;
+	assign zf [2'b01] = res[15:0] == 16'b0;
+	assign zf [2'b10] = res[23:0] == 24'b0;
+	assign zf [2'b11] = res[31:0] == 32'b0;
 
-	assign sf [2'b00] = dst[ 7];
-	assign sf [2'b01] = dst[15];
-	assign sf [2'b10] = dst[23];
-	assign sf [2'b11] = dst[31];
+	assign sf [2'b00] = res[ 7];
+	assign sf [2'b01] = res[15];
+	assign sf [2'b10] = res[23];
+	assign sf [2'b11] = res[31];
 
 	assign cf[4'b0000] 	= c_ld [sz];			// LOAD
 	assign cf[4'b0001] 	= c_and[sz];			// AND
@@ -131,22 +131,22 @@ module	apu_alu(
 	assign vf[4'b1110] 	= v_nul[sz];			// 0
 	assign vf[4'b1111] 	= v_mul[sz];			// MUL
 
-	assign res[4'b0000] = r_ld [sz];			// LOAD
-	assign res[4'b0001] = r_and[sz];			// AND
-	assign res[4'b0010] = r_or [sz]; 			// OR
-	assign res[4'b0011] = r_xor[sz];			// XOR
-	assign res[4'b0100] = r_add[sz];			// ADD
-	assign res[4'b0101] = r_sub[sz];			// SUB
-	assign res[4'b0110] = r_adc[sz];			// ADC
-	assign res[4'b0111] = r_sbc[sz];			// SBC
-	assign res[4'b1000] = r_rl [sz]; 			// RL
-	assign res[4'b1001] = r_rr [sz];			// RR
-	assign res[4'b1010] = r_rlc[sz];			// RLC
-	assign res[4'b1011] = r_rrc[sz];			// RRC
-	assign res[4'b1100] = r_sra[sz];			// SRA
-	assign res[4'b1101] = r_srz[sz];			// SRZ
-	assign res[4'b1110] = r_nul[sz];			// 0
-	assign res[4'b1111] = r_mul[sz];			// MUL
+	assign rs[4'b0000] = r_ld [sz];				// LOAD
+	assign rs[4'b0001] = r_and[sz];				// AND
+	assign rs[4'b0010] = r_or [sz]; 			// OR
+	assign rs[4'b0011] = r_xor[sz];				// XOR
+	assign rs[4'b0100] = r_add[sz];				// ADD
+	assign rs[4'b0101] = r_sub[sz];				// SUB
+	assign rs[4'b0110] = r_adc[sz];				// ADC
+	assign rs[4'b0111] = r_sbc[sz];				// SBC
+	assign rs[4'b1000] = r_rl [sz]; 			// RL
+	assign rs[4'b1001] = r_rr [sz];				// RR
+	assign rs[4'b1010] = r_rlc[sz];				// RLC
+	assign rs[4'b1011] = r_rrc[sz];				// RRC
+	assign rs[4'b1100] = r_sra[sz];				// SRA
+	assign rs[4'b1101] = r_srz[sz];				// SRZ
+	assign rs[4'b1110] = r_nul[sz];				// 0
+	assign rs[4'b1111] = r_mul[sz];				// MUL
 
 // 0 - LOAD
 	assign r_ld  [2'b00] = src;
@@ -165,10 +165,10 @@ module	apu_alu(
 	assign v_ld  [2'b11] = 1'bX;
 
 // 1 - AND
-	assign r_and [2'b00] = src && arg;
-	assign r_and [2'b01] = src && arg;
-	assign r_and [2'b10] = src && arg;
-	assign r_and [2'b11] = src && arg;
+	assign r_and [2'b00] = src & arg;
+	assign r_and [2'b01] = src & arg;
+	assign r_and [2'b10] = src & arg;
+	assign r_and [2'b11] = src & arg;
 
 	assign c_and [2'b00] = 1'bX;
 	assign c_and [2'b01] = 1'bX;
@@ -181,10 +181,10 @@ module	apu_alu(
 	assign v_and [2'b11] = 1'bX;
 
 // 2 - OR
-	assign r_or [2'b00] = src || arg;
-	assign r_or [2'b01] = src || arg;
-	assign r_or [2'b10] = src || arg;
-	assign r_or [2'b11] = src || arg;
+	assign r_or [2'b00] = src | arg;
+	assign r_or [2'b01] = src | arg;
+	assign r_or [2'b10] = src | arg;
+	assign r_or [2'b11] = src | arg;
              
 	assign c_or [2'b00] = 1'bX;
 	assign c_or [2'b01] = 1'bX;
@@ -197,10 +197,10 @@ module	apu_alu(
 	assign v_or [2'b11] = 1'bX;
 
 // 3 - XOR
-	assign r_xor [2'b00] = src ^^ arg;
-	assign r_xor [2'b01] = src ^^ arg;
-	assign r_xor [2'b10] = src ^^ arg;
-	assign r_xor [2'b11] = src ^^ arg;
+	assign r_xor [2'b00] = src ^ arg;
+	assign r_xor [2'b01] = src ^ arg;
+	assign r_xor [2'b10] = src ^ arg;
+	assign r_xor [2'b11] = src ^ arg;
 
 	assign c_xor [2'b00] = 1'bX;
 	assign c_xor [2'b01] = 1'bX;
