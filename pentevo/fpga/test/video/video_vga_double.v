@@ -126,7 +126,7 @@ module mem1536(
 	begin
 		if( wr_stb )
 		begin
-			mem[wraddr] <= wrdata;
+			mem[wraddr] <= 8'b0;
 		end
 
 		rddata <= mem[rdaddr];
