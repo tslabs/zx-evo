@@ -689,13 +689,13 @@ module top(
 
 				   .palcolor(palcolor),
 				   
-					.alu_src({16'b0, alu_src}),
+					.alu_src(alu_src),
 					.alu_arg(alu_arg),
-				   .alu_in(alu_out),
+					.alu_in(alu_out),
 	             );
 
-	wire	[31:0]	alu_src;
-	wire	[31:0]	alu_arg;
+	wire	[15:0]	alu_src;
+	wire	[15:0]	alu_arg;
 	wire 	[15:0] 	alu_out;
 	wire	[3:0]	func;
 	wire	[1:0]	sz;
@@ -703,8 +703,8 @@ module top(
 	wire [5:0] rnd = {vred, vgrn, vblu};
 	
 	apu_alu apu_alu(
-				   .src	(alu_src),
-				   .arg	(alu_arg),
+				   .src	({16'h0000, alu_src}),
+				   .arg	({16'h0000, alu_arg}),
 				   .res	(alu_out),
 				   .c	(rnd[4]),
 				   .func(rnd[3:0]),
