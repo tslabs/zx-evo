@@ -25,17 +25,6 @@ module	apu_alu(
 		);
 
 
-	wire [31:0] r_add[0:3];
-	wire [31:0] r_sub[0:3];
-	wire [31:0] r_rl [0:3];
-	wire [31:0] r_rr [0:3];
-	wire [31:0] r_mul[0:3];
-	
-	wire ca[0:3];
-	wire cs[0:3];
-	wire cl[0:3];
-
-
 	// Flag Z
 	always @*
 	case (sz)
@@ -69,95 +58,113 @@ module	apu_alu(
 	// Flag C
 	always @*
 	casex (func)
-4'b0000:	fc = 1'b0;						// LOAD
-4'b0001:	fc = 1'b0;	    				// AND
-4'b0010:    fc = 1'b0; 	    				// OR
-4'b0011:    fc = 1'b0;	    				// XOR
-4'b010X:    fc = ca[sz];    				// ADD, ADC
-4'b011X:    fc = cs[sz];    				// SUB, SBC
+4'b00XX:	fc = 1'b0;						// LOAD, AND, OR, XOR
+4'b01XX:    fc = cx[sz];    				// ADD, ADC, SUB, SBC
 4'b10XX:    fc = cr;	    				// RR, RRC, SRA, SRZ
 4'b110X:    fc = cl[sz];    				// RL, RLC
 4'b111X:    fc = 1'b0;	    				// MUL, MULS
 	endcase
 
 
+	// Result
 	always @*
 	casex (func)
 4'b0000:	res = src;						// LOAD
 4'b0001:	res = src & arg;				// AND
 4'b0010:    res = src | arg;				// OR
 4'b0011:    res = src ^ arg;				// XOR
-4'b010X:    res = r_add[sz];				// ADD, ADC
-4'b011X:    res = r_sub[sz];				// SUB, SBC
-4'b10XX:    res = r_rr [sz];				// RR, RRC, SRA, SRZ
-4'b110X:    res = r_rl [sz];				// RL, RLC
-4'b111X:    res = r_mul[sz];				// MUL, MULS
+4'b010X:    res = r_add;					// ADD, ADC
+4'b011X:    res = r_sub;					// SUB, SBC
+4'b10XX:    res = r_rr;						// RR, RRC, SRA, SRZ
+4'b110X:    res = r_rl;						// RL, RLC
+4'b111X:    res = r_mul;					// MUL, MULS
 	endcase
 	
 	
 	// Adder, Subtractor
+	wire [31:0] r_add;
+	wire [31:0] r_sub;
+
+	wire [31:0] srcs[0:3];
+	wire [31:0] args[0:3];
+	
+	wire ca, cs;
+	wire cx[0:3];
+
+	assign srcs[2'b00] = {24'h000000, src[ 7:0]};
+	assign srcs[2'b01] = {	16'h0000, src[15:0]};
+	assign srcs[2'b10] = {	   8'h00, src[23:0]};
+    assign srcs[2'b11] = {			  src[31:0]};
+
+	assign args[2'b00] = {24'h000000, arg[ 7:0]};
+	assign args[2'b01] = {	16'h0000, arg[15:0]};
+	assign args[2'b10] = {	   8'h00, arg[23:0]};
+    assign args[2'b11] = {		  	  arg[31:0]};
+	
+	assign cx[2'b00] = res[ 8];
+	assign cx[2'b01] = res[16];
+	assign cx[2'b10] = res[24];	
+	assign cx[2'b11] = !func[1] ? ca : cs;
+
 	wire sc = c && func[0];		// ADD/ADC and SUB/SBC select
 
 	
-	// Rotators
-	assign cl  [2'b00] = src[ 7];
-	assign cl  [2'b01] = src[15];
-	assign cl  [2'b10] = src[23];
-	assign cl  [2'b11] = src[31];
-	wire cr = src[0];
-	wire lc =	!func[0] ?	cl[sz] : c;					// RL/RLC select
-	wire rc =	!func[1] ?	(!func[0] ? cr : c) :		// RR/RRC select
-							(!func[0] ? cl[sz] : 1'b0); // SRA/SRZ select
-
-	
 //  ADD, ADC
-	assign {ca [2'b00], r_add [2'b00][ 7:0]} = src[ 7:0] + arg[ 7:0] + sc;
-	assign {ca [2'b01], r_add [2'b01][15:0]} = src[15:0] + arg[15:0] + sc;
-	assign {ca [2'b10], r_add [2'b10][23:0]} = src[23:0] + arg[23:0] + sc;
-	assign {ca [2'b11], r_add [2'b11][31:0]} = src[31:0] + arg[31:0] + sc;
-	assign r_add [2'b00][31: 8] = 24'h000000;
-	assign r_add [2'b01][31:16] = 16'h0000;
-	assign r_add [2'b10][31:24] = 8'h00;
+	assign {ca, r_add} = srcs[sz] + args[sz] + sc;
 
 	
 //  SUB, SBC
-	assign {cs [2'b00], r_sub [2'b00][ 7:0]} = src[ 7:0] - arg[ 7:0] - sc;
-	assign {cs [2'b01], r_sub [2'b01][15:0]} = src[15:0] - arg[15:0] - sc;
-	assign {cs [2'b10], r_sub [2'b10][23:0]} = src[23:0] - arg[23:0] - sc;
-	assign {cs [2'b11], r_sub [2'b11][31:0]} = src[31:0] - arg[31:0] - sc;
-	assign r_sub [2'b00][31: 8] = 24'h000000;
-	assign r_sub [2'b01][31:16] = 16'h0000;
-	assign r_sub [2'b10][31:24] = 8'h00;
+	assign {cs, r_sub} = srcs[sz] - args[sz] - sc;
 
 	
-// RR, RRC, SRA, SRZ
-	assign r_rr  [2'b00][ 7:0] = {			rc, src[ 7:1]};
-	assign r_rr  [2'b01][15:0] = {			rc, src[15:1]};
-	assign r_rr  [2'b10][23:0] = {			rc, src[23:1]};
-	assign r_rr  [2'b11][31:0] = {			rc, src[31:1]};
-	assign r_rr  [2'b00][31: 8] = 24'h000000;
-	assign r_rr  [2'b01][31:16] = 16'h0000;
-	assign r_rr  [2'b10][31:24] = 8'h00;
+	// Rotators
+	wire [31:0] r_rl;
+	wire [31:0] r_rr;
 	
+	wire cl[0:3];
 
+	assign cl[2'b00] = src[ 7];
+	assign cl[2'b01] = src[15];
+	assign cl[2'b10] = src[23];
+	assign cl[2'b11] = src[31];
+
+	wire cr = src[0];
+	wire lc = !func[0] ?	cl[sz] : c;					// RL/RLC select
+	wire rc = !func[1] ?	(!func[0] ? cr : c) :		// RR/RRC select
+							(!func[0] ? cl[sz] : 1'b0); // SRA/SRZ select
+
+	wire rc0 = (sz == 2'b00) ? rc : src[ 8];
+	wire rc1 = (sz == 2'b01) ? rc : src[16];
+	wire rc2 = (sz == 2'b10) ? rc : src[24];
+	
+	
 //  RL, RLC
-	assign r_rl  [2'b00][ 7:0] = {			src[ 6:0], lc};
-	assign r_rl  [2'b01][15:0] = {			src[14:0], lc};
-	assign r_rl  [2'b10][23:0] = {			src[22:0], lc};
-	assign r_rl  [2'b11][31:0] = {			src[30:0], lc};
-	assign r_rl  [2'b00][31: 8] = 24'h000000;
-	assign r_rl  [2'b01][31:16] = 16'h0000;
-	assign r_rl  [2'b10][31:24] = 8'h00;
-
+	assign r_rl = {src[30:0], lc};
 	
-// MUL, MULS
-	assign {r_mul [2'b00][ 7:0]} = src[ 7:0] * arg[ 7:0];
-	assign {r_mul [2'b01][15:0]} = src[ 7:0] * arg[ 7:0];
-	assign {r_mul [2'b10][23:0]} = src[15:0] * arg[15:0];
-	assign {r_mul [2'b11][31:0]} = src[15:0] * arg[15:0];
-	assign r_mul [2'b00][31: 8] = 24'h000000;
-	assign r_mul [2'b01][31:16] = 16'h0000;
-	assign r_mul [2'b10][31:24] = 8'h00;
 
+// RR, RRC, SRA, SRZ
+	assign r_rr = {rc, src[31:25], rc2, src[23:17], rc1, src[15:9], rc0, src[7:1]};
+	
+
+	// Multiplier
+	wire [31:0] r_mul;
+
+	wire [31:0] srcm[0:3];
+	wire [31:0] argm[0:3];
+
+	assign srcm[2'b00] = {24'h000000, src[ 7:0]};	//  8 =  8*8
+	assign srcm[2'b01] = {24'h000000, src[ 7:0]};	// 16 =  8*8
+	assign srcm[2'b10] = {	16'h0000, src[15:0]};   // 24 = 16*8
+	assign srcm[2'b11] = {	16'h0000, src[15:0]};   // 32 = 16*16
+
+	assign argm[2'b00] = {24'h000000, arg[ 7:0]};
+	assign argm[2'b01] = {24'h000000, arg[ 7:0]};
+	assign argm[2'b10] = {24'h000000, arg[ 7:0]};
+	assign argm[2'b11] = {	16'h0000, arg[15:0]};
+	
+
+// MUL, MULS
+	assign r_mul = srcm[sz] * argm[sz];
+	
 	
 endmodule
