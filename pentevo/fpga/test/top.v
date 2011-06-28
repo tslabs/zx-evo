@@ -689,7 +689,7 @@ module top(
 
 				   .palcolor(palcolor),
 				   
-					.alu_src(alu_src),
+					.alu_src({16'b0, alu_src}),
 					.alu_arg(alu_arg),
 				   .alu_in(alu_out),
 	             );
