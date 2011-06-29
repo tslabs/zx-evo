@@ -702,6 +702,8 @@ module top(
 	wire 	[15:0] 	alu_out;
 	wire	[3:0]	func = rnd[3:0];
 	wire	[1:0]	sz = {1'b0, rnd[5]};
+	// wire	[1:0]	sz = {2'b00};
+	// wire	[1:0]	sz = {2'b01};
 	wire 			in_c = rnd[4];
 	
 	apu_alu apu_alu(
@@ -710,10 +712,7 @@ module top(
 				   .res	(alu_out),
 				   .c	(in_c),
 				   .func(func),
-				   // .func(rnd[3:0] == 4'd15 ? 4'd14 : rnd[3:0]),
 				   .sz	(sz),
-				   // .sz	(2'b0),
-				   // .sz	(2'b1),
 				   // .fz	(),
 				   // .fs	(),
 				   // .fc	(),
