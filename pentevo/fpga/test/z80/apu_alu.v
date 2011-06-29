@@ -148,23 +148,45 @@ module	apu_alu(
 
 	// Multiplier
 	wire [31:0] r_mul;
+	wire [31:0] r_muls;
 
 	wire [31:0] srcm[0:3];
 	wire [31:0] argm[0:3];
+	
+	// wire sgned = func[0];
+	wire sgned = 1'b0;
+	
+	wire sgns8  = src[ 7] && sgned;
+	wire sgns16 = src[15] && sgned;
+	wire sgna8  = arg[ 7] && sgned;
+	wire sgna16 = arg[15] && sgned;
+	
+	wire sgn[0:3];
+	
+	assign sgn[2'b00] = sgns8  ^ sgna8;
+	assign sgn[2'b01] = sgns8  ^ sgna8;
+	assign sgn[2'b10] = sgns16 ^ sgna8;
+	assign sgn[2'b11] = sgns16 ^ sgna16;
+	
+	wire [ 7:0] src8  = sgns8  ? -src[ 7:0] : src[ 7:0];
+	wire [15:0] src16 = sgns16 ? -src[15:0] : src[15:0];
+	wire [ 7:0] arg8  = sgna8  ? -arg[ 7:0] : arg[ 7:0];
+	wire [15:0] arg16 = sgns16 ? -arg[15:0] : arg[15:0];
 
-	assign srcm[2'b00] = {24'h000000, src[ 7:0]};	//  8 =  8*8
-	assign srcm[2'b01] = {24'h000000, src[ 7:0]};	// 16 =  8*8
-	assign srcm[2'b10] = {	16'h0000, src[15:0]};   // 24 = 16*8
-	assign srcm[2'b11] = {	16'h0000, src[15:0]};   // 32 = 16*16
+	assign srcm[2'b00] = {24'h000000, src8 };	//  8 =  8*8
+	assign srcm[2'b01] = {24'h000000, src8 };	// 16 =  8*8
+	assign srcm[2'b10] = {	16'h0000, src16};   // 24 = 16*8
+	assign srcm[2'b11] = {	16'h0000, src16};   // 32 = 16*16
 
-	assign argm[2'b00] = {24'h000000, arg[ 7:0]};
-	assign argm[2'b01] = {24'h000000, arg[ 7:0]};
-	assign argm[2'b10] = {24'h000000, arg[ 7:0]};
-	assign argm[2'b11] = {	16'h0000, arg[15:0]};
+	assign argm[2'b00] = {24'h000000, arg8 };
+	assign argm[2'b01] = {24'h000000, arg8 };
+	assign argm[2'b10] = {24'h000000, arg8 };
+	assign argm[2'b11] = {	16'h0000, arg16};
 	
 
 // MUL, MULS
-	assign r_mul = srcm[sz] * argm[sz];
+	assign r_muls = srcm[sz] * argm[sz];
+	assign r_mul  = sgn[sz] ? -r_muls : r_muls;
 	
 	
 endmodule
