@@ -62,7 +62,7 @@ module	apu_alu(
 4'b01XX:    fc = cx[sz];    				// ADD, ADC, SUB, SBC
 4'b10XX:    fc = cr;	    				// RR, RRC, SRA, SRZ
 4'b110X:    fc = cl[sz];    				// RL, RLC
-4'b111X:    fc = 1'b0;	    				// MUL, MULS
+4'b111X:    fc = fs;	    				// MUL, MULS
 	endcase
 
 

@@ -694,22 +694,24 @@ module top(
 					.alu_in(alu_out),
 	             );
 
+
+	wire [5:0] rnd = {vred, vgrn, vblu};
+	
 	wire	[15:0]	alu_src;
 	wire	[15:0]	alu_arg;
 	wire 	[15:0] 	alu_out;
-	wire	[3:0]	func;
-	wire	[1:0]	sz;
-
-	wire [5:0] rnd = {vred, vgrn, vblu};
+	wire	[3:0]	func = rnd[3:0];
+	wire	[1:0]	sz = {1'b0, rnd[5]};
+	wire 			in_c = rnd[4];
 	
 	apu_alu apu_alu(
 				   .src	({16'h0000, alu_src}),
 				   .arg	({16'h0000, alu_arg}),
 				   .res	(alu_out),
-				   .c	(rnd[4]),
-				   .func(rnd[3:0]),
+				   .c	(in_c),
+				   .func(func),
 				   // .func(rnd[3:0] == 4'd15 ? 4'd14 : rnd[3:0]),
-				   .sz	({1'b0, rnd[5]}),
+				   .sz	(sz),
 				   // .sz	(2'b0),
 				   // .sz	(2'b1),
 				   // .fz	(),
