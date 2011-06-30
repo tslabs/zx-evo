@@ -76,8 +76,9 @@ module	apu_alu(
 4'b010X:    res = r_add;					// ADD, ADC
 4'b011X:    res = r_sub;					// SUB, SBC
 4'b10XX:    res = r_rr;						// RR, RRC, SRA, SRZ
-4'b110X:    res = r_rl;						// RL, RLC
-4'b111X:    res = r_mul;					// MUL, MULS
+// 4'b110X:    res = r_rl;						// RL, RLC
+// 4'b111X:    res = r_mul;					// MUL, MULS
+4'b11XX:    res = r_rl;						// RL, RLC			// BLOCKER for muls!!!
 	endcase
 	
 	
@@ -154,7 +155,7 @@ module	apu_alu(
 	wire [15:0] argm[0:3];
 	
 	// wire sg = func[0];
-	wire sg = 1'b0;
+	wire sg = 1'b0;			// BLOCKER for signed mul!!!
 	
 	wire [ 7:0] src8  = sgs8  ? 16'h0 - src[ 7:0] : src[ 7:0];
 	wire [ 7:0] arg8  = sga8  ? 16'h0 - arg[ 7:0] : arg[ 7:0];
