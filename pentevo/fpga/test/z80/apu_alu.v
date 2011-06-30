@@ -150,43 +150,43 @@ module	apu_alu(
 	wire [31:0] r_mul;
 	wire [31:0] r_muls;
 
-	wire [31:0] srcm[0:3];
-	wire [31:0] argm[0:3];
+	wire [15:0] srcm[0:3];
+	wire [15:0] argm[0:3];
 	
-	// wire sgned = func[0];
-	wire sgned = 1'b0;
+	// wire sg = func[0];
+	wire sg = 1'b0;
 	
-	wire sgns8  = src[ 7] && sgned;
-	wire sgns16 = src[15] && sgned;
-	wire sgna8  = arg[ 7] && sgned;
-	wire sgna16 = arg[15] && sgned;
-	
-	wire sgn[0:3];
-	
-	assign sgn[2'b00] = sgns8  ^ sgna8;
-	assign sgn[2'b01] = sgns8  ^ sgna8;
-	assign sgn[2'b10] = sgns16 ^ sgna8;
-	assign sgn[2'b11] = sgns16 ^ sgna16;
-	
-	wire [ 7:0] src8  = sgns8  ? -src[ 7:0] : src[ 7:0];
-	wire [15:0] src16 = sgns16 ? -src[15:0] : src[15:0];
-	wire [ 7:0] arg8  = sgna8  ? -arg[ 7:0] : arg[ 7:0];
-	wire [15:0] arg16 = sgns16 ? -arg[15:0] : arg[15:0];
+	wire [ 7:0] src8  = sgs8  ? 16'h0 - src[ 7:0] : src[ 7:0];
+	wire [ 7:0] arg8  = sga8  ? 16'h0 - arg[ 7:0] : arg[ 7:0];
+	wire [15:0] src16 = sgs16 ? 16'h0 - src[15:0] : src[15:0];
+	wire [15:0] arg16 = sgs16 ? 16'h0 - arg[15:0] : arg[15:0];
 
-	assign srcm[2'b00] = {24'h000000, src8 };	//  8 =  8*8
-	assign srcm[2'b01] = {24'h000000, src8 };	// 16 =  8*8
-	assign srcm[2'b10] = {	16'h0000, src16};   // 24 = 16*8
-	assign srcm[2'b11] = {	16'h0000, src16};   // 32 = 16*16
+	wire sgs8  = src[ 7] && sg;
+	wire sga8  = arg[ 7] && sg;
+	wire sgs16 = src[15] && sg;
+	wire sga16 = arg[15] && sg;
+	
+	wire sgr[0:3];
+	
+	assign sgr[2'b00] = sgs8  ^ sga8;
+	assign sgr[2'b01] = sgs8  ^ sga8;
+	assign sgr[2'b10] = sgs16 ^ sga8;
+	assign sgr[2'b11] = sgs16 ^ sga16;
+	
+	assign srcm[2'b00] = {8'h000000, src8 };	//  8 =  8*8
+	assign srcm[2'b01] = {8'h000000, src8 };	// 16 =  8*8
+	assign srcm[2'b10] = {		   	 src16};	// 24 = 16*8
+	assign srcm[2'b11] = {		   	 src16};	// 32 = 16*16
 
-	assign argm[2'b00] = {24'h000000, arg8 };
-	assign argm[2'b01] = {24'h000000, arg8 };
-	assign argm[2'b10] = {24'h000000, arg8 };
-	assign argm[2'b11] = {	16'h0000, arg16};
+	assign argm[2'b00] = {8'h000000, arg8 };
+	assign argm[2'b01] = {8'h000000, arg8 };
+	assign argm[2'b10] = {8'h000000, arg8 };
+	assign argm[2'b11] = {		   	 arg16};
 	
 
 // MUL, MULS
 	assign r_muls = srcm[sz] * argm[sz];
-	assign r_mul  = sgn[sz] ? -r_muls : r_muls;
+	assign r_mul  = sgr[sz] ? 32'h0 - r_muls : r_muls;
 	
 	
 endmodule
