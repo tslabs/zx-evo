@@ -1,0 +1,77 @@
+video resolution:
+
+lowres - 7MHz pixelclock (256 or 320 pixels per line)
+hires  - 14MHz pixelclock (512 or 640 pixels per line)
+
+
+videomode:
+
+attr   - two bytes per 8 pixels, bits and attribute
+text   - 2 bytes per 8 pixels, same as attr, but bytes are letter code and letter attribute
+16c    - 4 bits per pixel, 16 colors
+2c     - one bit per pixel, monochrome
+256c   - 8 bits per pixel
+16+16c - two 16c playfields with transparency
+
+
+table structure:
+
+MEMORY SPEED
+	VIDEO MODE
+		CPU SPEED/WAITS
+
+
+BW - available memory bandwidth usage: when 1, cpu stalls, when 1/2 or less - CPU runs nowait at Fcpu<=Fmemory.
+     When Fcpu>Fmemory and BW<1, there are wait states.
+
+
+-----------------------------------------------------------------------------------------
+
+3.5MHz, 8 bit memory:
+
+	lowres attr/text,
+	hires 2c:         BW=1/2
+		3.5MHz nowait
+		7MHz wait
+	lowres 16c,
+	hires attr/text:  BW=1
+		stall
+
+
+3.5MHz, 16 bit memory:
+
+	lowres attr/text: BW=1/4 (or 1/2 in lame schemes like ATM turbo or Profi)
+		3.5MHz nowait
+		7MHz wait
+	lowres 16c,
+	hires attr/text:  BW=1/2
+		3.5MHz nowait
+		7MHz wait
+	lowres 256c,
+	lowres 16+16c,
+	hires 16c:        BW=1
+		stall
+
+
+7MHz, 16 bit memory:
+
+	lowres attr/text,
+	hires 2c:         BW=1/8
+		3.5MHz nowait
+		7MHz nowait
+		14MHz wait
+	lowres 16c,
+	hires attr/text:  BW=1/4
+		3.5MHz nowait
+		7MHz nowait
+		14MHz wait
+	lowres 256c,
+	lowres 16+16c,
+	hires 16c:        BW=1/2
+		3.5MHz nowait
+		7MHz nowait
+		14MHz wait
+	hires 256c,
+	hires 16+16c:     BW=1
+		stall
+
