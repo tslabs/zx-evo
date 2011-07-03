@@ -706,6 +706,27 @@ module top(
 	// wire	[1:0]	sz = {2'b01};
 	wire 			in_c = rnd[4];
 	
+	// reg [3:0] func1;
+	
+	// always @*
+	// case (func)
+// 4'h0:		func1 = 4'h0;
+// 4'h1:		func1 = 4'h0;
+// 4'h2:		func1 = 4'h0;
+// 4'h3:		func1 = 4'h0;
+// 4'h4:		func1 = 4'h0;
+// 4'h5:		func1 = 4'h0;
+// 4'h6:		func1 = 4'h0;
+// 4'h7:		func1 = 4'h0;
+// 4'h8:		func1 = 4'h0;
+// 4'h9:		func1 = 4'h0;
+// 4'hA:		func1 = 4'h0;
+// 4'hB:		func1 = 4'h0;
+// 4'hC:		func1 = 4'h0;
+// 4'hD:		func1 = 4'h0;
+// default:	func1 = 4'h0;
+	// endcase
+	
 	apu_alu apu_alu(
 				   .src	({16'h0000, alu_src}),
 				   .arg	({16'h0000, alu_arg}),
