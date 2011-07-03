@@ -32,31 +32,32 @@
 // - tune spu_next on 16c and 4c modes
 
 
-module sprites(
+module spu(
 
-	input clk, spu_en, line_start, pre_vline,
-	input cbeg, post_cbeg,
-	input [7:0] din,
-	output reg test,
-	output wire [5:0] mcd,
+	input 				clk,
+	input 				spu_en,
+	input 				line_start,
+	input 				pre_vline,
+	input 				cbeg, post_cbeg,
+	input		[7:0]	din,
 
-//sfile	
-	output wire [8:0] sf_ra,
-	input [7:0] sf_rd,
+	output reg			test,
+	output wire	[5:0]	mcd,
 
-//spram
-	output reg [8:0] sp_ra,
-	input [7:0] sp_rd,
+// spram/sfile
+	output reg	[8:0]	spsf_ra,
+	input		[7:0]	spsf_rd,
 	
-//dram
-	output reg [20:0] spu_addr,
-	input [15:0] spu_data,
-	output reg spu_req,
-	input spu_strobe, spu_next,
+// dram
+	output reg	[20:0]	spu_addr,
+	input		[15:0]	spu_data,
+	output reg			spu_req,
+	input				spu_strobe,
+	input				spu_next,
 
-//video
-	output reg [5:0] spixel,
-	output reg spx_en
+// video
+	output reg	[5:0]	spixel,
+	output reg			spx_en
 
 	);
 
@@ -152,36 +153,22 @@ module sprites(
 	localparam r_am = 3'd6;
 	localparam r_ah = 3'd7;
 
-	wire s_vis, s_last, s_act, s_eox;
-	wire [5:0] s_next;
-	wire [20:0] adr_next;
-	wire [20:0] adr_ofs;
-	wire [7:0] dec_xs;
-	wire [8:0] ypc;
-	wire [8:0] ysc;
-	wire [7:0] xsc;
-	wire [7:0] xsv;
-	wire [8:0] lofsc;
-	wire [8:0] sl_next;
-	wire [8:0] xc;
-	wire [8:0] xsf;
-	
-	assign sf_ra = {num, sf_sa};
-	assign s_act = !(sf_rd[1:0] == 2'b0);
-	assign s_next = num + 6'd1;
-	assign s_last = (s_next == 5'd0);
-	assign ypc = {sf_rd[0], yp};
-	assign ysc = {sf_rd[7:1], 2'b0};
-	assign s_vis = ((vline >= ypc) && (vline < (ypc + ysc)));
-	assign dec_xs = xs - 8'd1;
-	assign s_eox = (dec_xs == 8'b0);
-	assign xsc = (cres == 2'b11) ? {sf_rd[7:1], 1'b0} : {1'b0, sf_rd[7:1]};
-	assign lofsc = flipy ? (ypc - vline + ysc - 9'd1) : (vline - ypc);
-	assign adr_ofs = {sf_rd[7:0], spu_addr[12:0]} + (xs * lofs);
-	assign adr_next = spu_addr + 21'b1;
-	assign sl_next = flipx ? (sl_wa - 9'd1) : (sl_wa + 9'd1);
-	assign xsf = (cres == 2'b11) ? (xs * 9'd2) : ((cres == 2'b10) ? (xs[6:0] * 9'd4) : (xs[5:0] * 9'd8));
-	assign xc = flipx ? ({sl_wa[8], sf_rd[7:0]} + xsf - 9'd1) : {sl_wa[8], sf_rd[7:0]};
+	assign		sf_ra = {num, sf_sa};
+	wire		s_act = !(sf_rd[1:0] == 2'b0);
+	wire [5:0]	s_next = num + 6'd1;
+	wire		s_last = (s_next == 5'd0);
+	wire [8:0]	ypc = {sf_rd[0], yp};
+	wire [8:0]	ysc = {sf_rd[7:1], 2'b0};
+	wire		s_vis = ((vline >= ypc) && (vline < (ypc + ysc)));
+	wire [7:0]	dec_xs = xs - 8'd1;
+	wire		s_eox = (dec_xs == 8'b0);
+	wire [7:0]	xsc = (cres == 2'b11) ? {sf_rd[7:1], 1'b0} : {1'b0, sf_rd[7:1]};
+	wire [8:0]	lofsc = flipy ? (ypc - vline + ysc - 9'd1) : (vline - ypc);
+	wire [20:0]	adr_ofs = {sf_rd[7:0], spu_addr[12:0]} + (xs * lofs);
+	wire [20:0]	adr_next = spu_addr + 21'b1;
+	wire [8:0]	sl_next = flipx ? (sl_wa - 9'd1) : (sl_wa + 9'd1);
+	wire [8:0]	xsf = (cres == 2'b11) ? (xs * 9'd2) : ((cres == 2'b10) ? (xs[6:0] * 9'd4) : (xs[5:0] * 9'd8));
+	wire [8:0]	xc = flipx ? ({sl_wa[8], sf_rd[7:0]} + xsf - 9'd1) : {sl_wa[8], sf_rd[7:0]};
 	
 
 // Here the states are processed on CLK event
@@ -404,25 +391,22 @@ module sprites(
 
 
 	reg sl_we;
-	wire sl_wss, pixt, pixs, tcol;
-	wire [6:0] pixc;
 	reg [8:0] sl_wa;
 	wire [7:0] sl_rd0, sl_rd1;
-	wire [6:0] sl_wds;
 
-	assign pixs = (ms == ms_tc1);
-	assign pixt = pixs ? !spu_data[14] : !sdbuf[6];
-	assign pixc = pixs ? {!spu_data[15], spu_data[13:8]} : {!sdbuf[7], sdbuf[5:0]};
-	assign tcol = (cres == 2'b11);
-	assign sl_wss = (tcol ? pixt : !sp_rd[6]) && sl_we;
-	assign sl_wds = tcol ? pixc : {!sp_rd[7], sp_rd[5:0]};
+	wire		 pixs = (ms == ms_tc1);
+	wire		 pixt = pixs ? !spu_data[14] : !sdbuf[6];
+	wire [6:0]	 pixc = pixs ? {!spu_data[15], spu_data[13:8]} : {!sdbuf[7], sdbuf[5:0]};
+	wire		 tcol = (cres == 2'b11);
+	wire		 sl_wss = (tcol ? pixt : !sp_rd[6]) && sl_we;
+	wire [6:0]	 sl_wds = tcol ? pixc : {!sp_rd[7], sp_rd[5:0]};
 	
 	sline0 sline0(	.wraddress(l_sel ? sl_wa : sl_ra),
 					.data(l_sel ? sl_wds : 8'b0),
 					.wren(l_sel ? sl_wss : sl_wsn),
 					.rdaddress(sl_ra),
 					.q(sl_rd0),
-					.wrclock(clk)
+					.clock(clk)
 				);
 
 	sline1 sline1(	.wraddress(!l_sel ? sl_wa : sl_ra),
@@ -430,6 +414,6 @@ module sprites(
 					.wren(!l_sel ? sl_wss : sl_wsn),
 					.rdaddress(sl_ra),
 					.q(sl_rd1),
-					.wrclock(clk)
+					.clock(clk)
 				);
 endmodule
