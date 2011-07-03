@@ -231,10 +231,12 @@ set_global_assignment -name OPTIMIZE_HOLD_TIMING OFF
 set_global_assignment -name FITTER_EFFORT "STANDARD FIT"
 set_global_assignment -name AUTO_PACKED_REGISTERS "MINIMIZE AREA"
 set_global_assignment -name FLEX10K_OPTIMIZATION_TECHNIQUE AREA
+set_global_assignment -name VERILOG_FILE ../video/video_spu.v
+set_global_assignment -name VERILOG_FILE ../video/spu_line0.v
+set_global_assignment -name VERILOG_FILE ../video/spu_line1.v
+set_global_assignment -name VERILOG_FILE ../video/spu_spsf.v
 set_global_assignment -name VERILOG_FILE ../z80/zmaps.v
-set_global_assignment -name VERILOG_FILE ../video/spu_mem.v
 set_global_assignment -name VERILOG_FILE ../sound/covox.v
-set_global_assignment -name VERILOG_FILE ../video/sprites.v
 set_global_assignment -name VERILOG_FILE ../z80/zdos.v
 set_global_assignment -name VERILOG_FILE ../mem/atm_pager.v
 set_global_assignment -name VERILOG_FILE ../vga/vga_double.v

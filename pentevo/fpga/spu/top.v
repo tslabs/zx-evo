@@ -508,35 +508,46 @@ module top(
 	              .video_strobe(video_strobe), .video_next(video_next), .go(go), .bw(bw), .pixel(pixel) );
 
 
-	wire [8:0] sp_ra, sp_wa;
-	wire [7:0] sp_rd;
-	wire sp_we;
+	wire [8:0]	spsf_wa;
+	wire		spsf_we;
+	wire [8:0]	spsf_ra;
+	wire [7:0]	spsf_rd;
 
-spram spram(	.wraddress(sp_wa), .data(d), .rdaddress(sp_ra), .q(sp_rd),
-				.wrclock(fclk),
-				.wren(sp_we) );
+spu_spsf spu_spsf(
+				.clock(fclk),
+				.wraddress(spsf_wa),
+				.data(d),
+				.rdaddress(spsf_ra),
+				.q(spsf_rd),
+				.wren(spsf_we)
+			);
 			
-	wire [8:0] sf_ra, sf_wa;
-	wire [7:0] sf_rd;
-	wire sf_we;
-
 	
-sfile sfile(	.wraddress(sf_wa), .data(d), .rdaddress(sf_ra), .q(sf_rd), .wrclock(fclk), .wren(sf_we) );
-
-	wire [5:0] spixel, sp_mc;
-	wire spx_en, spu_req;
-
+	wire [5:0]	spixel, sp_mc;
+	wire 		spx_en, spu_req;
 	
-sprites sprites( .clk(fclk), .spu_en(vcfg[3]),
+spu spu(
+			.clk(fclk),
 			.line_start(line_start),
 			.pre_vline(pre_vline),
-			.post_cbeg(post_cbeg), .cbeg(cbeg),
-			.spixel(spixel), .spx_en(spx_en),
-			.sf_ra(sf_ra), .sf_rd(sf_rd), 
-			.sp_ra(sp_ra), .sp_rd(sp_rd),
-			.test(test), .mcd(sp_mc),
-			.spu_addr(spu_addr), .spu_data(spu_data), 
-			.spu_req(spu_req), .spu_strobe(spu_strobe), .spu_next(spu_next)
+			.post_cbeg(post_cbeg),
+			.cbeg(cbeg),
+			
+			.spu_en(vcfg[3]),
+			
+			.spixel(spixel),
+			.spx_en(spx_en),
+			.spsf_ra(spsf_ra),
+			.spsf_rd(spsf_rd), 
+
+			.spu_addr(spu_addr),
+			.spu_data(spu_data),
+			.spu_req(spu_req),
+			.spu_strobe(spu_strobe),
+			.spu_next(spu_next),
+			
+			.test(test),
+			.mcd(sp_mc)
 			);
 
 
@@ -678,10 +689,8 @@ zmaps zmaps(
 					.fp(fp), .fa(fa),
 					.fwd(fwd),
 					
-					.sf_wa(sf_wa), .sf_we(sf_we), 
-					.sp_wa(sp_wa), .sp_we(sp_we), 
-					// .hf_wa(hf_wa), .hf_we(hf_we), 
-					// .hv_wa(hv_wa), .hv_we(hv_we), 
+					.spsf_wa(spsf_wa),
+					.spsf_we(spsf_we), 
 
 				);
 
