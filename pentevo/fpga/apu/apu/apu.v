@@ -6,6 +6,7 @@
 //
 // Written by TS-Labs inc.
 //
+// Version APU-1
 
 
 module apu(
@@ -59,7 +60,7 @@ module apu(
 // * port in
 // port out
 // flags
-// instructions
+// opcodeuctions
 // ALU
 // * GRP sz
 // port_r_sz
@@ -67,43 +68,181 @@ module apu(
 
 //- Operands decoding -----------------------------------------
 
-	wire [3:0]	ih		= instr[15:12];					// instruction class 4
-	wire [3:0]	im		= instr[11:8];					// instruction sub-class 4
+	wire [3:0]	ih		= opcode[15:12];					// opcodeuction class 4
+	wire [3:0]	im		= opcode[11:8];					// opcodeuction sub-class 4
 
-	wire [2:0]	a1fh	= instr[14:12];					// ALU1 function class 4
-	wire [2:0]	a1fm	= {instr[12], instr[7:6]};		// ALU1 function sub-class 4
-	wire [1:0]	a2fm	= {instr[7:6]};					// ALU2 function sub-class 4
-	wire [1:0]	a3fm	= {instr[5:4]};					// ALU3 function sub-class 4
-	wire [2:0]	bfm		= {instr[8:6]};					// Barrel function sub-class 4
+	wire [2:0]	a1fh	= opcode[14:12];					// ALU1 function class 4
+	wire [2:0]	a1fm	= {opcode[12], opcode[7:6]};		// ALU1 function sub-class 4
+	wire [1:0]	a2fm	= {opcode[7:6]};					// ALU2 function sub-class 4
+	wire [1:0]	a3fm	= {opcode[5:4]};					// ALU3 function sub-class 4
+	wire [2:0]	bfm		= {opcode[8:6]};					// Barrel function sub-class 4
 
-	wire [7:0]	imm		= instr[7:0];					// immediate 8
+	wire [7:0]	imm		= opcode[7:0];					// immediate 8
 
-	wire [15:0]	rel		= {{8{instr[7]}}, instr[7:0]};	// relative addr 16
+	wire [15:0]	rel		= {{8{opcode[7]}}, opcode[7:0]};	// relative addr 16
 	
-	wire [3:0]	src		= instr[3:0];					// source reg8 4
-	wire [3:0]	dst		= instr[11:8];					// destination reg8 4
+	wire [3:0]	src		= opcode[3:0];					// source reg8 4
+	wire [3:0]	dst		= opcode[11:8];					// destination reg8 4
 
-	wire [1:0]	sz		= instr[5:4];					// sizeness 2
+	wire [1:0]	sz		= opcode[5:4];					// sizeness 2
 
-	wire [3:0]	jc		= instr[11:8];					// jump condition 4
-	wire [1:0]	wc		= instr[7:6];					// wait condition 2
-	wire 		ic		= instr[11];					// inverse condition 1
+	wire [3:0]	jc		= opcode[11:8];					// jump condition 4
+	wire [1:0]	wc		= opcode[7:6];					// wait condition 2
+	wire 		ic		= opcode[11];					// inverse condition 1
 
-	wire [4:0]	pin0	= instr[4:0];					// pin0 5
-	wire [4:0]	pin1	= instr[9:5];					// pin1 5
-	wire [1:0]	stb		= instr[7:6];					// strobe signal 2
+	wire [4:0]	pin0	= opcode[4:0];					// pin0 5
+	wire [4:0]	pin1	= opcode[9:5];					// pin1 5
+	wire [1:0]	stb		= opcode[7:6];					// strobe signal 2
 
 
 //- Instructions decoding -------------------------------------
-	wire inst[0:15]
+
+	localparam ALU_LD   = 4'b0000;
+	localparam ALU_AND  = 4'b0001;
+	localparam ALU_OR   = 4'b0010;
+	localparam ALU_XOR  = 4'b0011;
+	localparam ALU_ADD  = 4'b0100;
+	localparam ALU_ADC  = 4'b0101;
+	localparam ALU_SUB  = 4'b0110;
+	localparam ALU_SBC  = 4'b0111;
+	localparam ALU_RR   = 4'b1000;
+	localparam ALU_RRC  = 4'b1001;
+	localparam ALU_SRA  = 4'b1010;
+	localparam ALU_SRZ  = 4'b1011;
+	localparam ALU_RL   = 4'b1100;
+	localparam ALU_RLC  = 4'b1101;
+	localparam ALU_MUL  = 4'b1110;
+	localparam ALU_MULS = 4'b1111;
+
+	reg	 [3:0]	alu_func1;		// r,imm
+	reg	 [3:0]	alu_func2;		// r
+	reg	 [3:0]	alu_func3;		// r,r
+	reg	 [3:0]	alu_func4;		// mul
 	
-	generate
-		genvar i;
-		for(i=0;i<16;i=i+1)
-		assign inst[i] = ih == i;
-	endgenerate
+	wire [3:0]	src		= opcode[3:0];	
+	wire [3:0]	dst		= opcode[11:8];		
 
+	reg	 [31:0]	result;
+	reg	 [7:0]	gpr[0:15];
 
+	wire src8  = src;
+	wire src16  = src & 4'b1110;
+	wire src32  = src & 4'b1100;
+	
+	wire [31:0] r_src_sz[0:3];
+	wire [31:0] r_dst_sz[0:3];
+	
+	assign r_src_sz[2'b00] = {24'b0, gpr[src8]};
+	assign r_src_sz[2'b01] = {16'b0, gpr[src16+1], gpr[src16]};
+	assign r_src_sz[2'b10] = {8'b0, gpr[src32+2], gpr[src32+1], gpr[src32]};
+	assign r_src_sz[2'b11] = {gpr[src32+3], gpr[src32+2], gpr[src32+1], gpr[src32]};
+
+	assign r_dst_sz[2'b00] = {24'b0, gpr[dst8]};
+	assign r_dst_sz[2'b01] = {16'b0, gpr[dst16+1], gpr[dst16]};
+	assign r_dst_sz[2'b10] = {8'b0, gpr[dst32+2], gpr[dst32+1], gpr[dst32]};
+	assign r_dst_sz[2'b11] = {gpr[dst32+3], gpr[dst32+2], gpr[dst32+1], gpr[dst32]};
+
+	wire [31:0] r_src = r_src_sz[sz];
+	wire [31:0] r_dst = r_dst_sz[sz];
+	wire [31:0] imm		= {24'b0, opcode[7:0]};
+	
+	
+	always @*
+	casex (opcode[14:12])
+
+4'b0000,
+4'b0001,
+4'b0010,
+4'b0011,
+4'b0100,
+4'b0101,
+4'b0110:	// alu_func1
+
+		alu_func = alu_func1;
+		alu_src = r_dst_sz[2'b00];
+		alu_dst = imm;
+
+4'b0111:	// misc
+		casex (opcode[7:6])
+	
+	2'b00:	// alu_func2
+			casex (opcode[11:8])
+		
+		4'b00xx:	// inc, dec, cpl, neg
+		
+        4'b01xx:	// adc, sbc, swap, flip
+		
+        4'b1xxx:	// rotators
+			
+			endcase
+
+	2'b01:	// ex
+			
+	2'b1x:	// alu_func4
+			alu_func = alu_func4;
+			alu_src = r_dst;
+			alu_arg = r_src;
+			result = alu_res;
+	default:
+		endcase
+
+4'b100x:	// alu_func3
+		alu_func = alu_func3;
+		alu_src = r_dst;
+		alu_arg = r_src;
+		result = alu_res;
+
+default:
+	
+	endcase
+	
+
+	always @*
+	case (opcode[14:12])
+3'b001:		alu_func1 = ALU_AND;	// and
+3'b010:		alu_func1 = ALU_OR;		// or
+3'b011:		alu_func1 = ALU_XOR;	// xor
+3'b100:		alu_func1 = ALU_ADD;	// add
+3'b101:		alu_func1 = ALU_AND;	// tst
+3'b110:		alu_func1 = ALU_SUB;	// cmp
+default:	alu_func1 = ALU_LD;		// *
+	endcase
+	
+	always @*
+	case (opcode[11:8])
+4'b0000:	alu_func2 = ALU_ADD;	// inc
+4'b0001:	alu_func2 = ALU_SUB;	// dec
+4'b0010:	alu_func2 = ALU_XOR;	// cpl
+4'b0011:	alu_func2 = ALU_SUB;	// neg
+4'b0100:	alu_func2 = ALU_ADC;	// adc
+4'b0101:	alu_func2 = ALU_SBC;	// sbc
+4'b1000:	alu_func2 = ALU_RR;		// rr
+4'b1001:	alu_func2 = ALU_RRC;	// rrc
+4'b1010:	alu_func2 = ALU_SRA;	// sra
+4'b1011:	alu_func2 = ALU_SRZ;	// srz
+4'b1100:	alu_func2 = ALU_RL;		// rl
+4'b1101:	alu_func2 = ALU_RLC;	// rlc
+4'b1110:	alu_func2 = ALU_RL;		// rlt
+4'b1111:	alu_func2 = ALU_RLC;	// rltc
+default:	alu_func2 = ALU_LD;
+	endcase
+	
+	always @*
+	case ({opcode[12], opcode[7:6]})
+3'b001:		alu_func3 = ALU_AND;	// and
+3'b010:		alu_func3 = ALU_OR;		// or
+3'b011:		alu_func3 = ALU_XOR;	// xor
+3'b100:		alu_func3 = ALU_ADD;	// add
+3'b101:		alu_func3 = ALU_AND;	// tst
+3'b110:		alu_func3 = ALU_SUB;	// cmp
+3'b111:		alu_func3 = ALU_SUB;	// sub
+default:	alu_func3 = ALU_LD;		// *
+	endcase
+	
+	always @*
+		alu_func4 = opcode[6] ? ALU_MUL : ALU_MULS;
+	
+	
 //- ALU arguments decoding ------------------------------------
 // input:	ih 4
 // output:	ih_arg1 - 1st argument (dst)
@@ -169,14 +308,8 @@ module apu(
 
 
 // input:	sz 2
-// output:	gpr_src_sz - "src" instruction argument, coerced to 
+// output:	gpr_src_sz - "src" opcodeuction argument, coerced to 
 
-	wire [31:0] gpr_src_sz[0:3];
-	
-	assign gpr_src_sz[2'b00] = {24'b0, gpr[src8]};
-	assign gpr_src_sz[2'b01] = {16'b0, gpr[src16+1], gpr[src16]};
-	assign gpr_src_sz[2'b10] = {8'b0, gpr[src32+2], gpr[src32+1], gpr[src32]};
-	assign gpr_src_sz[2'b11] = {gpr[src32+3], gpr[src32+2], gpr[src32+1], gpr[src32]};
 
 
 	wire [31:0] gpr_dst_sz[0:3];
@@ -359,7 +492,7 @@ jr:			// jr jc, rel8
 		pc_next = jcond[jc] ? pc_rel : pc_inc;
 
 misc:		// halt and stall
-		if (instr[11:1] == 11'b11111111111)
+		if (opcode[11:1] == 11'b11111111111)
 			pc_next = pc;
 		else
 			pc_next = pc_inc;
@@ -371,8 +504,8 @@ default:
 
 
 //- Ports control decoding ------------------------------------
-	wire ld_port = (ih == io_port) && (instr [7:6] == 2'b10);		// out (port), dst
-	wire ld_pin1 = (ih == o_pin) && (instr [7:6] == 2'b10);			// set/res pin0, set/res pin1
+	wire ld_port = (ih == io_port) && (opcode [7:6] == 2'b10);		// out (port), dst
+	wire ld_pin1 = (ih == o_pin) && (opcode [7:6] == 2'b10);			// set/res pin0, set/res pin1
 	wire ld_pin0 = ((ih == misc) && (im == m_o_pin)) || ld_pin1;	// set/res pin0
 
 
@@ -475,14 +608,14 @@ default:
 //- APU Halting -----------------------------------------------
 	always @*
 	if (apu_halt)
-		instr = 16'hfffe;
+		opcode = 16'hffff;
 	else
-		instr = instr_r;
+		opcode = opcode_r;
 
 	
 //- Ready signal handling -------------------------------------
 	always @(posedge clk)
-	if (instr == 16'hffff)
+	if (opcode == 16'hffff)
 		apu_rdy <= 1'b1;
 	else
 		apu_rdy <= 1'b0;
@@ -499,7 +632,7 @@ default:
 		
 
 //- APU microcode RAM module ----------------------------------
-	wire [15:0]	instr;
+	wire [15:0]	opcode;
 		
 	apu_code apu_code(
 					.clock(clk),
@@ -507,7 +640,7 @@ default:
 					.data(code_data),
 					.wren(code_wren),
 					.rdaddress(pc_next),
-					.q(instr_r)
+					.q(opcode_r)
 					);
 
 
@@ -523,5 +656,33 @@ default:
 					.ctr(timer_data_r),
 					.cnt_end(timer_end)
 			);
+
+			
+//- ALU module ------------------------------------------------
+	reg		[31:0]	alu_src;
+	reg		[31:0]	alu_arg;
+	reg				alu_in_c;
+	reg		[3:0]	alu_func;
+	reg		[1:0]	alu_sz;
+
+	wire	[31:0]	alu_res;
+	wire			alu_out_z;
+	wire			alu_out_s;
+	wire			alu_out_c;
+	wire			alu_out_v;
+	
+	apu_alu(
+					.src	(alu_src),
+					.arg	(alu_arg),
+					.c	    (alu_in_c),
+					.func	(alu_func),
+					.sz 	(alu_sz),
+					.res	(alu_res)
+					.fz	    (alu_out_z),
+					.fs	    (alu_out_s),
+					.fc	    (alu_out_c),
+					.fv     (alu_out_v)
+			);
+
 
 endmodule
