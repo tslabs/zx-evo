@@ -71,10 +71,13 @@ module apu(
 	localparam ALU_MULS = 4'b1111;
 
 	reg	 [7:0]	gpr[0:15];					// 16 8-bit regs
-	wire [3:0]	src		= opcode[3:0];		// operand 'src'
-	wire [3:0]	dst		= opcode[11:8];		// operand 'dst'
-	reg	 [31:0]	result;						// the result of execution
-	reg	 [3:0]	dst_lat;					// result latching
+	reg			c_reg, z_reg, s_reg, v_reg;	// Flags regs
+	wire		c_fg, z_fg, s_fg, v_fg;		// Flags
+	reg	 		c_lat, z_lat, s_lat, v_lat;	// Flags latch enables
+	reg	 [31:0]	result;						// The result of execution
+	reg	 [3:0]	dst_lat;					// Result latch enables
+	wire [3:0]	src		= opcode[3:0];		// Operand 'src'
+	wire [3:0]	dst		= opcode[11:8];		// Operand 'dst'
 	
 	wire r_lat = {sz > 2'd2, sz > 2'd1, sz > 2'd0, 1'b1};	// what regs to latch result into
 	
@@ -195,7 +198,7 @@ default:	alu_arg1 = r_src;
 	endcase
 
 
-// ALU result decoding
+// Result decoding
 	always @*
 	casex (opcode[15:12])
 
@@ -215,7 +218,7 @@ default:	result = alu_res;
 	endcase
 
 
-// ALU destination latch decoding
+// Destination latch decoding
 	always @*
 	casex (opcode[15:12])
 4'b0101,
@@ -238,31 +241,72 @@ default:	dst_lat = r_lat;
 	endcase
 
 
-// ALU  decoding
+// C flag latch decoding
 	always @*
 	casex (opcode[15:12])
-default:	;
+4'b01x0:	c_lat = 1'b1;					// add, cmp
+
+4'b0111:	casex (opcode[11:6])
+		6'b0x0x00:	c_lat = 1'b1;			// inc, dec, adc, sbc
+		6'b10xx00:	c_lat = 1'b1;			// rr, rrc, sra, srz
+		6'b110x00:	c_lat = 1'b1;			// rl, rlc
+		6'bxxxx1x:	c_lat = 1'b1;			// mul, muls
+		default:	c_lat = 1'b0;
+			endcase
+
+4'b1001:	casex (opcode[7:6])
+		2'b00:		c_lat = 1'b1;			// add
+		2'b1x:		c_lat = 1'b1;			// cmp, sub
+		default:	c_lat = 1'b0;
+			endcase
+
+default:	c_lat = 1'b0;
 	endcase
 
 
-// Ports Latch decoding
+// Z flag latch decoding
 	always @*
-	casex (opcode[3:0])
-default:	r_lat = 4'b0;
+	casex (opcode[15:12])
+4'b0000,
+4'b001x,
+4'b010x,
+4'b0110,
+4'b1001:	z_lat = 1'b1;	// and, or, xor, add, tst, cmp
+							// add, tst, cmp, sub (r,r)
+
+4'b0111:	casex (opcode[11:6])
+		6'b00xx00:	z_lat = 1'b1;			// inc, dec, cpl, neg
+		6'b010x00:	z_lat = 1'b1;			// adc, sbc
+		default:	z_lat = 1'b0;
+			endcase
+
+4'b1000:	casex (opcode[7:6])
+		2'b01:		z_lat = 1'b1;			// and
+		2'b1x:		z_lat = 1'b1;			// or, xor
+		default:	z_lat = 1'b0;
+			endcase
+
+default:	z_lat = 1'b0;
 	endcase
+
+
+// Flags 
+	assign c_fg = c_lat ? alu_out_c : c_reg;
+	assign z_fg = z_lat ? alu_out_z : z_reg;
+	assign s_fg = s_lat ? alu_out_s : s_reg;
+	assign v_fg = v_lat ? alu_out_v : v_reg;
 	
+// Flags latching
+	always @(posedge clk)
+	begin
+		if (c_lat)	c_reg <= alu_out_c;
+		if (z_lat)	z_reg <= alu_out_z;
+		if (s_lat)	s_reg <= alu_out_s;
+		if (v_lat)	v_reg <= alu_out_v;
+	end
 
-// input:	sz 2
-// output:	gprs_sz - "src" opcodeuction argument, coerced to 
-
-
-
-	wire [31:0] gprd_sz[0:3];
 	
-	assign gprd_sz[2'b00] = {24'b0, gpr[dst8]};
-	assign gprd_sz[2'b01] = {16'b0, gpr[dst16+1], gpr[dst16]};
-	assign gprd_sz[2'b10] = {8'b0, gpr[dst32+2], gpr[dst32+1], gpr[dst32]};
-	assign gprd_sz[2'b11] = {gpr[dst32+3], gpr[dst32+2], gpr[dst32+1], gpr[dst32]};
+	// Ports Latch decoding
 
 
 //- Jump Condition decoding -----------------------------------
@@ -585,9 +629,9 @@ default:
 					.c	    (alu_in_c),
 					
 					.res	(alu_res)
+					.fc	    (alu_out_c),
 					.fz	    (alu_out_z),
 					.fs	    (alu_out_s),
-					.fc	    (alu_out_c),
 					.fv     (alu_out_v)
 			);
 
