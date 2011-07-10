@@ -13,8 +13,13 @@ module apu(
 
 	input				clk,
 	
+	input				cbeg,
+	input				post_cbeg,
+	input				pre_cend,   
+	input				cend,  
+		
 // APU
-	input				apu_halt,
+	input				apu_halt_in,
 	output reg			apu_rdy,
 	
 // ZMAPS
@@ -70,35 +75,8 @@ module apu(
 	localparam ALU_MUL  = 4'b1110;
 	localparam ALU_MULS = 4'b1111;
 
-	reg	 [7:0]	gpr[0:15];					// 16 8-bit regs
-	reg			c_reg, z_reg, s_reg, v_reg;	// Flags regs
-	wire		c_fg, z_fg, s_fg, v_fg;		// Flags
-	reg	 		c_lat, z_lat, s_lat, v_lat;	// Flags latch enables
-	reg	 [31:0]	result;						// The result of execution
-	reg	 [3:0]	dst_lat;					// Result latch enables
-	wire [3:0]	src		= opcode[3:0];		// Operand 'src'
-	wire [3:0]	dst		= opcode[11:8];		// Operand 'dst'
+	reg	 [ 7:0]	gpr[0:15];									// 16 8-bit regs
 	
-	wire r_lat = {sz > 2'd2, sz > 2'd1, sz > 2'd0, 1'b1};	// what regs to latch result into
-	
-	wire src_sz  = src & (	sz == 2'b00 ? 4'b1111 :
-							sz == 2'b01 ? 4'b1110 : 4'b1100 );
-	wire dst_sz  = dst & (	sz == 2'b00 ? 4'b1111 :
-							sz == 2'b01 ? 4'b1110 : 4'b1100 );
-
-	wire [31:0] r_src = { gpr[src_sz+3], gpr[src_sz+2], gpr[src_sz+1], gpr[src_sz] };
-	wire [31:0] r_dst = { gpr[dst_sz+3], gpr[dst_sz+2], gpr[dst_sz+1], gpr[dst_sz] };
-
-	wire [15:0]	rel		= {{8{opcode[7]}}, opcode[7:0]};	// relative addr 16
-	
-	wire [3:0]	jc		= opcode[11:8];					// jump condition 4
-	wire [1:0]	wc		= opcode[7:6];					// wait condition 2
-	wire 		ic		= opcode[11];					// inverse condition 1
-
-	wire [4:0]	pin0	= opcode[4:0];					// pin0 5
-	wire [4:0]	pin1	= opcode[9:5];					// pin1 5
-	wire [1:0]	stb		= opcode[7:6];					// strobe signal 2
-
 
 // ALU function decoding
 	always @*
@@ -150,27 +128,27 @@ default:	alu_func = ALU_LD;
 4'b010x,
 4'b0110:	sz = 2'b0;			// ld, and, or, xor, add, tst, cmp
 
-4'b0111:	if (opcode[11:10] == 2'b01 && opcode[7:6] == 2'b00)
-				sz = 2'b0;		// adc, sbc, swap, flip
-			else if (opcode[7])
-				sz = mul_sz;	// mul, muls
-			else
-				sz = opcode[5:4];
+4'b0111:	if (opcode[11:10] == 2'b01 && opcode[7:6] == 2'b00)	sz = 2'b0;		// adc, sbc, swap, flip
+			else if (opcode[7]) sz = mul_sz;	// mul, muls
+			else sz = opcode[5:4];
 				
 4'b101x:	sz = pp_sz;			// wait, in, out
 default:	sz = opcode[5:4];
 	endcase
 
 
+	wire [31:0] r_src = {gpr[src+3], gpr[src+2], gpr[src+1], gpr[src]};
+	wire [31:0] r_dst = {gpr[dst+3], gpr[dst+2], gpr[dst+1], gpr[dst]};
+
 // ALU argument0 decoding
 	always @*
 	casex (opcode[15:12])
 
 4'b0111:	casex (opcode[11:6])
-		6'b000x00:	alu_arg0 = r_src;	// inc, dec
-		6'b001000:	alu_arg0 = r_src;	// cpl
-		6'b001100:	alu_arg0 = 32'b0;	// neg
-		default:	alu_arg0 = r_dst;
+	6'b000x00:	alu_arg0 = r_src;	// inc, dec
+	6'b001000:	alu_arg0 = r_src;	// cpl
+	6'b001100:	alu_arg0 = 32'b0;	// neg
+	default:	alu_arg0 = r_dst;
 			endcase
 			
 4'b1010:	alu_arg0 = in_port;			// in
@@ -186,11 +164,11 @@ default:	alu_arg0 = r_dst;
 4'b0110:	alu_arg1 = {24'b0, opcode[7:0]};	// imm8
 
 4'b0111:	casex (opcode[11:6])
-		6'b000x00:	alu_arg1 = 32'b1;		// inc, dec
-		6'b001000:	alu_arg1 = {8{4'hF}};	// cpl
-		6'b001100:	alu_arg1 = r_src;		// neg
-		6'b01xx00:	alu_arg1 = 32'b0;		// adc, sbc, swap, flip
-		default:	alu_arg1 = r_dst;
+	6'b000x00:	alu_arg1 = 32'b1;		// inc, dec
+	6'b001000:	alu_arg1 = {8{4'hF}};	// cpl
+	6'b001100:	alu_arg1 = r_src;		// neg
+	6'b01xx00:	alu_arg1 = 32'b0;		// adc, sbc, swap, flip
+	default:	alu_arg1 = r_dst;
 			endcase
 			
 4'b1110:	alu_arg1 = 32'b1;		//djnz
@@ -198,19 +176,21 @@ default:	alu_arg1 = r_src;
 	endcase
 
 
-// Result decoding
+// Result source decoding
+	reg	 [31:0]	result;				// The result of execution
+
 	always @*
 	casex (opcode[15:12])
 
 4'b0111:	casex (opcode[11:6])
-		6'b011000:	alu_arg1 = {alu_res[31:24],
-						r_src[3:0], r_src[7:4]
-						};		// swap
-		6'b011100:	alu_arg1 = {alu_res[31:24],
-						r_src[0], r_src[1], r_src[2], r_src[3],
-						r_src[4], r_src[5], r_src[6], r_src[7]
-						};		// flip
-		default:	alu_arg1 = alu_res;
+	6'b011000:	result = {alu_res[31:24],
+					r_src[3:0], r_src[7:4]
+					};				// swap
+	6'b011100:	result = {alu_res[31:24],
+					r_src[0], r_src[1], r_src[2], r_src[3],
+					r_src[4], r_src[5], r_src[6], r_src[7]
+					};				// flip
+	default:	result = alu_res;
 			endcase
 			
 4'b1011:	result = in_port;		// in
@@ -218,7 +198,23 @@ default:	result = alu_res;
 	endcase
 
 
+// Destination address decoding
+	reg	 [3:0]	res;
+
+	wire src  = opcode[3:0]  & (sz == 2'b00 ? 4'b1111 :
+								sz == 2'b01 ? 4'b1110 : 4'b1100 );
+	wire dst  = opcode[11:8] & (sz == 2'b00 ? 4'b1111 :
+								sz == 2'b01 ? 4'b1110 : 4'b1100 );
+
+	always @*
+	if ((opcode[15:12] == 4'b0111) && (opcode[7:6] == 2'b0)) res = src;
+	else res = dst;
+
+
 // Destination latch decoding
+	reg	 [3:0]	dst_lat;									// Result latch enables
+	wire r_lat = {sz > 2'd2, sz > 2'd1, sz > 2'd0, 1'b1};	// what regs to latch result into
+
 	always @*
 	casex (opcode[15:12])
 4'b0101,
@@ -227,18 +223,35 @@ default:	result = alu_res;
 4'b110x,
 4'b1111:	dst_lat = 4'b0;		// tst, cmp
 
-4'b1001:	if (opcode[7:6] = 2'b01 || opcode[7:6] = 2'b10)
-				dst_lat = 4'b0;		// tst, cmp
-			else
-				dst_lat = r_lat;
+4'b1001:	if (opcode[7:6] = 2'b01 || opcode[7:6] = 2'b10) dst_lat = 4'b0;		// tst, cmp
+			else dst_lat = r_lat;
 
-4'b1011:	if (opcode[7:6] = 2'b01 || opcode[7])
-				dst_lat = 4'b0;		// out
-			else
-				dst_lat = r_lat;
+4'b1011:	if (opcode[7:6] = 2'b01 || opcode[7]) dst_lat = 4'b0;		// out
+			else dst_lat = r_lat;
 
 default:	dst_lat = r_lat;
 	endcase
+
+	
+// Destination latching
+	always @(posedge clk)
+	begin
+		if (dst_lat[0])		gpr[res]	<= result[ 7: 0];
+		if (dst_lat[1])		gpr[res+1]	<= result[15: 8];
+		if (dst_lat[2])		gpr[res+2]	<= result[23:16];
+		if (dst_lat[3])		gpr[res+3]	<= result[24:31];
+	end
+
+
+// Flags 
+	reg			c_reg, z_reg, s_reg, v_reg;		// Flags regs
+	wire		c_fg, z_fg, s_fg, v_fg;			// Flags
+	reg	 		c_lat, z_lat, s_lat, v_lat;		// Flags latch enables
+	
+	assign c_fg = c_lat ? alu_out_c : c_reg;
+	assign z_fg = z_lat ? alu_out_z : z_reg;
+	assign s_fg = s_lat ? alu_out_s : s_reg;
+	assign v_fg = v_lat ? alu_out_v : v_reg;
 
 
 // C flag latch decoding
@@ -247,17 +260,17 @@ default:	dst_lat = r_lat;
 4'b01x0:	c_lat = 1'b1;					// add, cmp
 
 4'b0111:	casex (opcode[11:6])
-		6'b0x0x00:	c_lat = 1'b1;			// inc, dec, adc, sbc
-		6'b10xx00:	c_lat = 1'b1;			// rr, rrc, sra, srz
-		6'b110x00:	c_lat = 1'b1;			// rl, rlc
-		6'bxxxx1x:	c_lat = 1'b1;			// mul, muls
-		default:	c_lat = 1'b0;
+	6'b0x0x00:	c_lat = 1'b1;			// inc, dec, adc, sbc
+	6'b10xx00:	c_lat = 1'b1;			// rr, rrc, sra, srz
+	6'b110x00:	c_lat = 1'b1;			// rl, rlc
+	6'bxxxx1x:	c_lat = 1'b1;			// mul, muls
+	default:	c_lat = 1'b0;
 			endcase
 
 4'b1001:	casex (opcode[7:6])
-		2'b00:		c_lat = 1'b1;			// add
-		2'b1x:		c_lat = 1'b1;			// cmp, sub
-		default:	c_lat = 1'b0;
+	2'b00:		c_lat = 1'b1;			// add
+	2'b1x:		c_lat = 1'b1;			// cmp, sub
+	default:	c_lat = 1'b0;
 			endcase
 
 default:	c_lat = 1'b0;
@@ -275,26 +288,20 @@ default:	c_lat = 1'b0;
 							// add, tst, cmp, sub (r,r)
 
 4'b0111:	casex (opcode[11:6])
-		6'b00xx00:	z_lat = 1'b1;			// inc, dec, cpl, neg
-		6'b010x00:	z_lat = 1'b1;			// adc, sbc
-		default:	z_lat = 1'b0;
+	6'b00xx00:	z_lat = 1'b1;			// inc, dec, cpl, neg
+	6'b010x00:	z_lat = 1'b1;			// adc, sbc
+	default:	z_lat = 1'b0;
 			endcase
 
 4'b1000:	casex (opcode[7:6])
-		2'b01:		z_lat = 1'b1;			// and
-		2'b1x:		z_lat = 1'b1;			// or, xor
-		default:	z_lat = 1'b0;
+	2'b01:		z_lat = 1'b1;			// and
+	2'b1x:		z_lat = 1'b1;			// or, xor
+	default:	z_lat = 1'b0;
 			endcase
 
 default:	z_lat = 1'b0;
 	endcase
 
-
-// Flags 
-	assign c_fg = c_lat ? alu_out_c : c_reg;
-	assign z_fg = z_lat ? alu_out_z : z_reg;
-	assign s_fg = s_lat ? alu_out_s : s_reg;
-	assign v_fg = v_lat ? alu_out_v : v_reg;
 	
 // Flags latching
 	always @(posedge clk)
@@ -306,156 +313,113 @@ default:	z_lat = 1'b0;
 	end
 
 	
-	// Ports Latch decoding
-
-
-//- Jump Condition decoding -----------------------------------
-	wire jcond[0:15];
-
-	assign jcond[4'b0000] = 1'b1;				//always
-	assign jcond[4'b0001] = _z;             	//equal, Z
-	assign jcond[4'b0010] = _c;             	//less, C
-	assign jcond[4'b0011] = !_z;            	//not equal, !Z
-	assign jcond[4'b0100] = !_c && !_z;     	//greater, !C&!Z
-	assign jcond[4'b0101] = _c || _z;       	//less of equal, C|Z
-	assign jcond[4'b0110] = !_c;            	//greater or equal, !C
-	assign jcond[4'b0111] = _n;             	//negative, N
-	assign jcond[4'b1000] = !_n;            	//positive, !N
-	assign jcond[4'b1001] = 1'b1;               //signed less
-	assign jcond[4'b1010] = 1'b1;               //signed less or equal
-	assign jcond[4'b1011] = 1'b1;               //signed greater
-	assign jcond[4'b1100] = 1'b1;               //signed greater or equal
-	assign jcond[4'b1101] = _h;             	//half carry, H
-	assign jcond[4'b1110] = !_h;            	//not half carry, !H
-	assign jcond[4'b1111] = 1'b0;           	//never
-
-
-//- Wait Condition decoding -----------------------------------
-	wire wcond[0:3];
-
-	assign wcond[2'b00] = cbeg;
-	assign wcond[2'b01] = post_cbeg;
-	assign wcond[2'b10] = pre_cend;       
-	assign wcond[2'b11] = cend;      
-
-
-//- Pins in decoding ------------------------------------------
-	wire pin_r[0:31];
+// PC modification decoding
+	reg  [15:0]	pc, pc_next;								// Program counter
+	wire [15:0]	rel	= {{8{opcode[7]}}, opcode[7:0]};		// relative addr 16
+	wire [15:0]	pc_inc = pc + 16'b1;						// Next PC
+	wire [15:0]	pc_rel = pc + rel;							// PC for rel jump
+	wire [ 0:3] stb = {cbeg, post_cbeg, pre_cend, cend};	// Synchro strobes
+	wire ss = stb(opcode[7:6]);								// Synchro strobe select
+	wire ic = pin_r ^ opcode[5];
+	wire wc = jcnd[{2'b0, opcode[7:6]}];
 	
-	assign pin_r[5'h00] = 1'b1;		
-	assign pin_r[5'h01] = timer_end;
-	assign pin_r[5'h02] = apu_strobe;
-	assign pin_r[5'h03] = hsync_start;
-	assign pin_r[5'h04] = hblank;
-	assign pin_r[5'h05] = vsync;
-	assign pin_r[5'h06] = vblank;
-	assign pin_r[5'h07] = line_start;
-	assign pin_r[5'h08] = 1'bX;
-	assign pin_r[5'h09] = 1'bX;
-	assign pin_r[5'h0A] = 1'bX;
-	assign pin_r[5'h0B] = 1'bX;
-	assign pin_r[5'h0C] = 1'bX;
-	assign pin_r[5'h0D] = 1'bX;
-	assign pin_r[5'h0E] = 1'bX;
-	assign pin_r[5'h0F] = 1'bX;
-	assign pin_r[5'h10] = 1'bX;		
-	assign pin_r[5'h11] = 1'bX;
-	assign pin_r[5'h12] = 1'bX;
-	assign pin_r[5'h13] = 1'bX;
-	assign pin_r[5'h14] = 1'bX;
-	assign pin_r[5'h15] = 1'bX;
-	assign pin_r[5'h16] = 1'bX;
-	assign pin_r[5'h17] = 1'bX;
-	assign pin_r[5'h18] = 1'bX;
-	assign pin_r[5'h19] = 1'bX;
-	assign pin_r[5'h1A] = 1'bX;
-	assign pin_r[5'h1B] = 1'bX;
-	assign pin_r[5'h1C] = 1'bX;
-	assign pin_r[5'h1D] = 1'bX;
-	assign pin_r[5'h1E] = 1'bX;
-	assign pin_r[5'h1F] = 1'bX;
-
-
-//- Ports in decoding ------------------------------------------
-	wire [31:0] port_r[0:15];
-	
-	assign port_r[4'h00] = { 24'b0, sram_data_r		};	// sram_data_r
-	assign port_r[4'h01] = { 16'b0, apu_data_r		};	// apu_data_r
-	assign port_r[4'h02] = { 16'b0, timer_data_r	};	// timer_data_r
-	assign port_r[4'h03] = { 16'b0, hcnt			};	// hcnt
-	assign port_r[4'h04] = { 16'b0, vcnt			};	// vcnt
-	assign port_r[4'h05] = { 32'b0 					};	// 
-	assign port_r[4'h06] = { 32'b0 					};	// 
-	assign port_r[4'h07] = { 32'b0 					};	// 
-	assign port_r[4'h08] = { 32'b0 					};	// 
-	assign port_r[4'h09] = { 32'b0 					};	// 
-	assign port_r[4'h0A] = { 32'b0 					};	// 
-	assign port_r[4'h0B] = { 32'b0 					};	// 
-	assign port_r[4'h0C] = { 32'b0 					};	// 
-	assign port_r[4'h0D] = { 32'b0 					};	// 
-	assign port_r[4'h0E] = { 32'b0 					};	// 
-	assign port_r[4'h0F] = { 32'b0 					};	// 
-	
-	
-	wire [15:0] port_r_e[0:15];
-	
-//						reg	=	  3210	   3210		3210	 3210
-//						sz	=	  3333	   2222		1111	 0000
-	assign port_r_e[4'h00] = { 4'b0001, 4'b0001, 4'b0001, 4'b0001 };	// sram_data_r
-	assign port_r_e[4'h01] = { 4'b0011, 4'b0011, 4'b0010, 4'b0001 };	// apu_data_r
-	assign port_r_e[4'h02] = { 4'b0011, 4'b0011, 4'b0010, 4'b0001 };	// timer_data_r
-	assign port_r_e[4'h03] = { 4'b0011, 4'b0011, 4'b0010, 4'b0001 };	// hcnt
-	assign port_r_e[4'h04] = { 4'b0011, 4'b0011, 4'b0010, 4'b0001 };	// vcnt
-	assign port_r_e[4'h05] = { 4'b0000, 4'b0000, 4'b0000, 4'b0000 };	// 
-	assign port_r_e[4'h06] = { 4'b0000, 4'b0000, 4'b0000, 4'b0000 };	// 
-	assign port_r_e[4'h07] = { 4'b0000, 4'b0000, 4'b0000, 4'b0000 };	// 
-	assign port_r_e[4'h08] = { 4'b0000, 4'b0000, 4'b0000, 4'b0000 };	// 
-	assign port_r_e[4'h09] = { 4'b0000, 4'b0000, 4'b0000, 4'b0000 };	// 
-	assign port_r_e[4'h0A] = { 4'b0000, 4'b0000, 4'b0000, 4'b0000 };	// 
-	assign port_r_e[4'h0B] = { 4'b0000, 4'b0000, 4'b0000, 4'b0000 };	// 
-	assign port_r_e[4'h0C] = { 4'b0000, 4'b0000, 4'b0000, 4'b0000 };	// 
-	assign port_r_e[4'h0D] = { 4'b0000, 4'b0000, 4'b0000, 4'b0000 };	// 
-	assign port_r_e[4'h0E] = { 4'b0000, 4'b0000, 4'b0000, 4'b0000 };	// 
-	assign port_r_e[4'h0F] = { 4'b0000, 4'b0000, 4'b0000, 4'b0000 };	// 
-
-	
-//- PC handling -----------------------------------------------
-	wire pc = {r[15], r[14]};
-	wire pc_inc = pc + 16'b1;
-	wire pc_rel = pc + rel;
-	reg [15:0] pc_next;
-
 	always @*
-	if (apu_halt)
-		pc_next = 16'b0;
-	else
-	case (ih)
+	casex (opcode[15:12])
+4'b1010:	pc_next = wc ? pc_inc : pc;				// wait port
+4'b1101:	pc_next = jc ? pc_rel : pc_inc;			// jr
+4'b1110:	pc_next = !z_fg ? pc_rel : pc_inc;		// djnz
 
-wt_pin:		// wait	cond pin0 mask pin1
-		pc_next = ~cond ^^ (~mask ? pin[pin0] || pin[pin1] : pin[pin0] && pin[pin1]) ? pc : pc_inc;
+4'b1111:	casex (opcode[11:8])
+	4'b1010:	pc_next = ic ? pc_inc : pc;			// wait pin
+	4'b1011:	pc_next = ic && ss(opcode[7:6]) ? pc_inc : pc;	// wait ss pin
+	4'b1101:	pc_next = jc ? {gpr[src+1], gpr[src]} : pc_inc; 	// jp
+	4'b1111:	pc_next = pc; 						// halt
+	default:	pc_next = pc_inc;
+			endcase
 
-wt_port:	// wait sz (port) wc src
-		begin
-		end
-
-jr:			// jr jc, rel8
-		pc_next = jcond[jc] ? pc_rel : pc_inc;
-
-misc:		// halt and stall
-		if (opcode[11:1] == 11'b11111111111)
-			pc_next = pc;
-		else
-			pc_next = pc_inc;
-
-default:
-		pc_next = pc_inc;
-	
+default:	pc_next = pc_inc;
 	endcase
 
 
+// PC latching
+	wire [15:0] pc_code = apu_halt ? 16'b0 : pc_next;
+	
+	always @(posedge clk)
+		pc <= pc_code;
+
+
+// Jump Condition decoding
+	reg jc;
+
+	always @*
+	casex (opcode[15:12] == 4'b1101 ? opcode[11:8] : opcode[7:4])
+4'b0000:	jc = z_fg;             	// 	equal, E, Z
+4'b0001:	jc = c_fg;             	// 	less, L, C
+4'b0010:	jc = !z_fg;            	// 	not equal, NE, NZ
+4'b0011:	jc = !c_fg && !z_fg;   	// 	greater, G
+4'b0100:	jc = c_fg || z_fg;     	// 	less of equal, LE
+4'b0101:	jc = !c_fg;            	// 	greater or equal, GE, NC
+4'b0110:	jc = s_fg;             	// 	negative, N
+4'b0111:	jc = !s_fg;            	// 	positive, P
+4'b1000:	jc = 1'b1;	          	// 	signed less or equal
+4'b1001:	jc = 1'b1;	          	// 	signed greater
+4'b1010:	jc = 1'b1;	          	// 	signed less
+4'b1011:	jc = 1'b1;	          	// 	signed greater or equal
+default:	jc = 1'b1;
+	endcase
+
+	
+	wire [4:0]	pin0n	= opcode[4:0];					// pin0 5
+	wire [4:0]	pin1n	= opcode[9:5];					// pin1 5
+	
+	
+// Pins in decoding
+	reg pin_r;
+	
+	always @*
+	casex (opcode[4:0])
+5'h00:		pin_r = timer_end;	
+5'h01:		pin_r = apu_strobe;
+5'h02:		pin_r = hsync_start;
+5'h03:		pin_r = hblank;	   
+5'h04:		pin_r = vsync;	   
+5'h05:		pin_r = vblank;	   
+5'h06:		pin_r = line_start;
+default:	pin_r = 1'b1;
+	endcase
+
+	
+// Ports in decoding
+	reg [31:0] in_port;
+	
+	always @*
+	casex (opcode[3:0])
+4'h00:		in_port = {24'b0, sram_data_r	};
+4'h01:		in_port = {16'b0, apu_data_r	};
+4'h02:		in_port = {16'b0, timer_data_r	};
+4'h03:		in_port = {23'b0, hcnt			};
+4'h04:		in_port = {23'b0, vcnt			};
+default:	in_port = 32'b0;
+	endcase
+	
+
+// Ports in size decoding
+	reg [3:0] pp_sz;
+	
+	always @*
+	casex (opcode[3:0])
+4'h00:		pp_sz = 2'b00;		// sram_data_r
+4'h01:		pp_sz = 2'b01;		// apu_data_r
+4'h02:		pp_sz = 2'b01;		// timer_data_r
+4'h03:		pp_sz = 2'b01;		// hcnt
+4'h04:		pp_sz = 2'b01;		// vcnt
+default:	pp_sz = 2'b00;
+	endcase
+	
+
 //- Ports control decoding ------------------------------------
 	wire ld_port = (ih == io_port) && (opcode [7:6] == 2'b10);		// out (port), dst
-	wire ld_pin1 = (ih == o_pin) && (opcode [7:6] == 2'b10);			// set/res pin0, set/res pin1
+	wire ld_pin1 = (ih == o_pin) && (opcode [7:6] == 2'b10);		// set/res pin0, set/res pin1
 	wire ld_pin0 = ((ih == misc) && (im == m_o_pin)) || ld_pin1;	// set/res pin0
 
 
@@ -471,17 +435,6 @@ default:
 	reg [31:0] port_w [0:15];
 	wire [1:0] psz_w[0:15];
 
-	// wires
-//	assign [7:0]	sram_data_w		= gpr[dst8];
-//	assign [15:0]	timer_data_w	= {gpr[dst16+1], r[dst16]};
-//	assign [7:0]	apu_covox		= gpr[dst8];
-//	assign [5:0]	apu_border		= gpr[dst8][5:0];
-
-	// regs
-//	assign [15:0] sram_addr		= port_w[p_sram_addr][15:0];
-//	assign [20:0] apu_addr		= port_w[p_apu_addr][21:1];
-//	assign [15:0] apu_data_w		= port_w[p_apu_data_w][15:0];
-
 	// sizes
 	assign psz_w	[p_sram_addr]		= s16;
 	assign psz_w	[p_sram_data_w]		= s8;
@@ -496,20 +449,6 @@ default:
 	assign timer_we		= port == p_timer_data_w;
 	assign apu_covox_we	= port == p_apu_covox;
 	assign apu_border_we	= port == p_apu_border;
-
-	always @(posedge clk)
-	begin
-		if (ld_port)
-		case (psz_w)
-	s8:
-			port_w[port][7:0] <= r[dst];
-	s16:
-			port_w[port][15:0] <= {r[dst16+1], r[dst16]};
-	s24,
-	s32:
-			port_w[port][31:0] <= {r[dst32+3], r[dst32+2], r[dst32+1], r[dst32]};
-		endcase
-	end
 
 
 //- Pins out decoding and clocking ----------------------------
@@ -534,43 +473,19 @@ default:
 	end
 
 
-//- PC clocking -----------------------------------------------
-	always @(posedge clk)
-		{r[15], r[14]} <= pc_next;
-
-
-//- Registers, flags clocking ---------------------------------
-	reg _c, _z, _n;			// flags
-	reg [7:0] r[0:15];		// GPRs
-	reg z, c, n;			// flags
+// APU Halting
+	reg apu_halt;
 	
 	always @(posedge clk)
-	begin
-		z <= _z;
-		c <= _c;
-		n <= _n;
-		
-		if (ld_dst)
-			r[dst] <= res;	// RESTRICTION! Should be SZ added!
-	end
-	
+		apu_halt <= apu_halt_in;
 
-//- APU Halting -----------------------------------------------
-	always @*
-	if (apu_halt)
-		opcode = 16'hffff;
-	else
-		opcode = opcode_r;
-
-	
-//- Ready signal handling -------------------------------------
 	always @(posedge clk)
-	if (opcode == 16'hffff)
-		apu_rdy <= 1'b1;
-	else
-		apu_rdy <= 1'b0;
+		if (opcode[15:8] == 8'hFF)	apu_rdy <= 1'b1;
+		else						apu_rdy <= 1'b0;
+	
+	wire [15:0] opcode = apu_halt ? = 16'hffff: opcode_r;
 
-
+	
 //- Write to APU microcode RAM --------------------------------
 	reg [7:0] code_wdata_lo;
 	wire code_wren = code_wen && code_waddr[0];
@@ -589,25 +504,11 @@ default:
 					.wraddress(code_waddr[8:1]),
 					.data(code_data),
 					.wren(code_wren),
-					.rdaddress(pc_next),
+					.rdaddress(pc_code),
 					.q(opcode_r)
 					);
 
 
-//- Timer module ----------------------------------------------
-	reg timer_wen;
-	wire [15:0]	timer_data_r;
-	wire timer_end;
-	
-	apu_timer apu_timer(
-					.clk(clk),
-					.wdata(timer_data_w),
-					.wen(timer_we),
-					.ctr(timer_data_r),
-					.cnt_end(timer_end)
-			);
-
-			
 //- ALU module ------------------------------------------------
 	reg		[3:0]	alu_func;
 	reg		[1:0]	alu_sz;
@@ -636,6 +537,20 @@ default:
 			);
 
 
+//- Timer module ----------------------------------------------
+	reg timer_wen;
+	wire [15:0]	timer_data_r;
+	wire timer_end;
+	
+	apu_timer apu_timer(
+					.clk(clk),
+					.wdata(timer_data_w),
+					.wen(timer_we),
+					.ctr(timer_data_r),
+					.cnt_end(timer_end)
+			);
+
+			
 endmodule
 
 // just remark
