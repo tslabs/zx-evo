@@ -51,35 +51,6 @@ module apu(
 	wire sram_data_r = 16'd0;
 
 	
-//- Operands decoding -----------------------------------------
-
-	wire [3:0]	ih		= opcode[15:12];					// opcodeuction class 4
-	wire [3:0]	im		= opcode[11:8];					// opcodeuction sub-class 4
-
-	wire [2:0]	a1fh	= opcode[14:12];					// ALU1 function class 4
-	wire [2:0]	a1fm	= {opcode[12], opcode[7:6]};		// ALU1 function sub-class 4
-	wire [1:0]	a2fm	= {opcode[7:6]};					// ALU2 function sub-class 4
-	wire [1:0]	a3fm	= {opcode[5:4]};					// ALU3 function sub-class 4
-	wire [2:0]	bfm		= {opcode[8:6]};					// Barrel function sub-class 4
-
-	wire [7:0]	imm		= opcode[7:0];					// immediate 8
-
-	wire [15:0]	rel		= {{8{opcode[7]}}, opcode[7:0]};	// relative addr 16
-	
-	wire [3:0]	src		= opcode[3:0];					// source reg8 4
-	wire [3:0]	dst		= opcode[11:8];					// destination reg8 4
-
-	wire [1:0]	sz		= opcode[5:4];					// sizeness 2
-
-	wire [3:0]	jc		= opcode[11:8];					// jump condition 4
-	wire [1:0]	wc		= opcode[7:6];					// wait condition 2
-	wire 		ic		= opcode[11];					// inverse condition 1
-
-	wire [4:0]	pin0	= opcode[4:0];					// pin0 5
-	wire [4:0]	pin1	= opcode[9:5];					// pin1 5
-	wire [1:0]	stb		= opcode[7:6];					// strobe signal 2
-
-
 //- Instructions decoding -------------------------------------
 
 	localparam ALU_LD   = 4'b0000;
@@ -99,167 +70,180 @@ module apu(
 	localparam ALU_MUL  = 4'b1110;
 	localparam ALU_MULS = 4'b1111;
 
-	wire [3:0]	src		= opcode[3:0];		// number of reg 'src'
-	wire [3:0]	dst		= opcode[11:8];		// number of reg 'dst'
-
-	reg	 [31:0]	result;		// the result of execution
+	reg	 [7:0]	gpr[0:15];					// 16 8-bit regs
+	wire [3:0]	src		= opcode[3:0];		// operand 'src'
+	wire [3:0]	dst		= opcode[11:8];		// operand 'dst'
+	reg	 [31:0]	result;						// the result of execution
+	reg	 [3:0]	dst_lat;					// result latching
 	
-	reg	 [7:0]	gpr[0:15];
-
-	wire src8  = src;
-	wire src16  = src & 4'b1110;
-	wire src32  = src & 4'b1100;
+	wire r_lat = {sz > 2'd2, sz > 2'd1, sz > 2'd0, 1'b1};	// what regs to latch result into
 	
-	wire [31:0] r_src_sz[0:3];
-	assign r_src_sz[2'b00] = {24'b0, gpr[src8]};
-	assign r_src_sz[2'b01] = {16'b0, gpr[src16+1], gpr[src16]};
-	assign r_src_sz[2'b10] = {8'b0, gpr[src32+2], gpr[src32+1], gpr[src32]};
-	assign r_src_sz[2'b11] = {gpr[src32+3], gpr[src32+2], gpr[src32+1], gpr[src32]};
+	wire src_sz  = src & (	sz == 2'b00 ? 4'b1111 :
+							sz == 2'b01 ? 4'b1110 : 4'b1100 );
+	wire dst_sz  = dst & (	sz == 2'b00 ? 4'b1111 :
+							sz == 2'b01 ? 4'b1110 : 4'b1100 );
 
-	wire [31:0] r_dst_sz[0:3];
-	assign r_dst_sz[2'b00] = {24'b0, gpr[dst8]};
-	assign r_dst_sz[2'b01] = {16'b0, gpr[dst16+1], gpr[dst16]};
-	assign r_dst_sz[2'b10] = {8'b0, gpr[dst32+2], gpr[dst32+1], gpr[dst32]};
-	assign r_dst_sz[2'b11] = {gpr[dst32+3], gpr[dst32+2], gpr[dst32+1], gpr[dst32]};
-	wire [31:0] r_dst = r_dst_sz[sz];
+	wire [31:0] r_src = { gpr[src_sz+3], gpr[src_sz+2], gpr[src_sz+1], gpr[src_sz] };
+	wire [31:0] r_dst = { gpr[dst_sz+3], gpr[dst_sz+2], gpr[dst_sz+1], gpr[dst_sz] };
+
+	wire [15:0]	rel		= {{8{opcode[7]}}, opcode[7:0]};	// relative addr 16
 	
-	reg  [3:0] r_lat;		// the latching bits for receiver: 3 - r+3, ..., 0 - r
-	wire [3:0] r_lat_r;		// the latching bits for reg operations
-	reg  [3:0] r_lat_p;		// the latching bits for port operations
-	assign r_lat_r = r_lat_s[sz];
-	
-	wire r_lat_s[0:3];
-	assign r_lat_s[2'b00] = 4'b0001;
-	assign r_lat_s[2'b01] = 4'b0011;
-	assign r_lat_s[2'b10] = 4'b0111;
-	assign r_lat_s[2'b11] = 4'b1111;
+	wire [3:0]	jc		= opcode[11:8];					// jump condition 4
+	wire [1:0]	wc		= opcode[7:6];					// wait condition 2
+	wire 		ic		= opcode[11];					// inverse condition 1
+
+	wire [4:0]	pin0	= opcode[4:0];					// pin0 5
+	wire [4:0]	pin1	= opcode[9:5];					// pin1 5
+	wire [1:0]	stb		= opcode[7:6];					// strobe signal 2
 
 
-// ALU function use decoding
+// ALU function decoding
 	always @*
 	casex (opcode[15:12])
-4'b0000,
-4'b0001,
-4'b0010,
-4'b0011,
-4'b0100,
-4'b0101,
-4'b0110:	alu_func = alu_func1;
+4'b0x01:		alu_func = ALU_AND;	// and, tst
+4'b0010:		alu_func = ALU_OR;	// or
+4'b0011:		alu_func = ALU_XOR;	// xor
+4'b0100:		alu_func = ALU_ADD;	// add
+4'b0110:		alu_func = ALU_SUB;	// cmp
+
 4'b0111:	casex(opcode[7:6])
-	2'b00:		alu_func = alu_func2;
+	2'b00:		casex (opcode[11:8])
+		4'b0000:	alu_func = ALU_ADD;	// inc
+		4'b00x1:	alu_func = ALU_SUB;	// dec, neg
+		4'b0010:	alu_func = ALU_XOR;	// cpl
+		4'b0100:	alu_func = ALU_ADC;	// adc
+		4'b0101:	alu_func = ALU_SBC;	// sbc
+		4'b1000:	alu_func = ALU_RR;	// rr
+		4'b1001:	alu_func = ALU_RRC;	// rrc
+		4'b1010:	alu_func = ALU_SRA;	// sra
+		4'b1011:	alu_func = ALU_SRZ;	// srz
+		4'b11x0:	alu_func = ALU_RL;	// rl, rlt
+		4'b11x1:	alu_func = ALU_RLC;	// rlc, rltc
+		default:	alu_func = ALU_LD;
+				endcase
+
 	2'b1x:		alu_func = opcode[6] ? ALU_MUL : ALU_MULS;
 	default:	alu_func = ALU_LD;
 			endcase
-4'b100x:	alu_func = alu_func3;
+			
+4'b100x:	casex ({opcode[12], opcode[7:6]})
+	3'bx01:		alu_func3 = ALU_AND;	// and, tst
+	3'b010:		alu_func3 = ALU_OR;		// or
+	3'b011:		alu_func3 = ALU_XOR;	// xor
+	3'b100:		alu_func3 = ALU_ADD;	// add
+	3'b11x:		alu_func3 = ALU_SUB;	// cmp, sub
+	default:	alu_func3 = ALU_LD;	
+			endcase
+
+4'b1x10:	alu_func = ALU_SUB;		// wait, djnz
 default:	alu_func = ALU_LD;
 	endcase
 
-// ALU functions decoding
-	reg	 [3:0]	alu_func1;		// r,imm
-	always @*
-	case (opcode[14:12])
-3'b001:		alu_func1 = ALU_AND;	// and
-3'b010:		alu_func1 = ALU_OR;		// or
-3'b011:		alu_func1 = ALU_XOR;	// xor
-3'b100:		alu_func1 = ALU_ADD;	// add
-3'b101:		alu_func1 = ALU_AND;	// tst
-3'b110:		alu_func1 = ALU_SUB;	// cmp
-default:	alu_func1 = ALU_LD;		// *
-	endcase
 	
-	reg	 [3:0]	alu_func2;		// r
-	always @*
-	case (opcode[11:8])
-4'b0000:	alu_func2 = ALU_ADD;	// inc
-4'b0001:	alu_func2 = ALU_SUB;	// dec
-4'b0010:	alu_func2 = ALU_XOR;	// cpl
-4'b0011:	alu_func2 = ALU_SUB;	// neg
-4'b0100:	alu_func2 = ALU_ADC;	// adc
-4'b0101:	alu_func2 = ALU_SBC;	// sbc
-4'b1000:	alu_func2 = ALU_RR;		// rr
-4'b1001:	alu_func2 = ALU_RRC;	// rrc
-4'b1010:	alu_func2 = ALU_SRA;	// sra
-4'b1011:	alu_func2 = ALU_SRZ;	// srz
-4'b1100:	alu_func2 = ALU_RL;		// rl
-4'b1101:	alu_func2 = ALU_RLC;	// rlc
-4'b1110:	alu_func2 = ALU_RL;		// rlt
-4'b1111:	alu_func2 = ALU_RLC;	// rltc
-default:	alu_func2 = ALU_LD;
-	endcase
-	
-	reg	 [3:0]	alu_func3;		// r,r
-	always @*
-	case ({opcode[12], opcode[7:6]})
-3'b001:		alu_func3 = ALU_AND;	// and
-3'b010:		alu_func3 = ALU_OR;		// or
-3'b011:		alu_func3 = ALU_XOR;	// xor
-3'b100:		alu_func3 = ALU_ADD;	// add
-3'b101:		alu_func3 = ALU_AND;	// tst
-3'b110:		alu_func3 = ALU_SUB;	// cmp
-3'b111:		alu_func3 = ALU_SUB;	// sub
-default:	alu_func3 = ALU_LD;		// *
-	endcase
-
-		
-
-		alu_func = alu_func3;
-		alu_src = r_dst;
-		alu_arg = r_src;
-		result = alu_res;
-
-			alu_src = r_dst;
-			alu_arg = r_src;
-			result = alu_res;
-	default:
-
-	
-// ALU argument1 (src) decoding
+// ALU size decoding
 	always @*
 	casex (opcode[15:12])
-4'b0001,
-4'b0010,
-4'b0011,
-4'b0100,
-4'b0101,
-4'b0110:	alu_arg = r_dst_sz[sz];
-4'b0111:	casex (opcode[7:6])
-		2'b00:		alu_src = r_src_sz[sz];
-		2'b1x:		alu_src = r_dst_sz[sz];
-		default:	
+4'b00xx,
+4'b010x,
+4'b0110:	sz = 2'b0;			// ld, and, or, xor, add, tst, cmp
+
+4'b0111:	if (opcode[11:10] == 2'b01 && opcode[7:6] == 2'b00)
+				sz = 2'b0;		// adc, sbc, swap, flip
+			else if (opcode[7])
+				sz = mul_sz;	// mul, muls
+			else
+				sz = opcode[5:4];
+				
+4'b101x:	sz = pp_sz;			// wait, in, out
+default:	sz = opcode[5:4];
+	endcase
+
+
+// ALU argument0 decoding
+	always @*
+	casex (opcode[15:12])
+
+4'b0111:	casex (opcode[11:6])
+		6'b000x00:	alu_arg0 = r_src;	// inc, dec
+		6'b001000:	alu_arg0 = r_src;	// cpl
+		6'b001100:	alu_arg0 = 32'b0;	// neg
+		default:	alu_arg0 = r_dst;
 			endcase
-4'b100x:	alu_src = r_dst_sz[sz];
-default:	alu_src = r_dst_sz[sz];
+			
+4'b1010:	alu_arg0 = in_port;			// in
+default:	alu_arg0 = r_dst;
 	endcase
 
 
-// ALU argument2 (arg) decoding
+// ALU argument1 decoding
 	always @*
 	casex (opcode[15:12])
-4'b0000,
-4'b0001,
-4'b0010,
-4'b0011,
-4'b0100,
+4'b00xx,
+4'b010x,
+4'b0110:	alu_arg1 = {24'b0, opcode[7:0]};	// imm8
+
+4'b0111:	casex (opcode[11:6])
+		6'b000x00:	alu_arg1 = 32'b1;		// inc, dec
+		6'b001000:	alu_arg1 = {8{4'hF}};	// cpl
+		6'b001100:	alu_arg1 = r_src;		// neg
+		6'b01xx00:	alu_arg1 = 32'b0;		// adc, sbc, swap, flip
+		default:	alu_arg1 = r_dst;
+			endcase
+			
+4'b1110:	alu_arg1 = 32'b1;		//djnz
+default:	alu_arg1 = r_src;
+	endcase
+
+
+// ALU result decoding
+	always @*
+	casex (opcode[15:12])
+
+4'b0111:	casex (opcode[11:6])
+		6'b011000:	alu_arg1 = {alu_res[31:24],
+						r_src[3:0], r_src[7:4]
+						};		// swap
+		6'b011100:	alu_arg1 = {alu_res[31:24],
+						r_src[0], r_src[1], r_src[2], r_src[3],
+						r_src[4], r_src[5], r_src[6], r_src[7]
+						};		// flip
+		default:	alu_arg1 = alu_res;
+			endcase
+			
+4'b1011:	result = in_port;		// in
+default:	result = alu_res;
+	endcase
+
+
+// ALU destination latch decoding
+	always @*
+	casex (opcode[15:12])
 4'b0101,
-4'b0110:	alu_arg = {24'b0, opcode[7:0]};
-4'b0111,
-4'b100x:	alu_src = r_src_sz[sz];
-default:	alu_src = r_src_sz[sz];
+4'b0110,
+4'b1010,
+4'b110x,
+4'b1111:	dst_lat = 4'b0;		// tst, cmp
+
+4'b1001:	if (opcode[7:6] = 2'b01 || opcode[7:6] = 2'b10)
+				dst_lat = 4'b0;		// tst, cmp
+			else
+				dst_lat = r_lat;
+
+4'b1011:	if (opcode[7:6] = 2'b01 || opcode[7])
+				dst_lat = 4'b0;		// out
+			else
+				dst_lat = r_lat;
+
+default:	dst_lat = r_lat;
 	endcase
 
 
-
-	
-// Regs Latch decoding
+// ALU  decoding
 	always @*
 	casex (opcode[15:12])
-4'b0xxx,
-4'b100x,
-4'b1110:	r_lat = r_lat_s[sz];
-4'b1011:	r_lat = r_lat_p;
-default:	r_lat = 4'b0;
+default:	;
 	endcase
-	
+
 
 // Ports Latch decoding
 	always @*
@@ -268,121 +252,17 @@ default:	r_lat = 4'b0;
 	endcase
 	
 
-	
-//- ALU arguments decoding ------------------------------------
-// input:	ih 4
-// output:	ih_arg1 - 1st argument (dst)
-// 			ih_arg1 - 2nd argument (src)
-// used in:	ALU1, ALU2, ALU3, Barrel
-
-	wire [31:0] ih_arg1[0:15];		// first argument for main class
-	wire [31:0] ih_arg2[0:15];		// second argument for main class
-	
-	assign ih_arg1[4'b0000] = 32'hXXXX;
-	assign ih_arg1[4'b0001] = dst_sz[sz];
-	assign ih_arg1[4'b0010] = dst_sz[sz];
-	assign ih_arg1[4'b0011] = dst_sz[sz];
-	assign ih_arg1[4'b0100] = dst_sz[sz];
-	assign ih_arg1[4'b0101] = dst_sz[sz];
-	assign ih_arg1[4'b0110] = dst_sz[sz];
-	assign ih_arg1[4'b0111] = dst_sz[sz];
-	assign ih_arg1[4'b1000] = dst_sz[sz];
-	assign ih_arg1[4'b1001] = dst_sz[sz];
-	assign ih_arg1[4'b1010] = 32'hXXXX;
-	assign ih_arg1[4'b1011] = port_r_sz[sz];
-	assign ih_arg1[4'b1100] = 32'hXXXX;
-	assign ih_arg1[4'b1101] = 32'hXXXX;
-	assign ih_arg1[4'b1110] = dst_sz[sz];
-	assign ih_arg1[4'b1111] = 32'hXXXX;
-
-	assign ih_arg2[4'b0000] = {24'b0, imm};
-	assign ih_arg2[4'b0001] = {24'b0, imm};
-	assign ih_arg2[4'b0010] = {24'b0, imm};
-	assign ih_arg2[4'b0011] = {24'b0, imm};
-	assign ih_arg2[4'b0100] = {24'b0, imm};
-	assign ih_arg2[4'b0101] = {24'b0, imm};
-	assign ih_arg2[4'b0110] = {24'b0, imm};
-	assign ih_arg2[4'b0111] = {24'b0, imm};
-	assign ih_arg2[4'b1000] = src_sz[sz];
-	assign ih_arg2[4'b1001] = src_sz[sz];
-	assign ih_arg2[4'b1010] = 32'hXXXX;
-	assign ih_arg2[4'b1011] = src_sz[sz];
-	assign ih_arg2[4'b1100] = 32'hXXXX;
-	assign ih_arg2[4'b1101] = 32'hXXXX;
-	assign ih_arg2[4'b1110] = dst_sz[sz];
-	assign ih_arg2[4'b1111] = src_sz[sz];
-
-
-//- GPR Sizeness decoding -------------------------------------
 // input:	sz 2
-// output:	src_sz, dst_sz - number of 1st GPR in cluster
-// used in:	ALU arguments
-// notice:	used to aline gpr pairs and quads, just to minimize number of muxes
+// output:	gprs_sz - "src" opcodeuction argument, coerced to 
 
-	wire [3:0] src_sz[0:3];
-	wire [3:0] dst_sz[0:3];
+
+
+	wire [31:0] gprd_sz[0:3];
 	
-	assign src_sz[2'b00] = src;
-	assign src_sz[2'b01] = {src[3:1], 1'b0};
-	assign src_sz[2'b10] = {src[3:2], 2'b0};
-	assign src_sz[2'b11] = {src[3:2], 2'b0};
-
-	assign dst_sz[2'b00] = dst;
-	assign dst_sz[2'b01] = {dst[3:1], 1'b0};
-	assign dst_sz[2'b10] = {dst[3:2], 2'b0};
-	assign dst_sz[2'b11] = {dst[3:2], 2'b0};
-
-
-// input:	sz 2
-// output:	gpr_src_sz - "src" opcodeuction argument, coerced to 
-
-
-
-	wire [31:0] gpr_dst_sz[0:3];
-	
-	assign gpr_dst_sz[2'b00] = {24'b0, gpr[dst8]};
-	assign gpr_dst_sz[2'b01] = {16'b0, gpr[dst16+1], gpr[dst16]};
-	assign gpr_dst_sz[2'b10] = {8'b0, gpr[dst32+2], gpr[dst32+1], gpr[dst32]};
-	assign gpr_dst_sz[2'b11] = {gpr[dst32+3], gpr[dst32+2], gpr[dst32+1], gpr[dst32]};
-
-
-//- ALU1 fuctions ---------------------------------------------
-	wire [31:0] afunc1[0:7];
-
-	assign afunc1[3'b000] = ih_arg2[ih];					// ld
-	assign afunc1[3'b001] = ih_arg1[ih] & ih_arg2[ih];		// and
-	assign afunc1[3'b010] = ih_arg1[ih] | ih_arg2[ih];		// or
-	assign afunc1[3'b011] = ih_arg1[ih] ^ ih_arg2[ih];		// xor
-	assign afunc1[3'b100] = ih_arg1[ih] + ih_arg2[ih];		// add
-	assign afunc1[3'b101] = ih_arg1[ih] - ih_arg2[ih];		// sub
-	assign afunc1[3'b110] = ih_arg1[ih] - ih_arg2[ih];		// cmp
-	assign afunc1[3'b111] = ih_arg1[ih] & ih_arg2[ih];		// tst
-
-	
-//- ALU2 fuctions ---------------------------------------------
-	wire [31:0] afunc2[0:3];
-
-	assign afunc2[2'b00] = ih_arg2[ih] + 32'b1;				// inc
-	assign afunc2[2'b01] = ih_arg2[ih] - 32'b1;				// dec
-	assign afunc2[2'b10] = ih_arg2[ih] ^ 32'hFFFF;			// cpl
-	assign afunc2[2'b11] = - ih_arg2[ih];					// neg
-
-	
-//- ALU3 fuctions ---------------------------------------------
-	wire [7:0] afunc3[0:3];
-
-	assign afunc3[2'b00] = gpr[src8] + {7'b0, f_c};			// adc
-	assign afunc3[2'b01] = gpr[src8] - {7'b0, f_c};			// sbc
-	assign afunc3[2'b10] = {gpr[src8][3:0],
-							gpr[src8][7:4]};				// swap
-	assign afunc3[2'b11] = {gpr[src8][0], gpr[src8][1],
-							gpr[src8][2], gpr[src8][3],
-							gpr[src8][4], gpr[src8][5],
-							gpr[src8][6], gpr[src8][7]};	// flip
-
-	
-//- Barrel fuctions ---------------------------------------------
-	wire [31:0] bfunc[0:15];
+	assign gprd_sz[2'b00] = {24'b0, gpr[dst8]};
+	assign gprd_sz[2'b01] = {16'b0, gpr[dst16+1], gpr[dst16]};
+	assign gprd_sz[2'b10] = {8'b0, gpr[dst32+2], gpr[dst32+1], gpr[dst32]};
+	assign gprd_sz[2'b11] = {gpr[dst32+3], gpr[dst32+2], gpr[dst32+1], gpr[dst32]};
 
 
 //- Jump Condition decoding -----------------------------------
@@ -685,11 +565,11 @@ default:
 
 			
 //- ALU module ------------------------------------------------
-	reg		[31:0]	alu_src;
-	reg		[31:0]	alu_arg;
-	reg				alu_in_c;
 	reg		[3:0]	alu_func;
 	reg		[1:0]	alu_sz;
+	reg		[31:0]	alu_arg0;
+	reg		[31:0]	alu_arg1;
+	reg				alu_in_c;
 
 	wire	[31:0]	alu_res;
 	wire			alu_out_z;
@@ -698,11 +578,12 @@ default:
 	wire			alu_out_v;
 	
 	apu_alu(
-					.src	(alu_src),
-					.arg	(alu_arg),
-					.c	    (alu_in_c),
 					.func	(alu_func),
 					.sz 	(alu_sz),
+					.arg0	(alu_arg0),
+					.arg1	(alu_arg1),
+					.c	    (alu_in_c),
+					
 					.res	(alu_res)
 					.fz	    (alu_out_z),
 					.fs	    (alu_out_s),
