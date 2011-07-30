@@ -35,6 +35,7 @@ module synch(
 	output reg hsync,
 
 	output reg line_start,  // 1 video cycle prior to actual start of visible line
+	output wire pre_hline,
 	output reg hsync_start, // 1 cycle prior to beginning of hsync: used in frame sync/blank generation
 	                        // these signals coincide with cend
 
@@ -78,6 +79,8 @@ module synch(
 		hpix = 1'b0;
 	end
 
+// hcounter
+// clocked by 'cend so can be sampled at 'cbeg if any
 	always @(posedge clk) if( cend )
 	begin
             if( init || (hcount==(HPERIOD-9'd1)) )
@@ -125,6 +128,11 @@ module synch(
 	end
 
 
+// this controls the starting signal for the SPU
+// coincides with 'cbeg so can be sampled at 'post_cbeg
+	assign pre_hline = (hcount == HBLNK_END) && cbeg;
+
+	
 	always @(posedge clk)
 	begin
 		if( pre_cend && (hcount==HINT_BEG) )

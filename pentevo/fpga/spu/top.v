@@ -446,6 +446,7 @@ module top(
 	                 .dram_bsel(dbsel),
 	                 .dram_rddata(drddata),
 	                 .dram_wrdata(dwrdata),
+					 .dram_rd_valid(rd_valid),
 
 	                 .cend(cend),
 	                 .pre_cend(pre_cend),
@@ -486,7 +487,9 @@ module top(
 
 	synch horiz_sync( .clk(fclk), .init(1'b0), .cend(cend), .pre_cend(pre_cend),
 	                  .hsync(hsync), .hblank(hblank), .hpix(hpix), .hsync_start(hsync_start),
-	                  .line_start(line_start), .hint_start(hint_start), .scanin_start(scanin_start) );
+	                  .line_start(line_start),
+	                  .pre_hline(pre_hline),
+					  .hint_start(hint_start), .scanin_start(scanin_start) );
 
 
 	wire vblank,vsync,int_start,vpix;
@@ -517,9 +520,9 @@ spu_spsf spu_spsf(
 				.clock(fclk),
 				.wraddress(spsf_wa),
 				.data(d),
+				.wren(spsf_we)
 				.rdaddress(spsf_ra),
 				.q(spsf_rd),
-				.wren(spsf_we)
 			);
 			
 	
@@ -529,6 +532,7 @@ spu_spsf spu_spsf(
 spu spu(
 			.clk(fclk),
 			.line_start(line_start),
+			.pre_hline(pre_hline),
 			.pre_vline(pre_vline),
 			.post_cbeg(post_cbeg),
 			.cbeg(cbeg),

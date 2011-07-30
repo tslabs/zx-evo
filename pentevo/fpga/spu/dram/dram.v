@@ -51,6 +51,7 @@ module dram(
 	output reg rrdy,       // Read data ReaDY
 
 	output reg [15:0] rddata, // data just read
+	output wire rd_valid,
 
 	input  [15:0] wrdata, // data to be written
 	input   [1:0] bsel    // positive byte select for write: bsel[0] is for wrdata[7:0], bsel[1] is for wrdata[15:8]
@@ -58,6 +59,8 @@ module dram(
 
 );
 
+	assign rd_valid = (state == RD3);
+	
 	reg [1:0] rst_sync;
 	wire reset;
 	wire int_req;
