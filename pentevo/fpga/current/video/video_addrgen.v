@@ -70,6 +70,9 @@ module video_addrgen(
 	assign ldaddr = mode_a_text ? tnext : gnext;
 
 	// gfx counter
+	//
+	initial gctr <= 0;
+	//
 	always @(posedge clk)
 	if( frame_init )
 		gctr <= 0;
@@ -132,6 +135,8 @@ module video_addrgen(
 	assign addr_at = { 5'b00000, ~txctr[0], scr_page, 1'b1, txctr[1], 2'b00, tyctr[7:3], txctr[6:2] };
 
 
+	initial video_addr <= 0;
+	//
 	always @(posedge clk) if( ldaddr )
 	begin
 		video_addr <=

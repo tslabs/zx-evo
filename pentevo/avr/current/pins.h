@@ -130,6 +130,15 @@
 /** SOFT RESET direction register. */
 #define SOFTRES_DDR  DDRC
 
+/** NMI pin number*/
+#define NMI          PC6
+/** NMI port register. */
+#define NMI_PORT     PORTC
+/** NMI pins register. */
+#define NMI_PIN  PINC
+/** NMI direction register. */
+#define NMI_DDR  DDRC
+
 /** JOYSTICK RIGHT pin number. */
 #define JOYSTICK_RIGHT PG0
 /** JOYSTICK LEFT pin number. */
@@ -148,6 +157,24 @@
 #define JOYSTICK_PIN   PING
 /** JOYSTICK direction register. */
 #define JOYSTICK_DDR   DDRC
+
+/** RS232 CTS pin number. */
+#define RS232CTS PB6
+/** RS232 CTS port register. */
+#define RS232CTS_PORT PORTB
+/** RS232 CTS pins register. */
+#define RS232CTS_PIN  PINB
+/** RS232 CTS direction register. */
+#define RS232CTS_DDR  DDRB
+
+/** RS232 RTS pin number. */
+#define RS232RTS PD5
+/** RS232 RTS port register. */
+#define RS232RTS_PORT PORTD
+/** RS232 RTS pins register. */
+#define RS232RTS_PIN  PIND
+/** RS232 RTS direction register. */
+#define RS232RTS_DDR  DDRD
 
 #endif
 

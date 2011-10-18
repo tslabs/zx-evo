@@ -1,0 +1,150 @@
+
+;LINIT  - initialization (hook on "P"-channel and printer init)
+;LPRINT - print ZX simbol (with token decode)
+;LBYTE  - print simbol (without token decode)
+;LCOPY  - print screen
+
+		include ../../macros.a80
+
+		ORG 0X5B00   ;23296
+LINIT		JR INIT
+
+LBYTE		JR OUTBYTE
+
+LCOPY		LD HL,GRSET1
+		CALL OUTSTR
+		LD HL,0X4000
+		LD C,0X03
+LCOP5		LD B,0X08
+LCOP4		PUSH BC
+		PUSH HL
+		LD HL,GRSET2
+		CALL OUTSTR
+		POP HL
+		LD D,H
+		LD E,L
+		LD B,0X20
+LCOP3		PUSH BC
+		LD C,0X08
+LCOP2		LD B,0X08
+LCOP1		RLC (HL)
+		RLA
+		INC H
+		DJNZ LCOP1
+		CALL OUTBYTE
+		LD H,D
+		LD L,E
+		DEC C
+		JR NZ,LCOP2
+		INC E
+		PUSH DE
+		POP HL
+		POP BC
+		DJNZ LCOP3
+		POP BC
+		DJNZ LCOP4
+		LD A,H
+		ADD A,0X08
+		LD H,A
+		DEC C
+		JR NZ,LCOP5
+		LD HL,GRSET3
+OUTSTR		LD A,(HL)
+		CP 0XFF
+		RET Z
+		CALL OUTBYTE
+		INC HL
+		JR OUTSTR
+
+OUTBYTE		PUSH BC
+		PUSH HL
+		CALL LP01
+		POP HL
+		POP BC
+		RET
+
+INIT		LD DE,0XFFBF
+		LD C,0XFD
+		LD B,D		;FF
+		LD A,0XFE		;for TS or TSFM
+		OUT (C),A		;select first chip
+		LD A,7
+		OUT (C),A
+		LD B,E		;BF
+		LD A,0X7F
+		OUT (C),A
+		LD B,D		;FF
+		LD A,0X0F
+		OUT (C),A
+		LD B,E		;BF
+		LD A,0XFE
+		OUT (C),A
+		LD HL,(0X5C4F)
+		LD DE,0X0F
+		ADD HL,DE
+		LD DE,LPRINT
+		LD (HL),E
+		INC HL
+		LD (HL),D
+		LD HL,INTX
+		JR OUTSTR
+
+LPRINT		CP 0X0D
+		JR NZ,LP02
+		CALL LP01
+		LD A,0X0A
+		JR LP01
+
+LP02		CP 0X20
+		RET C
+		CP 0X7F
+		JR C,LP01
+		CP 0XA5
+		JP NC,0X09F4
+		CP 0X90
+		JR C,LP03
+		SUB 0X4F
+		JR LP01
+
+LP03		LD A,0X20
+LP01		PUSH BC
+		PUSH AF
+		LD BC,0XFFFD
+		LD A,0X0E
+		OUT (C),A
+		LD B,0XBF
+		POP AF
+		OUT (C),A
+		LD B,0XFF
+		LD A,0X0F
+		OUT (C),A
+LP04		CALL 0X1F54
+		JR NC,LP05
+		IN A,(C)
+		RLA
+		JR NC,LP04
+		LD A,7
+		OUT (C),A
+		LD B,0XBF
+		LD A,0XFF
+		OUT (C),A
+		PUSH IX
+		POP IX
+		LD A,0X7F
+		OUT (C),A
+		POP BC
+		RET
+
+LP05		RST 8
+		DB 0X14			; BREAK into program
+
+		DUPL 0X5BE0-$,0
+;Command code for 9-pin EPSON-compatibility printers
+;Printer initialization
+INTX		DB 0X1B,0X40,0X07,0X07,0XFF,0XFF,0XFF,0XFF
+;setup1 (before screen copy)
+GRSET1		DB 0X1B,0X41,0X08,0XFF,0XFF,0XFF,0XFF,0XFF
+;setup2 (every new line)
+GRSET2		DB 0X0D,0X0A,0X1B,0X2A,0X05,0X00,0X01,0XFF
+;setup2 (after complete screen copy)
+GRSET3		DB 0X0D,0X0A,0X1B,0X32,0X07,0X07,0X07,0XFF

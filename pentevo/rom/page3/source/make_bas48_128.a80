@@ -1,0 +1,7 @@
+
+		include ../../macros.a80
+		include ../../global_vars.a80
+
+BAS48_ONLY	EQU 0
+
+		include basic48.a80

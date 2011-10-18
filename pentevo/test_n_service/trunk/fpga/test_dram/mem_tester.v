@@ -82,14 +82,8 @@ parameter DRAM_MA_SIZE = 10;
     rnd_vec_gen my_rnd( .clk(clk), .init(rnd_init), .next(ram_ready), .save(rnd_save), .restore(rnd_restore), .out(rnd_out) );
     defparam my_rnd.OUT_SIZE = DRAM_DATA_SIZE;
 
-`define SHORT_RND
-`ifdef SHORT_RND
-    defparam my_rnd.LFSR_LENGTH = 25;
-    defparam my_rnd.LFSR_FEEDBACK = 22;
-`else
-    defparam my_rnd.LFSR_LENGTH = 39;
-    defparam my_rnd.LFSR_FEEDBACK = 35;
-`endif
+    defparam my_rnd.LFSR_LENGTH = 17;
+    defparam my_rnd.LFSR_FEEDBACK = 14;
 
 
 

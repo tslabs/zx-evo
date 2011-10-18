@@ -1,9 +1,9 @@
 
-;		DEVICE ZXSPECTRUM48
+;LAST UPDATE: 27.08.2011 savelij
 
-		INCLUDE ../../macros.a80
-		INCLUDE fat/sdcomand.a80
-		INCLUDE fat/ports_ngs.a80
+		include ../../macros.a80
+		include fat/sdcomand.a80
+		include fat/ports_ngs.a80
 	
 BUF_512		EQU 0X4000		;0X200 “”… —’…ˆŸ ‘…Š’€
 ERORDRV		EQU BUF_512+0X200	;2 ‚‡‚€’ ‘ ˜ˆŠ‰ ‚ A

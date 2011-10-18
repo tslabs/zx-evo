@@ -560,7 +560,7 @@ T_PSM20:
         RCALL   FPGA_REG
         LDH     XL,TPSM_Y
         CLR     XH
-        ADIW    XL,44
+        ADIW    XL,43
         PUSH    XL
         MOV     DATA,XH
         LDI     TEMP,SCR_MOUSE_TEMP

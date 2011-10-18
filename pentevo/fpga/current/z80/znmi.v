@@ -6,28 +6,28 @@
 
 module znmi
 (
-	input  wire rst_n,
-	input  wire fclk,
+	input  wire       rst_n,
+	input  wire       fclk,
 
-	input  wire zpos,
-	input  wire zneg,
+	input  wire       zpos,
+	input  wire       zneg,
 
-	input  wire int_start, // when INT starts
-	input  wire set_nmi,   // NMI request from slavespi
+	input  wire       int_start, // when INT starts
+	input  wire [1:0] set_nmi,   // NMI request from slavespi
 
-	input  wire clr_nmi, // clear nmi: from zports, pulsed at out to #xxBE
-
-
-	input  wire rfsh_n,
+	input  wire       clr_nmi, // clear nmi: from zports, pulsed at out to #xxBE
 
 
-	output reg  in_nmi, // when 1, there must be last ram page in 0000-3FFF
+	input  wire       rfsh_n,
 
-	output wire gen_nmi // NMI generator: when 1, NMI_N=0, otherwise NMI_N=Z
+
+	output reg        in_nmi, // when 1, there must be last ram page in 0000-3FFF
+
+	output wire       gen_nmi // NMI generator: when 1, NMI_N=0, otherwise NMI_N=Z
 );
 
-	reg  set_nmi_r;
-	wire set_nmi_now;
+	reg  [1:0] set_nmi_r;
+	wire       set_nmi_now;
 
 	reg pending_nmi;
 
@@ -42,7 +42,8 @@ module znmi
 	always @(posedge fclk)
 		set_nmi_r <= set_nmi;
 	//
-	assign set_nmi_now = (set_nmi_r != set_nmi);
+	assign set_nmi_now = (set_nmi_r[0] && (!set_nmi[0])) ||
+	                     (set_nmi_r[1] && (!set_nmi[1])) ;
 
 
 	always @(posedge fclk, negedge rst_n)

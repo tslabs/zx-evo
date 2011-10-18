@@ -26,6 +26,7 @@ module zports(
 	input  wire        wr_n,
 
 	output reg         porthit, // when internal port hit occurs, this is 1, else 0; used for iorq1_n iorq2_n on zxbus
+	output reg         external_port, // asserts for AY and VG93 accesses
 
 	output wire [15:0] ideout,
 	input  wire [15:0] idein,
@@ -114,7 +115,11 @@ module zports(
 	input  wire [ 7:0] ramnroms,
 	input  wire [ 7:0] dos7ffds,
 
-	input  wire [ 5:0] palcolor
+	input  wire [ 5:0] palcolor,
+
+
+	// NMI generation
+	output reg         set_nmi
 );
 
 
@@ -144,6 +149,11 @@ module zports(
 	localparam VGDAT  = 8'h7F;
 	localparam VGSYS  = 8'hFF;
 
+	localparam SAVPORT1 = 8'h2F;
+	localparam SAVPORT2 = 8'h4F;
+	localparam SAVPORT3 = 8'h6F;
+	localparam SAVPORT4 = 8'h8F;
+
 	localparam KJOY   = 8'h1F;
 	localparam KMOUSE = 8'hDF;
 
@@ -163,8 +173,6 @@ module zports(
 
 
 
-
-	reg external_port;
 
 	reg port_wr;
 	reg port_rd;
@@ -229,6 +237,10 @@ module zports(
 
 
 
+	reg [7:0] savport [3:0];
+
+
+
 
 
 	assign shadow = dos || shadow_en_reg;
@@ -252,6 +264,10 @@ module zports(
 
 		    ( (loa==VGCOM)&&shadow ) || ( (loa==VGTRK)&&shadow ) || ( (loa==VGSEC)&&shadow ) || ( (loa==VGDAT)&&shadow ) ||
 		    ( (loa==VGSYS)&&shadow ) || ( (loa==KJOY)&&(!shadow) ) ||
+
+    		    ( (loa==SAVPORT1)&&shadow ) || ( (loa==SAVPORT2)&&shadow ) ||
+		    ( (loa==SAVPORT3)&&shadow ) || ( (loa==SAVPORT4)&&shadow ) ||
+
 
 		    ( (loa==PORTF7)&&(!shadow) ) || ( (loa==SDCFG)&&(!shadow) ) || ( (loa==SDDAT) ) ||
 
@@ -350,6 +366,10 @@ module zports(
 		VGSYS:
 			dout = { vg_intrq, vg_drq, 6'b111111 };
 
+		SAVPORT1, SAVPORT2, SAVPORT3, SAVPORT4:
+			dout = savport[ loa[6:5] ];
+
+
 		KJOY:
 			dout = {3'b000, kj_in};
 		KMOUSE:
@@ -373,7 +393,7 @@ module zports(
 		end
 
 		ZXEVBF: begin
-			dout = { 5'b00000, fntw_en_reg, romrw_en_reg, shadow_en_reg };
+			dout = { 4'b0000, set_nmi, fntw_en_reg, romrw_en_reg, shadow_en_reg };
 		end
 
 		ZXEVBE: begin
@@ -691,16 +711,16 @@ module zports(
 
 	wire sdcfg_wr,sddat_wr,sddat_rd;
 
-	assign sdcfg_wr = ( (loa==SDCFG) && port_wr && (!shadow) )                  ||
-	                  ( (loa==SDDAT) && port_wr &&   shadow  && (a[15]==1'b1) ) ;
+	assign sdcfg_wr = ( (loa==SDCFG) && port_wr_fclk && (!shadow) )                  ||
+	                  ( (loa==SDDAT) && port_wr_fclk &&   shadow  && (a[15]==1'b1) ) ;
 
-	assign sddat_wr = ( (loa==SDDAT) && port_wr && (!shadow) )                  ||
-	                  ( (loa==SDDAT) && port_wr &&   shadow  && (a[15]==1'b0) ) ;
+	assign sddat_wr = ( (loa==SDDAT) && port_wr_fclk && (!shadow) )                  ||
+	                  ( (loa==SDDAT) && port_wr_fclk &&   shadow  && (a[15]==1'b0) ) ;
 
-	assign sddat_rd = ( (loa==SDDAT) && port_rd              );
+	assign sddat_rd = ( (loa==SDDAT) && port_rd_fclk              );
 
 	// SDCFG write - sdcs_n control
-	always @(posedge zclk, negedge rst_n)
+	always @(posedge fclk, negedge rst_n)
 	begin
 		if( !rst_n )
 			sdcs_n <= 1'b1;
@@ -712,19 +732,7 @@ module zports(
 
 	// start signal for SPI module with resyncing to fclk
 
-	reg sd_start_toggle;
-	reg [2:0] sd_stgl;
-
-	// Z80 clock
-	always @(posedge zclk)
-		if( sddat_wr || sddat_rd )
-			sd_start_toggle <= ~sd_start_toggle;
-
-	// FPGA clock
-	always @(posedge fclk)
-		sd_stgl[2:0] <= { sd_stgl[1:0], sd_start_toggle };
-
-	assign sd_start = ( sd_stgl[1] != sd_stgl[2] );
+	assign sd_start = sddat_wr || sddat_rd;
 
 
 	// data for SPI module
@@ -756,15 +764,17 @@ module zports(
 	always @(posedge fclk, negedge rst_n)
 	if( !rst_n )
 	begin
-		shadow_en_reg = 1'b0;
-		romrw_en_reg  = 1'b0;
-		fntw_en_reg   = 1'b0;
+		shadow_en_reg <= 1'b0;
+		romrw_en_reg  <= 1'b0;
+		fntw_en_reg   <= 1'b0;
+		set_nmi       <= 1'b0;
 	end
 	else if( zxevbf_wr_fclk )
 	begin
 		shadow_en_reg <= din[0];
 		romrw_en_reg  <= din[1];
 		fntw_en_reg   <= din[2];
+		set_nmi       <= din[3];
 	end
 
 	assign romrw_en = romrw_en_reg;
@@ -776,7 +786,7 @@ module zports(
 	if( !rst_n )
 	begin
 		atm_scr_mode = 3'b011;
-		atm_turbo    = 1'b1;
+		atm_turbo    = 1'b0;
 
 		atm_pen =   1'b1; // no manager,
 		atm_cpm_n = 1'b0; // permanent dosen (shadow ports on)
@@ -857,6 +867,20 @@ module zports(
 	endcase
 
 
+
+
+
+	// savelij ports write
+	//
+	always @(posedge fclk)
+	if( port_wr_fclk && shadow )
+	begin
+		if( (loa==SAVPORT1) ||
+		    (loa==SAVPORT2) ||
+		    (loa==SAVPORT3) ||
+		    (loa==SAVPORT4) )
+			savport[ loa[6:5] ] <= din;
+	end
 
 
 

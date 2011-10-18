@@ -8,12 +8,37 @@
  *
  * @subsection current Current version.
  *
+ * - Add access to PS2 keyboards log via gluk extensions.
+ *
+ * @subsection ver_2011_09_29 Version 29.09.2011.
+ *
+ *  - Add support BCD or HEX format in emulation Gluk clock.
+ *  - Fix RTS line control.
+ *
+ * @subsection ver_2011_06_11 Version 11.06.2011.
+ *
+ *  - Add NMI button supporting.
+ *  - Fix PS/2 mouse initialization.
+ *
+ * @subsection ver_2011_05_11 Version 11.05.2011
+ *
+ * - Direct load UBRR on RS232 mode [if (DLM&0x80)!=0 ].
+ * - Control PLL (ICS501M) via PE2,PE3. Set it to 2X.
+ *
+ * @subsection ver_2011_04_26 Version 26.04.2011
+ *
+ * - Add RS232 supporting.
+ * - Increase delay for reset FPGA (nCONFIG pin) before download it.
+ *
+ * @subsection ver_2011_04_02 Version 02.04.2011
+ *
+ * - Add access to 0..EF cells of PC8583.
  * - Fix RTC PC8583 dayweek 0..6 convert to DS12788 dayweek 1..7 and vice versa.
  *
  * @subsection ver_2010_12_07 Version 07.12.2010
  *
  * - Keyboard mapping without using RAM.
- * - Add setting resolution for PS/2 mouse [1..4]
+ * - Add setting resolution for PS/2 mouse [1..4].
  *   (left and right mouse buttons and pad'*' - default [1], pad'+' - increment, pad'-' - decrement).
  * - Add PS/2 mouse resolution saving to RTC register.
  *
@@ -80,18 +105,20 @@ extern volatile UBYTE flags_register;
 /** Direction for ps2 keyboard data (0 - Receive/1 - Send). */
 #define FLAG_PS2KEYBOARD_DIRECTION  0x10
 /** Version type (0 - BaseConf /1 - BootLoader). */
-#define FLAG_VERSION_TYPE       0x20
+//#define FLAG_VERSION_TYPE       0x20
 /** Last tape in bit value. */
 #define FLAG_LAST_TAPE_VALUE    0x40
 /** Hard reset flag (1 - enable hard reset). */
 #define FLAG_HARD_RESET         0x80
 
-/** Common flag register. */
+/** Common extension flag register. */
 extern volatile UBYTE flags_ex_register;
 /** Ps2 mouse command (0 - not/1 - process). */
 #define FLAG_EX_PS2MOUSE_CMD    0x01
 /** Ps2 keyboard map (0 - default/1 - user). */
 #define FLAG_EX_PS2KEYBOARD_MAP 0x02
+/** NMI interrupt set (0 - not/1 - set). */
+#define FLAG_EX_NMI             0x04
 
 /** Common modes register. */
 extern volatile UBYTE modes_register;
@@ -99,6 +126,16 @@ extern volatile UBYTE modes_register;
 #define MODE_VGA 0x01
 /** Tapeout mode (0 - beeper or pwm mode/1 - tapeout). */
 #define MODE_TAPEOUT 0x02
+
+/** Type extensions of gluk registers. */
+extern volatile UBYTE ext_type_gluk;
+/** Type is baseconfiguration version. */
+#define EXT_TYPE_BASECONF_VERSION     0
+/** Type is bootloader version. */
+#define EXT_TYPE_BOOTLOADER_VERSION   1
+/** Type is PS2 keyboards log. */
+#define EXT_TYPE_PS2KEYBOARDS_LOG     2
+
 
 /** Data buffer. */
 extern UBYTE dbuf[];

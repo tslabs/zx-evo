@@ -23,4 +23,7 @@ void rs232_zx_write(UBYTE index, UBYTE data);
  */
 UBYTE rs232_zx_read(UBYTE index);
 
+/** RS232 task. */
+void rs232_task(void);
+
 #endif //RS232_H

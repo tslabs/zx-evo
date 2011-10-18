@@ -58,8 +58,6 @@ void atx_power_task(void)
 
 	if ( atx_counter > 1700 )
 	{
-
-
 		if ( ( SOFTRES_PIN & (1<<SOFTRES) ) == 0 )
 		{
 			//atx power off button pressed (~5 sec)

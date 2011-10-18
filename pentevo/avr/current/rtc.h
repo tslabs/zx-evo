@@ -80,6 +80,15 @@ UBYTE rtc_read(UBYTE addr);
 /** C register 4 bit - Update-ended interrupt flag [UF] (Bit is set after each update cycle, UF is cleared by reading Register C or a RESET). */
 #define GLUK_C_UPDATE_FLAG  0x10
 
+/** Initial value for Gluk A register. */
+#define GLUK_A_INIT_VALUE   0x00
+/** Initial value for Gluk B register. */
+#define GLUK_B_INIT_VALUE   0x02
+/** Initial value for Gluk C register. */
+#define GLUK_C_INIT_VALUE   0x00
+/** Initial value for Gluk D register. */
+#define GLUK_D_INIT_VALUE   0x80
+
 /** Read values from RTC and setup Gluk clock registers. */
 void gluk_init(void);
 

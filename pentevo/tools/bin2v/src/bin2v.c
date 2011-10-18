@@ -113,7 +113,8 @@ int emit_body(FILE * infile, FILE * outfile, int len, int bits)
 	{
 		if( 1==fread(&b,1,1,infile) )
 		{
-			fprintf(outfile, "\t\t%d'h%X: out_word = 8'h%02X;\n", bits,i,(int)b);
+			if( b!=0xFF )
+				fprintf(outfile, "\t\t%d'h%X: out_word = 8'h%02X;\n", bits,i,(int)b);
 		}
 		else // error reading byte
 		{

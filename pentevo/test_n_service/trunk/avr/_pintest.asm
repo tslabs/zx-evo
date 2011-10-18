@@ -26,9 +26,9 @@ PINTEST:
 CHAOS00:
         SBI     DDRB,7
 CHAOS2: CALL    RANDOM
-        SBI     PORTB,7
+        LED_OFF
         SBRC    DATA,0
-        CBI     PORTB,7
+        LED_ON
         LDIX    $6C00
 CHAOS1: SUBI    XL,1
         SBCI    XH,0

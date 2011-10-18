@@ -26,6 +26,7 @@ module sound(
 	reg mx_beep_n_covox;
 
 	reg beep_bit;
+	reg beep_bit_old;
 
 	wire covox_bit;
 
@@ -34,12 +35,14 @@ module sound(
 
 	always @(posedge clk)
 	begin
-		if( beeper_wr )
+/*		if( beeper_wr ) */
+                                if( beeper_wr && (beep_bit!=beep_bit_old) )
 			mx_beep_n_covox <= 1'b1;
 		else if( covox_wr )
 			mx_beep_n_covox <= 1'b0;
 	end
 
+	always @(posedge clk) if( beeper_wr ) beep_bit_old <= beep_bit;
 
 	always @(posedge clk)
 	if( beeper_wr )

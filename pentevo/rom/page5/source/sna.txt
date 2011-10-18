@@ -1,0 +1,66 @@
+
+			.SNA, .snap or .snapshot 
+		(Mirage Microdrive format used by many emulators)
+
+This format is the most well-supported of all snapshot formats (though Z80 is 
+close on its heels) but has a drawback:
+
+As the program counter is pushed onto the stack so that a RETN instruction can 
+restart the program, 2 bytes of memory are overwritten. This will usually not 
+matter; the game (or whatever) will have stack space that can be used for this. 
+However, if this space is all in use when the snap is made, memory below the 
+stack space will be corrupted. According to Rui Ribeiro, the effects of this can 
+sometimes be avoided by replacing the corrupted bytes with zeros; e.g. take the 
+PC from the, stack pointer, replace that word with 0000 and then increment SP. 
+This worked with snapshots of Batman, Bounder and others which had been saved at 
+critical points. Theoretically, this problem could cause a complete crash 
+on a real Spectrum if the stack pointer happened to be at address 16384; 
+the push would try and write to the ROM. How different emulators handle this 
+is not something I know...
+
+When the registers have been loaded, a RETN command is required to start the 
+program. IFF2 is short for interrupt flip-flop 2, and for all practical purposes 
+is the interrupt-enabled flag. Set means enabled.
+
+   Offset   Size   Description
+   ------------------------------------------------------------------------
+   0        1      byte   I
+   1        8      word   HL',DE',BC',AF'
+   9        10     word   HL,DE,BC,IY,IX
+   19       1      byte   Interrupt (bit 2 contains IFF2, 1=EI/0=DI)
+   20       1      byte   R
+   21       4      words  AF,SP
+   25       1      byte   IntMode (0=IM0/1=IM1/2=IM2)
+   26       1      byte   BorderColor (0..7, not used by Spectrum 1.7)
+   27       49152  bytes  RAM dump 16384..65535
+   ------------------------------------------------------------------------
+   Total: 49179 bytes
+
+			.SNA (128Kb version) (SP_EMU)
+
+This is simply the SNA format extended to include the extra memory banks of the 
+128K/+2 machines, and fixes the problem with the PC being pushed onto the stack
+- now it is located in an extra variable in the file (and is not pushed onto the 
+stack at all). The first 49179 bytes of the snapshot are otherwise exactly as 
+described above, so the full description is:
+
+   Offset   Size   Description
+   ------------------------------------------------------------------------
+   0        27     bytes  SNA header (see above)
+   27       16Kb   bytes  RAM bank 5 \
+   16411    16Kb   bytes  RAM bank 2  } - as standard 48Kb SNA file
+   32795    16Kb   bytes  RAM bank n / (currently paged bank)
+   49179    2      word   PC
+   49181    1      byte   port 7FFD setting
+   49182    1      byte   TR-DOS rom paged (1) or not (0)
+   49183    16Kb   bytes  remaining RAM banks in ascending order
+   ...
+   ------------------------------------------------------------------------
+   Total: 131103 or 147487 bytes
+
+The third RAM bank saved is always the one currently paged, even if this is 
+page 5 or 2 - in this case, the bank is actually included twice. The remaining 
+RAM banks are saved in ascending order - e.g. if RAM bank 4 is paged in, the 
+snapshot is made up of banks 5, 2 and 4 to start with, and banks 0, 1, 3, 6 
+and 7 afterwards. If RAM bank 5 is paged in, the snapshot is made up of 
+banks 5, 2 and 5 again, followed by banks 0, 1, 3, 4, 6 and 7.

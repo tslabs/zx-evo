@@ -17,25 +17,38 @@
 volatile UBYTE gluk_regs[14];
 
 //stop transmit
-#define tw_send_stop() {TWCR = (1<<TWINT)|(1<<TWEN)|(1<<TWSTO);}
+static void tw_send_stop(void)
+{
+	TWCR = _BV(TWINT)|_BV(TWEN)|_BV(TWSTO);
+	//wait for flag
+//	while ( (TWCR&_BV(TWSTO))!=0 );
+//	_delay_us(20); //4mks for PCF8583
+}
 
 static UBYTE tw_send_start(void)
 {
 	//start transmit
-	TWCR = (1<<TWINT)|(1<<TWSTA)|(1<<TWEN);
+	TWCR =_BV(TWINT)|_BV(TWSTA)|_BV(TWEN);
 
 	//wait for flag
-	while (!(TWCR & (1<<TWINT)));
+	while ( (TWCR&_BV(TWINT))==0 );
+//	while ( TWCR & (1<<TWSTA) );
 
-//#ifdef LOGENABLE
-//	char log_reset_type[] = "TWS..\r\n";
-//	UBYTE b = TWSR;
-//	log_reset_type[3] = ((b >> 4) <= 9 )?'0'+(b >> 4):'A'+(b >> 4)-10;
-//	log_reset_type[4] = ((b & 0x0F) <= 9 )?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
-//	to_log(log_reset_type);
-//#endif
+#ifdef LOGENABLE
+	char log_reset_type[] = "TWS..[..]..\r\n";
+	UBYTE b = TWSR;
+	log_reset_type[3] = ((b >> 4) <= 9 )?'0'+(b >> 4):'A'+(b >> 4)-10;
+	log_reset_type[4] = ((b & 0x0F) <= 9 )?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
+	b=TWCR;
+	log_reset_type[6] = ((b >> 4) <= 9 )?'0'+(b >> 4):'A'+(b >> 4)-10;
+	log_reset_type[7] = ((b & 0x0F) <= 9 )?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
+	b=TWDR;
+	log_reset_type[9] = ((b >> 4) <= 9 )?'0'+(b >> 4):'A'+(b >> 4)-10;
+	log_reset_type[10] = ((b & 0x0F) <= 9 )?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
+	to_log(log_reset_type);
+#endif
 	//return status
-   return TWSR&0xF8;
+   return TW_STATUS;
 }
 
 static UBYTE tw_send_addr(UBYTE addr)
@@ -44,22 +57,25 @@ static UBYTE tw_send_addr(UBYTE addr)
 	TWDR = addr;
 
 	//enable transmit
-	TWCR = (1<<TWINT)|(1<<TWEN);
+	TWCR = _BV(TWINT)|_BV(TWEN);
 
 	//wait for end transmit
-	while (!(TWCR & (1<<TWINT)));
+	while ( (TWCR &_BV(TWINT))==0 );
 
 #ifdef LOGENABLE
-	char log_tw[] = "TWA.. ..\r\n";
+	char log_tw[] = "TWA..[..]..\r\n";
 	UBYTE b = TWSR;
 	log_tw[3] = ((b >> 4) <= 9 )?'0'+(b >> 4):'A'+(b >> 4)-10;
 	log_tw[4] = ((b & 0x0F) <= 9 )?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
-	log_tw[6] = ((addr >> 4) <= 9 )?'0'+(addr >> 4):'A'+(addr >> 4)-10;
-	log_tw[7] = ((addr & 0x0F) <= 9 )?'0'+(addr & 0x0F):'A'+(addr & 0x0F)-10;
+	b=TWCR;
+	log_tw[6] = ((b >> 4) <= 9 )?'0'+(b >> 4):'A'+(b >> 4)-10;
+	log_tw[7] = ((b & 0x0F) <= 9 )?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
+	log_tw[9] = ((addr >> 4) <= 9 )?'0'+(addr >> 4):'A'+(addr >> 4)-10;
+	log_tw[10] = ((addr & 0x0F) <= 9 )?'0'+(addr & 0x0F):'A'+(addr & 0x0F)-10;
 	to_log(log_tw);
 #endif
 	//return status
-   return TWSR&0xF8;
+   return TW_STATUS;
 }
 
 static UBYTE tw_send_data(UBYTE data)
@@ -68,58 +84,64 @@ static UBYTE tw_send_data(UBYTE data)
 	TWDR = data;
 
 	//enable transmit
-	TWCR = (1<<TWINT)|(1<<TWEN);
+	TWCR = _BV(TWINT)|_BV(TWEN);
 
 	//wait for end transmit
-	while (!(TWCR & (1<<TWINT)));
+	while ( (TWCR&_BV(TWINT))==0 );
 
 #ifdef LOGENABLE
-	char log_tw[] = "TWD.. ..\r\n";
+	char log_tw[] = "TWW..[..]..\r\n";
 	UBYTE b = TWSR;
 	log_tw[3] = ((b >> 4) <= 9 )?'0'+(b >> 4):'A'+(b >> 4)-10;
 	log_tw[4] = ((b & 0x0F) <= 9 )?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
-	log_tw[6] = ((data >> 4) <= 9 )?'0'+(data >> 4):'A'+(data >> 4)-10;
-	log_tw[7] = ((data & 0x0F) <= 9 )?'0'+(data & 0x0F):'A'+(data & 0x0F)-10;
+	b=TWCR;
+	log_tw[6] = ((b >> 4) <= 9 )?'0'+(b >> 4):'A'+(b >> 4)-10;
+	log_tw[7] = ((b & 0x0F) <= 9 )?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
+	log_tw[9] = ((data >> 4) <= 9 )?'0'+(data >> 4):'A'+(data >> 4)-10;
+	log_tw[10] = ((data & 0x0F) <= 9 )?'0'+(data & 0x0F):'A'+(data & 0x0F)-10;
 	to_log(log_tw);
 #endif
 	//return status
-   return TWSR&0xF8;
+   return TW_STATUS;
 }
 
 static UBYTE tw_read_data(UBYTE* data)
 {
 	//enable
-	TWCR = (1<<TWINT)|(1<<TWEN);
+	TWCR = _BV(TWINT)|_BV(TWEN);
 
 	//wait for flag set
-	while (!(TWCR & (1<<TWINT)));
+	while ( (TWCR&_BV(TWINT))==0 );
 
 #ifdef LOGENABLE
-	char log_tw[] = "TWR.. ..\r\n";
+	char log_tw[] = "TWR..[..]..\r\n";
 	UBYTE b = TWSR;
 	log_tw[3] = ((b >> 4) <= 9 )?'0'+(b >> 4):'A'+(b >> 4)-10;
 	log_tw[4] = ((b & 0x0F) <= 9 )?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
-	log_tw[6] = ((TWDR >> 4) <= 9 )?'0'+(TWDR >> 4):'A'+(TWDR >> 4)-10;
-	log_tw[7] = ((TWDR & 0x0F) <= 9 )?'0'+(TWDR & 0x0F):'A'+(TWDR & 0x0F)-10;
+	b=TWCR;
+	log_tw[6] = ((b >> 4) <= 9 )?'0'+(b >> 4):'A'+(b >> 4)-10;
+	log_tw[7] = ((b & 0x0F) <= 9 )?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
+	log_tw[9] = ((TWDR >> 4) <= 9 )?'0'+(TWDR >> 4):'A'+(TWDR >> 4)-10;
+	log_tw[10] = ((TWDR & 0x0F) <= 9 )?'0'+(TWDR & 0x0F):'A'+(TWDR & 0x0F)-10;
 	to_log(log_tw);
 #endif
 	//get data
 	*data = TWDR;
 
 	//return status
-   return TWSR & 0xF8;
+   return TW_STATUS;
 }
 
 static UBYTE bcd_to_hex(UBYTE data)
 {
 	//convert BCD to HEX
-	return  (data>>4)*10 + (data&0x0F);
+	return  (UBYTE)(data>>4)*10 + (UBYTE)(data&0x0F);
 }
 
 static UBYTE hex_to_bcd(UBYTE data)
 {
 	//convert HEX to BCD
-	return  ((data/10)<<4) + (data%10);
+	return  (UBYTE)((data/10)<<4) + (UBYTE)(data%10);
 }
 
 static UBYTE days_of_months()
@@ -142,8 +164,9 @@ void rtc_init(void)
 {
 	//SCL frequency = CPU clk/ ( 16 + 2* (TWBR) * 4^(TWPS) )
 	// 11052000 / (16 + 2*48 ) = 98678,5Hz (100000Hz recommended for PCF8583)
-	TWBR = 48;
 	TWSR = 0;
+	TWBR = 48;
+	TWAR = 0; //disable address match unit
 
 	//reset RTC
 	//write 0 to control/status register [0] on PCF8583
@@ -166,7 +189,7 @@ void rtc_write(UBYTE addr, UBYTE data)
 	//set address
 	if ( tw_send_start() & (TW_START|TW_REP_START) )
 	{
-		if ( tw_send_addr(RTC_ADDRESS) == TW_MT_SLA_ACK )
+		if ( tw_send_addr(RTC_ADDRESS|TW_WRITE) == TW_MT_SLA_ACK )
 		{
 			if ( tw_send_data(addr) == TW_MT_DATA_ACK )
 			{
@@ -181,17 +204,18 @@ void rtc_write(UBYTE addr, UBYTE data)
 UBYTE rtc_read(UBYTE addr)
 {
 	UBYTE ret = 0;
+
 	//set address
 	if ( tw_send_start() & (TW_START|TW_REP_START) )
 	{
-		if ( tw_send_addr(RTC_ADDRESS) == TW_MT_SLA_ACK )
+		if ( tw_send_addr(RTC_ADDRESS|TW_WRITE) == TW_MT_SLA_ACK )
 		{
 			if ( tw_send_data(addr) == TW_MT_DATA_ACK )
 			{
 				//read data
 				if ( tw_send_start() == TW_REP_START )
 				{
-					if ( tw_send_addr(RTC_ADDRESS|0x01) == TW_MR_SLA_ACK )
+					if ( tw_send_addr(RTC_ADDRESS|TW_READ) == TW_MR_SLA_ACK )
 					{
 						tw_read_data(&ret);
 					}
@@ -207,10 +231,10 @@ void gluk_init(void)
 {
 	UBYTE tmp;
 	//default values
-	gluk_regs[GLUK_REG_A] = 0x00;
-	gluk_regs[GLUK_REG_B] = 0x02;
-	gluk_regs[GLUK_REG_C] = 0x00;
-	gluk_regs[GLUK_REG_D] = 0x80;
+	gluk_regs[GLUK_REG_A] = GLUK_A_INIT_VALUE;
+	gluk_regs[GLUK_REG_B] = GLUK_B_INIT_VALUE;
+	gluk_regs[GLUK_REG_C] = GLUK_C_INIT_VALUE;
+	gluk_regs[GLUK_REG_D] = GLUK_D_INIT_VALUE;
 
 	//setup
 
@@ -316,16 +340,29 @@ UBYTE gluk_get_reg(UBYTE index)
 			//read version
 			return GetVersionByte( index&0x0F );
 		}
-
-		//other from nvram
-		//- on PCF8583 nvram started from #10
-		//- on 512vi1[DS12887] nvram started from #0E
-		return rtc_read( (index&0x3F)+2 );
+		else
+		{
+			//other from nvram
+			//- on PCF8583 nvram started from #10
+			//- on 512vi1[DS12887] nvram started from #0E
+			return rtc_read( (index/*&0x3F*/)+2 );
+		}
 	}
 }
 
 void gluk_set_reg(UBYTE index, UBYTE data)
 {
+#ifdef LOGENABLE
+	char log_gs[] = "GS[..]..\r\n";
+	UBYTE b = index;
+	log_gs[3] = ((b >> 4) <= 9 )?'0'+(b >> 4):'A'+(b >> 4)-10;
+	log_gs[4] = ((b & 0x0F) <= 9 )?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
+	b=data;
+	log_gs[6] = ((b >> 4) <= 9 )?'0'+(b >> 4):'A'+(b >> 4)-10;
+	log_gs[7] = ((b & 0x0F) <= 9 )?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
+	to_log(log_gs);
+#endif
+
 	if( index < sizeof(gluk_regs)/sizeof(gluk_regs[0]) )
 	{
 		if ( index<10 )
@@ -342,24 +379,37 @@ void gluk_set_reg(UBYTE index, UBYTE data)
 			switch( index )
 			{
 				case GLUK_REG_SEC:
-					rtc_write(2, hex_to_bcd(gluk_regs[GLUK_REG_SEC]));
+					if( data <= 59 ) rtc_write(2, hex_to_bcd(data/*gluk_regs[GLUK_REG_SEC]*/));
 					break;
 				case GLUK_REG_MIN:
-					rtc_write(3, hex_to_bcd(gluk_regs[GLUK_REG_MIN]));
+					if( data <= 59) rtc_write(3, hex_to_bcd(data/*gluk_regs[GLUK_REG_MIN]*/));
 					break;
 				case GLUK_REG_HOUR:
-					rtc_write(4, 0x3F&hex_to_bcd(gluk_regs[GLUK_REG_HOUR]));
+					if( data <= 23) rtc_write(4, 0x3F&hex_to_bcd(data/*gluk_regs[GLUK_REG_HOUR]*/));
 					break;
 				case GLUK_REG_MONTH:
 				case GLUK_REG_DAY_WEEK:
-					//DS12788 dayweek 1..7 => PC8583 dayweek 0..6
-					rtc_write(6, ((gluk_regs[GLUK_REG_DAY_WEEK]-1)<<5)+(0x1F&hex_to_bcd(gluk_regs[GLUK_REG_MONTH])));
+					if( ( gluk_regs[GLUK_REG_DAY_WEEK]-1 <= 6 ) &&
+						( gluk_regs[GLUK_REG_MONTH] > 0 ) &&
+						( gluk_regs[GLUK_REG_MONTH] <= 12 ) )
+					{
+						//DS12788 dayweek 1..7 => PC8583 dayweek 0..6
+						rtc_write(6, ((gluk_regs[GLUK_REG_DAY_WEEK]-1)<<5)+(0x1F&hex_to_bcd(gluk_regs[GLUK_REG_MONTH])));
+					}
 					break;
 				case GLUK_REG_YEAR:
 					rtc_write(RTC_YEAR_ADD_REG, gluk_regs[GLUK_REG_YEAR]);
 				case GLUK_REG_DAY_MONTH:
 					rtc_write(5, (gluk_regs[GLUK_REG_YEAR]<<6)+(0x3F&hex_to_bcd(gluk_regs[GLUK_REG_DAY_MONTH])));
 					break;
+			}
+		}
+		else
+		{
+			if( index == GLUK_REG_B )
+			{
+				//BCD or Hex mode set
+				gluk_regs[GLUK_REG_B]=(data&GLUK_B_DATA_MODE)|GLUK_B_INIT_VALUE;
 			}
 		}
 	}
@@ -375,7 +425,7 @@ void gluk_set_reg(UBYTE index, UBYTE data)
 			//write to nvram
 			//- on PCF8583 nvram started from #10
 			//- on 512vi1[DS12887] nvram started from #0E
-			rtc_write( (index&0x3F)+2, data);
+			rtc_write( (index/*&0x3F*/)+2, data);
 		}
 	}
 }

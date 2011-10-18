@@ -15,30 +15,36 @@
 
 module zmem(
 
-	input fclk,
-	input rst_n,
+	input  wire fclk,
+	input  wire rst_n,
 
-	input zpos, //
-	input zneg, // strobes which show positive and negative edges of zclk; this is to stay in single clock domain
+	input  wire zpos, //
+	input  wire zneg, // strobes which show positive and negative edges of zclk
 
-	input cend,  // DRAM cycle end
-	input pre_cend, // pre cycle end
+	input  wire cbeg,      // DRAM synchronization
+	input  wire post_cbeg, //
+	input  wire pre_cend,  //
+	input  wire cend,      //
 
 
-	input [15:0] za,
+	input  wire [15:0] za,
 
-	input [7:0] zd_in, // won't emit anything to Z80 bus, data bus mux is another module
-	output reg [7:0] zd_out, // output to Z80 bus
+	input  wire [ 7:0] zd_in, // won't emit anything to Z80 bus, data bus mux is another module
+	output wire [ 7:0] zd_out, // output to Z80 bus
 
-	output zd_ena, // out bus to the Z80
+	output wire zd_ena, // out bus to the Z80
 
-	input m1_n,
-	input rfsh_n,
-	input mreq_n,
-	input iorq_n,
-	input rd_n,
-	input wr_n,
+	input  wire m1_n,
+	input  wire rfsh_n,
+	input  wire mreq_n,
+	input  wire iorq_n,
+	input  wire rd_n,
+	input  wire wr_n,
 
+
+	input  wire [ 1:0] int_turbo, // 2'b00 - 3.5,
+	                              // 2'b01 - 7.0,
+	                              // 2'b1x - 14.0
 
 
 
@@ -62,14 +68,19 @@ module zmem(
 	output wire        csrom,
 
 
-	output cpu_req,
-	output cpu_rnw,
-	output [20:0] cpu_addr,
-	output [7:0] cpu_wrdata,
-	output cpu_wrbsel,
+	output wire        cpu_req,
+	output wire        cpu_rnw,
+	output wire [20:0] cpu_addr,
+	output wire [ 7:0] cpu_wrdata,
+	output wire        cpu_wrbsel,
 
-	input [15:0] cpu_rddata,
-	input cpu_strobe
+	input  wire [15:0] cpu_rddata,
+
+	input  wire        cpu_next,
+	input  wire        cpu_strobe,
+
+
+	output wire        cpu_stall // for zclock
 
 );
 
@@ -78,11 +89,44 @@ module zmem(
 	reg [7:0] page;
 	reg romnram;
 
+
+
+
+	reg [15:0] rd_buf;
+
+	reg [15:1] cached_addr;
+	reg        cached_addr_valid;
+
+	wire cache_hit;
+
+
+	wire dram_beg;
+	wire opfetch, memrd, memwr;
+	wire stall14, stall7_35;
+
+	wire stall14_ini;
+	wire stall14_cyc;
+	reg  stall14_cycrd;
+	reg  stall14_fin;
+
+	reg r_mreq_n;
+
+
+	reg pending_cpu_req;
+
+	reg cpu_rnw_r;
+
+
+
+	// this is for 7/3.5mhz  
 	wire ramreq;
-
 	wire ramwr,ramrd;
+	wire cpureq_357;
+	reg ramrd_reg,ramwr_reg;
 
-	reg ramrd_reg,ramwr_reg,ramrd_prereg;
+
+
+
 
 
 	// make paging
@@ -128,42 +172,168 @@ module zmem(
 
 
 
-	// DRAM accesses
+	// 7/3.5mhz support
 
 	assign ramreq = (~mreq_n) && (~romnram) && rfsh_n;
-
 	assign ramrd = ramreq & (~rd_n);
 	assign ramwr = ramreq & (~wr_n);
 
-
-	assign zd_ena = ramrd;
-	assign cpu_wrdata = zd_in;
-
-	assign cpu_wrbsel = za[0];
-	assign cpu_addr[20:0] = { page[7:0], za[13:1] };
-
-	always @* if( cpu_strobe ) // WARNUNG! ACHTING! LATCH!!!
-		zd_out <= cpu_wrbsel ? cpu_rddata[7:0] : cpu_rddata[15:8];
-
-
-//	always @(posedge fclk) if( pre_cend )
-//		ramrd_prereg <= ramrd;
-//	assign cpu_rnw = ramrd_prereg; // is it correct???
-//
-// removed because it could be source of problems for NMOS Z80
-//
-// new one:
-//
-	assign cpu_rnw = ramrd;
-
-
-	always @(posedge fclk) if( cend )
+	always @(posedge fclk)
+	if( cend && (!cpu_stall) )
 	begin
 		ramrd_reg <= ramrd;
 		ramwr_reg <= ramwr;
 	end
 
-	assign cpu_req = ( ramrd & (~ramrd_reg) ) | ( ramwr & (~ramwr_reg) );
+	assign cpureq_357 = ( ramrd & (~ramrd_reg) ) | ( ramwr & (~ramwr_reg) );
+	
+
+
+
+	assign zd_ena = (~mreq_n) & (~rd_n) & (~romnram);
+
+
+
+	assign cache_hit = ( (za[15:1] == cached_addr[15:1]) && cached_addr_valid );
+
+
+
+	// strobe the beginnings of DRAM cycles
+
+	always @(posedge fclk)
+	if( zneg )
+		r_mreq_n <= mreq_n | (~rfsh_n);
+	//
+	assign dram_beg = ( (!cache_hit) || memwr ) && zneg && r_mreq_n && (!romnram) && (!mreq_n) && rfsh_n;
+
+	// access type
+	assign opfetch = (~mreq_n) && (~m1_n);
+	assign memrd   = (~mreq_n) && (~rd_n);
+	assign memwr   = (~mreq_n) &&   rd_n && rfsh_n;
+
+
+	// wait tables: 
+	//
+	// M1 opcode fetch, dram_beg coincides with:
+	// cend:      +3
+	// pre_cend:  +4
+	// post_cbeg: +5
+	// cbeg:      +6
+	//
+	// memory read, dram_beg coincides with:
+	// cend:      +2
+	// pre_cend:  +3
+	// post_cbeg: +4
+	// cbeg:      +5
+	//
+	// memory write: no wait
+	//
+	// special case: if dram_beg pulses 1 when cpu_next is 0,
+	// unconditional wait has to be performed until cpu_next is 1, and
+	// then wait as if dram_beg would coincide with cbeg
+
+	assign stall14_ini = dram_beg && ( (!cpu_next) || opfetch || memrd ); // no wait at all in write cycles, if next dram cycle is available
+
+
+	// memrd, opfetch - wait till cend & cpu_next,
+	// memwr - wait till cpu_next
+	assign stall14_cyc = memwr ? (!cpu_next) : stall14_cycrd;
+	//
+	always @(posedge fclk, negedge rst_n)
+	if( !rst_n )
+		stall14_cycrd <= 1'b0;
+	else // posedge fclk
+	begin
+		if( cpu_next && cend )
+			stall14_cycrd <= 1'b0;
+		else if( dram_beg && ( (!cend) || (!cpu_next) ) && (opfetch || memrd) )
+			stall14_cycrd <= 1'b1;
+	end
+	//
+	always @(posedge fclk, negedge rst_n)
+	if( !rst_n )
+		stall14_fin <= 1'b0;
+	else // posedge fclk
+	begin
+		if( stall14_fin && ( (opfetch&pre_cend) || (memrd&post_cbeg) ) )
+			stall14_fin <= 1'b0;
+		else if( cpu_next && cend && cpu_req && (opfetch || memrd) )
+			stall14_fin <= 1'b1;
+	end
+
+
+	//
+	assign cpu_stall = int_turbo[1] ? (stall14_ini | stall14_cyc | stall14_fin) : (cpureq_357 && (!cpu_next));
+
+	// cpu request
+	assign cpu_req = int_turbo[1] ? (pending_cpu_req | dram_beg) : cpureq_357;
+	//
+	assign cpu_rnw = int_turbo[1] ? (dram_beg ? (!memwr) : cpu_rnw_r) : ramrd;
+	//
+	//
+	always @(posedge fclk, negedge rst_n)
+	if( !rst_n )
+		pending_cpu_req <= 1'b0;
+	else if( cpu_next && cend )
+		pending_cpu_req <= 1'b0;
+	else if( dram_beg )
+		pending_cpu_req <= 1'b1;
+	//
+	always @(posedge fclk)
+	if( dram_beg )
+		cpu_rnw_r <= !memwr;
+
+
+
+	// address, data in and data out
+	//
+	assign cpu_wrbsel = za[0];
+	assign cpu_addr[20:0] = { page[7:0], za[13:1] };
+	assign cpu_wrdata = zd_in;
+	//
+	always @* if( cpu_strobe ) // WARNING! ACHTUNG! LATCH!!!
+		rd_buf <= cpu_rddata;
+	//
+	assign zd_out = cpu_wrbsel ? rd_buf[7:0] : rd_buf[15:8];
+
+
+
+
+
+	wire io;
+	reg  io_r;
+	//
+	assign io = (~iorq_n);
+	//
+	always @(posedge fclk)
+	if( zpos )
+		io_r <= io;
+	//
+	always @(posedge fclk, negedge rst_n)
+	if( !rst_n )
+	begin
+		cached_addr_valid <= 1'b0;
+	end
+	else
+	begin
+		if( (zneg && r_mreq_n && (!mreq_n) && rfsh_n && romnram) ||
+		    (zneg && r_mreq_n && memwr                         ) ||
+		    (io && (!io_r) && zpos                             ) )
+			cached_addr_valid <= 1'b0;
+		else if( cpu_strobe )
+			cached_addr_valid <= 1'b1;
+	end
+	//
+	always @(posedge fclk)
+	if( !rst_n )
+	begin
+		cached_addr <= 15'd0;
+	end
+	else if( cpu_strobe )
+	begin
+		cached_addr[15:1] <= za[15:1];
+	end
+
 
 
 
