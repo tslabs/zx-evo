@@ -263,6 +263,7 @@ T_RSSTAT3:
 ;--------------------------------------
 ;
 T_RS_CLRBUFFS:
+.IFNDEF DEBUG_FPGA_OUT
         CLI
         LDS     TEMP,UART_TX_HD
         STS     UART_TX_TL,TEMP
@@ -272,6 +273,7 @@ T_RS_CLRBUFFS:
         STS     UART_RX_LN,NULL
         RTS_CLR
         SEI
+.ENDIF
         RET
 ;
 ;--------------------------------------

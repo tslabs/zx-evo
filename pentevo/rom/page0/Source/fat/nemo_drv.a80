@@ -49,7 +49,7 @@ P_1F1		EQU 0X30			;Ž’ Ž˜ˆŽŠ/‘‚Ž‰‘’‚
 P_1F0		EQU 0X10			;Ž’ „€›•
 P_3F6		EQU 0XC8			;…ƒˆ‘’ ‘Ž‘’ŽŸˆŸ/“€‚‹…ˆŸ
 P_HI		EQU 0X11			;‘’€˜ˆ… 8 ˆ’
-PRT_RW		EQU P_1F0*256+P_HI	;Ž’› —’…ˆŸ/‡€ˆ‘ˆ Ž„ˆŒ ‘‹Ž‚ŽŒ
+PRT_RW		EQU P_1F0*256+P_HI		;Ž’› —’…ˆŸ/‡€ˆ‘ˆ Ž„ˆŒ ‘‹Ž‚ŽŒ
 
 ;€ ‚›•Ž„…:
 ;H-„‹Ÿ MASTER 0-HDD, 1-CDROM, 0XFF-NONE
@@ -154,6 +154,10 @@ READSC1		REPT 4
 		RET
 
 SETHREG		PUSH DE
+;		CALL COM_DEV
+;		DB 3
+		RST 8
+		DB Set_device
 		LD D,B
 		LD E,C
 		LD BC,0XFF00+P_1F6

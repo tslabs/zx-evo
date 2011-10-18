@@ -1,138 +1,138 @@
 module main(
 
-    // clocks
-    input fclk,
-    output clkz_out,
-    input clkz_in,
+ // clocks
+ input fclk,
+ output clkz_out,
+ input clkz_in,
 
-    // z80
-    input iorq_n,
-    input mreq_n,
-    input rd_n,
-    input wr_n,
-    input m1_n,
-    input rfsh_n,
-    input int_n,
-    input nmi_n,
-    input wait_n,
-    output res,
+ // z80
+ input iorq_n,
+ input mreq_n,
+ input rd_n,
+ input wr_n,
+ input m1_n,
+ input rfsh_n,
+ input int_n,
+ input nmi_n,
+ input wait_n,
+ output res,
 
-    inout [7:0] d,
-    output [15:0] a,
+ inout [7:0] d,
+ output [15:0] a,
 
-    // zxbus and related
-    output csrom,
-    output romoe_n,
-    output romwe_n,
+ // zxbus and related
+ output csrom,
+ output romoe_n,
+ output romwe_n,
 
-    output rompg0_n,
-    output dos_n, // aka rompg1
-    output rompg2,
-    output rompg3,
-    output rompg4,
+ output rompg0_n,
+ output dos_n, // aka rompg1
+ output rompg2,
+ output rompg3,
+ output rompg4,
 
-    input iorqge1,
-    input iorqge2,
-    output iorq1_n,
-    output iorq2_n,
+ input iorqge1,
+ input iorqge2,
+ output iorq1_n,
+ output iorq2_n,
 
-    // DRAM
-    inout [15:0] rd,
-    output [9:0] ra,
-    output rwe_n,
-    output rucas_n,
-    output rlcas_n,
-    output rras0_n,
-    output rras1_n,
+ // DRAM
+ inout [15:0] rd,
+ output [9:0] ra,
+ output rwe_n,
+ output rucas_n,
+ output rlcas_n,
+ output rras0_n,
+ output rras1_n,
 
-    // video
-    output reg [1:0] vred,
-    output reg [1:0] vgrn,
-    output reg [1:0] vblu,
+ // video
+ output [1:0] vred,
+ output [1:0] vgrn,
+ output [1:0] vblu,
 
-    output vhsync,
-    output vvsync,
-    output vcsync,
+ output vhsync,
+ output vvsync,
+ output vcsync,
 
-    // AY control and audio/tape
-    input ay_clk,
-    output ay_bdir,
-    output ay_bc1,
+ // AY control and audio/tape
+ input ay_clk,
+ output ay_bdir,
+ output ay_bc1,
 
-//    output beep,
-    output reg beep,
+ output reg beep,
 
-    // IDE
-    input [2:0] ide_a,
-    input [15:0] ide_d,
+ // IDE
+ input [2:0] ide_a,
+ input [15:0] ide_d,
 
-    output ide_dir,
+ output ide_dir,
 
-    input ide_rdy,
+ input ide_rdy,
 
-    output ide_cs0_n,
-    output ide_cs1_n,
-    output ide_rs_n,
-    output ide_rd_n,
-    output ide_wr_n,
+ output ide_cs0_n,
+ output ide_cs1_n,
+ output ide_rs_n,
+ output ide_rd_n,
+ output ide_wr_n,
 
-    // VG93 and diskdrive
-    output reg vg_clk,
+ // VG93 and diskdrive
+ output reg vg_clk,
 
-    output vg_cs_n,
-    output vg_res_n,
+ output vg_cs_n,
+ output vg_res_n,
 
-    input vg_hrdy,
-    input vg_rclk,
-    input vg_rawr,
-    input [1:0] vg_a, // disk drive selection
-    input vg_wrd,
-    input vg_side,
+ input vg_hrdy,
+ input vg_rclk,
+ input vg_rawr,
+ input [1:0] vg_a, // disk drive selection
+ input vg_wrd,
+ input vg_side,
 
-    input step,
-    input vg_sl,
-    input vg_sr,
-    input vg_tr43,
-    input rdat_b_n,
-    input vg_wf_de,
-    input vg_drq,
-    input vg_irq,
-    input vg_wd,
+ input step,
+ input vg_sl,
+ input vg_sr,
+ input vg_tr43,
+ input rdat_b_n,
+ input vg_wf_de,
+ input vg_drq,
+ input vg_irq,
+ input vg_wd,
 
-    // serial links (atmega-fpga, sdcard)
-    output sdcs_n,
-    output sddo,
-    output sdclk,
-    input sddi,
+ // serial links (atmega-fpga, sdcard)
+ output sdcs_n,
+ output sddo,
+ output sdclk,
+ input sddi,
 
-    input spics_n,
-    input spick,
-    input spido,
-    output spidi,
-    output reg spiint_n
+ input spics_n,
+ input spick,
+ input spido,
+ output spidi,
+ output reg spiint_n
+
 );
 
 //--Dummy----------------------------------------------------------------------
 
-    assign iorq1_n = 1'b1;
-    assign iorq2_n = 1'b1;
+ assign iorq1_n   = 1'b1;
+ assign iorq2_n   = 1'b1;
 
-    assign res= 1'b1;
+ assign res       = 1'b1;
 
-    assign ay_bdir = 1'b0;
-    assign ay_bc1  = 1'b0;
+ assign ay_bdir   = 1'b0;
+ assign ay_bc1    = 1'b0;
 
-    assign vg_cs_n  = 1'b1;
-    assign vg_res_n = 1'b0;
+ assign vg_cs_n   = 1'b1;
+ assign vg_res_n  = 1'b0;
 
-    assign ide_dir=1'b1;
-    assign ide_rs_n = 1'b0;
-    assign ide_cs0_n = 1'b1;
-    assign ide_cs1_n = 1'b1;
-    assign ide_rd_n = 1'b1;
-    assign ide_wr_n = 1'b1;
+ assign ide_dir   = 1'b1;
+ assign ide_rs_n  = 1'b0;
+ assign ide_cs0_n = 1'b1;
+ assign ide_cs1_n = 1'b1;
+ assign ide_rd_n  = 1'b1;
+ assign ide_wr_n  = 1'b1;
 
-    assign a[15:14] = 2'b00;
+ assign a[15:14]  = 2'b00;
 
 //--INT---------------------------------------------------------------------------
 
@@ -142,9 +142,9 @@ module main(
  always @(posedge fclk)
   begin
    if ( enable_covox_int )
-    spiint_n <= ( main_osc[9:2]==8'h00 ) ? 1'b0 : 1'b1;
+    spiint_n <= cvx_ptr_diff[3]|main_osc[7];
    else if ( enable_frame_int )
-    spiint_n <= ~vblank;
+    spiint_n <= vtxtscr;
    else
     spiint_n <= 1'b1;
   end
@@ -152,22 +152,35 @@ module main(
 //--clocks--Z80_clk--VG_clk--COVOX---------------------------------------------
 
  reg [9:0] main_osc;
- reg [7:0] covox;       initial covox = 8'h7f;
- reg [7:0] covox_work;
  reg [2:0] vgclk_div7;
+ reg [7:0] covox [15:0];        initial covox[0] = 8'h7f;
+ reg [8:0] qe;                  initial qe = 9'h0ff;
+ reg [3:0] cvx_ptr_out;         initial cvx_ptr_out = 4'd0;
+ reg [3:0] cvx_ptr_in;          initial cvx_ptr_in  = 4'd0;
+ wire [3:0] cvx_ptr_iinc;
+ wire [3:0] cvx_ptr_diff;
+ assign cvx_ptr_iinc = cvx_ptr_in + 4'd1;
+ assign cvx_ptr_diff = cvx_ptr_in - cvx_ptr_out;
 
  always @(posedge fclk)
   begin
    //
-   main_osc <= main_osc + 10'h01;
-   //
-   if ( main_osc[7:0] < covox_work )
-    beep <= 1'b1;
+   if ( { 1'b1, covox[cvx_ptr_out] } >= qe )
+    begin
+     beep <= 1'b1;
+     qe <= 9'h1ff - { 1'b1, covox[cvx_ptr_out] } + qe;
+    end
    else
-    beep <= 1'b0;
+    begin
+     beep <= 1'b0;
+     qe <= 9'h000 - { 1'b1, covox[cvx_ptr_out] } + qe;
+    end
    //
-   if ( main_osc[7:0]==8'h00 )
-    covox_work <= covox;
+   if ( main_osc[7:0] == 8'hff )
+    begin
+     if ( cvx_ptr_in !== cvx_ptr_out )
+      cvx_ptr_out <= cvx_ptr_out + 4'd1;
+    end
    //
    if ( main_osc[1:0]==2'b00 )
    begin
@@ -180,6 +193,8 @@ module main(
      vgclk_div7 <= vgclk_div7 + 3'd1;
    end
    //
+   main_osc <= main_osc + 10'd1;
+   //
   end
 
  assign clkz_out = main_osc[2]; // 3.5 MHz
@@ -188,25 +203,54 @@ module main(
 // character image - 6x8
 // character size  - 6x10
 // col x row       - 53x25 (318x250)
+// fullscreen test - 360x288
 
- localparam HBLNK_BEG  = 9'd416;
- localparam CSYNC_CUT  = 9'd415;
- localparam HSYNC_BEG  = 9'd0;
- localparam HSYNC_END  = 9'd33;
- localparam HSYNC_END2 = 9'd53;
- localparam HBLNK_END  = 9'd98;
- localparam HMAX       = 9'd447;
+ localparam HTXTS_END   = 9'd416;
+ localparam CSYNC_CUT   = 9'd415;
+ localparam CSYNC_CUT2  = 9'd395; // 9'd382;
+ localparam HSYNC_BEG   = 9'd0;
+ localparam HSYNC_END   = 9'd33;
+ localparam HSYNC_END2  = 9'd53;
+ localparam HTXTS_BEG   = 9'd98;
+ localparam HMAX        = 9'd447;
 
- localparam VBLNK_BEG  = 9'd294;
- localparam VSYNC_BEG  = 9'd0;
- localparam VSYNC_END  = 9'd2;
- localparam VBLNK_END  = 9'd44;
- localparam VMAX       = 9'd319;
+ localparam VTXTS_END   = 9'd293;
+ localparam VSYNC_BEG   = 9'd0;
+ localparam VSYNC_END   = 9'd2;
+ localparam VTXTS_BEG   = 9'd43;
+ localparam VMAX        = 9'd319;
 
- localparam HMARK_A    = 9'd77;
- localparam HMARK_B    = 9'd437;
- localparam VMARK_A    = 9'd25;
- localparam VMARK_B    = 9'd313;
+ localparam HBORD_BEG   = 9'd77;
+ localparam HBORD_END   = 9'd437;
+ localparam VBORD_BEG   = 9'd24;
+ localparam VBORD_END   = 9'd312;
+
+ //                          GgRrBb
+ localparam BLACK       = 6'b000000;
+ localparam GRAY_1      = 6'b010101;
+ localparam GRAY_2      = 6'b101010;
+ localparam WHITE       = 6'b111111;
+
+ localparam BLUE_3      = 6'b000011;
+ localparam RED_3       = 6'b001100;
+ localparam MAGENTA_3   = 6'b001111;
+ localparam GREEN_3     = 6'b110000;
+ localparam CYAN_3      = 6'b110011;
+ localparam YELLOW_3    = 6'b111100;
+
+ localparam BLUE_2      = 6'b000010;
+ localparam RED_2       = 6'b001000;
+ localparam MAGENTA_2   = 6'b001010;
+ localparam GREEN_2     = 6'b100000;
+ localparam CYAN_2      = 6'b100010;
+ localparam YELLOW_2    = 6'b101000;
+
+ localparam BLUE_H      = 6'b010110;
+ localparam RED_H       = 6'b011001;
+ localparam MAGENTA_H   = 6'b011010;
+ localparam GREEN_H     = 6'b100101;
+ localparam CYAN_H      = 6'b100110;
+ localparam YELLOW_H    = 6'b101001;
 
  reg [8:0] hcount;      initial hcount = 9'd0;
  reg [2:0] pixptr;
@@ -216,9 +260,9 @@ module main(
  reg [10:0] voffset;
  reg [3:0] vcharlinecount;
  reg hsync;             initial hsync = 1'b1;
- reg hblank;            initial hblank = 1'b1;
+ reg htxtscr;           initial htxtscr = 1'b0;
  reg vsync;             initial vsync = 1'b1;
- reg vblank;            initial vblank = 1'b1;
+ reg vtxtscr;           initial vtxtscr = 1'b0;
  reg csync;             initial csync = 1'b1;
  wire [10:0] video_addr;
  wire [7:0] charcode0, charcode1, charcode2;
@@ -227,13 +271,31 @@ module main(
  wire [7:0] attrcode;
  wire [5:0] charpix;
  wire pixel;
- wire [5:0] fcolor, bcolor, color, image_color;
+ wire [5:0] fcolor, bcolor, image_color;
+ reg [5:0] color;
  wire fontenable;
  reg [8:0] hmouse, vmouse;
  wire mouse_here, mouse_i, mouse_image, mouse_m, mouse_mask;
  reg vgaff, nextline;
- reg hmark;             initial hmark = 1'b0;
- reg vmark;             initial vmark = 1'b0;
+ reg hbord;             initial hbord = 1'b0;
+ reg vbord;             initial vbord = 1'b0;
+ reg circle;            initial circle = 1'b0;
+ reg uhole;             initial uhole = 1'b0;
+ reg hhole;             initial hhole = 1'b0;
+ reg vhole;             initial vhole = 1'b0;
+ reg [1:0] bcdir;       initial bcdir = 2'b00;
+ reg [1:0] scdir;       initial scdir = 2'b00;
+ reg [3:0] hsetka, vsetka;
+ reg [4:0] hchess, vchess;
+ reg [1:0] hchss3;
+ reg [2:0] cband;
+ reg [6:0] bccount;
+ reg [4:0] sccount;
+ reg [6:0] schcnt;
+ wire [6:0] cb_val;
+ wire [4:0] cs_val;
+ reg [2:0] clr3;
+
 
  always @(posedge fclk)
   begin
@@ -241,7 +303,196 @@ module main(
    if ( {(main_osc[1]&scr_tv_mode),main_osc[0]}==2'h0 )
     begin
 
-     if ( hblank )
+     if ( scr_mode==2'h0 )
+      color <= (htxtscr & vtxtscr) ? ( (mouse_image) ? ~image_color : image_color ) : BLACK;
+     else if ( hbord & vbord )
+      case ( scr_mode )
+       3'h2:
+             color <= (hchess[0]^vchess[0]) ? WHITE : BLACK;
+       3'h3:
+             case (vchess)
+              5'd0, 5'd19:
+                if (vsetka==5'd14)
+                 color <= GRAY_2;
+                else if (hchess[0])
+                 color <= WHITE;
+                else
+                 color <= BLACK;
+              5'd5, 5'd6:
+                case (cband)
+                 3'd0: color <= GRAY_2;
+                 3'd1: color <= YELLOW_H;
+                 3'd2: color <= CYAN_H;
+                 3'd3: color <= GREEN_H;
+                 3'd4: color <= MAGENTA_H;
+                 3'd5: color <= RED_H;
+                 3'd6: color <= BLUE_H;
+                 3'd7: color <= GRAY_1;
+                endcase
+              5'd13, 5'd14:
+                case (cband)
+                 3'd0: color <= GRAY_2;
+                 3'd1: color <= YELLOW_2;
+                 3'd2: color <= CYAN_2;
+                 3'd3: color <= GREEN_2;
+                 3'd4: color <= MAGENTA_2;
+                 3'd5: color <= RED_2;
+                 3'd6: color <= BLUE_2;
+                 3'd7: color <= BLACK;
+                endcase
+              default
+               begin
+                if (uhole)
+                 begin
+                  if (pixel)
+                   color <= GRAY_2;
+                  else
+                   color <= GRAY_1;
+                 end
+                else if ( (circle) && !(hhole&vhole) )
+                 case (vchess)
+                  5'd2, 5'd17:
+                    if ( (hchess==5'd2) || (hchess==5'd3) || (hchess==5'd20) || (hchess==5'd21) )
+                     begin
+                      if (hcount[0])
+                       color <= GRAY_2;
+                      else
+                       color <= GRAY_1;
+                     end
+                    else
+                     color <= GRAY_2;
+                  5'd3:
+                    if ( (hchess==5'd2)  || ((hchess==5'd3)  && (hsetka!=5'd14))
+                      || (hchess==5'd20) || ((hchess==5'd21) && (hsetka!=5'd14)) )
+                     begin
+                      if (hcount[0]^vcount[0])
+                       color <= GRAY_1;
+                      else
+                       color <= GRAY_2;
+                     end
+                    else
+                     color <= GRAY_2;
+                  5'd7:
+                    case (cband)
+                     //3'd0: color <= WHITE;
+                     3'd1: color <= WHITE;
+                     3'd2: color <= BLACK;
+                     3'd3: color <= GRAY_1;
+                     3'd4: color <= GRAY_2;
+                     3'd5: color <= WHITE;
+                     3'd6: color <= BLACK;
+                     //3'd7: color <= BLACK;
+                    endcase
+                  5'd8:
+                    if (hcount[3])
+                     color <= MAGENTA_H;
+                    else
+                     color <= GREEN_H;
+                  5'd9, 5'd10:
+                    if ( (hcount[8]) ^ (vchess[0]) ^ ( (hchess==5'd4) && (hsetka==4'd14) ) )
+                     color <= GRAY_2;
+                    else
+                     color <= BLACK;
+                  5'd11:
+                    if (hcount[3])
+                     color <= RED_H;
+                    else
+                     color <= CYAN_H;
+                  5'd12:
+                    if (hcount[0])
+                     color <= GRAY_1;
+                    else
+                     color <= GRAY_2;
+                  5'd15:
+                    if ( (hchess[0]) && (schcnt==6'd63) )
+                     color <= BLACK;
+                    else
+                     color <= GRAY_2;
+                  5'd16:
+                    if ( (hchess==5'd2)  || ((hchess==5'd3) &&(hsetka!=4'd14))
+                      || (hchess==5'd20) || ((hchess==5'd21)&&(hsetka!=4'd14)) )
+                     begin
+                      if (hcount[0]^vcount[0])
+                       color <= GRAY_2;
+                      else
+                       color <= GRAY_1;
+                     end
+                    else
+                     color <= GRAY_2;
+                  default:
+                   color <= GRAY_2;
+                 endcase
+                else
+                 color <= ( (hsetka==4'd14) || (vsetka==4'd14) ) ? GRAY_2 : GRAY_1;
+               end
+             endcase
+       3'h4: case (cband)
+              3'd0: color <= GRAY_2;
+              3'd1: color <= YELLOW_2;
+              3'd2: color <= CYAN_2;
+              3'd3: color <= GREEN_2;
+              3'd4: color <= MAGENTA_2;
+              3'd5: color <= RED_2;
+              3'd6: color <= BLUE_2;
+              3'd7: color <= BLACK;
+             endcase
+       3'h5: if (vchess[4]==1'b0)
+              begin
+               if (vchess!=5'd15)
+                case (cband)
+                 3'd0: color <= GRAY_2;
+                 3'd1: color <= YELLOW_2;
+                 3'd2: color <= CYAN_2;
+                 3'd3: color <= GREEN_2;
+                 3'd4: color <= MAGENTA_2;
+                 3'd5: color <= RED_2;
+                 3'd6: color <= BLUE_2;
+                 3'd7: color <= BLACK;
+                endcase
+               else
+                case (cband)
+                 3'd0: color <= BLUE_2;
+                 3'd1: color <= BLACK;
+                 3'd2: color <= MAGENTA_2;
+                 3'd3: color <= BLACK;
+                 3'd4: color <= CYAN_2;
+                 3'd5: color <= BLACK;
+                 3'd6: color <= GRAY_2;
+                 3'd7: color <= BLACK;
+                endcase
+              end
+             else
+              case (cband)
+               3'd0: color <= WHITE;
+               3'd1: color <= YELLOW_2;
+               3'd2: color <= CYAN_2;
+               3'd3: color <= GREEN_2;
+               3'd4: color <= MAGENTA_2;
+               3'd5: color <= RED_2;
+               3'd6: color <= BLUE_2;
+               3'd7: color <= BLACK;
+              endcase
+       3'h6: begin
+              if ( (vcount[2:0]==3'd4) || (hcount[2:0]==3'd1) )
+               begin
+                color[0] <= clr3[0];
+                color[1] <= clr3[0];
+                color[2] <= clr3[1];
+                color[3] <= clr3[1];
+                color[4] <= clr3[2];
+                color[5] <= clr3[2];
+               end
+              else
+               color <= BLACK;
+             end
+       default: color <= (hcount[0]^vcount[0]) ? WHITE : BLACK;
+      endcase
+     else
+      color <= BLACK;
+
+     hmouse <= hcount - scr_mouse_x;
+
+     if ( ~htxtscr )
       begin
        hcharcount <= 6'h00;
        pixptr <= 3'd0;
@@ -262,10 +513,10 @@ module main(
      else
       hcount <= hcount + 9'd1;
 
-     if ( hcount==HBLNK_BEG )
-      hblank <= 1'b1;
-     else if ( hcount==HBLNK_END )
-      hblank <= 1'b0;
+     if ( hcount==HTXTS_END )
+      htxtscr <= 1'b0;
+     else if ( hcount==HTXTS_BEG )
+      htxtscr <= 1'b1;
 
      if ( hcount==HSYNC_BEG )
       begin
@@ -292,25 +543,50 @@ module main(
         csync <= 1'b0;
       end
 
-     if ( (vgaff) && (hcount==HBLNK_BEG) ) // localparam CSYNC_CUT2 = 9'd382;
+     if (scr_tv_mode)
+      begin
+       if (hcount==CSYNC_CUT)
+        csync <= 1'b0;
+      end
+     else if ( (vgaff) && (hcount==CSYNC_CUT2) )
       csync <= 1'b0;
 
-     if ( scr_tv_mode && (hcount==CSYNC_CUT) )
-      csync <= 1'b0;
+     if ( ((hchess==5'd0) || (hchess==5'd18)) && (hsetka==4'd13) )
+      schcnt <= 6'd0;
+     else if (schcnt!=6'd63)
+      schcnt <= schcnt+6'd1;
 
-     if ( hcount==HMARK_A )
-      hmark <= 1'b1;
-     else if ( hcount==HMARK_B )
-      hmark <= 1'b0;
+     if ( hcount==HBORD_BEG )
+      begin
+       hbord <= 1'b1;
+       hsetka <= 4'd0;
+       hchess <= 5'd0;
+       hchss3 <= 2'd0;
+       cband <= 3'd0;
+      end
+     else
+      begin
+       if ( hsetka==4'd14 )
+        begin
+         hsetka <= 4'd0;
+         hchess <= hchess+5'd1;
+         if ( hchss3==2'd2 )
+          begin
+           hchss3 <= 2'd0;
+           cband <= cband+3'd1;
+          end
+         else
+          hchss3 <= hchss3+2'd1;
+        end
+       else
+        hsetka <= hsetka+4'd1;
+       if ( hcount==HBORD_END ) hbord <= 1'b0;
+      end
 
-     vgrn[1] <= color[5];
-     vgrn[0] <= color[4];
-     vred[1] <= color[3];
-     vred[0] <= color[2];
-     vblu[1] <= color[1];
-     vblu[0] <= color[0];
-
-     hmouse <= hcount - scr_mouse_x;
+     if ( !((vcount[2:0]==3'd0)&&vgaff) && (hcount==9'd0) )
+      clr3 <= { clr3[1:0], clr3[2] };
+     else if (hcount[2:0]==3'd5)
+      clr3 <= { clr3[1:0], clr3[2] };
 
     end
    //
@@ -319,7 +595,7 @@ module main(
 
      nextline <= 1'b0;
 
-     if ( vblank )
+     if ( ~vtxtscr )
       begin
        voffset <= 11'd0;
        vcharlinecount <= 4'd15;
@@ -338,31 +614,109 @@ module main(
      if ( vcount==VMAX )
       begin
        vcount <= 9'd0;
-//       cursorflash <= cursorflash + 4'd1;
+       clr3 <= 3'b001;
       end
      else
       vcount <= vcount + 9'd1;
 
-     if ( vcount==VBLNK_BEG )
-      vblank <= 1'b1;
-     else if ( vcount==VBLNK_END )
-      vblank <= 1'b0;
+     if ( vcount==VTXTS_END )
+      vtxtscr <= 1'b0;
+     else if ( vcount==VTXTS_BEG )
+      vtxtscr <= 1'b1;
 
      if ( vcount==VSYNC_BEG )
       vsync <= 1'b1;
      else if ( vcount==VSYNC_END )
       vsync <= 1'b0;
 
-     if ( vcount==VMARK_A )
-      vmark <= 1'b1;
-     else if ( vcount==VMARK_B )
-      vmark <= 1'b0;
+     if ( vcount==VBORD_BEG )
+      begin
+       vbord <= 1'b1;
+       vsetka <= 4'd5;
+       vchess <= 5'd0;
+       circle <= 1'b0;
+       bccount <= 7'd0;
+       sccount <= 5'd0;
+       bcdir <= 2'b00;
+       scdir <= 2'b00;
+      end
+     else
+      begin
+
+       if (bcdir[0])
+        bccount <= bccount+7'd1;
+       else if (bcdir[1])
+        bccount <= bccount-7'd1;
+
+       if (scdir[0])
+        sccount <= sccount+5'd1;
+       else if (scdir[1])
+        sccount <= sccount-5'd1;
+
+       if ( vsetka==4'd14 )
+        begin
+         vsetka <= 4'd0;
+         vchess <= vchess+5'd1;
+        end
+       else
+        begin
+         vsetka <= vsetka+4'd1;
+         if ( vsetka==4'd13 )
+          begin
+           if (vchess==5'd1)
+            bcdir <= 2'b01;
+           else if (vchess==5'd9)
+            bcdir <= 2'b10;
+           else if (vchess==5'd17)
+            bcdir <= 2'b00;
+           if ( (vchess==5'd0) || (vchess==5'd14) )
+            scdir <= 2'b01;
+           else if ( (vchess==5'd2) || (vchess==5'd16) )
+            scdir <= 2'b10;
+           else if ( (vchess==5'd4) || (vchess==5'd18) )
+            scdir <= 2'b00;
+          end
+        end
+
+       if ( vcount==VBORD_END ) vbord <= 1'b0;
+
+      end
 
      vmouse <= vcount - scr_mouse_y;
 
     end
    //
+   if ( (hchess==5'd2) || (hchess==5'd10) || (hchess==5'd20) )
+    hhole <= 1'b1;
+   else if ( (hchess==5'd4) || (hchess==5'd14) || (hchess==5'd22) )
+    hhole <= 1'b0;
+   //
+   if ( (vchess==5'd4) && (schcnt==6'd63) )
+    begin
+     if (hchess==5'd7)
+      uhole <= 1'b1;
+     else if (hchess==5'd17)
+      uhole <= 1'b0;
+    end
+   //
+   if (hcount==(9'd258+cb_val))
+    circle <= 1'b0;
+   else if ( (schcnt==(5'd31+cs_val)) && (sccount!=5'd0) )
+    circle <= 1'b0;
+   else if (hcount==(9'd257-cb_val))
+    circle <= 1'b1;
+   else if ( (schcnt==(5'd30-cs_val)) && (sccount!=5'd0) )
+    circle <= 1'b1;
+   //
+   if ( (((vchess==5'd2) || (vchess==5'd16)) && (vsetka==4'd7)) || (vchess==5'd9) )
+    vhole <= 1'b1;
+   else if ( (((vchess==5'd3) || (vchess==5'd17)) && (vsetka==4'd7)) || (vchess==5'd11) )
+    vhole <= 1'b0;
+   //
   end
+
+ circl_b ccb ( .in_addr(bccount), .out_word(cb_val) );
+ circl_s ccs ( .in_addr(sccount), .out_word(cs_val) );
 
  lpm_rom_7x2 mouse_cursor ( .address({ vmouse[3:0], hmouse[2:0] }), .q({ mouse_i, mouse_m }) );
  assign mouse_here = (hmouse[8:3] == 6'd0) && (vmouse[8:4] == 5'd0);
@@ -404,13 +758,9 @@ module main(
                 ( charcode==8'hb2 ) ? ( (vcount[0]^hcount[1])| hcount[0] ) :
                 ( fontenable ) ? charpix[3'd5-pixptr] : 1'b0;
 
- assign mark = vmark&hmark&(vcount[0]^hcount[0]);
+ assign image_color = (mouse_mask) ? BLACK : ( pixel ? fcolor : bcolor ) ;
 
- assign image_color = (mouse_mask) ? 6'h00 : ( pixel ? fcolor : bcolor ) ;
- assign color = (scr_mark) ? ((mark) ? 6'h3f : 6'h00) :
-                (hblank | vblank) ? 6'h00 :
-                (mouse_image) ? ~image_color : image_color;
-
+ assign { vgrn[1:0], vred[1:0], vblu[1:0] } = color;
  assign vhsync = hsync;
  assign vvsync = vsync;
  assign vcsync = ~csync;
@@ -435,9 +785,9 @@ module main(
                                    // (если только дергать spics_n, то в память будет писаться предыдущие значения)
  localparam SCR_MOUSE_X   = 8'had;
  localparam SCR_MOUSE_Y   = 8'hae;
- localparam SCR_MODE      = 8'haf; // .0 - 0=VGAmode, 1=TVmode; .1 - 0=сетка 720x576
+ localparam SCR_MODE      = 8'haf; // [7] - 0=VGAmode, 1=TVmode; [2:0] - 0=TXT, иначе ScrTESTs
 
- localparam MTST_CONTROL  = 8'h50; // .0 - тест памяти (0 - сброс, 1 - работа)
+ localparam MTST_CONTROL  = 8'h50; // [0] - тест памяти (0=сброс, 1=работа)
  localparam MTST_PASS_CNT0= 8'h51;
  localparam MTST_PASS_CNT1= TEMP_REG;
  localparam MTST_FAIL_CNT0= 8'h52;
@@ -445,8 +795,8 @@ module main(
 
  localparam COVOX         = 8'h53;
 
- localparam INT_CONTROL   = 8'h54; // .0 - разрешение прерываний от covox-а (27343.75 Hz)
-                                   // .1 - разрешение кадровых прерываний (~50 Hz)
+ localparam INT_CONTROL   = 8'h54; // [0] - разрешение прерываний от covox-а (27343.75 Hz)
+                                   // [1] - разрешение кадровых прерываний (~49 Hz)
 
  reg [7:0] number;          initial number = 8'hff;
  reg [7:0] indata;          initial indata = 8'hff;
@@ -466,7 +816,7 @@ module main(
  reg [8:0] scr_mouse_x;     initial scr_mouse_x = 9'd0;
  reg [8:0] scr_mouse_y;     initial scr_mouse_y = 9'd0;
  reg scr_tv_mode;           initial scr_tv_mode = 1'b1;
- reg scr_mark;              initial scr_mark = 1'b0;
+ reg [2:0] scr_mode;        initial scr_mode = 3'b0;
  wire spicsn_rising;
  wire spicsn_falling;
  wire sd_selected;
@@ -526,11 +876,14 @@ module main(
       SCR_MOUSE_X:   scr_mouse_x <= { temp_reg[0], indata };
       SCR_MOUSE_Y:   scr_mouse_y <= { temp_reg[0], indata };
       SCR_MODE:      begin
-                      scr_tv_mode <= indata[0];
-                      scr_mark <= ~indata[1];
+                      scr_tv_mode <= indata[7];
+                      scr_mode <= indata[2:0];
                      end
       MTST_CONTROL:  mtst_run <= indata[0];
-      COVOX:         covox <= indata;
+      COVOX:         begin
+                      covox[cvx_ptr_iinc] <= indata;
+                      cvx_ptr_in <= cvx_ptr_iinc;
+                     end
       INT_CONTROL:   begin
                       enable_covox_int <= indata[0];
                       enable_frame_int <= indata[1];
@@ -550,6 +903,7 @@ module main(
       cs_trg <= 1'b0;
       //
       case ( number )
+       SCR_SET_ATTR:  outdata <= ~scr_attr; // for SPI testing
        SCR_FILL:      begin
                        outdata <= 8'hff;
                        scr_addr <= scr_addr + 11'd1;
@@ -559,7 +913,6 @@ module main(
                        scr_addr <= scr_addr + 11'd1;
                       end
        FLASH_DATA:    outdata <= d;
-       COVOX:         outdata <= ~covox; // for SPI testing
        MTST_PASS_CNT0:begin
                        outdata <= mtst_pass_counter[7:0];
                        temp_reg <= mtst_pass_counter[15:8];
@@ -568,6 +921,7 @@ module main(
                        outdata <= mtst_fail_counter[7:0];
                        temp_reg <= mtst_fail_counter[15:8];
                       end
+       COVOX:         outdata <= { 4'd0, cvx_ptr_diff };
        TEMP_REG:      outdata <= temp_reg; // read after MTST_PASS_CNT0, MTST_FAIL_CNT0
        default:       outdata <= 8'hff;
       endcase

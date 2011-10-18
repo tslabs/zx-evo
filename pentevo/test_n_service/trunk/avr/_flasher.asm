@@ -78,6 +78,15 @@ FL_HEGLUK:
 FL_EVODOS:
         .DB     "EVOD"
         .DB     "evodos     ",0
+FL_ADDONS:
+        .DB     "ADDO"
+        .DB     "addons     ",0
+FL_RST08:
+        .DB     "RST_"
+        .DB     "rst_08     ",0
+FL_QC3:
+        .DB     "QC 3"
+        .DB     "qc3.xx     ",0
 FL_ATM2CPM:
         .DB     $1E,$65,$1E,$B3 ;B31E651E
         .DB     "atm2_cpm   ",0
@@ -490,6 +499,21 @@ FL_DET_ROM_3:
         RCALL   FL_CRC_CMP
         BREQ    FL_DET_ROM_4
         LDIZ    FL_EVODOS*2
+        RCALL   FL_CRC_CMP
+        BREQ    FL_DET_ROM_4
+        LDIZ    FL_ADDONS*2
+        RCALL   FL_CRC_CMP
+        BREQ    FL_DET_ROM_4
+        LDIZ    FL_RST08*2
+        RCALL   FL_CRC_CMP
+        BREQ    FL_DET_ROM_4
+
+        LDIZ    FL_BUFFER+$019B
+        LDD     R0,Z+0
+        LDD     R1,Z+1
+        LDD     R2,Z+2
+        LDD     R3,Z+3
+        LDIZ    FL_QC3*2
         RCALL   FL_CRC_CMP
         BREQ    FL_DET_ROM_4
 

@@ -1,5 +1,5 @@
 
-;LAST UPDATE: 12.11.2010 savelij
+;LAST UPDATE: 28.09.2011 savelij
 
 ;ŽŒ…€ ‚›‡›‚€…Œ›• ”“Š–ˆ‰
 Wc_fat		EQU 0X00		;ˆˆ–ˆ€‹ˆ‡€–ˆŸ ……Œ…›•
@@ -194,12 +194,20 @@ ADD2FI1		PUSH AF
 		AND A
 		JR Z,ADD2FI5
 		EX AF,AF'
-		CALL TO_DRV
+;		CALL TO_DRV
+;		DB 5
+		RST 8
+		DB Com_dev
+		DB To_drv
 		DB 5
 		JR ADD2FI4
 
 ADD2FI5		EX AF,AF'
-		CALL TO_DRV
+;		CALL TO_DRV
+;		DB 3
+		RST 8
+		DB Com_dev
+		DB To_drv
 		DB 3
 ADD2FI4		AND A
 		JP NZ,ERR_DRV
@@ -279,7 +287,11 @@ LOADLS1		LD (LSTLOAD+2),BC
 		LD (LSTLOAD),DE
 		LD HL,BUF_512
 		PUSH HL
-		CALL TO_DRV
+;		CALL TO_DRV
+;		DB 2
+		RST 8
+		DB Com_dev
+		DB To_drv
 		DB 2
 		AND A
 		JP NZ,ERR_DRV
@@ -729,8 +741,12 @@ LOADZP		LD E,(HL)
 WC_FAT		LD HL,0XFFFF
 		LD (LSTLOAD),HL
 		LD (LSTLOAD+2),HL
-		CALL COM_DEV
-		DB 2
+;		CALL COM_DEV
+;		DB 2
+		RST 8
+		DB Com_dev
+		DB Kol_vol
+		LD HL,ADR_CAT-0X100
 		LD (CAL_FAT),A
 		LD E,D
 		LD D,0
@@ -1414,8 +1430,12 @@ LD_FILE2	ADD A,IYH
 		SUB IYH
 LD_FILE5	LD IYL,A		;‘ŠŽ‹œŠŽ ‘…Š’ŽŽ‚ ‘…‰—€‘ ƒ“‡ˆŒ
 		POP HL			;‚Ž‘‘’€Ž‚ˆ‹ˆ €„…‘ ‡€ƒ“‡Šˆ
-		CALL TO_DRV
-		DB 3			;‡€ƒ“‡ˆ‹ˆ ‘…Š’Ž€
+;		CALL TO_DRV
+;		DB 3			;‡€ƒ“‡ˆ‹ˆ ‘…Š’Ž€
+		RST 8
+		DB Com_dev
+		DB To_drv
+		DB 3
 		POP DE
 		POP BC			;‚Ž‘‘’€Ž‚ˆ‹ˆ ŽŒ… Š‹€‘’…€
 		LD A,IYH

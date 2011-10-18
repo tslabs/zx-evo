@@ -93,7 +93,10 @@ entity T80a is
 		HALT_n          : out std_logic;
 		BUSAK_n         : out std_logic;
 		A                       : out std_logic_vector(15 downto 0);
-		D                       : inout std_logic_vector(7 downto 0)
+		D                       : inout std_logic_vector(7 downto 0);
+		D_I		: in std_logic_vector(7 downto 0);
+		D_O		: out std_logic_vector(7 downto 0)
+
 	);
 end T80a;
 
@@ -138,6 +141,9 @@ begin
 	A <= A_i when BUSAK_n_i = '1' else (others => 'Z');
 	D <= DO when Write = '1' and BUSAK_n_i = '1' else (others => 'Z');
 
+	D_O <= DO when Write = '1' and BUSAK_n_i = '1' else (others => 'Z');
+
+
 	process (RESET_n, CLK_n)
 	begin
 		if RESET_n = '0' then
@@ -167,7 +173,7 @@ begin
 			BUSAK_n => BUSAK_n_i,
 			CLK_n => CLK_n,
 			A => A_i,
-			DInst => D,
+			DInst => D_I, -- D -> D_I
 			DI => DI_Reg,
 			DO => DO,
 			MC => MCycle,
@@ -179,7 +185,7 @@ begin
 		if CLK_n'event and CLK_n = '0' then
 			Wait_s <= WAIT_n;
 			if TState = "011" and BUSAK_n_i = '1' then
-				DI_Reg <= to_x01(D);
+				DI_Reg <= to_x01(D_I); -- D -> D_I
 			end if;
 		end if;
 	end process;

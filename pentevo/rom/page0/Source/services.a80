@@ -1,16 +1,14 @@
 
-;LAST UPDATE: 27.02.2011 savelij
+;LAST UPDATE: 28.09.2011 savelij
 
-DD		EQU 27				;„€’€
-MM		EQU 2				;Œ…‘Ÿ–
+DD		EQU 9				;„€’€
+MM		EQU 10				;Œ…‘Ÿ–
 YY		EQU 11				;ƒŽ„
 DATA		EQU DD+(MM<<5)+(YY<<9)+0X8000	;“†… “€ŠŽ‚€Ž
 
+KOL_MODES	EQU 3
+ADRNMIRST8	EQU 0X0013
 DEPKADR		EQU 0X6000
-
-;SYSREG_EFF7	EQU 0XEEF7
-;SET_ADR_CMOS	EQU 0XDEF7
-;RD_WR_CMOS	EQU 0XBEF7
 
 		ORG 0X0000
 		DI
@@ -21,58 +19,46 @@ DEPKADR		EQU 0X6000
 		IM 1
 		XOR A
 		OUT (0XFE),A
-		LD IXL,"P"			;…‘‹ˆ … Ž…„…‹ˆ’‘Ÿ, ’Ž “„…’ Ž˜ˆ‚Š€ „‹Ÿ …’€ƒŽ€
-		LD HL,4
-		LD D,0X40
-		LD E,L
-		LD B,0X80
-		LD C,L
-CMPROM1		LD A,(BC)
-		CP (HL)
-		JP NZ,RSTKEYS
-		EX DE,HL
-		CP (HL)
-		EX DE,HL
-		JP NZ,RSTKEYS
-		DEC L
-		DEC E
-		DEC C
-		JR NZ,CMPROM1
-		LD IXL,"A"			;Ž…„…‹ˆ‹Ž‘œ, Ž˜ˆ‚Š€ „‹Ÿ €’Œ
-		JR RSTRAM
+		JR RSTRAM0
+
+		DUPL 0X0013-$,0XFF
+		OUT (C),A
+		NOP
+		RET
+
+RSTRAM0		LD HL,PAGES_CONF
+		LD A,0XEF
+		IN A,(0XFE)
+		RRCA
+		JR NC,RSTRAM
+		LD BC,CMOSD_SET_ADR
+		LD A,0XEF
+		OUT (C),A
+		LD B,HIGH (CMOSD_RD_WR)
+		IN A,(C)
+		AND 3
+		CP KOL_MODES
+		JR NC,RSTRAM
+		AND A
+		JR Z,RSTRAM
+		JR RSTRAM1
 
 		DUPL 0X0038-$,0XFF
 		ORG 0X0038
 		EI
 		RET
 		
-;€ …‚ŽŒ Ž•Ž„… ‚ ‚ˆ„…Ž …†ˆŒ… 640•200
-;€ ‚’ŽŽŒ Ž•Ž„… ‚ ’…Š‘’Ž‚ŽŒ …†ˆŒ…
-
-RSTRAM
-;		LD DE,0X1002
-;RSRAMP0		LD BC,0X0077
-;		OUT (C),E			;‚›“€…Œ „ˆ‘…’—…€ €ŒŸ’ˆ
-;		LD HL,TRSTRAM
-;RSRAMP1		LD BC,0X7FFD
-;		OUT (C),D			;‚“€…Œ ŠŽ”ˆƒ 48Š € …‚ŽŒ Ž•Ž„…, 128Š € ‚’ŽŽŒ
-;		LD BC,0X3FF7
-;RSRAMP2		LD A,(HL)
-;		OUT (C),A			;ˆ˜…Œ ŽŒ… ‘’€ˆ–› „‹Ÿ ’…Š“™…ƒŽ ŽŠ€ Ž…–ˆŽ‚€ˆŸ
-;		INC HL
-;		LD A,B
-;		ADD A,0X40			;‘‹…„“ž™…… ŽŠŽ Ž…–ˆŽ‚€ˆŸ
-;		LD B,A
-;		JR NC,RSRAMP2			;…‘‹ˆ … ŠŽ—ˆ‹Ž‘œ ……•Ž„ˆŒ Š ‡€ˆ‘ˆ ‚ ‘‹…„“™…… ŽŠŽ
-;		LD A,D
-;		XOR 0X10			;‘Œ…ˆ‹ˆ …†ˆŒ € 128Š
-;		LD D,A
-;		JR Z,RSRAMP1			;ˆ ……Š‹ž—…ˆˆ ‚ 128Š Ž‚’ŽŸ…Œ
-
-		LD BC,0X77|0XBC00
+RSTRAM1		DEC A
+		LD HL,PAGES_CONFGLUK
+		JR Z,RSTRAM
+		LD HL,PAGES_PROFROM
+RSTRAM		LD A,0XEF
+		IN A,(0XFE)
+		RRCA
+		JR NC,RSTRAM
+		LD BC,0XBC77
 		LD A,2
 		OUT (C),A
-		LD HL,PAGES_CONF
 		LD DE,0X103F
 LOOP2		LD BC,0X7FFD
 		OUT (C),D
@@ -87,27 +73,18 @@ LOOP1		OUTI
 		XOR 0X10
 		LD D,A
 		JR Z,LOOP2
-		JR RSTPAL
-
-		DUPL 0X0066-$,0XFF
-		ORG 0X0066
-		PUSH AF
-		LD A,R
-		JP PO,EXIT_NMI
-		EI
-EXIT_NMI	POP AF
-		RET
-
-RSTPAL		LD A,%10101011			;ZX SCREEN MODE, TURBO ON („‹Ÿ €’Œ)
-		LD BC,0X4177|0XBC00		;ˆ „Ž‘’“ Š €‹ˆ’…
+RSTPAL		LD A,(HL)
+		LD IXH,A			;ŽŒ… ‘’€ˆ–› ‡€‚…˜…ˆŸ ˆˆ’€ Œ€€ƒ…€ 
+		LD A,%10100011			;ZX SCREEN MODE, TURBO OFF („‹Ÿ €’Œ)
+		LD BC,0XFD77			;ˆ „Ž‘’“ Š €‹ˆ’…
 		OUT (C),A
 ;¯ «¨âà 
 		EI
 		HALT
 		DI
 		LD HL,TRSTPAL			;+15
-		LD DE,0XAB0F
-		LD BC,0X0177|0XBC00
+		LD DE,0XA30F
+		LD BC,0XBD77
 		OUT (C),D			;¢ª«.PAL
 RSTPAL0		LD A,E
 		BIT 3,E
@@ -116,16 +93,43 @@ RSTPAL0		LD A,E
 		OUT (0XF6),A
 		LD A,(HL)
 		INC HL
+		OR %00001100
 		OUT (0XFF),A
 		DEC E
 		JP P,RSTPAL0
-END_INIT	LD A,%10101011
-		LD BC,0X4177|0XBC00
+END_INIT	LD A,%10100011
+		LD BC,0XFF77
 		OUT (C),A			;¢ëª«.PAL
 ;~¯ «¨âà 
+RSTKEYS		LD A,IXH
+		LD BC,0
+		CP 0X84
+		JR C,RSTKEYS2
+		CP 0X9C
+		JR NC,RSTKEYS3
+		JP LDIR4PROFROM
 
-;¯à®¢¥àª  ­ ¦ â¨ï ¤¢ãå ª« ¢¨è (¯®àâ¨¬ â®«ìª® AF,BC)
-RSTKEYS		LD BC,WIN_P2
+RSTKEYS3	PUSH BC
+		LD BC,0XBC77
+		LD A,2
+		OUT (C),A
+		LD BC,WIN_A0
+		LD A,IXH
+		OUT (C),A
+		XOR A
+		OUT (PEVO_CONF),A
+		LD BC,0XFF77
+		LD A,0XA3
+		JP 0X3D2D
+
+RSTKEYS2	LD BC,CMOSD_SET_ADR
+		LD A,0XEF
+		OUT (C),A
+		LD B,HIGH (CMOSD_RD_WR)
+		IN A,(C)
+		AND 0XFC
+		OUT (C),A
+		LD BC,WIN_P2
 		LD A,1
 		OUT (C),A			
 		LD BC,WIN_A3
@@ -134,73 +138,57 @@ RSTKEYS		LD BC,WIN_P2
 		LD HL,0XC000
 		LD DE,0X8000
 		LD BC,0X4000
-		LDIR
+		LDIR				;……Ž‘ DOS ‚ …„Ž‘‹…„žž ‘’€ˆ–“
 		LD BC,WIN_P2
 		XOR A
 		OUT (C),A
 		LD HL,RAM_SEL
-		LD DE,0X8013
+		LD DE,0X8000+ADRNMIRST8
 		LD BC,ERAM_SEL-RAM_SEL
-		LDIR
-;		LD B,0X18
-;		LD DE,0X4000
-;		LD HL,0X9C00
-;ADRTSC2		LD C,8
-;ADRTSC1		LD (HL),E
+		LDIR				;“‘’€Ž‚Š€ Ž€Ž’—ˆŠ€
+		LD HL,ERAM_SEL
+		LD DE,0X8101
+		LD BC,ENMI_SERVICE-ERAM_SEL
+		LDIR				;“‘’€Ž‚Š€ Ž€Ž’—ˆŠ€
+;		LD HL,0X9C33
+;		XOR A
+;		LD (HL),0XFF
 ;		INC HL
-;		LD (HL),D
+;		LD (HL),A
 ;		INC HL
-;		INC D
-;		DEC C
-;		JR NZ,ADRTSC1
-;		LD A,0X20
-;		ADD A,E
-;		LD E,A
-;		JR C,ADRTSC3
-;		LD A,D
-;		SUB 8
-;		LD D,A
-;ADRTSC3		DJNZ ADRTSC2
-;		LD (HL),0X18
+;		LD (HL),A
 ;		INC HL
-;		LD (HL),0
+;		LD (HL),A
 ;		INC HL
-;		LD B,0X20
-;LDI_BLOCK	LD (HL),0XED
+;		LD (HL),0XFF
 ;		INC HL
-;		LD (HL),0XA0
+;		LD (HL),A
 ;		INC HL
-;		DJNZ LDI_BLOCK
-;		LD (HL),0XC9
-		LD HL,0X9C33
-		XOR A
-		LD (HL),0XFF
-		INC HL
-		LD (HL),A
-		INC HL
-		LD (HL),A
-		INC HL
-		LD (HL),A
-		INC HL
-		LD (HL),0XFF
-		INC HL
-		LD (HL),A
-		INC HL
-		LD (HL),A
-		INC HL
-		LD (HL),A
-		INC HL
-		LD (HL),A
-		INC HL
-		LD (HL),0X23
-		INC HL
-		LD (HL),2
-		LD BC,WIN_P2
-		LD A,0XFD
-		OUT (C),A
+;		LD (HL),A
+;		INC HL
+;		LD (HL),A
+;		INC HL
+;		LD (HL),A
+;		INC HL
+;		LD (HL),0X23
+;		INC HL
+;		LD (HL),2
 		LD BC,WIN_A3
 		LD A,0XFF
 		OUT (C),A
+		LD BC,WIN_A2
+		LD A,5
+		OUT (C),A
+		LD HL,0XB7F8
+		LD DE,0XF800
+		LD BC,0X0800
+		LDIR				;“‘’€Ž‚Š€ ˜ˆ”’€
+		LD BC,WIN_A2
+		LD A,0X7D
+		OUT (C),A
+;		LD BC,WIN_P2
+;		LD A,0XFD
+;		OUT (C),A
 		LD BC,0XFEFF
 RSTKEYS1	LD A,B
 		IN A,(0XFE)
@@ -238,15 +226,12 @@ RSTKEYS1	LD A,B
 
 CMPCFG1		LD A,0XFD
 		IN A,(0XFE)
-		AND 4				;‡€“‘Š „…ŒŠˆ
+		AND 4				;€†€’Ž "D" ‡€“‘Š „…ŒŠˆ
 		JP Z,GDEMO
 		LD HL,DEPKADR
 		LD SP,HL
 		EX DE,HL
 		LD HL,LOADADR			;€‘€ŠŽ‚Š€ … ƒ‹žŠ€
-		CALL DEC40
-		LD HL,CHARS
-		LD DE,0XF800
 		CALL DEC40
 		XOR A
 		IN A,(0XFE)
@@ -276,7 +261,6 @@ GDEMO		LD HL,0X6000-szdemoini
 		LD HL,DEMO
 		LD B,3
 		LDIR
-
 START_SELECT	EX AF,AF'			;‘Ž•€…ˆ… € ˆ ”‹€ƒŽ‚
 		LD HL,ERAM_CODE-1
 		LD DE,0X5C80
@@ -297,11 +281,6 @@ START_SELECT	EX AF,AF'			;‘Ž•€…ˆ… € ˆ ”‹€ƒŽ‚
 		RRCA
 		LD D,A				;‘Ž•€ˆ‹ˆ ˆ’ ’“Ž …†ˆŒ€
 		EXX
-		LD A,IXL
-		CP "A"
-		JR Z,CMPCFG2			;…‘‹ˆ Ž…„…‹ˆ‹Ž‘œ Š€Š €’Œ, ’Ž € €’Œ ˆ ‡€“‘Š€…Œ
-		LD BC,NOATM_CODE-RAM_CODE
-		ADD HL,BC
 CMPCFG2		JP (HL)
 
 RAM_CODE	LD BC,0X7FFD
@@ -310,10 +289,10 @@ RAM_CODE	LD BC,0X7FFD
 		INC A
 		OUT (0XBF),A
 		LD BC,WIN_A0
-		LD A,0X81			;‘’€ˆ–€ …‰‘ˆŠ128
+		LD A,IXH			;‘’€ˆ–€ …‰‘ˆŠ128
 		OUT (C),A
 		LD BC,0XFF77
-		LD A,0XAB
+		LD A,0XA3
 		OUT (C),A
 		XOR A
 		OUT (0XBF),A
@@ -331,70 +310,12 @@ SET_MODE1	OUT (C),D
 		RET
 ERAM_CODE
 
-BONUADR		BINCLUDE cmosset_pack.rom
-LOADADR		BINCLUDE main_pack.rom
-CHARS		BINCLUDE chars_pack.bin
+BONUADR		binclude cmosset_pack.rom
+LOADADR		binclude main_pack.rom
+		include nmi_service.a80
 
-RAM_SEL
-		PHASE 0X0013
+	       	DUPL 0X3D2D-$,0XFF
 		OUT (C),A
-		NOP
-		LD (0X00FE),SP
-		LD SP,0X00F6
-		PUSH DE
-		PUSH HL
-		EXX
-		PUSH BC
-		PUSH DE
-		PUSH HL
-		EXX
-		PUSH IX
-		PUSH IY
-		LD A,I
-		PUSH AF
-		LD HL,(0X00FE)
-		LD DE,0X00F6
-		REPT 8
-		LDI
-		ENDM
-		LD A,0XC9
-		LD (0X0015),A
-		LD BC,WIN_A0
-		LD A,5
-		JP 0X0013
-
-		XOR A
-		LD (0X0015),A
-		LD BC,WIN_P2
-		LD A,0XFD
-		OUT (C),A
-		LD HL,0X00F6
-		LD DE,(0X00FE)
-		REPT 8
-		LDI
-		ENDM
-		LD SP,0X00E6
-		POP AF
-		LD I,A
-		POP IY
-		POP IX
-		POP HL
-		POP DE
-		POP BC
-		EXX
-		POP HL
-		POP DE
-		LD SP,(0X00FE)
-		LD BC,0X3CD0
-		PUSH BC
-		LD BC,WIN_A0
-		LD A,0X83
-		JP 0X0013
-		DEPHASE
-ERAM_SEL
-
-	       	DUPL 0X3D2F-$,0XFF
-		ORG 0X3D2F
 		NOP
 		RET
 
@@ -404,15 +325,61 @@ DEMO		LD BC,0X7FFD
 		EI
 szdemoini	EQU $-DEMO
 
-		BINCLUDE grass.bin
+		binclude grass.bin
 
-		INCLUDE dec40.a80
+		include dec40.a80
+
+LDIR4PROFROM	LD HL,JMP2PROFROM
+		LD DE,JMP2PROFROM+0X8000
+		LD BC,EJMP2PROFROM-JMP2PROFROM
+		LDIR
+		PUSH BC
+		LD BC,0XBC77
+		LD A,3
+		OUT (C),A
+		LD A,IXH
+		LD BC,WIN_A0
+		OUT (C),A
+		LD BC,0XFF77
+		LD A,0XA3
+		JP JMP2PROFROM+0X8000
+
+JMP2PROFROM	OUT (C),A
+		RET
+EJMP2PROFROM	
+
+;1000 0001 81 0 BASIC 48
+;1000 0011 83 0 BASIC 128
+
+;1000 0101 85 1
+;1000 0111 87 1
+
+;1000 1001 89 2
+;1000 1110 8B 2
+
+;1000 1101 8D 3
+;1000 1111 8F 3
+
+;1001 0001 91 4
+;1001 0011 93 4
+
+;1001 0101 95 5
+;1001 0111 97 5
+
+;1001 1001 99 6 BASIC 48
+;1001 1011 9B 6 BASIC 128
+
+;1001 1101 9D 7 BASIC 48
+;1001 1111 9F 7 BASIC 128
 
 PAGES_CONF	DB 0XFF,0X7D,0X7A,0X83
-		DB 0XFF,0X7D,0X7A,0X00
+		DB 0XFF,0X7D,0X7A,0X00,0X81
 
-;TRSTRAM		DB 0X83,0X7A,0X7D,0XFF		;BASIC 48
-;		DB 0X00,0X7A,0X7D,0XFF		;BASIC 128
+PAGES_CONFGLUK	DB 0XFF,0X7D,0X7A,0X9F
+		DB 0XFF,0X7D,0X7A,0X00,0X9D
+
+PAGES_PROFROM	DB 0XFF,0X7D,0X7A,0X9B
+		DB 0XFF,0X7D,0X7A,0X00,0X99
 
 TRSTPAL		DB 0X00,0X21,0X42,0X63,0X90,0XB1,0XD2,0XF3
 		DB 0XE0,0XE1,0XE2,0XE3,0XF0,0XF1,0XF2,0XF3

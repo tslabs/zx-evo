@@ -1,4 +1,6 @@
 
+;LAST UPDATE: 04.06.2011 savelij
+
 ;‘Ž•€…ˆ… Š“‘Š€ Š€€
 SAVE2X2		LD HL,(ADR_REST)
 		LD DE,MOUSE_BUFF
@@ -125,16 +127,16 @@ MOUOPT		LD H,(IX+1)
 		LD A,D
 		SUB H
 		LD C,A
-		LD L,(IX+0X12)
-		LD H,(IX+0X13)
+		LD L,(IX+8)
+		LD H,(IX+9)
 		LD B,0
 		LD D,B
-		LD E,(IX+0X0F)
+		LD E,(IX+7)
 		SBC HL,DE
 		ADD HL,BC
-		LD (IX+0X12),L
-		LD (IX+0X13),H
-		LD (IX+0X0F),C
+		LD (IX+8),L
+		LD (IX+9),H
+		LD (IX+7),C
 		JP COLOR_CURSOR
 
 DRAW_MOUSE	LD BC,0
@@ -200,8 +202,8 @@ PRAR1		SCF
 		RET
 
 ;Œ…‘’ŽŽ‹Ž†…ˆ… Š“‘Ž€
-OPMSPL		LD E,(IX+0X14)
-		LD D,(IX+0X15)
+OPMSPL		LD E,(IX+0X10)
+		LD D,(IX+0X11)
 		LD A,D
 		OR E
 		RET Z			;€„…‘ Žˆ‘€’…‹…‰ … ‡€„€

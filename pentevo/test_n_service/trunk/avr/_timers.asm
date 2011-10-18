@@ -33,9 +33,12 @@ TIM3_COMPA:
         PUSH    TEMP
 
         LDS     TEMP,MSCOUNTER+0
+        SBRC    TEMP,4
+        LED_ON
         INC     TEMP
         STS     MSCOUNTER+0,TEMP
         BRNE    TIM3_CMPA_1
+        LED_OFF
         LDS     TEMP,MSCOUNTER+1
         INC     TEMP
         STS     MSCOUNTER+1,TEMP

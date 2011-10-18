@@ -1,0 +1,190 @@
+
+			.Z80 (Z80) [from Z80 documentation]
+
+The old .Z80 snapshot format (for version 1.45 and below) looks like this:
+
+        Offset  Length  Description
+        ---------------------------
+        0       1       A register
+        1       1       F register
+        2       2       BC register pair (LSB, i.e. C, first)
+        4       2       HL register pair
+        6       2       Program counter
+        8       2       Stack pointer
+        10      1       Interrupt register
+        11      1       Refresh register (Bit 7 is not significant!)
+        12      1       Bit 0  : Bit 7 of the R-register
+                        Bit 1-3: Border colour
+                        Bit 4  : 1=Basic SamRom switched in
+                        Bit 5  : 1=Block of data is compressed
+                        Bit 6-7: No meaning
+        13      2       DE register pair
+        15      2       BC' register pair
+        17      2       DE' register pair
+        19      2       HL' register pair
+        21      1       A' register
+        22      1       F' register
+        23      2       IY register (Again LSB first)
+        25      2       IX register
+        27      1       Interrupt flipflop, 0=DI, otherwise EI
+        28      1       IFF2 (not particularly important...)
+        29      1       Bit 0-1: Interrupt mode (0, 1 or 2)
+                        Bit 2  : 1=Issue 2 emulation
+                        Bit 3  : 1=Double interrupt frequency
+                        Bit 4-5: 1=High video synchronisation
+                                 3=Low video synchronisation
+                                 0,2=Normal
+                        Bit 6-7: 0=Cursor/Protek/AGF joystick
+                                 1=Kempston joystick
+                                 2=Sinclair 2 Left joystick (or user
+                                   defined, for version 3 .Z80 files)
+                                 3=Sinclair 2 Right joystick
+
+Because of compatibility, if byte 12 is 255, it has to be regarded as being 1. 
+After this header block of 30 bytes the 48K bytes of Spectrum memory follows 
+in a compressed format (if bit 5 of byte 12 is one). The compression method 
+is very simple: it replaces repetitions of at least five equal bytes by a 
+four-byte code ED ED xx yy, which stands for "byte yy repeated xx times". 
+Only sequences of length at least 5 are coded. The exception is sequences 
+consisting of ED's; if they are encountered, even two ED's are encoded 
+into ED ED 02 ED. Finally, every byte directly following a single ED is not 
+taken into a block, for example ED 6*00 is not encoded into ED ED ED 06 00 
+but into ED 00 ED ED 05 00. The block is terminated by an end marker, 
+00 ED ED 00.
+
+That's the format of .Z80 files as used by versions up to 1.45. Starting 
+from version 2.0, a different format is used, since from then on also 128K 
+snapshots had to be supported. This new format is used for all snapshots, 
+either 48K or 128K.
+
+Version 2.01 and 3.0 .Z80 files start with the same 30 byte header as 
+old .Z80 files used. Bit 4 and 5 of the flag byte have no meaning anymore, 
+and the program counter (byte 6 and 7) are zero to signal a version 2.01 
+or version 3.0 snapshot file.
+
+After the first 30 bytes, the additional header follows:
+
+        Offset  Length  Description
+        ---------------------------
+      * 30      2       Length of additional header block (see below)
+      * 32      2       Program counter
+      * 34      1       Hardware mode (see below)
+      * 35      1       If in SamRam mode, bitwise state of 74ls259.
+                        For example, bit 6=1 after an OUT 31,13 (=2*6+1)
+                        If in 128 mode, contains last OUT to 7ffd
+      * 36      1       Contains 0FF if Interface I rom paged
+      * 37      1       Bit 0: 1 if R register emulation on
+                        Bit 1: 1 if LDIR emulation on
+      * 38      1       Last OUT to fffd (soundchip register number)
+      * 39      16      Contents of the sound chip registers
+        55      2       Low T state counter
+        57      1       Hi T state counter
+        58      1       Flag byte used by Spectator (QL spec. emulator)
+                        Ignored by Z80 when loading, zero when saving
+        59      1       0FF if MGT Rom paged
+        60      1       0FF if Multiface Rom paged. Should always be 0.
+        61      1       0FF if 0-8191 is ROM, 0 if RAM
+        62      1       0FF if 8192-16383 is ROM, 0 if RAM
+        63      10      5x keyboard mappings for user defined joystick
+        73      10      5x ascii word: keys corresponding to mappings above
+        83      1       MGT type: 0=Disciple+Epson,1=Disciple+HP,16=Plus D
+        84      1       Disciple inhibit button status: 0=out, 0ff=in
+        85      1       Disciple inhibit flag: 0=rom pageable, 0ff=not
+
+The value of the word at position 30 is 23 for version 2.01 files, and 54 for 
+version 3.0 files. The starred fields are the ones that constitute the 
+version 2.01 header, and their interpretation has remained unchanged except 
+for byte 34:
+
+        Value:          Meaning in v2.01        Meaning in v3.0x
+        --------------------------------------------------------
+        0               48k                     48k
+        1               48k + If.1              48k + If.1
+        2               SamRam                  SamRam
+        3               128k                    48k + M.G.T.
+        4               128k + If.1             128k
+        5               -                       128k + If.1
+        6               -                       128k + M.G.T.
+
+The documenation for versions 3.00 to 3.02 of Z80 had the entries for 'SamRam' 
+and '48k + M.G.T.' in the second column of the above table reversed; also 
+bytes 61 and 62 of the format were wrong up to version 3.04. (The snaps 
+produced by the older versions of Z80 still follow what is above; the 
+documentation for the older versions is wrong).
+
+The hi T state counter counts up modulo 4. Just after the ULA generates its 
+once-in-every-20-ms interrupt, it is 3, and is increased by one every 5 
+emulated milliseconds. In these 1/200s intervals, the low T state counter 
+counts down from 17471 to 0 (17726 in 128K modes), which make a total of 
+69888 (70908) T states per frame.
+
+The 5 ASCII words (high byte always 0) at 73-82 are the keys corresponding 
+to the joystick directions left, right, down (!), up (!), fire respectively. 
+Shift, Symbol Shift, Enter and Space are denoted by [,],/,\ respectively. 
+The ascii values are used only to display the joystick keys; the information 
+in the 5 keyboard mapping words determine which key is actually pressed (and 
+should correspond to the ascii values). The low byte is in the range 0-7 and 
+determines the keyboard row. The high byte is a mask byte and determines the 
+column. Enter for example is stored as 0x0106 (row 6 and column 1) and 'g' 
+as 0x1001 (row 1 and column 4).
+
+Byte 60 must be zero, because the contents of the Multiface RAM is not saved 
+in the snapshot file. If the Multiface was paged when the snapshot was saved, 
+the emulated program will most probably crash when loaded back.
+
+Bytes 61 and 62 are a function of the other flags, such as byte 34, 59, 
+60 and 83.
+
+Hereafter a number of memory blocks follow, each containing the compressed 
+data of a 16K block. The compression is according to the old scheme, except 
+for the end-marker, which is now absent. The structure of a memory block is:
+
+        Byte    Length  Description
+        ---------------------------
+        0       2       Length of compressed data (without this 3-byte header)
+                        If length=0xffff, data is 16384 bytes long and not compressed
+        2       1       Page number of block
+        3       [0]     Data
+
+The pages are numbered, depending on the hardware mode, in the following way:
+
+        Page    In '48 mode     In '128 mode    In SamRam mode
+        ------------------------------------------------------
+         0      48K rom         rom (basic)     48K rom
+         1      Interface I, Disciple or Plus D rom, according to setting
+         2      -               rom (reset)     samram rom (basic)
+         3      -               page 0          samram rom (monitor,..)
+         4      8000-bfff       page 1          Normal 8000-bfff
+         5      c000-ffff       page 2          Normal c000-ffff
+         6      -               page 3          Shadow 8000-bfff
+         7      -               page 4          Shadow c000-ffff
+         8      4000-7fff       page 5          4000-7fff
+         9      -               page 6          -
+        10      -               page 7          -
+        11      Multiface rom   Multiface rom   -
+
+In 48K mode, pages 4,5 and 8 are saved. In SamRam mode, pages 4 to 8 are saved. 
+In '128 mode, all pages from 3 to 10 are saved. There is no end marker.
+
+Warajevo writes v2 .Z80 files, but with some extensions to deal with its 
+Timex 2068 emulation:
+
+    Byte 34: 128 signifies Timex 2068 emulation is active.
+    Byte 35: If Timex 2068 is active, last OUT to port 244.
+    Byte 36: If Timex 2068 is active, last OUT to port 255. 
+
+xzx has also made various extensions to the .Z80 format:
+
+    The AY registers are always saved into .Z80 snapshots, independent 
+    of the emulated machine. Bit 2 of byte 37 being set signifies that 
+    this feature is in use.
+    +3 snapshots: The hardware field is written as '7', and a 55th byte 
+    is added to the header, which stores the last byte output to #1FFD. 
+    This 55th byte is added to all snapshots, which causes many other 
+    emulators to reject them. If you have this problem, SnapConv may be 
+    able to help. Also, some versions of xzx could write a value of 8 to 
+    hardware field, but this should also be treated as a +3.
+    A hardware field of '9' signifies Pentagon emulation, whilst '10' 
+    signifies Scorpion emulation. The Pentagon snapshots are (to quote 
+    from xzx's ChangeLog) "pretty much the same as standard 128K ones", 
+    whilst those for the Scorpion consist of 16 RAM pages. 

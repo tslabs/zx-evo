@@ -208,15 +208,20 @@ set_global_assignment -name FITTER_AGGRESSIVE_ROUTABILITY_OPTIMIZATION ALWAYS
 set_global_assignment -name SMART_RECOMPILE OFF
 set_global_assignment -name RESERVE_ALL_UNUSED_PINS_NO_OUTPUT_GND "AS INPUT TRI-STATED"
 set_global_assignment -name EDA_SIMULATION_TOOL "<None>"
+set_global_assignment -name ROUTER_TIMING_OPTIMIZATION_LEVEL MAXIMUM
+set_global_assignment -name PLACEMENT_EFFORT_MULTIPLIER 4.0
+set_global_assignment -name ROUTER_EFFORT_MULTIPLIER 3.0
+set_global_assignment -name AUTO_PACKED_REGISTERS NORMAL
+set_global_assignment -name SLOW_SLEW_RATE ON
+set_global_assignment -name READ_OR_WRITE_IN_BYTE_ADDRESS ON
+
 set_global_assignment -name VERILOG_FILE main.v
-set_global_assignment -name VERILOG_FILE lpm_rom_7x2.v
+set_global_assignment -name VERILOG_FILE circl_b.v
+set_global_assignment -name VERILOG_FILE circl_s.v
 set_global_assignment -name VERILOG_FILE lpm_ram_dp_9x8.v
+set_global_assignment -name VERILOG_FILE lpm_rom_7x2.v
 set_global_assignment -name VERILOG_FILE lpm_rom_11x6.v
 set_global_assignment -name VERILOG_FILE test_dram/dram.v
 set_global_assignment -name VERILOG_FILE test_dram/dram_control.v
 set_global_assignment -name VERILOG_FILE test_dram/rnd_vec_gen.v
 set_global_assignment -name VERILOG_FILE test_dram/mem_tester.v
-set_global_assignment -name ROUTER_TIMING_OPTIMIZATION_LEVEL MAXIMUM
-set_global_assignment -name PLACEMENT_EFFORT_MULTIPLIER 4.0
-set_global_assignment -name ROUTER_EFFORT_MULTIPLIER 3.0
-set_global_assignment -name AUTO_PACKED_REGISTERS NORMAL

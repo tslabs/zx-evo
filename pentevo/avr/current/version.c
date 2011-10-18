@@ -2,6 +2,7 @@
 
 #include "mytypes.h"
 #include "main.h"
+#include "ps2.h"
 
 //base configuration version string pointer [far address of PROGMEM]
 const ULONG baseVersionAddr = 0x1DFF0;
@@ -13,15 +14,25 @@ UBYTE GetVersionByte(UBYTE index)
 {
 	if ( index < 0x10 )
 	{
-		if ( flags_register & FLAG_VERSION_TYPE )
+		switch( ext_type_gluk )
 		{
-			//bootloader version
-			return (UBYTE)pgm_read_byte_far(bootVersionAddr+(ULONG)index);
-		}
-		else
-		{
-			//base configuration version
-			return (UBYTE)pgm_read_byte_far(baseVersionAddr+(ULONG)index);
+			case EXT_TYPE_BASECONF_VERSION:
+			{
+				//base configuration version
+				return (UBYTE)pgm_read_byte_far(baseVersionAddr+(ULONG)index);
+			}
+
+			case EXT_TYPE_BOOTLOADER_VERSION:
+			{
+				//bootloader version
+				return (UBYTE)pgm_read_byte_far(bootVersionAddr+(ULONG)index);
+			}
+
+			case EXT_TYPE_PS2KEYBOARDS_LOG:
+			{
+				//PS2 keyboards log
+				return ps2keyboard_from_log();
+			}
 		}
 	}
 	return (UBYTE)0xFF;
@@ -29,16 +40,10 @@ UBYTE GetVersionByte(UBYTE index)
 
 void SetVersionType(UBYTE type)
 {
-	switch(type)
-	{
-		case 0:
-			//base configuration
-			flags_register &= ~FLAG_VERSION_TYPE;
-			break;
+	ext_type_gluk = type;
 
-		case 1:
-			//bootloader
-			flags_register |= FLAG_VERSION_TYPE;
-			break;
+	if ( type==EXT_TYPE_PS2KEYBOARDS_LOG )
+	{
+		ps2keyboard_reset_log();
 	}
 }

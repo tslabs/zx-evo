@@ -28,7 +28,7 @@ set_global_assignment -name FAMILY ACEX1K
 set_global_assignment -name TOP_LEVEL_ENTITY top
 set_global_assignment -name ORIGINAL_QUARTUS_VERSION 6.1
 set_global_assignment -name PROJECT_CREATION_TIME_DATE "19:03:44  NOVEMBER 07, 2009"
-set_global_assignment -name LAST_QUARTUS_VERSION 6.1
+set_global_assignment -name LAST_QUARTUS_VERSION "7.2 SP3"
 set_global_assignment -name DEVICE_FILTER_PACKAGE "ANY QFP"
 set_global_assignment -name DEVICE_FILTER_PIN_COUNT 208
 set_global_assignment -name DEVICE_FILTER_SPEED_GRADE 3
@@ -196,10 +196,10 @@ set_instance_assignment -name GLOBAL_SIGNAL ON -to spics_n
 set_instance_assignment -name CUT ON -from rddata -to zd_out
 set_instance_assignment -name CLOCK_SETTINGS "Z80 clock" -to clkz_in
 set_instance_assignment -name CLOCK_SETTINGS "SPI clock" -to spick
-set_global_assignment -name FMAX_REQUIREMENT "56 MHz" -section_id "FPGA clock"
+set_global_assignment -name FMAX_REQUIREMENT "28 MHz" -section_id "FPGA clock"
 set_global_assignment -name FMAX_REQUIREMENT "5.5296 MHz" -section_id "SPI clock"
 set_global_assignment -name BASED_ON_CLOCK_SETTINGS "FPGA clock" -section_id "Z80 clock"
-set_global_assignment -name MULTIPLY_BASE_CLOCK_PERIOD_BY 4 -section_id "Z80 clock"
+set_global_assignment -name MULTIPLY_BASE_CLOCK_PERIOD_BY 2 -section_id "Z80 clock"
 set_global_assignment -name OFFSET_FROM_BASE_CLOCK "-8 ns" -section_id "Z80 clock"
 set_global_assignment -name USE_CONFIGURATION_DEVICE OFF
 set_global_assignment -name GENERATE_RBF_FILE ON
@@ -235,6 +235,8 @@ set_global_assignment -name VERILOG_FILE ../z80/zint.v
 set_global_assignment -name VERILOG_FILE ../z80/zmem.v
 set_global_assignment -name VERILOG_FILE ../z80/zbus.v
 set_global_assignment -name VERILOG_FILE ../vg93/vg93.v
+set_global_assignment -name VERILOG_FILE ../vg93/fapch_counter.v
+set_global_assignment -name VERILOG_FILE ../vg93/fapch_zek.v
 set_global_assignment -name VERILOG_FILE ../slave/slavespi.v
 set_global_assignment -name VERILOG_FILE ../dram/dram.v
 set_global_assignment -name VERILOG_FILE ../dram/arbiter.v
@@ -242,3 +244,7 @@ set_global_assignment -name VERILOG_FILE ../common/spi2.v
 set_global_assignment -name VERILOG_FILE ../common/resetter.v
 set_global_assignment -name VERILOG_FILE ../top.v
 set_global_assignment -name MIF_FILE ../video/r0bat_font.mif
+set_instance_assignment -name CUT ON -from clkz_in -to fclk
+set_global_assignment -name OPTIMIZE_HOLD_TIMING OFF
+set_global_assignment -name FITTER_EFFORT "STANDARD FIT"
+set_global_assignment -name SLOW_SLEW_RATE ON

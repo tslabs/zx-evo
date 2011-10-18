@@ -111,6 +111,27 @@ void zx_task(UBYTE operation) // zx task, tracks when there is need to send new 
 	// сначала делаем тупо без никаких пауз - чтобы работало вообще с фифой
 
 	{
+		//check and set/reset NMI
+		if( (flags_ex_register&FLAG_EX_NMI)==0 )
+		{
+			if ( ( NMI_PIN & (1<<NMI) ) == 0 )
+			{
+				//NMI button pressed
+				flags_ex_register |= FLAG_EX_NMI; //set flag
+				zx_set_config(0); //set NMI to Z80
+			}
+		}
+		else
+		{
+			if ( ( NMI_PIN & (1<<NMI) ) != 0 )
+			{
+				//NMI button pressed
+				flags_ex_register &= ~FLAG_EX_NMI; //reset flag
+				zx_set_config(0); //reset NMI to Z80
+			}
+		}
+
+
 		if( !task_state )
 		{
 			nSPICS_PORT |= (1<<nSPICS);
@@ -314,7 +335,16 @@ void to_zx(UBYTE scancode, UBYTE was_E0, UBYTE was_release)
 			//Print Screen
 			case 0x7C:
 				//set/reset NMI
-				zx_set_config( (was_release==0)? SPI_CONFIG_NMI_FLAG : 0 );
+				if( ((flags_ex_register&FLAG_EX_NMI)==0 ) && (was_release==0) )
+				{
+					flags_ex_register |= FLAG_EX_NMI; //set flag
+					zx_set_config(0); //set NMI to Z80
+				}
+				else if( ((flags_ex_register&FLAG_EX_NMI)!=0 ) && (was_release!=0) )
+				{
+					flags_ex_register &= ~FLAG_EX_NMI; //reset flag
+					zx_set_config( 0 ); //reset NMI to Z80
+				}
 				break;
 			//Del
 			case 0x71:
@@ -576,6 +606,7 @@ void zx_set_config(UBYTE flags)
 	zx_spi_send(SPI_CONFIG_REG,
 		(modes_register&MODE_VGA) |
 		((modes_register&MODE_TAPEOUT)?SPI_TAPEOUT_MODE_FLAG:0) |
-		(flags & ~(MODE_VGA|SPI_TAPEOUT_MODE_FLAG)),
+		((flags_ex_register&FLAG_EX_NMI)?SPI_CONFIG_NMI_FLAG:0) |
+		(flags & ~(MODE_VGA|SPI_TAPEOUT_MODE_FLAG|SPI_CONFIG_NMI_FLAG)),
 		0x7F);
 }

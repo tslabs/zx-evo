@@ -4,7 +4,7 @@ CC=gcc
 MODELLIB=./sndpix.so
 APPL=./viewer
 
-PLI_INCLUDE=/home/lvd/modelsim/6.6a/modeltech/include
+PLI_INCLUDE=/home/lvd/modelsim/10.0b/modeltech/include
 
 SRCLIB=./sndpix.c
 SRCAPP=./viewer.c

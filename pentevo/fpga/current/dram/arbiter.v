@@ -1,9 +1,45 @@
 `include "../include/tune.v"
 
-// PentEvo project (c) NedoPC 2008-2009
+// PentEvo project (c) NedoPC 2008-2011
 //
 // DRAM arbiter. Shares DRAM between processor and video data fetcher
 //
+
+
+
+
+
+// 14.06.2011:
+// removed cpu_stall and cpu_waitcyc.
+// changed cpu_strobe behavior (only strobes read data arrival now).
+// added cpu_next signal (shows whether next DRAM cycle CAN be grabbed by CPU)
+//
+// Now it is a REQUIREMENT for 'go' signal only starting and ending on
+// beginning of DRAM cycle (i.e. right after 'cend' strobe).
+//
+
+
+// 13.06.2011:
+// ѕридЄтс€ потребовать, чтоб go устанавливалс€ сразу после cend (у мен€ [lvd] это так).
+// это дл€ того, чтобы процессор на 14мгц мог заранее и в любой момент знать, на
+// сколько завейтитьс€. ¬место cpu_ack введем другой сигнал, который в течение всего
+// драм-цикла будет показывать, чей может быть следующий цикл - процессора или только
+// видео. ѕо сути это и будет также cpu_ack, но валидный в момент cpu_req (т.е.
+// в момент cend) и ранее.
+
+// 12.06.2011:
+// проблема: если цпу просит цикл чтени€, а его дать не могут,
+// то он должен держать cpu_req. однако, сн€ть он его может
+// только по cpu_strobe, при этом также отправитс€ еще один
+// запрос чтени€!!!
+// решение: добавить сигнал cpu_ack, по которому узнаЄтс€, что
+// арбитр зохавал запрос (записи или чтени€), который будет
+// совпадать с нынешним cpu_strobe на записи (cbeg), а будущий
+// cpu_strobe сделать только как строб данных на зохаванном
+// запросе чтен€.
+// это, возможно, позволит удалить вс€кие cpu_waitcyc...
+
+
 // Arbitration is made on full 8-cycle access blocks. Each cycle is defined by dram.v and consists of 4 fpga clocks.
 // During each access block, there can be either no videodata access, 1 videodata access, 2, 4 or full 8 accesses.
 // All spare cycles can be used by processor. If nobody uses memory in the given cycle, refresh cycle is performed
@@ -43,9 +79,9 @@ module arbiter(
 	input rst_n,
 
 	// dram.v interface
-      output     [20:0] dram_addr,   // address for dram access
-      output reg        dram_req,    // dram request
-      output reg        dram_rnw,    // Read-NotWrite
+	output     [20:0] dram_addr,   // address for dram access
+	output reg        dram_req,    // dram request
+	output reg        dram_rnw,    // Read-NotWrite
 	input             dram_cbeg,   // cycle begin
 	input             dram_rrdy,   // read data ready (coincides with cend)
 	output      [1:0] dram_bsel,   // positive bytes select: bsel[1] for wrdata[15:8], bsel[0] for wrdata[7:0]
@@ -74,15 +110,15 @@ module arbiter(
 
 
 
-	input cpu_req,cpu_rnw,
-	input  [20:0] cpu_addr,
-	input   [7:0] cpu_wrdata,
-	input         cpu_wrbsel,
+	input  wire        cpu_req,
+	input  wire        cpu_rnw,
+	input  wire [20:0] cpu_addr,
+	input  wire [ 7:0] cpu_wrdata,
+	input  wire        cpu_wrbsel,
 
-	output [15:0] cpu_rddata,
-	output reg    cpu_stall,
-	output  [4:0] cpu_waitcyc,
-	output    reg cpu_strobe
+	output wire [15:0] cpu_rddata,
+	output reg         cpu_next,
+        output reg         cpu_strobe
 );
 
 	wire cbeg;
@@ -90,6 +126,8 @@ module arbiter(
 	reg [1:0] cctr; // DRAM cycle counter: 0 when cbeg is 1, then 1,2,3,0, etc...
 
 
+	reg stall;
+	reg cpu_rnw_r;
 
 	reg [2:0] blk_rem;  // remaining accesses in a block (7..0)
 	reg [2:0] blk_nrem; // remaining for the next dram cycle
@@ -112,17 +150,12 @@ module arbiter(
 
 
 
-	reg [4:0] wait_new,wait_cyc; // how many cycles to wait until end of CPU cycle: _new is for next _cyc
-	reg [4:0] rw_add,vcyc_add;
-
-
 
 	initial // simulation only!
 	begin
 		curr_cycle = CYC_FREE;
 		blk_rem = 0;
 		vid_rem = 0;
-		cpu_stall = 0;
 	end
 
 
@@ -134,8 +167,8 @@ module arbiter(
 	always @(posedge clk)
 	begin
 		post_cbeg <= cbeg;
-		pre_cend <= post_cbeg;
-		cend <= pre_cend;
+		pre_cend  <= post_cbeg;
+		cend      <= pre_cend;
 	end
 
 
@@ -145,7 +178,7 @@ module arbiter(
 		blk_rem <= blk_nrem;
 
 		if( (blk_rem==3'd0) )
-			cpu_stall <= (bw==2'd3) & go;
+			stall <= (bw==2'd3) & go;
 	end
 
 	always @*
@@ -188,15 +221,25 @@ module arbiter(
 			if( go )
 			begin
 				if( bw==2'b11 )
+				begin
+					cpu_next = 1'b0;
+
 					next_cycle = CYC_VIDEO;
+				end
 				else
+				begin
+					cpu_next = 1'b1;
+
 					if( cpu_req )
 						next_cycle = CYC_CPU;
 					else
 						next_cycle = CYC_VIDEO;
+				end
 			end
 			else // !go
 			begin
+				cpu_next = 1'b1;
+
 				if( cpu_req )
 					next_cycle = CYC_CPU;
 				else
@@ -205,13 +248,24 @@ module arbiter(
 		end
 		else // blk_rem!=3'd0
 		begin
-			if( cpu_stall )
+			if( stall )
+			begin
+				cpu_next = 1'b0;
+
 				next_cycle = CYC_VIDEO;
+			end
 			else
 			begin
 				if( vid_rem==blk_rem )
+				begin
+					cpu_next = 1'b0;
+	
 					next_cycle = CYC_VIDEO;
+				end
 				else
+				begin
+					cpu_next = 1'b1;
+	
 					if( cpu_req )
 						next_cycle = CYC_CPU;
 					else
@@ -219,9 +273,11 @@ module arbiter(
 							next_cycle = CYC_FREE;
 						else
 							next_cycle = CYC_VIDEO;
+				end
 			end
 		end
 	end
+
 
 
 
@@ -263,20 +319,25 @@ module arbiter(
 
 
 
-	// generation of strobes: for video and cpu
-      // for cpu, write strobe is earlier than read one
+	// generation of read strobes: for video and cpu
+
+
+	always @(posedge clk)
+	if( cend )
+		cpu_rnw_r <= cpu_rnw;
 
 
 	always @(posedge clk)
 	begin
-		if( (next_cycle==CYC_CPU) && cend && (!cpu_rnw) )
-			cpu_strobe <= 1'b1;
-		else if( (curr_cycle==CYC_CPU) && cpu_rnw && pre_cend )
+		if( (curr_cycle==CYC_CPU) && cpu_rnw_r && pre_cend )
 			cpu_strobe <= 1'b1;
 		else
 			cpu_strobe <= 1'b0;
+	end
 
 
+	always @(posedge clk)
+	begin
 		if( (curr_cycle==CYC_VIDEO) && pre_cend )
 			video_strobe <= 1'b1;
 		else
@@ -287,44 +348,6 @@ module arbiter(
 		else
 			video_next <= 1'b0;
 	end
-
-
-
-	// generate cpu_waitcyc
-
-	always @*
-	begin
-		rw_add = cpu_rnw ? 5'd3 : 5'd0;
-
-		if( (vid_rem==blk_rem) && (!cpu_stall) )
-			vcyc_add[4:0] = {blk_rem[2:0],2'b00};
-		else
-			vcyc_add[4:0] = 5'd0;
-
-		wait_new = rw_add + vcyc_add;
-	end
-
-
-	always @(posedge clk)
-	begin
-		if( (wait_cyc!=5'd0) )
-		begin
-			if( !cpu_stall )
-				wait_cyc <= wait_cyc - 5'd1;
-		end
-		else // wait_cyc==0
-		begin
-			if( cend && cpu_req )
-			begin
-				wait_cyc <= wait_new;
-			end
-		end
-
-
-	end
-
-
-	assign cpu_waitcyc = wait_cyc;
 
 
 

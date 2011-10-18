@@ -35,6 +35,9 @@ volatile UBYTE flags_ex_register;
 // Common modes register.
 volatile UBYTE modes_register;
 
+// Type extensions of gluk registers
+volatile UBYTE ext_type_gluk;
+
 // Buffer for depacking FPGA configuration.
 // You can USED for other purposed after setup FPGA.
 UBYTE dbuf[DBSIZE];
@@ -60,16 +63,17 @@ void hardware_init(void)
 	// configure pins
 
 	PORTG = 0b11111111;
-	DDRG  = 0b00000000;
+	DDRG  = 0b00000000; // inputs pulled up
 
 //	PORTF = 0b11110000; // ATX off (zero output), fpga config/etc inputs
 	DDRF  = 0b00001000;
 
-	PORTE = 0b11111111;
-	DDRE  = 0b00000000; // inputs pulled up
+	PORTE = 0b11110011;
+	DDRE  = 0b00000000; // PLL to 2X [E2=Z,E3=Z], inputs pulled up
 
-	PORTD = 0b11111111;
-	DDRD  = 0b00000000; // same
+	PORTD = 0b11111111; // inputs pulled up
+	DDRD  = 0b00100000; // RTS out
+
 
 	PORTC = 0b11011111;
 	DDRC  = 0b00000000; // PWRGOOD input, other pulled up
@@ -137,7 +141,7 @@ start:
 	spi_init();
 
 	DDRF |= (1<<nCONFIG); // pull low for a time
-	_delay_us(40);
+	_delay_ms(50);
 	DDRF &= ~(1<<nCONFIG);
 	while( !(PINF & (1<<nSTATUS)) ); // wait ready
 
@@ -180,6 +184,7 @@ start:
     ps2keyboard_count = 12;
 	ps2keyboard_cmd_count = 0;
 	ps2keyboard_cmd = 0;
+	ps2keyboard_log_len = 0;
 	ps2mouse_count = 12;
 	ps2mouse_initstep = 0;
 	ps2mouse_resp_count = 0;
@@ -187,6 +192,7 @@ start:
 	flags_register = 0;
 	flags_ex_register = 0;
 	modes_register = 0;
+	ext_type_gluk = 0;
 
 	//enable mouse
 	zx_mouse_reset(1);
@@ -222,6 +228,7 @@ start:
         zx_task(ZX_TASK_WORK);
 		zx_mouse_task();
 		joystick_task();
+		rs232_task();
 
 		//event from SPI
 		if ( flags_register&FLAG_SPI_INT )

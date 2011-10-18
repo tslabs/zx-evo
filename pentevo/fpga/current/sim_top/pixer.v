@@ -101,10 +101,10 @@ module pixer
 
 
 	// display periods
-	always @*
-		$display("h period is %d",hperiod);
-	always @*
-		$display("v period is %d",vperiod);
+//	always @*
+//		$display("h period is %d",hperiod);
+//	always @*
+//		$display("v period is %d",vperiod);
 
 
 
