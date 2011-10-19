@@ -22,7 +22,7 @@
 
 module video_sync_h(
 
-	input  wire        clk,
+	input  wire        clk, s3,
 
 	input  wire        init, // one-pulse strobe read at c3==1, initializes phase
 	                         // this is mainly for phasing with CPU clock 3.5/7 MHz
@@ -103,7 +103,7 @@ module video_sync_h(
 
 
 
-	always @(posedge clk) if( c3 )
+	always @(posedge clk) if (s3) if( c3 )
 	begin
             if( init || (hcount==(HPERIOD-9'd1)) )
             	hcount <= 9'd0;
@@ -113,7 +113,7 @@ module video_sync_h(
 
 
 
-	always @(posedge clk) if( c3 )
+	always @(posedge clk) if (s3) if( c3 )
 	begin
 		if( hcount==HBLNK_BEG )
 			hblank <= 1'b1;
@@ -128,7 +128,7 @@ module video_sync_h(
 	end
 
 
-	always @(posedge clk)
+	always @(posedge clk) if (s3)
 	begin
 		if( c2 )
 		begin
@@ -162,12 +162,12 @@ module video_sync_h(
 	                          (HPIX_BEG_ATM -FETCH_FOREGO-9'd4) :
 	                          (HPIX_BEG_PENT-FETCH_FOREGO-9'd4) ) == hcount;
 
-	always @(posedge clk) if( c3 )
+	always @(posedge clk) if (s3) if( c3 )
 		fetch_start_wait[3:0] <= { fetch_start_wait[2:0], fetch_start_time };
 
 	assign fetch_start_condition = mode_a_text ? fetch_start_time  : fetch_start_wait[3];
 
-	always @(posedge clk)
+	always @(posedge clk) if (s3)
 	if( c2 && fetch_start_condition )
 		fetch_start <= 1'b1;
 	else
@@ -180,7 +180,7 @@ module video_sync_h(
 	                        (HPIX_END_ATM -FETCH_FOREGO) :
 	                        (HPIX_END_PENT-FETCH_FOREGO) ) == hcount;
 
-	always @(posedge clk)
+	always @(posedge clk) if (s3)
 	if( c2 && fetch_end_time )
 		fetch_end <= 1'b1;
 	else
@@ -190,7 +190,7 @@ module video_sync_h(
 
 
 
-	always @(posedge clk)
+	always @(posedge clk) if (s3)
 	begin
 		if( c2 && (hcount==HINT_BEG) )
 			hint_start <= 1'b1;
@@ -199,7 +199,7 @@ module video_sync_h(
 	end
 
 
-	always @(posedge clk) if( c3 )
+	always @(posedge clk) if (s3) if( c3 )
 	begin
 		if( hcount==(mode_atm_n_pent ? HPIX_BEG_ATM : HPIX_BEG_PENT) )
 			hpix <= 1'b1;

@@ -72,7 +72,7 @@ module tb_cdv;
 	begin
             rst_n <= 1'b0;
 
-		for(rst_count=0;rst_count<=32;rst_count=rst_count+1) @(posedge clk);
+		for(rst_count=0;rst_count<=32;rst_count=rst_count+1) @(posedge clk) if (s3);
 
 		rst_n <= 1'b1;
 	end
