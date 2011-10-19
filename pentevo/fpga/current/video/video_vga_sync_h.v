@@ -6,7 +6,7 @@
 
 module video_vga_sync_h(
 
-	input  wire clk,
+	input  wire clk, s3,
 
 	output reg  vga_hsync,
 
@@ -32,7 +32,7 @@ module video_vga_sync_h(
 
 
 
-	always @(posedge clk)
+	always @(posedge clk) if (s3)
 	begin
 			if( hsync_start )
 				hcount <= 10'd2;
@@ -43,7 +43,7 @@ module video_vga_sync_h(
 	end
 
 
-	always @(posedge clk)
+	always @(posedge clk) if (s3)
 	begin
 		if( !hcount )
 			vga_hsync <= 1'b1;
@@ -52,7 +52,7 @@ module video_vga_sync_h(
 	end
 
 
-	always @(posedge clk)
+	always @(posedge clk) if (s3)
 	begin
 		if( hcount==SCANOUT_BEG )
 			scanout_start <= 1'b1;

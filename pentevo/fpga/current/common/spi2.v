@@ -60,6 +60,7 @@
 module spi2(
 
 	clock, // system clock
+	s3,	// 28 MHz strobe
 
 	sck,   // SPI bus pins...
 	sdo,   //
@@ -75,7 +76,7 @@ module spi2(
 	dout  // and output 8bit busses
 );
 
-	input clock;
+	input clock, s3;
 
 
 	output sck;

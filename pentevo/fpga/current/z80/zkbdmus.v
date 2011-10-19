@@ -6,7 +6,7 @@
 
 module zkbdmus(
 
-	input  wire        fclk,
+	input  wire        fclk, s3,
 	input  wire        rst_n,
 
 
@@ -49,7 +49,7 @@ module zkbdmus(
 
 	// store data from slavespi
 	//
-    always @(posedge fclk)
+    always @(posedge fclk) if (s3)
     begin
 		if( kbd_stb )
 			kbd <= kbd_in;

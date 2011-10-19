@@ -211,6 +211,12 @@ set_global_assignment -name MESSAGE_SUPPRESSION_RULE_FILE top.srf
 set_global_assignment -name SMART_RECOMPILE OFF
 set_global_assignment -name VERILOG_INPUT_VERSION SYSTEMVERILOG_2005
 set_global_assignment -name VERILOG_SHOW_LMF_MAPPING_MESSAGES OFF
+set_instance_assignment -name CUT ON -from clkz_in -to fclk
+set_global_assignment -name OPTIMIZE_HOLD_TIMING OFF
+set_global_assignment -name FITTER_EFFORT "STANDARD FIT"
+set_global_assignment -name SLOW_SLEW_RATE ON
+
+set_global_assignment -name VERILOG_FILE ../common/clock.v
 set_global_assignment -name VERILOG_FILE ../z80/znmi.v
 set_global_assignment -name VERILOG_FILE ../sound/sound.v
 set_global_assignment -name VERILOG_FILE ../video/video_fontrom.v
@@ -244,7 +250,3 @@ set_global_assignment -name VERILOG_FILE ../common/spi2.v
 set_global_assignment -name VERILOG_FILE ../common/resetter.v
 set_global_assignment -name VERILOG_FILE ../top.v
 set_global_assignment -name MIF_FILE ../video/r0bat_font.mif
-set_instance_assignment -name CUT ON -from clkz_in -to fclk
-set_global_assignment -name OPTIMIZE_HOLD_TIMING OFF
-set_global_assignment -name FITTER_EFFORT "STANDARD FIT"
-set_global_assignment -name SLOW_SLEW_RATE ON

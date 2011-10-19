@@ -52,6 +52,6 @@ begin
 	blk_nrem=blk_rem-1
 end
 
-always @(posedge clk) blk_rem<=blk_nrem;
+always @(posedge clk) if (s3) blk_rem<=blk_nrem;
 
 

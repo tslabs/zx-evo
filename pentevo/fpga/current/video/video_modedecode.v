@@ -6,7 +6,7 @@
 
 module video_modedecode(
 
-	input  wire        clk,
+	input  wire        clk, s3,
 
 	input  wire [ 1:0] pent_vmode, // inputs as set by Z80 environment
 	input  wire [ 2:0] atm_vmode,  //
@@ -51,7 +51,7 @@ module video_modedecode(
 
 
 
-	always @(posedge clk)
+	always @(posedge clk) if (s3)
 	begin
 		case( atm_vmode )
 			3'b010:  mode_atm_n_pent <= 1'b1;

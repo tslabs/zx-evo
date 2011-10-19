@@ -75,7 +75,7 @@
 
 module arbiter(
 
-	input clk,
+	input clk, s3,
 	input rst_n,
 
 	// dram.v interface
@@ -164,7 +164,7 @@ module arbiter(
 	assign c0 = dram_c0; // just alias
 
 	// make cycle strobe signals
-	always @(posedge clk)
+	always @(posedge clk) if (s3)
 	begin
 		c1 <= c0;
 		c2  <= c1;
@@ -173,7 +173,7 @@ module arbiter(
 
 
 	// track blk_rem counter: how many cycles left to the end of block (7..0)
-	always @(posedge clk) if( c3 )
+	always @(posedge clk) if (s3) if( c3 )
 	begin
 		blk_rem <= blk_nrem;
 
@@ -194,7 +194,7 @@ module arbiter(
 	// track vid_rem counter
 	assign vidmax = (3'b001) << bw; // 1,2,4 or 8 - just to know how many cycles to perform
 
-	always @(posedge clk) if( c3 )
+	always @(posedge clk) if (s3) if( c3 )
 	begin
 		vid_rem <= vid_nrem;
 	end
@@ -282,7 +282,7 @@ module arbiter(
 
 
 	// just current cycle register
-	always @(posedge clk) if( c3 )
+	always @(posedge clk) if (s3) if( c3 )
 	begin
 		curr_cycle <= next_cycle;
 	end
@@ -322,12 +322,12 @@ module arbiter(
 	// generation of read strobes: for video and cpu
 
 
-	always @(posedge clk)
+	always @(posedge clk) if (s3)
 	if( c3 )
 		cpu_rnw_r <= cpu_rnw;
 
 
-	always @(posedge clk)
+	always @(posedge clk) if (s3)
 	begin
 		if( (curr_cycle==CYC_CPU) && cpu_rnw_r && c2 )
 			cpu_strobe <= 1'b1;
@@ -336,7 +336,7 @@ module arbiter(
 	end
 
 
-	always @(posedge clk)
+	always @(posedge clk) if (s3)
 	begin
 		if( (curr_cycle==CYC_VIDEO) && c2 )
 			video_strobe <= 1'b1;
