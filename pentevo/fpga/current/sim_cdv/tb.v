@@ -22,7 +22,7 @@ module tb_cdv;
 	wire [7:0] romdata;
 
 
-	wire cbeg,pre_cend,cend;
+	wire c0,c2,c3;
 
 	wire cpu_req,cpu_rnw,cpu_wrbsel,cpu_strobe;
 	wire [20:0] cpu_addr;
@@ -163,7 +163,7 @@ module tb_cdv;
 	                 .zclk_out(zclk_out),
 	                 .zclk(zclk),
 	                 .turbo(2'b01),
-	                 .pre_cend(pre_cend) );
+	                 .c2(c2) );
 
 	assign zclk = ~zclk_out; // inversion in the schematics!
 
@@ -174,8 +174,8 @@ module tb_cdv;
 	                .zpos(1'b1),
 	                .zneg(1'b0),
 
-	                .cend(cend),
-	                .pre_cend(pre_cend),
+	                .c3(c3),
+	                .c2(c2),
 
 	                .za(zaddr),
 	                .zd_in(zdata),
@@ -223,14 +223,14 @@ module tb_cdv;
 	                 .dram_addr(daddr),
 	                 .dram_req(dreq),
 	                 .dram_rnw(drnw),
-	                 .dram_cbeg(cbeg),
+	                 .dram_c0(c0),
 	                 .dram_rrdy(drrdy),
 	                 .dram_bsel(dbsel),
 	                 .dram_rddata(drddata),
 	                 .dram_wrdata(dwrdata),
 
-	                 .cend(cend),
-	                 .pre_cend(pre_cend),
+	                 .c3(c3),
+	                 .c2(c2),
 
 	                 .go(go),
 	                 .bw(bw),
@@ -257,7 +257,7 @@ module tb_cdv;
 	             .addr(daddr),
 	             .req(dreq),
 	             .rnw(drnw),
-	             .cbeg(cbeg),
+	             .c0(c0),
 	             .rrdy(drrdy),
 	             .rddata(drddata),
 	             .wrdata(dwrdata),
@@ -302,7 +302,7 @@ module tb_cdv;
 
 
 
-	synch horiz_sync( .clk(clk), .init(1'b0), .cend(cend), .pre_cend(pre_cend),
+	synch horiz_sync( .clk(clk), .init(1'b0), .c3(c3), .c2(c2),
 	                  .hsync(hsync), .hblank(hblank), .hpix(hpix), .hsync_start(hsync_start),
 	                  .line_start(line_start) );
 
@@ -313,7 +313,7 @@ module tb_cdv;
 
 
 
-	fetch fecher( .clk(clk), .cend(cend), .line_start(line_start), .vpix(vpix), .int_start(int_start),
+	fetch fecher( .clk(clk), .c3(c3), .line_start(line_start), .vpix(vpix), .int_start(int_start),
 	              .vmode(1'b1), .screen(1'b0), .video_addr(video_addr), .video_data(video_data), .video_strobe(video_strobe),
 	              .video_next(video_next), .go(go), .bw(bw), .pixel(pixel) );
 

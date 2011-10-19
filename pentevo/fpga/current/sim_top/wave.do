@@ -56,7 +56,7 @@ add wave -noupdate /tb/DUT/z80mem/pending_cpu_req
 add wave -noupdate /tb/DUT/z80mem/cpu_strobe
 add wave -noupdate /tb/DUT/z80mem/cpu_rnw
 add wave -noupdate /tb/DUT/z80mem/cpu_rnw_r
-add wave -noupdate /tb/DUT/z80mem/cend
+add wave -noupdate /tb/DUT/z80mem/c3
 add wave -noupdate -divider <NULL>
 add wave -noupdate -radix hexadecimal /tb/z80/u0/IR
 add wave -noupdate -divider <NULL>
@@ -66,7 +66,7 @@ add wave -noupdate /tb/DUT/dram/rras0_n
 add wave -noupdate /tb/DUT/dram/rras1_n
 add wave -noupdate /tb/DUT/dram/rucas_n
 add wave -noupdate /tb/DUT/dram/rlcas_n
-add wave -noupdate /tb/DUT/dram/cbeg
+add wave -noupdate /tb/DUT/dram/c0
 add wave -noupdate -radix hexadecimal /tb/DUT/dram/int_addr
 add wave -noupdate -radix hexadecimal /tb/DUT/dram/int_wrdata
 add wave -noupdate /tb/DUT/dram/int_bsel

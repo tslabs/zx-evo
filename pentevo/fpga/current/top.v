@@ -248,7 +248,7 @@ module top(
 	wire [15:0] cpu_rddata;
 	wire [7:0] cpu_wrdata;
 
-	wire cbeg,post_cbeg,pre_cend,cend;
+	wire c0,c1,c2,c3;
 
 	wire go;
 
@@ -319,7 +319,7 @@ module top(
 	(
 		.fclk(fclk), .rst_n(rst_n), .zclk(zclk), .rfsh_n(rfsh_n), .zclk_out(clkz_out),
 		.zpos(zpos), .zneg(zneg),
-		.turbo( {atm_turbo,~(peff7[4])} ), .pre_cend(pre_cend), .cbeg(cbeg),
+		.turbo( {atm_turbo,~(peff7[4])} ), .c2(c2), .c0(c0),
 		.zclk_stall( cpu_stall | (|zclk_stall) ), .int_turbo(int_turbo),
 		.external_port(external_port), .iorq_n(iorq_n), .m1_n(m1_n)
 	);
@@ -464,10 +464,10 @@ module top(
 		.zpos(zpos),
 		.zneg(zneg),
 
-		.cbeg     (cbeg     ),
-		.post_cbeg(post_cbeg),
-		.pre_cend (pre_cend ),
-		.cend     (cend     ),
+		.c0     (c0     ),
+		.c1(c1),
+		.c2 (c2 ),
+		.c3     (c3     ),
 		
 		.za    (a       ),
 		.zd_in (d       ),
@@ -529,7 +529,7 @@ module top(
 	           .addr(daddr),
 	           .req(dreq),
 	           .rnw(drnw),
-	           .cbeg(cbeg),
+	           .c0(c0),
 	           .rrdy(drrdy),
 	           .rddata(drddata),
 	           .wrdata(dwrdata),
@@ -558,15 +558,15 @@ module top(
 	                 .dram_addr(daddr),
 	                 .dram_req(dreq),
 	                 .dram_rnw(drnw),
-	                 .dram_cbeg(cbeg),
+	                 .dram_c0(c0),
 	                 .dram_rrdy(drrdy),
 	                 .dram_bsel(dbsel),
 	                 .dram_rddata(drddata),
 	                 .dram_wrdata(dwrdata),
 
-	                 .post_cbeg(post_cbeg),
-	                 .pre_cend (pre_cend ),
-	                 .cend     (cend     ),
+	                 .c1(c1),
+	                 .c2 (c2 ),
+	                 .c3     (c3     ),
 
 	                 .go(go),
 	                 .bw(bw),
@@ -606,10 +606,10 @@ module top(
 
 		.vga_on(cfg_vga_on),
 
-		.cbeg     (cbeg     ),
-		.post_cbeg(post_cbeg),
-		.pre_cend (pre_cend ),
-		.cend     (cend     ),
+		.c0     (c0     ),
+		.c1(c1),
+		.c2 (c2 ),
+		.c3     (c3     ),
 
 		.video_go    (go          ),
 		.video_bw    (bw          ),

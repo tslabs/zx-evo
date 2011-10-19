@@ -9,15 +9,15 @@ module video_fetch(
 	input  wire        clk, // 28 MHz clock
 
 
-	input  wire        cend,     // general
-	input  wire        pre_cend, //        synchronization
+	input  wire        c3,     // general
+	input  wire        c2, //        synchronization
 
 	input  wire        vpix, // vertical window
 
 	input  wire        fetch_start, // fetching start and stop
 	input  wire        fetch_end,   //
 
-	output reg         fetch_sync,     // 1 cycle after cend
+	output reg         fetch_sync,     // 1 cycle after c3
 
 
 	input  wire [15:0] video_data,   // video data receiving from dram arbiter
@@ -33,7 +33,7 @@ module video_fetch(
 );
 	reg [3:0] fetch_sync_ctr; // generates fetch_sync to synchronize
 	                          // fetch cycles (each 16 dram cycles long)
-	                          // fetch_sync coincides with cend
+	                          // fetch_sync coincides with c3
 
 	reg [1:0] fetch_ptr; // pointer to fill pic_bits buffer
 	reg       fetch_ptr_clr; // clears fetch_ptr
@@ -51,7 +51,7 @@ module video_fetch(
 
 
 	// fetch sync counter
-	always @(posedge clk) if( cend )
+	always @(posedge clk) if( c3 )
 	begin
 		if( fetch_start )
 			fetch_sync_ctr <= 0;
@@ -62,7 +62,7 @@ module video_fetch(
 
 	// fetch sync signal
 	always @(posedge clk)
-		if( (fetch_sync_ctr==1) && pre_cend )
+		if( (fetch_sync_ctr==1) && c2 )
 			fetch_sync <= 1'b1;
 		else
 			fetch_sync <= 1'b0;
@@ -71,7 +71,7 @@ module video_fetch(
 
 	// fetch_ptr clear signal
 	always @(posedge clk)
-		if( (fetch_sync_ctr==0) && pre_cend )
+		if( (fetch_sync_ctr==0) && c2 )
 			fetch_ptr_clr <= 1'b1;
 		else
 			fetch_ptr_clr <= 1'b0;

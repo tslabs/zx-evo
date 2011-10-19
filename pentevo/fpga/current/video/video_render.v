@@ -12,12 +12,12 @@ module video_render(
 	input  wire [63:0] pic_bits, // video data from fetcher
 
 	input  wire        fetch_sync, // synchronizes pixel rendering -
-	                               // coincides with cbeg!!!
+	                               // coincides with c0!!!
 
-	input  wire        cbeg,
-	input  wire        post_cbeg, // pixel strobed and
-	input  wire        pre_cend,
-	input  wire        cend,      // general sync
+	input  wire        c0,
+	input  wire        c1, // pixel strobed and
+	input  wire        c2,
+	input  wire        c3,      // general sync
 
 	input  wire        int_start, // for flash gen
 
@@ -92,7 +92,7 @@ module video_render(
 
 
 	wire   ena_pix;
-	assign ena_pix = cend | (mode_pixf_14 & post_cbeg);
+	assign ena_pix = c3 | (mode_pixf_14 & c1);
 
 
 	assign modes_16c = mode_p_16c | mode_a_16c;
