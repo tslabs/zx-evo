@@ -45,10 +45,10 @@ module video_top(
 
 
 	// memory synchronization inputs
-	input  wire        cbeg,
-	input  wire        post_cbeg,
-	input  wire        pre_cend,
-	input  wire        cend,
+	input  wire        c0,
+	input  wire        c1,
+	input  wire        c2,
+	input  wire        c3,
 
 
 	// memory arbiter video port connection
@@ -188,8 +188,8 @@ module video_top(
 
 		.init(1'b0),
 
-		.pre_cend(pre_cend),
-		.cend    (cend    ),
+		.c2(c2),
+		.c3    (c3    ),
 
 
 		.hblank(hblank),
@@ -240,8 +240,8 @@ module video_top(
 
 		.clk(clk),
 
-		.pre_cend (pre_cend),
-		.cend     (cend    ),
+		.c2 (c2),
+		.c3     (c3    ),
 
 		.vpix(vpix),
 
@@ -267,10 +267,10 @@ module video_top(
 
 		.fetch_sync(fetch_sync),
 
-		.cbeg     (cbeg     ),
-		.post_cbeg(post_cbeg),
-		.pre_cend (pre_cend ),
-		.cend     (cend     ),
+		.c0     (c0     ),
+		.c1(c1),
+		.c2 (c2 ),
+		.c3     (c3     ),
 
 		.int_start(int_start),
 

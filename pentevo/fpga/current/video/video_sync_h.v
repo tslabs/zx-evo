@@ -24,12 +24,12 @@ module video_sync_h(
 
 	input  wire        clk,
 
-	input  wire        init, // one-pulse strobe read at cend==1, initializes phase
+	input  wire        init, // one-pulse strobe read at c3==1, initializes phase
 	                         // this is mainly for phasing with CPU clock 3.5/7 MHz
 	                         // still not used, but this may change anytime
 
-	input  wire        cend,     // working strobes from DRAM controller (7MHz)
-	input  wire        pre_cend,
+	input  wire        c3,     // working strobes from DRAM controller (7MHz)
+	input  wire        c2,
 
 
 	// modes inputs
@@ -42,7 +42,7 @@ module video_sync_h(
 
 	output reg         line_start,  // 1 video cycle prior to actual start of visible line
 	output reg         hsync_start, // 1 cycle prior to beginning of hsync: used in frame sync/blank generation
-	                                // these signals coincide with cend
+	                                // these signals coincide with c3
 
 	output reg         hint_start, // horizontal position of INT start, for fine tuning
 
@@ -51,7 +51,7 @@ module video_sync_h(
 	output reg         hpix, // marks gate during which pixels are outting
 
 	                                // these signals turn on and turn off 'go' signal
-	output reg         fetch_start, // 18 cycles earlier than hpix, coincide with cend
+	output reg         fetch_start, // 18 cycles earlier than hpix, coincide with c3
 	output reg         fetch_end    // --//--
 
 );
@@ -103,7 +103,7 @@ module video_sync_h(
 
 
 
-	always @(posedge clk) if( cend )
+	always @(posedge clk) if( c3 )
 	begin
             if( init || (hcount==(HPERIOD-9'd1)) )
             	hcount <= 9'd0;
@@ -113,7 +113,7 @@ module video_sync_h(
 
 
 
-	always @(posedge clk) if( cend )
+	always @(posedge clk) if( c3 )
 	begin
 		if( hcount==HBLNK_BEG )
 			hblank <= 1'b1;
@@ -130,7 +130,7 @@ module video_sync_h(
 
 	always @(posedge clk)
 	begin
-		if( pre_cend )
+		if( c2 )
 		begin
 			if( hcount==HSYNC_BEG )
 				hsync_start <= 1'b1;
@@ -162,13 +162,13 @@ module video_sync_h(
 	                          (HPIX_BEG_ATM -FETCH_FOREGO-9'd4) :
 	                          (HPIX_BEG_PENT-FETCH_FOREGO-9'd4) ) == hcount;
 
-	always @(posedge clk) if( cend )
+	always @(posedge clk) if( c3 )
 		fetch_start_wait[3:0] <= { fetch_start_wait[2:0], fetch_start_time };
 
 	assign fetch_start_condition = mode_a_text ? fetch_start_time  : fetch_start_wait[3];
 
 	always @(posedge clk)
-	if( pre_cend && fetch_start_condition )
+	if( c2 && fetch_start_condition )
 		fetch_start <= 1'b1;
 	else
 		fetch_start <= 1'b0;
@@ -181,7 +181,7 @@ module video_sync_h(
 	                        (HPIX_END_PENT-FETCH_FOREGO) ) == hcount;
 
 	always @(posedge clk)
-	if( pre_cend && fetch_end_time )
+	if( c2 && fetch_end_time )
 		fetch_end <= 1'b1;
 	else
 		fetch_end <= 1'b0;
@@ -192,14 +192,14 @@ module video_sync_h(
 
 	always @(posedge clk)
 	begin
-		if( pre_cend && (hcount==HINT_BEG) )
+		if( c2 && (hcount==HINT_BEG) )
 			hint_start <= 1'b1;
 		else
 			hint_start <= 1'b0;
 	end
 
 
-	always @(posedge clk) if( cend )
+	always @(posedge clk) if( c3 )
 	begin
 		if( hcount==(mode_atm_n_pent ? HPIX_BEG_ATM : HPIX_BEG_PENT) )
 			hpix <= 1'b1;

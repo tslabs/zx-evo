@@ -14,7 +14,7 @@
 // rwe:   `````````````````````````````````````````\_______________________________/````````````````````````````````
 // req:  __/```````\_______________________/```````\________________________________________________________________
 // rnw:  XX/```````\XXXXXXXXXXXXXXXXXXXXXXX\_______/XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-// cbeg: __________/```````\_______________________/```````\_______________________/```````\_______________________/
+// c0: __________/```````\_______________________/```````\_______________________/```````\_______________________/
 // rrdy: __________________________________/```````\________________________________________________________________
 // addr: XX< addr  >XXXXXXXXXXXXXXXXXXXXXXX< addr  >XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 //wrdata:XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX< write >XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
@@ -47,7 +47,7 @@ module dram(
 	input req,         // request for read/write cycle
 	input rnw,         // READ/nWRITE (=1: read, =0: write)
 
-	output reg cbeg,       // cycle begin (any including refresh), can be used for synchronizing
+	output reg c0,       // cycle begin (any including refresh), can be used for synchronizing
 	output reg rrdy,       // Read data ReaDY
 
 	output reg [15:0] rddata, // data just read
@@ -291,13 +291,13 @@ module dram(
 	end
 
 
-	// cbeg and rrdy control
+	// c0 and rrdy control
 	always @(posedge clk)
 	begin
 		if( (state==RD4) || (state==WR4) || (state==RFSH4) )
-			cbeg <= 1'b1;
+			c0 <= 1'b1;
 		else
-			cbeg <= 1'b0;
+			c0 <= 1'b0;
 
 
             if( state==RD3 )

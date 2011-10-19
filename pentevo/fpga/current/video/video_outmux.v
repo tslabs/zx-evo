@@ -36,8 +36,8 @@ module video_outmux(
 		vred[1:0] <= vga_on ? vgacolor[3:2] : tvcolor[3:2];
 		vblu[1:0] <= vga_on ? vgacolor[1:0] : tvcolor[1:0];
 
-		vhsync <= vga_on ? vga_hsync : hsync;
-		vvsync <= vsync;
+		vhsync <= ~(vga_on ? vga_hsync : hsync);
+		vvsync <= ~vsync;
 
 		vcsync <= ~(hsync ^ vsync);
 	end

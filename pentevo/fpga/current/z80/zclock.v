@@ -12,8 +12,8 @@
 // zneg     _/```\___/```\___/```\_______/```\___________/```\___________________/```\___________________________/```\________________
 
 // clock phasing:
-// cend must be zpos for 7mhz, therefore post_cbeg - zneg
-// for 3.5 mhz, cend is both zpos and zneg (alternating)
+// c3 must be zpos for 7mhz, therefore c1 - zneg
+// for 3.5 mhz, c3 is both zpos and zneg (alternating)
 
 
 
@@ -61,14 +61,14 @@ module zclock(
 	input  wire m1_n,
 
 
-	input cbeg,
-	input pre_cend // syncing signals, taken from arbiter.v and dram.v
+	input c0,
+	input c2 // syncing signals, taken from arbiter.v and dram.v
 );
 
 
-	reg precend_cnt;
-	wire h_precend_1; // to take every other pulse of pre_cend
-	wire h_precend_2; // to take every other pulse of pre_cend
+	reg prec3_cnt;
+	wire h_prec3_1; // to take every other pulse of c2
+	wire h_prec3_2; // to take every other pulse of c2
 
 	reg [2:0] zcount; // counter for generating 3.5 and 7 MHz z80 clocks
 
@@ -100,7 +100,7 @@ module zclock(
 `ifdef SIMULATE
 	initial // simulation...
 	begin
-		precend_cnt = 1'b0;
+		prec3_cnt = 1'b0;
 		int_turbo   = 2'b00;
 		old_rfsh_n  = 1'b1;
 		clk14_src   = 1'b0;
@@ -173,19 +173,19 @@ module zclock(
 
 
 
-	// take every other pulse of pre_cend (make half pre_cend)
-	always @(posedge fclk) if( pre_cend )
-		precend_cnt <= ~precend_cnt;
+	// take every other pulse of c2 (make half c2)
+	always @(posedge fclk) if( c2 )
+		prec3_cnt <= ~prec3_cnt;
 
-	assign h_precend_1 =  precend_cnt && pre_cend;
-	assign h_precend_2 = !precend_cnt && pre_cend;
+	assign h_prec3_1 =  prec3_cnt && c2;
+	assign h_prec3_2 = !prec3_cnt && c2;
 
 
-	assign pre_zpos_35 = h_precend_2;
-	assign pre_zneg_35 = h_precend_1;
+	assign pre_zpos_35 = h_prec3_2;
+	assign pre_zneg_35 = h_prec3_1;
 
-	assign pre_zpos_70 = pre_cend;
-	assign pre_zneg_70 = cbeg;
+	assign pre_zpos_70 = c2;
+	assign pre_zneg_70 = c0;
 
 
 	assign pre_zpos = int_turbo[1] ? pre_zpos_140 : ( int_turbo[0] ? pre_zpos_70 : pre_zpos_35 );
