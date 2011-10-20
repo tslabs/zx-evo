@@ -6,7 +6,7 @@
 
 module video_render(
 
-	input  wire        clk, s3,
+	input  wire        clk, q0,
 
 
 	input  wire [63:0] pic_bits, // video data from fetcher
@@ -56,7 +56,7 @@ module video_render(
 		flash_ctr = 0;
 	end
 
-	always @(posedge clk) if (s3) if( int_start )
+	always @(posedge clk) if (q0) if( int_start )
 	begin
 		flash_ctr <= flash_ctr + 1;
 	end
@@ -101,7 +101,7 @@ module video_render(
 
 	assign {ginc, padd} = {1'b0, pnum} + {2'b00, modes_16c, ~modes_16c};
 
-	always @(posedge clk) if (s3) if( ena_pix )
+	always @(posedge clk) if (q0) if( ena_pix )
 	if( fetch_sync )
 		pnum <= 3'b000;
 	else
@@ -110,7 +110,7 @@ module video_render(
 
 	assign gadd = gnum + ( {modes_zxattr,~modes_zxattr} & {2{ginc}} );
 
-	always @(posedge clk) if (s3) if( ena_pix )
+	always @(posedge clk) if (q0) if( ena_pix )
 	if( fetch_sync )
 		gnum <= 2'b00;
 	else

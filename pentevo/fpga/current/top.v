@@ -117,13 +117,22 @@ module top(
 	output spiint_n
 );
 
-	wire s3;
+	wire s0, q0, c0, c1, c2, c3;
 
 	clock clock
 	(
 		.clk(fclk),
-		.s3(s3)
+		.s0(s0),
+		.q0(q0),
+		.c0(c0),
+		.c1(c1),
+		.c2(c2),
+		.c3(c3),
+		.clk175(clk175)
 	);
+
+
+	assign ay_clk = clk175;
 	
 	wire dos;
 
@@ -191,9 +200,6 @@ module top(
 
 
 
-	reg [3:0] ayclk_gen;
-
-
 	wire [7:0] received;
 	wire [7:0] tobesent;
 
@@ -212,7 +218,7 @@ module top(
 	// RESETTER
 	wire genrst;
 
-	resetter myrst( .clk(fclk), .s3(s3),
+	resetter myrst( .clk(fclk), .q0(q0),
 	                .rst_in_n(~genrst),
 	                .rst_out_n(rst_n) );
 	defparam myrst.RST_CNT_SIZE = 6;
@@ -256,8 +262,6 @@ module top(
 	wire [15:0] cpu_rddata;
 	wire [7:0] cpu_wrdata;
 
-	wire c0,c1,c2,c3;
-
 	wire go;
 
 
@@ -290,19 +294,6 @@ module top(
 	wire external_port;
 
 
-
-//AY control
-	always @(posedge fclk) if (s3)
-	begin
-		ayclk_gen <= ayclk_gen + 4'd1;
-	end
-
-	assign ay_clk = ayclk_gen[3];
-
-
-
-
-
 	// fix ATM2-style ROM addressing for PENT-like ROM layout.
 	// this causes compications when writing to the flashROM from Z80
 	// and need to split and re-build old ATM romfiles before burning in
@@ -325,7 +316,7 @@ module top(
 
 	zclock zclock
 	(
-		.fclk(fclk), .s3(s3), .rst_n(rst_n), .zclk(zclk), .rfsh_n(rfsh_n), .zclk_out(clkz_out),
+		.fclk(fclk), .q0(q0), .rst_n(rst_n), .zclk(zclk), .rfsh_n(rfsh_n), .zclk_out(clkz_out),
 		.zpos(zpos), .zneg(zneg),
 		.turbo( {atm_turbo,~(peff7[4])} ), .c2(c2), .c0(c0),
 		.zclk_stall( cpu_stall | (|zclk_stall) ), .int_turbo(int_turbo),
@@ -397,7 +388,7 @@ module top(
 
 			atm_pager #( .ADDR(i) )
 			          atm_pager( .rst_n(rst_n),
-			                     .fclk (fclk), .s3(s3),
+			                     .fclk (fclk), .q0(q0),
 			                     .zpos (zpos),
 			                     .zneg (zneg),
 
@@ -447,7 +438,7 @@ module top(
 
 	zdos zdos( .rst_n(rst_n),
 
-	           .fclk(fclk), .s3(s3),
+	           .fclk(fclk), .q0(q0),
 
 	           .dos_turn_on ( |dos_turn_on  ),
 	           .dos_turn_off( |dos_turn_off ),
@@ -466,7 +457,7 @@ module top(
 
 	zmem z80mem
 	(
-		.fclk (fclk), .s3(s3),
+		.fclk (fclk), .q0(q0),
 		.rst_n(rst_n),
 		
 		.zpos(zpos),
@@ -531,7 +522,7 @@ module top(
 
 
 
-	dram dram( .clk(fclk), .s3(s3),
+	dram dram( .clk(fclk), .q0(q0),
 	           .rst_n(rst_n),
 
 	           .addr(daddr),
@@ -560,7 +551,7 @@ module top(
 	wire video_strobe;
 	wire video_next;
 
-	arbiter dramarb( .clk(fclk), .s3(s3),
+	arbiter dramarb( .clk(fclk), .q0(q0),
 	                 .rst_n(rst_n),
 
 	                 .dram_addr(daddr),
@@ -596,7 +587,7 @@ module top(
 
 	video_top video_top(
 
-		.clk(fclk), .s3(s3),
+		.clk(fclk), .q0(q0),
 
 		.vred(vred),
 		.vgrn(vgrn),
@@ -640,7 +631,7 @@ module top(
 
 
 	slavespi slavespi(
-		.fclk(fclk), .s3(s3), .rst_n(rst_n),
+		.fclk(fclk), .q0(q0), .rst_n(rst_n),
 
 		.spics_n(spics_n), .spidi(spidi),
 		.spido(spido), .spick(spick),
@@ -658,7 +649,7 @@ module top(
 		.config0( { not_used[7:4], beeper_mux, tape_read, set_nmi[0], cfg_vga_on} )
 	);
 
-	zkbdmus zkbdmus( .fclk(fclk), .s3(s3), .rst_n(rst_n),
+	zkbdmus zkbdmus( .fclk(fclk), .q0(q0), .rst_n(rst_n),
 	                 .kbd_in(kbd_data), .kbd_stb(kbd_stb),
 	                 .mus_in(mus_data), .mus_xstb(mus_xstb),
 	                 .mus_ystb(mus_ystb), .mus_btnstb(mus_btnstb),
@@ -668,7 +659,7 @@ module top(
 	               );
 
 
-	zports zports( .zclk(zclk), .fclk(fclk), .s3(s3), .rst_n(rst_n), .zpos(zpos), .zneg(zneg),
+	zports zports( .zclk(zclk), .fclk(fclk), .q0(q0), .rst_n(rst_n), .zpos(zpos), .zneg(zneg),
 	               .din(d), .dout(dout_ports), .dataout(ena_ports),
 	               .a(a), .iorq_n(iorq_n), .rd_n(rd_n), .wr_n(wr_n), .porthit(porthit),
 	               .ay_bdir(ay_bdir), .ay_bc1(ay_bc1), .border(border),
@@ -740,7 +731,7 @@ module top(
 
 
 	zint zint(
-		.fclk(fclk), .s3(s3),
+		.fclk(fclk), .q0(q0),
 		.zpos(zpos),
 		.zneg(zneg),
 
@@ -755,7 +746,7 @@ module top(
 	znmi znmi
 	(
 		.rst_n(rst_n),
-		.fclk(fclk), .s3(s3),
+		.fclk(fclk), .q0(q0),
 		.zpos(zpos),
 		.zneg(zneg),
 
@@ -788,7 +779,7 @@ module top(
 	assign vg_a[0] = vg_ddrv[0] ? 1'b1 : 1'b0; // possibly open drain?
 	assign vg_a[1] = vg_ddrv[1] ? 1'b1 : 1'b0;
 
-	vg93 vgshka( .zclk(zclk), .rst_n(rst_n), .fclk(fclk), .s3(s3), .vg_clk(vg_clk),
+	vg93 vgshka( .zclk(zclk), .rst_n(rst_n), .fclk(fclk), .q0(q0), .vg_clk(vg_clk),
 	             .vg_res_n(vg_res_n), .din(d), .intrq(intrq), .drq(drq), .vg_wrFF(vg_wrFF),
 	             .vg_hrdy(vg_hrdy), .vg_rclk(vg_rclk), .vg_rawr(vg_rawr), .vg_a(vg_ddrv),
 	             .vg_wrd(vg_wrd), .vg_side(vg_side), .step(step), .vg_sl(vg_sl), .vg_sr(vg_sr),
@@ -798,7 +789,7 @@ module top(
 
 
 
-	spi2 zspi( .clock(fclk), .s3(s3), .sck(sdclk), .sdo(sddo), .sdi(sddi), .start(sd_start),
+	spi2 zspi( .clock(fclk), .q0(q0), .sck(sdclk), .sdo(sddo), .sdi(sddi), .start(sd_start),
 	           .speed(2'b00), .din(sd_datain), .dout(sd_dataout) );
 
 
@@ -811,7 +802,7 @@ module top(
 
 	sound sound(
 
-		.clk(fclk), .s3(s3),
+		.clk(fclk), .q0(q0),
 
 		.din(d),
 

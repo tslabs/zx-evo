@@ -29,7 +29,7 @@
 
 module dram(
 
-	input clk, s3,
+	input clk, q0,
 	input rst_n, // shut down accesses, remain refresh
 
 	output reg [9:0] ra, // to the DRAM pins
@@ -47,7 +47,7 @@ module dram(
 	input req,         // request for read/write cycle
 	input rnw,         // READ/nWRITE (=1: read, =0: write)
 
-	output reg c0,       // cycle begin (any including refresh), can be used for synchronizing
+	input reg c0,       // cycle begin (any including refresh), can be used for synchronizing
 	output reg rrdy,       // Read data ReaDY
 
 	output reg [15:0] rddata, // data just read
@@ -97,7 +97,7 @@ module dram(
 
 /*
 `ifdef SIMULATE
-	always @(posedge clk) if (s3)
+	always @(posedge clk) if (q0)
 	begin
 		if( req && !rnw && (state==RD4 || state==WR4 || state==RFSH4) )
 		begin
@@ -107,7 +107,7 @@ module dram(
 `endif
 */
 
-	always @(posedge clk) if (s3)
+	always @(posedge clk) if (q0)
 	begin
 		state <= next_state;
 	end
@@ -156,7 +156,7 @@ module dram(
 
 
 	// incoming data latching
-	always @(posedge clk) if (s3)
+	always @(posedge clk) if (q0)
 	begin
 		if( (state==RD4) || (state==WR4) || (state==RFSH4) )
 		begin
@@ -167,7 +167,7 @@ module dram(
 	end
 
 	// WE control
-	always @(posedge clk) if (s3)
+	always @(posedge clk) if (q0)
 	begin
 		if( (next_state==WR1) || (next_state==WR2) || (next_state==WR3) || (next_state==WR4) )
 			rwe_n <= 1'b0;
@@ -177,7 +177,7 @@ module dram(
 
 
 	// RAS/CAS sequencing
-	always @(posedge clk) if (s3)
+	always @(posedge clk) if (q0)
 	begin
 		case( state )
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -270,7 +270,7 @@ module dram(
 
 
 	// row/column address multiplexing
-	always @(negedge clk) if (s3)
+	always @(negedge clk) if (q0)
 	begin
 		if( (state==RD1) || (state==WR1) )
 			ra <= int_addr[10:1];
@@ -284,7 +284,7 @@ module dram(
 
 
 	// read data from DRAM
-	always @(posedge clk) if (s3)
+	always @(posedge clk) if (q0)
 	begin
 		if( state==RD3 )
 			rddata <= rd;
@@ -292,12 +292,12 @@ module dram(
 
 
 	// c0 and rrdy control
-	always @(posedge clk) if (s3)
+	always @(posedge clk) if (q0)
 	begin
-		if( (state==RD4) || (state==WR4) || (state==RFSH4) )
-			c0 <= 1'b1;
-		else
-			c0 <= 1'b0;
+		// if( (state==RD4) || (state==WR4) || (state==RFSH4) )
+			// c0 <= 1'b1;
+		// else
+			// c0 <= 1'b0;
 
 
             if( state==RD3 )
@@ -312,7 +312,7 @@ module dram(
 	// asynchronous one globally. so we must re-synchronize it
 	// and use it as 'DRAM operation enable'. when in reset,
 	// controller ignores req signal and generates only refresh cycles
-	always @(posedge clk) if (s3)
+	always @(posedge clk) if (q0)
 		rst_sync[1:0] <= { rst_sync[0], ~rst_n };
 
 	assign reset = rst_sync[1];

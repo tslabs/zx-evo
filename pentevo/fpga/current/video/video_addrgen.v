@@ -6,7 +6,7 @@
 
 module video_addrgen(
 
-	input  wire        clk, s3,
+	input  wire        clk, q0,
 
 
 	output reg  [20:0] video_addr, // DRAM arbiter signals
@@ -46,7 +46,7 @@ module video_addrgen(
 	reg frame_init_r;
 	reg line_init_r;
 
-	always @(posedge clk) if (s3)
+	always @(posedge clk) if (q0)
 		line_start_r <= line_start;
 
 	assign line_init  = line_start_r & vpix;
@@ -58,10 +58,10 @@ module video_addrgen(
 	reg [6:0] txctr; // text X counter
 
 
-	always @(posedge clk) if (s3)
+	always @(posedge clk) if (q0)
 		frame_init_r <= frame_init;
 
-	always @(posedge clk) if (s3)
+	always @(posedge clk) if (q0)
 		line_init_r <= line_init;
 
 
@@ -73,7 +73,7 @@ module video_addrgen(
 	//
 	initial gctr <= 0;
 	//
-	always @(posedge clk) if (s3)
+	always @(posedge clk) if (q0)
 	if( frame_init )
 		gctr <= 0;
 	else if( gnext )
@@ -81,13 +81,13 @@ module video_addrgen(
 
 
 	// text counters
-	always @(posedge clk) if (s3)
+	always @(posedge clk) if (q0)
 	if( frame_init )
 		tyctr <= 8'b0011_0111;
 	else if( line_init )
 		tyctr <= tyctr + 1;
 
-	always @(posedge clk) if (s3)
+	always @(posedge clk) if (q0)
 	if( line_init )
 		txctr <= 7'b000_0000;
 	else if( tnext )
@@ -137,7 +137,7 @@ module video_addrgen(
 
 	initial video_addr <= 0;
 	//
-	always @(posedge clk) if (s3) if( ldaddr )
+	always @(posedge clk) if (q0) if( ldaddr )
 	begin
 		video_addr <=
 			( {21{mode_zx     }} & addr_zx  )  |

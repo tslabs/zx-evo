@@ -196,7 +196,7 @@ set_instance_assignment -name GLOBAL_SIGNAL ON -to spics_n
 set_instance_assignment -name CUT ON -from rddata -to zd_out
 set_instance_assignment -name CLOCK_SETTINGS "Z80 clock" -to clkz_in
 set_instance_assignment -name CLOCK_SETTINGS "SPI clock" -to spick
-set_global_assignment -name FMAX_REQUIREMENT "28 MHz" -section_id "FPGA clock"
+set_global_assignment -name FMAX_REQUIREMENT "112 MHz" -section_id "FPGA clock"
 set_global_assignment -name FMAX_REQUIREMENT "5.5296 MHz" -section_id "SPI clock"
 set_global_assignment -name BASED_ON_CLOCK_SETTINGS "FPGA clock" -section_id "Z80 clock"
 set_global_assignment -name MULTIPLY_BASE_CLOCK_PERIOD_BY 2 -section_id "Z80 clock"

@@ -9,7 +9,7 @@
 
 module video_top(
 
-	input  wire        clk, s3,
+	input  wire        clk, q0,
 
 
 	// external video outputs
@@ -132,7 +132,7 @@ module video_top(
 	// decode video modes
 	video_modedecode video_modedecode(
 
-		.clk(clk), .s3(s3),
+		.clk(clk), .q0(q0),
 
 		.pent_vmode(pent_vmode),
 		.atm_vmode (atm_vmode),
@@ -161,7 +161,7 @@ module video_top(
 	// vertical sync generator
 	video_sync_v video_sync_v(
 
-		.clk(clk), .s3(s3),
+		.clk(clk), .q0(q0),
 
 		.mode_atm_n_pent(mode_atm_n_pent),
 
@@ -180,7 +180,7 @@ module video_top(
 	// horizontal sync generator
 	video_sync_h video_sync_h(
 
-		.clk(clk), .s3(s3),
+		.clk(clk), .q0(q0),
 
 		.mode_atm_n_pent(mode_atm_n_pent),
 		.mode_a_text    (mode_a_text),
@@ -212,7 +212,7 @@ module video_top(
 	// address generation
 	video_addrgen video_addrgen(
 
-		.clk(clk), .s3(s3),
+		.clk(clk), .q0(q0),
 
 		.video_addr(video_addr),
 		.video_next(video_next),
@@ -238,7 +238,7 @@ module video_top(
 	// data fetch
 	video_fetch video_fetch(
 
-		.clk(clk), .s3(s3),
+		.clk(clk), .q0(q0),
 
 		.c2 (c2),
 		.c3     (c3    ),
@@ -261,7 +261,7 @@ module video_top(
 	// render fetched data to pixels
 	video_render video_render(
 
-		.clk(clk), .s3(s3),
+		.clk(clk), .q0(q0),
 
 		.pic_bits(pic_bits),
 
@@ -297,7 +297,7 @@ module video_top(
 	// combine border and pixels, apply palette
 	video_palframe video_palframe(
 
-		.clk(clk), .s3(s3),
+		.clk(clk), .q0(q0),
 
 		.hblank(hblank),
 		.vblank(vblank),
@@ -320,7 +320,7 @@ module video_top(
 	// VGA hsync doubling
 	video_vga_sync_h video_vga_sync_h(
 
-		.clk(clk), .s3(s3),
+		.clk(clk), .q0(q0),
 
 		.hsync_start(hsync_start),
 
@@ -333,7 +333,7 @@ module video_top(
 	// VGA scandoubling
 	video_vga_double video_vga_double(
 
-		.clk(clk), .s3(s3),
+		.clk(clk), .q0(q0),
 
 		.hsync_start  (hsync_start  ),
 		.scanout_start(scanout_start),
@@ -348,7 +348,7 @@ module video_top(
 	// final MUXing of VGA and TV signals
 	video_outmux video_outmux(
 
-		.clk(clk), .s3(s3),
+		.clk(clk), .q0(q0),
 
 		.vga_on(vga_on),
 

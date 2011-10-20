@@ -15,7 +15,7 @@
 
 module zmem(
 
-	input  wire fclk, s3,
+	input  wire fclk, q0,
 	input  wire rst_n,
 
 	input  wire zpos, //
@@ -178,7 +178,7 @@ module zmem(
 	assign ramrd = ramreq & (~rd_n);
 	assign ramwr = ramreq & (~wr_n);
 
-	always @(posedge fclk) if (s3)
+	always @(posedge fclk) if (q0)
 	if( c3 && (!cpu_stall) )
 	begin
 		ramrd_reg <= ramrd;
@@ -200,7 +200,7 @@ module zmem(
 
 	// strobe the beginnings of DRAM cycles
 
-	always @(posedge fclk) if (s3)
+	always @(posedge fclk) if (q0)
 	if( zneg )
 		r_mreq_n <= mreq_n | (~rfsh_n);
 	//
@@ -279,7 +279,7 @@ module zmem(
 	else if( dram_beg )
 		pending_cpu_req <= 1'b1;
 	//
-	always @(posedge fclk) if (s3)
+	always @(posedge fclk) if (q0)
 	if( dram_beg )
 		cpu_rnw_r <= !memwr;
 
@@ -305,7 +305,7 @@ module zmem(
 	//
 	assign io = (~iorq_n);
 	//
-	always @(posedge fclk) if (s3)
+	always @(posedge fclk) if (q0)
 	if( zpos )
 		io_r <= io;
 	//
@@ -324,7 +324,7 @@ module zmem(
 			cached_addr_valid <= 1'b1;
 	end
 	//
-	always @(posedge fclk) if (s3)
+	always @(posedge fclk) if (q0)
 	if( !rst_n )
 	begin
 		cached_addr <= 15'd0;

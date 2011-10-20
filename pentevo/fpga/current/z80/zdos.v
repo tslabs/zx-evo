@@ -7,7 +7,7 @@
 
 module zdos(
 
-	input  wire        fclk, s3,
+	input  wire        fclk, q0,
 	input  wire        rst_n,
 
 

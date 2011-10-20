@@ -7,7 +7,7 @@
 module zports(
 
 	input  wire        zclk,   // z80 clock
-	input  wire        fclk, s3,
+	input  wire        fclk, q0,
 	input  wire        rst_n, // system reset
 
 	input  wire        zpos,
@@ -319,28 +319,28 @@ module zports(
 
 	// fclk-synchronous stobes
 	//
-	always @(posedge fclk) if (s3) if( zpos )
+	always @(posedge fclk) if (q0) if( zpos )
 	begin
 		iowr_reg_fclk[0] <= ~(iorq_n | wr_n);
 		iord_reg_fclk[0] <= ~(iorq_n | rd_n);
 	end
 
-	always @(posedge fclk) if (s3)
+	always @(posedge fclk) if (q0)
 	begin
 		iowr_reg_fclk[1] <= iowr_reg_fclk[0];
 		iord_reg_fclk[1] <= iord_reg_fclk[0];
 	end
 
-	always @(posedge fclk) if (s3)
+	always @(posedge fclk) if (q0)
 	begin
 		port_wr_fclk <= iowr_reg_fclk[0] && (!iowr_reg_fclk[1]);
 		port_rd_fclk <= iord_reg_fclk[0] && (!iord_reg_fclk[1]);
 	end
 
-	always @(posedge fclk) if (s3)
+	always @(posedge fclk) if (q0)
 		memwr_reg_fclk[1:0] <= { memwr_reg_fclk[0], ~(mreq_n | wr_n) };
 
-	always @(posedge fclk) if (s3)
+	always @(posedge fclk) if (q0)
 		mem_wr_fclk <= memwr_reg_fclk[0] && (!memwr_reg_fclk[1]);
 
 
@@ -431,7 +431,7 @@ module zports(
 
 	assign portfe_wr_fclk = (((loa==PORTFE) || (loa==PORTF6)) && port_wr_fclk);
 
-	always @(posedge fclk) if (s3)
+	always @(posedge fclk) if (q0)
 	if( portfe_wr_fclk )
 		border <= { ~a[3], din[2:0] };
 
@@ -872,7 +872,7 @@ module zports(
 
 	// savelij ports write
 	//
-	always @(posedge fclk) if (s3)
+	always @(posedge fclk) if (q0)
 	if( port_wr_fclk && shadow )
 	begin
 		if( (loa==SAVPORT1) ||

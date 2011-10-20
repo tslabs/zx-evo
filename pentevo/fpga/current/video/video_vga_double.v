@@ -6,7 +6,7 @@
 
 module video_vga_double(
 
-	input  wire        clk, s3,
+	input  wire        clk, q0,
 
 	input  wire        hsync_start,
 
@@ -35,12 +35,12 @@ pg0 pg1
 	wire [ 7:0] data_out;
 
 
-	always @(posedge clk) if (s3) if( hsync_start )
+	always @(posedge clk) if (q0) if( hsync_start )
 		pages <= ~pages;
 
 
 	// write ptr and strobe
-	always @(posedge clk) if (s3)
+	always @(posedge clk) if (q0)
 	begin
 		if( scanin_start )
 		begin
@@ -62,7 +62,7 @@ pg0 pg1
 
 
 	// read ptr
-	always @(posedge clk) if (s3)
+	always @(posedge clk) if (q0)
 	begin
 		if( scanout_start )
 		begin
@@ -79,7 +79,7 @@ pg0 pg1
 	end
 
 	//read data
-	always @(posedge clk) if (s3)
+	always @(posedge clk) if (q0)
 	begin
 		if( ptr_out[9:8]!=2'b11 )
 			pix_out <= data_out[5:0];
@@ -91,7 +91,7 @@ pg0 pg1
 
 
 
-	mem1536 line_buf( .clk(clk), .s3(s3),
+	mem1536 line_buf( .clk(clk), .q0(q0),
 
 	                  .wraddr({ptr_in[9:8], pages, ptr_in[7:0]}),
 	                  .wrdata({2'b00,pix_in}),
@@ -110,7 +110,7 @@ endmodule
 // 3x512b memory
 module mem1536(
 
-	input  wire        clk, s3,
+	input  wire        clk, q0,
 
 	input  wire [10:0] wraddr,
 	input  wire [ 7:0] wrdata,
@@ -122,7 +122,7 @@ module mem1536(
 
 	reg [7:0] mem [0:1535];
 
-	always @(posedge clk) if (s3)
+	always @(posedge clk) if (q0)
 	begin
 		if( wr_stb )
 		begin

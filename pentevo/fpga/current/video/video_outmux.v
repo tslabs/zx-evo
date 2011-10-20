@@ -6,7 +6,7 @@
 
 module video_outmux(
 
-	input  wire        clk, s3,
+	input  wire        clk, q0,
 
 
 	input  wire        vga_on,
@@ -30,7 +30,7 @@ module video_outmux(
 );
 
 
-	always @(posedge clk) if (s3)
+	always @(posedge clk) if (q0)
 	begin
 		vgrn[1:0] <= vga_on ? vgacolor[5:4] : tvcolor[5:4];
 		vred[1:0] <= vga_on ? vgacolor[3:2] : tvcolor[3:2];

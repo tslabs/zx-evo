@@ -10,7 +10,7 @@
 
 module video_sync_v(
 
-	input  wire        clk, s3,
+	input  wire        clk, q0,
 
 	input  wire        hsync_start, // synchronizing signal
 	input  wire        line_start,  // to end vsync some time after hsync has ended
@@ -68,7 +68,7 @@ module video_sync_v(
 		int_start = 1'b0;
 	end
 
-	always @(posedge clk) if (s3) if( hsync_start )
+	always @(posedge clk) if (q0) if( hsync_start )
 	begin
 		if( vcount==(VPERIOD-9'd1) )
 			vcount <= 9'd0;
@@ -78,7 +78,7 @@ module video_sync_v(
 
 
 
-	always @(posedge clk) if (s3) if( hsync_start )
+	always @(posedge clk) if (q0) if( hsync_start )
 	begin
 		if( vcount==VBLNK_BEG )
 			vblank <= 1'b1;
@@ -87,7 +87,7 @@ module video_sync_v(
 	end
 
 
-	always @(posedge clk) if (s3)
+	always @(posedge clk) if (q0)
 	begin
 		if( (vcount==VSYNC_BEG) && hsync_start )
 			vsync <= 1'b1;
@@ -96,7 +96,7 @@ module video_sync_v(
 	end
 
 
-	always @(posedge clk) if (s3)
+	always @(posedge clk) if (q0)
 	begin
 		if( (vcount==INT_BEG) && hint_start )
 			int_start <= 1'b1;
@@ -106,7 +106,7 @@ module video_sync_v(
 
 
 
-	always @(posedge clk) if (s3) if( hsync_start )
+	always @(posedge clk) if (q0) if( hsync_start )
 	begin
 		if( vcount==(mode_atm_n_pent ? VPIX_BEG_ATM : VPIX_BEG_PENT) )
 			vpix <= 1'b1;
