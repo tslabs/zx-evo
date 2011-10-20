@@ -117,13 +117,14 @@ module top(
 	output spiint_n
 );
 
-	wire s0, q0, c0, c1, c2, c3;
+	wire f0, q0, w0, c0, c1, c2, c3;
 
 	clock clock
 	(
 		.clk(fclk),
-		.s0(s0),
+		.f0(f0),
 		.q0(q0),
+		.w0(w0),
 		.c0(c0),
 		.c1(c1),
 		.c2(c2),
@@ -802,7 +803,7 @@ module top(
 
 	sound sound(
 
-		.clk(fclk), .q0(q0),
+		.clk(fclk), .q0(q0), .w0(w0),
 
 		.din(d),
 
