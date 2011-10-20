@@ -7,7 +7,7 @@
 
 module video_palframe(
 
-	input  wire        clk, s3,
+	input  wire        clk, q0,
 
 
 	input  wire        hpix,
@@ -38,10 +38,10 @@ module video_palframe(
 
 
 
-//	always @(posedge clk) if (s3)
+//	always @(posedge clk) if (q0)
 //		win <= hpix & vpix;
 //
-//	always @(posedge clk) if (s3)
+//	always @(posedge clk) if (q0)
 //		border_r <= border;
 //
 //	assign zxcolor = win ? pixels : border_r;
@@ -52,7 +52,7 @@ module video_palframe(
 	// palette
 	reg [5:0] palette [0:15]; // let quartus instantiate it as RAM if needed
 
-	always @(posedge clk) if (s3)
+	always @(posedge clk) if (q0)
 	begin
 		if( atm_palwr )
 			palette[zxcolor] <= atm_paldata;

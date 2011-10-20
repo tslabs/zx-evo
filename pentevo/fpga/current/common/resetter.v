@@ -2,7 +2,7 @@
 
 module resetter(
 
-	clk, s3,
+	clk, q0,
 
 	rst_in_n,
 
@@ -11,7 +11,7 @@ module resetter(
 parameter RST_CNT_SIZE = 4;
 
 
-	input clk, s3;
+	input clk, q0;
 
 	input rst_in_n; // input of external asynchronous reset
 

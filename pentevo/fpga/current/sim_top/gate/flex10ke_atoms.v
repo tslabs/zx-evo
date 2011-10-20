@@ -1842,7 +1842,7 @@ module flex10ke_pll (clk,
             $display("");
     end
 
-    always @(posedge clk) if (s3)
+    always @(posedge clk) if (q0)
     begin
         if (pll_rising_edge_count == 0)   // this is first rising edge
             start_inclk = clk;

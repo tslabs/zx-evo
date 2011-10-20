@@ -6,7 +6,7 @@
 
 module video_fetch(
 
-	input  wire        clk, s3,
+	input  wire        clk, q0,
 
 
 	input  wire        c3,     // general
@@ -42,7 +42,7 @@ module video_fetch(
 	reg [15:0] fetch_data [0:3]; // stores data fetched from memory
 
 	// fetch window
-	always @(posedge clk) if (s3)
+	always @(posedge clk) if (q0)
 		if( fetch_start && vpix )
 			video_go <= 1'b1;
 		else if( fetch_end )
@@ -51,7 +51,7 @@ module video_fetch(
 
 
 	// fetch sync counter
-	always @(posedge clk) if (s3) if( c3 )
+	always @(posedge clk) if( c3 )
 	begin
 		if( fetch_start )
 			fetch_sync_ctr <= 0;
@@ -61,7 +61,7 @@ module video_fetch(
 
 
 	// fetch sync signal
-	always @(posedge clk) if (s3)
+	always @(posedge clk) if (q0)
 		if( (fetch_sync_ctr==1) && c2 )
 			fetch_sync <= 1'b1;
 		else
@@ -70,7 +70,7 @@ module video_fetch(
 
 
 	// fetch_ptr clear signal
-	always @(posedge clk) if (s3)
+	always @(posedge clk) if (q0)
 		if( (fetch_sync_ctr==0) && c2 )
 			fetch_ptr_clr <= 1'b1;
 		else
@@ -78,7 +78,7 @@ module video_fetch(
 
 
 	// buffer fill pointer
-	always @(posedge clk) if (s3)
+	always @(posedge clk) if (q0)
 		if( fetch_ptr_clr )
 			fetch_ptr <= 0;
 		else if( video_strobe )
@@ -87,12 +87,12 @@ module video_fetch(
 
 
 	// store fetched data
-	always @(posedge clk) if (s3) if( video_strobe )
+	always @(posedge clk) if (q0) if( video_strobe )
 		fetch_data[fetch_ptr] <= video_data;
 
 
 	// pass fetched data to renderer
-	always @(posedge clk) if (s3) if( fetch_sync )
+	always @(posedge clk) if (q0) if( fetch_sync )
 	begin
 		pic_bits[ 7:0 ] <= fetch_data[0][15:8 ];
 		pic_bits[15:8 ] <= fetch_data[0][ 7:0 ];
