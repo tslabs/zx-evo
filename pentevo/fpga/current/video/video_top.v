@@ -158,12 +158,15 @@ module video_top(
 
 
 
-	// vertical sync generator
-	video_sync_v video_sync_v(
+	// sync generator
+	video_sync video_sync(
 
 		.clk(clk), .q0(q0),
+		.c2(c2),
+		.c3    (c3    ),
 
 		.mode_atm_n_pent(mode_atm_n_pent),
+		.mode_a_text    (mode_a_text),
 
 		.hsync_start(hsync_start),
 		.line_start(line_start),
@@ -173,33 +176,14 @@ module video_top(
 		.vsync(vsync),
 		.vpix(vpix),
 
-		.int_start(int_start)
-	);
-
-
-	// horizontal sync generator
-	video_sync_h video_sync_h(
-
-		.clk(clk), .q0(q0),
-
-		.mode_atm_n_pent(mode_atm_n_pent),
-		.mode_a_text    (mode_a_text),
-
+		.int_start(int_start),
 
 		.init(1'b0),
-
-		.c2(c2),
-		.c3    (c3    ),
 
 
 		.hblank(hblank),
 		.hsync(hsync),
 		.hpix(hpix),
-
-		.line_start(line_start),
-		.hsync_start(hsync_start),
-
-		.hint_start(hint_start),
 
 		.scanin_start(scanin_start),
 
