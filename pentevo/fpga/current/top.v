@@ -117,7 +117,7 @@ module top(
 	output spiint_n
 );
 
-	wire f0, q0, w0, c0, c1, c2, c3;
+	wire f0, q0, w0, c0, c1, c2, c3, c15;
 
 	clock clock
 	(
@@ -129,6 +129,7 @@ module top(
 		.c1(c1),
 		.c2(c2),
 		.c3(c3),
+		.c15(c15),
 		.clk175(clk175)
 	);
 
@@ -332,7 +333,7 @@ module top(
 	wire ena_ports;
 
 
-	wire [3:0] border;
+	wire [7:0] border;
 
 	wire drive_ff;
 
@@ -586,48 +587,43 @@ module top(
 	                 .cpu_rddata(cpu_rddata),
 	                 .cpu_strobe(cpu_strobe) );
 
+					 
+					 
+// under construction drafts
+	wire [7:0] scr_page = {6'b000001, p7ffd[3], 1'b1};
+					 
+					 
 	video_top video_top(
 
-		.clk(fclk), .q0(q0),
+		.clk(fclk),
+		.q0(q0),
+		.c0(c0),
+		.c1(c1),
+		.c2(c2),
+		.c3(c3),
+		.c15(c15),
 
 		.vred(vred),
 		.vgrn(vgrn),
 		.vblu(vblu),
-		.vhsync(vhsync),
-		.vvsync(vvsync),
-		.vcsync(vcsync),
+		.hsync(vhsync),
+		.vsync(vvsync),
+		.csync(vcsync),
 
-		.zxborder(border),
-
-		.pent_vmode( {peff7[0],peff7[5]} ),
-		.atm_vmode (atm_scr_mode),
-
-		.scr_page(p7ffd[3]),
+		.border(border),
+		.scr_page(scr_page),
 
 		.vga_on(cfg_vga_on),
 
-		.c0     (c0     ),
-		.c1(c1),
-		.c2 (c2 ),
-		.c3     (c3     ),
-
-		.video_go    (go          ),
-		.video_bw    (bw          ),
 		.video_addr  (video_addr  ),
 		.video_data  (video_data  ),
 		.video_strobe(video_strobe),
 		.video_next  (video_next  ),
+		.video_go    (go          ),
+		.video_bw    (bw          ),
 
-		.atm_palwr  (atm_palwr  ),
-		.atm_paldata(atm_paldata),
+		.int_start(int_start)
 
-		.int_start(int_start),
-
-		.fnt_a (a[10:0]),
-		.fnt_d (d      ),
-		.fnt_wr(fnt_wr ),
-
-		.palcolor(palcolor)
 	);
 
 
