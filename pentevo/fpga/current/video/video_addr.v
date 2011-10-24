@@ -5,7 +5,7 @@ module video_adr (
 
 // clocks
 	input wire clk,
-	input wire c8,
+	input wire c4,
 	
 // video controls
 	input wire frame_start,
@@ -15,6 +15,7 @@ module video_adr (
 	input wire [7:0] scr_page,
 	input wire		 mode_zx,
 	input wire		 mode_256c,
+	input wire		 vpix,
 	
 // addresses
 	output wire [21:0] addr_zx_gfx,
@@ -37,11 +38,14 @@ module video_adr (
 	reg [8:0] col;
 	reg [8:0] row;
 	
-	always @(posedge clk) if (c8)
-		if (line_start)
-			row <= frame_start ? rstart : row + 1;
+	always @(posedge clk) if (c4)
+		if (frame_start)
+			row <=  rstart;
+		else
+		if (line_start & vpix)
+			row <=  row + 1;
 		
-	always @(posedge clk) if (c8)
+	always @(posedge clk) if (c4)
 		if (line_start)
 			col <= cstart;
 		else

@@ -391,9 +391,9 @@ module tb;
 		put_byte(a,8'h45); a=a+1;
 
 
-		@(posedge fclk) if (q0);
+		@(posedge fclk) if (f0);
 		tb.DUT.slavespi.cfg0_reg_out[1] = 1'b1;
-		@(posedge fclk) if (q0);
+		@(posedge fclk) if (f0);
 		tb.DUT.slavespi.cfg0_reg_out[1] = 1'b0;
 
 		#64000000;

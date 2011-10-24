@@ -68,8 +68,8 @@ void hardware_init(void)
 //	PORTF = 0b11110000; // ATX off (zero output), fpga config/etc inputs
 	DDRF  = 0b00001000;
 
-	PORTE = 0b11111111;
-	DDRE  = 0b00001100; // PLL to 8X [E2=1,E3=1], inputs pulled up
+	PORTE = 0b11110011;
+	DDRE  = 0b00001100; // PLL to 4X [E2=0,E3=0], inputs pulled up
 
 	PORTD = 0b11111111; // inputs pulled up
 	DDRD  = 0b00100000; // RTS out

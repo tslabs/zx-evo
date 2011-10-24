@@ -12,8 +12,8 @@
 // zneg     _/```\___/```\___/```\_______/```\___________/```\___________________/```\___________________________/```\________________
 
 // clock phasing:
-// c12 must be zpos for 7mhz, therefore c4 - zneg
-// for 3.5 mhz, c12 is both zpos and zneg (alternating)
+// c6 must be zpos for 7mhz, therefore c2 - zneg
+// for 3.5 mhz, c6 is both zpos and zneg (alternating)
 
 
 
@@ -29,7 +29,7 @@
 
 module zclock(
 
-	input fclk, q0,
+	input fclk, f0,
 	input rst_n,
 
 	input zclk, // Z80 clock, buffered via act04 and returned back to the FPGA
@@ -62,13 +62,13 @@ module zclock(
 
 
 	input c0,
-	input c8 // syncing signals, taken from arbiter.v and dram.v
+	input c4 // syncing signals, taken from arbiter.v and dram.v
 );
 
 
 	reg prec3_cnt;
-	wire h_prec3_1; // to take every other pulse of c8
-	wire h_prec3_2; // to take every other pulse of c8
+	wire h_prec3_1; // to take every other pulse of c4
+	wire h_prec3_2; // to take every other pulse of c4
 
 	reg [2:0] zcount; // counter for generating 3.5 and 7 MHz z80 clocks
 
@@ -110,7 +110,7 @@ module zclock(
 `endif
 
 	// switch clock only at predefined time
-	always @(posedge fclk) if (q0) if(zpos)
+	always @(posedge fclk) if (f0) if(zpos)
 	begin
 		old_rfsh_n <= rfsh_n;
 
@@ -131,7 +131,7 @@ module zclock(
 
 	assign io = (~iorq_n) & m1_n & external_port;
 
-	always @(posedge fclk) if (q0)
+	always @(posedge fclk) if (f0)
 	if( zpos )
 		io_r <= io;
 
@@ -143,7 +143,7 @@ module zclock(
 	else if( io_wait_cnt[3] )
 		io_wait_cnt <= io_wait_cnt + 4'd1;
 
-	always @(posedge fclk) if (q0)
+	always @(posedge fclk) if (f0)
 	case( io_wait_cnt )
 		4'b1000: io_wait <= 1'b1;
 		4'b1001: io_wait <= 1'b1;
@@ -164,7 +164,7 @@ module zclock(
 
 
 	// 14MHz clocking
-	always @(posedge fclk) if (q0)
+	always @(posedge fclk) if (f0)
 	if( !stall )
 		clk14_src <= ~clk14_src;
 	//
@@ -173,18 +173,18 @@ module zclock(
 
 
 
-	// take every other pulse of c8 (make half c8)
-	always @(posedge fclk) if( c8 )
+	// take every other pulse of c4 (make half c4)
+	always @(posedge fclk) if( c4 )
 		prec3_cnt <= ~prec3_cnt;
 
-	assign h_prec3_1 =  prec3_cnt && c8;
-	assign h_prec3_2 = !prec3_cnt && c8;
+	assign h_prec3_1 =  prec3_cnt && c4;
+	assign h_prec3_2 = !prec3_cnt && c4;
 
 
 	assign pre_zpos_35 = h_prec3_2;
 	assign pre_zneg_35 = h_prec3_1;
 
-	assign pre_zpos_70 = c8;
+	assign pre_zpos_70 = c4;
 	assign pre_zneg_70 = c0;
 
 
@@ -193,12 +193,12 @@ module zclock(
 
 
 
-	always @(posedge fclk) if (q0)
+	always @(posedge fclk) if (f0)
 	begin
 		zpos <= (~stall) & pre_zpos & zclk_out;
 	end
 
-	always @(posedge fclk) if (q0)
+	always @(posedge fclk) if (f0)
 	begin
 		zneg <= (~stall) & pre_zneg & (~zclk_out);
 	end
@@ -215,7 +215,7 @@ module zclock(
 	// total: 5.8 ns lead of any edge of zclk relative to posedge of fclk => ACCOUNT FOR THIS WHEN DOING INTER-CLOCK DATA TRANSFERS
 	//
 
-	always @(negedge fclk)  if (q0)
+	always @(negedge fclk)  if (f0)
 	begin
 		if( zpos )
 			zclk_out <= 1'b0;

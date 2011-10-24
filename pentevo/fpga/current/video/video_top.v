@@ -5,13 +5,13 @@ module video_top (
 
 // clocks
 	input wire clk,
+	input wire f0,
 	input wire q0,
-	input wire w0,
 	input wire c0,
+	input wire c2,
 	input wire c4,
-	input wire c8,
-	input wire c12,
-	input wire c15,
+	input wire c6,
+	input wire c7,
 
 // video DAC
 	output wire	[1:0] vred,
@@ -49,12 +49,12 @@ module video_top (
 	video_sync video_sync (
 		.clk			(clk			),
 		.c0				(c0				),
-		.c12			(c12			),
+		.c6				(c6				),
 		.hsync			(hsync			),
 		.vsync			(vsync			),
 		.csync			(csync			),
-		.tv_pix_stb		(tv_pix_stb		),
-		.vga_pix_stb	(vga_pix_stb	),
+		.tv_pix_start	(tv_pix_start	),
+		.vga_pix_start	(vga_pix_start	),
 		.blank			(blank			),
 		.frame_start	(frame_start	),
 		.line_start		(line_start		),
@@ -67,8 +67,8 @@ module video_top (
 		
 	);
 
-	wire tv_pix_stb;
-    wire vga_pix_stb;
+	wire tv_pix_start;
+    wire vga_pix_start;
 	wire blank;
 	wire frame_start;
 	wire line_start;
@@ -82,11 +82,12 @@ module video_top (
 	
 	video_adr video_adr (
 		.clk			(clk			),
-		.c8				(c8				),
+		.c4				(c4				),
 		.line_start		(line_start		),
 		.frame_start	(frame_start	),
 		.mode_zx		(mode_zx		),
 		.mode_256c		(mode_256c		),
+		.vpix			(vpix			),
 		.scr_page		(scr_page		),
 		.addr_zx_gfx	(addr_zx_gfx	),
 		.addr_zx_atr	(addr_zx_atr	),
@@ -128,7 +129,8 @@ module video_top (
 	video_render video_render (
 		.clk		(clk      	),
 		.c0			(c0	      	),
-		.c12		(c12	  	),
+		.c4			(c4		  	),
+		.c6			(c6		  	),
 		.pix_start	(pix_start	),
 		.hvpix 	    (hvpix	  	),
 		.blank 	    (blank	  	),
@@ -148,13 +150,14 @@ module video_top (
 	
 	
 	video_vga video_vga (
-		.clk		(clk		),
-		.c0			(c0			),
-		.w0			(w0			),
-		.start_in	(tv_pix_stb	),
-		.start_out	(vga_pix_stb),
-		.vga_in		(tvdata		),
-		.vga_out	(vgadata	)
+		.clk		(clk			),
+		.c0			(c0				),
+		.q0			(q0				),
+		.start_in	(tv_pix_start	),
+		.start_out	(vga_pix_start	),
+		.line_start	(line_start		),
+		.vga_in		(tvdata			),
+		.vga_out	(vgadata		)
 	);
 
 	wire [7:0] tvdata;

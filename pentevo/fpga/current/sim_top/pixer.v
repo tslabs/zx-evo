@@ -35,10 +35,10 @@ module pixer
 
 
 
-	always @(posedge clk) if (q0)
+	always @(posedge clk) if (f0)
 		r_vsync <= vsync;
 
-	always @(posedge clk) if (q0)
+	always @(posedge clk) if (f0)
 		r_hsync <= hsync;
 
 	assign vbeg = ( (!r_vsync) && vsync );
@@ -46,13 +46,13 @@ module pixer
 
 
 	// get horizontal period
-	always @(posedge clk) if (q0)
+	always @(posedge clk) if (f0)
 	if( hbeg )
 		hcount <= 0;
 	else
 		hcount <= hcount + 1;
 
-	always @(posedge clk) if (q0)
+	always @(posedge clk) if (f0)
 	if( hbeg )
 	begin
 		hper2 <= hper1;
@@ -72,7 +72,7 @@ module pixer
 	// get vertical period
 	initial clr_vcnt = 0;
 	
-	always @(posedge clk) if (q0)
+	always @(posedge clk) if (f0)
 	begin
 		if( vbeg )
 			clr_vcnt=1;
@@ -108,7 +108,7 @@ module pixer
 
 
 
-	always @(posedge clk) if (q0)
+	always @(posedge clk) if (f0)
 	begin
 		sndpix(hcount,vcount,{26'd0,red,grn,blu},hperiod,vperiod);
 	end

@@ -6,7 +6,7 @@
 
 module zint
 (
-	input  wire fclk, q0,
+	input  wire fclk, f0,
 
 	input  wire zpos,
 	input  wire zneg,
@@ -33,7 +33,7 @@ module zint
 `endif
 
 
-	always @(posedge fclk) if (q0)
+	always @(posedge fclk) if (f0)
 	begin
 		if( int_start )
 			intctr <= 10'd0;
@@ -45,7 +45,7 @@ module zint
 	assign intend = intctr[9:8] || ( (!iorq_n) && (!m1_n) && zneg );
 
 
-	always @(posedge fclk) if (q0)
+	always @(posedge fclk) if (f0)
 	begin
 		if( int_start )
 			int_n <= 1'b0;

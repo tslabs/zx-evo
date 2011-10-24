@@ -6,7 +6,7 @@ module video_sync (
 // clocks
 	input wire clk,
 	input wire c0,
-	input wire c12,
+	input wire c6,
 
 // video syncs
 	output reg hsync,
@@ -14,8 +14,8 @@ module video_sync (
 	output reg csync,
 
 // video controls
-	output wire tv_pix_stb,
-	output wire vga_pix_stb,
+	output wire tv_pix_start,
+	output wire vga_pix_start,
 	output wire blank,
 	output wire line_start,
 	output wire frame_start,
@@ -61,11 +61,11 @@ module video_sync (
 	reg [8:0] hcount = 0;
 	reg [8:0] vcount = 0;
 
-	always @(posedge clk) if (c12)
+	always @(posedge clk) if (c6)
 		hcount <= hcount == (HPERIOD - 1) ? 0 : hcount + 1;
 
 		
-	always @(posedge clk) if (c12)
+	always @(posedge clk) if (c6)
 		if (hcount == (HPERIOD - 1))
 			vcount <= vcount == (VPERIOD - 1) ? 0 : vcount + 1;
 	
@@ -79,8 +79,8 @@ module video_sync (
 	wire vs = (vcount >= VSYNC_BEG) & (vcount < VSYNC_END);
 	wire vb = (vcount >= VBLNK_BEG) & (vcount < VBLNK_END);
 	
-	assign tv_pix_stb = (hcount == (HBLNK_END - 1));
-	assign vga_pix_stb = ((hcount == (HBLNKV_END - 1)) | (hcount == (HBLNKV_END + HPERIOD/2 - 1))) & c0;
+	assign tv_pix_start = (hcount == (HBLNK_END - 1));
+	assign vga_pix_start = ((hcount == (HBLNKV_END - 1)) | (hcount == (HBLNKV_END + HPERIOD/2 - 1))) & c0;
 
 	assign blank = hb | vb;
 	
@@ -88,7 +88,7 @@ module video_sync (
 	assign vpix = (vcount >= vpix_beg) & (vcount < vpix_end);
 	assign hvpix = hpix & vpix;
 	
-	assign fetch_zx = (hcount >= (hpix_beg - 18)) & (hcount < (hpix_end - 18)) & vpix;
+	assign fetch_zx = (hcount >= (hpix_beg - 16)) & (hcount < (hpix_end - 18)) & vpix;
 	
 	assign line_start = (hcount == (HPERIOD - 1));
 	assign frame_start = (hcount == (HPERIOD - 1)) & (vcount == (VPERIOD -1));
