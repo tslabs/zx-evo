@@ -12,8 +12,8 @@
 // zneg     _/```\___/```\___/```\_______/```\___________/```\___________________/```\___________________________/```\________________
 
 // clock phasing:
-// c3 must be zpos for 7mhz, therefore c1 - zneg
-// for 3.5 mhz, c3 is both zpos and zneg (alternating)
+// c12 must be zpos for 7mhz, therefore c4 - zneg
+// for 3.5 mhz, c12 is both zpos and zneg (alternating)
 
 
 
@@ -62,13 +62,13 @@ module zclock(
 
 
 	input c0,
-	input c2 // syncing signals, taken from arbiter.v and dram.v
+	input c8 // syncing signals, taken from arbiter.v and dram.v
 );
 
 
 	reg prec3_cnt;
-	wire h_prec3_1; // to take every other pulse of c2
-	wire h_prec3_2; // to take every other pulse of c2
+	wire h_prec3_1; // to take every other pulse of c8
+	wire h_prec3_2; // to take every other pulse of c8
 
 	reg [2:0] zcount; // counter for generating 3.5 and 7 MHz z80 clocks
 
@@ -173,18 +173,18 @@ module zclock(
 
 
 
-	// take every other pulse of c2 (make half c2)
-	always @(posedge fclk) if( c2 )
+	// take every other pulse of c8 (make half c8)
+	always @(posedge fclk) if( c8 )
 		prec3_cnt <= ~prec3_cnt;
 
-	assign h_prec3_1 =  prec3_cnt && c2;
-	assign h_prec3_2 = !prec3_cnt && c2;
+	assign h_prec3_1 =  prec3_cnt && c8;
+	assign h_prec3_2 = !prec3_cnt && c8;
 
 
 	assign pre_zpos_35 = h_prec3_2;
 	assign pre_zneg_35 = h_prec3_1;
 
-	assign pre_zpos_70 = c2;
+	assign pre_zpos_70 = c8;
 	assign pre_zneg_70 = c0;
 
 

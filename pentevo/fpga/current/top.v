@@ -117,7 +117,7 @@ module top(
 	output spiint_n
 );
 
-	wire f0, q0, w0, c0, c1, c2, c3, c15;
+	wire f0, q0, w0, c0, c4, c8, c12, c15, clk175;
 
 	clock clock
 	(
@@ -126,9 +126,9 @@ module top(
 		.q0(q0),
 		.w0(w0),
 		.c0(c0),
-		.c1(c1),
-		.c2(c2),
-		.c3(c3),
+		.c4(c4),
+		.c8(c8),
+		.c12(c12),
 		.c15(c15),
 		.clk175(clk175)
 	);
@@ -320,7 +320,7 @@ module top(
 	(
 		.fclk(fclk), .q0(q0), .rst_n(rst_n), .zclk(zclk), .rfsh_n(rfsh_n), .zclk_out(clkz_out),
 		.zpos(zpos), .zneg(zneg),
-		.turbo( {atm_turbo,~(peff7[4])} ), .c2(c2), .c0(c0),
+		.turbo( {atm_turbo,~(peff7[4])} ), .c8(c8), .c0(c0),
 		.zclk_stall( cpu_stall | (|zclk_stall) ), .int_turbo(int_turbo),
 		.external_port(external_port), .iorq_n(iorq_n), .m1_n(m1_n)
 	);
@@ -333,7 +333,8 @@ module top(
 	wire ena_ports;
 
 
-	wire [7:0] border;
+	wire [3:0] border;
+	// wire [7:0] border;
 
 	wire drive_ff;
 
@@ -466,9 +467,9 @@ module top(
 		.zneg(zneg),
 
 		.c0     (c0     ),
-		.c1(c1),
-		.c2 (c2 ),
-		.c3     (c3     ),
+		.c4(c4),
+		.c8 (c8 ),
+		.c12     (c12     ),
 		
 		.za    (a       ),
 		.zd_in (d       ),
@@ -565,9 +566,9 @@ module top(
 	                 .dram_rddata(drddata),
 	                 .dram_wrdata(dwrdata),
 
-	                 .c1(c1),
-	                 .c2 (c2 ),
-	                 .c3     (c3     ),
+	                 .c4(c4),
+	                 .c8 (c8 ),
+	                 .c12     (c12     ),
 
 	                 .go(go),
 	                 .bw(bw),
@@ -592,15 +593,15 @@ module top(
 // under construction drafts
 	wire [7:0] scr_page = {6'b000001, p7ffd[3], 1'b1};
 					 
-					 
 	video_top video_top(
 
 		.clk(fclk),
 		.q0(q0),
+		.w0(w0),
 		.c0(c0),
-		.c1(c1),
-		.c2(c2),
-		.c3(c3),
+		.c4(c4),
+		.c8(c8),
+		.c12(c12),
 		.c15(c15),
 
 		.vred(vred),
@@ -610,7 +611,7 @@ module top(
 		.vsync(vvsync),
 		.csync(vcsync),
 
-		.border(border),
+		.border({1'b0, border[1], 1'b0, border[2], 1'b0, border[0], 2'b0}),
 		.scr_page(scr_page),
 
 		.vga_on(cfg_vga_on),

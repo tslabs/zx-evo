@@ -22,9 +22,9 @@ module zmem(
 	input  wire zneg, // strobes which show positive and negative edges of zclk
 
 	input  wire c0,      // DRAM synchronization
-	input  wire c1, //
-	input  wire c2,  //
-	input  wire c3,      //
+	input  wire c4, //
+	input  wire c8,  //
+	input  wire c12,      //
 
 
 	input  wire [15:0] za,
@@ -179,7 +179,7 @@ module zmem(
 	assign ramwr = ramreq & (~wr_n);
 
 	always @(posedge fclk) if (q0)
-	if( c3 && (!cpu_stall) )
+	if( c12 && (!cpu_stall) )
 	begin
 		ramrd_reg <= ramrd;
 		ramwr_reg <= ramwr;
@@ -215,15 +215,15 @@ module zmem(
 	// wait tables: 
 	//
 	// M1 opcode fetch, dram_beg coincides with:
-	// c3:      +3
-	// c2:  +4
-	// c1: +5
+	// c12:      +3
+	// c8:  +4
+	// c4: +5
 	// c0:      +6
 	//
 	// memory read, dram_beg coincides with:
-	// c3:      +2
-	// c2:  +3
-	// c1: +4
+	// c12:      +2
+	// c8:  +3
+	// c4: +4
 	// c0:      +5
 	//
 	// memory write: no wait
@@ -235,7 +235,7 @@ module zmem(
 	assign stall14_ini = dram_beg && ( (!cpu_next) || opfetch || memrd ); // no wait at all in write cycles, if next dram cycle is available
 
 
-	// memrd, opfetch - wait till c3 & cpu_next,
+	// memrd, opfetch - wait till c12 & cpu_next,
 	// memwr - wait till cpu_next
 	assign stall14_cyc = memwr ? (!cpu_next) : stall14_cycrd;
 	//
@@ -244,9 +244,9 @@ module zmem(
 		stall14_cycrd <= 1'b0;
 	else // posedge fclk
 	begin
-		if( cpu_next && c3 )
+		if( cpu_next && c12 )
 			stall14_cycrd <= 1'b0;
-		else if( dram_beg && ( (!c3) || (!cpu_next) ) && (opfetch || memrd) )
+		else if( dram_beg && ( (!c12) || (!cpu_next) ) && (opfetch || memrd) )
 			stall14_cycrd <= 1'b1;
 	end
 	//
@@ -255,9 +255,9 @@ module zmem(
 		stall14_fin <= 1'b0;
 	else // posedge fclk
 	begin
-		if( stall14_fin && ( (opfetch&c2) || (memrd&c1) ) )
+		if( stall14_fin && ( (opfetch&c8) || (memrd&c4) ) )
 			stall14_fin <= 1'b0;
-		else if( cpu_next && c3 && cpu_req && (opfetch || memrd) )
+		else if( cpu_next && c12 && cpu_req && (opfetch || memrd) )
 			stall14_fin <= 1'b1;
 	end
 
@@ -274,7 +274,7 @@ module zmem(
 	always @(posedge fclk, negedge rst_n)
 	if( !rst_n )
 		pending_cpu_req <= 1'b0;
-	else if( cpu_next && c3 )
+	else if( cpu_next && c12 )
 		pending_cpu_req <= 1'b0;
 	else if( dram_beg )
 		pending_cpu_req <= 1'b1;
