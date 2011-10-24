@@ -15,17 +15,17 @@
 // added cpu_next signal (shows whether next DRAM cycle CAN be grabbed by CPU)
 //
 // Now it is a REQUIREMENT for 'go' signal only starting and ending on
-// beginning of DRAM cycle (i.e. right after 'c12' strobe).
+// beginning of DRAM cycle (i.e. right after 'c6' strobe).
 //
 
 
 // 13.06.2011:
-// Придётся потребовать, чтоб go устанавливался сразу после c12 (у меня [lvd] это так).
+// Придётся потребовать, чтоб go устанавливался сразу после c6 (у меня [lvd] это так).
 // это для того, чтобы процессор на 14мгц мог заранее и в любой момент знать, на
 // сколько завейтиться. Вместо cpu_ack введем другой сигнал, который в течение всего
 // драм-цикла будет показывать, чей может быть следующий цикл - процессора или только
 // видео. По сути это и будет также cpu_ack, но валидный в момент cpu_req (т.е.
-// в момент c12) и ранее.
+// в момент c6) и ранее.
 
 // 12.06.2011:
 // проблема: если цпу просит цикл чтения, а его дать не могут,
@@ -75,7 +75,7 @@
 
 module arbiter(
 
-	input clk, q0,
+	input clk, f0,
 	input rst_n,
 
 	// dram.v interface
@@ -83,15 +83,15 @@ module arbiter(
 	output reg        dram_req,    // dram request
 	output reg        dram_rnw,    // Read-NotWrite
 	input             dram_c0,   // cycle begin
-	input             dram_rrdy,   // read data ready (coincides with c12)
+	input             dram_rrdy,   // read data ready (coincides with c6)
 	output      [1:0] dram_bsel,   // positive bytes select: bsel[1] for wrdata[15:8], bsel[0] for wrdata[7:0]
 	input      [15:0] dram_rddata, // data just read
 	output     [15:0] dram_wrdata, // data to be written
 
 
-	input reg c12,      // regenerates this signal: end of DRAM cycle. c12 is one-cycle positive pulse just before c0 pulse
-	input reg c8,  // one clock earlier c12
-	input reg c4, // one more earlier
+	input reg c6,      // regenerates this signal: end of DRAM cycle. c6 is one-cycle positive pulse just before c0 pulse
+	input reg c4,  // one clock earlier c6
+	input reg c2, // one more earlier
 
 
 	input go, // start video access blocks
@@ -105,7 +105,7 @@ module arbiter(
 	output [15:0] video_data,   // read video data which is valid only during video_strobe==1 because video_data
 	                            // is just wires to the dram.v's rddata signals
 	output reg    video_strobe, // positive one-cycle strobe as soon as there is next video_data available.
-	                            // if there is video_strobe, it coincides with c12 signal
+	                            // if there is video_strobe, it coincides with c6 signal
 	output reg    video_next,   // on this signal you can change video_addr; it is one clock leading the video_strobe
 
 
@@ -161,16 +161,16 @@ module arbiter(
 	assign c0 = dram_c0; // just alias
 
 	// make cycle strobe signals
-	// always @(posedge clk) if (q0)
+	// always @(posedge clk) if (f0)
 	// begin
-		// c4 <= c0;
-		// c8  <= c4;
-		// c12      <= c8;
+		// c2 <= c0;
+		// c4  <= c2;
+		// c6      <= c4;
 	// end
 
 
 	// track blk_rem counter: how many cycles left to the end of block (7..0)
-	always @(posedge clk) if( c12 )
+	always @(posedge clk) if( c6 )
 	begin
 		blk_rem <= blk_nrem;
 
@@ -191,7 +191,7 @@ module arbiter(
 	// track vid_rem counter
 	assign vidmax = (3'b001) << bw; // 1,2,4 or 8 - just to know how many cycles to perform
 
-	always @(posedge clk) if( c12 )
+	always @(posedge clk) if( c6 )
 	begin
 		vid_rem <= vid_nrem;
 	end
@@ -279,7 +279,7 @@ module arbiter(
 
 
 	// just current cycle register
-	always @(posedge clk) if( c12 )
+	always @(posedge clk) if( c6 )
 	begin
 		curr_cycle <= next_cycle;
 	end
@@ -319,27 +319,27 @@ module arbiter(
 	// generation of read strobes: for video and cpu
 
 
-	always @(posedge clk) if( c12 )
+	always @(posedge clk) if( c6 )
 		cpu_rnw_r <= cpu_rnw;
 
 
-	always @(posedge clk) if (q0)
+	always @(posedge clk) if (f0)
 	begin
-		if( (curr_cycle==CYC_CPU) && cpu_rnw_r && c8 )
+		if( (curr_cycle==CYC_CPU) && cpu_rnw_r && c4 )
 			cpu_strobe <= 1'b1;
 		else
 			cpu_strobe <= 1'b0;
 	end
 
 
-	always @(posedge clk) if (q0)
+	always @(posedge clk) if (f0)
 	begin
-		if( (curr_cycle==CYC_VIDEO) && c8 )
+		if( (curr_cycle==CYC_VIDEO) && c4 )
 			video_strobe <= 1'b1;
 		else
 			video_strobe <= 1'b0;
 
-		if( (curr_cycle==CYC_VIDEO) && c4 )
+		if( (curr_cycle==CYC_VIDEO) && c2 )
 			video_next <= 1'b1;
 		else
 			video_next <= 1'b0;

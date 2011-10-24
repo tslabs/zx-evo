@@ -6,7 +6,7 @@
 
 module sound(
 
-	input  wire       clk, q0, w0,
+	input  wire       clk, f0, q0,
 
 	input  wire [7:0] din,
 
@@ -31,7 +31,7 @@ module sound(
 
 
 
-	always @(posedge clk) if (q0)
+	always @(posedge clk) if (f0)
 	begin
 /*		if( beeper_wr ) */
         if( beeper_wr && (beep_bit!=beep_bit_old) )
@@ -53,7 +53,7 @@ module sound(
 	if( covox_wr )
 			val <= din;
 
-	always @(posedge clk) if (w0)		// 14 MHz strobe, Fpwm = 54 kHz
+	always @(posedge clk) if (q0)		// 14 MHz strobe, Fpwm = 54 kHz
 		ctr <= ctr + 1;
 
 	wire covox_bit = ( ctr < val );
@@ -61,7 +61,7 @@ module sound(
 
 	bothedge trigger
 	(
-		.clk( clk ), .q0(q0),
+		.clk( clk ), .f0(f0),
 
 		.d( mx_beep_n_covox ? beep_bit : covox_bit ),
 
@@ -78,7 +78,7 @@ endmodule
 // both-edge trigger emulator
 module bothedge(
 
-	input  wire clk, q0,
+	input  wire clk, f0,
 
 	input  wire d,
 
@@ -89,11 +89,11 @@ module bothedge(
 
 	assign q = trgp ^ trgn;
 
-	always @(posedge clk) if (q0)
+	always @(posedge clk) if (f0)
 	if( d!=q )
 		trgp <= ~trgp;
 
-	always @(negedge clk) if (q0)
+	always @(negedge clk) if (f0)
 	if( d!=q )
 		trgn <= ~trgn;
 

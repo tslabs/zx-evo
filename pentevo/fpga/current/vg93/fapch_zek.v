@@ -3,7 +3,7 @@
 
 module fapch_zek
 (
-	input  wire fclk, q0,
+	input  wire fclk, f0,
 
 	input  wire rdat_n,
 
@@ -16,7 +16,7 @@ module fapch_zek
 
 	reg rdat_n_r;
 
-	always @ (posedge fclk) if (q0)
+	always @ (posedge fclk) if (f0)
 	begin
 		rdat_n_r <= rdat_n;
 
@@ -29,7 +29,7 @@ module fapch_zek
 	// rawr
 	reg [4:0] rawr_sr;
 
-	always @ (posedge fclk) if (q0)
+	always @ (posedge fclk) if (f0)
 	begin
 	    rawr_sr <= { rawr_sr[3:0], rawr_sync };
 	    vg_rawr <= !(rawr_sr[4] && !rawr_sr[0] ); // rawr 140ns
@@ -41,7 +41,7 @@ module fapch_zek
 	wire[5:0] shift = { delta[5], delta[5], delta[4:1] }; // sign div
 	wire[5:0] inc   = rawr_sr[1:0] == 2'b10 ? shift : 1;
 
-	always @ (posedge fclk) if (q0)
+	always @ (posedge fclk) if (f0)
 	begin
 	    if (counter < 55)
 	        counter <= counter + inc;

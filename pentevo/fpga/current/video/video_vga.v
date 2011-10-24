@@ -6,7 +6,7 @@ module video_vga (
 // clocks
 	input wire clk,
 	input wire c0,
-	input wire w0,
+	input wire q0,
 
 // video data
 	input  wire [7:0] vga_in,
@@ -15,6 +15,7 @@ module video_vga (
 // video controls
 	input wire start_in,
 	input wire start_out,
+	input wire line_start,
 	input wire blank
 
 );
@@ -27,11 +28,11 @@ module video_vga (
 	always @(posedge clk) if (c0)
 		cnt_in <= start_in ? 0 : cnt_in + 1;
 		
-	always @(posedge clk) if (w0)
+	always @(posedge clk) if (q0)
 		cnt_out <= start_out ? 0 : cnt_out + 1;
 
 	always @(posedge clk) if (c0)
-		if (start_in)
+		if (line_start)
 			sel <= ~sel;
 
 			

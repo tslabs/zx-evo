@@ -7,7 +7,7 @@
 module znmi
 (
 	input  wire       rst_n,
-	input  wire       fclk, q0,
+	input  wire       fclk, f0,
 
 	input  wire       zpos,
 	input  wire       zneg,
@@ -39,7 +39,7 @@ module znmi
 	reg pending_clr;
 
 
-	always @(posedge fclk) if (q0)
+	always @(posedge fclk) if (f0)
 		set_nmi_r <= set_nmi;
 	//
 	assign set_nmi_now = (set_nmi_r[0] && (!set_nmi[0])) ||
@@ -60,13 +60,13 @@ module znmi
 
 
 
-	always @(posedge fclk) if (q0)
+	always @(posedge fclk) if (f0)
 	if( clr_nmi )
 		clr_count <= 2'd3;
 	else if( zpos && (!rfsh_n) && (clr_count>2'd0) )
 		clr_count <= clr_count - 2'd1;
 
-	always @(posedge fclk) if (q0)
+	always @(posedge fclk) if (f0)
 	if( clr_nmi )
 		pending_clr <= 1'b1;
 	else if( clr_count==2'd0 )

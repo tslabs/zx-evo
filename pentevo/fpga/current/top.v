@@ -117,19 +117,18 @@ module top(
 	output spiint_n
 );
 
-	wire f0, q0, w0, c0, c4, c8, c12, c15, clk175;
+	wire f0, q0, c0, c2, c4, c6, c7, clk175;
 
 	clock clock
 	(
 		.clk(fclk),
 		.f0(f0),
 		.q0(q0),
-		.w0(w0),
 		.c0(c0),
+		.c2(c2),
 		.c4(c4),
-		.c8(c8),
-		.c12(c12),
-		.c15(c15),
+		.c6(c6),
+		.c7(c7),
 		.clk175(clk175)
 	);
 
@@ -220,7 +219,7 @@ module top(
 	// RESETTER
 	wire genrst;
 
-	resetter myrst( .clk(fclk), .q0(q0),
+	resetter myrst( .clk(fclk), .f0(f0),
 	                .rst_in_n(~genrst),
 	                .rst_out_n(rst_n) );
 	defparam myrst.RST_CNT_SIZE = 6;
@@ -318,9 +317,9 @@ module top(
 
 	zclock zclock
 	(
-		.fclk(fclk), .q0(q0), .rst_n(rst_n), .zclk(zclk), .rfsh_n(rfsh_n), .zclk_out(clkz_out),
+		.fclk(fclk), .f0(f0), .rst_n(rst_n), .zclk(zclk), .rfsh_n(rfsh_n), .zclk_out(clkz_out),
 		.zpos(zpos), .zneg(zneg),
-		.turbo( {atm_turbo,~(peff7[4])} ), .c8(c8), .c0(c0),
+		.turbo( {atm_turbo,~(peff7[4])} ), .c4(c4), .c0(c0),
 		.zclk_stall( cpu_stall | (|zclk_stall) ), .int_turbo(int_turbo),
 		.external_port(external_port), .iorq_n(iorq_n), .m1_n(m1_n)
 	);
@@ -391,7 +390,7 @@ module top(
 
 			atm_pager #( .ADDR(i) )
 			          atm_pager( .rst_n(rst_n),
-			                     .fclk (fclk), .q0(q0),
+			                     .fclk (fclk), .f0(f0),
 			                     .zpos (zpos),
 			                     .zneg (zneg),
 
@@ -441,7 +440,7 @@ module top(
 
 	zdos zdos( .rst_n(rst_n),
 
-	           .fclk(fclk), .q0(q0),
+	           .fclk(fclk), .f0(f0),
 
 	           .dos_turn_on ( |dos_turn_on  ),
 	           .dos_turn_off( |dos_turn_off ),
@@ -460,16 +459,16 @@ module top(
 
 	zmem z80mem
 	(
-		.fclk (fclk), .q0(q0),
+		.fclk (fclk), .f0(f0),
 		.rst_n(rst_n),
 		
 		.zpos(zpos),
 		.zneg(zneg),
 
 		.c0     (c0     ),
-		.c4(c4),
-		.c8 (c8 ),
-		.c12     (c12     ),
+		.c2(c2),
+		.c4 (c4 ),
+		.c6     (c6     ),
 		
 		.za    (a       ),
 		.zd_in (d       ),
@@ -525,7 +524,7 @@ module top(
 
 
 
-	dram dram( .clk(fclk), .q0(q0),
+	dram dram( .clk(fclk), .f0(f0),
 	           .rst_n(rst_n),
 
 	           .addr(daddr),
@@ -554,7 +553,7 @@ module top(
 	wire video_strobe;
 	wire video_next;
 
-	arbiter dramarb( .clk(fclk), .q0(q0),
+	arbiter dramarb( .clk(fclk), .f0(f0),
 	                 .rst_n(rst_n),
 
 	                 .dram_addr(daddr),
@@ -566,9 +565,9 @@ module top(
 	                 .dram_rddata(drddata),
 	                 .dram_wrdata(dwrdata),
 
-	                 .c4(c4),
-	                 .c8 (c8 ),
-	                 .c12     (c12     ),
+	                 .c2(c2),
+	                 .c4 (c4 ),
+	                 .c6     (c6     ),
 
 	                 .go(go),
 	                 .bw(bw),
@@ -596,13 +595,13 @@ module top(
 	video_top video_top(
 
 		.clk(fclk),
+		.f0(f0),
 		.q0(q0),
-		.w0(w0),
 		.c0(c0),
+		.c2(c2),
 		.c4(c4),
-		.c8(c8),
-		.c12(c12),
-		.c15(c15),
+		.c6(c6),
+		.c7(c7),
 
 		.vred(vred),
 		.vgrn(vgrn),
@@ -611,7 +610,7 @@ module top(
 		.vsync(vvsync),
 		.csync(vcsync),
 
-		.border({1'b0, border[1], 1'b0, border[2], 1'b0, border[0], 2'b0}),
+		.border({border[1], 1'b0, border[2], 1'b0, border[0], 3'b0}),
 		.scr_page(scr_page),
 
 		.vga_on(cfg_vga_on),
@@ -629,7 +628,7 @@ module top(
 
 
 	slavespi slavespi(
-		.fclk(fclk), .q0(q0), .rst_n(rst_n),
+		.fclk(fclk), .f0(f0), .rst_n(rst_n),
 
 		.spics_n(spics_n), .spidi(spidi),
 		.spido(spido), .spick(spick),
@@ -647,7 +646,7 @@ module top(
 		.config0( { not_used[7:4], beeper_mux, tape_read, set_nmi[0], cfg_vga_on} )
 	);
 
-	zkbdmus zkbdmus( .fclk(fclk), .q0(q0), .rst_n(rst_n),
+	zkbdmus zkbdmus( .fclk(fclk), .f0(f0), .rst_n(rst_n),
 	                 .kbd_in(kbd_data), .kbd_stb(kbd_stb),
 	                 .mus_in(mus_data), .mus_xstb(mus_xstb),
 	                 .mus_ystb(mus_ystb), .mus_btnstb(mus_btnstb),
@@ -657,7 +656,7 @@ module top(
 	               );
 
 
-	zports zports( .zclk(zclk), .fclk(fclk), .q0(q0), .rst_n(rst_n), .zpos(zpos), .zneg(zneg),
+	zports zports( .zclk(zclk), .fclk(fclk), .f0(f0), .rst_n(rst_n), .zpos(zpos), .zneg(zneg),
 	               .din(d), .dout(dout_ports), .dataout(ena_ports),
 	               .a(a), .iorq_n(iorq_n), .rd_n(rd_n), .wr_n(wr_n), .porthit(porthit),
 	               .ay_bdir(ay_bdir), .ay_bc1(ay_bc1), .border(border),
@@ -729,7 +728,7 @@ module top(
 
 
 	zint zint(
-		.fclk(fclk), .q0(q0),
+		.fclk(fclk), .f0(f0),
 		.zpos(zpos),
 		.zneg(zneg),
 
@@ -744,7 +743,7 @@ module top(
 	znmi znmi
 	(
 		.rst_n(rst_n),
-		.fclk(fclk), .q0(q0),
+		.fclk(fclk), .f0(f0),
 		.zpos(zpos),
 		.zneg(zneg),
 
@@ -777,7 +776,7 @@ module top(
 	assign vg_a[0] = vg_ddrv[0] ? 1'b1 : 1'b0; // possibly open drain?
 	assign vg_a[1] = vg_ddrv[1] ? 1'b1 : 1'b0;
 
-	vg93 vgshka( .zclk(zclk), .rst_n(rst_n), .fclk(fclk), .q0(q0), .vg_clk(vg_clk),
+	vg93 vgshka( .zclk(zclk), .rst_n(rst_n), .fclk(fclk), .f0(f0), .vg_clk(vg_clk),
 	             .vg_res_n(vg_res_n), .din(d), .intrq(intrq), .drq(drq), .vg_wrFF(vg_wrFF),
 	             .vg_hrdy(vg_hrdy), .vg_rclk(vg_rclk), .vg_rawr(vg_rawr), .vg_a(vg_ddrv),
 	             .vg_wrd(vg_wrd), .vg_side(vg_side), .step(step), .vg_sl(vg_sl), .vg_sr(vg_sr),
@@ -787,7 +786,7 @@ module top(
 
 
 
-	spi2 zspi( .clock(fclk), .q0(q0), .sck(sdclk), .sdo(sddo), .sdi(sddi), .start(sd_start),
+	spi2 zspi( .clock(fclk), .f0(f0), .sck(sdclk), .sdo(sddo), .sdi(sddi), .start(sd_start),
 	           .speed(2'b00), .din(sd_datain), .dout(sd_dataout) );
 
 
@@ -800,7 +799,7 @@ module top(
 
 	sound sound(
 
-		.clk(fclk), .q0(q0), .w0(w0),
+		.clk(fclk), .f0(f0), .q0(q0),
 
 		.din(d),
 

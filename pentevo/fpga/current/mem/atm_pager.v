@@ -12,7 +12,7 @@ module atm_pager(
 
 	input  wire rst_n,
 
-	input  wire fclk, q0,
+	input  wire fclk, f0,
 	input  wire zpos,
 	input  wire zneg,
 
@@ -84,7 +84,7 @@ module atm_pager(
 
 	// paging function, does not set pages, ramnrom, dos_7ffd
 	//
-	always @(posedge fclk) if (q0)
+	always @(posedge fclk) if (f0)
 	begin
 		if( pager_off )
 		begin // atm no pager mode - each window has same ROM
@@ -141,7 +141,7 @@ module atm_pager(
 
 	// port reading: sets pages, ramnrom, dos_7ffd
 	//
-	always @(posedge fclk) if (q0) if( atmF7_wr )
+	always @(posedge fclk) if (f0) if( atmF7_wr )
 	begin
 		if( za[15:14]==ADDR )
 		begin
@@ -175,12 +175,12 @@ module atm_pager(
 	end
 `endif
 
-	always @(posedge fclk) if (q0) if( zpos )
+	always @(posedge fclk) if (f0) if( zpos )
 	begin
 		m1_n_reg <= m1_n;
 	end
 
-	always @(posedge fclk) if (q0) if( zneg )
+	always @(posedge fclk) if (f0) if( zneg )
 	begin
 		mreq_n_reg <= mreq_n;
 	end
@@ -203,7 +203,7 @@ module atm_pager(
 	// stall Z80 for some time when dos turning on to allow ROM chip to supply new data
 	// this can be important at 7 or even 14 mhz. minimum stall time is
 	// 3 clocks @ 28 MHz
-	always @(posedge fclk) if (q0)
+	always @(posedge fclk) if (f0)
 	begin
 		// переключение в ДОС пзу происходит за полтакта z80 до того, как
 		// z80 считает данные. т.е. у пзу полтакта для выдачи новых данных.

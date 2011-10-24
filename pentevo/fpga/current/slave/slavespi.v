@@ -7,7 +7,7 @@
 
 module slavespi(
 
-	input  wire fclk, q0,
+	input  wire fclk, f0,
 	input  wire rst_n,
 
 	input  wire spics_n, // avr SPI iface
@@ -57,7 +57,7 @@ module slavespi(
 	reg [1:0] spido_sync;
 	reg [2:0] spick_sync;
 	//
-	always @(posedge fclk) if (q0)
+	always @(posedge fclk) if (f0)
 	begin
 		spics_n_sync[2:0] <= { spics_n_sync[1:0], spics_n };
 		spido_sync  [1:0] <= { spido_sync    [0], spido   };
@@ -115,7 +115,7 @@ module slavespi(
 
 	// register number
 	//
-	always @(posedge fclk) if (q0)
+	always @(posedge fclk) if (f0)
 	begin
 		if( scs_n_01 )
 		begin
@@ -141,7 +141,7 @@ module slavespi(
 		else data_in = 8'hFF;
 	end
 	//
-	always @(posedge fclk) if (q0)
+	always @(posedge fclk) if (f0)
 	begin
 		if( scs_n_01 || scs_n_10 ) // both edges
 		begin
@@ -177,7 +177,7 @@ module slavespi(
 
 	// registers data-in
 	//
-	always @(posedge fclk) if (q0)
+	always @(posedge fclk) if (f0)
 	begin
 		if( !scs_n && sel_kbdreg && sck_01 )
 			kbd_reg[39:0] <= { sdo, kbd_reg[39:1] };
