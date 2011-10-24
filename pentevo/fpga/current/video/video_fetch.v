@@ -26,13 +26,11 @@ module video_fetch (
 	input  wire        video_strobe,
 	output wire [20:0] video_addr,
 	input  wire [15:0] video_data,
-	output wire [ 1:0] video_bw,
-	output wire        video_go
+	output wire [ 1:0] video_bw
 		
 );
 
 
-	assign video_go = fetch;
 	assign video_bw = 2'b00;
 	assign video_addr = addr_zx;
 	

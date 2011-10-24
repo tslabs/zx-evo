@@ -28,8 +28,6 @@ module video_adr (
 );
 
 	
-	assign ccc = col; //!!!
-
 	wire [8:0] cstart = 0;
 	wire [8:0] rstart = 0;
 
