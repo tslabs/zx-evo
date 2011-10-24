@@ -332,8 +332,7 @@ module top(
 	wire ena_ports;
 
 
-	wire [3:0] border;
-	// wire [7:0] border;
+	wire [7:0] border;
 
 	wire drive_ff;
 
@@ -610,8 +609,9 @@ module top(
 		.vsync(vvsync),
 		.csync(vcsync),
 
-		.border({border[1], 1'b0, border[2], 1'b0, border[0], 3'b0}),
+		.border(border),
 		.scr_page(scr_page),
+		.vconfig(vconfig),
 
 		.vga_on(cfg_vga_on),
 
@@ -655,6 +655,22 @@ module top(
 	                 .mus_data(mus_port_data)
 	               );
 
+		wire [7:0]	   cpuconfig;
+		wire [7:0]	   romconfig;
+		wire [7:0]	   vpage	;
+		wire [7:0]	   page00	;
+		wire [7:0]	   page01	;
+		wire [7:0]	   page10	;
+		wire [7:0]	   page11	;
+		wire [7:0]	   vconfig	;
+		wire [7:0]	   faddr	;
+		wire [7:0]	   fpage	;
+		wire [7:0]	   tpage	;
+		wire [7:0]	   tgpage0	;
+		wire [7:0]	   tgpage1	;
+		wire [7:0]	   tmctrl	;
+		wire [7:0]	   hsint	;
+				   
 
 	zports zports( .zclk(zclk), .fclk(fclk), .f0(f0), .rst_n(rst_n), .zpos(zpos), .zneg(zneg),
 	               .din(d), .dout(dout_ports), .dataout(ena_ports),
@@ -667,7 +683,23 @@ module top(
 	               .idein(idein), .ideout(ideout), .idedataout(idedataout),
 	               .ide_a(ide_a), .ide_cs0_n(ide_cs0_n), .ide_cs1_n(ide_cs1_n),
 	               .ide_wr_n(ide_wr_n), .ide_rd_n(ide_rd_n),
-
+					
+					.cpuconfig	(cpuconfig	),
+					.romconfig	(romconfig	),
+					.vpage		(vpage		),
+					.page00		(page00		),
+					.page01		(page01		),
+					.page10		(page10		),
+					.page11		(page11		),
+					.vconfig	(vconfig	),
+					.faddr	  	(faddr	  	),
+					.fpage	  	(fpage	  	),
+					.tpage	  	(tpage	  	),
+					.tgpage0	(tgpage0	),
+					.tgpage1	(tgpage1	),
+					.tmctrl	  	(tmctrl	  	),
+					.hsint	  	(hsint	  	),
+					
 	               .keys_in(kbd_port_data),
 	               .mus_in (mus_port_data),
 	               .kj_in  (kj_port_data ),

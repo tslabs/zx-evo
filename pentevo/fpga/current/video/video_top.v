@@ -26,6 +26,7 @@ module video_top (
 // ZX ports
 	input wire [7:0] border,
 	input wire [7:0] scr_page,
+	input wire [7:0] vconfig,
 	
 // ZX controls
 	output wire int_start,
@@ -45,17 +46,35 @@ module video_top (
 
 
 // instantiations
-
+	video_mode video_mode (
+		.vconfig	(vconfig	),
+		.hpix_beg	(hpix_beg	),
+		.hpix_end	(hpix_end	),
+		.vpix_beg	(vpix_beg	),
+		.vpix_end	(vpix_end	)
+	);
+	
+	wire [8:0] hpix_beg;
+	wire [8:0] hpix_end;
+	wire [8:0] vpix_beg;
+	wire [8:0] vpix_end;
+	
+	
 	video_sync video_sync (
 		.clk			(clk			),
 		.c0				(c0				),
 		.c6				(c6				),
+		.hpix_beg		(hpix_beg		),
+		.hpix_end		(hpix_end		),
+		.vpix_beg		(vpix_beg		),
+		.vpix_end		(vpix_end		),
 		.hsync			(hsync			),
 		.vsync			(vsync			),
 		.csync			(csync			),
 		.tv_pix_start	(tv_pix_start	),
 		.vga_pix_start	(vga_pix_start	),
 		.blank			(blank			),
+		.vga_line		(vga_line		),
 		.frame_start	(frame_start	),
 		.line_start		(line_start		),
 		.pix_start		(pix_start		),
@@ -63,8 +82,7 @@ module video_top (
 		.hpix			(hpix			),
 		.vpix			(vpix			),
 		.hvpix			(hvpix			),
-		.fetch_zx		(fetch_zx		)
-		
+		.video_go		(video_go		)
 	);
 
 	wire tv_pix_start;
@@ -76,7 +94,6 @@ module video_top (
 	wire hpix;
 	wire vpix;
 	wire hvpix;
-	wire fetch_zx;
 	
 	
 	
@@ -93,10 +110,8 @@ module video_top (
 		.addr_zx_atr	(addr_zx_atr	),
 		.addr_256c		(addr_256c  	),
 		.video_next		(video_next		)
-				
 	);
 
-	wire [31:0] cccc = {2'b01, addr_zx_atr[2:0], 3'b111, 2'b01, addr_zx_atr[2:0], 3'b111, addr_zx_gfx[15:0]};	//!!!
 	
 	wire mode_zx = 1;
 	wire mode_256c = 0;
@@ -110,22 +125,19 @@ module video_top (
 		.c0				(c0				),
 		.mode_zx		(mode_zx		),
 		.mode_256c		(mode_256c		),
-		.fetch			(fetch			),
 		.addr_zx_gfx	(addr_zx_gfx	),
 		.addr_zx_atr	(addr_zx_atr	),
 		.addr_256c		(addr_256c  	),
 		.video_strobe	(video_strobe	),
 		.video_addr		(video_addr		),
 		.video_data		(video_data		),
-		// .video_data 	(cccc	),		//!!!
 		.video_bw		(video_bw		),
-		.video_go	 	(video_go		),
 		.data_out		(fetch_data		)
 	);
 
 	wire [31:0] fetch_data;
-	wire fetch = fetch_zx;
-		
+
+	
 	video_render video_render (
 		.clk		(clk      	),
 		.c0			(c0	      	),
@@ -137,17 +149,10 @@ module video_top (
 		.mode_zx 	(mode_zx	),
 		.mode_256c	(mode_256c	),	 
 		.data_in 	(fetch_data	),
-		// .data_in 	(cccc	),		//!!!
 		.border 	(border		),
-		.data_out 	(tvdata		),
-		.ddd 		(ddd		)	//!!!
+		.data_out 	(tvdata		)
 	);
 		
-	wire [7:0] vdata;
-	// wire [7:0] vdata = {ddd, fetch_stb, video_strobe, hpix, ccc[1:0], 2'b0}; //!!!
-	
-	wire ddd;	//!!!
-	
 	
 	video_vga video_vga (
 		.clk		(clk			),
@@ -167,6 +172,7 @@ module video_top (
 	video_out video_out (
 		.clk		(clk		),
 		.vga_on		(vga_on		),
+		.vga_line	(vga_line	),
 		.vred		(vred		),
 	    .vgrn		(vgrn		),
 	    .vblu		(vblu		),

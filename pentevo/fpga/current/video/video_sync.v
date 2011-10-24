@@ -8,22 +8,29 @@ module video_sync (
 	input wire c0,
 	input wire c6,
 
+// video parameters
+	input wire [8:0] hpix_beg,
+	input wire [8:0] hpix_end,
+	input wire [8:0] vpix_beg,
+	input wire [8:0] vpix_end,
+	
 // video syncs
 	output reg hsync,
 	output reg vsync,
 	output reg csync,
 
 // video controls
-	output wire tv_pix_start,
-	output wire vga_pix_start,
-	output wire blank,
-	output wire line_start,
-	output wire frame_start,
 	output wire hpix,
 	output wire vpix,
 	output wire hvpix,
-	output wire fetch_zx,
+	output wire blank,
+	output wire vga_line,
+	output wire line_start,
+	output wire frame_start,
+	output wire tv_pix_start,
+	output wire vga_pix_start,
 	output wire pix_start,
+	output wire video_go,
 	
 // ZX controls
 	output wire int_start
@@ -51,12 +58,6 @@ module video_sync (
 	localparam VPERIOD   	= 9'd320;	// fucking pentagovn!!!
 
 
-	wire [8:0] hpix_beg = 9'd140;	// 256
-	wire [8:0] hpix_end = 9'd396;	// 256
-	wire [8:0] vpix_beg = 9'd080;	// 192
-	wire [8:0] vpix_end = 9'd272;	// 192
-	
-	
 // counters
 	reg [8:0] hcount = 0;
 	reg [8:0] vcount = 0;
@@ -84,11 +85,13 @@ module video_sync (
 
 	assign blank = hb | vb;
 	
+	assign vga_line = (hcount >= HPERIOD/2);
+	
 	assign hpix = (hcount >= hpix_beg) & (hcount < hpix_end);
 	assign vpix = (vcount >= vpix_beg) & (vcount < vpix_end);
 	assign hvpix = hpix & vpix;
 	
-	assign fetch_zx = (hcount >= (hpix_beg - 16)) & (hcount < (hpix_end - 18)) & vpix;
+	assign video_go = (hcount >= (hpix_beg - 16)) & (hcount < (hpix_end - 18)) & vpix;
 	
 	assign line_start = (hcount == (HPERIOD - 1));
 	assign frame_start = (hcount == (HPERIOD - 1)) & (vcount == (VPERIOD -1));
