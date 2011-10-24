@@ -39,26 +39,33 @@ module video_top (
 	output wire [ 1:0] video_bw,
 	output wire        video_go, 
 	
-// controls
+// video controls
 	input wire vga_on
 	
 );
 
 
-// instantiations
 	video_mode video_mode (
 		.vconfig	(vconfig	),
 		.hpix_beg	(hpix_beg	),
 		.hpix_end	(hpix_end	),
 		.vpix_beg	(vpix_beg	),
-		.vpix_end	(vpix_end	)
+		.vpix_end	(vpix_end	),
+        .go_beg     (go_beg     ),
+        .go_end     (go_end     ),
+        .cnt_col    (cnt_col    ),
+        .cnt_row    (cnt_row    ),
+		.video_addr	(video_addr	),
+		.video_bw   (video_bw   )
 	);
 	
 	wire [8:0] hpix_beg;
 	wire [8:0] hpix_end;
 	wire [8:0] vpix_beg;
 	wire [8:0] vpix_end;
-	
+    wire [8:0] go_beg;
+	wire [8:0] go_end;
+
 	
 	video_sync video_sync (
 		.clk			(clk			),
@@ -68,6 +75,8 @@ module video_top (
 		.hpix_end		(hpix_end		),
 		.vpix_beg		(vpix_beg		),
 		.vpix_end		(vpix_end		),
+        .go_beg         (go_beg         ),
+        .go_end         (go_end         ),        
 		.hsync			(hsync			),
 		.vsync			(vsync			),
 		.csync			(csync			),
@@ -96,46 +105,31 @@ module video_top (
 	wire hvpix;
 	
 	
-	
-	video_adr video_adr (
+	video_cntr video_cntr (
 		.clk			(clk			),
 		.c4				(c4				),
 		.line_start		(line_start		),
 		.frame_start	(frame_start	),
-		.mode_zx		(mode_zx		),
-		.mode_256c		(mode_256c		),
 		.vpix			(vpix			),
-		.scr_page		(scr_page		),
-		.addr_zx_gfx	(addr_zx_gfx	),
-		.addr_zx_atr	(addr_zx_atr	),
-		.addr_256c		(addr_256c  	),
+        .cnt_col        (cnt_col        ),
+        .cnt_row        (cnt_row        ),
 		.video_next		(video_next		)
 	);
 
-	
-	wire mode_zx = 1;
-	wire mode_256c = 0;
-	wire [21:0] addr_zx_gfx;
-	wire [21:0] addr_zx_atr;
-	wire [21:0] addr_256c;
-	
-	
+    wire [8:0] cnt_col;
+    wire [8:0] cnt_row;
+    
+
 	video_fetch video_fetch (
 		.clk			(clk			),
-		.c0				(c0				),
-		.mode_zx		(mode_zx		),
-		.mode_256c		(mode_256c		),
-		.addr_zx_gfx	(addr_zx_gfx	),
-		.addr_zx_atr	(addr_zx_atr	),
-		.addr_256c		(addr_256c  	),
+		.ptr			(ptr			),
 		.video_strobe	(video_strobe	),
-		.video_addr		(video_addr		),
 		.video_data		(video_data		),
-		.video_bw		(video_bw		),
 		.data_out		(fetch_data		)
 	);
 
 	wire [31:0] fetch_data;
+    wire [ 1:0] ptr = cnt_col[1:0];
 
 	
 	video_render video_render (

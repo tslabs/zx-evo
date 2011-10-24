@@ -13,6 +13,8 @@ module video_sync (
 	input wire [8:0] hpix_end,
 	input wire [8:0] vpix_beg,
 	input wire [8:0] vpix_end,
+	input wire [8:0] go_beg,
+	input wire [8:0] go_end,
 	
 // video syncs
 	output reg hsync,
@@ -31,7 +33,7 @@ module video_sync (
 	output wire vga_pix_start,
 	output wire pix_start,
 	output wire video_go,
-	
+
 // ZX controls
 	output wire int_start
 	
@@ -91,7 +93,7 @@ module video_sync (
 	assign vpix = (vcount >= vpix_beg) & (vcount < vpix_end);
 	assign hvpix = hpix & vpix;
 	
-	assign video_go = (hcount >= (hpix_beg - 16)) & (hcount < (hpix_end - 18)) & vpix;
+	assign video_go = (hcount >= go_beg) & (hcount < go_end) & vpix;
 	
 	assign line_start = (hcount == (HPERIOD - 1));
 	assign frame_start = (hcount == (HPERIOD - 1)) & (vcount == (VPERIOD -1));
