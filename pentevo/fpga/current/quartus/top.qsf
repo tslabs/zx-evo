@@ -280,7 +280,7 @@ set_instance_assignment -name CLOCK_SETTINGS "SPI clock" -to spick
 set_global_assignment -name VERILOG_FILE ../video/video_top.v
 set_global_assignment -name VERILOG_FILE ../video/video_mode.v
 set_global_assignment -name VERILOG_FILE ../video/video_sync.v
-set_global_assignment -name VERILOG_FILE ../video/video_addr.v
+set_global_assignment -name VERILOG_FILE ../video/video_cntr.v
 set_global_assignment -name VERILOG_FILE ../video/video_fetch.v
 set_global_assignment -name VERILOG_FILE ../video/video_render.v
 set_global_assignment -name VERILOG_FILE ../video/video_vga.v
