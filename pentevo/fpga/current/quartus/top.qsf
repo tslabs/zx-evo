@@ -285,7 +285,7 @@ set_global_assignment -name VERILOG_FILE ../video/video_fetch.v
 set_global_assignment -name VERILOG_FILE ../video/video_render.v
 set_global_assignment -name VERILOG_FILE ../video/video_vga.v
 set_global_assignment -name VERILOG_FILE ../video/video_out.v
-set_global_assignment -name VERILOG_FILE ../video/video_cmem.v
+set_global_assignment -name VERILOG_FILE ../video/video_cram.v
 set_global_assignment -name MIF_FILE ../video/test_cram.mif
 set_global_assignment -name VERILOG_FILE ../video/video_vmem.v
 set_global_assignment -name VERILOG_FILE ../mem/atm_pager.v
@@ -309,3 +309,4 @@ set_global_assignment -name VERILOG_FILE ../common/clock.v
 set_global_assignment -name VERILOG_FILE ../common/spi2.v
 set_global_assignment -name VERILOG_FILE ../common/resetter.v
 set_global_assignment -name VERILOG_FILE ../top.v
+set_global_assignment -name FLEX10K_OPTIMIZATION_TECHNIQUE AREA

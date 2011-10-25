@@ -47,19 +47,20 @@ module video_top (
 
 
 	video_mode video_mode (
-		.vconfig	(vconfig	),
-		.scr_page	(scr_page	),
-		.hpix_beg	(hpix_beg	),
-		.hpix_end	(hpix_end	),
-		.vpix_beg	(vpix_beg	),
-		.vpix_end	(vpix_end	),
-        .go_beg     (go_beg     ),
-        .go_end     (go_end     ),
-        .cnt_col    (cnt_col    ),
-        .cnt_row    (cnt_row    ),
-		.hires		(hires		),
-		.video_addr	(video_addr	),
-		.video_bw   (video_bw   )
+		.vconfig	    (vconfig	    ),
+		.scr_page	    (scr_page	    ),
+		.hpix_beg	    (hpix_beg	    ),
+		.hpix_end	    (hpix_end	    ),
+		.vpix_beg	    (vpix_beg	    ),
+		.vpix_end	    (vpix_end	    ),
+        .go_beg         (go_beg         ),
+        .go_end         (go_end         ),
+        .cnt_col        (cnt_col        ),
+        .cnt_row        (cnt_row        ),
+		.hires		    (hires		    ),
+		.render_mode	(render_mode    ),
+		.video_addr	    (video_addr	    ),
+		.video_bw       (video_bw       )
 	);
 	
 	wire [8:0] hpix_beg;
@@ -68,6 +69,7 @@ module video_top (
 	wire [8:0] vpix_end;
     wire [8:0] go_beg;
 	wire [8:0] go_end;
+	wire [1:0] render_mode;
 	wire hires;
 
 	
@@ -130,7 +132,7 @@ module video_top (
 		.ptr			(ptr			),
 		.video_strobe	(video_strobe	),
 		.video_data		(video_data		),
-		.data_out		(fetch_data		)
+		.dram_out		(fetch_data		)
 	);
 
 	wire [31:0] fetch_data;
@@ -138,18 +140,18 @@ module video_top (
 
 	
 	video_render video_render (
-		.clk		(clk      	),
-		.q2			(q2	      	),
-		.c0			(c0	      	),
-		.c4			(c4		  	),
-		.c6			(c6		  	),
-		.pix_start	(pix_start	),
-		.hvpix 	    (hvpix	  	),
-		.blank 	    (blank	  	),
-		.hires		(hires		),
-		.data_in 	(fetch_data	),
-		.border 	(border		),
-		.data_out 	(tvdata		)
+		.clk		    (clk      	),
+		.q2			    (q2	      	),
+		.c0			    (c0	      	),
+		.c4			    (c4		  	),
+		.c6			    (c6		  	),
+		.pix_start	    (pix_start	),
+		.hvpix 	        (hvpix	  	),
+		.hires		    (hires		),
+		.render_mode	(render_mode),
+		.dram_in 	    (fetch_data	),
+		.border 	    (border		),
+		.vdata_out 	    (tvdata		)
 	);
 		
 	
@@ -160,10 +162,12 @@ module video_top (
 		.start_in	(tv_pix_start	),
 		.start_out	(vga_pix_start	),
 		.line_start	(line_start		),
+		.vga_blank	(vga_blank		),
 		.vga_in		(tvdata			),
 		.vga_out	(vgadata		)
 	);
 
+	wire vga_blank;
 	wire [7:0] tvdata;
 	wire [7:0] vgadata;
 	
@@ -172,11 +176,13 @@ module video_top (
 		.clk		(clk		),
 		.vga_on		(vga_on		),
 		.vga_line	(vga_line	),
+		.blank 	    (blank	  	),
+		.vga_blank	(vga_blank	),
+	    .tvdata		(tvdata		),
+	    .vgadata	(vgadata	),
 		.vred		(vred		),
 	    .vgrn		(vgrn		),
-	    .vblu		(vblu		),
-	    .tvdata		(tvdata		),
-	    .vgadata	(vgadata	)
+	    .vblu		(vblu		)
 	);
 	
 	
