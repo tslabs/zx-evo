@@ -8,7 +8,7 @@ module video_out (
 	
 // video controls
     input wire vga_on,
-    input wire blank,
+    input wire tv_blank,
     input wire vga_blank,
     input wire vga_line,
 
@@ -44,7 +44,8 @@ module video_out (
 	
 // preparing PWM'ed output levels
     wire [11:0] vpixel;
-    wire [11:0] vpix = vga_on ? (vga_blank ? vpixel : 0) : (blank ? vpixel : 0);
+    wire blank = vga_on ? vga_blank : tv_blank;
+    wire [11:0] vpix = blank ? 0: vpixel;
 	
 	wire [3:0] red = vpix[11:8];
 	wire [3:0] grn = vpix[ 7:4];
