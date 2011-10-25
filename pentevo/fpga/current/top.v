@@ -117,13 +117,14 @@ module top(
 	output spiint_n
 );
 
-	wire f0, q0, c0, c2, c4, c6, c7, clk175;
+	wire f0, q0, q2, c0, c2, c4, c6, c7, clk175;
 
 	clock clock
 	(
 		.clk(fclk),
 		.f0(f0),
 		.q0(q0),
+		.q2(q2),
 		.c0(c0),
 		.c2(c2),
 		.c4(c4),
@@ -596,6 +597,7 @@ module top(
 		.clk(fclk),
 		.f0(f0),
 		.q0(q0),
+		.q2(q2),
 		.c0(c0),
 		.c2(c2),
 		.c4(c4),

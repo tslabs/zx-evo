@@ -18,10 +18,14 @@ module video_mode (
 // video counters
     input wire [8:0] cnt_col,
     input wire [8:0] cnt_row,
+	
+// mode controls
+	output wire hires,
     
 // DRAM interface	
     output wire [20:0] video_addr,
     output wire [ 1:0] video_bw
+	
 );
 
 // Modes:
@@ -30,7 +34,7 @@ module video_mode (
 // 2 - 
 // 3 - 
 // 4 - 
-// 5 - 
+// 5 - (ZX hi-res)
 // 6 - 256c
 // 7 - Text
 
@@ -81,7 +85,7 @@ module video_mode (
     assign g_beg[2] = hpix_beg - 16;
     assign g_beg[3] = hpix_beg - 16;
     assign g_beg[4] = hpix_beg - 16;
-    assign g_beg[5] = hpix_beg - 16;
+    assign g_beg[5] = hpix_beg - 8;
     assign g_beg[6] = hpix_beg - 16;
     assign g_beg[7] = hpix_beg - 8;
 
@@ -90,7 +94,7 @@ module video_mode (
     assign g_end[2] = hpix_end - 18;
     assign g_end[3] = hpix_end - 18;
     assign g_end[4] = hpix_end - 18;
-    assign g_end[5] = hpix_end - 18;
+    assign g_end[5] = hpix_end - 10;
     assign g_end[6] = hpix_end - 18;
     assign g_end[7] = hpix_end - 10;
 
@@ -103,15 +107,20 @@ module video_mode (
     
     assign bw[0] = 2'b00;
     assign bw[1] = 2'b01;
-    assign bw[2] = 2'b00;
-    assign bw[3] = 2'b00;
-    assign bw[4] = 2'b00;
-    assign bw[5] = 2'b00;
+    assign bw[2] = 2'b01;
+    assign bw[3] = 2'b10;
+    assign bw[4] = 2'b11;
+    assign bw[5] = 2'b01;
     assign bw[6] = 2'b10;
     assign bw[7] = 2'b10;
     
     assign video_bw = bw[vmod];
 
+	
+// pixelrate
+	wire [7:0] pixrate = 8'b10100000;
+	assign hires = pixrate[vmod];
+	
 	
 // raster resolution
 	wire [8:0] hp_beg[0:3];
@@ -144,6 +153,6 @@ module video_mode (
 	assign vpix_beg = vp_beg[rres];
 	assign vpix_end = vp_end[rres];
 
-
+	
 	
 endmodule
