@@ -1,4 +1,5 @@
-// This module doubles video data for VGA
+// This module shifts in TV data into buffer and shift out VGA data
+// Also, it generates blanking signal for VGA
 
 
 module video_vga (
@@ -16,7 +17,7 @@ module video_vga (
 	input wire start_in,
 	input wire start_out,
 	input wire line_start,
-	input wire blank
+    output wire vga_blank
 
 );
 
@@ -35,8 +36,10 @@ module video_vga (
 		if (line_start)
 			sel <= ~sel;
 
-			
+	assign vga_blank = (cnt_out >= 9'd360);
 
+    
+ // VGA buffer   
 	video_vmem video_vmem(
 		.clock		(clk			),
 		.wraddress	({sel, cnt_in}	),
