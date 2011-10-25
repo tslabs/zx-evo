@@ -67,6 +67,6 @@ module video_render (
     assign d_out[2] = zx_pix;
     assign d_out[3] = zx_pix;
     
-	assign data_out = hvpix ? d_out[render_mode] : border;
+	assign vdata_out = hvpix ? d_out[render_mode] : border;
 	
 endmodule
