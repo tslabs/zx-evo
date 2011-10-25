@@ -5,6 +5,7 @@ module video_render (
 
 // clocks
 	input wire clk,
+	input wire q2,
 	input wire c0,
 	input wire c4,
 	input wire c6,
@@ -15,8 +16,7 @@ module video_render (
 	input wire blank,
 
 // mode controls
-	input wire mode_zx,
-	input wire mode_256c,
+	input wire hires,
 
 // video data
 	input  wire [31:0] data_in,
@@ -26,19 +26,21 @@ module video_render (
 );
 
 
+	wire pix_stb = hires ? q2 : c6;
+
 	wire get_zx = pix_start | (cnt == 4'b1111);
 
 // pixel counter
 	reg [3:0] cnt;
 	
-	always @(posedge clk) if (c6)
+	always @(posedge clk) if (pix_stb)
 		cnt <= pix_start ? 0 : cnt + 1;
 
 
 // video data fetcher
 	reg  [31:0] data;
 	
-	always @(posedge clk) if (c6)
+	always @(posedge clk) if (pix_stb)
 		if (get_zx)
 			data <= data_in;
 

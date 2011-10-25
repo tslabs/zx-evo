@@ -6,6 +6,7 @@ module video_top (
 // clocks
 	input wire clk,
 	input wire f0,
+	input wire q2,
 	input wire q0,
 	input wire c0,
 	input wire c2,
@@ -47,6 +48,7 @@ module video_top (
 
 	video_mode video_mode (
 		.vconfig	(vconfig	),
+		.scr_page	(scr_page	),
 		.hpix_beg	(hpix_beg	),
 		.hpix_end	(hpix_end	),
 		.vpix_beg	(vpix_beg	),
@@ -55,6 +57,7 @@ module video_top (
         .go_end     (go_end     ),
         .cnt_col    (cnt_col    ),
         .cnt_row    (cnt_row    ),
+		.hires		(hires		),
 		.video_addr	(video_addr	),
 		.video_bw   (video_bw   )
 	);
@@ -65,6 +68,7 @@ module video_top (
 	wire [8:0] vpix_end;
     wire [8:0] go_beg;
 	wire [8:0] go_end;
+	wire hires;
 
 	
 	video_sync video_sync (
@@ -97,6 +101,7 @@ module video_top (
 	wire tv_pix_start;
     wire vga_pix_start;
 	wire blank;
+	wire vga_line;
 	wire frame_start;
 	wire line_start;
 	wire pix_start;
@@ -134,14 +139,14 @@ module video_top (
 	
 	video_render video_render (
 		.clk		(clk      	),
+		.q2			(q2	      	),
 		.c0			(c0	      	),
 		.c4			(c4		  	),
 		.c6			(c6		  	),
 		.pix_start	(pix_start	),
 		.hvpix 	    (hvpix	  	),
 		.blank 	    (blank	  	),
-		.mode_zx 	(mode_zx	),
-		.mode_256c	(mode_256c	),	 
+		.hires		(hires		),
 		.data_in 	(fetch_data	),
 		.border 	(border		),
 		.data_out 	(tvdata		)
