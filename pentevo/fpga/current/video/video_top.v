@@ -88,7 +88,7 @@ module video_top (
 		.csync			(csync			),
 		.tv_pix_start	(tv_pix_start	),
 		.vga_pix_start	(vga_pix_start	),
-		.blank			(blank			),
+		.tv_blank		(tv_blank		),
 		.vga_line		(vga_line		),
 		.frame_start	(frame_start	),
 		.line_start		(line_start		),
@@ -102,7 +102,7 @@ module video_top (
 
 	wire tv_pix_start;
     wire vga_pix_start;
-	wire blank;
+	wire tv_blank;
 	wire vga_line;
 	wire frame_start;
 	wire line_start;
@@ -176,7 +176,7 @@ module video_top (
 		.clk		(clk		),
 		.vga_on		(vga_on		),
 		.vga_line	(vga_line	),
-		.blank 	    (blank	  	),
+		.tv_blank 	(tv_blank	),
 		.vga_blank	(vga_blank	),
 	    .tvdata		(tvdata		),
 	    .vgadata	(vgadata	),

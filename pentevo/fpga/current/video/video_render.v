@@ -13,7 +13,7 @@ module video_render (
 // video controls
 	input wire pix_start,
 	input wire hvpix,
-	input wire blank,
+	input wire tv_blank,
 
 // mode controls
 	input wire [1:0] render_mode,
