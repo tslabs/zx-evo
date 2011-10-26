@@ -44,8 +44,8 @@ module zports(
 
 	output reg  [ 7:0] border,
 
-	output reg [7:0] cpuconfig	,
-	output reg [7:0] romconfig	,
+	output reg [7:0] cpuconf	,
+	output reg [7:0] romconf	,
 	output reg [7:0] vpage		,
 	output reg [7:0] page00		,
 	output reg [7:0] page01		,
@@ -143,7 +143,7 @@ module zports(
 
 
 	localparam PORTFE = 8'hFE;
-	localparam PORTBF = 8'hBF;
+	localparam PORT6F = 8'h6F;
 	localparam PORTF6 = 8'hF6;
 	localparam PORTF7 = 8'hF7;
 
@@ -209,7 +209,7 @@ module zports(
 
 
 	wire portfe_wr;
-	wire portbf_wr;
+	wire port6f_wr;
 
 
 
@@ -271,7 +271,7 @@ module zports(
 
 	always @*
 	begin
-		if( (loa==PORTFE) || (loa==PORTBF) || (loa==PORTF6) ||
+		if( (loa==PORTFE) || (loa==PORT6F) || (loa==PORTF6) ||
 		    (loa==PORTFD) ||
 
 		    (loa==NIDE10) || (loa==NIDE11) || (loa==NIDE30) || (loa==NIDE50) || (loa==NIDE70) ||
@@ -426,7 +426,7 @@ module zports(
 
 
 	assign portfe_wr    = (((loa==PORTFE) || (loa==PORTF6)) && port_wr);
-	assign portbf_wr    = ((loa==PORTBF) && port_wr);
+	assign port6f_wr    = ((loa==PORT6F) && port_wr);
 	assign portfd_wr    = ((loa==PORTFD) && port_wr);
 
 	// F7 ports (like EFF7) are accessible in shadow mode but at addresses like EEF7, DEF7, BEF7 so that
@@ -445,10 +445,10 @@ module zports(
 
 
 	//extension port BF
-	assign portbf_wr_fclk = ((loa==PORTBF) && port_wr_fclk);
+	assign port6f_wr_fclk = ((loa==PORT6F) && port_wr_fclk);
 
 	localparam XBORDER		= 8'h00;
-	localparam ROMCONFIG	= 8'h02;
+	localparam ROMCONF		= 8'h02;
 	localparam VPAGE		= 8'h03;
 	localparam PAGE00		= 8'h04;
 	localparam PAGE01		= 8'h05;
@@ -462,12 +462,12 @@ module zports(
 	localparam TGPAGE1		= 8'h0D;
 	localparam TMCTRL		= 8'h0E;
 	localparam HSINT		= 8'h0F;
-	localparam CPUCONFIG	= 8'h10;
+	localparam CPUCONF		= 8'h10;
 
 
-	always @(posedge fclk) if (f0) if( portbf_wr_fclk )
+	always @(posedge fclk) if (f0) if( port6f_wr_fclk )
 	begin
-		if (hoa == ROMCONFIG)	romconfig	<= din;
+		if (hoa == ROMCONF)		romconf		<= din;
 		if (hoa == VPAGE	)	vpage		<= din;
 		if (hoa == PAGE00	)	page00		<= din;
 		if (hoa == PAGE01	)	page01		<= din;
@@ -481,7 +481,7 @@ module zports(
 		if (hoa == TGPAGE1	)	tgpage1		<= din;
 		if (hoa == TMCTRL	)	tmctrl	 	<= din;
 		if (hoa == HSINT	)	hsint	 	<= din;
-		if (hoa == CPUCONFIG)	cpuconfig	<= din;
+		if (hoa == CPUCONF	)	cpuconf		<= din;
 	end
 	
 
@@ -491,9 +491,9 @@ module zports(
 	always @(posedge fclk) if (f0)
 	begin
 		if( portfe_wr_fclk )
-			border <= {din[1], 1'b0, din[2], 1'b0, din[0], 3'b0};
+			border <= {5'b11110, din[2], din[1], din[0]};
 
-		if( portbf_wr_fclk ) if (hoa == XBORDER)
+		if( port6f_wr_fclk ) if (hoa == XBORDER)
 			border[7:0] <= din;
 	end	
 		

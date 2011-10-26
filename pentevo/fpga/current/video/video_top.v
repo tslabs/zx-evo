@@ -28,6 +28,9 @@ module video_top (
 	input wire [7:0] border,
 	input wire [7:0] scr_page,
 	input wire [7:0] vconfig,
+	input wire [7:0] romconf,	//!!!
+	input wire [7:0] vpage,	//!!!
+	input wire [7:0] page00,	//!!!
 	
 // ZX controls
 	output wire int_start,
@@ -181,6 +184,9 @@ module video_top (
 	    .tvdata		(tvdata		),
 	    .vgadata	(vgadata	),
 		.vred		(vred		),
+		.romconf	(romconf	), //!!!		
+		.vpage	(vpage	), //!!!		
+		.page00	(page00	), //!!!		
 	    .vgrn		(vgrn		),
 	    .vblu		(vblu		)
 	);

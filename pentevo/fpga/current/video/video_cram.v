@@ -45,14 +45,14 @@ module video_cram (
 	q);
 
 	input	  clock;
-	input	[15:0]  data;
+	input	[14:0]  data;
 	input	[7:0]  rdaddress;
 	input	[7:0]  wraddress;
 	input	  wren;
-	output	[15:0]  q;
+	output	[14:0]  q;
 
-	wire [15:0] sub_wire0;
-	wire [15:0] q = sub_wire0[15:0];
+	wire [14:0] sub_wire0;
+	wire [14:0] q = sub_wire0[14:0];
 
 	altdpram	altdpram_component (
 				.wren (wren),
@@ -73,7 +73,7 @@ module video_cram (
 		altdpram_component.indata_aclr = "OFF",
 		altdpram_component.indata_reg = "UNREGISTERED",
 		altdpram_component.intended_device_family = "ACEX1K",
-		altdpram_component.lpm_file = "d:/_heap/Work/SVN/Pentevo.TSL/fpga/current/video/test_cram.mif",
+		altdpram_component.lpm_file = "d:/_heap/Work/SVN/Pentevo.TSL/fpga/current/video/video_cram.mif",
 		altdpram_component.lpm_type = "altdpram",
 		altdpram_component.outdata_aclr = "OFF",
 		altdpram_component.outdata_reg = "UNREGISTERED",
@@ -81,7 +81,7 @@ module video_cram (
 		altdpram_component.rdaddress_reg = "UNREGISTERED",
 		altdpram_component.rdcontrol_aclr = "OFF",
 		altdpram_component.rdcontrol_reg = "UNREGISTERED",
-		altdpram_component.width = 16,
+		altdpram_component.width = 15,
 		altdpram_component.widthad = 8,
 		altdpram_component.wraddress_aclr = "OFF",
 		altdpram_component.wraddress_reg = "UNREGISTERED",
@@ -125,9 +125,9 @@ endmodule
 // Retrieval info: PRIVATE: JTAG_ENABLED NUMERIC "0"
 // Retrieval info: PRIVATE: JTAG_ID STRING "NONE"
 // Retrieval info: PRIVATE: MAXIMUM_DEPTH NUMERIC "0"
-// Retrieval info: PRIVATE: MEMSIZE NUMERIC "4096"
+// Retrieval info: PRIVATE: MEMSIZE NUMERIC "3840"
 // Retrieval info: PRIVATE: MEM_IN_BITS NUMERIC "0"
-// Retrieval info: PRIVATE: MIFfilename STRING "d:/_heap/Work/SVN/Pentevo.TSL/fpga/current/video/test_cram.mif"
+// Retrieval info: PRIVATE: MIFfilename STRING "d:/_heap/Work/SVN/Pentevo.TSL/fpga/current/video/video_cram.mif"
 // Retrieval info: PRIVATE: OPERATION_MODE NUMERIC "2"
 // Retrieval info: PRIVATE: OUTDATA_ACLR_B NUMERIC "0"
 // Retrieval info: PRIVATE: OUTDATA_REG_B NUMERIC "0"
@@ -144,10 +144,10 @@ endmodule
 // Retrieval info: PRIVATE: USE_DIFF_CLKEN NUMERIC "0"
 // Retrieval info: PRIVATE: UseDPRAM NUMERIC "1"
 // Retrieval info: PRIVATE: VarWidth NUMERIC "0"
-// Retrieval info: PRIVATE: WIDTH_READ_A NUMERIC "16"
-// Retrieval info: PRIVATE: WIDTH_READ_B NUMERIC "16"
-// Retrieval info: PRIVATE: WIDTH_WRITE_A NUMERIC "16"
-// Retrieval info: PRIVATE: WIDTH_WRITE_B NUMERIC "16"
+// Retrieval info: PRIVATE: WIDTH_READ_A NUMERIC "15"
+// Retrieval info: PRIVATE: WIDTH_READ_B NUMERIC "15"
+// Retrieval info: PRIVATE: WIDTH_WRITE_A NUMERIC "15"
+// Retrieval info: PRIVATE: WIDTH_WRITE_B NUMERIC "15"
 // Retrieval info: PRIVATE: WRADDR_ACLR_B NUMERIC "0"
 // Retrieval info: PRIVATE: WRADDR_REG_B NUMERIC "0"
 // Retrieval info: PRIVATE: WRCTRL_ACLR_B NUMERIC "0"
@@ -156,7 +156,7 @@ endmodule
 // Retrieval info: CONSTANT: INDATA_ACLR STRING "OFF"
 // Retrieval info: CONSTANT: INDATA_REG STRING "UNREGISTERED"
 // Retrieval info: CONSTANT: INTENDED_DEVICE_FAMILY STRING "ACEX1K"
-// Retrieval info: CONSTANT: LPM_FILE STRING "d:/_heap/Work/SVN/Pentevo.TSL/fpga/current/video/test_cram.mif"
+// Retrieval info: CONSTANT: LPM_FILE STRING "d:/_heap/Work/SVN/Pentevo.TSL/fpga/current/video/video_cram.mif"
 // Retrieval info: CONSTANT: LPM_TYPE STRING "altdpram"
 // Retrieval info: CONSTANT: OUTDATA_ACLR STRING "OFF"
 // Retrieval info: CONSTANT: OUTDATA_REG STRING "UNREGISTERED"
@@ -164,20 +164,20 @@ endmodule
 // Retrieval info: CONSTANT: RDADDRESS_REG STRING "UNREGISTERED"
 // Retrieval info: CONSTANT: RDCONTROL_ACLR STRING "OFF"
 // Retrieval info: CONSTANT: RDCONTROL_REG STRING "UNREGISTERED"
-// Retrieval info: CONSTANT: WIDTH NUMERIC "16"
+// Retrieval info: CONSTANT: WIDTH NUMERIC "15"
 // Retrieval info: CONSTANT: WIDTHAD NUMERIC "8"
 // Retrieval info: CONSTANT: WRADDRESS_ACLR STRING "OFF"
 // Retrieval info: CONSTANT: WRADDRESS_REG STRING "UNREGISTERED"
 // Retrieval info: CONSTANT: WRCONTROL_ACLR STRING "OFF"
 // Retrieval info: CONSTANT: WRCONTROL_REG STRING "INCLOCK"
 // Retrieval info: USED_PORT: clock 0 0 0 0 INPUT NODEFVAL clock
-// Retrieval info: USED_PORT: data 0 0 16 0 INPUT NODEFVAL data[15..0]
-// Retrieval info: USED_PORT: q 0 0 16 0 OUTPUT NODEFVAL q[15..0]
+// Retrieval info: USED_PORT: data 0 0 15 0 INPUT NODEFVAL data[14..0]
+// Retrieval info: USED_PORT: q 0 0 15 0 OUTPUT NODEFVAL q[14..0]
 // Retrieval info: USED_PORT: rdaddress 0 0 8 0 INPUT NODEFVAL rdaddress[7..0]
 // Retrieval info: USED_PORT: wraddress 0 0 8 0 INPUT NODEFVAL wraddress[7..0]
 // Retrieval info: USED_PORT: wren 0 0 0 0 INPUT VCC wren
-// Retrieval info: CONNECT: @data 0 0 16 0 data 0 0 16 0
-// Retrieval info: CONNECT: q 0 0 16 0 @q 0 0 16 0
+// Retrieval info: CONNECT: @data 0 0 15 0 data 0 0 15 0
+// Retrieval info: CONNECT: q 0 0 15 0 @q 0 0 15 0
 // Retrieval info: CONNECT: @wraddress 0 0 8 0 wraddress 0 0 8 0
 // Retrieval info: CONNECT: @rdaddress 0 0 8 0 rdaddress 0 0 8 0
 // Retrieval info: CONNECT: @wren 0 0 0 0 wren 0 0 0 0
@@ -186,7 +186,7 @@ endmodule
 // Retrieval info: GEN_FILE: TYPE_NORMAL video_cram.v TRUE
 // Retrieval info: GEN_FILE: TYPE_NORMAL video_cram.inc FALSE
 // Retrieval info: GEN_FILE: TYPE_NORMAL video_cram.cmp FALSE
-// Retrieval info: GEN_FILE: TYPE_NORMAL video_cram.bsf FALSE
+// Retrieval info: GEN_FILE: TYPE_NORMAL video_cram.bsf TRUE FALSE
 // Retrieval info: GEN_FILE: TYPE_NORMAL video_cram_inst.v FALSE
 // Retrieval info: GEN_FILE: TYPE_NORMAL video_cram_bb.v FALSE
 // Retrieval info: LIB_FILE: altera_mf
