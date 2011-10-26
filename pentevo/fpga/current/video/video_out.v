@@ -15,6 +15,9 @@ module video_out (
 // video data
 	input  wire [7:0] tvdata,
 	input  wire [7:0] vgadata,
+	input  wire [7:0] romconf,	//!!!
+	input  wire [7:0] vpage,	//!!!
+	input  wire [7:0] page00,	//!!!
 	output reg  [1:0] vred,
     output reg  [1:0] vgrn,
     output reg  [1:0] vblu
@@ -23,7 +26,7 @@ module video_out (
 
 // registering output colors
 	
-	always @(posedge clk)
+	always @(negedge clk)
 	begin
 		vred <= pred;
 		vgrn <= pgrn;
@@ -32,7 +35,7 @@ module video_out (
 
 	
 // phase clocking
-	reg [1:0] ph;
+	reg [2:0] ph;
 	
 	always @(posedge clk)
 		ph <= ph +1;
@@ -43,41 +46,41 @@ module video_out (
 
 	
 // preparing PWM'ed output levels
-    wire [11:0] vpixel;
+    wire [14:0] vpixel;
     wire blank = vga_on ? vga_blank : tv_blank;
-    wire [11:0] vpix = blank ? 0: vpixel;
+	wire [14:0] vpix = blank ? 0: vpixel;
 	
-	wire [3:0] red = vpix[11:8];
-	wire [3:0] grn = vpix[ 7:4];
-	wire [3:0] blu = vpix[ 3:0];
+	wire [1:0] cred = vpix[14:13];
+	wire [2:0] ired = vpix[12:10];
+	wire [1:0] cgrn = vpix[ 9: 8];
+	wire [2:0] igrn = vpix[ 7: 5];
+	wire [1:0] cblu = vpix[ 4: 3];
+	wire [2:0] iblu = vpix[ 2: 0];
+	
 		
-	wire [7:0] pwm[0:3];
+	wire [7:0] pwm[0:7];
 	assign pwm[0] = 8'b00000000;
-	assign pwm[1] = 8'b01000001;
-	assign pwm[2] = 8'b10100101;
-	assign pwm[3] = 8'b11010111;
+	assign pwm[1] = 8'b00000001;
+	assign pwm[2] = 8'b01000001;
+	assign pwm[3] = 8'b01000101;
+	assign pwm[4] = 8'b10100101;
+	assign pwm[5] = 8'b10100111;
+	assign pwm[6] = 8'b11010111;
+	assign pwm[7] = 8'b11011111;
 
-	wire [2:0] phase = vga_on ? {vga_line, ph} : {1'b0, ph};
+	wire [2:0] phase = vga_on ? {vga_line, ph[1:0]} : {ph[2:0]};
+
+	wire [1:0] pred = pwm[ired][phase] ? (cred == 2'b11) ? cred : cred + 2'b1 : cred;
+	wire [1:0] pgrn = pwm[igrn][phase] ? (cgrn == 2'b11) ? cgrn : cgrn + 2'b1 : cgrn;
+	wire [1:0] pblu = pwm[iblu][phase] ? (cblu == 2'b11) ? cblu : cblu + 2'b1 : cblu;
 	
-	wire [1:0] pred = pwm[red[1:0]][phase] ? (red[3:2] == 2'b11) ? red[3:2] : red[3:2] + 2'b1 : red[3:2];
-	wire [1:0] pgrn = pwm[grn[1:0]][phase] ? (grn[3:2] == 2'b11) ? grn[3:2] : grn[3:2] + 2'b1 : grn[3:2];
-	wire [1:0] pblu = pwm[blu[1:0]][phase] ? (blu[3:2] == 2'b11) ? blu[3:2] : blu[3:2] + 2'b1 : blu[3:2];
-	
-
-//!!!
-	// wire [ 1:0]	zx_col		= vdata[3] ? 2'b11 : 2'b10;
-	// wire [ 1:0]	zx_pixr		= vdata[1] ? zx_col : 2'b00;
-	// wire [ 1:0]	zx_pixg		= vdata[2] ? zx_col : 2'b00;
-	// wire [ 1:0]	zx_pixb		= vdata[0] ? zx_col : 2'b00;
-	// wire [ 7:0]	vpixel  	= {zx_pixr, zx_pixg, zx_pixb, 2'b0};
-
 
 // CRAM
 	video_cram video_cram(
 		.clock		(clk		),
-		.wraddress	(0         	),
-		.data		(0      	),
-		.wren		(0			),
+		.wraddress	(romconf   	),	//!!!
+		.data		({vpage, page00}    ),	//!!!
+		.wren		(1			),	//!!!
 	    .rdaddress	(vdata      ),
 	    .q			(vpixel    	)
 	);

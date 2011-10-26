@@ -614,7 +614,10 @@ module top(
 		.border(border),
 		.scr_page(scr_page),
 		.vconfig(vconfig),
-
+		.romconf	(romconf	), //!!!
+		.vpage	(vpage	), //!!!
+		.page00	(page00	), //!!!
+		
 		.vga_on(cfg_vga_on),
 
 		.video_addr  (video_addr  ),
@@ -657,8 +660,8 @@ module top(
 	                 .mus_data(mus_port_data)
 	               );
 
-		wire [7:0]	   cpuconfig;
-		wire [7:0]	   romconfig;
+		wire [7:0]	   cpuconf	;
+		wire [7:0]	   romconf	;
 		wire [7:0]	   vpage	;
 		wire [7:0]	   page00	;
 		wire [7:0]	   page01	;
@@ -686,8 +689,8 @@ module top(
 	               .ide_a(ide_a), .ide_cs0_n(ide_cs0_n), .ide_cs1_n(ide_cs1_n),
 	               .ide_wr_n(ide_wr_n), .ide_rd_n(ide_rd_n),
 					
-					.cpuconfig	(cpuconfig	),
-					.romconfig	(romconfig	),
+					.cpuconf	(cpuconf	),
+					.romconf	(romconf	),
 					.vpage		(vpage		),
 					.page00		(page00		),
 					.page01		(page01		),
