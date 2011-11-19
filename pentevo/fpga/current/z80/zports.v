@@ -143,7 +143,7 @@ module zports(
 
 
 	localparam PORTFE = 8'hFE;
-	localparam PORT6F = 8'h6F;
+	localparam PORTXT = 8'hAF;
 	localparam PORTF6 = 8'hF6;
 	localparam PORTF7 = 8'hF7;
 
@@ -209,7 +209,7 @@ module zports(
 
 
 	wire portfe_wr;
-	wire port6f_wr;
+	wire PORTXT_wr;
 
 
 
@@ -271,7 +271,7 @@ module zports(
 
 	always @*
 	begin
-		if( (loa==PORTFE) || (loa==PORT6F) || (loa==PORTF6) ||
+		if( (loa==PORTFE) || (loa==PORTXT) || (loa==PORTF6) ||
 		    (loa==PORTFD) ||
 
 		    (loa==NIDE10) || (loa==NIDE11) || (loa==NIDE30) || (loa==NIDE50) || (loa==NIDE70) ||
@@ -426,7 +426,7 @@ module zports(
 
 
 	assign portfe_wr    = (((loa==PORTFE) || (loa==PORTF6)) && port_wr);
-	assign port6f_wr    = ((loa==PORT6F) && port_wr);
+	assign PORTXT_wr    = ((loa==PORTXT) && port_wr);
 	assign portfd_wr    = ((loa==PORTFD) && port_wr);
 
 	// F7 ports (like EFF7) are accessible in shadow mode but at addresses like EEF7, DEF7, BEF7 so that
@@ -445,7 +445,7 @@ module zports(
 
 
 	//extension port BF
-	assign port6f_wr_fclk = ((loa==PORT6F) && port_wr_fclk);
+	assign PORTXT_wr_fclk = ((loa==PORTXT) && port_wr_fclk);
 
 	localparam XBORDER		= 8'h00;
 	localparam ROMCONF		= 8'h02;
@@ -465,7 +465,7 @@ module zports(
 	localparam CPUCONF		= 8'h10;
 
 
-	always @(posedge fclk) if (f0) if( port6f_wr_fclk )
+	always @(posedge fclk) if (f0) if( PORTXT_wr_fclk )
 	begin
 		if (hoa == ROMCONF)		romconf		<= din;
 		if (hoa == VPAGE	)	vpage		<= din;
@@ -493,7 +493,7 @@ module zports(
 		if( portfe_wr_fclk )
 			border <= {5'b11110, din[2], din[1], din[0]};
 
-		if( port6f_wr_fclk ) if (hoa == XBORDER)
+		if( PORTXT_wr_fclk ) if (hoa == XBORDER)
 			border[7:0] <= din;
 	end	
 		
