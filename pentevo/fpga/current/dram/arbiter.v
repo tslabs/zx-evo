@@ -7,6 +7,9 @@
 
 
 
+// 18.11.2011:
+// arbiter has been re-factored so it uses N_cycles from N_total instead of BW
+// (with big reserve, probably a subject to optimize. by now is used only for 256c)
 
 
 // 14.06.2011:
@@ -96,10 +99,14 @@ module arbiter(
 
 	input go, // start video access blocks
 
-	input [1:0] bw, // required bandwidth: 3'b00 - 1 video cycle per block
+	// input [1:0] bw, // required bandwidth: 3'b00 - 1 video cycle per block
 	                //                     3'b01 - 2 video accesses
 	                //                     3'b10 - 4 video accesses
 	                //                     3'b11 - 8 video accesses (stall of CPU)
+					
+	input wire [2:0] bw_need,	// number of cycles used for video accesses out of total
+	input wire [2:0] bw_total,	// number of cycles in one arbiter burst
+								// both mean 0 = 8 cycles
 
 	input  [20:0] video_addr,   // during access block, only when video_strobe==1
 	output [15:0] video_data,   // read video data which is valid only during video_strobe==1 because video_data
@@ -160,14 +167,7 @@ module arbiter(
 
 	assign c0 = dram_c0; // just alias
 
-	// make cycle strobe signals
-	// always @(posedge clk) if (f0)
-	// begin
-		// c2 <= c0;
-		// c4  <= c2;
-		// c6      <= c4;
-	// end
-
+	wire bw_full = (bw_need == bw_total);	// ex bw==2'd3
 
 	// track blk_rem counter: how many cycles left to the end of block (7..0)
 	always @(posedge clk) if( c6 )
@@ -175,13 +175,14 @@ module arbiter(
 		blk_rem <= blk_nrem;
 
 		if( (blk_rem==3'd0) )
-			stall <= (bw==2'd3) & go;
+			stall <= bw_full & go;
 	end
 
 	always @*
 	begin
 		if( (blk_rem==3'd0) && go )
-			blk_nrem = 7;
+			blk_nrem = bw_total - 1;	
+			// blk_nrem = 7;	
 		else
 			blk_nrem = (blk_rem==0) ? 3'd0 : (blk_rem-3'd1);
 	end
@@ -189,7 +190,8 @@ module arbiter(
 
 
 	// track vid_rem counter
-	assign vidmax = (3'b001) << bw; // 1,2,4 or 8 - just to know how many cycles to perform
+	assign vidmax = bw_need; // number of cycles to perform
+	// assign vidmax = (3'b001) << bw; // number of cycles to perform
 
 	always @(posedge clk) if( c6 )
 	begin
@@ -217,7 +219,7 @@ module arbiter(
 		begin
 			if( go )
 			begin
-				if( bw==2'b11 )
+				if( bw_full )
 				begin
 					cpu_next = 1'b0;
 
@@ -278,7 +280,7 @@ module arbiter(
 
 
 
-	// just current cycle register
+	// just current cycle registering
 	always @(posedge clk) if( c6 )
 	begin
 		curr_cycle <= next_cycle;

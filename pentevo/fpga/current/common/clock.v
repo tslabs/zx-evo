@@ -1,6 +1,5 @@
-// This module receives 112 MHz as input clock
+// This module receives 56 MHz as input clock
 // and formes strobes for all clocked parts
-// (now forms only 28 MHz strobes)
 
 //			0 1 2 3 4 5 6 7 |0 1 2 3 4 5 6 7 
 // clk		-_-_-_-_-_-_-_-_|-_-_-_-_-_-_-_-_	56

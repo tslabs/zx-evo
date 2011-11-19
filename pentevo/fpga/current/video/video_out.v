@@ -5,12 +5,18 @@ module video_out (
 
 // clocks
 	input wire clk,
+	input wire f0,
 	
 // video controls
     input wire vga_on,
-    input wire tv_blank,
-    input wire vga_blank,
+    input wire tv_hblank,
+    input wire tv_vblank,
+    input wire vga_hblank,
     input wire vga_line,
+	input wire start_out,
+
+// mode controls	
+	input wire hires,
 
 // video data
 	input  wire [7:0] tvdata,
@@ -18,15 +24,14 @@ module video_out (
 	input  wire [7:0] romconf,	//!!!
 	input  wire [7:0] vpage,	//!!!
 	input  wire [7:0] page00,	//!!!
-	output reg  [1:0] vred,
-    output reg  [1:0] vgrn,
-    output reg  [1:0] vblu
+	output reg [1:0] vred,
+    output reg [1:0] vgrn,
+    output reg [1:0] vblu
 );
 
 
 // registering output colors
-	
-	always @(negedge clk)
+	always @(posedge clk)
 	begin
 		vred <= pred;
 		vgrn <= pgrn;
@@ -34,20 +39,23 @@ module video_out (
 	end
 
 	
-// phase clocking
-	reg [2:0] ph;
-	
-	always @(posedge clk)
-		ph <= ph +1;
-
-
 // TV/VGA mux
-    wire [7:0] vdata = vga_on ? vgadata : tvdata;
+	reg hires_sel;
+	always @(posedge clk) if (f0)
+		hires_sel <= start_out ? 0 : ~hires_sel;
+
+	wire [7:0] vgasplit = {4'b1111, hires_sel ? vgadata[3:0] : vgadata[7:4]};	// in HI-RES the byte should be split onto 2 nibbles
+    wire [7:0] vdata = vga_on ? hires ? vgasplit : vgadata : tvdata;
 
 	
 // preparing PWM'ed output levels
     wire [14:0] vpixel;
-    wire blank = vga_on ? vga_blank : tv_blank;
+	
+	reg [2:0] ph;
+	always @(posedge clk)
+		ph <= ph + 1;
+
+    wire blank = vga_on ? vga_hblank | tv_vblank : tv_hblank | tv_vblank;
 	wire [14:0] vpix = blank ? 0: vpixel;
 	
 	wire [1:0] cred = vpix[14:13];
