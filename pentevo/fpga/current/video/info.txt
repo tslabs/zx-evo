@@ -1,0 +1,37 @@
+Of videomodes
+-------------
+
+1. Palette
+----------
+
+CRAM has 256 cells and is 15 bits wide. It codes color info as following:
++--------------------+
+| 15     8  7      0 |
+| xRRrrrGG  gggBBbbb |
++--------------------+
+RR/GG/BB is Pentevo video-DAC and rrr/ggg/bbb are PWM 'boost'.
+If you not intend to use PWN functionality, just set rrr/ggg/bbb to 3'b000
+to obtain regular Pentevo colors.
+When any of RR/GG/BB are 2'b11, the correspondent rrr/ggg/bbb are ignored
+as DAC value of 2'b11 simply cannot be 'boosted'.
+x is ignored value.
+
+Mode ZX uses palette cells #F0-#F7 for BRIGHT 0 and #F8-#FF for BRIGHT 1.
+
+Mode HC (16c) uses palette cells #E0-#EF.
+
+Mode XC (256c) uses palette cells #00-#FF.
+
+Mode GS (Gigascreen) uses palette cells addressed as following:
++----------+
+| 7      0 |
+| IGRBigrb |
++----------+
+IGRB is pixel color from screen 1 and igrb - from screen 0.
+Thus, you can tune the color 'blending' from two screens using the palette.
+Some Gigascreen palette should be calculated using 'sophisticated' Excel tool or something.
+
+2. Addresses
+------------
+
+Mode ZX is at offset of #0000 and #1800 at selected video page as usually.

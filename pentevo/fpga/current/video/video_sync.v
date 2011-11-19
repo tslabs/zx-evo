@@ -25,7 +25,8 @@ module video_sync (
 	output wire hpix,
 	output wire vpix,
 	output wire hvpix,
-	output wire tv_blank,
+	output wire hb,
+	output wire vb,
 	output wire vga_line,
 	output wire line_start,
 	output wire frame_start,
@@ -77,16 +78,14 @@ module video_sync (
 	wire hs = (hcount >= HSYNC_BEG) & (hcount < HSYNC_END);
 	wire hs_vga = ((hcount >= HSYNCV_BEG) & (hcount < HSYNCV_END)) |
 			((hcount >= (HSYNCV_BEG + HPERIOD/2)) & (hcount < (HSYNCV_END + HPERIOD/2)));
-	wire hb = (hcount >= HBLNK_BEG) & (hcount < HBLNK_END);
+	assign hb = (hcount >= HBLNK_BEG) & (hcount < HBLNK_END);
 			
 	wire vs = (vcount >= VSYNC_BEG) & (vcount < VSYNC_END);
-	wire vb = (vcount >= VBLNK_BEG) & (vcount < VBLNK_END);
+	assign vb = (vcount >= VBLNK_BEG) & (vcount < VBLNK_END);
 	
 	assign tv_pix_start = (hcount == (HBLNK_END - 1));
 	assign vga_pix_start = ((hcount == (HBLNKV_END - 1)) | (hcount == (HBLNKV_END + HPERIOD/2 - 1))) & c0;
 
-	assign tv_blank = hb | vb;
-	
 	assign vga_line = (hcount >= HPERIOD/2);
 	
 	assign hpix = (hcount >= hpix_beg) & (hcount < hpix_end);

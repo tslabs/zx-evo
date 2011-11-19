@@ -40,7 +40,8 @@ module video_top (
 	input  wire        video_next,
 	output wire [20:0] video_addr,
 	input  wire [15:0] video_data,
-	output wire [ 1:0] video_bw,
+	output wire [ 2:0] video_bw_need,
+	output wire [ 2:0] video_bw_total,
 	output wire        video_go, 
 	
 // video controls
@@ -63,7 +64,8 @@ module video_top (
 		.hires		    (hires		    ),
 		.render_mode	(render_mode    ),
 		.video_addr	    (video_addr	    ),
-		.video_bw       (video_bw       )
+		.video_bw_need  (video_bw_need  ),
+		.video_bw_total (video_bw_total )
 	);
 	
 	wire [8:0] hpix_beg;
@@ -91,7 +93,8 @@ module video_top (
 		.csync			(csync			),
 		.tv_pix_start	(tv_pix_start	),
 		.vga_pix_start	(vga_pix_start	),
-		.tv_blank		(tv_blank		),
+		.hb				(tv_hblank		),
+		.vb				(tv_vblank		),
 		.vga_line		(vga_line		),
 		.frame_start	(frame_start	),
 		.line_start		(line_start		),
@@ -105,7 +108,9 @@ module video_top (
 
 	wire tv_pix_start;
     wire vga_pix_start;
-	wire tv_blank;
+	wire tv_hblank;
+	wire tv_vblank;
+	wire vga_hblank;
 	wire vga_line;
 	wire frame_start;
 	wire line_start;
@@ -139,7 +144,7 @@ module video_top (
 	);
 
 	wire [31:0] fetch_data;
-    wire [ 1:0] ptr = cnt_col[1:0];
+    wire 		ptr = cnt_col[0];
 
 	
 	video_render video_render (
@@ -161,26 +166,31 @@ module video_top (
 	video_vga video_vga (
 		.clk		(clk			),
 		.c0			(c0				),
+		.c4			(c4				),
 		.q0			(q0				),
 		.start_in	(tv_pix_start	),
 		.start_out	(vga_pix_start	),
 		.line_start	(line_start		),
-		.vga_blank	(vga_blank		),
+		.hb			(vga_hblank		),
+		.hires		(hires		    ),
 		.vga_in		(tvdata			),
 		.vga_out	(vgadata		)
 	);
 
-	wire vga_blank;
 	wire [7:0] tvdata;
 	wire [7:0] vgadata;
 	
 
 	video_out video_out (
 		.clk		(clk		),
+		.f0			(f0			),
 		.vga_on		(vga_on		),
 		.vga_line	(vga_line	),
-		.tv_blank 	(tv_blank	),
-		.vga_blank	(vga_blank	),
+		.tv_hblank 	(tv_hblank	),
+		.tv_vblank 	(tv_vblank	),
+		.vga_hblank	(vga_hblank	),
+		.hires		(hires		),
+		.start_out	(vga_pix_start	),
 	    .tvdata		(tvdata		),
 	    .vgadata	(vgadata	),
 		.vred		(vred		),

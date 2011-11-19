@@ -7,7 +7,7 @@ module video_fetch (
 	input wire clk,
 	
 // control
-    input wire [1:0] ptr,
+    input wire ptr,
    
 // video data
 	output  reg [31:0] dram_out,
@@ -22,7 +22,7 @@ module video_fetch (
 // fetching data
 	always @(posedge clk)
 		if (video_strobe)
-			if (ptr[0])
+			if (ptr)
 				dram_out[31:16] <= video_data;
 			else
 				dram_out[15: 0] <= video_data;
