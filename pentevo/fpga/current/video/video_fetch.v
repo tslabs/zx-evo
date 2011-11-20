@@ -7,7 +7,8 @@ module video_fetch (
 	input wire clk,
 	
 // control
-    input wire ptr,
+    input wire [3:0] f_sel,
+    input wire [1:0] b_sel,
    
 // video data
 	output  reg [31:0] dram_out,
@@ -21,11 +22,12 @@ module video_fetch (
 
 // fetching data
 	always @(posedge clk) if (video_strobe)
-		if (ptr)	// counter is already incremented by this time!
-			dram_out[15: 0] <= video_data;	// 1st word is clocked
-		else
-			dram_out[31:16] <= video_data;	// 2nd word is clocked
+	begin
+		if (f_sel[0]) dram_out[ 7: 0] <= b_sel[0] ? video_data[15:8] : video_data[ 7:0];
+		if (f_sel[1]) dram_out[15: 8] <= b_sel[1] ? video_data[15:8] : video_data[ 7:0];
+		if (f_sel[2]) dram_out[23:16] <= video_data[ 7:0];
+		if (f_sel[3]) dram_out[31:24] <= video_data[15:8];
+	end
 	
-    
-	
+   
 endmodule

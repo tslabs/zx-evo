@@ -1,12 +1,14 @@
+ -  fix port addresses
+ -  zmaps
+ -  add horizontal scroll fine tuning (now only address is clocked)
  -  fix vertical blank for border 1 line lag
  -  fix hi-res 1st pixel lag
- -  add horizontal scroll fine tuning (now only address is clocked)
- -  text mode
- -  giga mode
+ -  unify the lo/hi-res video data processing for tv/vga (borded apparently)
+ -  gigascreen mode
  -  make proper clocked altdprams
  -  make proper video buffering to avoid Qua's yelling
- -  zmaps
+ -  check timings for video
  -  ZX flash generator
  -  s/w writes to X/Y counters
- -  check timings for video
  -  search ways to optimize huge LC usage
+ 

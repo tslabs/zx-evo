@@ -7,9 +7,8 @@
 
 
 
-// 18.11.2011:
-// arbiter has been re-factored so it uses N_cycles from N_total instead of BW
-// (with big reserve, probably a subject to optimize. by now is used only for 256c)
+// 20.11.2011:
+// arbiter has been re-factored so it uses N_cycles out of 4/8
 
 
 // 14.06.2011:
@@ -100,13 +99,15 @@ module arbiter(
 	input go, // start video access blocks
 
 	// input [1:0] bw, // required bandwidth: 3'b00 - 1 video cycle per block
-	                //                     3'b01 - 2 video accesses
-	                //                     3'b10 - 4 video accesses
-	                //                     3'b11 - 8 video accesses (stall of CPU)
-					
-	input wire [2:0] bw_need,	// number of cycles used for video accesses out of total
-	input wire [2:0] bw_total,	// number of cycles in one arbiter burst
-								// both mean 0 = 8 cycles
+	input wire [3:0] video_bw,
+								// 4'b0x00 - 4 video accesses of 4 (stall of CPU)
+								// 4'b0x01 - 1 video access of 4
+								// 4'b0x10 - 2 video accesses of 4
+								
+								// 4'b1000 - 8 video accesses of 8 (stall of CPU)
+								// 4'b1001 - 1 video access of 8
+								// 4'b1010 - 2 video accesses of 8
+								// 4'b1100 - 4 video accesses of 8
 
 	input  [20:0] video_addr,   // during access block, only when video_strobe==1
 	output [15:0] video_data,   // read video data which is valid only during video_strobe==1 because video_data
@@ -167,7 +168,7 @@ module arbiter(
 
 	assign c0 = dram_c0; // just alias
 
-	wire bw_full = (bw_need == bw_total);	// ex bw==2'd3
+	wire bw_full = {video_bw[3] & video_bw[2], video_bw[1:0]} == 3'b0;
 
 	// track blk_rem counter: how many cycles left to the end of block (7..0)
 	always @(posedge clk) if( c6 )
@@ -181,7 +182,7 @@ module arbiter(
 	always @*
 	begin
 		if( (blk_rem==3'd0) && go )
-			blk_nrem = bw_total - 1;	
+			blk_nrem = {video_bw[3], 2'b11};	// select 4/8 cycles per burst
 			// blk_nrem = 7;	
 		else
 			blk_nrem = (blk_rem==0) ? 3'd0 : (blk_rem-3'd1);
@@ -190,7 +191,7 @@ module arbiter(
 
 
 	// track vid_rem counter
-	assign vidmax = bw_need; // number of cycles to perform
+	assign vidmax = {video_bw[3] & video_bw[2], video_bw[1:0]}; // number of cycles for video access
 	// assign vidmax = (3'b001) << bw; // number of cycles to perform
 
 	always @(posedge clk) if( c6 )

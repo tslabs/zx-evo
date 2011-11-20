@@ -546,9 +546,7 @@ module top(
 	         );
 
 
-	// wire [1:0] bw;
-	wire [2:0] bw_need;
-	wire [2:0] bw_total;
+	wire [3:0] video_bw;
 
 	wire [20:0] video_addr;
 	wire [15:0] video_data;
@@ -572,8 +570,7 @@ module top(
 	                 .c6     (c6     ),
 
 	                 .go(go),
-	                 .bw_need(bw_need),
-	                 .bw_total(bw_total),
+	                 .video_bw(video_bw),
 
 	                 .video_addr(video_addr),
 	                 .video_data(video_data),
@@ -628,8 +625,7 @@ module top(
 		.video_strobe   (video_strobe),
 		.video_next     (video_next  ),
 		.video_go       (go          ),
-		.video_bw_need  (bw_need     ),
-		.video_bw_total (bw_total    ),
+		.video_bw		(video_bw	 ),
 
 		.int_start(int_start)
 
