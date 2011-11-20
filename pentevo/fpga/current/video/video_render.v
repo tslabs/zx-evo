@@ -44,8 +44,7 @@ module video_render (
 // video data fetcher
 	reg  [31:0] data;
 	
-	always @(posedge clk) if (pix_stb)
-		if (fetch)
+	always @(posedge clk) if (pix_stb & fetch)
 			data <= dram_in;
 
 
@@ -54,8 +53,8 @@ module video_render (
 	
 	wire [15:0] zx_gfx = data[15: 0];
 	wire [15:0] zx_atr = data[31:16];
-	wire zx_dot = zx_gfx[~cnt[3:0]];
-	wire [7:0] zx_attr	= cnt[3] ? zx_atr[7:0] : zx_atr[15:8];
+	wire zx_dot = zx_gfx[{cnt[3], ~cnt[2:0]}];
+	wire [7:0] zx_attr	= ~cnt[3] ? zx_atr[7:0] : zx_atr[15:8];
 	wire [7:0] zx_pix = {ZX_PAL, zx_attr[6], zx_dot ? zx_attr[2:0] : zx_attr[5:3]};
 
     
@@ -71,7 +70,7 @@ module video_render (
 	assign hc_dot[5] = data[19:16];
 	assign hc_dot[6] = data[31:28];
 	assign hc_dot[7] = data[27:24];
-	wire [7:0] hc_pix = {HC_PAL, hc_dot[~cnt[2:0]]};
+	wire [7:0] hc_pix = {HC_PAL, hc_dot[cnt[2:0]]};
 	
     
 // 256c graphics
@@ -80,7 +79,7 @@ module video_render (
 	assign xc_dot[1] = data[15: 8];
 	assign xc_dot[2] = data[23:16];
 	assign xc_dot[3] = data[31:24];
-	wire [7:0] xc_pix = {xc_dot[~cnt[1:0]]};
+	wire [7:0] xc_pix = {xc_dot[cnt[1:0]]};
 	
     
 // mode muxes

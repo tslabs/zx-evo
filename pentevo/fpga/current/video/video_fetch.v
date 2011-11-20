@@ -20,12 +20,11 @@ module video_fetch (
 
 
 // fetching data
-	always @(posedge clk)
-		if (video_strobe)
-			if (ptr)
-				dram_out[31:16] <= video_data;
-			else
-				dram_out[15: 0] <= video_data;
+	always @(posedge clk) if (video_strobe)
+		if (ptr)	// counter is already incremented by this time!
+			dram_out[15: 0] <= video_data;	// 1st word is clocked
+		else
+			dram_out[31:16] <= video_data;	// 2nd word is clocked
 	
     
 	
