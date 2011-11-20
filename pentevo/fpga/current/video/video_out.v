@@ -31,7 +31,8 @@ module video_out (
 
 
 // registering output colors
-	always @(negedge clk)
+	// always @(negedge clk)
+	always @(posedge clk)
 	begin
 		vred <= pred;
 		vgrn <= pgrn;

@@ -40,8 +40,7 @@ module video_top (
 	input  wire        video_next,
 	output wire [20:0] video_addr,
 	input  wire [15:0] video_data,
-	output wire [ 2:0] video_bw_need,
-	output wire [ 2:0] video_bw_total,
+	output wire [ 3:0] video_bw,
 	output wire        video_go, 
 	
 // video controls
@@ -51,20 +50,22 @@ module video_top (
 
 
 	video_mode video_mode (
-		.vconfig	    (vconfig	    ),
-		.scr_page	    (scr_page	    ),
-		.hpix_beg	    (hpix_beg	    ),
-		.hpix_end	    (hpix_end	    ),
-		.vpix_beg	    (vpix_beg	    ),
-		.vpix_end	    (vpix_end	    ),
-        .go_offs        (go_offs        ),
-        .cnt_col        (cnt_col        ),
-        .cnt_row        (cnt_row        ),
-		.hires		    (hires		    ),
-		.render_mode	(render_mode    ),
-		.video_addr	    (video_addr	    ),
-		.video_bw_need  (video_bw_need  ),
-		.video_bw_total (video_bw_total )
+		.vconfig	    (vconfig	     ),
+		.scr_page	    (scr_page	     ),
+		.fetch_sel		(fetch_sel		 ),
+		.fetch_bsl		(fetch_bsl		 ),
+		.txt_char	    (fetch_data[15:0]),
+		.hpix_beg	    (hpix_beg	     ),
+		.hpix_end	    (hpix_end	     ),
+		.vpix_beg	    (vpix_beg	     ),
+		.vpix_end	    (vpix_end	     ),
+        .go_offs        (go_offs         ),
+        .cnt_col        (cnt_col         ),
+        .cnt_row        (cnt_row         ),
+		.hires		    (hires		     ),
+		.render_mode	(render_mode     ),
+		.video_addr	    (video_addr	     ),
+		.video_bw		(video_bw		 )
 	);
 	
 	wire [8:0] hpix_beg;
@@ -134,13 +135,16 @@ module video_top (
 
 	video_fetch video_fetch (
 		.clk			(clk			),
-		.ptr			(cnt_col[0]		),
+		.f_sel			(fetch_sel		),
+		.b_sel			(fetch_bsl		),
 		.video_strobe	(video_strobe	),
 		.video_data		(video_data		),
 		.dram_out		(fetch_data		)
 	);
 
 	wire [31:0] fetch_data;
+	wire [3:0] fetch_sel;
+	wire [1:0] fetch_bsl;
 
 	
 	video_render video_render (

@@ -13,6 +13,11 @@ module video_mode (
 	output wire [8:0] vpix_beg,
 	output wire [8:0] vpix_end,
 	output wire [4:0] go_offs,
+	output wire [3:0] fetch_sel,
+	output wire	[1:0] fetch_bsl,
+
+// video data
+	input wire [15:0] txt_char,
     
 // video counters
     input wire [8:0] cnt_col,
@@ -24,8 +29,7 @@ module video_mode (
     
 // DRAM interface	
     output wire [20:0] video_addr,
-    output wire [ 2:0] video_bw_need,
-    output wire [ 2:0] video_bw_total
+    output wire [ 3:0] video_bw
 	
 );
 
@@ -43,7 +47,7 @@ module video_mode (
     localparam M_XC = 3'h6;		// 256c
     localparam M_TX = 3'h7;		// Text
     
-// Render modes (affect 'video_render.v')
+// Render modes (affects 'video_render.v')
     localparam R_ZX = 2'h0;
     localparam R_HC = 2'h1;
     localparam R_XC = 2'h2;
@@ -53,6 +57,7 @@ module video_mode (
 // fetch window
 	wire [4:0] g_offs[0:7];
 
+	// these values are empiric!!! recheck them occasionally!
     assign g_offs[M_ZX] = 5'd18;
     assign g_offs[M_GS] = 5'd18;
     assign g_offs[M_02] = 5'd10;
@@ -66,35 +71,18 @@ module video_mode (
 
 
 // DRAM bandwidth usage
-    wire [2:0] bwu[0:7];
-    wire [2:0] bwt[0:7];
+    wire [3:0] bw[0:7];
     
-    assign bwu[M_ZX] = 3'd1;	// 1 of 8
-    assign bwt[M_ZX] = 3'd0;
-	
-    assign bwu[M_GS] = 3'd2;	// 2 of 8
-    assign bwt[M_GS] = 3'd0;
-	
-    assign bwu[M_02] = 3'd2;	// 2 of 8 (ZX Hi-res test)
-    assign bwt[M_02] = 3'd0;
-	
-    assign bwu[M_03] = 3'd4;	// 4 of 8 (test)
-    assign bwt[M_03] = 3'd0;
-	
-    assign bwu[M_04] = 3'd0;	// 8 of 8 (test)
-    assign bwt[M_04] = 3'd0;
-	
-    assign bwu[M_HC] = 3'd2;	// 2 of 8
-    assign bwt[M_HC] = 3'd0;
-	
-    assign bwu[M_XC] = 3'd2;	// 2 of 4
-    assign bwt[M_XC] = 3'd4;
-	
-    assign bwu[M_TX] = 3'd3;	// 3 of 8
-    assign bwt[M_TX] = 3'd0;
+    assign bw[M_ZX] = 4'b1001;	// 1 of 8 (ZX)
+    assign bw[M_GS] = 4'b1010;	// 2 of 8 (Giga)
+    assign bw[M_02] = 4'b1010;	// 2 of 8 (ZX Hi-res test)
+    assign bw[M_03] = 4'b1100;	// 4 of 8 (test)
+    assign bw[M_04] = 4'b0000;	// 4 of 4 (test)
+    assign bw[M_HC] = 4'b1010;	// 2 of 8 (16c)
+    assign bw[M_XC] = 4'b0010;	// 2 of 4 (256c)
+    assign bw[M_TX] = 4'b1100;	// 4 of 8 (text)
     
-    assign video_bw_need  = bwu[vmod];
-    assign video_bw_total = bwt[vmod];
+    assign video_bw = bw[vmod];
 
 	
 // pixelrate
@@ -165,9 +153,9 @@ module video_mode (
 
  
 // ZX
-	wire [20:0] addr_zx = ~cnt_col[0] ? addr_zx_gfx : addr_zx_atr;
-	wire [20:0] addr_zx_gfx = {scr_page, 1'b0, cnt_row[7:6], cnt_row[2:0], cnt_row[5:3], cnt_col[4:1]};
-	wire [20:0] addr_zx_atr = {scr_page, 4'b0110, cnt_row[7:3], cnt_col[4:1]};
+	wire [20:0] addr_zx = {scr_page, 1'b0, ~cnt_col[0] ? addr_zx_gfx : addr_zx_atr};
+	wire [11:0] addr_zx_gfx = {cnt_row[7:6], cnt_row[2:0], cnt_row[5:3], cnt_col[4:1]};
+	wire [11:0] addr_zx_atr = {3'b110, cnt_row[7:3], cnt_col[4:1]};
 
     
 // Gigascreen
@@ -183,8 +171,32 @@ module video_mode (
 
 
 // Textmode
-    wire [20:0] addr_text = 0;
+    wire [20:0] addr_text = {scr_page[7:1], addr_tx[cnt_col[1:0]]};
+	wire [13:0] addr_tx[0:3];
+    assign addr_tx[0] = {1'b0, cnt_row[8:3], 1'b0, cnt_col[7:2]};	// char codes, data[15:0]
+    assign addr_tx[1] = {1'b0, cnt_row[8:3], 1'b1, cnt_col[7:2]};	// char attributes, data[31:16]
+    assign addr_tx[2] = {4'b1000, txt_char[7:0], cnt_row[2:1]};		// char0 graphics, data[7:0]
+    assign addr_tx[3] = {4'b1000, txt_char[15:8], cnt_row[2:1]};	// char1 graphics, data[15:8]
     
-    
+
+// fetch selectors
+	assign fetch_sel = vmod == M_TX ? f_txt_sel[cnt_col[1:0]] : {{2{~cnt_col[0]}}, {2{cnt_col[0]}}};
+	assign fetch_bsl = vmod == M_TX ? f_txt_bsl[cnt_col[1:0]] : 2'b10;
+
+// Attention: counter is already incremented at the time of video data fetching!
+	wire [3:0] f_txt_sel[0:3];
+	assign f_txt_sel[1] = 4'b0011;	// char
+	assign f_txt_sel[2] = 4'b1100;	// attr
+	assign f_txt_sel[3] = 4'b0001;	// gfx0
+	assign f_txt_sel[0] = 4'b0010;	// gfx1
 	
+	wire [1:0] f_txt_bsl[0:3];
+	assign f_txt_bsl[1] = 2'b10;			// char
+	assign f_txt_bsl[2] = 2'b10;			// attr
+	assign f_txt_bsl[3] = {2{cnt_row[0]}};	// gfx0
+	assign f_txt_bsl[0] = {2{cnt_row[0]}};	// gfx1
+	
+
 endmodule
+
+

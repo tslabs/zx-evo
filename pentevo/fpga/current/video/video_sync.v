@@ -92,6 +92,7 @@ module video_sync (
 	assign hvpix = hpix & vpix;
 	
 	assign video_go = (hcount >= (hpix_beg - go_offs)) & (hcount < (hpix_end - go_offs)) & vpix;
+	// assign video_go = (hcount >= (hpix_beg - 16)) & (hcount < (hpix_end - 16)) & vpix;
 	
 	assign line_start = (hcount == (HPERIOD - 1));
 	assign frame_start = (hcount == (HPERIOD - 1)) & (vcount == (VPERIOD - 1));
