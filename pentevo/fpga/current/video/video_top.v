@@ -57,8 +57,7 @@ module video_top (
 		.hpix_end	    (hpix_end	    ),
 		.vpix_beg	    (vpix_beg	    ),
 		.vpix_end	    (vpix_end	    ),
-        .go_beg         (go_beg         ),
-        .go_end         (go_end         ),
+        .go_offs        (go_offs        ),
         .cnt_col        (cnt_col        ),
         .cnt_row        (cnt_row        ),
 		.hires		    (hires		    ),
@@ -72,8 +71,7 @@ module video_top (
 	wire [8:0] hpix_end;
 	wire [8:0] vpix_beg;
 	wire [8:0] vpix_end;
-    wire [8:0] go_beg;
-	wire [8:0] go_end;
+    wire [4:0] go_offs;
 	wire [1:0] render_mode;
 	wire hires;
 
@@ -86,8 +84,7 @@ module video_top (
 		.hpix_end		(hpix_end		),
 		.vpix_beg		(vpix_beg		),
 		.vpix_end		(vpix_end		),
-        .go_beg         (go_beg         ),
-        .go_end         (go_end         ),        
+        .go_offs        (go_offs        ),
 		.hsync			(hsync			),
 		.vsync			(vsync			),
 		.csync			(csync			),
@@ -137,14 +134,13 @@ module video_top (
 
 	video_fetch video_fetch (
 		.clk			(clk			),
-		.ptr			(ptr			),
+		.ptr			(cnt_col[0]		),
 		.video_strobe	(video_strobe	),
 		.video_data		(video_data		),
 		.dram_out		(fetch_data		)
 	);
 
 	wire [31:0] fetch_data;
-    wire 		ptr = cnt_col[0];
 
 	
 	video_render video_render (
@@ -180,6 +176,7 @@ module video_top (
 	wire [7:0] tvdata;
 	wire [7:0] vgadata;
 	
+	// assign vred = {debug, 1'b0};
 
 	video_out video_out (
 		.clk		(clk		),
@@ -193,10 +190,10 @@ module video_top (
 		.start_out	(vga_pix_start	),
 	    .tvdata		(tvdata		),
 	    .vgadata	(vgadata	),
-		.vred		(vred		),
 		.romconf	(romconf	), //!!!		
 		.vpage	(vpage	), //!!!		
 		.page00	(page00	), //!!!		
+		.vred		(vred		),
 	    .vgrn		(vgrn		),
 	    .vblu		(vblu		)
 	);

@@ -294,7 +294,7 @@ module zmem(
 	always @* if( cpu_strobe ) // WARNING! ACHTUNG! LATCH!!!
 		rd_buf <= cpu_rddata;
 	//
-	assign zd_out = cpu_wrbsel ? rd_buf[7:0] : rd_buf[15:8];
+	assign zd_out = ~cpu_wrbsel ? rd_buf[7:0] : rd_buf[15:8];
 
 
 

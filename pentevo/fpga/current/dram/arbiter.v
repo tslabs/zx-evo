@@ -111,9 +111,9 @@ module arbiter(
 	input  [20:0] video_addr,   // during access block, only when video_strobe==1
 	output [15:0] video_data,   // read video data which is valid only during video_strobe==1 because video_data
 	                            // is just wires to the dram.v's rddata signals
-	output reg    video_strobe, // positive one-cycle strobe as soon as there is next video_data available.
+	output wire   video_strobe, // positive one-cycle strobe as soon as there is next video_data available.
 	                            // if there is video_strobe, it coincides with c6 signal
-	output reg    video_next,   // on this signal you can change video_addr; it is one clock leading the video_strobe
+	output wire    video_next,   // on this signal you can change video_addr; it is one clock leading the video_strobe
 
 
 
@@ -125,7 +125,7 @@ module arbiter(
 
 	output wire [15:0] cpu_rddata,
 	output reg         cpu_next,
-        output reg         cpu_strobe
+    output reg         cpu_strobe
 );
 
 	wire c0;
@@ -292,7 +292,7 @@ module arbiter(
 	// route required data/etc. to and from the dram.v
 
 	assign dram_wrdata[15:0] = { cpu_wrdata[7:0], cpu_wrdata[7:0] };
-	assign dram_bsel[1:0] = { ~cpu_wrbsel, cpu_wrbsel };
+	assign dram_bsel[1:0] = { cpu_wrbsel, ~cpu_wrbsel };
 
 	assign dram_addr = next_cycle[0] ? cpu_addr : video_addr;
 
@@ -334,19 +334,8 @@ module arbiter(
 	end
 
 
-	always @(posedge clk) if (f0)
-	begin
-		if( (curr_cycle==CYC_VIDEO) && c4 )
-			video_strobe <= 1'b1;
-		else
-			video_strobe <= 1'b0;
-
-		if( (curr_cycle==CYC_VIDEO) && c2 )
-			video_next <= 1'b1;
-		else
-			video_next <= 1'b0;
-	end
-
+	assign video_next = (curr_cycle==CYC_VIDEO) & c4;
+	assign video_strobe = (curr_cycle==CYC_VIDEO) & c6;
 
 
 endmodule

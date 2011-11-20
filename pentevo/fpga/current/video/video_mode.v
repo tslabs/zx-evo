@@ -12,8 +12,7 @@ module video_mode (
 	output wire [8:0] hpix_end,
 	output wire [8:0] vpix_beg,
 	output wire [8:0] vpix_end,
-	output wire [8:0] go_beg,
-	output wire [8:0] go_end,
+	output wire [4:0] go_offs,
     
 // video counters
     input wire [8:0] cnt_col,
@@ -51,46 +50,19 @@ module video_mode (
     localparam R_03 = 2'h3;
 
     
-// addresses
-    wire [20:0] v_addr[0:7];
-
-    assign v_addr[M_ZX] = addr_zx;
-    assign v_addr[M_GS] = addr_giga;
-    assign v_addr[M_02] = addr_zx;
-    assign v_addr[M_03] = addr_zx;
-    assign v_addr[M_04] = addr_zx;
-    assign v_addr[M_HC] = addr_16c;
-    assign v_addr[M_XC] = addr_256c;
-    assign v_addr[M_TX] = addr_text;
-    
-    assign video_addr = v_addr[vmod];
-
- 
 // fetch window
-	wire [8:0] g_beg[0:7];
-	wire [8:0] g_end[0:7];
+	wire [4:0] g_offs[0:7];
 
-// !!! check these values !!!    
-    assign g_beg[M_ZX] = hpix_beg - 16;
-    assign g_beg[M_GS] = hpix_beg - 16;
-    assign g_beg[M_02] = hpix_beg - 8;
-    assign g_beg[M_03] = hpix_beg - 16;
-    assign g_beg[M_04] = hpix_beg - 16;
-    assign g_beg[M_HC] = hpix_beg - 8;
-    assign g_beg[M_XC] = hpix_beg - 5;
-    assign g_beg[M_TX] = hpix_beg - 8;
+    assign g_offs[M_ZX] = 5'd18;
+    assign g_offs[M_GS] = 5'd18;
+    assign g_offs[M_02] = 5'd10;
+    assign g_offs[M_03] = 5'd18;
+    assign g_offs[M_04] = 5'd18;
+    assign g_offs[M_HC] = 5'd10;
+    assign g_offs[M_XC] = 5'd6;
+    assign g_offs[M_TX] = 5'd10;
 
-    assign g_end[M_ZX] = hpix_end - 18;
-    assign g_end[M_GS] = hpix_end - 18;
-    assign g_end[M_02] = hpix_end - 10;
-    assign g_end[M_03] = hpix_end - 18;
-    assign g_end[M_04] = hpix_end - 18;
-    assign g_end[M_HC] = hpix_end - 10;
-    assign g_end[M_XC] = hpix_end - 6;
-    assign g_end[M_TX] = hpix_end - 10;
-
-    assign go_beg = g_beg[vmod];
-    assign go_end = g_end[vmod];
+    assign go_offs = g_offs[vmod];
 
 
 // DRAM bandwidth usage
@@ -177,8 +149,23 @@ module video_mode (
 	assign vpix_end = vp_end[rres];
 
 	
+// addresses
+    wire [20:0] v_addr[0:7];
+
+    assign v_addr[M_ZX] = addr_zx;
+    assign v_addr[M_GS] = addr_giga;
+    assign v_addr[M_02] = addr_zx;
+    assign v_addr[M_03] = addr_zx;
+    assign v_addr[M_04] = addr_zx;
+    assign v_addr[M_HC] = addr_16c;
+    assign v_addr[M_XC] = addr_256c;
+    assign v_addr[M_TX] = addr_text;
+    
+    assign video_addr = v_addr[vmod];
+
+ 
 // ZX
-	wire [20:0] addr_zx = cnt_col[0] ? addr_zx_gfx : addr_zx_atr;
+	wire [20:0] addr_zx = ~cnt_col[0] ? addr_zx_gfx : addr_zx_atr;
 	wire [20:0] addr_zx_gfx = {scr_page, 1'b0, cnt_row[7:6], cnt_row[2:0], cnt_row[5:3], cnt_col[4:1]};
 	wire [20:0] addr_zx_atr = {scr_page, 4'b0110, cnt_row[7:3], cnt_col[4:1]};
 

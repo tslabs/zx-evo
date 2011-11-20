@@ -27,6 +27,13 @@ module video_cntr (
 
 
 // counters
+	always @(posedge clk)
+		if (line_start)
+			cnt_col <= cstart;
+		else
+		if (video_next)
+			cnt_col <= cnt_col + 1;
+
 	always @(posedge clk) if (c4)
 		if (frame_start)
 			cnt_row <=  rstart;
@@ -34,13 +41,6 @@ module video_cntr (
 		if (line_start & vpix)
 			cnt_row <=  cnt_row + 1;
 		
-	always @(posedge clk) if (c4)
-		if (line_start)
-			cnt_col <= cstart;
-		else
-		if (video_next)
-			cnt_col <= cnt_col + 1;
-
 
 
 endmodule
