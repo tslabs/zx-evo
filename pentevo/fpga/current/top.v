@@ -611,6 +611,8 @@ module top(
 		.border(border),
 		.vpage(vpage),
 		.vconfig(vconfig),
+		.x_offs(x_offs),
+		.y_offs(y_offs),
 		
 		.vga_on(cfg_vga_on),
 
@@ -675,9 +677,11 @@ zmaps zmaps(
 				);
 				
 		
-		wire [7:0]	   vconfig	;
-		wire [7:0]	   vpage	;
-		wire [4:0]	   fmaddr	;
+		wire [7:0] vconfig	;
+		wire [7:0] vpage	;
+		wire [4:0] fmaddr	;
+		wire [8:0] x_offs	;
+		wire [8:0] y_offs	;
 		// wire [7:0]	   cpuconf	;
 		// wire [7:0]	   romconf	;
 		// wire [7:0]	   page00	;
@@ -708,6 +712,8 @@ zmaps zmaps(
 					.vconfig	(vconfig	),
 					.vpage		(vpage		),
 					.fmaddr		(fmaddr		),
+					.x_offs		(x_offs		),
+					.y_offs		(y_offs		),
 					// .cpuconf	(cpuconf	),
 					// .romconf	(romconf	),
 					// .page00		(page00		),

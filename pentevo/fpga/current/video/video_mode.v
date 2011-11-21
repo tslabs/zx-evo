@@ -8,6 +8,8 @@ module video_mode (
 	input wire [7:0] vpage,
 	
 // video parameters
+	input  wire [8:0] x_offs,
+	output wire [9:0] x_offs_mode,
 	output wire [8:0] hpix_beg,
 	output wire [8:0] hpix_end,
 	output wire [8:0] vpix_beg,
@@ -20,8 +22,9 @@ module video_mode (
 	input wire [15:0] txt_char,
     
 // video counters
-    input wire [8:0] cnt_col,
+    input wire [7:0] cnt_col,
     input wire [8:0] cnt_row,
+    input wire cptr,
 	
 // mode controls
 	output wire hires,
@@ -56,8 +59,7 @@ module video_mode (
     
 // fetch window
 	wire [4:0] g_offs[0:7];
-
-	// these values are empiric!!! recheck them occasionally!
+// these values are empiric!!! recheck them occasionally!
     assign g_offs[M_ZX] = 5'd18;
     assign g_offs[M_GS] = 5'd18;
     assign g_offs[M_02] = 5'd10;
@@ -66,13 +68,15 @@ module video_mode (
     assign g_offs[M_HC] = 5'd10;
     assign g_offs[M_XC] = 5'd6;
     assign g_offs[M_TX] = 5'd10;
-
     assign go_offs = g_offs[vmod];
 
 
+// X offset
+	assign x_offs_mode = vmod == M_XC ? {x_offs[8:1], 1'b0, x_offs[0]} : {1'b0, x_offs[8:0]};
+
+	
 // DRAM bandwidth usage
     wire [3:0] bw[0:7];
-    
     assign bw[M_ZX] = 4'b1001;	// 1 of 8 (ZX)
     assign bw[M_GS] = 4'b1010;	// 2 of 8 (Giga)
     assign bw[M_02] = 4'b1010;	// 2 of 8 (ZX Hi-res test)
@@ -81,7 +85,6 @@ module video_mode (
     assign bw[M_HC] = 4'b1010;	// 2 of 8 (16c)
     assign bw[M_XC] = 4'b0010;	// 2 of 4 (256c)
     assign bw[M_TX] = 4'b1100;	// 4 of 8 (text)
-    
     assign video_bw = bw[vmod];
 
 	
@@ -92,7 +95,6 @@ module video_mode (
 	
 // render mode
     wire [1:0] r_mode[0:7];
-    
     assign r_mode[M_ZX] = R_ZX;
     assign r_mode[M_GS] = R_ZX;
     assign r_mode[M_02] = R_ZX;
@@ -101,7 +103,6 @@ module video_mode (
     assign r_mode[M_HC] = R_HC;
     assign r_mode[M_XC] = R_XC;
     assign r_mode[M_TX] = R_TX;    
-    
 	assign render_mode = r_mode[vmod];
 	
 	
@@ -139,7 +140,6 @@ module video_mode (
 	
 // addresses
     wire [20:0] v_addr[0:7];
-
     assign v_addr[M_ZX] = addr_zx;
     assign v_addr[M_GS] = addr_giga;
     assign v_addr[M_02] = addr_zx;
@@ -148,7 +148,6 @@ module video_mode (
     assign v_addr[M_HC] = addr_16c;
     assign v_addr[M_XC] = addr_256c;
     assign v_addr[M_TX] = addr_text;
-    
     assign video_addr = v_addr[vmod];
 
  
@@ -180,7 +179,7 @@ module video_mode (
     
 
 // fetch selectors
-	assign fetch_sel = vmod == M_TX ? f_txt_sel[cnt_col[1:0]] : {{2{~cnt_col[0]}}, {2{cnt_col[0]}}};
+	assign fetch_sel = vmod == M_TX ? f_txt_sel[cnt_col[1:0]] : {~cptr, ~cptr, cptr, cptr};
 	assign fetch_bsl = vmod == M_TX ? f_txt_bsl[cnt_col[1:0]] : 2'b10;
 
 // Attention: counter is already incremented at the time of video data fetching!
