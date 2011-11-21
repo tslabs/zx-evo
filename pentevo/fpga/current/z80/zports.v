@@ -471,7 +471,7 @@ module zports(
 	always @(posedge zclk)
 		if (!rst_n)
 		begin
-			// vconfig	<= 8'h00;
+			vconfig	<= 8'h00;
 			fmaddr[4]	<= 1'b0;
 			x_offs <= 9'b0;
 			y_offs <= 9'b0;

@@ -1,15 +1,18 @@
- -  fix port addresses
+Fixes:
+ -  ZX flash generator
  -  make CRAM clocked: zclk for WE and fclk for RE
  -  Xscroll for text mode
  -  fix vertical blank for border 1 line lag
  -  fix hi-res 1st pixel lag
  -  unify the lo/hi-res video data processing for tv/vga (borded apparently)
- -  gigascreen mode
  -  make proper clocked altdprams
  -  make proper video buffering to avoid Qua's yelling
  -  check timings for video
- -  ZX flash generator
- -  s/w writes to X/Y counters on-the-fly
  -  search ways to optimize huge LC usage
  -  fix covox and beeper write
  -  check border effects on INT position
+
+Features:
+ -  gigascreen mode
+ -  s/w writes to X/Y counters on-the-fly
+ -  RAM / ROM paging
