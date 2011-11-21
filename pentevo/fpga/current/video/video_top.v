@@ -166,7 +166,6 @@ module video_top (
 		.c0			    (c0	      	),
 		.c4			    (c4		  	),
 		.c6			    (c6		  	),
-		.x_offs			(x_offs[2:1]),
 		.pix_start	    (pix_start	),
 		.hvpix 	        (hvpix	  	),
 		.hires		    (hires		),
