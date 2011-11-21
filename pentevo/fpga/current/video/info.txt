@@ -1,6 +1,7 @@
 Of videomodes
 -------------
 
+
 1. Palette
 ----------
 
@@ -31,6 +32,9 @@ IGRB is pixel color from screen 1 and igrb - from screen 0.
 Thus, you can tune the color 'blending' from two screens using the palette.
 Some Gigascreen palette should be calculated using 'sophisticated' Excel tool or something.
 
+Text mode uses the same palette that 16c.
+
+
 2. Addresses
 ------------
 
@@ -52,3 +56,10 @@ Font is located at next to visible page at offset #0000.
 Example:
 Page 5 selected: text at page 4 at #C000-#FFFF,
 font at page 5 at #C000-$CFFF.
+The attributes in this mode are:
++----------+
+| 7      0 |
+| IGRBigrb |
++----------+
+IGRB is paper color for the symbol, and igrb is ink color.
+

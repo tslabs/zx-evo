@@ -24,13 +24,15 @@ module video_top (
 	output wire	vsync,
 	output wire	csync,
 
-// ZX ports
-	input wire [7:0] border,
-	input wire [7:0] scr_page,
+// config data
+	input wire [3:0] border,
+	input wire [7:0] vpage,
 	input wire [7:0] vconfig,
-	input wire [7:0] romconf,	//!!!
-	input wire [7:0] vpage,	//!!!
-	input wire [7:0] page00,	//!!!
+	
+// Z80 controls
+	input wire [15:0] a,
+	input wire [14:0] pal_data_in,
+	input wire 		  pal_we,
 	
 // ZX controls
 	output wire int_start,
@@ -51,7 +53,7 @@ module video_top (
 
 	video_mode video_mode (
 		.vconfig	    (vconfig	     ),
-		.scr_page	    (scr_page	     ),
+		.vpage	    (vpage	     ),
 		.fetch_sel		(fetch_sel		 ),
 		.fetch_bsl		(fetch_bsl		 ),
 		.txt_char	    (fetch_data[15:0]),
@@ -194,9 +196,9 @@ module video_top (
 		.start_out	(vga_pix_start	),
 	    .tvdata		(tvdata		),
 	    .vgadata	(vgadata	),
-		.romconf	(romconf	), //!!!		
-		.vpage	(vpage	), //!!!		
-		.page00	(page00	), //!!!		
+		.pal_addr_in(a[8:1]		),
+		.pal_data_in(pal_data_in),
+		.pal_we		(pal_we		),
 		.vred		(vred		),
 	    .vgrn		(vgrn		),
 	    .vblu		(vblu		)

@@ -333,7 +333,7 @@ module top(
 	wire ena_ports;
 
 
-	wire [7:0] border;
+	wire [3:0] border;
 
 	wire drive_ff;
 
@@ -589,9 +589,6 @@ module top(
 
 					 
 					 
-// under construction drafts
-	wire [7:0] scr_page = {6'b000001, p7ffd[3], 1'b1};
-					 
 	video_top video_top(
 
 		.clk(fclk),
@@ -612,11 +609,8 @@ module top(
 		.csync(vcsync),
 
 		.border(border),
-		.scr_page(scr_page),
+		.vpage(vpage),
 		.vconfig(vconfig),
-		.romconf	(romconf	), //!!!
-		.vpage	(vpage	), //!!!
-		.page00	(page00	), //!!!
 		
 		.vga_on(cfg_vga_on),
 
@@ -627,6 +621,9 @@ module top(
 		.video_go       (go          ),
 		.video_bw		(video_bw	 ),
 
+		.a(a),
+		.pal_data_in({d[6:0], zmd}),
+		.pal_we(pal_we),
 		.int_start(int_start)
 
 	);
@@ -660,21 +657,40 @@ module top(
 	                 .mus_data(mus_port_data)
 	               );
 
-		wire [7:0]	   cpuconf	;
-		wire [7:0]	   romconf	;
-		wire [7:0]	   vpage	;
-		wire [7:0]	   page00	;
-		wire [7:0]	   page01	;
-		wire [7:0]	   page10	;
-		wire [7:0]	   page11	;
+				   
+		wire [7:0]	   zmd	;
+				   
+zmaps zmaps(
+					.mreq_n(mreq_n),
+					.wr_n(wr_n),
+					.a(a),
+					.d(d),
+					.zclk(zclk),
+
+					.fmaddr(fmaddr),
+
+					.zmd(zmd),
+					
+					.pal_we(pal_we)
+				);
+				
+		
 		wire [7:0]	   vconfig	;
-		wire [7:0]	   faddr	;
-		wire [7:0]	   fpage	;
-		wire [7:0]	   tpage	;
-		wire [7:0]	   tgpage0	;
-		wire [7:0]	   tgpage1	;
-		wire [7:0]	   tmctrl	;
-		wire [7:0]	   hsint	;
+		wire [7:0]	   vpage	;
+		wire [4:0]	   fmaddr	;
+		// wire [7:0]	   cpuconf	;
+		// wire [7:0]	   romconf	;
+		// wire [7:0]	   page00	;
+		// wire [7:0]	   page01	;
+		// wire [7:0]	   page10	;
+		// wire [7:0]	   page11	;
+		// wire [7:0]	   faddr	;
+		// wire [7:0]	   fpage	;
+		// wire [7:0]	   tpage	;
+		// wire [7:0]	   tgpage0	;
+		// wire [7:0]	   tgpage1	;
+		// wire [7:0]	   tmctrl	;
+		// wire [7:0]	   hsint	;
 				   
 
 	zports zports( .zclk(zclk), .fclk(fclk), .f0(f0), .rst_n(rst_n), .zpos(zpos), .zneg(zneg),
@@ -689,21 +705,22 @@ module top(
 	               .ide_a(ide_a), .ide_cs0_n(ide_cs0_n), .ide_cs1_n(ide_cs1_n),
 	               .ide_wr_n(ide_wr_n), .ide_rd_n(ide_rd_n),
 					
-					.cpuconf	(cpuconf	),
-					.romconf	(romconf	),
-					.vpage		(vpage		),
-					.page00		(page00		),
-					.page01		(page01		),
-					.page10		(page10		),
-					.page11		(page11		),
 					.vconfig	(vconfig	),
-					.faddr	  	(faddr	  	),
-					.fpage	  	(fpage	  	),
-					.tpage	  	(tpage	  	),
-					.tgpage0	(tgpage0	),
-					.tgpage1	(tgpage1	),
-					.tmctrl	  	(tmctrl	  	),
-					.hsint	  	(hsint	  	),
+					.vpage		(vpage		),
+					.fmaddr		(fmaddr		),
+					// .cpuconf	(cpuconf	),
+					// .romconf	(romconf	),
+					// .page00		(page00		),
+					// .page01		(page01		),
+					// .page10		(page10		),
+					// .page11		(page11		),
+					// .faddr	  	(faddr	  	),
+					// .fpage	  	(fpage	  	),
+					// .tpage	  	(tpage	  	),
+					// .tgpage0	(tgpage0	),
+					// .tgpage1	(tgpage1	),
+					// .tmctrl	  	(tmctrl	  	),
+					// .hsint	  	(hsint	  	),
 					
 	               .keys_in(kbd_port_data),
 	               .mus_in (mus_port_data),

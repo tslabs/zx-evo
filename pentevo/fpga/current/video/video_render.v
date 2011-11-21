@@ -21,7 +21,7 @@ module video_render (
 
 // video data
 	input  wire [31:0] dram_in,
-	input  wire [ 7:0] border,
+	input  wire [ 3:0] border,
 	output wire [ 7:0] vdata_out
 	
 );
@@ -29,7 +29,7 @@ module video_render (
     localparam R_ZX = 2'h0;
     localparam R_HC = 2'h1;
     localparam R_XC = 2'h2;
-    localparam R_03 = 2'h3;
+    localparam R_TX = 2'h3;
 
     
 	wire pix_stb = hires ? q2 : c6;	//fixme!!! take out to the mode decoder!
@@ -80,14 +80,19 @@ module video_render (
 	assign xc_dot[2] = data[23:16];
 	assign xc_dot[3] = data[31:24];
 	wire [7:0] xc_pix = {xc_dot[cnt[1:0]]};
-	
+
+
+// text graphics
+// (it uses common renderer with ZX, but different attributes, it also shares palette with 16c)
+	wire [7:0] tx_pix = {HC_PAL, zx_dot ? zx_attr[3:0] : zx_attr[7:4]};
+
     
-// mode muxes
+// mode selects
     wire [7:0] d_out[0:3];
     assign d_out[R_ZX] = zx_pix;	// ZX
     assign d_out[R_HC] = hc_pix;	// 16c
     assign d_out[R_XC] = xc_pix;	// 256c
-    assign d_out[R_03] = 0;	// test
+    assign d_out[R_TX] = tx_pix;	// text
 
 
 	wire ftch[0:3];
@@ -95,11 +100,11 @@ module video_render (
 	assign ftch[R_ZX] = cnt[3:0] == 4'b1111;
 	assign ftch[R_HC] = cnt[2:0] == 3'b111;
 	assign ftch[R_XC] = cnt[1:0] == 2'b11;
-	assign ftch[R_03] = cnt[3:0] == 4'b1111;
+	assign ftch[R_TX] = cnt[3:0] == 4'b1111;
 
 	
 // mix video data and border
-	assign vdata_out = hvpix ? d_out[render_mode] : border;
+	assign vdata_out = hvpix ? d_out[render_mode] : {4'hF, border};
 	
 	
 	
