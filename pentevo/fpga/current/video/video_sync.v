@@ -14,6 +14,7 @@ module video_sync (
 	input wire [8:0] vpix_beg,
 	input wire [8:0] vpix_end,
 	input wire [4:0] go_offs,
+	input wire [1:0] x_offs,
 	
 // video syncs
 	output reg hsync,
@@ -91,12 +92,11 @@ module video_sync (
 	assign vpix = (vcount >= vpix_beg) & (vcount < vpix_end);
 	assign hvpix = hpix & vpix;
 	
-	assign video_go = (hcount >= (hpix_beg - go_offs)) & (hcount < (hpix_end - go_offs)) & vpix;
-	// assign video_go = (hcount >= (hpix_beg - 16)) & (hcount < (hpix_end - 16)) & vpix;
+	assign video_go = (hcount >= (hpix_beg - go_offs - x_offs)) & (hcount < (hpix_end - go_offs)) & vpix;
 	
 	assign line_start = (hcount == (HPERIOD - 1));
 	assign frame_start = (hcount == (HPERIOD - 1)) & (vcount == (VPERIOD - 1));
-	assign pix_start = (hcount == (hpix_beg - 1));
+	assign pix_start = (hcount == (hpix_beg - 1 - x_offs));
 	
 	assign int_start = (hcount == HINT_BEG) & (vcount == VINT_BEG);
 	

@@ -47,6 +47,8 @@ module zports(
 	output reg [7:0] vconfig	,
 	output reg [7:0] vpage		,
 	output reg [4:0] fmaddr		,
+	output reg [8:0] x_offs		,
+	output reg [8:0] y_offs		,
 	// output reg [7:0] cpuconf	,
 	// output reg [7:0] romconf	,
 	// output reg [7:0] page00		,
@@ -446,6 +448,10 @@ module zports(
 
 	localparam VCONFIG		= 8'd00;
 	localparam VPAGE		= 8'd01;
+	localparam XOFFSL		= 8'd02;
+	localparam XOFFSH		= 8'd03;
+	localparam YOFFSL		= 8'd04;
+	localparam YOFFSH		= 8'd05;
 	localparam FMADDR		= 8'd21;
 	// localparam XBORDER		= 8'h00;
 	// localparam ROMCONF		= 8'h02;
@@ -467,12 +473,18 @@ module zports(
 		begin
 			// vconfig	<= 8'h00;
 			fmaddr[4]	<= 1'b0;
+			x_offs <= 9'b0;
+			y_offs <= 9'b0;
 		end
 		else
 		if (portxt_wr)
 		begin
 			if (hoa == VCONFIG)	vconfig	<= din;
 			if (hoa == FMADDR)	fmaddr	<= din[4:0];
+			if (hoa == XOFFSL)	x_offs[7:0] <= din;
+			if (hoa == XOFFSH)	x_offs[8] <= din[0];
+			if (hoa == YOFFSL)	y_offs[7:0] <= din;
+			if (hoa == YOFFSH)	y_offs[8] <= din[0];
 			// if (hoa == ROMCONF)		romconf		<= din;
 			// if (hoa == PAGE00	)	page00		<= din;
 			// if (hoa == PAGE01	)	page01		<= din;

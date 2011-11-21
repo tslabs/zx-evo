@@ -24,10 +24,12 @@ module video_top (
 	output wire	vsync,
 	output wire	csync,
 
-// config data
+// video config
 	input wire [3:0] border,
 	input wire [7:0] vpage,
 	input wire [7:0] vconfig,
+	input wire [8:0] x_offs,
+	input wire [8:0] y_offs,
 	
 // Z80 controls
 	input wire [15:0] a,
@@ -53,10 +55,12 @@ module video_top (
 
 	video_mode video_mode (
 		.vconfig	    (vconfig	     ),
-		.vpage	    (vpage	     ),
+		.vpage	    	(vpage	     	 ),
 		.fetch_sel		(fetch_sel		 ),
 		.fetch_bsl		(fetch_bsl		 ),
 		.txt_char	    (fetch_data[15:0]),
+		.x_offs			(x_offs			 ),
+		.x_offs_mode	(x_offs_mode	 ),
 		.hpix_beg	    (hpix_beg	     ),
 		.hpix_end	    (hpix_end	     ),
 		.vpix_beg	    (vpix_beg	     ),
@@ -64,12 +68,14 @@ module video_top (
         .go_offs        (go_offs         ),
         .cnt_col        (cnt_col         ),
         .cnt_row        (cnt_row         ),
+        .cptr	        (cptr	         ),
 		.hires		    (hires		     ),
 		.render_mode	(render_mode     ),
 		.video_addr	    (video_addr	     ),
 		.video_bw		(video_bw		 )
 	);
 	
+    wire [9:0] x_offs_mode;
 	wire [8:0] hpix_beg;
 	wire [8:0] hpix_end;
 	wire [8:0] vpix_beg;
@@ -88,6 +94,7 @@ module video_top (
 		.vpix_beg		(vpix_beg		),
 		.vpix_end		(vpix_end		),
         .go_offs        (go_offs        ),
+        .x_offs         (x_offs_mode[1:0]),
 		.hsync			(hsync			),
 		.vsync			(vsync			),
 		.csync			(csync			),
@@ -125,14 +132,18 @@ module video_top (
 		.c4				(c4				),
 		.line_start		(line_start		),
 		.frame_start	(frame_start	),
+		.cstart			(x_offs_mode[9:2]),
+		.rstart			(y_offs			),
 		.vpix			(vpix			),
         .cnt_col        (cnt_col        ),
         .cnt_row        (cnt_row        ),
+        .cptr	        (cptr	        ),
 		.video_next		(video_next		)
 	);
 
-    wire [8:0] cnt_col;
+    wire [7:0] cnt_col;
     wire [8:0] cnt_row;
+	wire cptr;
     
 
 	video_fetch video_fetch (
@@ -155,6 +166,7 @@ module video_top (
 		.c0			    (c0	      	),
 		.c4			    (c4		  	),
 		.c6			    (c6		  	),
+		.x_offs			(x_offs[2:1]),
 		.pix_start	    (pix_start	),
 		.hvpix 	        (hvpix	  	),
 		.hires		    (hires		),

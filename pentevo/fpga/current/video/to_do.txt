@@ -1,7 +1,6 @@
  -  fix port addresses
- -  zmaps + lo/hi & hi/lo write mechanism for 16bit cells
- -  clocked data wr for CRAM
- -  add horizontal scroll fine tuning (now only address is clocked)
+ -  make CRAM clocked: zclk for WE and fclk for RE
+ -  Xscroll for text mode
  -  fix vertical blank for border 1 line lag
  -  fix hi-res 1st pixel lag
  -  unify the lo/hi-res video data processing for tv/vga (borded apparently)
@@ -10,7 +9,7 @@
  -  make proper video buffering to avoid Qua's yelling
  -  check timings for video
  -  ZX flash generator
- -  s/w writes to X/Y counters
+ -  s/w writes to X/Y counters on-the-fly
  -  search ways to optimize huge LC usage
  -  fix covox and beeper write
  -  check border effects on INT position

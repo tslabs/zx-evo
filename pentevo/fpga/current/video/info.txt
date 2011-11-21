@@ -63,3 +63,17 @@ The attributes in this mode are:
 +----------+
 IGRB is paper color for the symbol, and igrb is ink color.
 
+
+3. Ports
+--------
+
+Ports are arranged as #nnAF, where nn is a register number.
+Registers (in DEC):
+
+0  - VConfig	(Video mode and raster size)
+1  - VPage		(Visible page)
+2  - XOffsL		(X Offset)
+3  - XOffsH
+4  - YOffsL		(Y Offset)
+5  - YOffsH
+21 - FMAddr		(FMaps address and write enable)
