@@ -18,12 +18,14 @@ module video_out (
 // mode controls	
 	input wire hires,
 
+// Z80 controls
+	input  wire [14:0] pal_data_in,
+	input  wire [7:0] pal_addr_in,
+	input  wire pal_we,
+	
 // video data
 	input  wire [7:0] tvdata,
 	input  wire [7:0] vgadata,
-	input  wire [7:0] romconf,	//!!!
-	input  wire [7:0] vpage,	//!!!
-	input  wire [7:0] page00,	//!!!
 	output reg [1:0] vred,
     output reg [1:0] vgrn,
     output reg [1:0] vblu
@@ -31,8 +33,8 @@ module video_out (
 
 
 // registering output colors
-	// always @(negedge clk)
-	always @(posedge clk)
+	always @(negedge clk)
+	// always @(posedge clk)
 	begin
 		vred <= pred;
 		vgrn <= pgrn;
@@ -87,9 +89,9 @@ module video_out (
 // CRAM
 	video_cram video_cram(
 		.clock		(clk		),
-		.wraddress	(romconf   	),	//!!!
-		.data		({vpage, page00}    ),	//!!!
-		.wren		(1			),	//!!!
+		.wraddress	(pal_addr_in),
+		.data		(pal_data_in),
+		.wren		(pal_we		),
 	    .rdaddress	(vdata      ),
 	    .q			(vpixel    	)
 	);

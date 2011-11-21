@@ -5,7 +5,7 @@ module video_mode (
 
 // video config
 	input wire [7:0] vconfig,
-	input wire [7:0] scr_page,
+	input wire [7:0] vpage,
 	
 // video parameters
 	output wire [8:0] hpix_beg,
@@ -51,7 +51,7 @@ module video_mode (
     localparam R_ZX = 2'h0;
     localparam R_HC = 2'h1;
     localparam R_XC = 2'h2;
-    localparam R_03 = 2'h3;
+    localparam R_TX = 2'h3;
 
     
 // fetch window
@@ -100,7 +100,7 @@ module video_mode (
     assign r_mode[M_04] = R_ZX;
     assign r_mode[M_HC] = R_HC;
     assign r_mode[M_XC] = R_XC;
-    assign r_mode[M_TX] = R_ZX;    
+    assign r_mode[M_TX] = R_TX;    
     
 	assign render_mode = r_mode[vmod];
 	
@@ -153,7 +153,7 @@ module video_mode (
 
  
 // ZX
-	wire [20:0] addr_zx = {scr_page, 1'b0, ~cnt_col[0] ? addr_zx_gfx : addr_zx_atr};
+	wire [20:0] addr_zx = {vpage, 1'b0, ~cnt_col[0] ? addr_zx_gfx : addr_zx_atr};
 	wire [11:0] addr_zx_gfx = {cnt_row[7:6], cnt_row[2:0], cnt_row[5:3], cnt_col[4:1]};
 	wire [11:0] addr_zx_atr = {3'b110, cnt_row[7:3], cnt_col[4:1]};
 
@@ -163,15 +163,15 @@ module video_mode (
 
     
 // 16c
-	wire [20:0] addr_16c = {scr_page[7:3], cnt_row, cnt_col[6:0]};
+	wire [20:0] addr_16c = {vpage[7:3], cnt_row, cnt_col[6:0]};
 
 
 // 256c
-	wire [20:0] addr_256c = {scr_page[7:4], cnt_row, cnt_col[7:0]};
+	wire [20:0] addr_256c = {vpage[7:4], cnt_row, cnt_col[7:0]};
 
 
 // Textmode
-    wire [20:0] addr_text = {scr_page[7:1], addr_tx[cnt_col[1:0]]};
+    wire [20:0] addr_text = {vpage[7:1], addr_tx[cnt_col[1:0]]};
 	wire [13:0] addr_tx[0:3];
     assign addr_tx[0] = {1'b0, cnt_row[8:3], 1'b0, cnt_col[7:2]};	// char codes, data[15:0]
     assign addr_tx[1] = {1'b0, cnt_row[8:3], 1'b1, cnt_col[7:2]};	// char attributes, data[31:16]

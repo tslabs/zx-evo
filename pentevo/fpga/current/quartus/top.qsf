@@ -274,6 +274,7 @@ set_instance_assignment -name GLOBAL_SIGNAL ON -to spics_n
 
 # end ENTITY(top)
 # ---------------
+set_global_assignment -name FLEX10K_OPTIMIZATION_TECHNIQUE AREA
 set_global_assignment -name VERILOG_FILE ../video/video_top.v
 set_global_assignment -name VERILOG_FILE ../video/video_mode.v
 set_global_assignment -name VERILOG_FILE ../video/video_sync.v
@@ -287,6 +288,7 @@ set_global_assignment -name MIF_FILE ../video/test_cram.mif
 set_global_assignment -name VERILOG_FILE ../video/video_vmem.v
 set_global_assignment -name VERILOG_FILE ../mem/atm_pager.v
 set_global_assignment -name VERILOG_FILE ../sound/sound.v
+set_global_assignment -name VERILOG_FILE ../z80/zmaps.v
 set_global_assignment -name VERILOG_FILE ../z80/znmi.v
 set_global_assignment -name VERILOG_FILE ../z80/zdos.v
 set_global_assignment -name VERILOG_FILE ../z80/zwait.v
@@ -306,4 +308,3 @@ set_global_assignment -name VERILOG_FILE ../common/clock.v
 set_global_assignment -name VERILOG_FILE ../common/spi2.v
 set_global_assignment -name VERILOG_FILE ../common/resetter.v
 set_global_assignment -name VERILOG_FILE ../top.v
-set_global_assignment -name FLEX10K_OPTIMIZATION_TECHNIQUE AREA

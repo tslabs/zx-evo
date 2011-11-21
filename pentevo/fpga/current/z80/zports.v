@@ -42,23 +42,24 @@ module zports(
 	input  wire [ 7:0] mus_in,  // mouse (xxDF)
 	input  wire [ 4:0] kj_in,
 
-	output reg  [ 7:0] border,
+	output reg  [ 3:0] border,
 
-	output reg [7:0] cpuconf	,
-	output reg [7:0] romconf	,
-	output reg [7:0] vpage		,
-	output reg [7:0] page00		,
-	output reg [7:0] page01		,
-	output reg [7:0] page10		,
-	output reg [7:0] page11		,
 	output reg [7:0] vconfig	,
-	output reg [7:0] faddr	    ,
-	output reg [7:0] fpage	    ,
-	output reg [7:0] tpage	    ,
-	output reg [7:0] tgpage0	,
-	output reg [7:0] tgpage1	,
-	output reg [7:0] tmctrl	    ,
-	output reg [7:0] hsint	    ,
+	output reg [7:0] vpage		,
+	output reg [4:0] fmaddr		,
+	// output reg [7:0] cpuconf	,
+	// output reg [7:0] romconf	,
+	// output reg [7:0] page00		,
+	// output reg [7:0] page01		,
+	// output reg [7:0] page10		,
+	// output reg [7:0] page11		,
+	// output reg [7:0] faddr	    ,
+	// output reg [7:0] fpage	    ,
+	// output reg [7:0] tpage	    ,
+	// output reg [7:0] tgpage0	,
+	// output reg [7:0] tgpage1	,
+	// output reg [7:0] tmctrl	    ,
+	// output reg [7:0] hsint	    ,
 	
 
 	input  wire        dos,
@@ -208,11 +209,6 @@ module zports(
 	reg [1:0] memwr_reg_fclk;
 
 
-	wire portfe_wr;
-	wire PORTXT_wr;
-
-
-
 	wire ideout_hi_wr;
 	wire idein_lo_rd;
 	reg [7:0] idehiin; // IDE high part read register: low part is read directly to Z80 bus,
@@ -312,12 +308,16 @@ module zports(
 	assign dataout = porthit & (~iorq_n) & (~rd_n) & (~external_port);
 
 
+	// Z80 asynchronous signals
+	wire iowr = ~(iorq_n | wr_n);
+	wire iord = ~(iorq_n | rd_n);
+	
 
 	// this is zclk-synchronous strobes
 	always @(posedge zclk)
 	begin
-		iowr_reg <= ~(iorq_n | wr_n);
-		iord_reg <= ~(iorq_n | rd_n);
+		iowr_reg <= iowr;
+		iord_reg <= iord;
 
 		if( (!iowr_reg) && (!iorq_n) && (!wr_n) )
 			port_wr <= 1'b1;
@@ -332,14 +332,12 @@ module zports(
 	end
 
 
-
-
 	// fclk-synchronous stobes
 	//
 	always @(posedge fclk) if (f0) if( zpos )
 	begin
-		iowr_reg_fclk[0] <= ~(iorq_n | wr_n);
-		iord_reg_fclk[0] <= ~(iorq_n | rd_n);
+		iowr_reg_fclk[0] <= iowr;
+		iord_reg_fclk[0] <= iord;
 	end
 
 	always @(posedge fclk) if (f0)
@@ -425,9 +423,9 @@ module zports(
 
 
 
-	assign portfe_wr    = (((loa==PORTFE) || (loa==PORTF6)) && port_wr);
-	assign PORTXT_wr    = ((loa==PORTXT) && port_wr);
-	assign portfd_wr    = ((loa==PORTFD) && port_wr);
+	wire portxt_wr    = ((loa==PORTXT) && iowr);
+	wire portfe_wr    = ((loa==PORTFE) && iowr);
+	wire portfd_wr    = ((loa==PORTFD) && iowr);
 
 	// F7 ports (like EFF7) are accessible in shadow mode but at addresses like EEF7, DEF7, BEF7 so that
 	// there are no conflicts in shadow mode with ATM xFF7 and x7F7 ports
@@ -444,59 +442,57 @@ module zports(
 
 
 
-	//extension port BF
-	assign PORTXT_wr_fclk = ((loa==PORTXT) && port_wr_fclk);
+	//extension port #nnAF
 
-	localparam XBORDER		= 8'h00;
-	localparam ROMCONF		= 8'h02;
-	localparam VPAGE		= 8'h03;
-	localparam PAGE00		= 8'h04;
-	localparam PAGE01		= 8'h05;
-	localparam PAGE10		= 8'h06;
-	localparam PAGE11		= 8'h07;
-	localparam VCONFIG		= 8'h08;
-	localparam FADDR		= 8'h09;
-	localparam FPAGE		= 8'h0A;
-	localparam TPAGE		= 8'h0B;
-	localparam TGPAGE0		= 8'h0C;
-	localparam TGPAGE1		= 8'h0D;
-	localparam TMCTRL		= 8'h0E;
-	localparam HSINT		= 8'h0F;
-	localparam CPUCONF		= 8'h10;
+	localparam VCONFIG		= 8'd00;
+	localparam VPAGE		= 8'd01;
+	localparam FMADDR		= 8'd21;
+	// localparam XBORDER		= 8'h00;
+	// localparam ROMCONF		= 8'h02;
+	// localparam PAGE00		= 8'h04;
+	// localparam PAGE01		= 8'h05;
+	// localparam PAGE10		= 8'h06;
+	// localparam PAGE11		= 8'h07;
+	// localparam FPAGE		= 8'h0A;
+	// localparam TPAGE		= 8'h0B;
+	// localparam TGPAGE0		= 8'h0C;
+	// localparam TGPAGE1		= 8'h0D;
+	// localparam TMCTRL		= 8'h0E;
+	// localparam HSINT		= 8'h0F;
+	// localparam CPUCONF		= 8'h10;
 
 
-	always @(posedge fclk) if (f0) if( PORTXT_wr_fclk )
-	begin
-		if (hoa == ROMCONF)		romconf		<= din;
-		if (hoa == VPAGE	)	vpage		<= din;
-		if (hoa == PAGE00	)	page00		<= din;
-		if (hoa == PAGE01	)	page01		<= din;
-		if (hoa == PAGE10	)	page10		<= din;
-		if (hoa == PAGE11	)	page11		<= din;
-		if (hoa == VCONFIG	)	vconfig		<= din;
-		if (hoa == FADDR	)	faddr	 	<= din;
-		if (hoa == FPAGE	)	fpage	 	<= din;
-		if (hoa == TPAGE	)	tpage	 	<= din;
-		if (hoa == TGPAGE0	)	tgpage0		<= din;
-		if (hoa == TGPAGE1	)	tgpage1		<= din;
-		if (hoa == TMCTRL	)	tmctrl	 	<= din;
-		if (hoa == HSINT	)	hsint	 	<= din;
-		if (hoa == CPUCONF	)	cpuconf		<= din;
-	end
+	always @(posedge zclk)
+		if (!rst_n)
+		begin
+			// vconfig	<= 8'h00;
+			fmaddr[4]	<= 1'b0;
+		end
+		else
+		if (portxt_wr)
+		begin
+			if (hoa == VCONFIG)	vconfig	<= din;
+			if (hoa == FMADDR)	fmaddr	<= din[4:0];
+			// if (hoa == ROMCONF)		romconf		<= din;
+			// if (hoa == PAGE00	)	page00		<= din;
+			// if (hoa == PAGE01	)	page01		<= din;
+			// if (hoa == PAGE10	)	page10		<= din;
+			// if (hoa == PAGE11	)	page11		<= din;
+			// if (hoa == FADDR	)	faddr	 	<= din;
+			// if (hoa == FPAGE	)	fpage	 	<= din;
+			// if (hoa == TPAGE	)	tpage	 	<= din;
+			// if (hoa == TGPAGE0	)	tgpage0		<= din;
+			// if (hoa == TGPAGE1	)	tgpage1		<= din;
+			// if (hoa == TMCTRL	)	tmctrl	 	<= din;
+			// if (hoa == HSINT	)	hsint	 	<= din;
+			// if (hoa == CPUCONF	)	cpuconf		<= din;
+		end
 	
 
 	//border port FE
-	assign portfe_wr_fclk = (((loa==PORTFE) || (loa==PORTF6)) && port_wr_fclk);
-
-	always @(posedge fclk) if (f0)
-	begin
-		if( portfe_wr_fclk )
-			border <= {5'b11110, din[2], din[1], din[0]};
-
-		if( PORTXT_wr_fclk ) if (hoa == XBORDER)
-			border[7:0] <= din;
-	end	
-		
+	always @(posedge zclk)
+		if (portfe_wr)
+			border <= {din[7], din[2], din[1], din[0]};
 		
 		
 	// IDE ports
@@ -646,19 +642,32 @@ module zports(
 	wire block7ffd;
 	wire block1m;
 
-	always @(posedge zclk, negedge rst_n)
+	always @(posedge zclk)
 	begin
-		if( !rst_n )
-			p7ffd_int <= 7'h00;
-		else if( (a[15]==1'b0) && portfd_wr && (!block7ffd) )
-			p7ffd_int <= din; // 2..0 - page, 3 - screen, 4 - rom, 5 - block48k, 6..7 -
+		if (!rst_n)
+		begin
+			p7ffd_int <= 8'h00;
+			vpage <= 8'h05;
+		end
+		else
+		begin
+			if( (!a[15]) && portfd_wr && (!block7ffd) )
+			begin
+				p7ffd_int <= din; // 2..0 - page, 3 - screen (obsolete), 4 - rom, 5 - block48k, 6..7 - pentagon 512k pages
+				vpage <= {6'b000001, din[3], 1'b1};
+			end
+			else
+			if (portxt_wr & (hoa == VPAGE))
+				vpage <= din;
+		end
 	end
+
 
 	always @(posedge zclk)
 	begin
 		if( rstsync2 )
 			p7ffd_rom_int <= rstrom[0];
-		else if( (a[15]==1'b0) && portfd_wr && (!block7ffd) )
+		else if( (!a[15]) && portfd_wr && (!block7ffd) )
 			p7ffd_rom_int <= din[4];
 	end
 
@@ -666,7 +675,7 @@ module zports(
 
 
 	// EFF7 port
-	always @(posedge zclk, negedge rst_n)
+	always @(posedge zclk)
 	begin
 		if( !rst_n )
 			peff7_int <= 8'h00;
@@ -779,7 +788,7 @@ module zports(
 	assign sddat_rd = ( (loa==SDDAT) && port_rd_fclk              );
 
 	// SDCFG write - sdcs_n control
-	always @(posedge fclk, negedge rst_n)
+	always @(posedge fclk)
 	begin
 		if( !rst_n )
 			sdcs_n <= 1'b1;
@@ -820,7 +829,7 @@ module zports(
 
 	// port BF write
 	//
-	always @(posedge fclk, negedge rst_n)
+	always @(posedge fclk)
 	if( !rst_n )
 	begin
 		shadow_en_reg <= 1'b0;
@@ -841,7 +850,7 @@ module zports(
 
 
 	// port xx77 write
-	always @(posedge fclk, negedge rst_n)
+	always @(posedge fclk)
 	if( !rst_n )
 	begin
 		atm_scr_mode = 3'b011;
@@ -883,8 +892,8 @@ module zports(
 
 	// covox/beeper writes
 
-	assign beeper_wr = (loa==PORTFE) && portfe_wr_fclk;
-	assign covox_wr  = (loa==COVOX) && port_wr_fclk;
+	assign beeper_wr = (loa==PORTFE) && iowr;
+	assign covox_wr  = (loa==COVOX) && iowr;
 
 
 
