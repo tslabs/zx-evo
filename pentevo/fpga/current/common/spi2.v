@@ -5,7 +5,7 @@
 //
 // short diagram for speed=0 (Fclk/Fspi=2, no rdy shown)
 //
-// clock:   ^  ^  ^  ^  ^  ^  ^  ^  ^  ^  ^  ^  ^  ^  ^  ^  ^  ^  ^  ^  ^  ^  ^  ^ (positive edges)
+// clk:   ^  ^  ^  ^  ^  ^  ^  ^  ^  ^  ^  ^  ^  ^  ^  ^  ^  ^  ^  ^  ^  ^  ^  ^ (positive edges)
 // counter: |00|00|10|11|12|13|14|15|16|17|18|19|1A|1B|1C|1D|1E|1F|00|00|00 // internal!
 // sck:   ___________/``\__/``\__/``\__/``\__/``\__/``\__/``\__/``\_______
 // sdo:   --------< do7 X do6 X do5 X do4 X do3 X do2 X do1 X do0 >-------
@@ -22,17 +22,17 @@
 //
 // bsync is 1 while do7 is outting, otherwise it is 0
 //
-// start is synchronous pulse, which starts all transfer and also latches din data on the same clock edge
+// start is synchronous pulse, which starts all transfer and also latches din data on the same clk edge
 //  as it is registered high. start can be given anytime (only when speed=0),
 //  so it is functioning then as synchronous reset. when speed!=0, there is global enable for majority of
 //  flipflops in the module, so start can't be accepted at any time
 //
-// dout updates with freshly received data at the clock edge in which sck goes high for the last time, thus
+// dout updates with freshly received data at the clk edge in which sck goes high for the last time, thus
 //  latching last bit on sdi.
 //
 // sdo emits last bit shifted out after the transfer end
 //
-// when speed=0, data transfer rate could be as fast as one byte every 16 clock pulses. To achieve that,
+// when speed=0, data transfer rate could be as fast as one byte every 16 clk pulses. To achieve that,
 //   start must be pulsed high simultaneously with the last high pulse of sck
 //
 // speed[1:0] determines Fclk/Fspi
@@ -44,22 +44,22 @@
 //  2'b10 | 8
 //  2'b11 | 16
 //
-// for speed=0 you can start new transfer as fast as every 16 clocks
-// for speed=1 - every 34 clocks.
+// for speed=0 you can start new transfer as fast as every 16 clks
+// for speed=1 - every 34 clks.
 // alternatively, you can check rdy output: it goes to 0 after start pulse and when it goes back to 1, you can
-// issue another start at the next clock cycle. See spi2_modelled.png and .zip (modelsim project)
+// issue another start at the next clk cycle. See spi2_modelled.png and .zip (modelsim project)
 //
-// warning: if using rdy-driven transfers and speed=0, new transfer will be started every 18 clocks.
+// warning: if using rdy-driven transfers and speed=0, new transfer will be started every 18 clks.
 //  it is recommended to use rdy-driven transfers when speed!=0
 //
-// warning: this module does not contain asynchronous reset. Provided clock is stable, start=0
-//  and speed=0, module returns to initial ready state after maximum of 18+8=26 clocks. To reset module
-//  to the known state from any operational state, set speed=0 and start=1 for 8 clocks
-//  (that starts Fclk/Fspi=2 speed transfer for sure), then remain start=0, speed=0 for at least 18 clocks.
+// warning: this module does not contain asynchronous reset. Provided clk is stable, start=0
+//  and speed=0, module returns to initial ready state after maximum of 18+8=26 clks. To reset module
+//  to the known state from any operational state, set speed=0 and start=1 for 8 clks
+//  (that starts Fclk/Fspi=2 speed transfer for sure), then remain start=0, speed=0 for at least 18 clks.
 
 module spi2(
 
-	clock, // system clock
+	clk, // system clk
 	f0,	// 28 MHz strobe
 
 	sck,   // SPI bus pins...
@@ -70,13 +70,13 @@ module spi2(
 	start, // positive strobe that starts transfer
 	rdy,   // ready (idle) - when module can accept data
 
-	speed, // =2'b00 - sck full speed (1/2 of clock), =2'b01 - half (1/4 of clock), =2'b10 - one fourth (1/8 of clock), =2'b11 - one eighth (1/16 of clock)
+	speed, // =2'b00 - sck full speed (1/2 of clk), =2'b01 - half (1/4 of clk), =2'b10 - one fourth (1/8 of clk), =2'b11 - one eighth (1/16 of clk)
 
 	din,  // input
 	dout  // and output 8bit busses
 );
 
-	input clock, f0;
+	input clk, f0;
 
 
 	output sck;
@@ -144,7 +144,7 @@ module spi2(
 
 
 
-	always @(posedge clock)
+	always @(posedge clk)
 	begin
 		if( g_ena )
 		begin
@@ -175,7 +175,7 @@ module spi2(
 
 
 	// shiftout treatment is done so just to save LCELLs in acex1k
-	always @(posedge clock)
+	always @(posedge clk)
 	begin
 		if( ena_shout_load )
 		begin
@@ -188,7 +188,7 @@ module spi2(
 
 
 	// slow speeds - governed by g_ena
-	always @(posedge clock)
+	always @(posedge clk)
 	begin
 		if( speed!=2'b00 )
 		begin

@@ -49,14 +49,13 @@ module zports(
 	output reg [4:0] fmaddr		,
 	output reg [8:0] x_offs		,
 	output reg [8:0] y_offs		,
+	output reg [7:0] rampage0,
+	output reg [7:0] rampage1,
+	output reg [7:0] rampage2,
+	output reg [7:0] rampage3,
+	
 	// output reg [7:0] cpuconf	,
 	// output reg [7:0] romconf	,
-	// output reg [7:0] page00		,
-	// output reg [7:0] page01		,
-	// output reg [7:0] page10		,
-	// output reg [7:0] page11		,
-	// output reg [7:0] faddr	    ,
-	// output reg [7:0] fpage	    ,
 	// output reg [7:0] tpage	    ,
 	// output reg [7:0] tgpage0	,
 	// output reg [7:0] tgpage1	,
@@ -70,7 +69,6 @@ module zports(
 	output wire        ay_bdir,
 	output wire        ay_bc1,
 
-	output wire [ 7:0] p7ffd,
 	output wire [ 7:0] peff7,
 
 	input  wire [ 1:0] rstrom,
@@ -336,28 +334,28 @@ module zports(
 
 	// fclk-synchronous stobes
 	//
-	always @(posedge fclk) if (f0) if( zpos )
+	always @(posedge fclk) if( zpos )	// if (f0)
 	begin
 		iowr_reg_fclk[0] <= iowr;
 		iord_reg_fclk[0] <= iord;
 	end
 
-	always @(posedge fclk) if (f0)
+	always @(posedge fclk) //if (f0)
 	begin
 		iowr_reg_fclk[1] <= iowr_reg_fclk[0];
 		iord_reg_fclk[1] <= iord_reg_fclk[0];
 	end
 
-	always @(posedge fclk) if (f0)
+	always @(posedge fclk) //if (f0)
 	begin
 		port_wr_fclk <= iowr_reg_fclk[0] && (!iowr_reg_fclk[1]);
 		port_rd_fclk <= iord_reg_fclk[0] && (!iord_reg_fclk[1]);
 	end
 
-	always @(posedge fclk) if (f0)
+	always @(posedge fclk) //if (f0)
 		memwr_reg_fclk[1:0] <= { memwr_reg_fclk[0], ~(mreq_n | wr_n) };
 
-	always @(posedge fclk) if (f0)
+	always @(posedge fclk) //if (f0)
 		mem_wr_fclk <= memwr_reg_fclk[0] && (!memwr_reg_fclk[1]);
 
 
@@ -453,13 +451,9 @@ module zports(
 	localparam YOFFSL		= 8'd04;
 	localparam YOFFSH		= 8'd05;
 	localparam FMADDR		= 8'd21;
-	// localparam XBORDER		= 8'h00;
+	localparam RAMPAGE		= 8'd16;	// this covers pool [16:19]
+	
 	// localparam ROMCONF		= 8'h02;
-	// localparam PAGE00		= 8'h04;
-	// localparam PAGE01		= 8'h05;
-	// localparam PAGE10		= 8'h06;
-	// localparam PAGE11		= 8'h07;
-	// localparam FPAGE		= 8'h0A;
 	// localparam TPAGE		= 8'h0B;
 	// localparam TGPAGE0		= 8'h0C;
 	// localparam TGPAGE1		= 8'h0D;
@@ -479,25 +473,18 @@ module zports(
 		else
 		if (portxt_wr)
 		begin
-			if (hoa == VCONFIG)	vconfig	<= din;
-			if (hoa == FMADDR)	fmaddr	<= din[4:0];
-			if (hoa == XOFFSL)	x_offs[7:0] <= din;
-			if (hoa == XOFFSH)	x_offs[8] <= din[0];
-			if (hoa == YOFFSL)	y_offs[7:0] <= din;
-			if (hoa == YOFFSH)	y_offs[8] <= din[0];
-			// if (hoa == ROMCONF)		romconf		<= din;
-			// if (hoa == PAGE00	)	page00		<= din;
-			// if (hoa == PAGE01	)	page01		<= din;
-			// if (hoa == PAGE10	)	page10		<= din;
-			// if (hoa == PAGE11	)	page11		<= din;
-			// if (hoa == FADDR	)	faddr	 	<= din;
-			// if (hoa == FPAGE	)	fpage	 	<= din;
-			// if (hoa == TPAGE	)	tpage	 	<= din;
-			// if (hoa == TGPAGE0	)	tgpage0		<= din;
-			// if (hoa == TGPAGE1	)	tgpage1		<= din;
-			// if (hoa == TMCTRL	)	tmctrl	 	<= din;
-			// if (hoa == HSINT	)	hsint	 	<= din;
-			// if (hoa == CPUCONF	)	cpuconf		<= din;
+			if (hoa == VCONFIG)
+				vconfig <= din;
+			if (hoa == FMADDR)
+				fmaddr <= din[4:0];
+			if (hoa == XOFFSL)
+				x_offs[7:0] <= din;
+			if (hoa == XOFFSH)
+				x_offs[8] <= din[0];
+			if (hoa == YOFFSL)
+				y_offs[7:0] <= din;
+			if (hoa == YOFFSH)
+				y_offs[8] <= din[0];
 		end
 	
 
@@ -649,32 +636,50 @@ module zports(
 
 
 	// 7FFD port
-	reg [7:0] p7ffd_int,peff7_int;
+	reg [7:0] p7ffd, peff7_int;
 	reg p7ffd_rom_int;
-	wire block7ffd;
+	reg block7ffd;
 	wire block1m;
 
 	always @(posedge zclk)
 	begin
 		if (!rst_n)
 		begin
-			p7ffd_int <= 8'h00;
+			p7ffd <= 8'h00;
+			block7ffd <= 1'b0;
 			vpage <= 8'h05;
+			rampage0 <= 8'd0;
+			rampage1 <= 8'd5;
+			rampage2 <= 8'd2;
+			rampage3 <= 8'd0;
 		end
 		else
 		begin
 			if( (!a[15]) && portfd_wr && (!block7ffd) )
 			begin
-				p7ffd_int <= din; // 2..0 - page, 3 - screen (obsolete), 4 - rom, 5 - block48k, 6..7 - pentagon 512k pages
+				p7ffd <= din;
+				block7ffd=p7ffd[5] & block1m;
+				rampage3 <= {2'b0, block1m ? 3'b0 : {din[5], din[7:6]}, din[2:0]};
 				vpage <= {6'b000001, din[3], 1'b1};
 			end
 			else
-			if (portxt_wr & (hoa == VPAGE))
-				vpage <= din;
+			if (portxt_wr)
+			begin
+				if (hoa == VPAGE)
+					vpage <= din;
+				if (hoa == RAMPAGE)
+					rampage0 <= din;
+				if (hoa == (RAMPAGE+1))
+					rampage1 <= din;
+				if (hoa == (RAMPAGE+2))
+					rampage2 <= din;
+				if (hoa == (RAMPAGE+3))
+					rampage3 <= din;
+			end
 		end
 	end
 
-
+	
 	always @(posedge zclk)
 	begin
 		if( rstsync2 )
@@ -683,7 +688,6 @@ module zports(
 			p7ffd_rom_int <= din[4];
 	end
 
-	assign block7ffd=p7ffd_int[5] & block1m;
 
 
 	// EFF7 port
@@ -696,13 +700,11 @@ module zports(
 	end
 	assign block1m = peff7_int[2];
 
-	assign p7ffd = { (block1m ? 3'b0 : p7ffd_int[7:5]),p7ffd_rom_int,p7ffd_int[3:0]};
-
 	assign peff7 = block1m ? { peff7_int[7], 1'b0, peff7_int[5], peff7_int[4], 3'b000, peff7_int[0] } : peff7_int;
 
 
-	assign pent1m_ROM       = p7ffd_int[4];
-	assign pent1m_page[5:0] = { p7ffd_int[7:5], p7ffd_int[2:0] };
+	assign pent1m_ROM       = p7ffd[4];
+	assign pent1m_page      = rampage3[5:0];
 	assign pent1m_1m_on     = ~peff7_int[2];
 	assign pent1m_ram0_0    = peff7_int[3];
 
@@ -931,16 +933,12 @@ module zports(
 	4'h8: portbemux = ramnroms;
 	4'h9: portbemux = dos7ffds;
 
-	4'hA: portbemux = p7ffd_int;
+	4'hA: portbemux = p7ffd;
 	4'hB: portbemux = peff7_int;
 
 	4'hC: portbemux = { ~atm_pen2, atm_cpm_n, ~atm_pen, 1'bX, atm_turbo, atm_scr_mode };
 
 	4'hD: portbemux = { ~palcolor[4], ~palcolor[2], ~palcolor[0], ~palcolor[5], 2'b11, ~palcolor[3], ~palcolor[1] };
-//	assign atm_paldata = { ~din[4], ~din[7], ~din[1], ~din[6], ~din[0], ~din[5] };
-//  {GgRrBb} -> {grbG11RB}
-// was: 76543210 -> 471605
-// now:             543210 -> 4205xx31
 
 	default: portbemux = 8'bXXXXXXXX;
 
@@ -952,7 +950,7 @@ module zports(
 
 	// savelij ports write
 	//
-	always @(posedge fclk) if (f0)
+	always @(posedge fclk) //if (f0)
 	if( port_wr_fclk && shadow )
 	begin
 		if( (loa==SAVPORT1) ||

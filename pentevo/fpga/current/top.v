@@ -250,7 +250,6 @@ module top(
 
 
 	wire [7:0] peff7;
-	wire [7:0] p7ffd;
 
 
 	wire romrw_en;
@@ -677,19 +676,18 @@ zmaps zmaps(
 				);
 				
 		
-		wire [7:0] vconfig	;
-		wire [7:0] vpage	;
-		wire [4:0] fmaddr	;
-		wire [8:0] x_offs	;
-		wire [8:0] y_offs	;
+		wire [7:0] vconfig;
+		wire [7:0] vpage;
+		wire [4:0] fmaddr;
+		wire [8:0] x_offs;
+		wire [8:0] y_offs;
+		wire [7:0] rampage0;
+		wire [7:0] rampage1;
+		wire [7:0] rampage2;
+		wire [7:0] rampage3;
+		
 		// wire [7:0]	   cpuconf	;
 		// wire [7:0]	   romconf	;
-		// wire [7:0]	   page00	;
-		// wire [7:0]	   page01	;
-		// wire [7:0]	   page10	;
-		// wire [7:0]	   page11	;
-		// wire [7:0]	   faddr	;
-		// wire [7:0]	   fpage	;
 		// wire [7:0]	   tpage	;
 		// wire [7:0]	   tgpage0	;
 		// wire [7:0]	   tgpage1	;
@@ -701,7 +699,7 @@ zmaps zmaps(
 	               .din(d), .dout(dout_ports), .dataout(ena_ports),
 	               .a(a), .iorq_n(iorq_n), .rd_n(rd_n), .wr_n(wr_n), .porthit(porthit),
 	               .ay_bdir(ay_bdir), .ay_bc1(ay_bc1), .border(border),
-	               .p7ffd(p7ffd), .peff7(peff7), .mreq_n(mreq_n), .m1_n(m1_n), .dos(dos),
+	               .peff7(peff7), .mreq_n(mreq_n), .m1_n(m1_n), .dos(dos),
 	               .rstrom(rstrom), .vg_intrq(intrq), .vg_drq(drq), .vg_wrFF(vg_wrFF),
 	               .vg_cs_n(vg_cs_n), .sd_start(sd_start), .sd_dataout(sd_dataout),
 	               .sd_datain(sd_datain), .sdcs_n(sdcs_n),
@@ -714,14 +712,10 @@ zmaps zmaps(
 					.fmaddr		(fmaddr		),
 					.x_offs		(x_offs		),
 					.y_offs		(y_offs		),
+					.rampage0	(rampage0	),
+					
 					// .cpuconf	(cpuconf	),
 					// .romconf	(romconf	),
-					// .page00		(page00		),
-					// .page01		(page01		),
-					// .page10		(page10		),
-					// .page11		(page11		),
-					// .faddr	  	(faddr	  	),
-					// .fpage	  	(fpage	  	),
 					// .tpage	  	(tpage	  	),
 					// .tgpage0	(tgpage0	),
 					// .tgpage1	(tgpage1	),
@@ -846,8 +840,9 @@ zmaps zmaps(
 
 
 
-	spi2 zspi( .clock(fclk), .f0(f0), .sck(sdclk), .sdo(sddo), .sdi(sddi), .start(sd_start),
-	           .speed(2'b00), .din(sd_datain), .dout(sd_dataout) );
+	spi2 zspi( .clk(fclk), .f0(f0), .sck(sdclk), .sdo(sddo), .sdi(sddi), .start(sd_start),
+	           .speed(2'b01),	// this is 14 MHz at 56 Mhz Altera clock
+			   .din(sd_datain), .dout(sd_dataout) );
 
 
 
