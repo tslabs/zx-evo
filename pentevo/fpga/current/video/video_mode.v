@@ -29,6 +29,7 @@ module video_mode (
 // mode controls
 	output wire hires,
 	output wire [1:0] render_mode,
+	output wire nogfx,
     
 // DRAM interface	
     output wire [20:0] video_addr,
@@ -42,13 +43,13 @@ module video_mode (
 
 // Modes
     localparam M_ZX = 3'h0;		// ZX
-    localparam M_GS = 3'h1;		// Giga (ZX*2)
-    localparam M_02 = 3'h2;		// ZX hi-res (for test)
-    localparam M_03 = 3'h3;		// 
-    localparam M_04 = 3'h4;		// 
-    localparam M_HC = 3'h5;		// 16c
-    localparam M_XC = 3'h6;		// 256c
-    localparam M_TX = 3'h7;		// Text
+    localparam M_HC = 3'h1;		// 16c
+    localparam M_XC = 3'h2;		// 256c
+    localparam M_TX = 3'h3;		// Text
+    localparam M_GS = 3'h4;		// Giga (ZX*2)
+    localparam M_T0 = 3'h5;		// ZX hi-res (test)
+    localparam M_T1 = 3'h6;		// (reserved)
+    localparam M_NG = 3'h7;		// No graphics
     
 // Render modes (affects 'video_render.v')
     localparam R_ZX = 2'h0;
@@ -62,12 +63,12 @@ module video_mode (
 // these values are empiric!!! recheck them occasionally!
     assign g_offs[M_ZX] = 5'd18;
     assign g_offs[M_GS] = 5'd18;
-    assign g_offs[M_02] = 5'd10;
-    assign g_offs[M_03] = 5'd18;
-    assign g_offs[M_04] = 5'd18;
     assign g_offs[M_HC] = 5'd10;
-    assign g_offs[M_XC] = 5'd6;
+    assign g_offs[M_XC] = 5'd6;	
     assign g_offs[M_TX] = 5'd10;
+    assign g_offs[M_T0] = 5'd10;
+    assign g_offs[M_T1] = 5'd18;
+    assign g_offs[M_NG] = 5'd18;
     assign go_offs = g_offs[vmod];
 
 
@@ -79,17 +80,17 @@ module video_mode (
     wire [3:0] bw[0:7];
     assign bw[M_ZX] = 4'b1001;	// 1 of 8 (ZX)
     assign bw[M_GS] = 4'b1010;	// 2 of 8 (Giga)
-    assign bw[M_02] = 4'b1010;	// 2 of 8 (ZX Hi-res test)
-    assign bw[M_03] = 4'b1100;	// 4 of 8 (test)
-    assign bw[M_04] = 4'b0000;	// 4 of 4 (test)
     assign bw[M_HC] = 4'b1010;	// 2 of 8 (16c)
     assign bw[M_XC] = 4'b0010;	// 2 of 4 (256c)
     assign bw[M_TX] = 4'b1100;	// 4 of 8 (text)
+    assign bw[M_T0] = 4'b1010;	// 2 of 8 (ZX Hi-res test)
+    assign bw[M_T1] = 4'b1001;	// 4 of 4 (unused)
+    assign bw[M_NG] = 4'b1001;	// 4 of 8 (No graphics)
     assign video_bw = bw[vmod];
 
 	
 // pixelrate
-	wire [7:0] pixrate = 8'b10000100;
+	wire [7:0] pixrate = 8'b00101000;	// change these if you change the modes indexes!
 	assign hires = pixrate[vmod];
 
 	
@@ -97,12 +98,12 @@ module video_mode (
     wire [1:0] r_mode[0:7];
     assign r_mode[M_ZX] = R_ZX;
     assign r_mode[M_GS] = R_ZX;
-    assign r_mode[M_02] = R_ZX;
-    assign r_mode[M_03] = R_ZX;
-    assign r_mode[M_04] = R_ZX;
     assign r_mode[M_HC] = R_HC;
     assign r_mode[M_XC] = R_XC;
-    assign r_mode[M_TX] = R_TX;    
+    assign r_mode[M_TX] = R_TX;
+    assign r_mode[M_T0] = R_ZX;
+    assign r_mode[M_T1] = R_ZX;
+    assign r_mode[M_NG] = R_ZX;
 	assign render_mode = r_mode[vmod];
 	
 	
@@ -142,12 +143,12 @@ module video_mode (
     wire [20:0] v_addr[0:7];
     assign v_addr[M_ZX] = addr_zx;
     assign v_addr[M_GS] = addr_giga;
-    assign v_addr[M_02] = addr_zx;
-    assign v_addr[M_03] = addr_zx;
-    assign v_addr[M_04] = addr_zx;
     assign v_addr[M_HC] = addr_16c;
     assign v_addr[M_XC] = addr_256c;
     assign v_addr[M_TX] = addr_text;
+    assign v_addr[M_T0] = addr_zx;
+    assign v_addr[M_T1] = addr_zx;
+    assign v_addr[M_NG] = addr_zx;
     assign video_addr = v_addr[vmod];
 
  

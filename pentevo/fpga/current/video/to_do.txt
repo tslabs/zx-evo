@@ -1,7 +1,9 @@
 Fixes:
+ -  add paging for 0000-BFFF
+ -  signals fo No GFX mode
  -  ZX flash generator
  -  make CRAM clocked: zclk for WE and fclk for RE
- -  Xscroll for text mode
+ -  fix Xscroll for text mode
  -  fix vertical blank for border 1 line lag
  -  fix hi-res 1st pixel lag
  -  unify the lo/hi-res video data processing for tv/vga (borded apparently)
@@ -11,8 +13,55 @@ Fixes:
  -  search ways to optimize huge LC usage
  -  fix covox and beeper write
  -  check border effects on INT position
+ -  check if 7 Mhz for SD is enough for proper SD drivers working on z80 clocked 14 MHz
 
 Features:
+ -  horizontal scrollers
+ -  vertical scrollers (unified with Tile mode)
+ -  line INTs
  -  gigascreen mode
  -  s/w writes to X/Y counters on-the-fly
  -  RAM / ROM paging
+ 
+ 
+ 
+ 
+ 
+ 
+ Sprites
+ -------
+ 
+ Nr of sprites: 42 (252 bytes)
+ Sized as 16/32/48/64 pix individually for X and Y
+ Min sprite (16x16) = 128 bytes (7 bits)
+ Max sprite (64x64) = 2048 bytes
+ Total addressable space 21 - 7 = 14bits
+ 
+ bits	desc
+ 9		X coord
+ 9		Y coord
+ 2		X size
+ 2		Y size
+ 1		X flip
+ 1		Y flip
+ 4		palette
+ 1		active
+ 1		leap
+ ---------------------
+ 30		totally
+ 48		of
+ 
+ Layers (from bottom):
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
