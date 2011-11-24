@@ -609,9 +609,12 @@ module top(
 
 		.border(border),
 		.vpage(vpage),
-		.vconfig(vconfig),
+		.vconf(vconf),
 		.x_offs(x_offs),
 		.y_offs(y_offs),
+		
+		.hint_beg(hint_beg),
+		.vint_beg(vint_beg),
 		
 		.vga_on(cfg_vga_on),
 
@@ -676,7 +679,7 @@ zmaps zmaps(
 				);
 				
 		
-		wire [7:0] vconfig;
+		wire [7:0] vconf;
 		wire [7:0] vpage;
 		wire [4:0] fmaddr;
 		wire [8:0] x_offs;
@@ -707,20 +710,19 @@ zmaps zmaps(
 	               .ide_a(ide_a), .ide_cs0_n(ide_cs0_n), .ide_cs1_n(ide_cs1_n),
 	               .ide_wr_n(ide_wr_n), .ide_rd_n(ide_rd_n),
 					
-					.vconfig	(vconfig	),
+					.vconf	(vconf	),
 					.vpage		(vpage		),
 					.fmaddr		(fmaddr		),
 					.x_offs		(x_offs		),
 					.y_offs		(y_offs		),
 					.rampage0	(rampage0	),
+					.hint_beg	(hint_beg	),
+					.vint_beg	(vint_beg	),
 					
 					// .cpuconf	(cpuconf	),
 					// .romconf	(romconf	),
-					// .tpage	  	(tpage	  	),
-					// .tgpage0	(tgpage0	),
-					// .tgpage1	(tgpage1	),
+					// .tgpage1	(tgpage0	),
 					// .tmctrl	  	(tmctrl	  	),
-					// .hsint	  	(hsint	  	),
 					
 	               .keys_in(kbd_port_data),
 	               .mus_in (mus_port_data),
@@ -854,7 +856,7 @@ zmaps zmaps(
 
 	sound sound(
 
-		.clk(fclk), .f0(f0), .q0(q0),
+		.clk(fclk), .q2(q2),
 
 		.din(d),
 

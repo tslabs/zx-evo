@@ -4,19 +4,16 @@
 module video_render (
 
 // clocks
-	input wire clk,
-	input wire q2,
-	input wire c0,
-	input wire c4,
-	input wire c6,
+	input wire clk, c0,
 	
 // video controls
+	input wire int_start,
 	input wire pix_start,
 	input wire hvpix,
 
 // mode controls
 	input wire [1:0] render_mode,
-	input wire hires,
+	input wire pix_stb,
 
 // video data
 	input  wire [31:0] dram_in,
@@ -31,8 +28,6 @@ module video_render (
     localparam R_TX = 2'h3;
 
     
-	wire pix_stb = hires ? q2 : c6;	//fixme!!! take out to the mode decoder!
-
 // pixel counter
 	reg [3:0] cnt;
 	
@@ -47,6 +42,13 @@ module video_render (
 			data <= dram_in;
 
 
+// FLASH generator
+	reg [4:0] flash_ctr;
+
+	always @(posedge clk) if (int_start & c0)
+		flash_ctr <= flash_ctr + 1;
+
+
 // ZX graphics
 	localparam ZX_PAL = 4'hF;
 	
@@ -54,7 +56,12 @@ module video_render (
 	wire [15:0] zx_atr = data[31:16];
 	wire zx_dot = zx_gfx[{cnt[3], ~cnt[2:0]}];
 	wire [7:0] zx_attr	= ~cnt[3] ? zx_atr[7:0] : zx_atr[15:8];
-	wire [7:0] zx_pix = {ZX_PAL, zx_attr[6], zx_dot ? zx_attr[2:0] : zx_attr[5:3]};
+	wire [7:0] zx_pix = {ZX_PAL, zx_attr[6], zx_dot ^ (flash_ctr[4] & zx_attr[7]) ? zx_attr[2:0] : zx_attr[5:3]};
+
+    
+// text graphics
+// (it uses common renderer with ZX, but different attributes, it also shares palette with 16c)
+	wire [7:0] tx_pix = {HC_PAL, zx_dot ? zx_attr[3:0] : zx_attr[7:4]};
 
     
 // 16c graphics
@@ -81,11 +88,6 @@ module video_render (
 	wire [7:0] xc_pix = {xc_dot[cnt[1:0]]};
 
 
-// text graphics
-// (it uses common renderer with ZX, but different attributes, it also shares palette with 16c)
-	wire [7:0] tx_pix = {HC_PAL, zx_dot ? zx_attr[3:0] : zx_attr[7:4]};
-
-    
 // mode selects
     wire [7:0] d_out[0:3];
     assign d_out[R_ZX] = zx_pix;	// ZX

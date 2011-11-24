@@ -27,9 +27,11 @@ module video_top (
 // video config
 	input wire [3:0] border,
 	input wire [7:0] vpage,
-	input wire [7:0] vconfig,
+	input wire [7:0] vconf,
 	input wire [8:0] x_offs,
 	input wire [8:0] y_offs,
+	input wire [7:0] hint_beg,
+	input wire [8:0] vint_beg,
 	
 // Z80 controls
 	input wire [15:0] a,
@@ -54,25 +56,28 @@ module video_top (
 
 
 	video_mode video_mode (
-		.vconfig	    (vconfig	     ),
-		.vpage	    	(vpage	     	 ),
-		.fetch_sel		(fetch_sel		 ),
-		.fetch_bsl		(fetch_bsl		 ),
+		.q2			    (q2	      		),
+		.c6			    (c6		  		),
+		.vconf		    (vconf	    	),
+		.vpage	    	(vpage	     	),
+		.fetch_sel		(fetch_sel		),
+		.fetch_bsl		(fetch_bsl		),
 		.txt_char	    (fetch_data[15:0]),
-		.x_offs			(x_offs			 ),
-		.x_offs_mode	(x_offs_mode	 ),
-		.hpix_beg	    (hpix_beg	     ),
-		.hpix_end	    (hpix_end	     ),
-		.vpix_beg	    (vpix_beg	     ),
-		.vpix_end	    (vpix_end	     ),
-        .go_offs        (go_offs         ),
-        .cnt_col        (cnt_col         ),
-        .cnt_row        (cnt_row         ),
-        .cptr	        (cptr	         ),
-		.hires		    (hires		     ),
-		.render_mode	(render_mode     ),
-		.video_addr	    (video_addr	     ),
-		.video_bw		(video_bw		 )
+		.x_offs			(x_offs			),
+		.x_offs_mode	(x_offs_mode	),
+		.hpix_beg	    (hpix_beg	    ),
+		.hpix_end	    (hpix_end	    ),
+		.vpix_beg	    (vpix_beg	    ),
+		.vpix_end	    (vpix_end	    ),
+        .go_offs        (go_offs        ),
+        .cnt_col        (cnt_col        ),
+        .cnt_row        (cnt_row        ),
+        .cptr	        (cptr	        ),
+		.hires		    (hires		    ),
+		.pix_stb	    (pix_stb		),
+		.render_mode	(render_mode    ),
+		.video_addr	    (video_addr	    ),
+		.video_bw		(video_bw		)
 	);
 	
     wire [9:0] x_offs_mode;
@@ -95,17 +100,19 @@ module video_top (
 		.vpix_end		(vpix_end		),
         .go_offs        (go_offs        ),
         .x_offs         (x_offs_mode[1:0]),
+		.hint_beg		(hint_beg		),
+		.vint_beg		(vint_beg		),
 		.hsync			(hsync			),
 		.vsync			(vsync			),
 		.csync			(csync			),
 		.tv_pix_start	(tv_pix_start	),
 		.vga_pix_start	(vga_pix_start	),
+		.pix_start		(pix_start		),
 		.hb				(tv_hblank		),
 		.vb				(tv_vblank		),
 		.vga_line		(vga_line		),
 		.frame_start	(frame_start	),
 		.line_start		(line_start		),
-		.pix_start		(pix_start		),
 		.int_start		(int_start		),
 		.hpix			(hpix			),
 		.vpix			(vpix			),
@@ -162,20 +169,20 @@ module video_top (
 	
 	video_render video_render (
 		.clk		    (clk      	),
-		.q2			    (q2	      	),
-		.c0			    (c0	      	),
-		.c4			    (c4		  	),
-		.c6			    (c6		  	),
+		.c0			    (c0      	),
+		.int_start		(int_start	),
 		.pix_start	    (pix_start	),
 		.hvpix 	        (hvpix	  	),
-		.hires		    (hires		),
+		.pix_stb	    (pix_stb	),
 		.render_mode	(render_mode),
 		.dram_in 	    (fetch_data	),
 		.border 	    (border		),
 		.vdata_out 	    (tvdata		)
 	);
-		
-	
+
+	wire pix_stb;
+
+
 	video_vga video_vga (
 		.clk		(clk			),
 		.c0			(c0				),
@@ -193,7 +200,6 @@ module video_top (
 	wire [7:0] tvdata;
 	wire [7:0] vgadata;
 	
-	// assign vred = {debug, 1'b0};
 
 	video_out video_out (
 		.clk		(clk		),

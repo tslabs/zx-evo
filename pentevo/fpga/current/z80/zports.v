@@ -44,24 +44,26 @@ module zports(
 
 	output reg  [ 3:0] border,
 
-	output reg [7:0] vconfig	,
-	output reg [7:0] vpage		,
-	output reg [4:0] fmaddr		,
-	output reg [8:0] x_offs		,
-	output reg [8:0] y_offs		,
+	output reg [7:0] vconf,
+	output reg [7:0] vpage,
+	output reg [8:0] x_offs,
+	output reg [8:0] y_offs,
+	output reg [7:0] tsconf,
+	
 	output reg [7:0] rampage0,
 	output reg [7:0] rampage1,
 	output reg [7:0] rampage2,
 	output reg [7:0] rampage3,
+	output reg [7:0] rompage,
+	output reg [4:0] fmaddr,
+	output reg [4:0] tgpage,
 	
-	// output reg [7:0] cpuconf	,
-	// output reg [7:0] romconf	,
-	// output reg [7:0] tpage	    ,
-	// output reg [7:0] tgpage0	,
-	// output reg [7:0] tgpage1	,
-	// output reg [7:0] tmctrl	    ,
-	// output reg [7:0] hsint	    ,
-	
+	output reg [7:0] sysconf,
+	output reg [7:0] memconf,
+	output reg [7:0] hint_beg,
+	output reg [8:0] vint_beg,
+	output reg [8:0] im2vect,
+
 
 	input  wire        dos,
 
@@ -444,39 +446,52 @@ module zports(
 
 	//extension port #nnAF
 
-	localparam VCONFIG		= 8'd00;
+	localparam VCONF		= 8'd00;
 	localparam VPAGE		= 8'd01;
 	localparam XOFFSL		= 8'd02;
 	localparam XOFFSH		= 8'd03;
 	localparam YOFFSL		= 8'd04;
 	localparam YOFFSH		= 8'd05;
+	localparam TSCONF		= 8'd06;
+
+	localparam RAMPAGE0		= 8'd16;
+	localparam RAMPAGE1		= 8'd17;
+	localparam RAMPAGE2		= 8'd18;
+	localparam RAMPAGE3		= 8'd19;
 	localparam FMADDR		= 8'd21;
-	localparam RAMPAGE		= 8'd16;	// this covers pool [16:19]
+	localparam TGPAGE		= 8'd22;
 	
-	// localparam ROMCONF		= 8'h02;
-	// localparam TPAGE		= 8'h0B;
-	// localparam TGPAGE0		= 8'h0C;
-	// localparam TGPAGE1		= 8'h0D;
-	// localparam TMCTRL		= 8'h0E;
-	// localparam HSINT		= 8'h0F;
-	// localparam CPUCONF		= 8'h10;
+	localparam SYSCONF		= 8'd32;
+	localparam MEMCONF		= 8'd33;
+	localparam HSINT		= 8'd34;
+	localparam VSINTL		= 8'd35;
+	localparam VSINTH		= 8'd36;
+	localparam IM2VECT		= 8'd37;
 
 
 	always @(posedge zclk)
 		if (!rst_n)
 		begin
-			vconfig	<= 8'h00;
-			fmaddr[4]	<= 1'b0;
+		
+			vconf <= 8'h00;
 			x_offs <= 9'b0;
 			y_offs <= 9'b0;
+			tsconf[7] <= 1'b0;
+			
+			fmaddr[4] <= 1'b0;
+			
+			sysconf <= 8'h00;
+			memconf <= 8'h00;
+			hint_beg <= 8'd1;			// adjust this with border effects!
+			vint_beg <= 9'd0;
+			im2vect <= 8'hFF;
+			
 		end
 		else
 		if (portxt_wr)
 		begin
-			if (hoa == VCONFIG)
-				vconfig <= din;
-			if (hoa == FMADDR)
-				fmaddr <= din[4:0];
+			if (hoa == VCONF)
+				vconf <= din;
 			if (hoa == XOFFSL)
 				x_offs[7:0] <= din;
 			if (hoa == XOFFSH)
@@ -485,6 +500,26 @@ module zports(
 				y_offs[7:0] <= din;
 			if (hoa == YOFFSH)
 				y_offs[8] <= din[0];
+			if (hoa == TSCONF)
+				tsconf <= din;
+				
+			if (hoa == FMADDR)
+				fmaddr <= din[4:0];
+			if (hoa == TGPAGE)
+				tgpage <= din[7:3];
+				
+			if (hoa == SYSCONF)
+				sysconf <= din;
+			if (hoa == MEMCONF)
+				memconf <= din;
+			if (hoa == HSINT)
+				hint_beg <= din;
+			if (hoa == VSINTL)
+				vint_beg[7:0] <= din;
+			if (hoa == VSINTH)
+				vint_beg[8] <= din[0];
+			if (hoa == IM2VECT)
+				im2vect <= din;
 		end
 	
 
@@ -667,13 +702,13 @@ module zports(
 			begin
 				if (hoa == VPAGE)
 					vpage <= din;
-				if (hoa == RAMPAGE)
+				if (hoa == RAMPAGE0)
 					rampage0 <= din;
-				if (hoa == (RAMPAGE+1))
+				if (hoa == (RAMPAGE1))
 					rampage1 <= din;
-				if (hoa == (RAMPAGE+2))
+				if (hoa == (RAMPAGE2))
 					rampage2 <= din;
-				if (hoa == (RAMPAGE+3))
+				if (hoa == (RAMPAGE3))
 					rampage3 <= din;
 			end
 		end

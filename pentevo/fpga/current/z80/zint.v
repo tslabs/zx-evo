@@ -24,36 +24,31 @@ module zint
 	reg [9:0] intctr;
 
 
-
 `ifdef SIMULATE
 	initial
 	begin
-		intctr = 10'b1100000000;
+		intctr = 10'b1000000000;
 	end
 `endif
 
 
-	always @(posedge fclk) if (f0)
+// 32 Z80 tacts at 3,5MHz
+	always @(posedge fclk)
 	begin
 		if( int_start )
 			intctr <= 10'd0;
-		else if( !intctr[9:8] )
+		else if( !intctr[9] )
 			intctr <= intctr + 10'd1;
 	end
 
 
-	assign intend = intctr[9:8] || ( (!iorq_n) && (!m1_n) && zneg );
-
-
-	always @(posedge fclk) if (f0)
+	always @(posedge fclk)
 	begin
 		if( int_start )
 			int_n <= 1'b0;
-		else if( intend )
+		else if (intctr[9] | ((!iorq_n) && (!m1_n) && zneg))
 			int_n <= 1'bZ;
 	end
-
-
 
 
 
