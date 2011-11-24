@@ -15,6 +15,8 @@ module video_sync (
 	input wire [8:0] vpix_end,
 	input wire [4:0] go_offs,
 	input wire [1:0] x_offs,
+	input wire [7:0] hint_beg,
+	input wire [8:0] vint_beg,
 	
 // video syncs
 	output reg hsync,
@@ -49,7 +51,6 @@ module video_sync (
 	localparam HSYNCV_END 	= 9'd31;
 	localparam HBLNKV_END 	= 9'd44;
 	
-	localparam HINT_BEG  	= 9'd2;
 	localparam HPERIOD   	= 9'd448;
 
 	localparam VSYNC_BEG 	= 9'd08;
@@ -57,7 +58,6 @@ module video_sync (
 	localparam VBLNK_BEG 	= 9'd00;
 	localparam VBLNK_END 	= 9'd32;
 	
-	localparam VINT_BEG  	= 9'd0;
 	localparam VPERIOD   	= 9'd320;	// fucking pentagovn!!!
 
 
@@ -98,7 +98,7 @@ module video_sync (
 	assign frame_start = (hcount == (HPERIOD - 1)) & (vcount == (VPERIOD - 1));
 	assign pix_start = (hcount == (hpix_beg - 1 - x_offs));
 	
-	assign int_start = (hcount == HINT_BEG) & (vcount == VINT_BEG);
+	assign int_start = (hcount == {hint_beg, 1'b0}) & (vcount == vint_beg);
 	
 	
 	always @(posedge clk)

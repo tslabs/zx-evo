@@ -3,8 +3,12 @@
 
 module video_mode (
 
+// clocks
+	input wire q2,
+	input wire c6,
+
 // video config
-	input wire [7:0] vconfig,
+	input wire [7:0] vconf,
 	input wire [7:0] vpage,
 	
 // video parameters
@@ -30,6 +34,7 @@ module video_mode (
 	output wire hires,
 	output wire [1:0] render_mode,
 	output wire nogfx,
+	output wire pix_stb,
     
 // DRAM interface	
     output wire [20:0] video_addr,
@@ -38,8 +43,8 @@ module video_mode (
 );
 
 
-    wire [2:0] vmod = vconfig[2:0];
-	wire [1:0] rres = vconfig[4:3];
+    wire [2:0] vmod = vconf[2:0];
+	wire [1:0] rres = vconf[7:6];
 
 // Modes
     localparam M_ZX = 3'h0;		// ZX
@@ -56,6 +61,10 @@ module video_mode (
     localparam R_HC = 2'h1;
     localparam R_XC = 2'h2;
     localparam R_TX = 2'h3;
+
+	
+// clocking strobe for render
+	assign pix_stb = hires ? q2 : c6;
 
     
 // fetch window

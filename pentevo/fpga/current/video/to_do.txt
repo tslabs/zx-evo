@@ -1,24 +1,22 @@
 Fixes:
+ -  IM2 vector to Z80 bus (RTFM)
+ -  SYSConfig and CPU clock select
  -  add paging for 0000-BFFF
- -  signals fo No GFX mode
- -  ZX flash generator
- -  make CRAM clocked: zclk for WE and fclk for RE
+ -  signals for No GFX mode
  -  fix Xscroll for text mode
  -  fix vertical blank for border 1 line lag
  -  fix hi-res 1st pixel lag
- -  unify the lo/hi-res video data processing for tv/vga (borded apparently)
+ -  unify the lo/hi-res video data processing for tv/vga (border apparently)
  -  make proper clocked altdprams
+ -  make CRAM clocked: zclk for WE and fclk for RE
  -  make proper video buffering to avoid Qua's yelling
  -  check timings for video
  -  search ways to optimize huge LC usage
- -  fix covox and beeper write
  -  check border effects on INT position
- -  check if 7 Mhz for SD is enough for proper SD drivers working on z80 clocked 14 MHz
 
 Features:
  -  horizontal scrollers
  -  vertical scrollers (unified with Tile mode)
- -  line INTs
  -  gigascreen mode
  -  s/w writes to X/Y counters on-the-fly
  -  RAM / ROM paging
@@ -28,14 +26,16 @@ Features:
  
  
  
- Sprites
- -------
+ Sprites 'n' Tiles
+ -----------------
  
+Sprites:
+
  Nr of sprites: 42 (252 bytes)
- Sized as 16/32/48/64 pix individually for X and Y
- Min sprite (16x16) = 128 bytes (7 bits)
- Max sprite (64x64) = 2048 bytes
- Total addressable space 21 - 7 = 14bits
+ Sized: 16/32/48/64 pix individually for X and Y
+ Min sprite (16x16) = 128 bytes = 64 words (6 bits)
+ Max sprite (64x64) = 2048 bytes = 1024 words
+ Total addressable space 21 - 6 = 15 bits
  
  bits	desc
  9		X coord
@@ -44,24 +44,63 @@ Features:
  2		Y size
  1		X flip
  1		Y flip
+ 15		addr
  4		palette
  1		active
  1		leap
  ---------------------
- 30		totally
- 48		of
+ 45		totally of 48
+
+
+ 0 - XXXX XXXX
+ 1 - PPPP FSSX
+ 2 - YYYY YYYY
+ 3 - LCxx FSSY
+ 4 - AAAA AAAx
+ 5 - AAAA AAAA
+ 
+
+Tiles:
+
+ Sized: 8x8
+ Tile: 32 bytes = 16 words = 4 bits
+ Screen 360x288 = 45x36 = 1620 tiles = 51840 bytes
+ Plane 512x512 = 64x64 = 4096 tiles = 128kB = 64kW = 16 bits (8 pages)
+
+ bits	desc
+ 12		tile
+ 1		X flip
+ 1		Y flip
+ 2		palette
+ ---------------------
+ 16		totally of 16
+ 
+ 
+ 
  
  Layers (from bottom):
+
+ for tile mode 0
+1 - border
+2 - sprites (until 1st leap)	
+3 - tiles0
+4 - sprites (until 2nd leap)
+5 - sprites (until 3rd leap)
+
+
+ for tile mode 1
+1 - border
+2 - sprites (until 1st leap)	
+3 - tiles0
+4 - sprites (until 2nd leap)
+5 - tiles1
+6 - sprites (until 3rd leap)
+
+
+ for pixel modes
  
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
+1 - pixel graphics
+2 - sprites (until 1st leap)	
+3 - sprites (until 2nd leap)
+4 - sprites (until 3rd leap)
  
