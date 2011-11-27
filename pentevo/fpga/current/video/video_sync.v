@@ -24,6 +24,7 @@ module video_sync (
 	output reg csync,
 
 // video controls
+	input wire nogfx,
 	output wire hpix,
 	output wire vpix,
 	output wire hvpix,
@@ -35,6 +36,10 @@ module video_sync (
 	output wire tv_pix_start,
 	output wire vga_pix_start,
 	output wire pix_start,
+	output wire tspix_start,
+	output wire [8:0] lcount,
+
+// DRAM
 	output wire video_go,
 
 // ZX controls
@@ -72,6 +77,8 @@ module video_sync (
 	always @(posedge clk) if (c6)
 		if (hcount == (HPERIOD - 1))
 			vcount <= vcount == (VPERIOD - 1) ? 0 : vcount + 1;
+			
+	assign lcount = vcount - vpix_beg - 1;
 	
 	
 //	strobes
@@ -92,11 +99,12 @@ module video_sync (
 	assign vpix = (vcount >= vpix_beg) & (vcount < vpix_end);
 	assign hvpix = hpix & vpix;
 	
-	assign video_go = (hcount >= (hpix_beg - go_offs - x_offs)) & (hcount < (hpix_end - go_offs)) & vpix;
+	assign video_go = (hcount >= (hpix_beg - go_offs - x_offs)) & (hcount < (hpix_end - go_offs)) & vpix &!nogfx;
 	
 	assign line_start = (hcount == (HPERIOD - 1));
 	assign frame_start = (hcount == (HPERIOD - 1)) & (vcount == (VPERIOD - 1));
 	assign pix_start = (hcount == (hpix_beg - 1 - x_offs));
+	assign tspix_start = (hcount == (hpix_beg - 1));
 	
 	assign int_start = (hcount == {hint_beg, 1'b0}) & (vcount == vint_beg);
 	

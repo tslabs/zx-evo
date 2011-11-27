@@ -1,8 +1,8 @@
 Fixes:
+ -  make less power-off delay (apx. 2 sec)
  -  IM2 vector to Z80 bus (RTFM)
  -  SYSConfig and CPU clock select
  -  add paging for 0000-BFFF
- -  signals for No GFX mode
  -  fix Xscroll for text mode
  -  fix vertical blank for border 1 line lag
  -  fix hi-res 1st pixel lag

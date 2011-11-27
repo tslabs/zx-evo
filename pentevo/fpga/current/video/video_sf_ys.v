@@ -4,7 +4,7 @@
 // MODULE: altdpram 
 
 // ============================================================
-// File Name: video_cram.v
+// File Name: video_sf_ys.v
 // Megafunction Name(s):
 // 			altdpram
 //
@@ -36,7 +36,7 @@
 // synopsys translate_off
 `timescale 1 ps / 1 ps
 // synopsys translate_on
-module video_cram (
+module video_sf_ys (
 	clock,
 	data,
 	rdaddress,
@@ -45,14 +45,14 @@ module video_cram (
 	q);
 
 	input	  clock;
-	input	[14:0]  data;
+	input	[15:0]  data;
 	input	[7:0]  rdaddress;
 	input	[7:0]  wraddress;
 	input	  wren;
-	output	[14:0]  q;
+	output	[15:0]  q;
 
-	wire [14:0] sub_wire0;
-	wire [14:0] q = sub_wire0[14:0];
+	wire [15:0] sub_wire0;
+	wire [15:0] q = sub_wire0[15:0];
 
 	altdpram	altdpram_component (
 				.wren (wren),
@@ -71,20 +71,19 @@ module video_cram (
 				.wraddressstall (1'b0));
 	defparam
 		altdpram_component.indata_aclr = "OFF",
-		altdpram_component.indata_reg = "UNREGISTERED",
+		altdpram_component.indata_reg = "INCLOCK",
 		altdpram_component.intended_device_family = "ACEX1K",
-		altdpram_component.lpm_file = "../video/video_cram.mif",
 		altdpram_component.lpm_type = "altdpram",
 		altdpram_component.outdata_aclr = "OFF",
 		altdpram_component.outdata_reg = "UNREGISTERED",
 		altdpram_component.rdaddress_aclr = "OFF",
-		altdpram_component.rdaddress_reg = "UNREGISTERED",
+		altdpram_component.rdaddress_reg = "INCLOCK",
 		altdpram_component.rdcontrol_aclr = "OFF",
 		altdpram_component.rdcontrol_reg = "UNREGISTERED",
-		altdpram_component.width = 15,
+		altdpram_component.width = 16,
 		altdpram_component.widthad = 8,
 		altdpram_component.wraddress_aclr = "OFF",
-		altdpram_component.wraddress_reg = "UNREGISTERED",
+		altdpram_component.wraddress_reg = "INCLOCK",
 		altdpram_component.wrcontrol_aclr = "OFF",
 		altdpram_component.wrcontrol_reg = "INCLOCK";
 
@@ -101,7 +100,7 @@ endmodule
 // Retrieval info: PRIVATE: BYTE_ENABLE_A NUMERIC "0"
 // Retrieval info: PRIVATE: BYTE_ENABLE_B NUMERIC "0"
 // Retrieval info: PRIVATE: BYTE_SIZE NUMERIC "1"
-// Retrieval info: PRIVATE: BlankMemory NUMERIC "0"
+// Retrieval info: PRIVATE: BlankMemory NUMERIC "1"
 // Retrieval info: PRIVATE: CLOCK_ENABLE_INPUT_A NUMERIC "0"
 // Retrieval info: PRIVATE: CLOCK_ENABLE_INPUT_B NUMERIC "0"
 // Retrieval info: PRIVATE: CLOCK_ENABLE_OUTPUT_A NUMERIC "0"
@@ -118,75 +117,74 @@ endmodule
 // Retrieval info: PRIVATE: ECC NUMERIC "0"
 // Retrieval info: PRIVATE: IMPLEMENT_IN_LES NUMERIC "0"
 // Retrieval info: PRIVATE: INDATA_ACLR_B NUMERIC "0"
-// Retrieval info: PRIVATE: INDATA_REG_B NUMERIC "0"
+// Retrieval info: PRIVATE: INDATA_REG_B NUMERIC "1"
 // Retrieval info: PRIVATE: INIT_FILE_LAYOUT STRING "PORT_A"
 // Retrieval info: PRIVATE: INIT_TO_SIM_X NUMERIC "0"
 // Retrieval info: PRIVATE: INTENDED_DEVICE_FAMILY STRING "ACEX1K"
 // Retrieval info: PRIVATE: JTAG_ENABLED NUMERIC "0"
 // Retrieval info: PRIVATE: JTAG_ID STRING "NONE"
 // Retrieval info: PRIVATE: MAXIMUM_DEPTH NUMERIC "0"
-// Retrieval info: PRIVATE: MEMSIZE NUMERIC "3840"
+// Retrieval info: PRIVATE: MEMSIZE NUMERIC "4096"
 // Retrieval info: PRIVATE: MEM_IN_BITS NUMERIC "0"
-// Retrieval info: PRIVATE: MIFfilename STRING "../video/video_cram.mif"
+// Retrieval info: PRIVATE: MIFfilename STRING ""
 // Retrieval info: PRIVATE: OPERATION_MODE NUMERIC "2"
 // Retrieval info: PRIVATE: OUTDATA_ACLR_B NUMERIC "0"
-// Retrieval info: PRIVATE: OUTDATA_REG_B NUMERIC "0"
+// Retrieval info: PRIVATE: OUTDATA_REG_B NUMERIC "1"
 // Retrieval info: PRIVATE: RAM_BLOCK_TYPE NUMERIC "0"
 // Retrieval info: PRIVATE: READ_DURING_WRITE_MODE_MIXED_PORTS NUMERIC "0"
 // Retrieval info: PRIVATE: READ_DURING_WRITE_MODE_PORT_A NUMERIC "3"
 // Retrieval info: PRIVATE: READ_DURING_WRITE_MODE_PORT_B NUMERIC "3"
-// Retrieval info: PRIVATE: REGdata NUMERIC "0"
+// Retrieval info: PRIVATE: REGdata NUMERIC "1"
 // Retrieval info: PRIVATE: REGq NUMERIC "0"
-// Retrieval info: PRIVATE: REGrdaddress NUMERIC "0"
-// Retrieval info: PRIVATE: REGrren NUMERIC "0"
-// Retrieval info: PRIVATE: REGwraddress NUMERIC "0"
+// Retrieval info: PRIVATE: REGrdaddress NUMERIC "1"
+// Retrieval info: PRIVATE: REGrren NUMERIC "1"
+// Retrieval info: PRIVATE: REGwraddress NUMERIC "1"
 // Retrieval info: PRIVATE: REGwren NUMERIC "1"
 // Retrieval info: PRIVATE: USE_DIFF_CLKEN NUMERIC "0"
 // Retrieval info: PRIVATE: UseDPRAM NUMERIC "1"
 // Retrieval info: PRIVATE: VarWidth NUMERIC "0"
-// Retrieval info: PRIVATE: WIDTH_READ_A NUMERIC "15"
-// Retrieval info: PRIVATE: WIDTH_READ_B NUMERIC "15"
-// Retrieval info: PRIVATE: WIDTH_WRITE_A NUMERIC "15"
-// Retrieval info: PRIVATE: WIDTH_WRITE_B NUMERIC "15"
+// Retrieval info: PRIVATE: WIDTH_READ_A NUMERIC "16"
+// Retrieval info: PRIVATE: WIDTH_READ_B NUMERIC "16"
+// Retrieval info: PRIVATE: WIDTH_WRITE_A NUMERIC "16"
+// Retrieval info: PRIVATE: WIDTH_WRITE_B NUMERIC "16"
 // Retrieval info: PRIVATE: WRADDR_ACLR_B NUMERIC "0"
-// Retrieval info: PRIVATE: WRADDR_REG_B NUMERIC "0"
+// Retrieval info: PRIVATE: WRADDR_REG_B NUMERIC "1"
 // Retrieval info: PRIVATE: WRCTRL_ACLR_B NUMERIC "0"
 // Retrieval info: PRIVATE: enable NUMERIC "0"
 // Retrieval info: PRIVATE: rden NUMERIC "0"
 // Retrieval info: CONSTANT: INDATA_ACLR STRING "OFF"
-// Retrieval info: CONSTANT: INDATA_REG STRING "UNREGISTERED"
+// Retrieval info: CONSTANT: INDATA_REG STRING "INCLOCK"
 // Retrieval info: CONSTANT: INTENDED_DEVICE_FAMILY STRING "ACEX1K"
-// Retrieval info: CONSTANT: LPM_FILE STRING "../video/video_cram.mif"
 // Retrieval info: CONSTANT: LPM_TYPE STRING "altdpram"
 // Retrieval info: CONSTANT: OUTDATA_ACLR STRING "OFF"
 // Retrieval info: CONSTANT: OUTDATA_REG STRING "UNREGISTERED"
 // Retrieval info: CONSTANT: RDADDRESS_ACLR STRING "OFF"
-// Retrieval info: CONSTANT: RDADDRESS_REG STRING "UNREGISTERED"
+// Retrieval info: CONSTANT: RDADDRESS_REG STRING "INCLOCK"
 // Retrieval info: CONSTANT: RDCONTROL_ACLR STRING "OFF"
 // Retrieval info: CONSTANT: RDCONTROL_REG STRING "UNREGISTERED"
-// Retrieval info: CONSTANT: WIDTH NUMERIC "15"
+// Retrieval info: CONSTANT: WIDTH NUMERIC "16"
 // Retrieval info: CONSTANT: WIDTHAD NUMERIC "8"
 // Retrieval info: CONSTANT: WRADDRESS_ACLR STRING "OFF"
-// Retrieval info: CONSTANT: WRADDRESS_REG STRING "UNREGISTERED"
+// Retrieval info: CONSTANT: WRADDRESS_REG STRING "INCLOCK"
 // Retrieval info: CONSTANT: WRCONTROL_ACLR STRING "OFF"
 // Retrieval info: CONSTANT: WRCONTROL_REG STRING "INCLOCK"
 // Retrieval info: USED_PORT: clock 0 0 0 0 INPUT NODEFVAL clock
-// Retrieval info: USED_PORT: data 0 0 15 0 INPUT NODEFVAL data[14..0]
-// Retrieval info: USED_PORT: q 0 0 15 0 OUTPUT NODEFVAL q[14..0]
+// Retrieval info: USED_PORT: data 0 0 16 0 INPUT NODEFVAL data[15..0]
+// Retrieval info: USED_PORT: q 0 0 16 0 OUTPUT NODEFVAL q[15..0]
 // Retrieval info: USED_PORT: rdaddress 0 0 8 0 INPUT NODEFVAL rdaddress[7..0]
 // Retrieval info: USED_PORT: wraddress 0 0 8 0 INPUT NODEFVAL wraddress[7..0]
 // Retrieval info: USED_PORT: wren 0 0 0 0 INPUT VCC wren
-// Retrieval info: CONNECT: @data 0 0 15 0 data 0 0 15 0
-// Retrieval info: CONNECT: q 0 0 15 0 @q 0 0 15 0
+// Retrieval info: CONNECT: @data 0 0 16 0 data 0 0 16 0
+// Retrieval info: CONNECT: q 0 0 16 0 @q 0 0 16 0
 // Retrieval info: CONNECT: @wraddress 0 0 8 0 wraddress 0 0 8 0
 // Retrieval info: CONNECT: @rdaddress 0 0 8 0 rdaddress 0 0 8 0
 // Retrieval info: CONNECT: @wren 0 0 0 0 wren 0 0 0 0
 // Retrieval info: CONNECT: @inclock 0 0 0 0 clock 0 0 0 0
 // Retrieval info: LIBRARY: altera_mf altera_mf.altera_mf_components.all
-// Retrieval info: GEN_FILE: TYPE_NORMAL video_cram.v TRUE
-// Retrieval info: GEN_FILE: TYPE_NORMAL video_cram.inc FALSE
-// Retrieval info: GEN_FILE: TYPE_NORMAL video_cram.cmp FALSE
-// Retrieval info: GEN_FILE: TYPE_NORMAL video_cram.bsf TRUE FALSE
-// Retrieval info: GEN_FILE: TYPE_NORMAL video_cram_inst.v FALSE
-// Retrieval info: GEN_FILE: TYPE_NORMAL video_cram_bb.v FALSE
+// Retrieval info: GEN_FILE: TYPE_NORMAL video_sf_ys.v TRUE
+// Retrieval info: GEN_FILE: TYPE_NORMAL video_sf_ys.inc FALSE
+// Retrieval info: GEN_FILE: TYPE_NORMAL video_sf_ys.cmp FALSE
+// Retrieval info: GEN_FILE: TYPE_NORMAL video_sf_ys.bsf FALSE
+// Retrieval info: GEN_FILE: TYPE_NORMAL video_sf_ys_inst.v FALSE
+// Retrieval info: GEN_FILE: TYPE_NORMAL video_sf_ys_bb.v FALSE
 // Retrieval info: LIB_FILE: altera_mf

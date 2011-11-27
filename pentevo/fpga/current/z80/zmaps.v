@@ -14,13 +14,15 @@ module zmaps(
 	output reg [7:0] zmd,
 	
 // FPRAM controls
-	output wire pal_we
+	output wire cram_we,
+	output wire sfys_we
 
 );
 
 
 // addresses of files withing zmaps
 	localparam CRAM	= 3'b000;
+	localparam SFYS	= 3'b001;
 	
 
 // control signals
@@ -29,7 +31,8 @@ module zmaps(
 	
 
 // write enables
-	assign pal_we = (a[11:9] == CRAM) & a[0] & hit;
+	assign cram_we = (a[11:9] == CRAM) & a[0] & hit;
+	assign sfys_we = (a[11:9] == SFYS) & a[0] & hit;
 
 	
 // LSB fetching

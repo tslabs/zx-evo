@@ -10,6 +10,7 @@ module video_render (
 	input wire int_start,
 	input wire pix_start,
 	input wire hvpix,
+	input wire nogfx,
 
 // mode controls
 	input wire [1:0] render_mode,
@@ -17,7 +18,8 @@ module video_render (
 
 // video data
 	input  wire [31:0] dram_in,
-	input  wire [ 3:0] border,
+	input  wire [ 3:0] border_in,
+	input  wire [ 7:0] tsdata_in,
 	output wire [ 7:0] vdata_out
 	
 );
@@ -31,7 +33,7 @@ module video_render (
 // pixel counter
 	reg [3:0] cnt;
 	
-	always @(posedge clk) if (pix_stb)
+	always @(posedge clk) if (pix_stb)		// q2 or c6
 		cnt <= pix_start ? 0 : cnt + 1;
 
 
@@ -98,14 +100,15 @@ module video_render (
 
 	wire ftch[0:3];
 	wire fetch = pix_start | ftch[render_mode];
-	assign ftch[R_ZX] = cnt[3:0] == 4'b1111;
-	assign ftch[R_HC] = cnt[2:0] == 3'b111;
-	assign ftch[R_XC] = cnt[1:0] == 2'b11;
-	assign ftch[R_TX] = cnt[3:0] == 4'b1111;
+	assign ftch[R_ZX] = &cnt[3:0];
+	assign ftch[R_HC] = &cnt[2:0];
+	assign ftch[R_XC] = &cnt[1:0];
+	assign ftch[R_TX] = &cnt[3:0];
 
 	
-// mix video data and border
-	assign vdata_out = hvpix ? d_out[render_mode] : {4'hF, border};
+// video data mixer
+	wire [7:0] border = {4'hF, border_in};
+	assign vdata_out = hvpix ? (|tsdata_in[3:0] ? tsdata_in[7:0] : (nogfx ? border : d_out[render_mode])) : border;
 	
 	
 	

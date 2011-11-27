@@ -19,9 +19,9 @@ module video_out (
 	input wire hires,
 
 // Z80 controls
-	input  wire [14:0] pal_data_in,
-	input  wire [7:0] pal_addr_in,
-	input  wire pal_we,
+	input  wire [14:0] cram_data_in,
+	input  wire [7:0] cram_addr_in,
+	input  wire cram_we,
 	
 // video data
 	input  wire [7:0] tvdata,
@@ -89,9 +89,9 @@ module video_out (
 // CRAM
 	video_cram video_cram(
 		.clock		(clk		),
-		.wraddress	(pal_addr_in),
-		.data		(pal_data_in),
-		.wren		(pal_we		),
+		.wraddress	(cram_addr_in),
+		.data		(cram_data_in),
+		.wren		(cram_we	),
 	    .rdaddress	(vdata      ),
 	    .q			(vpixel    	)
 	);
