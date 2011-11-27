@@ -319,8 +319,8 @@ module top(
 	(
 		.fclk(fclk), .f0(f0), .rst_n(rst_n), .zclk(zclk), .rfsh_n(rfsh_n), .zclk_out(clkz_out),
 		.zpos(zpos), .zneg(zneg),
-		.turbo( {atm_turbo,~(peff7[4])} ), .c4(c4), .c0(c0),
-		.zclk_stall( cpu_stall | (|zclk_stall) ), .int_turbo(int_turbo),
+		.turbo( {atm_turbo,~(peff7[4])}), .c4(c4), .c0(c0),
+		.zclk_stall( cpu_stall | (|zclk_stall)), .int_turbo(int_turbo),
 		.external_port(external_port), .iorq_n(iorq_n), .m1_n(m1_n)
 	);
 
@@ -425,7 +425,7 @@ module top(
 			                     .rd_page0  (rd_pages[i  ]),
 			                     .rd_page1  (rd_pages[i+4]),
 
-			                     .rd_ramnrom( {rd_ramnrom[i+4], rd_ramnrom[i]} ),
+			                     .rd_ramnrom( {rd_ramnrom[i+4], rd_ramnrom[i]}),
 			                     .rd_dos7ffd( {rd_dos7ffd[i+4], rd_dos7ffd[i]} )
 			                   );
 		end
@@ -441,8 +441,8 @@ module top(
 
 	           .fclk(fclk), .f0(f0),
 
-	           .dos_turn_on ( |dos_turn_on  ),
-	           .dos_turn_off( |dos_turn_off ),
+	           .dos_turn_on ( |dos_turn_on),
+	           .dos_turn_off( |dos_turn_off),
 
 	           .cpm_n(cpm_n),
 
@@ -464,21 +464,21 @@ module top(
 		.zpos(zpos),
 		.zneg(zneg),
 
-		.c0     (c0     ),
+		.c0     (c0),
 		.c2(c2),
-		.c4 (c4 ),
-		.c6     (c6     ),
+		.c4 (c4),
+		.c6     (c6),
 		
-		.za    (a       ),
-		.zd_in (d       ),
+		.za    (a),
+		.zd_in (d),
 		.zd_out(dout_ram), 
-		.zd_ena(ena_ram ), 
-		.m1_n  (m1_n    ),
-		.rfsh_n(rfsh_n  ), 
-		.iorq_n(iorq_n  ), 
-		.mreq_n(mreq_n  ),
-		.rd_n  (rd_n    ), 
-		.wr_n  (wr_n    ),
+		.zd_ena(ena_ram), 
+		.m1_n  (m1_n),
+		.rfsh_n(rfsh_n), 
+		.iorq_n(iorq_n), 
+		.mreq_n(mreq_n),
+		.rd_n  (rd_n), 
+		.wr_n  (wr_n),
 
 		.win0_romnram(romnram[0]),
 		.win1_romnram(romnram[1]),
@@ -492,20 +492,20 @@ module top(
 
 		.romrw_en(romrw_en),
 
-		.rompg  (rompg  ),
+		.rompg  (rompg),
 		.romoe_n(romoe_n),
 		.romwe_n(romwe_n),
-		.csrom  (csrom  ),
+		.csrom  (csrom),
 
-		.cpu_req   (cpu_req   ),
-		.cpu_rnw   (cpu_rnw   ),
+		.cpu_req   (cpu_req),
+		.cpu_rnw   (cpu_rnw),
 		.cpu_wrbsel(cpu_wrbsel),
 		.cpu_strobe(cpu_strobe),
-		.cpu_addr  (cpu_addr  ),
+		.cpu_addr  (cpu_addr),
 		.cpu_wrdata(cpu_wrdata),
 		.cpu_rddata(cpu_rddata),
-		.cpu_stall (cpu_stall ),
-		.cpu_next  (cpu_next  ),
+		.cpu_stall (cpu_stall),
+		.cpu_next  (cpu_next),
 
 		.int_turbo(int_turbo)
 	);
@@ -552,6 +552,12 @@ module top(
 	wire video_strobe;
 	wire video_next;
 
+	wire ts_req;
+	wire [20:0] ts_addr;
+	wire [15:0] ts_data;
+	wire ts_strobe;
+	wire ts_next;
+
 	arbiter dramarb( .clk(fclk), .f0(f0),
 	                 .rst_n(rst_n),
 
@@ -565,8 +571,8 @@ module top(
 	                 .dram_wrdata(dwrdata),
 
 	                 .c2(c2),
-	                 .c4 (c4 ),
-	                 .c6     (c6     ),
+	                 .c4 (c4),
+	                 .c6     (c6),
 
 	                 .go(go),
 	                 .video_bw(video_bw),
@@ -575,9 +581,15 @@ module top(
 	                 .video_data(video_data),
 	                 .video_strobe(video_strobe),
 	                 .video_next(video_next),
+					 
+					 .ts_req		(ts_req),
+					 .ts_addr		(ts_addr),
+					 .ts_data		(ts_data),
+					 .ts_next		(ts_next),
+					 .ts_strobe		(ts_strobe),
 
 	                 //.cpu_waitcyc(cpu_waitcyc),
-			 .cpu_next (cpu_next),
+					 .cpu_next (cpu_next),
 	                 .cpu_req(cpu_req),
 	                 .cpu_rnw(cpu_rnw),
 	                 .cpu_addr(cpu_addr),
@@ -612,22 +624,32 @@ module top(
 		.vconf(vconf),
 		.x_offs(x_offs),
 		.y_offs(y_offs),
+		.tsconf(tsconf),
+		.tgpage(tgpage),
 		
 		.hint_beg(hint_beg),
 		.vint_beg(vint_beg),
 		
 		.vga_on(cfg_vga_on),
 
-		.video_addr     (video_addr  ),
-		.video_data     (video_data  ),
+		.video_addr     (video_addr),
+		.video_data     (video_data),
 		.video_strobe   (video_strobe),
-		.video_next     (video_next  ),
-		.video_go       (go          ),
-		.video_bw		(video_bw	 ),
+		.video_next     (video_next),
+		.video_go       (go),
+		.video_bw		(video_bw),
 
+		.ts_req			(ts_req),
+		.ts_addr		(ts_addr),
+		.ts_data		(ts_data),
+		.ts_next		(ts_next),
+		.ts_strobe		(ts_strobe),
+		
 		.a(a),
-		.pal_data_in({d[6:0], zmd}),
-		.pal_we(pal_we),
+		.cram_data_in({d[6:0], zmd}),
+		.sfys_data_in({d[7:0], zmd}),
+		.cram_we(cram_we),
+		.sfys_we(sfys_we),
 		.int_start(int_start)
 
 	);
@@ -675,28 +697,34 @@ zmaps zmaps(
 
 					.zmd(zmd),
 					
-					.pal_we(pal_we)
+					.cram_we(cram_we),
+					.sfys_we(sfys_we)
 				);
 				
 		
+		wire cram_we;
+		wire sfys_we;
+		
 		wire [7:0] vconf;
 		wire [7:0] vpage;
-		wire [4:0] fmaddr;
 		wire [8:0] x_offs;
 		wire [8:0] y_offs;
+		wire [7:0] tsconf;
+		
 		wire [7:0] rampage0;
 		wire [7:0] rampage1;
 		wire [7:0] rampage2;
 		wire [7:0] rampage3;
+		wire [7:0] rompage;
+		wire [4:0] fmaddr;
+		wire [4:0] tgpage;
 		
-		// wire [7:0]	   cpuconf	;
-		// wire [7:0]	   romconf	;
-		// wire [7:0]	   tpage	;
-		// wire [7:0]	   tgpage0	;
-		// wire [7:0]	   tgpage1	;
-		// wire [7:0]	   tmctrl	;
-		// wire [7:0]	   hsint	;
-				   
+		wire [7:0] sysconf;
+		wire [7:0] memconf;
+		wire [7:0] hint_beg;
+		wire [8:0] vint_beg;
+		wire [7:0] im2vect ;
+		
 
 	zports zports( .zclk(zclk), .fclk(fclk), .f0(f0), .rst_n(rst_n), .zpos(zpos), .zneg(zneg),
 	               .din(d), .dout(dout_ports), .dataout(ena_ports),
@@ -710,34 +738,40 @@ zmaps zmaps(
 	               .ide_a(ide_a), .ide_cs0_n(ide_cs0_n), .ide_cs1_n(ide_cs1_n),
 	               .ide_wr_n(ide_wr_n), .ide_rd_n(ide_rd_n),
 					
-					.vconf	(vconf	),
-					.vpage		(vpage		),
-					.fmaddr		(fmaddr		),
-					.x_offs		(x_offs		),
-					.y_offs		(y_offs		),
-					.rampage0	(rampage0	),
-					.hint_beg	(hint_beg	),
-					.vint_beg	(vint_beg	),
+					.vconf		(vconf),
+					.vpage		(vpage),
+					.x_offs		(x_offs),
+					.y_offs		(y_offs),
+					.tsconf		(tsconf),
 					
-					// .cpuconf	(cpuconf	),
-					// .romconf	(romconf	),
-					// .tgpage1	(tgpage0	),
-					// .tmctrl	  	(tmctrl	  	),
+					.rampage0	(rampage0),
+					.rampage1	(rampage1),
+					.rampage2	(rampage2),
+					.rampage3	(rampage3),
+					.rompage	(rompage),
+					.fmaddr		(fmaddr),
+					.tgpage		(tgpage),
+					
+					.sysconf	(sysconf),
+					.memconf	(memconf),
+					.hint_beg	(hint_beg),
+					.vint_beg	(vint_beg),
+					.im2vect	(im2vect),
 					
 	               .keys_in(kbd_port_data),
 	               .mus_in (mus_port_data),
-	               .kj_in  (kj_port_data ),
+	               .kj_in  (kj_port_data),
 
 	               .tape_read(tape_read),
 
 	               .gluclock_addr(gluclock_addr),
-	               .comport_addr (comport_addr ),
+	               .comport_addr (comport_addr),
 	               .wait_start_gluclock(wait_start_gluclock),
-	               .wait_start_comport (wait_start_comport ),
-	               .wait_rnw  (wait_rnw  ),
+	               .wait_start_comport (wait_start_comport),
+	               .wait_rnw  (wait_rnw),
 	               .wait_write(wait_write),
 `ifndef SIMULATE
-	               .wait_read (wait_read ),
+	               .wait_read (wait_read),
 `else
 	               .wait_read(8'hFF),
 `endif
@@ -756,11 +790,11 @@ zmaps zmaps(
 		.pent1m_page  (pent1m_page),
 		.pent1m_ROM   (pent1m_ROM),
 
-		.atm_palwr  (atm_palwr  ),
+		.atm_palwr  (atm_palwr),
 		.atm_paldata(atm_paldata),
 
 		.beeper_wr(beeper_wr),
-		.covox_wr (covox_wr ),
+		.covox_wr (covox_wr),
 
 		.fnt_wr(fnt_wr),
 		.clr_nmi(clr_nmi),
@@ -771,8 +805,8 @@ zmaps zmaps(
 		          rd_pages[3], rd_pages[2],
 		          rd_pages[1], rd_pages[0] }),
 
-		.ramnroms( rd_ramnrom ),
-		.dos7ffds( rd_dos7ffd ),
+		.ramnroms( rd_ramnrom),
+		.dos7ffds( rd_dos7ffd),
 
 		.palcolor(palcolor),
 
@@ -791,7 +825,7 @@ zmaps zmaps(
 		.int_start(int_start),
 
 		.iorq_n(iorq_n),
-		.m1_n  (m1_n  ),
+		.m1_n  (m1_n),
 
 		.int_n(int_n)
 	);
@@ -810,7 +844,7 @@ zmaps zmaps(
 		.set_nmi(set_nmi),
 		.clr_nmi(clr_nmi),
 
-		.in_nmi (in_nmi ),
+		.in_nmi (in_nmi),
 		.gen_nmi(gen_nmi)
 	);
 
@@ -861,7 +895,7 @@ zmaps zmaps(
 		.din(d),
 
 		.beeper_wr(beeper_wr),
-		.covox_wr (covox_wr ),
+		.covox_wr (covox_wr),
 
 		.beeper_mux(beeper_mux),
 

@@ -44,6 +44,8 @@ module zports(
 
 	output reg  [ 3:0] border,
 
+	
+// Xtension ports
 	output reg [7:0] vconf,
 	output reg [7:0] vpage,
 	output reg [8:0] x_offs,
@@ -476,7 +478,7 @@ module zports(
 			vconf <= 8'h00;
 			x_offs <= 9'b0;
 			y_offs <= 9'b0;
-			tsconf[7] <= 1'b0;
+			tsconf[7:5] <= 3'b0;
 			
 			fmaddr[4] <= 1'b0;
 			
@@ -973,7 +975,7 @@ module zports(
 
 	4'hC: portbemux = { ~atm_pen2, atm_cpm_n, ~atm_pen, 1'bX, atm_turbo, atm_scr_mode };
 
-	4'hD: portbemux = { ~palcolor[4], ~palcolor[2], ~palcolor[0], ~palcolor[5], 2'b11, ~palcolor[3], ~palcolor[1] };
+	// 4'hD: portbemux = { ~palcolor[4], ~palcolor[2], ~palcolor[0], ~palcolor[5], 2'b11, ~palcolor[3], ~palcolor[1] };
 
 	default: portbemux = 8'bXXXXXXXX;
 

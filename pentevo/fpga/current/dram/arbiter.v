@@ -116,13 +116,18 @@ module arbiter(
 	                            // if there is video_strobe, it coincides with c6 signal
 	output wire    video_next,   // on this signal you can change video_addr; it is one clock leading the video_strobe
 
+	input wire 		   ts_req,
+	input wire  [20:0] ts_addr,
+	output wire [15:0] ts_data,
+	output wire        ts_next,
+	output wire        ts_strobe,
 
 
-	input  wire        cpu_req,
-	input  wire        cpu_rnw,
-	input  wire [20:0] cpu_addr,
-	input  wire [ 7:0] cpu_wrdata,
-	input  wire        cpu_wrbsel,
+	input wire        cpu_req,
+	input wire        cpu_rnw,
+	input wire [20:0] cpu_addr,
+	input wire [ 7:0] cpu_wrdata,
+	input wire        cpu_wrbsel,
 
 	output wire [15:0] cpu_rddata,
 	output reg         cpu_next,
@@ -144,11 +149,21 @@ module arbiter(
 	wire [2:0] vidmax; // max number of video cycles in a block, depends on bw input
 
 
+	localparam CYC_CPU   = 2'b00;
+	localparam CYC_VIDEO = 2'b01;
+	localparam CYC_TS    = 2'b10;
+	localparam CYC_FREE  = 2'b11;
 
-	localparam CYC_VIDEO = 2'b00; // do             there
-	localparam CYC_CPU   = 2'b01; //   not     since     are   dependencies
-	localparam CYC_FREE  = 2'b10; //      alter             bit
-
+	wire next_cpu = next_cycle == CYC_CPU;
+	wire next_vid = next_cycle == CYC_VIDEO;
+	wire next_ts  = next_cycle == CYC_TS;
+	wire next_fre = next_cycle == CYC_FREE;
+	
+	wire curr_cpu = curr_cycle == CYC_CPU;
+	wire curr_vid = curr_cycle == CYC_VIDEO;
+	wire curr_ts  = curr_cycle == CYC_TS;
+	wire curr_fre = curr_cycle == CYC_FREE;
+	
 	reg [1:0] curr_cycle; // type of the cycle in progress
 	reg [1:0] next_cycle; // type of the next cycle
 
@@ -204,7 +219,7 @@ module arbiter(
 		if( go && (blk_rem==3'd0) )
 			vid_nrem = cpu_req ? vidmax : (vidmax-3'd1);
 		else
-			if( next_cycle==CYC_VIDEO )
+			if( next_vid )
 				vid_nrem = (vid_rem==3'd0) ? 3'd0 : (vid_rem-3'd1);
 			else
 				vid_nrem = vid_rem;
@@ -243,6 +258,9 @@ module arbiter(
 				if( cpu_req )
 					next_cycle = CYC_CPU;
 				else
+				if( ts_req )
+					next_cycle = CYC_TS;
+				else
 					next_cycle = CYC_FREE;
 			end
 		end
@@ -268,6 +286,9 @@ module arbiter(
 	
 					if( cpu_req )
 						next_cycle = CYC_CPU;
+					else
+					if( ts_req )
+						next_cycle = CYC_TS;
 					else
 						if( vid_rem==3'd0 )
 							next_cycle = CYC_FREE;
@@ -295,14 +316,15 @@ module arbiter(
 	assign dram_wrdata[15:0] = { cpu_wrdata[7:0], cpu_wrdata[7:0] };
 	assign dram_bsel[1:0] = { cpu_wrbsel, ~cpu_wrbsel };
 
-	assign dram_addr = next_cycle[0] ? cpu_addr : video_addr;
+	assign dram_addr = next_cpu ? cpu_addr : next_vid ? video_addr : ts_addr;
 
 	assign cpu_rddata = dram_rddata;
 	assign video_data = dram_rddata;
+	assign ts_data = dram_rddata;
 
 	always @*
 	begin
-		if( next_cycle[1] ) // CYC_FREE
+		if( next_fre ) // CYC_FREE
 		begin
 			dram_req = 1'b0;
 			dram_rnw = 1'b1;
@@ -310,7 +332,7 @@ module arbiter(
 		else // CYC_CPU or CYC_VIDEO
 		begin
 			dram_req = 1'b1;
-			if( next_cycle[0] ) // CYC_CPU
+			if( next_cpu ) // CYC_CPU
 				dram_rnw = cpu_rnw;
 			else // CYC_VIDEO
 				dram_rnw = 1'b1;
@@ -328,16 +350,19 @@ module arbiter(
 
 	always @(posedge clk) if (f0)
 	begin
-		if( (curr_cycle==CYC_CPU) && cpu_rnw_r && c4 )
+		if( curr_cpu && cpu_rnw_r && c4 )
 			cpu_strobe <= 1'b1;
 		else
 			cpu_strobe <= 1'b0;
 	end
 
 
-	assign video_next = (curr_cycle==CYC_VIDEO) & c4;
-	assign video_strobe = (curr_cycle==CYC_VIDEO) & c6;
+	assign video_next = curr_vid & c4;
+	assign video_strobe = curr_vid & c6;
 
+	assign ts_next = curr_ts & c4;
+	assign ts_strobe = curr_ts & c6;
 
+	
 endmodule
 

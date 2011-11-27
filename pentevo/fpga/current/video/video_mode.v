@@ -18,6 +18,7 @@ module video_mode (
 	output wire [8:0] hpix_end,
 	output wire [8:0] vpix_beg,
 	output wire [8:0] vpix_end,
+	output wire [5:0] x_tiles,
 	output wire [4:0] go_offs,
 	output wire [3:0] fetch_sel,
 	output wire	[1:0] fetch_bsl,
@@ -46,6 +47,9 @@ module video_mode (
     wire [2:0] vmod = vconf[2:0];
 	wire [1:0] rres = vconf[7:6];
 
+	assign nogfx = &vmod;
+	
+	
 // Modes
     localparam M_ZX = 3'h0;		// ZX
     localparam M_HC = 3'h1;		// 16c
@@ -82,7 +86,7 @@ module video_mode (
 
 
 // X offset
-	assign x_offs_mode = vmod == M_XC ? {x_offs[8:1], 1'b0, x_offs[0]} : {1'b0, x_offs[8:0]};
+	assign x_offs_mode = {vmod == M_XC ? {x_offs[8:1], 1'b0} : {1'b0, x_offs[8:1]}, x_offs[0]};
 
 	
 // DRAM bandwidth usage
@@ -121,6 +125,7 @@ module video_mode (
 	wire [8:0] hp_end[0:3];
 	wire [8:0] vp_beg[0:3];
 	wire [8:0] vp_end[0:3];
+	wire [5:0] x_tile[0:3];
 
 	assign hp_beg[0] = 9'd140;	// 256 (88-52-256-52)
 	assign hp_beg[1] = 9'd108;	// 320 (88-20-320-20)
@@ -142,10 +147,16 @@ module video_mode (
 	assign vp_end[2] = 9'd296;	// 240
 	assign vp_end[3] = 9'd320;	// 288
 
+	assign x_tile[0] = 6'd33;	// 256
+	assign x_tile[1] = 6'd41;	// 320
+	assign x_tile[2] = 6'd41;	// 320
+	assign x_tile[3] = 6'd46;	// 360
+
 	assign hpix_beg = hp_beg[rres];
 	assign hpix_end = hp_end[rres];
 	assign vpix_beg = vp_beg[rres];
 	assign vpix_end = vp_end[rres];
+	assign x_tiles = x_tile[rres];
 
 	
 // addresses
