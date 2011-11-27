@@ -149,24 +149,24 @@ module arbiter(
 	wire [2:0] vidmax; // max number of video cycles in a block, depends on bw input
 
 
-	localparam CYC_CPU   = 2'b00;
-	localparam CYC_VIDEO = 2'b01;
-	localparam CYC_TS    = 2'b10;
-	localparam CYC_FREE  = 2'b11;
+	localparam CYC_CPU   = 3'b001;
+	localparam CYC_VIDEO = 3'b010;
+	localparam CYC_TS    = 3'b100;
+	localparam CYC_FREE  = 3'b000;
 
-	wire next_cpu = next_cycle == CYC_CPU;
-	wire next_vid = next_cycle == CYC_VIDEO;
-	wire next_ts  = next_cycle == CYC_TS;
-	wire next_fre = next_cycle == CYC_FREE;
-	
-	wire curr_cpu = curr_cycle == CYC_CPU;
-	wire curr_vid = curr_cycle == CYC_VIDEO;
-	wire curr_ts  = curr_cycle == CYC_TS;
-	wire curr_fre = curr_cycle == CYC_FREE;
-	
-	reg [1:0] curr_cycle; // type of the cycle in progress
-	reg [1:0] next_cycle; // type of the next cycle
+	reg [2:0] curr_cycle; // type of the cycle in progress
+	reg [2:0] next_cycle; // type of the next cycle
 
+	wire next_cpu = next_cycle[0];
+	wire next_vid = next_cycle[1];
+	wire next_ts  = next_cycle[2];
+	wire next_fre = ~|next_cycle;
+	
+	wire curr_cpu = curr_cycle[0];
+	wire curr_vid = curr_cycle[1];
+	wire curr_ts  = curr_cycle[2];
+	wire curr_fre = ~|curr_cycle;
+	
 
 
 
