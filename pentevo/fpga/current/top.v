@@ -117,14 +117,16 @@ module top(
 	output spiint_n
 );
 
-	wire f0, q0, q2, c0, c2, c4, c6, c7, clk175;
+	wire f0, f1, q0, q2, q3, c0, c2, c4, c6, c7, clk175;
 
 	clock clock
 	(
 		.clk(fclk),
 		.f0(f0),
+		.f1(f1),
 		.q0(q0),
 		.q2(q2),
+		.q3(q3),
 		.c0(c0),
 		.c2(c2),
 		.c4(c4),
@@ -138,8 +140,6 @@ module top(
 	
 	wire dos;
 
-
-	wire zclk; // z80 clock for short
 
 	wire zpos,zneg;
 
@@ -214,7 +214,7 @@ module top(
 
 
 
-	assign zclk = clkz_in;
+	wire zclk = clkz_in;
 
 
 	// RESETTER
@@ -317,7 +317,7 @@ module top(
 
 	zclock zclock
 	(
-		.fclk(fclk), .f0(f0), .rst_n(rst_n), .zclk(zclk), .rfsh_n(rfsh_n), .zclk_out(clkz_out),
+		.fclk(fclk), .f0(f0), .f1(f1), .rst_n(rst_n), .zclk(zclk), .rfsh_n(rfsh_n), .zclk_out(clkz_out),
 		.zpos(zpos), .zneg(zneg),
 		.turbo( {atm_turbo,~(peff7[4])}), .c4(c4), .c0(c0),
 		.zclk_stall( cpu_stall | (|zclk_stall)), .int_turbo(int_turbo),
@@ -523,7 +523,7 @@ module top(
 
 
 
-	dram dram( .clk(fclk), .f0(f0),
+	dram dram( .clk(fclk), .f0(f0), .f1(f1),
 	           .rst_n(rst_n),
 
 	           .addr(daddr),
@@ -568,11 +568,12 @@ module top(
 	                 .dram_rrdy(drrdy),
 	                 .dram_bsel(dbsel),
 	                 .dram_rddata(drddata),
+	                 // .dram_rd(rd),
 	                 .dram_wrdata(dwrdata),
 
 	                 .c2(c2),
-	                 .c4 (c4),
-	                 .c6     (c6),
+	                 .c4(c4),
+	                 .c6(c6),
 
 	                 .go(go),
 	                 .video_bw(video_bw),
@@ -603,9 +604,11 @@ module top(
 	video_top video_top(
 
 		.clk(fclk),
+		.zclk(zclk),
 		.f0(f0),
 		.q0(q0),
 		.q2(q2),
+		.q3(q3),
 		.c0(c0),
 		.c2(c2),
 		.c4(c4),

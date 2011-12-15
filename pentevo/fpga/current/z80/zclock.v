@@ -29,7 +29,7 @@
 
 module zclock(
 
-	input fclk, f0,
+	input fclk, f0, f1,
 	input rst_n,
 
 	input zclk, // Z80 clock, buffered via act04 and returned back to the FPGA
@@ -215,7 +215,7 @@ module zclock(
 	// total: 5.8 ns lead of any edge of zclk relative to posedge of fclk => ACCOUNT FOR THIS WHEN DOING INTER-CLOCK DATA TRANSFERS
 	//
 
-	always @(negedge fclk)  if (f0)
+	always @(posedge fclk)  if (f1)
 	begin
 		if( zpos )
 			zclk_out <= 1'b0;

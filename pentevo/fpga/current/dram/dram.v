@@ -14,22 +14,20 @@
 // rwe:   `````````````````````````````````````````\_______________________________/````````````````````````````````
 // req:  __/```````\_______________________/```````\________________________________________________________________
 // rnw:  XX/```````\XXXXXXXXXXXXXXXXXXXXXXX\_______/XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-// c0: __________/```````\_______________________/```````\_______________________/```````\_______________________/
+// c0:   __________/```````\_______________________/```````\_______________________/```````\_______________________/
 // rrdy: __________________________________/```````\________________________________________________________________
 // addr: XX< addr  >XXXXXXXXXXXXXXXXXXXXXXX< addr  >XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 //wrdata:XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX< write >XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 //rddata:XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX< read  >XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 //
 // comments:
-// rucas_n, rlcas_n, rras0_n, rras1_n, rwe_n could be made 'fast output register'
-// ra[] couldn't be such in acex1k, because output registers could be all driven only by
-//  single clock polarity (and here they are driven by negative edge, while CAS/RAS by positive)
+// rucas_n, rlcas_n, rras0_n, rras1_n, rwe_n, ra[] could be made 'fast output register'
 //
 // rst_n is resynced before use and acts as req inhibit. so while in reset, dram regenerates and isn't corrupted
 
 module dram(
 
-	input clk, f0,
+	input clk, f0, f1,
 	input rst_n, // shut down accesses, remain refresh
 
 	output reg [9:0] ra, // to the DRAM pins
@@ -270,7 +268,7 @@ module dram(
 
 
 	// row/column address multiplexing
-	always @(negedge clk) if (f0)
+	always @(posedge clk) if (f1)
 	begin
 		if( (state==RD1) || (state==WR1) )
 			ra <= int_addr[10:1];
@@ -291,19 +289,13 @@ module dram(
 	end
 
 
-	// c0 and rrdy control
+	// rrdy control
 	always @(posedge clk) if (f0)
 	begin
-		// if( (state==RD4) || (state==WR4) || (state==RFSH4) )
-			// c0 <= 1'b1;
-		// else
-			// c0 <= 1'b0;
-
-
-            if( state==RD3 )
-            	rrdy <= 1'b1;
-            else
-            	rrdy <= 1'b0;
+       if( state==RD3 )
+		rrdy <= 1'b1;
+       else
+       	rrdy <= 1'b0;
 	end
 
 

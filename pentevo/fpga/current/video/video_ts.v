@@ -4,6 +4,7 @@ module video_ts (
 
 // clocks
 	input wire clk,
+	input wire zclk,
 	input wire c7,
 
 // video config
@@ -77,6 +78,12 @@ module video_ts (
 	wire [2:0] layer = start ? lnxt[BEG] : layer_sw ? lnxt[layer_r] : layer_r;
 	wire [5:0] s_num = start ? 6'b0 : sprite_sw ? s_num_r + 6'd1 : s_num_r;
 	wire [2:0] s_reg = sprites_start | sprite_sw ? R1 : s_reg_stb & (s_reg_r != R3) ? rnxt[s_reg_r] : s_reg_r;
+	wire [2:0] x_sz = s_xsz + 1;
+
+	// buffer interface
+	assign tsbuf_wr_addr = xcrd;
+	assign tsbuf_wr_data = 0;
+	assign tsbuf_we = 0;
 
 	// DRAM address for TS gfx reading
 	wire [20:0] addr = tns ? a_t : a_s;
@@ -89,21 +96,15 @@ module video_ts (
 	// number of tiles to process (sprite: 2-8, or tile: up to 46)
 	wire [5:0] tiles = tns ? n_t : n_s;
 	wire [5:0] n_t = tiles_start ? num_tiles : tiles_next;
-	wire [5:0] n_s = r0_stb ? (s_xsz + 1) * 2 : tiles_next;
+	wire [5:0] n_s = r0_stb ? x_sz << 1 : tiles_next;
 	wire [5:0] tiles_next = tile_end ? tiles_r - 1 : tiles_r;
 
 	// X coordinate of tile being draw
 	wire [8:0] xcrd = tns ? x_t : x_s;
 	wire [8:0] x_t = tiles_start ? 0 : x_next;
-	wire [8:0] x_s = r0_stb ? s_xflp ? (s_xsize - s_xcrd - 1) : s_xcrd : x_next;
+	wire [8:0] x_s = r0_stb ? s_xflp ? (x_sz << 4) - s_xcrd - 1 : s_xcrd : x_next;
 	wire [8:0] x_next = xflp_r & !tns ? xcrd_r - 1 : xcrd_r + 1;
-	wire [6:0] s_xsize = (s_xsz + 1) * 16;
 	
-	// buffer interface
-	assign tsbuf_wr_addr = xcrd;
-	assign tsbuf_wr_data = 0;
-	assign tsbuf_we = 0;
-
 	wire [7:0] sfys_addr = {tns, tns ? ys_addr : sf_addr};
 	wire [6:0] sf_addr = s_num * 3 + s_reg;		// 16 bit memory addressing
 	wire [6:0] ys_addr = 0;
@@ -114,6 +115,7 @@ module video_ts (
 	assign ts_addr = {addr};
 
 	
+	
 // layers
 	localparam S0 = 3'd0;
 	localparam T0 = 3'd1;
@@ -121,7 +123,7 @@ module video_ts (
 	localparam T1 = 3'd3;
 	localparam S2 = 3'd4;
 	localparam END = 3'd5;
-	localparam END1 = 3'd5;
+	localparam END1 = 3'd6;
 	localparam BEG = 3'd7;
 	
 	wire [2:0] lnxt[0:7];
@@ -191,23 +193,29 @@ module video_ts (
 	
 	
 video_sf_ys video_sf_ys (
-	.clock (clk),
-	.data (sfys_data_in),
-	.rdaddress (sfys_addr),
-	.wraddress (sfys_addr_in),
-	.wren (sfys_we),
-	.q (sfys_data)
-	);
+	.wrclock	(~zclk),
+	// .wrclock	(clk),	// this should be zclk
+	.wraddress	(sfys_addr_in),
+	.data		(sfys_data_in),
+	.wren		(sfys_we),
+	
+	// .rdclock	(clk),
+	.rdclock	(0),
+	// .rdaddress	(sfys_addr),
+	.rdaddress	(0),
+	// .rden		(1),
+	.q			(sfys_data)
+);
 
 	
 video_tmbuf video_tmbuf (
-	.clock (clk),
-	.data (0),
-	.rdaddress (0),
-	.wraddress (0),
-	.wren (0),
-	.q (tmbuf_data)
-	);
+	.clock		(clk),
+	.data		(0),
+	.rdaddress	(0),
+	.wraddress	(0),
+	.wren		(0),
+	.q			(tmbuf_data)
+);
 	
 	
 endmodule

@@ -64,7 +64,7 @@ module zports(
 	output reg [7:0] memconf,
 	output reg [7:0] hint_beg,
 	output reg [8:0] vint_beg,
-	output reg [8:0] im2vect,
+	output reg [7:0] im2vect,
 
 
 	input  wire        dos,
@@ -460,6 +460,7 @@ module zports(
 	localparam RAMPAGE1		= 8'd17;
 	localparam RAMPAGE2		= 8'd18;
 	localparam RAMPAGE3		= 8'd19;
+	localparam ROMPAGE		= 8'd19;
 	localparam FMADDR		= 8'd21;
 	localparam TGPAGE		= 8'd22;
 	
@@ -528,7 +529,7 @@ module zports(
 	//border port FE
 	always @(posedge zclk)
 		if (portfe_wr)
-			border <= {din[7], din[2], din[1], din[0]};
+			border <= {1'b0, din[2], din[1], din[0]};
 		
 		
 	// IDE ports
@@ -689,6 +690,7 @@ module zports(
 			rampage1 <= 8'd5;
 			rampage2 <= 8'd2;
 			rampage3 <= 8'd0;
+			rompage <= 8'd0;
 		end
 		else
 		begin

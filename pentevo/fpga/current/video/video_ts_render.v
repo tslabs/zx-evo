@@ -48,7 +48,8 @@ module video_ts_render (
 
 	
 video_tsbuf0 video_tsbuf0 (
-	.clock (clk),
+	// .clock (clk),
+	.clock (0),
 	.data (tb_wd0),
 	.rdaddress (cnt),
 	.wraddress (tb_wa0),
@@ -58,7 +59,8 @@ video_tsbuf0 video_tsbuf0 (
 	
 	
 video_tsbuf1 video_tsbuf1 (
-	.clock (clk),
+	// .clock (clk),
+	.clock (0),
 	.data (tb_wd1),
 	.rdaddress (cnt),
 	.wraddress (tb_wa1),

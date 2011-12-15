@@ -4,8 +4,7 @@
 module video_mode (
 
 // clocks
-	input wire q2,
-	input wire c6,
+	input wire f0, q2, c6,
 
 // video config
 	input wire [7:0] vconf,
@@ -22,6 +21,7 @@ module video_mode (
 	output wire [4:0] go_offs,
 	output wire [3:0] fetch_sel,
 	output wire	[1:0] fetch_bsl,
+	input wire	[3:0] fetch_cnt,
 
 // video data
 	input wire [15:0] txt_char,
@@ -32,10 +32,12 @@ module video_mode (
     input wire cptr,
 	
 // mode controls
+	input wire pix_start,
 	output wire hires,
 	output wire [1:0] render_mode,
 	output wire nogfx,
 	output wire pix_stb,
+	output wire	fetch_stb,
     
 // DRAM interface	
     output wire [20:0] video_addr,
@@ -50,6 +52,10 @@ module video_mode (
 	assign nogfx = &vmod;
 	
 	
+// clocking strobe for pixels
+	assign pix_stb = hires ? f0 : q2;
+
+
 // Modes
     localparam M_ZX = 3'h0;		// ZX
     localparam M_HC = 3'h1;		// 16c
@@ -67,8 +73,13 @@ module video_mode (
     localparam R_TX = 2'h3;
 
 	
-// clocking strobe for render
-	assign pix_stb = hires ? q2 : c6;
+// fetch strobes
+	wire ftch[0:3];
+	assign fetch_stb = (pix_start | ftch[render_mode]) & c6;
+	assign ftch[R_ZX] = &fetch_cnt[3:0];
+	assign ftch[R_HC] = &fetch_cnt[2:0];
+	assign ftch[R_XC] = &fetch_cnt[1:0];
+	assign ftch[R_TX] = &fetch_cnt[3:0];
 
     
 // fetch window
@@ -84,6 +95,24 @@ module video_mode (
     assign g_offs[M_NG] = 5'd18;
     assign go_offs = g_offs[vmod];
 
+
+// fetch selectors
+	assign fetch_sel = vmod == M_TX ? f_txt_sel[cnt_col[1:0]] : {~cptr, ~cptr, cptr, cptr};
+	assign fetch_bsl = vmod == M_TX ? f_txt_bsl[cnt_col[1:0]] : 2'b10;
+
+// Attention: counter is already incremented at the time of video data fetching!
+	wire [3:0] f_txt_sel[0:3];
+	assign f_txt_sel[1] = 4'b0011;	// char
+	assign f_txt_sel[2] = 4'b1100;	// attr
+	assign f_txt_sel[3] = 4'b0001;	// gfx0
+	assign f_txt_sel[0] = 4'b0010;	// gfx1
+	
+	wire [1:0] f_txt_bsl[0:3];
+	assign f_txt_bsl[1] = 2'b10;			// char
+	assign f_txt_bsl[2] = 2'b10;			// attr
+	assign f_txt_bsl[3] = {2{cnt_row[0]}};	// gfx0
+	assign f_txt_bsl[0] = {2{cnt_row[0]}};	// gfx1
+	
 
 // X offset
 	assign x_offs_mode = {vmod == M_XC ? {x_offs[8:1], 1'b0} : {1'b0, x_offs[8:1]}, x_offs[0]};
@@ -198,24 +227,6 @@ module video_mode (
     assign addr_tx[2] = {4'b1000, txt_char[7:0], cnt_row[2:1]};		// char0 graphics, data[7:0]
     assign addr_tx[3] = {4'b1000, txt_char[15:8], cnt_row[2:1]};	// char1 graphics, data[15:8]
     
-
-// fetch selectors
-	assign fetch_sel = vmod == M_TX ? f_txt_sel[cnt_col[1:0]] : {~cptr, ~cptr, cptr, cptr};
-	assign fetch_bsl = vmod == M_TX ? f_txt_bsl[cnt_col[1:0]] : 2'b10;
-
-// Attention: counter is already incremented at the time of video data fetching!
-	wire [3:0] f_txt_sel[0:3];
-	assign f_txt_sel[1] = 4'b0011;	// char
-	assign f_txt_sel[2] = 4'b1100;	// attr
-	assign f_txt_sel[3] = 4'b0001;	// gfx0
-	assign f_txt_sel[0] = 4'b0010;	// gfx1
-	
-	wire [1:0] f_txt_bsl[0:3];
-	assign f_txt_bsl[1] = 2'b10;			// char
-	assign f_txt_bsl[2] = 2'b10;			// attr
-	assign f_txt_bsl[3] = {2{cnt_row[0]}};	// gfx0
-	assign f_txt_bsl[0] = {2{cnt_row[0]}};	// gfx1
-	
 
 endmodule
 
