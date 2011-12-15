@@ -4,61 +4,42 @@
 module video_render (
 
 // clocks
-	input wire clk, c0,
+	input wire clk, c2,
 	
 // video controls
-	input wire int_start,
-	input wire pix_start,
 	input wire hvpix,
 	input wire nogfx,
+	input wire flash,
+	input wire hires,
+	input wire [3:0] psel,
 
 // mode controls
 	input wire [1:0] render_mode,
-	input wire pix_stb,
 
 // video data
-	input  wire [31:0] dram_in,
+	input  wire [31:0] data,
 	input  wire [ 3:0] border_in,
 	input  wire [ 7:0] tsdata_in,
-	output wire [ 7:0] vdata_out
+	output wire [ 7:0] vplex_out
 	
 );
+
 
     localparam R_ZX = 2'h0;
     localparam R_HC = 2'h1;
     localparam R_XC = 2'h2;
     localparam R_TX = 2'h3;
 
-    
-// pixel counter
-	reg [3:0] cnt;
-	
-	always @(posedge clk) if (pix_stb)		// q2 or c6
-		cnt <= pix_start ? 0 : cnt + 1;
-
-
-// video data fetcher
-	reg  [31:0] data;
-	
-	always @(posedge clk) if (pix_stb & fetch)
-			data <= dram_in;
-
-
-// FLASH generator
-	reg [4:0] flash_ctr;
-
-	always @(posedge clk) if (int_start & c0)
-		flash_ctr <= flash_ctr + 1;
-
-
-// ZX graphics
+	localparam HC_PAL = 4'hE;
 	localparam ZX_PAL = 4'hF;
-	
+
+    
+// ZX graphics
 	wire [15:0] zx_gfx = data[15: 0];
 	wire [15:0] zx_atr = data[31:16];
-	wire zx_dot = zx_gfx[{cnt[3], ~cnt[2:0]}];
-	wire [7:0] zx_attr	= ~cnt[3] ? zx_atr[7:0] : zx_atr[15:8];
-	wire [7:0] zx_pix = {ZX_PAL, zx_attr[6], zx_dot ^ (flash_ctr[4] & zx_attr[7]) ? zx_attr[2:0] : zx_attr[5:3]};
+	wire zx_dot = zx_gfx[{psel[3], ~psel[2:0]}];
+	wire [7:0] zx_attr	= ~psel[3] ? zx_atr[7:0] : zx_atr[15:8];
+	wire [7:0] zx_pix = {ZX_PAL, zx_attr[6], zx_dot ^ (flash & zx_attr[7]) ? zx_attr[2:0] : zx_attr[5:3]};
 
     
 // text graphics
@@ -67,8 +48,6 @@ module video_render (
 
     
 // 16c graphics
-	localparam HC_PAL = 4'hE;
-	
 	wire [3:0] hc_dot[0:7];
 	assign hc_dot[0] = data[ 7: 4];
 	assign hc_dot[1] = data[ 3: 0];
@@ -78,7 +57,7 @@ module video_render (
 	assign hc_dot[5] = data[19:16];
 	assign hc_dot[6] = data[31:28];
 	assign hc_dot[7] = data[27:24];
-	wire [7:0] hc_pix = {HC_PAL, hc_dot[cnt[2:0]]};
+	wire [7:0] hc_pix = {HC_PAL, hc_dot[psel[2:0]]};
 	
     
 // 256c graphics
@@ -87,29 +66,27 @@ module video_render (
 	assign xc_dot[1] = data[15: 8];
 	assign xc_dot[2] = data[23:16];
 	assign xc_dot[3] = data[31:24];
-	wire [7:0] xc_pix = {xc_dot[cnt[1:0]]};
+	wire [7:0] xc_pix = {xc_dot[psel[1:0]]};
 
 
 // mode selects
-    wire [7:0] d_out[0:3];
-    assign d_out[R_ZX] = zx_pix;	// ZX
-    assign d_out[R_HC] = hc_pix;	// 16c
-    assign d_out[R_XC] = xc_pix;	// 256c
-    assign d_out[R_TX] = tx_pix;	// text
-
-
-	wire ftch[0:3];
-	wire fetch = pix_start | ftch[render_mode];
-	assign ftch[R_ZX] = &cnt[3:0];
-	assign ftch[R_HC] = &cnt[2:0];
-	assign ftch[R_XC] = &cnt[1:0];
-	assign ftch[R_TX] = &cnt[3:0];
+    wire [7:0] pix[0:3];
+    assign pix[R_ZX] = zx_pix;	// ZX
+    assign pix[R_HC] = hc_pix;	// 16c
+    assign pix[R_XC] = xc_pix;	// 256c
+    assign pix[R_TX] = tx_pix;	// text
 
 	
-// video data mixer
+// video plex muxer
 	wire [7:0] border = {4'hF, border_in};
-	assign vdata_out = hvpix ? (|tsdata_in[3:0] ? tsdata_in[7:0] : (nogfx ? border : d_out[render_mode])) : border;
+	wire [7:0] pixel = pix[render_mode];
+	wire [7:0] vplex = hvpix & !nogfx ? pixel : border;
+	assign vplex_out = hires ? {temp, vplex[3:0]} : vplex;		// in hi-res plex contains two pixels 4 bits each
+	// assign vplex_out = hvpix ? |tsdata_in[3:0] ? tsdata_in[7:0] : nogfx ? border : pixel[render_mode] : border;
 	
+	reg [3:0] temp;
+	always @(posedge clk) if (c2)
+		temp <= vplex[3:0];
 	
 	
 endmodule

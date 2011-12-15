@@ -1,4 +1,6 @@
 Fixes:
+ -  migrate 16c to bw 1/4 from 2/8
+ -  learn what is read to rddata by c4
  -  make less power-off delay (apx. 2 sec)
  -  IM2 vector to Z80 bus (RTFM)
  -  SYSConfig and CPU clock select
@@ -11,7 +13,8 @@ Fixes:
  -  make CRAM clocked: zclk for WE and fclk for RE
  -  make proper video buffering to avoid Qua's yelling
  -  check timings for video
- -  search ways to optimize huge LC usage
+ -  make c0 sync for dram.v (if necessary though)
+ -  search ways to optimize huge LC usage - one-hot style selectors
  -  check border effects on INT position
 
 Features:
