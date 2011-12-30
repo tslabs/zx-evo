@@ -1,0 +1,206 @@
+
+;LAST UPDATE: 12.02.2011 savelij
+
+WR_TXT_TIME	EQU BUFF4TXT+5
+WR_TXT_DATA	EQU BUFF4TXT+0X10
+
+;€ ‚•Ž„…: H-€„…‘ Ÿ—…‰Šˆ
+;	   L-Ž—ˆ’€Ž… ‡€—…ˆ…
+READCMOS	DI
+		PUSH BC
+		LD BC,CMOSD_SET_ADR
+		OUT (C),H
+		LD B,HIGH (CMOSD_RD_WR)
+		IN L,(C)
+		JR OFF_CMOS
+
+;€ ‚•Ž„…: H-€„…‘ Ÿ—…‰Šˆ
+;	   L-—’Ž ’“„€ ‡€ˆ‘€’œ
+WRITECMOS	DI
+		PUSH BC
+		LD BC,CMOSD_SET_ADR
+		OUT (C),H
+		LD B,HIGH (CMOSD_RD_WR)
+		OUT (C),L
+OFF_CMOS	POP BC
+		LD A,L
+		AND A
+		RET
+
+;—’…ˆ… ‚…‘ˆˆ FPGA ˆ‹ˆ BOOTLOADER, …‘‹ˆ ’Ž …’…‚€
+GET_VERS_EVO	LD C,L
+		LD H,0XF0
+		CALL WRITECMOS			;ˆ˜…Œ ‚ €„…‘ 0XF0 „‹Ÿ Ž‹“—…ˆŸ ‚…‘ˆˆ
+		CALL READCMOS			;—ˆ’€…Œ Ž’‚…’
+		CP C				;‘Ž‚€‹Ž ‘ ’…Œ —’Ž ‡€ˆ‘€Ž, … Ž„„…†ˆ‚€…’‘Ÿ
+		RET Z				;ˆ ’Ž … …’…‚€ (ˆ‹ˆ ‚…‘ˆŸ FPGA ‘’€€Ÿ). ‚›•Ž„ˆŒ
+		INC A				;ˆ˜…‹ 0XFF, ‡€—ˆ’ —€‘Ž‚ …’“
+		RET Z				;‚›•Ž„ˆŒ
+		DI
+		DEC A				;‚Ž‡‚€™€…Œ ‘—ˆ’€Ž… ‡€—…ˆ…
+		PUSH DE
+		LD (DE),A			;Ž‹Ž†ˆ‹ˆ ‚ “”… “†… Ž—ˆ’€›‰ €‰’
+		INC DE
+		LD B,0X0F			;Ž‘’€‹Ž‘œ Ž—ˆ’€’œ Ž‘’€‹œ›… …™… 15 €‰’
+GVE1		INC H
+		CALL READCMOS			;—ˆ’€…Œ €‰’
+		LD (DE),A
+		INC DE
+		DJNZ GVE1			;—ˆ’€…Œ ŽŠ€ ‚‘… €‰’› … ŠŽ—€’‘Ÿ
+		POP DE				;Ž‚…ŸŒ ‚ “”…… 12 €‰’ ’…Š‘’€
+		LD H,D
+		LD L,E
+		LD B,0X0C			;…‘‹ˆ ’…Š‘’ ŠŽŽ—… ˆ™…Œ €‰’ 0 (ˆ‡€Š ŠŽ–€ ’…Š‘’€)
+GVE2		LD A,(DE)
+		AND A
+		JR Z,GVE3
+		INC DE
+		DJNZ GVE2
+GVE3		LD BC,0X0C			;‡€€‹ˆ ˆ‡ “”…€ 2 €‰’€ „€’› ‚ ‘…–”ŽŒ€’…
+		ADD HL,BC
+		LD C,(HL)
+		INC HL
+		LD B,(HL)
+		EX DE,HL
+		LD (HL)," "			;„Ž€‚‹Ÿ…Œ Š ’…Š‘’“ Ž…‹-€‡„…‹ˆ’…‹œ
+		INC HL
+
+;€‘€ŠŽ‚™ˆŠ „€’›
+UNVERS		LD A,C
+		AND 0X1F			;“†› 5 ˆ’-—ˆ‘‹Ž Œ…‘Ÿ–€
+		CALL A2TXT			;ŠŽ‚…‘ˆŸ ˆ “Š‹€„Š€ „€’›
+		SRL B
+		RR C				;‘„‚ˆ“‹ˆ „‹Ÿ –…‹Ž‘’Ž‘’ˆ ŽŒ…€ Œ…‘Ÿ–€
+		LD A,C				;‚‡Ÿ‹ˆ ˆ’› Œ…‘Ÿ–€
+		RRCA
+		RRCA
+		RRCA
+		RRCA				;‘„‚ˆ“‹ˆ ‚ Œ‹€„˜ˆ… ˆ’›
+		AND 0X0F			;€Œ “†› ’Ž‹œŠŽ 4 ˆ’€ Œ…‘Ÿ–€
+		LD (HL),"."			;€‡„…‹ˆ’…‹œ€Ÿ ’Ž—Š€
+		INC HL
+		CALL A2TXT			;ŠŽ‚…‘ˆŸ ˆ “Š‹€„Š€ Œ…‘Ÿ–€
+		LD (HL),"."			;€‡„…‹ˆ’…‹œ€Ÿ ’Ž—Š€
+		INC HL
+		LD (HL),"2"
+		INC HL
+		LD (HL),"0"			;„Ž€‚ˆ‹ˆ Š ƒŽ„“ „‚… –ˆ”…Šˆ
+		INC HL
+		LD A,B				;‚‡Ÿ‹ˆ ŽŒ… ƒŽ„€
+		AND 0X3F			;“†› ’Ž‹œŠŽ 6 ˆ’
+		CALL A2TXT			;ŠŽ‚…‘ˆŸ ˆ “Š‹€„Š€ ƒŽ„€
+		BIT 6,B				;…‘‹ˆ ˆ’ 6 (‘„‚ˆ“’›‰ ˆ’ 7) “‘’€Ž‚‹…
+		RET NZ	;JR NZ,GVE4		;’Ž ‡€‚…˜€…Œ ‘’ŽŠ“
+		EX DE,HL			;ˆ€—… ‚…‘ˆŸ …’€, Ž —…Œ „Ž€‚‹Ÿ…Œ ’…Š‘’ ‚ “”…
+		LD HL,TXT_BETA
+		LD BC,5
+		LDIR
+		EX DE,HL
+		RET
+
+;…‘‹ˆ ‚ €‰’… ŠŒŽ‘ Ž ‘Œ…™…ˆž 0X11 … 0XAA ˆ‹ˆ 0X55, ’Ž ŠŒŽ‘ ‘—ˆ’€…’‘Ÿ ‡€Ž‹… …ˆ‡‚…‘’Ž —…Œ
+;ˆ‹ˆ ’Ž …‚Ž… ‚Š‹ž—…ˆŸ. ‡€ˆ‘›‚…Œ „…”Ž‹’›… ‡€—…ˆŸ ‚ ŠŒŽ‘.
+SET_CMOS_DEFAULT
+		LD DE,CMOS_DEFAULT
+		LD H,0X0A
+		LD B,8
+SCD1		EX DE,HL
+		LD E,(HL)
+		INC HL
+		EX DE,HL
+		CALL WRITECMOS
+		INC H
+		DJNZ SCD1
+		RET
+
+;€‘…—€’Š€ € Š€… ‚…Œ…ˆ, „€’› ˆ „Ÿ …„…‹ˆ
+PRINTTIME	LD A,(FLAGS)
+		AND 4
+		RET Z				;—€‘› … Ž€“†…›, ‚›•Ž„ˆŒ ˆ—…ƒŽ … ‚›‚Ž„Ÿ
+		LD H,0X0C
+		CALL READCMOS
+		AND 0X10
+		RET Z				;…‘‹ˆ ‚…ŒŸ …™… … ŽŽ‚ˆ‹Ž‘œ, ‚›•Ž„ˆŒ ˆ—…ƒŽ … ‚›‚Ž„Ÿ
+		LD H,0X11
+		CALL READCMOS
+		CP 0X55
+		RET Z				;Ž’Ž€†…ˆ… ‚›Š‹ž—…Ž, ‚›•Ž„ˆŒ ˆ—…ƒŽ … ‚›‚Ž„Ÿ
+		DI
+		EXX
+		LD HL,BUFF_TIME
+		LD DE,BUFF4TXT
+		LD BC,EBUFF_TIME-BUFF_TIME
+		LDIR
+		LD BC,WR_TXT_TIME		;—’…ˆ… ˆ …Ž€‡Ž‚€ˆ… ‚…Œ…ˆ
+		LD H,4
+		CALL READCMOS			;Ž—ˆ’€‹ˆ —€‘›
+		CALL BYTE2TXT			;‘ŠŽ‚…’ˆ‹ˆ —€‘› ‘ “Š‹€„ŠŽ‰ ‚ “”…
+		LD A,(BC)
+		XOR 0X1A			;ŠŽ‚…‘ˆŸ Œˆƒ€ž™…ƒŽ „‚Ž…’Ž—ˆŸ
+		LD (BC),A
+		INC BC
+		LD H,2
+		CALL READCMOS			;Ž—ˆ’€‹ˆ Œˆ“’›
+		CALL BYTE2TXT			;‘ŠŽ‚…’ˆ‹ˆ —€‘› ‘ “Š‹€„ŠŽ‰ ‚ “”…
+		LD A,(BC)
+		XOR 0X1A			;ŠŽ‚…‘ˆŸ Œˆƒ€ž™…ƒŽ „‚Ž…’Ž—ˆŸ
+		LD (BC),A
+		INC BC
+		LD H,0
+		CALL READCMOS			;Ž—ˆ’€‹ˆ ‘…Š“„›
+		CALL BYTE2TXT
+		LD BC,WR_TXT_DATA		;„€‹…… —’…ˆ… ˆ …Ž€‡Ž‚€ˆ… „€’›
+		LD H,7
+		CALL READCMOS
+		CALL BYTE2TXT
+		INC BC
+		LD H,8
+		CALL READCMOS
+		CALL BYTE2TXT
+		INC BC
+		LD H,9
+		CALL READCMOS
+		CALL BYTE2TXT
+		LD HL,BUFF4TXT			;…—€’€…Œ ‚…ŒŸ ˆ‡ “”…€
+		CALL NEXT
+		EXX
+		RET
+
+;……‚Ž„ "A" ‚ „…‘Ÿ’ˆ—Š“ ˆ ‚ ’…Š‘’
+A2TXT		PUSH HL
+		LD L,A
+		LD H,0
+		LD DE,10
+		XOR A
+		DEC A
+		INC A
+		SBC HL,DE
+		JR NC,$-3
+		ADD HL,DE
+		ADD A,"0"
+		LD D,A
+		LD A,L
+		ADD A,"0"
+		POP HL
+		LD (HL),D
+		INC HL
+		LD (HL),A
+		INC HL
+		RET
+
+BYTE2TXT	LD L,A
+		LD H,"0"
+		RRCA
+		RRCA
+		RRCA
+		RRCA
+		AND 0X0F
+		ADD A,H
+		LD (BC),A
+		INC BC
+		LD A,L
+		AND 0X0F
+		ADD A,H
+		LD (BC),A
+		INC BC
+		RET

@@ -1,0 +1,158 @@
+
+;LAST UPDATE: 13.12.2011 savelij
+
+		include ../../macros.a80
+		include ../../global_vars.a80
+		include rst8_vars.a80
+
+DD		EQU 13				;„€’€
+MM		EQU 12				;Œ…‘Ÿ–
+YY		EQU 11				;ƒŽ„
+DATA		EQU DD+(MM<<5)+(YY<<9)+0X8000	;“†… “€ŠŽ‚€Ž
+
+		PHASE 0
+;Ž€Ž’Š€ €†€’ˆŸ MAGIC
+		JP CONT_MAGIC			;0000
+
+		DUPL 0X0008-$,0XFF
+;Ž„Ž‹†…ˆ… Ž€Ž’Šˆ RST8
+		JP NEXT_RST8			;0008
+
+		DUPL 0X0010-$,0XFF
+;—’…ˆ… €‰’€ ˆ‡ Ž‘Ž‚Ž‰ €ŒŸ’ˆ
+		JP RD_BYTE_48K			;0010
+
+JUMP2PAGE	OUT (C),A			;0013
+		NOP
+		RET
+
+		DUPL 0X0018-$,0XFF
+		JP EXIT_RST8			;0018
+
+		DUPL 0X0020-$,0XFF
+		JP $				;0020
+
+		DUPL 0X0028-$,0XFF
+		JP $				;0028
+
+		DUPL 0X0030-$,0XFF
+		JP $				;0030
+
+		DUPL 0X0038-$,0XFF
+;ŽŽ‘ Š‹€‚ˆ€’“›
+		JP KEYBOARDS			;0038
+
+;—’…ˆ… €‰’€ ˆ‡ Ž‹€‘’ˆ €ŒŸ’ˆ 0X4000-0XFFFF
+RD_BYTE_48K	PUSH HL
+		PUSH DE
+		PUSH BC
+		PUSH AF
+		LD BC,WIN_P2
+		LD DE,0XFD
+		LD HL,(ADRRET_L)
+		OUT (C),E
+		LD A,(HL)
+		INC HL
+		OUT (C),D
+		LD (ADRRET_L),HL
+		LD (NEXTBYTERST8),A
+		POP AF
+		POP BC
+		POP DE
+		POP HL
+		RET
+
+;‚›•Ž„ ˆ‡ RST8
+EXIT_RST8	LD BC,0X0069			;€„…‘ ‚Ž‡‚€’€ ‚ Ž‘‹…„…‰ ‘’€ˆ–… RAM
+		PUSH BC
+		LD BC,WIN_P0
+		XOR A
+		JP JUMP2PAGE
+
+;‚›•Ž„ ˆ‡ MAGIC
+CONT_MAGIC	LD BC,0X0066+6
+		PUSH BC
+		LD BC,WIN_P0
+		XOR A
+		JP JUMP2PAGE
+
+;Ž„Ž‹†…ˆ… Ž€Ž’Šˆ RST8
+NEXT_RST8	LD HL,EXIT_RST8
+		PUSH HL
+		LD (INTERNAL_SP),SP
+		LD A,(CODE_CALL)
+		AND 0X3F
+		LD L,A
+		LD H,0
+		ADD HL,HL
+		LD DE,CODE_TABL
+		ADD HL,DE
+		LD E,(HL)
+		INC HL
+		LD D,(HL)
+		EX DE,HL
+		JP (HL)
+
+CODE_TABL	DW AY_PRN_INIT			;40
+		DW AY_PRN_A_			;41
+		DW AY_PRN_TOKEN			;42
+		DW AY_PRN_SCR			;43
+		DW TAPE_INIT			;44
+		DW TAPE_EMUL			;45
+		DW WINW				;46
+		DW PRINT_MESSAGE		;47
+		DW PRINT_A			;48
+		DW SCRUP			;49
+		DW SCRDN			;4A
+		DW COM_DEV			;4B
+		DW RUN_FILECODE			;4C
+ECODE_TABL
+
+		DUPL 0X00FF-$,0XFF
+		DW 0X0038
+
+;===============
+
+RUN_FILECODE	LD BC,0X0100			;€„…‘ ……•Ž„€
+		PUSH BC
+		LD BC,WIN_A0
+		LD A,4				;‚›‡Ž‚ ŠŽ„€ ˆ‡ 4 ‘’€ˆ–›
+		JP JUMP2PAGE
+
+CONTINUE_PROG	XOR A
+		IN A,(0XFE)
+		CPL
+		AND 0X1F
+		JR NZ,CONTINUE_PROG
+		
+		LD SP,(INTERNAL_SP)
+		RET
+
+		include tape.a80
+		include input_keys.a80
+		include mouse.a80
+		include selector.a80
+		include koshak.a80
+		include call_cmos.a80
+		include window.a80
+		include rst8_data.a80
+		include fat/ports_ngs.a80
+		include fat/sdcomand.a80
+		include fat/dev_drv.a80
+		include fat/ngs_sd_drv.a80
+		include fat/z_sd_drv.a80
+		include fat/nemo_drv.a80
+		IF SMUC=1
+		include fat/smuc_drv.a80
+		ENDIF
+;		include fat/micro_boot_fat.a80
+COM_FAT		include fat/read_fat.a80
+;		include fat/fat_boot.a80
+		include ay_printer.a80
+
+		DUPL 0X37F8-$,0XFF
+CHARS		binclude altstd.bin
+
+		DB "RST_08"
+		DW DATA
+		DEPHASE

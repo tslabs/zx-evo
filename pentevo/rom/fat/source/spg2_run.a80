@@ -1,0 +1,260 @@
+
+;SPG runner, version 0.2
+;EVO version
+
+;данный код использует одну внешнюю
+;функцию - LOADING
+;у неё только 2 входных параметра:
+;HL - адрес куда грузить
+;B  - кол-во блоков размером в 2к,
+;     которые нужно загрузить
+
+;перед первым вызовом LOADING'а, оная
+;должна быть спозиционирована на начало
+;файла SPG
+
+;затем, при каждом последующем обращении
+;к ней, должен грузиться очередной кусок
+;данного файла.
+;  Т.е. после каждого обращения к данной
+;процедуре, она должна сохранять позицию
+;в нутри файла и продолжать читать даные
+;из него с того  же  места,  на  котором
+;остановились при прошлом обращении...
+
+;        ORG $
+PAGER   EQU 0X5000;0X4800
+LOBU    EQU 0XA000
+;---------------------------------------
+RUNSPG2 LD IYH,0
+	LD HL,LOBU
+        LD B,1
+        CALL LOADING
+        LD HL,LOBU+32
+        LD DE,IDNT
+        LD B,12;см.описание заголовка SPG
+RAZ     LD A,(DE)
+	CP (HL)
+	RET NZ
+        INC HL
+        INC DE
+        DJNZ RAZ
+;в кратце тут идет сканирование блоков, которые по страницам грузятся.
+;блоков максимум 12 может быть
+
+        LD A,(HL)
+        CP 3
+        RET NC;выходим, если версия выше 0.2 (0X02)
+        CP 2
+        JR C,OF4;SPG версии 0X00 или 0X01
+;SPGv0.2:
+        LD A,15
+        LD (VrS+1),A
+        LD A,16
+        LD (V2A+1),A
+        LD (V2F+1),A
+        LD A,4
+        LD (V2B+1),A
+        LD A,15
+        LD (V2C+1),A
+;SPGv0.0/0.1:
+OF4     ;LD HL,SPGLOG:CALL SPGLOG
+        LD HL,LOBU
+        LD DE,PAGER
+        LD BC,0X0800
+        LDIR
+;-------
+        LD HL,MANAG0
+        LD DE,PAGER
+        LD BC,32
+        LDIR;кидаем манагер сраниц в заголовок SPG (ибо первые 32б там не пользуются)
+        XOR A
+        CALL PAGER;включаем 0ю страницу
+;-------
+V2A     LD A,8
+	LD (C0),A;счетчик!
+;тут далее переносятся нужные переменные из заголовка SPG файла, там расположение стека, стартовый адресс и т.д.
+        LD HL,(PAGER+64)
+        LD (SAR+1),HL
+
+        LD A,(PAGER+66)
+        LD (SPA+1),A
+        LD HL,(PAGER+74)
+        LD A,H
+        CP 0X40
+        JR NC,NSPZ
+        LD HL,(SPBU)
+NSPZ    LD (SSPA+1),HL
+
+        LD HL,(PAGER+68)
+        LD (V2E+1),HL
+
+        LD HL,(PAGER+76)
+		LD A,H
+		OR L
+		JR Z,V2Di
+        LD (V2D+1),HL
+V2Di    LD BC,(PAGER+78)
+        LD A,B
+        OR C
+        JR Z,MAA
+        LD A,B
+        OR A
+        JR Z,MAA
+        LD B,1
+        LD A,C
+        CP 0X41
+        JR C,MAA
+        LD C,0
+MAA     LD (LAA+1),BC
+
+        LD IX,PAGER+128
+GROP    LD A,(IX+2)
+	CP 14
+	JR C,NSPL
+        LD A,13;ограничение на макс размер блока, дабы на поврежденных SPG не получить затирание всей памяти.
+NSPL    LD (SPGL+1),A
+
+        LD A,(IX+3)
+VrS     AND 7
+        DI
+        CALL PAGER;на выходе в A
+;                     знач. порта 0X7FFD
+
+        LD HL,PAGER+512
+        LD E,(IX)
+        LD D,(IX+1)
+        LD BC,0X0600
+        CALL LC
+        EX DE,HL
+        LD A,H
+        CP 0XA0
+        JR C,DIPL;типо загрузили все блоки (условие: когда адрес загрузки блока ниже 0XA000 переходим к стадии запуска SPG)
+SPGL    LD B,1
+	LD A,B
+	OR A
+	CALL NZ,LOADING;иначе грузим очередной блок SPG файла в память (в заданную страницу)
+
+V2B     LD DE,8
+	ADD IX,DE;собственно переходим к описателю след. блока
+
+        LD A,(C0)
+        DEC A
+        LD (C0),A
+        JR NZ,GROP;идем на загрузку след блока, если счетчик не говорит обратного
+;-------
+;тут выставляем нужный стек, прерывания и т.д. ну и включаем нужную страницу (что в заголовке SPG указана)
+;и делаем JP на заданный адрес
+;экран чистить не нужно
+DIPL    DI
+        LD A,63
+        LD I,A
+        IM 1
+        LD IY,0X5C3A
+
+        LD HL,PAGER
+V2E     LD DE,0
+        LD BC,32
+        LDIR
+
+LAA     LD BC,0
+	LD A,B
+	OR C
+	JR Z,SPA
+        LD HL,PAGER+192
+V2D     LD DE,0X5B00
+        LDIR
+
+SPA     LD A,0
+V2C     AND 7
+        CALL PAGER
+
+        LD A,(PAGER+67);опять смотрим заголовок SPG файла
+        CP 1
+        JR NZ,NNx
+        LD A,(DRVE)
+        LD (0X5CF6),A
+
+NNx     LD A,(V2C+1)
+	CP 7
+	JR Z,SSPA
+        LD HL,PAGER+49
+        LD E,5
+OUTZ    LD C,(HL)
+	INC HL
+        LD B,(HL)
+        INC HL
+        LD A,B
+        OR C
+        JR Z,OUTz
+        LD A,(HL)
+        OUT (C),A
+OUTz    INC HL
+        DEC E
+        JR NZ,OUTZ
+
+SSPA    LD SP,0
+SAR     JP 0
+;-------
+LC      LD A,(C0)
+V2F     CP 8
+	RET NZ;вызывается только когда счетчик обнулился, чтобы только один раз оную вызвать
+        LD A,D
+        CP 0XA0
+        JR NC,V01;самый первый блок может грузиться в адрес ниже 0Xa000
+
+        LD (SREZ+4),DE
+        ADD A,6
+        LD D,A
+        PUSH DE
+        LD HL,(SAR+1)
+        LD (SR1+1),HL;стартовый адрес выставляем
+        LD DE,PAGER+0X20
+        LD (SAR+1),DE;тут резидент будет (пересылает блок, что оказался вместе с заголовком SPG, ибо грузим блоки по 2кб)
+        LD HL,SREZ
+        LD BC,16
+        LDIR
+        POP DE
+        RET
+
+V01     LDIR
+        RET
+
+SREZ    LD HL,PAGER+512
+        LD DE,0
+        LD BC,0X0600
+        LDIR
+SR1     JP 0
+
+IDNT    DB "SpectrumProg"
+;-------
+SPBU    DW 0X6000
+C0      NOP
+DRVE    DB 0;номер активного дисковода
+
+;---------------------------------------
+MANAG0  ;I:A - num of PAGE (VALID: 0-15)
+        PUSH BC
+        LD C,A
+        AND %11111000
+        LD A,C
+        JR Z,K128
+        AND 7
+        OR %01000000
+K128    OR 16
+	LD BC,0X7FFD
+	OUT (C),A
+        POP BC
+        RET
+;---------------------------------------
+
+LOADING		PUSH IX
+		LD A,B
+		ADD A,A
+		ADD A,A
+		LD IYL,A
+		CALL LD_FILE
+		POP IX
+		RET
+
+;---------------------------------------

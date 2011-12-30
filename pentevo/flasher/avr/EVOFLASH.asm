@@ -220,7 +220,7 @@ START:  CLI
         OUTPORT PORTF,TEMP
         OUTPORT DDRF,TEMP
 
-        LDI     TEMP,      0B11111111
+        LDI     TEMP,      0B11110011
         OUT     PORTE,TEMP
         LDI     TEMP,      0B00000000
         OUT     DDRE,TEMP

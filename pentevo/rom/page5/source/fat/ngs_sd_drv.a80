@@ -1,0 +1,537 @@
+
+;LAST UPDATE: 19.02.2010 savelij
+
+;€„…‘ –‹€ ™… ‘ ‘…
+COMINT_		EQU 0X026E
+
+;€„…‘ “‘’€‚™€ „€‰‚…€ € NeoGS
+SETUPSD		EQU 0X5B00
+
+;„€‰‚… SD-CARD „‹ NGS
+
+;‚ε®¤­λ¥ ― ΰ ¬¥βΰλ ®΅ι¨¥:
+;HL- ¤ΰ¥α § £ΰγ§ª¨ Ά ― ¬οβμ
+;BCDE-32-ε ΅¨β­λ© ­®¬¥ΰ α¥ªβ®ΰ 
+;A-ª®«¨η¥αβΆ® ΅«®ª®Ά (΅«®ª=512 ΅ ©β)
+;β®«μª® ¤«ο ¬­®£®΅«®η­®© § ―¨α¨/ηβ¥­¨¨
+
+;θ¨΅ª¨ Άλ¤ Ά ¥¬λ¥ ­  Άλε®¤¥:
+;A=0-¨­¨ζ¨ «¨§ ζ¨ο ―ΰ®θ«  γα―¥θ­®
+;A=1-ª ΰβ  ­¥ ­ ©¤¥­  ¨«¨ ­¥ ®βΆ¥β¨« 
+
+COMSDG		EX AF,AF'
+		LD A,IYL
+		AND A
+		LD A,(NEXTBYTERST8)
+		JR Z,COMSDG1
+		EX (SP),HL
+		LD A,(HL)
+		INC HL
+		EX (SP),HL
+COMSDG1		ADD A,A
+		PUSH HL
+		LD HL,RET4SDG
+		EX (SP),HL
+		PUSH HL
+		LD HL,NGSSDT
+		ADD A,L
+		LD L,A
+		ADC A,H
+		SUB L
+		LD H,A
+		LD A,(HL)
+		INC HL
+		LD H,(HL)
+		LD L,A
+		EX AF,AF'
+		EX (SP),HL
+		RET
+
+RET4SDG		PUSH AF
+		LD A,IYL
+		AND A
+		JR NZ,RET4SDG1
+		LD (REG_L),HL
+		EX (SP),HL
+		LD (REG_F),HL
+		EX (SP),HL
+RET4SDG1	POP AF
+		RET
+
+
+NGSSDT		DW GSDINIT	;’ SD €’›
+		DW GSDOFF	;’‹—…… SD €’›
+		DW SDRDSIN	;—’€’ 1 ‘…’
+		DW SDRDMUL	;—’€’ "A" ‘…’‚
+
+;—’…… "A" ‘…’‚
+SDRDMUL		EX AF,AF'
+		LD A,3
+		JR SDRDSN3
+
+;—’…… „ƒ ‘…’€
+SDRDSIN		LD A,1
+		EX AF,AF'
+		LD A,2
+SDRDSN3		CALL COMM2SD
+		EX AF,AF'
+		PUSH DE
+		PUSH BC
+		LD BC,GSDAT
+SDRDSN1		EX AF,AF'
+		OUT (GSCOM),A
+		CALL WC_
+		LD DE,0X0200
+SDRDSN2		CALL WN_
+		INI
+		DEC DE
+		LD A,D
+		OR E
+		JR NZ,SDRDSN2
+		EX AF,AF'
+		DEC A
+		JR NZ,SDRDSN1
+		CALL WN_
+		IN A,(C)
+		CP 0X77
+		JR NZ,$-4
+		POP BC
+		POP DE
+		XOR A
+		RET
+
+;’‹—…… ‚›€ €’—
+GSDOFF		LD A,1
+		JR GSDINIT+1
+
+;–€‹‡€– €’—
+GSDINIT		XOR A
+		CALL COMM2SD
+		CALL WN_
+		IN A,(GSDAT)
+		CP 0X77
+		JR NZ,SD_NO
+		XOR A
+		RET
+
+SD_NO		LD A,1
+		RET
+
+;……„€’— €„/€€…’‚ ‚ „€‰‚… € NeoGS
+COMM2SD		OUT (GSDAT),A		;“‹€ €„€ „€‰‚…“
+		LD A,0X1E
+		OUT (GSCOM),A
+		CALL WC_		;“‹€ €„€ ‚…
+		LD A,B
+		OUT (GSDAT),A
+		CALL WD_		;“‹ ’› 31-24 €€…’‚
+		LD A,C
+		OUT (GSDAT),A
+		CALL WD_		;“‹ ’› 23-16 €€…’‚
+		LD A,D
+		OUT (GSDAT),A
+		CALL WD_		;“‹ ’› 15-8 €€…’‚
+		LD A,E
+		OUT (GSDAT),A
+		CALL WD_		;“‹ ’› 7-0 €€…’‚
+		EX AF,AF'
+		OUT (GSDAT),A
+		EX AF,AF'
+		DUPL 9,0
+		RET			;“‹ ‹-‚ ‘…’‚
+
+;†„€… ƒ„€ NeoGS €‰’ ‡€……’
+WD_		IN A,(GSCOM)
+		RLA
+		JR C,$-3
+		RET
+
+;†„€… ƒ„€ NeoGS „€‘’ €‰’
+WN_		IN A,(GSCOM)
+		RLA
+		JR NC,$-3
+		RET
+
+;†„€… ƒ„€ NeoGS €„“ ‡€……’
+WC_		IN A,(GSCOM)
+		RRA
+		JR C,$-3
+		RET
+
+;“‘’€‚™ „€‰‚…€ € NeoGS
+INSTSDD		LD A,0X80
+		OUT (GSCTR),A
+		EI
+		HALT
+		HALT
+		DI
+		LD A,0XF3
+		LD B,0X30
+		OUT (GSCOM),A
+ISDD1		EI
+		HALT
+		DI
+		DEC B
+		JR Z,SD_NO
+		IN A,(GSCOM)
+		RRA
+		JR C,ISDD1
+		LD BC,GSDAT
+		IN A,(C)
+		LD DE,0X0300
+		LD HL,SETUPSD
+		OUT (C),E
+		LD A,0X14
+		OUT (GSCOM),A
+		CALL WC_
+		OUT (C),D
+		CALL WD_
+		OUT (C),L
+		CALL WD_
+		OUT (C),H
+		CALL WD_
+		LD HL,UKLAD1
+ISDD3		OUTI
+		CALL WD_
+		DEC DE
+		LD A,D
+		OR E
+		JR NZ,ISDD3
+		LD HL,SETUPSD
+		OUT (C),L
+		LD A,0X13
+		OUT (GSCOM),A
+		CALL WC_
+		OUT (C),H
+		EI
+		HALT
+		HALT
+		DI
+		LD B,3
+		IN A,(GSDAT)
+		DEC B
+		JP Z,SD_NO
+		CP 0X77
+		JP NZ,SD_NO
+		XOR A
+		RET
+
+UKLAD1	;’“„€ „ € ƒ‘ ‡€„›‚€’
+
+		PHASE SETUPSD
+
+;‘€ “‘’€‚™ „€‰‚…€ „‹ NeoGS
+		DI
+		LD A,0X9C
+		OUT (SCTRL),A		;”ƒ“€’ NeoGS
+		CALL AVTODET
+		AND A
+		LD A,0X77		;0X77-NeoGS €‰„…
+		JR Z,$+4
+		LD A,0XCC		;0XCC-€‰„… OLDGS
+		OUT (ZXDATWR),A
+		OUT (CLRCBIT),A
+		JP NZ,COMINT_
+		DI
+		IN A,(GSCFG0)
+		RES B_RAMRO,A
+		OUT (GSCFG0),A
+		LD HL,0X1D00
+		LD (0X0300+(0X1E*2)),HL
+		LD DE,UKLAD2
+		LD BC,GSDDRVE-GSDDRV
+		EX DE,HL
+		LDIR
+		IN A,(GSCFG0)
+		SET B_RAMRO,A
+		OUT (GSCFG0),A
+		JP COMINT_
+
+;‚…€ —’ ’ NeoGS  ‚‹—…… —€‘’’› 24MHz
+AVTODET		IN A,(GSCFG0)
+		AND 0XCF
+		OUT (GSCFG0),A		;€’€ ‡€‘ ‚ ’ ‘ ‘…›
+					;’€ 5-4 ‚‹—€…’ —€‘’’“ –…‘‘€
+					;€‚› 24 ƒζ
+		LD D,A
+		IN A,(GSCFG0)
+		CP D
+		LD A,0
+		RET Z
+		DEC A
+		RET
+
+UKLAD2	;’“„€ „ ……„›‚€’
+
+		DEPHASE
+
+		PHASE 0X1D00
+
+;™€ ’—€ ‚•„€ „‹ €’› ‘
+GSDDRV		DI
+		IN A,(ZXDATRD)		;… €„› „€‰‚…€
+		OUT (CLRCBIT),A		;‘‘ COMANDBIT
+		LD HL,COMINT_
+		PUSH HL
+		ADD A,A
+		LD E,A
+		LD D,0
+		LD HL,TABLSDG
+		ADD HL,DE
+		LD E,(HL)
+		INC HL
+		LD D,(HL)
+		EX DE,HL
+		CALL WDY
+		IN A,(ZXDATRD)		;… ’‚ 31-24 €€…’€
+		LD B,A
+		CALL WDY
+		IN A,(ZXDATRD)		;… ’‚ 23-16 €€…’€
+		LD C,A
+		CALL WDY
+		IN A,(ZXDATRD)		;… ’‚ 15-8 €€…’€
+		LD D,A
+		CALL WDY
+		IN A,(ZXDATRD)		;… ’‚ 7-0 €€…’€
+		LD E,A
+		CALL WDY
+		IN A,(ZXDATRD)		;… ‹-‚ ‘…’‚
+		JP (HL)
+
+TABLSDG		DW SDINITG		;0 ― ΰ ¬¥βΰ®Ά ­¥ βΰ¥΅γ¥β, ­  Άλε®¤¥ A
+					;α¬®βΰ¨ Άλθ¥ ―¥ΰΆλ¥ 2 §­ η¥­¨ο
+	        DW SDOFFG		;1 ―ΰ®αβ® α­οβ¨¥ Άλ΅®ΰ  SD ª ΰβλ
+		DW RDSING		;2 —’€’ 1 ‘…’
+		DW RDMULG		;3 —’€’ "A" ‘…’‚
+
+ZAW003G		CALL CSHIGHG
+		LD A,0XEE
+		JP OUTSTAT
+
+SDINITG		CALL CSHIGHG
+		LD BC,SD_SEND
+		LD DE,0X20FF
+		OUT (C),E
+		DEC D
+		JR NZ,$-3
+		LD BC,SD_RSTR
+		XOR A
+		EX AF,AF'
+ZAW001G		LD HL,CMD00G
+		CALL OUTCOMG
+		CALL INOOUTG
+		EX AF,AF'
+		DEC A
+		JR Z,ZAW003G
+		EX AF,AF'
+		DEC A
+		JR NZ,ZAW001G
+		LD HL,CMD08G
+		CALL OUTCOMG
+		CALL INOOUTG
+		IN H,(C)
+		NOP
+		IN H,(C)
+		NOP
+		IN H,(C)
+		NOP
+		IN H,(C)
+		LD HL,0
+		BIT 2,A
+		JR NZ,ZAW006G
+		LD H,0X40
+ZAW006G		LD A,CMD_55
+		CALL OUT_COG
+		CALL INOOUTG
+		LD BC,SD_SEND
+		LD A,ACMD_41
+		OUT (C),A
+		NOP
+		OUT (C),H
+		NOP
+		OUT (C),L
+		NOP
+		OUT (C),L
+		NOP
+		OUT (C),L
+		LD A,0XFF
+		OUT (C),A
+		CALL INOOUTG
+		AND A
+		JR NZ,ZAW006G
+ZAW004G		LD A,CMD_59
+		CALL OUT_COG
+		CALL INOOUTG
+		AND A
+		JR NZ,ZAW004G
+ZAW005G		LD HL,CMD16G
+		CALL OUTCOMG
+		CALL INOOUTG
+		AND A
+		JR NZ,ZAW005G
+
+SDOFFG		JP OK_WORK
+
+CSHIGHG		PUSH AF
+		LD A,M_SDNCS+M_SNCLR	;0X81
+		OUT (SCTRL),A
+		POP AF
+		RET
+
+CSLOWG		PUSH AF
+		LD A,M_SDNCS		;1
+		OUT (SCTRL),A
+		POP AF
+		RET
+
+OUTCOMG		CALL CSLOWG
+		PUSH BC
+		LD BC,0X0600+SD_SEND
+		OTIR
+		POP BC
+		RET
+
+OUT_COG		PUSH BC
+		CALL CSLOWG
+		LD BC,SD_SEND
+		OUT (C),A
+		XOR A
+		OUT (C),A
+		NOP
+		OUT (C),A
+		NOP
+		OUT (C),A
+		NOP
+		OUT (C),A
+		DEC A
+		OUT (C),A
+		POP BC
+		RET
+
+SECM20G		PUSH HL
+		PUSH DE
+		PUSH BC
+		PUSH AF
+		PUSH BC
+		LD A,CMD_58
+		LD BC,SD_RSTR
+		CALL OUT_COG
+		CALL INOOUTG
+		IN A,(C)
+		NOP
+		IN H,(C)
+		NOP
+		IN H,(C)
+		NOP
+		IN H,(C)
+		BIT 6,A
+		POP HL
+		JR NZ,SECN20G
+		EX DE,HL
+		ADD HL,HL
+		EX DE,HL
+		ADC HL,HL
+		LD H,L
+		LD L,D
+		LD D,E
+		LD E,0
+SECN20G		POP AF
+		LD BC,SD_SEND
+		OUT (C),A
+		NOP
+		OUT (C),H
+		NOP
+		OUT (C),L
+		NOP
+		OUT (C),D
+		NOP
+		OUT (C),E
+		LD A,0XFF
+		OUT (C),A
+		POP BC
+		POP DE
+		POP HL
+		RET
+
+INOOUTG		PUSH DE
+		LD DE,0X20FF
+INWAITG		IN A,(SD_RSTR)
+		CP E
+		JR NZ,INEXITG
+		DEC D
+		JR NZ,INWAITG
+INEXITG		POP DE
+		RET
+
+CMD00G		DB 0X40,0X00,0X00,0X00,0X00,0X95	;GO_IDLE_STATE
+CMD08G		DB 0X48,0X00,0X00,0X01,0XAA,0X87	;SEND_IF_COND
+CMD16G		DB 0X50,0X00,0X00,0X02,0X00,0XFF	;SET_BLOCKEN
+
+;……„€—€ „ƒ ‘…’€ € ‘…
+RDSECTG		IN A,(ZXSTAT)
+		RRA
+		JR NC,$-3
+		OUT (CLRCBIT),A
+		LD BC,SD_RSTR
+		LD HL,0X0200
+		IN A,(C)
+		DEC HL
+		OUT (ZXDATWR),A
+		CALL WDN
+		LD A,H
+		OR L
+		JR NZ,$-10
+		IN A,(C)
+		NOP
+		IN A,(C)
+		RET
+
+;‡€ƒ“‡€ „ƒ ‘…’€
+RDSING		LD A,CMD_17
+		CALL SECM20G
+		CALL INOOUTG
+		CP 0XFE
+		JR NZ,$-5
+		CALL RDSECTG
+		CALL INOOUTG
+		INC A	
+		JR NZ,$-4
+		JR OK_WORK
+
+;‡€ƒ“‡€ "A" ‘…’‚
+RDMULG		EX AF,AF'
+		LD A,CMD_18
+		CALL SECM20G
+		EX AF,AF'
+RDMULG1		EX AF,AF'
+		CALL INOOUTG
+		CP 0XFE
+		JR NZ,$-5
+		CALL RDSECTG
+		EX AF,AF'
+		DEC A
+		JR NZ,RDMULG1
+		LD A,CMD_12
+		CALL OUT_COG
+		CALL INOOUTG
+		INC A
+		JR NZ,$-4
+
+OK_WORK		CALL CSHIGHG
+		LD A,0X77
+
+OUTSTAT		OUT (ZXDATWR),A
+
+;†„€… ƒ„€ ‘… ‡€……’ €‰’ „€›•
+WDN		IN A,(ZXSTAT)
+		RLA
+		JR C,$-3
+		RET
+
+;†„€… ƒ„€ ‘… „€‘’ €‰’ „€›•
+WDY		IN A,(ZXSTAT)
+		RLA
+		JR NC,$-3
+		RET
+GSDDRVE
+		DEPHASE

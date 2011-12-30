@@ -176,11 +176,10 @@ void rtc_init(void)
 	gluk_init();
 	if ( gluk_regs[GLUK_REG_SEC] == 0 ) gluk_init();
 
-	//restore mode register from NVRAM
-	modes_register = rtc_read(RTC_COMMON_MODE_REG);
+	//restore mode register from NVRAM (CAPS LED off on init)
+	modes_register = rtc_read(RTC_COMMON_MODE_REG) & ~(MODE_CAPSLED);
 
 	//set modes on fpga
-	//zx_spi_send(SPI_CONFIG_REG, modes_register&MODE_VGA, 0);
 	zx_set_config(0);
 }
 
@@ -406,10 +405,28 @@ void gluk_set_reg(UBYTE index, UBYTE data)
 		}
 		else
 		{
-			if( index == GLUK_REG_B )
+			switch( index )
 			{
-				//BCD or Hex mode set
-				gluk_regs[GLUK_REG_B]=(data&GLUK_B_DATA_MODE)|GLUK_B_INIT_VALUE;
+				case GLUK_REG_B:
+					//BCD or Hex mode set
+					gluk_regs[GLUK_REG_B]=(data&GLUK_B_DATA_MODE)|GLUK_B_INIT_VALUE;
+					break;
+
+				case GLUK_REG_C:
+					if ( (data&GLUK_C_CLEAR_LOG_FLAG) != 0 )
+					{
+						//clear PS2 keyboard log
+						ps2keyboard_reset_log();
+					}
+					if ( (data&GLUK_C_CAPS_LED_FLAG) != (gluk_regs[GLUK_REG_C]&GLUK_C_CAPS_LED_FLAG) )
+					{
+						//switch state of CAPS LED on PS2 keyboard
+						gluk_regs[GLUK_REG_C] = gluk_regs[GLUK_REG_C]^GLUK_C_CAPS_LED_FLAG;
+						modes_register = modes_register^MODE_CAPSLED;
+						//set led on keyboard
+						ps2keyboard_send_cmd(PS2KEYBOARD_CMD_SETLED);
+					}
+					break;
 			}
 		}
 	}

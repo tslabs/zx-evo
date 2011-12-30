@@ -1,21 +1,21 @@
 
-;LAST UPDATE: 09.10.2011 savelij
+;LAST UPDATE: 04.12.2011 savelij
 
 		include ../../macros.a80
 		include ../../global_vars.a80
 		include bas_trd_vars.a80
 
-DD		EQU 9				;„€’€
-MM		EQU 10				;Œ…‘Ÿ–
+DD		EQU 4				;„€’€
+MM		EQU 12				;Œ…‘Ÿ–
 YY		EQU 11				;ƒŽ„
-DATA		EQU DD+(MM<<5)+(YY<<9)+0X8000	;“†… “€ŠŽ‚€Ž
+DATA		EQU DD+(MM<<5)+(YY<<9);+0X8000	;“†… “€ŠŽ‚€Ž
 
 RD_SECT		EQU 0X80
 WR_SECT		EQU 0XA0
 RD_ADDR		EQU 0XC0
 
 ;		     0123456789012345678
-NUMBER_VERS	EQU " EVO-DOS Ver 0.28  "
+NUMBER_VERS	EQU " EVO-DOS Ver 0.29  "
 ZASTV_X		EQU 7					;ŠŽŽ„ˆ€’€ X …—€’ˆ €„ˆ‘ˆ BETA128
 ZASTV_Y		EQU 6					;ŠŽŽ„ˆ€’€ Y …—€’ˆ €„ˆ‘ˆ BETA128
 ZASTV_PIX	EQU ZASTV_Y*0X20+0X4000+ZASTV_X+9	;€„…‘ ‚›‚Ž„€ ‘ŠŽ˜…›• “ƒŽ‹ŠŽ‚
@@ -38,7 +38,6 @@ LOC_09		LD A,0X3F
 		JP PRINT_A_			;RST 10 …—€’œ ‘ˆŒ‚Ž‹€
 
 LOC_13		OUT (C),A
-		NOP
 		NOP
 		RET
 
@@ -472,11 +471,12 @@ END_COM		LD HL,FLAGS
 ;FIX
 ;’…Š‘’ ‡€‘’€‚Šˆ „Ž‘€
 ZASTAVKA	DB 0X16,0X00,0X06
+ZASTAVKA_VER	EQU $+9
 		DB NUMBER_VERS
 		DB 0X0D,0X0D,0X7F
 		;  12345678901234567890123456789012
 		DB " 2010 Created for PentEvo 4MB "
-		DB 0X16,0X04,0X0D
+		DB 0X16,0X04,0X0C
 		DB "NedoPC"
 		DB 0X16,ZASTV_Y,ZASTV_X
 		IF EMU3D2F=1
@@ -686,7 +686,7 @@ READ_SEC2BUF	LD HL,TRD_5CCC		; ’…Š“™ˆ‰ ŽŒ…	‘…Š’Ž€	ˆ —’…ˆˆ Š€’€‹Žƒ€
 		RET
 
 NUMDSK2BYTE	AND 0XDF
-		SBC A,"A"
+		SUB A,"A"
 		JP C,SINTAX_ERROR
 		CP 4
 		JP NC,SINTAX_ERROR
@@ -4699,7 +4699,7 @@ LOC_30F4	LD A,0XFF
 
 ; ’€‹ˆ–€ …‰‘ˆŠ ŠŽŒ€„ „‹Ÿ TR-DOS
 CODE_BYTE_COM	DB 0XCF		;CAT
-		DB 0X2A		;*
+		DB "*"
 		DB 0XD0		;FORMAT
 		DB 0XD1		;MOVE
 		DB 0XE6		;NEW
@@ -4714,10 +4714,9 @@ CODE_BYTE_COM	DB 0XCF		;CAT
 		DB 0XD3		;OPEN
 		DB 0XD4		;CLOSE
 		DB 0XFF		;COPY
-;		DB 0X34		;40
-;		DB 0X38		;80
 		DB 0XF0		;LIST
 		DB 0XD6		;VERIFY
+		DB "."
 ECODE_BYTE_COM
 
 ; ’€‹ˆ–€ €„…‘Ž‚ ˆ‘Ž‹…ˆŸ ŠŽŒ€„
@@ -4737,10 +4736,9 @@ SPIS_ADR_COM	DW CAT
 		DW OPEN
 		DW CLOSE
 		DW COPY
-;		DW COM_40
-;		DW COM_80
 		DW LIST
 		DW VERIFY
+		DW COM_DOT
 
 ;’€‹ˆ–€ Š‹ž—…‚›• ‘‹Ž‚
 TBL_KEYWORD	DB "SAVE",0X80
@@ -4783,8 +4781,6 @@ TBL_KEYWORD	DB "SAVE",0X80
 		DC "LINE"
 		DB "VERIFY",0X80
 		DC "VERIFY"
-;		DB "GOTO",0X80
-;		DC "GOTO"
 		DB 0XFF,0XFF
 
 ;€‰’Ž‚›… ŠŽ„› Š‹ž—…‚›• ‘‹Ž‚
@@ -4808,10 +4804,181 @@ BYTES_COM	DW 0XF8F8	;SAVE
 		DW 0XF0F0	;LIST
 		DW 0XCACA	;LINE
 		DW 0XD6D6	;VERIFY
-;		DW 0XECEC	;GOTO
 		DB 0
 
 ;===============FREE SPACE 2============
+EXTEND_COM	DB 3,"VER"
+		DW PRT_VERS
+		DB 4,"VIRT"
+		DW SET_VIRT
+		DB 0
+
+END_EXT_COM	INC DE
+		LD A,(DE)
+		CP ":"
+		DEC DE
+		JP NZ,SINTAX_ERROR
+		LD A,(DE)
+		AND 0DFH
+		SUB "A"
+		JP C,SINTAX_ERROR
+		CP 4
+		JP NC,SINTAX_ERROR
+		LD (TRD_5CF6),A			; „ˆ‘ŠŽ‚Ž„ „‹Ÿ ‚…Œ…Ž‰ Ž…€–ˆˆ
+		LD (TRD_5D19),A			; „ˆ‘ŠŽ‚Ž„ Ž “ŒŽ‹—€ˆž
+		LD B,A
+		LD A,(TRD_5D16)			; ŠŽˆŸ	‘ˆ‘’…ŒŽƒŽ …ƒˆ‘’€ (Ž’ #FF)
+		AND 7CH
+		OR B
+		LD (TRD_5D16),A			; ŠŽˆŸ	‘ˆ‘’…ŒŽƒŽ …ƒˆ‘’€ (Ž’ #FF)
+		RST 0X08
+		DB WOUTFF
+		JP ERR_OK
+
+COM_DOT		CALL EXIT_IF_SINTAX
+		LD HL,EXTEND_COM
+NEXT_CMP_COM	LD DE,(TRD_5D11)
+		INC DE
+		LD A,(HL)
+		INC HL
+		AND A
+		JP Z,END_EXT_COM
+		LD B,A
+LOC_C34		LD A,(DE)
+		AND 0DFH
+		CP (HL)
+		JR NZ,PROPUSK
+		INC DE
+		INC HL
+		DJNZ LOC_C34
+		LD A,(DE)
+		CP 0DH
+		JR Z,NO_PARAM
+		CP " "
+		JR Z,GET_PARAM
+		JR LOC_C58
+
+PROPUSK		INC HL
+		DJNZ PROPUSK
+LOC_C58		INC HL
+		INC HL
+		JR NEXT_CMP_COM
+
+GET_PARAM	INC DE
+NO_PARAM	LD A,(HL)
+		INC HL
+		LD H,(HL)
+		LD L,A
+		PUSH HL
+		LD HL,END_COMAND
+		EX (SP),HL
+		JP (HL)
+
+;‚›‚Ž„ ˆŒ…ˆ ‚ˆ’“€‹œŽƒŽ „ˆ‘Š€ …‘‹ˆ … “Š€‡€Ž ˆŒŸ „‹Ÿ ˆ‡Œ……ˆŸ
+PRT_NUM_VIRT	LD HL,TXT4VIRTDRV
+		LD B,ETXT4VIRTDRV-TXT4VIRTDRV-1
+		CALL PRT_B_HL_
+		LD A," "
+		RST 0X10
+		LD H,0X0F
+		CALL READCMOS
+		AND 3
+		ADD A,"A"
+		RST 0X10
+		LD A,0X0D
+		RST 0X10
+		RET
+
+;“‘’€Ž‚Š€ ‚ˆ’“€‹œŽƒŽ „ˆ‘Š€
+SET_VIRT	LD A,(DE)
+		CP 0X0D
+		JR Z,PRT_NUM_VIRT
+		LD C,A
+		INC DE
+		LD A,(DE)
+		CP ":"
+		JP NZ,SINTAX_ERROR
+		LD A,C
+		CALL NUMDSK2BYTE
+		LD B,A
+		LD H,0X0F
+		CALL READCMOS
+		AND 0XFC
+		OR B
+		LD L,A
+		JP WRITECMOS
+
+;…—€’œ ‚…‘ˆˆ „Ž‘€ ˆ „€’› ŠŽŒˆ‹Ÿ–ˆˆ
+PRT_VERS	LD HL,0X3FF8
+		LD B,6
+		CALL PRT_B_HL_
+		LD A," "
+		RST 0X10
+		LD C,(HL)
+		INC HL
+		LD B,(HL)
+		PUSH BC
+		LD HL,ZASTAVKA_VER
+		LD B,9
+		CALL PRT_B_HL_
+		POP BC
+		LD A,C
+		AND 0X1F		;“†› 5 ˆ’-—ˆ‘‹Ž Œ…‘Ÿ–€
+		CALL A2TXT		;ŠŽ‚…‘ˆŸ ˆ “Š‹€„Š€ „€’›
+		SRL B
+		RR C			;‘„‚ˆ“‹ˆ „‹Ÿ –…‹Ž‘’Ž‘’ˆ ŽŒ…€ Œ…‘Ÿ–€
+		LD A,"."
+		RST 0X10
+		LD A,C			;‚‡Ÿ‹ˆ ˆ’› Œ…‘Ÿ–€
+		RRCA
+		RRCA
+		RRCA
+		RRCA			;‘„‚ˆ“‹ˆ ‚ Œ‹€„˜ˆ… ˆ’›
+		AND 0X0F		;€Œ “†› ’Ž‹œŠŽ 4 ˆ’€ Œ…‘Ÿ–€
+		CALL A2TXT		;ŠŽ‚…‘ˆŸ ˆ “Š‹€„Š€ Œ…‘Ÿ–€
+		LD A,"."
+		RST 0X10
+		LD A,"2"
+		RST 0X10
+		LD A,"0"
+		RST 0X10
+		LD A,B			;‚‡Ÿ‹ˆ ŽŒ… ƒŽ„€
+		AND 0X3F		;“†› ’Ž‹œŠŽ 6 ˆ’
+		CALL A2TXT		;ŠŽ‚…‘ˆŸ ˆ “Š‹€„Š€ ƒŽ„€
+		BIT 6,B			;…‘‹ˆ ˆ’ 6 (‘„‚ˆ“’›‰ ˆ’ 7) “‘’€Ž‚‹…
+		LD HL,TXT_BETA
+		LD B,5
+		CALL NZ,PRT_B_HL_
+		LD A,0X0D
+		RST 0X10
+		RET
+
+;…—€’œ B=ŠŽ‹ˆ—…‘’‚Ž ‘ˆŒ‚Ž‹Ž‚ ˆ‡ HL=€„…‘ ’…Š‘’€ „‹Ÿ ‚›‚Ž„€
+PRT_B_HL_	LD A,(HL)
+		INC HL
+		RST 0X10
+		DJNZ PRT_B_HL_
+		RET
+
+TXT_BETA	DB " beta"
+
+;……‚Ž„ "A" ‚ „…‘Ÿ’ˆ—Š“ ˆ ‚ ’…Š‘’
+A2TXT		;PUSH HL
+		LD L,A
+		LD H,0
+		LD DE,10
+		XOR A
+		DEC A
+		INC A
+		SBC HL,DE
+		JR NC,$-3
+		ADD HL,DE
+		ADD A,"0"
+		RST 0X10
+		LD A,L
+		ADD A,"0"
+		RST 0X10
+		RET
 ;===============FREE SPACE 2============
 
 		DUPL 0X3BFF-$,0XFF
@@ -4894,7 +5061,8 @@ WRPORT_RET	OUTI
 		JP MEMBOT
 
 		DUPL 0X3D67-$,0XFF
-CREATE_VARS	LD HL,SET_VARS
+CREATE_VARS	CALL CMP_RAMDISK
+		LD HL,SET_VARS
 		PUSH HL
 		LD HL,LOC_3D2F
 		PUSH HL
@@ -4971,7 +5139,7 @@ COM_01		LD (TRD_5CF6),A		; €‘’Ž‰Š€ € „ˆ‘ŠŽ‚Ž„
 		OR 0X3C
 		LD (HL),A
 		IF EMUWRFF
-		RST 0X08		;RST 0X30
+		RST 0X08
 		DB WOUTFF
 		ELSE
 		OUT (0XFF),A

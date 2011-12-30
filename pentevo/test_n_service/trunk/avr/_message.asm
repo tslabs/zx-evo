@@ -55,8 +55,6 @@ MSG_PINTEST_PD:
         .DB     "PD5 ",0,0
 MSG_PINTEST_PE:
         .DB     "PEx ",0,0
-MSG_PINTEST_PF:
-        .DB     "PFx ",0,0
 MSG_PINTEST_PG:
         .DB     "PGx ",0,0
 ;

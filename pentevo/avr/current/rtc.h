@@ -74,11 +74,15 @@ UBYTE rtc_read(UBYTE addr);
 #define GLUK_REG_D          0x0D
 
 /** B register 2 bit - data mode (A 1 in DM signifies binary data while a 0 in DM specifies BCD data). */
-#define GLUK_B_DATA_MODE    0x04
+#define GLUK_B_DATA_MODE      0x04
 /** B register 1 bit - 24/12 mode (A 1 indicates the 24-hour mode and a 0 indicates the 12-hour mode). */
-#define GLUK_B_24_12_MODE   0x02
+#define GLUK_B_24_12_MODE     0x02
 /** C register 4 bit - Update-ended interrupt flag [UF] (Bit is set after each update cycle, UF is cleared by reading Register C or a RESET). */
-#define GLUK_C_UPDATE_FLAG  0x10
+#define GLUK_C_UPDATE_FLAG    0x10
+/** C register 0 bit - unused in original but in ZXEVO clear PS2 keyboard log. */
+#define GLUK_C_CLEAR_LOG_FLAG 0x01
+/** C register 1 bit - unused in original but in ZXEVO switch CAPS LED mode on PS2 keyboard. */
+#define GLUK_C_CAPS_LED_FLAG  0x02
 
 /** Initial value for Gluk A register. */
 #define GLUK_A_INIT_VALUE   0x00

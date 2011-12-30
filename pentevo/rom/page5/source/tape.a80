@@ -1,0 +1,100 @@
+
+;LAST UPDATE: 06.05.2011 savelij
+
+TAPE_EMUL	LD H,0XEF
+		CALL READCMOS
+		AND EMUL_TAPE
+		JR NZ,EMULOADTAP
+		LD A,(REG_A)
+		LD (REG_C),A
+		LD HL,REG_F
+		SET 6,(HL)
+		RES 0,(HL)
+		RET
+
+EMULOADTAP	LD A,(0X8002)			;ŽŒ… ‘’€ˆ–› ƒ„… €—ˆ€…’‘Ÿ ‘‹…„“ž™ˆ‰ ‹ŽŠ
+		LD IYL,A
+		ADD A,PAGE4TAP
+		LD BC,WIN_P1
+		OUT (C),A			;…€‹œ€Ÿ ‘’€ˆ–€ Ž’Š“„€ €’œ
+		LD HL,(0X8000)			;‘Œ…™…ˆ… ‚ ‘’€ˆ–…
+		LD DE,(REG_IXL)			;€„…‘ Š“„€ ‹Ž†ˆ’œ
+		LD A,D
+		EXX
+		LD BC,WIN_P2
+		CP 0X80
+		LD A,0XFA			;„‹Ÿ „ˆ€€‡Ž€ €„…‘Ž‚ ‡€ƒ“‡Šˆ 4000-7FFF
+		JR C,ELT01
+		LD A,0XFD			;„‹Ÿ „ˆ€€‡Ž€ €„…‘Ž ‡€ƒ“‡Šˆ 8000 ˆ ‚›˜…
+ELT01		OUT (C),A
+		LD IYH,A			;ŽŒ… ‘’€ˆ–› ‚ ŠŽ’Ž“ž ……Ž‘ˆŒ
+		EXX
+		LD A,0X40			;„‹Ÿ „ˆ€€‡Ž€ €„…‘Ž‚ 4000-7FFF ƒ“‡ˆŒ € 4000 ‚›˜…
+		JR C,ELT02
+		LD A,0				;„‹Ÿ „ˆ€€‡Ž€ €„…‘Ž‚ 8000 ˆ ‚›˜… €„…‘ ‡€ƒ“‡Šˆ … Œ…Ÿ…Œ
+ELT02		ADD A,D
+		LD D,A				;…€‹œ›‰ €„…‘ “Š‹€„Šˆ
+		SET 6,H
+		LD C,(HL)
+		INC HL
+		LD B,(HL)			;‚‡Ÿ‹ˆ €‡Œ… ‹ŽŠ€ „‹Ÿ ‡€ƒ“‡Šˆ
+		INC HL
+		INC HL				;Ž“‘Š€…Œ ”‹€ƒŽ‚›‰ €‰’
+		DEC BC				;ƒ“‡ˆ’œ € 2 €‰’€ Œ…œ˜… (Œˆ“‘ ”‹€ƒŽ‚›‰ €‰’ ˆ CRC)
+ELT07		LDI
+		JP PO,ELT05
+		LD A,D
+		CP 0XC0
+		JR C,ELT06
+		LD A,IYH
+		CP 0XFA
+		JR NZ,ELT06
+		LD A,0XFD
+		LD IYH,A
+		EXX
+		LD B,HIGH (WIN_P2)
+		OUT (C),A
+		EXX
+		LD D,0X80
+ELT06		LD A,H
+		CP 0X80
+		JR C,ELT07
+		INC IYL
+		LD A,IYL
+		ADD A,PAGE4TAP
+		EXX
+		LD B,HIGH (WIN_P1)
+		OUT (C),A
+		EXX
+		LD H,0X40
+		JR ELT07
+		
+ELT05		RES 6,H
+		LD BC,WIN_P1
+		LD A,0XFA
+		OUT (C),A			;‚…“‹ˆ ‘’€ˆ–“ ‚ 1 ŽŠ… Ž…–ˆŽ‚€ˆŸ
+		LD B,HIGH (WIN_P2)
+		XOR A
+		OUT (C),A			;‚Š‹ž—ˆ‹ˆ Ž‘‹…„žž ‘’€ˆ–“
+		LD (0X8000),HL			;‚…“‹ˆ ‘Œ…™…ˆ… ‚ ‘’€ˆ–… „‹Ÿ ‡€ƒ“‡Šˆ
+		LD A,IYL
+		LD (0X8002),A			;‚…“‹ˆ ‚ ……Œ…“ž ŽŒ… ’…Š“™…‰ ‘’€ˆ–› ‡€ƒ“‡Šˆ
+		LD HL,(REG_IXL)
+		LD DE,(REG_E)
+		ADD HL,DE
+		LD (REG_IXL),HL
+		LD HL,0
+		LD (REG_E),HL
+		LD HL,REG_F
+		RES 6,(HL)
+		SET 0,(HL)
+		RET
+
+TAPE_INIT	XOR A
+		LD HL,0X8000
+		LD (HL),A
+		INC L
+		LD (HL),A
+		INC L
+		LD (HL),A
+		RET

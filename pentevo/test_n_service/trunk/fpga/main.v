@@ -207,10 +207,11 @@ module main(
 
  localparam HTXTS_END   = 9'd416;
  localparam CSYNC_CUT   = 9'd415;
- localparam CSYNC_CUT2  = 9'd395; // 9'd382;
+ localparam CSYNC_CUT2  = 9'd394; // 9'd395;            // 9'd382;
  localparam HSYNC_BEG   = 9'd0;
+ localparam HSYNC_BEG2  = 9'd447;
  localparam HSYNC_END   = 9'd33;
- localparam HSYNC_END2  = 9'd53;
+ localparam HSYNC_END2  = 9'd52; // 9'd53;
  localparam HTXTS_BEG   = 9'd98;
  localparam HMAX        = 9'd447;
 
@@ -400,9 +401,9 @@ module main(
                      color <= CYAN_H;
                   5'd12:
                     if (hcount[0])
-                     color <= GRAY_1;
-                    else
                      color <= GRAY_2;
+                    else
+                     color <= GRAY_1;
                   5'd15:
                     if ( (hchess[0]) && (schcnt==6'd63) )
                      color <= BLACK;
@@ -520,13 +521,19 @@ module main(
 
      if ( hcount==HSYNC_BEG )
       begin
-       hsync <= 1'b1;
+       if ( scr_tv_mode ) hsync <= 1'b1;
        vgaff <= scr_tv_mode | ~vgaff;
        if ( vgaff )
         begin
-         csync <= 1'b1;
+         if ( scr_tv_mode ) csync <= 1'b1;
          nextline <= 1'b1;
         end
+      end
+
+     if ( (~scr_tv_mode) && (hcount==HSYNC_BEG2) )
+      begin
+       hsync <= 1'b1;
+       if ( vgaff ) csync <= 1'b1;
       end
 
      if ( (~scr_tv_mode) && (hcount==HSYNC_END2) )

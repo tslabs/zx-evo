@@ -41,9 +41,4 @@ UBYTE GetVersionByte(UBYTE index)
 void SetVersionType(UBYTE type)
 {
 	ext_type_gluk = type;
-
-	if ( type==EXT_TYPE_PS2KEYBOARDS_LOG )
-	{
-		ps2keyboard_reset_log();
-	}
 }

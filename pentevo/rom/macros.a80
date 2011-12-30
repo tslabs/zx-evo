@@ -19,7 +19,8 @@ SUM_HOB		MACRO STR,AA,BB,CC
 		DB STR
 		DW AA
 		DW BB
-		DW CC
+		DB 0
+		DB CC
 $$I := 0
 $$S := 0
 		REPT 9

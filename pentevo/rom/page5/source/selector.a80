@@ -1,0 +1,246 @@
+
+;LAST UPDATE: 06.03.2011 savelij
+
+SELECTOR	XOR A
+		OUT (PEVO_CONF),A
+		CALL DETECTMOUSE
+		EI	
+		LD A,(FLAGS)
+		AND 2				;Ž‚…Š€ €‹ˆ—ˆŸ Œ›˜ˆ
+		JR Z,_RULNMO
+;FIX ŠŽ‹…‘Ž Œ›˜ˆ
+MKEYPR		EI
+		HALT
+		LD A,0XFA
+		IN A,(0XDF)
+		CPL
+		AND 7
+		JR NZ,MKEYPR
+_RULNMO		CALL SAVE2X2			;…‘‹ˆ Œ…ž €…—€’€‹ˆ Ž‚…• ‘’…‹Šˆ
+		CALL SET_ADR_ATR		;“‘’€Ž‚Š€ Ž‚ŽƒŽ €„…‘€ „‹Ÿ –‚…’Ž‰ Ž‹Ž‘Šˆ
+		LD HL,FLAGS_KEY
+		RES 5,(HL)			;€ Š‹€‚ˆ€’“… ˆ—…ƒŽ … €†€’Ž
+		JR MAINLOP
+
+;€†€’€ ‘’…‹Š€ ‚‚…•
+UP		CALL CURSOR_UP			;‘Œ…ˆ‹ˆ ’…Š“™ˆ‰ “Š’ € -1
+		JR SET_POS1			
+
+;€†€’€ ‘’…‹Š€ ‚€‚Ž
+RIGHT		BIT 1,(IX+6)			;Ž‚…Š€ Ž‘’Ž Œ…ž ˆ‹ˆ ”€‰‹Ž‚Ž…
+		PUSH AF				;‘Ž•€ˆ‹ˆ …‡“‹œ’€’ Ž‚…Šˆ
+		CALL NZ,PAGEDN			;…‘‹ˆ ”€‰‹Ž‚Ž…, ’Ž ‹ˆ‘’€ˆ… ‘’€ˆ—Ž…
+		POP AF				;‚Ž‘‘’€Ž‚ˆ‹ˆ …‡“‹œ’€’ Ž‚…Šˆ
+		JR NZ,SET_POS1			;…‘‹ˆ ”€‰‹Ž‚Ž… Ž„Ž‹†€…Œ
+		LD A,(IX+0X0A)
+		AND A
+		JR Z,SET_POS
+		DEC A				;ˆ€—… ……•Ž„ Š“‘Ž€ € Ž‘‹…„ˆ‰ “Š’
+		JR SET_POS			;ˆ‡Œ…Ÿ…Œ Ž‹Ž†…ˆ… Š“‘Ž€ ˆ Ž„Ž‹†€…Œ
+
+;€†€’€ ‘’…‹Š€ ‚ˆ‡
+DOWN		CALL CURSOR_DOWN		;‘Œ…ˆ‹ˆ ’…Š“™ˆ‰ “Š’ € +1
+		JR SET_POS1
+
+;€†€’€ ‘’…‹Š€ ‚‹…‚Ž
+LEFT		BIT 1,(IX+6)			;Ž‚…Š€ Ž‘’Ž Œ…ž ˆ‹ˆ ”€‰‹Ž‚Ž…
+		PUSH AF				;‘Ž•€ˆ‹ˆ …‡“‹œ’€’ Ž‚…Šˆ
+		CALL NZ,PAGEUP			;…‘‹ˆ ”€‰‹Ž‚Ž…, ’Ž ‹ˆ‘’€ˆ… ‘’€ˆ—Ž…
+		POP AF				;‚Ž‘‘’€Ž‚ˆ‹ˆ …‡“‹œ’€’ Ž‚…Šˆ
+		JR NZ,SET_POS1			;…‘‹ˆ ”€‰‹Ž‚Ž… Ž„Ž‹†€…Œ
+		XOR A				;ˆ€—… ……•Ž„ Š“‘Ž€ € …‚›‰ “Š’
+SET_POS		BIT 7,(IX+7)
+		JR Z,SET_POS3
+		LD L,(IX+8)
+		LD H,(IX+9)
+		LD (HL),A
+		INC HL
+		LD (HL),A
+		INC HL
+		LD (HL),0
+		JR SET_POS1
+
+SET_POS3	LD (IX+7),A			;ˆ‡Œ…ˆ‹ˆ Ž‡ˆ–ˆž Š“‘Ž€
+		LD (IX+8),A
+		LD (IX+9),0			;ˆ‡Œ…ˆ‹ˆ ŽŒ… ‚›€ŽƒŽ “Š’€
+SET_POS1	CALL COLOR_CURSOR		;……ˆ‘Ž‚Š€ –‚…’Ž‰ Ž‹Ž‘Šˆ Œ…ž
+SET_POS2	CALL GLUDIN			;“ŒŠ“‹ˆ ‚ AY
+MAINLOP		LD HL,FLAGS_KEY
+		RES 5,(HL)			;‘Ž‘ €†€’›• ŠŽŽŠ
+		LD A,(FLAGS)
+		AND 2				;Ž‚…Š€ €‹ˆ—ˆŸ Œ›˜ˆ
+		JP Z,MAINNMO
+		LD HL,(ARXY)			;‘’€€Ÿ ŠŽŽ„ˆ€’€ Œ›˜ˆ
+		PUSH HL
+		CALL MOUSE			;ŽŽ‘ Ž’Ž‚ Œ›˜ˆ
+		POP BC
+		AND A
+		SBC HL,BC
+		JR Z,NO_SELECT			;… ›‹Ž „‚ˆ†…ˆŸ Œ›˜ˆ
+		CALL RESTORE_KOSHAK		;›‹Ž „‚ˆ†…ˆ… Œ›˜ˆ, ‘Ž‘ ‘—…’—ˆŠŽ‚ ŠŽ˜€Š€
+		CALL MOUOPT			;Ž‚…Š€ €‚…„…ˆŸ Œ›˜ˆ € ‡€„€Ž… ŽŠŽ
+NO_SELECT	LD BC,0XFADF
+		IN A,(C)			;ŽŽ‘ €†€’ˆŸ ŠŽŽŠ Œ›˜ˆ
+		AND 7
+		CP 6
+		JR Z,PRESS_MOUSE		;…‘‹ˆ €†€’€ ‹…‚€Ÿ ŠŽŠ€ Œ›˜ˆ
+		CP 5
+		JP Z,RESTART			;…‘‹ˆ €†€’€ €‚€Ÿ ŠŽŠ€ Œ›˜ˆ
+		CALL PRINTTIME			;ŽŽ‚ˆ‹ˆ ‚…ŒŸ …‘‹ˆ ˆ‡Œ…ˆ‹Ž‘œ
+		EI
+		HALT
+		CALL REST2X2			;‚Ž‘‘’€Ž‚ˆ‹ˆ Š“‘ŽŠ Š€€ Ž„ Œ›˜œž
+		CALL DRAW_MOUSE			;€ˆ‘Ž‚€‹ˆ Š“‘Ž Œ›˜ˆ
+		JR MAINQMO			;Ž„Ž‹†…ˆ… ŽŽ‘€
+
+PRESS_MOUSE	CALL OPMSPL
+		AND A
+		JR Z,CP_MOUSE4
+		LD (LAST_K),A
+		CALL TIMELP
+		JR SELECT_KEY
+
+CP_MOUSE4	CALL MOUOPT			;Ž‚…Š€ Ž€„€ˆŸ Œ›˜ˆ ‚ …„…‹› ’…Š“™…ƒŽ ŽŠ€
+		JR C,MAINNMO			;… Ž€‹ˆ ˆ …„…Œ „€‹……
+		LD E,(IX+7)			;‚‡Ÿ‹ˆ ŽŒ… “Š’€ Š“„€ Ž€‹ˆ Œ›˜œž
+		BIT 7,E
+		JR Z,CP_MOUSE5
+		LD L,(IX+8)
+		LD H,(IX+9)
+		LD E,(HL)
+CP_MOUSE5	LD D,0
+		LD HL,(PRESSEDKEY)		;€„…‘ ‘ˆ‘Š€ •Ž’Š……‚ ’…Š“™…ƒŽ ŽŠ€
+		ADD HL,DE			;€„…‘ •Ž’Š…Ÿ ‚›€ŽƒŽ “Š’€
+		LD DE,LAST_K
+		LDI				;Œˆ’€–ˆŸ €†€’ˆŸ ‡€„€Ž‰ ŠŽŠˆ
+		JR ENTER
+		
+MAINNMO		CALL PRINTTIME			;ŽŽ‚‹…ˆ… ‚…Œ…ˆ, …‘‹ˆ ‚ ŽŽ ŽŽ‚ˆ‹Ž‘œ
+		EI
+		HALT
+MAINQMO		LD A,(FLAGS_KEY)
+		BIT 5,A				;Ž‚…Š€ €†€’ˆŸ ŠŽŽŠ Š‹€‚ˆ€’“›
+		CALL Z,CP_TIME_KOSHAK		;…‘‹ˆ … €†€’Ž ˆ—…ƒŽ, Ž‚…Ÿ…Œ ‘—…’—ˆŠ ŠŽ˜€Š€
+		JP Z,MAINLOP			;Ž„Ž‹†€…Œ ŽŽ‘ “€‚‹…ˆŸ
+		CALL BREAK_KEY			;Ž‚…Š€ € BREAK
+		JR C,SELECT_KEY			;…‘‹ˆ BREAK €†€’ ……‡€“‘Š€…Œ‘Ÿ
+RESTART		LD A,1
+		OUT (PEVO_CONF),A
+		RET
+
+SELECT_KEY 	CALL RESTORE_KOSHAK		;€†€’Ž …—’Ž € Š‹€‚…, ‘Ž‘ ‘—…’—ˆŠ€ ŠŽ˜€Š€
+		LD HL,LAST_K
+		LD A,(HL)			;‚‡Ÿ‹ˆ €†€’“ž Š‹€‚ˆ˜“
+		LD B,0
+		LD HL,MAIN_KEYS
+		LD C,(HL)			;ŠŽ‹ˆ—…‘’‚Ž „Ž‘’“›• ŠŽŽŠ
+		LD D,C
+		INC HL
+		CPIR
+		JR NZ,NOMAINKEYS		;ˆ—…ƒŽ … €˜‹ˆ, „€‹…… ‘ŒŽ’ˆŒ ŠŽŠˆ ’…Š“™…ƒŽ ŽŠ€
+						;€†€’Ž —’Ž-’Ž ˆ‡ ƒ‹€‚›• ŠŽŽŠ, „Ž‘’“›• ‚‘…ƒ„€
+		LD HL,ADREXEKEYS
+		LD A,D				;ŠŽ‹ˆ—…‘’‚Ž ŠŽŽŠ ‚ ’€‹ˆ–… -1
+		SUB C				;Ž‹“—ˆ‹ˆ ‚›€›‰ ŽŒ…
+		DEC A
+		ADD A,A
+		ADD A,L
+		LD L,A
+		ADC A,H
+		SUB L
+		LD H,A
+		LD A,(HL)
+		INC HL
+		LD H,(HL)
+		LD L,A
+		JP (HL)
+
+;Ž‚…Š€ •Ž’Š……‚ ‚ ’…Š“™…Œ ŽŠ…
+NOMAINKEYS	LD HL,(PRESSEDKEY)		;€„…‘ ‘ˆ‘Š€ €†€’›• ŠŽŽŠ ’…Š“™…ƒŽ ŽŠ€
+		LD C,A
+		LD A,H
+		OR L
+		JP Z,MAINLOP			;…‘‹ˆ ‘ˆ‘Š€ …’, Ž„Ž‹†€…Œ ŽŽ‘
+		LD A,C
+		LD C,(IX+2)
+		LD E,(HL)
+		INC HL
+		DEC C				;ŠŽ‹ˆ—…‘’‚Ž ŠŽŽŠ
+		DEC C				;‚›‘Ž’€ ŽŠ€ -2
+		LD D,C
+		LD B,0
+		CPIR				;‘Š€ˆŽ‚€ˆ… ‘ˆ‘Š€ ‡€„€›• Š‹€‚ˆ˜
+		JR NZ,OSTAT_KEYS
+		LD A,D				;‚›‘Ž’€ ŽŠ€
+		SUB C
+		DEC A				;Ž‹“—ˆ‹ˆ ŽŒ… €†€’Ž‰ ŠŽŠˆ ˆ -1
+		BIT 7,(IX+7)
+		JR Z,ENTER1
+		LD L,(IX+8)
+		LD H,(IX+9)
+		LD (HL),A
+		INC HL
+		LD (HL),A
+		JR ENTER
+
+ENTER1		LD (IX+7),A			;ŽŒ… “Š’€ ‚ ŽŠ…
+		LD (IX+8),A			;ŽŒ… €†€’Ž‰ Š‹€‚ˆ˜ˆ Ž “Š€‡€ŽŒ“ ‘ˆ‘Š“
+ENTER		LD A,(FLAGS)
+		AND 2
+		CALL NZ,TIMELP			;ŽŽ‚‹…ˆ… ‚…Œ…ˆ …‘‹ˆ ŽŽ ˆ‡Œ…ˆ‹Ž‘œ	
+		CALL REST2X2			;‘’…‹ˆ Š“‘Ž Œ›˜ˆ
+		CALL GLUDIN			;“ŒŠ“‹ˆ ‚ AY
+		LD A,(IX+7)			;ŽŒ… ˆ‡ ‘ˆ‘Š€ ŠŽ’Ž›‰ ‚›‡‚€’œ
+		BIT 7,A
+		JR Z,JUMP2HL1
+		LD L,(IX+8)
+		LD H,(IX+9)
+		LD A,(HL)
+JUMP2HL1	LD L,(IX+0X0E)
+		LD H,(IX+0X0F)			;‚‡Ÿ‹ˆ ‘ˆ‘ŽŠ €„…‘Ž‚ 1 ˆ‡ ŠŽ’Ž›• “„…Œ ‚›‡›‚€’œ
+JUMP2HL		ADD A,A
+		ADD A,L
+		LD L,A
+		ADC A,H
+		SUB L
+		LD H,A
+		LD A,(HL)
+		INC HL
+		LD H,(HL)
+		LD L,A
+		LD A,1
+		OUT (PEVO_CONF),A
+		JP (HL)
+
+OSTAT_KEYS	EX AF,AF'
+		LD A,E
+		SUB D
+		JP Z,MAINLOP
+		LD C,A
+		EX AF,AF'
+		CPIR
+		JP NZ,MAINLOP
+		LD A,E
+		SUB C
+		DEC A
+		JR JUMP2HL1
+
+TIMELP		CALL PRINTTIME
+		LD A,0XFA
+		IN A,(0XDF)			;ŠŽŠˆ Œ›˜ˆ
+		CPL
+		AND 7
+		JR NZ,TIMELP			;ŽŠ€ … Ž’“‘’Ÿ’
+		RET
+
+GLUDIN		LD HL,DIN+0X0D
+		LD A,0X0D
+GLUDIN1		LD BC,0XFFFD
+		OUT (C),A
+		LD B,0XBF
+		OUTD
+		SUB 1
+		JR NC,GLUDIN1
+		RET
+
+KOSHAK		BINCLUDE kot_anim.bin,9
