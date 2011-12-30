@@ -1,5 +1,5 @@
 
-;LAST UPDATE: 28.09.2011 savelij
+;LAST UPDATE: 29.11.2011 savelij
 
 ;Žˆ‘€’…‹œ ŽŠ€ (€„…‘ ‚ IX)
 ;+00 X ŠŽŽ„ˆ€’€
@@ -683,7 +683,7 @@ PRTSPECSYM	PUSH HL
 		REPT 8
 		LD A,(HL)
 		LD (DE),A
-		INC L
+		INC HL
 		INC D
 		ENDM
 		POP DE

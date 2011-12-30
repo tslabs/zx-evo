@@ -1,0 +1,171 @@
+
+;LINIT  - initialization (hook on "P"-channel and printer init)
+;LPRINT - print ZX simbol (with token decode)
+;LBYTE  - print simbol (without token decode)
+;LCOPY  - print screen
+
+AY_PRN_SCR	LD H,0XEF
+		CALL READCMOS
+		AND PRINTER_AY
+		JR NZ,AY_PRN_SCR1
+		LD A,0XB0
+		LD (REG_B),A
+		RET
+
+AY_PRN_SCR1	LD HL,GRSET1
+		CALL OUTSTR
+		LD HL,0X4000
+		LD C,3
+LCOP5		LD B,8
+LCOP4		PUSH BC
+		PUSH HL
+		LD HL,GRSET2
+		CALL OUTSTR
+		POP HL
+		LD D,H
+		LD E,L
+		LD B,0X20
+LCOP3		PUSH BC
+		LD C,8
+LCOP2		LD B,8
+LCOP1		RLC (HL)
+		RLA
+		INC H
+		DJNZ LCOP1
+		CALL AY_PRN_BYTE
+		LD H,D
+		LD L,E
+		DEC C
+		JR NZ,LCOP2
+		INC E
+		PUSH DE
+		POP HL
+		POP BC
+		DJNZ LCOP3
+		POP BC
+		DJNZ LCOP4
+		LD A,H
+		ADD A,8
+		LD H,A
+		DEC C
+		JR NZ,LCOP5
+		LD HL,0X0EDE
+		LD (ADRRET_L),HL
+		LD HL,GRSET3
+OUTSTR		LD A,(HL)
+		CP 0XFF
+		RET Z
+		CALL AY_PRN_BYTE
+		INC HL
+		JR OUTSTR
+
+AY_PRN_A_	LD H,0XEF
+		CALL READCMOS
+		AND PRINTER_AY
+		JR Z,AY_PRN_A_1
+		LD A,(REG_B)
+		CP 3
+		SBC A,A
+		LD (REG_A),A
+		RET
+
+AY_PRN_A_1	LD A,(0X80FD)
+AY_PRN_BYTE	PUSH BC
+		PUSH HL
+		CALL LP01
+		POP HL
+		POP BC
+		RET
+
+AY_PRN_INIT	LD DE,0XFFBF
+		LD C,0XFD
+		LD B,D		;FF
+		LD A,0XFE		;for TS or TSFM
+		OUT (C),A		;select first chip
+		LD A,7
+		OUT (C),A
+		LD B,E		;BF
+		LD A,0X7F
+		OUT (C),A
+		LD B,D		;FF
+		LD A,0X0F
+		OUT (C),A
+		LD B,E		;BF
+		LD A,0XFE
+		OUT (C),A
+		LD HL,INTX
+		JR OUTSTR
+
+EXIT_09F4	LD HL,0X09F4
+		LD (ADRRET_L),HL
+		LD SP,(INTERNAL_SP)
+		RET
+
+AY_PRN_TOKEN	LD H,0XEF
+		CALL READCMOS
+		AND PRINTER_AY
+		JR NZ,EXIT_09F4
+		LD A,(REG_A)
+		CP 0X0D
+		JR NZ,LP02
+		CALL LP01
+		LD A,0X0A
+		JR LP01
+
+LP02		CP 0X20
+		RET C
+		CP 0X7F
+		JR C,LP01
+		CP 0XA5
+		JR NC,EXIT_09F4		;JP NC,0X09F4
+		CP 0X90
+		JR C,LP03
+		SUB 0X4F
+		JR LP01
+
+LP03		LD A,0X20
+LP01		PUSH BC
+		PUSH AF
+		LD BC,0XFFFD
+		LD A,0X0E
+		OUT (C),A
+		LD B,0XBF
+		POP AF
+		OUT (C),A
+		LD B,0XFF
+		LD A,0X0F
+		OUT (C),A
+LP04		CALL BREAK_KEY
+		JR NC,LP05
+		IN A,(C)
+		RLA
+		JR NC,LP04
+		LD A,7
+		OUT (C),A
+		LD B,0XBF
+		LD A,0XFF
+		OUT (C),A
+		PUSH IX
+		POP IX
+		LD A,0X7F
+		OUT (C),A
+		POP BC
+		RET
+
+LP05		LD HL,0X1B7B
+		LD (ADRRET_L),HL
+		LD HL,EI_DI
+		SET 2,(HL)
+		LD SP,(INTERNAL_SP)
+		RET
+
+;Command code for 9-pin EPSON-compatibility printers
+;Printer initialization
+INTX		DB 0X1B,0X40,0X07,0X07,0XFF
+;setup1 (before screen copy)
+GRSET1		DB 0X1B,0X41,0X08,0XFF
+;setup2 (every new line)
+GRSET2		DB 0X0D,0X0A,0X1B,0X2A,0X05,0X00,0X01,0XFF
+;setup2 (after complete screen copy)
+GRSET3		DB 0X0D,0X0A,0X1B,0X32,0X07,0X07,0X07,0XFF
+

@@ -1,0 +1,44 @@
+
+;LAST UPDATE: 13.12.2011 savelij
+
+		include ../../macros.a80
+		include ../../global_vars.a80
+		include ../../ports_ngs.a80
+		include ../../sdcomand.a80
+
+DRV_VAR		EQU 0X4000
+
+		include ../../fat_vars.a80
+
+DD		EQU 13				;„€’€
+MM		EQU 12				;Œ…‘Ÿ–
+YY		EQU 11				;ƒŽ„
+DATA		EQU DD+(MM<<5)+(YY<<9)+0X8000	;“†… “€ŠŽ‚€Ž
+
+		ORG 0
+		DUPL 0X0013-$,0XFF
+JUMP2PAGE	OUT (C),A
+		NOP
+		RET
+
+		DUPL 0X0080-$,0XFF
+UNPACK		include ../../dec40.a80
+
+		DUPL 0X0100-$,0XFF
+		LD HL,MICRO_BOOT
+		LD DE,DRV_VAR+0X300
+		CALL UNPACK
+		LD BC,0X0018			;€„…‘ ‚›•Ž„€ ˆ‡ RST 8
+		PUSH BC
+		LD BC,WIN_A0
+		LD A,5
+		JP JUMP2PAGE
+
+MICRO_BOOT	binclude ../../fat/source/micro_boot_fat_pack.rom
+
+		DUPL 0X2FF8-$,0XFF
+		binclude 866_code.fnt
+		binclude atm_code.fnt
+
+		DB "ADDONS"
+		DW DATA

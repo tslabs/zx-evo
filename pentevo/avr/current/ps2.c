@@ -68,9 +68,22 @@ volatile UBYTE  ps2keyboard_log_len;
 
 void ps2keyboard_to_log(UBYTE data)
 {
-	if( (ps2keyboard_log_len++) < sizeof(ps2keyboard_log) )
+	if( ( ps2keyboard_log_len!=0xFF ) && ( ps2keyboard_log_len<sizeof(ps2keyboard_log) ) )
 	{
 		ps2keyboard_log[ps2keyboard_log_len] = data;
+		ps2keyboard_log_len++;
+#ifdef LOGENABLE
+		{
+			char log_ps2kb_parse[] = "LG<..:..\r\n";
+			UBYTE b = ps2keyboard_log_len;
+			log_ps2kb_parse[3] = ((b >> 4) <= 9 )?'0'+(b >> 4):'A'+(b >> 4)-10;
+			log_ps2kb_parse[4] = ((b & 0x0F) <= 9 )?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
+			b = data;
+			log_ps2kb_parse[6] = ((b >> 4) <= 9 )?'0'+(b >> 4):'A'+(b >> 4)-10;
+			log_ps2kb_parse[7] = ((b & 0x0F) <= 9 )?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
+			to_log(log_ps2kb_parse);
+		}
+#endif
 	}
 	else
 	{
@@ -81,10 +94,23 @@ void ps2keyboard_to_log(UBYTE data)
 
 UBYTE ps2keyboard_from_log(void)
 {
-	if( (ps2keyboard_log_len>0) && (ps2keyboard_log_len!=0xFF) )
+	UBYTE ret;
+	if( (ps2keyboard_log_len>0) && (ps2keyboard_log_len<=sizeof(ps2keyboard_log)) )
 	{
-		UBYTE ret = ps2keyboard_log[0];
+		ret = ps2keyboard_log[0];
 		ps2keyboard_log_len--;
+#ifdef LOGENABLE
+		{
+			char log_ps2kb_parse[] = "LG>..:..\r\n";
+			UBYTE b = ret;
+			log_ps2kb_parse[3] = ((b >> 4) <= 9 )?'0'+(b >> 4):'A'+(b >> 4)-10;
+			log_ps2kb_parse[4] = ((b & 0x0F) <= 9 )?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
+			b = ps2keyboard_log_len;
+			log_ps2kb_parse[6] = ((b >> 4) <= 9 )?'0'+(b >> 4):'A'+(b >> 4)-10;
+			log_ps2kb_parse[7] = ((b & 0x0F) <= 9 )?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
+			to_log(log_ps2kb_parse);
+		}
+#endif
 		if( ps2keyboard_log_len>0 )
 		{
 			//shift log
@@ -94,15 +120,22 @@ UBYTE ps2keyboard_from_log(void)
 				ps2keyboard_log[i]=ps2keyboard_log[i+1];
 			}
 		}
-		return ret;
+	}
+	else
+	{
+		ret = ps2keyboard_log_len;
+		if ( ret==0xFE ) ret=0;
 	}
 	//0 - no data, 0xFF - overload
-	return ps2keyboard_log_len;
+	return ret;
 }
 
 void ps2keyboard_reset_log(void)
 {
-	ps2keyboard_log_len = 0;
+	ps2keyboard_log_len = 0xFE;
+#ifdef LOGENABLE
+	to_log("LGRESET\r\n");
+#endif
 }
 
 static void ps2keyboard_release_clk(void)
@@ -159,7 +192,7 @@ void ps2keyboard_task(void)
 		//if need send led data on current stage
 		if ( ((ps2keyboard_cmd_count == 2)&&(ps2keyboard_cmd == PS2KEYBOARD_CMD_SETLED)) )
 		{
-			b = (PS2KEYBOARD_LED_SCROLLOCK|PS2KEYBOARD_LED_NUMLOCK)&modes_register;
+			b = (PS2KEYBOARD_LED_SCROLLOCK|PS2KEYBOARD_LED_NUMLOCK|PS2KEYBOARD_LED_CAPSLOCK)&modes_register;
 			ps2keyboard_send(b);
 			ps2keyboard_cmd_count--;
 		}
@@ -279,9 +312,13 @@ void ps2keyboard_parse(UBYTE recbyte)
 	if( recbyte==0xAA ) return;
 
 	//start write to log only for full key data
-	if( (ps2keyboard_log_len>0) || ((was_release==0) && (was_E0==0) && (skipshit==0)) )
+	if( (recbyte!=0xE1) && (skipshit==0) ) //PAUSE not logged
 	{
-	   	ps2keyboard_to_log(recbyte);
+		if( (ps2keyboard_log_len!=0xFE) || ((was_release==0) && (was_E0==0)/* && (skipshit==0)*/) )
+		{
+			if( ps2keyboard_log_len==0xFE ) ps2keyboard_log_len=0;
+		   	ps2keyboard_to_log(recbyte);
+		}
 	}
 
 	if( skipshit )

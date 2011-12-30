@@ -1,5 +1,5 @@
 
-;LAST UPDATE: 03.08.2011 savelij
+;LAST UPDATE: 17.12.2011 savelij
 
 ;Žˆ‘€’…‹œ ŽŠ€ (€„…‘ ‚ IX)
 ;+00 X ŠŽŽ„ˆ€’€
@@ -85,18 +85,22 @@ MKILLSTXT	DB 0X17,0XFF,"Services"
 		DB 0X0D," K.Format ramdisk 640k"	;k
 		DB 0X0D," I.Format ramdisk 896k"	;i
 		DB 0X0D," M.Edit CMOS"			;m
+		DB 0X0D," S.Test PC keyboard"		;s
 		DB 0X0D," F.Fast update ROM"		;f
-		DB 0X0D," C.Image to RAMDISK"		;c
-		DB 0X0D," T.Load font 4 TEXTMODE",0	;t
-MKILLS_KEY	DB LOW (KILL1-$-1),"rkimfct"
+		DB 0X0D," U.Update custom ROM"		;u
+		DB 0X0D," T.Load font 4 TEXTMODE"	;t
+		DB 0X0D," C.Image to RAMDISK",0		;c
+MKILLS_KEY	DB LOW (KILL1-$-1),"rkimsfutc"
 
-KILL1		DW RESETNGS
-		DW RAM_640
-		DW RAM_892
-		DW EDIT_CMOS
-		DW LOAD4FLASH
-		DW COPYIMAGE
-		DW LOAD_FONT
+KILL1		DW RESETNGS				;r
+		DW RAM_640				;k
+		DW RAM_892				;i
+		DW EDIT_CMOS				;m
+		DW PC_KEYS_TEST				;s
+		DW LOAD4FLASH_FULL			;f
+		DW LOAD4FLASH_CUST			;u
+		DW LOAD_FONT				;t
+		DW COPYIMAGE				;c
 KILL2
 ;===========================‘…‚ˆ‘Ž… Œ…ž============================
 
@@ -241,6 +245,13 @@ TXT_UPDATEWIN	DB 0X17,0XFF,"Update FLASH ROM",0X0D
 		DB 0X0D,3,"Page 7",0
 ;==============================UPDATE ROM=============================
 
+;=======================UPDATE CUSTOM ROM=============================
+UPDATE_CUSTOM	DB 0X09,0X0A,0X04,0X12,0X17,0X00,%00100000,0
+		DW 0,0
+		DW TXT_UPDATECUST,0,0,0
+TXT_UPDATECUST	DB 0X17,0XFF,"Update custom ROM",0
+;=======================UPDATE CUSTOM ROM=============================
+
 ;===============================ERASE ROM=============================
 ERASE_ROM	DB 0X0D,0X05,0X05,0X0A,0X17,0X00,%00000000,0
 		DW 0,0
@@ -305,7 +316,7 @@ TXT_AYPRINTER	DB 0X16,0X70,0X00,0X17,3,"K.DRV AY printer: ",0X17,0XFF,"off",0
 ETXT_AYPRINTER	EQU $-3
 
 ;‘ˆ‘ŽŠ Š‹€‚ˆ˜ Ž‚…Ÿ…Œ›• ‚‘…ƒ„€
-MAIN_KEYS	DB LOW (EMAIN_KEYS-$-1),"qaop ",0X07,0X08,0X09,0X0A,0X0B,0X0D
+MAIN_KEYS	DB LOW (EMAIN_KEYS-$-1),"qaop ",0X07,0X08,0X09,0X0A,0X0B,0X0D,0XAC,0XC6
 EMAIN_KEYS
 
 MAIN_ZONE	DB 0,0X00,0X06,0X01,0X10,"v"		;……Ž „ˆ‘ŠŽ‚Ž„Ž‚
@@ -331,6 +342,8 @@ ADREXEKEYS	DW UP			;q
 		DW DOWN			;0X0A
 		DW UP			;0X0B
 		DW ENTER		;0X0D
+		DW UDOS			;0XAC
+		DW MSXDOS		;0XC6
 EADREXEKEYS
 
 BUFF_TIME	DB 0X16,0X00,0XD0,0X17,0X4E
@@ -345,14 +358,15 @@ HOT_KEY		EQU $-3
 TXT_RESETTO	DB " EVO Service"
 		DB "GLUK Service"
 		DB " EVO ProfROM"
+		DB "  Custom ROM"
 
 TXTMODTYPE	DB "  ATMCP866"
-TXTTURBOMODE	DB " 3.5 7.014.0"
+TXTTURBOMODE	DB " 3,5 7,014,0"
 
 SIGN_SCL	DB "SINCLAIR"
 IMAGES		DB "TRDSCLFDI",0
 TAPES		DB "TAP",0
-HOBETA		DB "$C ",0
+HOBETA		DB "$C SPG",0
 ROMS		DB "ROM",0
 FONTS		DB "FNT",0
 
@@ -370,9 +384,6 @@ TXT4MENU_TYPE	DB "FAT12"
 		DB "FAT16"
 		DB "FAT32"
 
-;„…”Ž‹’›… ‡€—…ˆŸ „‹Ÿ ‚ ŠŒŽ‘
-CMOS_DEFAULT	DB 0X20,0X02,0X00,0X80,0X00,0X00,0X00,0XAA
-
 ;ˆ”€ „‹Ÿ ‘Ž‡„€ˆŸ 9 ‘…Š’Ž€ Ž‚ŽƒŽ „ˆ‘Š€
 DSKINFO		DB 0			;+0XE1-ŽŒ… …‚ŽƒŽ ‘‚ŽŽ„ŽƒŽ ‘…Š’Ž€
 		DB 1			;+0XE2-ŽŒ… …‚ŽƒŽ ‘‚ŽŽ„ŽƒŽ ’…Š€
@@ -389,6 +400,7 @@ DSK_END
 
 TXT_EDITCMOS1	DB "Press ",0X1B,0X18,0X19,0X1A," keys, 0..9,A..F for edit,  X.Exit",0
 TXT_EDITCMOS2	DB "CMOS Editor",0
+
 BR_ATM		DB 0X99,0X9D,0X8B,0X8A,0X98,0X9D,0X8C
 BR_866		DB 0XC9,0XCD,0XBB,0XBA,0XC8,0XCD,0XBC
 
@@ -473,6 +485,3 @@ ICON		BINCLUDE icon.bin,9
 
 BAS_VAR		BINCLUDE bas_var.bin
 EBAS_VAR
-
-MICROBOOT	BINCLUDE micro_boot_fat.rom
-END_MICROBOOT

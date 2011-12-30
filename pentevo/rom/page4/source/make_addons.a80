@@ -1,18 +1,8 @@
 
-;LAST UPDATE: 15.05.2011 savelij
+;LAST UPDATE: 13.12.2011 savelij
 
 		include ../../macros.a80
+		include ../../sdcomand.a80
+		include ../../ports_ngs.a80
 
-DD		EQU 15				;„€’€
-MM		EQU 5				;Œ…‘Ÿ–
-YY		EQU 11				;ƒŽ„
-DATA		EQU DD+(MM<<5)+(YY<<9)+0X8000	;“†… “€ŠŽ‚€Ž
-
-		PHASE 0X0000
-		DUPL 0X2FF8-$,0XFF
-		binclude 866_code.fnt
-		binclude atm_code.fnt
-
-		DB "ADDONS"
-		DW DATA
-		DEPHASE
+		include micro_boot_fat.a80

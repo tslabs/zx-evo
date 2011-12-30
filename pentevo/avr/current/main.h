@@ -8,6 +8,7 @@
  *
  * @subsection current Current version.
  *
+ * - Add some controls to C gluk's register.
  * - Add access to PS2 keyboards log via gluk extensions.
  *
  * @subsection ver_2011_09_29 Version 29.09.2011.
@@ -126,6 +127,8 @@ extern volatile UBYTE modes_register;
 #define MODE_VGA 0x01
 /** Tapeout mode (0 - beeper or pwm mode/1 - tapeout). */
 #define MODE_TAPEOUT 0x02
+/** CAPS LED mode (0 - off/1 - on). */
+#define MODE_CAPSLED 0x04
 
 /** Type extensions of gluk registers. */
 extern volatile UBYTE ext_type_gluk;

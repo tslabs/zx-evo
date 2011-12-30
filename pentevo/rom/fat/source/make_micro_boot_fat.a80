@@ -1,0 +1,15 @@
+
+;LAST UPDATE: 13.12.2011 savelij
+
+		include ../../macros.a80
+		include ../../global_vars.a80
+		include ../../ports_ngs.a80
+		include ../../sdcomand.a80
+
+DRV_VAR		EQU 0X4000
+
+		include ../../fat_vars.a80
+
+		ORG DRV_VAR+0X300
+		include micro_boot_fat.a80
+		include spg2_run.a80

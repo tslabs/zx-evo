@@ -1,7 +1,5 @@
 
-;LAST UPDATE: 09.02.2010 savelij
-
-BUFFSEC		EQU DRV_VAR
+;LAST UPDATE: 13.12.2011 savelij
 
 MASTER		EQU 0
 SLAVE		EQU 0X80
@@ -231,10 +229,10 @@ RD0HDD2		LD DE,0X10
 		ADD IY,DE
 		DJNZ RD0HDD0		;Ž‚…Ÿ…Œ ‘‹…„“ž™“ž 16 €‰’“ž ‡€ˆ‘œ ‚ MBR
 		LD A,C
-		AND A
+		AND A			;€‰„…› ‹ˆ €‡„…‹› ‚ MBR?
 		POP HL
-		JP NZ,SCANMBR
-		PUSH HL
+		JP NZ,SCANMBR		;…‘‹ˆ €‰„…› ……•Ž„ˆŒ € ‘Ž‡„€ˆ… ’€‹ˆ–› €‰„…›• €‡„…‹Ž‚
+		PUSH HL			;ˆ€—… Ž‚…Ÿ…Œ €‹ˆ—ˆ… 1 €‡„…‹€ ˆ ›’€…Œ‘Ÿ Ž…„…‹ˆ’œ …ƒŽ ’ˆ
 		POP IY
 		LD C,(IY+0X0D)
 		XOR A
@@ -286,7 +284,7 @@ RD0HDD2		LD DE,0X10
 		INC HL
 		LD (HL),B
 		INC HL
-		LD (HL),0XFF
+		LD (HL),0XFF			;“Š€‡›‚€…Œ € …Ž…„…‹…Ž‘’œ ’ˆ€ €‡„…‹€
 		INC HL
 		LD (HL),A
 		INC HL
@@ -307,6 +305,7 @@ RD0HDD2		LD DE,0X10
 		LD (IX-6),A
 		RET
 
+;‘Ž‡„€ˆ… ’€‹ˆ–› €‰„…›• €‡„…‹Ž‚
 ;€ ‚•Ž„…:
 ;A-BIT 7-0/1-MASTER/SLAVE
 ;BITS 6-0-’ˆ Ž‘ˆ’…‹Ÿ

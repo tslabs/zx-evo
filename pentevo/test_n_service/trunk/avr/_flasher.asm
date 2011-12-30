@@ -64,10 +64,10 @@ FL_ZXBAS48:
         .DB     $A8,$02,$99,$0C ;0C9902A8
         .DB     "zx basic48 ",0
 FL_ZXBAS128:
-        .DB     $59,$D5,$91,$5C ;5C91D559
+        .DB     $C8,$59,$C0,$83 ;83C059C8
         .DB     "zx basic128",0
 FL_TRDOS:
-        .DB     $E3,$39,$3C,$F2 ;F23C39E3
+        .DB     $71,$06,$7A,$7A ;7A7A0671
         .DB     "tr-dos     ",0
 FL_ALCOGLUKPEN:
         .DB     $44,$6F,$D7,$87 ;87D76F44
@@ -84,6 +84,9 @@ FL_ADDONS:
 FL_RST08:
         .DB     "RST_"
         .DB     "rst_08     ",0
+FL_PROF13:
+        .DB     "PROF"
+        .DB     "prof-rom   ",0
 FL_QC3:
         .DB     "QC 3"
         .DB     "qc3.xx     ",0
@@ -424,8 +427,8 @@ FL_DET_ROM_6:
         RCALL   FL_CRC_CMP
         BREQ    FL_DET_ROM_1
 
-        LDIZ    FL_BUFFER+$0009
-        LDIX    $002F
+        LDIZ    FL_BUFFER+$0080
+        LDIX    $0080
         RCALL   RAM_CRC32
         LDIZ    FL_ZXBAS128*2
         RCALL   FL_CRC_CMP
@@ -507,6 +510,9 @@ FL_DET_ROM_3:
         LDIZ    FL_RST08*2
         RCALL   FL_CRC_CMP
         BREQ    FL_DET_ROM_4
+        LDIZ    FL_PROF13*2
+        RCALL   FL_CRC_CMP
+        BREQ    FL_DET_ROM_4
 
         LDIZ    FL_BUFFER+$019B
         LDD     R0,Z+0
@@ -524,8 +530,8 @@ FL_DET_ROM_3:
         RCALL   FL_CRC_CMP
         BREQ    FL_DET_ROM_4
 
-        LDIZ    FL_BUFFER+$02C2
-        LDIX    $012E
+        LDIZ    FL_BUFFER+$03B0
+        LDIX    $0040
         RCALL   RAM_CRC32
         LDIZ    FL_TRDOS*2
         RCALL   FL_CRC_CMP

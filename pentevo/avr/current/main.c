@@ -69,7 +69,7 @@ void hardware_init(void)
 	DDRF  = 0b00001000;
 
 	PORTE = 0b11110011;
-	DDRE  = 0b00001100; // PLL to 4X [E2=0,E3=0], inputs pulled up
+	DDRE  = 0b00000000; // PLL to 2X [E2=Z,E3=Z], inputs pulled up
 
 	PORTD = 0b11111111; // inputs pulled up
 	DDRD  = 0b00100000; // RTS out

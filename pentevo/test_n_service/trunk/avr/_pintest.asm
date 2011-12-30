@@ -209,15 +209,9 @@ PINTEST_ERR5:
         LSR     DATA
         PUSH    DATA
         BRCC    PINTEST_ERR6
-        LDIZ    MSG_PINTEST_PF*2
-        CALL    PRINTSTRZ
-PINTEST_ERR6:
-        POP     DATA
-        LSR     DATA
-        BRCC    PINTEST_ERR7
         LDIZ    MSG_PINTEST_PG*2
         CALL    PRINTSTRZ
-PINTEST_ERR7:
+PINTEST_ERR6:
         LDIZ    MLMSG_HALT*2
         CALL    PRINTMLSTR
         CALL    CLRPINS

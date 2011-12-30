@@ -1,5 +1,5 @@
 
-;LAST UPDATE: 24.09.2011 savelij
+;LAST UPDATE: 02.12.2011 savelij
 
 GLUBOOT		LD HL,FLAGS
 		RES 3,(HL)			;‡€“‘Š ‘ „ˆ‘Š…’›
