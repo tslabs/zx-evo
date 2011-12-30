@@ -4,7 +4,7 @@
 module video_mode (
 
 // clocks
-	input wire f0, q2, c6,
+	input wire clk, f1, c3,
 
 // video config
 	input wire [7:0] vconf,
@@ -53,7 +53,7 @@ module video_mode (
 	
 	
 // clocking strobe for pixels
-	assign pix_stb = hires ? f0 : q2;
+	assign pix_stb = hires ? f1 : c3;
 
 
 // Modes
@@ -61,7 +61,7 @@ module video_mode (
     localparam M_HC = 3'h1;		// 16c
     localparam M_XC = 3'h2;		// 256c
     localparam M_TX = 3'h3;		// Text
-    localparam M_GS = 3'h4;		// Giga (ZX*2)
+    localparam M_T2 = 3'h4;		// (reserved)
     localparam M_T0 = 3'h5;		// ZX hi-res (test)
     localparam M_T1 = 3'h6;		// (reserved)
     localparam M_NG = 3'h7;		// No graphics
@@ -75,7 +75,7 @@ module video_mode (
 	
 // fetch strobes
 	wire ftch[0:3];
-	assign fetch_stb = (pix_start | ftch[render_mode]) & c6;
+	assign fetch_stb = (pix_start | ftch[render_mode]) & c3;
 	assign ftch[R_ZX] = &fetch_cnt[3:0];
 	assign ftch[R_HC] = &fetch_cnt[2:0];
 	assign ftch[R_XC] = &fetch_cnt[1:0];
@@ -86,10 +86,10 @@ module video_mode (
 	wire [4:0] g_offs[0:7];
 // these values are empiric!!! recheck them occasionally!
     assign g_offs[M_ZX] = 5'd18;
-    assign g_offs[M_GS] = 5'd18;
     assign g_offs[M_HC] = 5'd10;
     assign g_offs[M_XC] = 5'd6;	
     assign g_offs[M_TX] = 5'd10;
+    assign g_offs[M_T2] = 5'd18;
     assign g_offs[M_T0] = 5'd10;
     assign g_offs[M_T1] = 5'd18;
     assign g_offs[M_NG] = 5'd18;
@@ -121,12 +121,12 @@ module video_mode (
 // DRAM bandwidth usage
     wire [3:0] bw[0:7];
     assign bw[M_ZX] = 4'b1001;	// 1 of 8 (ZX)
-    assign bw[M_GS] = 4'b1010;	// 2 of 8 (Giga)
     assign bw[M_HC] = 4'b1010;	// 2 of 8 (16c)
     assign bw[M_XC] = 4'b0010;	// 2 of 4 (256c)
     assign bw[M_TX] = 4'b1100;	// 4 of 8 (text)
+    assign bw[M_T2] = 4'b1001;	// 1 of 8 (reserved)
     assign bw[M_T0] = 4'b1010;	// 2 of 8 (ZX Hi-res test)
-    assign bw[M_T1] = 4'b1001;	// 4 of 4 (unused)
+    assign bw[M_T1] = 4'b1001;	// 4 of 4 (reserved)
     assign bw[M_NG] = 4'b1001;	// 4 of 8 (No graphics)
     assign video_bw = bw[vmod];
 
@@ -139,10 +139,10 @@ module video_mode (
 // render mode
     wire [1:0] r_mode[0:7];
     assign r_mode[M_ZX] = R_ZX;
-    assign r_mode[M_GS] = R_ZX;
     assign r_mode[M_HC] = R_HC;
     assign r_mode[M_XC] = R_XC;
     assign r_mode[M_TX] = R_TX;
+    assign r_mode[M_T2] = R_ZX;
     assign r_mode[M_T0] = R_ZX;
     assign r_mode[M_T1] = R_ZX;
     assign r_mode[M_NG] = R_ZX;
@@ -191,10 +191,10 @@ module video_mode (
 // addresses
     wire [20:0] v_addr[0:7];
     assign v_addr[M_ZX] = addr_zx;
-    assign v_addr[M_GS] = addr_giga;
     assign v_addr[M_HC] = addr_16c;
     assign v_addr[M_XC] = addr_256c;
     assign v_addr[M_TX] = addr_text;
+    assign v_addr[M_T2] = addr_zx;
     assign v_addr[M_T0] = addr_zx;
     assign v_addr[M_T1] = addr_zx;
     assign v_addr[M_NG] = addr_zx;
@@ -205,10 +205,6 @@ module video_mode (
 	wire [20:0] addr_zx = {vpage, 1'b0, ~cnt_col[0] ? addr_zx_gfx : addr_zx_atr};
 	wire [11:0] addr_zx_gfx = {cnt_row[7:6], cnt_row[2:0], cnt_row[5:3], cnt_col[4:1]};
 	wire [11:0] addr_zx_atr = {3'b110, cnt_row[7:3], cnt_col[4:1]};
-
-    
-// Gigascreen
-    wire [20:0] addr_giga = 0;
 
     
 // 16c
@@ -224,8 +220,12 @@ module video_mode (
 	wire [13:0] addr_tx[0:3];
     assign addr_tx[0] = {1'b0, cnt_row[8:3], 1'b0, cnt_col[7:2]};	// char codes, data[15:0]
     assign addr_tx[1] = {1'b0, cnt_row[8:3], 1'b1, cnt_col[7:2]};	// char attributes, data[31:16]
-    assign addr_tx[2] = {4'b1000, txt_char[7:0], cnt_row[2:1]};		// char0 graphics, data[7:0]
-    assign addr_tx[3] = {4'b1000, txt_char[15:8], cnt_row[2:1]};	// char1 graphics, data[15:8]
+    assign addr_tx[2] = {4'b1000, (txt_char[7:0]), cnt_row[2:1]};		// char0 graphics, data[7:0]
+    assign addr_tx[3] = {4'b1000, (txt_char[15:8]), cnt_row[2:1]};	// char1 graphics, data[15:8]
+
+    // assign addr_tx[0] = {1'b0, 6'd0, 1'b0, cnt_col[7:2]};	// char codes, data[15:0]
+    // assign addr_tx[0] = {1'b0, 6'd0, 1'b0, 6'd0};	// char codes, data[15:0]
+    // assign addr_tx[3] = {14'b10000000000000};		// debug!!!
     
 
 endmodule

@@ -4,7 +4,7 @@
 module video_sync (
 
 // clocks
-	input wire clk, q2, c6, pix_stb,
+	input wire clk, f0, f1, c3, pix_stb,
 
 // video parameters
 	input wire [8:0] hpix_beg,
@@ -44,7 +44,7 @@ module video_sync (
 	output reg [7:0] cnt_col,
 	output reg [8:0] cnt_row,
 	output reg cptr,
-	output reg [4:0] scnt,
+	output reg [3:0] scnt,
 
 // DRAM
 	input wire video_next,
@@ -62,9 +62,10 @@ module video_sync (
 	
 	localparam HSYNCV_BEG 	= 9'd5;
 	localparam HSYNCV_END 	= 9'd31;
-	localparam HBLNKV_END 	= 9'd44;
+	localparam HBLNKV_END 	= 9'd42;
 	
 	localparam HPERIOD   	= 9'd448;
+	// localparam HPERIOD   	= 9'd430;
 
 	localparam VSYNC_BEG 	= 9'd08;
 	localparam VSYNC_END 	= 9'd11;
@@ -80,15 +81,15 @@ module video_sync (
 	reg [8:0] cnt_out = 0;
 
 	// horizontal TV (7 MHz)
-	always @(posedge clk) if (c6)
+	always @(posedge clk) if (c3)
 		hcount <= line_start ? 0 : hcount + 1;
 
 	// horizontal VGA (14MHz)
-	always @(posedge clk) if (q2)
-		cnt_out <= vga_pix_start & c6 ? 0 : cnt_out + 1;
+	always @(posedge clk) if (f1)
+		cnt_out <= vga_pix_start & c3 ? 0 : cnt_out + 1;
 
 	// vertical TV (15.625 kHz)
-	always @(posedge clk) if (c6) if (line_start)
+	always @(posedge clk) if (c3) if (line_start)
 		vcount <= vcount == (VPERIOD - 1) ? 0 : vcount + 1;
 
 	// column address for DRAM
@@ -106,7 +107,7 @@ module video_sync (
 		end
 
 	// row address for DRAM
-	always @(posedge clk) if (c6)
+	always @(posedge clk) if (c3)
 		if (frame_start)
 			cnt_row <=  rstart;
 		else
@@ -114,7 +115,7 @@ module video_sync (
 			cnt_row <=  cnt_row + 1;
 	
 	// pixel counter
-	always @(posedge clk) if (pix_stb)		// f0 or q2
+	always @(posedge clk) if (pix_stb)		// f1 or c3
 		scnt <= pix_start ? 0 : scnt + 1;
 	
 	assign vga_cnt_in = {vcount[0], hcount - HBLNK_END};
@@ -125,7 +126,7 @@ module video_sync (
 // FLASH generator
 	reg [4:0] flash_ctr;
 	assign flash = flash_ctr[4];
-	always @(posedge clk) if (int_start & c6)
+	always @(posedge clk) if (int_start & c3)
 		flash_ctr <= flash_ctr + 1;
 
 
@@ -135,13 +136,13 @@ module video_sync (
 	wire tv_hblank = (hcount > HBLNK_BEG) & (hcount < HBLNK_END + 1);
 	wire tv_vblank = (vcount >= VBLNK_BEG) & (vcount < VBLNK_END);
 	assign tv_blank = tv_hblank | tv_vblank;
-	assign vga_hblank = (cnt_out >= 9'd360);
+	wire vga_hblank1 = (cnt_out > 9'd359);
 	assign vga_blank = vga_hblank | vga_vblank;
 	
 	wire hs_vga = ((hcount >= HSYNCV_BEG) & (hcount < HSYNCV_END)) |
 			((hcount >= (HSYNCV_BEG + HPERIOD/2)) & (hcount < (HSYNCV_END + HPERIOD/2)));
 	
-	assign vga_pix_start = ((hcount == (HBLNKV_END) - 1) | (hcount == (HBLNKV_END + HPERIOD/2 - 1)));
+	assign vga_pix_start = ((hcount == (HBLNKV_END)) | (hcount == (HBLNKV_END + HPERIOD/2)));
 
 	assign vga_line = (hcount >= HPERIOD/2);
 	
@@ -160,8 +161,12 @@ module video_sync (
 
 
 	reg vga_vblank;
-	always @(posedge clk) if (line_start & c6)
+	always @(posedge clk) if (line_start & c3)		// fix me - bydlocode !!!
 		vga_vblank <= tv_vblank;
+
+	reg vga_hblank;
+	always @(posedge clk) if (f1)		// fix me - bydlocode !!!
+		vga_hblank <= vga_hblank1;
 	
 	
 	always @(posedge clk)

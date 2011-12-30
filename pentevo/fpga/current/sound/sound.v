@@ -6,7 +6,7 @@
 
 module sound(
 
-	input  wire       clk, q2,
+	input  wire       clk, f0,
 
 	input  wire [7:0] din,
 
@@ -34,11 +34,11 @@ module sound(
 				val <= din;
 		else
 		if (beeper_wr)
-				val <= {din[4], {7{din[3]}}};
+				val <= {din[3], {7{din[4]}}};
 
 
 // PWM generator
-	always @(posedge clk) if (q2)		// 14 MHz strobes, Fpwm = 54.7 kHz
+	always @(posedge clk) if (f0)		// 14 MHz strobes, Fpwm = 54.7 kHz
 		ctr <= ctr + 1;
 
 	assign sound_bit = ( ctr < val );

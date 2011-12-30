@@ -7,7 +7,7 @@
 module zports(
 
 	input  wire        zclk,   // z80 clock
-	input  wire        fclk, f0,
+	input  wire        fclk,
 	input  wire        rst_n, // system reset
 
 	input  wire        zpos,
@@ -36,6 +36,7 @@ module zports(
 	output wire        ide_cs1_n,
 	output wire        ide_rd_n,
 	output wire        ide_wr_n,
+	// output wire        t0,	// debug!!!
 
 
 	input  wire [ 4:0] keys_in, // keys (port FE)
@@ -142,6 +143,8 @@ module zports(
 	// NMI generation
 	output reg         set_nmi
 );
+
+	// assign t0 = portfd_wr | portfe_wr;	//debug!!!
 
 
 	reg rstsync1,rstsync2;
@@ -338,28 +341,28 @@ module zports(
 
 	// fclk-synchronous stobes
 	//
-	always @(posedge fclk) if( zpos )	// if (f0)
+	always @(posedge fclk) if( zpos )
 	begin
 		iowr_reg_fclk[0] <= iowr;
 		iord_reg_fclk[0] <= iord;
 	end
 
-	always @(posedge fclk) //if (f0)
+	always @(posedge fclk)
 	begin
 		iowr_reg_fclk[1] <= iowr_reg_fclk[0];
 		iord_reg_fclk[1] <= iord_reg_fclk[0];
 	end
 
-	always @(posedge fclk) //if (f0)
+	always @(posedge fclk)
 	begin
 		port_wr_fclk <= iowr_reg_fclk[0] && (!iowr_reg_fclk[1]);
 		port_rd_fclk <= iord_reg_fclk[0] && (!iord_reg_fclk[1]);
 	end
 
-	always @(posedge fclk) //if (f0)
+	always @(posedge fclk)
 		memwr_reg_fclk[1:0] <= { memwr_reg_fclk[0], ~(mreq_n | wr_n) };
 
-	always @(posedge fclk) //if (f0)
+	always @(posedge fclk)
 		mem_wr_fclk <= memwr_reg_fclk[0] && (!memwr_reg_fclk[1]);
 
 
@@ -485,7 +488,7 @@ module zports(
 			
 			sysconf <= 8'h00;
 			memconf <= 8'h00;
-			hint_beg <= 8'd1;			// adjust this with border effects!
+			hint_beg <= 8'd2;			// adjust this with border effects!
 			vint_beg <= 9'd0;
 			im2vect <= 8'hFF;
 			
@@ -989,7 +992,7 @@ module zports(
 
 	// savelij ports write
 	//
-	always @(posedge fclk) //if (f0)
+	always @(posedge fclk)
 	if( port_wr_fclk && shadow )
 	begin
 		if( (loa==SAVPORT1) ||

@@ -1,21 +1,15 @@
 Fixes:
+ -  fix vertical blank for border 1 pixel at the upper-right corner
  -  migrate 16c to bw 1/4 from 2/8
  -  learn what is read to rddata by c4
  -  make less power-off delay (apx. 2 sec)
  -  IM2 vector to Z80 bus (RTFM)
  -  SYSConfig and CPU clock select
- -  add paging for 0000-BFFF
+ -  add paging of RAM
  -  fix Xscroll for text mode
- -  fix vertical blank for border 1 line lag
- -  fix hi-res 1st pixel lag
- -  unify the lo/hi-res video data processing for tv/vga (border apparently)
  -  make proper clocked altdprams
  -  make CRAM clocked: zclk for WE and fclk for RE
- -  make proper video buffering to avoid Qua's yelling
- -  check timings for video
- -  make c0 sync for dram.v (if necessary though)
  -  search ways to optimize huge LC usage - one-hot style selectors
- -  check border effects on INT position
 
 Features:
  -  horizontal scrollers
@@ -24,7 +18,11 @@ Features:
  -  s/w writes to X/Y counters on-the-fly
  -  RAM / ROM paging
  
- 
+
+NOTES:
+
+When add addr mux for TS address - clk slack is getting "-".
+Fix it by optimizing timings.
  
  
  

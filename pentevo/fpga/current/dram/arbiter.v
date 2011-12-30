@@ -17,17 +17,17 @@
 // added cpu_next signal (shows whether next DRAM cycle CAN be grabbed by CPU)
 //
 // Now it is a REQUIREMENT for 'go' signal only starting and ending on
-// beginning of DRAM cycle (i.e. right after 'c6' strobe).
+// beginning of DRAM cycle (i.e. right after 'c3' strobe).
 //
 
 
 // 13.06.2011:
-// Придётся потребовать, чтоб go устанавливался сразу после c6 (у меня [lvd] это так).
+// Придётся потребовать, чтоб go устанавливался сразу после c3 (у меня [lvd] это так).
 // это для того, чтобы процессор на 14мгц мог заранее и в любой момент знать, на
 // сколько завейтиться. Вместо cpu_ack введем другой сигнал, который в течение всего
 // драм-цикла будет показывать, чей может быть следующий цикл - процессора или только
 // видео. По сути это и будет также cpu_ack, но валидный в момент cpu_req (т.е.
-// в момент c6) и ранее.
+// в момент c3) и ранее.
 
 // 12.06.2011:
 // проблема: если цпу просит цикл чтения, а его дать не могут,
@@ -77,23 +77,22 @@
 
 module arbiter(
 
-	input clk, f0,
+	input clk,
 	input rst_n,
 
 	// dram.v interface
 	output     [20:0] dram_addr,   // address for dram access
 	output reg        dram_req,    // dram request
 	output reg        dram_rnw,    // Read-NotWrite
-	input             dram_c0,   // cycle begin
-	input             dram_rrdy,   // read data ready (coincides with c6)
+	// input             dram_c0,   // cycle begin
+	input             dram_rrdy,   // read data ready (coincides with c3)
 	output      [1:0] dram_bsel,   // positive bytes select: bsel[1] for wrdata[15:8], bsel[0] for wrdata[7:0]
-	input      [15:0] dram_rddata, // data just read
 	output     [15:0] dram_wrdata, // data to be written
 
 
-	input reg c6,      // regenerates this signal: end of DRAM cycle. c6 is one-cycle positive pulse just before c0 pulse
-	input reg c4,  // one clock earlier c6
-	input reg c2, // one more earlier
+	input reg c3,      // regenerates this signal: end of DRAM cycle. c3 is one-cycle positive pulse just before c0 pulse
+	input reg c2,  // one clock earlier c3
+	input reg c1, // one more earlier
 
 
 	input go, // start video access blocks
@@ -110,15 +109,13 @@ module arbiter(
 								// 4'b1100 - 4 video accesses of 8
 
 	input  [20:0] video_addr,   // during access block, only when video_strobe==1
-	output [15:0] video_data,   // read video data which is valid only during video_strobe==1 because video_data
-	                            // is just wires to the dram.v's rddata signals
 	output wire   video_strobe, // positive one-cycle strobe as soon as there is next video_data available.
-	                            // if there is video_strobe, it coincides with c6 signal
+	                            // if there is video_strobe, it coincides with c3 signal
 	output wire    video_next,   // on this signal you can change video_addr; it is one clock leading the video_strobe
 
+	
 	input wire 		   ts_req,
 	input wire  [20:0] ts_addr,
-	output wire [15:0] ts_data,
 	output wire        ts_next,
 	output wire        ts_strobe,
 
@@ -129,12 +126,10 @@ module arbiter(
 	input wire [ 7:0] cpu_wrdata,
 	input wire        cpu_wrbsel,
 
-	output wire [15:0] cpu_rddata,
 	output reg         cpu_next,
     output reg         cpu_strobe
+	
 );
-
-	wire c0;
 
 	reg stall;
 	reg cpu_rnw_r;
@@ -181,12 +176,12 @@ module arbiter(
 
 
 
-	assign c0 = dram_c0; // just alias
+	// assign c0 = dram_c0; // just alias
 
 	wire bw_full = {video_bw[3] & video_bw[2], video_bw[1:0]} == 3'b0;
 
 	// track blk_rem counter: how many cycles left to the end of block (7..0)
-	always @(posedge clk) if( c6 )
+	always @(posedge clk) if( c3 )
 	begin
 		blk_rem <= blk_nrem;
 
@@ -209,7 +204,7 @@ module arbiter(
 	assign vidmax = {video_bw[3] & video_bw[2], video_bw[1:0]}; // number of cycles for video access
 	// assign vidmax = (3'b001) << bw; // number of cycles to perform
 
-	always @(posedge clk) if( c6 )
+	always @(posedge clk) if( c3 )
 	begin
 		vid_rem <= vid_nrem;
 	end
@@ -303,7 +298,7 @@ module arbiter(
 
 
 	// just current cycle registering
-	always @(posedge clk) if( c6 )
+	always @(posedge clk) if( c3 )
 	begin
 		curr_cycle <= next_cycle;
 	end
@@ -313,14 +308,12 @@ module arbiter(
 
 	// route required data/etc. to and from the dram.v
 
-	assign dram_wrdata[15:0] = { cpu_wrdata[7:0], cpu_wrdata[7:0] };
+	assign dram_wrdata[15:0] = {2{cpu_wrdata[7:0]}};
 	assign dram_bsel[1:0] = { cpu_wrbsel, ~cpu_wrbsel };
 
-	assign dram_addr = next_cpu ? cpu_addr : next_vid ? video_addr : ts_addr;
+	// assign dram_addr = next_cpu ? cpu_addr : next_vid ? video_addr : ts_addr;
+	assign dram_addr = next_cpu ? cpu_addr : video_addr;	//debug!!!
 
-	assign cpu_rddata = dram_rddata;
-	assign video_data = dram_rddata;
-	assign ts_data = dram_rddata;
 
 	always @*
 	begin
@@ -344,24 +337,24 @@ module arbiter(
 	// generation of read strobes: for video and cpu
 
 
-	always @(posedge clk) if( c6 )
+	always @(posedge clk) if( c3 )
 		cpu_rnw_r <= cpu_rnw;
 
 
-	always @(posedge clk) if (f0)
+	always @(posedge clk)
 	begin
-		if( curr_cpu && cpu_rnw_r && c4 )
+		if( curr_cpu && cpu_rnw_r && c2 )
 			cpu_strobe <= 1'b1;
 		else
 			cpu_strobe <= 1'b0;
 	end
 
 
-	assign video_next = curr_vid & c4;
-	assign video_strobe = curr_vid & c6;
+	assign video_next = curr_vid & c2;
+	assign video_strobe = curr_vid & c3;
 
-	assign ts_next = curr_ts & c4;
-	assign ts_strobe = curr_ts & c6;
+	assign ts_next = curr_ts & c2;
+	assign ts_strobe = curr_ts & c3;
 
 	
 endmodule

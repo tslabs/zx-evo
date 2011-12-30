@@ -5,7 +5,7 @@ module video_ts (
 // clocks
 	input wire clk,
 	input wire zclk,
-	input wire c7,
+	input wire c3,
 
 // video config
     input wire [4:0] tgpage,
@@ -60,7 +60,7 @@ module video_ts (
 		
 	
 // combs
-	wire start = line_start & c7;
+	wire start = line_start & c3;
 	wire sprites_start = (start | layer_sw) & ((layer == S0) | (layer == S1) | (layer == S2));
 	wire tiles_start = (start | layer_sw) & ((layer == T0) | (layer == T1));
 	wire layer_sw = (s_leap & sprite_skip) | (leap_r & sprite_end);
