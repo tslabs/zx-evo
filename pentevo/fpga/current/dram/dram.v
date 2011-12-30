@@ -27,7 +27,7 @@
 
 module dram(
 
-	input clk, f0, f1,
+	input clk,
 	input rst_n, // shut down accesses, remain refresh
 
 	output reg [9:0] ra, // to the DRAM pins
@@ -45,7 +45,7 @@ module dram(
 	input req,         // request for read/write cycle
 	input rnw,         // READ/nWRITE (=1: read, =0: write)
 
-	input reg c0,       // cycle begin (any including refresh), can be used for synchronizing
+	input c0, c1, c2, c3,
 	output reg rrdy,       // Read data ReaDY
 
 	output reg [15:0] rddata, // data just read
@@ -62,241 +62,105 @@ module dram(
 
 	reg [20:0] int_addr;
 	reg [15:0] int_wrdata;
-	reg  [1:0] int_bsel;
-
+	reg [1:0] int_bsel;
 
 	reg rfsh_alt; // we must alternate chips in refresh cycles to lower total heating
 
 
+// next cycle decision
+	reg [1:0] state = 2'b0;
 
-	reg [3:0] state;
-	reg [3:0] next_state;
-
-	localparam RD1   = 0;
-	localparam RD2   = 1;
-	localparam RD3   = 2;
-	localparam RD4   = 3;
-	localparam WR1   = 4;
-	localparam WR2   = 5;
-	localparam WR3   = 6;
-	localparam WR4   = 7;
-	localparam RFSH1 = 8;
-	localparam RFSH2 = 9;
-	localparam RFSH3 = 10;
-	localparam RFSH4 = 11;
-
-
-
-	initial
-	begin
-		state = RFSH1; // for simulation only!
-		rfsh_alt = 1'b0;
-	end
-
-/*
-`ifdef SIMULATE
-	always @(posedge clk) if (f0)
-	begin
-		if( req && !rnw && (state==RD4 || state==WR4 || state==RFSH4) )
-		begin
-			$display("written word %x mask %x to address %x",wrdata&{ {8{bsel[1]}}, {8{bsel[0]}} },{ {8{bsel[1]}}, {8{bsel[0]}} },addr);
-		end
-	end
-`endif
-*/
-
-	always @(posedge clk) if (f0)
-	begin
+	localparam RFSH = 2'b00;	// Don't change these
+	localparam RD   = 2'b01;	// because there are
+	localparam WR   = 2'b10;	// bit dependencies
+	
+	wire [1:0] next_state = int_req ? rnw ? RD : WR : RFSH;
+	
+	always @(posedge clk) if (c3)
 		state <= next_state;
+
+
+// incoming data latching
+	always @(posedge clk) if (c3)
+	begin
+		int_addr   <= addr;
+		int_wrdata <= wrdata;
+		int_bsel   <= bsel;
 	end
 
-	always @*
-		case( state )
+	
+// WE control
+	always @(posedge clk) if (c3)
+		rwe_n <= ~next_state[1];
 
-		RD1:
-			next_state = RD2;
-		RD2:
-			next_state = RD3;
-		RD3:
-			next_state = RD4;
-		RD4:
-			if( !int_req )
-				next_state = RFSH1;
+
+// RAS/CAS sequencing
+	always @(posedge clk)
+	begin
+		if (c0)
+			if (|state)
+			begin
+				rras0_n <= int_addr[0];
+				rras1_n <= ~int_addr[0];
+			end
 			else
-				next_state = rnw?RD1:WR1;
-
-		WR1:
-			next_state = WR2;
-		WR2:
-			next_state = WR3;
-		WR3:
-			next_state = WR4;
-		WR4:
-			if( !int_req )
-				next_state = RFSH1;
+			begin
+				rlcas_n <= 1'b0;
+				rucas_n <= 1'b0;
+			end
+				
+		if (c1)
+			if (|state)
+			begin
+				rlcas_n <= state[1] ? ~int_bsel[0] : 1'b0;
+				rucas_n <= state[1] ? ~int_bsel[1] : 1'b0;
+			end
 			else
-				next_state = rnw?RD1:WR1;
-
-
-		RFSH1:
-			next_state = RFSH2;
-		RFSH2:
-			next_state = RFSH3;
-		RFSH3:
-			next_state = RFSH4;
-		RFSH4:
-			if( !int_req )
-				next_state = RFSH1;
+			begin
+				rras0_n <=  rfsh_alt;
+				rras1_n <= ~rfsh_alt;
+				rfsh_alt <= ~rfsh_alt;
+			end
+	
+		if (c2)
+			if (|state)
+			begin
+				rras0_n <= 1'b1;
+				rras1_n <= 1'b1;
+			end
 			else
-				next_state = rnw?RD1:WR1;
-
-		endcase
-
-
-	// incoming data latching
-	always @(posedge clk) if (f0)
-	begin
-		if( (state==RD4) || (state==WR4) || (state==RFSH4) )
-		begin
-			int_addr   <= addr;
-			int_wrdata <= wrdata;
-			int_bsel   <= bsel;
-		end
-	end
-
-	// WE control
-	always @(posedge clk) if (f0)
-	begin
-		if( (next_state==WR1) || (next_state==WR2) || (next_state==WR3) || (next_state==WR4) )
-			rwe_n <= 1'b0;
-		else
-			rwe_n <= 1'b1;
-	end
-
-
-	// RAS/CAS sequencing
-	always @(posedge clk) if (f0)
-	begin
-		case( state )
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		RD1:
-		begin
-			rras0_n <= int_addr[0];
-			rras1_n <= ~int_addr[0];
-		end
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		RD2:
-		begin
-			rucas_n <= 1'b0;
-			rlcas_n <= 1'b0;
-		end
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		RD3:
-		begin
-			rras0_n <= 1'b1;
-			rras1_n <= 1'b1;
-		end
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		RD4:
+			begin
+				rlcas_n <= 1'b1;
+				rucas_n <= 1'b1;
+			end
+				
+		if (c3)
 		begin
 			rras0_n <= 1'b1;
 			rras1_n <= 1'b1;
 			rucas_n <= 1'b1;
 			rlcas_n <= 1'b1;
 		end
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		WR1:
-		begin
-			rras0_n <= int_addr[0];
-			rras1_n <= ~int_addr[0];
-		end
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		WR2:
-		begin
-			rucas_n <= ~int_bsel[1];
-			rlcas_n <= ~int_bsel[0];
-		end
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		WR3:
-		begin
-			rras0_n <= 1'b1;
-			rras1_n <= 1'b1;
-		end
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		WR4:
-		begin
-			rras0_n <= 1'b1;
-			rras1_n <= 1'b1;
-			rucas_n <= 1'b1;
-			rlcas_n <= 1'b1;
-		end
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		RFSH1:
-		begin
-			rucas_n <= 1'b0;
-			rlcas_n <= 1'b0;
-		end
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		RFSH2:
-		begin
-			rras0_n <=  rfsh_alt;
-			rras1_n <= ~rfsh_alt;
-
-			rfsh_alt <= ~rfsh_alt;
-		end
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		RFSH3:
-		begin
-			rucas_n <= 1'b1;
-			rlcas_n <= 1'b1;
-		end
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		RFSH4:
-		begin
-			rras0_n <= 1'b1;
-			rras1_n <= 1'b1;
-			rucas_n <= 1'b1;
-			rlcas_n <= 1'b1;
-		end
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		endcase
 	end
 
-
-	// row/column address multiplexing
-	always @(posedge clk) if (f1)
-	begin
-		if( (state==RD1) || (state==WR1) )
-			ra <= int_addr[10:1];
-		else
-			ra <= int_addr[20:11];
-	end
+// row/column address multiplexing
+	always @(negedge clk)		// here is a difficulty with fitting to pin fast output regs
+		ra <= c0 ? int_addr[10:1] : int_addr[20:11];
 
 
-	// DRAM data bus control
+// DRAM data bus control
 	assign rd = rwe_n ? 16'hZZZZ : int_wrdata;
 
 
-	// read data from DRAM
-	always @(posedge clk) if (f0)
-	begin
-		if( state==RD3 )
+// read data from DRAM
+	always @(posedge clk)
+		if (c2 & state[0])
 			rddata <= rd;
-	end
 
 
-	// rrdy control
-	always @(posedge clk) if (f0)
-	begin
-       if( state==RD3 )
-		rrdy <= 1'b1;
-       else
-       	rrdy <= 1'b0;
-	end
+// rrdy control
+	always @(posedge clk)
+       rrdy <= c2 & state[0];
 
 
 	// reset must be synchronous here in order to preserve
@@ -304,11 +168,12 @@ module dram(
 	// asynchronous one globally. so we must re-synchronize it
 	// and use it as 'DRAM operation enable'. when in reset,
 	// controller ignores req signal and generates only refresh cycles
-	always @(posedge clk) if (f0)
+	always @(posedge clk)
 		rst_sync[1:0] <= { rst_sync[0], ~rst_n };
 
 	assign reset = rst_sync[1];
 
 	assign int_req = req & (~reset);
 
+	
 endmodule

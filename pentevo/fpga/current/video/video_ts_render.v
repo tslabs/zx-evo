@@ -5,7 +5,7 @@ module video_ts_render (
 // clocks
 	input wire clk,
 	input wire c0,
-	input wire c4,
+	input wire c2,
 
 // video controls
 	input wire tspix_start,
@@ -40,11 +40,11 @@ module video_ts_render (
 	
 	wire [8:0] tb_wa0 = lsel ? tsbuf_wr_addr : cnt;
 	wire [7:0] tb_wd0 = lsel ? tsbuf_wr_data : 8'b0;
-	wire tb_we0 = lsel ? tsbuf_we : c4;
+	wire tb_we0 = lsel ? tsbuf_we : c2;
 
 	wire [8:0] tb_wa1 = ~lsel ? tsbuf_wr_addr : cnt;
 	wire [7:0] tb_wd1 = ~lsel ? tsbuf_wr_data : 8'b0;
-	wire tb_we1 = ~lsel ? tsbuf_we : c4;
+	wire tb_we1 = ~lsel ? tsbuf_we : c2;
 
 	
 video_tsbuf0 video_tsbuf0 (

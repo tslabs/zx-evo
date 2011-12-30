@@ -391,9 +391,9 @@ module tb;
 		put_byte(a,8'h45); a=a+1;
 
 
-		@(posedge fclk) if (f0);
+		@(posedge fclk);
 		tb.DUT.slavespi.cfg0_reg_out[1] = 1'b1;
-		@(posedge fclk) if (f0);
+		@(posedge fclk);
 		tb.DUT.slavespi.cfg0_reg_out[1] = 1'b0;
 
 		#64000000;
@@ -470,11 +470,11 @@ module tb;
 
 
 	// turbo
-`ifdef C7MHZ
+`ifdef 7MHZ
 	initial
 		force tb.DUT.zclock.turbo = 2'b01;
 `else
-	`ifdef C35MHZ
+	`ifdef 35MHZ
 
 		initial
 			force tb.DUT.zclock.turbo = 2'b00;

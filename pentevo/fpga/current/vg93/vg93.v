@@ -26,7 +26,6 @@ module vg93(
 	input zclk, // Z80 cpu clock
 	input rst_n,
 	input fclk, // fpga 28 MHz clock
-	input f0,
 
 	output vg_clk,
 	output reg vg_res_n,
@@ -99,7 +98,7 @@ module vg93(
 
 	// VG93 clocking and turbo-mode
 
-	always @(posedge fclk) if (f0)
+	always @(posedge fclk)
 	begin
 		step_pulse[2:0] <= { step_pulse[1:0], step};
 		 drq_pulse[2:0] <= {  drq_pulse[1:0], vg_drq};
@@ -125,7 +124,7 @@ module vg93(
 
 	assign vgclk_strobe7 = (vgclk_div7[2:1] == 2'b11); // 28/7=4MHz freq strobe
 
-	always @(posedge fclk) if (f0)
+	always @(posedge fclk)
 	begin
 		if( vgclk_strobe7 )
 			vgclk_div7 <= 3'd0;
@@ -133,7 +132,7 @@ module vg93(
 			vgclk_div7 <= vgclk_div7 + 3'd1;
 	end
 
-	always @(posedge fclk) if (f0)
+	always @(posedge fclk)
 	begin
 		if( vgclk_strobe7 )
 		begin
@@ -174,7 +173,7 @@ module vg93(
 	// write precompensation
 	// delay times are as in WRDELAY_* parameters, vg_wrd width is always 7 clocks
 
-	always @(posedge fclk) if (f0)
+	always @(posedge fclk)
 	begin
 		  sl_sync[1:0] <= {   sl_sync[0],   vg_sl   };
 		  sr_sync[1:0] <= {   sr_sync[0],   vg_sr   };
@@ -190,7 +189,7 @@ module vg93(
 
 
 	// make delay
-	always @(posedge fclk) if (f0)
+	always @(posedge fclk)
 	begin
 		if( wd )
 			case( {sl, tr43, sr} )
@@ -214,7 +213,7 @@ module vg93(
 
 	// make vg_wdr impulse after a delay
 
-	always @(posedge fclk) if (f0)
+	always @(posedge fclk)
 		if( wrwidth_ena )
 		begin
 			if( wd )
@@ -225,7 +224,7 @@ module vg93(
 
 	assign wrwidth_ena = wd | ( delay_end & (~wrwidth_cnt[3]) );
 
-	always @(posedge fclk) if (f0)
+	always @(posedge fclk)
 		vg_wrd <= | wrwidth_cnt[2:0]; // only 7 clocks is the lendth of vg_wrd
 
 
@@ -234,10 +233,7 @@ module vg93(
 /*	fapch_counter dpll
 	(
 		.fclk   (fclk   ),
-		.f0		(f0		),
-
 		.rdat_n (rdat_n ),
-
 		.vg_rclk(vg_rclk),
 		.vg_rawr(vg_rawr)
 	);
@@ -246,10 +242,7 @@ module vg93(
 	fapch_zek     dpll
 	(
 		.fclk   (fclk   ),
-		.f0		(f0		),
-
 		.rdat_n (rdat_n ),
-
 		.vg_rclk(vg_rclk),
 		.vg_rawr(vg_rawr)
 	);

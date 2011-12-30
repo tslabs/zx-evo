@@ -23,16 +23,7 @@ Mode HC (16c) uses palette cells #E0-#EF.
 
 Mode XC (256c) uses palette cells #00-#FF.
 
-Mode GS (Gigascreen) uses palette cells addressed as following:
-+----------+
-| 7      0 |
-| IGRBigrb |
-+----------+
-IGRB is pixel color from screen 1 and igrb - from screen 0.
-Thus, you can tune the color 'blending' from two screens using the palette.
-Some Gigascreen palette should be calculated using 'sophisticated' Excel tool or something.
-
-Text mode uses the same palette that 16c.
+Text mode uses the same palette that ZX.
 
 
 2. Addresses

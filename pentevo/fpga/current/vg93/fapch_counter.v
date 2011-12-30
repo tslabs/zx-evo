@@ -4,7 +4,7 @@
 
 module fapch_counter
 (
-	input  wire fclk, f0,
+	input  wire fclk,
 
 	input  wire rdat_n,
 
@@ -28,12 +28,12 @@ module fapch_counter
 	// RAWR on time is 4 clocks
 
 	// digital filter - removing glitches
-	always @(posedge fclk) if (f0)
+	always @(posedge fclk)
 		rdat_sync[4:0] <= { rdat_sync[3:0], (~rdat_n) };
 
 
 
-	always @(posedge fclk) if (f0)
+	always @(posedge fclk)
 	begin
 		if( rdat_sync[4:1]==4'b1111 ) // filter beginning of strobe
 			rdat_edge1 <= 1'b1;
@@ -49,7 +49,7 @@ module fapch_counter
 
 
 
-	always @(posedge fclk) if (f0)
+	always @(posedge fclk)
 		if( rwidth_ena )
 		begin
 			if( rdat )
@@ -60,7 +60,7 @@ module fapch_counter
 
 	assign rwidth_ena = rdat | (~rwidth_cnt[2]); // [2] - 140ns, [3] - 280ns
 
-	always @(posedge fclk) if (f0)
+	always @(posedge fclk)
 		vg_rawr <= rwidth_cnt[2]; // RAWR has 2 clocks latency from rdat strobe
 
 
@@ -68,7 +68,7 @@ module fapch_counter
 
 	assign rclk_strobe = (rclk_cnt==6'd0);
 
-	always @(posedge fclk) if (f0)
+	always @(posedge fclk)
 	begin
 		if( rdat )
 			rclk_cnt <= 6'd29; // (56/2)-1 plus halfwidth of RAWR
@@ -78,7 +78,7 @@ module fapch_counter
 			rclk_cnt <= rclk_cnt - 6'd1;
 	end
 
-	always @(posedge fclk) if (f0)
+	always @(posedge fclk)
 		if( rclk_strobe )
 			vg_rclk <= ~vg_rclk; // vg_rclk latency is 2 clocks plus a number loaded into rclk_cnt at rdat strobe
 

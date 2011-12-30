@@ -7,7 +7,7 @@
 
 module zdos(
 
-	input  wire        fclk, f0,
+	input  wire        fclk,
 	input  wire        rst_n,
 
 
@@ -19,11 +19,6 @@ module zdos(
 
 	output reg         dos
 );
-
-
-
-
-
 
 
 	always @(posedge fclk, negedge rst_n)
@@ -40,11 +35,6 @@ module zdos(
 		else if( dos_turn_on )
 			dos <= 1'b1;
 	end
-
-
-
-
-
 
 
 endmodule

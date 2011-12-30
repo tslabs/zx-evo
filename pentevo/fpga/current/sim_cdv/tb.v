@@ -22,7 +22,7 @@ module tb_cdv;
 	wire [7:0] romdata;
 
 
-	wire c0,c4,c6;
+	wire c0,c2,c3;
 
 	wire cpu_req,cpu_rnw,cpu_wrbsel,cpu_strobe;
 	wire [20:0] cpu_addr;
@@ -72,7 +72,7 @@ module tb_cdv;
 	begin
             rst_n <= 1'b0;
 
-		for(rst_count=0;rst_count<=32;rst_count=rst_count+1) @(posedge clk) if (f0);
+		for(rst_count=0;rst_count<=32;rst_count=rst_count+1) @(posedge clk);
 
 		rst_n <= 1'b1;
 	end
@@ -163,7 +163,7 @@ module tb_cdv;
 	                 .zclk_out(zclk_out),
 	                 .zclk(zclk),
 	                 .turbo(2'b01),
-	                 .c4(c4) );
+	                 .c2(c2) );
 
 	assign zclk = ~zclk_out; // inversion in the schematics!
 
@@ -174,8 +174,8 @@ module tb_cdv;
 	                .zpos(1'b1),
 	                .zneg(1'b0),
 
-	                .c6(c6),
-	                .c4(c4),
+	                .c3(c3),
+	                .c2(c2),
 
 	                .za(zaddr),
 	                .zd_in(zdata),
@@ -229,8 +229,8 @@ module tb_cdv;
 	                 .dram_rddata(drddata),
 	                 .dram_wrdata(dwrdata),
 
-	                 .c6(c6),
-	                 .c4(c4),
+	                 .c3(c3),
+	                 .c2(c2),
 
 	                 .go(go),
 	                 .bw(bw),
@@ -302,7 +302,7 @@ module tb_cdv;
 
 
 
-	synch horiz_sync( .clk(clk), .init(1'b0), .c6(c6), .c4(c4),
+	synch horiz_sync( .clk(clk), .init(1'b0), .c3(c3), .c2(c2),
 	                  .hsync(hsync), .hblank(hblank), .hpix(hpix), .hsync_start(hsync_start),
 	                  .line_start(line_start) );
 
@@ -313,7 +313,7 @@ module tb_cdv;
 
 
 
-	fetch fecher( .clk(clk), .c6(c6), .line_start(line_start), .vpix(vpix), .int_start(int_start),
+	fetch fecher( .clk(clk), .c3(c3), .line_start(line_start), .vpix(vpix), .int_start(int_start),
 	              .vmode(1'b1), .screen(1'b0), .video_addr(video_addr), .video_data(video_data), .video_strobe(video_strobe),
 	              .video_next(video_next), .go(go), .bw(bw), .pixel(pixel) );
 

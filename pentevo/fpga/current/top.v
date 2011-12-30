@@ -117,27 +117,20 @@ module top(
 	output spiint_n
 );
 
-	wire f0, f1, q0, q2, q3, c0, c2, c4, c6, c7, clk175;
+	wire f0, f1, c0, c1, c2, c3;
+	wire [1:0] ay_mod;
 
 	clock clock
 	(
 		.clk(fclk),
-		.f0(f0),
-		.f1(f1),
-		.q0(q0),
-		.q2(q2),
-		.q3(q3),
-		.c0(c0),
-		.c2(c2),
-		.c4(c4),
-		.c6(c6),
-		.c7(c7),
-		.clk175(clk175)
+		.f0(f0), .f1(f1),
+		.h0(h0), .h1(h1),
+		.c0(c0), .c1(c1), .c2(c2), .c3(c3),
+		.ay_clk(ay_clk),
+		.ay_mod(2'b00)
 	);
 
 
-	assign ay_clk = clk175;
-	
 	wire dos;
 
 
@@ -220,7 +213,7 @@ module top(
 	// RESETTER
 	wire genrst;
 
-	resetter myrst( .clk(fclk), .f0(f0),
+	resetter myrst( .clk(fclk),
 	                .rst_in_n(~genrst),
 	                .rst_out_n(rst_n) );
 	defparam myrst.RST_CNT_SIZE = 6;
@@ -260,7 +253,7 @@ module top(
 
 	wire cpu_req,cpu_rnw,cpu_wrbsel,cpu_strobe;
 	wire [20:0] cpu_addr;
-	wire [15:0] cpu_rddata;
+	// wire [15:0] cpu_rddata;
 	wire [7:0] cpu_wrdata;
 
 	wire go;
@@ -317,9 +310,9 @@ module top(
 
 	zclock zclock
 	(
-		.fclk(fclk), .f0(f0), .f1(f1), .rst_n(rst_n), .zclk(zclk), .rfsh_n(rfsh_n), .zclk_out(clkz_out),
+		.fclk(fclk), .rst_n(rst_n), .zclk(zclk), .rfsh_n(rfsh_n), .zclk_out(clkz_out),
 		.zpos(zpos), .zneg(zneg),
-		.turbo( {atm_turbo,~(peff7[4])}), .c4(c4), .c0(c0),
+		.turbo( {atm_turbo,~(peff7[4])}), .c2(c2), .c0(c0),
 		.zclk_stall( cpu_stall | (|zclk_stall)), .int_turbo(int_turbo),
 		.external_port(external_port), .iorq_n(iorq_n), .m1_n(m1_n)
 	);
@@ -389,7 +382,7 @@ module top(
 
 			atm_pager #( .ADDR(i) )
 			          atm_pager( .rst_n(rst_n),
-			                     .fclk (fclk), .f0(f0),
+			                     .fclk (fclk),
 			                     .zpos (zpos),
 			                     .zneg (zneg),
 
@@ -439,7 +432,7 @@ module top(
 
 	zdos zdos( .rst_n(rst_n),
 
-	           .fclk(fclk), .f0(f0),
+	           .fclk(fclk),
 
 	           .dos_turn_on ( |dos_turn_on),
 	           .dos_turn_off( |dos_turn_off),
@@ -458,16 +451,16 @@ module top(
 
 	zmem z80mem
 	(
-		.fclk (fclk), .f0(f0),
+		.fclk (fclk),
 		.rst_n(rst_n),
 		
 		.zpos(zpos),
 		.zneg(zneg),
 
 		.c0     (c0),
-		.c2(c2),
-		.c4 (c4),
-		.c6     (c6),
+		.c1(c1),
+		.c2 (c2),
+		.c3     (c3),
 		
 		.za    (a),
 		.zd_in (d),
@@ -503,7 +496,7 @@ module top(
 		.cpu_strobe(cpu_strobe),
 		.cpu_addr  (cpu_addr),
 		.cpu_wrdata(cpu_wrdata),
-		.cpu_rddata(cpu_rddata),
+		.cpu_rddata(dram_rddata),
 		.cpu_stall (cpu_stall),
 		.cpu_next  (cpu_next),
 
@@ -516,23 +509,26 @@ module top(
 	wire [20:0] daddr;
 	wire dreq;
 	wire drnw;
-	wire [15:0] drddata;
-	wire [15:0] dwrdata;
+	wire [15:0] dram_rddata;
+	wire [15:0] dram_wrdata;
 	wire [1:0] dbsel;
 
 
 
 
-	dram dram( .clk(fclk), .f0(f0), .f1(f1),
+	dram dram( .clk(fclk),
 	           .rst_n(rst_n),
 
 	           .addr(daddr),
 	           .req(dreq),
 	           .rnw(drnw),
 	           .c0(c0),
+	           .c1(c1),
+	           .c2(c2),
+	           .c3(c3),
 	           .rrdy(drrdy),
-	           .rddata(drddata),
-	           .wrdata(dwrdata),
+	           .rddata(dram_rddata),
+	           .wrdata(dram_wrdata),
 	           .bsel(dbsel),
 
 	           .ra(ra),
@@ -548,44 +544,44 @@ module top(
 	wire [3:0] video_bw;
 
 	wire [20:0] video_addr;
-	wire [15:0] video_data;
+	// wire [15:0] video_data;
 	wire video_strobe;
 	wire video_next;
 
 	wire ts_req;
 	wire [20:0] ts_addr;
-	wire [15:0] ts_data;
+	// wire [15:0] ts_data;
 	wire ts_strobe;
 	wire ts_next;
 
-	arbiter dramarb( .clk(fclk), .f0(f0),
+	arbiter dramarb( .clk(fclk),
 	                 .rst_n(rst_n),
 
 	                 .dram_addr(daddr),
 	                 .dram_req(dreq),
 	                 .dram_rnw(drnw),
-	                 .dram_c0(c0),
+	                 // .dram_c0(c0),
 	                 .dram_rrdy(drrdy),
 	                 .dram_bsel(dbsel),
-	                 .dram_rddata(drddata),
+	                 // .dram_rddata(dram_rddata),
 	                 // .dram_rd(rd),
-	                 .dram_wrdata(dwrdata),
+	                 .dram_wrdata(dram_wrdata),
 
+	                 .c1(c1),
 	                 .c2(c2),
-	                 .c4(c4),
-	                 .c6(c6),
+	                 .c3(c3),
 
 	                 .go(go),
 	                 .video_bw(video_bw),
 
 	                 .video_addr(video_addr),
-	                 .video_data(video_data),
+	                 // .video_data(video_data),
 	                 .video_strobe(video_strobe),
 	                 .video_next(video_next),
 					 
 					 .ts_req		(ts_req),
 					 .ts_addr		(ts_addr),
-					 .ts_data		(ts_data),
+					 // .ts_data		(ts_data),
 					 .ts_next		(ts_next),
 					 .ts_strobe		(ts_strobe),
 
@@ -596,7 +592,7 @@ module top(
 	                 .cpu_addr(cpu_addr),
 	                 .cpu_wrbsel(cpu_wrbsel),
 	                 .cpu_wrdata(cpu_wrdata),
-	                 .cpu_rddata(cpu_rddata),
+	                 // .cpu_rddata(cpu_rddata),
 	                 .cpu_strobe(cpu_strobe) );
 
 					 
@@ -605,15 +601,10 @@ module top(
 
 		.clk(fclk),
 		.zclk(zclk),
-		.f0(f0),
-		.q0(q0),
-		.q2(q2),
-		.q3(q3),
-		.c0(c0),
-		.c2(c2),
-		.c4(c4),
-		.c6(c6),
-		.c7(c7),
+		.f0(f0), .f1(f1),
+		.h0(h0), .h1(h1),
+		.c0(c0), .c1(c1), .c2(c2), .c3(c3),
+		// .t0(t0),	//debug!!!
 
 		.vred(vred),
 		.vgrn(vgrn),
@@ -636,15 +627,14 @@ module top(
 		.vga_on(cfg_vga_on),
 
 		.video_addr     (video_addr),
-		.video_data     (video_data),
+		.video_bw		(video_bw),
+		.video_go       (go),
+		.dram_rddata    (dram_rddata),
 		.video_strobe   (video_strobe),
 		.video_next     (video_next),
-		.video_go       (go),
-		.video_bw		(video_bw),
 
 		.ts_req			(ts_req),
 		.ts_addr		(ts_addr),
-		.ts_data		(ts_data),
 		.ts_next		(ts_next),
 		.ts_strobe		(ts_strobe),
 		
@@ -659,7 +649,7 @@ module top(
 
 
 	slavespi slavespi(
-		.fclk(fclk), .f0(f0), .rst_n(rst_n),
+		.fclk(fclk), .rst_n(rst_n),
 
 		.spics_n(spics_n), .spidi(spidi),
 		.spido(spido), .spick(spick),
@@ -677,7 +667,7 @@ module top(
 		.config0( { not_used[7:4], beeper_mux, tape_read, set_nmi[0], cfg_vga_on} )
 	);
 
-	zkbdmus zkbdmus( .fclk(fclk), .f0(f0), .rst_n(rst_n),
+	zkbdmus zkbdmus( .fclk(fclk), .rst_n(rst_n),
 	                 .kbd_in(kbd_data), .kbd_stb(kbd_stb),
 	                 .mus_in(mus_data), .mus_xstb(mus_xstb),
 	                 .mus_ystb(mus_ystb), .mus_btnstb(mus_btnstb),
@@ -729,7 +719,7 @@ zmaps zmaps(
 		wire [7:0] im2vect ;
 		
 
-	zports zports( .zclk(zclk), .fclk(fclk), .f0(f0), .rst_n(rst_n), .zpos(zpos), .zneg(zneg),
+	zports zports( .zclk(zclk), .fclk(fclk), .rst_n(rst_n), .zpos(zpos), .zneg(zneg),
 	               .din(d), .dout(dout_ports), .dataout(ena_ports),
 	               .a(a), .iorq_n(iorq_n), .rd_n(rd_n), .wr_n(wr_n), .porthit(porthit),
 	               .ay_bdir(ay_bdir), .ay_bc1(ay_bc1), .border(border),
@@ -740,6 +730,7 @@ zmaps zmaps(
 	               .idein(idein), .ideout(ideout), .idedataout(idedataout),
 	               .ide_a(ide_a), .ide_cs0_n(ide_cs0_n), .ide_cs1_n(ide_cs1_n),
 	               .ide_wr_n(ide_wr_n), .ide_rd_n(ide_rd_n),
+	               // .t0(t0), //debug!!!
 					
 					.vconf		(vconf),
 					.vpage		(vpage),
@@ -821,7 +812,7 @@ zmaps zmaps(
 
 
 	zint zint(
-		.fclk(fclk), .f0(f0),
+		.fclk(fclk),
 		.zpos(zpos),
 		.zneg(zneg),
 
@@ -836,7 +827,7 @@ zmaps zmaps(
 	znmi znmi
 	(
 		.rst_n(rst_n),
-		.fclk(fclk), .f0(f0),
+		.fclk(fclk),
 		.zpos(zpos),
 		.zneg(zneg),
 
@@ -869,7 +860,7 @@ zmaps zmaps(
 	assign vg_a[0] = vg_ddrv[0] ? 1'b1 : 1'b0; // possibly open drain?
 	assign vg_a[1] = vg_ddrv[1] ? 1'b1 : 1'b0;
 
-	vg93 vgshka( .zclk(zclk), .rst_n(rst_n), .fclk(fclk), .f0(f0), .vg_clk(vg_clk),
+	vg93 vgshka( .zclk(zclk), .rst_n(rst_n), .fclk(fclk), .vg_clk(vg_clk),
 	             .vg_res_n(vg_res_n), .din(d), .intrq(intrq), .drq(drq), .vg_wrFF(vg_wrFF),
 	             .vg_hrdy(vg_hrdy), .vg_rclk(vg_rclk), .vg_rawr(vg_rawr), .vg_a(vg_ddrv),
 	             .vg_wrd(vg_wrd), .vg_side(vg_side), .step(step), .vg_sl(vg_sl), .vg_sr(vg_sr),
@@ -879,8 +870,8 @@ zmaps zmaps(
 
 
 
-	spi2 zspi( .clk(fclk), .f0(f0), .sck(sdclk), .sdo(sddo), .sdi(sddi), .start(sd_start),
-	           .speed(2'b01),	// this is 14 MHz at 56 Mhz Altera clock
+	spi2 zspi( .clk(fclk), .sck(sdclk), .sdo(sddo), .sdi(sddi), .start(sd_start),
+	           .speed(2'b00),	// this is 14 MHz at 28 Mhz Altera clock
 			   .din(sd_datain), .dout(sd_dataout) );
 
 
@@ -893,7 +884,7 @@ zmaps zmaps(
 
 	sound sound(
 
-		.clk(fclk), .q2(q2),
+		.clk(fclk), .f0(f0),
 
 		.din(d),
 

@@ -4,7 +4,7 @@
 module video_out (
 
 // clocks
-	input wire clk, zclk, f0, c6,
+	input wire clk, zclk, f0, c3,
 	
 // video controls
     input wire vga_on,
@@ -30,22 +30,9 @@ module video_out (
 );
 
 
-// registering output colors
-	// always @(negedge clk)
-	always @(posedge clk)
-	begin
-		vred <= pred;
-		vgrn <= pgrn;
-		vblu <= pblu;
-		// vred <= p1red;
-		// vgrn <= p1grn;
-		// vblu <= p1blu;
-	end
-
-	
 // TV/VGA mux
 	reg [7:0] vplex;
-	always @(posedge clk) if (c6)
+	always @(posedge clk) if (c3)
 		vplex <= vplex_in;
 
 	wire [7:0] plex = vga_on ? vgaplex : vplex;
@@ -53,25 +40,11 @@ module video_out (
 	wire [7:0] vdata = hires ? {4'b1111, plex_sel ? plex[3:0] : plex[7:4]} : plex;
     wire blank = vga_on ? vga_blank : tv_blank;
 
-	
-	// reg [1:0] p1red;
-	// reg [1:0] p1grn;
-	// reg [1:0] p1blu;
-    // reg [7:0] vdata;
-	// wire [1:0] p1red = blank ? 0 : {vdata[1], vdata[3]};		// debug!!!
-	// wire [1:0] p1grn = blank ? 0 : {vdata[2], vdata[3]};		// debug!!!
-	// wire [1:0] p1blu = blank ? 0 : {vdata[0], vdata[3]};		// debug!!!
-
-	
-// preparing PWM'ed output levels
-	reg [2:0] ph;
-	always @(posedge clk)
-		ph <= ph + 1;
-	
-	wire [2:0] phase = vga_on ? {vga_line, ph[1:0]} : {ph[2:0]};
 	wire [14:0] vpix = blank ? 0 : vpixel;
-	// wire [14:0] vpix = blank ? 0 : {vdata[2], 4'b0, vdata[1], 4'b0, vdata[0], 4'b0};
+	// wire [14:0] vpix = blank ? 0 : {vdata[2], 4'b0, vdata[1], 4'b0, vdata[0], 4'b0};		//debug!!!
 	
+	
+// color components extraction
 	wire [1:0] cred = vpix[14:13];
 	wire [2:0] ired = vpix[12:10];
 	wire [1:0] cgrn = vpix[ 9: 8];
@@ -79,10 +52,40 @@ module video_out (
 	wire [1:0] cblu = vpix[ 4: 3];
 	wire [2:0] iblu = vpix[ 2: 0];
 
-	wire [1:0] pred = pwm[ired][phase] ? (cred == 2'b11) ? cred : cred + 2'b1 : cred;
-	wire [1:0] pgrn = pwm[igrn][phase] ? (cgrn == 2'b11) ? cgrn : cgrn + 2'b1 : cgrn;
-	wire [1:0] pblu = pwm[iblu][phase] ? (cblu == 2'b11) ? cblu : cblu + 2'b1 : cblu;
+// prepare and clocking two phases of output
+	reg [1:0] red0;
+	reg [1:0] grn0;
+	reg [1:0] blu0;
+	reg [1:0] red1;
+	reg [1:0] grn1;
+	reg [1:0] blu1;
 	
+	always @(posedge clk)
+	begin
+		red0 <= pwm[ired][{phase, 1'b0}] ? (cred == 2'b11) ? cred : cred + 2'b1 : cred;
+		grn0 <= pwm[igrn][{phase, 1'b0}] ? (cgrn == 2'b11) ? cgrn : cgrn + 2'b1 : cgrn;
+		blu0 <= pwm[iblu][{phase, 1'b0}] ? (cblu == 2'b11) ? cblu : cblu + 2'b1 : cblu;
+		red1 <= pwm[ired][{phase, 1'b1}] ? (cred == 2'b11) ? cred : cred + 2'b1 : cred;
+		grn1 <= pwm[igrn][{phase, 1'b1}] ? (cgrn == 2'b11) ? cgrn : cgrn + 2'b1 : cgrn;
+		blu1 <= pwm[iblu][{phase, 1'b1}] ? (cblu == 2'b11) ? cblu : cblu + 2'b1 : cblu;
+	end
+	
+
+// output muxing for 56MHz PWM resolution
+	assign vred = clk ? red0 : red1;
+	assign vgrn = clk ? grn0 : grn1;
+	assign vblu = clk ? blu0 : blu1;
+
+	
+// PWM phase
+	reg [1:0] ph;
+	always @(posedge clk)
+		ph <= ph + 1;
+	
+	wire [1:0] phase = {vga_on ? vga_line : ph[1], ph[0]};
+
+	
+// PWM	
 	wire [7:0] pwm[0:7];
 	assign pwm[0] = 8'b00000000;
 	assign pwm[1] = 8'b00000001;

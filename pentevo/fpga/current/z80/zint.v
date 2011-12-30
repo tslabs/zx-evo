@@ -6,7 +6,7 @@
 
 module zint
 (
-	input  wire fclk, f0,
+	input  wire fclk,
 
 	input  wire zpos,
 	input  wire zneg,

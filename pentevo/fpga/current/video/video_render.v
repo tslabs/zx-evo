@@ -4,7 +4,7 @@
 module video_render (
 
 // clocks
-	input wire clk, c2,
+	input wire clk, c1,
 	
 // video controls
 	input wire hvpix,
@@ -19,6 +19,7 @@ module video_render (
 // video data
 	input  wire [31:0] data,
 	input  wire [ 3:0] border_in,
+	// input  wire [ 7:0] aaa,
 	input  wire [ 7:0] tsdata_in,
 	output wire [ 7:0] vplex_out
 	
@@ -43,8 +44,8 @@ module video_render (
 
     
 // text graphics
-// (it uses common renderer with ZX, but different attributes, it also shares palette with 16c)
-	wire [7:0] tx_pix = {HC_PAL, zx_dot ? zx_attr[3:0] : zx_attr[7:4]};
+// (it uses common renderer with ZX, but different attributes)
+	wire [7:0] tx_pix = {ZX_PAL, zx_dot ? zx_attr[3:0] : zx_attr[7:4]};
 
     
 // 16c graphics
@@ -81,11 +82,12 @@ module video_render (
 	wire [7:0] border = {4'hF, border_in};
 	wire [7:0] pixel = pix[render_mode];
 	wire [7:0] vplex = hvpix & !nogfx ? pixel : border;
+	// wire [7:0] vplex = hvpix & !nogfx ? pixel : aaa;
 	assign vplex_out = hires ? {temp, vplex[3:0]} : vplex;		// in hi-res plex contains two pixels 4 bits each
 	// assign vplex_out = hvpix ? |tsdata_in[3:0] ? tsdata_in[7:0] : nogfx ? border : pixel[render_mode] : border;
 	
 	reg [3:0] temp;
-	always @(posedge clk) if (c2)
+	always @(posedge clk) if (c1)
 		temp <= vplex[3:0];
 	
 	

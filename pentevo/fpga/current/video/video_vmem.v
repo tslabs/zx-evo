@@ -40,7 +40,6 @@ module video_vmem (
 	clock,
 	data,
 	rdaddress,
-	rden,
 	wraddress,
 	wren,
 	q);
@@ -48,7 +47,6 @@ module video_vmem (
 	input	  clock;
 	input	[7:0]  data;
 	input	[9:0]  rdaddress;
-	input	  rden;
 	input	[9:0]  wraddress;
 	input	  wren;
 	output	[7:0]  q;
@@ -57,9 +55,9 @@ module video_vmem (
 	wire [7:0] q = sub_wire0[7:0];
 
 	altdpram	altdpram_component (
+				.outclock (clock),
 				.wren (wren),
 				.inclock (clock),
-				.rden (rden),
 				.data (data),
 				.rdaddress (rdaddress),
 				.wraddress (wraddress),
@@ -67,9 +65,9 @@ module video_vmem (
 				.aclr (1'b0),
 				.byteena (1'b1),
 				.inclocken (1'b1),
-				.outclock (1'b1),
 				.outclocken (1'b1),
 				.rdaddressstall (1'b0),
+				.rden (1'b1),
 				.wraddressstall (1'b0));
 	defparam
 		altdpram_component.indata_aclr = "OFF",
@@ -77,11 +75,11 @@ module video_vmem (
 		altdpram_component.intended_device_family = "ACEX1K",
 		altdpram_component.lpm_type = "altdpram",
 		altdpram_component.outdata_aclr = "OFF",
-		altdpram_component.outdata_reg = "UNREGISTERED",
+		altdpram_component.outdata_reg = "OUTCLOCK",
 		altdpram_component.rdaddress_aclr = "OFF",
 		altdpram_component.rdaddress_reg = "INCLOCK",
 		altdpram_component.rdcontrol_aclr = "OFF",
-		altdpram_component.rdcontrol_reg = "INCLOCK",
+		altdpram_component.rdcontrol_reg = "UNREGISTERED",
 		altdpram_component.width = 8,
 		altdpram_component.widthad = 10,
 		altdpram_component.wraddress_aclr = "OFF",
@@ -137,7 +135,7 @@ endmodule
 // Retrieval info: PRIVATE: READ_DURING_WRITE_MODE_PORT_A NUMERIC "3"
 // Retrieval info: PRIVATE: READ_DURING_WRITE_MODE_PORT_B NUMERIC "3"
 // Retrieval info: PRIVATE: REGdata NUMERIC "1"
-// Retrieval info: PRIVATE: REGq NUMERIC "0"
+// Retrieval info: PRIVATE: REGq NUMERIC "1"
 // Retrieval info: PRIVATE: REGrdaddress NUMERIC "1"
 // Retrieval info: PRIVATE: REGrren NUMERIC "1"
 // Retrieval info: PRIVATE: REGwraddress NUMERIC "1"
@@ -154,17 +152,17 @@ endmodule
 // Retrieval info: PRIVATE: WRADDR_REG_B NUMERIC "0"
 // Retrieval info: PRIVATE: WRCTRL_ACLR_B NUMERIC "0"
 // Retrieval info: PRIVATE: enable NUMERIC "0"
-// Retrieval info: PRIVATE: rden NUMERIC "1"
+// Retrieval info: PRIVATE: rden NUMERIC "0"
 // Retrieval info: CONSTANT: INDATA_ACLR STRING "OFF"
 // Retrieval info: CONSTANT: INDATA_REG STRING "INCLOCK"
 // Retrieval info: CONSTANT: INTENDED_DEVICE_FAMILY STRING "ACEX1K"
 // Retrieval info: CONSTANT: LPM_TYPE STRING "altdpram"
 // Retrieval info: CONSTANT: OUTDATA_ACLR STRING "OFF"
-// Retrieval info: CONSTANT: OUTDATA_REG STRING "UNREGISTERED"
+// Retrieval info: CONSTANT: OUTDATA_REG STRING "OUTCLOCK"
 // Retrieval info: CONSTANT: RDADDRESS_ACLR STRING "OFF"
 // Retrieval info: CONSTANT: RDADDRESS_REG STRING "INCLOCK"
 // Retrieval info: CONSTANT: RDCONTROL_ACLR STRING "OFF"
-// Retrieval info: CONSTANT: RDCONTROL_REG STRING "INCLOCK"
+// Retrieval info: CONSTANT: RDCONTROL_REG STRING "UNREGISTERED"
 // Retrieval info: CONSTANT: WIDTH NUMERIC "8"
 // Retrieval info: CONSTANT: WIDTHAD NUMERIC "10"
 // Retrieval info: CONSTANT: WRADDRESS_ACLR STRING "OFF"
@@ -175,7 +173,6 @@ endmodule
 // Retrieval info: USED_PORT: data 0 0 8 0 INPUT NODEFVAL data[7..0]
 // Retrieval info: USED_PORT: q 0 0 8 0 OUTPUT NODEFVAL q[7..0]
 // Retrieval info: USED_PORT: rdaddress 0 0 10 0 INPUT NODEFVAL rdaddress[9..0]
-// Retrieval info: USED_PORT: rden 0 0 0 0 INPUT VCC rden
 // Retrieval info: USED_PORT: wraddress 0 0 10 0 INPUT NODEFVAL wraddress[9..0]
 // Retrieval info: USED_PORT: wren 0 0 0 0 INPUT VCC wren
 // Retrieval info: CONNECT: @data 0 0 8 0 data 0 0 8 0
@@ -183,13 +180,13 @@ endmodule
 // Retrieval info: CONNECT: @wraddress 0 0 10 0 wraddress 0 0 10 0
 // Retrieval info: CONNECT: @rdaddress 0 0 10 0 rdaddress 0 0 10 0
 // Retrieval info: CONNECT: @wren 0 0 0 0 wren 0 0 0 0
-// Retrieval info: CONNECT: @rden 0 0 0 0 rden 0 0 0 0
 // Retrieval info: CONNECT: @inclock 0 0 0 0 clock 0 0 0 0
+// Retrieval info: CONNECT: @outclock 0 0 0 0 clock 0 0 0 0
 // Retrieval info: LIBRARY: altera_mf altera_mf.altera_mf_components.all
 // Retrieval info: GEN_FILE: TYPE_NORMAL video_vmem.v TRUE
 // Retrieval info: GEN_FILE: TYPE_NORMAL video_vmem.inc FALSE
 // Retrieval info: GEN_FILE: TYPE_NORMAL video_vmem.cmp FALSE
 // Retrieval info: GEN_FILE: TYPE_NORMAL video_vmem.bsf FALSE
-// Retrieval info: GEN_FILE: TYPE_NORMAL video_vmem_inst.v TRUE
+// Retrieval info: GEN_FILE: TYPE_NORMAL video_vmem_inst.v FALSE
 // Retrieval info: GEN_FILE: TYPE_NORMAL video_vmem_bb.v FALSE
 // Retrieval info: LIB_FILE: altera_mf

@@ -4,7 +4,11 @@
 module video_top (
 
 // clocks
-	input wire clk, f0, q2, q3, q0, c0, c2, c4, c6, c7, zclk,
+	input wire clk, zclk,
+	input wire f0, f1,
+	input wire h0, h1,
+	input wire c0, c1, c2, c3,
+	// input wire t0,	// debug!!!
 
 // video DAC
 	output wire	[1:0] vred,
@@ -39,14 +43,13 @@ module video_top (
 
 // DRAM interface
 	output wire [20:0] video_addr,
-	input  wire [15:0] video_data,
 	output wire [ 3:0] video_bw,
 	output wire        video_go, 
+	input  wire [15:0] dram_rddata,
 	input  wire        video_next,
 	input  wire        video_strobe,
-	output wire        ts_req,
 	output wire [20:0] ts_addr,
-	input  wire [15:0] ts_data,
+	output wire        ts_req,
 	input  wire        ts_next,
 	input  wire        ts_strobe,
 	
@@ -85,8 +88,9 @@ module video_top (
     wire [7:0] cnt_col;
     wire [8:0] cnt_row;
 	wire cptr;
-    wire [4:0] scnt;
+    wire [3:0] scnt;
 	wire [31:0] fetch_data;
+	wire [31:0] fetch_temp;
 	wire [3:0] fetch_sel;
 	wire [1:0] fetch_bsl;
 	wire fetch_stb;
@@ -100,16 +104,16 @@ module video_top (
 	
 
 	video_mode video_mode (
-		.f0			    (f0),
-		.q2			    (q2),
-		.c6			    (c6),
+		.clk		  	(clk),
+		.f1			    (f1),
+		.c3			    (c3),
 		.vconf		    (vconf),
 		.vpage	    	(vpage),
 		.fetch_sel		(fetch_sel),
 		.fetch_bsl		(fetch_bsl),
-		.fetch_cnt	    (scnt[4:1]),
+		.fetch_cnt	    (scnt),
 		.fetch_stb	    (fetch_stb),
-		.txt_char	    (fetch_data[15:0]),
+		.txt_char	    (fetch_temp[15:0]),
 		.x_offs			(x_offs),
 		.x_offs_mode	(x_offs_mode),
 		.hpix_beg	    (hpix_beg),
@@ -133,8 +137,8 @@ module video_top (
 	
 	video_sync video_sync (
 		.clk			(clk),
-		.q2				(q2),
-		.c6				(c6),
+		.f1				(f1),
+		.c3				(c3),
 		.hpix_beg		(hpix_beg),
 		.hpix_end		(hpix_end),
 		.vpix_beg		(vpix_beg),
@@ -178,17 +182,18 @@ module video_top (
 		.clk			(clk),
 		.f_sel			(fetch_sel),
 		.b_sel			(fetch_bsl),
-		.fetch			(fetch_stb),
-		.data			(fetch_data),
+		.fetch_stb		(fetch_stb),
+		.fetch_data		(fetch_data),
+		.fetch_temp		(fetch_temp),
 		.video_strobe	(video_strobe),
-		.video_data		(video_data)
+		.video_data		(dram_rddata)
 );
 
 	
 	video_ts video_ts (
 		.clk		    (clk),
 		.zclk		    (zclk),
-		.c7			    (c7),
+		.c3			    (c3),
 		.line_start		(line_start),
 		.num_tiles		(x_tiles),
 		.lcount			(lcount),
@@ -203,7 +208,7 @@ module video_top (
 		.tsbuf_we		(tsbuf_we),
 		.ts_req			(ts_req),
 		.ts_addr		(ts_addr),
-		.ts_data		(ts_data),
+		.ts_data		(dram_rddata),
 		.ts_next		(ts_next),
 		.ts_strobe		(ts_strobe)
 );
@@ -213,7 +218,7 @@ module video_top (
 		// .clk		    (clk),
 		.clk		    (0),
 		.c0				(c0),
-		.c4				(c4),
+		.c2				(c2),
 		.tspix_start	(tspix_start),
 		.line_start		(line_start),
 		.frame_start	(frame_start),
@@ -228,15 +233,16 @@ module video_top (
 	
 	video_render video_render (
 		.clk		    (clk),
-		.c2			    (c2),
+		.c1			    (c1),
 		.hvpix 	        (hvpix),
 		.nogfx			(nogfx),
 		.flash			(flash),
 		.hires			(hires),
-		.psel			(scnt[4:1]),
+		.psel			(scnt),
 		.render_mode	(render_mode),
 		.data	 	    (fetch_data),
 		.border_in 	    (border),
+		// .aaa 	    (vga_cnt_in),
 		.tsdata_in 	    (tsdata),
 		.vplex_out 	    (vplex)
 );
@@ -246,18 +252,20 @@ module video_top (
 		.clk			(clk),
 		.zclk			(zclk),
 		.f0				(f0),
-		.c6				(c6),
+		.c3				(c3),
 		.vga_on			(vga_on),
 		.tv_blank 		(tv_blank),
 		.vga_blank		(vga_blank),
 		.vga_line		(vga_line),
-	    .plex_sel_in	(scnt[1:0]),
+	    .plex_sel_in	({h1, f1}),
 		.hires			(hires),
+		// .t0			(t0),	//debug
 		.cram_addr_in	(a[8:1]),
 		.cram_data_in	(cram_data_in),
 		.cram_we		(cram_we),
 	    .vplex_in		(vplex),
 	    .vgaplex		(vgaplex),
+	    // .vgaplex		(8'h0f),
 		.vred			(vred),
 	    .vgrn			(vgrn),
 	    .vblu			(vblu)
@@ -267,11 +275,13 @@ module video_top (
 	video_vmem video_vmem(
 		.clock		(clk),
 		.wraddress	(vga_cnt_in),
+		// .data		(vplex | (t0 << 1)),	//debug!!!
 		.data		(vplex),
-		.wren		(c6),
+		// .data		(8'h0f),
+		.wren		(c3),
 	    .rdaddress	(vga_cnt_out),
-	    .q			(vgaplex),
-	    .rden		(q2)
+	    // .rden		(f0),
+	    .q			(vgaplex)
 );
 	
 endmodule
