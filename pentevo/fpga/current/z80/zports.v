@@ -46,18 +46,17 @@ module zports(
 	output reg  [ 3:0] border,
 
 	
-// Xtension ports
+// eXTension ports
 	output reg [7:0] vconf,
 	output reg [7:0] vpage,
 	output reg [8:0] x_offs,
 	output reg [8:0] y_offs,
 	output reg [7:0] tsconf,
 	
-	output reg [7:0] rampage0,
-	output reg [7:0] rampage1,
-	output reg [7:0] rampage2,
-	output reg [7:0] rampage3,
-	output reg [7:0] rompage,
+	output wire [47:0] xt_rampage,
+	output reg [4:0] xt_rompage,
+	output reg [3:0] xt_override,
+	
 	output reg [4:0] fmaddr,
 	output reg [4:0] tgpage,
 	
@@ -449,32 +448,54 @@ module zports(
 
 
 
-	//extension port #nnAF
+//eXTension port #nnAF
 
-	localparam VCONF		= 8'd00;
-	localparam VPAGE		= 8'd01;
-	localparam XOFFSL		= 8'd02;
-	localparam XOFFSH		= 8'd03;
-	localparam YOFFSL		= 8'd04;
-	localparam YOFFSH		= 8'd05;
-	localparam TSCONF		= 8'd06;
+	localparam VCONF		= 8'h00;
+	localparam VPAGE		= 8'h01;
+	localparam XOFFSL		= 8'h02;
+	localparam XOFFSH		= 8'h03;
+	localparam YOFFSL		= 8'h04;
+	localparam YOFFSH		= 8'h05;
+	localparam TSCONF		= 8'h06;
 
-	localparam RAMPAGE0		= 8'd16;
-	localparam RAMPAGE1		= 8'd17;
-	localparam RAMPAGE2		= 8'd18;
-	localparam RAMPAGE3		= 8'd19;
-	localparam ROMPAGE		= 8'd19;
-	localparam FMADDR		= 8'd21;
-	localparam TGPAGE		= 8'd22;
+	localparam RAMPAGE		= 8'h10;	// this uses #10-#13
+	localparam ROMPAGE		= 8'h14;
+	localparam FMADDR		= 8'h15;
+	localparam RAMPAGES		= 8'h16;
+	localparam TGPAGE		= 8'h18;
 	
-	localparam SYSCONF		= 8'd32;
-	localparam MEMCONF		= 8'd33;
-	localparam HSINT		= 8'd34;
-	localparam VSINTL		= 8'd35;
-	localparam VSINTH		= 8'd36;
-	localparam IM2VECT		= 8'd37;
+	localparam SYSCONF		= 8'h20;
+	localparam MEMCONF		= 8'h21;
+	localparam HSINT		= 8'h22;
+	localparam VSINTL		= 8'h23;
+	localparam VSINTH		= 8'h24;
+	localparam IM2VECT		= 8'h25;
 
-
+	wire rampage_h = hoa[7:2] == RAMPAGE[7:2];
+	wire rampagsh_h = hoa[7:1] == RAMPAGES[7:1];
+	wire rampage_wr = portxt_wr & rampage_h;
+	wire rampagsh_wr = portxt_wr & rampagsh_h;
+	
+	reg [7:0] rampage[0:5];
+	assign xt_rampage = {rampage[5], rampage[4], rampage[3], rampage[2], rampage[1], rampage[0]};
+	
+// harshest crotch for the ATM fucking pager!!!
+	always @(posedge zclk)
+		if (!rst_n)
+			xt_override <= 4'b0;
+		else
+		begin
+			if (rampage_wr)
+				xt_override[a[9:8]] <= 1'b1;	// if XT page write, correspondent override ON
+			if (rampagsh_wr)
+				xt_override[a[8]+2] <= 1'b1;	// shadow XT pages
+			if (p7ffd_wr)
+				xt_override[3'b11] <= 1'b0;		// if 7FFD write, C000 window override OFF
+			if (atmF7_wr_fclk)
+				xt_override[a[15:14]] <= 1'b0;	// if ATM pager write, correspondent override OFF
+		end
+		
+		
 	always @(posedge zclk)
 		if (!rst_n)
 		begin
@@ -488,14 +509,22 @@ module zports(
 			
 			sysconf <= 8'h00;
 			memconf <= 8'h00;
-			hint_beg <= 8'd2;			// adjust this with border effects!
+			hint_beg <= 8'd2;	// pentagon default
 			vint_beg <= 9'd0;
 			im2vect <= 8'hFF;
+	
+			rampage[0] <= 8'h00;
+			rampage[1] <= 8'h05;
+			rampage[2] <= 8'h02;
+			rampage[3] <= 8'h00;
+			rampage[4] <= 8'h02;
+			rampage[5] <= 8'h00;
 			
 		end
 		else
 		if (portxt_wr)
 		begin
+		
 			if (hoa == VCONF)
 				vconf <= din;
 			if (hoa == XOFFSL)
@@ -513,6 +542,14 @@ module zports(
 				fmaddr <= din[4:0];
 			if (hoa == TGPAGE)
 				tgpage <= din[7:3];
+
+			if (rampage_h)
+				rampage[a[9:8]] <= din;
+			if (rampagsh_h)
+				rampage[a[8]+4] <= din;
+				
+			if (hoa == ROMPAGE)
+				xt_rompage <= din[4:0];
 				
 			if (hoa == SYSCONF)
 				sysconf <= din;
@@ -526,6 +563,7 @@ module zports(
 				vint_beg[8] <= din[0];
 			if (hoa == IM2VECT)
 				im2vect <= din;
+				
 		end
 	
 
@@ -681,7 +719,8 @@ module zports(
 	reg p7ffd_rom_int;
 	reg block7ffd;
 	wire block1m;
-
+	wire p7ffd_wr = !a[15] && portfd_wr && !block7ffd;
+	
 	always @(posedge zclk)
 	begin
 		if (!rst_n)
@@ -689,19 +728,15 @@ module zports(
 			p7ffd <= 8'h00;
 			block7ffd <= 1'b0;
 			vpage <= 8'h05;
-			rampage0 <= 8'd0;
-			rampage1 <= 8'd5;
-			rampage2 <= 8'd2;
-			rampage3 <= 8'd0;
-			rompage <= 8'd0;
+			pent1m_page <= 6'd0;
 		end
 		else
 		begin
-			if( (!a[15]) && portfd_wr && (!block7ffd) )
+			if (p7ffd_wr)
 			begin
 				p7ffd <= din;
 				block7ffd=p7ffd[5] & block1m;
-				rampage3 <= {2'b0, block1m ? 3'b0 : {din[5], din[7:6]}, din[2:0]};
+				pent1m_page <= {block1m ? 3'b0 : {din[5], din[7:6]}, din[2:0]};
 				vpage <= {6'b000001, din[3], 1'b1};
 			end
 			else
@@ -709,14 +744,6 @@ module zports(
 			begin
 				if (hoa == VPAGE)
 					vpage <= din;
-				if (hoa == RAMPAGE0)
-					rampage0 <= din;
-				if (hoa == (RAMPAGE1))
-					rampage1 <= din;
-				if (hoa == (RAMPAGE2))
-					rampage2 <= din;
-				if (hoa == (RAMPAGE3))
-					rampage3 <= din;
 			end
 		end
 	end
@@ -726,7 +753,7 @@ module zports(
 	begin
 		if( rstsync2 )
 			p7ffd_rom_int <= rstrom[0];
-		else if( (!a[15]) && portfd_wr && (!block7ffd) )
+		else if (p7ffd_wr)
 			p7ffd_rom_int <= din[4];
 	end
 
@@ -745,8 +772,7 @@ module zports(
 	assign peff7 = block1m ? { peff7_int[7], 1'b0, peff7_int[5], peff7_int[4], 3'b000, peff7_int[0] } : peff7_int;
 
 
-	assign pent1m_ROM       = p7ffd[4];
-	assign pent1m_page      = rampage3[5:0];
+	assign pent1m_ROM       = p7ffd_rom_int;
 	assign pent1m_1m_on     = ~peff7_int[2];
 	assign pent1m_ram0_0    = peff7_int[3];
 

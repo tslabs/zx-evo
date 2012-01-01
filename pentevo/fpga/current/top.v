@@ -353,6 +353,12 @@ module top(
 	// ATM memory pagers instantiation //
 	/////////////////////////////////////
 
+	wire atmF7_wr_fclk;
+	// wire [3:0] atmF7_wr = atmF7_wr_fclk & (1 << a[15:14]);
+	
+	wire rampage_wr;	// ports #10AF-#13AF
+	// wire [3:0] rampg_wr = rampage_wr & (1 << a[9:8]);
+
 	wire pager_off;
 
 	wire        pent1m_ROM;
@@ -360,7 +366,7 @@ module top(
 	wire        pent1m_ram0_0;
 	wire        pent1m_1m_on;
 
-	wire atmF7_wr_fclk;
+	wire [ 7:0] memconf;
 
 	wire [3:0] dos_turn_off,
 	           dos_turn_on;
@@ -373,6 +379,11 @@ module top(
 	wire [ 7:0] rd_ramnrom;
 	wire [ 7:0] rd_dos7ffd;
 
+	// by now you can only use page setting for RAM at #0000, if ROM, the page is not altered
+	wire [3:0] xt_override1 = {xt_override[3:1], xt_override[0] & memconf[3]};
+	wire [3:0] xt_shadow = {{2{memconf[4]}}, 2'b0};
+	// wire [3:0] xt_shadow = {4{memconf[4]}};
+	
 	generate
 
 		genvar i;
@@ -399,10 +410,18 @@ module top(
 			                     .pent1m_ram0_0(pent1m_ram0_0),
 			                     .pent1m_1m_on (pent1m_1m_on),
 
+								 .xt_rampage (xt_ramp[i]),
+								 .xt_rampagsh (xt_ramp[i[0]+4]),
+								 // .xt_rompage (xt_rompage),
+								 .xt_override(xt_override1[i]),
+								 .xt_shadow(xt_shadow[i]),
+								 // .xt_override(xt_override[i]),
+								 // .memconf	(memconf),
 
 			                     .in_nmi(in_nmi),
 
 			                     .atmF7_wr(atmF7_wr_fclk),
+								 // .rampg_wr(rampage_wr),
 
 			                     .dos(dos),
 
@@ -473,15 +492,8 @@ module top(
 		.rd_n  (rd_n), 
 		.wr_n  (wr_n),
 
-		.win0_romnram(romnram[0]),
-		.win1_romnram(romnram[1]),
-		.win2_romnram(romnram[2]),
-		.win3_romnram(romnram[3]),
-
-		.win0_page(page[0]),
-		.win1_page(page[1]),
-		.win2_page(page[2]),
-		.win3_page(page[3]),
+		.win_page({page[3], page[2], page[1], page[0]}),
+		.win_romnram(romnram),
 
 		.romrw_en(romrw_en),
 
@@ -704,16 +716,17 @@ zmaps zmaps(
 		wire [8:0] y_offs;
 		wire [7:0] tsconf;
 		
-		wire [7:0] rampage0;
-		wire [7:0] rampage1;
-		wire [7:0] rampage2;
-		wire [7:0] rampage3;
-		wire [7:0] rompage;
+		wire [47:0] xt_rampage;
+		wire [4:0] xt_rompage;
+		wire [3:0] xt_override;
+		
+		wire [7:0] xt_ramp[0:5];
+		assign {xt_ramp[5], xt_ramp[4], xt_ramp[3], xt_ramp[2], xt_ramp[1], xt_ramp[0]} = xt_rampage;
+		
 		wire [4:0] fmaddr;
 		wire [4:0] tgpage;
 		
 		wire [7:0] sysconf;
-		wire [7:0] memconf;
 		wire [7:0] hint_beg;
 		wire [8:0] vint_beg;
 		wire [7:0] im2vect ;
@@ -738,11 +751,10 @@ zmaps zmaps(
 					.y_offs		(y_offs),
 					.tsconf		(tsconf),
 					
-					.rampage0	(rampage0),
-					.rampage1	(rampage1),
-					.rampage2	(rampage2),
-					.rampage3	(rampage3),
-					.rompage	(rompage),
+					.xt_rampage (xt_rampage),
+					.xt_rompage	(xt_rompage),
+					.xt_override(xt_override),
+					
 					.fmaddr		(fmaddr),
 					.tgpage		(tgpage),
 					
@@ -770,6 +782,7 @@ zmaps zmaps(
 	               .wait_read(8'hFF),
 `endif
 		.atmF7_wr_fclk(atmF7_wr_fclk),
+		// .rampage_wr (rampage_wr),
 
 		.atm_scr_mode(atm_scr_mode),
 		.atm_turbo   (atm_turbo),

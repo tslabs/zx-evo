@@ -218,10 +218,10 @@ module video_mode (
 // Textmode
     wire [20:0] addr_text = {vpage[7:1], addr_tx[cnt_col[1:0]]};
 	wire [13:0] addr_tx[0:3];
-    assign addr_tx[0] = {1'b0, cnt_row[8:3], 1'b0, cnt_col[7:2]};	// char codes, data[15:0]
-    assign addr_tx[1] = {1'b0, cnt_row[8:3], 1'b1, cnt_col[7:2]};	// char attributes, data[31:16]
-    assign addr_tx[2] = {4'b1000, (txt_char[7:0]), cnt_row[2:1]};		// char0 graphics, data[7:0]
-    assign addr_tx[3] = {4'b1000, (txt_char[15:8]), cnt_row[2:1]};	// char1 graphics, data[15:8]
+    assign addr_tx[0] = {vpage[0], cnt_row[8:3], 1'b0, cnt_col[7:2]};			// char codes, data[15:0]
+    assign addr_tx[1] = {vpage[0], cnt_row[8:3], 1'b1, cnt_col[7:2]};			// char attributes, data[31:16]
+    assign addr_tx[2] = {~vpage[0], 3'b000, (txt_char[7:0]), cnt_row[2:1]};		// char0 graphics, data[7:0]
+    assign addr_tx[3] = {~vpage[0], 3'b000, (txt_char[15:8]), cnt_row[2:1]};	// char1 graphics, data[15:8]
 
     // assign addr_tx[0] = {1'b0, 6'd0, 1'b0, cnt_col[7:2]};	// char codes, data[15:0]
     // assign addr_tx[0] = {1'b0, 6'd0, 1'b0, 6'd0};	// char codes, data[15:0]

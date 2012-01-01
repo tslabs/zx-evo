@@ -48,21 +48,14 @@ module zmem(
 
 
 
-	input  wire        win0_romnram, // four windows, each 16k,
-	input  wire        win1_romnram, // ==1 - there is rom,
-	input  wire        win2_romnram, // ==0 - there is ram
-	input  wire        win3_romnram, //
-
-	input  wire [ 7:0] win0_page, // which 16k page is in given window
-	input  wire [ 7:0] win1_page, //
-	input  wire [ 7:0] win2_page, //
-	input  wire [ 7:0] win3_page, //
+	input  wire [ 31:0] win_page, // which 16k page is in given window
+	input  wire [ 3:0] win_romnram, // four windows, each 16k, 1 - rom, 0 - ram
 
 
 	input  wire        romrw_en,
 
 
-	output reg  [ 4:0] rompg, // output for ROM paging
+	output wire [ 4:0] rompg, // output for ROM paging
 	output wire        romoe_n,
 	output wire        romwe_n,
 	output wire        csrom,
@@ -83,13 +76,6 @@ module zmem(
 	output wire        cpu_stall // for zclock
 
 );
-
-
-	wire [1:0] win;
-	reg [7:0] page;
-	reg romnram;
-
-
 
 
 	reg [15:0] rd_buf;
@@ -129,40 +115,16 @@ module zmem(
 
 
 
-	// make paging
-	assign win[1:0] = za[15:14];
-
-	always @*
-	case( win )
-		2'b00: begin
-			page    = win0_page;
-			romnram = win0_romnram;
-		end
-
-		2'b01: begin
-			page    = win1_page;
-			romnram = win1_romnram;
-		end
-
-		2'b10: begin
-			page    = win2_page;
-			romnram = win2_romnram;
-		end
-
-		2'b11: begin
-			page    = win3_page;
-			romnram = win3_romnram;
-		end
-	endcase
-
-
-	// rom paging - only half a megabyte addressing.
-	always @*
-	begin
-		rompg[4:0] = page[4:0];
-	end
-
-
+	// paging
+	wire [1:0] win = za[15:14];
+	wire [7:0] pages[0:3];
+	assign pages[0] = win_page[7:0];
+	assign pages[1] = win_page[15:8];
+	assign pages[2] = win_page[23:16];
+	assign pages[3] = win_page[31:24];
+	wire [7:0] page = pages[win];
+	wire romnram = win_romnram[win];
+	assign rompg = page[4:0];
 
 
 	assign romwe_n = wr_n | mreq_n | (~romrw_en);

@@ -32,11 +32,18 @@ module atm_pager(
 	input  wire        pent1m_ram0_0, // RAM0 to the window 0 from pentagon1024 mode
 	input  wire        pent1m_1m_on,  // 1 meg addressing of pent1m mode on
 
+	input  wire [ 7:0] xt_rampage,
+	input  wire [ 7:0] xt_rampagsh,
+	input  wire		   xt_override,
+	input  wire		   xt_shadow,
+	input  wire	[ 7:0] memconf,
+	
 	input  wire        in_nmi, // when we are in nmi, in 0000-3FFF must be last (FFth)
 	                           // RAM page. analoguous to pent1m_ram0_0
 				   // but has higher priority
 
 	input  wire        atmF7_wr, // write strobe for the xxF7 ATM port
+	//input  wire        rampg_wr, // write strobe for the xxAF XT port
 
 
 	input  wire        dos, // indicates state of computer: also determines ROM mapping
@@ -82,7 +89,7 @@ module atm_pager(
 
 
 
-	// paging function, does not set pages, ramnrom, dos_7ffd
+	// paging function, does NOT set pages, ramnrom, dos_7ffd
 	//
 	always @(posedge fclk)
 	begin
@@ -92,6 +99,14 @@ module atm_pager(
 			page    <= 8'hFF;
 		end
 		else // pager on
+		
+		if (xt_override)
+			begin
+				romnram <= 1'b0;
+				page    <= (xt_shadow & dos) ? xt_rampagsh : xt_rampage;
+			end
+		
+		else
 		begin
 			if( (ADDR==2'b00) && (pent1m_ram0_0 || in_nmi) ) // pent ram0 OR nmi
 			begin
@@ -100,13 +115,14 @@ module atm_pager(
 					romnram <= 1'b0;
 					page    <= 8'hFF;
 				end
-				else // if( pent1m_ram0_0 )
+				else
+				if( pent1m_ram0_0 )
 				begin
 					romnram <= 1'b0;
 					page    <= 8'd0;
 				end
 			end
-			else
+			else	// ADDR !=2'b00
 			begin
 				romnram <= ~ramnrom[ pent1m_ROM ];
 
@@ -141,24 +157,25 @@ module atm_pager(
 
 	// port reading: sets pages, ramnrom, dos_7ffd
 	//
-	always @(posedge fclk) if( atmF7_wr )
-	begin
-		if( za[15:14]==ADDR )
+	always @(posedge fclk)
+		if( atmF7_wr )
 		begin
-			if( za[11] ) // xff7 ports - 1 meg
+			if( za[15:14]==ADDR )
 			begin
-				pages   [ pent1m_ROM ] <= ~{ 2'b11, zd[5:0] };
-				ramnrom [ pent1m_ROM ] <= zd[6];
-				dos_7ffd[ pent1m_ROM ] <= zd[7];
-			end
-			else // x7f7 ports - 4 meg ram
-			begin
-				pages   [ pent1m_ROM ] <= ~zd;
-				ramnrom [ pent1m_ROM ] <= 1'b1; // RAM on
-				// dos_7ffd - UNCHANGED!!! (possibility to use 7ffd 1m and 128k addressing in the whole 4m!)
+				if( za[11] ) // xff7 ports - 1 meg
+				begin
+					pages   [ pent1m_ROM ] <= ~{ 2'b11, zd[5:0] };
+					ramnrom [ pent1m_ROM ] <= zd[6];
+					dos_7ffd[ pent1m_ROM ] <= zd[7];
+				end
+				else // x7f7 ports - 4 meg ram
+				begin
+					pages   [ pent1m_ROM ] <= ~zd;
+					ramnrom [ pent1m_ROM ] <= 1'b1; // RAM on
+					// dos_7ffd - UNCHANGED!!! (possibility to use 7ffd 1m and 128k addressing in the whole 4m!)
+				end
 			end
 		end
-	end
 
 
 	// DOS turn on/turn off
@@ -207,7 +224,7 @@ module atm_pager(
 	begin
 		// переключение в ДОС пзу происходит за полтакта z80 до того, как
 		// z80 считает данные. т.е. у пзу полтакта для выдачи новых данных.
-		// 3.5мгц - 140 нан, 7мгц - 70 нан, 14мгц - 35 нан.
+		// 3.5мгц - 140 нс, 7мгц - 70 нс, 14мгц - 35 нс.
 		// для пзухи 120нс на 14мгц надо еще 3 полтакта добавить, или другими
 		// словами, добавить к любой задержке на любой частоте минимум 3 такта
 		// 28 мгц.
