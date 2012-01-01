@@ -252,7 +252,7 @@ set_global_assignment -name FMAX_REQUIREMENT "5.5296 MHz" -section_id "SPI clock
 
 	# Pin & Location Assignments
 	# ==========================
-	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to clkz_out
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to clkz_out
 set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to vblu[0] -disable
 set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to vblu[1] -disable
 set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to vred[0] -disable
@@ -263,17 +263,17 @@ set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to vgrn[1] -disable
 	# Classic Timing Assignments
 	# ==========================
 set_instance_assignment -name CLOCK_SETTINGS "FPGA clock" -to fclk
-	set_instance_assignment -name CUT ON -from rddata -to zd_out
+set_instance_assignment -name CUT ON -from rddata -to zd_out
 set_instance_assignment -name CLOCK_SETTINGS "Z80 clock" -to clkz_in
 set_instance_assignment -name CLOCK_SETTINGS "SPI clock" -to spick
-	set_instance_assignment -name CUT ON -from clkz_in -to fclk
+set_instance_assignment -name CUT ON -from clkz_in -to fclk
 
 	# Fitter Assignments
 	# ==================
-	set_instance_assignment -name GLOBAL_SIGNAL ON -to fclk
-	set_instance_assignment -name GLOBAL_SIGNAL ON -to clkz_in
-	set_instance_assignment -name GLOBAL_SIGNAL ON -to spick
-	set_instance_assignment -name GLOBAL_SIGNAL ON -to spics_n
+set_instance_assignment -name GLOBAL_SIGNAL ON -to fclk
+set_instance_assignment -name GLOBAL_SIGNAL ON -to clkz_in
+set_instance_assignment -name GLOBAL_SIGNAL ON -to spick
+set_instance_assignment -name GLOBAL_SIGNAL ON -to spics_n
 
 # end ENTITY(top)
 # ---------------
