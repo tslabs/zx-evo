@@ -127,7 +127,7 @@ module top(
 		.h0(h0), .h1(h1),
 		.c0(c0), .c1(c1), .c2(c2), .c3(c3),
 		.ay_clk(ay_clk),
-		.ay_mod(2'b00)
+		.ay_mod(sysconf[4:3])
 	);
 
 
