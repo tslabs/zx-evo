@@ -103,7 +103,8 @@ module atm_pager(
 		if (xt_override)
 			begin
 				romnram <= 1'b0;
-				page    <= (xt_shadow & dos) ? xt_rampagsh : xt_rampage;
+				// page    <= (xt_shadow & dos) ? xt_rampagsh : xt_rampage;
+				page <= xt_shadow ? xt_rampagsh : xt_rampage;
 			end
 		
 		else
