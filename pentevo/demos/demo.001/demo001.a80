@@ -1,0 +1,572 @@
+extern	font8
+extern	pal32
+extern	scrl0
+extern	scrl1
+
+im2_addr:   equ 0x6FFF
+im2_addrh:  equ 0x6F
+im2_vect:   equ 0xFF
+
+; TS-config extended ports definition
+extp:         equ 0xAF
+
+vconfig:      equ 0x00
+vpage:        equ 0x01
+xoffsl:       equ 0x02
+xoffsh:       equ 0x03
+yoffsl:       equ 0x04
+yoffsh:       equ 0x05
+tsconfig:     equ 0x06
+border:       equ 0x0F
+
+rampage0:     equ 0x10
+rampage1:     equ 0x11
+rampage2:     equ 0x12
+rampage3:     equ 0x13
+rompage:      equ 0x14
+fmaddr:       equ 0x15
+rampage2sh:   equ 0x16
+rampage3sh:   equ 0x17
+tgpage:       equ 0x18
+dmasaddrl:    equ 0x1A
+dmasaddrh:    equ 0x1B
+dmasaddrx:    equ 0x1C
+dmadaddrl:    equ 0x1D
+dmadaddrh:    equ 0x1E
+dmadaddrx:    equ 0x1F
+
+sysconfig:    equ 0x20
+memconfig:    equ 0x21
+hsint:        equ 0x22
+vsintl:       equ 0x23
+vsinth:       equ 0x24
+intvect:      equ 0x25
+dmalen:       equ 0x26
+dmactrl:      equ 0x27
+
+
+; some constants
+win0:         equ 0x0000
+win1:         equ 0x4000
+win2:         equ 0x8000
+win3:         equ 0xC000
+
+
+	rseg	CODE
+
+    
+; start initialisation
+	di
+    call ports_init
+    call scrl0_init
+    call scrl1_init
+    call im2_init
+    ei
+    ret
+
+
+; lower scroll initialisation
+
+scrl1_init:
+; vpage 8 will be used for text mode
+
+; copy font to page 9
+; we use here shadow memory regs to avoid coflicts with regular paging
+    ld c, extp
+    ld b, memconfig
+    ld a, 0x10      ; shadow RAM on
+    out (c), a
+    ld b, rampage3sh
+    ld a, 0x09      ; shadow RAM page 9 on
+    out (c), a
+
+    ld hl, font8
+    ld de, win3
+    ld bc, 0x800    ; 2048 bytes of font
+    ldir
+
+    
+; copy text to page 8
+    ld c, extp
+    ld b, rampage3sh
+    ld a, 0x08      ; shadow RAM page 8 on
+    out (c), a
+
+    ld b, 64        ; num of lines
+        
+    ld hl, scrl1
+    ld de, win3
+    
+s1i_01:
+    push bc
+    ld bc, 128
+    ldir
+    
+    
+; prepare attributes for lower scroller
+s1i_00:
+    ld a, r          ; pseudo-random
+    and 0xF
+    jr z, s1i_00    ; black ink is out of our idea =)
+    cp 8
+    jr z, s1i_00
+    
+    push hl
+    push de
+    pop hl
+    inc de
+    ld (hl), a
+    ld c,127
+    ldir
+    pop hl
+
+    pop bc
+    djnz s1i_01
+    
+    ld c, extp
+    ld b, memconfig
+    xor a           ; shadow RAM off
+    out (c), a
+
+    ld (scr1_offs), a   ; nulling offset
+    ld (scr1_offs+1), a
+    ld (scr1_cnt), a
+    ret
+
+
+scrl0_init:
+; vpage 16 will be used for 16c
+
+; we use here shadow memory regs to avoid coflicts with regular paging
+; nulling the scroll buffer - 8192 bytes (256x32)
+    ld c, extp
+    ld b, memconfig
+    ld a, 0x10      ; shadow RAM on
+    out (c), a
+    ld b, rampage3sh
+    ld a, 0x10      ; shadow RAM page 16 on
+    out (c), a
+
+    ld hl, win3
+    ld de, win3+1
+    ld bc, 8191
+    ld (hl), 0
+    ldir
+
+    ld c, extp
+    ld b, memconfig
+    xor a           ; shadow RAM off
+    out (c), a
+
+    
+; palette for 16c initialisation
+
+; open FMAddr window for writing at 0x0000
+    ld c, extp
+    ld b, fmaddr
+    ld a, 0x10
+    out (c), a
+
+; copy 16c palette into cells 0xE0..EF
+    ld hl, pal32
+    ld de, 0x1C0
+    ld bc, 0x20     ;32 bytes
+    ldir
+
+; close FMAddr window
+    ld c, extp
+    ld b, fmaddr
+    xor a
+    out (c), a
+
+    ld (scr0_offs), a   ; nulling offset and counter
+    ld (scr0_offs+1), a
+    ld hl, scrl0
+    ld (scr0_addr), hl  ; set initial addr
+    ret
+    
+    
+; interrupts initialisation
+im2_init:
+
+; prepare IM2 table
+    ld hl, int0
+    ld (im2_addr), hl
+    
+; set INT to start of frame
+    ld c, extp
+    ld b, hsint
+    xor a
+    out (c), a
+    ld b, vsintl
+    out (c), a
+    ld b, vsinth
+    out (c), a
+    
+    ld a, im2_addrh
+    ld i, a
+    im 2
+    ret
+
+    
+; ports initialisation
+ports_init:
+
+; 6912 mode on
+    ld c, extp
+    ld b, vconfig
+    xor a
+    out (c), a
+
+; something to add here
+    ret
+
+
+; int0: start of frame
+; coordinates 0, 0
+;  - keyboard
+;  - mode = 6912
+;  - vpage = 16
+;  - Y offset = 0
+;  - X offset = scr0_offs
+;  - scrolls processing
+int0:
+
+; keyboard
+    rst 56
+    di
+    
+    push af
+    push bc
+
+; mode 6912
+    ld c, extp
+    ld b, vconfig
+    xor a
+    out (c), a
+    
+; vpage = 16
+    ld b, vpage
+    ld a, 16
+    out (c), a
+
+; Y offset = 0
+    ld b, yoffsl
+    xor a
+    out (c), a
+    ld b, yoffsh
+    out (c), a
+
+; X offset = scr0_offs
+    ld b, xoffsl
+    ld a, (scr0_offs)
+    out (c), a
+    ld b, xoffsh
+    ld a, (scr0_offs+1)
+    out (c), a
+    
+    ; ld a,1          ; debug!!!
+    ; out (254), a
+    
+    push hl
+    
+; move INT and its address to next
+    ld c, extp
+    ld b, hsint
+    xor a
+    out (c), a
+    ld b, vsintl
+    ld a, 40
+    out (c), a
+    xor a
+    ld b, vsinth
+    out (c), a
+    
+    ld hl, int1
+    ld (im2_addr), hl
+    
+    call scrl1_proc
+    call scrl0_proc
+    call z, scrl0_char     ; if bits 4:0 of scroller are 0 (Z=1) we need to update next char
+    
+    pop hl
+    pop bc
+    pop af
+    ei
+    ret
+    
+    
+; int1: begin of scroller 0
+; coordinates 0, 40
+;  - mode 16c, 360x288
+;  
+int1:
+    push af
+    push bc
+    
+; mode 16c, 360x288
+    ld c, extp
+    ld b, vconfig
+    ld a, 0xC1
+    out (c), a
+    
+    push hl
+    
+    ; ld a,2          ; debug!!!
+    ; out (254), a
+    
+; move INT and its address to next
+    ld c, extp
+    ld b, hsint
+    xor a
+    out (c), a
+    ld b, vsintl
+    ld a, 72
+    out (c), a
+    xor a
+    ld b, vsinth
+    out (c), a
+    
+    ld hl, int2
+    ld (im2_addr), hl
+    
+    pop hl
+    pop bc
+    pop af
+    ei
+    ret
+
+    
+; int2: end of scroller 0
+; coordinates 0, 72
+;  - mode 6912
+;  - vpage = 5
+;  - X offset = 0
+;  - Y offset = 0
+int2:
+    push af
+    push bc
+
+; mode 6912
+    ld c, extp
+    ld b, vconfig
+    xor a
+    out (c), a
+    
+; vpage = 5
+    ld b, vpage
+    ld a, 5
+    out (c), a
+
+; X offset = 0
+    ld b, xoffsl
+    xor a
+    out (c), a
+    ld b, xoffsh
+    out (c), a
+    
+; Y offset = 0
+    ld b, yoffsl
+    out (c), a
+    ld b, yoffsh
+    out (c), a
+
+    push hl
+    
+    ; ld a,3          ; debug!!!
+    ; out (254), a
+    
+; move INT and its address to next
+    ld c, extp
+    ld b, hsint
+    xor a
+    out (c), a
+    ld b, vsintl
+    ld a, 16
+    out (c), a
+    ld b, vsinth
+    ld a, 1
+    out (c), a
+
+    ld hl, int3
+    ld (im2_addr), hl
+    pop hl
+    pop bc
+    pop af
+    ei
+    ret
+
+    
+; int3: begin of scroller 1
+; coordinates 0, 272
+;  - Y offset = scr1_offs
+;  - mode text, 360x288
+;  - vpage = 8
+
+int3:
+    push af
+    push bc
+    push hl
+
+; Y offset = scr1_offs
+    ld c, extp
+    ld b, yoffsl
+    ld hl, (scr1_offs)
+    out (c), l
+    ld b, yoffsh
+    out (c), h
+
+; mode text, 360x288
+    ld b, vconfig
+    ld a, 0xC3
+    out (c), a
+
+; vpage = 8
+    ld b, vpage
+    ld a, 8
+    out (c), a
+
+    ; ld a,4          ; debug!!!
+    ; out (254), a
+    
+; move INT and its address to next
+    ld c, extp
+    ld b, hsint
+    xor a
+    out (c), a
+    ld b, vsintl
+    out (c), a
+    ld b, vsinth
+    out (c), a
+
+    ld hl, int0
+    ld (im2_addr), hl
+    pop hl
+    pop bc
+    pop af
+    ei
+    ret
+
+    
+; scroll 0 processing
+scrl0_proc:
+
+    ld a, (scr0_offs)
+    add a, 4
+    ld (scr0_offs), a
+    ld b,a
+    
+    ld a, (scr0_offs+1)
+    adc a, 0
+    and 1
+    ld (scr0_offs+1), a
+    
+    ld a, b
+    and 0x1F
+    ret
+    
+    
+; update next char
+scrl0_char:
+    ei              ; since this procdure takes a while, we must not miss next INT
+    push de
+    
+    ld hl, (scr0_addr)
+    inc hl
+
+s0c_01:
+    ld a, (hl)
+    or a
+    jr nz, s0c_00
+    
+    ld hl, scrl0
+    jr s0c_01
+
+s0c_00:
+    ld (scr0_addr), hl
+    
+; calculate address for char within font
+    sub 32
+    ld h, a
+    ld l, 0
+    add hl, hl      ; 512 bytes per char
+    res 6, h
+    set 7, h        ; font will be accessible for read at 0x8000
+    
+; calculate page
+; 16c 32x32 font loaded to the pages 10 and 11
+    rlca
+    rlca
+    rlca
+    and 1
+    or 10
+
+; turn on page
+    ld c, extp
+    ld b, rampage2sh
+    out (c), a      ; shadow RAM page 10 or 11 at 0x8000
+    ld b, memconfig
+    ld a, 0x10      ; shadow RAM on
+    out (c), a
+    ld b, rampage3sh
+    ld a, 0x10      ; shadow RAM page 16 on at 0xC000
+    out (c), a
+
+; calculate address in screen    
+    ld a, (scr0_offs+1)
+    rrca
+    ld a, (scr0_offs)
+    rra
+    add a, 160 + 16
+    ld e, a
+    ld d, 0xC0      ; scroll will be accessible for write at 0xC000
+    
+; copying 16x32 bytes of char
+    ld c, 32
+s0c_02:
+    push de
+    ld b, 16
+s0c_03:
+    ld a, (hl)
+    inc hl
+    ld (de), a
+    inc e
+    djnz s0c_03
+    pop de
+    inc d
+    dec c
+    jr nz, s0c_02
+    
+
+; turn off shadow RAM pages
+    ld c, extp
+    ld b, memconfig
+    xor a           ; shadow RAM off
+    out (c), a
+    
+    pop de
+    ret
+
+
+; scroll 1 processing
+scrl1_proc:
+    ld a, (scr1_cnt)
+    inc a
+    and 3
+    ld (scr1_cnt), a
+    ret nz
+    
+    ld hl, (scr1_offs)
+    inc hl
+    ld (scr1_offs), hl
+    ret
+
+    
+; local variables
+scr0_offs:      equ $       ; 2 bytes
+scr0_addr:      equ $+2     ; 2 bytes
+scr1_offs:      equ $+4     ; 2 bytes
+scr1_cnt:       equ $+6     ; 1 byte
+
+    
+	end
