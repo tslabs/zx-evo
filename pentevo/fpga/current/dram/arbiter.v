@@ -77,58 +77,52 @@
 
 module arbiter(
 
-	input clk,
-	input rst_n,
+	input wire clk,
+	input wire c2,
+	input wire c3,
+	input wire rst_n,
 
-	// dram.v interface
-	output     [20:0] dram_addr,   // address for dram access
-	output reg        dram_req,    // dram request
-	output reg        dram_rnw,    // Read-NotWrite
-	// input             dram_c0,   // cycle begin
-	input             dram_rrdy,   // read data ready (coincides with c3)
-	output      [1:0] dram_bsel,   // positive bytes select: bsel[1] for wrdata[15:8], bsel[0] for wrdata[7:0]
-	output     [15:0] dram_wrdata, // data to be written
+// dram.v interface
+	output wire [20:0] dram_addr,   // address for dram access
+	output reg         dram_req,    // dram request
+	output reg         dram_rnw,    // Read-NotWrite
+	input  wire        dram_rrdy,   // read data ready (coincides with c3)
+	output wire  [1:0] dram_bsel,   // positive bytes select: bsel[1] for wrdata[15:8], bsel[0] for wrdata[7:0]
+	output wire [15:0] dram_wrdata, // data to be written
 
-
-	input reg c3,      // regenerates this signal: end of DRAM cycle. c3 is one-cycle positive pulse just before c0 pulse
-	input reg c2,  // one clock earlier c3
-	input reg c1, // one more earlier
-
-
-	input go, // start video access blocks
-
-	// input [1:0] bw, // required bandwidth: 3'b00 - 1 video cycle per block
-	input wire [3:0] video_bw,
-								// 4'b0x00 - 4 video accesses of 4 (stall of CPU)
-								// 4'b0x01 - 1 video access of 4
-								// 4'b0x10 - 2 video accesses of 4
-								
-								// 4'b1000 - 8 video accesses of 8 (stall of CPU)
-								// 4'b1001 - 1 video access of 8
-								// 4'b1010 - 2 video accesses of 8
-								// 4'b1100 - 4 video accesses of 8
-
-	input  [20:0] video_addr,   // during access block, only when video_strobe==1
-	output wire   video_strobe, // positive one-cycle strobe as soon as there is next video_data available.
-	                            // if there is video_strobe, it coincides with c3 signal
-	output wire    video_next,   // on this signal you can change video_addr; it is one clock leading the video_strobe
-
-	
-	input wire 		   ts_req,
-	input wire  [20:0] ts_addr,
-	output wire        ts_next,
-	output wire        ts_strobe,
-
-
-	input wire        cpu_req,
-	input wire        cpu_rnw,
+// CPU
 	input wire [20:0] cpu_addr,
 	input wire [ 7:0] cpu_wrdata,
+	input wire        cpu_req,
+	input wire        cpu_rnw,
 	input wire        cpu_wrbsel,
-
-	output reg         cpu_next,
-    output reg         cpu_strobe
+	output reg        cpu_next,
+    output reg        cpu_strobe,
 	
+// video
+	input  [20:0] video_addr,   // during access block, only when video_strobe==1
+	output wire   video_next,   // on this signal you can change video_addr; it is one clock leading the video_strobe
+	input wire go, 				// start video access blocks
+	output wire   video_strobe, // positive one-cycle strobe as soon as there is next video_data available.
+	                            // if there is video_strobe, it coincides with c3 signal
+	input wire [4:0] video_bw,
+								// [4:3] - total cycles: 11 = 8 / 01 = 4 / 00 = 2
+								// [2:0] - need cycles
+
+// DMA
+	input wire [20:0] dma_addr,
+	input wire [15:0] dma_wrdata,
+	input wire        dma_req,
+	input wire        dma_rnw,
+	output reg        dma_next,
+    output reg        dma_strobe,
+	
+// TS engine	
+	input wire [20:0] ts_addr,
+	input wire 	      ts_req,
+	output wire       ts_next,
+	output wire       ts_strobe
+
 );
 
 	reg stall;
@@ -144,22 +138,32 @@ module arbiter(
 	wire [2:0] vidmax; // max number of video cycles in a block, depends on bw input
 
 
-	localparam CYC_CPU   = 3'b001;
-	localparam CYC_VIDEO = 3'b010;
-	localparam CYC_TS    = 3'b100;
-	localparam CYC_FREE  = 3'b000;
+// DRAM access priority:
+// - CPU
+// - video
+// - TS
+// - DMA
+	
+	
+	localparam CYC_CPU   = 4'b0001;
+	localparam CYC_VIDEO = 4'b0010;
+	localparam CYC_TS    = 4'b0100;
+	localparam CYC_DMA   = 4'b1000;
+	localparam CYC_FREE  = 4'b0000;
 
-	reg [2:0] curr_cycle; // type of the cycle in progress
-	reg [2:0] next_cycle; // type of the next cycle
+	reg [3:0] curr_cycle; // type of the cycle in progress
+	reg [3:0] next_cycle; // type of the next cycle
 
 	wire next_cpu = next_cycle[0];
 	wire next_vid = next_cycle[1];
 	wire next_ts  = next_cycle[2];
+	wire next_dma = next_cycle[3];
 	wire next_fre = ~|next_cycle;
 	
 	wire curr_cpu = curr_cycle[0];
 	wire curr_vid = curr_cycle[1];
 	wire curr_ts  = curr_cycle[2];
+	wire curr_dma = curr_cycle[3];
 	wire curr_fre = ~|curr_cycle;
 	
 
@@ -178,7 +182,7 @@ module arbiter(
 
 	// assign c0 = dram_c0; // just alias
 
-	wire bw_full = {video_bw[3] & video_bw[2], video_bw[1:0]} == 3'b0;
+	wire bw_full = ~|{video_bw[4] & video_bw[2], video_bw[3] & video_bw[1], video_bw[0]}; // stall when 000/00/0
 
 	// track blk_rem counter: how many cycles left to the end of block (7..0)
 	always @(posedge clk) if( c3 )
@@ -192,7 +196,7 @@ module arbiter(
 	always @*
 	begin
 		if( (blk_rem==3'd0) && go )
-			blk_nrem = {video_bw[3], 2'b11};	// select 4/8 cycles per burst
+			blk_nrem = {video_bw[4:3], 1'b1};	// remaining 7/3/1
 			// blk_nrem = 7;	
 		else
 			blk_nrem = (blk_rem==0) ? 3'd0 : (blk_rem-3'd1);
@@ -201,7 +205,7 @@ module arbiter(
 
 
 	// track vid_rem counter
-	assign vidmax = {video_bw[3] & video_bw[2], video_bw[1:0]}; // number of cycles for video access
+	assign vidmax = {video_bw[2:0]}; // number of cycles for video access
 	// assign vidmax = (3'b001) << bw; // number of cycles to perform
 
 	always @(posedge clk) if( c3 )
@@ -253,8 +257,11 @@ module arbiter(
 				if( cpu_req )
 					next_cycle = CYC_CPU;
 				else
-				if( ts_req )
+				if (ts_req)
 					next_cycle = CYC_TS;
+				else
+				if (dma_req)
+					next_cycle = CYC_DMA;
 				else
 					next_cycle = CYC_FREE;
 			end
@@ -282,8 +289,11 @@ module arbiter(
 					if( cpu_req )
 						next_cycle = CYC_CPU;
 					else
-					if( ts_req )
+					if (ts_req)
 						next_cycle = CYC_TS;
+					else
+					if (dma_req)
+						next_cycle = CYC_DMA;
 					else
 						if( vid_rem==3'd0 )
 							next_cycle = CYC_FREE;
@@ -311,8 +321,8 @@ module arbiter(
 	assign dram_wrdata[15:0] = {2{cpu_wrdata[7:0]}};
 	assign dram_bsel[1:0] = { cpu_wrbsel, ~cpu_wrbsel };
 
-	// assign dram_addr = next_cpu ? cpu_addr : next_vid ? video_addr : ts_addr;
-	assign dram_addr = next_cpu ? cpu_addr : video_addr;	//debug!!!
+	assign dram_addr = next_cpu ? cpu_addr : next_vid ? video_addr : next_ts ? ts_addr : dma_addr;
+	// assign dram_addr = next_cpu ? cpu_addr : video_addr;
 
 
 	always @*

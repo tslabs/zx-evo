@@ -43,7 +43,7 @@ module zports(
 	input  wire [ 7:0] mus_in,  // mouse (xxDF)
 	input  wire [ 4:0] kj_in,
 
-	output reg  [ 3:0] border,
+	output reg  [ 7:0] border,
 
 	
 // eXTension ports
@@ -66,6 +66,8 @@ module zports(
 	output reg [8:0] vint_beg,
 	output reg [7:0] im2vect,
 
+	output wire [4:0] dmaport_wr,
+	output wire y_offs_wr,
 
 	input  wire        dos,
 
@@ -237,7 +239,6 @@ module zports(
 
 
 
-	reg pre_bc1,pre_bdir;
 
 	wire gluclock_on;
 
@@ -304,8 +305,8 @@ module zports(
 
 	always @*
 	begin
-		if( ((loa==PORTFD) && (a[15:14]==2'b11)) || // 0xFFFD ports
-		    (( (loa==VGCOM)&&shadow ) || ( (loa==VGTRK)&&shadow ) || ( (loa==VGSEC)&&shadow ) || ( (loa==VGDAT)&&shadow )) ) // vg93 ports
+			if ( ((loa==PORTFD) & a[15]) || // AY
+		   (( (loa==VGCOM)&&shadow ) || ( (loa==VGTRK)&&shadow ) || ( (loa==VGSEC)&&shadow ) || ( (loa==VGDAT)&&shadow )) ) // vg93 ports
 			external_port = 1'b1;
 		else
 			external_port = 1'b0;
@@ -457,12 +458,16 @@ module zports(
 	localparam YOFFSL		= 8'h04;
 	localparam YOFFSH		= 8'h05;
 	localparam TSCONF		= 8'h06;
+	localparam XBORDER		= 8'h0F;
 
 	localparam RAMPAGE		= 8'h10;	// this uses #10-#13
 	localparam ROMPAGE		= 8'h14;
 	localparam FMADDR		= 8'h15;
-	localparam RAMPAGES		= 8'h16;
+	localparam RAMPAGES		= 8'h16;	// this uses #16-#17
 	localparam TGPAGE		= 8'h18;
+	localparam DMAADDRL		= 8'h1A;
+	localparam DMAADDRH		= 8'h1B;
+	localparam DMAADDRX		= 8'h1C;
 	
 	localparam SYSCONF		= 8'h20;
 	localparam MEMCONF		= 8'h21;
@@ -470,11 +475,22 @@ module zports(
 	localparam VSINTL		= 8'h23;
 	localparam VSINTH		= 8'h24;
 	localparam IM2VECT		= 8'h25;
+	localparam DMALEN		= 8'h26;
+	localparam DMACTRL		= 8'h27;
 
+	
 	wire rampage_h = hoa[7:2] == RAMPAGE[7:2];
 	wire rampagsh_h = hoa[7:1] == RAMPAGES[7:1];
 	wire rampage_wr = portxt_wr & rampage_h;
 	wire rampagsh_wr = portxt_wr & rampagsh_h;
+	
+	assign dmaport_wr[0] = portxt_wr & (hoa == DMAADDRL);
+	assign dmaport_wr[1] = portxt_wr & (hoa == DMAADDRH);
+	assign dmaport_wr[2] = portxt_wr & (hoa == DMAADDRX);
+	assign dmaport_wr[3] = portxt_wr & (hoa == DMALEN);
+	assign dmaport_wr[4] = portxt_wr & (hoa == DMACTRL);
+	
+    assign y_offs_wr = portxt_wr & ((hoa == YOFFSL) | (hoa == YOFFSH));
 	
 	reg [7:0] rampage[0:5];
 	assign xt_rampage = {rampage[5], rampage[4], rampage[3], rampage[2], rampage[1], rampage[0]};
@@ -494,8 +510,17 @@ module zports(
 			if (atmF7_wr_fclk)
 				xt_override[a[15:14]] <= 1'b0;	// if ATM pager write, correspondent override OFF
 		end
+
 		
+	//border port FE
+	always @(posedge zclk)
+		if (portfe_wr)
+			border <= {5'b11110, din[2:0]};
+		else
+		if (portxt_wr & (hoa == XBORDER))
+			border <= din;
 		
+
 	always @(posedge zclk)
 		if (!rst_n)
 		begin
@@ -567,11 +592,6 @@ module zports(
 		end
 	
 
-	//border port FE
-	always @(posedge zclk)
-		if (portfe_wr)
-			border <= {1'b0, din[2], din[1], din[0]};
-		
 		
 	// IDE ports
 
@@ -667,7 +687,8 @@ module zports(
 
 
 
-	assign idedataout = ide_rd_n;
+	// assign idedataout = ide_rd_n;
+	assign idedataout = !ide_wr_n;
 
 
 
@@ -683,36 +704,11 @@ module zports(
 	assign ideout[ 7:0] = ide_wrlo_latch ? idewrreg[ 7:0] : din[ 7:0];
 
 
-
-
-
-
-
 	// AY control
-	always @*
-	begin
-		pre_bc1 = 1'b0;
-		pre_bdir = 1'b0;
-
-		if( loa==PORTFD )
-		begin
-			if( a[15:14]==2'b11 )
-			begin
-				pre_bc1=1'b1;
-				pre_bdir=1'b1;
-			end
-			else if( a[15:14]==2'b10 )
-			begin
-				pre_bc1=1'b0;
-				pre_bdir=1'b1;
-			end
-		end
-	end
-
-	assign ay_bc1  = pre_bc1  & (~iorq_n) & ((~rd_n)|(~wr_n));
-	assign ay_bdir = pre_bdir & (~iorq_n) & (~wr_n);
-
-
+	wire ay_hit = (loa==PORTFD) & a[15] & (~iorq_n);
+	assign ay_bc1  = ay_hit & a[14] & ((~rd_n)|(~wr_n));
+	assign ay_bdir = ay_hit & (~wr_n);
+	
 
 	// 7FFD port
 	reg [7:0] p7ffd, peff7_int;
@@ -989,14 +985,14 @@ module zports(
 	always @*
 	case( a[11:8] )
 
-	4'h0: portbemux = pages[ 7:0 ];
-	4'h1: portbemux = pages[15:8 ];
-	4'h2: portbemux = pages[23:16];
-	4'h3: portbemux = pages[31:24];
-	4'h4: portbemux = pages[39:32];
-	4'h5: portbemux = pages[47:40];
-	4'h6: portbemux = pages[55:48];
-	4'h7: portbemux = pages[63:56];
+	// 4'h0: portbemux = pages[ 7:0 ];
+	// 4'h1: portbemux = pages[15:8 ];
+	// 4'h2: portbemux = pages[23:16];
+	// 4'h3: portbemux = pages[31:24];
+	// 4'h4: portbemux = pages[39:32];
+	// 4'h5: portbemux = pages[47:40];
+	// 4'h6: portbemux = pages[55:48];
+	// 4'h7: portbemux = pages[63:56];
 
 	4'h8: portbemux = ramnroms;
 	4'h9: portbemux = dos7ffds;
@@ -1004,7 +1000,7 @@ module zports(
 	4'hA: portbemux = p7ffd;
 	4'hB: portbemux = peff7_int;
 
-	4'hC: portbemux = { ~atm_pen2, atm_cpm_n, ~atm_pen, 1'bX, atm_turbo, atm_scr_mode };
+	// 4'hC: portbemux = { ~atm_pen2, atm_cpm_n, ~atm_pen, 1'bX, atm_turbo, atm_scr_mode };
 
 	// 4'hD: portbemux = { ~palcolor[4], ~palcolor[2], ~palcolor[0], ~palcolor[5], 2'b11, ~palcolor[3], ~palcolor[1] };
 

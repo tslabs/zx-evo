@@ -325,7 +325,7 @@ module top(
 	wire ena_ports;
 
 
-	wire [3:0] border;
+	wire [7:0] border;
 
 	wire drive_ff;
 
@@ -553,59 +553,66 @@ module top(
 	         );
 
 
-	wire [3:0] video_bw;
+	wire [4:0] video_bw;
 
 	wire [20:0] video_addr;
-	// wire [15:0] video_data;
 	wire video_strobe;
 	wire video_next;
 
-	wire ts_req;
+	wire [20:0] dma_addr;
+	wire [15:0] dma_wrdata;
+	wire dma_req;
+	wire dma_rnw;
+	wire dma_next;
+	wire dma_strobe;
+					 
 	wire [20:0] ts_addr;
-	// wire [15:0] ts_data;
-	wire ts_strobe;
+	wire ts_req;
 	wire ts_next;
+	wire ts_strobe;
 
-	arbiter dramarb( .clk(fclk),
+	arbiter dramarb(
+					 .clk(fclk),
+	                 .c2(c2),
+	                 .c3(c3),
+
 	                 .rst_n(rst_n),
 
 	                 .dram_addr(daddr),
 	                 .dram_req(dreq),
 	                 .dram_rnw(drnw),
-	                 // .dram_c0(c0),
 	                 .dram_rrdy(drrdy),
 	                 .dram_bsel(dbsel),
-	                 // .dram_rddata(dram_rddata),
-	                 // .dram_rd(rd),
 	                 .dram_wrdata(dram_wrdata),
 
-	                 .c1(c1),
-	                 .c2(c2),
-	                 .c3(c3),
+	                 //.cpu_waitcyc(cpu_waitcyc),
+	                 .cpu_addr		(cpu_addr),
+	                 .cpu_wrdata	(cpu_wrdata),
+	                 .cpu_req		(cpu_req),
+	                 .cpu_rnw		(cpu_rnw),
+	                 .cpu_wrbsel	(cpu_wrbsel),
+					 .cpu_next		(cpu_next),
+	                 .cpu_strobe	(cpu_strobe),
 
 	                 .go(go),
 	                 .video_bw(video_bw),
-
 	                 .video_addr(video_addr),
-	                 // .video_data(video_data),
 	                 .video_strobe(video_strobe),
 	                 .video_next(video_next),
 					 
-					 .ts_req		(ts_req),
+	                 .dma_addr		(dma_addr),
+	                 .dma_wrdata	(dma_wrdata),
+	                 .dma_req		(dma_req),
+	                 .dma_rnw		(dma_rnw),
+					 .dma_next		(dma_next),
+	                 .dma_strobe	(dma_strobe),
+					 
+					 // .ts_req		(ts_req),
+					 .ts_req		(0),	//debug
 					 .ts_addr		(ts_addr),
-					 // .ts_data		(ts_data),
 					 .ts_next		(ts_next),
-					 .ts_strobe		(ts_strobe),
-
-	                 //.cpu_waitcyc(cpu_waitcyc),
-					 .cpu_next (cpu_next),
-	                 .cpu_req(cpu_req),
-	                 .cpu_rnw(cpu_rnw),
-	                 .cpu_addr(cpu_addr),
-	                 .cpu_wrbsel(cpu_wrbsel),
-	                 .cpu_wrdata(cpu_wrdata),
-	                 // .cpu_rddata(cpu_rddata),
-	                 .cpu_strobe(cpu_strobe) );
+					 .ts_strobe		(ts_strobe)
+	);
 
 					 
 					 
@@ -630,6 +637,7 @@ module top(
 		.vconf(vconf),
 		.x_offs(x_offs),
 		.y_offs(y_offs),
+		.y_offs_wr(y_offs_wr),
 		.tsconf(tsconf),
 		.tgpage(tgpage),
 		
@@ -718,7 +726,10 @@ zmaps zmaps(
 		
 		wire [47:0] xt_rampage;
 		wire [4:0] xt_rompage;
-		wire [3:0] xt_override;
+		wire [3:0] xt_override;	// crotch!!!
+		
+		wire [4:0] dmaport_wr;
+		wire y_offs_wr;
 		
 		wire [7:0] xt_ramp[0:5];
 		assign {xt_ramp[5], xt_ramp[4], xt_ramp[3], xt_ramp[2], xt_ramp[1], xt_ramp[0]} = xt_rampage;
@@ -764,6 +775,9 @@ zmaps zmaps(
 					.vint_beg	(vint_beg),
 					.im2vect	(im2vect),
 					
+					.dmaport_wr (dmaport_wr),
+                    .y_offs_wr(y_offs_wr),
+					
 	               .keys_in(kbd_port_data),
 	               .mus_in (mus_port_data),
 	               .kj_in  (kj_port_data),
@@ -781,48 +795,70 @@ zmaps zmaps(
 `else
 	               .wait_read(8'hFF),
 `endif
-		.atmF7_wr_fclk(atmF7_wr_fclk),
-		// .rampage_wr (rampage_wr),
-
-		.atm_scr_mode(atm_scr_mode),
-		.atm_turbo   (atm_turbo),
-		.atm_pen     (pager_off),
-		.atm_cpm_n   (cpm_n),
-		.atm_pen2    (atm_pen2),
-
-		.romrw_en(romrw_en),
-
-		.pent1m_ram0_0(pent1m_ram0_0),
-		.pent1m_1m_on (pent1m_1m_on),
-		.pent1m_page  (pent1m_page),
-		.pent1m_ROM   (pent1m_ROM),
-
-		.atm_palwr  (atm_palwr),
-		.atm_paldata(atm_paldata),
-
-		.beeper_wr(beeper_wr),
-		.covox_wr (covox_wr),
-
-		.fnt_wr(fnt_wr),
-		.clr_nmi(clr_nmi),
-
-
-		.pages(~{ rd_pages[7], rd_pages[6],
-		          rd_pages[5], rd_pages[4],
-		          rd_pages[3], rd_pages[2],
-		          rd_pages[1], rd_pages[0] }),
-
-		.ramnroms( rd_ramnrom),
-		.dos7ffds( rd_dos7ffd),
-
-		.palcolor(palcolor),
-
-		.external_port(external_port),
-
-
-		.set_nmi(set_nmi[1])
+					.atmF7_wr_fclk(atmF7_wr_fclk),
+					// .rampage_wr (rampage_wr),
+			
+					.atm_scr_mode(atm_scr_mode),
+					.atm_turbo   (atm_turbo),
+					.atm_pen     (pager_off),
+					.atm_cpm_n   (cpm_n),
+					.atm_pen2    (atm_pen2),
+			
+					.romrw_en(romrw_en),
+			
+					.pent1m_ram0_0(pent1m_ram0_0),
+					.pent1m_1m_on (pent1m_1m_on),
+					.pent1m_page  (pent1m_page),
+					.pent1m_ROM   (pent1m_ROM),
+			
+					.atm_palwr  (atm_palwr),
+					.atm_paldata(atm_paldata),
+			
+					.beeper_wr(beeper_wr),
+					.covox_wr (covox_wr),
+			
+					.fnt_wr(fnt_wr),
+					.clr_nmi(clr_nmi),
+			
+			
+					.pages(~{ rd_pages[7], rd_pages[6],
+							rd_pages[5], rd_pages[4],
+							rd_pages[3], rd_pages[2],
+							rd_pages[1], rd_pages[0] }),
+			
+					.ramnroms( rd_ramnrom),
+					.dos7ffds( rd_dos7ffd),
+			
+					.palcolor(palcolor),
+			
+					.external_port(external_port),
+			
+			
+					.set_nmi(set_nmi[1])
 	);
 
+	
+	wire dma_act;
+	wire dma_zwait;
+	
+	dma dma(
+		.clk		(fclk),
+        .rst_n		(rst_n),
+		
+		.zdata		(d),
+		.dmaport_wr	(dmaport_wr),
+		.dma_act	(dma_act),
+		.dma_zwait	(dma_zwait),
+		
+		.dma_addr	(dma_addr),
+		.dma_rnw	(dma_rnw),
+		.dma_req	(dma_req),
+		.dma_rddata	(dram_rddata),
+		.dma_wrdata	(dma_wrdata),
+		.dma_next	(dma_next),
+		.dma_stb	(dma_strobe)
+	);
+	
 
 	zint zint(
 		.fclk(fclk),

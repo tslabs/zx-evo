@@ -51,6 +51,7 @@ module video_sync (
 	output wire video_go,
 
 // ZX controls
+	input wire y_offs_wr,
 	output wire int_start
 	
 );
@@ -108,7 +109,7 @@ module video_sync (
 
 	// row address for DRAM
 	always @(posedge clk) if (c3)
-		if (frame_start)
+		if (vis_start | (line_start & y_offs_wr_r))
 			cnt_row <=  rstart;
 		else
 		if (line_start & vpix)
@@ -122,11 +123,21 @@ module video_sync (
 	assign vga_cnt_out = {~vcount[0], cnt_out};
 	assign lcount = vcount - vpix_beg - 1;
 
+    
+// Y offset trigger
+    reg y_offs_wr_r;
+    always @(posedge clk)
+        if (y_offs_wr)
+            y_offs_wr_r <= 1'b1;
+        else
+        if (line_start & c3)
+            y_offs_wr_r <= 1'b0;
+    
 	
 // FLASH generator
 	reg [4:0] flash_ctr;
 	assign flash = flash_ctr[4];
-	always @(posedge clk) if (int_start & c3)
+	always @(posedge clk) if (frame_start & c3)
 		flash_ctr <= flash_ctr + 1;
 
 
@@ -154,6 +165,7 @@ module video_sync (
 	
 	assign line_start = (hcount == (HPERIOD - 1));
 	assign frame_start = line_start & (vcount == (VPERIOD - 1));
+	assign vis_start = line_start & (vcount == (VBLNK_END - 1));
 	assign pix_start = (hcount == (hpix_beg - 1 - x_offs));
 	assign tspix_start = (hcount == (hpix_beg - 1));
 	

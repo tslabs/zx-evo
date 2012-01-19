@@ -14,7 +14,8 @@ module video_out (
 	input wire [1:0] plex_sel_in,
 
 // mode controls	
-	input wire hires,
+	input wire tv_hires,
+	input wire vga_hires,
 
 // Z80 pins
 	input  wire [14:0] cram_data_in,
@@ -39,6 +40,7 @@ module video_out (
 	wire plex_sel = vga_on ? plex_sel_in[0] : plex_sel_in[1];
 	wire [7:0] vdata = hires ? {4'b1111, plex_sel ? plex[3:0] : plex[7:4]} : plex;
     wire blank = vga_on ? vga_blank : tv_blank;
+    wire hires = vga_on ? vga_hires : tv_hires;
 
 	wire [14:0] vpix = blank ? 0 : vpixel;
 	// wire [14:0] vpix = blank ? 0 : {vdata[2], 4'b0, vdata[1], 4'b0, vdata[0], 4'b0};		//debug!!!
@@ -62,12 +64,12 @@ module video_out (
 	
 	always @(posedge clk)
 	begin
-		red0 <= pwm[ired][{phase, 1'b0}] ? (cred == 2'b11) ? cred : cred + 2'b1 : cred;
-		grn0 <= pwm[igrn][{phase, 1'b0}] ? (cgrn == 2'b11) ? cgrn : cgrn + 2'b1 : cgrn;
-		blu0 <= pwm[iblu][{phase, 1'b0}] ? (cblu == 2'b11) ? cblu : cblu + 2'b1 : cblu;
-		red1 <= pwm[ired][{phase, 1'b1}] ? (cred == 2'b11) ? cred : cred + 2'b1 : cred;
-		grn1 <= pwm[igrn][{phase, 1'b1}] ? (cgrn == 2'b11) ? cgrn : cgrn + 2'b1 : cgrn;
-		blu1 <= pwm[iblu][{phase, 1'b1}] ? (cblu == 2'b11) ? cblu : cblu + 2'b1 : cblu;
+		red0 <= !pwm[ired][{phase, 1'b0}] | &cred ? cred : cred + 2'b1;
+		grn0 <= !pwm[igrn][{phase, 1'b0}] | &cgrn ? cgrn : cgrn + 2'b1;
+		blu0 <= !pwm[iblu][{phase, 1'b0}] | &cblu ? cblu : cblu + 2'b1;
+		red1 <= !pwm[ired][{phase, 1'b1}] | &cred ? cred : cred + 2'b1;
+		grn1 <= !pwm[igrn][{phase, 1'b1}] | &cgrn ? cgrn : cgrn + 2'b1;
+		blu1 <= !pwm[iblu][{phase, 1'b1}] | &cblu ? cblu : cblu + 2'b1;
 	end
 	
 
