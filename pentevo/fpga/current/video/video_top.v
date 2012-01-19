@@ -38,6 +38,7 @@ module video_top (
 	input wire 		  cram_we,
 	input wire 		  sfys_we,
 	input wire        y_offs_wr,
+	input wire        p7ffd_wr,
 	
 // ZX controls
 	output wire int_start,
@@ -121,6 +122,7 @@ module video_top (
 		.x_offs			(x_offs),
 		.x_offs_mode	(x_offs_mode),
         .line_start     (line_start),
+		.p7ffd_wr	    (p7ffd_wr),
 		.hpix_beg	    (hpix_beg),
 		.hpix_end	    (hpix_end),
 		.vpix_beg	    (vpix_beg),

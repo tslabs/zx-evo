@@ -11,7 +11,7 @@ module video_mode (
 	input wire [7:0] vpage,
 	output reg [7:0] vpage_d,
 	
-// video parameters
+// video parameters & mode controls
 	input  wire [8:0] x_offs,
 	output wire [9:0] x_offs_mode,
 	output wire [8:0] hpix_beg,
@@ -23,6 +23,14 @@ module video_mode (
 	output wire [3:0] fetch_sel,
 	output wire	[1:0] fetch_bsl,
 	input wire	[3:0] fetch_cnt,
+	input wire pix_start,
+	input wire line_start,
+	output wire tv_hires,
+	output reg  vga_hires,
+	output wire [1:0] render_mode,
+	output wire pix_stb,
+	output wire	fetch_stb,
+	output wire nogfx,
 
 // video data
 	input wire [15:0] txt_char,
@@ -32,15 +40,8 @@ module video_mode (
     input wire [8:0] cnt_row,
     input wire cptr,
 	
-// mode controls
-	input wire pix_start,
-	input wire line_start,
-	output wire tv_hires,
-	output reg  vga_hires,
-	output wire [1:0] render_mode,
-	output wire nogfx,
-	output wire pix_stb,
-	output wire	fetch_stb,
+// Z80 controls
+    input wire p7ffd_wr,
     
 // DRAM interface	
     output wire [20:0] video_addr,
@@ -62,10 +63,12 @@ module video_mode (
     always @(posedge clk) if (line_start & c3)
     begin
         vconf_d <= vconf;
-        vpage_d <= vpage;
         x_offs_d <= x_offs;
         vga_hires <= tv_hires;
     end
+    
+    always @(posedge clk) if ((line_start & c3) | p7ffd_wr)
+        vpage_d <= vpage;
     
     
 // clocking strobe for pixels (TV)

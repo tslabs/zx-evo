@@ -68,6 +68,7 @@ module zports(
 
 	output wire [4:0] dmaport_wr,
 	output wire y_offs_wr,
+	output wire p7ffd_wr,
 
 	input  wire        dos,
 
@@ -715,7 +716,7 @@ module zports(
 	reg p7ffd_rom_int;
 	reg block7ffd;
 	wire block1m;
-	wire p7ffd_wr = !a[15] && portfd_wr && !block7ffd;
+	assign p7ffd_wr = !a[15] && portfd_wr && !block7ffd;
 	
 	always @(posedge zclk)
 	begin

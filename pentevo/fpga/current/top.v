@@ -638,6 +638,7 @@ module top(
 		.x_offs(x_offs),
 		.y_offs(y_offs),
 		.y_offs_wr(y_offs_wr),
+		.p7ffd_wr(p7ffd_wr),
 		.tsconf(tsconf),
 		.tgpage(tgpage),
 		
@@ -777,6 +778,7 @@ zmaps zmaps(
 					
 					.dmaport_wr (dmaport_wr),
                     .y_offs_wr(y_offs_wr),
+                    .p7ffd_wr(p7ffd_wr),
 					
 	               .keys_in(kbd_port_data),
 	               .mus_in (mus_port_data),
