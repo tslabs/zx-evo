@@ -1,29 +1,37 @@
+
+DMA:
+ - finish address/counters
+ - code arbitr selection
+ - code device processing
+ - code access to ports with blocking strobes
+ - code z80 wait
+
 Fixes:
- -  fix vertical blank for border 1 pixel at the upper-right corner
- -  migrate 16c to bw 1/4 from 2/8
- -  learn what is read to rddata by c4
- -  make less power-off delay (apx. 2 sec)
- -  IM2 vector to Z80 bus (RTFM)
- -  SYSConfig and CPU clock select
- -  add paging of RAM
- -  fix Xscroll for text mode
- -  make proper clocked altdprams
- -  make CRAM clocked: zclk for WE and fclk for RE
- -  search ways to optimize huge LC usage - one-hot style selectors
+ - fix PWM for TV (make smoother)
+ - fix vertical blank for border 1 pixel at the upper-right corner
+ - learn what is read to rddata by c4
+ - SYSConfig and CPU clock select
+ - fix Xscroll for text mode
+ - make proper clocked altdprams
+ - make CRAM clocked: zclk for WE and fclk for RE
+ - search ways to optimize huge LC usage - one-hot style selectors
 
 Features:
- -  horizontal scrollers
- -  vertical scrollers (unified with Tile mode)
- -  gigascreen mode
- -  s/w writes to X/Y counters on-the-fly
- -  RAM / ROM paging
+ - horizontal scrollers (array)
+ - vertical scrollers (unified with Tile mode)
+ - RAM / ROM paging
+ - 512 bytes no-wait buffer
+ - IM2 vector to Z80 bus (RTFM z80 UG)
+ - LOAD "" for COM-port using X-modem
+ - make less power-off delay (apx. 2 sec) on AVR
+ 
  
 
 NOTES:
 
 When add addr mux for TS address - clk slack is getting "-".
 Fix it by optimizing timings.
- 
+
  
  
  
@@ -104,4 +112,6 @@ Tiles:
 2 - sprites (until 1st leap)	
 3 - sprites (until 2nd leap)
 4 - sprites (until 3rd leap)
+ 
+
  

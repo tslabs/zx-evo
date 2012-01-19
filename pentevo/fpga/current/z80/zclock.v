@@ -76,25 +76,7 @@ module zclock(
 	reg old_rfsh_n;
 
 
-	wire stall;
-
-
 	reg clk14_src; // source for 14MHz clock
-
-
-
-
-
-	wire pre_zpos_35,
-	     pre_zneg_35;
-
-	wire pre_zpos_70,
-	     pre_zneg_70;
-
-	wire pre_zpos_140,
-	     pre_zneg_140;
-
-
 
 
 `ifdef SIMULATE
@@ -139,12 +121,23 @@ module zclock(
 	if( ~rst_n )
 		io_wait_cnt <= 4'd0;
 	else if( io && (!io_r) && zpos && int_turbo[1] )
-		io_wait_cnt[3] <= 1'b1;
-	else if( io_wait_cnt[3] )
+		// io_wait_cnt[3] <= 1'b1;
+		io_wait_cnt[0] <= 1'b1;
+	// else if( io_wait_cnt[3] )
+	else if (|io_wait_cnt)
 		io_wait_cnt <= io_wait_cnt + 4'd1;
 
+		
 	always @(posedge fclk)
 	case( io_wait_cnt )
+		4'b0000: io_wait <= 1'b0;
+		4'b0001: io_wait <= 1'b1;
+		4'b0010: io_wait <= 1'b1;
+		4'b0011: io_wait <= 1'b1;
+		4'b0100: io_wait <= 1'b1;
+		4'b0101: io_wait <= 1'b1;
+		4'b0110: io_wait <= 1'b1;
+		4'b0111: io_wait <= 1'b1;
 		4'b1000: io_wait <= 1'b1;
 		4'b1001: io_wait <= 1'b1;
 		4'b1010: io_wait <= 1'b1;
@@ -159,7 +152,7 @@ module zclock(
 
 
 
-	assign stall = zclk_stall | io_wait;
+	wire stall = zclk_stall | io_wait;
 
 
 
@@ -168,8 +161,8 @@ module zclock(
 	if( !stall )
 		clk14_src <= ~clk14_src;
 	//
-	assign pre_zpos_140 =   clk14_src ;
-	assign pre_zneg_140 = (~clk14_src);
+	wire pre_zpos_140 =   clk14_src ;
+	wire pre_zneg_140 = (~clk14_src);
 
 
 
@@ -181,11 +174,11 @@ module zclock(
 	assign h_prec3_2 = !prec3_cnt && c2;
 
 
-	assign pre_zpos_35 = h_prec3_2;
-	assign pre_zneg_35 = h_prec3_1;
+	wire pre_zpos_35 = h_prec3_2;
+	wire pre_zneg_35 = h_prec3_1;
 
-	assign pre_zpos_70 = c2;
-	assign pre_zneg_70 = c0;
+	wire pre_zpos_70 = c2;
+	wire pre_zneg_70 = c0;
 
 
 	assign pre_zpos = int_turbo[1] ? pre_zpos_140 : ( int_turbo[0] ? pre_zpos_70 : pre_zpos_35 );

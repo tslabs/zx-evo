@@ -18,7 +18,7 @@ module video_render (
 
 // video data
 	input  wire [31:0] data,
-	input  wire [ 3:0] border_in,
+	input  wire [ 7:0] border_in,
 	// input  wire [ 7:0] aaa,
 	input  wire [ 7:0] tsdata_in,
 	output wire [ 7:0] vplex_out
@@ -49,25 +49,19 @@ module video_render (
 
     
 // 16c graphics
-	wire [3:0] hc_dot[0:7];
+	wire [3:0] hc_dot[0:3];
 	assign hc_dot[0] = data[ 7: 4];
 	assign hc_dot[1] = data[ 3: 0];
 	assign hc_dot[2] = data[15:12];
 	assign hc_dot[3] = data[11: 8];
-	assign hc_dot[4] = data[23:20];
-	assign hc_dot[5] = data[19:16];
-	assign hc_dot[6] = data[31:28];
-	assign hc_dot[7] = data[27:24];
-	wire [7:0] hc_pix = {HC_PAL, hc_dot[psel[2:0]]};
+	wire [7:0] hc_pix = {HC_PAL, hc_dot[psel[1:0]]};
 	
     
 // 256c graphics
-	wire [7:0] xc_dot[0:3];
+	wire [7:0] xc_dot[0:1];
 	assign xc_dot[0] = data[ 7: 0];
 	assign xc_dot[1] = data[15: 8];
-	assign xc_dot[2] = data[23:16];
-	assign xc_dot[3] = data[31:24];
-	wire [7:0] xc_pix = {xc_dot[psel[1:0]]};
+	wire [7:0] xc_pix = {xc_dot[psel[0]]};
 
 
 // mode selects
@@ -79,10 +73,10 @@ module video_render (
 
 	
 // video plex muxer
-	wire [7:0] border = {4'hF, border_in};
+	wire [7:0] border = border_in;
 	wire [7:0] pixel = pix[render_mode];
 	wire [7:0] vplex = hvpix & !nogfx ? pixel : border;
-	// wire [7:0] vplex = hvpix & !nogfx ? pixel : aaa;
+	// wire [7:0] vplex = hvpix & !nogfx ? pixel : aaa; // debug!!!
 	assign vplex_out = hires ? {temp, vplex[3:0]} : vplex;		// in hi-res plex contains two pixels 4 bits each
 	// assign vplex_out = hvpix ? |tsdata_in[3:0] ? tsdata_in[7:0] : nogfx ? border : pixel[render_mode] : border;
 	

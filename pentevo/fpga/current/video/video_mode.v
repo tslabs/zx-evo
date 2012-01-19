@@ -9,6 +9,7 @@ module video_mode (
 // video config
 	input wire [7:0] vconf,
 	input wire [7:0] vpage,
+	output reg [7:0] vpage_d,
 	
 // video parameters
 	input  wire [8:0] x_offs,
@@ -33,7 +34,9 @@ module video_mode (
 	
 // mode controls
 	input wire pix_start,
-	output wire hires,
+	input wire line_start,
+	output wire tv_hires,
+	output reg  vga_hires,
 	output wire [1:0] render_mode,
 	output wire nogfx,
 	output wire pix_stb,
@@ -41,19 +44,32 @@ module video_mode (
     
 // DRAM interface	
     output wire [20:0] video_addr,
-    output wire [ 3:0] video_bw
+    output wire [ 4:0] video_bw
 	
 );
 
 
-    wire [2:0] vmod = vconf[2:0];
-	wire [1:0] rres = vconf[7:6];
+    // wire [2:0] vmod = vconf[2:0];
+    wire [2:0] vmod = {1'b0, vconf_d[1:0]};
+	wire [1:0] rres = vconf_d[7:6];
+	assign nogfx = vconf_d[5];
 
-	assign nogfx = &vmod;
 	
-	
-// clocking strobe for pixels
-	assign pix_stb = hires ? f1 : c3;
+// latching regs at line start, delaying hires for 1 line
+    reg [7:0] vconf_d;
+    reg [8:0] x_offs_d;
+    
+    always @(posedge clk) if (line_start & c3)
+    begin
+        vconf_d <= vconf;
+        vpage_d <= vpage;
+        x_offs_d <= x_offs;
+        vga_hires <= tv_hires;
+    end
+    
+    
+// clocking strobe for pixels (TV)
+	assign pix_stb = tv_hires ? f1 : c3;
 
 
 // Modes
@@ -64,7 +80,7 @@ module video_mode (
     localparam M_T2 = 3'h4;		// (reserved)
     localparam M_T0 = 3'h5;		// ZX hi-res (test)
     localparam M_T1 = 3'h6;		// (reserved)
-    localparam M_NG = 3'h7;		// No graphics
+    localparam M_T3 = 3'h7;		// (reserved)
     
 // Render modes (affects 'video_render.v')
     localparam R_ZX = 2'h0;
@@ -77,8 +93,8 @@ module video_mode (
 	wire ftch[0:3];
 	assign fetch_stb = (pix_start | ftch[render_mode]) & c3;
 	assign ftch[R_ZX] = &fetch_cnt[3:0];
-	assign ftch[R_HC] = &fetch_cnt[2:0];
-	assign ftch[R_XC] = &fetch_cnt[1:0];
+	assign ftch[R_HC] = &fetch_cnt[1:0];
+	assign ftch[R_XC] = fetch_cnt[0];
 	assign ftch[R_TX] = &fetch_cnt[3:0];
 
     
@@ -86,26 +102,51 @@ module video_mode (
 	wire [4:0] g_offs[0:7];
 // these values are empiric!!! recheck them occasionally!
     assign g_offs[M_ZX] = 5'd18;
-    assign g_offs[M_HC] = 5'd10;
-    assign g_offs[M_XC] = 5'd6;	
+    assign g_offs[M_HC] = 5'd6;
+    assign g_offs[M_XC] = 5'd4;	
     assign g_offs[M_TX] = 5'd10;
     assign g_offs[M_T2] = 5'd18;
     assign g_offs[M_T0] = 5'd10;
     assign g_offs[M_T1] = 5'd18;
-    assign g_offs[M_NG] = 5'd18;
+    assign g_offs[M_T3] = 5'd18;
     assign go_offs = g_offs[vmod];
 
 
 // fetch selectors
-	assign fetch_sel = vmod == M_TX ? f_txt_sel[cnt_col[1:0]] : {~cptr, ~cptr, cptr, cptr};
-	assign fetch_bsl = vmod == M_TX ? f_txt_bsl[cnt_col[1:0]] : 2'b10;
-
 // Attention: counter is already incremented at the time of video data fetching!
+
+	// wire m_c = (vmod == M_HC) | (vmod == M_XC);
+	// assign fetch_sel = vmod == M_TX ? f_txt_sel[cnt_col[1:0]] : {~cptr, ~cptr, cptr | m_c, cptr | m_c};
+	
+	wire [3:0] f_sel[0:7];
+	assign f_sel[M_ZX] = {~cptr, ~cptr, cptr, cptr};
+	assign f_sel[M_HC] = {~cptr, ~cptr, 2'b11};
+	assign f_sel[M_XC] = {~cptr, ~cptr, 2'b11};
+	assign f_sel[M_TX] = f_txt_sel[cnt_col[1:0]];
+	assign f_sel[M_T2] = {~cptr, ~cptr, cptr, cptr};
+	assign f_sel[M_T0] = {~cptr, ~cptr, cptr, cptr};
+	assign f_sel[M_T1] = {~cptr, ~cptr, cptr, cptr};
+	assign f_sel[M_T3] = {~cptr, ~cptr, cptr, cptr};
+	assign fetch_sel = f_sel[vmod];
+	
+	assign fetch_bsl = vmod == M_TX ? f_txt_bsl[cnt_col[1:0]] : 2'b10;
+	
+	// wire [1:0] f_bsl[0:7];
+	// assign f_bsl[M_ZX] = 2'b10;
+	// assign f_bsl[M_HC] = 2'b10;
+	// assign f_bsl[M_XC] = 2'b10;
+	// assign f_bsl[M_TX] = f_txt_bsl[cnt_col[1:0]];
+	// assign f_bsl[M_T2] = 2'b10;
+	// assign f_bsl[M_T0] = 2'b10;
+	// assign f_bsl[M_T1] = 2'b10;
+	// assign f_bsl[M_T3] = 2'b10;
+	// assign fetch_bsl = f_bsl[vmod];
+
 	wire [3:0] f_txt_sel[0:3];
-	assign f_txt_sel[1] = 4'b0011;	// char
-	assign f_txt_sel[2] = 4'b1100;	// attr
-	assign f_txt_sel[3] = 4'b0001;	// gfx0
-	assign f_txt_sel[0] = 4'b0010;	// gfx1
+	assign f_txt_sel[1] = 4'b0011;			// char
+	assign f_txt_sel[2] = 4'b1100;			// attr
+	assign f_txt_sel[3] = 4'b0001;			// gfx0
+	assign f_txt_sel[0] = 4'b0010;			// gfx1
 	
 	wire [1:0] f_txt_bsl[0:3];
 	assign f_txt_bsl[1] = 2'b10;			// char
@@ -115,25 +156,27 @@ module video_mode (
 	
 
 // X offset
-	assign x_offs_mode = {vmod == M_XC ? {x_offs[8:1], 1'b0} : {1'b0, x_offs[8:1]}, x_offs[0]};
+	assign x_offs_mode = {vmod == M_XC ? {x_offs_d[8:1], 1'b0} : {1'b0, x_offs_d[8:1]}, x_offs_d[0]};
 
 	
 // DRAM bandwidth usage
-    wire [3:0] bw[0:7];
-    assign bw[M_ZX] = 4'b1001;	// 1 of 8 (ZX)
-    assign bw[M_HC] = 4'b1010;	// 2 of 8 (16c)
-    assign bw[M_XC] = 4'b0010;	// 2 of 4 (256c)
-    assign bw[M_TX] = 4'b1100;	// 4 of 8 (text)
-    assign bw[M_T2] = 4'b1001;	// 1 of 8 (reserved)
-    assign bw[M_T0] = 4'b1010;	// 2 of 8 (ZX Hi-res test)
-    assign bw[M_T1] = 4'b1001;	// 4 of 4 (reserved)
-    assign bw[M_NG] = 4'b1001;	// 4 of 8 (No graphics)
+	// [4:3] - total cycles: 11 = 8 / 01 = 4 / 00 = 2
+	// [2:0] - need cycles
+    wire [4:0] bw[0:7];
+    assign bw[M_ZX] = 5'b11001;	// 1 of 8 (ZX)
+    assign bw[M_HC] = 5'b01001;	// 1 of 4 (16c)
+    assign bw[M_XC] = 5'b00001;	// 1 of 2 (256c)
+    assign bw[M_TX] = 5'b11100;	// 4 of 8 (text)
+    assign bw[M_T2] = 5'b11001;	// 1 of 8 (reserved)
+    assign bw[M_T0] = 5'b11010;	// 2 of 8 (ZX Hi-res test)
+    assign bw[M_T1] = 5'b11001;	// 1 of 8 (reserved)
+    assign bw[M_T3] = 5'b11001;	// 1 of 8 (No graphics)
     assign video_bw = bw[vmod];
 
 	
 // pixelrate
 	wire [7:0] pixrate = 8'b00101000;	// change these if you change the modes indexes!
-	assign hires = pixrate[vmod];
+	assign tv_hires = pixrate[vmod];
 
 	
 // render mode
@@ -145,7 +188,7 @@ module video_mode (
     assign r_mode[M_T2] = R_ZX;
     assign r_mode[M_T0] = R_ZX;
     assign r_mode[M_T1] = R_ZX;
-    assign r_mode[M_NG] = R_ZX;
+    assign r_mode[M_T3] = R_ZX;
 	assign render_mode = r_mode[vmod];
 	
 	
@@ -197,31 +240,31 @@ module video_mode (
     assign v_addr[M_T2] = addr_zx;
     assign v_addr[M_T0] = addr_zx;
     assign v_addr[M_T1] = addr_zx;
-    assign v_addr[M_NG] = addr_zx;
+    assign v_addr[M_T3] = addr_zx;
     assign video_addr = v_addr[vmod];
 
  
 // ZX
-	wire [20:0] addr_zx = {vpage, 1'b0, ~cnt_col[0] ? addr_zx_gfx : addr_zx_atr};
+	wire [20:0] addr_zx = {vpage_d, 1'b0, ~cnt_col[0] ? addr_zx_gfx : addr_zx_atr};
 	wire [11:0] addr_zx_gfx = {cnt_row[7:6], cnt_row[2:0], cnt_row[5:3], cnt_col[4:1]};
 	wire [11:0] addr_zx_atr = {3'b110, cnt_row[7:3], cnt_col[4:1]};
 
     
 // 16c
-	wire [20:0] addr_16c = {vpage[7:3], cnt_row, cnt_col[6:0]};
+	wire [20:0] addr_16c = {vpage_d[7:3], cnt_row, cnt_col[6:0]};
 
 
 // 256c
-	wire [20:0] addr_256c = {vpage[7:4], cnt_row, cnt_col[7:0]};
+	wire [20:0] addr_256c = {vpage_d[7:4], cnt_row, cnt_col[7:0]};
 
 
 // Textmode
-    wire [20:0] addr_text = {vpage[7:1], addr_tx[cnt_col[1:0]]};
+    wire [20:0] addr_text = {vpage_d[7:1], addr_tx[cnt_col[1:0]]};
 	wire [13:0] addr_tx[0:3];
-    assign addr_tx[0] = {vpage[0], cnt_row[8:3], 1'b0, cnt_col[7:2]};			// char codes, data[15:0]
-    assign addr_tx[1] = {vpage[0], cnt_row[8:3], 1'b1, cnt_col[7:2]};			// char attributes, data[31:16]
-    assign addr_tx[2] = {~vpage[0], 3'b000, (txt_char[7:0]), cnt_row[2:1]};		// char0 graphics, data[7:0]
-    assign addr_tx[3] = {~vpage[0], 3'b000, (txt_char[15:8]), cnt_row[2:1]};	// char1 graphics, data[15:8]
+    assign addr_tx[0] = {vpage_d[0], cnt_row[8:3], 1'b0, cnt_col[7:2]};			// char codes, data[15:0]
+    assign addr_tx[1] = {vpage_d[0], cnt_row[8:3], 1'b1, cnt_col[7:2]};			// char attributes, data[31:16]
+    assign addr_tx[2] = {~vpage_d[0], 3'b000, (txt_char[7:0]), cnt_row[2:1]};		// char0 graphics, data[7:0]
+    assign addr_tx[3] = {~vpage_d[0], 3'b000, (txt_char[15:8]), cnt_row[2:1]};	// char1 graphics, data[15:8]
 
     // assign addr_tx[0] = {1'b0, 6'd0, 1'b0, cnt_col[7:2]};	// char codes, data[15:0]
     // assign addr_tx[0] = {1'b0, 6'd0, 1'b0, 6'd0};	// char codes, data[15:0]

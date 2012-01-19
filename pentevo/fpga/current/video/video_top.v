@@ -21,11 +21,11 @@ module video_top (
 	output wire	csync,
 
 // video config
-	input wire [3:0] border,
-	input wire [7:0] vpage,
-	input wire [7:0] vconf,
-	input wire [8:0] x_offs,
-	input wire [8:0] y_offs,
+	input wire [7:0] border,
+	input wire [7:0] vpage,     // strobed at line_start
+	input wire [7:0] vconf,     // strobed at line_start
+	input wire [8:0] x_offs,     // strobed at line_start
+	input wire [8:0] y_offs,     // strobed at line_start
 	input wire [7:0] hint_beg,
 	input wire [8:0] vint_beg,
 	input wire [7:0] tsconf,
@@ -37,13 +37,14 @@ module video_top (
 	input wire [15:0] sfys_data_in,
 	input wire 		  cram_we,
 	input wire 		  sfys_we,
+	input wire        y_offs_wr,
 	
 // ZX controls
 	output wire int_start,
 
 // DRAM interface
 	output wire [20:0] video_addr,
-	output wire [ 3:0] video_bw,
+	output wire [ 4:0] video_bw,
 	output wire        video_go, 
 	input  wire [15:0] dram_rddata,
 	input  wire        video_next,
@@ -60,6 +61,7 @@ module video_top (
 
 
     wire [9:0] x_offs_mode;
+	wire [7:0] vpage_d;
 	wire [8:0] hpix_beg;
 	wire [8:0] hpix_end;
 	wire [8:0] vpix_beg;
@@ -70,7 +72,8 @@ module video_top (
 	wire [8:0] lcount;
     wire [4:0] go_offs;
 	wire [1:0] render_mode;
-	wire hires;
+	wire tv_hires;
+	wire vga_hires;
 	wire nogfx;
 	wire tv_blank;
 	wire vga_blank;
@@ -109,6 +112,7 @@ module video_top (
 		.c3			    (c3),
 		.vconf		    (vconf),
 		.vpage	    	(vpage),
+		.vpage_d    	(vpage_d),
 		.fetch_sel		(fetch_sel),
 		.fetch_bsl		(fetch_bsl),
 		.fetch_cnt	    (scnt),
@@ -116,6 +120,7 @@ module video_top (
 		.txt_char	    (fetch_temp[15:0]),
 		.x_offs			(x_offs),
 		.x_offs_mode	(x_offs_mode),
+        .line_start     (line_start),
 		.hpix_beg	    (hpix_beg),
 		.hpix_end	    (hpix_end),
 		.vpix_beg	    (vpix_beg),
@@ -126,7 +131,8 @@ module video_top (
         .cnt_row        (cnt_row),
         .cptr	        (cptr),
 		.pix_start	    (pix_start),
-		.hires		    (hires),
+		.tv_hires		(tv_hires),
+		.vga_hires	    (vga_hires),
 		.nogfx		    (nogfx),
 		.pix_stb	    (pix_stb),
 		.render_mode	(render_mode),
@@ -145,6 +151,7 @@ module video_top (
 		.vpix_end		(vpix_end),
         .go_offs        (go_offs),
         .x_offs         (x_offs_mode[1:0]),
+        .y_offs_wr      (y_offs_wr),
 		.hint_beg		(hint_beg),
 		.vint_beg		(vint_beg),
 		.hsync			(hsync),
@@ -199,7 +206,7 @@ module video_top (
 		.lcount			(lcount),
 		.tsconf			(tsconf),
 		.tgpage			(tgpage),
-		.vpage			(vpage),
+		.vpage			(vpage_d),
 		.sfys_addr_in	(a[8:1]),
 		.sfys_data_in	(sfys_data_in),
 		.sfys_we		(sfys_we),
@@ -237,7 +244,7 @@ module video_top (
 		.hvpix 	        (hvpix),
 		.nogfx			(nogfx),
 		.flash			(flash),
-		.hires			(hires),
+		.hires			(tv_hires),
 		.psel			(scnt),
 		.render_mode	(render_mode),
 		.data	 	    (fetch_data),
@@ -258,7 +265,8 @@ module video_top (
 		.vga_blank		(vga_blank),
 		.vga_line		(vga_line),
 	    .plex_sel_in	({h1, f1}),
-		.hires			(hires),
+		.tv_hires		(tv_hires),
+		.vga_hires		(vga_hires),
 		// .t0			(t0),	//debug
 		.cram_addr_in	(a[8:1]),
 		.cram_data_in	(cram_data_in),
