@@ -1,64 +1,64 @@
-                                                                                                                              
-                                                                                                                              
-                                                                                                                              
-                                                                                                                              
-                                                                                                                              
-                                                                                                                              
-                                                                                                                              
-            Превед, посоны                                                                                                    
-                        Тут кароче bee-goo-ch-kah нарисовалась                                                                
-                Она бежит (КЭП)                                                                                               
-                                    Можно разные bookvy писать (читать)                                                       
-                                                                                                                              
-                Это бегучка для ниасиливателей тс-конфы                                                                       
-                        типа "вот так тоже можно" (но не нужно)                                                               
-                                                                                                                              
-------------------------------------------------------------------------------------------                                    
-                                                                                                                              
-                                                                                                                              
-                                                                                                                              
-        Пользуясь служебным (вертикальным) положением,                                                                        
-                    хочу сообщить верную примету:                                                                             
-                                                                                                                              
-                если сейчас дать команду РАНДОМИЗЭ УСР 15616 то можно словить скрытую                                         
-       часть этой мегадемы (называется RESET)                                                                                 
-                                                                                                                              
-          Конец приметы.                                                                                                      
-                                                                                                                              
-                                                                                                                              
-            Алсо, не стоит юзать SAVE - не к добру это, ой не к добру...                                                      
-                                                                                                                              
-                                                                                                                              
-                                                                                                                              
-                                                                                                                              
-        Im diese Schkroll Sie koennen etwas zu schreiben, ja ja! Das is fantastisch.                                          
-                                                                                                                              
-                                                                                                                              
-                                                                                                                              
-        Technical info:                                                                                                       
-            - upper scroll: mode 360x288, 16c, size 360x32 pix                                                                
-            - lower scroll: mode 360x288, text mode, size 90x6 chars                                                          
-            - middle part: ZX screen, 256x192                                                                                 
-                                                                                                                              
-          Extended Features used:                                                                                             
-            - Extended graphmodes                                                                                             
-            - Programmable INT position                                                                                       
-            - X and Y scrollers                                                                                               
-            - 15625 colors palette                                                                                            
-            - Advanced RAM paging                                                                                             
-                                                                                                                              
-                                                                                                                              
-                                                                                                                              
-            Горяче ня всем chyatekeram und Togyafu v частносте                                                                
-                                                                                                                              
-                                                                                                                              
-                                            (fuck to ATM!!!11111oneone)                                                       
-                                                                                                                              
-                                                                                                                              
-                                                                                                                              
-                                                                                                                              
-        Преведе мудаку Тхуйимсу. Потребляйтеру и просто pee-dah-rah-soo.                                                      
-                                                                                                                              
-   (Tак всегда бывает, вот уже прошло 900 лет, потомки читают beegoochkooh, moo-duck                                          
-          давно разложился, а память о нём живет в beegoochkakh и потомки охреневают -                                        
-                        a кто этот moo-duck??!)                                                                               
+                                                                                                                               
+                                                                                                                               
+                                                                                                                               
+                                                                                                                               
+                                                                                                                               
+                                                                                                                               
+                                                                                                                               
+            Превед, посоны                                                                                                     
+                        Тут кароче bee-goo-ch-kah нарисовалась                                                                 
+                Она бежит (КЭП)                                                                                                
+                                    Можно разные bookvy писать (читать)                                                        
+                                                                                                                               
+                                                                                                                               
+                Это бегучка для ниасиливателей тс-конфы                                                                        
+                                    типа "вот так тоже можно"                                                                  
+                   (но не нужно)                                                                                               
+                                                                                                                               
+                                                                                                                               
+------------------------------------------------------------------------------------------                                     
+                                                                                                                               
+                                                                                                                               
+                                                                                                                               
+        Пользуясь служебным (вертикальным) положением,                                                                         
+                    хочу сообщить верную примету:                                                                              
+                                                                                                                               
+                                                                                                                               
+                если сейчас дать команду РАНДОМИЗЭ УСР 15616 то можно словить скрытую                                          
+                                                                                                                               
+       часть этой мегадемы (называется RESET)                                                                                  
+                                                                                                                               
+                                                                                                                               
+          Конец приметы.                                                                                                       
+                                                                                                                               
+                                                                                                                               
+            Алсо, не стоит юзать SAVE - не к добру это, ой не к добру...                                                       
+                                                                                                                               
+                                                                                                                               
+                                                                                                                               
+                                                                                                                               
+        Im diese Schkroll Sie koennen etwas zu schreiben, ja ja! Das is fantastisch.                                           
+                                                                                                                               
+                                                                                                                               
+                                                                                                                               
+        Technical info:                                                                                                        
+            - upper scroll: mode 360x288, 16c, size 360x32 pix                                                                 
+            - lower scroll: mode 360x288, text mode, size 90x6 chars                                                           
+            - middle part: ZX screen, 256x192                                                                                  
+                                                                                                                               
+          Extended Features used:                                                                                              
+            - Extended graphmodes                                                                                              
+            - Programmable INT position                                                                                        
+            - X and Y scrollers                                                                                                
+            - 15625 colors palette                                                                                             
+            - Advanced RAM paging                                                                                              
+                                                                                                                               
+                                                                                                                               
+                                                                                                                               
+                                                                                                                               
+                                                                                                                               
+            Горяче ня всем chyatekeram und Togyafu v частносте                                                                 
+                                                                                                                               
+                                                                                                                               
+                                            (fuck to ATM!!!11111oneone)                                                        
+                                                                                                                               

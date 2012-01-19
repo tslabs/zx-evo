@@ -76,8 +76,11 @@ scrl1_init:
     ld b, memconfig
     ld a, 0x10      ; shadow RAM on
     out (c), a
+    ld b, rampage2sh
+    ld a, 0x02      ; shadow RAM page 2 on at #8000
+    out (c), a
     ld b, rampage3sh
-    ld a, 0x09      ; shadow RAM page 9 on
+    ld a, 0x09      ; shadow RAM page 9 on at #C000
     out (c), a
 
     ld hl, font8
@@ -112,11 +115,11 @@ s1i_00:
     jr z, s1i_00
     
     push hl
-    push de
-    pop hl
+    ld h, d
+    ld l, e
     inc de
     ld (hl), a
-    ld c,127
+    ld c, 127
     ldir
     pop hl
 
@@ -213,10 +216,10 @@ im2_init:
 ports_init:
 
 ; 6912 mode on
-    ld c, extp
-    ld b, vconfig
-    xor a
-    out (c), a
+    ; ld c, extp
+    ; ld b, vconfig
+    ; xor a
+    ; out (c), a
 
 ; something to add here
     ret
@@ -265,9 +268,6 @@ int0:
     ld a, (scr0_offs+1)
     out (c), a
     
-    ; ld a,1          ; debug!!!
-    ; out (254), a
-    
     push hl
     
 ; move INT and its address to next
@@ -276,7 +276,7 @@ int0:
     xor a
     out (c), a
     ld b, vsintl
-    ld a, 40
+    ld a, 39
     out (c), a
     xor a
     ld b, vsinth
@@ -287,7 +287,7 @@ int0:
     
     call scrl1_proc
     call scrl0_proc
-    call z, scrl0_char     ; if bits 4:0 of scroller are 0 (Z=1) we need to update next char
+    call z, scrl0_char     ; if next move will be last (Z=1) we need to update next char
     
     pop hl
     pop bc
@@ -297,7 +297,7 @@ int0:
     
     
 ; int1: begin of scroller 0
-; coordinates 0, 40
+; coordinates 0, 39
 ;  - mode 16c, 360x288
 ;  
 int1:
@@ -312,16 +312,13 @@ int1:
     
     push hl
     
-    ; ld a,2          ; debug!!!
-    ; out (254), a
-    
 ; move INT and its address to next
     ld c, extp
     ld b, hsint
     xor a
     out (c), a
     ld b, vsintl
-    ld a, 72
+    ld a, 71
     out (c), a
     xor a
     ld b, vsinth
@@ -338,7 +335,7 @@ int1:
 
     
 ; int2: end of scroller 0
-; coordinates 0, 72
+; coordinates 0, 71
 ;  - mode 6912
 ;  - vpage = 5
 ;  - X offset = 0
@@ -373,16 +370,13 @@ int2:
 
     push hl
     
-    ; ld a,3          ; debug!!!
-    ; out (254), a
-    
 ; move INT and its address to next
     ld c, extp
     ld b, hsint
     xor a
     out (c), a
     ld b, vsintl
-    ld a, 16
+    ld a, 15
     out (c), a
     ld b, vsinth
     ld a, 1
@@ -398,7 +392,7 @@ int2:
 
     
 ; int3: begin of scroller 1
-; coordinates 0, 272
+; coordinates 0, 271
 ;  - Y offset = scr1_offs
 ;  - mode text, 360x288
 ;  - vpage = 8
@@ -425,9 +419,6 @@ int3:
     ld b, vpage
     ld a, 8
     out (c), a
-
-    ; ld a,4          ; debug!!!
-    ; out (254), a
     
 ; move INT and its address to next
     ld c, extp
@@ -463,12 +454,13 @@ scrl0_proc:
     
     ld a, b
     and 0x1F
+    cp 0x1C
     ret
     
     
 ; update next char
 scrl0_char:
-    ei              ; since this procdure takes a while, we must not miss next INT
+    ei              ; since this procedure takes a while, we must not miss next INT
     push de
     
     ld hl, (scr0_addr)
@@ -517,7 +509,7 @@ s0c_00:
     rrca
     ld a, (scr0_offs)
     rra
-    add a, 160 + 16
+    add a, 160 + 20
     ld e, a
     ld d, 0xC0      ; scroll will be accessible for write at 0xC000
     
