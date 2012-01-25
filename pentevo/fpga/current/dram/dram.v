@@ -46,7 +46,6 @@ module dram(
 	input rnw,         // READ/nWRITE (=1: read, =0: write)
 
 	input c0, c1, c2, c3,
-	output reg rrdy,       // Read data ReaDY
 
 	output reg [15:0] rddata, // data just read
 
@@ -81,11 +80,16 @@ module dram(
 
 
 // incoming data latching
+	always @(posedge clk) if (c0)
+    begin
+		int_wrdata <= wrdata;
+    end
+        
+// incoming addr and bsel latching
 	always @(posedge clk) if (c3)
 	begin
-		int_addr   <= addr;
-		int_wrdata <= wrdata;
 		int_bsel   <= bsel;
+		int_addr   <= addr;
 	end
 
 	
@@ -156,11 +160,6 @@ module dram(
 	always @(posedge clk)
 		if (c2 & state[0])
 			rddata <= rd;
-
-
-// rrdy control
-	always @(posedge clk)
-       rrdy <= c2 & state[0];
 
 
 	// reset must be synchronous here in order to preserve

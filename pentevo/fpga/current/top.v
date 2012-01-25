@@ -138,7 +138,6 @@ module top(
 
 	wire rst_n; // global reset
 
-	wire rrdy;
 	wire [15:0] rddata;
 
 	wire [4:0] rompg;
@@ -538,7 +537,6 @@ module top(
 	           .c1(c1),
 	           .c2(c2),
 	           .c3(c3),
-	           .rrdy(drrdy),
 	           .rddata(dram_rddata),
 	           .wrdata(dram_wrdata),
 	           .bsel(dbsel),
@@ -581,7 +579,6 @@ module top(
 	                 .dram_addr(daddr),
 	                 .dram_req(dreq),
 	                 .dram_rnw(drnw),
-	                 .dram_rrdy(drrdy),
 	                 .dram_bsel(dbsel),
 	                 .dram_wrdata(dram_wrdata),
 
@@ -603,12 +600,15 @@ module top(
 	                 .dma_addr		(dma_addr),
 	                 .dma_wrdata	(dma_wrdata),
 	                 .dma_req		(dma_req),
+	                 // .dma_req		(0),
+	                 // .dma_req		(memconf[7]),
 	                 .dma_rnw		(dma_rnw),
+	                 // .dma_rnw		(1),    // debug
 					 .dma_next		(dma_next),
 	                 .dma_strobe	(dma_strobe),
 					 
 					 // .ts_req		(ts_req),
-					 .ts_req		(0),	//debug
+					 .ts_req		(0),	// debug
 					 .ts_addr		(ts_addr),
 					 .ts_next		(ts_next),
 					 .ts_strobe		(ts_strobe)
@@ -729,7 +729,7 @@ zmaps zmaps(
 		wire [4:0] xt_rompage;
 		wire [3:0] xt_override;	// crotch!!!
 		
-		wire [4:0] dmaport_wr;
+		wire [7:0] dmaport_wr;
 		wire y_offs_wr;
 		
 		wire [7:0] xt_ramp[0:5];
@@ -845,20 +845,21 @@ zmaps zmaps(
 	
 	dma dma(
 		.clk		(fclk),
+		.c2		    (c2),
         .rst_n		(rst_n),
 		
 		.zdata		(d),
 		.dmaport_wr	(dmaport_wr),
 		.dma_act	(dma_act),
-		.dma_zwait	(dma_zwait),
+		.dma_wait	(dma_wait),
 		
-		.dma_addr	(dma_addr),
-		.dma_rnw	(dma_rnw),
-		.dma_req	(dma_req),
-		.dma_rddata	(dram_rddata),
-		.dma_wrdata	(dma_wrdata),
-		.dma_next	(dma_next),
-		.dma_stb	(dma_strobe)
+		.dram_addr	(dma_addr),
+		.dram_rnw	(dma_rnw),
+		.dram_req	(dma_req),
+		.dram_rddata(dram_rddata),
+		.dram_wrdata(dma_wrdata),
+		.dram_next	(dma_next),
+		.dram_stb	(dma_strobe)
 	);
 	
 

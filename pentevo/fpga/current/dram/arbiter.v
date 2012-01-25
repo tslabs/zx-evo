@@ -86,7 +86,6 @@ module arbiter(
 	output wire [20:0] dram_addr,   // address for dram access
 	output reg         dram_req,    // dram request
 	output reg         dram_rnw,    // Read-NotWrite
-	input  wire        dram_rrdy,   // read data ready (coincides with c3)
 	output wire  [1:0] dram_bsel,   // positive bytes select: bsel[1] for wrdata[15:8], bsel[0] for wrdata[7:0]
 	output wire [15:0] dram_wrdata, // data to be written
 
@@ -289,16 +288,16 @@ module arbiter(
 					if( cpu_req )
 						next_cycle = CYC_CPU;
 					else
-					if (ts_req)
-						next_cycle = CYC_TS;
-					else
-					if (dma_req)
-						next_cycle = CYC_DMA;
-					else
-						if( vid_rem==3'd0 )
-							next_cycle = CYC_FREE;
-						else
+						if (|vid_rem)
 							next_cycle = CYC_VIDEO;
+						else
+                            if (ts_req)
+                                next_cycle = CYC_TS;
+                            else
+                            if (dma_req)
+                                next_cycle = CYC_DMA;
+                            else
+                                next_cycle = CYC_FREE;
 				end
 			end
 		end
@@ -318,9 +317,8 @@ module arbiter(
 
 	// route required data/etc. to and from the dram.v
 
-	assign dram_wrdata[15:0] = {2{cpu_wrdata[7:0]}};
-	assign dram_bsel[1:0] = { cpu_wrbsel, ~cpu_wrbsel };
-
+	assign dram_wrdata = curr_dma ? dma_wrdata : {2{cpu_wrdata[7:0]}};
+	assign dram_bsel[1:0] = next_dma ? 2'b11 : {cpu_wrbsel, ~cpu_wrbsel};
 	assign dram_addr = next_cpu ? cpu_addr : next_vid ? video_addr : next_ts ? ts_addr : dma_addr;
 	// assign dram_addr = next_cpu ? cpu_addr : video_addr;
 
@@ -332,12 +330,15 @@ module arbiter(
 			dram_req = 1'b0;
 			dram_rnw = 1'b1;
 		end
-		else // CYC_CPU or CYC_VIDEO
+		else
 		begin
 			dram_req = 1'b1;
-			if( next_cpu ) // CYC_CPU
+			if( next_cpu )
 				dram_rnw = cpu_rnw;
-			else // CYC_VIDEO
+            else
+			if( next_dma )
+				dram_rnw = dma_rnw;
+			else
 				dram_rnw = 1'b1;
 		end
 	end
@@ -360,11 +361,14 @@ module arbiter(
 	end
 
 
-	assign video_next = curr_vid & c2;
+	assign video_next   = curr_vid & c2;
 	assign video_strobe = curr_vid & c3;
 
-	assign ts_next = curr_ts & c2;
+	assign ts_next   = curr_ts & c2;
 	assign ts_strobe = curr_ts & c3;
+
+	assign dma_next   = curr_dma & c2;
+	assign dma_strobe = curr_dma & c3;
 
 	
 endmodule

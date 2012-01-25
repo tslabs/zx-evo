@@ -66,7 +66,7 @@ module zports(
 	output reg [8:0] vint_beg,
 	output reg [7:0] im2vect,
 
-	output wire [4:0] dmaport_wr,
+	output wire [7:0] dmaport_wr,
 	output wire y_offs_wr,
 	output wire p7ffd_wr,
 
@@ -466,9 +466,12 @@ module zports(
 	localparam FMADDR		= 8'h15;
 	localparam RAMPAGES		= 8'h16;	// this uses #16-#17
 	localparam TGPAGE		= 8'h18;
-	localparam DMAADDRL		= 8'h1A;
-	localparam DMAADDRH		= 8'h1B;
-	localparam DMAADDRX		= 8'h1C;
+	localparam DMASADDRL	= 8'h1A;
+	localparam DMASADDRH	= 8'h1B;
+	localparam DMASADDRX	= 8'h1C;
+	localparam DMADADDRL	= 8'h1D;
+	localparam DMADADDRH	= 8'h1E;
+	localparam DMADADDRX	= 8'h1F;
 	
 	localparam SYSCONF		= 8'h20;
 	localparam MEMCONF		= 8'h21;
@@ -485,11 +488,14 @@ module zports(
 	wire rampage_wr = portxt_wr & rampage_h;
 	wire rampagsh_wr = portxt_wr & rampagsh_h;
 	
-	assign dmaport_wr[0] = portxt_wr & (hoa == DMAADDRL);
-	assign dmaport_wr[1] = portxt_wr & (hoa == DMAADDRH);
-	assign dmaport_wr[2] = portxt_wr & (hoa == DMAADDRX);
-	assign dmaport_wr[3] = portxt_wr & (hoa == DMALEN);
-	assign dmaport_wr[4] = portxt_wr & (hoa == DMACTRL);
+	assign dmaport_wr[0] = portxt_wr & (hoa == DMASADDRL);
+	assign dmaport_wr[1] = portxt_wr & (hoa == DMASADDRH);
+	assign dmaport_wr[2] = portxt_wr & (hoa == DMASADDRX);
+	assign dmaport_wr[3] = portxt_wr & (hoa == DMADADDRL);
+	assign dmaport_wr[4] = portxt_wr & (hoa == DMADADDRH);
+	assign dmaport_wr[5] = portxt_wr & (hoa == DMADADDRX);
+	assign dmaport_wr[6] = portxt_wr & (hoa == DMALEN);
+	assign dmaport_wr[7] = portxt_wr & (hoa == DMACTRL);
 	
     assign y_offs_wr = portxt_wr & ((hoa == YOFFSL) | (hoa == YOFFSH));
 	
