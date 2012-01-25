@@ -1,10 +1,10 @@
 
 DMA:
- - finish address/counters
- - code arbitr selection
- - code device processing
  - code access to ports with blocking strobes
  - code z80 wait
+ - separate INT for DMA with vector
+ - option to receive INT before burst end (?)
+ - multilevel INT (delayed for non-VINT)
 
 Fixes:
  - fix PWM for TV (make smoother)
@@ -17,6 +17,9 @@ Fixes:
  - search ways to optimize huge LC usage - one-hot style selectors
 
 Features:
+ - DOS switch to RAM #FF when in/out to VG93 and FDDVirt[(#FF)]
+ - back to DOS by ld b,b (opcode #40) + jmp nnnn (next but one M1)
+
  - horizontal scrollers (array)
  - vertical scrollers (unified with Tile mode)
  - RAM / ROM paging
