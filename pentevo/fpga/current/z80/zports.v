@@ -65,6 +65,7 @@ module zports(
 	output reg [7:0] hint_beg,
 	output reg [8:0] vint_beg,
 	output reg [7:0] im2vect,
+	output reg [3:0] fddvirt,
 
 	output wire [7:0] dmaport_wr,
 	output wire y_offs_wr,
@@ -82,10 +83,13 @@ module zports(
 
 	input  wire        tape_read,
 
-	output wire        vg_cs_n,
 	input  wire        vg_intrq,
 	input  wire        vg_drq, // from vg93 module - drq + irq read
-	output wire        vg_wrFF,        // write strobe of #FF port
+	output wire        vg_cs_n,
+	output wire        vg_wrFF,
+    
+	input wire  [1:0]  vg_a,
+	output wire        virt_vg_hit,        // this is crafted offhand, should be re-fined somehow
 
 	output reg         sdcs_n,
 	output wire        sd_start,
@@ -459,6 +463,7 @@ module zports(
 	localparam YOFFSL		= 8'h04;
 	localparam YOFFSH		= 8'h05;
 	localparam TSCONF		= 8'h06;
+	localparam PSEL 		= 8'h07;
 	localparam XBORDER		= 8'h0F;
 
 	localparam RAMPAGE		= 8'h10;	// this uses #10-#13
@@ -481,6 +486,7 @@ module zports(
 	localparam IM2VECT		= 8'h25;
 	localparam DMALEN		= 8'h26;
 	localparam DMACTRL		= 8'h27;
+	localparam FDDVIRT		= 8'h28;
 
 	
 	wire rampage_h = hoa[7:2] == RAMPAGE[7:2];
@@ -845,7 +851,8 @@ module zports(
 	// VG93 control
 	assign vg_cs_n =  (~shadow) | iorq_n | (rd_n & wr_n) | ( ~((loa==VGCOM)|(loa==VGTRK)|(loa==VGSEC)|(loa==VGDAT)) );
 
-
+    wire vgsys_cs = shadow & !iorq_n & (!rd_n | !wr_n) & (loa==VGSYS);
+    assign virt_vg_hit = (!vg_cs_n | vgsys_cs) & fddvirt[vg_a];
 
 
 

@@ -605,13 +605,11 @@ module top(
 	                 .dma_rnw		(dma_rnw),
 	                 // .dma_rnw		(1),    // debug
 					 .dma_next		(dma_next),
-	                 .dma_strobe	(dma_strobe),
 					 
 					 // .ts_req		(ts_req),
 					 .ts_req		(0),	// debug
 					 .ts_addr		(ts_addr),
-					 .ts_next		(ts_next),
-					 .ts_strobe		(ts_strobe)
+					 .ts_next		(ts_next)
 	);
 
 					 
@@ -727,7 +725,7 @@ zmaps zmaps(
 		
 		wire [47:0] xt_rampage;
 		wire [4:0] xt_rompage;
-		wire [3:0] xt_override;	// crotch!!!
+		wire [3:0] xt_override;	    // crotch!!!
 		
 		wire [7:0] dmaport_wr;
 		wire y_offs_wr;
@@ -742,6 +740,7 @@ zmaps zmaps(
 		wire [7:0] hint_beg;
 		wire [8:0] vint_beg;
 		wire [7:0] im2vect ;
+		wire [3:0] fddvirt ;
 		
 
 	zports zports( .zclk(zclk), .fclk(fclk), .rst_n(rst_n), .zpos(zpos), .zneg(zneg),
@@ -749,9 +748,8 @@ zmaps zmaps(
 	               .a(a), .iorq_n(iorq_n), .rd_n(rd_n), .wr_n(wr_n), .porthit(porthit),
 	               .ay_bdir(ay_bdir), .ay_bc1(ay_bc1), .border(border),
 	               .peff7(peff7), .mreq_n(mreq_n), .m1_n(m1_n), .dos(dos),
-	               .rstrom(rstrom), .vg_intrq(intrq), .vg_drq(drq), .vg_wrFF(vg_wrFF),
-	               .vg_cs_n(vg_cs_n), .sd_start(sd_start), .sd_dataout(sd_dataout),
-	               .sd_datain(sd_datain), .sdcs_n(sdcs_n),
+	               .rstrom(rstrom), .vg_intrq(intrq), .vg_drq(drq), .vg_wrFF(vg_wrFF), .vg_cs_n(vg_cs_n),
+                   .sd_start(sd_start), .sd_dataout(sd_dataout), .sd_datain(sd_datain), .sdcs_n(sdcs_n),
 	               .idein(idein), .ideout(ideout), .idedataout(idedataout),
 	               .ide_a(ide_a), .ide_cs0_n(ide_cs0_n), .ide_cs1_n(ide_cs1_n),
 	               .ide_wr_n(ide_wr_n), .ide_rd_n(ide_rd_n),
@@ -775,6 +773,8 @@ zmaps zmaps(
 					.hint_beg	(hint_beg),
 					.vint_beg	(vint_beg),
 					.im2vect	(im2vect),
+					.fddvirt	(fddvirt),
+                    .vg_a       (vg_a),
 					
 					.dmaport_wr (dmaport_wr),
                     .y_offs_wr(y_offs_wr),
@@ -852,14 +852,14 @@ zmaps zmaps(
 		.dmaport_wr	(dmaport_wr),
 		.dma_act	(dma_act),
 		.dma_wait	(dma_wait),
+		.rfsh_n     (rfsh_n),
 		
 		.dram_addr	(dma_addr),
 		.dram_rnw	(dma_rnw),
 		.dram_req	(dma_req),
-		.dram_rddata(dram_rddata),
+		.dram_rddata(rd),
 		.dram_wrdata(dma_wrdata),
-		.dram_next	(dma_next),
-		.dram_stb	(dma_strobe)
+		.dram_next	(dma_next)
 	);
 	
 
@@ -876,8 +876,7 @@ zmaps zmaps(
 		.int_n(int_n)
 	);
 
-	znmi znmi
-	(
+	znmi znmi(
 		.rst_n(rst_n),
 		.fclk(fclk),
 		.zpos(zpos),
@@ -897,24 +896,29 @@ zmaps zmaps(
 
 
 
-	zwait zwait( .wait_start_gluclock(wait_start_gluclock),
+	zwait zwait( 
+                 .wait_start_gluclock(wait_start_gluclock),
 	             .wait_start_comport (wait_start_comport),
 	             .wait_end(wait_end),
 	             .rst_n(rst_n),
+                 .dma_wait(dma_wait),
 	             .wait_n(wait_n),
 	             .waits(waits),
-	             .spiint_n(spiint_n) );
+	             .spiint_n(spiint_n)
+    );
 
 
 
 
-	wire [1:0] vg_ddrv;
-	assign vg_a[0] = vg_ddrv[0] ? 1'b1 : 1'b0; // possibly open drain?
-	assign vg_a[1] = vg_ddrv[1] ? 1'b1 : 1'b0;
+	// wire [1:0] vg_ddrv;
+	// assign vg_a[0] = vg_ddrv[0] ? 1'b1 : 1'b0; // possibly open drain?
+	// assign vg_a[1] = vg_ddrv[1] ? 1'b1 : 1'b0;
 
 	vg93 vgshka( .zclk(zclk), .rst_n(rst_n), .fclk(fclk), .vg_clk(vg_clk),
 	             .vg_res_n(vg_res_n), .din(d), .intrq(intrq), .drq(drq), .vg_wrFF(vg_wrFF),
-	             .vg_hrdy(vg_hrdy), .vg_rclk(vg_rclk), .vg_rawr(vg_rawr), .vg_a(vg_ddrv),
+	             .vg_hrdy(vg_hrdy), .vg_rclk(vg_rclk), .vg_rawr(vg_rawr),
+                 // .vg_a(vg_ddrv),
+                 .vg_a(vg_a),
 	             .vg_wrd(vg_wrd), .vg_side(vg_side), .step(step), .vg_sl(vg_sl), .vg_sr(vg_sr),
 	             .vg_tr43(vg_tr43), .rdat_n(rdat_b_n), .vg_wf_de(vg_wf_de), .vg_drq(vg_drq),
 	             .vg_irq(vg_irq), .vg_wd(vg_wd) );

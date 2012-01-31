@@ -17,7 +17,7 @@
 // c0:   __________/```````\_______________________/```````\_______________________/```````\_______________________/
 // rrdy: __________________________________/```````\________________________________________________________________
 // addr: XX< addr  >XXXXXXXXXXXXXXXXXXXXXXX< addr  >XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-//wrdata:XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX< write >XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+//wrdata:XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX< write >XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 //rddata:XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX< read  >XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 //
 // comments:
@@ -73,6 +73,10 @@ module dram(
 	localparam RD   = 2'b01;	// because there are
 	localparam WR   = 2'b10;	// bit dependencies
 	
+    wire idle = |state;
+    wire read = state[0];
+    wire write = state[1];
+    
 	wire [1:0] next_state = int_req ? rnw ? RD : WR : RFSH;
 	
 	always @(posedge clk) if (c3)
@@ -80,7 +84,7 @@ module dram(
 
 
 // incoming data latching
-	always @(posedge clk) if (c0)
+	always @(posedge clk) if (c0)      // changed: now wrdata is latched 1 clk later - at c0 of current cycle (NOT at c3 of previous as before)
     begin
 		int_wrdata <= wrdata;
     end
@@ -102,7 +106,7 @@ module dram(
 	always @(posedge clk)
 	begin
 		if (c0)
-			if (|state)
+			if (idle)
 			begin
 				rras0_n <= int_addr[0];
 				rras1_n <= ~int_addr[0];
@@ -114,10 +118,10 @@ module dram(
 			end
 				
 		if (c1)
-			if (|state)
+			if (idle)
 			begin
-				rlcas_n <= state[1] ? ~int_bsel[0] : 1'b0;
-				rucas_n <= state[1] ? ~int_bsel[1] : 1'b0;
+				rlcas_n <= write ? ~int_bsel[0] : 1'b0;
+				rucas_n <= write ? ~int_bsel[1] : 1'b0;
 			end
 			else
 			begin
@@ -127,7 +131,7 @@ module dram(
 			end
 	
 		if (c2)
-			if (|state)
+			if (idle)
 			begin
 				rras0_n <= 1'b1;
 				rras1_n <= 1'b1;
@@ -158,7 +162,7 @@ module dram(
 
 // read data from DRAM
 	always @(posedge clk)
-		if (c2 & state[0])
+		if (c2 & read)
 			rddata <= rd;
 
 

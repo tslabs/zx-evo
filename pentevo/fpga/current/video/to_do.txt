@@ -1,24 +1,24 @@
 
 DMA:
- - code access to ports with blocking strobes
- - code z80 wait
- - separate INT for DMA with vector
- - option to receive INT before burst end (?)
- - multilevel INT (delayed for non-VINT)
+ - access to ports with blocking strobes
+ - DMA status bit
 
 Fixes:
  - fix PWM for TV (make smoother)
  - fix vertical blank for border 1 pixel at the upper-right corner
  - learn what is read to rddata by c4
  - SYSConfig and CPU clock select
- - fix Xscroll for text mode
+ ? fix Xscroll for text mode
  - make proper clocked altdprams
  - make CRAM clocked: zclk for WE and fclk for RE
  - search ways to optimize huge LC usage - one-hot style selectors
+ - move video to fetcher at c2
+ - investigate 14mhz wait length
 
 Features:
- - DOS switch to RAM #FF when in/out to VG93 and FDDVirt[(#FF)]
+ - DOS switch to RAM #nn when in/out to VG93 and FDDVirt[(#FF)]
  - back to DOS by ld b,b (opcode #40) + jmp nnnn (next but one M1)
+ - W0[2:0] modes
 
  - horizontal scrollers (array)
  - vertical scrollers (unified with Tile mode)

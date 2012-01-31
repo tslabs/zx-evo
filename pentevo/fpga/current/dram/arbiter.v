@@ -114,13 +114,11 @@ module arbiter(
 	input wire        dma_req,
 	input wire        dma_rnw,
 	output reg        dma_next,
-    output reg        dma_strobe,
 	
 // TS engine	
 	input wire [20:0] ts_addr,
 	input wire 	      ts_req,
-	output wire       ts_next,
-	output wire       ts_strobe
+	output wire       ts_next
 
 );
 
@@ -317,7 +315,7 @@ module arbiter(
 
 	// route required data/etc. to and from the dram.v
 
-	assign dram_wrdata = curr_dma ? dma_wrdata : {2{cpu_wrdata[7:0]}};
+	assign dram_wrdata = curr_dma ? dma_wrdata : {2{cpu_wrdata[7:0]}};      // changed: now wrdata is latched 1 clk later - at c0 of current cycle (NOT at c3 of previous as before)
 	assign dram_bsel[1:0] = next_dma ? 2'b11 : {cpu_wrbsel, ~cpu_wrbsel};
 	assign dram_addr = next_cpu ? cpu_addr : next_vid ? video_addr : next_ts ? ts_addr : dma_addr;
 	// assign dram_addr = next_cpu ? cpu_addr : video_addr;
@@ -365,10 +363,8 @@ module arbiter(
 	assign video_strobe = curr_vid & c3;
 
 	assign ts_next   = curr_ts & c2;
-	assign ts_strobe = curr_ts & c3;
 
 	assign dma_next   = curr_dma & c2;
-	assign dma_strobe = curr_dma & c3;
 
 	
 endmodule

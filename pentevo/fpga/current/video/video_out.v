@@ -42,9 +42,14 @@ module video_out (
     wire blank = vga_on ? vga_blank : tv_blank;
     wire hires = vga_on ? vga_hires : tv_hires;
 
-	wire [14:0] vpix = blank ? 0 : vpixel;
+	wire [14:0] vpix = blank1 ? 0 : vpixel;
 	// wire [14:0] vpix = blank ? 0 : {vdata[2], 4'b0, vdata[1], 4'b0, vdata[0], 4'b0};		//debug!!!
 	
+    reg blank1;         // GOVNOKOD!!!!!!!!!!!!!!!!!!!!!
+    always @(posedge clk)
+    begin
+        blank1 <= blank;
+    end
 	
 // color components extraction
 	wire [1:0] cred = vpix[14:13];
@@ -74,9 +79,9 @@ module video_out (
 	
 
 // output muxing for 56MHz PWM resolution
-	assign vred = clk ? red0 : red1;
-	assign vgrn = clk ? grn0 : grn1;
-	assign vblu = clk ? blu0 : blu1;
+	assign vred = clk ? red1 : red0;
+	assign vgrn = clk ? grn1 : grn0;
+	assign vblu = clk ? blu1 : blu0;
 
 	
 // PWM phase
