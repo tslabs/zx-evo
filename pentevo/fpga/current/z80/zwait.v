@@ -13,6 +13,7 @@ module zwait(
 	input  wire wait_start_comport,
 
 	input  wire wait_end,
+	input  wire dma_wait,
 
 
 	output reg  [6:0] waits,
@@ -48,10 +49,12 @@ module zwait(
 	else if( wait_start_comport )
 		waits[1] <= 1'b1;
 
+    always @*
+        waits[2] = dma_wait;
 
 	always @(posedge wait_end) // just dummy for future extensions
 	begin
-		waits[6:2] <= 5'd0;
+		waits[6:3] <= 5'd0;
 	end
 
 

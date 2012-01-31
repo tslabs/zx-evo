@@ -56,7 +56,7 @@ module video_sync (
 	
 );
 	
-	localparam HSYNC_BEG 	= 9'd10;
+	localparam HSYNC_BEG 	= 9'd11;
 	localparam HSYNC_END 	= 9'd43;
 	localparam HBLNK_BEG 	= 9'd00;
 	localparam HBLNK_END 	= 9'd88;

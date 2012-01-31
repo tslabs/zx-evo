@@ -12,10 +12,13 @@ module dma (
 	input wire rst_n,
 
 // controls	
-	input  wire [7:0] zdata,
 	input  wire [7:0] dmaport_wr,
 	output wire dma_act,
-	output wire dma_wait,
+	output reg  dma_wait,
+
+// Z80
+	input  wire [7:0] zdata,
+	input  wire rfsh_n,
 
 // DRAM interface
 	output wire [20:0] dram_addr,
@@ -24,7 +27,6 @@ module dma (
 	output wire        dram_req,
 	output wire        dram_rnw,
 	input  wire        dram_next,
-	input  wire        dram_stb,
     
 // SD interface
 	input  wire  [7:0] sd_rddata,
@@ -55,7 +57,6 @@ module dma (
 
 
 // target device
-//  000 - (test)
 //  001 - RAM
 //  010 - SD
 //  011 - IDE
@@ -67,9 +68,9 @@ module dma (
 //  1 - RAM to device (write to device)
 // if device RAM selected - bit is ignored
 
-	wire [2:0] device_p = zdata[2:0];
 	wire dma_wnr_p = zdata[7];
 	wire dma_zwait_p = zdata[6];
+	wire [2:0] device_p = zdata[2:0];
 
 	wire [7:0] dma_wr = dmaport_wr & {8{!dma_act}};    // blocking of DMA regs write strobes while DMA active
            
@@ -80,9 +81,8 @@ module dma (
     wire dma_daddrh = dma_wr[4];
     wire dma_daddrx = dma_wr[5];
     wire dma_len    = dma_wr[6];
-    wire dma_launch = dma_wr[7];
+    wire dma_launch_int   = dma_wr[7];
 
-	wire dv_tst = device == 3'b000;     //debug!!!
 	wire dv_ram = device == 3'b001;
 	wire dv_sd  = device == 3'b010;
 	wire dv_ide = device == 3'b011;
@@ -164,7 +164,7 @@ module dma (
     
     always @(posedge clk)
     begin
-        if (state_wr & dram_stb)   // cycle has switched already
+        if (state_rd & dram_next)
         begin
             data <= dram_rddata;
         end
@@ -218,6 +218,7 @@ module dma (
     
 // counter processing	
 	reg [8:0] ctr;
+	reg [7:0] b_len;
 	
 	always @(posedge clk)
     if (!rst_n)
@@ -227,9 +228,14 @@ module dma (
     else
     begin
 		if (dma_len)			// setting by write to DMALen
-			ctr[7:0] <= zdata;
+        begin
+            b_len <= zdata;
+        end
 		if (dma_launch & c2)			// launch of DMA burst - write to DMACtrl
-			ctr[8] <= 1'b0;
+        begin
+            ctr[8] <= 1'b0;
+            ctr[7:0] <= b_len;
+        end
 		if (cyc_end)			// decrement on successfull cycle processing
 			ctr <= ctr - 1;
 	end
@@ -261,5 +267,19 @@ module dma (
 			d_addr <= d_addr + 1;
 	end
 
-
+    
+// Z80 wait
+    reg dma_launch_en;
+    wire dma_launch = dma_launch_int & dma_launch_en;
+    assign dma_wait = dma_act & dma_zwait;
+    
+    always @(posedge clk)
+    begin
+        if (dma_act)
+            dma_launch_en <= 0;
+        if (!rfsh_n)
+            dma_launch_en <= 1;
+    end
+    
+    
 endmodule
