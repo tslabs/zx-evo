@@ -250,16 +250,16 @@ module dma (
 		if (dma_saddrl)						// setting by write to DMASAddrL
 			s_addr[6:0] <= zdata[7:1];
 		if (dma_saddrh)						// setting by write to DMASAddrH
-			s_addr[14:7] <= zdata;
+			s_addr[12:7] <= zdata[5:0];
 		if (dma_saddrx)						// setting by write to DMASAddrX
-			s_addr[20:15] <= zdata[5:0];
+			s_addr[20:13] <= zdata;
             
 		if (dma_daddrl)						// setting by write to DMADAddrL
 			d_addr[6:0] <= zdata[7:1];
 		if (dma_daddrh)						// setting by write to DMADAddrH
-			d_addr[14:7] <= zdata;
+			d_addr[12:7] <= zdata[5:0];
 		if (dma_daddrx)						// setting by write to DMADAddrX
-			d_addr[20:15] <= zdata[5:0];
+			d_addr[20:13] <= zdata;
             
 		if (dram_next & state_rd)			// increment RAM source addr
 			s_addr <= s_addr + 1;
