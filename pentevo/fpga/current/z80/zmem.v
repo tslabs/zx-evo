@@ -60,6 +60,8 @@ module zmem(
 	output wire        romwe_n,
 	output wire        csrom,
 
+	output wire        m1_on,
+	output wire        m1_off,
 
 	output wire        cpu_req,
 	output wire        cpu_rnw,
@@ -297,7 +299,20 @@ module zmem(
 	end
 
 
+// M1 strobe
+    reg m1_r;
+    assign m1_on = opfetch & !m1_r;        // 1 clk strobe of M1 after it asserted
+    assign m1_off = !opfetch & m1_r;       // 1 clk strobe of M1 after it deasserted
+    
+    always @(posedge fclk)
+    begin
+        m1_r <= opfetch;
+    end
 
-
+        // if (m1_off & (zd_out == 8'h40))
+        
+    
+    
+    
 endmodule
 

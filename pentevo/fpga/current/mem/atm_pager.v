@@ -35,6 +35,9 @@ module atm_pager(
 	input  wire [ 7:0] xt_rampage,
 	input  wire [ 7:0] xt_rampagsh,
 	input  wire		   xt_override,
+	input  wire		   w0_ramnrom,
+	input  wire		   w0_mapped_n,
+	input  wire		   w0_we,
 	input  wire		   xt_shadow,
 	input  wire	[ 7:0] memconf,
 	
@@ -102,9 +105,9 @@ module atm_pager(
 		
 		if (xt_override)
 			begin
-				romnram <= 1'b0;
-				// page    <= (xt_shadow & dos) ? xt_rampagsh : xt_rampage;
-				page <= xt_shadow ? xt_rampagsh : xt_rampage;
+				romnram <= ~w0_ramnrom;
+                if (w0_mapped_n)
+                    page <= xt_shadow ? xt_rampagsh : xt_rampage;
 			end
 		
 		else

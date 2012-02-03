@@ -38,7 +38,6 @@ module vg93(
 	output reg  vg_hrdy,
 	output wire vg_rclk,
 	output wire vg_rawr,
-	output reg  [1:0] vg_a, // disk drive selection
 	output reg  vg_wrd,
 	output reg  vg_side,
 
@@ -155,7 +154,7 @@ module vg93(
 		if( !rst_n )
 			vg_res_n <= 1'b0;
 		else if( vg_wrFF )
-			{ vg_side, vg_hrdy, vg_res_n, vg_a } <= { (~din[4]),din[3],din[2],din[1:0] };
+			{vg_side, vg_hrdy, vg_res_n} <= {(~din[4]),din[3],din[2]};
 	end
 
 	always @(posedge zclk)

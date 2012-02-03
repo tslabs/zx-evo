@@ -379,7 +379,12 @@ module top(
 	wire [ 7:0] rd_dos7ffd;
 
 	// by now you can only use page setting for RAM at #0000, if ROM, the page is not altered
-	wire [3:0] xt_override1 = {xt_override[3:1], xt_override[0] & memconf[3]};
+	// wire [3:0] xt_override1 = {xt_override[3:0], xt_override[0] & memconf[3]};
+	
+    wire [3:0] w0_ramnrom = {3'b111, memconf[3]};       // window #0000: 0 - ROM / 1 - RAM
+    wire [3:0] w0_mapped_n = {3'b111, memconf[2]};      // window #0000: 0 - mapped on SROM/DOS/48/128 / 1 - plain rampage0
+    wire [3:0] w0_we = {3'b111, memconf[1]};      // window #0000: 0 - write protect / 1 - write enable
+    
 	wire [3:0] xt_shadow = {{2{memconf[4]}}, 2'b0};
 	// wire [3:0] xt_shadow = {4{memconf[4]}};
 	
@@ -411,16 +416,18 @@ module top(
 
 								 .xt_rampage (xt_ramp[i]),
 								 .xt_rampagsh (xt_ramp[i[0]+4]),
-								 // .xt_rompage (xt_rompage),
-								 .xt_override(xt_override1[i]),
+                                 
+								 .xt_override(xt_override[i]),
+                                 
+								 .w0_ramnrom(w0_ramnrom[i]),
+								 .w0_mapped_n(w0_mapped_n[i]),
+								 .w0_we(w0_we[i]),
+                                 
 								 .xt_shadow(xt_shadow[i]),
-								 // .xt_override(xt_override[i]),
-								 // .memconf	(memconf),
 
 			                     .in_nmi(in_nmi),
 
 			                     .atmF7_wr(atmF7_wr_fclk),
-								 // .rampg_wr(rampage_wr),
 
 			                     .dos(dos),
 
@@ -467,6 +474,9 @@ module top(
 	// Z80 memory controller //
 	///////////////////////////
 
+    wire m1_on;
+    wire m1_off;
+
 	zmem z80mem
 	(
 		.fclk (fclk),
@@ -485,6 +495,8 @@ module top(
 		.zd_out(dout_ram), 
 		.zd_ena(ena_ram), 
 		.m1_n  (m1_n),
+		.m1_on (m1_on),
+		.m1_off(m1_off),
 		.rfsh_n(rfsh_n), 
 		.iorq_n(iorq_n), 
 		.mreq_n(mreq_n),
@@ -513,8 +525,6 @@ module top(
 
 		.int_turbo(int_turbo)
 	);
-
-
 
 
 	wire [20:0] daddr;
@@ -638,6 +648,7 @@ module top(
 		.y_offs_wr(y_offs_wr),
 		.p7ffd_wr(p7ffd_wr),
 		.tsconf(tsconf),
+		.palsel(palsel),
 		.tgpage(tgpage),
 		
 		.hint_beg(hint_beg),
@@ -722,12 +733,12 @@ zmaps zmaps(
 		wire [8:0] x_offs;
 		wire [8:0] y_offs;
 		wire [7:0] tsconf;
+		wire [3:0] palsel;
 		
 		wire [47:0] xt_rampage;
-		wire [4:0] xt_rompage;
 		wire [3:0] xt_override;	    // crotch!!!
 		
-		wire [7:0] dmaport_wr;
+		wire [8:0] dmaport_wr;
 		wire y_offs_wr;
 		
 		wire [7:0] xt_ramp[0:5];
@@ -760,9 +771,9 @@ zmaps zmaps(
 					.x_offs		(x_offs),
 					.y_offs		(y_offs),
 					.tsconf		(tsconf),
+					.palsel		(palsel),
 					
 					.xt_rampage (xt_rampage),
-					.xt_rompage	(xt_rompage),
 					.xt_override(xt_override),
 					
 					.fmaddr		(fmaddr),
@@ -777,6 +788,7 @@ zmaps zmaps(
                     .vg_a       (vg_a),
 					
 					.dmaport_wr (dmaport_wr),
+                    .dma_act	(dma_act),
                     .y_offs_wr(y_offs_wr),
                     .p7ffd_wr(p7ffd_wr),
 					
@@ -804,7 +816,6 @@ zmaps zmaps(
 					.atm_turbo   (atm_turbo),
 					.atm_pen     (pager_off),
 					.atm_cpm_n   (cpm_n),
-					.atm_pen2    (atm_pen2),
 			
 					.romrw_en(romrw_en),
 			
@@ -812,9 +823,6 @@ zmaps zmaps(
 					.pent1m_1m_on (pent1m_1m_on),
 					.pent1m_page  (pent1m_page),
 					.pent1m_ROM   (pent1m_ROM),
-			
-					.atm_palwr  (atm_palwr),
-					.atm_paldata(atm_paldata),
 			
 					.beeper_wr(beeper_wr),
 					.covox_wr (covox_wr),
@@ -831,10 +839,7 @@ zmaps zmaps(
 					.ramnroms( rd_ramnrom),
 					.dos7ffds( rd_dos7ffd),
 			
-					.palcolor(palcolor),
-			
 					.external_port(external_port),
-			
 			
 					.set_nmi(set_nmi[1])
 	);
@@ -917,8 +922,6 @@ zmaps zmaps(
 	vg93 vgshka( .zclk(zclk), .rst_n(rst_n), .fclk(fclk), .vg_clk(vg_clk),
 	             .vg_res_n(vg_res_n), .din(d), .intrq(intrq), .drq(drq), .vg_wrFF(vg_wrFF),
 	             .vg_hrdy(vg_hrdy), .vg_rclk(vg_rclk), .vg_rawr(vg_rawr),
-                 // .vg_a(vg_ddrv),
-                 .vg_a(vg_a),
 	             .vg_wrd(vg_wrd), .vg_side(vg_side), .step(step), .vg_sl(vg_sl), .vg_sr(vg_sr),
 	             .vg_tr43(vg_tr43), .rdat_n(rdat_b_n), .vg_wf_de(vg_wf_de), .vg_drq(vg_drq),
 	             .vg_irq(vg_irq), .vg_wd(vg_wd) );

@@ -29,6 +29,7 @@ module video_top (
 	input wire [7:0] hint_beg,
 	input wire [8:0] vint_beg,
 	input wire [7:0] tsconf,
+	input wire [3:0] palsel,
 	input wire [4:0] tgpage,
 	
 // Z80 controls
@@ -89,6 +90,7 @@ module video_top (
 	wire hpix;
 	wire vpix;
 	wire hvpix;
+    wire [3:0] palsel_d;
     wire [7:0] cnt_col;
     wire [8:0] cnt_row;
 	wire cptr;
@@ -114,6 +116,8 @@ module video_top (
 		.vconf		    (vconf),
 		.vpage	    	(vpage),
 		.vpage_d    	(vpage_d),
+		.palsel	    	(palsel),
+		.palsel_d    	(palsel_d),
 		.fetch_sel		(fetch_sel),
 		.fetch_bsl		(fetch_bsl),
 		.fetch_cnt	    (scnt),
@@ -248,6 +252,7 @@ module video_top (
 		.flash			(flash),
 		.hires			(tv_hires),
 		.psel			(scnt),
+		.palsel			(palsel_d),
 		.render_mode	(render_mode),
 		.data	 	    (fetch_data),
 		.border_in 	    (border),
@@ -266,6 +271,7 @@ module video_top (
 		.tv_blank 		(tv_blank),
 		.vga_blank		(vga_blank),
 		.vga_line		(vga_line),
+		.palsel			(palsel_d),
 	    .plex_sel_in	({h1, f1}),
 		.tv_hires		(tv_hires),
 		.vga_hires		(vga_hires),

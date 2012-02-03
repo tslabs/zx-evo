@@ -12,6 +12,7 @@ module video_render (
 	input wire flash,
 	input wire hires,
 	input wire [3:0] psel,
+	input wire [3:0] palsel,
 
 // mode controls
 	input wire [1:0] render_mode,
@@ -31,21 +32,18 @@ module video_render (
     localparam R_XC = 2'h2;
     localparam R_TX = 2'h3;
 
-	localparam HC_PAL = 4'hE;
-	localparam ZX_PAL = 4'hF;
-
     
 // ZX graphics
 	wire [15:0] zx_gfx = data[15: 0];
 	wire [15:0] zx_atr = data[31:16];
 	wire zx_dot = zx_gfx[{psel[3], ~psel[2:0]}];
 	wire [7:0] zx_attr	= ~psel[3] ? zx_atr[7:0] : zx_atr[15:8];
-	wire [7:0] zx_pix = {ZX_PAL, zx_attr[6], zx_dot ^ (flash & zx_attr[7]) ? zx_attr[2:0] : zx_attr[5:3]};
+	wire [7:0] zx_pix = {palsel, zx_attr[6], zx_dot ^ (flash & zx_attr[7]) ? zx_attr[2:0] : zx_attr[5:3]};
 
     
 // text graphics
 // (it uses common renderer with ZX, but different attributes)
-	wire [7:0] tx_pix = {ZX_PAL, zx_dot ? zx_attr[3:0] : zx_attr[7:4]};
+	wire [7:0] tx_pix = {palsel, zx_dot ? zx_attr[3:0] : zx_attr[7:4]};
 
     
 // 16c graphics
@@ -54,7 +52,7 @@ module video_render (
 	assign hc_dot[1] = data[ 3: 0];
 	assign hc_dot[2] = data[15:12];
 	assign hc_dot[3] = data[11: 8];
-	wire [7:0] hc_pix = {HC_PAL, hc_dot[psel[1:0]]};
+	wire [7:0] hc_pix = {palsel, hc_dot[psel[1:0]]};
 	
     
 // 256c graphics

@@ -1,31 +1,33 @@
 
 DMA:
- - access to ports with blocking strobes
- - DMA status bit
+ + DMA status bit
+ - access to devices ports with blocking strobes
+ - blitter
  
 Fixes:
  - fix PWM for TV (make smoother)
  - fix vertical blank for border 1 pixel at the upper-right corner
- - learn what is read to rddata by c4
+ - migrate video fetcher to c2
  - SYSConfig and CPU clock select
- ? fix Xscroll for text mode
  - make proper clocked altdprams
  - make CRAM clocked: zclk for WE and fclk for RE
+ - investigate and longer 14mhz wait length
+ ? fix Xscroll for text mode
  - search ways to optimize huge LC usage - one-hot style selectors
- - move video to fetcher at c2
- - investigate 14mhz wait length
 
 Features:
+ + W0[2:0] modes (RAM / ROM paging)
+ + block VG93 access when virt DOS
  - DOS switch to RAM #nn when in/out to VG93 and FDDVirt[(#FF)]
+ - block INT when virt DOS
+ - WP for RAM
  - back to DOS by ld b,b (opcode #40) + jmp nnnn (next but one M1)
- - W0[2:0] modes
  - version read (AVR wait ports)
- - horizontal scrollers (array)
- - vertical scrollers (unified with Tile mode)
- - RAM / ROM paging
+ ? horizontal scrollers (array)
+ ? vertical scrollers (unified with Tile mode)
  - 512 bytes no-wait buffer
- - IM2 vector to Z80 bus (RTFM z80 UG)
- - LOAD "" for COM-port using X-modem
+ - IM2 vector to Z80 bus (RTFM z80 UM)
+ ? LOAD "" for COM-port using X-modem
  - make less power-off delay (apx. 2 sec) on AVR
  
  

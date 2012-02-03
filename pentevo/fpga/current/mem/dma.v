@@ -12,7 +12,7 @@ module dma (
 	input wire rst_n,
 
 // controls	
-	input  wire [7:0] dmaport_wr,
+	input  wire [8:0] dmaport_wr,
 	output wire dma_act,
 	output reg  dma_wait,
 
@@ -40,18 +40,7 @@ module dma (
 	output wire [15:0] ide_wrdata,
 	output wire        ide_req,
 	output wire        ide_rnw,
-	input  wire        ide_stb,
-
-// AY interface
-	input  wire  [7:0] ay_rddata,
-	output wire  [7:0] ay_wrdata,
-	output wire        ay_req,
-	output wire        ay_rnw,
-	input  wire        ay_stb,
-
-// CVX interface
-	output wire  [7:0] cvx_wrdata,
-	output wire        cvx_rnw
+	input  wire        ide_stb
 
 );
 
@@ -60,44 +49,36 @@ module dma (
 //  001 - RAM
 //  010 - SD
 //  011 - IDE
-//  100 - AY
-//  101 - CVX 
 
 // mode:
 //  0 - device to RAM (read from device)
 //  1 - RAM to device (write to device)
-// if device RAM selected - bit is ignored
 
 	wire dma_wnr_p = zdata[7];
 	wire dma_zwait_p = zdata[6];
 	wire [2:0] device_p = zdata[2:0];
 
-	wire [7:0] dma_wr = dmaport_wr & {8{!dma_act}};    // blocking of DMA regs write strobes while DMA active
+	wire [8:0] dma_wr = dmaport_wr & {9{!dma_act}};    // blocking of DMA regs write strobes while DMA active
            
-    wire dma_saddrl = dma_wr[0];
-    wire dma_saddrh = dma_wr[1];
-    wire dma_saddrx = dma_wr[2];
-    wire dma_daddrl = dma_wr[3];
-    wire dma_daddrh = dma_wr[4];
-    wire dma_daddrx = dma_wr[5];
-    wire dma_len    = dma_wr[6];
-    wire dma_launch_int   = dma_wr[7];
+    wire dma_saddrl 	= dma_wr[0];
+    wire dma_saddrh 	= dma_wr[1];
+    wire dma_saddrx 	= dma_wr[2];
+    wire dma_daddrl 	= dma_wr[3];
+    wire dma_daddrh 	= dma_wr[4];
+    wire dma_daddrx 	= dma_wr[5];
+    wire dma_len    	= dma_wr[6];
+    wire dma_launch_int = dma_wr[7];
+    wire dma_num    	= dma_wr[8];
 
 	wire dv_ram = device == 3'b001;
 	wire dv_sd  = device == 3'b010;
 	wire dv_ide = device == 3'b011;
-	wire dv_ay  = device == 3'b100;
-	wire dv_cvx = device == 3'b101;
 	
     wire bs_sd  = dma_act & dv_sd ;
     wire bs_ide = dma_act & dv_ide;
-    wire bs_ay  = dma_act & dv_ay ;
-    wire bs_cvx = dma_act & dv_cvx;
     
-    wire [0:3] bs_dma = {bs_sd ,
-                         bs_ide,
-                         bs_ay ,
-                         bs_cvx};
+    wire [0:1] bs_dma = {bs_sd ,
+                         bs_ide};
 
 
 // states logic
@@ -138,25 +119,13 @@ module dma (
     assign ide_rnw = dev_rnw;
 	wire ide_stb_int = ide_stb;
     
-    assign ay_wrdata = bsel ? data[15:8] : data[7:0];
-    assign ay_req = dev_req & dv_ay;
-    assign ay_rnw = dev_rnw;
-	wire ay_stb_int = ay_stb;
-    
-    assign cvx_wrdata = bsel ? data[15:8] : data[7:0];
-    assign cvx_req = dev_req & dv_cvx;
-    assign cvx_rnw = dev_rnw;
-	wire cvx_stb = 1'b1;
-    
     wire dev_stb = (dv_sd & sd_stb_int & bsel) |
-                   (dv_ide & ide_stb_int) |
-                   (dv_ay & ay_stb_int & bsel) |
-                   (dv_cvx & cvx_stb);
+                   (dv_ide & ide_stb_int);
     
     wire phase_end = (state_mem & dram_next) | (state_dev & dev_stb);
     wire cyc_end = phase & phase_end;
     
-    wire byte_switch = (dv_sd & sd_stb_int) | (dv_ay & ay_stb_int);
+    wire byte_switch = (dv_sd & sd_stb_int);
     
     
 // data aquiring
@@ -179,14 +148,6 @@ module dma (
 
         if (state_rd & ide_stb_int)
             data <= ide_rddata;
-
-        if (state_rd & ay_stb_int)
-        begin
-            if (bsel)
-                data[7:0] <= ay_rddata;
-            else
-                data[15:8] <= ay_rddata;
-        end
     end
 
 	
