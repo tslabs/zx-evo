@@ -141,7 +141,7 @@ module video_sync (
 		flash_ctr <= flash_ctr + 1;
 
 
-//	strobes
+//	sync strobes
 	wire hs = (hcount >= HSYNC_BEG) & (hcount < HSYNC_END);
 	wire vs = (vcount >= VSYNC_BEG) & (vcount < VSYNC_END);
 	wire tv_hblank = (hcount > HBLNK_BEG) & (hcount < HBLNK_END + 1);

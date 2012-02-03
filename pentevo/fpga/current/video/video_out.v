@@ -16,6 +16,7 @@ module video_out (
 // mode controls	
 	input wire tv_hires,
 	input wire vga_hires,
+	input wire [3:0] palsel,
 
 // Z80 pins
 	input  wire [14:0] cram_data_in,
@@ -38,7 +39,7 @@ module video_out (
 
 	wire [7:0] plex = vga_on ? vgaplex : vplex;
 	wire plex_sel = vga_on ? plex_sel_in[0] : plex_sel_in[1];
-	wire [7:0] vdata = hires ? {4'b1111, plex_sel ? plex[3:0] : plex[7:4]} : plex;
+	wire [7:0] vdata = hires ? {palsel, plex_sel ? plex[3:0] : plex[7:4]} : plex;
     wire blank = vga_on ? vga_blank : tv_blank;
     wire hires = vga_on ? vga_hires : tv_hires;
 

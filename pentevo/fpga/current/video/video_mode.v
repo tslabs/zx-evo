@@ -9,7 +9,9 @@ module video_mode (
 // video config
 	input wire [7:0] vconf,
 	input wire [7:0] vpage,
+	input wire [7:0] palsel,
 	output reg [7:0] vpage_d,
+	output reg [7:0] palsel_d,
 	
 // video parameters & mode controls
 	input  wire [8:0] x_offs,
@@ -64,6 +66,8 @@ module video_mode (
     begin
         vconf_d <= vconf;
         x_offs_d <= x_offs;
+        palsel_d <= palsel;
+		
         vga_hires <= tv_hires;
     end
     
