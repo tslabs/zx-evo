@@ -48,6 +48,7 @@ module vg93(
 	input vg_drq,
 	input vg_irq,
 	input vg_wd
+	
 );
 
 

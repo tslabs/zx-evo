@@ -50,6 +50,7 @@ module atm_pager(
 
 
 	input  wire        dos, // indicates state of computer: also determines ROM mapping
+	input  wire		   v_dos,
 
 
 	output wire        dos_turn_on,  // turns on or off DOS signal
@@ -103,11 +104,18 @@ module atm_pager(
 		end
 		else // pager on
 		
+		if (v_dos)
+			begin
+				romnram <= 1'b0;
+				page <= {xt_rampage[7:2], 2'b00};
+			end
+			
+		else
 		if (xt_override)
 			begin
 				romnram <= ~w0_ramnrom;
-                if (w0_mapped_n)
-                    page <= xt_shadow ? xt_rampagsh : xt_rampage;
+                page[7:2] <= xt_shadow ? xt_rampagsh[7:2] : xt_rampage[7:2];
+                page[1:0] <= w0_mapped_n ? {dos, pent1m_ROM} : xt_shadow ? xt_rampagsh[1:0] : xt_rampage[1:0];
 			end
 		
 		else

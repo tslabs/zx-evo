@@ -13,12 +13,13 @@ module zdos(
 
 	input  wire        dos_turn_on,
 	input  wire        dos_turn_off,
-	input  wire        virt_vg_hit,
+	input  wire        vdos_on,
+	input  wire        vdos_off,
 
 	input  wire        cpm_n,
 
 	output reg         dos,
-	output reg         virtdos
+	output reg         vdos
     
 );
 
@@ -41,20 +42,18 @@ module zdos(
 
     
 // turn on and off virtdos
-    // always @(posedge fclk)
-        // if (virt_vg_hit)
-            // virtdos <= 1'b1;
-        // else
-        // if (virtdos & m2)
-            // virtdos <= 1'b0;
+    always @(posedge fclk, negedge rst_n)
+	if( !rst_n )
+	begin
+		vdos = 1'b0;
+	end
+	else // posedge fclk
+        if (vdos_on)
+            vdos <= 1'b1;
+        else
+        if (vdos_off)
+            vdos <= 1'b0;
             
-
-// checking for 
-    // always @(posedge fclk)
-    // begin
-        
-    // end
-    
     
 endmodule
 

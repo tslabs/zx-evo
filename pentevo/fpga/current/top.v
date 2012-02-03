@@ -132,6 +132,7 @@ module top(
 
 
 	wire dos;
+	wire vdos;
 
 
 	wire zpos,zneg;
@@ -369,6 +370,7 @@ module top(
 
 	wire [3:0] dos_turn_off,
 	           dos_turn_on;
+	wire vdos_on, vdos_off;
 
 	wire [ 7:0] page [0:3];
 	wire [ 3:0] romnram;
@@ -383,7 +385,8 @@ module top(
 	
     wire [3:0] w0_ramnrom = {3'b111, memconf[3]};       // window #0000: 0 - ROM / 1 - RAM
     wire [3:0] w0_mapped_n = {3'b111, memconf[2]};      // window #0000: 0 - mapped on SROM/DOS/48/128 / 1 - plain rampage0
-    wire [3:0] w0_we = {3'b111, memconf[1]};      // window #0000: 0 - write protect / 1 - write enable
+    wire [3:0] w0_we = {3'b111, memconf[1]};      		// window #0000: 0 - write protect / 1 - write enable
+    wire [3:0] v_dos = {3'b000, vdos};     			 	// virtual DOS page
     
 	wire [3:0] xt_shadow = {{2{memconf[4]}}, 2'b0};
 	// wire [3:0] xt_shadow = {4{memconf[4]}};
@@ -422,6 +425,8 @@ module top(
 								 .w0_ramnrom(w0_ramnrom[i]),
 								 .w0_mapped_n(w0_mapped_n[i]),
 								 .w0_we(w0_we[i]),
+								 
+								 .v_dos(v_dos[i]),
                                  
 								 .xt_shadow(xt_shadow[i]),
 
@@ -455,16 +460,19 @@ module top(
 	// DOS signal controller //
 	///////////////////////////
 
-	zdos zdos( .rst_n(rst_n),
-
+	zdos zdos( 
 	           .fclk(fclk),
+			   .rst_n(rst_n),
 
 	           .dos_turn_on ( |dos_turn_on),
 	           .dos_turn_off( |dos_turn_off),
-
+			   .vdos_on (vdos_on),
+               .vdos_off(vdos_off),
+			   
 	           .cpm_n(cpm_n),
 
-	           .dos(dos)
+	           .dos(dos),
+	           .vdos(vdos)
 	         );
 
 
@@ -495,8 +503,6 @@ module top(
 		.zd_out(dout_ram), 
 		.zd_ena(ena_ram), 
 		.m1_n  (m1_n),
-		.m1_on (m1_on),
-		.m1_off(m1_off),
 		.rfsh_n(rfsh_n), 
 		.iorq_n(iorq_n), 
 		.mreq_n(mreq_n),
@@ -505,7 +511,7 @@ module top(
 
 		.win_page({page[3], page[2], page[1], page[0]}),
 		.win_romnram(romnram),
-
+		
 		.romrw_en(romrw_en),
 
 		.rompg  (rompg),
@@ -513,6 +519,8 @@ module top(
 		.romwe_n(romwe_n),
 		.csrom  (csrom),
 
+		.vdos_off  (vdos_off),
+		
 		.cpu_req   (cpu_req),
 		.cpu_rnw   (cpu_rnw),
 		.cpu_wrbsel(cpu_wrbsel),
