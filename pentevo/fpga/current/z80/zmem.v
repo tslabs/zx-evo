@@ -60,8 +60,12 @@ module zmem(
 	output wire        romwe_n,
 	output wire        csrom,
 
-	output wire        m1_on,
-	output wire        m1_off,
+// strobes
+	output wire vdos_off;
+	// output wire        opf_on,
+	// output wire        opf_off,
+	// output wire        mrd_on,
+	// output wire        mrd_off,
 
 	output wire        cpu_req,
 	output wire        cpu_rnw,
@@ -299,20 +303,28 @@ module zmem(
 	end
 
 
-// M1 strobe
-    reg m1_r;
-    assign m1_on = opfetch & !m1_r;        // 1 clk strobe of M1 after it asserted
-    assign m1_off = !opfetch & m1_r;       // 1 clk strobe of M1 after it deasserted
-    
+// This should be moved somewhere else from this module !!!
+
+// on/off of virt dos
+    reg opf_r, mrd_r;
+	reg [3:0] vd_off;
+	assign vdos_off = vd_off[3];
+    assign opf_off = !opfetch & opf_r;       // 1 clk strobe of !M1 & !RD after it deasserted
+    assign mrd_off = !memrd & mrd_r;         // 1 clk strobe of !MRQ & !RD after it deasserted
+    assign ldbb = (zd_out == 8'h40);
+	
     always @(posedge fclk)
     begin
-        m1_r <= opfetch;
+        opf_r <= opfetch;
+        mrd_r <= memrd;
+		
+		if (opf_off & ldbb)
+			vd_off[0] <= 1'b1;
+		else
+		if (mrd_off | vdos_off)
+			vd_off[3:0] <= {vd_off[2:0], 1'b0};
     end
-
-        // if (m1_off & (zd_out == 8'h40))
-        
-    
-    
-    
+	
+	
 endmodule
 

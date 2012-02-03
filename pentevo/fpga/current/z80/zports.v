@@ -594,7 +594,7 @@ module zports(
 			if (hoa == IM2VECT)
 				im2vect <= din;
 			if (hoa == FDDVIRT)
-				fddvirt <= din;
+				fddvirt <= din[3:0];
 				
 		end
 	
@@ -842,7 +842,7 @@ module zports(
 	// VG93 control
     wire virt_vg = fddvirt[vg_a];
     
-    wire vg_port = ((loa==VGCOM)|(loa==VGTRK)|(loa==VGSEC)|(loa==VGDAT)) & shadow;
+    wire vg_port = ((loa==VGCOM) | (loa==VGTRK) | (loa==VGSEC) | (loa==VGDAT)) & shadow;
     wire vgsys_port = (loa==VGSYS) & shadow;
     
 	wire vg_cs_n_int =  !(iorq & rdwr & vg_port);
@@ -852,7 +852,7 @@ module zports(
     assign vg_cs_n = vg_cs_n_int | virt_vg;
     assign vg_wrFF = vgsys_wr_int & !virt_vg;
     
-    assign virt_vg_hit = (!vg_cs_n_int | vgsys_cs_int) & virt_vg;
+    assign vdos_on = (!vg_cs_n_int | vgsys_cs_int) & virt_vg;
 
     always @(posedge fclk)
         if (vgsys_wr_int)
