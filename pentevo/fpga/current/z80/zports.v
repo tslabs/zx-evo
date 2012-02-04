@@ -61,7 +61,7 @@ module zports(
     output wire vint_begl_wr,
     output wire vint_begh_wr,
 	
-	output wire [47:0] xt_rampage,
+	output wire [31:0] xt_page,
 	output reg [3:0] xt_override,
 	
 	output reg [4:0] fmaddr,
@@ -412,9 +412,11 @@ module zports(
 
         PORTXT:
             begin
-            case (a[15:8])
+            case (hoa)
             XSTAT:
                 dout = {dma_act, 7'b0};
+            RAMPAGE+2, RAMPAGE+3:
+                dout = rampage[hoa[1:0]];
             default:
                 dout = 8'hFF;
             endcase
@@ -484,12 +486,8 @@ module zports(
 
 
 //eXTension port #nnAF
-
 	
-	wire rampage_h = hoa[7:2] == RAMPAGE[7:2];
-	wire rampagsh_h = hoa[7:1] == RAMPAGES[7:1];
-	wire rampage_wr = portxt_wr & rampage_h;
-	wire rampagsh_wr = portxt_wr & rampagsh_h;
+	wire rampage_wr = portxt_wr & (hoa[7:2] == RAMPAGE[7:2]);
 	
 	assign dmaport_wr[0] = portxt_wr & (hoa == DMASADDRL);
 	assign dmaport_wr[1] = portxt_wr & (hoa == DMASADDRH);
@@ -503,8 +501,8 @@ module zports(
 	
    	assign romrw_en = memconf[1];
     
-	reg [7:0] rampage[0:5];
-	assign xt_rampage = {rampage[5], rampage[4], rampage[3], rampage[2], rampage[1], rampage[0]};
+	reg [7:0] rampage[0:3];
+	assign xt_page = {rampage[3], rampage[2], rampage[1], rampage[0]};
 	
 // harshest crotch for the ATM fucking pager!!!
 	always @(posedge zclk)
@@ -513,9 +511,7 @@ module zports(
 		else
 		begin
 			if (rampage_wr)
-				xt_override[a[9:8]] <= 1'b1;	// if XT page write, correspondent override ON
-			if (rampagsh_wr)
-				xt_override[a[8]+2] <= 1'b1;	// shadow XT pages
+				xt_override[hoa[1:0]] <= 1'b1;	// if XT page write, correspondent override ON
 			if (p7ffd_wr)
 				xt_override[3'b11] <= 1'b0;		// if 7FFD write, C000 window override OFF
 			if (atmF7_wr_fclk)
@@ -555,8 +551,6 @@ module zports(
 			rampage[1] <= 8'h05;
 			rampage[2] <= 8'h02;
 			rampage[3] <= 8'h00;
-			rampage[4] <= 8'h02;
-			rampage[5] <= 8'h00;
 		end
         
 		else
@@ -565,10 +559,8 @@ module zports(
 			if (hoa == FMADDR)
 				fmaddr <= din[4:0];
 
-			if (rampage_h)
-				rampage[a[9:8]] <= din;
-			if (rampagsh_h)
-				rampage[a[8]+4] <= din;
+			if (hoa[7:2] == RAMPAGE[7:2])
+				rampage[hoa[1:0]] <= din;
 				
 			if (hoa == SYSCONF)
 				sysconf <= din;

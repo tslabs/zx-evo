@@ -368,9 +368,9 @@ module top(
 
 	wire [ 7:0] memconf;
 
-	wire [3:0] dos_turn_off,
-	           dos_turn_on;
-	wire vdos_on, vdos_off;
+	wire [ 3:0] dos_turn_off,
+	            dos_turn_on;
+	wire        vdos_on, vdos_off;
 
 	wire [ 7:0] page [0:3];
 	wire [ 3:0] romnram;
@@ -380,19 +380,16 @@ module top(
 	wire [ 7:0] rd_ramnrom;
 	wire [ 7:0] rd_dos7ffd;
 
-	// by now you can only use page setting for RAM at #0000, if ROM, the page is not altered
-	// wire [3:0] xt_override1 = {xt_override[3:0], xt_override[0] & memconf[3]};
+	wire [7:0] xt_ramp[0:3];
+	assign {xt_ramp[3], xt_ramp[2], xt_ramp[1], xt_ramp[0]} = xt_page;
 	
-    wire [3:0] w0_romnram = {3'b0, ~memconf[3]};       // window #0000: 1 - ROM / 0 - RAM
-    wire [3:0] w0_mapped = {3'b0, ~memconf[2]};      // window #0000: 1 - mapped on SROM/DOS/48/128 / 0 - plain rampage0
+    wire [3:0] w0_romnram = {3'b0, ~memconf[3]};        // window #0000: 1 - ROM / 0 - RAM
+    wire [3:0] w0_mapped = {3'b0, ~memconf[2]};         // window #0000: 1 - mapped on SROM/DOS/48/128 / 0 - plain rampage0
     wire [3:0] w0_we = {3'b111, memconf[1]};      		// window #0000: 0 - write protect / 1 - write enable
     wire [3:0] v_dos = {3'b0, vdos};     			 	// virtual DOS page
     
-	wire [3:0] xt_shadow = {{2{memconf[4]}}, 2'b0};
-	// wire [3:0] xt_shadow = {4{memconf[4]}};
 	
 	generate
-
 		genvar i;
 
 		for(i=0;i<4;i=i+1)
@@ -417,33 +414,25 @@ module top(
 			                     .pent1m_ram0_0(pent1m_ram0_0),
 			                     .pent1m_1m_on (pent1m_1m_on),
 
-								 .xt_rampage (xt_ramp[i]),
-								 .xt_rampagsh (xt_ramp[i[0]+4]),
-                                 
+								 .xt_page (xt_ramp[i]),
 								 .xt_override(xt_override[i]),
-                                 
 								 .w0_romnram(w0_romnram[i]),
 								 .w0_mapped(w0_mapped[i]),
 								 .w0_we(w0_we[i]),
 								 
+			                     .dos(dos),
 								 .v_dos(v_dos[i]),
-                                 
-								 .xt_shadow(xt_shadow[i]),
+			                     .dos_turn_on (dos_turn_on[i]),
+			                     .dos_turn_off(dos_turn_off[i]),
 
 			                     .in_nmi(in_nmi),
 
 			                     .atmF7_wr(atmF7_wr_fclk),
 
-			                     .dos(dos),
-
-			                     .dos_turn_on (dos_turn_on[i]),
-			                     .dos_turn_off(dos_turn_off[i]),
-
 			                     .zclk_stall(zclk_stall[i]),
 
 			                     .page   (page[i]),
 			                     .romnram(romnram[i]),
-
 
 			                     .rd_page0  (rd_pages[i  ]),
 			                     .rd_page1  (rd_pages[i+4]),
@@ -452,7 +441,6 @@ module top(
 			                     .rd_dos7ffd( {rd_dos7ffd[i+4], rd_dos7ffd[i]} )
 			                   );
 		end
-
 	endgenerate
 
 
@@ -756,14 +744,10 @@ zmaps zmaps(
 		wire sfys_we;
 		
 		
-		wire [47:0] xt_rampage;
 		wire [3:0] xt_override;	    // crotch!!!
+		wire [31:0] xt_page;
 		
 		wire [8:0] dmaport_wr;
-		
-		wire [7:0] xt_ramp[0:5];
-		assign {xt_ramp[5], xt_ramp[4], xt_ramp[3], xt_ramp[2], xt_ramp[1], xt_ramp[0]} = xt_rampage;
-		
 		wire [4:0] fmaddr;
 		
 		wire [7:0] sysconf;
@@ -798,7 +782,7 @@ zmaps zmaps(
 					.tsconf_wr	    (tsconf_wr),
 					.tgpage_wr	    (tgpage_wr),
 					
-					.xt_rampage (xt_rampage),
+					.xt_page (xt_page),
 					.xt_override(xt_override),
 					
 					.fmaddr		(fmaddr),
@@ -895,6 +879,7 @@ zmaps zmaps(
 		.zneg(zneg),
 
 		.int_start(int_start),
+		.vdos(vdos),
 
 		.iorq_n(iorq_n),
 		.m1_n  (m1_n),

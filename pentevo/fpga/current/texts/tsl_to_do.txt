@@ -4,8 +4,9 @@ DMA:
  - blitter
  
 Fixes:
- - fix PWM for TV (make smoother)
  - fix vertical blank for border 1 pixel at the upper-right corner
+ - fix all oddies with raster: INT 1 pix shift, hblank etc
+ - fix PWM for TV (make smoother)
  - migrate video fetcher to c2
  - SYSConfig and CPU clock select
  - make proper clocked altdprams

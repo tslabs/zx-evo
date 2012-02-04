@@ -12,6 +12,7 @@ module zint
 	input  wire zneg,
 
 	input  wire int_start,
+	input  wire vdos,
 
 	input  wire iorq_n,
 	input  wire m1_n,
@@ -44,7 +45,7 @@ module zint
 
 	always @(posedge fclk)
 	begin
-		if( int_start )
+		if( int_start & !vdos)
 			int_n <= 1'b0;
 		else if (intctr[9] | ((!iorq_n) && (!m1_n) && zneg))
 			int_n <= 1'bZ;
