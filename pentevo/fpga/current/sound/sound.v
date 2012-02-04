@@ -39,7 +39,7 @@ module sound(
 
 // PWM generator
 	always @(posedge clk) if (f0)		// 14 MHz strobes, Fpwm = 54.7 kHz
-		ctr <= ctr + 1;
+		ctr <= ctr + 8'b1;
 
 	assign sound_bit = ( ctr < val );
 

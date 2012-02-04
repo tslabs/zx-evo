@@ -31,45 +31,6 @@ set_global_assignment -name PROJECT_CREATION_TIME_DATE "19:03:44  NOVEMBER 07, 2
 set_global_assignment -name LAST_QUARTUS_VERSION "7.2 SP3"
 set_global_assignment -name MESSAGE_SUPPRESSION_RULE_FILE top.srf
 set_global_assignment -name SMART_RECOMPILE OFF
-set_global_assignment -name VERILOG_FILE ../mem/dma.v
-set_global_assignment -name VERILOG_FILE ../video/video_top.v
-set_global_assignment -name VERILOG_FILE ../video/video_mode.v
-set_global_assignment -name VERILOG_FILE ../video/video_sync.v
-set_global_assignment -name VERILOG_FILE ../video/video_fetch.v
-set_global_assignment -name VERILOG_FILE ../video/video_ts.v
-set_global_assignment -name VERILOG_FILE ../video/video_sf_ys.v
-set_global_assignment -name VERILOG_FILE ../video/video_tmbuf.v
-set_global_assignment -name VERILOG_FILE ../video/video_ts_render.v
-set_global_assignment -name VERILOG_FILE ../video/video_tsbuf0.v
-set_global_assignment -name VERILOG_FILE ../video/video_tsbuf1.v
-set_global_assignment -name VERILOG_FILE ../video/video_render.v
-set_global_assignment -name VERILOG_FILE ../video/video_out.v
-set_global_assignment -name VERILOG_FILE ../video/video_cram.v
-set_global_assignment -name MIF_FILE ../video/test_cram.mif
-set_global_assignment -name VERILOG_FILE ../video/video_vmem.v
-set_global_assignment -name VERILOG_FILE ../mem/atm_pager.v
-set_global_assignment -name VERILOG_FILE ../sound/sound.v
-set_global_assignment -name VERILOG_FILE ../z80/zmaps.v
-set_global_assignment -name VERILOG_FILE ../z80/znmi.v
-set_global_assignment -name VERILOG_FILE ../z80/zdos.v
-set_global_assignment -name VERILOG_FILE ../z80/zwait.v
-set_global_assignment -name VERILOG_FILE ../z80/zkbdmus.v
-set_global_assignment -name VERILOG_FILE ../z80/zports.v
-set_global_assignment -name VERILOG_FILE ../z80/zclock.v
-set_global_assignment -name VERILOG_FILE ../z80/zint.v
-set_global_assignment -name VERILOG_FILE ../z80/zmem.v
-set_global_assignment -name VERILOG_FILE ../z80/zbus.v
-set_global_assignment -name VERILOG_FILE ../vg93/vg93.v
-set_global_assignment -name VERILOG_FILE ../vg93/fapch_counter.v
-set_global_assignment -name VERILOG_FILE ../vg93/fapch_zek.v
-set_global_assignment -name VERILOG_FILE ../slave/slavespi.v
-set_global_assignment -name VERILOG_FILE ../dram/dram.v
-set_global_assignment -name VERILOG_FILE ../dram/arbiter.v
-set_global_assignment -name VERILOG_FILE ../common/clock.v
-set_global_assignment -name VERILOG_FILE ../common/spi2.v
-set_global_assignment -name VERILOG_FILE ../common/resetter.v
-set_global_assignment -name VERILOG_FILE ../top.v
-set_global_assignment -name MIF_FILE ../video/tsbuf_test.mif
 
 # Pin & Location Assignments
 # ==========================
@@ -314,3 +275,42 @@ set_instance_assignment -name GLOBAL_SIGNAL ON -to spics_n
 
 # end ENTITY(top)
 # ---------------
+set_global_assignment -name VERILOG_FILE ../common/slavespi.v
+set_global_assignment -name VERILOG_FILE ../common/atm_pager.v
+set_global_assignment -name VERILOG_FILE ../common/dma.v
+set_global_assignment -name VERILOG_FILE ../video/video_ports.v
+set_global_assignment -name VERILOG_FILE ../video/video_top.v
+set_global_assignment -name VERILOG_FILE ../video/video_mode.v
+set_global_assignment -name VERILOG_FILE ../video/video_sync.v
+set_global_assignment -name VERILOG_FILE ../video/video_fetch.v
+set_global_assignment -name VERILOG_FILE ../video/video_ts.v
+set_global_assignment -name VERILOG_FILE ../video/video_sf_ys.v
+set_global_assignment -name VERILOG_FILE ../video/video_tmbuf.v
+set_global_assignment -name VERILOG_FILE ../video/video_ts_render.v
+set_global_assignment -name VERILOG_FILE ../video/video_tsbuf0.v
+set_global_assignment -name VERILOG_FILE ../video/video_tsbuf1.v
+set_global_assignment -name VERILOG_FILE ../video/video_render.v
+set_global_assignment -name VERILOG_FILE ../video/video_out.v
+set_global_assignment -name VERILOG_FILE ../video/video_cram.v
+set_global_assignment -name MIF_FILE ../video/test_cram.mif
+set_global_assignment -name VERILOG_FILE ../video/video_vmem.v
+set_global_assignment -name VERILOG_FILE ../sound/sound.v
+set_global_assignment -name VERILOG_FILE ../z80/zmaps.v
+set_global_assignment -name VERILOG_FILE ../z80/znmi.v
+set_global_assignment -name VERILOG_FILE ../z80/zdos.v
+set_global_assignment -name VERILOG_FILE ../z80/zwait.v
+set_global_assignment -name VERILOG_FILE ../z80/zkbdmus.v
+set_global_assignment -name VERILOG_FILE ../z80/zports.v
+set_global_assignment -name VERILOG_FILE ../z80/zclock.v
+set_global_assignment -name VERILOG_FILE ../z80/zint.v
+set_global_assignment -name VERILOG_FILE ../z80/zmem.v
+set_global_assignment -name VERILOG_FILE ../z80/zbus.v
+set_global_assignment -name VERILOG_FILE ../vg93/vg93.v
+set_global_assignment -name VERILOG_FILE ../vg93/fapch_counter.v
+set_global_assignment -name VERILOG_FILE ../vg93/fapch_zek.v
+set_global_assignment -name VERILOG_FILE ../dram/dram.v
+set_global_assignment -name VERILOG_FILE ../dram/arbiter.v
+set_global_assignment -name VERILOG_FILE ../common/clock.v
+set_global_assignment -name VERILOG_FILE ../common/spi2.v
+set_global_assignment -name VERILOG_FILE ../common/resetter.v
+set_global_assignment -name VERILOG_FILE ../top.v

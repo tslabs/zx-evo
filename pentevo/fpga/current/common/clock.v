@@ -30,11 +30,11 @@ module clock (
 	reg [1:0] cnt;
 
 	always @(posedge clk)
-		cnt <= cnt + 1;
+		cnt <= cnt + 2'b1;
 		
-	assign {f1, f0} = 1 << cnt[0];
-	assign {h1, h0} = 1 << cnt[1];
-	assign {c3, c2, c1, c0} = 1 << cnt;
+	assign {f1, f0} = 1'b1 << cnt[2'b0];
+	assign {h1, h0} = 1'b1 << cnt[2'b1];
+	assign {c3, c2, c1, c0} = 4'b1 << cnt;
 	
 
 // AY clock generator	

@@ -43,36 +43,37 @@ module zports(
 	input  wire [ 7:0] mus_in,  // mouse (xxDF)
 	input  wire [ 4:0] kj_in,
 
-	output reg  [ 7:0] border,
-
 	
 // eXTension ports
-	output reg [7:0] vconf,
-	output reg [7:0] vpage,
-	output reg [8:0] x_offs,
-	output reg [8:0] y_offs,
-	output reg [7:0] tsconf,
-	output reg [3:0] palsel,
+    output wire zborder_wr  ,
+    output wire border_wr   ,
+    output wire zvpage_wr	,
+    output wire vpage_wr	,   
+    output wire vconf_wr	,   
+    output wire x_offsl_wr	,
+    output wire x_offsh_wr	,
+    output wire y_offsl_wr	,
+    output wire y_offsh_wr	,
+    output wire tsconf_wr	,
+    output wire palsel_wr	,
+    output wire tgpage_wr	,
+    output wire hint_beg_wr ,
+    output wire vint_begl_wr,
+    output wire vint_begh_wr,
 	
 	output wire [47:0] xt_rampage,
 	output reg [3:0] xt_override,
 	
 	output reg [4:0] fmaddr,
-	output reg [4:0] tgpage,
 	
 	output reg [7:0] sysconf,
 	output reg [7:0] memconf,
-	output reg [7:0] hint_beg,
-	output reg [8:0] vint_beg,
 	output reg [7:0] im2vect,
 	output reg [3:0] fddvirt,
 
 	output wire [8:0] dmaport_wr,
 	input  wire       dma_act,
     
-	output wire y_offs_wr,
-	output wire p7ffd_wr,
-
 	input  wire        dos,
 	output  wire       vdos_on,
 
@@ -471,14 +472,14 @@ module zports(
 
 	// F7 ports (like EFF7) are accessible in shadow mode but at addresses like EEF7, DEF7, BEF7 so that
 	// there are no conflicts in shadow mode with ATM xFF7 and x7F7 ports
-	assign portf7_wr    = ( (loa==PORTF7) && (a[8]==1'b1) && port_wr && (!shadow) ) ||
+	wire portf7_wr    = ( (loa==PORTF7) && (a[8]==1'b1) && port_wr && (!shadow) ) ||
 	                      ( (loa==PORTF7) && (a[8]==1'b0) && port_wr &&   shadow  ) ;
 
-	assign portf7_rd    = ( (loa==PORTF7) && (a[8]==1'b1) && port_rd && (!shadow) ) ||
+	wire portf7_rd    = ( (loa==PORTF7) && (a[8]==1'b1) && port_rd && (!shadow) ) ||
 	                      ( (loa==PORTF7) && (a[8]==1'b0) && port_rd &&   shadow  ) ;
 
-	assign comport_wr   = ( (loa==COMPORT) && port_wr);
-	assign comport_rd   = ( (loa==COMPORT) && port_rd);
+	wire comport_wr   = ( (loa==COMPORT) && port_wr);
+	wire comport_rd   = ( (loa==COMPORT) && port_rd);
 
 
 
@@ -499,8 +500,6 @@ module zports(
 	assign dmaport_wr[6] = portxt_wr & (hoa == DMALEN);
 	assign dmaport_wr[7] = portxt_wr & (hoa == DMACTRL);
 	assign dmaport_wr[8] = portxt_wr & (hoa == DMANUM);
-	
-    assign y_offs_wr = portxt_wr & ((hoa == YOFFSL) | (hoa == YOFFSH));
 	
    	assign romrw_en = memconf[1];
     
@@ -525,30 +524,30 @@ module zports(
 
 		
 	//border port FE
-	always @(posedge zclk)
-		if (portfe_wr)
-			border <= {5'b11110, din[2:0]};
-		else
-		if (portxt_wr & (hoa == XBORDER))
-			border <= din;
-		
+	assign zborder_wr   = portfe_wr;
+	assign border_wr    = (portxt_wr & (hoa == XBORDER));
+    assign zvpage_wr	= p7ffd_wr;
+    assign vpage_wr	    = (portxt_wr & (hoa == VPAGE ));
+    assign vconf_wr	    = (portxt_wr & (hoa == VCONF ));
+    assign x_offsl_wr	= (portxt_wr & (hoa == XOFFSL));
+    assign x_offsh_wr	= (portxt_wr & (hoa == XOFFSH));
+    assign y_offsl_wr	= (portxt_wr & (hoa == YOFFSL));
+    assign y_offsh_wr	= (portxt_wr & (hoa == YOFFSH));
+    assign tsconf_wr	= (portxt_wr & (hoa == TSCONF));
+    assign palsel_wr	= (portxt_wr & (hoa == PALSEL));
+	assign tgpage_wr	= (portxt_wr & (hoa == TGPAGE));
+    assign hint_beg_wr  = (portxt_wr & (hoa == HSINT ));
+    assign vint_begl_wr = (portxt_wr & (hoa == VSINTL));
+    assign vint_begh_wr = (portxt_wr & (hoa == VSINTH));
 
+    
 	always @(posedge zclk)
 		if (!rst_n)
 		begin
-		
-			vconf <= 8'h00;
-			x_offs <= 9'b0;
-			y_offs <= 9'b0;
-			tsconf[7:5] <= 3'b0;
-			palsel <= 4'hF;
-			
 			fmaddr[4] <= 1'b0;
 			
 			sysconf <= 8'h00;
 			memconf <= 8'h00;
-			hint_beg <= 8'd2;	// pentagon default
-			vint_beg <= 9'd0;
 			im2vect <= 8'hFF;
 			fddvirt <= 4'b0;
 	
@@ -558,31 +557,13 @@ module zports(
 			rampage[3] <= 8'h00;
 			rampage[4] <= 8'h02;
 			rampage[5] <= 8'h00;
-			
 		end
+        
 		else
 		if (portxt_wr)
 		begin
-		
-			if (hoa == VCONF)
-				vconf <= din;
-			if (hoa == XOFFSL)
-				x_offs[7:0] <= din;
-			if (hoa == XOFFSH)
-				x_offs[8] <= din[0];
-			if (hoa == YOFFSL)
-				y_offs[7:0] <= din;
-			if (hoa == YOFFSH)
-				y_offs[8] <= din[0];
-			if (hoa == TSCONF)
-				tsconf <= din;
-			if (hoa == PALSEL)
-				palsel <= din[3:0];
-				
 			if (hoa == FMADDR)
 				fmaddr <= din[4:0];
-			if (hoa == TGPAGE)
-				tgpage <= din[7:3];
 
 			if (rampage_h)
 				rampage[a[9:8]] <= din;
@@ -593,24 +574,15 @@ module zports(
 				sysconf <= din;
 			if (hoa == MEMCONF)
 				memconf <= din;
-			if (hoa == HSINT)
-				hint_beg <= din;
-			if (hoa == VSINTL)
-				vint_beg[7:0] <= din;
-			if (hoa == VSINTH)
-				vint_beg[8] <= din[0];
 			if (hoa == IM2VECT)
 				im2vect <= din;
 			if (hoa == FDDVIRT)
 				fddvirt <= din[3:0];
-				
 		end
 	
-
 		
 	// IDE ports
-
-	// IDE physical ports (that go to IDE device)
+	// IDE physical ports (routed to IDE device)
 	always @(loa)
 		case( loa )
 		NIDE10,NIDE30,NIDE50,NIDE70,NIDE90,NIDEB0,NIDED0,NIDEF0,NIDEC8: ide_ports = 1'b1;
@@ -730,7 +702,7 @@ module zports(
 	reg p7ffd_rom_int;
 	reg block7ffd;
 	wire block1m;
-	assign p7ffd_wr = !a[15] && portfd_wr && !block7ffd;
+	wire p7ffd_wr = !a[15] && portfd_wr && !block7ffd;
 	
 	always @(posedge zclk)
 	begin
@@ -738,7 +710,6 @@ module zports(
 		begin
 			p7ffd <= 8'h00;
 			block7ffd <= 1'b0;
-			vpage <= 8'h05;
 			pent1m_page <= 6'd0;
 		end
 		else
@@ -746,15 +717,8 @@ module zports(
 			if (p7ffd_wr)
 			begin
 				p7ffd <= din;
-				block7ffd=p7ffd[5] & block1m;
+				block7ffd <= p7ffd[5] & block1m;
 				pent1m_page <= {block1m ? 3'b0 : {din[5], din[7:6]}, din[2:0]};
-				vpage <= {6'b000001, din[3], 1'b1};
-			end
-			else
-			if (portxt_wr)
-			begin
-				if (hoa == VPAGE)
-					vpage <= din;
 			end
 		end
 	end
@@ -953,11 +917,11 @@ module zports(
 	always @(posedge fclk)
 	if( !rst_n )
 	begin
-		atm_scr_mode = 3'b011;
-		atm_turbo    = 1'b0;
+		atm_scr_mode <= 3'b011;
+		atm_turbo    <= 1'b0;
 
-		atm_pen =   1'b1; // no manager,
-		atm_cpm_n = 1'b0; // permanent dosen (shadow ports on)
+		atm_pen <=   1'b1; // no manager,
+		atm_cpm_n <= 1'b0; // permanent dosen (shadow ports on)
 
 
 	end

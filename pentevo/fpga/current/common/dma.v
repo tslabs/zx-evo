@@ -198,7 +198,7 @@ module dma (
             ctr[7:0] <= b_len;
         end
 		if (cyc_end)			// decrement on successfull cycle processing
-			ctr <= ctr - 1;
+			ctr <= ctr - 9'b1;
 	end
 
 
@@ -223,9 +223,9 @@ module dma (
 			d_addr[20:13] <= zdata;
             
 		if (dram_next & state_rd)			// increment RAM source addr
-			s_addr <= s_addr + 1;
+			s_addr <= s_addr + 21'b1;
 		if (dram_next & state_wr)			// increment RAM dest addr
-			d_addr <= d_addr + 1;
+			d_addr <= d_addr + 21'b1;
 	end
 
     

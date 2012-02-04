@@ -117,7 +117,7 @@ module top(
 	output spiint_n
 );
 
-	wire f0, f1, c0, c1, c2, c3;
+	wire f0, f1, h0, h1, c0, c1, c2, c3;
 	wire [1:0] ay_mod;
 
 	clock clock
@@ -630,12 +630,29 @@ module top(
 					 .ts_next		(ts_next)
 	);
 
+    
+        wire border_wr   ;
+        wire zborder_wr  ;
+        wire zvpage_wr	 ;
+        wire vpage_wr	 ;
+        wire vconf_wr	 ;
+        wire x_offsl_wr	 ;
+        wire x_offsh_wr	 ;
+        wire y_offsl_wr	 ;
+        wire y_offsh_wr	 ;
+        wire palsel_wr	 ;
+        wire hint_beg_wr ;
+        wire vint_begl_wr;
+        wire vint_begh_wr;
+        wire tsconf_wr	 ;
+        wire tgpage_wr	 ;
 					 
 					 
 	video_top video_top(
 
 		.clk(fclk),
 		.zclk(zclk),
+        .res(res),
 		.f0(f0), .f1(f1),
 		.h0(h0), .h1(h1),
 		.c0(c0), .c1(c1), .c2(c2), .c3(c3),
@@ -648,21 +665,23 @@ module top(
 		.vsync(vvsync),
 		.csync(vcsync),
 
-		.border(border),
-		.vpage(vpage),
-		.vconf(vconf),
-		.x_offs(x_offs),
-		.y_offs(y_offs),
-		.y_offs_wr(y_offs_wr),
-		.p7ffd_wr(p7ffd_wr),
-		.tsconf(tsconf),
-		.palsel(palsel),
-		.tgpage(tgpage),
-		
-		.hint_beg(hint_beg),
-		.vint_beg(vint_beg),
-		
 		.vga_on(cfg_vga_on),
+        
+        .border_wr      (border_wr),
+        .zborder_wr     (zborder_wr),
+		.zvpage_wr	    (zvpage_wr),
+		.vpage_wr	    (vpage_wr),
+		.vconf_wr	    (vconf_wr),
+		.x_offsl_wr	    (x_offsl_wr),
+		.x_offsh_wr	    (x_offsh_wr),
+		.y_offsl_wr	    (y_offsl_wr),
+		.y_offsh_wr	    (y_offsh_wr),
+		.palsel_wr	    (palsel_wr),
+		.hint_beg_wr    (hint_beg_wr),
+		.vint_begl_wr   (vint_begl_wr),
+		.vint_begh_wr   (vint_begh_wr),
+		.tsconf_wr	    (tsconf_wr),
+		.tgpage_wr	    (tgpage_wr),
 
 		.video_addr     (video_addr),
 		.video_bw		(video_bw),
@@ -676,7 +695,7 @@ module top(
 		.ts_next		(ts_next),
 		.ts_strobe		(ts_strobe),
 		
-		.a(a),
+		.a(a), .d(d),
 		.cram_data_in({d[6:0], zmd}),
 		.sfys_data_in({d[7:0], zmd}),
 		.cram_we(cram_we),
@@ -736,36 +755,25 @@ zmaps zmaps(
 		wire cram_we;
 		wire sfys_we;
 		
-		wire [7:0] vconf;
-		wire [7:0] vpage;
-		wire [8:0] x_offs;
-		wire [8:0] y_offs;
-		wire [7:0] tsconf;
-		wire [3:0] palsel;
 		
 		wire [47:0] xt_rampage;
 		wire [3:0] xt_override;	    // crotch!!!
 		
 		wire [8:0] dmaport_wr;
-		wire y_offs_wr;
 		
 		wire [7:0] xt_ramp[0:5];
 		assign {xt_ramp[5], xt_ramp[4], xt_ramp[3], xt_ramp[2], xt_ramp[1], xt_ramp[0]} = xt_rampage;
 		
 		wire [4:0] fmaddr;
-		wire [4:0] tgpage;
 		
 		wire [7:0] sysconf;
-		wire [7:0] hint_beg;
-		wire [8:0] vint_beg;
 		wire [7:0] im2vect ;
 		wire [3:0] fddvirt ;
 		
-
 	zports zports( .zclk(zclk), .fclk(fclk), .rst_n(rst_n), .zpos(zpos), .zneg(zneg),
 	               .din(d), .dout(dout_ports), .dataout(ena_ports),
 	               .a(a), .iorq_n(iorq_n), .rd_n(rd_n), .wr_n(wr_n), .porthit(porthit),
-	               .ay_bdir(ay_bdir), .ay_bc1(ay_bc1), .border(border),
+	               .ay_bdir(ay_bdir), .ay_bc1(ay_bc1),
 	               .peff7(peff7), .mreq_n(mreq_n), .m1_n(m1_n), .dos(dos),
 	               .rstrom(rstrom), .vg_intrq(intrq), .vg_drq(drq), .vg_wrFF(vg_wrFF), .vg_cs_n(vg_cs_n),
                    .sd_start(sd_start), .sd_dataout(sd_dataout), .sd_datain(sd_datain), .sdcs_n(sdcs_n),
@@ -774,23 +782,29 @@ zmaps zmaps(
 	               .ide_wr_n(ide_wr_n), .ide_rd_n(ide_rd_n),
 	               // .t0(t0), //debug!!!
 					
-					.vconf		(vconf),
-					.vpage		(vpage),
-					.x_offs		(x_offs),
-					.y_offs		(y_offs),
-					.tsconf		(tsconf),
-					.palsel		(palsel),
+                    .border_wr      (border_wr),
+                    .zborder_wr     (zborder_wr),
+					.zvpage_wr	    (zvpage_wr),
+					.vpage_wr	    (vpage_wr),
+					.vconf_wr	    (vconf_wr),
+					.x_offsl_wr	    (x_offsl_wr),
+					.x_offsh_wr	    (x_offsh_wr),
+					.y_offsl_wr	    (y_offsl_wr),
+					.y_offsh_wr	    (y_offsh_wr),
+					.palsel_wr	    (palsel_wr),
+					.hint_beg_wr    (hint_beg_wr),
+					.vint_begl_wr   (vint_begl_wr),
+					.vint_begh_wr   (vint_begh_wr),
+					.tsconf_wr	    (tsconf_wr),
+					.tgpage_wr	    (tgpage_wr),
 					
 					.xt_rampage (xt_rampage),
 					.xt_override(xt_override),
 					
 					.fmaddr		(fmaddr),
-					.tgpage		(tgpage),
 					
 					.sysconf	(sysconf),
 					.memconf	(memconf),
-					.hint_beg	(hint_beg),
-					.vint_beg	(vint_beg),
 					.im2vect	(im2vect),
 					.fddvirt	(fddvirt),
                     .vg_a       (vg_a),
@@ -798,8 +812,6 @@ zmaps zmaps(
 					
 					.dmaport_wr (dmaport_wr),
                     .dma_act	(dma_act),
-                    .y_offs_wr(y_offs_wr),
-                    .p7ffd_wr(p7ffd_wr),
 					
 	               .keys_in(kbd_port_data),
 	               .mus_in (mus_port_data),
@@ -855,7 +867,7 @@ zmaps zmaps(
 
 	
 	wire dma_act;
-	wire dma_zwait;
+	wire dma_wait;
 	
 	dma dma(
 		.clk		(fclk),
