@@ -35,8 +35,8 @@ module atm_pager(
 	input  wire [ 7:0] xt_rampage,
 	input  wire [ 7:0] xt_rampagsh,
 	input  wire		   xt_override,
-	input  wire		   w0_ramnrom,
-	input  wire		   w0_mapped_n,
+	input  wire		   w0_romnram,
+	input  wire		   w0_mapped,
 	input  wire		   w0_we,
 	input  wire		   xt_shadow,
 	input  wire	[ 7:0] memconf,
@@ -66,6 +66,7 @@ module atm_pager(
 	output wire	[ 7:0] rd_page1,
 	output wire [ 1:0] rd_dos7ffd,
 	output wire [ 1:0] rd_ramnrom
+    
 );
 	parameter ADDR = 2'b00;
 
@@ -95,6 +96,8 @@ module atm_pager(
 
 	// paging function, does NOT set pages, ramnrom, dos_7ffd
 	//
+    wire [7:0] xt_rpg = xt_shadow ? xt_rampagsh : xt_rampage;
+    
 	always @(posedge fclk)
 	begin
 		if( pager_off )
@@ -102,21 +105,21 @@ module atm_pager(
 			romnram <= 1'b1;
 			page    <= 8'hFF;
 		end
+        
 		else // pager on
-		
-		if (v_dos)
-			begin
-				romnram <= 1'b0;
-				page <= {xt_rampage[7:2], 2'b00};
-			end
+		if (v_dos & dos)
+        begin
+            romnram <= 1'b0;
+            page <= {xt_rampage[7:2], 2'b00};
+        end
 			
 		else
 		if (xt_override)
-			begin
-				romnram <= ~w0_ramnrom;
-                page[7:2] <= xt_shadow ? xt_rampagsh[7:2] : xt_rampage[7:2];
-                page[1:0] <= w0_mapped_n ? {dos, pent1m_ROM} : xt_shadow ? xt_rampagsh[1:0] : xt_rampage[1:0];
-			end
+		begin
+               romnram <= w0_romnram;
+               page[7:2] <= xt_rpg[7:2];
+               page[1:0] <= w0_mapped ? {~dos, dos ? 1'b1 : pent1m_ROM} : xt_rpg[1:0];
+		end
 		
 		else
 		begin
@@ -221,7 +224,7 @@ module atm_pager(
 	                      (za[13:8]==6'h3D) &&
 	                      dos_7ffd[1'b1] && (!ramnrom[1'b1]) && pent1m_ROM;
 
-	assign ram_exec_stb = zneg && (za[15:14]==ADDR) &&
+	assign ram_exec_stb = zneg && (za[15:14]==ADDR) && (|za[15:14]) &&
 	                      (!m1_n_reg) && (!mreq_n) && mreq_n_reg &&
 	                      ramnrom[pent1m_ROM];
 

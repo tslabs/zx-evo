@@ -383,10 +383,10 @@ module top(
 	// by now you can only use page setting for RAM at #0000, if ROM, the page is not altered
 	// wire [3:0] xt_override1 = {xt_override[3:0], xt_override[0] & memconf[3]};
 	
-    wire [3:0] w0_ramnrom = {3'b111, memconf[3]};       // window #0000: 0 - ROM / 1 - RAM
-    wire [3:0] w0_mapped_n = {3'b111, memconf[2]};      // window #0000: 0 - mapped on SROM/DOS/48/128 / 1 - plain rampage0
+    wire [3:0] w0_romnram = {3'b0, ~memconf[3]};       // window #0000: 1 - ROM / 0 - RAM
+    wire [3:0] w0_mapped = {3'b0, ~memconf[2]};      // window #0000: 1 - mapped on SROM/DOS/48/128 / 0 - plain rampage0
     wire [3:0] w0_we = {3'b111, memconf[1]};      		// window #0000: 0 - write protect / 1 - write enable
-    wire [3:0] v_dos = {3'b000, vdos};     			 	// virtual DOS page
+    wire [3:0] v_dos = {3'b0, vdos};     			 	// virtual DOS page
     
 	wire [3:0] xt_shadow = {{2{memconf[4]}}, 2'b0};
 	// wire [3:0] xt_shadow = {4{memconf[4]}};
@@ -422,8 +422,8 @@ module top(
                                  
 								 .xt_override(xt_override[i]),
                                  
-								 .w0_ramnrom(w0_ramnrom[i]),
-								 .w0_mapped_n(w0_mapped_n[i]),
+								 .w0_romnram(w0_romnram[i]),
+								 .w0_mapped(w0_mapped[i]),
 								 .w0_we(w0_we[i]),
 								 
 								 .v_dos(v_dos[i]),
@@ -794,6 +794,7 @@ zmaps zmaps(
 					.im2vect	(im2vect),
 					.fddvirt	(fddvirt),
                     .vg_a       (vg_a),
+                    .vdos_on    (vdos_on),
 					
 					.dmaport_wr (dmaport_wr),
                     .dma_act	(dma_act),

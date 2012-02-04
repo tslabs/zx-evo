@@ -45,7 +45,7 @@ module zdos(
     always @(posedge fclk, negedge rst_n)
 	if( !rst_n )
 	begin
-		vdos = 1'b0;
+		vdos <= 1'b0;
 	end
 	else // posedge fclk
         if (vdos_on)
