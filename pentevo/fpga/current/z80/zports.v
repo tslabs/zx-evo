@@ -200,7 +200,6 @@ module zports(
 //eXTension port #nnAF
 
 	localparam VCONF		= 8'h00;
-	localparam XSTAT		= 8'h00;
 	localparam VPAGE		= 8'h01;
 	localparam XOFFSL		= 8'h02;
 	localparam XOFFSH		= 8'h03;
@@ -233,6 +232,7 @@ module zports(
 	localparam DMANUM		= 8'h28;
 	localparam FDDVIRT		= 8'h29;
 
+	localparam XSTAT		= 8'h00;
 
 	reg port_wr;
 	reg port_rd;
@@ -410,7 +410,14 @@ module zports(
 			dout = iderdodd;
 
         PORTXT:
-			dout = {dma_act, 7'b0};
+            begin
+            case (a[15:8])
+            XSTAT:
+                dout = {dma_act, 7'b0};
+            default:
+                dout = 8'hFF;
+            endcase
+            end
 
 		VGSYS:
 			dout = { vg_intrq, vg_drq, 6'b111111 };
