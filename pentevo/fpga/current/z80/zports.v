@@ -409,7 +409,7 @@ module zports(
 		NIDE11:
 			dout = iderdodd;
 
-        XSTAT:
+        PORTXT:
 			dout = {dma_act, 7'b0};
 
 		VGSYS:
