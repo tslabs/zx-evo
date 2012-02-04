@@ -181,8 +181,8 @@ module zclock(
 	wire pre_zneg_70 = c0;
 
 
-	assign pre_zpos = int_turbo[1] ? pre_zpos_140 : ( int_turbo[0] ? pre_zpos_70 : pre_zpos_35 );
-	assign pre_zneg = int_turbo[1] ? pre_zneg_140 : ( int_turbo[0] ? pre_zneg_70 : pre_zneg_35 );
+	wire pre_zpos = int_turbo[1] ? pre_zpos_140 : ( int_turbo[0] ? pre_zpos_70 : pre_zpos_35 );
+	wire pre_zneg = int_turbo[1] ? pre_zneg_140 : ( int_turbo[0] ? pre_zneg_70 : pre_zneg_35 );
 
 
 

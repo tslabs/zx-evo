@@ -309,9 +309,9 @@ module zmem(
     reg opf_r, mrd_r;
 	reg [3:0] vd_off;
 	assign vdos_off = vd_off[3];
-    assign opf_off = !opfetch & opf_r;       // 1 clk strobe of !M1 & !RD after it deasserted
-    assign mrd_off = !memrd & mrd_r;         // 1 clk strobe of !MRQ & !RD after it deasserted
-    assign ldbb = (zd_out == 8'h40);
+    wire opf_off = !opfetch & opf_r;       // 1 clk strobe of !M1 & !RD after it deasserted
+    wire mrd_off = !memrd & mrd_r;         // 1 clk strobe of !MRQ & !RD after it deasserted
+    wire ldbb = (zd_out == 8'h40);
 	
     always @(posedge fclk)
     begin

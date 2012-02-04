@@ -37,9 +37,9 @@ module fapch_zek
 
 	// rclk
 	reg [5:0] counter = 0;
-	wire[5:0] delta = 27 - counter;
+	wire[5:0] delta = 6'd27 - counter;
 	wire[5:0] shift = { delta[5], delta[5], delta[4:1] }; // sign div
-	wire[5:0] inc   = rawr_sr[1:0] == 2'b10 ? shift : 1;
+	wire[5:0] inc   = rawr_sr[1:0] == 2'b10 ? shift : 6'b1;
 
 	always @ (posedge fclk)
 	begin
@@ -48,7 +48,7 @@ module fapch_zek
 	    else
 	    begin
 	        counter <= 0;
-	        vg_rclk = ~vg_rclk;
+	        vg_rclk <= ~vg_rclk;
 	    end
 
 	end

@@ -9,9 +9,9 @@ module video_mode (
 // video config
 	input wire [7:0] vconf,
 	input wire [7:0] vpage,
-	input wire [7:0] palsel,
 	output reg [7:0] vpage_d,
-	output reg [7:0] palsel_d,
+	input wire [3:0] palsel,
+	output reg [3:0] palsel_d,
 	
 // video parameters & mode controls
 	input  wire [8:0] x_offs,
@@ -43,7 +43,7 @@ module video_mode (
     input wire cptr,
 	
 // Z80 controls
-    input wire p7ffd_wr,
+    input wire zvpage_wr,
     
 // DRAM interface	
     output wire [20:0] video_addr,
@@ -71,7 +71,7 @@ module video_mode (
         vga_hires <= tv_hires;
     end
     
-    always @(posedge clk) if ((line_start & c3) | p7ffd_wr)
+    always @(posedge clk) if ((line_start & c3) | zvpage_wr)
         vpage_d <= vpage;
     
     

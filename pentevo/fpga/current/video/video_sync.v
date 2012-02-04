@@ -83,15 +83,15 @@ module video_sync (
 
 	// horizontal TV (7 MHz)
 	always @(posedge clk) if (c3)
-		hcount <= line_start ? 0 : hcount + 1;
+		hcount <= line_start ? 9'b0 : hcount + 9'b1;
 
 	// horizontal VGA (14MHz)
 	always @(posedge clk) if (f1)
-		cnt_out <= vga_pix_start & c3 ? 0 : cnt_out + 1;
+		cnt_out <= vga_pix_start & c3 ? 9'b0 : cnt_out + 9'b1;
 
 	// vertical TV (15.625 kHz)
 	always @(posedge clk) if (c3) if (line_start)
-		vcount <= vcount == (VPERIOD - 1) ? 0 : vcount + 1;
+		vcount <= vcount == (VPERIOD - 1) ? 9'b0 : vcount + 9'b1;
 
 	// column address for DRAM
 	always @(posedge clk)
@@ -103,7 +103,7 @@ module video_sync (
 		else
 		if (video_next)
 		begin
-			cnt_col <= cnt_col + 1;
+			cnt_col <= cnt_col + 8'b1;
 			cptr <= ~cptr;
 		end
 
@@ -113,15 +113,15 @@ module video_sync (
 			cnt_row <=  rstart;
 		else
 		if (line_start & vpix)
-			cnt_row <=  cnt_row + 1;
+			cnt_row <=  cnt_row + 9'b1;
 	
 	// pixel counter
 	always @(posedge clk) if (pix_stb)		// f1 or c3
-		scnt <= pix_start ? 0 : scnt + 1;
+		scnt <= pix_start ? 4'b0 : scnt + 4'b1;
 	
 	assign vga_cnt_in = {vcount[0], hcount - HBLNK_END};
 	assign vga_cnt_out = {~vcount[0], cnt_out};
-	assign lcount = vcount - vpix_beg - 1;
+	assign lcount = vcount - vpix_beg - 9'b1;
 
     
 // Y offset trigger
@@ -138,7 +138,7 @@ module video_sync (
 	reg [4:0] flash_ctr;
 	assign flash = flash_ctr[4];
 	always @(posedge clk) if (frame_start & c3)
-		flash_ctr <= flash_ctr + 1;
+		flash_ctr <= flash_ctr + 5'b1;
 
 
 //	sync strobes
@@ -153,7 +153,7 @@ module video_sync (
 	wire hs_vga = ((hcount >= HSYNCV_BEG) & (hcount < HSYNCV_END)) |
 			((hcount >= (HSYNCV_BEG + HPERIOD/2)) & (hcount < (HSYNCV_END + HPERIOD/2)));
 	
-	assign vga_pix_start = ((hcount == (HBLNKV_END)) | (hcount == (HBLNKV_END + HPERIOD/2)));
+	wire vga_pix_start = ((hcount == (HBLNKV_END)) | (hcount == (HBLNKV_END + HPERIOD/2)));
 
 	assign vga_line = (hcount >= HPERIOD/2);
 	
@@ -165,7 +165,7 @@ module video_sync (
 	
 	assign line_start = (hcount == (HPERIOD - 1));
 	assign frame_start = line_start & (vcount == (VPERIOD - 1));
-	assign vis_start = line_start & (vcount == (VBLNK_END - 1));
+	wire vis_start = line_start & (vcount == (VBLNK_END - 1));
 	assign pix_start = (hcount == (hpix_beg - 1 - x_offs));
 	assign tspix_start = (hcount == (hpix_beg - 1));
 	

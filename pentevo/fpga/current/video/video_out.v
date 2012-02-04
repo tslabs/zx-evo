@@ -43,7 +43,7 @@ module video_out (
     wire blank = vga_on ? vga_blank : tv_blank;
     wire hires = vga_on ? vga_hires : tv_hires;
 
-	wire [14:0] vpix = blank1 ? 0 : vpixel;
+	wire [14:0] vpix = blank1 ? 15'b0 : vpixel;
 	// wire [14:0] vpix = blank ? 0 : {vdata[2], 4'b0, vdata[1], 4'b0, vdata[0], 4'b0};		//debug!!!
 	
     reg blank1;         // GOVNOKOD!!!!!!!!!!!!!!!!!!!!!
@@ -88,7 +88,7 @@ module video_out (
 // PWM phase
 	reg [1:0] ph;
 	always @(posedge clk)
-		ph <= ph + 1;
+		ph <= ph + 2'b1;
 	
 	wire [1:0] phase = {vga_on ? vga_line : ph[1], ph[0]};
 
