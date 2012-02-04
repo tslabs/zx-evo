@@ -32,14 +32,11 @@ module atm_pager(
 	input  wire        pent1m_ram0_0, // RAM0 to the window 0 from pentagon1024 mode
 	input  wire        pent1m_1m_on,  // 1 meg addressing of pent1m mode on
 
-	input  wire [ 7:0] xt_rampage,
-	input  wire [ 7:0] xt_rampagsh,
+	input  wire [ 7:0] xt_page,
 	input  wire		   xt_override,
 	input  wire		   w0_romnram,
 	input  wire		   w0_mapped,
 	input  wire		   w0_we,
-	input  wire		   xt_shadow,
-	input  wire	[ 7:0] memconf,
 	
 	input  wire        in_nmi, // when we are in nmi, in 0000-3FFF must be last (FFth)
 	                           // RAM page. analoguous to pent1m_ram0_0
@@ -96,8 +93,6 @@ module atm_pager(
 
 	// paging function, does NOT set pages, ramnrom, dos_7ffd
 	//
-    wire [7:0] xt_rpg = xt_shadow ? xt_rampagsh : xt_rampage;
-    
 	always @(posedge fclk)
 	begin
 		if( pager_off )
@@ -110,15 +105,15 @@ module atm_pager(
 		if (v_dos & dos)
         begin
             romnram <= 1'b0;
-            page <= {xt_rampage[7:2], 2'b00};
+            page <= {xt_page[7:2], 2'b00};
         end
 			
 		else
 		if (xt_override)
 		begin
                romnram <= w0_romnram;
-               page[7:2] <= xt_rpg[7:2];
-               page[1:0] <= w0_mapped ? {~dos, dos ? 1'b1 : pent1m_ROM} : xt_rpg[1:0];
+               page[7:2] <= xt_page[7:2];
+               page[1:0] <= w0_mapped ? {~pent1m_ROM | ~dos, pent1m_ROM} : xt_page[1:0];
 		end
 		
 		else
