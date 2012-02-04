@@ -25,8 +25,6 @@ rampage1:     equ 0x11
 rampage2:     equ 0x12
 rampage3:     equ 0x13
 fmaddr:       equ 0x15
-rampage2sh:   equ 0x16
-rampage3sh:   equ 0x17
 tgpage:       equ 0x18
 dmasaddrl:    equ 0x1A
 dmasaddrh:    equ 0x1B
@@ -71,16 +69,9 @@ scrl1_init:
 ; vpage 8 will be used for text mode
 
 ; copy font to page 9
-; we use here shadow memory regs to avoid coflicts with regular paging
     ld c, extp
-    ld b, memconfig
-    ld a, 0x10      ; shadow RAM on
-    out (c), a
-    ld b, rampage2sh
-    ld a, 0x02      ; shadow RAM page 2 on at #8000
-    out (c), a
-    ld b, rampage3sh
-    ld a, 0x09      ; shadow RAM page 9 on at #C000
+    ld b, rampage3
+    ld a, 0x09      ; RAM page 9 on at #C000
     out (c), a
 
     ld hl, font8
@@ -91,29 +82,26 @@ scrl1_init:
     
 ; copy text to page 8
     ld c, extp
-    ld b, rampage3sh
-    ld a, 0x08      ; shadow RAM page 8 on
+    ld b, rampage3
+    ld a, 0x08
     out (c), a
 
-    ld b, 64        ; num of lines
-        
     ld hl, scrl1
     ld de, win3
     
+    ld b, 64        ; num of lines
 s1i_01:
+    ld a, b
+    and 15
+    jr nz, s1i_00
+    inc a
+    
+s1i_00:
     push bc
     ld bc, 128
     ldir
     
-    
 ; prepare attributes for lower scroller
-s1i_00:
-    ld a, r          ; pseudo-random
-    and 0xF
-    jr z, s1i_00    ; black ink is out of our idea =)
-    cp 8
-    jr z, s1i_00
-    
     push hl
     ld h, d
     ld l, e
@@ -126,11 +114,47 @@ s1i_00:
     pop bc
     djnz s1i_01
     
+; palette for textmod initialisation
+
+; open FMAddr window for writing at 0x0000
     ld c, extp
-    ld b, memconfig
-    xor a           ; shadow RAM off
+    ld b, fmaddr
+    ld a, 0x10
     out (c), a
 
+; generate textmode palette into cells 0xD0..DF
+    ld b, 15
+    ld hl, 0x300        ; 48k ROM
+    ld de, 0x1A0
+
+    xor a
+    ld (de), a
+    inc de
+    ld (de), a
+    inc de
+    
+s1i_02:
+    ld a,r
+    xor (hl)
+    inc hl
+    and 0x18          ;gggBBbbb
+    ld (de), a
+    inc de
+    ld a,r
+    xor (hl)
+    inc hl
+    and 0x63          ;0RRrrrGG
+    ld (de), a
+    inc de
+    djnz s1i_02
+
+; close FMAddr window
+    ld c, extp
+    ld b, fmaddr
+    xor a
+    out (c), a
+
+    xor a
     ld (scr1_offs), a   ; nulling offset
     ld (scr1_offs+1), a
     ld (scr1_cnt), a
@@ -140,14 +164,10 @@ s1i_00:
 scrl0_init:
 ; vpage 16 will be used for 16c
 
-; we use here shadow memory regs to avoid coflicts with regular paging
 ; nulling the scroll buffer - 8192 bytes (256x32)
     ld c, extp
-    ld b, memconfig
-    ld a, 0x10      ; shadow RAM on
-    out (c), a
-    ld b, rampage3sh
-    ld a, 0x10      ; shadow RAM page 16 on
+    ld b, rampage3
+    ld a, 0x10      ; RAM page 16 at #C000
     out (c), a
 
     ld hl, win3
@@ -155,11 +175,6 @@ scrl0_init:
     ld bc, 8191
     ld (hl), 0
     ldir
-
-    ld c, extp
-    ld b, memconfig
-    xor a           ; shadow RAM off
-    out (c), a
 
     
 ; palette for 16c initialisation
@@ -182,6 +197,7 @@ scrl0_init:
     xor a
     out (c), a
 
+    xor a
     ld (scr0_offs), a   ; nulling offset and counter
     ld (scr0_offs+1), a
     ld hl, scrl0
@@ -228,6 +244,7 @@ ports_init:
 ; int0: start of frame
 ; coordinates 0, 0
 ;  - keyboard
+;  - pal 15
 ;  - mode = 6912
 ;  - vpage = 16
 ;  - Y offset = 0
@@ -242,6 +259,11 @@ int0:
     push af
     push bc
 
+;  - pal 15
+    ld b, psel
+    ld a, 15
+    out (c), a
+    
 ; mode 6912
     ld c, extp
     ld b, vconfig
@@ -407,6 +429,7 @@ int2:
 ; coordinates 0, 271
 ;  - Y offset = scr1_offs
 ;  - mode text, 360x288
+;  - pal 13
 ;  - vpage = 8
 
 int3:
@@ -427,6 +450,11 @@ int3:
     ld a, 0xC3
     out (c), a
 
+;  - pal 13
+    ld b, psel
+    ld a, 13
+    out (c), a
+    
 ; vpage = 8
     ld b, vpage
     ld a, 8
@@ -541,13 +569,6 @@ s0c_02:
     inc d
     dec l
     jr nz, s0c_02
-    
-
-; turn off shadow RAM pages
-    ld c, extp
-    ld b, memconfig
-    xor a           ; shadow RAM off
-    out (c), a
     
     pop de
     ret

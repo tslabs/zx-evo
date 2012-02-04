@@ -1,64 +1,64 @@
-                                                                                                                               
-                                                                                                                               
-                                                                                                                               
-                                                                                                                               
-                                                                                                                               
-                                                                                                                               
-                                                                                                                               
-            Превед, посоны                                                                                                     
-                        Тут кароче bee-goo-ch-kah нарисовалась                                                                 
-                Она бежит (КЭП)                                                                                                
-                                    Можно разные bookvy писать (читать)                                                        
-                                                                                                                               
-                                                                                                                               
-                Это бегучка для ниасиливателей тс-конфы                                                                        
-                                    типа "вот так тоже можно"                                                                  
-                   (но не нужно)                                                                                               
-                                                                                                                               
-                                                                                                                               
-------------------------------------------------------------------------------------------                                     
-                                                                                                                               
-                                                                                                                               
-                                                                                                                               
-        Пользуясь служебным (вертикальным) положением,                                                                         
-                    хочу сообщить верную примету:                                                                              
-                                                                                                                               
-                                                                                                                               
-                если сейчас дать команду РАНДОМИЗЭ УСР 15616 то можно словить скрытую                                          
-                                                                                                                               
-       часть этой мегадемы (называется RESET)                                                                                  
-                                                                                                                               
-                                                                                                                               
-          Конец приметы.                                                                                                       
-                                                                                                                               
-                                                                                                                               
-            Алсо, не стоит юзать SAVE - не к добру это, ой не к добру...                                                       
-                                                                                                                               
-                                                                                                                               
-                                                                                                                               
-                                                                                                                               
-        Im diese Schkroll Sie koennen etwas zu schreiben, ja ja! Das is fantastisch.                                           
-                                                                                                                               
-                                                                                                                               
-                                                                                                                               
-        Technical info:                                                                                                        
-            - upper scroll: mode 360x288, 16c, size 360x32 pix                                                                 
-            - lower scroll: mode 360x288, text mode, size 90x6 chars                                                           
-            - middle part: ZX screen, 256x192                                                                                  
-                                                                                                                               
-          Extended Features used:                                                                                              
-            - Extended graphmodes                                                                                              
-            - Programmable INT position                                                                                        
-            - X and Y scrollers                                                                                                
-            - 15625 colors palette                                                                                             
-            - Advanced RAM paging                                                                                              
-                                                                                                                               
-                                                                                                                               
-                                                                                                                               
-                                                                                                                               
-                                                                                                                               
-            Горяче ня всем chyatekeram und Togyafu v частносте                                                                 
-                                                                                                                               
-                                                                                                                               
-                                            (fuck to ATM!!!11111oneone)                                                        
-                                                                                                                               
+                                                                                     #0000                                     
+                                                                                     #0001                                     
+                                                                                     #0002                                     
+                                                                                     #0003                                     
+                                                                                     #0004                                     
+                                                                                     #0005                                     
+                                                                                     #0006                                     
+            Превед, посоны                                                           #0007                                     
+                        Тут кароче bee-goo-ch-kah нарисовалась                       #0008                                     
+                Она бежит (КЭП)                                                      #0009                                     
+                                    Можно разные bookvy писать (читать)              #000A                                     
+                                                                                     #000B                                     
+                                                                                     #000C                                     
+                Это бегучка для ниасиливателей тс-конфы                              #000D                                     
+                                    типа "вот так тоже можно"                        #000E                                     
+                   (но не нужно)                                                     #000F                                     
+                                                                                     #0010                                     
+                                                                                     #0011                                     
+-------------------------------------------------------------------------------------#0012                                     
+                                                                                     #0013                                     
+                                                                                     #0014                                     
+                                                                                     #0015                                     
+        Пользуясь служебным (вертикальным) положением,                               #0016                                     
+                    хочу сообщить верную примету:                                    #0017                                     
+                                                                                     #0018                                     
+                                                                                     #0019                                     
+            если сейчас дать команду РАНДОМИЗЭ УСР 15616 то можно словить скрытую    #001A                                     
+                                                                                     #001B                                     
+       часть этой мегадемы (называется RESET)                                        #001C                                     
+                                                                                     #001D                                     
+                                                                                     #001E                                     
+          Конец приметы.                                                             #001F                                     
+                                                                                     #0020                                     
+                                                                                     #0021                                     
+            Алсо, не стоит юзать SAVE - не к добру это, ой не к добру...             #0022                                     
+                                                                                     #0023                                     
+                                                                                     #0024                                     
+                                                                                     #0025                                     
+                                                                                     #0026                                     
+        Im diese Schkroll Sie koennen etwas zu schreiben, ja ja! Das is fantastisch. #0027                                     
+                                                                                     #0028                                     
+                                                                                     #0029                                     
+                                                                                     #002A                                     
+        Technical info:                                                              #002B                                     
+            - upper scroll: mode 360x288, 16c, size 360x32 pix                       #002C                                     
+            - lower scroll: mode 360x288, text mode, size 90x6 chars                 #002D                                     
+            - middle part: ZX screen, 256x192                                        #002E                                     
+                                                                                     #002F                                     
+          Extended Features used:                                                    #0030                                     
+            - Extended graphmodes                                                    #0031                                     
+            - Programmable INT position                                              #0032                                     
+            - X and Y scrollers                                                      #0033                                     
+            - 15625 colors palette                                                   #0034                                     
+            - Advanced RAM paging                                                    #0035                                     
+                                                                                     #0036                                     
+                                                                                     #0037                                     
+                                                                                     #0038                                     
+                                                                                     #0039                                     
+                                                                                     #003A                                     
+            Горяче ня всем chyatekeram und Togyafu v частносте                       #003B                                     
+                                                                                     #003C                                     
+                                                                                     #003D                                     
+                                            (fuck to ATM!!!11111oneone)              #003E                                     
+                                                                                     #003F                                     
