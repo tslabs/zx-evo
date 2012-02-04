@@ -17,13 +17,13 @@ xoffsh:       equ 0x03
 yoffsl:       equ 0x04
 yoffsh:       equ 0x05
 tsconfig:     equ 0x06
+psel:         equ 0x07
 border:       equ 0x0F
 
 rampage0:     equ 0x10
 rampage1:     equ 0x11
 rampage2:     equ 0x12
 rampage3:     equ 0x13
-rompage:      equ 0x14
 fmaddr:       equ 0x15
 rampage2sh:   equ 0x16
 rampage3sh:   equ 0x17
@@ -299,6 +299,7 @@ int0:
 ; int1: begin of scroller 0
 ; coordinates 0, 39
 ;  - mode 16c, 360x288
+;  - pal 14
 ;  
 int1:
     push af
@@ -308,6 +309,11 @@ int1:
     ld c, extp
     ld b, vconfig
     ld a, 0xC1
+    out (c), a
+    
+;  - pal 14
+    ld b, psel
+    ld a, 14
     out (c), a
     
     push hl
@@ -337,6 +343,7 @@ int1:
 ; int2: end of scroller 0
 ; coordinates 0, 71
 ;  - mode 6912
+;  - pal 15
 ;  - vpage = 5
 ;  - X offset = 0
 ;  - Y offset = 0
@@ -348,6 +355,11 @@ int2:
     ld c, extp
     ld b, vconfig
     xor a
+    out (c), a
+
+;  - pal 15
+    ld b, psel
+    ld a, 15
     out (c), a
     
 ; vpage = 5
@@ -476,15 +488,14 @@ s0c_01:
 
 s0c_00:
     ld (scr0_addr), hl
+    ld c, extp
     
 ; calculate address for char within font
     sub 32
     ld h, a
     ld l, 0
     add hl, hl      ; 512 bytes per char
-    res 6, h
-    set 7, h        ; font will be accessible for read at 0x8000
-    
+
 ; calculate page
 ; 16c 32x32 font loaded to the pages 10 and 11
     rlca
@@ -493,40 +504,42 @@ s0c_00:
     and 1
     or 10
 
-; turn on page
-    ld c, extp
-    ld b, rampage2sh
-    out (c), a      ; shadow RAM page 10 or 11 at 0x8000
-    ld b, memconfig
-    ld a, 0x10      ; shadow RAM on
+    ld b, dmasaddrl
+    out (c), l
+    ld b, dmasaddrh
+    out (c), h
+    ld b, dmasaddrx
     out (c), a
-    ld b, rampage3sh
-    ld a, 0x10      ; shadow RAM page 16 on at 0xC000
-    out (c), a
+    
+    ld b, dmalen
+    ld a, 7
+    out (c), a     ; DMA burt = 16 bytes
 
 ; calculate address in screen    
     ld a, (scr0_offs+1)
     rrca
     ld a, (scr0_offs)
     rra
-    add a, 160 + 20
+    add a, 180
     ld e, a
-    ld d, 0xC0      ; scroll will be accessible for write at 0xC000
+    ld d, 0xC0
+
+    ld b, dmadaddrx
+    ld a, 0x10
+    out (c), a
     
 ; copying 16x32 bytes of char
-    ld c, 32
+    ld a, 1     ; DMA burt with RAM-to-RAM, no wait
+    ld l, 32
 s0c_02:
-    push de
-    ld b, 16
-s0c_03:
-    ld a, (hl)
-    inc hl
-    ld (de), a
-    inc e
-    djnz s0c_03
-    pop de
+    ld b, dmadaddrl
+    out (c), e
+    inc b
+    out (c), d
+    ld b, dmactrl
+    out (c), a
     inc d
-    dec c
+    dec l
     jr nz, s0c_02
     
 
