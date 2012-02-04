@@ -61,7 +61,7 @@ module zmem(
 	output wire        csrom,
 
 // strobes
-	output wire vdos_off;
+	output wire vdos_off,
 	// output wire        opf_on,
 	// output wire        opf_off,
 	// output wire        mrd_on,

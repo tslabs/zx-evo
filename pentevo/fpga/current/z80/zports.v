@@ -74,6 +74,7 @@ module zports(
 	output wire p7ffd_wr,
 
 	input  wire        dos,
+	output  wire       vdos_on,
 
 
 	output wire        ay_bdir,
@@ -90,7 +91,6 @@ module zports(
 	output wire        vg_cs_n,
 	output wire        vg_wrFF,
    	output reg  [1:0]  vg_a, // disk drive selection
-	output wire        virt_vg_hit,        // this is crafted offhand, should be re-fined somehow
 
 	output reg         sdcs_n,
 	output wire        sd_start,
@@ -543,6 +543,7 @@ module zports(
 			hint_beg <= 8'd2;	// pentagon default
 			vint_beg <= 9'd0;
 			im2vect <= 8'hFF;
+			fddvirt <= 4'b0;
 	
 			rampage[0] <= 8'h00;
 			rampage[1] <= 8'h05;
