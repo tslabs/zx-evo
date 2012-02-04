@@ -1,6 +1,5 @@
 
 DMA:
- + DMA status bit
  - access to devices ports with blocking strobes
  - blitter
  
@@ -16,8 +15,6 @@ Fixes:
  - search ways to optimize huge LC usage - one-hot style selectors
 
 Features:
- + W0[2:0] modes (RAM / ROM paging)
- + block VG93 access when virt DOS
  - DOS switch to RAM #nn when in/out to VG93 and FDDVirt[(#FF)]
  - block INT when virt DOS
  - WP for RAM
