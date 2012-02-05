@@ -116,7 +116,6 @@ module zports(
 
 
 	output reg  [ 2:0] atm_scr_mode, // RG0..RG2 in docs
-	output reg         atm_turbo,    // turbo mode ON
 	output reg         atm_pen,      // pager_off in atm_pager.v, NOT inverted!!!
 	output reg         atm_cpm_n,    // permanent dos on
 
@@ -232,6 +231,7 @@ module zports(
 	localparam DMACTRL		= 8'h27;
 	localparam DMANUM		= 8'h28;
 	localparam FDDVIRT		= 8'h29;
+	localparam XTOVERR  	= 8'h2A;
 
 	localparam XSTAT		= 8'h00;
 
@@ -488,6 +488,8 @@ module zports(
 //eXTension port #nnAF
 	
 	wire rampage_wr = portxt_wr & (hoa[7:2] == RAMPAGE[7:2]);
+    
+	wire xtoverr_wr = portxt_wr & (hoa == XTOVERR);
 	
 	assign dmaport_wr[0] = portxt_wr & (hoa == DMASADDRL);
 	assign dmaport_wr[1] = portxt_wr & (hoa == DMASADDRH);
@@ -514,8 +516,8 @@ module zports(
 				xt_override[hoa[1:0]] <= 1'b1;	// if XT page write, correspondent override ON
 			if (p7ffd_wr)
 				xt_override[3'b11] <= 1'b0;		// if 7FFD write, C000 window override OFF
-			if (atmF7_wr_fclk)
-				xt_override[a[15:14]] <= 1'b0;	// if ATM pager write, correspondent override OFF
+			if (xtoverr_wr)
+				xt_override <= din[3:0];
 		end
 
 		
@@ -535,14 +537,14 @@ module zports(
     assign hint_beg_wr  = (portxt_wr & (hoa == HSINT ));
     assign vint_begl_wr = (portxt_wr & (hoa == VSINTL));
     assign vint_begh_wr = (portxt_wr & (hoa == VSINTH));
-
+    
     
 	always @(posedge zclk)
 		if (!rst_n)
 		begin
 			fmaddr[4] <= 1'b0;
 			
-			sysconf <= 8'h00;
+			sysconf <= 8'h02;       // turbo 14mhz
 			memconf <= 8'h00;
 			im2vect <= 8'hFF;
 			fddvirt <= 4'b0;
@@ -910,20 +912,18 @@ module zports(
 	if( !rst_n )
 	begin
 		atm_scr_mode <= 3'b011;
-		atm_turbo    <= 1'b0;
-
 		atm_pen <=   1'b1; // no manager,
 		atm_cpm_n <= 1'b0; // permanent dosen (shadow ports on)
 
 
 	end
-	else if( atm77_wr_fclk )
-	begin
-		atm_scr_mode <= din[2:0];
-		atm_turbo    <= din[3];
-		atm_pen      <= ~a[8];
-		atm_cpm_n    <=  a[9];
-	end
+	else
+    if( atm77_wr_fclk )
+    begin
+        atm_scr_mode <= din[2:0];
+        atm_pen      <= ~a[8];
+        atm_cpm_n    <=  a[9];
+    end
 
 
 	// port BE write

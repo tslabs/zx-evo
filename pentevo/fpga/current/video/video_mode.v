@@ -25,6 +25,8 @@ module video_mode (
 	output wire [3:0] fetch_sel,
 	output wire	[1:0] fetch_bsl,
 	input wire	[3:0] fetch_cnt,
+	input wire	[1:0] tm_en,
+	input wire tm_pf,
 	input wire pix_start,
 	input wire line_start,
 	output wire tv_hires,
@@ -167,18 +169,28 @@ module video_mode (
 
 	
 // DRAM bandwidth usage
+    localparam BW2 = 2'b00;
+    localparam BW4 = 2'b01;
+    localparam BW8 = 2'b11;
+    
+    localparam BU1 = 3'b001;
+    localparam BU2 = 3'b010;
+    localparam BU4 = 3'b100;
+    
 	// [4:3] - total cycles: 11 = 8 / 01 = 4 / 00 = 2
 	// [2:0] - need cycles
     wire [4:0] bw[0:7];
-    assign bw[M_ZX] = 5'b11001;	// 1 of 8 (ZX)
-    assign bw[M_HC] = 5'b01001;	// 1 of 4 (16c)
-    assign bw[M_XC] = 5'b00001;	// 1 of 2 (256c)
-    assign bw[M_TX] = 5'b11100;	// 4 of 8 (text)
-    assign bw[M_T2] = 5'b11001;	// 1 of 8 (reserved)
-    assign bw[M_T0] = 5'b11010;	// 2 of 8 (ZX Hi-res test)
-    assign bw[M_T1] = 5'b11001;	// 1 of 8 (reserved)
-    assign bw[M_T3] = 5'b11001;	// 1 of 8 (No graphics)
-    assign video_bw = bw[vmod];
+    assign bw[M_ZX] = {BW8, BU1};	// '1 of 8' (ZX)
+    assign bw[M_HC] = {BW4, BU1};	// '1 of 4' (16c)
+    assign bw[M_XC] = {BW2, BU1};	// '1 of 2' (256c)
+    assign bw[M_TX] = {BW8, BU4};	// '4 of 8' (text)
+    assign bw[M_T2] = {BW8, BU1};	// '1 of 8' (reserved)
+    assign bw[M_T0] = {BW8, BU2};	// '2 of 8' (ZX Hi-res test)
+    assign bw[M_T1] = {BW8, BU1};	// '1 of 8' (reserved)
+    assign bw[M_T3] = {BW8, BU1};	// '1 of 8' (No graphics)
+    assign video_bw = tm_pf ? tm_bw : bw[vmod];
+    
+    wire [5:0] tm_bw = {BW4, &tm_en ? BU2 : BU1};      // '1/2 of 4' (1 or 2 tile-planes used)
 
 	
 // pixelrate
@@ -248,9 +260,13 @@ module video_mode (
     assign v_addr[M_T0] = addr_zx;
     assign v_addr[M_T1] = addr_zx;
     assign v_addr[M_T3] = addr_zx;
-    assign video_addr = v_addr[vmod];
+    assign video_addr = tm_pf ? tm_addr : v_addr[vmod];
 
- 
+    
+// TM
+    wire [20:0] tm_addr = 0;
+    
+    
 // ZX
 	wire [20:0] addr_zx = {vpage_d, 1'b0, ~cnt_col[0] ? addr_zx_gfx : addr_zx_atr};
 	wire [11:0] addr_zx_gfx = {cnt_row[7:6], cnt_row[2:0], cnt_row[5:3], cnt_col[4:1]};

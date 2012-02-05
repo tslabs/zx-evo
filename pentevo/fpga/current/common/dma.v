@@ -137,7 +137,8 @@ module dma (
         begin
             data <= dram_rddata;
         end
-
+        
+        else
         if (state_rd & sd_stb_int)
         begin
             if (bsel)
@@ -146,6 +147,7 @@ module dma (
                 data[15:8] <= sd_rddata;
         end
 
+        else
         if (state_rd & ide_stb_int)
             data <= ide_rddata;
     end
@@ -172,6 +174,7 @@ module dma (
     begin
         if (phase_end)
             phase <= ~phase;
+        // else
         if (byte_switch)
             bsel <= ~bsel;
     end

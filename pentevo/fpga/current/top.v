@@ -269,16 +269,10 @@ module top(
 
 	wire [2:0] atm_scr_mode;
 
-	wire atm_turbo;
-
-
 	wire beeper_wr, covox_wr;
 
 
-
 	wire [5:0] palcolor; // palette readback
-
-
 
 
 	wire [1:0] int_turbo;
@@ -312,12 +306,12 @@ module top(
 	(
 		.fclk(fclk), .rst_n(rst_n), .zclk(zclk), .rfsh_n(rfsh_n), .zclk_out(clkz_out),
 		.zpos(zpos), .zneg(zneg),
-		.turbo( {atm_turbo,~(peff7[4])}), .c2(c2), .c0(c0),
+		.turbo(turbo), .c2(c2), .c0(c0),
 		.zclk_stall( cpu_stall | (|zclk_stall)), .int_turbo(int_turbo),
 		.external_port(external_port), .iorq_n(iorq_n), .m1_n(m1_n)
 	);
 
-
+    wire [1:0] turbo =  sysconf[1:0];
 
 	wire [7:0] dout_ram;
 	wire ena_ram;
@@ -635,6 +629,8 @@ module top(
         wire tsconf_wr	 ;
         wire tgpage_wr	 ;
 					 
+    // wire [1:0] vred0;
+    // assign vred = vred0 | {2{t}};
 					 
 	video_top video_top(
 
@@ -644,7 +640,7 @@ module top(
 		.f0(f0), .f1(f1),
 		.h0(h0), .h1(h1),
 		.c0(c0), .c1(c1), .c2(c2), .c3(c3),
-		// .t0(t0),	//debug!!!
+		// .t(t),	//debug!!!
 
 		.vred(vred),
 		.vgrn(vgrn),
@@ -818,7 +814,6 @@ zmaps zmaps(
 					// .rampage_wr (rampage_wr),
 			
 					.atm_scr_mode(atm_scr_mode),
-					.atm_turbo   (atm_turbo),
 					.atm_pen     (pager_off),
 					.atm_cpm_n   (cpm_n),
 			

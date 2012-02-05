@@ -275,6 +275,13 @@ set_instance_assignment -name GLOBAL_SIGNAL ON -to spics_n
 
 # end ENTITY(top)
 # ---------------
+set_global_assignment -name MIF_FILE ../video/mem/video_cram.mif
+set_global_assignment -name VERILOG_FILE ../video/mem/video_cram.v
+set_global_assignment -name VERILOG_FILE ../video/mem/video_sf_ys.v
+set_global_assignment -name VERILOG_FILE ../video/mem/video_tmbuf.v
+set_global_assignment -name VERILOG_FILE ../video/mem/video_tsbuf0.v
+set_global_assignment -name VERILOG_FILE ../video/mem/video_tsbuf1.v
+set_global_assignment -name VERILOG_FILE ../video/mem/video_vmem.v
 set_global_assignment -name VERILOG_FILE ../common/slavespi.v
 set_global_assignment -name VERILOG_FILE ../common/atm_pager.v
 set_global_assignment -name VERILOG_FILE ../common/dma.v
@@ -284,16 +291,9 @@ set_global_assignment -name VERILOG_FILE ../video/video_mode.v
 set_global_assignment -name VERILOG_FILE ../video/video_sync.v
 set_global_assignment -name VERILOG_FILE ../video/video_fetch.v
 set_global_assignment -name VERILOG_FILE ../video/video_ts.v
-set_global_assignment -name VERILOG_FILE ../video/video_sf_ys.v
-set_global_assignment -name VERILOG_FILE ../video/video_tmbuf.v
 set_global_assignment -name VERILOG_FILE ../video/video_ts_render.v
-set_global_assignment -name VERILOG_FILE ../video/video_tsbuf0.v
-set_global_assignment -name VERILOG_FILE ../video/video_tsbuf1.v
 set_global_assignment -name VERILOG_FILE ../video/video_render.v
 set_global_assignment -name VERILOG_FILE ../video/video_out.v
-set_global_assignment -name VERILOG_FILE ../video/video_cram.v
-set_global_assignment -name MIF_FILE ../video/test_cram.mif
-set_global_assignment -name VERILOG_FILE ../video/video_vmem.v
 set_global_assignment -name VERILOG_FILE ../sound/sound.v
 set_global_assignment -name VERILOG_FILE ../z80/zmaps.v
 set_global_assignment -name VERILOG_FILE ../z80/znmi.v
