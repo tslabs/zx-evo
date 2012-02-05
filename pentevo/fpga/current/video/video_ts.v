@@ -208,16 +208,6 @@ video_sf_ys video_sf_ys (
 );
 
 	
-video_tmbuf video_tmbuf (
-	.clock		(clk),
-	.data		(0),
-	.rdaddress	(0),
-	.wraddress	(0),
-	.wren		(0),
-	.q			(tmbuf_data)
-);
-	
-	
 endmodule
 
 

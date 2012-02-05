@@ -39,6 +39,8 @@ module dram(
 	output reg rras0_n,  // .              .
 	output reg rras1_n,  // to the DRAM pins
 
+	output reg [15:0] rddata, // data just read
+
 	input [20:0] addr, // access address of 16bit word: addr[0] selects between rras0_n and rras1_n,
 	                   // addr[10:1] goes to row address, addr[20:11] goes to column address
 
@@ -47,7 +49,6 @@ module dram(
 
 	input c0, c1, c2, c3,
 
-	output reg [15:0] rddata, // data just read
 
 	input  [15:0] wrdata, // data to be written
 	input   [1:0] bsel    // positive byte select for write: bsel[0] is for wrdata[7:0], bsel[1] is for wrdata[15:8]

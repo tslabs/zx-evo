@@ -670,7 +670,8 @@ module top(
 		.video_addr     (video_addr),
 		.video_bw		(video_bw),
 		.video_go       (go),
-		.dram_rddata    (dram_rddata),
+		.dram_rddata    (dram_rddata),      // reg'ed, should be latched by c3
+   		.dram_rdata     (rd),               // raw, should be latched by c2
 		.video_strobe   (video_strobe),
 		.video_next     (video_next),
 

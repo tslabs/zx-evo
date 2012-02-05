@@ -42,12 +42,16 @@ module video_mode (
 // video counters
     input wire [7:0] cnt_col,
     input wire [8:0] cnt_row,
+    input wire [8:0] cnt_tp_row,
     input wire cptr,
 	
 // Z80 controls
     input wire zvpage_wr,
+
+// TMBUF interface
+    output wire [8:0] tmb_waddr,
     
-// DRAM interface	
+// DRAM interface
     output wire [20:0] video_addr,
     output wire [ 4:0] video_bw
 	
@@ -263,8 +267,14 @@ module video_mode (
     assign video_addr = tm_pf ? tm_addr : v_addr[vmod];
 
     
-// TM
-    wire [20:0] tm_addr = 0;
+// Tiles
+    wire [20:0] tm_addr = {vpage_d, tpos_y, tpn, tpos_x};
+    wire [5:0] tpos_y = cnt_tp_row[8:3];
+    wire [5:0] tpos_x = {cnt_tp_row[2:0], cnt_tp_col};
+    wire [2:0] cnt_tp_col = &tm_en ? cnt_col[3:1] : cnt_col[2:0];
+    wire tpn = &tm_en ? cnt_col[0] : tm_en[1];
+    
+    assign tmb_waddr = {cnt_tp_row[4:0], cnt_tp_col, tpn};
     
     
 // ZX
