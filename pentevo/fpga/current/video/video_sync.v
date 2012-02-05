@@ -49,9 +49,11 @@ module video_sync (
 // video counters
 	output wire [9:0] vga_cnt_in,
 	output wire [9:0] vga_cnt_out,
+	output wire [8:0] ts_raddr,
 	output wire [8:0] lcount,
 	output reg [7:0] cnt_col,
 	output reg [8:0] cnt_row,
+	output reg [8:0] cnt_tp_row,
 	output reg cptr,
 	output reg [3:0] scnt,
 
@@ -137,6 +139,15 @@ module video_sync (
 			cnt_row <=  cnt_row + 9'b1;
 	
     
+	// row address for tile-planes
+	always @(posedge clk) if (c3)
+		if (vis_start)
+			cnt_tp_row <= 0;
+		else
+		if (line_start & tm_vpf)
+			cnt_tp_row <=  cnt_tp_row + 9'b1;
+	
+    
 	// pixel counter
 	always @(posedge clk) if (pix_stb)		// f1 or c3
 		scnt <= pix_start ? 4'b0 : scnt + 4'b1;
@@ -146,7 +157,11 @@ module video_sync (
 	assign lcount = vcount - vpix_beg - 9'b1;
 
     
-// Y offset trigger
+    // TS-line counter
+    assign ts_raddr = hcount - hpix_beg;
+    
+    
+// Y offset re-latch trigger
     reg y_offs_wr_r;
     always @(posedge clk)
         if (y_offs_wr)

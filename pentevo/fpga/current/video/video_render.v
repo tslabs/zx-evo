@@ -71,16 +71,12 @@ module video_render (
 
 	
 // video plex muxer
-	wire [7:0] border = border_in;
-	wire [7:0] pixel = pix[render_mode];
-	wire [7:0] vplex = hvpix & !nogfx ? pixel : border;
-	// wire [7:0] vplex = hvpix & !nogfx ? pixel : aaa; // debug!!!
-	assign vplex_out = hires ? {temp, vplex[3:0]} : vplex;		// in hi-res plex contains two pixels 4 bits each
-	// assign vplex_out = hvpix ? |tsdata_in[3:0] ? tsdata_in[7:0] : nogfx ? border : pixel[render_mode] : border;
+	wire [7:0] video = !hvpix ? border_in : (|tsdata_in[3:0] ? tsdata_in : (!nogfx ? pix[render_mode] : border_in));
+	assign vplex_out = hires ? {temp, video[3:0]} : video;		// in hi-res plex contains two pixels 4 bits each
 	
 	reg [3:0] temp;
 	always @(posedge clk) if (c1)
-		temp <= vplex[3:0];
+		temp <= video[3:0];
 	
 	
 endmodule

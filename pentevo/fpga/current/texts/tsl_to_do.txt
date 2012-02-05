@@ -4,6 +4,7 @@ DMA:
  - blitter
  
 Fixes:
+ - move DMA wait to stall (like in BW 1/1)
  - fix vertical blank for border 1 pixel at the upper-right corner
  - fix all oddies with raster: INT 1 pix shift, hblank etc
  - fix PWM for TV (make smoother)
@@ -16,10 +17,12 @@ Fixes:
  - search ways to optimize huge LC usage - one-hot style selectors = use if...elseif constructions instead of if...if
 
 Features:
+ - copper
  - DOS switch to RAM #nn when in/out to VG93 and FDDVirt[(#FF)]
  - WP for RAM
  - back to DOS by ld b,b (opcode #40) + jmp nnnn (next but one M1)
- - version read (AVR wait ports)
+ - blitter accelerated by commands like 'ld c,c'
+ - version read (AVR wait ports) ? is already
  ? horizontal scrollers (array)
  ? vertical scrollers (unified with Tile mode)
  - 512 bytes no-wait buffer
