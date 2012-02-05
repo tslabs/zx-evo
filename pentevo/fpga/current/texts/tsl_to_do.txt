@@ -13,11 +13,10 @@ Fixes:
  - make CRAM clocked: zclk for WE and fclk for RE
  - investigate and longer 14mhz wait length
  ? fix Xscroll for text mode
- - search ways to optimize huge LC usage - one-hot style selectors
+ - search ways to optimize huge LC usage - one-hot style selectors = use if...elseif constructions instead of if...if
 
 Features:
  - DOS switch to RAM #nn when in/out to VG93 and FDDVirt[(#FF)]
- - block INT when virt DOS
  - WP for RAM
  - back to DOS by ld b,b (opcode #40) + jmp nnnn (next but one M1)
  - version read (AVR wait ports)

@@ -66,7 +66,6 @@ module video_top (
 
 );
 
-
  	wire [7:0] border;
 	wire [7:0] vpage;      //
 	wire [7:0] vconf;      //
@@ -102,6 +101,7 @@ module video_top (
 	wire tspix_start;
 	wire tv_pix_start;
     wire vga_pix_start;
+	wire tm_pf;
 	wire hpix;
 	wire vpix;
 	wire hvpix;
@@ -173,6 +173,8 @@ module video_top (
 		.x_offs			(x_offs),
 		.x_offs_mode	(x_offs_mode),
         .line_start     (line_start),
+		.tm_en	        (tsconf[6:5]),
+		.tm_pf	        (tm_pf),
 		.zvpage_wr	    (zvpage_wr),
 		.hpix_beg	    (hpix_beg),
 		.hpix_end	    (hpix_end),
@@ -229,10 +231,12 @@ module video_top (
 		.frame_start	(frame_start),
 		.line_start		(line_start),
 		.int_start		(int_start),
+		.tm_pf			(tm_pf),
 		.hpix			(hpix),
 		.vpix			(vpix),
 		.hvpix			(hvpix),
 		.nogfx			(nogfx),
+        .tiles_en       (|tsconf[6:5]),
 		.video_go		(video_go),
 		.video_next		(video_next)
 );
@@ -251,7 +255,8 @@ module video_top (
 
 
 	video_ts video_ts (
-		.clk		    (clk),
+		// .clk		    (clk),
+		.clk		    (0),
 		.zclk		    (zclk),
 		.c3			    (c3),
 		.line_start		(line_start),

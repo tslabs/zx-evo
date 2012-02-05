@@ -1,5 +1,12 @@
 // This module generates all video raster signals
 
+// Hor. timings
+// pixel clocks     |0
+// hblank
+
+
+
+
 
 module video_sync (
 
@@ -25,6 +32,8 @@ module video_sync (
 
 // video controls
 	input wire nogfx,
+	input wire tiles_en,
+	output wire tm_pf,
 	output wire hpix,
 	output wire vpix,
 	output wire hvpix,
@@ -66,7 +75,6 @@ module video_sync (
 	localparam HBLNKV_END 	= 9'd42;
 	
 	localparam HPERIOD   	= 9'd448;
-	// localparam HPERIOD   	= 9'd430;
 
 	localparam VSYNC_BEG 	= 9'd08;
 	localparam VSYNC_END 	= 9'd11;
@@ -85,28 +93,41 @@ module video_sync (
 	always @(posedge clk) if (c3)
 		hcount <= line_start ? 9'b0 : hcount + 9'b1;
 
+        
 	// horizontal VGA (14MHz)
 	always @(posedge clk) if (f1)
 		cnt_out <= vga_pix_start & c3 ? 9'b0 : cnt_out + 9'b1;
 
+        
 	// vertical TV (15.625 kHz)
 	always @(posedge clk) if (c3) if (line_start)
 		vcount <= vcount == (VPERIOD - 1) ? 9'b0 : vcount + 9'b1;
 
+        
 	// column address for DRAM
 	always @(posedge clk)
-		if (line_start)
+    begin
+		if (line_start)         // for tiles prefetch
+		begin
+			cnt_col <= 0;
+			cptr <= 1'b0;
+		end
+        
+        else
+        if (line_start2)        // for graphics fetch
 		begin
 			cnt_col <= cstart;
 			cptr <= 1'b0;
 		end
-		else
+        
+        else
 		if (video_next)
 		begin
 			cnt_col <= cnt_col + 8'b1;
 			cptr <= ~cptr;
 		end
-
+    end
+        
 	// row address for DRAM
 	always @(posedge clk) if (c3)
 		if (vis_start | (line_start & y_offs_wr_r))
@@ -115,6 +136,7 @@ module video_sync (
 		if (line_start & vpix)
 			cnt_row <=  cnt_row + 9'b1;
 	
+    
 	// pixel counter
 	always @(posedge clk) if (pix_stb)		// f1 or c3
 		scnt <= pix_start ? 4'b0 : scnt + 4'b1;
@@ -161,9 +183,14 @@ module video_sync (
 	assign vpix = (vcount >= vpix_beg) & (vcount < vpix_end);
 	assign hvpix = hpix & vpix;
 	
-	assign video_go = (hcount >= (hpix_beg - go_offs - x_offs)) & (hcount < (hpix_end - go_offs)) & vpix &!nogfx;
+	wire tm_hpf = (hcount >= 0) & (hcount < 32);        // 8+8 tiles per line, totally 64+64 per 8 lines
+    wire tm_vpf = (vcount >= (vpix_beg - 16)) & (vcount < (vpix_end - 8));      // start prefetch 16 lines before visible area, finish 8 lines before visible area
+    assign tm_pf = tm_hpf & tm_vpf & tiles_en;
+    
+	assign video_go = ((hcount >= (hpix_beg - go_offs - x_offs)) & (hcount < (hpix_end - go_offs - x_offs)) & vpix &!nogfx) | tm_pf;
 	
 	assign line_start = (hcount == (HPERIOD - 1));
+	assign line_start2 = (hcount == (HSYNC_END - 1));
 	assign frame_start = line_start & (vcount == (VPERIOD - 1));
 	wire vis_start = line_start & (vcount == (VBLNK_END - 1));
 	assign pix_start = (hcount == (hpix_beg - 1 - x_offs));
