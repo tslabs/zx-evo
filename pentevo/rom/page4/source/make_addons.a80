@@ -1,8 +1,0 @@
-
-;LAST UPDATE: 13.12.2011 savelij
-
-		include ../../macros.a80
-		include ../../sdcomand.a80
-		include ../../ports_ngs.a80
-
-		include micro_boot_fat.a80
