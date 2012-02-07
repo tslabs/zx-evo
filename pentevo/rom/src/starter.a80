@@ -1,0 +1,40 @@
+
+extern	bios
+
+; TS-config extended ports definition
+extp:         equ 0xAF
+
+page0:        equ 0x10
+page1:        equ 0x11
+page2:        equ 0x12
+page3:        equ 0x13
+
+sysconfig:    equ 0x20
+memconfig:    equ 0x21
+
+win0:         equ 0x0000
+win1:         equ 0x4000
+win2:         equ 0x8000
+win3:         equ 0xC000
+
+
+	rseg	CODE
+
+    di
+    ld c, extp
+    ld b, memconfig
+    ld a, 0x0E
+    out (c), a
+    
+    ld b, page0
+    ld a, 0xF8
+    out (c), a
+    
+    ld hl, bios
+    ld de, win0
+    ld bc, 0x4000
+    ldir
+    
+    jp 0
+    
+    end
