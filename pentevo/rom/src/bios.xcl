@@ -1,0 +1,9 @@
+// xcl-file for assembler-only projects
+-Fraw-binary
+-cz80
+-Z(CODE)CODE=0000-37FF
+-Z(CONST)FONT8=3800-3FFF
+--image_input=866_code.fnt,font8,FONT8,1
+-o bios.bin
+-l bios.map
+-xmisn

@@ -1,0 +1,72 @@
+extern	font8
+
+; TS-config extended ports definition
+extp:         equ 0xAF
+
+vconfig:      equ 0x00
+vpage:        equ 0x01
+xoffsl:       equ 0x02
+xoffsh:       equ 0x03
+yoffsl:       equ 0x04
+yoffsh:       equ 0x05
+tsconfig:     equ 0x06
+psel:         equ 0x07
+border:       equ 0x0F
+
+page0:        equ 0x10
+page1:        equ 0x11
+page2:        equ 0x12
+page3:        equ 0x13
+fmaddr:       equ 0x15
+tgpage:       equ 0x18
+dmasaddrl:    equ 0x1A
+dmasaddrh:    equ 0x1B
+dmasaddrx:    equ 0x1C
+dmadaddrl:    equ 0x1D
+dmadaddrh:    equ 0x1E
+dmadaddrx:    equ 0x1F
+
+sysconfig:    equ 0x20
+memconfig:    equ 0x21
+hsint:        equ 0x22
+vsintl:       equ 0x23
+vsinth:       equ 0x24
+intvect:      equ 0x25
+dmalen:       equ 0x26
+dmactrl:      equ 0x27
+
+
+win0:         equ 0x0000
+win1:         equ 0x4000
+win2:         equ 0x8000
+win3:         equ 0xC000
+
+
+outxt   macro port, val
+        ld bc, port * 256 + extp
+        ld a, val
+        out (c), a
+        endm
+
+
+        rseg	CODE
+    
+        di
+        ld sp, 0x5BFF
+
+        outxt page3, 0xFE
+        ld hl, font8
+        ld de, win3
+        ld bc, 0x4000
+        ldir
+        
+        outxt page3, 0xFF
+        ld hl, win3
+        ld de, win3 + 1
+        ld bc, 0x3FFF
+        ld (hl), 0xFF
+        ldir
+        
+        halt
+        
+        end

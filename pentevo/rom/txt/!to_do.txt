@@ -2,7 +2,7 @@ BIOS starting procedure
 -----------------------
 1. Start memory conditions at #0000: DOS, 128k = ROM Page0
 2. Read NVRAM and checking sum.
-3. Checksum OK ? go to Reset : Load defaults, go to setup.
+3. Checksum OK ? (CS pressed ? go to Setup : go to Reset) : Load defaults, go to setup.
 2. Set Page3 = #FF
 3. SP = #FFFF
 4. Load NVRAM.
