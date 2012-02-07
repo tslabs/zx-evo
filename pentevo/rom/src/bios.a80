@@ -1,6 +1,9 @@
+
+; ------- external modules
 extern	font8
 
-; TS-config extended ports definition
+
+; ------- TSconf extended ports definition
 extp:         equ 0xAF
 
 vconfig:      equ 0x00
@@ -36,37 +39,110 @@ dmalen:       equ 0x26
 dmactrl:      equ 0x27
 
 
+; ------- addresses
 win0:         equ 0x0000
 win1:         equ 0x4000
 win2:         equ 0x8000
 win3:         equ 0xC000
 
+nv_buf:       equ 0x5B80
+stck:         equ 0x5BFF
 
-outxt   macro port, val
+
+; ------- macro definitions
+xt      macro port, val
         ld bc, port * 256 + extp
         ld a, val
         out (c), a
         endm
 
 
+; ------- main code
         rseg	CODE
     
         di
-        ld sp, 0x5BFF
+        xt page1, 0x05
+        ld sp, stck
+        
+        call LOAD_NVRAM
+        call CALC_CRC
+        jr z, RESET
+        
+        call LOAD_DEFAULTS
+        call SAVE_NVRAM
+        jr SETUP
+        
+RESET:  
+        
+SETUP:       
+        call CLS
+        call LD_FONT
+        call LD_S_PAL
 
-        outxt page3, 0xFE
+        halt
+
+        
+; ------- subroutines
+CALC_CRC:
+
+        ld hl, nv_buf
+        ld de, 0
+        ld b, 62
+CC0:
+        ld a, d
+        add a, (hl)
+        ld d, a
+        ld a, e
+        xor (hl)
+        ld e, a
+        inc hl
+        djnz CC0
+        
+        ld a, d
+        cp (hl)
+        ret nz
+        inc hl
+        ld a, e
+        cp (hl)
+        ret
+
+LOAD_DEFAULTS:
+        ld hl, nv_buf
+        ld de, nv_buf + 1
+        ld bc, 0x003D
+        ld (hl), b
+        ldir
+        ret
+        
+LOAD_NVRAM:
+        ret
+        
+SAVE_NVRAM:
+        call CALC_CRC
+        ld (nv_buf + 62), de
+        ret
+        
+LD_FONT:
+        xt page3, 0xFE
         ld hl, font8
         ld de, win3
         ld bc, 0x4000
         ldir
-        
-        outxt page3, 0xFF
+        ret
+
+CLS:        
+        xt page3, 0xFF
         ld hl, win3
         ld de, win3 + 1
         ld bc, 0x3FFF
-        ld (hl), 0xFF
+        ld (hl), 0
         ldir
+        ret
+
+LD_S_PAL:        
         
-        halt
+        
+; ------- messages
+
         
         end
