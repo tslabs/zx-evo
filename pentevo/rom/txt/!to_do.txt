@@ -39,12 +39,22 @@ NVRAM
         1 - Basic 48k
         2 - Basic 128k
         3 - SD: boot.c$
-        4 - boot from rs-232
-        5 - SD: system.rom    // 4 justine
+        4 - SD: system.rom    // 4 justine
+        5 - boot from rs-232
         6 - custom ROM (page #04-07)
         7 - custom RAM (page #F8-FB)
 
-#B2    Palette
+#B2    128k Lock
+        0 - OFF
+        1 - ON
+		
+#B3    AY frequency, MHz
+        0 - 1.75
+        1 - 1.7733
+        2 - 3.5
+        3 - 3.546
+
+#B4    Palette
         0 - pulsar
         1 - bright black
         2 - dim
@@ -52,17 +62,7 @@ NVRAM
         4 - dark
         5 - black and white       // PWM
         6 - custom (NVRAM #D0-#EF)
-
-#B3    128k Lock
-        0 - OFF
-        1 - ON
         
-#B4    AY frequency, MHz
-        0 - 1.75
-        1 - 1.7733
-        2 - 3.5
-        3 - 3.546
-
 #C0.DF Custom Palette
 
 #EE.EF Checksum (add + xor)
