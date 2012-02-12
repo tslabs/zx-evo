@@ -3,6 +3,7 @@
 
 ; -- addresses
 
+res_buf:      equ h'5B00
 nv_buf:       equ h'5B80
 stck:         equ h'5BFF
 

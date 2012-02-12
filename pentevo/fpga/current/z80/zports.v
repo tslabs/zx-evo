@@ -486,11 +486,7 @@ module zports(
 
 
 //eXTension port #nnAF
-	
-	wire rampage_wr = portxt_wr & (hoa[7:2] == RAMPAGE[7:2]);
-    
-	wire xtoverr_wr = portxt_wr & (hoa == XTOVERR);
-	
+
 	assign dmaport_wr[0] = portxt_wr & (hoa == DMASADDRL);
 	assign dmaport_wr[1] = portxt_wr & (hoa == DMASADDRH);
 	assign dmaport_wr[2] = portxt_wr & (hoa == DMASADDRX);
@@ -500,31 +496,10 @@ module zports(
 	assign dmaport_wr[6] = portxt_wr & (hoa == DMALEN);
 	assign dmaport_wr[7] = portxt_wr & (hoa == DMACTRL);
 	assign dmaport_wr[8] = portxt_wr & (hoa == DMANUM);
-	
-   	assign romrw_en = memconf[1];
     
-	reg [7:0] rampage[0:3];
-	assign xt_page = {rampage[3], rampage[2], rampage[1], rampage[0]};
-	
-// harshest crotch for the ATM fucking pager!!!
-	always @(posedge zclk)
-		if (!rst_n)
-			xt_override <= 4'b0;
-		else
-		begin
-			if (rampage_wr)
-				xt_override[hoa[1:0]] <= 1'b1;	// if XT page write, correspondent override ON
-			if (p7ffd_wr)
-				xt_override[3'b11] <= 1'b0;		// if 7FFD write, C000 window override OFF
-			if (xtoverr_wr)
-				xt_override <= din[3:0];
-		end
-
-		
-	//border port FE
 	assign zborder_wr   = portfe_wr;
 	assign border_wr    = (portxt_wr & (hoa == XBORDER));
-    assign zvpage_wr	= p7ffd_wr;
+    assign zvpage_wr	=  p7ffd_wr;
     assign vpage_wr	    = (portxt_wr & (hoa == VPAGE ));
     assign vconf_wr	    = (portxt_wr & (hoa == VCONF ));
     assign x_offsl_wr	= (portxt_wr & (hoa == XOFFSL));
@@ -537,15 +512,23 @@ module zports(
     assign hint_beg_wr  = (portxt_wr & (hoa == HSINT ));
     assign vint_begl_wr = (portxt_wr & (hoa == VSINTL));
     assign vint_begh_wr = (portxt_wr & (hoa == VSINTH));
+
     
-    
+	reg [7:0] rampage[0:3];
+	assign xt_page = {rampage[3], rampage[2], rampage[1], rampage[0]};
+	
+    wire lock128 = (memconf[7:6] == 2'b01);
+   	assign romrw_en = memconf[1];
+	assign pent1m_ROM = memconf[0];
+        
 	always @(posedge zclk)
 		if (!rst_n)
 		begin
 			fmaddr[4] <= 1'b0;
 			
-			sysconf <= 8'h02;       // turbo 14mhz
-			memconf <= 8'h00;
+			sysconf <= 8'h01;       // turbo 7 MHz
+			memconf <= 8'h00;       // atm
+			// memconf <= 8'h04;       // boleq
 			im2vect <= 8'hFF;
 			fddvirt <= 4'b0;
 	
@@ -553,23 +536,40 @@ module zports(
 			rampage[1] <= 8'h05;
 			rampage[2] <= 8'h02;
 			rampage[3] <= 8'h00;
+			xt_override <= 4'b0;       // atm crotch
 		end
         
+        else
+       	if (p7ffd_wr)
+        begin
+            memconf[0] <= din[4];
+            rampage[3] <= {3'b0, lock128 ? 2'b0 : din[7:6], din[2:0]};
+        end
+
 		else
 		if (portxt_wr)
 		begin
+			if (hoa[7:2] == RAMPAGE[7:2])
+            begin
+				rampage[hoa[1:0]] <= din;
+				xt_override[hoa[1:0]] <= 1'b1;	// if XT page write, correspondent override ON
+            end
+				
+            if (hoa == XTOVERR)
+				xt_override <= din[3:0];
+                
 			if (hoa == FMADDR)
 				fmaddr <= din[4:0];
 
-			if (hoa[7:2] == RAMPAGE[7:2])
-				rampage[hoa[1:0]] <= din;
-				
 			if (hoa == SYSCONF)
 				sysconf <= din;
+                
 			if (hoa == MEMCONF)
 				memconf <= din;
+                
 			if (hoa == IM2VECT)
 				im2vect <= din;
+                
 			if (hoa == FDDVIRT)
 				fddvirt <= din[3:0];
 		end
@@ -693,8 +693,7 @@ module zports(
 
 	// 7FFD port
 	reg [7:0] p7ffd, peff7_int;
-	reg p7ffd_rom_int;
-	reg block7ffd;
+	wire block7ffd = p7ffd[5];
 	wire block1m;
 	wire p7ffd_wr = !a[15] && portfd_wr && !block7ffd;
 	
@@ -703,7 +702,6 @@ module zports(
 		if (!rst_n)
 		begin
 			p7ffd <= 8'h00;
-			block7ffd <= 1'b0;
 			pent1m_page <= 6'd0;
 		end
 		else
@@ -711,20 +709,18 @@ module zports(
 			if (p7ffd_wr)
 			begin
 				p7ffd <= din;
-				block7ffd <= p7ffd[5] & block1m;
-				pent1m_page <= {block1m ? 3'b0 : {din[5], din[7:6]}, din[2:0]};
 			end
 		end
 	end
 
 	
-	always @(posedge zclk)
-	begin
-		if( rstsync2 )
-			p7ffd_rom_int <= rstrom[0];
-		else if (p7ffd_wr)
-			p7ffd_rom_int <= din[4];
-	end
+	// always @(posedge zclk)
+	// begin
+		// if (rstsync2)
+			// p7ffd_rom_int <= rstrom[0];
+		// else if (p7ffd_wr)
+			// p7ffd_rom_int <= din[4];
+	// end
 
 
 
@@ -734,14 +730,13 @@ module zports(
 		if( !rst_n )
 			peff7_int <= 8'h00;
 		else if( !a[12] && portf7_wr && (!shadow) ) // EEF7 in shadow mode is abandoned!
-			peff7_int <= din; // 4 - turbooff, 0 - p16c on, 2 - block1meg
+			peff7_int <= din; // 4 - turbooff, 0 - p16c on, 2 - block1m
 	end
 	assign block1m = peff7_int[2];
 
-	assign peff7 = block1m ? { peff7_int[7], 1'b0, peff7_int[5], peff7_int[4], 3'b000, peff7_int[0] } : peff7_int;
+	assign peff7 = block1m ? (peff7_int & 8'b10110001) : peff7_int;
 
 
-	assign pent1m_ROM       = p7ffd_rom_int;
 	assign pent1m_1m_on     = ~peff7_int[2];
 	assign pent1m_ram0_0    = peff7_int[3];
 

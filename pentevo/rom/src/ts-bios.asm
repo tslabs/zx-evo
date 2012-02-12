@@ -7,7 +7,6 @@ extern	font8
 
 ; ------- main code
         rseg CODE
-        xtr
         
 		jp MAIN
     
@@ -24,22 +23,68 @@ NMI:
 MAIN:
         di
         
-l1:     inc a
-        out (254),a        
-        jr l1
-        
-        xt page1, h'05
+        xtr
+        ; xt xtoverride, h'0F
+        xt page1, 5
         ld sp, stck
         
-        call LOAD_NVRAM
-        call CALC_CRC
-        jr z, RESET
+        ; call LOAD_NVRAM
+        ; call CALC_CRC
+        ; jr z, RESET
+        
+        xor a
+        jr RESET        ; debug!!!
         
         call LOAD_DEFAULTS
         call SAVE_NVRAM
         jr SETUP
         
-RESET:  
+
+; This proc makes reset to the specified destination
+; input:    A - reset destination
+RESET:
+        ld hl, RESET2
+        ld de, res_buf
+        ld bc, RESET2_END - RESET2      ; No checking for stack at this point!!!
+        ldir
+        jp res_buf
+        
+        
+RESET2:        
+        push af
+        xtr
+        xt page0, 0
+        xt page2, 2
+        xt page3, 0
+        pop af
+        
+        or a
+        jr z, RES_TRD
+        ; jr z, RES_48
+        halt
+
+        
+RES_TRD:
+        xtr
+        xt memconf, 1
+        ld sp, h'3D2E
+        jp h'3D2F           ; ret to #0000
+        
+        
+RES_48:
+        xtr
+        xt memconf, 1
+        jp 0
+
+        
+RES_128:
+        xtr
+        xt memconf, 0
+        jp 0
+
+        
+RESET2_END:
+
         
 SETUP:       
         call CLS

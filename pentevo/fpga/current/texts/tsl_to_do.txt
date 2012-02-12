@@ -4,6 +4,9 @@ DMA:
  - blitter
  
 Fixes:
+ - dos 48/128 on/off
+ - check INT length !!! (demo001 at 7mhz)
+ - check stops of video fetching
  - move DMA wait to stall (like in BW 1/1)
  - fix vertical blank for border 1 pixel at the upper-right corner
  - fix all oddies with raster: INT 1 pix shift, hblank etc

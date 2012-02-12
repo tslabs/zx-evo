@@ -97,7 +97,7 @@ module atm_pager(
 	begin
 		if( pager_off )
 		begin // atm no pager mode - each window has same ROM
-			romnram <= 1'b1;
+			romnram <= 1'b1;     // commented for boleq
 			page    <= 8'hFF;
 		end
         
@@ -113,7 +113,7 @@ module atm_pager(
 		begin
                romnram <= w0_romnram;
                page[7:2] <= xt_page[7:2];
-               page[1:0] <= w0_mapped ? {~pent1m_ROM | ~dos, pent1m_ROM} : xt_page[1:0];
+               page[1:0] <= w0_mapped ? {~dos, pent1m_ROM} : xt_page[1:0];
 		end
 		
 		else
@@ -214,14 +214,16 @@ module atm_pager(
 
 
 
-	assign dos_exec_stb = zneg && (za[15:14]==ADDR) &&
+	assign dos_exec_stb = zneg && (~&za[15:14]) &&
 	                      (!m1_n_reg) && (!mreq_n) && mreq_n_reg &&
 	                      (za[13:8]==6'h3D) &&
-	                      dos_7ffd[1'b1] && (!ramnrom[1'b1]) && pent1m_ROM;
+	                      // dos_7ffd[1'b1] && (!ramnrom[1'b1]) && pent1m_ROM;
+	                      pent1m_ROM;
 
-	assign ram_exec_stb = zneg && (za[15:14]==ADDR) && (|za[15:14]) &&
-	                      (!m1_n_reg) && (!mreq_n) && mreq_n_reg &&
-	                      ramnrom[pent1m_ROM];
+	assign ram_exec_stb = zneg && (|za[15:14]) &&
+	                      (!m1_n_reg) && (!mreq_n) && mreq_n_reg;
+	                      // (!m1_n_reg) && (!mreq_n) && mreq_n_reg &&
+	                      // ramnrom[pent1m_ROM];
 
 	assign dos_turn_on  = dos_exec_stb;
 	assign dos_turn_off = ram_exec_stb;
