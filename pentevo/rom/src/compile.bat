@@ -1,7 +1,7 @@
 echo off
 
 "%IAR%\az80.exe" ts-bios.asm -l ts-bios.lst
-"%IAR%\xlink.exe" -f ts-bios.xcl ts-bios.r01
+"%IAR%\xlink.exe" -Hff -f ts-bios.xcl ts-bios.r01
 del ts-bios.r01
 
 "%IAR%\az80.exe" starter.asm
