@@ -4,6 +4,8 @@
 `define SIMULATE
 `endif
 
+// `define BOLEQ
+
 
 //`define DRAMMEM_VERBOSE
 //`define FETCH_VERBOSE

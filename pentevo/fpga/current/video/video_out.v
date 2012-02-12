@@ -1,5 +1,7 @@
 // This module generates video for DAC
 
+`include "../include/tune.v"
+
 
 module video_out (
 

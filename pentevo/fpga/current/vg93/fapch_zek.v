@@ -1,5 +1,7 @@
 // 'fapch', based on zek govnokode
 
+`include "../include/tune.v"
+
 
 module fapch_zek
 (

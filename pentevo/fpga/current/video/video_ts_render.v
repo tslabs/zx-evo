@@ -1,5 +1,7 @@
 // This module renders video for tiles/sprites
 
+`include "../include/tune.v"
+
 
 module video_ts_render (
 

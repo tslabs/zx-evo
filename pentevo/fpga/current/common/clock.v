@@ -14,6 +14,8 @@
 // ay		--------|--------|________|________|	period = 1,75	duty = 50%		phase = not specified
 
 
+`include "../include/tune.v"
+
 module clock (
 
 	input wire clk,

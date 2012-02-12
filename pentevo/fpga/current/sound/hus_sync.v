@@ -4,6 +4,8 @@
 //
 // Wave DMA stop conditions, or:    1. FIFO is empty (also on reset)
 
+`include "../include/tune.v"
+
 
 module hus_sync(
 

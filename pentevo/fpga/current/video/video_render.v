@@ -1,5 +1,7 @@
 // This module renders video data for output
 
+`include "../include/tune.v"
+
 
 module video_render (
 

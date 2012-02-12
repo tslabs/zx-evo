@@ -7,6 +7,8 @@
 //                       2. tick occures (
 //                       3. FIFO is full
 
+`include "../include/tune.v"
+
 
 module hus_fsm(
 

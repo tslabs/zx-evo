@@ -3,6 +3,8 @@
 // to do
 // - probably add the extra 8 bit counter for number of bursts
 
+`include "../include/tune.v"
+
 
 module dma (
 

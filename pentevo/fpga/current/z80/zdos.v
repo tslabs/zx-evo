@@ -28,14 +28,23 @@ module zdos(
 	always @(posedge fclk, negedge rst_n)
 	if( !rst_n )
 	begin
-		// dos <= 1'b1;     //atm
+    
+`ifdef BOLEQ    
 		dos <= 1'b0;    // boleq
+`else
+		dos <= 1'b1;     //atm
+`endif
+
 	end
 	else // posedge fclk
 	begin
-		if( !cpm_n )
+    
+`ifndef BOLEQ    
+		if( !cpm_n )            // remove it!!! (boleq)
 			dos <= 1'b1;
-		else if( dos_turn_off )
+		else
+`endif
+        if( dos_turn_off )
 			dos <= 1'b0;
 		else if( dos_turn_on )
 			dos <= 1'b1;
