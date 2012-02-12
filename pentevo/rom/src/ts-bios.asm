@@ -24,7 +24,7 @@ MAIN:
         di
         
         xtr
-        ; xt xtoverride, h'0F
+        xt xtoverride, h'0F
         xt page1, 5
         ld sp, stck
         
@@ -68,6 +68,7 @@ RES_TRD:
         xtr
         xt memconf, 1
         ld sp, h'3D2E
+        
         jp h'3D2F           ; ret to #0000
         
         
