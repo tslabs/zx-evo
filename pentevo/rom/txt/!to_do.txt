@@ -47,6 +47,8 @@ NVRAM
 #B2    128k Lock
         0 - OFF
         1 - ON
+        2 - Auto (boleq)
+        3 - Auto (lvd)
 		
 #B3    AY frequency, MHz
         0 - 1.75

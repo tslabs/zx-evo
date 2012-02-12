@@ -3,7 +3,7 @@
 -cz80
 -Z(CODE)CODE=8000-80FF
 -Z(CONST)BIOS=8100-C0FF
---image_input=bios.bin,bios,BIOS,1
+--image_input=ts-bios.bin,bios,BIOS,1
 -o starter.bin
 -l starter.map
 -xmisn
