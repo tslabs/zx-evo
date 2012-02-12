@@ -1,7 +1,10 @@
-; TS-config extended ports definition
+
+; ------- definitions
+
+; -- TS-config extended ports
 extp:           equ 0xAF
     
-vconfig:        equ 0x00
+vconf:          equ 0x00
 vpage:          equ 0x01
 xoffs:          equ 0x02
 xoffsl:         equ 0x02
@@ -38,14 +41,42 @@ dmac:           equ 0x27
 
 xtoverride:     equ 0x2A    
     
+
+rres_256x192:   equ 0x00
+rres_320x200:   equ 0x40
+rres_320x240:   equ 0x80
+rres_360x288:   equ 0xC0
+    
+mode_zx:        equ 0
+mode_16c:       equ 1
+mode_256c:      equ 2
+mode_text:      equ 3
+    
+fm_en:          equ 0x10
+
 dma_zwt_en:     equ 0x40
 
 
-
-
-
-; some constants
+; -- RAM windows
 win0:           equ 0x0000
 win1:           equ 0x4000
 win2:           equ 0x8000
 win3:           equ 0xC000
+
+
+; -- addresses
+
+res_buf:        equ h'5B00
+nv_buf:         equ h'5B80
+stck:           equ h'5BFF
+
+txpage:         equ h'FF
+
+
+; -- NVRAM cells
+cfrq:	equ h'B0
+btto:	equ h'B1
+l128:	equ h'B2
+ayfr:	equ h'B3		
+zpal:	equ h'B4		
+		

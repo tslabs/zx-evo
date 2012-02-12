@@ -93,3 +93,28 @@ __val 	defl val
 		.endif
         endm
       
+      
+pmsg    macro addr, xy, attr
+        ld de, addr
+        ld hl, xy
+        ld b, attr
+        call PRINT_MSG
+        endm
+        
+        
+pmsgc   macro addr, yc, attr
+        ld de, addr
+        ld h, yc
+        ld b, attr
+        call PRINT_MSG_C
+        endm
+        
+        
+box     macro xy, xys, attr
+        ld hl, xy
+        ld bc, xys
+        ld a, attr
+        call DRAW_BOX
+        endm
+        
+        

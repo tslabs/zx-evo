@@ -1,21 +1,4 @@
 
-; ------- definitions
-
-; -- addresses
-
-res_buf:      equ h'5B00
-nv_buf:       equ h'5B80
-stck:         equ h'5BFF
-
-
-; -- NVRAM cells
-cfrq:	equ h'B0
-btto:	equ h'B1
-l128:	equ h'B2
-ayfr:	equ h'B3		
-zpal:	equ h'B4		
-		
-
 ; ------- tabs
 ; -- options tab
 ; word - address of option text
@@ -32,6 +15,17 @@ OPTTAB:
 		
 		
 ; ------- messages
+
+M_HEAD1:
+        defb '--=  TS-BIOS  Setup  Utility  =--', 0
+M_HEAD2:
+        defb '(c)2012 TS-Labs inc.', 0
+
+M_OPT:  defb 'Select NVRAM options:', 0        
+
+M_HLP:  defb 'Arrows - move cursor,  Enter - change option,  F12 - exit from Setup', 0
+
+
 ; -- option text
 ; byte - number of choises
 ; byte - address in NVRAM
@@ -92,3 +86,40 @@ SEL4:	defb 'Pulsar', 0
 		
 ; SEL7:	defb '', 0
 		; defb '', 0
+        
+        
+; -- palette
+pal_tx:
+        	defw h'0000
+            defw h'0010
+            defw h'4000
+            defw h'4010
+            defw h'0200
+            defw h'0210
+            defw h'4200
+            defw h'4210
+            defw h'2108
+            defw h'0018
+            defw h'6000
+            defw h'6018
+            defw h'0300
+            defw h'0318
+            defw h'6300
+            defw h'6318
+            defw h'0000
+            defw h'0010
+            defw h'4000
+            defw h'4010
+            defw h'0200
+            defw h'0210
+            defw h'4200
+            defw h'4210
+            defw h'0000
+            defw h'0018
+            defw h'6000
+            defw h'6018
+            defw h'0300
+            defw h'0318
+            defw h'6300
+            defw h'6318
+
