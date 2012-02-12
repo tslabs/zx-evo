@@ -1,5 +1,7 @@
 // This module latches all port parameters for video from Z80
 
+`include "../include/tune.v"
+
 
 module video_ports (
 

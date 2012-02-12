@@ -1,5 +1,8 @@
 // This module latches the HUS parameters
 
+`include "../include/tune.v"
+
+
 module hus_parm(
 
 // clocks

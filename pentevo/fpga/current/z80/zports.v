@@ -525,18 +525,22 @@ module zports(
 		if (!rst_n)
 		begin
 			fmaddr[4] <= 1'b0;
-			
-			sysconf <= 8'h01;       // turbo 7 MHz
-			memconf <= 8'h00;       // atm
-			// memconf <= 8'h04;       // boleq
 			im2vect <= 8'hFF;
 			fddvirt <= 4'b0;
-	
+			sysconf <= 8'h01;       // turbo 7 MHz
+
+`ifdef BOLEQ
+			memconf <= 8'h04;       // boleq
+			xt_override <= 4'b1111;       // boleq
+`else
+			memconf <= 8'h00;       // atm
+			xt_override <= 4'b0;       // atm crotch
+`endif
+            
 			rampage[0] <= 8'h00;
 			rampage[1] <= 8'h05;
 			rampage[2] <= 8'h02;
 			rampage[3] <= 8'h00;
-			xt_override <= 4'b0;       // atm crotch
 		end
         
         else
@@ -906,9 +910,14 @@ module zports(
 	always @(posedge fclk)
 	if( !rst_n )
 	begin
-		atm_scr_mode <= 3'b011;
+        
+`ifdef BOLEQ
+		atm_pen <=   1'b0; // boleq,
+		atm_cpm_n <= 1'b1; // boleq
+`else
 		atm_pen <=   1'b1; // no manager,
 		atm_cpm_n <= 1'b0; // permanent dosen (shadow ports on)
+`endif
 
 
 	end

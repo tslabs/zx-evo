@@ -1,5 +1,8 @@
 // This is the heart of TS-graphics - Tile Sprite Processing Unit
 
+`include "../include/tune.v"
+
+
 module video_ts (
 
 // clocks

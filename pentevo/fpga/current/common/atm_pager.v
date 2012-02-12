@@ -97,7 +97,7 @@ module atm_pager(
 	begin
 		if( pager_off )
 		begin // atm no pager mode - each window has same ROM
-			romnram <= 1'b1;     // commented for boleq
+			romnram <= 1'b1;
 			page    <= 8'hFF;
 		end
         

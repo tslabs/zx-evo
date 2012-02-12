@@ -4,8 +4,7 @@
 // pixel clocks     |0
 // hblank
 
-
-
+`include "../include/tune.v"
 
 
 module video_sync (

@@ -1,3 +1,6 @@
+`include "../include/tune.v"
+
+
 module hus_top(
 
 // clocks

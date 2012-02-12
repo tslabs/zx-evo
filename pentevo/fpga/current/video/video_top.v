@@ -1,5 +1,7 @@
 // This module is a video top-level
 
+`include "../include/tune.v"
+
 
 module video_top (
 
