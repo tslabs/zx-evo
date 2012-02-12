@@ -356,7 +356,7 @@ module top(
 	wire pager_off;
 
 	wire        pent1m_ROM;
-	wire [ 5:0] pent1m_page;
+	// wire [ 5:0] pent1m_page;
 	wire        pent1m_ram0_0;
 	wire        pent1m_1m_on;
 
@@ -404,7 +404,7 @@ module top(
 			                     .pager_off(pager_off),
 
 			                     .pent1m_ROM   (pent1m_ROM),
-			                     .pent1m_page  (pent1m_page),
+			                     .pent1m_page  (xt_ramp[3][5:0]),
 			                     .pent1m_ram0_0(pent1m_ram0_0),
 			                     .pent1m_1m_on (pent1m_1m_on),
 
@@ -567,7 +567,6 @@ module top(
 	wire [20:0] ts_addr;
 	wire ts_req;
 	wire ts_next;
-	wire ts_strobe;
 
 	arbiter dramarb(
 					 .clk(fclk),
@@ -600,14 +599,10 @@ module top(
 	                 .dma_addr		(dma_addr),
 	                 .dma_wrdata	(dma_wrdata),
 	                 .dma_req		(dma_req),
-	                 // .dma_req		(0),
-	                 // .dma_req		(memconf[7]),
 	                 .dma_rnw		(dma_rnw),
-	                 // .dma_rnw		(1),    // debug
 					 .dma_next		(dma_next),
 					 
-					 // .ts_req		(ts_req),
-					 .ts_req		(0),	// debug
+					 .ts_req		(ts_req),
 					 .ts_addr		(ts_addr),
 					 .ts_next		(ts_next)
 	);
@@ -678,7 +673,6 @@ module top(
 		.ts_req			(ts_req),
 		.ts_addr		(ts_addr),
 		.ts_next		(ts_next),
-		.ts_strobe		(ts_strobe),
 		
 		.a(a), .d(d),
 		.cram_data_in({d[6:0], zmd}),

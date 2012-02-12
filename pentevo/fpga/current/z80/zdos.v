@@ -28,7 +28,8 @@ module zdos(
 	always @(posedge fclk, negedge rst_n)
 	if( !rst_n )
 	begin
-		dos <= 1'b1;
+		// dos <= 1'b1;     //atm
+		dos <= 1'b0;    // boleq
 	end
 	else // posedge fclk
 	begin

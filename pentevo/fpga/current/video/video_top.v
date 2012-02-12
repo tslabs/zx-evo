@@ -60,7 +60,6 @@ module video_top (
 	output wire [20:0] ts_addr,
 	output wire        ts_req,
 	input  wire        ts_next,
-	input  wire        ts_strobe,
 
 // video controls
 	input wire vga_on
@@ -116,7 +115,7 @@ module video_top (
 	wire hvpix;
 	wire flash;
 	wire pix_stb;
-    
+
 // fetcher
 	wire [31:0] fetch_data;
 	wire [31:0] fetch_temp;
@@ -129,6 +128,11 @@ module video_top (
 	wire [7:0] vplex;
 	wire [7:0] vgaplex;
     
+// TS
+    wire ts_render_done;
+    wire [20:0] tsg_addr;
+    wire ts_rld;
+    
 // TM-buf    
     wire [8:0] tmb_waddr;
     wire [8:0] tmb_raddr;
@@ -138,7 +142,7 @@ module video_top (
 	// wire [8:0] ts_waddr = a[8:0];
 	// wire [7:0] ts_wdata = {d[7:1], 1'b1};
 	// wire ts_we = c3;
-	wire [9:0] ts_waddr;
+	wire [8:0] ts_waddr;
 	wire [7:0] ts_wdata;
 	wire ts_we;
 	wire [8:0] ts_raddr;
@@ -284,23 +288,44 @@ module video_top (
 
 	video_ts video_ts (
 		// .clk		    (clk),
-		.clk		    (0),
-		.zclk		    (zclk),
-		.c3			    (c3),
-		.line_start		(line_start),
-		.num_tiles		(x_tiles),
-		.lcount			(lcount),
-		.tsconf			(tsconf),
-		.tgpage			(tgpage),
-		.vpage			(vpage_d),
-		.sfys_addr_in	(a[8:1]),
-		.sfys_data_in	(sfys_data_in),
-		.sfys_we		(sfys_we),
-		.ts_req			(ts_req),
-		.ts_addr		(ts_addr),
-		.ts_data		(dram_rddata),
-		.ts_next		(ts_next),
-		.ts_strobe		(ts_strobe)
+		// .clk		    (0),
+		// .zclk		    (zclk),
+		// .c3			    (c3),
+		// .line_start		(line_start),
+		// .num_tiles		(x_tiles),
+		// .lcount			(lcount),
+		// .tsconf			(tsconf),
+		// .tgpage			(tgpage),
+		// .vpage			(vpage_d),
+		// .tsg_addr		(tsg_addr),
+		// .sfys_addr_in	(a[8:1]),
+		// .sfys_data_in	(sfys_data_in),
+		// .sfys_we		(sfys_we)
+);
+
+
+	video_ts_render video_ts_render (
+		.clk		    (clk),
+        .reset          (line_start & c3),
+        // .go             (tspix_start & c0),       // debug!!!
+        .go             (0),       // debug!!!
+        // .reload         (ts_rld),
+        // .reload         (tspix_start & c0),       // debug!!!
+        .reload         (0),       // debug!!!
+        .x_coord        (0),
+        .x_size         (0),
+        .x_flip         (0),
+        // .addr           (tsg_addr),
+        .addr           (0),
+        .pal            (15),
+        .done           (ts_render_done),
+        .ts_waddr       (ts_waddr),
+        .ts_wdata       (ts_wdata),
+        .ts_we          (ts_we),
+        .dram_addr      (ts_addr),
+        .dram_req       (ts_req),
+        .dram_rdata     (dram_rdata),
+        .dram_next      (ts_next)
 );
 
 

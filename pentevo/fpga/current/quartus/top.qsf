@@ -275,6 +275,8 @@ set_instance_assignment -name GLOBAL_SIGNAL ON -to spics_n
 
 # end ENTITY(top)
 # ---------------
+set_global_assignment -name VERILOG_FILE ../video/video_ts_render.v
+set_global_assignment -name VERILOG_FILE ../video/video_ts.v
 set_global_assignment -name VERILOG_FILE ../video/mem/video_tsline1.v
 set_global_assignment -name VERILOG_FILE ../video/mem/video_tsline0.v
 set_global_assignment -name MIF_FILE ../video/mem/video_cram.mif
@@ -290,7 +292,6 @@ set_global_assignment -name VERILOG_FILE ../video/video_top.v
 set_global_assignment -name VERILOG_FILE ../video/video_mode.v
 set_global_assignment -name VERILOG_FILE ../video/video_sync.v
 set_global_assignment -name VERILOG_FILE ../video/video_fetch.v
-set_global_assignment -name VERILOG_FILE ../video/video_ts.v
 set_global_assignment -name VERILOG_FILE ../video/video_render.v
 set_global_assignment -name VERILOG_FILE ../video/video_out.v
 set_global_assignment -name VERILOG_FILE ../sound/sound.v

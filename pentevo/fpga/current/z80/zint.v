@@ -33,19 +33,19 @@ module zint
 `endif
 
 
-// 32 Z80 tacts at 3,5MHz
 	always @(posedge fclk)
 	begin
 		if( int_start )
 			intctr <= 10'd0;
-		else if( !intctr[9] )
+		// else if (~&intctr[9:8])   // 48 clks 3,5MHz
+		else if (!intctr[9])   // 32 clks 3,5MHz
 			intctr <= intctr + 10'd1;
 	end
 
 
 	always @(posedge fclk)
 	begin
-		if( int_start & !vdos)
+		if (int_start & !vdos)
 			int_n <= 1'b0;
 		else if (intctr[9] | ((!iorq_n) && (!m1_n) && zneg))
 			int_n <= 1'bZ;
