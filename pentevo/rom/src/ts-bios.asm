@@ -3,6 +3,7 @@
 extern	font8
 #include "conf.asm"
 #include "macro.asm"
+#include "vars.asm"
 
 
 ; ------- main code
@@ -13,25 +14,28 @@ extern	font8
     
 ; -- IM1 INT
 		org h'38
-IM1:
+IM1
 		ei
 		ret
 	
 	
 ; -- NMI        
 		org h'66
-NMI:
+NMI
 		retn
 	
 	
 ; -- reset procedures
 		org h'100
-MAIN:
+MAIN
         di
         
         xtr
         xt page1, 5
         ld sp, stck
+        im 1
+        xor a
+        ld i, a
         
         ; call LOAD_NVRAM
         ; call CALC_CRC
@@ -49,7 +53,7 @@ MAIN:
 
 ; This proc makes reset to the specified destination
 ; input:    A - reset destination
-RESET:
+RESET
         ld hl, RESET2
         ld de, res_buf
         ld bc, RESET2_END - RESET2      ; No checking for stack at this point!!!
@@ -71,7 +75,7 @@ RESET2:
         halt
 
         
-RES_TRD:
+RES_TRD
         xtr
         xt memconf, 1
         ld sp, h'3D2E
@@ -79,19 +83,19 @@ RES_TRD:
         jp h'3D2F           ; ret to #0000
         
         
-RES_48:
+RES_48
         xtr
         xt memconf, 1
         jp 0
 
         
-RES_128:
+RES_128
         xtr
         xt memconf, 0
         jp 0
 
         
-RESET2_END:
+RESET2_END
 
 
 ; ------- BIOS Setup
@@ -118,12 +122,57 @@ SETUP:
 
         
 ; ------- subroutines
-CALC_CRC:
+
+; KBD poll
+; out: 
+;   D - key pressed (0-39), CS+SS = 255
+;   L - bit0 = CS, bit1 = SS,
+;   fc - c = pressed / nc = not pressed
+KBD_POLL
+        ld bc, h'FEFE
+        xor a
+        ld l, a
+KBP1
+        in d, (c)
+        ld e, 5
+KBP2
+        rr d
+        jr nc, KBP3
+KBP4
+        inc a
+        dec e
+        jr nz, KBP2
+        rlc b
+        jr c, KBP1
+        
+        ld a, l
+        cpl
+        and 3
+        ld a, 255
+        ret nz
+        scf
+        ret
+KBP3
+        or a        ; CS
+        jr z, KBP5
+        cp 36       ; SS
+        jr z, KBP6
+        scf
+        ret
+KBP5
+        set 0, l
+        jr KBP4
+KBP6
+        set 1, l
+        jr KBP4
+        
+
+CALC_CRC
 
         ld hl, nv_buf
         ld de, 0
         ld b, 62
-CC0:
+CC0
         ld a, d
         add a, (hl)
         ld d, a
@@ -141,7 +190,7 @@ CC0:
         cp (hl)
         ret
 
-LOAD_DEFAULTS:
+LOAD_DEFAULTS
         ld hl, nv_buf
         ld de, nv_buf + 1
         ld bc, h'003D
@@ -150,17 +199,17 @@ LOAD_DEFAULTS:
         ret
         
         
-LOAD_NVRAM:
+LOAD_NVRAM
         ret
         
         
-SAVE_NVRAM:
+SAVE_NVRAM
         call CALC_CRC
         ld (nv_buf + 62), de
         ret
         
         
-LD_FONT:
+LD_FONT
         xtr
         xt page3, txpage ^ 1
         ld hl, font8
@@ -180,7 +229,7 @@ CLS:    xtr
         ret
 
         
-LD_S_PAL:
+LD_S_PAL
         xtr
         xt palsel, 15
         xt fmaddr, h'04 | fm_en
@@ -196,10 +245,10 @@ LD_S_PAL:
 ; DE - addr
 ; H - Y coord
 ; B - attr
-PRINT_MSG_C:
+PRINT_MSG_C
         push de
         ld l, -1
-PMC1:
+PMC1
         ld a, (de)
         inc de
         inc l
@@ -218,10 +267,10 @@ PMC1:
 ; DE - addr
 ; HL - coords        
 ; B - attr
-PRINT_MSG:
+PRINT_MSG
         set 6, h
         set 7, h
-PM1:
+PM1
         ld a, (de)
         or a
         ret z
@@ -237,7 +286,7 @@ PM1:
 ; HL - coords
 ; BC - sizes
 ; A - attr
-DRAW_BOX:
+DRAW_BOX
         set 6, h
         set 7, h
         dec b
@@ -251,7 +300,7 @@ DRAW_BOX:
         pop hl
         pop bc
         inc h
-DB1:
+DB1
         push bc
         push hl
         ld de, 'º' << 8 + ' '
@@ -298,7 +347,8 @@ DB2:
 ;        º º º
 ;        ÈÍÊÍ¼
 
-        
+
+#include "booter.asm"
 #include "arrays.asm"
 
         end
