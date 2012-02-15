@@ -1,7 +1,7 @@
 MD20    .ASM - main module
 WCVLS   .ASM - variables and structures
 PS2P    .ASM - PS/2 handler (stand-alone)
-WCVW    .ASM - viewers, SPG runner, WMF loader
+WCVW    .ASM - viewers, SPG/$C runner, WMF loader
 ENCODET .ASM - encoding detector (ALT,WIN,KOI)
 
 DIDENEMO.ASM - source of IDE(nemo) driver
