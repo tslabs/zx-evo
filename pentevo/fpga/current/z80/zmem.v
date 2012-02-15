@@ -63,9 +63,9 @@ module zmem(
 // strobes
 	output wire vdos_off,
 	// output wire        opf_on,
-	// output wire        opf_off,
+	// output wire        opf_end,
 	// output wire        mrd_on,
-	// output wire        mrd_off,
+	// output wire        mrd_end,
 
 	output wire        cpu_req,
 	output wire        cpu_rnw,
@@ -177,7 +177,7 @@ module zmem(
 	// access type
 	assign opfetch = (~mreq_n) && (~m1_n);
 	assign memrd   = (~mreq_n) && (~rd_n);
-	assign memwr   = (~mreq_n) &&   rd_n && rfsh_n;
+	assign memwr   = (~mreq_n) && rd_n && rfsh_n;
 
 
 	// wait tables: 
@@ -307,22 +307,34 @@ module zmem(
 
 // on/off of virt dos
     reg opf_r, mrd_r;
-	reg [3:0] vd_off;
-	assign vdos_off = vd_off[3];
-    wire opf_off = !opfetch & opf_r;       // 1 clk strobe of !M1 & !RD after it deasserted
-    wire mrd_off = !memrd & mrd_r;         // 1 clk strobe of !MRQ & !RD after it deasserted
-    wire ldbb = (zd_out == 8'h40);
+	reg [2:0] vd_off;
+    reg opDD_r;
+	assign vdos_off = vd_off[2];
+    wire opf_end = !opfetch & opf_r;       // 1 clk strobe after !M1 & !RD
+    wire mrd_end = !memrd & mrd_r;         // 1 clk strobe after !MRQ & !RD
+    wire opDD = (zd_out == 8'hDD);
+    wire opC3 = (zd_out == 8'hC3);
 	
     always @(posedge fclk)
     begin
         opf_r <= opfetch;
         mrd_r <= memrd;
+    end
 		
-		if (opf_off & ldbb)
-			vd_off[0] <= 1'b1;
-		else
-		if (mrd_off | vdos_off)
-			vd_off[3:0] <= {vd_off[2:0], 1'b0};
+    always @(posedge fclk)
+    begin
+		if (opf_end)
+        begin
+			opDD_r <= opDD;
+            
+            else
+            if (opC3 & opDD_r)
+                vd_off[0] <= 1'b1;
+		end
+        
+        else
+		if (mrd_end | vdos_off)
+			vd_off[2:0] <= {vd_off[1:0], 1'b0};
     end
 	
 	
