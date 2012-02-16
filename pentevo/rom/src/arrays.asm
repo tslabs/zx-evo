@@ -2,20 +2,28 @@
 ; ------- messages
 
 M_HEAD1
-        defb '--=  TS-BIOS  Setup  Utility  =--', 0
+        defb 'TS-BIOS Setup Utility', 0
 M_HEAD2
-        defb '(c)2012 TS-Labs inc.', 0
+        defb 'Build date:', 0
+MH2_SZ  equ $ - M_HEAD2 + 18
 
-M_OPT:  defb 'Select NVRAM options:', 0        
-
-M_HLP:  defb 'Arrows - move cursor,  Enter - change option,  F12 - exit from Setup', 0
+M_HLP   defb 'Arrows - move,  Enter - change option,  F12 - exit', 0
 
 
 ; ------- tabs
 ; -- options tab
+OPTTAB0
+; byte - number of options
+; byte - X coordinate
+; byte - Y coordinate
+; string - message
+        defb h'0A, h'0A
+        defb h'0C, h'08
+        defb h'8C
+        defb 5
+        defb 'Select NVRAM options:', 0        
 ; word - address of option text
 ; word - address of option choises
-OPTTAB
 		defw OPT0, SEL0
 		defw OPT1, SEL1
 		defw OPT2, SEL2
@@ -28,22 +36,20 @@ OPTTAB
 ; -- option text
 ; byte - number of choises
 ; byte - address in NVRAM
-; byte - X coordinate
-; byte - Y coordinate
-; text - option
+; string - option
 ; byte - 0
-OPT0    defb 3, cfrq, 0, 0, 'CPU frequency, MHz:', 0
-OPT1    defb 8, btto, 0, 0, 'Boot to:', 0
-OPT2    defb 4, l128, 0, 0, '128k Lock:', 0
-OPT3    defb 4, ayfr, 0, 0, 'AY frequency, MHz:', 0
-OPT4    defb 7, zpal, 0, 0, 'ZX Palette:', 0
+OPT0    defb 3, cfrq, 'CPU frequency, MHz:', 0
+OPT1    defb 8, btto, 'Boot to:', 0
+OPT2    defb 4, l128, '128k Lock:', 0
+OPT3    defb 4, ayfr, 'AY frequency, MHz:', 0
+OPT4    defb 7, zpal, 'ZX Palette:', 0
 ; OPT5    defb 0, h'B0, 0, 0, '', 0
 ; OPT6    defb 0, h'B0, 0, 0, '', 0
 ; OPT7    defb 0, h'B0, 0, 0, '', 0
 
 ; -- choises
 ; *repeat n times
-; text - choise
+; string - choise
 ; byte - 0
 SEL0    defb '7.0', 0
 		defb '14.0', 0
@@ -123,10 +129,8 @@ pal_tx
 
         
 keys_norm
-        defb 0, 'zxcvasdfgqwert1234509876poiuy', 13, 'lkjh ', 0, 'mnb'
+        defb 0, 'zxcvasdfgqwert1234509876poiuy', 13, 'lkjh ', 14, 'mnb'
 keys_caps
-        defb 0, 'ZXCVASDFGQWERT1234509876POIUY', 13, 'LKJH ', 0, 'MNB'
+        defb 0, 'ZXCVASDFGQWERT', 7, 6, 4, 5, 8, 12, 15, 9, 11, 10, 'POIUY', 13, 'LKJH ', 14, 'MNB'
 keys_symb
-        defb 0, ':`?/~|\\{}   <>!@#$%_)(', 39, '&', 34, '; ][', 13, '=+-^ ', 0, '.,*'
-        
-        
+        defb 0, ':`?/~|\\{}   <>!@#$%_)(', 39, '&', 34, '; ][', 13, '=+-^ ', 14, '.,*'

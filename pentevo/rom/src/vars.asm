@@ -4,11 +4,18 @@
                 
 ; -------- BIOS
 
-kbd_del         defs 1
-kbd_last        defs 1
-fld_curr        defs 1
+kbd_del         defs 1      ; current value of autorepeat counter
+last_key        defs 1      ; last pressed key
+map_key         defs 1      ; key mapped to layout
+key             defs 1      ; actually pressed key mapped to layout (affected by autorepead)
+evt             defs 1      ; event code
+fld_curr        defs 1      ; current field of setup
+fld_top         defs 2      ; coordinates of 1st option in the field
+fld_tab         defs 2      ; addr of tab options
+fld_max         defs 1      ; number of options in field
+fld0_pos        defs 1      ; cursor position in field0
 
-        
+
 ; -------- FAT driver
 
 nsdc            defs 1      ; номер сектора в clus
@@ -20,7 +27,7 @@ rezde           defs 2
 clhl            defs 2
 clde            defs 2
 llhl            defs 4
-lthl            defs 2;last
+lthl            defs 2      ;last
 ltde            defs 2
 entry           defs 11     ;------ шаблон элемента каталога
 clsde           defs 2

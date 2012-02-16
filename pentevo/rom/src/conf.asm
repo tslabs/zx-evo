@@ -28,7 +28,6 @@ dmasax          equ 0x1C
 dmadal          equ 0x1D
 dmadah          equ 0x1E
 dmadax          equ 0x1F
-    
 sysconf         equ 0x20
 memconf         equ 0x21
 hsint           equ 0x22
@@ -38,22 +37,20 @@ vsinth          equ 0x24
 intv            equ 0x25
 dmal            equ 0x26
 dmac            equ 0x27
-
 xtoverride      equ 0x2A    
-    
 
+; video modes
 rres_256x192    equ 0x00
 rres_320x200    equ 0x40
 rres_320x240    equ 0x80
 rres_360x288    equ 0xC0
-    
 mode_zx         equ 0
 mode_16c        equ 1
 mode_256c       equ 2
 mode_text       equ 3
     
+; other port values    
 fm_en           equ 0x10
-
 dma_zwt_en      equ 0x40
 
 
@@ -65,7 +62,6 @@ win3            equ 0xC000
 
 
 ; -- addresses
-
 fat_bufs        equ h'4000
 vars            equ h'5B00
 res_buf         equ h'5B00
@@ -77,6 +73,11 @@ stck            equ h'5BFF
 txpage          equ h'FF
 
 
+; -- UI colors
+opt_norm        equ h'89
+opt_hgl         equ h'7D
+
+
 ; -- NVRAM cells
 cfrq            equ h'B0
 btto            equ h'B1
@@ -84,3 +85,10 @@ l128            equ h'B2
 ayfr            equ h'B3		
 zpal            equ h'B4		
 		
+
+; events
+ev_kb_help      equ h'01
+ev_kb_up        equ h'02
+ev_kb_down      equ h'03
+ev_kb_enter     equ h'04
+
