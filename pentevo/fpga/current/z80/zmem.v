@@ -312,8 +312,6 @@ module zmem(
 	assign vdos_off = vd_off[2];
     wire opf_end = !opfetch & opf_r;       // 1 clk strobe after !M1 & !RD
     wire mrd_end = !memrd & mrd_r;         // 1 clk strobe after !MRQ & !RD
-    wire opDD = (zd_out == 8'hDD);
-    wire opC3 = (zd_out == 8'hC3);
 	
     always @(posedge fclk)
     begin
@@ -325,10 +323,8 @@ module zmem(
     begin
 		if (opf_end)
         begin
-			opDD_r <= opDD;
-            
-            else
-            if (opC3 & opDD_r)
+			opDD_r <= (zd_out == 8'hDD);
+            if ((zd_out == 8'hC3) & opDD_r)
                 vd_off[0] <= 1'b1;
 		end
         
