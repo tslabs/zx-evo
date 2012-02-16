@@ -4,7 +4,7 @@
 `define SIMULATE
 `endif
 
-// `define BOLEQ
+`define BOLEQ
 
 
 //`define DRAMMEM_VERBOSE
