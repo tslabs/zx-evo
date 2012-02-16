@@ -93,6 +93,12 @@ __val 	defl val
 		.endif
         endm
       
+
+chr     macro symb
+        ld a, symb
+        call SYM
+        endm
+      
       
 pmsg    macro addr, xy, attr
         ld de, addr
@@ -107,6 +113,12 @@ pmsgc   macro addr, yc, attr
         ld h, yc
         ld b, attr
         call PRINT_MSG_C
+        endm
+        
+
+num     macro numb
+        ld a, numb
+        call NUM_10
         endm
         
         
