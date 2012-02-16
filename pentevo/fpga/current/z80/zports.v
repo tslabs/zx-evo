@@ -456,9 +456,11 @@ module zports(
 			dout = { 4'b0000, set_nmi, fntw_en_reg, 1'b0, shadow_en_reg };
 		end
 
+`ifndef ANTIATM
 		ZXEVBE: begin
 			dout = portbemux;
 		end
+`endif
 
 
 		default:
@@ -529,9 +531,9 @@ module zports(
 			fddvirt <= 4'b0;
 			sysconf <= 8'h01;       // turbo 7 MHz
 
-`ifdef BOLEQ
-			memconf <= 8'h04;       // boleq
-			xt_override <= 4'b1111;       // boleq
+`ifdef ANTIATM
+			memconf <= 8'h04;       // ANTIATM
+			xt_override <= 4'b1111;       // ANTIATM
 `else
 			memconf <= 8'h00;       // atm
 			xt_override <= 4'b0;       // atm crotch
@@ -911,9 +913,9 @@ module zports(
 	if( !rst_n )
 	begin
         
-`ifdef BOLEQ
-		atm_pen <=   1'b0; // boleq,
-		atm_cpm_n <= 1'b1; // boleq
+`ifdef ANTIATM
+		atm_pen <=   1'b0; // ANTIATM,
+		atm_cpm_n <= 1'b1; // ANTIATM
 `else
 		atm_pen <=   1'b1; // no manager,
 		atm_cpm_n <= 1'b0; // permanent dosen (shadow ports on)
@@ -946,6 +948,7 @@ module zports(
 
 
 	// port BE read
+`ifndef ANTIATM
 
 	always @*
 	case( a[11:8] )
@@ -972,6 +975,7 @@ module zports(
 
 	endcase
 
+`endif
 
 
 
