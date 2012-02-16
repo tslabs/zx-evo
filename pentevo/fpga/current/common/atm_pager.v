@@ -95,6 +95,7 @@ module atm_pager(
 	//
 	always @(posedge fclk)
 	begin
+`ifndef ANTIATM
 		if( pager_off )
 		begin // atm no pager mode - each window has same ROM
 			romnram <= 1'b1;
@@ -102,20 +103,22 @@ module atm_pager(
 		end
         
 		else // pager on
+`endif
 		if (v_dos & dos)
         begin
             romnram <= 1'b0;
             page <= {xt_page[7:2], 2'b00};
         end
-			
 		else
+`ifndef ANTIATM			
 		if (xt_override)
+`endif
 		begin
                romnram <= w0_romnram;
                page[7:2] <= xt_page[7:2];
                page[1:0] <= w0_mapped ? {~dos, pent1m_ROM} : xt_page[1:0];
 		end
-		
+`ifndef ANTIATM		
 		else
 		begin
 			if( (ADDR==2'b00) && (pent1m_ram0_0 || in_nmi) ) // pent ram0 OR nmi
@@ -160,6 +163,7 @@ module atm_pager(
 				end
 			end
 		end
+`endif
 	end
 
 
@@ -167,7 +171,8 @@ module atm_pager(
 
 	// port reading: sets pages, ramnrom, dos_7ffd
 	//
-	always @(posedge fclk)
+`ifndef ANTIATM
+    always @(posedge fclk)
 		if( atmF7_wr )
 		begin
 			if( za[15:14]==ADDR )
@@ -186,6 +191,7 @@ module atm_pager(
 				end
 			end
 		end
+`endif
 
 
 	// DOS turn on/turn off

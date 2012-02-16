@@ -29,8 +29,8 @@ module zdos(
 	if( !rst_n )
 	begin
     
-`ifdef BOLEQ    
-		dos <= 1'b0;    // boleq
+`ifdef ANTIATM    
+		dos <= 1'b0;    // ANTIATM
 `else
 		dos <= 1'b1;     //atm
 `endif
@@ -39,8 +39,8 @@ module zdos(
 	else // posedge fclk
 	begin
     
-`ifndef BOLEQ    
-		if( !cpm_n )            // remove it!!! (boleq)
+`ifndef ANTIATM    
+		if( !cpm_n )            // remove it!!! (ANTIATM)
 			dos <= 1'b1;
 		else
 `endif
