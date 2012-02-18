@@ -501,6 +501,7 @@ module top(
 		.romwe_n(romwe_n),
 		.csrom  (csrom),
 
+		.vdos_on   (vdos_on),
 		.vdos_off  (vdos_off),
 		
 		.cpu_req   (cpu_req),
