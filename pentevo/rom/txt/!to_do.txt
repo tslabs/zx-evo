@@ -1,6 +1,4 @@
 - NVRAM checksum
-- rd/wr NVRAM
-- program h/w on reset
 - program palette
 - FAT boot
 - help window

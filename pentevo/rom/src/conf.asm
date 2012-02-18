@@ -1,9 +1,23 @@
 
 ; ------- definitions
 
-; -- TS-config extended ports
+; -- ports
 extp            equ 0xAF
+pf7             equ 0xF7
+
     
+; -- F7 port regs
+shadow          equ 0xEF
+nvaddr          equ 0xDF
+nvdata          equ 0xBF
+
+
+; F7 parameters
+shadow_on       equ 0x80
+shadow_off      equ 0x00
+
+
+; -- TS-config port regs
 vconf           equ 0x00
 vpage           equ 0x01
 xoffs           equ 0x02
@@ -37,7 +51,13 @@ vsinth          equ 0x24
 intv            equ 0x25
 dmal            equ 0x26
 dmac            equ 0x27
-xtoverride      equ 0x2A    
+xtoverride      equ 0x2A
+
+
+; TS parameters
+fm_en           equ 0x10
+dma_zwt_en      equ 0x40
+
 
 ; video modes
 rres_256x192    equ 0x00
@@ -48,12 +68,8 @@ mode_zx         equ 0
 mode_16c        equ 1
 mode_256c       equ 2
 mode_text       equ 3
+mode_nogfx      equ 0x20
     
-; h/w parameters
-fm_en           equ 0x10
-dma_zwt_en      equ 0x40
-
-
 ; -- RAM windows
 win0            equ 0x0000
 win1            equ 0x4000
@@ -62,10 +78,10 @@ win3            equ 0xC000
 
 
 ; -- addresses
-pal_addr        equ h'4000      ; \ 
+pal_addr        equ h'6000      ; \ 
 fat_bufs        equ h'4000      ; | 
-res_buf         equ h'5000      ; |
-nv_buf          equ h'5700      ; | LSB should be 0 !!
+res_buf         equ h'5C00      ; |
+nv_buf          equ h'5D00      ; | LSB should be 0 !!
 vars            equ h'5B00      ; /
 stck            equ h'5BFF
 nv_1st          equ h'B0
