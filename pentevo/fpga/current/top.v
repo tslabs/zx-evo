@@ -503,6 +503,8 @@ module top(
 
 		.vdos_on   (vdos_on),
 		.vdos_off  (vdos_off),
+        .dos_turn_on ( |dos_turn_on),
+        .dos_turn_off( |dos_turn_off),
 		
 		.cpu_req   (cpu_req),
 		.cpu_rnw   (cpu_rnw),
