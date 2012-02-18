@@ -48,7 +48,7 @@ OPT1    defb 8, low(btto), 'Boot to:', 0
 OPT5    defb 8, low(b2to), 'CS Boot to:', 0
 OPT2    defb 4, low(l128), '128k Lock:', 0
 OPT3    defb 4, low(ayfr), 'AY clock, MHz:', 0
-OPT4    defb 7, low(zpal), 'ZX Palette:', 0
+OPT4    defb 6, low(zpal), 'ZX Palette:', 0
 ; OPT5    defb 0, h'B0, 0, 0, '', 0
 ; OPT6    defb 0, h'B0, 0, 0, '', 0
 ; OPT7    defb 0, h'B0, 0, 0, '', 0
@@ -85,13 +85,12 @@ SEL3
 		defb '3.546', 0
 		
 SEL4    
-        defb ' Pulsar', 0
-		defb 'B.black', 0
-		defb '    Dim', 0
-		defb '   Pale', 0
-		defb '   Dark', 0
-		defb '    B/W', 0
-		defb ' Custom', 0
+        defb ' Pulsar', 0   ; 0
+		defb 'B.black', 0   ; 1
+		defb '   Pale', 0   ; 2
+		defb '   Dark', 0   ; 3
+		defb 'Grayscl', 0   ; 4
+		defb ' Custom', 0   ; 5
 		
 ; SEL5    defb '', 0
 		; defb '', 0
@@ -104,7 +103,7 @@ SEL4
         
         
 ; -- palette
-pal_tx
+pal_bb               ; bright black
         defw h'0000
         defw h'0010
         defw h'4000
@@ -121,6 +120,8 @@ pal_tx
         defw h'0318
         defw h'6300
         defw h'6318
+        
+pal_puls             ; pulsar
         defw h'0000
         defw h'0010
         defw h'4000
@@ -138,6 +139,61 @@ pal_tx
         defw h'6300
         defw h'6318
 
+pal_dark              ; dark
+        defw b'000000000000000
+        defw b'000000000001000
+        defw b'010000000000000
+        defw b'010000000001000
+        defw b'000000100000000
+        defw b'000000100001000
+        defw b'010000100000000
+        defw b'010000100001000
+        defw b'000000000000000
+        defw b'000000000010000
+        defw b'100000000000000
+        defw b'100000000010000
+        defw b'000001000000000
+        defw b'000001000010000
+        defw b'100001000000000
+        defw b'100001000010000
+
+
+pal_pale              ; pale
+        defw b'010000100001000
+        defw b'010000100010000
+        defw b'100000100001000
+        defw b'100000100010000
+        defw b'010001000001000
+        defw b'010001000010000
+        defw b'100001000001000
+        defw b'100001000010000
+        defw b'010000100001000
+        defw b'010000100011000
+        defw b'110000100001000
+        defw b'110000100011000
+        defw b'010001100001000
+        defw b'010001100011000
+        defw b'110001100001000
+        defw b'110001100011000
+
+pal_gsc               ; grayscale
+        defw 0  << 10 + 0  << 5 + 0
+        defw 3  << 10 + 3  << 5 + 3
+        defw 6  << 10 + 6  << 5 + 6
+        defw 9  << 10 + 9  << 5 + 9
+        defw 12 << 10 + 12 << 5 + 12
+        defw 16 << 10 + 16 << 5 + 16
+        defw 19 << 10 + 19 << 5 + 19
+        defw 22 << 10 + 22 << 5 + 22
+        defw 0  << 10 + 0  << 5 + 0
+        defw 4  << 10 + 4  << 5 + 4
+        defw 8  << 10 + 8  << 5 + 8
+        defw 11 << 10 + 11 << 5 + 11
+        defw 14 << 10 + 14 << 5 + 14
+        defw 17 << 10 + 17 << 5 + 17
+        defw 20 << 10 + 20 << 5 + 20
+        defw 24 << 10 + 24 << 5 + 24
+        
         
 keys_norm
         defb 0, 'zxcvasdfgqwert1234509876poiuy', 13, 'lkjh ', 14, 'mnb'
