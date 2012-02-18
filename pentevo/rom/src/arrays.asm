@@ -45,7 +45,7 @@ OPTTAB0
 ; byte - 0
 OPT0    defb 3, low(cfrq), 'CPU speed, MHz:', 0
 OPT1    defb 8, low(btto), 'Boot to:', 0
-OPT5    defb 8, low(b2to), 'SS Boot to:', 0
+OPT5    defb 8, low(b2to), 'CS Boot to:', 0
 OPT2    defb 4, low(l128), '128k Lock:', 0
 OPT3    defb 4, low(ayfr), 'AY clock, MHz:', 0
 OPT4    defb 7, low(zpal), 'ZX Palette:', 0
