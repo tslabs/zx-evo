@@ -17,13 +17,13 @@ extern    font8
         org h'80
 MAIN
         di
+        xtr
+        xt page1, 5
+        
         ld sp, stck
         im 1
         xor a
         ld i, a
-        
-        xtr
-        xt page1, 5
         
         call READ_NVRAM
         call CALC_CRC
@@ -43,6 +43,7 @@ MAIN
 RESET
         di
         xtr
+        xt page1, 5
         xt page2, 2
         xt page3, 0
         xt vpage, 5
@@ -56,10 +57,6 @@ RESET
         
         
 RESET2:        
-        xtr
-        xt page0, 0
-
-        
 ; -- setting up h/w parameters
 
 ; Palette
@@ -103,7 +100,6 @@ RES_2
         xtr
         xta sysconf
 
-        
         ld bc, h'FEFE
         in a, (c)
         rrca
@@ -135,6 +131,7 @@ RES_TRD
         or d
         xtr
         xta memconf
+        xt page0, 0
         ld sp, h'3D2E
         jp h'3D2F           ; ret to #0000
         
@@ -144,6 +141,7 @@ RES_48
         or d
         xtr
         xta memconf
+        xt page0, 0
         jp 0
 
         
@@ -151,6 +149,7 @@ RES_128
         ld a, d
         xtr
         xta memconf
+        xt page0, 0
         jp 0
 
 
@@ -167,20 +166,20 @@ RES_COM
 
                    
 RES_CROM        
-        xt page0, 4
         xtr
         ld a, 4
         or d
         xta memconf
+        xt page0, 4
         jp 0
 
                    
 RES_CRAM        
-        xt page0, h'F8
         xtr
         ld a, 12
         or d
         xta memconf
+        xt page0, h'F8
         jp 0
 
         
