@@ -61,6 +61,8 @@ module zmem(
 	output wire        csrom,
 
 // strobes
+	input wire dos_turn_on,
+	input wire dos_turn_off,
 	input wire vdos_on,
 	output wire vdos_off,
 	// output wire        opf_on,
@@ -288,11 +290,12 @@ module zmem(
 		if( (zneg && r_mreq_n && (!mreq_n) && rfsh_n && romnram) ||
 		    (zneg && r_mreq_n && memwr                         ) ||
 		    (io && (!io_r) && zpos                             ) ||
-            (vdos_off | vdos_on)
+            (vdos_off | vdos_on | dos_turn_on | dos_turn_off)
            )
 			cached_addr_valid <= 1'b0;
 		else if( cpu_strobe )
-			cached_addr_valid <= 1'b1;
+			// cached_addr_valid <= 1'b1;
+			cached_addr_valid <= 1'b0;
 	end
 	//
 	always @(posedge fclk)
