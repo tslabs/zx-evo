@@ -49,7 +49,7 @@ mode_16c        equ 1
 mode_256c       equ 2
 mode_text       equ 3
     
-; other port values    
+; h/w parameters
 fm_en           equ 0x10
 dma_zwt_en      equ 0x40
 
@@ -62,29 +62,26 @@ win3            equ 0xC000
 
 
 ; -- addresses
-fat_bufs        equ h'4000
-vars            equ h'5B00
-res_buf         equ h'5B00
-nv_buf          equ h'5B80
+pal_addr        equ h'4000      ; \ 
+fat_bufs        equ h'4000      ; | 
+res_buf         equ h'5000      ; |
+nv_buf          equ h'5700      ; | LSB should be 0 !!
+vars            equ h'5B00      ; /
 stck            equ h'5BFF
+nv_1st          equ h'B0
 
 
 ; -- video config
 txpage          equ h'FF
+pal_sel         equ h'F
 
 
 ; -- UI colors
+box_norm        equ h'8F
 opt_norm        equ h'89
 opt_hgl         equ h'7D
+sel_norm        equ h'8A
 
-
-; -- NVRAM cells
-cfrq            equ h'B0
-btto            equ h'B1
-l128            equ h'B2
-ayfr            equ h'B3		
-zpal            equ h'B4		
-		
 
 ; events
 ev_kb_help      equ h'01

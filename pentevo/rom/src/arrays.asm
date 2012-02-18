@@ -13,16 +13,20 @@ M_HLP   defb 'Arrows - move,  Enter - change option,  F12 - exit', 0
 ; ------- tabs
 ; -- options tab
 OPTTAB0
+; byte - X, Y coord of box
+; byte - X, Y size of box
+; byte - X, Y coord of list top
+; byte - X, Y coord of header text
 ; byte - number of options
-; byte - X coordinate
-; byte - Y coordinate
 ; string - message
+        defw h'0707
+        defw h'0A20
         defb h'0A, h'0A
         defb h'0C, h'08
         defb h'8C
         defb 5
         defb 'Select NVRAM options:', 0        
-; word - address of option text
+; word - address of option desc
 ; word - address of option choises
 		defw OPT0, SEL0
 		defw OPT1, SEL1
@@ -38,11 +42,11 @@ OPTTAB0
 ; byte - address in NVRAM
 ; string - option
 ; byte - 0
-OPT0    defb 3, cfrq, 'CPU frequency, MHz:', 0
-OPT1    defb 8, btto, 'Boot to:', 0
-OPT2    defb 4, l128, '128k Lock:', 0
-OPT3    defb 4, ayfr, 'AY frequency, MHz:', 0
-OPT4    defb 7, zpal, 'ZX Palette:', 0
+OPT0    defb 3, low(cfrq), 'CPU freq, MHz:', 0
+OPT1    defb 8, low(btto), 'Boot to:', 0
+OPT2    defb 4, low(l128), '128k Lock:', 0
+OPT3    defb 4, low(ayfr), 'AY freq, MHz:', 0
+OPT4    defb 7, low(zpal), 'ZX Palette:', 0
 ; OPT5    defb 0, h'B0, 0, 0, '', 0
 ; OPT6    defb 0, h'B0, 0, 0, '', 0
 ; OPT7    defb 0, h'B0, 0, 0, '', 0
@@ -51,36 +55,36 @@ OPT4    defb 7, zpal, 'ZX Palette:', 0
 ; *repeat n times
 ; string - choise
 ; byte - 0
-SEL0    defb '7.0', 0
+SEL0    defb ' 7.0', 0
 		defb '14.0', 0
-		defb '3.5', 0
+		defb ' 3.5', 0
 		
-SEL1    defb 'TR-DOS', 0
-		defb 'Basic 48k', 0
-		defb 'Basic 128k', 0
-		defb 'SD: boot.c$', 0
-		defb 'SD: system.rom', 0
-		defb 'RS-232', 0
-		defb 'Custom ROM (page #04-07)', 0
-		defb 'Custom RAM (page #F8-FB)', 0
+SEL1    defb '    TR-DOS', 0
+		defb '  Basic 48', 0
+		defb ' Basic 128', 0
+		defb 'SD:boot.c$', 0
+		defb 'SD:sys.rom', 0
+		defb '    RS-232', 0
+		defb 'ROM:#04-07', 0
+		defb 'RAM:#F8-FB', 0
 		
-SEL2    defb 'ON', 0
-		defb 'OFF', 0
-		defb 'Auto (boleq)', 0
-		defb 'Auto (lvd)', 0
+SEL2    defb '  OFF', 0
+		defb '   ON', 0
+		defb 'Auto1', 0
+		defb 'Auto2', 0
 		
-SEL3    defb '1.75', 0
-		defb '1.7733', 0
-		defb '3.5', 0
+SEL3    defb '1.750', 0
+		defb '1.773', 0
+		defb '3.500', 0
 		defb '3.546', 0
 		
-SEL4    defb 'Pulsar', 0
-		defb 'Bright black', 0
-		defb 'Dim', 0
-		defb 'Pale', 0
-		defb 'Dark', 0
-		defb 'Black and white', 0
-		defb 'Custom', 0
+SEL4    defb ' Pulsar', 0
+		defb 'B.black', 0
+		defb '    Dim', 0
+		defb '   Pale', 0
+		defb '   Dark', 0
+		defb '    B/W', 0
+		defb ' Custom', 0
 		
 ; SEL5    defb '', 0
 		; defb '', 0
