@@ -8,40 +8,13 @@ extern    font8
 
 ; ------- main code
         rseg CODE
+        
+        di
         jp MAIN
     
     
-; -- IM1 INT
-        org h'38
-IM1     
-        push bc
-        push de
-        push hl
-        push af
-        call KBD_PROC
-        ld a, (evt)
-        or a            ; was last event processed?
-        jr nz, IM11     ; not yet - return
-        call KBD_EVT
-IM11
-        ld a, ev_kb_down
-        ld (evt), a
-        pop af
-        pop hl
-        pop de
-        pop bc
-        ei
-        ret
-    
-    
-; -- NMI        
-        org h'66
-NMI
-        retn
-    
-    
 ; -- reset procedures
-        org h'100
+        org h'80
 MAIN
         di
         
@@ -52,26 +25,23 @@ MAIN
         xor a
         ld i, a
         
-        ; call LOAD_NVRAM
-        ; call CALC_CRC
-        ; jr z, RESET
+        call READ_NVRAM
+        call CALC_CRC
+        push af
+        call nz, LOAD_DEFAULTS
+        pop af
+        jr nz, SETUP        ; CRC error
         
-        jr SETUP
-        
-        xor a
-        jr RESET        ; debug!!!
-        
-        call LOAD_DEFAULTS
-        call SAVE_NVRAM
-        jr SETUP
+        ld bc, h'FEFE
+        in a, (c)
+        rrca
+        jr nc, SETUP        ; CS pressed
         
 
-; This proc makes reset to the specified destination
-; input:    A - reset destination
 RESET
         ld hl, RESET2
         ld de, res_buf
-        ld bc, RESET2_END - RESET2      ; No check for stack violation at this point!!!
+        ld bc, RESET2_END - RESET2
         ldir
         jp res_buf
         
@@ -83,6 +53,12 @@ RESET2:
         xt page2, 2
         xt page3, 0
         pop af
+        
+        ld bc, h'7FFE
+        in a, (c)
+        rrca
+        rrca
+        jr nc, RES_TRD      ; SS pressed
         
         or a
         jr z, RES_TRD
@@ -151,7 +127,8 @@ SETUP:
         
         pmsgc M_HLP, 28, h'87
         call BOX0
-        
+        ld a, (fld0_pos)
+        call OPT_HG
         
 ; Main cycle
         ei
@@ -160,8 +137,14 @@ S_MAIN
         ld a, (evt)
         or a
         jr z, S_MAIN
+        
+        ld c, a             ; debug!!!
+        ld a, 2
+        out (254), a
+        ld a, c
         call EVT_PROC
         xor a
+        out (254), a
         ld (evt), a
         jr S_MAIN
         
@@ -174,7 +157,6 @@ S_INIT
         ld (evt), a
         ld (fld_curr), a
         ld (fld0_pos), a
-        dec a
         ld (last_key), a
         ret
         
@@ -199,7 +181,7 @@ EVT_P0
         cp ev_kb_down
         jr z, EV0_D
         cp ev_kb_enter
-        ; jr z, EV0_E
+        jr z, EV0_E
         ret
 
 EV0_U
@@ -221,6 +203,17 @@ EV0_D
         inc a
         jr EVO0_1
         
+        
+EV0_E
+        ld a, (opt_nvr)
+        ld e, a
+        ld d, high(nv_buf)
+        ld a, (de)
+        inc a
+        ld (de), a
+        ld a, c
+        jr OPT_HG
+        
 OPT_DH
         ld b, opt_norm      ; change to var!
         jr OPT_1
@@ -229,34 +222,99 @@ OPT_HG
         ld b, opt_hgl       ; change to var!
 OPT_1
         push af
+        call OPT_DEC
+        ld hl, (fld_top)
+        add a, h
+        ld h, a             ; Y coord
+        call PRINT_MSG
+        
+        ld a, (sel_max)
         ld c, a
-        ld de, (fld_top)
-        add a, d
-        ld d, a             ; Y coord
+        ld a, (opt_nvr)
+        ld e, a
+        ld d, high(nv_buf)
+        ld a, (de)
+        cp c                ; is the value larger than max?
+        jr c, OPP2          ; no - ok
+        xor a               ; yes - zero it
+        ld (de), a
+OPP2
+        push af
+        ld de, (fld_sel)
+        call MSG_LEN
+        ld c, a
+        neg
+        add a, 36
+        ld l, a
+        pop af
+        
+        ex de, hl
+        ld b, 0
+        inc c
+OPP3
+        sub 1
+        jr c, OPP4
+        add hl, bc
+        jr OPP3
+OPP4
+        ex de, hl
+        ld b, sel_norm       ; change to var!
+        call PRINT_MSG
+        pop af
+        ret
+
+        
+OPT_DEC
+; in:
+;       
+        push af
         ld hl, (fld_tab)
-        ld a, c
         add a, a
         add a, a
         add a, l
         ld l, a
         adc a, h
         sub l
-        ld h, a
-        ld c, (hl)
+        ld h, a             ; HL = address of option desc pointer
+        
+        ld e, (hl)
         inc hl
-        ld h, (hl)
-        ld l, c
+        ld d, (hl)
         inc hl
+        ld (fld_opt), de
+        ld a, (de)          ; number of choises
+        inc de
+        ld (sel_max), a
+        ld a, (de)          ; address in NVRAM
+        inc de
+        ld (opt_nvr), a
+        push de
+        ld e, (hl)
         inc hl
-        ex de, hl
-        call PRINT_MSG
+        ld d, (hl)
+        ld (fld_sel), de
+        pop de
         pop af
         ret
-
         
-BOX0
-        box h'0707, h'0E20, h'8F
+
+BOX0        
         ld hl, OPTTAB0
+BOX
+        ld e, (hl)      ; X coord of box
+        inc hl
+        ld d, (hl)      ; Y coord of box
+        inc hl
+        ld c, (hl)      ; X size of box
+        inc hl
+        ld b, (hl)      ; Y size of box
+        inc hl
+        push hl
+        ex de, hl
+        ld a, box_norm  ; change to var!
+        call DRAW_BOX
+        pop hl
+        
         ld a, (hl)      ; X coord of list top
         inc hl
         ld (fld_top), a
@@ -281,10 +339,8 @@ BOX0
         ld b, a
         xor a
 BX01
-        cp b
         push bc
-        call z, OPT_HG
-        call nz, OPT_DH
+        call OPT_DH
         pop bc
         inc a
         cp c
@@ -296,16 +352,19 @@ BX01
 ; check pressed key and set event to process
 KBD_EVT
         ld a, (key)
-        cp 13       ; enter
-        ld a, ev_kb_enter
-        ret z
         cp 11       ; up
-        ld a, ev_kb_up
+        ld b, ev_kb_up
         ret z
         cp 10       ; down
-        ld a, ev_kb_down
+        ld b, ev_kb_down
         ret z
-        xor a
+        cp 13       ; enter
+        ld b, ev_kb_enter
+        ret z
+        cp 14       ; help
+        ld b, ev_kb_help
+        ret z
+        ld b, 0
         ret
         
         
@@ -315,6 +374,17 @@ KBD_PROC
         call KBD_POLL
         jr nc, KPC1     ; no key pressed
         ld c, a
+        ld b, 0
+        ld hl, keys_caps
+        bit 0, e
+        jr nz, KPC4     ; CS map
+        ld hl, keys_symb
+        bit 1, e
+        jr nz, KPC4     ; SS map
+        ld hl, keys_norm
+KPC4
+        add hl, bc      ; map to layout
+        ld c, (hl)
         ld a, (last_key)
         cp c            ; is key the same as last time?
         jr z, KPC2      ; yes - autorepeat
@@ -323,18 +393,6 @@ KBD_PROC
         ld (kbd_del), a
         ld a, c 
         ld (last_key), a
-        ld b, 0
-        ld hl, keys_caps
-        bit 0, l
-        jr nz, KPC4     ; CS map
-        ld hl, keys_symb
-        bit 1, l
-        jr nz, KPC4     ; SS map
-        ld hl, keys_norm
-KPC4
-        add hl, bc      ; map to layout
-        ld a, (hl)
-        ld (map_key), a
         jr KPC3
         
 KPC2
@@ -344,10 +402,10 @@ KPC2
         jr nz, KPC5     ; autorepeat in progress
         ld a, 2         ; autorepeat value
         ld (kbd_del), a
-        ld a, (map_key)
+        ld a, c
         jr KPC3
 KPC1
-        ld a, 255
+        xor a
         ld (last_key), a
 KPC5
         xor a
@@ -359,21 +417,21 @@ KPC3
 ; KBD poll
 ; out: 
 ;   A - key pressed (0-39), CS+SS = 36
-;   L - bit0 = CS, bit1 = SS,
+;   E - bit0 = CS, bit1 = SS,
 ;   fc - c = pressed / nc = not pressed (A = 40)
 KBD_POLL
         ld bc, h'FEFE
         xor a
-        ld l, a
+        ld e, a
 KBP1
-        in d, (c)
-        ld e, 5
+        in h, (c)
+        ld l, 5
 KBP2
-        rr d
+        rr h
         jr nc, KBP3     ; some key pressed
 KBP4
         inc a
-        dec e
+        dec l
         jr nz, KBP2
         rlc b
         jr c, KBP1
@@ -383,14 +441,21 @@ KBP3
         jr z, KBP5      ; CS pressed
         cp 36
         jr z, KBP6      ; SS pressed
-        scf             ; some other key pressed
+                        ; some other key pressed
+        ld b, h'7F      ; additional check for SS - it could be not polled yet
+        in c, (c)
+        bit 1, c
+        jr nz, KBP7     ; no SS
+        set 1, e        ; SS pressed
+KBP7
+        scf
         ret
 KBP5
-        set 0, l
+        set 0, e
         jr KBP4
 KBP6
-        set 1, l
-        bit 0, l        ; was CS pressed before?
+        set 1, e
+        bit 0, e        ; was CS pressed before?
         jr z, KBP4      ; no - go back to cycle
         scf             ; yes - CS+SS pressed
         ret
@@ -419,17 +484,18 @@ CC0
         ret
 
         
+READ_NVRAM
+        ret
+        
+        
 LOAD_DEFAULTS
-        ld hl, nv_buf
-        ld de, nv_buf + 1
-        ld bc, h'003D
+        ld hl, high(nv_buf) << 8 + nv_1st
+        ld d, h
+        ld e, l
+        inc de
+        ld bc, nv_size - 1
         ld (hl), b
         ldir
-        ret
-        
-        
-LOAD_NVRAM
-        ret
         
         
 SAVE_NVRAM
@@ -460,10 +526,10 @@ CLS:    xtr
         
 LD_S_PAL
         xtr
-        xt palsel, 15
+        xt palsel, pal_sel
         xt fmaddr, h'04 | fm_en
         ld hl, pal_tx
-        ld de, h'4000 + 15 * 32
+        ld de, pal_addr + pal_sel * 32
         ld bc, 32
         ldir
         xtr
@@ -471,21 +537,32 @@ LD_S_PAL
         ret
         
 
-; DE - addr
-; H - Y coord
-; B - attr
-PRINT_MSG_C
+; Calculate length of message
+; in:
+;   DE - addr
+; out:
+;   A - length
+MSG_LEN
         push de
         ld l, -1
-PMC1
+MLN1
         ld a, (de)
         inc de
         inc l
         or a
-        jr nz, PMC1
+        jr nz, MLN1
         pop de
-        
         ld a, l
+        ret
+        
+        
+; Print message terminated by 0, centered within 80 chars on screen
+; in:
+;   DE - addr
+;   H - Y coord
+;   B - attr
+PRINT_MSG_C
+        call MSG_LEN
 PMC2
         rrca
         and 127
@@ -494,9 +571,11 @@ PMC2
         ld l, a
 
 
-; DE - addr
-; HL - coords        
-; B - attr
+; Print message terminated by 0
+; in:
+;   DE - addr
+;   HL - coords        
+;   B - attr
 PRINT_MSG
         set 6, h
         set 7, h
@@ -508,10 +587,12 @@ PM1
         call SYM
         jr PM1
         
-        
-; HL - coords
-; BC - sizes
-; A - attr
+
+; Drawing framed filled box
+; in:
+;   HL - coords
+;   BC - sizes
+;   A - attr
 DRAW_BOX
         set 6, h
         set 7, h
@@ -567,11 +648,11 @@ DB2:
         ldir
         ret
 
-;        ÉÍËÍ»
-;        º º º
-;        ÌÍÎÍ¹
-;        º º º
-;        ÈÍÊÍ¼
+; ÉÍËÍ»
+; º º º
+; ÌÍÎÍ¹
+; º º º
+; ÈÍÊÍ¼
 
 
 NUM_10
@@ -600,6 +681,7 @@ SYM
 
 ; #include "booter.asm"
 #include "arrays.asm"
+#include "restarts.asm"
 
         end
         

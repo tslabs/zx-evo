@@ -1,71 +1,9 @@
-BIOS starting procedure
------------------------
-1. Start memory conditions at #0000: DOS, 128k = ROM Page0
-2. Read NVRAM and checking sum.
-3. Checksum OK ? (CS pressed ? go to Setup : go to Reset) : Load defaults, go to setup.
-2. Set Page3 = #FF
-3. SP = #FFFF
-4. Load NVRAM.
-
-
-Setup start procedure
----------------------
-1. Load palette (F0-FF) at #C000
-2. Set border = #F0 and noGFX
-3. Load font to page #FE at #C000
-4. Null screen at page #FF
-5. Turn on screen #FF, mode text.
-
-
-
-Reset procedure
----------------
-
-
-
-
-Setup options (option 0 is default)
----------------------------------------
-
-NVRAM
------
-#B0    CPU frequency, MHz
-        0 - 7.0
-        1 - 14.0
-        2 - 3.5
-
-#B1    Reset to
-        0 - TR-DOS 
-        1 - Basic 48k
-        2 - Basic 128k
-        3 - SD: boot.c$
-        4 - SD: system.rom    // 4 justine
-        5 - boot from rs-232
-        6 - custom ROM (page #04-07)
-        7 - custom RAM (page #F8-FB)
-
-#B2    128k Lock
-        0 - OFF
-        1 - ON
-        2 - Auto (boleq)
-        3 - Auto (lvd)
-		
-#B3    AY frequency, MHz
-        0 - 1.75
-        1 - 1.7733
-        2 - 3.5
-        3 - 3.546
-
-#B4    Palette
-        0 - pulsar
-        1 - bright black
-        2 - dim
-        3 - pale
-        4 - dark
-        5 - black and white       // PWM
-        6 - custom (NVRAM #D0-#EF)
-        
-#C0.DF Custom Palette
-
-#EE.EF Checksum (add + xor)
-
+- NVRAM checksum
+- rd/wr NVRAM
+- program h/w on reset
+- program palette
+- FAT boot
+- help window
+- palette editor
+- CMOS editor
+- clock setup
