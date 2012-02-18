@@ -20,16 +20,17 @@ OPTTAB0
 ; byte - number of options
 ; string - message
         defw h'0707
-        defw h'0A20
+        defw h'0B20
         defb h'0A, h'0A
         defb h'0C, h'08
         defb h'8C
-        defb 5
+        defb 6
         defb 'Select NVRAM options:', 0        
 ; word - address of option desc
 ; word - address of option choises
 		defw OPT0, SEL0
 		defw OPT1, SEL1
+		defw OPT5, SEL1
 		defw OPT2, SEL2
 		defw OPT3, SEL3
 		defw OPT4, SEL4
@@ -42,10 +43,11 @@ OPTTAB0
 ; byte - address in NVRAM
 ; string - option
 ; byte - 0
-OPT0    defb 3, low(cfrq), 'CPU freq, MHz:', 0
+OPT0    defb 3, low(cfrq), 'CPU speed, MHz:', 0
 OPT1    defb 8, low(btto), 'Boot to:', 0
+OPT5    defb 8, low(b2to), 'SS Boot to:', 0
 OPT2    defb 4, low(l128), '128k Lock:', 0
-OPT3    defb 4, low(ayfr), 'AY freq, MHz:', 0
+OPT3    defb 4, low(ayfr), 'AY clock, MHz:', 0
 OPT4    defb 7, low(zpal), 'ZX Palette:', 0
 ; OPT5    defb 0, h'B0, 0, 0, '', 0
 ; OPT6    defb 0, h'B0, 0, 0, '', 0
@@ -55,30 +57,35 @@ OPT4    defb 7, low(zpal), 'ZX Palette:', 0
 ; *repeat n times
 ; string - choise
 ; byte - 0
-SEL0    defb ' 7.0', 0
-		defb '14.0', 0
+SEL0
 		defb ' 3.5', 0
+        defb ' 7.0', 0
+		defb '14.0', 0
 		
-SEL1    defb '    TR-DOS', 0
+SEL1    
 		defb '  Basic 48', 0
 		defb ' Basic 128', 0
+        defb '    TR-DOS', 0
 		defb 'SD:boot.c$', 0
 		defb 'SD:sys.rom', 0
 		defb '    RS-232', 0
 		defb 'ROM:#04-07', 0
 		defb 'RAM:#F8-FB', 0
 		
-SEL2    defb '  OFF', 0
+SEL2    
+        defb '  OFF', 0
 		defb '   ON', 0
 		defb 'Auto1', 0
 		defb 'Auto2', 0
 		
-SEL3    defb '1.750', 0
+SEL3    
+        defb '1.750', 0
 		defb '1.773', 0
 		defb '3.500', 0
 		defb '3.546', 0
 		
-SEL4    defb ' Pulsar', 0
+SEL4    
+        defb ' Pulsar', 0
 		defb 'B.black', 0
 		defb '    Dim', 0
 		defb '   Pale', 0

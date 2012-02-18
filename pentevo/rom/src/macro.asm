@@ -1,6 +1,22 @@
 
 ; ------- MACRO definitions
 
+; -- port macros
+
+; write to F7
+outf7   macro reg, val
+        ld bc, reg << 8 + pf7
+        ld a, val
+        out (c), a
+        endm
+
+
+; read from F7
+inf7    macro reg
+        ld bc, reg << 8 + pf7
+        in a, (c)
+        endm
+
 
 ; write imm8 to XTport 
 xt      macro port, val
@@ -24,26 +40,13 @@ __prt   defl port + 1
         endm
 
         
-; write [addr]8 to XTport 
-xta     macro port, addr
+; write A to XTport 
+xta     macro port
         xtp port
 __val 	defl -1
-		ld a, (addr)
         out (c), a
         endm
 
-        
-; write [addr]16 to XTport 
-xthl    macro port, addr
-        xtp port
-		
-		ld hl, (addr)
-        out (c), l
-__prt   defl port + 1
-        inc b
-        out (c), h
-        endm
-        
         
 ; load XTport to BC directly
 xtbc    macro port
@@ -93,6 +96,8 @@ __val 	defl val
 		.endif
         endm
       
+      
+; -- procedure macros
 
 chr     macro symb
         ld a, symb

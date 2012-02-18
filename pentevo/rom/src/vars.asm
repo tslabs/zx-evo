@@ -20,9 +20,10 @@ opt_nvr         defs 1      ; NVRAM cell for current option
 ; -- NVRAM cells
                 org nv_buf + nv_1st
 cfrq            defs 1      ; CPU freq
-btto            defs 1      ; Boot option
-l128            defs 1      ; Lock 128
 ayfr            defs 1      ; AY freq
+btto            defs 1      ; Boot option
+b2to            defs 1      ; SS Boot option
+l128            defs 1      ; Lock 128
 zpal            defs 1      ; ZX palette
 cpal            defs 32     ; Custom palette
 nvcs            defs 2      ; checksum - must be last in the declaration

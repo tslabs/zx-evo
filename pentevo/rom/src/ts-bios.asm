@@ -20,6 +20,8 @@ MAIN
         
         xtr
         xt page1, 5
+        xt page2, 2
+        xt page3, 0
         ld sp, stck
         im 1
         xor a
@@ -30,15 +32,22 @@ MAIN
         push af
         call nz, LOAD_DEFAULTS
         pop af
-        jr nz, SETUP        ; CRC error
+        jp nz, SETUP        ; CRC error
         
         ld bc, h'FEFE
         in a, (c)
         rrca
-        jr nc, SETUP        ; CS pressed
+        jp nc, SETUP        ; CS pressed
         
 
 RESET
+        di
+        xtr
+        xt page2, 2
+        xt page3, 0
+        xt vpage, 5
+        xt vconf, mode_zx | rres_256x192
+        
         ld hl, RESET2
         ld de, res_buf
         ld bc, RESET2_END - RESET2
@@ -47,42 +56,112 @@ RESET
         
         
 RESET2:        
-        push af
         xtr
         xt page0, 0
-        xt page2, 2
-        xt page3, 0
-        pop af
+
+        
+; -- setting up h/w parameters
+
+; Palette
+
+
+; 128 lock
+        ld a, (l128)
+        rrca
+        rrca
+        ld d, a
+
+        
+; AY & CPU freq
+        ld a, (ayfr)
+        rlca
+        rlca
+        rlca
+        ld e, a
+        ld a, (cfrq)
+        or e
+        xtr
+        xta sysconf
+
         
         ld bc, h'7FFE
         in a, (c)
         rrca
         rrca
-        jr nc, RES_TRD      ; SS pressed
-        
-        or a
+        ld a, (b2to)
+        jr nc, RES_1        ; SS pressed
+        ld a, (btto)
+RES_1        
+        or a                ; 0
+        jr z, RES_48
+        dec a               ; 1
+        jr z, RES_128
+        dec a               ; 2
         jr z, RES_TRD
-        ; jr z, RES_48
+        dec a               ; 3
+        jr z, RES_SD_BT
+        dec a               ; 4
+        jr z, RES_SD_ROM
+        dec a               ; 5
+        jr z, RES_COM
+        dec a               ; 6
+        jr z, RES_CROM
+        dec a               ; 7
+        jr z, RES_CRAM
         halt
 
         
 RES_TRD
+        ld a, 1
+        or d
         xtr
-        xt memconf, 1
+        xta memconf
         ld sp, h'3D2E
-        
         jp h'3D2F           ; ret to #0000
         
         
 RES_48
+        ld a, 1
+        or d
         xtr
-        xt memconf, 1
+        xta memconf
         jp 0
 
         
 RES_128
+        ld a, d
         xtr
-        xt memconf, 0
+        xta memconf
+        jp 0
+
+
+RES_SD_BT        
+        halt
+
+                   
+RES_SD_ROM        
+        halt
+
+                   
+RES_COM        
+        halt
+
+                   
+RES_CROM        
+        xt page0, 4
+        xtr
+        ld a, 4
+        or d
+        xta memconf
+        jp 0
+
+                   
+RES_CRAM        
+        xt page0, h'F8
+        xtr
+        ld a, 12
+        or d
+        xta memconf
         jp 0
 
         
@@ -92,6 +171,11 @@ RESET2_END
 ; ------- BIOS Setup
 
 SETUP:       
+        xor a
+        out (254), a
+        xtr
+        xt vconf, mode_nogfx
+
         call S_INIT
         call CLS
         call LD_FONT
@@ -182,6 +266,8 @@ EVT_P0
         jr z, EV0_D
         cp ev_kb_enter
         jr z, EV0_E
+        cp ev_kb_help
+        jr z, EV0_H
         ret
 
 EV0_U
@@ -212,7 +298,12 @@ EV0_E
         inc a
         ld (de), a
         ld a, c
-        jr OPT_HG
+        call OPT_HG
+        jp WRITE_NVRAM
+
+EV0_H
+        jp RESET
+        
         
 OPT_DH
         ld b, opt_norm      ; change to var!
@@ -464,7 +555,7 @@ KBP6
 CALC_CRC
         ld hl, nv_buf
         ld de, 0
-        ld b, 62
+        ld b, nv_size - 2
 CC0
         ld a, d
         add a, (hl)
@@ -481,15 +572,32 @@ CC0
         inc hl
         ld a, e
         cp (hl)
+        xor a           ; mock!!!
         ret
 
         
 READ_NVRAM
+        outf7 shadow, shadow_on
+        
+        ld hl, nv_buf + nv_1st
+        ld a, nv_size
+        ld c, pf7
+RNV1
+        ld b, nvaddr
+        out (c), l
+        ld b, nvdata
+        in d, (c)
+        ld (hl), d
+        inc l
+        dec a
+        jr nz, RNV1
+
+        outf7 shadow, shadow_off
         ret
         
         
 LOAD_DEFAULTS
-        ld hl, high(nv_buf) << 8 + nv_1st
+        ld hl, nv_buf + nv_1st
         ld d, h
         ld e, l
         inc de
@@ -498,9 +606,26 @@ LOAD_DEFAULTS
         ldir
         
         
-SAVE_NVRAM
+WRITE_NVRAM
         call CALC_CRC
-        ld (nv_buf + 62), de
+        ld (nvcs), de
+        
+        outf7 shadow, shadow_on
+        
+        ld hl, nv_buf + nv_1st
+        ld a, nv_size
+        ld c, pf7
+WNV1
+        ld b, nvaddr
+        out (c), l
+        ld b, nvdata
+        ld d, (hl)
+        out (c), d
+        inc l
+        dec a
+        jr nz, WNV1
+        
+        outf7 shadow, shadow_off
         ret
         
         
@@ -527,7 +652,7 @@ CLS:    xtr
 LD_S_PAL
         xtr
         xt palsel, pal_sel
-        xt fmaddr, h'04 | fm_en
+        xt fmaddr,  fm_en | (pal_addr >> 12)
         ld hl, pal_tx
         ld de, pal_addr + pal_sel * 32
         ld bc, 32
