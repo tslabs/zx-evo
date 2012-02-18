@@ -245,7 +245,6 @@ module top(
 	wire [7:0] peff7;
 
 
-	wire romrw_en;
 	wire cpm_n;
 	wire fnt_wr;
 
@@ -379,8 +378,9 @@ module top(
 	
     wire [3:0] w0_romnram = {3'b0, ~memconf[3]};        // window #0000: 1 - ROM / 0 - RAM
     wire [3:0] w0_mapped = {3'b0, ~memconf[2]};         // window #0000: 1 - mapped on SROM/DOS/48/128 / 0 - plain rampage0
-    wire [3:0] w0_we = {3'b111, memconf[1]};      		// window #0000: 0 - write protect / 1 - write enable
     wire [3:0] v_dos = {3'b0, vdos};     			 	// virtual DOS page
+    wire rw_en = |a[15:14] | memconf[1];   		// window #0000: 0 - write protect / 1 - write enable
+    // wire rw_en = |a[15:14];   		// window #0000: 0 - write protect / 1 - write enable
     
 	
 	generate
@@ -412,8 +412,9 @@ module top(
 								 .xt_override(xt_override[i]),
 								 .w0_romnram(w0_romnram[i]),
 								 .w0_mapped(w0_mapped[i]),
-								 .w0_we(w0_we[i]),
-								 
+								 // .w0_we(w0_we[i]),
+						 		 // .rw_en(rw_en),
+                                        
 			                     .dos(dos),
 								 .v_dos(v_dos[i]),
 			                     .dos_turn_on (dos_turn_on[i]),
@@ -494,7 +495,8 @@ module top(
 		.win_page({page[3], page[2], page[1], page[0]}),
 		.win_romnram(romnram),
 		
-		.romrw_en(romrw_en),
+		.rw_en(rw_en),
+		// .rw_en(1),
 
 		.rompg  (rompg),
 		.romoe_n(romoe_n),
@@ -814,8 +816,6 @@ zmaps zmaps(
 					.atm_scr_mode(atm_scr_mode),
 					.atm_pen     (pager_off),
 					.atm_cpm_n   (cpm_n),
-			
-					.romrw_en(romrw_en),
 			
 					.pent1m_ram0_0(pent1m_ram0_0),
 					.pent1m_1m_on (pent1m_1m_on),
