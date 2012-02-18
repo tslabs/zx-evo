@@ -1,5 +1,4 @@
 - NVRAM checksum
-- program palette
 - FAT boot
 - help window
 - palette editor

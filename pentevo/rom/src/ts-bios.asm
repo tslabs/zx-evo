@@ -63,7 +63,27 @@ RESET2:
 ; -- setting up h/w parameters
 
 ; Palette
-
+        ld a, (zpal)
+        ld hl, pal_puls
+        or a                ; 0
+        jr z, RES_2
+        ld hl, pal_bb
+        dec a               ; 1
+        jr z, RES_2
+        ld hl, pal_pale
+        dec a               ; 2
+        jr z, RES_2
+        ld hl, pal_dark
+        dec a               ; 3
+        jr z, RES_2
+        ld hl, pal_gsc
+        dec a               ; 4
+        jr z, RES_2
+        ld hl, cpal
+        ; dec a               ; 5
+        ; jr z, RES_2
+RES_2
+        call LD_PAL
 
 ; 128 lock
         ld a, (l128)
@@ -648,10 +668,11 @@ CLS:    xtr
 
         
 LD_S_PAL
+        ld hl, pal_bb
+LD_PAL
         xtr
         xt palsel, pal_sel
         xt fmaddr,  fm_en | (pal_addr >> 12)
-        ld hl, pal_tx
         ld de, pal_addr + pal_sel * 32
         ld bc, 32
         ldir
