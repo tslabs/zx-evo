@@ -8,9 +8,12 @@ del ts-bios.r01
 "%IAR%\xlink.exe" -f starter.xcl starter.r01
 del starter.r01
 
-copy /b header.bin + starter.bin TS-BIOS.$C
+copy /b header.bin + starter.bin "../bin/TS-BIOS.$C"
 rem del starter.bin
 
-copy /b ts-bios.bin + trdos504T.rom + 128.rom ts-bios.rom
+copy /b ts-bios.bin + trdos504T.rom + 128.rom "../bin/ts-bios.rom"
+
+copy ts-bios.bin "../bin/ts-bios.bin"
+del ts-bios.bin
 
 pause
