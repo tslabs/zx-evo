@@ -1,0 +1,6 @@
+1. Program https://zx-evo-fpga.googlecode.com/svn/branches/tslabs/pentevo/rom/bin/ts-bios.rom to ROM pages 00-03
+2. Flash https://zx-evo-fpga.googlecode.com/svn/branches/tslabs/pentevo/avr/current/default/zxevo_fw.bin
+
+SS + F12 - Setup
+F12      - Reset
+CS + F12 - Reset (another option)
