@@ -52,7 +52,7 @@ module zmem(
 	input  wire [ 3:0] win_romnram, // four windows, each 16k, 1 - rom, 0 - ram
 
 
-	input  wire        romrw_en,
+	input  wire        rw_en,
 
 
 	output wire [ 4:0] rompg, // output for ROM paging
@@ -114,8 +114,6 @@ module zmem(
 
 
 	// this is for 7/3.5mhz  
-	wire ramreq;
-	wire ramwr,ramrd;
 	wire cpureq_357;
 	reg ramrd_reg,ramwr_reg;
 
@@ -136,7 +134,7 @@ module zmem(
 	assign rompg = page[4:0];
 
 
-	assign romwe_n = wr_n | mreq_n | (~romrw_en);
+	assign romwe_n = wr_n | mreq_n | !rw_en;
 	assign romoe_n = rd_n | mreq_n;
 
 	assign csrom = romnram; // positive polarity!
@@ -145,9 +143,9 @@ module zmem(
 
 	// 7/3.5mhz support
 
-	assign ramreq = (~mreq_n) && (~romnram) && rfsh_n;
-	assign ramrd = ramreq & (~rd_n);
-	assign ramwr = ramreq & (~wr_n);
+	wire ramreq = (~mreq_n) && (~romnram) && rfsh_n;
+	wire ramrd = ramreq & (~rd_n);
+	wire ramwr = ramreq & (~wr_n) & rw_en;
 
 	always @(posedge fclk)
 	if( c3 && (!cpu_stall) )
@@ -180,7 +178,7 @@ module zmem(
 	// access type
 	assign opfetch = (~mreq_n) && (~m1_n);
 	assign memrd   = (~mreq_n) && (~rd_n);
-	assign memwr   = (~mreq_n) && rd_n && rfsh_n;
+	assign memwr   = (~mreq_n) && rd_n && rfsh_n && rw_en;
 
 
 	// wait tables: 

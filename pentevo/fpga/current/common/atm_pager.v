@@ -36,7 +36,8 @@ module atm_pager(
 	input  wire		   xt_override,
 	input  wire		   w0_romnram,
 	input  wire		   w0_mapped,
-	input  wire		   w0_we,
+	// input  wire		   w0_we,
+	// output wire		   rw_en,
 	
 	input  wire        in_nmi, // when we are in nmi, in 0000-3FFF must be last (FFth)
 	                           // RAM page. analoguous to pent1m_ram0_0
@@ -66,7 +67,6 @@ module atm_pager(
     
 );
 	parameter ADDR = 2'b00;
-
 
 	reg [ 7:0] pages [0:1]; // 2 pages for each map - switched by pent1m_ROM
 
