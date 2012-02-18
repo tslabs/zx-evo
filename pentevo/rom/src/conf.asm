@@ -83,6 +83,7 @@ fat_bufs        equ h'4000      ; |
 res_buf         equ h'5C00      ; |
 nv_buf          equ h'5D00      ; | LSB should be 0 !!
 vars            equ h'5B00      ; /
+
 stck            equ h'5BFF
 nv_1st          equ h'B0
 

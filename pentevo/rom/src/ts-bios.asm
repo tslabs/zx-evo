@@ -17,25 +17,25 @@ extern    font8
         org h'80
 MAIN
         di
-        
-        xtr
-        xt page1, 5
-        xt page2, 2
-        xt page3, 0
         ld sp, stck
         im 1
         xor a
         ld i, a
         
+        xtr
+        xt page1, 5
+        
         call READ_NVRAM
         call CALC_CRC
+        xor a                ; mock!!!
         push af
         call nz, LOAD_DEFAULTS
         pop af
         jp nz, SETUP        ; CRC error
         
-        ld bc, h'FEFE
+        ld bc, h'7FFE
         in a, (c)
+        rrca
         rrca
         jp nc, SETUP        ; CS pressed
         
@@ -84,9 +84,8 @@ RESET2:
         xta sysconf
 
         
-        ld bc, h'7FFE
+        ld bc, h'FEFE
         in a, (c)
-        rrca
         rrca
         ld a, (b2to)
         jr nc, RES_1        ; SS pressed
@@ -566,13 +565,12 @@ CC0
         inc hl
         djnz CC0
         
-        ld a, d
+        ld a, e
         cp (hl)
         ret nz
         inc hl
-        ld a, e
+        ld a, d
         cp (hl)
-        xor a           ; mock!!!
         ret
 
         
