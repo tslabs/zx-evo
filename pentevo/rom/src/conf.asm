@@ -97,7 +97,7 @@ pal_sel         equ h'F
 box_norm        equ h'8F
 opt_norm        equ h'89
 opt_hgl         equ h'7D
-sel_norm        equ h'8A
+sel_norm        equ h'8F
 
 
 ; events
