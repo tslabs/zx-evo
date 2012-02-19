@@ -9,14 +9,11 @@ module zdos(
 
 	input  wire        fclk,
 	input  wire        rst_n,
-	input  wire        m1_on,
 
-	input  wire        dos_turn_on,
-	input  wire        dos_turn_off,
+	input  wire        dos_on,
+	input  wire        dos_off,
 	input  wire        vdos_on,
 	input  wire        vdos_off,
-
-	input  wire        cpm_n,
 
 	output reg         dos,
 	output reg         vdos
@@ -28,25 +25,15 @@ module zdos(
 	always @(posedge fclk, negedge rst_n)
 	if( !rst_n )
 	begin
-    
-`ifdef ANTIATM    
-		dos <= 1'b0;    // ANTIATM
-`else
-		dos <= 1'b1;     //atm
-`endif
-
+		dos <= 1'b0;
 	end
-	else // posedge fclk
-	begin
     
-`ifndef ANTIATM    
-		if( !cpm_n )            // remove it!!! (ANTIATM)
-			dos <= 1'b1;
-		else
-`endif
-        if( dos_turn_off )
+	else
+	begin
+        if (dos_off)
 			dos <= 1'b0;
-		else if( dos_turn_on )
+		else
+        if (dos_on)
 			dos <= 1'b1;
 	end
 
@@ -66,5 +53,3 @@ module zdos(
             
     
 endmodule
-
-
