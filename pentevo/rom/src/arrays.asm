@@ -20,71 +20,70 @@ OPTTAB0
 ; byte - number of options
 ; string - message
         defw h'0707
-        defw h'0B20
-        defb h'0A, h'0A
-        defb h'0C, h'08
+        defw h'0D20
+        defw h'0A0A
+        defw h'080C
         defb h'8C
-        defb 6
+        defb 8
         defb 'Select NVRAM options:', 0        
 ; word - address of option desc
 ; word - address of option choises
-		defw OPT0, SEL0
-		defw OPT1, SEL1
-		defw OPT5, SEL1
-		defw OPT2, SEL2
-		defw OPT3, SEL3
-		defw OPT4, SEL4
-		; defw OPT5, SEL5
-		; defw OPT6, SEL6
-		; defw OPT7, SEL7
+		defw OPT_CFQ, SEL_CFQ
+		defw OPT_B1T, SEL_BOT
+		defw OPT_B1B, SEL_BTB
+		defw OPT_B2T, SEL_BOT
+		defw OPT_B2B, SEL_BTB
+		defw OPT_80L, SEL_80L
+		defw OPT_AFQ, SEL_AFQ
+		defw OPT_ZPL, SEL_ZPL
 		
 ; -- option text
 ; byte - number of choises
 ; byte - address in NVRAM
 ; string - option
-; byte - 0
-OPT0    defb 3, low(cfrq), 'CPU speed, MHz:', 0
-OPT1    defb 8, low(btto), 'Boot to:', 0
-OPT5    defb 8, low(b2to), 'CS Boot to:', 0
-OPT2    defb 4, low(l128), '128k Lock:', 0
-OPT3    defb 4, low(ayfr), 'AY clock, MHz:', 0
-OPT4    defb 6, low(zpal), 'ZX Palette:', 0
-; OPT5    defb 0, h'B0, 0, 0, '', 0
-; OPT6    defb 0, h'B0, 0, 0, '', 0
-; OPT7    defb 0, h'B0, 0, 0, '', 0
+OPT_CFQ    defb 3, low(cfrq), 'CPU speed, MHz:', 0
+OPT_B1T    defb 6, low(b1to), 'Boot to:', 0
+OPT_B1B    defb 4, low(b1tb), '  bank:', 0
+OPT_B2T    defb 6, low(b2to), 'CS Boot to:', 0
+OPT_B2B    defb 4, low(b2tb), '  bank:', 0
+OPT_80L    defb 4, low(l128), '128k Lock:', 0
+OPT_AFQ    defb 4, low(ayfr), 'AY clock, MHz:', 0
+OPT_ZPL    defb 6, low(zpal), 'ZX Palette:', 0
 
 ; -- choises
-; *repeat n times
 ; string - choise
-; byte - 0
-SEL0
+SEL_CFQ
 		defb ' 3.5', 0
         defb ' 7.0', 0
 		defb '14.0', 0
 		
-SEL1    
-		defb '  Basic 48', 0
-		defb ' Basic 128', 0
-        defb '    TR-DOS', 0
+SEL_BOT
+		defb '   ROM #00', 0
+		defb '   ROM #04', 0
+		defb '   RAM #F8', 0
 		defb 'SD:boot.c$', 0
 		defb 'SD:sys.rom', 0
 		defb '    RS-232', 0
-		defb 'ROM:#04-07', 0
-		defb 'RAM:#F8-FB', 0
 		
-SEL2    
+SEL_BTB
+        defb '    TR-DOS', 0
+		defb '  Basic 48', 0
+		defb ' Basic 128', 0
+		defb '       SYS', 0
+		
+SEL_80L
         defb '  OFF', 0
 		defb '   ON', 0
 		defb 'Auto1', 0
 		defb 'Auto2', 0
 		
-SEL3    
+SEL_AFQ
         defb '1.750', 0
 		defb '1.773', 0
 		defb '3.500', 0
 		defb '3.546', 0
 		
-SEL4    
+SEL_ZPL
         defb ' Pulsar', 0   ; 0
 		defb 'B.black', 0   ; 1
 		defb '   Pale', 0   ; 2
@@ -92,15 +91,6 @@ SEL4
 		defb 'Grayscl', 0   ; 4
 		defb ' Custom', 0   ; 5
 		
-; SEL5    defb '', 0
-		; defb '', 0
-		
-; SEL6    defb '', 0
-		; defb '', 0
-		
-; SEL7    defb '', 0
-		; defb '', 0
-        
         
 ; -- palette
 pal_bb               ; bright black

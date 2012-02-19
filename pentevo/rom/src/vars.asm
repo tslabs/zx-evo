@@ -21,8 +21,10 @@ opt_nvr         defs 1      ; NVRAM cell for current option
                 org nv_buf + nv_1st
 cfrq            defs 1      ; CPU freq
 ayfr            defs 1      ; AY freq
-btto            defs 1      ; Boot option
-b2to            defs 1      ; SS Boot option
+b1to            defs 1      ; Boot option
+b1tb            defs 1      ; Boot bank
+b2to            defs 1      ; CS Boot option
+b2tb            defs 1      ; CS Boot bank
 l128            defs 1      ; Lock 128
 zpal            defs 1      ; ZX palette
 cpal            defs 32     ; Custom palette

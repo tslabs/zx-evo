@@ -49,16 +49,6 @@ RESET
         xt vpage, 5
         xt vconf, mode_zx | rres_256x192
         
-        ld hl, RESET2
-        ld de, res_buf
-        ld bc, RESET2_END - RESET2
-        ldir
-        jp res_buf
-        
-        
-RESET2:        
-; -- setting up h/w parameters
-
 ; Palette
         ld a, (zpal)
         ld hl, pal_puls
@@ -77,16 +67,24 @@ RESET2:
         dec a               ; 4
         jr z, RES_2
         ld hl, cpal
-        ; dec a               ; 5
-        ; jr z, RES_2
 RES_2
         call LD_PAL
+
+        ld hl, RESET2
+        ld de, res_buf
+        ld bc, RESET2_END - RESET2
+        ldir
+        jp res_buf
+        
+        
+RESET2:        
+; -- setting up h/w parameters
 
 ; 128 lock
         ld a, (l128)
         rrca
         rrca
-        ld d, a
+        ld d, a             ; D keeps the Lock128 Mode
 
         
 ; AY & CPU freq
@@ -103,45 +101,76 @@ RES_2
         ld bc, h'FEFE
         in a, (c)
         rrca
+        ld a, (b2tb)
+        ld e, a             ; E keeps the bank where boot to
         ld a, (b2to)
-        jr nc, RES_1        ; SS pressed
-        ld a, (btto)
+        jr nc, RES_1        ; CS pressed
+        ld a, (b1tb)
+        ld e, a             ; E keeps the bank where boot to
+        ld a, (b1to)
 RES_1        
         or a                ; 0
-        jr z, RES_48
+        jr z, RES_ROM00
         dec a               ; 1
-        jr z, RES_128
+        jr z, RES_ROM04
         dec a               ; 2
-        jr z, RES_TRD
+        jr z, RES_RAMF8
         dec a               ; 3
         jr z, RES_SD_BT
         dec a               ; 4
         jr z, RES_SD_ROM
         dec a               ; 5
         jr z, RES_COM
-        dec a               ; 6
-        jr z, RES_CROM
-        dec a               ; 7
-        jr z, RES_CRAM
+        halt
+
+        
+RES_ROM00
+        xtr
+        xt page0, 0
+        jr RES_3
+
+        
+RES_ROM04
+        xtr
+        xt page0, 4
+        jr RES_3
+
+        
+RES_RAMF8
+        xtr
+        xt page0, h'F8
+        ld a, b'1000
+        or d
+        ld d, a             ; RAM will be used instead of ROM
+
+
+RES_3
+        ld a, e
+        or a                ; 0
+        jr z, RES_TRD
+        dec a               ; 1
+        jr z, RES_48
+        dec a               ; 2
+        jr z, RES_128
+        dec a               ; 3
+        jr z, RES_SYS
         halt
 
         
 RES_TRD
-        ld a, 1
-        or d
+        ld a, d
+        or 1                ; ROM 48
         xtr
         xta memconf
-        xt page0, 0
         ld sp, h'3D2E
         jp h'3D2F           ; ret to #0000
         
         
 RES_48
-        ld a, 1
-        or d
+        ld a, d
+        or 1                ; ROM 48
         xtr
         xta memconf
-        xt page0, 0
         jp 0
 
         
@@ -149,7 +178,14 @@ RES_128
         ld a, d
         xtr
         xta memconf
-        xt page0, 0
+        jp 0
+
+        
+RES_SYS
+        ld a, d
+        or b'0100
+        xtr
+        xta memconf         ; no mapping
         jp 0
 
 
@@ -164,25 +200,7 @@ RES_SD_ROM
 RES_COM        
         halt
 
-                   
-RES_CROM        
-        xtr
-        ld a, 4
-        or d
-        xta memconf
-        xt page0, 4
-        jp 0
-
-                   
-RES_CRAM        
-        xtr
-        ld a, 12
-        or d
-        xta memconf
-        xt page0, h'F8
-        jp 0
-
-        
+       
 RESET2_END
 
 
