@@ -1,3 +1,4 @@
+- zero 48k RAM before reset
 - NVRAM checksum
 - FAT boot
 - help window
