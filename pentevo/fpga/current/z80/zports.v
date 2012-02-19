@@ -821,7 +821,8 @@ module zports(
     assign vg_cs_n = vg_cs_n_int | virt_vg;
     assign vg_wrFF = vgsys_wr_int & !virt_vg;
     
-    assign vdos_on = (!vg_cs_n_int | vgsys_cs_int) & virt_vg;
+    assign vdos_on = (!vg_cs_n_int | vgsys_cs_int) & !vdos & virt_vg;
+    // assign vdos_off = iorq & rdwr & ((loa==VGCOM) | (loa==VGTRK) | (loa==VGSEC) | (loa==VGDAT));
     assign vdos_off = !vg_cs_n_int & vdos & virt_vg;
     // assign vdos_off = !vg_cs_n_int & vdos;
 
