@@ -275,6 +275,8 @@ set_instance_assignment -name GLOBAL_SIGNAL ON -to spics_n
 
 # end ENTITY(top)
 # ---------------
+set_global_assignment -name FIT_ONLY_ONE_ATTEMPT OFF
+set_global_assignment -name SEED 2
 set_global_assignment -name VERILOG_FILE ../video/video_ts_render.v
 set_global_assignment -name VERILOG_FILE ../video/video_ts.v
 set_global_assignment -name VERILOG_FILE ../video/mem/video_tsline1.v
@@ -285,7 +287,6 @@ set_global_assignment -name VERILOG_FILE ../video/mem/video_sf_ys.v
 set_global_assignment -name VERILOG_FILE ../video/mem/video_tmbuf.v
 set_global_assignment -name VERILOG_FILE ../video/mem/video_vmem.v
 set_global_assignment -name VERILOG_FILE ../common/slavespi.v
-set_global_assignment -name VERILOG_FILE ../common/atm_pager.v
 set_global_assignment -name VERILOG_FILE ../common/dma.v
 set_global_assignment -name VERILOG_FILE ../video/video_ports.v
 set_global_assignment -name VERILOG_FILE ../video/video_top.v
@@ -295,6 +296,7 @@ set_global_assignment -name VERILOG_FILE ../video/video_fetch.v
 set_global_assignment -name VERILOG_FILE ../video/video_render.v
 set_global_assignment -name VERILOG_FILE ../video/video_out.v
 set_global_assignment -name VERILOG_FILE ../sound/sound.v
+set_global_assignment -name VERILOG_FILE ../z80/zpager.v
 set_global_assignment -name VERILOG_FILE ../z80/zmaps.v
 set_global_assignment -name VERILOG_FILE ../z80/znmi.v
 set_global_assignment -name VERILOG_FILE ../z80/zdos.v
@@ -314,5 +316,3 @@ set_global_assignment -name VERILOG_FILE ../common/clock.v
 set_global_assignment -name VERILOG_FILE ../common/spi2.v
 set_global_assignment -name VERILOG_FILE ../common/resetter.v
 set_global_assignment -name VERILOG_FILE ../top.v
-set_global_assignment -name FIT_ONLY_ONE_ATTEMPT OFF
-set_global_assignment -name SEED 2

@@ -141,7 +141,7 @@ module top(
 
 	wire [15:0] rddata;
 
-	wire [4:0] rompg;
+	wire [4:0] rompg = page[4:0];
 
 	wire [7:0] zports_dout;
 	wire zports_dataout;
@@ -299,14 +299,14 @@ module top(
 	assign rompg3   =  rompg[3];
 	assign rompg4   =  rompg[4];
 
-	wire [3:0] zclk_stall;
+	wire zclk_stall;
 
 	zclock zclock
 	(
 		.fclk(fclk), .rst_n(rst_n), .zclk(zclk), .rfsh_n(rfsh_n), .zclk_out(clkz_out),
 		.zpos(zpos), .zneg(zneg),
 		.turbo(turbo), .c2(c2), .c0(c0),
-		.zclk_stall( cpu_stall | (|zclk_stall)), .int_turbo(int_turbo),
+		.zclk_stall( cpu_stall | zclk_stall), .int_turbo(int_turbo),
 		.external_port(external_port), .iorq_n(iorq_n), .m1_n(m1_n)
 	);
 
@@ -340,103 +340,34 @@ module top(
 	            .porthit(porthit), .drive_ff(drive_ff) );
 
 
-
-
-	/////////////////////////////////////
-	// ATM memory pagers instantiation //
-	/////////////////////////////////////
-
-	wire atmF7_wr_fclk;
-	// wire [3:0] atmF7_wr = atmF7_wr_fclk & (1 << a[15:14]);
-	
-	wire rampage_wr;	// ports #10AF-#13AF
-	// wire [3:0] rampg_wr = rampage_wr & (1 << a[9:8]);
-
-	wire pager_off;
-
-	wire        pent1m_ROM;
-	// wire [ 5:0] pent1m_page;
-	wire        pent1m_ram0_0;
-	wire        pent1m_1m_on;
-
-	wire [ 7:0] memconf;
-
-	wire [ 3:0] dos_turn_off,
-	            dos_turn_on;
-	wire        vdos_on, vdos_off;
-
-	wire [ 7:0] page [0:3];
-	wire [ 3:0] romnram;
-
-	// for reading back data via xxBE port
-	wire [ 7:0] rd_pages [0:7];
-	wire [ 7:0] rd_ramnrom;
-	wire [ 7:0] rd_dos7ffd;
-
+                
+	wire rampage_wr;	    // ports #10AF-#13AF
+	wire [7:0] memconf;
 	wire [7:0] xt_ramp[0:3];
-	assign {xt_ramp[3], xt_ramp[2], xt_ramp[1], xt_ramp[0]} = xt_page;
-	
-    wire [3:0] w0_romnram = {3'b0, ~memconf[3]};        // window #0000: 1 - ROM / 0 - RAM
-    wire [3:0] w0_mapped = {3'b0, ~memconf[2]};         // window #0000: 1 - mapped on SROM/DOS/48/128 / 0 - plain rampage0
-    wire [3:0] v_dos = {3'b0, vdos};     			 	// virtual DOS page
-    wire rw_en = |a[15:14] | memconf[1];   		// window #0000: 0 - write protect / 1 - write enable
-    // wire rw_en = |a[15:14];   		// window #0000: 0 - write protect / 1 - write enable
+	wire [7:0] page;
+	wire vdos_on, vdos_off;
+	wire dos_on, dos_off;
+    wire romnram;
+                
+    pager pager(
+        .clk        (fclk),
+        .za         (a),
+        .m1         (!m1_n),
+        .mreq       (!mreq_n),
+        .memconf    (memconf),
+        .xt_page    (xt_page),
+        .dos        (dos),
+        .vdos       (vdos),
+        
+        .page       (page),
+        .romnram    (romnram),
+        .rw_en      (rw_en),
+        .dos_on     (dos_on),
+        .dos_off    (dos_off),
+        .zclk_stall (zclk_stall)
     
-	
-	generate
-		genvar i;
+    );
 
-		for(i=0;i<4;i=i+1)
-		begin : instantiate_atm_pagers
-
-			atm_pager #( .ADDR(i) )
-			          atm_pager( .rst_n(rst_n),
-			                     .fclk (fclk),
-			                     .zpos (zpos),
-			                     .zneg (zneg),
-
-			                     .za(a),
-			                     .zd(d),
-			                     .mreq_n(mreq_n),
-			                     .rd_n  (rd_n),
-			                     .m1_n  (m1_n),
-
-			                     .pager_off(pager_off),
-
-			                     .pent1m_ROM   (pent1m_ROM),
-			                     .pent1m_page  (xt_ramp[3][5:0]),
-			                     .pent1m_ram0_0(pent1m_ram0_0),
-			                     .pent1m_1m_on (pent1m_1m_on),
-
-								 .xt_page (xt_ramp[i]),
-								 .xt_override(xt_override[i]),
-								 .w0_romnram(w0_romnram[i]),
-								 .w0_mapped(w0_mapped[i]),
-								 // .w0_we(w0_we[i]),
-						 		 // .rw_en(rw_en),
-                                        
-			                     .dos(dos),
-								 .v_dos(v_dos[i]),
-			                     .dos_turn_on (dos_turn_on[i]),
-			                     .dos_turn_off(dos_turn_off[i]),
-
-			                     .in_nmi(in_nmi),
-
-			                     .atmF7_wr(atmF7_wr_fclk),
-
-			                     .zclk_stall(zclk_stall[i]),
-
-			                     .page   (page[i]),
-			                     .romnram(romnram[i]),
-
-			                     .rd_page0  (rd_pages[i  ]),
-			                     .rd_page1  (rd_pages[i+4]),
-
-			                     .rd_ramnrom( {rd_ramnrom[i+4], rd_ramnrom[i]}),
-			                     .rd_dos7ffd( {rd_dos7ffd[i+4], rd_dos7ffd[i]} )
-			                   );
-		end
-	endgenerate
 
 
 	///////////////////////////
@@ -447,13 +378,11 @@ module top(
 	           .fclk(fclk),
 			   .rst_n(rst_n),
 
-	           .dos_turn_on ( |dos_turn_on),
-	           .dos_turn_off( |dos_turn_off),
+	           .dos_on  (dos_on),
+	           .dos_off (dos_off),
 			   .vdos_on (vdos_on),
                .vdos_off(vdos_off),
 			   
-	           .cpm_n(cpm_n),
-
 	           .dos(dos),
 	           .vdos(vdos)
 	         );
@@ -476,10 +405,10 @@ module top(
 		.zpos(zpos),
 		.zneg(zneg),
 
-		.c0     (c0),
-		.c1(c1),
-		.c2 (c2),
-		.c3     (c3),
+		.c0    (c0),
+		.c1    (c1),
+		.c2    (c2),
+		.c3    (c3),
 		
 		.za    (a),
 		.zd_in (d),
@@ -492,21 +421,22 @@ module top(
 		.rd_n  (rd_n), 
 		.wr_n  (wr_n),
 
-		.win_page({page[3], page[2], page[1], page[0]}),
-		.win_romnram(romnram),
+        // .win_page({page[3], page[2], page[1], page[0]}),
+		// .win_romnram(romnram),
+		.page   (page),
+		.romnram(romnram),
 		
 		.rw_en(rw_en),
 		// .rw_en(1),
 
-		.rompg  (rompg),
+		// .rompg  (rompg),
 		.romoe_n(romoe_n),
 		.romwe_n(romwe_n),
 		.csrom  (csrom),
 
 		.vdos_on   (vdos_on),
 		.vdos_off  (vdos_off),
-        .dos_turn_on ( |dos_turn_on),
-        .dos_turn_off( |dos_turn_off),
+        .dos_on    (dos_on),
 		
 		.cpu_req   (cpu_req),
 		.cpu_rnw   (cpu_rnw),
@@ -514,7 +444,8 @@ module top(
 		.cpu_strobe(cpu_strobe),
 		.cpu_addr  (cpu_addr),
 		.cpu_wrdata(cpu_wrdata),
-		.cpu_rddata(dram_rddata),
+		// .cpu_rddata(dram_rddata),
+		.cpu_rddata(rd),
 		.cpu_stall (cpu_stall),
 		.cpu_next  (cpu_next),
 
@@ -789,6 +720,8 @@ zmaps zmaps(
 					.fddvirt	(fddvirt),
                     .vg_a       (vg_a),
                     .vdos_on    (vdos_on),
+                    .vdos_off   (vdos_off),
+                    .vdos       (vdos),
 					
 					.dmaport_wr (dmaport_wr),
                     .dma_act	(dma_act),
@@ -817,10 +750,10 @@ zmaps zmaps(
 					.atm_pen     (pager_off),
 					.atm_cpm_n   (cpm_n),
 			
-					.pent1m_ram0_0(pent1m_ram0_0),
-					.pent1m_1m_on (pent1m_1m_on),
-					.pent1m_page  (pent1m_page),
-					.pent1m_ROM   (pent1m_ROM),
+					// .p7ffd_ram0_0(p7ffd_ram0_0),
+					// .p7ffd_1m_on (p7ffd_1m_on),
+					// .p7ffd_page  (p7ffd_page),
+					// .p7ffd_ROM   (p7ffd_ROM),
 			
 					.beeper_wr(beeper_wr),
 					.covox_wr (covox_wr),
@@ -829,13 +762,13 @@ zmaps zmaps(
 					.clr_nmi(clr_nmi),
 			
 			
-					.pages(~{ rd_pages[7], rd_pages[6],
-							rd_pages[5], rd_pages[4],
-							rd_pages[3], rd_pages[2],
-							rd_pages[1], rd_pages[0] }),
+					// .pages(~{ rd_pages[7], rd_pages[6],
+							// rd_pages[5], rd_pages[4],
+							// rd_pages[3], rd_pages[2],
+							// rd_pages[1], rd_pages[0] }),
 			
-					.ramnroms( rd_ramnrom),
-					.dos7ffds( rd_dos7ffd),
+					// .ramnroms( rd_ramnrom),
+					// .dos7ffds( rd_dos7ffd),
 			
 					.external_port(external_port),
 			

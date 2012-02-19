@@ -75,7 +75,9 @@ module zports(
 	input  wire       dma_act,
     
 	input  wire        dos,
+	input  wire        vdos,
 	output  wire       vdos_on,
+	output  wire       vdos_off,
 
 
 	output wire        ay_bdir,
@@ -122,10 +124,10 @@ module zports(
 	output wire        romrw_en, // from port BF
 
 
-	output wire        pent1m_ram0_0, // d3.eff7
-	output wire        pent1m_1m_on,  // d2.eff7
-	output wire [ 5:0] pent1m_page,   // full 1 meg page number
-	output wire        pent1m_ROM,     // d4.7ffd
+	output wire        p7ffd_ram0_0, // d3.eff7
+	output wire        p7ffd_1m_on,  // d2.eff7
+	// output wire [ 5:0] p7ffd_page,   // full 1 meg page number
+	output wire        p7ffd_ROM,     // d4.7ffd
 
 
 	output wire        covox_wr,
@@ -521,7 +523,7 @@ module zports(
 	
     wire lock128 = (memconf[7:6] == 2'b01);
    	assign romrw_en = memconf[1];
-	assign pent1m_ROM = memconf[0];
+	assign p7ffd_ROM = memconf[0];
         
 	always @(posedge zclk)
 		if (!rst_n)
@@ -708,7 +710,7 @@ module zports(
 		if (!rst_n)
 		begin
 			p7ffd <= 8'h00;
-			pent1m_page <= 6'd0;
+			// p7ffd_page <= 6'd0;
 		end
 		else
 		begin
@@ -743,8 +745,8 @@ module zports(
 	assign peff7 = block1m ? (peff7_int & 8'b10110001) : peff7_int;
 
 
-	assign pent1m_1m_on     = ~peff7_int[2];
-	assign pent1m_ram0_0    = peff7_int[3];
+	assign p7ffd_1m_on     = ~peff7_int[2];
+	assign p7ffd_ram0_0    = peff7_int[3];
 
 
 
@@ -820,6 +822,8 @@ module zports(
     assign vg_wrFF = vgsys_wr_int & !virt_vg;
     
     assign vdos_on = (!vg_cs_n_int | vgsys_cs_int) & virt_vg;
+    assign vdos_off = !vg_cs_n_int & vdos & virt_vg;
+    // assign vdos_off = !vg_cs_n_int & vdos;
 
     always @(posedge fclk)
         if (vgsys_wr_int)
