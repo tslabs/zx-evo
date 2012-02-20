@@ -8,7 +8,6 @@ module zports(
 
 	input  wire        zclk,   // z80 clock
 	input  wire        fclk,
-	input  wire        rst_n, // system reset
 
 	input  wire        zpos,
 	input  wire        zneg,
@@ -19,11 +18,23 @@ module zports(
 	output wire        dataout,
 	input  wire [15:0] a,
 
+	input  wire        rst_n, // system reset
 	input  wire        iorq_n,
 	input  wire        mreq_n,
 	input  wire        m1_n,
 	input  wire        rd_n,
 	input  wire        wr_n,
+    
+	input  wire        iorq,
+	input  wire        iorq_s,
+	input  wire        mreq,
+	input  wire        m1,
+	input  wire        iord,
+	input  wire        iowr,
+	input  wire        iorw,
+	input  wire        rd,
+	input  wire        wr,
+	input  wire        rdwr,
 
 	output wire        porthit, // when internal port hit occurs, this is 1, else 0; used for iorq1_n iorq2_n on zxbus
 	output wire        external_port, // asserts for AY and VG93 accesses
@@ -36,7 +47,6 @@ module zports(
 	output wire        ide_cs1_n,
 	output wire        ide_rd_n,
 	output wire        ide_wr_n,
-	// output wire        t0,	// debug!!!
 
 
 	input  wire [ 4:0] keys_in, // keys (port FE)
@@ -62,7 +72,6 @@ module zports(
     output wire vint_begh_wr,
 	
 	output wire [31:0] xt_page,
-	output reg [3:0] xt_override,
 	
 	output reg [4:0] fmaddr,
 	
@@ -155,7 +164,6 @@ module zports(
 
 	localparam PORTFE = 8'hFE;
 	localparam PORTXT = 8'hAF;
-	localparam PORTF6 = 8'hF6;
 	localparam PORTF7 = 8'hF7;
 
 	localparam NIDE10 = 8'h10;
@@ -177,11 +185,6 @@ module zports(
 	localparam VGDAT  = 8'h7F;
 	localparam VGSYS  = 8'hFF;
 
-	localparam SAVPORT1 = 8'h2F;
-	localparam SAVPORT2 = 8'h4F;
-	localparam SAVPORT3 = 8'h6F;
-	localparam SAVPORT4 = 8'h8F;
-
 	localparam KJOY   = 8'h1F;
 	localparam KMOUSE = 8'hDF;
 
@@ -190,9 +193,6 @@ module zports(
 
 	localparam ATMF7  = 8'hF7;
 	localparam ATM77  = 8'h77;
-
-	localparam ZXEVBE = 8'hBE; // xxBE config-read and nmi-end port
-	localparam ZXEVBF = 8'hBF; // xxBF config port
 
 	localparam COMPORT = 8'hEF; // F8EF..FFEF - rs232 ports
 
@@ -233,7 +233,6 @@ module zports(
 	localparam DMACTRL		= 8'h27;
 	localparam DMANUM		= 8'h28;
 	localparam FDDVIRT		= 8'h29;
-	localparam XTOVERR  	= 8'h2A;
 
 	localparam XSTAT		= 8'h00;
 
@@ -273,96 +272,50 @@ module zports(
 	wire [ 7:0] iderdeven; // to control read data from "even" ide ports (all except #11)
 	wire [ 7:0] iderdodd;  // read data from "odd" port (#11)
 
-
-
-
 	wire gluclock_on;
 
-
-
 	reg  shadow_en_reg; //bit0.xxBF
-	// reg   romrw_en_reg; //bit1.xxBF
 	reg  fntw_en_reg; 	//bit2.xxBF
 
-	wire shadow;
-
-
-
-	reg [7:0] portbemux;
-
-
-
-	reg [7:0] savport [3:0];
-
-
-
-
-
-	assign shadow = dos || shadow_en_reg;
-
-
-
-
-
+	wire shadow = dos || shadow_en_reg;
 
 	wire [7:0] loa=a[7:0];
 	wire [7:0] hoa=a[15:8];
 
     assign porthit = (
-            (loa==PORTFE) || (loa==PORTXT) || (loa==PORTF6) || (loa==PORTFD) ||
-
+            (loa==PORTFE) || (loa==PORTXT) || (loa==PORTFD) ||
 		    (loa==NIDE10) || (loa==NIDE11) || (loa==NIDE30) || (loa==NIDE50) || (loa==NIDE70) ||
 		    (loa==NIDE90) || (loa==NIDEB0) || (loa==NIDED0) || (loa==NIDEF0) || (loa==NIDEC8) ||
-
 		    (loa==KMOUSE) ||
-
 		    (((loa==VGCOM) || (loa==VGTRK) || (loa==VGSEC) || (loa==VGDAT) || (loa==VGSYS)) && shadow) ||
-            
             ( (loa==KJOY)&&(!shadow) ) ||
-
-    		( (loa==SAVPORT1)&&shadow ) || ( (loa==SAVPORT2)&&shadow ) || ( (loa==SAVPORT3)&&shadow ) || ( (loa==SAVPORT4)&&shadow ) ||
-
 		    ( (loa==PORTF7)&&(!shadow) ) ||
-            
             ( (loa==SDCFG)&&(!shadow) ) || ( (loa==SDDAT) ) ||
-
 		    ( (loa==ATMF7)&&shadow ) || ( (loa==ATM77)&&shadow ) ||
-
-		    ( loa==ZXEVBF ) || ( loa==ZXEVBE) || 
-            
             ( loa==COMPORT )
 		  );
 
 
-	assign external_port = ( ((loa==PORTFD) & a[15]) || // AY
-    
-		   (( (loa==VGCOM)&&shadow ) || ( (loa==VGTRK)&&shadow ) || ( (loa==VGSEC)&&shadow ) || ( (loa==VGDAT)&&shadow ))
-           
-           );
+	assign external_port = ( ((loa==PORTFD) & a[15])    // AY
+                         || (( (loa==VGCOM) && shadow ) || ( (loa==VGTRK)&&shadow ) || ( (loa==VGSEC)&&shadow ) || ( (loa==VGDAT)&&shadow ))
+                            );
 
-	assign dataout = porthit & (~iorq_n) & (~rd_n) & (~external_port);
+	assign dataout = porthit & iord & (~external_port);
 
 
-	// Z80 asynchronous signals
-	wire iowr = ~(iorq_n | wr_n);
-	wire iord = ~(iorq_n | rd_n);
-    wire rdwr = (!rd_n | !wr_n);
-    wire iorq = !iorq_n;
-    
-
-	// this is zclk-synchronous strobes
+	// zclk-synchronous strobes
 	always @(posedge zclk)
 	begin
 		iowr_reg <= iowr;
 		iord_reg <= iord;
 
-		if( (!iowr_reg) && (!iorq_n) && (!wr_n) )
+		if( (!iowr_reg) && (iorq) && (wr) )
 			port_wr <= 1'b1;
 		else
 			port_wr <= 1'b0;
 
 
-		if( (!iord_reg) && (!iorq_n) && (!rd_n) )
+		if( (!iord_reg) && (iorq) && (rd) )
 			port_rd <= 1'b1;
 		else
 			port_rd <= 1'b0;
@@ -403,9 +356,6 @@ module zports(
 		case( loa )
 		PORTFE:
 			dout = { 1'b1, tape_read, 1'b0, keys_in };
-		PORTF6:
-			dout = { 1'b1, tape_read, 1'b0, keys_in };
-
 
 		NIDE10,NIDE30,NIDE50,NIDE70,NIDE90,NIDEB0,NIDED0,NIDEF0,NIDEC8:
 			dout = iderdeven;
@@ -426,10 +376,6 @@ module zports(
 
 		VGSYS:
 			dout = { vg_intrq, vg_drq, 6'b111111 };
-
-		SAVPORT1, SAVPORT2, SAVPORT3, SAVPORT4:
-			dout = savport[ loa[6:5] ];
-
 
 		KJOY:
 			dout = {3'b000, kj_in};
@@ -452,18 +398,6 @@ module zports(
 		COMPORT: begin
 			dout = wait_read; // $F8EF..$FFEF
 		end
-
-		ZXEVBF: begin
-			// dout = { 4'b0000, set_nmi, fntw_en_reg, romrw_en_reg, shadow_en_reg };
-			dout = { 4'b0000, set_nmi, fntw_en_reg, 1'b0, shadow_en_reg };
-		end
-
-`ifndef ANTIATM
-		ZXEVBE: begin
-			dout = portbemux;
-		end
-`endif
-
 
 		default:
 			dout = 8'hFF;
@@ -532,14 +466,7 @@ module zports(
 			im2vect <= 8'hFF;
 			fddvirt <= 4'b0;
 			sysconf <= 8'h01;       // turbo 7 MHz
-
-`ifdef ANTIATM
-			memconf <= 8'h04;       // ANTIATM
-			xt_override <= 4'b1111;       // ANTIATM
-`else
-			memconf <= 8'h00;       // atm
-			xt_override <= 4'b0;       // atm crotch
-`endif
+			memconf <= 8'h04;       // no map
             
 			rampage[0] <= 8'h00;
 			rampage[1] <= 8'h05;
@@ -560,12 +487,8 @@ module zports(
 			if (hoa[7:2] == RAMPAGE[7:2])
             begin
 				rampage[hoa[1:0]] <= din;
-				xt_override[hoa[1:0]] <= 1'b1;	// if XT page write, correspondent override ON
             end
 				
-            if (hoa == XTOVERR)
-				xt_override <= din[3:0];
-                
 			if (hoa == FMADDR)
 				fmaddr <= din[4:0];
 
@@ -637,8 +560,6 @@ module zports(
 	end
 
 
-
-
 	always @(posedge zclk)
 	if( idein_lo_rd )
 			idehiin <= idein[15:8];
@@ -694,9 +615,9 @@ module zports(
 
 
 	// AY control
-	wire ay_hit = (loa==PORTFD) & a[15] & (~iorq_n);
-	assign ay_bc1  = ay_hit & a[14] & ((~rd_n)|(~wr_n));
-	assign ay_bdir = ay_hit & (~wr_n);
+	wire ay_hit = (loa==PORTFD) & a[15] & iorq;
+	assign ay_bc1  = ay_hit & a[14] & (rd|(wr));
+	assign ay_bdir = ay_hit & (wr);
 	
 
 	// 7FFD port
@@ -814,17 +735,15 @@ module zports(
     wire vg_port = ((loa==VGCOM) | (loa==VGTRK) | (loa==VGSEC) | (loa==VGDAT)) & shadow;
     wire vgsys_port = (loa==VGSYS) & shadow;
     
-	wire vg_cs_n_int =  !(iorq & rdwr & vg_port);
-    wire vgsys_cs_int = iorq & rdwr & vgsys_port;
+	wire vg_cs_n_int =  !(iorw & vg_port);
+    wire vgsys_cs_int = iorw & vgsys_port;
 	wire vgsys_wr_int = vgsys_port && port_wr;
 	
     assign vg_cs_n = vg_cs_n_int | virt_vg;
     assign vg_wrFF = vgsys_wr_int & !virt_vg;
     
-    assign vdos_on = (!vg_cs_n_int | vgsys_cs_int) & !vdos & virt_vg;
-    // assign vdos_off = iorq & rdwr & ((loa==VGCOM) | (loa==VGTRK) | (loa==VGSEC) | (loa==VGDAT));
-    assign vdos_off = !vg_cs_n_int & vdos & virt_vg;
-    // assign vdos_off = !vg_cs_n_int & vdos;
+    assign vdos_on = iorq_s & rdwr & (vg_port | vgsys_port) & !vdos & virt_vg;
+    assign vdos_off = iorq_s & rdwr & vg_port & vdos & virt_vg;
 
     always @(posedge fclk)
         if (vgsys_wr_int)
@@ -838,8 +757,6 @@ module zports(
 		rstsync1<=~rst_n;
 		rstsync2<=rstsync1;
 	end
-
-
 
 
 // SD card (z-control¸r compatible)
@@ -874,130 +791,9 @@ module zports(
 	assign sd_datain = wr_n ? 8'hFF : din;
 
 
-
-
-
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////
-
-	///////////////
-	// ATM ports //
-	///////////////
-
-	wire atm77_wr_fclk;
-	wire zxevbf_wr_fclk;
-
-	assign atmF7_wr_fclk = ( (loa==ATMF7) && (a[8]==1'b1) && shadow && port_wr_fclk ); // xFF7 and x7F7 ports, NOT xEF7!
-	assign atm77_wr_fclk = ( (loa==ATM77) && shadow && port_wr_fclk );
-
-	assign zxevbf_wr_fclk = ( (loa==ZXEVBF) && port_wr_fclk );
-
-
-	// port BF write
-	//
-	always @(posedge fclk)
-	if( !rst_n )
-	begin
-		shadow_en_reg <= 1'b0;
-		// romrw_en_reg  <= 1'b0;
-		fntw_en_reg   <= 1'b0;
-		set_nmi       <= 1'b0;
-	end
-	else if( zxevbf_wr_fclk )
-	begin
-		shadow_en_reg <= din[0];
-		// romrw_en_reg  <= din[1];
-		fntw_en_reg   <= din[2];
-		set_nmi       <= din[3];
-	end
-
-
-	// port xx77 write
-	always @(posedge fclk)
-	if( !rst_n )
-	begin
-        
-`ifdef ANTIATM
-		atm_pen <=   1'b0; // ANTIATM,
-		atm_cpm_n <= 1'b1; // ANTIATM
-`else
-		atm_pen <=   1'b1; // no manager,
-		atm_cpm_n <= 1'b0; // permanent dosen (shadow ports on)
-`endif
-
-
-	end
-	else
-    if( atm77_wr_fclk )
-    begin
-        atm_scr_mode <= din[2:0];
-        atm_pen      <= ~a[8];
-        atm_cpm_n    <=  a[9];
-    end
-
-
-	// port BE write
-	assign clr_nmi = ( (loa==ZXEVBE) && port_wr_fclk );
-
-
 	// covox/beeper writes
 	assign beeper_wr = (loa==PORTFE) && iowr;
 	assign covox_wr  = (loa==COVOX) && iowr;
 
 
-
-	// font write enable
-	assign fnt_wr = fntw_en_reg && mem_wr_fclk;
-
-
-
-	// port BE read
-`ifndef ANTIATM
-
-	always @*
-	case( a[11:8] )
-
-	// 4'h0: portbemux = pages[ 7:0 ];
-	// 4'h1: portbemux = pages[15:8 ];
-	// 4'h2: portbemux = pages[23:16];
-	// 4'h3: portbemux = pages[31:24];
-	// 4'h4: portbemux = pages[39:32];
-	// 4'h5: portbemux = pages[47:40];
-	// 4'h6: portbemux = pages[55:48];
-	// 4'h7: portbemux = pages[63:56];
-
-	4'h8: portbemux = ramnroms;
-	4'h9: portbemux = dos7ffds;
-
-	4'hA: portbemux = p7ffd;
-	4'hB: portbemux = peff7_int;
-
-	// 4'hC: portbemux = { ~atm_pen2, atm_cpm_n, ~atm_pen, 1'bX, atm_turbo, atm_scr_mode };
-
-
-	default: portbemux = 8'bXXXXXXXX;
-
-	endcase
-
-`endif
-
-
-
-
-	// savelij ports write
-	//
-	always @(posedge fclk)
-	if( port_wr_fclk && shadow )
-	begin
-		if( (loa==SAVPORT1) ||
-		    (loa==SAVPORT2) ||
-		    (loa==SAVPORT3) ||
-		    (loa==SAVPORT4) )
-			savport[ loa[6:5] ] <= din;
-	end
-
-
-
 endmodule
-

@@ -43,8 +43,8 @@ module top(
 	output iorq2_n,
 
 	// DRAM
-	inout [15:0] rd,
-	output [9:0] ra,
+	inout [15:0] dram_rd,
+	output [9:0] dram_ra,
 	output rwe_n,
 	output rucas_n,
 	output rlcas_n,
@@ -340,7 +340,7 @@ module top(
 	            .porthit(porthit), .drive_ff(drive_ff) );
 
 
-                
+
 	wire rampage_wr;	    // ports #10AF-#13AF
 	wire [7:0] memconf;
 	wire [7:0] xt_ramp[0:3];
@@ -348,7 +348,7 @@ module top(
 	wire vdos_on, vdos_off;
 	wire dos_on, dos_off;
     wire romnram;
-                
+
     pager pager(
         .clk        (fclk),
         .za         (a),
@@ -358,14 +358,14 @@ module top(
         .xt_page    (xt_page),
         .dos        (dos),
         .vdos       (vdos),
-        
+
         .page       (page),
         .romnram    (romnram),
         .rw_en      (rw_en),
         .dos_on     (dos_on),
         .dos_off    (dos_off),
         .zclk_stall (zclk_stall)
-    
+
     );
 
 
@@ -374,7 +374,7 @@ module top(
 	// DOS signal controller //
 	///////////////////////////
 
-	zdos zdos( 
+	zdos zdos(
 	           .fclk(fclk),
 			   .rst_n(rst_n),
 
@@ -382,7 +382,7 @@ module top(
 	           .dos_off (dos_off),
 			   .vdos_on (vdos_on),
                .vdos_off(vdos_off),
-			   
+
 	           .dos(dos),
 	           .vdos(vdos)
 	         );
@@ -401,7 +401,7 @@ module top(
 	(
 		.fclk (fclk),
 		.rst_n(rst_n),
-		
+
 		.zpos(zpos),
 		.zneg(zneg),
 
@@ -409,23 +409,23 @@ module top(
 		.c1    (c1),
 		.c2    (c2),
 		.c3    (c3),
-		
+
 		.za    (a),
 		.zd_in (d),
-		.zd_out(dout_ram), 
-		.zd_ena(ena_ram), 
+		.zd_out(dout_ram),
+		.zd_ena(ena_ram),
 		.m1_n  (m1_n),
-		.rfsh_n(rfsh_n), 
-		.iorq_n(iorq_n), 
+		.rfsh_n(rfsh_n),
+		.iorq_n(iorq_n),
 		.mreq_n(mreq_n),
-		.rd_n  (rd_n), 
+		.rd_n  (rd_n),
 		.wr_n  (wr_n),
 
         // .win_page({page[3], page[2], page[1], page[0]}),
 		// .win_romnram(romnram),
 		.page   (page),
 		.romnram(romnram),
-		
+
 		.rw_en(rw_en),
 		// .rw_en(1),
 
@@ -437,7 +437,7 @@ module top(
 		.vdos_on   (vdos_on),
 		.vdos_off  (vdos_off),
         .dos_on    (dos_on),
-		
+
 		.cpu_req   (cpu_req),
 		.cpu_rnw   (cpu_rnw),
 		.cpu_wrbsel(cpu_wrbsel),
@@ -445,7 +445,7 @@ module top(
 		.cpu_addr  (cpu_addr),
 		.cpu_wrdata(cpu_wrdata),
 		// .cpu_rddata(dram_rddata),
-		.cpu_rddata(rd),
+		.cpu_rddata(dram_rd),
 		.cpu_stall (cpu_stall),
 		.cpu_next  (cpu_next),
 
@@ -477,8 +477,8 @@ module top(
 	           .wrdata(dram_wrdata),
 	           .bsel(dbsel),
 
-	           .ra(ra),
-	           .rd(rd),
+	           .ra(dram_ra),
+	           .rd(dram_rd),
 	           .rwe_n(rwe_n),
 	           .rucas_n(rucas_n),
 	           .rlcas_n(rlcas_n),
@@ -499,7 +499,7 @@ module top(
 	wire dma_rnw;
 	wire dma_next;
 	wire dma_strobe;
-					 
+
 	wire [20:0] ts_addr;
 	wire ts_req;
 	wire ts_next;
@@ -531,19 +531,19 @@ module top(
 	                 .video_addr(video_addr),
 	                 .video_strobe(video_strobe),
 	                 .video_next(video_next),
-					 
+
 	                 .dma_addr		(dma_addr),
 	                 .dma_wrdata	(dma_wrdata),
 	                 .dma_req		(dma_req),
 	                 .dma_rnw		(dma_rnw),
 					 .dma_next		(dma_next),
-					 
+
 					 .ts_req		(ts_req),
 					 .ts_addr		(ts_addr),
 					 .ts_next		(ts_next)
 	);
 
-    
+
         wire border_wr   ;
         wire zborder_wr  ;
         wire zvpage_wr	 ;
@@ -559,10 +559,10 @@ module top(
         wire vint_begh_wr;
         wire tsconf_wr	 ;
         wire tgpage_wr	 ;
-					 
+
     // wire [1:0] vred0;
     // assign vred = vred0 | {2{t}};
-					 
+
 	video_top video_top(
 
 		.clk(fclk),
@@ -581,7 +581,7 @@ module top(
 		.csync(vcsync),
 
 		.vga_on(cfg_vga_on),
-        
+
         .border_wr      (border_wr),
         .zborder_wr     (zborder_wr),
 		.zvpage_wr	    (zvpage_wr),
@@ -602,14 +602,14 @@ module top(
 		.video_bw		(video_bw),
 		.video_go       (go),
 		.dram_rddata    (dram_rddata),      // reg'ed, should be latched by c3
-   		.dram_rdata     (rd),               // raw, should be latched by c2
+   		.dram_rdata     (dram_rd),               // raw, should be latched by c2
 		.video_strobe   (video_strobe),
 		.video_next     (video_next),
 
 		.ts_req			(ts_req),
 		.ts_addr		(ts_addr),
 		.ts_next		(ts_next),
-		
+
 		.a(a), .d(d),
 		.cram_data_in({d[6:0], zmd}),
 		.sfys_data_in({d[7:0], zmd}),
@@ -648,51 +648,112 @@ module top(
 	                 .mus_data(mus_port_data)
 	               );
 
-				   
+
 		wire [7:0]	   zmd	;
-				   
-zmaps zmaps(
-					.mreq_n(mreq_n),
-					.wr_n(wr_n),
-					.a(a),
-					.d(d),
-					.zclk(zclk),
 
-					.fmaddr(fmaddr),
-
-					.zmd(zmd),
-					
-					.cram_we(cram_we),
-					.sfys_we(sfys_we)
+    zmaps zmaps(
+				.zclk   (zclk),
+				.mreq_n (mreq_n),
+				.wr_n   (wr_n),
+				.a      (a),
+				.d      (d),
+				.fmaddr (fmaddr),
+				.zmd    (zmd),
+				.cram_we(cram_we),
+				.sfys_we(sfys_we)
 				);
-				
-		
+
+
+	wire rst;
+	wire iorq;
+	wire iorq_s;
+	wire mreq;
+	wire m1;
+	wire rd;
+	wire wr;
+	wire rdwr;
+	wire iord;
+	wire iowr;
+	wire iorw;
+	wire memrd;
+	wire memwr;
+	wire memrw;
+
+    zsignals zsignals(
+                .clk    (fclk),
+				.zclk   (zclk),
+
+				.rst_n  (rst_n),
+
+                .iorq_n (iorq_n),
+                .mreq_n (mreq_n),
+                .m1_n   (m1_n),
+                .rd_n   (rd_n),
+                .wr_n   (wr_n),
+
+                .rst    (rst),
+                .iorq   (iorq),
+                .iorq_s (iorq_s),
+                .mreq   (mreq),
+                .m1     (m1),
+                .rd     (rd),
+                .wr     (wr),
+                .rdwr   (rdwr),
+                .iord   (iord),
+                .iowr   (iowr),
+                .iorw   (iorw),
+                .memrd  (memrd),
+                .memwr  (memwr),
+                .memrw  (memrw)
+                );
+
+
 		wire cram_we;
 		wire sfys_we;
-		
-		
-		wire [3:0] xt_override;	    // crotch!!!
+
+
 		wire [31:0] xt_page;
-		
+
 		wire [8:0] dmaport_wr;
 		wire [4:0] fmaddr;
-		
+
 		wire [7:0] sysconf;
 		wire [7:0] im2vect ;
 		wire [3:0] fddvirt ;
-		
-	zports zports( .zclk(zclk), .fclk(fclk), .rst_n(rst_n), .zpos(zpos), .zneg(zneg),
-	               .din(d), .dout(dout_ports), .dataout(ena_ports),
-	               .a(a), .iorq_n(iorq_n), .rd_n(rd_n), .wr_n(wr_n), .porthit(porthit),
-	               .ay_bdir(ay_bdir), .ay_bc1(ay_bc1),
-	               .peff7(peff7), .mreq_n(mreq_n), .m1_n(m1_n), .dos(dos),
-	               .rstrom(rstrom), .vg_intrq(intrq), .vg_drq(drq), .vg_wrFF(vg_wrFF), .vg_cs_n(vg_cs_n),
-                   .sd_start(sd_start), .sd_dataout(sd_dataout), .sd_datain(sd_datain), .sdcs_n(sdcs_n),
-	               .idein(idein), .ideout(ideout), .idedataout(idedataout),
-	               .ide_a(ide_a), .ide_cs0_n(ide_cs0_n), .ide_cs1_n(ide_cs1_n),
-	               .ide_wr_n(ide_wr_n), .ide_rd_n(ide_rd_n),
-	               // .t0(t0), //debug!!!
-					
+
+	zports zports(
+                    .zclk(zclk), .fclk(fclk),
+                    .zpos(zpos), .zneg(zneg),
+                    .din(d), .dout(dout_ports), .dataout(ena_ports),
+                    .a(a),
+                    
+                    .rst_n(rst_n),
+                    .iorq_n(iorq_n),
+                    .mreq_n(mreq_n),
+                    .m1_n(m1_n),
+                    .rd_n(rd_n),
+                    .wr_n(wr_n),
+                    
+                    .iorq(iorq),
+                    .iorq_s(iorq_s),
+                    .mreq(mreq),
+                    .m1(m1),
+                    .iord(iord),
+                    .iowr(iowr),
+                    .iorw(iorw),
+                    .rd(rd),
+                    .wr(wr),
+                    .rdwr(rdwr),
+                    
+                    .porthit(porthit),
+                    .ay_bdir(ay_bdir), .ay_bc1(ay_bc1),
+                    .peff7(peff7),
+                    .rstrom(rstrom), .vg_intrq(intrq), .vg_drq(drq), .vg_wrFF(vg_wrFF), .vg_cs_n(vg_cs_n),
+                    .sd_start(sd_start), .sd_dataout(sd_dataout), .sd_datain(sd_datain), .sdcs_n(sdcs_n),
+                    .idein(idein), .ideout(ideout), .idedataout(idedataout),
+                    .ide_a(ide_a), .ide_cs0_n(ide_cs0_n), .ide_cs1_n(ide_cs1_n),
+                    .ide_wr_n(ide_wr_n), .ide_rd_n(ide_rd_n),
+
                     .border_wr      (border_wr),
                     .zborder_wr     (zborder_wr),
 					.zvpage_wr	    (zvpage_wr),
@@ -708,96 +769,96 @@ zmaps zmaps(
 					.vint_begh_wr   (vint_begh_wr),
 					.tsconf_wr	    (tsconf_wr),
 					.tgpage_wr	    (tgpage_wr),
-					
+
 					.xt_page (xt_page),
-					.xt_override(xt_override),
-					
+
 					.fmaddr		(fmaddr),
-					
+
 					.sysconf	(sysconf),
 					.memconf	(memconf),
 					.im2vect	(im2vect),
 					.fddvirt	(fddvirt),
                     .vg_a       (vg_a),
+                    .dos        (dos),
+                    .vdos       (vdos),
                     .vdos_on    (vdos_on),
                     .vdos_off   (vdos_off),
-                    .vdos       (vdos),
-					
+
 					.dmaport_wr (dmaport_wr),
                     .dma_act	(dma_act),
-					
-	               .keys_in(kbd_port_data),
-	               .mus_in (mus_port_data),
-	               .kj_in  (kj_port_data),
 
-	               .tape_read(tape_read),
+                    .keys_in(kbd_port_data),
+                    .mus_in (mus_port_data),
+                    .kj_in  (kj_port_data),
 
-	               .gluclock_addr(gluclock_addr),
-	               .comport_addr (comport_addr),
-	               .wait_start_gluclock(wait_start_gluclock),
-	               .wait_start_comport (wait_start_comport),
-	               .wait_rnw  (wait_rnw),
-	               .wait_write(wait_write),
+                    .tape_read(tape_read),
+
+                    .gluclock_addr(gluclock_addr),
+                    .comport_addr (comport_addr),
+                    .wait_start_gluclock(wait_start_gluclock),
+                    .wait_start_comport (wait_start_comport),
+                    .wait_rnw  (wait_rnw),
+                    .wait_write(wait_write),
 `ifndef SIMULATE
-	               .wait_read (wait_read),
+                    .wait_read (wait_read),
 `else
-	               .wait_read(8'hFF),
+                    .wait_read(8'hFF),
 `endif
-					.atmF7_wr_fclk(atmF7_wr_fclk),
+					// .atmF7_wr_fclk(atmF7_wr_fclk),
 					// .rampage_wr (rampage_wr),
-			
-					.atm_scr_mode(atm_scr_mode),
-					.atm_pen     (pager_off),
-					.atm_cpm_n   (cpm_n),
-			
+
+					// .atm_scr_mode(atm_scr_mode),
+					// .atm_pen     (pager_off),
+					// .atm_cpm_n   (cpm_n),
+
 					// .p7ffd_ram0_0(p7ffd_ram0_0),
 					// .p7ffd_1m_on (p7ffd_1m_on),
 					// .p7ffd_page  (p7ffd_page),
 					// .p7ffd_ROM   (p7ffd_ROM),
-			
+
 					.beeper_wr(beeper_wr),
 					.covox_wr (covox_wr),
-			
+
 					.fnt_wr(fnt_wr),
 					.clr_nmi(clr_nmi),
-			
-			
+
+
 					// .pages(~{ rd_pages[7], rd_pages[6],
 							// rd_pages[5], rd_pages[4],
 							// rd_pages[3], rd_pages[2],
 							// rd_pages[1], rd_pages[0] }),
-			
+
 					// .ramnroms( rd_ramnrom),
 					// .dos7ffds( rd_dos7ffd),
-			
-					.external_port(external_port),
-			
-					.set_nmi(set_nmi[1])
+
+					.external_port(external_port)
+
+					// .set_nmi(set_nmi[1])
 	);
 
-	
+
 	wire dma_act;
 	wire dma_wait;
-	
+
 	dma dma(
 		.clk		(fclk),
 		.c2		    (c2),
         .rst_n		(rst_n),
-		
+
 		.zdata		(d),
 		.dmaport_wr	(dmaport_wr),
 		.dma_act	(dma_act),
 		.dma_wait	(dma_wait),
 		.rfsh_n     (rfsh_n),
-		
+
 		.dram_addr	(dma_addr),
 		.dram_rnw	(dma_rnw),
 		.dram_req	(dma_req),
-		.dram_rddata(rd),
+		.dram_rddata(dram_rd),
 		.dram_wrdata(dma_wrdata),
 		.dram_next	(dma_next)
 	);
-	
+
 
 	zint zint(
 		.fclk(fclk),
@@ -833,7 +894,7 @@ zmaps zmaps(
 
 
 
-	zwait zwait( 
+	zwait zwait(
                  .wait_start_gluclock(wait_start_gluclock),
 	             .wait_start_comport (wait_start_comport),
 	             .wait_end(wait_end),
