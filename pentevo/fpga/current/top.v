@@ -726,14 +726,14 @@ module top(
                     .zpos(zpos), .zneg(zneg),
                     .din(d), .dout(dout_ports), .dataout(ena_ports),
                     .a(a),
-                    
+
                     .rst_n(rst_n),
                     .iorq_n(iorq_n),
                     .mreq_n(mreq_n),
                     .m1_n(m1_n),
                     .rd_n(rd_n),
                     .wr_n(wr_n),
-                    
+
                     .iorq(iorq),
                     .iorq_s(iorq_s),
                     .mreq(mreq),
@@ -744,7 +744,7 @@ module top(
                     .rd(rd),
                     .wr(wr),
                     .rdwr(rdwr),
-                    
+
                     .porthit(porthit),
                     .ay_bdir(ay_bdir), .ay_bc1(ay_bc1),
                     .peff7(peff7),
@@ -804,18 +804,6 @@ module top(
 `else
                     .wait_read(8'hFF),
 `endif
-					// .atmF7_wr_fclk(atmF7_wr_fclk),
-					// .rampage_wr (rampage_wr),
-
-					// .atm_scr_mode(atm_scr_mode),
-					// .atm_pen     (pager_off),
-					// .atm_cpm_n   (cpm_n),
-
-					// .p7ffd_ram0_0(p7ffd_ram0_0),
-					// .p7ffd_1m_on (p7ffd_1m_on),
-					// .p7ffd_page  (p7ffd_page),
-					// .p7ffd_ROM   (p7ffd_ROM),
-
 					.beeper_wr(beeper_wr),
 					.covox_wr (covox_wr),
 
