@@ -33,7 +33,7 @@ module pager (
     wire win0 = ~|win;
     assign romnram = win0 & ~memconf[3] & !vdos;
     // assign romnram = win0 & ~memconf[3] & !(vdos & dos);
-    assign rw_en = !win0 | memconf[1];
+    assign rw_en = !win0 | memconf[1] | (win0 & vdos);
     assign page = xtpage[win];
 
     wire [7:0] xtpage[0:3];
