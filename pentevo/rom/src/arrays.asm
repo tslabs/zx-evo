@@ -84,7 +84,7 @@ SEL_AFQ
 		defb '3.546', 0
 		
 SEL_ZPL
-        defb ' Pulsar', 0   ; 0
+        defb 'Default', 0   ; 0
 		defb 'B.black', 0   ; 1
 		defb '   Pale', 0   ; 2
 		defb '   Dark', 0   ; 3
