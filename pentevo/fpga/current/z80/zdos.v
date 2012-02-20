@@ -17,7 +17,7 @@ module zdos(
 
 	output reg         dos,
 	output reg         vdos
-    
+
 );
 
 
@@ -27,7 +27,7 @@ module zdos(
 	begin
 		dos <= 1'b0;
 	end
-    
+
 	else
 	begin
         if (dos_off)
@@ -37,7 +37,7 @@ module zdos(
 			dos <= 1'b1;
 	end
 
-    
+
 // turn on and off virtdos
     always @(posedge fclk, negedge rst_n)
 	if( !rst_n )
@@ -50,6 +50,6 @@ module zdos(
         else
         if (vdos_off)
             vdos <= 1'b0;
-            
-    
+
+
 endmodule

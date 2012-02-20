@@ -95,7 +95,7 @@ module zmem(
 	reg cpu_rnw_r;
 
 
-	// this is for 7/3.5mhz  
+	// this is for 7/3.5mhz
 	wire cpureq_357;
 	reg ramrd_reg,ramwr_reg;
 
@@ -119,7 +119,7 @@ module zmem(
 	end
 
 	assign cpureq_357 = ( ramrd & (~ramrd_reg) ) | ( ramwr & (~ramwr_reg) );
-	
+
 
 
 
@@ -145,7 +145,7 @@ module zmem(
 	wire memwr   = (~mreq_n) && rd_n && rfsh_n && rw_en;
 
 
-	// wait tables: 
+	// wait tables:
 	//
 	// M1 opcode fetch, dram_beg coincides with:
 	// c3:      +3
@@ -245,7 +245,7 @@ module zmem(
 	begin
 		cached_addr_valid <= 1'b0;
 	end
-    
+
 	else
 	begin
 		if( (zneg && r_mreq_n && (!mreq_n) && rfsh_n && romnram)
@@ -283,32 +283,32 @@ module zmem(
 	// assign vdos_off = vd_off[2];
     // wire opf_end = !opfetch & opf_r;       // 1 clk strobe after !M1 & !RD
     // wire mrd_end = !memrd & mrd_r;         // 1 clk strobe after !MRQ & !RD
-	
-    
+
+
     // always @(posedge fclk)
     // begin
         // opf_r <= opfetch;
         // mrd_r <= memrd;
-        
+
         // if (opfetch)
             // opc <= zd_out;
     // end
-	
-	
+
+
     // always @(posedge fclk)
     // begin
 		// if (opf_end)
         // begin
 			// opDD_r <= (opc == 8'hDD);
-            
+
             // if ((opc == 8'hC3) & opDD_r)
                 // vd_off[0] <= 1'b1;
 		// end
-        
+
         // else
 		// if (mrd_end)
 			// vd_off[2:0] <= {vd_off[1:0], 1'b0};
     // end
 
-	
+
 endmodule
