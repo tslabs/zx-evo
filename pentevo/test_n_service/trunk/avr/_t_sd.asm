@@ -64,13 +64,13 @@ WIND_TSD2:
 ;
 .EQU    TSD_BLS0        =4
 .EQU    TSD_BLS1        =5
-.EQU    TSD_ARG_ACMD41  =17
-.EQU    TSD_CARDTYPE    =18
-.EQU    TSD_Y           =19
+.EQU    TSD_ARG_ACMD41  =18
+.EQU    TSD_CARDTYPE    =19
+.EQU    TSD_Y           =20
 ;
 ;--------------------------------------
 ;
-TESTSD: GETMEM  20
+TESTSD: GETMEM  21
 ;
 T_SD00: CBR     FLAGS1,0B00000011
         SBR     FLAGS1,0B00000100
@@ -105,7 +105,7 @@ T_SD01: RCALL   T_SD_SENSORS
         CPI     DATA,KEY_ESC
         BRNE    T_SD01
         CBR     FLAGS1,0B00001000
-        FREEMEM 20
+        FREEMEM 21
         RET
 ;
 T_SD03: STH     TSD_Y,ONE
@@ -271,7 +271,7 @@ T_SD20: LDI     TEMP,SD_CS0
         CPI     DATA,$FF
         BREQ    T_SD30
         MOVW    XL,YL
-        LDI     COUNT,17
+        LDI     COUNT,18
 T_SD21: CALL    SD_RECEIVE
         ST      X+,DATA
         DEC     COUNT
@@ -301,7 +301,7 @@ T_SD30: LDI     TEMP,SD_CS0
         BRNE    T_SD31
 T_SD39: RJMP    T_SD90
 T_SD31: MOVW    XL,YL
-        LDI     COUNT,17
+        LDI     COUNT,18
 T_SD32: CALL    SD_RECEIVE
         ST      X+,DATA
         DEC     COUNT
