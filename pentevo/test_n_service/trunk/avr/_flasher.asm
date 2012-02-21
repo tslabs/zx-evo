@@ -3,7 +3,7 @@
 ;ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿01    ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
 ;³ Exit          ³³..          ³ <DIR>³31.12.09³23:58³02    ³ ‚ëå®¤         ³
 ;³ Retrieve all  ³³Ž‚€Ÿ~1    ³ <DIR>³31.12.09³23:58³03    ³ ‚áñ á­®¢      ³
-;³ Erase chip    ³³NEWFOL~1    ³ <DIR>³31.12.09³23:58³04    ³ ‘â¥à¥âì ¬/áå. ³
+;³ûErase chip    ³³NEWFOL~1    ³ <DIR>³31.12.09³23:58³04    ³ ‘â¥à¥âì ¬/áå. ³
 ;³ Add job       ³³testram  rom³  2048³31.12.09³23:58³05    ³ „®¡ ¢.§ ¤ ­¨¥ ³
 ;³ Execute jobs  ³³filename rom³524288³31.12.09³23:58³06    ³ ‚ë¯®«­¨âì     ³
 ;ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ³zxevo    rom³ 65536³31.12.09³23:58³07    ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
@@ -13,7 +13,7 @@
 ;³ SDcard: FAT32 ³³some     rom³   123³31.12.09³23:58³11    ³  No SD-card!  ³
 ;³ Erase...      ³³onemore  bin³  9876³31.12.09³23:58³12    ³ Verify...     ³
 ;ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ13    ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
-;ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ [û] Erase chip ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿14
+;ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿14
 ;³gluk     rom trdos610 rom basic128 rom basic48  rom³15     á¥ªâ®à®¢(1)  ­ ç.ª« áâ¥à(4)  ¨¬ï(8+3)  |  ¨â®£® ­  ïç¥©ªã 16
 ;³............ ............ ............ ............³16                                            |  ¨â®£® ­  ¢áñ   512
 ;³............ ............ ............ ............³17
@@ -39,7 +39,7 @@ MSG_FL_CRC:
 MSG_FL_SDCARD:
         .DB     $16, 2,11,        "SDcard: FAT"  ,0,0
 MSG_FL_ERASECHIP:
-        .DB     $16,19,14,$15,$9F," [",$FB,"] Erase chip ",0
+        .DB     $16,1,4,$FB,0,0
 MSG_FL_ERRPOS:
         .DB     $16, 1,11,$15,$AE,0
 ;
@@ -1503,6 +1503,12 @@ FL_CPT7:LD      DATA,Z+
 ;======================================
 ;
 FLMENU_PUTCURSOR:
+        LDH     DATA,FLSH_ERASE
+        CPI     DATA,$FF
+        BRNE    FPM_PC5
+        LDIZ    MSG_FL_ERASECHIP*2
+        CALL    SCR_PRINTSTRZ
+FPM_PC5:
         CLR     COUNT
         LDI     TEMP,0B00000001
 FPM_PC4:STH     FLSH_COUNT,COUNT
@@ -2016,13 +2022,7 @@ FL_SHW5:LDH     XH,FLSH_TEMP2
         INC     COUNT
         CPI     COUNT,32
         BRCS    FL_SHW1
-
-        LDH     DATA,FLSH_ERASE
-        CPI     DATA,$FF
-        BRNE    FL_SHW6
-        LDIZ    MSG_FL_ERASECHIP*2
-        CALL    SCR_PRINTSTRZ
-FL_SHW6:RET
+        RET
 ;
 ;======================================
 ;
