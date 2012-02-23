@@ -5,15 +5,15 @@
 //
 // short diagram for speed=0 (Fclk/Fspi=2, no rdy shown)
 //
-// clk:   ^  ^  ^  ^  ^  ^  ^  ^  ^  ^  ^  ^  ^  ^  ^  ^  ^  ^  ^  ^  ^  ^  ^  ^ (positive edges)
-// counter: |00|00|10|11|12|13|14|15|16|17|18|19|1A|1B|1C|1D|1E|1F|00|00|00 // internal!
-// sck:   ___________/``\__/``\__/``\__/``\__/``\__/``\__/``\__/``\_______
-// sdo:   --------< do7 X do6 X do5 X do4 X do3 X do2 X do1 X do0 >-------
-// sdi:   --------< di7 X di6 X di5 X di4 X di3 X di2 X di1 X di0 >-------
-// bsync: ________/`````\_________________________________________________
-// start: _____/``\_______________________________________________________
-// din:   -----<IN>-------------------------------------------------------
-// dout:   old old old old old old old old old old old old old | new new new
+// clk:     ^  ^  ^  ^  ^  ^  ^  ^  ^  ^  ^  ^  ^  ^  ^  ^  ^  ^  ^  ^  ^  ^  ^  ^ (positive edges)
+// counter: 00|00|00|10|11|12|13|14|15|16|17|18|19|1A|1B|1C|1D|1E|1F|00|00|00 // internal!
+// sck:     ___________/``\__/``\__/``\__/``\__/``\__/``\__/``\__/``\_______
+// sdo:     --------< do7 | do6 | do5 | do4 | do3 | do2 | do1 | do0 >-------
+// sdi:     --------< di7 | di6 | di5 | di4 | di3 | di2 | di1 | di0 >-------
+// bsync:   ________/`````\_________________________________________________
+// start:   _____/``\_______________________________________________________
+// din:     -----<IN>-------------------------------------------------------
+// dout:     old old old old old old old old old old old old old | new new new
 //
 // data on sdo must be latched by slave on rising sck edge. data on sdo changes on falling edge of sck
 //
@@ -62,61 +62,18 @@
 
 module spi2(
 
-	clk, // system clk
-
-	sck,   // SPI bus pins...
-	sdo,   //
-	sdi,   //
-	bsync, // ...and bsync for vs1001
-
-	start, // positive strobe that starts transfer
-	rdy,   // ready (idle) - when module can accept data
-
-	speed, // =2'b00 - sck full speed (1/2 of clk), =2'b01 - half (1/4 of clk), =2'b10 - one fourth (1/8 of clk), =2'b11 - one eighth (1/16 of clk)
-
-	din,  // input
-	dout  // and output 8bit busses
+	input  wire       clk,      // system clk
+	output wire       sck,      // SPI bus pins...
+	output wire       sdo,      //
+	input  wire       sdi,      //
+	output reg        bsync,    // ...and bsync for vs1001
+	input  wire       start,    // positive strobe that starts transfer
+	output wire       rdy,      // ready (idle) - when module can accept data
+	input  wire [1:0] speed,    // =2'b00 - sck full speed (1/2 of clk), =2'b01 - half (1/4 of clk), =2'b10 - one fourth (1/8 of clk), =2'b11 - one eighth (1/16 of clk)
+	input  wire [7:0] din,      // input
+	output reg  [7:0] dout      // and output 8bit busses
 );
 
-	input clk;
-
-
-	output sck;
-	wire   sck;
-
-	output sdo;
-
-	input sdi;
-
-	output reg bsync;
-
-	input start;
-
-	output rdy;
-
-
-	input [1:0] speed;
-
-	input [7:0] din;
-
-	output reg [7:0] dout;
-
-
-
-	// internal regs
-
-	reg [4:0] counter; // governs transmission
-
-	wire enable_n; // =1 when transmission in progress
-
-	reg [6:0] shiftin; // shifting in data from sdi before emitting it on dout
-
-	reg [7:0] shiftout; // shifting out data to the sdo
-
-	wire ena_shout_load; // enable load of shiftout register
-
-	wire g_ena;
-	reg [2:0] wcnt;
 
 
 	initial // for simulation only!
@@ -136,40 +93,40 @@ module spi2(
 	assign sck = counter[0];
 
 	// enable_n is high bit of counter
-	assign enable_n = counter[4];
+	wire enable_n = counter[4];         // =1 when transmission in progress
 
 	// sdo is high bit of shiftout
 	assign sdo = shiftout[7];
 
-	assign ena_shout_load = (start | sck) & g_ena;
+	wire ena_shout_load = (start | sck) & g_ena;     // enable load of shiftout register
 
 
-
-
+	reg [6:0] shiftin; // shifting in data from sdi before emitting it on dout
+	reg [4:0] counter; // governs transmission
 	always @(posedge clk)
 	begin
-		if( g_ena )
+		if (g_ena)
 		begin
-			if( start )
+			if (start)
 			begin
 				counter <= 5'b00000; // enable_n = 0; sck = 0;
 				bsync <= 1'b1; // begin bsync pulse
 			end
 			else
 			begin
-				if( !sck ) // on the rising edge of sck
+				if (!sck) // on the rising edge of sck
 				begin
       	                  shiftin[6:0] <= { shiftin[5:0], sdi };
 
-					if( (&counter[3:1]) && (!enable_n) )
-						dout <= { shiftin[6:0], sdi }; // update dout at the last sck rising edge
+					if ((&counter[3:1]) && (!enable_n))
+						dout <= {shiftin[6:0], sdi}; // update dout at the last sck rising edge
 				end
 				else // on the falling edge of sck
 				begin
 					bsync <= 1'b0;
 				end
 
-				if( !enable_n )
+				if (!enable_n)
 					counter <= counter + 5'd1;
 			end
 		end
@@ -177,11 +134,12 @@ module spi2(
 
 
 	// shiftout treatment is done so just to save LCELLs in acex1k
+	reg [7:0] shiftout; // shifting out data to the sdo
 	always @(posedge clk)
 	begin
-		if( ena_shout_load )
+		if (ena_shout_load)
 		begin
-			if( start )
+			if (start)
 				shiftout <= din;
 			else // sck
 				shiftout[7:0] <= { shiftout[6:0], shiftout[0] }; // last bit remains after end of exchange
@@ -189,14 +147,15 @@ module spi2(
 	end
 
 
-	// slow speeds - governed by g_ena
+	// slow speeds - controlled by g_ena
+	reg [2:0] wcnt;
 	always @(posedge clk)
 	begin
-		if( speed!=2'b00 )
+		if (|speed)
 		begin
-			if( start )
+			if (start)
 				wcnt <= 3'b001;
-			else if( enable_n )
+			else if (enable_n)
 				wcnt <= 3'b000;
 			else
 				wcnt <= wcnt + 3'd1;
@@ -205,11 +164,13 @@ module spi2(
 			wcnt <= 3'b000;
 	end
 
-	assign g_ena = (speed==2'b00) ? 1'b1 :
-	               (speed==2'b01) ? (wcnt[0]  == 1'b0   ) :
-	               (speed==2'b10) ? (wcnt[1:0]== 2'b00  ) :
-	                                (wcnt[2:0]== 3'b000 ) ;
+    
+	wire g_ena = g_en[speed];
+    wire g_en[0:3];
+    assign g_en[0] = 1'b1;
+    assign g_en[1] = ~|wcnt[0];
+    assign g_en[2] = ~|wcnt[1:0];
+    assign g_en[3] = ~|wcnt[2:0];
 
-
+    
 endmodule
-

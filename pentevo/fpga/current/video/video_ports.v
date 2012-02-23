@@ -26,7 +26,10 @@ module video_ports (
     input wire        y_offsh_wr,
     input wire        tsconf_wr,
     input wire        palsel_wr,
-    input wire        tgpage_wr,
+    input wire        tmpage_wr,
+    input wire        t0gpage_wr,	
+    input wire        t1gpage_wr,	
+    input wire        sgpage_wr,
     input wire        hint_beg_wr ,
     input wire        vint_begl_wr,
     input wire        vint_begh_wr,
@@ -41,7 +44,10 @@ module video_ports (
 	output reg [7:0] hint_beg,
 	output reg [8:0] vint_beg,
 	output reg [7:0] tsconf,
-	output reg [4:0] tgpage
+	output reg [7:0] tmpage,
+	output reg [7:0] t0gpage,
+	output reg [7:0] t1gpage,
+	output reg [7:0] sgpage
 	
  );
  
@@ -72,7 +78,10 @@ module video_ports (
 			if (y_offsh_wr  )   y_offs[8]       <= d[0];
 			if (tsconf_wr   )   tsconf          <= d;
 			if (palsel_wr   )   palsel          <= d[3:0];
-			if (tgpage_wr   )   tgpage          <= d[7:3];
+			if (tmpage_wr	)   tmpage          <= d;
+			if (t0gpage_wr	)   t0gpage         <= d;
+			if (t1gpage_wr	)   t1gpage         <= d;
+			if (sgpage_wr	)   sgpage          <= d;
 			if (hint_beg_wr )   hint_beg        <= d;
 			if (vint_begl_wr)   vint_beg[7:0]   <= d;
 			if (vint_begh_wr)   vint_beg[8]     <= d[0];

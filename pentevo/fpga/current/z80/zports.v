@@ -66,7 +66,10 @@ module zports(
     output wire y_offsh_wr	,
     output wire tsconf_wr	,
     output wire palsel_wr	,
-    output wire tgpage_wr	,
+    output wire tmpage_wr	,
+    output wire t0gpage_wr	,
+    output wire t1gpage_wr	,
+    output wire sgpage_wr	,
     output wire hint_beg_wr ,
     output wire vint_begl_wr,
     output wire vint_begh_wr,
@@ -201,13 +204,16 @@ module zports(
 	localparam YOFFSH		= 8'h05;
 	localparam TSCONF		= 8'h06;
 	localparam PALSEL 		= 8'h07;
+	localparam TMPAGE		= 8'h08;
+	localparam T0GPAGE		= 8'h09;
+	localparam T1GPAGE		= 8'h0A;
+	localparam SGPAGE		= 8'h0B;
 	localparam XBORDER		= 8'h0F;
 
 	localparam RAMPAGE		= 8'h10;	// this uses #10-#13
 	localparam NWRADDR		= 8'h14;
 	localparam FMADDR		= 8'h15;
 	localparam RAMPAGES		= 8'h16;	// this uses #16-#17
-	localparam TGPAGE		= 8'h18;
 	localparam DMASADDRL	= 8'h1A;
 	localparam DMASADDRH	= 8'h1B;
 	localparam DMASADDRX	= 8'h1C;
@@ -428,7 +434,10 @@ module zports(
     assign y_offsh_wr	= (portxt_wr & (hoa == YOFFSH));
     assign tsconf_wr	= (portxt_wr & (hoa == TSCONF));
     assign palsel_wr	= (portxt_wr & (hoa == PALSEL));
-	assign tgpage_wr	= (portxt_wr & (hoa == TGPAGE));
+	assign tmpage_wr	= (portxt_wr & (hoa == TMPAGE));
+	assign t0gpage_wr	= (portxt_wr & (hoa == T0GPAGE));
+	assign t1gpage_wr	= (portxt_wr & (hoa == T1GPAGE));
+	assign sgpage_wr	= (portxt_wr & (hoa == SGPAGE));
     assign hint_beg_wr  = (portxt_wr & (hoa == HSINT ));
     assign vint_begl_wr = (portxt_wr & (hoa == VSINTL));
     assign vint_begh_wr = (portxt_wr & (hoa == VSINTH));
