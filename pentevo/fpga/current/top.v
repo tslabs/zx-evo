@@ -558,7 +558,10 @@ module top(
         wire vint_begl_wr;
         wire vint_begh_wr;
         wire tsconf_wr	 ;
-        wire tgpage_wr	 ;
+        wire tmpage_wr	 ;
+        wire t0gpage_wr	 ;
+        wire t1gpage_wr	 ;
+        wire sgpage_wr	 ;
 
     // wire [1:0] vred0;
     // assign vred = vred0 | {2{t}};
@@ -596,7 +599,10 @@ module top(
 		.vint_begl_wr   (vint_begl_wr),
 		.vint_begh_wr   (vint_begh_wr),
 		.tsconf_wr	    (tsconf_wr),
-		.tgpage_wr	    (tgpage_wr),
+		.tmpage_wr	    (tmpage_wr),
+		.t0gpage_wr	    (t0gpage_wr),
+		.t1gpage_wr	    (t1gpage_wr),
+		.sgpage_wr	    (sgpage_wr),
 
 		.video_addr     (video_addr),
 		.video_bw		(video_bw),
@@ -768,7 +774,10 @@ module top(
 					.vint_begl_wr   (vint_begl_wr),
 					.vint_begh_wr   (vint_begh_wr),
 					.tsconf_wr	    (tsconf_wr),
-					.tgpage_wr	    (tgpage_wr),
+					.tmpage_wr	    (tmpage_wr),
+					.t0gpage_wr	    (t0gpage_wr),
+					.t1gpage_wr	    (t1gpage_wr),
+					.sgpage_wr	    (sgpage_wr),
 
 					.xt_page (xt_page),
 

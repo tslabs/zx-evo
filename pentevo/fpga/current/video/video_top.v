@@ -42,7 +42,10 @@ module video_top (
     input wire        y_offsh_wr,
     input wire        tsconf_wr,
     input wire        palsel_wr,
-    input wire        tgpage_wr,
+    input wire        tmpage_wr,
+    input wire        t0gpage_wr,
+    input wire        t1gpage_wr,
+    input wire        sgpage_wr,
     input wire        hint_beg_wr ,
     input wire        vint_begl_wr,
     input wire        vint_begh_wr,
@@ -75,8 +78,11 @@ module video_top (
 	wire [8:0] x_offs;     // re-latched at line_start
 	wire [8:0] y_offs;     //
 	wire [3:0] palsel;     //
-	wire [7:0] tsconf;          // re-latch!
-	wire [4:0] tgpage;          //  these
+	wire [7:0] tsconf;          // re-latch these!
+	wire [7:0] tmpage;          //  
+	wire [7:0] t0gpage;         //  
+	wire [7:0] t1gpage;         //  
+	wire [7:0] sgpage;          //  
 	wire [7:0] vpage_d;
     wire [3:0] palsel_d;
 	wire [7:0] hint_beg;
@@ -172,7 +178,10 @@ module video_top (
     	.vint_begl_wr   (vint_begl_wr),
     	.vint_begh_wr   (vint_begh_wr),
     	.tsconf_wr	    (tsconf_wr),
-    	.tgpage_wr	    (tgpage_wr),
+    	.tmpage_wr	    (tmpage_wr),
+    	.t0gpage_wr	    (t0gpage_wr),
+    	.t1gpage_wr	    (t1gpage_wr),
+    	.sgpage_wr	    (sgpage_wr),
         .border         (border),
         .vpage          (vpage),
         .vconf          (vconf),
@@ -182,7 +191,10 @@ module video_top (
         .hint_beg       (hint_beg),
         .vint_beg       (vint_beg),
         .tsconf         (tsconf),
-        .tgpage         (tgpage)
+        .tmpage         (tmpage),
+        .t0gpage        (t0gpage),
+        .t1gpage        (t1gpage),
+        .sgpage         (sgpage)
 );
 
 
