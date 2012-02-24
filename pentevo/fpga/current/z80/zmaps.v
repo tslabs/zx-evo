@@ -6,11 +6,10 @@
 module zmaps(
 
 // Z80 controls
-	input wire mreq_n,
-	input wire wr_n,
+	input wire clk,
+	input wire memwr_s,
 	input wire [15:0] a,
 	input wire [7:0] d,
-	input wire zclk,
 	
 // config data
 	input wire [4:0] fmaddr,
@@ -31,8 +30,7 @@ module zmaps(
 	
 
 // control signals
-	wire mwr = ~(mreq_n | wr_n);
-	wire hit = (a[15:12] == fmaddr[3:0]) & fmaddr[4] & mwr;
+	wire hit = (a[15:12] == fmaddr[3:0]) & fmaddr[4] & memwr_s;
 	
 
 // write enables
@@ -41,7 +39,7 @@ module zmaps(
 
 	
 // LSB fetching
-	always @(posedge zclk)
+	always @(posedge clk)
 		if (!a[0] & hit)
 			zmd <= d;
 

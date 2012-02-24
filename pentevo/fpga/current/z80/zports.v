@@ -31,6 +31,7 @@ module zports(
 	input  wire        m1,
 	input  wire        iord,
 	input  wire        iowr,
+	input  wire        iowr_s,
 	input  wire        iorw,
 	input  wire        rd,
 	input  wire        wr,
@@ -388,9 +389,9 @@ module zports(
 	end
 
 
-	wire portxt_wr    = ((loa==PORTXT) && iowr);
-	wire portfe_wr    = ((loa==PORTFE) && iowr);
-	wire portfd_wr    = ((loa==PORTFD) && iowr);
+	wire portxt_wr    = ((loa==PORTXT) && iowr_s);
+	wire portfe_wr    = ((loa==PORTFE) && iowr_s);
+	wire portfd_wr    = ((loa==PORTFD) && iowr_s);
 
 	// F7 ports (like EFF7) are accessible in dos mode but at addresses like EEF7, DEF7, BEF7 so that
 	// there are no conflicts in dos mode with ATM xFF7 and x7F7 ports
@@ -441,7 +442,7 @@ module zports(
     wire lock128 = (memconf[7:6] == 2'b01);
    	assign romrw_en = memconf[1];
 
-	always @(posedge zclk)
+	always @(posedge fclk)
 		if (!rst_n)
 		begin
 			fmaddr[4] <= 1'b0;
@@ -607,7 +608,7 @@ module zports(
 	wire block1m;
 	wire p7ffd_wr = !a[15] && portfd_wr && !block7ffd;
 
-	always @(posedge zclk)
+	always @(posedge fclk)
 	begin
 		if (!rst_n)
 		begin
