@@ -15,31 +15,43 @@ module video_ports (
     input wire        res,    
     
 // port write strobes
-    input wire        zborder_wr,
-    input wire        border_wr,
-    input wire        zvpage_wr,
-    input wire        vpage_wr,
-    input wire        vconf_wr,
-    input wire        x_offsl_wr,
-    input wire        x_offsh_wr,
-    input wire        y_offsl_wr,
-    input wire        y_offsh_wr,
-    input wire        tsconf_wr,
-    input wire        palsel_wr,
-    input wire        tmpage_wr,
-    input wire        t0gpage_wr,	
-    input wire        t1gpage_wr,	
-    input wire        sgpage_wr,
-    input wire        hint_beg_wr ,
-    input wire        vint_begl_wr,
-    input wire        vint_begh_wr,
+    input wire zborder_wr,
+    input wire border_wr,
+    input wire zvpage_wr,
+    input wire vpage_wr,
+    input wire vconf_wr,
+    input wire gx_offsl_wr,
+    input wire gx_offsh_wr,
+    input wire gy_offsl_wr,
+    input wire gy_offsh_wr,
+    input wire t0x_offsl_wr,
+    input wire t0x_offsh_wr,
+    input wire t0y_offsl_wr,
+    input wire t0y_offsh_wr,
+    input wire t1x_offsl_wr,
+    input wire t1x_offsh_wr,
+    input wire t1y_offsl_wr,
+    input wire t1y_offsh_wr,
+    input wire tsconf_wr,
+    input wire palsel_wr,
+    input wire tmpage_wr,
+    input wire t0gpage_wr,	
+    input wire t1gpage_wr,	
+    input wire sgpage_wr,
+    input wire hint_beg_wr ,
+    input wire vint_begl_wr,
+    input wire vint_begh_wr,
 
 // video parameters
 	output reg [7:0] border,
 	output reg [7:0] vpage, 
 	output reg [7:0] vconf, 
-	output reg [8:0] x_offs,
-	output reg [8:0] y_offs,
+	output reg [8:0] gx_offs,
+	output reg [8:0] gy_offs,
+	output reg [8:0] t0x_offs,
+	output reg [8:0] t0y_offs,
+	output reg [8:0] t1x_offs,
+	output reg [8:0] t1y_offs,
 	output reg [3:0] palsel,
 	output reg [7:0] hint_beg,
 	output reg [8:0] vint_beg,
@@ -57,8 +69,12 @@ module video_ports (
 		begin
 			vpage       <= 8'h05;
    			vconf       <= 8'h00;
-			x_offs      <= 9'b0;
-			y_offs      <= 9'b0;
+			gx_offs     <= 9'b0;
+			gy_offs     <= 9'b0;
+			t0x_offs    <= 9'b0;
+			t0y_offs    <= 9'b0;
+			t1x_offs    <= 9'b0;
+			t1y_offs    <= 9'b0;
 			tsconf[7:5] <= 3'b0;
 			palsel      <= 4'hF;
 			hint_beg    <= 8'd2;	// pentagon default
@@ -72,10 +88,18 @@ module video_ports (
             if (zvpage_wr	)   vpage           <= {6'b000001, d[3], 1'b1};
             if (vpage_wr	)   vpage           <= d;
             if (vconf_wr    )   vconf           <= d;
-			if (x_offsl_wr  )   x_offs[7:0]     <= d;
-			if (x_offsh_wr  )   x_offs[8]       <= d[0];
-			if (y_offsl_wr  )   y_offs[7:0]     <= d;
-			if (y_offsh_wr  )   y_offs[8]       <= d[0];
+			if (gx_offsl_wr	)   gx_offs[7:0]    <= d;
+			if (gx_offsh_wr	)   gx_offs[8]      <= d[0];
+			if (gy_offsl_wr	)   gy_offs[7:0]    <= d;
+			if (gy_offsh_wr	)   gy_offs[8]      <= d[0];
+			if (t0x_offsl_wr)   t0x_offs[7:0]   <= d;
+			if (t0x_offsh_wr)   t0x_offs[8]     <= d[0];
+			if (t0y_offsl_wr)   t0y_offs[7:0]   <= d;
+			if (t0y_offsh_wr)   t0y_offs[8]     <= d[0];
+			if (t1x_offsl_wr)   t1x_offs[7:0]   <= d;
+			if (t1x_offsh_wr)   t1x_offs[8]     <= d[0];
+			if (t1y_offsl_wr)   t1y_offs[7:0]   <= d;
+			if (t1y_offsh_wr)   t1y_offs[8]     <= d[0];
 			if (tsconf_wr   )   tsconf          <= d;
 			if (palsel_wr   )   palsel          <= d[3:0];
 			if (tmpage_wr	)   tmpage          <= d;

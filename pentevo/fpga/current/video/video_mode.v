@@ -16,7 +16,7 @@ module video_mode (
 	output reg [3:0] palsel_d,
 	
 // video parameters & mode controls
-	input  wire [8:0] x_offs,
+	input  wire [8:0] gx_offs,
 	output wire [9:0] x_offs_mode,
 	output wire [8:0] hpix_beg,
 	output wire [8:0] hpix_end,
@@ -68,12 +68,12 @@ module video_mode (
 	
 // latching regs at line start, delaying hires for 1 line
     reg [7:0] vconf_d;
-    reg [8:0] x_offs_d;
+    reg [8:0] gx_offs_d;
     
     always @(posedge clk) if (line_start & c3)
     begin
         vconf_d <= vconf;
-        x_offs_d <= x_offs;
+        gx_offs_d <= gx_offs;
         palsel_d <= palsel;
 		
         vga_hires <= tv_hires;
@@ -171,7 +171,7 @@ module video_mode (
 	
 
 // X offset
-	assign x_offs_mode = {vmod == M_XC ? {x_offs_d[8:1], 1'b0} : {1'b0, x_offs_d[8:1]}, x_offs_d[0]};
+	assign x_offs_mode = {vmod == M_XC ? {gx_offs_d[8:1], 1'b0} : {1'b0, gx_offs_d[8:1]}, gx_offs_d[0]};
 
 	
 // DRAM bandwidth usage
