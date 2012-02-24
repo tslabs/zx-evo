@@ -64,6 +64,7 @@ module video_top (
 	input  wire        video_strobe,
 	output wire [20:0] ts_addr,
 	output wire        ts_req,
+	input  wire        ts_pre_next,
 	input  wire        ts_next,
 
 // video controls
@@ -79,10 +80,10 @@ module video_top (
 	wire [8:0] y_offs;     //
 	wire [3:0] palsel;     //
 	wire [7:0] tsconf;          // re-latch these!
-	wire [7:0] tmpage;          //  
-	wire [7:0] t0gpage;         //  
-	wire [7:0] t1gpage;         //  
-	wire [7:0] sgpage;          //  
+	wire [7:0] tmpage;          //
+	wire [7:0] t0gpage;         //
+	wire [7:0] t1gpage;         //
+	wire [7:0] sgpage;          //
 	wire [7:0] vpage_d;
     wire [3:0] palsel_d;
 	wire [7:0] hint_beg;
@@ -99,7 +100,7 @@ module video_top (
 	wire vga_hires;
 	wire nogfx;
 	wire tv_blank;
-    
+
 // counters
     wire [7:0] cnt_col;
     wire [8:0] cnt_row;
@@ -107,7 +108,7 @@ module video_top (
 	wire cptr;
     wire [3:0] scnt;
 	wire [8:0] lcount;
-    
+
 // synchro
 	wire frame_start;
 	wire line_start;
@@ -130,18 +131,18 @@ module video_top (
 	wire [3:0] fetch_sel;
 	wire [1:0] fetch_bsl;
 	wire fetch_stb;
-    
+
 // video data
  	wire [7:0] border;
 	wire [7:0] vplex;
 	wire [7:0] vgaplex;
-    
+
 // TS
     wire ts_render_done;
     wire [20:0] tsg_addr;
     wire ts_rld;
-    
-// TM-buf    
+
+// TM-buf
     wire [8:0] tmb_waddr;
     wire [8:0] tmb_raddr;
     wire [15:0] tmb_rdata;
@@ -320,14 +321,14 @@ module video_top (
 
 	video_ts_render video_ts_render (
 		.clk		    (clk),
-        .reset          (line_start & c3),
+        .reset          (line_start & c2),
         // .go             (tspix_start & c0),       // debug!!!
         .go             (0),       // debug!!!
         // .reload         (ts_rld),
         // .reload         (tspix_start & c0),       // debug!!!
-        .reload         (0),       // debug!!!
+        .reload         (1),       // debug!!!
         .x_coord        (0),
-        .x_size         (0),
+        .x_size         (7),
         .x_flip         (0),
         // .addr           (tsg_addr),
         .addr           (0),
@@ -339,6 +340,7 @@ module video_top (
         .dram_addr      (ts_addr),
         .dram_req       (ts_req),
         .dram_rdata     (dram_rdata),
+        .dram_pre_next  (ts_pre_next),
         .dram_next      (ts_next)
 );
 
@@ -409,7 +411,7 @@ module video_top (
     wire       ts_we1    = tl_act1 ? c3 : ts_we;
     wire [7:0] ts_rdata  = tl_act0 ? ts_rdata0 : ts_rdata1;
     wire [7:0] ts_rdata0, ts_rdata1;
-    
+
     video_tsline0 video_tsline0 (
         .clock      (clk),
         .wraddress  (ts_waddr0),
