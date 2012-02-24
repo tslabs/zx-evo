@@ -61,10 +61,18 @@ module zports(
     output wire zvpage_wr	,
     output wire vpage_wr	,
     output wire vconf_wr	,
-    output wire x_offsl_wr	,
-    output wire x_offsh_wr	,
-    output wire y_offsl_wr	,
-    output wire y_offsh_wr	,
+    output wire gx_offsl_wr	,
+    output wire gx_offsh_wr	,
+    output wire gy_offsl_wr	,
+    output wire gy_offsh_wr	,
+    output wire t0x_offsl_wr,
+    output wire t0x_offsh_wr,
+    output wire t0y_offsl_wr,
+    output wire t0y_offsh_wr,
+    output wire t1x_offsl_wr,
+    output wire t1x_offsh_wr,
+    output wire t1y_offsl_wr,
+    output wire t1y_offsh_wr,
     output wire tsconf_wr	,
     output wire palsel_wr	,
     output wire tmpage_wr	,
@@ -149,7 +157,6 @@ module zports(
 
 	reg rstsync1,rstsync2;
 
-
 	localparam PORTFE = 8'hFE;
 	localparam PORTXT = 8'hAF;
 	localparam PORTF7 = 8'hF7;
@@ -186,46 +193,6 @@ module zports(
 
 	localparam COVOX   = 8'hFB;
 
-
-//eXTension port #nnAF
-
-	localparam VCONF		= 8'h00;
-	localparam VPAGE		= 8'h01;
-	localparam XOFFSL		= 8'h02;
-	localparam XOFFSH		= 8'h03;
-	localparam YOFFSL		= 8'h04;
-	localparam YOFFSH		= 8'h05;
-	localparam TSCONF		= 8'h06;
-	localparam PALSEL 		= 8'h07;
-	localparam TMPAGE		= 8'h08;
-	localparam T0GPAGE		= 8'h09;
-	localparam T1GPAGE		= 8'h0A;
-	localparam SGPAGE		= 8'h0B;
-	localparam XBORDER		= 8'h0F;
-
-	localparam RAMPAGE		= 8'h10;	// this uses #10-#13
-	localparam NWRADDR		= 8'h14;
-	localparam FMADDR		= 8'h15;
-	localparam RAMPAGES		= 8'h16;	// this uses #16-#17
-	localparam DMASADDRL	= 8'h1A;
-	localparam DMASADDRH	= 8'h1B;
-	localparam DMASADDRX	= 8'h1C;
-	localparam DMADADDRL	= 8'h1D;
-	localparam DMADADDRH	= 8'h1E;
-	localparam DMADADDRX	= 8'h1F;
-
-	localparam SYSCONF		= 8'h20;
-	localparam MEMCONF		= 8'h21;
-	localparam HSINT		= 8'h22;
-	localparam VSINTL		= 8'h23;
-	localparam VSINTH		= 8'h24;
-	localparam IM2VECT		= 8'h25;
-	localparam DMALEN		= 8'h26;
-	localparam DMACTRL		= 8'h27;
-	localparam DMANUM		= 8'h28;
-	localparam FDDVIRT		= 8'h29;
-
-	localparam XSTAT		= 8'h00;
 
 	reg port_wr;
 	reg port_rd;
@@ -389,10 +356,6 @@ module zports(
 	end
 
 
-	wire portxt_wr    = ((loa==PORTXT) && iowr_s);
-	wire portfe_wr    = ((loa==PORTFE) && iowr_s);
-	wire portfd_wr    = ((loa==PORTFD) && iowr_s);
-
 	// F7 ports (like EFF7) are accessible in dos mode but at addresses like EEF7, DEF7, BEF7 so that
 	// there are no conflicts in dos mode with ATM xFF7 and x7F7 ports
 	wire portf7_wr    = ( (loa==PORTF7) && (a[8]==1'b1) && port_wr && (!dos) ) ||
@@ -404,8 +367,61 @@ module zports(
 	wire comport_wr   = ( (loa==COMPORT) && port_wr);
 	wire comport_rd   = ( (loa==COMPORT) && port_rd);
 
+	wire portxt_wr    = ((loa==PORTXT) && iowr_s);
+	wire portfe_wr    = ((loa==PORTFE) && iowr_s);
+	wire portfd_wr    = ((loa==PORTFD) && iowr_s);
+
 
 //eXTension port #nnAF
+
+	localparam VCONF		= 8'h00;
+	localparam VPAGE		= 8'h01;
+	localparam GXOFFSL		= 8'h02;
+	localparam GXOFFSH		= 8'h03;
+	localparam GYOFFSL		= 8'h04;
+	localparam GYOFFSH		= 8'h05;
+	localparam TSCONF		= 8'h06;
+	localparam PALSEL 		= 8'h07;
+	localparam TMPAGE		= 8'h08;
+	localparam T0GPAGE		= 8'h09;
+	localparam T1GPAGE		= 8'h0A;
+	localparam SGPAGE		= 8'h0B;
+	localparam XBORDER		= 8'h0F;
+
+	localparam T0XOFFSL		= 8'h40;
+	localparam T0XOFFSH		= 8'h41;
+	localparam T0YOFFSL		= 8'h42;
+	localparam T0YOFFSH		= 8'h43;
+	localparam T1XOFFSL		= 8'h44;
+	localparam T1XOFFSH		= 8'h45;
+	localparam T1YOFFSL		= 8'h46;
+	localparam T1YOFFSH		= 8'h47;
+    
+	localparam RAMPAGE		= 8'h10;	// this covers #10-#13
+	localparam NWRADDR		= 8'h14;
+	localparam FMADDR		= 8'h15;
+	localparam RAMPAGES		= 8'h16;	// this covers #16-#17
+	localparam DMASADDRL	= 8'h1A;
+	localparam DMASADDRH	= 8'h1B;
+	localparam DMASADDRX	= 8'h1C;
+	localparam DMADADDRL	= 8'h1D;
+	localparam DMADADDRH	= 8'h1E;
+	localparam DMADADDRX	= 8'h1F;
+
+	localparam SYSCONF		= 8'h20;
+	localparam MEMCONF		= 8'h21;
+	localparam HSINT		= 8'h22;
+	localparam VSINTL		= 8'h23;
+	localparam VSINTH		= 8'h24;
+	localparam IM2VECT		= 8'h25;
+	localparam DMALEN		= 8'h26;
+	localparam DMACTRL		= 8'h27;
+	localparam DMANUM		= 8'h28;
+	localparam FDDVIRT		= 8'h29;
+
+	localparam XSTAT		= 8'h00;
+
+
 	assign dmaport_wr[0] = portxt_wr & (hoa == DMASADDRL);
 	assign dmaport_wr[1] = portxt_wr & (hoa == DMASADDRH);
 	assign dmaport_wr[2] = portxt_wr & (hoa == DMASADDRX);
@@ -421,10 +437,18 @@ module zports(
     assign zvpage_wr	=  p7ffd_wr;
     assign vpage_wr	    = (portxt_wr & (hoa == VPAGE ));
     assign vconf_wr	    = (portxt_wr & (hoa == VCONF ));
-    assign x_offsl_wr	= (portxt_wr & (hoa == XOFFSL));
-    assign x_offsh_wr	= (portxt_wr & (hoa == XOFFSH));
-    assign y_offsl_wr	= (portxt_wr & (hoa == YOFFSL));
-    assign y_offsh_wr	= (portxt_wr & (hoa == YOFFSH));
+    assign gx_offsl_wr	= (portxt_wr & (hoa == GXOFFSL));
+    assign gx_offsh_wr	= (portxt_wr & (hoa == GXOFFSH));
+    assign gy_offsl_wr	= (portxt_wr & (hoa == GYOFFSL));
+    assign gy_offsh_wr	= (portxt_wr & (hoa == GYOFFSH));
+    assign t0x_offsl_wr	= (portxt_wr & (hoa == T0XOFFSL));
+    assign t0x_offsh_wr	= (portxt_wr & (hoa == T0XOFFSH));
+    assign t0y_offsl_wr	= (portxt_wr & (hoa == T0YOFFSL));
+    assign t0y_offsh_wr	= (portxt_wr & (hoa == T0YOFFSH));
+    assign t1x_offsl_wr	= (portxt_wr & (hoa == T1XOFFSL));
+    assign t1x_offsh_wr	= (portxt_wr & (hoa == T1XOFFSH));
+    assign t1y_offsl_wr	= (portxt_wr & (hoa == T1YOFFSL));
+    assign t1y_offsh_wr	= (portxt_wr & (hoa == T1YOFFSH));
     assign tsconf_wr	= (portxt_wr & (hoa == TSCONF));
     assign palsel_wr	= (portxt_wr & (hoa == PALSEL));
 	assign tmpage_wr	= (portxt_wr & (hoa == TMPAGE));

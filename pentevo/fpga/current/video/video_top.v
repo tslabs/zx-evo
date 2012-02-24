@@ -30,24 +30,32 @@ module video_top (
 	input wire 		  sfys_we,
 
 // port write strobes
-    input wire        zborder_wr,
-    input wire        border_wr,
-    input wire        zvpage_wr,
-    input wire        vpage_wr,
-    input wire        vconf_wr,
-    input wire        x_offsl_wr,
-    input wire        x_offsh_wr,
-    input wire        y_offsl_wr,
-    input wire        y_offsh_wr,
-    input wire        tsconf_wr,
-    input wire        palsel_wr,
-    input wire        tmpage_wr,
-    input wire        t0gpage_wr,
-    input wire        t1gpage_wr,
-    input wire        sgpage_wr,
-    input wire        hint_beg_wr ,
-    input wire        vint_begl_wr,
-    input wire        vint_begh_wr,
+    input wire zborder_wr,
+    input wire border_wr,
+    input wire zvpage_wr,
+    input wire vpage_wr,
+    input wire vconf_wr,
+    input wire gx_offsl_wr,
+    input wire gx_offsh_wr,
+    input wire gy_offsl_wr,
+    input wire gy_offsh_wr,
+    input wire t0x_offsl_wr,
+    input wire t0x_offsh_wr,
+    input wire t0y_offsl_wr,
+    input wire t0y_offsh_wr,
+    input wire t1x_offsl_wr,
+    input wire t1x_offsh_wr,
+    input wire t1y_offsl_wr,
+    input wire t1y_offsh_wr,
+    input wire tsconf_wr,
+    input wire palsel_wr,
+    input wire tmpage_wr,
+    input wire t0gpage_wr,
+    input wire t1gpage_wr,
+    input wire sgpage_wr,
+    input wire hint_beg_wr ,
+    input wire vint_begl_wr,
+    input wire vint_begh_wr,
 
 // ZX controls
     input wire        res,
@@ -75,8 +83,12 @@ module video_top (
 // video config
 	wire [7:0] vpage;      //
 	wire [7:0] vconf;      //
-	wire [8:0] x_offs;     // re-latched at line_start
-	wire [8:0] y_offs;     //
+	wire [8:0] gx_offs;    // re-latched at line_start
+	wire [8:0] gy_offs;    //
+	wire [8:0] t0x_offs;   // *
+	wire [8:0] t0y_offs;   // *
+	wire [8:0] t1x_offs;   // *
+	wire [8:0] t1y_offs;   // *
 	wire [3:0] palsel;     //
 	wire [7:0] tsconf;          // re-latch these!
 	wire [7:0] tmpage;          //
@@ -176,10 +188,18 @@ module video_top (
     	.zvpage_wr	    (zvpage_wr),
     	.vpage_wr	    (vpage_wr),
     	.vconf_wr	    (vconf_wr),
-    	.x_offsl_wr	    (x_offsl_wr),
-    	.x_offsh_wr	    (x_offsh_wr),
-    	.y_offsl_wr	    (y_offsl_wr),
-    	.y_offsh_wr	    (y_offsh_wr),
+		.gx_offsl_wr	(gx_offsl_wr),
+		.gx_offsh_wr	(gx_offsh_wr),
+		.gy_offsl_wr	(gy_offsl_wr),
+		.gy_offsh_wr	(gy_offsh_wr),
+		.t0x_offsl_wr	(t0x_offsl_wr),
+		.t0x_offsh_wr	(t0x_offsh_wr),
+		.t0y_offsl_wr	(t0y_offsl_wr),
+		.t0y_offsh_wr	(t0y_offsh_wr),
+		.t1x_offsl_wr	(t1x_offsl_wr),
+		.t1x_offsh_wr	(t1x_offsh_wr),
+		.t1y_offsl_wr	(t1y_offsl_wr),
+		.t1y_offsh_wr	(t1y_offsh_wr),
     	.palsel_wr	    (palsel_wr),
     	.hint_beg_wr    (hint_beg_wr),
     	.vint_begl_wr   (vint_begl_wr),
@@ -192,8 +212,12 @@ module video_top (
         .border         (border),
         .vpage          (vpage),
         .vconf          (vconf),
-        .x_offs         (x_offs),
-        .y_offs         (y_offs),
+        .gx_offs        (gx_offs),
+        .gy_offs        (gy_offs),
+        .t0x_offs       (t0x_offs),
+        .t0y_offs       (t0y_offs),
+        .t1x_offs       (t1x_offs),
+        .t1y_offs       (t1y_offs),
         .palsel         (palsel),
         .hint_beg       (hint_beg),
         .vint_beg       (vint_beg),
@@ -219,7 +243,7 @@ module video_top (
 		.fetch_cnt	    (scnt),
 		.fetch_stb	    (fetch_stb),
 		.txt_char	    (fetch_temp[15:0]),
-		.x_offs			(x_offs),
+		.gx_offs		(gx_offs),
 		.x_offs_mode	(x_offs_mode),
         .line_start     (line_start),
 		.tm_en	        (tsconf[6:5]),
@@ -318,6 +342,10 @@ module video_top (
         .t1gpage        (t1gpage),
         .sgpage         (sgpage),
 		.num_tiles		(x_tiles),
+        .t0x_offs       (t0x_offs),
+        .t0y_offs       (t0y_offs),
+        .t1x_offs       (t1x_offs),
+        .t1y_offs       (t1y_offs),
 
         .tmb_raddr      (tmb_raddr),
         .tmb_rdata      (tmb_rdata),

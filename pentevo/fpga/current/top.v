@@ -552,10 +552,18 @@ module top(
         wire zvpage_wr	 ;
         wire vpage_wr	 ;
         wire vconf_wr	 ;
-        wire x_offsl_wr	 ;
-        wire x_offsh_wr	 ;
-        wire y_offsl_wr	 ;
-        wire y_offsh_wr	 ;
+        wire gx_offsl_wr ;
+        wire gx_offsh_wr ;
+        wire gy_offsl_wr ;
+        wire gy_offsh_wr ;
+        wire t0x_offsl_wr;
+        wire t0x_offsh_wr;
+        wire t0y_offsl_wr;
+        wire t0y_offsh_wr;
+        wire t1x_offsl_wr;
+        wire t1x_offsh_wr;
+        wire t1y_offsl_wr;
+        wire t1y_offsh_wr;
         wire palsel_wr	 ;
         wire hint_beg_wr ;
         wire vint_begl_wr;
@@ -591,10 +599,18 @@ module top(
 		.zvpage_wr	    (zvpage_wr),
 		.vpage_wr	    (vpage_wr),
 		.vconf_wr	    (vconf_wr),
-		.x_offsl_wr	    (x_offsl_wr),
-		.x_offsh_wr	    (x_offsh_wr),
-		.y_offsl_wr	    (y_offsl_wr),
-		.y_offsh_wr	    (y_offsh_wr),
+		.gx_offsl_wr	(gx_offsl_wr),
+		.gx_offsh_wr	(gx_offsh_wr),
+		.gy_offsl_wr	(gy_offsl_wr),
+		.gy_offsh_wr	(gy_offsh_wr),
+		.t0x_offsl_wr	(t0x_offsl_wr),
+		.t0x_offsh_wr	(t0x_offsh_wr),
+		.t0y_offsl_wr	(t0y_offsl_wr),
+		.t0y_offsh_wr	(t0y_offsh_wr),
+		.t1x_offsl_wr	(t1x_offsl_wr),
+		.t1x_offsh_wr	(t1x_offsh_wr),
+		.t1y_offsl_wr	(t1y_offsl_wr),
+		.t1y_offsh_wr	(t1y_offsh_wr),
 		.palsel_wr	    (palsel_wr),
 		.hint_beg_wr    (hint_beg_wr),
 		.vint_begl_wr   (vint_begl_wr),
@@ -768,10 +784,18 @@ module top(
 					.zvpage_wr	    (zvpage_wr),
 					.vpage_wr	    (vpage_wr),
 					.vconf_wr	    (vconf_wr),
-					.x_offsl_wr	    (x_offsl_wr),
-					.x_offsh_wr	    (x_offsh_wr),
-					.y_offsl_wr	    (y_offsl_wr),
-					.y_offsh_wr	    (y_offsh_wr),
+					.gx_offsl_wr	(gx_offsl_wr),
+					.gx_offsh_wr	(gx_offsh_wr),
+					.gy_offsl_wr	(gy_offsl_wr),
+					.gy_offsh_wr	(gy_offsh_wr),
+					.t0x_offsl_wr	(t0x_offsl_wr),
+					.t0x_offsh_wr	(t0x_offsh_wr),
+					.t0y_offsl_wr	(t0y_offsl_wr),
+					.t0y_offsh_wr	(t0y_offsh_wr),
+					.t1x_offsl_wr	(t1x_offsl_wr),
+					.t1x_offsh_wr	(t1x_offsh_wr),
+					.t1y_offsl_wr	(t1y_offsl_wr),
+					.t1y_offsh_wr	(t1y_offsh_wr),
 					.palsel_wr	    (palsel_wr),
 					.hint_beg_wr    (hint_beg_wr),
 					.vint_begl_wr   (vint_begl_wr),
