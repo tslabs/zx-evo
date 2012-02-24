@@ -6,7 +6,7 @@
 module video_out (
 
 // clocks
-	input wire clk, zclk, f0, c3,
+	input wire clk, f0, c3,
 	
 // video controls
     input wire vga_on,
@@ -111,16 +111,11 @@ module video_out (
     wire [14:0] vpixel;
 	
 	video_cram video_cram(
-		// .wrclock	(~zclk),
-		// .wrclock	(clk),	// this should be zclk
+		.clock	    (clk),
 		.wraddress	(cram_addr_in),
 		.data		(cram_data_in),
 		.wren		(cram_we),
-		
-		.clock	(clk),
-		// .rdclock	(clk),
 	    .rdaddress	(vdata),
-		// .rden		(f0),
 	    .q			(vpixel)
 );
 

@@ -24,7 +24,7 @@
 module video_ts_render (
 
 // clocks
-	input wire clk, c1,
+	input wire clk,
 
 // controls
 	input  wire        reset,      // line start strobe, inits the machine

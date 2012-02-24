@@ -71,7 +71,7 @@ module video_cram (
 				.wraddressstall (1'b0));
 	defparam
 		altdpram_component.indata_aclr = "OFF",
-		altdpram_component.indata_reg = "UNREGISTERED",
+		altdpram_component.indata_reg = "INCLOCK",
 		altdpram_component.intended_device_family = "ACEX1K",
 		altdpram_component.lpm_file = "../video/mem/video_cram.mif",
 		altdpram_component.lpm_type = "altdpram",
@@ -84,7 +84,7 @@ module video_cram (
 		altdpram_component.width = 15,
 		altdpram_component.widthad = 8,
 		altdpram_component.wraddress_aclr = "OFF",
-		altdpram_component.wraddress_reg = "UNREGISTERED",
+		altdpram_component.wraddress_reg = "INCLOCK",
 		altdpram_component.wrcontrol_aclr = "OFF",
 		altdpram_component.wrcontrol_reg = "INCLOCK";
 
@@ -135,11 +135,11 @@ endmodule
 // Retrieval info: PRIVATE: READ_DURING_WRITE_MODE_MIXED_PORTS NUMERIC "0"
 // Retrieval info: PRIVATE: READ_DURING_WRITE_MODE_PORT_A NUMERIC "3"
 // Retrieval info: PRIVATE: READ_DURING_WRITE_MODE_PORT_B NUMERIC "3"
-// Retrieval info: PRIVATE: REGdata NUMERIC "0"
+// Retrieval info: PRIVATE: REGdata NUMERIC "1"
 // Retrieval info: PRIVATE: REGq NUMERIC "0"
 // Retrieval info: PRIVATE: REGrdaddress NUMERIC "1"
 // Retrieval info: PRIVATE: REGrren NUMERIC "1"
-// Retrieval info: PRIVATE: REGwraddress NUMERIC "0"
+// Retrieval info: PRIVATE: REGwraddress NUMERIC "1"
 // Retrieval info: PRIVATE: REGwren NUMERIC "1"
 // Retrieval info: PRIVATE: SYNTH_WRAPPER_GEN_POSTFIX STRING "0"
 // Retrieval info: PRIVATE: USE_DIFF_CLKEN NUMERIC "0"
@@ -155,7 +155,7 @@ endmodule
 // Retrieval info: PRIVATE: enable NUMERIC "0"
 // Retrieval info: PRIVATE: rden NUMERIC "0"
 // Retrieval info: CONSTANT: INDATA_ACLR STRING "OFF"
-// Retrieval info: CONSTANT: INDATA_REG STRING "UNREGISTERED"
+// Retrieval info: CONSTANT: INDATA_REG STRING "INCLOCK"
 // Retrieval info: CONSTANT: INTENDED_DEVICE_FAMILY STRING "ACEX1K"
 // Retrieval info: CONSTANT: LPM_FILE STRING "../video/mem/video_cram.mif"
 // Retrieval info: CONSTANT: LPM_TYPE STRING "altdpram"
@@ -168,7 +168,7 @@ endmodule
 // Retrieval info: CONSTANT: WIDTH NUMERIC "15"
 // Retrieval info: CONSTANT: WIDTHAD NUMERIC "8"
 // Retrieval info: CONSTANT: WRADDRESS_ACLR STRING "OFF"
-// Retrieval info: CONSTANT: WRADDRESS_REG STRING "UNREGISTERED"
+// Retrieval info: CONSTANT: WRADDRESS_REG STRING "INCLOCK"
 // Retrieval info: CONSTANT: WRCONTROL_ACLR STRING "OFF"
 // Retrieval info: CONSTANT: WRCONTROL_REG STRING "INCLOCK"
 // Retrieval info: USED_PORT: clock 0 0 0 0 INPUT NODEFVAL clock

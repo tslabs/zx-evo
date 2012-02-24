@@ -6,7 +6,7 @@
 module video_top (
 
 // clocks
-	input wire clk, zclk,
+	input wire clk,
 	input wire f0, f1,
 	input wire h0, h1,
 	input wire c0, c1, c2, c3,
@@ -25,8 +25,7 @@ module video_top (
 // Z80 controls
 	input wire [15:0] a,
 	input wire [ 7:0] d,
-	input wire [14:0] cram_data_in,
-	input wire [15:0] sfys_data_in,
+	input wire [15:0] fd,
 	input wire 		  cram_we,
 	input wire 		  sfys_we,
 
@@ -138,9 +137,16 @@ module video_top (
 	wire [7:0] vgaplex;
 
 // TS
-    wire ts_render_done;
-    wire [20:0] tsg_addr;
-    wire ts_rld;
+    wire tsr_go;
+    wire tsr_rld;
+    wire [8:0] tsr_x;
+    wire [2:0] tsr_xs;
+    wire tsr_xf;
+    wire [7:0] tsr_page;
+    wire [8:0] tsr_line;
+    wire [6:0] tsr_addr;
+    wire [3:0] tsr_pal;
+    wire tsr_done;
 
 // TM-buf
     wire [8:0] tmb_waddr;
@@ -302,41 +308,56 @@ module video_top (
 
 
 	video_ts video_ts (
-		// .clk		    (clk),
-		// .clk		    (0),
-		// .zclk		    (zclk),
-		// .c3			    (c3),
-		// .line_start		(line_start),
-		// .num_tiles		(x_tiles),
-		// .lcount			(lcount),
-		// .tsconf			(tsconf),
-		// .tgpage			(tgpage),
-		// .vpage			(vpage_d),
-		// .tsg_addr		(tsg_addr),
-		// .sfys_addr_in	(a[8:1]),
-		// .sfys_data_in	(sfys_data_in),
-		// .sfys_we		(sfys_we)
+		.clk		    (clk),
+        .start          (line_start & c3),
+		.line			(lcount),
+
+        .tsconf         (tsconf),
+        .tmpage         (tmpage),
+        .t0gpage        (t0gpage),
+        .t1gpage        (t1gpage),
+        .sgpage         (sgpage),
+		.num_tiles		(x_tiles),
+
+        .tmb_raddr      (tmb_raddr),
+        .tmb_rdata      (tmb_rdata),
+        
+        .tsr_go         (tsr_go),
+        .tsr_rld        (tsr_rld),
+        .tsr_x          (tsr_x),
+        .tsr_xs         (tsr_xs),
+        .tsr_xf         (tsr_xf),
+        .tsr_page       (tsr_page),
+        .tsr_line       (tsr_line),
+        .tsr_addr       (tsr_addr),
+        .tsr_pal        (tsr_pal),
+        .tsr_done       (tsr_done),
+        
+		.sfys_addr_in	(a[8:1]),
+		.sfys_data_in	(fd),
+		.sfys_we		(sfys_we)
 );
 
 
 	video_ts_render video_ts_render (
 		.clk		    (clk),
-        .reset          (line_start & c2),
-        // .go             (tspix_start & c0),       // debug!!!
-        .go             (0),       // debug!!!
-        // .reload         (ts_rld),
-        // .reload         (tspix_start & c0),       // debug!!!
-        .reload         (1),       // debug!!!
-        .x_coord        (0),
-        .x_size         (7),
-        .x_flip         (0),
-        // .addr           (tsg_addr),
-        .addr           (0),
-        .pal            (15),
-        .done           (ts_render_done),
+        
+        .reset          (line_start & c3),
+        .go             (tsr_go),
+        .reload         (tsr_rld),
+        .x_coord        (tsr_x),
+        .x_size         (tsr_xs),
+        .x_flip         (tsr_xf),
+        .page           (tsr_page),
+        .line           (tsr_line),
+        .addr           (tsr_addr),
+        .pal            (tsr_pal),
+        .done           (tsr_done),
+        
         .ts_waddr       (ts_waddr),
         .ts_wdata       (ts_wdata),
         .ts_we          (ts_we),
+        
         .dram_addr      (ts_addr),
         .dram_req       (ts_req),
         .dram_rdata     (dram_rdata),
@@ -364,7 +385,6 @@ module video_top (
 
 	video_out video_out (
 		.clk			(clk),
-		.zclk			(zclk),
 		.f0				(f0),
 		.c3				(c3),
 		.vga_on			(vga_on),
@@ -377,7 +397,7 @@ module video_top (
 		.vga_hires		(vga_hires),
 		// .t0			(t0),	//debug
 		.cram_addr_in	(a[8:1]),
-		.cram_data_in	(cram_data_in),
+		.cram_data_in	(fd[14:0]),
 		.cram_we		(cram_we),
 	    .vplex_in		(vplex),
 	    .vgaplex		(vgaplex),
@@ -440,5 +460,6 @@ module video_top (
 	    .rdaddress	(vga_cnt_out),
 	    .q			(vgaplex)
 );
+
 
 endmodule

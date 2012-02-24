@@ -572,12 +572,10 @@ module top(
 	video_top video_top(
 
 		.clk(fclk),
-		.zclk(zclk),
         .res(res),
 		.f0(f0), .f1(f1),
 		.h0(h0), .h1(h1),
 		.c0(c0), .c1(c1), .c2(c2), .c3(c3),
-		// .t(t),	//debug!!!
 
 		.vred(vred),
 		.vgrn(vgrn),
@@ -616,16 +614,16 @@ module top(
 		.video_next     (video_next),
 
 		.ts_req			(ts_req),
-		.ts_pre_next		(ts_pre_next),
+		.ts_pre_next	(ts_pre_next),
 		.ts_addr		(ts_addr),
 		.ts_next		(ts_next),
 
-		.a(a), .d(d),
-		.cram_data_in({d[6:0], zmd}),
-		.sfys_data_in({d[7:0], zmd}),
-		.cram_we(cram_we),
-		.sfys_we(sfys_we),
-		.int_start(int_start)
+		.a              (a),
+        .d              (d),
+		.fd             ({d[7:0], zmd}),
+		.cram_we        (cram_we),
+		.sfys_we        (sfys_we),
+		.int_start      (int_start)
 
 	);
 
@@ -662,15 +660,14 @@ module top(
 		wire [7:0]	   zmd	;
 
     zmaps zmaps(
-				.zclk   (zclk),
-				.mreq_n (mreq_n),
-				.wr_n   (wr_n),
-				.a      (a),
-				.d      (d),
-				.fmaddr (fmaddr),
-				.zmd    (zmd),
-				.cram_we(cram_we),
-				.sfys_we(sfys_we)
+				.clk     (fclk),
+				.memwr_s (memwr_s),
+				.a       (a),
+				.d       (d),
+				.fmaddr  (fmaddr),
+				.zmd     (zmd),
+				.cram_we (cram_we),
+				.sfys_we (sfys_we)
 				);
 
 
@@ -684,37 +681,38 @@ module top(
 	wire rdwr;
 	wire iord;
 	wire iowr;
+	wire iowr_s;
 	wire iorw;
 	wire memrd;
 	wire memwr;
+	wire memwr_s;
 	wire memrw;
 
     zsignals zsignals(
-                .clk    (fclk),
-				.zclk   (zclk),
+                .clk      (fclk),
+				.rst_n    (rst_n),
+                .iorq_n   (iorq_n),
+                .mreq_n   (mreq_n),
+                .m1_n     (m1_n),
+                .rd_n     (rd_n),
+                .wr_n     (wr_n),
 
-				.rst_n  (rst_n),
-
-                .iorq_n (iorq_n),
-                .mreq_n (mreq_n),
-                .m1_n   (m1_n),
-                .rd_n   (rd_n),
-                .wr_n   (wr_n),
-
-                .rst    (rst),
-                .iorq   (iorq),
-                .iorq_s (iorq_s),
-                .mreq   (mreq),
-                .m1     (m1),
-                .rd     (rd),
-                .wr     (wr),
-                .rdwr   (rdwr),
-                .iord   (iord),
-                .iowr   (iowr),
-                .iorw   (iorw),
-                .memrd  (memrd),
-                .memwr  (memwr),
-                .memrw  (memrw)
+                .rst      (rst),
+                .iorq     (iorq),
+                .iorq_s   (iorq_s),
+                .mreq     (mreq),
+                .m1       (m1),
+                .rd       (rd),
+                .wr       (wr),
+                .rdwr     (rdwr),
+                .iord     (iord),
+                .iowr     (iowr),
+                .iowr_s   (iowr_s),
+                .iorw     (iorw),
+                .memrd    (memrd),
+                .memwr    (memwr),
+                .memwr_s  (memwr_s),
+                .memrw    (memrw)
                 );
 
 
@@ -750,6 +748,7 @@ module top(
                     .m1(m1),
                     .iord(iord),
                     .iowr(iowr),
+                    .iowr_s(iowr_s),
                     .iorw(iorw),
                     .rd(rd),
                     .wr(wr),

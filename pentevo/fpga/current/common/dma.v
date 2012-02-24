@@ -163,7 +163,8 @@ module dma (
     reg bsel;                // 0 - lsb / 1 - msb
     
 	always @(posedge clk)
-	if (dma_launch & c2)			// write to DMACtrl - launch of DMA burst
+	// if (dma_launch & c2)			// write to DMACtrl - launch of DMA burst
+	if (dma_launch)			// write to DMACtrl - launch of DMA burst
 	begin
 		device    <= device_p;
 		dma_wnr   <= dma_wnr_p;
@@ -197,7 +198,8 @@ module dma (
         begin
             b_len <= zdata;
         end
-		if (dma_launch & c2)			// launch of DMA burst - write to DMACtrl
+		// if (dma_launch & c2)			// launch of DMA burst - write to DMACtrl
+		if (dma_launch)			// launch of DMA burst - write to DMACtrl
         begin
             ctr[8] <= 1'b0;
             ctr[7:0] <= b_len;

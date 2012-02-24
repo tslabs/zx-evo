@@ -37,19 +37,17 @@
 `timescale 1 ps / 1 ps
 // synopsys translate_on
 module video_sf_ys (
+	clock,
 	data,
 	rdaddress,
-	rdclock,
 	wraddress,
-	wrclock,
 	wren,
 	q);
 
+	input	  clock;
 	input	[15:0]  data;
 	input	[7:0]  rdaddress;
-	input	  rdclock;
 	input	[7:0]  wraddress;
-	input	  wrclock;
 	input	  wren;
 	output	[15:0]  q;
 
@@ -57,9 +55,8 @@ module video_sf_ys (
 	wire [15:0] q = sub_wire0[15:0];
 
 	altdpram	altdpram_component (
-				.outclock (rdclock),
 				.wren (wren),
-				.inclock (wrclock),
+				.inclock (clock),
 				.data (data),
 				.rdaddress (rdaddress),
 				.wraddress (wraddress),
@@ -67,6 +64,7 @@ module video_sf_ys (
 				.aclr (1'b0),
 				.byteena (1'b1),
 				.inclocken (1'b1),
+				.outclock (1'b1),
 				.outclocken (1'b1),
 				.rdaddressstall (1'b0),
 				.rden (1'b1),
@@ -79,7 +77,7 @@ module video_sf_ys (
 		altdpram_component.outdata_aclr = "OFF",
 		altdpram_component.outdata_reg = "UNREGISTERED",
 		altdpram_component.rdaddress_aclr = "OFF",
-		altdpram_component.rdaddress_reg = "OUTCLOCK",
+		altdpram_component.rdaddress_reg = "INCLOCK",
 		altdpram_component.rdcontrol_aclr = "OFF",
 		altdpram_component.rdcontrol_reg = "UNREGISTERED",
 		altdpram_component.width = 16,
@@ -113,7 +111,7 @@ endmodule
 // Retrieval info: PRIVATE: CLRrren NUMERIC "0"
 // Retrieval info: PRIVATE: CLRwraddress NUMERIC "0"
 // Retrieval info: PRIVATE: CLRwren NUMERIC "0"
-// Retrieval info: PRIVATE: Clock NUMERIC "1"
+// Retrieval info: PRIVATE: Clock NUMERIC "0"
 // Retrieval info: PRIVATE: Clock_A NUMERIC "0"
 // Retrieval info: PRIVATE: Clock_B NUMERIC "0"
 // Retrieval info: PRIVATE: ECC NUMERIC "0"
@@ -162,7 +160,7 @@ endmodule
 // Retrieval info: CONSTANT: OUTDATA_ACLR STRING "OFF"
 // Retrieval info: CONSTANT: OUTDATA_REG STRING "UNREGISTERED"
 // Retrieval info: CONSTANT: RDADDRESS_ACLR STRING "OFF"
-// Retrieval info: CONSTANT: RDADDRESS_REG STRING "OUTCLOCK"
+// Retrieval info: CONSTANT: RDADDRESS_REG STRING "INCLOCK"
 // Retrieval info: CONSTANT: RDCONTROL_ACLR STRING "OFF"
 // Retrieval info: CONSTANT: RDCONTROL_REG STRING "UNREGISTERED"
 // Retrieval info: CONSTANT: WIDTH NUMERIC "16"
@@ -171,20 +169,18 @@ endmodule
 // Retrieval info: CONSTANT: WRADDRESS_REG STRING "INCLOCK"
 // Retrieval info: CONSTANT: WRCONTROL_ACLR STRING "OFF"
 // Retrieval info: CONSTANT: WRCONTROL_REG STRING "INCLOCK"
+// Retrieval info: USED_PORT: clock 0 0 0 0 INPUT NODEFVAL clock
 // Retrieval info: USED_PORT: data 0 0 16 0 INPUT NODEFVAL data[15..0]
 // Retrieval info: USED_PORT: q 0 0 16 0 OUTPUT NODEFVAL q[15..0]
 // Retrieval info: USED_PORT: rdaddress 0 0 8 0 INPUT NODEFVAL rdaddress[7..0]
-// Retrieval info: USED_PORT: rdclock 0 0 0 0 INPUT NODEFVAL rdclock
 // Retrieval info: USED_PORT: wraddress 0 0 8 0 INPUT NODEFVAL wraddress[7..0]
-// Retrieval info: USED_PORT: wrclock 0 0 0 0 INPUT NODEFVAL wrclock
 // Retrieval info: USED_PORT: wren 0 0 0 0 INPUT VCC wren
 // Retrieval info: CONNECT: @data 0 0 16 0 data 0 0 16 0
 // Retrieval info: CONNECT: q 0 0 16 0 @q 0 0 16 0
 // Retrieval info: CONNECT: @wraddress 0 0 8 0 wraddress 0 0 8 0
 // Retrieval info: CONNECT: @rdaddress 0 0 8 0 rdaddress 0 0 8 0
 // Retrieval info: CONNECT: @wren 0 0 0 0 wren 0 0 0 0
-// Retrieval info: CONNECT: @inclock 0 0 0 0 wrclock 0 0 0 0
-// Retrieval info: CONNECT: @outclock 0 0 0 0 rdclock 0 0 0 0
+// Retrieval info: CONNECT: @inclock 0 0 0 0 clock 0 0 0 0
 // Retrieval info: LIBRARY: altera_mf altera_mf.altera_mf_components.all
 // Retrieval info: GEN_FILE: TYPE_NORMAL video_sf_ys.v TRUE
 // Retrieval info: GEN_FILE: TYPE_NORMAL video_sf_ys.inc FALSE
