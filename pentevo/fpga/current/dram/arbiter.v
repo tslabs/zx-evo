@@ -78,6 +78,7 @@
 module arbiter(
 
 	input wire clk,
+	input wire c1,
 	input wire c2,
 	input wire c3,
 	input wire rst_n,
@@ -97,7 +98,7 @@ module arbiter(
 	input wire        cpu_wrbsel,
 	output reg        cpu_next,
     output reg        cpu_strobe,
-	
+
 // video
 	input  [20:0] video_addr,   // during access block, only when video_strobe==1
 	output wire   video_next,   // on this signal you can change video_addr; it is one clock leading the video_strobe
@@ -114,10 +115,11 @@ module arbiter(
 	input wire        dma_req,
 	input wire        dma_rnw,
 	output reg        dma_next,
-	
-// TS engine	
+
+// TS engine
 	input wire [20:0] ts_addr,
 	input wire 	      ts_req,
+	output wire       ts_pre_next,
 	output wire       ts_next
 
 );
@@ -140,8 +142,8 @@ module arbiter(
 // - video
 // - TS
 // - DMA
-	
-	
+
+
 	localparam CYC_CPU   = 4'b0001;
 	localparam CYC_VIDEO = 4'b0010;
 	localparam CYC_TS    = 4'b0100;
@@ -156,13 +158,13 @@ module arbiter(
 	wire next_ts  = next_cycle[2];
 	wire next_dma = next_cycle[3];
 	wire next_fre = ~|next_cycle;
-	
+
 	wire curr_cpu = curr_cycle[0];
 	wire curr_vid = curr_cycle[1];
 	wire curr_ts  = curr_cycle[2];
 	wire curr_dma = curr_cycle[3];
 	wire curr_fre = ~|curr_cycle;
-	
+
 
 
 
@@ -194,7 +196,7 @@ module arbiter(
 	begin
 		if( (blk_rem==3'd0) && go )
 			blk_nrem = {video_bw[4:3], 1'b1};	// remaining 7/3/1
-			// blk_nrem = 7;	
+			// blk_nrem = 7;
 		else
 			blk_nrem = (blk_rem==0) ? 3'd0 : (blk_rem-3'd1);
 	end
@@ -276,13 +278,13 @@ module arbiter(
 				if( vid_rem==blk_rem )
 				begin
 					cpu_next = 1'b0;
-	
+
 					next_cycle = CYC_VIDEO;
 				end
 				else
 				begin
 					cpu_next = 1'b1;
-	
+
 					if( cpu_req )
 						next_cycle = CYC_CPU;
 					else
@@ -359,13 +361,14 @@ module arbiter(
 	end
 
 
-	assign video_next   = curr_vid & c2;
+	assign video_next = curr_vid & c2;
 	assign video_strobe = curr_vid & c3;
 
-	assign ts_next   = curr_ts & c2;
+	assign ts_pre_next = curr_ts & c1;
+	assign ts_next = curr_ts & c2;
 
-	assign dma_next   = curr_dma & c2;
+	assign dma_next = curr_dma & c2;
 
-	
+
 endmodule
 

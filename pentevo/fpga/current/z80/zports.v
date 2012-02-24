@@ -131,24 +131,16 @@ module zports(
 	output wire        p7ffd_ram0_0, // d3.eff7
 	output wire        p7ffd_1m_on,  // d2.eff7
 	// output wire [ 5:0] p7ffd_page,   // full 1 meg page number
-	output wire        p7ffd_ROM,     // d4.7ffd
 
 
 	output wire        covox_wr,
 	output wire        beeper_wr,
 
-	output wire        clr_nmi,
-
-	output wire        fnt_wr,		// write to font_ram enabled
-
 	// inputs from atm_pagers, to read back its config
 	input  wire [63:0] pages,
 	input  wire [ 7:0] ramnroms,
-	input  wire [ 7:0] dos7ffds,
+	input  wire [ 7:0] dos7ffds
 
-
-	// NMI generation
-	output reg         set_nmi
 );
 
 	// assign t0 = portfd_wr | portfe_wr;	//debug!!!

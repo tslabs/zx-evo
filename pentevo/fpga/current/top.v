@@ -502,10 +502,12 @@ module top(
 
 	wire [20:0] ts_addr;
 	wire ts_req;
+	wire ts_pre_next;
 	wire ts_next;
 
 	arbiter dramarb(
 					 .clk(fclk),
+	                 .c1(c1),
 	                 .c2(c2),
 	                 .c3(c3),
 
@@ -540,6 +542,7 @@ module top(
 
 					 .ts_req		(ts_req),
 					 .ts_addr		(ts_addr),
+					 .ts_pre_next	(ts_pre_next),
 					 .ts_next		(ts_next)
 	);
 
@@ -613,6 +616,7 @@ module top(
 		.video_next     (video_next),
 
 		.ts_req			(ts_req),
+		.ts_pre_next		(ts_pre_next),
 		.ts_addr		(ts_addr),
 		.ts_next		(ts_next),
 
@@ -816,21 +820,7 @@ module top(
 					.beeper_wr(beeper_wr),
 					.covox_wr (covox_wr),
 
-					.fnt_wr(fnt_wr),
-					.clr_nmi(clr_nmi),
-
-
-					// .pages(~{ rd_pages[7], rd_pages[6],
-							// rd_pages[5], rd_pages[4],
-							// rd_pages[3], rd_pages[2],
-							// rd_pages[1], rd_pages[0] }),
-
-					// .ramnroms( rd_ramnrom),
-					// .dos7ffds( rd_dos7ffd),
-
 					.external_port(external_port)
-
-					// .set_nmi(set_nmi[1])
 	);
 
 
