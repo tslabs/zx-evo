@@ -33,8 +33,8 @@ module top(
 	output wire rompg3 = 0,
 	output wire rompg4 = 0,
 
-	input wire iorqge1 = 0,
-	input wire iorqge2 = 0,
+	input wire iorqge1,
+	input wire iorqge2,
 	output wire iorq1_n = 1'b1,
 	output wire iorq2_n = 1'b1,
 
@@ -131,7 +131,6 @@ module top(
 	video_top video_top(
 
 		.clk(fclk),
-        .res(res),
 		.f0(f0), .f1(f1),
 		.c0(c0), .c1(c1), .c2(c2), .c3(c3),
 
@@ -166,7 +165,7 @@ module top(
 		.wait_read(wait_read),
 		.wait_rnw(1),
 		.wait_end(wait_end),
-		.config0( { not_used[7:4], beeper_mux, tape_read, set_nmi[0], cfg_vga_on} )
+		.config0( { not_used[7:4], beeper_mux, tape_read, not_used[1], cfg_vga_on} )
 	);
 
 

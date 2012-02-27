@@ -277,6 +277,7 @@ set_location_assignment PIN_205 -to dram_rd[14]
 set_location_assignment PIN_206 -to dram_rd[1]
 set_location_assignment PIN_207 -to dram_rd[15]
 set_location_assignment PIN_208 -to dram_rd[0]
+set_global_assignment -name VERILOG_FILE ../video/video_vmem.v
 set_global_assignment -name VERILOG_FILE ../common/slavespi.v
 set_global_assignment -name VERILOG_FILE ../video/video_ports.v
 set_global_assignment -name VERILOG_FILE ../video/video_top.v
