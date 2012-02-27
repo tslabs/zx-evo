@@ -200,9 +200,9 @@ module zports(
 	reg iowr_reg;
 	reg iord_reg;
 
-	reg port_wr_fclk,
-	    port_rd_fclk,
-	    mem_wr_fclk;
+	reg port_wr_fclk;
+	reg port_rd_fclk;
+	// reg mem_wr_fclk;
 
 	reg [1:0] iowr_reg_fclk,
 	          iord_reg_fclk;
@@ -296,8 +296,8 @@ module zports(
 	always @(posedge fclk)
 		memwr_reg_fclk[1:0] <= { memwr_reg_fclk[0], ~(mreq_n | wr_n) };
 
-	always @(posedge fclk)
-		mem_wr_fclk <= memwr_reg_fclk[0] && (!memwr_reg_fclk[1]);
+	// always @(posedge fclk)
+		// mem_wr_fclk <= memwr_reg_fclk[0] && (!memwr_reg_fclk[1]);
 
 
 

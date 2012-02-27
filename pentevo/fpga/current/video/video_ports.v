@@ -12,8 +12,8 @@ module video_ports (
 	input wire [ 7:0] d,
 
 // ZX controls
-    input wire        res,    
-    
+    input wire        res,
+
 // port write strobes
     input wire zborder_wr,
     input wire border_wr,
@@ -35,8 +35,8 @@ module video_ports (
     input wire tsconf_wr,
     input wire palsel_wr,
     input wire tmpage_wr,
-    input wire t0gpage_wr,	
-    input wire t1gpage_wr,	
+    input wire t0gpage_wr,
+    input wire t1gpage_wr,
     input wire sgpage_wr,
     input wire hint_beg_wr ,
     input wire vint_begl_wr,
@@ -44,15 +44,15 @@ module video_ports (
 
 // video parameters
 	output reg [7:0] border,
-	output reg [7:0] vpage, 
-	output reg [7:0] vconf, 
+	output reg [7:0] vpage,
+	output reg [7:0] vconf,
 	output reg [8:0] gx_offs,
 	output reg [8:0] gy_offs,
 	output reg [8:0] t0x_offs,
 	output reg [8:0] t0y_offs,
 	output reg [8:0] t1x_offs,
 	output reg [8:0] t1y_offs,
-	output reg [3:0] palsel,
+	output reg [7:0] palsel,
 	output reg [7:0] hint_beg,
 	output reg [8:0] vint_beg,
 	output reg [7:0] tsconf,
@@ -60,10 +60,10 @@ module video_ports (
 	output reg [7:0] t0gpage,
 	output reg [7:0] t1gpage,
 	output reg [7:0] sgpage
-	
+
  );
- 
- 
+
+
     always @(posedge clk)
 		if (res)
 		begin
@@ -76,11 +76,11 @@ module video_ports (
 			t1x_offs    <= 9'b0;
 			t1y_offs    <= 9'b0;
 			tsconf[7:5] <= 3'b0;
-			palsel      <= 4'hF;
+			palsel      <= 8'h0F;
 			hint_beg    <= 8'd2;	// pentagon default
 			vint_beg    <= 9'd0;
         end
-        
+
         else
         begin
             if (zborder_wr  )   border          <= {5'b11110, d[2:0]};
@@ -101,7 +101,7 @@ module video_ports (
 			if (t1y_offsl_wr)   t1y_offs[7:0]   <= d;
 			if (t1y_offsh_wr)   t1y_offs[8]     <= d[0];
 			if (tsconf_wr   )   tsconf          <= d;
-			if (palsel_wr   )   palsel          <= d[3:0];
+			if (palsel_wr   )   palsel          <= d;
 			if (tmpage_wr	)   tmpage          <= d;
 			if (t0gpage_wr	)   t0gpage         <= d;
 			if (t1gpage_wr	)   t1gpage         <= d;
@@ -111,5 +111,5 @@ module video_ports (
 			if (vint_begh_wr)   vint_beg[8]     <= d[0];
         end
 
- 
+
  endmodule

@@ -15,6 +15,7 @@ module zsignals(
 	input wire iorq_n,
 	input wire mreq_n,
 	input wire m1_n,
+	input wire rfsh_n,
 	input wire rd_n,
 	input wire wr_n,
 
@@ -33,13 +34,13 @@ module zsignals(
 	output wire iorw,
 
 	output wire mreq,
-	output wire mreq_s,
 	output wire memrd,
 	output wire memwr,
 	output wire memwr_s,
 	output wire memrw,
 
-	output wire m1
+	output wire m1,
+	output wire rfsh
 
 );
 
@@ -58,11 +59,12 @@ module zsignals(
 
     assign mreq = !mreq_n;
     assign memrd = mreq & rd;
-    assign memwr = mreq & wr;
+    assign memwr = mreq & !rfsh & !rd;
     assign memwr_s = memwr_r[1];
     assign memrw = mreq & (rd | wr);
 
     assign m1 = !m1_n;
+    assign rfsh = !rfsh_n;
 
 
 // z80 strobed signals

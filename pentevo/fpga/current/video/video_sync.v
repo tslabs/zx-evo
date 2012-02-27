@@ -204,7 +204,7 @@ module video_sync (
 	assign video_go = ((hcount >= (hpix_beg - go_offs - x_offs)) & (hcount < (hpix_end - go_offs - x_offs)) & vpix &!nogfx) | tm_pf;
 	
 	assign line_start = (hcount == (HPERIOD - 1));
-	assign line_start2 = (hcount == (HSYNC_END - 1));
+	wire line_start2 = (hcount == (HSYNC_END - 1));
 	assign frame_start = line_start & (vcount == (VPERIOD - 1));
 	wire vis_start = line_start & (vcount == (VBLNK_END - 1));
 	assign pix_start = (hcount == (hpix_beg - 1 - x_offs));

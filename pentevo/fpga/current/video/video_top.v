@@ -89,14 +89,14 @@ module video_top (
 	wire [8:0] t0y_offs;   // *
 	wire [8:0] t1x_offs;   // *
 	wire [8:0] t1y_offs;   // *
-	wire [3:0] palsel;     //
+	wire [7:0] palsel;     //
 	wire [7:0] tsconf;          // re-latch these!
 	wire [7:0] tmpage;          //
 	wire [7:0] t0gpage;         //
 	wire [7:0] t1gpage;         //
 	wire [7:0] sgpage;          //
 	wire [7:0] vpage_d;
-    wire [3:0] palsel_d;
+    wire [7:0] palsel_d;
 	wire [7:0] hint_beg;
 	wire [8:0] vint_beg;
 	wire [8:0] hpix_beg;
@@ -281,7 +281,7 @@ module video_top (
 		.vpix_end		(vpix_end),
         .go_offs        (go_offs),
         .x_offs         (x_offs_mode[1:0]),
-        .y_offs_wr      (y_offsl_wr | y_offsh_wr),
+        .y_offs_wr      (gy_offsl_wr | gy_offsh_wr),
 		.hint_beg		(hint_beg),
 		.vint_beg		(vint_beg),
 		.hsync			(hsync),
@@ -303,7 +303,7 @@ module video_top (
 		.pix_start		(pix_start),
 		.tspix_start	(tspix_start),
 		.cstart			(x_offs_mode[9:2]),
-		.rstart			(y_offs),
+		.rstart			(gy_offs),
 		.vga_line		(vga_line),
 		.frame_start	(frame_start),
 		.line_start		(line_start),
@@ -346,12 +346,13 @@ module video_top (
         .t0y_offs       (t0y_offs),
         .t1x_offs       (t1x_offs),
         .t1y_offs       (t1y_offs),
+        .t0_palsel      (palsel[5:4]),
+        .t1_palsel      (palsel[7:6]),
 
         .tmb_raddr      (tmb_raddr),
         .tmb_rdata      (tmb_rdata),
         
         .tsr_go         (tsr_go),
-        .tsr_rld        (tsr_rld),
         .tsr_x          (tsr_x),
         .tsr_xs         (tsr_xs),
         .tsr_xf         (tsr_xf),
@@ -359,7 +360,7 @@ module video_top (
         .tsr_line       (tsr_line),
         .tsr_addr       (tsr_addr),
         .tsr_pal        (tsr_pal),
-        .tsr_done       (tsr_done),
+        .tsr_ready      (tsr_done),
         
 		.sfys_addr_in	(a[8:1]),
 		.sfys_data_in	(fd),
@@ -372,12 +373,14 @@ module video_top (
         
         .reset          (line_start & c3),
         .go             (tsr_go),
-        .reload         (tsr_rld),
+        // .go             (c3),
+        .reload         (1'b1),
         .x_coord        (tsr_x),
         .x_size         (tsr_xs),
         .x_flip         (tsr_xf),
         .page           (tsr_page),
         .line           (tsr_line),
+        // .line           (lcount),
         .addr           (tsr_addr),
         .pal            (tsr_pal),
         .done           (tsr_done),
@@ -402,7 +405,7 @@ module video_top (
 		.flash			(flash),
 		.hires			(tv_hires),
 		.psel			(scnt),
-		.palsel			(palsel_d),
+		.palsel			(palsel_d[3:0]),
 		.render_mode	(render_mode),
 		.data	 	    (fetch_data),
 		.border_in 	    (border),
@@ -419,7 +422,7 @@ module video_top (
 		.tv_blank 		(tv_blank),
 		.vga_blank		(vga_blank),
 		.vga_line		(vga_line),
-		.palsel			(palsel_d),
+		.palsel			(palsel_d[3:0]),
 	    .plex_sel_in	({h1, f1}),
 		.tv_hires		(tv_hires),
 		.vga_hires		(vga_hires),
@@ -452,10 +455,10 @@ module video_top (
     wire tl_act0 = lcount[0];
     wire tl_act1 = !lcount[0];
     wire [8:0] ts_waddr0 = tl_act0 ? ts_raddr : ts_waddr;
-    wire [7:0] ts_wdata0 = tl_act0 ? 0 : ts_wdata;
+    wire [7:0] ts_wdata0 = tl_act0 ? 8'd0 : ts_wdata;
     wire       ts_we0    = tl_act0 ? c3 : ts_we;
     wire [8:0] ts_waddr1 = tl_act1 ? ts_raddr : ts_waddr;
-    wire [7:0] ts_wdata1 = tl_act1 ? 0 : ts_wdata;
+    wire [7:0] ts_wdata1 = tl_act1 ? 8'd0 : ts_wdata;
     wire       ts_we1    = tl_act1 ? c3 : ts_we;
     wire [7:0] ts_rdata  = tl_act0 ? ts_rdata0 : ts_rdata1;
     wire [7:0] ts_rdata0, ts_rdata1;
