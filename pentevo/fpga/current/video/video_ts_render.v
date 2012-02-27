@@ -61,7 +61,7 @@ module video_ts_render (
 // DRAM addressing
     assign dram_addr = go ? {page_line, addr} : addr_reg;
     wire [13:0] page_line = {page + line[8:6], line[5:0]};
-    wire [20:0] addr_next = {dram_addr[20:7], dram_next ? dram_addr[6:0] + 1 : dram_addr[6:0]};
+    wire [20:0] addr_next = {dram_addr[20:7], dram_next ? dram_addr[6:0] + 7'd1 : dram_addr[6:0]};
     // as renderer can't move outside the single bitmap line, only 7 bits are processed
 
     reg [20:0] addr_reg;
@@ -78,7 +78,7 @@ module video_ts_render (
 
 // interim regs processing
     wire [8:0] x_coord_c = x_flip ? (x_coord + flip_adder) : x_coord;
-    wire [5:0] flip_adder = (x_size + 1) * 8 - 1;
+    wire [5:0] flip_adder = ((x_size + 6'd1) << 3) - 6'd1;
 
     reg [8:0] x_coord_r;
     reg [3:0] pal_r;
@@ -110,7 +110,7 @@ module video_ts_render (
 
 // TS-line address
     assign ts_waddr = rld ? x_coord_r : x_reg;
-    wire [8:0] x_next = x_flip_rr ? ts_waddr - 1 : ts_waddr + 1;
+    wire [8:0] x_next = ts_waddr + x_flip_rr ? -9'd1 : 9'd1;
 
     reg [8:0] x_reg;
     always @(posedge clk)
@@ -131,7 +131,7 @@ module video_ts_render (
             cyc <= {1'b0, x_size, 1'b1};
 
         else if (dram_next)
-            cyc <= cyc - 1;
+            cyc <= cyc - 5'd1;
 
 
 // pixel render counter
@@ -147,7 +147,7 @@ module video_ts_render (
             cnt <= 3'b000;
 
         else if (!cnt[2])
-            cnt <= cnt + 1;
+            cnt <= cnt + 3'd1;
 
 
 // rendering

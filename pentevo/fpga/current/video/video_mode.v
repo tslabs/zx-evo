@@ -12,8 +12,8 @@ module video_mode (
 	input wire [7:0] vconf,
 	input wire [7:0] vpage,
 	output reg [7:0] vpage_d,
-	input wire [3:0] palsel,
-	output reg [3:0] palsel_d,
+	input wire [7:0] palsel,
+	output reg [7:0] palsel_d,
 	
 // video parameters & mode controls
 	input  wire [8:0] gx_offs,
@@ -196,7 +196,7 @@ module video_mode (
     assign bw[M_T3] = {BW8, BU1};	// '1 of 8' (No graphics)
     assign video_bw = tm_pf ? tm_bw : bw[vmod];
     
-    wire [5:0] tm_bw = {BW4, &tm_en ? BU2 : BU1};      // '1/2 of 4' (1 or 2 tile-planes used)
+    wire [4:0] tm_bw = {BW4, &tm_en ? BU2 : BU1};      // '1/2 of 4' (1 or 2 tile-planes used)
 
 	
 // pixelrate
@@ -244,10 +244,10 @@ module video_mode (
 	assign vp_end[2] = 9'd296;	// 240
 	assign vp_end[3] = 9'd320;	// 288
 
-	assign x_tile[0] = 6'd33;	// 256
-	assign x_tile[1] = 6'd41;	// 320
-	assign x_tile[2] = 6'd41;	// 320
-	assign x_tile[3] = 6'd46;	// 360
+	assign x_tile[0] = 6'd31;	// 256
+	assign x_tile[1] = 6'd39;	// 320
+	assign x_tile[2] = 6'd39;	// 320
+	assign x_tile[3] = 6'd44;	// 360
 
 	assign hpix_beg = hp_beg[rres];
 	assign hpix_end = hp_end[rres];

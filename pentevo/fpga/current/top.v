@@ -348,6 +348,7 @@ module top(
 	wire vdos_on, vdos_off;
 	wire dos_on, dos_off;
     wire romnram;
+    wire rw_en;
 
     pager pager(
         .clk        (fclk),
@@ -692,6 +693,7 @@ module top(
 	wire iorq_s;
 	wire mreq;
 	wire m1;
+	wire rfsh;
 	wire rd;
 	wire wr;
 	wire rdwr;
@@ -710,6 +712,7 @@ module top(
                 .iorq_n   (iorq_n),
                 .mreq_n   (mreq_n),
                 .m1_n     (m1_n),
+                .rfsh_n   (rfsh_n),
                 .rd_n     (rd_n),
                 .wr_n     (wr_n),
 
@@ -718,6 +721,7 @@ module top(
                 .iorq_s   (iorq_s),
                 .mreq     (mreq),
                 .m1       (m1),
+                .rfsh     (rfsh),
                 .rd       (rd),
                 .wr       (wr),
                 .rdwr     (rdwr),
