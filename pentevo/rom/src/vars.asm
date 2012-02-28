@@ -19,6 +19,7 @@ opt_nvr         defs 1      ; NVRAM cell for current option
 
 ; -- NVRAM cells
                 org nv_buf + nv_1st
+fddv            defs 1      ; FDDVirt (#29AF copy)
 cfrq            defs 1      ; CPU freq
 ayfr            defs 1      ; AY freq
 b1to            defs 1      ; Boot option

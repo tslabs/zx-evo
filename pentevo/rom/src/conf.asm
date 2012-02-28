@@ -51,7 +51,7 @@ vsinth          equ 0x24
 intv            equ 0x25
 dmal            equ 0x26
 dmac            equ 0x27
-xtoverride      equ 0x2A
+fddvirt         equ 0x29
 
 
 ; TS parameters
