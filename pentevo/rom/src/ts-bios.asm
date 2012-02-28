@@ -80,6 +80,11 @@ RES_2
 RESET2:        
 ; -- setting up h/w parameters
 
+; FDDVirt
+        ld a, (fddv)
+        xtr
+        xta fddvirt
+
 ; 128 lock
         ld a, (l128)
         rrca
