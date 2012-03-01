@@ -377,7 +377,8 @@ module top(
 
 	zdos zdos(
 	           .fclk(fclk),
-			   .rst_n(rst_n),
+			   .rst(rst),
+               .m1(m1),
 
 	           .dos_on  (dos_on),
 	           .dos_off (dos_off),
