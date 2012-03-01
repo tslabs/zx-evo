@@ -69,6 +69,7 @@ RESET
         ld hl, cpal
 RES_2
         call LD_PAL
+        call LD_64_PAL
 
         ld hl, RESET2
         ld de, res_buf
@@ -674,11 +675,22 @@ LD_PAL
         xt fmaddr,  fm_en | (pal_addr >> 12)
         ld de, pal_addr + pal_sel * 32
         ld bc, 32
+LDP1
         ldir
         xtr
         xt fmaddr, 0
         ret
 
+
+LD_64_PAL
+        ld hl, pal_64c
+        xtr
+        xt palsel, pal_sel
+        xt fmaddr,  fm_en | (pal_addr >> 12)
+        ld de, pal_addr
+        ld bc, 128
+        jr LDP1
+        
 
 ; Calculate length of message
 ; in:
