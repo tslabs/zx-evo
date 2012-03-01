@@ -286,6 +286,6 @@ set_global_assignment -name VERILOG_FILE ../video/video_out.v
 set_global_assignment -name VERILOG_FILE ../z80/rom.v
 set_global_assignment -name VERILOG_FILE ../z80/zsignals.v
 set_global_assignment -name VERILOG_FILE ../common/clock.v
-set_global_assignment -name VERILOG_FILE ../common/spi2.v
 set_global_assignment -name VERILOG_FILE ../common/resetter.v
 set_global_assignment -name VERILOG_FILE ../top.v
+set_global_assignment -name MIF_FILE ../video/top.mif
