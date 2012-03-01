@@ -197,7 +197,72 @@ pal_gsc               ; grayscale
         defw 20 << 10 + 20 << 5 + 20
         defw 24 << 10 + 24 << 5 + 24
 
-
+pal_64c
+        defw 0000
+        defw 0008
+        defw 0010
+        defw 0018
+        defw 2000
+        defw 2008
+        defw 2010
+        defw 2018
+        defw 4000
+        defw 4008
+        defw 4010
+        defw 4018
+        defw 6000
+        defw 6008
+        defw 6010
+        defw 6018
+        defw 0100
+        defw 0108
+        defw 0110
+        defw 0118
+        defw 2100
+        defw 2108
+        defw 2110
+        defw 2118
+        defw 4100
+        defw 4108
+        defw 4110
+        defw 4118
+        defw 6100
+        defw 6108
+        defw 6110
+        defw 6118
+        defw 0200
+        defw 0208
+        defw 0210
+        defw 0218
+        defw 2200
+        defw 2208
+        defw 2210
+        defw 2218
+        defw 4200
+        defw 4208
+        defw 4210
+        defw 4218
+        defw 6200
+        defw 6208
+        defw 6210
+        defw 6218
+        defw 0300
+        defw 0308
+        defw 0310
+        defw 0318
+        defw 2300
+        defw 2308
+        defw 2310
+        defw 2318
+        defw 4300
+        defw 4308
+        defw 4310
+        defw 4318
+        defw 6300
+        defw 6308
+        defw 6310
+        defw 6318
+        
 keys_norm
         defb 0, 'zxcvasdfgqwert1234509876poiuy', 13, 'lkjh ', 14, 'mnb'
 keys_caps
