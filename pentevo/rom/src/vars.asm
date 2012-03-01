@@ -19,8 +19,10 @@ opt_nvr         defs 1      ; NVRAM cell for current option
 
 ; -- NVRAM cells
                 org nv_buf + nv_1st
-fddv            defs 1      ; FDDVirt (#29AF copy)
-cfrq            defs 1      ; CPU freq
+fddv            defs 1      ; FDDVirt (#29AF copy)  // non-removable #B0
+cfrq            defs 1      ; CPU freq              // non-removable #B1
+bdev            defs 1      ; boot device           // non-removable #B2
+
 ayfr            defs 1      ; AY freq
 b1to            defs 1      ; Boot option
 b1tb            defs 1      ; Boot bank

@@ -8,23 +8,23 @@ extern    font8
 
 ; ------- main code
         rseg CODE
-        
+
         di
         jp MAIN
-    
-    
+
+
 ; -- reset procedures
         org h'80
 MAIN
         di
         xtr
         xt page1, 5
-        
+
         ld sp, stck
         im 1
         xor a
         ld i, a
-        
+
         call READ_NVRAM
         call CALC_CRC
         xor a                ; mock!!!
@@ -32,13 +32,13 @@ MAIN
         call nz, LOAD_DEFAULTS
         pop af
         jp nz, SETUP        ; CRC error
-        
+
         ld bc, h'7FFE
         in a, (c)
         rrca
         rrca
         jp nc, SETUP        ; CS pressed
-        
+
 
 RESET
         di
@@ -48,7 +48,7 @@ RESET
         xt page3, 0
         xt vpage, 5
         xt vconf, mode_zx | rres_256x192
-        
+
 ; Palette
         ld a, (zpal)
         ld hl, pal_puls
@@ -75,12 +75,15 @@ RES_2
         ld bc, RESET2_END - RESET2
         ldir
         jp res_buf
-        
-        
-RESET2:        
+
+
+RESET2:
 ; -- setting up h/w parameters
 
 ; FDDVirt
+
+        ; Here check the power-up bit!!!
+
         ld a, (fddv)
         xtr
         xta fddvirt
@@ -91,7 +94,7 @@ RESET2:
         rrca
         ld d, a             ; D keeps the Lock128 Mode
 
-        
+
 ; AY & CPU freq
         ld a, (ayfr)
         rlca
@@ -113,37 +116,35 @@ RESET2:
         ld a, (b1tb)
         ld e, a             ; E keeps the bank where boot to
         ld a, (b1to)
-RES_1        
+RES_1
         or a                ; 0
         jr z, RES_ROM00
         dec a               ; 1
         jr z, RES_ROM04
         dec a               ; 2
-        jr z, RES_RAMF8
+        jr z, RES_VROM
         dec a               ; 3
-        jr z, RES_SD_BT
+        jr z, RES_BT_HB
         dec a               ; 4
-        jr z, RES_SD_ROM
-        dec a               ; 5
-        jr z, RES_COM
+        jr z, RES_BT_SR
         halt
 
-        
+
 RES_ROM00
         xtr
         xt page0, 0
         jr RES_3
 
-        
+
 RES_ROM04
         xtr
         xt page0, 4
         jr RES_3
 
-        
-RES_RAMF8
+
+RES_VROM
         xtr
-        xt page0, h'F8
+        xt page0, vrompage
         ld a, b'1000
         or d
         ld d, a             ; RAM will be used instead of ROM
@@ -161,7 +162,7 @@ RES_3
         jr z, RES_SYS
         halt
 
-        
+
 RES_TRD
         ld a, d
         or 1                ; ROM 48
@@ -169,8 +170,8 @@ RES_TRD
         xta memconf
         ld sp, h'3D2E
         jp h'3D2F           ; ret to #0000
-        
-        
+
+
 RES_48
         ld a, d
         or 1                ; ROM 48
@@ -178,14 +179,14 @@ RES_48
         xta memconf
         jp 0
 
-        
+
 RES_128
         ld a, d
         xtr
         xta memconf
         jp 0
 
-        
+
 RES_SYS
         ld a, d
         or b'0100
@@ -194,24 +195,20 @@ RES_SYS
         jp 0
 
 
-RES_SD_BT        
+RES_BT_HB           ; boot.$c
         halt
 
-                   
-RES_SD_ROM        
+
+RES_BT_SR           ; sys.rom
         halt
 
-                   
-RES_COM        
-        halt
 
-       
 RESET2_END
 
 
 ; ------- BIOS Setup
 
-SETUP:       
+SETUP:
         xor a
         out (254), a
         xtr
@@ -221,7 +218,7 @@ SETUP:
         call CLS
         call LD_FONT
         call LD_S_PAL
-        
+
         xtr
         xt vconf, rres_320x240 | mode_text
         xt vpage, txpage
@@ -229,40 +226,20 @@ SETUP:
 
         box 0, h'1E50, h'8F
         pmsgc M_HEAD1, 1, h'8E
-        
-        ld de, M_HEAD2
-        ld h, 2
-        ld b, h'8E
-        ld a, MH2_SZ
-        call PMC2
-        chr ' '
-        num date 4      ; day (1-31)
-        chr '.'
-        num date 5      ; month (1-12)
-        chr '.'
-        chr '2'
-        chr '0'
-        num date 6      ; year (0-99)
-        chr ' '
-        num date 3      ; hour (0-23)
-        chr ':'
-        num date 2      ; minute (0-59)
-        chr ':'
-        num date 1      ; second (0-59)
-        
+        pmsgc M_HEAD2, 2, h'8E
         pmsgc M_HLP, 28, h'87
         call BOX0
         ld a, (fld0_pos)
         call OPT_HG
-        
+
 ; Main cycle
         ei
-; Event handler        
-S_MAIN        
+; Event handler
+S_MAIN
         ld a, (evt)
         or a
         jr z, S_MAIN
-        
+
         ld c, a             ; debug!!!
         ld a, 2
         out (254), a
@@ -272,7 +249,7 @@ S_MAIN
         out (254), a
         ld (evt), a
         jr S_MAIN
-        
+
 
 ; ------- subroutines
 
@@ -284,7 +261,7 @@ S_INIT
         ld (fld0_pos), a
         ld (last_key), a
         ret
-        
+
 
 ; Event processing
 EVT_PROC
@@ -293,8 +270,8 @@ EVT_PROC
         jr z, EVT_P0
         ret
 
-        
-EVT_P0        
+
+EVT_P0
         ld a, (fld_max)
         dec a
         ld b, a
@@ -321,7 +298,7 @@ EVO0_1
         ld (fld0_pos), a
         jr OPT_HG
 
-        
+
 EV0_D
         ld a, c
         cp b
@@ -329,8 +306,8 @@ EV0_D
         call OPT_DH
         inc a
         jr EVO0_1
-        
-        
+
+
 EV0_E
         ld a, (opt_nvr)
         ld e, a
@@ -344,13 +321,13 @@ EV0_E
 
 EV0_H
         jp RESET
-        
-        
+
+
 OPT_DH
         ld b, opt_norm      ; change to var!
         jr OPT_1
-        
-OPT_HG       
+
+OPT_HG
         ld b, opt_hgl       ; change to var!
 OPT_1
         push af
@@ -359,7 +336,7 @@ OPT_1
         add a, h
         ld h, a             ; Y coord
         call PRINT_MSG
-        
+
         ld a, (sel_max)
         ld c, a
         ld a, (opt_nvr)
@@ -379,7 +356,7 @@ OPP2
         add a, 36
         ld l, a
         pop af
-        
+
         ex de, hl
         ld b, 0
         inc c
@@ -395,10 +372,10 @@ OPP4
         pop af
         ret
 
-        
+
 OPT_DEC
 ; in:
-;       
+;
         push af
         ld hl, (fld_tab)
         add a, a
@@ -408,7 +385,7 @@ OPT_DEC
         adc a, h
         sub l
         ld h, a             ; HL = address of option desc pointer
-        
+
         ld e, (hl)
         inc hl
         ld d, (hl)
@@ -428,9 +405,9 @@ OPT_DEC
         pop de
         pop af
         ret
-        
 
-BOX0        
+
+BOX0
         ld hl, OPTTAB0
 BOX
         ld e, (hl)      ; X coord of box
@@ -446,7 +423,7 @@ BOX
         ld a, box_norm  ; change to var!
         call DRAW_BOX
         pop hl
-        
+
         ld a, (hl)      ; X coord of list top
         inc hl
         ld (fld_top), a
@@ -466,7 +443,7 @@ BOX
         ex de, hl
         call PRINT_MSG
         ld (fld_tab), de
-        
+
         ld a, (fld0_pos)
         ld b, a
         xor a
@@ -478,8 +455,8 @@ BX01
         cp c
         jr c, BX01
         ret
-        
-                
+
+
 ; KBD event processing
 ; check pressed key and set event to process
 KBD_EVT
@@ -498,8 +475,8 @@ KBD_EVT
         ret z
         ld b, 0
         ret
-        
-        
+
+
 ; KBD procedure
 ; makes keyboard mapping and autorepeat
 KBD_PROC
@@ -523,10 +500,10 @@ KPC4
 
         ld a, 15        ; initial autorepeat value
         ld (kbd_del), a
-        ld a, c 
+        ld a, c
         ld (last_key), a
         jr KPC3
-        
+
 KPC2
         ld a, (kbd_del)
         dec a
@@ -547,7 +524,7 @@ KPC3
 
 
 ; KBD poll
-; out: 
+; out:
 ;   A - key pressed (0-39), CS+SS = 36
 ;   E - bit0 = CS, bit1 = SS,
 ;   fc - c = pressed / nc = not pressed (A = 40)
@@ -591,7 +568,7 @@ KBP6
         jr z, KBP4      ; no - go back to cycle
         scf             ; yes - CS+SS pressed
         ret
-        
+
 
 CALC_CRC
         ld hl, nv_buf
@@ -606,7 +583,7 @@ CC0
         ld e, a
         inc hl
         djnz CC0
-        
+
         ld a, e
         cp (hl)
         ret nz
@@ -615,10 +592,10 @@ CC0
         cp (hl)
         ret
 
-        
+
 READ_NVRAM
         outf7 shadow, shadow_on
-        
+
         ld hl, nv_buf + nv_1st
         ld a, nv_size
         ld c, pf7
@@ -634,8 +611,8 @@ RNV1
 
         outf7 shadow, shadow_off
         ret
-        
-        
+
+
 LOAD_DEFAULTS
         ld hl, nv_buf + nv_1st
         ld d, h
@@ -644,14 +621,14 @@ LOAD_DEFAULTS
         ld bc, nv_size - 1
         ld (hl), b
         ldir
-        
-        
+
+
 WRITE_NVRAM
         call CALC_CRC
         ld (nvcs), de
-        
+
         outf7 shadow, shadow_on
-        
+
         ld hl, nv_buf + nv_1st
         ld a, nv_size
         ld c, pf7
@@ -664,11 +641,11 @@ WNV1
         inc l
         dec a
         jr nz, WNV1
-        
+
         outf7 shadow, shadow_off
         ret
-        
-        
+
+
 LD_FONT
         xtr
         xt page3, txpage ^ 1
@@ -678,7 +655,7 @@ LD_FONT
         ldir
         ret
 
-        
+
 CLS:    xtr
         xt page3, txpage
         ld hl, win3
@@ -688,7 +665,7 @@ CLS:    xtr
         ldir
         ret
 
-        
+
 LD_S_PAL
         ld hl, pal_bb
 LD_PAL
@@ -701,7 +678,7 @@ LD_PAL
         xtr
         xt fmaddr, 0
         ret
-        
+
 
 ; Calculate length of message
 ; in:
@@ -720,8 +697,8 @@ MLN1
         pop de
         ld a, l
         ret
-        
-        
+
+
 ; Print message terminated by 0, centered within 80 chars on screen
 ; in:
 ;   DE - addr
@@ -729,7 +706,6 @@ MLN1
 ;   B - attr
 PRINT_MSG_C
         call MSG_LEN
-PMC2
         rrca
         and 127
         neg
@@ -740,7 +716,7 @@ PMC2
 ; Print message terminated by 0
 ; in:
 ;   DE - addr
-;   HL - coords        
+;   HL - coords
 ;   B - attr
 PRINT_MSG
         set 6, h
@@ -752,7 +728,7 @@ PM1
         ret z
         call SYM
         jr PM1
-        
+
 
 ; Drawing framed filled box
 ; in:
@@ -764,7 +740,7 @@ DRAW_BOX
         set 7, h
         dec b
         dec b
-        
+
         push bc
         push hl
         ld de, 'É' << 8 + 'Í'
@@ -786,8 +762,8 @@ DB1
 
         ld de, 'È' <<8 + 'Í'
         ld b, '¼'
-        
-DB2:        
+
+DB2:
         push hl
         push bc
         ld (hl), d
@@ -803,7 +779,7 @@ DB2:
         pop bc
         ld (hl), b
         pop hl
-        
+
         set 7, l
         ld (hl), a
         ld e, l
@@ -821,21 +797,22 @@ DB2:
 ; ÈÍÊÍ¼
 
 
-NUM_10
-        ld e, 0
-N102
-        sub 10
-        jr c, N101
-        inc e
-        jr N102
-N101
-        ld d, a
-        ld a, e
-        add a, '0'
-        call SYM
-        
-        ld a, d
-        add a, '0' + 10
+; NUM_10
+        ; ld e, 0
+; N102
+        ; sub 10
+        ; jr c, N101
+        ; inc e
+        ; jr N102
+; N101
+        ; ld d, a
+        ; ld a, e
+        ; add a, '0'
+        ; call SYM
+
+        ; ld a, d
+        ; add a, '0' + 10
+
 SYM
         ld (hl), a
         set 7, l
@@ -843,11 +820,11 @@ SYM
         res 7, l
         inc l
         ret
-        
+
 
 ; #include "booter.asm"
 #include "arrays.asm"
 #include "restarts.asm"
 
         end
-        
+
