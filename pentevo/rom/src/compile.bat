@@ -12,7 +12,7 @@ copy /b header.bin + starter.bin "../bin/TS-BIOS.$C"
 rem del starter.bin
 
 copy /b ts-bios.bin + trdos504T.rom + 128.rom "../bin/ts-bios.rom"
-
+copy /b ts-bios.bin + trdos504T.rom + 128.rom + zxevo_upper.rom "../bin/zxevo.rom"
 copy /b ts-bios.bin + trdos504T.rom + glukpen.rom + 48.rom "../bin/ts-bios-gluk.rom"
 
 copy ts-bios.bin "../bin/ts-bios.bin"

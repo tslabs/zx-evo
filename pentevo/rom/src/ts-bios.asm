@@ -26,13 +26,21 @@ MAIN
         ld i, a
 
         call READ_NVRAM
-        call CALC_CRC
-        xor a                ; mock!!!
-        push af
-        call nz, LOAD_DEFAULTS
-        pop af
-        jp nz, SETUP        ; CRC error
+        ; call CALC_CRC
+        ; push af
+        ; call nz, LOAD_DEFAULTS
+        ; pop af
+        ; jp nz, SETUP        ; CRC error
 
+        inxt xstatus
+        bit 5, a
+        jr z, MN1
+        
+        xor a
+        ld (fddv), a
+        call WRITE_NVRAM
+        
+MN1:        
         ld bc, h'7FFE
         in a, (c)
         rrca

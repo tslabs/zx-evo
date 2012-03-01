@@ -9,7 +9,7 @@ extern	bios
     di
     xtr
     xt memconf, 0x0E
-    xt page0, 0xF8
+    xt page0, 0xF0
     
     ld hl, bios
     ld de, win0

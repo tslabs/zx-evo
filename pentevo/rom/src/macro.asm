@@ -18,6 +18,13 @@ inf7    macro reg
         endm
 
 
+; read from AF
+inxt    macro reg
+        ld bc, reg << 8 + extp
+        in a, (c)
+        endm
+
+
 ; write imm8 to XTport
 xt      macro port, val
         xtp port

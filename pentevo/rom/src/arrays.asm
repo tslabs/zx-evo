@@ -25,7 +25,7 @@ M_HLP   defb 'Arrows - move,  Enter - change option,  F12 - exit', 0
 ; -- options tab
 OPTTAB0
         defw h'0707     ; X, Y coord of box
-        defw h'0F20     ; X, Y size of box
+        defw h'0E20     ; X, Y size of box
         defw h'0A0A     ; X, Y coord of list top
         defw h'080C     ; X, Y coord of header text
         defb h'8C       ; attrs
