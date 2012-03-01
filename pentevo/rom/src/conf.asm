@@ -89,8 +89,12 @@ nv_1st          equ h'B0
 
 
 ; -- video config
-txpage          equ h'FF
+txpage          equ h'F8
 pal_sel         equ h'F
+
+
+; -- pages config
+vrompage        equ h'F4
 
 
 ; -- UI colors

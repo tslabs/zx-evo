@@ -4,8 +4,19 @@
 M_HEAD1
         defb 'TS-BIOS Setup Utility', 0
 M_HEAD2
-        defb 'Build date:', 0
-MH2_SZ  equ $ - M_HEAD2 + 18
+        defb 'Build date: '
+        dec8 date 4      ; day (1-31)
+        defb  '.'
+        dec8 date 5      ; month (1-12)
+        defb  '.20'
+        dec8 date 6      ; year (0-99)
+        defb  ' '
+        dec8 date 3      ; hour (0-23)
+        defb  ':'
+        dec8 date 2      ; minute (0-59)
+        defb  ':'
+        dec8 date 1      ; second (0-59)
+        defb 0
 
 M_HLP   defb 'Arrows - move,  Enter - change option,  F12 - exit', 0
 
@@ -13,39 +24,34 @@ M_HLP   defb 'Arrows - move,  Enter - change option,  F12 - exit', 0
 ; ------- tabs
 ; -- options tab
 OPTTAB0
-; byte - X, Y coord of box
-; byte - X, Y size of box
-; byte - X, Y coord of list top
-; byte - X, Y coord of header text
-; byte - number of options
-; string - message
-        defw h'0707
-        defw h'0D20
-        defw h'0A0A
-        defw h'080C
-        defb h'8C
-        defb 8
-        defb 'Select NVRAM options:', 0        
-; word - address of option desc
-; word - address of option choises
-		defw OPT_CFQ, SEL_CFQ
+        defw h'0707     ; X, Y coord of box
+        defw h'0F20     ; X, Y size of box
+        defw h'0A0A     ; X, Y coord of list top
+        defw h'080C     ; X, Y coord of header text
+        defb h'8C       ; attrs
+        defb 9          ; number of options
+        defb 'Select NVRAM options:', 0
+
+		defw OPT_CFQ, SEL_CFQ   ; address of option desc, address of option choises
 		defw OPT_B1T, SEL_BOT
 		defw OPT_B1B, SEL_BTB
 		defw OPT_B2T, SEL_BOT
 		defw OPT_B2B, SEL_BTB
+		defw OPT_B1D, SEL_BDV
 		defw OPT_80L, SEL_80L
 		defw OPT_AFQ, SEL_AFQ
 		defw OPT_ZPL, SEL_ZPL
-		
+
 ; -- option text
 ; byte - number of choises
 ; byte - address in NVRAM
 ; string - option
 OPT_CFQ    defb 3, low(cfrq), 'CPU speed, MHz:', 0
-OPT_B1T    defb 6, low(b1to), 'Boot to:', 0
+OPT_B1T    defb 5, low(b1to), 'Reset to:', 0
 OPT_B1B    defb 4, low(b1tb), '  bank:', 0
-OPT_B2T    defb 6, low(b2to), 'CS Boot to:', 0
+OPT_B2T    defb 5, low(b2to), 'CS Reset to:', 0
 OPT_B2B    defb 4, low(b2tb), '  bank:', 0
+OPT_B1D    defb 4, low(bdev), 'Boot Device:', 0
 OPT_80L    defb 4, low(l128), '128k Lock:', 0
 OPT_AFQ    defb 4, low(ayfr), 'AY clock, MHz:', 0
 OPT_ZPL    defb 6, low(zpal), 'ZX Palette:', 0
@@ -56,33 +62,40 @@ SEL_CFQ
 		defb ' 3.5', 0
         defb ' 7.0', 0
 		defb '14.0', 0
-		
+
 SEL_BOT
 		defb '   ROM #00', 0
 		defb '   ROM #04', 0
-		defb '   RAM #F8', 0
-		defb 'SD:boot.c$', 0
-		defb 'SD:sys.rom', 0
-		defb '    RS-232', 0
-		
+		defb '   RAM #'
+        hex8 vrompage
+        defb 0
+		defb 'BD boot.$c', 0
+		defb 'BD sys.rom', 0
+
 SEL_BTB
         defb '    TR-DOS', 0
 		defb '  Basic 48', 0
 		defb ' Basic 128', 0
 		defb '       SYS', 0
-		
+
+SEL_BDV
+        defb 'SD Z-contr', 0
+        defb 'HDD Master', 0
+        defb ' HDD Slave', 0
+        defb '    RS-232', 0
+
 SEL_80L
         defb '  OFF', 0
 		defb '   ON', 0
 		defb 'Auto1', 0
 		defb 'Auto2', 0
-		
+
 SEL_AFQ
         defb '1.750', 0
 		defb '1.773', 0
 		defb '3.500', 0
 		defb '3.546', 0
-		
+
 SEL_ZPL
         defb 'Default', 0   ; 0
 		defb 'B.black', 0   ; 1
@@ -90,8 +103,8 @@ SEL_ZPL
 		defb '   Dark', 0   ; 3
 		defb 'Grayscl', 0   ; 4
 		defb ' Custom', 0   ; 5
-		
-        
+
+
 ; -- palette
 pal_bb               ; bright black
         defw h'0000
@@ -110,7 +123,7 @@ pal_bb               ; bright black
         defw h'0318
         defw h'6300
         defw h'6318
-        
+
 pal_puls             ; pulsar
         defw h'0000
         defw h'0010
@@ -183,8 +196,8 @@ pal_gsc               ; grayscale
         defw 17 << 10 + 17 << 5 + 17
         defw 20 << 10 + 20 << 5 + 20
         defw 24 << 10 + 24 << 5 + 24
-        
-        
+
+
 keys_norm
         defb 0, 'zxcvasdfgqwert1234509876poiuy', 13, 'lkjh ', 14, 'mnb'
 keys_caps
