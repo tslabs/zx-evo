@@ -4,7 +4,7 @@ module top(
 
 	// clocks
 	input  wire fclk,
-	output wire clkz_out = f1,
+	output wire clkz_out,
 	input  wire clkz_in,
 
 	// z80
@@ -14,38 +14,38 @@ module top(
 	input wire wr_n,
 	input wire m1_n,
 	input wire rfsh_n,
-	output wire int_n = 1'b1,
-	output wire nmi_n = 1'b1,
-	output wire wait_n = 1'b1,
-	output wire res = ~rst_n,
+	output wire int_n,
+	output wire nmi_n,
+	output wire wait_n,
+	output wire res,
 
 	inout wire [7:0] d,
 	input wire [15:0] a,
 
 	// zxbus and related
-	output wire csrom = 0,
-	output wire romoe_n = 1,
-	output wire romwe_n = 1,
+	output wire csrom,
+	output wire romoe_n,
+	output wire romwe_n,
 
-	output wire rompg0_n = 1,
-	output wire dos_n = 1, // aka rompg1
-	output wire rompg2 = 0,
-	output wire rompg3 = 0,
-	output wire rompg4 = 0,
+	output wire rompg0_n,
+	output wire dos_n, // aka rompg1
+	output wire rompg2,
+	output wire rompg3,
+	output wire rompg4,
 
 	input wire iorqge1,
 	input wire iorqge2,
-	output wire iorq1_n = 1'b1,
-	output wire iorq2_n = 1'b1,
+	output wire iorq1_n,
+	output wire iorq2_n,
 
 	// DRAM
-	inout  wire [15:0] dram_rd = 16'hZZ,
-	output wire [9:0] dram_ra = 10'b0,
-	output wire rwe_n   = 1'b1,
-	output wire rucas_n = 1'b1,
-	output wire rlcas_n = 1'b1,
-	output wire rras0_n = 1'b1,
-	output wire rras1_n = 1'b1,
+	inout  wire [15:0] dram_rd,
+	output wire [9:0] dram_ra,
+	output wire rwe_n  ,
+	output wire rucas_n,
+	output wire rlcas_n,
+	output wire rras0_n,
+	output wire rras1_n,
 
 	// video
 	output wire [1:0] vred,
@@ -56,33 +56,33 @@ module top(
 	output wire vcsync,
 
 	// AY control and audio/tape
-	output ay_clk = 0,
-	output ay_bdir = 0,
-	output ay_bc1 = 0,
+	output ay_clk,
+	output ay_bdir,
+	output ay_bc1,
 
-	output beep = 0,
+	output beep,
 
 	// IDE
-	output wire [2:0] ide_a = 0,
-	inout  wire [15:0] ide_d = 16'hZZ,
-	output wire ide_dir = 1,
-	output wire ide_cs0_n = 1,
-	output wire ide_cs1_n = 1,
-	output wire ide_rs_n = 1,
-	output wire ide_rd_n = 1,
-	output wire ide_wr_n = 1,
+	output wire [2:0] ide_a,
+	inout  wire [15:0] ide_d,
+	output wire ide_dir,
+	output wire ide_cs0_n,
+	output wire ide_cs1_n,
+	output wire ide_rs_n,
+	output wire ide_rd_n,
+	output wire ide_wr_n,
 	input  wire ide_rdy,
 
 	// VG93 and diskdrive
-	output wire vg_clk = 0,
-	output wire vg_cs_n = 1,
-	output wire vg_res_n = 0,
-	output wire vg_hrdy = 0,
-	output wire vg_rclk = 0,
-	output wire vg_rawr = 0,
-	output wire [1:0] vg_a = 0, // disk drive selection
-	output wire vg_wrd = 0,
-	output wire vg_side = 0,
+	output wire vg_clk,
+	output wire vg_cs_n,
+	output wire vg_res_n,
+	output wire vg_hrdy,
+	output wire vg_rclk,
+	output wire vg_rawr,
+	output wire [1:0] vg_a, // disk drive selection
+	output wire vg_wrd,
+	output wire vg_side,
 
 	input wire step,
 	input wire vg_sl,
@@ -103,9 +103,62 @@ module top(
 	input  wire spics_n,
 	input  wire spick,
 	input  wire spido,
-	output wire spidi = 0,
-	output wire spiint_n = 1
+	output wire spidi,
+	output wire spiint_n
 );
+
+	// assign clkz_out = f1;
+	assign clkz_out = fclk;
+    assign int_n = 1'b1;
+	assign nmi_n = 1'b1;
+	assign wait_n = 1'b1;
+	assign res = ~rst_n;
+    
+	assign csrom = 0;
+	assign romoe_n = 1;
+	assign romwe_n = 1;
+	assign rompg0_n = 1;
+	assign dos_n = 1;
+	assign rompg2 = 0;
+	assign rompg3 = 0;
+	assign rompg4 = 0;
+    
+	assign iorq1_n = 1'b1;
+	assign iorq2_n = 1'b1;
+	assign sdcs_n = 1;
+	assign spiint_n = 1;
+    
+	assign ay_clk = 0;
+	assign ay_bdir = 0;
+	assign ay_bc1 = 0;
+	assign beep = 0;
+    
+	assign rwe_n   = 1'b1;
+	assign rucas_n = 1'b1;
+	assign rlcas_n = 1'b1;
+	assign rras0_n = 1'b1;
+	assign rras1_n = 1'b1;
+	assign dram_rd = 0;
+	assign dram_ra = 10'b0;
+    
+	assign ide_a = 0;
+	assign ide_d = 0;
+	assign ide_dir = 1;
+	assign ide_cs0_n = 1;
+	assign ide_cs1_n = 1;
+	assign ide_rs_n = 1;
+	assign ide_rd_n = 1;
+	assign ide_wr_n = 1;
+    
+	assign vg_clk = 0;
+	assign vg_cs_n = 1;
+	assign vg_res_n = 0;
+	assign vg_hrdy = 0;
+	assign vg_rclk = 0;
+	assign vg_rawr = 0;
+	assign vg_a = 0;
+	assign vg_wrd = 0;
+	assign vg_side = 0;
 
 
 	wire f0, f1, h0, h1, c0, c1, c2, c3;
