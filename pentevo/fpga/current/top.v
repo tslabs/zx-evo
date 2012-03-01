@@ -156,9 +156,6 @@ module top(
 	wire [ 4:0] kj_port_data;
 	wire [ 7:0] mus_port_data;
 
-
-
-
 	wire [7:0] wait_read,wait_write;
 	wire wait_rnw;
 	wire wait_start_gluclock;
@@ -167,9 +164,6 @@ module top(
 	wire [7:0] gluclock_addr;
 	wire [2:0] comport_addr;
 	wire [6:0] waits;
-
-
-
 
 	// config signals
 	wire [7:0] not_used;
@@ -180,8 +174,6 @@ module top(
 	wire gen_nmi;
 	wire clr_nmi;
 	wire in_nmi;
-
-
 
 	wire tape_in;
 
@@ -204,9 +196,6 @@ module top(
 
 	wire [1:0] rstrom;
 
-
-
-
 	wire zclk = clkz_in;
 
 
@@ -224,13 +213,6 @@ module top(
 
 	assign res= ~rst_n;
 
-
-
-
-
-
-
-
 	assign ide_rs_n = rst_n;
 
 	assign ide_d = idedataout ? ideout : 16'hZZZZ;
@@ -238,25 +220,12 @@ module top(
 
 	assign ide_dir = ~idedataout;
 
-
-
-
-
-	wire [7:0] peff7;
-
-
-	wire cpm_n;
-	wire fnt_wr;
-
-
-
 	wire cpu_req,cpu_rnw,cpu_wrbsel,cpu_strobe;
 	wire [20:0] cpu_addr;
 	// wire [15:0] cpu_rddata;
 	wire [7:0] cpu_wrdata;
 
 	wire go;
-
 
 	wire sd_start;
 	wire [7:0] sd_dataout,sd_datain;
@@ -332,13 +301,9 @@ module top(
 	// data bus out: either RAM data or internal ports data or 0xFF with unused ports
 	assign d = ena_ram ? dout_ram : ( ena_ports ? dout_ports : ( drive_ff ? 8'hFF : 8'bZZZZZZZZ ) );
 
-
-
-
 	zbus zxbus( .iorq_n(iorq_n), .rd_n(rd_n), .wr_n(wr_n), .m1_n(m1_n),
 	            .iorq1_n(iorq1_n), .iorq2_n(iorq2_n), .iorqge1(iorqge1), .iorqge2(iorqge2),
 	            .porthit(porthit), .drive_ff(drive_ff) );
-
 
 
 	wire rampage_wr;	    // ports #10AF-#13AF
@@ -461,8 +426,6 @@ module top(
 	wire [15:0] dram_rddata;
 	wire [15:0] dram_wrdata;
 	wire [1:0] dbsel;
-
-
 
 
 	dram dram( .clk(fclk),
@@ -718,18 +681,24 @@ module top(
                 .wr_n     (wr_n),
 
                 .rst      (rst),
-                .iorq     (iorq),
-                .iorq_s   (iorq_s),
-                .mreq     (mreq),
-                .m1       (m1),
-                .rfsh     (rfsh),
+
                 .rd       (rd),
                 .wr       (wr),
                 .rdwr     (rdwr),
+                .m1       (m1),
+                .rfsh     (rfsh),
+
+                .iorq     (iorq),
                 .iord     (iord),
                 .iowr     (iowr),
-                .iowr_s   (iowr_s),
                 .iorw     (iorw),
+
+                .iorq_s   (iorq_s),
+                .iord_s   (iord_s),
+                .iowr_s   (iowr_s),
+                .iorw_s   (iorw_s),
+
+                .mreq     (mreq),
                 .memrd    (memrd),
                 .memwr    (memwr),
                 .memwr_s  (memwr_s),
@@ -751,38 +720,51 @@ module top(
 		wire [3:0] fddvirt ;
 
 	zports zports(
-                    .zclk(zclk), .fclk(fclk),
-                    .zpos(zpos), .zneg(zneg),
-                    .din(d), .dout(dout_ports), .dataout(ena_ports),
-                    .a(a),
+                    .zclk       (zclk),
+                    .clk        (fclk),
 
-                    .rst_n(rst_n),
-                    .iorq_n(iorq_n),
-                    .mreq_n(mreq_n),
-                    .m1_n(m1_n),
-                    .rd_n(rd_n),
-                    .wr_n(wr_n),
+                    .din        (d),
+                    .dout       (dout_ports),
+                    .dataout    (ena_ports),
+                    .a          (a),
 
-                    .iorq(iorq),
-                    .iorq_s(iorq_s),
-                    .mreq(mreq),
-                    .m1(m1),
-                    .iord(iord),
-                    .iowr(iowr),
-                    .iowr_s(iowr_s),
-                    .iorw(iorw),
-                    .rd(rd),
-                    .wr(wr),
-                    .rdwr(rdwr),
+                    .rst        (rst),
 
-                    .porthit(porthit),
-                    .ay_bdir(ay_bdir), .ay_bc1(ay_bc1),
-                    .peff7(peff7),
-                    .rstrom(rstrom), .vg_intrq(intrq), .vg_drq(drq), .vg_wrFF(vg_wrFF), .vg_cs_n(vg_cs_n),
-                    .sd_start(sd_start), .sd_dataout(sd_dataout), .sd_datain(sd_datain), .sdcs_n(sdcs_n),
-                    .idein(idein), .ideout(ideout), .idedataout(idedataout),
-                    .ide_a(ide_a), .ide_cs0_n(ide_cs0_n), .ide_cs1_n(ide_cs1_n),
-                    .ide_wr_n(ide_wr_n), .ide_rd_n(ide_rd_n),
+                    .rd         (rd),
+                    .wr         (wr),
+                    .rdwr       (rdwr),
+                    
+                    .iord       (iord),
+                    .iowr       (iowr),
+                    .iorw       (iorw),
+
+                    .iorq_s     (iorq_s),
+                    .iord_s     (iord_s),
+                    .iowr_s     (iowr_s),
+                    .iorw_s     (iorw_s),
+
+                    .ay_bdir        (ay_bdir),
+                    .ay_bc1         (ay_bc1),
+
+                    .rstrom         (rstrom),
+                    .vg_intrq       (intrq),
+                    .vg_drq         (drq),
+                    .vg_cs_n        (vg_cs_n),
+                    .vg_wrFF        (vg_wrFF),
+
+                    .sd_start       (sd_start),
+                    .sd_dataout     (sd_dataout),
+                    .sd_datain      (sd_datain),
+                    .sdcs_n         (sdcs_n),
+
+                    .idein          (idein),
+                    .ideout         (ideout),
+                    .idedataout     (idedataout),
+                    .ide_a          (ide_a),
+                    .ide_cs0_n      (ide_cs0_n),
+                    .ide_cs1_n      (ide_cs1_n),
+                    .ide_wr_n       (ide_wr_n),
+                    .ide_rd_n       (ide_rd_n),
 
                     .border_wr      (border_wr),
                     .zborder_wr     (zborder_wr),
@@ -811,7 +793,7 @@ module top(
 					.t1gpage_wr	    (t1gpage_wr),
 					.sgpage_wr	    (sgpage_wr),
 
-					.xt_page (xt_page),
+					.xt_page    (xt_page),
 
 					.fmaddr		(fmaddr),
 
@@ -828,27 +810,24 @@ module top(
 					.dmaport_wr (dmaport_wr),
                     .dma_act	(dma_act),
 
-                    .keys_in(kbd_port_data),
-                    .mus_in (mus_port_data),
-                    .kj_in  (kj_port_data),
+                    .keys_in    (kbd_port_data),
+                    .mus_in     (mus_port_data),
+                    .kj_in      (kj_port_data),
 
-                    .tape_read(tape_read),
+                    .tape_read  (tape_read),
 
-                    .gluclock_addr(gluclock_addr),
-                    .comport_addr (comport_addr),
-                    .wait_start_gluclock(wait_start_gluclock),
-                    .wait_start_comport (wait_start_comport),
-                    .wait_rnw  (wait_rnw),
-                    .wait_write(wait_write),
-`ifndef SIMULATE
-                    .wait_read (wait_read),
-`else
-                    .wait_read(8'hFF),
-`endif
-					.beeper_wr(beeper_wr),
-					.covox_wr (covox_wr),
+					.beeper_wr  (beeper_wr),
+					.covox_wr   (covox_wr),
 
-					.external_port(external_port)
+                    .gluclock_addr          (gluclock_addr),
+                    .comport_addr           (comport_addr),
+                    .wait_start_gluclock    (wait_start_gluclock),
+                    .wait_start_comport     (wait_start_comport),
+                    .wait_rnw               (wait_rnw),
+                    .wait_write             (wait_write),
+
+                    .porthit    (porthit),
+					.external_port  (external_port)
 	);
 
 
@@ -907,8 +886,6 @@ module top(
 	);
 
 
-
-
 	zwait zwait(
                  .wait_start_gluclock(wait_start_gluclock),
 	             .wait_start_comport (wait_start_comport),
@@ -919,8 +896,6 @@ module top(
 	             .waits(waits),
 	             .spiint_n(spiint_n)
     );
-
-
 
 
 	// wire [1:0] vg_ddrv;
@@ -935,14 +910,9 @@ module top(
 	             .vg_irq(vg_irq), .vg_wd(vg_wd) );
 
 
-
-
 	spi2 zspi( .clk(fclk), .sck(sdclk), .sdo(sddo), .sdi(sddi), .start(sd_start),
 	           .speed(2'b00),	// this is 14 MHz at 28 Mhz Altera clock
 			   .din(sd_datain), .dout(sd_dataout) );
-
-
-
 
 
 	  //////////////////////////////////////
