@@ -143,12 +143,7 @@ module zports(
 
 
 	output wire        covox_wr,
-	output wire        beeper_wr,
-
-	// inputs from atm_pagers, to read back its config
-	input  wire [63:0] pages,
-	input  wire [ 7:0] ramnroms,
-	input  wire [ 7:0] dos7ffds
+	output wire        beeper_wr
 
 );
 
@@ -185,9 +180,6 @@ module zports(
 
 	localparam SDCFG  = 8'h77;
 	localparam SDDAT  = 8'h57;
-
-	localparam ATMF7  = 8'hF7;
-	localparam ATM77  = 8'h77;
 
 	localparam COMPORT = 8'hEF; // F8EF..FFEF - rs232 ports
 
@@ -233,18 +225,17 @@ module zports(
 	wire [7:0] loa=a[7:0];
 	wire [7:0] hoa=a[15:8];
 
-    assign porthit = (
-            (loa==PORTFE) || (loa==PORTXT) || (loa==PORTFD) ||
-		    (loa==NIDE10) || (loa==NIDE11) || (loa==NIDE30) || (loa==NIDE50) || (loa==NIDE70) ||
-		    (loa==NIDE90) || (loa==NIDEB0) || (loa==NIDED0) || (loa==NIDEF0) || (loa==NIDEC8) ||
-		    (loa==KMOUSE) ||
-		    (((loa==VGCOM) || (loa==VGTRK) || (loa==VGSEC) || (loa==VGDAT) || (loa==VGSYS)) && dos) ||
-            ( (loa==KJOY)&&(!dos) ) ||
-		    ( (loa==PORTF7)&&(!dos) ) ||
-            ( (loa==SDCFG)&&(!dos) ) || ( (loa==SDDAT) ) ||
-		    ( (loa==ATMF7)&&dos ) || ( (loa==ATM77)&&dos ) ||
-            ( loa==COMPORT )
-		  );
+    assign porthit =
+            (((loa==SDCFG) || (loa==SDDAT)) && (!dos || vdos))
+         || (loa==PORTFE) || (loa==PORTXT) || (loa==PORTFD)
+		 || (loa==NIDE10) || (loa==NIDE11) || (loa==NIDE30) || (loa==NIDE50) || (loa==NIDE70)
+		 || (loa==NIDE90) || (loa==NIDEB0) || (loa==NIDED0) || (loa==NIDEF0) || (loa==NIDEC8)
+		 || (loa==KMOUSE)
+		 || (((loa==VGCOM) || (loa==VGTRK) || (loa==VGSEC) || (loa==VGDAT) || (loa==VGSYS)) && dos)
+         || ((loa==KJOY) && !dos)
+		 || ((loa==PORTF7) && !dos)
+         || (loa==COMPORT)
+		  ;
 
 
 	assign external_port = ( ((loa==PORTFD) & a[15])    // AY
@@ -339,14 +330,16 @@ module zports(
 			dout = sd_dataout;
 
 
-		PORTF7: begin
+		PORTF7:
+        begin
 			if( !a[14] && (a[8]^dos) && gluclock_on ) // $BFF7 - data i/o
 				dout = wait_read;
 			else // any other $xxF7 port
 				dout = 8'hFF;
 		end
 
-		COMPORT: begin
+		COMPORT:
+        begin
 			dout = wait_read; // $F8EF..$FFEF
 		end
 
@@ -757,31 +750,26 @@ module zports(
 	end
 
 
-// SD card (z-control¸r compatible)
+// SD card (Z-control¸r compatible)
+	wire sdcfg_wr;
+    wire sddat_wr;
+    wire sddat_rd;
 
-	wire sdcfg_wr,sddat_wr,sddat_rd;
-
-	assign sdcfg_wr = ( (loa==SDCFG) && port_wr_fclk && (!dos) )                  ||
-	                  ( (loa==SDDAT) && port_wr_fclk &&   dos  && (a[15]==1'b1) ) ;
-
-	assign sddat_wr = ( (loa==SDDAT) && port_wr_fclk && (!dos) )                  ||
-	                  ( (loa==SDDAT) && port_wr_fclk &&   dos  && (a[15]==1'b0) ) ;
-
-	assign sddat_rd = ( (loa==SDDAT) && port_rd_fclk              );
+	assign sdcfg_wr = ((loa==SDCFG) && port_wr_fclk && (!dos || vdos));
+	assign sddat_wr = ((loa==SDDAT) && port_wr_fclk && (!dos || vdos));
+	assign sddat_rd = ((loa==SDDAT) && port_rd_fclk);
 
 	// SDCFG write - sdcs_n control
 	always @(posedge fclk)
 	begin
-		if( !rst_n )
+		if (!rst_n)
 			sdcs_n <= 1'b1;
-		else // posedge zclk
-			if( sdcfg_wr )
-				sdcs_n <= din[1];
+		else if (sdcfg_wr)
+			sdcs_n <= din[1];
 	end
 
 
 	// start signal for SPI module with resyncing to fclk
-
 	assign sd_start = sddat_wr || sddat_rd;
 
 

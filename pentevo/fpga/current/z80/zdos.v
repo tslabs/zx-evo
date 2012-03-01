@@ -8,7 +8,8 @@
 module zdos(
 
 	input  wire        fclk,
-	input  wire        rst_n,
+	input  wire        rst,
+	input  wire        m1,
 
 	input  wire        dos_on,
 	input  wire        dos_off,
@@ -22,8 +23,8 @@ module zdos(
 
 
 // turn on and off dos
-	always @(posedge fclk, negedge rst_n)
-	if( !rst_n )
+	always @(posedge fclk)
+	if (rst)
 	begin
 		dos <= 1'b0;
 	end
@@ -39,17 +40,22 @@ module zdos(
 
 
 // turn on and off virtdos
-    always @(posedge fclk, negedge rst_n)
-	if( !rst_n )
-	begin
+    reg pre_vdos;
+    
+    always @(posedge fclk)
+	if (rst)
+		pre_vdos <= 1'b0;
+	else if (vdos_on)
+            pre_vdos <= 1'b1;
+    else if (vdos_off)
+            pre_vdos <= 1'b0;
+
+    
+    always @(posedge fclk)
+	if (rst)
 		vdos <= 1'b0;
-	end
-	else // posedge fclk
-        if (vdos_on)
-            vdos <= 1'b1;
-        else
-        if (vdos_off)
-            vdos <= 1'b0;
+	else if (m1)
+            vdos <= pre_vdos;
 
 
 endmodule
