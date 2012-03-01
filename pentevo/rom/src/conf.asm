@@ -18,6 +18,8 @@ shadow_off      equ 0x00
 
 
 ; -- TS-config port regs
+xstatus         equ 0x00
+
 vconf           equ 0x00
 vpage           equ 0x01
 xoffs           equ 0x02
