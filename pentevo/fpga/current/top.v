@@ -662,9 +662,11 @@ module top(
 	wire wr;
 	wire rdwr;
 	wire iord;
+	wire iord_s;
 	wire iowr;
 	wire iowr_s;
 	wire iorw;
+	wire iorw_s;
 	wire memrd;
 	wire memwr;
 	wire memwr_s;
@@ -734,6 +736,7 @@ module top(
                     .wr         (wr),
                     .rdwr       (rdwr),
                     
+                    .iorq       (iorq),
                     .iord       (iord),
                     .iowr       (iowr),
                     .iorw       (iorw),
@@ -801,7 +804,7 @@ module top(
 					.memconf	(memconf),
 					.im2vect	(im2vect),
 					.fddvirt	(fddvirt),
-                    .vg_a       (vg_a),
+                    .drive_sel  (vg_a),
                     .dos        (dos),
                     .vdos       (vdos),
                     .vdos_on    (vdos_on),
@@ -824,6 +827,7 @@ module top(
                     .wait_start_gluclock    (wait_start_gluclock),
                     .wait_start_comport     (wait_start_comport),
                     .wait_rnw               (wait_rnw),
+                    .wait_read              (wait_read),
                     .wait_write             (wait_write),
 
                     .porthit    (porthit),

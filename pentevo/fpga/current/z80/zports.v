@@ -18,6 +18,7 @@ module zports(
 	input  wire        wr,
 	input  wire        rdwr,
 
+	input  wire        iorq,
 	input  wire        iord,
 	input  wire        iowr,
 	input  wire        iorw,
@@ -77,7 +78,7 @@ module zports(
 	output wire        ay_bdir,
 	output wire        ay_bc1,
 	output wire        covox_wr,
-	output wire        beeper_wr
+	output wire        beeper_wr,
 
 	input  wire [ 1:0] rstrom,
 	input  wire        tape_read,
@@ -99,7 +100,7 @@ module zports(
 	input  wire        vg_drq,  // from vg93 module - drq + irq read
 	output wire        vg_cs_n,
 	output wire        vg_wrFF,
-   	output reg  [1:0]  vg_a,    // disk drive selection
+   	output reg  [1:0]  drive_sel,    // disk drive selection
 
 	output reg         sdcs_n,
 	output wire        sd_start,
@@ -158,17 +159,17 @@ module zports(
 		 || ((loa==PORTF7) && !dos)
          || ide_ports
          || (loa==NIDE11)
-		 || vg_port || vgsys_port
+		 || ((vg_port || vgsys_port) && dos)
          || ((loa==KJOY) && !dos)
 		 || (loa==KMOUSE)
-         || ((loa==SDCFG) || (loa==SDDAT)) && (!dos || vdos))
+         || (((loa==SDCFG) || (loa==SDDAT)) && (!dos || vdos))
          || (loa==COMPORT);
 
 	wire ide_ports = (loa==NIDE10) || (loa==NIDE30) || (loa==NIDE50) || (loa==NIDE70)
-                  || (loa==NIDE90) || (loa==NIDEB0) || (loa==NIDED0) || (loa==NIDEF0) || (loa==NIDEC8);
+                  || (loa==NIDE90) || (loa==NIDEB0) || (loa==NIDED0) || (loa==NIDEF0) || (loa==NIDEC8); // ide ports selected
 
-    wire vg_port = ((loa==VGCOM) | (loa==VGTRK) | (loa==VGSEC) | (loa==VGDAT)) & dos;
-    wire vgsys_port = (loa==VGSYS) & dos;
+    wire vg_port = (loa==VGCOM) | (loa==VGTRK) | (loa==VGSEC) | (loa==VGDAT);
+    wire vgsys_port = (loa==VGSYS);
 
 	assign external_port = ((loa==PORTFD) & a[15])        // AY
                         || (((loa==VGCOM) || (loa==VGTRK) || (loa==VGSEC) || (loa==VGDAT)) && dos);
@@ -177,6 +178,11 @@ module zports(
 
 
 // zclk-synchronous strobes
+    // wire zclk = clk;
+	// wire port_wr = iowr;
+	// wire port_rd = iord;
+	reg iowr_reg;
+	reg iord_reg;
 	reg port_wr;
 	reg port_rd;
 
@@ -242,6 +248,7 @@ module zports(
         begin
 			if (!a[14] && (a[8] ^ dos) && gluclock_on) // $BFF7 - data i/o
 				dout = wait_read;
+				// dout = 8'h55;
 			else // any other $xxF7 port
 				dout = 8'hFF;
 		end
@@ -256,7 +263,7 @@ module zports(
 		endcase
 	end
 
-    
+
 // power-up
 // This bit is loaded as 1 while FPGA is configured
 // and automatically reset to 0 after STATUS port reading
@@ -409,7 +416,7 @@ module zports(
 // 7FFD port
 	wire p7ffd_wr = !a[15] && (loa==PORTFD) && iowr_s && !p7ffd[5];
 
-	reg [7:0] p7ffd
+	reg [7:0] p7ffd;
 	always @(posedge clk)
 		if (rst)
 			p7ffd <= 8'h00;
@@ -424,17 +431,22 @@ module zports(
 
 
 // VG93
-    wire virt_vg = fddvirt[vg_a];
+    wire virt_vg = fddvirt[drive_sel];
 
-    assign vg_cs_n = !(iorw & vg_port & !virt_vg);
-    assign vg_wrFF = iowr_s & vgsys_port & !virt_vg;
+    assign vg_cs_n = !(iorw & vg_port & dos & !vdos & !virt_vg);
+    assign vg_wrFF = wr & iorq_s2 & vgsys_port & dos & !vdos & !virt_vg;
 
-    assign vdos_on  = iorw_s & (vg_port | vgsys_port) & dos & !vdos & virt_vg;
-    assign vdos_off = iorw_s & vg_port & vdos & virt_vg;
+    assign vdos_on  = rdwr & iorq_s2 & (vg_port | vgsys_port) & dos & !vdos & virt_vg;
+    assign vdos_off = rdwr & iorq_s2 & vg_port & vdos;
 
+    reg iorq_s2;
     always @(posedge clk)
-        if (iowr_s & vgsys_port)
-            vg_a <= din[1:0];
+        iorq_s2 <= iorq_s;
+    
+    // write drive number
+    always @(posedge clk)
+        if (iowr_s & vgsys_port & dos)
+            drive_sel <= din[1:0];
 
 
 // SD card (Z-control¸r compatible)
@@ -467,13 +479,10 @@ module zports(
 	assign covox_wr  = (loa==COVOX) && iowr;
 
 
-// F7 ports (like EFF7) are accessible in dos mode but at addresses like EEF7, DEF7, BEF7 so that
-	// there are no conflicts in dos mode with ATM xFF7 and x7F7 ports
-	wire portf7_wr    = ((loa==PORTF7) && (a[8]==1'b1) && port_wr && !dos) ||
-	                    ((loa==PORTF7) && (a[8]==1'b0) && port_wr && dos) ;
+// xxF7
+	wire portf7_wr = ((loa==PORTF7) && (a[8]==1'b1) && port_wr && (!dos || vdos));
+	wire portf7_rd = ((loa==PORTF7) && (a[8]==1'b1) && port_rd && (!dos || vdos));
 
-	wire portf7_rd    = ((loa==PORTF7) && (a[8]==1'b1) && port_rd && (!dos)) ||
-	                    ((loa==PORTF7) && (a[8]==1'b0) && port_rd && dos) ;
 
 // EFF7 port
     reg [7:0] peff7;
@@ -484,23 +493,13 @@ module zports(
 			peff7 <= din;
 
 
-// gluclock ports (bit7:eff7 is above)
-	wire gluclock_on = peff7[7] || dos;        // in dos mode EEF7 is not accessible
-	                                             // gluclock access is ON in dos mode.
+// gluclock ports
+	wire gluclock_on = peff7[7] || dos;        // in dos mode EEF7 is not accessible, gluclock access is ON in dos mode.
 
 	always @(posedge zclk)
 		if (gluclock_on && portf7_wr) // gluclocks on
 			if( !a[13] ) // $DFF7 - addr reg
 				gluclock_addr <= din;
-
-
-// comports
-	wire comport_wr   = ((loa==COMPORT) && port_wr);
-	wire comport_rd   = ((loa==COMPORT) && port_rd);
-
-	always @(posedge zclk)
-		if (comport_wr || comport_rd)
-			comport_addr <= a[10:8];
 
 
 // write to wait registers
@@ -513,6 +512,15 @@ module zports(
 		else if (comport_wr) // $F8EF..$FFEF - comports
 			wait_write <= din;
 	end
+
+
+// comports
+	wire comport_wr   = ((loa==COMPORT) && port_wr);
+	wire comport_rd   = ((loa==COMPORT) && port_rd);
+
+	always @(posedge zclk)
+		if (comport_wr || comport_rd)
+			comport_addr <= a[10:8];
 
 
 // wait from wait registers
@@ -542,7 +550,6 @@ module zports(
 
 	wire ideout_hi_wr;
 	wire idein_lo_rd;
-	reg ide_ports; // ide ports selected
 
 	reg ide_rd_trig; // nemo-divide read trigger
 	reg ide_rd_latch; // to save state of trigger during read cycle
@@ -615,7 +622,7 @@ module zports(
             ide_rd_latch <= ide_rd_trig;
 
 	always @*
-        if (!wr_n)
+        if (!wr)
         begin
             ide_wrlo_latch <= ide_wrlo_trig; // same for write triggers
             ide_wrhi_latch <= ide_wrhi_trig;
