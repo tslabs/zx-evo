@@ -80,9 +80,11 @@ win3            equ 0xC000
 
 
 ; -- addresses
+sys_var         equ h'5C00
+
 pal_addr        equ h'6000      ; \ 
 fat_bufs        equ h'4000      ; | 
-res_buf         equ h'5C00      ; |
+res_buf         equ h'5000      ; |
 nv_buf          equ h'5D00      ; | LSB should be 0 !!
 vars            equ h'5B00      ; /
 

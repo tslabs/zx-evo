@@ -204,12 +204,39 @@ RES_SYS
         jp 0
 
 
-RES_BT_HB           ; boot.$c
-        halt
-
-
 RES_BT_SR           ; sys.rom
         halt
+
+
+RES_BT_HB           ; boot.$c
+        xor a
+        xtr
+        xta page3
+
+        call start
+        push de
+
+        ld a, h'01
+        xtr
+        xta memconf
+
+        xor a
+        xtr
+        xta page0
+
+        ld bc, h'7FFD
+        ld a, h'10
+        out (c),a
+
+        di
+        im 1
+        ld a, 63
+        ld i, a
+        ld iy, h'5C3A
+        
+        ld hl, h'2758
+        exx
+        ret
 
 
 RESET2_END
@@ -841,8 +868,7 @@ SYM
         inc l
         ret
 
-
-; #include "booter.asm"
+#include "booter.asm"
 #include "arrays.asm"
 #include "restarts.asm"
 

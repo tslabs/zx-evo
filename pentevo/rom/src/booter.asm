@@ -11,32 +11,40 @@ acmd_41 equ h'69
 
 
 ;---------------------------------------
-start
-        ld hl, 0
+
+start   ld hl, 0
         ld (lstcat), hl
         ld (lstcat + 2), hl
+
         call ide_ini
+
         xor a
         call sel_dev
+
         call hdd
+
         ld hl, file1
         ld de, entry
         ld bc, 11
         ldir
-        call srhdrn
-        ld a, 1
-        jr nz, $ + 4
-        ld a, 7
-        out (254), a
+        call srhdrn; Z - file not found
+
         ld (lobu), hl
         ld (lobu + 2), de
         ld hl, lobu
         call gipag
+
         ld hl, lobu
         ld b, 1
         call load512
+
         ld hl, lobu + 17
         ld de, (lobu + 9)
+
+;ld a, d
+;cp h'60
+;jr c, fail
+
         push de
         ld bc, 512-17
         ldir
@@ -46,7 +54,14 @@ thg     ld b, 1
         ld a, (eoc)
         cp h'0f
         jr nz, thg
-        ret
+
+	ld hl, sysvar_start
+        ld de, sys_var
+        ld bc, sysvar_end-sysvar_start
+        ldir
+
+        pop de       
+	ret
 
 ;---------------------------------------
 ;read data from fat32 (flow)
@@ -96,7 +111,7 @@ newcla  ld (nr0), a
         call proz
         pop hl
         ld a, (nr0)
-nw0     call rddse;       read sector(s)
+        call rddse;       read sector(s)
         ld (ldhl), hl;   updating address
         ld hl, lthl
         ld de, llhl
@@ -573,11 +588,8 @@ tos     xor a
 ;---------------------------------------
 ;   SD DRIVER
 ;---------------------------------------
-;инициализация sd карты
 
-ide_ini ;cp h'f1
-        ; ret z
-        call sd__off
+ide_ini call sd__off
         ret
 
 ;=======================================
@@ -623,7 +635,7 @@ reads   push bc
         ret
 
 ;---------------------------------------
-;определение наличия карты
+;detecting device:
         
 sel_dev ;i:        a - n of dev
         or a
@@ -812,7 +824,7 @@ in_exit pop de
 
         
 ;-------
-file1   defb "boot    $c "
+file1   defb "BOOT    $C "
 
 ;---------------------------------------
 cmd00   defb 0x40, 0, 0, 0, 0, 0x95
