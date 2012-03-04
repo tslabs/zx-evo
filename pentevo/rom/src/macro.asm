@@ -71,6 +71,12 @@ __val 	defl -1
         endm
 
 
+; reset value flag
+xtrv    macro
+__val 	defl -1
+        endm
+
+
 ; manage port
 xtp     macro port
         .if __xtp <> extp

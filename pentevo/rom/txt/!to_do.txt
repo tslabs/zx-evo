@@ -1,6 +1,8 @@
-- zero 48k RAM before reset
+- conf version display
+- clock
+- bank de-highlight when BD selected
+- boot error processing
 - NVRAM checksum
-- FAT boot
 - help window
 - palette editor
 - CMOS editor
