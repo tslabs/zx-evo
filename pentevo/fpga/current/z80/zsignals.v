@@ -8,6 +8,8 @@ module zsignals(
 // clocks
 	input wire clk,
 	input wire zclk,
+	input wire zpos,
+	input wire zneg,
 
 // board controls
 	input wire rst_n,
@@ -31,15 +33,16 @@ module zsignals(
 	output wire iord,
 	output wire iowr,
 	output wire iorw,
-	output wire iorq_s,
 	output wire iord_s,
 	output wire iowr_s,
 	output wire iorw_s,
+    
+	output wire iorq_s,
+	output wire memwr_s,
 
 	output wire mreq,
 	output wire memrd,
 	output wire memwr,
-	output wire memwr_s,
 	output wire memrw,
 
 	output wire m1,
@@ -58,7 +61,6 @@ module zsignals(
     assign iowr = iorq & wr;
     assign iorw = iorq & (rd | wr);
 
-    assign iorq_s = iorq_r[1];
     assign iord_s = iorq_s & rd;
     assign iowr_s = iorq_s & wr;
     assign iorw_s = iorq_s & (rd | wr);
@@ -68,33 +70,29 @@ module zsignals(
     assign memwr = mreq & !rfsh & !rd;
     assign memrw = mreq & (rd | wr);
 
-    assign memwr_s = memwr_r[1];
-
     assign m1 = !m1_n;
     assign rfsh = !rfsh_n;
 
 
 // z80 strobed signals
+    assign iorq_s = iorq_r[0] && (!iorq_r[1]);
     reg [1:0] iorq_r;
-    always @(posedge clk)
-        if (iorq)
-            if (~|iorq_r & zclk)
-                iorq_r <= 2'b11;
-            else
-                iorq_r[1] <= 1'b0;
-        else
-            iorq_r <= 2'b00;
+	always @(posedge clk)
+    begin
+        if (zpos)
+            iorq_r[0] <= iorq;
+		iorq_r[1] <= iorq_r[0];
+    end
 
 
+    assign memwr_s = memwr_r[0] && (!memwr_r[1]);
     reg [1:0] memwr_r;
     always @(posedge clk)
-        if (memwr)
-            if (~|memwr_r & zclk)
-                memwr_r <= 2'b11;
-            else
-                memwr_r[1] <= 1'b0;
-        else
-            memwr_r <= 2'b00;
+    begin
+        if (zpos)
+            memwr_r[0] <= memwr;
+		memwr_r[1] <= memwr_r[0];
+    end
 
 
 endmodule
