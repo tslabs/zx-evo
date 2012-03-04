@@ -50,6 +50,8 @@ MN1:
 
 RESET
         di
+        call CLS_ZX
+        
         xtr
         xt page1, 5
         xt page2, 2
@@ -78,7 +80,6 @@ RESET
 RES_2
         call LD_PAL
         call LD_64_PAL
-        call CLS_ZX
 
 ; FDDVirt
         ld a, (fddv)
