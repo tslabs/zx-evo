@@ -32,32 +32,32 @@ OPTTAB0
         defb 9          ; number of options
         defb 'Select NVRAM options:', 0
 
-		defw OPT_CFQ, SEL_CFQ   ; address of option desc, address of option choises
+		defw OPT_CFQ, SEL_CFQ   ; address of option desc, address of option choices
+		defw OPT_80L, SEL_80L
 		defw OPT_B1T, SEL_BOT
 		defw OPT_B1B, SEL_BTB
 		defw OPT_B2T, SEL_BOT
 		defw OPT_B2B, SEL_BTB
 		defw OPT_B1D, SEL_BDV
-		defw OPT_80L, SEL_80L
 		defw OPT_AFQ, SEL_AFQ
 		defw OPT_ZPL, SEL_ZPL
 
 ; -- option text
-; byte - number of choises
+; byte - number of choices
 ; byte - address in NVRAM
 ; string - option
 OPT_CFQ    defb 3, low(cfrq), 'CPU speed, MHz:', 0
+OPT_80L    defb 4, low(l128), '128k Lock:', 0
 OPT_B1T    defb 5, low(b1to), 'Reset to:', 0
 OPT_B1B    defb 4, low(b1tb), '  bank:', 0
 OPT_B2T    defb 5, low(b2to), 'CS Reset to:', 0
 OPT_B2B    defb 4, low(b2tb), '  bank:', 0
 OPT_B1D    defb 4, low(bdev), 'Boot Device:', 0
-OPT_80L    defb 4, low(l128), '128k Lock:', 0
 OPT_AFQ    defb 4, low(ayfr), 'AY clock, MHz:', 0
 OPT_ZPL    defb 6, low(zpal), 'ZX Palette:', 0
 
-; -- choises
-; string - choise
+; -- choices
+; string - choice
 SEL_CFQ
 		defb ' 3.5', 0
         defb ' 7.0', 0

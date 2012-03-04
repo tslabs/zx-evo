@@ -22,7 +22,7 @@ MAIN
 
         ld sp, stck
         im 1
-        xor a
+        ld a, 63
         ld i, a
 
         call READ_NVRAM
@@ -78,6 +78,7 @@ RESET
 RES_2
         call LD_PAL
         call LD_64_PAL
+        call CLS_ZX
 
 ; FDDVirt
         ld a, (fddv)
@@ -235,7 +236,8 @@ SETUP:
         xt vconf, mode_nogfx
 
         call S_INIT
-        call CLS
+        call CLS_ZX
+        call CLS_TXT
         call LD_FONT
         call LD_S_PAL
 
@@ -676,15 +678,57 @@ LD_FONT
         ret
 
 
-CLS:    xtr
-        xt page3, txpage
-        ld hl, win3
-        ld de, win3 + 1
-        ld bc, h'3FFF
-        ld (hl), 0
-        ldir
-        ret
+CLS_ZX
+        ld e, 5
+        ld d, 27
+        jr CLT1
 
+        
+CLS_TXT
+        ld e, txpage
+        ld d, 64
+CLT1
+        ld hl, 0
+        xor a
+
+        
+; Fill memory using DMA (only 256 byte aligned addresses!)
+; EHL - address
+; D - numbers of 256 byte blocks
+; A - fill value
+DMAFILL
+        xtbc, page3
+        out (c), e
+        ld b, dmasax
+        out (c), e
+        ld b, dmadax
+        out (c), e
+        ld b, dmasah
+        out (c), h
+        ld b, dmadah
+        out (c), h
+        ld b, dmasal
+        out (c), l
+        set 7, h
+        set 6, h
+        ld (hl), a
+        inc l
+        ld (hl), a
+        inc l
+        ld b, dmadal
+        out (c), l
+        ld b, dmanum
+        dec d
+        dec d
+        out (c), d
+        xtrv
+        xt dmalen, 127
+        xt dmactr, dma_dev_mem | dma_z80lp     ; Run DMA
+        xt dmanum, 0
+        xt dmalen, 126
+        xt dmactr, dma_dev_mem | dma_z80lp     ; Run last burst
+        ret
+        
 
 LD_S_PAL
         ld hl, pal_bb
