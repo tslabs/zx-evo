@@ -17,28 +17,6 @@ sel_max         defs 1      ; number of available choises in current option
 opt_nvr         defs 1      ; NVRAM cell for current option
 
 
-; -- NVRAM cells
-                org nv_buf + nv_1st
-fddv            defs 1      ; FDDVirt (#29AF copy)  // non-removable #B0
-cfrq            defs 1      ; CPU freq              // non-removable #B1
-bdev            defs 1      ; boot device           // non-removable #B2
-
-ayfr            defs 1      ; AY freq
-b1to            defs 1      ; Boot option
-b1tb            defs 1      ; Boot bank
-b2to            defs 1      ; CS Boot option
-b2tb            defs 1      ; CS Boot bank
-l128            defs 1      ; Lock 128
-zpal            defs 1      ; ZX palette
-cpal            defs 32     ; Custom palette
-nvcs            defs 2      ; checksum - must be last in the declaration
-
-nv_size         equ $ - nv_buf - nv_1st
- .if nv_size > 64
-#error 'NVRAM is exceeding 64 bytes!'
- .endif
-
-
 ; -------- FAT driver
 
 nsdc            defs 1      ; sec num in clus
@@ -86,6 +64,29 @@ blknum          defs 4
 dahl            defs 2      ; see hdd proc.
 dade            defs 2
 zes             defs 1
+
+
+; -- NVRAM cells
+                org nv_buf + nv_1st
+fddv            defs 1      ; FDDVirt (#29AF copy)  // non-removable #B0
+cfrq            defs 1      ; CPU freq              // non-removable #B1
+bdev            defs 1      ; boot device           // non-removable #B2
+
+ayfr            defs 1      ; AY freq
+b1to            defs 1      ; Boot option
+b1tb            defs 1      ; Boot bank
+b2to            defs 1      ; CS Boot option
+b2tb            defs 1      ; CS Boot bank
+l128            defs 1      ; Lock 128
+zpal            defs 1      ; ZX palette
+cpal            defs 32     ; Custom palette
+nvcs            defs 2      ; checksum - must be last in the declaration
+
+nv_size         equ $ - nv_buf - nv_1st
+ .if nv_size > 64
+#error 'NVRAM is exceeding 64 bytes!'
+ .endif
+
 
 ; FAT driver buffers
                 org fat_bufs
