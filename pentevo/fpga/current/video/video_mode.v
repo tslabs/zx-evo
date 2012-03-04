@@ -79,7 +79,11 @@ module video_mode (
         vga_hires <= tv_hires;
     end
     
-    always @(posedge clk) if ((line_start & c3) | zvpage_wr)
+    reg zvpage_wr_r;
+    always @(posedge clk)
+        zvpage_wr_r <= zvpage_wr;
+    
+    always @(posedge clk) if ((line_start & c3) | zvpage_wr_r)
         vpage_d <= vpage;
     
     
