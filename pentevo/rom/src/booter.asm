@@ -55,7 +55,7 @@ thg     ld b, 1
         cp h'0f
         jr nz, thg
 
-	ld hl, sysvar_start
+        ld hl, sysvar_start
         ld de, sys_var
         ld bc, sysvar_end-sysvar_start
         ldir

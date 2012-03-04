@@ -79,6 +79,11 @@ RES_2
         call LD_PAL
         call LD_64_PAL
 
+; FDDVirt
+        ld a, (fddv)
+        xtr
+        xta fddvirt
+
         ld hl, RESET2
         ld de, res_buf
         ld bc, RESET2_END - RESET2
@@ -89,20 +94,11 @@ RES_2
 RESET2:
 ; -- setting up h/w parameters
 
-; FDDVirt
-
-        ; Here check the power-up bit!!!
-
-        ld a, (fddv)
-        xtr
-        xta fddvirt
-
 ; 128 lock
         ld a, (l128)
         rrca
         rrca
         ld d, a             ; D keeps the Lock128 Mode
-
 
 ; AY & CPU freq
         ld a, (ayfr)
@@ -155,7 +151,7 @@ RES_VROM
         xtr
         xt page0, vrompage
         ld a, b'1000
-        or d
+        or d                ; Lock128 Mode
         ld d, a             ; RAM will be used instead of ROM
 
 
@@ -204,39 +200,27 @@ RES_SYS
         jp 0
 
 
-RES_BT_SR           ; sys.rom
-        halt
-
-
 RES_BT_HB           ; boot.$c
-        xor a
         xtr
-        xta page3
+        xt page3, 0
 
         call start
         push de
 
-        ld a, h'01
         xtr
-        xta memconf
+        xt memconf, b'0001      ; mapping, Basic 48 ROM
+        xt page0, 0
 
-        xor a
-        xtr
-        xta page0
-
-        ld bc, h'7FFD
-        ld a, h'10
-        out (c),a
-
-        di
-        im 1
         ld a, 63
         ld i, a
         ld iy, h'5C3A
-        
         ld hl, h'2758
         exx
         ret
+
+
+RES_BT_SR           ; sys.rom
+        halt
 
 
 RESET2_END
