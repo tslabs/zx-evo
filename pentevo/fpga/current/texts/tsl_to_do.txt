@@ -1,125 +1,35 @@
 
 DMA:
- - access to devices ports with blocking strobes
- - blitter
- 
-Fixes:
- - dos 48/128 on/off
- - check INT length !!! (demo001 at 7mhz)
- - check stops of video fetching
- - move DMA wait to stall (like in BW 1/1)
- - fix vertical blank for border 1 pixel at the upper-right corner
- - fix all oddies with raster: INT 1 pix shift, hblank etc
- - fix PWM for TV (make smoother)
- - migrate video fetcher to c2
- - SYSConfig and CPU clock select
- - make proper clocked altdprams
- - make CRAM clocked: zclk for WE and fclk for RE
- - investigate and longer 14mhz wait length
- ? fix Xscroll for text mode
- - search ways to optimize huge LC usage - one-hot style selectors = use if...elseif constructions instead of if...if
+ - access to devices with ports blocking strobes
+ - move DMA wait to cycles with Z80 stall
 
 Features:
+ - debug TS engine
+ - move TS higher priority cycles to Z80 stall
+ - move all ports to fclk
  - copper
- - DOS switch to RAM #nn when in/out to VG93 and FDDVirt[(#FF)]
- - WP for RAM
- - back to DOS by ld b,b (opcode #40) + jmp nnnn (next but one M1)
- - blitter accelerated by commands like 'ld c,c'
- - version read (AVR wait ports) ? is already
+ ? blitter accelerated by commands like 'ld c,c'
  ? horizontal scrollers (array)
  ? vertical scrollers (unified with Tile mode)
+ - re-factor Z80 clock module (double-edge trigger)
+ - 28 MHz for Z80
  - 512 bytes no-wait buffer
  - IM2 vector to Z80 bus (RTFM z80 UM)
- ? LOAD "" for COM-port using X-modem
  - make less power-off delay (apx. 2 sec) on AVR
- 
- 
+ ? LOAD "" for COM-port using X-modem
+ - version read (AVR wait ports) ? is already
 
-NOTES:
+Fixes:
+ - optimize timings (negative slack on DRAM addr muxes)
+ - demo001 glitch at 7mhz
+ - check stop times of video fetching
+ - fix all oddies with raster: INT 1 pix shift, hblank etc
+ - fix vertical blank for border 1 pixel at the upper-right corner
+ - fix PWM for TV (make smoother)
+ - migrate video fetcher to c2
+ - make proper clocked altdprams
+ - investigate and longer 14mhz wait length
+ - search ways to optimize huge LC usage:
+    - one-hot style selectors = use if...elseif constructions instead of if...if
+    - muxes + summators -> summators only
 
-When add addr mux for TS address - clk slack is getting "-".
-Fix it by optimizing timings.
-
- 
- 
- 
- Sprites 'n' Tiles
- -----------------
- 
-Sprites:
-
- Nr of sprites: 42 (252 bytes)
- Sized: 16/32/48/64 pix individually for X and Y
- Min sprite (16x16) = 128 bytes = 64 words (6 bits)
- Max sprite (64x64) = 2048 bytes = 1024 words
- Total addressable space 21 - 6 = 15 bits
- 
- bits	desc
- 9		X coord
- 9		Y coord
- 2		X size
- 2		Y size
- 1		X flip
- 1		Y flip
- 15		addr
- 4		palette
- 1		active
- 1		leap
- ---------------------
- 45		totally of 48
-
-
- 0 - XXXX XXXX
- 1 - PPPP FSSX
- 2 - YYYY YYYY
- 3 - LCxx FSSY
- 4 - AAAA AAAx
- 5 - AAAA AAAA
- 
-
-Tiles:
-
- Sized: 8x8
- Tile: 32 bytes = 16 words = 4 bits
- Screen 360x288 = 45x36 = 1620 tiles = 51840 bytes
- Plane 512x512 = 64x64 = 4096 tiles = 128kB = 64kW = 16 bits (8 pages)
-
- bits	desc
- 12		tile
- 1		X flip
- 1		Y flip
- 2		palette
- ---------------------
- 16		totally of 16
- 
- 
- 
- 
- Layers (from bottom):
-
- for tile mode 0
-1 - border
-2 - sprites (until 1st leap)	
-3 - tiles0
-4 - sprites (until 2nd leap)
-5 - sprites (until 3rd leap)
-
-
- for tile mode 1
-1 - border
-2 - sprites (until 1st leap)	
-3 - tiles0
-4 - sprites (until 2nd leap)
-5 - tiles1
-6 - sprites (until 3rd leap)
-
-
- for pixel modes
- 
-1 - pixel graphics
-2 - sprites (until 1st leap)	
-3 - sprites (until 2nd leap)
-4 - sprites (until 3rd leap)
- 
-
- 
