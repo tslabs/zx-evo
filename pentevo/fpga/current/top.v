@@ -674,6 +674,7 @@ module top(
 
     zsignals zsignals(
                 .clk      (fclk),
+                .zclk     (zclk),
 				.rst_n    (rst_n),
                 .iorq_n   (iorq_n),
                 .mreq_n   (mreq_n),
