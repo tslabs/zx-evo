@@ -12,7 +12,13 @@ acmd_41 equ h'69
 
 ;---------------------------------------
 
-start   ld hl, 0
+start   ld hl, nsdc
+        ld de, nsdc+1
+        ld bc, zes-nsdc
+        ld (hl), 0
+        ldir
+
+        ld hl, 0
         ld (lstcat), hl
         ld (lstcat + 2), hl
 
