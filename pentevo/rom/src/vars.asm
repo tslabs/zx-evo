@@ -45,7 +45,6 @@ clshl           defs 2      ; | FirstClusLO
 sizik           defs 4      ; / size
 
 brezs           defs 2      ; fat parameters
-fsinf           defs 4      ;
 bfats           defs 1
 bftsz           defs 4
 bsecpc          defs 2      ; use 1
