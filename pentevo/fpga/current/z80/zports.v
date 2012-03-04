@@ -427,7 +427,7 @@ module zports(
 
 // AY control
 	wire ay_hit = (loa==PORTFD) & a[15] & iorq;
-	assign ay_bc1  = ay_hit & a[14] & (rd|(wr));
+	assign ay_bc1  = ay_hit & a[14] & (rd|wr);
 	assign ay_bdir = ay_hit & (wr);
 
 
