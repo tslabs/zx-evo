@@ -239,27 +239,28 @@ module dma (
     reg [7:0] s_addr_r;     // source lower address
 
 	always @(posedge clk)
-    begin
-		if (dma_saddrl)
-        begin
-			s_addr[6:0] <= zdata[7:1];
-			s_addr_r[6:0] <= zdata[7:1];
-        end
-
-		if (dma_saddrh)
-        begin
-			s_addr[12:7] <= zdata[5:0];
-			s_addr_r[7] <= zdata[0];
-        end
-
-		if (dma_saddrx)
-			s_addr[20:13] <= zdata;
-
 		if (dram_next & state_rd)			// increment RAM source addr
 			s_addr <= s_addr_next;
-    end
 
-            
+        else
+        begin
+            if (dma_saddrl)
+            begin
+                s_addr[6:0] <= zdata[7:1];
+                s_addr_r[6:0] <= zdata[7:1];
+            end
+
+            if (dma_saddrh)
+            begin
+                s_addr[12:7] <= zdata[5:0];
+                s_addr_r[7] <= zdata[0];
+            end
+
+            if (dma_saddrx)
+                s_addr[20:13] <= zdata;
+        end
+
+
     wire [20:0] d_addr_next = {d_addr_next_h[13:1], d_addr_next_m, d_addr_next_l[6:0]};
     wire [13:0] d_addr_next_h = d_addr[20:7] + d_addr_add_h;
     wire [1:0] d_addr_add_h = dma_dalgn ? {next_burst & dma_asz, next_burst & !dma_asz} : {d_addr_inc_l[8], 1'b0};
@@ -271,25 +272,25 @@ module dma (
     reg [7:0] d_addr_r;     // dest lower address
 
 	always @(posedge clk)
-    begin
-		if (dma_daddrl)
-        begin
-			d_addr[6:0] <= zdata[7:1];
-			d_addr_r[6:0] <= zdata[7:1];
-        end
-
-		if (dma_daddrh)
-        begin
-			d_addr[12:7] <= zdata[5:0];
-			d_addr_r[7] <= zdata[0];
-        end
-
-		if (dma_daddrx)
-			d_addr[20:13] <= zdata;
-
 		if (dram_next & state_wr)			// increment RAM dest addr
 			d_addr <= d_addr_next;
-    end
+        else
+        begin
+            if (dma_daddrl)
+            begin
+                d_addr[6:0] <= zdata[7:1];
+                d_addr_r[6:0] <= zdata[7:1];
+            end
+    
+            if (dma_daddrh)
+            begin
+                d_addr[12:7] <= zdata[5:0];
+                d_addr_r[7] <= zdata[0];
+            end
+    
+            if (dma_daddrx)
+                d_addr[20:13] <= zdata;
+        end
 
 
 // Z80 wait

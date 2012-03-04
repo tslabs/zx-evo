@@ -404,6 +404,7 @@ module zports(
 				fmaddr <= din[4:0];
 			if (hoa == SYSCONF)
 				sysconf <= din;
+				// sysconf <= 8'b01;
 			if (hoa == MEMCONF)
 				memconf <= din;
 			if (hoa == IM2VECT)
@@ -454,9 +455,9 @@ module zports(
     wire sddat_wr;
     wire sddat_rd;
 
-	assign sdcfg_wr = ((loa==SDCFG) && iowr_s && (!dos || vdos));
-	assign sddat_wr = ((loa==SDDAT) && iowr_s && (!dos || vdos));
-	assign sddat_rd = ((loa==SDDAT) && iord_s);
+	assign sdcfg_wr = ((loa==SDCFG) && iorq_s && wr && (!dos || vdos));
+	assign sddat_wr = ((loa==SDDAT) && iorq_s && wr && (!dos || vdos));
+	assign sddat_rd = ((loa==SDDAT) && iorq_s && rd);
 
 	// SDCFG write - sdcs_n control
 	always @(posedge clk)
