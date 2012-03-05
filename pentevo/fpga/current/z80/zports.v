@@ -373,8 +373,8 @@ module zports(
 	reg [7:0] rampage[0:3];
 	assign xt_page = {rampage[3], rampage[2], rampage[1], rampage[0]};
 
-    wire lock128 = (memconf[7:6] == 2'b01);
-
+    wire lock128 = memconf[7] ? !a[13] : memconf[6];
+        
 	always @(posedge clk)
 		if (rst)
 		begin
@@ -417,14 +417,14 @@ module zports(
 
 
 // 7FFD port
-	wire p7ffd_wr = !a[15] && (loa==PORTFD) && iowr_s && !p7ffd[5];
+	wire p7ffd_wr = !a[15] && (loa==PORTFD) && iowr_s && !lck48;
 
-	reg [7:0] p7ffd;
+	reg lck48;
 	always @(posedge clk)
 		if (rst)
-			p7ffd <= 8'h00;
+			lck48 <= 8'h00;
 		else if (p7ffd_wr)
-			p7ffd <= din;
+			lck48 <= din[5];
 
 
 // AY control
