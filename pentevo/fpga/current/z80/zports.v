@@ -365,8 +365,10 @@ module zports(
     assign vint_begl_wr = (portxt_wr & (hoa == VSINTL));
     assign vint_begh_wr = (portxt_wr & (hoa == VSINTH));
 
-	wire portxt_wr = ((loa==PORTXT) && iowr_s);
-	wire portfe_wr = ((loa==PORTFE) && iowr_s);
+	assign beeper_wr = portfe_wr;
+	wire portfe_wr = (loa==PORTFE) && iowr_s;
+	assign covox_wr  = (loa==COVOX) && iowr_s;
+	wire portxt_wr = (loa==PORTXT) && iowr_s;
 
 	reg [7:0] rampage[0:3];
 	assign xt_page = {rampage[3], rampage[2], rampage[1], rampage[0]};
@@ -473,11 +475,6 @@ module zports(
 
 	// data for SPI module
 	assign sd_datain = wr ? din : 8'hFF;
-
-
-	// covox/beeper writes
-	assign beeper_wr = (loa==PORTFE) && iowr;
-	assign covox_wr  = (loa==COVOX) && iowr;
 
 
 // xxF7

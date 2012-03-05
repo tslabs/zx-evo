@@ -18,6 +18,7 @@ Features:
  - make less power-off delay (apx. 2 sec) on AVR
  ? LOAD "" for COM-port using X-modem
  - version read (AVR wait ports) ? is already
+ - find solution to mix BEEP and TAPE simultaneously
 
 Fixes:
  - optimize timings (negative slack on DRAM addr muxes)

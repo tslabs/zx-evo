@@ -34,7 +34,7 @@ module sound(
 				val <= din;
 		else
 		if (beeper_wr)
-				val <= {din[3], {7{din[4]}}};
+				val <= {8{beeper_mux ? din[3] : din[4]}};
 
 
 // PWM generator
