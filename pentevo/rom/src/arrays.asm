@@ -47,7 +47,7 @@ OPTTAB0
 ; byte - address in NVRAM
 ; string - option
 OPT_CFQ    defb 3, low(cfrq), 'CPU speed, MHz:', 0
-OPT_80L    defb 4, low(l128), '128k Lock:', 0
+OPT_80L    defb 3, low(l128), '128k Lock:', 0
 OPT_B1T    defb 5, low(b1to), 'Reset to:', 0
 OPT_B1B    defb 4, low(b1tb), '  bank:', 0
 OPT_B2T    defb 5, low(b2to), 'CS Reset to:', 0
@@ -85,10 +85,9 @@ SEL_BDV
         defb '    RS-232', 0
 
 SEL_80L
-        defb '  OFF', 0
-		defb '   ON', 0
-		defb 'Auto1', 0
-		defb 'Auto2', 0
+        defb ' OFF', 0
+		defb '  ON', 0
+		defb 'Auto', 0
 
 SEL_AFQ
         defb '1.750', 0
