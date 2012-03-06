@@ -374,12 +374,12 @@ module zports(
 	reg [7:0] rampage[0:3];
 	assign xt_page = {rampage[3], rampage[2], rampage[1], rampage[0]};
 
-    wire lock128 = memconf[7] ? m1_bit7 : memconf[6];
+    wire lock128 = memconf[7] ? m1_lock128 : memconf[6];
     
-	reg m1_bit7;
+	reg m1_lock128;
     always @(posedge clk)
 		if (m1)
-			m1_bit7 <= din[7];
+			m1_lock128 <= !(din[7] ^ din[6]);
 
         
 	always @(posedge clk)
