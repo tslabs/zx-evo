@@ -4,4 +4,4 @@ out (nn),a      11010011
 out (c),r       01rrr001
 otiX            101xx011
 
-Use bit7 or 1, but otiX won't work anyway.
+Used bits7 and 6 XOR'ed
