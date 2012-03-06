@@ -734,6 +734,7 @@ module top(
                     .a          (a),
 
                     .rst        (rst),
+                    .m1         (m1),
 
                     .rd         (rd),
                     .wr         (wr),

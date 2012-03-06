@@ -17,8 +17,8 @@ Features:
  - IM2 vector to Z80 bus (RTFM z80 UM)
  - make less power-off delay (apx. 2 sec) on AVR
  ? LOAD "" for COM-port using X-modem
- - version read (AVR wait ports) ? is already
  - find solution to mix BEEP and TAPE simultaneously
+ - combine TS and Base confs to one AVR firmware (selection by Turbo key)
 
 Fixes:
  - optimize timings (negative slack on DRAM addr muxes)
@@ -29,7 +29,7 @@ Fixes:
  - fix PWM for TV (make smoother)
  - migrate video fetcher to c2
  - make proper clocked altdprams
- - investigate and longer 14mhz wait length
+ - investigate and longer 14mhz wait length (if need)
  - search ways to optimize huge LC usage:
     - one-hot style selectors = use if...elseif constructions instead of if...if
     - muxes + summators -> summators only
