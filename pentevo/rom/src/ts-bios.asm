@@ -205,16 +205,17 @@ RES_SYS
 RES_BT_HB           ; boot.$c
         xtr
         xt page3, 0
-
+        
+        push de
         call start
+        pop af
         push de
 
+        or 1
         xtr
-        xt memconf, b'0001      ; mapping, Basic 48 ROM
+        xta memconf      ; mapping, Basic 48 ROM
         xt page0, 0
 
-        ld a, 63
-        ld i, a
         ld iy, h'5C3A
         ld hl, h'2758
         exx
