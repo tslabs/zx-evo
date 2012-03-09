@@ -5,43 +5,6 @@
 // DRAM arbiter. Shares DRAM between processor and video data fetcher
 //
 
-
-
-// 20.11.2011:
-// arbiter has been re-factored so it uses N_cycles out of 4/8
-
-
-// 14.06.2011:
-// removed cpu_stall and cpu_waitcyc.
-// changed cpu_strobe behavior (only strobes read data arrival now).
-// added cpu_next signal (shows whether next DRAM cycle CAN be grabbed by CPU)
-//
-// Now it is a REQUIREMENT for 'go' signal only starting and ending on
-// beginning of DRAM cycle (i.e. right after 'c3' strobe).
-//
-
-
-// 13.06.2011:
-// ѕридЄтс€ потребовать, чтоб go устанавливалс€ сразу после c3 (у мен€ [lvd] это так).
-// это дл€ того, чтобы процессор на 14мгц мог заранее и в любой момент знать, на
-// сколько завейтитьс€. ¬место cpu_ack введем другой сигнал, который в течение всего
-// драм-цикла будет показывать, чей может быть следующий цикл - процессора или только
-// видео. ѕо сути это и будет также cpu_ack, но валидный в момент cpu_req (т.е.
-// в момент c3) и ранее.
-
-// 12.06.2011:
-// проблема: если цпу просит цикл чтени€, а его дать не могут,
-// то он должен держать cpu_req. однако, сн€ть он его может
-// только по cpu_strobe, при этом также отправитс€ еще один
-// запрос чтени€!!!
-// решение: добавить сигнал cpu_ack, по которому узнаЄтс€, что
-// арбитр зохавал запрос (записи или чтени€), который будет
-// совпадать с нынешним cpu_strobe на записи (c0), а будущий
-// cpu_strobe сделать только как строб данных на зохаванном
-// запросе чтен€.
-// это, возможно, позволит удалить вс€кие cpu_waitcyc...
-
-
 // Arbitration is made on full 8-cycle access blocks. Each cycle is defined by dram.v and consists of 4 fpga clocks.
 // During each access block, there can be either no videodata access, 1 videodata access, 2, 4 or full 8 accesses.
 // All spare cycles can be used by processor. If nobody uses memory in the given cycle, refresh cycle is performed
@@ -75,6 +38,7 @@
 // key signals are go and cpu_req, sampled at the end of each dram cycle. Must be set to the module
 // one clock cycle earlier the clock of the beginning current dram cycle
 
+
 module arbiter(
 
 	input wire clk,
@@ -85,8 +49,8 @@ module arbiter(
 
 // dram.v interface
 	output wire [20:0] dram_addr,   // address for dram access
-	output reg         dram_req,    // dram request
-	output reg         dram_rnw,    // Read-NotWrite
+	output wire        dram_req,    // dram request
+	output wire        dram_rnw,    // Read-NotWrite
 	output wire  [1:0] dram_bsel,   // positive bytes select: bsel[1] for wrdata[15:8], bsel[0] for wrdata[7:0]
 	output wire [15:0] dram_wrdata, // data to be written
 
@@ -113,12 +77,14 @@ module arbiter(
 	input wire [20:0] dma_addr,
 	input wire [15:0] dma_wrdata,
 	input wire        dma_req,
+	input wire        dma_zwt,
 	input wire        dma_rnw,
 	output reg        dma_next,
 
 // TS engine
 	input wire [20:0] ts_addr,
 	input wire 	      ts_req,
+	input wire 	      ts_zwt,
 	output wire       ts_pre_next,
 	output wire       ts_next
 
@@ -139,7 +105,7 @@ module arbiter(
 
 // DRAM access priority:
 // - CPU
-// - video
+// - VIDEO
 // - TS
 // - DMA
 
@@ -166,199 +132,122 @@ module arbiter(
 	wire curr_fre = ~|curr_cycle;
 
 
-
-
-
-	initial // simulation only!
-	begin
-		curr_cycle = CYC_FREE;
-		blk_rem = 0;
-		vid_rem = 0;
-	end
-
-
-
-
 	// assign c0 = dram_c0; // just alias
 
 	wire bw_full = ~|{video_bw[4] & video_bw[2], video_bw[3] & video_bw[1], video_bw[0]}; // stall when 000/00/0
+    wire blk_rem_0 = ~|blk_rem;
 
 	// track blk_rem counter: how many cycles left to the end of block (7..0)
-	always @(posedge clk) if( c3 )
+	always @(posedge clk) if (c3)
 	begin
 		blk_rem <= blk_nrem;
-
-		if( (blk_rem==3'd0) )
+		if (blk_rem_0)
 			stall <= bw_full & go;
 	end
 
 	always @*
 	begin
-		if( (blk_rem==3'd0) && go )
+		if (blk_rem_0 && go)
 			blk_nrem = {video_bw[4:3], 1'b1};	// remaining 7/3/1
-			// blk_nrem = 7;
 		else
-			blk_nrem = (blk_rem==0) ? 3'd0 : (blk_rem-3'd1);
+			blk_nrem = blk_rem_0 ? 3'd0 : (blk_rem - 3'd1);
 	end
 
 
+// track vid_rem counter
+	assign vidmax = {video_bw[2:0]};    // number of cycles for video access
 
-	// track vid_rem counter
-	assign vidmax = {video_bw[2:0]}; // number of cycles for video access
-	// assign vidmax = (3'b001) << bw; // number of cycles to perform
-
-	always @(posedge clk) if( c3 )
-	begin
+	always @(posedge clk) if (c3)       // number of remain video cycles
 		vid_rem <= vid_nrem;
-	end
+
 
 	always @*
 	begin
-		if( go && (blk_rem==3'd0) )
-			vid_nrem = cpu_req ? vidmax : (vidmax-3'd1);
+		if (go && blk_rem_0)
+			vid_nrem = cpu_req ? vidmax : (vidmax - 3'd1);
 		else
-			if( next_vid )
-				vid_nrem = (vid_rem==3'd0) ? 3'd0 : (vid_rem-3'd1);
+			if (next_vid)
+				vid_nrem = ~|vid_rem ? 3'd0 : (vid_rem - 3'd1);
 			else
 				vid_nrem = vid_rem;
 	end
 
 
+// next cycle decision
+    wire cpu_low = (ts_req & ts_zwt) | (dma_req & dma_zwt);
+    wire other_req = cpu_req | ts_req | dma_req;
+    wire [3:0] next_other = cpu_low ? (ts_req ? CYC_TS : CYC_DMA) : CYC_CPU;
 
-
-	// next cycle decision
 	always @*
-	begin
-		if( blk_rem==3'd0 )
-		begin
-			if( go )
-			begin
-				if( bw_full )
+		if (blk_rem_0)      // video burst start or video idle
+			if (go)             // video start
+				if (bw_full)        // BW full - CPU stall
 				begin
 					cpu_next = 1'b0;
-
 					next_cycle = CYC_VIDEO;
 				end
-				else
-				begin
-					cpu_next = 1'b1;
 
-					if( cpu_req )
+				else                // BW not full - if CPU has low priority - video goes first
+				begin
+					cpu_next = !cpu_low;
+					if (cpu_req & !cpu_low)
 						next_cycle = CYC_CPU;
 					else
 						next_cycle = CYC_VIDEO;
 				end
-			end
-			else // !go
-			begin
-				cpu_next = 1'b1;
 
-				if( cpu_req )
-					next_cycle = CYC_CPU;
-				else
-				if (ts_req)
-					next_cycle = CYC_TS;
-				else
-				if (dma_req)
-					next_cycle = CYC_DMA;
+			else
+			begin               // video idle
+				cpu_next = !cpu_low;
+				if (other_req)
+					next_cycle = next_other;
 				else
 					next_cycle = CYC_FREE;
 			end
-		end
-		else // blk_rem!=3'd0
+
+		else                // video burst in progress
+		if (stall | (vid_rem==blk_rem))     // stall CPU if there too few cycles for video left
 		begin
-			if( stall )
-			begin
-				cpu_next = 1'b0;
-
-				next_cycle = CYC_VIDEO;
-			end
-			else
-			begin
-				if( vid_rem==blk_rem )
-				begin
-					cpu_next = 1'b0;
-
-					next_cycle = CYC_VIDEO;
-				end
-				else
-				begin
-					cpu_next = 1'b1;
-
-					if( cpu_req )
-						next_cycle = CYC_CPU;
-					else
-						if (|vid_rem)
-							next_cycle = CYC_VIDEO;
-						else
-                            if (ts_req)
-                                next_cycle = CYC_TS;
-                            else
-                            if (dma_req)
-                                next_cycle = CYC_DMA;
-                            else
-                                next_cycle = CYC_FREE;
-				end
-			end
+			cpu_next = 1'b0;
+			next_cycle = CYC_VIDEO;
 		end
-	end
+
+        else                    // there are spare cycles that can be used for others before video
+		begin
+			cpu_next = !cpu_low;
+			if (other_req)
+				next_cycle = next_other;
+			else if (|vid_rem)
+					next_cycle = CYC_VIDEO;
+            else
+                next_cycle = CYC_FREE;
+		end
 
 
-
-
-	// just current cycle registering
-	always @(posedge clk) if( c3 )
-	begin
+// current cycle registering
+	always @(posedge clk) if (c3)
 		curr_cycle <= next_cycle;
-	end
 
 
-
-
-	// route required data/etc. to and from the dram.v
-
-	assign dram_wrdata = curr_dma ? dma_wrdata : {2{cpu_wrdata[7:0]}};      // changed: now wrdata is latched 1 clk later - at c0 of current cycle (NOT at c3 of previous as before)
+// signals for the dram.v
+    // attention: now wrdata is latched at c0 of current cycle (NOT at c3 of previous as LVD did)
+	assign dram_wrdata = curr_dma ? dma_wrdata : {2{cpu_wrdata[7:0]}};
 	assign dram_bsel[1:0] = next_dma ? 2'b11 : {cpu_wrbsel, ~cpu_wrbsel};
 	assign dram_addr = next_cpu ? cpu_addr : next_vid ? video_addr : next_ts ? ts_addr : dma_addr;
-	// assign dram_addr = next_cpu ? cpu_addr : video_addr;
+	assign dram_req = !next_fre;
+    assign dram_rnw = next_cpu ? cpu_rnw : next_dma ? dma_rnw : 1'b1;
 
 
-	always @*
-	begin
-		if( next_fre ) // CYC_FREE
-		begin
-			dram_req = 1'b0;
-			dram_rnw = 1'b1;
-		end
-		else
-		begin
-			dram_req = 1'b1;
-			if( next_cpu )
-				dram_rnw = cpu_rnw;
-            else
-			if( next_dma )
-				dram_rnw = dma_rnw;
-			else
-				dram_rnw = 1'b1;
-		end
-	end
-
-
-
-	// generation of read strobes: for video and cpu
-
-
-	always @(posedge clk) if( c3 )
+// generation of read strobes: for video and cpu
+	always @(posedge clk) if (c3)
 		cpu_rnw_r <= cpu_rnw;
 
 
 	always @(posedge clk)
-	begin
-		if( curr_cpu && cpu_rnw_r && c2 )
+		if (curr_cpu && cpu_rnw_r && c2)
 			cpu_strobe <= 1'b1;
 		else
 			cpu_strobe <= 1'b0;
-	end
 
 
 	assign video_next = curr_vid & c2;
