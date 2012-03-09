@@ -476,6 +476,7 @@ module top(
 	                 .c3(c3),
 
 	                 .rst_n(rst_n),
+	                 .int_n(int_n),
 
 	                 .dram_addr(daddr),
 	                 .dram_req(dreq),
