@@ -46,6 +46,7 @@ module arbiter(
 	input wire c2,
 	input wire c3,
 	input wire rst_n,
+	input wire int_n,
 
 // dram.v interface
 	output wire [20:0] dram_addr,   // address for dram access
@@ -174,7 +175,7 @@ module arbiter(
 
 
 // next cycle decision
-    wire cpu_low = (ts_req & ts_zwt) | (dma_req & dma_zwt);
+    wire cpu_low = ((ts_req & ts_zwt) | (dma_req & dma_zwt)) & int_n;
     wire other_req = cpu_req | ts_req | dma_req;
     wire [3:0] next_other = cpu_low ? (ts_req ? CYC_TS : CYC_DMA) : CYC_CPU;
 
