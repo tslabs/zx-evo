@@ -91,24 +91,13 @@ module arbiter(
 
 );
 
-	reg stall;
-	reg cpu_rnw_r;
-
-	reg [2:0] blk_rem;  // remaining accesses in a block (7..0)
-	reg [2:0] blk_nrem; // remaining for the next dram cycle
-
-	reg [2:0] vid_rem;  // remaining video accesses in block (4..0)
-	reg [2:0] vid_nrem; // for rhe next cycle
-
-
-	wire [2:0] vidmax; // max number of video cycles in a block, depends on bw input
-
 
 // DRAM access priority:
-// - CPU
-// - VIDEO
-// - TS
-// - DMA
+// Z80 normal       Z80 low
+// - VIDEO          - VIDEO
+// - CPU            - TS
+// - TS             - DMA
+// - DMA            - CPU
 
 
 	localparam CYC_CPU   = 4'b0001;
@@ -133,95 +122,57 @@ module arbiter(
 	wire curr_fre = ~|curr_cycle;
 
 
-	// assign c0 = dram_c0; // just alias
-
+// track blk_rem counter:
+// how many cycles left to the end of block (7..0)
+	wire [2:0] blk_nrem = (blk_start && go) ? {video_bw[4:3], 1'b1} : (blk_start ? 3'd0 : (blk_rem - 3'd1));
 	wire bw_full = ~|{video_bw[4] & video_bw[2], video_bw[3] & video_bw[1], video_bw[0]}; // stall when 000/00/0
-    wire blk_rem_0 = ~|blk_rem;
+    wire blk_start = ~|blk_rem;
 
-	// track blk_rem counter: how many cycles left to the end of block (7..0)
+	reg [2:0] blk_rem;       // remaining accesses in a block (7..0)
+	reg stall;
 	always @(posedge clk) if (c3)
 	begin
 		blk_rem <= blk_nrem;
-		if (blk_rem_0)
+		if (blk_start)
 			stall <= bw_full & go;
-	end
-
-	always @*
-	begin
-		if (blk_rem_0 && go)
-			blk_nrem = {video_bw[4:3], 1'b1};	// remaining 7/3/1
-		else
-			blk_nrem = blk_rem_0 ? 3'd0 : (blk_rem - 3'd1);
 	end
 
 
 // track vid_rem counter
-	assign vidmax = {video_bw[2:0]};    // number of cycles for video access
+// how many video cycles left to the end of block (7..0)
+	wire vid_nrem = (go && blk_start) ? (cpu_req ? vidmax : (vidmax - 3'd1)) : (next_vid ? vid_nrem_next : vid_rem);
+	wire [2:0] vidmax = {video_bw[2:0]};    // number of cycles for video access
+	wire [2:0] vid_nrem_next = ~|vid_rem ? 3'd0 : (vid_rem - 3'd1);
 
+	reg [2:0] vid_rem;  // remaining video accesses in block (4..0)
 	always @(posedge clk) if (c3)       // number of remain video cycles
 		vid_rem <= vid_nrem;
-
-
-	always @*
-	begin
-		if (go && blk_rem_0)
-			vid_nrem = cpu_req ? vidmax : (vidmax - 3'd1);
-		else
-			if (next_vid)
-				vid_nrem = ~|vid_rem ? 3'd0 : (vid_rem - 3'd1);
-			else
-				vid_nrem = vid_rem;
-	end
 
 
 // next cycle decision
     wire cpu_low = ((ts_req & ts_zwt) | (dma_req & dma_zwt)) & int_n;
     wire other_req = cpu_req | ts_req | dma_req;
     wire [3:0] next_other = cpu_low ? (ts_req ? CYC_TS : CYC_DMA) : CYC_CPU;
+    wire video_only = stall | (vid_rem==blk_rem);
 
 	always @*
-		if (blk_rem_0)      // video burst start or video idle
-			if (go)             // video start
-				if (bw_full)        // BW full - CPU stall
-				begin
-					cpu_next = 1'b0;
-					next_cycle = CYC_VIDEO;
-				end
+		if (blk_start)      // video burst start
+			if (go)             // video started
+			begin
+				cpu_next = bw_full ? 1'b0 : !cpu_low;
+				next_cycle = bw_full ? CYC_VIDEO : (other_req ? next_other : CYC_VIDEO);
+			end
 
-				else                // BW not full - if CPU has low priority - video goes first
-				begin
-					cpu_next = !cpu_low;
-					if (cpu_req & !cpu_low)
-						next_cycle = CYC_CPU;
-					else
-						next_cycle = CYC_VIDEO;
-				end
-
-			else
-			begin               // video idle
+			else                // video idle
+			begin
 				cpu_next = !cpu_low;
-				if (other_req)
-					next_cycle = next_other;
-				else
-					next_cycle = CYC_FREE;
+				next_cycle = other_req ? next_other : CYC_FREE;
 			end
 
 		else                // video burst in progress
-		if (stall | (vid_rem==blk_rem))     // stall CPU if there too few cycles for video left
 		begin
-			cpu_next = 1'b0;
-			next_cycle = CYC_VIDEO;
-		end
-
-        else                    // there are spare cycles that can be used for others before video
-		begin
-			cpu_next = !cpu_low;
-			if (other_req)
-				next_cycle = next_other;
-			else if (|vid_rem)
-					next_cycle = CYC_VIDEO;
-            else
-                next_cycle = CYC_FREE;
+			cpu_next = video_only ? 1'b0 : !cpu_low;
+			next_cycle = video_only ? CYC_VIDEO : (other_req ? next_other : (|vid_rem ? CYC_VIDEO : CYC_FREE);
 		end
 
 
@@ -240,6 +191,7 @@ module arbiter(
 
 
 // generation of read strobes: for video and cpu
+	reg cpu_rnw_r;
 	always @(posedge clk) if (c3)
 		cpu_rnw_r <= cpu_rnw;
 
