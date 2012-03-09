@@ -280,30 +280,29 @@ module top(
 	);
 
     wire [1:0] turbo =  sysconf[1:0];
-
-	wire [7:0] dout_ram;
-	wire ena_ram;
-	wire [7:0] dout_ports;
-	wire ena_ports;
-
-
 	wire [7:0] border;
-
-	wire drive_ff;
-
-
-	wire       atm_palwr;
-	wire [5:0] atm_paldata;
-
 	wire int_start;
 
+	wire [7:0] dout_ram;
+	wire [7:0] dout_ports;
+	wire [7:0] im2vect ;
+	wire ena_ram;
+	wire ena_ports;
+	wire drive_ff;
 
-	// data bus out: either RAM data or internal ports data or 0xFF with unused ports
-	assign d = ena_ram ? dout_ram : ( ena_ports ? dout_ports : ( drive_ff ? 8'hFF : 8'bZZZZZZZZ ) );
+	assign d = ena_ram ? dout_ram : (ena_ports ? dout_ports : ( intack ? im2vect : (drive_ff ? 8'hFF : 8'bZZZZZZZZ)));
 
-	zbus zxbus( .iorq_n(iorq_n), .rd_n(rd_n), .wr_n(wr_n), .m1_n(m1_n),
-	            .iorq1_n(iorq1_n), .iorq2_n(iorq2_n), .iorqge1(iorqge1), .iorqge2(iorqge2),
-	            .porthit(porthit), .drive_ff(drive_ff) );
+	zbus zxbus(
+        .iorq(iorq),
+        .rd(rd),
+        .m1(m1),
+        .iorq1_n(iorq1_n),
+        .iorq2_n(iorq2_n),
+        .iorqge1(iorqge1),
+        .iorqge2(iorqge2),
+        .porthit(porthit),
+        .drive_ff(drive_ff)
+        );
 
 
 	wire rampage_wr;	    // ports #10AF-#13AF
@@ -502,10 +501,12 @@ module top(
 	                 .dma_addr		(dma_addr),
 	                 .dma_wrdata	(dma_wrdata),
 	                 .dma_req		(dma_req),
+	                 .dma_zwt		(dma_zwt),
 	                 .dma_rnw		(dma_rnw),
 					 .dma_next		(dma_next),
 
 					 .ts_req		(ts_req),
+					 .ts_zwt		(ts_zwt),
 					 .ts_addr		(ts_addr),
 					 .ts_pre_next	(ts_pre_next),
 					 .ts_next		(ts_next)
@@ -595,6 +596,7 @@ module top(
 		.video_next     (video_next),
 
 		.ts_req			(ts_req),
+		.ts_zwt			(ts_zwt),
 		.ts_pre_next	(ts_pre_next),
 		.ts_addr		(ts_addr),
 		.ts_next		(ts_next),
@@ -671,6 +673,7 @@ module top(
 	wire memwr;
 	wire memwr_s;
 	wire memrw;
+	wire intack;
 
     zsignals zsignals(
                 .clk      (fclk),
@@ -707,7 +710,9 @@ module top(
                 .memrd    (memrd),
                 .memwr    (memwr),
                 .memwr_s  (memwr_s),
-                .memrw    (memrw)
+                .memrw    (memrw),
+
+                .intack   (intack)
                 );
 
 
@@ -721,7 +726,6 @@ module top(
 		wire [4:0] fmaddr;
 
 		wire [7:0] sysconf;
-		wire [7:0] im2vect ;
 		wire [3:0] fddvirt ;
 
 	zports zports(
@@ -739,7 +743,7 @@ module top(
                     .rd         (rd),
                     .wr         (wr),
                     .rdwr       (rdwr),
-                    
+
                     .iorq       (iorq),
                     .iord       (iord),
                     .iowr       (iowr),
@@ -840,7 +844,6 @@ module top(
 
 
 	wire dma_act;
-	wire dma_wait;
 
 	dma dma(
 		.clk		(fclk),
@@ -850,12 +853,12 @@ module top(
 		.zdata		(d),
 		.dmaport_wr	(dmaport_wr),
 		.dma_act	(dma_act),
-		.dma_wait	(dma_wait),
 		.rfsh_n     (rfsh_n),
 
 		.dram_addr	(dma_addr),
 		.dram_rnw	(dma_rnw),
 		.dram_req	(dma_req),
+		.dma_zwt	(dma_zwt),
 		.dram_rddata(dram_rd),
 		.dram_wrdata(dma_wrdata),
 		.dram_next	(dma_next)
@@ -863,16 +866,11 @@ module top(
 
 
 	zint zint(
-		.fclk(fclk),
-		.zpos(zpos),
-		.zneg(zneg),
-
+		.clk(fclk),
 		.int_start(int_start),
 		.vdos(vdos),
-
-		.iorq_n(iorq_n),
-		.m1_n  (m1_n),
-
+		.iorq_s (iorq_s),
+		.m1     (m1),
 		.int_n(int_n)
 	);
 
@@ -899,7 +897,6 @@ module top(
 	             .wait_start_comport (wait_start_comport),
 	             .wait_end(wait_end),
 	             .rst_n(rst_n),
-                 .dma_wait(dma_wait),
 	             .wait_n(wait_n),
 	             .waits(waits),
 	             .spiint_n(spiint_n)

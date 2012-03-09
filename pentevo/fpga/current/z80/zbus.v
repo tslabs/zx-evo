@@ -6,10 +6,9 @@
 //
 module zbus(
 
-	input iorq_n,
-	input rd_n,
-	input wr_n,
-	input m1_n,
+	input iorq,
+	input rd,
+	input m1,
 
 	output iorq1_n,
 	output iorq2_n,
@@ -23,15 +22,9 @@ module zbus(
 );
 
 
-
-	assign iorq1_n = iorq_n | porthit;
-
+	assign iorq1_n = !iorq | porthit;
 	assign iorq2_n = iorq1_n | iorqge1;
-
-	assign drive_ff = ( (~(iorq2_n|iorqge2)) & (~rd_n) ) | (~(m1_n|iorq_n));
-
-
-
+	assign drive_ff = ~(iorq2_n | iorqge2) & rd;
 
 
 endmodule

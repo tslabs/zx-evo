@@ -16,7 +16,6 @@ module dma (
 // controls
 	input  wire [8:0] dmaport_wr,
 	output wire dma_act,
-	output reg  dma_wait,
 
 // Z80
 	input  wire [7:0] zdata,
@@ -27,6 +26,7 @@ module dma (
 	input  wire [15:0] dram_rddata,
 	output wire [15:0] dram_wrdata,
 	output wire        dram_req,
+	output reg         dma_zwt,
 	output wire        dram_rnw,
 	input  wire        dram_next,
 
@@ -58,15 +58,15 @@ module dma (
 
 	wire [8:0] dma_wr = dmaport_wr & {9{!dma_act}};    // blocking of DMA regs write strobes while DMA active
 
-    wire dma_saddrl 	= dma_wr[0];
-    wire dma_saddrh 	= dma_wr[1];
-    wire dma_saddrx 	= dma_wr[2];
-    wire dma_daddrl 	= dma_wr[3];
-    wire dma_daddrh 	= dma_wr[4];
-    wire dma_daddrx 	= dma_wr[5];
-    wire dma_len    	= dma_wr[6];
-    wire dma_launch_int = dma_wr[7];
-    wire dma_num    	= dma_wr[8];
+    wire dma_saddrl = dma_wr[0];
+    wire dma_saddrh = dma_wr[1];
+    wire dma_saddrx = dma_wr[2];
+    wire dma_daddrl = dma_wr[3];
+    wire dma_daddrh = dma_wr[4];
+    wire dma_daddrx = dma_wr[5];
+    wire dma_len    = dma_wr[6];
+    wire dma_launch = dma_wr[7];
+    wire dma_num    = dma_wr[8];
 
 	wire dv_ram = device == 3'b001;
 	wire dv_sd  = device == 3'b010;
@@ -136,8 +136,7 @@ module dma (
             data <= dram_rddata;
         end
 
-        else
-        if (state_rd & sd_stb_int)
+        else if (state_rd & sd_stb_int)
         begin
             if (bsel)
                 data[7:0] <= sd_rddata;
@@ -145,8 +144,7 @@ module dma (
                 data[15:8] <= sd_rddata;
         end
 
-        else
-        if (state_rd & ide_stb_int)
+        else if (state_rd & ide_stb_int)
             data <= ide_rddata;
     end
 
@@ -154,7 +152,6 @@ module dma (
 // states processing
 	reg [2:0] device;
     reg dma_wnr;
-    reg dma_zwait;
     reg dma_salgn;
     reg dma_dalgn;
     reg dma_asz;
@@ -165,7 +162,7 @@ module dma (
 	if (dma_launch)			// write to DMACtrl - launch of DMA burst
 	begin
 		dma_wnr <= zdata[7];
-		dma_zwait <= zdata[6];
+		dma_zwt <= zdata[6];
 		dma_salgn <= zdata[5];
 		dma_dalgn <= zdata[4];
 		dma_asz <= zdata[3];
@@ -178,7 +175,6 @@ module dma (
     begin
         if (phase_end)
             phase <= ~phase;
-        // else
         if (byte_switch)
             bsel <= ~bsel;
     end
@@ -195,28 +191,25 @@ module dma (
     wire [8:0] n_ctr_dec = n_ctr - next_burst;
     wire next_burst = b_ctr_dec[8];
 
-
 	always @(posedge clk)
     if (!rst_n)
 		n_ctr[8] <= 1'b1;       // disable DMA on RESET
 
     else
-    begin
 		if (dma_launch)			// launch of DMA burst
         begin
             b_ctr <= b_len;
             n_ctr <= {1'b0, b_num};
         end
 
-		if (cyc_end)		// cycle processed
+		else if (cyc_end)		// cycle processed
         begin
 			b_ctr <= b_ctr_next;
             n_ctr <= n_ctr_dec;
         end
-	end
 
 
-	// loading of burst parameters
+// loading of burst parameters
     always @(posedge clk)
     begin
 		if (dma_len)
@@ -228,6 +221,8 @@ module dma (
 
 
 // address processing
+
+    // source
     wire [20:0] s_addr_next = {s_addr_next_h[13:1], s_addr_next_m, s_addr_next_l[6:0]};
     wire [13:0] s_addr_next_h = s_addr[20:7] + s_addr_add_h;
     wire [1:0] s_addr_add_h = dma_salgn ? {next_burst & dma_asz, next_burst & !dma_asz} : {s_addr_inc_l[8], 1'b0};
@@ -260,7 +255,7 @@ module dma (
                 s_addr[20:13] <= zdata;
         end
 
-
+    // destination
     wire [20:0] d_addr_next = {d_addr_next_h[13:1], d_addr_next_m, d_addr_next_l[6:0]};
     wire [13:0] d_addr_next_h = d_addr[20:7] + d_addr_add_h;
     wire [1:0] d_addr_add_h = dma_dalgn ? {next_burst & dma_asz, next_burst & !dma_asz} : {d_addr_inc_l[8], 1'b0};
@@ -281,31 +276,16 @@ module dma (
                 d_addr[6:0] <= zdata[7:1];
                 d_addr_r[6:0] <= zdata[7:1];
             end
-    
+
             if (dma_daddrh)
             begin
                 d_addr[12:7] <= zdata[5:0];
                 d_addr_r[7] <= zdata[0];
             end
-    
+
             if (dma_daddrx)
                 d_addr[20:13] <= zdata;
         end
-
-
-// Z80 wait
-// should be replaced by stall!!!
-    reg dma_launch_en;
-    wire dma_launch = dma_launch_int & dma_launch_en;
-    assign dma_wait = dma_act & dma_zwait;
-
-    always @(posedge clk)
-    begin
-        if (dma_act)
-            dma_launch_en <= 0;
-        if (!rfsh_n)
-            dma_launch_en <= 1;
-    end
 
 
 endmodule

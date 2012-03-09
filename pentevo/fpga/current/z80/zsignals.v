@@ -44,6 +44,8 @@ module zsignals(
 	output wire memrd,
 	output wire memwr,
 	output wire memrw,
+    
+	output wire intack,
 
 	output wire m1,
 	output wire rfsh
@@ -70,6 +72,8 @@ module zsignals(
     assign memwr = mreq & !rfsh & !rd;
     assign memrw = mreq & (rd | wr);
 
+    assign intack = iorq & m1;
+    
     assign m1 = !m1_n;
     assign rfsh = !rfsh_n;
 

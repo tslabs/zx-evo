@@ -71,6 +71,7 @@ module video_top (
 	input  wire        video_strobe,
 	output wire [20:0] ts_addr,
 	output wire        ts_req,
+	output wire        ts_zwt,
 	input  wire        ts_pre_next,
 	input  wire        ts_next,
 
@@ -79,6 +80,7 @@ module video_top (
 
 );
 
+    assign ts_zwt = tsconf[4];
 
 // video config
 	wire [7:0] vpage;      //
