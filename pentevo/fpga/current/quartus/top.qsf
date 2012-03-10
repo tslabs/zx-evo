@@ -250,7 +250,7 @@ set_instance_assignment -name GLOBAL_SIGNAL ON -to spics_n
 # end ENTITY(top)
 # ---------------
 set_global_assignment -name FIT_ONLY_ONE_ATTEMPT OFF
-set_global_assignment -name SEED 3
+set_global_assignment -name SEED 2
 set_location_assignment PIN_169 -to dram_ra[4]
 set_location_assignment PIN_170 -to dram_ra[3]
 set_location_assignment PIN_172 -to dram_ra[5]
