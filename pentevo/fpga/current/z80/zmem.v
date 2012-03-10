@@ -21,17 +21,14 @@ module zmem(
 	input  wire zpos, //
 	input  wire zneg, // strobes which show positive and negative edges of zclk
 
-	input  wire c0,      // DRAM synchronization
-	input  wire c1, //
-	input  wire c2,  //
-	input  wire c3,      //
-
+	input  wire c0,
+	input  wire c1,
+	input  wire c2,
+	input  wire c3,
 
 	input  wire [15:0] za,
-
 	input  wire [ 7:0] zd_in, // won't emit anything to Z80 bus, data bus mux is another module
 	output wire [ 7:0] zd_out, // output to Z80 bus
-
 	output wire zd_ena, // out bus to the Z80
 
 	input  wire m1_n,
@@ -41,44 +38,30 @@ module zmem(
 	input  wire rd_n,
 	input  wire wr_n,
 
-
 	input  wire [ 1:0] int_turbo, // 2'b00 - 3.5,
 	                              // 2'b01 - 7.0,
 	                              // 2'b1x - 14.0
-
-
-
-	// input  wire [ 31:0] win_page, // which 16k page is in given window
-	// input  wire [ 3:0] win_romnram, // four windows, each 16k, 1 - rom, 0 - ram
-
 	input wire [7:0] page,
 	input wire rw_en,
 	input wire romnram,
 
-	// output wire [ 4:0] rompg, // output for ROM paging
 	output wire        romoe_n,
 	output wire        romwe_n,
 	output wire        csrom,
 
-// strobes
 	input wire dos_on,
 	input wire vdos_on,
 	input wire vdos_off,
-	// output wire vdos_off,
 
 	output wire        cpu_req,
 	output wire        cpu_rnw,
 	output wire [20:0] cpu_addr,
 	output wire [ 7:0] cpu_wrdata,
 	output wire        cpu_wrbsel,
-
 	input  wire [15:0] cpu_rddata,
-
 	input  wire        cpu_next,
 	input  wire        cpu_strobe,
-
-
-	output wire        cpu_stall // for zclock
+	output wire        cpu_stall    // for zclock
 
 );
 
@@ -86,17 +69,17 @@ module zmem(
 	reg [15:0] rd_buf;
 
 	reg [15:1] cached_addr;
-	reg        cached_addr_valid;
+	reg cached_addr_valid;
 
-	reg  stall14_cycrd;
-	reg  stall14_fin;
+	reg stall14_cycrd;
+	reg stall14_fin;
 	reg r_mreq_n;
 	reg pending_cpu_req;
 	reg cpu_rnw_r;
 
 
 	// this is for 7/3.5mhz
-	wire cpureq_357;
+	wire cpureq_357 = ( ramrd & (~ramrd_reg) ) | ( ramwr & (~ramwr_reg) );
 	reg ramrd_reg,ramwr_reg;
 
 
@@ -106,7 +89,6 @@ module zmem(
 
 
 	// 7/3.5mhz support
-
 	wire ramreq = (~mreq_n) && (~romnram) && rfsh_n;
 	wire ramrd = ramreq & (~rd_n);
 	wire ramwr = ramreq & (~wr_n) & rw_en;
@@ -118,21 +100,13 @@ module zmem(
 		ramwr_reg <= ramwr;
 	end
 
-	assign cpureq_357 = ( ramrd & (~ramrd_reg) ) | ( ramwr & (~ramwr_reg) );
-
-
-
 
 	assign zd_ena = (~mreq_n) & (~rd_n) & (~romnram);
-
-
 
 	wire cache_hit = ( (za[15:1] == cached_addr[15:1]) && cached_addr_valid );
 
 
-
-	// strobe the beginnings of DRAM cycles
-
+// strobe the beginnings of DRAM cycles
 	always @(posedge fclk)
 	if( zneg )
 		r_mreq_n <= mreq_n | (~rfsh_n);
@@ -149,14 +123,14 @@ module zmem(
 	//
 	// M1 opcode fetch, dram_beg coincides with:
 	// c3:      +3
-	// c2:  +4
-	// c1: +5
+	// c2:      +4
+	// c1:      +5
 	// c0:      +6
 	//
 	// memory read, dram_beg coincides with:
 	// c3:      +2
-	// c2:  +3
-	// c1: +4
+	// c2:      +3
+	// c1:      +4
 	// c0:      +5
 	//
 	// memory write: no wait
@@ -171,7 +145,7 @@ module zmem(
 	// memrd, opfetch - wait till c3 & cpu_next,
 	// memwr - wait till cpu_next
 	wire stall14_cyc = memwr ? (!cpu_next) : stall14_cycrd;
-	//
+
 	always @(posedge fclk, negedge rst_n)
 	if( !rst_n )
 		stall14_cycrd <= 1'b0;
@@ -182,28 +156,26 @@ module zmem(
 		else if( dram_beg && ( (!c3) || (!cpu_next) ) && (opfetch || memrd) )
 			stall14_cycrd <= 1'b1;
 	end
-	//
+
 	always @(posedge fclk, negedge rst_n)
 	if( !rst_n )
 		stall14_fin <= 1'b0;
 	else // posedge fclk
 	begin
-		if( stall14_fin && ( (opfetch&c2) || (memrd&c1) ) )
+		// if( stall14_fin && ( (opfetch&c2) || (memrd&c1) ) )
+		if (stall14_fin && ((opfetch&c1) || (memrd&c0)))     // boost!!!
 			stall14_fin <= 1'b0;
 		else if( cpu_next && c3 && cpu_req && (opfetch || memrd) )
 			stall14_fin <= 1'b1;
 	end
 
 
-	//
 	assign cpu_stall = int_turbo[1] ? (stall14_ini | stall14_cyc | stall14_fin) : (cpureq_357 && (!cpu_next));
 
 	// cpu request
 	assign cpu_req = int_turbo[1] ? (pending_cpu_req | dram_beg) : cpureq_357;
-	//
 	assign cpu_rnw = int_turbo[1] ? (dram_beg ? (!memwr) : cpu_rnw_r) : ramrd;
-	//
-	//
+
 	always @(posedge fclk, negedge rst_n)
 	if( !rst_n )
 		pending_cpu_req <= 1'b0;
@@ -217,34 +189,27 @@ module zmem(
 		cpu_rnw_r <= !memwr;
 
 
-
 	// address, data in and data out
-	//
 	assign cpu_wrbsel = za[0];
 	assign cpu_addr[20:0] = { page[7:0], za[13:1] };
 	assign cpu_wrdata = zd_in;
-	//
-	always @* if( cpu_strobe ) // WARNING! ACHTUNG! LATCH!!!
-	// always @* if( cpu_next ) // WARNING! ACHTUNG! LATCH!!!
-		rd_buf <= cpu_rddata;
-	//
 	assign zd_out = ~cpu_wrbsel ? rd_buf[7:0] : rd_buf[15:8];
 
+	always @* if( cpu_strobe ) // WARNING! ACHTUNG! LATCH!!!
+		rd_buf <= cpu_rddata;
 
-	wire io;
-	reg  io_r;
-	//
-	assign io = (~iorq_n);
-	//
+	wire io = (~iorq_n);
+	reg io_r;
 	always @(posedge fclk)
 	if( zpos )
 		io_r <= io;
-	//
+
 	always @(posedge fclk, negedge rst_n)
 	if( !rst_n )
 	begin
 		cached_addr_valid <= 1'b0;
 	end
+
 
 	else
 	begin
@@ -256,59 +221,18 @@ module zmem(
         )
 			cached_addr_valid <= 1'b0;
 		else if( cpu_strobe )
-		// else if( cpu_next )
 			cached_addr_valid <= 1'b1;
-			// cached_addr_valid <= 1'b0;
 	end
-	//
+
 	always @(posedge fclk)
 	if( !rst_n )
 	begin
 		cached_addr <= 15'd0;
 	end
 	else if( cpu_strobe )
-	// else if( cpu_next )
 	begin
 		cached_addr[15:1] <= za[15:1];
 	end
-
-
-// This should be moved somewhere else from this module !!!
-
-// on/off of virt dos
-	// reg [7:0] opc;
-	// reg [2:0] vd_off;
-    // reg opf_r, mrd_r;
-    // reg opDD_r;
-	// assign vdos_off = vd_off[2];
-    // wire opf_end = !opfetch & opf_r;       // 1 clk strobe after !M1 & !RD
-    // wire mrd_end = !memrd & mrd_r;         // 1 clk strobe after !MRQ & !RD
-
-
-    // always @(posedge fclk)
-    // begin
-        // opf_r <= opfetch;
-        // mrd_r <= memrd;
-
-        // if (opfetch)
-            // opc <= zd_out;
-    // end
-
-
-    // always @(posedge fclk)
-    // begin
-		// if (opf_end)
-        // begin
-			// opDD_r <= (opc == 8'hDD);
-
-            // if ((opc == 8'hC3) & opDD_r)
-                // vd_off[0] <= 1'b1;
-		// end
-
-        // else
-		// if (mrd_end)
-			// vd_off[2:0] <= {vd_off[1:0], 1'b0};
-    // end
 
 
 endmodule

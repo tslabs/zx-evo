@@ -272,7 +272,8 @@ module top(
 
 	zclock zclock
 	(
-		.fclk(fclk), .rst_n(rst_n), .zclk(zclk), .rfsh_n(rfsh_n), .zclk_out(clkz_out),
+		.fclk(fclk), .rst_n(rst_n), .zclk(zclk), .rfsh_n(rfsh_n),
+        .zclk_out1(clkz_out),
 		.zpos(zpos), .zneg(zneg),
 		.turbo(turbo), .c2(c2), .c0(c0),
 		.zclk_stall( cpu_stall | zclk_stall), .int_turbo(int_turbo),
@@ -410,8 +411,8 @@ module top(
 		.cpu_strobe(cpu_strobe),
 		.cpu_addr  (cpu_addr),
 		.cpu_wrdata(cpu_wrdata),
-		// .cpu_rddata(dram_rddata),
-		.cpu_rddata(dram_rd),
+		// .cpu_rddata(dram_rddata),    // registered
+		.cpu_rddata(dram_rd),       // raw
 		.cpu_stall (cpu_stall),
 		.cpu_next  (cpu_next),
 

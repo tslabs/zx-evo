@@ -36,24 +36,19 @@ module zclock(
 
 	input rfsh_n, // switch turbo modes in RFSH part of m1
 
-
-	output reg zclk_out, // generated Z80 clock - passed through inverter externally!
+	// output reg zclk_out, // generated Z80 clock - passed through inverter externally!
+	output wire zclk_out1, // generated Z80 clock - passed through inverter externally!
 
 	output reg zpos,
 	output reg zneg,
 
-
 	input  wire zclk_stall,
-
-
-
 
 	input [1:0] turbo, // 2'b00 -  3.5 MHz
 	                   // 2'b01 -  7.0 MHz
 	                   // 2'b1x - 14.0 MHz
 
 	output reg [1:0] int_turbo, // internal turbo, switched on /RFSH
-
 
 	// input signals for 14MHz external IORQ waits
 	input  wire external_port,
@@ -65,6 +60,9 @@ module zclock(
 	input c2 // syncing signals, taken from arbiter.v and dram.v
 );
 
+    reg zclk_out;
+    // assign zclk_out1 = rfsh_n ? zclk_out : !fclk;
+    assign zclk_out1 = zclk_out;
 
 	reg prec3_cnt;
 	wire h_prec3_1; // to take every other pulse of c2
@@ -105,7 +103,7 @@ module zclock(
 
 	// make 14MHz iorq wait
 	reg [3:0] io_wait_cnt;
-	
+
 	reg io_wait;
 
 	wire io;
@@ -127,7 +125,7 @@ module zclock(
 	else if (|io_wait_cnt)
 		io_wait_cnt <= io_wait_cnt + 4'd1;
 
-		
+
 	always @(posedge fclk)
 	case( io_wait_cnt )
 		4'b0000: io_wait <= 1'b0;
@@ -146,14 +144,11 @@ module zclock(
 		4'b1101: io_wait <= 1'b0;
 		4'b1110: io_wait <= 1'b1;
 		4'b1111: io_wait <= 1'b0;
-		default: io_wait <= 1'b0;		
+		default: io_wait <= 1'b0;
 	endcase
 
 
-
-
 	wire stall = zclk_stall | io_wait;
-
 
 
 	// 14MHz clocking
@@ -173,17 +168,14 @@ module zclock(
 	assign h_prec3_1 =  prec3_cnt && c2;
 	assign h_prec3_2 = !prec3_cnt && c2;
 
-
 	wire pre_zpos_35 = h_prec3_2;
 	wire pre_zneg_35 = h_prec3_1;
 
 	wire pre_zpos_70 = c2;
 	wire pre_zneg_70 = c0;
 
-
 	wire pre_zpos = int_turbo[1] ? pre_zpos_140 : ( int_turbo[0] ? pre_zpos_70 : pre_zpos_35 );
 	wire pre_zneg = int_turbo[1] ? pre_zneg_140 : ( int_turbo[0] ? pre_zneg_70 : pre_zneg_35 );
-
 
 
 	always @(posedge fclk)
@@ -196,17 +188,12 @@ module zclock(
 		zneg <= (~stall) & pre_zneg & (~zclk_out);
 	end
 
-	
-
-
-
 
 	// make Z80 clock: account for external inversion and make some leading of clock
 	// 9.5 ns propagation delay: from fclk posedge to zclk returned back any edge
 	// (1/28)/2=17.9ns half a clock lead
 	// 2.6ns lag because of non-output register emitting of zclk_out
 	// total: 5.8 ns lead of any edge of zclk relative to posedge of fclk => ACCOUNT FOR THIS WHEN DOING INTER-CLOCK DATA TRANSFERS
-	//
 
 	always @(negedge fclk)
 	begin
@@ -219,4 +206,3 @@ module zclock(
 
 
 endmodule
-
