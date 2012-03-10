@@ -198,7 +198,7 @@ module arbiter(
 
 
 // generation of read strobes: for video and cpu
-    assign cpu_strobe = curr_cpu && cpu_rnw_r && c3;
+    assign cpu_strobe = curr_cpu && cpu_rnw_r && c2;
 
 	assign video_next = curr_vid & c2;
 	assign video_strobe = curr_vid & c3;
