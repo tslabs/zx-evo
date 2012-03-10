@@ -101,7 +101,6 @@ nv_buf          equ h'5D00      ; | LSB should be 0 !!
 vars            equ h'5B00      ; /
 
 stck            equ h'6000
-dummy_ram       equ h'4000
 nv_1st          equ h'B0
 
 
