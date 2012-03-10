@@ -725,10 +725,13 @@ DMAFILL
         out (c), d
         xtrv
         xt dmalen, 127
-        xt dmactr, dma_dev_mem | dma_z80lp     ; Run DMA
+        xt dmactr, dma_dev_mem | dma_zwt    ; Run DMA
+        ld a, (dummy_ram)                   ; just to provide stall for CPU until DMA has worked out
+        xtrv
         xt dmanum, 0
         xt dmalen, 126
-        xt dmactr, dma_dev_mem | dma_z80lp     ; Run last burst
+        xt dmactr, dma_dev_mem | dma_zwt    ; Run last burst
+        ld a, (dummy_ram)
         ret
         
 

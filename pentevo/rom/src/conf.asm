@@ -61,7 +61,6 @@ fddvirt         equ 0x29
 
 ; TS parameters
 fm_en           equ 0x10
-dma_zwt_en      equ 0x40
 
 
 ; video modes
@@ -77,12 +76,12 @@ mode_nogfx      equ 0x20
 
 
 ; DMA modes
-dma_rw          equ h'80
-dma_z80lp       equ h'40
-dma_salgn       equ h'20
-dma_dalgn       equ h'10
-dma_asz         equ h'08
-dma_dev_mem     equ h'01
+dma_rw          equ 0x80
+dma_zwt         equ 0x40
+dma_salgn       equ 0x20
+dma_dalgn       equ 0x10
+dma_asz         equ 0x08
+dma_dev_mem     equ 0x01
 
     
 ; -- RAM windows
@@ -102,6 +101,7 @@ nv_buf          equ h'5D00      ; | LSB should be 0 !!
 vars            equ h'5B00      ; /
 
 stck            equ h'6000
+dummy_ram       equ h'4000
 nv_1st          equ h'B0
 
 
