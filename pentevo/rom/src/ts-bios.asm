@@ -726,12 +726,18 @@ DMAFILL
         xtrv
         xt dmalen, 127
         xt dmactr, dma_dev_mem | dma_zwt    ; Run DMA
-        ld a, (dummy_ram)                   ; just to provide stall for CPU until DMA has worked out
+        call DWT
         xtrv
         xt dmanum, 0
         xt dmalen, 126
         xt dmactr, dma_dev_mem | dma_zwt    ; Run last burst
-        ld a, (dummy_ram)
+        
+; wait for DMA end     
+DWT
+        xor a
+        in a, (extp)
+        rla
+        jr c, DWT
         ret
         
 
