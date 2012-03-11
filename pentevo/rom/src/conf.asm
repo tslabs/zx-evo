@@ -93,6 +93,7 @@ win3            equ 0xC000
 
 ; -- addresses
 sys_var         equ h'5C00
+rslsys_addr     equ h'4000
 
 pal_addr        equ h'6000      ; \ 
 fat_bufs        equ h'4000      ; | 
