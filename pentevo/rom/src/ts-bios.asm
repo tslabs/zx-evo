@@ -734,10 +734,8 @@ DMAFILL
         
 ; wait for DMA end     
 DWT
-        xor a
-        in a, (extp)
-        rla
-        jr c, DWT
+        inf
+        jp m, DWT
         ret
         
 
