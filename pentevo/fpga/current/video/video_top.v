@@ -135,6 +135,7 @@ module video_top (
 	wire hpix;
 	wire vpix;
 	wire hvpix;
+	wire frame;
 	wire flash;
 	wire pix_stb;
 
@@ -300,6 +301,7 @@ module video_top (
         .cnt_tp_row     (cnt_tp_row),
         .cptr	        (cptr),
 		.scnt			(scnt),
+		.frame			(frame),
 		.flash			(flash),
 		.pix_stb	    (pix_stb),
 		.pix_start		(pix_start),
@@ -424,6 +426,7 @@ module video_top (
 		.tv_blank 		(tv_blank),
 		.vga_blank		(vga_blank),
 		.vga_line		(vga_line),
+		.frame			(frame),
 		.palsel			(palsel_d[3:0]),
 	    .plex_sel_in	({h1, f1}),
 		.tv_hires		(tv_hires),
