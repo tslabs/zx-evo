@@ -13,7 +13,7 @@ module zports(
 	input  wire [15:0] a,
 
 	input  wire        rst,     // system reset
-	input  wire        opfetch_s,
+	input  wire        opfetch,
 
 	input  wire        rd,
 	input  wire        wr,
@@ -222,7 +222,7 @@ module zports(
             case (hoa)
             
             XSTAT:
-                dout = {dma_act, 1'b0, pwr_up_reg, 1'b0, no_ide, 3'b0};
+                dout = {1'b0, pwr_up_reg, 6'b0};
                 
             DMASTAT:
                 dout = {dma_act, 7'b0};
@@ -384,7 +384,7 @@ module zports(
 
 	reg m1_lock128;
     always @(posedge clk)
-		if (opfetch_s)
+		if (opfetch)
 			m1_lock128 <= !(din[7] ^ din[6]);
 
 

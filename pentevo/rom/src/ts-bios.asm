@@ -34,10 +34,10 @@ MAIN
         ; jp nz, SETUP        ; CRC error
 
         inxt xstatus
-        bit 5, a
-        jr z, MN1
+        bit 6, a
+        jr z, MN1             ; check if first boot after conf loading
         
-        xor a
+        xor a                 ; nulling vdos mountings
         ld (fddv), a
         call WRITE_NVRAM
         
@@ -771,8 +771,8 @@ DMAFILL
         
 ; wait for DMA end     
 DWT
-        inf
-        jp m, DWT
+        in a,(c)
+        jr nz, DWT
         ret
         
 

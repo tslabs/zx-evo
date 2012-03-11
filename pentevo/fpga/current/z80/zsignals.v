@@ -68,7 +68,7 @@ module zsignals(
     assign iorq = !iorq_n & m1_n;       // this is masked by ~M1 to avoid port decoding on INT ack
     assign mreq = !mreq_n & rfsh_n;     // this is masked by ~RFSH to ignore refresh cycles as memory requests
     assign iorq_s = iorq_r[0] && (!iorq_r[1]);
-    assign mreq_s = mreq_r[0] && (!mreq_r[1]);
+    assign mreq_s = mreq_r[0] && (!mreq_r[1]);      // ??? strange behavior
     
 // combined
     assign rdwr = rd | wr;
