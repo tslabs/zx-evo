@@ -43,6 +43,7 @@ module video_sync (
 	output wire line_start,
 	output wire pix_start,
 	output wire tspix_start,
+	output wire frame,
 	output wire flash,
 
 // video counters
@@ -172,6 +173,7 @@ module video_sync (
 	
 // FLASH generator
 	reg [4:0] flash_ctr;
+	assign frame = flash_ctr[0];
 	assign flash = flash_ctr[4];
 	always @(posedge clk) if (frame_start & c3)
 		flash_ctr <= flash_ctr + 5'b1;
