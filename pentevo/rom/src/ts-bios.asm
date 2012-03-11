@@ -1,6 +1,7 @@
 
 ; ------- external modules
 extern    font8
+extern    rslsys
 #include "conf.asm"
 #include "macro.asm"
 #include "vars.asm"
@@ -131,7 +132,7 @@ RES_1
         dec a               ; 2
         jr z, RES_VROM
         dec a               ; 3
-        jr z, RES_BT_HB
+        jr z, RES_BT_BD
         dec a               ; 4
         jr z, RES_BT_SR
         halt
@@ -202,10 +203,26 @@ RES_SYS
         jp 0
 
 
-RES_BT_HB           ; boot.$c
+RES_BT_BD           ; boot.$c
         xtr
         xt page3, 0
         
+        ld a, (bdev)
+        or a                ;0
+        jr z, RES_BD_SD
+        dec a               ;1
+        jr z, RES_BD_HM
+        dec a               ;2
+        jr z, RES_BD_HS
+        dec a               ;3
+        jr z, RES_BD_RS
+        halt
+        
+RES_BT_SR           ; sys.rom
+        halt
+
+
+RES_BD_SD           ; SD Card
         push de
         call start
         pop af
@@ -220,12 +237,32 @@ RES_BT_HB           ; boot.$c
         ld hl, h'2758
         exx
         ret
-
-
-RES_BT_SR           ; sys.rom
+        
+RES_BD_HM           ; HDD Master
+        halt
+        
+RES_BD_HS           ; HDD Slave
         halt
 
+RES_BD_RS           ;RS-232
+        push de
+        ld hl, rslsys
+        ld de, rslsys_addr
+        ld bc, 256
+        ldir
+        call rslsys_addr
+        pop af
+        jr nc, RES_4
 
+        or 1
+        xtr
+        xta memconf      ; mapping, Basic 48 ROM
+        xt page0, 0
+        jp (hl)
+RES_4        
+        halt
+
+        
 RESET2_END
 
 
