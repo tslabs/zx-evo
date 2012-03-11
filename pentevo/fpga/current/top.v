@@ -298,7 +298,7 @@ module top(
 	wire ena_ports;
 	wire drive_ff;
 
-	assign d = ena_ram ? dout_ram : (ena_ports ? dout_ports : ( intack ? im2vect : (drive_ff ? 8'hFF : 8'bZZZZZZZZ)));
+	assign d = ena_ram ? dout_ram : (ena_ports ? dout_ports : (intack ? im2vect : (drive_ff ? 8'hFF : 8'bZZZZZZZZ)));
 
 	zbus zxbus(
         .iorq(iorq),
