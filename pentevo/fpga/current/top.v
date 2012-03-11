@@ -751,7 +751,7 @@ module top(
                     .a          (a),
 
                     .rst        (rst),
-                    .opfetch_s  (opfetch_s),
+                    .opfetch    (opfetch),
 
                     .rd         (rd),
                     .wr         (wr),
