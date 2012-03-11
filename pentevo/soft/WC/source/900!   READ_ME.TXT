@@ -1,4 +1,5 @@
 MD20    .ASM - main module
+WCFX    .ASM - main functions
 WCVLS   .ASM - variables and structures
 PS2P    .ASM - PS/2 handler (stand-alone)
 WCVW    .ASM - viewers, SPG/$C runner, WMF loader
