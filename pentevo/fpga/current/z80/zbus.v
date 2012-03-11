@@ -8,7 +8,6 @@ module zbus(
 
 	input iorq,
 	input rd,
-	input m1,
 
 	output iorq1_n,
 	output iorq2_n,

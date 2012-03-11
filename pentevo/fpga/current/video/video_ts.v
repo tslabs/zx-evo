@@ -171,7 +171,7 @@ module video_ts (
     wire [5:0] tpos_x_next = tile_wait ? tpos_x_r : tpos_x_r + 6'd1;
     assign tmb_raddr = {line[4:3], tpos_x, tiles1};
     
-    wire [5:0] tx = (start | tile_layer_end) ? 0 : tx_next;
+    wire [5:0] tx = (start | tile_layer_end) ? 6'b0 : tx_next;
     wire [5:0] tx_next = (tr_rd_stb & (tsr_ready | !t_act)) ? tx_r + 6'd1 : tx_r;
     
     wire [1:0] tr_stb = (start | tile_layer_end) ? 2'b01 : tr_stb_next;

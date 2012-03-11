@@ -268,17 +268,26 @@ module top(
 	assign rompg3   =  rompg[3];
 	assign rompg4   =  rompg[4];
 
-	wire zclk_stall;
+	wire dos_stall;
 
 	zclock zclock
 	(
-		.fclk(fclk), .rst_n(rst_n), .zclk(zclk), .rfsh_n(rfsh_n),
-        .zclk_out1(clkz_out),
-		.zpos(zpos), .zneg(zneg),
-		.turbo(turbo), .c2(c2), .c0(c0),
-		.zclk_stall( cpu_stall | zclk_stall), .int_turbo(int_turbo),
-		.external_port(external_port), .iorq_n(iorq_n), .m1_n(m1_n)
+		.fclk(fclk),
+        .zclk(zclk),
+        .c0(c0),
+        .c2(c2),
+        .rst(rst),
+        .rfsh_n(rfsh_n),
+        .iorq(iorq),
+        .zclk_out(clkz_out),
+		.zpos(zpos),
+        .zneg(zneg),
+		.turbo(turbo),
+		.zclk_stall(cpu_stall | dos_stall),
+        .int_turbo(int_turbo),
+		.external_port(external_port)
 	);
+
 
     wire [1:0] turbo =  sysconf[1:0];
 	wire [7:0] border;
@@ -286,7 +295,7 @@ module top(
 
 	wire [7:0] dout_ram;
 	wire [7:0] dout_ports;
-	wire [7:0] im2vect ;
+	wire [7:0] im2vect;
 	wire ena_ram;
 	wire ena_ports;
 	wire drive_ff;
@@ -296,7 +305,6 @@ module top(
 	zbus zxbus(
         .iorq(iorq),
         .rd(rd),
-        .m1(m1),
         .iorq1_n(iorq1_n),
         .iorq2_n(iorq2_n),
         .iorqge1(iorqge1),
@@ -318,8 +326,7 @@ module top(
     pager pager(
         .clk        (fclk),
         .za         (a),
-        .m1         (!m1_n),
-        .mreq       (!mreq_n),
+        .opfetch_s  (opfetch_s),
         .memconf    (memconf),
         .xt_page    (xt_page),
         .dos        (dos),
@@ -329,8 +336,7 @@ module top(
         .romnram    (romnram),
         .rw_en      (rw_en),
         .dos_on     (dos_on),
-        .dos_off    (dos_off),
-        .zclk_stall (zclk_stall)
+        .dos_off    (dos_off)
 
     );
 
@@ -341,9 +347,9 @@ module top(
 	///////////////////////////
 
 	zdos zdos(
-	           .fclk(fclk),
+	           .clk(fclk),
 			   .rst(rst),
-               .m1(m1),
+               .opfetch(opfetch),
 
 	           .dos_on  (dos_on),
 	           .dos_off (dos_off),
@@ -351,7 +357,8 @@ module top(
                .vdos_off(vdos_off),
 
 	           .dos(dos),
-	           .vdos(vdos)
+	           .vdos(vdos),
+               .dos_stall(dos_stall)
 	         );
 
 
@@ -367,7 +374,7 @@ module top(
 	zmem z80mem
 	(
 		.fclk (fclk),
-		.rst_n(rst_n),
+		.rst(rst),
 
 		.zpos(zpos),
 		.zneg(zneg),
@@ -381,22 +388,19 @@ module top(
 		.zd_in (d),
 		.zd_out(dout_ram),
 		.zd_ena(ena_ram),
-		.m1_n  (m1_n),
-		.rfsh_n(rfsh_n),
-		.iorq_n(iorq_n),
-		.mreq_n(mreq_n),
-		.rd_n  (rd_n),
-		.wr_n  (wr_n),
+        
+		.opfetch(opfetch),
+		.iorq(iorq),
+		.mreq(mreq),
+        .memrd(memrd),
+        .memwr(memwr),
+		.rd(rd),
+		.wr(wr),
 
-        // .win_page({page[3], page[2], page[1], page[0]}),
-		// .win_romnram(romnram),
 		.page   (page),
 		.romnram(romnram),
 
 		.rw_en(rw_en),
-		// .rw_en(1),
-
-		// .rompg  (rompg),
 		.romoe_n(romoe_n),
 		.romwe_n(romwe_n),
 		.csrom  (csrom),
@@ -412,7 +416,7 @@ module top(
 		.cpu_addr  (cpu_addr),
 		.cpu_wrdata(cpu_wrdata),
 		// .cpu_rddata(dram_rddata),    // registered
-		.cpu_rddata(dram_rd),       // raw
+		.cpu_rddata(dram_rd),        // raw
 		.cpu_stall (cpu_stall),
 		.cpu_next  (cpu_next),
 
@@ -461,12 +465,14 @@ module top(
 	wire [20:0] dma_addr;
 	wire [15:0] dma_wrdata;
 	wire dma_req;
+	wire dma_zwt;
 	wire dma_rnw;
 	wire dma_next;
 	wire dma_strobe;
 
 	wire [20:0] ts_addr;
 	wire ts_req;
+	wire ts_zwt;
 	wire ts_pre_next;
 	wire ts_next;
 
@@ -515,15 +521,15 @@ module top(
 	);
 
 
-        wire border_wr   ;
-        wire zborder_wr  ;
-        wire zvpage_wr	 ;
-        wire vpage_wr	 ;
-        wire vconf_wr	 ;
-        wire gx_offsl_wr ;
-        wire gx_offsh_wr ;
-        wire gy_offsl_wr ;
-        wire gy_offsh_wr ;
+        wire border_wr;
+        wire zborder_wr;
+        wire zvpage_wr	;
+        wire vpage_wr	;
+        wire vconf_wr	;
+        wire gx_offsl_wr;
+        wire gx_offsh_wr;
+        wire gy_offsl_wr;
+        wire gy_offsh_wr;
         wire t0x_offsl_wr;
         wire t0x_offsh_wr;
         wire t0y_offsl_wr;
@@ -532,15 +538,15 @@ module top(
         wire t1x_offsh_wr;
         wire t1y_offsl_wr;
         wire t1y_offsh_wr;
-        wire palsel_wr	 ;
-        wire hint_beg_wr ;
+        wire palsel_wr	;
+        wire hint_beg_wr;
         wire vint_begl_wr;
         wire vint_begh_wr;
-        wire tsconf_wr	 ;
-        wire tmpage_wr	 ;
-        wire t0gpage_wr	 ;
-        wire t1gpage_wr	 ;
-        wire sgpage_wr	 ;
+        wire tsconf_wr	;
+        wire tmpage_wr	;
+        wire t0gpage_wr	;
+        wire t1gpage_wr	;
+        wire sgpage_wr	;
 
     // wire [1:0] vred0;
     // assign vred = vred0 | {2{t}};
@@ -657,64 +663,71 @@ module top(
 
 
 	wire rst;
-	wire iorq;
-	wire iorq_s;
-	wire mreq;
 	wire m1;
 	wire rfsh;
 	wire rd;
 	wire wr;
+	wire iorq;
+	wire iorq_s;
+	wire iorq_s2;
+	wire mreq;
+	wire mreq_s;
 	wire rdwr;
 	wire iord;
-	wire iord_s;
 	wire iowr;
-	wire iowr_s;
 	wire iorw;
+	wire iord_s;
+	wire iowr_s;
 	wire iorw_s;
 	wire memrd;
 	wire memwr;
-	wire memwr_s;
 	wire memrw;
+	wire memrd_s;
+	wire memwr_s;
+	wire memrw_s;
+	wire opfetch;
+	wire opfetch_s;
 	wire intack;
+	wire intack_s;
 
     zsignals zsignals(
-                .clk      (fclk),
-                .zclk     (zclk),
-                .zpos     (zpos),
-                .zneg     (zneg),
-				.rst_n    (rst_n),
-                .iorq_n   (iorq_n),
-                .mreq_n   (mreq_n),
-                .m1_n     (m1_n),
-                .rfsh_n   (rfsh_n),
-                .rd_n     (rd_n),
-                .wr_n     (wr_n),
+                .clk        (fclk),
+                .zpos       (zpos),
+				.rst_n      (rst_n),
+                .iorq_n     (iorq_n),
+                .mreq_n     (mreq_n),
+                .m1_n       (m1_n),
+                .rfsh_n     (rfsh_n),
+                .rd_n       (rd_n),
+                .wr_n       (wr_n),
 
-                .rst      (rst),
-
-                .rd       (rd),
-                .wr       (wr),
-                .rdwr     (rdwr),
-                .m1       (m1),
-                .rfsh     (rfsh),
-
-                .iorq     (iorq),
-                .iord     (iord),
-                .iowr     (iowr),
-                .iorw     (iorw),
-
-                .iorq_s   (iorq_s),
-                .iord_s   (iord_s),
-                .iowr_s   (iowr_s),
-                .iorw_s   (iorw_s),
-
-                .mreq     (mreq),
-                .memrd    (memrd),
-                .memwr    (memwr),
-                .memwr_s  (memwr_s),
-                .memrw    (memrw),
-
-                .intack   (intack)
+                .rst        (rst),
+                .m1         (m1),
+                .rfsh       (rfsh),
+                .rd         (rd),
+                .wr         (wr),
+                .iorq       (iorq),
+                .iorq_s     (iorq_s),
+                .iorq_s2    (iorq_s2),
+                .mreq       (mreq),
+                .mreq_s     (mreq_s),
+                .rdwr       (rdwr),
+                .iord       (iord),
+                .iowr       (iowr),
+                .iorw       (iorw),
+                .iord_s     (iord_s),
+                .iowr_s     (iowr_s),
+                .iorw_s     (iorw_s),
+                .memrd      (memrd),
+                .memwr      (memwr),
+                .memrw      (memrw),
+                .memrd_s    (memrd_s),
+                .memwr_s    (memwr_s),
+                .memrw_s    (memrw_s),
+                .opfetch    (opfetch),
+                .opfetch_s  (opfetch_s),
+                .intack     (intack),
+                .intack_s   (intack_s)
                 );
 
 
@@ -728,7 +741,7 @@ module top(
 		wire [4:0] fmaddr;
 
 		wire [7:0] sysconf;
-		wire [3:0] fddvirt ;
+		wire [3:0] fddvirt;
 
 	zports zports(
                     .zclk       (zclk),
@@ -740,7 +753,7 @@ module top(
                     .a          (a),
 
                     .rst        (rst),
-                    .m1         (m1),
+                    .opfetch_s  (opfetch_s),
 
                     .rd         (rd),
                     .wr         (wr),
@@ -752,6 +765,7 @@ module top(
                     .iorw       (iorw),
 
                     .iorq_s     (iorq_s),
+                    .iorq_s2    (iorq_s2),
                     .iord_s     (iord_s),
                     .iowr_s     (iowr_s),
                     .iorw_s     (iorw_s),
@@ -871,8 +885,7 @@ module top(
 		.clk(fclk),
 		.int_start(int_start),
 		.vdos(vdos),
-		.iorq_s (iorq_s),
-		.m1     (m1),
+		.intack(intack),
 		.int_n(int_n)
 	);
 

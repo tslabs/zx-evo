@@ -24,45 +24,31 @@
 // 3. clock switch 14-7-3.5 only at RFSH
 
 
-
 `include "../include/tune.v"
 
 module zclock(
 
 	input fclk,
-	input rst_n,
-
 	input zclk, // Z80 clock, buffered via act04 and returned back to the FPGA
-
+	output reg zclk_out, // generated Z80 clock - passed through inverter externally!
+	input c0, c2,
+    
+	input rst,
 	input rfsh_n, // switch turbo modes in RFSH part of m1
-
-	// output reg zclk_out, // generated Z80 clock - passed through inverter externally!
-	output wire zclk_out1, // generated Z80 clock - passed through inverter externally!
+	input  wire iorq,
+	input  wire external_port,
 
 	output reg zpos,
 	output reg zneg,
-
 	input  wire zclk_stall,
 
 	input [1:0] turbo, // 2'b00 -  3.5 MHz
 	                   // 2'b01 -  7.0 MHz
 	                   // 2'b1x - 14.0 MHz
 
-	output reg [1:0] int_turbo, // internal turbo, switched on /RFSH
-
-	// input signals for 14MHz external IORQ waits
-	input  wire external_port,
-	input  wire iorq_n,
-	input  wire m1_n,
-
-
-	input c0,
-	input c2 // syncing signals, taken from arbiter.v and dram.v
+	output reg [1:0] int_turbo // internal turbo, switched on /RFSH
+    
 );
-
-    reg zclk_out;
-    // assign zclk_out1 = rfsh_n ? zclk_out : !fclk;
-    assign zclk_out1 = zclk_out;
 
 	reg prec3_cnt;
 	wire h_prec3_1; // to take every other pulse of c2
@@ -99,8 +85,6 @@ module zclock(
 	end
 
 
-
-
 	// make 14MHz iorq wait
 	reg [3:0] io_wait_cnt;
 
@@ -109,14 +93,14 @@ module zclock(
 	wire io;
 	reg  io_r;
 
-	assign io = (~iorq_n) & m1_n & external_port;
+	assign io = iorq & external_port;
 
 	always @(posedge fclk)
 	if( zpos )
 		io_r <= io;
 
-	always @(posedge fclk, negedge rst_n)
-	if( ~rst_n )
+	always @(posedge fclk)
+	if (rst)
 		io_wait_cnt <= 4'd0;
 	else if( io && (!io_r) && zpos && int_turbo[1] )
 		// io_wait_cnt[3] <= 1'b1;
@@ -197,10 +181,10 @@ module zclock(
 
 	always @(negedge fclk)
 	begin
-		if( zpos )
+		if (zpos)
 			zclk_out <= 1'b0;
 
-		if( zneg )
+		if (zneg)
 			zclk_out <= 1'b1;
 	end
 
