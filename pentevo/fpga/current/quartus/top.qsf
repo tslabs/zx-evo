@@ -28,7 +28,7 @@
 # ========================
 set_global_assignment -name ORIGINAL_QUARTUS_VERSION 6.1
 set_global_assignment -name PROJECT_CREATION_TIME_DATE "19:03:44  NOVEMBER 07, 2009"
-set_global_assignment -name LAST_QUARTUS_VERSION "7.2 SP3"
+set_global_assignment -name LAST_QUARTUS_VERSION 6.1
 set_global_assignment -name MESSAGE_SUPPRESSION_RULE_FILE top.srf
 set_global_assignment -name SMART_RECOMPILE OFF
 set_global_assignment -name VERILOG_FILE ../video/video_ts_render.v
@@ -245,7 +245,7 @@ set_global_assignment -name FLEX10K_DEVICE_IO_STANDARD LVTTL/LVCMOS
 set_global_assignment -name OPTIMIZE_HOLD_TIMING OFF
 set_global_assignment -name FITTER_EFFORT "STANDARD FIT"
 set_global_assignment -name SLOW_SLEW_RATE ON
-set_global_assignment -name AUTO_PACKED_REGISTERS NORMAL
+set_global_assignment -name AUTO_PACKED_REGISTERS "MINIMIZE AREA"
 set_global_assignment -name FIT_ONLY_ONE_ATTEMPT OFF
 set_global_assignment -name SEED 3
 
