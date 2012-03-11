@@ -220,12 +220,19 @@ module zports(
         PORTXT:
             begin
             case (hoa)
+            
             XSTAT:
                 dout = {dma_act, 1'b0, pwr_up_reg, 1'b0, no_ide, 3'b0};
+                
+            DMASTAT:
+                dout = {dma_act, 7'b0};
+                
             RAMPAGE+2, RAMPAGE+3:
                 dout = rampage[hoa[1:0]];
+                
             default:
                 dout = 8'hFF;
+
             endcase
             end
 
@@ -326,6 +333,7 @@ module zports(
 	localparam FDDVIRT		= 8'h29;
 
 	localparam XSTAT		= 8'h00;
+	localparam DMASTAT		= 8'h27;
 
 	assign dmaport_wr[0] = portxt_wr & (hoa == DMASADDRL);
 	assign dmaport_wr[1] = portxt_wr & (hoa == DMASADDRH);

@@ -110,6 +110,12 @@ __val 	defl val
         endm
 
 
+; -- undoc macros
+inf     macro
+        defb h'ED, h'70
+        endm
+
+
 ; -- procedure macros
 
 chr     macro symb

@@ -316,3 +316,4 @@ set_global_assignment -name INCREMENTAL_VECTOR_INPUT_SOURCE top.vwf
 
 # end ENTITY(top)
 # ---------------
+set_global_assignment -name VECTOR_COMPARE_TRIGGER_MODE INPUT_EDGE
