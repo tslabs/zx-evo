@@ -139,8 +139,6 @@ module top(
 
 	wire rst_n; // global reset
 
-	wire [15:0] rddata;
-
 	wire [4:0] rompg = page[4:0];
 
 	wire [7:0] zports_dout;
