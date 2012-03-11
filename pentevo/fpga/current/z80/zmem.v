@@ -16,7 +16,7 @@
 module zmem(
 
 	input  wire fclk,
-	input  wire rst_n,
+	input  wire rst,
 
 	input  wire zpos, //
 	input  wire zneg, // strobes which show positive and negative edges of zclk
@@ -27,16 +27,17 @@ module zmem(
 	input  wire c3,
 
 	input  wire [15:0] za,
-	input  wire [ 7:0] zd_in, // won't emit anything to Z80 bus, data bus mux is another module
-	output wire [ 7:0] zd_out, // output to Z80 bus
-	output wire zd_ena, // out bus to the Z80
+	input  wire [ 7:0] zd_in,
+	output wire [ 7:0] zd_out,  // output to Z80 bus
+	output wire zd_ena,         // output to Z80 bus enable
 
-	input  wire m1_n,
-	input  wire rfsh_n,
-	input  wire mreq_n,
-	input  wire iorq_n,
-	input  wire rd_n,
-	input  wire wr_n,
+	input  wire opfetch,
+	input  wire iorq,
+	input  wire mreq,
+    input  wire memrd,
+    input  wire memwr,
+	input  wire rd,
+	input  wire wr,
 
 	input  wire [ 1:0] int_turbo, // 2'b00 - 3.5,
 	                              // 2'b01 - 7.0,
@@ -83,15 +84,15 @@ module zmem(
 	reg ramrd_reg,ramwr_reg;
 
 
-	assign romwe_n = wr_n | mreq_n | !rw_en;
-	assign romoe_n = rd_n | mreq_n;
+	assign romwe_n = !(wr & mreq & rw_en);
+	assign romoe_n = !(rd & mreq);
 	assign csrom = romnram; // positive polarity!
 
 
 	// 7/3.5mhz support
-	wire ramreq = (~mreq_n) && (~romnram) && rfsh_n;
-	wire ramrd = ramreq & (~rd_n);
-	wire ramwr = ramreq & (~wr_n) & rw_en;
+	wire ramreq = mreq && !romnram;
+	wire ramrd = ramreq & rd;
+	wire ramwr = ramreq & wr & rw_en;
 
 	always @(posedge fclk)
 	if( c3 && (!cpu_stall) )
@@ -101,22 +102,17 @@ module zmem(
 	end
 
 
-	assign zd_ena = (~mreq_n) & (~rd_n) & (~romnram);
+	assign zd_ena = mreq & rd & !romnram;
 
 	wire cache_hit = ( (za[15:1] == cached_addr[15:1]) && cached_addr_valid );
 
 
 // strobe the beginnings of DRAM cycles
 	always @(posedge fclk)
-	if( zneg )
-		r_mreq_n <= mreq_n | (~rfsh_n);
+	if (zneg)
+		r_mreq_n <= !mreq;
 	//
-	wire dram_beg = ( (!cache_hit) || memwr ) && zneg && r_mreq_n && (!romnram) && (!mreq_n) && rfsh_n;
-
-	// access type
-	wire opfetch = (~mreq_n) && (~m1_n);
-	wire memrd   = (~mreq_n) && (~rd_n);
-	wire memwr   = (~mreq_n) && rd_n && rfsh_n && rw_en;
+	wire dram_beg = ( (!cache_hit) || memwr ) && zneg && r_mreq_n && (!romnram) && mreq;
 
 
 	// wait tables:
@@ -146,8 +142,8 @@ module zmem(
 	// memwr - wait till cpu_next
 	wire stall14_cyc = memwr ? (!cpu_next) : stall14_cycrd;
 
-	always @(posedge fclk, negedge rst_n)
-	if( !rst_n )
+	always @(posedge fclk)
+	if (rst)
 		stall14_cycrd <= 1'b0;
 	else // posedge fclk
 	begin
@@ -157,13 +153,13 @@ module zmem(
 			stall14_cycrd <= 1'b1;
 	end
 
-	always @(posedge fclk, negedge rst_n)
-	if( !rst_n )
+	always @(posedge fclk)
+	if (rst)
 		stall14_fin <= 1'b0;
 	else // posedge fclk
 	begin
-		// if( stall14_fin && ( (opfetch&c2) || (memrd&c1) ) )
-		if (stall14_fin && ((opfetch&c1) || (memrd&c0)))     // boost!!!
+		// if (stall14_fin && ((opfetch & c2) || (memrd & c1)))
+		if (stall14_fin && ((opfetch & c1) || (memrd & c0)))     // boost!!!
 			stall14_fin <= 1'b0;
 		else if( cpu_next && c3 && cpu_req && (opfetch || memrd) )
 			stall14_fin <= 1'b1;
@@ -176,8 +172,8 @@ module zmem(
 	assign cpu_req = int_turbo[1] ? (pending_cpu_req | dram_beg) : cpureq_357;
 	assign cpu_rnw = int_turbo[1] ? (dram_beg ? (!memwr) : cpu_rnw_r) : ramrd;
 
-	always @(posedge fclk, negedge rst_n)
-	if( !rst_n )
+	always @(posedge fclk)
+	if (rst)
 		pending_cpu_req <= 1'b0;
 	else if( cpu_next && c3 )
 		pending_cpu_req <= 1'b0;
@@ -198,14 +194,14 @@ module zmem(
 	always @* if( cpu_strobe ) // WARNING! ACHTUNG! LATCH!!!
 		rd_buf <= cpu_rddata;
 
-	wire io = (~iorq_n);
+	wire io = iorq;
 	reg io_r;
 	always @(posedge fclk)
 	if( zpos )
 		io_r <= io;
 
-	always @(posedge fclk, negedge rst_n)
-	if( !rst_n )
+	always @(posedge fclk)
+	if (rst)
 	begin
 		cached_addr_valid <= 1'b0;
 	end
@@ -213,9 +209,9 @@ module zmem(
 
 	else
 	begin
-		if( (zneg && r_mreq_n && (!mreq_n) && rfsh_n && romnram)
-		 || (zneg && r_mreq_n && memwr                         )
-		 || (io && (!io_r) && zpos                             )
+		if( (zneg && r_mreq_n && mreq && romnram)
+		 || (zneg && r_mreq_n && memwr)
+		 || (io && (!io_r) && zpos)
          || (vdos_off | vdos_on)
          || dos_on
         )
@@ -225,7 +221,7 @@ module zmem(
 	end
 
 	always @(posedge fclk)
-	if( !rst_n )
+	if (rst)
 	begin
 		cached_addr <= 15'd0;
 	end

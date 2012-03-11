@@ -10,8 +10,7 @@ module pager (
 
 // Z80 interface
     input wire [15:0] za,
-    input wire m1,
-    input wire mreq,
+    input wire opfetch_s,
 
 // controls
 	input wire [7:0] memconf,
@@ -23,9 +22,7 @@ module pager (
 	output wire romnram,
     output wire rw_en,
   	output wire dos_on,
-	output wire dos_off,
-	output wire zclk_stall // stall Z80 clock during DOS turning on
-
+	output wire dos_off
 
 );
 
@@ -43,25 +40,8 @@ module pager (
 
 
 // DOS signal control
-	assign dos_on = win0 && m1 && mreq && (za[13:8]==6'h3D) && memconf[0] && !memconf[2];
-	assign dos_off = !win0 && m1 && mreq && !vdos;
-    // assign zclk_stall = dos_on | stall_count[2];
-    assign zclk_stall = 0;
-
-	reg [2:0] stall_count;
-	always @(posedge clk)
-	begin
-		if (dos_on)
-		begin
-			stall_count[2] <= 1'b1;     // count: 000(stop) -> 101 -> 110 -> 111 -> 000(stop)
-			stall_count[0] <= 1'b1;
-		end
-		else if( stall_count[2] )
-		begin
-			stall_count[2:0] <= stall_count[2:0] + 3'd1;
-		end
-    end
+	assign dos_on = win0 && opfetch_s && (za[13:8]==6'h3D) && memconf[0] && !memconf[2];
+	assign dos_off = !win0 && opfetch_s && !vdos;
 
 
 endmodule
-
