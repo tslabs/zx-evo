@@ -12,20 +12,26 @@ acmd_41 equ h'69
 
 ;---------------------------------------
 
-start   ld hl, nsdc
+start   push bc
+        ld hl, nsdc
         ld de, nsdc+1
         ld bc, zes-nsdc
         ld (hl), 0
         ldir
-
+        pop af
+        ld (device), a
+        
         ld hl, 0
         ld (lstcat), hl
         ld (lstcat + 2), hl
 
         call ide_ini
-
-        xor a
-        call sel_dev
+;-------
+        ld a, (device)
+        or a
+        jr z, one_dev
+        dec a
+one_dev call sel_dev
 
         call hdd
 
@@ -66,7 +72,7 @@ thg     ld b, 1
         ld bc, sysvar_end-sysvar_start
         ldir
 
-        pop de       
+        pop de
 	ret
 
 ;---------------------------------------
@@ -595,19 +601,21 @@ tos     xor a
 ;   SD DRIVER
 ;---------------------------------------
 
-ide_ini call sd__off
+ini_sd  call sd__off
         ret
 
 ;=======================================
-xpozi   ld (lthl), hl
+xpozi_sd
+        ld (lthl), hl
         ld (ltde), de
         
-proz    ld (blknum), hl
+proz_sd ld (blknum), hl
         ld (blknum+2), de
         ret
 
 ;hl, in da kudy a, secs
-rddse   ld de, (blknum)
+rddse_sd
+        ld de, (blknum)
         ld bc, (blknum+2)
         ex af, af'
         ld a, cmd_18
@@ -643,10 +651,11 @@ reads   push bc
 ;---------------------------------------
 ;detecting device:
         
-sel_dev ;i:        a - n of dev
+sel_dev_sd
+;i:        a - n of dev
         or a
         ret nz
-drdet   call sd_init
+        call sd_init
         ld de, 2
         or a
         ret nz
@@ -828,8 +837,230 @@ in_exit pop de
         pop bc
         ret
 
-        
+;---------------------------------------
+;   IDE NEMO DRIVER
+;---------------------------------------
+
+xpozi_nemo
+        ld (lthl), hl
+        ld (ltde), de
+proz_nemo
+        ld a, h
+        ld h, d
+        ld d, e
+        ld e, a
+
+;DE,cyl H,head L,sec
+
+        ld a, h
+        and %00001111
+        ld h, a
+        ld a, (drvre)
+        or h
+        ld bc, h'FFD0
+        out (c), a
+        ld c, h'70
+        out (c), l
+        ld c, h'B0
+        out (c), d
+        ld c, h'90
+        out (c), e
+        RET
+		
+;---------------------------------------
+rpoz    ld bc, h'ffd0
+        in a, (c)
+        and h'0f
+        ld h,a
+        ld c, h'70
+        in l, (c)
+        ld c, h'b0
+        in d, (c)
+        ld c, h'90
+        in e, (c)
+        ret
+
+;---------------------------------------
+;hl,in da kudy a,secs
+
+rddse_nemo
+        push af
+        ld bc, h'50
+        out (c), a
+        ld a, h'20
+        call comah
+        pop bc
+rdh1    push bc
+        call reads_nemo
+        call ready
+        pop bc
+        djnz rdh1
+        ret
+
+;---------------------------------------
+reads_nemo
+        ld bc, h'0010
+        inir
+        inir
+        ret
+
+;---------------------------------------
+sel_sla ld a, h'F0
+        ld (drvre), a
+        ld bc, h'D0
+        out (c), a
+        ld bc, h'F0
+        in a, (c)
+        rlca
+        ret
+
+sel_mas ld a, h'E0
+        jr sel_sla+2
+
+;---------------------------------------
+dv2     call sel_sla
+        jr drdet
 ;-------
+sel_dev_nemo
+;i:a - n of dev
+        cp 2
+        ret nc
+        dec a
+        jr z,dv2
+        call sel_mas
+drdet   ld a, h'08
+        call comm
+        ld hl, 16384
+ydet    ld bc, h'f0
+        in a, (c)
+        rlca
+        jr nc, rrr
+        call error_7
+        jr c, rrr
+
+        call hult
+		
+        dec hl
+        ld a, h
+        or l
+        jr nz, ydet
+
+        ld de, 500
+        jr ru
+
+rrr     ld de, 0
+        ld h, d
+        ld l, e
+        call xpozi_nemo
+        ld bc, h'f0
+        ld a, h'ec
+        out (c), a
+        
+        call hult2
+        
+        call rpoz
+        ld a, d
+        or e
+        jr z, kru
+;ld hl,#eb14
+;or a:sbc hl,de:ret z;atapi
+ru      ld a, 1
+        or a
+        ret
+;-------
+kru     ld hl, lobu
+        call reads_nemo
+        ld de, 0
+        xor a
+        ret
+
+hult2   ld hl, 192
+huu     call hult
+        dec hl
+        ld a, h
+        or l
+        jr nz, huu
+        ret
+hult    ld b, 0
+haalt   add a, (ix+0)
+        djnz haalt
+        ret
+;---------------------------------------
+comah   ld bc, h'f0
+        out (c), a
+ready   ld bc, h'f0
+        in a, (c)
+        rlca
+        ret nc
+        jr ready
+
+comm    ld bc, h'f0
+        out (c), a
+        ret
+		
+error_7 ld bc, h'f0
+        in a, (c)
+        rrca
+        ret
+
+;=======================================
+ide_ini ld a, (device)
+        or a
+        jp z, ini_sd
+        ret
+		
+xpozi   ld a, (device)
+        or a
+        jp z, xpozi_sd
+        dec a
+        jp z, xpozi_nemo
+        dec a
+        jp z, xpozi_nemo
+        ret
+		
+proz    ld a, (device)
+        or a
+        jp z, proz_sd
+        dec a
+        jp z, proz_nemo
+        dec a
+        jp z, proz_nemo
+        ret
+
+rddse   ld c, a
+        ld a, (device)
+        or a
+        jr z, to_rddse_sd
+        dec a
+        jr z, to_rddse_nemo
+        dec a
+        jr z, to_rddse_nemo
+        ld a, c
+        ret
+to_rddse_sd
+        ld a, c
+        jp rddse_sd
+to_rddse_nemo
+        ld a, c
+        jp rddse_nemo
+		
+sel_dev ld c, a
+        ld a, (device)
+        or a
+        jr z, to_sel_dev_sd
+        dec a
+        jr z, to_sel_dev_nemo
+        dec a
+        jr z, to_sel_dev_nemo
+        ld c, a
+        ret
+to_sel_dev_sd
+        ld a, c
+        jp sel_dev_sd
+to_sel_dev_nemo
+        ld a, c
+        jp sel_dev_nemo
+;---------------------------------------        
 file1   defb "BOOT    $C "
 
 ;---------------------------------------

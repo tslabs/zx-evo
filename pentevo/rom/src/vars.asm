@@ -62,6 +62,8 @@ lstcat          defs 4      ; active dir
 blknum          defs 4
 dahl            defs 2      ; see hdd proc.
 dade            defs 2
+drvre           defs 1
+device          defs 1; 0 - SD, 1 - HDD Master, 2 - HDD Slave
 zes             defs 1
 
 
