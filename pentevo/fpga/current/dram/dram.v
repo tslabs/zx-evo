@@ -74,7 +74,7 @@ module dram(
 	localparam RD   = 2'b01;	// because there are
 	localparam WR   = 2'b10;	// bit dependencies
 	
-    wire idle = |state;
+    wire idle = ~|state;
     wire read = state[0];
     wire write = state[1];
     
@@ -109,38 +109,38 @@ module dram(
 		if (c0)
 			if (idle)
 			begin
-				rras0_n <= int_addr[0];
-				rras1_n <= ~int_addr[0];
+				rlcas_n <= 1'b0;
+				rucas_n <= 1'b0;
 			end
 			else
 			begin
-				rlcas_n <= 1'b0;
-				rucas_n <= 1'b0;
+				rras0_n <= int_addr[0];
+				rras1_n <= ~int_addr[0];
 			end
 				
 		if (c1)
 			if (idle)
 			begin
-				rlcas_n <= write ? ~int_bsel[0] : 1'b0;
-				rucas_n <= write ? ~int_bsel[1] : 1'b0;
-			end
-			else
-			begin
 				rras0_n <=  rfsh_alt;
 				rras1_n <= ~rfsh_alt;
 				rfsh_alt <= ~rfsh_alt;
+			end
+			else
+			begin
+				rlcas_n <= write ? ~int_bsel[0] : 1'b0;
+				rucas_n <= write ? ~int_bsel[1] : 1'b0;
 			end
 	
 		if (c2)
 			if (idle)
 			begin
-				rras0_n <= 1'b1;
-				rras1_n <= 1'b1;
+				rlcas_n <= 1'b1;
+				rucas_n <= 1'b1;
 			end
 			else
 			begin
-				rlcas_n <= 1'b1;
-				rucas_n <= 1'b1;
+				rras0_n <= 1'b1;
+				rras1_n <= 1'b1;
 			end
 				
 		if (c3)
