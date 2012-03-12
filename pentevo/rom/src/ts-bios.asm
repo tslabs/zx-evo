@@ -36,12 +36,12 @@ MAIN
         inxt xstatus
         bit 6, a
         jr z, MN1             ; check if first boot after conf loading
-        
+
         xor a                 ; nulling vdos mountings
         ld (fddv), a
         call WRITE_NVRAM
-        
-MN1:        
+
+MN1:
         ld bc, h'7FFE
         in a, (c)
         rrca
@@ -52,7 +52,7 @@ MN1:
 RESET
         di
         call CLS_ZX
-        
+
         xtr
         xt page1, 5
         xt page2, 2
@@ -206,23 +206,26 @@ RES_SYS
 RES_BT_BD           ; boot.$c
         xtr
         xt page3, 0
-        
+
         ld a, (bdev)
         or a                ;0
-        jr z, RES_BD_SD
+        ld b, 0
+        jr z, RES_BD_XX
+        inc b
         dec a               ;1
-        jr z, RES_BD_HM
+        jr z, RES_BD_XX
+        inc b
         dec a               ;2
-        jr z, RES_BD_HS
+        jr z, RES_BD_XX
         dec a               ;3
         jr z, RES_BD_RS
         halt
-        
+
 RES_BT_SR           ; sys.rom
         halt
 
 
-RES_BD_SD           ; SD Card
+RES_BD_XX           ; SD Card, HDD Master, HDD Slave (B = device)
         push de
         call start
         pop af
@@ -237,12 +240,7 @@ RES_BD_SD           ; SD Card
         ld hl, h'2758
         exx
         ret
-        
-RES_BD_HM           ; HDD Master
-        halt
-        
-RES_BD_HS           ; HDD Slave
-        halt
+
 
 RES_BD_RS           ;RS-232
         push de
@@ -259,10 +257,10 @@ RES_BD_RS           ;RS-232
         xta memconf      ; mapping, Basic 48 ROM
         xt page0, 0
         jp (hl)
-RES_4        
+RES_4
         halt
 
-        
+
 RESET2_END
 
 
@@ -722,7 +720,7 @@ CLS_ZX
         ld d, 27
         jr CLT1
 
-        
+
 CLS_TXT
         ld e, txpage
         ld d, 64
@@ -730,7 +728,7 @@ CLT1
         ld hl, 0
         xor a
 
-        
+
 ; Fill memory using DMA (only 256 byte aligned addresses!)
 ; EHL - address
 ; D - numbers of 256 byte blocks
@@ -768,13 +766,13 @@ DMAFILL
         xt dmanum, 0
         xt dmalen, 126
         xt dmactr, dma_dev_mem | dma_zwt    ; Run last burst
-        
-; wait for DMA end     
+
+; wait for DMA end
 DWT
         in a,(c)
         jr nz, DWT
         ret
-        
+
 
 LD_S_PAL
         ld hl, pal_bb
@@ -799,7 +797,7 @@ LD_64_PAL
         ld de, pal_addr
         ld bc, 128
         jr LDP1
-        
+
 
 ; Calculate length of message
 ; in:
