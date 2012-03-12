@@ -28,7 +28,7 @@
 # ========================
 set_global_assignment -name ORIGINAL_QUARTUS_VERSION 6.1
 set_global_assignment -name PROJECT_CREATION_TIME_DATE "19:03:44  NOVEMBER 07, 2009"
-set_global_assignment -name LAST_QUARTUS_VERSION 6.1
+set_global_assignment -name LAST_QUARTUS_VERSION 8.1
 set_global_assignment -name MESSAGE_SUPPRESSION_RULE_FILE top.srf
 set_global_assignment -name SMART_RECOMPILE OFF
 set_global_assignment -name VERILOG_FILE ../video/video_ts_render.v
@@ -247,7 +247,7 @@ set_global_assignment -name FITTER_EFFORT "STANDARD FIT"
 set_global_assignment -name SLOW_SLEW_RATE ON
 set_global_assignment -name AUTO_PACKED_REGISTERS "MINIMIZE AREA"
 set_global_assignment -name FIT_ONLY_ONE_ATTEMPT OFF
-set_global_assignment -name SEED 3
+set_global_assignment -name SEED 99
 
 # Assembler Assignments
 # =====================
@@ -266,9 +266,9 @@ set_global_assignment -name INCREMENTAL_VECTOR_INPUT_SOURCE top.vwf
 
 	# Classic Timing Assignments
 	# ==========================
-	set_global_assignment -name BASED_ON_CLOCK_SETTINGS "FPGA clock" -section_id "Z80 clock"
-	set_global_assignment -name MULTIPLY_BASE_CLOCK_PERIOD_BY 2 -section_id "Z80 clock"
-	set_global_assignment -name OFFSET_FROM_BASE_CLOCK "-8 ns" -section_id "Z80 clock"
+set_global_assignment -name BASED_ON_CLOCK_SETTINGS "FPGA clock" -section_id "Z80 clock"
+set_global_assignment -name MULTIPLY_BASE_CLOCK_PERIOD_BY 2 -section_id "Z80 clock"
+set_global_assignment -name OFFSET_FROM_BASE_CLOCK "-8 ns" -section_id "Z80 clock"
 
 # end CLOCK(Z80 clock)
 # --------------------
@@ -278,7 +278,7 @@ set_global_assignment -name INCREMENTAL_VECTOR_INPUT_SOURCE top.vwf
 
 	# Classic Timing Assignments
 	# ==========================
-	set_global_assignment -name FMAX_REQUIREMENT "28 MHz" -section_id "FPGA clock"
+set_global_assignment -name FMAX_REQUIREMENT "28 MHz" -section_id "FPGA clock"
 
 # end CLOCK(FPGA clock)
 # ---------------------
@@ -288,7 +288,7 @@ set_global_assignment -name INCREMENTAL_VECTOR_INPUT_SOURCE top.vwf
 
 	# Classic Timing Assignments
 	# ==========================
-	set_global_assignment -name FMAX_REQUIREMENT "5.5296 MHz" -section_id "SPI clock"
+set_global_assignment -name FMAX_REQUIREMENT "5.5296 MHz" -section_id "SPI clock"
 
 # end CLOCK(SPI clock)
 # --------------------
@@ -298,21 +298,21 @@ set_global_assignment -name INCREMENTAL_VECTOR_INPUT_SOURCE top.vwf
 
 	# Pin & Location Assignments
 	# ==========================
-	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to clkz_out
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to clkz_out
 
 	# Classic Timing Assignments
 	# ==========================
-	set_instance_assignment -name CLOCK_SETTINGS "FPGA clock" -to fclk
-	set_instance_assignment -name CLOCK_SETTINGS "Z80 clock" -to clkz_in
-	set_instance_assignment -name CLOCK_SETTINGS "SPI clock" -to spick
-	set_instance_assignment -name CUT ON -from clkz_in -to fclk
-	set_instance_assignment -name CUT ON -from dram_rd -to "zmem:z80mem|rd_buf"
-	set_instance_assignment -name CUT ON -from "zmem:z80mem|rd_buf" -to d
+set_instance_assignment -name CLOCK_SETTINGS "FPGA clock" -to fclk
+set_instance_assignment -name CLOCK_SETTINGS "Z80 clock" -to clkz_in
+set_instance_assignment -name CLOCK_SETTINGS "SPI clock" -to spick
+set_instance_assignment -name CUT ON -from clkz_in -to fclk
+set_instance_assignment -name CUT ON -from dram_rd -to "zmem:z80mem|rd_buf"
+set_instance_assignment -name CUT ON -from "zmem:z80mem|rd_buf" -to d
 
 	# Fitter Assignments
 	# ==================
-	set_instance_assignment -name GLOBAL_SIGNAL ON -to fclk
-	set_instance_assignment -name GLOBAL_SIGNAL ON -to clkz_in
+set_instance_assignment -name GLOBAL_SIGNAL ON -to fclk
+set_instance_assignment -name GLOBAL_SIGNAL ON -to clkz_in
 
 # end ENTITY(top)
 # ---------------
