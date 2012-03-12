@@ -76,8 +76,8 @@ module zports(
 	output  wire       vdos_on,
 	output  wire       vdos_off,
 
-	output wire        ay_bdir,
-	output wire        ay_bc1,
+	output reg         ay_bdir,
+	output reg         ay_bc1,
 	output wire        covox_wr,
 	output wire        beeper_wr,
 
@@ -441,9 +441,13 @@ module zports(
 
 
 // AY control
-	wire ay_hit = (loa==PORTFD) & a[15] & iorq;
-	assign ay_bc1  = ay_hit & a[14] & rdwr;
-	assign ay_bdir = ay_hit & wr;
+	wire ay_hit = (loa==PORTFD) & a[15];
+    
+    always @(posedge clk)
+    begin
+        ay_bc1  <= ay_hit & a[14] & iorw;
+        ay_bdir <= ay_hit & iowr;
+    end
 
 
 // VG93
