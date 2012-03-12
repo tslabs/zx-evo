@@ -741,6 +741,33 @@ module top(
 		wire [7:0] sysconf;
 		wire [3:0] fddvirt;
 
+        
+	// AY control
+	reg pre_bc1,pre_bdir;
+	always @*
+	begin
+		pre_bc1 = 1'b0;
+		pre_bdir = 1'b0;
+
+		if( a[7:0]==8'hFD )
+		begin
+			if( a[15:14]==2'b11 )
+			begin
+				pre_bc1=1'b1;
+				pre_bdir=1'b1;
+			end
+			else if( a[15:14]==2'b10 )
+			begin
+				pre_bc1=1'b0;
+				pre_bdir=1'b1;
+			end
+		end
+	end
+
+	assign ay_bc1  = pre_bc1  & (~iorq_n) & ((~rd_n)|(~wr_n));
+	assign ay_bdir = pre_bdir & (~iorq_n) & (~wr_n);
+        
+        
 	zports zports(
                     .zclk       (zclk),
                     .clk        (fclk),
@@ -768,8 +795,8 @@ module top(
                     .iowr_s     (iowr_s),
                     .iorw_s     (iorw_s),
 
-                    .ay_bdir        (ay_bdir),
-                    .ay_bc1         (ay_bc1),
+                    // .ay_bdir        (ay_bdir),
+                    // .ay_bc1         (ay_bc1),
 
                     .rstrom         (rstrom),
                     .vg_intrq       (intrq),
