@@ -281,6 +281,7 @@ module top(
 		.zpos(zpos),
         .zneg(zneg),
 		.turbo(turbo),
+		// .turbo(2'b10),
 		.zclk_stall(cpu_stall | dos_stall),
         .int_turbo(int_turbo),
 		.external_port(external_port)
@@ -322,7 +323,6 @@ module top(
     wire rw_en;
 
     pager pager(
-        .clk        (fclk),
         .za         (a),
         .opfetch_s  (opfetch_s),
         .memconf    (memconf),
@@ -346,6 +346,7 @@ module top(
 
 	zdos zdos(
 	           .clk(fclk),
+	           .zclk(zclk),
 			   .rst(rst),
                .opfetch(opfetch),
 

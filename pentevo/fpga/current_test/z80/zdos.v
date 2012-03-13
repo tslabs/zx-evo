@@ -5,6 +5,7 @@
 module zdos(
 
 	input  wire        clk,
+	input  wire        zclk,
 	input  wire        rst,
 	input  wire        opfetch,
 
@@ -43,7 +44,7 @@ module zdos(
             pre_vdos <= 1'b0;
 
     
-    always @(posedge clk)
+    always @(posedge zclk)
 	if (rst)
 		vdos <= 1'b0;
 	else if (opfetch)

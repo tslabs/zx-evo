@@ -5,9 +5,6 @@
 
 module pager (
 
-// clocks
-    input wire clk,
-
 // Z80 interface
     input wire [15:0] za,
     input wire opfetch_s,
