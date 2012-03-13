@@ -44,7 +44,7 @@ module zdos(
             pre_vdos <= 1'b0;
 
     
-    always @(posedge zclk)
+    always @(negedge clk)
 	if (rst)
 		vdos <= 1'b0;
 	else if (opfetch)
