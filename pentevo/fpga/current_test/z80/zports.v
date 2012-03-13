@@ -443,7 +443,7 @@ module zports(
 // AY control
 	wire ay_hit = (loa==PORTFD) & a[15];
     
-    always @(posedge clk)
+    always @(posedge zclk)
     begin
         ay_bc1  <= ay_hit & a[14] & iorw;
         ay_bdir <= ay_hit & iowr;
