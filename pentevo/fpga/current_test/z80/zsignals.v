@@ -89,8 +89,8 @@ module zsignals(
     assign memwr_s = mreq_s & !rd;
     assign memrw_s = mreq_s & rdwr;
 
-    assign opfetch = mreq & m1;
-    assign opfetch_s = mreq_s & m1;
+    assign opfetch = memrd & m1;
+    assign opfetch_s = memrd_s & m1;
     
     assign intack = !iorq_n & m1;
     assign intack_s = iorq_s & m1;
