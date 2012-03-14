@@ -220,7 +220,6 @@ set_global_assignment -name RESERVE_ALL_UNUSED_PINS_NO_OUTPUT_GND "AS INPUT TRI-
 # =====================
 set_global_assignment -name ADD_DEFAULT_PINS_TO_SIMULATION_OUTPUT_WAVEFORMS OFF
 set_global_assignment -name VECTOR_COMPARE_TRIGGER_MODE INPUT_EDGE
-set_global_assignment -name INCREMENTAL_VECTOR_INPUT_SOURCE ../sim_vw/dram.vwf
 
 # start CLOCK(Z80 clock)
 # ----------------------
@@ -323,3 +322,5 @@ set_global_assignment -name VERILOG_FILE ../common/spi2.v
 set_global_assignment -name VERILOG_FILE ../common/resetter.v
 set_global_assignment -name VERILOG_FILE ../top.v
 set_global_assignment -name ZIP_VECTOR_WAVEFORM_FILE ../sim_vw/dram.cvwf
+set_global_assignment -name INCREMENTAL_VECTOR_INPUT_SOURCE ../sim_vw/dram.cvwf
+set_instance_assignment -name CUT ON -from "zclock:zclock|zclk_out" -to clkz_out
