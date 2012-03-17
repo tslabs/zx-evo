@@ -274,7 +274,7 @@ o │создание файла в активном каталоге
   │o:NZ - Operation failed
   │        o:A - type of error (in next versions!)
   │   Z - File created
-  │        o:ENTRY(32) [use TENTRY]
+  │        o:ENTRY(32) [uses TENTRY]
 ──┴───────────────────────────────────────────────────
 
 
