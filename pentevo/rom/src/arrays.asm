@@ -1,4 +1,14 @@
 
+; --error messages
+ERR_ME0
+        defb 'unknown error!!!', 0
+ERR_ME1
+		defb 'Boot-Device not found!', 0
+ERR_ME2
+        defb 'FAT32 not found!', 0
+ERR_ME3
+		defb 'boot.$c not found!', 0
+
 ; ------- messages
 
 M_HEAD1

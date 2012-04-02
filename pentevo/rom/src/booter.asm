@@ -32,14 +32,17 @@ start   push bc
         jr z, one_dev
         dec a
 one_dev call sel_dev
+        jr nz, no_dev
 
         call hdd
+		jr nz, no_fat
 
         ld hl, file1
         ld de, entry
         ld bc, 11
         ldir
         call srhdrn; Z - file not found
+		jr z, no_file
 
         ld (lobu), hl
         ld (lobu + 2), de
@@ -73,8 +76,19 @@ thg     ld b, 1
         ldir
 
         pop de
-	ret
+		xor a
+        ret
 
+no_dev  ld a, 1
+        jr er_exit
+		
+no_fat	ld a, 2	
+        jr er_exit
+		
+no_file ld a, 3
+er_exit scf
+        ret
+		
 ;---------------------------------------
 ;read data from fat32 (flow)
         
@@ -385,13 +399,14 @@ ldbpb   ld (addtop), hl
         ld hl, lobu ;load bpb sector
         ld a, 1
         call rddse
-        ld hl, lobu + 3
-        ld b, 6
-        ld a, h'1d
-five    cp (hl)
-        inc hl
-        jp nc, fhdd
-        djnz five
+
+    ;ld hl, lobu + 3
+    ;ld b, 6
+    ;ld a, h'1d
+    ;five    cp (hl)
+    ;inc hl
+    ;jp nc, fhdd
+    ;djnz five
         
         ld hl, (lobu + 11)
         ld a, h
@@ -924,7 +939,8 @@ dv2     call sel_sla
 sel_dev_nemo
 ;i:a - n of dev
         cp 2
-        ret nc
+        jr nc, ru
+		
         dec a
         jr z,dv2
         call sel_mas
