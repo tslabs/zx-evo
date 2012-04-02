@@ -119,6 +119,7 @@ box_norm        equ h'8F
 opt_norm        equ h'89
 opt_hgl         equ h'79
 sel_norm        equ h'8F
+err_norm        equ h'0A
 
 
 ; events

@@ -42,6 +42,14 @@ MAIN
         call WRITE_NVRAM
 
 MN1:
+; NGS Reset
+        ld a, (nres)
+        or a
+        jr z, RES_5
+        ld a, h'80
+        out (h'33), a
+RES_5
+
         ld bc, h'7FFE
         in a, (c)
         rrca
@@ -227,8 +235,8 @@ RES_BT_SR           ; sys.rom
 
 RES_BD_XX           ; SD Card, HDD Master, HDD Slave (B = device)
         push de
-        call start ; a=1 - no device, a=2 - FAT32 not found, a=3 - file not found 
-        call c, boot_errors
+        call start  ; a = Return code: 1 - no device, 2 - FAT32 not found, 3 - file not found
+        call c, BT_ERROR
         pop af
         push de
 
@@ -264,56 +272,41 @@ RES_4
 
 RESET2_END
 
+
 ; ------- ERROR Messages
 
-boot_errors
+BT_ERROR
         push af
-        xtr
-        xt page3, 1
-		
-        ld hl, font8
-        ld de, win3
-        ld bc, 2048
-        ldir
-		
-		xtr
-		xt page3, 0
-		pop af
-		
-		push af
-		ld hl, win3
-		ld de, win3 + 1
-		ld bc, 8191
-		ld (hl), l
-		ldir
-		
-		xtr
-		xt vconf, b'01000011
-		xt vpage, 0
-        pop af
+        call TX_MODE
 
+        ld hl, h'0308
+        ld bc, h'0740
+        ld a, err_norm
+        call DRAW_BOX
+        
+        pmsgc ERR_ME, 5, err_norm
+		pop af
+
+        dec a
         ld de, ERR_ME1
+        jr z, BTE1
         dec a
-        jr z, print_me
-		
         ld de, ERR_ME2
+        jr z, BTE1
         dec a
-        jr z, print_me
-		
         ld de, ERR_ME3
-        dec a
-        jr z, print_me
-		
+        jr z, BTE1
 		ld de, ERR_ME0
-		
-print_me
-        ld h, 30/2;       Y
-        ld b, b'00001010; Color
+
+BTE1
+        ld h, 7
+        ld b, err_norm
         call PRINT_MSG_C
 
         di
 		halt
-		ret; %)
+		ret
+
 
 ; ------- BIOS Setup
 
@@ -325,14 +318,7 @@ SETUP:
 
         call S_INIT
         call CLS_ZX
-        call CLS_TXT
-        call LD_FONT
-        call LD_S_PAL
-
-        xtr
-        xt vconf, rres_320x240 | mode_text
-        xt vpage, txpage
-        xt page3, txpage
+        call TX_MODE
 
         box 0, h'1E50, h'8F
         pmsgc M_HEAD1, 1, h'8E
@@ -352,7 +338,7 @@ S_MAIN
 
         ld c, a             ; debug!!!
         ld a, 2
-        out (254), a
+        ; out (254), a
         ld a, c
         call EVT_PROC
         xor a
@@ -394,8 +380,8 @@ EVT_P0
         jr z, EV0_D
         cp ev_kb_enter
         jr z, EV0_E
-        cp ev_kb_help
-        jr z, EV0_H
+        ; cp ev_kb_help
+        ; jr z, EV0_H
         ret
 
 EV0_U
@@ -763,6 +749,18 @@ LD_FONT
         ld de, win3
         ld bc, 2048
         ldir
+        ret
+
+
+TX_MODE
+        call CLS_TXT
+        call LD_FONT
+        call LD_S_PAL
+
+        xtr
+        xt vconf, rres_320x240 | mode_text
+        xt vpage, txpage
+        xt page3, txpage
         ret
 
 
