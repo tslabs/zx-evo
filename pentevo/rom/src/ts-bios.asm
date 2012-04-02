@@ -227,7 +227,8 @@ RES_BT_SR           ; sys.rom
 
 RES_BD_XX           ; SD Card, HDD Master, HDD Slave (B = device)
         push de
-        call start
+        call start ; a=1 - no device, a=2 - FAT32 not found, a=3 - file not found 
+        call c, boot_errors
         pop af
         push de
 
@@ -263,6 +264,56 @@ RES_4
 
 RESET2_END
 
+; ------- ERROR Messages
+
+boot_errors
+        push af
+        xtr
+        xt page3, 1
+		
+        ld hl, font8
+        ld de, win3
+        ld bc, 2048
+        ldir
+		
+		xtr
+		xt page3, 0
+		pop af
+		
+		push af
+		ld hl, win3
+		ld de, win3 + 1
+		ld bc, 8191
+		ld (hl), l
+		ldir
+		
+		xtr
+		xt vconf, b'01000011
+		xt vpage, 0
+        pop af
+
+        ld de, ERR_ME1
+        dec a
+        jr z, print_me
+		
+        ld de, ERR_ME2
+        dec a
+        jr z, print_me
+		
+        ld de, ERR_ME3
+        dec a
+        jr z, print_me
+		
+		ld de, ERR_ME0
+		
+print_me
+        ld h, 30/2;       Y
+        ld b, b'00001010; Color
+        call PRINT_MSG_C
+
+        di
+		halt
+		ret; %)
 
 ; ------- BIOS Setup
 
