@@ -1,14 +1,4 @@
 
-; --error messages
-ERR_ME0
-        defb 'unknown error!!!', 0
-ERR_ME1
-		defb 'Boot-Device not found!', 0
-ERR_ME2
-        defb 'FAT32 not found!', 0
-ERR_ME3
-		defb 'boot.$c not found!', 0
-
 ; ------- messages
 
 M_HEAD1
@@ -31,19 +21,33 @@ M_HEAD2
 M_HLP   defb 'Arrows - move,  Enter - change option,  F12 - exit', 0
 
 
+; ------- errors
+
+ERR_ME
+        defb 'System Meditation:', 0
+ERR_ME0
+        defb 'UNKNOWN ERROR!', 0
+ERR_ME1
+		defb 'Boot-Device NOT READY!', 0
+ERR_ME2
+        defb 'FAT32 NOT FOUND!', 0
+ERR_ME3
+		defb 'boot.$c NOT FOUND!', 0
+
+
 ; ------- tabs
 ; -- options tab
 OPTTAB0
         defw h'0707     ; X, Y coord of box
-        defw h'0E20     ; X, Y size of box
+        defw h'0F20     ; X, Y size of box
         defw h'0A0A     ; X, Y coord of list top
         defw h'080C     ; X, Y coord of header text
         defb h'8C       ; attrs
-        defb 9          ; number of options
+        defb 10          ; number of options
         defb 'Select NVRAM options:', 0
 
 		defw OPT_CFQ, SEL_CFQ   ; address of option desc, address of option choices
-		defw OPT_80L, SEL_80L
+		defw OPT_80L, SEL_ONF
 		defw OPT_B1T, SEL_BOT
 		defw OPT_B1B, SEL_BTB
 		defw OPT_B2T, SEL_BOT
@@ -51,27 +55,30 @@ OPTTAB0
 		defw OPT_B1D, SEL_BDV
 		defw OPT_AFQ, SEL_AFQ
 		defw OPT_ZPL, SEL_ZPL
+		defw OPT_NGR, SEL_ONF
 
 ; -- option text
 ; byte - number of choices
 ; byte - address in NVRAM
 ; string - option
-OPT_CFQ    defb 3, low(cfrq), 'CPU speed, MHz:', 0
+OPT_CFQ    defb 4, low(cfrq), 'CPU speed, MHz:', 0
 OPT_80L    defb 3, low(l128), '128k Lock:', 0
 OPT_B1T    defb 5, low(b1to), 'Reset to:', 0
 OPT_B1B    defb 4, low(b1tb), '  bank:', 0
 OPT_B2T    defb 5, low(b2to), 'CS Reset to:', 0
 OPT_B2B    defb 4, low(b2tb), '  bank:', 0
 OPT_B1D    defb 4, low(bdev), 'Boot Device:', 0
-OPT_AFQ    defb 4, low(ayfr), 'AY clock, MHz:', 0
+OPT_AFQ    defb 6, low(ayfr), 'AY clock, MHz:', 0
 OPT_ZPL    defb 6, low(zpal), 'ZX Palette:', 0
+OPT_NGR    defb 2, low(nres), 'NGS Reset:', 0
 
 ; -- choices
 ; string - choice
 SEL_CFQ
-		defb ' 3.5', 0
-        defb ' 7.0', 0
-		defb '14.0', 0
+		defb '       3.5', 0
+        defb '         7', 0
+		defb '        14', 0
+		defb 'overclk 14', 0
 
 SEL_BOT
 		defb '   ROM #00', 0
@@ -94,7 +101,7 @@ SEL_BDV
         defb ' HDD Slave', 0
         defb '    RS-232', 0
 
-SEL_80L
+SEL_ONF
         defb ' OFF', 0
 		defb '  ON', 0
 		defb 'Auto', 0
@@ -104,6 +111,8 @@ SEL_AFQ
 		defb '1.773', 0
 		defb '3.500', 0
 		defb '3.546', 0
+		defb '1.000', 0
+		defb '2.000', 0
 
 SEL_ZPL
         defb 'Default', 0   ; 0
@@ -271,7 +280,7 @@ pal_64c
         defw h'6308
         defw h'6310
         defw h'6318
-        
+
 keys_norm
         defb 0, 'zxcvasdfgqwert1234509876poiuy', 13, 'lkjh ', 14, 'mnb'
 keys_caps

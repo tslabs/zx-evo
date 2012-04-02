@@ -426,9 +426,9 @@ ldbpb   ld (addtop), hl
         ld hl, (lobu + 17)
         ld a, h
         or l
-        ld hl, (lobu + 19)
-        or h
-        or l
+        ; ld hl, (lobu + 19)
+        ; or h
+        ; or l
         ld hl, (lobu + 22)
         or h
         or l

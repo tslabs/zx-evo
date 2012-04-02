@@ -80,7 +80,8 @@ b2to            defs 1      ; CS Boot option
 b2tb            defs 1      ; CS Boot bank
 l128            defs 1      ; Lock 128
 zpal            defs 1      ; ZX palette
-cpal            defs 32     ; Custom palette
+nres            defs 1      ; NGS Reset
+cpal            defs 32     ; Custom palette (array)
 nvcs            defs 2      ; checksum - must be last in the declaration
 
 nv_size         equ $ - nv_buf - nv_1st

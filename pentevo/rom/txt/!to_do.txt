@@ -1,7 +1,6 @@
 - conf version display
 - clock
 - bank de-highlight when BD selected
-- boot error processing
 - NVRAM checksum
 - help window
 - palette editor
