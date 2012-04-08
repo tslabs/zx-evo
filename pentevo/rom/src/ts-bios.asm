@@ -25,6 +25,8 @@ MAIN
         im 1
         ld a, 63
         ld i, a
+        xor a
+        out (254), a
 
         call READ_NVRAM
         ; call CALC_CRC
@@ -311,8 +313,6 @@ BTE1
 ; ------- BIOS Setup
 
 SETUP:
-        xor a
-        out (254), a
         xtr
         xt vconf, mode_nogfx
 
