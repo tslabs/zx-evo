@@ -15,30 +15,31 @@
 
 ISR(TIMER2_OVF_vect)
 {
-	static UBYTE counter=0x00;
-	static BYTE dir=0x01;
-	static BYTE ocr=0x00;
+	// static UBYTE counter=0x00;
+	// static BYTE dir=0x01;
+	// static BYTE ocr=0x00;
 	static BYTE scankbd=0;
 	static BYTE cskey=0xff;
 
-	counter++; // just fucking shit to fadein-fadeout LED :-)))
-	if( counter&128 )
-	{
-		counter=0;
+	// counter++; // just fucking shit to fadein-fadeout LED :-)))
+	// if( counter&128 )
+	// {
+		// counter=0;
 
-		ocr += dir;
-		if( (ocr==(-1)) && (dir==(-1)) )
-		{
-			dir = -dir;
-			ocr = 1;
-		} else if( (ocr==0) && (dir==1) )
-		{
-			dir = -dir;
-			ocr = 0xFF;
-		}
+		// ocr += dir;
+		// if( (ocr==(-1)) && (dir==(-1)) )
+		// {
+			// dir = -dir;
+			// ocr = 1;
+		// } else if( (ocr==0) && (dir==1) )
+		// {
+			// dir = -dir;
+			// ocr = 0xFF;
+		// }
 
-		OCR2 = ocr;
-	}
+		// OCR2 = ocr;
+	// }
+		OCR2 = 0xff;
 
 	// PS/2 keyboard timeout tracking
 	if( (ps2keyboard_count<12) && (ps2keyboard_count!=0) )
