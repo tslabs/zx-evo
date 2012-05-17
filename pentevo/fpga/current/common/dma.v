@@ -19,7 +19,6 @@ module dma (
 
 // Z80
 	input  wire [7:0] zdata,
-	input  wire rfsh_n,
 
 // DRAM interface
 	output wire [20:0] dram_addr,
@@ -38,11 +37,16 @@ module dma (
 	input  wire        sd_stb,
 
 // IDE interface
-	input  wire [15:0] ide_rddata,
-	output wire [15:0] ide_wrdata,
+	input  wire [15:0] ide_in,
+	output wire [15:0] ide_out,
 	output wire        ide_req,
 	output wire        ide_rnw,
-	input  wire        ide_stb
+	input  wire        ide_stb,
+
+// CRAM interface
+	output wire [15:0] cram_wrdata,
+	output wire [ 7:0] cram_wraddr,
+	output wire        cram_we
 
 );
 
@@ -51,6 +55,7 @@ module dma (
 //  001 - RAM
 //  010 - SD
 //  011 - IDE
+//  100 - CRAM
 
 // mode:
 //  0 - device to RAM (read from device)
@@ -68,90 +73,45 @@ module dma (
     wire dma_launch = dma_wr[7];
     wire dma_num    = dma_wr[8];
 
-	wire dv_ram = device == 3'b001;
-	wire dv_sd  = device == 3'b010;
-	wire dv_ide = device == 3'b011;
+	wire dv_ram = (device == 3'b001);
+	wire dv_sd  = (device == 3'b010);
+	wire dv_ide = (device == 3'b011);
+	wire dv_crm = (device == 3'b100) && dma_wnr;
 
-    wire bs_sd  = dma_act & dv_sd ;
-    wire bs_ide = dma_act & dv_ide;
+//    wire bs_sd  = dma_act && dv_sd ;
+//    wire bs_ide = dma_act && dv_ide;
 
-    wire [0:1] bs_dma = {bs_sd ,
-                         bs_ide};
-
-
-// states logic
-
-// !R/W  phase  RAM  DEV
-// device-RAM
-//   0     0     0    1
-//   0     1     1    0
-//   1     0     1    0
-//   1     0     0    1
-// RAM-RAM
-//   x     0     1    0
-//   x     1     1    0
-
-	assign dma_act = ~n_ctr[8];
-
-    wire state_rd = ~phase;
-    wire state_wr = phase;
-
-    wire state_dev = !dv_ram & (dma_wnr ^ !phase);
-    wire state_mem = dv_ram | (dma_wnr ^ phase);
-
-    assign dram_addr = state_rd ? s_addr : d_addr;
-    assign dram_wrdata = data;
-    assign dram_req = dma_act & state_mem;
-    assign dram_rnw = state_rd;
-
-	wire dev_req = dma_act & state_dev;
-	wire dev_rnw = state_rd;
-
-    assign sd_wrdata = bsel ? data[15:8] : data[7:0];
-    assign sd_req = dev_req & dv_sd;
-    assign sd_rnw = dev_rnw;
-	wire sd_stb_int = sd_stb;
-
-    assign ide_wrdata = data;
-    assign ide_req = dev_req & dv_ide;
-    assign ide_rnw = dev_rnw;
-	wire ide_stb_int = ide_stb;
-
-    wire dev_stb = (dv_sd & sd_stb_int & bsel) |
-                   (dv_ide & ide_stb_int);
-
-    wire phase_end = (state_mem & dram_next) | (state_dev & dev_stb);
-    wire cyc_end = phase & phase_end;
-
-    wire byte_switch = (dv_sd & sd_stb_int);
+    //wire [1:0] bs_dma = {bs_sd, bs_ide};
 
 
 // data aquiring
     reg [15:0] data;
 
     always @(posedge clk)
-    begin
-        if (state_rd & dram_next)
-        begin
-            data <= dram_rddata;
-        end
+        if (state_rd)
+        
+            if (dram_next)
+                data <= dram_rddata;
 
-        else if (state_rd & sd_stb_int)
-        begin
-            if (bsel)
-                data[7:0] <= sd_rddata;
-            else
-                data[15:8] <= sd_rddata;
-        end
+            else if (ide_stb)
+                data <= ide_in;
+                
+        // else if (state_rd && sd_stb_int)
+        // begin
+            // if (bsel)
+                // data[7:0] <= sd_rddata;
+            // else
+                // data[15:8] <= sd_rddata;
+        // end
 
-        else if (state_rd & ide_stb_int)
-            data <= ide_rddata;
-    end
 
 
 // states processing
+    wire phase_end = (state_mem && dram_next) || (state_dev && dev_stb);
+    wire cyc_end = phase && phase_end;
+
 	reg [2:0] device;
-    reg dma_wnr;
+    reg dma_wnr;             // 0 - device to RAM / 1 - RAM to device
     reg dma_salgn;
     reg dma_dalgn;
     reg dma_asz;
@@ -186,6 +146,7 @@ module dma (
 	reg [7:0] b_ctr;        // counter for cycles in burst
 	reg [8:0] n_ctr;        // counter for bursts
 
+	assign dma_act = ~n_ctr[8];
     wire [7:0] b_ctr_next = next_burst ? b_len : b_ctr_dec[7:0];
     wire [8:0] b_ctr_dec = {1'b0, b_ctr[7:0]} - 9'b1;
     wire [8:0] n_ctr_dec = n_ctr - next_burst;
@@ -225,16 +186,16 @@ module dma (
     // source
     wire [20:0] s_addr_next = {s_addr_next_h[13:1], s_addr_next_m, s_addr_next_l[6:0]};
     wire [13:0] s_addr_next_h = s_addr[20:7] + s_addr_add_h;
-    wire [1:0] s_addr_add_h = dma_salgn ? {next_burst & dma_asz, next_burst & !dma_asz} : {s_addr_inc_l[8], 1'b0};
+    wire [1:0] s_addr_add_h = dma_salgn ? {next_burst && dma_asz, next_burst && !dma_asz} : {s_addr_inc_l[8], 1'b0};
     wire s_addr_next_m = dma_salgn ? (dma_asz ? s_addr_next_l[7] : s_addr_next_h[0]) : s_addr_inc_l[7];
-    wire [7:0] s_addr_next_l = (dma_salgn & next_burst) ? s_addr_r : s_addr_inc_l[7:0];
+    wire [7:0] s_addr_next_l = (dma_salgn && next_burst) ? s_addr_r : s_addr_inc_l[7:0];
     wire [8:0] s_addr_inc_l = {1'b0, s_addr[7:0]} + 9'b1;
 
     reg [20:0] s_addr;      // current source address
     reg [7:0] s_addr_r;     // source lower address
 
 	always @(posedge clk)
-		if (dram_next & state_rd)			// increment RAM source addr
+		if ((dram_next || dev_stb) && state_rd)			// increment RAM source addr
 			s_addr <= s_addr_next;
 
         else
@@ -258,16 +219,16 @@ module dma (
     // destination
     wire [20:0] d_addr_next = {d_addr_next_h[13:1], d_addr_next_m, d_addr_next_l[6:0]};
     wire [13:0] d_addr_next_h = d_addr[20:7] + d_addr_add_h;
-    wire [1:0] d_addr_add_h = dma_dalgn ? {next_burst & dma_asz, next_burst & !dma_asz} : {d_addr_inc_l[8], 1'b0};
+    wire [1:0] d_addr_add_h = dma_dalgn ? {next_burst && dma_asz, next_burst && !dma_asz} : {d_addr_inc_l[8], 1'b0};
     wire d_addr_next_m = dma_dalgn ? (dma_asz ? d_addr_next_l[7] : d_addr_next_h[0]) : d_addr_inc_l[7];
-    wire [7:0] d_addr_next_l = (dma_dalgn & next_burst) ? d_addr_r : d_addr_inc_l[7:0];
+    wire [7:0] d_addr_next_l = (dma_dalgn && next_burst) ? d_addr_r : d_addr_inc_l[7:0];
     wire [8:0] d_addr_inc_l = {1'b0, d_addr[7:0]} + 9'b1;
 
     reg [20:0] d_addr;      // current dest address
     reg [7:0] d_addr_r;     // dest lower address
 
 	always @(posedge clk)
-		if (dram_next & state_wr)			// increment RAM dest addr
+		if ((dram_next || dev_stb) && state_wr)			// increment RAM dest addr
 			d_addr <= d_addr_next;
         else
         begin
@@ -286,6 +247,50 @@ module dma (
             if (dma_daddrx)
                 d_addr[20:13] <= zdata;
         end
+
+
+// !R/W  phase  RAM  DEV
+// device-RAM
+//   0     0     0    1
+//   0     1     1    0
+//   1     0     1    0
+//   1     0     0    1
+// RAM-RAM
+//   x     0     1    0
+//   x     1     1    0
+
+
+// DRAM
+    assign dram_addr = state_rd ? s_addr : d_addr;
+    assign dram_wrdata = data;
+    assign dram_req = dma_act && state_mem;
+    assign dram_rnw = state_rd;
+
+
+// devices
+    wire state_rd = ~phase;
+    wire state_wr = phase;
+    wire state_dev = !dv_ram && (dma_wnr ^ !phase);
+    wire state_mem = dv_ram || (dma_wnr ^ phase);
+	wire dev_req = dma_act && state_dev;
+    wire byte_switch = (dv_sd && sd_stb_int);
+    wire dev_stb = cram_we || ide_stb;          // add here all newly coded devices
+
+    // CRAM
+    assign cram_wrdata = data;
+    assign cram_wraddr = d_addr[7:0];
+    assign cram_we = dev_req && dv_crm && state_wr;
+
+    // SD
+    assign sd_wrdata = bsel ? data[15:8] : data[7:0];
+    assign sd_req = dev_req && dv_sd;
+    assign sd_rnw = state_rd;
+	wire sd_stb_int = sd_stb;
+
+    // IDE
+    assign ide_out = data;
+    assign ide_req = dev_req && dv_ide;
+    assign ide_rnw = state_rd;
 
 
 endmodule

@@ -15,8 +15,14 @@ module zmaps(
 	input wire [4:0] fmaddr,
 	
 // FPRAM data
-	output reg [7:0] zmd,
+	output wire [15:0] zmd,
+	output wire [7:0] zma,
 	
+// DMA
+	input wire [15:0] dma_data,
+	input wire [7:0] dma_addr,
+    input wire dma_cram_we,
+
 // FPRAM controls
 	output wire cram_we,
 	output wire sfys_we
@@ -34,14 +40,21 @@ module zmaps(
 	
 
 // write enables
-	assign cram_we = (a[11:9] == CRAM) & a[0] & hit;
+	assign cram_we = dma_req ? dma_cram_we : (a[11:9] == CRAM) & a[0] & hit;
 	assign sfys_we = (a[11:9] == SFYS) & a[0] & hit;
 
 	
 // LSB fetching
-	always @(posedge clk)
+    assign zma = dma_req ? dma_addr : a[8:1];
+    assign zmd = dma_req ? dma_data : {d, zmd0};
+    
+	reg [7:0] zmd0;
+    always @(posedge clk)
 		if (!a[0] & hit)
-			zmd <= d;
+			zmd0 <= d;
 
+// DMA
+    wire dma_req = dma_cram_we;
 
+            
 endmodule
