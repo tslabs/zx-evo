@@ -12,6 +12,7 @@ module video_mode (
 	input wire [7:0] vconf,
 	input wire [7:0] vpage,
 	output reg [7:0] vpage_d,
+	input reg  [7:0] tmpage,
 	input wire [7:0] palsel,
 	output reg [7:0] palsel_d,
 	
@@ -200,7 +201,8 @@ module video_mode (
     assign bw[M_T3] = {BW8, BU1};	// '1 of 8' (No graphics)
     assign video_bw = tm_pf ? tm_bw : bw[vmod];
     
-    wire [4:0] tm_bw = {BW4, &tm_en ? BU2 : BU1};      // '1/2 of 4' (1 or 2 tile-planes used)
+    // wire [4:0] tm_bw = {BW4, &tm_en ? BU2 : BU1};      // '1/2 of 4' (1 or 2 tile-planes used)
+    wire [4:0] tm_bw = {BW8, &tm_en ? BU4 : BU2};      // '2/4 of 8' (1 or 2 tile-planes used)		- dirty fix!!! probably tiles will blink and harsh DRAM usage - problem with fetcher signals
 
 	
 // pixelrate
@@ -231,7 +233,7 @@ module video_mode (
 	assign hp_beg[0] = 9'd140;	// 256 (88-52-256-52)
 	assign hp_beg[1] = 9'd108;	// 320 (88-20-320-20)
 	assign hp_beg[2] = 9'd108;	// 320 (88-20-320-20)
-	assign hp_beg[3] = 9'd88;	// 360 (88-0-360-0  )
+	assign hp_beg[3] = 9'd88;	// 360 (88-0-360-0)
 
 	assign hp_end[0] = 9'd396;	// 256
 	assign hp_end[1] = 9'd428;	// 320
@@ -241,17 +243,17 @@ module video_mode (
 	assign vp_beg[0] = 9'd080;	// 192 (32-48-192-32)
 	assign vp_beg[1] = 9'd076;	// 200 (32-44-200-44)
 	assign vp_beg[2] = 9'd056;	// 240 (32-24-240-24)
-	assign vp_beg[3] = 9'd032;	// 288 (32-0-288-0  )
+	assign vp_beg[3] = 9'd032;	// 288 (32-0-288-0)
 
 	assign vp_end[0] = 9'd272;	// 192
 	assign vp_end[1] = 9'd276;	// 200
 	assign vp_end[2] = 9'd296;	// 240
 	assign vp_end[3] = 9'd320;	// 288
 
-	assign x_tile[0] = 6'd31;	// 256
-	assign x_tile[1] = 6'd39;	// 320
-	assign x_tile[2] = 6'd39;	// 320
-	assign x_tile[3] = 6'd44;	// 360
+	assign x_tile[0] = 6'd33;	// 256
+	assign x_tile[1] = 6'd41;	// 320
+	assign x_tile[2] = 6'd41;	// 320
+	assign x_tile[3] = 6'd46;	// 360
 
 	assign hpix_beg = hp_beg[rres];
 	assign hpix_end = hp_end[rres];
@@ -273,14 +275,14 @@ module video_mode (
     assign video_addr = tm_pf ? tm_addr : v_addr[vmod];
 
     
-// Tiles
-    wire [20:0] tm_addr = {vpage_d, tpos_y, tpn, tpos_x};
+// Tilemap prefetch
+    wire [20:0] tm_addr = {tmpage, tpos_y, tpn, tpos_x};        // 128 bytes for plane0 + 128 bytes for plane1
     wire [5:0] tpos_y = cnt_tp_row[8:3];
     wire [5:0] tpos_x = {cnt_tp_row[2:0], cnt_tp_col};
     wire [2:0] cnt_tp_col = &tm_en ? cnt_col[3:1] : cnt_col[2:0];
     wire tpn = &tm_en ? cnt_col[0] : tm_en[1];
     
-    assign tmb_waddr = {cnt_tp_row[4:0], cnt_tp_col, tpn};
+    assign tmb_waddr = {cnt_tp_row[4:0], cnt_tp_col, tpn};      // 1 word for plane0 + 1 word for plane1
     
     
 // ZX
@@ -305,11 +307,5 @@ module video_mode (
     assign addr_tx[2] = {~vpage_d[0], 3'b000, (txt_char[7:0]), cnt_row[2:1]};		// char0 graphics, data[7:0]
     assign addr_tx[3] = {~vpage_d[0], 3'b000, (txt_char[15:8]), cnt_row[2:1]};	// char1 graphics, data[15:8]
 
-    // assign addr_tx[0] = {1'b0, 6'd0, 1'b0, cnt_col[7:2]};	// char codes, data[15:0]
-    // assign addr_tx[0] = {1'b0, 6'd0, 1'b0, 6'd0};	// char codes, data[15:0]
-    // assign addr_tx[3] = {14'b10000000000000};		// debug!!!
-    
 
 endmodule
-
-

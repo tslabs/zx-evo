@@ -70,16 +70,13 @@ module top(
 	// IDE
 	output [2:0] ide_a,
 	inout [15:0] ide_d,
-
-	output ide_dir,
-
-	input ide_rdy,
-
+	output ide_dir,         // rnw
 	output ide_cs0_n,
 	output ide_cs1_n,
-	output ide_rs_n,
 	output ide_rd_n,
 	output ide_wr_n,
+	output ide_rs_n,
+	input ide_rdy,
 
 	// VG93 and diskdrive
 	output vg_clk,
@@ -175,19 +172,11 @@ module top(
 
 	wire tape_in;
 
-	wire [15:0] ideout;
-	wire [15:0] idein;
-	wire idedataout;
-
-
 	wire [7:0] zmem_dout;
 	wire zmem_dataout;
 
-
-
 	wire [7:0] received;
 	wire [7:0] tobesent;
-
 
 	wire intrq,drq;
 	wire vg_wrFF;
@@ -211,16 +200,8 @@ module top(
 
 	assign res= ~rst_n;
 
-	assign ide_rs_n = rst_n;
-
-	assign ide_d = idedataout ? ideout : 16'hZZZZ;
-	assign idein = ide_d;
-
-	assign ide_dir = ~idedataout;
-
-	wire cpu_req,cpu_rnw,cpu_wrbsel,cpu_strobe;
+	wire cpu_req, cpu_rnw, cpu_wrbsel, cpu_strobe;
 	wire [20:0] cpu_addr;
-	// wire [15:0] cpu_rddata;
 	wire [7:0] cpu_wrdata;
 
 	wire go;
@@ -233,13 +214,7 @@ module top(
 
 	wire beeper_mux; // what is mixed to FPGA beeper output - beeper (0) or tapeout (1)
 
-	wire [2:0] atm_scr_mode;
-
 	wire beeper_wr, covox_wr;
-
-
-	wire [5:0] palcolor; // palette readback
-
 
 	wire [1:0] int_turbo;
 	wire cpu_next;
@@ -247,18 +222,6 @@ module top(
 
 	wire external_port;
 
-
-	// fix ATM2-style ROM addressing for PENT-like ROM layout.
-	// this causes compications when writing to the flashROM from Z80
-	// and need to split and re-build old ATM romfiles before burning in
-	// flash
-//	wire [1:0] adr_fix;
-//	assign adr_fix = ~{ rompg[0], rompg[1] };
-//	assign rompg0_n = ~adr_fix[0];
-//	assign dos_n    =  adr_fix[1];
-//	assign rompg2   =  1'b0;//rompg[2];
-//	assign rompg3   =  1'b0;//rompg[3];
-//	assign rompg4   =  1'b0;//rompg[4];
 
 	assign rompg0_n = ~rompg[0];
 	assign dos_n    =  rompg[1];
@@ -281,7 +244,7 @@ module top(
 		.zpos(zpos),
         .zneg(zneg),
 		.turbo(turbo),
-		// .turbo(2'b10),
+		// .turbo(2'b01),
 		.zclk_stall(cpu_stall | dos_stall),
         .int_turbo(int_turbo),
 		.external_port(external_port)
@@ -300,6 +263,9 @@ module top(
 	wire drive_ff;
 
 	assign d = ena_ram ? dout_ram : (ena_ports ? dout_ports : (intack ? im2vect : (drive_ff ? 8'hFF : 8'bZZZZZZZZ)));
+	// assign d = ena_ram ? dout_ram : (ena_ports ? dout_ports : (drive_ff ? 8'hFF : 8'bZZZZZZZZ));
+	// assign d = ena_ram ? dout_ram : (ena_ports ? dout_ports : (intack ? im2vect : (drive_ff ? 8'h00 : 8'bZZZZZZZZ)));
+	// assign d = ena_ram ? dout_ram : (ena_ports ? dout_ports : 8'bZZZZZZZZ);
 
 	zbus zxbus(
         .iorq(iorq),
@@ -387,7 +353,7 @@ module top(
 		.zd_in (d),
 		.zd_out(dout_ram),
 		.zd_ena(ena_ram),
-        
+
 		.opfetch(opfetch),
 		.iorq(iorq),
 		.mreq(mreq),
@@ -610,7 +576,8 @@ module top(
 
 		.a              (a),
         .d              (d),
-		.fd             ({d[7:0], zmd}),
+		.zmd            (zmd),
+		.zma            (zma),
 		.cram_we        (cram_we),
 		.sfys_we        (sfys_we),
 		.int_start      (int_start)
@@ -644,21 +611,26 @@ module top(
 	                 .kj_stb(kj_stb), .kj_data(kj_port_data),
 	                 .zah(a[15:8]), .kbd_data(kbd_port_data),
 	                 .mus_data(mus_port_data)
-	               );
+	);
 
 
-		wire [7:0]	   zmd	;
+	wire [15:0]	   zmd;
+	wire [7:0]	   zma;
 
     zmaps zmaps(
-				.clk     (fclk),
-				.memwr_s (memwr_s),
-				.a       (a),
-				.d       (d),
-				.fmaddr  (fmaddr),
-				.zmd     (zmd),
-				.cram_we (cram_we),
-				.sfys_we (sfys_we)
-				);
+				.clk        (fclk),
+				.memwr_s    (memwr_s),
+				.a          (a),
+				.d          (d),
+				.fmaddr     (fmaddr),
+				.zmd        (zmd),
+				.zma        (zma),
+                .dma_data   (dma_cram_wrdata),
+                .dma_addr   (dma_cram_wraddr),
+                .dma_cram_we(dma_cram_we),
+				.cram_we    (cram_we),
+				.sfys_we    (sfys_we)
+	);
 
 
 	wire rst;
@@ -742,7 +714,7 @@ module top(
 		wire [7:0] sysconf;
 		wire [3:0] fddvirt;
 
-        
+
 	// AY control
 	// reg pre_bc1,pre_bdir;
 	// always @*
@@ -767,8 +739,14 @@ module top(
 
 	// assign ay_bc1  = pre_bc1  & (~iorq_n) & ((~rd_n)|(~wr_n));
 	// assign ay_bdir = pre_bdir & (~iorq_n) & (~wr_n);
-        
-        
+
+    
+    wire [15:0] z80_ide_out;
+    wire z80_ide_cs0_n;
+    wire z80_ide_cs1_n;
+    wire z80_ide_req;
+    wire z80_ide_rnw;
+
 	zports zports(
                     .zclk       (zclk),
                     .clk        (fclk),
@@ -810,14 +788,13 @@ module top(
                     .sd_datain      (sd_datain),
                     .sdcs_n         (sdcs_n),
 
-                    .idein          (idein),
-                    .ideout         (ideout),
-                    .idedataout     (idedataout),
-                    .ide_a          (ide_a),
-                    .ide_cs0_n      (ide_cs0_n),
-                    .ide_cs1_n      (ide_cs1_n),
-                    .ide_wr_n       (ide_wr_n),
-                    .ide_rd_n       (ide_rd_n),
+                    .ide_in         (ide_d),
+                    .ide_out        (z80_ide_out),
+                    .ide_cs0_n      (z80_ide_cs0_n),
+                    .ide_cs1_n      (z80_ide_cs1_n),
+                    .ide_req        (z80_ide_req),
+                    .ide_rnw        (z80_ide_rnw),
+                    .ide_stb        (ide_stb),
 
                     .border_wr      (border_wr),
                     .zborder_wr     (zborder_wr),
@@ -887,6 +864,14 @@ module top(
 
 	wire dma_act;
 
+    wire [15:0] dma_cram_wrdata;
+    wire [7:0] dma_cram_wraddr;
+	wire dma_cram_we;
+
+    wire [15:0] dma_ide_out;
+    wire dma_ide_req;
+    wire dma_ide_rnw;
+
 	dma dma(
 		.clk		(fclk),
 		.c2		    (c2),
@@ -895,7 +880,6 @@ module top(
 		.zdata		(d),
 		.dmaport_wr	(dmaport_wr),
 		.dma_act	(dma_act),
-		.rfsh_n     (rfsh_n),
 
 		.dram_addr	(dma_addr),
 		.dram_rnw	(dma_rnw),
@@ -903,7 +887,17 @@ module top(
 		.dma_zwt	(dma_zwt),
 		.dram_rddata(dram_rd),
 		.dram_wrdata(dma_wrdata),
-		.dram_next	(dma_next)
+		.dram_next	(dma_next),
+
+        .cram_wrdata(dma_cram_wrdata),
+        .cram_wraddr(dma_cram_wraddr),
+        .cram_we    (dma_cram_we),
+
+        .ide_in     (ide_d),
+        .ide_out    (dma_ide_out),
+        .ide_req    (dma_ide_req),
+        .ide_rnw    (dma_ide_rnw),
+        .ide_stb    (ide_stb)
 	);
 
 
@@ -914,6 +908,7 @@ module top(
 		.intack(intack),
 		.int_n(int_n)
 	);
+
 
 	znmi znmi(
 		.rst_n(rst_n),
@@ -958,26 +953,50 @@ module top(
 
 	spi2 zspi( .clk(fclk), .sck(sdclk), .sdo(sddo), .sdi(sddi), .start(sd_start),
 	           .speed(2'b00),	// this is 14 MHz at 28 Mhz Altera clock
-			   .din(sd_datain), .dout(sd_dataout) );
+			   .din(sd_datain), .dout(sd_dataout)
+             );
 
 
-	  //////////////////////////////////////
-	 // sound: beeper, tapeout and covox //
-	//////////////////////////////////////
+	wire [15:0] ide_out;
+    wire ide_stb;
+	assign ide_d = ide_dir ? 16'hZZZZ : ide_out;
+	// assign ide_d = 16'hZZZZ;
+	assign ide_rs_n = rst_n;
+
+    ide ide(
+            .clk        (fclk),
+            .res        (res),
+            .stb        (ide_stb),
+
+            .dma_out    (dma_ide_out),
+            .dma_req    (dma_ide_req),
+            .dma_rnw    (dma_ide_rnw),
+
+            .z80_out     (z80_ide_out),
+            .z80_a       (a[7:5]),
+            .z80_cs0_n   (z80_ide_cs0_n),
+            .z80_cs1_n   (z80_ide_cs1_n),
+            .z80_req     (z80_ide_req),
+            .z80_rnw     (z80_ide_rnw),
+            
+            .ide_out     (ide_out),
+            .ide_dir     (ide_dir),
+            .ide_a       (ide_a),
+            .ide_cs0_n   (ide_cs0_n),
+            .ide_cs1_n   (ide_cs1_n),
+            .ide_rd_n    (ide_rd_n),
+            .ide_wr_n    (ide_wr_n)
+           );
+
 
 	sound sound(
-
 		.clk(fclk), .f0(f0),
-
 		.din(d),
-
 		.beeper_wr(beeper_wr),
 		.covox_wr (covox_wr),
-
 		.beeper_mux(beeper_mux),
-
 		.sound_bit(beep)
-	);
+        );
 
 
 endmodule
