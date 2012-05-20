@@ -10,7 +10,9 @@ module zkbdmus(
 	input  wire        rst_n,
 
 
-	input  wire [39:0] kbd_in,  // key bits
+	// input  wire [39:0] kbd_in,  // key bits
+	input  wire  [7:0] kbd_in,  // key bits
+	input  wire  [2:0] kbd_in_sel,  // key byte selector
 	input  wire        kbd_stb, // and strobe
 
 	input  wire [ 7:0] mus_in,
@@ -49,10 +51,19 @@ module zkbdmus(
 
 	// store data from slavespi
 	//
-    always @(posedge fclk)
+	always @(posedge fclk)
     begin
 		if( kbd_stb )
-			kbd <= kbd_in;
+		begin
+			kbd[{kbd_in_sel, 3'h0}] <= kbd_in[0];
+			kbd[{kbd_in_sel, 3'h1}] <= kbd_in[1];
+			kbd[{kbd_in_sel, 3'h2}] <= kbd_in[2];
+			kbd[{kbd_in_sel, 3'h3}] <= kbd_in[3];
+			kbd[{kbd_in_sel, 3'h4}] <= kbd_in[4];
+			kbd[{kbd_in_sel, 3'h5}] <= kbd_in[5];
+			kbd[{kbd_in_sel, 3'h6}] <= kbd_in[6];
+			kbd[{kbd_in_sel, 3'h7}] <= kbd_in[7];
+		end
 
 		if( mus_xstb )
 			musx <= mus_in;

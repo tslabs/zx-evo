@@ -78,7 +78,7 @@ void hardware_init(void)
 	PORTC = 0b11011111;
 	DDRC  = 0b00000000; // PWRGOOD input, other pulled up
 
-	PORTB = 0b11110001;
+	PORTB = 0b11000001;
 	DDRB  = 0b10000111; // LED off, spi outs inactive
 
 	PORTA = 0b11111111;
@@ -184,7 +184,6 @@ start:
     ps2keyboard_count = 12;
 	ps2keyboard_cmd_count = 0;
 	ps2keyboard_cmd = 0;
-	ps2keyboard_log_len = 0;
 	ps2mouse_count = 12;
 	ps2mouse_initstep = 0;
 	ps2mouse_resp_count = 0;
@@ -193,6 +192,9 @@ start:
 	flags_ex_register = 0;
 	modes_register = 0;
 	ext_type_gluk = 0;
+
+	//reset ps2 keyboard log
+	ps2keyboard_reset_log();
 
 	//enable mouse
 	zx_mouse_reset(1);

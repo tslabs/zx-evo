@@ -203,8 +203,8 @@ void rs232_zx_write(UBYTE index, UBYTE data)
 			{
 				//receive FIFO reset
 				rs232_FI_start = rs232_FI_end = 0;
-				//set empty FIFO flag
-				rs232_LSR &= ~(0x01);
+				//set empty FIFO flag and clear overrun flag
+				rs232_LSR &= ~(0x03);
 			}
 			if( data&(1<<2) )
 			{

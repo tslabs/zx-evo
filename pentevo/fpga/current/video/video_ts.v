@@ -39,34 +39,33 @@
 //				|
 
 // - sprites -
-// clk			|—__——__——__——__——__——__——__——__——__——__——__——__——__——__——__——__——__——__——__——__——__——__——__——__——__— ~ —__——__——__——__—
-// c0-3			|<c3><c0><c1><c2><c3><c0><c1><c2><c3><c0><c1><c2><c3><c0><c1><c2><c3><c0><c1><c2><c3><c0><c1><c2><c3> ~ <c0><c1><c2><c3>
-// layer		|<s0><s0><s0><s0><s0><s0><s0><s0><s0><s0><s0><s0><s0><s0><s0><s0><s0><s0><s0><s0><s1><s1><s1><s1><s1> ~ <s1><s1><s1><s2>
-// start		|————________________________________________________________________________________________________ ~ ________________
-// sprt_end  	|____________________________________________________________________________————____________________ ~ ________————____  sprt_end = (sreg == 7'd126) || (spr_next && s_leap) || (sprt_go && s_leap_r);
-// layer_end_r	|xxxx____________________________________________________________________________————________________ ~ ____________————
-// sreg			|<00><01><02><03><06><09><0A><0B><0B><0B><0B><0C><0F><10><11><11><11><11><11><12><13><14><14><14><14> ~ <79><7A><7B><7E>
-// sf_data		|xxxx<00><01><02><03><06><09><0A><0B><0B><0B><0B><0C><0F><10><11><11><11><11><11><12><13><14><14><14> ~ <78><79><7A><7B>
-// sf0_valid	|____————________————————————____________________————————________________________————________________ ~ ————________————
-// sf1_valid	|________————________________————________________________————________________________————             ~ ____————________
-// sf2_valid	|____________————________________————————————————____________————————————————————________———————————— ~ ________————____
-// s_act		|xxxx————xxxxxxxx________————xxxxxxxxxxxxxxxxxxxx____————xxxxxxxxxxxxxxxxxxxxxxxx————xxxxxxxxxxxxxxxx ~ ————xxxxxxxx____
-// s_act_r		|xxxxxxxx————————————________————————————————————————____———————————————————————————————————————————— ~ ————————————————  (delete?)
-// sreg_next	|xxxx————————————________————————____________————____————————________________————————————____________ ~ ————————————____  sreg_next = sprt_go || (sf0_valid && s_act) || sf1_valid;
-// spr_next		|xxxx____________————————________________________————________________________________________________ ~ ____________————
-// tsr_rdy		|xxxx————————————____________________________————____________________________————____________________ ~ ________————____
-// sprt_go		|____________————____________________________————____________________________————____________________ ~ ________————____  sprt_go = sprites && sf2_valid && tsr_rdy;
-// s_leap		|xxxx____xxxxxxxx____________xxxxxxxxxxxxxxxxxxxx____————xxxxxxxxxxxxxxxxxxxxxxxx____xxxxxxxxxxxxxxxx ~ ————xxxxxxxx____
-// s_leap_r		|xxxxxxxx________________________________________________————————————————————————————________________ ~ ____————————————
+// clk			|—__——__——__——__——__——__——__——__——__——__——__——__——__——__——__——__——__——__——__——__——__——__——__——__——__— ~ —__——__——__——__——__—
+// c0-3			|<c3><c0><c1><c2><c3><c0><c1><c2><c3><c0><c1><c2><c3><c0><c1><c2><c3><c0><c1><c2><c3><c0><c1><c2><c3> ~ <c0><c1><c2><c3><c3>
+// layer		|<s0><s0><s0><s0><s0><s0><s0><s0><s0><s0><s0><s0><s0><s0><s0><s0><s0><s0><s0><s0><s1><s1><s1><s1><s1> ~ <s1><s1><s1><s2><s2>
+// start		|————________________________________________________________________________________________________ ~ ____________________
+// sprt_end  	|____________________________________________________————____________________________________________ ~ ____________————————  = sprt_done || (spr_next && s_leap) || (sprt_go && s_leap_r)
+// sprt_done  	|____________________________________________________________________________________________________ ~ ____________————————  = sreg == 7'd126
+// sprt_done_r 	|xxxx________________________________________________________________________________________________ ~ ________________————
+// layer_end_r	|xxxx____________________________________________________————________________________________________ ~ ____________————————
+// sreg			|<00><01><02><03><06><09><0A><0B><0B><0B><0B><0C><0F><10><11><11><11><11><11><12><13><14><14><14><14> ~ <79><7A><7B><7E><7E>
+// sf_data		|xxxx<00><01><02><03><06><09><0A><0B><0B><0B><0B><0C><0F><10><11><11><11><11><11><12><13><14><14><14> ~ <78><79><7A><7B><7E>
+// sreg*		|xxxx<00><01><02><00><00><00><01><02><02><02><02><00><00><01><02><02><02><02><02><00><01><02><02><02> ~ <00><01><02><00><00>
+// sf0_valid	|____————________————————————____________________————————________________________————________________ ~ ————________________
+// sf1_valid	|________————________________————________________________————________________________————             ~ ____————____________
+// sf2_valid	|____________————________________————————————————____________————————————————————________———————————— ~ ________————________
+// s_visible	|xxxx————xxxxxxxx________————xxxxxxxxxxxxxxxxxxxx____————xxxxxxxxxxxxxxxxxxxxxxxx————xxxxxxxxxxxxxxxx ~ ————xxxxxxxx________
+// sreg_next	|xxxx————————————________————————____________————____————————________________————————————____________ ~ ————————————________  = sprt_go || (sf0_valid && s_act) || sf1_valid
+// spr_next		|xxxx____________————————________________________————________________________________________________ ~ ____________________  = sf0_valid && !s_act
+// tsr_rdy		|xxxx————————————____________________________————____________________________————____________________ ~ ________————________
+// sprt_go		|____________————____________________________————____________________________————____________________ ~ ________————________  = sprites && sf2_valid && tsr_rdy
+// s_leap		|xxxx____xxxxxxxx____________xxxxxxxxxxxxxxxxxxxx____————xxxxxxxxxxxxxxxxxxxxxxxx____xxxxxxxxxxxxxxxx ~ ————xxxxxxxxxxxxxxxx
+// s_leap_r		|xxxxxxxx________________________________________________————————————————————————————________________ ~ ____————————————————
 
 
 // to do:
-// - rethink logics when layers disabled (use s_en/tX_en, Luke)
-// - test Xflip
-// - code Yflip
-// - code Yscroll
-// - test Yscrolls array
+// - fix Yscrolls array
 // - draw DRAM cycles on-screen to determine how and what works
+// - code a/r Ys for tiles
 // - write global test for TS
 // - DMA for Sfile
 
@@ -82,15 +81,14 @@ module video_ts (
 
 // video config
 	input wire [7:0] tsconf,
-    // input wire [7:0] tmpage,
     input wire [7:0] t0gpage,
     input wire [7:0] t1gpage,
     input wire [7:0] sgpage,
 	input wire [5:0] num_tiles,
 	input wire [8:0] t0x_offs,
-	input wire [8:0] t0y_offs,
 	input wire [8:0] t1x_offs,
-	input wire [8:0] t1y_offs,
+	input wire [2:0] t0y_offs,
+	input wire [2:0] t1y_offs,
 	input wire [1:0] t0_palsel,
 	input wire [1:0] t1_palsel,
 
@@ -98,6 +96,9 @@ module video_ts (
 	input  wire  [7:0] sfys_addr_in,
 	input  wire [15:0] sfys_data_in,
 	input  wire sfys_we,
+	input  wire [6:0] tys_data_x,
+	input  wire tys_data_s,
+	output wire [5:0] tys_data_f,
 
 // TMbuf interface
 	output wire [8:0] tmb_raddr,
@@ -168,51 +169,66 @@ module video_ts (
 
     // TSR values for tiles
     wire [7:0] tile_page = tiles0 ? t0gpage : t1gpage;
-    wire [8:0] tile_line = {t_tnum[11:6], line[2:0]};	// add here Y scroll and flip!!!
+    wire [8:0] tile_line = {t_tnum[11:6], (t_line[2:0] ^ {3{t_yflp}})};
     wire [5:0] tile_addr = t_tnum[5:0];
     wire tile_xf = t_xflp;
     wire [2:0] tile_xs = 3'd0;
     wire [3:0] tile_pal = {tiles0 ? t0_palsel : t1_palsel, t_pal};
 
-	// X processing
+	// tile layers
+	wire tile_start = layer_new && tiles;		// 1st cycle when tile layer is active
+	wire tile_end = (tiles0 && !t0_en) || (tiles1 && !t1_en)  || (tx == num_tiles);
+	wire tile_done = tile_end && tiles1;
+
+	reg tile_done_r;
+	always @(posedge clk)
+		if (start)
+			tile_done_r <= 1'b0;
+		else if (tile_done)
+			tile_done_r <= 1'b1;
+
+	// tile X processing
     wire t_act = |t_tnum || (tiles0 ? t0z_en : t1z_en);
 	wire t_next = tile_go || (!t_act && tmb_valid);
-	wire tmb_valid = !layer_new;
+	wire tmb_valid = !layer_new && !tile_done_r;
 
     // TMB address
-    assign tmb_raddr = {line[4:3], tpos_x, tiles1};
-	wire [5:0] tpos_x = layer_new ? tx_offs[8:3] : (tpos_x_r + t_next);	// X position in tilemap
+    assign tmb_raddr = {t_line[4:3], tpos_x, tiles1};
+	wire [5:0] tpos_x = layer_new ? tx_offs[8:3] : (tpos_x_r + t_next);		// X position in tilemap
     wire [8:0] tx_offs = tiles0 ? t0x_offs : t1x_offs;
 
 	reg [5:0] tpos_x_r;
 	always @(posedge clk)
-        tpos_x_r <=  tpos_x;
+        tpos_x_r <= tpos_x;
 
-    // X coordinate
+    // tile X coordinate
     wire [8:0] tile_x = {tx_r, 3'd0} - tx_offs[2:0];
-	wire [5:0] tx = layer_new ? 6'd0 : (tx_r + t_next);	// X coordinate at the screen, higher bits (lower are offset finetune)
+	wire [5:0] tx = layer_new ? 6'd0 : (tx_r + t_next);		// X coordinate at the screen, higher bits (lower are offset finetune)
 
 	reg [5:0] tx_r;
 	always @(posedge clk)
         tx_r <= tx;
 
+	// tile Y geometry
+	wire [8:0] t_line = line + ty_offset;
+
+	// tile Y scrollers
+	wire [2:0] ty_offset = tys_en ? tys_data[2:0] : ty_offs;
+	wire [2:0] ty_offs = tiles0 ? t0y_offs : t1y_offs;
+
 	// SFYS addressing
-	wire [15:0] yscrl = yscrl_rd_r ? sfys_data_out : sfys_data_out_r;
-	wire yscrl_rd = tys_en && (layer_new || t_next);
+	wire [2:0] tys_data = yscrl_rd_r ? sfys_data_out[2:0] : tys_data_r;
+	wire yscrl_rd = tys_en && (tile_start || t_next);
 	wire tys_en = tiles0 ? t0ys_en : t1ys_en;
-	
-	reg [15:0] sfys_data_out_r;
+
+	reg [2:0] tys_data_r;
 	always @(posedge clk)
 		if (yscrl_rd_r)
-			sfys_data_out_r <= sfys_data_out;
-	
+			tys_data_r <= sfys_data_out[2:0];
+
 	reg yscrl_rd_r;
 	always @(posedge clk)
-		yscrl_rd_r <= yscrl_rd;
-		
-	// tile layers
-	wire tile_start = layer_new && tiles;	// 1st cycle when layer is active
-	wire tile_end = (tx == num_tiles);
+		yscrl_rd_r <= yscrl_rd || tys_data_s;
 
 
 // --- Sprites ---
@@ -225,12 +241,27 @@ module video_ts (
     wire [2:0] sprt_xs = sprt_xs_r;
     wire sprt_xf = sprt_xf_r;
     wire [7:0] sprt_page = sgpage;
-    wire [8:0] sprt_line = line;     // debug!!!
+    wire [8:0] sprt_line = s_bmline;
     wire [5:0] sprt_addr = s_tnum[5:0];
     wire [3:0] sprt_pal = s_pal;
 
 	// sprite layers
-	wire sprt_end = (sreg == 7'd126) || (spr_next && s_leap) || (sprt_go && s_leap_r);
+	wire sprt_end = sprt_done || (spr_next && s_leap) || (sprt_go && s_leap_r);
+	wire sprt_done = sreg == 7'd126;
+
+	reg sprt_done_r;
+	always @(posedge clk)
+		if (start)
+			sprt_done_r <= 1'b0;
+		else if (sprt_done)
+			sprt_done_r <= 1'b1;
+
+	// sprite Y geometry
+	wire [8:0] s_bmline = {s_tnum[11:6], 3'b0} + s_bmline_offset_r;
+	wire [5:0] s_bmline_offset = s_yflp ? (s_ysize - s_line[5:0]) : s_line[5:0];
+    wire [8:0] s_line = line + s_ycrd;					// 3-6 (depending on its size) lower bits - line number within sprite
+    wire s_visible = (s_line <= s_ysize) && s_act;
+	wire [5:0] s_ysize = {s_ysz, 3'b111};
 
 	// SFile regs counter
 	wire [6:0] sreg = start ? 7'd0 : sreg_r + (sreg_next ? 7'd1 : (spr_next ? 7'd3 : 7'd0));
@@ -240,11 +271,11 @@ module video_ts (
 		sreg_r <= sreg;
 
 	// SFile regs processing
-	wire spr_next = sf0_valid && !s_act;
-	wire sreg_next = sprt_go || (sf0_valid && s_act) || sf1_valid;
+	wire spr_next = sf0_valid && !s_visible;
+	wire sreg_next = sprt_go || (sf0_valid && s_visible) || sf1_valid;
 
 	// SFile regs validity
-	wire sf0_valid = !start && !yscrl_rd_r && sf_valid_r[0];
+	wire sf0_valid = !start && !yscrl_rd_r && sf_valid_r[0] && !sprt_done_r;
 	wire sf1_valid = !start && !yscrl_rd_r && sf_valid_r[1];
 	wire sf2_valid = !start && !yscrl_rd_r && sf_valid_r[2];
 
@@ -258,16 +289,16 @@ module video_ts (
 
 	// SFile regs latching
     reg [8:0] sprt_x_r;
+    reg [5:0] s_bmline_offset_r;
     reg [2:0] sprt_xs_r;
     reg sprt_xf_r;
-	// reg s_act_r;
 	reg s_leap_r;
 	always @(posedge clk)
 	begin
 		if (sf0_valid)
 		begin
-			// s_act_r <= s_act;
 			s_leap_r <= s_leap;
+			s_bmline_offset_r <= s_bmline_offset;
 		end
 
 		if (sf1_valid)
@@ -277,13 +308,6 @@ module video_ts (
 			sprt_xf_r <= s_xflp;
 		end
 	end
-
-
-	// sprite geometry
-    // wire [8:0] line_of_sprite = line - s_ycrd;
-    wire sprite_visible = 1;     // debug!!!
-	// wire sprite_visible = ; // here calculate if sprite is visible in the current line
-	// wire [6:0] s_ysiz = (s_ysz + 1) * 8;		// Y size in lines
 
 
 // layers
@@ -325,8 +349,9 @@ module video_ts (
 
 
 // SFile / YScrolls
-	wire [7:0] sfys_addr_out = {yscrl_rd, yscrl_rd ? tpos_x : sreg};
+	wire [7:0] sfys_addr_out = {(yscrl_rd || tys_data_s), tys_data_s ? tys_data_x : (yscrl_rd ? {tiles1, tpos_x} : sreg)};
 	wire [15:0] sfys_data_out;
+	assign tys_data_f = sfys_data_out[8:3];
 
 video_sf_ys video_sf_ys (
 	.clock	    (clk),

@@ -124,7 +124,8 @@ module top(
 		.h0(h0), .h1(h1),
 		.c0(c0), .c1(c1), .c2(c2), .c3(c3),
 		.ay_clk(ay_clk),
-		.ay_mod(sysconf[4:3])
+		// .ay_mod(sysconf[4:3])
+		.ay_mod(2'b00)
 	);
 
 
@@ -143,8 +144,10 @@ module top(
 	wire porthit;
 
 
-	wire [39:0] kbd_data;
-	wire [ 7:0] mus_data;
+	// wire [39:0] kbd_data;
+	wire [7:0] kbd_data;
+	wire [2:0] kbd_data_sel;
+	wire [7:0] mus_data;
 	wire kbd_stb,mus_xstb,mus_ystb,mus_btnstb,kj_stb;
 
 	wire [ 4:0] kbd_port_data;
@@ -230,6 +233,7 @@ module top(
 	assign rompg4   =  rompg[4];
 
 	wire dos_stall;
+	wire ide_stall;
 
 	zclock zclock
 	(
@@ -245,7 +249,8 @@ module top(
         .zneg(zneg),
 		.turbo(turbo),
 		// .turbo(2'b01),
-		.zclk_stall(cpu_stall | dos_stall),
+		// .turbo(2'b00),
+		.zclk_stall(cpu_stall || dos_stall || ide_stall),
         .int_turbo(int_turbo),
 		.external_port(external_port)
 	);
@@ -426,6 +431,8 @@ module top(
 	wire [20:0] video_addr;
 	wire video_strobe;
 	wire video_next;
+	wire video_pre_next;
+	wire next_video;
 
 	wire [20:0] dma_addr;
 	wire [15:0] dma_wrdata;
@@ -469,7 +476,9 @@ module top(
 	                 .video_bw(video_bw),
 	                 .video_addr(video_addr),
 	                 .video_strobe(video_strobe),
+	                 .video_pre_next(video_pre_next),
 	                 .video_next(video_next),
+	                 .next_video(next_video),
 
 	                 .dma_addr		(dma_addr),
 	                 .dma_wrdata	(dma_wrdata),
@@ -488,9 +497,9 @@ module top(
 
         wire border_wr;
         wire zborder_wr;
-        wire zvpage_wr	;
-        wire vpage_wr	;
-        wire vconf_wr	;
+        wire zvpage_wr;
+        wire vpage_wr;
+        wire vconf_wr;
         wire gx_offsl_wr;
         wire gx_offsh_wr;
         wire gy_offsl_wr;
@@ -503,15 +512,15 @@ module top(
         wire t1x_offsh_wr;
         wire t1y_offsl_wr;
         wire t1y_offsh_wr;
-        wire palsel_wr	;
+        wire palsel_wr;
         wire hint_beg_wr;
         wire vint_begl_wr;
         wire vint_begh_wr;
-        wire tsconf_wr	;
-        wire tmpage_wr	;
-        wire t0gpage_wr	;
-        wire t1gpage_wr	;
-        wire sgpage_wr	;
+        wire tsconf_wr;
+        wire tmpage_wr;
+        wire t0gpage_wr;
+        wire t1gpage_wr;
+        wire sgpage_wr;
 
     // wire [1:0] vred0;
     // assign vred = vred0 | {2{t}};
@@ -567,6 +576,8 @@ module top(
    		.dram_rdata     (dram_rd),               // raw, should be latched by c2
 		.video_strobe   (video_strobe),
 		.video_next     (video_next),
+		.video_pre_next (video_pre_next),
+		.next_video     (next_video),
 
 		.ts_req			(ts_req),
 		.ts_zwt			(ts_zwt),
@@ -591,9 +602,9 @@ module top(
 		.spics_n(spics_n), .spidi(spidi),
 		.spido(spido), .spick(spick),
 		.status_in({/* wait_rnw */ wr_n, waits[6:0]}), .genrst(genrst),
-		.rstrom(rstrom), .kbd_out(kbd_data),
-		.kbd_stb(kbd_stb), .mus_out(mus_data),
-		.mus_xstb(mus_xstb), .mus_ystb(mus_ystb),
+		.rstrom(rstrom),
+		.kbd_out(kbd_data), .kbd_out_sel(kbd_data_sel), .kbd_stb(kbd_stb),
+		.mus_out(mus_data), .mus_xstb(mus_xstb), .mus_ystb(mus_ystb),
 		.mus_btnstb(mus_btnstb), .kj_stb(kj_stb),
 		.gluclock_addr(gluclock_addr),
 		.comport_addr (comport_addr),
@@ -605,7 +616,7 @@ module top(
 	);
 
 	zkbdmus zkbdmus( .fclk(fclk), .rst_n(rst_n),
-	                 .kbd_in(kbd_data), .kbd_stb(kbd_stb),
+	                 .kbd_in(kbd_data), .kbd_in_sel(kbd_data_sel), .kbd_stb(kbd_stb),
 	                 .mus_in(mus_data), .mus_xstb(mus_xstb),
 	                 .mus_ystb(mus_ystb), .mus_btnstb(mus_btnstb),
 	                 .kj_stb(kj_stb), .kj_data(kj_port_data),
@@ -793,8 +804,9 @@ module top(
                     .ide_cs0_n      (z80_ide_cs0_n),
                     .ide_cs1_n      (z80_ide_cs1_n),
                     .ide_req        (z80_ide_req),
-                    .ide_rnw        (z80_ide_rnw),
-                    .ide_stb        (ide_stb),
+                    .ide_stb        (ide_din_stb),
+                    .ide_ready      (ide_ready),
+                    .ide_stall      (ide_stall),
 
                     .border_wr      (border_wr),
                     .zborder_wr     (zborder_wr),
@@ -897,7 +909,7 @@ module top(
         .ide_out    (dma_ide_out),
         .ide_req    (dma_ide_req),
         .ide_rnw    (dma_ide_rnw),
-        .ide_stb    (ide_stb)
+        .ide_stb    (ide_din_stb)
 	);
 
 
@@ -957,16 +969,24 @@ module top(
              );
 
 
-	wire [15:0] ide_out;
-    wire ide_stb;
-	assign ide_d = ide_dir ? 16'hZZZZ : ide_out;
-	// assign ide_d = 16'hZZZZ;
 	assign ide_rs_n = rst_n;
+	wire [15:0] ide_out;
+    wire ide_din_stb;
+    wire ide_ready;
 
     ide ide(
             .clk        (fclk),
-            .res        (res),
-            .stb        (ide_stb),
+            .reset      (res),
+            .din_stb    (ide_din_stb),
+            .rdy        (ide_ready),
+			
+            .ide_d      (ide_d),
+            .ide_a      (ide_a),
+            .ide_dir    (ide_dir),
+            .ide_cs0_n  (ide_cs0_n),
+            .ide_cs1_n  (ide_cs1_n),
+            .ide_rd_n   (ide_rd_n),
+            .ide_wr_n   (ide_wr_n),
 
             .dma_out    (dma_ide_out),
             .dma_req    (dma_ide_req),
@@ -977,16 +997,8 @@ module top(
             .z80_cs0_n   (z80_ide_cs0_n),
             .z80_cs1_n   (z80_ide_cs1_n),
             .z80_req     (z80_ide_req),
-            .z80_rnw     (z80_ide_rnw),
-            
-            .ide_out     (ide_out),
-            .ide_dir     (ide_dir),
-            .ide_a       (ide_a),
-            .ide_cs0_n   (ide_cs0_n),
-            .ide_cs1_n   (ide_cs1_n),
-            .ide_rd_n    (ide_rd_n),
-            .ide_wr_n    (ide_wr_n)
-           );
+            .z80_rnw     (!rd_n)
+    );
 
 
 	sound sound(

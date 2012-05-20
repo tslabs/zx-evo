@@ -84,7 +84,8 @@ module video_ts_render (
 
 // DRAM addressing
     assign dram_addr = tsr_go ? addr_in : addr_next;
-	wire [20:0] addr_in = {{page + line[8:6], line[5:0]}, addr, 1'b0};
+	wire [20:0] addr_in = {addr_offset, addr, 1'b0};
+	wire [13:0] addr_offset = {page, 6'b0} + line[8:0];
     wire [20:0] addr_next = {addr_reg[20:7], addr_reg[6:0] + dram_next};
     // as renderer can't move outside the single bitmap line, only 7 bits are processed
 

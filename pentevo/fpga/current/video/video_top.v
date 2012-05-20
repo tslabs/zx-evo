@@ -69,6 +69,8 @@ module video_top (
 	input  wire [15:0] dram_rddata,     // reg'ed, should be latched by c3 (video_strobe)
 	input  wire [15:0] dram_rdata,      // raw, should be latched by c2 (video_next)
 	input  wire        video_next,
+	input  wire        video_pre_next,
+	input  wire        next_video,
 	input  wire        video_strobe,
 	output wire [20:0] ts_addr,
 	output wire        ts_req,
@@ -86,20 +88,20 @@ module video_top (
 
 
 // video config
-	wire [7:0] vpage;      //
+	wire [7:0] vpage;      // re-latched at line_start
 	wire [7:0] vconf;      //
-	wire [8:0] gx_offs;    // re-latched at line_start
+	wire [8:0] gx_offs;    //
 	wire [8:0] gy_offs;    //
-	wire [8:0] t0x_offs;   // *
+	wire [8:0] t0x_offs;   // *not
 	wire [8:0] t0y_offs;   // *
 	wire [8:0] t1x_offs;   // *
 	wire [8:0] t1y_offs;   // *
 	wire [7:0] palsel;     //
-	wire [7:0] tsconf;          // re-latch these!
-	wire [7:0] tmpage;          //
-	wire [7:0] t0gpage;         //
-	wire [7:0] t1gpage;         //
-	wire [7:0] sgpage;          //
+	wire [7:0] tsconf;
+	wire [7:0] tmpage;
+	wire [7:0] t0gpage;
+	wire [7:0] t1gpage;
+	wire [7:0] sgpage;
 	wire [7:0] vpage_d;
     wire [7:0] palsel_d;
 	wire [7:0] hint_beg;
@@ -166,6 +168,11 @@ module video_top (
     wire [3:0] tsr_pal;
     wire tsr_rdy;
 
+// SFYS
+	wire [6:0] tys_data_x;
+	wire tys_data_s;
+	wire [5:0] tys_data_f;
+	
 // TM-buf
     wire [8:0] tmb_waddr;
     wire [8:0] tmb_raddr;
@@ -221,8 +228,8 @@ module video_top (
         .gx_offs        (gx_offs),
         .gy_offs        (gy_offs),
         .t0x_offs       (t0x_offs),
-        .t0y_offs       (t0y_offs),
         .t1x_offs       (t1x_offs),
+        .t0y_offs       (t0y_offs),
         .t1y_offs       (t1y_offs),
         .palsel         (palsel),
         .hint_beg       (hint_beg),
@@ -238,11 +245,14 @@ module video_top (
 	video_mode video_mode (
 		.clk		  	(clk),
 		.f1			    (f1),
+		.c2			    (c2),
 		.c3			    (c3),
 		.vconf		    (vconf),
 		.vpage	    	(vpage),
 		.vpage_d    	(vpage_d),
         .tmpage         (tmpage),
+        .t0y_offs       (t0y_offs[8:3]),
+        .t1y_offs       (t1y_offs[8:3]),
 		.palsel	    	(palsel),
 		.palsel_d    	(palsel_d),
 		.fetch_sel		(fetch_sel),
@@ -254,6 +264,7 @@ module video_top (
 		.x_offs_mode	(x_offs_mode),
         .line_start     (line_start),
 		.tm_en	        (tsconf[6:5]),
+		.tys_en		    (tsconf[1:0]),
 		.tm_pf	        (tm_pf),
 		.zvpage_wr	    (zvpage_wr),
 		.hpix_beg	    (hpix_beg),
@@ -273,6 +284,10 @@ module video_top (
 		.pix_stb	    (pix_stb),
 		.render_mode	(render_mode),
 		.tmb_waddr	    (tmb_waddr),
+		.tys_data_x	    (tys_data_x),
+		.tys_data_s	    (tys_data_s),
+		.tys_data_f	    (tys_data_f),
+		.next_video	    (next_video),
 		.video_addr	    (video_addr),
 		.video_bw		(video_bw)
 );
@@ -324,7 +339,7 @@ module video_top (
 		.nogfx			(nogfx),
         .tiles_en       (|tsconf[6:5]),
 		.video_go		(video_go),
-		.video_next		(video_next)
+		.video_pre_next	(video_pre_next)
 );
 
 
@@ -342,7 +357,6 @@ module video_top (
 
 	video_ts video_ts (
 		.clk		    (clk),
-		// .clk		    (0),
         .start          (ts_start),
 		.line			(lcount),
 
@@ -352,9 +366,9 @@ module video_top (
         .sgpage         (sgpage),
 		.num_tiles		(x_tiles),
         .t0x_offs       (t0x_offs),
-        .t0y_offs       (t0y_offs),
         .t1x_offs       (t1x_offs),
-        .t1y_offs       (t1y_offs),
+        .t0y_offs       (t0y_offs[2:0]),
+        .t1y_offs       (t1y_offs[2:0]),
         .t0_palsel      (palsel[5:4]),
         .t1_palsel      (palsel[7:6]),
 
@@ -373,7 +387,10 @@ module video_top (
 
 		.sfys_addr_in	(zma),
 		.sfys_data_in	(zmd),
-		.sfys_we		(sfys_we)
+		.sfys_we		(sfys_we),
+		.tys_data_x		(tys_data_x),
+		.tys_data_s		(tys_data_s),
+		.tys_data_f		(tys_data_f)
 );
 
 
@@ -381,7 +398,7 @@ module video_top (
 		.clk		    (clk),
 
         .reset          (ts_start),
-        
+
         .tsr_go         (tsr_go),
         .addr           (tsr_addr),
         .line           (tsr_line),
@@ -470,7 +487,7 @@ module video_top (
     wire       ts_we1    = tl_act1 ? c3 : ts_we;
     wire [7:0] ts_rdata  = tl_act0 ? ts_rdata0 : ts_rdata1;
     wire [7:0] ts_rdata0, ts_rdata1;
-	
+
 
     video_tsline0 video_tsline0 (
         .clock      (clk),

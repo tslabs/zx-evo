@@ -68,12 +68,15 @@ module arbiter(
 // video
 	input  [20:0] video_addr,   // during access block, only when video_strobe==1
 	output wire   video_next,   // on this signal you can change video_addr; it is one clock leading the video_strobe
+	output wire   video_pre_next,
 	input wire go, 				// start video access blocks
 	output wire   video_strobe, // positive one-cycle strobe as soon as there is next video_data available.
 	                            // if there is video_strobe, it coincides with c3 signal
 	input wire [4:0] video_bw,
 								// [4:3] - total cycles: 11 = 8 / 01 = 4 / 00 = 2
 								// [2:0] - need cycles
+	output wire next_video,
+	
 // CPU
 	input wire [20:0] cpu_addr,
 	input wire [ 7:0] cpu_wrdata,
@@ -120,8 +123,10 @@ module arbiter(
 	wire curr_vid = curr_cycle[1];
 	wire curr_ts  = curr_cycle[2];
 	wire curr_dma = curr_cycle[3];
-	wire curr_fre = ~|curr_cycle;
+//	wire curr_fre = ~|curr_cycle;
 
+	assign next_video = next_vid;
+	
 
 // track blk_rem counter:
 // how many cycles left to the end of block (7..0)
@@ -200,6 +205,7 @@ module arbiter(
 // generation of read strobes: for video and cpu
     assign cpu_strobe = curr_cpu && cpu_rnw_r && c2;
 
+	assign video_pre_next = curr_vid & c1;
 	assign video_next = curr_vid & c2;
 	assign video_strobe = curr_vid & c3;
 
