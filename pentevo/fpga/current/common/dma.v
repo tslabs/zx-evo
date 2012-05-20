@@ -13,9 +13,11 @@ module dma (
 	input wire c2,
 	input wire rst_n,
 
-// controls
+// interface
 	input  wire [8:0] dmaport_wr,
 	output wire dma_act,
+	output reg  [15:0] data,
+	output wire [ 7:0] wraddr,
 
 // Z80
 	input  wire [7:0] zdata,
@@ -44,10 +46,10 @@ module dma (
 	input  wire        ide_stb,
 
 // CRAM interface
-	output wire [15:0] cram_wrdata,
-	output wire [ 7:0] cram_wraddr,
-	output wire        cram_we
+	output wire        cram_we,
 
+// SFILE interface
+	output wire        sfile_we
 );
 
 
@@ -56,11 +58,13 @@ module dma (
 //  010 - SD
 //  011 - IDE
 //  100 - CRAM
+//  101 - SFILE
 
 // mode:
 //  0 - device to RAM (read from device)
 //  1 - RAM to device (write to device)
 
+    assign wraddr = d_addr[7:0];
 	wire [8:0] dma_wr = dmaport_wr & {9{!dma_act}};    // blocking of DMA regs write strobes while DMA active
 
     wire dma_saddrl = dma_wr[0];
@@ -77,6 +81,7 @@ module dma (
 	wire dv_sd  = (device == 3'b010);
 	wire dv_ide = (device == 3'b011);
 	wire dv_crm = (device == 3'b100) && dma_wnr;
+	wire dv_sfl = (device == 3'b101) && dma_wnr;
 
 //    wire bs_sd  = dma_act && dv_sd ;
 //    wire bs_ide = dma_act && dv_ide;
@@ -85,8 +90,6 @@ module dma (
 
 
 // data aquiring
-    reg [15:0] data;
-
     always @(posedge clk)
         if (state_rd)
         
@@ -274,12 +277,13 @@ module dma (
     wire state_mem = dv_ram || (dma_wnr ^ phase);
 	wire dev_req = dma_act && state_dev;
     wire byte_switch = (dv_sd && sd_stb_int);
-    wire dev_stb = cram_we || ide_stb;          // add here all newly coded devices
+    wire dev_stb = cram_we || sfile_we || ide_stb;          // add here all newly coded devices
 
     // CRAM
-    assign cram_wrdata = data;
-    assign cram_wraddr = d_addr[7:0];
     assign cram_we = dev_req && dv_crm && state_wr;
+
+    // SFILE
+    assign sfile_we = dev_req && dv_sfl && state_wr;
 
     // SD
     assign sd_wrdata = bsel ? data[15:8] : data[7:0];

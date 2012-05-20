@@ -629,18 +629,19 @@ module top(
 	wire [7:0]	   zma;
 
     zmaps zmaps(
-				.clk        (fclk),
-				.memwr_s    (memwr_s),
-				.a          (a),
-				.d          (d),
-				.fmaddr     (fmaddr),
-				.zmd        (zmd),
-				.zma        (zma),
-                .dma_data   (dma_cram_wrdata),
-                .dma_addr   (dma_cram_wraddr),
-                .dma_cram_we(dma_cram_we),
-				.cram_we    (cram_we),
-				.sfys_we    (sfys_we)
+				.clk        	(fclk),
+				.memwr_s    	(memwr_s),
+				.a          	(a),
+				.d          	(d),
+				.fmaddr     	(fmaddr),
+				.zmd        	(zmd),
+				.zma        	(zma),
+                .dma_wraddr   	(dma_wraddr),
+                .dma_data   	(dma_data),
+                .dma_cram_we	(dma_cram_we),
+                .dma_sfile_we	(dma_sfile_we),
+				.cram_we    	(cram_we),
+				.sfys_we    	(sfys_we)
 	);
 
 
@@ -751,7 +752,7 @@ module top(
 	// assign ay_bc1  = pre_bc1  & (~iorq_n) & ((~rd_n)|(~wr_n));
 	// assign ay_bdir = pre_bdir & (~iorq_n) & (~wr_n);
 
-    
+
     wire [15:0] z80_ide_out;
     wire z80_ide_cs0_n;
     wire z80_ide_cs1_n;
@@ -876,9 +877,11 @@ module top(
 
 	wire dma_act;
 
-    wire [15:0] dma_cram_wrdata;
-    wire [7:0] dma_cram_wraddr;
+    wire [15:0] dma_data;
+    wire [7:0] dma_wraddr;
 	wire dma_cram_we;
+
+	wire dma_sfile_we;
 
     wire [15:0] dma_ide_out;
     wire dma_ide_req;
@@ -901,9 +904,11 @@ module top(
 		.dram_wrdata(dma_wrdata),
 		.dram_next	(dma_next),
 
-        .cram_wrdata(dma_cram_wrdata),
-        .cram_wraddr(dma_cram_wraddr),
+        .data		(dma_data),
+        .wraddr		(dma_wraddr),
+		
         .cram_we    (dma_cram_we),
+        .sfile_we   (dma_sfile_we),
 
         .ide_in     (ide_d),
         .ide_out    (dma_ide_out),
@@ -979,7 +984,7 @@ module top(
             .reset      (res),
             .din_stb    (ide_din_stb),
             .rdy        (ide_ready),
-			
+
             .ide_d      (ide_d),
             .ide_a      (ide_a),
             .ide_dir    (ide_dir),
