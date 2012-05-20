@@ -63,19 +63,24 @@ volatile UBYTE ps2keyboard_timeout;
 volatile UBYTE ps2keyboard_cmd_count;
 volatile UBYTE ps2keyboard_cmd;
 
-volatile UBYTE  ps2keyboard_log[15];
-volatile UBYTE  ps2keyboard_log_len;
+volatile UBYTE  ps2keyboard_log[16];
+volatile UBYTE  ps2keyboard_log_start;
+volatile UBYTE  ps2keyboard_log_end;
 
 void ps2keyboard_to_log(UBYTE data)
 {
-	if( ( ps2keyboard_log_len!=0xFF ) && ( ps2keyboard_log_len<sizeof(ps2keyboard_log) ) )
+	if( ps2keyboard_log_end != 0xFF )
 	{
-		ps2keyboard_log[ps2keyboard_log_len] = data;
-		ps2keyboard_log_len++;
+		if( ps2keyboard_log_end == 0xFE )
+		{
+			//first byte after reset
+			ps2keyboard_log_end = ps2keyboard_log_start;
+		}
+
 #ifdef LOGENABLE
 		{
 			char log_ps2kb_parse[] = "LG<..:..\r\n";
-			UBYTE b = ps2keyboard_log_len;
+			UBYTE b = ps2keyboard_log_end;
 			log_ps2kb_parse[3] = ((b >> 4) <= 9 )?'0'+(b >> 4):'A'+(b >> 4)-10;
 			log_ps2kb_parse[4] = ((b & 0x0F) <= 9 )?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
 			b = data;
@@ -84,47 +89,69 @@ void ps2keyboard_to_log(UBYTE data)
 			to_log(log_ps2kb_parse);
 		}
 #endif
-	}
-	else
-	{
-		//overload
-		ps2keyboard_log_len = 0xFF;
+		ps2keyboard_log[ps2keyboard_log_end] = data;
+		ps2keyboard_log_end++;
+		if( ps2keyboard_log_end >= sizeof(ps2keyboard_log) )
+		{
+			ps2keyboard_log_end = 0;
+		}
+
+		if( ps2keyboard_log_end == ps2keyboard_log_start )
+		{
+			//overload
+			ps2keyboard_log_end = 0xFF;
+		}
 	}
 }
 
 UBYTE ps2keyboard_from_log(void)
 {
 	UBYTE ret;
-	if( (ps2keyboard_log_len>0) && (ps2keyboard_log_len<=sizeof(ps2keyboard_log)) )
+	if( ps2keyboard_log_start == 0xFF )
 	{
-		ret = ps2keyboard_log[0];
-		ps2keyboard_log_len--;
+		//reset state
+		return 0;
+	}
+	if( ps2keyboard_log_end<sizeof(ps2keyboard_log) )
+	{
+		if( ps2keyboard_log_end != ps2keyboard_log_start )
+		{
+			ret = ps2keyboard_log[ps2keyboard_log_start];
 #ifdef LOGENABLE
 		{
 			char log_ps2kb_parse[] = "LG>..:..\r\n";
 			UBYTE b = ret;
 			log_ps2kb_parse[3] = ((b >> 4) <= 9 )?'0'+(b >> 4):'A'+(b >> 4)-10;
 			log_ps2kb_parse[4] = ((b & 0x0F) <= 9 )?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
-			b = ps2keyboard_log_len;
+			b = ps2keyboard_log_start;
 			log_ps2kb_parse[6] = ((b >> 4) <= 9 )?'0'+(b >> 4):'A'+(b >> 4)-10;
 			log_ps2kb_parse[7] = ((b & 0x0F) <= 9 )?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
 			to_log(log_ps2kb_parse);
 		}
 #endif
-		if( ps2keyboard_log_len>0 )
-		{
-			//shift log
-			UBYTE i;
-			for( i=0; i<ps2keyboard_log_len; i++)
+			ps2keyboard_log_start++;
+			if( ps2keyboard_log_start >= sizeof(ps2keyboard_log) )
 			{
-				ps2keyboard_log[i]=ps2keyboard_log[i+1];
+				ps2keyboard_log_start = 0;
 			}
+		}
+		else
+		{
+			ret=0;
 		}
 	}
 	else
 	{
-		ret = ps2keyboard_log_len;
-		if ( ret==0xFE ) ret=0;
+		ret = ps2keyboard_log_end;
+		if ( ret==0xFE )
+		{
+			ret=0;
+		}
+		else
+		{
+			//after reading overload 'FF' - reset log
+			ps2keyboard_reset_log();
+		}
 	}
 	//0 - no data, 0xFF - overload
 	return ret;
@@ -132,10 +159,11 @@ UBYTE ps2keyboard_from_log(void)
 
 void ps2keyboard_reset_log(void)
 {
-	ps2keyboard_log_len = 0xFE;
 #ifdef LOGENABLE
+	if( ps2keyboard_log_start!=0xFF )
 	to_log("LGRESET\r\n");
 #endif
+	ps2keyboard_log_start = 0xFF;
 }
 
 static void ps2keyboard_release_clk(void)
@@ -314,9 +342,14 @@ void ps2keyboard_parse(UBYTE recbyte)
 	//start write to log only for full key data
 	if( (recbyte!=0xE1) && (skipshit==0) ) //PAUSE not logged
 	{
-		if( (ps2keyboard_log_len!=0xFE) || ((was_release==0) && (was_E0==0)/* && (skipshit==0)*/) )
+		if( ps2keyboard_log_start == 0xFF )
 		{
-			if( ps2keyboard_log_len==0xFE ) ps2keyboard_log_len=0;
+			//reseting log
+			ps2keyboard_log_end = 0xFE;
+			ps2keyboard_log_start = 0;
+		}
+		if( (ps2keyboard_log_end!=0xFE) || ((was_release==0) && (was_E0==0)/* && (skipshit==0)*/) )
+		{
 		   	ps2keyboard_to_log(recbyte);
 		}
 	}
@@ -346,7 +379,6 @@ void ps2keyboard_parse(UBYTE recbyte)
 		return; // skip next 7 bytes
 	}
 
-
 	if( (recbyte==last_scancode) && (was_E0==last_scancode_E0) )
 	{
 		if( was_release )
@@ -356,6 +388,7 @@ void ps2keyboard_parse(UBYTE recbyte)
 		}
 		else // was depress
 		{
+			was_E0 = 0;
 			return;
 		}
 	}
@@ -373,8 +406,15 @@ void ps2keyboard_parse(UBYTE recbyte)
 		return;
 	}
 
-
 	to_zx( recbyte, was_E0, was_release ); // send valid scancode to zx decoding stage
+#ifdef LOGENABLE
+	char log_ps2keyboard_parse2[] = "KB(..,.,.)\r\n";
+	log_ps2keyboard_parse2[3] = ((recbyte >> 4) <= 9 )?'0'+(recbyte >> 4):'A'+(recbyte >> 4)-10;
+	log_ps2keyboard_parse2[4] = ((recbyte & 0x0F) <= 9 )?'0'+(recbyte & 0x0F):'A'+(recbyte & 0x0F)-10;
+	log_ps2keyboard_parse2[6] = (was_E0)?'1':'0';
+	log_ps2keyboard_parse2[8] = (was_release)?'1':'0';
+	to_log(log_ps2keyboard_parse2);
+#endif
 
 	was_E0 = 0;
 	was_release = 0;

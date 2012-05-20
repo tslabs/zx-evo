@@ -55,16 +55,31 @@ The attributes in this mode are:
 IGRB is paper color for the symbol, and igrb is ink color.
 
 
-3. Ports
---------
+3. Raster constants
+-------------------
 
-Ports are arranged as #nnAF, where nn is a register number.
-Registers (in DEC):
+	hp_beg[0] = 9'd140;	// 256 (88-52-256-52)
+	hp_beg[1] = 9'd108;	// 320 (88-20-320-20)
+	hp_beg[2] = 9'd108;	// 320 (88-20-320-20)
+	hp_beg[3] = 9'd88;	// 360 (88-0-360-0)
+    
+	hp_end[0] = 9'd396;	// 256
+	hp_end[1] = 9'd428;	// 320
+	hp_end[2] = 9'd428;	// 320
+	hp_end[3] = 9'd448;	// 360
+    
+	vp_beg[0] = 9'd080;	// 192 (32-48-192-32)
+	vp_beg[1] = 9'd076;	// 200 (32-44-200-44)
+	vp_beg[2] = 9'd056;	// 240 (32-24-240-24)
+	vp_beg[3] = 9'd032;	// 288 (32-0-288-0)
+    
+	vp_end[0] = 9'd272;	// 192
+	vp_end[1] = 9'd276;	// 200
+	vp_end[2] = 9'd296;	// 240
+	vp_end[3] = 9'd320;	// 288
+    
+	x_tile[0] = 6'd33;	// 256
+	x_tile[1] = 6'd41;	// 320
+	x_tile[2] = 6'd41;	// 320
+	x_tile[3] = 6'd46;	// 360
 
-0  - VConfig	(Video mode and raster size)
-1  - VPage		(Visible page)
-2  - XOffsL		(X Offset)
-3  - XOffsH
-4  - YOffsL		(Y Offset)
-5  - YOffsH
-21 - FMAddr		(FMaps address and write enable)

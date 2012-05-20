@@ -18,7 +18,9 @@ module slavespi(
 	input  wire [ 7:0] status_in, // status bits to be shown to avr
 
 
-	output wire [39:0] kbd_out,
+	// output wire [39:0] kbd_out,
+	output wire [ 7:0] kbd_out,
+	output reg  [ 2:0] kbd_out_sel,
 	output wire        kbd_stb,
 
 	output wire [ 7:0] mus_out,
@@ -66,13 +68,13 @@ module slavespi(
 	//
 	wire scs_n = spics_n_sync[1]; // scs_n - synchronized CS_N
 	wire sdo   = spido_sync[1];
-	wire sck   = spick_sync[1];
+//	wire sck   = spick_sync[1];
 	//
 	wire scs_n_01 = (~spics_n_sync[2]) &   spics_n_sync[1] ;
 	wire scs_n_10 =   spics_n_sync[2]  & (~spics_n_sync[1]);
 	//
 	wire sck_01 = (~spick_sync[2]) &   spick_sync[1] ;
-	wire sck_10 =   spick_sync[2]  & (~spick_sync[1]);
+//	wire sck_10 =   spick_sync[2]  & (~spick_sync[1]);
 
 
 	reg [7:0] regnum; // register number holder
@@ -88,7 +90,8 @@ module slavespi(
 	wire sel_rstreg, sel_waitreg, sel_gluadr, sel_comadr, sel_cfg0;
 
 	// keyboard register
-	reg [39:0] kbd_reg;
+	// reg [39:0] kbd_reg;
+	reg [6:0] kbd_reg;
 
 	// mouse register
 	reg [7:0] mouse_buf;
@@ -175,12 +178,25 @@ module slavespi(
 	assign sel_cfg0 = (regnum[7:4]==4'h5); // $50
 
 
+	assign kbd_stb = kbd_bit_stb && &kbd_out_cnt[2:0];
+	assign kbd_out_sel = kbd_out_cnt[5:3];
+	wire kbd_bit_stb = !scs_n && sel_kbdreg && sck_01;
+	wire kbdstb = sel_kbdstb && scs_n_01;	// this requires to change zx.c for good: kbdstb should be issued BEFORE kbd reg transfer, NOT after
+	
+	reg [5:0] kbd_out_cnt;
+	always @(posedge fclk)
+		if (kbdstb)
+			kbd_out_cnt <= 6'b0;
+		else if (kbd_bit_stb)
+			kbd_out_cnt <= kbd_out_cnt + 6'b1;
+	
 	// registers data-in
 	//
 	always @(posedge fclk)
 	begin
-		if( !scs_n && sel_kbdreg && sck_01 )
-			kbd_reg[39:0] <= { sdo, kbd_reg[39:1] };
+		if( kbd_bit_stb )
+			// kbd_reg[39:0] <= { sdo, kbd_reg[39:1] };
+			kbd_reg[6:0] <= { sdo, kbd_reg[6:1] };
 
 		if( !scs_n && (sel_musxcr || sel_musycr || sel_musbtn || sel_kj) && sck_01 )
 			mouse_buf[7:0] <= { sdo, mouse_buf[7:1] };
@@ -200,8 +216,8 @@ module slavespi(
 
 
 	// output data
-	assign kbd_out = kbd_reg;
-	assign kbd_stb = sel_kbdstb && scs_n_01;
+	assign kbd_out = {sdo, kbd_reg};
+	// assign kbd_stb = sel_kbdstb && scs_n_01;
 
 	assign mus_out    = mouse_buf;
 	assign mus_xstb   = sel_musxcr && scs_n_01;

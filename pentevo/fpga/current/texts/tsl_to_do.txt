@@ -1,36 +1,29 @@
 
 DMA:
  - access to devices with ports blocking strobes
- - move DMA wait to cycles with Z80 stall
 
 Features:
- - debug TS engine
- - move TS higher priority cycles to Z80 stall
  - move all ports to fclk
  - copper
- ? blitter accelerated by commands like 'ld c,c'
- ? horizontal scrollers (array)
- ? vertical scrollers (unified with Tile mode)
  - re-factor Z80 clock module (double-edge trigger)
  - 28 MHz for Z80
  - 512 bytes no-wait buffer
- - IM2 vector to Z80 bus (RTFM z80 UM)
  - make less power-off delay (apx. 2 sec) on AVR
  ? LOAD "" for COM-port using X-modem
  - find solution to mix BEEP and TAPE simultaneously
  - combine TS and Base confs to one AVR firmware (selection by Turbo key)
+ - AY frequency (2MHz for Atari and 1MHz for Amstrad)
 
 Fixes:
  - optimize timings (negative slack on DRAM addr muxes)
- - demo001 glitch at 7mhz
+ - find demo001 glitch at 7mhz bug
  - check stop times of video fetching
  - fix all oddies with raster: INT 1 pix shift, hblank etc
  - fix vertical blank for border 1 pixel at the upper-right corner
  - fix PWM for TV (make smoother)
  - migrate video fetcher to c2
  - make proper clocked altdprams
- - investigate and longer 14mhz wait length (if need)
+ - investigate and longer 14mhz wait length for IOs (if need)
  - search ways to optimize huge LC usage:
     - one-hot style selectors = use if...elseif constructions instead of if...if
-    - muxes + summators -> summators only
 

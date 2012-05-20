@@ -153,13 +153,17 @@ module zmem(
 			stall14_cycrd <= 1'b1;
 	end
 
+    
+    wire [1:0] cc = &int_turbo ? {c1, c0} : {c2, c1};
+    
 	always @(posedge fclk)
 	if (rst)
 		stall14_fin <= 1'b0;
 	else // posedge fclk
 	begin
-		// if (stall14_fin && ((opfetch & c2) || (memrd & c1)))
-		if (stall14_fin && ((opfetch & c1) || (memrd & c0)))     // overclock boost!!!
+		// if (stall14_fin && ((opfetch & c2) || (memrd & c1)))     // normal
+		// if (stall14_fin && ((opfetch & c1) || (memrd & c0)))     // overclock boost!!!
+		if (stall14_fin && ((opfetch & cc[0]) || (memrd & cc[1])))
 			stall14_fin <= 1'b0;
 		else if( cpu_next && c3 && cpu_req && (opfetch || memrd) )
 			stall14_fin <= 1'b1;

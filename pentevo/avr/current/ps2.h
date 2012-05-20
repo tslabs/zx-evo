@@ -59,11 +59,6 @@ extern volatile UBYTE ps2keyboard_cmd_count;
 /** Current PS/2 keyboard command (0 - none). */
 extern volatile UBYTE ps2keyboard_cmd;
 
-/** PS2 keyboards log. */
-extern volatile UBYTE  ps2keyboard_log[15];
-/** PS2 keyboards log length (0xFF - overload). */
-extern volatile UBYTE  ps2keyboard_log_len;
-
 /** Reset PS2 keyboard log. */
 void ps2keyboard_reset_log(void);
 

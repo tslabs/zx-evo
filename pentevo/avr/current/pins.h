@@ -176,5 +176,16 @@
 /** RS232 RTS direction register. */
 #define RS232RTS_DDR  DDRD
 
+/** SD write protection detect pin number. */
+#define SDWRP       PB4
+/** SD card detect pin number. */
+#define SDDET       PB5
+/** SD port register. */
+#define SD_PORT PORTB
+/** SD pins register. */
+#define SD_PIN  PINB
+/** SD detect direction register. */
+#define SD_DDR  DDRB
+
 #endif
 

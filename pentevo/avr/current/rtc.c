@@ -328,6 +328,10 @@ UBYTE gluk_get_reg(UBYTE index)
 		{
 			//clear update flag
 			gluk_regs[GLUK_REG_C] &= ~GLUK_C_UPDATE_FLAG;
+
+			//3 bit - SD card detect
+			//2 bit - SD WRP detect
+			tmp = tmp | (((~SD_PIN)&((1<<SDWRP)|(1<<SDDET)))>>2);
 		}
 
 		return tmp;

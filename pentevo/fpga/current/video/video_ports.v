@@ -64,7 +64,7 @@ module video_ports (
  );
 
 
-    always @(posedge clk)
+	always @(posedge clk)
 		if (res)
 		begin
 			vpage       <= 8'h05;

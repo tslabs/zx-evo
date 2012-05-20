@@ -214,7 +214,7 @@ void zx_task(UBYTE operation) // zx task, tracks when there is need to send new 
 
 					was_data = 1;
 				}
-			}
+			}//while( !zx_fifo_isempty() )
 
 			if ( zx_realkbd[10] )
 			{
