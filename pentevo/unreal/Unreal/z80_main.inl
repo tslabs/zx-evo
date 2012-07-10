@@ -58,6 +58,33 @@ void wm(unsigned addr, unsigned char val)
    }
 #endif
 
+   // TS palette load
+   if ((conf.mem_model == MM_TSL) && (comp.ts.fmaddr.i.fm_en))
+		if (((addr >> 12) & 0x0F) == comp.ts.fmaddr.i.addr)
+			if (addr & 1)
+			// write to FPGA RAM
+			switch ((addr >> 9) & 0x07)
+			{
+				case TSF_CRAM:
+				{
+					comp.ts.cram[(addr >> 1) & 0xFF] = ((val << 8) | temp.fm_tmp) & 0x7FFF;		// 15 bits of CRAM data
+					update_tspal((addr >> 1) & 0xFF);
+					update_screen();
+					break;
+				}
+				case TSF_SFILE:
+				{
+					comp.ts.sfile[(addr >> 1) & 0xFF] = (val << 8) | temp.fm_tmp;
+					update_screen();
+					break;
+				}
+			}
+
+			else
+			// remember temp value
+				temp.fm_tmp = val;
+
+
    if ((conf.mem_model == MM_ATM3) && (comp.pBF & 4) /*&& ((addr & 0xF800) == 0)*/ ) // Разрешена загрузка шрифта для ATM3 // lvd: any addr is possible in ZXEVO
    {
        unsigned idx = ((addr&0x07F8) >> 3) | ((addr & 7) << 8);

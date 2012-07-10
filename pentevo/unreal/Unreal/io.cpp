@@ -1,4 +1,4 @@
-#include "std.h"
+п»ї#include "std.h"
 #include "emul.h"
 #include "vars.h"
 #include "draw.h"
@@ -13,16 +13,20 @@
 
 void out(unsigned port, unsigned char val)
 {
+   
    port &= 0xFFFF;
    u8 p1 = (port & 0xFF);
+   u8 p2 = ((port >>8) & 0xFF);
    brk_port_out = port; brk_port_val = val;
-
-   // В начале дешифрация портов по полным 8бит
+	
+	// if (p1 == 0xAF)
+		// printf("out (%04X), %02X\n", port, val);
+   
    #ifdef MOD_GS
    // 10111011 | BB
    // 10110011 | B3
    // 00110011 | 33
-   if ((port & 0xFF) == 0x33 && conf.gs_type) // 33
+   if (p1 == 0x33 && conf.gs_type) // 33
    {
        out_gs(port, val);
        return;
@@ -35,7 +39,7 @@ void out(unsigned port, unsigned char val)
    #endif
 
    // z-controller
-   if (conf.zc && (port & 0xFF) == 0x57 )
+   if (conf.zc && p1 == 0x57 )
    {
       if ((port & 0x80FF) == 0x8057 && conf.mem_model == MM_ATM3
          &&(comp.flags & CF_DOSPORTS))
@@ -44,12 +48,12 @@ void out(unsigned port, unsigned char val)
        return;
    }
 
-   // divide на nemo портах
+   // divide РЅР° nemo РїРѕСЂС‚Р°С…
    if (conf.ide_scheme == IDE_NEMO_DIVIDE)
    {
        if ((port & 0x1E) == 0x10) // rrr1000x
        {
-           if ((port & 0xFF) == 0x11)
+           if (p1 == 0x11)
            {
                comp.ide_write = val;
                comp.ide_hi_byte_w = 0;
@@ -61,18 +65,18 @@ void out(unsigned port, unsigned char val)
            {
                comp.ide_hi_byte_w ^= 1;
 
-               if (comp.ide_hi_byte_w1) // Была запись в порт 0x11 (старший байт уже запомнен)
+               if (comp.ide_hi_byte_w1) // Р‘С‹Р»Р° Р·Р°РїРёСЃСЊ РІ РїРѕСЂС‚ 0x11 (СЃС‚Р°СЂС€РёР№ Р±Р°Р№С‚ СѓР¶Рµ Р·Р°РїРѕРјРЅРµРЅ)
                {
                    comp.ide_hi_byte_w1 = 0;
                }
                else
                {
-                   if (comp.ide_hi_byte_w) // Запоминаем младший байт
+                   if (comp.ide_hi_byte_w) // Р—Р°РїРѕРјРёРЅР°РµРј РјР»Р°РґС€РёР№ Р±Р°Р№С‚
                    {
                        comp.ide_write = val;
                        return;
                    }
-                   else // Меняем старший и младший байты местами (как этого ожидает write_hdd_5)
+                   else // РњРµРЅСЏРµРј СЃС‚Р°СЂС€РёР№ Рё РјР»Р°РґС€РёР№ Р±Р°Р№С‚С‹ РјРµСЃС‚Р°РјРё (РєР°Рє СЌС‚РѕРіРѕ РѕР¶РёРґР°РµС‚ write_hdd_5)
                    {
                        u8 tmp = comp.ide_write;
                        comp.ide_write = val;
@@ -86,16 +90,242 @@ void out(unsigned port, unsigned char val)
            }
            goto write_hdd_5;
        }
-       else if ((port & 0xFF) == 0xC8)
+       else if (p1 == 0xC8)
        {
            return hdd.write(8, val);
        }
    }
 
+   if ((conf.mem_model == MM_TSL) && (p1 == 0xAF))
+   {
+       // TS-Config extensions ports
+	   switch (p2) {
+	   
+	    // memory
+			case TSW_MEMCONF: {
+				comp.ts.memconf.b = val;
+				comp.p7FFD &= ~0x10;
+				comp.p7FFD |= (val & 1) << 4;
+				set_banks();
+				break;
+			}
+			
+			case TSW_PAGE0: {
+				comp.ts.page0 = val;
+				set_banks();
+				break;
+			}
+			
+			case TSW_PAGE1: {
+				comp.ts.page1 = val;
+				set_banks();
+				break;
+			}
+			
+			case TSW_PAGE2: {
+				comp.ts.page2 = val;
+				set_banks();
+				break;
+			}
+			
+			case TSW_PAGE3: {
+				comp.ts.page3 = val;
+				set_banks();
+				break;
+			}
+			
+			case TSW_FMADDR: {
+				comp.ts.fmaddr.b = val;
+				break;
+			}
+		
+		// video
+			case TSW_VCONF: {
+				comp.ts.vconf.b = val;
+				update_screen();
+				break;
+			}
+			
+			case TSW_VPAGE: {
+				comp.ts.vpage = val;
+				update_screen();
+				set_banks();
+				break;
+			}
+			
+			case TSW_TMPAGE: {
+				comp.ts.tmpage = val;
+				update_screen();
+				break;
+			}
+			
+			case TSW_T0GPAGE: {
+				comp.ts.t0gpage = val;
+				update_screen();
+				break;
+			}
+			
+			case TSW_T1GPAGE: {
+				comp.ts.t1gpage = val;
+				update_screen();
+				break;
+			}
+			
+			case TSW_SGPAGE: {
+				comp.ts.sgpage = val;
+				update_screen();
+				break;
+			}
+			
+			case TSW_BORDER: {
+				comp.ts.border = val;
+				update_screen();
+				break;
+			}
+			
+			case TSW_TSCONF: {
+				comp.ts.tsconf.b = val;
+				update_screen();
+				break;
+			}
+			
+			case TSW_PALSEL: {
+				comp.ts.palsel.b = val;
+				update_screen();
+				break;
+			}
+			
+			case TSW_GXOFFSL: {
+				comp.ts.g_offs.x.b.l = val;
+				update_screen();
+				break;
+			}
+			
+			case TSW_GXOFFSH: {
+				comp.ts.g_offs.x.b.h = val & 1;
+				update_screen();
+				break;
+			}
+			
+			case TSW_GYOFFSL: {
+				comp.ts.g_offs.y.b.l = val;
+				update_screen();
+				break;
+			}
+			
+			case TSW_GYOFFSH: {
+				comp.ts.g_offs.y.b.h = val & 1;
+				update_screen();
+				break;
+			}
+			
+			case TSW_T0XOFFSL: {
+				comp.ts.t0_offs.x.b.l = val;
+				update_screen();
+				break;
+			}
+			
+			case TSW_T0XOFFSH: {
+				comp.ts.t0_offs.x.b.h = val & 1;
+				update_screen();
+				break;
+			}
+			
+			case TSW_T0YOFFSL: {
+				comp.ts.t0_offs.y.b.l = val;
+				update_screen();
+				break;
+			}
+			
+			case TSW_T0YOFFSH: {
+				comp.ts.t0_offs.y.b.h = val & 1;
+				update_screen();
+				break;
+			}
+			
+			case TSW_T1XOFFSL: {
+				comp.ts.t1_offs.x.b.l = val;
+				update_screen();
+				break;
+			}
+			
+			case TSW_T1XOFFSH: {
+				comp.ts.t1_offs.x.b.h = val & 1;
+				update_screen();
+				break;
+			}
+			
+			case TSW_T1YOFFSL: {
+				comp.ts.t1_offs.y.b.l = val;
+				update_screen();
+				break;
+			}
+			
+			case TSW_T1YOFFSH: {
+				comp.ts.t1_offs.y.b.h = val & 1;
+				update_screen();
+				break;
+			}
+		
+		// system
+			case TSW_SYSCONF: {
+				comp.ts.sysconf.b = val;
+				break;
+			}
+			
+		// dma
+			case TSW_DMASAL: {
+				comp.ts.dmasaddr.b.l = val &0xFE;
+				break;
+			}
+			
+			case TSW_DMASAH: {
+				comp.ts.dmasaddr.b.h = val & 0x3F;
+				break;
+			}
+			
+			case TSW_DMASAX: {
+				comp.ts.dmasaddr.b.x = val;
+				break;
+			}
+			
+			case TSW_DMADAL: {
+				comp.ts.dmadaddr.b.l = val &0xFE;
+				break;
+			}
+			
+			case TSW_DMADAH: {
+				comp.ts.dmadaddr.b.h = val & 0x3F;
+				break;
+			}
+			
+			case TSW_DMADAX: {
+				comp.ts.dmadaddr.b.x = val;
+				break;
+			}
+			
+			case TSW_DMALEN: {
+				comp.ts.dmalen = val;
+				break;
+			}
+			
+			case TSW_DMANUM: {
+				comp.ts.dmanum = val;
+				break;
+			}
+			
+			case TSW_DMACTR: {
+				dma(val);
+				update_screen();
+				break;
+			}
+		}
+   }
+
    if (conf.mem_model == MM_ATM3)
    {
-       // Порт расширений АТМ3
-       if ((port & 0xFF) == 0xBF)
+       // РџРѕСЂС‚ СЂР°СЃС€РёСЂРµРЅРёР№ РђРўРњ3
+       if (p1 == 0xBF)
        {
            if ((comp.pBF ^ val) & comp.pBF & 8) // D3: 1->0
                nmi_pending  = 1;
@@ -104,10 +334,10 @@ void out(unsigned port, unsigned char val)
            return;
        }
 
-       // Порт разблокировки RAM0 АТМ3
-       if ((port & 0xFF) == 0xBE)
+       // РџРѕСЂС‚ СЂР°Р·Р±Р»РѕРєРёСЂРѕРІРєРё RAM0 РђРўРњ3
+       if (p1 == 0xBE)
        {
-           comp.pBE = 2; // счетчик для выхода из nmi
+           comp.pBE = 2; // СЃС‡РµС‚С‡РёРє РґР»СЏ РІС‹С…РѕРґР° РёР· nmi
            return;
        }
    }
@@ -185,7 +415,8 @@ void out(unsigned port, unsigned char val)
 
       if (conf.mem_model == MM_ATM710 || conf.mem_model == MM_ATM3)
       {
-         if ((conf.mem_model == MM_ATM3) && ((port & 0x3FFF) == 0x37F7)) // x7f7 ATM3 4Mb memory manager
+         // x7f7 ATM3 4Mb memory manager
+         if ((conf.mem_model == MM_ATM3) && ((port & 0x3FFF) == 0x37F7))
          {
              unsigned idx = ((comp.p7FFD & 0x10) >> 2) | ((port >> 14) & 3);
              comp.pFFF7[idx] = (comp.pFFF7[idx] & ~0x1FF) | (val ^ 0xFF); // always ram
@@ -199,9 +430,10 @@ void out(unsigned port, unsigned char val)
              return;
          }
 
-         u32 mask = (conf.mem_model == MM_ATM3) ? /*0x3FFF*/ 0x0FFF : 0x00FF; // lvd fix: pentevo hardware decodes fully only low byte,
-                                                                              // so using eff7 in shadow mode lead to outting to fff7,
-                                                                              // unlike this was in unreal!
+         // lvd fix: pentevo hardware decodes fully only low byte,
+		 // so using eff7 in shadow mode lead to outting to fff7,
+         // unlike this was in unreal!
+         u32 mask = (conf.mem_model == MM_ATM3) ? /*0x3FFF*/ 0x0FFF : 0x00FF;
          if ((port & mask) == (0x3FF7 & mask)) // xff7
          {
              comp.pFFF7[((comp.p7FFD & 0x10) >> 2) | ((port >> 14) & 3)] = (((val & 0xC0) << 2) | (val & 0x3F)) ^ 0x33F;
@@ -311,11 +543,11 @@ void out(unsigned port, unsigned char val)
       }
       // don't return - out to port #FE works in trdos!
    }
-   else // не dos
+   else // РЅРµ dos
    {
          if (((port & 0xA3) == 0xA3) && (conf.ide_scheme == IDE_DIVIDE))
          {
-             if ((port & 0xFF) == 0xA3)
+             if (p1 == 0xA3)
              {
                  comp.ide_hi_byte_w ^= 1;
                  if (comp.ide_hi_byte_w)
@@ -361,7 +593,7 @@ void out(unsigned port, unsigned char val)
          }
    }
 
-   if ((port & 0xFF) == 0x00 && conf.mem_model == MM_QUORUM)
+   if (p1 == 0x00 && conf.mem_model == MM_QUORUM)
    {
        comp.p00 = val;
        set_banks();
@@ -405,6 +637,7 @@ void out(unsigned port, unsigned char val)
 
       unsigned char new_border = (val & 7);
       if (conf.mem_model == MM_ATM710 || conf.mem_model == MM_ATM3 || conf.mem_model == MM_ATM450)
+		// BRIGHT for ATM border
           new_border += ((port & 8) ^ 8);
       if (comp.border_attr ^ new_border)
           update_screen();
@@ -498,8 +731,9 @@ set1FFD:
 
          if ((comp.p7FFD ^ val) & 0x08)
              update_screen();
-
          comp.p7FFD = val;
+		 comp.ts.vpage = (val & 8) ? 7 : 5;
+		 
          set_banks();
          return;
       }
@@ -574,7 +808,7 @@ set1FFD:
       return;
    }
 
-   if (conf.sound.saa1099 && ((port & 0xFF) == 0xFF)) // saa1099
+   if (conf.sound.saa1099 && (p1 == 0xFF)) // saa1099
    {
        if (port & 0x100)
            Saa1099.WrCtl(val);
@@ -606,9 +840,10 @@ set1FFD:
           set_banks(); //Alone Coder 0.36.4
       return;
    }
-   if (conf.cmos && (((comp.pEFF7 & EFF7_CMOS) && conf.mem_model == MM_PENTAGON) || conf.mem_model == MM_ATM3))
+   if (conf.cmos && (((comp.pEFF7 & EFF7_CMOS) && conf.mem_model == MM_PENTAGON) || conf.mem_model == MM_ATM3 || conf.mem_model == MM_TSL))
    {
-      unsigned mask = (conf.mem_model == MM_ATM3 && (comp.flags & CF_DOSPORTS)) ? ~0x100 : 0xFFFF;
+      unsigned mask = ((conf.mem_model == MM_ATM3) && (comp.flags & CF_DOSPORTS)) ? ~0x100 : 0xFFFF;
+      mask = (conf.mem_model == MM_TSL) ? 0xFFFF : mask;
 
       if (port == (0xDFF7 & mask))
       {
@@ -617,7 +852,7 @@ set1FFD:
       }
       if (port == (0xBFF7 & mask))
       {
-         if (conf.mem_model == MM_ATM3 && comp.cmos_addr >= 0xF0 && val <= 2)
+         if ((conf.mem_model == MM_ATM3 || conf.mem_model == MM_TSL) && comp.cmos_addr >= 0xF0 && val <= 2)
          {
             if (val < 2)
             {
@@ -652,16 +887,19 @@ __inline unsigned char in1(unsigned port)
    brk_port_in = port;
 
    u8 p1 = (port & 0xFF);
+   u8 p2 = ((port >>8) & 0xFF);
+   
+   u8 tmp;
 
 /*
-   if ((port & 0xFF) == 0xF0)
+   if (p1 == 0xF0)
        __debugbreak();
 
    if ((comp.flags & CF_DOSPORTS) && port == 0xFADF)
        __debugbreak();
 */
 
-   // В начале дешифрация портов по полным 8бит
+   // Р’ РЅР°С‡Р°Р»Рµ РґРµС€РёС„СЂР°С†РёСЏ РїРѕСЂС‚РѕРІ РїРѕ РїРѕР»РЅС‹Рј 8Р±РёС‚
    // ngs
    #ifdef MOD_GS
    if ((port & 0xF7) == 0xB3 && conf.gs_type)
@@ -669,23 +907,45 @@ __inline unsigned char in1(unsigned port)
    #endif
 
    // z-controller
-   if (conf.zc && (port & 0xFF) == 0x57)
+   if (conf.zc && p1 == 0x57)
    {
       // no shadow-mode ZXEVO patch here since 0x57 port in read mode is the same
       // as in noshadow-mode, i.e. no A15 is used to decode port.
       return Zc.Rd(port);
    }
 
-   if (conf.mem_model == MM_ATM3)
+   if ((conf.mem_model == MM_TSL) && (p1 == 0xAF))
    {
-       // Порт расширений АТМ3
-       if ((port & 0xFF) == 0xBF)
+       // TS-Config extensions ports
+	   switch (p2) {
+	   
+			case TSR_STATUS: {
+				tmp = comp.ts.pwr_up;
+				comp.ts.pwr_up = 0x00;
+				return tmp;
+			}
+
+			case TSR_PAGE2:
+				return comp.ts.page2;
+
+			case TSR_PAGE3:
+				return comp.ts.page3;
+
+			case TSR_DMASTATUS:
+				return 0;
+	   }
+	}
+	   
+  if (conf.mem_model == MM_ATM3)
+   {
+       // РџРѕСЂС‚ СЂР°СЃС€РёСЂРµРЅРёР№ РђРўРњ3
+       if (p1 == 0xBF)
            return comp.pBF;
 
-       if ((port & 0xFF) == 0xBE)
+       if (p1 == 0xBE)
        {
            u8 port_hi = (port >> 8) & 0xFF;
-           if ((port_hi & ~7) == 0) // Чтение не инвертированного номера страницы
+           if ((port_hi & ~7) == 0) // Р§С‚РµРЅРёРµ РЅРµ РёРЅРІРµСЂС‚РёСЂРѕРІР°РЅРЅРѕРіРѕ РЅРѕРјРµСЂР° СЃС‚СЂР°РЅРёС†С‹
            {
                unsigned PgIdx = port_hi & 7;
                return (comp.pFFF7[PgIdx] & 0xFF) ^ 0xFF;
@@ -718,12 +978,12 @@ __inline unsigned char in1(unsigned port)
        }
    }
 
-   // divide на nemo портах
+   // divide РЅР° nemo РїРѕСЂС‚Р°С…
    if (conf.ide_scheme == IDE_NEMO_DIVIDE)
    {
        if (((port & 0x1E) == 0x10)) // rrr1000x
        {
-           if ((port & 0xFF) == 0x11)
+           if (p1 == 0x11)
            {
                comp.ide_hi_byte_r = 0;
                return comp.ide_read;
@@ -743,14 +1003,14 @@ __inline unsigned char in1(unsigned port)
            }
            goto read_hdd_5;
        }
-       else if ((port & 0xFF) == 0xC8)
+       else if (p1 == 0xC8)
        {
         return hdd.read(8);
        }
    }
 
    // quorum additional keyboard port
-   if ((conf.mem_model == MM_QUORUM) && ((port & 0xFF) == 0x7E))
+   if ((conf.mem_model == MM_QUORUM) && (p1 == 0x7E))
    {
       u8 val = input.read_quorum(port >> 8);
       return val;
@@ -863,16 +1123,16 @@ __inline unsigned char in1(unsigned port)
           // 3F = 0011|1111b
           // 5F = 0101|1111b
           // 7F = 0111|1111b
-          // DF = 1101|1111b порт мыши
+          // DF = 1101|1111b РїРѕСЂС‚ РјС‹С€Рё
           // FF = 1111|1111b
       else if ((p1 & 0x9F) == 0x1F || p1 == 0xFF) // 1F, 3F, 5F, 7F, FF
           return comp.wd.in(p1);
    }
-   else // не dos
+   else // РЅРµ dos
    {
        if (((port & 0xA3) == 0xA3) && (conf.ide_scheme == IDE_DIVIDE))
        {
-           if ((port & 0xFF) == 0xA3)
+           if (p1 == 0xA3)
            {
                comp.ide_hi_byte_r ^= 1;
                if (!comp.ide_hi_byte_r)
@@ -979,9 +1239,11 @@ __inline unsigned char in1(unsigned port)
       return 0xFF;
    }
 
-   if (conf.cmos && ((comp.pEFF7 & EFF7_CMOS) || conf.mem_model == MM_ATM3))
+   if (conf.cmos && ((comp.pEFF7 & EFF7_CMOS) || conf.mem_model == MM_ATM3) || conf.mem_model == MM_TSL)
    {
-      unsigned mask = (conf.mem_model == MM_ATM3 && (comp.flags & CF_DOSPORTS)) ? ~0x100 : 0xFFFF;
+      unsigned mask = ((conf.mem_model == MM_ATM3) && (comp.flags & CF_DOSPORTS)) ? ~0x100 : 0xFFFF;
+	  mask = (conf.mem_model == MM_TSL) ? 0xFFFF : mask;
+	  
       if (port == (0xBFF7 & mask))
           return cmos_read();
    }
@@ -989,7 +1251,7 @@ __inline unsigned char in1(unsigned port)
    if ((port & 0xF8FF) == 0xF8EF && modem.open_port)
        return modem.read((port >> 8) & 7);
 
-   if (conf.portff && ((port & 0xFF) == 0xFF))
+   if (conf.portff && (p1 == 0xFF))
    {
       update_screen();
       if (vmode != 2) return 0xFF; // ray is not in paper

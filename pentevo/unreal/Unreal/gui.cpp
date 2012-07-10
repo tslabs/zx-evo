@@ -93,6 +93,7 @@ char *MemDlg_get_bigrom()
 //   if (c1.mem_model == MM_KAY) return c1.kay_rom_path;
    if (c1.mem_model == MM_PLUS3) return c1.plus3_rom_path;
    if (c1.mem_model == MM_QUORUM) return c1.quorum_rom_path;
+   if (c1.mem_model == MM_TSL) return c1.tsl_rom_path;
    return 0;
 }
 

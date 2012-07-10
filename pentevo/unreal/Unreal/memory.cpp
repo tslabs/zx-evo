@@ -1,17 +1,21 @@
 #include "std.h"
 #include "emul.h"
 #include "vars.h"
+#include "tsconf.h"
 #include "memory.h"
 #include "util.h"
 
 // input: ports 7FFD,1FFD,DFFD,FFF7,FF77,EFF7, flags CF_TRDOS,CF_CACHEON
 void set_banks()
 {
+   u8 tmp;
+   
    bankw[1] = bankr[1] = RAM_BASE_M + 5*PAGE;
    bankw[2] = bankr[2] = RAM_BASE_M + 2*PAGE;
 
    // screen begining
-   temp.base = memory + ((comp.p7FFD & 8) ? 7*PAGE : 5*PAGE);
+   // temp.base = memory + ((comp.p7FFD & 8) ? 7*PAGE : 5*PAGE);
+   temp.base = memory + comp.ts.vpage * PAGE;
 /*
    if (conf.mem_model == MM_QUORUM)
        temp.base = memory + (comp.p80FD & 7) * 0x2000 + 5*PAGE;
@@ -26,18 +30,9 @@ void set_banks()
    unsigned char *bank0, *bank3;
 
    if (comp.flags & CF_TRDOS)
-   {
-       if (comp.p7FFD & 0x10)
-       {
-           bank0 = base_dos_rom;
-       }
-       else
-       {
-           bank0 = base_sys_rom;
-       }
-   }
+       bank0 = (comp.p7FFD & 0x10) ? base_dos_rom : base_sys_rom;
    else
-       bank0 = (comp.p7FFD & 0x10)? base_sos_rom : base_128_rom;
+       bank0 = (comp.p7FFD & 0x10) ? base_sos_rom : base_128_rom;
 
    unsigned bank = (comp.p7FFD & 7);
 
@@ -58,6 +53,7 @@ void set_banks()
          membits[0x0104] &= ~MEMBITS_R;
          membits[0x0108] &= ~MEMBITS_R;
          membits[0x010C] &= ~MEMBITS_R;
+
       case MM_SCORP:
          bank += ((comp.p1FFD & 0x10) >> 1) + ((comp.p1FFD & 0xC0) >> 2);
          bank3 = RAM_BASE_M + (bank & temp.ram_mask) * PAGE;
@@ -148,6 +144,39 @@ void set_banks()
          break;
       }
 
+      case MM_TSL:
+	  {
+		if (comp.ts.memconf.i.w0_ram)
+		// RAM at #0000
+			if (comp.ts.memconf.i.w0_map_n)
+			// no map
+				bank0 = RAM_BASE_M + PAGE * comp.ts.page0;
+			else
+			{
+			// mapping
+				if (comp.flags & CF_TRDOS)
+					tmp = (comp.p7FFD & 0x10) ? 2 : 0;
+				else
+					tmp = (comp.p7FFD & 0x10) ? 3 : 1;
+					
+				bank0 = RAM_BASE_M + PAGE * (comp.ts.page0 + tmp);
+			}
+		else
+		// ROM at #0000
+			if (comp.ts.memconf.i.w0_map_n)
+			// no map
+				if (comp.ts.page0 & 0x02)
+					bank0 = (comp.ts.page0 & 0x01) ? base_sos_rom : base_128_rom;
+				else
+					bank0 = (comp.ts.page0 & 0x01) ? base_dos_rom : base_sys_rom;
+
+		bankr[1] = bankw[1] = RAM_BASE_M + PAGE * comp.ts.page1;
+		bankr[2] = bankw[2] = RAM_BASE_M + PAGE * comp.ts.page2;
+		bank3  = RAM_BASE_M + PAGE * comp.ts.page3;
+
+		break;
+	  }
+
       case MM_ATM3:
          if (comp.pBF & 1) // shaden
             comp.flags |= CF_DOSPORTS;
@@ -169,10 +198,10 @@ void set_banks()
             // lvd added 6 or 3 bits from 7FFD to page number insertion in pentevo (was only 3 as in atm2)
             unsigned int mem7ffd = (comp.p7FFD & 7) | ( (comp.p7FFD & 0xE0)>>2 );
             unsigned int mask7ffd = 0x07;
-            
+
             if ( conf.mem_model==MM_ATM3 && ( !(comp.pEFF7 & EFF7_LOCKMEM) ) )
                 mask7ffd = 0x3F;
-            
+
             switch (comp.pFFF7[i+bank] & 0x300)
             {
                case 0x000: // RAM from 7FFD (lvd patched)
@@ -200,7 +229,7 @@ void set_banks()
             else if ( comp.pEFF7 & EFF7_ROCACHE )
                 bank0 = RAM_BASE_M + PAGE * 0x00;
         }
-        
+
          break;
       }
 
@@ -418,7 +447,7 @@ unsigned char cmos_read()
    static unsigned long long last_tsc = 0ULL;
    unsigned char reg = comp.cmos_addr;
    unsigned char rv;
-   if (conf.cmos == 2) 
+   if (conf.cmos == 2)
        reg &= 0x3F;
 
    if ((1 << reg) & ((1<<0)|(1<<2)|(1<<4)|(1<<6)|(1<<7)|(1<<8)|(1<<9)|(1<<12)))
@@ -466,7 +495,7 @@ void cmos_write(unsigned char val)
 {
    if (conf.cmos == 2) comp.cmos_addr &= 0x3F;
 
-   if (conf.mem_model == MM_ATM3 && comp.cmos_addr == 0x0C)
+   if (((conf.mem_model == MM_ATM3) || (conf.mem_model == MM_TSL)) && comp.cmos_addr == 0x0C)
    {
        BYTE keys[256];
        if (GetKeyboardState(keys) && !keys[VK_CAPITAL] != !(val & 0x02))
@@ -558,4 +587,48 @@ void NVRAM::write(unsigned char val)
  exit:
    if (out_z) out = (val & SDA)? SDA_1 : SDA_0;
    prev = val;
+}
+
+// TS-conf DMA
+void dma (u8 val)
+{
+	DMACTRL_t ctrl;
+	ctrl.b = val;
+	
+	switch (ctrl.i.dev)
+	{
+		case 1:	{dma_ram(ctrl); break;}
+	}
+}
+
+void dma_ram(DMACTRL_t ctrl)
+{
+	int i, j;
+	u16 *s, *d;
+	u32 ss, dd;
+	
+	for (i=0; i<(comp.ts.dmanum + 1); i++)
+	{
+		ss = comp.ts.dmasaddr.w;
+		dd = comp.ts.dmadaddr.w;
+		
+		for (j=0; j<(comp.ts.dmalen + 1); j++)
+		{
+			s = (u16*)(ss + RAM_BASE_M);
+			d = (u16*)(dd + RAM_BASE_M);
+			*d = *s;
+			ss = (ss + 2) & 0x3FFFFF;
+			dd = (dd + 2) & 0x3FFFFF;
+		}
+		
+		if (ctrl.i.s_algn)
+			comp.ts.dmasaddr.w += ctrl.i.asz ? 512 : 256;
+		else
+			comp.ts.dmasaddr.w = ss;
+			
+		if (ctrl.i.d_algn)
+			comp.ts.dmadaddr.w += ctrl.i.asz ? 512 : 256;
+		else
+			comp.ts.dmadaddr.w = dd;
+	}
 }

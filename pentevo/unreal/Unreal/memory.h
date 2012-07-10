@@ -4,6 +4,8 @@ void set_banks();
 void set_scorp_profrom(unsigned read_address);
 void cmos_write(unsigned char val);
 unsigned char cmos_read();
+void dma(u8);
+void dma_ram(DMACTRL_t);
 
 Z80INLINE u8 *am_r(unsigned addr)
 {

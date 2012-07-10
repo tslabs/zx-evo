@@ -1,0 +1,47 @@
+To Do:
+
++ TS Graphics
+	+ modes: 16c, NoBorder
+	+ rasters
+	+ border update
+	+ palette
+	+ TS
+	+ scrolls
+* move the whole stuff on proper place in Full Border mode
++ INT position
++ INT vector
++ VDOS
++ TS-DOS ON/OFF with regard to RAM at #0000 (MEMCONFIG)
++ Turbo for CPU (divide actual tacts by factor)
++ Checks for 'No border' mode when raster is larger than 256x192 (the
+  best way to do it is to resize the window up to raster size)
+
+----------
+For the 'Full Border' shit:
+
+1. Bug with render crash if window is smaller that raste.
+Add check when graphics mode is set to higher and forcibly extend the window.
+
+2. Size of Full Border.
+It doesn't feel right that full border has 384x300 odd size.
+Visible ZX pixels on any display are 360x288.
+So, need to fix the size on this value.
+
+3. Odd raster position in Full Border.
+Now it has such number of lines within raster:
+(300 total)
+256x192	320x200	320x240	360x288
+64		60		40		16		- top border
+192		200		240		288		- pixels
+44		40		20		-4		- bottom border
+
+Should be:
+(288 total)
+256x192	320x200	320x240	360x288
+48		44		24		0		- top border
+192		200		240		288		- pixels
+48		44		24		0		- bottom border
+
+So, need to:
+a) move the Full Border renderers 16 lines higher
+b) change window size to 288 lines

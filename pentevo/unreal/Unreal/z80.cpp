@@ -7,6 +7,7 @@
 #include "debug.h"
 #include "sound.h"
 #include "atm.h"
+#include "tsconf.h"
 #include "gs.h"
 #include "emulkeys.h"
 #include "op_system.h"
@@ -69,13 +70,47 @@ void reset(ROM_MODE mode)
                 conf.frame = frametime;
                 cpu.SetTpi(conf.frame);
 //                if ((conf.mem_model == MM_PENTAGON)&&(comp.pEFF7 & EFF7_GIGASCREEN))conf.frame = 71680; //removed 0.37
-                apply_sound(); 
+                apply_sound();
    } //Alone Coder 0.36.4
    comp.t_states = 0; comp.frame_counter = 0;
    comp.p7FFD = comp.pDFFD = comp.pFDFD = comp.p1FFD = 0;
    comp.p7EFD = 0;
 
-   comp.p00 = comp.p80FD = 0; // quorum
+
+   // TS-Config init
+   comp.ts.page0 = 0;
+   comp.ts.page1 = 5;
+   comp.ts.page2 = 2;
+   comp.ts.page3 = 0;
+
+   comp.ts.fmaddr.b = 0;
+   comp.ts.im2vect = 255;
+   comp.ts.fddvirt = 0;
+   comp.ts.sysconf.b = 1;		// turbo 7MHz
+   
+   comp.ts.hsint = 2;
+   comp.ts.vsint.h = 0;
+
+   comp.ts.vpage = 5;
+   comp.ts.vconf.b = 0;
+   comp.ts.tsconf.b = 0;
+   comp.ts.palsel.b = 15;
+   comp.ts.g_offs.x.h = 0;
+   comp.ts.g_offs.y.h = 0;
+   comp.ts.t0_offs.x.h = 0;
+   comp.ts.t0_offs.y.h = 0;
+   comp.ts.t1_offs.x.h = 0;
+   comp.ts.t1_offs.y.h = 0;
+
+   switch (mode)
+   {
+	case RM_SYS: {comp.ts.memconf.b = 4; break;}
+	case RM_DOS: {comp.ts.memconf.b = 0; break;}
+	case RM_128: {comp.ts.memconf.b = 0; break;}
+	case RM_SOS: {comp.ts.memconf.b = 0; break;}
+   }
+
+   comp.p00 = comp.p80FD = 0; 	// quorum
 
    comp.pBF = 0; // ATM3
    comp.pBE = 0; // ATM3
@@ -144,6 +179,7 @@ void reset(ROM_MODE mode)
    if (conf.mem_model == MM_ATM450 ||
        conf.mem_model == MM_ATM710 ||
        conf.mem_model == MM_ATM3 ||
+       conf.mem_model == MM_TSL ||
        conf.mem_model == MM_PROFI)
        load_spec_colors();
 

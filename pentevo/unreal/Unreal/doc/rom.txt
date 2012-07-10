@@ -13,6 +13,7 @@ kay1024b.rom - прошивка для KAY 1024, 1998, JV Kramis 0.2
 trd503.rom - tr-dos 5.03
 trd504tm.rom - tr-dos 5.04tm
 bootgs.rom - прошивка для ngs (на базе gs1.05a)
+ts-bios.rom - BIOS for TS-Configuration (includes: TS BIOS Setup and start code, 128 basic ROM (32 kB), tr-dos 5.04T)
 
 Дополнительные rom (не входят в компект)
 48for128.rom - 48k прошивка для 128 бейсика

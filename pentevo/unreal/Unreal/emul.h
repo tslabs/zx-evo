@@ -1,7 +1,10 @@
 #pragma once
+
+
 #include "sysdefs.h"
 #include "defs.h"
 #include "sndrender.h"
+#include "tsconf.h"
 
 #define EMUL_DEBUG
 #define TRASH_PAGE
@@ -61,6 +64,7 @@ enum MEM_MODEL
    MM_KAY,
    MM_PLUS3,
    MM_QUORUM,
+   MM_TSL,
    N_MM_MODELS
 };
 
@@ -236,6 +240,7 @@ struct CONFIG
 //[vv]   char kay_rom_path[FILENAME_MAX];
    char plus3_rom_path[FILENAME_MAX];
    char quorum_rom_path[FILENAME_MAX];
+   char tsl_rom_path[FILENAME_MAX];
 
    #ifdef MOD_GSZ80
    unsigned gs_ramsize;
@@ -283,6 +288,12 @@ struct TEMP
    unsigned scale; // window scale (x1, x2, x3, x4)
    unsigned mon_scale; // window scale in monitor mode(debugger)
 
+   u8 tspal_8[256];		// TS palette LUT for 8 bit mode
+   u16 tspal_16[256];	// TS palette LUT for 16 bit mode
+   u32 tspal_32[256];	// TS palette LUT for 32 bit mode
+   
+   u8 fm_tmp;			// temporary reg for FMAPS writes
+   
    unsigned ataricolors[0x100];
    unsigned shift_mask; // for 16/32 bit modes masks low bits of color components
 
@@ -393,6 +404,7 @@ struct COMPUTER
 {
    unsigned char p7FFD, pFE, pEFF7, pXXXX;
    unsigned char pDFFD, pFDFD, p1FFD, pFF77;
+   TS_t ts;
    u8 p7EFD; // gmx
    u8 p00, p80FD; // quorum
    __int64 t_states; // inc with conf.frame by each frame

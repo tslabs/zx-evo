@@ -24,11 +24,12 @@
 
   модели памяти
 
-		ZX Evolution
 		Pentagon 128/512/1024 с 64K ПЗУ
+		TS-Configuration
 		Scorpion 256/1024 с 64K ПЗУ
 		Scorpion ПрофПЗУ с поддержкой SMUC (128/256/512K)
 		KAY-256/1024 с 64K ПЗУ
+		ZX Evolution
 		Profi 1024 ОЗУ/ПЗУ с memory mapper'ом
 		ATM TURBO 1 v4.50 512/1024 ОЗУ, 64-1024K ПЗУ
 		ATM TURBO 2+ v7.10 128/512/1024 ОЗУ, 64-1024K ПЗУ
