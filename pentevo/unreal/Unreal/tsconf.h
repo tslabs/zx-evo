@@ -59,6 +59,12 @@
 #define		TSF_SFILE		0x01
 
 
+// DMA devices
+#define		DMA_RAM			0x01
+#define		DMA_CRAM		0x04
+#define		DMA_SFILE		0x05
+
+
 typedef struct {
 
 // -- system --
@@ -222,4 +228,5 @@ typedef	union {
 } DMACTRL_t;
 
 
-void update_tspal(u8 addr);
+void update_tspal(u8);
+void dma (u8);
