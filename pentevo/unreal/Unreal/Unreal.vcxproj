@@ -74,12 +74,10 @@
     </Link>
     <ProjectReference />
     <PostBuildEvent>
-      <Command>copy /y "$(ProjectDir)lib\*.dll" "$(TargetDir).."
-copy /y "$(ProjectDir)cfg\*.*" "$(TargetDir).."
-copy /y "$(TargetPath)" "$(TargetDir).."
-copy /y "$(ProjectDir)lib\*.dll" "$(TargetDir)"
+      <Command>copy /y "$(ProjectDir)lib\*.dll" "$(TargetDir)"
 copy /y "$(ProjectDir)cfg\*.*" "$(TargetDir)"
-</Command>
+md "$(TargetDir)"rom
+copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)"rom</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -111,8 +109,8 @@ copy /y "$(ProjectDir)cfg\*.*" "$(TargetDir)"
       <Command>copy /y "$(ProjectDir)lib\*.dll" "$(TargetDir).."
 copy /y "$(ProjectDir)cfg\*.*" "$(TargetDir).."
 copy /y "$(TargetPath)" "$(TargetDir).."
-copy /y "$(ProjectDir)lib\*.dll" "$(TargetDir)"
-copy /y "$(ProjectDir)cfg\*.*" "$(TargetDir)"
+md "$(TargetDir)"..\rom
+copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)"..\rom
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -188,6 +186,10 @@ copy /y "$(ProjectDir)cfg\*.*" "$(TargetDir)"
     <ClCompile Include="dxr_prof.cpp" />
     <ClCompile Include="dxr_rsm.cpp" />
     <ClCompile Include="dxr_text.cpp" />
+    <ClCompile Include="dxr_ts.cpp" />
+    <ClCompile Include="dxr_ts1.cpp" />
+    <ClCompile Include="dxr_ts2.cpp" />
+    <ClCompile Include="dxr_ts3.cpp" />
     <ClCompile Include="dxr_vd.cpp" />
     <ClCompile Include="emul.cpp" />
     <ClCompile Include="emulkeys.cpp" />
@@ -262,6 +264,7 @@ copy /y "$(ProjectDir)cfg\*.*" "$(TargetDir)"
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="tape.cpp" />
+    <ClCompile Include="tsconf.cpp" />
     <ClCompile Include="util.cpp" />
     <ClCompile Include="vars.cpp" />
     <ClCompile Include="vs1001.cpp" />
@@ -321,6 +324,10 @@ copy /y "$(ProjectDir)cfg\*.*" "$(TargetDir)"
     <ClInclude Include="dxr_prof.h" />
     <ClInclude Include="dxr_rsm.h" />
     <ClInclude Include="dxr_text.h" />
+    <ClInclude Include="dxr_ts.h" />
+    <ClInclude Include="dxr_ts1.h" />
+    <ClInclude Include="dxr_ts2.h" />
+    <ClInclude Include="dxr_ts3.h" />
     <ClInclude Include="emul.h" />
     <ClInclude Include="emulkeys.h" />
     <ClInclude Include="emul_2203.h" />
@@ -370,6 +377,7 @@ copy /y "$(ProjectDir)cfg\*.*" "$(TargetDir)"
     <ClInclude Include="sysdefs.h" />
     <ClInclude Include="tables.h" />
     <ClInclude Include="tape.h" />
+    <ClInclude Include="tsconf.h" />
     <ClInclude Include="util.h" />
     <ClInclude Include="vars.h" />
     <ClInclude Include="vs1001.h" />

@@ -285,6 +285,7 @@ void load_config(const char *fname)
 //[vv]   GetPrivateProfileString(rom, "KAY", nil, conf.kay_rom_path, sizeof conf.kay_rom_path, ininame);
    GetPrivateProfileString(rom, "PLUS3", nil, conf.plus3_rom_path, sizeof conf.plus3_rom_path, ininame);
    GetPrivateProfileString(rom, "QUORUM", nil, conf.quorum_rom_path, sizeof conf.quorum_rom_path, ininame);
+   GetPrivateProfileString(rom, "TSL", nil, conf.tsl_rom_path, sizeof conf.tsl_rom_path, ininame);
    #ifdef MOD_GSZ80
    GetPrivateProfileString(rom, "GS", nil, conf.gs_rom_path, sizeof conf.gs_rom_path, ininame);
    addpath(conf.gs_rom_path);
@@ -297,6 +298,7 @@ void load_config(const char *fname)
    addpath(conf.profi_rom_path);
    addpath(conf.plus3_rom_path);
    addpath(conf.quorum_rom_path);
+   addpath(conf.tsl_rom_path);
 //[vv]   addpath(conf.kay_rom_path);
 
    GetPrivateProfileString(rom, "ROMSET", "default", line, sizeof line, ininame);
@@ -837,6 +839,13 @@ void apply_memory()
       base_sos_rom = ROM_BASE_M + 3*PAGE;
    break;
 
+   case MM_TSL:
+      base_sys_rom = ROM_BASE_M + 0*PAGE;
+      base_dos_rom = ROM_BASE_M + 1*PAGE;
+      base_128_rom = ROM_BASE_M + 2*PAGE;
+      base_sos_rom = ROM_BASE_M + 3*PAGE;
+   break;
+
 /*
    case MM_KAY:
       base_128_rom = ROM_BASE_M + 0*PAGE;
@@ -896,6 +905,7 @@ void apply_memory()
          case MM_ATM450: romname = conf.atm1_rom_path; break;
          case MM_PLUS3: romname = conf.plus3_rom_path; break;
          case MM_QUORUM: romname = conf.quorum_rom_path; break;
+         case MM_TSL: romname = conf.tsl_rom_path; break;
 
          default:
              errexit("ROMSET should be defined for this memory model");
@@ -938,6 +948,9 @@ void apply_memory()
 
 void applyconfig()
 {
+   // set POWER_UP bit for TS-Config
+   comp.ts.pwr_up = 0x40;
+   
    //[vv] disable turbo
    comp.pEFF7 |= EFF7_GIGASCREEN;
 

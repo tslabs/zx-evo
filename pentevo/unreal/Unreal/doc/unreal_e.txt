@@ -24,11 +24,12 @@ features
 
   memory
 
-        ZX Evolution
         Pentagon 128/512/1024 and 48K ROM
+		TS-Configuration
         Scorpion 256/1024 RAM and 64K ROM
         Scorpion PROF-ROM with SMUC support (128/256/512K)
         KAY-256/1024 and 64K ROM
+        ZX Evolution
         Profi 1024 RAM/ROM and memory mapper
         ATM TURBO 1 v4.50 512/1024 RAM, 64-1024K ROM
         ATM TURBO 2+ v7.10 128/512/1024 RAM, 64-1024K ROM
@@ -420,14 +421,14 @@ F7              step
 F8              trace, skip calls and loops
 F9              show Spectrum screen
 Shift-F9        show alternative 128k screen
-Alt-F9          show screen until painted point with border, mc and 2-scr 
+Alt-F9          show screen until painted point with border, mc and 2-scr
 effects
 F11             run program until address (SP)
 TAB             next window
 SHIFT-TAB       previous window
 Alt-D           toggle text/hex dump
 Alt-B           write to port 7FFD (select bank / screen)
-Alt-M           write to model-specific extended memory port (like 
+Alt-M           write to model-specific extended memory port (like
 #1FFD,#FDFD,#DFFD,...)
 Alt-P           enter POKE(s)
 Alt-F6          search in memory for changed values (cheats, etc)
@@ -439,9 +440,9 @@ Alt-G           General Sound status (double-click - play sample)
 Alt-T           ripper's tool
 Alt-O           configure on-screen watches
 Alt-U           disasm to file
-Alt-S           cycle screenshot (ray-painted) / screendump (screen memory) / 
+Alt-S           cycle screenshot (ray-painted) / screendump (screen memory) /
 watches
-Alt-F           render current frame to video buffer without border and MC 
+Alt-F           render current frame to video buffer without border and MC
 effects
 Ctrl-U          set user-defined watch address
 Ctrl-L          view labels, visible for Z80 in current memory state
@@ -464,7 +465,7 @@ Alt-Y           switch active sound chip in Turbo-Sound mode
          FD     - memory port #FD (also known as #7FFD)
          OUT    - port used in 'OUT' command (or 0FFFFFFFF when no outs)
          IN     - port used in 'IN'  command (or 0FFFFFFFF when no ins)
-         VAL    - read/written value to port (only meaningful when OUT != 
+         VAL    - read/written value to port (only meaningful when OUT !=
 0FFFFFFFF or IN != 0FFFFFFFF)
          numbers - hex, must start with digit: DFFD - wrong, 0DFFD - right
          characters - must be enclosed in single quotes ('A','B',etc..)
@@ -601,11 +602,11 @@ bugs and incompatibilities
 
    If emulator control keys work wrong after returning of focus, press Enter,
    and keys must go normal.
-   
+
    If emulator hangs with General Sound, try DSPrimary=0.
 
    If emulator crashes with General Sound, try GSType=Z80.
-   
+
    If Kempston Joystick doesn't work, go to menu, press NumLock there,
 then return.
 
@@ -620,7 +621,7 @@ Download sys.trd (for drive B:) from http://alonecoder.narod.ru/zx/SYS.rar
 Download xBIOS for ATM Turbo2+ from http://atmturbo.nedopc.com/
 Get WNASPI32.DLL from Ahead Nero or from Ahead website
 
-BASS.DLL v2.3 was taken from http://www.un4seen.com/ 
+BASS.DLL v2.3 was taken from http://www.un4seen.com/
 
 ----------------------------------------------------------------------
 

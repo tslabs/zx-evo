@@ -7,6 +7,7 @@
 #include "dxr_4bpp.h"
 #include "dxr_prof.h"
 #include "dxr_atm.h"
+#include "dxr_ts.h"
 #include "draw.h"
 #include "util.h"
 
@@ -45,6 +46,13 @@ void __fastcall render_small(unsigned char *dst, unsigned pitch)
        rend_atm_2_small(dst, pitch);
        return;
    }
+   
+   if (conf.mem_model == MM_TSL)
+   {
+		rend_ts_small(dst, pitch);
+		return;
+   }
+
    rend_small(dst, pitch);
 }
 
@@ -119,26 +127,40 @@ void __fastcall render_dbl(unsigned char *dst, unsigned pitch)
    #endif
 
    // todo: add ini option to show zx-screen with palette or with MC
-   if (comp.pEFF7 & EFF7_512)
+
+   if (conf.mem_model == MM_TSL)
    {
-       rend_512(dst, pitch);
-       return;
+		rend_ts(dst, pitch);
+		return;
    }
-   if (comp.pEFF7 & EFF7_4BPP)
+
+   else
    {
-       rend_p4bpp(dst, pitch);
-       return;
+		if (comp.pEFF7 & EFF7_512)
+		{
+			rend_512(dst, pitch);
+			return;
+		}
+
+		if (comp.pEFF7 & EFF7_4BPP)
+		{
+			rend_p4bpp(dst, pitch);
+			return;
+		}
    }
+
    if ((comp.pDFFD & 0x80) && conf.mem_model == MM_PROFI)
    {
        rend_profi(dst, pitch);
        return;
    }
+
    if (conf.mem_model == MM_ATM450)
    {
        rend_atm_1(dst, pitch);
        return;
    }
+
    if (conf.mem_model == MM_ATM710 || conf.mem_model == MM_ATM3)
    {
        rend_atm_2(dst, pitch);

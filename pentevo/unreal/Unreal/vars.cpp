@@ -1,4 +1,4 @@
-#include "std.h"
+Ôªø#include "std.h"
 #include "emul.h"
 #include "vars.h"
 #include "debug.h"
@@ -213,6 +213,7 @@ const TMemModel mem_model[N_MM_MODELS] =
     { "Nemo's KAY", "KAY",                   MM_KAY, 256,  RAM_256 | RAM_1024 },
     { "ZX-Spectrum +3", "PLUS3",             MM_PLUS3, 128,  RAM_128 },
     { "QUORUM", "QUORUM",                    MM_QUORUM, 1024, RAM_128 | RAM_1024 },
+    { "TS-Config", "TSL",                    MM_TSL, 4096, RAM_4096 },
 };
 
 unsigned char kbdpc[VK_MAX]; // add cells for mouse & joystick
@@ -229,7 +230,7 @@ unsigned char exitflag = 0; // avoid call exit() twice
 
 // beta128 vars
 unsigned trd_toload = 0; // drive to load
-unsigned DefaultDrive = -1; // Ñ®·™Æ¢Æ§ ØÆ „¨Æ´Á†≠®Ó ¢ ™Æ‚Æ‡Î© £‡„ßÔ‚·Ô Æ°‡†ßÎ §®·™Æ¢ Ø‡® ·‚†‡‚•
+unsigned DefaultDrive = -1; // –î–∏—Å–∫–æ–≤–æ–¥ –ø–æ —É–º–æ–ª—á–∞–Ω–∏—é –≤ –∫–æ—Ç–æ—Ä—ã–π –≥—Ä—É–∑—è—Ç—Å—è –æ–±—Ä–∞–∑—ã –¥–∏—Å–∫–æ–≤ –ø—Ä–∏ —Å—Ç–∞—Ä—Ç–µ
 
 char trd_loaded[4]; // used to get first free drive with no account of autoloaded images
 char ininame[0x200];
