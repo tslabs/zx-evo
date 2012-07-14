@@ -1,5 +1,7 @@
 To Do:
 
+! #FD decode - check cat-demo on out(#00fd),a
++ #FD lock port
 + TS Graphics
 	+ modes: 16c, NoBorder
 	+ rasters
