@@ -19,7 +19,7 @@ void out(unsigned port, unsigned char val)
    u8 p2 = ((port >>8) & 0xFF);
    brk_port_out = port; brk_port_val = val;
 	
-	// if (p1 == 0xAF)
+	 // if (p1 == 0xFD)
 		// printf("out (%04X), %02X\n", port, val);
    
    #ifdef MOD_GS
