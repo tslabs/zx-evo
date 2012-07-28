@@ -3,9 +3,9 @@
 ; wait for DMA end
         org DWT
 		xtbc dstatus
-DWT1    in a,(c)
-        jr nz, DWT1
-        ret
+DWT1    inf
+        ret p
+        jr DWT1
 
         org h'10
         ret
