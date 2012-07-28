@@ -810,16 +810,12 @@ DMAFILL
         xtrv
         xt dmalen, 127
         xt dmactr, dma_dev_mem | dma_zwt    ; Run DMA
-        call DWT
+        rst DWT
         xtrv
         xt dmanum, 0
         xt dmalen, 126
         xt dmactr, dma_dev_mem | dma_zwt    ; Run last burst
-
-; wait for DMA end
-DWT
-        in a,(c)
-        jr nz, DWT
+		rst DWT
         ret
 
 

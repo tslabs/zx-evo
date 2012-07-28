@@ -19,6 +19,7 @@ shadow_off      equ 0x00
 
 ; -- TS-config port regs
 xstatus         equ 0x00
+dstatus         equ 0x27
 
 vconf           equ 0x00
 vpage           equ 0x01
@@ -89,6 +90,10 @@ win0            equ 0x0000
 win1            equ 0x4000
 win2            equ 0x8000
 win3            equ 0xC000
+
+
+; -- restarts
+DWT				equ 8
 
 
 ; -- addresses

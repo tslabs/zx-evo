@@ -1,6 +1,10 @@
 
 ; -- RST 08-30
-        org h'08
+; wait for DMA end
+        org DWT
+		xtbc dstatus
+DWT1    in a,(c)
+        jr nz, DWT1
         ret
 
         org h'10
