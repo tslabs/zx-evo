@@ -273,6 +273,24 @@ void out(unsigned port, unsigned char val)
 				break;
 			}
 			
+			case TSW_HSINT: {
+				comp.ts.hsint = val;
+				cpu.intpos = ((comp.ts.hsint > 223) || (comp.ts.vsint.h > 319)) ? -1 : (comp.ts.vsint.h * 224 + comp.ts.hsint);
+				cpu.intnew = true;
+				break;
+			}
+			case TSW_VSINTL: {
+				comp.ts.vsint.b.l = val;
+				cpu.intpos = ((comp.ts.hsint > 223) || (comp.ts.vsint.h > 319)) ? -1 : (comp.ts.vsint.h * 224 + comp.ts.hsint);
+				cpu.intnew = true;
+				break;
+			}
+			case TSW_VSINTH: {
+				comp.ts.vsint.b.h = val;
+				cpu.intpos = ((comp.ts.hsint > 223) || (comp.ts.vsint.h > 319)) ? -1 : (comp.ts.vsint.h * 224 + comp.ts.hsint);
+				cpu.intnew = true;
+				break;
+			}
 		// dma
 			case TSW_DMASAL: {
 				comp.ts.dmasaddr.b.l = val &0xFE;
@@ -671,7 +689,7 @@ void out(unsigned port, unsigned char val)
          return;
       }
 
-      if (!(port & 0x8000)) // zx128 port
+      if (!(port & 0x8000)) // zx128 port (#7FFD port)
       {
          // 0001xxxxxxxxxx0x (bcig4)
          if ((port & 0xF002) == (0x1FFD & 0xF002) && conf.mem_model == MM_PLUS3)
@@ -733,6 +751,19 @@ set1FFD:
              update_screen();
          comp.p7FFD = val;
 		 comp.ts.vpage = (val & 8) ? 7 : 5;
+
+		 // In TS Memory Model the actual value of #7FFD ignored, and page3 is used instead
+			if (comp.ts.memconf.i.lck128 == 0)
+				comp.ts.page3 = ((val & 0xC0) >> 3) | (val & 0x07);		// no lock
+			else if (comp.ts.memconf.i.lck128 == 1)
+				comp.ts.page3 = val & 0x07;		// lock 128
+			else 	// auto
+			{
+				if ((port >> 13) & 1)
+					comp.ts.page3 = ((val & 0xC0) >> 3) | (val & 0x07);		// out(c), R = no lock
+				else
+					comp.ts.page3 = val & 0x07;		// out(#FD), a = lock128
+			}
 		 
          set_banks();
          return;

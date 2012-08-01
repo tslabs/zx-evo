@@ -90,6 +90,7 @@ void reset(ROM_MODE mode)
    
    comp.ts.hsint = 2;
    comp.ts.vsint.h = 0;
+   cpu.intpos = 2;	// pentagon standard
 
    comp.ts.vpage = 5;
    comp.ts.vconf.b = 0;
