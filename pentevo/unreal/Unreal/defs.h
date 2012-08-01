@@ -165,7 +165,8 @@ struct TZ80State
             unsigned char memh;
         };
     };
-    unsigned eipos, haltpos;
+    unsigned eipos, haltpos, intpos;
+	bool intnew;
     /*------------------------------*/
     unsigned char im;
     bool nmi_in_progress;

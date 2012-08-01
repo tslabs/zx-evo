@@ -1,20 +1,23 @@
-To Do:
+Limitations:
+-------------
 
-! #FD decode - check cat-demo on out(#00fd),a
-+ #FD lock port
+- Incorrect DOS on/off behaviour with regard to RAM at #0000 (MEMCONFIG)
+- No border update in non-ZX videomodes
+- No precise raster emulation
+- No NoBorder videomode
+- No Turbo modes
+- No VDOS
+- No TS Engine
+
+To Do:
+------
 + TS Graphics
-	+ modes: 16c, NoBorder
+	+ modes: NoBorder
 	+ rasters
 	+ border update
-	+ palette
 	+ TS
 	+ scrolls
 * move the whole stuff on proper place in Full Border mode
-+ INT position
-+ INT vector
-+ VDOS
-+ TS-DOS ON/OFF with regard to RAM at #0000 (MEMCONFIG)
-+ Turbo for CPU (divide actual tacts by factor)
 + Checks for 'No border' mode when raster is larger than 256x192 (the
   best way to do it is to resize the window up to raster size)
 
