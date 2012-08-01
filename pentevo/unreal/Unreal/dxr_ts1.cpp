@@ -15,7 +15,7 @@ void line_ts1_32(u8 *dst, u8 *src)
 		
 		u8 tmp = src[src_offset];
 		
-		u32 p = temp.tspal_32[(comp.ts.palsel.i.gpal << 4) | ((tmp & 0x0F) >> 4)];
+		u32 p = temp.tspal_32[(comp.ts.palsel.i.gpal << 4) | (tmp >> 4)];
 		*(unsigned*)(dst+x+0x00) = p;
 		*(unsigned*)(dst+x+0x04) = p;
 		
@@ -37,7 +37,7 @@ void rend1_ts1(u8 *dst, unsigned pitch, int y)
    dst2 += pitch * offs * mul;
 
 	u8 gfx_page = (comp.ts.vpage & 0xF8);
-	u8 *gfx = RAM_BASE_M + PAGE * (gfx_page + (y >> 6)) + ((y & 0x3F) << 8);
+	u8 *gfx = RAM_BASE_M + PAGE * (gfx_page + ((y >> 6) & 7)) + ((y & 0x3F) << 8);
 
 
     if (conf.fast_sl) {

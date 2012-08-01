@@ -375,6 +375,14 @@ char ATA_DEVICE::exec_ata_cmd(unsigned char cmd)
       return 1;
    }
 
+   if (cmd == 0x08)		// reset
+   {
+      recalibrate();
+      command_ok();
+      intrq = 1;
+      return 1;
+   }
+
    if (cmd == 0x70)
    { // seek
       if (!seek())
