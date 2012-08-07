@@ -60,6 +60,8 @@
 #define IDC_SND_COVOXDD                 1035
 #define IDC_VIDEOFILTER                 1036
 #define IDC_TAPE                        1037
+#define IDC_VIDEOFILTER2                1037
+#define IDC_BORDERSIZE                  1037
 #define IDC_LED_AY_Y                    1039
 #define IDC_LED_ROM_Y                   1040
 #define IDC_LED_INPUT_Y                 1041
@@ -204,6 +206,7 @@
 #define IDC_BIT3                        1166
 #define IDC_REND_TITLE2                 1166
 #define IDC_BIT4                        1167
+#define IDC_B_TITLE2                    1167
 #define IDC_BIT5                        1168
 #define IDC_BIT6                        1169
 #define IDC_BIT7                        1170

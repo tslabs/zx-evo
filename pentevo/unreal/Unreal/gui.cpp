@@ -819,13 +819,17 @@ INT_PTR CALLBACK fir_dlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
 INT_PTR CALLBACK VideoDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
 {
    ::dlg = dlg; unsigned id, code;
-   int i; //Alone Coder 0.36.7
+   int i;
    if (msg == WM_INITDIALOG)
    {
       HWND box = GetDlgItem(dlg, IDC_VIDEOFILTER);
-      for (/*int*/ i = 0; renders[i].func; i++)
+      for (i = 0; renders[i].func; i++)
          SendMessage(box, CB_ADDSTRING, 0, (LPARAM)renders[i].name);
       SendMessage(box, CB_SETCURSEL, c1.render, 0);
+      box = GetDlgItem(dlg, IDC_BORDERSIZE);
+      for (i = 0; bordersizes[i].name; i++)
+         SendMessage(box, CB_ADDSTRING, 0, (LPARAM)bordersizes[i].name);
+      SendMessage(box, CB_SETCURSEL, c1.bordersize, 0);
       box = GetDlgItem(dlg, IDC_RENDER);
       for (i = 0; drivers[i].name; i++)
          SendMessage(box, CB_ADDSTRING, 0, (LPARAM)drivers[i].name);
@@ -857,6 +861,10 @@ INT_PTR CALLBACK VideoDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
       if (id == IDC_FONT) { font_setup(dlg); return 1; }
       if (id == IDC_FIR) { DialogBox(hIn, MAKEINTRESOURCE(IDD_FIR), dlg, fir_dlg); return 1; }
       if ((id == IDC_NOFLIC || id == IDC_FAST_SL) && code == BN_CLICKED) goto filter_changed;
+      if (code == CBN_SELCHANGE && id == IDC_BORDERSIZE) {
+         c1.bordersize = SendDlgItemMessage(dlg, IDC_BORDERSIZE, CB_GETCURSEL, 0, 0);
+	  }
+	  
       if (code == CBN_SELCHANGE && id == IDC_VIDEOFILTER) {
    filter_changed:
          unsigned filt_n = SendDlgItemMessage(dlg, IDC_VIDEOFILTER, CB_GETCURSEL, 0, 0);
@@ -929,12 +937,6 @@ INT_PTR CALLBACK VideoDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
       c1.flashcolor = getcheck(IDC_FLASH);
       c1.noflic = getcheck(IDC_NOFLIC);
       c1.alt_nf = getcheck(IDC_ALT_NOFLIC);
-      if (getcheck(IDC_B0)) c1.bordersize = 0;
-      if (getcheck(IDC_B1)) c1.bordersize = 1;
-      if (getcheck(IDC_B2)) c1.bordersize = 2;
-      if (getcheck(IDC_CH_AUTO)) c1.ch_size = 0;
-      if (getcheck(IDC_CH2)) c1.ch_size = 2;
-      if (getcheck(IDC_CH4)) c1.ch_size = 4;
       c1.videoscale = (unsigned char)(SendDlgItemMessage(dlg, IDC_VIDEOSCALE, TBM_GETPOS, 0, 0));
    }
 
@@ -957,13 +959,6 @@ INT_PTR CALLBACK VideoDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
       SendDlgItemMessage(dlg, IDC_VIDEOSCALE, TBM_SETRANGE, 0, MAKELONG(1,4));
       SendDlgItemMessage(dlg, IDC_VIDEOSCALE, TBM_SETPOS, 1, c1.videoscale);
 
-      SendDlgItemMessage(dlg, IDC_B0, BM_SETCHECK, c1.bordersize==0 ? BST_CHECKED : BST_UNCHECKED, 0);
-      SendDlgItemMessage(dlg, IDC_B1, BM_SETCHECK, c1.bordersize==1 ? BST_CHECKED : BST_UNCHECKED, 0);
-      SendDlgItemMessage(dlg, IDC_B2, BM_SETCHECK, c1.bordersize==2 ? BST_CHECKED : BST_UNCHECKED, 0);
-
-      SendDlgItemMessage(dlg, IDC_CH_AUTO, BM_SETCHECK, c1.ch_size==0 ? BST_CHECKED : BST_UNCHECKED, 0);
-      SendDlgItemMessage(dlg, IDC_CH2, BM_SETCHECK, c1.ch_size==2 ? BST_CHECKED : BST_UNCHECKED, 0);
-      SendDlgItemMessage(dlg, IDC_CH4, BM_SETCHECK, c1.ch_size==4 ? BST_CHECKED : BST_UNCHECKED, 0);
       lastpage = "VIDEO";
       goto filter_changed;
    }

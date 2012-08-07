@@ -398,14 +398,9 @@ void load_config(const char *fname)
 
    conf.fast_sl = GetPrivateProfileInt(video, "fastlines", 0, ininame);
 
-   GetPrivateProfileString(video, "Border", nil, line, sizeof line, ininame);
-   conf.bordersize = 1;
-   if (!strnicmp(line, "none", 4))
-       conf.bordersize = 0;
-   else if (!strnicmp(line, "small", 5))
-       conf.bordersize = 1;
-   else if (!strnicmp(line, "wide", 4))
-       conf.bordersize = 2;
+   conf.bordersize = GetPrivateProfileInt(video, "Border", 3, ininame);
+   if (conf.bordersize > 5)
+	   conf.bordersize = 3;
    conf.minres = GetPrivateProfileInt(video, "MinRes", 0, ininame);
 
    GetPrivateProfileString(video, "Hide", nil, line, sizeof line, ininame);

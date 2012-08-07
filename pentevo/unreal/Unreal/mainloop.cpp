@@ -37,8 +37,8 @@ void spectrum_frame()
        modem.io();
 
    flush_snd_frame();
-   flush_frame();
-   showleds();
+   //flush_frame();
+   // showleds();
 
    if (!cpu.iff1 || // int disabled in CPU
         ((conf.mem_model == MM_ATM710/* || conf.mem_model == MM_ATM3*/) && !(comp.pFF77 & 0x20))) // int disabled by ATM hardware -- lvd removed int disabling in pentevo (atm3)

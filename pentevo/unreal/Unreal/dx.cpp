@@ -82,6 +82,21 @@ RENDER renders[] =
 
 size_t renders_count = _countof(renders);
 
+
+BORDSIZE bordersizes[] =
+{
+   { "256x192 (ZX)", 140, 80, 256, 192 },
+   { "320x200 (ATM)", 108, 76, 320, 200 },
+   { "320x240 (TS)", 108, 56, 320, 240 },
+   { "360x288 (TS full)", 88, 32, 360, 288 },
+   { "384x304 (AlCo)", 64, 16, 384, 304 },
+   { "448x320 (Debug)", 0, 0, 448, 320 },
+   { 0,0,0,0,0 }
+};
+
+size_t bordersizes_count = _countof(bordersizes);
+
+
 const RENDER drivers[] =
 {
    { "video memory (8bpp)",  0, "ddraw",  RF_8 },
@@ -920,8 +935,10 @@ void set_vidmode()
    }
 
    // select resolution
-   temp.ox = temp.scx = size_x[conf.bordersize];
-   temp.oy = temp.scy = size_y[conf.bordersize];
+   temp.ox = temp.scx = conf.framexsize;
+   temp.oy = temp.scy = conf.frameysize;
+   // temp.ox = temp.scx = 448;
+   // temp.oy = temp.scy = 320;
 
    if (temp.rflags & RF_2X)
    {
@@ -1375,8 +1392,8 @@ static void CalcWindowSize()
         temp.rflags |= drivers[conf.driver].flags;
 
     // select resolution
-    temp.ox = temp.scx = size_x[conf.bordersize];
-    temp.oy = temp.scy = size_y[conf.bordersize];
+    temp.ox = temp.scx = 448;
+    temp.oy = temp.scy = 320;
 
     if (temp.rflags & RF_2X)
     {

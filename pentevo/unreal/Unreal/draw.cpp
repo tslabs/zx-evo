@@ -666,6 +666,11 @@ void set_video()
 
 void apply_video()
 {
+   conf.framex = bordersizes[conf.bordersize].x;
+   conf.framexsize = bordersizes[conf.bordersize].xsize;
+   conf.framey = bordersizes[conf.bordersize].y;
+   conf.frameysize = bordersizes[conf.bordersize].ysize;
+   
    load_ula_preset();
    temp.rflags = renders[conf.render].flags;
    if (conf.use_comp_pal && (conf.mem_model == MM_ATM710 || conf.mem_model == MM_ATM3 || conf.mem_model == MM_ATM450 || conf.mem_model == MM_PROFI))

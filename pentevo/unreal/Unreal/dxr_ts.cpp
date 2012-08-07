@@ -71,11 +71,13 @@ void rend_ts(u8 *dst, unsigned pitch)
 {
 //	u8 *dst1 = dst;
 	u32 *src = &vbuf[0];
-	for (int i=0; i<VID_HEIGHT; i++)
+	src += conf.framex * 2;
+	src += conf.framey * VID_WIDTH * 2;
+	for (u32 i=0; i<conf.frameysize; i++)
 	{
-		memcpy (dst, src, VID_WIDTH*4); dst += VID_WIDTH*4;
-		memcpy (dst, src, VID_WIDTH*4); dst += VID_WIDTH*4;
-		src += VID_WIDTH;
+		memcpy (dst, src, pitch); dst += pitch;
+		memcpy (dst, src, pitch); dst += pitch;
+		src += VID_WIDTH * 2;
 	}
 //	dst = dst1;
 	
