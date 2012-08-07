@@ -83,6 +83,15 @@ struct TMemModel
 typedef void (__fastcall *VOID_FUNC)(void);
 typedef void (__fastcall *RENDER_FUNC)(unsigned char*,unsigned);
 
+struct BORDSIZE
+{
+   const char *name;
+   const u32 x;
+   const u32 y;
+   const u32 xsize;
+   const u32 ysize;
+};
+
 struct RENDER
 {
    const char *name;
@@ -135,6 +144,10 @@ struct CONFIG
    unsigned char use_romset;
 
    unsigned char updateb, bordersize;
+   unsigned framex;
+   unsigned framexsize;
+   unsigned framey;
+   unsigned frameysize;
    unsigned char even_M1, border_4T;
 
    unsigned char floatbus, floatdos;

@@ -7,7 +7,7 @@
 
 #define VID_TACTS 224
 #define VID_LINES 320
-#define VID_WIDTH 896
+#define VID_WIDTH 448
 #define VID_HEIGHT 320
 
 #define M_ZX	0	// Sinclair
@@ -160,7 +160,7 @@ extern AtmVideoController AtmVideoCtrl;
 
 static const int rb2_offs = MAX_HEIGHT*MAX_WIDTH_P;
 static const int sizeof_rbuf = rb2_offs*(MAX_BUFFERS+2);
-static const int sizeof_vbuf = VID_HEIGHT*VID_WIDTH;
+static const int sizeof_vbuf = VID_HEIGHT*VID_WIDTH*2;
 #ifdef CACHE_ALIGNED
 extern CACHE_ALIGNED unsigned char rbuf[sizeof_rbuf];
 #else // __declspec(align) not available, force QWORD align with old method

@@ -135,6 +135,7 @@ extern action ac_regs[];
 extern action ac_trace[];
 extern action ac_mem[];
 extern RENDER renders[];
+extern BORDSIZE bordersizes[];
 extern VOID_FUNC prebuffers[];
 
 extern const TMemModel mem_model[N_MM_MODELS];
