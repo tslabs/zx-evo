@@ -2,9 +2,7 @@ Limitations:
 -------------
 
 - Incorrect DOS on/off behaviour with regard to RAM at #0000 (MEMCONFIG)
-- No border update in non-ZX videomodes
-- No precise raster emulation
-- No NoBorder videomode
+- Not precise raster emulation
 - No Turbo modes
 - No VDOS
 - No TS Engine
@@ -12,11 +10,7 @@ Limitations:
 To Do:
 ------
 + TS Graphics
-	+ modes: NoBorder
-	+ rasters
-	+ border update
 	+ TS
-	+ scrolls
 * move the whole stuff on proper place in Full Border mode
 + Checks for 'No border' mode when raster is larger than 256x192 (the
   best way to do it is to resize the window up to raster size)

@@ -18,6 +18,9 @@
 #include "emulkeys.h"
 #include "util.h"
 
+const int size_x[3] = { 256, 320, 448 };
+const int size_y[3] = { 192, 240, 320 };
+
 unsigned char active = 0, pause = 0;
 
 static const DWORD SCU_SCALE1 = 0x10;
@@ -917,8 +920,6 @@ void set_vidmode()
    }
 
    // select resolution
-   static const int size_x[3] = { 256, 320, 384 };
-   static const int size_y[3] = { 192, 240, 300 };
    temp.ox = temp.scx = size_x[conf.bordersize];
    temp.oy = temp.scy = size_y[conf.bordersize];
 
@@ -1374,8 +1375,6 @@ static void CalcWindowSize()
         temp.rflags |= drivers[conf.driver].flags;
 
     // select resolution
-    static const int size_x[3] = { 256, 320, 384 };
-    static const int size_y[3] = { 192, 240, 300 };
     temp.ox = temp.scx = size_x[conf.bordersize];
     temp.oy = temp.scy = size_y[conf.bordersize];
 

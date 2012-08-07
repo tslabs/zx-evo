@@ -141,129 +141,130 @@ void out(unsigned port, unsigned char val)
 		
 		// video
 			case TSW_VCONF: {
-				comp.ts.vconf.b = val;
 				update_screen();
+				comp.ts.vconf.b = val;
+				init_raster();
 				break;
 			}
 			
 			case TSW_VPAGE: {
-				comp.ts.vpage = val;
 				update_screen();
+				comp.ts.vpage = val;
 				set_banks();
 				break;
 			}
 			
 			case TSW_TMPAGE: {
-				comp.ts.tmpage = val;
 				update_screen();
+				comp.ts.tmpage = val;
 				break;
 			}
 			
 			case TSW_T0GPAGE: {
-				comp.ts.t0gpage = val;
 				update_screen();
+				comp.ts.t0gpage = val;
 				break;
 			}
 			
 			case TSW_T1GPAGE: {
-				comp.ts.t1gpage = val;
 				update_screen();
+				comp.ts.t1gpage = val;
 				break;
 			}
 			
 			case TSW_SGPAGE: {
-				comp.ts.sgpage = val;
 				update_screen();
+				comp.ts.sgpage = val;
 				break;
 			}
 			
 			case TSW_BORDER: {
-				comp.ts.border = val;
 				update_screen();
+				comp.ts.border = val;
 				break;
 			}
 			
 			case TSW_TSCONF: {
-				comp.ts.tsconf.b = val;
 				update_screen();
+				comp.ts.tsconf.b = val;
 				break;
 			}
 			
 			case TSW_PALSEL: {
-				comp.ts.palsel.b = val;
 				update_screen();
+				comp.ts.palsel.b = val;
 				break;
 			}
 			
 			case TSW_GXOFFSL: {
-				comp.ts.g_offs.x.b.l = val;
 				update_screen();
+				comp.ts.g_offs.x.b.l = val;
 				break;
 			}
 			
 			case TSW_GXOFFSH: {
-				comp.ts.g_offs.x.b.h = val & 1;
 				update_screen();
+				comp.ts.g_offs.x.b.h = val & 1;
 				break;
 			}
 			
 			case TSW_GYOFFSL: {
-				comp.ts.g_offs.y.b.l = val;
 				update_screen();
+				comp.ts.g_offs.y.b.l = val;
 				break;
 			}
 			
 			case TSW_GYOFFSH: {
-				comp.ts.g_offs.y.b.h = val & 1;
 				update_screen();
+				comp.ts.g_offs.y.b.h = val & 1;
 				break;
 			}
 			
 			case TSW_T0XOFFSL: {
-				comp.ts.t0_offs.x.b.l = val;
 				update_screen();
+				comp.ts.t0_offs.x.b.l = val;
 				break;
 			}
 			
 			case TSW_T0XOFFSH: {
-				comp.ts.t0_offs.x.b.h = val & 1;
 				update_screen();
+				comp.ts.t0_offs.x.b.h = val & 1;
 				break;
 			}
 			
 			case TSW_T0YOFFSL: {
-				comp.ts.t0_offs.y.b.l = val;
 				update_screen();
+				comp.ts.t0_offs.y.b.l = val;
 				break;
 			}
 			
 			case TSW_T0YOFFSH: {
-				comp.ts.t0_offs.y.b.h = val & 1;
 				update_screen();
+				comp.ts.t0_offs.y.b.h = val & 1;
 				break;
 			}
 			
 			case TSW_T1XOFFSL: {
-				comp.ts.t1_offs.x.b.l = val;
 				update_screen();
+				comp.ts.t1_offs.x.b.l = val;
 				break;
 			}
 			
 			case TSW_T1XOFFSH: {
-				comp.ts.t1_offs.x.b.h = val & 1;
 				update_screen();
+				comp.ts.t1_offs.x.b.h = val & 1;
 				break;
 			}
 			
 			case TSW_T1YOFFSL: {
-				comp.ts.t1_offs.y.b.l = val;
 				update_screen();
+				comp.ts.t1_offs.y.b.l = val;
 				break;
 			}
 			
 			case TSW_T1YOFFSH: {
-				comp.ts.t1_offs.y.b.h = val & 1;
 				update_screen();
+				comp.ts.t1_offs.y.b.h = val & 1;
 				break;
 			}
 		
@@ -657,8 +658,9 @@ void out(unsigned port, unsigned char val)
       if (conf.mem_model == MM_ATM710 || conf.mem_model == MM_ATM3 || conf.mem_model == MM_ATM450)
 		// BRIGHT for ATM border
           new_border += ((port & 8) ^ 8);
-      if (comp.border_attr ^ new_border)
+      // if (comp.border_attr ^ new_border)
           update_screen();
+	  comp.ts.border = (comp.ts.palsel.i.gpal << 4) | (val & 7);
       comp.border_attr = new_border;
 
       if (conf.mem_model == MM_ATM450)

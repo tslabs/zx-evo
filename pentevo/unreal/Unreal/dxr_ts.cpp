@@ -3,6 +3,7 @@
 #include "vars.h"
 #include "draw.h"
 #include "dxrend.h"
+#include "dxr_ts.h"
 #include "dxr_ts1.h"
 #include "dxr_ts2.h"
 #include "dxr_ts3.h"
@@ -68,10 +69,17 @@ void rend_ts_small(u8 *dst, unsigned pitch)
 
 void rend_ts(u8 *dst, unsigned pitch)
 {
-    // if (temp.comp_pal_changed) {
-        // pixel_tables();
-        // temp.comp_pal_changed = 0;
-    // }
+//	u8 *dst1 = dst;
+	u32 *src = &vbuf[0];
+	for (int i=0; i<VID_HEIGHT; i++)
+	{
+		memcpy (dst, src, VID_WIDTH*4); dst += VID_WIDTH*4;
+		memcpy (dst, src, VID_WIDTH*4); dst += VID_WIDTH*4;
+		src += VID_WIDTH;
+	}
+//	dst = dst1;
+	
+	return;
 
     switch (comp.ts.vconf.i.vmode)
     {
