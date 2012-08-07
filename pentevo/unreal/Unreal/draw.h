@@ -2,8 +2,27 @@
 
 #define MAX_WIDTH_P (64*2)
 #define MAX_WIDTH 512
-#define MAX_HEIGHT 304
+#define MAX_HEIGHT 320
 #define MAX_BUFFERS 8
+
+#define VID_TACTS 224
+#define VID_LINES 320
+#define VID_WIDTH 896
+#define VID_HEIGHT 320
+
+#define M_ZX	0	// Sinclair
+#define M_TS16	1	// TS 16c
+#define M_TS256	2	// TS 256c
+#define M_TSTX	3	// TS Text
+#define M_TSBRD	4	// TS Border only
+#define M_ATM16	5	// ATM 16c
+#define M_ATMHR	6	// ATM HiRes
+#define M_ATMTX	7	// ATM Text
+#define M_ATMTL	8	// ATM Text Linear
+#define M_PMC	9	// Pentagon Multicolor
+#define M_P16	10	// Pentagon 16c
+#define M_PHR	11	// Pentagon HiRes
+#define M_LAST	12
 
 #define MAX_FONT_TABLES 0x62000
 static const int sc2lines_width = MAX_WIDTH*2;
@@ -99,6 +118,21 @@ struct videopoint
    unsigned scr_offs;
 };
 
+struct VCTR
+{
+	u32 t_next;		// next tact to be rendered
+	u32 l_pix;		// line where pixels start
+	u32 l_bord2;	// line where lower border starts
+	u32 t_pix;		// tact in line where pixels start
+	u32 t_bord2;	// tact in line where right border start
+	u32	mode;		// renderer mode
+	u32	mode_next;	// renderer mode, delayed to the start of the line
+	u32	vptr;		// address in videobuffer
+	u32	vptr_pix;	// address in videobuffer of 1st pixel (used to render TS)
+	u32	xctr;		// videocontroller X counter
+	u32	yctr;		// videocontroller Y counter
+};
+
 struct AtmVideoController
 {
     struct ScanLine
@@ -111,7 +145,7 @@ struct AtmVideoController
 
     ScanLine Scanlines[256]; // параметры 56 надбордерных сканлиний и 200 растровых сканлиний
 
-    // Если инкременты видеоадреса происходят до фактической отрисовки сканлинии - 
+    // Если инкременты видеоадреса происходят до фактической отрисовки сканлинии -
     // то они применяются к её началу и сохраняются в соответствующем поле .offset этой сканлинии.
     //
     // Если инкременты видеоадреса происходят в момент отрисовки растра или сразу за ним -
@@ -126,6 +160,7 @@ extern AtmVideoController AtmVideoCtrl;
 
 static const int rb2_offs = MAX_HEIGHT*MAX_WIDTH_P;
 static const int sizeof_rbuf = rb2_offs*(MAX_BUFFERS+2);
+static const int sizeof_vbuf = VID_HEIGHT*VID_WIDTH;
 #ifdef CACHE_ALIGNED
 extern CACHE_ALIGNED unsigned char rbuf[sizeof_rbuf];
 #else // __declspec(align) not available, force QWORD align with old method
@@ -146,10 +181,13 @@ extern unsigned char * const rbuf_s; // frames to mix with noflic and resampler 
 extern unsigned vmode;  // what are drawing: 0-not visible, 1-border, 2-screen
 extern videopoint *vcurr;
 
+
+// functions
 void set_video();
 void apply_video();
 void paint_scr(char alt); // alt=0/1 - main/alt screen, alt=2 - ray-painted
 void update_screen();
+void update_screen1();	// !!! delete it!
 void video_timing_tables();
 void pixel_tables();
 void video_color_tables();
@@ -157,3 +195,4 @@ void video_permanent_tables();
 void init_frame();
 void flush_frame();
 void load_spec_colors();
+void init_raster();

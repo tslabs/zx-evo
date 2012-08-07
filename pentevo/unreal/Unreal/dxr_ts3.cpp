@@ -33,9 +33,7 @@ void line_ts3_32(u8 *dst, u8 *src, u8 *font, int src_offset)
 void rend1_ts3(u8 *dst, unsigned pitch, int y)
 {
    u8 *dst2 = dst + (temp.ox - 640) * temp.obpp / 16;
-   // !!! temporary dirty hack
-   // int offs = (temp.scy == 300) ? 60 : (temp.scy == 240) ? 20 : 0;
-   int offs = (temp.scy == 300) ? 40 : (temp.scy == 240) ? 0 : 0;
+   int offs = (conf.bordersize == 2) ? 40 : (temp.scy == 240) ? 0 : 0;   // !!! temporary dirty hack
    int mul = (temp.oy > temp.scy) ? 2 : 1;
 
    if (temp.scy > 200)

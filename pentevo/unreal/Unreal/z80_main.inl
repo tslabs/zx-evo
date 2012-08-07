@@ -281,4 +281,5 @@ void z80loop()
 			}
 		}
 	}
+	update_screen();
 }

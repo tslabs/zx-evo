@@ -11,12 +11,31 @@
 #include "config.h"
 #include "util.h"
 
+const int l_pix[5]		= {  80,  76,  56,  32,  16 };		// first pixel line
+const int l_bord2[5]	= { 272, 276, 296, 320, 320 };		// first lower border line
+const int t_pix[5]		= {  70,  54,  54,  44,  32 };			// first pixel tact
+const int t_bord2[5]	= { 198, 214, 214, 224, 224 };			// first right border tact
+const int v_mode[M_LAST]	= { M_ZX
+							, M_TS16
+							, M_TS256
+							, M_TSTX
+							, M_ATM16
+							, M_ATMHR
+							, M_ATMTX
+							, M_ATMTL
+							, M_PMC
+							, M_P16
+							, M_PHR };
+
 #ifdef CACHE_ALIGNED
 CACHE_ALIGNED unsigned char rbuf[sizeof_rbuf];
 #else // __declspec(align) not available, force QWORD align with old method
 __int64 rbuf__[sizeof_rbuf/sizeof(__int64)];
 unsigned char * const rbuf = (unsigned char*)rbuf__;
 #endif
+
+CACHE_ALIGNED u32 vbuf[sizeof_vbuf];
+VCTR vid;
 
 unsigned char * const rbuf_s = rbuf + rb2_offs; // frames to mix with noflic and resampler filters
 unsigned char * const save_buf = rbuf_s + rb2_offs*MAX_BUFFERS; // used in monitor
@@ -697,14 +716,227 @@ void paint_scr(char alt) // alt=0/1 - main/alt screen, alt=2 - ray-painted
       update_screen();
       clear_until_ray();
    } else {
+	   // !!! here need to handle comp.ts.vpage somehow, now it's unhandled
       if (alt) comp.p7FFD ^= 8, set_banks();
       draw_screen();
       if (alt) comp.p7FFD ^= 8, set_banks();
    }
 }
 
-// Вызывается при записи в видеопамять нового значения
+// Draws pixels of border
+void draw_border(int n)
+{
+	vid.t_next += n;
+
+	for (; n > 0; n--)
+	{
+		u32 p0 = temp.tspal_32[comp.ts.border];
+		
+		vbuf[vid.vptr++] = p0;
+		vbuf[vid.vptr++] = p0;
+		vbuf[vid.vptr++] = p0;
+		vbuf[vid.vptr++] = p0;
+	}
+}
+
+// Sinclair screen
+void draw_zx(int n)
+{
+	u32 g = ((vid.yctr & 0x07) << 8) + ((vid.yctr & 0x38) << 2) + ((vid.yctr & 0xC0) << 5) + (vid.xctr & 0x1F);
+	u32 a = ((vid.yctr & 0xF8) << 2) + (vid.xctr & 0x1F) + 0x1800;
+	u8 *scr = RAM_BASE_M + PAGE * comp.ts.vpage;
+	
+	for (; n > 0; n -= 4, vid.t_next += 4, vid.xctr++, g++, a++)
+	{
+		u8 p = scr[g];	// pixels
+		u8 c = scr[a];	// attributes
+		u32 b = (c & 0x40) >> 3;
+		u32 p0 = temp.tspal_32[(comp.ts.palsel.i.gpal << 4) | b | ((c >> 3) & 0x07)];	// color for 'PAPER'
+		u32 p1 = temp.tspal_32[(comp.ts.palsel.i.gpal << 4) | b | (c & 0x07)];			// color for 'INK'
+		
+		vbuf[vid.vptr++] = ((p << 1) & 0x100) ? p1 : p0;
+		vbuf[vid.vptr++] = ((p << 1) & 0x100) ? p1 : p0;
+		vbuf[vid.vptr++] = ((p << 2) & 0x100) ? p1 : p0;
+		vbuf[vid.vptr++] = ((p << 2) & 0x100) ? p1 : p0;
+		vbuf[vid.vptr++] = ((p << 3) & 0x100) ? p1 : p0;
+		vbuf[vid.vptr++] = ((p << 3) & 0x100) ? p1 : p0;
+		vbuf[vid.vptr++] = ((p << 4) & 0x100) ? p1 : p0;
+		vbuf[vid.vptr++] = ((p << 4) & 0x100) ? p1 : p0;
+		vbuf[vid.vptr++] = ((p << 5) & 0x100) ? p1 : p0;
+		vbuf[vid.vptr++] = ((p << 5) & 0x100) ? p1 : p0;
+		vbuf[vid.vptr++] = ((p << 6) & 0x100) ? p1 : p0;
+		vbuf[vid.vptr++] = ((p << 6) & 0x100) ? p1 : p0;
+		vbuf[vid.vptr++] = ((p << 7) & 0x100) ? p1 : p0;
+		vbuf[vid.vptr++] = ((p << 7) & 0x100) ? p1 : p0;
+		vbuf[vid.vptr++] = ((p << 8) & 0x100) ? p1 : p0;
+		vbuf[vid.vptr++] = ((p << 8) & 0x100) ? p1 : p0;
+	}
+}
+
+// TS text screen
+void draw_tstx(int n)
+{
+	vid.xctr &= 0x7F;
+	u32 s = ((vid.yctr & 0xF8) << 5);
+	u8 *scr = RAM_BASE_M + PAGE * comp.ts.vpage;
+	u8 *fnt = RAM_BASE_M + PAGE * (comp.ts.vpage ^ 0x01);
+	
+	for (; n > 0; n -= 2, vid.t_next += 2)
+	{
+		u8 a = scr[s + vid.xctr + 0x80];
+		u8 p = fnt[(vid.yctr & 7) + (scr[s + vid.xctr++] << 3)]; vid.xctr &= 0x7F;
+		u32 p0 = temp.tspal_32[(comp.ts.palsel.i.gpal << 4) | ((a >> 4) & 0x0F)];	// color for 'PAPER'
+		u32 p1 = temp.tspal_32[(comp.ts.palsel.i.gpal << 4) | (a & 0x0F)];			// color for 'INK'
+		
+		vbuf[vid.vptr++] = ((p << 1) & 0x100) ? p1 : p0;
+		vbuf[vid.vptr++] = ((p << 2) & 0x100) ? p1 : p0;
+		vbuf[vid.vptr++] = ((p << 3) & 0x100) ? p1 : p0;
+		vbuf[vid.vptr++] = ((p << 4) & 0x100) ? p1 : p0;
+		vbuf[vid.vptr++] = ((p << 5) & 0x100) ? p1 : p0;
+		vbuf[vid.vptr++] = ((p << 6) & 0x100) ? p1 : p0;
+		vbuf[vid.vptr++] = ((p << 7) & 0x100) ? p1 : p0;
+		vbuf[vid.vptr++] = ((p << 8) & 0x100) ? p1 : p0;
+	}
+}
+
+// TS 16c screen
+void draw_ts16(int n)
+{
+	u32 s = (vid.yctr << 8);
+	u8 *scr = RAM_BASE_M + PAGE * (comp.ts.vpage & 0xF8);
+	
+	for (; n > 0; n -= 1, vid.t_next += 1)
+	{
+		u8 p = scr[s + vid.xctr++]; vid.xctr &= 0xFF;
+		u32 p0 = temp.tspal_32[(comp.ts.palsel.i.gpal << 4) | ((p >> 4) & 0x0F)];
+		u32 p1 = temp.tspal_32[(comp.ts.palsel.i.gpal << 4) | (p & 0x0F)];
+		
+		vbuf[vid.vptr++] = p0;
+		vbuf[vid.vptr++] = p0;
+		vbuf[vid.vptr++] = p1;
+		vbuf[vid.vptr++] = p1;
+	}
+}
+
+// TS 256c screen
+void draw_ts256(int n)
+{
+	u32 s = (vid.yctr << 9);
+	u8 *scr = RAM_BASE_M + PAGE * (comp.ts.vpage & 0xF0);
+	
+	for (; n > 0; n -= 1, vid.t_next += 1)
+	{
+		u32 p = temp.tspal_32[scr[s + vid.xctr++]];  vid.xctr &= 0x1FF;
+		vbuf[vid.vptr++] = p;
+		vbuf[vid.vptr++] = p;
+		p = temp.tspal_32[scr[s + vid.xctr++]]; vid.xctr &= 0x1FF;
+		vbuf[vid.vptr++] = p;
+		vbuf[vid.vptr++] = p;
+	}
+}
+
+// Draws number of pixel of graphics in current video mode format
+void draw_pixels(int n)
+{
+	switch (vid.mode)
+	{
+	case M_ZX:
+		{
+			draw_zx(n);
+			break;
+		}
+	case M_TSTX:
+		{
+			draw_tstx(n);
+			break;
+		}
+	case M_TS16:
+		{
+			draw_ts16(n);
+			break;
+		}
+	case M_TS256:
+		{
+			draw_ts256(n);
+			break;
+		}
+	case M_TSBRD:
+		{
+			draw_border(n);
+			break;
+		}
+	}
+}
+
+void draw_pixel_line(int n)
+{
+	int m;
+	u32 t;
+	u32 tact = vid.t_next % VID_TACTS;
+	
+	if (!tact)		// start of line
+	{
+		vid.xctr = comp.ts.g_offs.x.h;
+		vid.yctr++;
+		// vid.mode = vid.mode_next;
+	}
+	
+	while (n > 0)
+	{
+		
+		if (tact < vid.t_pix)
+		// left border
+		{
+			m = min((u32)n, vid.t_pix - tact);
+			draw_border(m); n -= m; tact += m;
+			vid.vptr_pix = vid.vptr;
+		}
+
+		else if (tact < vid.t_bord2)
+		// pixels & TS
+		{
+			m = min((u32)n, vid.t_bord2 - tact);
+			t = vid.t_next;
+			draw_pixels(m);
+			t = vid.t_next - t; n -= t; tact += t;
+			if (tact = vid.t_bord2)
+			{
+				// draw_ts();
+			}
+		}
+
+		else
+		// right border
+		{
+			m = min((u32)n, VID_TACTS - tact);
+			draw_border(m);
+			n -= m; tact += m;
+		}
+	}
+}
+
+// Draws raster till current tact
 void update_screen()
+{
+	u32 line;
+	u32 n;
+	// update_screen1();		// legacy video renderer
+
+	
+	while (vid.t_next < min(cpu.t, VID_TACTS * VID_LINES))		// iterate until current CPU tact or to the frame end
+	{
+		line = (vid.t_next / VID_TACTS);
+		n = min(cpu.t - vid.t_next, VID_TACTS - (vid.t_next % VID_TACTS));
+		
+		if ((line < vid.l_pix) || (line >= vid.l_bord2))
+			draw_border(n);
+		else
+			draw_pixel_line(n);
+	}
+}
+
+// Вызывается при записи в видеопамять нового значения
+void update_screen1()
 {
    unsigned last_t = (cpu.t + temp.border_add) & temp.border_and;
    unsigned t = prev_t;
@@ -721,7 +953,7 @@ void update_screen()
 
 mode0: // not visible
    {
-      vmode = 1;
+     vmode = 1;
       t = vcurr->next_t;
       vcurr++;
       if (t >= last_t)
@@ -785,8 +1017,35 @@ mode2: // screen
    }
 }
 
+void init_raster()
+{
+   if (conf.mem_model == MM_TSL)
+   {
+		vid.l_pix = l_pix[comp.ts.vconf.i.rres];
+		vid.l_bord2 = l_bord2[comp.ts.vconf.i.rres];
+		vid.t_pix = t_pix[comp.ts.vconf.i.rres];
+		vid.t_bord2 = t_bord2[comp.ts.vconf.i.rres];
+		vid.mode = comp.ts.vconf.i.nogfx ? M_TSBRD : comp.ts.vconf.i.vmode;
+   }
+
+   else
+   {
+		vid.l_pix = l_pix[0];
+		vid.l_bord2 = l_bord2[0];
+		vid.t_pix = t_pix[0];
+		vid.t_bord2 = t_bord2[0];
+		vid.mode = 0;
+   }
+}
+
 void init_frame()
 {
+   // TS video
+   vid.t_next = 0;
+   vid.vptr = 0;
+   vid.yctr = comp.ts.g_offs.y.h - 1;
+   init_raster();
+
    // recreate colors with flash attribute
    unsigned char frame = (unsigned char)comp.frame_counter;
    if (!(frame & 15) /* && !conf.flashcolor */ )
@@ -824,7 +1083,7 @@ void init_frame()
            AtmVideoCtrl.PrepareFrameATM1( (comp.aFE >> 5) & 3 );
 
        }
-       
+
       // if border update disabled, dont show anything on zx-screen
       if (!conf.updateb)
           return;
