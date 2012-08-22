@@ -146,9 +146,9 @@ void set_banks()
 
       case MM_TSL:
 	  {
-		if (comp.ts.memconf.i.w0_ram)
+		if (comp.ts.w0_ram)
 		// RAM at #0000
-			if (comp.ts.memconf.i.w0_map_n)
+			if (comp.ts.w0_map_n)
 			// no map
 				bank0 = RAM_BASE_M + PAGE * comp.ts.page0;
 			else
@@ -163,7 +163,7 @@ void set_banks()
 			}
 		else
 		// ROM at #0000
-			if (comp.ts.memconf.i.w0_map_n)
+			if (comp.ts.w0_map_n)
 			// no map
 				if (comp.ts.page0 & 0x02)
 					bank0 = (comp.ts.page0 & 0x01) ? base_sos_rom : base_128_rom;

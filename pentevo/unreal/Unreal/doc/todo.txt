@@ -1,23 +1,42 @@
-Limitations:
--------------
+
+Tests:
+- GSZ80: check it on TheLink
+- check all places where cpu.t or cpu->t used
 
 Bugs:
-- Bugs with procedures using conf.bordersize
-- Border bug in BallDreams-2 when NumLock is ON
-- INT is shifted 1 tact to right
-- Wrong 512k lock
+- TR-DOS doesn't work with 'No Delays' option
+- Bugs with legacy procedures using conf.bordersize
+- bug in DEMO001 when pressing Enter (similar to that on H/W but much more often)
+- Border bug in BallDreams-2 when NumLock is ON (WTF?)
 - Incorrect exit from DEBUG with multiple INTs
 - Incorrect DOS on/off behaviour with regard to RAM at #0000 (MEMCONFIG)
 
 Missing features:
-- All legacy renderers disabled
-- No other videomodes
-- No leds
-- No NoFlic
-- No TS Engine
-- No Turbo
-- No VDOS
+- line-delayed ports:
+		TSConfig
+		T0XOffsL
+		T0XOffsH
+		T0YOffsL
+		T0YOffsH
+		T1XOffsL
+		T1XOffsH
+		T1YOffsL
+		T1YOffsH
+		TMPage
+		T0GPage
+		T1GPage
+		SGPage
+- legacy renderers
+- other clones videomodes
+- leds
+- NoFlic
+- TS Engine
+- Turbo for Baseconf
+- VDOS
 
 To Do:
-------
+- Re-factor multiplier to the cputact macro
 - Save settings to .ini
+
+X-factors:
+- Regular lags/glitches in when Process Explorer ON

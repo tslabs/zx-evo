@@ -1,6 +1,5 @@
 #pragma once
 
-
 // TS ext port #AF registers
 #define		TSW_VCONF		0x00
 #define		TSW_VPAGE       0x01
@@ -53,11 +52,9 @@
 #define		TSR_PAGE3       0x13
 #define		TSR_DMASTATUS	0x27
 
-
 // FMAPS
 #define		TSF_CRAM		0x00
 #define		TSF_SFILE		0x01
-
 
 // DMA devices
 #define		DMA_RAM			0x01
@@ -67,25 +64,29 @@
 
 typedef struct {
 
+// -- video FPGA memories --
+	u16 cram[256];
+	u16 sfile[256];
+
 // -- system --
 	union {
+		u8 sysconf;
 		struct {
 			u8 zclk:2;
-			u8 _p0:1;
+			u8 reserved_00:1;
 			u8 ayclk:2;
-			u8 _p1:3;
-		} i;
-		u8 b;
-	} sysconf;
+			u8 reserved_01:3;
+		};
+	} ;
 
 	u8 hsint;
 	union {
+		u16 vsint;
 		struct {
-			u16 l:8;
-			u16 h:1;
-		} b;
-		u16 h;
-	} vsint;
+			u8 vsintl:8;
+			u8 vsinth:1;
+		};
+	} ;
 
 	u8 im2vect;
 	u8 fddvirt;
@@ -93,27 +94,32 @@ typedef struct {
 
 
 // -- video --
+	u8 vpage;
+	u8 vpage_d;		// *_d - line-delayed
+	u8 tmpage;
+	u8 tmpage_d;
+	u8 t0gpage;
+	u8 t0gpage_d;
+	u8 t1gpage;
+	u8 t1gpage_d;
+	u8 sgpage;
+	u8 sgpage_d;
+	u8 border;
+	u8 g_offsy_updated;
 
-	// video configuration
 	union {
+		u8 vconf;
 		struct {
 			u8 vmode:2;
-			u8 _p:3;
+			u8 reserved_02:3;
 			u8 nogfx:1;
 			u8 rres:2;
-		} i;
-		u8 b;
-	} vconf;
+		};
+	};
+	u8 vconf_d;
 
-	u8 vpage;
-	
-	// TS configuration
-	u8 tmpage;
-	u8 t0gpage;
-	u8 t1gpage;
-	u8 sgpage;
-	
 	union {
+		u8 tsconf;
 		struct {
 			u8 t0ys_en:1;
 			u8 t1ys_en:1;
@@ -123,99 +129,129 @@ typedef struct {
 			u8 t0_en:1;
 			u8 t1_en:1;
 			u8 s_en:1;
-		} i;
-		u8 b;
-	} tsconf;
+		};
+	};
+	u8 tsconf_d;
 
-	// palette
 	union {
+		u8 palsel;
 		struct {
 			u8 gpal:4;
 			u8 t0pal:2;
 			u8 t1pal:2;
-		} i;
-		u8 b;
-	} palsel;
-
-	// offsets
-typedef struct {
-	union {
-		struct {
-			u16 l:8;
-			u16 h:1;
-		} b;
-		u16 h;
-	} x;
+		};
+	} ;
+	u8 palsel_d;
 
 	union {
+		u16 g_offsx;
 		struct {
-			u16 l:8;
-			u16 h:1;
-		} b;
-		u16 h;
-	} y;
-} OFFS_t;
+			u8 g_offsxl:8;
+			u8 g_offsxh:1;
+		};
+	};
 
-	OFFS_t g_offs;
-	OFFS_t t0_offs;
-	OFFS_t t1_offs;
+	union {
+		u16 g_offsx_d;
+		struct {
+			u8 g_offsxl_d:8;
+			u8 g_offsxh_d:1;
+		};
+	};
 
-	// other
-	u8 border;
+	union {
+		u16 g_offsy;
+		struct {
+			u8 g_offsyl:8;
+			u8 g_offsyh:1;
+		};
+	};
 
+	union {
+		u16 t0_offsx;
+		struct {
+			u8 t0_offsxl:8;
+			u8 t0_offsxh:1;
+		};
+	};
 
-// -- video FPGA memories --
-	u16 cram[256];
-	u16 sfile[256];
+	union {
+		u16 t0_offsy;
+		struct {
+			u8 t0_offsyl:8;
+			u8 t0_offsyh:1;
+		};
+	};
 
+	union {
+		u16 t1_offsx;
+		struct {
+			u8 t1_offsxl:8;
+			u8 t1_offsxh:1;
+		};
+	};
+
+	union {
+		u16 t1_offsy;
+		struct {
+			u8 t1_offsyl:8;
+			u8 t1_offsyh:1;
+		};
+	};
 
 // -- memory --
-	union {
-		struct {
-			u8 rom128:1;	// unused in Unreal - taken from the #7FFD
-			u8 w0_we:1;
-			u8 w0_map_n:1;
-			u8 w0_ram:1;
-			u8 _p0:2;
-			u8 lck128:2;	// 00 - no lock, 01 - lock128, 1x - auto (!a13)
-		} i;
-		u8 b;
-	} memconf;
-
 	u8 page0;
 	u8 page1;
 	u8 page2;
 	u8 page3;
 
 	union {
+		u8 memconf;
 		struct {
-			u8 addr:4;
-			u8 fm_en:1;
-		} i;
-		u8 b;
-	} fmaddr;
+			u8 rom128:1;	// unused in Unreal - taken from the #7FFD
+			u8 w0_we:1;
+			u8 w0_map_n:1;
+			u8 w0_ram:1;
+			u8 reserved_03:2;
+			u8 lck128:2;	// 00 - no lock, 01 - lock128, 1x - auto (!a13)
+		};
+	};
 
+	union {
+		u8 fmaddr;
+		struct {
+			u8 fm_addr:4;
+			u8 fm_en:1;
+		};
+	} ;
 
 // -- dma --
-typedef union {
-	struct {
-		u32 l:8;
-		u32 h:6;
-		u32 x:8;
-	} b;
-	u32 w;
-} ADDR_t;
-
-	ADDR_t dmasaddr;
-	ADDR_t dmadaddr;
-
 	u8 dmalen;
 	u8 dmanum;
+
+	union {
+		u32 dmasaddr;
+		struct {
+			u32 dmasaddrl:8;
+			u32 dmasaddrh:6;
+			u32 dmasaddrx:8;
+		};
+	};
+
+	union {
+		u32 dmadaddr;
+		struct {
+			u32 dmadaddrl:8;
+			u32 dmadaddrh:6;
+			u32 dmadaddrx:8;
+		};
+	};
 
 } TS_t;
 
 
 typedef	union {
+	u8 ctrl;
 	struct {
 		u8 dev:3;
 		u8 asz:1;
@@ -223,10 +259,13 @@ typedef	union {
 		u8 s_algn:1;
 		u8 z80_lp:1;
 		u8 rw:1;
-	} i;
-	u8 b;
+	};
 } DMACTRL_t;
 
 
+// functions
 void update_tspal(u8);
 void dma (u8);
+
+#define ss_inc	ss = ctrl.s_algn ? ((ss & m1) | ((ss + 2) & m2)) : ((ss + 2) & 0x3FFFFF)
+#define dd_inc	dd = ctrl.d_algn ? ((dd & m1) | ((dd + 2) & m2)) : ((dd + 2) & 0x3FFFFF)

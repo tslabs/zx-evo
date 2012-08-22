@@ -4,7 +4,7 @@
 #include "draw.h"
 #include "drawnomc.h"
 
-void draw_border()
+void draw_border1()
 {
    unsigned br = comp.border_attr * 0x11001100;
    for (unsigned i = 0; i < temp.scx*temp.scy/4; i+=4)
@@ -26,10 +26,10 @@ void draw_screen()
 
    if (conf.nopaper)
    {
-       draw_border();
+       draw_border1();
        return;
    }
-//   if (comp.pEFF7 & EFF7_GIGASCREEN) { draw_border(); draw_gigascreen_no_border(); return; } //Alone Coder
+//   if (comp.pEFF7 & EFF7_GIGASCREEN) { draw_border1(); draw_gigascreen_no_border(); return; } //Alone Coder
 
    unsigned char *dst = rbuf;
    unsigned br = comp.border_attr * 0x11001100;

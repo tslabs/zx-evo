@@ -670,7 +670,7 @@ void apply_video()
    conf.framexsize = bordersizes[conf.bordersize].xsize;
    conf.framey = bordersizes[conf.bordersize].y;
    conf.frameysize = bordersizes[conf.bordersize].ysize;
-   
+
    load_ula_preset();
    temp.rflags = renders[conf.render].flags;
    if (conf.use_comp_pal && (conf.mem_model == MM_ATM710 || conf.mem_model == MM_ATM3 || conf.mem_model == MM_ATM450 || conf.mem_model == MM_PROFI))
@@ -728,37 +728,21 @@ void paint_scr(char alt) // alt=0/1 - main/alt screen, alt=2 - ray-painted
    }
 }
 
-// Draws pixels of border
-void draw_border(int n)
-{
-	vid.t_next += n;
-
-	for (; n > 0; n--)
-	{
-		u32 p0 = temp.tspal_32[comp.ts.border];
-		
-		vbuf[vid.vptr++] = p0;
-		vbuf[vid.vptr++] = p0;
-		vbuf[vid.vptr++] = p0;
-		vbuf[vid.vptr++] = p0;
-	}
-}
-
 // Sinclair screen
 void draw_zx(int n)
 {
 	u32 g = ((vid.yctr & 0x07) << 8) + ((vid.yctr & 0x38) << 2) + ((vid.yctr & 0xC0) << 5) + (vid.xctr & 0x1F);
 	u32 a = ((vid.yctr & 0xF8) << 2) + (vid.xctr & 0x1F) + 0x1800;
 	u8 *scr = RAM_BASE_M + PAGE * comp.ts.vpage;
-	
+
 	for (; n > 0; n -= 4, vid.t_next += 4, vid.xctr++, g++, a++)
 	{
 		u8 p = scr[g];	// pixels
 		u8 c = scr[a];	// attributes
 		u32 b = (c & 0x40) >> 3;
-		u32 p0 = temp.tspal_32[(comp.ts.palsel.i.gpal << 4) | b | ((c >> 3) & 0x07)];	// color for 'PAPER'
-		u32 p1 = temp.tspal_32[(comp.ts.palsel.i.gpal << 4) | b | (c & 0x07)];			// color for 'INK'
-		
+		u32 p0 = temp.tspal_32[(comp.ts.gpal << 4) | b | ((c >> 3) & 0x07)];	// color for 'PAPER'
+		u32 p1 = temp.tspal_32[(comp.ts.gpal << 4) | b | (c & 0x07)];			// color for 'INK'
+
 		vbuf[vid.vptr++] = ((p << 1) & 0x100) ? p1 : p0;
 		vbuf[vid.vptr++] = ((p << 1) & 0x100) ? p1 : p0;
 		vbuf[vid.vptr++] = ((p << 2) & 0x100) ? p1 : p0;
@@ -782,17 +766,17 @@ void draw_zx(int n)
 void draw_tstx(int n)
 {
 	vid.xctr &= 0x7F;
-	u32 s = ((vid.yctr & 0xF8) << 5);
+	u32 s = ((vid.yctr & 0x1F8) << 5);
 	u8 *scr = RAM_BASE_M + PAGE * comp.ts.vpage;
 	u8 *fnt = RAM_BASE_M + PAGE * (comp.ts.vpage ^ 0x01);
-	
+
 	for (; n > 0; n -= 2, vid.t_next += 2)
 	{
 		u8 a = scr[s + vid.xctr + 0x80];
 		u8 p = fnt[(vid.yctr & 7) + (scr[s + vid.xctr++] << 3)]; vid.xctr &= 0x7F;
-		u32 p0 = temp.tspal_32[(comp.ts.palsel.i.gpal << 4) | ((a >> 4) & 0x0F)];	// color for 'PAPER'
-		u32 p1 = temp.tspal_32[(comp.ts.palsel.i.gpal << 4) | (a & 0x0F)];			// color for 'INK'
-		
+		u32 p0 = temp.tspal_32[(comp.ts.gpal << 4) | ((a >> 4) & 0x0F)];	// color for 'PAPER'
+		u32 p1 = temp.tspal_32[(comp.ts.gpal << 4) | (a & 0x0F)];			// color for 'INK'
+
 		vbuf[vid.vptr++] = ((p << 1) & 0x100) ? p1 : p0;
 		vbuf[vid.vptr++] = ((p << 2) & 0x100) ? p1 : p0;
 		vbuf[vid.vptr++] = ((p << 3) & 0x100) ? p1 : p0;
@@ -809,17 +793,37 @@ void draw_ts16(int n)
 {
 	u32 s = (vid.yctr << 8);
 	u8 *scr = RAM_BASE_M + PAGE * (comp.ts.vpage & 0xF8);
-	
-	for (; n > 0; n -= 1, vid.t_next += 1)
+	u32 t = (vid.xctr + (comp.ts.g_offsx >> 1)) & 0xFF;
+	vid.xctr += n;
+	u32 p0, p1;
+	u8 p;
+
+	if (comp.ts.g_offsx & 1)		// odd offset - left pixel
 	{
-		u8 p = scr[s + vid.xctr++]; vid.xctr &= 0xFF;
-		u32 p0 = temp.tspal_32[(comp.ts.palsel.i.gpal << 4) | ((p >> 4) & 0x0F)];
-		u32 p1 = temp.tspal_32[(comp.ts.palsel.i.gpal << 4) | (p & 0x0F)];
-		
+		n--; vid.t_next++;
+		p = scr[s + t++]; t &= 0xFF;
+		p1 = temp.tspal_32[(comp.ts.gpal << 4) | (p & 0x0F)];
+		vbuf[vid.vptr++] = p1;
+		vbuf[vid.vptr++] = p1;
+	}	
+	
+	for (; n > 0; n -= 1, vid.t_next++)
+	{
+		p = scr[s + t++]; t &= 0xFF;
+		p0 = temp.tspal_32[(comp.ts.gpal << 4) | ((p >> 4) & 0x0F)];
+		p1 = temp.tspal_32[(comp.ts.gpal << 4) | (p & 0x0F)];
 		vbuf[vid.vptr++] = p0;
 		vbuf[vid.vptr++] = p0;
 		vbuf[vid.vptr++] = p1;
 		vbuf[vid.vptr++] = p1;
+	}
+
+	if (comp.ts.g_offsx & 1)		// odd offset - right pixel
+	{
+		p = scr[s + t];
+		p0 = temp.tspal_32[(comp.ts.gpal << 4) | ((p >> 4) & 0x0F)];
+		vbuf[vid.vptr++] = p0;
+		vbuf[vid.vptr++] = p0;
 	}
 }
 
@@ -828,19 +832,34 @@ void draw_ts256(int n)
 {
 	u32 s = (vid.yctr << 9);
 	u8 *scr = RAM_BASE_M + PAGE * (comp.ts.vpage & 0xF0);
+	u32 t = (vid.xctr + comp.ts.g_offsx) & 0x1FF;
+	vid.xctr += n * 2;
 	
-	for (; n > 0; n -= 1, vid.t_next += 1)
+	for (; n > 0; n -= 1, vid.t_next++)
 	{
-		u32 p = temp.tspal_32[scr[s + vid.xctr++]];  vid.xctr &= 0x1FF;
+		u32 p = temp.tspal_32[scr[s + t++]];  t &= 0x1FF;
 		vbuf[vid.vptr++] = p;
 		vbuf[vid.vptr++] = p;
-		p = temp.tspal_32[scr[s + vid.xctr++]]; vid.xctr &= 0x1FF;
+		p = temp.tspal_32[scr[s + t++]]; t &= 0x1FF;
 		vbuf[vid.vptr++] = p;
 		vbuf[vid.vptr++] = p;
 	}
 }
 
-// Draws number of pixel of graphics in current video mode format
+void draw_border(int n)
+{
+	vid.t_next += n;
+
+	for (; n > 0; n--)
+	{
+		u32 p0 = temp.tspal_32[comp.ts.border];
+		vbuf[vid.vptr++] = p0;
+		vbuf[vid.vptr++] = p0;
+		vbuf[vid.vptr++] = p0;
+		vbuf[vid.vptr++] = p0;
+	}
+}
+
 void draw_pixels(int n)
 {
 	switch (vid.mode)
@@ -873,70 +892,80 @@ void draw_pixels(int n)
 	}
 }
 
-void draw_pixel_line(int n)
-{
-	int m;
-	u32 t;
-	u32 tact = vid.t_next % VID_TACTS;
-	
-	if (!tact)		// start of line
-	{
-		vid.xctr = comp.ts.g_offs.x.h;
-		vid.yctr++;
-		// vid.mode = vid.mode_next;
-	}
-	
-	while (n > 0)
-	{
-		
-		if (tact < vid.t_pix)
-		// left border
-		{
-			m = min((u32)n, vid.t_pix - tact);
-			draw_border(m); n -= m; tact += m;
-			vid.vptr_pix = vid.vptr;
-		}
-
-		else if (tact < vid.t_bord2)
-		// pixels & TS
-		{
-			m = min((u32)n, vid.t_bord2 - tact);
-			t = vid.t_next;
-			draw_pixels(m);
-			t = vid.t_next - t; n -= t; tact += t;
-			if (tact = vid.t_bord2)
-			{
-				// draw_ts();
-			}
-		}
-
-		else
-		// right border
-		{
-			m = min((u32)n, VID_TACTS - tact);
-			draw_border(m);
-			n -= m; tact += m;
-		}
-	}
-}
-
-// Draws raster till current tact
+// Draws raster until current tact
 void update_screen()
 {
-	u32 line;
-	u32 n;
-	// update_screen1();		// legacy video renderer
+	// update_screen1();		// legacy video renderer - scheduled to delete
 
-	
 	while (vid.t_next < min(cpu.t, VID_TACTS * VID_LINES))		// iterate until current CPU tact or to the frame end
 	{
-		line = (vid.t_next / VID_TACTS);
-		n = min(cpu.t - vid.t_next, VID_TACTS - (vid.t_next % VID_TACTS));
-		
-		if ((line < vid.l_pix) || (line >= vid.l_bord2))
+		u32 line = (vid.t_next / VID_TACTS);	// number of line in raster
+		u32 tact = vid.t_next % VID_TACTS;		// number of tact in line
+		int n = min(cpu.t - vid.t_next, VID_TACTS - tact);	// number of tacts to be rendered in this line
+
+		if (!tact)		// start of video line - reload of gfx params
+			if (comp.ts.vconf != comp.ts.vconf_d) {
+				comp.ts.vconf = comp.ts.vconf_d;
+				init_raster();
+			}
+
+		u8 b = (line < vid.l_pix) || (line >= vid.l_bord2) || (vid.mode == M_TSBRD);	// border line?
+
+		if (b)
 			draw_border(n);
 		else
-			draw_pixel_line(n);
+		{
+			if (!tact)		// start of pixel line
+			{
+				vid.xctr = 0;
+				comp.ts.g_offsx = comp.ts.g_offsx_d;			// reload X-offset
+				comp.ts.vpage = comp.ts.vpage_d;	// reload Video Page
+				comp.ts.palsel = comp.ts.palsel_d;	// reload Palette Select
+
+				if (!comp.ts.g_offsy_updated)	// was Y-offset updated?
+					vid.yctr++;					// no - just increment old
+				else
+				{
+					vid.yctr = comp.ts.g_offsy;		// yes - reload X-offset
+					comp.ts.g_offsy_updated = 0;
+				}
+			}
+
+			while (n > 0)		// draw pixel line (border + pixels + border)
+			{
+				u32 m;
+
+				if (tact < vid.t_pix)
+				// left border
+				{
+					m = min((u32)n, vid.t_pix - tact);
+					draw_border(m); n -= m; tact += m;
+					vid.vptr_pix = vid.vptr;
+				}
+
+				else if (tact < vid.t_bord2)
+				// pixels & TS
+				{
+					m = min((u32)n, vid.t_bord2 - tact);
+					u32 t = vid.t_next;
+					draw_pixels(m);
+					t = vid.t_next - t; n -= t; tact += t;
+
+					if (tact = vid.t_bord2)
+					{
+						// draw_ts();
+					}
+				}
+
+				else
+				// right border or border line
+				{
+					m = min((u32)n, VID_TACTS - tact);
+					draw_border(m);
+					n -= m; tact += m;
+				}
+			}
+		}
 	}
 }
 
@@ -1026,11 +1055,11 @@ void init_raster()
 {
    if (conf.mem_model == MM_TSL)
    {
-		vid.l_pix = l_pix[comp.ts.vconf.i.rres];
-		vid.l_bord2 = l_bord2[comp.ts.vconf.i.rres];
-		vid.t_pix = t_pix[comp.ts.vconf.i.rres];
-		vid.t_bord2 = t_bord2[comp.ts.vconf.i.rres];
-		vid.mode = comp.ts.vconf.i.nogfx ? M_TSBRD : comp.ts.vconf.i.vmode;
+		vid.l_pix = l_pix[comp.ts.rres];
+		vid.l_bord2 = l_bord2[comp.ts.rres];
+		vid.t_pix = t_pix[comp.ts.rres];
+		vid.t_bord2 = t_bord2[comp.ts.rres];
+		vid.mode = comp.ts.nogfx ? M_TSBRD : comp.ts.vmode;
    }
 
    else
@@ -1048,7 +1077,8 @@ void init_frame()
    // TS video
    vid.t_next = 0;
    vid.vptr = 0;
-   vid.yctr = comp.ts.g_offs.y.h - 1;
+   vid.yctr = comp.ts.g_offsyh - 1;
+   comp.ts.g_offsy_updated = 0;
    init_raster();
 
    // recreate colors with flash attribute
@@ -1062,7 +1092,7 @@ void init_frame()
    if (temp.vidblock)
        return;
 
-/* [vv] Отключен, т.к. этот бит использется для DDp scroll
+/* [vv] Отключен, т.к. этот бит использyется для DDp scroll
    // AlCo384 - no border/paper rendering
    if (comp.pEFF7 & EFF7_384)
        return;
@@ -1120,8 +1150,8 @@ void flush_frame()
       { // MCR on, but no screen updates in last frame - use fast painter
          if (temp.base_2 /*|| (comp.pEFF7 & EFF7_GIGASCREEN)*/ /*Alone Coder*/)
              draw_screen();
-         else
-             draw_border();
+         // else
+             // draw_border();
       }
       return;
    }

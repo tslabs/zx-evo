@@ -13,15 +13,15 @@
 
 void out(unsigned port, unsigned char val)
 {
-   
+
    port &= 0xFFFF;
    u8 p1 = (port & 0xFF);
    u8 p2 = ((port >>8) & 0xFF);
    brk_port_out = port; brk_port_val = val;
-	
+
 	 // if (p1 == 0xFD)
 		// printf("out (%04X), %02X\n", port, val);
-   
+
    #ifdef MOD_GS
    // 10111011 | BB
    // 10110011 | B3
@@ -100,239 +100,246 @@ void out(unsigned port, unsigned char val)
    {
        // TS-Config extensions ports
 	   switch (p2) {
-	   
+
+		// system
+			case TSW_SYSCONF: {
+				comp.ts.sysconf = val;
+				switch(comp.ts.zclk) {
+					case 0: turbo(1); break;
+					case 1: turbo(2); break;
+					case 2: turbo(3); break;
+					case 3: turbo(3.5); break;
+				}
+				break;
+			}
+
+			case TSW_HSINT: {
+				comp.ts.hsint = val;
+				comp.intpos = ((comp.ts.hsint > (conf.t_line-1)) || (comp.ts.vsinth > 319)) ? -1 : (comp.ts.vsint * conf.t_line + comp.ts.hsint);
+				cpu.intnew = true;
+				break;
+			}
+			case TSW_VSINTL: {
+				comp.ts.vsintl = val;
+				comp.intpos = ((comp.ts.hsint > (conf.t_line-1)) || (comp.ts.vsinth > 319)) ? -1 : (comp.ts.vsint * conf.t_line + comp.ts.hsint);
+				cpu.intnew = true;
+				break;
+			}
+			case TSW_VSINTH: {
+				comp.ts.vsinth = val;
+				comp.intpos = ((comp.ts.hsint > (conf.t_line-1)) || (comp.ts.vsinth > 319)) ? -1 : (comp.ts.vsint * conf.t_line + comp.ts.hsint);
+				cpu.intnew = true;
+				break;
+			}
 	    // memory
 			case TSW_MEMCONF: {
-				comp.ts.memconf.b = val;
+				comp.ts.memconf = val;
 				comp.p7FFD &= ~0x10;
 				comp.p7FFD |= (val & 1) << 4;
 				set_banks();
 				break;
 			}
-			
+
 			case TSW_PAGE0: {
 				comp.ts.page0 = val;
 				set_banks();
 				break;
 			}
-			
+
 			case TSW_PAGE1: {
 				comp.ts.page1 = val;
 				set_banks();
 				break;
 			}
-			
+
 			case TSW_PAGE2: {
 				comp.ts.page2 = val;
 				set_banks();
 				break;
 			}
-			
+
 			case TSW_PAGE3: {
 				comp.ts.page3 = val;
 				set_banks();
 				break;
 			}
-			
+
 			case TSW_FMADDR: {
-				comp.ts.fmaddr.b = val;
+				comp.ts.fmaddr = val;
 				break;
 			}
-		
+
 		// video
 			case TSW_VCONF: {
 				update_screen();
-				comp.ts.vconf.b = val;
-				init_raster();
+				comp.ts.vconf_d = val;
 				break;
 			}
-			
+
 			case TSW_VPAGE: {
 				update_screen();
-				comp.ts.vpage = val;
+				comp.ts.vpage_d = val;
 				set_banks();
 				break;
 			}
-			
+
 			case TSW_TMPAGE: {
 				update_screen();
 				comp.ts.tmpage = val;
 				break;
 			}
-			
+
 			case TSW_T0GPAGE: {
 				update_screen();
 				comp.ts.t0gpage = val;
 				break;
 			}
-			
+
 			case TSW_T1GPAGE: {
 				update_screen();
 				comp.ts.t1gpage = val;
 				break;
 			}
-			
+
 			case TSW_SGPAGE: {
 				update_screen();
 				comp.ts.sgpage = val;
 				break;
 			}
-			
+
 			case TSW_BORDER: {
 				update_screen();
 				comp.ts.border = val;
 				break;
 			}
-			
+
 			case TSW_TSCONF: {
 				update_screen();
-				comp.ts.tsconf.b = val;
+				comp.ts.tsconf = val;
 				break;
 			}
-			
+
 			case TSW_PALSEL: {
 				update_screen();
-				comp.ts.palsel.b = val;
+				comp.ts.palsel_d = val;
 				break;
 			}
-			
+
 			case TSW_GXOFFSL: {
 				update_screen();
-				comp.ts.g_offs.x.b.l = val;
+				comp.ts.g_offsxl_d = val;
 				break;
 			}
-			
+
 			case TSW_GXOFFSH: {
 				update_screen();
-				comp.ts.g_offs.x.b.h = val & 1;
+				comp.ts.g_offsxh_d = val & 1;
 				break;
 			}
-			
+
 			case TSW_GYOFFSL: {
 				update_screen();
-				comp.ts.g_offs.y.b.l = val;
+				comp.ts.g_offsyl = val;
+				comp.ts.g_offsy_updated = 1;
 				break;
 			}
-			
+
 			case TSW_GYOFFSH: {
 				update_screen();
-				comp.ts.g_offs.y.b.h = val & 1;
+				comp.ts.g_offsyh = val & 1;
+				comp.ts.g_offsy_updated = 1;
 				break;
 			}
-			
+
 			case TSW_T0XOFFSL: {
 				update_screen();
-				comp.ts.t0_offs.x.b.l = val;
+				comp.ts.t0_offsxl = val;
 				break;
 			}
-			
+
 			case TSW_T0XOFFSH: {
 				update_screen();
-				comp.ts.t0_offs.x.b.h = val & 1;
+				comp.ts.t0_offsxh = val & 1;
 				break;
 			}
-			
+
 			case TSW_T0YOFFSL: {
 				update_screen();
-				comp.ts.t0_offs.y.b.l = val;
+				comp.ts.t0_offsyl = val;
 				break;
 			}
-			
+
 			case TSW_T0YOFFSH: {
 				update_screen();
-				comp.ts.t0_offs.y.b.h = val & 1;
+				comp.ts.t0_offsyh = val & 1;
 				break;
 			}
-			
+
 			case TSW_T1XOFFSL: {
 				update_screen();
-				comp.ts.t1_offs.x.b.l = val;
+				comp.ts.t1_offsxl = val;
 				break;
 			}
-			
+
 			case TSW_T1XOFFSH: {
 				update_screen();
-				comp.ts.t1_offs.x.b.h = val & 1;
+				comp.ts.t1_offsxh = val & 1;
 				break;
 			}
-			
+
 			case TSW_T1YOFFSL: {
 				update_screen();
-				comp.ts.t1_offs.y.b.l = val;
+				comp.ts.t1_offsyl = val;
 				break;
 			}
-			
+
 			case TSW_T1YOFFSH: {
 				update_screen();
-				comp.ts.t1_offs.y.b.h = val & 1;
+				comp.ts.t1_offsyh = val & 1;
 				break;
 			}
-		
-		// system
-			case TSW_SYSCONF: {
-				comp.ts.sysconf.b = val;
-				break;
-			}
-			
-			case TSW_HSINT: {
-				comp.ts.hsint = val;
-				cpu.intpos = ((comp.ts.hsint > 223) || (comp.ts.vsint.h > 319)) ? -1 : (comp.ts.vsint.h * 224 + comp.ts.hsint);
-				cpu.intnew = true;
-				break;
-			}
-			case TSW_VSINTL: {
-				comp.ts.vsint.b.l = val;
-				cpu.intpos = ((comp.ts.hsint > 223) || (comp.ts.vsint.h > 319)) ? -1 : (comp.ts.vsint.h * 224 + comp.ts.hsint);
-				cpu.intnew = true;
-				break;
-			}
-			case TSW_VSINTH: {
-				comp.ts.vsint.b.h = val;
-				cpu.intpos = ((comp.ts.hsint > 223) || (comp.ts.vsint.h > 319)) ? -1 : (comp.ts.vsint.h * 224 + comp.ts.hsint);
-				cpu.intnew = true;
-				break;
-			}
+
 		// dma
 			case TSW_DMASAL: {
-				comp.ts.dmasaddr.b.l = val &0xFE;
+				comp.ts.dmasaddrl = val &0xFE;
 				break;
 			}
-			
+
 			case TSW_DMASAH: {
-				comp.ts.dmasaddr.b.h = val & 0x3F;
+				comp.ts.dmasaddrh = val & 0x3F;
 				break;
 			}
-			
+
 			case TSW_DMASAX: {
-				comp.ts.dmasaddr.b.x = val;
+				comp.ts.dmasaddrx = val;
 				break;
 			}
-			
+
 			case TSW_DMADAL: {
-				comp.ts.dmadaddr.b.l = val &0xFE;
+				comp.ts.dmadaddrl = val &0xFE;
 				break;
 			}
-			
+
 			case TSW_DMADAH: {
-				comp.ts.dmadaddr.b.h = val & 0x3F;
+				comp.ts.dmadaddrh = val & 0x3F;
 				break;
 			}
-			
+
 			case TSW_DMADAX: {
-				comp.ts.dmadaddr.b.x = val;
+				comp.ts.dmadaddrx = val;
 				break;
 			}
-			
+
 			case TSW_DMALEN: {
 				comp.ts.dmalen = val;
 				break;
 			}
-			
+
 			case TSW_DMANUM: {
 				comp.ts.dmanum = val;
 				break;
 			}
-			
+
 			case TSW_DMACTR: {
 				dma(val);
 				update_screen();
@@ -660,7 +667,7 @@ void out(unsigned port, unsigned char val)
           new_border += ((port & 8) ^ 8);
       // if (comp.border_attr ^ new_border)
           update_screen();
-	  comp.ts.border = (comp.ts.palsel.i.gpal << 4) | (val & 7);
+	  comp.ts.border = (comp.ts.gpal << 4) | (val & 7);
       comp.border_attr = new_border;
 
       if (conf.mem_model == MM_ATM450)
@@ -751,13 +758,14 @@ set1FFD:
 
          if ((comp.p7FFD ^ val) & 0x08)
              update_screen();
+
          comp.p7FFD = val;
-		 comp.ts.vpage = (val & 8) ? 7 : 5;
+		 comp.ts.vpage = comp.ts.vpage_d = (val & 8) ? 7 : 5;
 
 		 // In TS Memory Model the actual value of #7FFD ignored, and page3 is used instead
-			if (comp.ts.memconf.i.lck128 == 0)
+			if (comp.ts.lck128 == 0)
 				comp.ts.page3 = ((val & 0xC0) >> 3) | (val & 0x07);		// no lock
-			else if (comp.ts.memconf.i.lck128 == 1)
+			else if (comp.ts.lck128 == 1)
 				comp.ts.page3 = val & 0x07;		// lock 128
 			else 	// auto
 			{
@@ -766,7 +774,7 @@ set1FFD:
 				else
 					comp.ts.page3 = val & 0x07;		// out(#FD), a = lock128
 			}
-		 
+
          set_banks();
          return;
       }
@@ -896,11 +904,11 @@ set1FFD:
                {
                   unsigned day, year;
                   char month[8];
-                  static const char months[] = "JanFebMarAprMayJunJulAugSepOctNovDec"; 
+                  static const char months[] = "JanFebMarAprMayJunJulAugSepOctNovDec";
                   sscanf(__DATE__, "%s %d %d", month, &day, &year);
                   version = day | ((strstr(months, month) - months) / 3 + 1) << 5 | (year - 2000) << 9;
                }
-               
+
                strcpy((char*)cmos + 0xF0, "UnrealSpeccy");
                *(unsigned*)(cmos + 0xFC) = version;
             }
@@ -921,7 +929,7 @@ __inline unsigned char in1(unsigned port)
 
    u8 p1 = (port & 0xFF);
    u8 p2 = ((port >>8) & 0xFF);
-   
+
    u8 tmp;
 
 /*
@@ -951,7 +959,7 @@ __inline unsigned char in1(unsigned port)
    {
        // TS-Config extensions ports
 	   switch (p2) {
-	   
+
 			case TSR_STATUS: {
 				tmp = comp.ts.pwr_up;
 				comp.ts.pwr_up = 0x00;
@@ -968,7 +976,7 @@ __inline unsigned char in1(unsigned port)
 				return 0;
 	   }
 	}
-	   
+
   if (conf.mem_model == MM_ATM3)
    {
        // Порт расширений АТМ3
@@ -1276,7 +1284,7 @@ __inline unsigned char in1(unsigned port)
    {
       unsigned mask = ((conf.mem_model == MM_ATM3) && (comp.flags & CF_DOSPORTS)) ? ~0x100 : 0xFFFF;
 	  mask = (conf.mem_model == MM_TSL) ? 0xFFFF : mask;
-	  
+
       if (port == (0xBFF7 & mask))
           return cmos_read();
    }

@@ -83,32 +83,37 @@ void reset(ROM_MODE mode)
    comp.ts.page2 = 2;
    comp.ts.page3 = 0;
 
-   comp.ts.fmaddr.b = 0;
+   comp.ts.fmaddr = 0;
    comp.ts.im2vect = 255;
    comp.ts.fddvirt = 0;
-   comp.ts.sysconf.b = 1;		// turbo 7MHz
+   
+   comp.ts.sysconf = 1;		// turbo 7MHz for TS-Conf
+   if (conf.mem_model == MM_TSL)
+		turbo(2);		// turbo 2x (7MHz) for TS-Conf
+   else
+		turbo(1);		// turbo 1x (3.5MHz) for all other clones
    
    comp.ts.hsint = 2;
-   comp.ts.vsint.h = 0;
-   cpu.intpos = 2;	// pentagon standard
+   comp.ts.vsint = 0;
+   comp.intpos = 2;	// pentagon standard
 
-   comp.ts.vpage = 5;
-   comp.ts.vconf.b = 0;
-   comp.ts.tsconf.b = 0;
-   comp.ts.palsel.b = 15;
-   comp.ts.g_offs.x.h = 0;
-   comp.ts.g_offs.y.h = 0;
-   comp.ts.t0_offs.x.h = 0;
-   comp.ts.t0_offs.y.h = 0;
-   comp.ts.t1_offs.x.h = 0;
-   comp.ts.t1_offs.y.h = 0;
+   comp.ts.vpage = comp.ts.vpage_d = 5;
+   comp.ts.vconf = comp.ts.vconf_d = 0;
+   comp.ts.tsconf = 0;
+   comp.ts.palsel = comp.ts.palsel_d = 15;
+   comp.ts.g_offsxh = 0;
+   comp.ts.g_offsyh = 0;
+   comp.ts.t0_offsxh = 0;
+   comp.ts.t0_offsyh = 0;
+   comp.ts.t1_offsxh = 0;
+   comp.ts.t1_offsyh = 0;
 
    switch (mode)
    {
-	case RM_SYS: {comp.ts.memconf.b = 4; break;}
-	case RM_DOS: {comp.ts.memconf.b = 0; break;}
-	case RM_128: {comp.ts.memconf.b = 0; break;}
-	case RM_SOS: {comp.ts.memconf.b = 0; break;}
+	case RM_SYS: {comp.ts.memconf = 4; break;}
+	case RM_DOS: {comp.ts.memconf = 0; break;}
+	case RM_128: {comp.ts.memconf = 0; break;}
+	case RM_SOS: {comp.ts.memconf = 0; break;}
    }
 
    comp.p00 = comp.p80FD = 0; 	// quorum

@@ -30,19 +30,21 @@ void update_tspal(u8 addr)
 void dma (u8 val)
 {
 	DMACTRL_t ctrl;
-	ctrl.b = val;
+	ctrl.ctrl = val;
 
 	u8 tmp;
 	int i, j;
 	u16 *s, *d;
 	u32 ss, dd;
+	u32 m1 = ctrl.asz ? 0x3FFE00 : 0x3FFF00;
+	u32 m2 = ctrl.asz ? 0x1FF : 0xFF;
 
 	for (i=0; i<(comp.ts.dmanum + 1); i++)
 	{
-		ss = comp.ts.dmasaddr.w;
-		dd = comp.ts.dmadaddr.w;
+		ss = comp.ts.dmasaddr;
+		dd = comp.ts.dmadaddr;
 
-		switch (ctrl.i.dev)
+		switch (ctrl.dev)
 		{
 			// RAM to RAM
 			case DMA_RAM:
@@ -52,13 +54,12 @@ void dma (u8 val)
 				s = (u16*)(ss + RAM_BASE_M);
 				d = (u16*)(dd + RAM_BASE_M);
 				*d = *s;
-				ss = (ss + 2) & 0x3FFFFF;
-				dd = (dd + 2) & 0x3FFFFF;
+				ss_inc; dd_inc;
 				}
 				break;
 			}
-			case DMA_CRAM:
 			// RAM to CRAM (palette)
+			case DMA_CRAM:
 			{
 				for (j=0; j<(comp.ts.dmalen + 1); j++)
 				{
@@ -66,21 +67,20 @@ void dma (u8 val)
 					tmp = (dd >> 1) & 0xFF;
 					comp.ts.cram[tmp] = *s;
 					update_tspal(tmp);
-					ss = (ss + 2) & 0x3FFFFF;
-					dd = (dd + 2) & 0x3FFFFF;
+					ss_inc; dd_inc;
 				}
 				break;
 			}
 		}
 
-		if (ctrl.i.s_algn)
-			comp.ts.dmasaddr.w += ctrl.i.asz ? 512 : 256;
+		if (ctrl.s_algn)
+			comp.ts.dmasaddr += ctrl.asz ? 512 : 256;
 		else
-			comp.ts.dmasaddr.w = ss;
+			comp.ts.dmasaddr = ss;
 
-		if (ctrl.i.d_algn)
-			comp.ts.dmadaddr.w += ctrl.i.asz ? 512 : 256;
+		if (ctrl.d_algn)
+			comp.ts.dmadaddr += ctrl.asz ? 512 : 256;
 		else
-			comp.ts.dmadaddr.w = dd;
+			comp.ts.dmadaddr = dd;
 	}
 }

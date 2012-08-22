@@ -174,12 +174,12 @@ Z80INLINE void Z80FAST ddfd(Z80 *cpu, unsigned char opcode)
       // DDCBnnXX,FDCBnnXX increment R by 2, not 3!
       opcode = cpu->m1_cycle(); cpu->r_low--;
       unsigned char byte = (logic_ix_opcode[opcode])(cpu, cpu->MemIf->rm(ptr));
-      if ((opcode & 0xC0) == 0x40) { cpu->t += 8; return; } // bit n,rm
+      if ((opcode & 0xC0) == 0x40) { cputact(8); return; } // bit n,rm
 
       // select destination register for shift/res/set
       *(&cpu->c + reg_offset[opcode & 7]) = byte;
       cpu->MemIf->wm(ptr, byte);
-      cpu->t += 11;
+      cputact(11);
       return;
    }
 

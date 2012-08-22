@@ -418,6 +418,7 @@ struct COMPUTER
    unsigned char p7FFD, pFE, pEFF7, pXXXX;
    unsigned char pDFFD, pFDFD, p1FFD, pFF77;
    TS_t ts;
+   unsigned intpos;
    u8 p7EFD; // gmx
    u8 p00, p80FD; // quorum
    __int64 t_states; // inc with conf.frame by each frame
