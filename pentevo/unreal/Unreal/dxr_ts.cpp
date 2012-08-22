@@ -4,9 +4,6 @@
 #include "draw.h"
 #include "dxrend.h"
 #include "dxr_ts.h"
-#include "dxr_ts1.h"
-#include "dxr_ts2.h"
-#include "dxr_ts3.h"
 
 typedef void (*TTsRendFunc)(u8 *dst, unsigned pitch);
 
@@ -57,7 +54,7 @@ void rend_ts_small(u8 *dst, unsigned pitch)
       // temp.comp_pal_changed = 0;
    // }
 
-    switch (comp.ts.vconf.i.vmode)
+    switch (comp.ts.vmode)
     {
 		case 0:		// Sinclair
 		{
@@ -79,31 +76,4 @@ void rend_ts(u8 *dst, unsigned pitch)
 		memcpy (dst, src, pitch); dst += pitch;
 		src += VID_WIDTH * 2;
 	}
-//	dst = dst1;
-	
-	return;
-
-    switch (comp.ts.vconf.i.vmode)
-    {
-		case 0:		// Sinclair
-		{
-			rend_dbl(dst, pitch);
-			return;
-		}
-		case 1:		// 16c
-		{
-			rend_ts1(dst, pitch);
-			return;
-		}
-		case 2:		// 256c
-		{
-			rend_ts2(dst, pitch);
-			return;
-		}
-		case 3:		// Text
-		{
-			rend_ts3(dst, pitch);
-			return;
-		}
-    }
 }

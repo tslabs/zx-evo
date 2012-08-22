@@ -59,8 +59,8 @@ void wm(unsigned addr, unsigned char val)
 #endif
 
    // TS palette load
-   if ((conf.mem_model == MM_TSL) && (comp.ts.fmaddr.i.fm_en))
-		if (((addr >> 12) & 0x0F) == comp.ts.fmaddr.i.addr)
+   if ((conf.mem_model == MM_TSL) && (comp.ts.fm_en))
+		if (((addr >> 12) & 0x0F) == comp.ts.fm_addr)
 			if (addr & 1)
 			// write to FPGA RAM
 			switch ((addr >> 9) & 0x07)
@@ -117,7 +117,7 @@ Z80INLINE unsigned char m1_cycle(Z80 *cpu)
       ((comp.pEFF7 & (EFF7_384 | EFF7_4BPP)) == (EFF7_384 | EFF7_4BPP)))
        temp.offset_hscroll++;
    cpu->r_low++;// = (cpu->r & 0x80) + ((cpu->r+1) & 0x7F);
-   cpu->t += 4;
+   cputact(4);
    return rm(cpu->pc++);
 }
 
@@ -226,11 +226,11 @@ void z80loop()
 	while (cpu.t < conf.frame)
 	{
 		// INT loop
-		if (cpu.intnew && ((cpu.t - cpu.intpos) < conf.intlen))
+		if (cpu.intnew && ((cpu.t - comp.intpos + 1) < conf.intlen))
 		{
 			cpu.int_pend = true;
 			cpu.intnew = false;
-			while (cpu.int_pend && ((cpu.t - cpu.intpos) < conf.intlen))
+			while (cpu.int_pend && ((cpu.t - comp.intpos + 1) < conf.intlen))
 			{
 				try_int();
 				step1();

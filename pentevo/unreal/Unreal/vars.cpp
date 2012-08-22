@@ -1,5 +1,6 @@
 ﻿#include "std.h"
 #include "emul.h"
+#include "defs.h"
 #include "vars.h"
 #include "debug.h"
 #include "memory.h"
@@ -35,7 +36,7 @@ unsigned char in(unsigned port);
 
 Z80INLINE unsigned char m1_cycle(Z80 *cpu)
 {
-   cpu->r_low++; cpu->t += 4;
+   cpu->r_low++; cputact(4);
    return cpu->MemIf->rm(cpu->pc++);
 }
 

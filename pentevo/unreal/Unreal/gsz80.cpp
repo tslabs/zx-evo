@@ -1,5 +1,6 @@
 #include "std.h"
 #include "emul.h"
+#include "defs.h"
 #include "vars.h"
 #include "gs.h"
 #include "gsz80.h"
@@ -295,7 +296,7 @@ void __cdecl BankNames(int i, char *Name)
 
 Z80INLINE unsigned char m1_cycle(Z80 *cpu)
 {
-   cpu->r_low++; cpu->t += 4;
+   cpu->r_low++; cputact(4);
    return cpu->MemIf->rm(cpu->pc++);
 }
 

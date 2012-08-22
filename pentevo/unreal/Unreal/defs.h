@@ -19,7 +19,15 @@ typedef unsigned char (Z80FAST *LOGICFUNC)(Z80*, unsigned char byte);
 
 struct TZ80State
 {
-    unsigned t;
+   union
+   {
+		unsigned tt;
+		struct
+		{
+			unsigned t_l:8;
+			unsigned t:24;
+		};
+   };
     /*------------------------------*/
     union
     {
@@ -165,7 +173,7 @@ struct TZ80State
             unsigned char memh;
         };
     };
-    unsigned eipos, haltpos, intpos;
+    unsigned eipos, haltpos;
 	bool intnew;
     /*------------------------------*/
     unsigned char im;
@@ -185,6 +193,15 @@ struct TMemIf
 struct Z80 : public TZ80State
 {
    unsigned char tmp0, tmp1, tmp3;
+   union
+   {
+		unsigned rate;
+		struct
+		{
+			unsigned rate_l:8;
+			unsigned rate_h:24;
+		};
+   };
    unsigned short last_branch;
    unsigned trace_curs, trace_top, trace_mode;
    unsigned mem_curs, mem_top, mem_second;
@@ -236,6 +253,7 @@ struct Z80 : public TZ80State
    {
        MemIf = FastMemIf;
        tpi = 0;
+	   rate = (1 << 8);
        dbgbreak = 0;
        dbgchk = 0;
        debug_last_t = 0;
@@ -280,3 +298,8 @@ struct Z80 : public TZ80State
 #define F5 0x20
 #define ZF 0x40
 #define SF 0x80
+
+#define cputact(a)	cpu->tt += ((a) * cpu->rate)
+// #define cputact(a) cpu->t += (a)
+
+#define turbo(a)	cpu.rate = (256/(a))

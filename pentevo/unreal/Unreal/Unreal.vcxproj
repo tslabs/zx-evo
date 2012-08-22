@@ -130,7 +130,7 @@ copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)"..\rom
     <None Include="doc\rom.txt" />
     <None Include="doc\unreal_e.txt" />
     <None Include="doc\unreal_r.txt" />
-    <None Include="gsz80.inl" />
+    <None Include="gsz80.cpp" />
     <None Include="lib\bass.dll" />
     <None Include="Makefile" />
     <None Include="res\cur00000.cur" />
@@ -187,9 +187,6 @@ copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)"..\rom
     <ClCompile Include="dxr_rsm.cpp" />
     <ClCompile Include="dxr_text.cpp" />
     <ClCompile Include="dxr_ts.cpp" />
-    <ClCompile Include="dxr_ts1.cpp" />
-    <ClCompile Include="dxr_ts2.cpp" />
-    <ClCompile Include="dxr_ts3.cpp" />
     <ClCompile Include="dxr_vd.cpp" />
     <ClCompile Include="emul.cpp" />
     <ClCompile Include="emulkeys.cpp" />
@@ -325,9 +322,6 @@ copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)"..\rom
     <ClInclude Include="dxr_rsm.h" />
     <ClInclude Include="dxr_text.h" />
     <ClInclude Include="dxr_ts.h" />
-    <ClInclude Include="dxr_ts1.h" />
-    <ClInclude Include="dxr_ts2.h" />
-    <ClInclude Include="dxr_ts3.h" />
     <ClInclude Include="emul.h" />
     <ClInclude Include="emulkeys.h" />
     <ClInclude Include="emul_2203.h" />
