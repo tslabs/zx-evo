@@ -15,6 +15,20 @@ Features:
  - AY frequency (2MHz for Atari and 1MHz for Amstrad)
 
 Fixes:
+ - line-delay ports: 86 bits
+		TSConfig	8
+		T0XOffsL	8
+		T0XOffsH	1
+		T0YOffsL	8
+		T0YOffsH	1
+		T1XOffsL	8
+		T1XOffsH	1
+		T1YOffsL	8
+		T1YOffsH	1
+		TMPage		8
+		T0GPage		8
+		T1GPage		8
+		SGPage		8
  - optimize timings (negative slack on DRAM addr muxes)
  - find demo001 glitch at 7mhz bug
  - check stop times of video fetching
