@@ -185,7 +185,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy /y &quot;$(ProjectDir)lib\*.dll&quot; &quot;$(TargetDir)..&quot;&#x0D;&#x0A;copy /y &quot;$(ProjectDir)cfg\*.*&quot; &quot;$(TargetDir)..&quot;&#x0D;&#x0A;copy /y &quot;$(TargetPath)&quot; &quot;$(TargetDir)..&quot;&#x0D;&#x0A;md &quot;$(TargetDir)&quot;..\rom&#x0D;&#x0A;copy /y &quot;$(ProjectDir)cfg\rom\*.*&quot; &quot;$(TargetDir)&quot;..\rom&#x0D;&#x0A;"
+				CommandLine="copy /y &quot;$(ProjectDir)lib\*.dll&quot; &quot;$(TargetDir)&quot;&#x0D;&#x0A;copy /y &quot;$(ProjectDir)cfg\*.*&quot; &quot;$(TargetDir)&quot;&#x0D;&#x0A;md &quot;$(TargetDir)&quot;rom&#x0D;&#x0A;copy /y &quot;$(ProjectDir)cfg\rom\*.*&quot; &quot;$(TargetDir)&quot;rom&#x0D;&#x0A;copy /y &quot;$(ProjectDir)lib\*.dll&quot; &quot;$(TargetDir)..&quot;&#x0D;&#x0A;copy /y &quot;$(ProjectDir)cfg\*.*&quot; &quot;$(TargetDir)..&quot;&#x0D;&#x0A;md &quot;$(TargetDir)&quot;..\rom&#x0D;&#x0A;copy /y &quot;$(ProjectDir)cfg\rom\*.*&quot; &quot;$(TargetDir)&quot;..\rom&#x0D;&#x0A;copy /y &quot;$(TargetPath)&quot; &quot;$(TargetDir)..&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 	</Configurations>

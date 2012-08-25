@@ -111,11 +111,15 @@ copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)"rom</Command>
     </Link>
     <ProjectReference />
     <PostBuildEvent>
-      <Command>copy /y "$(ProjectDir)lib\*.dll" "$(TargetDir).."
+      <Command>copy /y "$(ProjectDir)lib\*.dll" "$(TargetDir)"
+copy /y "$(ProjectDir)cfg\*.*" "$(TargetDir)"
+md "$(TargetDir)"rom
+copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)"rom
+copy /y "$(ProjectDir)lib\*.dll" "$(TargetDir).."
 copy /y "$(ProjectDir)cfg\*.*" "$(TargetDir).."
-copy /y "$(TargetPath)" "$(TargetDir).."
 md "$(TargetDir)"..\rom
 copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)"..\rom
+copy /y "$(TargetPath)" "$(TargetDir).."
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
