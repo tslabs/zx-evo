@@ -64,13 +64,16 @@
       <PreprocessorDefinitions>_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;USE_SND_EXTERNAL_BUFFER;_DEBUG;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>std.h</PrecompiledHeaderFile>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <MultiProcessorCompilation>false</MultiProcessorCompilation>
+      <ErrorReporting>Prompt</ErrorReporting>
+      <PrecompiledHeaderFile>std.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <DelayLoadDLLs>gdiplus.dll</DelayLoadDLLs>
       <AdditionalDependencies>delayimp.lib;gdiplus.lib;kernel32.lib;user32.lib;gdi32.lib;shell32.lib;comdlg32.lib;comctl32.lib;winmm.lib;setupapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <LinkErrorReporting>PromptImmediately</LinkErrorReporting>
     </Link>
     <ProjectReference />
     <PostBuildEvent>
@@ -86,7 +89,7 @@ copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)"rom</Command>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <MultiProcessorCompilation>false</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <ExceptionHandling>false</ExceptionHandling>
@@ -96,6 +99,7 @@ copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)"rom</Command>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>std.h</PrecompiledHeaderFile>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <ErrorReporting>Prompt</ErrorReporting>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>false</GenerateDebugInformation>
@@ -103,6 +107,7 @@ copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)"rom</Command>
       <OptimizeReferences>true</OptimizeReferences>
       <DelayLoadDLLs>gdiplus.dll</DelayLoadDLLs>
       <AdditionalDependencies>delayimp.lib;gdiplus.lib;kernel32.lib;user32.lib;gdi32.lib;shell32.lib;comdlg32.lib;comctl32.lib;winmm.lib;setupapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <LinkErrorReporting>PromptImmediately</LinkErrorReporting>
     </Link>
     <ProjectReference />
     <PostBuildEvent>
@@ -115,34 +120,7 @@ copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)"..\rom
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <None Include="cfg\128.rom" />
-    <None Include="cfg\48.rom" />
-    <None Include="cfg\bootGS.rom" />
-    <None Include="cfg\Default.ini" />
-    <None Include="cfg\pentagon.rom" />
-    <None Include="cfg\Quorum.ini" />
-    <None Include="cfg\sos.l" />
-    <None Include="cfg\trd504tm.rom" />
-    <None Include="cfg\Unreal.ini" />
-    <None Include="cfg\zxevo.rom" />
-    <None Include="doc\help_eng.html" />
-    <None Include="doc\news.txt" />
-    <None Include="doc\rom.txt" />
-    <None Include="doc\unreal_e.txt" />
-    <None Include="doc\unreal_r.txt" />
-    <None Include="gsz80.cpp" />
-    <None Include="lib\bass.dll" />
-    <None Include="Makefile" />
-    <None Include="res\cur00000.cur" />
-    <None Include="res\cur00001.cur" />
-    <None Include="res\cur00002.cur" />
-    <None Include="res\cur00003.cur" />
-    <None Include="res\cur00004.cur" />
-    <None Include="res\cur00005.cur" />
-    <None Include="res\cur00006.cur" />
-    <None Include="res\cur00007.cur" />
-    <None Include="res\cur00008.cur" />
-    <None Include="res\main.ico" />
+    <None Include="gsz80.inl" />
     <None Include="z80_main.inl" />
   </ItemGroup>
   <ItemGroup>
@@ -383,12 +361,6 @@ copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)"..\rom
     <ClInclude Include="z80_main.h" />
     <ClInclude Include="zc.h" />
     <ClInclude Include="zxevo.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="Unreal.rc" />
-  </ItemGroup>
-  <ItemGroup>
-    <Manifest Include="res\Unreal.manifest" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="lib\dinput.lib" />
