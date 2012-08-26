@@ -18,8 +18,8 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="bin\$(ConfigurationName)\"
-			IntermediateDirectory="bin\$(ConfigurationName)\"
+			OutputDirectory="bin\$(ConfigurationName)"
+			IntermediateDirectory="bin\$(ConfigurationName)"
 			ConfigurationType="1"
 			CharacterSet="2"
 			>
@@ -102,8 +102,8 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="bin\$(ConfigurationName)\"
-			IntermediateDirectory="bin\$(ConfigurationName)\"
+			OutputDirectory="bin\$(ConfigurationName)"
+			IntermediateDirectory="bin\$(ConfigurationName)"
 			ConfigurationType="1"
 			CharacterSet="2"
 			WholeProgramOptimization="1"
@@ -185,7 +185,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy /y &quot;$(ProjectDir)lib\*.dll&quot; &quot;$(TargetDir)&quot;&#x0D;&#x0A;copy /y &quot;$(ProjectDir)cfg\*.*&quot; &quot;$(TargetDir)&quot;&#x0D;&#x0A;md &quot;$(TargetDir)&quot;rom&#x0D;&#x0A;copy /y &quot;$(ProjectDir)cfg\rom\*.*&quot; &quot;$(TargetDir)&quot;rom&#x0D;&#x0A;copy /y &quot;$(ProjectDir)lib\*.dll&quot; &quot;$(TargetDir)..&quot;&#x0D;&#x0A;copy /y &quot;$(ProjectDir)cfg\*.*&quot; &quot;$(TargetDir)..&quot;&#x0D;&#x0A;md &quot;$(TargetDir)&quot;..\rom&#x0D;&#x0A;copy /y &quot;$(ProjectDir)cfg\rom\*.*&quot; &quot;$(TargetDir)&quot;..\rom&#x0D;&#x0A;copy /y &quot;$(TargetPath)&quot; &quot;$(TargetDir)..&quot;&#x0D;&#x0A;"
+				CommandLine="md &quot;$(TargetDir)..\tmp&quot;&#x0D;&#x0A;md &quot;$(TargetDir)..\tmp\rom&quot;&#x0D;&#x0A;copy /y &quot;$(ProjectDir)lib\*.dll&quot; &quot;$(TargetDir)..\tmp&quot;&#x0D;&#x0A;copy /y &quot;$(ProjectDir)cfg\*.*&quot; &quot;$(TargetDir)..\tmp&quot;&#x0D;&#x0A;copy /y &quot;$(ProjectDir)cfg\rom\*.*&quot; &quot;$(TargetDir)..\tmp\rom&quot;&#x0D;&#x0A;copy /y &quot;$(TargetPath)&quot; &quot;$(TargetDir)..\tmp&quot;&#x0D;&#x0A;cd /d &quot;$(TargetDir)..\tmp&quot;&#x0D;&#x0A;7z a -t7z -r -mx9 -y -i!* ..\unreal.7z *.*&#x0D;&#x0A;"
 			/>
 		</Configuration>
 	</Configurations>
