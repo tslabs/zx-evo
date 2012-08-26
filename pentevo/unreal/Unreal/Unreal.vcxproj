@@ -365,11 +365,14 @@ copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)"rom</Command>
     </Link>
     <ProjectReference />
     <PostBuildEvent>
-      <Command>copy /y "$(ProjectDir)lib\*.dll" "$(TargetDir).."
-copy /y "$(ProjectDir)cfg\*.*" "$(TargetDir).."
-copy /y "$(TargetPath)" "$(TargetDir).."
-md "$(TargetDir)"..\rom
-copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)"..\rom
+      <Command>md "$(TargetDir)..\tmp"
+md "$(TargetDir)..\tmp\rom"
+copy /y "$(ProjectDir)lib\*.dll" "$(TargetDir)..\tmp"
+copy /y "$(ProjectDir)cfg\*.*" "$(TargetDir)..\tmp"
+copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)..\tmp\rom"
+copy /y "$(TargetPath)" "$(TargetDir)..\tmp"
+cd /d "$(TargetDir)..\tmp"
+7z a -t7z -r -mx9 -y -i!* ..\unreal.7z *.*
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
