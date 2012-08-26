@@ -10,122 +10,17 @@
       <Platform>Win32</Platform>
     </ProjectConfiguration>
   </ItemGroup>
-  <PropertyGroup Label="Globals">
-    <ProjectGuid>{B9C745E9-52E2-48EA-9D6A-7AE42133B56E}</ProjectGuid>
-    <RootNamespace>Unreal</RootNamespace>
-    <ProjectName>Unreal</ProjectName>
-    <SccProjectName>
-    </SccProjectName>
-    <SccAuxPath>
-    </SccAuxPath>
-    <SccLocalPath>
-    </SccLocalPath>
-    <SccProvider>
-    </SccProvider>
-  </PropertyGroup>
-  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
-    <UseDebugLibraries>true</UseDebugLibraries>
-    <CharacterSet>MultiByte</CharacterSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
-    <UseDebugLibraries>false</UseDebugLibraries>
-    <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>MultiByte</CharacterSet>
-  </PropertyGroup>
-  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
-  <ImportGroup Label="ExtensionSettings">
-  </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <PropertyGroup Label="UserMacros" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <GenerateManifest>false</GenerateManifest>
-    <OutDir>bin\$(Configuration)\</OutDir>
-    <IntDir>bin\$(Configuration)\</IntDir>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <GenerateManifest>false</GenerateManifest>
-    <OutDir>bin\$(Configuration)\</OutDir>
-    <IntDir>bin\$(Configuration)\</IntDir>
-  </PropertyGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <Optimization>Disabled</Optimization>
-      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <ExceptionHandling>false</ExceptionHandling>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;USE_SND_EXTERNAL_BUFFER;_DEBUG;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <RuntimeTypeInfo>false</RuntimeTypeInfo>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-      <MultiProcessorCompilation>false</MultiProcessorCompilation>
-      <ErrorReporting>Prompt</ErrorReporting>
-      <PrecompiledHeaderFile>std.h</PrecompiledHeaderFile>
-    </ClCompile>
-    <Link>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-      <DelayLoadDLLs>gdiplus.dll</DelayLoadDLLs>
-      <AdditionalDependencies>delayimp.lib;gdiplus.lib;kernel32.lib;user32.lib;gdi32.lib;shell32.lib;comdlg32.lib;comctl32.lib;winmm.lib;setupapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <LinkErrorReporting>PromptImmediately</LinkErrorReporting>
-    </Link>
-    <ProjectReference />
-    <PostBuildEvent>
-      <Command>copy /y "$(ProjectDir)lib\*.dll" "$(TargetDir)"
-copy /y "$(ProjectDir)cfg\*.*" "$(TargetDir)"
-md "$(TargetDir)"rom
-copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)"rom</Command>
-    </PostBuildEvent>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <Optimization>Full</Optimization>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
-      <MultiProcessorCompilation>false</MultiProcessorCompilation>
-      <MinimalRebuild>false</MinimalRebuild>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <ExceptionHandling>false</ExceptionHandling>
-      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;USE_SND_EXTERNAL_BUFFER;NDEBUG;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <RuntimeTypeInfo>false</RuntimeTypeInfo>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>std.h</PrecompiledHeaderFile>
-      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-      <ErrorReporting>Prompt</ErrorReporting>
-    </ClCompile>
-    <Link>
-      <GenerateDebugInformation>false</GenerateDebugInformation>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <OptimizeReferences>true</OptimizeReferences>
-      <DelayLoadDLLs>gdiplus.dll</DelayLoadDLLs>
-      <AdditionalDependencies>delayimp.lib;gdiplus.lib;kernel32.lib;user32.lib;gdi32.lib;shell32.lib;comdlg32.lib;comctl32.lib;winmm.lib;setupapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <LinkErrorReporting>PromptImmediately</LinkErrorReporting>
-    </Link>
-    <ProjectReference />
-    <PostBuildEvent>
-      <Command>copy /y "$(ProjectDir)lib\*.dll" "$(TargetDir)"
-copy /y "$(ProjectDir)cfg\*.*" "$(TargetDir)"
-md "$(TargetDir)"rom
-copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)"rom
-copy /y "$(ProjectDir)lib\*.dll" "$(TargetDir).."
-copy /y "$(ProjectDir)cfg\*.*" "$(TargetDir).."
-md "$(TargetDir)"..\rom
-copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)"..\rom
-copy /y "$(TargetPath)" "$(TargetDir).."
-</Command>
-    </PostBuildEvent>
-  </ItemDefinitionGroup>
   <ItemGroup>
     <None Include="gsz80.inl" />
+    <None Include="res\main.ico" />
     <None Include="z80_main.inl" />
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="res\Unreal.manifest" />
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="lib\dinput.lib" />
+    <Library Include="lib\dxerr8.lib" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="atm.cpp" />
@@ -133,7 +28,6 @@ copy /y "$(TargetPath)" "$(TargetDir).."
     <ClCompile Include="config.cpp" />
     <ClCompile Include="daa_tabs.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="dbgbpx.cpp" />
     <ClCompile Include="dbgcmd.cpp" />
@@ -202,27 +96,21 @@ copy /y "$(TargetPath)" "$(TargetDir).."
     <ClCompile Include="opendlg.cpp" />
     <ClCompile Include="op_cb.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="op_dd.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="op_ddcb.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="op_ed.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="op_fd.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="op_noprefix.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="saa1099.cpp" />
     <ClCompile Include="savesnd.cpp" />
@@ -236,11 +124,9 @@ copy /y "$(TargetPath)" "$(TargetDir).."
     <ClCompile Include="sound.cpp" />
     <ClCompile Include="std.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="tables.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="tape.cpp" />
     <ClCompile Include="tsconf.cpp" />
@@ -367,9 +253,117 @@ copy /y "$(TargetPath)" "$(TargetDir).."
     <ClInclude Include="zxevo.h" />
   </ItemGroup>
   <ItemGroup>
-    <Library Include="lib\dinput.lib" />
-    <Library Include="lib\dxerr8.lib" />
+    <ResourceCompile Include="Unreal.rc" />
   </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{B9C745E9-52E2-48EA-9D6A-7AE42133B56E}</ProjectGuid>
+    <RootNamespace>Unreal</RootNamespace>
+    <ProjectName>Unreal</ProjectName>
+    <SccProjectName>
+    </SccProjectName>
+    <SccAuxPath>
+    </SccAuxPath>
+    <SccLocalPath>
+    </SccLocalPath>
+    <SccProvider>
+    </SccProvider>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <GenerateManifest>false</GenerateManifest>
+    <OutDir>bin\$(Configuration)\</OutDir>
+    <IntDir>bin\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <GenerateManifest>false</GenerateManifest>
+    <OutDir>bin\$(Configuration)\</OutDir>
+    <IntDir>bin\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <ExceptionHandling>false</ExceptionHandling>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;USE_SND_EXTERNAL_BUFFER;_DEBUG;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <MultiProcessorCompilation>false</MultiProcessorCompilation>
+      <ErrorReporting>Prompt</ErrorReporting>
+      <PrecompiledHeaderFile>std.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <DelayLoadDLLs>gdiplus.dll</DelayLoadDLLs>
+      <AdditionalDependencies>delayimp.lib;gdiplus.lib;kernel32.lib;user32.lib;gdi32.lib;shell32.lib;comdlg32.lib;comctl32.lib;winmm.lib;setupapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <LinkErrorReporting>PromptImmediately</LinkErrorReporting>
+    </Link>
+    <ProjectReference />
+    <PostBuildEvent>
+      <Command>copy /y "$(ProjectDir)lib\*.dll" "$(TargetDir)"
+copy /y "$(ProjectDir)cfg\*.*" "$(TargetDir)"
+md "$(TargetDir)"rom
+copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)"rom</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Full</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MultiProcessorCompilation>false</MultiProcessorCompilation>
+      <MinimalRebuild>false</MinimalRebuild>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>false</ExceptionHandling>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;USE_SND_EXTERNAL_BUFFER;NDEBUG;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>std.h</PrecompiledHeaderFile>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <ErrorReporting>Prompt</ErrorReporting>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <DelayLoadDLLs>gdiplus.dll</DelayLoadDLLs>
+      <AdditionalDependencies>delayimp.lib;gdiplus.lib;kernel32.lib;user32.lib;gdi32.lib;shell32.lib;comdlg32.lib;comctl32.lib;winmm.lib;setupapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <LinkErrorReporting>PromptImmediately</LinkErrorReporting>
+    </Link>
+    <ProjectReference />
+    <PostBuildEvent>
+      <Command>copy /y "$(ProjectDir)lib\*.dll" "$(TargetDir).."
+copy /y "$(ProjectDir)cfg\*.*" "$(TargetDir).."
+copy /y "$(TargetPath)" "$(TargetDir).."
+md "$(TargetDir)"..\rom
+copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)"..\rom
+</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
