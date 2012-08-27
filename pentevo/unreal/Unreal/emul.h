@@ -84,7 +84,7 @@ struct TMemModel
 };
 
 typedef void (__fastcall *VOID_FUNC)(void);
-typedef void (__fastcall *RENDER_FUNC)(unsigned char*,unsigned);
+typedef void (__fastcall *RENDER_FUNC)(u8 *, u32);
 
 struct BORDSIZE
 {

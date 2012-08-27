@@ -10,9 +10,9 @@
 #include "draw.h"
 #include "util.h"
 
-void rend_1x_32(u8 *dst, unsigned pitch)
+void rend_1x_32(u8 *dst, u32 pitch)
 {
-	RGB32 *src = (RGB32*)vbuf;
+	RGB32 *src = (RGB32*)vbuf[vid.buf];
 	src += conf.framex*2;
 	src += conf.framey * VID_WIDTH*2;
 
@@ -31,7 +31,7 @@ void rend_1x_32(u8 *dst, unsigned pitch)
 	}
 }
 
-void __fastcall render_1x(unsigned char *dst, unsigned pitch)
+void __fastcall render_1x(u8 *dst, u32 pitch)
 {
 	if (conf.noflic)    {
 		if (temp.obpp == 8)  { rend_copy8_nf(dst, pitch); }
@@ -132,11 +132,12 @@ void rend_dbl(unsigned char *dst, unsigned pitch)
 }
 */
 
-void rend_2x_32(u8 *dst, unsigned pitch)
+void rend_2x_32(u8 *dst, u32 pitch)
 {
-	u32 *src = vbuf;
+	u32 *src = (u32*)vbuf[vid.buf];
 	src += conf.framex * 2;
 	src += conf.framey * VID_WIDTH * 2;
+	
 	for (u32 i=0; i<conf.frameysize; i++)
 	{
 		memcpy (dst, src, pitch); dst += pitch;
@@ -145,15 +146,41 @@ void rend_2x_32(u8 *dst, unsigned pitch)
 	}
 }
 
-void __fastcall render_2x(unsigned char *dst, unsigned pitch)
+void rend_2x_32_nf(u8 *dst, u32 pitch)
+{
+	RGB32 *src1 = (RGB32*)vbuf[vid.buf];
+	src1 += conf.framex * 2;
+	src1 += conf.framey * VID_WIDTH * 2;
+	RGB32 *src2 = (RGB32*)vbuf[vid.buf^1];
+	src2 += conf.framex * 2;
+	src2 += conf.framey * VID_WIDTH * 2;
+	
+	for (u32 i=0; i<conf.frameysize; i++)
+	{
+		RGB32 *src11 = src1;
+		RGB32 *src22 = src2;
+		u8 *dst1 = dst;
+		for (u32 j=0; j<(pitch/4); j++)
+		{
+			RGB32 p1 = *src11++; RGB32 p2 = *src22++;
+			*dst++ = (p1.b + p2.b) >> 1;
+			*dst++ = (p1.g + p2.g) >> 1;
+			*dst++ = (p1.r + p2.r) >> 1;
+			*dst++;
+		}
+		memcpy (dst, dst1, pitch); dst += pitch;
+		src1 += VID_WIDTH * 2;
+		src2 += VID_WIDTH * 2;
+	}
+}
+
+void __fastcall render_2x(u8 *dst, u32 pitch)
 {
 
-   if (conf.noflic)    {
-      if (temp.obpp == 8)  { rend_copy8_nf (dst, pitch); }
-      if (temp.obpp == 16) { rend_copy16_nf(dst, pitch); }
-      if (temp.obpp == 32) { rend_copy32_nf(dst, pitch); }
-      memcpy(rbuf_s, rbuf, temp.scy*temp.scx/4);
-      return;
+	if (conf.noflic) {
+		if (temp.obpp == 8)  { rend_2x_32_nf(dst, pitch); return; }
+		if (temp.obpp == 16) { rend_2x_32_nf(dst, pitch); return; }
+		if (temp.obpp == 32) { rend_2x_32_nf(dst, pitch); return; }
 
    } else {
     if (temp.obpp == 8)  { rend_2x_32(dst, pitch); return; }
@@ -210,9 +237,9 @@ void __fastcall render_2x(unsigned char *dst, unsigned pitch)
    */
 }
 
-void rend_3x_32(u8 *dst, unsigned pitch)
+void rend_3x_32(u8 *dst, u32 pitch)
 {
-	RGB32 *src = (RGB32*)vbuf;
+	RGB32 *src = (RGB32*)vbuf[vid.buf];
 	src += conf.framex*2;
 	src += conf.framey * VID_WIDTH*2;
 
@@ -242,7 +269,7 @@ void rend_3x_32(u8 *dst, unsigned pitch)
 	}
 }
 
-void __fastcall render_3x(unsigned char *dst, unsigned pitch)
+void __fastcall render_3x(u8 *dst, u32 pitch)
 {
    if (conf.noflic) {
 		if (temp.obpp == 8)  rend_copy8t_nf (dst, pitch);
@@ -256,7 +283,7 @@ void __fastcall render_3x(unsigned char *dst, unsigned pitch)
    }
 }
 
-void __fastcall render_4x(unsigned char *dst, unsigned pitch)
+void __fastcall render_4x(u8 *dst, u32 pitch)
 {
    if (conf.noflic) {
       if (temp.obpp == 8)  rend_copy8q_nf (dst, pitch);
@@ -271,7 +298,7 @@ void __fastcall render_4x(unsigned char *dst, unsigned pitch)
 }
 
 
-void __fastcall render_scale(unsigned char *dst, unsigned pitch)
+void __fastcall render_scale(u8 *dst, u32 pitch)
 {
    unsigned char *src = rbuf;
    unsigned dx = temp.scx / 4;
@@ -415,9 +442,9 @@ m2:   movq  mm0, [edx]
 */
 }
 
-void __fastcall render_bil(unsigned char *dst, unsigned pitch)
+void __fastcall render_bil(u8 *dst, u32 pitch)
 {
-   render_1x(snbuf, MAX_WIDTH);
+   //render_1x(snbuf, MAX_WIDTH);
 
    unsigned char *src = snbuf;
    unsigned char ATTR_ALIGN(16) l1[MAX_WIDTH*4];
@@ -448,7 +475,7 @@ void __fastcall render_bil(unsigned char *dst, unsigned pitch)
 //   _mm_empty();
 }
 
-void __fastcall render_tv(unsigned char *dst, unsigned pitch)
+void __fastcall render_tv(u8 *dst, u32 pitch)
 {
 // ripped from ccs and *highly* simplified and optimized
 

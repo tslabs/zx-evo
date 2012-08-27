@@ -131,6 +131,7 @@ struct VCTR
 	u32	vptr_pix;	// address in videobuffer of 1st pixel (used to render TS)
 	u32	xctr;		// videocontroller X counter
 	u32	yctr;		// videocontroller Y counter
+	u32 buf;		// active video buffer
 };
 
 struct AtmVideoController

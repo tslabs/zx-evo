@@ -1,2 +1,2 @@
 #pragma once
-void __fastcall render_advmame(unsigned char *dst, unsigned pitch);
+void __fastcall render_advmame(u8 *dst, u32 pitch);

@@ -34,7 +34,7 @@ __int64 rbuf__[sizeof_rbuf/sizeof(__int64)];
 unsigned char * const rbuf = (unsigned char*)rbuf__;
 #endif
 
-CACHE_ALIGNED u32 vbuf[sizeof_vbuf];
+CACHE_ALIGNED u32 vbuf[2][sizeof_vbuf];
 VCTR vid;
 
 unsigned char * const rbuf_s = rbuf + rb2_offs; // frames to mix with noflic and resampler filters
@@ -93,7 +93,9 @@ AtmVideoController AtmVideoCtrl;
 
 void video_permanent_tables()
 {
-   // pixel doubling table
+	vid.buf = 0;
+   
+	// pixel doubling table
    unsigned i; //Alone Coder 0.36.7
    for (/*unsigned*/ i = 0; i < 0x100; i++) {
       unsigned res = 0;
@@ -751,22 +753,22 @@ void draw_zx(int n)
 		u32 p0 = temp.tspal_32[(comp.ts.gpal << 4) | b | ((c >> 3) & 0x07)];	// color for 'PAPER'
 		u32 p1 = temp.tspal_32[(comp.ts.gpal << 4) | b | (c & 0x07)];			// color for 'INK'
 
-		vbuf[vid.vptr++] = ((p << 1) & 0x100) ? p1 : p0;
-		vbuf[vid.vptr++] = ((p << 1) & 0x100) ? p1 : p0;
-		vbuf[vid.vptr++] = ((p << 2) & 0x100) ? p1 : p0;
-		vbuf[vid.vptr++] = ((p << 2) & 0x100) ? p1 : p0;
-		vbuf[vid.vptr++] = ((p << 3) & 0x100) ? p1 : p0;
-		vbuf[vid.vptr++] = ((p << 3) & 0x100) ? p1 : p0;
-		vbuf[vid.vptr++] = ((p << 4) & 0x100) ? p1 : p0;
-		vbuf[vid.vptr++] = ((p << 4) & 0x100) ? p1 : p0;
-		vbuf[vid.vptr++] = ((p << 5) & 0x100) ? p1 : p0;
-		vbuf[vid.vptr++] = ((p << 5) & 0x100) ? p1 : p0;
-		vbuf[vid.vptr++] = ((p << 6) & 0x100) ? p1 : p0;
-		vbuf[vid.vptr++] = ((p << 6) & 0x100) ? p1 : p0;
-		vbuf[vid.vptr++] = ((p << 7) & 0x100) ? p1 : p0;
-		vbuf[vid.vptr++] = ((p << 7) & 0x100) ? p1 : p0;
-		vbuf[vid.vptr++] = ((p << 8) & 0x100) ? p1 : p0;
-		vbuf[vid.vptr++] = ((p << 8) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vid.vptr++] = ((p << 1) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vid.vptr++] = ((p << 1) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vid.vptr++] = ((p << 2) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vid.vptr++] = ((p << 2) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vid.vptr++] = ((p << 3) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vid.vptr++] = ((p << 3) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vid.vptr++] = ((p << 4) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vid.vptr++] = ((p << 4) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vid.vptr++] = ((p << 5) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vid.vptr++] = ((p << 5) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vid.vptr++] = ((p << 6) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vid.vptr++] = ((p << 6) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vid.vptr++] = ((p << 7) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vid.vptr++] = ((p << 7) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vid.vptr++] = ((p << 8) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vid.vptr++] = ((p << 8) & 0x100) ? p1 : p0;
 	}
 }
 
@@ -785,14 +787,14 @@ void draw_tstx(int n)
 		u32 p0 = temp.tspal_32[(comp.ts.gpal << 4) | ((a >> 4) & 0x0F)];	// color for 'PAPER'
 		u32 p1 = temp.tspal_32[(comp.ts.gpal << 4) | (a & 0x0F)];			// color for 'INK'
 
-		vbuf[vid.vptr++] = ((p << 1) & 0x100) ? p1 : p0;
-		vbuf[vid.vptr++] = ((p << 2) & 0x100) ? p1 : p0;
-		vbuf[vid.vptr++] = ((p << 3) & 0x100) ? p1 : p0;
-		vbuf[vid.vptr++] = ((p << 4) & 0x100) ? p1 : p0;
-		vbuf[vid.vptr++] = ((p << 5) & 0x100) ? p1 : p0;
-		vbuf[vid.vptr++] = ((p << 6) & 0x100) ? p1 : p0;
-		vbuf[vid.vptr++] = ((p << 7) & 0x100) ? p1 : p0;
-		vbuf[vid.vptr++] = ((p << 8) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vid.vptr++] = ((p << 1) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vid.vptr++] = ((p << 2) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vid.vptr++] = ((p << 3) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vid.vptr++] = ((p << 4) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vid.vptr++] = ((p << 5) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vid.vptr++] = ((p << 6) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vid.vptr++] = ((p << 7) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vid.vptr++] = ((p << 8) & 0x100) ? p1 : p0;
 	}
 }
 
@@ -811,8 +813,8 @@ void draw_ts16(int n)
 		n--; vid.t_next++;
 		p = scr[s + t++]; t &= 0xFF;
 		p1 = temp.tspal_32[(comp.ts.gpal << 4) | (p & 0x0F)];
-		vbuf[vid.vptr++] = p1;
-		vbuf[vid.vptr++] = p1;
+		vbuf[vid.buf][vid.vptr++] = p1;
+		vbuf[vid.buf][vid.vptr++] = p1;
 	}	
 	
 	for (; n > 0; n -= 1, vid.t_next++)
@@ -820,18 +822,18 @@ void draw_ts16(int n)
 		p = scr[s + t++]; t &= 0xFF;
 		p0 = temp.tspal_32[(comp.ts.gpal << 4) | ((p >> 4) & 0x0F)];
 		p1 = temp.tspal_32[(comp.ts.gpal << 4) | (p & 0x0F)];
-		vbuf[vid.vptr++] = p0;
-		vbuf[vid.vptr++] = p0;
-		vbuf[vid.vptr++] = p1;
-		vbuf[vid.vptr++] = p1;
+		vbuf[vid.buf][vid.vptr++] = p0;
+		vbuf[vid.buf][vid.vptr++] = p0;
+		vbuf[vid.buf][vid.vptr++] = p1;
+		vbuf[vid.buf][vid.vptr++] = p1;
 	}
 
 	if (comp.ts.g_offsx & 1)		// odd offset - right pixel
 	{
 		p = scr[s + t];
 		p0 = temp.tspal_32[(comp.ts.gpal << 4) | ((p >> 4) & 0x0F)];
-		vbuf[vid.vptr++] = p0;
-		vbuf[vid.vptr++] = p0;
+		vbuf[vid.buf][vid.vptr++] = p0;
+		vbuf[vid.buf][vid.vptr++] = p0;
 	}
 }
 
@@ -846,11 +848,11 @@ void draw_ts256(int n)
 	for (; n > 0; n -= 1, vid.t_next++)
 	{
 		u32 p = temp.tspal_32[scr[s + t++]];  t &= 0x1FF;
-		vbuf[vid.vptr++] = p;
-		vbuf[vid.vptr++] = p;
+		vbuf[vid.buf][vid.vptr++] = p;
+		vbuf[vid.buf][vid.vptr++] = p;
 		p = temp.tspal_32[scr[s + t++]]; t &= 0x1FF;
-		vbuf[vid.vptr++] = p;
-		vbuf[vid.vptr++] = p;
+		vbuf[vid.buf][vid.vptr++] = p;
+		vbuf[vid.buf][vid.vptr++] = p;
 	}
 }
 
@@ -861,10 +863,10 @@ void draw_border(int n)
 	for (; n > 0; n--)
 	{
 		u32 p0 = temp.tspal_32[comp.ts.border];
-		vbuf[vid.vptr++] = p0;
-		vbuf[vid.vptr++] = p0;
-		vbuf[vid.vptr++] = p0;
-		vbuf[vid.vptr++] = p0;
+		vbuf[vid.buf][vid.vptr++] = p0;
+		vbuf[vid.buf][vid.vptr++] = p0;
+		vbuf[vid.buf][vid.vptr++] = p0;
+		vbuf[vid.buf][vid.vptr++] = p0;
 	}
 }
 
@@ -1081,6 +1083,7 @@ void init_raster()
 void init_frame()
 {
    // TS video
+   vid.buf ^= 1;
    vid.t_next = 0;
    vid.vptr = 0;
    vid.yctr = comp.ts.g_offsyh - 1;
