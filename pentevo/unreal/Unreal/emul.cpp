@@ -122,10 +122,8 @@ int main(int argc, char **argv)
    // http://dlcorp.ucoz.ru/forum/22
    // http://dlcorp.nedopc.com/viewforum.php?f=8
    // https://zx-evo-fpga.googlecode.com/svn/branches/tslabs/pentevo/unreal
-   printf("new versions & sources of this fix ->\n");
+   printf("new versions & sources ->\n");
    printf("   https://zx-evo-fpga.googlecode.com/svn/branches/tslabs/pentevo/unreal\n");
-   printf("original unreal -> http://dlcorp.nedopc.com/viewforum.php?f=8\n");
-
 
 #ifndef DEBUG
    SetUnhandledExceptionFilter(filter);

@@ -34,5 +34,5 @@ struct RSM_DATA
 
 extern RSM_DATA rsm;
 
-void __fastcall render_rsm(unsigned char *dst, unsigned pitch);
+void __fastcall render_rsm(u8 *dst, u32 pitch);
 void calc_rsm_tables();

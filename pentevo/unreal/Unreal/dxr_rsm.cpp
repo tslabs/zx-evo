@@ -159,7 +159,7 @@ void rend_rsm_32(unsigned char *dst, unsigned pitch, unsigned char *src)
    }
 }
 
-void __fastcall render_rsm(unsigned char *dst, unsigned pitch)
+void __fastcall render_rsm(u8 *dst, u32 pitch)
 {
    rsm.colortab = (__m64*)((int)rsm.tables + rsm.frame * rsm.frame_table_size);
    unsigned char *src = rbuf_s + rb2_offs * rsm.rbuf_dst;
