@@ -232,6 +232,7 @@ sleep:
 //   CpuMgr.CopyToPrev();
    cpu->SetLastT();
    temp.scale = temp.mon_scale;
+   temp.rflags = RF_GDI;
    apply_video();
    sound_play();
 }

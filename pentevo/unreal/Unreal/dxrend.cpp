@@ -12,35 +12,40 @@
 
 void rend_1x_32(u8 *dst, unsigned pitch)
 {
-	u32 *src = vbuf;
-	src += conf.framex * 2;
-	src += conf.framey * VID_WIDTH * 2;
+	RGB32 *src = (RGB32*)vbuf;
+	src += conf.framex*2;
+	src += conf.framey * VID_WIDTH*2;
+
 	for (u32 i=0; i<conf.frameysize; i++)
 	{
-		memcpy (dst, src, pitch); dst += pitch;
+		RGB32 *src1 = src;
+		for (u32 j=0; j<(pitch/4); j++)
+		{
+			RGB32 p1 = *src1++; RGB32 p2 = *src1++;
+			*dst++ = (p1.b + p2.b) >> 1;
+			*dst++ = (p1.g + p2.g) >> 1;
+			*dst++ = (p1.r + p2.r) >> 1;
+			*dst++;
+		}
 		src += VID_WIDTH * 2;
 	}
 }
 
-void rend_1x(unsigned char *dst, unsigned pitch)
-{
-    // if (temp.obpp == 8)  { rend_1x_8 (dst, pitch); return; }
-    // if (temp.obpp == 16) { rend_1x_16(dst, pitch); return; }
-    if (temp.obpp == 32) { rend_1x_32(dst, pitch); return; }
-}
-
 void __fastcall render_1x(unsigned char *dst, unsigned pitch)
 {
-   if (conf.noflic)
-   {
-      if (temp.obpp == 8)  { rend_copy8_nf (dst, pitch); }
-      if (temp.obpp == 16) { rend_copy16_nf(dst, pitch); }
-      if (temp.obpp == 32) { rend_copy32_nf(dst, pitch); }
-      memcpy(rbuf_s, rbuf, temp.scy*temp.scx/4);
-      return;
-   }
+	if (conf.noflic)    {
+		if (temp.obpp == 8)  { rend_copy8_nf(dst, pitch); }
+		if (temp.obpp == 16) { rend_copy16_nf(dst, pitch); }
+		if (temp.obpp == 32) { rend_copy32_nf(dst, pitch); }
+		memcpy(rbuf_s, rbuf, temp.scy*temp.scx/4);
+		return;
 
-	rend_1x(dst, pitch);
+	} else {
+		if (temp.obpp == 8)  { rend_1x_32(dst, pitch); return; }
+		if (temp.obpp == 16) { rend_1x_32(dst, pitch); return; }
+		if (temp.obpp == 32) { rend_1x_32(dst, pitch); return; }
+	}
+
 /*
 
    if (comp.pEFF7 & EFF7_4BPP)
@@ -60,7 +65,7 @@ void __fastcall render_1x(unsigned char *dst, unsigned pitch)
        rend_atm_2_small(dst, pitch);
        return;
    }
-   
+
    rend_small(dst, pitch);
 */
 }
@@ -140,17 +145,22 @@ void rend_2x_32(u8 *dst, unsigned pitch)
 	}
 }
 
-void rend_2x(unsigned char *dst, unsigned pitch)
-{
-    // if (temp.obpp == 8)  { rend_2x_8 (dst, pitch); return; }
-    // if (temp.obpp == 16) { rend_2x_16(dst, pitch); return; }
-    if (temp.obpp == 32) { rend_2x_32(dst, pitch); return; }
-}
-
 void __fastcall render_2x(unsigned char *dst, unsigned pitch)
 {
 
-	rend_2x(dst, pitch);
+   if (conf.noflic)    {
+      if (temp.obpp == 8)  { rend_copy8_nf (dst, pitch); }
+      if (temp.obpp == 16) { rend_copy16_nf(dst, pitch); }
+      if (temp.obpp == 32) { rend_copy32_nf(dst, pitch); }
+      memcpy(rbuf_s, rbuf, temp.scy*temp.scx/4);
+      return;
+
+   } else {
+    if (temp.obpp == 8)  { rend_2x_32(dst, pitch); return; }
+    if (temp.obpp == 16) { rend_2x_32(dst, pitch); return; }
+    if (temp.obpp == 32) { rend_2x_32(dst, pitch); return; }
+   }
+
 /*
 
    #ifdef MOD_VID_VD
@@ -200,19 +210,49 @@ void __fastcall render_2x(unsigned char *dst, unsigned pitch)
    */
 }
 
+void rend_3x_32(u8 *dst, unsigned pitch)
+{
+	RGB32 *src = (RGB32*)vbuf;
+	src += conf.framex*2;
+	src += conf.framey * VID_WIDTH*2;
+
+	for (u32 i=0; i<conf.frameysize; i++)
+	{
+		RGB32 *src1 = src;
+		u8 *dst1 = dst;
+		for (u32 j=0; j<(pitch/12); j++)
+		{
+			RGB32 p1 = *src1++; RGB32 p2 = *src1++;
+			*dst++ = p1.b;
+			*dst++ = p1.g;
+			*dst++ = p1.r;
+			*dst++;
+			*dst++ = (p1.b + p2.b) >> 1;
+			*dst++ = (p1.g + p2.g) >> 1;
+			*dst++ = (p1.r + p2.r) >> 1;
+			*dst++;
+			*dst++ = p2.b;
+			*dst++ = p2.g;
+			*dst++ = p2.r;
+			*dst++;
+		}
+		memcpy (dst, dst1, pitch); dst += pitch;
+		memcpy (dst, dst1, pitch); dst += pitch;
+		src += VID_WIDTH * 2;
+	}
+}
+
 void __fastcall render_3x(unsigned char *dst, unsigned pitch)
 {
    if (conf.noflic) {
-      if (temp.obpp == 8)  rend_copy8t_nf (dst, pitch);
-      if (temp.obpp == 16) rend_copy16t_nf(dst, pitch);
-      if (temp.obpp == 32) rend_copy32t_nf(dst, pitch);
-      memcpy(rbuf_s, rbuf, temp.scy*temp.scx/4);
-   }
-   else
-   {
-      if (temp.obpp == 8)  { rend_copy8t (dst, pitch); return; }
-      if (temp.obpp == 16) { rend_copy16t(dst, pitch); return; }
-      if (temp.obpp == 32) { rend_copy32t(dst, pitch); return; }
+		if (temp.obpp == 8)  rend_copy8t_nf (dst, pitch);
+		if (temp.obpp == 16) rend_copy16t_nf(dst, pitch);
+		if (temp.obpp == 32) rend_copy32t_nf(dst, pitch);
+		memcpy(rbuf_s, rbuf, temp.scy*temp.scx/4);
+   } else {
+		if (temp.obpp == 8)  { rend_3x_32(dst, pitch); return; }
+		if (temp.obpp == 16) { rend_3x_32(dst, pitch); return; }
+		if (temp.obpp == 32) { rend_3x_32(dst, pitch); return; }
    }
 }
 
