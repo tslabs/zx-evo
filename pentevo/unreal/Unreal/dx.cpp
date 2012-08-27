@@ -965,6 +965,8 @@ void set_vidmode()
        temp.obpp = 32;
    if ((temp.rflags & (RF_GDI|RF_8BPCH)) == (RF_GDI|RF_8BPCH))
        temp.obpp = 32;
+   if ((temp.rflags & RF_MONITOR) == RF_MONITOR)	// temporary fix!!!
+       temp.obpp = 8;
 
    if (conf.fullscr || ((temp.rflags & RF_MON) && desc.dwHeight < 480))
    {

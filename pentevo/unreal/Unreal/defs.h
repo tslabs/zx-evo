@@ -17,6 +17,16 @@ typedef void (Z80FAST *STEPFUNC)(Z80*);
 typedef unsigned char (Z80FAST *LOGICFUNC)(Z80*, unsigned char byte);
 #define Z80LOGIC unsigned char Z80FAST
 
+typedef union {
+	u32 p;
+	struct {
+		u8 b;
+		u8 g;
+		u8 r;
+		u8 a;
+	};
+} RGB32;
+
 struct TZ80State
 {
    union
