@@ -7,18 +7,29 @@
 #include "dxr_4bpp.h"
 #include "dxr_prof.h"
 #include "dxr_atm.h"
-#include "dxr_ts.h"
 #include "draw.h"
 #include "util.h"
 
-void rend_small(unsigned char *dst, unsigned pitch)
+void rend_1x_32(u8 *dst, unsigned pitch)
 {
-    if (temp.obpp == 8)  { rend_copy8 (dst, pitch); return; }
-    if (temp.obpp == 16) { rend_copy16(dst, pitch); return; }
-    if (temp.obpp == 32) { rend_copy32(dst, pitch); return; }
+	u32 *src = vbuf;
+	src += conf.framex * 2;
+	src += conf.framey * VID_WIDTH * 2;
+	for (u32 i=0; i<conf.frameysize; i++)
+	{
+		memcpy (dst, src, pitch); dst += pitch;
+		src += VID_WIDTH * 2;
+	}
 }
 
-void __fastcall render_small(unsigned char *dst, unsigned pitch)
+void rend_1x(unsigned char *dst, unsigned pitch)
+{
+    // if (temp.obpp == 8)  { rend_1x_8 (dst, pitch); return; }
+    // if (temp.obpp == 16) { rend_1x_16(dst, pitch); return; }
+    if (temp.obpp == 32) { rend_1x_32(dst, pitch); return; }
+}
+
+void __fastcall render_1x(unsigned char *dst, unsigned pitch)
 {
    if (conf.noflic)
    {
@@ -28,6 +39,9 @@ void __fastcall render_small(unsigned char *dst, unsigned pitch)
       memcpy(rbuf_s, rbuf, temp.scy*temp.scx/4);
       return;
    }
+
+	rend_1x(dst, pitch);
+/*
 
    if (comp.pEFF7 & EFF7_4BPP)
    {
@@ -47,15 +61,11 @@ void __fastcall render_small(unsigned char *dst, unsigned pitch)
        return;
    }
    
-   if (conf.mem_model == MM_TSL)
-   {
-		rend_ts_small(dst, pitch);
-		return;
-   }
-
    rend_small(dst, pitch);
+*/
 }
 
+/*
 void rend_dbl(unsigned char *dst, unsigned pitch)
 {
    if (temp.oy > temp.scy && conf.fast_sl)
@@ -115,9 +125,34 @@ void rend_dbl(unsigned char *dst, unsigned pitch)
       }
    }
 }
+*/
 
-void __fastcall render_dbl(unsigned char *dst, unsigned pitch)
+void rend_2x_32(u8 *dst, unsigned pitch)
 {
+	u32 *src = vbuf;
+	src += conf.framex * 2;
+	src += conf.framey * VID_WIDTH * 2;
+	for (u32 i=0; i<conf.frameysize; i++)
+	{
+		memcpy (dst, src, pitch); dst += pitch;
+		memcpy (dst, src, pitch); dst += pitch;
+		src += VID_WIDTH * 2;
+	}
+}
+
+void rend_2x(unsigned char *dst, unsigned pitch)
+{
+    // if (temp.obpp == 8)  { rend_2x_8 (dst, pitch); return; }
+    // if (temp.obpp == 16) { rend_2x_16(dst, pitch); return; }
+    if (temp.obpp == 32) { rend_2x_32(dst, pitch); return; }
+}
+
+void __fastcall render_2x(unsigned char *dst, unsigned pitch)
+{
+
+	rend_2x(dst, pitch);
+/*
+
    #ifdef MOD_VID_VD
    if ((comp.pVD & 8) && temp.obpp == 8)
    {
@@ -128,14 +163,8 @@ void __fastcall render_dbl(unsigned char *dst, unsigned pitch)
 
    // todo: add ini option to show zx-screen with palette or with MC
 
-   if (conf.mem_model == MM_TSL)
-   {
-		rend_ts(dst, pitch);
-		return;
-   }
 
-   else
-   {
+	{
 		if (comp.pEFF7 & EFF7_512)
 		{
 			rend_512(dst, pitch);
@@ -167,7 +196,8 @@ void __fastcall render_dbl(unsigned char *dst, unsigned pitch)
        return;
    }
 
-   rend_dbl(dst, pitch);
+   rend_2x(dst, pitch);
+   */
 }
 
 void __fastcall render_3x(unsigned char *dst, unsigned pitch)
@@ -186,7 +216,7 @@ void __fastcall render_3x(unsigned char *dst, unsigned pitch)
    }
 }
 
-void __fastcall render_quad(unsigned char *dst, unsigned pitch)
+void __fastcall render_4x(unsigned char *dst, unsigned pitch)
 {
    if (conf.noflic) {
       if (temp.obpp == 8)  rend_copy8q_nf (dst, pitch);
@@ -347,7 +377,7 @@ m2:   movq  mm0, [edx]
 
 void __fastcall render_bil(unsigned char *dst, unsigned pitch)
 {
-   render_small(snbuf, MAX_WIDTH);
+   render_1x(snbuf, MAX_WIDTH);
 
    unsigned char *src = snbuf;
    unsigned char ATTR_ALIGN(16) l1[MAX_WIDTH*4];

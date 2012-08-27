@@ -697,6 +697,14 @@ void apply_video()
    set_video();
    calc_rsm_tables();
    video_timing_tables();
+
+   // Console info about selected video option
+   printf("\n");
+   color(CONSCLR_HARDINFO);
+   printf("Display: %ux%u\n", conf.framexsize, conf.frameysize);
+   printf("Render: %s\n", renders[conf.render].name);
+   printf("Driver: %s\n", drivers[conf.driver].name);
+   printf("Bits per pixel: %u\n", temp.obpp);
 }
 
 __inline unsigned char *raypointer()
@@ -895,8 +903,6 @@ void draw_pixels(int n)
 // Draws raster until current tact
 void update_screen()
 {
-	// update_screen1();		// legacy video renderer - scheduled to delete
-
 	while (vid.t_next < min(cpu.t, VID_TACTS * VID_LINES))		// iterate until current CPU tact or to the frame end
 	{
 		u32 line = (vid.t_next / VID_TACTS);	// number of line in raster

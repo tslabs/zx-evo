@@ -63,7 +63,6 @@
     <ClCompile Include="dxr_prof.cpp" />
     <ClCompile Include="dxr_rsm.cpp" />
     <ClCompile Include="dxr_text.cpp" />
-    <ClCompile Include="dxr_ts.cpp" />
     <ClCompile Include="dxr_vd.cpp" />
     <ClCompile Include="emul.cpp" />
     <ClCompile Include="emulkeys.cpp" />
@@ -198,7 +197,6 @@
     <ClInclude Include="dxr_prof.h" />
     <ClInclude Include="dxr_rsm.h" />
     <ClInclude Include="dxr_text.h" />
-    <ClInclude Include="dxr_ts.h" />
     <ClInclude Include="emul.h" />
     <ClInclude Include="emulkeys.h" />
     <ClInclude Include="emul_2203.h" />

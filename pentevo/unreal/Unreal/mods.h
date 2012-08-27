@@ -1,7 +1,7 @@
 #pragma once
 /* edit this file to make optimized versions without unnecessary parts */
 
-#define VERS_STRING  "0.37.8"    // version for monitor (exact 6 chars)
+#define VERS_STRING  "0.37.9"    // version for monitor (exact 6 chars)
 #define VERS_STRING_ VERS_STRING //##".beta"  // version for startup string (any length)
 #define VER_HL 37     // major version
 #define VER_A  9      // minor version and beta flag

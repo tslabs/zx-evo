@@ -346,10 +346,6 @@
 				>
 			</File>
 			<File
-				RelativePath="dxr_ts.cpp"
-				>
-			</File>
-			<File
 				RelativePath="dxr_vd.cpp"
 				>
 			</File>
@@ -921,10 +917,6 @@
 			</File>
 			<File
 				RelativePath="dxr_text.h"
-				>
-			</File>
-			<File
-				RelativePath="dxr_ts.h"
 				>
 			</File>
 			<File

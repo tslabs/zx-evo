@@ -62,7 +62,7 @@ void rend_atm_2_small(unsigned char *dst, unsigned pitch)
 
     if ( 3 == (comp.pFF77 & 7) ) //< Sinclair VideoMode
     {
-        rend_small(dst, pitch);
+//        rend_1x(dst, pitch);
         return;
     }
 
@@ -106,7 +106,7 @@ void rend_atm_2(unsigned char *dst, unsigned pitch)
 
     if ( 3 == (comp.pFF77 & 7) ) //< Sinclair VideoMode
     {
-        rend_dbl(dst, pitch);
+        // rend_2x(dst, pitch);
         return;
     }
 
@@ -159,7 +159,7 @@ void rend_atm_1_small(unsigned char *dst, unsigned pitch)
    int VideoMode = (comp.aFE >> 5) & 3;
    if ( 3 == VideoMode ) //< Sinclair VideoMode
    {
-       rend_small(dst, pitch);
+//       rend_1x(dst, pitch);
        return;
    }
 
@@ -195,7 +195,7 @@ void rend_atm_1(unsigned char *dst, unsigned pitch)
    int VideoMode = (comp.aFE >> 5) & 3;
    if ( 3 == VideoMode ) //< Sinclair VideoMode
    {
-       rend_dbl(dst, pitch);
+       // rend_2x(dst, pitch);
        return;
    }
 
