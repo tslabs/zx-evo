@@ -207,17 +207,17 @@ char droppedFile[512];
 
 const TMemModel mem_model[N_MM_MODELS] =
 {
-    { "PENTAGON", "PENTAGON",                MM_PENTAGON, 128,  RAM_128 | RAM_256 | RAM_512 | RAM_1024 },
-    { "ZS SCORPION", "SCORPION",             MM_SCORP, 256,  RAM_256 | RAM_1024 },
-    { "ZS SCORPION + PROF ROM", "PROFSCORP", MM_PROFSCORP, 256,  RAM_256 | RAM_1024 },
-    { "PROFI", "PROFI",                      MM_PROFI, 1024, RAM_1024 },
-    { "ATM-TURBO v4.50", "ATM450",           MM_ATM450, 512,  RAM_512 | RAM_1024 },
-    { "ATM-TURBO 2+ v7.10", "ATM710",        MM_ATM710, 1024, RAM_128 | RAM_256 | RAM_512 | RAM_1024 },
-    { "ZX-EVO", "ATM3",                      MM_ATM3, 4096, RAM_4096 },
-    { "Nemo's KAY", "KAY",                   MM_KAY, 256,  RAM_256 | RAM_1024 },
-    { "ZX-Spectrum +3", "PLUS3",             MM_PLUS3, 128,  RAM_128 },
-    { "QUORUM", "QUORUM",                    MM_QUORUM, 1024, RAM_128 | RAM_1024 },
+    { "Pentagon", "PENTAGON",                MM_PENTAGON, 128,  RAM_128 | RAM_256 | RAM_512 | RAM_1024 },
     { "TS-Config", "TSL",                    MM_TSL, 4096, RAM_4096 },
+    { "ZX-Evo", "ATM3",                      MM_ATM3, 4096, RAM_4096 },
+    { "ATM-Turbo 2+ v7.10", "ATM710",        MM_ATM710, 1024, RAM_128 | RAM_256 | RAM_512 | RAM_1024 },
+    { "ATM-Turbo v4.50", "ATM450",           MM_ATM450, 512,  RAM_512 | RAM_1024 },
+    { "Profi", "PROFI",                      MM_PROFI, 1024, RAM_1024 },
+    { "ZX-Spectrum +3", "PLUS3",             MM_PLUS3, 128,  RAM_128 },
+    { "ZS Scorpion", "SCORPION",             MM_SCORP, 256,  RAM_256 | RAM_1024 },
+    { "ZS Scorpion + PROF ROM", "PROFSCORP", MM_PROFSCORP, 256,  RAM_256 | RAM_1024 },
+    { "Nemo's KAY", "KAY",                   MM_KAY, 256,  RAM_256 | RAM_1024 },
+    { "Quorum", "QUORUM",                    MM_QUORUM, 1024, RAM_128 | RAM_1024 },
 };
 
 unsigned char kbdpc[VK_MAX]; // add cells for mouse & joystick
@@ -575,7 +575,7 @@ const size_t zxk_maps_count = _countof(zxk_maps);
 
 PALETTEENTRY syspalette[0x100];
 
-GDIBMP gdibmp = { { { sizeof(BITMAPINFOHEADER), 320, -240, 1, 8, BI_RGB, 0 } } };
+GDIBMP gdibmp = { { { sizeof(BITMAPINFOHEADER), 320, -240, 1, 32, BI_RGB, 0 } } };
 
 PALETTE_OPTIONS pals[32] = {{"default",0x00,0x80,0xC0,0xE0,0xFF,0xC8,0xFF,0x00,0x00,0x00,0xFF,0x00,0x00,0x00,0xFF}};
 

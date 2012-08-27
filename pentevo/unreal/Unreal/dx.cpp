@@ -58,10 +58,10 @@ unsigned dsoffset, dsbuffer = DSBUFFER;
 
 RENDER renders[] =
 {
-   { "Normal",                    render_small,   "normal",    RF_DRIVER | RF_1X },
-   { "Double size",               render_dbl,     "double",    RF_DRIVER | RF_2X },
+   { "Normal",                    render_1x,      "normal",    RF_DRIVER | RF_1X },
+   { "Double size",               render_2x,      "double",    RF_DRIVER | RF_2X },
    { "Triple size",               render_3x,      "triple",    RF_DRIVER | RF_3X },
-   { "Quad size",                 render_quad,    "quad",      RF_DRIVER | RF_4X },
+   { "Quad size",                 render_4x,      "quad",      RF_DRIVER | RF_4X },
    { "Anti-Text64",               render_text,    "text",      RF_DRIVER | RF_2X | RF_USEFONT },
    { "Frame resampler",           render_rsm,     "resampler", RF_DRIVER | RF_8BPCH },
 
@@ -956,7 +956,7 @@ void set_vidmode()
 //   printf("temp.ox=%d, temp.oy=%d\n", temp.ox, temp.oy);
 
    // select color depth
-   temp.obpp = 8;
+   temp.obpp = 32;
    if (temp.rflags & (RF_CLIP | RF_D3D))
        temp.obpp = desc.ddpfPixelFormat.dwRGBBitCount;
    if (temp.rflags & (RF_16 | RF_OVR))
@@ -1438,7 +1438,8 @@ void start_dx()
    int winy = rect1.top + (rect1.bottom - rect1.top - cy) / 2;
 
    wnd = CreateWindow("EMUL_WND", "UnrealSpeccy", WS_VISIBLE|WS_OVERLAPPEDWINDOW,
-                    winx, winy, cx, cy, 0, 0, hIn, NULL);
+                    winx, winy, 0, 0, 0, 0, hIn, NULL);
+//                    winx, winy, cx, cy, 0, 0, hIn, NULL);
 
    DragAcceptFiles(wnd, 1);
 

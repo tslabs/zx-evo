@@ -58,7 +58,7 @@ void debug_events(Z80 *cpu);
 void __fastcall render_rsm(unsigned char*, unsigned); //Alone Coder
 void __fastcall render_advmame(unsigned char *dst, unsigned pitch); //Alone Coder
 void __fastcall render_small(unsigned char *dst, unsigned pitch);
-void rend_dbl(unsigned char *dst, unsigned pitch);
+// void rend_2x(unsigned char *dst, unsigned pitch);
 
 int loadsnap(char *filename);
 unsigned char what_is(char *filename);

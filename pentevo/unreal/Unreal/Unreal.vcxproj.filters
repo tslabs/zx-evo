@@ -135,9 +135,6 @@
     <ClCompile Include="dxr_text.cpp">
       <Filter>Souces</Filter>
     </ClCompile>
-    <ClCompile Include="dxr_ts.cpp">
-      <Filter>Souces</Filter>
-    </ClCompile>
     <ClCompile Include="dxr_vd.cpp">
       <Filter>Souces</Filter>
     </ClCompile>
@@ -462,9 +459,6 @@
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="dxr_text.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="dxr_ts.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="dxrcopy.h">

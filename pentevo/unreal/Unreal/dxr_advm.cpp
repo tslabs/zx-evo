@@ -470,7 +470,7 @@ void __fastcall render_advmame(unsigned char *dst, unsigned pitch)
           else if (temp.obpp == 32) render_scale3_32(dst, pitch);
       break;
       case 4: render_scale4(dst, pitch); break;
-      default: render_small(dst, pitch); return; // skip noflic test
+      default: render_1x(dst, pitch); return; // skip noflic test
    }
    if (conf.noflic)
        memcpy(rbuf_s, rbuf, temp.scy*temp.scx/4);
