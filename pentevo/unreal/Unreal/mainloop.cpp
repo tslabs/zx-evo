@@ -33,6 +33,9 @@ void spectrum_frame()
        cpu.SetFastMemIf();
        z80fast::z80loop();
    }
+
+   update_screen();
+
    if (modem.open_port)
        modem.io();
 
@@ -128,8 +131,16 @@ void mainloop()
 void mainloop(const bool &Exit)
 {
    unsigned char skipped = 0;
-   for (;!Exit;)
+   while (!Exit)
    {
+ //     for (unsigned f = rsm.needframes[rsm.frame]; f; f--)
+  //    {
+         temp.sndblock = !conf.sound.enabled;
+         temp.inputblock = temp.vidblock && conf.sound.enabled;
+
+         spectrum_frame();
+         VideoSaver();
+
       if (skipped < temp.frameskip)
       {
           skipped++;
@@ -141,13 +152,6 @@ void mainloop(const bool &Exit)
       if (!temp.vidblock)
           flip();
 
-      for (unsigned f = rsm.needframes[rsm.frame]; f; f--)
-      {
-         temp.sndblock = !conf.sound.enabled;
-         temp.inputblock = temp.vidblock && conf.sound.enabled;
-         spectrum_frame();
-         VideoSaver();
-
          // message handling before flip (they paint to rbuf)
          if (!temp.inputblock)
          {
@@ -158,23 +162,24 @@ void mainloop(const bool &Exit)
              do_sound();
              Vs1001.Play();
          }
-         if (rsm.mix_frames > 1)
+/*         if (rsm.mix_frames > 1)
          {
             memcpy(rbuf_s + rsm.rbuf_dst * rb2_offs, rbuf, temp.scx * temp.scy / 4);
             if (++rsm.rbuf_dst == rsm.mix_frames)
                 rsm.rbuf_dst = 0;
          }
-         if (!temp.sndblock)
-         {
+		 */
+     //    if (!temp.sndblock)
+      //   {
 /*
              if (conf.sound.do_sound == do_sound_none)
                  do_idle();
 */
-         }
-      }
+       //  }
+    //  }
 
-      if (++rsm.frame == rsm.period)
-          rsm.frame = 0;
+   //   if (++rsm.frame == rsm.period)
+    //      rsm.frame = 0;
 
    }
    correct_exit();

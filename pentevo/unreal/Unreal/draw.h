@@ -10,19 +10,22 @@
 #define VID_WIDTH 448
 #define VID_HEIGHT 320
 
-#define M_ZX	0	// Sinclair
-#define M_TS16	1	// TS 16c
-#define M_TS256	2	// TS 256c
-#define M_TSTX	3	// TS Text
-#define M_TSBRD	4	// TS Border only
-#define M_ATM16	5	// ATM 16c
-#define M_ATMHR	6	// ATM HiRes
-#define M_ATMTX	7	// ATM Text
-#define M_ATMTL	8	// ATM Text Linear
-#define M_PMC	9	// Pentagon Multicolor
-#define M_P16	10	// Pentagon 16c
-#define M_PHR	11	// Pentagon HiRes
-#define M_LAST	12
+enum
+{
+	M_BRD=0	,	// Border only
+	M_ZX	,	// Sinclair
+	M_PMC	,	// Pentagon Multicolor
+	M_P16	,	// Pentagon 16c
+	M_P384	,	// Pentagon 384x304
+	M_PHR	,	// Pentagon HiRes
+	M_TS16	,	// TS 16c
+	M_TS256	,	// TS 256c
+	M_TSTX	,	// TS Text
+	M_ATM16	,	// ATM 16c
+	M_ATMHR	,	// ATM HiRes
+	M_ATMTX	,	// ATM Text
+	M_ATMTL		// ATM Text Linear
+};
 
 #define MAX_FONT_TABLES 0x62000
 static const int sc2lines_width = MAX_WIDTH*2;
@@ -132,6 +135,7 @@ struct VCTR
 	u32	xctr;		// videocontroller X counter
 	u32	yctr;		// videocontroller Y counter
 	u32 buf;		// active video buffer
+	u32 flash;		// flash counter
 };
 
 struct AtmVideoController

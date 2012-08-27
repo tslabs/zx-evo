@@ -15,17 +15,6 @@ const int l_pix[5]		= {  80,  76,  56,  32,  16 };		// first pixel line
 const int l_bord2[5]	= { 272, 276, 296, 320, 320 };		// first lower border line
 const int t_pix[5]		= {  70,  54,  54,  44,  32 };			// first pixel tact
 const int t_bord2[5]	= { 198, 214, 214, 224, 224 };			// first right border tact
-const int v_mode[M_LAST]	= { M_ZX
-							, M_TS16
-							, M_TS256
-							, M_TSTX
-							, M_ATM16
-							, M_ATMHR
-							, M_ATMTX
-							, M_ATMTL
-							, M_PMC
-							, M_P16
-							, M_PHR };
 
 #ifdef CACHE_ALIGNED
 CACHE_ALIGNED unsigned char rbuf[sizeof_rbuf];
@@ -593,8 +582,7 @@ void video_timing_tables()
    temp.b_bottom = temp.b_top = 24, temp.b_left = 32;
    unsigned mid_lines = 192, buf_mid = 256;
 
-   if (conf.bordersize==0) temp.b_top = temp.b_left = 0;
-   if (conf.bordersize==2) temp.b_top = temp.b_left = 64;
+   temp.b_top = temp.b_left = 0;
 
    temp.b_right = temp.scx - buf_mid - temp.b_left;
    temp.b_bottom = temp.scy - mid_lines - temp.b_top;
@@ -707,6 +695,7 @@ void apply_video()
    printf("Render: %s\n", renders[conf.render].name);
    printf("Driver: %s\n", drivers[conf.driver].name);
    printf("Bits per pixel: %u\n", temp.obpp);
+   printf("Window dimensions: %ux%u\n", temp.ox, temp.oy);
 }
 
 __inline unsigned char *raypointer()
@@ -738,12 +727,13 @@ void paint_scr(char alt) // alt=0/1 - main/alt screen, alt=2 - ray-painted
    }
 }
 
-// Sinclair screen
+// Sinclair
 void draw_zx(int n)
 {
 	u32 g = ((vid.yctr & 0x07) << 8) + ((vid.yctr & 0x38) << 2) + ((vid.yctr & 0xC0) << 5) + (vid.xctr & 0x1F);
 	u32 a = ((vid.yctr & 0xF8) << 2) + (vid.xctr & 0x1F) + 0x1800;
 	u8 *scr = RAM_BASE_M + PAGE * comp.ts.vpage;
+	u32 vptr = vid.vptr;
 
 	for (; n > 0; n -= 4, vid.t_next += 4, vid.xctr++, g++, a++)
 	{
@@ -753,32 +743,70 @@ void draw_zx(int n)
 		u32 p0 = temp.tspal_32[(comp.ts.gpal << 4) | b | ((c >> 3) & 0x07)];	// color for 'PAPER'
 		u32 p1 = temp.tspal_32[(comp.ts.gpal << 4) | b | (c & 0x07)];			// color for 'INK'
 
-		vbuf[vid.buf][vid.vptr++] = ((p << 1) & 0x100) ? p1 : p0;
-		vbuf[vid.buf][vid.vptr++] = ((p << 1) & 0x100) ? p1 : p0;
-		vbuf[vid.buf][vid.vptr++] = ((p << 2) & 0x100) ? p1 : p0;
-		vbuf[vid.buf][vid.vptr++] = ((p << 2) & 0x100) ? p1 : p0;
-		vbuf[vid.buf][vid.vptr++] = ((p << 3) & 0x100) ? p1 : p0;
-		vbuf[vid.buf][vid.vptr++] = ((p << 3) & 0x100) ? p1 : p0;
-		vbuf[vid.buf][vid.vptr++] = ((p << 4) & 0x100) ? p1 : p0;
-		vbuf[vid.buf][vid.vptr++] = ((p << 4) & 0x100) ? p1 : p0;
-		vbuf[vid.buf][vid.vptr++] = ((p << 5) & 0x100) ? p1 : p0;
-		vbuf[vid.buf][vid.vptr++] = ((p << 5) & 0x100) ? p1 : p0;
-		vbuf[vid.buf][vid.vptr++] = ((p << 6) & 0x100) ? p1 : p0;
-		vbuf[vid.buf][vid.vptr++] = ((p << 6) & 0x100) ? p1 : p0;
-		vbuf[vid.buf][vid.vptr++] = ((p << 7) & 0x100) ? p1 : p0;
-		vbuf[vid.buf][vid.vptr++] = ((p << 7) & 0x100) ? p1 : p0;
-		vbuf[vid.buf][vid.vptr++] = ((p << 8) & 0x100) ? p1 : p0;
-		vbuf[vid.buf][vid.vptr++] = ((p << 8) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr++] = ((p << 1) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr++] = ((p << 1) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr++] = ((p << 2) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr++] = ((p << 2) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr++] = ((p << 3) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr++] = ((p << 3) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr++] = ((p << 4) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr++] = ((p << 4) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr++] = ((p << 5) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr++] = ((p << 5) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr++] = ((p << 6) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr++] = ((p << 6) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr++] = ((p << 7) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr++] = ((p << 7) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr++] = ((p << 8) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr++] = ((p << 8) & 0x100) ? p1 : p0;
 	}
+	vid.vptr = vptr;
 }
 
-// TS text screen
+// Pentagon multicolor
+void draw_pmc(int n)
+{
+	u32 g = ((vid.yctr & 0x07) << 8) + ((vid.yctr & 0x38) << 2) + ((vid.yctr & 0xC0) << 5) + (vid.xctr & 0x1F);
+	u32 a = g + 0x2000;
+	u8 *scr = RAM_BASE_M + PAGE * comp.ts.vpage;
+	u32 vptr = vid.vptr;
+
+	for (; n > 0; n -= 4, vid.t_next += 4, vid.xctr++, g++, a++)
+	{
+		u8 p = scr[g];	// pixels
+		u8 c = scr[a];	// attributes
+		u32 b = (c & 0x40) >> 3;
+		u32 p0 = temp.tspal_32[(comp.ts.gpal << 4) | b | ((c >> 3) & 0x07)];	// color for 'PAPER'
+		u32 p1 = temp.tspal_32[(comp.ts.gpal << 4) | b | (c & 0x07)];			// color for 'INK'
+
+		vbuf[vid.buf][vptr++] = ((p << 1) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr++] = ((p << 1) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr++] = ((p << 2) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr++] = ((p << 2) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr++] = ((p << 3) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr++] = ((p << 3) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr++] = ((p << 4) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr++] = ((p << 4) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr++] = ((p << 5) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr++] = ((p << 5) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr++] = ((p << 6) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr++] = ((p << 6) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr++] = ((p << 7) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr++] = ((p << 7) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr++] = ((p << 8) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr++] = ((p << 8) & 0x100) ? p1 : p0;
+	}
+	vid.vptr = vptr;
+}
+
+// TS text
 void draw_tstx(int n)
 {
 	vid.xctr &= 0x7F;
 	u32 s = ((vid.yctr & 0x1F8) << 5);
 	u8 *scr = RAM_BASE_M + PAGE * comp.ts.vpage;
 	u8 *fnt = RAM_BASE_M + PAGE * (comp.ts.vpage ^ 0x01);
+	u32 vptr = vid.vptr;
 
 	for (; n > 0; n -= 2, vid.t_next += 2)
 	{
@@ -787,18 +815,19 @@ void draw_tstx(int n)
 		u32 p0 = temp.tspal_32[(comp.ts.gpal << 4) | ((a >> 4) & 0x0F)];	// color for 'PAPER'
 		u32 p1 = temp.tspal_32[(comp.ts.gpal << 4) | (a & 0x0F)];			// color for 'INK'
 
-		vbuf[vid.buf][vid.vptr++] = ((p << 1) & 0x100) ? p1 : p0;
-		vbuf[vid.buf][vid.vptr++] = ((p << 2) & 0x100) ? p1 : p0;
-		vbuf[vid.buf][vid.vptr++] = ((p << 3) & 0x100) ? p1 : p0;
-		vbuf[vid.buf][vid.vptr++] = ((p << 4) & 0x100) ? p1 : p0;
-		vbuf[vid.buf][vid.vptr++] = ((p << 5) & 0x100) ? p1 : p0;
-		vbuf[vid.buf][vid.vptr++] = ((p << 6) & 0x100) ? p1 : p0;
-		vbuf[vid.buf][vid.vptr++] = ((p << 7) & 0x100) ? p1 : p0;
-		vbuf[vid.buf][vid.vptr++] = ((p << 8) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr++] = ((p << 1) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr++] = ((p << 2) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr++] = ((p << 3) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr++] = ((p << 4) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr++] = ((p << 5) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr++] = ((p << 6) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr++] = ((p << 7) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr++] = ((p << 8) & 0x100) ? p1 : p0;
 	}
+	vid.vptr = vptr;
 }
 
-// TS 16c screen
+// TS 16c
 void draw_ts16(int n)
 {
 	u32 s = (vid.yctr << 8);
@@ -807,14 +836,15 @@ void draw_ts16(int n)
 	vid.xctr += n;
 	u32 p0, p1;
 	u8 p;
+	u32 vptr = vid.vptr;
 
 	if (comp.ts.g_offsx & 1)		// odd offset - left pixel
 	{
 		n--; vid.t_next++;
 		p = scr[s + t++]; t &= 0xFF;
 		p1 = temp.tspal_32[(comp.ts.gpal << 4) | (p & 0x0F)];
-		vbuf[vid.buf][vid.vptr++] = p1;
-		vbuf[vid.buf][vid.vptr++] = p1;
+		vbuf[vid.buf][vptr++] = p1;
+		vbuf[vid.buf][vptr++] = p1;
 	}	
 	
 	for (; n > 0; n -= 1, vid.t_next++)
@@ -822,85 +852,75 @@ void draw_ts16(int n)
 		p = scr[s + t++]; t &= 0xFF;
 		p0 = temp.tspal_32[(comp.ts.gpal << 4) | ((p >> 4) & 0x0F)];
 		p1 = temp.tspal_32[(comp.ts.gpal << 4) | (p & 0x0F)];
-		vbuf[vid.buf][vid.vptr++] = p0;
-		vbuf[vid.buf][vid.vptr++] = p0;
-		vbuf[vid.buf][vid.vptr++] = p1;
-		vbuf[vid.buf][vid.vptr++] = p1;
+		vbuf[vid.buf][vptr++] = p0;
+		vbuf[vid.buf][vptr++] = p0;
+		vbuf[vid.buf][vptr++] = p1;
+		vbuf[vid.buf][vptr++] = p1;
 	}
 
 	if (comp.ts.g_offsx & 1)		// odd offset - right pixel
 	{
 		p = scr[s + t];
 		p0 = temp.tspal_32[(comp.ts.gpal << 4) | ((p >> 4) & 0x0F)];
-		vbuf[vid.buf][vid.vptr++] = p0;
-		vbuf[vid.buf][vid.vptr++] = p0;
+		vbuf[vid.buf][vptr++] = p0;
+		vbuf[vid.buf][vptr++] = p0;
 	}
+	vid.vptr = vptr;
 }
 
-// TS 256c screen
+// TS 256c
 void draw_ts256(int n)
 {
 	u32 s = (vid.yctr << 9);
 	u8 *scr = RAM_BASE_M + PAGE * (comp.ts.vpage & 0xF0);
 	u32 t = (vid.xctr + comp.ts.g_offsx) & 0x1FF;
 	vid.xctr += n * 2;
+	u32 vptr = vid.vptr;
 	
 	for (; n > 0; n -= 1, vid.t_next++)
 	{
 		u32 p = temp.tspal_32[scr[s + t++]];  t &= 0x1FF;
-		vbuf[vid.buf][vid.vptr++] = p;
-		vbuf[vid.buf][vid.vptr++] = p;
+		vbuf[vid.buf][vptr++] = p;
+		vbuf[vid.buf][vptr++] = p;
 		p = temp.tspal_32[scr[s + t++]]; t &= 0x1FF;
-		vbuf[vid.buf][vid.vptr++] = p;
-		vbuf[vid.buf][vid.vptr++] = p;
+		vbuf[vid.buf][vptr++] = p;
+		vbuf[vid.buf][vptr++] = p;
 	}
+	vid.vptr = vptr;
 }
 
+// Border
 void draw_border(int n)
 {
 	vid.t_next += n;
+	u32 vptr = vid.vptr;
 
 	for (; n > 0; n--)
 	{
 		u32 p0 = temp.tspal_32[comp.ts.border];
-		vbuf[vid.buf][vid.vptr++] = p0;
-		vbuf[vid.buf][vid.vptr++] = p0;
-		vbuf[vid.buf][vid.vptr++] = p0;
-		vbuf[vid.buf][vid.vptr++] = p0;
+		vbuf[vid.buf][vptr++] = p0;
+		vbuf[vid.buf][vptr++] = p0;
+		vbuf[vid.buf][vptr++] = p0;
+		vbuf[vid.buf][vptr++] = p0;
 	}
+	vid.vptr = vptr;
 }
 
-void draw_pixels(int n)
-{
-	switch (vid.mode)
-	{
-	case M_ZX:
-		{
-			draw_zx(n);
-			break;
-		}
-	case M_TSTX:
-		{
-			draw_tstx(n);
-			break;
-		}
-	case M_TS16:
-		{
-			draw_ts16(n);
-			break;
-		}
-	case M_TS256:
-		{
-			draw_ts256(n);
-			break;
-		}
-	case M_TSBRD:
-		{
-			draw_border(n);
-			break;
-		}
-	}
-}
+DRAWER drawers[] = {
+	{ M_BRD		, draw_border	},	// Border only
+	{ M_ZX		, draw_zx 		},	// Sinclair
+	{ M_PMC		, draw_pmc 		},	// Pentagon Multicolor
+	{ M_P16		, draw_zx 		},	// Pentagon 16c
+	{ M_P384	, draw_zx 		},	// Pentagon 384x304
+	{ M_PHR		, draw_zx 		},	// Pentagon HiRes
+	{ M_TS16	, draw_ts16		},	// TS 16c
+	{ M_TS256	, draw_ts256	},	// TS 256c
+	{ M_TSTX	, draw_tstx		},	// TS Text
+	{ M_ATM16	, draw_zx 		},	// ATM 16c
+	{ M_ATMHR	, draw_zx 		},	// ATM HiRes
+	{ M_ATMTX	, draw_zx 		},	// ATM Text
+	{ M_ATMTL	, draw_zx 		}	// ATM Text Linear
+};
 
 // Draws raster until current tact
 void update_screen()
@@ -917,7 +937,7 @@ void update_screen()
 				init_raster();
 			}
 
-		u8 b = (line < vid.l_pix) || (line >= vid.l_bord2) || (vid.mode == M_TSBRD);	// border line?
+		u8 b = (line < vid.l_pix) || (line >= vid.l_bord2) || (vid.mode == M_BRD);	// border line?
 
 		if (b)
 			draw_border(n);
@@ -956,7 +976,7 @@ void update_screen()
 				{
 					m = min((u32)n, vid.t_bord2 - tact);
 					u32 t = vid.t_next;
-					draw_pixels(m);
+					drawers[vid.mode].func(m);
 					t = vid.t_next - t; n -= t; tact += t;
 
 					if (tact = vid.t_bord2)
@@ -977,88 +997,6 @@ void update_screen()
 	}
 }
 
-// Вызывается при записи в видеопамять нового значения
-void update_screen1()
-{
-   unsigned last_t = (cpu.t + temp.border_add) & temp.border_and;
-   unsigned t = prev_t;
-   if (t >= last_t)
-       return;
-
-   unsigned char b = comp.border_attr;
-   b = (b<<4)+b;
-
-   if (vmode == 1)
-       goto mode1;
-   if (vmode == 2)
-       goto mode2;
-
-mode0: // not visible
-   {
-     vmode = 1;
-      t = vcurr->next_t;
-      vcurr++;
-      if (t >= last_t)
-      {
-      done:
-          prev_t = t;
-          return;
-      }
-   }
-mode1: // border
-   {
-      unsigned offs = (t - vcurr[-1].next_t);
-      unsigned char *ptr = vcurr->screen_ptr + offs/2;
-      ptr = (unsigned char*)(ULONG_PTR(ptr) & ~ULONG_PTR(1));
-      if (offs & 3)
-      {
-         *ptr++ = ((unsigned)0xFF00 >> ((offs & 3)*2));
-         t += 4 -(offs & 3);
-         *ptr = (*ptr & 0x0F) + (b & 0xF0);
-         ptr++;
-      }
-      unsigned end = min(vcurr->next_t, last_t);
-      for (; t < end; t+=4)
-      {
-         *(volatile unsigned char*)ptr;
-         *ptr++ = 0; *ptr++ = b;
-      }
-      t = end;
-      if (t == vcurr->next_t)
-      {
-          vmode = vcurr->nextvmode;
-          vcurr++;
-      }
-      if (t == last_t)
-          goto done;
-      if (!vmode)
-          goto mode0;
-   }
-mode2: // screen
-   {
-      unsigned offs = (t - vcurr[-1].next_t)/4;
-      unsigned char *scr = temp.base + vcurr->scr_offs + offs;
-      unsigned char *atr = temp.base + vcurr->atr_offs + offs;
-      unsigned char *ptr = vcurr->screen_ptr + offs*2;
-      unsigned end = min(last_t, vcurr->next_t);
-      for (int i = 0; t < end; t += 4, i++)
-      {
-         *(volatile unsigned char*)(ptr+2*i);
-         ptr[2*i] = scr[i];
-         ptr[2*i+1] = colortab[atr[i]];
-      }
-      t = end;
-      if (t == vcurr->next_t)
-      {
-          vmode = 1;
-          vcurr++;
-      }
-      if (t == last_t)
-          goto done;
-      goto mode1;
-   }
-}
-
 void init_raster()
 {
    if (conf.mem_model == MM_TSL)
@@ -1067,7 +1005,13 @@ void init_raster()
 		vid.l_bord2 = l_bord2[comp.ts.rres];
 		vid.t_pix = t_pix[comp.ts.rres];
 		vid.t_bord2 = t_bord2[comp.ts.rres];
-		vid.mode = comp.ts.nogfx ? M_TSBRD : comp.ts.vmode;
+		if (comp.ts.nogfx) vid.mode = M_BRD;
+		else {
+			if (comp.ts.vmode == 0) vid.mode = M_ZX;
+			if (comp.ts.vmode == 1) vid.mode = M_TS16;
+			if (comp.ts.vmode == 2) vid.mode = M_TS256;
+			if (comp.ts.vmode == 3) vid.mode = M_TSTX;
+		}
    }
 
    else
@@ -1082,25 +1026,26 @@ void init_raster()
 
 void init_frame()
 {
-   // TS video
    vid.buf ^= 1;
    vid.t_next = 0;
    vid.vptr = 0;
    vid.yctr = comp.ts.g_offsyh - 1;
    comp.ts.g_offsy_updated = 0;
+   vid.flash = comp.frame_counter & 0x10;
    init_raster();
 
+   
    // recreate colors with flash attribute
-   unsigned char frame = (unsigned char)comp.frame_counter;
-   if (!(frame & 15) /* && !conf.flashcolor */ )
+/*    unsigned char frame = (unsigned char)comp.frame_counter;
+    if (!(frame & 15) )
        make_colortab(frame & 16);
 
    prev_t = -1; // block MCR
    temp.base_2 = 0; // block paper trace
-
+   */
    if (temp.vidblock)
        return;
-
+   
 /* [vv] Отключен, т.к. этот бит использyется для DDp scroll
    // AlCo384 - no border/paper rendering
    if (comp.pEFF7 & EFF7_384)

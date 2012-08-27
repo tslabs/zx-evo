@@ -885,8 +885,8 @@ INT_PTR CALLBACK VideoDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
          sh = (f & RF_BORDER)? SW_HIDE : SW_SHOW;
          ShowWindow(GetDlgItem(dlg, IDC_FLASH), sh);
 
-         sh = (((f & (RF_DRIVER | RF_8BPCH | RF_USEFONT)) == RF_DRIVER) || (rend == render_tv) || (rend == render_advmame))? SW_SHOW : SW_HIDE;
-         ShowWindow(GetDlgItem(dlg, IDC_NOFLIC), sh);
+//         sh = (((f & (RF_DRIVER | RF_8BPCH | RF_USEFONT)) == RF_DRIVER) || (rend == render_tv) || (rend == render_advmame))? SW_SHOW : SW_HIDE;
+//         ShowWindow(GetDlgItem(dlg, IDC_NOFLIC), sh);
 
          if (!(f & RF_2X) || getcheck(IDC_FAST_SL) || !getcheck(IDC_NOFLIC)) sh = SW_HIDE;
          ShowWindow(GetDlgItem(dlg, IDC_ALT_NOFLIC), sh);

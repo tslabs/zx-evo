@@ -84,7 +84,6 @@ struct TMemModel
 };
 
 typedef void (__fastcall *VOID_FUNC)(void);
-typedef void (__fastcall *RENDER_FUNC)(u8 *, u32);
 
 struct BORDSIZE
 {
@@ -95,12 +94,20 @@ struct BORDSIZE
    const u32 ysize;
 };
 
+typedef void (__fastcall *RENDER_FUNC)(u8 *, u32);
 struct RENDER
 {
    const char *name;
    RENDER_FUNC func;
    const char *nick;
    unsigned flags;
+};
+
+typedef void (*DRAWER_FUNC)(int);
+struct DRAWER
+{
+   const u8 number;
+   DRAWER_FUNC func;
 };
 
 struct IDE_CONFIG
