@@ -1,14 +1,14 @@
 #pragma once
 
-enum
-{
-    DRIVER_DDRAW, 
-    DRIVER_DDRAW16,
-    DRIVER_DDRAW32,
-    DRIVER_GDI, 
-    DRIVER_OVR,
-    DRIVER_BLT,
-};
+// enum
+// {
+    // DRIVER_DDRAW, 
+    // DRIVER_DDRAW16,
+    // DRIVER_DDRAW32,
+    // DRIVER_GDI, 
+    // DRIVER_OVR,
+    // DRIVER_BLT,
+// };
 
 #define MAXWQSIZE 32
 

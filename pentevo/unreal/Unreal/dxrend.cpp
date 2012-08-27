@@ -25,7 +25,7 @@ void rend_1x_32(u8 *dst, u32 pitch)
 			*dst++ = (p1.b + p2.b) >> 1;
 			*dst++ = (p1.g + p2.g) >> 1;
 			*dst++ = (p1.r + p2.r) >> 1;
-			*dst++;
+			dst++;
 		}
 		src += VID_WIDTH * 2;
 	}
@@ -166,7 +166,7 @@ void rend_2x_32_nf(u8 *dst, u32 pitch)
 			*dst++ = (p1.b + p2.b) >> 1;
 			*dst++ = (p1.g + p2.g) >> 1;
 			*dst++ = (p1.r + p2.r) >> 1;
-			*dst++;
+			dst++;
 		}
 		memcpy (dst, dst1, pitch); dst += pitch;
 		src1 += VID_WIDTH * 2;
@@ -176,8 +176,7 @@ void rend_2x_32_nf(u8 *dst, u32 pitch)
 
 void __fastcall render_2x(u8 *dst, u32 pitch)
 {
-
-	if (conf.noflic) {
+		if (conf.noflic) {
 		if (temp.obpp == 8)  { rend_2x_32_nf(dst, pitch); return; }
 		if (temp.obpp == 16) { rend_2x_32_nf(dst, pitch); return; }
 		if (temp.obpp == 32) { rend_2x_32_nf(dst, pitch); return; }
@@ -187,6 +186,44 @@ void __fastcall render_2x(u8 *dst, u32 pitch)
     if (temp.obpp == 16) { rend_2x_32(dst, pitch); return; }
     if (temp.obpp == 32) { rend_2x_32(dst, pitch); return; }
    }
+}
+
+void rend_2xs_32(u8 *dst, u32 pitch)
+{
+	RGB32 *src = (RGB32*)vbuf[vid.buf];
+	src += conf.framex*2;
+	src += conf.framey * VID_WIDTH*2;
+
+	for (u32 i=0; i<conf.frameysize; i++)
+	{
+		RGB32 *src1 = src;
+		u8 *dst1 = dst;
+		memcpy (dst, src, pitch); dst += pitch;
+		for (u32 j=0; j<(pitch/4); j++)
+		{
+			RGB32 p = *src1++;
+			*dst++ = p.b >> 1;
+			*dst++ = p.g >> 1;
+			*dst++ = p.r >> 1;
+			dst++;
+		}
+		src += VID_WIDTH * 2;
+	}
+}
+
+void __fastcall render_2xs(u8 *dst, u32 pitch)
+{
+		if (conf.noflic) {
+		if (temp.obpp == 8)  { rend_2x_32_nf(dst, pitch); return; }
+		if (temp.obpp == 16) { rend_2x_32_nf(dst, pitch); return; }
+		if (temp.obpp == 32) { rend_2x_32_nf(dst, pitch); return; }
+
+   } else {
+    if (temp.obpp == 8)  { rend_2xs_32(dst, pitch); return; }
+    if (temp.obpp == 16) { rend_2xs_32(dst, pitch); return; }
+    if (temp.obpp == 32) { rend_2xs_32(dst, pitch); return; }
+   }
+}
 
 /*
 
@@ -235,7 +272,6 @@ void __fastcall render_2x(u8 *dst, u32 pitch)
 
    rend_2x(dst, pitch);
    */
-}
 
 void rend_3x_32(u8 *dst, u32 pitch)
 {
@@ -253,15 +289,15 @@ void rend_3x_32(u8 *dst, u32 pitch)
 			*dst++ = p1.b;
 			*dst++ = p1.g;
 			*dst++ = p1.r;
-			*dst++;
+			dst++;
 			*dst++ = (p1.b + p2.b) >> 1;
 			*dst++ = (p1.g + p2.g) >> 1;
 			*dst++ = (p1.r + p2.r) >> 1;
-			*dst++;
+			dst++;
 			*dst++ = p2.b;
 			*dst++ = p2.g;
 			*dst++ = p2.r;
-			*dst++;
+			dst++;
 		}
 		memcpy (dst, dst1, pitch); dst += pitch;
 		memcpy (dst, dst1, pitch); dst += pitch;

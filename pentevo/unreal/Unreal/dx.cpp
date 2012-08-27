@@ -62,20 +62,21 @@ RENDER renders[] =
    { "Double size",               render_2x,      "double",    RF_DRIVER | RF_2X },
    { "Triple size",               render_3x,      "triple",    RF_DRIVER | RF_3X },
    { "Quad size",                 render_4x,      "quad",      RF_DRIVER | RF_4X },
+   { "Double with scanlines",     render_2xs,     "dblscan",   RF_DRIVER | RF_2X },
    { "Anti-Text64",               render_text,    "text",      RF_DRIVER | RF_2X | RF_USEFONT },
-   { "Frame resampler",           render_rsm,     "resampler", RF_DRIVER | RF_8BPCH },
+   // { "Frame resampler",           render_rsm,     "resampler", RF_DRIVER | RF_8BPCH },
 
-   { "TV Emulation",              render_tv,      "tv",        RF_YUY2 | RF_OVR },
-   { "Bilinear filter (MMX,fullscr)", render_bil, "bilinear",  RF_2X | RF_PALB },
-   { "Vector scaling (fullscr)",  render_scale,   "scale",     RF_2X },
-   { "AdvMAME scale (fullscr)",   render_advmame, "advmame",   RF_DRIVER },
+   // { "TV Emulation",              render_tv,      "tv",        RF_YUY2 | RF_OVR },
+   // { "Bilinear filter (MMX,fullscr)", render_bil, "bilinear",  RF_2X | RF_PALB },
+   // { "Vector scaling (fullscr)",  render_scale,   "scale",     RF_2X },
+   // { "AdvMAME scale (fullscr)",   render_advmame, "advmame",   RF_DRIVER },
 
-   { "Chunky overlay (fast!)",    render_ch_ov,   "ch_ov",     RF_OVR | 0*RF_128x96 | 0*RF_64x48 | RF_BORDER | RF_USE32AS16 },
-   { "Chunky 32bit hardware (flt,fullscr)", render_ch_hw,   "ch_hw",     RF_CLIP | 0*RF_128x96 | 0*RF_64x48 | RF_BORDER | RF_32 | RF_USEC32 },
+   // { "Chunky overlay (fast!)",    render_ch_ov,   "ch_ov",     RF_OVR | 0*RF_128x96 | 0*RF_64x48 | RF_BORDER | RF_USE32AS16 },
+   // { "Chunky 32bit hardware (flt,fullscr)", render_ch_hw,   "ch_hw",     RF_CLIP | 0*RF_128x96 | 0*RF_64x48 | RF_BORDER | RF_32 | RF_USEC32 },
 
-   { "Chunky 16bit, low-res, (flt,fullscr)",render_c16bl,   "ch_bl",     RF_16 | RF_BORDER | RF_USEC32 },
-   { "Chunky 16bit, hi-res, (flt,fullscr)", render_c16b,    "ch_b",      RF_16 | RF_2X | RF_BORDER | RF_USEC32 },
-   { "Ch4x4 true color (fullscr)",render_c4x32b,  "ch4true",   RF_32 | RF_2X | RF_BORDER | RF_USEC32 },
+   // { "Chunky 16bit, low-res, (flt,fullscr)",render_c16bl,   "ch_bl",     RF_16 | RF_BORDER | RF_USEC32 },
+   // { "Chunky 16bit, hi-res, (flt,fullscr)", render_c16b,    "ch_b",      RF_16 | RF_2X | RF_BORDER | RF_USEC32 },
+   // { "Ch4x4 true color (fullscr)",render_c4x32b,  "ch4true",   RF_32 | RF_2X | RF_BORDER | RF_USEC32 },
 
    { 0,0,0,0 }
 };
@@ -99,13 +100,13 @@ size_t bordersizes_count = _countof(bordersizes);
 
 const RENDER drivers[] =
 {
-   { "video memory (8bpp)",  0, "ddraw",  RF_8 },
-   { "video memory (16bpp)", 0, "ddrawh", RF_16 },
-   { "video memory (32bpp)", 0, "ddrawt", RF_32 },
+   // { "video memory (8bpp)",  0, "ddraw",  RF_8 },
+   // { "video memory (16bpp)", 0, "ddrawh", RF_16 },
+   // { "video memory (32bpp)", 0, "ddrawt", RF_32 },
    { "gdi device context",   0, "gdi",    RF_GDI },
-   { "overlay",              0, "ovr",    RF_OVR },
    { "hardware blitter",     0, "blt",    RF_CLIP },
-   { "hardware 3d",          0, "d3d",    RF_D3D },
+   // { "overlay",              0, "ovr",    RF_OVR },
+   // { "hardware 3d",          0, "d3d",    RF_D3D },
    { 0,0,0,0 }
 };
 

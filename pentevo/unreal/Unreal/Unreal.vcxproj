@@ -12,6 +12,15 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="gsz80.inl" />
+    <None Include="res\cur00000.cur" />
+    <None Include="res\cur00001.cur" />
+    <None Include="res\cur00002.cur" />
+    <None Include="res\cur00003.cur" />
+    <None Include="res\cur00004.cur" />
+    <None Include="res\cur00005.cur" />
+    <None Include="res\cur00006.cur" />
+    <None Include="res\cur00007.cur" />
+    <None Include="res\cur00008.cur" />
     <None Include="res\main.ico" />
     <None Include="z80_main.inl" />
   </ItemGroup>
