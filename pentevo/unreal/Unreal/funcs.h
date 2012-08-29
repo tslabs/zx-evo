@@ -12,7 +12,7 @@ void setpal(char);
 void set_vidmode();
 void set_video();
 void calc_rsm_tables();
-void _fastcall update_screen();
+void update_screen();
 
 void spectrum_frame();
 void do_sound();
@@ -55,9 +55,9 @@ void reset(ROM_MODE mode);
 
 void debug_events(Z80 *cpu);
 
-void __fastcall render_rsm(unsigned char*, unsigned); //Alone Coder
-void __fastcall render_advmame(unsigned char *dst, unsigned pitch); //Alone Coder
-void __fastcall render_small(unsigned char *dst, unsigned pitch);
+void render_rsm(unsigned char*, unsigned); //Alone Coder
+void render_advmame(unsigned char *dst, unsigned pitch); //Alone Coder
+void render_small(unsigned char *dst, unsigned pitch);
 // void rend_2x(unsigned char *dst, unsigned pitch);
 
 int loadsnap(char *filename);

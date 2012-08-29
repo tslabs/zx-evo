@@ -946,7 +946,7 @@ void rend_copy16q_nf(unsigned char *dst, unsigned pitch)
    }
 }
 
-void __fastcall rend_copy8(unsigned char *dst, unsigned pitch)
+void rend_copy8(unsigned char *dst, unsigned pitch)
 {
    unsigned char *src = rbuf; unsigned delta = temp.scx/4;
    for (unsigned y = 0; y < temp.scy; y++) {
@@ -955,7 +955,7 @@ void __fastcall rend_copy8(unsigned char *dst, unsigned pitch)
    }
 }
 
-void __fastcall rend_copy8_nf(unsigned char *dst, unsigned pitch)
+void rend_copy8_nf(unsigned char *dst, unsigned pitch)
 {
    unsigned char *src = rbuf; unsigned delta = temp.scx/4;
    for (unsigned y = 0; y < temp.scy; y++) {

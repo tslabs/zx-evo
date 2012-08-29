@@ -31,7 +31,7 @@ void rend_1x_32(u8 *dst, u32 pitch)
 	}
 }
 
-void __fastcall render_1x(u8 *dst, u32 pitch)
+void render_1x(u8 *dst, u32 pitch)
 {
 	if (conf.noflic)    {
 		if (temp.obpp == 8)  { rend_copy8_nf(dst, pitch); }
@@ -174,7 +174,7 @@ void rend_2x_32_nf(u8 *dst, u32 pitch)
 	}
 }
 
-void __fastcall render_2x(u8 *dst, u32 pitch)
+void render_2x(u8 *dst, u32 pitch)
 {
 		if (conf.noflic) {
 		if (temp.obpp == 8)  { rend_2x_32_nf(dst, pitch); return; }
@@ -211,7 +211,7 @@ void rend_2xs_32(u8 *dst, u32 pitch)
 	}
 }
 
-void __fastcall render_2xs(u8 *dst, u32 pitch)
+void render_2xs(u8 *dst, u32 pitch)
 {
 		if (conf.noflic) {
 		if (temp.obpp == 8)  { rend_2x_32_nf(dst, pitch); return; }
@@ -305,7 +305,7 @@ void rend_3x_32(u8 *dst, u32 pitch)
 	}
 }
 
-void __fastcall render_3x(u8 *dst, u32 pitch)
+void render_3x(u8 *dst, u32 pitch)
 {
    if (conf.noflic) {
 		if (temp.obpp == 8)  rend_copy8t_nf (dst, pitch);
@@ -319,7 +319,7 @@ void __fastcall render_3x(u8 *dst, u32 pitch)
    }
 }
 
-void __fastcall render_4x(u8 *dst, u32 pitch)
+void render_4x(u8 *dst, u32 pitch)
 {
    if (conf.noflic) {
       if (temp.obpp == 8)  rend_copy8q_nf (dst, pitch);
@@ -334,7 +334,7 @@ void __fastcall render_4x(u8 *dst, u32 pitch)
 }
 
 
-void __fastcall render_scale(u8 *dst, u32 pitch)
+void render_scale(u8 *dst, u32 pitch)
 {
    unsigned char *src = rbuf;
    unsigned dx = temp.scx / 4;
@@ -377,7 +377,7 @@ void __fastcall render_scale(u8 *dst, u32 pitch)
 static u64 mask49 = 0x4949494949494949;
 static u64 mask92 = 0x9292929292929292;
 
-static void /*__declspec(naked)*/ __fastcall _bil_line1(unsigned char *dst, unsigned char *src)
+static void /*__declspec(naked)*/ _bil_line1(unsigned char *dst, unsigned char *src)
 {
     for (unsigned i = 0; i < temp.scx; i += 2)
     {
@@ -420,7 +420,7 @@ l1:
 */
 }
 
-static void /*__declspec(naked)*/ __fastcall _bil_line2(unsigned char *dst, unsigned char *s1)
+static void /*__declspec(naked)*/ _bil_line2(unsigned char *dst, unsigned char *s1)
 {
       u32 *s = (u32 *)s1;
       u32 *d = (u32 *)dst;
@@ -478,7 +478,7 @@ m2:   movq  mm0, [edx]
 */
 }
 
-void __fastcall render_bil(u8 *dst, u32 pitch)
+void render_bil(u8 *dst, u32 pitch)
 {
    //render_1x(snbuf, MAX_WIDTH);
 
@@ -511,7 +511,7 @@ void __fastcall render_bil(u8 *dst, u32 pitch)
 //   _mm_empty();
 }
 
-void __fastcall render_tv(u8 *dst, u32 pitch)
+void render_tv(u8 *dst, u32 pitch)
 {
 // ripped from ccs and *highly* simplified and optimized
 

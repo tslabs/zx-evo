@@ -342,12 +342,12 @@ WAVEHDR wq[MAXWQSIZE];
 unsigned char wbuffer[MAXWQSIZE*MAXDSPIECE];
 unsigned wqhead, wqtail;
 
-void __fastcall do_sound_none()
+void do_sound_none()
 {
 
 }
 
-void __fastcall do_sound_wave()
+void do_sound_wave()
 {
    HRESULT r;
 
@@ -438,7 +438,7 @@ void clear_buffer()
 
 int maxgap;
 
-void __fastcall do_sound_ds()
+void do_sound_ds()
 {
    HRESULT r;
 

@@ -728,7 +728,7 @@ void paint_scr(char alt) // alt=0/1 - main/alt screen, alt=2 - ray-painted
 }
 
 // Sinclair
-void __fastcall draw_zx(int n)
+void draw_zx(int n)
 {
 	u32 g = ((vid.yctr & 0x07) << 8) + ((vid.yctr & 0x38) << 2) + ((vid.yctr & 0xC0) << 5) + (vid.xctr & 0x1F);
 	u32 a = ((vid.yctr & 0xF8) << 2) + (vid.xctr & 0x1F) + 0x1800;
@@ -757,7 +757,7 @@ void __fastcall draw_zx(int n)
 }
 
 // Pentagon multicolor
-void __fastcall draw_pmc(int n)
+void draw_pmc(int n)
 {
 	u32 g = ((vid.yctr & 0x07) << 8) + ((vid.yctr & 0x38) << 2) + ((vid.yctr & 0xC0) << 5) + (vid.xctr & 0x1F);
 	u8 *scr = RAM_BASE_M + PAGE * comp.ts.vpage;
@@ -785,7 +785,7 @@ void __fastcall draw_pmc(int n)
 }
 
 // Pentagon 16c
-void __fastcall draw_p16(int n)
+void draw_p16(int n)
 {
 	u32 g = ((vid.yctr & 0x07) << 8) + ((vid.yctr & 0x38) << 2) + ((vid.yctr & 0xC0) << 5) + (vid.xctr & 0x1F);
 	u8 *scr = RAM_BASE_M + PAGE * comp.ts.vpage;
@@ -822,7 +822,7 @@ void __fastcall draw_p16(int n)
 }
 
 // ATM 16c
-void __fastcall draw_atm16(int n)
+void draw_atm16(int n)
 {
 	u32 g = vid.yctr * 40 + vid.xctr;
 	u8 *scr = RAM_BASE_M + PAGE * comp.ts.vpage;
@@ -858,12 +858,12 @@ void __fastcall draw_atm16(int n)
 	vid.vptr = vptr;
 }
 
-void __fastcall draw_p384(int n)
+void draw_p384(int n)
 {
 }
 
 // TS text
-void __fastcall draw_tstx(int n)
+void draw_tstx(int n)
 {
 	vid.xctr &= 0x7F;
 	u32 s = ((vid.yctr & 0x1F8) << 5);
@@ -892,7 +892,7 @@ void __fastcall draw_tstx(int n)
 }
 
 // Pentagon 512x192
-void __fastcall draw_phr(int n)
+void draw_phr(int n)
 {
 	u32 g = ((vid.yctr & 0x07) << 8) + ((vid.yctr & 0x38) << 2) + ((vid.yctr & 0xC0) << 5) + (vid.xctr & 0x1F);
 	u8 *scr = RAM_BASE_M + PAGE * comp.ts.vpage;
@@ -927,7 +927,7 @@ void __fastcall draw_phr(int n)
 }
 
 // TS 16c
-void __fastcall draw_ts16(int n)
+void draw_ts16(int n)
 {
 	u32 s = (vid.yctr << 8);
 	u8 *scr = RAM_BASE_M + PAGE * (comp.ts.vpage & 0xF8);
@@ -965,7 +965,7 @@ void __fastcall draw_ts16(int n)
 }
 
 // TS 256c
-void __fastcall draw_ts256(int n)
+void draw_ts256(int n)
 {
 	u32 s = (vid.yctr << 9);
 	u8 *scr = RAM_BASE_M + PAGE * (comp.ts.vpage & 0xF0);
@@ -984,7 +984,7 @@ void __fastcall draw_ts256(int n)
 }
 
 // Border
-void __fastcall draw_border(int n)
+void draw_border(int n)
 {
 	vid.t_next += n;
 	u32 vptr = vid.vptr;
@@ -1015,7 +1015,7 @@ DRAWER drawers[] = {
 };
 
 // Draws raster until current tact
-void __fastcall update_screen()
+void update_screen()
 {
 	while (vid.t_next < min(cpu.t, VID_TACTS * VID_LINES))		// iterate until current CPU tact or to the frame end
 	{
@@ -1089,7 +1089,7 @@ void __fastcall update_screen()
 	}
 }
 
-void __fastcall init_raster()
+void init_raster()
 {
    if (conf.mem_model == MM_TSL)
    {

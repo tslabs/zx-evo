@@ -7,7 +7,7 @@
 
 RENDER_FUNC auto_ch = 0;
 
-void __fastcall _render_ch_ax(unsigned char *dst, unsigned pitch, RENDER_FUNC c2, RENDER_FUNC c4)
+void _render_ch_ax(unsigned char *dst, unsigned pitch, RENDER_FUNC c2, RENDER_FUNC c4)
 {
    if (conf.ch_size == 2) { c2(dst, pitch); return; }
    if (conf.ch_size == 4) { c4(dst, pitch); return; }
@@ -99,7 +99,7 @@ void get_c4_32() {
    }
 }
 
-void __fastcall _render_c2x16(u8 *dst, u32 pitch) {
+void _render_c2x16(u8 *dst, u32 pitch) {
    get_c2_32();
    if (!(temp.rflags & RF_128x96)) temp.rflags = (temp.rflags & ~RF_64x48) | RF_128x96, set_vidmode();
    else
@@ -110,7 +110,7 @@ void __fastcall _render_c2x16(u8 *dst, u32 pitch) {
       dst += pitch;
    }
 }
-void __fastcall _render_c4x16(u8 *dst, u32 pitch) {
+void _render_c4x16(u8 *dst, u32 pitch) {
    get_c4_32();
    if (!(temp.rflags & RF_64x48)) temp.rflags = (temp.rflags & ~RF_128x96) | RF_64x48, set_vidmode();
    else
@@ -122,7 +122,7 @@ void __fastcall _render_c4x16(u8 *dst, u32 pitch) {
    }
 }
 
-void __fastcall render_ch_ov(u8 *dst, u32 pitch)
+void render_ch_ov(u8 *dst, u32 pitch)
 {
    _render_ch_ax(dst, pitch, _render_c2x16, _render_c4x16);
 }
@@ -136,26 +136,26 @@ void _render_blt(unsigned char *dst, unsigned pitch, unsigned char *src, unsigne
    }
 }
 
-void __fastcall  _render_c2hw(u8 *dst, u32 pitch)
+void  _render_c2hw(u8 *dst, u32 pitch)
 {
    get_c2_32();
    if (!(temp.rflags & RF_128x96)) { temp.rflags = (temp.rflags & ~RF_64x48) | RF_128x96, set_vidmode(); return; }
    _render_blt(dst, pitch, (unsigned char*)t.bs2h, sizeof t.bs2h[0]);
 }
 
-void __fastcall  _render_c4hw(u8 *dst, u32 pitch)
+void  _render_c4hw(u8 *dst, u32 pitch)
 {
    get_c4_32();
    if (!(temp.rflags & RF_64x48)) { temp.rflags = (temp.rflags & ~RF_128x96) | RF_64x48, set_vidmode(); return; }
    _render_blt(dst, pitch, (unsigned char*)t.bs4h, sizeof t.bs4h[0]);
 }
 
-void __fastcall render_ch_hw(u8 *dst, u32 pitch)
+void render_ch_hw(u8 *dst, u32 pitch)
 {
    _render_ch_ax(dst, pitch, _render_c2hw, _render_c4hw);
 }
 
-void __fastcall  _render_c2x16b(u8 *dst, u32 pitch)
+void  _render_c2x16b(u8 *dst, u32 pitch)
 {
    if (conf.updateb)
    {
@@ -212,7 +212,7 @@ void __fastcall  _render_c2x16b(u8 *dst, u32 pitch)
       for (x = 0; x < 512; x++) ll[x] = ll[x+512];
    }
 }
-void __fastcall  _render_c2x16bl(u8 *dst, u32 pitch)
+void  _render_c2x16bl(u8 *dst, u32 pitch)
 {
    rend_frame16(dst, pitch);
    get_c2_32();
@@ -262,7 +262,7 @@ void __fastcall  _render_c2x16bl(u8 *dst, u32 pitch)
       for (x = 0; x < 256; x++) ll[x] = ll[x+256];
    }
 }
-void __fastcall  _render_c4x16b(u8 *dst, u32 pitch)
+void  _render_c4x16b(u8 *dst, u32 pitch)
 {
    if (conf.updateb)
    {
@@ -322,7 +322,7 @@ void __fastcall  _render_c4x16b(u8 *dst, u32 pitch)
       for (x = 0; x < 512; x++) ll[x] = ll[x+512];
    }
 }
-void __fastcall  _render_c4x16bl(u8 *dst, u32 pitch)
+void  _render_c4x16bl(u8 *dst, u32 pitch)
 {
    rend_frame16(dst, pitch);
    get_c4_32();
@@ -374,17 +374,17 @@ void __fastcall  _render_c4x16bl(u8 *dst, u32 pitch)
    }
 }
 
-void __fastcall render_c16bl(u8 *dst, u32 pitch)
+void render_c16bl(u8 *dst, u32 pitch)
 {
    _render_ch_ax(dst, pitch, _render_c2x16bl, _render_c4x16bl);
 }
 
-void __fastcall render_c16b(u8 *dst, u32 pitch)
+void render_c16b(u8 *dst, u32 pitch)
 {
    _render_ch_ax(dst, pitch, _render_c2x16b, _render_c4x16b);
 }
 
-void __fastcall render_c4x32b(u8 *dst, u32 pitch)
+void render_c4x32b(u8 *dst, u32 pitch)
 {
    if (!conf.fast_sl) rend_frame_32d(dst, pitch);
    else rend_frame_32d1(dst, pitch*2);

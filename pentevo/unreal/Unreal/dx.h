@@ -27,9 +27,9 @@ extern LPDIRECTINPUTDEVICE2 dijoyst;
 
 void sound_play();
 void sound_stop();
-void __fastcall do_sound_none();
-void __fastcall do_sound_wave();
-void __fastcall do_sound_ds();
+void do_sound_none();
+void do_sound_wave();
+void do_sound_ds();
 void do_sound();
 void setpal(char system);
 void set_priority();

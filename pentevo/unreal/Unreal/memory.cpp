@@ -371,17 +371,17 @@ void set_scorp_profrom(unsigned read_address)
 }
 
 /*
-u8 *__fastcall MemDbg(u32 addr)
+u8 *MemDbg(u32 addr)
 {
     return am_r(addr);
 }
 
-void __fastcall wmdbg(u32 addr, u8 val)
+void wmdbg(u32 addr, u8 val)
 {
    *am_r(addr) = val;
 }
 
-u8 __fastcall rmdbg(u32 addr)
+u8 rmdbg(u32 addr)
 {
    return *am_r(addr);
 }

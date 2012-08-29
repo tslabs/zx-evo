@@ -18,9 +18,9 @@ int fmsoundon0=4; //Alone Coder
 int tfmstatuson0=2; //Alone Coder
 char pressedit = 0; //Alone Coder
 
-void __fastcall wmdbg(u32 addr, u8 val);
-u8 __fastcall rmdbg(u32 addr);
-u8 *__fastcall MemDbg(u32 addr);
+void wmdbg(u32 addr, u8 val);
+u8 rmdbg(u32 addr);
+u8 *MemDbg(u32 addr);
 void __cdecl BankNames(int i, char *Name);
 namespace z80dbg
 {
@@ -96,9 +96,9 @@ TMainZ80 cpu(0, BankNames, z80dbg::step, z80dbg::delta, z80dbg::SetLastT, membit
 #ifdef MOD_GSZ80
 namespace z80gs
 {
-    u8 __fastcall dbgrm(u32 addr);
-    void __fastcall dbgwm(u32 addr, u8 val);
-    u8 *__fastcall MemDbg(u32 addr);
+    u8 dbgrm(u32 addr);
+    void dbgwm(u32 addr, u8 val);
+    u8 *MemDbg(u32 addr);
     void __cdecl BankNames(int i, char *Name);
     void Z80FAST step();
     __int64 __cdecl delta();
