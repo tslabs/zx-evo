@@ -10,7 +10,7 @@
 #define VID_WIDTH 448
 #define VID_HEIGHT 320
 
-enum
+enum VMODE
 {
 	M_BRD=0	,	// Border only
 	M_NUL	,	// Non-existing mode
@@ -26,6 +26,39 @@ enum
 	M_ATMHR	,	// ATM HiRes
 	M_ATMTX	,	// ATM Text
 	M_ATMTL		// ATM Text Linear
+};
+
+enum RASTER_N
+{
+	R_256_192=0,	// Sinclair
+	R_320_200,		// ATM, TS
+	R_320_240,		// TS
+	R_360_288,		// TS
+	R_384_304,		// AlCo
+	R_MAX
+};
+
+struct RASTER
+{
+	RASTER_N num;
+	u32 l_pix;		// first pixel line
+	u32 l_bord2;	// first lower border line
+	u32 t_pix;		// first pixel tact
+	u32 t_bord2;	// first right border tact
+};
+
+struct VCTR
+{
+	RASTER 	raster;
+	VMODE	mode;		// renderer mode
+	VMODE	mode_next;	// renderer mode, delayed to the start of the line
+	u32 	t_next;		// next tact to be rendered
+	u32		vptr;		// address in videobuffer
+	u32		vptr_pix;	// address in videobuffer of 1st pixel (used to render TS)
+	u32		xctr;		// videocontroller X counter
+	u32		yctr;		// videocontroller Y counter
+	u32 	buf;		// active video buffer
+	u32 	flash;		// flash counter
 };
 
 #define MAX_FONT_TABLES 0x62000
@@ -120,23 +153,6 @@ struct videopoint
       unsigned atr_offs;   // for vmode=2
    };
    unsigned scr_offs;
-};
-
-struct VCTR
-{
-	u32 t_next;		// next tact to be rendered
-	u32 l_pix;		// line where pixels start
-	u32 l_bord2;	// line where lower border starts
-	u32 t_pix;		// tact in line where pixels start
-	u32 t_bord2;	// tact in line where right border start
-	u32	mode;		// renderer mode
-	u32	mode_next;	// renderer mode, delayed to the start of the line
-	u32	vptr;		// address in videobuffer
-	u32	vptr_pix;	// address in videobuffer of 1st pixel (used to render TS)
-	u32	xctr;		// videocontroller X counter
-	u32	yctr;		// videocontroller Y counter
-	u32 buf;		// active video buffer
-	u32 flash;		// flash counter
 };
 
 struct AtmVideoController

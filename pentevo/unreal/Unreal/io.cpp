@@ -452,7 +452,9 @@ void out(unsigned port, unsigned char val)
 
          if (p1 == 0x77) // xx77
          {
-             set_atm_FF77(port, val);
+             update_screen();
+			 set_atm_FF77(port, val);
+			 init_raster();
              return;
          }
 
@@ -661,17 +663,20 @@ void out(unsigned port, unsigned char val)
       }
 
 
+      update_screen();
       unsigned char new_border = (val & 7);
-      if (conf.mem_model == MM_ATM710 || conf.mem_model == MM_ATM3 || conf.mem_model == MM_ATM450)
+
+	  if (conf.mem_model == MM_ATM710 || conf.mem_model == MM_ATM3 || conf.mem_model == MM_ATM450)
 		// BRIGHT for ATM border
           new_border += ((port & 8) ^ 8);
-      // if (comp.border_attr ^ new_border)
-          update_screen();
+
 	  comp.ts.border = (comp.ts.gpal << 4) | (val & 7);
-      comp.border_attr = new_border;
 
       if (conf.mem_model == MM_ATM450)
+	  {
           set_atm_aFE((unsigned char)port);
+		  init_raster();
+	  }
 
       if (conf.mem_model == MM_PROFI)
       {
@@ -682,7 +687,7 @@ void out(unsigned port, unsigned char val)
         }
       }
 
-      comp.pFE = val;
+      comp.pFE = val;  // looks obsolete
       // do not return! intro to navy seals (by rst7) uses out #FC for to both FE and 7FFD
    }
 
@@ -860,14 +865,13 @@ set1FFD:
 
    if ( (port == 0xEFF7) && ( (conf.mem_model==MM_PENTAGON) || (conf.mem_model==MM_ATM3) ) ) // lvd added eff7 to atm3
    {
-      unsigned char oldpEFF7 = comp.pEFF7; //Alone Coder 0.36.4
+      update_screen();
+	  unsigned char oldpEFF7 = comp.pEFF7; //Alone Coder 0.36.4
       comp.pEFF7 = (comp.pEFF7 & conf.EFF7_mask) | (val & ~conf.EFF7_mask);
       comp.pEFF7 |= EFF7_GIGASCREEN; // [vv] disable turbo
-//    if ((comp.pEFF7 ^ oldpEFF7) & EFF7_GIGASCREEN) {
-//      conf.frame = frametime;
-//      if ((conf.mem_model == MM_PENTAGON)&&(comp.pEFF7 & EFF7_GIGASCREEN))conf.frame = 71680;
-//      apply_sound();
-//    } //Alone Coder removed 0.37.1
+	  init_raster();
+
+	  /*
 
       if (!(comp.pEFF7 & EFF7_4BPP))
       {
@@ -876,7 +880,7 @@ set1FFD:
           temp.offset_hscroll = 0;
           temp.offset_hscroll_prev = 0;
       }
-
+*/
       if ((comp.pEFF7 ^ oldpEFF7) & (EFF7_ROCACHE | EFF7_LOCKMEM))
           set_banks(); //Alone Coder 0.36.4
       return;
