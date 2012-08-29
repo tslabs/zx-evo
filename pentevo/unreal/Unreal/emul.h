@@ -394,6 +394,15 @@ enum AY_SCHEME
 #define EFF7_384        0x40
 #define EFF7_CMOS       0x80
 
+#define aFE_16          0x00
+#define aFE_MC          0x01
+
+#define FF77_16         0x00
+#define FF77_MC         0x02
+#define FF77_ZX         0x03
+#define FF77_TX         0x06
+#define FF77_TL         0x07
+
 // Биты порта 00 для кворума
 static const u8 Q_F_RAM = 0x01;
 static const u8 Q_RAM_8 = 0x08;
