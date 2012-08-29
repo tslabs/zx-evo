@@ -2,7 +2,7 @@
 
 #define inline __inline
 #define forceinline __forceinline
-#define fastcall __fastcall             // parameters in registers
+#define fastcall             // parameters in registers
 
 typedef unsigned long long uint64_t;
 

@@ -346,7 +346,7 @@ unsigned detect_scroll(unsigned char *src)
    return scroll;
 }
 
-void __fastcall render_text(u8 *dst, u32 pitch)
+void render_text(u8 *dst, u32 pitch)
 {
    unsigned char *dst2 = dst + temp.b_left*temp.obpp/4 +
                        temp.b_top*pitch * ((temp.oy > temp.scy)?2:1);

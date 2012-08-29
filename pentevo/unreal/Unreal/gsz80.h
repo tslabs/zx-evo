@@ -17,10 +17,10 @@ void __cdecl BankNames(int i, char *Name);
 __int64 __cdecl delta();
 void __cdecl SetLastT();
 
-u8 __fastcall Rm(u32 addr);
-void __fastcall Wm(u32 addr, u8 val);
-u8 __fastcall DbgRm(u32 addr);
-void __fastcall DbgWm(u32 addr, u8 val);
+u8 Rm(u32 addr);
+void Wm(u32 addr, u8 val);
+u8 DbgRm(u32 addr);
+void DbgWm(u32 addr, u8 val);
 }
 
 class TGsZ80 : public Z80

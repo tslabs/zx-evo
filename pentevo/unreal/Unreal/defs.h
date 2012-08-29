@@ -190,8 +190,8 @@ struct TZ80State
     bool nmi_in_progress;
 };
 
-typedef u8 (__fastcall * TRm)(u32 addr);
-typedef void (__fastcall * TWm)(u32 addr, u8 val);
+typedef u8 (* TRm)(u32 addr);
+typedef void (* TWm)(u32 addr, u8 val);
 
 struct TMemIf
 {
@@ -232,9 +232,9 @@ struct Z80 : public TZ80State
    i64 debug_last_t; // used to find time delta
    u32 tpi; // Число тактов между прерываниями
    u32 trpc[40];
-//   typedef u8 (__fastcall * TRmDbg)(u32 addr);
-//   typedef u8 *(__fastcall * TMemDbg)(u32 addr);
-//   typedef void (__fastcall * TWmDbg)(u32 addr, u8 val);
+//   typedef u8 (* TRmDbg)(u32 addr);
+//   typedef u8 *(* TMemDbg)(u32 addr);
+//   typedef void (* TWmDbg)(u32 addr, u8 val);
    typedef void (__cdecl *TBankNames)(int i, char *Name);
    typedef void (Z80FAST * TStep)();
    typedef i64 (__cdecl * TDelta)();

@@ -3,8 +3,8 @@
 #define line16 line8d
 #define line16d line32
 
-void __fastcall rend_copy8(unsigned char *dst, unsigned pitch);
-void __fastcall rend_copy8_nf(unsigned char *dst, unsigned pitch);
+void rend_copy8(unsigned char *dst, unsigned pitch);
+void rend_copy8_nf(unsigned char *dst, unsigned pitch);
 void rend_copy8d(unsigned char *dst, unsigned pitch);
 void rend_copy8d1(unsigned char *dst, unsigned pitch);
 void rend_copy8d1_nf(unsigned char *dst, unsigned pitch);

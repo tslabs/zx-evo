@@ -14,6 +14,6 @@ Z80INLINE u8 *am_r(unsigned addr)
 #endif
    return bankr[(addr >> 14) & 3] + (addr & (PAGE-1));
 }
-//u8 __fastcall rmdbg(u32 addr);
-//void __fastcall wmdbg(u32 addr, u8 val);
-//u8 *__fastcall MemDbg(u32 addr);
+//u8 rmdbg(u32 addr);
+//void wmdbg(u32 addr, u8 val);
+//u8 *MemDbg(u32 addr);

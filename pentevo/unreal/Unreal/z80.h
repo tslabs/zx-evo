@@ -18,9 +18,9 @@
    #define z80dbg z80fast
 #endif
 
-u8 __fastcall Rm(u32 addr);
-void __fastcall Wm(u32 addr, u8 val);
-u8 __fastcall DbgRm(u32 addr);
-void __fastcall DbgWm(u32 addr, u8 val);
+u8 Rm(u32 addr);
+void Wm(u32 addr, u8 val);
+u8 DbgRm(u32 addr);
+void DbgWm(u32 addr, u8 val);
 
 void reset(ROM_MODE mode);

@@ -42,22 +42,22 @@ void flush_gs_z80();
 
 void out(unsigned port, unsigned char val);
 
-u8 __fastcall Rm(u32 addr)
+u8 Rm(u32 addr)
 {
     return z80fast::rm(addr);
 }
 
-void __fastcall Wm(u32 addr, u8 val)
+void Wm(u32 addr, u8 val)
 {
     z80fast::wm(addr, val);
 }
 
-u8 __fastcall DbgRm(u32 addr)
+u8 DbgRm(u32 addr)
 {
     return z80dbg::rm(addr);
 }
 
-void __fastcall DbgWm(u32 addr, u8 val)
+void DbgWm(u32 addr, u8 val)
 {
     z80dbg::wm(addr, val);
 }

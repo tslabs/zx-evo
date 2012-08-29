@@ -16,9 +16,9 @@ unsigned __int64 gs_t_states; // inc'ed with GSCPUINT every gs int
 unsigned __int64 gscpu_t_at_frame_start; // gs_t_states+gscpu.t when spectrum frame begins
 
 Z80INLINE unsigned char rm(unsigned addr);
-u8 __fastcall dbgrm(u32 addr);
+u8 dbgrm(u32 addr);
 Z80INLINE void wm(unsigned addr, unsigned char val);
-void __fastcall dbgwm(u32 addr, u8 val);
+void dbgwm(u32 addr, u8 val);
 Z80INLINE u8 *am_r(u32 addr);
 Z80INLINE unsigned char m1_cycle(Z80 *cpu);
 unsigned char in(unsigned port);
@@ -36,22 +36,22 @@ Z80INLINE unsigned char rm(unsigned addr);
 Z80INLINE void wm(unsigned addr, unsigned char val);
 }
 
-u8 __fastcall Rm(u32 addr)
+u8 Rm(u32 addr)
 {
     return z80gs::z80fast::rm(addr);
 }
 
-void __fastcall Wm(u32 addr, u8 val)
+void Wm(u32 addr, u8 val)
 {
     z80gs::z80fast::wm(addr, val);
 }
 
-u8 __fastcall DbgRm(u32 addr)
+u8 DbgRm(u32 addr)
 {
     return z80gs::z80dbg::rm(addr);
 }
 
-void __fastcall DbgWm(u32 addr, u8 val)
+void DbgWm(u32 addr, u8 val)
 {
     z80gs::z80dbg::wm(addr, val);
 }
@@ -270,17 +270,17 @@ namespace z80dbg
    #undef Z80_DBG
 }
 
-u8 *__fastcall MemDbg(u32 addr)
+u8 *MemDbg(u32 addr)
 {
     return am_r(addr);
 }
 
-u8 __fastcall dbgrm(u32 addr)
+u8 dbgrm(u32 addr)
 {
     return z80dbg::rm(addr);
 }
 
-void __fastcall dbgwm(u32 addr, u8 val)
+void dbgwm(u32 addr, u8 val)
 {
     *am_r(addr) = val;
 }

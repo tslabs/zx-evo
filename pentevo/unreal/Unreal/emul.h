@@ -83,7 +83,7 @@ struct TMemModel
    unsigned availRAMs;
 };
 
-typedef void (__fastcall *VOID_FUNC)(void);
+typedef void (*VOID_FUNC)(void);
 
 struct BORDSIZE
 {
@@ -94,7 +94,7 @@ struct BORDSIZE
    const u32 ysize;
 };
 
-typedef void (__fastcall *RENDER_FUNC)(u8 *, u32);
+typedef void (*RENDER_FUNC)(u8 *, u32);
 struct RENDER
 {
    const char *name;
@@ -103,7 +103,7 @@ struct RENDER
    unsigned flags;
 };
 
-typedef void (__fastcall *DRAWER_FUNC)(int);
+typedef void (*DRAWER_FUNC)(int);
 struct DRAWER
 {
    const u8 number;
