@@ -55,10 +55,7 @@ void reset(ROM_MODE mode);
 
 void debug_events(Z80 *cpu);
 
-void render_rsm(unsigned char*, unsigned); //Alone Coder
-void render_advmame(unsigned char *dst, unsigned pitch); //Alone Coder
 void render_small(unsigned char *dst, unsigned pitch);
-// void rend_2x(unsigned char *dst, unsigned pitch);
 
 int loadsnap(char *filename);
 unsigned char what_is(char *filename);

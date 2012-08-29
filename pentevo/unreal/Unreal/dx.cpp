@@ -6,12 +6,8 @@
 #include "dx.h"
 #include "draw.h"
 #include "dxrend.h"
-#include "dxrendch.h"
 #include "dxrframe.h"
 #include "dxr_text.h"
-#include "dxr_rsm.h"
-#include "dxr_advm.h"
-#include "dxovr.h"
 #include "dxerr.h"
 #include "sound.h"
 #include "savesnd.h"
@@ -64,20 +60,6 @@ RENDER renders[] =
    { "Quad size",                 render_4x,      "quad",      RF_DRIVER | RF_4X },
    { "Double with scanlines",     render_2xs,     "dblscan",   RF_DRIVER | RF_2X },
    { "Anti-Text64",               render_text,    "text",      RF_DRIVER | RF_2X | RF_USEFONT },
-   // { "Frame resampler",           render_rsm,     "resampler", RF_DRIVER | RF_8BPCH },
-
-   // { "TV Emulation",              render_tv,      "tv",        RF_YUY2 | RF_OVR },
-   // { "Bilinear filter (MMX,fullscr)", render_bil, "bilinear",  RF_2X | RF_PALB },
-   // { "Vector scaling (fullscr)",  render_scale,   "scale",     RF_2X },
-   // { "AdvMAME scale (fullscr)",   render_advmame, "advmame",   RF_DRIVER },
-
-   // { "Chunky overlay (fast!)",    render_ch_ov,   "ch_ov",     RF_OVR | 0*RF_128x96 | 0*RF_64x48 | RF_BORDER | RF_USE32AS16 },
-   // { "Chunky 32bit hardware (flt,fullscr)", render_ch_hw,   "ch_hw",     RF_CLIP | 0*RF_128x96 | 0*RF_64x48 | RF_BORDER | RF_32 | RF_USEC32 },
-
-   // { "Chunky 16bit, low-res, (flt,fullscr)",render_c16bl,   "ch_bl",     RF_16 | RF_BORDER | RF_USEC32 },
-   // { "Chunky 16bit, hi-res, (flt,fullscr)", render_c16b,    "ch_b",      RF_16 | RF_2X | RF_BORDER | RF_USEC32 },
-   // { "Ch4x4 true color (fullscr)",render_c4x32b,  "ch4true",   RF_32 | RF_2X | RF_BORDER | RF_USEC32 },
-
    { 0,0,0,0 }
 };
 
@@ -726,7 +708,6 @@ INT_PTR CALLBACK WndProc(HWND hwnd,UINT uMessage,WPARAM wparam,LPARAM lparam)
          HBRUSH br = CreateSolidBrush(RGB(0xFF,0x00,0xFF));
          FillRect(temp.gdidc, &rc, br);
          DeleteObject(br);
-         update_overlay();
       }
       else if (hbm && !active)
       {
@@ -1382,15 +1363,6 @@ static void CalcWindowSize()
 {
     temp.rflags = renders[conf.render].flags;
 
-    if (renders[conf.render].func == render_advmame)
-    {
-        if (conf.videoscale == 2)
-            temp.rflags |= RF_2X;
-        if (conf.videoscale == 3)
-            temp.rflags |= RF_3X;
-        if (conf.videoscale == 4)
-            temp.rflags |= RF_4X;
-    }
     if (temp.rflags & RF_DRIVER)
         temp.rflags |= drivers[conf.driver].flags;
 
