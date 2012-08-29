@@ -106,7 +106,6 @@ struct RENDER
 typedef void (*DRAWER_FUNC)(int);
 struct DRAWER
 {
-   const u8 number;
    DRAWER_FUNC func;
 };
 
