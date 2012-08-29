@@ -967,6 +967,23 @@ void draw_ts256(int n)
 	vid.vptr = vptr;
 }
 
+// Null
+void draw_nul(int n)
+{
+	u32 vptr = vid.vptr;
+	RGB32 p;
+	
+	for (; n > 0; n -= 1, vid.t_next++)
+	{
+		p.r = p.g = p.b = rand()*0xFFFF >> 3;
+		vbuf[vid.buf][vptr   ] = vbuf[vid.buf][vptr+ 1] = p.p;
+		p.r = p.g = p.b = rand()*0xFFFF >> 3;
+		vbuf[vid.buf][vptr+ 2] = vbuf[vid.buf][vptr+ 3] = p.p;
+		vptr += 4;
+	}
+	vid.vptr = vptr;
+}
+
 // Border
 void draw_border(int n)
 {
@@ -983,19 +1000,20 @@ void draw_border(int n)
 }
 
 DRAWER drawers[] = {
-	{ M_BRD		, draw_border	},	// Border only
-	{ M_ZX		, draw_zx		},	// Sinclair
-	{ M_PMC		, draw_pmc 		},	// Pentagon Multicolor
-	{ M_P16		, draw_p16 		},	// Pentagon 16c
-	{ M_P384	, draw_zx		},	// Pentagon 384x304
-	{ M_PHR		, draw_phr		},	// Pentagon HiRes
-	{ M_TS16	, draw_ts16		},	// TS 16c
-	{ M_TS256	, draw_ts256	},	// TS 256c
-	{ M_TSTX	, draw_tstx		},	// TS Text
-	{ M_ATM16	, draw_zx 		},	// ATM 16c
-	{ M_ATMHR	, draw_zx 		},	// ATM HiRes
-	{ M_ATMTX	, draw_zx 		},	// ATM Text
-	{ M_ATMTL	, draw_zx 		}	// ATM Text Linear
+	{ draw_border	},	// Border only
+	{ draw_nul		},	// Non-existing mode
+	{ draw_zx		},	// Sinclair
+	{ draw_pmc 		},	// Pentagon Multicolor
+	{ draw_p16 		},	// Pentagon 16c
+	{ draw_nul		},	// Pentagon 384x304
+	{ draw_phr		},	// Pentagon HiRes
+	{ draw_ts16		},	// TS 16c
+	{ draw_ts256	},	// TS 256c
+	{ draw_tstx		},	// TS Text
+	{ draw_atm16	},	// ATM 16c
+	{ draw_nul 		},	// ATM HiRes
+	{ draw_nul 		},	// ATM Text
+	{ draw_nul 		}	// ATM Text Linear
 };
 
 // Draws raster until current tact
@@ -1013,7 +1031,7 @@ void update_screen()
 				init_raster();
 			}
 
-		u8 b = (line < vid.l_pix) || (line >= vid.l_bord2) || (vid.mode == M_BRD);	// border line?
+		u8 b = (line < vid.l_pix) || (line >= vid.l_bord2);	// border line?
 
 		if (b)
 			draw_border(n);
@@ -1131,6 +1149,7 @@ void init_frame()
 //   if (comp.pEFF7 & EFF7_GIGASCREEN) goto allow_border; //Alone Coder
 
    // disable multicolors, border still works
+   /*
    if ((temp.rflags & RF_BORDER) || // chunk/etc filter
        (conf.mem_model == MM_PROFI && (comp.pDFFD & 0x80)) ||   // profi hires screen
        ((conf.mem_model == MM_ATM710 || conf.mem_model == MM_ATM3)&& (comp.pFF77 & 7) != 3) ||  // ATM-2 hires screen
@@ -1153,9 +1172,10 @@ void init_frame()
       if (!conf.updateb)
           return;
    }
+		   */
 
    // paper + border
-   temp.base_2 = temp.base;
+   // temp.base_2 = temp.base;
 //allow_border:
    prev_t = vmode = 0;
    vcurr = video;

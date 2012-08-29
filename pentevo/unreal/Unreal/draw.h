@@ -13,6 +13,7 @@
 enum
 {
 	M_BRD=0	,	// Border only
+	M_NUL	,	// Non-existing mode
 	M_ZX	,	// Sinclair
 	M_PMC	,	// Pentagon Multicolor
 	M_P16	,	// Pentagon 16c
