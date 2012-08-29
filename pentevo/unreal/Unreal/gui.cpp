@@ -6,8 +6,6 @@
 #include "draw.h"
 #include "dx.h"
 #include "dxrend.h"
-#include "dxr_advm.h"
-#include "dxr_rsm.h"
 #include "fntsrch.h"
 #include "tape.h"
 #include "snapshot.h"
@@ -885,9 +883,6 @@ INT_PTR CALLBACK VideoDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
          sh = (f & RF_BORDER)? SW_HIDE : SW_SHOW;
          ShowWindow(GetDlgItem(dlg, IDC_FLASH), sh);
 
-//         sh = (((f & (RF_DRIVER | RF_8BPCH | RF_USEFONT)) == RF_DRIVER) || (rend == render_tv) || (rend == render_advmame))? SW_SHOW : SW_HIDE;
-//         ShowWindow(GetDlgItem(dlg, IDC_NOFLIC), sh);
-
          if (!(f & RF_2X) || getcheck(IDC_FAST_SL) || !getcheck(IDC_NOFLIC)) sh = SW_HIDE;
          ShowWindow(GetDlgItem(dlg, IDC_ALT_NOFLIC), sh);
 
@@ -900,17 +895,9 @@ INT_PTR CALLBACK VideoDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
          ShowWindow(GetDlgItem(dlg, IDC_REND_TITLE), sh);
          ShowWindow(GetDlgItem(dlg, IDC_RENDER), sh);
 
-         sh = (rend == render_rsm)? SW_SHOW : SW_HIDE;
-         ShowWindow(GetDlgItem(dlg, IDC_FIR), sh);
-
          sh = (f & RF_2X) && (f & (RF_DRIVER | RF_USEC32))? SW_SHOW : SW_HIDE;
          ShowWindow(GetDlgItem(dlg, IDC_FAST_SL), sh);
 
-         sh = (rend == render_advmame) ? SW_SHOW : SW_HIDE;
-         ShowWindow(GetDlgItem(dlg, IDC_VIDEOSCALE), sh);
-         ShowWindow(GetDlgItem(dlg, IDC_VSCALE_TITLE1), sh);
-         ShowWindow(GetDlgItem(dlg, IDC_VSCALE_TITLE2), sh);
-         ShowWindow(GetDlgItem(dlg, IDC_VSCALE_TITLE3), sh);
       }
       return 1;
    }

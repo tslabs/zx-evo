@@ -90,9 +90,6 @@
     <ClCompile Include="draw.cpp">
       <Filter>Souces</Filter>
     </ClCompile>
-    <ClCompile Include="draw_384.cpp">
-      <Filter>Souces</Filter>
-    </ClCompile>
     <ClCompile Include="drawnomc.cpp">
       <Filter>Souces</Filter>
     </ClCompile>
@@ -102,58 +99,10 @@
     <ClCompile Include="dxerr.cpp">
       <Filter>Souces</Filter>
     </ClCompile>
-    <ClCompile Include="dxovr.cpp">
-      <Filter>Souces</Filter>
-    </ClCompile>
-    <ClCompile Include="dxr_4bpp.cpp">
-      <Filter>Souces</Filter>
-    </ClCompile>
-    <ClCompile Include="dxr_512.cpp">
-      <Filter>Souces</Filter>
-    </ClCompile>
-    <ClCompile Include="dxr_advm.cpp">
-      <Filter>Souces</Filter>
-    </ClCompile>
-    <ClCompile Include="dxr_atm.cpp">
-      <Filter>Souces</Filter>
-    </ClCompile>
-    <ClCompile Include="dxr_atm0.cpp">
-      <Filter>Souces</Filter>
-    </ClCompile>
-    <ClCompile Include="dxr_atm2.cpp">
-      <Filter>Souces</Filter>
-    </ClCompile>
-    <ClCompile Include="dxr_atm6.cpp">
-      <Filter>Souces</Filter>
-    </ClCompile>
-    <ClCompile Include="dxr_atm7.cpp">
-      <Filter>Souces</Filter>
-    </ClCompile>
-    <ClCompile Include="dxr_atmf.cpp">
-      <Filter>Souces</Filter>
-    </ClCompile>
-    <ClCompile Include="dxr_pentatm7.cpp">
-      <Filter>Souces</Filter>
-    </ClCompile>
-    <ClCompile Include="dxr_prof.cpp">
-      <Filter>Souces</Filter>
-    </ClCompile>
-    <ClCompile Include="dxr_rsm.cpp">
-      <Filter>Souces</Filter>
-    </ClCompile>
-    <ClCompile Include="dxr_text.cpp">
-      <Filter>Souces</Filter>
-    </ClCompile>
-    <ClCompile Include="dxr_vd.cpp">
-      <Filter>Souces</Filter>
-    </ClCompile>
     <ClCompile Include="dxrcopy.cpp">
       <Filter>Souces</Filter>
     </ClCompile>
     <ClCompile Include="dxrend.cpp">
-      <Filter>Souces</Filter>
-    </ClCompile>
-    <ClCompile Include="dxrendch.cpp">
       <Filter>Souces</Filter>
     </ClCompile>
     <ClCompile Include="dxrframe.cpp">
@@ -360,6 +309,9 @@
     <ClCompile Include="zxevo.cpp">
       <Filter>Souces</Filter>
     </ClCompile>
+    <ClCompile Include="dxr_text.cpp">
+      <Filter>Souces</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="atm.h">
@@ -428,55 +380,10 @@
     <ClInclude Include="dxerr8.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="dxovr.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="dxr_4bpp.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="dxr_512.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="dxr_advm.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="dxr_atm.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="dxr_atm0.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="dxr_atm2.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="dxr_atm6.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="dxr_atm7.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="dxr_atmf.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="dxr_pentatm7.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="dxr_prof.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="dxr_rsm.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
     <ClInclude Include="dxr_text.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="dxrcopy.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
     <ClInclude Include="dxrend.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="dxrendch.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="dxrframe.h">

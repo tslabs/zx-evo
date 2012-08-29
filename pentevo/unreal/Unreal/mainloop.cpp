@@ -4,7 +4,6 @@
 #include "sound.h"
 #include "draw.h"
 #include "dx.h"
-#include "dxr_rsm.h"
 #include "leds.h"
 #include "memory.h"
 #include "snapshot.h"

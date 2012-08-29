@@ -5,8 +5,6 @@
 #include "drawnomc.h"
 #include "dx.h"
 #include "dxr_text.h"
-#include "dxr_rsm.h"
-#include "dxr_advm.h"
 #include "memory.h"
 #include "config.h"
 #include "util.h"
@@ -671,21 +669,7 @@ void apply_video()
       conf.noflic = 0;
    }
 
-   if (renders[conf.render].func == render_rsm)
-       conf.flip = 1; // todo: revert back after returning from frame resampler //Alone Coder
-
-   if (renders[conf.render].func == render_advmame)
-   {
-      if (conf.videoscale == 2)
-          temp.rflags |= RF_2X;
-      if (conf.videoscale == 3)
-          temp.rflags |= RF_3X;
-      if (conf.videoscale == 4)
-          temp.rflags |= RF_4X;
-   } //Alone Coder
-
    set_video();
-   calc_rsm_tables();
    video_timing_tables();
 
    // Console info about selected video option
@@ -1175,34 +1159,6 @@ void init_frame()
 //allow_border:
    prev_t = vmode = 0;
    vcurr = video;
-}
-
-void flush_frame()
-{
-   if (temp.vidblock)
-       return;
-   if (prev_t != -1)
-   { // MCR on
-      if (prev_t)
-      {  // paint until end of frame
-         // paint until screen bottom, even if n_lines*t_line < cpu.t (=t_frame)
-         unsigned t = cpu.t;
-         cpu.t = 0x7FFF0000;
-         update_screen();
-         cpu.t = t;
-//         if (comp.pEFF7 & EFF7_GIGASCREEN) draw_gigascreen_no_border(); //Alone Coder
-      }
-      else
-      { // MCR on, but no screen updates in last frame - use fast painter
-         if (temp.base_2 /*|| (comp.pEFF7 & EFF7_GIGASCREEN)*/ /*Alone Coder*/)
-             draw_screen();
-         // else
-             // draw_border();
-      }
-      return;
-   }
-   if (comp.pEFF7 & EFF7_384)
-       draw_alco();
 }
 
 void load_spec_colors()
