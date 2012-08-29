@@ -12,7 +12,7 @@ void setpal(char);
 void set_vidmode();
 void set_video();
 void calc_rsm_tables();
-void update_screen();
+void _fastcall update_screen();
 
 void spectrum_frame();
 void do_sound();

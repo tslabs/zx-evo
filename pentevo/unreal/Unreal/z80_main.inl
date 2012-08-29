@@ -67,15 +67,15 @@ void wm(unsigned addr, unsigned char val)
 			{
 				case TSF_CRAM:
 				{
+					update_screen();
 					comp.ts.cram[(addr >> 1) & 0xFF] = ((val << 8) | temp.fm_tmp) & 0x7FFF;		// 15 bits of CRAM data
 					update_tspal((addr >> 1) & 0xFF);
-					update_screen();
 					break;
 				}
 				case TSF_SFILE:
 				{
-					comp.ts.sfile[(addr >> 1) & 0xFF] = (val << 8) | temp.fm_tmp;
 					update_screen();
+					comp.ts.sfile[(addr >> 1) & 0xFF] = (val << 8) | temp.fm_tmp;
 					break;
 				}
 			}
@@ -87,9 +87,9 @@ void wm(unsigned addr, unsigned char val)
 
    if ((conf.mem_model == MM_ATM3) && (comp.pBF & 4) /*&& ((addr & 0xF800) == 0)*/ ) // Разрешена загрузка шрифта для ATM3 // lvd: any addr is possible in ZXEVO
    {
+       update_screen();
        unsigned idx = ((addr&0x07F8) >> 3) | ((addr & 7) << 8);
        fontatm2[idx] = val;
-       update_screen();
        return;
    }
 

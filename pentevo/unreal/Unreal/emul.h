@@ -103,7 +103,7 @@ struct RENDER
    unsigned flags;
 };
 
-typedef void (*DRAWER_FUNC)(int);
+typedef void (__fastcall *DRAWER_FUNC)(int);
 struct DRAWER
 {
    const u8 number;

@@ -728,7 +728,7 @@ void paint_scr(char alt) // alt=0/1 - main/alt screen, alt=2 - ray-painted
 }
 
 // Sinclair
-void draw_zx(int n)
+void __fastcall draw_zx(int n)
 {
 	u32 g = ((vid.yctr & 0x07) << 8) + ((vid.yctr & 0x38) << 2) + ((vid.yctr & 0xC0) << 5) + (vid.xctr & 0x1F);
 	u32 a = ((vid.yctr & 0xF8) << 2) + (vid.xctr & 0x1F) + 0x1800;
@@ -743,64 +743,127 @@ void draw_zx(int n)
 		u32 p0 = temp.tspal_32[(comp.ts.gpal << 4) | b | ((c >> 3) & 0x07)];	// color for 'PAPER'
 		u32 p1 = temp.tspal_32[(comp.ts.gpal << 4) | b | (c & 0x07)];			// color for 'INK'
 
-		vbuf[vid.buf][vptr++] = ((p << 1) & 0x100) ? p1 : p0;
-		vbuf[vid.buf][vptr++] = ((p << 1) & 0x100) ? p1 : p0;
-		vbuf[vid.buf][vptr++] = ((p << 2) & 0x100) ? p1 : p0;
-		vbuf[vid.buf][vptr++] = ((p << 2) & 0x100) ? p1 : p0;
-		vbuf[vid.buf][vptr++] = ((p << 3) & 0x100) ? p1 : p0;
-		vbuf[vid.buf][vptr++] = ((p << 3) & 0x100) ? p1 : p0;
-		vbuf[vid.buf][vptr++] = ((p << 4) & 0x100) ? p1 : p0;
-		vbuf[vid.buf][vptr++] = ((p << 4) & 0x100) ? p1 : p0;
-		vbuf[vid.buf][vptr++] = ((p << 5) & 0x100) ? p1 : p0;
-		vbuf[vid.buf][vptr++] = ((p << 5) & 0x100) ? p1 : p0;
-		vbuf[vid.buf][vptr++] = ((p << 6) & 0x100) ? p1 : p0;
-		vbuf[vid.buf][vptr++] = ((p << 6) & 0x100) ? p1 : p0;
-		vbuf[vid.buf][vptr++] = ((p << 7) & 0x100) ? p1 : p0;
-		vbuf[vid.buf][vptr++] = ((p << 7) & 0x100) ? p1 : p0;
-		vbuf[vid.buf][vptr++] = ((p << 8) & 0x100) ? p1 : p0;
-		vbuf[vid.buf][vptr++] = ((p << 8) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr   ] = vbuf[vid.buf][vptr+ 1] = ((p << 1) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr+ 2] = vbuf[vid.buf][vptr+ 3] = ((p << 2) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr+ 4] = vbuf[vid.buf][vptr+ 5] = ((p << 3) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr+ 6] = vbuf[vid.buf][vptr+ 7] = ((p << 4) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr+ 8] = vbuf[vid.buf][vptr+ 9] = ((p << 5) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr+10] = vbuf[vid.buf][vptr+11] = ((p << 6) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr+12] = vbuf[vid.buf][vptr+13] = ((p << 7) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr+14] = vbuf[vid.buf][vptr+15] = ((p << 8) & 0x100) ? p1 : p0;
+		vptr += 16;
 	}
 	vid.vptr = vptr;
 }
 
 // Pentagon multicolor
-void draw_pmc(int n)
+void __fastcall draw_pmc(int n)
 {
 	u32 g = ((vid.yctr & 0x07) << 8) + ((vid.yctr & 0x38) << 2) + ((vid.yctr & 0xC0) << 5) + (vid.xctr & 0x1F);
-	u32 a = g + 0x2000;
 	u8 *scr = RAM_BASE_M + PAGE * comp.ts.vpage;
 	u32 vptr = vid.vptr;
 
-	for (; n > 0; n -= 4, vid.t_next += 4, vid.xctr++, g++, a++)
+	for (; n > 0; n -= 4, vid.t_next += 4, vid.xctr++, g++)
 	{
-		u8 p = scr[g];	// pixels
-		u8 c = scr[a];	// attributes
+		u8 p = scr[g];			// pixels
+		u8 c = scr[g + 0x2000];	// attributes
 		u32 b = (c & 0x40) >> 3;
 		u32 p0 = temp.tspal_32[(comp.ts.gpal << 4) | b | ((c >> 3) & 0x07)];	// color for 'PAPER'
 		u32 p1 = temp.tspal_32[(comp.ts.gpal << 4) | b | (c & 0x07)];			// color for 'INK'
 
-		vbuf[vid.buf][vptr++] = ((p << 1) & 0x100) ? p1 : p0;
-		vbuf[vid.buf][vptr++] = ((p << 1) & 0x100) ? p1 : p0;
-		vbuf[vid.buf][vptr++] = ((p << 2) & 0x100) ? p1 : p0;
-		vbuf[vid.buf][vptr++] = ((p << 2) & 0x100) ? p1 : p0;
-		vbuf[vid.buf][vptr++] = ((p << 3) & 0x100) ? p1 : p0;
-		vbuf[vid.buf][vptr++] = ((p << 3) & 0x100) ? p1 : p0;
-		vbuf[vid.buf][vptr++] = ((p << 4) & 0x100) ? p1 : p0;
-		vbuf[vid.buf][vptr++] = ((p << 4) & 0x100) ? p1 : p0;
-		vbuf[vid.buf][vptr++] = ((p << 5) & 0x100) ? p1 : p0;
-		vbuf[vid.buf][vptr++] = ((p << 5) & 0x100) ? p1 : p0;
-		vbuf[vid.buf][vptr++] = ((p << 6) & 0x100) ? p1 : p0;
-		vbuf[vid.buf][vptr++] = ((p << 6) & 0x100) ? p1 : p0;
-		vbuf[vid.buf][vptr++] = ((p << 7) & 0x100) ? p1 : p0;
-		vbuf[vid.buf][vptr++] = ((p << 7) & 0x100) ? p1 : p0;
-		vbuf[vid.buf][vptr++] = ((p << 8) & 0x100) ? p1 : p0;
-		vbuf[vid.buf][vptr++] = ((p << 8) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr   ] = vbuf[vid.buf][vptr+ 1] = ((p << 1) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr+ 2] = vbuf[vid.buf][vptr+ 3] = ((p << 2) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr+ 4] = vbuf[vid.buf][vptr+ 5] = ((p << 3) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr+ 6] = vbuf[vid.buf][vptr+ 7] = ((p << 4) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr+ 8] = vbuf[vid.buf][vptr+ 9] = ((p << 5) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr+10] = vbuf[vid.buf][vptr+11] = ((p << 6) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr+12] = vbuf[vid.buf][vptr+13] = ((p << 7) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr+14] = vbuf[vid.buf][vptr+15] = ((p << 8) & 0x100) ? p1 : p0;
+		vptr += 16;
 	}
 	vid.vptr = vptr;
 }
 
+// Pentagon 16c
+void __fastcall draw_p16(int n)
+{
+	u32 g = ((vid.yctr & 0x07) << 8) + ((vid.yctr & 0x38) << 2) + ((vid.yctr & 0xC0) << 5) + (vid.xctr & 0x1F);
+	u8 *scr = RAM_BASE_M + PAGE * comp.ts.vpage;
+	u32 vptr = vid.vptr;
+
+	for (; n > 0; n -= 4, vid.t_next += 4, vid.xctr++, g++)
+	{
+		u8 c = scr[g - PAGE];		// page4, #0000
+		u32 p0 = temp.tspal_32[(comp.ts.gpal << 4) | ((c & 0x40) >> 3) | (c & 0x07)];
+		u32 p1 = temp.tspal_32[(comp.ts.gpal << 4) | ((c & 0x80) >> 4) | ((c >> 3) & 0x07)];
+		vbuf[vid.buf][vptr  ] = vbuf[vid.buf][vptr+1] = p0;
+		vbuf[vid.buf][vptr+2] = vbuf[vid.buf][vptr+3] = p1;
+		vptr += 4;
+		c = scr[g];					// page5, #0000
+		p0 = temp.tspal_32[(comp.ts.gpal << 4) | ((c & 0x40) >> 3) | (c & 0x07)];
+		p1 = temp.tspal_32[(comp.ts.gpal << 4) | ((c & 0x80) >> 4) | ((c >> 3) & 0x07)];
+		vbuf[vid.buf][vptr  ] = vbuf[vid.buf][vptr+1] = p0;
+		vbuf[vid.buf][vptr+2] = vbuf[vid.buf][vptr+3] = p1;
+		vptr += 4;
+		c = scr[g - PAGE + 0x2000];	// page4, #2000
+		p0 = temp.tspal_32[(comp.ts.gpal << 4) | ((c & 0x40) >> 3) | (c & 0x07)];
+		p1 = temp.tspal_32[(comp.ts.gpal << 4) | ((c & 0x80) >> 4) | ((c >> 3) & 0x07)];
+		vbuf[vid.buf][vptr  ] = vbuf[vid.buf][vptr+1] = p0;
+		vbuf[vid.buf][vptr+2] = vbuf[vid.buf][vptr+3] = p1;
+		vptr += 4;
+		c = scr[g + 0x2000];		// page5, #2000
+		p0 = temp.tspal_32[(comp.ts.gpal << 4) | ((c & 0x40) >> 3) | (c & 0x07)];
+		p1 = temp.tspal_32[(comp.ts.gpal << 4) | ((c & 0x80) >> 4) | ((c >> 3) & 0x07)];
+		vbuf[vid.buf][vptr  ] = vbuf[vid.buf][vptr+1] = p0;
+		vbuf[vid.buf][vptr+2] = vbuf[vid.buf][vptr+3] = p1;
+		vptr += 4;
+	}
+	vid.vptr = vptr;
+}
+
+// ATM 16c
+void __fastcall draw_atm16(int n)
+{
+	u32 g = vid.yctr * 40 + vid.xctr;
+	u8 *scr = RAM_BASE_M + PAGE * comp.ts.vpage;
+	u32 vptr = vid.vptr;
+
+	for (; n > 0; n -= 4, vid.t_next += 4, vid.xctr++, g++)
+	{
+		u8 c = scr[g - PAGE*4];		// page1, #0000
+		u32 p0 = temp.tspal_32[(comp.ts.gpal << 4) | ((c & 0x40) >> 3) | (c & 0x07)];
+		u32 p1 = temp.tspal_32[(comp.ts.gpal << 4) | ((c & 0x80) >> 4) | ((c >> 3) & 0x07)];
+		vbuf[vid.buf][vptr  ] = vbuf[vid.buf][vptr+1] = p0;
+		vbuf[vid.buf][vptr+2] = vbuf[vid.buf][vptr+3] = p1;
+		vptr += 4;
+		c = scr[g];					// page5, #0000
+		p0 = temp.tspal_32[(comp.ts.gpal << 4) | ((c & 0x40) >> 3) | (c & 0x07)];
+		p1 = temp.tspal_32[(comp.ts.gpal << 4) | ((c & 0x80) >> 4) | ((c >> 3) & 0x07)];
+		vbuf[vid.buf][vptr  ] = vbuf[vid.buf][vptr+1] = p0;
+		vbuf[vid.buf][vptr+2] = vbuf[vid.buf][vptr+3] = p1;
+		vptr += 4;
+		c = scr[g - PAGE*4 + 0x2000];		// page1, #2000
+		p0 = temp.tspal_32[(comp.ts.gpal << 4) | ((c & 0x40) >> 3) | (c & 0x07)];
+		p1 = temp.tspal_32[(comp.ts.gpal << 4) | ((c & 0x80) >> 4) | ((c >> 3) & 0x07)];
+		vbuf[vid.buf][vptr  ] = vbuf[vid.buf][vptr+1] = p0;
+		vbuf[vid.buf][vptr+2] = vbuf[vid.buf][vptr+3] = p1;
+		vptr += 4;
+		c = scr[g + 0x2000];		// page5, #2000
+		p0 = temp.tspal_32[(comp.ts.gpal << 4) | ((c & 0x40) >> 3) | (c & 0x07)];
+		p1 = temp.tspal_32[(comp.ts.gpal << 4) | ((c & 0x80) >> 4) | ((c >> 3) & 0x07)];
+		vbuf[vid.buf][vptr  ] = vbuf[vid.buf][vptr+1] = p0;
+		vbuf[vid.buf][vptr+2] = vbuf[vid.buf][vptr+3] = p1;
+		vptr += 4;
+	}
+	vid.vptr = vptr;
+}
+
+void __fastcall draw_p384(int n)
+{
+}
+
 // TS text
-void draw_tstx(int n)
+void __fastcall draw_tstx(int n)
 {
 	vid.xctr &= 0x7F;
 	u32 s = ((vid.yctr & 0x1F8) << 5);
@@ -815,20 +878,56 @@ void draw_tstx(int n)
 		u32 p0 = temp.tspal_32[(comp.ts.gpal << 4) | ((a >> 4) & 0x0F)];	// color for 'PAPER'
 		u32 p1 = temp.tspal_32[(comp.ts.gpal << 4) | (a & 0x0F)];			// color for 'INK'
 
-		vbuf[vid.buf][vptr++] = ((p << 1) & 0x100) ? p1 : p0;
-		vbuf[vid.buf][vptr++] = ((p << 2) & 0x100) ? p1 : p0;
-		vbuf[vid.buf][vptr++] = ((p << 3) & 0x100) ? p1 : p0;
-		vbuf[vid.buf][vptr++] = ((p << 4) & 0x100) ? p1 : p0;
-		vbuf[vid.buf][vptr++] = ((p << 5) & 0x100) ? p1 : p0;
-		vbuf[vid.buf][vptr++] = ((p << 6) & 0x100) ? p1 : p0;
-		vbuf[vid.buf][vptr++] = ((p << 7) & 0x100) ? p1 : p0;
-		vbuf[vid.buf][vptr++] = ((p << 8) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr  ] = ((p << 1) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr+1] = ((p << 2) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr+2] = ((p << 3) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr+3] = ((p << 4) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr+4] = ((p << 5) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr+5] = ((p << 6) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr+6] = ((p << 7) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr+7] = ((p << 8) & 0x100) ? p1 : p0;
+		vptr += 8;
+	}
+	vid.vptr = vptr;
+}
+
+// Pentagon 512x192
+void __fastcall draw_phr(int n)
+{
+	u32 g = ((vid.yctr & 0x07) << 8) + ((vid.yctr & 0x38) << 2) + ((vid.yctr & 0xC0) << 5) + (vid.xctr & 0x1F);
+	u8 *scr = RAM_BASE_M + PAGE * comp.ts.vpage;
+	u32 vptr = vid.vptr;
+	u32 p0 = temp.tspal_32[(comp.ts.gpal << 4)];		// color for 'PAPER'
+	u32 p1 = temp.tspal_32[(comp.ts.gpal << 4) + 7];	// color for 'INK'
+
+	for (; n > 0; n -= 4, vid.t_next += 4, vid.xctr++, g++)
+	{
+		u8 p = scr[g];
+		vbuf[vid.buf][vptr  ] = ((p << 1) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr+1] = ((p << 2) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr+2] = ((p << 3) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr+3] = ((p << 4) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr+4] = ((p << 5) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr+5] = ((p << 6) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr+6] = ((p << 7) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr+7] = ((p << 8) & 0x100) ? p1 : p0;
+		vptr += 8;
+		p = scr[g + 0x2000];
+		vbuf[vid.buf][vptr  ] = ((p << 1) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr+1] = ((p << 2) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr+2] = ((p << 3) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr+3] = ((p << 4) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr+4] = ((p << 5) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr+5] = ((p << 6) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr+6] = ((p << 7) & 0x100) ? p1 : p0;
+		vbuf[vid.buf][vptr+7] = ((p << 8) & 0x100) ? p1 : p0;
+		vptr += 8;
 	}
 	vid.vptr = vptr;
 }
 
 // TS 16c
-void draw_ts16(int n)
+void __fastcall draw_ts16(int n)
 {
 	u32 s = (vid.yctr << 8);
 	u8 *scr = RAM_BASE_M + PAGE * (comp.ts.vpage & 0xF8);
@@ -843,8 +942,7 @@ void draw_ts16(int n)
 		n--; vid.t_next++;
 		p = scr[s + t++]; t &= 0xFF;
 		p1 = temp.tspal_32[(comp.ts.gpal << 4) | (p & 0x0F)];
-		vbuf[vid.buf][vptr++] = p1;
-		vbuf[vid.buf][vptr++] = p1;
+		vbuf[vid.buf][vptr] = vbuf[vid.buf][vptr+1] = p1; vptr += 2;
 	}	
 	
 	for (; n > 0; n -= 1, vid.t_next++)
@@ -852,24 +950,22 @@ void draw_ts16(int n)
 		p = scr[s + t++]; t &= 0xFF;
 		p0 = temp.tspal_32[(comp.ts.gpal << 4) | ((p >> 4) & 0x0F)];
 		p1 = temp.tspal_32[(comp.ts.gpal << 4) | (p & 0x0F)];
-		vbuf[vid.buf][vptr++] = p0;
-		vbuf[vid.buf][vptr++] = p0;
-		vbuf[vid.buf][vptr++] = p1;
-		vbuf[vid.buf][vptr++] = p1;
+		vbuf[vid.buf][vptr  ] = vbuf[vid.buf][vptr+1] = p0;
+		vbuf[vid.buf][vptr+2] = vbuf[vid.buf][vptr+3] = p1;
+		vptr += 4;
 	}
 
 	if (comp.ts.g_offsx & 1)		// odd offset - right pixel
 	{
 		p = scr[s + t];
 		p0 = temp.tspal_32[(comp.ts.gpal << 4) | ((p >> 4) & 0x0F)];
-		vbuf[vid.buf][vptr++] = p0;
-		vbuf[vid.buf][vptr++] = p0;
+		vbuf[vid.buf][vptr] = vbuf[vid.buf][vptr+1] = p1; vptr += 2;
 	}
 	vid.vptr = vptr;
 }
 
 // TS 256c
-void draw_ts256(int n)
+void __fastcall draw_ts256(int n)
 {
 	u32 s = (vid.yctr << 9);
 	u8 *scr = RAM_BASE_M + PAGE * (comp.ts.vpage & 0xF0);
@@ -880,39 +976,35 @@ void draw_ts256(int n)
 	for (; n > 0; n -= 1, vid.t_next++)
 	{
 		u32 p = temp.tspal_32[scr[s + t++]];  t &= 0x1FF;
-		vbuf[vid.buf][vptr++] = p;
-		vbuf[vid.buf][vptr++] = p;
+		vbuf[vid.buf][vptr] = vbuf[vid.buf][vptr+1] = p; vptr += 2;
 		p = temp.tspal_32[scr[s + t++]]; t &= 0x1FF;
-		vbuf[vid.buf][vptr++] = p;
-		vbuf[vid.buf][vptr++] = p;
+		vbuf[vid.buf][vptr] = vbuf[vid.buf][vptr+1] = p; vptr += 2;
 	}
 	vid.vptr = vptr;
 }
 
 // Border
-void draw_border(int n)
+void __fastcall draw_border(int n)
 {
 	vid.t_next += n;
 	u32 vptr = vid.vptr;
 
 	for (; n > 0; n--)
 	{
-		u32 p0 = temp.tspal_32[comp.ts.border];
-		vbuf[vid.buf][vptr++] = p0;
-		vbuf[vid.buf][vptr++] = p0;
-		vbuf[vid.buf][vptr++] = p0;
-		vbuf[vid.buf][vptr++] = p0;
+		u32 p = temp.tspal_32[comp.ts.border];
+		vbuf[vid.buf][vptr] = vbuf[vid.buf][vptr+1] = vbuf[vid.buf][vptr+2] = vbuf[vid.buf][vptr+3] = p;
+		vptr += 4;
 	}
 	vid.vptr = vptr;
 }
 
 DRAWER drawers[] = {
 	{ M_BRD		, draw_border	},	// Border only
-	{ M_ZX		, draw_zx 		},	// Sinclair
+	{ M_ZX		, draw_zx		},	// Sinclair
 	{ M_PMC		, draw_pmc 		},	// Pentagon Multicolor
-	{ M_P16		, draw_zx 		},	// Pentagon 16c
-	{ M_P384	, draw_zx 		},	// Pentagon 384x304
-	{ M_PHR		, draw_zx 		},	// Pentagon HiRes
+	{ M_P16		, draw_p16 		},	// Pentagon 16c
+	{ M_P384	, draw_zx		},	// Pentagon 384x304
+	{ M_PHR		, draw_phr		},	// Pentagon HiRes
 	{ M_TS16	, draw_ts16		},	// TS 16c
 	{ M_TS256	, draw_ts256	},	// TS 256c
 	{ M_TSTX	, draw_tstx		},	// TS Text
@@ -923,7 +1015,7 @@ DRAWER drawers[] = {
 };
 
 // Draws raster until current tact
-void update_screen()
+void __fastcall update_screen()
 {
 	while (vid.t_next < min(cpu.t, VID_TACTS * VID_LINES))		// iterate until current CPU tact or to the frame end
 	{
@@ -997,7 +1089,7 @@ void update_screen()
 	}
 }
 
-void init_raster()
+void __fastcall init_raster()
 {
    if (conf.mem_model == MM_TSL)
    {
