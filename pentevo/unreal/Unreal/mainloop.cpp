@@ -90,96 +90,45 @@ void do_idle()
    last_cpu = rdtsc();
 }
 
-// version before frame resampler
-//uncommented by Alone Coder
-/*
-void mainloop()
-{
-   unsigned char skipped = 0;
-   for (;;)
-   {
-      if (skipped < temp.frameskip)
-      {
-          skipped++;
-          temp.vidblock = 1;
-      }
-      else
-          skipped = temp.vidblock = 0;
-
-      temp.sndblock = !conf.sound.enabled;
-      temp.inputblock = 0; //temp.vidblock; //Alone Coder
-      spectrum_frame();
-
-      // message handling before flip (they paint to rbuf)
-      if (!temp.inputblock)
-          dispatch(conf.atm.xt_kbd ? ac_main_xt : ac_main);
-      if (!temp.vidblock)
-          flip();
-      if (!temp.sndblock)
-      {
-          do_sound();
-          Vs1001.Play();
-
-//          if (conf.sound.do_sound != do_sound_ds)
-          do_idle();
-      }
-   }
-}
-*/
-
 void mainloop(const bool &Exit)
 {
    unsigned char skipped = 0;
    while (!Exit)
-   {
- //     for (unsigned f = rsm.needframes[rsm.frame]; f; f--)
-  //    {
-         temp.sndblock = !conf.sound.enabled;
-         temp.inputblock = temp.vidblock && conf.sound.enabled;
+	{
+		temp.sndblock = !conf.sound.enabled;
+		temp.inputblock = temp.vidblock && conf.sound.enabled;
 
-         spectrum_frame();
-         VideoSaver();
+		spectrum_frame();
+		VideoSaver();
 
-      if (skipped < temp.frameskip)
-      {
-          skipped++;
-          temp.vidblock = 1;
-      }
-      else
-          skipped = temp.vidblock = 0;
+		if (skipped < temp.frameskip)
+		{
+			skipped++;
+			temp.vidblock = 1;
+		}
+		else
+			skipped = temp.vidblock = 0;
 
-      if (!temp.vidblock)
-          flip();
+		// message handling before flip (they paint to rbuf)
+		if (!temp.inputblock)
+		{
+			dispatch(conf.atm.xt_kbd ? ac_main_xt : ac_main);
+		}
 
-         // message handling before flip (they paint to rbuf)
-         if (!temp.inputblock)
-         {
-             dispatch(conf.atm.xt_kbd ? ac_main_xt : ac_main);
-         }
-         if (!temp.sndblock)
-         {
-             do_sound();
-             Vs1001.Play();
-         }
-/*         if (rsm.mix_frames > 1)
-         {
-            memcpy(rbuf_s + rsm.rbuf_dst * rb2_offs, rbuf, temp.scx * temp.scy / 4);
-            if (++rsm.rbuf_dst == rsm.mix_frames)
-                rsm.rbuf_dst = 0;
-         }
-		 */
-     //    if (!temp.sndblock)
-      //   {
-/*
-             if (conf.sound.do_sound == do_sound_none)
-                 do_idle();
-*/
-       //  }
-    //  }
+		if (!temp.vidblock)
+			flip();
 
-   //   if (++rsm.frame == rsm.period)
-    //      rsm.frame = 0;
+		if (!temp.sndblock)
+		{
+			do_sound();
+			Vs1001.Play();
+		}
 
-   }
+		if (!temp.sndblock)
+		{
+			if (conf.sound.do_sound == do_sound_none)
+				do_idle();
+		}
+	}
    correct_exit();
 }

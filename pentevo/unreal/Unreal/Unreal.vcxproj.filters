@@ -21,15 +21,33 @@
     <None Include="z80_main.inl">
       <Filter>Souces</Filter>
     </None>
-    <None Include="res\cur00000.cur" />
-    <None Include="res\cur00001.cur" />
-    <None Include="res\cur00002.cur" />
-    <None Include="res\cur00003.cur" />
-    <None Include="res\cur00004.cur" />
-    <None Include="res\cur00005.cur" />
-    <None Include="res\cur00006.cur" />
-    <None Include="res\cur00007.cur" />
-    <None Include="res\cur00008.cur" />
+    <None Include="res\cur00000.cur">
+      <Filter>Resources</Filter>
+    </None>
+    <None Include="res\cur00008.cur">
+      <Filter>Resources</Filter>
+    </None>
+    <None Include="res\cur00001.cur">
+      <Filter>Resources</Filter>
+    </None>
+    <None Include="res\cur00002.cur">
+      <Filter>Resources</Filter>
+    </None>
+    <None Include="res\cur00003.cur">
+      <Filter>Resources</Filter>
+    </None>
+    <None Include="res\cur00004.cur">
+      <Filter>Resources</Filter>
+    </None>
+    <None Include="res\cur00005.cur">
+      <Filter>Resources</Filter>
+    </None>
+    <None Include="res\cur00006.cur">
+      <Filter>Resources</Filter>
+    </None>
+    <None Include="res\cur00007.cur">
+      <Filter>Resources</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Manifest Include="res\Unreal.manifest">
@@ -99,13 +117,7 @@
     <ClCompile Include="dxerr.cpp">
       <Filter>Souces</Filter>
     </ClCompile>
-    <ClCompile Include="dxrcopy.cpp">
-      <Filter>Souces</Filter>
-    </ClCompile>
     <ClCompile Include="dxrend.cpp">
-      <Filter>Souces</Filter>
-    </ClCompile>
-    <ClCompile Include="dxrframe.cpp">
       <Filter>Souces</Filter>
     </ClCompile>
     <ClCompile Include="emul.cpp">
@@ -310,6 +322,12 @@
       <Filter>Souces</Filter>
     </ClCompile>
     <ClCompile Include="dxr_text.cpp">
+      <Filter>Souces</Filter>
+    </ClCompile>
+    <ClCompile Include="dxrframe.cpp">
+      <Filter>Souces</Filter>
+    </ClCompile>
+    <ClCompile Include="dxrcopy.cpp">
       <Filter>Souces</Filter>
     </ClCompile>
   </ItemGroup>
@@ -570,6 +588,9 @@
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="zxevo.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="dxrcopy.h">
       <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>

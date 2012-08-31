@@ -172,6 +172,7 @@
     <ClInclude Include="dx.h" />
     <ClInclude Include="dxerr.h" />
     <ClInclude Include="dxerr8.h" />
+    <ClInclude Include="dxrcopy.h" />
     <ClInclude Include="dxrend.h" />
     <ClInclude Include="dxrframe.h" />
     <ClInclude Include="dxr_text.h" />

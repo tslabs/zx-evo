@@ -182,12 +182,7 @@ void reset(ROM_MODE mode)
    comp.vdbase = 0; comp.pVD = 0;
    #endif
 
-   if (conf.mem_model == MM_ATM450 ||
-       conf.mem_model == MM_ATM710 ||
-       conf.mem_model == MM_ATM3 ||
-       conf.mem_model == MM_TSL ||
-       conf.mem_model == MM_PROFI)
-       load_spec_colors();
+   load_spec_colors();
 
    comp.ide_hi_byte_r = 0;
    comp.ide_hi_byte_w = 0;

@@ -1,12 +1,15 @@
 #include "std.h"
 #include "emul.h"
 #include "vars.h"
+#include "draw.h"
 #include "tsconf.h"
+
+extern VCTR vid;
 
 const u8 pwm[] = { 0,10,21,31,42,53,63,74,85,95,106,117,127,138,149,159,170,181,191,202,213,223,234,245,255 };
 
 // convert CRAM data to precalculated renderer tables
-void update_tspal(u8 addr)
+void update_clut(u8 addr)
 {
 	u16 t = comp.ts.cram[addr];
 	u8 r = (t >> 10) & 0x1F;
@@ -23,7 +26,7 @@ void update_tspal(u8 addr)
 	g = pwm[g];
 	b = pwm[b];
 
-	temp.tspal_32[addr] = (r << 16) | (g <<8) | b;
+	vid.clut[addr] = (r << 16) | (g <<8) | b;
 }
 
 // DMA procedures
@@ -66,7 +69,7 @@ void dma (u8 val)
 					s = (u16*)(ss + RAM_BASE_M);
 					tmp = (dd >> 1) & 0xFF;
 					comp.ts.cram[tmp] = *s;
-					update_tspal(tmp);
+					update_clut(tmp);
 					ss_inc; dd_inc;
 				}
 				break;

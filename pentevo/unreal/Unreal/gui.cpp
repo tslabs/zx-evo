@@ -81,6 +81,8 @@ char select_romfile(char *dstname)
 
 char *MemDlg_get_bigrom()
 {
+   if (c1.mem_model == MM_PENTAGON) return c1.pent_rom_path;
+   if (c1.mem_model == MM_TSL) return c1.tsl_rom_path;
    if (c1.mem_model == MM_ATM450) return c1.atm1_rom_path;
    if (c1.mem_model == MM_ATM710) return c1.atm2_rom_path;
    if (c1.mem_model == MM_ATM3) return c1.atm3_rom_path;
@@ -88,10 +90,9 @@ char *MemDlg_get_bigrom()
    if (c1.mem_model == MM_SCORP) return c1.scorp_rom_path;
    if (c1.mem_model == MM_PROFSCORP) return c1.prof_rom_path;
  //[vv] kay-1024 не имел стандартной раскладки ПЗУ (раскладка переключалась джампером J5)
-//   if (c1.mem_model == MM_KAY) return c1.kay_rom_path;
+   if (c1.mem_model == MM_KAY) return c1.kay_rom_path;
    if (c1.mem_model == MM_PLUS3) return c1.plus3_rom_path;
    if (c1.mem_model == MM_QUORUM) return c1.quorum_rom_path;
-   if (c1.mem_model == MM_TSL) return c1.tsl_rom_path;
    return 0;
 }
 
