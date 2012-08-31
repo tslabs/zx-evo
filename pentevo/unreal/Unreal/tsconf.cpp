@@ -11,7 +11,7 @@ const u8 pwm[] = { 0,10,21,31,42,53,63,74,85,95,106,117,127,138,149,159,170,181,
 // convert CRAM data to precalculated renderer tables
 void update_clut(u8 addr)
 {
-	u16 t = comp.ts.cram[addr];
+	u16 t = comp.cram[addr];
 	u8 r = (t >> 10) & 0x1F;
 	u8 g = (t >> 5) & 0x1F;
 	u8 b = t & 0x1F;
@@ -30,6 +30,9 @@ void update_clut(u8 addr)
 }
 
 // DMA procedures
+#define ss_inc	ss = ctrl.s_algn ? ((ss & m1) | ((ss + 2) & m2)) : ((ss + 2) & 0x3FFFFF)
+#define dd_inc	dd = ctrl.d_algn ? ((dd & m1) | ((dd + 2) & m2)) : ((dd + 2) & 0x3FFFFF)
+
 void dma (u8 val)
 {
 	DMACTRL_t ctrl;
@@ -68,7 +71,7 @@ void dma (u8 val)
 				{
 					s = (u16*)(ss + RAM_BASE_M);
 					tmp = (dd >> 1) & 0xFF;
-					comp.ts.cram[tmp] = *s;
+					comp.cram[tmp] = *s;
 					update_clut(tmp);
 					ss_inc; dd_inc;
 				}
@@ -86,4 +89,13 @@ void dma (u8 val)
 		else
 			comp.ts.dmadaddr = dd;
 	}
+}
+
+// TS Engine
+void render_ts()
+{
+	SPRITE_t *spr = (SPRITE_t*)comp.sfile;
+	u32 snum = 0;
+	memset(vid.tsline, 0, 512);
+	
 }

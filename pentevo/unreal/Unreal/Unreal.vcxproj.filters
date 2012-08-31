@@ -330,6 +330,9 @@
     <ClCompile Include="dxrcopy.cpp">
       <Filter>Souces</Filter>
     </ClCompile>
+    <ClCompile Include="drawers.cpp">
+      <Filter>Souces</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="atm.h">
@@ -591,6 +594,9 @@
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="dxrcopy.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="drawers.h">
       <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>

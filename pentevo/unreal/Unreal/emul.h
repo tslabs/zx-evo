@@ -432,7 +432,9 @@ struct COMPUTER
 {
    unsigned char p7FFD, pFE, pEFF7, pXXXX;
    unsigned char pDFFD, pFDFD, p1FFD, pFF77;
-   TS_t ts;
+   TSPORTS_t ts;
+   u16 cram[256];
+   u16 sfile[256];
    unsigned intpos;
    u8 p7EFD; // gmx
    u8 p00, p80FD; // quorum
