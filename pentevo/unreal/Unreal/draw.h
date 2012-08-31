@@ -41,25 +41,26 @@ enum RASTER_N
 struct RASTER
 {
 	RASTER_N num;
-	u32 l_pix;		// first pixel line
-	u32 l_bord2;	// first lower border line
-	u32 t_pix;		// first pixel tact
-	u32 t_bord2;	// first right border tact
+	u32 u_brd;	// first pixel line
+	u32 d_brd;	// first lower border line
+	u32 l_brd;	// first pixel tact
+	u32 r_brd;	// first right border tact
 };
 
 struct VCTR
 {
-	u32 	clut[256];	// TS palette LUT
-	RASTER 	raster;		// raster parameters
-	VMODE	mode;		// renderer mode
-	VMODE	mode_next;	// renderer mode, delayed to the start of the line
-	u32 	t_next;		// next tact to be rendered
-	u32		vptr;		// address in videobuffer
-	u32		vptr_pix;	// address in videobuffer of 1st pixel (used to render TS)
-	u32		xctr;		// videocontroller X counter
-	u32		yctr;		// videocontroller Y counter
-	u32 	buf;		// active video buffer
-	u32 	flash;		// flash counter
+	u32 	clut[256];		// TS palette LUT
+	RASTER 	raster;			// raster parameters
+	VMODE	mode;			// renderer mode
+	VMODE	mode_next;		// renderer mode, delayed to the start of the line
+	u32 	t_next;			// next tact to be rendered
+	u32		vptr;			// address in videobuffer
+	u32		vptr_pix;		// address in videobuffer of 1st pixel (used to render TS)
+	u32		xctr;			// videocontroller X counter
+	u32		yctr;			// videocontroller Y counter
+	u32 	buf;			// active video buffer
+	u32 	flash;			// flash counter
+	u8		tsline[512];	// TS buffer (indexed colors)
 };
 
 #define MAX_FONT_TABLES 0x62000

@@ -61,21 +61,40 @@
 #define		DMA_CRAM		0x04
 #define		DMA_SFILE		0x05
 
+// Sprite Descriptor
+typedef struct {
+	u16 y:9;
+	u16 ys:3;
+	u16 _0:1;
+	u16 act:1;
+	u16 leap:1;
+	u16 yflp:1;
+	u16 x:9;
+	u16 xs:3;
+	u16 _1:3;
+	u16 xflp:1;
+	u16 tnum:12;
+	u16 spal:4;
+} SPRITE_t;
+
+// Tile Descriptor
+typedef struct {
+	u16 tnum:12;
+	u16 tpal:2;
+	u16 xflp:1;
+	u16 yflp:1;
+} TILE_t;
 
 typedef struct {
-
-// -- video FPGA memories --
-	u16 cram[256];
-	u16 sfile[256];
 
 // -- system --
 	union {
 		u8 sysconf;
 		struct {
 			u8 zclk:2;
-			u8 reserved_00:1;
+			u8 _00:1;
 			u8 ayclk:2;
-			u8 reserved_01:3;
+			u8 _01:3;
 		};
 	} ;
 
@@ -111,7 +130,7 @@ typedef struct {
 		u8 vconf;
 		struct {
 			u8 vmode:2;
-			u8 reserved_02:3;
+			u8 _02:3;
 			u8 nogfx:1;
 			u8 rres:2;
 		};
@@ -212,7 +231,7 @@ typedef struct {
 			u8 w0_we:1;
 			u8 w0_map_n:1;
 			u8 w0_ram:1;
-			u8 reserved_03:2;
+			u8 _03:2;
 			u8 lck128:2;	// 00 - no lock, 01 - lock128, 1x - auto (!a13)
 		};
 	};
@@ -247,7 +266,7 @@ typedef struct {
 		};
 	};
 
-} TS_t;
+} TSPORTS_t;
 
 
 typedef	union {
@@ -266,6 +285,4 @@ typedef	union {
 // functions
 void update_clut(u8);
 void dma (u8);
-
-#define ss_inc	ss = ctrl.s_algn ? ((ss & m1) | ((ss + 2) & m2)) : ((ss + 2) & 0x3FFFFF)
-#define dd_inc	dd = ctrl.d_algn ? ((dd & m1) | ((dd + 2) & m2)) : ((dd + 2) & 0x3FFFFF)
+void render_ts();

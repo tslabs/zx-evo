@@ -50,6 +50,7 @@
     <ClCompile Include="dbgtrace.cpp" />
     <ClCompile Include="debug.cpp" />
     <ClCompile Include="draw.cpp" />
+    <ClCompile Include="drawers.cpp" />
     <ClCompile Include="drawnomc.cpp" />
     <ClCompile Include="dx.cpp" />
     <ClCompile Include="dxerr.cpp" />
@@ -168,6 +169,7 @@
     <ClInclude Include="debug.h" />
     <ClInclude Include="defs.h" />
     <ClInclude Include="draw.h" />
+    <ClInclude Include="drawers.h" />
     <ClInclude Include="drawnomc.h" />
     <ClInclude Include="dx.h" />
     <ClInclude Include="dxerr.h" />
