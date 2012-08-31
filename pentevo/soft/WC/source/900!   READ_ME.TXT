@@ -15,10 +15,10 @@ DSDNGS  .ASM - source of SD(NGS) driver
 DOS_SDGS.COD - compiled code
 
 CORE32  .ASM - kernel (only FAT32)
-WDOSFC21.COD - compiled code
+WDOSFC22.COD - compiled code
 
 FONT32L .CDB - font
 GIG_PAL .CDB - palette for gigascreen
 KOI_WIN .CDB - ALT->KOI, ALT->WIN tables
 
-see also topic: http://dlcorp.nedopc.com/viewtopic.php?f=17&t=942
+see also topic: http://forum.togyaf.org/viewtopic.php?f=9&t=143
