@@ -253,13 +253,14 @@ struct CONFIG
    char dos_rom_path[FILENAME_MAX];
    char zx128_rom_path[FILENAME_MAX];
    char sys_rom_path[FILENAME_MAX];
+   char pent_rom_path[FILENAME_MAX];
    char atm1_rom_path[FILENAME_MAX];
    char atm2_rom_path[FILENAME_MAX];
    char atm3_rom_path[FILENAME_MAX];
    char scorp_rom_path[FILENAME_MAX];
    char prof_rom_path[FILENAME_MAX];
    char profi_rom_path[FILENAME_MAX];
-//[vv]   char kay_rom_path[FILENAME_MAX];
+   char kay_rom_path[FILENAME_MAX];
    char plus3_rom_path[FILENAME_MAX];
    char quorum_rom_path[FILENAME_MAX];
    char tsl_rom_path[FILENAME_MAX];
@@ -310,10 +311,6 @@ struct TEMP
    unsigned scale; // window scale (x1, x2, x3, x4)
    unsigned mon_scale; // window scale in monitor mode(debugger)
 
-   u8 tspal_8[256];		// TS palette LUT for 8 bit mode
-   u16 tspal_16[256];	// TS palette LUT for 16 bit mode
-   u32 tspal_32[256];	// TS palette LUT for 32 bit mode
-   
    u8 fm_tmp;			// temporary reg for FMAPS writes
    
    unsigned ataricolors[0x100];

@@ -49,7 +49,8 @@ struct RASTER
 
 struct VCTR
 {
-	RASTER 	raster;
+	u32 	clut[256];	// TS palette LUT
+	RASTER 	raster;		// raster parameters
 	VMODE	mode;		// renderer mode
 	VMODE	mode_next;	// renderer mode, delayed to the start of the line
 	u32 	t_next;		// next tact to be rendered

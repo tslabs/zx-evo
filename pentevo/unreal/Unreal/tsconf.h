@@ -264,7 +264,7 @@ typedef	union {
 
 
 // functions
-void update_tspal(u8);
+void update_clut(u8);
 void dma (u8);
 
 #define ss_inc	ss = ctrl.s_algn ? ((ss & m1) | ((ss + 2) & m2)) : ((ss + 2) & 0x3FFFFF)

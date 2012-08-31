@@ -69,7 +69,7 @@ void wm(unsigned addr, unsigned char val)
 				{
 					update_screen();
 					comp.ts.cram[(addr >> 1) & 0xFF] = ((val << 8) | temp.fm_tmp) & 0x7FFF;		// 15 bits of CRAM data
-					update_tspal((addr >> 1) & 0xFF);
+					update_clut((addr >> 1) & 0xFF);
 					break;
 				}
 				case TSF_SFILE:

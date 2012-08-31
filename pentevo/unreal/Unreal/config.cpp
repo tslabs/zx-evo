@@ -275,14 +275,15 @@ void load_config(const char *fname)
    conf.tape_traps = GetPrivateProfileInt(misc, "TapeTraps", 1, ininame);
    conf.tape_autostart = GetPrivateProfileInt(misc, "TapeAutoStart", 1, ininame);
    conf.EFF7_mask = GetPrivateProfileInt(misc, "EFF7mask", 0, ininame);
-
+   
+   GetPrivateProfileString(rom, "PENTAGON", nil, conf.pent_rom_path, sizeof conf.pent_rom_path, ininame);
    GetPrivateProfileString(rom, "ATM1", nil, conf.atm1_rom_path, sizeof conf.atm1_rom_path, ininame);
    GetPrivateProfileString(rom, "ATM2", nil, conf.atm2_rom_path, sizeof conf.atm2_rom_path, ininame);
    GetPrivateProfileString(rom, "ATM3", nil, conf.atm3_rom_path, sizeof conf.atm3_rom_path, ininame);
    GetPrivateProfileString(rom, "SCORP", nil, conf.scorp_rom_path, sizeof conf.scorp_rom_path, ininame);
    GetPrivateProfileString(rom, "PROFROM", nil, conf.prof_rom_path, sizeof conf.prof_rom_path, ininame);
    GetPrivateProfileString(rom, "PROFI", nil, conf.profi_rom_path, sizeof conf.profi_rom_path, ininame);
-//[vv]   GetPrivateProfileString(rom, "KAY", nil, conf.kay_rom_path, sizeof conf.kay_rom_path, ininame);
+   GetPrivateProfileString(rom, "KAY", nil, conf.kay_rom_path, sizeof conf.kay_rom_path, ininame);
    GetPrivateProfileString(rom, "PLUS3", nil, conf.plus3_rom_path, sizeof conf.plus3_rom_path, ininame);
    GetPrivateProfileString(rom, "QUORUM", nil, conf.quorum_rom_path, sizeof conf.quorum_rom_path, ininame);
    GetPrivateProfileString(rom, "TSL", nil, conf.tsl_rom_path, sizeof conf.tsl_rom_path, ininame);
@@ -290,19 +291,22 @@ void load_config(const char *fname)
    GetPrivateProfileString(rom, "GS", nil, conf.gs_rom_path, sizeof conf.gs_rom_path, ininame);
    addpath(conf.gs_rom_path);
    #endif
+   addpath(conf.pent_rom_path);
    addpath(conf.atm1_rom_path);
    addpath(conf.atm2_rom_path);
    addpath(conf.atm3_rom_path);
    addpath(conf.scorp_rom_path);
    addpath(conf.prof_rom_path);
    addpath(conf.profi_rom_path);
+   addpath(conf.kay_rom_path);
    addpath(conf.plus3_rom_path);
    addpath(conf.quorum_rom_path);
    addpath(conf.tsl_rom_path);
 //[vv]   addpath(conf.kay_rom_path);
 
    GetPrivateProfileString(rom, "ROMSET", "default", line, sizeof line, ininame);
-   if (*line) load_romset(&conf, line), conf.use_romset = 1; else conf.use_romset = 0;
+   if (*line)
+	   load_romset(&conf, line), conf.use_romset = 1; else conf.use_romset = 0;
 
    conf.smuc = GetPrivateProfileInt(misc, "SMUC", 0, ininame);
    GetPrivateProfileString(misc, "CMOS", nil, line, sizeof line, ininame);
@@ -851,10 +855,10 @@ void apply_memory()
 */
 
    default:
-      base_128_rom = ROM_BASE_M + 0*PAGE;
-      base_sos_rom = ROM_BASE_M + 1*PAGE;
-      base_sys_rom = ROM_BASE_M + 2*PAGE;
-      base_dos_rom = ROM_BASE_M + 3*PAGE;
+      base_sys_rom = ROM_BASE_M + 0*PAGE;
+      base_dos_rom = ROM_BASE_M + 1*PAGE;
+      base_128_rom = ROM_BASE_M + 2*PAGE;
+      base_sos_rom = ROM_BASE_M + 3*PAGE;
    }
 
    unsigned romsize;
@@ -894,6 +898,7 @@ void apply_memory()
          char *romname = 0;
          switch(conf.mem_model)
          {
+         case MM_PENTAGON: romname = conf.pent_rom_path; break;
          case MM_PROFI: romname = conf.profi_rom_path; break;
          case MM_SCORP: romname = conf.scorp_rom_path; break;
 //[vv]         case MM_KAY: romname = conf.kay_rom_path; break;
