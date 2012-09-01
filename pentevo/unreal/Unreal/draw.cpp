@@ -810,7 +810,7 @@ void update_screen()
 					drawers[vid.mode].func(m);
 					t = vid.t_next - t; n -= t; tact += t;
 
-					if (tact = vid.raster.r_brd && conf.mem_model == MM_TSL)
+					if ((vid.t_next % VID_TACTS) == vid.raster.r_brd && conf.mem_model == MM_TSL)
 						render_ts(), draw_ts();
 				}
 

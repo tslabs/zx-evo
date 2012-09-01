@@ -74,13 +74,13 @@ typedef struct {
 	u16 _1:3;
 	u16 xflp:1;
 	u16 tnum:12;
-	u16 spal:4;
+	u16 pal:4;
 } SPRITE_t;
 
 // Tile Descriptor
 typedef struct {
 	u16 tnum:12;
-	u16 tpal:2;
+	u16 pal:2;
 	u16 xflp:1;
 	u16 yflp:1;
 } TILE_t;
@@ -100,7 +100,7 @@ typedef struct {
 
 	u8 hsint;
 	union {
-		u16 vsint;
+		u16 vsint:9;
 		struct {
 			u8 vsintl:8;
 			u8 vsinth:1;
@@ -163,7 +163,7 @@ typedef struct {
 	u8 palsel_d;
 
 	union {
-		u16 g_offsx;
+		u16 g_offsx:9;
 		struct {
 			u8 g_offsxl:8;
 			u8 g_offsxh:1;
@@ -171,7 +171,7 @@ typedef struct {
 	};
 
 	union {
-		u16 g_offsx_d;
+		u16 g_offsx_d:9;
 		struct {
 			u8 g_offsxl_d:8;
 			u8 g_offsxh_d:1;
@@ -179,7 +179,7 @@ typedef struct {
 	};
 
 	union {
-		u16 g_offsy;
+		u16 g_offsy:9;
 		struct {
 			u8 g_offsyl:8;
 			u8 g_offsyh:1;
@@ -187,7 +187,7 @@ typedef struct {
 	};
 
 	union {
-		u16 t0_offsx;
+		u16 t0_offsx:9;
 		struct {
 			u8 t0_offsxl:8;
 			u8 t0_offsxh:1;
@@ -195,7 +195,7 @@ typedef struct {
 	};
 
 	union {
-		u16 t0_offsy;
+		u16 t0_offsy:9;
 		struct {
 			u8 t0_offsyl:8;
 			u8 t0_offsyh:1;
@@ -203,7 +203,7 @@ typedef struct {
 	};
 
 	union {
-		u16 t1_offsx;
+		u16 t1_offsx:9;
 		struct {
 			u8 t1_offsxl:8;
 			u8 t1_offsxh:1;
@@ -211,7 +211,7 @@ typedef struct {
 	};
 
 	union {
-		u16 t1_offsy;
+		u16 t1_offsy:9;
 		struct {
 			u8 t1_offsyl:8;
 			u8 t1_offsyh:1;
@@ -249,7 +249,7 @@ typedef struct {
 	u8 dmanum;
 
 	union {
-		u32 dmasaddr;
+		u32 dmasaddr:22;
 		struct {
 			u32 dmasaddrl:8;
 			u32 dmasaddrh:6;
@@ -258,7 +258,7 @@ typedef struct {
 	};
 
 	union {
-		u32 dmadaddr;
+		u32 dmadaddr:22;
 		struct {
 			u32 dmadaddrl:8;
 			u32 dmadaddrh:6;
