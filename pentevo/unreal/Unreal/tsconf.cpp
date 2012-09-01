@@ -130,7 +130,7 @@ void render_tile_layer(u8 layer)
 			(layer ? comp.ts.t1gpage : comp.ts.t0gpage),				// page
 			t.tnum,														// tile number
 			y & 7,														// line offset (3 bit)
-			(i << 3) - (x % 7),											// x coordinate in buffer (masked 0x1FF in func)
+			(i << 3) - (x % 8),											// x coordinate in buffer (masked 0x1FF in func)
 			((layer ? comp.ts.t1pal : comp.ts.t0pal) << 2) | t.pal,		// palette
 			t.xflp, t.yflp, 1											// x/y flips, size
 		);
