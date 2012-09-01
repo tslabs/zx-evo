@@ -344,7 +344,11 @@ copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)"rom</Command>
     </Link>
     <ProjectReference />
     <PostBuildEvent>
-      <Command>md "$(TargetDir)..\tmp"
+      <Command>copy /y "$(ProjectDir)lib\*.dll" "$(TargetDir)"
+copy /y "$(ProjectDir)cfg\*.*" "$(TargetDir)"
+md "$(TargetDir)"rom
+copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)"rom
+md "$(TargetDir)..\tmp"
 md "$(TargetDir)..\tmp\rom"
 copy /y "$(ProjectDir)lib\*.dll" "$(TargetDir)..\tmp"
 copy /y "$(ProjectDir)cfg\*.*" "$(TargetDir)..\tmp"

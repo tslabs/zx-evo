@@ -92,10 +92,81 @@ void dma (u8 val)
 }
 
 // TS Engine
+
+void render_tile(u8 page, u32 tnum, u8 offs, u32 x, u8 pal, u8 xf, u8 yf, u8 n)
+{
+	u8 *g = RAM_BASE_M + PAGE * page + ((tnum & 0xFC0) << 5) + ((offs ^ (yf ? 7 : 0)) << 8) + ((tnum & 0x3F) << 2);
+	x += (xf ? (n * 8 - 1) : 0);
+	pal <<= 4;
+	u8 a = xf ? -1 : 1;
+	u8 c;
+	for (u32 i=0; i<n; i++)
+	{
+		if (c = g[0] & 0xF0) vid.tsline[(x & 0x1FF)] = pal | (c >> 4); x += a;
+		if (c = g[0] & 0x0F) vid.tsline[(x & 0x1FF)] = pal | c; x += a;
+		if (c = g[1] & 0xF0) vid.tsline[(x & 0x1FF)] = pal | (c >> 4); x += a;
+		if (c = g[1] & 0x0F) vid.tsline[(x & 0x1FF)] = pal | c; x += a;
+		if (c = g[2] & 0xF0) vid.tsline[(x & 0x1FF)] = pal | (c >> 4); x += a;
+		if (c = g[2] & 0x0F) vid.tsline[(x & 0x1FF)] = pal | c; x += a;
+		if (c = g[3] & 0xF0) vid.tsline[(x & 0x1FF)] = pal | (c >> 4); x += a;
+		if (c = g[3] & 0x0F) vid.tsline[(x & 0x1FF)] = pal | c; x += a;
+	}
+}
+
+SPRITE_t *spr = (SPRITE_t*)comp.sfile;
+u32 snum;
+
+void render_tile_layer(u8 layer)
+{
+	u32 y = (vid.yctr + (layer ? comp.ts.t1_offsy : comp.ts.t0_offsy)) & 0x1FF;
+	u32 x = (layer ? comp.ts.t1_offsx : comp.ts.t0_offsx);
+	TILE_t *tmap = (TILE_t*)(RAM_BASE_M + PAGE * comp.ts.tmpage + ((y & 0x1F8) << 5));
+	u32 ox = ((x & 0x1F8) >> 2) + layer;
+
+	for (u32 i=0; i<46; i++)
+	{
+		TILE_t t = tmap[(ox + (i << 1)) & 0x7F];
+		render_tile(
+			(layer ? comp.ts.t1gpage : comp.ts.t0gpage),				// page
+			t.tnum,														// tile number
+			y & 7,														// line offset (3 bit)
+			(i << 3) - (x % 7),											// x coordinate in buffer (masked 0x1FF in func)
+			((layer ? comp.ts.t1pal : comp.ts.t0pal) << 2) | t.pal,		// palette
+			t.xflp, t.yflp, 1											// x/y flips, size
+		);
+	}
+}
+
+void render_sprite()
+{
+}
+
+void render_sprite_layer()
+{
+	for (; snum < 42; snum++)
+	{
+		if (spr[snum].act)
+			render_sprite();
+		if (spr[snum].leap)
+			{ snum++; break; }
+	}
+}
+
 void render_ts()
 {
-	SPRITE_t *spr = (SPRITE_t*)comp.sfile;
-	u32 snum = 0;
 	memset(vid.tsline, 0, 512);
-	
+	snum = 0;
+
+	for (u32 layer=0; layer < 5; layer++)
+	{
+		if (layer == 0 || layer == 2 || layer == 4)
+			if (comp.ts.s_en)
+				{ render_sprite_layer(); continue; }
+		if (layer == 1)
+			if (comp.ts.t0_en)
+				{ render_tile_layer(0); continue; }
+		if (layer == 3)
+			if (comp.ts.t1_en)
+				{ render_tile_layer(1); continue; }
+	}
 }
