@@ -77,7 +77,7 @@ void draw_screen()
 void draw_gigascreen_no_border()
 {
    unsigned char *dst = rbuf + (temp.b_top * temp.scx + temp.b_left) / 4;
-   unsigned char * const screen = RAM_BASE_M + 5*PAGE;
+   unsigned char * const screen = page_ram(5);
    unsigned offset = (comp.frame_counter & 1)? 0 : 2*PAGE;
    for (int y = 0; y < 192; y++) {
       *(volatile unsigned char*)dst;

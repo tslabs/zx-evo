@@ -15,6 +15,7 @@
 #include "mainloop.h"
 #include "iehelp.h"
 #include "util.h"
+#include "memory.h"
 
 #define SND_TEST_FAILURES
 //#define SND_TEST_SHOWSTAT
@@ -130,6 +131,7 @@ int main(int argc, char **argv)
 #endif
 
    SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOOPENFILEERRORBOX);
+   rand_ram();
    load_spec_colors();
    init_all(argc-1, argv+1);
 //   applyconfig();

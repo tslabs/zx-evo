@@ -136,8 +136,8 @@ void __cdecl BankNames(int i, char *Name)
     unsigned rom_bank;
     unsigned ram_bank;
 
-    bool IsRam = (RAM_BASE_M <= bankr[i]) && (bankr[i] < RAM_BASE_M + PAGE * MAX_RAM_PAGES);
-    bool IsRom = (ROM_BASE_M <= bankr[i]) && (bankr[i] < ROM_BASE_M + PAGE * MAX_ROM_PAGES);
+    bool IsRam = (RAM_BASE_M <= bankr[i]) && (bankr[i] < page_ram(MAX_RAM_PAGES));
+    bool IsRom = (ROM_BASE_M <= bankr[i]) && (bankr[i] < page_rom(MAX_ROM_PAGES));
 
     if (IsRam)
         ram_bank = ULONG((bankr[i] - RAM_BASE_M)/PAGE);

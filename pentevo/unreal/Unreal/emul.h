@@ -1,6 +1,5 @@
 #pragma once
 
-
 #include "sysdefs.h"
 #include "defs.h"
 #include "sndrender.h"
@@ -29,6 +28,9 @@
 #endif
 
 #define MAX_PAGES (MAX_RAM_PAGES + MAX_CACHE_PAGES + MAX_MISC_PAGES + MAX_ROM_PAGES + MAX_GSROM_PAGES + MAX_GSRAM_PAGES)
+
+#define page_ram(a) RAM_BASE_M + PAGE * (a)
+#define page_rom(a) ROM_BASE_M + PAGE * (a)
 
 #define RAM_BASE_M  memory
 #define CACHE_M     (RAM_BASE_M + MAX_RAM_PAGES*PAGE)

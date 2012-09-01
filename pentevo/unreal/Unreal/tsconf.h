@@ -63,7 +63,7 @@
 
 // Sprite Descriptor
 typedef struct {
-	u16 y:9;
+	i16 y:9;
 	u16 ys:3;
 	u16 _0:1;
 	u16 act:1;

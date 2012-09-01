@@ -810,55 +810,53 @@ void apply_memory()
    {
    case MM_ATM710:
    case MM_ATM3:
-      base_sos_rom = ROM_BASE_M + 0*PAGE;
-      base_dos_rom = ROM_BASE_M + 1*PAGE;
-      base_128_rom = ROM_BASE_M + 2*PAGE;
-      base_sys_rom = ROM_BASE_M + 3*PAGE;
+      base_sos_rom = page_rom(0);
+      base_dos_rom = page_rom(1);
+      base_128_rom = page_rom(2);
+      base_sys_rom = page_rom(3);
    break;
 
    case MM_ATM450:
    case MM_PROFI:
-      base_sys_rom = ROM_BASE_M + 0*PAGE;
-      base_dos_rom = ROM_BASE_M + 1*PAGE;
-      base_128_rom = ROM_BASE_M + 2*PAGE;
-      base_sos_rom = ROM_BASE_M + 3*PAGE;
+      base_sys_rom = page_rom(0);
+      base_dos_rom = page_rom(1);
+      base_128_rom = page_rom(2);
+      base_sos_rom = page_rom(3);
    break;
 
    case MM_PLUS3:
-      base_128_rom = ROM_BASE_M + 0*PAGE;
-      base_sys_rom = ROM_BASE_M + 1*PAGE;
-      base_dos_rom = ROM_BASE_M + 2*PAGE;
-      base_sos_rom = ROM_BASE_M + 3*PAGE;
+      base_128_rom = page_rom(0);
+      base_sys_rom = page_rom(1);
+      base_dos_rom = page_rom(2);
+      base_sos_rom = page_rom(3);
    break;
 
    case MM_QUORUM:
-      base_sys_rom = ROM_BASE_M + 0*PAGE;
-      base_dos_rom = ROM_BASE_M + 1*PAGE;
-      base_128_rom = ROM_BASE_M + 2*PAGE;
-      base_sos_rom = ROM_BASE_M + 3*PAGE;
+      base_sys_rom = page_rom(0);
+      base_dos_rom = page_rom(1);
+      base_128_rom = page_rom(2);
+      base_sos_rom = page_rom(3);
    break;
 
    case MM_TSL:
-      base_sys_rom = ROM_BASE_M + 0*PAGE;
-      base_dos_rom = ROM_BASE_M + 1*PAGE;
-      base_128_rom = ROM_BASE_M + 2*PAGE;
-      base_sos_rom = ROM_BASE_M + 3*PAGE;
+      base_sys_rom = page_rom(0);
+      base_dos_rom = page_rom(1);
+      base_128_rom = page_rom(2);
+      base_sos_rom = page_rom(3);
    break;
 
-/*
    case MM_KAY:
-      base_128_rom = ROM_BASE_M + 0*PAGE;
-      base_sos_rom = ROM_BASE_M + 1*PAGE;
-      base_dos_rom = ROM_BASE_M + 2*PAGE;
-      base_sys_rom = ROM_BASE_M + 3*PAGE;
+      base_128_rom = page_rom(0);
+      base_sos_rom = page_rom(1);
+      base_dos_rom = page_rom(2);
+      base_sys_rom = page_rom(3);
    break;
-*/
 
    default:
-      base_sys_rom = ROM_BASE_M + 0*PAGE;
-      base_dos_rom = ROM_BASE_M + 1*PAGE;
-      base_128_rom = ROM_BASE_M + 2*PAGE;
-      base_sos_rom = ROM_BASE_M + 3*PAGE;
+      base_sys_rom = page_rom(0);
+      base_dos_rom = page_rom(1);
+      base_128_rom = page_rom(2);
+      base_sos_rom = page_rom(3);
    }
 
    unsigned romsize;

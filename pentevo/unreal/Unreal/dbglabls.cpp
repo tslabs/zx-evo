@@ -207,9 +207,9 @@ void MON_LABELS::import_alasm(unsigned offset, char *caption)
          unsigned val = *(unsigned short*)(base+1);
          unsigned char *bs;
          switch (val & 0xC000) {
-            case 0x4000: bs = RAM_BASE_M+5*PAGE; break;
-            case 0x8000: bs = RAM_BASE_M+2*PAGE; break;
-            case 0xC000: bs = RAM_BASE_M+0*PAGE; break;
+            case 0x4000: bs = page_ram(5); break;
+            case 0x8000: bs = page_ram(2); break;
+            case 0xC000: bs = page_ram(0); break;
             default: bs = 0;
          }
          if (bs) add(bs+(val & 0x3FFF), lbl);
@@ -248,9 +248,9 @@ void MON_LABELS::import_xas()
          unsigned val = *(unsigned short*)ptr;
          unsigned char *bs;
          switch (val & 0xC000) {
-            case 0x4000: bs = RAM_BASE_M+5*PAGE; break;
-            case 0x8000: bs = RAM_BASE_M+2*PAGE; break;
-            case 0xC000: bs = RAM_BASE_M+0*PAGE; break;
+            case 0x4000: bs = page_ram(5); break;
+            case 0x8000: bs = page_ram(2); break;
+            case 0xC000: bs = page_ram(0); break;
             default: bs = 0;
          }
          if (bs) add(bs+(val & 0x3FFF), lbl), count++;
