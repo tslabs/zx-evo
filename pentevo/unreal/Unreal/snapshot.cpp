@@ -305,14 +305,14 @@ int readZ80()
          unsigned char *p48[] =
          {
                 base_sos_rom, 0, 0, 0,
-                RAM_BASE_M+2*PAGE, RAM_BASE_M+0*PAGE, 0, 0,
-                RAM_BASE_M+5*PAGE, 0, 0, 0
+                page_ram(2), page_ram(0), 0, 0,
+                page_ram(5), 0, 0, 0
          };
          unsigned char *p128[] =
          {
-                base_sos_rom, base_dos_rom, base_128_rom, RAM_BASE_M+0*PAGE,
-                RAM_BASE_M+1*PAGE, RAM_BASE_M+2*PAGE, RAM_BASE_M+3*PAGE, RAM_BASE_M+4*PAGE,
-                RAM_BASE_M+5*PAGE, RAM_BASE_M+6*PAGE, RAM_BASE_M+7*PAGE, 0
+                base_sos_rom, base_dos_rom, base_128_rom, page_ram(0),
+                page_ram(1), page_ram(2), page_ram(3), page_ram(4),
+                page_ram(5), page_ram(6), page_ram(7), 0
          };
          unsigned len = *(unsigned short*)ptr;
          if (ptr[2] > 11)

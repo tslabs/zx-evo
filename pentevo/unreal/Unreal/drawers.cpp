@@ -43,7 +43,7 @@ void draw_zx(int n)
 {
 	u32 g = ((vid.yctr & 0x07) << 8) + ((vid.yctr & 0x38) << 2) + ((vid.yctr & 0xC0) << 5) + (vid.xctr & 0x1F);
 	u32 a = ((vid.yctr & 0xF8) << 2) + (vid.xctr & 0x1F) + 0x1800;
-	u8 *scr = RAM_BASE_M + PAGE * comp.ts.vpage;
+	u8 *scr = page_ram(comp.ts.vpage);
 	u32 vptr = vid.vptr;
 
 	for (; n > 0; n -= 4, vid.t_next += 4, vid.xctr++, g++, a++)
@@ -62,7 +62,7 @@ void draw_zx(int n)
 void draw_pmc(int n)
 {
 	u32 g = ((vid.yctr & 0x07) << 8) + ((vid.yctr & 0x38) << 2) + ((vid.yctr & 0xC0) << 5) + (vid.xctr & 0x1F);
-	u8 *scr = RAM_BASE_M + PAGE * comp.ts.vpage;
+	u8 *scr = page_ram(comp.ts.vpage);
 	u32 vptr = vid.vptr;
 
 	for (; n > 0; n -= 4, vid.t_next += 4, vid.xctr++, g++)
@@ -80,7 +80,7 @@ void draw_pmc(int n)
 // AlCo 384x304
 void draw_p384(int n)
 {
-	u8 *scr = RAM_BASE_M + PAGE * (comp.ts.vpage & 0xFE);
+	u8 *scr = page_ram(comp.ts.vpage & 0xFE);
 	u32 g = ((vid.yctr & 0x07) << 8) | ((vid.yctr & 0x38) << 2);	// 'raw' values, page4, only 64 lines addressing, no column address
 	u32 a = ((vid.yctr & 0x38) << 2) | (vid.xctr & 0x1F);
 	u32 vptr = vid.vptr;
@@ -119,7 +119,7 @@ void draw_zxw(int n)
 {
 	u32 g = ((vid.yctr & 0x07) << 8) + ((vid.yctr & 0x38) << 2) + ((vid.yctr & 0xC0) << 5) + (vid.xctr & 0x1F);
 	u32 a = ((vid.yctr & 0xF8) << 2) + (vid.xctr & 0x1F) + 0x1800;
-	u8 *scr = RAM_BASE_M + PAGE * (comp.ts.vpage & 0xFD);
+	u8 *scr = page_ram(comp.ts.vpage & 0xFD);
 	u32 vptr = vid.vptr;
 
 	for (; n > 0; n -= 4, vid.t_next += 4, vid.xctr++, g++, a++)
@@ -148,7 +148,7 @@ void draw_zxw(int n)
 void draw_p16(int n)
 {
 	u32 g = ((vid.yctr & 0x07) << 8) + ((vid.yctr & 0x38) << 2) + ((vid.yctr & 0xC0) << 5) + (vid.xctr & 0x1F);
-	u8 *scr = RAM_BASE_M + PAGE * comp.ts.vpage;
+	u8 *scr = page_ram(comp.ts.vpage);
 	u32 vptr = vid.vptr;
 	u32 p0, p1;
 
@@ -170,7 +170,7 @@ void draw_p16(int n)
 void draw_atm16(int n)
 {
 	u32 g = vid.yctr * 40 + vid.xctr;
-	u8 *scr = RAM_BASE_M + PAGE * comp.ts.vpage;
+	u8 *scr = page_ram(comp.ts.vpage);
 	u32 vptr = vid.vptr;
 	u32 p0, p1;
 
@@ -192,7 +192,7 @@ void draw_atm16(int n)
 void draw_atmhr(int n)
 {
 	u32 g = vid.yctr * 40 + vid.xctr;
-	u8 *scr = RAM_BASE_M + PAGE * comp.ts.vpage;
+	u8 *scr = page_ram(comp.ts.vpage);
 	u32 vptr = vid.vptr;
 
 	for (; n > 0; n -= 4, vid.t_next += 4, vid.xctr++, g++)
@@ -217,8 +217,8 @@ void draw_tstx(int n)
 {
 	vid.xctr &= 0x7F;
 	u32 s = ((vid.yctr & 0x1F8) << 5);
-	u8 *scr = RAM_BASE_M + PAGE * comp.ts.vpage;
-	u8 *fnt = RAM_BASE_M + PAGE * (comp.ts.vpage ^ 0x01);
+	u8 *scr = page_ram(comp.ts.vpage);
+	u8 *fnt = page_ram(comp.ts.vpage ^ 0x01);
 	u32 vptr = vid.vptr;
 
 	for (; n > 0; n -= 2, vid.t_next += 2)
@@ -236,7 +236,7 @@ void draw_tstx(int n)
 void draw_phr(int n)
 {
 	u32 g = ((vid.yctr & 0x07) << 8) + ((vid.yctr & 0x38) << 2) + ((vid.yctr & 0xC0) << 5) + (vid.xctr & 0x1F);
-	u8 *scr = RAM_BASE_M + PAGE * comp.ts.vpage;
+	u8 *scr = page_ram(comp.ts.vpage);
 	u32 vptr = vid.vptr;
 	u32 p0 = vid.clut[(comp.ts.gpal << 4)];		// color for 'PAPER'
 	u32 p1 = vid.clut[(comp.ts.gpal << 4) + 7];	// color for 'INK'
@@ -255,7 +255,7 @@ void draw_phr(int n)
 void draw_ts16(int n)
 {
 	u32 s = (vid.yctr << 8);
-	u8 *scr = RAM_BASE_M + PAGE * (comp.ts.vpage & 0xF8);
+	u8 *scr = page_ram(comp.ts.vpage & 0xF8);
 	u32 t = (vid.xctr + (comp.ts.g_offsx >> 1)) & 0xFF;
 	vid.xctr += n;
 	u32 p0, p1;
@@ -293,7 +293,7 @@ void draw_ts16(int n)
 void draw_ts256(int n)
 {
 	u32 s = (vid.yctr << 9);
-	u8 *scr = RAM_BASE_M + PAGE * (comp.ts.vpage & 0xF0);
+	u8 *scr = page_ram(comp.ts.vpage & 0xF0);
 	u32 t = (vid.xctr + comp.ts.g_offsx) & 0x1FF;
 	vid.xctr += n * 2;
 	u32 vptr = vid.vptr;
@@ -316,9 +316,9 @@ void draw_nul(int n)
 
 	for (; n > 0; n -= 1, vid.t_next++)
 	{
-		p.r = p.g = p.b = rand()*0xFFFF >> 3;
+		p.r = p.g = p.b = rand() >> 8;
 		vbuf[vid.buf][vptr  ] = vbuf[vid.buf][vptr+ 1] = p.p;
-		p.r = p.g = p.b = rand()*0xFFFF >> 3;
+		p.r = p.g = p.b = rand() >> 8;
 		vbuf[vid.buf][vptr+2] = vbuf[vid.buf][vptr+ 3] = p.p;
 		vptr += 4;
 	}
@@ -346,7 +346,7 @@ void draw_ts()
 {
 	int s_pix = (vid.raster.r_brd - vid.raster.l_brd) * 2;
 	u32 vptr = vid.vptr - s_pix * 2;
-	for (int i = 0; i < s_pix; i++)
+	for (int i = 64; i < (s_pix + 64); i++)
 	{
 		if (vid.tsline[i] & 0xF)	// if pixel is not transparent
 			vbuf[vid.buf][vptr] = vbuf[vid.buf][vptr+1] = vid.clut[vid.tsline[i]];

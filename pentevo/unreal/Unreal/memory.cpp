@@ -10,8 +10,8 @@ void set_banks()
 {
    u8 tmp;
    
-   bankw[1] = bankr[1] = RAM_BASE_M + 5*PAGE;
-   bankw[2] = bankr[2] = RAM_BASE_M + 2*PAGE;
+   bankw[1] = bankr[1] = page_ram(5);
+   bankw[2] = bankr[2] = page_ram(2);
 
    // screen begining
    // temp.base = memory + ((comp.p7FFD & 8) ? 7*PAGE : 5*PAGE);
@@ -42,10 +42,10 @@ void set_banks()
          if (!(comp.pEFF7 & EFF7_LOCKMEM))
              bank |= (comp.p7FFD & 0xE0) >> 2; // 7FFD bits 765210
 
-         bank3 = RAM_BASE_M + (bank & temp.ram_mask)*PAGE;
+         bank3 = page_ram(bank & temp.ram_mask);
 
          if (comp.pEFF7 & EFF7_ROCACHE)
-             bank0 = RAM_BASE_M + 0*PAGE; //Alone Coder 0.36.4
+             bank0 = page_ram(0); //Alone Coder 0.36.4
          break;
 
       case MM_PROFSCORP:
@@ -56,7 +56,7 @@ void set_banks()
 
       case MM_SCORP:
          bank += ((comp.p1FFD & 0x10) >> 1) + ((comp.p1FFD & 0xC0) >> 2);
-         bank3 = RAM_BASE_M + (bank & temp.ram_mask) * PAGE;
+         bank3 = page_ram(bank & temp.ram_mask);
 
 /*
          // обработка памяти gmx (конфликтует со стандартным profrom)
@@ -78,7 +78,7 @@ void set_banks()
          if (comp.p1FFD & 2)
             bank0 = base_sys_rom;
          if (comp.p1FFD & 1)
-            bank0 = RAM_BASE_M + 0 * PAGE;
+            bank0 = page_ram(0);
          if (conf.mem_model == MM_PROFSCORP)
          {
              if (bank0 == base_sys_rom)
@@ -91,7 +91,7 @@ void set_banks()
       case MM_KAY:
       {
          bank += ((comp.p1FFD & 0x10) >> 1) + ((comp.p1FFD & 0x80) >> 3) + ((comp.p7FFD & 0x80) >> 2);
-         bank3 = RAM_BASE_M + (bank & temp.ram_mask)*PAGE;
+         bank3 = page_ram(bank & temp.ram_mask);
          unsigned char rom1 = (comp.p1FFD >> 2) & 2;
          if (comp.flags & CF_TRDOS) rom1 ^= 2;
          switch (rom1+((comp.p7FFD & 0x10) >> 4))
@@ -102,16 +102,16 @@ void set_banks()
             case 3: bank0 = base_dos_rom; break;
             default: __assume(0);
          }
-         if (comp.p1FFD & 1) bank0 = RAM_BASE_M + 0*PAGE;
+         if (comp.p1FFD & 1) bank0 = page_ram(0);
          break;
       }
 
       case MM_PROFI:
-         bank += ((comp.pDFFD & 0x07) << 3); bank3 = RAM_BASE_M + (bank & temp.ram_mask)*PAGE;
-         if (comp.pDFFD & 0x08) bankr[1] = bankw[1] = bank3, bank3 = RAM_BASE_M+7*PAGE;
-         if (comp.pDFFD & 0x10) bank0 = RAM_BASE_M+0*PAGE;
+         bank += ((comp.pDFFD & 0x07) << 3); bank3 = page_ram(bank & temp.ram_mask);
+         if (comp.pDFFD & 0x08) bankr[1] = bankw[1] = bank3, bank3 = page_ram(7);
+         if (comp.pDFFD & 0x10) bank0 = page_ram(0);
          if (comp.pDFFD & 0x20) comp.flags |= CF_DOSPORTS;
-         if (comp.pDFFD & 0x40) bankr[2] = bankw[2] = RAM_BASE_M + 6*PAGE;
+         if (comp.pDFFD & 0x40) bankr[2] = bankw[2] = page_ram(6);
          break;
 
       case MM_ATM450:
@@ -119,11 +119,11 @@ void set_banks()
          // RAM
          // original ATM uses D2 as ROM address extension, not RAM
          bank += ((comp.pFDFD & 0x07) << 3);
-         bank3 = RAM_BASE_M + (bank & temp.ram_mask)*PAGE;
+         bank3 = page_ram(bank & temp.ram_mask);
          if (!(comp.aFE & 0x80))
          {
-            bankw[1] = bankr[1] = RAM_BASE_M + 4*PAGE;
-            bank0 = RAM_BASE_M;
+            bankw[1] = bankr[1] = page_ram(4);
+            bank0 = page_ram(0);
             break;
          }
 
@@ -150,7 +150,7 @@ void set_banks()
 		// RAM at #0000
 			if (comp.ts.w0_map_n)
 			// no map
-				bank0 = RAM_BASE_M + PAGE * comp.ts.page0;
+				bank0 = page_ram(comp.ts.page0);
 			else
 			{
 			// mapping
@@ -159,7 +159,7 @@ void set_banks()
 				else
 					tmp = (comp.p7FFD & 0x10) ? 3 : 1;
 					
-				bank0 = RAM_BASE_M + PAGE * (comp.ts.page0 + tmp);
+				bank0 = page_ram(comp.ts.page0 + tmp);
 			}
 		else
 		// ROM at #0000
@@ -170,9 +170,9 @@ void set_banks()
 				else
 					bank0 = (comp.ts.page0 & 0x01) ? base_dos_rom : base_sys_rom;
 
-		bankr[1] = bankw[1] = RAM_BASE_M + PAGE * comp.ts.page1;
-		bankr[2] = bankw[2] = RAM_BASE_M + PAGE * comp.ts.page2;
-		bank3  = RAM_BASE_M + PAGE * comp.ts.page3;
+		bankr[1] = bankw[1] = page_ram(comp.ts.page1);
+		bankr[2] = bankw[2] = page_ram(comp.ts.page2);
+		bank3  = page_ram(comp.ts.page3);
 
 		break;
 	  }
@@ -188,7 +188,7 @@ void set_banks()
 
          if (!(comp.aFF77 & 0x100))
          { // pen=0
-            bankr[1] = bankr[2] = bank3 = bank0 = ROM_BASE_M + PAGE * temp.rom_mask;
+            bankr[1] = bankr[2] = bank3 = bank0 = page_rom(temp.rom_mask);
             break;
          }
 
@@ -205,29 +205,29 @@ void set_banks()
             switch (comp.pFFF7[i+bank] & 0x300)
             {
                case 0x000: // RAM from 7FFD (lvd patched)
-                  bankr[bank] = bankw[bank] = RAM_BASE_M + PAGE * ((mem7ffd & mask7ffd) | (comp.pFFF7[i+bank] & (~mask7ffd) & temp.ram_mask));
+                  bankr[bank] = bankw[bank] = page_ram((mem7ffd & mask7ffd) | (comp.pFFF7[i+bank] & (~mask7ffd) & temp.ram_mask));
                   break;
                case 0x100: // ROM from 7FFD
-                  bankr[bank] = ROM_BASE_M + PAGE*((comp.pFFF7[i+bank] & 0xFE & temp.rom_mask) + ((comp.flags & CF_TRDOS)?1:0));
+                  bankr[bank] = page_rom((comp.pFFF7[i+bank] & 0xFE & temp.rom_mask) + ((comp.flags & CF_TRDOS)?1:0));
                   break;
                case 0x200: // RAM from FFF7
-                  bankr[bank] = bankw[bank] = RAM_BASE_M + PAGE*(comp.pFFF7[i+bank] & 0xFF & temp.ram_mask);
+                  bankr[bank] = bankw[bank] = page_ram(comp.pFFF7[i+bank] & 0xFF & temp.ram_mask);
                   break;
                case 0x300: // ROM from FFF7
-                  bankr[bank] = ROM_BASE_M + PAGE*(comp.pFFF7[i+bank] & 0xFF & temp.rom_mask);
+                  bankr[bank] = page_rom(comp.pFFF7[i+bank] & 0xFF & temp.rom_mask);
                   break;
             }
          }
          bank0 = bankr[0]; bank3 = bankr[3];
 
 //         if (conf.mem_model == MM_ATM3 && cpu.nmi_in_progress)
-//             bank0 = RAM_BASE_M + PAGE * 0xFF;
+//             bank0 = page_ram(0xFF);
         if ( conf.mem_model==MM_ATM3 ) // lvd added pentevo RAM0 to bank0 feature if EFF7_ROCACHE is set
         {
             if ( cpu.nmi_in_progress )
-                bank0 = RAM_BASE_M + PAGE * 0xFF;
+                bank0 = page_ram(0xFF);
             else if ( comp.pEFF7 & EFF7_ROCACHE )
-                bank0 = RAM_BASE_M + PAGE * 0x00;
+                bank0 = page_ram(0x00);
         }
 
          break;
@@ -237,7 +237,7 @@ void set_banks()
       {
           if (comp.p7FFD & 0x20) // paging disabled (48k mode)
           {
-              bank3 = RAM_BASE_M + (bank & temp.ram_mask)*PAGE;
+              bank3 = page_ram(bank & temp.ram_mask);
               break;
           }
 
@@ -251,7 +251,7 @@ void set_banks()
                  case 2: bank0 = base_dos_rom; break;
                  case 3: bank0 = base_sos_rom; break;
               }
-              bank3 = RAM_BASE_M + (bank & temp.ram_mask)*PAGE;
+              bank3 = page_ram(bank & temp.ram_mask);
           }
           else
           {
@@ -259,7 +259,7 @@ void set_banks()
               static const unsigned RamDecoder[4][4] =
               { {0, 1, 2, 3}, {4, 5, 6, 7}, {4, 5, 6, 3}, {4, 7, 6, 3} };
               for (unsigned i = 0; i < 4; i++)
-                  bankw[i] = bankr[i] = RAM_BASE_M + PAGE * RamDecoder[RamPage][i];
+                  bankw[i] = bankr[i] = page_ram(RamDecoder[RamPage][i]);
               bank0 = bankr[0];
               bank3 = bankr[3];
           }
@@ -286,15 +286,15 @@ void set_banks()
           if (comp.p00 & Q_F_RAM)
           {
               unsigned bnk0 = (comp.p00 & Q_RAM_8) ? 8 : 0;
-              bank0 = RAM_BASE_M + (bnk0 & temp.ram_mask) * PAGE;
+              bank0 = page_ram(bnk0 & temp.ram_mask);
           }
 
           bank |= ((comp.p7FFD & 0xC0) >> 3) | (comp.p7FFD & 0x20);
-          bank3 = RAM_BASE_M + (bank & temp.ram_mask) * PAGE;
+          bank3 = page_ram(bank & temp.ram_mask);
           break;
       }
 
-      default: bank3 = RAM_BASE_M + 0*PAGE;
+      default: bank3 = page_ram(0);
    }
 
    bankw[0] = bankr[0] = bank0;
@@ -317,7 +317,7 @@ void set_banks()
    else if ((comp.p7FFD & 0x10) && conf.trdos_present)
    { // B-48, inactive DOS, DOS present
       // for Scorp, ATM-1/2 and KAY, TR-DOS not started on executing RAM 3Dxx
-      if (!((dosflags & CF_LEAVEDOSRAM) && bankr[0] < RAM_BASE_M+PAGE*MAX_RAM_PAGES))
+      if (!((dosflags & CF_LEAVEDOSRAM) && bankr[0] < page_ram(MAX_RAM_PAGES)))
          comp.flags |= CF_SETDOSROM;
    }
 
@@ -587,4 +587,11 @@ void NVRAM::write(unsigned char val)
  exit:
    if (out_z) out = (val & SDA)? SDA_1 : SDA_0;
    prev = val;
+}
+
+void rand_ram()
+{
+	u8 *mem = page_ram(0);
+	for (u32 i=0; i<(4096*1024); i++)
+		mem[i] = rand();
 }

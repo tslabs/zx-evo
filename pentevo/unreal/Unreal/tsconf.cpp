@@ -93,23 +93,25 @@ void dma (u8 val)
 
 // TS Engine
 
-void render_tile(u8 page, u32 tnum, u8 offs, u32 x, u8 pal, u8 xf, u8 yf, u8 n)
+void render_tile(u8 page, u32 tnum, u8 line, u32 x, u8 pal, u8 xf, u8 n)
 {
-	u8 *g = RAM_BASE_M + PAGE * page + ((tnum & 0xFC0) << 5) + ((offs ^ (yf ? 7 : 0)) << 8) + ((tnum & 0x3F) << 2);
-	x += (xf ? (n * 8 - 1) : 0);
+	u8 *g = page_ram(page) + ((tnum & 0xFC0) << 5) + (line << 8);
+	x += (xf ? (n * 8 - 1) : 0) + 64;
 	pal <<= 4;
-	u8 a = xf ? -1 : 1;
+	i8 a = xf ? -1 : 1;
 	u8 c;
+	u32 ox = ((tnum & 0x3F) << 2);
 	for (u32 i=0; i<n; i++)
 	{
-		if (c = g[0] & 0xF0) vid.tsline[(x & 0x1FF)] = pal | (c >> 4); x += a;
-		if (c = g[0] & 0x0F) vid.tsline[(x & 0x1FF)] = pal | c; x += a;
-		if (c = g[1] & 0xF0) vid.tsline[(x & 0x1FF)] = pal | (c >> 4); x += a;
-		if (c = g[1] & 0x0F) vid.tsline[(x & 0x1FF)] = pal | c; x += a;
-		if (c = g[2] & 0xF0) vid.tsline[(x & 0x1FF)] = pal | (c >> 4); x += a;
-		if (c = g[2] & 0x0F) vid.tsline[(x & 0x1FF)] = pal | c; x += a;
-		if (c = g[3] & 0xF0) vid.tsline[(x & 0x1FF)] = pal | (c >> 4); x += a;
-		if (c = g[3] & 0x0F) vid.tsline[(x & 0x1FF)] = pal | c; x += a;
+		if (c = g[ox + 0] & 0xF0) vid.tsline[x] = pal | (c >> 4); x += a;
+		if (c = g[ox + 0] & 0x0F) vid.tsline[x] = pal | c; x += a;
+		if (c = g[ox + 1] & 0xF0) vid.tsline[x] = pal | (c >> 4); x += a;
+		if (c = g[ox + 1] & 0x0F) vid.tsline[x] = pal | c; x += a;
+		if (c = g[ox + 2] & 0xF0) vid.tsline[x] = pal | (c >> 4); x += a;
+		if (c = g[ox + 2] & 0x0F) vid.tsline[x] = pal | c; x += a;
+		if (c = g[ox + 3] & 0xF0) vid.tsline[x] = pal | (c >> 4); x += a;
+		if (c = g[ox + 3] & 0x0F) vid.tsline[x] = pal | c; x += a;
+		ox = (ox + (a * 4)) & 0xFF;
 	}
 }
 
@@ -120,7 +122,7 @@ void render_tile_layer(u8 layer)
 {
 	u32 y = (vid.yctr + (layer ? comp.ts.t1_offsy : comp.ts.t0_offsy)) & 0x1FF;
 	u32 x = (layer ? comp.ts.t1_offsx : comp.ts.t0_offsx);
-	TILE_t *tmap = (TILE_t*)(RAM_BASE_M + PAGE * comp.ts.tmpage + ((y & 0x1F8) << 5));
+	TILE_t *tmap = (TILE_t*)(page_ram(comp.ts.tmpage) + ((y & 0x1F8) << 5));
 	u32 ox = ((x & 0x1F8) >> 2) + layer;
 
 	for (u32 i=0; i<46; i++)
@@ -129,16 +131,29 @@ void render_tile_layer(u8 layer)
 		render_tile(
 			(layer ? comp.ts.t1gpage : comp.ts.t0gpage),				// page
 			t.tnum,														// tile number
-			y & 7,														// line offset (3 bit)
+			(y ^ (t.yflp ? 7 : 0)) & 7,									// line offset (3 bit)
 			(i << 3) - (x % 8),											// x coordinate in buffer (masked 0x1FF in func)
 			((layer ? comp.ts.t1pal : comp.ts.t0pal) << 2) | t.pal,		// palette
-			t.xflp, t.yflp, 1											// x/y flips, size
+			t.xflp, 1													// x flip, x size
 		);
 	}
 }
 
 void render_sprite()
 {
+	SPRITE_t s = spr[snum];
+	u8 ys = ((s.ys + 1) << 3);
+	i32 l = vid.yctr - s.y;
+
+	if ((l >= 0) && (l < ys))
+		render_tile(
+			comp.ts.sgpage,					// page
+			s.tnum,							// tile number
+			(s.yflp ? (ys - l) : l),		// line offset (3 bit)
+			s.x,							// x coordinate in buffer (masked 0x1FF in func)
+			s.pal,							// palette
+			s.xflp, s.xs + 1				// x flip, x size
+		);
 }
 
 void render_sprite_layer()
@@ -154,7 +169,7 @@ void render_sprite_layer()
 
 void render_ts()
 {
-	memset(vid.tsline, 0, 512);
+	memset(vid.tsline+64, 0, 360);
 	snum = 0;
 
 	for (u32 layer=0; layer < 5; layer++)

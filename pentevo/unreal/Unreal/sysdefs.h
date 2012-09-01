@@ -5,15 +5,16 @@
 #define fastcall             // parameters in registers
 
 typedef unsigned long long uint64_t;
-
 typedef uint64_t QWORD;
 
 typedef unsigned long long u64;
-typedef long long i64;
+typedef signed long long i64;
 typedef unsigned long u32;
+typedef signed long i32;
 typedef unsigned short u16;
-typedef signed  short i16;
+typedef signed short i16;
 typedef unsigned char u8;
+typedef signed char i8;
 
 #ifdef _MSC_VER
 #define ATTR_ALIGN(x) __declspec(align(x))
