@@ -946,8 +946,8 @@ void init_frame()
    // paper + border
    // temp.base_2 = temp.base;
 //allow_border:
-   prev_t = vmode = 0;
-   vcurr = video;
+   //prev_t = vmode = 0;
+   //vcurr = video;
 }
 
 void load_spec_colors()

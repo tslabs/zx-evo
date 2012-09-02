@@ -123,19 +123,20 @@ void render_tile_layer(u8 layer)
 	u32 y = (vid.yctr + (layer ? comp.ts.t1_offsy : comp.ts.t0_offsy)) & 0x1FF;
 	u32 x = (layer ? comp.ts.t1_offsx : comp.ts.t0_offsx);
 	TILE_t *tmap = (TILE_t*)(page_ram(comp.ts.tmpage) + ((y & 0x1F8) << 5));
-	u32 ox = ((x & 0x1F8) >> 2) + layer;
+	u32 ox = ((x & 0x1F8) >> 3) + (layer << 6);
 
 	for (u32 i=0; i<46; i++)
 	{
-		TILE_t t = tmap[(ox + (i << 1)) & 0x7F];
-		render_tile(
-			(layer ? comp.ts.t1gpage : comp.ts.t0gpage),				// page
-			t.tnum,														// tile number
-			(y ^ (t.yflp ? 7 : 0)) & 7,									// line offset (3 bit)
-			(i << 3) - (x % 8),											// x coordinate in buffer (masked 0x1FF in func)
-			((layer ? comp.ts.t1pal : comp.ts.t0pal) << 2) | t.pal,		// palette
-			t.xflp, 1													// x flip, x size
-		);
+		TILE_t t = tmap[(ox + i) & 0x7F];
+		if ((layer ? comp.ts.t1z_en : comp.ts.t0z_en) || t.tnum)
+			render_tile(
+				(layer ? comp.ts.t1gpage : comp.ts.t0gpage),				// page
+				t.tnum,														// tile number
+				(y ^ (t.yflp ? 7 : 0)) & 7,									// line offset (3 bit)
+				(i << 3) - (x % 8),											// x coordinate in buffer (masked 0x1FF in func)
+				((layer ? comp.ts.t1pal : comp.ts.t0pal) << 2) | t.pal,		// palette
+				t.xflp, 1													// x flip, x size
+			);
 	}
 }
 
