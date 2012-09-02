@@ -1,0 +1,5 @@
+    #FF - vDOS Traps
+    #FE - vDOS Drivers
+#FC,#FD - vDOS Tables
+#F8-#FB - virtual ROM
+#F0-#F7 - buffer
