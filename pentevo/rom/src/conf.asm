@@ -111,12 +111,12 @@ nv_1st          equ h'B0
 
 
 ; -- video config
-txpage          equ h'F8
+txpage          equ h'04
 pal_sel         equ h'F
 
 
 ; -- pages config
-vrompage        equ h'F4
+vrompage        equ h'F8
 
 
 ; -- UI colors

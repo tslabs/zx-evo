@@ -2,17 +2,16 @@
 ; ------- external modules
 extern    font8
 extern    rslsys
+extern    sysvars
 #include "conf.asm"
 #include "macro.asm"
 #include "vars.asm"
-
 
 ; ------- main code
         rseg CODE
 
         di
         jp MAIN
-
 
 ; -- reset procedures
         org h'80
@@ -58,7 +57,6 @@ RES_5
         rrca
         jp nc, SETUP        ; CS pressed
 
-
 RESET
         di
         call CLS_ZX
@@ -103,7 +101,6 @@ RES_2
         ldir
         jp res_buf
 
-
 RESET2:
 ; -- setting up h/w parameters
 
@@ -147,18 +144,15 @@ RES_1
         jr z, RES_BT_SR
         halt
 
-
 RES_ROM00
         xtr
         xt page0, 0
         jr RES_3
 
-
 RES_ROM04
         xtr
         xt page0, 4
         jr RES_3
-
 
 RES_VROM
         xtr
@@ -166,7 +160,6 @@ RES_VROM
         ld a, b'1000
         or d                ; Lock128 Mode
         ld d, a             ; RAM will be used instead of ROM
-
 
 RES_3
         ld a, e
@@ -180,7 +173,6 @@ RES_3
         jr z, RES_SYS
         halt
 
-
 RES_TRD
         ld a, d
         or 1                ; ROM 48
@@ -189,7 +181,6 @@ RES_TRD
         ld sp, h'3D2E
         jp h'3D2F           ; ret to #0000
 
-
 RES_48
         ld a, d
         or 1                ; ROM 48
@@ -197,13 +188,11 @@ RES_48
         xta memconf
         jp 0
 
-
 RES_128
         ld a, d
         xtr
         xta memconf
         jp 0
-
 
 RES_SYS
         ld a, d
@@ -211,7 +200,6 @@ RES_SYS
         xtr
         xta memconf         ; no mapping
         jp 0
-
 
 RES_BT_BD           ; boot.$c
         xtr
@@ -234,7 +222,6 @@ RES_BT_BD           ; boot.$c
 RES_BT_SR           ; sys.rom
         halt
 
-
 RES_BD_XX           ; SD Card, HDD Master, HDD Slave (B = device)
         push de
         call start  ; a = Return code: 1 - no device, 2 - FAT32 not found, 3 - file not found
@@ -251,7 +238,6 @@ RES_BD_XX           ; SD Card, HDD Master, HDD Slave (B = device)
         ld hl, h'2758
         exx
         ret
-
 
 RES_BD_RS           ;RS-232
         push de
@@ -271,9 +257,7 @@ RES_BD_RS           ;RS-232
 RES_4
         halt
 
-
 RESET2_END
-
 
 ; ------- ERROR Messages
 
@@ -285,7 +269,7 @@ BT_ERROR
         ld bc, h'0740
         ld a, err_norm
         call DRAW_BOX
-        
+
         pmsgc ERR_ME, 5, err_norm
 		pop af
 
@@ -308,7 +292,6 @@ BTE1
         di
 		halt
 		ret
-
 
 ; ------- BIOS Setup
 
@@ -346,7 +329,6 @@ S_MAIN
         ld (evt), a
         jr S_MAIN
 
-
 ; ------- subroutines
 
 ; Setup init
@@ -358,14 +340,12 @@ S_INIT
         ld (last_key), a
         ret
 
-
 ; Event processing
 EVT_PROC
         ld a, (fld_curr)
         or a
         jr z, EVT_P0
         ret
-
 
 EVT_P0
         ld a, (fld_max)
@@ -394,7 +374,6 @@ EVO0_1
         ld (fld0_pos), a
         jr OPT_HG
 
-
 EV0_D
         ld a, c
         cp b
@@ -402,7 +381,6 @@ EV0_D
         call OPT_DH
         inc a
         jr EVO0_1
-
 
 EV0_E
         ld a, (opt_nvr)
@@ -417,7 +395,6 @@ EV0_E
 
 EV0_H
         jp RESET
-
 
 OPT_DH
         ld b, opt_norm      ; change to var!
@@ -468,7 +445,6 @@ OPP4
         pop af
         ret
 
-
 OPT_DEC
 ; in:
 ;
@@ -501,7 +477,6 @@ OPT_DEC
         pop de
         pop af
         ret
-
 
 BOX0
         ld hl, OPTTAB0
@@ -552,7 +527,6 @@ BX01
         jr c, BX01
         ret
 
-
 ; KBD event processing
 ; check pressed key and set event to process
 KBD_EVT
@@ -571,7 +545,6 @@ KBD_EVT
         ret z
         ld b, 0
         ret
-
 
 ; KBD procedure
 ; makes keyboard mapping and autorepeat
@@ -617,7 +590,6 @@ KPC5
 KPC3
         ld (key), a
         ret
-
 
 ; KBD poll
 ; out:
@@ -665,7 +637,6 @@ KBP6
         scf             ; yes - CS+SS pressed
         ret
 
-
 CALC_CRC
         ld hl, nv_buf
         ld de, 0
@@ -688,7 +659,6 @@ CC0
         cp (hl)
         ret
 
-
 READ_NVRAM
         outf7 shadow, shadow_on
 
@@ -708,7 +678,6 @@ RNV1
         outf7 shadow, shadow_off
         ret
 
-
 LOAD_DEFAULTS
         ld hl, nv_buf + nv_1st
         ld d, h
@@ -717,7 +686,6 @@ LOAD_DEFAULTS
         ld bc, nv_size - 1
         ld (hl), b
         ldir
-
 
 WRITE_NVRAM
         call CALC_CRC
@@ -741,16 +709,12 @@ WNV1
         outf7 shadow, shadow_off
         ret
 
-
 LD_FONT
         xtr
         xt page3, txpage ^ 1
         ld hl, font8
         ld de, win3
-        ld bc, 2048
-        ldir
-        ret
-
+        jp DEC40
 
 TX_MODE
         call CLS_TXT
@@ -763,12 +727,10 @@ TX_MODE
         xt page3, txpage
         ret
 
-
 CLS_ZX
         ld e, 5
         ld d, 27
         jr CLT1
-
 
 CLS_TXT
         ld e, txpage
@@ -776,7 +738,6 @@ CLS_TXT
 CLT1
         ld hl, 0
         xor a
-
 
 ; Fill memory using DMA (only 256 byte aligned addresses!)
 ; EHL - address
@@ -818,7 +779,6 @@ DMAFILL
 		rst DWT
         ret
 
-
 LD_S_PAL
         ld hl, pal_bb
 LD_PAL
@@ -833,7 +793,6 @@ LDP1
         xt fmaddr, 0
         ret
 
-
 LD_64_PAL
         ld hl, pal_64c
         xtr
@@ -842,7 +801,6 @@ LD_64_PAL
         ld de, pal_addr
         ld bc, 128
         jr LDP1
-
 
 ; Calculate length of message
 ; in:
@@ -862,7 +820,6 @@ MLN1
         ld a, l
         ret
 
-
 ; Print message terminated by 0, centered within 80 chars on screen
 ; in:
 ;   DE - addr
@@ -875,7 +832,6 @@ PRINT_MSG_C
         neg
         add a, 40
         ld l, a
-
 
 ; Print message terminated by 0
 ; in:
@@ -892,7 +848,6 @@ PM1
         ret z
         call SYM
         jr PM1
-
 
 ; Drawing framed filled box
 ; in:
@@ -960,7 +915,6 @@ DB2:
 ; ∫ ∫ ∫
 ; »Õ Õº
 
-
 ; NUM_10
         ; ld e, 0
 ; N102
@@ -986,6 +940,7 @@ SYM
         ret
 
 #include "booter.asm"
+#include "dec40.asm"
 #include "arrays.asm"
 #include "restarts.asm"
 

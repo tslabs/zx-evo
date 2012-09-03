@@ -287,38 +287,3 @@ keys_caps
         defb 0, 'ZXCVASDFGQWERT', 7, 6, 4, 5, 8, 12, 15, 9, 11, 10, 'POIUY', 13, 'LKJH ', 14, 'MNB'
 keys_symb
         defb 0, ':`?/~|\\{}   <>!@#$%_)(', 39, '&', 34, '; ][', 13, '=+-^ ', 14, '.,*'
-
-sysvar_start
-        defb h'FF,h'00,h'23,h'0D,h'44,h'05,h'0B,h'44,h'00,h'10,h'01,h'00,h'00,h'00,h'16,h'07
-        defb h'01,h'00,h'06,h'00,h'0B,h'00,h'01,h'00,h'01,h'00,h'06,h'00,h'10,h'00,h'00,h'00
-        defb h'00,h'00,h'00,h'00,h'00,h'00,h'01,h'FD,h'7F,h'3E,h'14,h'ED,h'79,h'C3,h'00,h'C0
-        defb h'18,h'F4,h'00,h'00,h'00,h'00,h'00,h'3C,h'40,h'00,h'FF,h'CD,h'01,h'FC,h'5F,h'00
-        defb h'00,h'00,h'01,h'00,h'FF,h'74,h'2E,h'01,h'07,h'00,h'00,h'4A,h'5D,h'00,h'00,h'26
-        defb h'5D,h'26,h'5D,h'3B,h'5D,h'4F,h'5D,h'3A,h'5D,h'4B,h'5D,h'36,h'5E,h'48,h'5D,h'00
-        defb h'00,h'4D,h'5D,h'4D,h'5D,h'4D,h'5D,h'2D,h'92,h'5C,h'08,h'02,h'00,h'00,h'00,h'00
-        defb h'00,h'00,h'00,h'00,h'B6,h'1A,h'00,h'00,h'AA,h'18,h'00,h'58,h'FF,h'00,h'00,h'00
-        defb h'00,h'00,h'21,h'17,h'00,h'40,h'E0,h'50,h'21,h'18,h'21,h'17,h'01,h'07,h'00,h'38
-        defb h'00,h'00,h'AF,h'D3,h'F7,h'DB,h'F7,h'FE,h'1E,h'28,h'03,h'FE,h'1F,h'C0,h'CF,h'31
-        defb h'3E,h'01,h'32,h'EF,h'5C,h'C9,h'00,h'00,h'00,h'00,h'00,h'00,h'00,h'00,h'00,h'00
-        defb h'00,h'00,h'FF,h'5F,h'FF,h'FF,h'F4,h'09,h'A8,h'10,h'4B,h'F4,h'09,h'C4,h'15,h'53
-        defb h'81,h'0F,h'C9,h'C9,h'52,h'34,h'5B,h'2F,h'FF,h'FF,h'FF,h'FF,h'00,h'00,h'00,h'22
-        defb h'31,h'35,h'36,h'31,h'36,h'22,h'03,h'DB,h'01,h'3D,h'5D,h'FF,h'00,h'53,h'74,h'6F
-        defb h'72,h'6D,h'20,h'20,h'20,h'42,h'FA,h'00,h'2E,h'00,h'6D,h'00,h'01,h'00,h'00,h'00
-        defb h'00,h'00,h'00,h'00,h'01,h'01,h'00,h'00,h'00,h'00,h'08,h'08,h'08,h'08,h'80,h'00
-        defb h'25,h'5D,h'25,h'5D,h'3B,h'5F,h'09,h'00,h'00,h'00,h'00,h'00,h'FF,h'00,h'00,h'07
-        defb h'00,h'3C,h'5D,h'FC,h'5F,h'FF,h'2C,h'AA,h'00,h'00,h'01,h'02,h'E6,h'5F,h'00,h'00
-        defb h'F7,h'22,h'62,h'00,h'00,h'FF,h'F4,h'09,h'A8,h'10,h'4B,h'F4,h'09,h'C4,h'15,h'53
-        defb h'81,h'0F,h'C4,h'15,h'52,h'34,h'5B,h'2F,h'5B,h'50,h'80,h'00,h'05,h'0B,h'00,h'F9
-        defb h'C0,h'B0,h'22,h'32,h'33,h'36,h'30,h'30,h'22,h'0D,h'80,h'0D,h'80,h'31,h'00,h'60
-        defb h'2A,h'3B,h'5D,h'22,h'FE,h'5B,h'ED,h'5B,h'F4,h'5C,h'21,h'19,h'6F,h'E5,h'06,h'42
-        defb h'CD,h'96,h'5D,h'CD,h'8E,h'5D,h'21,h'00,h'DB,h'06,h'25,h'CD,h'96,h'5D,h'3A,h'AE
-        defb h'E5,h'E6,h'F7,h'F6,h'10,h'CD,h'90,h'5D,h'21,h'00,h'FB,h'06,h'05,h'CD,h'96,h'5D
-        defb h'CD,h'8E,h'5D,h'3E,h'20,h'DD,h'DD,h'DD,h'DD,h'DD,h'DD,h'DD,h'18,h'79,h'3E,h'17
-        defb h'01,h'FD,h'7F,h'ED,h'79,h'C9,h'CD,h'05,h'5E,h'0E,h'FF,h'F3,h'0C,h'28,h'0C,h'79
-        defb h'E6,h'07,h'20,h'0D,h'D9,h'3E,h'08,h'CD,h'2D,h'5E,h'D9,h'7A,h'D9,h'CD,h'12,h'5E
-        defb h'D9,h'7B,h'E5,h'D9,h'E1,h'16,h'00,h'CD,h'C8,h'5D,h'20,h'DF,h'24,h'1C,h'CB,h'63
-        defb h'28,h'03,h'CB,h'A3,h'14,h'10,h'D2,h'C9,h'3C,h'0E,h'5F,h'CD,h'09,h'5E,h'3E,h'80
-        defb h'CD,h'07,h'5E,h'DD,h'21,h'D7,h'3F,h'01,h'7F,h'01,h'CD,h'0D,h'5E,h'28,h'0E,h'3A
-        defb h'D6,h'5C,h'08,h'CD,h'FA,h'5D,h'08,h'32,h'D6,h'5C,h'05,h'D9,h'C9,h'CD,h'05,h'5E
-        defb h'3E,h'D4,h'CD,h'2D,h'5E,h'D9,h'0E,h'07,h'B1,h'C9,h'21,h'AA,h'20,h'E5,h'3E,h'01
-sysvar_end
