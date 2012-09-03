@@ -70,10 +70,9 @@ thg     ld b, 1
         cp h'0f
         jr nz, thg
 
-        ld hl, sysvar_start
+        ld hl, sysvars
         ld de, sys_var
-        ld bc, sysvar_end-sysvar_start
-        ldir
+		call DEC40
 
         pop de
 		xor a
