@@ -111,7 +111,7 @@ nv_1st          equ h'B0
 
 
 ; -- video config
-txpage          equ h'04
+txpage          equ h'F6
 pal_sel         equ h'F
 
 
