@@ -1,13 +1,7 @@
 // xcl-file for assembler-only projects
 -Fraw-binary
 -cz80
--Z(CODE)CODE=0000-38FF
--Z(CONST)SYSVARS=3900-3AFF
--Z(CONST)RS232=3B00-3BFF
--Z(CONST)FONT8=3C00-3FFF
---image_input=866_code.fnt,font8,FONT8,1
---image_input=rslsys.bin,rslsys,RS232,1
---image_input=sysvars.bin,sysvars,SYSVARS,1
+-Z(CODE)CODE=0000-3FFF
 -o ts-bios.bin
 -l ts-bios.map
 -xmisn

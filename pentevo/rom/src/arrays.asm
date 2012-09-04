@@ -287,3 +287,12 @@ keys_caps
         defb 0, 'ZXCVASDFGQWERT', 7, 6, 4, 5, 8, 12, 15, 9, 11, 10, 'POIUY', 13, 'LKJH ', 14, 'MNB'
 keys_symb
         defb 0, ':`?/~|\\{}   <>!@#$%_)(', 39, '&', 34, '; ][', 13, '=+-^ ', 14, '.,*'
+
+font8
+#include "866_code.asm"
+
+rslsys
+#include "rslsys.asm"
+
+sysvars
+#include "sysvars.asm"
