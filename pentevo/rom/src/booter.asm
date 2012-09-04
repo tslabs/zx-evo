@@ -72,7 +72,7 @@ thg     ld b, 1
 
         ld hl, sysvars
         ld de, sys_var
-		call DEC40
+		call DEHRUST
 
         pop de
 		xor a

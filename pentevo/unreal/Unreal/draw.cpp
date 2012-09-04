@@ -854,7 +854,7 @@ void init_raster()
 	if ((conf.mem_model == MM_ATM710 || conf.mem_model == MM_ATM3) && ((comp.pFF77 & 7) != FF77_ZX))
 	{
 		vid.raster = raster[R_320_200];
-		if (conf.mem_model == MM_ATM3 && !(comp.pEFF7 & m)) { vid.mode = M_NUL; return; }	// EFF7 AlCo bits must be 00, or invalid mode
+		if (conf.mem_model == MM_ATM3 && (comp.pEFF7 & m)) { vid.mode = M_NUL; return; }	// EFF7 AlCo bits must be 00, or invalid mode
 		if ((comp.pFF77 & 7) == FF77_16) { vid.mode = M_ATM16; return; }
 		if ((comp.pFF77 & 7) == FF77_MC) { vid.mode = M_ATMHR; return; }
 		if ((comp.pFF77 & 7) == FF77_TX) { vid.mode = M_ATMTX; return; }

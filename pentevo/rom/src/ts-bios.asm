@@ -1,8 +1,5 @@
 
 ; ------- external modules
-extern    font8
-extern    rslsys
-extern    sysvars
 #include "conf.asm"
 #include "macro.asm"
 #include "vars.asm"
@@ -243,9 +240,7 @@ RES_BD_RS           ;RS-232
         push de
         ld hl, rslsys
         ld de, rslsys_addr
-        ld bc, 256
-        ldir
-        call rslsys_addr
+        call DEHRUST
         pop af
         jr nc, RES_4
 
@@ -714,7 +709,7 @@ LD_FONT
         xt page3, txpage ^ 1
         ld hl, font8
         ld de, win3
-        jp DEC40
+        jp DEHRUST
 
 TX_MODE
         call CLS_TXT
@@ -940,9 +935,8 @@ SYM
         ret
 
 #include "booter.asm"
-#include "dec40.asm"
+#include "dehst.asm"
 #include "arrays.asm"
 #include "restarts.asm"
 
         end
-
