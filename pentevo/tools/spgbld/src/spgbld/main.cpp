@@ -11,40 +11,27 @@ CONF conf;
 int _tmain(int argc, _TCHAR* argv[])
 {
 	init_hdr();
+	parse_args(argc, argv);
 	
-	if (!wcscmp(argv[1], L"-b"))
-		//Build
+	switch (conf.mode)
 	{
-		conf.packer = -1;
-		if (argc > 4 && !wcscmp(argv[4], L"-c"))
-			conf.packer = _wtof(argv[5]);
-		load_ini(argv[2]);
-		load_files();
-		if (conf.packer != 0)
-			pack_blocks();
-		save_out(argv[3]);
-		error(RC_OK);
+		case M_BLD:
+		{
+			load_ini(conf.in_fname);
+			load_files();
+			if (conf.packer != PM_NONE)
+				pack_blocks();
+			save_spg(conf.out_fname);
+			error(RC_OK);
+		}
+		
+		case M_UNP:
+		{
+			load_spg(conf.in_fname);
+			// save_ini(conf.out_fname);
+			save_files();
+			error(RC_OK);
+		}
 	}
-	
-	if (!wcscmp(argv[1], L"-i"))
-		//Info
-	{
-		return 0;
-	}
-	
-	if (!wcscmp(argv[1], L"-u"))
-		//Unpack
-	{
-		return 0;
-	}
-	
-	if (!wcscmp(argv[1], L"-r"))
-		//Re-pack
-	{
-		return 0;
-	}
-	
-	print_help();
-	return RC_NOARG;
 }
 
