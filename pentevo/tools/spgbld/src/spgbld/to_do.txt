@@ -1,0 +1,6 @@
+- Add HEX numbers
+- Change all file functions to _TCHAR (or wchar)
+- Add thorough error handlings
+- Make order with CMD line parameters processing and storing
+- Check presence of mhmt.exe
+- Add all paths relative to current (?)
