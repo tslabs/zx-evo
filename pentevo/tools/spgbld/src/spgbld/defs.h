@@ -40,8 +40,25 @@ typedef signed char i8;
 #define F_YEAR 	year
 #define F_BLK  	block
 
+enum C_MOD {
+	M_INFO = 0,
+	M_BLD,
+	M_CONV,
+	M_UNP
+};
+
+enum C_PACK {
+	PM_AUTO = -1,
+	PM_NONE,
+	PM_MLZ,
+	PM_HST
+};
+
 struct CONF {
-	int packer;
+	C_PACK packer;
+	C_MOD mode;
+	_TCHAR* in_fname;
+	_TCHAR* out_fname;
 	int n_blocks;
 };
 

@@ -7,6 +7,40 @@ extern HDR hdr;
 extern BLK blk[256];
 extern CONF conf;
 
+int parse_arg(int argc, _TCHAR* argv[], _TCHAR* arg, int n)
+{
+	for (int i=1; i<argc; i++)
+		if (!wcscmp(argv[i], arg) && (argc-1) >= (i+n))
+			return i+1;
+	return 0;
+}
+
+void parse_args(int argc, _TCHAR* argv[])
+{
+	int i;
+	conf.packer = PM_AUTO;
+	
+	if (i = parse_arg(argc, argv, L"-b", 2))
+	{
+		conf.mode = M_BLD;
+		conf.in_fname = argv[i];
+		conf.out_fname = argv[i+1];
+		if (i = parse_arg(argc, argv, L"-c", 1))
+			conf.packer = (C_PACK)_wtoi(argv[i]);
+		return;
+	}
+	
+	if (i = parse_arg(argc, argv, L"-u", 1))
+	{
+		conf.mode = M_UNP;
+		conf.in_fname = argv[i];
+		return;
+	}
+	
+	print_help();
+	error (RC_ARG);
+}
+
 void init_hdr()
 {
 	memset(&hdr, 0, sizeof(hdr));
@@ -41,7 +75,7 @@ void load_ini(_TCHAR *name)
 	
 	FILE* f = _wfopen(name, L"rt");
 	if (!f)
-		error(RC_NOINI);
+		error(RC_INI);
 		
 	while (!feof(f))
 	{
@@ -118,16 +152,6 @@ void load_ini(_TCHAR *name)
 			continue;
 		}
 		
-		// packer
-		if (!strcmp(t, STR(F_COMP)))
-		{
-			sscanf(v, "%d", &a);
-			if (a < -1 || a > 2)
-				error(RC_PACK);
-			conf.packer = a;
-			continue;
-		}
-		
 		// block
 		if (!strcmp(t, STR(F_BLK)))
 		{
@@ -158,38 +182,13 @@ void load_ini(_TCHAR *name)
 	fclose(f);
 }
 
-void load_files()
+void rand_name(char* name)
 {
-	struct stat st;
-	
-	for (int i=0; i<conf.n_blocks; i++)
+	for (int i=0; i<11; i++)
 	{
-		stat(blk[i].fname, &st);
-		
-		if (st.st_size < 0)
-		{
-			printf("%s: ", blk[i].fname);
-			error(RC_NOFILE);
-		}
-
-		if (st.st_size > 16384)
-		{
-			printf("%s: ", blk[i].fname);
-			error(RC_BIG);
-		}
-		
-		if (st.st_size == 0)
-		{
-			printf("%s: ", blk[i].fname);
-			error(RC_ZERO);
-		}
-		
-		FILE* f = fopen(blk[i].fname, "rb");
-		blk[i].size = st.st_size;
-		hdr.blk[i].size = (blk[i].size - 1) >> 9;
-		fread(blk[i].data, 1, blk[i].size, f);
-		fclose(f);
+		name[i] = 65 + (rand() & 15);
 	}
+	name[11] ='.', name[12] ='t', name[13] ='m', name[14] ='p', name[15] = 0;
 }
 
 void store_block(int i, char* fn, int s)
@@ -220,15 +219,17 @@ void pack_blocks()
 		
 		s1 = s2 = 16384;
 		
-		if (conf.packer == -1 || conf.packer == 1)
+		if (conf.packer == PM_AUTO || conf.packer == PM_MLZ)
 		{
-			_spawnl(_P_WAIT, "mhmt.exe", "_", "-mlz", f1n, f2n, NULL);
+			if (_spawnlp(_P_WAIT, "mhmt.exe", "dummy", "-mlz", f1n, f2n, NULL) < 0)
+				error(RC_MHMT);
 			stat(f2n, &st); s1 = st.st_size;
 		}
 		
-		if (conf.packer == -1 || conf.packer == 2)
+		if (conf.packer == PM_AUTO || conf.packer == PM_HST)
 		{
-			_spawnl(_P_WAIT, "mhmt.exe", "_", "-hst", f1n, f3n, NULL);
+			if (_spawnlp(_P_WAIT, "mhmt.exe", "dummy", "-hst", f1n, f3n, NULL) < 0)
+				error(RC_MHMT);
 			stat(f3n, &st); s2 = st.st_size;
 		}
 		
@@ -236,7 +237,7 @@ void pack_blocks()
 		
 		if (blk[i].size <= min(s1, s2))
 			p = 0;
-		else p = (s1 < s2) ? 1 : 2;
+		else p = (s1 < s2) ? PM_MLZ : PM_HST;
 		
 		hdr.blk[i].comp = p;
 
@@ -258,7 +259,11 @@ void pack_blocks()
 	}
 }
 
-void save_out(_TCHAR* name)
+void load_spg(_TCHAR* name)
+{
+}
+
+void save_spg(_TCHAR* name)
 {
 	FILE* f = _wfopen(name, L"wb");
 	
@@ -274,11 +279,44 @@ void save_out(_TCHAR* name)
 	fclose(f);
 }
 
-void rand_name(char* name)
+void load_files()
 {
-	for (int i=0; i<11; i++)
+	struct stat st;
+	
+	for (int i=0; i<conf.n_blocks; i++)
 	{
-		name[i] = 65 + (rand() & 15);
+		stat(blk[i].fname, &st);
+		
+		if (st.st_size < 0)
+		{
+			printf("%s: ", blk[i].fname);
+			error(RC_FILE);
+		}
+
+		if (st.st_size > 16384)
+		{
+			printf("%s: ", blk[i].fname);
+			error(RC_BIG);
+		}
+		
+		if (st.st_size == 0)
+		{
+			printf("%s: ", blk[i].fname);
+			error(RC_ZERO);
+		}
+		
+		FILE* f = fopen(blk[i].fname, "rb");
+		blk[i].size = st.st_size;
+		hdr.blk[i].size = (blk[i].size - 1) >> 9;
+		fread(blk[i].data, 1, blk[i].size, f);
+		fclose(f);
 	}
-	name[11] ='.', name[12] ='t', name[13] ='m', name[14] ='p', name[15] = 0;
+}
+
+void save_files()
+{
+}
+
+void save_ini(_TCHAR *name)
+{
 }
