@@ -31,10 +31,17 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	wprintf(L"Converting %s to %s ... ", argv[1], argv[2]);
 
-	while (!feof(f_in))
+	int i = 0;
+	
+	while (!feof(f_in), fread(&c, 1, 1, f_in))
 	{
-		fread(&c, sizeof(c), 1, f_in);
-		fprintf(f_out,"\tdefb 0x%02x\n", c);
+		if (!(i % 16))
+			fprintf(f_out,"\tdefb 0x%02x", c);
+		else if ((i % 16) != 15)
+			fprintf(f_out,", 0x%02x", c);
+		else
+			fprintf(f_out,", 0x%02x\n", c);
+		i++;
 	}
 
 	printf("DONE!\n");
