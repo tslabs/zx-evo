@@ -30,21 +30,12 @@
 ;*         01.03.97 - 28.12.98        *
 ;**************************************
 
-DEHRUST PUSH HL
-        POP IX
-        LD A,0x03
-LL4025  DEC HL
-        LD B,(HL)
-        DEC HL
-        LD C,(HL)
-        PUSH BC
-        DEC A
-        JR NZ,LL4025
-        LD B,A
+DEHRUST
+        LD B,0
         EXX
         LD D,0xBF
         LD C,0x10
-        CALL LL4115
+        CALL R_DATA
 LL4036  LD A,(IX+0x00)
         INC IX
         EXX
@@ -53,13 +44,13 @@ LL403C  LD (DE),A
 LL403E  EXX
 LL403F  ADD HL,HL
         DJNZ LL4045
-        CALL LL4115
+        CALL R_DATA
 LL4045  JR C,LL4036
         LD E,0x01
 LL4049  LD A,0x80
 LL404B  ADD HL,HL
         DJNZ LL4051
-        CALL LL4115
+        CALL R_DATA
 LL4051  RLA
         JR C,LL404B
         CP 0x03
@@ -80,7 +71,7 @@ LL4068  EXX
         JR C,LL4082
 LL406D  ADD HL,HL
         DJNZ LL4073
-        CALL LL4115
+        CALL R_DATA
 LL4073  RLA
         JR C,LL406D
         JR Z,LL407D
@@ -95,7 +86,7 @@ LL4082  RRCA
         CP A
 LL4084  ADD HL,HL
         DJNZ LL408A
-        CALL LL4115
+        CALL R_DATA
 LL408A  RLA
         JR C,LL4084
 LL408D  EXX
@@ -110,9 +101,11 @@ LL409B  LD L,A
         ADD HL,DE
         LDIR
 LL409F  JR LL403E
+
 LL40A1  EXX
         RRC D
         JR LL403F
+
 LL40A6  CP 0xE0
         JR C,LL409B
         RLCA
@@ -132,45 +125,39 @@ LL40B1  LD L,A
         INC DE
         LD A,(HL)
         JP LL403C
+
 LL40C4  LD A,0x80
 LL40C6  ADD HL,HL
         DJNZ LL40CC
-        CALL LL4115
+        CALL R_DATA
 LL40CC  ADC A,A
         JR NZ,LL40F3
         JR C,LL40C6
         LD A,0xFC
         JR LL40F6
+
 LL40D5  LD B,A
         LD C,(IX+0x00)
         INC IX
         CCF
         JR LL4068
-LL40DE  CP 0x0F
+
+EXIT    CP 0x0F
         JR C,LL40D5
         JR NZ,LL4067
-        LD B,0x03
-        EX DE,HL
-LL40E7  POP DE
-        LD (HL),E
-        INC HL
-        LD (HL),D
-        INC HL
-        DJNZ LL40E7
-        LD HL,0x2758
-        EXX
         RET
+
 LL40F3  SBC A,A
         LD A,0xEF
 LL40F6  ADD HL,HL
         DJNZ LL40FC
-        CALL LL4115
+        CALL R_DATA
 LL40FC  RLA
         JR C,LL40F6
         EXX
         JR NZ,LL40B1
         BIT 7,A
-        JR Z,LL40DE
+        JR Z,EXIT
         SUB 0xEA
         ADD A,A
         LD B,A
@@ -180,10 +167,10 @@ LL410A  LD A,(IX+0x00)
         INC DE
         DJNZ LL410A
         JR LL409F
-LL4115  LD B,C
+
+R_DATA  LD B,C
         LD L,(IX+0x00)
+        LD H,(IX+0x01)
         INC IX
-        LD H,(IX+0x00)
         INC IX
         RET
- 

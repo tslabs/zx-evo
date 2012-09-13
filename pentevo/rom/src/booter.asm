@@ -70,7 +70,7 @@ thg     ld b, 1
         cp h'0f
         jr nz, thg
 
-        ld hl, sysvars
+        ld ix, sysvars
         ld de, sys_var
 		call DEHRUST
 

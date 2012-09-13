@@ -238,7 +238,7 @@ RES_BD_XX           ; SD Card, HDD Master, HDD Slave (B = device)
 
 RES_BD_RS           ;RS-232
         push de
-        ld hl, rslsys
+        ld ix, rslsys
         ld de, rslsys_addr
         call DEHRUST
         pop af
@@ -707,7 +707,7 @@ WNV1
 LD_FONT
         xtr
         xt page3, txpage ^ 1
-        ld hl, font8
+        ld ix, font8
         ld de, win3
         jp DEHRUST
 
