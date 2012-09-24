@@ -9,7 +9,7 @@ void print_help()
 	printf("\n\n");
 	printf("Build:	  spgbld.exe -b <input.ini> <output.spg> [-c <pack method>]\n");
 	//printf("Info:	  spgbld.exe -i <input.spg>\n");
-	printf("Unpack:	  spgbld.exe -u <input.spg>\n");
+	//printf("Unpack:	  spgbld.exe -u <input.spg>\n");
 	//printf("Re-pack:  spgbld.exe -r <input.spg> <output.spg> [-c <pack method>]\n");
 	printf("\n");
 }

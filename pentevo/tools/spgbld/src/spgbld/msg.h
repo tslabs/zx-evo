@@ -26,7 +26,7 @@
 #define RC_ZERO		9
 #define ER_ZERO		Block is ZERO size!
 #define RC_MHMT		10
-#define ER_MHMT		No mhmt.exe found! Place it in %PATH% or current dir.
+#define ER_MHMT		No mhmt.exe found! Place it in PATH or current dir.
 #define RC_VER		11
 #define ER_VER		Unsupported SPG version!
 

@@ -9,7 +9,8 @@ typedef signed short i16;
 typedef unsigned char u8;
 typedef signed char i8;
 
-#define min(a,b)            (((a) < (b)) ? (a) : (b))
+#define min(a,b)	(((a) < (b)) ? (a) : (b))
+#define sz(a)		(((a) - 1) >> 9)
 
 #define STR_EXPAND(tok) #tok
 #define STR(tok) STR_EXPAND(tok)
@@ -62,6 +63,8 @@ struct CONF {
 	int n_blocks;
 };
 
+#pragma pack(push)
+#pragma pack(1)
 struct HDR {
 	char desc[32];
 	char magic[12];
@@ -100,6 +103,7 @@ struct HDR {
 		u8 page;
 	} blk[256];
 };
+#pragma pack(pop)
 
 struct BLK {
 	char fname[128];

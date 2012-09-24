@@ -195,7 +195,7 @@ void store_block(int i, char* fn, int s)
 {
 	memset(blk[i].data, 0, sizeof(blk[i].data));
 	blk[i].size = s;
-	hdr.blk[i].size = (blk[i].size - 1) >> 9;
+	hdr.blk[i].size = sz(blk[i].size);
 	FILE* f = fopen(fn, "rb");
 	fread(blk[i].data, 1, s, f);
 	fclose(f);
@@ -204,7 +204,7 @@ void store_block(int i, char* fn, int s)
 void pack_blocks()
 {
 	struct stat st;
-	int s1, s2;
+	int s1, s2, sz1, sz2;
 	int p;
 	
 	for (int i=0; i<conf.n_blocks; i++)
@@ -218,26 +218,29 @@ void pack_blocks()
 		fclose(f1);
 		
 		s1 = s2 = 16384;
+		sz1 = sz2 = 31;
 		
 		if (conf.packer == PM_AUTO || conf.packer == PM_MLZ)
 		{
 			if (_spawnlp(_P_WAIT, "mhmt.exe", "dummy", "-mlz", f1n, f2n, NULL) < 0)
 				error(RC_MHMT);
-			stat(f2n, &st); s1 = st.st_size;
+			stat(f2n, &st); s1 = st.st_size; sz1 = sz(st.st_size);
 		}
 		
 		if (conf.packer == PM_AUTO || conf.packer == PM_HST)
 		{
 			if (_spawnlp(_P_WAIT, "mhmt.exe", "dummy", "-hst", f1n, f3n, NULL) < 0)
 				error(RC_MHMT);
-			stat(f3n, &st); s2 = st.st_size;
+			stat(f3n, &st); s2 = st.st_size; sz2 = sz(st.st_size);
 		}
 		
 		remove(f1n);
 		
-		if (blk[i].size <= min(s1, s2))
+		if (sz(blk[i].size) <= min(sz1, sz2))
 			p = 0;
-		else p = (s1 < s2) ? PM_MLZ : PM_HST;
+		else
+			p = (sz1 < sz2) ? PM_MLZ : PM_HST;		// HRUST priority (preferably)
+			// p = (sz1 <= sz2) ? PM_MLZ : PM_HST;	// MLZ priority
 		
 		hdr.blk[i].comp = p;
 
@@ -307,7 +310,7 @@ void load_files()
 		
 		FILE* f = fopen(blk[i].fname, "rb");
 		blk[i].size = st.st_size;
-		hdr.blk[i].size = (blk[i].size - 1) >> 9;
+		hdr.blk[i].size = sz(blk[i].size);
 		fread(blk[i].data, 1, blk[i].size, f);
 		fclose(f);
 	}
