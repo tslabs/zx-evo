@@ -670,7 +670,7 @@ void out(unsigned port, unsigned char val)
 		// BRIGHT for ATM border
           new_border += ((port & 8) ^ 8);
 
-	  comp.ts.border = (comp.ts.gpal << 4) | (val & 7);
+	  comp.ts.border = 0xF0 | (val & 7);
 
       if (conf.mem_model == MM_ATM450)
 	  {
