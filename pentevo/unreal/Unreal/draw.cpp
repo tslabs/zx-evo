@@ -755,11 +755,13 @@ DRAWER drawers[] = {
 // Draws raster until current tact
 void update_screen()
 {
-	while (vid.t_next < min(cpu.t, VID_TACTS * VID_LINES))		// iterate until current CPU tact or to the frame end
+	int cput = (cpu.t >= conf.frame) ? (VID_TACTS * VID_LINES) : cpu.t;
+
+	while (vid.t_next < min(cput, VID_TACTS * VID_LINES))		// iterate until current CPU tact or to the frame end
 	{
 		u32 line = (vid.t_next / VID_TACTS);	// number of line in raster
 		u32 tact = vid.t_next % VID_TACTS;		// number of tact in line
-		int n = min(cpu.t - vid.t_next, VID_TACTS - tact);	// number of tacts to be rendered in this line
+		int n = min(cput - vid.t_next, VID_TACTS - tact);	// number of tacts to be rendered in this line
 
 		if (!tact)		// start of video line - reload of gfx params
 			if (comp.ts.vconf != comp.ts.vconf_d) {
