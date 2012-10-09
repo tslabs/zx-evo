@@ -68,7 +68,6 @@ void load_ini(_TCHAR *name)
 {
 	char t[256];
 	char v[256];
-	char e[16];
 	int a = 0;
 	int b = 0;
 	conf.n_blocks = 0;
@@ -80,10 +79,10 @@ void load_ini(_TCHAR *name)
 	while (!feof(f))
 	{
 		*t = 0;
-		fscanf(f, "%256[^ =\n\r\t]%[ =]%256[^\n\r\t]%c", t, e, v, e);
+		fscanf(f, "%256[^ =\n\r\t]%*[ =]%256[^\n\r\t]%*c", t, v);
 		if (!*t)
 		{
-			fscanf(f, "%c", e);
+			fscanf(f, "%*c");
 			continue;
 		}
 
@@ -158,6 +157,8 @@ void load_ini(_TCHAR *name)
 			sscanf(v, "%d, %d, %s", &a, &b, v);
 			if (a & 0x1FF)
 				error(RC_ALGN);
+			if ((a < 49152) || (a > 65024))
+				error(RC_ADDR);
 			hdr.blk[conf.n_blocks].addr = (a - 49152) >> 9;
 			hdr.blk[conf.n_blocks].page = b;
 			strncpy(blk[conf.n_blocks].fname, v, sizeof(blk[conf.n_blocks].fname));

@@ -14,8 +14,8 @@ void print_help()
 	printf("\n");
 }
 
-#define	ERR(a, b)	case (a): \
-			printf(STR(b)); \
+#define	ERR(a)	case (RC_##a): \
+			printf(STR(ER_##a)); \
 			printf("\n\n"); \
 			exit(i);
 
@@ -23,17 +23,18 @@ void error(int i)
 {
 	switch(i)
 	{
-		ERR (RC_OK, ER_OK)
-		ERR (RC_ARG, ER_ARG)
-		ERR (RC_INI, ER_INI)
-		ERR (RC_UNK, ER_UNK)
-		ERR (RC_ALGN, ER_ALGN)
-		ERR (RC_FILE, ER_FILE)
-		ERR (RC_PACK, ER_PACK)
-		ERR (RC_0BLK, ER_0BLK)
-		ERR (RC_BIG, ER_BIG)
-		ERR (RC_ZERO, ER_ZERO)
-		ERR (RC_MHMT, ER_MHMT)
-		ERR (RC_VER, ER_VER)
+		ERR (OK)
+		ERR (ARG)
+		ERR (INI)
+		ERR (UNK)
+		ERR (ALGN)
+		ERR (FILE)
+		ERR (PACK)
+		ERR (0BLK)
+		ERR (BIG)
+		ERR (ZERO)
+		ERR (MHMT)
+		ERR (VER)
+		ERR (ADDR)
 	}
 }
