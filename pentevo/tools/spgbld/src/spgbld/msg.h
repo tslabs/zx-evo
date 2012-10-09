@@ -29,6 +29,8 @@
 #define ER_MHMT		No mhmt.exe found! Place it in PATH or current dir.
 #define RC_VER		11
 #define ER_VER		Unsupported SPG version!
+#define RC_ADDR		12
+#define ER_ADDR		Block Address is not in 49152-65024 span!
 
 void print_help();
 void error(int);
