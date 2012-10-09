@@ -694,16 +694,16 @@ void apply_video()
    }
 
    set_video();
-   video_timing_tables();
+//   video_timing_tables();
 
    // Console info about selected video option
-   printf("\n");
-   color(CONSCLR_HARDINFO);
-   printf("Display: %ux%u\n", conf.framexsize, conf.frameysize);
-   printf("Render: %s\n", renders[conf.render].name);
-   printf("Driver: %s\n", drivers[conf.driver].name);
-   printf("Bits per pixel: %u\n", temp.obpp);
-   printf("Window dimensions: %ux%u\n", temp.ox, temp.oy);
+   //printf("\n");
+   //color(CONSCLR_HARDINFO);
+   //printf("Display: %ux%u\n", conf.framexsize, conf.frameysize);
+   //printf("Render: %s\n", renders[conf.render].name);
+   //printf("Driver: %s\n", drivers[conf.driver].name);
+   //printf("Bits per pixel: %u\n", temp.obpp);
+   //printf("Window dimensions: %ux%u\n", temp.ox, temp.oy);
 }
 
 __inline unsigned char *raypointer()
@@ -769,9 +769,7 @@ void update_screen()
 				init_raster();
 			}
 
-		u8 b = (line < vid.raster.u_brd) || (line >= vid.raster.d_brd);	// border line?
-
-		if (b)
+		if ((line < vid.raster.u_brd) || (line >= vid.raster.d_brd))	// border line?
 			draw_border(n);
 		else
 		{
