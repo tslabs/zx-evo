@@ -108,7 +108,8 @@ void out(unsigned port, unsigned char val)
 					case 0: turbo(1); break;
 					case 1: turbo(2); break;
 					case 2: turbo(3); break;
-					case 3: turbo(3.5); break;
+					// case 3: turbo(3.5); break;
+					case 3: turbo(16); break;
 				}
 				break;
 			}
