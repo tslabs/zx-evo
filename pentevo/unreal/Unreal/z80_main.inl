@@ -99,7 +99,7 @@ void wm(unsigned addr, unsigned char val)
        return;
 #endif
    a += (addr & (PAGE-1));
-   if ((unsigned)(a - temp.base_2) < 0x1B00)
+   if ((unsigned)(a - temp.base_2) < 0x1B00)	// ADD CHECKER FOR OTHER SCREEN MODES!!!
    {
       if (*a == val)
           return;
