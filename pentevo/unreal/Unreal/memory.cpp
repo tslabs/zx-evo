@@ -21,8 +21,8 @@ void set_banks()
        temp.base = memory + (comp.p80FD & 7) * 0x2000 + 5*PAGE;
 */
 
-   if (temp.base_2)
-       temp.base_2 = temp.base;
+   //if (temp.base_2)
+       temp.base_2 = temp.base;		// FIX THIS SHIT ANYWHERE YOU MEEEET IT!!!!
 
    // these flags will be re-calculated
    comp.flags &= ~(CF_DOSPORTS | CF_Z80FBUS | CF_LEAVEDOSRAM | CF_LEAVEDOSADR | CF_SETDOSROM);
