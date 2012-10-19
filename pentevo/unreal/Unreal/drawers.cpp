@@ -50,7 +50,7 @@ void draw_zx(int n)
 	{
 		u8 p = scr[g];	// pixels
 		u8 c = scr[a];	// attributes
-		if ((c & 0x80) && (comp.frame_counter & 8))
+		if ((c & 0x80) && (comp.frame_counter & 0x10))
 			p ^= 0xFF; // flash
 		u32 b = (c & 0x40) >> 3;
 		u32 p0 = vid.clut[(comp.ts.gpal << 4) | b | ((c >> 3) & 0x07)];	// color for 'PAPER'
