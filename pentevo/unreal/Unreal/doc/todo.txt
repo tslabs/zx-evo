@@ -1,24 +1,16 @@
-
 Tests:
 - GSZ80: check it on TheLink
 - check all places where cpu.t or cpu->t used
 
 Bugs:
 - TR-DOS doesn't work with 'No Delays' option in 14MHz
-- Border bug in BallDreams-2
 - Incorrect exit from DEBUG in Bomber (paging?)
-- NGS (memory?) bug in WC mp3 player
-- Incorrect DOS on/off behaviour with regard to RAM at #0000 (MEMCONFIG)
+- Probably incorrect DOS on/off behaviour with regard to RAM at #0000 (MEMCONFIG)
 
 Missing features:
-		TMPage
-		T0GPage
-		T1GPage
-		SGPage
 - other clones full compatibility
 - leds
 - NoFlic (partially)
-- TS Engine
 - Turbo for Baseconf
 - VDOS
 
