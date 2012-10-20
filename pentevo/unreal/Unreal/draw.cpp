@@ -755,7 +755,7 @@ DRAWER drawers[] = {
 // Draws raster until current tact
 void update_screen()
 {
-	int cput = (cpu.t >= conf.frame) ? (VID_TACTS * VID_LINES) : cpu.t;
+	u32 cput = (cpu.t >= conf.frame) ? (VID_TACTS * VID_LINES) : cpu.t;
 
 	while (vid.t_next < min(cput, VID_TACTS * VID_LINES))		// iterate until current CPU tact or to the frame end
 	{
@@ -780,12 +780,12 @@ void update_screen()
 				comp.ts.vpage = comp.ts.vpage_d;	// reload Video Page
 				comp.ts.palsel = comp.ts.palsel_d;	// reload Palette Select
 
-				
+				vid.yctr++;
 				if (!comp.ts.g_offsy_updated)	// was Y-offset updated?
-					vid.yctr++;					// no - just increment old
+					vid.ygctr++;					// no - just increment old
 				else
 				{
-					vid.yctr = comp.ts.g_offsy;		// yes - reload X-offset
+					vid.ygctr = comp.ts.g_offsy;		// yes - reload X-offset
 					comp.ts.g_offsy_updated = 0;
 				}
 			}
@@ -892,7 +892,8 @@ void init_frame()
    vid.buf ^= 1;
    vid.t_next = 0;
    vid.vptr = 0;
-   vid.yctr = comp.ts.g_offsyh - 1;
+   vid.yctr = -1;
+   vid.ygctr = comp.ts.g_offsy - 1;
    comp.ts.g_offsy_updated = 0;
    vid.flash = comp.frame_counter & 0x10;
    init_raster();

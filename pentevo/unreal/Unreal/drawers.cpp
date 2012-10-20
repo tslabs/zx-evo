@@ -41,8 +41,8 @@ extern CACHE_ALIGNED u32 vbuf[2][sizeof_vbuf];
 // Sinclair
 void draw_zx(int n)
 {
-	u32 g = ((vid.yctr & 0x07) << 8) + ((vid.yctr & 0x38) << 2) + ((vid.yctr & 0xC0) << 5) + (vid.xctr & 0x1F);
-	u32 a = ((vid.yctr & 0xF8) << 2) + (vid.xctr & 0x1F) + 0x1800;
+	u32 g = ((vid.ygctr & 0x07) << 8) + ((vid.ygctr & 0x38) << 2) + ((vid.ygctr & 0xC0) << 5) + (vid.xctr & 0x1F);
+	u32 a = ((vid.ygctr & 0xF8) << 2) + (vid.xctr & 0x1F) + 0x1800;
 	u8 *scr = page_ram(comp.ts.vpage);
 	u32 vptr = vid.vptr;
 
@@ -63,7 +63,7 @@ void draw_zx(int n)
 // Pentagon multicolor
 void draw_pmc(int n)
 {
-	u32 g = ((vid.yctr & 0x07) << 8) + ((vid.yctr & 0x38) << 2) + ((vid.yctr & 0xC0) << 5) + (vid.xctr & 0x1F);
+	u32 g = ((vid.ygctr & 0x07) << 8) + ((vid.ygctr & 0x38) << 2) + ((vid.ygctr & 0xC0) << 5) + (vid.xctr & 0x1F);
 	u8 *scr = page_ram(comp.ts.vpage);
 	u32 vptr = vid.vptr;
 
@@ -83,16 +83,16 @@ void draw_pmc(int n)
 void draw_p384(int n)
 {
 	u8 *scr = page_ram(comp.ts.vpage & 0xFE);
-	u32 g = ((vid.yctr & 0x07) << 8) | ((vid.yctr & 0x38) << 2);	// 'raw' values, page4, only 64 lines addressing, no column address
-	u32 a = ((vid.yctr & 0x38) << 2) | (vid.xctr & 0x1F);
+	u32 g = ((vid.ygctr & 0x07) << 8) | ((vid.ygctr & 0x38) << 2);	// 'raw' values, page4, only 64 lines addressing, no column address
+	u32 a = ((vid.ygctr & 0x38) << 2) | (vid.xctr & 0x1F);
 	u32 vptr = vid.vptr;
 	u32 ogx, oax, ogy, oay;
 
 	// select Y segment
-	if (vid.yctr < 64)
+	if (vid.ygctr < 64)
 		ogy = 0, oay = 0x1000;
-	else if (vid.yctr < 256)
-		ogy = 0x4000 | (((vid.yctr-64) & 0xC0) << 5), oay = 0x5800 | (((vid.yctr-64) & 0xC0) << 2);
+	else if (vid.ygctr < 256)
+		ogy = 0x4000 | (((vid.ygctr-64) & 0xC0) << 5), oay = 0x5800 | (((vid.ygctr-64) & 0xC0) << 2);
 	else
 		ogy = 0x1800, oay = 0x1300;
 
@@ -119,8 +119,8 @@ void draw_p384(int n)
 // Sinclair double screen (debug)
 void draw_zxw(int n)
 {
-	u32 g = ((vid.yctr & 0x07) << 8) + ((vid.yctr & 0x38) << 2) + ((vid.yctr & 0xC0) << 5) + (vid.xctr & 0x1F);
-	u32 a = ((vid.yctr & 0xF8) << 2) + (vid.xctr & 0x1F) + 0x1800;
+	u32 g = ((vid.ygctr & 0x07) << 8) + ((vid.ygctr & 0x38) << 2) + ((vid.ygctr & 0xC0) << 5) + (vid.xctr & 0x1F);
+	u32 a = ((vid.ygctr & 0xF8) << 2) + (vid.xctr & 0x1F) + 0x1800;
 	u8 *scr = page_ram(comp.ts.vpage & 0xFD);
 	u32 vptr = vid.vptr;
 
@@ -149,7 +149,7 @@ void draw_zxw(int n)
 // Pentagon 16c
 void draw_p16(int n)
 {
-	u32 g = ((vid.yctr & 0x07) << 8) + ((vid.yctr & 0x38) << 2) + ((vid.yctr & 0xC0) << 5) + (vid.xctr & 0x1F);
+	u32 g = ((vid.ygctr & 0x07) << 8) + ((vid.ygctr & 0x38) << 2) + ((vid.ygctr & 0xC0) << 5) + (vid.xctr & 0x1F);
 	u8 *scr = page_ram(comp.ts.vpage);
 	u32 vptr = vid.vptr;
 	u32 p0, p1;
@@ -171,7 +171,7 @@ void draw_p16(int n)
 // ATM 16c
 void draw_atm16(int n)
 {
-	u32 g = vid.yctr * 40 + vid.xctr;
+	u32 g = vid.ygctr * 40 + vid.xctr;
 	u8 *scr = page_ram(comp.ts.vpage);
 	u32 vptr = vid.vptr;
 	u32 p0, p1;
@@ -193,7 +193,7 @@ void draw_atm16(int n)
 // ATM HiRes
 void draw_atmhr(int n)
 {
-	u32 g = vid.yctr * 40 + vid.xctr;
+	u32 g = vid.ygctr * 40 + vid.xctr;
 	u8 *scr = page_ram(comp.ts.vpage);
 	u32 vptr = vid.vptr;
 
@@ -218,7 +218,7 @@ void draw_atmhr(int n)
 void draw_tstx(int n)
 {
 	vid.xctr &= 0x7F;
-	u32 s = ((vid.yctr & 0x1F8) << 5);
+	u32 s = ((vid.ygctr & 0x1F8) << 5);
 	u8 *scr = page_ram(comp.ts.vpage);
 	u8 *fnt = page_ram(comp.ts.vpage ^ 0x01);
 	u32 vptr = vid.vptr;
@@ -226,7 +226,7 @@ void draw_tstx(int n)
 	for (; n > 0; n -= 2, vid.t_next += 2)
 	{
 		u8 a = scr[s + vid.xctr + 0x80];
-		u8 p = fnt[(vid.yctr & 7) + (scr[s + vid.xctr++] << 3)]; vid.xctr &= 0x7F;
+		u8 p = fnt[(vid.ygctr & 7) + (scr[s + vid.xctr++] << 3)]; vid.xctr &= 0x7F;
 		u32 p0 = vid.clut[(comp.ts.gpal << 4) | ((a >> 4) & 0x0F)];	// color for 'PAPER'
 		u32 p1 = vid.clut[(comp.ts.gpal << 4) | (a & 0x0F)];			// color for 'INK'
 		hires_draw
@@ -237,7 +237,7 @@ void draw_tstx(int n)
 // Pentagon 512x192
 void draw_phr(int n)
 {
-	u32 g = ((vid.yctr & 0x07) << 8) + ((vid.yctr & 0x38) << 2) + ((vid.yctr & 0xC0) << 5) + (vid.xctr & 0x1F);
+	u32 g = ((vid.ygctr & 0x07) << 8) + ((vid.ygctr & 0x38) << 2) + ((vid.ygctr & 0xC0) << 5) + (vid.xctr & 0x1F);
 	u8 *scr = page_ram(comp.ts.vpage);
 	u32 vptr = vid.vptr;
 	u32 p0 = vid.clut[(comp.ts.gpal << 4)];		// color for 'PAPER'
@@ -256,7 +256,7 @@ void draw_phr(int n)
 // TS 16c
 void draw_ts16(int n)
 {
-	u32 s = (vid.yctr << 8);
+	u32 s = (vid.ygctr << 8);
 	u8 *scr = page_ram(comp.ts.vpage & 0xF8);
 	u32 t = (vid.xctr + (comp.ts.g_offsx >> 1)) & 0xFF;
 	vid.xctr += n;
@@ -294,7 +294,7 @@ void draw_ts16(int n)
 // TS 256c
 void draw_ts256(int n)
 {
-	u32 s = (vid.yctr << 9);
+	u32 s = (vid.ygctr << 9);
 	u8 *scr = page_ram(comp.ts.vpage & 0xF0);
 	u32 t = (vid.xctr + comp.ts.g_offsx) & 0x1FF;
 	vid.xctr += n * 2;
