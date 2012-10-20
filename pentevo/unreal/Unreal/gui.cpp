@@ -861,7 +861,7 @@ INT_PTR CALLBACK VideoDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
       if (id == IDC_FIR) { DialogBox(hIn, MAKEINTRESOURCE(IDD_FIR), dlg, fir_dlg); return 1; }
       if ((id == IDC_NOFLIC || id == IDC_FAST_SL) && code == BN_CLICKED) goto filter_changed;
       if (code == CBN_SELCHANGE && id == IDC_BORDERSIZE) {
-         c1.bordersize = SendDlgItemMessage(dlg, IDC_BORDERSIZE, CB_GETCURSEL, 0, 0);
+         c1.bordersize = (u8)SendDlgItemMessage(dlg, IDC_BORDERSIZE, CB_GETCURSEL, 0, 0);
 	  }
 	  
       if (code == CBN_SELCHANGE && id == IDC_VIDEOFILTER) {

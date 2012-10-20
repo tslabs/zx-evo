@@ -150,7 +150,7 @@ void render_sprite()
 		render_tile(
 			comp.ts.sgpage,					// page
 			s.tnum,							// tile number
-			(s.yflp ? (ys - l) : l),		// line offset (3 bit)
+			(u8)(s.yflp ? (ys - l) : l),		// line offset (3 bit)
 			s.x,							// x coordinate in buffer (masked 0x1FF in func)
 			s.pal,							// palette
 			s.xflp, s.xs + 1				// x flip, x size

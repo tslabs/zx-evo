@@ -57,7 +57,8 @@ struct VCTR
 	u32		vptr;			// address in videobuffer
 	u32		vptr_pix;		// address in videobuffer of 1st pixel (used to render TS)
 	u32		xctr;			// videocontroller X counter
-	u32		yctr;			// videocontroller Y counter
+	u32		yctr;			// videocontroller absolute Y counter (used for TS)
+	u32		ygctr;			// videocontroller graphics Y counter (used for graphics)
 	u32 	buf;			// active video buffer
 	u32 	flash;			// flash counter
 	u8		tsline[512];	// TS buffer (indexed colors)
