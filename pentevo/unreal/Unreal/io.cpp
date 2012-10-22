@@ -455,6 +455,7 @@ void out(unsigned port, unsigned char val)
          {
              update_screen();
 			 set_atm_FF77(port, val);
+			 set_turbo();
 			 init_raster();
              return;
          }
@@ -671,7 +672,7 @@ void out(unsigned port, unsigned char val)
 		// BRIGHT for ATM border
           new_border += ((port & 8) ^ 8);
 
-	  comp.ts.border = 0xF0 | (val & 7);
+	  comp.ts.border = 0xF0 | new_border;
 
       if (conf.mem_model == MM_ATM450)
 	  {
@@ -867,9 +868,15 @@ set1FFD:
    if ( (port == 0xEFF7) && ( (conf.mem_model==MM_PENTAGON) || (conf.mem_model==MM_ATM3) ) ) // lvd added eff7 to atm3
    {
       update_screen();
-	  unsigned char oldpEFF7 = comp.pEFF7; //Alone Coder 0.36.4
+	  u8 oldpEFF7 = comp.pEFF7; //Alone Coder 0.36.4
       comp.pEFF7 = (comp.pEFF7 & conf.EFF7_mask) | (val & ~conf.EFF7_mask);
-      comp.pEFF7 |= EFF7_GIGASCREEN; // [vv] disable turbo
+      // comp.pEFF7 |= EFF7_GIGASCREEN; // [vv] disable turbo
+
+	  if (conf.mem_model==MM_PENTAGON)
+		  turbo((comp.pEFF7 & EFF7_GIGASCREEN) ? 2 : 1);
+	  if (conf.mem_model==MM_ATM3)
+		  set_turbo();
+	  
 	  init_raster();
 
 	  /*

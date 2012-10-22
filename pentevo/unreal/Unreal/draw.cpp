@@ -748,8 +748,8 @@ DRAWER drawers[] = {
 	{ draw_tstx		},	// TS Text
 	{ draw_atm16	},	// ATM 16c
 	{ draw_atmhr	},	// ATM HiRes
-	{ draw_nul 		},	// ATM Text
-	{ draw_nul 		}	// ATM Text Linear
+	{ draw_atm2tx	},	// ATM Text
+	{ draw_atm3tx	}	// ATM Text Linear
 };
 
 // Draws raster until current tact

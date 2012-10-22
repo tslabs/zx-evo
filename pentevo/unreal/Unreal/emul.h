@@ -388,7 +388,7 @@ enum AY_SCHEME
 #define EFF7_512        0x02
 #define EFF7_LOCKMEM    0x04
 #define EFF7_ROCACHE    0x08
-#define EFF7_GIGASCREEN 0x10
+#define EFF7_GIGASCREEN 0x10	// It is also Turbo bit0 at ATM3 (tsl)
 #define EFF7_HWMC       0x20
 #define EFF7_384        0x40
 #define EFF7_CMOS       0x80
