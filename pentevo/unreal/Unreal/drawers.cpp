@@ -8,6 +8,7 @@
 
 extern VCTR vid;
 extern CACHE_ALIGNED u32 vbuf[2][sizeof_vbuf];
+extern u8 fontatm2[2048];
 
 #define sinc_draw \
 	vbuf[vid.buf][vptr   ] = vbuf[vid.buf][vptr+ 1] = ((p << 1) & 0x100) ? p1 : p0;	\
@@ -221,6 +222,46 @@ void draw_tstx(int n)
 	u32 s = ((vid.ygctr & 0x1F8) << 5);
 	u8 *scr = page_ram(comp.ts.vpage);
 	u8 *fnt = page_ram(comp.ts.vpage ^ 0x01);
+	u32 vptr = vid.vptr;
+
+	for (; n > 0; n -= 2, vid.t_next += 2)
+	{
+		u8 a = scr[s + vid.xctr + 0x80];
+		u8 p = fnt[(vid.ygctr & 7) + (scr[s + vid.xctr++] << 3)]; vid.xctr &= 0x7F;
+		u32 p0 = vid.clut[(comp.ts.gpal << 4) | ((a >> 4) & 0x0F)];	// color for 'PAPER'
+		u32 p1 = vid.clut[(comp.ts.gpal << 4) | (a & 0x0F)];			// color for 'INK'
+		hires_draw
+	}
+	vid.vptr = vptr;
+}
+
+// ATM2 text
+void draw_atm2tx(int n)
+{
+	vid.xctr &= 0x7F;
+	u32 s = ((vid.ygctr & 0x1F8) << 5);
+	u8 *scr = page_ram(comp.ts.vpage);
+	u8 *fnt = fontatm2;
+	u32 vptr = vid.vptr;
+
+	for (; n > 0; n -= 2, vid.t_next += 2)
+	{
+		u8 a = scr[s + vid.xctr + 0x80];
+		u8 p = fnt[(vid.ygctr & 7) + (scr[s + vid.xctr++] << 3)]; vid.xctr &= 0x7F;
+		u32 p0 = vid.clut[(comp.ts.gpal << 4) | ((a >> 4) & 0x0F)];	// color for 'PAPER'
+		u32 p1 = vid.clut[(comp.ts.gpal << 4) | (a & 0x0F)];			// color for 'INK'
+		hires_draw
+	}
+	vid.vptr = vptr;
+}
+
+// ATM3 text
+void draw_atm3tx(int n)
+{
+	vid.xctr &= 0x7F;
+	u32 s = ((vid.ygctr & 0x1F8) << 5);
+	u8 *scr = page_ram(comp.ts.vpage);
+	u8 *fnt = fontatm2;
 	u32 vptr = vid.vptr;
 
 	for (; n > 0; n -= 2, vid.t_next += 2)

@@ -264,6 +264,19 @@ void AtmApplySideEffectsWhenChangeVideomode(unsigned char val)
     }
 }
 
+void set_turbo(void)
+{
+	if (comp.pFF77 & 8)
+		turbo(3);	// 1x = 14MHz (actually effective 11MHz)
+	else
+	{
+		if (comp.pEFF7 & 16)
+			turbo(1);	// 01 = 3.5MHz
+		else
+			turbo(2);	// 00 = 7MHz
+	}
+}
+
 void set_atm_FF77(unsigned port, unsigned char val)
 {
    if ((comp.pFF77 ^ val) & 1)
@@ -294,15 +307,23 @@ static u8 atm_pal[0x10] = { 0 };
 
 void atm_writepal(unsigned char val)
 {
-   assert(comp.border_attr < 0x10);
-   atm_pal[comp.border_attr] = val;
-   comp.comp_pal[comp.border_attr] = t.atm_pal_map[val];
-   temp.comp_pal_changed = 1;
+   // assert(comp.border_attr < 0x10); // commented (tsl)
+   atm_pal[comp.ts.border & 0xF] = val;
+   val ^= 0xFF;		// inverted RU2 value
+   comp.cram[comp.ts.border] =
+	   ((val & 0x02) << 13) |	// R (CLUT bit 14)
+	   ((val & 0x40) <<  7) |	// r (CLUT bit 13)
+	   ((val & 0x10) <<  5) |	// G (CLUT bit 9)
+	   ((val & 0x80) <<  1) |	// g (CLUT bit 8)
+	   ((val & 0x01) <<  4) |	// B (CLUT bit 4)
+	   ((val & 0x20) >>  2);	// b (CLUT bit 3)
+   update_clut(comp.ts.border);
+   temp.comp_pal_changed = 1; // check it to remove!
 }
 
 u8 atm_readpal()
 {
-   return atm_pal[comp.border_attr];
+   return atm_pal[comp.ts.border & 0xF];
 }
 
 unsigned char atm450_z(unsigned t)

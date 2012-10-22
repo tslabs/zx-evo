@@ -8,11 +8,15 @@ Bugs:
 - Probably incorrect DOS on/off behaviour with regard to RAM at #0000 (MEMCONFIG)
 
 Missing features:
-- other clones full compatibility
+- ATM2 textmode
+- ATM3 textmode
+- ATM3 NMI breakpoints
+- ATM3 wrong palette update in Personal Nightmare demo due to fine ATM3 port decode (PN uses coarse addressing)
 - leds
 - NoFlic (partially)
 - Turbo for Baseconf
 - VDOS
+- other clones full compatibility
 
 To Do:
 - Save settings to .ini

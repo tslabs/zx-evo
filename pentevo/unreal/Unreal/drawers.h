@@ -8,6 +8,8 @@ void draw_p16(int n);
 void draw_atm16(int n);
 void draw_atmhr(int n);
 void draw_tstx(int n);
+void draw_atm2tx(int n);
+void draw_atm3tx(int n);
 void draw_phr(int n);
 void draw_ts16(int n);
 void draw_ts256(int n);
