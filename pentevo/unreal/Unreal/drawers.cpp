@@ -241,7 +241,6 @@ void draw_tstx(int n)
 // ATM2 text
 void draw_atm2tx(int n)
 {
-	vid.xctr &= 0x7F;
 	u8 *scrs = page_ram(comp.ts.vpage);		// video memory symbols address
 	u8 *scra = page_ram(comp.ts.vpage-4);	// video memory attrs address
 	u8 *fnt = fontatm2;						// font address
@@ -252,11 +251,10 @@ void draw_atm2tx(int n)
 	for (; n > 0; n -= 2, vid.t_next += 2)
 	{
 		u32 ss = (vid.xctr & 1) ? 0x21C0 : 0x01C0;	// left/right symbol offset
-		u32 sa = (vid.xctr & 1) ? 0x01C0 : 0x21C0;	// left/right attr offset
-		u32 xs = vid.xctr >> 1;						// sym pair column
-		u32 xa = (vid.xctr + 1) >> 1;				// attr pair column
-		u8 sym = scrs[(y * 64) + xs + ss];			// symbol code
-		u8 atr = scra[(y * 64) + xa + sa];			// symbol attribute
+		u32 sa = (vid.xctr & 1) ? 0x01C1 : 0x21C0;	// left/right attr offset
+		u32 x = vid.xctr >> 1;						// pair column
+		u8 sym = scrs[(y * 64) + x + ss];			// symbol code
+		u8 atr = scra[(y * 64) + x + sa];			// symbol attribute
 		u8 p = fnt[(line << 8) + sym];				// pixels
 		u32 p0 = vid.clut[(comp.ts.gpal << 4) | ((atr & 0x80) >> 4) | ((atr >> 3) & 0x07)];	// true color for bit=0 (PAPER)
 		u32 p1 = vid.clut[(comp.ts.gpal << 4) | ((atr & 0x40) >> 3) | (atr & 0x07)];       	// true color for bit=1 (INK)
@@ -269,6 +267,26 @@ void draw_atm2tx(int n)
 // ATM3 text
 void draw_atm3tx(int n)
 {
+	u8 *scr = page_ram(comp.ts.vpage & 2 | 8);		// video memory address
+	u8 *fnt = fontatm2;						// font address
+	u32 vptr = vid.vptr;					// address in videobuffer
+	u32 y = vid.ygctr >> 3;					// row
+	u8 line = vid.ygctr & 7;				// line (0-7)
+
+	for (; n > 0; n -= 2, vid.t_next += 2)
+	{
+		u32 ss = (vid.xctr & 1) ? 0x11C0 : 0x01C0;	// left/right symbol offset
+		u32 sa = (vid.xctr & 1) ? 0x21C1 : 0x31C0;	// left/right attr offset
+		u32 x = vid.xctr >> 1;						// pair column
+		u8 sym = scr[(y * 64) + x + ss];			// symbol code
+		u8 atr = scr[(y * 64) + x + sa];			// symbol attribute
+		u8 p = fnt[(line << 8) + sym];				// pixels
+		u32 p0 = vid.clut[(comp.ts.gpal << 4) | ((atr & 0x80) >> 4) | ((atr >> 3) & 0x07)];	// true color for bit=0 (PAPER)
+		u32 p1 = vid.clut[(comp.ts.gpal << 4) | ((atr & 0x40) >> 3) | (atr & 0x07)];       	// true color for bit=1 (INK)
+		hires_draw
+		vid.xctr = (vid.xctr + 1) & 0x7F;
+	}
+	vid.vptr = vptr;
 }
 
 // Pentagon 512x192
