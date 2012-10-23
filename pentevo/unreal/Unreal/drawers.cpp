@@ -208,8 +208,8 @@ void draw_atmhr(int n)
 
 		p = scr[g + PAGE/2];				// page5, #0000
 		c = scr[g - PAGE*4 + PAGE/2];		// page1, #0000
-		p0 = vid.clut[(comp.ts.gpal << 4) | ((c & 0x80) >> 4) | ((c >> 3) & 0x07)];
-		p1 = vid.clut[(comp.ts.gpal << 4) | ((c & 0x40) >> 3) | (c & 0x07)];
+		p0 = vid.clut[(comp.ts.gpal << 4) | ((c & 0x80) >> 4) | ((c >> 3) & 0x07)];	// true color for bit=0 (PAPER)
+		p1 = vid.clut[(comp.ts.gpal << 4) | ((c & 0x40) >> 3) | (c & 0x07)];       	// true color for bit=1 (INK)
 		hires_draw
 	}
 	vid.vptr = vptr;
@@ -219,18 +219,21 @@ void draw_atmhr(int n)
 void draw_tstx(int n)
 {
 	vid.xctr &= 0x7F;
-	u32 s = ((vid.ygctr & 0x1F8) << 5);
-	u8 *scr = page_ram(comp.ts.vpage);
-	u8 *fnt = page_ram(comp.ts.vpage ^ 0x01);
-	u32 vptr = vid.vptr;
+	u8 *scr = page_ram(comp.ts.vpage);			// video memory address
+	u8 *fnt = page_ram(comp.ts.vpage ^ 0x01);	// font address
+	u32 s = ((vid.ygctr & 0x1F8) << 5);			// row address offset
+	u32 vptr = vid.vptr;						// address in videobuffer
+	u8 line = vid.ygctr & 7;					// symbol line (0-7)
 
 	for (; n > 0; n -= 2, vid.t_next += 2)
 	{
-		u8 a = scr[s + vid.xctr + 0x80];
-		u8 p = fnt[(vid.ygctr & 7) + (scr[s + vid.xctr++] << 3)]; vid.xctr &= 0x7F;
-		u32 p0 = vid.clut[(comp.ts.gpal << 4) | ((a >> 4) & 0x0F)];	// color for 'PAPER'
-		u32 p1 = vid.clut[(comp.ts.gpal << 4) | (a & 0x0F)];			// color for 'INK'
+		u8 sym = scr[s + vid.xctr];				// symbol code
+		u8 atr = scr[s + vid.xctr + 0x80];		// symbol attribute
+		u8 p = fnt[line + (sym << 3)];			// pixels
+		u32 p0 = vid.clut[(comp.ts.gpal << 4) | ((atr >> 4) & 0x0F)];	// true color for bit=0 (PAPER)
+		u32 p1 = vid.clut[(comp.ts.gpal << 4) | (atr & 0x0F)];			// true color for bit=1 (INK)
 		hires_draw
+		vid.xctr = (vid.xctr + 1) & 0x7F;
 	}
 	vid.vptr = vptr;
 }
@@ -239,18 +242,26 @@ void draw_tstx(int n)
 void draw_atm2tx(int n)
 {
 	vid.xctr &= 0x7F;
-	u32 s = ((vid.ygctr & 0x1F8) << 5);
-	u8 *scr = page_ram(comp.ts.vpage);
-	u8 *fnt = fontatm2;
-	u32 vptr = vid.vptr;
+	u8 *scrs = page_ram(comp.ts.vpage);		// video memory symbols address
+	u8 *scra = page_ram(comp.ts.vpage-4);	// video memory attrs address
+	u8 *fnt = fontatm2;						// font address
+	u32 vptr = vid.vptr;					// address in videobuffer
+	u32 y = vid.ygctr >> 3;					// row
+	u8 line = vid.ygctr & 7;				// line (0-7)
 
 	for (; n > 0; n -= 2, vid.t_next += 2)
 	{
-		u8 a = scr[s + vid.xctr + 0x80];
-		u8 p = fnt[(vid.ygctr & 7) + (scr[s + vid.xctr++] << 3)]; vid.xctr &= 0x7F;
-		u32 p0 = vid.clut[(comp.ts.gpal << 4) | ((a >> 4) & 0x0F)];	// color for 'PAPER'
-		u32 p1 = vid.clut[(comp.ts.gpal << 4) | (a & 0x0F)];			// color for 'INK'
+		u32 ss = (vid.xctr & 1) ? 0x21C0 : 0x01C0;	// left/right symbol offset
+		u32 sa = (vid.xctr & 1) ? 0x01C0 : 0x21C0;	// left/right attr offset
+		u32 xs = vid.xctr >> 1;						// sym pair column
+		u32 xa = (vid.xctr + 1) >> 1;				// attr pair column
+		u8 sym = scrs[(y * 64) + xs + ss];			// symbol code
+		u8 atr = scra[(y * 64) + xa + sa];			// symbol attribute
+		u8 p = fnt[(line << 8) + sym];				// pixels
+		u32 p0 = vid.clut[(comp.ts.gpal << 4) | ((atr & 0x80) >> 4) | ((atr >> 3) & 0x07)];	// true color for bit=0 (PAPER)
+		u32 p1 = vid.clut[(comp.ts.gpal << 4) | ((atr & 0x40) >> 3) | (atr & 0x07)];       	// true color for bit=1 (INK)
 		hires_draw
+		vid.xctr = (vid.xctr + 1) & 0x7F;
 	}
 	vid.vptr = vptr;
 }
@@ -258,21 +269,6 @@ void draw_atm2tx(int n)
 // ATM3 text
 void draw_atm3tx(int n)
 {
-	vid.xctr &= 0x7F;
-	u32 s = ((vid.ygctr & 0x1F8) << 5);
-	u8 *scr = page_ram(comp.ts.vpage);
-	u8 *fnt = fontatm2;
-	u32 vptr = vid.vptr;
-
-	for (; n > 0; n -= 2, vid.t_next += 2)
-	{
-		u8 a = scr[s + vid.xctr + 0x80];
-		u8 p = fnt[(vid.ygctr & 7) + (scr[s + vid.xctr++] << 3)]; vid.xctr &= 0x7F;
-		u32 p0 = vid.clut[(comp.ts.gpal << 4) | ((a >> 4) & 0x0F)];	// color for 'PAPER'
-		u32 p1 = vid.clut[(comp.ts.gpal << 4) | (a & 0x0F)];			// color for 'INK'
-		hires_draw
-	}
-	vid.vptr = vptr;
 }
 
 // Pentagon 512x192
