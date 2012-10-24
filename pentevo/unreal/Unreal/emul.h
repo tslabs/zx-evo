@@ -450,8 +450,15 @@ struct COMPUTER
 
    unsigned aFF77;
    unsigned active_ay;
-   u8 pBF; // ATM3
-   u8 pBE; // ATM3
+   // ATM3
+   union {
+	   u16 pBD;
+	   struct {
+			u8 pBDl;
+			u8 pBDh;
+	   };
+   };
+   u8 pBE, pBF;
 
    unsigned char flags;
    unsigned char border_attr;

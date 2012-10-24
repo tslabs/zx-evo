@@ -367,6 +367,16 @@ void out(unsigned port, unsigned char val)
            comp.pBE = 2; // счетчик для выхода из nmi
            return;
        }
+
+       // NMI breakpoints ATM3
+       if (p1 == 0xBD)
+	   {
+			if (p2 & 1)
+				comp.pBDh = val; // BP Address MSB
+			else
+				comp.pBDl = val; // BP Address LSB
+			return;
+       }
    }
 
    if (comp.flags & CF_DOSPORTS)

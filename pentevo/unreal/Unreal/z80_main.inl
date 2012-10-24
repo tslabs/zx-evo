@@ -212,18 +212,38 @@ void z80loop()
    cpu.haltpos = 0;
    cpu.intnew = true;
    
-	// NMI processing for Pentevo
-	if (conf.mem_model == MM_ATM3 && nmi_pending)
-	{
-		nmi_pending = 0;
-		cpu.nmi_in_progress = true;
-		set_banks();
-		m_nmi(RM_NOCHANGE);
-	}
-
 	// main loop
 	while (cpu.t < conf.frame)
 	{
+		// Baseconf NMI breakpoints
+		if (comp.pBF & 0x10)
+			if (cpu.pc == comp.pBD)
+				nmi_pending = 1;
+
+		// NMI processing
+		if (nmi_pending)
+		{
+			if (conf.mem_model == MM_ATM3)
+			{
+				nmi_pending = 0;
+				cpu.nmi_in_progress = true;
+				set_banks();
+				m_nmi(RM_NOCHANGE);
+			}
+			else if ((conf.mem_model == MM_PROFSCORP || conf.mem_model == MM_SCORP))
+			{
+				nmi_pending = 0;
+				if (cpu.pc >= 0x4000)
+				{
+					// printf("pc=%x\n", cpu.pc);
+					::m_nmi(RM_DOS);
+					nmi_pending = 0;
+				}
+			}
+			else
+				nmi_pending = 0;
+		}
+
 		// INT loop
 		if (cpu.intnew && ((cpu.t - comp.intpos + 1) < conf.intlen))
 		{
@@ -241,9 +261,20 @@ void z80loop()
 		else
 		step1();
 
+		// Baseconf NMI
+		if (comp.pBE)
+		{
+			if (comp.pBE == 1 && conf.mem_model == MM_ATM3)
+			{
+				cpu.nmi_in_progress = false;
+				set_banks();
+			}
+			comp.pBE--;
+		}
+
+
 		// if (cpu.halted)
 			// break;
-
 		
 /*
      if (cpu.halted)
@@ -255,29 +286,5 @@ void z80loop()
         break;
     }
 */  
-
-		if (comp.pBE)
-		{
-			if (comp.pBE == 1)
-			{
-				cpu.nmi_in_progress = false;
-				set_banks();
-			}
-			comp.pBE--;
-		}
-		
-		if (nmi_pending)
-		{
-			if ((conf.mem_model == MM_PROFSCORP || conf.mem_model == MM_SCORP))
-			{
-				nmi_pending--;
-				if (cpu.pc >= 0x4000)
-				{
-					// printf("pc=%x\n", cpu.pc);
-					::m_nmi(RM_DOS);
-					nmi_pending = 0;
-				}
-			}
-		}
 	}
 }
