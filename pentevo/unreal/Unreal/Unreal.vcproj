@@ -274,7 +274,7 @@
 				>
 			</File>
 			<File
-				RelativePath="draw_384.cpp"
+				RelativePath=".\drawers.cpp"
 				>
 			</File>
 			<File
@@ -290,63 +290,7 @@
 				>
 			</File>
 			<File
-				RelativePath="dxovr.cpp"
-				>
-			</File>
-			<File
-				RelativePath="dxr_4bpp.cpp"
-				>
-			</File>
-			<File
-				RelativePath="dxr_512.cpp"
-				>
-			</File>
-			<File
-				RelativePath="dxr_advm.cpp"
-				>
-			</File>
-			<File
-				RelativePath="dxr_atm.cpp"
-				>
-			</File>
-			<File
-				RelativePath="dxr_atm0.cpp"
-				>
-			</File>
-			<File
-				RelativePath="dxr_atm2.cpp"
-				>
-			</File>
-			<File
-				RelativePath="dxr_atm6.cpp"
-				>
-			</File>
-			<File
-				RelativePath="dxr_atm7.cpp"
-				>
-			</File>
-			<File
-				RelativePath="dxr_atmf.cpp"
-				>
-			</File>
-			<File
-				RelativePath="dxr_pentatm7.cpp"
-				>
-			</File>
-			<File
-				RelativePath="dxr_prof.cpp"
-				>
-			</File>
-			<File
-				RelativePath="dxr_rsm.cpp"
-				>
-			</File>
-			<File
 				RelativePath="dxr_text.cpp"
-				>
-			</File>
-			<File
-				RelativePath="dxr_vd.cpp"
 				>
 			</File>
 			<File
@@ -355,10 +299,6 @@
 			</File>
 			<File
 				RelativePath="dxrend.cpp"
-				>
-			</File>
-			<File
-				RelativePath="dxrendch.cpp"
 				>
 			</File>
 			<File
@@ -776,343 +716,291 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath="atm.h"
+				RelativePath=".\atm.h"
 				>
 			</File>
 			<File
-				RelativePath="bass.h"
+				RelativePath=".\bass.h"
 				>
 			</File>
 			<File
-				RelativePath="cheat.h"
+				RelativePath=".\cheat.h"
 				>
 			</File>
 			<File
-				RelativePath="config.h"
+				RelativePath=".\config.h"
 				>
 			</File>
 			<File
-				RelativePath="daa_tabs.h"
+				RelativePath=".\daa_tabs.h"
 				>
 			</File>
 			<File
-				RelativePath="dbgbpx.h"
+				RelativePath=".\dbgbpx.h"
 				>
 			</File>
 			<File
-				RelativePath="dbgcmd.h"
+				RelativePath=".\dbgcmd.h"
 				>
 			</File>
 			<File
-				RelativePath="dbglabls.h"
+				RelativePath=".\dbglabls.h"
 				>
 			</File>
 			<File
-				RelativePath="dbgmem.h"
+				RelativePath=".\dbgmem.h"
 				>
 			</File>
 			<File
-				RelativePath="dbgoth.h"
+				RelativePath=".\dbgoth.h"
 				>
 			</File>
 			<File
-				RelativePath="dbgpaint.h"
+				RelativePath=".\dbgpaint.h"
 				>
 			</File>
 			<File
-				RelativePath="dbgreg.h"
+				RelativePath=".\dbgreg.h"
 				>
 			</File>
 			<File
-				RelativePath="dbgrwdlg.h"
+				RelativePath=".\dbgrwdlg.h"
 				>
 			</File>
 			<File
-				RelativePath="dbgtrace.h"
+				RelativePath=".\dbgtrace.h"
 				>
 			</File>
 			<File
-				RelativePath="ddk.h"
+				RelativePath=".\ddk.h"
 				>
 			</File>
 			<File
-				RelativePath="debug.h"
+				RelativePath=".\debug.h"
 				>
 			</File>
 			<File
-				RelativePath="defs.h"
+				RelativePath=".\defs.h"
 				>
 			</File>
 			<File
-				RelativePath="draw.h"
+				RelativePath=".\draw.h"
 				>
 			</File>
 			<File
-				RelativePath="drawnomc.h"
+				RelativePath=".\drawers.h"
 				>
 			</File>
 			<File
-				RelativePath="dx.h"
+				RelativePath=".\drawnomc.h"
 				>
 			</File>
 			<File
-				RelativePath="dxerr.h"
+				RelativePath=".\dx.h"
 				>
 			</File>
 			<File
-				RelativePath="dxerr8.h"
+				RelativePath=".\dxerr.h"
 				>
 			</File>
 			<File
-				RelativePath="dxovr.h"
+				RelativePath=".\dxerr8.h"
 				>
 			</File>
 			<File
-				RelativePath="dxr_4bpp.h"
+				RelativePath=".\dxr_text.h"
 				>
 			</File>
 			<File
-				RelativePath="dxr_512.h"
+				RelativePath=".\dxrcopy.h"
 				>
 			</File>
 			<File
-				RelativePath="dxr_advm.h"
+				RelativePath=".\dxrend.h"
 				>
 			</File>
 			<File
-				RelativePath="dxr_atm.h"
+				RelativePath=".\dxrframe.h"
 				>
 			</File>
 			<File
-				RelativePath="dxr_atm0.h"
+				RelativePath=".\emul.h"
 				>
 			</File>
 			<File
-				RelativePath="dxr_atm2.h"
+				RelativePath=".\emul_2203.h"
 				>
 			</File>
 			<File
-				RelativePath="dxr_atm6.h"
+				RelativePath=".\emulkeys.h"
 				>
 			</File>
 			<File
-				RelativePath="dxr_atm7.h"
+				RelativePath=".\fntsrch.h"
 				>
 			</File>
 			<File
-				RelativePath="dxr_atmf.h"
+				RelativePath=".\font.h"
 				>
 			</File>
 			<File
-				RelativePath="dxr_pentatm7.h"
+				RelativePath=".\font14.h"
 				>
 			</File>
 			<File
-				RelativePath="dxr_prof.h"
+				RelativePath=".\font16.h"
 				>
 			</File>
 			<File
-				RelativePath="dxr_rsm.h"
+				RelativePath=".\font8.h"
 				>
 			</File>
 			<File
-				RelativePath="dxr_text.h"
+				RelativePath=".\fontatm2.h"
 				>
 			</File>
 			<File
-				RelativePath="dxrcopy.h"
+				RelativePath=".\fontdata.h"
 				>
 			</File>
 			<File
-				RelativePath="dxrend.h"
+				RelativePath=".\funcs.h"
 				>
 			</File>
 			<File
-				RelativePath="dxrendch.h"
+				RelativePath=".\getopt.h"
 				>
 			</File>
 			<File
-				RelativePath="dxrframe.h"
+				RelativePath=".\gs.h"
 				>
 			</File>
 			<File
-				RelativePath="emul.h"
+				RelativePath=".\gshlbass.h"
 				>
 			</File>
 			<File
-				RelativePath="emul_2203.h"
+				RelativePath=".\gshle.h"
 				>
 			</File>
 			<File
-				RelativePath="emulkeys.h"
+				RelativePath=".\gsz80.h"
 				>
 			</File>
 			<File
-				RelativePath="fntsrch.h"
+				RelativePath=".\gui.h"
 				>
 			</File>
 			<File
-				RelativePath="font.h"
+				RelativePath=".\hdd.h"
 				>
 			</File>
 			<File
-				RelativePath="font14.h"
+				RelativePath=".\hddio.h"
 				>
 			</File>
 			<File
-				RelativePath="font16.h"
+				RelativePath=".\iehelp.h"
 				>
 			</File>
 			<File
-				RelativePath="font8.h"
+				RelativePath=".\init.h"
 				>
 			</File>
 			<File
-				RelativePath="fontatm2.h"
+				RelativePath=".\input.h"
 				>
 			</File>
 			<File
-				RelativePath="fontdata.h"
+				RelativePath=".\inputpc.h"
 				>
 			</File>
 			<File
-				RelativePath="funcs.h"
+				RelativePath=".\leds.h"
 				>
 			</File>
 			<File
-				RelativePath="getopt.h"
+				RelativePath=".\mainloop.h"
 				>
 			</File>
 			<File
-				RelativePath="gs.h"
+				RelativePath=".\memory.h"
 				>
 			</File>
 			<File
-				RelativePath="gshlbass.h"
+				RelativePath=".\modem.h"
 				>
 			</File>
 			<File
-				RelativePath="gshle.h"
+				RelativePath=".\mods.h"
 				>
 			</File>
 			<File
-				RelativePath="gsz80.h"
+				RelativePath=".\op_dd.h"
 				>
 			</File>
 			<File
-				RelativePath="gui.h"
+				RelativePath=".\op_ed.h"
 				>
 			</File>
 			<File
-				RelativePath="hdd.h"
+				RelativePath=".\op_fd.h"
 				>
 			</File>
 			<File
-				RelativePath="hddio.h"
+				RelativePath=".\op_noprefix.h"
 				>
 			</File>
 			<File
-				RelativePath="iehelp.h"
+				RelativePath=".\op_system.h"
 				>
 			</File>
 			<File
-				RelativePath="init.h"
+				RelativePath=".\opendlg.h"
 				>
 			</File>
 			<File
-				RelativePath="input.h"
+				RelativePath=".\resource.h"
 				>
 			</File>
 			<File
-				RelativePath="inputpc.h"
+				RelativePath=".\saa1099.h"
 				>
 			</File>
 			<File
-				RelativePath="leds.h"
+				RelativePath=".\savesnd.h"
 				>
 			</File>
 			<File
-				RelativePath="mainloop.h"
+				RelativePath=".\sdcard.h"
 				>
 			</File>
 			<File
-				RelativePath="memory.h"
+				RelativePath=".\snapshot.h"
 				>
 			</File>
 			<File
-				RelativePath="modem.h"
+				RelativePath=".\snd_bass.h"
 				>
 			</File>
 			<File
-				RelativePath="mods.h"
+				RelativePath=".\sndbuffer.h"
 				>
 			</File>
 			<File
-				RelativePath="op_dd.h"
+				RelativePath=".\sndchip.h"
 				>
 			</File>
 			<File
-				RelativePath="op_ed.h"
+				RelativePath=".\sndcounter.h"
 				>
 			</File>
 			<File
-				RelativePath="op_fd.h"
+				RelativePath=".\sndrender.h"
 				>
 			</File>
 			<File
-				RelativePath="op_noprefix.h"
-				>
-			</File>
-			<File
-				RelativePath="op_system.h"
-				>
-			</File>
-			<File
-				RelativePath="opendlg.h"
-				>
-			</File>
-			<File
-				RelativePath="resource.h"
-				>
-			</File>
-			<File
-				RelativePath="saa1099.h"
-				>
-			</File>
-			<File
-				RelativePath="savesnd.h"
-				>
-			</File>
-			<File
-				RelativePath="sdcard.h"
-				>
-			</File>
-			<File
-				RelativePath="snapshot.h"
-				>
-			</File>
-			<File
-				RelativePath="snd_bass.h"
-				>
-			</File>
-			<File
-				RelativePath="sndbuffer.h"
-				>
-			</File>
-			<File
-				RelativePath="sndchip.h"
-				>
-			</File>
-			<File
-				RelativePath="sndcounter.h"
-				>
-			</File>
-			<File
-				RelativePath="sndrender.h"
-				>
-			</File>
-			<File
-				RelativePath="sound.h"
+				RelativePath=".\sound.h"
 				>
 			</File>
 			<File
@@ -1120,63 +1008,63 @@
 				>
 			</File>
 			<File
-				RelativePath="sysdefs.h"
+				RelativePath=".\sysdefs.h"
 				>
 			</File>
 			<File
-				RelativePath="tables.h"
+				RelativePath=".\tables.h"
 				>
 			</File>
 			<File
-				RelativePath="tape.h"
+				RelativePath=".\tape.h"
 				>
 			</File>
 			<File
-				RelativePath="tsconf.h"
+				RelativePath=".\tsconf.h"
 				>
 			</File>
 			<File
-				RelativePath="util.h"
+				RelativePath=".\util.h"
 				>
 			</File>
 			<File
-				RelativePath="vars.h"
+				RelativePath=".\vars.h"
 				>
 			</File>
 			<File
-				RelativePath="vs1001.h"
+				RelativePath=".\vs1001.h"
 				>
 			</File>
 			<File
-				RelativePath="wd93.h"
+				RelativePath=".\wd93.h"
 				>
 			</File>
 			<File
-				RelativePath="wd93crc.h"
+				RelativePath=".\wd93crc.h"
 				>
 			</File>
 			<File
-				RelativePath="wd93dat.h"
+				RelativePath=".\wd93dat.h"
 				>
 			</File>
 			<File
-				RelativePath="z80.h"
+				RelativePath=".\z80.h"
 				>
 			</File>
 			<File
-				RelativePath="z80_main.h"
+				RelativePath=".\z80_main.h"
 				>
 			</File>
 			<File
-				RelativePath="z80asm.h"
+				RelativePath=".\z80asm.h"
 				>
 			</File>
 			<File
-				RelativePath="zc.h"
+				RelativePath=".\zc.h"
 				>
 			</File>
 			<File
-				RelativePath="zxevo.h"
+				RelativePath=".\zxevo.h"
 				>
 			</File>
 		</Filter>
