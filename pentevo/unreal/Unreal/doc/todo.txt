@@ -1,25 +1,26 @@
 Tests:
-- GSZ80: check it on TheLink
-- check all places where cpu.t or cpu->t used
+- none
 
 Bugs:
-- TR-DOS doesn't work with 'No Delays' option in 14MHz
 - Incorrect exit from DEBUG in Bomber (paging?)
 - Probably incorrect DOS on/off behaviour with regard to RAM at #0000 (MEMCONFIG)
+- 3x and 4x renderers on Win7 crash Unreal
 
 Missing features:
-- ATM2 textmode
-- ATM3 textmode
-- ATM3 NMI breakpoints
-- ATM3 wrong palette update in Personal Nightmare demo due to fine ATM3 port decode (PN uses coarse addressing)
+- ld a,r and ld a,i tacts not recalculated for Turbo (op_ed.cpp.177 and op_ed.cpp.232)
 - leds
-- NoFlic (partially)
-- Turbo for Baseconf
+- ATM3 wrong palette update in Personal Nightmare demo due to fine ATM3 port decode (PN uses coarse addressing)
+- NoFlic (in some renderers)
 - VDOS
 - other clones full compatibility
+- TheLink doesn't compile on TSconf (probably missing #EFF7 features)
 
 To Do:
 - Save settings to .ini
+- Carry out Debugger into separate window
+- Add all models resources to Debugger
+- Save .avi using VFW
+- Add some workaround for TR-DOS timeouts on 7+ Turbo
 
 X-factors:
 - Regular lags/glitches in when Process Explorer ON
