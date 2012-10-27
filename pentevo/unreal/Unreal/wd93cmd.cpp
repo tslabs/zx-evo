@@ -501,11 +501,29 @@ void WD1793::load()
 unsigned char WD1793::in(unsigned char port)
 {
    process();
-   if (port & 0x80) return rqs | 0x3F;
-   if (port == 0x1F) { rqs &= ~INTRQ; return status & ((system & 8) ? 0xFF : ~WDS_HEADL); }
-   if (port == 0x3F) return track;
-   if (port == 0x5F) return sector;
-   if (port == 0x7F) { status &= ~WDS_DRQ; rqs &= ~DRQ; return data; }
+
+   if (port & 0x80)
+	   return rqs | 0x3F;
+
+   if (port == 0x1F)
+   {
+	   rqs &= ~INTRQ;
+	   return status & ((system & 8) ? 0xFF : ~WDS_HEADL);
+   }
+
+   if (port == 0x3F)
+	   return track;
+
+   if (port == 0x5F)
+	   return sector;
+
+   if (port == 0x7F)
+   {
+	   status &= ~WDS_DRQ;
+	   rqs &= ~DRQ;
+	   return data;
+   }
+
    return 0xFF;
 }
 
@@ -680,9 +698,10 @@ void WD1793::trdos_traps()
        cpu.b = 0;
    }
 
-   if (pc == 0x3E01 && bankr[0][0x3E01] == 0x0D) { cpu.a = cpu.c = 1; return; } // no delays
-   if (pc == 0x3FEC && bankr[0][0x3FED] == 0xA2 &&
-              (state == S_READ || (state2 == S_READ && state == S_WAIT))) {
+   if (pc == 0x3E01 && bankr[0][0x3E01] == 0x0D)
+		{ cpu.a = cpu.c = 1; return; } // no delays
+   if (pc == 0x3FEC && bankr[0][0x3FED] == 0xA2 && (state == S_READ || (state2 == S_READ && state == S_WAIT)))
+   {
       trdos_load = ROMLED_TIME;
       if (rqs & DRQ) {
          cpu.DbgMemIf->wm(cpu.hl, data); // move byte from controller

@@ -101,12 +101,8 @@ void reset(ROM_MODE mode)
    comp.ts.vconf = comp.ts.vconf_d = 0;
    comp.ts.tsconf = 0;
    comp.ts.palsel = comp.ts.palsel_d = 15;
-   comp.ts.g_offsxh = 0;
-   comp.ts.g_offsyh = 0;
-   comp.ts.t0_offsxh = 0;
-   comp.ts.t0_offsyh = 0;
-   comp.ts.t1_offsxh = 0;
-   comp.ts.t1_offsyh = 0;
+   comp.ts.g_offsx = 0;
+   comp.ts.g_offsy = 0;
 
    switch (mode)
    {
