@@ -128,7 +128,7 @@ module zports(
 	localparam PORTXT = 8'hAF;
 	localparam PORTF7 = 8'hF7;
 	localparam COVOX  = 8'hFB;
-
+	
 	localparam NIDE10 = 8'h10;
 	localparam NIDE11 = 8'h11;
 	localparam NIDE30 = 8'h30;
@@ -138,7 +138,14 @@ module zports(
 	localparam NIDEB0 = 8'hB0;
 	localparam NIDED0 = 8'hD0;
 	localparam NIDEF0 = 8'hF0;
+	localparam NIDE08 = 8'h08;
+	localparam NIDE28 = 8'h28;
+	localparam NIDE48 = 8'h48;
+	localparam NIDE68 = 8'h68;
+	localparam NIDE88 = 8'h88;
+	localparam NIDEA8 = 8'hA8;
 	localparam NIDEC8 = 8'hC8;
+	localparam NIDEE8 = 8'hE8;
 
 	localparam VGCOM  = 8'h1F;
 	localparam VGTRK  = 8'h3F;
@@ -161,17 +168,18 @@ module zports(
     assign porthit =
             ((loa==PORTFE) || (loa==PORTXT) || (loa==PORTFD) || (loa==COVOX))
 		 || ((loa==PORTF7) && !dos)
-         || ide_ports || ide_port11
+         || ide_all
 		 || ((vg_port || vgsys_port) && dos)
          || ((loa==KJOY) && !dos)
 		 || (loa==KMOUSE)
          || (((loa==SDCFG) || (loa==SDDAT)) && (!dos || vdos))
          || (loa==COMPORT);
 
-	wire ide_ports = (loa==NIDE10) || (loa==NIDE30) || (loa==NIDE50) || (loa==NIDE70)
-                  || (loa==NIDE90) || (loa==NIDEB0) || (loa==NIDED0) || (loa==NIDEF0) || (loa==NIDEC8); // ide ports selected
-    wire ide_port10 = (loa==NIDE10);
-    wire ide_port11 = (loa==NIDE11);
+	wire ide_all = ide_even || ide_port11;
+	wire ide_even = (loa[2:0] == 3'b000) && (loa[3] != loa[4]);			// even ports
+    wire ide_port11 = (loa==NIDE11);									// 11
+    wire ide_port10 = (loa==NIDE10);									// 10
+    wire ide_portc8 = (loa==NIDEC8);									// C8
 
     wire vg_port = (loa==VGCOM) | (loa==VGTRK) | (loa==VGSEC) | (loa==VGDAT);
     wire vgsys_port = (loa==VGSYS);
@@ -215,7 +223,7 @@ module zports(
 		PORTFE:
 			dout = {1'b1, tape_read, 1'b0, keys_in};
 
-		NIDE10,NIDE30,NIDE50,NIDE70,NIDE90,NIDEB0,NIDED0,NIDEF0,NIDEC8:
+		NIDE10,NIDE30,NIDE50,NIDE70,NIDE90,NIDEB0,NIDED0,NIDEF0,NIDE08,NIDE28,NIDE48,NIDE68,NIDE88,NIDEA8,NIDEC8,NIDEE8:
 			dout = iderdeven;
 		NIDE11:
 			dout = iderdodd;
@@ -552,11 +560,13 @@ module zports(
 
 // IDE ports
     // do NOT generate IDE write, if neither of ide_wrhi|lo latches set and writing to NIDE10
-	assign ide_cs0_n = ~(ide_ports && (loa!=NIDEC8));
-	assign ide_cs1_n = ~(ide_ports && (loa==NIDEC8));
+	wire ide_cs0 = ide_even && !ide_portc8;
+	wire ide_cs1 = ide_portc8;
 	wire ide_rd = rd && !(ide_rd_latch && ide_port10);
 	wire ide_wr = wr && !(!ide_wrlo_latch && !ide_wrhi_latch && ide_port10);
-    assign ide_req = iorq_s && ide_ports && (ide_rd || ide_wr);
+    assign ide_req = iorq_s && ide_even && (ide_rd || ide_wr);
+	assign ide_cs0_n = !ide_cs0;
+	assign ide_cs1_n = !ide_cs1;
 
 	
 	always @(posedge clk)
@@ -573,7 +583,7 @@ module zports(
 	begin
 		if (ide_port10 && port_rd && !ide_rd_trig)
 			ide_rd_trig <= 1'b1;
-		else if ((ide_ports || ide_port11) && (port_rd || port_wr))
+		else if (ide_all && (port_rd || port_wr))
 			ide_rd_trig <= 1'b0;
 	end
 
@@ -581,7 +591,7 @@ module zports(
     // two triggers for write sequence
 	reg ide_wrlo_trig,  ide_wrhi_trig;  // nemo-divide write triggers
 	always @(posedge zclk)
-	if ((ide_ports || ide_port11) && (port_rd || port_wr))
+	if (ide_all && (port_rd || port_wr))
 	begin
 		if (ide_port11 && port_wr)
 			ide_wrhi_trig <= 1'b1;

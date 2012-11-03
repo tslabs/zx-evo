@@ -250,11 +250,15 @@ module video_mode (
 	assign vpix_end = vp_end[rres];
 	assign x_tiles = x_tile[rres];
 
-
 // addresses
-
 	// Tilemap prefetch
     wire [20:0] tm_addr = {tmpage, tpos_y, tpn, tpos_x};        // 128 bytes for plane0 + 128 bytes for plane1
+    
+	// wire [2:0] cnt_tp_col1 = cnt_tp_col - 1;					// DIRTY      !!!! - doesn't work anyway
+	// assign tmb_waddr = {cnt_tp_row[4:0], cnt_tp_col1, tpn};     //       HACK      - to be removed!!!
+	// issue: wrong RAM (or/and buffer) addressing while prefetch
+	// wrong arbitrating (or counters usage) - blinks on active CPU memory droching
+	
     assign tmb_waddr = {cnt_tp_row[4:0], cnt_tp_col, tpn};      // 1 word for plane0 + 1 word for plane1
     wire [5:0] tpos_y = cnt_tp_row[8:3] + (tys_en[tpn] ? tys_data_f : (tpn ? t1y_offs : t0y_offs));
     wire [5:0] tpos_x = {cnt_tp_row[2:0], cnt_tp_col};

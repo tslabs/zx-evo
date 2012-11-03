@@ -49,6 +49,8 @@ module video_out (
     wire hires = vga_on ? vga_hires : tv_hires;
 
 	wire [14:0] vpix = blank1 ? 15'b0 : vpixel;
+	// wire [14:0] vpix = blank1 ? 15'b0 : (vpixel & 15'b111001110011100);		// test for 373 colors
+	// wire [14:0] vpix = blank1 ? 15'b0 : (vpixel & 15'b110001100011000);		// test for 64 colors
 
     reg blank1;         // GOVNOKOD!!!!!!!!!!!!!!!!!!!!!
     always @(posedge clk)
@@ -90,6 +92,9 @@ module video_out (
 	assign vred = clk ? red1 : red0;
 	assign vgrn = clk ? grn1 : grn0;
 	assign vblu = clk ? blu1 : blu0;
+	// assign vred = cred;	// test NO PWM
+	// assign vgrn = cgrn;	// test NO PWM
+	// assign vblu = cblu;	// test NO PWM
 
 `else
 
