@@ -26,7 +26,7 @@ module zmaps(
 
 // FPRAM controls
 	output wire cram_we,
-	output wire sfys_we
+	output wire sfile_we
 
 );
 
@@ -42,7 +42,7 @@ module zmaps(
 
 // write enables
 	assign cram_we = dma_req ? dma_cram_we : (a[11:9] == CRAM) & a[0] & hit;
-	assign sfys_we = dma_req ? dma_sfile_we : (a[11:9] == SFYS) & a[0] & hit;
+	assign sfile_we = dma_req ? dma_sfile_we : (a[11:9] == SFYS) & a[0] & hit;
 
 	
 // LSB fetching

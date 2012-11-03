@@ -155,6 +155,7 @@ module zmem(
 
     
     wire [1:0] cc = &int_turbo ? {c1, c0} : {c2, c1};
+    // wire [1:0] cc = {c2, c1};	// to disable overclock
     
 	always @(posedge fclk)
 	if (rst)

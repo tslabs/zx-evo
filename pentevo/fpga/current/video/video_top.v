@@ -28,7 +28,7 @@ module video_top (
 	input wire [15:0] zmd,
 	input wire [ 7:0] zma,
 	input wire 		  cram_we,
-	input wire 		  sfys_we,
+	input wire 		  sfile_we,
 
 // port write strobes
     input wire zborder_wr,
@@ -86,17 +86,16 @@ module video_top (
 
     assign ts_zwt = tsconf[4];
 
-
 // video config
 	wire [7:0] vpage;      // re-latched at line_start
 	wire [7:0] vconf;      //
 	wire [8:0] gx_offs;    //
 	wire [8:0] gy_offs;    //
+	wire [7:0] palsel;     //
 	wire [8:0] t0x_offs;   // *not
 	wire [8:0] t0y_offs;   // *
 	wire [8:0] t1x_offs;   // *
 	wire [8:0] t1y_offs;   // *
-	wire [7:0] palsel;     //
 	wire [7:0] tsconf;
 	wire [7:0] tmpage;
 	wire [7:0] t0gpage;
@@ -385,9 +384,9 @@ module video_top (
         .tsr_xf         (tsr_xf),
         .tsr_rdy        (tsr_rdy),
 
-		.sfys_addr_in	(zma),
-		.sfys_data_in	(zmd),
-		.sfys_we		(sfys_we),
+		.sfile_addr_in	(zma),
+		.sfile_data_in	(zmd),
+		.sfile_we		(sfile_we),
 		.tys_data_x		(tys_data_x),
 		.tys_data_s		(tys_data_s),
 		.tys_data_f		(tys_data_f)
@@ -468,6 +467,7 @@ module video_top (
     video_tmbuf video_tmbuf (
         .clock      (clk),
         .data       (dram_rdata),
+        // .data       ({7'b0000000, tmb_waddr}),
         .wraddress  (tmb_waddr),
         .wren       (video_next && tm_pf),
         .rdaddress  (tmb_raddr),

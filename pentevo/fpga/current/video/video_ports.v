@@ -71,10 +71,6 @@ module video_ports (
    			vconf       <= 8'h00;
 			gx_offs     <= 9'b0;
 			gy_offs     <= 9'b0;
-			t0x_offs    <= 9'b0;
-			t0y_offs    <= 9'b0;
-			t1x_offs    <= 9'b0;
-			t1y_offs    <= 9'b0;
 			tsconf      <= 8'b0;
 			palsel      <= 8'h0F;
 			hint_beg    <= 8'd2;	// pentagon default

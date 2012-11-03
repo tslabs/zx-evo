@@ -450,6 +450,7 @@ module top(
 
 	arbiter dramarb(
 					 .clk(fclk),
+	                 // .c0(c0),
 	                 .c1(c1),
 	                 .c2(c2),
 	                 .c3(c3),
@@ -590,7 +591,7 @@ module top(
 		.zmd            (zmd),
 		.zma            (zma),
 		.cram_we        (cram_we),
-		.sfys_we        (sfys_we),
+		.sfile_we        (sfile_we),
 		.int_start      (int_start)
 
 	);
@@ -641,7 +642,7 @@ module top(
                 .dma_cram_we	(dma_cram_we),
                 .dma_sfile_we	(dma_sfile_we),
 				.cram_we    	(cram_we),
-				.sfys_we    	(sfys_we)
+				.sfile_we    	(sfile_we)
 	);
 
 
@@ -715,7 +716,7 @@ module top(
 
 
 		wire cram_we;
-		wire sfys_we;
+		wire sfile_we;
 
 
 		wire [31:0] xt_page;

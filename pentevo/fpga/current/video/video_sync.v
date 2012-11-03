@@ -101,17 +101,13 @@ module video_sync (
 	always @(posedge clk) if (c3)
 		hcount <= line_start ? 9'b0 : hcount + 9'b1;
 
-	wire vga_line_start = vga_pix_start && c3;
-
-	// horizontal VGA (14MHz)
-	always @(posedge clk) if (f1)
-		cnt_out <= vga_line_start ? 9'b0 : cnt_out + 9'b1;
-
-
 	// vertical TV (15.625 kHz)
 	always @(posedge clk) if (c3) if (line_start)
 		vcount <= (vcount == (VPERIOD - 1)) ? 9'b0 : vcount + 9'b1;
 
+	// horizontal VGA (14MHz)
+	always @(posedge clk) if (f1)
+		cnt_out <= vga_pix_start && c3 ? 9'b0 : cnt_out + 9'b1;
 
 	// column address for DRAM
 	always @(posedge clk)
@@ -262,7 +258,7 @@ module video_sync (
     wire tm_vpf = (vcount >= (vpix_beg - 17)) & (vcount < (vpix_end - 9));      // start prefetch 16 lines before visible area minus 1 line for ts renderer
     assign tm_pf = tm_hpf & tm_vpf & tiles_en;
 
-	assign video_go = ((hcount >= (hpix_beg - go_offs - x_offs)) & (hcount < (hpix_end - go_offs - x_offs)) & vpix &!nogfx) || tm_pf;
+	assign video_go = ((hcount >= (hpix_beg - go_offs - x_offs)) & (hcount < (hpix_end - go_offs - x_offs + 4)) & vpix &!nogfx) || tm_pf;
 
 	assign line_start = (hcount == (HPERIOD - 1));
 	wire line_start2 = (hcount == (HSYNC_END - 1));
