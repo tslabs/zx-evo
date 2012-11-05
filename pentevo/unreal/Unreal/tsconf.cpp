@@ -159,7 +159,7 @@ void render_sprite()
 
 void render_sprite_layer()
 {
-	for (; snum < 42; snum++)
+	for (; snum < 85; snum++)
 	{
 		if (spr[snum].act)
 			render_sprite();
