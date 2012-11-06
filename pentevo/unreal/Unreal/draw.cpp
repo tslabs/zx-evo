@@ -782,7 +782,10 @@ void update_screen()
 
 				vid.yctr++;
 				if (!comp.ts.g_offsy_updated)	// was Y-offset updated?
+				{
 					vid.ygctr++;					// no - just increment old
+					vid.ygctr &= 0x1FF;
+				}
 				else
 				{
 					vid.ygctr = comp.ts.g_offsy;		// yes - reload X-offset
