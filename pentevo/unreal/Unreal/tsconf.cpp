@@ -95,7 +95,7 @@ void dma (u8 val)
 
 void render_tile(u8 page, u32 tnum, u8 line, u32 x, u8 pal, u8 xf, u8 n)
 {
-	u8 *g = page_ram(page) + ((tnum & 0xFC0) << 5) + (line << 8);
+	u8 *g = page_ram(page & 0xF8) + ((tnum & 0xFC0) << 5) + (line << 8);
 	x += (xf ? (n * 8 - 1) : 0) + 64;
 	pal <<= 4;
 	i8 a = xf ? -1 : 1;
