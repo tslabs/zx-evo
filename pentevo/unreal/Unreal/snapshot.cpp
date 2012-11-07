@@ -173,9 +173,9 @@ int loadsnap(char *filename)
 
 int readSNA128()
 {
-   conf.mem_model = MM_PENTAGON; conf.ramsize = 128;
+   // conf.mem_model = MM_PENTAGON; conf.ramsize = 128;
    hdrSNA128 *hdr = (hdrSNA128*)snbuf;
-   reset(hdr->trdos? RM_DOS : RM_SOS);
+   // reset(hdr->trdos? RM_DOS : RM_SOS);
    cpu.alt.af = hdr->altaf; cpu.alt.bc = hdr->altbc;
    cpu.alt.de = hdr->altde; cpu.alt.hl = hdr->althl;
    cpu.af = hdr->af; cpu.bc = hdr->bc; cpu.de = hdr->de; cpu.hl = hdr->hl;
