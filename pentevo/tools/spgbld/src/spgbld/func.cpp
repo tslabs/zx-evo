@@ -19,7 +19,7 @@ void parse_args(int argc, _TCHAR* argv[])
 {
 	int i;
 	conf.packer = PM_AUTO;
-	
+
 	if (i = parse_arg(argc, argv, L"-b", 2))
 	{
 		conf.mode = M_BLD;
@@ -29,14 +29,14 @@ void parse_args(int argc, _TCHAR* argv[])
 			conf.packer = (C_PACK)_wtoi(argv[i]);
 		return;
 	}
-	
+
 	if (i = parse_arg(argc, argv, L"-u", 1))
 	{
 		conf.mode = M_UNP;
 		conf.in_fname = argv[i];
 		return;
 	}
-	
+
 	print_help();
 	error (RC_ARG);
 }
@@ -64,119 +64,169 @@ void init_hdr()
 	hdr.hour = t2->tm_hour;
 }
 
+u32 num(char *ns)
+{
+	int n;
+
+	if ((ns[0] == '0') && ns[1] == 'x')
+	{
+		sscanf(ns, "%x", &n);
+		return n;
+	}
+
+	if ((ns[0] == '#') || (ns[0] == '$'))
+	{
+		sscanf(ns + 1, "%x", &n);
+		return n;
+	}
+
+	else
+	{
+		sscanf(ns, "%d", &n);
+		return n;
+	}
+}
+
 void load_ini(_TCHAR *name)
 {
 	char t[256];
 	char v[256];
+	char v1[256];
+	char v2[256];
 	int a = 0;
 	int b = 0;
 	conf.n_blocks = 0;
-	
+
 	FILE* f = _wfopen(name, L"rt");
 	if (!f)
 		error(RC_INI);
-		
+
 	while (!feof(f))
 	{
 		*t = 0;
-		fscanf(f, "%256[^ =\n\r\t]%*[ =]%256[^\n\r\t]%*c", t, v);
+		fscanf(f, "%256[^ =\n\r\t]%*[ =]%256[^\n\r]%*c", t, v);
 		if (!*t)
 		{
-			fscanf(f, "%*c");
-			continue;
+			fscanf(f, "%*c"); continue;
 		}
 
+		if (t[0] == ';')
+			continue;
+
 		strlwr(t);
-		
+
 		// description string
 		if (!strcmp(t, STR(F_DESC)))
 		{
 			strncpy(hdr.desc, v, 32);
+			printf("Description:\t%s\n", v);
 			continue;
 		}
-		
+
 		// stack address
 		if (!strcmp(t, STR(F_SP)))
 		{
-			sscanf(v, "%d", &a);
-			hdr.sp = a;
+			hdr.sp = (u16)num(v);
+			printf("SP:\t\t#%04X\n", hdr.sp);
 			continue;
 		}
-		
+
 		// resident address
 		if (!strcmp(t, STR(F_RES)))
 		{
-			sscanf(v, "%d", &a);
-			hdr.resid = a;
+			hdr.resid = (u16)num(v);
+			printf("Resident at:\t#%04X\n", hdr.resid);
 			continue;
 		}
-		
+
 		// pager address
 		if (!strcmp(t, STR(F_PAGER)))
 		{
-			sscanf(v, "%d", &a);
-			hdr.pager = a;
+			hdr.pager = (u16)num(v);
+			if (hdr.pager)
+				printf("Pager at:\t#%04X\n", hdr.pager);
+			else
+				printf("Pager:\t\tNot used\n");
 			continue;
 		}
-		
+
 		// start address
 		if (!strcmp(t, STR(F_START)))
 		{
-			sscanf(v, "%d", &a);
-			hdr.start = a;
+			hdr.start = (u16)num(v);
+			printf("Start:\t\t#%04X\n", hdr.start);
 			continue;
 		}
-		
+
 		// page3
 		if (!strcmp(t, STR(F_PAGE3)))
 		{
-			sscanf(v, "%d", &a);
-			hdr.page3 = a;
+			hdr.page3 = (u8)num(v);
+			printf("Page #C000:\t#%02X\n", hdr.page3);
 			continue;
 		}
-		
+
 		// clock
 		if (!strcmp(t, STR(F_CLOCK)))
 		{
-			sscanf(v, "%d", &a);
-			hdr.clk = a;
+			hdr.clk = (u8)num(v);
+			printf("Clock:\t\t");
+			switch (hdr.clk)
+			{
+				case 0: { printf("3.5"); break; }
+				case 1: { printf("7"); break; }
+				case 2: { printf("14"); break; }
+				case 3: { printf("14+"); break; }
+			}
+			printf(" MHz\n");
 			continue;
 		}
-		
+
 		// INT
 		if (!strcmp(t, STR(F_INT)))
 		{
-			sscanf(v, "%d", &a);
-			hdr.ei = a;
+			hdr.ei = num(v);
+			printf("Interrupts:\t");
+			if (hdr.ei)
+				printf("EI\n");
+			else
+				printf("DI\n");
 			continue;
 		}
-		
+
 		// block
 		if (!strcmp(t, STR(F_BLK)))
 		{
-			sscanf(v, "%d, %d, %s", &a, &b, v);
+			sscanf(v, "%[^ ,\t]%*[ ,\t]%[^ ,\t]%*[ ,\t]%s", v1, v2, v);
+			a = num(v1);
+			b = num(v2);
+
 			if (a & 0x1FF)
 				error(RC_ALGN);
+
 			if ((a < 49152) || (a > 65024))
 				error(RC_ADDR);
+
+			printf("Block:\t\tStart: #%04X  Page: #%02X  File: %s\n", a, b, v);
+
 			hdr.blk[conf.n_blocks].addr = (a - 49152) >> 9;
 			hdr.blk[conf.n_blocks].page = b;
 			strncpy(blk[conf.n_blocks].fname, v, sizeof(blk[conf.n_blocks].fname));
 			conf.n_blocks++;
-			
+
 			if (conf.n_blocks == 256)
 				break;
 			continue;
 		}
-		
+
 		// unknown tag
 		printf("%s: ", t);
 		error(RC_UNK);
 	}
-	
+
 	if (!conf.n_blocks)
 		error(RC_0BLK);
-	
+
 	hdr.num_blk = conf.n_blocks;
 	hdr.blk[conf.n_blocks - 1].last = 1;
 
@@ -207,42 +257,42 @@ void pack_blocks()
 	struct stat st;
 	int s1, s2, sz1, sz2;
 	int p;
-	
+
 	for (int i=0; i<conf.n_blocks; i++)
 	{
 		char f1n[16], f2n[16], f3n[16];
 		rand_name(f1n); rand_name(f2n); rand_name(f3n);
-		
+
 		// add errors check here!!!
 		FILE* f1 = fopen(f1n, "wb");
 		fwrite(blk[i].data, 1, blk[i].size, f1);
 		fclose(f1);
-		
+
 		s1 = s2 = 16384;
 		sz1 = sz2 = 31;
-		
+
 		if (conf.packer == PM_AUTO || conf.packer == PM_MLZ)
 		{
 			if (_spawnlp(_P_WAIT, "mhmt.exe", "dummy", "-mlz", f1n, f2n, NULL) < 0)
 				error(RC_MHMT);
 			stat(f2n, &st); s1 = st.st_size; sz1 = sz(st.st_size);
 		}
-		
+
 		if (conf.packer == PM_AUTO || conf.packer == PM_HST)
 		{
 			if (_spawnlp(_P_WAIT, "mhmt.exe", "dummy", "-hst", f1n, f3n, NULL) < 0)
 				error(RC_MHMT);
 			stat(f3n, &st); s2 = st.st_size; sz2 = sz(st.st_size);
 		}
-		
+
 		remove(f1n);
-		
+
 		if (sz(blk[i].size) <= min(sz1, sz2))
 			p = 0;
 		else
 			p = (sz1 < sz2) ? PM_MLZ : PM_HST;		// HRUST priority (preferably)
 			// p = (sz1 <= sz2) ? PM_MLZ : PM_HST;	// MLZ priority
-		
+
 		hdr.blk[i].comp = p;
 
 		switch (p)
@@ -258,7 +308,7 @@ void pack_blocks()
 				break;
 			}
 		}
-		
+
 		remove(f2n); remove(f3n);
 	}
 }
@@ -270,27 +320,27 @@ void load_spg(_TCHAR* name)
 void save_spg(_TCHAR* name)
 {
 	FILE* f = _wfopen(name, L"wb");
-	
+
 	// save header
 	fwrite(&hdr, 1, sizeof(hdr), f);
-	
+
 	// save blocks
 	for (int i=0; i<conf.n_blocks; i++)
 	{
 		fwrite(&blk[i].data, 1, (hdr.blk[i].size + 1) << 9, f);
 	}
-	
+
 	fclose(f);
 }
 
 void load_files()
 {
 	struct stat st;
-	
+
 	for (int i=0; i<conf.n_blocks; i++)
 	{
 		stat(blk[i].fname, &st);
-		
+
 		if (st.st_size < 0)
 		{
 			printf("%s: ", blk[i].fname);
@@ -302,13 +352,13 @@ void load_files()
 			printf("%s: ", blk[i].fname);
 			error(RC_BIG);
 		}
-		
+
 		if (st.st_size == 0)
 		{
 			printf("%s: ", blk[i].fname);
 			error(RC_ZERO);
 		}
-		
+
 		FILE* f = fopen(blk[i].fname, "rb");
 		blk[i].size = st.st_size;
 		hdr.blk[i].size = sz(blk[i].size);
