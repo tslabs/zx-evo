@@ -45,6 +45,7 @@ struct RASTER
 	u32 d_brd;	// first lower border line
 	u32 l_brd;	// first pixel tact
 	u32 r_brd;	// first right border tact
+	u32 r_ts;	// tact on which call TS engine draw
 };
 
 struct VCTR

@@ -11,11 +11,11 @@
 #include "util.h"
 
 const RASTER raster[R_MAX] = {
-	{ R_256_192, 80, 272, 70, 198 },
-	{ R_320_200, 76, 276, 54, 214 },
-	{ R_320_240, 56, 296, 54, 214 },
-	{ R_360_288, 32, 320, 44, 244 },
-	{ R_384_304, 16, 320, 32, 224 }
+	{ R_256_192, 80, 272, 70, 198, 198 },
+	{ R_320_200, 76, 276, 54, 214, 214 },
+	{ R_320_240, 56, 296, 54, 214, 214 },
+	{ R_360_288, 32, 320, 44, 224, 0 },
+	{ R_384_304, 16, 320, 32, 224, 0 }
 };
 
 // Default color table: 0RRrrrGG gggBBbbb
@@ -813,7 +813,7 @@ void update_screen()
 					drawers[vid.mode].func(m);
 					t = vid.t_next - t; n -= t; tact += t;
 
-					if ((vid.t_next % VID_TACTS) == vid.raster.r_brd && conf.mem_model == MM_TSL)
+					if ((vid.t_next % VID_TACTS) == vid.raster.r_ts && conf.mem_model == MM_TSL)
 						render_ts(), draw_ts();
 				}
 
