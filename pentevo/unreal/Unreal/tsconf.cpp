@@ -123,11 +123,12 @@ void render_tile_layer(u8 layer)
 	u32 y = (vid.yctr + (layer ? comp.ts.t1_offsy : comp.ts.t0_offsy)) & 0x1FF;
 	u32 x = (layer ? comp.ts.t1_offsx : comp.ts.t0_offsx);
 	TILE_t *tmap = (TILE_t*)(page_ram(comp.ts.tmpage) + ((y & 0x1F8) << 5));
-	u32 ox = ((x & 0x1F8) >> 3) + (layer << 6);
+	u32 ox = (x >> 3) & 0x3F;
+	u32 l = (layer << 6);
 
 	for (u32 i=0; i<46; i++)
 	{
-		TILE_t t = tmap[(ox + i) & 0x7F];
+		TILE_t t = tmap[(ox + i) & 0x3F | l];
 		if ((layer ? comp.ts.t1z_en : comp.ts.t0z_en) || t.tnum)
 			render_tile(
 				(layer ? comp.ts.t1gpage : comp.ts.t0gpage),				// page
