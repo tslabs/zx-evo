@@ -1,5 +1,5 @@
 Tests:
-- none
+- check TheLink Turbo switching for Pentagon config
 
 Bugs:
 - Incorrect exit from DEBUG in Bomber (paging?)
@@ -21,6 +21,8 @@ To Do:
 - Add all models resources to Debugger
 - Save .avi using VFW
 - Add some workaround for TR-DOS timeouts on 7+ Turbo
+- Separate reset() and res_init() procedures
+- Add res_init() to SNA load when TS-conf active
 
 X-factors:
 - Regular lags/glitches in when Process Explorer ON
