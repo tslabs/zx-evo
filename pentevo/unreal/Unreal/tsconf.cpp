@@ -96,8 +96,6 @@ void dma (u8 val)
 void render_tile(u8 page, u32 tnum, u8 line, u32 x, u8 pal, u8 xf, u8 n)
 {
 	u8 *g = page_ram(page & 0xF8) + ((tnum & 0xFC0) << 5) + (line << 8);
-	//if (xf)
-		//tnum += (n - 1);
 	x += (xf ? (n * 8 - 1) : 0) + 64;
 	pal <<= 4;
 	i8 a = xf ? -1 : 1;
@@ -105,14 +103,14 @@ void render_tile(u8 page, u32 tnum, u8 line, u32 x, u8 pal, u8 xf, u8 n)
 	u32 ox = (tnum & 0x3F) << 2;
 	for (u32 i=0; i<n; i++)
 	{
-		if (c = g[ox + 0] & 0xF0) vid.tsline[x] = pal | (c >> 4); x += a;
-		if (c = g[ox + 0] & 0x0F) vid.tsline[x] = pal | c; x += a;
-		if (c = g[ox + 1] & 0xF0) vid.tsline[x] = pal | (c >> 4); x += a;
-		if (c = g[ox + 1] & 0x0F) vid.tsline[x] = pal | c; x += a;
-		if (c = g[ox + 2] & 0xF0) vid.tsline[x] = pal | (c >> 4); x += a;
-		if (c = g[ox + 2] & 0x0F) vid.tsline[x] = pal | c; x += a;
-		if (c = g[ox + 3] & 0xF0) vid.tsline[x] = pal | (c >> 4); x += a;
-		if (c = g[ox + 3] & 0x0F) vid.tsline[x] = pal | c; x += a;
+		if (c = g[ox + 0] & 0xF0) vid.tsline[x & 0x1FF] = pal | (c >> 4); x += a;
+		if (c = g[ox + 0] & 0x0F) vid.tsline[x & 0x1FF] = pal | c; x += a;
+		if (c = g[ox + 1] & 0xF0) vid.tsline[x & 0x1FF] = pal | (c >> 4); x += a;
+		if (c = g[ox + 1] & 0x0F) vid.tsline[x & 0x1FF] = pal | c; x += a;
+		if (c = g[ox + 2] & 0xF0) vid.tsline[x & 0x1FF] = pal | (c >> 4); x += a;
+		if (c = g[ox + 2] & 0x0F) vid.tsline[x & 0x1FF] = pal | c; x += a;
+		if (c = g[ox + 3] & 0xF0) vid.tsline[x & 0x1FF] = pal | (c >> 4); x += a;
+		if (c = g[ox + 3] & 0x0F) vid.tsline[x & 0x1FF] = pal | c; x += a;
 		ox = (ox + 4) & 0xFF;
 	}
 }
