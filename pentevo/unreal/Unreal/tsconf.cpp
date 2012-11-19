@@ -96,11 +96,13 @@ void dma (u8 val)
 void render_tile(u8 page, u32 tnum, u8 line, u32 x, u8 pal, u8 xf, u8 n)
 {
 	u8 *g = page_ram(page & 0xF8) + ((tnum & 0xFC0) << 5) + (line << 8);
+	//if (xf)
+		//tnum += (n - 1);
 	x += (xf ? (n * 8 - 1) : 0) + 64;
 	pal <<= 4;
 	i8 a = xf ? -1 : 1;
 	u8 c;
-	u32 ox = ((tnum & 0x3F) << 2);
+	u32 ox = (tnum & 0x3F) << 2;
 	for (u32 i=0; i<n; i++)
 	{
 		if (c = g[ox + 0] & 0xF0) vid.tsline[x] = pal | (c >> 4); x += a;
@@ -111,7 +113,7 @@ void render_tile(u8 page, u32 tnum, u8 line, u32 x, u8 pal, u8 xf, u8 n)
 		if (c = g[ox + 2] & 0x0F) vid.tsline[x] = pal | c; x += a;
 		if (c = g[ox + 3] & 0xF0) vid.tsline[x] = pal | (c >> 4); x += a;
 		if (c = g[ox + 3] & 0x0F) vid.tsline[x] = pal | c; x += a;
-		ox = (ox + (a * 4)) & 0xFF;
+		ox = (ox + 4) & 0xFF;
 	}
 }
 
@@ -151,7 +153,7 @@ void render_sprite()
 		render_tile(
 			comp.ts.sgpage,					// page
 			s.tnum,							// tile number
-			(u8)(s.yflp ? (ys - l) : l),		// line offset (3 bit)
+			(u8)(s.yflp ? (ys - l) : l),	// line offset (3 bit)
 			s.x,							// x coordinate in buffer (masked 0x1FF in func)
 			s.pal,							// palette
 			s.xflp, s.xs + 1				// x flip, x size
