@@ -2,15 +2,6 @@
 
 // This module generates all video raster signals
 
-// clk			|—__——__——__——__——__——__——__——__——__——__——__——__——__——__——__——__—
-// c0-3			|<c0><c1><c2><c3><c0><c1><c2><c3><c0><c1><c2><c3><c0><c1><c2><c3>
-// hcount		|<......86......><......87......><......88......><......89......>
-// hpix			|________________________________————————————————————————————————
-// ts_raddr		|<......xx......><......xx......><......00......><......01......>
-// ts_pix_start	|————————————————————————————————________________________________
-// ts_start		|____________________________————________________________________
-// ts_line_sel	|________________________________————————————————————————————————
-
 
 module video_sync (
 
@@ -39,7 +30,8 @@ module video_sync (
 	input wire tiles_en,
 	output wire tm_pf,
 	output wire hpix,
-	output wire vpix,
+	output reg  vpix,
+	output wire pre_vpix,
 	output wire hvpix,
 	output wire tv_blank,
 	output wire vga_blank,
@@ -55,13 +47,12 @@ module video_sync (
 	output wire [9:0] vga_cnt_in,
 	output wire [9:0] vga_cnt_out,
 	output wire [8:0] ts_raddr,
-	output wire [8:0] lcount,
+	output reg  [8:0] lcount,
 	output reg 	[7:0] cnt_col,
 	output reg 	[8:0] cnt_row,
 	output reg 	[8:0] cnt_tp_row,
 	output reg  	  cptr,
 	output reg  [3:0] scnt,
-	output reg   	  ts_line_sel,
 
 // DRAM
 	input wire video_pre_next,
@@ -157,7 +148,6 @@ module video_sync (
 
 	assign vga_cnt_in = {vcount[0], hcount - HBLNK_END};
 	assign vga_cnt_out = {~vcount[0], cnt_out};
-	assign lcount = vcount - vpix_beg + 9'b1;
 
 
     // TS-line counter
@@ -165,7 +155,7 @@ module video_sync (
 
 	always @(posedge clk)
 		if (ts_start)
-			ts_line_sel <= ~ts_line_sel;
+			lcount <= vcount - vpix_beg + 9'b1;
 
 
 // Y offset re-latch trigger
@@ -176,7 +166,6 @@ module video_sync (
         else
         if (line_start & c3)
             y_offs_wr_r <= 1'b0;
-
 
 // FLASH generator
 	reg [4:0] flash_ctr;
@@ -189,39 +178,11 @@ module video_sync (
 
 // sync strobes
 	wire hs = (hcount >= HSYNC_BEG) & (hcount < HSYNC_END);
-	// reg hs;
-    // always @(posedge clk)
-		// if (hcount == (HSYNC_BEG - 1))
-			// hs <= 1'b1;
-		// else if (hcount == (HSYNC_END - 2))
-			// hs <= 1'b0;
-
 	wire vs = (vcount >= VSYNC_BEG) & (vcount < VSYNC_END);
-	// reg vs;
-    // always @(posedge clk)
-		// if (vcount == (VSYNC_BEG - 1))
-			// vs <= 1'b1;
-		// else if (vcount == (VSYNC_END - 2))
-			// vs <= 1'b0;
 
 	assign tv_blank = tv_hblank | tv_vblank;
-
 	wire tv_hblank = (hcount > HBLNK_BEG) & (hcount <= HBLNK_END);
-	// reg tv_hblank;
-    // always @(posedge clk)
-		// if (hcount == HBLNK_BEG)
-			// tv_hblank <= 1'b1;
-		// else if (hcount == (HBLNK_END - 1))
-			// tv_hblank <= 1'b0;
-
 	wire tv_vblank = (vcount >= VBLNK_BEG) & (vcount < VBLNK_END);
-	// reg tv_vblank;
-    // always @(posedge clk)
-		// if (vcount == (VBLNK_BEG - 1))
-			// tv_vblank <= 1'b1;
-		// else if (vcount == (VBLNK_END - 2))
-			// tv_vblank <= 1'b0;
-
 	assign vga_blank = vga_hblank | vga_vblank;
 
 
@@ -229,44 +190,34 @@ module video_sync (
 	reg vga_hblank;
 	always @(posedge clk) if (f1)		// fix me - bydlocode !!!
 		vga_hblank <= vga_hblank1;
-	// reg vga_hblank;
-    // always @(posedge clk)
-		// if (cnt_out == 9'd359)
-			// vga_hblank <= 1'b1;
-		// else if (vga_line_start)
-			// vga_hblank <= 1'b0;
 
 	wire hs_vga = ((hcount >= HSYNCV_BEG) & (hcount < HSYNCV_END)) |
 			((hcount >= (HSYNCV_BEG + HPERIOD/2)) & (hcount < (HSYNCV_END + HPERIOD/2)));
-    // reg hs_vga;
-	// always @(posedge clk)
-		// if ((hcount == (HSYNCV_BEG - 1)) || (hcount == (HSYNCV_BEG + HPERIOD/2 - 1)))
-			// hs_vga <= 1'b1;
-		// else if ((hcount == (HSYNCV_END - 2)) || (hcount == (HSYNCV_END + HPERIOD/2 - 2)))
-			// hs_vga <= 1'b0;
-		
 
 	wire vga_pix_start = ((hcount == (HBLNKV_END)) | (hcount == (HBLNKV_END + HPERIOD/2)));
 
 	assign vga_line = (hcount >= HPERIOD/2);
 
 	assign hpix = (hcount >= hpix_beg) & (hcount < hpix_end);
-	assign vpix = (vcount >= vpix_beg) & (vcount < vpix_end);
+	assign pre_vpix = (vcount >= vpix_beg) & (vcount < vpix_end);
 	assign hvpix = hpix & vpix;
 
+    always @(posedge clk)
+        if (line_start & c3)
+			vpix <= pre_vpix;
+	
 	wire tm_hpf = (hcount >= 0) & (hcount < 32);        // 8+8 tiles per line, totally 64+64 per 8 lines
     wire tm_vpf = (vcount >= (vpix_beg - 17)) & (vcount < (vpix_end - 9));      // start prefetch 16 lines before visible area minus 1 line for ts renderer
     assign tm_pf = tm_hpf & tm_vpf & tiles_en;
 
 	assign video_go = ((hcount >= (hpix_beg - go_offs - x_offs)) & (hcount < (hpix_end - go_offs - x_offs + 4)) & vpix &!nogfx) || tm_pf;
 
-	assign line_start = (hcount == (HPERIOD - 1));
-	wire line_start2 = (hcount == (HSYNC_END - 1));
+	assign line_start = hcount == (HPERIOD - 1);
+	wire line_start2 = hcount == (HSYNC_END - 1);
 	assign frame_start = line_start & (vcount == (VPERIOD - 1));
 	wire vis_start = line_start & (vcount == (VBLNK_END - 1));
-	assign pix_start = (hcount == (hpix_beg - x_offs - 1));
-	wire ts_pix_start = (hcount == (hpix_beg - 1));
-	assign ts_start = c3 && ts_pix_start;
+	assign pix_start = hcount == (hpix_beg - x_offs - 1);
+	assign ts_start = c3 && (hcount == hpix_beg);
 	assign int_start = (hcount == {hint_beg, 1'b0}) & (vcount == vint_beg);
 
 

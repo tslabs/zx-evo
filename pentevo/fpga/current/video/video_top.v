@@ -125,7 +125,6 @@ module video_top (
 	wire cptr;
     wire [3:0] scnt;
 	wire [8:0] lcount;
-	wire ts_line_sel;
 
 // synchro
 	wire frame_start;
@@ -314,7 +313,6 @@ module video_top (
 		.vga_cnt_out	(vga_cnt_out),
 		.ts_raddr	    (ts_raddr),
 		.lcount			(lcount),
-		.ts_line_sel	(ts_line_sel),
         .cnt_col        (cnt_col),
         .cnt_row        (cnt_row),
         .cnt_tp_row     (cnt_tp_row),
@@ -333,6 +331,7 @@ module video_top (
 		.int_start		(int_start),
 		.tm_pf			(tm_pf),
 		.hpix			(hpix),
+		.pre_vpix		(pre_vpix),
 		.vpix			(vpix),
 		.hvpix			(hvpix),
 		.nogfx			(nogfx),
@@ -353,17 +352,23 @@ module video_top (
 		.video_data		(dram_rddata)
 );
 
-
 	video_ts video_ts (
+		.tst		    (tst),
+		
 		.clk		    (clk),
         .start          (ts_start),
 		.line			(lcount),
+		.pre_vpix		(pre_vpix),
 
         .tsconf         (tsconf),
+        // .tsconf         ({tsconf[7], 2'b00, tsconf[4:0]}),		// no tiles
+        // .tsconf         ({tsconf[7], 1'b0, tsconf[5:0]}),		// only tiles0
+        // .tsconf         ({tsconf[7:6], 1'b0, tsconf[4:0]}),	// only tiles1
         .t0gpage        (t0gpage),
         .t1gpage        (t1gpage),
         .sgpage         (sgpage),
 		.num_tiles		(x_tiles),
+		// .num_tiles		(6'd46),
         .t0x_offs       (t0x_offs),
         .t1x_offs       (t1x_offs),
         .t0y_offs       (t0y_offs[2:0]),
@@ -436,8 +441,11 @@ module video_top (
 		.vplex_out 	    (vplex)
 );
 
+	wire [2:0] tst;
 
 	video_out video_out (
+		.tst			(tst),	// DEBUG!!!
+		
 		.clk			(clk),
 		.f0				(f0),
 		.c3				(c3),
@@ -477,8 +485,8 @@ module video_top (
 
 // 2 buffers: 512 pixels * 8 bits (9x8) - used as bitmap buffer for TS overlay over graphics
 // (2 altdprams)
-    wire tl_act0 = ts_line_sel;
-    wire tl_act1 = !ts_line_sel;
+    wire tl_act0 = lcount[0];
+    wire tl_act1 = ~lcount[0];
     wire [8:0] ts_waddr0 = tl_act0 ? ts_raddr : ts_waddr;
     wire [7:0] ts_wdata0 = tl_act0 ? 8'd0 : ts_wdata;
     wire       ts_we0    = tl_act0 ? c3 : ts_we;

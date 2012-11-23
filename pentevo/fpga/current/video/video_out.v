@@ -33,7 +33,9 @@ module video_out (
 	input wire [7:0] vgaplex,
 	output reg [1:0] vred,
     output reg [1:0] vgrn,
-    output reg [1:0] vblu
+    output reg [1:0] vblu,
+	
+    input wire [2:0] tst
 );
 
 
@@ -48,7 +50,8 @@ module video_out (
     wire blank = vga_on ? vga_blank : tv_blank;
     wire hires = vga_on ? vga_hires : tv_hires;
 
-	wire [14:0] vpix = blank1 ? 15'b0 : vpixel;
+	// wire [14:0] vpix = blank1 ? 15'b0 : vpixel;
+	wire [14:0] vpix = blank1 ? 15'b0 : (vpixel ^ {tst[1], tst[1], 3'b0, tst[2], tst[2], 3'b0, tst[0], tst[0], 3'b0});
 	// wire [14:0] vpix = blank1 ? 15'b0 : (vpixel & 15'b111001110011100);		// test for 373 colors
 	// wire [14:0] vpix = blank1 ? 15'b0 : (vpixel & 15'b110001100011000);		// test for 64 colors
 
