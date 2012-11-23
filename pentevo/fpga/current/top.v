@@ -523,9 +523,6 @@ module top(
         wire t1gpage_wr;
         wire sgpage_wr;
 
-    // wire [1:0] vred0;
-    // assign vred = vred0 | {2{t}};
-
 	video_top video_top(
 
 		.clk(fclk),

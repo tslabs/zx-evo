@@ -1,0 +1,16 @@
+Done:
+re-factored layers control
+
+Bugs:
+strange behavior of sprites layer switching
+
+To Do:
+add checker for screen Y coordinate (not to draw on border) for TS
+add checker for t/s parser enable
+add Yscroll array
+migrate paging to FPRAM
+
+Try:
+Register some video_mode outputs
+
+Done:
