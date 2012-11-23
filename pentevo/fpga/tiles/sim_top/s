@@ -1,3 +1,0 @@
-#!/bin/bash
-
-vsim -do "do wave.do" -gui -novopt -sdftyp /tb/DUT=top_v.sdo work.tb
