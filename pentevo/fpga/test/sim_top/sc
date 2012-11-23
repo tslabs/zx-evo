@@ -1,3 +1,0 @@
-#!/bin/bash
-
-vsim -c -vopt -sv_lib sndpix work.tb
