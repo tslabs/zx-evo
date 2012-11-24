@@ -21,6 +21,8 @@ rem del starter.bin
 copy /b ts-bios.bin + trdos504T.rom + 128.rom "../bin/ts-bios.rom"
 copy /b ts-bios.bin + trdos504T.rom + 128.rom + zxevo_upper.rom "../bin/zxevo.rom"
 copy /b ts-bios.bin + trdos504T.rom + glukpen.rom + 48.rom "../bin/ts-bios-gluk.rom"
+copy /b ts-bios.bin + trdos504T.rom + qc3_11.rom + 48.rom "../bin/ts-bios-qc311.rom"
+copy /b ts-bios.bin + trdos504T.rom + rc1_96.rom + 48.rom "../bin/ts-bios-rc196.rom"
 
 copy ts-bios.bin "../bin/ts-bios.bin"
 del ts-bios.bin
