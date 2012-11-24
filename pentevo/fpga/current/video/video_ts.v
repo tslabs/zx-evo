@@ -22,10 +22,14 @@ module video_ts (
 // video controls
 	input wire start,
 	input wire [8:0] line,      // 	= vcount - vpix_beg + 9'b1;
+	input wire [8:0] cnt_row,
 	input wire pre_vpix,
 
 // video config
 	input wire [7:0] tsconf,
+	input wire [7:0] vconf,
+	input wire [7:0] vpage,
+	input wire [8:0] gx_offs,
     input wire [7:0] t0gpage,
     input wire [7:0] t1gpage,
     input wire [7:0] sgpage,
@@ -34,6 +38,7 @@ module video_ts (
 	input wire [8:0] t1x_offs,
 	input wire [2:0] t0y_offs,
 	input wire [2:0] t1y_offs,
+	input wire [3:0] g_palsel,
 	input wire [1:0] t0_palsel,
 	input wire [1:0] t1_palsel,
 
@@ -94,17 +99,18 @@ module video_ts (
 	wire t0z_en = tsconf[2];
 	wire t1ys_en = tsconf[1];
 	wire t0ys_en = tsconf[0];
+	wire pln_en = vconf[1:0] == 1'b1;
 
 
 // TS renderer interface
-    assign tsr_x = sprites ? sprites_x : tile_x;
-    assign tsr_xs = sprites ? sprites_xs : tile_xs;
-    assign tsr_xf = sprites ? sprites_xf : tile_xf;
-    assign tsr_go = sprites ? sprite_go : tile_go;
-    assign tsr_page = sprites ? sprites_page : tile_page;
-    assign tsr_line = sprites ? sprites_line : tile_line;
-    assign tsr_addr = sprites ? sprites_addr : tile_addr;
-    assign tsr_pal = sprites ? sprites_pal : tile_pal;
+    assign tsr_x    = planes ? plane_x    : (sprites ? sprites_x    : tile_x   );
+    assign tsr_xs   = planes ? plane_xs   : (sprites ? sprites_xs   : tile_xs  );
+    assign tsr_xf   = planes ? plane_xf   : (sprites ? sprites_xf   : tile_xf  );
+    assign tsr_go   = planes ? plane_go   : (sprites ? sprite_go    : tile_go  );
+    assign tsr_page = planes ? plane_page : (sprites ? sprites_page : tile_page);
+    assign tsr_line = planes ? plane_line : (sprites ? sprites_line : tile_line);
+    assign tsr_addr = planes ? plane_addr : (sprites ? sprites_addr : tile_addr);
+    assign tsr_pal  = planes ? plane_pal  : (sprites ? sprites_pal  : tile_pal );
 
 
 // Layer selectors control
@@ -113,45 +119,72 @@ module video_ts (
 	assign tst = lyr;
 	reg [2:0] lyr;
 	always@*
-		if (layer[0])
+		if (layer_active[0])
+			lyr = 3;
+		else if (layer_active[1])
 			lyr = 4;
-		else if (layer[1])
+		else if (layer_active[2])
 			lyr = 1;
-		else if (layer[2])
+		else if (layer_active[3])
 			lyr = 6;
-		else if (layer[3])
+		else if (layer_active[4])
 			lyr = 1;
-		else if (layer[4])
+		else if (layer_active[5])
 			lyr = 2;
 		else lyr = 0;
 
-	wire [4:0] layer = start ? 5'b00001 : layer_r;
+	wire sprites = layer_active[1] || layer_active[3] || layer_active[5];
+	wire tiles = layer_active[2] || layer_active[4];
+	wire planes = layer_active[0];
 
-	reg [4:0] layer_r;
+	reg [5:0] layer;
 	always @(posedge clk)
-		layer_r <= layer_skip_active ? {layer[3:0], 1'b0} : layer;
+		if (start)
+			layer <= 6'b1;
+		else
+			layer <= (|(layer & layer_skip) || !pre_vpix) ? {layer[4:0], 1'b0} : layer;
 
-	wire sprites = layer_active[0] || layer_active[2] || layer_active[4];
-	wire tiles = layer_active[1] || layer_active[3];
-
-	wire [4:0] layer_active = layer & ~layer_skip;
-	wire layer_skip_active = |(layer & layer_skip) || !pre_vpix;
-	wire [4:0] layer_skip = layer_skip_end | layers_dis;
-	wire [4:0] layer_skip_end = start ? 5'b00000 : (layer_skip_r | layer_end);
-	wire [4:0] layer_end = {spr_end[2], tile_end[1], spr_end[1], tile_end[0], spr_end[0]};
-	wire [4:0] layers_dis = {!s_en, !t1_en, !s_en, !t0_en, !s_en};
-
-	reg [4:0] layer_skip_r;
+	reg [5:0] layer_active;
 	always @(posedge clk)
-		layer_skip_r <= layer_skip;
+		if (start)
+			layer_active <= 6'b0;
+		else
+			layer_active <= layer & ~layer_skip;
+			
+	wire [5:0] layer_dis = {!s_en, !t1_en, !s_en, !t0_en, !s_en, !pln_en};
+	wire [5:0] layer_end = {spr_end[2], tile_end[1], spr_end[1], tile_end[0], spr_end[0], pln_end};
+		
+	reg [5:0] layer_skip;
+	always @(posedge clk)
+		if (start)
+			layer_skip <= layer_dis;
+		else
+			layer_skip <= layer_skip | layer_end;
+
+
+// --- Planes ---
+    // TSR values for planes
+	wire plane_go = planes && tsr_rdy;
+    wire [7:0] plane_page = vpage;
+    wire [8:0] plane_line = cnt_row;
+    wire [5:0] plane_addr = px + gx_offs[8:3];	// ???
+    wire plane_xf = 1'b0;
+    wire [2:0] plane_xs = 3'd0;
+    wire [3:0] plane_pal = g_palsel;
+	wire [8:0] plane_x = {px, 3'd0} - gx_offs[2:0];	// ???
+
+	wire [5:0] px = start ? 6'd0 : px_r;
+	wire pln_end = px == num_tiles;
+
+	reg [5:0] px_r;
+	always @(posedge clk)
+        px_r <= px + plane_go;
 
 
 // --- Tiles ---
 
-    // TSR strobe for tiles
-	wire tile_go = tmb_valid && tiles && t_act && tsr_rdy;
-
     // TSR values for tiles
+	wire tile_go = tmb_valid && tiles && t_act && tsr_rdy;
     wire [7:0] tile_page = t_sel ? t0gpage : t1gpage;
     wire [8:0] tile_line = {t_tnum[11:6], (t_line[2:0] ^ {3{t_yflp}})};
     wire [5:0] tile_addr = t_tnum[5:0];
@@ -222,10 +255,8 @@ module video_ts (
 
 // --- Sprites ---
 
-    // TSR strobe for sprites
-	wire sprite_go = sf2_valid && sprites && tsr_rdy;		// kick to renderer
-
 	// TSR values for sprites
+	wire sprite_go = sf2_valid && sprites && tsr_rdy;		// kick to renderer
     wire [8:0] sprites_x = sprites_x_r;
     wire [2:0] sprites_xs = sprites_xs_r;
     wire sprites_xf = sprites_xf_r;

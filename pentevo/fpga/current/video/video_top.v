@@ -96,6 +96,8 @@ module video_top (
 	wire [8:0] t0y_offs;   // *
 	wire [8:0] t1x_offs;   // *
 	wire [8:0] t1y_offs;   // *
+	wire [7:0] vconf_d;
+	wire [8:0] gx_offs_d;
 	wire [7:0] tsconf;
 	wire [7:0] tmpage;
 	wire [7:0] t0gpage;
@@ -110,10 +112,8 @@ module video_top (
 	wire [8:0] vpix_beg;
 	wire [8:0] vpix_end;
 	wire [5:0] x_tiles;
-    wire [9:0] x_offs_mode;
     wire [4:0] go_offs;
-	wire [1:0] render_mode;
-	wire tv_hires;
+	wire txmode;
 	wire vga_hires;
 	wire nogfx;
 	wire tv_blank;
@@ -136,7 +136,6 @@ module video_top (
 	wire vga_blank;
 	wire vga_line;
 	wire tm_pf;
-	wire hpix;
 	wire vpix;
 	wire hvpix;
 	wire frame;
@@ -246,6 +245,7 @@ module video_top (
 		.c2			    (c2),
 		.c3			    (c3),
 		.vconf		    (vconf),
+		.vconf_d	    (vconf_d),
 		.vpage	    	(vpage),
 		.vpage_d    	(vpage_d),
         .tmpage         (tmpage),
@@ -259,7 +259,7 @@ module video_top (
 		.fetch_stb	    (fetch_stb),
 		.txt_char	    (fetch_temp[15:0]),
 		.gx_offs		(gx_offs),
-		.x_offs_mode	(x_offs_mode),
+		.gx_offs_d		(gx_offs_d),
         .line_start     (line_start),
 		.tm_en	        (tsconf[6:5]),
 		.tys_en		    (tsconf[1:0]),
@@ -276,11 +276,10 @@ module video_top (
         .cnt_tp_row     (cnt_tp_row),
         .cptr	        (cptr),
 		.pix_start	    (pix_start),
-		.tv_hires		(tv_hires),
+		.txmode			(txmode),
 		.vga_hires	    (vga_hires),
 		.nogfx		    (nogfx),
 		.pix_stb	    (pix_stb),
-		.render_mode	(render_mode),
 		.tmb_waddr	    (tmb_waddr),
 		.tys_data_x	    (tys_data_x),
 		.tys_data_s	    (tys_data_s),
@@ -300,7 +299,6 @@ module video_top (
 		.vpix_beg		(vpix_beg),
 		.vpix_end		(vpix_end),
         .go_offs        (go_offs),
-        .x_offs         (x_offs_mode[1:0]),
         .y_offs_wr      (gy_offsl_wr | gy_offsh_wr),
 		.hint_beg		(hint_beg),
 		.vint_beg		(vint_beg),
@@ -323,14 +321,12 @@ module video_top (
 		.pix_stb	    (pix_stb),
 		.pix_start		(pix_start),
 		.ts_start		(ts_start),
-		.cstart			(x_offs_mode[9:2]),
 		.rstart			(gy_offs),
 		.vga_line		(vga_line),
 		.frame_start	(frame_start),
 		.line_start		(line_start),
 		.int_start		(int_start),
 		.tm_pf			(tm_pf),
-		.hpix			(hpix),
 		.pre_vpix		(pre_vpix),
 		.vpix			(vpix),
 		.hvpix			(hvpix),
@@ -358,23 +354,28 @@ module video_top (
 		.clk		    (clk),
         .start          (ts_start),
 		.line			(lcount),
+		.cnt_row		(cnt_row),
 		.pre_vpix		(pre_vpix),
 
-        .tsconf         (tsconf),
-        // .tsconf         ({tsconf[7], 2'b00, tsconf[4:0]}),		// no tiles
+        // .tsconf         (tsconf),
+        // .tsconf         ({3'b0, tsconf[4:0]}),		// no TS
+        .tsconf         ({tsconf[7], 2'b0, tsconf[4:0]}),		// no tiles
         // .tsconf         ({tsconf[7], 1'b0, tsconf[5:0]}),		// only tiles0
         // .tsconf         ({tsconf[7:6], 1'b0, tsconf[4:0]}),	// only tiles1
+        .vconf          (vconf_d),
+        .vpage          (vpage_d),
+		.gx_offs		(gx_offs_d),
         .t0gpage        (t0gpage),
         .t1gpage        (t1gpage),
         .sgpage         (sgpage),
 		.num_tiles		(x_tiles),
-		// .num_tiles		(6'd46),
         .t0x_offs       (t0x_offs),
         .t1x_offs       (t1x_offs),
         .t0y_offs       (t0y_offs[2:0]),
         .t1y_offs       (t1y_offs[2:0]),
-        .t0_palsel      (palsel[5:4]),
-        .t1_palsel      (palsel[7:6]),
+        .g_palsel       (palsel_d[3:0]),
+        .t0_palsel      (palsel_d[5:4]),
+        .t1_palsel      (palsel_d[7:6]),
 
         .tmb_raddr      (tmb_raddr),
         .tmb_rdata      (tmb_rdata),
@@ -431,10 +432,9 @@ module video_top (
 		.hvpix 	        (hvpix),
 		.nogfx			(nogfx),
 		.flash			(flash),
-		.hires			(tv_hires),
+		.txmode			(txmode),
 		.psel			(scnt),
 		.palsel			(palsel_d[3:0]),
-		.render_mode	(render_mode),
 		.data	 	    (fetch_data),
 		.border_in 	    (border),
 		.tsdata_in 	    (ts_rdata),
@@ -456,7 +456,7 @@ module video_top (
 		.frame			(frame),
 		.palsel			(palsel_d[3:0]),
 	    .plex_sel_in	({h1, f1}),
-		.tv_hires		(tv_hires),
+		.tv_hires		(txmode),
 		.vga_hires		(vga_hires),
 		// .t0			(t0),	//debug
 		.cram_addr_in	(zma),

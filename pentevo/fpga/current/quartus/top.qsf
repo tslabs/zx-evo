@@ -341,4 +341,4 @@ set_global_assignment -name VERILOG_FILE ../common/resetter.v
 set_global_assignment -name VERILOG_FILE ../top.v
 set_global_assignment -name ZIP_VECTOR_WAVEFORM_FILE ../sim_vw/dram.cvwf
 set_global_assignment -name AUTO_RESOURCE_SHARING ON
-set_global_assignment -name CASCADE_CHAIN_LENGTH 0
+set_global_assignment -name CASCADE_CHAIN_LENGTH 8
