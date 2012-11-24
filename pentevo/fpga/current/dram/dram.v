@@ -56,54 +56,48 @@ module dram(
 
 );
 
-	reg [1:0] rst_sync;
-	wire reset;
-	wire int_req;
-
-	reg [20:0] int_addr;
-	reg [15:0] int_wrdata;
-	reg [1:0] int_bsel;
-
-	reg rfsh_alt; // we must alternate chips in refresh cycles to lower total heating
-
 
 // next cycle decision
-	reg [1:0] state = 2'b0;
 
 	localparam RFSH = 2'b00;	// Don't change these
 	localparam RD   = 2'b01;	// because there are
 	localparam WR   = 2'b10;	// bit dependencies
-	
+
     wire idle = ~|state;
     wire read = state[0];
     wire write = state[1];
-    
+
 	wire [1:0] next_state = int_req ? rnw ? RD : WR : RFSH;
-	
+
+	reg [1:0] state = 2'b0;
 	always @(posedge clk) if (c3)
 		state <= next_state;
 
 
-// incoming data latching
+// incoming data latch
+	reg [15:0] int_wrdata;
 	always @(posedge clk) if (c0)      // changed: now wrdata is latched 1 clk later - at c0 of current cycle (NOT at c3 of previous as before)
     begin
 		int_wrdata <= wrdata;
     end
-        
-// incoming addr and bsel latching
+
+// incoming addr and bsel latch
+	reg [20:0] int_addr;
+	reg [1:0] int_bsel;
 	always @(posedge clk) if (c3)
 	begin
 		int_bsel   <= bsel;
 		int_addr   <= addr;
 	end
 
-	
+
 // WE control
 	always @(posedge clk) if (c3)
 		rwe_n <= ~next_state[1];
 
 
 // RAS/CAS sequencing
+	reg rfsh_alt;	 // we must alternate chips in refresh cycles to lower total heating
 	always @(posedge clk)
 	begin
 		if (c0)
@@ -117,7 +111,7 @@ module dram(
 				rras0_n <= int_addr[0];
 				rras1_n <= ~int_addr[0];
 			end
-				
+
 		if (c1)
 			if (idle)
 			begin
@@ -130,7 +124,7 @@ module dram(
 				rlcas_n <= write ? ~int_bsel[0] : 1'b0;
 				rucas_n <= write ? ~int_bsel[1] : 1'b0;
 			end
-	
+
 		if (c2)
 			if (idle)
 			begin
@@ -142,7 +136,7 @@ module dram(
 				rras0_n <= 1'b1;
 				rras1_n <= 1'b1;
 			end
-				
+
 		if (c3)
 		begin
 			rras0_n <= 1'b1;
@@ -153,7 +147,7 @@ module dram(
 	end
 
 // row/column address multiplexing
-	always @(negedge clk)		// here is a difficulty with fitting to pin fast output regs
+	always @(negedge clk)		// here is a problem to fit to pins fast output regs
 		ra <= c0 ? int_addr[10:1] : int_addr[20:11];
 
 
@@ -172,12 +166,12 @@ module dram(
 	// asynchronous one globally. so we must re-synchronize it
 	// and use it as 'DRAM operation enable'. when in reset,
 	// controller ignores req signal and generates only refresh cycles
+	reg [1:0] rst_sync;
 	always @(posedge clk)
 		rst_sync[1:0] <= { rst_sync[0], ~rst_n };
 
-	assign reset = rst_sync[1];
+	wire reset = rst_sync[1];
+	wire int_req = req & (~reset);
 
-	assign int_req = req & (~reset);
 
-	
 endmodule

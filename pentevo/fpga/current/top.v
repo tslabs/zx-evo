@@ -479,7 +479,7 @@ module top(
 	                 .video_strobe(video_strobe),
 	                 .video_pre_next(video_pre_next),
 	                 .video_next(video_next),
-	                 .next_video(next_video),
+	                 .next_vid(next_video),
 
 	                 .dma_addr		(dma_addr),
 	                 .dma_wrdata	(dma_wrdata),
