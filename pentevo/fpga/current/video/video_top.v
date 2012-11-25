@@ -77,6 +77,9 @@ module video_top (
 	output wire        ts_zwt,
 	input  wire        ts_pre_next,
 	input  wire        ts_next,
+	output wire [20:0] tm_addr,
+	output wire        tm_req,
+	input  wire        tm_next,
 
 // video controls
 	input wire vga_on
@@ -92,12 +95,10 @@ module video_top (
 	wire [8:0] gx_offs;    //
 	wire [8:0] gy_offs;    //
 	wire [7:0] palsel;     //
-	wire [8:0] t0x_offs;   // *not
+	wire [8:0] t0x_offs;   // * not yet !!!
 	wire [8:0] t0y_offs;   // *
 	wire [8:0] t1x_offs;   // *
 	wire [8:0] t1y_offs;   // *
-	wire [7:0] vconf_d;
-	wire [8:0] gx_offs_d;
 	wire [7:0] tsconf;
 	wire [7:0] tmpage;
 	wire [7:0] t0gpage;
@@ -112,8 +113,10 @@ module video_top (
 	wire [8:0] vpix_beg;
 	wire [8:0] vpix_end;
 	wire [5:0] x_tiles;
+    wire [9:0] x_offs_mode;
     wire [4:0] go_offs;
-	wire txmode;
+	wire [1:0] render_mode;
+	wire tv_hires;
 	wire vga_hires;
 	wire nogfx;
 	wire tv_blank;
@@ -121,7 +124,6 @@ module video_top (
 // counters
     wire [7:0] cnt_col;
     wire [8:0] cnt_row;
-    wire [8:0] cnt_tp_row;
 	wire cptr;
     wire [3:0] scnt;
 	wire [8:0] lcount;
@@ -135,7 +137,8 @@ module video_top (
 	wire ts_start;
 	wire vga_blank;
 	wire vga_line;
-	wire tm_pf;
+	wire v_pf;
+	wire hpix;
 	wire vpix;
 	wire hvpix;
 	wire frame;
@@ -164,16 +167,6 @@ module video_top (
     wire tsr_xf;
     wire [3:0] tsr_pal;
     wire tsr_rdy;
-
-// SFYS
-	wire [6:0] tys_data_x;
-	wire tys_data_s;
-	wire [5:0] tys_data_f;
-	
-// TM-buf
-    wire [8:0] tmb_waddr;
-    wire [8:0] tmb_raddr;
-    wire [15:0] tmb_rdata;
 
 // TS-line
 	// wire [8:0] ts_waddr = a[8:0];
@@ -245,12 +238,8 @@ module video_top (
 		.c2			    (c2),
 		.c3			    (c3),
 		.vconf		    (vconf),
-		.vconf_d	    (vconf_d),
 		.vpage	    	(vpage),
 		.vpage_d    	(vpage_d),
-        .tmpage         (tmpage),
-        .t0y_offs       (t0y_offs[8:3]),
-        .t1y_offs       (t1y_offs[8:3]),
 		.palsel	    	(palsel),
 		.palsel_d    	(palsel_d),
 		.fetch_sel		(fetch_sel),
@@ -259,11 +248,8 @@ module video_top (
 		.fetch_stb	    (fetch_stb),
 		.txt_char	    (fetch_temp[15:0]),
 		.gx_offs		(gx_offs),
-		.gx_offs_d		(gx_offs_d),
+		.x_offs_mode	(x_offs_mode),
         .line_start     (line_start),
-		.tm_en	        (tsconf[6:5]),
-		.tys_en		    (tsconf[1:0]),
-		.tm_pf	        (tm_pf),
 		.zvpage_wr	    (zvpage_wr),
 		.hpix_beg	    (hpix_beg),
 		.hpix_end	    (hpix_end),
@@ -273,17 +259,13 @@ module video_top (
         .go_offs        (go_offs),
         .cnt_col        (cnt_col),
         .cnt_row        (cnt_row),
-        .cnt_tp_row     (cnt_tp_row),
         .cptr	        (cptr),
 		.pix_start	    (pix_start),
-		.txmode			(txmode),
+		.tv_hires		(tv_hires),
 		.vga_hires	    (vga_hires),
 		.nogfx		    (nogfx),
 		.pix_stb	    (pix_stb),
-		.tmb_waddr	    (tmb_waddr),
-		.tys_data_x	    (tys_data_x),
-		.tys_data_s	    (tys_data_s),
-		.tys_data_f	    (tys_data_f),
+		.render_mode	(render_mode),
 		.next_video	    (next_video),
 		.video_addr	    (video_addr),
 		.video_bw		(video_bw)
@@ -294,11 +276,13 @@ module video_top (
 		.clk			(clk),
 		.f1				(f1),
 		.c3				(c3),
+		.c1				(c1),
 		.hpix_beg		(hpix_beg),
 		.hpix_end		(hpix_end),
 		.vpix_beg		(vpix_beg),
 		.vpix_end		(vpix_end),
         .go_offs        (go_offs),
+        .x_offs         (x_offs_mode[1:0]),
         .y_offs_wr      (gy_offsl_wr | gy_offsh_wr),
 		.hint_beg		(hint_beg),
 		.vint_beg		(vint_beg),
@@ -313,7 +297,6 @@ module video_top (
 		.lcount			(lcount),
         .cnt_col        (cnt_col),
         .cnt_row        (cnt_row),
-        .cnt_tp_row     (cnt_tp_row),
         .cptr	        (cptr),
 		.scnt			(scnt),
 		.frame			(frame),
@@ -321,17 +304,18 @@ module video_top (
 		.pix_stb	    (pix_stb),
 		.pix_start		(pix_start),
 		.ts_start		(ts_start),
+		.cstart			(x_offs_mode[9:2]),
 		.rstart			(gy_offs),
 		.vga_line		(vga_line),
 		.frame_start	(frame_start),
 		.line_start		(line_start),
 		.int_start		(int_start),
-		.tm_pf			(tm_pf),
-		.pre_vpix		(pre_vpix),
+		.v_pf			(v_pf),
+		.hpix			(hpix),
+		.v_ts		(v_ts),
 		.vpix			(vpix),
 		.hvpix			(hvpix),
 		.nogfx			(nogfx),
-        .tiles_en       (|tsconf[6:5]),
 		.video_go		(video_go),
 		.video_pre_next	(video_pre_next)
 );
@@ -354,31 +338,30 @@ module video_top (
 		.clk		    (clk),
         .start          (ts_start),
 		.line			(lcount),
-		.cnt_row		(cnt_row),
-		.pre_vpix		(pre_vpix),
+		.v_ts		    (v_ts),
 
-        // .tsconf         (tsconf),
-        // .tsconf         ({3'b0, tsconf[4:0]}),		// no TS
-        .tsconf         ({tsconf[7], 2'b0, tsconf[4:0]}),		// no tiles
+        .tsconf         (tsconf),
+        // .tsconf         ({tsconf[7], 2'b00, tsconf[4:0]}),		// no tiles
         // .tsconf         ({tsconf[7], 1'b0, tsconf[5:0]}),		// only tiles0
         // .tsconf         ({tsconf[7:6], 1'b0, tsconf[4:0]}),	// only tiles1
-        .vconf          (vconf_d),
-        .vpage          (vpage_d),
-		.gx_offs		(gx_offs_d),
         .t0gpage        (t0gpage),
         .t1gpage        (t1gpage),
         .sgpage         (sgpage),
+        .tmpage         (tmpage),
 		.num_tiles		(x_tiles),
+		.v_pf	        (v_pf),
+		// .num_tiles		(6'd46),
         .t0x_offs       (t0x_offs),
         .t1x_offs       (t1x_offs),
-        .t0y_offs       (t0y_offs[2:0]),
-        .t1y_offs       (t1y_offs[2:0]),
-        .g_palsel       (palsel_d[3:0]),
-        .t0_palsel      (palsel_d[5:4]),
-        .t1_palsel      (palsel_d[7:6]),
+        .t0y_offs       (t0y_offs),
+        .t1y_offs       (t1y_offs),
+        .t0_palsel      (palsel[5:4]),
+        .t1_palsel      (palsel[7:6]),
 
-        .tmb_raddr      (tmb_raddr),
-        .tmb_rdata      (tmb_rdata),
+        .dram_addr      (tm_addr),
+        .dram_req       (tm_req),
+        .dram_next      (tm_next),
+        .dram_rdata     (dram_rdata),
 
         .tsr_go         (tsr_go),
         .tsr_addr       (tsr_addr),
@@ -393,9 +376,6 @@ module video_top (
 		.sfile_addr_in	(zma),
 		.sfile_data_in	(zmd),
 		.sfile_we		(sfile_we),
-		.tys_data_x		(tys_data_x),
-		.tys_data_s		(tys_data_s),
-		.tys_data_f		(tys_data_f)
 );
 
 
@@ -420,9 +400,9 @@ module video_top (
 
         .dram_addr      (ts_addr),
         .dram_req       (ts_req),
-        .dram_rdata     (dram_rdata),
         .dram_pre_next  (ts_pre_next),
-        .dram_next      (ts_next)
+        .dram_next      (ts_next),
+        .dram_rdata     (dram_rdata)
 );
 
 
@@ -432,9 +412,10 @@ module video_top (
 		.hvpix 	        (hvpix),
 		.nogfx			(nogfx),
 		.flash			(flash),
-		.txmode			(txmode),
+		.hires			(tv_hires),
 		.psel			(scnt),
 		.palsel			(palsel_d[3:0]),
+		.render_mode	(render_mode),
 		.data	 	    (fetch_data),
 		.border_in 	    (border),
 		.tsdata_in 	    (ts_rdata),
@@ -444,7 +425,8 @@ module video_top (
 	wire [2:0] tst;
 
 	video_out video_out (
-		.tst			(tst),	// DEBUG!!!
+		// .tst			(tst),	// DEBUG!!!
+		.tst			(3'b0),	// DEBUG!!!
 		
 		.clk			(clk),
 		.f0				(f0),
@@ -456,7 +438,7 @@ module video_top (
 		.frame			(frame),
 		.palsel			(palsel_d[3:0]),
 	    .plex_sel_in	({h1, f1}),
-		.tv_hires		(txmode),
+		.tv_hires		(tv_hires),
 		.vga_hires		(vga_hires),
 		// .t0			(t0),	//debug
 		.cram_addr_in	(zma),
@@ -467,19 +449,6 @@ module video_top (
 		.vred			(vred),
 	    .vgrn			(vgrn),
 	    .vblu			(vblu)
-);
-
-
-// 4 buffers * 2 tile-planes * 64 tiles * 16 bits (9x16) - used to prefetch tiles
-// (2 altdprams)
-    video_tmbuf video_tmbuf (
-        .clock      (clk),
-        .data       (dram_rdata),
-        // .data       ({7'b0000000, tmb_waddr}),
-        .wraddress  (tmb_waddr),
-        .wren       (video_next && tm_pf),
-        .rdaddress  (tmb_raddr),
-        .q          (tmb_rdata)
 );
 
 

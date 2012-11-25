@@ -448,6 +448,10 @@ module top(
 	wire ts_pre_next;
 	wire ts_next;
 
+	wire [20:0] tm_addr;
+	wire tm_req;
+	wire tm_next;
+
 	arbiter dramarb(
 					 .clk(fclk),
 	                 // .c0(c0),
@@ -492,7 +496,11 @@ module top(
 					 .ts_zwt		(ts_zwt),
 					 .ts_addr		(ts_addr),
 					 .ts_pre_next	(ts_pre_next),
-					 .ts_next		(ts_next)
+					 .ts_next		(ts_next),
+					 
+					 .tm_addr		(tm_addr),
+					 .tm_req		(tm_req),
+					 .tm_next		(tm_next)
 	);
 
 
@@ -583,12 +591,16 @@ module top(
 		.ts_addr		(ts_addr),
 		.ts_next		(ts_next),
 
+		.tm_addr		(tm_addr),
+		.tm_req			(tm_req),
+		.tm_next		(tm_next),
+
 		.a              (a),
         .d              (d),
 		.zmd            (zmd),
 		.zma            (zma),
 		.cram_we        (cram_we),
-		.sfile_we        (sfile_we),
+		.sfile_we       (sfile_we),
 		.int_start      (int_start)
 
 	);
