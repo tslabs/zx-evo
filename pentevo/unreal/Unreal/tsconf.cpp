@@ -141,8 +141,28 @@ void render_tile_layer(u8 layer)
 	}
 }
 
+// This used to debug SFILE operations
+void sfile_dump()
+{
+	FILE *f;
+	
+	f = fopen("dump.bin", "wb");
+	fwrite(comp.sfile, 1, 512, f);
+	fclose(f);
+
+	f = fopen("dump.txt", "w");
+	fprintf(f, "sgpage:%d\n\n", comp.ts.sgpage);
+	for(int i=0; i<85; i++)
+	{
+		SPRITE_t s = spr[i];
+		fprintf(f, "%d\tx:%d\ty:%d\tact:%d\tleap:%d\txs:%d\tys:%d\ttnum:%5d\txf:%d\tyf:%d\tpal:%d\r", i, s.x, s.y, s.act, s.leap, (s.xs+1)*8, (s.ys+1)*8, s.tnum, s.xflp, s.yflp, s.pal);
+	}
+	fclose(f);
+}
+
 void render_sprite()
 {
+	//sfile_dump();
 	SPRITE_t s = spr[snum];
 	u8 ys = ((s.ys + 1) << 3);
 	i32 l = vid.yctr - s.y;
