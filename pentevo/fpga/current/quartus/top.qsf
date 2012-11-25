@@ -298,6 +298,8 @@ set_instance_assignment -name GLOBAL_SIGNAL ON -to clkz_in
 # ---------------
 set_global_assignment -name NORMAL_LCELL_INSERT OFF
 set_global_assignment -name CARRY_OUT_PINS_LCELL_INSERT OFF
+set_global_assignment -name AUTO_RESOURCE_SHARING ON
+set_global_assignment -name CASCADE_CHAIN_LENGTH 8
 set_global_assignment -name VERILOG_FILE ../video/mem/video_sfile.v
 set_global_assignment -name VERILOG_FILE ../video/video_ts_render.v
 set_global_assignment -name VERILOG_FILE ../video/video_ts.v
@@ -340,5 +342,3 @@ set_global_assignment -name VERILOG_FILE ../common/spi2.v
 set_global_assignment -name VERILOG_FILE ../common/resetter.v
 set_global_assignment -name VERILOG_FILE ../top.v
 set_global_assignment -name ZIP_VECTOR_WAVEFORM_FILE ../sim_vw/dram.cvwf
-set_global_assignment -name AUTO_RESOURCE_SHARING ON
-set_global_assignment -name CASCADE_CHAIN_LENGTH 8

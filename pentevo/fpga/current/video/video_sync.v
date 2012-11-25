@@ -6,7 +6,7 @@
 module video_sync (
 
 // clocks
-	input wire clk, f1, c3, pix_stb,
+	input wire clk, f1, c3, c1, pix_stb,
 
 // video parameters
 	input wire [8:0] hpix_beg,
@@ -14,8 +14,10 @@ module video_sync (
 	input wire [8:0] vpix_beg,
 	input wire [8:0] vpix_end,
 	input wire [4:0] go_offs,
+	input wire [1:0] x_offs,
 	input wire [7:0] hint_beg,
 	input wire [8:0] vint_beg,
+	input wire [7:0] cstart,
     input wire [8:0] rstart,
 
 // video syncs
@@ -25,10 +27,10 @@ module video_sync (
 
 // video controls
 	input wire nogfx,
-	input wire tiles_en,
-	output wire tm_pf,
-	output reg vpix,
-	output wire pre_vpix,
+	output wire v_pf,
+	output wire hpix,
+	output wire vpix,
+	output wire v_ts,
 	output wire hvpix,
 	output wire tv_blank,
 	output wire vga_blank,
@@ -47,13 +49,12 @@ module video_sync (
 	output reg  [8:0] lcount,
 	output reg 	[7:0] cnt_col,
 	output reg 	[8:0] cnt_row,
-	output reg 	[8:0] cnt_tp_row,
 	output reg  	  cptr,
 	output reg  [3:0] scnt,
 
 // DRAM
 	input wire video_pre_next,
-	output wire video_go,
+	output reg video_go,
 
 // ZX controls
 	input wire y_offs_wr,
@@ -109,7 +110,7 @@ module video_sync (
         else
         if (line_start2)        // for graphics fetch
 		begin
-			cnt_col <= 8'b0;
+			cnt_col <= cstart;
 			cptr <= 1'b0;
 		end
 
@@ -123,20 +124,11 @@ module video_sync (
 
 	// row address for DRAM
 	always @(posedge clk) if (c3)
-		if (vis_start || (line_start & y_offs_wr_r))
+		if (vis_start || (line_start && y_offs_wr_r))
 			cnt_row <=  rstart;
 		else
-		if (line_start & vpix)
+		if (line_start && vpix)
 			cnt_row <=  cnt_row + 9'b1;
-
-
-	// row address for tile-planes
-	always @(posedge clk) if (c3)
-		if (frame_start)
-			cnt_tp_row <= 0;
-		else
-		if (line_start & tm_vpf)
-			cnt_tp_row <=  cnt_tp_row + 9'b1;
 
 
 	// pixel counter
@@ -151,7 +143,7 @@ module video_sync (
     assign ts_raddr = hcount - hpix_beg;
 
 	always @(posedge clk)
-		if (ts_start_dirty)
+		if (ts_start_coarse)
 			lcount <= vcount - vpix_beg + 1;
 
 
@@ -161,7 +153,7 @@ module video_sync (
         if (y_offs_wr)
             y_offs_wr_r <= 1'b1;
         else
-        if (line_start & c3)
+        if (line_start && c3)
             y_offs_wr_r <= 1'b0;
 
 // FLASH generator
@@ -169,18 +161,18 @@ module video_sync (
 	assign frame = flash_ctr[0];
 	assign flash = flash_ctr[4];
 	always @(posedge clk)
-		if (frame_start & c3)
+		if (frame_start && c3)
 			flash_ctr <= flash_ctr + 5'b1;
 
 
 // sync strobes
-	wire hs = (hcount >= HSYNC_BEG) & (hcount < HSYNC_END);
-	wire vs = (vcount >= VSYNC_BEG) & (vcount < VSYNC_END);
+	wire hs = (hcount >= HSYNC_BEG) && (hcount < HSYNC_END);
+	wire vs = (vcount >= VSYNC_BEG) && (vcount < VSYNC_END);
 
-	assign tv_blank = tv_hblank | tv_vblank;
-	wire tv_hblank = (hcount > HBLNK_BEG) & (hcount <= HBLNK_END);
-	wire tv_vblank = (vcount >= VBLNK_BEG) & (vcount < VBLNK_END);
-	assign vga_blank = vga_hblank | vga_vblank;
+	assign tv_blank = tv_hblank || tv_vblank;
+	wire tv_hblank = (hcount > HBLNK_BEG) && (hcount <= HBLNK_END);
+	wire tv_vblank = (vcount >= VBLNK_BEG) && (vcount < VBLNK_END);
+	assign vga_blank = vga_hblank || vga_vblank;
 
 
 	wire vga_hblank1 = (cnt_out > 9'd359);
@@ -188,39 +180,36 @@ module video_sync (
 	always @(posedge clk) if (f1)		// fix me - bydlocode !!!
 		vga_hblank <= vga_hblank1;
 
-	wire hs_vga = ((hcount >= HSYNCV_BEG) & (hcount < HSYNCV_END)) |
-			((hcount >= (HSYNCV_BEG + HPERIOD/2)) & (hcount < (HSYNCV_END + HPERIOD/2)));
+	wire hs_vga = ((hcount >= HSYNCV_BEG) && (hcount < HSYNCV_END)) ||
+			((hcount >= (HSYNCV_BEG + HPERIOD/2)) && (hcount < (HSYNCV_END + HPERIOD/2)));
 
-	wire vga_pix_start = ((hcount == (HBLNKV_END)) | (hcount == (HBLNKV_END + HPERIOD/2)));
+	wire vga_pix_start = ((hcount == (HBLNKV_END)) || (hcount == (HBLNKV_END + HPERIOD/2)));
 
 	assign vga_line = (hcount >= HPERIOD/2);
 
-	assign hpix = (hcount >= hpix_beg) & (hcount < hpix_end);
-	assign pre_vpix = (vcount >= vpix_beg) & (vcount < vpix_end);
 	assign hvpix = hpix && vpix;
+	
+	assign hpix = (hcount >= hpix_beg) && (hcount < hpix_end);
+	
+	assign vpix = (vcount >= vpix_beg)        && (vcount < vpix_end);			// vertical pixels window
+	assign v_ts = (vcount >= (vpix_beg - 1))  && (vcount < (vpix_end - 1));		// vertical TS window
+    assign v_pf = (vcount >= (vpix_beg - 17)) && (vcount < (vpix_end - 9));		// vertical tilemap prefetch window
 
     always @(posedge clk)
-        if (line_start & c3)
-			vpix <= pre_vpix;
-	
-	wire tm_hpf = (hcount >= 0) & (hcount < 32);        // 8+8 tiles per line, totally 64+64 per 8 lines
-    wire tm_vpf = (vcount >= (vpix_beg - 17)) & (vcount < (vpix_end - 9));      // start prefetch 16 lines before visible area minus 1 line for ts renderer
-    assign tm_pf = tm_hpf & tm_vpf & tiles_en;
-
-	assign video_go = ((hcount >= (hpix_beg - go_offs)) & (hcount < (hpix_end - go_offs)) & vpix &!nogfx) || tm_pf;
+		video_go <= (hcount >= (hpix_beg - go_offs - x_offs)) && (hcount < (hpix_end - go_offs - x_offs + 4)) && vpix && !nogfx;
 
 	assign line_start = hcount == (HPERIOD - 1);
 	wire line_start2 = hcount == (HSYNC_END - 1);
-	assign frame_start = line_start & (vcount == (VPERIOD - 1));
-	wire vis_start = line_start & (vcount == (VBLNK_END - 1));
-	assign pix_start = hcount == (hpix_beg - 1);
-	wire ts_start_dirty = hcount == (hpix_beg - 1);
-	assign ts_start = c3 && ts_start_dirty;
-	assign int_start = (hcount == {hint_beg, 1'b0}) & (vcount == vint_beg);
+	assign frame_start = line_start && (vcount == (VPERIOD - 1));
+	wire vis_start = line_start && (vcount == (VBLNK_END - 1));
+	assign pix_start = hcount == (hpix_beg - x_offs - 1);
+	wire ts_start_coarse = hcount == (hpix_beg - 1);
+	assign ts_start = c3 && ts_start_coarse;
+	assign int_start = (hcount == {hint_beg, 1'b0}) && (vcount == vint_beg);
 
 
 	reg vga_vblank;
-	always @(posedge clk) if (line_start & c3)		// fix me - bydlocode !!!
+	always @(posedge clk) if (line_start && c3)		// fix me - bydlocode !!!
 		vga_vblank <= tv_vblank;
 
 

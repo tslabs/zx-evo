@@ -1,16 +1,16 @@
 Done:
-re-factored layers control
 
 Bugs:
-strange behavior of sprites layer switching
 
-To Do:
-add checker for screen Y coordinate (not to draw on border) for TS
-add checker for t/s parser enable
+Fixes:
+fix Z80_LP and VDOS bugs (improve Z80-related timings)
+fix 1 pixel delay (test on MULFIX)
+fix mess in video frame signals
+
+Features:
+add DMA for SD and IDE
 add Yscroll array
 migrate paging to FPRAM
-
-Try:
 Register some video_mode outputs
 
-Done:
+Try:

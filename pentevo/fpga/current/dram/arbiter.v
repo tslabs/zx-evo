@@ -45,6 +45,7 @@
 // Z80 normal       Z80 low
 // - VIDEO          - VIDEO
 // - CPU            - TS
+// - TM             - TM
 // - TS             - DMA
 // - DMA            - CPU
 
@@ -97,30 +98,46 @@ module arbiter(
 	input wire 	      ts_req,
 	input wire 	      ts_zwt,
 	output wire       ts_pre_next,
-	output wire       ts_next
+	output wire       ts_next,
+
+// TM
+	input wire [20:0] tm_addr,
+	input wire 	      tm_req,
+	output wire       tm_next
 
 );
 
 
-	localparam CYC_CPU   = 4'b0001;
-	localparam CYC_VIDEO = 4'b0010;
-	localparam CYC_TS    = 4'b0100;
-	localparam CYC_DMA   = 4'b1000;
-	localparam CYC_FREE  = 4'b0000;
+	localparam CYCLES    = 5;
+	
+	localparam CYC_CPU   = 5'b00001;
+	localparam CYC_VIDEO = 5'b00010;
+	localparam CYC_TS    = 5'b00100;
+	localparam CYC_TM    = 5'b01000;
+	localparam CYC_DMA   = 5'b10000;
+	localparam CYC_FREE  = 5'b00000;
 
-	reg [3:0] curr_cycle; // type of the cycle in progress
-	reg [3:0] next_cycle; // type of the next cycle
+	localparam CPU   = 0;
+	localparam VIDEO = 1;
+	localparam TS    = 2;
+	localparam TM    = 3;
+	localparam DMA   = 4;
+	
+	reg [CYCLES-1:0] curr_cycle; // type of the cycle in progress
+	reg [CYCLES-1:0] next_cycle; // type of the next cycle
 
-	wire next_cpu = next_cycle[0];
-	assign next_vid = next_cycle[1];
-	wire next_ts  = next_cycle[2];
-	wire next_dma = next_cycle[3];
+	wire next_cpu = next_cycle[CPU];
+	assign next_vid = next_cycle[VIDEO];
+	wire next_ts  = next_cycle[TS];
+	wire next_tm  = next_cycle[TM];
+	wire next_dma = next_cycle[DMA];
 	wire next_fre = ~|next_cycle;
 
-	wire curr_cpu = curr_cycle[0];
-	wire curr_vid = curr_cycle[1];
-	wire curr_ts  = curr_cycle[2];
-	wire curr_dma = curr_cycle[3];
+	wire curr_cpu = curr_cycle[CPU];
+	wire curr_vid = curr_cycle[VIDEO];
+	wire curr_ts  = curr_cycle[TS];
+	wire curr_tm  = curr_cycle[TM];
+	wire curr_dma = curr_cycle[DMA];
 //	wire curr_fre = ~|curr_cycle;
 
 // track blk_rem counter:
@@ -151,11 +168,11 @@ module arbiter(
 
 
 // next cycle decision
-    wire cpu_low = ((ts_req && ts_zwt) || (dma_req && dma_zwt)) && int_n;
-    wire non_video_req = cpu_req || ts_req || dma_req;
-    wire [3:0] next_non_video = cpu_low ? next_cpu_low : next_cpu_high;
-    wire [3:0] next_cpu_low = ts_req ? CYC_TS : (dma_req ? CYC_DMA : CYC_CPU);
-    wire [3:0] next_cpu_high = cpu_req ? CYC_CPU : (ts_req ? CYC_TS : CYC_DMA);
+    wire cpu_low = (((ts_req || tm_req) && ts_zwt) || (dma_req && dma_zwt)) && int_n;
+    wire non_video_req = cpu_req || ts_req || tm_req || dma_req;
+    wire [CYCLES-1:0] next_non_video = cpu_low ? next_cpu_low : next_cpu_high;
+    wire [CYCLES-1:0] next_cpu_low = tm_req ? CYC_TM : (ts_req ? CYC_TS : (dma_req ? CYC_DMA : CYC_CPU));
+    wire [CYCLES-1:0] next_cpu_high = cpu_req ? CYC_CPU : (tm_req ? CYC_TM : (ts_req ? CYC_TS : CYC_DMA));
     wire video_only = stall || (vid_rem == blk_rem);
 
 	always @*
@@ -190,6 +207,7 @@ module arbiter(
 	assign dram_addr = {21{next_cpu}} & cpu_addr
 					 | {21{next_vid}} & video_addr
 					 | {21{next_ts}}  & ts_addr
+					 | {21{next_tm}}  & tm_addr
 					 | {21{next_dma}} & dma_addr;
 
 	reg cpu_rnw_r;
@@ -202,10 +220,12 @@ module arbiter(
 
 	assign video_pre_next = curr_vid & c1;
 	assign video_next = curr_vid & c2;
-	assign video_strobe = curr_vid & c3;
+	assign video_strobe = curr_vid && c3;
 
 	assign ts_pre_next = curr_ts & c1;
 	assign ts_next = curr_ts & c2;
+	
+	assign tm_next = curr_tm & c2;
 
 	assign dma_next = curr_dma & c2;
 

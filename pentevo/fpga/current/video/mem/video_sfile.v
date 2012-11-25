@@ -77,7 +77,7 @@ module video_sfile (
 		altdpram_component.outdata_aclr = "OFF",
 		altdpram_component.outdata_reg = "UNREGISTERED",
 		altdpram_component.rdaddress_aclr = "OFF",
-		altdpram_component.rdaddress_reg = "INCLOCK",
+		altdpram_component.rdaddress_reg = "UNREGISTERED",
 		altdpram_component.rdcontrol_aclr = "OFF",
 		altdpram_component.rdcontrol_reg = "UNREGISTERED",
 		altdpram_component.width = 16,
@@ -136,8 +136,8 @@ endmodule
 // Retrieval info: PRIVATE: READ_DURING_WRITE_MODE_PORT_B NUMERIC "3"
 // Retrieval info: PRIVATE: REGdata NUMERIC "1"
 // Retrieval info: PRIVATE: REGq NUMERIC "0"
-// Retrieval info: PRIVATE: REGrdaddress NUMERIC "1"
-// Retrieval info: PRIVATE: REGrren NUMERIC "1"
+// Retrieval info: PRIVATE: REGrdaddress NUMERIC "0"
+// Retrieval info: PRIVATE: REGrren NUMERIC "0"
 // Retrieval info: PRIVATE: REGwraddress NUMERIC "1"
 // Retrieval info: PRIVATE: REGwren NUMERIC "1"
 // Retrieval info: PRIVATE: SYNTH_WRAPPER_GEN_POSTFIX STRING "0"
@@ -160,7 +160,7 @@ endmodule
 // Retrieval info: CONSTANT: OUTDATA_ACLR STRING "OFF"
 // Retrieval info: CONSTANT: OUTDATA_REG STRING "UNREGISTERED"
 // Retrieval info: CONSTANT: RDADDRESS_ACLR STRING "OFF"
-// Retrieval info: CONSTANT: RDADDRESS_REG STRING "INCLOCK"
+// Retrieval info: CONSTANT: RDADDRESS_REG STRING "UNREGISTERED"
 // Retrieval info: CONSTANT: RDCONTROL_ACLR STRING "OFF"
 // Retrieval info: CONSTANT: RDCONTROL_REG STRING "UNREGISTERED"
 // Retrieval info: CONSTANT: WIDTH NUMERIC "16"
