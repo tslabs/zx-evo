@@ -684,8 +684,9 @@ module top(
 	wire intack_s;
 
     zsignals zsignals(
+                .zclk       (zclk),
                 .clk        (fclk),
-                .zpos       (zpos),
+                // .zpos       (zpos),
 				.rst_n      (rst_n),
                 .iorq_n     (iorq_n),
                 .mreq_n     (mreq_n),
@@ -735,32 +736,6 @@ module top(
 
 		wire [7:0] sysconf;
 		wire [3:0] fddvirt;
-
-
-	// AY control
-	// reg pre_bc1,pre_bdir;
-	// always @*
-	// begin
-		// pre_bc1 = 1'b0;
-		// pre_bdir = 1'b0;
-
-		// if( a[7:0]==8'hFD )
-		// begin
-			// if( a[15:14]==2'b11 )
-			// begin
-				// pre_bc1=1'b1;
-				// pre_bdir=1'b1;
-			// end
-			// else if( a[15:14]==2'b10 )
-			// begin
-				// pre_bc1=1'b0;
-				// pre_bdir=1'b1;
-			// end
-		// end
-	// end
-
-	// assign ay_bc1  = pre_bc1  & (~iorq_n) & ((~rd_n)|(~wr_n));
-	// assign ay_bdir = pre_bdir & (~iorq_n) & (~wr_n);
 
 
     wire [15:0] z80_ide_out;
@@ -1012,7 +987,7 @@ module top(
             .z80_cs0_n   (z80_ide_cs0_n),
             .z80_cs1_n   (z80_ide_cs1_n),
             .z80_req     (z80_ide_req),
-            .z80_rnw     (!rd_n)
+            .z80_rnw     (!rd_n)		// this should be direct Z80 signal
     );
 
 
