@@ -31,6 +31,7 @@ module ide(
 // controls
 	input  wire        reset,
 	output wire        din_stb,
+	output wire        rdy_stb,
 	output wire        rdy,
 	// output wire next,
 
@@ -54,10 +55,25 @@ module ide(
 	input wire         z80_cs0_n,
 	input wire         z80_cs1_n,
 	input wire         z80_req,
-	input wire         z80_rnw
+	input wire         z80_rnw,
+	
+	output reg [2:0] tst
 );
 
 
+	// DEBUG!!!
+	always @*
+		if (go)
+			tst = 3;
+		else if (!ide_rd_n || !ide_wr_n)
+			tst = !ide_rd_n ? 4 : 2;
+		else if (!ide_cs0_n)
+			tst = 6;
+		else if (rdy_stb)
+			tst = 5;
+		else
+			tst = 0;
+	
 	assign ide_d = ide_dir ? 16'hZZZZ : ide_out;
     wire [15:0] ide_out = dma_req ? dma_out : z80_out;
 	assign ide_a = dma_req ? 3'b0 : z80_a;
@@ -67,23 +83,19 @@ module ide(
 	wire rd_n = dma_req ? ~dma_rnw : ~z80_rnw;
 	wire wr_n = dma_req ? dma_rnw : z80_rnw;
 
-	assign rdy = ~|st[3:0];
-	// assign rdy = ~|st[5:0];		//debug
-	assign din_stb = st[4] && dir;
-	// assign din_stb = st[5] && dir;		//debug
 	wire go = (dma_req || z80_req) && rdy;
+	assign din_stb = st[4] && dir;
+	assign rdy_stb = st[4];
+	assign rdy = ~|st;
 
 
 // states clocking
 	reg [4:0] st;
-	// reg [6:0] st;		//debug
 	always @(posedge clk)
 		if (reset)
 			st <= 5'b0;
-			// st <= 7'b0;		//debug
 		else
 			st <= {st[3:0], go};
-			// st <= {st[5:0], go};		//debug
 
 // states processing
 	always @(posedge clk)
@@ -110,14 +122,12 @@ module ide(
 		end
 
 		else if (st[2])
-		// else if (st[4])		//debug
 		begin
 			ide_rd_n  <= 1'b1;
 			ide_wr_n  <= 1'b1;
 		end
 
 		else if (st[3])
-		// else if (st[5])		//debug
 		begin
 			ide_dir   <= 1'b1;
 			ide_cs0_n <= 1'b1;

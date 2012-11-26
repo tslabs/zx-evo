@@ -497,7 +497,7 @@ module top(
 					 .ts_addr		(ts_addr),
 					 .ts_pre_next	(ts_pre_next),
 					 .ts_next		(ts_next),
-					 
+
 					 .tm_addr		(tm_addr),
 					 .tm_req		(tm_req),
 					 .tm_next		(tm_next)
@@ -530,9 +530,13 @@ module top(
         wire t0gpage_wr;
         wire t1gpage_wr;
         wire sgpage_wr;
-
+		
+		wire [2:0] tst;
+		
 	video_top video_top(
 
+		.tst(tst),
+		
 		.clk(fclk),
         .res(res),
 		.f0(f0), .f1(f1),
@@ -891,7 +895,7 @@ module top(
 
         .data		(dma_data),
         .wraddr		(dma_wraddr),
-		
+
         .cram_we    (dma_cram_we),
         .sfile_we   (dma_sfile_we),
 
@@ -899,7 +903,8 @@ module top(
         .ide_out    (dma_ide_out),
         .ide_req    (dma_ide_req),
         .ide_rnw    (dma_ide_rnw),
-        .ide_stb    (ide_din_stb)
+        .ide_din_stb(ide_din_stb),
+        .ide_rdy_stb(ide_rdy_stb)
 	);
 
 
@@ -962,12 +967,16 @@ module top(
 	assign ide_rs_n = rst_n;
 	wire [15:0] ide_out;
     wire ide_din_stb;
+    wire ide_rdy_stb;
     wire ide_ready;
 
     ide ide(
+			// .tst		(tst),
+
             .clk        (fclk),
             .reset      (res),
             .din_stb    (ide_din_stb),
+            .rdy_stb    (ide_rdy_stb),
             .rdy        (ide_ready),
 
             .ide_d      (ide_d),

@@ -43,7 +43,8 @@ module dma (
 	output wire [15:0] ide_out,
 	output wire        ide_req,
 	output wire        ide_rnw,
-	input  wire        ide_stb,
+	input  wire        ide_din_stb,
+	input  wire        ide_rdy_stb,
 
 // CRAM interface
 	output wire        cram_we,
@@ -96,7 +97,7 @@ module dma (
             if (dram_next)
                 data <= dram_rddata;
 
-            else if (ide_stb)
+            else if (ide_din_stb)
                 data <= ide_in;
                 
         // else if (state_rd && sd_stb_int)
@@ -277,7 +278,7 @@ module dma (
     wire state_mem = dv_ram || (dma_wnr ^ phase);
 	wire dev_req = dma_act && state_dev;
     wire byte_switch = (dv_sd && sd_stb_int);
-    wire dev_stb = cram_we || sfile_we || ide_stb;          // add here all newly coded devices
+    wire dev_stb = cram_we || sfile_we || ide_rdy_stb;          // add here all new devices
 
     // CRAM
     assign cram_we = dev_req && dv_crm && state_wr;

@@ -82,9 +82,12 @@ module video_top (
 	input  wire        tm_next,
 
 // video controls
-	input wire vga_on
+	input wire vga_on,
 
+	input wire [2:0] tst
 );
+
+	// wire [2:0] tst;
 
 
     assign ts_zwt = tsconf[4];
@@ -333,7 +336,7 @@ module video_top (
 );
 
 	video_ts video_ts (
-		.tst		    (tst),
+		// .tst		    (tst),
 		
 		.clk		    (clk),
         .start          (ts_start),
@@ -344,6 +347,7 @@ module video_top (
         // .tsconf         ({tsconf[7], 2'b00, tsconf[4:0]}),		// no tiles
         // .tsconf         ({tsconf[7], 1'b0, tsconf[5:0]}),		// only tiles0
         // .tsconf         ({tsconf[7:6], 1'b0, tsconf[4:0]}),	// only tiles1
+        // .tsconf         ({3'b0, tsconf[4:0]}),	// no ts
         .t0gpage        (t0gpage),
         .t1gpage        (t1gpage),
         .sgpage         (sgpage),
@@ -422,11 +426,8 @@ module video_top (
 		.vplex_out 	    (vplex)
 );
 
-	wire [2:0] tst;
-
 	video_out video_out (
-		// .tst			(tst),	// DEBUG!!!
-		.tst			(3'b0),	// DEBUG!!!
+		.tst			(tst),	// DEBUG!!!
 		
 		.clk			(clk),
 		.f0				(f0),
@@ -440,7 +441,6 @@ module video_top (
 	    .plex_sel_in	({h1, f1}),
 		.tv_hires		(tv_hires),
 		.vga_hires		(vga_hires),
-		// .t0			(t0),	//debug
 		.cram_addr_in	(zma),
 		.cram_data_in	(zmd[14:0]),
 		.cram_we		(cram_we),
