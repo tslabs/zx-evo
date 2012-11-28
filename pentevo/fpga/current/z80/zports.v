@@ -104,12 +104,11 @@ module zports(
 	output wire        vg_wrFF,
    	output reg  [1:0]  drive_sel,    // disk drive selection
 
+// SPI
 	output reg         sdcs_n,
 	output wire        sd_start,
 	output wire [ 7:0] sd_datain,
 	input  wire [ 7:0] sd_dataout,
-
-// DMA devices
 
 // WAIT-ports related
 	output reg  [ 7:0] gluclock_addr,

@@ -60,21 +60,49 @@
 `include "../include/tune.v"
 
 
-module spi2(
-
+module spi(
+// SPI wires
 	input  wire       clk,      // system clk
 	output wire       sck,      // SPI bus pins...
 	output wire       sdo,      //
 	input  wire       sdi,      //
-	output reg        bsync,    // ...and bsync for vs1001
-	input  wire       start,    // positive strobe that starts transfer
-	output wire       rdy,      // ready (idle) - when module can accept data
+
+// controls
+	output wire       stb,      // ready strobe, 1 clock length
+	// output wire       rdy,      // ready (idle) - when module can accept data
+	output reg        bsync,    // for vs1001
+	
+// DMA interface
+	input  wire       dma_req,
+	input  wire [7:0] dma_din,
+	
+// Z80 interface
+	input  wire       cpu_req,
+	input  wire [7:0] cpu_din,
+
+	output reg  [7:0] dout,
+	
+// configuration
 	input  wire [1:0] speed,    // =2'b00 - sck full speed (1/2 of clk), =2'b01 - half (1/4 of clk), =2'b10 - one fourth (1/8 of clk), =2'b11 - one eighth (1/16 of clk)
-	input  wire [7:0] din,      // input
-	output reg  [7:0] dout      // and output 8bit busses
+	
+	output reg [2:0] tst
+
 );
 
 
+	always @*
+		if (stb)
+			tst = 5;
+		else if (start)
+			tst = 3;
+		else if (dma_req)
+			tst = 1;
+		else if (cpu_req)
+			tst = 4;
+		else tst = 0;
+	
+	wire req = cpu_req || dma_req;
+	wire [7:0] din = dma_req ? dma_din : cpu_din;
 
 	initial // for simulation only!
 	begin
@@ -86,48 +114,49 @@ module spi2(
 	end
 
 
-	// rdy is enable_n
-	assign rdy = enable_n;
-
-	// sck is low bit of counter
-	assign sck = counter[0];
-
-	// enable_n is high bit of counter
-	wire enable_n = counter[4];         // =1 when transmission in progress
-
 	// sdo is high bit of shiftout
 	assign sdo = shiftout[7];
 
-	wire ena_shout_load = (start | sck) & g_ena;     // enable load of shiftout register
+	wire ena_shout_load = (start || sck) & g_ena;     // enable load of shiftout register
 
+	assign sck = counter[0];
+	wire rdy = counter[4];         // =0 when transmission in progress
+	assign stb = !stb_r && rdy;
+	wire start = req && rdy;
 
-	reg [6:0] shiftin; // shifting in data from sdi before emitting it on dout
-	reg [4:0] counter; // governs transmission
+	reg [6:0] shiftin; 	// shifting in data from sdi before emitting it on dout
+	reg [4:0] counter; 	// handles transmission
+	reg stb_r;
 	always @(posedge clk)
 	begin
 		if (g_ena)
 		begin
 			if (start)
 			begin
-				counter <= 5'b00000; // enable_n = 0; sck = 0;
-				bsync <= 1'b1; // begin bsync pulse
+				counter <= 5'b0; 	// rdy = 0; sck = 0;
+				bsync <= 1'b1; 		// begin bsync pulse
+				stb_r <= 1'b0;
 			end
+
 			else
 			begin
 				if (!sck) // on the rising edge of sck
 				begin
-      	                  shiftin[6:0] <= { shiftin[5:0], sdi };
+      	            shiftin[6:0] <= {shiftin[5:0], sdi};
 
-					if ((&counter[3:1]) && (!enable_n))
+					if (&counter[3:1] && !rdy)
 						dout <= {shiftin[6:0], sdi}; // update dout at the last sck rising edge
 				end
+
 				else // on the falling edge of sck
 				begin
 					bsync <= 1'b0;
 				end
 
-				if (!enable_n)
+				if (!rdy)
 					counter <= counter + 5'd1;
+					
+				stb_r <= rdy;
 			end
 		end
 	end
@@ -142,7 +171,7 @@ module spi2(
 			if (start)
 				shiftout <= din;
 			else // sck
-				shiftout[7:0] <= { shiftout[6:0], shiftout[0] }; // last bit remains after end of exchange
+				shiftout[7:0] <= {shiftout[6:0], shiftout[0]}; // last bit remains after end of exchange
 		end
 	end
 
@@ -155,7 +184,7 @@ module spi2(
 		begin
 			if (start)
 				wcnt <= 3'b001;
-			else if (enable_n)
+			else if (rdy)
 				wcnt <= 3'b000;
 			else
 				wcnt <= wcnt + 3'd1;
@@ -164,7 +193,7 @@ module spi2(
 			wcnt <= 3'b000;
 	end
 
-    
+
 	wire g_ena = g_en[speed];
     wire g_en[0:3];
     assign g_en[0] = 1'b1;
@@ -172,5 +201,5 @@ module spi2(
     assign g_en[2] = ~|wcnt[1:0];
     assign g_en[3] = ~|wcnt[2:0];
 
-    
+
 endmodule

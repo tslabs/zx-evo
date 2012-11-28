@@ -31,20 +31,18 @@ module dma (
 	output wire        dram_rnw,
 	input  wire        dram_next,
 
-// SD interface
-	input  wire  [7:0] sd_rddata,
-	output wire  [7:0] sd_wrdata,
-	output wire        sd_req,
-	output wire        sd_rnw,
-	input  wire        sd_stb,
+// SPI interface
+	input  wire  [7:0] spi_rddata,
+	output wire  [7:0] spi_wrdata,
+	output wire        spi_req,
+	input  wire        spi_stb,
 
 // IDE interface
 	input  wire [15:0] ide_in,
 	output wire [15:0] ide_out,
 	output wire        ide_req,
 	output wire        ide_rnw,
-	input  wire        ide_din_stb,
-	input  wire        ide_rdy_stb,
+	input  wire        ide_stb,
 
 // CRAM interface
 	output wire        cram_we,
@@ -78,17 +76,6 @@ module dma (
     wire dma_launch = dma_wr[7];
     wire dma_num    = dma_wr[8];
 
-	wire dv_ram = (device == 3'b001);
-	wire dv_sd  = (device == 3'b010);
-	wire dv_ide = (device == 3'b011);
-	wire dv_crm = (device == 3'b100) && dma_wnr;
-	wire dv_sfl = (device == 3'b101) && dma_wnr;
-
-//    wire bs_sd  = dma_act && dv_sd ;
-//    wire bs_ide = dma_act && dv_ide;
-
-    //wire [1:0] bs_dma = {bs_sd, bs_ide};
-
 
 // data aquiring
     always @(posedge clk)
@@ -97,16 +84,16 @@ module dma (
             if (dram_next)
                 data <= dram_rddata;
 
-            else if (ide_din_stb)
+            else if (ide_stb)
                 data <= ide_in;
                 
-        // else if (state_rd && sd_stb_int)
-        // begin
-            // if (bsel)
-                // data[7:0] <= sd_rddata;
-            // else
-                // data[15:8] <= sd_rddata;
-        // end
+			else if (spi_stb)
+			begin
+				if (bsel)
+					data[7:0] <= spi_rddata;
+				else
+					data[15:8] <= spi_rddata;
+			end
 
 
 
@@ -272,30 +259,35 @@ module dma (
 
 
 // devices
+	wire dv_ram = (device == 3'b001);
+	wire dv_spi = (device == 3'b010);
+	wire dv_ide = (device == 3'b011);
+	wire dv_crm = (device == 3'b100) && dma_wnr;
+	wire dv_sfl = (device == 3'b101) && dma_wnr;
+
     wire state_rd = ~phase;
     wire state_wr = phase;
     wire state_dev = !dv_ram && (dma_wnr ^ !phase);
     wire state_mem = dv_ram || (dma_wnr ^ phase);
 	wire dev_req = dma_act && state_dev;
-    wire byte_switch = (dv_sd && sd_stb_int);
-    wire dev_stb = cram_we || sfile_we || ide_rdy_stb;          // add here all new devices
+    wire byte_switch = (dv_spi && spi_stb);
+    wire dev_stb = cram_we || sfile_we || ide_stb || (spi_stb && bsel);
 
-    // CRAM
-    assign cram_we = dev_req && dv_crm && state_wr;
 
-    // SFILE
-    assign sfile_we = dev_req && dv_sfl && state_wr;
-
-    // SD
-    assign sd_wrdata = bsel ? data[15:8] : data[7:0];
-    assign sd_req = dev_req && dv_sd;
-    assign sd_rnw = state_rd;
-	wire sd_stb_int = sd_stb;
-
+	// SPI
+    assign spi_wrdata = {8{state_rd}} | (bsel ? data[15:8] : data[7:0]);	// send FF on read cycles
+    assign spi_req = dev_req && dv_spi && !spi_stb;
+	
     // IDE
     assign ide_out = data;
     assign ide_req = dev_req && dv_ide;
     assign ide_rnw = state_rd;
+
+    // CRAM
+    assign cram_we = dev_req && dv_crm && state_wr;
+	
+    // SFILE
+    assign sfile_we = dev_req && dv_sfl && state_wr;
 
 
 endmodule

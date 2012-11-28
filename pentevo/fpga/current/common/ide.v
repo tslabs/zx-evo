@@ -30,7 +30,6 @@ module ide(
 
 // controls
 	input  wire        reset,
-	output wire        din_stb,
 	output wire        rdy_stb,
 	output wire        rdy,
 	// output wire next,
@@ -84,7 +83,6 @@ module ide(
 	wire wr_n = dma_req ? dma_rnw : z80_rnw;
 
 	wire go = (dma_req || z80_req) && rdy;
-	assign din_stb = st[4] && dir;
 	assign rdy_stb = st[4];
 	assign rdy = ~|st;
 
