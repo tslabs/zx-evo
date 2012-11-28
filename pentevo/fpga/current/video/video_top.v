@@ -140,6 +140,7 @@ module video_top (
 	wire ts_start;
 	wire vga_blank;
 	wire vga_line;
+	wire v_ts;
 	wire v_pf;
 	wire hpix;
 	wire vpix;
@@ -315,7 +316,7 @@ module video_top (
 		.int_start		(int_start),
 		.v_pf			(v_pf),
 		.hpix			(hpix),
-		.v_ts		(v_ts),
+		.v_ts			(v_ts),
 		.vpix			(vpix),
 		.hvpix			(hvpix),
 		.nogfx			(nogfx),
@@ -379,7 +380,7 @@ module video_top (
 
 		.sfile_addr_in	(zma),
 		.sfile_data_in	(zmd),
-		.sfile_we		(sfile_we),
+		.sfile_we		(sfile_we)
 );
 
 

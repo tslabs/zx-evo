@@ -209,10 +209,6 @@ module top(
 
 	wire go;
 
-	wire sd_start;
-	wire [7:0] sd_dataout,sd_datain;
-
-
 	wire tape_read; // data for tapein
 
 	wire beeper_mux; // what is mixed to FPGA beeper output - beeper (0) or tapeout (1)
@@ -530,13 +526,13 @@ module top(
         wire t0gpage_wr;
         wire t1gpage_wr;
         wire sgpage_wr;
-		
+
 		wire [2:0] tst;
-		
+
 	video_top video_top(
 
 		.tst(tst),
-		
+
 		.clk(fclk),
         .res(res),
 		.f0(f0), .f1(f1),
@@ -784,9 +780,9 @@ module top(
                     .vg_cs_n        (vg_cs_n),
                     .vg_wrFF        (vg_wrFF),
 
-                    .sd_start       (sd_start),
-                    .sd_dataout     (sd_dataout),
-                    .sd_datain      (sd_datain),
+                    .sd_start       (cpu_spi_req),
+                    .sd_dataout     (spi_dout),
+                    .sd_datain      (cpu_spi_din),
                     .sdcs_n         (sdcs_n),
 
                     .ide_in         (ide_d),
@@ -794,7 +790,7 @@ module top(
                     .ide_cs0_n      (z80_ide_cs0_n),
                     .ide_cs1_n      (z80_ide_cs1_n),
                     .ide_req        (z80_ide_req),
-                    .ide_stb        (ide_din_stb),
+                    .ide_stb        (ide_stb),
                     .ide_ready      (ide_ready),
                     .ide_stall      (ide_stall),
 
@@ -899,12 +895,16 @@ module top(
         .cram_we    (dma_cram_we),
         .sfile_we   (dma_sfile_we),
 
+        .spi_req    (dma_spi_req),
+		.spi_stb	(spi_stb),
+        .spi_rddata (spi_dout),
+        .spi_wrdata (dma_spi_din),
+
         .ide_in     (ide_d),
         .ide_out    (dma_ide_out),
         .ide_req    (dma_ide_req),
         .ide_rnw    (dma_ide_rnw),
-        .ide_din_stb(ide_din_stb),
-        .ide_rdy_stb(ide_rdy_stb)
+        .ide_stb	(ide_stb)
 	);
 
 
@@ -958,16 +958,37 @@ module top(
 	             .vg_irq(vg_irq), .vg_wd(vg_wd) );
 
 
-	spi2 zspi( .clk(fclk), .sck(sdclk), .sdo(sddo), .sdi(sddi), .start(sd_start),
-	           .speed(2'b00),	// this is 14 MHz at 28 Mhz Altera clock
-			   .din(sd_datain), .dout(sd_dataout)
+	wire cpu_spi_req;
+	wire dma_spi_req;
+	wire spi_rdy;
+	wire spi_stb;
+	wire [7:0] cpu_spi_din;
+	wire [7:0] dma_spi_din;
+	wire [7:0] spi_dout;
+
+	spi spi(
+				// .tst(tst),
+
+				.clk(fclk),
+				.sck(sdclk),
+				.sdo(sddo),
+				.sdi(sddi),
+				
+				.cpu_req(cpu_spi_req),
+				.dma_req(dma_spi_req),
+				// .rdy(spi_rdy),
+				.stb(spi_stb),
+				.cpu_din(cpu_spi_din),
+				.dma_din(dma_spi_din),
+				.dout(spi_dout),
+				
+				.speed(2'b00)		// this is 14 MHz at 28 Mhz Altera clock
              );
 
 
 	assign ide_rs_n = rst_n;
 	wire [15:0] ide_out;
-    wire ide_din_stb;
-    wire ide_rdy_stb;
+    wire ide_stb;
     wire ide_ready;
 
     ide ide(
@@ -975,8 +996,7 @@ module top(
 
             .clk        (fclk),
             .reset      (res),
-            .din_stb    (ide_din_stb),
-            .rdy_stb    (ide_rdy_stb),
+            .rdy_stb    (ide_stb),
             .rdy        (ide_ready),
 
             .ide_d      (ide_d),
@@ -996,7 +1016,7 @@ module top(
             .z80_cs0_n   (z80_ide_cs0_n),
             .z80_cs1_n   (z80_ide_cs1_n),
             .z80_req     (z80_ide_req),
-            .z80_rnw     (!rd_n)		// this should be direct Z80 signal
+            .z80_rnw     (!rd_n)			// this should be the direct Z80 signal
     );
 
 
