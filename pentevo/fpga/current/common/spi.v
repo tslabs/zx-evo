@@ -121,7 +121,7 @@ module spi(
 
 	assign sck = counter[0];
 	wire rdy = counter[4];         // =0 when transmission in progress
-	assign stb = !stb_r && rdy;
+	assign stb = stb_r && !rdy;
 	wire start = req && rdy;
 
 	reg [6:0] shiftin; 	// shifting in data from sdi before emitting it on dout
@@ -145,7 +145,10 @@ module spi(
       	            shiftin[6:0] <= {shiftin[5:0], sdi};
 
 					if (&counter[3:1] && !rdy)
+					begin
 						dout <= {shiftin[6:0], sdi}; // update dout at the last sck rising edge
+						stb_r <= 1'b1;
+					end
 				end
 
 				else // on the falling edge of sck
@@ -155,8 +158,6 @@ module spi(
 
 				if (!rdy)
 					counter <= counter + 5'd1;
-					
-				stb_r <= rdy;
 			end
 		end
 	end
