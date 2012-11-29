@@ -77,29 +77,75 @@ module dma (
     wire dma_num    = dma_wr[8];
 
 
+// !R/W  phase  RAM  DEV
+// device-RAM
+//   0     0     0    1
+//   0     1     1    0
+//   1     0     1    0
+//   1     0     0    1
+// RAM-RAM
+//   x     0     1    0
+//   x     1     1    0
+
+
+// DRAM
+    assign dram_addr = state_rd ? s_addr : d_addr;
+    assign dram_wrdata = data;
+    assign dram_req = dma_act && state_mem;
+    assign dram_rnw = state_rd;
+
+
+// devices
+	wire dv_ram = (device == 3'b001);
+	wire dv_spi = (device == 3'b010);
+	wire dv_ide = (device == 3'b011);
+	wire dv_crm = (device == 3'b100) && dma_wnr;
+	wire dv_sfl = (device == 3'b101) && dma_wnr;
+
+    wire state_rd = ~phase;
+    wire state_wr = phase;
+    wire state_dev = !dv_ram && (dma_wnr ^ !phase);
+    wire state_mem = dv_ram || (dma_wnr ^ phase);
+	wire dev_req = dma_act && state_dev;
+    wire dev_stb = cram_we || sfile_we || ide_int_stb || (spi_int_stb && bsel);
+
+	wire spi_int_stb = dv_spi && spi_stb;
+	wire ide_int_stb = dv_ide && ide_stb;
+    assign cram_we = dev_req && dv_crm && state_wr;
+    assign sfile_we = dev_req && dv_sfl && state_wr;
+
+	// SPI
+    assign spi_wrdata = {8{state_rd}} | (bsel ? data[15:8] : data[7:0]);	// send FF on read cycles
+    assign spi_req = dev_req && dv_spi;
+
+    // IDE
+    assign ide_out = data;
+    assign ide_req = dev_req && dv_ide;
+    assign ide_rnw = state_rd;
+
+
 // data aquiring
     always @(posedge clk)
         if (state_rd)
-        
+		begin
             if (dram_next)
                 data <= dram_rddata;
 
-            else if (ide_stb)
+            if (ide_int_stb)
                 data <= ide_in;
-                
-			else if (spi_stb)
+
+			if (spi_int_stb)
 			begin
 				if (bsel)
-					data[7:0] <= spi_rddata;
-				else
 					data[15:8] <= spi_rddata;
+				else
+					data[7:0] <= spi_rddata;
 			end
+		end
 
-
-
+		
 // states processing
     wire phase_end = (state_mem && dram_next) || (state_dev && dev_stb);
-    wire cyc_end = phase && phase_end;
 
 	reg [2:0] device;
     reg dma_wnr;             // 0 - device to RAM / 1 - RAM to device
@@ -126,7 +172,7 @@ module dma (
     begin
         if (phase_end)
             phase <= ~phase;
-        if (byte_switch)
+        if (spi_int_stb)
             bsel <= ~bsel;
     end
 
@@ -154,7 +200,7 @@ module dma (
             n_ctr <= {1'b0, b_num};
         end
 
-		else if (cyc_end)		// cycle processed
+		else if (phase && phase_end)		// cycle processed
         begin
 			b_ctr <= b_ctr_next;
             n_ctr <= n_ctr_dec;
@@ -238,56 +284,6 @@ module dma (
             if (dma_daddrx)
                 d_addr[20:13] <= zdata;
         end
-
-
-// !R/W  phase  RAM  DEV
-// device-RAM
-//   0     0     0    1
-//   0     1     1    0
-//   1     0     1    0
-//   1     0     0    1
-// RAM-RAM
-//   x     0     1    0
-//   x     1     1    0
-
-
-// DRAM
-    assign dram_addr = state_rd ? s_addr : d_addr;
-    assign dram_wrdata = data;
-    assign dram_req = dma_act && state_mem;
-    assign dram_rnw = state_rd;
-
-
-// devices
-	wire dv_ram = (device == 3'b001);
-	wire dv_spi = (device == 3'b010);
-	wire dv_ide = (device == 3'b011);
-	wire dv_crm = (device == 3'b100) && dma_wnr;
-	wire dv_sfl = (device == 3'b101) && dma_wnr;
-
-    wire state_rd = ~phase;
-    wire state_wr = phase;
-    wire state_dev = !dv_ram && (dma_wnr ^ !phase);
-    wire state_mem = dv_ram || (dma_wnr ^ phase);
-	wire dev_req = dma_act && state_dev;
-    wire byte_switch = (dv_spi && spi_stb);
-    wire dev_stb = cram_we || sfile_we || ide_stb || (spi_stb && bsel);
-
-
-	// SPI
-    assign spi_wrdata = {8{state_rd}} | (bsel ? data[15:8] : data[7:0]);	// send FF on read cycles
-    assign spi_req = dev_req && dv_spi && !spi_stb;
-	
-    // IDE
-    assign ide_out = data;
-    assign ide_req = dev_req && dv_ide;
-    assign ide_rnw = state_rd;
-
-    // CRAM
-    assign cram_we = dev_req && dv_crm && state_wr;
-	
-    // SFILE
-    assign sfile_we = dev_req && dv_sfl && state_wr;
 
 
 endmodule
