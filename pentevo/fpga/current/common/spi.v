@@ -69,6 +69,7 @@ module spi(
 
 // controls
 	output wire       stb,      // ready strobe, 1 clock length
+	output wire       start,    // start strobe, 1 clock length
 	// output wire       rdy,      // ready (idle) - when module can accept data
 	output reg        bsync,    // for vs1001
 	
@@ -122,7 +123,7 @@ module spi(
 	assign sck = counter[0];
 	wire rdy = counter[4];         // =0 when transmission in progress
 	assign stb = stb_r && !rdy;
-	wire start = req && rdy;
+	assign start = req && rdy;
 
 	reg [6:0] shiftin; 	// shifting in data from sdi before emitting it on dout
 	reg [4:0] counter; 	// handles transmission

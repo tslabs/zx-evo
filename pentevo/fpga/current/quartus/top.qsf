@@ -1,4 +1,4 @@
-# Copyright (C) 1991-2006 Altera Corporation
+# Copyright (C) 1991-2008 Altera Corporation
 # Your use of Altera Corporation's design tools, logic functions 
 # and other software and tools, and its AMPP partner logic 
 # functions, and any output files from any of the foregoing 
@@ -31,6 +31,48 @@ set_global_assignment -name PROJECT_CREATION_TIME_DATE "19:03:44  NOVEMBER 07, 2
 set_global_assignment -name LAST_QUARTUS_VERSION 8.1
 set_global_assignment -name MESSAGE_SUPPRESSION_RULE_FILE top.srf
 set_global_assignment -name SMART_RECOMPILE OFF
+set_global_assignment -name VERILOG_FILE ../video/mem/video_sfile.v
+set_global_assignment -name VERILOG_FILE ../video/video_ts_render.v
+set_global_assignment -name VERILOG_FILE ../video/video_ts.v
+set_global_assignment -name VERILOG_FILE ../video/mem/video_tsline1.v
+set_global_assignment -name VERILOG_FILE ../video/mem/video_tsline0.v
+set_global_assignment -name MIF_FILE ../video/mem/video_cram.mif
+set_global_assignment -name VERILOG_FILE ../video/mem/video_cram.v
+set_global_assignment -name VERILOG_FILE ../video/mem/video_tmbuf.v
+set_global_assignment -name VERILOG_FILE ../video/mem/video_vmem.v
+set_global_assignment -name VERILOG_FILE ../common/slavespi.v
+set_global_assignment -name VERILOG_FILE ../common/dma.v
+set_global_assignment -name VERILOG_FILE ../common/ide.v
+set_global_assignment -name VERILOG_FILE ../video/video_ports.v
+set_global_assignment -name VERILOG_FILE ../video/video_top.v
+set_global_assignment -name VERILOG_FILE ../video/video_mode.v
+set_global_assignment -name VERILOG_FILE ../video/video_sync.v
+set_global_assignment -name VERILOG_FILE ../video/video_fetch.v
+set_global_assignment -name VERILOG_FILE ../video/video_render.v
+set_global_assignment -name VERILOG_FILE ../video/video_out.v
+set_global_assignment -name VERILOG_FILE ../sound/sound.v
+set_global_assignment -name VERILOG_FILE ../z80/zsignals.v
+set_global_assignment -name VERILOG_FILE ../z80/zpager.v
+set_global_assignment -name VERILOG_FILE ../z80/zmaps.v
+set_global_assignment -name VERILOG_FILE ../z80/znmi.v
+set_global_assignment -name VERILOG_FILE ../z80/zdos.v
+set_global_assignment -name VERILOG_FILE ../z80/zwait.v
+set_global_assignment -name VERILOG_FILE ../z80/zkbdmus.v
+set_global_assignment -name VERILOG_FILE ../z80/zports.v
+set_global_assignment -name VERILOG_FILE ../z80/zclock.v
+set_global_assignment -name VERILOG_FILE ../z80/zint.v
+set_global_assignment -name VERILOG_FILE ../z80/zmem.v
+set_global_assignment -name VERILOG_FILE ../z80/zbus.v
+set_global_assignment -name VERILOG_FILE ../vg93/vg93.v
+set_global_assignment -name VERILOG_FILE ../vg93/fapch_counter.v
+set_global_assignment -name VERILOG_FILE ../vg93/fapch_zek.v
+set_global_assignment -name VERILOG_FILE ../dram/dram.v
+set_global_assignment -name VERILOG_FILE ../dram/arbiter.v
+set_global_assignment -name VERILOG_FILE ../common/clock.v
+set_global_assignment -name VERILOG_FILE ../common/spi.v
+set_global_assignment -name VERILOG_FILE ../common/resetter.v
+set_global_assignment -name VERILOG_FILE ../top.v
+set_global_assignment -name ZIP_VECTOR_WAVEFORM_FILE ../sim_vw/dram.cvwf
 
 # Pin & Location Assignments
 # ==========================
@@ -203,6 +245,8 @@ set_global_assignment -name ALLOW_ANY_RAM_SIZE_FOR_RECOGNITION ON
 set_global_assignment -name ALLOW_ANY_SHIFT_REGISTER_SIZE_FOR_RECOGNITION ON
 set_global_assignment -name IGNORE_LCELL_BUFFERS ON
 set_global_assignment -name IGNORE_CASCADE_BUFFERS ON
+set_global_assignment -name AUTO_RESOURCE_SHARING ON
+set_global_assignment -name CASCADE_CHAIN_LENGTH 8
 
 # Fitter Assignments
 # ==================
@@ -221,6 +265,8 @@ set_global_assignment -name ROUTER_EFFORT_MULTIPLIER 1.0
 set_global_assignment -name FINAL_PLACEMENT_OPTIMIZATION AUTOMATICALLY
 set_global_assignment -name FITTER_AGGRESSIVE_ROUTABILITY_OPTIMIZATION AUTOMATICALLY
 set_global_assignment -name OPTIMIZE_IOC_REGISTER_PLACEMENT_FOR_TIMING OFF
+set_global_assignment -name NORMAL_LCELL_INSERT OFF
+set_global_assignment -name CARRY_OUT_PINS_LCELL_INSERT OFF
 
 # Assembler Assignments
 # =====================
@@ -240,9 +286,9 @@ set_global_assignment -name INCREMENTAL_VECTOR_INPUT_SOURCE ../sim_vw/dram.cvwf
 
 	# Classic Timing Assignments
 	# ==========================
-set_global_assignment -name BASED_ON_CLOCK_SETTINGS "FPGA clock" -section_id "Z80 clock"
-set_global_assignment -name MULTIPLY_BASE_CLOCK_PERIOD_BY 2 -section_id "Z80 clock"
-set_global_assignment -name OFFSET_FROM_BASE_CLOCK "-8 ns" -section_id "Z80 clock"
+	set_global_assignment -name BASED_ON_CLOCK_SETTINGS "FPGA clock" -section_id "Z80 clock"
+	set_global_assignment -name MULTIPLY_BASE_CLOCK_PERIOD_BY 2 -section_id "Z80 clock"
+	set_global_assignment -name OFFSET_FROM_BASE_CLOCK "-8 ns" -section_id "Z80 clock"
 
 # end CLOCK(Z80 clock)
 # --------------------
@@ -252,7 +298,7 @@ set_global_assignment -name OFFSET_FROM_BASE_CLOCK "-8 ns" -section_id "Z80 cloc
 
 	# Classic Timing Assignments
 	# ==========================
-set_global_assignment -name FMAX_REQUIREMENT "28 MHz" -section_id "FPGA clock"
+	set_global_assignment -name FMAX_REQUIREMENT "28 MHz" -section_id "FPGA clock"
 
 # end CLOCK(FPGA clock)
 # ---------------------
@@ -262,7 +308,7 @@ set_global_assignment -name FMAX_REQUIREMENT "28 MHz" -section_id "FPGA clock"
 
 	# Classic Timing Assignments
 	# ==========================
-set_global_assignment -name FMAX_REQUIREMENT "5.5296 MHz" -section_id "SPI clock"
+	set_global_assignment -name FMAX_REQUIREMENT "5.5296 MHz" -section_id "SPI clock"
 
 # end CLOCK(SPI clock)
 # --------------------
@@ -272,73 +318,27 @@ set_global_assignment -name FMAX_REQUIREMENT "5.5296 MHz" -section_id "SPI clock
 
 	# Pin & Location Assignments
 	# ==========================
-set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to clkz_out
-set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to rwe_n
-set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to rras0_n
-set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to rras1_n
-set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to rucas_n
-set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to rlcas_n
+	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to clkz_out
+	set_instance_assignment -name FAST_OUTPUT_REGISTER OFF -to rwe_n
+	set_instance_assignment -name FAST_OUTPUT_REGISTER OFF -to rras0_n
+	set_instance_assignment -name FAST_OUTPUT_REGISTER OFF -to rras1_n
+	set_instance_assignment -name FAST_OUTPUT_REGISTER OFF -to rucas_n
+	set_instance_assignment -name FAST_OUTPUT_REGISTER OFF -to rlcas_n
 
 	# Classic Timing Assignments
 	# ==========================
-set_instance_assignment -name CLOCK_SETTINGS "FPGA clock" -to fclk
-set_instance_assignment -name CLOCK_SETTINGS "Z80 clock" -to clkz_in
-set_instance_assignment -name CLOCK_SETTINGS "SPI clock" -to spick
-set_instance_assignment -name CUT ON -from clkz_in -to fclk
-set_instance_assignment -name CUT ON -from dram_rd -to "zmem:z80mem|rd_buf"
-set_instance_assignment -name CUT ON -from "zmem:z80mem|rd_buf" -to d
-set_instance_assignment -name CUT ON -from "zclock:zclock|zclk_out" -to clkz_out
+	set_instance_assignment -name CLOCK_SETTINGS "FPGA clock" -to fclk
+	set_instance_assignment -name CLOCK_SETTINGS "Z80 clock" -to clkz_in
+	set_instance_assignment -name CLOCK_SETTINGS "SPI clock" -to spick
+	set_instance_assignment -name CUT ON -from clkz_in -to fclk
+	set_instance_assignment -name CUT ON -from dram_rd -to "zmem:z80mem|rd_buf"
+	set_instance_assignment -name CUT ON -from "zmem:z80mem|rd_buf" -to d
+	set_instance_assignment -name CUT ON -from "zclock:zclock|zclk_out" -to clkz_out
 
 	# Fitter Assignments
 	# ==================
-set_instance_assignment -name GLOBAL_SIGNAL ON -to fclk
-set_instance_assignment -name GLOBAL_SIGNAL ON -to clkz_in
+	set_instance_assignment -name GLOBAL_SIGNAL ON -to fclk
+	set_instance_assignment -name GLOBAL_SIGNAL ON -to clkz_in
 
 # end ENTITY(top)
 # ---------------
-set_global_assignment -name NORMAL_LCELL_INSERT OFF
-set_global_assignment -name CARRY_OUT_PINS_LCELL_INSERT OFF
-set_global_assignment -name AUTO_RESOURCE_SHARING ON
-set_global_assignment -name CASCADE_CHAIN_LENGTH 8
-set_global_assignment -name VERILOG_FILE ../video/mem/video_sfile.v
-set_global_assignment -name VERILOG_FILE ../video/video_ts_render.v
-set_global_assignment -name VERILOG_FILE ../video/video_ts.v
-set_global_assignment -name VERILOG_FILE ../video/mem/video_tsline1.v
-set_global_assignment -name VERILOG_FILE ../video/mem/video_tsline0.v
-set_global_assignment -name MIF_FILE ../video/mem/video_cram.mif
-set_global_assignment -name VERILOG_FILE ../video/mem/video_cram.v
-set_global_assignment -name VERILOG_FILE ../video/mem/video_tmbuf.v
-set_global_assignment -name VERILOG_FILE ../video/mem/video_vmem.v
-set_global_assignment -name VERILOG_FILE ../common/slavespi.v
-set_global_assignment -name VERILOG_FILE ../common/dma.v
-set_global_assignment -name VERILOG_FILE ../common/ide.v
-set_global_assignment -name VERILOG_FILE ../video/video_ports.v
-set_global_assignment -name VERILOG_FILE ../video/video_top.v
-set_global_assignment -name VERILOG_FILE ../video/video_mode.v
-set_global_assignment -name VERILOG_FILE ../video/video_sync.v
-set_global_assignment -name VERILOG_FILE ../video/video_fetch.v
-set_global_assignment -name VERILOG_FILE ../video/video_render.v
-set_global_assignment -name VERILOG_FILE ../video/video_out.v
-set_global_assignment -name VERILOG_FILE ../sound/sound.v
-set_global_assignment -name VERILOG_FILE ../z80/zsignals.v
-set_global_assignment -name VERILOG_FILE ../z80/zpager.v
-set_global_assignment -name VERILOG_FILE ../z80/zmaps.v
-set_global_assignment -name VERILOG_FILE ../z80/znmi.v
-set_global_assignment -name VERILOG_FILE ../z80/zdos.v
-set_global_assignment -name VERILOG_FILE ../z80/zwait.v
-set_global_assignment -name VERILOG_FILE ../z80/zkbdmus.v
-set_global_assignment -name VERILOG_FILE ../z80/zports.v
-set_global_assignment -name VERILOG_FILE ../z80/zclock.v
-set_global_assignment -name VERILOG_FILE ../z80/zint.v
-set_global_assignment -name VERILOG_FILE ../z80/zmem.v
-set_global_assignment -name VERILOG_FILE ../z80/zbus.v
-set_global_assignment -name VERILOG_FILE ../vg93/vg93.v
-set_global_assignment -name VERILOG_FILE ../vg93/fapch_counter.v
-set_global_assignment -name VERILOG_FILE ../vg93/fapch_zek.v
-set_global_assignment -name VERILOG_FILE ../dram/dram.v
-set_global_assignment -name VERILOG_FILE ../dram/arbiter.v
-set_global_assignment -name VERILOG_FILE ../common/clock.v
-set_global_assignment -name VERILOG_FILE ../common/spi.v
-set_global_assignment -name VERILOG_FILE ../common/resetter.v
-set_global_assignment -name VERILOG_FILE ../top.v
-set_global_assignment -name ZIP_VECTOR_WAVEFORM_FILE ../sim_vw/dram.cvwf
