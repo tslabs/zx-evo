@@ -1,0 +1,45 @@
+
+Fixes:
+ - move all Z80 signals to if(zpos)
+ - DMA: access to devices with ports blocking strobes
+ - optimize timings (negative slack on DRAM addr muxes)
+ - fix all oddies with raster: INT 1 pixel delay (test on MULFIX), hblank etc
+ - fix vertical blank for border 1 pixel at the upper-right corner
+ - fix PWM for TV (make smoother)
+ - migrate video fetcher to c2
+ - investigate and longer 14mhz wait length for IOs (if need)
+ - search ways to optimize huge LC usage:
+    - one-hot style selectors = use if...elseif constructions instead of if...if
+
+
+Features to add:
+ - RFSH 28MHz burst
+ - Yscroll array
+ - migrate paging to FPRAM
+ - RRRGGGBB using IDE_RDY and IDE_RES as additional bit, create 2nd project, add to compile
+ - AY frequency (2MHz for Atari and 1MHz for Amstrad)
+ - move all ports to fclk
+ - copper
+ - re-factor Z80 clock module (double-edge trigger)
+ - 28 MHz for Z80 (?)
+ - 512 bytes no-wait buffer
+ - make less power-off delay (apx. 2 sec) on AVR
+ ? LOAD "" for COM-port using X-modem
+ - find solution to mix BEEP and TAPE simultaneously
+ - combine TS and Base confs to one AVR firmware (selection by Turbo key)
+ - line-delay ports: 86 bits
+		TSConfig	8
+		T0XOffsL	8
+		T0XOffsH	1
+		T0YOffsL	8
+		T0YOffsH	1
+		T1XOffsL	8
+		T1XOffsH	1
+		T1YOffsL	8
+		T1YOffsH	1
+		TMPage		8
+		T0GPage		8
+		T1GPage		8
+		SGPage		8
+
+

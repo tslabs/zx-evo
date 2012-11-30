@@ -345,10 +345,10 @@ module video_top (
 		.v_ts		    (v_ts),
 
         .tsconf         (tsconf),
+        // .tsconf         ({3'b0, tsconf[4:0]}),	// no ts
         // .tsconf         ({tsconf[7], 2'b00, tsconf[4:0]}),		// no tiles
         // .tsconf         ({tsconf[7], 1'b0, tsconf[5:0]}),		// only tiles0
         // .tsconf         ({tsconf[7:6], 1'b0, tsconf[4:0]}),	// only tiles1
-        // .tsconf         ({3'b0, tsconf[4:0]}),	// no ts
         .t0gpage        (t0gpage),
         .t1gpage        (t1gpage),
         .sgpage         (sgpage),

@@ -36,6 +36,7 @@ module dma (
 	output wire  [7:0] spi_wrdata,
 	output wire        spi_req,
 	input  wire        spi_stb,
+	input  wire        spi_start,
 
 // IDE interface
 	input  wire [15:0] ide_in,
@@ -110,6 +111,7 @@ module dma (
     wire dev_stb = cram_we || sfile_we || ide_int_stb || (spi_int_stb && bsel);
 
 	wire spi_int_stb = dv_spi && spi_stb;
+	wire spi_int_start = dv_spi && spi_start;
 	wire ide_int_stb = dv_ide && ide_stb;
     assign cram_we = dev_req && dv_crm && state_wr;
     assign sfile_we = dev_req && dv_sfl && state_wr;
@@ -123,7 +125,6 @@ module dma (
     assign ide_req = dev_req && dv_ide;
     assign ide_rnw = state_rd;
 
-
 // data aquiring
     always @(posedge clk)
         if (state_rd)
@@ -134,7 +135,7 @@ module dma (
             if (ide_int_stb)
                 data <= ide_in;
 
-			if (spi_int_stb)
+			if (spi_int_start)			// data that is already read from SPI, just get it
 			begin
 				if (bsel)
 					data[15:8] <= spi_rddata;

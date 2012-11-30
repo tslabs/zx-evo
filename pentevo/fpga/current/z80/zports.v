@@ -462,10 +462,10 @@ module zports(
     wire virt_vg = fddvirt[drive_sel];
 
     assign vg_cs_n = !(iorw & vg_port & dos & !vdos & !virt_vg);
-    assign vg_wrFF = wr & iorq_s2 & vgsys_port & dos & !vdos & !virt_vg;
+    assign vg_wrFF = wr & iorq_s & vgsys_port & dos & !vdos & !virt_vg;
 
-    assign vdos_on  = rdwr & iorq_s2 & (vg_port | vgsys_port) & dos & !vdos & virt_vg;
-    assign vdos_off = rdwr & iorq_s2 & vg_port & vdos;
+    assign vdos_on  = rdwr & iorq_s & (vg_port | vgsys_port) & dos & !vdos & virt_vg;
+    assign vdos_off = rdwr & iorq_s & vg_port & vdos;
 
     // write drive number
     always @(posedge clk)

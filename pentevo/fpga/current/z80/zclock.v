@@ -16,8 +16,6 @@
 // for 3.5 mhz, c3 is both zpos and zneg (alternating)
 
 
-
-
 // 14MHz rulez:
 // 1. do variable stalls for memory access.
 // 2. do fallback on 7mhz for external IO accesses
@@ -50,9 +48,9 @@ module zclock(
     
 );
 
-	reg prec3_cnt;
-	wire h_prec3_1; // to take every other pulse of c2
-	wire h_prec3_2; // to take every other pulse of c2
+	reg c2_cnt;
+	wire h_c2_1; // to take every other pulse of c2
+	wire h_c2_2; // to take every other pulse of c2
 
 	reg [2:0] zcount; // counter for generating 3.5 and 7 MHz z80 clocks
 
@@ -66,7 +64,7 @@ module zclock(
 `ifdef SIMULATE
 	initial // simulation...
 	begin
-		prec3_cnt = 1'b0;
+		c2_cnt = 1'b0;
 		int_turbo   = 2'b00;
 		old_rfsh_n  = 1'b1;
 		clk14_src   = 1'b0;
@@ -147,13 +145,13 @@ module zclock(
 
 	// take every other pulse of c2 (make half c2)
 	always @(posedge fclk) if( c2 )
-		prec3_cnt <= ~prec3_cnt;
+		c2_cnt <= ~c2_cnt;
 
-	assign h_prec3_1 =  prec3_cnt && c2;
-	assign h_prec3_2 = !prec3_cnt && c2;
+	assign h_c2_1 =  c2_cnt && c2;
+	assign h_c2_2 = !c2_cnt && c2;
 
-	wire pre_zpos_35 = h_prec3_2;
-	wire pre_zneg_35 = h_prec3_1;
+	wire pre_zpos_35 = h_c2_2;
+	wire pre_zneg_35 = h_c2_1;
 
 	wire pre_zpos_70 = c2;
 	wire pre_zneg_70 = c0;

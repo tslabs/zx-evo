@@ -35,7 +35,7 @@ module ide(
 	// output wire next,
 
 // IDE interface
-	inout  wire [15:0] ide_d,
+	output  wire [15:0] ide_out,
 	output wire [ 2:0] ide_a,
 	output reg         ide_dir,     // rnw
 	output reg         ide_cs0_n,
@@ -73,8 +73,7 @@ module ide(
 		else
 			tst = 0;
 	
-	assign ide_d = ide_dir ? 16'hZZZZ : ide_out;
-    wire [15:0] ide_out = dma_req ? dma_out : z80_out;
+    assign ide_out = dma_req ? dma_out : z80_out;
 	assign ide_a = dma_req ? 3'b0 : z80_a;
 	wire dir = dma_req ? dma_rnw : z80_rnw;
 	wire cs0_n = dma_req ? 1'b0 : z80_cs0_n;

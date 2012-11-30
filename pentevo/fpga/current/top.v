@@ -662,7 +662,7 @@ module top(
 	wire wr;
 	wire iorq;
 	wire iorq_s;
-	wire iorq_s2;
+	// wire iorq_s2;
 	wire mreq;
 	wire mreq_s;
 	wire rdwr;
@@ -686,7 +686,8 @@ module top(
     zsignals zsignals(
                 .zclk       (zclk),
                 .clk        (fclk),
-                // .zpos       (zpos),
+                .zpos       (zpos),
+				
 				.rst_n      (rst_n),
                 .iorq_n     (iorq_n),
                 .mreq_n     (mreq_n),
@@ -702,7 +703,7 @@ module top(
                 .wr         (wr),
                 .iorq       (iorq),
                 .iorq_s     (iorq_s),
-                .iorq_s2    (iorq_s2),
+                // .iorq_s2    (iorq_s2),
                 .mreq       (mreq),
                 .mreq_s     (mreq_s),
                 .rdwr       (rdwr),
@@ -766,7 +767,7 @@ module top(
                     .iorw       (iorw),
 
                     .iorq_s     (iorq_s),
-                    .iorq_s2    (iorq_s2),
+                    // .iorq_s2    (iorq_s2),
                     .iord_s     (iord_s),
                     .iowr_s     (iowr_s),
                     .iorw_s     (iorw_s),
@@ -897,6 +898,7 @@ module top(
 
         .spi_req    (dma_spi_req),
 		.spi_stb	(spi_stb),
+		.spi_start	(spi_start),
         .spi_rddata (spi_dout),
         .spi_wrdata (dma_spi_din),
 
@@ -962,6 +964,7 @@ module top(
 	wire dma_spi_req;
 	wire spi_rdy;
 	wire spi_stb;
+	wire spi_start;
 	wire [7:0] cpu_spi_din;
 	wire [7:0] dma_spi_din;
 	wire [7:0] spi_dout;
@@ -978,6 +981,7 @@ module top(
 				.dma_req(dma_spi_req),
 				// .rdy(spi_rdy),
 				.stb(spi_stb),
+				.start(spi_start),
 				.cpu_din(cpu_spi_din),
 				.dma_din(dma_spi_din),
 				.dout(spi_dout),
@@ -987,9 +991,10 @@ module top(
 
 
 	assign ide_rs_n = rst_n;
-	wire [15:0] ide_out;
     wire ide_stb;
     wire ide_ready;
+	wire [15:0] ide_out;
+	assign ide_d = ide_dir ? 16'hZZZZ : ide_out;
 
     ide ide(
 			// .tst		(tst),
@@ -999,7 +1004,7 @@ module top(
             .rdy_stb    (ide_stb),
             .rdy        (ide_ready),
 
-            .ide_d      (ide_d),
+            .ide_out    (ide_out),
             .ide_a      (ide_a),
             .ide_dir    (ide_dir),
             .ide_cs0_n  (ide_cs0_n),
