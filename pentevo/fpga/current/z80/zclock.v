@@ -33,18 +33,24 @@ module zclock(
     
 	input rst,
 	input rfsh_n, // switch turbo modes in RFSH part of m1
-	input  wire iorq,
+	input  wire iorq_s,
 	input  wire external_port,
 
 	output reg zpos,
 	output reg zneg,
-	input  wire zclk_stall,
+
+// stall enables and triggers
+	input  wire cpu_stall,
+	input  wire ide_stall,
+	input  wire dos_on,
+	input  wire dos_off,
 
 	input [1:0] turbo, // 2'b00 -  3.5 MHz
 	                   // 2'b01 -  7.0 MHz
 	                   // 2'b1x - 14.0 MHz
 
-	output reg [1:0] int_turbo // internal turbo, switched on /RFSH
+	// output reg [1:0] int_turbo // internal turbo, switched on /RFSH
+	output wire [1:0] int_turbo // internal turbo, switched on /RFSH
     
 );
 
@@ -55,7 +61,7 @@ module zclock(
 	reg [2:0] zcount; // counter for generating 3.5 and 7 MHz z80 clocks
 
 
-	reg old_rfsh_n;
+	// reg old_rfsh_n;
 
 
 	reg clk14_src; // source for 14MHz clock
@@ -74,63 +80,35 @@ module zclock(
 `endif
 
 	// switch clock only at predefined time
-	always @(posedge fclk) if(zpos)
-	begin
-		old_rfsh_n <= rfsh_n;
+	// always @(posedge fclk) if(zpos)
+	// begin
+		// old_rfsh_n <= rfsh_n;
 
-		if( old_rfsh_n && !rfsh_n )
-			int_turbo <= turbo;
-	end
-
-
-	// make 14MHz iorq wait
-	reg [3:0] io_wait_cnt;
-
-	reg io_wait;
-
-	wire io;
-	reg  io_r;
-
-	assign io = iorq & external_port;
-
-	always @(posedge fclk)
-	if( zpos )
-		io_r <= io;
-
-	always @(posedge fclk)
-	if (rst)
-		io_wait_cnt <= 4'd0;
-	else if( io && (!io_r) && zpos && int_turbo[1] )
-		// io_wait_cnt[3] <= 1'b1;
-		io_wait_cnt[0] <= 1'b1;
-	// else if( io_wait_cnt[3] )
-	else if (|io_wait_cnt)
-		io_wait_cnt <= io_wait_cnt + 4'd1;
+		// if( old_rfsh_n && !rfsh_n )
+			// int_turbo <= turbo;
+	// end
+		assign int_turbo = turbo;
 
 
-	always @(posedge fclk)
-	case( io_wait_cnt )
-		4'b0000: io_wait <= 1'b0;
-		4'b0001: io_wait <= 1'b1;
-		4'b0010: io_wait <= 1'b1;
-		4'b0011: io_wait <= 1'b1;
-		4'b0100: io_wait <= 1'b1;
-		4'b0101: io_wait <= 1'b1;
-		4'b0110: io_wait <= 1'b1;
-		4'b0111: io_wait <= 1'b1;
-		4'b1000: io_wait <= 1'b1;
-		4'b1001: io_wait <= 1'b1;
-		4'b1010: io_wait <= 1'b1;
-		4'b1011: io_wait <= 1'b1;
-		4'b1100: io_wait <= 1'b1;
-		4'b1101: io_wait <= 1'b0;
-		4'b1110: io_wait <= 1'b1;
-		4'b1111: io_wait <= 1'b0;
-		default: io_wait <= 1'b0;
-	endcase
+// wait generator
+	wire stall = cpu_stall || dos_io_stall || ide_stall;
+    wire dos_io_stall = stall_start || !stall_count_end;
+    wire stall_start = dos_stall || io_stall;
+    wire dos_stall = dos_on || vdos_off;
+    wire io_stall = iorq_s && external_port && int_turbo[1];
+	wire stall_count_end = stall_count[3];
 
-
-	wire stall = zclk_stall | io_wait;
+	reg [3:0] stall_count;
+	always @(posedge clk)
+		if (stall_start)
+		begin
+			if (dos_stall)
+				stall_count <= 4'd4;	// 4 tacts 28MHz (1 tact 7MHz)
+			else
+				stall_count <= 4'd0;	// 8 tacts 28MHz (1 tact 3.5MHz)
+		end
+		else if (!stall_count_end)
+			stall_count <= stall_count + 3'd1;
 
 
 	// 14MHz clocking
@@ -140,7 +118,6 @@ module zclock(
 	//
 	wire pre_zpos_140 =   clk14_src ;
 	wire pre_zneg_140 = (~clk14_src);
-
 
 
 	// take every other pulse of c2 (make half c2)
