@@ -15,8 +15,7 @@ module zdos(
 	input  wire        vdos_off,
 
 	output reg         dos,
-	output reg         vdos,
-	output wire        dos_stall
+	output reg         vdos
 
 );
 
@@ -49,21 +48,6 @@ module zdos(
 		vdos <= 1'b0;
 	else if (opfetch)
         vdos <= pre_vdos;
-
-
-// stall Z80 clock during modes switching
-    assign dos_stall = stall_start | stall_count[2];
-    wire stall_start = dos_on | vdos_off;
-
-	reg [2:0] stall_count;
-	always @(posedge clk)
-		if (stall_start)
-		begin
-			stall_count[2] <= 1'b1;
-			stall_count[0] <= 1'b1;
-		end
-		else if (stall_count[2])
-			stall_count[2:0] <= stall_count[2:0] + 3'd1;     // count: 000(stop) -> 101 -> 110 -> 111 -> 000(stop)
 
 
 endmodule

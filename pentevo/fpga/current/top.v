@@ -228,7 +228,6 @@ module top(
 	assign rompg3   =  rompg[3];
 	assign rompg4   =  rompg[4];
 
-	wire dos_stall;
 	wire ide_stall;
 
 	zclock zclock
@@ -239,14 +238,20 @@ module top(
         .c2(c2),
         .rst(rst),
         .rfsh_n(rfsh_n),
-        .iorq(iorq),
+        .iorq_s(iorq_s),
         .zclk_out(clkz_out),
 		.zpos(zpos),
         .zneg(zneg),
 		.turbo(turbo),
 		// .turbo(2'b01),
 		// .turbo(2'b00),
-		.zclk_stall(cpu_stall || dos_stall || ide_stall),
+		
+        .dos_on     (dos_on),
+        .dos_off    (dos_off)
+
+		.cpu_stall(cpu_stall),
+		.ide_stall(ide_stall),
+		
         .int_turbo(int_turbo),
 		.external_port(external_port)
 	);
@@ -324,7 +329,6 @@ module top(
 
 	           .dos(dos),
 	           .vdos(vdos),
-               .dos_stall(dos_stall)
 	         );
 
 

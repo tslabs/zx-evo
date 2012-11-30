@@ -26,7 +26,7 @@ module pager (
     wire [1:0] win = za[15:14];
     wire win0 = ~|win;
     assign romnram = win0 && (!memconf[3]) && (!vdos);
-    assign rw_en = !win0 | memconf[1] | vdos;
+    assign rw_en = !win0 || memconf[1] || vdos;
     assign page = xtpage[win];
 
     wire [7:0] xtpage[0:3];
