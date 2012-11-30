@@ -342,3 +342,13 @@ set_global_assignment -name INCREMENTAL_VECTOR_INPUT_SOURCE ../sim_vw/dram.cvwf
 
 # end ENTITY(top)
 # ---------------
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to dram_ra[4]
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to dram_ra[3]
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to dram_ra[5]
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to dram_ra[2]
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to dram_ra[6]
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to dram_ra[1]
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to dram_ra[7]
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to dram_ra[0]
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to dram_ra[8]
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to dram_ra[9]
