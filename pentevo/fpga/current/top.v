@@ -75,8 +75,6 @@ module top(
 	output ide_cs1_n,
 	output ide_rd_n,
 	output ide_wr_n,
-	output ide_rs_n,
-	input ide_rdy,
 
 	// VG93 and diskdrive
 	output vg_clk,
@@ -96,7 +94,6 @@ module top(
 	input vg_sr,
 	input vg_tr43,
 	input rdat_b_n,
-	input vg_wf_de,
 	input vg_drq,
 	input vg_irq,
 	input vg_wd,
@@ -111,8 +108,18 @@ module top(
 	input spick,
 	input spido,
 	output spidi,
-	output spiint_n
+	output spiint_n,
+	
+	// unused
+	output ide_rs_n,
+	output ide_rdy,
+	output vg_wf_de
 );
+
+	assign ide_rs_n = clkz_out;
+	assign ide_rdy = clkz_out;
+	assign vg_wf_de = clkz_out;
+
 
 	wire f0, f1, h0, h1, c0, c1, c2, c3;
 	wire [1:0] ay_mod;
@@ -215,7 +222,7 @@ module top(
 
 	wire beeper_wr, covox_wr;
 
-	wire [1:0] int_turbo;
+	// wire [1:0] int_turbo;
 	wire cpu_next;
 	wire cpu_stall;
 
@@ -232,7 +239,7 @@ module top(
 
 	zclock zclock
 	(
-		.fclk(fclk),
+		.clk(fclk),
         .zclk(zclk),
         .c0(c0),
         .c2(c2),
@@ -247,12 +254,12 @@ module top(
 		// .turbo(2'b00),
 		
         .dos_on     (dos_on),
-        .dos_off    (dos_off)
+        .vdos_off    (vdos_off),
 
 		.cpu_stall(cpu_stall),
 		.ide_stall(ide_stall),
 		
-        .int_turbo(int_turbo),
+        // .int_turbo(int_turbo),
 		.external_port(external_port)
 	);
 
@@ -386,11 +393,11 @@ module top(
 		.cpu_addr  (cpu_addr),
 		.cpu_wrdata(cpu_wrdata),
 		// .cpu_rddata(dram_rddata),    // registered
-		.cpu_rddata(dram_rd),        // raw
+		.cpu_rddata(dram_rd),   	    // raw
 		.cpu_stall (cpu_stall),
-		.cpu_next  (cpu_next),
+		.cpu_next  (cpu_next)
 
-		.int_turbo(int_turbo)
+		// .int_turbo(int_turbo)
 	);
 
 
@@ -994,7 +1001,6 @@ module top(
              );
 
 
-	assign ide_rs_n = rst_n;
     wire ide_stb;
     wire ide_ready;
 	wire [15:0] ide_out;
