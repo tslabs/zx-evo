@@ -222,7 +222,6 @@ module top(
 
 	wire beeper_wr, covox_wr;
 
-	// wire [1:0] int_turbo;
 	wire cpu_next;
 	wire cpu_stall;
 
@@ -240,16 +239,14 @@ module top(
 	zclock zclock
 	(
 		.clk(fclk),
-        .zclk(zclk),
         .c0(c0),
         .c2(c2),
-        .rst(rst),
-        .rfsh_n(rfsh_n),
         .iorq_s(iorq_s),
         .zclk_out(clkz_out),
 		.zpos(zpos),
         .zneg(zneg),
 		.turbo(turbo),
+		// .turbo(turbo & 2'b01),
 		// .turbo(2'b01),
 		// .turbo(2'b00),
 		
@@ -259,7 +256,6 @@ module top(
 		.cpu_stall(cpu_stall),
 		.ide_stall(ide_stall),
 		
-        // .int_turbo(int_turbo),
 		.external_port(external_port)
 	);
 
@@ -395,9 +391,9 @@ module top(
 		// .cpu_rddata(dram_rddata),    // registered
 		.cpu_rddata(dram_rd),   	    // raw
 		.cpu_stall (cpu_stall),
-		.cpu_next  (cpu_next)
+		.cpu_next  (cpu_next),
 
-		// .int_turbo(int_turbo)
+		.turbo(turbo)
 	);
 
 

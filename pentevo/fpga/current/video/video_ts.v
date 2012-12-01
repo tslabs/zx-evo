@@ -260,14 +260,13 @@ module video_ts (
 	wire s_layer_end = (spr_skip && s_leap) || (sprite_go && s_leap_r);
 	// wire sprites_last = sreg == 8'd254;
 	wire sprites_last = sreg == 8'd255;
-	wire sprites_done = s_layer[3];
 
-	reg [3:0] s_layer;
+	reg [2:0] s_layer;
 	always @(posedge clk)
 		if (start)
-			s_layer <= 4'b1;
+			s_layer <= 3'b1;
 		else if (s_layer_end)
-			s_layer <= {(sprites_last || s_layer[2]), s_layer[1:0], 1'b0};
+			s_layer <= {s_layer[1:0], 1'b0};
 
 	// SFile registers control
 	wire spr_skip = sf0_valid && !spr_valid;

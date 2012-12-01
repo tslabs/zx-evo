@@ -27,7 +27,6 @@
 module zclock(
 
 	input clk,
-	input zclk, // Z80 clock, buffered via act04 and returned back to the FPGA
 	output reg zclk_out, // generated Z80 clock - passed through inverter externally!
 	input c0, c2,
 
@@ -66,8 +65,7 @@ module zclock(
     wire dos_io_stall = stall_start || !stall_count_end;
     wire stall_start = dos_stall || io_stall;
     wire dos_stall = dos_on || vdos_off;
-    // wire io_stall = iorq_s && external_port && turbo[1];
-    wire io_stall = iorq_s;
+    wire io_stall = iorq_s && external_port && turbo[1];
 	wire stall_count_end = stall_count[3];
 
 	reg [3:0] stall_count;
@@ -107,7 +105,6 @@ module zclock(
 
 		
 // Z80 clocking strobes
-	// wire stall = cpu_stall || ide_stall;
 	wire stall = cpu_stall || dos_io_stall || ide_stall;
 
 	always @(posedge clk)

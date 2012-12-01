@@ -39,7 +39,7 @@ module zmem(
 	input  wire rd,
 	input  wire wr,
 
-	input  wire [ 1:0] int_turbo, // 2'b00 - 3.5,
+	input  wire [ 1:0] turbo, 	  // 2'b00 - 3.5,
 	                              // 2'b01 - 7.0,
 	                              // 2'b1x - 14.0
 	input wire [7:0] page,
@@ -154,7 +154,7 @@ module zmem(
 	end
 
     
-    wire [1:0] cc = &int_turbo ? {c1, c0} : {c2, c1};
+    wire [1:0] cc = &turbo ? {c1, c0} : {c2, c1};
     // wire [1:0] cc = {c2, c1};	// to disable overclock
     
 	always @(posedge fclk)
@@ -171,11 +171,11 @@ module zmem(
 	end
 
 
-	assign cpu_stall = int_turbo[1] ? (stall14_ini | stall14_cyc | stall14_fin) : (cpureq_357 && (!cpu_next));
+	assign cpu_stall = turbo[1] ? (stall14_ini | stall14_cyc | stall14_fin) : (cpureq_357 && (!cpu_next));
 
 	// cpu request
-	assign cpu_req = int_turbo[1] ? (pending_cpu_req | dram_beg) : cpureq_357;
-	assign cpu_rnw = int_turbo[1] ? (dram_beg ? (!memwr) : cpu_rnw_r) : ramrd;
+	assign cpu_req = turbo[1] ? (pending_cpu_req | dram_beg) : cpureq_357;
+	assign cpu_rnw = turbo[1] ? (dram_beg ? (!memwr) : cpu_rnw_r) : ramrd;
 
 	always @(posedge fclk)
 	if (rst)
