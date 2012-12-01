@@ -56,7 +56,7 @@ void atx_power_task(void)
 	static UWORD last_count = 0;
 	UBYTE j = 50;
 
-	if ( atx_counter > 1700 )
+	if ( atx_counter > 680 )
 	{
 		if ( ( SOFTRES_PIN & (1<<SOFTRES) ) == 0 )
 		{
