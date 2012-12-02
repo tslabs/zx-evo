@@ -6,7 +6,7 @@ module zint
 	input  wire clk,
 	input  wire int_start,
 	input  wire vdos,
-	input  wire intack_s,
+	input  wire intack,
 	output reg  int_n
 );
 
@@ -16,7 +16,7 @@ module zint
 	begin
 		if (int_start && !vdos)
 			int_n <= 1'b0;
-		else if (intctr[9] || intack_s)
+		else if (intctr[9] || intack)
 			int_n <= 1'bZ;
 	end
 

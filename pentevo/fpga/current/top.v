@@ -111,12 +111,12 @@ module top(
 	output spiint_n,
 	
 	// unused
-	output ide_rs_n,
-	output ide_rdy,
-	output vg_wf_de
+	input ide_rs_n,
+	input ide_rdy,
+	input vg_wf_de
 );
 
-	// assign ide_rs_n = clkz_out;
+	// assign ide_rs_n = !cpu_next;
 	// assign ide_rdy = clkz_out;
 	// assign vg_wf_de = clkz_out;
 
@@ -133,8 +133,8 @@ module top(
 		.h0(h0), .h1(h1),
 		.c0(c0), .c1(c1), .c2(c2), .c3(c3),
 		.ay_clk(ay_clk),
-		// .ay_mod(sysconf[4:3])
-		.ay_mod(2'b00)
+		.ay_mod(sysconf[4:3])
+		// .ay_mod(2'b00)
 	);
 
 
@@ -273,9 +273,9 @@ module top(
 	wire ena_ports;
 	wire drive_ff;
 
-	// assign d = ena_ram ? dout_ram : (ena_ports ? dout_ports : 8'bZZZZZZZZ);
-	// assign d = ena_ram ? dout_ram : (ena_ports ? dout_ports : (drive_ff ? 8'hFF : 8'bZZZZZZZZ));
 	assign d = ena_ram ? dout_ram : (ena_ports ? dout_ports : (intack ? im2vect : (drive_ff ? 8'hFF : 8'bZZZZZZZZ)));
+	// assign d = ena_ram ? dout_ram : (ena_ports ? dout_ports : (drive_ff ? 8'hFF : 8'bZZZZZZZZ));
+	// assign d = ena_ram ? dout_ram : (ena_ports ? dout_ports : 8'bZZZZZZZZ);
 
 	zbus zxbus(
         .iorq(iorq),
@@ -439,14 +439,14 @@ module top(
 	wire [20:0] dma_addr;
 	wire [15:0] dma_wrdata;
 	wire dma_req;
-	wire dma_zwt;
+	wire dma_z80_lp;
 	wire dma_rnw;
 	wire dma_next;
 	wire dma_strobe;
 
 	wire [20:0] ts_addr;
 	wire ts_req;
-	wire ts_zwt;
+	wire ts_z80_lp;
 	wire ts_pre_next;
 	wire ts_next;
 
@@ -490,12 +490,12 @@ module top(
 	                 .dma_addr		(dma_addr),
 	                 .dma_wrdata	(dma_wrdata),
 	                 .dma_req		(dma_req),
-	                 .dma_zwt		(dma_zwt),
+	                 .dma_z80_lp		(dma_z80_lp),
 	                 .dma_rnw		(dma_rnw),
 					 .dma_next		(dma_next),
 
 					 .ts_req		(ts_req),
-					 .ts_zwt		(ts_zwt),
+					 .ts_z80_lp		(ts_z80_lp),
 					 .ts_addr		(ts_addr),
 					 .ts_pre_next	(ts_pre_next),
 					 .ts_next		(ts_next),
@@ -592,7 +592,7 @@ module top(
 		.next_video     (next_video),
 
 		.ts_req			(ts_req),
-		.ts_zwt			(ts_zwt),
+		.ts_z80_lp			(ts_z80_lp),
 		.ts_pre_next	(ts_pre_next),
 		.ts_addr		(ts_addr),
 		.ts_next		(ts_next),
@@ -687,7 +687,6 @@ module top(
 	wire opfetch;
 	wire opfetch_s;
 	wire intack;
-	wire intack_s;
 
     zsignals zsignals(
                 .clk        (fclk),
@@ -726,8 +725,7 @@ module top(
                 .memrw_s    (memrw_s),
                 .opfetch    (opfetch),
                 .opfetch_s  (opfetch_s),
-                .intack     (intack),
-                .intack_s   (intack_s)
+                .intack     (intack)
                 );
 
 
@@ -890,7 +888,7 @@ module top(
 		.dram_addr	(dma_addr),
 		.dram_rnw	(dma_rnw),
 		.dram_req	(dma_req),
-		.dma_zwt	(dma_zwt),
+		.dma_z80_lp	(dma_z80_lp),
 		.dram_rddata(dram_rd),
 		.dram_wrdata(dma_wrdata),
 		.dram_next	(dma_next),
@@ -919,7 +917,7 @@ module top(
 		.clk(fclk),
 		.int_start(int_start),
 		.vdos(vdos),
-		.intack_s(intack_s),
+		.intack(intack),
 		.int_n(int_n)
 	);
 

@@ -45,8 +45,7 @@ module zsignals(
 	output wire memrd_s,
 	output wire memwr_s,
 	output wire memrw_s,
-	output wire opfetch_s,
-	output wire intack_s
+	output wire opfetch_s
 );
 
 // invertors
@@ -81,7 +80,6 @@ module zsignals(
     assign memwr_s = mreq_s && !rd;
     assign memrw_s = mreq_s && rdwr;
     assign opfetch_s = memrd_s && m1;
-    assign intack_s = iorq_s && m1;
 
 // latch inputs on FPGA clock
 	reg [1:0] iorq_r, mreq_r;
