@@ -284,8 +284,8 @@ module zports(
 // This bit is loaded as 1 while FPGA is configured
 // and automatically reset to 0 after STATUS port reading
 
-    reg pwr_up = 1'b1;
     reg pwr_up_reg;
+    reg pwr_up = 1'b1;
     always @(posedge clk)
         if (iord_s & (loa == PORTXT) & (hoa == XSTAT))
         begin
@@ -461,11 +461,11 @@ module zports(
 // VG93
     wire virt_vg = fddvirt[drive_sel];
 
-    assign vg_cs_n = !(iorw & vg_port & dos & !vdos & !virt_vg);
-    assign vg_wrFF = wr & iorq_s & vgsys_port & dos & !vdos & !virt_vg;
+    assign vg_cs_n = !(iorw && vg_port && dos && !vdos && !virt_vg);
+    assign vg_wrFF = wr && iorq_s && vgsys_port && dos && !vdos && !virt_vg;
 
-    assign vdos_on  = rdwr & iorq_s & (vg_port | vgsys_port) & dos & !vdos & virt_vg;
-    assign vdos_off = rdwr & iorq_s & vg_port & vdos;
+    assign vdos_on  = rdwr && iorq_s && (vg_port || vgsys_port) && dos && !vdos && virt_vg;
+    assign vdos_off = rdwr && iorq_s && vg_port && vdos;
 
     // write drive number
     always @(posedge clk)

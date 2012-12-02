@@ -116,10 +116,12 @@ module top(
 	output vg_wf_de
 );
 
-	assign ide_rs_n = clkz_out;
-	assign ide_rdy = clkz_out;
-	assign vg_wf_de = clkz_out;
+	// assign ide_rs_n = clkz_out;
+	// assign ide_rdy = clkz_out;
+	// assign vg_wf_de = clkz_out;
 
+	// assign tst[2] = iord_s;
+	// assign tst[1] = iorq_s;
 
 	wire f0, f1, h0, h1, c0, c1, c2, c3;
 	wire [1:0] ay_mod;
@@ -271,10 +273,9 @@ module top(
 	wire ena_ports;
 	wire drive_ff;
 
-	assign d = ena_ram ? dout_ram : (ena_ports ? dout_ports : (intack ? im2vect : (drive_ff ? 8'hFF : 8'bZZZZZZZZ)));
-	// assign d = ena_ram ? dout_ram : (ena_ports ? dout_ports : (drive_ff ? 8'hFF : 8'bZZZZZZZZ));
-	// assign d = ena_ram ? dout_ram : (ena_ports ? dout_ports : (intack ? im2vect : (drive_ff ? 8'h00 : 8'bZZZZZZZZ)));
 	// assign d = ena_ram ? dout_ram : (ena_ports ? dout_ports : 8'bZZZZZZZZ);
+	// assign d = ena_ram ? dout_ram : (ena_ports ? dout_ports : (drive_ff ? 8'hFF : 8'bZZZZZZZZ));
+	assign d = ena_ram ? dout_ram : (ena_ports ? dout_ports : (intack ? im2vect : (drive_ff ? 8'hFF : 8'bZZZZZZZZ)));
 
 	zbus zxbus(
         .iorq(iorq),
@@ -294,7 +295,6 @@ module top(
 	wire [7:0] page;
 	wire vdos_on, vdos_off;
 	wire dos_on, dos_off;
-    wire romnram;
     wire rw_en;
 
     pager pager(
@@ -306,11 +306,10 @@ module top(
         .vdos       (vdos),
 
         .page       (page),
-        .romnram    (romnram),
+        .romnram    (csrom),
         .rw_en      (rw_en),
         .dos_on     (dos_on),
         .dos_off    (dos_off)
-
     );
 
 
@@ -324,6 +323,7 @@ module top(
 	           .zclk(zclk),
 			   .rst(rst),
                .opfetch(opfetch),
+               .opfetch_s(opfetch_s),
 
 	           .dos_on  (dos_on),
 	           .dos_off (dos_off),
@@ -346,7 +346,7 @@ module top(
 
 	zmem z80mem
 	(
-		.fclk (fclk),
+		.clk (fclk),
 		.rst(rst),
 
 		.zpos(zpos),
@@ -363,7 +363,7 @@ module top(
 		.zd_ena(ena_ram),
 
 		.opfetch(opfetch),
-		.iorq(iorq),
+		.iorq_s(iorq_s),
 		.mreq(mreq),
         .memrd(memrd),
         .memwr(memwr),
@@ -371,7 +371,6 @@ module top(
 		.wr(wr),
 
 		.page   (page),
-		.romnram(romnram),
 
 		.rw_en(rw_en),
 		.romoe_n(romoe_n),
@@ -691,7 +690,6 @@ module top(
 	wire intack_s;
 
     zsignals zsignals(
-                .zclk       (zclk),
                 .clk        (fclk),
                 .zpos       (zpos),
 				
@@ -921,7 +919,7 @@ module top(
 		.clk(fclk),
 		.int_start(int_start),
 		.vdos(vdos),
-		.intack(intack),
+		.intack_s(intack_s),
 		.int_n(int_n)
 	);
 
@@ -937,10 +935,10 @@ module top(
 		.int_start(int_start),
 
 		.set_nmi(set_nmi),
-		.clr_nmi(clr_nmi),
+		.clr_nmi(clr_nmi)
 
-		.in_nmi (in_nmi),
-		.gen_nmi(gen_nmi)
+		// .in_nmi (in_nmi),	// commented to disable
+		// .gen_nmi(gen_nmi)
 	);
 
 
