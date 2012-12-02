@@ -98,17 +98,15 @@ module video_top (
 	wire [8:0] gx_offs;    //
 	wire [8:0] gy_offs;    //
 	wire [7:0] palsel;     //
-	wire [8:0] t0x_offs;   // * not yet !!!
-	wire [8:0] t0y_offs;   // *
-	wire [8:0] t1x_offs;   // *
-	wire [8:0] t1y_offs;   // *
+	wire [8:0] t0x_offs;   // 
+	wire [8:0] t1x_offs;   // 
+	wire [7:0] t0gpage;    //
+	wire [7:0] t1gpage;    //
+	wire [7:0] sgpage;     // * not yet !!!
+	wire [8:0] t0y_offs;
+	wire [8:0] t1y_offs;
 	wire [7:0] tsconf;
 	wire [7:0] tmpage;
-	wire [7:0] t0gpage;
-	wire [7:0] t1gpage;
-	wire [7:0] sgpage;
-	wire [7:0] vpage_d;
-    wire [7:0] palsel_d;
 	wire [7:0] hint_beg;
 	wire [8:0] vint_beg;
 	wire [8:0] hpix_beg;
@@ -133,7 +131,7 @@ module video_top (
 
 // synchro
 	wire frame_start;
-	wire line_start;
+	wire line_start_s;
 	wire pix_start;
 	wire tv_pix_start;
     wire vga_pix_start;
@@ -190,6 +188,8 @@ module video_top (
 		.clk		  	(clk),
         .d              (d),
         .res            (res),
+		.line_start_s	(line_start_s),
+		
         .border_wr      (border_wr),
         .zborder_wr     (zborder_wr),
     	.zvpage_wr	    (zvpage_wr),
@@ -216,6 +216,7 @@ module video_top (
     	.t0gpage_wr	    (t0gpage_wr),
     	.t1gpage_wr	    (t1gpage_wr),
     	.sgpage_wr	    (sgpage_wr),
+		
         .border         (border),
         .vpage          (vpage),
         .vconf          (vconf),
@@ -241,11 +242,8 @@ module video_top (
 		.f1			    (f1),
 		.c2			    (c2),
 		.c3			    (c3),
-		.vconf		    (vconf),
 		.vpage	    	(vpage),
-		.vpage_d    	(vpage_d),
-		.palsel	    	(palsel),
-		.palsel_d    	(palsel_d),
+		.vconf	    	(vconf),
 		.fetch_sel		(fetch_sel),
 		.fetch_bsl		(fetch_bsl),
 		.fetch_cnt	    (scnt),
@@ -253,8 +251,6 @@ module video_top (
 		.txt_char	    (fetch_temp[15:0]),
 		.gx_offs		(gx_offs),
 		.x_offs_mode	(x_offs_mode),
-        .line_start     (line_start),
-		.zvpage_wr	    (zvpage_wr),
 		.hpix_beg	    (hpix_beg),
 		.hpix_end	    (hpix_end),
 		.vpix_beg	    (vpix_beg),
@@ -264,6 +260,7 @@ module video_top (
         .cnt_col        (cnt_col),
         .cnt_row        (cnt_row),
         .cptr	        (cptr),
+		.line_start_s	(line_start_s),
 		.pix_start	    (pix_start),
 		.tv_hires		(tv_hires),
 		.vga_hires	    (vga_hires),
@@ -312,7 +309,7 @@ module video_top (
 		.rstart			(gy_offs),
 		.vga_line		(vga_line),
 		.frame_start	(frame_start),
-		.line_start		(line_start),
+		.line_start_s	(line_start_s),
 		.int_start		(int_start),
 		.v_pf			(v_pf),
 		.hpix			(hpix),
@@ -419,7 +416,7 @@ module video_top (
 		.flash			(flash),
 		.hires			(tv_hires),
 		.psel			(scnt),
-		.palsel			(palsel_d[3:0]),
+		.palsel			(palsel[3:0]),
 		.render_mode	(render_mode),
 		.data	 	    (fetch_data),
 		.border_in 	    (border),
@@ -438,7 +435,7 @@ module video_top (
 		.vga_blank		(vga_blank),
 		.vga_line		(vga_line),
 		.frame			(frame),
-		.palsel			(palsel_d[3:0]),
+		.palsel			(palsel[3:0]),
 	    .plex_sel_in	({h1, f1}),
 		.tv_hires		(tv_hires),
 		.vga_hires		(vga_hires),
