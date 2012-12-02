@@ -5,7 +5,7 @@
 // Z80 memory manager: routes ROM/RAM accesses, makes wait-states for 14MHz or stall condition, etc.
 //
 //
-// fclk    _/`\_/`\_/`\_/`\_/`\_/`\_/`\_/`\_/`\_/`\_/`\_/`\_/`\_/`\_/`\_/`\_/`\_/`\_/`\_/`\_/`\_/`\_/`\_/`\_/`\_/`\_/`\_/`\_/`\_/`\_/`\
+// clk    _/`\_/`\_/`\_/`\_/`\_/`\_/`\_/`\_/`\_/`\_/`\_/`\_/`\_/`\_/`\_/`\_/`\_/`\_/`\_/`\_/`\_/`\_/`\_/`\_/`\_/`\_/`\_/`\_/`\_/`\_/`\
 //          |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
 // zclk     /```\___/```\___/```\___/```````\_______/```````\_______/```````````````\_______________/```````````````\_______________/`
 //          |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
@@ -15,7 +15,7 @@
 
 module zmem(
 
-	input  wire fclk,
+	input  wire clk,
 	input  wire rst,
 
 	input  wire zpos, //
@@ -32,7 +32,7 @@ module zmem(
 	output wire zd_ena,         // output to Z80 bus enable
 
 	input  wire opfetch,
-	input  wire iorq,
+	input  wire iorq_s,
 	input  wire mreq,
     input  wire memrd,
     input  wire memwr,
@@ -44,11 +44,10 @@ module zmem(
 	                              // 2'b1x - 14.0
 	input wire [7:0] page,
 	input wire rw_en,
-	input wire romnram,
+	input wire csrom,
 
 	output wire        romoe_n,
 	output wire        romwe_n,
-	output wire        csrom,
 
 	input wire dos_on,
 	input wire vdos_on,
@@ -66,54 +65,39 @@ module zmem(
 
 );
 
-
-	reg [15:0] rd_buf;
-
-	reg [15:1] cached_addr;
-	reg cached_addr_valid;
-
-	reg stall14_cycrd;
-	reg stall14_fin;
-	reg r_mreq_n;
-	reg pending_cpu_req;
-	reg cpu_rnw_r;
-
-
-	// this is for 7/3.5mhz
-	wire cpureq_357 = ( ramrd & (~ramrd_reg) ) | ( ramwr & (~ramwr_reg) );
-	reg ramrd_reg,ramwr_reg;
-
-
+// Z80 controls
 	assign romwe_n = !(wr & mreq & rw_en);
 	assign romoe_n = !(rd & mreq);
-	assign csrom = romnram; // positive polarity!
-
-
-	// 7/3.5mhz support
-	wire ramreq = mreq && !romnram;
-	wire ramrd = ramreq & rd;
-	wire ramwr = ramreq & wr & rw_en;
-
-	always @(posedge fclk)
-	if( c3 && (!cpu_stall) )
-	begin
-		ramrd_reg <= ramrd;
-		ramwr_reg <= ramwr;
-	end
-
-
-	assign zd_ena = mreq & rd & !romnram;
-
-	wire cache_hit = ( (za[15:1] == cached_addr[15:1]) && cached_addr_valid );
-
+	assign zd_ena = mreq & rd & !csrom;
+	wire turbo14 = turbo[1];
 
 // strobe the beginnings of DRAM cycles
-	always @(posedge fclk)
-	if (zneg)
-		r_mreq_n <= !mreq;
-	//
-	wire dram_beg = ( (!cache_hit) || memwr ) && zneg && r_mreq_n && (!romnram) && mreq;
+	wire dram_beg = (!cache_hit || memwr) && zneg && r_mreq_n && mreq && !csrom;
+	
+	reg r_mreq_n;
+	always @(posedge clk)
+		if (zneg)
+			r_mreq_n <= !mreq;
+			
+	assign cpu_stall = turbo14 ? stall14 : stall357;
+	
+// 7/3.5MHz support
+	wire ramreq = mreq && !csrom;
+	wire ramrd = ramreq && rd;
+	wire ramwr = ramreq && wr && rw_en;
+	wire stall357 = cpureq_357 && !cpu_next;
+	wire cpureq_357 = (ramrd && !ramrd_r) || (ramwr && !ramwr_r);
 
+	reg ramrd_r, ramwr_r;
+	always @(posedge clk)
+		if (c3 && !cpu_stall)
+		begin
+			ramrd_r <= ramrd;
+			ramwr_r <= ramwr;
+		end
+
+		
+// 14MHz support
 
 	// wait tables:
 	//
@@ -135,105 +119,101 @@ module zmem(
 	// unconditional wait has to be performed until cpu_next is 1, and
 	// then wait as if dram_beg would coincide with c0
 
-	wire stall14_ini = dram_beg && ( (!cpu_next) || opfetch || memrd ); // no wait at all in write cycles, if next dram cycle is available
-
+	wire stall14 = stall14_ini || stall14_cyc || stall14_fin;
+	wire stall14_ini = dram_beg && (!cpu_next || opfetch || memrd);	// no wait at all in write cycles, if next dram cycle is available
 
 	// memrd, opfetch - wait till c3 & cpu_next,
 	// memwr - wait till cpu_next
-	wire stall14_cyc = memwr ? (!cpu_next) : stall14_cycrd;
+	wire stall14_cyc = memwr ? !cpu_next : stall14_cycrd;
 
-	always @(posedge fclk)
+	reg stall14_cycrd;
+	always @(posedge clk)
 	if (rst)
 		stall14_cycrd <= 1'b0;
-	else // posedge fclk
-	begin
-		if( cpu_next && c3 )
+	else
+		if (cpu_next && c3)
 			stall14_cycrd <= 1'b0;
-		else if( dram_beg && ( (!c3) || (!cpu_next) ) && (opfetch || memrd) )
+		else if (dram_beg && (!c3 || !cpu_next) && (opfetch || memrd))
 			stall14_cycrd <= 1'b1;
-	end
 
-    
-    wire [1:0] cc = &turbo ? {c1, c0} : {c2, c1};
-    // wire [1:0] cc = {c2, c1};	// to disable overclock
-    
-	always @(posedge fclk)
+    wire [1:0] cc = &turbo ? {c1, c0} : {c2, c1};	// normal or overclock
+
+	reg stall14_fin;
+	always @(posedge clk)
 	if (rst)
 		stall14_fin <= 1'b0;
-	else // posedge fclk
+	else
 	begin
-		// if (stall14_fin && ((opfetch & c2) || (memrd & c1)))     // normal
-		// if (stall14_fin && ((opfetch & c1) || (memrd & c0)))     // overclock boost!!!
-		if (stall14_fin && ((opfetch & cc[0]) || (memrd & cc[1])))
+		if (stall14_fin && ((opfetch && cc[0]) || (memrd && cc[1])))
 			stall14_fin <= 1'b0;
-		else if( cpu_next && c3 && cpu_req && (opfetch || memrd) )
+		else if (cpu_next && c3 && cpu_req && (opfetch || memrd))
 			stall14_fin <= 1'b1;
 	end
 
 
-	assign cpu_stall = turbo[1] ? (stall14_ini | stall14_cyc | stall14_fin) : (cpureq_357 && (!cpu_next));
-
 	// cpu request
-	assign cpu_req = turbo[1] ? (pending_cpu_req | dram_beg) : cpureq_357;
-	assign cpu_rnw = turbo[1] ? (dram_beg ? (!memwr) : cpu_rnw_r) : ramrd;
+	assign cpu_req = turbo14 ? (pending_cpu_req || dram_beg) : cpureq_357;
+	assign cpu_rnw = turbo14 ? (dram_beg ? !memwr : cpu_rnw_r) : ramrd;
 
-	always @(posedge fclk)
+	reg pending_cpu_req;
+	always @(posedge clk)
 	if (rst)
 		pending_cpu_req <= 1'b0;
 	else if( cpu_next && c3 )
 		pending_cpu_req <= 1'b0;
 	else if( dram_beg )
 		pending_cpu_req <= 1'b1;
-	//
-	always @(posedge fclk)
+
+	reg cpu_rnw_r;
+	always @(posedge clk)
 	if( dram_beg )
 		cpu_rnw_r <= !memwr;
 
 
-	// address, data in and data out
+// address, data in and data out
 	assign cpu_wrbsel = za[0];
 	assign cpu_addr[20:0] = { page[7:0], za[13:1] };
 	assign cpu_wrdata = zd_in;
 	assign zd_out = ~cpu_wrbsel ? rd_buf[7:0] : rd_buf[15:8];
 
-	always @* if( cpu_strobe ) // WARNING! ACHTUNG! LATCH!!!
-		rd_buf <= cpu_rddata;
+	reg [15:0] rd_buf;
+	always @* if (cpu_strobe) // WARNING! ACHTUNG! LATCH!!!
+		rd_buf = cpu_rddata;
 
-	wire io = iorq;
-	reg io_r;
-	always @(posedge fclk)
-	if( zpos )
-		io_r <= io;
-
-	always @(posedge fclk)
+	reg cached_addr_valid;
+	always @(posedge clk)
 	if (rst)
 	begin
 		cached_addr_valid <= 1'b0;
 	end
 
-
 	else
 	begin
-		if( (zneg && r_mreq_n && mreq && romnram)
+		if( (zneg && r_mreq_n && mreq && csrom)
 		 || (zneg && r_mreq_n && memwr)
-		 || (io && (!io_r) && zpos)
-         || (vdos_off | vdos_on)
+		 || iorq_s
+         || (vdos_off || vdos_on)
          || dos_on
         )
 			cached_addr_valid <= 1'b0;
-		else if( cpu_strobe )
+		else if (cpu_strobe)
 			cached_addr_valid <= 1'b1;
 	end
 
-	always @(posedge fclk)
-	if (rst)
-	begin
-		cached_addr <= 15'd0;
-	end
-	else if( cpu_strobe )
-	begin
-		cached_addr[15:1] <= za[15:1];
-	end
+
+// cache
+	wire cache_hit = ((za[15:1] == cached_addr[15:1]) && cached_addr_valid);
+
+	reg [15:1] cached_addr;
+	always @(posedge clk)
+		if (rst)
+		begin
+			cached_addr <= 15'd0;
+		end
+		else if (cpu_strobe)
+		begin
+			cached_addr[15:1] <= za[15:1];
+		end
 
 
 endmodule

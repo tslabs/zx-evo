@@ -8,46 +8,48 @@ module zdos(
 	input  wire        zclk,
 	input  wire        rst,
 	input  wire        opfetch,
+	input  wire        opfetch_s,
 
-	input  wire        dos_on,
-	input  wire        dos_off,
-	input  wire        vdos_on,
-	input  wire        vdos_off,
+	input  wire        dos_on,		// 1 clock strobe (driven by opfetch_s)
+	input  wire        dos_off,			// from zpager.v
+	input  wire        vdos_on,		// 1 clock strobe (driven by iorq_s)
+	input  wire        vdos_off,		// from zports.v
 
-	output reg         dos,
-	output reg         vdos
+	output wire        dos,
+	output wire        vdos
 
 );
 
 
 // turn on and off dos
+	assign dos = (dos_on || dos_off) ^^ dos_r;		// to make dos appear 1 clock earlier than dos_r
+
+    reg dos_r;
 	always @(posedge clk)
 	if (rst)
-		dos <= 1'b0;
+		dos_r <= 1'b0;
 
 	else if (dos_off)
-			dos <= 1'b0;
+			dos_r <= 1'b0;
 	else if (dos_on)
-			dos <= 1'b1;
+			dos_r <= 1'b1;
 
 
 // turn on and off virtdos
-    reg pre_vdos;
-    
-    always @(posedge clk)
-	if (rst)
-		pre_vdos <= 1'b0;
-	else if (vdos_on)
-            pre_vdos <= 1'b1;
-    else if (vdos_off)
-            pre_vdos <= 1'b0;
+    // vdos turn on/off is delayed till next opfetch due to INIR that writes right after iord cycle
+	assign vdos = opfetch ? pre_vdos : vdos_r;	// vdos appears as soon as first opfetch
 
-    
-    always @(posedge clk)
-	if (rst)
-		vdos <= 1'b0;
-	else if (opfetch)
-        vdos <= pre_vdos;
+    reg pre_vdos, vdos_r;
+	always @(posedge clk)
+	if (rst || vdos_off)
+	begin
+		pre_vdos <= 1'b0;
+		vdos_r <= 1'b0;
+	end
+	else if (vdos_on)
+		pre_vdos <= 1'b1;
+	else if (opfetch_s)
+		vdos_r <= pre_vdos;
 
 
 endmodule

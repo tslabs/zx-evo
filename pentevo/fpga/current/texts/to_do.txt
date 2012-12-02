@@ -1,18 +1,19 @@
 
 Fixes:
- - move all Z80 signals to if(zpos)
- - DMA: access to devices with ports blocking strobes
+ - check unnecessary wait sources/conditions (e.g. IDE)
  - optimize timings (negative slack on DRAM addr muxes)
+ - DMA: access to devices with ports blocking strobes
  - fix all oddies with raster: INT 1 pixel delay (test on MULFIX), hblank etc
  - fix vertical blank for border 1 pixel at the upper-right corner
  - fix PWM for TV (make smoother)
  - migrate video fetcher to c2
  - investigate and longer 14mhz wait length for IOs (if need)
  - search ways to optimize huge LC usage:
-    - one-hot style selectors = use if...elseif constructions instead of if...if
+    * one-hot style selectors = use if...elseif constructions instead of if...if
 
 
 Features to add:
+ - 3 color bits to unused signals
  - RFSH 28MHz burst
  - Yscroll array
  - migrate paging to FPRAM
