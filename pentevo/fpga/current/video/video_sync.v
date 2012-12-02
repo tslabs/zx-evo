@@ -36,7 +36,7 @@ module video_sync (
 	output wire vga_blank,
 	output wire vga_line,
 	output wire frame_start,
-	output wire line_start,
+	output wire line_start_s,
 	output wire pix_start,
 	output wire ts_start,
 	output wire frame,
@@ -91,7 +91,7 @@ module video_sync (
 		hcount <= line_start ? 9'b0 : hcount + 9'b1;
 
 	// vertical TV (15.625 kHz)
-	always @(posedge clk) if (c3) if (line_start)
+	always @(posedge clk) if (line_start_s)
 		vcount <= (vcount == (VPERIOD - 1)) ? 9'b0 : vcount + 9'b1;
 
 	// horizontal VGA (14MHz)
@@ -153,7 +153,7 @@ module video_sync (
         if (y_offs_wr)
             y_offs_wr_r <= 1'b1;
         else
-        if (line_start && c3)
+        if (line_start_s)
             y_offs_wr_r <= 1'b0;
 
 // FLASH generator
@@ -199,6 +199,7 @@ module video_sync (
 		video_go <= (hcount >= (hpix_beg - go_offs - x_offs)) && (hcount < (hpix_end - go_offs - x_offs + 4)) && vpix && !nogfx;
 
 	assign line_start = hcount == (HPERIOD - 1);
+	assign line_start_s = line_start && c3;
 	wire line_start2 = hcount == (HSYNC_END - 1);
 	assign frame_start = line_start && (vcount == (VPERIOD - 1));
 	wire vis_start = line_start && (vcount == (VBLNK_END - 1));
@@ -209,7 +210,7 @@ module video_sync (
 
 
 	reg vga_vblank;
-	always @(posedge clk) if (line_start && c3)		// fix me - bydlocode !!!
+	always @(posedge clk) if (line_start_s)		// fix me - bydlocode !!!
 		vga_vblank <= tv_vblank;
 
 

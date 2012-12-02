@@ -9,11 +9,8 @@ module video_mode (
 	input wire clk, f1, c3, c2,
 
 // video config
-	input wire [7:0] vconf,
 	input wire [7:0] vpage,
-	output reg [7:0] vpage_d,
-	input wire [7:0] palsel,
-	output reg [7:0] palsel_d,
+	input wire [7:0] vconf,
 
 // video parameters & mode controls
 	input  wire [8:0] gx_offs,
@@ -28,7 +25,7 @@ module video_mode (
 	output wire	[1:0] fetch_bsl,
 	input wire [3:0] fetch_cnt,
 	input wire pix_start,
-	input wire line_start,
+	input wire line_start_s,
 	output wire tv_hires,
 	output reg  vga_hires,
 	output wire [1:0] render_mode,
@@ -44,9 +41,6 @@ module video_mode (
     input wire [8:0] cnt_row,
     input wire cptr,
 
-// Z80 controls
-    input wire zvpage_wr,
-
 // DRAM interface
     output wire [20:0] video_addr,
     output wire [ 4:0] video_bw,
@@ -55,34 +49,17 @@ module video_mode (
 );
 
 
-    wire [1:0] vmod = vconf_d[1:0];
-	wire [1:0] rres = vconf_d[7:6];
-	assign nogfx = vconf_d[5];
-
-
-// latching regs at line start, delaying hires for 1 line
-    reg [7:0] vconf_d;
-    reg [8:0] gx_offs_d;
-
-    always @(posedge clk) if (line_start && c3)
-    begin
-        vconf_d <= vconf;
-        gx_offs_d <= gx_offs;
-        palsel_d <= palsel;
-
-        vga_hires <= tv_hires;
-    end
-
-    reg zvpage_wr_r;
-    always @(posedge clk)
-        zvpage_wr_r <= zvpage_wr;
-
-    always @(posedge clk) if ((line_start && c3) | zvpage_wr_r)
-        vpage_d <= vpage;
+    wire [1:0] vmod = vconf[1:0];
+	wire [1:0] rres = vconf[7:6];
+	assign nogfx = vconf[5];
 
 
 // clocking strobe for pixels (TV)
 	assign pix_stb = tv_hires ? f1 : c3;
+
+	always @(posedge clk)
+		if (line_start_s)
+			vga_hires <= tv_hires;
 
 
 // Modes
@@ -155,7 +132,7 @@ module video_mode (
 
 
 // X offset
-	assign x_offs_mode = {vmod == M_XC ? {gx_offs_d[8:1], 1'b0} : {1'b0, gx_offs_d[8:1]}, gx_offs_d[0]};
+	assign x_offs_mode = {vmod == M_XC ? {gx_offs[8:1], 1'b0} : {1'b0, gx_offs[8:1]}, gx_offs[0]};
 
 
 // DRAM bandwidth usage
@@ -240,23 +217,23 @@ module video_mode (
     assign video_addr = v_addr[vmod];
 
 	// ZX
-	wire [20:0] addr_zx = {vpage_d, 1'b0, ~cnt_col[0] ? addr_zx_gfx : addr_zx_atr};
+	wire [20:0] addr_zx = {vpage, 1'b0, ~cnt_col[0] ? addr_zx_gfx : addr_zx_atr};
 	wire [11:0] addr_zx_gfx = {cnt_row[7:6], cnt_row[2:0], cnt_row[5:3], cnt_col[4:1]};
 	wire [11:0] addr_zx_atr = {3'b110, cnt_row[7:3], cnt_col[4:1]};
 
 	// 16c
-	wire [20:0] addr_16c = {vpage_d[7:3], cnt_row, cnt_col[6:0]};
+	wire [20:0] addr_16c = {vpage[7:3], cnt_row, cnt_col[6:0]};
 
 	// 256c
-	wire [20:0] addr_256c = {vpage_d[7:4], cnt_row, cnt_col[7:0]};
+	wire [20:0] addr_256c = {vpage[7:4], cnt_row, cnt_col[7:0]};
 
 	// Textmode
-    wire [20:0] addr_text = {vpage_d[7:1], addr_tx[cnt_col[1:0]]};
+    wire [20:0] addr_text = {vpage[7:1], addr_tx[cnt_col[1:0]]};
 	wire [13:0] addr_tx[0:3];
-    assign addr_tx[0] = {vpage_d[0], cnt_row[8:3], 1'b0, cnt_col[7:2]};			// char codes, data[15:0]
-    assign addr_tx[1] = {vpage_d[0], cnt_row[8:3], 1'b1, cnt_col[7:2]};			// char attributes, data[31:16]
-    assign addr_tx[2] = {~vpage_d[0], 3'b000, (txt_char[7:0]), cnt_row[2:1]};		// char0 graphics, data[7:0]
-    assign addr_tx[3] = {~vpage_d[0], 3'b000, (txt_char[15:8]), cnt_row[2:1]};	// char1 graphics, data[15:8]
+    assign addr_tx[0] = {vpage[0], cnt_row[8:3], 1'b0, cnt_col[7:2]};			// char codes, data[15:0]
+    assign addr_tx[1] = {vpage[0], cnt_row[8:3], 1'b1, cnt_col[7:2]};			// char attributes, data[31:16]
+    assign addr_tx[2] = {~vpage[0], 3'b000, (txt_char[7:0]), cnt_row[2:1]};		// char0 graphics, data[7:0]
+    assign addr_tx[3] = {~vpage[0], 3'b000, (txt_char[15:8]), cnt_row[2:1]};	// char1 graphics, data[15:8]
 
 
 endmodule
