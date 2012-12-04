@@ -3,6 +3,8 @@
 #include "vars.h"
 #include "draw.h"
 #include "tsconf.h"
+#include "sdcard.h"
+#include "zc.h"
 
 extern VCTR vid;
 
@@ -57,13 +59,56 @@ void dma (u8 val)
 			{
 				for (j=0; j<(comp.ts.dmalen + 1); j++)
 				{
-				s = (u16*)(ss + RAM_BASE_M);
-				d = (u16*)(dd + RAM_BASE_M);
+					s = (u16*)(ss + RAM_BASE_M);
+					d = (u16*)(dd + RAM_BASE_M);
 				*d = *s;
 				ss_inc; dd_inc;
 				}
 				break;
 			}
+
+			// RAM to SPI and SPI to RAM
+			case DMA_SPI:
+			{
+				for (j=0; j<(comp.ts.dmalen + 1); j++)
+				{
+					s = (u16*)(ss + RAM_BASE_M);
+					d = (u16*)(dd + RAM_BASE_M);
+					if (ctrl.rw)	// RAM to SPI
+					{
+						Zc.Wr(0x57, *s & 0xFF);
+						Zc.Wr(0x57, *s >> 8);
+					}
+					else		// SPI to RAM
+					{
+						u8 d1 = Zc.Rd(0x57);
+						*d = (Zc.Rd(0x57) << 8) | d1;
+					}
+					ss_inc; dd_inc;
+				}
+				break;
+			}
+
+			// RAM to IDE and IDE to RAM
+			case DMA_IDE:
+			{
+				for (j=0; j<(comp.ts.dmalen + 1); j++)
+				{
+					s = (u16*)(ss + RAM_BASE_M);
+					d = (u16*)(dd + RAM_BASE_M);
+					if (ctrl.rw)	// RAM to IDE
+					{
+						hdd.write_data(*s);
+					}
+					else	// IDE to RAM
+					{
+						*d = (u16)hdd.read_data();
+					}
+					ss_inc; dd_inc;
+				}
+				break;
+			}
+
 			// RAM to CRAM (palette)
 			case DMA_CRAM:
 			{
@@ -73,6 +118,19 @@ void dma (u8 val)
 					tmp = (dd >> 1) & 0xFF;
 					comp.cram[tmp] = *s;
 					update_clut(tmp);
+					ss_inc; dd_inc;
+				}
+				break;
+			}
+
+			// RAM to SFILE (sprites)
+			case DMA_SFILE:
+			{
+				for (j=0; j<(comp.ts.dmalen + 1); j++)
+				{
+					s = (u16*)(ss + RAM_BASE_M);
+					tmp = (dd >> 1) & 0xFF;
+					comp.sfile[tmp] = *s;
 					ss_inc; dd_inc;
 				}
 				break;

@@ -58,6 +58,8 @@
 
 // DMA devices
 #define		DMA_RAM			0x01
+#define		DMA_SPI			0x02
+#define		DMA_IDE			0x03
 #define		DMA_CRAM		0x04
 #define		DMA_SFILE		0x05
 
