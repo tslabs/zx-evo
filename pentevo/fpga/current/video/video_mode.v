@@ -6,7 +6,7 @@
 module video_mode (
 
 // clocks
-	input wire clk, f1, c3, c2,
+	input wire clk, f1, c3,
 
 // video config
 	input wire [7:0] vpage,
@@ -43,9 +43,7 @@ module video_mode (
 
 // DRAM interface
     output wire [20:0] video_addr,
-    output wire [ 4:0] video_bw,
-    input wire next_video
-
+    output wire [ 4:0] video_bw
 );
 
 
@@ -60,7 +58,6 @@ module video_mode (
 	always @(posedge clk)
 		if (line_start_s)
 			vga_hires <= tv_hires;
-
 
 // Modes
     localparam M_ZX = 2'h0;		// ZX

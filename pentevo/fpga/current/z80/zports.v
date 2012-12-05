@@ -21,7 +21,6 @@ module zports(
 
 	input  wire        iorq,
 	input  wire        iorq_s,
-	input  wire        iorq_s2,
 	input  wire        iord,
 	input  wire        iord_s,
 	input  wire        iowr,

@@ -71,8 +71,6 @@ module video_ts (
 	wire t0_en = tsconf[5];
 	wire t1z_en = tsconf[3];
 	wire t0z_en = tsconf[2];
-	wire t1ys_en = tsconf[1];
-	wire t0ys_en = tsconf[0];
 
 
 // TS renderer interface
@@ -106,7 +104,7 @@ module video_ts (
 			// lyr = 5;
 		// else lyr = 0;
 		lyr = 0;
-		// lyr = sf_valid;
+		// lyr = sr_valid;
 
 	localparam LAYERS = 6;		// Total number of layers to process
 	localparam TM = 0;		// Individual layers
@@ -249,7 +247,6 @@ module video_ts (
 	wire [3:0]	s_pal	= sfile_rdata[15:12];
 
 	// TSR control
-	wire sprite_go = sf2_valid && sprites && tsr_rdy;		// kick to renderer
     reg [8:0] sprites_x;
     reg [2:0] sprites_xs;
     reg sprites_xf;
@@ -269,34 +266,46 @@ module video_ts (
 			s_layer <= {s_layer[1:0], 1'b0};
 
 	// SFile registers control
-	wire spr_skip = sf0_valid && !spr_valid;
+	wire sprite_go = sr2_valid && sprites && tsr_rdy;		// kick to renderer
+	wire spr_skip = sr0_valid && !spr_valid;
+	wire spr_not_skip = sr0_valid && spr_valid;
 	wire spr_valid = s_visible && s_act;
+
+	wire sr0_pre_valid = sr_valid[0];
+	wire sr0_valid     = sr_valid[1];
+	wire sr1_pre_valid = sr_valid[2];
+	wire sr1_valid     = sr_valid[3];
+	wire sr2_valid     = sr_valid[4];
+
+	reg [4:0] sr_valid;
+	always @(posedge clk)
+		if (start)
+			sr_valid <= 5'b00001;
+		else if (sprites_last)
+			sr_valid <= 5'b00000;
+		else if (sr0_pre_valid)
+			sr_valid <= 5'b00010;
+		else if (spr_not_skip)
+			sr_valid <= 5'b00100;
+		else if (sr1_pre_valid)
+			sr_valid <= 5'b01000;
+		else if (sr1_valid)
+			sr_valid <= 5'b10000;
+		else if (sprite_go)
+			sr_valid <= 5'b00001;
 
 	reg [7:0] sreg;
 	always @(posedge clk)
 		if (start)
 			sreg <= 8'd0;
-		else if (spr_skip)
+		else if (sr0_pre_valid)
 			sreg <= sreg + 8'd3;
-		else if (sf0_valid || sf1_valid || sprite_go)
+		else if (sr0_valid)
+			sreg <= spr_valid ? (sreg - 8'd2) : (sreg + 8'd3);
+		else if (sr1_pre_valid)
 			sreg <= sreg + 8'd1;
-
-	wire sf0_valid = sf_valid[0];
-	wire sf1_valid = sf_valid[1];
-	wire sf2_valid = sf_valid[2];
-
-	reg [2:0] sf_valid;
-	always @(posedge clk)
-		if (start)
-			sf_valid <= 3'b001;
-		else if (sprites_last)
-			sf_valid <= 3'b000;
-		else if (spr_skip || sprite_go)
-			sf_valid <= 3'b001;
-		else if (sf0_valid)
-			sf_valid <= 3'b010;
-		else if (sf1_valid)
-			sf_valid <= 3'b100;
+		else if (sprite_go)
+			sreg <= sreg + 8'd1;
 
 	// SFile control
     reg [5:0] s_bmline_offset_r;
@@ -304,13 +313,13 @@ module video_ts (
 
 	always @(posedge clk)
 	begin
-		if (sf0_valid)
+		if (sr0_valid)
 		begin
 			s_leap_r <= s_leap;
 			s_bmline_offset_r <= s_bmline_offset;
 		end
 
-		if (sf1_valid)
+		if (sr1_valid)
 		begin
 			sprites_x <= s_xcrd;
 			sprites_xs <= s_xsz;

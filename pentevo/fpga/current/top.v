@@ -320,7 +320,6 @@ module top(
 
 	zdos zdos(
 	           .clk(fclk),
-	           .zclk(zclk),
 			   .rst(rst),
                .opfetch(opfetch),
                .opfetch_s(opfetch_s),
@@ -331,7 +330,7 @@ module top(
                .vdos_off(vdos_off),
 
 	           .dos(dos),
-	           .vdos(vdos),
+	           .vdos(vdos)
 	         );
 
 
@@ -461,7 +460,6 @@ module top(
 	                 .c2(c2),
 	                 .c3(c3),
 
-	                 .rst_n(rst_n),
 	                 .int_n(int_n),
 
 	                 .dram_addr(daddr),

@@ -189,7 +189,6 @@ module video_top (
         .d              (d),
         .res            (res),
 		.line_start_s	(line_start_s),
-		
         .border_wr      (border_wr),
         .zborder_wr     (zborder_wr),
     	.zvpage_wr	    (zvpage_wr),
@@ -216,7 +215,6 @@ module video_top (
     	.t0gpage_wr	    (t0gpage_wr),
     	.t1gpage_wr	    (t1gpage_wr),
     	.sgpage_wr	    (sgpage_wr),
-		
         .border         (border),
         .vpage          (vpage),
         .vconf          (vconf),
@@ -240,7 +238,6 @@ module video_top (
 	video_mode video_mode (
 		.clk		  	(clk),
 		.f1			    (f1),
-		.c2			    (c2),
 		.c3			    (c3),
 		.vpage	    	(vpage),
 		.vconf	    	(vconf),
@@ -267,7 +264,6 @@ module video_top (
 		.nogfx		    (nogfx),
 		.pix_stb	    (pix_stb),
 		.render_mode	(render_mode),
-		.next_video	    (next_video),
 		.video_addr	    (video_addr),
 		.video_bw		(video_bw)
 );
@@ -284,7 +280,8 @@ module video_top (
 		.vpix_end		(vpix_end),
         .go_offs        (go_offs),
         .x_offs         (x_offs_mode[1:0]),
-        .y_offs_wr      (gy_offsl_wr | gy_offsh_wr),
+        .y_offs_wr      (gy_offsl_wr || gy_offsh_wr),
+		.line_start_s	(line_start_s),
 		.hint_beg		(hint_beg),
 		.vint_beg		(vint_beg),
 		.hsync			(hsync),
@@ -309,7 +306,6 @@ module video_top (
 		.rstart			(gy_offs),
 		.vga_line		(vga_line),
 		.frame_start	(frame_start),
-		.line_start_s	(line_start_s),
 		.int_start		(int_start),
 		.v_pf			(v_pf),
 		.hpix			(hpix),

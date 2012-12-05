@@ -5,7 +5,6 @@
 module zdos(
 
 	input  wire        clk,
-	input  wire        zclk,
 	input  wire        rst,
 	input  wire        opfetch,
 	input  wire        opfetch_s,
