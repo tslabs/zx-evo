@@ -87,7 +87,7 @@ module video_mode (
 	// these values are from a thin air!!! recheck them occasionally!
     assign g_offs[M_ZX] = 5'd18;
     assign g_offs[M_HC] = 5'd6;
-    assign g_offs[M_XC] = 5'd6;
+    assign g_offs[M_XC] = 5'd4;
     assign g_offs[M_TX] = 5'd10;
     assign go_offs = g_offs[vmod];
 
