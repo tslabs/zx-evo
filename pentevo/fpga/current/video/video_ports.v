@@ -12,7 +12,7 @@ module video_ports (
 	input wire [ 7:0] d,
 
 // ZX controls
-    input wire res,
+    input wire        res,
     input wire line_start_s,
 
 // port write strobes

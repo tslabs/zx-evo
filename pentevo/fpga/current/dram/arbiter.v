@@ -56,7 +56,6 @@ module arbiter(
 	input wire c1,
 	input wire c2,
 	input wire c3,
-	input wire rst_n,
 	input wire int_n,
 
 // dram.v interface
@@ -160,9 +159,9 @@ module arbiter(
 // track vid_rem counter
 // how many video cycles left to the end of block (7..0)
 	wire [2:0] vid_nrem = (go && video_start) ? vid_nrem_start : (next_vid ? vid_nrem_next : vid_rem);
-	wire [2:0] vidmax = {video_bw[2:0]};    // number of cycles for video access
 	wire [2:0] vid_nrem_start = (cpu_req && !cpu_down) ? vidmax : (vidmax - 3'd1);
 	wire [2:0] vid_nrem_next = video_idle ? 3'd0 : (vid_rem - 3'd1);
+	wire [2:0] vidmax = {video_bw[2:0]};    // number of cycles for video access
 
 	reg [2:0] vid_rem;      // remaining video accesses in block
 	always @(posedge clk) if (c3)
@@ -172,7 +171,7 @@ module arbiter(
 // next cycle decision
     wire [CYCLES-1:0] cyc_dev = tm_req ? CYC_TM : (ts_req ? CYC_TS : CYC_DMA);
     wire dev_req = ts_req || tm_req || dma_req;
-    wire cpu_down = (((ts_req || tm_req) && ts_z80_lp) || (dma_req && dma_z80_lp)) && int_n;		// CPU obtains higher priority to acknowledge the INT
+    wire cpu_down = (((ts_req || tm_req) && ts_z80_lp) || (dma_req && dma_z80_lp)) && int_n;		// CPU gets higher priority to acknowledge the INT
 
 	always @*
 		if (video_start)      // video burst start
@@ -236,7 +235,7 @@ module arbiter(
 	always @(posedge clk)
 		if (c1)
 			cpu_strobe <= curr_cpu && cpu_rnw_r;
-		else
+		else if (c2)
 			cpu_strobe <= 1'b0;
 
 	assign video_pre_next = curr_vid & c1;

@@ -101,14 +101,7 @@ module video_sync (
 	// column address for DRAM
 	always @(posedge clk)
     begin
-		if (line_start)         // for tiles prefetch
-		begin
-			cnt_col <= 0;
-			cptr <= 1'b0;
-		end
-
-        else
-        if (line_start2)        // for graphics fetch
+        if (line_start)        // for graphics fetch
 		begin
 			cnt_col <= cstart;
 			cptr <= 1'b0;
@@ -144,7 +137,7 @@ module video_sync (
 
 	always @(posedge clk)
 		if (ts_start_coarse)
-			lcount <= vcount - vpix_beg + 1;
+			lcount <= vcount - vpix_beg + 9'b1;
 
 
 // Y offset re-latch trigger
@@ -198,9 +191,8 @@ module video_sync (
     always @(posedge clk)
 		video_go <= (hcount >= (hpix_beg - go_offs - x_offs)) && (hcount < (hpix_end - go_offs - x_offs + 4)) && vpix && !nogfx;
 
-	assign line_start = hcount == (HPERIOD - 1);
+	wire line_start = hcount == (HPERIOD - 1);
 	assign line_start_s = line_start && c3;
-	wire line_start2 = hcount == (HSYNC_END - 1);
 	assign frame_start = line_start && (vcount == (VPERIOD - 1));
 	wire vis_start = line_start && (vcount == (VBLNK_END - 1));
 	assign pix_start = hcount == (hpix_beg - x_offs - 1);

@@ -55,6 +55,7 @@ module video_sfile (
 	wire [15:0] q = sub_wire0[15:0];
 
 	altdpram	altdpram_component (
+				.outclock (clock),
 				.wren (wren),
 				.inclock (clock),
 				.data (data),
@@ -64,7 +65,6 @@ module video_sfile (
 				.aclr (1'b0),
 				.byteena (1'b1),
 				.inclocken (1'b1),
-				.outclock (1'b1),
 				.outclocken (1'b1),
 				.rdaddressstall (1'b0),
 				.rden (1'b1),
@@ -75,7 +75,7 @@ module video_sfile (
 		altdpram_component.intended_device_family = "ACEX1K",
 		altdpram_component.lpm_type = "altdpram",
 		altdpram_component.outdata_aclr = "OFF",
-		altdpram_component.outdata_reg = "UNREGISTERED",
+		altdpram_component.outdata_reg = "OUTCLOCK",
 		altdpram_component.rdaddress_aclr = "OFF",
 		altdpram_component.rdaddress_reg = "UNREGISTERED",
 		altdpram_component.rdcontrol_aclr = "OFF",
@@ -135,7 +135,7 @@ endmodule
 // Retrieval info: PRIVATE: READ_DURING_WRITE_MODE_PORT_A NUMERIC "3"
 // Retrieval info: PRIVATE: READ_DURING_WRITE_MODE_PORT_B NUMERIC "3"
 // Retrieval info: PRIVATE: REGdata NUMERIC "1"
-// Retrieval info: PRIVATE: REGq NUMERIC "0"
+// Retrieval info: PRIVATE: REGq NUMERIC "1"
 // Retrieval info: PRIVATE: REGrdaddress NUMERIC "0"
 // Retrieval info: PRIVATE: REGrren NUMERIC "0"
 // Retrieval info: PRIVATE: REGwraddress NUMERIC "1"
@@ -158,7 +158,7 @@ endmodule
 // Retrieval info: CONSTANT: INTENDED_DEVICE_FAMILY STRING "ACEX1K"
 // Retrieval info: CONSTANT: LPM_TYPE STRING "altdpram"
 // Retrieval info: CONSTANT: OUTDATA_ACLR STRING "OFF"
-// Retrieval info: CONSTANT: OUTDATA_REG STRING "UNREGISTERED"
+// Retrieval info: CONSTANT: OUTDATA_REG STRING "OUTCLOCK"
 // Retrieval info: CONSTANT: RDADDRESS_ACLR STRING "OFF"
 // Retrieval info: CONSTANT: RDADDRESS_REG STRING "UNREGISTERED"
 // Retrieval info: CONSTANT: RDCONTROL_ACLR STRING "OFF"
@@ -181,6 +181,7 @@ endmodule
 // Retrieval info: CONNECT: @rdaddress 0 0 8 0 rdaddress 0 0 8 0
 // Retrieval info: CONNECT: @wren 0 0 0 0 wren 0 0 0 0
 // Retrieval info: CONNECT: @inclock 0 0 0 0 clock 0 0 0 0
+// Retrieval info: CONNECT: @outclock 0 0 0 0 clock 0 0 0 0
 // Retrieval info: LIBRARY: altera_mf altera_mf.altera_mf_components.all
 // Retrieval info: GEN_FILE: TYPE_NORMAL video_sfile.v TRUE
 // Retrieval info: GEN_FILE: TYPE_NORMAL video_sfile.inc FALSE
