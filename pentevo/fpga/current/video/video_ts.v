@@ -152,7 +152,7 @@ module video_ts (
 
     // TMB control
 	wire [8:0] tmb_waddr = {tm_line[4:3], tm_b_line, tm_num, tm_layer};	// 8:7 - buffer #, 6:4 - burst number (of 8 bursts), 3:1 - number in burst (8 tiles per burst), 0 - layer
-	wire [8:0] tm_line = line + 16;
+	wire [8:0] tm_line = line + 9'd16;
 	wire [2:0] tm_b_line = tm_line[2:0];
 	wire [5:0] tm_b_row = tm_line[8:3] + (tm_layer ? t1y_offs[8:3] : t0y_offs[8:3]);
 	wire [2:0] tm_num = tm_x[2:0];
@@ -175,7 +175,7 @@ module video_ts (
 		if (start)
 			tm_x <= t0_en ? 5'd0 : 5'd8;
 		else if (tm_next)
-			tm_x <= tm_x + 1;
+			tm_x <= tm_x + 5'd1;
 
 
 // --- Tiles ---
@@ -187,7 +187,7 @@ module video_ts (
 	wire        t_yflp	= tmb_rdata[15];
 
 	// TSR control
-	wire tile_go = t_act && tiles && tsr_rdy;
+	wire tile_go = tm_valid && t_act && tiles && tsr_rdy;
     wire [7:0] tile_page = t_sel ? t0gpage : t1gpage;
     wire [8:0] tile_line = {t_tnum[11:6], (t_line[2:0] ^ {3{t_yflp}})};
     wire [5:0] tile_addr = t_tnum[5:0];
@@ -214,9 +214,19 @@ module video_ts (
 			t_layer <= t0_en ? 2'b01 : 2'b10;
 		else if (t_layer_end)
 			t_layer <=  {t_layer[0], 1'b0};
-
+			
+	// TMBUF validity control
+	wire tm_valid = tm_valid_r[1];
+	
+	reg [1:0] tm_valid_r;
+	always @(posedge clk)
+		if (t_layer_start)
+			tm_valid_r <= 2'b01;
+		else if (tm_valid_r[0])
+			tm_valid_r <= 2'b10;
+			
 	// tilemap/screen X coordinate
-	wire t_next = !t_act || tile_go;
+	wire t_next = (tm_valid && !t_act) || tile_go;
 
 	reg [5:0] tx;
 	always @(posedge clk)
