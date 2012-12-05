@@ -101,7 +101,7 @@ module video_sync (
 	// column address for DRAM
 	always @(posedge clk)
     begin
-        if (line_start)        // for graphics fetch
+		if (line_start2)
 		begin
 			cnt_col <= cstart;
 			cptr <= 1'b0;
@@ -193,6 +193,7 @@ module video_sync (
 
 	wire line_start = hcount == (HPERIOD - 1);
 	assign line_start_s = line_start && c3;
+	wire line_start2 = hcount == (HSYNC_END - 1);
 	assign frame_start = line_start && (vcount == (VPERIOD - 1));
 	wire vis_start = line_start && (vcount == (VBLNK_END - 1));
 	assign pix_start = hcount == (hpix_beg - x_offs - 1);
