@@ -161,7 +161,7 @@ module video_ts (
 	// internal layers control
 	wire tm_end = tm_x == (t1_en ? 5'd16 : 5'd8);
 	wire tm_next = dram_next && tmap;
-	
+
 	reg [1:0] m_layer;
 	always @(posedge clk)
 		if (start)
@@ -214,17 +214,17 @@ module video_ts (
 			t_layer <= t0_en ? 2'b01 : 2'b10;
 		else if (t_layer_end)
 			t_layer <=  {t_layer[0], 1'b0};
-			
+
 	// TMBUF validity control
 	wire tm_valid = tm_valid_r[1];
-	
+
 	reg [1:0] tm_valid_r;
 	always @(posedge clk)
 		if (t_layer_start)
 			tm_valid_r <= 2'b01;
 		else if (tm_valid_r[0])
 			tm_valid_r <= 2'b10;
-			
+
 	// tilemap/screen X coordinate
 	wire t_next = (tm_valid && !t_act) || tile_go;
 
@@ -264,7 +264,7 @@ module video_ts (
 
 	// internal layers control
 	wire [2:0] spr_end = ({3{s_layer_end}} & s_layer[2:0]) | {3{sprites_last}};
-	wire s_layer_end = (spr_skip && s_leap) || (sprite_go && s_leap_r);
+	wire s_layer_end = (sr0_valid && !spr_valid && s_leap) || (sprite_go && s_leap_r);
 	// wire sprites_last = sreg == 8'd254;
 	wire sprites_last = sreg == 8'd255;
 
@@ -276,9 +276,18 @@ module video_ts (
 			s_layer <= {s_layer[1:0], 1'b0};
 
 	// SFile registers control
+		// condition				write to sreg	write to sr_valid	action
+		// 	start					 0				 sr0_pre_valid		 Start
+		//  sr0_pre_valid			 sreg+3			 sr0_valid			 Pre SR0 read
+		//  sr0_valid && !spr_valid	 sreg+3			 -					 Skip sprite
+		//  sr0_valid && spr_valid	 sreg-2			 sr1_pre_valid		 Pre SR1 read
+		//  sr1_pre_valid			 sreg+1			 sr1_valid			 SR1 read
+		//  sr1_valid				 sreg+1			 sr2_valid			 Pre SR2 read
+		//  sr2_valid && !tsr_rdy	 -				 -					 Wait for TSR ready
+		//  sr2_valid && tsr_rdy	 sreg+1			 sr0_pre_valid		 Next sprite
+		//	sprites_last			 -				 none_valid			 End
+
 	wire sprite_go = sr2_valid && sprites && tsr_rdy;		// kick to renderer
-	wire spr_skip = sr0_valid && !spr_valid;
-	wire spr_not_skip = sr0_valid && spr_valid;
 	wire spr_valid = s_visible && s_act;
 
 	wire sr0_pre_valid = sr_valid[0];
@@ -295,7 +304,7 @@ module video_ts (
 			sr_valid <= 5'b00000;
 		else if (sr0_pre_valid)
 			sr_valid <= 5'b00010;
-		else if (spr_not_skip)
+		else if (sr0_valid && spr_valid)
 			sr_valid <= 5'b00100;
 		else if (sr1_pre_valid)
 			sr_valid <= 5'b01000;
