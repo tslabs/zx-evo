@@ -236,7 +236,7 @@ module zports(
             DMASTAT:
                 dout = {dma_act, 7'b0};
 
-            RAMPAGE+2, RAMPAGE+3:
+            RAMPAGE+8'd2, RAMPAGE+8'd3:
                 dout = rampage[hoa[1:0]];
 
             default:
