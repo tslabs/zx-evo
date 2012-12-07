@@ -33,11 +33,11 @@ module zmem(
 
 	input  wire opfetch,
 	input  wire iorq_s,
+	input  wire memwr_s,
 	input  wire mreq,
     input  wire memrd,
     input  wire memwr,
-	input  wire rd,
-	input  wire wr,
+	input  wire nw_hit,
 
 	input  wire [ 1:0] turbo, 	  // 2'b00 - 3.5,
 	                              // 2'b01 - 7.0,
@@ -65,28 +65,42 @@ module zmem(
 
 );
 
+
+// address, data in and data out
+	assign cpu_wrbsel = za[0];
+	assign cpu_addr[20:0] = { page[7:0], za[13:1] };
+	assign cpu_wrdata = zd_in;
+	assign zd_out = nw_hit ? nw_data : (~cpu_wrbsel ? rd_buf[7:0] : rd_buf[15:8]);
+
+
 // Z80 controls
-	assign romwe_n = !(wr & mreq & rw_en);
-	assign romoe_n = !(rd & mreq);
-	assign zd_ena = mreq & rd & !csrom;
-	wire turbo14 = turbo[1];
+	assign romoe_n = !(memrd && !nw_hit);
+	assign romwe_n = !(memwr && !nw_hit && rw_en);
+	// assign romwe_n = !(wr && mreq && rw_en);		// check ^^^ on ROM writing plug!!!
+
+	wire ramreq = mreq && !csrom && !nw_hit;
+	wire ramrd = memrd && ramreq;
+	wire ramwr = memwr && ramreq && rw_en;
+	assign zd_ena = memrd && !csrom;
+
 
 // strobe the beginnings of DRAM cycles
-	wire dram_beg = (!cache_hit || memwr) && zneg && r_mreq_n && mreq && !csrom;
-	
-	reg r_mreq_n;
+	wire dram_beg = (!cache_hit || memwr) && zneg && r_mreq_s_n;
+	wire r_mreq_s_n = r_mreq_r_n && ramreq;
+
+	reg r_mreq_r_n;
 	always @(posedge clk)
 		if (zneg)
-			r_mreq_n <= !mreq;
-			
+			r_mreq_r_n <= !mreq;
+
 	assign cpu_stall = turbo14 ? stall14 : stall357;
-	
+
+
 // 7/3.5MHz support
-	wire ramreq = mreq && !csrom;
-	wire ramrd = ramreq && rd;
-	wire ramwr = ramreq && wr && rw_en;
 	wire stall357 = cpureq_357 && !cpu_next;
-	wire cpureq_357 = (ramrd && !ramrd_r) || (ramwr && !ramwr_r);
+	wire cpureq_357 = ramrd_s || ramwr_s;
+	wire ramwr_s = ramwr && !ramwr_r;
+	wire ramrd_s = ramrd && !ramrd_r;
 
 	reg ramrd_r, ramwr_r;
 	always @(posedge clk)
@@ -96,7 +110,7 @@ module zmem(
 			ramwr_r <= ramwr;
 		end
 
-		
+
 // 14MHz support
 
 	// wait tables:
@@ -119,10 +133,12 @@ module zmem(
 	// unconditional wait has to be performed until cpu_next is 1, and
 	// then wait as if dram_beg would coincide with c0
 
+	wire turbo14 = turbo[1];
+
 	wire stall14 = stall14_ini || stall14_cyc || stall14_fin;
 	wire stall14_ini = dram_beg && (!cpu_next || opfetch || memrd);	// no wait at all in write cycles, if next dram cycle is available
 
-	// memrd, opfetch - wait till c3 & cpu_next,
+	// memrd, opfetch - wait till c3 && cpu_next,
 	// memwr - wait till cpu_next
 	wire stall14_cyc = memwr ? !cpu_next : stall14_cycrd;
 
@@ -151,7 +167,7 @@ module zmem(
 	end
 
 
-	// cpu request
+// cpu request
 	assign cpu_req = turbo14 ? (pending_cpu_req || dram_beg) : cpureq_357;
 	assign cpu_rnw = turbo14 ? (dram_beg ? !memwr : cpu_rnw_r) : ramrd;
 
@@ -170,12 +186,7 @@ module zmem(
 		cpu_rnw_r <= !memwr;
 
 
-// address, data in and data out
-	assign cpu_wrbsel = za[0];
-	assign cpu_addr[20:0] = { page[7:0], za[13:1] };
-	assign cpu_wrdata = zd_in;
-	assign zd_out = ~cpu_wrbsel ? rd_buf[7:0] : rd_buf[15:8];
-
+// cache
 	reg [15:0] rd_buf;
 	always @* if (cpu_strobe) // WARNING! ACHTUNG! LATCH!!!
 		rd_buf = cpu_rddata;
@@ -186,22 +197,21 @@ module zmem(
 	begin
 		cached_addr_valid <= 1'b0;
 	end
-
 	else
 	begin
-		if( (zneg && r_mreq_n && mreq && csrom)
-		 || (zneg && r_mreq_n && memwr)
+		if (
+			(zneg && r_mreq_r_n && mreq && csrom)
+		 || (zneg && r_mreq_r_n && memwr)
 		 || iorq_s
          || (vdos_off || vdos_on)
          || dos_on
+         || nw_hit
         )
 			cached_addr_valid <= 1'b0;
 		else if (cpu_strobe)
 			cached_addr_valid <= 1'b1;
 	end
 
-
-// cache
 	wire cache_hit = ((za[15:1] == cached_addr[15:1]) && cached_addr_valid);
 
 	reg [15:1] cached_addr;
@@ -215,5 +225,18 @@ module zmem(
 			cached_addr[15:1] <= za[15:1];
 		end
 
+
+// nwram
+	wire nw_we = nw_hit && memwr_s;
+	wire [7:0] nw_data;
+
+nwram nwram (
+		.clock (clk),
+		.data (zd_in),
+		.rdaddress (za[8:0]),
+		.wraddress (za[8:0]),
+		.wren (nw_we),
+		.q (nw_data)
+);
 
 endmodule

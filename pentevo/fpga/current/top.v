@@ -304,6 +304,9 @@ module top(
         .xt_page    (xt_page),
         .dos        (dos),
         .vdos       (vdos),
+		
+		.nwaddr     (nwaddr),
+		.nwram_hit 	(nwram_hit),
 
         .page       (page),
         .romnram    (csrom),
@@ -366,8 +369,9 @@ module top(
 		.mreq(mreq),
         .memrd(memrd),
         .memwr(memwr),
-		.rd(rd),
-		.wr(wr),
+		
+		.nw_hit(nwram_hit),
+		.memwr_s(memwr_s),
 
 		.page   (page),
 
@@ -641,6 +645,9 @@ module top(
 
 	wire [15:0]	   zmd;
 	wire [7:0]	   zma;
+	wire cram_we;
+	wire sfile_we;
+	wire nwram_hit;
 
     zmaps zmaps(
 				.clk        	(fclk),
@@ -727,14 +734,11 @@ module top(
                 );
 
 
-		wire cram_we;
-		wire sfile_we;
-
-
 		wire [31:0] xt_page;
 
 		wire [8:0] dmaport_wr;
 		wire [4:0] fmaddr;
+		wire [7:0] nwaddr;
 
 		wire [7:0] sysconf;
 		wire [3:0] fddvirt;
@@ -826,6 +830,7 @@ module top(
 					.xt_page    (xt_page),
 
 					.fmaddr		(fmaddr),
+					.nwaddr		(nwaddr),
 
 					.sysconf	(sysconf),
 					.memconf	(memconf),

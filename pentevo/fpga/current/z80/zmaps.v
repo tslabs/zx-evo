@@ -37,12 +37,12 @@ module zmaps(
 	
 
 // control signals
-	wire hit = (a[15:12] == fmaddr[3:0]) & fmaddr[4] & memwr_s;
+	wire hit = (a[15:12] == fmaddr[3:0]) && fmaddr[4] && memwr_s;
 	
 
 // write enables
-	assign cram_we = dma_req ? dma_cram_we : (a[11:9] == CRAM) & a[0] & hit;
-	assign sfile_we = dma_req ? dma_sfile_we : (a[11:9] == SFYS) & a[0] & hit;
+	assign cram_we = dma_req ? dma_cram_we : (a[11:9] == CRAM) && a[0] && hit;
+	assign sfile_we = dma_req ? dma_sfile_we : (a[11:9] == SFYS) && a[0] && hit;
 
 	
 // LSB fetching
@@ -51,7 +51,7 @@ module zmaps(
     
 	reg [7:0] zmd0;
     always @(posedge clk)
-		if (!a[0] & hit)
+		if (!a[0] && hit)
 			zmd0 <= d;
 
 // DMA

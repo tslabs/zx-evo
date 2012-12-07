@@ -14,6 +14,9 @@ module pager (
 	input wire [31:0] xt_page,
 	input wire dos,
 	input wire vdos,
+	
+	input wire [7:0] nwaddr,
+	output wire nwram_hit,
 
   	output wire [7:0] page,
 	output wire romnram,
@@ -23,9 +26,11 @@ module pager (
 
 );
 
+	assign nwram_hit = (za[15:9] == nwaddr[7:1]) && nwaddr[0];
+
     wire [1:0] win = za[15:14];
     wire win0 = ~|win;
-    assign romnram = win0 && !memconf[3] && !vdos;
+    assign romnram = win0 && !memconf[3] && !vdos && !nwram_hit;
     assign rw_en = !win0 || memconf[1] || vdos;
     assign page = xtpage[win];
 
