@@ -73,7 +73,7 @@ fddv            defs 1      ; FDDVirt (#29AF copy)  // non-removable #B0
 cfrq            defs 1      ; CPU freq              // non-removable #B1
 bdev            defs 1      ; boot device           // non-removable #B2
 
-ayfr            defs 1      ; AY freq
+cach            defs 1      ; CPU Cache
 b1to            defs 1      ; Boot option
 b1tb            defs 1      ; Boot bank
 b2to            defs 1      ; CS Boot option

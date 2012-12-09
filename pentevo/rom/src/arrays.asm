@@ -47,13 +47,13 @@ OPTTAB0
         defb 'Select NVRAM options:', 0
 
 		defw OPT_CFQ, SEL_CFQ   ; address of option desc, address of option choices
+		defw OPT_CCH, SEL_ONF
 		defw OPT_80L, SEL_ONF
 		defw OPT_B1T, SEL_BOT
 		defw OPT_B1B, SEL_BTB
 		defw OPT_B2T, SEL_BOT
 		defw OPT_B2B, SEL_BTB
 		defw OPT_B1D, SEL_BDV
-		defw OPT_AFQ, SEL_AFQ
 		defw OPT_ZPL, SEL_ZPL
 		defw OPT_NGR, SEL_ONF
 
@@ -61,14 +61,14 @@ OPTTAB0
 ; byte - number of choices
 ; byte - address in NVRAM
 ; string - option
-OPT_CFQ    defb 4, low(cfrq), 'CPU speed, MHz:', 0
+OPT_CFQ    defb 4, low(cfrq), 'CPU Speed, MHz:', 0
+OPT_CCH    defb 2, low(cach), 'CPU Cache:', 0
 OPT_80L    defb 3, low(l128), '128k Lock:', 0
 OPT_B1T    defb 5, low(b1to), 'Reset to:', 0
 OPT_B1B    defb 4, low(b1tb), '  bank:', 0
 OPT_B2T    defb 5, low(b2to), 'CS Reset to:', 0
 OPT_B2B    defb 4, low(b2tb), '  bank:', 0
 OPT_B1D    defb 4, low(bdev), 'Boot Device:', 0
-OPT_AFQ    defb 6, low(ayfr), 'AY clock, MHz:', 0
 OPT_ZPL    defb 6, low(zpal), 'ZX Palette:', 0
 OPT_NGR    defb 2, low(nres), 'NGS Reset:', 0
 
@@ -105,14 +105,6 @@ SEL_ONF
         defb ' OFF', 0
 		defb '  ON', 0
 		defb 'Auto', 0
-
-SEL_AFQ
-        defb '1.750', 0
-		defb '1.773', 0
-		defb '3.500', 0
-		defb '3.546', 0
-		defb '1.000', 0
-		defb '2.000', 0
 
 SEL_ZPL
         defb 'Default', 0   ; 0

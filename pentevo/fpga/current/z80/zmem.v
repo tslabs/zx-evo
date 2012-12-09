@@ -37,13 +37,13 @@ module zmem(
 	input  wire mreq,
     input  wire memrd,
     input  wire memwr,
-	input  wire nw_hit,
 
 	input  wire [ 1:0] turbo, 	  // 2'b00 - 3.5,
 	                              // 2'b01 - 7.0,
 	                              // 2'b1x - 14.0
 	input wire [7:0] page,
 	input wire rw_en,
+	input wire cache_en,
 	input wire csrom,
 
 	output wire        romoe_n,
@@ -68,17 +68,22 @@ module zmem(
 
 // address, data in and data out
 	assign cpu_wrbsel = za[0];
-	assign cpu_addr[20:0] = { page[7:0], za[13:1] };
+	assign cpu_addr[20:0] = {page[7:0], za[13:1]};
+	wire [12:0] cpu_hi_addr = {page[7:0], za[13:9]};
 	assign cpu_wrdata = zd_in;
-	assign zd_out = nw_hit ? nw_data : (~cpu_wrbsel ? rd_buf[7:0] : rd_buf[15:8]);
+	wire [15:0] mem_d = (cpu_strobe || cpu_strobe_r) ? cpu_rddata : cache_d;
+	assign zd_out = ~cpu_wrbsel ? mem_d[7:0] : mem_d[15:8];
+
+	reg cpu_strobe_r;
+	always @(posedge clk)
+		cpu_strobe_r <= cpu_strobe;
 
 
 // Z80 controls
-	assign romoe_n = !(memrd && !nw_hit);
-	assign romwe_n = !(memwr && !nw_hit && rw_en);
-	// assign romwe_n = !(wr && mreq && rw_en);		// check ^^^ on ROM writing plug!!!
+	assign romoe_n = !memrd;
+	assign romwe_n = !(memwr && rw_en);
 
-	wire ramreq = mreq && !csrom && !nw_hit;
+	wire ramreq = mreq && !csrom;
 	wire ramrd = memrd && ramreq;
 	wire ramwr = memwr && ramreq && rw_en;
 	assign zd_ena = memrd && !csrom;
@@ -175,9 +180,9 @@ module zmem(
 	always @(posedge clk)
 	if (rst)
 		pending_cpu_req <= 1'b0;
-	else if( cpu_next && c3 )
+	else if (cpu_next && c3)
 		pending_cpu_req <= 1'b0;
-	else if( dram_beg )
+	else if (dram_beg)
 		pending_cpu_req <= 1'b1;
 
 	reg cpu_rnw_r;
@@ -187,56 +192,29 @@ module zmem(
 
 
 // cache
-	reg [15:0] rd_buf;
-	always @* if (cpu_strobe) // WARNING! ACHTUNG! LATCH!!!
-		rd_buf = cpu_rddata;
+	wire cache_hit = (cpu_hi_addr == cache_a) && cache_v && cache_en;
+	// wire cache_hit = (cpu_hi_addr == cache_a) && cache_v;
+	wire cache_wr = memwr_s || cpu_strobe;
+	wire [15:0] cache_d;
+	wire [12:0] cache_a;
+	wire cache_v;
 
-	reg cached_addr_valid;
-	always @(posedge clk)
-	if (rst)
-	begin
-		cached_addr_valid <= 1'b0;
-	end
-	else
-	begin
-		if (
-			(zneg && r_mreq_r_n && mreq && csrom)
-		 || (zneg && r_mreq_r_n && memwr)
-		 || iorq_s
-         || (vdos_off || vdos_on)
-         || dos_on
-         || nw_hit
-        )
-			cached_addr_valid <= 1'b0;
-		else if (cpu_strobe)
-			cached_addr_valid <= 1'b1;
-	end
-
-	wire cache_hit = ((za[15:1] == cached_addr[15:1]) && cached_addr_valid);
-
-	reg [15:1] cached_addr;
-	always @(posedge clk)
-		if (rst)
-		begin
-			cached_addr <= 15'd0;
-		end
-		else if (cpu_strobe)
-		begin
-			cached_addr[15:1] <= za[15:1];
-		end
-
-
-// nwram
-	wire nw_we = nw_hit && memwr_s;
-	wire [7:0] nw_data;
-
-nwram nwram (
+cache_data cache_data (
 		.clock (clk),
-		.data (zd_in),
-		.rdaddress (za[8:0]),
-		.wraddress (za[8:0]),
-		.wren (nw_we),
-		.q (nw_data)
+		.data (cpu_rddata),
+		.rdaddress (cpu_addr[7:0]),
+		.wraddress (cpu_addr[7:0]),
+		.wren (cache_wr),
+		.q (cache_d)
+);
+
+cache_addr cache_addr (
+		.clock (clk),
+		.data ({!memwr_s, cpu_hi_addr}),
+		.rdaddress (cpu_addr[7:0]),
+		.wraddress (cpu_addr[7:0]),
+		.wren (cache_wr),
+		.q ({cache_v, cache_a})
 );
 
 endmodule

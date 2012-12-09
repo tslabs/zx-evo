@@ -216,7 +216,7 @@ set_global_assignment -name FITTER_EFFORT "STANDARD FIT"
 set_global_assignment -name SLOW_SLEW_RATE ON
 set_global_assignment -name AUTO_PACKED_REGISTERS NORMAL
 set_global_assignment -name FIT_ONLY_ONE_ATTEMPT OFF
-set_global_assignment -name SEED 2
+set_global_assignment -name SEED 3
 set_global_assignment -name ROUTER_TIMING_OPTIMIZATION_LEVEL MINIMUM
 set_global_assignment -name PLACEMENT_EFFORT_MULTIPLIER 1.0
 set_global_assignment -name ROUTER_EFFORT_MULTIPLIER 1.0
@@ -310,7 +310,8 @@ set_instance_assignment -name GLOBAL_SIGNAL ON -to clkz_in
 
 # end ENTITY(top)
 # ---------------
-set_global_assignment -name VERILOG_FILE ../z80/nwram.v
+set_global_assignment -name VERILOG_FILE ../z80/mem/cache_addr.v
+set_global_assignment -name VERILOG_FILE ../z80/mem/cache_data.v
 set_global_assignment -name VERILOG_FILE ../video/mem/video_tsline1.v
 set_global_assignment -name VERILOG_FILE ../video/mem/video_tsline0.v
 set_global_assignment -name VERILOG_FILE ../video/mem/video_sfile.v
@@ -352,5 +353,4 @@ set_global_assignment -name VERILOG_FILE ../common/spi.v
 set_global_assignment -name VERILOG_FILE ../common/resetter.v
 set_global_assignment -name VERILOG_FILE ../top.v
 set_global_assignment -name MIF_FILE ../video/mem/video_cram.mif
-set_global_assignment -name MIF_FILE ../z80/nwram.mif
 set_global_assignment -name ZIP_VECTOR_WAVEFORM_FILE ../sim_vw/dram.cvwf

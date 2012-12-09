@@ -4,7 +4,7 @@
 // MODULE: altdpram 
 
 // ============================================================
-// File Name: nwram.v
+// File Name: cache_addr.v
 // Megafunction Name(s):
 // 			altdpram
 //
@@ -36,7 +36,7 @@
 // synopsys translate_off
 `timescale 1 ps / 1 ps
 // synopsys translate_on
-module nwram (
+module cache_addr (
 	clock,
 	data,
 	rdaddress,
@@ -45,14 +45,14 @@ module nwram (
 	q);
 
 	input	  clock;
-	input	[7:0]  data;
-	input	[8:0]  rdaddress;
-	input	[8:0]  wraddress;
+	input	[15:0]  data;
+	input	[7:0]  rdaddress;
+	input	[7:0]  wraddress;
 	input	  wren;
-	output	[7:0]  q;
+	output	[15:0]  q;
 
-	wire [7:0] sub_wire0;
-	wire [7:0] q = sub_wire0[7:0];
+	wire [15:0] sub_wire0;
+	wire [15:0] q = sub_wire0[15:0];
 
 	altdpram	altdpram_component (
 				.wren (wren),
@@ -80,8 +80,8 @@ module nwram (
 		altdpram_component.rdaddress_reg = "UNREGISTERED",
 		altdpram_component.rdcontrol_aclr = "OFF",
 		altdpram_component.rdcontrol_reg = "UNREGISTERED",
-		altdpram_component.width = 8,
-		altdpram_component.widthad = 9,
+		altdpram_component.width = 16,
+		altdpram_component.widthad = 8,
 		altdpram_component.wraddress_aclr = "OFF",
 		altdpram_component.wraddress_reg = "INCLOCK",
 		altdpram_component.wrcontrol_aclr = "OFF",
@@ -131,7 +131,7 @@ endmodule
 // Retrieval info: PRIVATE: OUTDATA_ACLR_B NUMERIC "0"
 // Retrieval info: PRIVATE: OUTDATA_REG_B NUMERIC "1"
 // Retrieval info: PRIVATE: RAM_BLOCK_TYPE NUMERIC "0"
-// Retrieval info: PRIVATE: READ_DURING_WRITE_MODE_MIXED_PORTS NUMERIC "0"
+// Retrieval info: PRIVATE: READ_DURING_WRITE_MODE_MIXED_PORTS NUMERIC "2"
 // Retrieval info: PRIVATE: READ_DURING_WRITE_MODE_PORT_A NUMERIC "3"
 // Retrieval info: PRIVATE: READ_DURING_WRITE_MODE_PORT_B NUMERIC "3"
 // Retrieval info: PRIVATE: REGdata NUMERIC "1"
@@ -144,10 +144,10 @@ endmodule
 // Retrieval info: PRIVATE: USE_DIFF_CLKEN NUMERIC "0"
 // Retrieval info: PRIVATE: UseDPRAM NUMERIC "1"
 // Retrieval info: PRIVATE: VarWidth NUMERIC "0"
-// Retrieval info: PRIVATE: WIDTH_READ_A NUMERIC "8"
-// Retrieval info: PRIVATE: WIDTH_READ_B NUMERIC "8"
-// Retrieval info: PRIVATE: WIDTH_WRITE_A NUMERIC "8"
-// Retrieval info: PRIVATE: WIDTH_WRITE_B NUMERIC "8"
+// Retrieval info: PRIVATE: WIDTH_READ_A NUMERIC "16"
+// Retrieval info: PRIVATE: WIDTH_READ_B NUMERIC "16"
+// Retrieval info: PRIVATE: WIDTH_WRITE_A NUMERIC "16"
+// Retrieval info: PRIVATE: WIDTH_WRITE_B NUMERIC "16"
 // Retrieval info: PRIVATE: WRADDR_ACLR_B NUMERIC "0"
 // Retrieval info: PRIVATE: WRADDR_REG_B NUMERIC "1"
 // Retrieval info: PRIVATE: WRCTRL_ACLR_B NUMERIC "0"
@@ -163,29 +163,29 @@ endmodule
 // Retrieval info: CONSTANT: RDADDRESS_REG STRING "UNREGISTERED"
 // Retrieval info: CONSTANT: RDCONTROL_ACLR STRING "OFF"
 // Retrieval info: CONSTANT: RDCONTROL_REG STRING "UNREGISTERED"
-// Retrieval info: CONSTANT: WIDTH NUMERIC "8"
-// Retrieval info: CONSTANT: WIDTHAD NUMERIC "9"
+// Retrieval info: CONSTANT: WIDTH NUMERIC "16"
+// Retrieval info: CONSTANT: WIDTHAD NUMERIC "8"
 // Retrieval info: CONSTANT: WRADDRESS_ACLR STRING "OFF"
 // Retrieval info: CONSTANT: WRADDRESS_REG STRING "INCLOCK"
 // Retrieval info: CONSTANT: WRCONTROL_ACLR STRING "OFF"
 // Retrieval info: CONSTANT: WRCONTROL_REG STRING "INCLOCK"
 // Retrieval info: USED_PORT: clock 0 0 0 0 INPUT NODEFVAL clock
-// Retrieval info: USED_PORT: data 0 0 8 0 INPUT NODEFVAL data[7..0]
-// Retrieval info: USED_PORT: q 0 0 8 0 OUTPUT NODEFVAL q[7..0]
-// Retrieval info: USED_PORT: rdaddress 0 0 9 0 INPUT NODEFVAL rdaddress[8..0]
-// Retrieval info: USED_PORT: wraddress 0 0 9 0 INPUT NODEFVAL wraddress[8..0]
+// Retrieval info: USED_PORT: data 0 0 16 0 INPUT NODEFVAL data[15..0]
+// Retrieval info: USED_PORT: q 0 0 16 0 OUTPUT NODEFVAL q[15..0]
+// Retrieval info: USED_PORT: rdaddress 0 0 8 0 INPUT NODEFVAL rdaddress[7..0]
+// Retrieval info: USED_PORT: wraddress 0 0 8 0 INPUT NODEFVAL wraddress[7..0]
 // Retrieval info: USED_PORT: wren 0 0 0 0 INPUT VCC wren
-// Retrieval info: CONNECT: @data 0 0 8 0 data 0 0 8 0
-// Retrieval info: CONNECT: q 0 0 8 0 @q 0 0 8 0
-// Retrieval info: CONNECT: @wraddress 0 0 9 0 wraddress 0 0 9 0
-// Retrieval info: CONNECT: @rdaddress 0 0 9 0 rdaddress 0 0 9 0
+// Retrieval info: CONNECT: @data 0 0 16 0 data 0 0 16 0
+// Retrieval info: CONNECT: q 0 0 16 0 @q 0 0 16 0
+// Retrieval info: CONNECT: @wraddress 0 0 8 0 wraddress 0 0 8 0
+// Retrieval info: CONNECT: @rdaddress 0 0 8 0 rdaddress 0 0 8 0
 // Retrieval info: CONNECT: @wren 0 0 0 0 wren 0 0 0 0
 // Retrieval info: CONNECT: @inclock 0 0 0 0 clock 0 0 0 0
 // Retrieval info: LIBRARY: altera_mf altera_mf.altera_mf_components.all
-// Retrieval info: GEN_FILE: TYPE_NORMAL nwram.v TRUE
-// Retrieval info: GEN_FILE: TYPE_NORMAL nwram.inc FALSE
-// Retrieval info: GEN_FILE: TYPE_NORMAL nwram.cmp FALSE
-// Retrieval info: GEN_FILE: TYPE_NORMAL nwram.bsf FALSE
-// Retrieval info: GEN_FILE: TYPE_NORMAL nwram_inst.v FALSE
-// Retrieval info: GEN_FILE: TYPE_NORMAL nwram_bb.v FALSE
+// Retrieval info: GEN_FILE: TYPE_NORMAL cache_addr.v TRUE
+// Retrieval info: GEN_FILE: TYPE_NORMAL cache_addr.inc FALSE
+// Retrieval info: GEN_FILE: TYPE_NORMAL cache_addr.cmp FALSE
+// Retrieval info: GEN_FILE: TYPE_NORMAL cache_addr.bsf FALSE
+// Retrieval info: GEN_FILE: TYPE_NORMAL cache_addr_inst.v FALSE
+// Retrieval info: GEN_FILE: TYPE_NORMAL cache_addr_bb.v FALSE
 // Retrieval info: LIB_FILE: altera_mf
