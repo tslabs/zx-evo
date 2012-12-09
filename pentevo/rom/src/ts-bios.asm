@@ -108,8 +108,7 @@ RESET2:
         ld d, a             ; D keeps the Lock128 Mode
 
 ; AY & CPU freq
-        ld a, (ayfr)
-        rlca
+        ld a, (cach)
         rlca
         rlca
         ld e, a

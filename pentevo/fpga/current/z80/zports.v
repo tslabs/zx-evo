@@ -61,7 +61,6 @@ module zports(
 	output wire [31:0] xt_page,
 
 	output reg [4:0] fmaddr,
-	output reg [7:0] nwaddr,
 
 	output reg [7:0] sysconf,
 	output reg [7:0] memconf,
@@ -317,7 +316,6 @@ module zports(
 	localparam T1YOFFSH		= 8'h47;
 
 	localparam RAMPAGE		= 8'h10;	// this covers #10-#13
-	localparam NWADDR		= 8'h14;
 	localparam FMADDR		= 8'h15;
 	localparam TMPAGE		= 8'h16;
 	localparam T0GPAGE		= 8'h17;
@@ -401,7 +399,6 @@ module zports(
 		if (rst)
 		begin
 			fmaddr[4] <= 1'b0;
-			nwaddr[0] <= 1'b0;
 			im2vect <= 8'hFF;
 			fddvirt <= 4'b0;
 			sysconf <= 8'h01;       // turbo 7 MHz
@@ -427,8 +424,6 @@ module zports(
 				rampage[hoa[1:0]] <= din;
 			if (hoa == FMADDR)
 				fmaddr <= din[4:0];
-			if (hoa == NWADDR)
-				nwaddr <= din;
 			if (hoa == SYSCONF)
 				sysconf <= din;
 			if (hoa == MEMCONF)

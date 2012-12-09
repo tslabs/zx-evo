@@ -263,6 +263,7 @@ module top(
 
 
     wire [1:0] turbo =  sysconf[1:0];
+	wire cache_en = sysconf[2];
 	wire [7:0] border;
 	wire int_start;
 
@@ -304,9 +305,6 @@ module top(
         .xt_page    (xt_page),
         .dos        (dos),
         .vdos       (vdos),
-		
-		.nwaddr     (nwaddr),
-		.nwram_hit 	(nwram_hit),
 
         .page       (page),
         .romnram    (csrom),
@@ -370,12 +368,12 @@ module top(
         .memrd(memrd),
         .memwr(memwr),
 		
-		.nw_hit(nwram_hit),
 		.memwr_s(memwr_s),
 
 		.page   (page),
 
 		.rw_en(rw_en),
+		.cache_en(cache_en),
 		.romoe_n(romoe_n),
 		.romwe_n(romwe_n),
 		.csrom  (csrom),
@@ -647,7 +645,6 @@ module top(
 	wire [7:0]	   zma;
 	wire cram_we;
 	wire sfile_we;
-	wire nwram_hit;
 
     zmaps zmaps(
 				.clk        	(fclk),
@@ -738,7 +735,6 @@ module top(
 
 		wire [8:0] dmaport_wr;
 		wire [4:0] fmaddr;
-		wire [7:0] nwaddr;
 
 		wire [7:0] sysconf;
 		wire [3:0] fddvirt;
@@ -830,7 +826,6 @@ module top(
 					.xt_page    (xt_page),
 
 					.fmaddr		(fmaddr),
-					.nwaddr		(nwaddr),
 
 					.sysconf	(sysconf),
 					.memconf	(memconf),
