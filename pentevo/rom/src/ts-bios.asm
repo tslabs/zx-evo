@@ -205,13 +205,13 @@ RES_BT_BD           ; boot.$c
         ld a, (bdev)
         or a                ;0
         ld b, 0
-        jr z, RES_BD_XX
+        jr z, RES_BD_XX		; SD Card
         inc b
         dec a               ;1
-        jr z, RES_BD_XX
+        jr z, RES_BD_XX		; HDD Master
         inc b
         dec a               ;2
-        jr z, RES_BD_XX
+        jr z, RES_BD_XX		; HDD Slave
         dec a               ;3
         jr z, RES_BD_RS
         halt
@@ -765,14 +765,13 @@ DMAFILL
         out (c), d
         xtrv
         xt dmalen, 127
-        xt dmactr, dma_dev_mem | dma_zwt    ; Run DMA
+        xt dmactr, dma_dev_mem    ; Run DMA
         rst DWT
         xtrv
         xt dmanum, 0
         xt dmalen, 126
-        xt dmactr, dma_dev_mem | dma_zwt    ; Run last burst
-		rst DWT
-        ret
+        xt dmactr, dma_dev_mem    ; Run last burst
+		jp DWT
 
 LD_S_PAL
         ld hl, pal_bb

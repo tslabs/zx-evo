@@ -77,12 +77,16 @@ mode_nogfx      equ 0x20
 
 
 ; DMA modes
-dma_rw          equ 0x80
+dma_wnr         equ 0x80
 dma_zwt         equ 0x40
 dma_salgn       equ 0x20
 dma_dalgn       equ 0x10
 dma_asz         equ 0x08
 dma_dev_mem     equ 0x01
+dma_dev_spi     equ 0x02
+dma_dev_ide     equ 0x03
+dma_dev_crm     equ 0x04
+dma_dev_sfl     equ 0x05
 
     
 ; -- RAM windows
