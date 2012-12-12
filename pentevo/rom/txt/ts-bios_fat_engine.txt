@@ -32,12 +32,7 @@
 10│FENTRY
   │Search for file entry in current dir
   │   
-  │i: HL - pointer to structure:
-  │		+ 0 1	flag: #00 - file / #10 - dir
-  │ 	+ 1 8	name: UPPER case
-  │ 	+ 9 1	"." padder
-  │ 	+10 3	extension: UPPER case
-  │ 	+13 1	\0 padder
+  │i: HL - pointer to FES
   │   
   │o: DEHL - file length if file found
   │   
@@ -49,27 +44,19 @@
 12│MKFILE
   │Create file entry in current dir
   │   
-  │i: HL - pointer to structure:
-  │ 	+ 0  4	length, bytes
-  │ 	+ 4  1	flag
-  │ 	+ 5  12	name
-  │ 	+17  1	\0 padder
+  │i: HL - pointer to FES
   │   
   │SEEK0 function is automatically called after file creation
 ──┼───────────────────────────────────────────────────
 13│MKDIR
   │Create dir entry in current dir
   │
-  │i: HL - pointer to structure:
-  │ 	+ 0  12	name
-  │ 	+12  1	\0 padder
+  │i: HL - pointer to FES
 ──┼───────────────────────────────────────────────────
 14│DELFILE
   │Delete dir entry in current dir
   │
-  │i: HL - pointer to structure:
-  │ 	+ 0  12	name
-  │ 	+12  1	\0 padder
+  │i: HL - pointer to FES
 ──┼───────────────────────────────────────────────────
 15│SETROOT
   │Set Root dir of current partition active
@@ -96,6 +83,17 @@
   │
   │i: C - Stream number
 ──┴───────────────────────────────────────────────────
+
+File Entry Structure (FES):
++ 0 	1	flag: #00 - file / #10 - dir
++ 1 	N	name+extension
++ N+1	1	\0 padder
+
+Name for 8.3 format:
++ 0 	8	name: UPPER case
++ 8 	1	"." padder
++ 9 	3	extension: UPPER case
+
 
 Error codes:
 0 - OK
