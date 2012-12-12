@@ -1,0 +1,105 @@
+﻿
+* Every function returns error code in regA. See table below.
+
+──┌───────────────────────────────────────────────────
+00│READ512
+  │Sector read
+  │   
+  │i: CDE - Address
+  │   B - Number of sectors to process
+──┼───────────────────────────────────────────────────
+01│WRITE512
+  │Sector write
+  │   
+  │i: CDE - Address
+  │   B - Number of sectors to process
+──┼───────────────────────────────────────────────────
+02│SEEK0
+  │Set file pointer to sector 0
+──┼───────────────────────────────────────────────────
+03│SEEK512
+  │Set file pointer to sector
+  │   
+  │i: CDE - Sector number
+──┼───────────────────────────────────────────────────
+04│SKIP512
+  │Sector seek/skip
+  │   
+  │i: B - Number of sectors to process
+──┴───────────────────────────────────────────────────
+
+──┌───────────────────────────────────────────────────
+10│FENTRY
+  │Search for file entry in current dir
+  │   
+  │i: HL - pointer to structure:
+  │		+ 0 1	flag: #00 - file / #10 - dir
+  │ 	+ 1 8	name: UPPER case
+  │ 	+ 9 1	"." padder
+  │ 	+10 3	extension: UPPER case
+  │ 	+13 1	\0 padder
+  │   
+  │o: DEHL - file length if file found
+  │   
+  │SEEK0 function is automatically called after file creation
+──┼───────────────────────────────────────────────────
+11│SETDIR
+  │Set dir found by FENTRY active
+──┼───────────────────────────────────────────────────
+12│MKFILE
+  │Create file entry in current dir
+  │   
+  │i: HL - pointer to structure:
+  │ 	+ 0  4	length, bytes
+  │ 	+ 4  1	flag
+  │ 	+ 5  12	name
+  │ 	+17  1	\0 padder
+  │   
+  │SEEK0 function is automatically called after file creation
+──┼───────────────────────────────────────────────────
+13│MKDIR
+  │Create dir entry in current dir
+  │
+  │i: HL - pointer to structure:
+  │ 	+ 0  12	name
+  │ 	+12  1	\0 padder
+──┼───────────────────────────────────────────────────
+14│DELFILE
+  │Delete dir entry in current dir
+  │
+  │i: HL - pointer to structure:
+  │ 	+ 0  12	name
+  │ 	+12  1	\0 padder
+──┼───────────────────────────────────────────────────
+15│SETROOT
+  │Set Root dir of current partition active
+──┴───────────────────────────────────────────────────
+
+──┌───────────────────────────────────────────────────
+20│CRTSTREAM
+  │Create stream
+  │
+  │i: B - device (0 - SD, 1 - HDD Master, 2 - HDD Slave
+  │   C - partition
+  │
+  │o: C - stream number
+  │
+  │SETROOT function is automatically called after stream creation
+──┼───────────────────────────────────────────────────
+21│SELSTREAM
+  │Select stream
+  │
+  │i: C - Stream number
+──┼───────────────────────────────────────────────────
+22│DELSTREAM
+  │Delete stream
+  │
+  │i: C - Stream number
+──┴───────────────────────────────────────────────────
+
+Error codes:
+0 - OK
+1 - Entry not found
+2 - Wrong device
+3 - Device error
+4 - Wrong stream
