@@ -30,13 +30,13 @@
 
 ──┌───────────────────────────────────────────────────
 10│FENTRY
-  │Search for file entry in current dir
+  │Search for dir entry in current dir
   │   
   │i: HL - pointer to FES
   │   
   │o: DEHL - file length if file found
   │   
-  │SEEK0 function is automatically called after file creation
+  │SEEK0 function is automatically called after dir entry found
 ──┼───────────────────────────────────────────────────
 11│SETDIR
   │Set dir found by FENTRY active
@@ -45,6 +45,7 @@
   │Create file entry in current dir
   │   
   │i: HL - pointer to FES
+  │   BCDE - length
   │   
   │SEEK0 function is automatically called after file creation
 ──┼───────────────────────────────────────────────────
