@@ -6,6 +6,7 @@ mhmt.exe -hst  rslsys.bin
 bin2defb.exe rslsys.bin.hst rslsys.asm
 mhmt.exe -hst sysvars.bin
 bin2defb.exe sysvars.bin.hst sysvars.asm
+bin2defb.exe tsfat.bin tsfat.asm
 
 "%IAR%\az80.exe" ts-bios.asm -l ts-bios.lst
 "%IAR%\xlink.exe" -Hff -f ts-bios.xcl ts-bios.r01

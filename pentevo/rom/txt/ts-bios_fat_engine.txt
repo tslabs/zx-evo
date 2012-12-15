@@ -7,12 +7,16 @@
   │   
   │i: CDE - Address
   │   B - Number of sectors to process
+  │
+  │o: CDE - Address
 ──┼───────────────────────────────────────────────────
 01│WRITE512
   │Sector write
   │   
   │i: CDE - Address
   │   B - Number of sectors to process
+  │
+  │o: CDE - Address
 ──┼───────────────────────────────────────────────────
 02│SEEK0
   │Set file pointer to sector 0
@@ -68,7 +72,7 @@
   │Create stream
   │
   │i: B - device (0 - SD, 1 - HDD Master, 2 - HDD Slave
-  │   C - partition
+  │   C - partition (0-7)
   │
   │o: C - stream number
   │
@@ -97,8 +101,12 @@ Name for 8.3 format:
 
 
 Error codes:
-0 - OK
-1 - Entry not found
-2 - Wrong device
-3 - Device error
-4 - Wrong stream
+ 0 - OK
+ 1 - Entry not found
+ 2 - Not enough space
+ 8 - Device not found
+ 9 - Device not ready
+10 - Partition not found
+16 - Write protection
+24 - Wrong stream
+25 - Stream not ready

@@ -97,8 +97,8 @@ win3            equ 0xC000
 
 
 ; -- restarts
-DWT				equ 8
-
+DWT             equ h'8
+TSFAT           equ h'2000
 
 ; -- addresses
 sys_var         equ h'5C00
