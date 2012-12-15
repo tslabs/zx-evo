@@ -937,4 +937,7 @@ SYM
 #include "arrays.asm"
 #include "restarts.asm"
 
+        org TSFAT
+#include "tsfat.asm"
+
         end

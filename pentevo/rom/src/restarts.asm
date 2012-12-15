@@ -2,13 +2,13 @@
 ; -- RST 08-30
 ; wait for DMA end
         org DWT
-		xtbc dstatus
+        xtbc dstatus
 DWT1    inf
         ret p
         jr DWT1
 
         org h'10
-        ret
+        jp TSFAT
 
         org h'18
         ret
@@ -24,7 +24,7 @@ DWT1    inf
 
 ; -- IM1 INT
         org h'38
-IM1     
+IM1
         push bc
         push de
         push hl
@@ -43,8 +43,8 @@ IM11
         pop bc
         ei
         ret
-    
-    
+
+
 ; -- NMI        
         org h'66
 NMI
