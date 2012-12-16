@@ -2,10 +2,11 @@
 //
 // here we build picture and send it sometimes to C program
 
+`ifndef NO_PIXER
 module pixer
 (
 	input  wire clk,
-	
+
 	input  wire vsync,
 	input  wire hsync,
 
@@ -71,7 +72,7 @@ module pixer
 
 	// get vertical period
 	initial clr_vcnt = 0;
-	
+
 	always @(posedge clk)
 	begin
 		if( vbeg )
@@ -116,7 +117,6 @@ module pixer
 
 
 
-
 	import "DPI-C" task sndpix
 	(
 		input int hcoord,
@@ -128,6 +128,6 @@ module pixer
 
 
 
-
 endmodule
+`endif
 

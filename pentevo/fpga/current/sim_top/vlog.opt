@@ -1,13 +1,16 @@
 tb_top.v
 ../top.v
 ../common/resetter.v
-../common/spi2.v
 ../dram/dram.v
 ../dram/arbiter.v
 ../mem/atm_pager.v
 ../slave/slavespi.v
 ../sound/sound.v
 ../vg93/vg93.v
+../vg93/fapch_zek.v
+
+../spihub/spi2.v
+../spihub/spihub.v
 
 ../video/video_addrgen.v
 ../video/video_fetch.v
@@ -37,4 +40,9 @@ rom_top.v
 zxevo_rom.v
 pixer.v
 
+spitest_rom.v
+spitest_print.v
+spitest_avr.v
+
+nmitest_rom.v
 

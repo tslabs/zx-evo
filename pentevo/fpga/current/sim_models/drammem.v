@@ -12,6 +12,7 @@ module drammem(
 	parameter _verbose_ = 1;
 	parameter _add_to_addr_ = 0;
 	parameter _filter_out_ = 32'h91;
+	parameter _init_ = 1;
 
 	reg [15:0] array [0:1048575];
 	reg [15:0] dout;
@@ -32,8 +33,11 @@ module drammem(
 	begin : clear_mem
 		integer i;
 
-		for(i=0;i<1048576;i=i+1)
-			array[i] = 16'hDEAD;
+		if( _init_ )
+		begin
+			for(i=0;i<1048576;i=i+1)
+				array[i] = 16'hDEAD;
+		end
 	end
 
 
