@@ -39,6 +39,53 @@ add wave -noupdate /tb/csrom
 add wave -noupdate /tb/romoe_n
 add wave -noupdate /tb/romwe_n
 add wave -noupdate -divider <NULL>
+add wave -noupdate /tb/DUT/zports/port_rd_fclk
+add wave -noupdate /tb/DUT/zports/port_wr_fclk
+add wave -noupdate /tb/DUT/zports/shadow
+add wave -noupdate -radix hexadecimal /tb/DUT/zports/loa
+add wave -noupdate -radix hexadecimal /tb/DUT/zports/a
+add wave -noupdate /tb/DUT/zports/sdcfg_wr
+add wave -noupdate /tb/DUT/zports/sddat_rd
+add wave -noupdate /tb/DUT/zports/sddat_wr
+add wave -noupdate /tb/DUT/zports/sd_start
+add wave -noupdate -divider <NULL>
+add wave -noupdate /tb/DUT/zx_sdcs_n_val
+add wave -noupdate /tb/DUT/zx_sdcs_n_stb
+add wave -noupdate /tb/DUT/zx_sd_start
+add wave -noupdate -radix hexadecimal /tb/DUT/zx_sd_datain
+add wave -noupdate -radix hexadecimal /tb/DUT/zx_sd_dataout
+add wave -noupdate -divider <NULL>
+add wave -noupdate /tb/DUT/avr_lock_claim
+add wave -noupdate /tb/DUT/avr_lock_grant
+add wave -noupdate /tb/DUT/avr_sdcs_n
+add wave -noupdate /tb/DUT/avr_sd_start
+add wave -noupdate -radix hexadecimal /tb/DUT/avr_sd_datain
+add wave -noupdate -radix hexadecimal /tb/DUT/avr_sd_dataout
+add wave -noupdate -divider <NULL>
+add wave -noupdate /tb/DUT/spihub/sd_start
+add wave -noupdate -radix hexadecimal /tb/DUT/spihub/sd_datain
+add wave -noupdate -radix hexadecimal /tb/DUT/spihub/sd_dataout
+add wave -noupdate -divider <NULL>
+add wave -noupdate /tb/DUT/sdcs_n
+add wave -noupdate /tb/DUT/sdclk
+add wave -noupdate /tb/DUT/sddo
+add wave -noupdate /tb/DUT/sddi
+add wave -noupdate -divider <NULL>
+add wave -noupdate /tb/spitest_print/sdclk
+add wave -noupdate /tb/spitest_print/sdcs_n
+add wave -noupdate /tb/spitest_print/sddi
+add wave -noupdate /tb/spitest_print/sddo
+add wave -noupdate /tb/spitest_print/shift_in
+add wave -noupdate -radix unsigned /tb/spitest_print/counter
+add wave -noupdate -radix unsigned /tb/spitest_print/pointer
+add wave -noupdate -radix ascii /tb/spitest_print/txt_buffer
+add wave -noupdate -divider <NULL>
+add wave -noupdate /tb/DUT/spics_n
+add wave -noupdate /tb/DUT/spick
+add wave -noupdate /tb/DUT/spido
+add wave -noupdate /tb/DUT/spidi
+add wave -noupdate -divider <NULL>
+add wave -noupdate -divider <NULL>
 add wave -noupdate -radix hexadecimal /tb/z80/u0/IR
 add wave -noupdate -divider <NULL>
 add wave -noupdate /tb/DUT/z80mem/memrd
@@ -56,17 +103,19 @@ add wave -noupdate /tb/DUT/z80mem/pending_cpu_req
 add wave -noupdate /tb/DUT/z80mem/cpu_strobe
 add wave -noupdate /tb/DUT/z80mem/cpu_rnw
 add wave -noupdate /tb/DUT/z80mem/cpu_rnw_r
-add wave -noupdate /tb/DUT/z80mem/c3
+add wave -noupdate /tb/DUT/z80mem/cend
 add wave -noupdate -divider <NULL>
 add wave -noupdate -radix hexadecimal /tb/z80/u0/IR
-add wave -noupdate -divider <NULL>
 add wave -noupdate -divider <NULL>
 add wave -noupdate -divider <NULL>
 add wave -noupdate /tb/DUT/dram/rras0_n
 add wave -noupdate /tb/DUT/dram/rras1_n
 add wave -noupdate /tb/DUT/dram/rucas_n
 add wave -noupdate /tb/DUT/dram/rlcas_n
-add wave -noupdate /tb/DUT/dram/c0
+add wave -noupdate /tb/DUT/dram/rwe_n
+add wave -noupdate -radix hexadecimal /tb/DUT/dram/ra
+add wave -noupdate -radix hexadecimal /tb/DUT/dram/rd
+add wave -noupdate /tb/DUT/dram/cbeg
 add wave -noupdate -radix hexadecimal /tb/DUT/dram/int_addr
 add wave -noupdate -radix hexadecimal /tb/DUT/dram/int_wrdata
 add wave -noupdate /tb/DUT/dram/int_bsel
@@ -85,6 +134,45 @@ add wave -noupdate -radix hexadecimal /tb/z80/A
 add wave -noupdate -radix hexadecimal /tb/z80/D
 add wave -noupdate -divider <NULL>
 add wave -noupdate -divider <NULL>
+add wave -noupdate /tb/DUT/video_top/clk
+add wave -noupdate /tb/DUT/video_top/cbeg
+add wave -noupdate /tb/DUT/video_top/post_cbeg
+add wave -noupdate /tb/DUT/video_top/pre_cend
+add wave -noupdate /tb/DUT/video_top/cend
+add wave -noupdate -divider <NULL>
+add wave -noupdate -divider <NULL>
+add wave -noupdate /tb/DUT/video_top/int_start
+add wave -noupdate /tb/DUT/video_top/line_start
+add wave -noupdate /tb/DUT/video_top/hpix
+add wave -noupdate /tb/DUT/video_top/vpix
+add wave -noupdate -divider <NULL>
+add wave -noupdate /tb/DUT/video_top/fetch_start
+add wave -noupdate /tb/DUT/video_top/fetch_end
+add wave -noupdate /tb/DUT/video_top/fetch_sync
+add wave -noupdate -divider <NULL>
+add wave -noupdate /tb/DUT/video_top/video_go
+add wave -noupdate -radix hexadecimal /tb/DUT/video_top/video_addr
+add wave -noupdate /tb/DUT/video_top/video_next
+add wave -noupdate -radix hexadecimal /tb/DUT/video_top/video_data
+add wave -noupdate /tb/DUT/video_top/video_strobe
+add wave -noupdate /tb/DUT/video_top/video_bw
+add wave -noupdate -divider <NULL>
+add wave -noupdate /tb/DUT/video_top/video_addrgen/frame_init
+add wave -noupdate /tb/DUT/video_top/video_addrgen/gnext
+add wave -noupdate -radix hexadecimal /tb/DUT/video_top/video_addrgen/gctr
+add wave -noupdate /tb/DUT/video_top/video_addrgen/ldaddr
+add wave -noupdate -radix hexadecimal /tb/DUT/video_top/video_addrgen/video_addr
+add wave -noupdate -divider <NULL>
+add wave -noupdate -radix hexadecimal /tb/DUT/video_top/pic_bits
+add wave -noupdate -divider <NULL>
+add wave -noupdate -radix unsigned /tb/DUT/video_top/vred
+add wave -noupdate -radix unsigned /tb/DUT/video_top/vgrn
+add wave -noupdate -radix unsigned /tb/DUT/video_top/vblu
+add wave -noupdate -divider <NULL>
+add wave -noupdate -divider <NULL>
+add wave -noupdate -divider <NULL>
+add wave -noupdate -divider <NULL>
+add wave -noupdate -divider <NULL>
 add wave -noupdate -divider <NULL>
 add wave -noupdate -divider <NULL>
 add wave -noupdate -divider <NULL>
@@ -93,9 +181,9 @@ add wave -noupdate -divider <NULL>
 add wave -noupdate -divider <NULL>
 add wave -noupdate -divider <NULL>
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {447762029900 ps} 0} {{Cursor 2} {166348107189 ps} 0}
-configure wave -namecolwidth 353
-configure wave -valuecolwidth 172
+WaveRestoreCursors {{Cursor 1} {447762029900 ps} 0} {{Cursor 2} {45952747000 ps} 0} {{Cursor 3} {760917722 ps} 0}
+configure wave -namecolwidth 241
+configure wave -valuecolwidth 40
 configure wave -justifyvalue left
 configure wave -signalnamewidth 0
 configure wave -snapdistance 10
@@ -108,4 +196,4 @@ configure wave -griddelta 8
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {447760689667 ps} {447763370133 ps}
+WaveRestoreZoom {0 ps} {184414557 ps}

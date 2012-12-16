@@ -290,8 +290,8 @@ wire \zports|sd_start ;
 wire \slavespi|sel_waitreg~8 ;
 wire \zports|wait_start_comport~22 ;
 wire \zports|wait_start_gluclock~58 ;
-wire \dram|c0 ;
-wire \dramarb|c2 ;
+wire \dram|cbeg ;
+wire \dramarb|pre_cend ;
 wire \WideOr0~83 ;
 wire WideOr0;
 wire \zports|atmF7_wr_fclk ;
@@ -339,7 +339,7 @@ wire \dramarb|dram_addr[9]~2026 ;
 wire \z80mem|Mux1~3 ;
 wire \dramarb|dram_addr[10]~2027 ;
 wire \z80mem|Mux0~3 ;
-wire \dramarb|c3 ;
+wire \dramarb|cend ;
 wire \vga_synch|scanout_start ;
 wire \horiz_sync|hsync_start ;
 wire \dramarb|video_strobe ;
@@ -547,8 +547,8 @@ zclock zclock_1(
 	.zclk_out(\zclock|zclk_out ),
 	.zneg(\zclock|zneg ),
 	.zpos(\zclock|zpos ),
-	.c0(\dram|c0 ),
-	.c2(\dramarb|c2 ),
+	.cbeg(\dram|cbeg ),
+	.pre_cend(\dramarb|pre_cend ),
 	.WideOr0(WideOr0),
 	.peff7_int_4(\zports|peff7_int [4]),
 	.fclk(\fclk~dataout ),
@@ -817,7 +817,7 @@ zmem z80mem(
 	.page_72(\instantiate_atm_pagers[0].atm_pager|page [7]),
 	.page_73(\instantiate_atm_pagers[3].atm_pager|page [7]),
 	.Mux0(\z80mem|Mux0~3 ),
-	.c3(\dramarb|c3 ),
+	.cend(\dramarb|cend ),
 	.rddata_15(\dram|rddata [15]),
 	.rddata_6(\dram|rddata [6]),
 	.rddata_14(\dram|rddata [14]),
@@ -882,7 +882,7 @@ dram dram_1(
 	.next_cycle_0(\dramarb|next_cycle[0]~256 ),
 	.Selector1(\dram|Selector1~73 ),
 	.next_cycle_1(\dramarb|next_cycle[1]~258 ),
-	.c0(\dram|c0 ),
+	.cbeg(\dram|cbeg ),
 	.q_1(\fecher|hcnt_rtl_11|wysi_counter|q [1]),
 	.q_2(\fecher|hcnt_rtl_11|wysi_counter|q [2]),
 	.q_3(\fecher|hcnt_rtl_11|wysi_counter|q [3]),
@@ -991,8 +991,8 @@ arbiter dramarb(
 	.go(\fecher|go ),
 	.next_cycle_1(\dramarb|next_cycle[1]~258 ),
 	.peff7_int_0(\zports|peff7_int [0]),
-	.c0(\dram|c0 ),
-	.c2(\dramarb|c2 ),
+	.cbeg(\dram|cbeg ),
+	.pre_cend(\dramarb|pre_cend ),
 	.dcnt_0(\fecher|dcnt [0]),
 	.video_next(\dramarb|video_next ),
 	.dcnt_1(\fecher|dcnt [1]),
@@ -1006,7 +1006,7 @@ arbiter dramarb(
 	.dram_addr_9(\dramarb|dram_addr[9]~2026 ),
 	.q_6(\fecher|vcnt_rtl_10|wysi_counter|q [6]),
 	.dram_addr_10(\dramarb|dram_addr[10]~2027 ),
-	.c3(\dramarb|c3 ),
+	.cend(\dramarb|cend ),
 	.video_strobe(\dramarb|video_strobe ),
 	.cpu_strobe(\dramarb|cpu_strobe ),
 	.q_1(\fecher|vcnt_rtl_10|wysi_counter|q [1]),
@@ -1022,9 +1022,9 @@ synch horiz_sync(
 	.hpix(\horiz_sync|hpix ),
 	.hblank(\horiz_sync|hblank ),
 	.hsync(\horiz_sync|hsync ),
-	.c2(\dramarb|c2 ),
+	.pre_cend(\dramarb|pre_cend ),
 	.line_start(\horiz_sync|line_start ),
-	.c3(\dramarb|c3 ),
+	.cend(\dramarb|cend ),
 	.hsync_start(\horiz_sync|hsync_start ),
 	.hint_start(\horiz_sync|hint_start ),
 	.clk(\fclk~dataout ),
@@ -1086,7 +1086,7 @@ fetch fecher(
 	.q_7(\fecher|vcnt_rtl_10|wysi_counter|q [7]),
 	.q_21(\fecher|vcnt_rtl_10|wysi_counter|q [2]),
 	.q_6(\fecher|vcnt_rtl_10|wysi_counter|q [6]),
-	.c3(\dramarb|c3 ),
+	.cend(\dramarb|cend ),
 	.rddata_15(\dram|rddata [15]),
 	.video_strobe(\dramarb|video_strobe ),
 	.rddata_6(\dram|rddata [6]),
@@ -5442,8 +5442,8 @@ module arbiter (
 	go,
 	next_cycle_1,
 	peff7_int_0,
-	c0,
-	c2,
+	cbeg,
+	pre_cend,
 	dcnt_0,
 	video_next,
 	dcnt_1,
@@ -5457,7 +5457,7 @@ module arbiter (
 	dram_addr_9,
 	q_6,
 	dram_addr_10,
-	c3,
+	cend,
 	video_strobe,
 	cpu_strobe,
 	q_1,
@@ -5477,8 +5477,8 @@ input 	Selector1;
 input 	go;
 output 	next_cycle_1;
 input 	peff7_int_0;
-input 	c0;
-output 	c2;
+input 	cbeg;
+output 	pre_cend;
 input 	dcnt_0;
 output 	video_next;
 input 	dcnt_1;
@@ -5492,7 +5492,7 @@ input 	q_2;
 output 	dram_addr_9;
 input 	q_6;
 output 	dram_addr_10;
-output 	c3;
+output 	cend;
 output 	video_strobe;
 output 	cpu_strobe;
 input 	q_1;
@@ -5520,7 +5520,7 @@ wire \vid_nrem[1]~508 ;
 wire \vid_nrem[1]~509 ;
 wire \next_cycle[0]~255 ;
 wire \next_cycle[1]~257 ;
-wire c1;
+wire post_cbeg;
 wire \always8~3 ;
 wire \dram_addr[7]~2042 ;
 wire \dram_addr[8]~2045 ;
@@ -5614,14 +5614,14 @@ defparam \next_cycle[1]~258_I .packed_mode = "false";
 // synopsys translate_on
 
 // atom is at LC2_I1
-flex10ke_lcell \c2~I (
+flex10ke_lcell \pre_cend~I (
 // Equation(s):
-// c2 = DFFEA(c1, GLOBAL(\fclk~dataout ), , , , , )
+// pre_cend = DFFEA(post_cbeg, GLOBAL(\fclk~dataout ), , , , , )
 
 	.dataa(vcc),
 	.datab(vcc),
 	.datac(vcc),
-	.datad(c1),
+	.datad(post_cbeg),
 	.aclr(gnd),
 	.aload(gnd),
 	.clk(clk),
@@ -5630,26 +5630,26 @@ flex10ke_lcell \c2~I (
 	.devclrn(devclrn),
 	.devpor(devpor),
 	.combout(),
-	.regout(c2),
+	.regout(pre_cend),
 	.cout(),
 	.cascout());
 // synopsys translate_off
-defparam \c2~I .clock_enable_mode = "false";
-defparam \c2~I .lut_mask = "ff00";
-defparam \c2~I .operation_mode = "normal";
-defparam \c2~I .output_mode = "reg_only";
-defparam \c2~I .packed_mode = "false";
+defparam \pre_cend~I .clock_enable_mode = "false";
+defparam \pre_cend~I .lut_mask = "ff00";
+defparam \pre_cend~I .operation_mode = "normal";
+defparam \pre_cend~I .output_mode = "reg_only";
+defparam \pre_cend~I .packed_mode = "false";
 // synopsys translate_on
 
 // atom is at LC6_I1
 flex10ke_lcell \video_next~I (
 // Equation(s):
-// video_next = DFFEA(!curr_cycle[0] & curr_cycle[1] & c1, GLOBAL(\fclk~dataout ), , , , , )
+// video_next = DFFEA(!curr_cycle[0] & curr_cycle[1] & post_cbeg, GLOBAL(\fclk~dataout ), , , , , )
 
 	.dataa(vcc),
 	.datab(curr_cycle[0]),
 	.datac(curr_cycle[1]),
-	.datad(c1),
+	.datad(post_cbeg),
 	.aclr(gnd),
 	.aload(gnd),
 	.clk(clk),
@@ -5838,14 +5838,14 @@ defparam \dram_addr[10]~2027_I .packed_mode = "false";
 // synopsys translate_on
 
 // atom is at LC4_I1
-flex10ke_lcell \c3~I (
+flex10ke_lcell \cend~I (
 // Equation(s):
-// c3 = DFFEA(c2, GLOBAL(\fclk~dataout ), , , , , )
+// cend = DFFEA(pre_cend, GLOBAL(\fclk~dataout ), , , , , )
 
 	.dataa(vcc),
 	.datab(vcc),
 	.datac(vcc),
-	.datad(c2),
+	.datad(pre_cend),
 	.aclr(gnd),
 	.aload(gnd),
 	.clk(clk),
@@ -5854,26 +5854,26 @@ flex10ke_lcell \c3~I (
 	.devclrn(devclrn),
 	.devpor(devpor),
 	.combout(),
-	.regout(c3),
+	.regout(cend),
 	.cout(),
 	.cascout());
 // synopsys translate_off
-defparam \c3~I .clock_enable_mode = "false";
-defparam \c3~I .lut_mask = "ff00";
-defparam \c3~I .operation_mode = "normal";
-defparam \c3~I .output_mode = "reg_only";
-defparam \c3~I .packed_mode = "false";
+defparam \cend~I .clock_enable_mode = "false";
+defparam \cend~I .lut_mask = "ff00";
+defparam \cend~I .operation_mode = "normal";
+defparam \cend~I .output_mode = "reg_only";
+defparam \cend~I .packed_mode = "false";
 // synopsys translate_on
 
 // atom is at LC8_I1
 flex10ke_lcell \video_strobe~I (
 // Equation(s):
-// video_strobe = DFFEA(!curr_cycle[0] & curr_cycle[1] & c2, GLOBAL(\fclk~dataout ), , , , , )
+// video_strobe = DFFEA(!curr_cycle[0] & curr_cycle[1] & pre_cend, GLOBAL(\fclk~dataout ), , , , , )
 
 	.dataa(vcc),
 	.datab(curr_cycle[0]),
 	.datac(curr_cycle[1]),
-	.datad(c2),
+	.datad(pre_cend),
 	.aclr(gnd),
 	.aload(gnd),
 	.clk(clk),
@@ -5896,10 +5896,10 @@ defparam \video_strobe~I .packed_mode = "false";
 // atom is at LC7_I1
 flex10ke_lcell \cpu_strobe~I (
 // Equation(s):
-// cpu_strobe = DFFEA(\always8~3  # !next_cycle_1 & c3 & Selector1, GLOBAL(\fclk~dataout ), , , , , )
+// cpu_strobe = DFFEA(\always8~3  # !next_cycle_1 & cend & Selector1, GLOBAL(\fclk~dataout ), , , , , )
 
 	.dataa(next_cycle_1),
-	.datab(c3),
+	.datab(cend),
 	.datac(Selector1),
 	.datad(\always8~3 ),
 	.aclr(gnd),
@@ -6008,9 +6008,9 @@ defparam \Equal2~39_I .packed_mode = "false";
 // atom is at LC2_E8
 flex10ke_lcell \blk_rem[2]~I (
 // Equation(s):
-// blk_rem[2] = DFFEA(\always2~53  $ (!\Equal2~39  & blk_rem[2]), GLOBAL(\fclk~dataout ), , , c3, , )
+// blk_rem[2] = DFFEA(\always2~53  $ (!\Equal2~39  & blk_rem[2]), GLOBAL(\fclk~dataout ), , , cend, , )
 
-	.dataa(c3),
+	.dataa(cend),
 	.datab(\always2~53 ),
 	.datac(\Equal2~39 ),
 	.datad(blk_rem[2]),
@@ -6064,9 +6064,9 @@ defparam \always2~53_I .packed_mode = "false";
 // atom is at LC3_E8
 flex10ke_lcell \blk_rem[0]~I (
 // Equation(s):
-// blk_rem[0] = DFFEA(\always2~53  $ (!Equal2 & !blk_rem[0]), GLOBAL(\fclk~dataout ), , , c3, , )
+// blk_rem[0] = DFFEA(\always2~53  $ (!Equal2 & !blk_rem[0]), GLOBAL(\fclk~dataout ), , , cend, , )
 
-	.dataa(c3),
+	.dataa(cend),
 	.datab(\always2~53 ),
 	.datac(Equal2),
 	.datad(blk_rem[0]),
@@ -6120,9 +6120,9 @@ defparam \blk_nrem[1]~68_I .packed_mode = "false";
 // atom is at LC5_E8
 flex10ke_lcell \blk_rem[1]~I (
 // Equation(s):
-// blk_rem[1] = DFFEA(!\blk_nrem[1]~68 , GLOBAL(\fclk~dataout ), , , c3, , )
+// blk_rem[1] = DFFEA(!\blk_nrem[1]~68 , GLOBAL(\fclk~dataout ), , , cend, , )
 
-	.dataa(c3),
+	.dataa(cend),
 	.datab(vcc),
 	.datac(vcc),
 	.datad(\blk_nrem[1]~68 ),
@@ -6204,9 +6204,9 @@ defparam \vid_nrem[2]~507_I .packed_mode = "false";
 // atom is at LC5_E1
 flex10ke_lcell \vid_rem[2]~I (
 // Equation(s):
-// vid_rem[2] = DFFEA(!\always2~53  & \vid_nrem[2]~507 , GLOBAL(\fclk~dataout ), , , c3, , )
+// vid_rem[2] = DFFEA(!\always2~53  & \vid_nrem[2]~507 , GLOBAL(\fclk~dataout ), , , cend, , )
 
-	.dataa(c3),
+	.dataa(cend),
 	.datab(vcc),
 	.datac(\always2~53 ),
 	.datad(\vid_nrem[2]~507 ),
@@ -6288,9 +6288,9 @@ defparam \vid_nrem[0]~506_I .packed_mode = "false";
 // atom is at LC2_E1
 flex10ke_lcell \vid_rem[0]~I (
 // Equation(s):
-// vid_rem[0] = DFFEA(\vid_nrem[0]~506 , GLOBAL(\fclk~dataout ), , , c3, , )
+// vid_rem[0] = DFFEA(\vid_nrem[0]~506 , GLOBAL(\fclk~dataout ), , , cend, , )
 
-	.dataa(c3),
+	.dataa(cend),
 	.datab(vcc),
 	.datac(vcc),
 	.datad(\vid_nrem[0]~506 ),
@@ -6372,9 +6372,9 @@ defparam \vid_nrem[1]~509_I .packed_mode = "false";
 // atom is at LC4_E1
 flex10ke_lcell \vid_rem[1]~I (
 // Equation(s):
-// vid_rem[1] = DFFEA(\vid_nrem[1]~509 , GLOBAL(\fclk~dataout ), , , c3, , )
+// vid_rem[1] = DFFEA(\vid_nrem[1]~509 , GLOBAL(\fclk~dataout ), , , cend, , )
 
-	.dataa(c3),
+	.dataa(cend),
 	.datab(vcc),
 	.datac(vcc),
 	.datad(\vid_nrem[1]~509 ),
@@ -6454,14 +6454,14 @@ defparam \next_cycle[1]~257_I .packed_mode = "false";
 // synopsys translate_on
 
 // atom is at LC1_I1
-flex10ke_lcell \c1~I (
+flex10ke_lcell \post_cbeg~I (
 // Equation(s):
-// c1 = DFFEA(c0, GLOBAL(\fclk~dataout ), , , , , )
+// post_cbeg = DFFEA(cbeg, GLOBAL(\fclk~dataout ), , , , , )
 
 	.dataa(vcc),
 	.datab(vcc),
 	.datac(vcc),
-	.datad(c0),
+	.datad(cbeg),
 	.aclr(gnd),
 	.aload(gnd),
 	.clk(clk),
@@ -6470,23 +6470,23 @@ flex10ke_lcell \c1~I (
 	.devclrn(devclrn),
 	.devpor(devpor),
 	.combout(),
-	.regout(c1),
+	.regout(post_cbeg),
 	.cout(),
 	.cascout());
 // synopsys translate_off
-defparam \c1~I .clock_enable_mode = "false";
-defparam \c1~I .lut_mask = "ff00";
-defparam \c1~I .operation_mode = "normal";
-defparam \c1~I .output_mode = "reg_only";
-defparam \c1~I .packed_mode = "false";
+defparam \post_cbeg~I .clock_enable_mode = "false";
+defparam \post_cbeg~I .lut_mask = "ff00";
+defparam \post_cbeg~I .operation_mode = "normal";
+defparam \post_cbeg~I .output_mode = "reg_only";
+defparam \post_cbeg~I .packed_mode = "false";
 // synopsys translate_on
 
 // atom is at LC8_E2
 flex10ke_lcell \curr_cycle[0]~I (
 // Equation(s):
-// curr_cycle[0] = DFFEA(cpu_req & (Equal2 # !next_cycle_0), GLOBAL(\fclk~dataout ), , , c3, , )
+// curr_cycle[0] = DFFEA(cpu_req & (Equal2 # !next_cycle_0), GLOBAL(\fclk~dataout ), , , cend, , )
 
-	.dataa(c3),
+	.dataa(cend),
 	.datab(next_cycle_0),
 	.datac(cpu_req),
 	.datad(Equal2),
@@ -6512,9 +6512,9 @@ defparam \curr_cycle[0]~I .packed_mode = "false";
 // atom is at LC3_I1
 flex10ke_lcell \curr_cycle[1]~I (
 // Equation(s):
-// curr_cycle[1] = DFFEA(!next_cycle_1, GLOBAL(\fclk~dataout ), , , c3, , )
+// curr_cycle[1] = DFFEA(!next_cycle_1, GLOBAL(\fclk~dataout ), , , cend, , )
 
-	.dataa(c3),
+	.dataa(cend),
 	.datab(vcc),
 	.datac(vcc),
 	.datad(next_cycle_1),
@@ -6540,10 +6540,10 @@ defparam \curr_cycle[1]~I .packed_mode = "false";
 // atom is at LC5_I1
 flex10ke_lcell \always8~3_I (
 // Equation(s):
-// \always8~3  = curr_cycle[1] & c2 & curr_cycle[0] & cpu_rnw
+// \always8~3  = curr_cycle[1] & pre_cend & curr_cycle[0] & cpu_rnw
 
 	.dataa(curr_cycle[1]),
-	.datab(c2),
+	.datab(pre_cend),
 	.datac(curr_cycle[0]),
 	.datad(cpu_rnw),
 	.aclr(gnd),
@@ -13175,7 +13175,7 @@ module dram (
 	next_cycle_0,
 	Selector1,
 	next_cycle_1,
-	c0,
+	cbeg,
 	q_1,
 	q_2,
 	q_3,
@@ -13299,7 +13299,7 @@ input 	Equal2;
 input 	next_cycle_0;
 output 	Selector1;
 input 	next_cycle_1;
-output 	c0;
+output 	cbeg;
 input 	q_1;
 input 	q_2;
 input 	q_3;
@@ -13878,9 +13878,9 @@ defparam \Selector1~73_I .packed_mode = "false";
 // synopsys translate_on
 
 // atom is at LC3_A1
-flex10ke_lcell \c0~I (
+flex10ke_lcell \cbeg~I (
 // Equation(s):
-// c0 = DFFEA(!\WideOr0~18 , GLOBAL(\fclk~dataout ), , , , , )
+// cbeg = DFFEA(!\WideOr0~18 , GLOBAL(\fclk~dataout ), , , , , )
 
 	.dataa(vcc),
 	.datab(vcc),
@@ -13894,15 +13894,15 @@ flex10ke_lcell \c0~I (
 	.devclrn(devclrn),
 	.devpor(devpor),
 	.combout(),
-	.regout(c0),
+	.regout(cbeg),
 	.cout(),
 	.cascout());
 // synopsys translate_off
-defparam \c0~I .clock_enable_mode = "false";
-defparam \c0~I .lut_mask = "00ff";
-defparam \c0~I .operation_mode = "normal";
-defparam \c0~I .output_mode = "reg_only";
-defparam \c0~I .packed_mode = "false";
+defparam \cbeg~I .clock_enable_mode = "false";
+defparam \cbeg~I .lut_mask = "00ff";
+defparam \cbeg~I .operation_mode = "normal";
+defparam \cbeg~I .output_mode = "reg_only";
+defparam \cbeg~I .packed_mode = "false";
 // synopsys translate_on
 
 // atom is at LC4_F35
@@ -16149,7 +16149,7 @@ module fetch (
 	q_7,
 	q_21,
 	q_6,
-	c3,
+	cend,
 	rddata_15,
 	video_strobe,
 	rddata_6,
@@ -16204,7 +16204,7 @@ input 	line_start;
 output 	q_7;
 output 	q_21;
 output 	q_6;
-input 	c3;
+input 	cend;
 input 	rddata_15;
 input 	video_strobe;
 input 	rddata_6;
@@ -18594,9 +18594,9 @@ defparam \always1~0_I .packed_mode = "false";
 // atom is at LC5_J4
 flex10ke_lcell \scnt[0]~I (
 // Equation(s):
-// scnt[0] = DFFEA(!\Equal0~42  & !scnt[0] & !\always1~0 , GLOBAL(\fclk~dataout ), , , c3, , )
+// scnt[0] = DFFEA(!\Equal0~42  & !scnt[0] & !\always1~0 , GLOBAL(\fclk~dataout ), , , cend, , )
 
-	.dataa(c3),
+	.dataa(cend),
 	.datab(\Equal0~42 ),
 	.datac(scnt[0]),
 	.datad(\always1~0 ),
@@ -18679,9 +18679,9 @@ defparam \Add2|adder|result_node|cs_buffer[1]~I .packed_mode = "false";
 // atom is at LC6_J4
 flex10ke_lcell \scnt[1]~I (
 // Equation(s):
-// scnt[1] = DFFEA(\always1~0  # !\Equal0~42  & !\Add2|adder|result_node|cs_buffer [1], GLOBAL(\fclk~dataout ), , , c3, , )
+// scnt[1] = DFFEA(\always1~0  # !\Equal0~42  & !\Add2|adder|result_node|cs_buffer [1], GLOBAL(\fclk~dataout ), , , cend, , )
 
-	.dataa(c3),
+	.dataa(cend),
 	.datab(\Equal0~42 ),
 	.datac(\Add2|adder|result_node|cs_buffer [1]),
 	.datad(\always1~0 ),
@@ -18737,9 +18737,9 @@ defparam \Add2|adder|result_node|cs_buffer[2]~I .packed_mode = "false";
 // atom is at LC8_J10
 flex10ke_lcell \scnt[2]~I (
 // Equation(s):
-// scnt[2] = DFFEA(!\Add2|adder|result_node|cs_buffer [2] & !\Equal0~42  & !\always1~0 , GLOBAL(\fclk~dataout ), , , c3, , )
+// scnt[2] = DFFEA(!\Add2|adder|result_node|cs_buffer [2] & !\Equal0~42  & !\always1~0 , GLOBAL(\fclk~dataout ), , , cend, , )
 
-	.dataa(c3),
+	.dataa(cend),
 	.datab(\Add2|adder|result_node|cs_buffer [2]),
 	.datac(\Equal0~42 ),
 	.datad(\always1~0 ),
@@ -18795,9 +18795,9 @@ defparam \Add2|adder|result_node|cs_buffer[3]~I .packed_mode = "false";
 // atom is at LC7_J10
 flex10ke_lcell \scnt[3]~I (
 // Equation(s):
-// scnt[3] = DFFEA(!\Add2|adder|result_node|cs_buffer [3] & !\Equal0~42  & !\always1~0 , GLOBAL(\fclk~dataout ), , , c3, , )
+// scnt[3] = DFFEA(!\Add2|adder|result_node|cs_buffer [3] & !\Equal0~42  & !\always1~0 , GLOBAL(\fclk~dataout ), , , cend, , )
 
-	.dataa(c3),
+	.dataa(cend),
 	.datab(\Add2|adder|result_node|cs_buffer [3]),
 	.datac(\Equal0~42 ),
 	.datad(\always1~0 ),
@@ -18853,9 +18853,9 @@ defparam \Add2|adder|result_node|cs_buffer[4]~I .packed_mode = "false";
 // atom is at LC8_J4
 flex10ke_lcell \scnt[4]~I (
 // Equation(s):
-// scnt[4] = DFFEA(!\Equal0~42  & !\always1~0  & !\Add2|adder|result_node|cs_buffer [4], GLOBAL(\fclk~dataout ), , , c3, , )
+// scnt[4] = DFFEA(!\Equal0~42  & !\always1~0  & !\Add2|adder|result_node|cs_buffer [4], GLOBAL(\fclk~dataout ), , , cend, , )
 
-	.dataa(c3),
+	.dataa(cend),
 	.datab(\Equal0~42 ),
 	.datac(\always1~0 ),
 	.datad(\Add2|adder|result_node|cs_buffer [4]),
@@ -18910,9 +18910,9 @@ defparam \Add2|adder|unreg_res_node[5]~I .packed_mode = "false";
 // atom is at LC1_J4
 flex10ke_lcell \scnt[5]~I (
 // Equation(s):
-// scnt[5] = DFFEA(\always1~0  # !\Add2|adder|unreg_res_node [5] & !\Equal0~42 , GLOBAL(\fclk~dataout ), , , c3, , )
+// scnt[5] = DFFEA(\always1~0  # !\Add2|adder|unreg_res_node [5] & !\Equal0~42 , GLOBAL(\fclk~dataout ), , , cend, , )
 
-	.dataa(c3),
+	.dataa(cend),
 	.datab(\Add2|adder|unreg_res_node [5]),
 	.datac(\Equal0~42 ),
 	.datad(\always1~0 ),
@@ -18966,11 +18966,11 @@ defparam \Equal0~41_I .packed_mode = "false";
 // atom is at LC3_J4
 flex10ke_lcell \wcnt_rtl_9|wysi_counter|counter_cell[3]~1_I (
 // Equation(s):
-// \wcnt_rtl_9|wysi_counter|counter_cell[3]~1  = scnt[1] # !c3 # !\Equal0~41  # !scnt[0]
+// \wcnt_rtl_9|wysi_counter|counter_cell[3]~1  = scnt[1] # !cend # !\Equal0~41  # !scnt[0]
 
 	.dataa(scnt[0]),
 	.datab(\Equal0~41 ),
-	.datac(c3),
+	.datac(cend),
 	.datad(scnt[1]),
 	.aclr(gnd),
 	.aload(gnd),
@@ -18994,10 +18994,10 @@ defparam \wcnt_rtl_9|wysi_counter|counter_cell[3]~1_I .packed_mode = "false";
 // atom is at LC1_I2
 flex10ke_lcell \wcnt_rtl_9|wysi_counter|counter_cell[0] (
 // Equation(s):
-// \wcnt_rtl_9|wysi_counter|q [0] = DFFEA((c3 $ \wcnt_rtl_9|wysi_counter|q [0]) & \wcnt_rtl_9|wysi_counter|counter_cell[3]~1 , GLOBAL(\fclk~dataout ), , , c3, , )
+// \wcnt_rtl_9|wysi_counter|q [0] = DFFEA((cend $ \wcnt_rtl_9|wysi_counter|q [0]) & \wcnt_rtl_9|wysi_counter|counter_cell[3]~1 , GLOBAL(\fclk~dataout ), , , cend, , )
 // \wcnt_rtl_9|wysi_counter|counter_cell[0]~COUT  = CARRY(\wcnt_rtl_9|wysi_counter|q [0])
 
-	.dataa(c3),
+	.dataa(cend),
 	.datab(\wcnt_rtl_9|wysi_counter|counter_cell[3]~1 ),
 	.datac(vcc),
 	.datad(vcc),
@@ -19023,10 +19023,10 @@ defparam \wcnt_rtl_9|wysi_counter|counter_cell[0] .packed_mode = "false";
 // atom is at LC2_I2
 flex10ke_lcell \wcnt_rtl_9|wysi_counter|counter_cell[1] (
 // Equation(s):
-// \wcnt_rtl_9|wysi_counter|q [1] = DFFEA((\wcnt_rtl_9|wysi_counter|q [1] $ (c3 & \wcnt_rtl_9|wysi_counter|counter_cell[0]~COUT )) & \wcnt_rtl_9|wysi_counter|counter_cell[3]~1 , GLOBAL(\fclk~dataout ), , , c3, , )
+// \wcnt_rtl_9|wysi_counter|q [1] = DFFEA((\wcnt_rtl_9|wysi_counter|q [1] $ (cend & \wcnt_rtl_9|wysi_counter|counter_cell[0]~COUT )) & \wcnt_rtl_9|wysi_counter|counter_cell[3]~1 , GLOBAL(\fclk~dataout ), , , cend, , )
 // \wcnt_rtl_9|wysi_counter|counter_cell[1]~COUT  = CARRY(\wcnt_rtl_9|wysi_counter|q [1] & (\wcnt_rtl_9|wysi_counter|counter_cell[0]~COUT ))
 
-	.dataa(c3),
+	.dataa(cend),
 	.datab(\wcnt_rtl_9|wysi_counter|counter_cell[3]~1 ),
 	.datac(vcc),
 	.datad(vcc),
@@ -19053,10 +19053,10 @@ defparam \wcnt_rtl_9|wysi_counter|counter_cell[1] .packed_mode = "false";
 // atom is at LC3_I2
 flex10ke_lcell \wcnt_rtl_9|wysi_counter|counter_cell[2] (
 // Equation(s):
-// \wcnt_rtl_9|wysi_counter|q [2] = DFFEA((\wcnt_rtl_9|wysi_counter|q [2] $ (c3 & \wcnt_rtl_9|wysi_counter|counter_cell[1]~COUT )) & \wcnt_rtl_9|wysi_counter|counter_cell[3]~1 , GLOBAL(\fclk~dataout ), , , c3, , )
+// \wcnt_rtl_9|wysi_counter|q [2] = DFFEA((\wcnt_rtl_9|wysi_counter|q [2] $ (cend & \wcnt_rtl_9|wysi_counter|counter_cell[1]~COUT )) & \wcnt_rtl_9|wysi_counter|counter_cell[3]~1 , GLOBAL(\fclk~dataout ), , , cend, , )
 // \wcnt_rtl_9|wysi_counter|counter_cell[2]~COUT  = CARRY(\wcnt_rtl_9|wysi_counter|q [2] & (\wcnt_rtl_9|wysi_counter|counter_cell[1]~COUT ))
 
-	.dataa(c3),
+	.dataa(cend),
 	.datab(\wcnt_rtl_9|wysi_counter|counter_cell[3]~1 ),
 	.datac(vcc),
 	.datad(vcc),
@@ -19083,9 +19083,9 @@ defparam \wcnt_rtl_9|wysi_counter|counter_cell[2] .packed_mode = "false";
 // atom is at LC4_I2
 flex10ke_lcell \wcnt_rtl_9|wysi_counter|counter_cell[3] (
 // Equation(s):
-// \wcnt_rtl_9|wysi_counter|q [3] = DFFEA((\wcnt_rtl_9|wysi_counter|q [3] $ (c3 & \wcnt_rtl_9|wysi_counter|counter_cell[2]~COUT )) & \wcnt_rtl_9|wysi_counter|counter_cell[3]~1 , GLOBAL(\fclk~dataout ), , , c3, , )
+// \wcnt_rtl_9|wysi_counter|q [3] = DFFEA((\wcnt_rtl_9|wysi_counter|q [3] $ (cend & \wcnt_rtl_9|wysi_counter|counter_cell[2]~COUT )) & \wcnt_rtl_9|wysi_counter|counter_cell[3]~1 , GLOBAL(\fclk~dataout ), , , cend, , )
 
-	.dataa(c3),
+	.dataa(cend),
 	.datab(\wcnt_rtl_9|wysi_counter|counter_cell[3]~1 ),
 	.datac(vcc),
 	.datad(vcc),
@@ -19112,11 +19112,11 @@ defparam \wcnt_rtl_9|wysi_counter|counter_cell[3] .packed_mode = "false";
 // atom is at LC2_J4
 flex10ke_lcell \go_start~I (
 // Equation(s):
-// go_start = scnt[1] # !\Equal0~41  # !c3 # !scnt[0]
+// go_start = scnt[1] # !\Equal0~41  # !cend # !scnt[0]
 
 	.dataa(scnt[1]),
 	.datab(scnt[0]),
-	.datac(c3),
+	.datac(cend),
 	.datad(\Equal0~41 ),
 	.aclr(gnd),
 	.aload(gnd),
@@ -19284,10 +19284,10 @@ defparam \fcnt_rtl_8|wysi_counter|counter_cell[4] .packed_mode = "false";
 // atom is at LC7_I2
 flex10ke_lcell \go~68_I (
 // Equation(s):
-// \go~68  = !\fcnt_rtl_8|wysi_counter|q [4] # !\wcnt_rtl_9|wysi_counter|q [3] # !c3 # !\wcnt_rtl_9|wysi_counter|q [0]
+// \go~68  = !\fcnt_rtl_8|wysi_counter|q [4] # !\wcnt_rtl_9|wysi_counter|q [3] # !cend # !\wcnt_rtl_9|wysi_counter|q [0]
 
 	.dataa(\wcnt_rtl_9|wysi_counter|q [0]),
-	.datab(c3),
+	.datab(cend),
 	.datac(\wcnt_rtl_9|wysi_counter|q [3]),
 	.datad(\fcnt_rtl_8|wysi_counter|q [4]),
 	.aclr(gnd),
@@ -19396,12 +19396,12 @@ defparam \shift[7][7]~I .packed_mode = "false";
 // atom is at LC8_I2
 flex10ke_lcell \wordsync~31_I (
 // Equation(s):
-// \wordsync~31  = \wcnt_rtl_9|wysi_counter|q [0] & c3
+// \wordsync~31  = \wcnt_rtl_9|wysi_counter|q [0] & cend
 
 	.dataa(vcc),
 	.datab(vcc),
 	.datac(\wcnt_rtl_9|wysi_counter|q [0]),
-	.datad(c3),
+	.datad(cend),
 	.aclr(gnd),
 	.aload(gnd),
 	.clk(gnd),
@@ -19452,12 +19452,12 @@ defparam \wordsync~I .packed_mode = "false";
 // atom is at LC5_G9
 flex10ke_lcell \pixnumber_rtl_4|wysi_counter|counter_cell[3]~1_I (
 // Equation(s):
-// \pixnumber_rtl_4|wysi_counter|counter_cell[3]~1  = !c3 # !wordsync
+// \pixnumber_rtl_4|wysi_counter|counter_cell[3]~1  = !cend # !wordsync
 
 	.dataa(vcc),
 	.datab(vcc),
 	.datac(wordsync),
-	.datad(c3),
+	.datad(cend),
 	.aclr(gnd),
 	.aload(gnd),
 	.clk(gnd),
@@ -19480,10 +19480,10 @@ defparam \pixnumber_rtl_4|wysi_counter|counter_cell[3]~1_I .packed_mode = "false
 // atom is at LC1_G9
 flex10ke_lcell \pixnumber_rtl_4|wysi_counter|counter_cell[0] (
 // Equation(s):
-// \pixnumber_rtl_4|wysi_counter|q [0] = DFFEA((c3 $ \pixnumber_rtl_4|wysi_counter|q [0]) & \pixnumber_rtl_4|wysi_counter|counter_cell[3]~1 , GLOBAL(\fclk~dataout ), , , c3, , )
+// \pixnumber_rtl_4|wysi_counter|q [0] = DFFEA((cend $ \pixnumber_rtl_4|wysi_counter|q [0]) & \pixnumber_rtl_4|wysi_counter|counter_cell[3]~1 , GLOBAL(\fclk~dataout ), , , cend, , )
 // \pixnumber_rtl_4|wysi_counter|counter_cell[0]~COUT  = CARRY(\pixnumber_rtl_4|wysi_counter|q [0])
 
-	.dataa(c3),
+	.dataa(cend),
 	.datab(\pixnumber_rtl_4|wysi_counter|counter_cell[3]~1 ),
 	.datac(vcc),
 	.datad(vcc),
@@ -19509,10 +19509,10 @@ defparam \pixnumber_rtl_4|wysi_counter|counter_cell[0] .packed_mode = "false";
 // atom is at LC2_G9
 flex10ke_lcell \pixnumber_rtl_4|wysi_counter|counter_cell[1] (
 // Equation(s):
-// \pixnumber_rtl_4|wysi_counter|q [1] = DFFEA((\pixnumber_rtl_4|wysi_counter|q [1] $ (c3 & \pixnumber_rtl_4|wysi_counter|counter_cell[0]~COUT )) & \pixnumber_rtl_4|wysi_counter|counter_cell[3]~1 , GLOBAL(\fclk~dataout ), , , c3, , )
+// \pixnumber_rtl_4|wysi_counter|q [1] = DFFEA((\pixnumber_rtl_4|wysi_counter|q [1] $ (cend & \pixnumber_rtl_4|wysi_counter|counter_cell[0]~COUT )) & \pixnumber_rtl_4|wysi_counter|counter_cell[3]~1 , GLOBAL(\fclk~dataout ), , , cend, , )
 // \pixnumber_rtl_4|wysi_counter|counter_cell[1]~COUT  = CARRY(\pixnumber_rtl_4|wysi_counter|q [1] & (\pixnumber_rtl_4|wysi_counter|counter_cell[0]~COUT ))
 
-	.dataa(c3),
+	.dataa(cend),
 	.datab(\pixnumber_rtl_4|wysi_counter|counter_cell[3]~1 ),
 	.datac(vcc),
 	.datad(vcc),
@@ -19539,10 +19539,10 @@ defparam \pixnumber_rtl_4|wysi_counter|counter_cell[1] .packed_mode = "false";
 // atom is at LC3_G9
 flex10ke_lcell \pixnumber_rtl_4|wysi_counter|counter_cell[2] (
 // Equation(s):
-// \pixnumber_rtl_4|wysi_counter|q [2] = DFFEA((\pixnumber_rtl_4|wysi_counter|q [2] $ (c3 & \pixnumber_rtl_4|wysi_counter|counter_cell[1]~COUT )) & \pixnumber_rtl_4|wysi_counter|counter_cell[3]~1 , GLOBAL(\fclk~dataout ), , , c3, , )
+// \pixnumber_rtl_4|wysi_counter|q [2] = DFFEA((\pixnumber_rtl_4|wysi_counter|q [2] $ (cend & \pixnumber_rtl_4|wysi_counter|counter_cell[1]~COUT )) & \pixnumber_rtl_4|wysi_counter|counter_cell[3]~1 , GLOBAL(\fclk~dataout ), , , cend, , )
 // \pixnumber_rtl_4|wysi_counter|counter_cell[2]~COUT  = CARRY(\pixnumber_rtl_4|wysi_counter|q [2] & (\pixnumber_rtl_4|wysi_counter|counter_cell[1]~COUT ))
 
-	.dataa(c3),
+	.dataa(cend),
 	.datab(\pixnumber_rtl_4|wysi_counter|counter_cell[3]~1 ),
 	.datac(vcc),
 	.datad(vcc),
@@ -19905,9 +19905,9 @@ defparam \Mux10~26_I .packed_mode = "false";
 // atom is at LC4_G9
 flex10ke_lcell \pixnumber_rtl_4|wysi_counter|counter_cell[3] (
 // Equation(s):
-// \pixnumber_rtl_4|wysi_counter|q [3] = DFFEA((\pixnumber_rtl_4|wysi_counter|q [3] $ (c3 & \pixnumber_rtl_4|wysi_counter|counter_cell[2]~COUT )) & \pixnumber_rtl_4|wysi_counter|counter_cell[3]~1 , GLOBAL(\fclk~dataout ), , , c3, , )
+// \pixnumber_rtl_4|wysi_counter|q [3] = DFFEA((\pixnumber_rtl_4|wysi_counter|q [3] $ (cend & \pixnumber_rtl_4|wysi_counter|counter_cell[2]~COUT )) & \pixnumber_rtl_4|wysi_counter|counter_cell[3]~1 , GLOBAL(\fclk~dataout ), , , cend, , )
 
-	.dataa(c3),
+	.dataa(cend),
 	.datab(\pixnumber_rtl_4|wysi_counter|counter_cell[3]~1 ),
 	.datac(vcc),
 	.datad(vcc),
@@ -29392,9 +29392,9 @@ module synch (
 	hpix,
 	hblank,
 	hsync,
-	c2,
+	pre_cend,
 	line_start,
-	c3,
+	cend,
 	hsync_start,
 	hint_start,
 	clk,
@@ -29405,9 +29405,9 @@ module synch (
 output 	hpix;
 output 	hblank;
 output 	hsync;
-input 	c2;
+input 	pre_cend;
 output 	line_start;
-input 	c3;
+input 	cend;
 output 	hsync_start;
 output 	hint_start;
 input 	clk;
@@ -29441,9 +29441,9 @@ wire [8:0] \Add0|adder|unreg_res_node ;
 // atom is at LC2_H13
 flex10ke_lcell \hpix~I (
 // Equation(s):
-// hpix = DFFEA(\hpix~66  & !hcount[8] # !\hpix~66  & (hpix), GLOBAL(\fclk~dataout ), , , c3, , )
+// hpix = DFFEA(\hpix~66  & !hcount[8] # !\hpix~66  & (hpix), GLOBAL(\fclk~dataout ), , , cend, , )
 
-	.dataa(c3),
+	.dataa(cend),
 	.datab(hcount[8]),
 	.datac(\hpix~66 ),
 	.datad(hpix),
@@ -29469,9 +29469,9 @@ defparam \hpix~I .packed_mode = "false";
 // atom is at LC5_H13
 flex10ke_lcell \hblank~I (
 // Equation(s):
-// hblank = DFFEA(\Equal1~49  # !\Equal2~61  & hblank, GLOBAL(\fclk~dataout ), , , c3, , )
+// hblank = DFFEA(\Equal1~49  # !\Equal2~61  & hblank, GLOBAL(\fclk~dataout ), , , cend, , )
 
-	.dataa(c3),
+	.dataa(cend),
 	.datab(\Equal2~61 ),
 	.datac(\Equal1~49 ),
 	.datad(hblank),
@@ -29497,9 +29497,9 @@ defparam \hblank~I .packed_mode = "false";
 // atom is at LC4_H7
 flex10ke_lcell \hsync~I (
 // Equation(s):
-// hsync = DFFEA(\Equal3~46  # !\Equal4~23  & hsync, GLOBAL(\fclk~dataout ), , , c3, , )
+// hsync = DFFEA(\Equal3~46  # !\Equal4~23  & hsync, GLOBAL(\fclk~dataout ), , , cend, , )
 
-	.dataa(c3),
+	.dataa(cend),
 	.datab(\Equal4~23 ),
 	.datac(\Equal3~46 ),
 	.datad(hsync),
@@ -29525,12 +29525,12 @@ defparam \hsync~I .packed_mode = "false";
 // atom is at LC3_H13
 flex10ke_lcell \line_start~I (
 // Equation(s):
-// line_start = DFFEA(c2, GLOBAL(\fclk~dataout ), , , \line_start~189 , , )
+// line_start = DFFEA(pre_cend, GLOBAL(\fclk~dataout ), , , \line_start~189 , , )
 
 	.dataa(\line_start~189 ),
 	.datab(vcc),
 	.datac(vcc),
-	.datad(c2),
+	.datad(pre_cend),
 	.aclr(gnd),
 	.aload(gnd),
 	.clk(clk),
@@ -29553,12 +29553,12 @@ defparam \line_start~I .packed_mode = "false";
 // atom is at LC2_J11
 flex10ke_lcell \hsync_start~I (
 // Equation(s):
-// hsync_start = DFFEA(c2 & (\Equal3~46  # hsync_start), GLOBAL(\fclk~dataout ), , , , , )
+// hsync_start = DFFEA(pre_cend & (\Equal3~46  # hsync_start), GLOBAL(\fclk~dataout ), , , , , )
 
 	.dataa(vcc),
 	.datab(\Equal3~46 ),
 	.datac(hsync_start),
-	.datad(c2),
+	.datad(pre_cend),
 	.aclr(gnd),
 	.aload(gnd),
 	.clk(clk),
@@ -29581,11 +29581,11 @@ defparam \hsync_start~I .packed_mode = "false";
 // atom is at LC5_H7
 flex10ke_lcell \hint_start~I (
 // Equation(s):
-// hint_start = DFFEA(!hcount[2] & c2 & \Equal0~52 , GLOBAL(\fclk~dataout ), , , , , )
+// hint_start = DFFEA(!hcount[2] & pre_cend & \Equal0~52 , GLOBAL(\fclk~dataout ), , , , , )
 
 	.dataa(vcc),
 	.datab(hcount[2]),
-	.datac(c2),
+	.datac(pre_cend),
 	.datad(\Equal0~52 ),
 	.aclr(gnd),
 	.aload(gnd),
@@ -29637,10 +29637,10 @@ defparam \line_start~_wirecell_I .packed_mode = "false";
 // atom is at LC5_H16
 flex10ke_lcell \hcount[0]~I (
 // Equation(s):
-// hcount[0] = DFFEA(!hcount[0], GLOBAL(\fclk~dataout ), , , c3, , )
+// hcount[0] = DFFEA(!hcount[0], GLOBAL(\fclk~dataout ), , , cend, , )
 // \Add0|adder|result_node|cout [0] = CARRY(hcount[0])
 
-	.dataa(c3),
+	.dataa(cend),
 	.datab(hcount[0]),
 	.datac(vcc),
 	.datad(vcc),
@@ -29696,9 +29696,9 @@ defparam \Add0|adder|result_node|cs_buffer[1]~I .packed_mode = "false";
 // atom is at LC2_H16
 flex10ke_lcell \hcount[1]~I (
 // Equation(s):
-// hcount[1] = DFFEA(\Add0|adder|result_node|cs_buffer [1], GLOBAL(\fclk~dataout ), , , c3, , )
+// hcount[1] = DFFEA(\Add0|adder|result_node|cs_buffer [1], GLOBAL(\fclk~dataout ), , , cend, , )
 
-	.dataa(c3),
+	.dataa(cend),
 	.datab(vcc),
 	.datac(vcc),
 	.datad(\Add0|adder|result_node|cs_buffer [1]),
@@ -29754,9 +29754,9 @@ defparam \Add0|adder|result_node|cs_buffer[2]~I .packed_mode = "false";
 // atom is at LC3_H16
 flex10ke_lcell \hcount[2]~I (
 // Equation(s):
-// hcount[2] = DFFEA(\Add0|adder|result_node|cs_buffer [2], GLOBAL(\fclk~dataout ), , , c3, , )
+// hcount[2] = DFFEA(\Add0|adder|result_node|cs_buffer [2], GLOBAL(\fclk~dataout ), , , cend, , )
 
-	.dataa(c3),
+	.dataa(cend),
 	.datab(vcc),
 	.datac(vcc),
 	.datad(\Add0|adder|result_node|cs_buffer [2]),
@@ -29812,9 +29812,9 @@ defparam \Add0|adder|result_node|cs_buffer[3]~I .packed_mode = "false";
 // atom is at LC4_H16
 flex10ke_lcell \hcount[3]~I (
 // Equation(s):
-// hcount[3] = DFFEA(\Add0|adder|result_node|cs_buffer [3], GLOBAL(\fclk~dataout ), , , c3, , )
+// hcount[3] = DFFEA(\Add0|adder|result_node|cs_buffer [3], GLOBAL(\fclk~dataout ), , , cend, , )
 
-	.dataa(c3),
+	.dataa(cend),
 	.datab(vcc),
 	.datac(vcc),
 	.datad(\Add0|adder|result_node|cs_buffer [3]),
@@ -29870,9 +29870,9 @@ defparam \Add0|adder|result_node|cs_buffer[4]~I .packed_mode = "false";
 // atom is at LC6_H18
 flex10ke_lcell \hcount[4]~I (
 // Equation(s):
-// hcount[4] = DFFEA(\Add0|adder|result_node|cs_buffer [4], GLOBAL(\fclk~dataout ), , , c3, , )
+// hcount[4] = DFFEA(\Add0|adder|result_node|cs_buffer [4], GLOBAL(\fclk~dataout ), , , cend, , )
 
-	.dataa(c3),
+	.dataa(cend),
 	.datab(vcc),
 	.datac(vcc),
 	.datad(\Add0|adder|result_node|cs_buffer [4]),
@@ -29928,9 +29928,9 @@ defparam \Add0|adder|result_node|cs_buffer[5]~I .packed_mode = "false";
 // atom is at LC7_H18
 flex10ke_lcell \hcount[5]~I (
 // Equation(s):
-// hcount[5] = DFFEA(\Add0|adder|result_node|cs_buffer [5], GLOBAL(\fclk~dataout ), , , c3, , )
+// hcount[5] = DFFEA(\Add0|adder|result_node|cs_buffer [5], GLOBAL(\fclk~dataout ), , , cend, , )
 
-	.dataa(c3),
+	.dataa(cend),
 	.datab(vcc),
 	.datac(vcc),
 	.datad(\Add0|adder|result_node|cs_buffer [5]),
@@ -30070,9 +30070,9 @@ defparam \Add0|adder|result_node|cs_buffer[6]~I .packed_mode = "false";
 // atom is at LC1_H7
 flex10ke_lcell \hcount[6]~I (
 // Equation(s):
-// hcount[6] = DFFEA(\Add0|adder|result_node|cs_buffer [6] & (!hcount[2] # !\Equal0~52 ), GLOBAL(\fclk~dataout ), , , c3, , )
+// hcount[6] = DFFEA(\Add0|adder|result_node|cs_buffer [6] & (!hcount[2] # !\Equal0~52 ), GLOBAL(\fclk~dataout ), , , cend, , )
 
-	.dataa(c3),
+	.dataa(cend),
 	.datab(\Equal0~52 ),
 	.datac(hcount[2]),
 	.datad(\Add0|adder|result_node|cs_buffer [6]),
@@ -30128,9 +30128,9 @@ defparam \Add0|adder|result_node|cs_buffer[7]~I .packed_mode = "false";
 // atom is at LC8_H7
 flex10ke_lcell \hcount[7]~I (
 // Equation(s):
-// hcount[7] = DFFEA(\Add0|adder|result_node|cs_buffer [7] & (!hcount[2] # !\Equal0~52 ), GLOBAL(\fclk~dataout ), , , c3, , )
+// hcount[7] = DFFEA(\Add0|adder|result_node|cs_buffer [7] & (!hcount[2] # !\Equal0~52 ), GLOBAL(\fclk~dataout ), , , cend, , )
 
-	.dataa(c3),
+	.dataa(cend),
 	.datab(\Equal0~52 ),
 	.datac(hcount[2]),
 	.datad(\Add0|adder|result_node|cs_buffer [7]),
@@ -30185,9 +30185,9 @@ defparam \Add0|adder|unreg_res_node[8]~I .packed_mode = "false";
 // atom is at LC6_H7
 flex10ke_lcell \hcount[8]~I (
 // Equation(s):
-// hcount[8] = DFFEA(\Add0|adder|unreg_res_node [8] & (!hcount[2] # !\Equal0~52 ), GLOBAL(\fclk~dataout ), , , c3, , )
+// hcount[8] = DFFEA(\Add0|adder|unreg_res_node [8] & (!hcount[2] # !\Equal0~52 ), GLOBAL(\fclk~dataout ), , , cend, , )
 
-	.dataa(c3),
+	.dataa(cend),
 	.datab(\Equal0~52 ),
 	.datac(hcount[2]),
 	.datad(\Add0|adder|unreg_res_node [8]),
@@ -30465,11 +30465,11 @@ defparam \Equal3~46_I .packed_mode = "false";
 // atom is at LC6_H13
 flex10ke_lcell \line_start~189_I (
 // Equation(s):
-// \line_start~189  = \Equal2~61  # !c2
+// \line_start~189  = \Equal2~61  # !pre_cend
 
 	.dataa(vcc),
 	.datab(vcc),
-	.datac(c2),
+	.datac(pre_cend),
 	.datad(\Equal2~61 ),
 	.aclr(gnd),
 	.aload(gnd),
@@ -37402,8 +37402,8 @@ module zclock (
 	zclk_out,
 	zneg,
 	zpos,
-	c0,
-	c2,
+	cbeg,
+	pre_cend,
 	WideOr0,
 	peff7_int_4,
 	fclk,
@@ -37414,8 +37414,8 @@ module zclock (
 output 	zclk_out;
 output 	zneg;
 output 	zpos;
-input 	c0;
-input 	c2;
+input 	cbeg;
+input 	pre_cend;
 input 	WideOr0;
 input 	peff7_int_4;
 input 	fclk;
@@ -37429,7 +37429,7 @@ wire vcc = 1'b1;
 
 wire old_rfsh_n;
 wire \int_turbo[0]~25 ;
-wire prec3_cnt;
+wire precend_cnt;
 wire \zneg~51 ;
 wire [1:0] int_turbo;
 
@@ -37549,12 +37549,12 @@ defparam \zneg~I .packed_mode = "false";
 // atom is at LC5_A1
 flex10ke_lcell \zpos~I (
 // Equation(s):
-// zpos = DFFEA(!WideOr0 & c2 & (int_turbo[0] # !prec3_cnt), GLOBAL(\fclk~dataout ), , , , , )
+// zpos = DFFEA(!WideOr0 & pre_cend & (int_turbo[0] # !precend_cnt), GLOBAL(\fclk~dataout ), , , , , )
 
 	.dataa(WideOr0),
-	.datab(prec3_cnt),
+	.datab(precend_cnt),
 	.datac(int_turbo[0]),
-	.datad(c2),
+	.datad(pre_cend),
 	.aclr(gnd),
 	.aload(gnd),
 	.clk(fclk),
@@ -37603,14 +37603,14 @@ defparam \int_turbo[0]~I .packed_mode = "false";
 // synopsys translate_on
 
 // atom is at LC1_A1
-flex10ke_lcell \prec3_cnt~I (
+flex10ke_lcell \precend_cnt~I (
 // Equation(s):
-// prec3_cnt = DFFEA(!prec3_cnt, GLOBAL(\fclk~dataout ), , , c2, , )
+// precend_cnt = DFFEA(!precend_cnt, GLOBAL(\fclk~dataout ), , , pre_cend, , )
 
-	.dataa(c2),
+	.dataa(pre_cend),
 	.datab(vcc),
 	.datac(vcc),
-	.datad(prec3_cnt),
+	.datad(precend_cnt),
 	.aclr(gnd),
 	.aload(gnd),
 	.clk(fclk),
@@ -37619,26 +37619,26 @@ flex10ke_lcell \prec3_cnt~I (
 	.devclrn(devclrn),
 	.devpor(devpor),
 	.combout(),
-	.regout(prec3_cnt),
+	.regout(precend_cnt),
 	.cout(),
 	.cascout());
 // synopsys translate_off
-defparam \prec3_cnt~I .clock_enable_mode = "true";
-defparam \prec3_cnt~I .lut_mask = "00ff";
-defparam \prec3_cnt~I .operation_mode = "normal";
-defparam \prec3_cnt~I .output_mode = "reg_only";
-defparam \prec3_cnt~I .packed_mode = "false";
+defparam \precend_cnt~I .clock_enable_mode = "true";
+defparam \precend_cnt~I .lut_mask = "00ff";
+defparam \precend_cnt~I .operation_mode = "normal";
+defparam \precend_cnt~I .output_mode = "reg_only";
+defparam \precend_cnt~I .packed_mode = "false";
 // synopsys translate_on
 
 // atom is at LC6_A1
 flex10ke_lcell \zneg~51_I (
 // Equation(s):
-// \zneg~51  = int_turbo[0] & (c0) # !int_turbo[0] & prec3_cnt & c2
+// \zneg~51  = int_turbo[0] & (cbeg) # !int_turbo[0] & precend_cnt & pre_cend
 
 	.dataa(int_turbo[0]),
-	.datab(prec3_cnt),
-	.datac(c2),
-	.datad(c0),
+	.datab(precend_cnt),
+	.datac(pre_cend),
+	.datad(cbeg),
 	.aclr(gnd),
 	.aload(gnd),
 	.clk(gnd),
@@ -40407,7 +40407,7 @@ module zmem (
 	page_72,
 	page_73,
 	Mux0,
-	c3,
+	cend,
 	rddata_15,
 	rddata_6,
 	rddata_14,
@@ -40494,7 +40494,7 @@ input 	page_71;
 input 	page_72;
 input 	page_73;
 output 	Mux0;
-input 	c3;
+input 	cend;
 input 	rddata_15;
 input 	rddata_6;
 input 	rddata_14;
@@ -41344,9 +41344,9 @@ defparam \ramwr~9_I .packed_mode = "false";
 // atom is at LC6_E7
 flex10ke_lcell \ramwr_reg~I (
 // Equation(s):
-// ramwr_reg = DFFEA(\ramwr~9 , GLOBAL(\fclk~dataout ), , , c3, , )
+// ramwr_reg = DFFEA(\ramwr~9 , GLOBAL(\fclk~dataout ), , , cend, , )
 
-	.dataa(c3),
+	.dataa(cend),
 	.datab(vcc),
 	.datac(vcc),
 	.datad(\ramwr~9 ),
@@ -41372,9 +41372,9 @@ defparam \ramwr_reg~I .packed_mode = "false";
 // atom is at LC5_E7
 flex10ke_lcell \ramrd_reg~I (
 // Equation(s):
-// ramrd_reg = DFFEA(cpu_rnw, GLOBAL(\fclk~dataout ), , , c3, , )
+// ramrd_reg = DFFEA(cpu_rnw, GLOBAL(\fclk~dataout ), , , cend, , )
 
-	.dataa(c3),
+	.dataa(cend),
 	.datab(vcc),
 	.datac(vcc),
 	.datad(cpu_rnw),

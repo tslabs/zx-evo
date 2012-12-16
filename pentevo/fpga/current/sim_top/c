@@ -1,5 +1,13 @@
 #!/bin/bash
 
 vcom -novopt -f vcom.opt
-vlog -sv -novopt -incr -f vlog.opt
+
+
+if (( $#>0 ));
+then
+# SPITEST, NMITEST
+	vlog +define+$1 -sv -novopt -incr -f vlog.opt
+else
+	vlog -sv -novopt -incr -f vlog.opt
+fi
 

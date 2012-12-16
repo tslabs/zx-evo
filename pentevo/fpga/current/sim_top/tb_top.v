@@ -62,6 +62,14 @@ module tb;
 
 
 
+	// sdcard
+	wire sdcs_n, sddo, sddi, sdclk;
+
+	// avr
+	wire spick, spidi, spido, spics_n;
+
+
+
 
 	assign zwait_n = (wait_n==1'b0) ? 1'b0 : 1'b1;
 	assign znmi_n = (nmi_n==1'b0) ? 1'b0 : 1'b1;
@@ -147,12 +155,16 @@ module tb;
 	         .vg_wd(1'b0),
 
 	         // SDcard SPI
-	         .sddi(1'b1),
+	         .sddi(sddi),
+	         .sddo(sddo),
+	         .sdcs_n(sdcs_n),
+	         .sdclk(sdclk),
 
 	         // ATmega SPI
-	         .spics_n(1'b1),
-	         .spick(1'b0),
-	         .spido(1'b1),
+	         .spics_n(spics_n),
+	         .spick(spick),
+	         .spido(spido),
+	         .spidi(spidi),
 
 		 .vhsync(hsync),
 		 .vvsync(vsync),
@@ -167,7 +179,7 @@ module tb;
 
 	assign zd_dut_to_z80 = tb.DUT.ena_ram ? tb.DUT.dout_ram : ( tb.DUT.ena_ports ? tb.DUT.dout_ports : ( tb.DUT.drive_ff ? 8'hFF : 8'bZZZZZZZZ ) );
 
-	
+
 
 
 
@@ -241,7 +253,7 @@ module tb;
 	//
 	//
 	// special handling for broken T80 WR_n
-	//	
+	//
 	always @(negedge clkz_in)
 		mreq_wr_n <= zwr_n;
 	//
@@ -287,6 +299,9 @@ module tb;
 	               );
 	defparam dramko1._verbose_ = 0;
 	defparam dramko2._verbose_ = 0;
+
+	defparam dramko1._init_ = 0;
+	defparam dramko2._init_ = 0;
 
 
 
@@ -351,7 +366,7 @@ module tb;
 
 		#1000000000;
 
-		a = 22'h3FC066;	
+		a = 22'h3FC066;
 
 		put_byte(a,8'hF5); a=a+1;
 		put_byte(a,8'hC5); a=a+1;
@@ -374,7 +389,7 @@ module tb;
 		put_byte(a,8'h78); a=a+1;
 
 		put_byte(a,8'h1F); a=a+1;
-		
+
 		put_byte(a,8'hDA); a=a+1;
 		put_byte(a,8'h6A); a=a+1;
 		put_byte(a,8'h00); a=a+1;
@@ -424,14 +439,14 @@ module tb;
 	always @(zm1_n)
 	if( zm1_n )
 		was_m1 <= 1'b0;
-	else 
+	else
 		was_m1 = 1'b1;
 
 	always @(posedge (zmreq_n | zrd_n | zm1_n | (~zrfsh_n)) )
 	if( was_m1 )
 	begin
 		if( (zdd!==old_opcode) || (za!==old_opcode_addr) )
-		begin		
+		begin
 			if( tb.DUT.z80mem.romnram )
 //				$display("Z80OPROM: addr %x, opcode %x, time %t",za,zdd,$time);
 				$display("Z80OPROM: addr %x, opcode %x",za,zdd);
@@ -470,11 +485,11 @@ module tb;
 
 
 	// turbo
-`ifdef 7MHZ
+`ifdef C7MHZ
 	initial
 		force tb.DUT.zclock.turbo = 2'b01;
 `else
-	`ifdef 35MHZ
+	`ifdef C35MHZ
 
 		initial
 			force tb.DUT.zclock.turbo = 2'b00;
@@ -503,7 +518,7 @@ module tb;
 
 
 
-
+`ifndef NO_PIXER
 	// picture out
 	pixer pixer
 	(
@@ -515,10 +530,10 @@ module tb;
 		.grn(grn),
 		.blu(blu)
 	);
+`endif
 
 
-
-
+/*
 	// time ticks
 	always
 	begin : timemark
@@ -531,12 +546,53 @@ module tb;
 
 		#10000000.0; // 1 ms
 	end
+*/
+
+
+
+
+	// init dram
+	initial
+	begin : init_dram
+		integer i;
+
+		for(i=0;i<4*1024*1024;i=i+1)
+		begin
+			put_byte(i,(i%257));
+		end
+	end
 
 
 
 
 
 
+`ifdef SPITEST
+	// spitest printing module
+	// does not hurt at any time (yet), so attached forever
+
+	spitest_print spitest_print(
+		.sdclk (sdclk ),
+		.sddi  (sddi  ),
+		.sddo  (sddo  ),
+		.sdcs_n(sdcs_n)
+	);
+
+	// spitest AVR imitator
+
+	spitest_avr spitest_avr(
+		.spick  (spick  ),
+		.spics_n(spics_n),
+		.spido  (spido  ),
+		.spidi  (spidi  )
+	);
+`else
+	assign sddi = 1'b1;
+
+	assign spics_n = 1'b1;
+	assign spick   = 1'b0;
+	assign spido   = 1'b1;
+`endif
 
 
 
@@ -548,7 +604,7 @@ module tb;
 		input [ 7:0] data;
 
 
-		
+
 		reg [19:0] arraddr;
 
 		begin
