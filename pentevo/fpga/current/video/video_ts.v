@@ -187,11 +187,10 @@ module video_ts (
 	wire        t_yflp	= tmb_rdata[15];
 
 	// TSR control
-	wire tile_go = tm_valid && t_act && tiles && tsr_rdy;
     wire [7:0] tile_page = t_sel ? t0gpage : t1gpage;
     wire [8:0] tile_line = {t_tnum[11:6], (t_line[2:0] ^ {3{t_yflp}})};
     wire [5:0] tile_addr = t_tnum[5:0];
-    wire [8:0] tile_x = {tx, 3'd0} - tx_offs[2:0];
+    wire [8:0] tile_x = {(tx - 6'd1), 3'd0} - tx_offs[2:0];
     wire [3:0] tile_pal = {t_sel ? t0_palsel : t1_palsel, t_pal};
 
     // TMB control
@@ -200,7 +199,6 @@ module video_ts (
 	// layer parameter selectors
     wire [8:0] tx_offs = t_sel ? t0x_offs : t1x_offs;
 	wire [3:0] ty_offs = t_sel ? t0y_offs[2:0] : t1y_offs[2:0];
-    wire t_act = |t_tnum || (t_sel ? t0z_en : t1z_en);
 	wire t_sel = t_layer[0];
 
 	// internal layers control
@@ -215,25 +213,42 @@ module video_ts (
 		else if (t_layer_end)
 			t_layer <=  {t_layer[0], 1'b0};
 
-	// TMBUF validity control
+	// TMBUF control
+		// condition		write to tx		write to tm_valid
+		// 	t_layer_start	 0				 TM_PRE_VALID
+		// 	tm_pre_valid	 tx+1			 TM_VALID
+		// 	tile_skip		 tx+1			 -
+		// 	tile_go	 		 tx+1			 TM_VALID
+		// 	tile_wait		 tx-1			 TM_PRE_VALID
+
+	localparam TM_PRE_VALID	= 2'b01;
+	localparam TM_VALID		= 2'b10;
+
+	wire tile_go = tile_good && tsr_allowed;
+	wire tile_wait = tile_good && !tsr_allowed;
+	wire tile_good = tm_valid && tile_valid;
+	wire tile_skip = tm_valid && !tile_valid;
+	wire tsr_allowed = tiles && tsr_rdy;
+    wire tile_valid = |t_tnum || (t_sel ? t0z_en : t1z_en);
+
+	wire tm_pre_valid = tm_valid_r[0];
 	wire tm_valid = tm_valid_r[1];
 
 	reg [1:0] tm_valid_r;
 	always @(posedge clk)
-		if (t_layer_start)
-			tm_valid_r <= 2'b01;
-		else if (tm_valid_r[0])
-			tm_valid_r <= 2'b10;
-
-	// tilemap/screen X coordinate
-	wire t_next = (tm_valid && !t_act) || tile_go;
+		if (t_layer_start || tile_wait)
+			tm_valid_r <= TM_PRE_VALID;
+		else if (tm_pre_valid || tile_go)
+			tm_valid_r <= TM_VALID;
 
 	reg [5:0] tx;
 	always @(posedge clk)
 		if (t_layer_start)
 			tx <= 6'd0;
-		else if (t_next)
+		else if (tm_pre_valid || tile_skip || tile_go)
 			tx <= tx + 6'd1;
+		else if (tile_wait)
+			tx <= tx - 6'd1;
 
 	// tile Y geometry
 	wire [4:0] t_line = line[4:0] + ty_offs;
@@ -265,7 +280,6 @@ module video_ts (
 	// internal layers control
 	wire [2:0] spr_end = ({3{s_layer_end}} & s_layer[2:0]) | {3{sprites_last}};
 	wire s_layer_end = (sr0_valid && !spr_valid && s_leap) || (sprite_go && s_leap_r);
-	// wire sprites_last = sreg == 8'd254;
 	wire sprites_last = sreg == 8'd255;
 
 	reg [2:0] s_layer;
@@ -277,15 +291,22 @@ module video_ts (
 
 	// SFile registers control
 		// condition				write to sreg	write to sr_valid	action
-		// 	start					 0				 sr0_pre_valid		 Start
-		//  sr0_pre_valid			 sreg+3			 sr0_valid			 Pre SR0 read
+		// 	start					 0				 SR0_PRE_VALID		 Start
+		//  sr0_pre_valid			 sreg+3			 SR0_VALID			 SR0 pre-read
 		//  sr0_valid && !spr_valid	 sreg+3			 -					 Skip sprite
-		//  sr0_valid && spr_valid	 sreg-2			 sr1_pre_valid		 Pre SR1 read
-		//  sr1_pre_valid			 sreg+1			 sr1_valid			 SR1 read
-		//  sr1_valid				 sreg+1			 sr2_valid			 Pre SR2 read
+		//  sr0_valid && spr_valid	 sreg-2			 SR1_PRE_VALID		 SR1 pre-read
+		//  sr1_pre_valid			 sreg+1			 SR1_VALID			 SR1 read
+		//  sr1_valid				 sreg+1			 SR2_VALID			 SR2 pre-read
 		//  sr2_valid && !tsr_rdy	 -				 -					 Wait for TSR ready
-		//  sr2_valid && tsr_rdy	 sreg+1			 sr0_pre_valid		 Next sprite
-		//	sprites_last			 -				 none_valid			 End
+		//  sr2_valid && tsr_rdy	 sreg+1			 SR0_PRE_VALID		 Next sprite
+		//	sprites_last			 -				 NONE_VALID			 End
+
+	localparam NONE_VALID		= 5'b00000;
+	localparam SR0_PRE_VALID	= 5'b00001;
+	localparam SR0_VALID		= 5'b00010;
+	localparam SR1_PRE_VALID	= 5'b00100;
+	localparam SR1_VALID		= 5'b01000;
+	localparam SR2_VALID		= 5'b10000;
 
 	wire sprite_go = sr2_valid && sprites && tsr_rdy;		// kick to renderer
 	wire spr_valid = s_visible && s_act;
@@ -299,19 +320,19 @@ module video_ts (
 	reg [4:0] sr_valid;
 	always @(posedge clk)
 		if (start)
-			sr_valid <= 5'b00001;
+			sr_valid <= SR0_PRE_VALID;
 		else if (sprites_last)
-			sr_valid <= 5'b00000;
+			sr_valid <= NONE_VALID;
 		else if (sr0_pre_valid)
-			sr_valid <= 5'b00010;
+			sr_valid <= SR0_VALID;
 		else if (sr0_valid && spr_valid)
-			sr_valid <= 5'b00100;
+			sr_valid <= SR1_PRE_VALID;
 		else if (sr1_pre_valid)
-			sr_valid <= 5'b01000;
+			sr_valid <= SR1_VALID;
 		else if (sr1_valid)
-			sr_valid <= 5'b10000;
+			sr_valid <= SR2_VALID;
 		else if (sprite_go)
-			sr_valid <= 5'b00001;
+			sr_valid <= SR0_PRE_VALID;
 
 	reg [7:0] sreg;
 	always @(posedge clk)
@@ -321,9 +342,7 @@ module video_ts (
 			sreg <= sreg + 8'd3;
 		else if (sr0_valid)
 			sreg <= spr_valid ? (sreg - 8'd2) : (sreg + 8'd3);
-		else if (sr1_pre_valid)
-			sreg <= sreg + 8'd1;
-		else if (sprite_go)
+		else if (sr1_pre_valid || sprite_go)
 			sreg <= sreg + 8'd1;
 
 	// SFile control

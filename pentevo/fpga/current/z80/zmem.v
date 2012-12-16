@@ -52,6 +52,8 @@ module zmem(
 	input wire dos_on,
 	input wire vdos_on,
 	input wire vdos_off,
+	
+	input wire testkey,		// DEBUG!!!
 
 	output wire        cpu_req,
 	output wire        cpu_rnw,
@@ -61,22 +63,28 @@ module zmem(
 	input  wire [15:0] cpu_rddata,
 	input  wire        cpu_next,
 	input  wire        cpu_strobe,
-	output wire        cpu_stall    // for zclock
-
+	input  wire        cpu_latch,
+	output wire        cpu_stall,    // for zclock
+	
+	input wire intt,
+	output wire [2:0] tst
 );
 
+	assign tst = {ramwrc_s, cpu_req, intt};
+	// assign tst = ttt;
+	// reg [2:0] ttt;
+	// always@*
+		// if (cpu_req)
+			// ttt = 4;
+		// else
+			// ttt = 0;
 
 // address, data in and data out
 	assign cpu_wrbsel = za[0];
 	assign cpu_addr[20:0] = {page[7:0], za[13:1]};
-	wire [12:0] cpu_hi_addr = {page[7:0], za[13:9]};
 	assign cpu_wrdata = zd_in;
-	wire [15:0] mem_d = (cpu_strobe || cpu_strobe_r) ? cpu_rddata : cache_d;
+	wire [15:0] mem_d = cpu_latch ? cpu_rddata : cache_d;
 	assign zd_out = ~cpu_wrbsel ? mem_d[7:0] : mem_d[15:8];
-
-	reg cpu_strobe_r;
-	always @(posedge clk)
-		cpu_strobe_r <= cpu_strobe;
 
 
 // Z80 controls
@@ -84,8 +92,8 @@ module zmem(
 	assign romwe_n = !(memwr && rw_en);
 
 	wire ramreq = mreq && !csrom;
-	wire ramrd = memrd && ramreq;
-	wire ramwr = memwr && ramreq && rw_en;
+	wire ramrd = memrd && !csrom;
+	wire ramwr = memwr && !csrom && rw_en;
 	assign zd_ena = memrd && !csrom;
 
 
@@ -102,8 +110,8 @@ module zmem(
 
 
 // 7/3.5MHz support
+	wire cpureq_357 = (ramrd_s && !cache_hit) || ramwr_s;
 	wire stall357 = cpureq_357 && !cpu_next;
-	wire cpureq_357 = ramrd_s || ramwr_s;
 	wire ramwr_s = ramwr && !ramwr_r;
 	wire ramrd_s = ramrd && !ramrd_r;
 
@@ -173,7 +181,7 @@ module zmem(
 
 
 // cpu request
-	assign cpu_req = turbo14 ? (pending_cpu_req || dram_beg) : cpureq_357;
+	assign cpu_req = turbo14 ? (dram_beg || pending_cpu_req) : cpureq_357;
 	assign cpu_rnw = turbo14 ? (dram_beg ? !memwr : cpu_rnw_r) : ramrd;
 
 	reg pending_cpu_req;
@@ -193,26 +201,34 @@ module zmem(
 
 // cache
 	wire cache_hit = (cpu_hi_addr == cache_a) && cache_v && cache_en;
-	// wire cache_hit = (cpu_hi_addr == cache_a) && cache_v;
-	wire cache_wr = memwr_s || cpu_strobe;
+	// wire cache_hit = (cpu_hi_addr == cache_a) && cache_v && testkey;
+	// wire cache_hit = (ch_addr[7:2] != 6'b011100) && (cpu_hi_addr == cache_a) && cache_v && testkey;
+	wire cache_wr = ramwrc_s || cpu_strobe;
+	wire ramwrc_s = memwr_s && !csrom && rw_en;
 	wire [15:0] cache_d;
-	wire [12:0] cache_a;
 	wire cache_v;
+	
+	wire [12:0] cpu_hi_addr = {page[7:0], za[13:9]};
+	wire [12:0] cache_a;
+	wire [7:0] ch_addr = cpu_addr[7:0];
+	// wire [14:0] cpu_hi_addr = {page[7:0], za[13:7]};
+	// wire [14:0] cache_a;
+	// wire [7:0] ch_addr = {2'b0, cpu_addr[5:0]};
 
 cache_data cache_data (
 		.clock (clk),
 		.data (cpu_rddata),
-		.rdaddress (cpu_addr[7:0]),
-		.wraddress (cpu_addr[7:0]),
+		.rdaddress (ch_addr),
+		.wraddress (ch_addr),
 		.wren (cache_wr),
 		.q (cache_d)
 );
 
 cache_addr cache_addr (
 		.clock (clk),
-		.data ({!memwr_s, cpu_hi_addr}),
-		.rdaddress (cpu_addr[7:0]),
-		.wraddress (cpu_addr[7:0]),
+		.data ({!ramwrc_s, cpu_hi_addr}),
+		.rdaddress (ch_addr),
+		.wraddress (ch_addr),
 		.wren (cache_wr),
 		.q ({cache_v, cache_a})
 );

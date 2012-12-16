@@ -83,6 +83,7 @@ module arbiter(
 	input wire        cpu_wrbsel,
 	output reg        cpu_next,			// next cycle is allowed to be used by CPU
     output reg        cpu_strobe,
+    output reg        cpu_latch,
 
 // DMA
 	input wire [20:0] dma_addr,
@@ -172,6 +173,7 @@ module arbiter(
     wire [CYCLES-1:0] cyc_dev = tm_req ? CYC_TM : (ts_req ? CYC_TS : CYC_DMA);
     wire dev_req = ts_req || tm_req || dma_req;
     wire cpu_down = (((ts_req || tm_req) && ts_z80_lp) || (dma_req && dma_z80_lp)) && int_n;		// CPU gets higher priority to acknowledge the INT
+    // wire cpu_down = 0;
 
 	always @*
 		if (video_start)      // video burst start
@@ -234,9 +236,14 @@ module arbiter(
 // generation of read strobes: for video and cpu
 	always @(posedge clk)
 		if (c1)
+		begin
 			cpu_strobe <= curr_cpu && cpu_rnw_r;
+			cpu_latch <= curr_cpu && cpu_rnw_r;
+		end
 		else if (c2)
 			cpu_strobe <= 1'b0;
+		else if (c3)
+			cpu_latch <= 1'b0;
 
 	assign video_pre_next = curr_vid & c1;
 	assign video_next = curr_vid & c2;
