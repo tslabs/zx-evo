@@ -212,10 +212,6 @@ module top(
 
 	assign res= ~rst_n;
 
-	wire cpu_req, cpu_rnw, cpu_wrbsel, cpu_strobe;
-	wire [20:0] cpu_addr;
-	wire [7:0] cpu_wrdata;
-
 	wire go;
 
 	wire tape_read; // data for tapein
@@ -248,9 +244,6 @@ module top(
 		.zpos(zpos),
         .zneg(zneg),
 		.turbo(turbo),
-		// .turbo(turbo & 2'b01),
-		// .turbo(2'b01),
-		// .turbo(2'b00),
 		
         .dos_on     (dos_on),
         .vdos_off    (vdos_off),
@@ -263,6 +256,7 @@ module top(
 
 
     wire [1:0] turbo =  sysconf[1:0];
+    // wire [1:0] turbo =  2'b00;
 	wire cache_en = sysconf[2];
 	wire [7:0] border;
 	wire int_start;
@@ -346,6 +340,10 @@ module top(
 
 	zmem z80mem
 	(
+		// .tst(tst),
+		// .intt(!int_n),
+        .testkey   (beeper_mux),	// DEBUG !!!
+
 		.clk (fclk),
 		.rst(rst),
 
@@ -381,11 +379,13 @@ module top(
 		.vdos_on   (vdos_on),
 		.vdos_off  (vdos_off),
         .dos_on    (dos_on),
+		
 
 		.cpu_req   (cpu_req),
 		.cpu_rnw   (cpu_rnw),
 		.cpu_wrbsel(cpu_wrbsel),
 		.cpu_strobe(cpu_strobe),
+		.cpu_latch (cpu_latch),
 		.cpu_addr  (cpu_addr),
 		.cpu_wrdata(cpu_wrdata),
 		// .cpu_rddata(dram_rddata),    // registered
@@ -429,9 +429,13 @@ module top(
 	         );
 
 
-	wire [4:0] video_bw;
 
+	wire cpu_req, cpu_rnw, cpu_wrbsel, cpu_strobe, cpu_latch;
+	wire [20:0] cpu_addr;
+	wire [7:0] cpu_wrdata;
 	wire [20:0] video_addr;
+	
+	wire [4:0] video_bw;
 	wire video_strobe;
 	wire video_next;
 	wire video_pre_next;
@@ -478,6 +482,7 @@ module top(
 	                 .cpu_wrbsel	(cpu_wrbsel),
 					 .cpu_next		(cpu_next),
 	                 .cpu_strobe	(cpu_strobe),
+	                 .cpu_latch	    (cpu_latch),
 
 	                 .go(go),
 	                 .video_bw(video_bw),
