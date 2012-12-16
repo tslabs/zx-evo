@@ -34,7 +34,7 @@
 
 ──┌───────────────────────────────────────────────────
 10│FENTRY
-  │Search for dir entry in current dir
+  │Search for entry in current dir
   │   
   │i: HL - pointer to FES
   │   
