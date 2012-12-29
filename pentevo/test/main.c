@@ -19,7 +19,10 @@ int main(void)
 		cls();
 		color(C_HEAD); xy(16,1);
 		msg("Memory test");
+		color(C_NORM); xy(0,8); msg("Fill pgnum");
+		color(C_NORM); xy(0,16); msg("Fill inc");
 
+		// while(1);
 //		msg_disp();
 //		key_disp();
 		
@@ -30,27 +33,23 @@ int main(void)
 			{
 				border(p&7); 
 				
-				color(C_NORM); xy(16,3);
-				msg("Fill 0:   ");
 				page3(p);
-				ram_fill_0();
+				ram_fill_p(p);
 				dma_copy(p);
 				page3(p+1);
-				if (ram_check_0())
-					{color(C_WARN); msg(" Error");}
-				else
-					{color(C_INFO); msg(" OK   ");}
+				color(ram_check_p(p) ? C_WARN : C_INFO);
+				cx = (p&31)<<3;
+				cy = ((p&0xE0)>>5) + 8;
+				drawc('#');
 	
-				color(C_NORM); xy(16,4);
-				msg("Fill inc: ");
 				page3(p);
 				ram_fill_inc();
 				dma_copy(p);
 				page3(p+1);
-				if (ram_check_inc())
-					{color(C_WARN); msg(" Error");}
-				else
-					{color(C_INFO); msg(" OK   ");}
+				color(ram_check_inc() ? C_WARN : C_INFO);
+				cx = (p&31)<<3;
+				cy = ((p&0xE0)>>5) + 16;
+				drawc('#');
 			}
 		}
 	}

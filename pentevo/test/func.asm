@@ -1,8 +1,8 @@
 		module drawc
 		public drawc
-		public ram_fill_0
+		public ram_fill_p
 		public ram_fill_inc
-		public ram_check_0
+		public ram_check_p
 		public ram_check_inc
 		public dma_copy
 		
@@ -17,14 +17,13 @@ extern	cc
 extern	font
 
 ; ----------------------------------
-ram_fill_0:
-		ld de, 0xC000
-		xor a
+ram_fill_p:
+		ld hl, 0xC000
 rf01:
-		ld (de), a
-		inc e
+		ld (hl), e
+		inc l
 		jp nz, rf01
-		inc d
+		inc h
 		jp nz, rf01
 		ret
 		
@@ -40,16 +39,22 @@ rfi1:
 		jp nz, rfi1
 		ret
 
-ram_check_0:
+ram_check_p
+		call rcp2
+		ld a,0
+		ret z
+		inc a
+		ret
+rcp2
 		ld hl, 0xC000
-		xor a
-rc01:
-		or (hl)
+		ld a, e
+rcp1:
+		cp (hl)
 		ret nz
 		inc l
-		jp nz, rc01
+		jp nz, rcp1
 		inc h
-		jp nz, rc01
+		jp nz, rcp1
 		ret
 
 ram_check_inc:
@@ -98,7 +103,13 @@ dcw
 ; ----------------------------------
 ; E = symbol code, D = 0
 drawc
-		ex de, hl
+		push bc
+		call drawc1
+		pop bc
+		ret
+drawc1
+		ld l, e
+		ld h, 0
 		ld bc, font
 		add hl, hl
 		add hl, hl
