@@ -146,12 +146,9 @@ module top(
 
 	wire rst_n; // global reset
 
-	wire [4:0] rompg = page[4:0];
-
 	wire [7:0] zports_dout;
 	wire zports_dataout;
 	wire porthit;
-
 
 	// wire [39:0] kbd_data;
 	wire [7:0] kbd_data;
@@ -284,76 +281,33 @@ module top(
         );
 
 
-	wire rampage_wr;	    // ports #10AF-#13AF
-	wire [7:0] memconf;
-	wire [7:0] xt_ramp[0:3];
-	wire [7:0] page;
-	wire vdos_on, vdos_off;
-	wire dos_on, dos_off;
-    wire rw_en;
-
-    pager pager(
-        .za         (a),
-        .opfetch_s  (opfetch_s),
-        .memconf    (memconf),
-        .xt_page    (xt_page),
-        .dos        (dos),
-        .vdos       (vdos),
-
-        .page       (page),
-        .romnram    (csrom),
-        .rw_en      (rw_en),
-        .dos_on     (dos_on),
-        .dos_off    (dos_off)
-    );
-
-
-
-	///////////////////////////
-	// DOS signal controller //
-	///////////////////////////
-
-	zdos zdos(
-	           .clk(fclk),
-			   .rst(rst),
-               .opfetch(opfetch),
-               .opfetch_s(opfetch_s),
-
-	           .dos_on  (dos_on),
-	           .dos_off (dos_off),
-			   .vdos_on (vdos_on),
-               .vdos_off(vdos_off),
-
-	           .dos(dos),
-	           .vdos(vdos)
-	         );
-
-
-
-
 	///////////////////////////
 	// Z80 memory controller //
 	///////////////////////////
 
-    wire m1_on;
-    wire m1_off;
+	wire rampage_wr;	    // ports #10AF-#13AF
+	wire [7:0] memconf;
+	wire [7:0] xt_ramp[0:3];
+	wire [4:0] rompg;
+	wire vdos_on, vdos_off;
+	wire dos_on, dos_off;
 
 	zmem z80mem
 	(
 		// .tst(tst),
-		// .intt(!int_n),
+		.intt(!int_n),
         .testkey   (beeper_mux),	// DEBUG !!!
 
 		.clk (fclk),
-		.rst(rst),
-
-		.zpos(zpos),
-		.zneg(zneg),
-
 		.c0    (c0),
 		.c1    (c1),
 		.c2    (c2),
 		.c3    (c3),
+
+		.rst(rst),
+
+		.zpos(zpos),
+		.zneg(zneg),
 
 		.za    (a),
 		.zd_in (d),
@@ -361,25 +315,26 @@ module top(
 		.zd_ena(ena_ram),
 
 		.opfetch(opfetch),
-		.iorq_s(iorq_s),
+		.opfetch_s(opfetch_s),
 		.mreq(mreq),
         .memrd(memrd),
         .memwr(memwr),
-		
 		.memwr_s(memwr_s),
 
-		.page   (page),
-
-		.rw_en(rw_en),
+        .memconf    (memconf[3:0]),
+        .xt_page    (xt_page),
+        .rompg    (rompg),
 		.cache_en(cache_en),
 		.romoe_n(romoe_n),
 		.romwe_n(romwe_n),
 		.csrom  (csrom),
 
+        .dos        (dos),
+        .dos_on     (dos_on),
+        .dos_off    (dos_off),
+        .vdos       (vdos),
 		.vdos_on   (vdos_on),
 		.vdos_off  (vdos_off),
-        .dos_on    (dos_on),
-		
 
 		.cpu_req   (cpu_req),
 		.cpu_rnw   (cpu_rnw),
