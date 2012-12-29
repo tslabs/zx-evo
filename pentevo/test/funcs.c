@@ -4,7 +4,10 @@
 #define page3(a) output(0x13AF,(a))
 #define xy(x, y) cx = (x); cy = (y)
 
-u8 ram_check_0(void);
+void drawc(u8);
+void ram_fill_p(u8);
+void ram_fill_inc(void);
+u8 ram_check_p(u8);
 u8 ram_check_inc(void);
 void dma_copy(u8);
 
