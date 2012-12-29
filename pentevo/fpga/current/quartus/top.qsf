@@ -332,10 +332,8 @@ set_global_assignment -name VERILOG_FILE ../video/video_render.v
 set_global_assignment -name VERILOG_FILE ../video/video_out.v
 set_global_assignment -name VERILOG_FILE ../sound/sound.v
 set_global_assignment -name VERILOG_FILE ../z80/zsignals.v
-set_global_assignment -name VERILOG_FILE ../z80/zpager.v
 set_global_assignment -name VERILOG_FILE ../z80/zmaps.v
 set_global_assignment -name VERILOG_FILE ../z80/znmi.v
-set_global_assignment -name VERILOG_FILE ../z80/zdos.v
 set_global_assignment -name VERILOG_FILE ../z80/zwait.v
 set_global_assignment -name VERILOG_FILE ../z80/zkbdmus.v
 set_global_assignment -name VERILOG_FILE ../z80/zports.v

@@ -1,7 +1,6 @@
 
 Fixes:
- - check unnecessary wait sources/conditions (e.g. IDE)
- - optimize timings (negative slack on DRAM addr muxes)
+ - check unnecessary wait sources/conditions (e.g. IDE ports)
  - DMA: access to devices with ports blocking strobes
  - fix all oddies with raster: INT 1 pixel delay (test on MULFIX), hblank etc
  - fix vertical blank for border 1 pixel at the upper-right corner
@@ -12,10 +11,15 @@ Fixes:
     * one-hot style selectors = use if...elseif constructions instead of if...if
 
 
+Discussable features:
+ - as no Yscroll array available, it is possible to migrate to 2 buffers for TM instead of 4
+ - extend cache to 1kB (test its efficiency previously)
+
+
 Features to add:
  - 3 color bits to unused signals
- - RFSH 28MHz burst
  - Yscroll array
+ - RFSH 28MHz burst
  - migrate paging to FPRAM
  - RRRGGGBB using IDE_RDY and IDE_RES as additional bit, create 2nd project, add to compile
  - AY frequency (2MHz for Atari and 1MHz for Amstrad)
