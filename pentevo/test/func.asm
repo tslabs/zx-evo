@@ -4,7 +4,6 @@
 		public ram_fill_inc
 		public ram_check_p
 		public ram_check_inc
-		public dma_copy
 		
 		RSEG RCODE:CODE
 
@@ -40,12 +39,6 @@ rfi1:
 		ret
 
 ram_check_p
-		call rcp2
-		ld a,0
-		ret z
-		inc a
-		ret
-rcp2
 		ld hl, 0xC000
 		ld a, e
 rcp1:
@@ -58,12 +51,6 @@ rcp1:
 		ret
 
 ram_check_inc:
-		call rci2
-		ld a,0
-		ret z
-		inc a
-		ret
-rci2:
 		ld hl, 0xC000
 		xor a
 rci1:
@@ -76,29 +63,6 @@ rci1:
 		jp nz, rci1
 		ret
 
-; ----------------------------------
-dma_copy
-		push bc
-        xtr
-		xtbc dstatus
-dcw
-		inf
-		jp m, dcw
-		
-        ld b,dmasax
-		out (c), e
-		inc e
-		ld b, dmadax
-		out (c), e
-        xt dmasah, 0
-        xt dmadah, 0
-        xt dmasal, 0
-        xt dmadal, 0
-        xt dmanum, 31
-        xt dmalen, 255
-        xt dmactr, dma_dev_mem    ; Run DMA
-		pop bc
-		ret
 
 ; ----------------------------------
 ; E = symbol code, D = 0

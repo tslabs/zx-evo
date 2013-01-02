@@ -7,6 +7,11 @@ typedef signed char s8;
 typedef signed short s16;
 typedef signed long s32;
 
+
+// common constants
+#define OFF = 0
+#define ON = 1
+
 // vars
 static	u8 *vm = (u8 *)0x4000;
 
@@ -15,9 +20,9 @@ extern const u8 font[2048];
 	u8 cx, cy;		// text coordinates
 	u8 cc;			// text attributes
 	u8 menu = 0;	// current menu
+	u8 mode = 255;		// test mode
+	u8 z80_lp = 1;
 
-// ports
-sfr pFE = 0xFE;
 
 // keys
 #define K_CS	0
@@ -79,3 +84,81 @@ sfr pFE = 0xFE;
 #define M_SAVE1	0x41
 #define M_FUPD	0x50
 #define M_FUPD1	0x51
+
+// tsconf
+	// read ports
+#define XSTATUS         0x00AF
+#define DSTATUS         0x27AF
+
+	// write ports
+#define VCONF           0x00AF
+#define VPAGE           0x01AF
+#define XOFFS           0x02AF
+#define XOFFSL          0x02AF
+#define XOFFSH          0x03AF
+#define YOFFS           0x04AF
+#define YOFFSL          0x04AF
+#define YOFFSH          0x05AF
+#define TSCONF          0x06AF
+#define PALSEL          0x07AF
+#define TMPAGE          0x08AF
+#define T0GPAGE         0x09AF
+#define T1GPAGE         0x0AAF
+#define SGPAGE          0x0BAF
+#define BORDER          0x0FAF
+#define PAGE0           0x10AF
+#define PAGE1           0x11AF
+#define PAGE2           0x12AF
+#define PAGE3           0x13AF
+#define FMADDR          0x15AF
+#define DMASAL          0x1AAF
+#define DMASAH          0x1BAF
+#define DMASAX          0x1CAF
+#define DMADAL          0x1DAF
+#define DMADAH          0x1EAF
+#define DMADAX          0x1FAF
+#define SYSCONF         0x20AF
+#define MEMCONF         0x21AF
+#define HSINT           0x22AF
+#define VSINT           0x23AF    // just alias
+#define VSINTL          0x23AF
+#define VSINTH          0x24AF
+#define INTV            0x25AF
+#define DMALEN          0x26AF
+#define DMACTR          0x27AF
+#define DMANUM          0x28AF
+#define FDDVIRT         0x29AF
+
+	// params
+#define FM_EN           0x10
+#define TS_S_EN			0x80
+#define TS_T1_EN		0x40
+#define TS_T0_EN		0x20
+
+	// video modes
+#define RRES_256X192    0x00
+#define RRES_320X200    0x40
+#define RRES_320X240    0x80
+#define RRES_360X288    0xC0
+#define MODE_ZX         0
+#define MODE_16C        1
+#define MODE_256C       2
+#define MODE_TEXT       3
+#define MODE_NOGFX      0x20
+
+	// DMA
+#define DMA_BSY         0x80
+#define DMA_WNR         0x80
+#define DMA_ZWT         0x40
+#define DMA_SALGN       0x20
+#define DMA_DALGN       0x10
+#define DMA_ASZ         0x08
+#define DMA_DEV_MEM     0x01
+#define DMA_DEV_SPI     0x02
+#define DMA_DEV_IDE     0x03
+#define DMA_DEV_CRM     0x04
+#define DMA_DEV_SFL     0x05
+
+	// fmaps addresses
+#define CRAM			0x000
+#define SFILE			0x200
