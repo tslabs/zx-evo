@@ -53,6 +53,7 @@
 module arbiter(
 
 	input wire clk,
+	input wire c0,
 	input wire c1,
 	input wire c2,
 	input wire c3,
@@ -107,7 +108,6 @@ module arbiter(
 
 );
 
-
 	localparam CYCLES    = 5;
 	
 	localparam CYC_CPU   = 5'b00001;
@@ -160,7 +160,7 @@ module arbiter(
 // track vid_rem counter
 // how many video cycles left to the end of block (7..0)
 	wire [2:0] vid_nrem = (go && video_start) ? vid_nrem_start : (next_vid ? vid_nrem_next : vid_rem);
-	wire [2:0] vid_nrem_start = (cpu_req && !cpu_down) ? vidmax : (vidmax - 3'd1);
+	wire [2:0] vid_nrem_start = (cpu_req && !dev_over_cpu) ? vidmax : (vidmax - 3'd1);
 	wire [2:0] vid_nrem_next = video_idle ? 3'd0 : (vid_rem - 3'd1);
 	wire [2:0] vidmax = {video_bw[2:0]};    // number of cycles for video access
 
@@ -172,46 +172,28 @@ module arbiter(
 // next cycle decision
     wire [CYCLES-1:0] cyc_dev = tm_req ? CYC_TM : (ts_req ? CYC_TS : CYC_DMA);
     wire dev_req = ts_req || tm_req || dma_req;
-    wire cpu_down = (((ts_req || tm_req) && ts_z80_lp) || (dma_req && dma_z80_lp)) && int_n;		// CPU gets higher priority to acknowledge the INT
-    // wire cpu_down = 0;
+    wire dev_over_cpu = (((ts_req || tm_req) && ts_z80_lp) || (dma_req && dma_z80_lp)) && int_n;		// CPU gets higher priority to acknowledge the INT
+    // wire dev_over_cpu = 0;
 
 	always @*
-		if (video_start)      // video burst start
+		if (video_start)    // video burst start
 			if (go)             // video active
-				if (!cpu_down)
-				begin
-					cpu_next = !bw_full;
-					next_cycle = bw_full ? CYC_VID : (cpu_req ? CYC_CPU : CYC_VID);
-				end
-				else
-				begin
-					cpu_next = 1'b0;
-					next_cycle = CYC_VID;
-				end
+			begin
+				cpu_next = dev_over_cpu ? 1'b0 : !bw_full;
+				next_cycle = dev_over_cpu ? CYC_VID : (bw_full ? CYC_VID : (cpu_req ? CYC_CPU : CYC_VID));
+			end
 
 			else                // video idle
-				if (!cpu_down)
-				begin
-					cpu_next = 1'b1;
-					next_cycle = cpu_req ? CYC_CPU : (dev_req ? cyc_dev : CYC_FREE);
-				end
-				else
-				begin
-					cpu_next = 1'b0;
-					next_cycle = cyc_dev;
-				end
+			begin
+				cpu_next = !dev_over_cpu;
+				next_cycle = dev_over_cpu ? cyc_dev : (cpu_req ? CYC_CPU : (dev_req ? cyc_dev : CYC_FREE));
+			end
 
-		else                	// video burst in progress
-			if (!cpu_down)
-			begin
-				cpu_next = !video_only;
-				next_cycle = video_only ? CYC_VID : (cpu_req ? CYC_CPU : (!video_idle ? CYC_VID : (dev_req ? cyc_dev : CYC_FREE)));
-			end
-			else
-			begin
-				cpu_next = 0;
-				next_cycle = video_only ? CYC_VID : cyc_dev;
-			end
+		else                // video burst in progress
+		begin
+			cpu_next = dev_over_cpu ? 1'b0 : !video_only;
+			next_cycle = video_only ? CYC_VID : (dev_over_cpu ? cyc_dev : (cpu_req ? CYC_CPU : (!video_idle ? CYC_VID : (dev_req ? cyc_dev : CYC_FREE))));
+		end
 
 	always @(posedge clk) if (c3)
 		curr_cycle <= next_cycle;
