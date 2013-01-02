@@ -217,11 +217,7 @@ module top(
 
 	wire beeper_wr, covox_wr;
 
-	wire cpu_next;
-	wire cpu_stall;
-
 	wire external_port;
-
 
 	assign rompg0_n = ~rompg[0];
 	assign dos_n    =  rompg[1];
@@ -310,7 +306,6 @@ module top(
 		.zneg(zneg),
 
 		.za    (a),
-		.zd_in (d),
 		.zd_out(dout_ram),
 		.zd_ena(ena_ram),
 
@@ -337,12 +332,10 @@ module top(
 		.vdos_off  (vdos_off),
 
 		.cpu_req   (cpu_req),
-		.cpu_rnw   (cpu_rnw),
 		.cpu_wrbsel(cpu_wrbsel),
 		.cpu_strobe(cpu_strobe),
 		.cpu_latch (cpu_latch),
 		.cpu_addr  (cpu_addr),
-		.cpu_wrdata(cpu_wrdata),
 		// .cpu_rddata(dram_rddata),    // registered
 		.cpu_rddata(dram_rd),   	    // raw
 		.cpu_stall (cpu_stall),
@@ -385,11 +378,12 @@ module top(
 
 
 
-	wire cpu_req, cpu_rnw, cpu_wrbsel, cpu_strobe, cpu_latch;
+	wire cpu_req, cpu_wrbsel, cpu_strobe, cpu_latch;
 	wire [20:0] cpu_addr;
-	wire [7:0] cpu_wrdata;
 	wire [20:0] video_addr;
-	
+	wire cpu_next;
+	wire cpu_stall;
+
 	wire [4:0] video_bw;
 	wire video_strobe;
 	wire video_next;
@@ -414,9 +408,9 @@ module top(
 	wire tm_req;
 	wire tm_next;
 
-	arbiter dramarb(
+	arbiter arbiter(
 					 .clk(fclk),
-	                 // .c0(c0),
+	                 .c0(c0),
 	                 .c1(c1),
 	                 .c2(c2),
 	                 .c3(c3),
@@ -429,11 +423,10 @@ module top(
 	                 .dram_bsel(dbsel),
 	                 .dram_wrdata(dram_wrdata),
 
-	                 //.cpu_waitcyc(cpu_waitcyc),
 	                 .cpu_addr		(cpu_addr),
-	                 .cpu_wrdata	(cpu_wrdata),
+	                 .cpu_wrdata	(d),
 	                 .cpu_req		(cpu_req),
-	                 .cpu_rnw		(cpu_rnw),
+	                 .cpu_rnw		(rd),
 	                 .cpu_wrbsel	(cpu_wrbsel),
 					 .cpu_next		(cpu_next),
 	                 .cpu_strobe	(cpu_strobe),

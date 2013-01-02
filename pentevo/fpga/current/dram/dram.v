@@ -27,32 +27,26 @@
 
 module dram(
 
-	input clk,
-	input rst_n, // shut down accesses, remain refresh
+	input wire clk,
+	input wire c0, c1, c2, c3,
+	input wire rst_n, // shut down accesses, remain refresh
 
-	output reg [9:0] ra, // to the DRAM pins
-	inout     [15:0] rd, // .              .
-	                     // .              .
-	output reg rwe_n,    // .              .
-	output reg rucas_n,  // .              .
-	output reg rlcas_n,  // .              .
-	output reg rras0_n,  // .              .
-	output reg rras1_n,  // to the DRAM pins
+// DRAM pins
+	output reg [9:0] ra,
+	inout wire [15:0] rd,
+	output reg rwe_n,
+	output reg rucas_n,
+	output reg rlcas_n,
+	output reg rras0_n,
+	output reg rras1_n,
 
+	input wire req,         // request for read/write cycle
+	input wire [20:0] addr, // access address of 16bit word: addr[0] selects between rras0_n and rras1_n,
+							// addr[10:1] goes to row address, addr[20:11] goes to column address
 	output reg [15:0] rddata, // data just read
-
-	input [20:0] addr, // access address of 16bit word: addr[0] selects between rras0_n and rras1_n,
-	                   // addr[10:1] goes to row address, addr[20:11] goes to column address
-
-	input req,         // request for read/write cycle
-	input rnw,         // READ/nWRITE (=1: read, =0: write)
-
-	input c0, c1, c2, c3,
-
-
-	input  [15:0] wrdata, // data to be written
-	input   [1:0] bsel    // positive byte select for write: bsel[0] is for wrdata[7:0], bsel[1] is for wrdata[15:8]
-
+	input wire [15:0] wrdata, // data to be written
+	input wire  [1:0] bsel,   // positive byte select for write: bsel[0] is for wrdata[7:0], bsel[1] is for wrdata[15:8]
+	input wire rnw            // READ/nWRITE
 
 );
 
@@ -67,12 +61,9 @@ module dram(
     wire read = state[0];
     wire write = state[1];
 
-	wire [1:0] next_state = int_req ? rnw ? RD : WR : RFSH;
-
 	reg [1:0] state = 2'b0;
 	always @(posedge clk) if (c3)
-		state <= next_state;
-
+		state <= int_req ? (rnw ? RD : WR) : RFSH;
 
 // incoming data latch
 	reg [15:0] int_wrdata;
@@ -90,11 +81,9 @@ module dram(
 		int_addr   <= addr;
 	end
 
-
 // WE control
-	always @(posedge clk) if (c3)
-		rwe_n <= ~next_state[1];
-
+	always @(posedge clk) if (c0)      // changed: now wrdata is latched 1 clk later - at c0 of current cycle (NOT at c3 of previous as before)
+		rwe_n <= !write;
 
 // RAS/CAS sequencing
 	reg rfsh_alt;	 // we must alternate chips in refresh cycles to lower total heating
@@ -150,16 +139,13 @@ module dram(
 	always @(negedge clk)		// here is a problem to fit to pins fast output regs
 		ra <= c0 ? int_addr[10:1] : int_addr[20:11];
 
-
 // DRAM data bus control
 	assign rd = rwe_n ? 16'hZZZZ : int_wrdata;
-
 
 // read data from DRAM
 	always @(posedge clk)
 		if (c2 & read)
 			rddata <= rd;
-
 
 	// reset must be synchronous here in order to preserve
 	// DRAM state while other modules reset, but we have only
@@ -171,7 +157,7 @@ module dram(
 		rst_sync[1:0] <= { rst_sync[0], ~rst_n };
 
 	wire reset = rst_sync[1];
-	wire int_req = req & (~reset);
+	wire int_req = req && !reset;
 
 
 endmodule
