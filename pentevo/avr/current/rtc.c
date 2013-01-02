@@ -34,19 +34,19 @@ static UBYTE tw_send_start(void)
 	while ( (TWCR&_BV(TWINT))==0 );
 //	while ( TWCR & (1<<TWSTA) );
 
-#ifdef LOGENABLE
-	char log_reset_type[] = "TWS..[..]..\r\n";
-	UBYTE b = TWSR;
-	log_reset_type[3] = ((b >> 4) <= 9 )?'0'+(b >> 4):'A'+(b >> 4)-10;
-	log_reset_type[4] = ((b & 0x0F) <= 9 )?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
-	b=TWCR;
-	log_reset_type[6] = ((b >> 4) <= 9 )?'0'+(b >> 4):'A'+(b >> 4)-10;
-	log_reset_type[7] = ((b & 0x0F) <= 9 )?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
-	b=TWDR;
-	log_reset_type[9] = ((b >> 4) <= 9 )?'0'+(b >> 4):'A'+(b >> 4)-10;
-	log_reset_type[10] = ((b & 0x0F) <= 9 )?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
-	to_log(log_reset_type);
-#endif
+//#ifdef LOGENABLE
+//	char log_reset_type[] = "TWS..[..]..\r\n";
+//	UBYTE b = TWSR;
+//	log_reset_type[3] = ((b >> 4) <= 9 )?'0'+(b >> 4):'A'+(b >> 4)-10;
+//	log_reset_type[4] = ((b & 0x0F) <= 9 )?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
+//	b=TWCR;
+//	log_reset_type[6] = ((b >> 4) <= 9 )?'0'+(b >> 4):'A'+(b >> 4)-10;
+//	log_reset_type[7] = ((b & 0x0F) <= 9 )?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
+//	b=TWDR;
+//	log_reset_type[9] = ((b >> 4) <= 9 )?'0'+(b >> 4):'A'+(b >> 4)-10;
+//	log_reset_type[10] = ((b & 0x0F) <= 9 )?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
+//	to_log(log_reset_type);
+//#endif
 	//return status
    return TW_STATUS;
 }
@@ -62,18 +62,18 @@ static UBYTE tw_send_addr(UBYTE addr)
 	//wait for end transmit
 	while ( (TWCR &_BV(TWINT))==0 );
 
-#ifdef LOGENABLE
-	char log_tw[] = "TWA..[..]..\r\n";
-	UBYTE b = TWSR;
-	log_tw[3] = ((b >> 4) <= 9 )?'0'+(b >> 4):'A'+(b >> 4)-10;
-	log_tw[4] = ((b & 0x0F) <= 9 )?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
-	b=TWCR;
-	log_tw[6] = ((b >> 4) <= 9 )?'0'+(b >> 4):'A'+(b >> 4)-10;
-	log_tw[7] = ((b & 0x0F) <= 9 )?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
-	log_tw[9] = ((addr >> 4) <= 9 )?'0'+(addr >> 4):'A'+(addr >> 4)-10;
-	log_tw[10] = ((addr & 0x0F) <= 9 )?'0'+(addr & 0x0F):'A'+(addr & 0x0F)-10;
-	to_log(log_tw);
-#endif
+//#ifdef LOGENABLE
+//	char log_tw[] = "TWA..[..]..\r\n";
+//	UBYTE b = TWSR;
+//	log_tw[3] = ((b >> 4) <= 9 )?'0'+(b >> 4):'A'+(b >> 4)-10;
+//	log_tw[4] = ((b & 0x0F) <= 9 )?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
+//	b=TWCR;
+//	log_tw[6] = ((b >> 4) <= 9 )?'0'+(b >> 4):'A'+(b >> 4)-10;
+//	log_tw[7] = ((b & 0x0F) <= 9 )?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
+//	log_tw[9] = ((addr >> 4) <= 9 )?'0'+(addr >> 4):'A'+(addr >> 4)-10;
+//	log_tw[10] = ((addr & 0x0F) <= 9 )?'0'+(addr & 0x0F):'A'+(addr & 0x0F)-10;
+//	to_log(log_tw);
+//#endif
 	//return status
    return TW_STATUS;
 }
@@ -89,18 +89,18 @@ static UBYTE tw_send_data(UBYTE data)
 	//wait for end transmit
 	while ( (TWCR&_BV(TWINT))==0 );
 
-#ifdef LOGENABLE
-	char log_tw[] = "TWW..[..]..\r\n";
-	UBYTE b = TWSR;
-	log_tw[3] = ((b >> 4) <= 9 )?'0'+(b >> 4):'A'+(b >> 4)-10;
-	log_tw[4] = ((b & 0x0F) <= 9 )?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
-	b=TWCR;
-	log_tw[6] = ((b >> 4) <= 9 )?'0'+(b >> 4):'A'+(b >> 4)-10;
-	log_tw[7] = ((b & 0x0F) <= 9 )?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
-	log_tw[9] = ((data >> 4) <= 9 )?'0'+(data >> 4):'A'+(data >> 4)-10;
-	log_tw[10] = ((data & 0x0F) <= 9 )?'0'+(data & 0x0F):'A'+(data & 0x0F)-10;
-	to_log(log_tw);
-#endif
+//#ifdef LOGENABLE
+//	char log_tw[] = "TWW..[..]..\r\n";
+//	UBYTE b = TWSR;
+//	log_tw[3] = ((b >> 4) <= 9 )?'0'+(b >> 4):'A'+(b >> 4)-10;
+//	log_tw[4] = ((b & 0x0F) <= 9 )?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
+//	b=TWCR;
+//	log_tw[6] = ((b >> 4) <= 9 )?'0'+(b >> 4):'A'+(b >> 4)-10;
+//	log_tw[7] = ((b & 0x0F) <= 9 )?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
+//	log_tw[9] = ((data >> 4) <= 9 )?'0'+(data >> 4):'A'+(data >> 4)-10;
+//	log_tw[10] = ((data & 0x0F) <= 9 )?'0'+(data & 0x0F):'A'+(data & 0x0F)-10;
+//	to_log(log_tw);
+//#endif
 	//return status
    return TW_STATUS;
 }
@@ -113,18 +113,18 @@ static UBYTE tw_read_data(UBYTE* data)
 	//wait for flag set
 	while ( (TWCR&_BV(TWINT))==0 );
 
-#ifdef LOGENABLE
-	char log_tw[] = "TWR..[..]..\r\n";
-	UBYTE b = TWSR;
-	log_tw[3] = ((b >> 4) <= 9 )?'0'+(b >> 4):'A'+(b >> 4)-10;
-	log_tw[4] = ((b & 0x0F) <= 9 )?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
-	b=TWCR;
-	log_tw[6] = ((b >> 4) <= 9 )?'0'+(b >> 4):'A'+(b >> 4)-10;
-	log_tw[7] = ((b & 0x0F) <= 9 )?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
-	log_tw[9] = ((TWDR >> 4) <= 9 )?'0'+(TWDR >> 4):'A'+(TWDR >> 4)-10;
-	log_tw[10] = ((TWDR & 0x0F) <= 9 )?'0'+(TWDR & 0x0F):'A'+(TWDR & 0x0F)-10;
-	to_log(log_tw);
-#endif
+//#ifdef LOGENABLE
+//	char log_tw[] = "TWR..[..]..\r\n";
+//	UBYTE b = TWSR;
+//	log_tw[3] = ((b >> 4) <= 9 )?'0'+(b >> 4):'A'+(b >> 4)-10;
+//	log_tw[4] = ((b & 0x0F) <= 9 )?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
+//	b=TWCR;
+//	log_tw[6] = ((b >> 4) <= 9 )?'0'+(b >> 4):'A'+(b >> 4)-10;
+//	log_tw[7] = ((b & 0x0F) <= 9 )?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
+//	log_tw[9] = ((TWDR >> 4) <= 9 )?'0'+(TWDR >> 4):'A'+(TWDR >> 4)-10;
+//	log_tw[10] = ((TWDR & 0x0F) <= 9 )?'0'+(TWDR & 0x0F):'A'+(TWDR & 0x0F)-10;
+//	to_log(log_tw);
+//#endif
 	//get data
 	*data = TWDR;
 
@@ -314,10 +314,12 @@ void gluk_inc(void)
 
 UBYTE gluk_get_reg(UBYTE index)
 {
+	UBYTE tmp;
+
 	if( index < sizeof(gluk_regs)/sizeof(gluk_regs[0]) )
 	{
 		//clock registers from array
-		UBYTE tmp = gluk_regs[index];
+		tmp = gluk_regs[index];
 		if ( ( index<10 ) && ( (gluk_regs[GLUK_REG_B]&GLUK_B_DATA_MODE) == 0 ) )
 		{
 			//clock registers mast be in BCD if HEX-bit not set in reg B
@@ -333,24 +335,36 @@ UBYTE gluk_get_reg(UBYTE index)
 			//2 bit - SD WRP detect
 			tmp = tmp | (((~SD_PIN)&((1<<SDWRP)|(1<<SDDET)))>>2);
 		}
-
-		return tmp;
 	}
 	else
 	{
 		if ( index >= 0xF0 )
 		{
 			//read version
-			return GetVersionByte( index&0x0F );
+			tmp = GetVersionByte( index&0x0F );
 		}
 		else
 		{
 			//other from nvram
 			//- on PCF8583 nvram started from #10
 			//- on 512vi1[DS12887] nvram started from #0E
-			return rtc_read( (index/*&0x3F*/)+2 );
+			tmp = rtc_read( (index/*&0x3F*/)+2 );
 		}
 	}
+
+#ifdef LOGENABLE
+	{
+		char log_gs[] = "GR[..]..\r\n";
+		UBYTE b = index;
+		log_gs[3] = ((b >> 4) <= 9 )?'0'+(b >> 4):'A'+(b >> 4)-10;
+		log_gs[4] = ((b & 0x0F) <= 9 )?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
+		b = tmp;
+		log_gs[6] = ((b >> 4) <= 9 )?'0'+(b >> 4):'A'+(b >> 4)-10;
+		log_gs[7] = ((b & 0x0F) <= 9 )?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
+		to_log(log_gs);
+	}
+#endif
+	return tmp;
 }
 
 void gluk_set_reg(UBYTE index, UBYTE data)
