@@ -86,6 +86,7 @@ void reset(ROM_MODE mode)
    comp.ts.fmaddr = 0;
    comp.ts.im2vect = 255;
    comp.ts.fddvirt = 0;
+   comp.ts.vdos = 0;
    
    comp.ts.sysconf = 1;		// turbo 7MHz for TS-Conf
    if (conf.mem_model == MM_TSL)
