@@ -111,6 +111,7 @@ typedef struct {
 
 	u8 im2vect;
 	u8 fddvirt;
+	u8 vdos;
 	u8 pwr_up;
 
 

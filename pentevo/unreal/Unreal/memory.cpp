@@ -40,7 +40,7 @@ void set_banks()
    {
       case MM_PENTAGON:
          if (!(comp.pEFF7 & EFF7_LOCKMEM))
-             bank |= (comp.p7FFD & 0xE0) >> 2; // 7FFD bits 765210
+             bank |= (comp.p7FFD & 0x20) | (comp.p7FFD & 0xC0) >> 3; // 7FFD bits 657..210
 
          bank3 = page_ram(bank & temp.ram_mask);
 
