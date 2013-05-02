@@ -328,7 +328,12 @@ void to_zx(UBYTE scancode, UBYTE was_E0, UBYTE was_release)
 		//additional functionality from ps/2 keyboard
 		switch( scancode )
 		{
-			//Alt Gr
+			//Right Ctrl
+			case  0x14:
+				if ( !was_release ) kb_status |= KB_CTRL_MASK;
+				else kb_status &= ~KB_CTRL_MASK;
+				break;
+			//Right Alt
 			case  0x11:
 				if ( !was_release ) kb_status |= KB_ALT_MASK;
 				else kb_status &= ~KB_ALT_MASK;
@@ -403,12 +408,12 @@ void to_zx(UBYTE scancode, UBYTE was_E0, UBYTE was_release)
 				if ( !was_release ) kb_status |= KB_RSHIFT_MASK;
 				else kb_status &= ~KB_RSHIFT_MASK;
 				break;
-			//Ctrl
+			//Left Ctrl
 			case  0x14:
 				if ( !was_release ) kb_status |= KB_CTRL_MASK;
 				else kb_status &= ~KB_CTRL_MASK;
 				break;
-			//Alt
+			//Left Alt
 			case  0x11:
 				if ( !was_release ) kb_status |= KB_ALT_MASK;
 				else kb_status &= ~KB_ALT_MASK;
