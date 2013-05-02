@@ -147,16 +147,12 @@ start:
 	DDRF &= ~(1<<nCONFIG);
 	while( !(PINF & (1<<nSTATUS)) ); // wait ready
 
-	{
-		UBYTE curF;
-		_EEGET( curF, 0x0fff ); // "current FPGA-data"
-		switch (curF)
-		{	case 0:
-				curFpga = GET_FAR_ADDRESS(fpga1); // prepare for data fetching
-				break;
-			default:
-				curFpga = GET_FAR_ADDRESS(fpga0); // prepare for data fetching
-		}
+	switch (eeprom_read_byte((const UBYTE*)0x0fff))
+	{	case 0:
+			curFpga = GET_FAR_ADDRESS(fpga1); // prepare for data fetching
+			break;
+		default:
+			curFpga = GET_FAR_ADDRESS(fpga0); // prepare for data fetching
 	}
 #ifdef LOGENABLE
 	{
