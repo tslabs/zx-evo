@@ -1,6 +1,7 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
+#include <avr/eeprom.h>
 
 #include <util/delay.h>
 
@@ -23,7 +24,8 @@
 #undef LOGENABLE
 
 /** FPGA data pointer [far address] (linker symbol). */
-extern ULONG fpga PROGMEM;
+extern ULONG fpga0 PROGMEM;
+extern ULONG fpga1 PROGMEM;
 
 // FPGA data index..
 volatile ULONG curFpga;
@@ -97,42 +99,42 @@ start:
 #ifdef LOGENABLE
 	to_log("VER:");
 	{
-	 	UBYTE b,i;
+		UBYTE b,i;
 		ULONG version = 0x1DFF0;
-	 	char VER[]="..";
-	 	for( i=0; i<12; i++)
-	 	{
+		char VER[]="..";
+		for( i=0; i<12; i++)
+		{
 			dbuf[i] = pgm_read_byte_far(version+i);
-	 	}
-	 	dbuf[i]=0;
-	 	to_log((char*)dbuf);
-	 	to_log(" ");
-	 	UBYTE b1 = pgm_read_byte_far(version+12);
-	 	UBYTE b2 = pgm_read_byte_far(version+13);
-	 	UBYTE day = b1&0x1F;
-	 	UBYTE mon = ((b2<<3)+(b1>>5))&0x0F;
-	 	UBYTE year = (b2>>1)&0x3F;
-	 	VER[0] = '0'+(day/10);
-	 	VER[1] = '0'+(day%10);
-     	to_log(VER);
-     	to_log(".");
-	 	VER[0] = '0'+(mon/10);
-	 	VER[1] = '0'+(mon%10);
-     	to_log(VER);
-     	to_log(".");
-	 	VER[0] = '0'+(year/10);
-	 	VER[1] = '0'+(year%10);
-     	to_log(VER);
-     	to_log("\r\n");
-	 	//
-	 	for( i=0; i<16; i++)
-	 	{
-	 		b = pgm_read_byte_far(version+i);
-	 		VER[0] = ((b >> 4) <= 9 )?'0'+(b >> 4):'A'+(b >> 4)-10;
-	 		VER[1] = ((b & 0x0F) <= 9 )?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
-	 		to_log(VER);
-	 	}
-	 	to_log("\r\n");
+		}
+		dbuf[i]=0;
+		to_log((char*)dbuf);
+		to_log(" ");
+		UBYTE b1 = pgm_read_byte_far(version+12);
+		UBYTE b2 = pgm_read_byte_far(version+13);
+		UBYTE day = b1&0x1F;
+		UBYTE mon = ((b2<<3)+(b1>>5))&0x0F;
+		UBYTE year = (b2>>1)&0x3F;
+		VER[0] = '0'+(day/10);
+		VER[1] = '0'+(day%10);
+		to_log(VER);
+		to_log(".");
+		VER[0] = '0'+(mon/10);
+		VER[1] = '0'+(mon%10);
+		to_log(VER);
+		to_log(".");
+		VER[0] = '0'+(year/10);
+		VER[1] = '0'+(year%10);
+		to_log(VER);
+		to_log("\r\n");
+		//
+		for( i=0; i<16; i++)
+		{
+			b = pgm_read_byte_far(version+i);
+			VER[0] = ((b >> 4) <= 9 )?'0'+(b >> 4):'A'+(b >> 4)-10;
+			VER[1] = ((b & 0x0F) <= 9 )?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
+			to_log(VER);
+		}
+		to_log("\r\n");
 	}
 #endif
 
@@ -145,7 +147,17 @@ start:
 	DDRF &= ~(1<<nCONFIG);
 	while( !(PINF & (1<<nSTATUS)) ); // wait ready
 
-	curFpga = GET_FAR_ADDRESS(fpga); // prepare for data fetching
+	{
+		UBYTE curF;
+		_EEGET( curF, 0x0fff ); // "current FPGA-data"
+		switch (curF)
+		{	case 0:
+				curFpga = GET_FAR_ADDRESS(fpga1); // prepare for data fetching
+				break;
+			default:
+				curFpga = GET_FAR_ADDRESS(fpga0); // prepare for data fetching
+		}
+	}
 #ifdef LOGENABLE
 	{
 	char log_fpga[]="F........\r\n";
@@ -161,7 +173,7 @@ start:
 	b = (UBYTE)(curFpga&0xFF);
 	log_fpga[7] = ((b >> 4) <= 9 )?'0'+(b >> 4):'A'+(b >> 4)-10;
 	log_fpga[8] = ((b & 0x0F) <= 9 )?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
- 	to_log(log_fpga);
+	to_log(log_fpga);
 	}
 #endif
 	depacker_dirty();
@@ -174,14 +186,14 @@ start:
 
 	// start timer (led dimming and timeouts for ps/2)
 	TCCR2 = 0b01110011; // FOC2=0, {WGM21,WGM20}=01, {COM21,COM20}=11, {CS22,CS21,CS20}=011
-	                    // clk/64 clocking,
-	                    // 1/512 overflow rate, total 11.059/32768 = 337.5 Hz interrupt rate
+				// clk/64 clocking,
+				// 1/512 overflow rate, total 11.059/32768 = 337.5 Hz interrupt rate
 	TIFR = (1<<TOV2);
 	TIMSK = (1<<TOIE2);
 
 
 	//init some counters and registers
-    ps2keyboard_count = 12;
+	ps2keyboard_count = 12;
 	ps2keyboard_cmd_count = 0;
 	ps2keyboard_cmd = 0;
 	ps2mouse_count = 12;
@@ -200,10 +212,10 @@ start:
 	zx_mouse_reset(1);
 
 	//set external interrupt
-	//INT4 - PS2 Keyboard  (falling edge)
-	//INT5 - PS2 Mouse     (falling edge)
-	//INT6 - SPI  (falling edge)
-	//INT7 - RTC  (falling edge)
+	//INT4 - PS2 Keyboard (falling edge)
+	//INT5 - PS2 Mouse (falling edge)
+	//INT6 - SPI (falling edge)
+	//INT7 - RTC (falling edge)
 	EICRB = (1<<ISC41)+(0<<ISC40) + (1<<ISC51)+(0<<ISC50) + (1<<ISC61)+(0<<ISC60) + (1<<ISC71)+(0<<ISC70); // set condition for interrupt
 	EIFR = (1<<INTF4)|(1<<INTF5)|(1<<INTF6)|(1<<INTF7); // clear spurious ints there
 	EIMSK |= (1<<INT4)|(1<<INT5)|(1<<INT6)|(1<<INT7); // enable
@@ -223,11 +235,11 @@ start:
 
 	//main loop
 	do
-    {
-	    tape_task();
+	{
+		tape_task();
 		ps2mouse_task();
-        ps2keyboard_task();
-        zx_task(ZX_TASK_WORK);
+		ps2keyboard_task();
+		zx_task(ZX_TASK_WORK);
 		zx_mouse_task();
 		joystick_task();
 		rs232_task();
@@ -244,7 +256,7 @@ start:
 		}
 
 		atx_power_task();
-    }
+	}
 	while( (flags_register&FLAG_HARD_RESET) == 0 );
 
 	goto start;
