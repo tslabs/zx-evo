@@ -28,4 +28,4 @@ copy /b ts-bios.bin + trdos504T.rom + rc1_96.rom + 48.rom "../bin/ts-bios-rc196.
 copy ts-bios.bin "../bin/ts-bios.bin"
 del ts-bios.bin
 
-pause
+if ERRORLEVEL 1 pause
