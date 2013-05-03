@@ -35,14 +35,38 @@ static UBYTE rs232_LSR;
 static UBYTE rs232_MSR;
 //Scratch Pad
 static UBYTE rs232_SCR;
-//Fifo In
-static UBYTE rs232_FI[16];
-static UBYTE rs232_FI_start;
-static UBYTE rs232_FI_end;
-//Fifo Out
-static UBYTE rs232_FO[16];
-static UBYTE rs232_FO_start;
-static UBYTE rs232_FO_end;
+//FIFO In
+volatile UBYTE rs232_FI[256];
+volatile UBYTE rs232_FI_in_ptr;		// address where next received byte to be placed to
+volatile UBYTE rs232_FI_out_ptr;	// address where next byte to be transmitted will be read from
+//FIFO Out
+volatile UBYTE rs232_FO[256];
+volatile UBYTE rs232_FO_in_ptr;
+volatile UBYTE rs232_FO_out_ptr;
+
+void rs232_receive(void)
+{
+	UBYTE data = UDR1;
+	if ( ((UBYTE)(rs232_FI_out_ptr - rs232_FI_in_ptr) != 1) )		// receive FIFO has at least 1 char free
+	{
+	   	rs232_FI[rs232_FI_in_ptr++] = data;
+		rs232_LSR |= 0x01;		   	//set data received flag
+	}
+	else	// receive FIFO is full
+	{
+		rs232_LSR |= 0x02;			//set overrun flag
+	}
+}
+	
+void rs232_transmit(void)
+{
+	UDR1 = rs232_FO[rs232_FO_out_ptr++];
+	if (rs232_FO_out_ptr == rs232_FO_in_ptr)	// out buffer is empty
+	{
+		UCSR1B &= ~_BV(UDRIE);			// disable byte transmission complete interrupt unless new byte sent for output
+		rs232_LSR |= 0x60;				//set FIFO empty flag
+	}
+}
 
 void rs232_init(void)
 {
@@ -52,7 +76,7 @@ void rs232_init(void)
 	// Clear reg
 	UCSR1A = 0;
 	// Enable receiver and transmitter
-	UCSR1B = _BV(RXEN)|_BV(TXEN);
+	UCSR1B = _BV(RXEN)|_BV(TXEN)|_BV(RXCIE);
 	// Set frame format: 8data, 1stop bit
 	UCSR1C = _BV(USBS)|_BV(UCSZ0)|_BV(UCSZ1);
 
@@ -67,29 +91,23 @@ void rs232_init(void)
 	rs232_LSR = 0x60;
 	rs232_MSR = 0xA0; //DSR=CD=1, RI=0
 	rs232_SCR = 0xFF;
-	rs232_FI_start = rs232_FI_end = 0;
-	rs232_FO_start = rs232_FO_end = 0;
-}
-
-void rs232_transmit( UBYTE data )
-{
-	// Wait for empty transmit buffer
-	while ( !( UCSR1A & (1<<UDRE)) );
-	// Put data into buffer, sends the data
-	UDR1 = data;
+	rs232_FI_in_ptr = rs232_FI_out_ptr = 0;
+	rs232_FO_in_ptr = rs232_FO_out_ptr = 0;
 }
 
 //#ifdef LOGENABLE
+// WARNING!!! THIS COFLICTS WITH ZX RS-232 TRANSMITTER IF USED SIMULTANEOUSLY. Should be fixed for compatibility (if need).
 void to_log(char* ptr)
 {
-	while( (*ptr)!=0 )
+	UBYTE data;
+	
+	while( !(data = *ptr++) )
 	{
-		rs232_transmit(*ptr);
-		ptr++;
+		while ( !( UCSR1A & (1<<UDRE)) );
+		UDR1 = data;
 	}
 }
 //#endif
-
 
 //after DLL or DLM changing
 void rs232_set_baud(void)
@@ -154,6 +172,7 @@ void rs232_zx_write(UBYTE index, UBYTE data)
 	log_write[5] = ((data & 0x0F) <= 9 )?'0'+(data & 0x0F):'A'+((data & 0x0F)-10);
 	to_log(log_write);
 #endif
+
 	switch( index )
 	{
 	case 0:
@@ -164,19 +183,16 @@ void rs232_zx_write(UBYTE index, UBYTE data)
 		}
 		else
 		{
-			//place byte to fifo out
-			if ( ( rs232_FO_end != rs232_FO_start ) ||
-			     ( rs232_LSR&0x20 ) )
+			//place byte to FIFO out
+			if ( ((UBYTE)(rs232_FO_out_ptr - rs232_FO_in_ptr) != 1) )		// transmit FIFO has at least 1 char free
 			{
-				rs232_FO[rs232_FO_end] = data;
-				rs232_FO_end = (rs232_FO_end + 1) & 0x0F;
-
-				//clear fifo empty flag
-				rs232_LSR &= ~(0x60);
+				rs232_FO[rs232_FO_in_ptr++] = data;
+				rs232_LSR &= ~0x60;				// clear FIFO empty flag
+				UCSR1B |= _BV(UDRIE);			// enable transmission complete interrupt to send byte via UART
 			}
 			else
 			{
-				//fifo overload
+				//FIFO overload
 			}
 		}
 		break;
@@ -202,16 +218,17 @@ void rs232_zx_write(UBYTE index, UBYTE data)
 			if( data&(1<<1) )
 			{
 				//receive FIFO reset
-				rs232_FI_start = rs232_FI_end = 0;
-				//set empty FIFO flag and clear overrun flag
-				rs232_LSR &= ~(0x03);
+				UCSR1B &= ~_BV(RXCIE);			// disable UART byte received interrupt to make the operation atomic
+				rs232_FI_out_ptr = rs232_FI_in_ptr;	// set FIFO "empty"
+				rs232_LSR &= ~0x03;				// set FIFO empty flag and clear overrun flag
+				UCSR1B |= _BV(RXCIE);
 			}
 			if( data&(1<<2) )
 			{
-				//tramsmit FIFO reset
-				rs232_FO_start = rs232_FO_end = 0;
-				//set fifo is empty flag
-				rs232_LSR |= 0x60;
+				//transmit FIFO reset
+				UCSR1B &= ~_BV(UDRIE);			// disable byte transmission complete interrupt
+				rs232_FO_in_ptr = rs232_FO_out_ptr;	// set FIFO "empty"
+				rs232_LSR |= 0x60;				// set FIFO empty flag
 			}
 			rs232_FCR = data&0xC9;
 		}
@@ -263,18 +280,15 @@ UBYTE rs232_zx_read(UBYTE index)
 		}
 		else
 		{
-			//get byte from fifo in
-			if ( rs232_LSR&0x01 )
+			//get byte from FIFO in
+			UCSR1B &= ~_BV(RXCIE);					// disable UART byte received interrupt to make the operation atomic
+			if ( rs232_FI_out_ptr != rs232_FI_in_ptr )		// input buffer is not empty
 			{
-				data = rs232_FI[rs232_FI_start];
-				rs232_FI_start = ( rs232_FI_start + 1 ) & 0x0F;
-
-				if( rs232_FI_start == rs232_FI_end )
-				{
-					//set empty FIFO flag
-					rs232_LSR &= ~(0x01);
-				}
+				data = rs232_FI[rs232_FI_out_ptr++];
+				if ( rs232_FI_out_ptr == rs232_FI_in_ptr )
+					rs232_LSR &= ~(0x01);			//set FIFO empty flag
 			}
+			UCSR1B |= _BV(RXCIE);
 		}
 		break;
 
@@ -334,42 +348,6 @@ UBYTE rs232_zx_read(UBYTE index)
 
 void rs232_task(void)
 {
-	//send data
-	if( (rs232_LSR&0x20)==0 )
-	{
-		if ( UCSR1A&_BV(UDRE) )
-		{
-			UDR1 = rs232_FO[rs232_FO_start];
-			rs232_FO_start = (rs232_FO_start+1)&0x0F;
-
-			if( rs232_FO_start == rs232_FO_end )
-			{
-				//set fifo is empty flag
-				rs232_LSR |= 0x60;
-			}
-		}
-	}
-
-	//receive data
-	if( UCSR1A&_BV(RXC) )
-	{
-		BYTE b = UDR1;
-		if( (rs232_FI_end == rs232_FI_start) &&
-		    (rs232_LSR&0x01) )
-		{
-			//set overrun flag
-			rs232_LSR|=0x02;
-		}
-		else
-		{
-			//receive data
-		   	rs232_FI[rs232_FI_end] = b;
-		   	rs232_FI_end = (rs232_FI_end+1)&0x0F;
-		   	//set data received flag
-		   	rs232_LSR |= 0x01;
-		}
-	}
-
 	//statuses
 	if( UCSR1A&_BV(FE) )
 	{

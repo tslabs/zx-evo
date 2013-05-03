@@ -15,31 +15,10 @@
 
 ISR(TIMER2_OVF_vect)
 {
-	// static UBYTE counter=0x00;
-	// static BYTE dir=0x01;
-	// static BYTE ocr=0x00;
 	static BYTE scankbd=0;
 	static BYTE cskey=0xff;
 
-	// counter++; // just fucking shit to fadein-fadeout LED :-)))
-	// if( counter&128 )
-	// {
-		// counter=0;
-
-		// ocr += dir;
-		// if( (ocr==(-1)) && (dir==(-1)) )
-		// {
-			// dir = -dir;
-			// ocr = 1;
-		// } else if( (ocr==0) && (dir==1) )
-		// {
-			// dir = -dir;
-			// ocr = 0xFF;
-		// }
-
-		// OCR2 = ocr;
-	// }
-		OCR2 = 0xff;
+		OCR2 = 0xff;	// the intesity of PWR LED, could be changed if need
 
 	// PS/2 keyboard timeout tracking
 	if( (ps2keyboard_count<12) && (ps2keyboard_count!=0) )
@@ -70,8 +49,7 @@ ISR(TIMER2_OVF_vect)
 	}
 
 	//check soft reset and F12 key
-	if ( !( SOFTRES_PIN & (1<<SOFTRES)) ||
-	     (kb_status & KB_F12_MASK) )
+	if ( !( SOFTRES_PIN & (1<<SOFTRES)) || (kb_status & KB_F12_MASK) )
 	{
 		//pressed
 		atx_counter++;
@@ -79,7 +57,7 @@ ISR(TIMER2_OVF_vect)
 	else
 	{
 		//not pressed
-		atx_counter >>= 1;
+		atx_counter = 0;
 	}
 
 	if ( scankbd==0 )
@@ -230,17 +208,28 @@ ISR(INT5_vect)
 	ps2mouse_timeout = PS2MOUSE_TIMEOUT;
 }
 
- // SPI_INT
+// SPI_INT
 ISR(INT6_vect)
 {
 	flags_register |= FLAG_SPI_INT;
 	EIFR = (1<<INTF6);
 }
 
- // RTC up data
+// RTC up data
 ISR(INT7_vect)
 {
 	gluk_inc();
 	EIFR = (1<<INTF7);
 }
 
+// RS-232 data in
+ISR (USART1_RX_vect)
+{
+	rs232_receive();
+}
+
+// RS-232 data out
+ISR (USART1_UDRE_vect)
+{
+	rs232_transmit();
+}

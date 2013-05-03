@@ -11,3 +11,4 @@ make clean
 copy /y ..\kbmap_nedopc.c ..\kbmap.c
 make
 
+if ERRORLEVEL 1 pause

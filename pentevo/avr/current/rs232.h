@@ -2,7 +2,6 @@
 #define RS232_H
 
 void rs232_init(void);
-void rs232_transmit(UBYTE data);
 
 //#define LOGENABLE
 #ifdef LOGENABLE
@@ -25,5 +24,11 @@ UBYTE rs232_zx_read(UBYTE index);
 
 /** RS232 task. */
 void rs232_task(void);
+
+/** RS232 receive. */
+void rs232_receive(void);
+
+/** RS232 transmit. */
+void rs232_transmit(void);
 
 #endif //RS232_H
