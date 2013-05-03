@@ -58,9 +58,9 @@ void atx_power_task(void)
 
 	if ( atx_counter > 680 )
 	{
-		if ( ( SOFTRES_PIN & (1<<SOFTRES) ) == 0 )
+		if ( !(SOFTRES_PIN & (1<<SOFTRES)) || (kb_status & KB_F12_MASK) )
 		{
-			//atx power off button pressed (~5 sec)
+			//atx power off or F12 button pressed (~2 sec)
 
 			//switch off atx power
 			ATXPWRON_PORT &= ~(1<<ATXPWRON);

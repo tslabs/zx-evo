@@ -56,6 +56,20 @@ void put_buffer(UWORD size)
 	} while(--size);
 }
 
+//event from SPI
+void SPI_task(void)
+{
+	if ( flags_register&FLAG_SPI_INT )
+	{
+		flags_register &= ~FLAG_SPI_INT;
+		UBYTE status;
+		nSPICS_PORT &= ~(1<<nSPICS);
+		nSPICS_PORT |= (1<<nSPICS);
+		status = spi_send(0);
+		zx_wait_task( status );
+	}
+}
+
 void hardware_init(void)
 {
 	//Initialized AVR pins
@@ -233,25 +247,21 @@ start:
 	do
 	{
 		tape_task();
+		SPI_task();
 		ps2mouse_task();
+		SPI_task();
 		ps2keyboard_task();
+		SPI_task();
 		zx_task(ZX_TASK_WORK);
+		SPI_task();
 		zx_mouse_task();
+		SPI_task();
 		joystick_task();
+		SPI_task();
 		rs232_task();
-
-		//event from SPI
-		if ( flags_register&FLAG_SPI_INT )
-		{
-			//get status byte
-			UBYTE status;
-			nSPICS_PORT &= ~(1<<nSPICS);
-			nSPICS_PORT |= (1<<nSPICS);
-			status = spi_send(0);
-			zx_wait_task( status );
-		}
-
+		SPI_task();
 		atx_power_task();
+		SPI_task();
 	}
 	while( (flags_register&FLAG_HARD_RESET) == 0 );
 

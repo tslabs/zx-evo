@@ -552,28 +552,24 @@ void zx_wait_task(UBYTE status)
 	UBYTE addr = 0;
 	UBYTE data = 0xFF;
 
-	//reset flag
-	flags_register &= ~FLAG_SPI_INT;
-
 	//prepare data
 	switch( status&0x7F )
 	{
-	case ZXW_GLUK_CLOCK:
-		{
+		case ZXW_GLUK_CLOCK:
 			addr = zx_spi_send(SPI_GLUK_ADDR, data, 0);
 			if ( status&0x80 ) data = gluk_get_reg(addr);
 			break;
-		}
-	case ZXW_KONDR_RS232:
-		{
+			
+		case ZXW_KONDR_RS232:
 			addr = zx_spi_send(SPI_RS232_ADDR, data, 0);
 			if ( status&0x80 ) data = rs232_zx_read(addr);
 			break;
-		}
 	}
 
-	if ( status&0x80 ) zx_spi_send(SPI_WAIT_DATA, data, 0);
-	else data = zx_spi_send(SPI_WAIT_DATA, data, 0);
+	if ( status&0x80 )
+		zx_spi_send(SPI_WAIT_DATA, data, 0);			// Z80 performed read operation
+	else
+		data = zx_spi_send(SPI_WAIT_DATA, data, 0);		// Z80 performed write operation
 
 	if ( !(status&0x80) )
 	{
