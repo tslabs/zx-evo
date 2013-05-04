@@ -186,7 +186,11 @@ int _tmain(int argc, _TCHAR* argv[])
 
 		osReader.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
 		ReadFile(hPort, &req, 7, &dwRead, &osReader);
-		if (!dwRead) continue;
+		if (!dwRead)
+		{
+			SleepEx(10, NULL);
+			continue;
+		}
 		if (req.op != OP_RD) continue;
 		
 		req.drv &= 3;
