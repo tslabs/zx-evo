@@ -19,6 +19,7 @@ ISR(TIMER2_OVF_vect)
 	static BYTE cskey=0xff;
 
 		OCR2 = 0xff;	// the intesity of PWR LED, could be changed if need
+		// OCR2 = (PINE & _BV(6)) ? 0: 0xff; // to monitor SPIINT
 
 	// PS/2 keyboard timeout tracking
 	if( (ps2keyboard_count<12) && (ps2keyboard_count!=0) )
@@ -208,28 +209,17 @@ ISR(INT5_vect)
 	ps2mouse_timeout = PS2MOUSE_TIMEOUT;
 }
 
-// SPI_INT
+ // SPI_INT
 ISR(INT6_vect)
 {
 	flags_register |= FLAG_SPI_INT;
 	EIFR = (1<<INTF6);
 }
 
-// RTC up data
+ // RTC up data
 ISR(INT7_vect)
 {
 	gluk_inc();
 	EIFR = (1<<INTF7);
 }
 
-// RS-232 data in
-ISR (USART1_RX_vect)
-{
-	rs232_receive();
-}
-
-// RS-232 data out
-ISR (USART1_UDRE_vect)
-{
-	rs232_transmit();
-}

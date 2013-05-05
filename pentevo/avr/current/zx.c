@@ -244,20 +244,6 @@ void zx_task(UBYTE operation) // zx task, tracks when there is need to send new 
 	to_log(log_task_state);
 #endif
 
-//			if( task_state==6 ) // send (or not) reset
-//			{
-//				if( reset_type )
-//				{
-//					zx_spi_send(SPI_RST_REG, reset_type, 0x7F);
-//#ifdef LOGENABLE
-//	char log_reset_type[] = "TR..\r\n";
-//	log_reset_type[2] = ((reset_type >> 4) <= 9 )?'0'+(reset_type >> 4):'A'+(reset_type >> 4)-10;
-//	log_reset_type[3] = ((reset_type & 0x0F) <= 9 )?'0'+(reset_type & 0x0F):'A'+(reset_type & 0x0F)-10;
-//	to_log(log_reset_type);
-//#endif
-//				}
-//			}
-//			else
 			if( task_state>0 )// task_state==5..1
 			{
 				UBYTE key_data;
@@ -537,9 +523,7 @@ void zx_mouse_task(void)
 #endif
 		//TODO: пока сделал скопом, потом сделать по одному байту за заход
 		zx_spi_send(SPI_MOUSE_BTN, zx_mouse_button, 0x7F);
-
 		zx_spi_send(SPI_MOUSE_X, zx_mouse_x, 0x7F);
-
 		zx_spi_send(SPI_MOUSE_Y, zx_mouse_y, 0x7F);
 
 		//data sended - reset flag
@@ -551,6 +535,9 @@ void zx_wait_task(UBYTE status)
 {
 	UBYTE addr = 0;
 	UBYTE data = 0xFF;
+
+	//reset flag
+	flags_register &= ~FLAG_SPI_INT;
 
 	//prepare data
 	switch( status&0x7F )
@@ -566,10 +553,8 @@ void zx_wait_task(UBYTE status)
 			break;
 	}
 
-	if ( status&0x80 )
-		zx_spi_send(SPI_WAIT_DATA, data, 0);			// Z80 performed read operation
-	else
-		data = zx_spi_send(SPI_WAIT_DATA, data, 0);		// Z80 performed write operation
+	if ( status&0x80 ) zx_spi_send(SPI_WAIT_DATA, data, 0);
+	else data = zx_spi_send(SPI_WAIT_DATA, data, 0);
 
 	if ( !(status&0x80) )
 	{

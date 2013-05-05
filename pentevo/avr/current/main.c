@@ -50,24 +50,8 @@ void put_buffer(UWORD size)
 	UBYTE * ptr = dbuf;
 
 	do
-	{
 		spi_send( *(ptr++) );
-
-	} while(--size);
-}
-
-//event from SPI
-void SPI_task(void)
-{
-	if ( flags_register&FLAG_SPI_INT )
-	{
-		flags_register &= ~FLAG_SPI_INT;
-		UBYTE status;
-		nSPICS_PORT &= ~(1<<nSPICS);
-		nSPICS_PORT |= (1<<nSPICS);
-		status = spi_send(0);
-		zx_wait_task( status );
-	}
+			while(--size);
 }
 
 void hardware_init(void)
@@ -202,7 +186,7 @@ start:
 	TIMSK = (1<<TOIE2);
 
 
-	//init some counters and registers
+	//init counters and registers
 	ps2keyboard_count = 12;
 	ps2keyboard_cmd_count = 0;
 	ps2keyboard_cmd = 0;
@@ -238,7 +222,7 @@ start:
 	to_log("zx_init OK\r\n");
 #endif
 
-	sei(); // globally go interrupting
+	sei();
 
 	//set led on keyboard
 	ps2keyboard_send_cmd(PS2KEYBOARD_CMD_SETLED);
@@ -247,21 +231,25 @@ start:
 	do
 	{
 		tape_task();
-		SPI_task();
 		ps2mouse_task();
-		SPI_task();
 		ps2keyboard_task();
-		SPI_task();
 		zx_task(ZX_TASK_WORK);
-		SPI_task();
 		zx_mouse_task();
-		SPI_task();
 		joystick_task();
-		SPI_task();
 		rs232_task();
-		SPI_task();
+
+		//event from SPI
+		if ( flags_register&FLAG_SPI_INT )
+		{
+			//get status byte
+			UBYTE status;
+			nSPICS_PORT &= ~(1<<nSPICS);
+			nSPICS_PORT |= (1<<nSPICS);
+			status = spi_send(0);
+			zx_wait_task( status );
+		}
+
 		atx_power_task();
-		SPI_task();
 	}
 	while( (flags_register&FLAG_HARD_RESET) == 0 );
 
