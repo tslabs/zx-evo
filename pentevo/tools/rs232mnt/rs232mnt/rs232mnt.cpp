@@ -14,7 +14,7 @@ typedef unsigned char u8;
 typedef signed char i8;
 
 #define TRD_SZ	256*16*255
-#define	BAUD	57600
+#define	BAUD	115200
 #define	ACK		0x55AA
 #define	ANS1	0xCC
 #define	ANS2	0xEE
