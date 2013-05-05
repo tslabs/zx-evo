@@ -350,19 +350,6 @@ void to_zx(UBYTE scancode, UBYTE was_E0, UBYTE was_release)
 					t.tb.b1=t.tb.b1=NO_KEY;
 				}
 				break;
-			//Insert
-			case 0x70:
-				//Ctrl-Alt-Insert pressed
-				if ( ( !was_release ) &&
-					 ( !(kb_status & KB_CTRL_ALT_DEL_MAPPED_MASK) ) &&
-					 ( (kb_status & (KB_CTRL_MASK|KB_ALT_MASK)) == (KB_CTRL_MASK|KB_ALT_MASK) ) )
-				{
-					eeprom_write_byte( (UBYTE*)0x0fff, !eeprom_read_byte((const UBYTE*)0x0fff) );
-					//hard reset
-					flags_register |= FLAG_HARD_RESET;
-					t.tb.b1=t.tb.b1=NO_KEY;
-				}
-				break;
 		}//switch
 	}
 	else
@@ -402,7 +389,18 @@ void to_zx(UBYTE scancode, UBYTE was_E0, UBYTE was_release)
 				break;
 			//F12
 			case  0x07:
-				if ( !was_release ) kb_status |= KB_F12_MASK;
+				// switch config
+				if ( ( !was_release ) &&
+					 ( !(kb_status & KB_CTRL_ALT_DEL_MAPPED_MASK) ) &&
+					 ( (kb_status & (KB_CTRL_MASK|KB_ALT_MASK)) == (KB_CTRL_MASK|KB_ALT_MASK) ) )
+				{
+					eeprom_write_byte( (UBYTE*)0x0fff, !eeprom_read_byte((const UBYTE*)0x0fff) );
+					//hard reset
+					flags_register |= FLAG_HARD_RESET;
+					t.tb.b1=t.tb.b1=NO_KEY;
+					break;
+				}
+				else if ( !was_release ) kb_status |= KB_F12_MASK;
 				else kb_status &= ~KB_F12_MASK;
 				break;
 			//keypad '+','-','*' - set ps2mouse resolution
