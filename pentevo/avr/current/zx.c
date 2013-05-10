@@ -40,6 +40,8 @@ volatile UBYTE shift_pause;
 
 UBYTE zx_realkbd[11];
 
+extern UBYTE egg;
+
 void zx_init(void)
 {
 	zx_fifo_in_ptr=zx_fifo_out_ptr=0;
@@ -386,6 +388,19 @@ void to_zx(UBYTE scancode, UBYTE was_E0, UBYTE was_release)
 			case  0x11:
 				if ( !was_release ) kb_status |= KB_ALT_MASK;
 				else kb_status &= ~KB_ALT_MASK;
+				break;
+			//F11
+			case  0x78:
+				// easter egg
+				if ( ( !was_release ) &&
+					 ( !(kb_status & KB_CTRL_ALT_DEL_MAPPED_MASK) ) &&
+					 ( (kb_status & (KB_CTRL_MASK|KB_ALT_MASK)) == (KB_CTRL_MASK|KB_ALT_MASK) ) )
+				{
+					egg = 1;
+					//hard reset
+					flags_register |= FLAG_HARD_RESET;
+					t.tb.b1=t.tb.b1=NO_KEY;
+				}
 				break;
 			//F12
 			case  0x07:
