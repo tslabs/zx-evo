@@ -26,6 +26,7 @@
 /** FPGA data pointer [far address] (linker symbol). */
 extern ULONG fpga0 PROGMEM;
 extern ULONG fpga1 PROGMEM;
+extern ULONG fpga2 PROGMEM;
 
 // FPGA data index..
 volatile ULONG curFpga;
@@ -43,6 +44,8 @@ volatile UBYTE ext_type_gluk;
 // Buffer for depacking FPGA configuration.
 // You can USED for other purposed after setup FPGA.
 UBYTE dbuf[DBSIZE];
+
+UBYTE egg;
 
 void put_buffer(UWORD size)
 {
@@ -89,6 +92,8 @@ void hardware_init(void)
 
 int main()
 {
+	egg = 0;
+	
 start:
 
 	hardware_init();
@@ -145,13 +150,21 @@ start:
 	DDRF &= ~(1<<nCONFIG);
 	while( !(PINF & (1<<nSTATUS)) ); // wait ready
 
+	// prepare for data fetching
+	if (egg)
+	{
+		curFpga = GET_FAR_ADDRESS(fpga2);
+		egg = 0;
+	}
+	else
 	switch (eeprom_read_byte((const UBYTE*)0x0fff))
 	{	case 0:
-			curFpga = GET_FAR_ADDRESS(fpga1); // prepare for data fetching
+			curFpga = GET_FAR_ADDRESS(fpga1);
 			break;
 		default:
-			curFpga = GET_FAR_ADDRESS(fpga0); // prepare for data fetching
+			curFpga = GET_FAR_ADDRESS(fpga0);
 	}
+
 #ifdef LOGENABLE
 	{
 	char log_fpga[]="F........\r\n";

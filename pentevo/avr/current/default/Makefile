@@ -39,7 +39,7 @@ OBJECTS = zx.o interrupts.o main.o ps2.o spi.o depacker_dirty.o rs232.o rtc.o at
 
 ## Objects explicitly added by the user
 #LINKONLYOBJECTS = fpga.o
-FPGACORE = top.o baseconf.o
+FPGACORE = top.o baseconf.o egg.o
 
 ## Build
 all: $(TARGET) core.hex core.eep core.lss size zxevo_beta.bin
@@ -95,11 +95,13 @@ $(TARGET): $(OBJECTS) $(FPGACORE)
 top.rbf: ../../../fpga/current/quartus/top.rbf
 	cp ../../../fpga/current/quartus/top.rbf top.rbf
 
-$(FPGACORE): top.rbf baseconf.rbf
+$(FPGACORE): top.rbf baseconf.rbf egg.rbf
 	../../../tools/mhmt/mhmt -maxwin2048 top.rbf top.mlz
 	avr-objcopy -I binary -O elf32-avr --rename-section .data=.progmem.data,contents,alloc,load,readonly,data --redefine-sym _binary_top_mlz_start=fpga0 top.mlz top.o
 	../../../tools/mhmt/mhmt -maxwin2048 baseconf.rbf baseconf.mlz
 	avr-objcopy -I binary -O elf32-avr --rename-section .data=.progmem.data,contents,alloc,load,readonly,data --redefine-sym _binary_baseconf_mlz_start=fpga1 baseconf.mlz baseconf.o
+	../../../tools/mhmt/mhmt -maxwin2048 egg.rbf egg.mlz
+	avr-objcopy -I binary -O elf32-avr --rename-section .data=.progmem.data,contents,alloc,load,readonly,data --redefine-sym _binary_egg_mlz_start=fpga2 egg.mlz egg.o
 
 %.hex: $(TARGET)
 	avr-objcopy -O ihex $(HEX_FLASH_FLAGS)  $< $@
