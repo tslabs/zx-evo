@@ -2,6 +2,8 @@ Tests:
 - check TheLink Turbo switching for Pentagon config
 
 Bugs:
+- Wrong multicolor rendering: truncate tcpu to lower limit of attribute address
+- Add WnR=1 to CRAM and SFILE DMA, otherwise ignore
 - Incorrect exit from DEBUG in Bomber (paging?)
 - Probably incorrect DOS on/off behaviour with regard to RAM at #0000 (MEMCONFIG)
 - 3x and 4x renderers on Win7 crash Unreal
