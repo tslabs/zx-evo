@@ -110,18 +110,18 @@ module video_ports (
 			if (gx_offsl_wr	)   gx_offs_r[7:0]  <= d;
 			if (gx_offsh_wr	)   gx_offs_r[8]    <= d[0];
 			if (palsel_wr   )   palsel_r        <= d;
-			// if (t0x_offsl_wr)   t0x_offs_r[7:0] <= d;
-			// if (t0x_offsh_wr)   t0x_offs_r[8]   <= d[0];
-			// if (t1x_offsl_wr)   t1x_offs_r[7:0] <= d;
-			// if (t1x_offsh_wr)   t1x_offs_r[8]   <= d[0];
-			// if (t0gpage_wr	)   t0gpage_r       <= d;
-			// if (t1gpage_wr	)   t1gpage_r       <= d;
-			if (t0x_offsl_wr)   t0x_offs[7:0] <= d;
-			if (t0x_offsh_wr)   t0x_offs[8]   <= d[0];
-			if (t1x_offsl_wr)   t1x_offs[7:0] <= d;
-			if (t1x_offsh_wr)   t1x_offs[8]   <= d[0];
-			if (t0gpage_wr	)   t0gpage       <= d;
-			if (t1gpage_wr	)   t1gpage       <= d;
+			if (t0x_offsl_wr)   t0x_offs_r[7:0] <= d;
+			if (t0x_offsh_wr)   t0x_offs_r[8]   <= d[0];
+			if (t1x_offsl_wr)   t1x_offs_r[7:0] <= d;
+			if (t1x_offsh_wr)   t1x_offs_r[8]   <= d[0];
+			if (t0gpage_wr	)   t0gpage_r       <= d;
+			if (t1gpage_wr	)   t1gpage_r       <= d;
+			// if (t0x_offsl_wr)   t0x_offs[7:0] <= d;
+			// if (t0x_offsh_wr)   t0x_offs[8]   <= d[0];
+			// if (t1x_offsl_wr)   t1x_offs[7:0] <= d;
+			// if (t1x_offsh_wr)   t1x_offs[8]   <= d[0];
+			// if (t0gpage_wr	)   t0gpage       <= d;
+			// if (t1gpage_wr	)   t1gpage       <= d;
         end
 
 
@@ -144,10 +144,10 @@ module video_ports (
 			vconf   <= vconf_r;
 			gx_offs <= gx_offs_r;
 			palsel  <= palsel_r;
-			// t0x_offs <= t0x_offs_r;
-			// t1x_offs <= t1x_offs_r;
-			// t0gpage <= t0gpage_r;
-			// t1gpage <= t1gpage_r;
+			t0x_offs <= t0x_offs_r;
+			t1x_offs <= t1x_offs_r;
+			t0gpage <= t0gpage_r;
+			t1gpage <= t1gpage_r;
 		end
 
 
