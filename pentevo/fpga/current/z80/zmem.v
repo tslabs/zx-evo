@@ -235,8 +235,8 @@ module zmem(
 // cache
 	// wire cache_hit = (ch_addr[7:2] != 6'b011100) && (cpu_hi_addr == cache_a) && cache_v;	// debug for BM
 	wire cache_hit = (cpu_hi_addr == cache_a) && cache_v;	// asynchronous signal meaning that address requested by CPU is cached and valid
-	// wire cache_hit_en = cache_hit && cache_en;
-	wire cache_hit_en = cache_hit && testkey;
+	wire cache_hit_en = cache_hit && cache_en;
+	// wire cache_hit_en = cache_hit && testkey;
 	wire cache_inv = ramwr_s && cache_hit;		// cache invalidation should be only performed if write happens to cached address
 
 	wire [12:0] cpu_hi_addr = {page[7:0], za[13:9]};

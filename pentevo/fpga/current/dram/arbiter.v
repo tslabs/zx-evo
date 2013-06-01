@@ -172,8 +172,8 @@ module arbiter(
 // next cycle decision
     wire [CYCLES-1:0] cyc_dev = tm_req ? CYC_TM : (ts_req ? CYC_TS : CYC_DMA);
     wire dev_req = ts_req || tm_req || dma_req;
-    wire dev_over_cpu = (((ts_req || tm_req) && ts_z80_lp) || (dma_req && dma_z80_lp)) && int_n;		// CPU gets higher priority to acknowledge the INT
-    // wire dev_over_cpu = 0;
+    // wire dev_over_cpu = (((ts_req || tm_req) && ts_z80_lp) || (dma_req && dma_z80_lp)) && int_n;		// CPU gets higher priority to acknowledge the INT
+    wire dev_over_cpu = 0;
 
 	always @*
 		if (video_start)    // video burst start
