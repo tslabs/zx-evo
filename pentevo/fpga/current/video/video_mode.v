@@ -183,7 +183,7 @@ module video_mode (
 	assign hp_end[2] = 9'd428;	// 320
 	assign hp_end[3] = 9'd448;	// 360
 
-	assign vp_beg[0] = 9'd080;	// 192 (32-48-192-32)
+	assign vp_beg[0] = 9'd080;	// 192 (32-48-192-48) (blank-border-pixels-border)
 	assign vp_beg[1] = 9'd076;	// 200 (32-44-200-44)
 	assign vp_beg[2] = 9'd056;	// 240 (32-24-240-24)
 	assign vp_beg[3] = 9'd032;	// 288 (32-0-288-0)
@@ -193,10 +193,10 @@ module video_mode (
 	assign vp_end[2] = 9'd296;	// 240
 	assign vp_end[3] = 9'd320;	// 288
 
-	assign x_tile[0] = 6'd33;	// 256
-	assign x_tile[1] = 6'd41;	// 320
-	assign x_tile[2] = 6'd41;	// 320
-	assign x_tile[3] = 6'd46;	// 360
+	assign x_tile[0] = 6'd34;	// 256
+	assign x_tile[1] = 6'd42;	// 320
+	assign x_tile[2] = 6'd42;	// 320
+	assign x_tile[3] = 6'd47;	// 360
 
 	assign hpix_beg = hp_beg[rres];
 	assign hpix_end = hp_end[rres];

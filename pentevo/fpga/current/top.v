@@ -290,9 +290,9 @@ module top(
 
 	zmem z80mem
 	(
-		// .tst(tst),
-		.intt(!int_n),
-        .testkey   (beeper_mux),	// DEBUG !!!
+//		.tst(tst),
+		//.dbg_arb(dbg_arb),	// DEBUG !!!
+        //.testkey   (beeper_mux),	// DEBUG !!!
 
 		.clk (fclk),
 		.c0    (c0),
@@ -408,7 +408,11 @@ module top(
 	wire tm_req;
 	wire tm_next;
 
+	wire dbg_arb;	// DEBUG!!!
+	
 	arbiter arbiter(
+					 //.dbg(dbg_arb),		// DEBUG!!!
+					 
 					 .clk(fclk),
 	                 .c0(c0),
 	                 .c1(c1),
@@ -443,7 +447,7 @@ module top(
 	                 .dma_addr		(dma_addr),
 	                 .dma_wrdata	(dma_wrdata),
 	                 .dma_req		(dma_req),
-	                 .dma_z80_lp		(dma_z80_lp),
+	                 .dma_z80_lp	(dma_z80_lp),
 	                 .dma_rnw		(dma_rnw),
 					 .dma_next		(dma_next),
 
