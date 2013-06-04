@@ -339,6 +339,7 @@ void load_files()
 
 	for (int i=0; i<conf.n_blocks; i++)
 	{
+		st.st_size = -1;
 		stat(blk[i].fname, &st);
 
 		if (st.st_size < 0)
@@ -360,18 +361,10 @@ void load_files()
 		}
 
 		FILE* f = fopen(blk[i].fname, "rb");
-		if (!f)
-		{
-			printf("%s: ", blk[i].fname);
-			error(RC_FILE);
-		}
-		else
-		{
-			blk[i].size = st.st_size;
-			hdr.blk[i].size = sz(blk[i].size);
-			fread(blk[i].data, 1, blk[i].size, f);
-			fclose(f);
-		}
+		blk[i].size = st.st_size;
+		hdr.blk[i].size = sz(blk[i].size);
+		fread(blk[i].data, 1, blk[i].size, f);
+		fclose(f);
 	}
 }
 
