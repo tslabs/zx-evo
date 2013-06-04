@@ -360,10 +360,18 @@ void load_files()
 		}
 
 		FILE* f = fopen(blk[i].fname, "rb");
-		blk[i].size = st.st_size;
-		hdr.blk[i].size = sz(blk[i].size);
-		fread(blk[i].data, 1, blk[i].size, f);
-		fclose(f);
+		if (!f)
+		{
+			printf("%s: ", blk[i].fname);
+			error(RC_FILE);
+		}
+		else
+		{
+			blk[i].size = st.st_size;
+			hdr.blk[i].size = sz(blk[i].size);
+			fread(blk[i].data, 1, blk[i].size, f);
+			fclose(f);
+		}
 	}
 }
 
