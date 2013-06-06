@@ -46,12 +46,13 @@ void draw_zx(int n)
 	u32 a = ((vid.ygctr & 0xF8) << 2) + (vid.xctr & 0x1F) + 0x1800;
 	u8 *scr = page_ram(comp.ts.vpage);
 	u32 vptr = vid.vptr;
+	u16 vcyc = vid.memvidcyc[vid.line];
 
 	for (; n > 0; n -= 4, vid.t_next += 4, vid.xctr++, g++, a++)
 	{
 		u8 p = scr[g];	// pixels
 		u8 c = scr[a];	// attributes
-		vid.memvidcyc[vid.line]++;
+		vcyc++;
 		if ((c & 0x80) && (comp.frame_counter & 0x10))
 			p ^= 0xFF; // flash
 		u32 b = (c & 0x40) >> 3;
@@ -60,6 +61,7 @@ void draw_zx(int n)
 		sinc_draw
 	}
 	vid.vptr = vptr;
+	vid.memvidcyc[vid.line] = vcyc;
 }
 
 // Pentagon multicolor
@@ -68,18 +70,20 @@ void draw_pmc(int n)
 	u32 g = ((vid.ygctr & 0x07) << 8) + ((vid.ygctr & 0x38) << 2) + ((vid.ygctr & 0xC0) << 5) + (vid.xctr & 0x1F);
 	u8 *scr = page_ram(comp.ts.vpage);
 	u32 vptr = vid.vptr;
+	u16 vcyc = vid.memvidcyc[vid.line];
 
 	for (; n > 0; n -= 4, vid.t_next += 4, vid.xctr++, g++)
 	{
 		u8 p = scr[g];			// pixels
 		u8 c = scr[g + 0x2000];	// attributes
-		vid.memvidcyc[vid.line]++;
+		vcyc++;
 		u32 b = (c & 0x40) >> 3;
 		u32 p0 = vid.clut[(comp.ts.gpal << 4) | b | ((c >> 3) & 0x07)];	// color for 'PAPER'
 		u32 p1 = vid.clut[(comp.ts.gpal << 4) | b | (c & 0x07)];			// color for 'INK'
 		sinc_draw
 	}
 	vid.vptr = vptr;
+	vid.memvidcyc[vid.line] = vcyc;
 }
 
 // AlCo 384x304
@@ -88,7 +92,6 @@ void draw_p384(int n)
 	u8 *scr = page_ram(comp.ts.vpage & 0xFE);
 	u32 g = ((vid.ygctr & 0x07) << 8) | ((vid.ygctr & 0x38) << 2);	// 'raw' values, page4, only 64 lines addressing, no column address
 	u32 a = ((vid.ygctr & 0x38) << 2) | (vid.xctr & 0x1F);
-	u32 vptr = vid.vptr;
 	u32 ogx, oax, ogy, oay;
 
 	// select Y segment
@@ -99,6 +102,9 @@ void draw_p384(int n)
 	else
 		ogy = 0x1800, oay = 0x1300;
 
+	u32 vptr = vid.vptr;
+	u16 vcyc = vid.memvidcyc[vid.line];
+	
 	for (u32 o = 0; n > 0; n -= 4, vid.t_next += 4, vid.xctr++, o = (o + 1) & 7)
 	{
 		// select X segment
@@ -111,13 +117,14 @@ void draw_p384(int n)
 
 		u8 p = scr[g + ogx + ogy + o];		// pixels
 		u8 c = scr[a + oax + oay + o];		// attributes
-		vid.memvidcyc[vid.line]++;
+		vcyc++;
 		u32 b = (c & 0x40) >> 3;
 		u32 p0 = vid.clut[(comp.ts.gpal << 4) | b | ((c >> 3) & 0x07)];	// color for 'PAPER'
 		u32 p1 = vid.clut[(comp.ts.gpal << 4) | b | (c & 0x07)];			// color for 'INK'
 		sinc_draw
 	}
 	vid.vptr = vptr;
+	vid.memvidcyc[vid.line] = vcyc;
 }
 
 // Sinclair double screen (debug)
@@ -127,12 +134,13 @@ void draw_zxw(int n)
 	u32 a = ((vid.ygctr & 0xF8) << 2) + (vid.xctr & 0x1F) + 0x1800;
 	u8 *scr = page_ram(comp.ts.vpage & 0xFD);
 	u32 vptr = vid.vptr;
+	u16 vcyc = vid.memvidcyc[vid.line];
 
 	for (; n > 0; n -= 4, vid.t_next += 4, vid.xctr++, g++, a++)
 	{
 		u8 p = scr[g];	// pixels
 		u8 c = scr[a];	// attributes
-		vid.memvidcyc[vid.line]++;
+		vcyc++;
 		u32 b = (c & 0x40) >> 3;
 		u32 p0 = vid.clut[(comp.ts.gpal << 4) | b | ((c >> 3) & 0x07)];	// color for 'PAPER'
 		u32 p1 = vid.clut[(comp.ts.gpal << 4) | b | (c & 0x07)];			// color for 'INK'
@@ -148,6 +156,7 @@ void draw_zxw(int n)
 		vptr -= 256;
 	}
 	vid.vptr = vptr;
+	vid.memvidcyc[vid.line] = vcyc;
 	if (vid.xctr & 0x20) vid.vptr += 256;
 }
 
@@ -157,6 +166,7 @@ void draw_p16(int n)
 	u32 g = ((vid.ygctr & 0x07) << 8) + ((vid.ygctr & 0x38) << 2) + ((vid.ygctr & 0xC0) << 5) + (vid.xctr & 0x1F);
 	u8 *scr = page_ram(comp.ts.vpage);
 	u32 vptr = vid.vptr;
+	u16 vcyc = vid.memvidcyc[vid.line];
 	u32 p0, p1;
 
 	for (; n > 0; n -= 4, vid.t_next += 4, vid.xctr++, g++)
@@ -169,9 +179,10 @@ void draw_p16(int n)
 		p16c_draw
 		c = scr[g + PAGE/2];		// page5, #2000
 		p16c_draw
-		vid.memvidcyc[vid.line] += 2;
+		vcyc += 2;
 	}
 	vid.vptr = vptr;
+	vid.memvidcyc[vid.line] = vcyc;
 }
 
 // ATM 16c
@@ -180,6 +191,7 @@ void draw_atm16(int n)
 	u32 g = vid.ygctr * 40 + vid.xctr;
 	u8 *scr = page_ram(comp.ts.vpage);
 	u32 vptr = vid.vptr;
+	u16 vcyc = vid.memvidcyc[vid.line];
 	u32 p0, p1;
 
 	for (; n > 0; n -= 4, vid.t_next += 4, vid.xctr++, g++)
@@ -192,9 +204,10 @@ void draw_atm16(int n)
 		p16c_draw
 		c = scr[g + PAGE/2];		// page5, #2000
 		p16c_draw
-		vid.memvidcyc[vid.line] += 2;
+		vcyc += 2;
 	}
 	vid.vptr = vptr;
+	vid.memvidcyc[vid.line] = vcyc;
 }
 
 // ATM HiRes
@@ -203,6 +216,7 @@ void draw_atmhr(int n)
 	u32 g = vid.ygctr * 40 + vid.xctr;
 	u8 *scr = page_ram(comp.ts.vpage);
 	u32 vptr = vid.vptr;
+	u16 vcyc = vid.memvidcyc[vid.line];
 
 	for (; n > 0; n -= 4, vid.t_next += 4, vid.xctr++, g++)
 	{
@@ -218,9 +232,10 @@ void draw_atmhr(int n)
 		p1 = vid.clut[(comp.ts.gpal << 4) | ((c & 0x40) >> 3) | (c & 0x07)];       	// true color for bit=1 (INK)
 		hires_draw
 
-		vid.memvidcyc[vid.line] += 2;
+		vcyc += 2;
 	}
 	vid.vptr = vptr;
+	vid.memvidcyc[vid.line] = vcyc;
 }
 
 // TS text
@@ -231,6 +246,7 @@ void draw_tstx(int n)
 	u8 *fnt = page_ram(comp.ts.vpage ^ 0x01);	// font address
 	u32 s = ((vid.ygctr & 0x1F8) << 5);			// row address offset
 	u32 vptr = vid.vptr;						// address in videobuffer
+	u16 vcyc = vid.memvidcyc[vid.line];
 	u8 line = vid.ygctr & 7;					// symbol line (0-7)
 
 	for (; n > 0; n -= 2, vid.t_next += 2)
@@ -242,9 +258,10 @@ void draw_tstx(int n)
 		u32 p1 = vid.clut[(comp.ts.gpal << 4) | (atr & 0x0F)];			// true color for bit=1 (INK)
 		hires_draw
 		vid.xctr = (vid.xctr + 1) & 0x7F;
-		vid.memvidcyc[vid.line] += 2;
+		vcyc += 2;
 	}
 	vid.vptr = vptr;
+	vid.memvidcyc[vid.line] = vcyc;
 }
 
 // ATM2 text
@@ -254,6 +271,7 @@ void draw_atm2tx(int n)
 	u8 *scra = page_ram(comp.ts.vpage-4);	// video memory attrs address
 	u8 *fnt = fontatm2;						// font address
 	u32 vptr = vid.vptr;					// address in videobuffer
+	u16 vcyc = vid.memvidcyc[vid.line];
 	u32 y = vid.ygctr >> 3;					// row
 	u8 line = vid.ygctr & 7;				// line (0-7)
 
@@ -269,9 +287,10 @@ void draw_atm2tx(int n)
 		u32 p1 = vid.clut[(comp.ts.gpal << 4) | ((atr & 0x40) >> 3) | (atr & 0x07)];       	// true color for bit=1 (INK)
 		hires_draw
 		vid.xctr = (vid.xctr + 1) & 0x7F;
-		vid.memvidcyc[vid.line] += 2;
+		vcyc += 2;
 	}
 	vid.vptr = vptr;
+	vid.memvidcyc[vid.line] = vcyc;
 }
 
 // ATM3 text
@@ -279,9 +298,10 @@ void draw_atm3tx(int n)
 {
 	u8 *scr = page_ram(comp.ts.vpage & 2 | 8);		// video memory address
 	u8 *fnt = fontatm2;						// font address
-	u32 vptr = vid.vptr;					// address in videobuffer
 	u32 y = vid.ygctr >> 3;					// row
 	u8 line = vid.ygctr & 7;				// line (0-7)
+	u32 vptr = vid.vptr;					// address in videobuffer
+	u16 vcyc = vid.memvidcyc[vid.line];
 
 	for (; n > 0; n -= 2, vid.t_next += 2)
 	{
@@ -295,9 +315,10 @@ void draw_atm3tx(int n)
 		u32 p1 = vid.clut[(comp.ts.gpal << 4) | ((atr & 0x40) >> 3) | (atr & 0x07)];       	// true color for bit=1 (INK)
 		hires_draw
 		vid.xctr = (vid.xctr + 1) & 0x7F;
-		vid.memvidcyc[vid.line] += 2;
+		vcyc += 2;
 	}
 	vid.vptr = vptr;
+	vid.memvidcyc[vid.line] = vcyc;
 }
 
 // Pentagon 512x192
@@ -305,19 +326,21 @@ void draw_phr(int n)
 {
 	u32 g = ((vid.ygctr & 0x07) << 8) + ((vid.ygctr & 0x38) << 2) + ((vid.ygctr & 0xC0) << 5) + (vid.xctr & 0x1F);
 	u8 *scr = page_ram(comp.ts.vpage);
-	u32 vptr = vid.vptr;
 	u32 p0 = vid.clut[(comp.ts.gpal << 4)];		// color for 'PAPER'
 	u32 p1 = vid.clut[(comp.ts.gpal << 4) + 7];	// color for 'INK'
+	u32 vptr = vid.vptr;
+	u16 vcyc = vid.memvidcyc[vid.line];
 
 	for (; n > 0; n -= 4, vid.t_next += 4, vid.xctr++, g++)
 	{
 		u8 p = scr[g];
 		hires_draw
 		p = scr[g + 0x2000];
-		vid.memvidcyc[vid.line]++;
+		vcyc++;
 		hires_draw
 	}
 	vid.vptr = vptr;
+	vid.memvidcyc[vid.line] = vcyc;
 }
 
 // TS 16c
@@ -332,6 +355,7 @@ static int subt = 0;
 	u32 p0, p1;
 	u8 p;
 	u32 vptr = vid.vptr;
+	u16 vcyc = vid.memvidcyc[vid.line];
 
 	if (comp.ts.g_offsx & 1)		// odd offset - left pixel
 	{
@@ -342,7 +366,7 @@ static int subt = 0;
 		subt++;
 		if (subt > 3)
 		{
-			subt = 0; vid.memvidcyc[vid.line]++;
+			subt = 0; vcyc++;
 		}
 
 	}
@@ -358,7 +382,7 @@ static int subt = 0;
 		subt += 2;
 		if (subt > 3)
 		{
-			subt -= 4; vid.memvidcyc[vid.line]++;
+			subt -= 4; vcyc++;
 		}
 	}
 
@@ -370,10 +394,11 @@ static int subt = 0;
 		subt++;
 		if (subt > 3)
 		{
-			subt = 0; vid.memvidcyc[vid.line]++;
+			subt = 0; vcyc++;
 		}
 	}
 	vid.vptr = vptr;
+	vid.memvidcyc[vid.line] = vcyc;
 }
 
 // TS 256c
@@ -384,6 +409,7 @@ void draw_ts256(int n)
 	u32 t = (vid.xctr + comp.ts.g_offsx) & 0x1FF;
 	vid.xctr += n * 2;
 	u32 vptr = vid.vptr;
+	u16 vcyc = vid.memvidcyc[vid.line];
 
 	for (; n > 0; n -= 1, vid.t_next++)
 	{
@@ -391,9 +417,10 @@ void draw_ts256(int n)
 		vbuf[vid.buf][vptr] = vbuf[vid.buf][vptr+1] = p; vptr += 2;
 		p = vid.clut[scr[s + t++]]; t &= 0x1FF;
 		vbuf[vid.buf][vptr] = vbuf[vid.buf][vptr+1] = p; vptr += 2;
-		vid.memvidcyc[vid.line]++;
+		vcyc++;
 	}
 	vid.vptr = vptr;
+	vid.memvidcyc[vid.line] = vcyc;
 }
 
 // Null

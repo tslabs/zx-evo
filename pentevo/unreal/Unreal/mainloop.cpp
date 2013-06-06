@@ -38,8 +38,9 @@ void spectrum_frame()
    if (modem.open_port)
        modem.io();
 
-   flush_snd_frame();
-   show_memcycles();
+	flush_snd_frame();
+	if (conf.bordersize == 5)
+		show_memcycles();
    //flush_frame();
    // showleds();
 

@@ -490,30 +490,49 @@ void init_memcycles(void)
 void show_memcycle(u16 num, u32 col, u8 init, u32 vbpi)
 {
 static int cnt;
-static u32 vbp;
+static u32 *vidbuf;
 
 	if (init)
 	{
 		cnt = 0;
-		vbp = vbpi;
+		vidbuf = &vbuf[vid.buf][vbpi];
 	}
+	
+	if (cnt > 128)
+		return;
 
 	num /= 4;
-	while (num && (cnt < 112))
-		{ vbuf[vid.buf][vbp+cnt] = col; num--; cnt++; }
-	while (num-- && (++cnt < 128))
-		vbuf[vid.buf][vbp+cnt] = 0xFF0000;
+	u16 num1, num2;
+	if ((cnt + num) < 112)
+	{
+		num1 = num;
+		num2 = 0;
+	}
+	else
+	{
+		num1 = 112 - cnt;
+		num2 = min (num - num1, 16);
+	}
+	
+	while (num1--)
+		*vidbuf++ = col;
+	if (num2)
+		vidbuf++;
+	while (num2--)
+		*vidbuf++ = 0xFF0000;
+	cnt += num;
 }
 
 void show_memcycles(void)
 {
 	u32 vbp;
+	u32 bar = 0x555555;
 
 	for (int i = 0; i < 320; i++)
 	{
 		vbp = i * 896;
-		vbuf[vid.buf][vbp+15]  = 0x6040FF;
-		vbuf[vid.buf][vbp+128] = 0x6040FF;
+		vbuf[vid.buf][vbp+15]  = bar;
+		vbuf[vid.buf][vbp+128] = bar;
 		show_memcycle(vid.memcpucyc[i], 0x40FF90, 1, vbp + 16);
 		show_memcycle(vid.memvidcyc[i], 0xFFFF90, 0, 0);
 		show_memcycle(vid.memtscyc[i], 0xFF9090, 0, 0);
