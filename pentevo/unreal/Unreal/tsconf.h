@@ -94,7 +94,7 @@ typedef struct {
 		u8 sysconf;
 		struct {
 			u8 zclk:2;
-			u8 _00:1;
+			u8 cache:1;
 			u8 ayclk:2;
 			u8 _01:3;
 		};
@@ -222,10 +222,7 @@ typedef struct {
 	};
 
 // -- memory --
-	u8 page0;
-	u8 page1;
-	u8 page2;
-	u8 page3;
+	u8 page[4];
 
 	union {
 		u8 memconf;

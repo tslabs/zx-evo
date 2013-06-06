@@ -62,7 +62,11 @@ struct VCTR
 	u32		ygctr;			// videocontroller graphics Y counter (used for graphics)
 	u32 	buf;			// active video buffer
 	u32 	flash;			// flash counter
+	u16		line;			// current rendered line
 	u8		tsline[512];	// TS buffer (indexed colors)
+	u16		memvidcyc[320];	// number of memory cycles used in every video line by video
+	u16		memcpucyc[320];	// number of memory cycles used in every video line by CPU
+	u16		memtscyc[320];	// number of memory cycles used in every video line by TS
 };
 
 #define MAX_FONT_TABLES 0x62000

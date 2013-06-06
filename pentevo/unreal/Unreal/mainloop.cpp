@@ -39,6 +39,7 @@ void spectrum_frame()
        modem.io();
 
    flush_snd_frame();
+   show_memcycles();
    //flush_frame();
    // showleds();
 

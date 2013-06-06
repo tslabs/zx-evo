@@ -1,14 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Souces">
-      <UniqueIdentifier>{1f95ed37-fb57-438e-81cc-6645dbdb2e3d}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Headers">
       <UniqueIdentifier>{844da2bb-d404-4c5f-935a-69cac5e23e6d}</UniqueIdentifier>
     </Filter>
     <Filter Include="Resources">
       <UniqueIdentifier>{a5af9dec-f0a7-40b3-a0de-7318bf2d8cf4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Sources">
+      <UniqueIdentifier>{1f95ed37-fb57-438e-81cc-6645dbdb2e3d}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -16,10 +16,10 @@
       <Filter>Resources</Filter>
     </None>
     <None Include="gsz80.inl">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </None>
     <None Include="z80_main.inl">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </None>
     <None Include="res\cur00000.cur">
       <Filter>Resources</Filter>
@@ -64,274 +64,274 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="atm.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="cheat.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="config.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="daa_tabs.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="dbgbpx.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="dbgcmd.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="dbglabls.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="dbgmem.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="dbgoth.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="dbgpaint.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="dbgreg.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="dbgrwdlg.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="dbgtrace.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="debug.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="draw.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="drawnomc.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="dx.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="dxerr.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="dxrend.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="emul.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="emul_2203.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="emulkeys.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="fntsrch.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="font.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="font8.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="font14.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="font16.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="fontatm2.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="fontdata.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="getopt.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="gs.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="gshlbass.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="gshle.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="gsz80.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="gui.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="hdd.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="hddaspi.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="hddio.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="iehelp.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="init.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="input.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="inputpc.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="io.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="keydefs.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="leds.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="mainloop.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="memory.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="modem.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="op_cb.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="op_dd.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="op_ddcb.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="op_ed.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="op_fd.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="op_noprefix.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="opendlg.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="saa1099.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="savesnd.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="sdcard.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="snapshot.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="snd_bass.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="sndbuffer.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="sndchip.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="sndcounter.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="sndrender.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="sound.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="std.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="tables.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="tape.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="tsconf.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="util.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="vars.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="vs1001.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="wd93cmd.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="wd93crc.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="wd93dat.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="wd93trk.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="wldr_fdi.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="wldr_isd.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="wldr_pro.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="wldr_td0.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="wldr_trd.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="wldr_udi.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="z80.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="z80asm.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="zc.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="zxevo.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="dxr_text.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="dxrframe.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="dxrcopy.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="drawers.cpp">
-      <Filter>Souces</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
