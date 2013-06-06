@@ -11,6 +11,9 @@
 #include "memory.h"
 #include "util.h"
 
+extern VCTR vid;
+extern CACHE_ALIGNED u32 vbuf[2][sizeof_vbuf];
+
 unsigned pitch;
 
 void text_i(unsigned char *dst, const char *text, unsigned char ink, unsigned off = 0)
@@ -475,6 +478,47 @@ void time_led()
       sprintf(bf, "%2d:%02d", st.wHour, st.wMinute);
    }
    text_i(temp.led.time, bf, 0x0D);
+}
+
+void init_memcycles(void)
+{
+   memset(vid.memcpucyc, 0, 320 * sizeof(vid.memcpucyc[0]));
+   memset(vid.memvidcyc, 0, 320 * sizeof(vid.memvidcyc[0]));
+   memset(vid.memtscyc,  0, 320 * sizeof( vid.memtscyc[0]));
+}
+
+void show_memcycle(u16 num, u32 col, u8 init, u32 vbpi)
+{
+static int cnt;
+static u32 vbp;
+
+	if (init)
+	{
+		cnt = 0;
+		vbp = vbpi;
+	}
+
+	num /= 4;
+	while (num && (cnt < 112))
+		{ vbuf[vid.buf][vbp+cnt] = col; num--; cnt++; }
+	while (num-- && (++cnt < 128))
+		vbuf[vid.buf][vbp+cnt] = 0xFF0000;
+}
+
+void show_memcycles(void)
+{
+	u32 vbp;
+
+	for (int i = 0; i < 320; i++)
+	{
+		vbp = i * 896;
+		vbuf[vid.buf][vbp+15]  = 0x6040FF;
+		vbuf[vid.buf][vbp+128] = 0x6040FF;
+		show_memcycle(vid.memcpucyc[i], 0x40FF90, 1, vbp + 16);
+		show_memcycle(vid.memvidcyc[i], 0xFFFF90, 0, 0);
+		show_memcycle(vid.memtscyc[i], 0xFF9090, 0, 0);
+	}
+	
 }
 
 // Вызывается раз в кадр

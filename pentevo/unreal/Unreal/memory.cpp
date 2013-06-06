@@ -12,6 +12,8 @@ void set_banks()
    
    bankw[1] = bankr[1] = page_ram(5);
    bankw[2] = bankr[2] = page_ram(2);
+   bankm[0] = 0;
+   bankm[1] = bankm[2] = bankm[3] = 1;
 
    // screen begining
    // temp.base = memory + ((comp.p7FFD & 8) ? 7*PAGE : 5*PAGE);
@@ -147,10 +149,12 @@ void set_banks()
       case MM_TSL:
 	  {
 		if (comp.ts.w0_ram)
+		{
 		// RAM at #0000
+			bankm[0] = 1;
 			if (comp.ts.w0_map_n)
 			// no map
-				bank0 = page_ram(comp.ts.page0);
+				bank0 = page_ram(comp.ts.page[0]);
 			else
 			{
 			// mapping
@@ -159,20 +163,24 @@ void set_banks()
 				else
 					tmp = (comp.p7FFD & 0x10) ? 3 : 1;
 					
-				bank0 = page_ram(comp.ts.page0 + tmp);
+				bank0 = page_ram(comp.ts.page[0] + tmp);
 			}
+		}
 		else
+		{
 		// ROM at #0000
+			bankm[0] = 0;
 			if (comp.ts.w0_map_n)
 			// no map
-				if (comp.ts.page0 & 0x02)
-					bank0 = (comp.ts.page0 & 0x01) ? base_sos_rom : base_128_rom;
+				if (comp.ts.page[0] & 0x02)
+					bank0 = (comp.ts.page[0] & 0x01) ? base_sos_rom : base_128_rom;
 				else
-					bank0 = (comp.ts.page0 & 0x01) ? base_dos_rom : base_sys_rom;
+					bank0 = (comp.ts.page[0] & 0x01) ? base_dos_rom : base_sys_rom;
+		}
 
-		bankr[1] = bankw[1] = page_ram(comp.ts.page1);
-		bankr[2] = bankw[2] = page_ram(comp.ts.page2);
-		bank3  = page_ram(comp.ts.page3);
+		bankr[1] = bankw[1] = page_ram(comp.ts.page[1]);
+		bankr[2] = bankw[2] = page_ram(comp.ts.page[2]);
+		bank3  = page_ram(comp.ts.page[3]);
 
 		break;
 	  }

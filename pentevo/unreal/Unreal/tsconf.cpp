@@ -153,8 +153,13 @@ void dma (u8 val)
 
 void render_tile(u8 page, u32 tnum, u8 line, u32 x, u8 pal, u8 xf, u8 n)
 {
+	/* check if number of allowed DRAM cycles per line (448) not exceeded */
+	vid.memtscyc[vid.line - 1] += n * 2;
+	if ((vid.memcpucyc[vid.line - 1] + vid.memvidcyc[vid.line - 1] + vid.memtscyc[vid.line - 1]) > 448)
+		return;
+
 	u8 *g = page_ram(page & 0xF8) + ((tnum & 0xFC0) << 5) + (line << 8);
-	x += (xf ? (n * 8 - 1) : 0) + 64;
+	x += (xf ? (n * 8 - 1) : 0);
 	pal <<= 4;
 	i8 a = xf ? -1 : 1;
 	u8 c;
@@ -223,9 +228,9 @@ void render_sprite()
 	//sfile_dump();
 	SPRITE_t s = spr[snum];
 	u8 ys = ((s.ys + 1) << 3);
-	i32 l = vid.yctr - s.y;
+	u32 l = (vid.yctr - s.y) & 0x1FF;
 
-	if ((l >= 0) && (l < ys))
+	if (l < ys)
 		render_tile(
 			comp.ts.sgpage,					// page
 			s.tnum,							// tile number
@@ -249,7 +254,7 @@ void render_sprite_layer()
 
 void render_ts()
 {
-	memset(vid.tsline+64, 0, 360);
+	memset(vid.tsline, 0, 360);
 	snum = 0;
 
 	for (u32 layer=0; layer < 5; layer++)

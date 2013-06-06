@@ -9,6 +9,7 @@
 #include "memory.h"
 #include "config.h"
 #include "util.h"
+#include "leds.h"
 
 const RASTER raster[R_MAX] = {
 	{ R_256_192, 80, 272, 70, 198, 198 },
@@ -810,6 +811,7 @@ void update_screen()
 				{
 					m = min((u32)n, vid.raster.r_brd - tact);
 					u32 t = vid.t_next;
+					vid.line = line;
 					drawers[vid.mode].func(m);
 					t = vid.t_next - t; n -= t; tact += t;
 
@@ -900,7 +902,7 @@ void init_frame()
    comp.ts.g_offsy_updated = 0;
    vid.flash = comp.frame_counter & 0x10;
    init_raster();
-
+   init_memcycles();
 
    // recreate colors with flash attribute
 /*    unsigned char frame = (unsigned char)comp.frame_counter;

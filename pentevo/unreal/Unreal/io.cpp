@@ -142,25 +142,25 @@ void out(unsigned port, unsigned char val)
 			}
 
 			case TSW_PAGE0: {
-				comp.ts.page0 = val;
+				comp.ts.page[0] = val;
 				set_banks();
 				break;
 			}
 
 			case TSW_PAGE1: {
-				comp.ts.page1 = val;
+				comp.ts.page[1] = val;
 				set_banks();
 				break;
 			}
 
 			case TSW_PAGE2: {
-				comp.ts.page2 = val;
+				comp.ts.page[2] = val;
 				set_banks();
 				break;
 			}
 
 			case TSW_PAGE3: {
-				comp.ts.page3 = val;
+				comp.ts.page[3] = val;
 				set_banks();
 				break;
 			}
@@ -781,15 +781,15 @@ set1FFD:
 
 		 // In TS Memory Model the actual value of #7FFD ignored, and page3 is used instead
 			if (comp.ts.lck128 == 0)
-				comp.ts.page3 = ((val & 0xC0) >> 3) | (val & 0x07);		// no lock
+				comp.ts.page[3] = ((val & 0xC0) >> 3) | (val & 0x07);		// no lock
 			else if (comp.ts.lck128 == 1)
-				comp.ts.page3 = val & 0x07;		// lock 128
+				comp.ts.page[3] = val & 0x07;		// lock 128
 			else 	// auto
 			{
 				if ((port >> 13) & 1)
-					comp.ts.page3 = ((val & 0xC0) >> 3) | (val & 0x07);		// out(c), R = no lock
+					comp.ts.page[3] = ((val & 0xC0) >> 3) | (val & 0x07);		// out(c), R = no lock
 				else
-					comp.ts.page3 = val & 0x07;		// out(#FD), a = lock128
+					comp.ts.page[3] = val & 0x07;		// out(#FD), a = lock128
 			}
 
          set_banks();
@@ -989,10 +989,10 @@ __inline unsigned char in1(unsigned port)
 			}
 
 			case TSR_PAGE2:
-				return comp.ts.page2;
+				return comp.ts.page[2];
 
 			case TSR_PAGE3:
-				return comp.ts.page3;
+				return comp.ts.page[3];
 
 			case TSR_DMASTATUS:
 				return 0;

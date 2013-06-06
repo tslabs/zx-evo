@@ -23,6 +23,22 @@ unsigned char rm(unsigned addr)
     }
 #endif
 
+	// TS-conf cache model
+	u8 window = (addr >> 14) & 3;
+	if (bankm[window])		// RAM hit
+	{
+		if (conf.mem_model == MM_TSL)
+		{
+			u32 cached_address = (comp.ts.page[window] << 5) | ((addr >> 9) & 0x1F);
+			u16 cache_pointer = addr & 0x1FF;
+			if (!comp.ts.cache || (cpu.tscache[cache_pointer] != cached_address))
+				vid.memcpucyc[cpu.t / 224]++;		// кеш промазинг
+			cpu.tscache[cache_pointer] = cached_address;
+		}
+		else
+			vid.memcpucyc[cpu.t / 224]++;
+	}
+
    return *am_r(addr);
 }
 
@@ -84,6 +100,13 @@ void wm(unsigned addr, unsigned char val)
 			// remember temp value
 				temp.fm_tmp = val;
 
+	// TS-conf cache model
+	if (conf.mem_model == MM_TSL)
+	{
+		u16 cache_pointer = addr & 0x1FF;
+		cpu.tscache[cache_pointer] = -1;
+		vid.memcpucyc[cpu.t / 224]++;
+	}
 
    if ((conf.mem_model == MM_ATM3) && (comp.pBF & 4) /*&& ((addr & 0xF800) == 0)*/ ) // Разрешена загрузка шрифта для ATM3 // lvd: any addr is possible in ZXEVO
    {

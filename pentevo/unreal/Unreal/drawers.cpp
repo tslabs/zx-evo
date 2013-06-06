@@ -51,6 +51,7 @@ void draw_zx(int n)
 	{
 		u8 p = scr[g];	// pixels
 		u8 c = scr[a];	// attributes
+		vid.memvidcyc[vid.line]++;
 		if ((c & 0x80) && (comp.frame_counter & 0x10))
 			p ^= 0xFF; // flash
 		u32 b = (c & 0x40) >> 3;
@@ -72,6 +73,7 @@ void draw_pmc(int n)
 	{
 		u8 p = scr[g];			// pixels
 		u8 c = scr[g + 0x2000];	// attributes
+		vid.memvidcyc[vid.line]++;
 		u32 b = (c & 0x40) >> 3;
 		u32 p0 = vid.clut[(comp.ts.gpal << 4) | b | ((c >> 3) & 0x07)];	// color for 'PAPER'
 		u32 p1 = vid.clut[(comp.ts.gpal << 4) | b | (c & 0x07)];			// color for 'INK'
@@ -109,6 +111,7 @@ void draw_p384(int n)
 
 		u8 p = scr[g + ogx + ogy + o];		// pixels
 		u8 c = scr[a + oax + oay + o];		// attributes
+		vid.memvidcyc[vid.line]++;
 		u32 b = (c & 0x40) >> 3;
 		u32 p0 = vid.clut[(comp.ts.gpal << 4) | b | ((c >> 3) & 0x07)];	// color for 'PAPER'
 		u32 p1 = vid.clut[(comp.ts.gpal << 4) | b | (c & 0x07)];			// color for 'INK'
@@ -129,6 +132,7 @@ void draw_zxw(int n)
 	{
 		u8 p = scr[g];	// pixels
 		u8 c = scr[a];	// attributes
+		vid.memvidcyc[vid.line]++;
 		u32 b = (c & 0x40) >> 3;
 		u32 p0 = vid.clut[(comp.ts.gpal << 4) | b | ((c >> 3) & 0x07)];	// color for 'PAPER'
 		u32 p1 = vid.clut[(comp.ts.gpal << 4) | b | (c & 0x07)];			// color for 'INK'
@@ -165,6 +169,7 @@ void draw_p16(int n)
 		p16c_draw
 		c = scr[g + PAGE/2];		// page5, #2000
 		p16c_draw
+		vid.memvidcyc[vid.line] += 2;
 	}
 	vid.vptr = vptr;
 }
@@ -187,6 +192,7 @@ void draw_atm16(int n)
 		p16c_draw
 		c = scr[g + PAGE/2];		// page5, #2000
 		p16c_draw
+		vid.memvidcyc[vid.line] += 2;
 	}
 	vid.vptr = vptr;
 }
@@ -211,6 +217,8 @@ void draw_atmhr(int n)
 		p0 = vid.clut[(comp.ts.gpal << 4) | ((c & 0x80) >> 4) | ((c >> 3) & 0x07)];	// true color for bit=0 (PAPER)
 		p1 = vid.clut[(comp.ts.gpal << 4) | ((c & 0x40) >> 3) | (c & 0x07)];       	// true color for bit=1 (INK)
 		hires_draw
+
+		vid.memvidcyc[vid.line] += 2;
 	}
 	vid.vptr = vptr;
 }
@@ -234,6 +242,7 @@ void draw_tstx(int n)
 		u32 p1 = vid.clut[(comp.ts.gpal << 4) | (atr & 0x0F)];			// true color for bit=1 (INK)
 		hires_draw
 		vid.xctr = (vid.xctr + 1) & 0x7F;
+		vid.memvidcyc[vid.line] += 2;
 	}
 	vid.vptr = vptr;
 }
@@ -260,6 +269,7 @@ void draw_atm2tx(int n)
 		u32 p1 = vid.clut[(comp.ts.gpal << 4) | ((atr & 0x40) >> 3) | (atr & 0x07)];       	// true color for bit=1 (INK)
 		hires_draw
 		vid.xctr = (vid.xctr + 1) & 0x7F;
+		vid.memvidcyc[vid.line] += 2;
 	}
 	vid.vptr = vptr;
 }
@@ -285,6 +295,7 @@ void draw_atm3tx(int n)
 		u32 p1 = vid.clut[(comp.ts.gpal << 4) | ((atr & 0x40) >> 3) | (atr & 0x07)];       	// true color for bit=1 (INK)
 		hires_draw
 		vid.xctr = (vid.xctr + 1) & 0x7F;
+		vid.memvidcyc[vid.line] += 2;
 	}
 	vid.vptr = vptr;
 }
@@ -303,6 +314,7 @@ void draw_phr(int n)
 		u8 p = scr[g];
 		hires_draw
 		p = scr[g + 0x2000];
+		vid.memvidcyc[vid.line]++;
 		hires_draw
 	}
 	vid.vptr = vptr;
@@ -311,6 +323,8 @@ void draw_phr(int n)
 // TS 16c
 void draw_ts16(int n)
 {
+static int subt = 0;
+
 	u32 s = (vid.ygctr << 8);
 	u8 *scr = page_ram(comp.ts.vpage & 0xF8);
 	u32 t = (vid.xctr + (comp.ts.g_offsx >> 1)) & 0xFF;
@@ -325,6 +339,12 @@ void draw_ts16(int n)
 		p = scr[s + t++]; t &= 0xFF;
 		p1 = vid.clut[(comp.ts.gpal << 4) | (p & 0x0F)];
 		vbuf[vid.buf][vptr] = vbuf[vid.buf][vptr+1] = p1; vptr += 2;
+		subt++;
+		if (subt > 3)
+		{
+			subt = 0; vid.memvidcyc[vid.line]++;
+		}
+
 	}
 
 	for (; n > 0; n -= 1, vid.t_next++)
@@ -335,6 +355,11 @@ void draw_ts16(int n)
 		vbuf[vid.buf][vptr  ] = vbuf[vid.buf][vptr+1] = p0;
 		vbuf[vid.buf][vptr+2] = vbuf[vid.buf][vptr+3] = p1;
 		vptr += 4;
+		subt += 2;
+		if (subt > 3)
+		{
+			subt -= 4; vid.memvidcyc[vid.line]++;
+		}
 	}
 
 	if (comp.ts.g_offsx & 1)		// odd offset - right pixel
@@ -342,6 +367,11 @@ void draw_ts16(int n)
 		p = scr[s + t];
 		p0 = vid.clut[(comp.ts.gpal << 4) | ((p >> 4) & 0x0F)];
 		vbuf[vid.buf][vptr] = vbuf[vid.buf][vptr+1] = p1; vptr += 2;
+		subt++;
+		if (subt > 3)
+		{
+			subt = 0; vid.memvidcyc[vid.line]++;
+		}
 	}
 	vid.vptr = vptr;
 }
@@ -361,6 +391,7 @@ void draw_ts256(int n)
 		vbuf[vid.buf][vptr] = vbuf[vid.buf][vptr+1] = p; vptr += 2;
 		p = vid.clut[scr[s + t++]]; t &= 0x1FF;
 		vbuf[vid.buf][vptr] = vbuf[vid.buf][vptr+1] = p; vptr += 2;
+		vid.memvidcyc[vid.line]++;
 	}
 	vid.vptr = vptr;
 }
@@ -403,7 +434,7 @@ void draw_ts()
 {
 	int s_pix = (vid.raster.r_brd - vid.raster.l_brd) * 2;
 	u32 vptr = vid.vptr - s_pix * 2;
-	for (int i = 64; i < (s_pix + 64); i++)
+	for (int i = 0; i < (s_pix); i++)
 	{
 		if (vid.tsline[i] & 0xF)	// if pixel is not transparent
 			vbuf[vid.buf][vptr] = vbuf[vid.buf][vptr+1] = vid.clut[vid.tsline[i]];

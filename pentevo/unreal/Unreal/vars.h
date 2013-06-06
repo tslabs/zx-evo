@@ -178,6 +178,7 @@ extern SNDCHIP ay[2];
 
 extern unsigned char *bankr[4];
 extern unsigned char *bankw[4];
+extern unsigned char bankm[4];		// bank mode: 0 - ROM / 1 - RAM
 
 #ifdef MOD_GSBASS
 extern GSHLE gs;

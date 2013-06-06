@@ -27,6 +27,7 @@ typedef union {
 	};
 } RGB32;
 
+#define TS_CACHE_SIZE	512
 struct TZ80State
 {
    union
@@ -188,6 +189,7 @@ struct TZ80State
     /*------------------------------*/
     unsigned char im;
     bool nmi_in_progress;
+	u32 tscache[TS_CACHE_SIZE];
 };
 
 typedef u8 (* TRm)(u32 addr);
@@ -198,7 +200,6 @@ struct TMemIf
     TRm rm;
     TWm wm;
 };
-
 
 struct Z80 : public TZ80State
 {

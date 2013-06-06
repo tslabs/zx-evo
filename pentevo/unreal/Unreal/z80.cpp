@@ -15,6 +15,8 @@
 #include "fontatm2.h"
 #include "util.h"
 
+extern VCTR vid;
+
 namespace z80gs
 {
 void flush_gs_z80();
@@ -78,10 +80,10 @@ void reset(ROM_MODE mode)
 
 
    // TS-Config init
-   comp.ts.page0 = 0;
-   comp.ts.page1 = 5;
-   comp.ts.page2 = 2;
-   comp.ts.page3 = 0;
+   comp.ts.page[0] = 0;
+   comp.ts.page[1] = 5;
+   comp.ts.page[2] = 2;
+   comp.ts.page[3] = 0;
 
    comp.ts.fmaddr = 0;
    comp.ts.im2vect = 255;
