@@ -55,7 +55,7 @@ module zmaps(
 			zmd0 <= d;
 
 // DMA
-    wire dma_req = dma_cram_we;
+    wire dma_req = dma_cram_we || dma_sfile_we;
 
             
 endmodule

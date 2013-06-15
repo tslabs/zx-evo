@@ -209,8 +209,8 @@ module video_sync (
 
 	always @(posedge clk)
 	begin
-		hsync <= ~hs_vga;
-		vsync <= ~vs;
+		hsync <= hs_vga;
+		vsync <= vs;
 		csync <= ~(vs ^ hs);
 	end
 
