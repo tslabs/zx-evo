@@ -26,6 +26,8 @@ module video_sync (
 	output reg csync,
 
 // video controls
+	input wire cfg_60hz,
+	output reg v60hz,
 	input wire nogfx,
 	output wire v_pf,
 	output wire hpix,
@@ -66,20 +68,28 @@ module video_sync (
 	localparam HSYNC_END 	= 9'd43;
 	localparam HBLNK_BEG 	= 9'd00;
 	localparam HBLNK_END 	= 9'd88;
-
 	localparam HSYNCV_BEG 	= 9'd5;
 	localparam HSYNCV_END 	= 9'd31;
 	localparam HBLNKV_END 	= 9'd42;
-
 	localparam HPERIOD   	= 9'd448;
 
-	localparam VSYNC_BEG 	= 9'd08;
-	localparam VSYNC_END 	= 9'd11;
-	localparam VBLNK_BEG 	= 9'd00;
-	localparam VBLNK_END 	= 9'd32;
+	localparam VSYNC_BEG_50	= 9'd08;
+	localparam VSYNC_END_50	= 9'd11;
+	localparam VBLNK_BEG_50	= 9'd00;
+	localparam VBLNK_END_50	= 9'd32;
+	localparam VPERIOD_50  	= 9'd320;
 
-	localparam VPERIOD   	= 9'd320;	// fucking pentagovn!!!
+	localparam VSYNC_BEG_60	= 9'd04;
+	localparam VSYNC_END_60	= 9'd07;
+	localparam VBLNK_BEG_60	= 9'd00;
+	localparam VBLNK_END_60	= 9'd22;
+	localparam VPERIOD_60  	= 9'd262;
 
+	wire [8:0] vsync_beg = v60hz ? VSYNC_BEG_60 : VSYNC_BEG_50;
+	wire [8:0] vsync_end = v60hz ? VSYNC_END_60 : VSYNC_END_50;
+	wire [8:0] vblnk_beg = v60hz ? VBLNK_BEG_60 : VBLNK_BEG_50;
+	wire [8:0] vblnk_end = v60hz ? VBLNK_END_60 : VBLNK_END_50;
+	wire [8:0] vperiod   = v60hz ? VPERIOD_60   : VPERIOD_50;
 
 // counters
 	reg [8:0] hcount = 0;
@@ -92,7 +102,7 @@ module video_sync (
 
 	// vertical TV (15.625 kHz)
 	always @(posedge clk) if (line_start_s)
-		vcount <= (vcount == (VPERIOD - 1)) ? 9'b0 : vcount + 9'b1;
+		vcount <= (vcount == (vperiod - 1)) ? 9'b0 : vcount + 9'b1;
 
 	// horizontal VGA (14MHz)
 	always @(posedge clk) if (f1)
@@ -155,16 +165,18 @@ module video_sync (
 	assign flash = flash_ctr[4];
 	always @(posedge clk)
 		if (frame_start && c3)
+		begin
+			v60hz <= !cfg_60hz;		// re-sync of 60Hz mode selector
 			flash_ctr <= flash_ctr + 5'b1;
-
+		end
 
 // sync strobes
 	wire hs = (hcount >= HSYNC_BEG) && (hcount < HSYNC_END);
-	wire vs = (vcount >= VSYNC_BEG) && (vcount < VSYNC_END);
+	wire vs = (vcount >= vsync_beg) && (vcount < vsync_end);
 
 	assign tv_blank = tv_hblank || tv_vblank;
 	wire tv_hblank = (hcount > HBLNK_BEG) && (hcount <= HBLNK_END);
-	wire tv_vblank = (vcount >= VBLNK_BEG) && (vcount < VBLNK_END);
+	wire tv_vblank = (vcount >= vblnk_beg) && (vcount < vblnk_end);
 	assign vga_blank = vga_hblank || vga_vblank;
 
 
@@ -194,8 +206,8 @@ module video_sync (
 	wire line_start = hcount == (HPERIOD - 1);
 	assign line_start_s = line_start && c3;
 	wire line_start2 = hcount == (HSYNC_END - 1);
-	assign frame_start = line_start && (vcount == (VPERIOD - 1));
-	wire vis_start = line_start && (vcount == (VBLNK_END - 1));
+	assign frame_start = line_start && (vcount == (vperiod - 1));
+	wire vis_start = line_start && (vcount == (vblnk_end - 1));
 	assign pix_start = hcount == (hpix_beg - x_offs - 1);
 	wire ts_start_coarse = hcount == (hpix_beg - 1);
 	assign ts_start = c3 && ts_start_coarse;

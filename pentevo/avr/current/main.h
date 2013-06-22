@@ -135,6 +135,9 @@ extern volatile UBYTE modes_register;
 #define MODE_TAPEOUT 0x02
 /** CAPS LED mode (0 - off/1 - on). */
 #define MODE_CAPSLED 0x04
+/** 60Hz mode (0 - 320 lines / 1 - 262 lines). */
+#define MODE_60HZ 0x10
+#define MODE_VIDEO_MASK (MODE_VGA|MODE_60HZ)
 
 /** Type extensions of gluk registers. */
 extern volatile UBYTE ext_type_gluk;

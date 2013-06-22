@@ -82,6 +82,7 @@ module video_top (
 	input  wire        tm_next,
 
 // video controls
+	input wire cfg_60hz,
 	input wire vga_on,
 
 	input wire [2:0] tst
@@ -119,6 +120,7 @@ module video_top (
 	wire [1:0] render_mode;
 	wire tv_hires;
 	wire vga_hires;
+	wire v60hz;
 	wire nogfx;
 	wire tv_blank;
 
@@ -241,6 +243,7 @@ module video_top (
 		.c3			    (c3),
 		.vpage	    	(vpage),
 		.vconf	    	(vconf),
+		.v60hz	    	(v60hz),
 		.fetch_sel		(fetch_sel),
 		.fetch_bsl		(fetch_bsl),
 		.fetch_cnt	    (scnt),
@@ -313,6 +316,8 @@ module video_top (
 		.vpix			(vpix),
 		.hvpix			(hvpix),
 		.nogfx			(nogfx),
+		.cfg_60hz		(cfg_60hz),
+		.v60hz			(v60hz),
 		.video_go		(video_go),
 		.video_pre_next	(video_pre_next)
 );
