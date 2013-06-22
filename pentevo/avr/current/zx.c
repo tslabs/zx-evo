@@ -362,7 +362,8 @@ void to_zx(UBYTE scancode, UBYTE was_E0, UBYTE was_release)
 			//Scroll Lock
 			case 0x7E:
 				//check key of vga mode switcher
-				if ( !was_release ) zx_mode_switcher(MODE_VGA);
+				if ( !was_release )
+					zx_mode_switcher((kb_status & (KB_LSHIFT_MASK | KB_RSHIFT_MASK)) ? MODE_60HZ : MODE_VGA);
 				break;
 			//Num Lock
 			case 0x77:
@@ -617,9 +618,9 @@ void zx_set_config(UBYTE flags)
 {
 	//send configuration to FPGA
 	zx_spi_send(SPI_CONFIG_REG,
-		(modes_register&MODE_VGA) |
+		(modes_register&MODE_VIDEO_MASK) |
 		((modes_register&MODE_TAPEOUT)?SPI_TAPEOUT_MODE_FLAG:0) |
 		((flags_ex_register&FLAG_EX_NMI)?SPI_CONFIG_NMI_FLAG:0) |
-		(flags & ~(MODE_VGA|SPI_TAPEOUT_MODE_FLAG|SPI_CONFIG_NMI_FLAG)),
+		(flags & ~(MODE_VIDEO_MASK|SPI_TAPEOUT_MODE_FLAG|SPI_CONFIG_NMI_FLAG)),
 		0x7F);
 }
