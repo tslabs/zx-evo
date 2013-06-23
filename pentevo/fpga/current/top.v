@@ -511,7 +511,7 @@ module top(
 		.csync(vcsync),
 
 		// .cfg_60hz(cfg_60hz),
-		.cfg_60hz(0),
+		.cfg_60hz(1),
 		.vga_on(cfg_vga_on),
 
         .border_wr      (border_wr),
