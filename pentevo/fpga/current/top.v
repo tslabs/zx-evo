@@ -172,6 +172,7 @@ module top(
 	// config signals
 	wire [7:0] not_used;
 	wire cfg_60hz;
+	wire cfg_sync_pol;
 	wire cfg_vga_on;
 	wire [1:0] set_nmi;
 
@@ -512,6 +513,7 @@ module top(
 
 		// .cfg_60hz(cfg_60hz),
 		.cfg_60hz(1),
+		.sync_pol(cfg_sync_pol),
 		.vga_on(cfg_vga_on),
 
         .border_wr      (border_wr),
@@ -588,7 +590,7 @@ module top(
 		.wait_read(wait_read),
 		.wait_rnw(wait_rnw),
 		.wait_end(wait_end),
-		.config0({not_used[7:5], cfg_60hz, beeper_mux, tape_read, set_nmi[0], cfg_vga_on})
+		.config0({not_used[7:6], cfg_sync_pol, cfg_60hz, beeper_mux, tape_read, set_nmi[0], cfg_vga_on})
 	);
 
 	zkbdmus zkbdmus( .fclk(fclk), .rst_n(rst_n),
