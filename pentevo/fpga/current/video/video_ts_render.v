@@ -16,34 +16,6 @@
 // after TS request recognized and processed by DRAM controller.
 // It is recommended to assert 'tsr_go' at 'c2'.
 
-
-// clk			|—__——__——__——__——__——__——__——__——__——__——__——__——__——__——__——__——__——__——__——__——__——__——__——__——__——__——__——__—
-// c0-3			|<c0><c1><c2><c3><c0><c1><c2><c3><c0><c1><c2><c3><c0><c1><c2><c3><c0><c1><c2><c3><c0><c1><c2><c3><c0><c1><c2><c3>
-// mem_rdy		|————————————____________________________————____________________________————————————————————————————————————————
-// tsr_go		|________————____________________________————____________________________________________________________________
-// x_coord		|xxxxxxxx<00>xxxxxxxxxxxxxxxxxxxxxxxxxxxx<38>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-// flip			|xxxxxxxx____xxxxxxxxxxxxxxxxxxxxxxxxxxxx————xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-// addr			|xxxxxxxx<00>xxxxxxxxxxxxxxxxxxxxxxxxxxxx<20>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-// x_size		|xxxxxxxx<00>xxxxxxxxxxxxxxxxxxxxxxxxxxxx<00>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-// x_coord_d	|xxxxxxxxxxxx<00><00><00><00><00><00><00><00><3F><3F><3F><3F><3F><3F><3F><3F><3F><3F><3F><3F><3F><3F><3F><3F><3F>
-// dram_req		|________————————————————————————————————————————————————————————————————________________________________________
-// dram_pre_next|____________________————____________————____________————____________————________________________________________
-// dram_next	|________________________————____________————____________————____________————____________________________________
-// dram_addr	|xxxxxxxx<00><00><00><00><01><01><01><01><20><20><20><20><21><21><21><21><22><22><22><22><22><22><22><22><22><22>
-// addr_reg		|xxxxxxxxxxxx<00><00><00><00><01><01><01><01><20><20><20><20><21><21><21><21><22><22><22><22><22><22><22><22><22>
-// addr_next	|xxxxxxxxxxxx<00><00><00><01><01><01><01><02><20><20><20><21><21><21><21><22><22><22><22><22><22><22><22><22><22>
-// dram_rdata	|xxxxxxxxxxxxxxxxxxxxxxxx<data>xxxxxxxxxx<data>xxxxxxxxxx<data>xxxxxxxxxx<data>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-// cyc			|<10><10><10><01><01><01><00><00><00><00><10><01><01><01><00><00><00><10><10><10><10><10><10><10><10><10><10><10>
-// tsr_rld		|____________————————————____________________————————————________________________________________________________
-// tsr_rld_stb 	|____________________————____________________________————________________________________________________________
-// cnt			|<04><04><04><04><04><04><00><01><02><03><00><01><02><03><00><01><02><03><00><01><02><03><04><04><04><04><04><04>
-// render_on	|________________________————————————————————————————————————————————————————————————____________________________
-// ts_waddr_mx	|xxxxxxxxxxxxxxxxxxxx<00><01><02><03><04><05><06><07><3F><3E><3D><3C><3B><3A><39><38><38><38><38><38><38><38><38>
-// ts_waddr		|xxxxxxxxxxxxxxxxxxxxxxxx<00><01><02><03><04><05><06><07><3F><3E><3D><3C><3B><3A><39><38><38><38><38><38><38><38>
-// ts_wdata		|xxxxxxxxxxxxxxxxxxxxxxxx<p0><p1><p2><00><p0><p1><p2><p3><p0><00><00><p3><p0><p1><p2><p3><p3><p3><p3><p3><p3><p3>
-// ts_we		|________________________————————————____————————————————————________————————————————————________________________
-
-
 module video_ts_render (
 
 // clocks
@@ -108,10 +80,10 @@ module video_ts_render (
 
 
 // DRAM data fetching
-    reg [11:0] data;
+    reg [15:0] data;
     always @(posedge clk)
         if (dram_next)
-            data <= {dram_rdata[3:0], dram_rdata[15:8]};
+            data <= dram_rdata;
 
 
 // pixel render counter
@@ -122,7 +94,7 @@ module video_ts_render (
     always @(posedge clk)
         if (reset)
             cnt <= 3'b100;
-        else if (dram_pre_next)
+        else if (dram_next)
             cnt <= 3'b000;
         else if (render_on)
             cnt <= cnt + 3'd1;
@@ -135,7 +107,7 @@ module video_ts_render (
 		    tsr_rld <= 1'b0;
         else if (tsr_go)
             tsr_rld <= 1'b1;
-        else if (dram_pre_next)
+        else if (dram_next)
             tsr_rld <= 1'b0;
 
 
@@ -155,7 +127,7 @@ module video_ts_render (
 // TS-line address
     wire [8:0] ts_waddr_mx = tsr_rld_stb ? x_coord_d : (render_on ? x_next : ts_waddr);
     wire [8:0] x_next = ts_waddr + {{8{flip_r}}, 1'b1};
-    wire tsr_rld_stb = tsr_rld && dram_pre_next;
+    wire tsr_rld_stb = tsr_rld && dram_next;
 
     always @(posedge clk)
         ts_waddr <= ts_waddr_mx;
@@ -175,10 +147,10 @@ module video_ts_render (
     wire [3:0] pix = pix_m[cnt[1:0]];
 
     wire [3:0] pix_m[0:3];
-    assign pix_m[0] = dram_rdata[7:4];
-    assign pix_m[1] = data[11:8];
-    assign pix_m[2] = data[7:4];
-    assign pix_m[3] = data[3:0];
+    assign pix_m[0] = data[7:4];
+    assign pix_m[1] = data[3:0];
+    assign pix_m[2] = data[15:12];
+    assign pix_m[3] = data[11:8];
 
 
 endmodule
