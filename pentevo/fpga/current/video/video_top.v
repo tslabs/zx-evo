@@ -66,7 +66,7 @@ module video_top (
 	output wire [20:0] video_addr,
 	output wire [ 4:0] video_bw,
 	output wire        video_go,
-	input  wire [15:0] dram_rddata,     // reg'ed, should be latched by c3 (video_strobe)
+	input  wire [15:0] dram_rdata_r,     // reg'ed, should be latched by c3 (video_strobe)
 	input  wire [15:0] dram_rdata,      // raw, should be latched by c2 (video_next)
 	input  wire        video_next,
 	input  wire        video_pre_next,
@@ -331,7 +331,7 @@ module video_top (
 		.fetch_data		(fetch_data),
 		.fetch_temp		(fetch_temp),
 		.video_strobe	(video_strobe),
-		.video_data		(dram_rddata)
+		.video_data		(dram_rdata_r)
 );
 
 	video_ts video_ts (

@@ -337,7 +337,7 @@ module top(
 		.cpu_strobe(cpu_strobe),
 		.cpu_latch (cpu_latch),
 		.cpu_addr  (cpu_addr),
-		// .cpu_rddata(dram_rddata),    // registered
+		// .cpu_rddata(dram_rd_r),    // registered
 		.cpu_rddata(dram_rd),   	    // raw
 		.cpu_stall (cpu_stall),
 		.cpu_next  (cpu_next),
@@ -349,7 +349,7 @@ module top(
 	wire [20:0] daddr;
 	wire dreq;
 	wire drnw;
-	wire [15:0] dram_rddata;
+	wire [15:0] dram_rd_r;
 	wire [15:0] dram_wrdata;
 	wire [1:0] dbsel;
 
@@ -364,7 +364,7 @@ module top(
 	           .c1(c1),
 	           .c2(c2),
 	           .c3(c3),
-	           .rddata(dram_rddata),
+	           .rddata(dram_rd_r),
 	           .wrdata(dram_wrdata),
 	           .bsel(dbsel),
 
@@ -544,7 +544,7 @@ module top(
 		.video_addr     (video_addr),
 		.video_bw		(video_bw),
 		.video_go       (go),
-		.dram_rddata    (dram_rddata),      // reg'ed, should be latched by c3
+		.dram_rdata_r   (dram_rd_r),      // reg'ed, should be latched by c3
    		.dram_rdata     (dram_rd),               // raw, should be latched by c2
 		.video_strobe   (video_strobe),
 		.video_next     (video_next),
