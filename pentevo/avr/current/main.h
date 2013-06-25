@@ -137,7 +137,9 @@ extern volatile UBYTE modes_register;
 #define MODE_CAPSLED 0x04
 /** 60Hz mode (0 - 320 lines / 1 - 262 lines). */
 #define MODE_60HZ 0x10
-#define MODE_VIDEO_MASK (MODE_VGA|MODE_60HZ)
+/** VGA sync polarity (0 - positive / 1 - negative). */
+#define MODE_POL 0x20
+#define MODE_VIDEO_MASK (MODE_VGA|MODE_60HZ|MODE_POL)
 
 /** Type extensions of gluk registers. */
 extern volatile UBYTE ext_type_gluk;

@@ -83,6 +83,7 @@ module video_top (
 
 // video controls
 	input wire cfg_60hz,
+	input wire sync_pol,
 	input wire vga_on,
 
 	input wire [2:0] tst
@@ -317,6 +318,7 @@ module video_top (
 		.hvpix			(hvpix),
 		.nogfx			(nogfx),
 		.cfg_60hz		(cfg_60hz),
+		.sync_pol		(sync_pol),
 		.v60hz			(v60hz),
 		.video_go		(video_go),
 		.video_pre_next	(video_pre_next)

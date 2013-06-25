@@ -363,7 +363,14 @@ void to_zx(UBYTE scancode, UBYTE was_E0, UBYTE was_release)
 			case 0x7E:
 				//check key of vga mode switcher
 				if ( !was_release )
-					zx_mode_switcher((kb_status & (KB_LSHIFT_MASK | KB_RSHIFT_MASK)) ? MODE_60HZ : MODE_VGA);
+				{
+					if (kb_status & (KB_LSHIFT_MASK | KB_RSHIFT_MASK))
+						zx_mode_switcher(MODE_60HZ);
+					else if (kb_status & KB_CTRL_MASK)
+						zx_mode_switcher(MODE_POL);
+					else
+						zx_mode_switcher(MODE_VGA);
+				}
 				break;
 			//Num Lock
 			case 0x77:
