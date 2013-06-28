@@ -57,12 +57,35 @@ void dma (u8 val)
 			// RAM to RAM
 			case DMA_RAM:
 			{
-				for (j=0; j<(comp.ts.dmalen + 1); j++)
+				/* blitter */
+				if (ctrl.rw)
 				{
-					s = (u16*)(ss + RAM_BASE_M);
-					d = (u16*)(dd + RAM_BASE_M);
-				*d = *s;
-				ss_inc; dd_inc;
+					for (j=0; j<(comp.ts.dmalen + 1); j++)
+					{
+						s = (u16*)(ss + RAM_BASE_M);
+						d = (u16*)(dd + RAM_BASE_M);
+						u16 ds = *s;
+						u16 dd = *d;
+						u16 dw = 0;
+						dw |= (ds & 0xF000) ? (ds & 0xF000) : (dd & 0xF000);
+						dw |= (ds & 0x0F00) ? (ds & 0x0F00) : (dd & 0x0F00);
+						dw |= (ds & 0x00F0) ? (ds & 0x00F0) : (dd & 0x00F0);
+						dw |= (ds & 0x000F) ? (ds & 0x000F) : (dd & 0x000F);
+						*d = dw;
+						ss_inc; dd_inc;
+					}
+				}
+				
+				/* simple copying */
+				else
+				{
+					for (j=0; j<(comp.ts.dmalen + 1); j++)
+					{
+						s = (u16*)(ss + RAM_BASE_M);
+						d = (u16*)(dd + RAM_BASE_M);
+						*d = *s;
+						ss_inc; dd_inc;
+					}
 				}
 				break;
 			}
