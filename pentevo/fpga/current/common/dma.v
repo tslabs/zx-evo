@@ -77,36 +77,20 @@ module dma (
     wire dma_launch = dma_wr[7];
     wire dma_num    = dma_wr[8];
 
-
-// !R/W  phase  RAM  DEV
-// device-RAM
-//   0     0     0    1
-//   0     1     1    0
-//   1     0     1    0
-//   1     0     0    1
-// RAM-RAM
-//   x     0     1    0
-//   x     1     1    0
-
-
 // DRAM
-    assign dram_addr = state_rd ? s_addr : d_addr;
+    assign dram_addr = state_rd ? ((!dv_blt || !phase_blt) ? s_addr : d_addr) : d_addr;
     assign dram_wrdata = data;
     assign dram_req = dma_act && state_mem;
     assign dram_rnw = state_rd;
 
-
 // devices
 	wire dv_ram = (device == 3'b001);
+	wire dv_blt = (device == 3'b001) && dma_wnr;
 	wire dv_spi = (device == 3'b010);
 	wire dv_ide = (device == 3'b011);
 	wire dv_crm = (device == 3'b100) && dma_wnr;
 	wire dv_sfl = (device == 3'b101) && dma_wnr;
 
-    wire state_rd = ~phase;
-    wire state_wr = phase;
-    wire state_dev = !dv_ram && (dma_wnr ^ !phase);
-    wire state_mem = dv_ram || (dma_wnr ^ phase);
 	wire dev_req = dma_act && state_dev;
     wire dev_stb = cram_we || sfile_we || ide_int_stb || (spi_int_stb && bsel);
 
@@ -124,13 +108,24 @@ module dma (
     assign ide_out = data;
     assign ide_req = dev_req && dv_ide;
     assign ide_rnw = state_rd;
+	
+	// blitter
+	wire [15:0] blt_rddata = {blt_data_h, blt_data_l};
+	wire [7:0] blt_data_h = dma_asz ? blt_data32 : {blt_data3, blt_data2};
+	wire [7:0] blt_data_l = dma_asz ? blt_data10 : {blt_data1, blt_data0};
+	wire [7:0] blt_data32 = |data[15:8] ? data[15:8] : dram_rddata[15:8];
+	wire [7:0] blt_data10 = |data[7:0] ? data[7:0] : dram_rddata[7:0];
+	wire [3:0] blt_data3 = |data[15:12] ? data[15:12] : dram_rddata[15:12];
+	wire [3:0] blt_data2 = |data[11:8] ? data[11:8] : dram_rddata[11:8];
+	wire [3:0] blt_data1 = |data[7:4] ? data[7:4] : dram_rddata[7:4];
+	wire [3:0] blt_data0 = |data[3:0] ? data[3:0] : dram_rddata[3:0];
 
 // data aquiring
     always @(posedge clk)
         if (state_rd)
 		begin
             if (dram_next)
-                data <= dram_rddata;
+                data <= (dv_blt && phase_blt) ? blt_rddata : dram_rddata;
 
             if (ide_int_stb)
                 data <= ide_in;
@@ -144,9 +139,15 @@ module dma (
 			end
 		end
 
+// states
+    wire state_rd = ~phase;
+    wire state_wr = phase;
+    wire state_dev = !dv_ram && (dma_wnr ^ !phase);
+    wire state_mem = dv_ram || (dma_wnr ^ phase);
 		
 // states processing
-    wire phase_end = (state_mem && dram_next) || (state_dev && dev_stb);
+    wire phase_end = (state_mem && dram_next && (!dv_blt || phase_blt || phase)) || (state_dev && dev_stb);
+    wire phase_blt_end = state_mem && dram_next && !phase;
 
 	reg [2:0] device;
     reg dma_wnr;             // 0 - device to RAM / 1 - RAM to device
@@ -154,6 +155,7 @@ module dma (
     reg dma_dalgn;
     reg dma_asz;
     reg phase;               // 0 - read / 1 - write
+    reg phase_blt;           // 0 - read / 1 - write
     reg bsel;                // 0 - lsb / 1 - msb
 
 	always @(posedge clk)
@@ -166,6 +168,7 @@ module dma (
 		dma_asz <= zdata[3];
 		device <= zdata[2:0];
 		phase <= 1'b0;
+		phase_blt <= 1'b0;
 		bsel <= 1'b0;
 	end
 
@@ -173,6 +176,8 @@ module dma (
     begin
         if (phase_end)
             phase <= ~phase;
+        if (phase_blt_end)
+            phase_blt <= ~phase_blt;
         if (spi_int_stb)
             bsel <= ~bsel;
     end
@@ -233,7 +238,7 @@ module dma (
     reg [7:0] s_addr_r;     // source lower address
 
 	always @(posedge clk)
-		if ((dram_next || dev_stb) && state_rd)			// increment RAM source addr
+		if ((dram_next || dev_stb) && state_rd && (!dv_blt || !phase_blt))			// increment RAM source addr
 			s_addr <= s_addr_next;
 
         else
