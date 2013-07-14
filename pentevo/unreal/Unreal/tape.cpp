@@ -14,6 +14,10 @@ unsigned tape_err = 0;
 unsigned char *tape_image = 0;
 unsigned tape_imagesize = 0;
 
+#ifdef LOG_TAPE_IN
+	extern FILE *f_log_tape_in;
+#endif
+
 TAPEINFO *tapeinfo;
 unsigned tape_infosize;
 
@@ -623,9 +627,9 @@ int readTZX()
 
 unsigned char tape_bit() // used in io.cpp & sound.cpp
 {
-   __int64 cur = comp.t_states + cpu.t;
+	__int64 cur = comp.t_states + cpu.t;
    if (cur < comp.tape.edge_change)
-       return (unsigned char)comp.tape.tape_bit;
+		return (unsigned char)comp.tape.tape_bit;
    while (comp.tape.edge_change < cur)
    {
       if (!temp.sndblock)
@@ -639,6 +643,11 @@ unsigned char tape_bit() // used in io.cpp & sound.cpp
          }
       }
       unsigned pulse; comp.tape.tape_bit ^= -1;
+
+#ifdef LOG_TAPE_IN
+	fprintf(f_log_tape_in, "%d\t%d\r\n", (u32)comp.tape.edge_change, comp.tape.tape_bit & 1);
+#endif
+
       if (comp.tape.play_pointer == comp.tape.end_of_tape ||
           (pulse = tape_pulse[*comp.tape.play_pointer++]) == -1)
               stop_tape();

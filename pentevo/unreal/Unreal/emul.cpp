@@ -31,7 +31,16 @@ typedef signed short INT16;
 typedef unsigned char UINT8;
 typedef signed char INT8;
 unsigned frametime = 111111; //Alone Coder (GUI value for conf.frame)
-//~------- Alone Coder ---------
+
+#ifdef LOG_FE_OUT
+	FILE *f_log_FE_out;
+#endif
+#ifdef LOG_FE_IN
+	FILE *f_log_FE_in;
+#endif
+#ifdef LOG_TAPE_IN
+	FILE *f_log_tape_in;
+#endif
 
 int nmi_pending = 0;
 
@@ -138,6 +147,30 @@ int main(int argc, char **argv)
    sound_play();
    color();
 
+#ifdef LOG_FE_OUT
+	f_log_FE_out = fopen("log_FE_out.txt", "wb");
+	fprintf(f_log_FE_out, "CPU_tact\tFE_val\r\n");
+#endif
+#ifdef LOG_FE_IN
+	f_log_FE_in = fopen("log_FE_in.txt", "wb");
+	fprintf(f_log_FE_in, "CPU_tact\tFE_val\tA[15:8]\r\n");
+#endif
+#ifdef LOG_TAPE_IN
+	f_log_tape_in = fopen("log_tape_in.txt", "wb");
+	fprintf(f_log_tape_in, "CPU_tact\ttape_bit\r\n");
+#endif
+
    mainloop(Exit);
+
+#ifdef LOG_FE_OUT
+   fclose(f_log_FE_out);
+#endif
+#ifdef LOG_FE_IN
+   fclose(f_log_FE_in);
+#endif
+#ifdef LOG_TAPE
+   fclose(f_log_tape_in);
+#endif
+
    return 0;
 }

@@ -11,6 +11,13 @@
 #include "tape.h"
 #include "zxevo.h"
 
+#ifdef LOG_FE_OUT
+	extern FILE *f_log_FE_in;
+#endif
+#ifdef LOG_FE_IN
+	extern FILE *f_log_FE_out;
+#endif
+
 void out(unsigned port, unsigned char val)
 {
 
@@ -664,6 +671,10 @@ void out(unsigned port, unsigned char val)
    {
 //[vv]      assert(!(val & 0x08));
 
+#ifdef LOG_FE_OUT
+   fprintf(f_log_FE_out, "%d\t%02X\r\n", (u32)(comp.t_states + cpu.t), val);
+#endif
+
       spkr_dig = (val & 0x10) ? conf.sound.beeper_vol : 0;
       mic_dig = (val & 0x08) ? conf.sound.micout_vol : 0;
 
@@ -1264,6 +1275,9 @@ __inline unsigned char in1(unsigned port)
       u8 val = input.read(port >> 8);
       if (conf.mem_model == MM_ATM450)
           val = (val & 0x7F) | atm450_z(cpu.t);
+#ifdef LOG_FE_IN
+   fprintf(f_log_FE_in, "%d\t%02X\t%02X\r\n", (u32)(comp.t_states + cpu.t), val, cpu.a);
+#endif
       return val;
    }
 

@@ -6,6 +6,10 @@ struct Z80;
 
 #define Z80FAST fastcall
 
+// #define LOG_TAPE_IN
+// #define LOG_FE_IN
+// #define LOG_FE_OUT
+
 #ifdef _MSC_VER
 #define Z80INLINE forceinline // time-critical inlines
 #else
