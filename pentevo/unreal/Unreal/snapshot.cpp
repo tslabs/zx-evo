@@ -249,12 +249,6 @@ int readSPG()
 			memcpy(page_ram(5) + addr, hdr02->vars, hdr02->vars_len);
 		}
 		
-		if (hdr02->pgmgr_addr)
-		{
-			const u8 mgr[] = {0xC5, 0x01, 0xAF, 0x13, 0xED, 0x79, 0xC1, 0xC9};
-			memcpy(page_ram(5) + hdr02->pgmgr_addr - 0x4000, mgr, sizeof(mgr));
-		}
-		
 		u8 *data = &hdr02->data;
 		for (u8 i = 0; i < 15; i++)
 		{
@@ -285,6 +279,14 @@ int readSPG()
 			if (type != 2)		// for ver. 0.0 and 0.1 there are 4 dummy bytes in every block descriptor
 				i++;
 		}
+		
+		if (hdr02->pgmgr_addr)
+		{
+			// const u8 mgr[] = {0xC5, 0x01, 0xAF, 0x13, 0xED, 0x79, 0xC1, 0xC9};	// TS-conf
+			const u8 mgr[] = {0xC5, 0x4F, 0xE6, 0xF8, 0x79, 0x28, 0x04, 0xE6, 0x07, 0xF6, 0x40, 0xF6, 0x10, 0x01, 0xFD, 0x7F, 0xED, 0x79, 0xC1, 0xC9};	// Pentagon
+			memcpy(page_ram(5) + hdr02->pgmgr_addr - 0x4000, mgr, sizeof(mgr));
+		}
+		
 	}
 	
 	set_clk();
