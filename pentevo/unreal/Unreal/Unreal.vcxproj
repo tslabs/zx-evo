@@ -49,6 +49,7 @@
     <ClCompile Include="dbgrwdlg.cpp" />
     <ClCompile Include="dbgtrace.cpp" />
     <ClCompile Include="debug.cpp" />
+    <ClCompile Include="depack.cpp" />
     <ClCompile Include="draw.cpp" />
     <ClCompile Include="drawers.cpp" />
     <ClCompile Include="drawnomc.cpp" />
@@ -168,6 +169,7 @@
     <ClInclude Include="ddk.h" />
     <ClInclude Include="debug.h" />
     <ClInclude Include="defs.h" />
+    <ClInclude Include="depack.h" />
     <ClInclude Include="draw.h" />
     <ClInclude Include="drawers.h" />
     <ClInclude Include="drawnomc.h" />

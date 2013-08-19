@@ -333,6 +333,9 @@
     <ClCompile Include="drawers.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
+    <ClCompile Include="depack.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="atm.h">
@@ -597,6 +600,9 @@
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="drawers.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="depack.h">
       <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>

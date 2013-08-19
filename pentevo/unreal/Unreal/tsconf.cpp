@@ -75,7 +75,7 @@ void dma (u8 val)
 						ss_inc; dd_inc;
 					}
 				}
-				
+
 				/* simple copying */
 				else
 				{
@@ -231,7 +231,7 @@ void render_tile_layer(u8 layer)
 void sfile_dump()
 {
 	FILE *f;
-	
+
 	f = fopen("dump.bin", "wb");
 	fwrite(comp.sfile, 1, 512, f);
 	fclose(f);
@@ -292,4 +292,33 @@ void render_ts()
 			if (comp.ts.t1_en)
 				{ render_tile_layer(1); continue; }
 	}
+}
+
+// TS-Config init
+void tsinit(void)
+{
+	comp.ts.page[0] = 0;
+	comp.ts.page[1] = 5;
+	comp.ts.page[2] = 2;
+	comp.ts.page[3] = 0;
+
+	comp.ts.fmaddr = 0;
+	comp.ts.im2vect = 255;
+	comp.ts.fddvirt = 0;
+	comp.ts.vdos = 0;
+
+	comp.ts.sysconf = 1;		// turbo 7MHz for TS-Conf
+	comp.ts.memconf = 0;
+
+	comp.ts.hsint = 2;
+	comp.ts.vsint = 0;
+
+	comp.ts.vpage = comp.ts.vpage_d = 5;
+	comp.ts.vconf = comp.ts.vconf_d = 0;
+	comp.ts.tsconf = 0;
+	comp.ts.palsel = comp.ts.palsel_d = 15;
+	comp.ts.g_offsx = 0;
+	comp.ts.g_offsy = 0;
+	
+	comp.intpos = 2;	// pentagon standard
 }

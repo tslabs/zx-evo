@@ -412,7 +412,7 @@ static const u8 Q_TR_DOS = 0x80;
 enum SNAP
 {
    snNOFILE, snUNKNOWN, snTOOLARGE,
-   snSP, snZ80, snSNA_48, snSNA_128,
+   snSP, snZ80, snSNA_48, snSNA_128, snSPG,
    snTAP, snTZX, snCSW,
    snHOB, snSCL, snTRD, snFDI, snTD0, snUDI, snISD, snPRO
 };
