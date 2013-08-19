@@ -24,4 +24,5 @@ u8 DbgRm(u32 addr);
 void DbgWm(u32 addr, u8 val);
 
 void reset(ROM_MODE mode);
+void reset_sound(void);
 void set_clk(void);
