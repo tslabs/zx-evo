@@ -24,3 +24,4 @@ u8 DbgRm(u32 addr);
 void DbgWm(u32 addr, u8 val);
 
 void reset(ROM_MODE mode);
+void set_clk(void);

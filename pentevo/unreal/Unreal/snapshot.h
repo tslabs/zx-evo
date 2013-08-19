@@ -1,37 +1,99 @@
 #pragma pack(1)
+
+struct blkSPG1_0{
+	u8 addr;
+	u8 size;
+	u8 page;
+};
+
+struct hdrSPG1_0 {
+	u8 author[32];
+	u8 sign[12];	// These are common for versions 1.0 and 0.2
+	u8 ver;			//
+	u8 day;
+	u8 month;
+	u8 year;
+	u16 pc;
+	u16 sp;
+	u8 win3_pg;
+	u8 clk;
+	u16 pgmgr_addr;
+	u16 rsd_addr;
+	u16 n_blk;
+	u8 second;
+	u8 minute;
+	u8 hour;
+	u8 res1[17];
+	u8 creator[32];
+	u8 res2[144];
+	blkSPG1_0 blocks[256];
+	u8 data;
+};
+
+struct blkSPG0_2{
+	u16 addr;
+	u8 len;
+	u8 page;
+};
+
+struct hdrSPG0_2 {
+	u8 res1[32];
+	u8 sign[12];	// These are common for versions 1.0 and 0.2
+	u8 ver;			//
+	u16 crc;
+	u16 crc_inv;
+	u16 port_xi_addr;
+	u8 port_xi_val;
+	u8 res2[64-52];
+	u16 pc;
+	u8 win3_pg;
+	u8 flag;
+	u16 pgmgr_addr;
+	u8 day;
+	u8 month;
+	u8 year;
+	u8 assy_ver;
+	u16 sp;
+	u16 vars_addr;
+	u16 vars_len;
+	u8 res3[128-80];
+	blkSPG0_2 blocks[16];
+	u8 vars[320];
+};
+
 struct hdrSNA128 {
-   unsigned char i;
-   unsigned short althl, altde, altbc, altaf;
-   unsigned short hl, de, bc, iy, ix;
-   unsigned char iff1; /* 00 - reset, FF - set */
-   unsigned char r;
-   unsigned short af, sp;
-   unsigned char im,pFE;
-   unsigned char page5[PAGE]; // 4000-7FFF
-   unsigned char page2[PAGE]; // 8000-BFFF
-   unsigned char active_page[PAGE]; // C000-FFFF
+   u8 i;
+   u16 althl, altde, altbc, altaf;
+   u16 hl, de, bc, iy, ix;
+   u8 iff1; /* 00 - reset, FF - set */
+   u8 r;
+   u16 af, sp;
+   u8 im,pFE;
+   u8 page5[PAGE]; // 4000-7FFF
+   u8 page2[PAGE]; // 8000-BFFF
+   u8 active_page[PAGE]; // C000-FFFF
    /* 128k extension */
-   unsigned short pc;
-   unsigned char p7FFD;
-   unsigned char trdos;
-//   unsigned char pages[PAGE]; // all pages, except already saved
+   u16 pc;
+   u8 p7FFD;
+   u8 trdos;
+//   u8 pages[PAGE]; // all pages, except already saved
                                 // (m.b. 5 or 6 pages)
 };
 
 struct hdrZ80
 {
-   unsigned char a,f;
-   unsigned short bc,hl,pc,sp;
-   unsigned char i,r,flags;
-   unsigned short de,bc1,de1,hl1;
-   unsigned char a1,f1;
-   unsigned short iy,ix;
-   unsigned char iff1, iff2, im;
+   u8 a,f;
+   u16 bc,hl,pc,sp;
+   u8 i,r,flags;
+   u16 de,bc1,de1,hl1;
+   u8 a1,f1;
+   u16 iy,ix;
+   u8 iff1, iff2, im;
    /* 2.01 extension */
-   unsigned short len, newpc;
-   unsigned char model, p7FFD;
-   unsigned char r1,r2, p7FFD_1;
-   unsigned char AY[16];
+   u16 len, newpc;
+   u8 model, p7FFD;
+   u8 r1,r2, p7FFD_1;
+   u8 AY[16];
    /* 3.0 extension */
    u16 LowT;
    u8 HighT;
@@ -50,19 +112,20 @@ struct hdrZ80
 
 struct hdrSP
 {
-   unsigned short sig;
-   unsigned short len;
-   unsigned short start;
-   unsigned short bc,de,hl,af;
-   unsigned short ix,iy;
-   unsigned short altbc,altde,althl,altaf;
-   unsigned char r, i;
-   unsigned short sp, pc;
-   unsigned short reserved;
-   unsigned char pFE;
-   unsigned char reserved2;
-   unsigned short flags;
+   u16 sig;
+   u16 len;
+   u16 start;
+   u16 bc,de,hl,af;
+   u16 ix,iy;
+   u16 altbc,altde,althl,altaf;
+   u8 r, i;
+   u16 sp, pc;
+   u16 reserved;
+   u8 pFE;
+   u8 reserved2;
+   u16 flags;
 };
+
 #pragma pack()
 
 typedef void (*TVideoSaver)();

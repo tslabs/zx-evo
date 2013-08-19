@@ -10,6 +10,7 @@
 #include "config.h"
 #include "z80.h"
 #include "util.h"
+#include "depack.h"
 
 using namespace Gdiplus;
 ULONG_PTR gdiplusToken = 0;
@@ -19,6 +20,7 @@ CLSID clsidGifEncoder = GUID_NULL;
 int readSP();
 int readSNA48();
 int readSNA128();
+int readSPG();
 int readZ80();
 int writeSNA(FILE*);
 int load_arc(char *fname);
@@ -73,6 +75,7 @@ unsigned char what_is(char *filename)
    if (snapsize == 49179) type = snSNA_48;
    if (ext == WORD4('t','a','p',' ')) type = snTAP;
    if (ext == WORD4('z','8','0',' ')) type = snZ80;
+   if (ext == WORD4('s','p','g',' ')) type = snSPG;
    if (conf.trdos_present)
    {
       if (!snbuf[13] && snbuf[14] && (int)snapsize == snbuf[14]*256+17) type = snHOB;
@@ -147,15 +150,8 @@ int loadsnap(char *filename)
             conf.trdos_wp[trd_toload] = 1;
          drive->snaptype = (type == snHOB || type == snSCL)? snTRD : type;
          trd_loaded[trd_toload] = 1;
-//---------Alone Coder
-         char *name = filename;
-         for (char *x = name; *x; x++)
-             if (*x == '\\') name = x+1;
-         char wintitle[0x200];
-         strcpy(wintitle,name);
-         strcat(wintitle," - UnrealSpeccy");
-         SetWindowText(wnd, wintitle);
-//~---------Alone Coder
+
+         SetWindowText(wnd, (strrchr(filename, '\\') + 1));
       }
       return ok;
    }
@@ -163,12 +159,87 @@ int loadsnap(char *filename)
    if (type == snSP) return readSP();
    if (type == snSNA_48) return readSNA48();
    if (type == snSNA_128) return readSNA128();
+   if (type == snSPG) return readSPG();
    if (type == snZ80) return readZ80();
    if (type == snTAP) return readTAP();
    if (type == snTZX) return readTZX();
    if (type == snCSW) return readCSW();
 
    return 0;
+}
+
+int readSPG_10()
+{
+	hdrSPG1_0 *hdr = (hdrSPG1_0*)snbuf;
+	
+	tsinit();
+	load_spec_colors();
+	
+	cpu.sp = hdr->sp;
+	cpu.pc = hdr->pc;
+	cpu.iy = 0x5C3A;
+	cpu.alt.hl = 0x2758;
+	cpu.i = 63;
+	cpu.im = 1;
+	cpu.iff1 = (hdr->clk & 4) ? 1 : 0;
+	
+	comp.ts.zclk = hdr->clk & 3;
+	set_clk();
+	
+	comp.ts.page[3] = hdr->win3_pg;
+	comp.p7FFD = 16;
+	set_banks();
+	
+	u8 *data = &hdr->data;
+	for (u8 i = 0; i < hdr->n_blk; i++)
+	{
+		u16 size = ((hdr->blocks[i].size & 0x1F) + 1) * 512;
+		u8 page = hdr->blocks[i].page;
+		u16 offs = (hdr->blocks[i].addr & 0x1F) * 512;
+		u8 *zxram = page_ram(page) + offs;
+		switch (hdr->blocks[i].size & 0xC0)
+		{
+			case 0x00:
+				memcpy(zxram, data, size);
+				break;
+			
+			case 0x01:
+				dehst(zxram, data);
+				break;
+			
+			case 0x02:
+				demlz(zxram, data);
+				break;
+		}
+		data += size;
+		if (hdr->blocks[i].addr & 0x80)
+			break;
+	}
+	
+	snbuf[0x20] = 0;	// to avoid garbage in header
+	SetWindowText(wnd, (char*)snbuf);
+	return 1;
+}
+
+int readSPG_02(int type)
+{
+	hdrSPG0_2 *hdr = (hdrSPG0_2*)snbuf;
+	return 1;
+}
+
+int readSPG()
+{
+	if (memcmp(&snbuf[0x20], "SpectrumProg", 12))
+		return 0;
+	if (snbuf[0x2C] == 0x10)
+		return readSPG_10();
+	if (snbuf[0x2C] == 0x00)
+		return readSPG_02(0);
+	if (snbuf[0x2C] == 0x01)
+		return readSPG_02(1);
+	if (snbuf[0x2C] == 0x02)
+		return readSPG_02(2);
+	return 0;
 }
 
 int readSNA128()
@@ -183,9 +254,9 @@ int readSNA128()
    cpu.i = hdr->i; cpu.r_low = hdr->r; cpu.r_hi = hdr->r & 0x80; cpu.im = hdr->im;
    cpu.iff1 = hdr->iff1?1:0; comp.p7FFD = hdr->p7FFD;
    comp.pFE = hdr->pFE; comp.border_attr = comp.pFE & 7;
-   memcpy(memory+PAGE*5, hdr->page5, PAGE);
-   memcpy(memory+PAGE*2, hdr->page2, PAGE);
-   memcpy(memory+PAGE*(hdr->p7FFD & 7), hdr->active_page, PAGE);
+   memcpy(page_ram(5), hdr->page5, PAGE);
+   memcpy(page_ram(2), hdr->page2, PAGE);
+   memcpy(page_ram((hdr->p7FFD & 7)), hdr->active_page, PAGE);
    unsigned char *newpage = snbuf+0xC01F;
    unsigned char mapped = 0x24 | (1 << (hdr->p7FFD & 7));
    for (unsigned char i = 0; i < 8; i++)
@@ -208,9 +279,9 @@ int readSNA48()
    cpu.iff1 = hdr->iff1?1:0; comp.p7FFD = 0x30;
    comp.pEFF7 |= EFF7_LOCKMEM; //Alone Coder
    comp.pFE = hdr->pFE; comp.border_attr = comp.pFE & 7;
-   memcpy(memory+PAGE*5, hdr->page5, PAGE);
-   memcpy(memory+PAGE*2, hdr->page2, PAGE);
-   memcpy(memory+PAGE*0, hdr->active_page, PAGE);
+   memcpy(page_ram(5), hdr->page5, PAGE);
+   memcpy(page_ram(2), hdr->page2, PAGE);
+   memcpy(page_ram(0), hdr->active_page, PAGE);
    cpu.pc = cpu.DirectRm(cpu.sp)+0x100*cpu.DirectRm(cpu.sp+1); cpu.sp += 2;
    set_banks(); return 1;
 }

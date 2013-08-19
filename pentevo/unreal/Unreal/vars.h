@@ -171,7 +171,7 @@ extern unsigned char trace_ram;
 
 extern TMainZ80 cpu;
 extern unsigned char dbgbreak;
-extern unsigned char snbuf[2*1048576]; // large temporary buffer (for reading snapshots)
+extern unsigned char snbuf[4*1048576]; // large temporary buffer (for reading snapshots)
 extern unsigned char gdibuf[2*1048576];
 
 extern SNDCHIP ay[2];

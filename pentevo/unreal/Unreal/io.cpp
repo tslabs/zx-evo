@@ -8,6 +8,7 @@
 #include "gs.h"
 #include "sdcard.h"
 #include "zc.h"
+#include "z80.h"
 #include "tape.h"
 #include "zxevo.h"
 
@@ -111,13 +112,7 @@ void out(unsigned port, unsigned char val)
 		// system
 			case TSW_SYSCONF: {
 				comp.ts.sysconf = val;
-				switch(comp.ts.zclk) {
-					case 0: turbo(1); break;
-					case 1: turbo(2); break;
-					case 2: turbo(3); break;
-					// case 3: turbo(3.5); break;
-					case 3: turbo(16); break;
-				}
+				set_clk();
 				break;
 			}
 

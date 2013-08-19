@@ -78,35 +78,13 @@ void reset(ROM_MODE mode)
    comp.p7FFD = comp.pDFFD = comp.pFDFD = comp.p1FFD = 0;
    comp.p7EFD = 0;
 
+   tsinit();
 
-   // TS-Config init
-   comp.ts.page[0] = 0;
-   comp.ts.page[1] = 5;
-   comp.ts.page[2] = 2;
-   comp.ts.page[3] = 0;
-
-   comp.ts.fmaddr = 0;
-   comp.ts.im2vect = 255;
-   comp.ts.fddvirt = 0;
-   comp.ts.vdos = 0;
-   
-   comp.ts.sysconf = 1;		// turbo 7MHz for TS-Conf
    if (conf.mem_model == MM_TSL)
 		turbo(2);		// turbo 2x (7MHz) for TS-Conf
    else
 		turbo(1);		// turbo 1x (3.5MHz) for all other clones
    
-   comp.ts.hsint = 2;
-   comp.ts.vsint = 0;
-   comp.intpos = 2;	// pentagon standard
-
-   comp.ts.vpage = comp.ts.vpage_d = 5;
-   comp.ts.vconf = comp.ts.vconf_d = 0;
-   comp.ts.tsconf = 0;
-   comp.ts.palsel = comp.ts.palsel_d = 15;
-   comp.ts.g_offsx = 0;
-   comp.ts.g_offsy = 0;
-
    switch (mode)
    {
 	case RM_SYS: {comp.ts.memconf = 4; break;}
@@ -195,4 +173,16 @@ void reset(ROM_MODE mode)
        mode = RM_SOS;
 
    set_mode(mode);
+}
+
+void set_clk(void)
+{
+	switch(comp.ts.zclk)
+	{
+		case 0: turbo(1); break;
+		case 1: turbo(2); break;
+		case 2: turbo(3); break;
+		case 3: turbo(4); break;
+		// case 3: turbo(16); break;
+	}
 }

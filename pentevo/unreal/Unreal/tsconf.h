@@ -286,3 +286,4 @@ typedef	union {
 void update_clut(u8);
 void dma (u8);
 void render_ts();
+void tsinit(void);
