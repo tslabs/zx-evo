@@ -168,78 +168,131 @@ int loadsnap(char *filename)
    return 0;
 }
 
-int readSPG_10()
+int readSPG()
 {
-	hdrSPG1_0 *hdr = (hdrSPG1_0*)snbuf;
+	hdrSPG1_0 *hdr10 = (hdrSPG1_0*)snbuf;
+	hdrSPG0_2 *hdr02 = (hdrSPG0_2*)snbuf;
 	
+	if (memcmp(&hdr10->sign, "SpectrumProg", 12))
+		return 0;
+	u8 type = hdr10->ver;
+	if ((type != 0) && (type != 1) && (type != 2) && (type != 0x10))
+		return 0;
+		
 	tsinit();
 	load_spec_colors();
+	reset_sound();
 	
-	cpu.sp = hdr->sp;
-	cpu.pc = hdr->pc;
 	cpu.iy = 0x5C3A;
 	cpu.alt.hl = 0x2758;
 	cpu.i = 63;
 	cpu.im = 1;
-	cpu.iff1 = (hdr->clk & 4) ? 1 : 0;
-	
-	comp.ts.zclk = hdr->clk & 3;
-	set_clk();
-	
-	comp.ts.page[3] = hdr->win3_pg;
 	comp.p7FFD = 16;
-	set_banks();
 	
-	u8 *data = &hdr->data;
-	for (u8 i = 0; i < hdr->n_blk; i++)
+	/* SPG ver.1.0 */
+	if (type == 0x10)
 	{
-		u16 size = ((hdr->blocks[i].size & 0x1F) + 1) * 512;
-		u8 page = hdr->blocks[i].page;
-		u16 offs = (hdr->blocks[i].addr & 0x1F) * 512;
-		u8 *zxram = page_ram(page) + offs;
-		switch (hdr->blocks[i].size & 0xC0)
+		cpu.sp = hdr10->sp;
+		cpu.pc = hdr10->pc;
+		cpu.iff1 = (hdr10->clk & 4) ? 1 : 0;
+		comp.ts.zclk = hdr10->clk & 3;
+		comp.ts.page[3] = hdr10->win3_pg;
+		
+		u8 *data = &hdr10->data;
+		for (u8 i = 0; i < hdr10->n_blk; i++)
 		{
-			case 0x00:
-				memcpy(zxram, data, size);
-				break;
+			u16 size = ((hdr10->blocks[i].size & 0x1F) + 1) * 512;
+			u8 page = hdr10->blocks[i].page;
+			u16 offs = (hdr10->blocks[i].addr & 0x1F) * 512;
+			u8 *zxram = page_ram(page) + offs;
+			switch (hdr10->blocks[i].size & 0xC0)
+			{
+				case 0x00:
+					memcpy(zxram, data, size);
+					break;
+				
+				case 0x01:
+					dehst(zxram, data);
+					break;
+				
+				case 0x02:
+					demlz(zxram, data);
+					break;
+			}
 			
-			case 0x01:
-				dehst(zxram, data);
-				break;
+			data += size;
 			
-			case 0x02:
-				demlz(zxram, data);
+			if (hdr10->blocks[i].addr & 0x80)
 				break;
 		}
-		data += size;
-		if (hdr->blocks[i].addr & 0x80)
-			break;
 	}
+	
+	/* SPG ver.0.x */
+	else
+	{
+		cpu.sp = hdr02->sp;
+		cpu.pc = hdr02->pc;
+		cpu.iff1 = 0;
+		comp.ts.zclk = 0;
+		comp.ts.page[3] = hdr02->win3_pg & ((type == 2) ? 15 : 7);
+		
+		if (hdr02->vars_len)
+		{
+			u16 addr;
+			
+			if (!hdr02->vars_addr)
+				addr = 0x5B00;
+			else
+				addr = hdr02->vars_addr;
+			addr -= 0x4000;		// fucking crotch for only loading to the lower memory
+				
+			memcpy(page_ram(5) + addr, hdr02->vars, hdr02->vars_len);
+		}
+		
+		if (hdr02->pgmgr_addr)
+		{
+			const u8 mgr[] = {0xC5, 0x01, 0xAF, 0x13, 0xED, 0x79, 0xC1, 0xC9};
+			memcpy(page_ram(5) + hdr02->pgmgr_addr - 0x4000, mgr, sizeof(mgr));
+		}
+		
+		u8 *data = &hdr02->data;
+		for (u8 i = 0; i < 15; i++)
+		{
+			u16 addr = hdr02->blocks[i].addr;
+			if (addr < 0x9A00)
+				break;
+			int size = hdr02->blocks[i].size * 2048;
+			if (!i)
+				size += 1536;
+			u8 page = hdr02->blocks[i].page & ((type == 2) ? 15 : 7);
+			int offs = (addr < 0xC000) ? (addr - 0x8000) : (addr - 0xC000);
+			
+			if (addr < 0xC000)
+			{
+				int sz = ((size + offs) > 0x4000) ? (0x4000 - offs) : size;
+				memcpy(page_ram(2) + offs, data, sz);
+				offs = 0x0000;
+				size -= sz;
+				data += sz;
+			}
+			
+			if (size)
+			{
+				memcpy(page_ram(page) + offs, data, size);
+				data += size;
+			}
+			
+			if (type != 2)		// for ver. 0.0 and 0.1 there are 4 dummy bytes in every block descriptor
+				i++;
+		}
+	}
+	
+	set_clk();
+	set_banks();
 	
 	snbuf[0x20] = 0;	// to avoid garbage in header
 	SetWindowText(wnd, (char*)snbuf);
 	return 1;
-}
-
-int readSPG_02(int type)
-{
-	hdrSPG0_2 *hdr = (hdrSPG0_2*)snbuf;
-	return 1;
-}
-
-int readSPG()
-{
-	if (memcmp(&snbuf[0x20], "SpectrumProg", 12))
-		return 0;
-	if (snbuf[0x2C] == 0x10)
-		return readSPG_10();
-	if (snbuf[0x2C] == 0x00)
-		return readSPG_02(0);
-	if (snbuf[0x2C] == 0x01)
-		return readSPG_02(1);
-	if (snbuf[0x2C] == 0x02)
-		return readSPG_02(2);
-	return 0;
 }
 
 int readSNA128()

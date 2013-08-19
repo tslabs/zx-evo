@@ -32,7 +32,7 @@ struct hdrSPG1_0 {
 
 struct blkSPG0_2{
 	u16 addr;
-	u8 len;
+	u8 size;
 	u8 page;
 };
 
@@ -59,6 +59,7 @@ struct hdrSPG0_2 {
 	u8 res3[128-80];
 	blkSPG0_2 blocks[16];
 	u8 vars[320];
+	u8 data;
 };
 
 struct hdrSNA128 {

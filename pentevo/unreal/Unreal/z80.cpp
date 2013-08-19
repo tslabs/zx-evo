@@ -64,6 +64,21 @@ void DbgWm(u32 addr, u8 val)
     z80dbg::wm(addr, val);
 }
 
+void reset_sound(void)
+{
+   ay[0].reset();
+   ay[1].reset();
+   Saa1099.reset();
+
+   if (conf.sound.ay_scheme == AY_SCHEME_CHRV)
+        out(0xfffd,0xff);
+
+   #ifdef MOD_GS
+   if (conf.sound.gsreset)
+       reset_gs();
+   #endif
+}
+
 void reset(ROM_MODE mode)
 {
    comp.pEFF7 &= conf.EFF7_mask;
@@ -140,20 +155,7 @@ void reset(ROM_MODE mode)
 
    cpu.reset();
    reset_tape();
-   ay[0].reset();
-   ay[1].reset();
-   Saa1099.reset();
-
-   if (conf.sound.ay_scheme == AY_SCHEME_CHRV)
-   {
-        out(0xfffd,0xff); //0.36.7
-        //printf("tfmstatuson0=%d\n",tfmstatuson0);
-   };//Alone Coder
-
-   #ifdef MOD_GS
-   if (conf.sound.gsreset)
-       reset_gs();
-   #endif
+   reset_sound();
 
    #ifdef MOD_VID_VD
    comp.vdbase = 0; comp.pVD = 0;
