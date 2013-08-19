@@ -205,18 +205,18 @@ int readSPG()
 			u8 page = hdr10->blocks[i].page;
 			u16 offs = (hdr10->blocks[i].addr & 0x1F) * 512;
 			u8 *zxram = page_ram(page) + offs;
-			switch (hdr10->blocks[i].size & 0xC0)
+			switch ((hdr10->blocks[i].size & 0xC0) >> 6)
 			{
 				case 0x00:
 					memcpy(zxram, data, size);
 					break;
 				
 				case 0x01:
-					dehst(zxram, data);
+					demlz(zxram, data, size);
 					break;
 				
 				case 0x02:
-					demlz(zxram, data);
+					dehrust(zxram, data, size);
 					break;
 			}
 			
