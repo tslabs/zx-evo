@@ -148,7 +148,7 @@ void dma (u8 val)
 				/* RAM filler */
 				else
 				{
-					s = (u16*)(ss + RAM_BASE_M);
+					s = (u16*)(ss + RAM_BASE_M); ss_inc;
 					for (j=0; j<(comp.ts.dmalen + 1); j++)
 					{
 						d = (u16*)(dd + RAM_BASE_M);
