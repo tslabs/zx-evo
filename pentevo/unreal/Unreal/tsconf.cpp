@@ -54,10 +54,9 @@ void dma (u8 val)
 
 		switch (ctrl.dev)
 		{
-			// RAM to RAM
 			case DMA_RAM:
-			{
-				/* blitter */
+			
+				/* Blitter */
 				if (ctrl.rw)
 				{
 					for (j=0; j<(comp.ts.dmalen + 1); j++)
@@ -76,7 +75,7 @@ void dma (u8 val)
 					}
 				}
 
-				/* simple copying */
+				/* RAM to RAM */
 				else
 				{
 					for (j=0; j<(comp.ts.dmalen + 1); j++)
@@ -87,12 +86,12 @@ void dma (u8 val)
 						ss_inc; dd_inc;
 					}
 				}
+				
 				break;
-			}
 
-			// RAM to SPI and SPI to RAM
 			case DMA_SPI:
-			{
+			
+				/* RAM to SPI and SPI to RAM */
 				for (j=0; j<(comp.ts.dmalen + 1); j++)
 				{
 					s = (u16*)(ss + RAM_BASE_M);
@@ -110,11 +109,10 @@ void dma (u8 val)
 					ss_inc; dd_inc;
 				}
 				break;
-			}
 
-			// RAM to IDE and IDE to RAM
 			case DMA_IDE:
-			{
+			
+				/* RAM to IDE and IDE to RAM */
 				for (j=0; j<(comp.ts.dmalen + 1); j++)
 				{
 					s = (u16*)(ss + RAM_BASE_M);
@@ -130,34 +128,51 @@ void dma (u8 val)
 					ss_inc; dd_inc;
 				}
 				break;
-			}
 
-			// RAM to CRAM (palette)
+			// RAM to CRAM or RAM filler
 			case DMA_CRAM:
-			{
-				for (j=0; j<(comp.ts.dmalen + 1); j++)
+			
+				/* CRAM */
+				if (ctrl.rw)
+				{
+					for (j=0; j<(comp.ts.dmalen + 1); j++)
+					{
+						s = (u16*)(ss + RAM_BASE_M);
+						tmp = (dd >> 1) & 0xFF;
+						comp.cram[tmp] = *s;
+						update_clut(tmp);
+						ss_inc; dd_inc;
+					}
+				}
+				
+				/* RAM filler */
+				else
 				{
 					s = (u16*)(ss + RAM_BASE_M);
-					tmp = (dd >> 1) & 0xFF;
-					comp.cram[tmp] = *s;
-					update_clut(tmp);
-					ss_inc; dd_inc;
+					for (j=0; j<(comp.ts.dmalen + 1); j++)
+					{
+						d = (u16*)(dd + RAM_BASE_M);
+						*d = *s;
+						dd_inc;
+					}
 				}
+				
 				break;
-			}
 
-			// RAM to SFILE (sprites)
 			case DMA_SFILE:
-			{
-				for (j=0; j<(comp.ts.dmalen + 1); j++)
+			
+				/* SFILE */
+				if (ctrl.rw)
 				{
-					s = (u16*)(ss + RAM_BASE_M);
-					tmp = (dd >> 1) & 0xFF;
-					comp.sfile[tmp] = *s;
-					ss_inc; dd_inc;
+					for (j=0; j<(comp.ts.dmalen + 1); j++)
+					{
+						s = (u16*)(ss + RAM_BASE_M);
+						tmp = (dd >> 1) & 0xFF;
+						comp.sfile[tmp] = *s;
+						ss_inc; dd_inc;
+					}
 				}
 				break;
-			}
 		}
 
 		if (ctrl.s_algn)
