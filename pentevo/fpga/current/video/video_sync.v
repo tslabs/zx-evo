@@ -6,7 +6,7 @@
 module video_sync (
 
 // clocks
-	input wire clk, f1, c3, c1, pix_stb,
+	input wire clk, f1, c0, c1, c3, pix_stb,
 
 // video parameters
 	input wire [8:0] hpix_beg,
@@ -212,7 +212,7 @@ module video_sync (
 	assign pix_start = hcount == (hpix_beg - x_offs - 1);
 	wire ts_start_coarse = hcount == (hpix_beg - 1);
 	assign ts_start = c3 && ts_start_coarse;
-	assign int_start = (hcount == {hint_beg, 1'b0}) && (vcount == vint_beg);
+	assign int_start = (hcount == {hint_beg, 1'b0}) && (vcount == vint_beg) && c0;
 
 
 	reg vga_vblank;

@@ -8,11 +8,9 @@ module video_ports (
 // clocks
 	input wire clk,
 
-// Z80 controls
 	input wire [ 7:0] d,
-
-// ZX controls
-    input wire        res,
+    input wire res,
+    input wire int_start,
     input wire line_start_s,
 
 // port write strobes
@@ -64,7 +62,6 @@ module video_ports (
 
  );
 
-
     reg [7:0] vpage_r;
     reg [7:0] vconf_r;
     reg [7:0] t0gpage_r;
@@ -73,7 +70,29 @@ module video_ports (
     reg [8:0] t0x_offs_r;
     reg [8:0] t1x_offs_r;
 	reg [7:0] palsel_r;
-
+	
+	wire [8:0] vint_beg_inc = vint_beg + vint_inc;
+	wire [8:0] vint_beg_next = {(vint_beg_inc[8:6] == 3'b101) ? 3'b0 : vint_beg_inc[8:6], vint_beg_inc[5:0]};	// if over 319 lines, decrement 320
+	reg [3:0] vint_inc;
+	always @(posedge clk)
+		if (res)
+		begin
+			vint_beg <= 9'd0;
+			vint_inc <= 4'b0;
+		end
+			
+		else if (vint_begl_wr)
+			vint_beg[7:0] <= d;
+			
+		else if (vint_begh_wr)
+		begin
+			vint_beg[8] <= d[0];
+			vint_inc <= d[7:4];
+		end
+		
+		else if (int_start)
+			vint_beg <= vint_beg_next;
+		
 	always @(posedge clk)
 		if (res)
 		begin
@@ -84,7 +103,6 @@ module video_ports (
 			gy_offs     <= 9'b0;
 			tsconf      <= 8'b0;
 			hint_beg    <= 8'd2;	// pentagon default
-			vint_beg    <= 9'd0;
         end
 
         else
@@ -101,8 +119,6 @@ module video_ports (
 			if (tmpage_wr	)   tmpage          <= d;
 			if (sgpage_wr	)   sgpage          <= d;
 			if (hint_beg_wr )   hint_beg        <= d;
-			if (vint_begl_wr)   vint_beg[7:0]   <= d;
-			if (vint_begh_wr)   vint_beg[8]     <= d[0];
 			
             if (zvpage_wr	)   vpage_r         <= {6'b000001, d[3], 1'b1};
             if (vpage_wr	)   vpage_r         <= d;
