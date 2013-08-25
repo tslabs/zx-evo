@@ -230,6 +230,7 @@ module video_top (
         .palsel         (palsel),
         .hint_beg       (hint_beg),
         .vint_beg       (vint_beg),
+		// .int_start		(int_start),	// uncomment to enable VSINT auto-increment
         .tsconf         (tsconf),
         .tmpage         (tmpage),
         .t0gpage        (t0gpage),
@@ -276,8 +277,9 @@ module video_top (
 	video_sync video_sync (
 		.clk			(clk),
 		.f1				(f1),
-		.c3				(c3),
+		.c0				(c0),
 		.c1				(c1),
+		.c3				(c3),
 		.hpix_beg		(hpix_beg),
 		.hpix_end		(hpix_end),
 		.vpix_beg		(vpix_beg),

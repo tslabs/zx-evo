@@ -511,7 +511,7 @@ module top(
 		.vsync(vvsync),
 		.csync(vcsync),
 
-		// .cfg_60hz(cfg_60hz),
+		// .cfg_60hz(cfg_60hz),		// uncomment to enable 60Hz VGA timings
 		.cfg_60hz(1),
 		.sync_pol(cfg_sync_pol),
 		.vga_on(cfg_vga_on),
