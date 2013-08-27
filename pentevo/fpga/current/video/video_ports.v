@@ -102,7 +102,7 @@ module video_ports (
 			palsel_r    <= 8'h0F;
 			gy_offs     <= 9'b0;
 			tsconf      <= 8'b0;
-			hint_beg    <= 8'd2;	// pentagon default
+			hint_beg    <= 8'd1;
         end
 
         else
