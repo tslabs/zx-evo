@@ -39,6 +39,7 @@ void dma (u8 val)
 {
 	DMACTRL_t ctrl;
 	ctrl.ctrl = val;
+	static int iter1st;
 
 	u8 tmp;
 	int i, j;
@@ -46,7 +47,10 @@ void dma (u8 val)
 	u32 ss, dd;
 	u32 m1 = ctrl.asz ? 0x3FFE00 : 0x3FFF00;
 	u32 m2 = ctrl.asz ? 0x1FF : 0xFF;
+	iter1st = 1;
 
+	u16 sv = *(u16*)(comp.ts.dmasaddr + RAM_BASE_M);
+	
 	for (i=0; i<(comp.ts.dmanum + 1); i++)
 	{
 		ss = comp.ts.dmasaddr;
@@ -148,11 +152,16 @@ void dma (u8 val)
 				/* RAM filler */
 				else
 				{
-					s = (u16*)(ss + RAM_BASE_M); ss_inc;
+					if (iter1st)
+					{
+						ss_inc;
+						iter1st = 0;
+					}
+
 					for (j=0; j<(comp.ts.dmalen + 1); j++)
 					{
 						d = (u16*)(dd + RAM_BASE_M);
-						*d = *s;
+						*d = sv;
 						dd_inc;
 					}
 				}
