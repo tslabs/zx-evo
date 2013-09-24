@@ -1,0 +1,482 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>4.6.16 PIC16 C Libraries</TITLE>
+<META NAME="description" CONTENT="4.6.16 PIC16 C Libraries">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="next" HREF="node137.html">
+<LINK REL="previous" HREF="node135.html">
+<LINK REL="up" HREF="node120.html">
+<LINK REL="next" HREF="node137.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html2677"
+  HREF="node137.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html2671"
+  HREF="node120.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html2665"
+  HREF="node135.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html2673"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html2675"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html2678"
+  HREF="node137.html">4.6.17 PIC16 Port -</A>
+<B> Up:</B> <A NAME="tex2html2672"
+  HREF="node120.html">4.6 The PIC16 port</A>
+<B> Previous:</B> <A NAME="tex2html2666"
+  HREF="node135.html">4.6.15 Generic Pointers</A>
+ &nbsp; <B>  <A NAME="tex2html2674"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html2676"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+<!--Table of Child-Links-->
+<A NAME="CHILD_LINKS"><STRONG>Subsections</STRONG></A>
+
+<UL>
+<LI><A NAME="tex2html2679"
+  HREF="node136.html#SECTION005616100000000000000">4.6.16.1 Standard I/O Streams</A>
+<LI><A NAME="tex2html2680"
+  HREF="node136.html#SECTION005616200000000000000">4.6.16.2 Printing functions</A>
+<LI><A NAME="tex2html2681"
+  HREF="node136.html#SECTION005616300000000000000">4.6.16.3 Signals</A>
+</UL>
+<!--End of Table of Child-Links-->
+<HR>
+
+<H2><A NAME="SECTION005616000000000000000">
+4.6.16 PIC16 C Libraries</A>
+</H2>
+
+<P>
+
+<H3><A NAME="SECTION005616100000000000000">
+4.6.16.1 Standard I/O Streams</A>
+</H3>
+
+<P>
+In the <I>stdio.h</I> the type FILE is defined as:
+
+<P>
+
+<DL COMPACT>
+<DT>
+<DD>typedef&nbsp;char&nbsp;*&nbsp;FILE;
+</DD>
+</DL>This type is the stream type implemented I/O in the PIC18F devices.
+Also the standard input and output streams are declared in stdio.h:
+
+<P>
+
+<DL COMPACT>
+<DT>
+<DD>extern&nbsp;FILE&nbsp;*&nbsp;stdin;
+
+<P>
+extern&nbsp;FILE&nbsp;*&nbsp;stdout;
+</DD>
+</DL>The FILE type is actually a generic pointer which defines one more
+type of generic pointers, the <I>stream</I> pointer. This new type
+has the format:
+
+<P>
+<DIV ALIGN="CENTER">
+<TABLE CELLPADDING=3 BORDER="1">
+<TR><TD ALIGN="CENTER">pointer type</TD>
+<TD ALIGN="CENTER">&lt;7:6&gt;</TD>
+<TD ALIGN="CENTER">&lt;5&gt;</TD>
+<TD ALIGN="CENTER">&lt;4&gt;</TD>
+<TD ALIGN="CENTER">&lt;3:0&gt;</TD>
+<TD ALIGN="CENTER">rest of the pointer</TD>
+<TD ALIGN="LEFT">descrption</TD>
+</TR>
+<TR><TD ALIGN="CENTER">stream</TD>
+<TD ALIGN="CENTER">00</TD>
+<TD ALIGN="CENTER">1</TD>
+<TD ALIGN="CENTER">0</TD>
+<TD ALIGN="CENTER">nnnn</TD>
+<TD ALIGN="CENTER"><TT><I><I>uuuuuuuu uuuuuuuu</I></I></TT></TD>
+<TD ALIGN="LEFT">upper byte high nubble is 0x2n, the rest are zeroes</TD>
+</TR>
+</TABLE>
+</DIV>
+<P>
+<DIV ALIGN="CENTER">
+</DIV>
+
+<P>
+Currently implemented there are 3 types of streams defined:
+
+<P>
+<DIV ALIGN="CENTER">
+<TABLE CELLPADDING=3 BORDER="1">
+<TR><TD ALIGN="CENTER">stream type</TD>
+<TD ALIGN="CENTER">value</TD>
+<TD ALIGN="CENTER">module</TD>
+<TD ALIGN="CENTER">description</TD>
+</TR>
+<TR><TD ALIGN="CENTER">STREAM_USART</TD>
+<TD ALIGN="CENTER"><TT>0x200000UL</TT></TD>
+<TD ALIGN="CENTER">USART</TD>
+<TD ALIGN="CENTER">Writes/Reads characters via the USART peripheral</TD>
+</TR>
+<TR><TD ALIGN="CENTER">STREAM_MSSP</TD>
+<TD ALIGN="CENTER"><TT>0x210000UL</TT></TD>
+<TD ALIGN="CENTER">MSSP</TD>
+<TD ALIGN="CENTER">Writes/Reads characters via the MSSP peripheral</TD>
+</TR>
+<TR><TD ALIGN="CENTER">STREAM_USER</TD>
+<TD ALIGN="CENTER"><TT>0x2f0000UL</TT></TD>
+<TD ALIGN="CENTER">(none)</TD>
+<TD ALIGN="CENTER">Writes/Reads characters via used defined functions</TD>
+</TR>
+</TABLE>
+</DIV>
+<P>
+<DIV ALIGN="CENTER">
+</DIV>
+
+<P>
+The stream identifiers are declared as macros in the stdio.h
+header.
+
+<P>
+In the libc library there exist the functions that are used
+to write to each of the above streams. These are
+
+<P>
+<DL>
+<DT><STRONG>__stream_usart_putchar</STRONG></DT>
+<DD>writes a character at the USART
+stream
+</DD>
+<DT><STRONG>__stream_mssp_putchar</STRONG></DT>
+<DD>writes a character at the MSSP stream
+</DD>
+<DT><STRONG>putchar</STRONG></DT>
+<DD>dummy function. This writes a character to a user specified
+manner.
+</DD>
+</DL>
+In order to increase performance <I>putchar</I> is declared in stdio.h
+as having its parameter in WREG (it has the wparam keyword). In stdio.h
+exists the macro PUTCHAR(arg) that defines the putchar function in
+a user-friendly way. <I>arg</I> is the name of the variable that holds
+the character to print. An example follows:
+
+<P>
+
+<DL COMPACT>
+<DT>
+<DD>#include&nbsp;&lt;pic18fregs.h&gt;&nbsp;
+<BR>#include&nbsp;&lt;stdio.h&gt;&nbsp;
+<BR>&nbsp;
+<BR>
+PUTCHAR(&nbsp;c&nbsp;)
+
+<P>
+{
+
+<P>
+&nbsp;&nbsp;&nbsp;&nbsp;PORTA&nbsp;=&nbsp;c;&nbsp;&nbsp;&nbsp;&nbsp;/*&nbsp;dump&nbsp;character&nbsp;c&nbsp;to&nbsp;PORTA&nbsp;*/
+
+<P>
+}&nbsp;&nbsp;
+<BR>&nbsp;
+<BR>
+void&nbsp;main(void)
+
+<P>
+{
+
+<P>
+&nbsp;&nbsp;&nbsp;&nbsp;stdout&nbsp;=&nbsp;STREAM_USER;&nbsp;&nbsp;&nbsp;&nbsp;/*&nbsp;this&nbsp;is&nbsp;not&nbsp;necessary,&nbsp;since&nbsp;stdout&nbsp;points
+
+<P>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;by&nbsp;default&nbsp;to&nbsp;STREAM_USER&nbsp;*/
+
+<P>
+&nbsp;&nbsp;&nbsp;&nbsp;printf&nbsp;(''This&nbsp;is&nbsp;a&nbsp;printf&nbsp;test&#92;n'');
+
+<P>
+}
+
+<P>
+</DD>
+</DL>
+<P>
+
+<H3><A NAME="SECTION005616200000000000000">
+4.6.16.2 Printing functions</A>
+</H3>
+
+<P>
+PIC16 contains an implementation of the printf-family of functions.
+There exist the following functions:
+
+<P>
+
+<DL COMPACT>
+<DT>
+<DD>extern&nbsp;unsigned&nbsp;int&nbsp;sprintf(char&nbsp;*buf,&nbsp;char&nbsp;*fmt,&nbsp;...);
+
+<P>
+extern&nbsp;unsigned&nbsp;int&nbsp;vsprintf(char&nbsp;*buf,&nbsp;char&nbsp;*fmt,&nbsp;va_list&nbsp;ap);
+
+<P>
+extern&nbsp;unsigned&nbsp;int&nbsp;printf(char&nbsp;*fmt,&nbsp;...);
+
+<P>
+extern&nbsp;unsigned&nbsp;int&nbsp;vprintf(char&nbsp;*fmt,&nbsp;va_lista&nbsp;ap);
+
+<P>
+extern&nbsp;unsigned&nbsp;int&nbsp;fprintf(FILE&nbsp;*fp,&nbsp;char&nbsp;*fmt,&nbsp;...);
+
+<P>
+extern&nbsp;unsigned&nbsp;int&nbsp;vfprintf(FILE&nbsp;*fp,&nbsp;char&nbsp;*fmt,&nbsp;va_list&nbsp;ap);
+</DD>
+</DL>For sprintf and vsprintf <I>buf</I> should normally be a data pointer
+where the resulting string will be placed. No range checking is done
+so the user should allocate the necessary buffer. For fprintf and
+vfprintf <I>fp</I> should be a stream pointer (i.e. stdout, STREAM_MSSP,
+etc...).
+
+<P>
+
+<H3><A NAME="SECTION005616300000000000000">
+4.6.16.3 Signals</A>
+</H3>
+
+<P>
+The PIC18F family of microcontrollers supports a number of interrupt
+sources. A list of these interrupts is shown in the following table:
+
+<P>
+<DIV ALIGN="CENTER">
+<TABLE CELLPADDING=3 BORDER="1">
+<TR><TD ALIGN="LEFT">signal name</TD>
+<TD ALIGN="CENTER">description</TD>
+<TD ALIGN="LEFT">signal name</TD>
+<TD ALIGN="CENTER">description</TD>
+</TR>
+<TR><TD ALIGN="LEFT">SIG_RB</TD>
+<TD ALIGN="CENTER" COLSPAN=1>PORTB change interrupt</TD>
+<TD ALIGN="LEFT">SIG_EE</TD>
+<TD ALIGN="CENTER">EEPROM/FLASH write complete interrupt</TD>
+</TR>
+<TR><TD ALIGN="LEFT">SIG_INT0</TD>
+<TD ALIGN="CENTER">INT0 external interrupt</TD>
+<TD ALIGN="LEFT">SIG_BCOL</TD>
+<TD ALIGN="CENTER">Bus collision interrupt</TD>
+</TR>
+<TR><TD ALIGN="LEFT">SIG_INT1</TD>
+<TD ALIGN="CENTER">INT1 external interrupt</TD>
+<TD ALIGN="LEFT">SIG_LVD</TD>
+<TD ALIGN="CENTER">Low voltage detect interrupt</TD>
+</TR>
+<TR><TD ALIGN="LEFT">SIG_INT2</TD>
+<TD ALIGN="CENTER">INT2 external interrupt</TD>
+<TD ALIGN="LEFT">SIG_PSP</TD>
+<TD ALIGN="CENTER">Parallel slave port interrupt</TD>
+</TR>
+<TR><TD ALIGN="LEFT">SIG_CCP1</TD>
+<TD ALIGN="CENTER">CCP1 module interrupt</TD>
+<TD ALIGN="LEFT">SIG_AD</TD>
+<TD ALIGN="CENTER">AD convertion complete interrupt</TD>
+</TR>
+<TR><TD ALIGN="LEFT">SIG_CCP2</TD>
+<TD ALIGN="CENTER">CCP2 module interrupt</TD>
+<TD ALIGN="LEFT">SIG_RC</TD>
+<TD ALIGN="CENTER">USART receive interrupt</TD>
+</TR>
+<TR><TD ALIGN="LEFT">SIG_TMR0</TD>
+<TD ALIGN="CENTER">TMR0 overflow interrupt</TD>
+<TD ALIGN="LEFT">SIG_TX</TD>
+<TD ALIGN="CENTER">USART transmit interrupt</TD>
+</TR>
+<TR><TD ALIGN="LEFT">SIG_TMR1</TD>
+<TD ALIGN="CENTER">TMR1 overflow interrupt</TD>
+<TD ALIGN="LEFT">SIG_MSSP</TD>
+<TD ALIGN="CENTER">SSP receive/transmit interrupt</TD>
+</TR>
+<TR><TD ALIGN="LEFT">SIG_TMR2</TD>
+<TD ALIGN="CENTER">TMR2 matches PR2 interrupt</TD>
+<TD ALIGN="LEFT">&nbsp;</TD>
+<TD ALIGN="CENTER">&nbsp;</TD>
+</TR>
+<TR><TD ALIGN="LEFT">SIG_TMR3</TD>
+<TD ALIGN="CENTER">TMR3 overflow interrupt</TD>
+<TD ALIGN="LEFT">&nbsp;</TD>
+<TD ALIGN="CENTER">&nbsp;</TD>
+</TR>
+</TABLE>
+</DIV>
+<P>
+<DIV ALIGN="CENTER">
+</DIV>
+
+<P>
+The prototypes for these names are defined in the header
+file <I>signal.h</I> .
+
+<P>
+In order to simplify signal handling, a number of macros
+is provided:
+
+<P>
+
+<UL>
+<LI>[DEF_INTHIGH(name)] begin the definition of the interrupt dispatch
+table for high priority interrupts. <I>name</I> is the function name
+to use.
+</LI>
+<LI>[DEF_INTLOW(name)] begin the definition of the interrupt dispatch
+table fo low priority interrupt. <I>name</I> is the function name
+to use.
+</LI>
+<LI>[DEF_HANDLER(sig,handler)] define a handler for signal <I>sig.</I>
+</LI>
+<LI>[END_DEF] end the declaration of the dispatch table.
+</LI>
+</UL>Additionally there are two more macros to simplify the declaration
+of the signal handler:
+
+<P>
+
+<UL>
+<LI>[SIGHANDLER(handler)] this declares the function prototype for
+the <I>handler</I> function.
+</LI>
+<LI>[SIGHANDLERNAKED(handler)] same as SIGHANDLER() but declares a
+naked function.
+</LI>
+</UL>An example of using the macros above is shown below:
+
+<P>
+
+<DL COMPACT>
+<DT>
+<DD>#include&nbsp;&lt;pic18fregs.h&gt;
+
+<P>
+#include&nbsp;&lt;signal.h&gt;&nbsp;
+<BR>&nbsp;
+<BR>
+DEF_INTHIGH(high_int)
+
+<P>
+DEF_HANDLER(SIG_TMR0,&nbsp;_tmr0_handler)
+
+<P>
+DEF_HANDLER(SIG_BCOL,&nbsp;_bcol_handler)
+
+<P>
+END_DEF&nbsp;
+<BR>&nbsp;
+<BR>
+SIGHANDLER(_tmr0_handler)
+
+<P>
+{
+
+<P>
+&nbsp;&nbsp;/*&nbsp;action&nbsp;to&nbsp;be&nbsp;taken&nbsp;when&nbsp;timer&nbsp;0&nbsp;overflows&nbsp;*/
+
+<P>
+}&nbsp;
+<BR>&nbsp;
+<BR>
+SIGHANDLERNAKED(_bcol_handler)
+
+<P>
+{
+
+<P>
+&nbsp;&nbsp;_asm
+
+<P>
+&nbsp;&nbsp;&nbsp;&nbsp;/*&nbsp;action&nbsp;to&nbsp;be&nbsp;taken&nbsp;when&nbsp;bus&nbsp;collision&nbsp;occurs&nbsp;*/
+
+<P>
+&nbsp;&nbsp;&nbsp;&nbsp;retfie
+
+<P>
+&nbsp;_endasm;
+
+<P>
+}
+</DD>
+</DL><B>NOTES:</B> Special care should be taken when using the above
+scheme:
+
+<P>
+
+<UL>
+<LI>do not place a colon (;) at the end of the DEF_* and END_DEF macros.
+</LI>
+<LI>when declaring SIGHANDLERNAKED handler never forget to use <I>retfie</I>
+for proper returning.
+</LI>
+</UL>
+
+<P>
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html2677"
+  HREF="node137.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html2671"
+  HREF="node120.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html2665"
+  HREF="node135.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html2673"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html2675"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html2678"
+  HREF="node137.html">4.6.17 PIC16 Port -</A>
+<B> Up:</B> <A NAME="tex2html2672"
+  HREF="node120.html">4.6 The PIC16 port</A>
+<B> Previous:</B> <A NAME="tex2html2666"
+  HREF="node135.html">4.6.15 Generic Pointers</A>
+ &nbsp; <B>  <A NAME="tex2html2674"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html2676"
+  HREF="node190.html">Index</A></B> 
+<!--End of Navigation Panel-->
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

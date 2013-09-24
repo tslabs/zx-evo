@@ -1,0 +1,190 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>4.6.8 Libraries</TITLE>
+<META NAME="description" CONTENT="4.6.8 Libraries">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="next" HREF="node129.html">
+<LINK REL="previous" HREF="node127.html">
+<LINK REL="up" HREF="node120.html">
+<LINK REL="next" HREF="node129.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html2563"
+  HREF="node129.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html2557"
+  HREF="node120.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html2551"
+  HREF="node127.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html2559"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html2561"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html2564"
+  HREF="node129.html">4.6.9 Adding New Devices</A>
+<B> Up:</B> <A NAME="tex2html2558"
+  HREF="node120.html">4.6 The PIC16 port</A>
+<B> Previous:</B> <A NAME="tex2html2552"
+  HREF="node127.html">4.6.7 Header Files</A>
+ &nbsp; <B>  <A NAME="tex2html2560"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html2562"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+<!--Table of Child-Links-->
+<A NAME="CHILD_LINKS"><STRONG>Subsections</STRONG></A>
+
+<UL>
+<LI><A NAME="tex2html2565"
+  HREF="node128.html#SECTION00568100000000000000">Building the libraries</A>
+<LI><A NAME="tex2html2566"
+  HREF="node128.html#SECTION00568200000000000000">Output of float values via printf()</A>
+</UL>
+<!--End of Table of Child-Links-->
+<HR>
+
+<H2><A NAME="SECTION00568000000000000000"></A><A NAME="sub:pic16Libraries"></A>
+<BR>
+4.6.8 Libraries
+</H2>
+
+<P>
+The libraries<A NAME="3059"></A> that PIC16<A NAME="3060"></A> port
+depends on are the microcontroller device libraries which contain
+the symbol definitions for the microcontroller special function registers.
+These libraries have the format pic18fxxxx.lib, where <I>xxxx</I>
+is the microcontroller identification number. The specific library
+is selected automatically by the compiler at link stage according
+to the selected device.
+
+<P>
+Libraries are created with gplib which is part of the gputils
+package http://sourceforge.net/projects/gputils.
+
+<P>
+
+<H3><A NAME="SECTION00568100000000000000">
+Building the libraries</A>
+</H3>
+
+<P>
+Before using SDCC/pic16 there are some libraries that need to be compiled.
+This process is done automatically if gputils are found at SDCC's
+compile time. Should you require to rebuild the pic16 libraries manually
+(e.g. in order to enable output of float values<A NAME="3064"></A>
+via <TT>printf()</TT>, see below), these are the steps required to
+do so under Linux or Mac OS X (cygwin might work as well, but is untested):
+
+<P>
+
+<DL COMPACT>
+<DT>
+<DD>cd&nbsp;device/lib/pic16
+
+<P>
+./configure.gnu
+
+<P>
+cd&nbsp;..
+
+<P>
+make&nbsp;model-pic16
+
+<P>
+su&nbsp;-c&nbsp;'make&nbsp;install'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#&nbsp;install&nbsp;the&nbsp;libraries,&nbsp;you&nbsp;need&nbsp;the&nbsp;root&nbsp;password
+
+<P>
+cd&nbsp;../..
+</DD>
+</DL>If you need to install the headers too, do:
+
+<P>
+
+<DL COMPACT>
+<DT>
+<DD>cd&nbsp;device/include
+
+<P>
+su&nbsp;-c&nbsp;'make&nbsp;install'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#&nbsp;install&nbsp;the&nbsp;headers,&nbsp;you&nbsp;need&nbsp;the&nbsp;root&nbsp;password
+</DD>
+</DL>
+<P>
+
+<H3><A NAME="SECTION00568200000000000000">
+Output of float values via printf()</A>
+</H3>
+
+<P>
+The library is normally built without support for displaying float
+values, only &lt;NO FLOAT&gt;<A NAME="3071"></A><A NAME="3072"></A>
+will appear instead of the value. To change this, rebuild the library
+as stated above, but call <TT>./configure.gnu -enable-floats
+</TT>instead of just <TT>./configure.gnu</TT>. Also make sure that at
+least <TT>libc/stdio/vfprintf.c</TT> is actually recompiled, e.g.
+by <TT>touch</TT>ing it after the <TT>configure</TT> run or deleting
+its <TT>.o</TT> file.
+
+<P>
+The more common appraoch of compiling <TT>vfprintf.c</TT> manually
+with <TT>-DUSE_FLOATS=1</TT> should also work, but is untested.
+
+<P>
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html2563"
+  HREF="node129.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html2557"
+  HREF="node120.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html2551"
+  HREF="node127.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html2559"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html2561"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html2564"
+  HREF="node129.html">4.6.9 Adding New Devices</A>
+<B> Up:</B> <A NAME="tex2html2558"
+  HREF="node120.html">4.6 The PIC16 port</A>
+<B> Previous:</B> <A NAME="tex2html2552"
+  HREF="node127.html">4.6.7 Header Files</A>
+ &nbsp; <B>  <A NAME="tex2html2560"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html2562"
+  HREF="node190.html">Index</A></B> 
+<!--End of Navigation Panel-->
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

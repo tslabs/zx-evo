@@ -1,0 +1,515 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>3.4.1 MCS51/DS390 Storage Class Language Extensions</TITLE>
+<META NAME="description" CONTENT="3.4.1 MCS51/DS390 Storage Class Language Extensions">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="next" HREF="node61.html">
+<LINK REL="previous" HREF="node59.html">
+<LINK REL="up" HREF="node59.html">
+<LINK REL="next" HREF="node61.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html1464"
+  HREF="node61.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html1458"
+  HREF="node59.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html1452"
+  HREF="node59.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html1460"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html1462"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1465"
+  HREF="node61.html">3.4.2 Z80/Z180 Storage Class</A>
+<B> Up:</B> <A NAME="tex2html1459"
+  HREF="node59.html">3.4 Storage Class Language</A>
+<B> Previous:</B> <A NAME="tex2html1453"
+  HREF="node59.html">3.4 Storage Class Language</A>
+ &nbsp; <B>  <A NAME="tex2html1461"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html1463"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+<!--Table of Child-Links-->
+<A NAME="CHILD_LINKS"><STRONG>Subsections</STRONG></A>
+
+<UL>
+<LI><A NAME="tex2html1466"
+  HREF="node60.html#SECTION00441100000000000000">3.4.1.1 data
+/ near</A>
+<LI><A NAME="tex2html1467"
+  HREF="node60.html#SECTION00441200000000000000">3.4.1.2 xdata
+/ far</A>
+<LI><A NAME="tex2html1468"
+  HREF="node60.html#SECTION00441300000000000000">3.4.1.3 idata</A>
+<LI><A NAME="tex2html1469"
+  HREF="node60.html#SECTION00441400000000000000">3.4.1.4 pdata</A>
+<LI><A NAME="tex2html1470"
+  HREF="node60.html#SECTION00441500000000000000">3.4.1.5 code</A>
+<LI><A NAME="tex2html1471"
+  HREF="node60.html#SECTION00441600000000000000">3.4.1.6 bit</A>
+<LI><A NAME="tex2html1472"
+  HREF="node60.html#SECTION00441700000000000000">3.4.1.7 sfr / sfr16
+/ sfr32 / sbit</A>
+<LI><A NAME="tex2html1473"
+  HREF="node60.html#SECTION00441800000000000000">3.4.1.8 Pointers to MCS51/DS390 specific memory spaces</A>
+<LI><A NAME="tex2html1474"
+  HREF="node60.html#SECTION00441900000000000000">3.4.1.9 Notes on MCS51 memory layout</A>
+</UL>
+<!--End of Table of Child-Links-->
+<HR>
+
+<H2><A NAME="SECTION00441000000000000000"></A><A NAME="1203"></A>
+<BR>
+3.4.1 MCS51/DS390 Storage Class Language Extensions
+</H2>
+
+<P>
+In addition to the ANSI storage classes SDCC allows the following
+MCS51 specific storage classes:
+
+<P>
+
+<H3><A NAME="SECTION00441100000000000000"></A><A NAME="1204"></A><A NAME="1205"></A><A NAME="1206"></A><A NAME="1207"></A>
+<BR>
+3.4.1.1 data
+/ near
+</H3>
+
+<P>
+This is the <B>default</B> storage class for the Small Memory model
+(<I>data</I> and <I>near</I> or the more ANSI-C compliant forms <I>__data</I>
+and <I>__near</I> can be used synonymously). Variables declared
+with this storage class will be allocated in the directly addressable
+portion of the internal RAM of a 8051, e.g.:
+
+<P>
+<BLOCKQUOTE>
+<TT>__data unsigned char test_data;</TT>
+
+</BLOCKQUOTE>
+Writing 0x01 to this variable generates the assembly code:
+
+<P>
+<BLOCKQUOTE>
+<TT>75*00 01&nbsp;&nbsp;&nbsp;mov&nbsp;&nbsp;_test_data,#0x01</TT>
+
+</BLOCKQUOTE>
+
+<P>
+
+<H3><A NAME="SECTION00441200000000000000"></A><A NAME="1219"></A><A NAME="1220"></A><A NAME="1221"></A><A NAME="1222"></A>
+<BR>
+3.4.1.2 xdata
+/ far
+</H3>
+
+<P>
+Variables declared with this storage class will be placed in the external
+RAM. This is the <B>default</B> storage class for the Large Memory
+model, e.g.:
+
+<P>
+<BLOCKQUOTE>
+<TT>__xdata unsigned char test_xdata;</TT>
+
+</BLOCKQUOTE>
+Writing 0x01 to this variable generates the assembly code:
+
+<P>
+<BLOCKQUOTE>
+<TT>90s00r00&nbsp;&nbsp;&nbsp;mov&nbsp;&nbsp;dptr,#_test_xdata </TT>&nbsp;
+<BR><TT>74&nbsp;01&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mov&nbsp;&nbsp;a,#0x01 </TT>&nbsp;
+<BR><TT>F0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;movx&nbsp;@dptr,a </TT>
+
+</BLOCKQUOTE>
+
+<P>
+
+<H3><A NAME="SECTION00441300000000000000"></A><A NAME="1232"></A><A NAME="1233"></A>
+<BR>
+3.4.1.3 idata
+</H3>
+
+<P>
+Variables declared with this storage class will be allocated into
+the indirectly addressable portion of the internal ram of a 8051,
+e.g.:
+
+<P>
+<BLOCKQUOTE>
+<TT>__idata unsigned char test_idata;</TT>
+
+</BLOCKQUOTE>
+Writing 0x01 to this variable generates the assembly code:
+
+<P>
+<BLOCKQUOTE>
+<TT>78r00&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mov&nbsp;&nbsp;r0,#_test_idata</TT>&nbsp;
+<BR><TT>76&nbsp;01&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mov&nbsp;&nbsp;@r0,#0x01</TT>
+
+</BLOCKQUOTE>
+Please note, the first 128 byte of idata physically access the same
+RAM as the data memory. The original 8051 had 128 byte idata memory,
+nowadays most devices have 256 byte idata memory. The stack<A NAME="1241"></A>
+is located in idata memory.
+
+<P>
+
+<H3><A NAME="SECTION00441400000000000000"></A><A NAME="1242"></A><A NAME="1243"></A>
+<BR>
+3.4.1.4 pdata
+</H3>
+
+<P>
+Paged xdata access is just as straightforward as using the other addressing
+modes of a 8051. It is typically located at the start of xdata and
+has a maximum size of 256 bytes. The following example writes 0x01
+to the pdata variable. Please note, pdata access physically accesses
+xdata memory. The high byte of the address is determined by port P2
+<A NAME="1244"></A>(or in case of some 8051 variants by a separate
+Special Function Register, see section <A HREF="node104.html#sub:MCS51-variants">4.1</A>).
+This is the <B>default</B> storage class for the Medium Memory model,
+e.g.:
+
+<P>
+<BLOCKQUOTE>
+<TT>__pdata unsigned char test_pdata;</TT>
+
+</BLOCKQUOTE>
+Writing 0x01 to this variable generates the assembly code:
+
+<P>
+<BLOCKQUOTE>
+<TT>78r00&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mov r0,#_test_pdata</TT>&nbsp;
+<BR><TT>74 01&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mov a,#0x01 </TT>&nbsp;
+<BR><TT>F2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;movx @r0,a</TT>
+
+</BLOCKQUOTE>
+If the --xstack<A NAME="1255"></A> option is used the pdata memory
+area is followed by the xstack memory area and the sum of their sizes
+is limited to 256 bytes.
+
+<P>
+
+<H3><A NAME="SECTION00441500000000000000"></A><A NAME="1256"></A><A NAME="1257"></A>
+<BR>
+3.4.1.5 code
+</H3>
+
+<P>
+'Variables' declared with this storage class will be placed in the
+code memory:
+
+<P>
+<BLOCKQUOTE>
+<TT>__code unsigned char test_code;</TT>
+
+</BLOCKQUOTE>
+Read access to this variable generates the assembly code:
+
+<P>
+<BLOCKQUOTE>
+<TT>90s00r6F&nbsp;&nbsp;&nbsp;mov dptr,#_test_code</TT>&nbsp;
+<BR><TT>E4&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;clr a</TT>&nbsp;
+<BR><TT>93&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;movc a,@a+dptr </TT>
+
+</BLOCKQUOTE>
+<TT>char</TT> indexed arrays of characters in code memory can be accessed
+efficiently:
+
+<P>
+<BLOCKQUOTE>
+<TT>__code char test_array[] = {'c','h','e','a','p'}; </TT>
+
+</BLOCKQUOTE>
+Read access to this array using an 8-bit unsigned index generates
+the assembly code:
+
+<P>
+<BLOCKQUOTE>
+<TT>E5*00&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mov a,_index </TT>
+</BLOCKQUOTE>
+<P>
+<BLOCKQUOTE><TT>90s00r41&nbsp;&nbsp;&nbsp;mov dptr,#_test_array</TT>
+</BLOCKQUOTE>
+<P>
+<BLOCKQUOTE><TT>93&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;movc a,@a+dptr </TT>
+
+</BLOCKQUOTE>
+
+<P>
+
+<H3><A NAME="SECTION00441600000000000000"></A><A NAME="1275"></A><A NAME="1276"></A>
+<BR>
+3.4.1.6 bit
+</H3>
+
+<P>
+This is a data-type and a storage class specifier. When a variable
+is declared as a bit, it is allocated into the bit addressable memory
+of 8051, e.g.:
+
+<P>
+<BLOCKQUOTE>
+<TT>__bit test_bit;</TT>
+
+</BLOCKQUOTE>
+Writing 1 to this variable generates the assembly code:
+
+<P>
+<BLOCKQUOTE>
+<TT>D2*00&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;setb&nbsp;_test_bit</TT>
+
+</BLOCKQUOTE>
+The bit addressable memory consists of 128 bits which are located
+from 0x20 to 0x2f in data memory. 
+<BR>
+Apart from this 8051 specific storage class most architectures support
+ANSI-C bitfields<A NAME="1283"></A><A NAME="tex2html4"
+  HREF="footnode.html#foot1284"><SUP>3.2</SUP></A>. In accordance with ISO/IEC 9899 bits and bitfields without an explicit
+signed modifier are implemented as unsigned.
+
+<P>
+
+<H3><A NAME="SECTION00441700000000000000"></A><A NAME="1285"></A><A NAME="1286"></A><A NAME="1287"></A><A NAME="1288"></A><A NAME="1289"></A><A NAME="1290"></A><A NAME="1291"></A><A NAME="1292"></A>
+<BR>
+3.4.1.7 sfr / sfr16
+/ sfr32 / sbit
+</H3>
+
+<P>
+Like the bit keyword, <I>sfr / sfr16 / sfr32 / sbit</I> signify both
+a data-type and storage class, they are used to describe the <I>s</I>pecial
+<I>f</I>unction <I>r</I>egisters and <I>s</I>pecial <I>bit</I> variables
+of a 8051, eg:
+
+<P>
+<BLOCKQUOTE>
+<TT>__sfr __at<A NAME="1300"></A><A NAME="1301"></A> (0x80) P0;&nbsp; /*
+special function register P0 at location 0x80 */</TT>&nbsp;
+<BR>&nbsp;
+<BR><TT>/* 16 bit special function register combination for timer
+0</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp; with the high byte at location 0x8C and the low byte
+at location 0x8A */</TT>&nbsp;
+<BR><TT>__sfr16 __at (0x8C8A) TMR0;</TT>&nbsp;
+<BR>&nbsp;
+<BR><TT>__sbit __at<A NAME="1309"></A><A NAME="1310"></A> (0xd7) CY;&nbsp; /*
+CY (Carry Flag<A NAME="1312"></A><A NAME="1313"></A>) */</TT>
+
+</BLOCKQUOTE>
+Special function registers which are located on an address dividable
+by 8 are bit-addressable, an <I>sbit</I> addresses a specific bit
+within these sfr.
+<BR>
+16 Bit and 32 bit special function register combinations which require
+a certain access order are better not declared using <I>sfr16</I>
+or <I>sfr32.</I> Allthough SDCC usually accesses them Least Significant
+Byte (LSB) first, this is not guaranteed.
+<BR>
+<P>
+Please note, if you use a header file which was written for another
+compiler then the sfr / sfr16 / sfr32 / sbit Storage Class extensions
+will most likely be <I>not</I> compatible. Specifically the syntax
+<TT>&nbsp;sfr P0 = 0x80;&nbsp;</TT> is compiled <I>without warning</I> by
+SDCC to an assignment of 0x80 to a variable called P0 <TT>.</TT> <B>Nevertheless it is possible to write header files<A NAME="1325"></A><A NAME="1326"></A>
+which can be shared among different compilers (see section <A HREF="node149.html#sec:Porting-code-to-other-compilers">6.1</A>). </B>
+
+<P>
+
+<H3><A NAME="SECTION00441800000000000000"></A><A NAME="1328"></A>
+<BR>
+3.4.1.8 Pointers to MCS51/DS390 specific memory spaces
+</H3>
+
+<P>
+SDCC allows (via language extensions) pointers to explicitly point
+to any of the memory spaces<A NAME="1329"></A> of the 8051. In addition
+to the explicit pointers, the compiler uses (by default) generic pointers
+which can be used to point to any of the memory spaces.
+<BR>
+<BR>
+Pointer declaration examples:
+
+<P>
+<BLOCKQUOTE>
+<TT>/* pointer physically in internal ram pointing to object
+in external ram */ </TT>&nbsp;
+<BR><TT>__xdata unsigned char * __data p;</TT>&nbsp;
+<BR>&nbsp;
+<BR><TT>/* pointer physically in external ram pointing to object
+in internal ram */ </TT>&nbsp;
+<BR><TT>__data unsigned char * __xdata p;</TT>&nbsp;
+<BR>&nbsp;
+<BR><TT>/* pointer physically in code rom pointing to data in xdata
+space */ </TT>&nbsp;
+<BR><TT>__xdata unsigned char * __code p;</TT>&nbsp;
+<BR>&nbsp;
+<BR><TT>/* pointer physically in code space pointing to data in
+code space */ </TT>&nbsp;
+<BR><TT>__code unsigned char * __code p;</TT>&nbsp;
+<BR>&nbsp;
+<BR><TT>/* generic pointer physically located in xdata space */</TT>&nbsp;
+<BR><TT>unsigned char * __xdata p;</TT>&nbsp;
+<BR>&nbsp;
+<BR><TT>/* generic pointer physically located in default memory
+space */</TT>&nbsp;
+<BR><TT>unsigned char * p;</TT>&nbsp;
+<BR>&nbsp;
+<BR><TT>/* the following is a function pointer<A NAME="1356"></A>
+physically located in data space */</TT>&nbsp;
+<BR><TT>char (* __data fp)(void);</TT>
+
+</BLOCKQUOTE>
+Well you get the idea. 
+<BR>
+<BR>
+All unqualified pointers are treated as 3-byte (4-byte for the ds390)
+<I>generic</I> pointers. 
+<BR>
+<BR>
+The highest order byte of the <I>generic</I> pointers contains the
+data space information. Assembler support routines are called whenever
+data is stored or retrieved using <I>generic</I> pointers. These are
+useful for developing reusable library<A NAME="1365"></A> routines.
+Explicitly specifying the pointer<A NAME="1366"></A> type will generate
+the most efficient code.
+
+<P>
+
+<H3><A NAME="SECTION00441900000000000000"></A><A NAME="1367"></A>
+<BR>
+3.4.1.9 Notes on MCS51 memory layout
+</H3>
+
+<P>
+The 8051 family of microcontrollers have a minimum of 128 bytes of
+internal RAM memory which is structured as follows:
+<BR>
+<BR>- Bytes 00-1F - 32 bytes to hold up to 4 banks of the registers R0
+to R7, 
+<BR>- Bytes 20-2F - 16 bytes to hold 128 bit<A NAME="1368"></A> variables and,
+
+<BR>- Bytes 30-7F - 80 bytes for general purpose use.
+<BR>
+<P>
+Additionally some members of the MCS51 family may have up to 128 bytes
+of additional, indirectly addressable, internal RAM memory (<I>idata</I><A NAME="1370"></A><A NAME="1371"></A>).
+Furthermore, some chips may have some built in external memory (<I>xdata</I><A NAME="1373"></A><A NAME="1374"></A>)
+which should not be confused with the internal, directly addressable
+RAM memory (<I>data</I><A NAME="1376"></A><A NAME="1377"></A>).
+Sometimes this built in <I>xdata</I> memory has to be activated before
+using it (you can probably find this information on the datasheet
+of the microcontroller your are using, see also section <A HREF="node78.html#sub:Startup-Code">3.12</A>&nbsp;Startup-Code).
+
+<P>
+Normally SDCC will only use the first bank<A NAME="1380"></A>
+of registers (register bank 0), but it is possible to specify that
+other banks of registers (keyword <I>using</I> <I><A NAME="1382"></A><A NAME="1383"></A></I>)
+should be used for example in interrupt<A NAME="1384"></A><A NAME="1385"></A>
+routines. By default, the compiler will place the stack after the
+last byte of allocated memory for variables. For example, if the first
+2 banks of registers are used, and only four bytes are used for <I>data</I>
+variables, it will position the base of the internal stack at address
+20 (0x14). This implies that as the stack<A NAME="1387"></A> grows, it
+will use up the remaining register banks, and the 16 bytes used by
+the 128 bit variables, and 80 bytes for general purpose use. If any
+bit variables are used, the data variables will be placed in unused
+register banks and after the byte holding the last bit variable. For
+example, if register banks 0 and 1 are used, and there are 9 bit variables
+(two bytes used), <I>data</I> variables will be placed starting from
+address 0x10 to 0x20 and continue at address 0x22. You can also use
+--data-loc<A NAME="1389"></A> to specify the start address
+of the <I>data</I> and --iram-size<A NAME="1391"></A>
+to specify the size of the total internal RAM (<I>data</I>+<I>idata</I>).
+
+<BR>
+<P>
+By default the 8051 linker will place the stack after the last byte
+of (i)data variables. Option --stack-loc<A NAME="1394"></A>
+allows you to specify the start of the stack, i.e. you could start
+it after any data in the general purpose area. If your microcontroller
+has additional indirectly addressable internal RAM (<I>idata</I>)
+you can place the stack on it. You may also need to use --xdata-loc<A NAME="1396"></A>
+to set the start address of the external RAM (<I>xdata</I>) and --xram-size<A NAME="1398"></A>
+to specify its size. Same goes for the code memory, using --code-loc<A NAME="1399"></A>
+and --code-size<A NAME="1400"></A>. If in doubt, don't
+specify any options and see if the resulting memory layout is appropriate,
+then you can adjust it.
+
+<P>
+The linker generates two files with memory allocation information.
+The first, with extension .map<A NAME="1401"></A> shows all the variables
+and segments. The second with extension .mem<A NAME="1402"></A> shows
+the final memory layout. The linker will complain either if memory
+segments overlap, there is not enough memory, or there is not enough
+space for stack. If you get any linking warnings and/or errors related
+to stack or segments allocation, take a look at either the .map or
+.mem files to find out what the problem is. The .mem file may even
+suggest a solution to the problem.
+<P><P>
+<BR>
+
+
+<P>
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html1464"
+  HREF="node61.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html1458"
+  HREF="node59.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html1452"
+  HREF="node59.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html1460"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html1462"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1465"
+  HREF="node61.html">3.4.2 Z80/Z180 Storage Class</A>
+<B> Up:</B> <A NAME="tex2html1459"
+  HREF="node59.html">3.4 Storage Class Language</A>
+<B> Previous:</B> <A NAME="tex2html1453"
+  HREF="node59.html">3.4 Storage Class Language</A>
+ &nbsp; <B>  <A NAME="tex2html1461"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html1463"
+  HREF="node190.html">Index</A></B> 
+<!--End of Navigation Panel-->
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

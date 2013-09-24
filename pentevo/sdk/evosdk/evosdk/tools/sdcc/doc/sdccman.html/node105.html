@@ -1,0 +1,136 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>4.1.1 pdata access by SFR </TITLE>
+<META NAME="description" CONTENT="4.1.1 pdata access by SFR ">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="next" HREF="node106.html">
+<LINK REL="previous" HREF="node104.html">
+<LINK REL="up" HREF="node104.html">
+<LINK REL="next" HREF="node106.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html2193"
+  HREF="node106.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html2187"
+  HREF="node104.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html2181"
+  HREF="node104.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html2189"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html2191"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html2194"
+  HREF="node106.html">4.1.2 Other Features available</A>
+<B> Up:</B> <A NAME="tex2html2188"
+  HREF="node104.html">4.1 MCS51 variants</A>
+<B> Previous:</B> <A NAME="tex2html2182"
+  HREF="node104.html">4.1 MCS51 variants</A>
+ &nbsp; <B>  <A NAME="tex2html2190"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html2192"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H2><A NAME="SECTION00511000000000000000">
+4.1.1 pdata access by SFR </A>
+</H2>
+
+<P>
+With the upcome of devices with internal xdata and flash memory devices
+using port P2<A NAME="2753"></A> as dedicated I/O port is becoming
+more popular. Switching the high byte for pdata<A NAME="2754"></A>
+access which was formerly done by port P2 is then achieved by a Special
+Function Register<A NAME="2755"></A>. In well-established MCS51 tradition
+the address of this <I>sfr</I> is where the chip designers decided
+to put it. Needless to say that they didn't agree on a common name
+either. So that the startup code can correctly initialize xdata variables,
+you should define an sfr with the name _XPAGE<TT><A NAME="2757"></A></TT>
+at the appropriate location if the default, port P2, is not used for
+this. Some examples are:
+
+<P>
+<BLOCKQUOTE>
+<TT>__sfr __at (0x85) _XPAGE; /* Ramtron VRS51 family a.k.a. MPAGE
+*/</TT>
+</BLOCKQUOTE>
+<P>
+<BLOCKQUOTE><TT>__sfr __at (0x92) _XPAGE; /* Cypress EZ-USB family,
+Texas Instruments (Chipcon) a.k.a. MPAGE */</TT>
+</BLOCKQUOTE>
+<P>
+<BLOCKQUOTE><TT>__sfr __at (0x91) _XPAGE; /* Infineon (Siemens) C500
+family a.k.a. XPAGE */</TT>
+</BLOCKQUOTE>
+<P>
+<BLOCKQUOTE><TT>__sfr __at (0xaf) _XPAGE; /* some Silicon Labs (Cygnal)
+chips a.k.a. EMI0CN */</TT>
+</BLOCKQUOTE>
+<P>
+<BLOCKQUOTE><TT>__sfr __at (0xaa) _XPAGE; /* some Silicon Labs (Cygnal)
+chips a.k.a. EMI0CN */</TT>
+
+</BLOCKQUOTE>
+For more exotic implementations further customizations may be needed.
+See section <A HREF="node78.html#sub:Startup-Code">3.12</A> for other possibilities.
+
+<P>
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html2193"
+  HREF="node106.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html2187"
+  HREF="node104.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html2181"
+  HREF="node104.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html2189"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html2191"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html2194"
+  HREF="node106.html">4.1.2 Other Features available</A>
+<B> Up:</B> <A NAME="tex2html2188"
+  HREF="node104.html">4.1 MCS51 variants</A>
+<B> Previous:</B> <A NAME="tex2html2182"
+  HREF="node104.html">4.1 MCS51 variants</A>
+ &nbsp; <B>  <A NAME="tex2html2190"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html2192"
+  HREF="node190.html">Index</A></B> 
+<!--End of Navigation Panel-->
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

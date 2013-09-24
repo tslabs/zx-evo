@@ -1,0 +1,166 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>4.6.9 Adding New Devices to the Port</TITLE>
+<META NAME="description" CONTENT="4.6.9 Adding New Devices to the Port">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="next" HREF="node130.html">
+<LINK REL="previous" HREF="node128.html">
+<LINK REL="up" HREF="node120.html">
+<LINK REL="next" HREF="node130.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html2579"
+  HREF="node130.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html2573"
+  HREF="node120.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html2567"
+  HREF="node128.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html2575"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html2577"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html2580"
+  HREF="node130.html">4.6.10 Memory Models</A>
+<B> Up:</B> <A NAME="tex2html2574"
+  HREF="node120.html">4.6 The PIC16 port</A>
+<B> Previous:</B> <A NAME="tex2html2568"
+  HREF="node128.html">4.6.8 Libraries</A>
+ &nbsp; <B>  <A NAME="tex2html2576"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html2578"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H2><A NAME="SECTION00569000000000000000">
+4.6.9 Adding New Devices to the Port</A>
+</H2>
+
+<P>
+Adding support for a new 16bit PIC MCU requires the following steps:
+
+<P>
+
+<OL>
+<LI>Create picDEVICE.c and picDEVICE.h from pDEVICE.inc using
+<BR><TT>perl /path/to/sdcc/support/scripts/inc2h-pic16.pl /path/to/gputils/header/pDEVICE.inc</TT>
+</LI>
+<LI><TT>mv picDEVICE.h /path/to/sdcc/device/include/pic16</TT>
+</LI>
+<LI><TT>mv picDEVICE.c /path/to/sdcc/device/lib/pic16/libdev</TT>
+</LI>
+<LI>Add DEVICE to <TT>/path/to/sdcc/device/lib/pic16/pics.all</TT>
+<BR>
+Note: No 18f prefix here!
+</LI>
+<LI>Edit <TT>/path/to/sdcc/device/include/pic16/adc.h</TT>&nbsp;
+<BR>
+Add the new devices to the correct ADC style class (depending on the
+number of ADC channels).
+<BR>
+Do not touch <TT>adc.h</TT> if the device does not offer any ADC at
+all.
+</LI>
+<LI>Edit <TT>/path/to/sdcc/device/include/pic16/pic18fregs.h</TT>
+<BR>
+The file format is self-explanatory, just add
+<BR><TT>#elif defined(picDEVICE)</TT>&nbsp;
+<BR><TT>#  include &lt;picDEVICE.h&gt;</TT>
+<BR>
+at the right place (keep the file sorted, please).
+</LI>
+<LI>Edit <TT>/path/to/sdcc/device/include/pic16devices.txt</TT>&nbsp;
+<BR>
+Copy and modify an existing entry or create a new one and insert it
+at the correct place (keep the file sorted, please).
+</LI>
+<LI>Add the device to <TT>/path/to/sdcc/device/lib/pic16/libdev/Makefile.am</TT>
+<BR>
+Copy an existing entry and adjust the device name.
+</LI>
+<LI>Add the device to <TT>/path/to/sdcc/device/lib/pic16/libio/Makefile.am</TT>
+<BR>
+Copy the record from the 18f2220 and adjust the device name.
+<BR>
+If the new device does not offer ADC, I<!-- MATH
+ $^{\text{2}}$
+ -->
+<IMG
+ WIDTH="10" HEIGHT="20" ALIGN="BOTTOM" BORDER="0"
+ SRC="img3.png"
+ ALT="$ ^{\text{2}}$">
+C, and/or (E)USART
+functionality as assumed by the library, remove the lines with references
+to <TT>adc/*.c</TT>, <TT>usart/*.c</TT>, or <TT>usart/*.c</TT>,
+respectively.
+</LI>
+<LI>Update <TT>libdev/Makefile.in</TT> and <TT>libio/Makefile.in</TT>
+using
+<BR><TT>./bootstrap.sh</TT>
+<BR>
+in <TT>/path/to/sdcc/device/lib/pic16</TT>.
+</LI>
+<LI>Recompile the pic16 libraries as described in <A HREF="node128.html#sub:pic16Libraries">4.6.8</A>.
+</LI>
+</OL>
+
+<P>
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html2579"
+  HREF="node130.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html2573"
+  HREF="node120.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html2567"
+  HREF="node128.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html2575"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html2577"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html2580"
+  HREF="node130.html">4.6.10 Memory Models</A>
+<B> Up:</B> <A NAME="tex2html2574"
+  HREF="node120.html">4.6 The PIC16 port</A>
+<B> Previous:</B> <A NAME="tex2html2568"
+  HREF="node128.html">4.6.8 Libraries</A>
+ &nbsp; <B>  <A NAME="tex2html2576"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html2578"
+  HREF="node190.html">Index</A></B> 
+<!--End of Navigation Panel-->
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

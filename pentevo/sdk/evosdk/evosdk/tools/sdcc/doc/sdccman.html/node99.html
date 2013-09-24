@@ -1,0 +1,165 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>3.18.1 MCS51 Memory Models</TITLE>
+<META NAME="description" CONTENT="3.18.1 MCS51 Memory Models">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="next" HREF="node100.html">
+<LINK REL="previous" HREF="node98.html">
+<LINK REL="up" HREF="node98.html">
+<LINK REL="next" HREF="node100.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html2052"
+  HREF="node100.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html2046"
+  HREF="node98.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html2040"
+  HREF="node98.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html2048"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html2050"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html2053"
+  HREF="node100.html">3.18.2 DS390 Memory Model</A>
+<B> Up:</B> <A NAME="tex2html2047"
+  HREF="node98.html">3.18 Memory Models</A>
+<B> Previous:</B> <A NAME="tex2html2041"
+  HREF="node98.html">3.18 Memory Models</A>
+ &nbsp; <B>  <A NAME="tex2html2049"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html2051"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+<!--Table of Child-Links-->
+<A NAME="CHILD_LINKS"><STRONG>Subsections</STRONG></A>
+
+<UL>
+<LI><A NAME="tex2html2054"
+  HREF="node99.html#SECTION004181100000000000000">3.18.1.1 Small, Medium and Large</A>
+<LI><A NAME="tex2html2055"
+  HREF="node99.html#SECTION004181200000000000000">3.18.1.2 External Stack</A>
+</UL>
+<!--End of Table of Child-Links-->
+<HR>
+
+<H2><A NAME="SECTION004181000000000000000"></A><A NAME="2499"></A><A NAME="2500"></A>
+<BR>
+3.18.1 MCS51 Memory Models
+</H2>
+
+<P>
+
+<H3><A NAME="SECTION004181100000000000000">
+3.18.1.1 Small, Medium and Large</A>
+</H3>
+
+<P>
+SDCC allows three memory models for MCS51 code, <I>small, medium</I>
+and <I>large</I>. Modules compiled with different memory models
+should <I>never</I> be combined together or the results would be unpredictable.
+The library routines supplied with the compiler are compiled as small,
+medium and large. The compiled library modules are contained in separate
+directories as small, medium and large so that you can link to the
+appropriate set.
+
+<P>
+When the medium or large model is used all variables declared without
+a storage class will be allocated into the external ram, this includes
+all parameters and local variables (for non-reentrant<A NAME="2505"></A>
+functions). When the small model is used variables without storage
+class are allocated in the internal ram.
+
+<P>
+Judicious usage of the processor specific storage classes<A NAME="2506"></A>
+and the 'reentrant' function type will yield much more efficient code,
+than using the large model. Several optimizations are disabled when
+the program is compiled using the large model, it is therefore recommended
+that the small model be used unless absolutely required.
+
+<P>
+
+<H3><A NAME="SECTION004181200000000000000"></A><A NAME="sub:External-Stack"></A><A NAME="2508"></A><A NAME="2509"></A>
+<BR>
+3.18.1.2 External Stack
+</H3>
+
+<P>
+The external stack (--xstack option<A NAME="2510"></A>) is located
+in pdata<A NAME="2511"></A> memory (usually
+at the start of the external ram segment) and uses all unused space
+in pdata (max. 256 bytes). When --xstack option is used to compile
+the program, the parameters and local variables<A NAME="2512"></A>
+of all reentrant functions are allocated in this area. This option
+is provided for programs with large stack space requirements. When
+used with the --stack-auto<A NAME="2513"></A> option, all parameters
+and local variables are allocated on the external stack (note: support
+libraries will need to be recompiled with the same options. There
+is a predefined target in the library makefile).
+
+<P>
+The compiler outputs the higher order address byte of the external
+ram segment into port P2<A NAME="2514"></A> (see also section
+<A HREF="node104.html#sub:MCS51-variants">4.1</A>), therefore when using the External Stack
+option, this port <I>may not</I> be used by the application program.
+
+<P>
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html2052"
+  HREF="node100.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html2046"
+  HREF="node98.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html2040"
+  HREF="node98.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html2048"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html2050"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html2053"
+  HREF="node100.html">3.18.2 DS390 Memory Model</A>
+<B> Up:</B> <A NAME="tex2html2047"
+  HREF="node98.html">3.18 Memory Models</A>
+<B> Previous:</B> <A NAME="tex2html2041"
+  HREF="node98.html">3.18 Memory Models</A>
+ &nbsp; <B>  <A NAME="tex2html2049"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html2051"
+  HREF="node190.html">Index</A></B> 
+<!--End of Navigation Panel-->
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

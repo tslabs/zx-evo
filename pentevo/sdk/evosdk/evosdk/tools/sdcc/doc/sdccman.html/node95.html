@@ -1,0 +1,502 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>3.17.2 Stdclib functions (puts, printf, strcat etc.)</TITLE>
+<META NAME="description" CONTENT="3.17.2 Stdclib functions (puts, printf, strcat etc.)">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="next" HREF="node96.html">
+<LINK REL="previous" HREF="node94.html">
+<LINK REL="up" HREF="node93.html">
+<LINK REL="next" HREF="node96.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html1989"
+  HREF="node96.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html1983"
+  HREF="node93.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html1977"
+  HREF="node94.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html1985"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html1987"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1990"
+  HREF="node96.html">3.17.3 Math functions (sinf,</A>
+<B> Up:</B> <A NAME="tex2html1984"
+  HREF="node93.html">3.17 Library Routines</A>
+<B> Previous:</B> <A NAME="tex2html1978"
+  HREF="node94.html">3.17.1 Compiler support routines</A>
+ &nbsp; <B>  <A NAME="tex2html1986"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html1988"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+<!--Table of Child-Links-->
+<A NAME="CHILD_LINKS"><STRONG>Subsections</STRONG></A>
+
+<UL>
+<LI><A NAME="tex2html1991"
+  HREF="node95.html#SECTION004172100000000000000">3.17.2.1 &lt;stdio.h&gt;</A>
+<UL>
+<LI><A NAME="tex2html1992"
+  HREF="node95.html#SECTION004172110000000000000">3.17.2.1.1 getchar(), putchar()</A>
+<LI><A NAME="tex2html1993"
+  HREF="node95.html#SECTION004172120000000000000">3.17.2.1.2 printf()</A>
+</UL>
+<BR>
+<LI><A NAME="tex2html1994"
+  HREF="node95.html#SECTION004172200000000000000">3.17.2.2 &lt;malloc.h&gt;</A>
+</UL>
+<!--End of Table of Child-Links-->
+<HR>
+
+<H2><A NAME="SECTION004172000000000000000">
+3.17.2 Stdclib functions (puts, printf, strcat etc.)</A>
+</H2>
+
+<P>
+
+<H3><A NAME="SECTION004172100000000000000">
+3.17.2.1 &lt;stdio.h&gt;</A>
+</H3>
+
+<P>
+
+<H4><A NAME="SECTION004172110000000000000">
+3.17.2.1.1 getchar(), putchar()</A>
+</H4>
+
+<P>
+<A NAME="2408"></A>As usual on embedded systems you have to provide
+your own <TT>getchar()<A NAME="2409"></A></TT> and <TT>putchar()<A NAME="2410"></A></TT>
+routines. SDCC does not know whether the system connects to a serial
+line with or without handshake, LCD, keyboard or other device. And
+whether a <TT>lf</TT> to <TT>crlf</TT> conversion within <TT>putchar()</TT>
+is intended. You'll find examples for serial routines f.e. in sdcc/device/lib.
+For the mcs51 this minimalistic polling <TT>putchar()</TT> routine
+might be a start:
+
+<P>
+<BLOCKQUOTE>
+<TT>void putchar (char c) { </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;while (!TI)&nbsp;&nbsp;&nbsp; /* assumes UART is initialized
+*/</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;;</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;TI = 0;</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;SBUF = c;</TT>&nbsp;
+<BR><TT>}</TT>
+
+</BLOCKQUOTE>
+
+<P>
+
+<H4><A NAME="SECTION004172120000000000000">
+3.17.2.1.2 printf()</A>
+</H4>
+
+<P>
+The default <TT>printf()<A NAME="2425"></A></TT> implementation in <TT>printf_large.c</TT>
+does not support float<A NAME="2427"></A> (except on ds390),
+only &lt;NO FLOAT&gt;<A NAME="2428"></A><A NAME="2429"></A>
+will be printed instead of the value. To enable floating point output,
+recompile it with the option <I>-DUSE_FLOATS=1<A NAME="2430"></A></I>
+on the command line. Use <I>--model-large<A NAME="2431"></A></I>
+for the mcs51 port, since this uses a lot of memory. To enable float
+support for the pic16 targets, see <A HREF="node128.html#sub:pic16Libraries">4.6.8</A>.
+
+<P>
+If you're short on code memory you might want to use <TT>printf_small()<A NAME="2433"></A></TT>
+<I>instead</I> of <TT>printf().</TT> For the mcs51 there additionally
+are assembly versions <TT>printf_tiny()<A NAME="2436"></A></TT>
+(subset of printf using less than 270 bytes) and <TT>printf_fast()<A NAME="2437"></A></TT>
+and <TT>printf_fast_f()<A NAME="2438"></A></TT> (floating-point
+aware version of printf_fast) which should fit the requirements of
+many embedded systems (printf_fast() can be customized by unsetting
+#defines to <I>not</I> support long variables and field widths).
+Be sure to use only one of these printf options within a project.
+<BR>
+<P>
+Feature matrix of different <I>printf</I> options on mcs51.
+
+<P>
+<TABLE CELLPADDING=3 BORDER="1">
+<TR><TH ALIGN="LEFT" VALIGN="MIDDLE" WIDTH=0> 
+<B><FONT SIZE="+1">mcs51</FONT></B> </TH>
+<TD ALIGN="CENTER">printf<A NAME="2451"></A></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=0>
+<DIV ALIGN="CENTER">
+printf <FONT SIZE="-2">USE_FLOATS=1</FONT> 
+</DIV></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=0>
+<DIV ALIGN="CENTER">
+printf_small 
+</DIV></TD>
+<TD ALIGN="CENTER">printf_fast</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=0>
+<DIV ALIGN="CENTER">
+printf_fast_f 
+</DIV></TD>
+<TD ALIGN="CENTER">printf_tiny</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="MIDDLE" WIDTH=0>
+
+filename </TD>
+<TD ALIGN="CENTER"><FONT SIZE="-2">printf_large.c</FONT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=0>
+<DIV ALIGN="CENTER">
+<FONT SIZE="-2">printf_large.c</FONT> 
+</DIV></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=0>
+<DIV ALIGN="CENTER">
+<FONT SIZE="-2">printfl.c</FONT> 
+</DIV></TD>
+<TD ALIGN="CENTER"><FONT SIZE="-2">printf_fast.c</FONT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=0>
+<DIV ALIGN="CENTER">
+<FONT SIZE="-2">printf_fast_f.c</FONT> 
+</DIV></TD>
+<TD ALIGN="CENTER"><FONT SIZE="-2">printf_tiny.c</FONT></TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="MIDDLE" WIDTH=0> 
+ 
+''Hello World'' size
+
+<P>
+small / large </TD>
+<TD ALIGN="CENTER">1.7k / 2.4k</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=0>
+<DIV ALIGN="CENTER">
+4.3k / 5.6k 
+</DIV></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=0>
+<DIV ALIGN="CENTER">
+1.2k / 1.8k 
+</DIV></TD>
+<TD ALIGN="CENTER">1.3k / 1.3k</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=0>
+<DIV ALIGN="CENTER">
+1.9k / 1.9k 
+</DIV></TD>
+<TD ALIGN="CENTER">0.44k / 0.44k</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="MIDDLE" WIDTH=0> 
+ 
+code size
+
+<P>
+small / large </TD>
+<TD ALIGN="CENTER">1.4k / 2.0k</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=0>
+<DIV ALIGN="CENTER">
+2.8k / 3.7k 
+</DIV></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=0>
+<DIV ALIGN="CENTER">
+0.45k / 0.47k (+ _ltoa) 
+</DIV></TD>
+<TD ALIGN="CENTER">1.2k / 1.2k</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=0>
+<DIV ALIGN="CENTER">
+1.6k / 1.6k 
+</DIV></TD>
+<TD ALIGN="CENTER">0.26k / 0.26k</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="MIDDLE" WIDTH=0>
+ 
+formats </TD>
+<TD ALIGN="CENTER">cdi<I>o</I>psux</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=0>
+<DIV ALIGN="CENTER">
+cdfi<I>o</I>psux 
+</DIV></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=0>
+<DIV ALIGN="CENTER">
+cd<I>o</I>sx 
+</DIV></TD>
+<TD ALIGN="CENTER">cdsux</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=0>
+<DIV ALIGN="CENTER">
+cdfsux 
+</DIV></TD>
+<TD ALIGN="CENTER">cdsux</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="MIDDLE" WIDTH=0> 
+ 
+long (32 bit) support </TD>
+<TD ALIGN="CENTER">x</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=0>
+<DIV ALIGN="CENTER">
+x 
+</DIV></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=0>
+<DIV ALIGN="CENTER">
+x 
+</DIV></TD>
+<TD ALIGN="CENTER">x</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=0>
+<DIV ALIGN="CENTER">
+x 
+</DIV></TD>
+<TD ALIGN="CENTER">-</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="MIDDLE" WIDTH=0> 
+ 
+byte arguments on stack </TD>
+<TD ALIGN="CENTER">b</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=0>
+<DIV ALIGN="CENTER">
+b 
+</DIV></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=0>
+<DIV ALIGN="CENTER">
+- 
+</DIV></TD>
+<TD ALIGN="CENTER">-</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=0>
+<DIV ALIGN="CENTER">
+- 
+</DIV></TD>
+<TD ALIGN="CENTER">-</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="MIDDLE" WIDTH=0> 
+ 
+float format<A NAME="2462"></A> </TD>
+<TD ALIGN="CENTER">-</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=0>
+<DIV ALIGN="CENTER">
+%f 
+</DIV></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=0>
+<DIV ALIGN="CENTER">
+- 
+</DIV></TD>
+<TD ALIGN="CENTER">-</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=0>
+<DIV ALIGN="CENTER">
+%f<A NAME="tex2html11"
+  HREF="footnode.html#foot2463"><SUP>3.9</SUP></A> 
+</DIV></TD>
+<TD ALIGN="CENTER">-</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="MIDDLE" WIDTH=0> 
+ 
+float formats %e %g </TD>
+<TD ALIGN="CENTER">-</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=0>
+<DIV ALIGN="CENTER">
+- 
+</DIV></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=0>
+<DIV ALIGN="CENTER">
+- 
+</DIV></TD>
+<TD ALIGN="CENTER">-</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=0>
+<DIV ALIGN="CENTER">
+- 
+</DIV></TD>
+<TD ALIGN="CENTER">-</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="MIDDLE" WIDTH=0> 
+ 
+field width </TD>
+<TD ALIGN="CENTER">x</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=0>
+<DIV ALIGN="CENTER">
+x 
+</DIV></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=0>
+<DIV ALIGN="CENTER">
+- 
+</DIV></TD>
+<TD ALIGN="CENTER">x</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=0>
+<DIV ALIGN="CENTER">
+x 
+</DIV></TD>
+<TD ALIGN="CENTER">-</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="MIDDLE" WIDTH=0> 
+
+string speed<A NAME="tex2html12"
+  HREF="footnode.html#foot5524"><SUP>3.10</SUP></A>,
+
+<P>
+small / large </TD>
+<TD ALIGN="CENTER">1.52 / 2.59 ms</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=0>
+<DIV ALIGN="CENTER">
+1.53 / 2.62 ms 
+</DIV></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=0>
+<DIV ALIGN="CENTER">
+0.92 / 0.93 ms 
+</DIV></TD>
+<TD ALIGN="CENTER">0.45 / 0.45 ms</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=0>
+<DIV ALIGN="CENTER">
+0.46 / 0.46 ms 
+</DIV></TD>
+<TD ALIGN="CENTER">0.45 / 0.45 ms</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="MIDDLE" WIDTH=0> 
+
+int speed<A NAME="tex2html13"
+  HREF="footnode.html#foot5525"><SUP>3.11</SUP></A>,
+
+<P>
+small / large </TD>
+<TD ALIGN="CENTER">3.01 / 3.61 ms</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=0>
+<DIV ALIGN="CENTER">
+3.01 / 3.61 ms 
+</DIV></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=0>
+<DIV ALIGN="CENTER">
+3.51 / 18.13 ms 
+</DIV></TD>
+<TD ALIGN="CENTER">0.22 / 0.22 ms</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=0>
+<DIV ALIGN="CENTER">
+0.23 / 0.23 ms 
+</DIV></TD>
+<TD ALIGN="CENTER">0.25 / 0.25 ms<A NAME="tex2html14"
+  HREF="footnode.html#foot2474"><SUP>3.12</SUP></A></TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="MIDDLE" WIDTH=0> 
+
+long speed<A NAME="tex2html15"
+  HREF="footnode.html#foot5526"><SUP>3.13</SUP></A>,
+
+<P>
+small / large </TD>
+<TD ALIGN="CENTER">5.37 / 6.31 ms</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=0>
+<DIV ALIGN="CENTER">
+5.37 / 6.31 ms 
+</DIV></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=0>
+<DIV ALIGN="CENTER">
+8.71 / 40.65 ms 
+</DIV></TD>
+<TD ALIGN="CENTER">0.40 / 0.40 ms</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=0>
+<DIV ALIGN="CENTER">
+0.40 / 0.40 ms 
+</DIV></TD>
+<TD ALIGN="CENTER">-</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="MIDDLE" WIDTH=0> 
+
+float speed<A NAME="tex2html16"
+  HREF="footnode.html#foot5527"><SUP>3.14</SUP></A>,
+
+<P>
+small / large </TD>
+<TD ALIGN="CENTER">-</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=0>
+<DIV ALIGN="CENTER">
+7.49 / 22.47 ms 
+</DIV></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=0>
+<DIV ALIGN="CENTER">
+- 
+</DIV></TD>
+<TD ALIGN="CENTER">-</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=0>
+<DIV ALIGN="CENTER">
+1.04 / 1.04 ms 
+</DIV></TD>
+<TD ALIGN="CENTER">-</TD>
+</TR>
+</TABLE>
+
+<P>
+
+<H3><A NAME="SECTION004172200000000000000"></A><A NAME="2480"></A>
+<BR>
+3.17.2.2 &lt;malloc.h&gt;
+</H3>
+
+<P>
+As of SDCC 2.6.2 you no longer need to call an initialization routine
+before using dynamic memory allocation<A NAME="2481"></A>
+and a default heap<A NAME="2482"></A> space of 1024 bytes is provided
+for malloc to allocate memory from. If you need a different heap size
+you need to recompile _heap.c with the required size defined in HEAP_SIZE.
+It is recommended to make a copy of this file into your project directory
+and compile it there with:
+
+<P>
+<BLOCKQUOTE>
+<TT>sdcc -c _heap.c -D HEAP_SIZE=2048</TT>
+
+</BLOCKQUOTE>
+And then link it with:
+
+<P>
+<BLOCKQUOTE>
+<TT>sdcc main.rel _heap.rel</TT>
+
+</BLOCKQUOTE>
+
+<P>
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html1989"
+  HREF="node96.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html1983"
+  HREF="node93.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html1977"
+  HREF="node94.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html1985"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html1987"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1990"
+  HREF="node96.html">3.17.3 Math functions (sinf,</A>
+<B> Up:</B> <A NAME="tex2html1984"
+  HREF="node93.html">3.17 Library Routines</A>
+<B> Previous:</B> <A NAME="tex2html1978"
+  HREF="node94.html">3.17.1 Compiler support routines</A>
+ &nbsp; <B>  <A NAME="tex2html1986"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html1988"
+  HREF="node190.html">Index</A></B> 
+<!--End of Navigation Panel-->
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

@@ -1,0 +1,96 @@
+
+  MEGALZ PC REINCARNATION
+
+ 
+ I. What the f*ck that all is about?
+
+ From  the  ancient times I was using nice MegaLZ speccy packer.
+But there were two problems - first, it wasn't released publicly
+(available  only to mayHem members), second, it has somewhat not
+perfect  packing in comparison with other packers available.  On
+the other hand, I like MegaLZ depacker, which is 110 bytes long,
+fully relocatable and just looks nice =) That's why I decided to
+improve  packing  ratio while keeping original nice 110-byte Z80
+depacker  (and thus remaining original packed file format).  For
+the  simplicity  and  for  memory  consumption  & speed reasons,
+packer  was re-written from scratch in C in portable manner.  Up
+to now console MegaLZ packer was successfully built under win32,
+amigaos, linux-i586 and ARM.
+
+
+ II. Some words about packing efficiency.
+
+ While  the  original  Speccy  MegaLZ  (old  MegaLZ)  was  quite
+straightforward in selection of LZ codes, this new MegaLZ does a
+nice  thing:  it selects the best LZ codes chain through all the
+file,  using  smart  algorithm,  which  is close to the Dijkstra
+algorithm  for  searching  a shortest path.  As a result, packed
+file  sizes  decrease  up  to  5%,  which  is equivalent to size
+decrease  about 1000 bytes on 20kB packed file.  Some comparison
+of packing ratio with other packers available on Speccy was also
+done.
+
+
+ III. How to use it.
+
+ First,  take suitable executable file from "Exe" directory, and
+then  put  it to the comfortable place you can call it from.  Up
+to  now, there are 3 executables:  for amigaos (built on SAS/C),
+for  win32  console (built on MSVS 6), for linux (built for i586
+on   gcc3.2.3   under  linux  redhat7.3).   If  for  some  cases
+executables  do  not fit your needs, you have then to build from
+sources your own one...
+ Then, invoke it with no arguments and follow tips.
+ If  you prefer reading instructions first, you have to remember
+simple  pattern:   "MegaLZ  [options]  <input filename> [<output
+filename>]",  where  options  could  be -h, -g and -d.  -h means
+just  printing  some  help.   -g  means using simple (greedy) LZ
+codes  selection instead of advanced (optimal).  In greedy mode,
+files  get bigger yet their size coincide with the size given by
+original Speccy MegaLZ packer.  -d means doing depacking instead
+of  packing.   If  you  do  not  specify  output filename, input
+filename will be used with addition of suitable extension.
+
+
+ IV. Depacking back.
+
+ First  way  to  recover  files  from  packed  ones is to use -d
+option.   The  second  and  the  most  natural way is to use Z80
+depacker,  which  is  in "Z80" directory, given as Z80 assembler
+source  code,  easily  adaptable  to  any  particular assembler.
+Detailed usage instructions are given in the source file itself.
+Third  way  - using universal C depacker, which is the part of C
+source code of overall MegaLZ packer.
+
+
+ V. Where is that all?
+
+ Distributive  is  divided  in three parts:  basic part contains
+only  executables  and  Z80  depacker, development part contains
+complete  C  sources  and  benchmark  part  contains thoroughful
+comparison of packing abilities with other Speccy packers.
+
+
+ VI. Copy right?
+
+ The original MegaLZ Speccy packer, Z80 depacker and packed file
+format  (C) fyrex^mhm.
+
+ Advanced C MegaLZ packer  (C) lvd^mhm.
+
+ This  product  is  supplied  "as-is",  without any explicit and
+implicit   warranties   of   any  kind.   The  authors  are  not
+responsible  for  any  kind  of  problems,  losses, injuries and
+deceases resulting anyhow from using, not using or misusing this
+product.
+ The  product can be spread freely as original archives provided
+no changes are made to it.
+
+
+
+
+
+ 04.01.2006       mayHem          lvd^mhm
+
+
+mailto: lvd@dgap.mipt.ru

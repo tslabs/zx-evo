@@ -1,0 +1,117 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>8.1.8 Bit-shifting Operations.</TITLE>
+<META NAME="description" CONTENT="8.1.8 Bit-shifting Operations.">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="next" HREF="node177.html">
+<LINK REL="previous" HREF="node175.html">
+<LINK REL="up" HREF="node168.html">
+<LINK REL="next" HREF="node177.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html3343"
+  HREF="node177.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html3337"
+  HREF="node168.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html3331"
+  HREF="node175.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html3339"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html3341"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html3344"
+  HREF="node177.html">8.1.9 Bit-rotation</A>
+<B> Up:</B> <A NAME="tex2html3338"
+  HREF="node168.html">8.1 Optimizations</A>
+<B> Previous:</B> <A NAME="tex2html3332"
+  HREF="node175.html">8.1.7 'switch' Statements</A>
+ &nbsp; <B>  <A NAME="tex2html3340"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html3342"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H2><A NAME="SECTION00918000000000000000"></A><A NAME="3951"></A>
+<BR>
+8.1.8 Bit-shifting Operations.
+</H2>
+
+<P>
+Bit shifting is one of the most frequently used operation in embedded
+programming. SDCC tries to implement bit-shift operations in the most
+efficient way possible, e.g.:
+
+<P>
+<BLOCKQUOTE>
+<TT>unsigned char i;</TT>&nbsp;
+<BR><TT>... </TT>&nbsp;
+<BR><TT>i &gt;&gt;= 4; </TT>&nbsp;
+<BR><TT>...</TT>
+
+</BLOCKQUOTE>
+generates the following code:
+
+<P>
+<BLOCKQUOTE>
+<TT>mov&nbsp; a,_i </TT>&nbsp;
+<BR><TT>swap a </TT>&nbsp;
+<BR><TT>anl&nbsp; a,#0x0f </TT>&nbsp;
+<BR><TT>mov&nbsp; _i,a</TT>
+
+</BLOCKQUOTE>
+In general SDCC will never setup a loop if the shift count is known.
+Another example:
+
+<P>
+<BLOCKQUOTE>
+<TT>unsigned int i; </TT>&nbsp;
+<BR><TT>... </TT>&nbsp;
+<BR><TT>i &gt;&gt;= 9; </TT>&nbsp;
+<BR><TT>...</TT>
+
+</BLOCKQUOTE>
+will generate:
+
+<P>
+<BLOCKQUOTE>
+<TT>mov&nbsp;&nbsp;a,(_i + 1) </TT>&nbsp;
+<BR><TT>mov&nbsp;&nbsp;(_i + 1),#0x00 </TT>&nbsp;
+<BR><TT>clr&nbsp;&nbsp;c </TT>&nbsp;
+<BR><TT>rrc&nbsp;&nbsp;a </TT>&nbsp;
+<BR><TT>mov&nbsp;&nbsp;_i,a</TT>
+
+</BLOCKQUOTE>
+
+<P>
+<BR><HR>
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>
