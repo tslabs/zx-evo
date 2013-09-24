@@ -1,0 +1,959 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>Footnotes</TITLE>
+<META NAME="description" CONTENT="Footnotes">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="previous" HREF="node188.html">
+<LINK REL="up" HREF="sdccman.html">
+</HEAD>
+
+<BODY >
+
+<DL>
+<DT><A NAME="foot88">... NAME="87"></A></A><A
+ HREF="node3.html#tex2html1"><SUP>1.1</SUP></A></DT>
+<DD>Obviously this has pros and cons
+
+<PRE>.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+</PRE>
+</DD>
+<DT><A NAME="foot536">... not</A><A
+ HREF="node25.html#tex2html2"><SUP>2.1</SUP></A></DT>
+<DD>If you should know why please drop us a note
+
+<PRE>.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+</PRE>
+</DD>
+<DT><A NAME="foot5118">... line</A><A
+ HREF="node41.html#tex2html3"><SUP>3.1</SUP></A></DT>
+<DD>the command backfills<A NAME="677"></A> unused memory
+with 0x12 and the overall 16 bit sum of the complete 64 kByte block
+is zero. If the program counter on an mcs51 runs wild the backfill
+pattern 0x12 will be interpreted as an <TT>lcall</TT> to address <TT>0x1212</TT>
+(where an emergency routine could sit).
+
+<PRE>.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+</PRE>
+</DD>
+<DT><A NAME="foot1284">...bitfields</A><A
+ HREF="node60.html#tex2html4"><SUP>3.2</SUP></A></DT>
+<DD>Not really meant as examples, but nevertheless showing what bitfields
+are about: device/include/mc68hc908qy.h and support/regression/tests/bitfields.c
+
+<PRE>.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+</PRE>
+</DD>
+<DT><A NAME="foot1758">...
+anyway</A><A
+ HREF="node77.html#tex2html5"><SUP>3.3</SUP></A></DT>
+<DD>possible exception: if a function is called ONLY from 'interrupt'
+functions using a particular bank, it can be declared with the same
+'using' attribute as the calling 'interrupt' functions. For instance,
+if you have several ISRs using bank one, and all of them call memcpy(),
+it might make sense to create a specialized version of memcpy() 'using
+1', since this would prevent the ISR from having to save bank zero
+to the stack on entry and switch to bank zero before calling the function
+
+<PRE>.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+</PRE>
+</DD>
+<DT><A NAME="foot5446">...
+-plosgff</A><A
+ HREF="node79.html#tex2html6"><SUP>3.4</SUP></A></DT>
+<DD>''-plosgff'' are the assembler options used in http://sdcc.svn.sourceforge.net/viewvc/sdcc/trunk/sdcc/device/lib/mcs51/Makefile.in?view=markup 
+
+<PRE>.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+</PRE>
+</DD>
+<DT><A NAME="foot2074">..._endasm;''</A><A
+ HREF="node83.html#tex2html7"><SUP>3.5</SUP></A></DT>
+<DD>Note, that the single underscore form (_asm and _endasm) are not
+C99-compatible, and for C-99 compatibility, the double-underscore
+form (__asm and __endasm) has to be used. The latter is also used
+in the library functions.
+
+<PRE>.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+</PRE>
+</DD>
+<DT><A NAME="foot2232">...).</A><A
+ HREF="node85.html#tex2html8"><SUP>3.6</SUP></A></DT>
+<DD>This is a slightly more stringent rule than absolutely necessary,
+but stays always on the safe side. Labels in the form of nnnnn$ are
+local labels in the assembler, locality of which is confined within
+two labels of the standard form. The compiler uses the same form for
+labels within a function (but starting from nnnnn=00100); and places
+always a standard label at the beginning of a function, thus limiting
+the locality of labels within the scope of the function. So, if the
+inline assembler part would be embedded into C-code, an improperly
+placed non-local label in the assembler would break up the reference
+space for labels created by the compiler for the C-code, leading to
+an assembling error.
+
+<P>
+The numeric part of local labels does not need to have 5 digits (although
+this is the form of labels output by the compiler), any valid integer
+will do. Please refer to the assemblers documentation for further
+details.
+
+<PRE>.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+</PRE>
+</DD>
+<DT><A NAME="foot5496">... </A><A
+ HREF="node85.html#tex2html9"><SUP>3.7</SUP></A></DT>
+<DD>Here, the C-label <TT>clabel</TT> is translated by the compiler into
+a local label, so the locality of labels within the function is not
+broken.
+
+<PRE>.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+</PRE>
+</DD>
+<DT><A NAME="foot5511">... improvement</A><A
+ HREF="node92.html#tex2html10"><SUP>3.8</SUP></A></DT>
+<DD>These floating point routines (<I>not</I> sinf(), cosf(), ...) for
+the mcs51 are implemented in assembler. 
+
+<PRE>.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+</PRE>
+</DD>
+<DT><A NAME="foot2463">... \%f</A><A
+ HREF="node95.html#tex2html11"><SUP>3.9</SUP></A></DT>
+<DD>Range limited to +/- 4294967040, precision limited to 8 digits past
+decimal
+
+<PRE>.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+</PRE>
+</DD>
+<DT><A NAME="foot5524">... speed</A><A
+ HREF="node95.html#tex2html12"><SUP>3.10</SUP></A></DT>
+<DD>Execution time of printf(&#34;%s%c%s%c%c%c&#34;, &#34;Hello&#34;,
+' ', &#34;World&#34;, '!', '&#92;r', '&#92;n');
+standard 8051 @ 22.1184 MHz, empty putchar()
+
+<PRE>.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+</PRE>
+</DD>
+<DT><A NAME="foot5525">... speed</A><A
+ HREF="node95.html#tex2html13"><SUP>3.11</SUP></A></DT>
+<DD>Execution time of printf(&#34;%d&#34;, -12345); standard
+8051 @ 22.1184 MHz, empty putchar()
+
+<PRE>.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+</PRE>
+</DD>
+<DT><A NAME="foot2474">... ms</A><A
+ HREF="node95.html#tex2html14"><SUP>3.12</SUP></A></DT>
+<DD>printf_tiny integer speed is data dependent, worst case is 0.33 ms
+
+<PRE>.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+</PRE>
+</DD>
+<DT><A NAME="foot5526">... speed</A><A
+ HREF="node95.html#tex2html15"><SUP>3.13</SUP></A></DT>
+<DD>Execution time of printf(&#34;%ld&#34;, -123456789); standard
+8051 @ 22.1184 MHz, empty putchar()
+
+<PRE>.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+</PRE>
+</DD>
+<DT><A NAME="foot5527">... speed</A><A
+ HREF="node95.html#tex2html16"><SUP>3.14</SUP></A></DT>
+<DD>Execution time of printf(&#34;%.3f&#34;, -12345.678); standard
+8051 @ 22.1184 MHz, empty putchar()
+
+<PRE>.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+</PRE>
+</DD>
+<DT><A NAME="foot3003">...</A><A
+ HREF="node126.html#tex2html17"><SUP>4.1</SUP></A></DT>
+<DD>The old format (ie. #pragma stack 0x5ff) is deprecated and will cause
+the stack pointer to cross page boundaries (or even exceed the available
+data RAM) and crash the program. Make sure that stack does not cross
+page boundaries when using the SMALL stack model.
+
+<PRE>.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+</PRE>
+</DD>
+<DT><A NAME="foot5597">...</A><A
+ HREF="node134.html#tex2html18"><SUP>4.2</SUP></A></DT>
+<DD>This is not a problem when
+
+<P>
+
+<OL>
+<LI>this is a HIGH interrupt ISR and LOW interrupts are <I>disabled</I>
+or not used.
+</LI>
+<LI>when the ISR is small enough not to reach the next interrupt's vector
+address.
+</LI>
+</OL>
+
+<PRE>.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+</PRE>
+</DD>
+<DT><A NAME="foot3193">...</A><A
+ HREF="node134.html#tex2html19"><SUP>4.3</SUP></A></DT>
+<DD>NOTE that when the _naked attribute is specified for an interrupt
+routine, then NO registers are stored or restored.
+
+<PRE>.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+</PRE>
+</DD>
+<DT><A NAME="foot3675">... burnout</A><A
+ HREF="node155.html#tex2html20"><SUP>6.1</SUP></A></DT>
+<DD>burnout is bad for electronic devices, programmers and motorcycle
+tyres
+
+<PRE>.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+</PRE>
+</DD>
+<DT><A NAME="foot3692">... day</A><A
+ HREF="node157.html#tex2html21"><SUP>7.1</SUP></A></DT>
+<DD>220 daily downloads on average Jan-Sept 2006 and about 150 daily downloads
+between 2002 and 2005. This does not include other methods of distribution.
+
+<PRE>.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+</PRE>
+</DD>
+<DT><A NAME="foot3706">...http://sourceforge.net/mail/?group_id=599</A><A
+ HREF="node160.html#tex2html22"><SUP>7.2</SUP></A></DT>
+<DD>Traffic on sdcc-devel and sdcc-user is about 100 mails/month each
+not counting automated messages (mid 2003)
+
+<PRE>.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+</PRE>
+</DD>
+<DT><A NAME="foot5681">... encouraged</A><A
+ HREF="node166.html#tex2html23"><SUP>7.3</SUP></A></DT>
+<DD>the phrase &#34;use in education&#34; might evoke the association
+&#34;<I>only</I> fit for use in education&#34;. This connotation
+is not intended but nevertheless risked as the licensing of SDCC makes
+it difficult to offer educational discounts
+
+<PRE>.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+</PRE>
+</DD>
+<DT><A NAME="foot5714">... little-endian</A><A
+ HREF="node178.html#tex2html24"><SUP>8.1</SUP></A></DT>
+<DD>Usually 8-bit processors don't care much about endianness. This is
+not the case for the standard 8051 which only has an instruction to
+increment its <I>dptr</I><A NAME="4017"></A>-datapointer so little-endian
+is the more efficient byte order.
+
+<PRE>.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+</PRE>
+</DD>
+</DL>
+</BODY>
+</HTML>

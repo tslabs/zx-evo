@@ -1,0 +1,145 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>2. Installing SDCC</TITLE>
+<META NAME="description" CONTENT="2. Installing SDCC">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="next" HREF="node38.html">
+<LINK REL="previous" HREF="node2.html">
+<LINK REL="up" HREF="sdccman.html">
+<LINK REL="next" HREF="node11.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html608"
+  HREF="node11.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html602"
+  HREF="sdccman.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html596"
+  HREF="node9.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html604"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html606"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html609"
+  HREF="node11.html">2.1 Configure Options</A>
+<B> Up:</B> <A NAME="tex2html603"
+  HREF="sdccman.html">SDCC Compiler User Guide</A>
+<B> Previous:</B> <A NAME="tex2html597"
+  HREF="node9.html">1.7 Wishes for the</A>
+ &nbsp; <B>  <A NAME="tex2html605"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html607"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H1><A NAME="SECTION00300000000000000000"></A><A NAME="172"></A>
+<BR>
+2. Installing SDCC
+</H1>
+
+<P>
+For most users it is sufficient to skip to either section <A HREF="node15.html#sub:Building-SDCC-on-Linux">2.4.1</A>
+(Unix) or section <A HREF="node22.html#sub:Windows-Install">2.4.8</A> (Windows). More detailed
+instructions follow below.
+
+<P>
+<BR><HR>
+<!--Table of Child-Links-->
+<A NAME="CHILD_LINKS"><STRONG>Subsections</STRONG></A>
+
+<UL>
+<LI><A NAME="tex2html610"
+  HREF="node11.html">2.1 Configure Options</A>
+<LI><A NAME="tex2html611"
+  HREF="node12.html">2.2 Install paths</A>
+<LI><A NAME="tex2html612"
+  HREF="node13.html">2.3 Search Paths</A>
+<LI><A NAME="tex2html613"
+  HREF="node14.html">2.4 Building SDCC</A>
+<UL>
+<LI><A NAME="tex2html614"
+  HREF="node15.html">2.4.1 Building SDCC on Linux</A>
+<LI><A NAME="tex2html615"
+  HREF="node16.html">2.4.2 Building SDCC on Mac OS X</A>
+<LI><A NAME="tex2html616"
+  HREF="node17.html">2.4.3 Cross compiling SDCC on Linux for Windows</A>
+<LI><A NAME="tex2html617"
+  HREF="node18.html">2.4.4 Building SDCC using Cygwin and Mingw32</A>
+<LI><A NAME="tex2html618"
+  HREF="node19.html">2.4.5 Building SDCC Using Microsoft Visual C++ 6.0/NET (MSVC)</A>
+<LI><A NAME="tex2html619"
+  HREF="node20.html">2.4.6 Building SDCC Using Borland</A>
+<LI><A NAME="tex2html620"
+  HREF="node21.html">2.4.7 Windows Install Using a ZIP Package</A>
+<LI><A NAME="tex2html621"
+  HREF="node22.html">2.4.8 Windows Install Using the Setup Program</A>
+<LI><A NAME="tex2html622"
+  HREF="node23.html">2.4.9 VPATH feature</A>
+</UL>
+<BR>
+<LI><A NAME="tex2html623"
+  HREF="node24.html">2.5 Building the Documentation</A>
+<LI><A NAME="tex2html624"
+  HREF="node25.html">2.6 Reading the Documentation</A>
+<LI><A NAME="tex2html625"
+  HREF="node26.html">2.7 Testing the SDCC Compiler</A>
+<LI><A NAME="tex2html626"
+  HREF="node27.html">2.8 Install Trouble-shooting</A>
+<UL>
+<LI><A NAME="tex2html627"
+  HREF="node28.html">2.8.1 If SDCC does not build correctly</A>
+<LI><A NAME="tex2html628"
+  HREF="node29.html">2.8.2 What the ''./configure'' does</A>
+<LI><A NAME="tex2html629"
+  HREF="node30.html">2.8.3 What the ''make'' does</A>
+<LI><A NAME="tex2html630"
+  HREF="node31.html">2.8.4 What the ''make install'' command does.</A>
+</UL>
+<BR>
+<LI><A NAME="tex2html631"
+  HREF="node32.html">2.9 Components of SDCC</A>
+<UL>
+<LI><A NAME="tex2html632"
+  HREF="node33.html">2.9.1 sdcc - The Compiler</A>
+<LI><A NAME="tex2html633"
+  HREF="node34.html">2.9.2 sdcpp - The C-Preprocessor</A>
+<LI><A NAME="tex2html634"
+  HREF="node35.html">2.9.3 as<I>xxxx</I>, aslink, link-<I>xxx</I> - The Assemblers and Linkage
+Editors</A>
+<LI><A NAME="tex2html635"
+  HREF="node36.html">2.9.4 s51 - The Simulator</A>
+<LI><A NAME="tex2html636"
+  HREF="node37.html">2.9.5 sdcdb - Source Level Debugger</A>
+</UL></UL>
+<!--End of Table of Child-Links-->
+<BR><HR>
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

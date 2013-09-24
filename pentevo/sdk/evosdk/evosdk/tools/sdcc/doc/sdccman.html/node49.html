@@ -1,0 +1,188 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>3.2.3 Linker Options</TITLE>
+<META NAME="description" CONTENT="3.2.3 Linker Options">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="next" HREF="node50.html">
+<LINK REL="previous" HREF="node48.html">
+<LINK REL="up" HREF="node46.html">
+<LINK REL="next" HREF="node50.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html1295"
+  HREF="node50.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html1289"
+  HREF="node46.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html1283"
+  HREF="node48.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html1291"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html1293"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1296"
+  HREF="node50.html">3.2.4 MCS51 Options</A>
+<B> Up:</B> <A NAME="tex2html1290"
+  HREF="node46.html">3.2 Command Line Options</A>
+<B> Previous:</B> <A NAME="tex2html1284"
+  HREF="node48.html">3.2.2 Preprocessor Options</A>
+ &nbsp; <B>  <A NAME="tex2html1292"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html1294"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H2><A NAME="SECTION00423000000000000000"></A><A NAME="856"></A><A NAME="857"></A>
+<BR>
+3.2.3 Linker Options
+</H2>
+
+<P>
+
+<UL>
+<LI>[<B>-L&nbsp;-</B><B>-lib-path<A NAME="861"></A><A NAME="862"></A></B>&nbsp;&lt;absolute] path
+to additional libraries&gt; This option is passed to the linkage editor's
+additional libraries<A NAME="863"></A> search path. The path name
+must be absolute. Additional library files may be specified in the
+command line. See section Compiling programs for more details.
+</LI>
+<LI>[<B>--xram-loc</B><A NAME="865"></A>&nbsp;&lt;Value&gt;] The
+start location of the external ram<A NAME="866"></A>,
+default value is 0. The value entered can be in Hexadecimal or Decimal
+format, e.g.: --xram-loc 0x8000 or --xram-loc 32768.
+</LI>
+<LI>[<B>--code-loc</B><A NAME="868"></A>&nbsp;&lt;Value&gt;] The
+start location of the code<A NAME="869"></A> segment, default value 0.
+Note when this option is used the interrupt vector table<A NAME="870"></A>
+is also relocated to the given address. The value entered can be in
+Hexadecimal or Decimal format, e.g.: --code-loc 0x8000 or --code-loc
+32768.
+</LI>
+<LI>[<B>--stack-loc</B><A NAME="872"></A>&nbsp;&lt;Value&gt;] By
+default the stack<A NAME="873"></A> is placed after the data segment.
+Using this option the stack can be placed anywhere in the internal
+memory space of the 8051. The value entered can be in Hexadecimal
+or Decimal format, e.g. --stack-loc 0x20 or --stack-loc 32.
+Since the sp register is incremented before a push or call, the initial
+sp will be set to one byte prior the provided value. The provided
+value should not overlap any other memory areas such as used register
+banks or the data segment and with enough space for the current application.
+The <B>--pack-iram</B>&nbsp;<A NAME="875"></A> option (which
+is now a default setting) will override this setting, so you should
+also specify the <B>--no-pack-iram</B>&nbsp;<A NAME="877"></A>
+option if you need to manually place the stack.
+</LI>
+<LI>[<B>--xstack-loc</B><A NAME="879"></A>&nbsp;&lt;Value&gt;] By
+default the external stack<A NAME="880"></A> is placed after the pdata<A NAME="881"></A>
+segment. Using this option the xstack can be placed anywhere in the
+external memory space of the 8051. The value entered can be in Hexadecimal
+or Decimal format, e.g. --xstack-loc 0x8000 or --stack-loc 32768.
+The provided value should not overlap any other memory areas such
+as the pdata or xdata segment and with enough space for the current
+application.
+</LI>
+<LI>[<B>--data-loc</B><A NAME="883"></A>&nbsp;&lt;Value&gt;] The
+start location of the internal ram data<A NAME="884"></A>
+segment. The value entered can be in Hexadecimal or Decimal format,
+eg. --data-loc 0x20 or --data-loc 32. (By default, the start
+location of the internal ram data segment  is set as low as possible
+in memory, taking into account the used register banks and the bit
+segment at address 0x20. For example if register banks 0 and 1 are
+used without bit variables, the data segment will be set, if --data-loc
+is not used, to location 0x10.)
+</LI>
+<LI>[<B>--idata-loc</B><A NAME="886"></A>&nbsp;&lt;Value&gt;] The
+start location of the indirectly addressable internal ram<A NAME="887"></A>
+of the 8051, default value is 0x80. The value entered can be in Hexadecimal
+or Decimal format, eg. --idata-loc 0x88 or --idata-loc 136.
+</LI>
+<LI>[<B>--bit-loc</B>&nbsp;&lt;Value&gt;] The start location of the bit<A NAME="889"></A>
+addressable internal ram of the 8051. This is <I>not</I> implemented
+yet. Instead an option can be passed directly to the linker: -Wl&nbsp;-bBSEG=&lt;Value&gt;.
+</LI>
+<LI>[<B>--out-fmt-ihx<A NAME="891"></A></B>] The linker
+output (final object code) is in Intel Hex format.<A NAME="892"></A>
+This is the default option. The format itself is documented in the
+documentation of srecord<A NAME="893"></A>.
+</LI>
+<LI>[<B>--out-fmt-s19<A NAME="894"></A></B>] The linker
+output (final object code) is in Motorola S19 format<A NAME="895"></A>.
+The format itself is documented in the documentation of srecord.
+</LI>
+<LI>[<B>--out-fmt-elf<A NAME="896"></A><A NAME="897"></A></B>] The
+linker output (final object code) is in ELF format<A NAME="898"></A>.
+(Currently only supported for the HC08<A NAME="899"></A> processors)
+</LI>
+<LI>[<B>-Wl&nbsp;linkOption[,linkOption]</B><A NAME="901"></A><A NAME="lyx:-Wl_option"></A>...] Pass
+the linkOption to the linker. If a bootloader is used an option like
+''-Wl&nbsp;-bCSEG=0x1000'' would be typical to set the start of the
+code segment. Either use the double quotes around this option or use
+no space (e.g. -Wl-bCSEG=0x1000). See also #pragma constseg and #pragma
+codeseg in section <A HREF="node101.html#sec:Pragmas">3.19</A> . File sdcc/as/doc/asxhtm.html
+has more on linker options.
+</LI>
+</UL>
+<P><P>
+<BR>
+
+
+<P>
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html1295"
+  HREF="node50.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html1289"
+  HREF="node46.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html1283"
+  HREF="node48.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html1291"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html1293"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1296"
+  HREF="node50.html">3.2.4 MCS51 Options</A>
+<B> Up:</B> <A NAME="tex2html1290"
+  HREF="node46.html">3.2 Command Line Options</A>
+<B> Previous:</B> <A NAME="tex2html1284"
+  HREF="node48.html">3.2.2 Preprocessor Options</A>
+ &nbsp; <B>  <A NAME="tex2html1292"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html1294"
+  HREF="node190.html">Index</A></B> 
+<!--End of Navigation Panel-->
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

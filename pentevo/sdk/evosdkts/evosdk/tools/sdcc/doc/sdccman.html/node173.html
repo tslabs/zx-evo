@@ -1,0 +1,105 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>8.1.5 Loop Reversing</TITLE>
+<META NAME="description" CONTENT="8.1.5 Loop Reversing">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="next" HREF="node174.html">
+<LINK REL="previous" HREF="node172.html">
+<LINK REL="up" HREF="node168.html">
+<LINK REL="next" HREF="node174.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html3301"
+  HREF="node174.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html3295"
+  HREF="node168.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html3289"
+  HREF="node172.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html3297"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html3299"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html3302"
+  HREF="node174.html">8.1.6 Algebraic Simplifications</A>
+<B> Up:</B> <A NAME="tex2html3296"
+  HREF="node168.html">8.1 Optimizations</A>
+<B> Previous:</B> <A NAME="tex2html3290"
+  HREF="node172.html">8.1.4 Loop Optimizations</A>
+ &nbsp; <B>  <A NAME="tex2html3298"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html3300"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H2><A NAME="SECTION00915000000000000000"></A><A NAME="3867"></A>
+<BR>
+8.1.5 Loop Reversing
+</H2>
+
+<P>
+This optimization is done to reduce the overhead of checking loop
+boundaries for every iteration. Some simple loops can be reversed
+and implemented using a ``decrement and jump if not zero'' instruction.
+SDCC checks for the following criterion to determine if a loop is
+reversible (note: more sophisticated compilers use data-dependency
+analysis to make this determination, SDCC uses a more simple minded
+analysis).
+
+<P>
+
+<UL>
+<LI>The 'for' loop is of the form 
+<BR>
+<BR><TT>for(&lt;symbol&gt; = &lt;expression&gt;; &lt;sym&gt; [&lt; | &lt;=] &lt;expression&gt;;
+[&lt;sym&gt;++ | &lt;sym&gt; += 1])</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&lt;for body&gt;</TT>
+</LI>
+<LI>The &lt;for body&gt; does not contain ``continue'' or 'break''.
+</LI>
+<LI>All goto's are contained within the loop.
+</LI>
+<LI>No function calls within the loop.
+</LI>
+<LI>The loop control variable &lt;sym&gt; is not assigned any value within the
+loop
+</LI>
+<LI>The loop control variable does NOT participate in any arithmetic operation
+within the loop.
+</LI>
+<LI>There are NO switch statements in the loop.
+</LI>
+</UL>
+
+<P>
+<BR><HR>
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

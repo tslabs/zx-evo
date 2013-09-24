@@ -1,0 +1,170 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>2.7 Testing the SDCC Compiler</TITLE>
+<META NAME="description" CONTENT="2.7 Testing the SDCC Compiler">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="next" HREF="node27.html">
+<LINK REL="previous" HREF="node25.html">
+<LINK REL="up" HREF="node10.html">
+<LINK REL="next" HREF="node27.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html866"
+  HREF="node27.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html860"
+  HREF="node10.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html854"
+  HREF="node25.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html862"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html864"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html867"
+  HREF="node27.html">2.8 Install Trouble-shooting</A>
+<B> Up:</B> <A NAME="tex2html861"
+  HREF="node10.html">2. Installing SDCC</A>
+<B> Previous:</B> <A NAME="tex2html855"
+  HREF="node25.html">2.6 Reading the Documentation</A>
+ &nbsp; <B>  <A NAME="tex2html863"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html865"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H1><A NAME="SECTION00370000000000000000"></A><A NAME="sec:Testing-the-SDCC"></A>
+<BR>
+2.7 Testing the SDCC Compiler
+</H1>
+
+<P>
+The first thing you should do after installing your SDCC compiler
+is to see if it runs. Type <I><B>&#34;sdcc --version&#34;<A NAME="555"></A></B></I>
+at the prompt, and the program should run and output its version like:
+
+<BR><TT>SDCC : mcs51/z80/avr/ds390/pic16/pic14/ds400/hc08 2.5.6 #4169
+(May 8 2006) (UNIX)</TT>
+
+<P>
+If it doesn't run, or gives a message about not finding sdcc program,
+then you need to check over your installation. Make sure that the
+sdcc bin directory is in your executable search path defined by the
+PATH environment setting (see section <A HREF="node27.html#sub:Install-Trouble-shooting">2.8</A>&nbsp;Install
+trouble-shooting for suggestions). Make sure that the sdcc program
+is in the bin folder, if not perhaps something did not install correctly.
+<BR>
+<BR>
+SDCC is commonly installed as described in section ''Install and
+search paths''.
+<BR>
+<BR>
+Make sure the compiler works on a very simple example. Type in the
+following test.c program using your favorite ASCII editor:
+
+<P>
+<BLOCKQUOTE>
+<TT>char test;</TT>&nbsp;
+<BR>&nbsp;
+<BR><TT>void main(void) {</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;test=0;</TT>&nbsp;
+<BR><TT>}</TT>
+
+</BLOCKQUOTE>
+Compile this using the following command: <I><B>&#34;sdcc
+-c test.c&#34;.</B></I> If all goes well, the compiler will generate
+a test.asm and test.rel file. Congratulations, you've just compiled
+your first program with SDCC. We used the -c option to tell SDCC not
+to link the generated code, just to keep things simple for this step.
+<BR>
+<BR>
+The next step is to try it with the linker. Type in <I><B>&#34;sdcc
+test.c</B></I>&#34;. If all goes well the compiler will link with the
+libraries and produce a test.ihx output file. If this step fails (no
+test.ihx, and the linker generates warnings), then the problem is
+most likely that SDCC cannot find the /usr/local/share/sdcc/lib directory
+(see section <A HREF="node27.html#sub:Install-Trouble-shooting">2.8</A>&nbsp;Install trouble-shooting
+for suggestions).
+<BR>
+<BR>
+The final test is to ensure SDCC can use the standard header files
+and libraries. Edit test.c and change it to the following:
+
+<P>
+<BLOCKQUOTE>
+<TT>#include &lt;string.h&gt;</TT>&nbsp;
+<BR>&nbsp;
+<BR><TT>char str1[10];</TT>&nbsp;
+<BR>&nbsp;
+<BR><TT>void main(void) {</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;strcpy(str1, &#34;testing&#34;);</TT>&nbsp;
+<BR><TT>}</TT>
+
+</BLOCKQUOTE>
+Compile this by typing <I><B>&#34;sdcc test.c&#34;</B></I>.
+This should generate a test.ihx output file, and it should give no
+warnings such as not finding the string.h file. If it cannot find
+the string.h file, then the problem is that SDCC cannot find the /usr/local/share/sdcc/include
+directory (see the section <A HREF="node27.html#sub:Install-Trouble-shooting">2.8</A>&nbsp;Install
+trouble-shooting section for suggestions). Use option <B>--print-search-dirs</B><A NAME="584"></A>
+to find exactly where SDCC is looking for the include and lib files.
+
+<P>
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html866"
+  HREF="node27.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html860"
+  HREF="node10.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html854"
+  HREF="node25.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html862"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html864"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html867"
+  HREF="node27.html">2.8 Install Trouble-shooting</A>
+<B> Up:</B> <A NAME="tex2html861"
+  HREF="node10.html">2. Installing SDCC</A>
+<B> Previous:</B> <A NAME="tex2html855"
+  HREF="node25.html">2.6 Reading the Documentation</A>
+ &nbsp; <B>  <A NAME="tex2html863"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html865"
+  HREF="node190.html">Index</A></B> 
+<!--End of Navigation Panel-->
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

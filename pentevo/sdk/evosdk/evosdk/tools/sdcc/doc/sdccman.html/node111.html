@@ -1,0 +1,200 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>4.5 The PIC14 port</TITLE>
+<META NAME="description" CONTENT="4.5 The PIC14 port">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="next" HREF="node120.html">
+<LINK REL="previous" HREF="node110.html">
+<LINK REL="up" HREF="node103.html">
+<LINK REL="next" HREF="node112.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html2277"
+  HREF="node112.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html2271"
+  HREF="node103.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html2265"
+  HREF="node110.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html2273"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html2275"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html2278"
+  HREF="node112.html">4.5.1 PIC Code Pages</A>
+<B> Up:</B> <A NAME="tex2html2272"
+  HREF="node103.html">4. Notes on supported</A>
+<B> Previous:</B> <A NAME="tex2html2266"
+  HREF="node110.html">4.4 The HC08 port</A>
+ &nbsp; <B>  <A NAME="tex2html2274"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html2276"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H1><A NAME="SECTION00550000000000000000"></A><A NAME="2828"></A>
+<BR>
+4.5 The PIC14 port
+</H1>
+
+<P>
+The PIC14 port adds support for Microchip<A NAME="2829"></A><!-- MATH
+ $^{\text{TM}}$
+ -->
+<IMG
+ WIDTH="22" HEIGHT="20" ALIGN="BOTTOM" BORDER="0"
+ SRC="img2.png"
+ ALT="$ ^{\text{TM}}$">
+
+PIC<A NAME="2831"></A><!-- MATH
+ $^{\text{TM}}$
+ -->
+<IMG
+ WIDTH="22" HEIGHT="20" ALIGN="BOTTOM" BORDER="0"
+ SRC="img2.png"
+ ALT="$ ^{\text{TM}}$">
+ MCUs with 14 bit wide instructions.
+This port is not yet mature and still lacks many features. However,
+it can work for simple code.
+
+<P>
+Currently supported devices include:
+
+<P>
+12F: 629, 635, 675, 683
+
+<P>
+16C: 432, 433
+
+<P>
+16C: 554, 557, 558
+
+<P>
+16C: 62, 620, 620a, 621, 621a, 622, 622a, 63a, 65b
+
+<P>
+16C: 71, 710, 711, 715, 717, 72, 73b, 745, 74b, 765, 770, 771, 773,
+774, 781, 782
+
+<P>
+16C: 925, 926
+
+<P>
+16CR: 620a, 73, 74, 76, 77
+
+<P>
+16F: 616, 627, 627a, 628, 628a, 630, 636, 639, 648, 648a, 676, 684,
+685, 687, 688, 689, 690
+
+<P>
+16F: 716, 72, 73, 737, 74, 747, 76, 767, 77, 777, 785
+
+<P>
+16F: 818, 819, 84, 84a, 87, 870, 871, 872, 873, 873a, 874, 874a, 876,
+876a, 877, 877a, 88, 886, 887
+
+<P>
+16F: 913, 914, 916, 917, 946
+
+<P>
+26HV: 626, 785
+
+<P>
+An up-to-date list of currently supported devices can be
+obtained via <TT>sdcc -mpic14 -phelp foo.c</TT> (foo.c must exist...).
+
+<P>
+<BR><HR>
+<!--Table of Child-Links-->
+<A NAME="CHILD_LINKS"><STRONG>Subsections</STRONG></A>
+
+<UL>
+<LI><A NAME="tex2html2279"
+  HREF="node112.html">4.5.1 PIC Code Pages and Memory Banks</A>
+<LI><A NAME="tex2html2280"
+  HREF="node113.html">4.5.2 Adding New Devices to the Port </A>
+<LI><A NAME="tex2html2281"
+  HREF="node114.html">4.5.3 Interrupt Code</A>
+<LI><A NAME="tex2html2282"
+  HREF="node115.html">4.5.4 Linking and Assembling</A>
+<LI><A NAME="tex2html2283"
+  HREF="node116.html">4.5.5 Command-Line Options</A>
+<LI><A NAME="tex2html2284"
+  HREF="node117.html">4.5.6 Environment Variables</A>
+<LI><A NAME="tex2html2285"
+  HREF="node118.html">4.5.7 The Library</A>
+<UL>
+<LI><A NAME="tex2html2286"
+  HREF="node118.html#SECTION00557100000000000000">4.5.7.1 error: missing definition for symbol ``__gptrget1''</A>
+<LI><A NAME="tex2html2287"
+  HREF="node118.html#SECTION00557200000000000000">4.5.7.2 Processor mismatch in file ``XXX''.</A>
+</UL>
+<BR>
+<LI><A NAME="tex2html2288"
+  HREF="node119.html">4.5.8 Known Bugs</A>
+<UL>
+<LI><A NAME="tex2html2289"
+  HREF="node119.html#SECTION00558100000000000000">4.5.8.1 Function arguments</A>
+<LI><A NAME="tex2html2290"
+  HREF="node119.html#SECTION00558200000000000000">4.5.8.2 Regression tests fail</A>
+</UL></UL>
+<!--End of Table of Child-Links-->
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html2277"
+  HREF="node112.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html2271"
+  HREF="node103.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html2265"
+  HREF="node110.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html2273"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html2275"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html2278"
+  HREF="node112.html">4.5.1 PIC Code Pages</A>
+<B> Up:</B> <A NAME="tex2html2272"
+  HREF="node103.html">4. Notes on supported</A>
+<B> Previous:</B> <A NAME="tex2html2266"
+  HREF="node110.html">4.4 The HC08 port</A>
+ &nbsp; <B>  <A NAME="tex2html2274"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html2276"
+  HREF="node190.html">Index</A></B> 
+<!--End of Navigation Panel-->
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

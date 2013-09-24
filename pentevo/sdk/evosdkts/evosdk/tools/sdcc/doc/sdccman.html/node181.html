@@ -1,0 +1,267 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>8.1.13 Peephole Optimizer</TITLE>
+<META NAME="description" CONTENT="8.1.13 Peephole Optimizer">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="previous" HREF="node180.html">
+<LINK REL="up" HREF="node168.html">
+<LINK REL="next" HREF="node182.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html3411"
+  HREF="node182.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html3405"
+  HREF="node168.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html3401"
+  HREF="node180.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html3407"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html3409"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html3412"
+  HREF="node182.html">8.2 ANSI-Compliance</A>
+<B> Up:</B> <A NAME="tex2html3406"
+  HREF="node168.html">8.1 Optimizations</A>
+<B> Previous:</B> <A NAME="tex2html3402"
+  HREF="node180.html">8.1.12 Higher Order Byte</A>
+ &nbsp; <B>  <A NAME="tex2html3408"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html3410"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H2><A NAME="SECTION009113000000000000000"></A><A NAME="sub:Peephole-Optimizer"></A><A NAME="4109"></A>
+<BR>
+8.1.13 Peephole Optimizer
+</H2>
+
+<P>
+The compiler uses a rule based, pattern matching and re-writing mechanism
+for peep-hole optimization. It is inspired by <I>copt</I> a peep-hole
+optimizer by Christopher W. Fraser (cwfraser&nbsp;@&nbsp;microsoft.com). A
+default set of rules are compiled into the compiler, additional rules
+may be added with the <I>--peep-file<A NAME="4111"></A> &lt;filename&gt;</I>
+option. The rule language is best illustrated with examples.
+
+<P>
+<BLOCKQUOTE>
+<TT>replace { </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;mov %1,a </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;mov a,%1</TT>&nbsp;
+<BR><TT>} by {</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;mov %1,a</TT>&nbsp;
+<BR><TT>}</TT>
+
+</BLOCKQUOTE>
+The above rule will change the following assembly<A NAME="4120"></A>
+sequence:
+
+<P>
+<BLOCKQUOTE>
+<TT>mov r1,a </TT>&nbsp;
+<BR><TT>mov a,r1</TT>
+
+</BLOCKQUOTE>
+to
+
+<P>
+<BLOCKQUOTE>
+<TT>mov r1,a</TT>
+
+</BLOCKQUOTE>
+Note: All occurrences of a <I>%n</I> (pattern variable) must denote
+the same string. With the above rule, the assembly sequence:
+
+<P>
+<BLOCKQUOTE>
+<TT>mov r1,a </TT>&nbsp;
+<BR><TT>mov a,r2</TT>
+
+</BLOCKQUOTE>
+will remain unmodified.
+<BR>
+<BR>
+Other special case optimizations may be added by the user (via <I>--peep-file
+option</I>). E.g. some variants of the 8051 MCU<A NAME="4134"></A>
+allow only <TT>ajmp</TT> and <TT>acall</TT>. The following two rules
+will change all <TT>ljmp</TT> and <TT>lcall</TT> to <TT>ajmp</TT>
+and <TT>acall</TT>
+
+<P>
+<BLOCKQUOTE>
+<TT>replace { lcall %1 } by { acall %1 } </TT>&nbsp;
+<BR><TT>replace { ljmp %1 } by { ajmp %1 }</TT>
+
+</BLOCKQUOTE>
+(NOTE: from version 2.7.3 on, you can use option --acall-ajmp<A NAME="4146"></A>,
+which also takes care of aligning the interrupt vectors properly.)
+<BR>
+<P>
+The <I>inline-assembler code</I> is also passed through the peep hole
+optimizer, thus the peephole optimizer can also be used as an assembly
+level macro expander. The rules themselves are MCU dependent whereas
+the rule language infra-structure is MCU independent. Peephole optimization
+rules for other MCU can be easily programmed using the rule language.
+<BR>
+<BR>
+The syntax for a rule is as follows:
+
+<P>
+<BLOCKQUOTE>
+<TT>rule := replace [ restart ] '{' &lt;assembly sequence&gt; '&#92;n'
+</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; '}' by '{' '&#92;n'
+</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;assembly
+sequence&gt; '&#92;n' </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; '}' [if &lt;functionName&gt;
+] '&#92;n' </TT>
+
+</BLOCKQUOTE>
+&lt;assembly sequence&gt; := assembly instruction (each instruction including
+labels must be on a separate line).
+<BR>
+<BR>
+The optimizer will apply to the rules one by one from the top in the
+sequence of their appearance, it will terminate when all rules are
+exhausted. If the 'restart' option is specified, then the optimizer
+will start matching the rules again from the top, this option for
+a rule is expensive (performance), it is intended to be used in situations
+where a transformation will trigger the same rule again. An example
+of this (not a good one, it has side effects) is the following rule:
+
+<P>
+<BLOCKQUOTE>
+<TT>replace restart { </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;pop %1 </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;push %1 } by { </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;; nop </TT>&nbsp;
+<BR><TT>}</TT>
+
+</BLOCKQUOTE>
+Note that the replace pattern cannot be a blank, but can be a comment
+line. Without the 'restart' option only the innermost 'pop' 'push'
+pair would be eliminated, i.e.:
+
+<P>
+<BLOCKQUOTE>
+<TT>pop ar1 </TT>&nbsp;
+<BR><TT>pop ar2 </TT>&nbsp;
+<BR><TT>push ar2 </TT>&nbsp;
+<BR><TT>push ar1</TT>
+
+</BLOCKQUOTE>
+would result in:
+
+<P>
+<BLOCKQUOTE>
+<TT>pop ar1 </TT>&nbsp;
+<BR><TT>; nop </TT>&nbsp;
+<BR><TT>push ar1</TT>
+
+</BLOCKQUOTE>
+<I>with</I> the restart option the rule will be applied again to the
+resulting code and then all the pop-push pairs will be eliminated
+to yield:
+
+<P>
+<BLOCKQUOTE>
+<TT>; nop </TT>&nbsp;
+<BR><TT>; nop</TT>
+
+</BLOCKQUOTE>
+A conditional function can be attached to a rule. Attaching rules
+are somewhat more involved, let me illustrate this with an example.
+
+<P>
+<BLOCKQUOTE>
+<TT>replace { </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;ljmp %5 </TT>&nbsp;
+<BR><TT>%2:</TT>&nbsp;
+<BR><TT>} by { </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;sjmp %5 </TT>&nbsp;
+<BR><TT>%2:</TT>&nbsp;
+<BR><TT>} if labelInRange</TT>
+
+</BLOCKQUOTE>
+The optimizer does a look-up of a function name table defined in function
+<I>callFuncByName</I> in the source file SDCCpeeph.c, with the name
+<I>labelInRange</I>. If it finds a corresponding entry the function
+is called. Note there can be no parameters specified for these functions,
+in this case the use of <I>%5</I> is crucial, since the function
+<I>labelInRange</I> expects to find the label in that particular variable
+(the hash table containing the variable bindings is passed as a parameter).
+If you want to code more such functions, take a close look at the
+function labelInRange and the calling mechanism in source file SDCCpeeph.c.
+Currently implemented are <I>labelInRange, labelRefCount, labelIsReturnOnly,
+operandsNotSame, xramMovcOption, 24bitMode, portIsDS390, 24bitModeAndPortDS390</I>
+and <I>notVolatile</I>.
+
+<P>
+I know this whole thing is a little kludgey, but maybe some day we
+will have some better means. If you are looking at this file, you
+will see the default rules that are compiled into the compiler, you
+can add your own rules in the default set there if you get tired of
+specifying the --peep-file option.
+
+<P>
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html3411"
+  HREF="node182.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html3405"
+  HREF="node168.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html3401"
+  HREF="node180.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html3407"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html3409"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html3412"
+  HREF="node182.html">8.2 ANSI-Compliance</A>
+<B> Up:</B> <A NAME="tex2html3406"
+  HREF="node168.html">8.1 Optimizations</A>
+<B> Previous:</B> <A NAME="tex2html3402"
+  HREF="node180.html">8.1.12 Higher Order Byte</A>
+ &nbsp; <B>  <A NAME="tex2html3408"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html3410"
+  HREF="node190.html">Index</A></B> 
+<!--End of Navigation Panel-->
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

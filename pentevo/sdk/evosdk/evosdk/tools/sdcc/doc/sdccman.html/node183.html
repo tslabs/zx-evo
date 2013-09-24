@@ -1,0 +1,126 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>8.3 Cyclomatic Complexity</TITLE>
+<META NAME="description" CONTENT="8.3 Cyclomatic Complexity">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="next" HREF="node184.html">
+<LINK REL="previous" HREF="node182.html">
+<LINK REL="up" HREF="node167.html">
+<LINK REL="next" HREF="node184.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html3439"
+  HREF="node184.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html3433"
+  HREF="node167.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html3427"
+  HREF="node182.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html3435"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html3437"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html3440"
+  HREF="node184.html">8.4 Retargetting for other</A>
+<B> Up:</B> <A NAME="tex2html3434"
+  HREF="node167.html">8. SDCC Technical Data</A>
+<B> Previous:</B> <A NAME="tex2html3428"
+  HREF="node182.html">8.2 ANSI-Compliance</A>
+ &nbsp; <B>  <A NAME="tex2html3436"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html3438"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H1><A NAME="SECTION00930000000000000000"></A><A NAME="4294"></A>
+<BR>
+8.3 Cyclomatic Complexity
+</H1>
+
+<P>
+Cyclomatic complexity of a function is defined as the number of independent
+paths the program can take during execution of the function. This
+is an important number since it defines the number test cases you
+have to generate to validate the function. The accepted industry standard
+for complexity number is 10, if the cyclomatic complexity reported
+by SDCC exceeds 10 you should think about simplification of the function
+logic. Note that the complexity level is not related to the number
+of lines of code in a function. Large functions can have low complexity,
+and small functions can have large complexity levels. 
+<BR>
+<BR>
+SDCC uses the following formula to compute the complexity:
+<BR>
+<P>
+complexity = (number of edges in control flow graph) - (number of
+nodes in control flow graph) + 2;
+<BR>
+<BR>
+Having said that the industry standard is 10, you should be aware
+that in some cases it be may unavoidable to have a complexity level
+of less than 10. For example if you have switch statement with more
+than 10 case labels, each case label adds one to the complexity level.
+The complexity level is by no means an absolute measure of the algorithmic
+complexity of the function, it does however provide a good starting
+point for which functions you might look at for further optimization.
+
+<P>
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html3439"
+  HREF="node184.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html3433"
+  HREF="node167.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html3427"
+  HREF="node182.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html3435"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html3437"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html3440"
+  HREF="node184.html">8.4 Retargetting for other</A>
+<B> Up:</B> <A NAME="tex2html3434"
+  HREF="node167.html">8. SDCC Technical Data</A>
+<B> Previous:</B> <A NAME="tex2html3428"
+  HREF="node182.html">8.2 ANSI-Compliance</A>
+ &nbsp; <B>  <A NAME="tex2html3436"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html3438"
+  HREF="node190.html">Index</A></B> 
+<!--End of Navigation Panel-->
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

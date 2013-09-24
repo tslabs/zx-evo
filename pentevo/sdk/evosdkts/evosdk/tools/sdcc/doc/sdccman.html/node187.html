@@ -1,0 +1,109 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>9.2 A few words about basic block successors, predecessors and dominators</TITLE>
+<META NAME="description" CONTENT="9.2 A few words about basic block successors, predecessors and dominators">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="previous" HREF="node186.html">
+<LINK REL="up" HREF="node185.html">
+<LINK REL="next" HREF="node188.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html3507"
+  HREF="node188.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html3501"
+  HREF="node185.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html3497"
+  HREF="node186.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html3503"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html3505"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html3508"
+  HREF="node188.html">10. Acknowledgments</A>
+<B> Up:</B> <A NAME="tex2html3502"
+  HREF="node185.html">9. Compiler internals</A>
+<B> Previous:</B> <A NAME="tex2html3498"
+  HREF="node186.html">9.1 The anatomy of</A>
+ &nbsp; <B>  <A NAME="tex2html3504"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html3506"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H1><A NAME="SECTION001020000000000000000">
+9.2 A few words about basic block successors, predecessors and dominators</A>
+</H1>
+
+<P>
+Successors are basic blocks<A NAME="5002"></A> that might execute
+after this basic block.
+<BR>
+Predecessors are basic blocks that might execute before reaching this
+basic block.
+<BR>
+Dominators are basic blocks that WILL execute before reaching this
+basic block.
+<BR>
+<P>
+[basic block 1]
+
+<P>
+if (something)
+
+<P>
+&nbsp;&nbsp;&nbsp;&nbsp;[basic block 2]
+
+<P>
+else
+
+<P>
+&nbsp;&nbsp;&nbsp;&nbsp;[basic block 3]
+
+<P>
+[basic block 4]
+<BR>
+<P>
+a) succList of [BB2] = [BB4], of [BB3] = [BB4], of [BB1]
+= [BB2,BB3]
+
+<P>
+b) predList of [BB2] = [BB1], of [BB3] = [BB1], of [BB4]
+= [BB2,BB3]
+
+<P>
+c) domVect of [BB4] = BB1 ... here we are not sure if BB2 or BB3
+was executed but we are SURE that BB1 was executed.
+
+<P>
+<BR><HR>
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

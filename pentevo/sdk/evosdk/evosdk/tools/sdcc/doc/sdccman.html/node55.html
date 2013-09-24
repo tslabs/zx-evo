@@ -1,0 +1,316 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>3.2.9 Other Options</TITLE>
+<META NAME="description" CONTENT="3.2.9 Other Options">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="next" HREF="node56.html">
+<LINK REL="previous" HREF="node54.html">
+<LINK REL="up" HREF="node46.html">
+<LINK REL="next" HREF="node56.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html1379"
+  HREF="node56.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html1373"
+  HREF="node46.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html1367"
+  HREF="node54.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html1375"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html1377"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1380"
+  HREF="node56.html">3.2.10 Intermediate Dump Options</A>
+<B> Up:</B> <A NAME="tex2html1374"
+  HREF="node46.html">3.2 Command Line Options</A>
+<B> Previous:</B> <A NAME="tex2html1368"
+  HREF="node54.html">3.2.8 Optimization Options</A>
+ &nbsp; <B>  <A NAME="tex2html1376"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html1378"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H2><A NAME="SECTION00429000000000000000"></A><A NAME="1024"></A>
+<BR>
+3.2.9 Other Options
+</H2>
+
+<P>
+
+<UL>
+<LI>[<B>-v&nbsp;--version<A NAME="1027"></A><A NAME="1028"></A></B>] displays
+the sdcc version.
+</LI>
+<LI>[<B>-c&nbsp;--compile-only<A NAME="1029"></A><A NAME="1030"></A></B>] will
+compile and assemble the source, but will not call the linkage editor.
+</LI>
+<LI>[<B>-</B><B>-c1mode<A NAME="1032"></A></B>] reads the preprocessed
+source from standard input and compiles it. The file name for the
+assembler output must be specified using the -o option.
+</LI>
+<LI>[<B>-E<A NAME="1033"></A></B>] Run only the C preprocessor. Preprocess
+all the C source files specified and output the results to standard
+output.
+</LI>
+<LI>[<B>-o&nbsp;&lt;path/file&gt;<A NAME="1034"></A></B>] The output path
+where everything will be placed or the file name used for all generated
+output files. If the parameter is a path, it must have a trailing
+slash (or backslash for the Windows binaries) to be recognized as
+a path. Note for Windows users: if the path contains spaces, it should
+be surrounded by quotes. The trailing backslash should be doubled
+in order to prevent escaping the final quote, for example: <I>-o
+''F:&#92;Projects&#92;test3&#92;output
+1&#92;&#92;''</I> or put after the final quote,
+for example: <I>-o ''F:&#92;Projects&#92;test3&#92;output
+1''&#92;</I>. The path using slashes for directory delimiters
+can be used too, for example: <I>-o ''F:/Projects/test3/output
+1/''</I>.
+</LI>
+<LI>[<B>--stack-auto<A NAME="1045"></A></B>] All functions
+in the source file will be compiled as <I>reentrant</I><A NAME="1047"></A>,
+i.e. the parameters and local variables will be allocated on the stack<A NAME="1048"></A>.
+See section <A HREF="node66.html#sec:Parameters-and-Local-Variables">3.7</A> Parameters and
+Local Variables for more details. If this option is used all source
+files in the project should be compiled with this option. It automatically
+implies --int-long-reent and --float-reent. 
+</LI>
+<LI>[<B>--callee-saves<A NAME="1052"></A></B>] <B><A NAME="lyx:-callee-saves-function1__function2___function3_..."></A>function1[,function2][,function3]....</B>
+The compiler by default uses a caller saves convention for register
+saving across function calls, however this can cause unnecessary register
+pushing and popping when calling small functions from larger functions.
+This option can be used to switch the register saving convention for
+the function names specified. The compiler will not save registers
+when calling these functions, no extra code will be generated at the
+entry and exit (function prologue<B><A NAME="1056"></A></B>
+and epilogue<B><A NAME="1057"></A></B>) for these functions
+to save and restore the registers used by these functions, this can
+SUBSTANTIALLY reduce code and improve run time performance of the
+generated code. In the future the compiler (with inter procedural
+analysis) will be able to determine the appropriate scheme to use
+for each function call. DO NOT use this option for built-in functions
+such as _mulint..., if this option is used for a library function
+the appropriate library function needs to be recompiled with the same
+option. If the project consists of multiple source files then all
+the source file should be compiled with the same --callee-saves
+option string. Also see #pragma&nbsp;callee_saves <A NAME="1058"></A>
+ite:callee_saves-function1[,function2[,function3...]]-.
+</LI>
+<LI>[<B>--all-callee-saves<A NAME="1060"></A></B>] Function
+of --callee-saves will be applied to all functions by default.
+</LI>
+<LI>[<B>--debug<A NAME="1061"></A></B>] When this option is used
+the compiler will generate debug information. The debug information
+collected in a file with .cdb extension can be used with the SDCDB.
+For more information see documentation for SDCDB. Another file with
+no extension contains debug information in AOMF or AOMF51<A NAME="1062"></A>
+format which is commonly used by third party tools.
+</LI>
+<LI>[<B>-S<A NAME="1063"></A></B>] Stop after the stage of compilation proper;
+do not assemble. The output is an assembler code file for the input
+file specified.
+</LI>
+<LI>[<B>--int-long-reent<A NAME="1064"></A></B>] Integer
+(16 bit) and long (32 bit) libraries have been compiled as reentrant.
+Note by default these libraries are compiled as non-reentrant. See
+section Installation for more details.
+</LI>
+<LI>[<B>--cyclomatic<A NAME="1065"></A></B>] This option will
+cause the compiler to generate an information message for each function
+in the source file. The message contains some <I>important</I> information
+about the function. The number of edges and nodes the compiler detected
+in the control flow graph of the function, and most importantly the
+<I>cyclomatic complexity<A NAME="1067"></A></I> see section
+on Cyclomatic Complexity for more details.
+</LI>
+<LI>[<B>--float-reent<A NAME="1068"></A></B>] Floating point
+library is compiled as reentrant<A NAME="1069"></A>. See section Installation
+for more details.
+</LI>
+<LI>[<B>--funsigned-char<A NAME="1070"></A></B>] The default
+signedness for every type is <TT>signed</TT>. In some embedded environments
+the default signedness of <TT>char</TT> is <TT>unsigned</TT>. To set
+the signess for characters to unsigned, use the option --funsigned-char.
+If this option is set and no signedness keyword (unsigned/signed)
+is given, a char will be signed. All other types are unaffected.
+</LI>
+<LI>[<B>--main-return<A NAME="1075"></A></B>] This option
+can be used if the code generated is called by a monitor program or
+if the main routine includes an endless loop. This option results
+in slightly smaller code and saves two bytes of stack space. The return
+from the 'main'<A NAME="1076"></A> function will return to the function
+calling main. The default setting is to lock up i.e. generate a '<TT>sjmp
+.</TT>'.
+</LI>
+<LI>[<B>--nostdinc<A NAME="1078"></A></B>] This will prevent
+the compiler from passing on the default include path to the preprocessor.
+</LI>
+<LI>[<B>--nostdlib<A NAME="1079"></A></B>] This will prevent
+the compiler from passing on the default library<A NAME="1080"></A>
+path to the linker.
+</LI>
+<LI>[<B>--verbose<A NAME="1081"></A></B>] Shows the various actions
+the compiler is performing.
+</LI>
+<LI>[<B>-V<A NAME="1082"></A></B>] Shows the actual commands the compiler
+is executing.
+</LI>
+<LI>[<B>--no-c-code-in-asm<A NAME="1083"></A></B>] Hides
+your ugly and inefficient c-code from the asm file, so you can always
+blame the compiler :)
+</LI>
+<LI>[<B>--fverbose-asm<A NAME="1084"></A></B>] Include
+code generator and peep-hole comments in the generated asm files.
+</LI>
+<LI>[<B>--no-peep-comments<A NAME="1085"></A></B>] Don't
+include peep-hole comments in the generated asm files even if --fverbose-asm
+option is specified.
+</LI>
+<LI>[<B>--i-code-in-asm<A NAME="1087"></A></B>] Include
+i-codes in the asm file. Sounds like noise but is most helpful for
+debugging the compiler itself.
+</LI>
+<LI>[<B>--less-pedantic<A NAME="1088"></A><A NAME="1089"></A></B><A NAME="lyx:-less-pedantic"></A>] Disable
+some of the more pedantic warnings<A NAME="1091"></A>. For more details,
+see the less_pedantic pragma ite:less_pedantic.
+</LI>
+<LI>[<B>--disable-warning&nbsp;&lt;nnnn&gt;<A NAME="1093"></A></B>] Disable
+specific warning with number &lt;nnnn&gt;.
+</LI>
+<LI>[<B>--Werror<A NAME="1094"></A></B>] Treat all warnings as
+errors.
+</LI>
+<LI>[<B>--print-search-dirs<A NAME="1095"></A></B>] Display
+the directories in the compiler's search path
+</LI>
+<LI>[<B>--vc<A NAME="1096"></A></B>] Display errors and warnings using
+MSVC style, so you can use SDCC with the visual studio IDE<A NAME="1097"></A>.
+With SDCC both offering a GCC-like (the default) and a MSVC-like<A NAME="1098"></A>
+output style, integration into most programming editors should be
+straightforward.
+</LI>
+<LI>[<B>--use-stdout<A NAME="1099"></A></B>] Send errors and
+warnings to stdout instead of stderr.
+</LI>
+<LI>[<B>-Wa&nbsp;asmOption[,asmOption]</B><A NAME="1101"></A>...] Pass
+the asmOption to the assembler<A NAME="1102"></A><A NAME="1103"></A>.
+See file sdcc/as/doc/asxhtm.html for assembler options.cd
+</LI>
+<LI>[<B>--std-sdcc89<A NAME="1104"></A></B>] Generally follow
+the C89 standard, but allow SDCC features that conflict with the standard
+(default).
+</LI>
+<LI>[<B>--std-c89<A NAME="1105"></A></B>] Follow the C89 standard
+and disable SDCC features that conflict with the standard.
+</LI>
+<LI>[<B>--std-sdcc99<A NAME="1106"></A></B>] Generally follow
+the C99 standard, but allow SDCC features that conflict with the standard
+(incomplete support).
+</LI>
+<LI>[<B>--std-c99<A NAME="1107"></A></B>] Follow the C99 standard
+and disable SDCC features that conflict with the standard (incomplete
+support).
+</LI>
+<LI>[<B>--codeseg</B><A NAME="1109"></A><A NAME="lyx:-codeseg"></A>&nbsp;&lt;Name&gt;] The
+name to be used for the code<A NAME="1111"></A> segment, default CSEG. This
+is useful if you need to tell the compiler to put the code in a special
+segment so you can later on tell the linker to put this segment in
+a special place in memory. Can be used for instance when using bank
+switching to put the code in a bank.
+</LI>
+<LI>[<B>--constseg</B><A NAME="1113"></A>&nbsp;&lt;Name&gt;] The
+name to be used for the const<A NAME="1114"></A> segment, default CONST.
+This is useful if you need to tell the compiler to put the const data
+in a special segment so you can later on tell the linker to put this
+segment in a special place in memory. Can be used for instance when
+using bank switching to put the const data in a bank.
+</LI>
+<LI>[<B>--fdollars-in-identifiers<A NAME="1115"></A></B>] Permit
+'$' as an identifier character.
+</LI>
+<LI>[<B>--more-pedantic</B><A NAME="1117"></A><A NAME="1118"></A>] Actually
+this is <B><I>not</I></B> a SDCC compiler option but if you want
+<I>more</I> warnings you can use a separate tool dedicated to syntax
+checking like splint<A NAME="lyx:more-pedantic-SPLINT"></A><A NAME="1122"></A>
+http://www.splint.org. To make your source files parseable
+by splint you will have to include <I>lint.h</I><A NAME="1125"></A>
+in your source file and add brackets around extended keywords (like
+<I>''__at&nbsp;</I><I><B>(</B></I><I>0xab</I><I><B>)</B></I><I>''</I>
+and <I>''__interrupt&nbsp;(2)''</I>). 
+<BR>
+Splint has an excellent on line manual at http://www.splint.org/manual/
+and it's capabilities go beyond pure syntax checking. You'll need
+to tell splint the location of SDCC's include files so a typical command
+line could look like this: 
+<BR><I>splint&nbsp;-I&nbsp;/usr/local/share/sdcc/include/mcs51/&nbsp;&nbsp;myprogram.c</I>
+</LI>
+<LI>[<B>--short-is-8bits</B><A NAME="1135"></A><A NAME="lyx:-short-is-8bits"></A>] Treat
+short as 8-bit (for backward compatibility with older versions of
+compiler - see section <A HREF="node6.html#sec:Compatibility-with-previous">1.4</A>)
+</LI>
+</UL>
+<P><P>
+<BR>
+
+
+<P>
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html1379"
+  HREF="node56.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html1373"
+  HREF="node46.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html1367"
+  HREF="node54.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html1375"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html1377"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1380"
+  HREF="node56.html">3.2.10 Intermediate Dump Options</A>
+<B> Up:</B> <A NAME="tex2html1374"
+  HREF="node46.html">3.2 Command Line Options</A>
+<B> Previous:</B> <A NAME="tex2html1368"
+  HREF="node54.html">3.2.8 Optimization Options</A>
+ &nbsp; <B>  <A NAME="tex2html1376"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html1378"
+  HREF="node190.html">Index</A></B> 
+<!--End of Navigation Panel-->
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

@@ -1,0 +1,230 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>3.6 Absolute Addressing</TITLE>
+<META NAME="description" CONTENT="3.6 Absolute Addressing">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="next" HREF="node66.html">
+<LINK REL="previous" HREF="node63.html">
+<LINK REL="up" HREF="node38.html">
+<LINK REL="next" HREF="node66.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html1545"
+  HREF="node66.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html1539"
+  HREF="node38.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html1533"
+  HREF="node64.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html1541"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html1543"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1546"
+  HREF="node66.html">3.7 Parameters &amp; Local</A>
+<B> Up:</B> <A NAME="tex2html1540"
+  HREF="node38.html">3. Using SDCC</A>
+<B> Previous:</B> <A NAME="tex2html1534"
+  HREF="node64.html">3.5.1 Binary constants</A>
+ &nbsp; <B>  <A NAME="tex2html1542"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html1544"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H1><A NAME="SECTION00460000000000000000"></A><A NAME="1452"></A>
+<BR>
+3.6 Absolute Addressing
+</H1>
+
+<P>
+Data items can be assigned an absolute address with the <I>at<A NAME="1453"></A><A NAME="1454"></A>
+&lt;address&gt;</I> keyword, in addition to a storage class, e.g.:
+
+<P>
+<BLOCKQUOTE>
+<TT>xdata<A NAME="1456"></A><A NAME="1457"></A>
+at<A NAME="1458"></A><A NAME="1459"></A> 0x7ffe unsigned int chksum;</TT>
+
+</BLOCKQUOTE>
+or, better conforming to ISO/IEC 9899 C:
+
+<P>
+<BLOCKQUOTE>
+<TT>__xdata __at (0x7ffe) unsigned int chksum;</TT>
+
+</BLOCKQUOTE>
+In the above example the variable chksum will be located at 0x7ffe
+and 0x7fff of the external ram. The compiler does <I>not</I> reserve
+any space for variables declared in this way (they are implemented with an equate in the assembler). Thus it is
+left to the programmer to make sure there are no overlaps with other
+variables that are declared without the absolute address. The assembler
+listing file (.lst<A NAME="1466"></A>) and the linker output files
+(.rst<A NAME="1467"></A>) and (.map<A NAME="1468"></A>) are good places
+to look for such overlaps.
+
+<P>
+If however you provide an initializer<A NAME="1469"></A>
+actual memory allocation will take place and overlaps will be detected
+by the linker. E.g.:
+
+<P>
+<BLOCKQUOTE>
+<TT>__code __at (0x7ff0) char Id[5] = ''SDCC'';</TT>
+
+</BLOCKQUOTE>
+In the above example the variable Id will be located from 0x7ff0 to
+0x7ff4 in code memory.
+
+<P>
+In case of memory mapped I/O devices the keyword <I>volatile</I> has
+to be used to tell the compiler that accesses might not be removed:
+
+<P>
+<BLOCKQUOTE>
+<TT>volatile<A NAME="1475"></A> __xdata<A NAME="1476"></A>
+__at<A NAME="1477"></A> (0x8000) unsigned char PORTA_8255;</TT>
+
+</BLOCKQUOTE>
+For some architectures (mcs51) array accesses are more efficient if
+an (xdata/far) array<TT><FONT SIZE="-1"><A NAME="1479"></A></FONT></TT>
+starts at a block (256 byte) boundary<A NAME="1480"></A> (section
+<A HREF="node83.html#sub:A-Step-by_Assembler_Introduction">3.13.1</A> has an example).
+<BR>
+Absolute addresses can be specified for variables in all storage classes,
+e.g.:
+
+<P>
+<BLOCKQUOTE>
+<TT>__bit<A NAME="1483"></A> __at<A NAME="1484"></A> (0x02) bvar;</TT>
+
+</BLOCKQUOTE>
+The above example will allocate the variable at offset 0x02 in the
+bit-addressable space. There is no real advantage to assigning absolute
+addresses to variables in this manner, unless you want strict control
+over all the variables allocated. One possible use would be to write
+hardware portable code. For example, if you have a routine that uses
+one or more of the microcontroller I/O pins, and such pins are different
+for two different hardwares, you can declare the I/O pins in your
+routine using:
+
+<P>
+<BLOCKQUOTE>
+<TT>extern volatile<A NAME="1487"></A> __bit MOSI;&nbsp;&nbsp;&nbsp;&nbsp;/*
+master out, slave in */</TT>&nbsp;
+<BR><TT>extern volatile __bit MISO;&nbsp;&nbsp;&nbsp;&nbsp;/* master in, slave
+out */</TT>&nbsp;
+<BR><TT>extern volatile __bit MCLK;&nbsp;&nbsp;&nbsp;&nbsp;/* master clock */</TT>&nbsp;
+<BR>&nbsp;
+<BR><TT>/* Input and Output of a byte on a 3-wire serial bus.</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;If needed adapt polarity of clock, polarity of data
+and bit order</TT>&nbsp;
+<BR><TT>&nbsp;*/</TT>&nbsp;
+<BR><TT>unsigned char spi_io(unsigned char out_byte) </TT>&nbsp;
+<BR><TT>{ </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;unsigned char i=8;</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;do { </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;MOSI = out_byte &amp; 0x80; </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;out_byte &lt;&lt;= 1;</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;MCLK = 1; </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/* _asm nop _endasm; */&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/*
+for slow peripherals */</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if(MISO) </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;out_byte += 1; </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;MCLK = 0; </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;} while(-i);</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;return out_byte; </TT>&nbsp;
+<BR><TT>}</TT>
+
+</BLOCKQUOTE>
+Then, someplace in the code for the first hardware you would use
+
+<P>
+<BLOCKQUOTE>
+<TT>__bit __at<A NAME="1517"></A><A NAME="1518"></A> (0x80) MOSI;&nbsp;&nbsp;&nbsp;&nbsp;/*
+I/O port 0, bit 0 */</TT>&nbsp;
+<BR><TT>__bit __at (0x81) MISO;&nbsp;&nbsp;&nbsp;&nbsp;/* I/O port 0, bit 1
+*/</TT>&nbsp;
+<BR><TT>__bit __at (0x82) MCLK;&nbsp;&nbsp;&nbsp;&nbsp;/* I/O port 0, bit 2
+*/</TT>
+
+</BLOCKQUOTE>
+Similarly, for the second hardware you would use
+
+<P>
+<BLOCKQUOTE>
+<TT>__bit __at (0x83) MOSI;&nbsp;&nbsp;&nbsp;&nbsp;/* I/O port 0, bit 3
+*/</TT>&nbsp;
+<BR><TT>__bit __at (0x91) MISO;&nbsp;&nbsp;&nbsp;&nbsp;/* I/O port 1, bit 1
+*/</TT>&nbsp;
+<BR><TT>__bit<A NAME="1531"></A> __at (0x92) MCLK;&nbsp;&nbsp;&nbsp;&nbsp;/* I/O port
+1, bit 2 */</TT>
+
+</BLOCKQUOTE>
+and you can use the same hardware dependent routine without changes,
+as for example in a library. This is somehow similar to sbit, but
+only one absolute address has to be specified in the whole project.
+<P><P>
+<BR>
+
+
+<P>
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html1545"
+  HREF="node66.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html1539"
+  HREF="node38.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html1533"
+  HREF="node64.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html1541"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html1543"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1546"
+  HREF="node66.html">3.7 Parameters &amp; Local</A>
+<B> Up:</B> <A NAME="tex2html1540"
+  HREF="node38.html">3. Using SDCC</A>
+<B> Previous:</B> <A NAME="tex2html1534"
+  HREF="node64.html">3.5.1 Binary constants</A>
+ &nbsp; <B>  <A NAME="tex2html1542"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html1544"
+  HREF="node190.html">Index</A></B> 
+<!--End of Navigation Panel-->
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

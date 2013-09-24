@@ -1,0 +1,18 @@
+This package contains few tools and some custom code. They are combined into a single package to avoid version dependences and misconfiguration problems.
+
+Tools:
+
+SDCC				http://sdcc.sourceforge.net/ (GPL)
+SjAsmPlus			http://sourceforge.net/projects/sjasmplus/ (BSD)
+MegaLZ				http://lvd.nm.ru/MegaLZ/ (custom license)
+UnrealSpeccy Evo	http://code.google.com/p/pentevo/ (PD)
+
+Third party Z80 routines:
+
+SDCC runtime		read docs
+MegaLZ unpacker		(C) fyrex^mhm
+PT3 player			(c)2004,2007 S.V.Bulba
+
+All the custom code and tools other than listed above is written by Shiru and Alone Coder and released into PD.
+
+There are some conversions of PD photos in the examples, source images are from http://public-domain-image.com and http://commons.wikimedia.org

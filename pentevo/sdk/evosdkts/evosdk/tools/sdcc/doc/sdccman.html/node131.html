@@ -1,0 +1,166 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>4.6.11 Stack</TITLE>
+<META NAME="description" CONTENT="4.6.11 Stack">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="next" HREF="node132.html">
+<LINK REL="previous" HREF="node130.html">
+<LINK REL="up" HREF="node120.html">
+<LINK REL="next" HREF="node132.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html2607"
+  HREF="node132.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html2601"
+  HREF="node120.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html2595"
+  HREF="node130.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html2603"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html2605"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html2608"
+  HREF="node132.html">4.6.12 Functions</A>
+<B> Up:</B> <A NAME="tex2html2602"
+  HREF="node120.html">4.6 The PIC16 port</A>
+<B> Previous:</B> <A NAME="tex2html2596"
+  HREF="node130.html">4.6.10 Memory Models</A>
+ &nbsp; <B>  <A NAME="tex2html2604"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html2606"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H2><A NAME="SECTION005611000000000000000">
+4.6.11 Stack</A>
+</H2>
+
+<P>
+The stack<A NAME="3125"></A> implementation for the PIC16 port uses
+two indirect registers, FSR1 and FSR2.
+
+<P>
+<DL>
+<DT><STRONG>FSR1</STRONG></DT>
+<DD>is assigned as stack pointer
+</DD>
+<DT><STRONG>FSR2</STRONG></DT>
+<DD>is assigned as frame pointer
+</DD>
+</DL>
+The following stack models are supported by the PIC16 port
+
+<P>
+
+<UL>
+<LI><SMALL>SMALL</SMALL> model
+</LI>
+<LI><SMALL>LARGE</SMALL> model
+</LI>
+</UL>
+S<SMALL>MALL</SMALL> model means that only the FSRxL byte is used to access
+stack and frame, while <I><SMALL>LARGE</SMALL></I> uses both FSRxL and FSRxH
+registers. The following table shows the stack/frame pointers sizes
+according to stack model and the maximum space they can address:
+
+<P>
+<DIV ALIGN="CENTER">
+<TABLE CELLPADDING=3 BORDER="1">
+<TR><TD ALIGN="CENTER">Stack &amp; Frame pointer sizes according to stack model</TD>
+<TD ALIGN="CENTER">small</TD>
+<TD ALIGN="CENTER">large</TD>
+</TR>
+<TR><TD ALIGN="CENTER">Stack pointer FSR1</TD>
+<TD ALIGN="CENTER">8-bits</TD>
+<TD ALIGN="CENTER">16-bits</TD>
+</TR>
+<TR><TD ALIGN="CENTER">Frame pointer FSR2</TD>
+<TD ALIGN="CENTER">8-bits</TD>
+<TD ALIGN="CENTER">16-bits</TD>
+</TR>
+</TABLE>
+</DIV>
+<P>
+<DIV ALIGN="CENTER">
+</DIV>
+
+<P>
+L<SMALL>ARGE </SMALL>stack model is currently not working properly
+throughout the code generator. So its use is not advised. Also there
+are some other points that need special care:
+<BR>
+<P>
+
+<OL>
+<LI>Do not create stack sections with size more than one physical bank
+(that is 256 bytes)
+</LI>
+<LI>Stack sections should no cross physical bank limits (i.e. #pragma
+stack 0x50 0x100)
+</LI>
+</OL>
+These limitations are caused by the fact that only FSRxL is modified
+when using SMALL stack model, so no more than 256 bytes of stack can
+be used. This problem will disappear after LARGE model is fully implemented.
+
+<P>
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html2607"
+  HREF="node132.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html2601"
+  HREF="node120.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html2595"
+  HREF="node130.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html2603"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html2605"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html2608"
+  HREF="node132.html">4.6.12 Functions</A>
+<B> Up:</B> <A NAME="tex2html2602"
+  HREF="node120.html">4.6 The PIC16 port</A>
+<B> Previous:</B> <A NAME="tex2html2596"
+  HREF="node130.html">4.6.10 Memory Models</A>
+ &nbsp; <B>  <A NAME="tex2html2604"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html2606"
+  HREF="node190.html">Index</A></B> 
+<!--End of Navigation Panel-->
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

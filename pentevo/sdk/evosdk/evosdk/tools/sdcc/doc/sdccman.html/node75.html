@@ -1,0 +1,160 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>3.10.2 Enabling and Disabling Interrupts directly</TITLE>
+<META NAME="description" CONTENT="3.10.2 Enabling and Disabling Interrupts directly">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="next" HREF="node76.html">
+<LINK REL="previous" HREF="node74.html">
+<LINK REL="up" HREF="node73.html">
+<LINK REL="next" HREF="node76.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html1698"
+  HREF="node76.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html1692"
+  HREF="node73.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html1686"
+  HREF="node74.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html1694"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html1696"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1699"
+  HREF="node76.html">3.10.3 Semaphore locking (mcs51/ds390)</A>
+<B> Up:</B> <A NAME="tex2html1693"
+  HREF="node73.html">3.10 Enabling and Disabling</A>
+<B> Previous:</B> <A NAME="tex2html1687"
+  HREF="node74.html">3.10.1 Critical Functions and</A>
+ &nbsp; <B>  <A NAME="tex2html1695"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html1697"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H2><A NAME="SECTION004102000000000000000">
+3.10.2 Enabling and Disabling Interrupts directly</A>
+</H2>
+
+<P>
+Interrupts<A NAME="1711"></A> can also be disabled and enabled directly
+(8051):
+
+<P>
+<BLOCKQUOTE>
+<TT>EA = 0;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;or:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;EA_SAVE
+= EA;</TT>
+</BLOCKQUOTE>
+<P>
+<BLOCKQUOTE><TT>...&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;EA
+= 0;</TT>
+</BLOCKQUOTE>
+<P>
+<BLOCKQUOTE><TT>EA = 1;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;...</TT>
+</BLOCKQUOTE>
+<P>
+<BLOCKQUOTE><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;EA
+= EA_SAVE;</TT>
+
+</BLOCKQUOTE>
+On other architectures which have separate opcodes for enabling and
+disabling interrupts you might want to make use of defines with inline
+assembly<A NAME="1718"></A> (HC08<A NAME="1719"></A>):
+
+<P>
+<BLOCKQUOTE>
+<TT>#define CLI _asm<A NAME="1721"></A>&nbsp;&nbsp;cli&nbsp;&nbsp;_endasm<A NAME="1722"></A>; </TT>
+</BLOCKQUOTE>
+<P>
+<BLOCKQUOTE><TT>#define SEI _asm&nbsp;&nbsp;sei&nbsp;&nbsp;_endasm; </TT>
+</BLOCKQUOTE>
+<P>
+<BLOCKQUOTE><TT>...</TT>
+
+</BLOCKQUOTE>
+Note: it is sometimes sufficient to disable only a specific interrupt
+source like f.e. a timer or serial interrupt by manipulating an <I>interrupt
+mask<A NAME="1726"></A></I> register. 
+
+<P>
+Usually the time during which interrupts are disabled should be kept
+as short as possible. This minimizes both <I>interrupt latency</I><A NAME="1728"></A>
+(the time between the occurrence of the interrupt and the execution
+of the first code in the interrupt routine) and <I>interrupt jitter</I><A NAME="1730"></A>
+(the difference between the shortest and the longest interrupt latency).
+These really are something different, f.e. a serial interrupt has
+to be served before its buffer overruns so it cares for the maximum
+interrupt latency, whereas it does not care about jitter. On a loudspeaker
+driven via a digital to analog converter which is fed by an interrupt
+a latency of a few milliseconds might be tolerable, whereas a much
+smaller jitter will be very audible.
+
+<P>
+You can reenable interrupts within an interrupt routine and on some
+architectures you can make use of two (or more) levels of <I>interrupt
+priorities</I><A NAME="1732"></A>. On some architectures which
+don't support interrupt priorities these can be implemented by manipulating
+the interrupt mask and reenabling interrupts within the interrupt
+routine. Check there is sufficient space on the stack<A NAME="1733"></A>
+and don't add complexity unless you have to. 
+
+<P>
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html1698"
+  HREF="node76.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html1692"
+  HREF="node73.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html1686"
+  HREF="node74.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html1694"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html1696"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1699"
+  HREF="node76.html">3.10.3 Semaphore locking (mcs51/ds390)</A>
+<B> Up:</B> <A NAME="tex2html1693"
+  HREF="node73.html">3.10 Enabling and Disabling</A>
+<B> Previous:</B> <A NAME="tex2html1687"
+  HREF="node74.html">3.10.1 Critical Functions and</A>
+ &nbsp; <B>  <A NAME="tex2html1695"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html1697"
+  HREF="node190.html">Index</A></B> 
+<!--End of Navigation Panel-->
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

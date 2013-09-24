@@ -1,0 +1,169 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>3.9.2 MCS51/DS390 Interrupt Service Routines</TITLE>
+<META NAME="description" CONTENT="3.9.2 MCS51/DS390 Interrupt Service Routines">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="next" HREF="node71.html">
+<LINK REL="previous" HREF="node69.html">
+<LINK REL="up" HREF="node68.html">
+<LINK REL="next" HREF="node71.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html1627"
+  HREF="node71.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html1621"
+  HREF="node68.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html1615"
+  HREF="node69.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html1623"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html1625"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1628"
+  HREF="node71.html">3.9.3 HC08 Interrupt Service</A>
+<B> Up:</B> <A NAME="tex2html1622"
+  HREF="node68.html">3.9 Interrupt Service Routines</A>
+<B> Previous:</B> <A NAME="tex2html1616"
+  HREF="node69.html">3.9.1 General Information</A>
+ &nbsp; <B>  <A NAME="tex2html1624"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html1626"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H2><A NAME="SECTION00492000000000000000">
+3.9.2 MCS51/DS390 Interrupt Service Routines</A>
+</H2>
+
+<P>
+Interrupt<A NAME="1659"></A> numbers and the corresponding address
+&amp; descriptions for the Standard 8051/8052 are listed below. SDCC
+will automatically adjust the <A NAME="1660"></A> to the
+maximum interrupt number specified.
+<BR>
+<P>
+<DIV ALIGN="CENTER">
+<TABLE CELLPADDING=3 BORDER="1">
+<TR><TD ALIGN="CENTER">Interrupt #</TD>
+<TD ALIGN="LEFT">Description</TD>
+<TD ALIGN="LEFT">Vector Address</TD>
+</TR>
+<TR><TD ALIGN="CENTER">0</TD>
+<TD ALIGN="LEFT">External 0</TD>
+<TD ALIGN="LEFT">0x0003</TD>
+</TR>
+<TR><TD ALIGN="CENTER">1</TD>
+<TD ALIGN="LEFT">Timer 0</TD>
+<TD ALIGN="LEFT">0x000b</TD>
+</TR>
+<TR><TD ALIGN="CENTER">2</TD>
+<TD ALIGN="LEFT">External 1</TD>
+<TD ALIGN="LEFT">0x0013</TD>
+</TR>
+<TR><TD ALIGN="CENTER">3</TD>
+<TD ALIGN="LEFT">Timer 1</TD>
+<TD ALIGN="LEFT">0x001b</TD>
+</TR>
+<TR><TD ALIGN="CENTER">4</TD>
+<TD ALIGN="LEFT">Serial</TD>
+<TD ALIGN="LEFT">0x0023</TD>
+</TR>
+<TR><TD ALIGN="CENTER" COLSPAN=1>5</TD>
+<TD ALIGN="LEFT">Timer 2 (8052)</TD>
+<TD ALIGN="LEFT">0x002b</TD>
+</TR>
+<TR><TD ALIGN="CENTER">...</TD>
+<TD ALIGN="LEFT">&nbsp;</TD>
+<TD ALIGN="LEFT">...</TD>
+</TR>
+<TR><TD ALIGN="CENTER">n</TD>
+<TD ALIGN="LEFT">&nbsp;</TD>
+<TD ALIGN="LEFT">0x0003 + 8*n</TD>
+</TR>
+</TABLE>
+<BR></DIV>
+<P>
+<DIV ALIGN="CENTER">
+</DIV>
+
+<P>
+If the interrupt service routine is defined without <I>using<A NAME="1670"></A><A NAME="1671"></A></I>
+a register bank or with register bank 0 (<I>using</I> 0), the compiler
+will save the registers used by itself on the stack upon entry and
+restore them at exit, however if such an interrupt service routine
+calls another function then the entire register bank will be saved
+on the stack. This scheme may be advantageous for small interrupt
+service routines which have low register usage.
+
+<P>
+If the interrupt service routine is defined to be using a specific
+register bank then only <I>a, b, dptr</I> &amp; psw are saved and restored,
+if such an interrupt service routine calls another function (using
+another register bank) then the entire register bank of the called
+function will be saved on the stack<A NAME="1674"></A>. This scheme is
+recommended for larger interrupt service routines.
+<P><P>
+<BR>
+
+
+<P>
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html1627"
+  HREF="node71.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html1621"
+  HREF="node68.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html1615"
+  HREF="node69.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html1623"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html1625"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1628"
+  HREF="node71.html">3.9.3 HC08 Interrupt Service</A>
+<B> Up:</B> <A NAME="tex2html1622"
+  HREF="node68.html">3.9 Interrupt Service Routines</A>
+<B> Previous:</B> <A NAME="tex2html1616"
+  HREF="node69.html">3.9.1 General Information</A>
+ &nbsp; <B>  <A NAME="tex2html1624"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html1626"
+  HREF="node190.html">Index</A></B> 
+<!--End of Navigation Panel-->
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

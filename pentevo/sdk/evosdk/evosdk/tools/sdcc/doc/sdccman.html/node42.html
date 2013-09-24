@@ -1,0 +1,136 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>3.1.3 Projects with Multiple Source Files</TITLE>
+<META NAME="description" CONTENT="3.1.3 Projects with Multiple Source Files">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="next" HREF="node43.html">
+<LINK REL="previous" HREF="node41.html">
+<LINK REL="up" HREF="node39.html">
+<LINK REL="next" HREF="node43.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html1188"
+  HREF="node43.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html1182"
+  HREF="node39.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html1176"
+  HREF="node41.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html1184"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html1186"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1189"
+  HREF="node43.html">3.1.4 Projects with Additional</A>
+<B> Up:</B> <A NAME="tex2html1183"
+  HREF="node39.html">3.1 Compiling</A>
+<B> Previous:</B> <A NAME="tex2html1177"
+  HREF="node41.html">3.1.2 Postprocessing the Intel</A>
+ &nbsp; <B>  <A NAME="tex2html1185"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html1187"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H2><A NAME="SECTION00413000000000000000">
+3.1.3 Projects with Multiple Source Files</A>
+</H2>
+
+<P>
+SDCC can compile only ONE file at a time. Let us for example assume
+that you have a project containing the following files:
+<BR>
+<BR>
+foo1.c (contains some functions)
+<BR>
+foo2.c (contains some more functions)
+<BR>
+foomain.c (contains more functions and the function main)
+<BR>
+<BR>
+The first two files will need to be compiled separately with the commands:
+<BR>
+<BR><I><B>sdcc&nbsp;-c&nbsp;foo1.c</B></I>
+<BR><I><B>sdcc&nbsp;-c&nbsp;foo2.c</B></I>
+<BR>
+<BR>
+Then compile the source file containing the <I>main()</I> function
+and link<A NAME="691"></A> the files together with the following command:
+
+<BR>
+<BR><I><B>sdcc&nbsp;foomain.c&nbsp;foo1.rel&nbsp;foo2.rel</B></I><A NAME="693"></A>
+<BR>
+<BR>
+Alternatively, <I>foomain.c</I> can be separately compiled as well:
+<BR>
+<BR><I><B>sdcc&nbsp;-c&nbsp;foomain.c</B></I>
+<BR><I><B>sdcc foomain.rel foo1.rel foo2.rel</B></I>
+<BR>
+<BR>
+The file containing the <I>main()</I> function <SMALL>MUST</SMALL> be the
+<SMALL>FIRST</SMALL> file specified in the command line, since the linkage
+editor processes file in the order they are presented to it. The linker
+is invoked from SDCC using a script file with extension .lnk<A NAME="703"></A>.
+You can view this file to troubleshoot linking problems such as those
+arising from missing libraries.
+
+<P>
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html1188"
+  HREF="node43.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html1182"
+  HREF="node39.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html1176"
+  HREF="node41.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html1184"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html1186"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1189"
+  HREF="node43.html">3.1.4 Projects with Additional</A>
+<B> Up:</B> <A NAME="tex2html1183"
+  HREF="node39.html">3.1 Compiling</A>
+<B> Previous:</B> <A NAME="tex2html1177"
+  HREF="node41.html">3.1.2 Postprocessing the Intel</A>
+ &nbsp; <B>  <A NAME="tex2html1185"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html1187"
+  HREF="node190.html">Index</A></B> 
+<!--End of Navigation Panel-->
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

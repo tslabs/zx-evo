@@ -1,0 +1,232 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>8.2 ANSI-Compliance</TITLE>
+<META NAME="description" CONTENT="8.2 ANSI-Compliance">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="next" HREF="node183.html">
+<LINK REL="previous" HREF="node168.html">
+<LINK REL="up" HREF="node167.html">
+<LINK REL="next" HREF="node183.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html3425"
+  HREF="node183.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html3419"
+  HREF="node167.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html3413"
+  HREF="node181.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html3421"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html3423"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html3426"
+  HREF="node183.html">8.3 Cyclomatic Complexity</A>
+<B> Up:</B> <A NAME="tex2html3420"
+  HREF="node167.html">8. SDCC Technical Data</A>
+<B> Previous:</B> <A NAME="tex2html3414"
+  HREF="node181.html">8.1.13 Peephole Optimizer</A>
+ &nbsp; <B>  <A NAME="tex2html3422"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html3424"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H1><A NAME="SECTION00920000000000000000"></A><A NAME="4194"></A><A NAME="sub:ANSI-Compliance"></A>
+<BR>
+8.2 ANSI-Compliance
+</H1>
+
+<P>
+The latest publicly available version of the standard <I>ISO/IEC
+9899 - Programming languages - C</I> should be available at: http://www.open-std.org/jtc1/sc22/wg14/www/standards.html#9899.
+<BR>
+<P>
+Deviations from the compliance:
+
+<P>
+
+<UL>
+<LI>functions are not reentrant<A NAME="4199"></A> unless explicitly declared
+as such or the <B>--stack-auto<A NAME="4200"></A></B> command
+line option is specified.
+</LI>
+<LI>structures<A NAME="4201"></A> and unions<A NAME="4202"></A> cannot be assigned
+values directly, cannot be passed as function parameters or assigned
+to each other and cannot be a return value<A NAME="4203"></A> from
+a function, e.g.:
+
+<P>
+<BLOCKQUOTE>
+<TT>struct s { ... }; </TT>&nbsp;
+<BR><TT>struct s s1, s2; </TT>&nbsp;
+<BR><TT>foo() </TT>&nbsp;
+<BR><TT>{ </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;... </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;s1 = s2 ; /* is invalid in SDCC although allowed
+in ANSI */ </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;... </TT>&nbsp;
+<BR><TT>}</TT>&nbsp;
+<BR><TT><B>struct</B></TT> <TT>s foo1 (<B>struct</B></TT>
+<TT>s parms) /* invalid in SDCC although allowed in ANSI */</TT>&nbsp;
+<BR><TT>{ </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;struct s rets; </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;... </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;return rets; /* is invalid in SDCC although allowed
+in ANSI */ </TT>&nbsp;
+<BR><TT>}</TT>
+
+</BLOCKQUOTE>
+</LI>
+<LI>initialization of structure arrays must be fully braced.
+
+<P>
+<BLOCKQUOTE>
+<TT>struct s { char x } a[] = {1, 2};&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/* invalid
+in SDCC */</TT>&nbsp;
+<BR><TT>struct s { char x } a[] = {{1}, {2}}; /* OK */</TT>
+
+</BLOCKQUOTE>
+</LI>
+<LI>'long long<A NAME="4234"></A>' (64 bit integers<A NAME="4235"></A>)
+not supported.
+</LI>
+<LI>'double<A NAME="4236"></A>' precision floating point <A NAME="4237"></A>not
+supported.
+</LI>
+<LI>Old K&amp;R style<A NAME="4238"></A> function declarations are NOT allowed.
+
+<P>
+<BLOCKQUOTE>
+<TT>foo(i,j) /* this old style of function declarations */
+</TT>&nbsp;
+<BR><TT>int i,j; /* is valid in ANSI but not valid in SDCC */
+</TT>&nbsp;
+<BR><TT>{ </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;... </TT>&nbsp;
+<BR><TT>}</TT>
+
+</BLOCKQUOTE>
+</LI>
+<LI>Most enhancements in C99 are not supported, e.g.:
+
+<P>
+<BLOCKQUOTE>
+<TT>for (<B>int</B></TT> <TT>i=0; i&lt;10; i++) /* is
+invalid in SDCC although allowed in C99 */</TT>
+
+</BLOCKQUOTE>
+</LI>
+<LI>But some have been added recently in SDCC 2.7.0. They must be considered
+alpha quality however.
+
+<P>
+<BLOCKQUOTE>
+<TT><B>inline<A NAME="4255"></A></B></TT> <TT>int
+increment (int a) { return a+1; } /* inlines the increment without
+function call overhead */</TT>&nbsp;
+<BR><TT>int *</TT> <TT><B>restrict<A NAME="4259"></A></B></TT>
+<TT>p; /* accepted but ignored */</TT>
+
+</BLOCKQUOTE>
+</LI>
+<LI>Certain words that are valid identifiers in the standard may be reserved
+words in SDCC unless the <B>--std-c89<A NAME="4263"></A></B>
+or <B>--std-c99<A NAME="4264"></A></B> command line options
+are used. These may include (depending on the selected processor):
+'at', 'banked', 'bit', 'code', 'critical', 'data', 'eeprom', 'far',
+'flash', 'idata', 'interrupt', 'near', 'nonbanked', 'pdata', 'reentrant',
+'sbit', 'sfr', 'shadowregs', 'sram', 'using', 'wparam', 'xdata', '_overlay',
+'_asm', '_endasm', and '_naked'. Compliant equivalents of these
+keywords are always available in a form that begin with two underscores<A NAME="4265"></A>,
+f.e. '__data' instead of 'data'.
+</LI>
+<LI>Integer promotion of variable arguments is not performed if the argument
+is explicitly taypecasted unless the <B>--std-c89<A NAME="4266"></A></B>
+or <B>--std-c99<A NAME="4267"></A></B> command line options
+are used.
+
+<P>
+<BLOCKQUOTE>
+<TT>void vararg_func (char *str, ...) { str; }</TT>&nbsp;
+<BR>&nbsp;
+<BR><TT>void main (void)</TT>&nbsp;
+<BR><TT>{</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;char c = 10;</TT>&nbsp;
+<BR>&nbsp;
+<BR><TT>&nbsp;&nbsp;/* argument u is promoted to int before</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;* passing to function */</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;vararg_func (&#34;%c&#34;, c);</TT>&nbsp;
+<BR>&nbsp;
+<BR><TT>&nbsp;&nbsp;/* argument u is not promoted to int,</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;* it is passed as char to function</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;* if -std-cXX is not defined;</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;* is promoted to int before passing</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;* to function if -std-cXX is defined */</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;vararg_func (&#34;%bc&#34;, (char)u);</TT>&nbsp;
+<BR><TT>}</TT>
+
+</BLOCKQUOTE>
+</LI>
+</UL>
+
+<P>
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html3425"
+  HREF="node183.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html3419"
+  HREF="node167.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html3413"
+  HREF="node181.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html3421"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html3423"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html3426"
+  HREF="node183.html">8.3 Cyclomatic Complexity</A>
+<B> Up:</B> <A NAME="tex2html3420"
+  HREF="node167.html">8. SDCC Technical Data</A>
+<B> Previous:</B> <A NAME="tex2html3414"
+  HREF="node181.html">8.1.13 Peephole Optimizer</A>
+ &nbsp; <B>  <A NAME="tex2html3422"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html3424"
+  HREF="node190.html">Index</A></B> 
+<!--End of Navigation Panel-->
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

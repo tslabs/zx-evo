@@ -1,0 +1,94 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>2.4.6 Building SDCC Using Borland</TITLE>
+<META NAME="description" CONTENT="2.4.6 Building SDCC Using Borland">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="next" HREF="node21.html">
+<LINK REL="previous" HREF="node19.html">
+<LINK REL="up" HREF="node14.html">
+<LINK REL="next" HREF="node21.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html784"
+  HREF="node21.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html778"
+  HREF="node14.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html772"
+  HREF="node19.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html780"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html782"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html785"
+  HREF="node21.html">2.4.7 Windows Install Using</A>
+<B> Up:</B> <A NAME="tex2html779"
+  HREF="node14.html">2.4 Building SDCC</A>
+<B> Previous:</B> <A NAME="tex2html773"
+  HREF="node19.html">2.4.5 Building SDCC Using</A>
+ &nbsp; <B>  <A NAME="tex2html781"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html783"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H2><A NAME="SECTION00346000000000000000">
+2.4.6 Building SDCC Using Borland</A>
+</H2>
+
+<P>
+
+<OL>
+<LI>From the sdcc directory, run the command &#34;make -f Makefile.bcc&#34;.
+This should regenerate all the .exe files in the bin directory except
+for SDCDB and ucSim.
+</LI>
+<LI>If you modify any source files and need to rebuild, be aware that
+the dependencies may not be correctly calculated. The safest option
+is to delete all .obj files and run the build again. From a Cygwin
+BASH prompt, this can easily be done with the command (be sure you
+are in the sdcc directory):
+<BR>
+<BR><I><B>find . &#92;( -name '*.obj' -o -name
+'*.lib' -o -name '*.rul' &#92;) -print -exec rm {}
+&#92;;</B></I>
+<BR>
+<BR>
+or on Windows NT/2000/XP from the command prompt with the command:
+<BR>
+<BR><I><B>del /s *.obj *.lib *.rul</B></I> from the sdcc directory.
+</LI>
+</OL>
+
+<P>
+<BR><HR>
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

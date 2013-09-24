@@ -1,0 +1,353 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>3.19 Pragmas</TITLE>
+<META NAME="description" CONTENT="3.19 Pragmas">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="next" HREF="node102.html">
+<LINK REL="previous" HREF="node98.html">
+<LINK REL="up" HREF="node38.html">
+<LINK REL="next" HREF="node102.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html2080"
+  HREF="node102.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html2074"
+  HREF="node38.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html2068"
+  HREF="node100.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html2076"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html2078"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html2081"
+  HREF="node102.html">3.20 Defines Created by</A>
+<B> Up:</B> <A NAME="tex2html2075"
+  HREF="node38.html">3. Using SDCC</A>
+<B> Previous:</B> <A NAME="tex2html2069"
+  HREF="node100.html">3.18.2 DS390 Memory Model</A>
+ &nbsp; <B>  <A NAME="tex2html2077"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html2079"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H1><A NAME="SECTION004190000000000000000"></A><A NAME="sec:Pragmas"></A><A NAME="2527"></A>
+<BR>
+3.19 Pragmas
+</H1>
+
+<P>
+Pragmas are used to turn on and/or off certain compiler options. Some
+of them are closely related to corresponding command-line options
+(see section sec:Command-Line-Options).
+<BR>
+Pragmas should be placed before and/or after a function, placing pragmas
+inside a function body could have unpredictable results.
+<BR>
+<BR>
+SDCC supports the following #pragma directives:
+
+<P>
+
+<UL>
+<LI><B>save</B><A NAME="2531"></A> - this will save most current
+options to the save/restore stack. See #pragma&nbsp;restore.
+</LI>
+<LI><B>restore</B><A NAME="2533"></A> - will restore saved options
+from the last save. saves &amp; restores can be nested. SDCC uses a save/restore
+stack: save pushes current options to the stack, restore pulls current
+options from the stack. See #pragma&nbsp;save.
+<BR>
+<P>
+</LI>
+<LI><B>callee_saves</B><A NAME="2535"></A><A NAME="2536"></A>
+function1[,function2[,function3...]] <A NAME="ite:callee_saves-function1__function2__function3...__-"></A>-
+The compiler by default uses a caller saves convention for register
+saving across function calls, however this can cause unnecessary register
+pushing and popping<A NAME="2540"></A> when calling small functions
+from larger functions. This option can be used to switch off the register
+saving convention for the function names specified. The compiler will
+not save registers when calling these functions, extra code need to
+be manually inserted at the entry and exit for these functions to
+save and restore the registers used by these functions, this can SUBSTANTIALLY
+reduce code and improve run time performance of the generated code.
+In the future the compiler (with inter procedural analysis) may be
+able to determine the appropriate scheme to use for each function
+call. If --callee-saves command line option is used (see page lyx:-callee-saves-function1[,function2][,function3]...),
+the function names specified in #pragma&nbsp;callee_saves<A NAME="2542"></A>
+is appended to the list of functions specified in the command line.
+</LI>
+<LI><B>exclude</B><A NAME="2544"></A> none | {acc[,b[,dpl[,dph]]]
+- The exclude pragma disables the generation of pairs of push/pop<A NAME="2548"></A>
+instructions in <I>I</I>nterrupt<A NAME="2550"></A> <I>S</I>ervice
+<I>R</I>outines. The directive should be placed immediately before
+the ISR function definition and it affects ALL ISR functions following
+it. To enable the normal register saving for ISR functions use #pragma&nbsp;exclude&nbsp;none<A NAME="2553"></A>.
+See also the related keyword _naked<A NAME="2554"></A><A NAME="2555"></A>.
+</LI>
+<LI><B>less_pedantic</B><A NAME="2557"></A><A NAME="2558"></A>
+<A NAME="ite:less_pedantic"></A>- the compiler will not warn you anymore
+for obvious mistakes, you're on your own now ;-( . See also the command
+line option --less-pedantic lyx:-less-pedantic. 
+<BR>
+More specifically, the following warnings will be disabled: <I>comparison
+is always [true/false] due to limited range of data type</I> (94);
+<I>overflow in implicit constant conversion</I> (158); [the (in)famous]
+<I>conditional flow changed by optimizer: so said EVELYN the
+modified DOG</I> (110); <I>function '[function name]' must return
+value</I> (59). 
+<BR>
+Furthermore, warnings of less importance (of PEDANTIC and INFO warning
+level) are disabled, too, namely: <I>constant value '[]',
+out of range</I> (81); <I>[left/right] shifting more than size
+of object changed to zero</I> (116); <I>unreachable code</I> (126);
+<I>integer overflow in expression</I> (165); <I>unmatched #pragma
+save and #pragma restore</I> (170); <I>comparison of 'signed char'
+with 'unsigned char' requires promotion to int</I> (185); <I>ISO
+C90 does not support flexible array members</I> (187); <I>extended
+stack by [number] bytes for compiler temp(s) :in function '[function&nbsp;name]':&nbsp;[]</I>
+(114); <I>function '[function name]', # edges [number] ,
+# nodes [number] , cyclomatic complexity [number]</I> (121).
+</LI>
+<LI><B>disable_warning</B> &lt;nnnn&gt;<A NAME="2581"></A>
+- the compiler will not warn you anymore about warning number &lt;nnnn&gt;.
+</LI>
+<LI><B>nogcse</B><A NAME="2583"></A> - will stop global common
+subexpression elimination.
+</LI>
+<LI><B>noinduction</B><A NAME="2585"></A> - will stop loop
+induction optimizations.
+</LI>
+<LI><B>noinvariant</B><A NAME="2587"></A> - will not do loop
+invariant optimizations. For more details see Loop Invariants in section<A HREF="node172.html#sub:Loop-Optimizations">8.1.4</A>.
+</LI>
+<LI><B>noiv</B><A NAME="2590"></A> - Do not generate interrupt<A NAME="2591"></A>
+vector table<A NAME="2592"></A> entries for all ISR functions
+defined after the pragma. This is useful in cases where the interrupt
+vector table must be defined manually, or when there is a secondary,
+manually defined interrupt vector table (e.g. for the autovector feature
+of the Cypress EZ-USB FX2). More elegantly this can be achieved by
+omitting the optional interrupt number after the interrupt keyword,
+see section <A HREF="node68.html#sub:Interrupt-Service-Routines">3.9</A>&nbsp;about interrupts.
+</LI>
+<LI><B>nojtbound</B><A NAME="2595"></A> - will not generate
+code for boundary value checking, when switch statements are turned
+into jump-tables (dangerous). For more details see section <A HREF="node175.html#sub:_switch_-Statements">8.1.7</A>.
+</LI>
+<LI><B>noloopreverse</B><A NAME="2598"></A> - Will not do
+loop reversal optimization
+</LI>
+<LI><B>nooverlay</B><A NAME="2600"></A> - the compiler will
+not overlay the parameters and local variables of a function.
+</LI>
+<LI><B>stackauto</B><A NAME="2602"></A>- See option --stack-auto<A NAME="2603"></A>
+and section <A HREF="node66.html#sec:Parameters-and-Local-Variables">3.7</A> Parameters and
+Local Variables.
+</LI>
+<LI><B>opt_code_speed</B> <A NAME="2606"></A>- The
+compiler will optimize code generation towards fast code, possibly
+at the expense of code size. Currently this has little effect.
+</LI>
+<LI><B>opt_code_size</B> <A NAME="2608"></A>- The compiler
+will optimize code generation towards compact code, possibly at the
+expense of code speed. Currently this has little effect.
+</LI>
+<LI><B>opt_code_balanced</B> <A NAME="2610"></A>-
+The compiler will attempt to generate code that is both compact and
+fast, as long as meeting one goal is not a detriment to the other
+(this is the default). 
+</LI>
+<LI><B>std_sdcc89</B> <A NAME="2612"></A>- Generally follow
+the C89 standard, but allow SDCC features that conflict with the standard
+(default).
+</LI>
+<LI><B>std_c89</B> <A NAME="2614"></A>- Follow the C89 standard
+and disable SDCC features that conflict with the standard.
+</LI>
+<LI><B>std_sdcc99</B> <A NAME="2616"></A>- Generally follow
+the C99 standard, but allow SDCC features that conflict with the standard
+(incomplete support).
+</LI>
+<LI><B>std_c99</B> <A NAME="2618"></A>- Follow the C99 standard
+and disable SDCC features that conflict with the standard (incomplete
+support).
+</LI>
+<LI><B>codeseg</B> &lt;name&gt;<A NAME="2620"></A>- Use this name (max.
+8 characters) for the code segment. See option --codeseg.
+</LI>
+<LI><B>constseg</B> &lt;name&gt;<A NAME="2622"></A>- Use this name
+(max. 8 characters) for the const segment. See option --constseg.
+</LI>
+</UL>
+The preprocessor SDCPP<A NAME="2624"></A> supports the following
+#pragma directives:
+
+<P>
+
+<UL>
+<LI><B>pedantic_parse_number</B><A NAME="2627"></A><A NAME="2628"></A>
+(+ | -) <A NAME="ite:pedantic_parse_number"></A>- Pedantic parse numbers
+so that situations like 0xfe-LO_B(3) are parsed properly and the
+macro LO_B(3) gets expanded. Default is off. See also the --pedantic-parse-number
+command line option lyx:-pedantic-parse-number. 
+<BR>
+Below is an example on how to use this pragma. <I>Note: this functionality
+is not in conformance with standard!</I>
+</LI>
+</UL>
+<BLOCKQUOTE>
+<TT>#pragma pedantic_parse_number +<A NAME="2634"></A></TT>&nbsp;
+<BR>&nbsp;
+<BR><TT>#define LO_B(x) ((x) &amp; 0xff)</TT>&nbsp;
+<BR>&nbsp;
+<BR><TT>unsigned char foo(void)</TT>&nbsp;
+<BR><TT>{</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;unsigned char c=0xfe-LO_B(3);</TT>&nbsp;
+<BR>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;return c;</TT>&nbsp;
+<BR><TT>}</TT>&nbsp;
+<BR></BLOCKQUOTE>
+<P>
+
+<UL>
+<LI><B>preproc_asm</B><A NAME="2647"></A> (+ | -) - switch
+_asm _endasm block preprocessing on / off. Default is on. You use
+this pragma to define multilines of assembly code. This will prevent
+the preprocessor from changing the formatting required by assembly
+code. Below is an example on how to use this pragma.
+</LI>
+</UL>
+<BLOCKQUOTE>
+<TT>#pragma preproc_asm -<A NAME="2650"></A></TT>&nbsp;
+<BR><TT>#define MYDELAY _asm</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;nop ;my assembly comment...</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;nop</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;nop</TT>&nbsp;
+<BR><TT>_endasm</TT>&nbsp;
+<BR><TT>#pragma preproc_asm +</TT>&nbsp;
+<BR>&nbsp;
+<BR><TT>void foo (void) </TT>&nbsp;
+<BR><TT>{ </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp; ... </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp; MYDELAY;</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp; ... </TT>&nbsp;
+<BR><TT>} </TT>&nbsp;
+<BR></BLOCKQUOTE>
+<P>
+
+<UL>
+<LI><B>sdcc_hash</B><A NAME="2667"></A> (+ | -) - Allow &#34;naked&#34;
+hash in macro definition, for example:
+<BR><TT>#define DIR_LO(x) #(x &amp; 0xff)</TT>
+<BR>
+Default is off. Below is an example on how to use this pragma.
+</LI>
+</UL>
+<BLOCKQUOTE>
+<TT>#pragma preproc_asm +</TT>&nbsp;
+<BR><TT>#pragma sdcc_hash +<A NAME="2674"></A></TT>&nbsp;
+<BR>&nbsp;
+<BR><TT>#define ROMCALL(x) &#92;</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;mov R6_B3, #(x &amp; 0xff) &#92;</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;mov R7_B3, #((x &gt;&gt; 8) &amp; 0xff) &#92;</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;lcall __romcall</TT>&nbsp;
+<BR>&nbsp;
+<BR><TT>...</TT>&nbsp;
+<BR><TT>_asm</TT>&nbsp;
+<BR><TT>ROMCALL(72)</TT>&nbsp;
+<BR><TT>_endasm;</TT>&nbsp;
+<BR><TT>...</TT>&nbsp;
+<BR></BLOCKQUOTE>
+<P>
+Some of the pragmas are intended to be used to turn-on or off certain
+optimizations which might cause the compiler to generate extra stack
+and/or data space to store compiler generated temporary variables.
+This usually happens in large functions. Pragma directives should
+be used as shown in the following example, they are used to control
+options and optimizations for a given function. 
+
+<P>
+<BLOCKQUOTE>
+<TT>#pragma save<A NAME="2689"></A>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/* save
+the current settings */ </TT>&nbsp;
+<BR><TT>#pragma nogcse<A NAME="2692"></A>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/* turnoff
+global subexpression elimination */ </TT>&nbsp;
+<BR><TT>#pragma noinduction<A NAME="2695"></A> /* turn
+off induction optimizations */ </TT>&nbsp;
+<BR><TT>int foo () </TT>&nbsp;
+<BR><TT>{ </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp; ... </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp; /* large code */ </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp; ... </TT>&nbsp;
+<BR><TT>} </TT>&nbsp;
+<BR><TT>#pragma restore<A NAME="2705"></A> /* turn the optimizations
+back on */</TT>
+
+</BLOCKQUOTE>
+The compiler will generate a warning message when extra space is allocated.
+It is strongly recommended that the save and restore pragmas be used
+when changing options for a function.
+<BR>
+<BR>
+<BR>
+<P>
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html2080"
+  HREF="node102.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html2074"
+  HREF="node38.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html2068"
+  HREF="node100.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html2076"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html2078"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html2081"
+  HREF="node102.html">3.20 Defines Created by</A>
+<B> Up:</B> <A NAME="tex2html2075"
+  HREF="node38.html">3. Using SDCC</A>
+<B> Previous:</B> <A NAME="tex2html2069"
+  HREF="node100.html">3.18.2 DS390 Memory Model</A>
+ &nbsp; <B>  <A NAME="tex2html2077"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html2079"
+  HREF="node190.html">Index</A></B> 
+<!--End of Navigation Panel-->
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

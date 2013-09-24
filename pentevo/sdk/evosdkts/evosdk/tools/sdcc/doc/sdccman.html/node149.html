@@ -1,0 +1,157 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>6.1 Porting code from or to other compilers</TITLE>
+<META NAME="description" CONTENT="6.1 Porting code from or to other compilers">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="next" HREF="node150.html">
+<LINK REL="previous" HREF="node148.html">
+<LINK REL="up" HREF="node148.html">
+<LINK REL="next" HREF="node150.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html2929"
+  HREF="node150.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html2923"
+  HREF="node148.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html2917"
+  HREF="node148.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html2925"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html2927"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html2930"
+  HREF="node150.html">6.2 Tools included in</A>
+<B> Up:</B> <A NAME="tex2html2924"
+  HREF="node148.html">6. TIPS</A>
+<B> Previous:</B> <A NAME="tex2html2918"
+  HREF="node148.html">6. TIPS</A>
+ &nbsp; <B>  <A NAME="tex2html2926"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html2928"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H1><A NAME="SECTION00710000000000000000"></A><A NAME="sec:Porting-code-to-other-compilers"></A>
+<BR>
+6.1 Porting code from or to other compilers
+</H1>
+
+<P>
+
+<UL>
+<LI>check whether endianness of the compilers differs and adapt where
+needed.
+</LI>
+<LI>check the device specific header files<A NAME="3493"></A><A NAME="3494"></A>
+for compiler specific syntax. Eventually include the file &lt;compiler.h<A NAME="3495"></A>&gt;
+http://sdcc.svn.sourceforge.net/viewvc/sdcc/trunk/sdcc/device/include/mcs51/compiler.h?view=markup
+to allow using common header files. (see f.e. cc2510fx.h http://sdcc.svn.sourceforge.net/viewvc/sdcc/trunk/sdcc/device/include/mcs51/cc2510fx.h?view=markup).
+</LI>
+<LI>check whether the startup code contains the correct initialization
+(watchdog, peripherals).
+</LI>
+<LI>check whether the sizes of short, int, long match.
+</LI>
+<LI>check if some 16 or 32 bit hardware registers require a specific addressing
+order (least significant or most significant byte first) and adapt
+if needed (<I>first</I> and <I>last</I> relate to time and not to
+lower/upper memory location here, so this is <I>not</I> the same as
+endianness).
+</LI>
+<LI>check whether the keyword <I>volatile</I> is used where needed. The
+compilers might differ in their optimization characteristics (as different
+versions of the same compiler might also use more clever optimizations
+this is good idea anyway). See section <A HREF="node69.html#sub:Common-interrupt-pitfall-volatile">3.9.1.1</A>.
+</LI>
+<LI>check that the compilers are not told to suppress warnings.
+</LI>
+<LI>check and convert compiler specific extensions (interrupts, memory
+areas, pragmas etc.).
+</LI>
+<LI>check for differences in type promotion. Especially check for math
+operations on <TT>char</TT> or <TT>unsigned char</TT> variables. For
+the sake of C99 compatibility SDCC will probably promote these to
+<TT>int</TT> more often than other compilers. Eventually insert explicit
+casts to <TT>(char)</TT> or <TT>(unsigned char)</TT>. Also check that
+the ~&nbsp;operator<A NAME="3509"></A> is not used
+on <TT>bit<A NAME="3510"></A></TT> variables, use the !&nbsp;operator instead.
+See sections <A HREF="node148.html#type_promotion">6</A> and <A HREF="node6.html#sec:Compatibility-with-previous">1.4</A>.
+</LI>
+<LI>check the assembly code generated for interrupt routines (f.e. for
+calls to possibly non-reentrant library functions).
+</LI>
+<LI>check whether timing loops result in proper timing (or preferably
+consider a rewrite of the code with timer based delays instead).
+</LI>
+<LI>check for differences in printf parameters (some compilers push (va_arg<A NAME="3513"></A>)
+char variables as <TT>int</TT> others push them as <TT>char</TT>.
+See section <A HREF="node6.html#sec:Compatibility-with-previous">1.4</A>).
+</LI>
+<LI>check the resulting memory map<A NAME="3517"></A>. Usage of different
+memory spaces: code, stack, data (for mcs51/ds390 additionally idata,
+pdata, xdata). Eventually check if unexpected library functions are
+included.
+</LI>
+</UL>
+
+<P>
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html2929"
+  HREF="node150.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html2923"
+  HREF="node148.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html2917"
+  HREF="node148.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html2925"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html2927"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html2930"
+  HREF="node150.html">6.2 Tools included in</A>
+<B> Up:</B> <A NAME="tex2html2924"
+  HREF="node148.html">6. TIPS</A>
+<B> Previous:</B> <A NAME="tex2html2918"
+  HREF="node148.html">6. TIPS</A>
+ &nbsp; <B>  <A NAME="tex2html2926"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html2928"
+  HREF="node190.html">Index</A></B> 
+<!--End of Navigation Panel-->
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

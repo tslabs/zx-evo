@@ -1,0 +1,127 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>4.5.2 Adding New Devices to the Port </TITLE>
+<META NAME="description" CONTENT="4.5.2 Adding New Devices to the Port ">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="next" HREF="node114.html">
+<LINK REL="previous" HREF="node112.html">
+<LINK REL="up" HREF="node111.html">
+<LINK REL="next" HREF="node114.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html2317"
+  HREF="node114.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html2311"
+  HREF="node111.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html2305"
+  HREF="node112.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html2313"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html2315"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html2318"
+  HREF="node114.html">4.5.3 Interrupt Code</A>
+<B> Up:</B> <A NAME="tex2html2312"
+  HREF="node111.html">4.5 The PIC14 port</A>
+<B> Previous:</B> <A NAME="tex2html2306"
+  HREF="node112.html">4.5.1 PIC Code Pages</A>
+ &nbsp; <B>  <A NAME="tex2html2314"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html2316"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H2><A NAME="SECTION00552000000000000000">
+4.5.2 Adding New Devices to the Port </A>
+</H2>
+
+<P>
+Adding support for a new 14bit PIC MCU requires the following steps:
+
+<P>
+
+<OL>
+<LI>Create a new device description.
+<BR>
+Each device is described in two files: pic16f*.h and pic16f*.c.
+These files primarily define SFRs, structs to access their bits, and
+symbolic configuration options. Both files can be generated from gputils'
+.inc files using the perl script <TT>support/scripts/inc2h.pl</TT>.
+This file also contains further instructions on how to proceed.
+</LI>
+<LI>Copy the .h file into SDCC's include path and either add the .c file
+to your project or copy it to <TT>device/lib/pic/libdev</TT>. Afterwards,
+rebuild and install the libraries.
+</LI>
+<LI>Edit pic14devices.txt in SDCC's include path (<TT>device/include/pic/</TT>
+in the source tree or <TT>/usr/local/share/sdcc/include/pic</TT> after
+installation).
+<BR>
+You need to add a device specification here to make the memory layout
+(code banks, RAM, aliased memory regions, ...) known to the compiler.
+Probably you can copy and modify an existing entry. The file format
+is documented at the top of the file.
+</LI>
+</OL>
+
+<P>
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html2317"
+  HREF="node114.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html2311"
+  HREF="node111.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html2305"
+  HREF="node112.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html2313"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html2315"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html2318"
+  HREF="node114.html">4.5.3 Interrupt Code</A>
+<B> Up:</B> <A NAME="tex2html2312"
+  HREF="node111.html">4.5 The PIC14 port</A>
+<B> Previous:</B> <A NAME="tex2html2306"
+  HREF="node112.html">4.5.1 PIC Code Pages</A>
+ &nbsp; <B>  <A NAME="tex2html2314"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html2316"
+  HREF="node190.html">Index</A></B> 
+<!--End of Navigation Panel-->
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

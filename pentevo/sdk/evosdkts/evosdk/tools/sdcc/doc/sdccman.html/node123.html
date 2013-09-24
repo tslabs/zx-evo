@@ -1,0 +1,98 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>4.6.3 Environment Variables</TITLE>
+<META NAME="description" CONTENT="4.6.3 Environment Variables">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="next" HREF="node124.html">
+<LINK REL="previous" HREF="node122.html">
+<LINK REL="up" HREF="node120.html">
+<LINK REL="next" HREF="node124.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html2493"
+  HREF="node124.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html2487"
+  HREF="node120.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html2481"
+  HREF="node122.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html2489"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html2491"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html2494"
+  HREF="node124.html">4.6.4 Preprocessor Macros</A>
+<B> Up:</B> <A NAME="tex2html2488"
+  HREF="node120.html">4.6 The PIC16 port</A>
+<B> Previous:</B> <A NAME="tex2html2482"
+  HREF="node122.html">4.6.2 Port Specific Options</A>
+ &nbsp; <B>  <A NAME="tex2html2490"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html2492"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H2><A NAME="SECTION00563000000000000000">
+4.6.3 Environment Variables</A>
+</H2>
+
+<P>
+There is a number of environmental variables that can be used when
+running SDCC to enable certain optimizations or force a specific program
+behaviour. these variables are primarily for debugging purposes so
+they can be enabled/disabled at will.
+
+<P>
+Currently there is only two such variables available:
+
+<P>
+<DL>
+<DT><STRONG>OPTIMIZE_BITFIELD_POINTER_GET</STRONG></DT>
+<DD>When this variable exists, reading
+of structure bitfields is optimized by directly loading FSR0 with
+the address of the bitfield structure. Normally SDCC will cast the
+bitfield structure to a bitfield pointer and then load FSR0. This
+step saves data ram and code space for functions that make heavy use
+of bitfields. (i.e., 80 bytes of code space are saved when compiling
+malloc.c with this option). 
+</DD>
+<DT><STRONG>NO_REG_OPT</STRONG></DT>
+<DD>Do not perform pCode registers optimization. This
+should be used for debugging purposes. If bugs in the pcode optimizer
+are found, users can benefit from temporarily disabling the optimizer
+until the bug is fixed.
+</DD>
+</DL>
+
+<P>
+<BR><HR>
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

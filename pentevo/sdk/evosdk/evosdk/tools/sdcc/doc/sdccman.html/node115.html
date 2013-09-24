@@ -1,0 +1,106 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>4.5.4 Linking and Assembling</TITLE>
+<META NAME="description" CONTENT="4.5.4 Linking and Assembling">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="next" HREF="node116.html">
+<LINK REL="previous" HREF="node114.html">
+<LINK REL="up" HREF="node111.html">
+<LINK REL="next" HREF="node116.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html2345"
+  HREF="node116.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html2339"
+  HREF="node111.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html2333"
+  HREF="node114.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html2341"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html2343"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html2346"
+  HREF="node116.html">4.5.5 Command-Line Options</A>
+<B> Up:</B> <A NAME="tex2html2340"
+  HREF="node111.html">4.5 The PIC14 port</A>
+<B> Previous:</B> <A NAME="tex2html2334"
+  HREF="node114.html">4.5.3 Interrupt Code</A>
+ &nbsp; <B>  <A NAME="tex2html2342"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html2344"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H2><A NAME="SECTION00554000000000000000">
+4.5.4 Linking and Assembling</A>
+</H2>
+
+<P>
+For assembling you can use either GPUTILS'<A NAME="2858"></A>
+gpasm.exe or MPLAB's mpasmwin.exe. GPUTILS are available from http://sourceforge.net/projects/gputils.
+For linking you can use either GPUTILS' gplink or MPLAB's mplink.exe.
+If you use MPLAB and an interrupt function then the linker script
+file vectors section will need to be enlarged to link with mplink.
+<BR>
+<BR>
+Here is a <TT>Makefile</TT> using GPUTILS:
+
+<P>
+<BLOCKQUOTE>
+<TT>.c.o:</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sdcc -V -mpic14 -p16f877 -c $&lt; </TT>&nbsp;
+<BR>&nbsp;
+<BR><TT>$(PRJ).hex: $(OBJS) </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gplink -m -s $(PRJ).lkr -o $(PRJ).hex $(OBJS)
+libsdcc.lib</TT>
+
+</BLOCKQUOTE>
+Here is a <TT>Makefile</TT> using MPLAB:
+
+<P>
+<BLOCKQUOTE>
+<TT>.c.o: </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sdcc -S -V -mpic14 -p16f877 $&lt; </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mpasmwin /q /o $*.asm</TT>&nbsp;
+<BR>&nbsp;
+<BR><TT>$(PRJ).hex: $(OBJS) </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mplink /v $(PRJ).lkr /m $(PRJ).map /o $(PRJ).hex
+$(OBJS) libsdcc.lib</TT>
+
+</BLOCKQUOTE>
+Please note that indentations within a <TT>Makefile</TT> have to be
+done with a tabulator character.
+
+<P>
+<BR><HR>
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

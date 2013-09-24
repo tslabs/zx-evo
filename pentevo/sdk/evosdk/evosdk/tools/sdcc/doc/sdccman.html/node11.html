@@ -1,0 +1,346 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>2.1 Configure Options</TITLE>
+<META NAME="description" CONTENT="2.1 Configure Options">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="next" HREF="node12.html">
+<LINK REL="previous" HREF="node10.html">
+<LINK REL="up" HREF="node10.html">
+<LINK REL="next" HREF="node12.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html649"
+  HREF="node12.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html643"
+  HREF="node10.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html637"
+  HREF="node10.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html645"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html647"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html650"
+  HREF="node12.html">2.2 Install paths</A>
+<B> Up:</B> <A NAME="tex2html644"
+  HREF="node10.html">2. Installing SDCC</A>
+<B> Previous:</B> <A NAME="tex2html638"
+  HREF="node10.html">2. Installing SDCC</A>
+ &nbsp; <B>  <A NAME="tex2html646"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html648"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H1><A NAME="SECTION00310000000000000000"></A><A NAME="175"></A>
+<BR>
+2.1 Configure Options
+</H1>
+
+<P>
+The install paths, search paths and other options are defined when
+running 'configure'. The defaults can be overridden by:
+
+<P>
+
+<UL>
+<LI>[--prefix] see table below
+</LI>
+<LI>[--exec_prefix] see table below
+</LI>
+<LI>[--bindir] see table below
+</LI>
+<LI>[--datadir] see table below
+</LI>
+<LI>[--datarootdir] see table below
+<BR>
+<P>
+</LI>
+<LI>[&nbsp;&nbsp;docdir] environment variable, see table below
+</LI>
+<LI>[&nbsp;&nbsp;include_dir_suffix] environment variable, see table below
+</LI>
+<LI>[&nbsp;&nbsp;lib_dir_suffix] environment variable, see table below
+</LI>
+<LI>[&nbsp;&nbsp;sdccconf_h_dir_separator] environment variable, either
+/ or &#92;&#92; makes sense here. This character
+will only be used in sdccconf.h; don't forget it's a C-header, therefore
+a double-backslash is needed there.
+<BR>
+<P>
+</LI>
+<LI>[--disable-mcs51-port] Excludes the Intel mcs51 port
+</LI>
+<LI>[--disable-gbz80-port] Excludes the Gameboy gbz80 port
+</LI>
+<LI>[--disable-z80-port] Excludes the z80 port
+</LI>
+<LI>[--disable-avr-port] Excludes the AVR port
+</LI>
+<LI>[--disable-ds390-port] Excludes the DS390 port
+</LI>
+<LI>[--disable-hc08-port] Excludes the HC08 port
+</LI>
+<LI>[--disable-pic-port] Excludes the PIC14 port
+</LI>
+<LI>[--disable-pic16-port] Excludes the PIC16 port
+</LI>
+<LI>[--disable-xa51-port] Excludes the XA51 port
+</LI>
+<LI>[--disable-ucsim] Disables configuring and building of ucsim
+</LI>
+<LI>[--disable-device-lib] Disables automatically building device
+libraries
+</LI>
+<LI>[--disable-packihx] Disables building packihx
+<BR>
+<P>
+</LI>
+<LI>[--enable-doc] Build pdf, html and txt files from the lyx sources
+</LI>
+<LI>[--enable-libgc] Use the Bohem memory allocator. Lower runtime
+footprint.
+</LI>
+<LI>[--without-ccache] Do not use ccache even if available
+</LI>
+</UL>Furthermore the environment variables CC, CFLAGS, ... the tools and
+their arguments can be influenced. Please see `configure --help'
+and the man/info pages of `configure' for details.
+<BR>
+<BR>
+The names of the standard libraries STD_LIB, STD_INT_LIB, STD_LONG_LIB,
+STD_FP_LIB, STD_DS390_LIB, STD_XA51_LIB and the environment
+variables SDCC_DIR_NAME, SDCC_INCLUDE_NAME, SDCC_LIB_NAME are
+defined by `configure' too. At the moment it's not possible to change
+the default settings (it was simply never required).
+<BR>
+<BR>
+These configure options are compiled into the binaries, and can only
+be changed by rerunning 'configure' and recompiling SDCC. The configure
+options are written in <I>italics</I> to distinguish them from run
+time environment variables (see section search paths).
+<BR>
+<BR>
+The settings for ''Win32 builds'' are used by the SDCC team to build
+the official Win32 binaries. The SDCC team uses Mingw32 to build the
+official Windows binaries, because it's
+
+<P>
+
+<OL>
+<LI>open source, 
+</LI>
+<LI>a gcc compiler and last but not least
+</LI>
+<LI>the binaries can be built by cross compiling on SDCC Distributed Compile
+Farm.
+</LI>
+</OL>
+See the examples, how to pass the Win32 settings to 'configure'. The
+other Win32 builds using Borland, VC or whatever don't use 'configure',
+but a header file sdcc_vc_in.h is the same as sdccconf.h built by
+'configure' for Win32.
+<BR>
+<BR>
+These defaults are:
+<BR>
+<P>
+<DIV ALIGN="CENTER">
+<TABLE CELLPADDING=3 BORDER="1">
+<TR><TD ALIGN="CENTER">Variable</TD>
+<TD ALIGN="CENTER">default</TD>
+<TD ALIGN="CENTER">Win32 builds</TD>
+</TR>
+<TR><TD ALIGN="CENTER"><I>PREFIX</I></TD>
+<TD ALIGN="CENTER">/usr/local</TD>
+<TD ALIGN="CENTER">&#92;sdcc</TD>
+</TR>
+<TR><TD ALIGN="CENTER"><I>EXEC_PREFIX</I></TD>
+<TD ALIGN="CENTER"><I>$PREFIX</I></TD>
+<TD ALIGN="CENTER"><I>$PREFIX</I></TD>
+</TR>
+<TR><TD ALIGN="CENTER"><I>BINDIR</I></TD>
+<TD ALIGN="CENTER"><I>$EXEC_PREFIX</I>/bin</TD>
+<TD ALIGN="CENTER"><I>$EXEC_PREFIX</I>&#92;bin</TD>
+</TR>
+<TR><TD ALIGN="CENTER"><I>DATADIR</I></TD>
+<TD ALIGN="CENTER"><I>$DATAROOTDIR</I></TD>
+<TD ALIGN="CENTER"><I>$DATAROOTDIR</I></TD>
+</TR>
+<TR><TD ALIGN="CENTER"><I>DATAROOTDIR</I></TD>
+<TD ALIGN="CENTER"><I>$PREFIX</I>/share</TD>
+<TD ALIGN="CENTER"><I>$PREFIX</I></TD>
+</TR>
+<TR><TD ALIGN="CENTER"><I>DOCDIR</I></TD>
+<TD ALIGN="CENTER"><I>$DATAROOTDIR</I>/sdcc/doc</TD>
+<TD ALIGN="CENTER"><I>$DATAROOTDIR</I>&#92;doc</TD>
+</TR>
+<TR><TD ALIGN="CENTER"><I>INCLUDE_DIR_SUFFIX</I></TD>
+<TD ALIGN="CENTER">sdcc/include</TD>
+<TD ALIGN="CENTER">include</TD>
+</TR>
+<TR><TD ALIGN="CENTER"><I>LIB_DIR_SUFFIX</I></TD>
+<TD ALIGN="CENTER">sdcc/lib</TD>
+<TD ALIGN="CENTER">lib</TD>
+</TR>
+</TABLE>
+<BR></DIV>
+<P>
+<DIV ALIGN="CENTER">
+</DIV>
+
+<P>
+'configure' also computes relative paths. This is needed
+for full relocatability of a binary package and to complete search
+paths (see section search paths below):
+<BR>
+<P>
+<DIV ALIGN="CENTER">
+<TABLE CELLPADDING=3 BORDER="1">
+<TR><TD ALIGN="CENTER">Variable (computed)</TD>
+<TD ALIGN="CENTER">default</TD>
+<TD ALIGN="CENTER">Win32 builds</TD>
+</TR>
+<TR><TD ALIGN="CENTER"><I>BIN2DATA_DIR</I></TD>
+<TD ALIGN="CENTER">../share</TD>
+<TD ALIGN="CENTER">..</TD>
+</TR>
+<TR><TD ALIGN="CENTER"><I>PREFIX2BIN_DIR</I></TD>
+<TD ALIGN="CENTER">bin</TD>
+<TD ALIGN="CENTER">bin</TD>
+</TR>
+<TR><TD ALIGN="CENTER"><I>PREFIX2DATA_DIR</I></TD>
+<TD ALIGN="CENTER">share/sdcc</TD>
+<TD ALIGN="CENTER">&nbsp;</TD>
+</TR>
+</TABLE>
+<BR></DIV>
+<P>
+<DIV ALIGN="CENTER">
+</DIV>
+
+<P>
+Examples:
+
+<P>
+
+<DL COMPACT>
+<DT>
+<DD>./configure&nbsp;
+<BR>./configure&nbsp;--prefix=''/usr/bin''&nbsp;--datarootdir=''/usr/share''&nbsp;
+<BR>./configure&nbsp;--disable-avr-port&nbsp;--disable-xa51-port
+</DD>
+</DL>To cross compile on linux for Mingw32 (see also 'sdcc/support/scripts/sdcc_mingw32'):
+
+<P>
+
+<DL COMPACT>
+<DT>
+<DD>./configure&nbsp;&#92;&nbsp;
+<BR>
+CC=''i586-mingw32msvc-gcc''&nbsp;CXX=''i586-mingw32msvc-g++''&nbsp;&#92;&nbsp;&nbsp;
+<BR>
+RANLIB=''i586-mingw32msvc-ranlib''&nbsp;&#92;&nbsp;
+<BR>
+STRIP=''i586-mingw32msvc-strip''&nbsp;&#92;&nbsp;
+<BR>--prefix=''/sdcc''&nbsp;&#92;&nbsp;
+<BR>--datarootdir=''/sdcc''&nbsp;&#92;&nbsp;
+<BR>
+docdir=''&#92;${datarootdir}/doc''&nbsp;&#92;&nbsp;
+<BR>
+include_dir_suffix=''include''&nbsp;&#92;&nbsp;
+<BR>
+lib_dir_suffix=''lib''&nbsp;&#92;&nbsp;
+<BR>
+sdccconf_h_dir_separator=''&#92;&#92;&#92;&#92;''&nbsp;&#92;&nbsp;
+<BR>--disable-device-lib&#92;&nbsp;
+<BR>--host=i586-mingw32msvc&#92;&nbsp;
+<BR>--build=unknown-unknown-linux-gnu
+</DD>
+</DL>To ''cross''compile on Cygwin for Mingw32 (see also sdcc/support/scripts/sdcc_cygwin_mingw32):
+
+<P>
+
+<DL COMPACT>
+<DT>
+<DD>./configure&nbsp;-C&nbsp;&#92;&nbsp;
+<BR>--prefix=''/sdcc''&nbsp;&#92;&nbsp;
+<BR>--datarootdir=''/sdcc''&nbsp;&#92;&nbsp;
+<BR>
+docdir=''&#92;${datarootdir}/doc''&nbsp;&#92;&nbsp;&nbsp;
+<BR>
+include_dir_suffix=''include''&nbsp;&#92;&nbsp;
+<BR>
+lib_dir_suffix=''lib''&nbsp;&#92;&nbsp;
+<BR>
+sdccconf_h_dir_separator=''&#92;&#92;&#92;&#92;''&nbsp;&#92;&nbsp;
+<BR>
+CC=''gcc&nbsp;-mno-cygwin''&nbsp;&#92;&nbsp;
+<BR>
+CXX=''g++&nbsp;-mno-cygwin''&nbsp;
+</DD>
+</DL>'configure' is quite slow on Cygwin (at least on windows before Win2000/XP).
+The option '--C' turns on caching, which gives a little bit extra
+speed. However if options are changed, it can be necessary to delete
+the config.cache file.
+
+<P>
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html649"
+  HREF="node12.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html643"
+  HREF="node10.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html637"
+  HREF="node10.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html645"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html647"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html650"
+  HREF="node12.html">2.2 Install paths</A>
+<B> Up:</B> <A NAME="tex2html644"
+  HREF="node10.html">2. Installing SDCC</A>
+<B> Previous:</B> <A NAME="tex2html638"
+  HREF="node10.html">2. Installing SDCC</A>
+ &nbsp; <B>  <A NAME="tex2html646"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html648"
+  HREF="node190.html">Index</A></B> 
+<!--End of Navigation Panel-->
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

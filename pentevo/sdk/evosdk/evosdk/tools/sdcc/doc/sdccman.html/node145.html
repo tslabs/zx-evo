@@ -1,0 +1,315 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>5.1.5 SDCDB Debugger Commands</TITLE>
+<META NAME="description" CONTENT="5.1.5 SDCDB Debugger Commands">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="next" HREF="node146.html">
+<LINK REL="previous" HREF="node144.html">
+<LINK REL="up" HREF="node140.html">
+<LINK REL="next" HREF="node146.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html2852"
+  HREF="node146.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html2846"
+  HREF="node140.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html2840"
+  HREF="node144.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html2848"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html2850"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html2853"
+  HREF="node146.html">5.1.6 Interfacing SDCDB with</A>
+<B> Up:</B> <A NAME="tex2html2847"
+  HREF="node140.html">5.1 Debugging with SDCDB</A>
+<B> Previous:</B> <A NAME="tex2html2841"
+  HREF="node144.html">5.1.4 SDCDB Command Line</A>
+ &nbsp; <B>  <A NAME="tex2html2849"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html2851"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+<!--Table of Child-Links-->
+<A NAME="CHILD_LINKS"><STRONG>Subsections</STRONG></A>
+
+<UL>
+<LI><A NAME="tex2html2854"
+  HREF="node145.html#SECTION00615100000000000000">break [line | file:line | function | file:function]</A>
+<LI><A NAME="tex2html2855"
+  HREF="node145.html#SECTION00615200000000000000">clear [line | file:line | function | file:function ]</A>
+<LI><A NAME="tex2html2856"
+  HREF="node145.html#SECTION00615300000000000000">continue</A>
+<LI><A NAME="tex2html2857"
+  HREF="node145.html#SECTION00615400000000000000">finish</A>
+<LI><A NAME="tex2html2858"
+  HREF="node145.html#SECTION00615500000000000000">delete [n]</A>
+<LI><A NAME="tex2html2859"
+  HREF="node145.html#SECTION00615600000000000000">info [break | stack | frame | registers ]</A>
+<LI><A NAME="tex2html2860"
+  HREF="node145.html#SECTION00615700000000000000">step</A>
+<LI><A NAME="tex2html2861"
+  HREF="node145.html#SECTION00615800000000000000">next</A>
+<LI><A NAME="tex2html2862"
+  HREF="node145.html#SECTION00615900000000000000">run</A>
+<LI><A NAME="tex2html2863"
+  HREF="node145.html#SECTION006151000000000000000">ptype variable </A>
+<LI><A NAME="tex2html2864"
+  HREF="node145.html#SECTION006151100000000000000">print variable</A>
+<LI><A NAME="tex2html2865"
+  HREF="node145.html#SECTION006151200000000000000">file filename</A>
+<LI><A NAME="tex2html2866"
+  HREF="node145.html#SECTION006151300000000000000">frame</A>
+<LI><A NAME="tex2html2867"
+  HREF="node145.html#SECTION006151400000000000000">set srcmode</A>
+<LI><A NAME="tex2html2868"
+  HREF="node145.html#SECTION006151500000000000000">! simulator command</A>
+<LI><A NAME="tex2html2869"
+  HREF="node145.html#SECTION006151600000000000000">quit</A>
+</UL>
+<!--End of Table of Child-Links-->
+<HR>
+
+<H2><A NAME="SECTION00615000000000000000">
+5.1.5 SDCDB Debugger Commands</A>
+</H2>
+
+<P>
+As mentioned earlier the command interface for the debugger has been
+deliberately kept as close the GNU debugger gdb, as possible. This
+will help the integration with existing graphical user interfaces
+(like ddd, xxgdb or xemacs) existing for the GNU debugger. If you
+use a graphical user interface for the debugger you can skip this
+section.
+
+<P>
+
+<H3><A NAME="SECTION00615100000000000000">
+break [line | file:line | function | file:function]</A>
+</H3>
+
+<P>
+Set breakpoint at specified line or function:
+<BR>
+<BR><I><B>sdcdb&gt;break 100 </B></I>
+<BR><I><B>sdcdb&gt;break foo.c:100</B></I>
+<BR><I><B>sdcdb&gt;break funcfoo</B></I>
+<BR><I><B>sdcdb&gt;break foo.c:funcfoo</B></I>
+
+<P>
+
+<H3><A NAME="SECTION00615200000000000000">
+clear [line | file:line | function | file:function ]</A>
+</H3>
+
+<P>
+Clear breakpoint at specified line or function:
+<BR>
+<BR><I><B>sdcdb&gt;clear 100</B></I>
+<BR><I><B>sdcdb&gt;clear foo.c:100</B></I>
+<BR><I><B>sdcdb&gt;clear funcfoo</B></I>
+<BR><I><B>sdcdb&gt;clear foo.c:funcfoo</B></I>
+
+<P>
+
+<H3><A NAME="SECTION00615300000000000000">
+continue</A>
+</H3>
+
+<P>
+Continue program being debugged, after breakpoint.
+
+<P>
+
+<H3><A NAME="SECTION00615400000000000000">
+finish</A>
+</H3>
+
+<P>
+Execute till the end of the current function.
+
+<P>
+
+<H3><A NAME="SECTION00615500000000000000">
+delete [n]</A>
+</H3>
+
+<P>
+Delete breakpoint number 'n'. If used without any option clear ALL
+user defined break points.
+
+<P>
+
+<H3><A NAME="SECTION00615600000000000000">
+info [break | stack | frame | registers ]</A>
+</H3>
+
+<P>
+
+<UL>
+<LI>info break - list all breakpoints
+</LI>
+<LI>info stack - show the function call stack.
+</LI>
+<LI>info frame - show information about the current execution frame.
+</LI>
+<LI>info registers - show content of all registers.
+</LI>
+</UL>
+
+<P>
+
+<H3><A NAME="SECTION00615700000000000000">
+step</A>
+</H3>
+
+<P>
+Step program until it reaches a different source line. Note: pressing
+&lt;return&gt; repeats the last command.
+
+<P>
+
+<H3><A NAME="SECTION00615800000000000000">
+next</A>
+</H3>
+
+<P>
+Step program, proceeding through subroutine calls.
+
+<P>
+
+<H3><A NAME="SECTION00615900000000000000">
+run</A>
+</H3>
+
+<P>
+Start debugged program.
+
+<P>
+
+<H3><A NAME="SECTION006151000000000000000">
+ptype variable </A>
+</H3>
+
+<P>
+Print type information of the variable.
+
+<P>
+
+<H3><A NAME="SECTION006151100000000000000">
+print variable</A>
+</H3>
+
+<P>
+print value of variable.
+
+<P>
+
+<H3><A NAME="SECTION006151200000000000000">
+file filename</A>
+</H3>
+
+<P>
+load the given file name. Note this is an alternate method of loading
+file for debugging.
+
+<P>
+
+<H3><A NAME="SECTION006151300000000000000">
+frame</A>
+</H3>
+
+<P>
+print information about current frame.
+
+<P>
+
+<H3><A NAME="SECTION006151400000000000000">
+set srcmode</A>
+</H3>
+
+<P>
+Toggle between C source &amp; assembly source.
+
+<P>
+
+<H3><A NAME="SECTION006151500000000000000">
+! simulator command</A>
+</H3>
+
+<P>
+Send the string following '!' to the simulator, the simulator response
+is displayed. Note the debugger does not interpret the command being
+sent to the simulator, so if a command like 'go' is sent the debugger
+can loose its execution context and may display incorrect values.
+
+<P>
+
+<H3><A NAME="SECTION006151600000000000000">
+quit</A>
+</H3>
+
+<P>
+&#34;Watch me now. Iam going Down. My name is Bobby Brown&#34;
+
+<P>
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html2852"
+  HREF="node146.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html2846"
+  HREF="node140.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html2840"
+  HREF="node144.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html2848"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html2850"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html2853"
+  HREF="node146.html">5.1.6 Interfacing SDCDB with</A>
+<B> Up:</B> <A NAME="tex2html2847"
+  HREF="node140.html">5.1 Debugging with SDCDB</A>
+<B> Previous:</B> <A NAME="tex2html2841"
+  HREF="node144.html">5.1.4 SDCDB Command Line</A>
+ &nbsp; <B>  <A NAME="tex2html2849"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html2851"
+  HREF="node190.html">Index</A></B> 
+<!--End of Navigation Panel-->
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

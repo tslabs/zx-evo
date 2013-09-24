@@ -1,0 +1,141 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>3.13.3 Use of Labels within Inline Assembler</TITLE>
+<META NAME="description" CONTENT="3.13.3 Use of Labels within Inline Assembler">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="previous" HREF="node84.html">
+<LINK REL="up" HREF="node82.html">
+<LINK REL="next" HREF="node86.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html1838"
+  HREF="node86.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html1832"
+  HREF="node82.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html1828"
+  HREF="node84.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html1834"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html1836"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1839"
+  HREF="node86.html">3.14 Interfacing with Assembler</A>
+<B> Up:</B> <A NAME="tex2html1833"
+  HREF="node82.html">3.13 Inline Assembler Code</A>
+<B> Previous:</B> <A NAME="tex2html1829"
+  HREF="node84.html">3.13.2 Naked Functions</A>
+ &nbsp; <B>  <A NAME="tex2html1835"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html1837"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H2><A NAME="SECTION004133000000000000000">
+3.13.3 Use of Labels within Inline Assembler</A>
+</H2>
+
+<P>
+SDCC allows the use of in-line assembler with a few restrictions regarding
+labels. All labels defined within inline assembler code have to be
+of the form <I>nnnnn$</I> where nnnnn is a number less than 100 (which
+implies a limit of utmost 100 inline assembler labels <I>per function</I>).<A NAME="tex2html8"
+  HREF="footnode.html#foot2232"><SUP>3.6</SUP></A> 
+
+<P>
+<BLOCKQUOTE>
+<TT>_asm<A NAME="2234"></A><A NAME="2235"></A> </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;mov&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;b,#10 </TT>&nbsp;
+<BR><TT>00001$: </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;djnz&nbsp;&nbsp;&nbsp;&nbsp;b,00001$ </TT>&nbsp;
+<BR><TT>_endasm<A NAME="2239"></A><A NAME="2240"></A> ;</TT>
+
+</BLOCKQUOTE>
+Inline assembler code cannot reference any C-labels, however it can
+reference labels<A NAME="2242"></A> defined by the inline assembler, e.g.:
+
+<P>
+<BLOCKQUOTE>
+<TT>foo() { </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;/* some c code */ </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;_asm </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;; some assembler code </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ljmp 0003$ </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;_endasm; </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;/* some more c code */ </TT>&nbsp;
+<BR><TT>clabel:&nbsp;&nbsp;/* inline assembler cannot reference this label
+*/ </TT><A NAME="tex2html9"
+  HREF="footnode.html#foot5496"><SUP>3.7</SUP></A>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;_asm</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;0003$: ;label (can be referenced by inline assembler
+only) </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;_endasm<A NAME="2259"></A><A NAME="2260"></A> ; </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;/* some more c code */</TT>&nbsp;
+<BR><TT>}</TT>
+
+</BLOCKQUOTE>
+In other words inline assembly code can access labels defined in inline
+assembly within the scope of the function. The same goes the other
+way, i.e. labels defines in inline assembly can not be accessed by
+C statements.
+
+<P>
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html1838"
+  HREF="node86.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html1832"
+  HREF="node82.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html1828"
+  HREF="node84.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html1834"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html1836"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1839"
+  HREF="node86.html">3.14 Interfacing with Assembler</A>
+<B> Up:</B> <A NAME="tex2html1833"
+  HREF="node82.html">3.13 Inline Assembler Code</A>
+<B> Previous:</B> <A NAME="tex2html1829"
+  HREF="node84.html">3.13.2 Naked Functions</A>
+ &nbsp; <B>  <A NAME="tex2html1835"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html1837"
+  HREF="node190.html">Index</A></B> 
+<!--End of Navigation Panel-->
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

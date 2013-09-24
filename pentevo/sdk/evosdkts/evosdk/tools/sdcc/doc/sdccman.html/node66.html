@@ -1,0 +1,165 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>3.7 Parameters &amp; Local
+Variables</TITLE>
+<META NAME="description" CONTENT="3.7 Parameters &amp; Local
+Variables">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="next" HREF="node67.html">
+<LINK REL="previous" HREF="node65.html">
+<LINK REL="up" HREF="node38.html">
+<LINK REL="next" HREF="node67.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html1559"
+  HREF="node67.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html1553"
+  HREF="node38.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html1547"
+  HREF="node65.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html1555"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html1557"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1560"
+  HREF="node67.html">3.8 Overlaying</A>
+<B> Up:</B> <A NAME="tex2html1554"
+  HREF="node38.html">3. Using SDCC</A>
+<B> Previous:</B> <A NAME="tex2html1548"
+  HREF="node65.html">3.6 Absolute Addressing</A>
+ &nbsp; <B>  <A NAME="tex2html1556"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html1558"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H1><A NAME="SECTION00470000000000000000"></A><A NAME="1536"></A><A NAME="1537"></A><A NAME="1538"></A><A NAME="sec:Parameters-and-Local-Variables"></A>
+<BR>
+3.7 Parameters &amp; Local
+Variables
+</H1>
+
+<P>
+Automatic (local) variables and parameters to functions can either
+be placed on the stack or in data-space. The default action of the
+compiler is to place these variables in the internal RAM (for small
+model) or external RAM (for medium or large model). This in fact makes
+them similar to <I>static<A NAME="1540"></A></I> so by default functions
+are non-reentrant<A NAME="1541"></A>. 
+<BR>
+<BR>
+They can be placed on the stack<A NAME="1542"></A> by using the <I>--stack-auto<A NAME="1543"></A></I>
+option, by using <I>#pragma&nbsp;stackauto</I><A NAME="1545"></A>
+or by using the <I>reentrant<A NAME="1546"></A></I> keyword in the
+function declaration, e.g.:
+
+<P>
+<BLOCKQUOTE>
+<TT>unsigned char foo(char i) __reentrant </TT>&nbsp;
+<BR><TT>{ </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;... </TT>&nbsp;
+<BR><TT>}</TT>
+
+</BLOCKQUOTE>
+Since stack space on 8051 is limited, the <I>reentrant</I> keyword
+or the <I>--stack-auto</I> option should be used sparingly. Note
+that the reentrant keyword just means that the parameters &amp; local
+variables will be allocated to the stack, it <I>does not</I> mean
+that the function is register bank<A NAME="1556"></A>
+independent.
+<BR>
+<BR>
+Local variables<A NAME="1557"></A> can be assigned storage classes
+and absolute<A NAME="1558"></A> addresses, e.g.: 
+
+<P>
+<BLOCKQUOTE>
+<TT>unsigned char foo() </TT>&nbsp;
+<BR><TT>{</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;__xdata unsigned char i;</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;__bit bvar;</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;__data __at<A NAME="1564"></A> (0x31) unsigned char j;</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;... </TT>&nbsp;
+<BR><TT>}</TT>
+
+</BLOCKQUOTE>
+In the above example the variable <I>i</I> will be allocated in the
+external ram, <I>bvar</I> in bit addressable space and <I>j</I> in
+internal ram. When compiled with <I>--stack-auto</I> or when a
+function is declared as <I>reentrant</I> this should only be done
+for static variables.
+
+<P>
+Parameters<A NAME="1573"></A> however are not allowed any
+storage class<A NAME="1574"></A>, (storage classes for parameters
+will be ignored), their allocation is governed by the memory model
+in use, and the reentrancy options.
+
+<P>
+It is however allowed to use bit parameters in reentrant functions
+and also non-static local bit variables are supported. Efficient use
+is limited to 8 semi-bitregisters in bit space. They are pushed and
+popped to stack<A NAME="1575"></A> as a single byte just like the normal
+registers.
+
+<P>
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html1559"
+  HREF="node67.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html1553"
+  HREF="node38.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html1547"
+  HREF="node65.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html1555"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html1557"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1560"
+  HREF="node67.html">3.8 Overlaying</A>
+<B> Up:</B> <A NAME="tex2html1554"
+  HREF="node38.html">3. Using SDCC</A>
+<B> Previous:</B> <A NAME="tex2html1548"
+  HREF="node65.html">3.6 Absolute Addressing</A>
+ &nbsp; <B>  <A NAME="tex2html1556"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html1558"
+  HREF="node190.html">Index</A></B> 
+<!--End of Navigation Panel-->
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

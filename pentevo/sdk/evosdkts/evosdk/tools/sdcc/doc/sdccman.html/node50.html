@@ -1,0 +1,157 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>3.2.4 MCS51 Options</TITLE>
+<META NAME="description" CONTENT="3.2.4 MCS51 Options">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="next" HREF="node51.html">
+<LINK REL="previous" HREF="node49.html">
+<LINK REL="up" HREF="node46.html">
+<LINK REL="next" HREF="node51.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html1309"
+  HREF="node51.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html1303"
+  HREF="node46.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html1297"
+  HREF="node49.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html1305"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html1307"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1310"
+  HREF="node51.html">3.2.5 DS390 / DS400</A>
+<B> Up:</B> <A NAME="tex2html1304"
+  HREF="node46.html">3.2 Command Line Options</A>
+<B> Previous:</B> <A NAME="tex2html1298"
+  HREF="node49.html">3.2.3 Linker Options</A>
+ &nbsp; <B>  <A NAME="tex2html1306"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html1308"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H2><A NAME="SECTION00424000000000000000"></A><A NAME="906"></A><A NAME="907"></A>
+<BR>
+3.2.4 MCS51 Options
+</H2>
+
+<P>
+
+<UL>
+<LI>[<B>--model-small<A NAME="910"></A></B>] Generate code
+for Small Model programs, see section Memory Models for more details.
+This is the default model.
+</LI>
+<LI>[<B>--model-medium<A NAME="911"></A></B>] Generate
+code for Medium model programs, see section Memory Models for more
+details. If this option is used all source files in the project have
+to be compiled with this option. It must also be used when invoking
+the linker.
+</LI>
+<LI>[<B>--model-large<A NAME="912"></A></B>] Generate code
+for Large model programs, see section Memory Models for more details.
+If this option is used all source files in the project have to be
+compiled with this option. It must also be used when invoking the
+linker.
+</LI>
+<LI>[<B>--xstack<A NAME="913"></A></B>] Uses a pseudo stack in
+the pdata<A NAME="914"></A> area (usually
+the first 256 bytes in the external ram) for allocating variables
+and passing parameters. See section <A HREF="node99.html#sub:External-Stack">3.18.1.2</A>&nbsp; External
+Stack for more details.
+</LI>
+<LI>[<B>--iram-size</B>&nbsp;&lt;Value&gt;<A NAME="917"></A>] Causes
+the linker to check if the internal ram usage is within limits of
+the given value.
+</LI>
+<LI>[<B>--xram-size</B>&nbsp;&lt;Value&gt;<A NAME="919"></A>] Causes
+the linker to check if the external ram usage is within limits of
+the given value.
+</LI>
+<LI>[<B>--code-size</B>&nbsp;&lt;Value&gt;<A NAME="921"></A>] Causes
+the linker to check if the code memory usage is within limits of the
+given value.
+</LI>
+<LI>[<B>--stack-size</B>&nbsp;&lt;Value&gt;<A NAME="923"></A>] Causes
+the linker to check if there is at minimum &lt;Value&gt; bytes for stack.
+</LI>
+<LI>[<B>--pack-iram</B>&nbsp;<A NAME="925"></A>] Causes the linker
+to use unused register banks for data variables and pack data, idata
+and stack together. This is the default now.
+</LI>
+<LI>[<B>--no-pack-iram</B>&nbsp;<A NAME="927"></A>] Causes
+the linker to use old style for allocating memory areas.
+</LI>
+<LI>[<B>--acall-ajmp</B>&nbsp;<A NAME="929"></A>] Replaces the
+three byte instructions lcall/ljmp with the two byte instructions
+acall/ajmp. Only use this option if your code is in the same 2k block
+of memory. You may need to use this option for some 8051 derivatives
+which lack the lcall/ljmp instructions..
+</LI>
+</UL>
+<P><P>
+<BR>
+
+
+<P>
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html1309"
+  HREF="node51.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html1303"
+  HREF="node46.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html1297"
+  HREF="node49.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html1305"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html1307"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1310"
+  HREF="node51.html">3.2.5 DS390 / DS400</A>
+<B> Up:</B> <A NAME="tex2html1304"
+  HREF="node46.html">3.2 Command Line Options</A>
+<B> Previous:</B> <A NAME="tex2html1298"
+  HREF="node49.html">3.2.3 Linker Options</A>
+ &nbsp; <B>  <A NAME="tex2html1306"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html1308"
+  HREF="node190.html">Index</A></B> 
+<!--End of Navigation Panel-->
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>
