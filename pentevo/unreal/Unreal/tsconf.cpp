@@ -68,21 +68,21 @@ void dma (u8 val)
 						s = (u16*)(ss + RAM_BASE_M);
 						d = (u16*)(dd + RAM_BASE_M);
 						u16 ds = *s;
-						u16 dd = *d;
+						u16 dr = *d;
 						u16 dw = 0;
 
 						if (ctrl.asz)
 						{
-							dw |= (ds & 0xFF00) ? (ds & 0xFF00) : (dd & 0xFF00);
-							dw |= (ds & 0x00FF) ? (ds & 0x00FF) : (dd & 0x00FF);
+							dw |= (ds & 0xFF00) ? (ds & 0xFF00) : (dr & 0xFF00);
+							dw |= (ds & 0x00FF) ? (ds & 0x00FF) : (dr & 0x00FF);
 						}
 
 						else
 						{
-							dw |= (ds & 0xF000) ? (ds & 0xF000) : (dd & 0xF000);
-							dw |= (ds & 0x0F00) ? (ds & 0x0F00) : (dd & 0x0F00);
-							dw |= (ds & 0x00F0) ? (ds & 0x00F0) : (dd & 0x00F0);
-							dw |= (ds & 0x000F) ? (ds & 0x000F) : (dd & 0x000F);
+							dw |= (ds & 0xF000) ? (ds & 0xF000) : (dr & 0xF000);
+							dw |= (ds & 0x0F00) ? (ds & 0x0F00) : (dr & 0x0F00);
+							dw |= (ds & 0x00F0) ? (ds & 0x00F0) : (dr & 0x00F0);
+							dw |= (ds & 0x000F) ? (ds & 0x000F) : (dr & 0x000F);
 						}
 
 						*d = dw;
