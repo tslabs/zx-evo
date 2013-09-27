@@ -1,0 +1,7 @@
+syntax: glob
+pentevo/unreal/Unreal/bin/Debug/*
+pentevo/unreal/Unreal/bin/Release/*
+pentevo/unreal/Unreal/bin/tmp/*
+pentevo/unreal/Unreal_2010.suo
+pentevo/unreal/Unreal_2010.sdf
+pentevo/unreal/Unreal/Unreal.vcxproj.user

@@ -70,10 +70,21 @@ void dma (u8 val)
 						u16 ds = *s;
 						u16 dd = *d;
 						u16 dw = 0;
-						dw |= (ds & 0xF000) ? (ds & 0xF000) : (dd & 0xF000);
-						dw |= (ds & 0x0F00) ? (ds & 0x0F00) : (dd & 0x0F00);
-						dw |= (ds & 0x00F0) ? (ds & 0x00F0) : (dd & 0x00F0);
-						dw |= (ds & 0x000F) ? (ds & 0x000F) : (dd & 0x000F);
+
+						if (ctrl.asz)
+						{
+							dw |= (ds & 0xFF00) ? (ds & 0xFF00) : (dd & 0xFF00);
+							dw |= (ds & 0x00FF) ? (ds & 0x00FF) : (dd & 0x00FF);
+						}
+
+						else
+						{
+							dw |= (ds & 0xF000) ? (ds & 0xF000) : (dd & 0xF000);
+							dw |= (ds & 0x0F00) ? (ds & 0x0F00) : (dd & 0x0F00);
+							dw |= (ds & 0x00F0) ? (ds & 0x00F0) : (dd & 0x00F0);
+							dw |= (ds & 0x000F) ? (ds & 0x000F) : (dd & 0x000F);
+						}
+
 						*d = dw;
 						ss_inc; dd_inc;
 					}
