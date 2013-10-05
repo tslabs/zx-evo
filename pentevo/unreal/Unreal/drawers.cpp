@@ -50,14 +50,32 @@ void draw_zx(int n)
 
 	for (; n > 0; n -= 4, vid.t_next += 4, vid.xctr++, g++, a++)
 	{
+		u32 p0, p1;
 		u8 p = scr[g];	// pixels
 		u8 c = scr[a];	// attributes
 		vcyc++;
-		if ((c & 0x80) && (comp.frame_counter & 0x10))
-			p ^= 0xFF; // flash
-		u32 b = (c & 0x40) >> 3;
-		u32 p0 = vid.clut[(comp.ts.gpal << 4) | b | ((c >> 3) & 0x07)];	// color for 'PAPER'
-		u32 p1 = vid.clut[(comp.ts.gpal << 4) | b | (c & 0x07)];			// color for 'INK'
+
+		if (conf.ulaplus && comp.ulaplus_mode)
+		{
+			const u32 cr[8] = { 0, 2359296, 4784128, 7143424, 9568256, 11927552, 14352384, 16711680 };
+			const u32 cg[8] = { 0, 9216, 18688, 27904, 37376, 46592, 56064, 65280 };
+			const u32 cb[4] = { 0, 85, 170, 255 };
+			u32 psel = (c & 0xC0) >> 2;
+			u32 ink = comp.ulaplus_cram[psel + (c & 7)];
+			u32 paper = comp.ulaplus_cram[psel + ((c >> 3) & 7) + 8];
+			p0 = cr[(paper & 0x1C) >> 2] | cg[(paper & 0xE0) >> 5] | cb[paper & 0x03];
+			p1 = cr[(ink & 0x1C) >> 2] | cg[(ink & 0xE0) >> 5] | cb[ink & 0x03];
+		}
+
+		else
+		{
+			if ((c & 0x80) && (comp.frame_counter & 0x10))
+				p ^= 0xFF; // flash
+			u32 b = (c & 0x40) >> 3;
+			p0 = vid.clut[(comp.ts.gpal << 4) | b | ((c >> 3) & 0x07)];	// color for 'PAPER'
+			p1 = vid.clut[(comp.ts.gpal << 4) | b | (c & 0x07)];			// color for 'INK'
+		}
+
 		sinc_draw
 	}
 	vid.vptr = vptr;
