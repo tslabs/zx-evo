@@ -145,6 +145,7 @@ struct CONFIG
    unsigned char lockmouse;
    unsigned char detect_video;
    unsigned char tape_traps;
+   unsigned char ulaplus;
    unsigned char tape_autostart;
    SSHOT_FORMAT scrshot;
    char scrshot_path[FILENAME_MAX];
@@ -485,6 +486,9 @@ struct COMPUTER
    } tape;
    SNDRENDER tape_sound; //Alone Coder
    unsigned char comp_pal[0x10];
+   unsigned char ulaplus_cram[64];
+   unsigned char ulaplus_mode;
+   unsigned char ulaplus_reg;
    unsigned char ide_hi_byte_r, ide_hi_byte_w, ide_hi_byte_w1, ide_read, ide_write; // high byte in IDE i/o
    unsigned char profrom_bank;
 };

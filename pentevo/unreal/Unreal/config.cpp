@@ -273,6 +273,7 @@ void load_config(const char *fname)
    conf.sleepidle = GetPrivateProfileInt(misc, "ShareCPU", 0, ininame);
    conf.highpriority = GetPrivateProfileInt(misc, "HighPriority", 0, ininame);
    conf.tape_traps = GetPrivateProfileInt(misc, "TapeTraps", 1, ininame);
+   conf.ulaplus = GetPrivateProfileInt(misc, "ULAPLUS", 1, ininame);
    conf.tape_autostart = GetPrivateProfileInt(misc, "TapeAutoStart", 1, ininame);
    conf.EFF7_mask = GetPrivateProfileInt(misc, "EFF7mask", 0, ininame);
    

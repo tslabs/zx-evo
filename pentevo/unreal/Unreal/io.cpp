@@ -30,6 +30,39 @@ void out(unsigned port, unsigned char val)
 	 // if (p1 == 0xFD)
 		// printf("out (%04X), %02X\n", port, val);
 
+   if (conf.ulaplus)
+   {
+	   /* ULA+ register select */
+	   if (port == 0xBF3B)
+	   {
+		   comp.ulaplus_reg = val;
+	   }
+
+	   /* ULA+ data */
+	   if (port == 0xFF3B)
+	   {
+		   switch (comp.ulaplus_reg & 0xC0)
+		   {
+		   case 0:	// CRAM
+			   {
+					update_screen();
+					comp.ulaplus_cram[comp.ulaplus_reg] = val;
+			   }
+			   break;
+
+		   case 64:	// MODE
+			   {
+					update_screen();
+					comp.ulaplus_mode = val & 1;
+			   }
+			   break;
+
+		   default:
+			   break;
+		   }
+	   }
+   }
+
    #ifdef MOD_GS
    // 10111011 | BB
    // 10110011 | B3
@@ -959,6 +992,15 @@ __inline unsigned char in1(unsigned port)
    u8 p2 = ((port >>8) & 0xFF);
 
    u8 tmp;
+
+   if (conf.ulaplus)
+   {
+	   if (port == 0xFF3B)
+	   {
+		   if (!(comp.ulaplus_reg && 0xC0))		// ULA+ DATA
+			   return comp.ulaplus_cram[comp.ulaplus_reg];
+	   }
+   }
 
 /*
    if (p1 == 0xF0)

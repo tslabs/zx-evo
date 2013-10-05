@@ -93,6 +93,9 @@ void reset(ROM_MODE mode)
    comp.p7FFD = comp.pDFFD = comp.pFDFD = comp.p1FFD = 0;
    comp.p7EFD = 0;
 
+   comp.ulaplus_mode=0;
+   comp.ulaplus_reg=0;
+
    tsinit();
 
    if (conf.mem_model == MM_TSL)
