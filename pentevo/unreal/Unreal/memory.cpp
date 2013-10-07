@@ -148,34 +148,33 @@ void set_banks()
 
       case MM_TSL:
 	  {
-		if (comp.ts.w0_ram)
+		if (comp.ts.w0_map_n)
+		/* linear */
+			tmp = comp.ts.page[0];
+
+		else
+		/* mapped */
 		{
-		// RAM at #0000
-			bankm[0] = 1;
-			if (comp.ts.w0_map_n)
-			// no map
-				bank0 = page_ram(comp.ts.page[0]);
+			if (comp.flags & CF_TRDOS)
+				tmp = (comp.p7FFD & 0x10) ? 1 : 0;
 			else
-			{
-			// mapping
-				if (comp.flags & CF_TRDOS)
-					tmp = (comp.p7FFD & 0x10) ? 2 : 0;
-				else
-					tmp = (comp.p7FFD & 0x10) ? 3 : 1;
-					
-				bank0 = page_ram(comp.ts.page[0] + tmp);
-			}
+				tmp = (comp.p7FFD & 0x10) ? 3 : 2;
+			
+			tmp += comp.ts.page[0] & 0xFC;
 		}
+
+		if (comp.ts.w0_ram)
+		// RAM at #0000
+		{
+			bankm[0] = 1;
+			bank0 = page_ram(tmp);
+		}
+
 		else
 		{
 		// ROM at #0000
 			bankm[0] = 0;
-			if (comp.ts.w0_map_n)
-			// no map
-				if (comp.ts.page[0] & 0x02)
-					bank0 = (comp.ts.page[0] & 0x01) ? base_sos_rom : base_128_rom;
-				else
-					bank0 = (comp.ts.page[0] & 0x01) ? base_dos_rom : base_sys_rom;
+			bank0 = page_rom(tmp & 0x1F);
 		}
 
 		bankr[1] = bankw[1] = page_ram(comp.ts.page[1]);

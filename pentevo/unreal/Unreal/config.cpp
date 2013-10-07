@@ -307,7 +307,9 @@ void load_config(const char *fname)
 
    GetPrivateProfileString(rom, "ROMSET", "default", line, sizeof line, ininame);
    if (*line)
-	   load_romset(&conf, line), conf.use_romset = 1; else conf.use_romset = 0;
+	   load_romset(&conf, line), conf.use_romset = 1;
+   else
+	   conf.use_romset = 0;
 
    conf.smuc = GetPrivateProfileInt(misc, "SMUC", 0, ininame);
    GetPrivateProfileString(misc, "CMOS", nil, line, sizeof line, ininame);
@@ -840,10 +842,10 @@ void apply_memory()
    break;
 
    case MM_TSL:
-      base_sys_rom = page_rom(0);
-      base_dos_rom = page_rom(1);
-      base_128_rom = page_rom(2);
-      base_sos_rom = page_rom(3);
+      base_sys_rom = 0;
+      base_dos_rom = 0;
+      base_128_rom = 0;
+      base_sos_rom = 0;
    break;
 
    case MM_KAY:
@@ -911,8 +913,8 @@ void apply_memory()
          }
 
          romsize = load_rom(romname, ROM_BASE_M, 64);
-         if (romsize != 64)
-             errexit("invalid ROM filesize");
+         //if (romsize != 64)
+           //  errexit("invalid ROM filesize");
       }
    }
 
