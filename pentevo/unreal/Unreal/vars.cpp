@@ -186,7 +186,7 @@ CACHE_ALIGNED unsigned char vdmem[4][0x2000];
 #endif
 
 unsigned char membits[0x10000];
-unsigned char *bankr[4];
+unsigned char *bankr[4];	// memory pointers to memory (RAM/ROM/cache) mapped in four Z80 windows
 unsigned char *bankw[4];
 unsigned char bankm[4];		// bank mode: 0 - ROM / 1 - RAM
 unsigned char cmos[0x100];
