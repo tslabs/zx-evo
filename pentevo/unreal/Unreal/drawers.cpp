@@ -389,7 +389,7 @@ static int subt = 0;
 
 	}
 
-	for (; n > 0; n -= 1, vid.t_next++)
+	for (; n > 0; n--, vid.t_next++)
 	{
 		p = scr[s + t++]; t &= 0xFF;
 		p0 = vid.clut[(comp.ts.gpal << 4) | ((p >> 4) & 0x0F)];
@@ -408,7 +408,7 @@ static int subt = 0;
 	{
 		p = scr[s + t];
 		p0 = vid.clut[(comp.ts.gpal << 4) | ((p >> 4) & 0x0F)];
-		vbuf[vid.buf][vptr] = vbuf[vid.buf][vptr+1] = p1; vptr += 2;
+		vbuf[vid.buf][vptr] = vbuf[vid.buf][vptr+1] = p0; vptr += 2;
 		subt++;
 		if (subt > 3)
 		{
