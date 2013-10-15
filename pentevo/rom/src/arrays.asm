@@ -25,6 +25,8 @@ M_HLP   defb 'Arrows - move,  Enter - change option,  F12 - exit', 0
 
 ERR_ME
         defb 'System Meditation:', 0
+ERR_MEZ
+        defb 'Press SS + Reset to change start-up options', 0
 ERR_ME0
         defb 'UNKNOWN ERROR!', 0
 ERR_ME1

@@ -260,11 +260,12 @@ BT_ERROR
         call TX_MODE
 
         ld hl, h'0308
-        ld bc, h'0740
+        ld bc, h'0940
         ld a, err_norm
         call DRAW_BOX
 
         pmsgc ERR_ME, 5, err_norm
+        pmsgc ERR_MEZ, 9, err_norm
 		pop af
 
         dec a
