@@ -138,7 +138,7 @@ void ATA_DEVICE::configure(IDE_CONFIG *cfg)
    if (errcode == NO_ERROR)
        return;
    errmsg("failed to open %s", cfg->image);
-   err_win32(errcode);
+   //err_win32(errcode);
    *cfg->image = 0;
 }
 
