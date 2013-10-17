@@ -58,7 +58,6 @@
     <ClCompile Include="dxrcopy.cpp" />
     <ClCompile Include="dxrend.cpp" />
     <ClCompile Include="dxrframe.cpp" />
-    <ClCompile Include="dxr_text.cpp" />
     <ClCompile Include="emul.cpp" />
     <ClCompile Include="emulkeys.cpp" />
     <ClCompile Include="emul_2203.cpp" />
@@ -179,7 +178,6 @@
     <ClInclude Include="dxrcopy.h" />
     <ClInclude Include="dxrend.h" />
     <ClInclude Include="dxrframe.h" />
-    <ClInclude Include="dxr_text.h" />
     <ClInclude Include="emul.h" />
     <ClInclude Include="emulkeys.h" />
     <ClInclude Include="emul_2203.h" />

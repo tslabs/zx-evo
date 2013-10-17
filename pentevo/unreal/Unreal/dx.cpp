@@ -7,7 +7,6 @@
 #include "draw.h"
 #include "dxrend.h"
 #include "dxrframe.h"
-#include "dxr_text.h"
 #include "dxerr.h"
 #include "sound.h"
 #include "savesnd.h"
@@ -56,10 +55,9 @@ RENDER renders[] =
 {
    { "Normal",                    render_1x,      "normal",    RF_DRIVER | RF_1X },
    { "Double size",               render_2x,      "double",    RF_DRIVER | RF_2X },
+   { "Double with scanlines",     render_2xs,     "dblscan",   RF_DRIVER | RF_2X },
    { "Triple size",               render_3x,      "triple",    RF_DRIVER | RF_3X },
    { "Quad size",                 render_4x,      "quad",      RF_DRIVER | RF_4X },
-   { "Double with scanlines",     render_2xs,     "dblscan",   RF_DRIVER | RF_2X },
-   { "Anti-Text64",               render_text,    "text",      RF_DRIVER | RF_2X | RF_USEFONT },
    { 0,0,0,0 }
 };
 
@@ -80,27 +78,13 @@ BORDSIZE bordersizes[] =
 size_t bordersizes_count = _countof(bordersizes);
 
 
-const RENDER drivers[] =
+const DRIVER drivers[] =
 {
-   // { "video memory (8bpp)",  0, "ddraw",  RF_8 },
-   // { "video memory (16bpp)", 0, "ddrawh", RF_16 },
-   // { "video memory (32bpp)", 0, "ddrawt", RF_32 },
-   { "gdi device context",   0, "gdi",    RF_GDI },
-   { "hardware blitter",     0, "blt",    RF_CLIP },
-   // { "overlay",              0, "ovr",    RF_OVR },
-   // { "hardware 3d",          0, "d3d",    RF_D3D },
+   { "gdi device context",   FlipGdi, "gdi",    RF_GDI },
+   { "hardware blitter",     FlipBlt, "blt",    RF_CLIP },
+   { "hardware 3d",          FlipD3d, "d3d",    RF_D3D },
    { 0,0,0,0 }
 };
-
-inline void switch_video()
-{
-   static unsigned char eff7 = -1;
-   if ((comp.pEFF7 ^ eff7) & EFF7_HWMC)
-   {
-       video_timing_tables();
-       eff7 = comp.pEFF7;
-   }
-}
 
 static void FlipGdi()
 {
@@ -135,7 +119,7 @@ restore_lost:;
        exit();
    }
 
-   renders[conf.render].func((unsigned char*)desc.lpSurface, desc.lPitch);
+   renders[conf.render].func((u8 *)desc.lpSurface, desc.lPitch);
 
    surf1->Unlock(0);
 
@@ -227,61 +211,10 @@ static void FlipD3d()
     SurfBackBuffer1->Release();
 }
 
-static void FlipVideoMem()
-{
-   // draw direct to video memory, overlay
-   LPDIRECTDRAWSURFACE drawsurf = conf.flip ? surf1 : surf0;
-
-   DDSURFACEDESC desc;
-   desc.dwSize = sizeof desc;
-restore_lost:;
-   HRESULT r = drawsurf->Lock(0, &desc, DDLOCK_SURFACEMEMORYPTR | DDLOCK_WAIT | DDLOCK_WRITEONLY, 0);
-   if (r != DD_OK)
-   {
-      if (!active)
-          return;
-      if (r == DDERR_SURFACELOST)
-      {
-          drawsurf->Restore();
-          if (drawsurf->IsLost() == DDERR_SURFACELOST)
-              Sleep(1);
-          goto restore_lost;
-      }
-      printrdd("IDirectDrawSurface2::Lock()", r);
-      if (!exitflag)
-          exit();
-   }
-   if (needclr)
-   {
-       needclr--;
-       _render_black((unsigned char*)desc.lpSurface, desc.lPitch);
-   }
-   renders[conf.render].func((unsigned char*)desc.lpSurface + desc.lPitch*temp.ody + temp.odx, desc.lPitch);
-   drawsurf->Unlock(0);
-
-   if (conf.flip) // draw direct to video memory
-   {
-      r = surf0->Flip(0, DDFLIP_WAIT);
-      if (r != DD_OK)
-      {
-          if (r == DDERR_SURFACELOST)
-          {
-              surf0->Restore();
-              if (surf0->IsLost() == DDERR_SURFACELOST)
-                  Sleep(1);
-              goto restore_lost;
-          }
-          printrdd("IDirectDrawSurface2::Flip()", r);
-          exit();
-      }
-   }
-}
-
 void flip()
 {
    if (temp.Minimized)
        return;
-   switch_video();
 
    if (conf.flip && (temp.rflags & (RF_GDI | RF_CLIP)))
       dd->WaitForVerticalBlank(DDWAITVB_BLOCKBEGIN, 0);
@@ -316,7 +249,7 @@ void flip()
    }
 
    // draw direct to video memory, overlay
-   FlipVideoMem();
+//   FlipVideoMem();
 }
 
 HWAVEOUT hwo = 0;
@@ -326,7 +259,6 @@ unsigned wqhead, wqtail;
 
 void do_sound_none()
 {
-
 }
 
 void do_sound_wave()

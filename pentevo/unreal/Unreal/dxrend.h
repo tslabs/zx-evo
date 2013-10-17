@@ -10,6 +10,6 @@ void render_2xs(u8 *dst, u32 pitch);
 void render_3x(u8 *dst, u32 pitch);
 void render_4x(u8 *dst, u32 pitch);
 
-//void render_tv(u8 *dst, u32 pitch);
-//void render_bil(u8 *dst, u32 pitch);
-//void render_scale(u8 *dst, u32 pitch);
+void FlipGdi(void);
+void FlipBlt(void);
+void FlipD3d(void);

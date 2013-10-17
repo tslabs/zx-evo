@@ -217,7 +217,6 @@ void set_video();
 void apply_video();
 void paint_scr(char alt); // alt=0/1 - main/alt screen, alt=2 - ray-painted
 void update_screen();
-void video_timing_tables();
 void pixel_tables();
 void video_color_tables();
 void video_permanent_tables();

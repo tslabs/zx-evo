@@ -23,7 +23,6 @@
 #define IDD_FONTS                       133
 #define IDD_HDD                         134
 #define IDD_LABELS                      135
-#define IDD_FIR                         136
 #define IDD_FILTER_DIALOG               137
 #define IDD_CHEAT                       138
 #define IDC_C0                          139
@@ -172,6 +171,8 @@
 #define IDC_MODEM                       1127
 #define IDC_FLASH                       1132
 #define IDC_B0                          1133
+#define IDC_FLASH2                      1133
+#define IDC_ULAPLUS                     1133
 #define IDC_B1                          1134
 #define IDC_B2                          1135
 #define IDC_DISK_TRAPS                  1136
@@ -246,7 +247,6 @@
 #define IDC_FONTHEIGHT                  1193
 #define IDC_FILE                        1193
 #define IDC_FNTTITLE                    1194
-#define IDC_FRAMES_BOX                  1194
 #define IDC_FONTSIZE                    1195
 #define IDC_SND_SD                      1200
 #define IDC_MODA                        1200
@@ -296,11 +296,6 @@
 #define IDC_MOUSE_AY                    1235
 #define IDC_LABEL_TEXT                  1235
 #define IDC_CHIP_DIGITAL                1236
-#define IDC_SIMPLE                      1237
-#define IDC_FIR0                        1238
-#define IDC_FIR1                        1239
-#define IDC_FIR2                        1240
-#define IDC_FRAMES                      1242
 #define IDC_LISTBOX                     1243
 #define IDC_RESULTS                     1243
 #define IDC_LED_MEMBAND                 1246

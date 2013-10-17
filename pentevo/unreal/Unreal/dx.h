@@ -12,7 +12,7 @@
 
 #define MAXWQSIZE 32
 
-extern const RENDER drivers[];
+extern const DRIVER drivers[];
 extern size_t renders_count;
 
 extern unsigned char active;
