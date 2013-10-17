@@ -55,8 +55,8 @@ void draw_screen()
       for (x = 0; x < 32; x++)
       {
 //[vv]   *(volatile unsigned char*)dst;
-         *dst++ = temp.base[t.scrtab[y] + x];
-         *dst++ = colortab[temp.base[atrtab[y] + x]];
+//         *dst++ = temp.base[t.scrtab[y] + x];
+//         *dst++ = colortab[temp.base[atrtab[y] + x]];
       }
 
 //[vv]      *(volatile unsigned*)dst;

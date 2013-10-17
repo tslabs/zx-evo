@@ -71,7 +71,7 @@ void chfix(int dx)
          case FIX_NOPAPER: value = (conf.nopaper ^= dx?1:0); break;
          case FIX_HWNC: value = (comp.pEFF7 ^= dx?EFF7_HWMC:0)? 1 : 0; break;
       }
-      video_timing_tables();
+//      video_timing_tables();
       apply_sound(); // t/frame affects AY engine!
       sprintf(statusline, fix_titles[whatfix], value); statcnt=50;
       if (dx) conf.ula_preset = -1;

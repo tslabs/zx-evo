@@ -5,7 +5,6 @@
 #include "drawers.h"
 #include "drawnomc.h"
 #include "dx.h"
-#include "dxr_text.h"
 #include "memory.h"
 #include "config.h"
 #include "util.h"
@@ -584,93 +583,6 @@ void video_color_tables()
    setpal(0);
 }
 
-void video_timing_tables()
-{
-   if (conf.frame < 2000)
-   {
-       conf.frame = 2000;
-       cpu.SetTpi(conf.frame);
-   }
-   if (conf.t_line < 128) conf.t_line = 128;
-   conf.nopaper &= 1;
-   atrtab = (comp.pEFF7 & EFF7_HWMC) ? t.atrtab_hwmc : t.atrtab;
-
-//   conf.bordersize=2;
-//   temp.scx = 384, temp.scy = 300;
-
-   unsigned width = temp.scx/4;
-   //temp.vidbufsize = temp.scx*temp.scy/4;
-
-   // make video table
-   temp.b_bottom = temp.b_top = 24, temp.b_left = 32;
-   unsigned mid_lines = 192, buf_mid = 256;
-
-   temp.b_top = temp.b_left = 0;
-
-   temp.b_right = temp.scx - buf_mid - temp.b_left;
-   temp.b_bottom = temp.scy - mid_lines - temp.b_top;
-
-   if (conf.nopaper) temp.b_bottom += mid_lines, mid_lines=0;
-   int inx = 0;
-
-   unsigned i;
-   #define ts(t) (((int)(t) < 0) ? 0 : t)
-   unsigned t = conf.paper - temp.b_top*conf.t_line;
-   video[inx++].next_t = ts(t - temp.b_left/2);
-   for (i = 0; i < temp.b_top; i++)
-   { // top border
-      video[inx].next_t = ts(t + (buf_mid+temp.b_right)/2);
-      video[inx].screen_ptr = rbuf+width*i;
-      video[inx].nextvmode = 0;
-      inx++; t += conf.t_line;
-      video[inx++].next_t = ts(t - temp.b_left/2);
-   }
-   for (i = 0; i < mid_lines; i++)
-   { // screen+border
-      video[inx].next_t = ts(t);
-      video[inx].screen_ptr = rbuf+width*(i+temp.b_top);
-      video[inx].nextvmode = 2; inx++;
-      video[inx].next_t = ts(t + buf_mid/2);
-      video[inx].screen_ptr = rbuf+width*(i+temp.b_top)+temp.b_left/4;
-      video[inx].scr_offs = ::t.scrtab[i];
-      video[inx].atr_offs = atrtab[i];
-      inx++;
-      video[inx].next_t = ts(t + (buf_mid+temp.b_right)/2);
-      video[inx].screen_ptr = rbuf+width*(i+temp.b_top)+(buf_mid+temp.b_left)/4;
-      video[inx].nextvmode = 0;
-      inx++; t += conf.t_line;
-      video[inx++].next_t = ts(t - temp.b_left/2);
-   }
-   for (i = 0; i < temp.b_bottom; i++)
-   { // bottom border
-      video[inx].next_t = ts(t + (buf_mid+temp.b_right)/2);
-      video[inx].screen_ptr = rbuf+width*(i+temp.b_top+mid_lines);
-      video[inx].nextvmode = 0;
-      inx++; t += conf.t_line;
-      video[inx++].next_t = ts(t - temp.b_left/2);
-   }
-   video[inx-1].next_t = 0x7FFFFFFF;
-
-   temp.evenM1_C0 = conf.even_M1 ? 0xC0 : 0x00;
-   temp.border_add = conf.border_4T ? 6 : 0;
-   temp.border_and = conf.border_4T ? 0xFFFFFFFC : 0xFFFFFFFF;
-
-   for (i = 0; i < NUM_LEDS; i++)
-   {
-      unsigned z = *(&conf.led.ay + i);
-      int x = (signed short)(z & 0xFFFF);
-      int y = (signed short)(((z >> 16) & 0x7FFF) + ((z >> 15) & 0x8000));
-      if (x < 0) x += width*8;
-      if (y < 0) y += temp.scy;
-      *(&temp.led.ay+i) = (z & 0x80000000) ? rbuf + ((x>>2)&0xFE) + y*width : 0;
-   }
-
-   if (temp.rflags & RF_USEFONT)
-       create_font_tables();
-
-   needclr = 2;
-}
-
 void set_video()
 {
    set_vidmode();
@@ -709,18 +621,18 @@ void apply_video()
 
 __inline unsigned char *raypointer()
 {
-   if (prev_t > conf.frame)
-       return rbuf + rb2_offs;
-   if (!vmode)
-       return vcurr[1].screen_ptr;
-   unsigned offs = (prev_t - vcurr[-1].next_t) / 4;
-   return vcurr->screen_ptr + (offs+1) * 2;
+//   if (prev_t > conf.frame)
+//       return rbuf + rb2_offs;
+//   if (!vmode)
+//       return vcurr[1].screen_ptr;
+//   unsigned offs = (prev_t - vcurr[-1].next_t) / 4;
+//   return vcurr->screen_ptr + (offs+1) * 2;
 }
 
 __inline void clear_until_ray()
 {
-   unsigned char *dst = raypointer();
-   while (dst < rbuf + rb2_offs) *dst++ = 0, *dst++ = 0x55;
+//   unsigned char *dst = raypointer();
+//   while (dst < rbuf + rb2_offs) *dst++ = 0, *dst++ = 0x55;
 }
 
 void paint_scr(char alt) // alt=0/1 - main/alt screen, alt=2 - ray-painted
@@ -811,7 +723,7 @@ void update_screen()
 				{
 					m = min((u32)n, vid.raster.r_brd - tact);
 					u32 t = vid.t_next;
-					vid.line = line;
+					vid.line = (u16)line;
 					drawers[vid.mode].func(m);
 					t = vid.t_next - t; n -= t; tact += t;
 

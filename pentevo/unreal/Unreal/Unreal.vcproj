@@ -294,10 +294,6 @@
 				>
 			</File>
 			<File
-				RelativePath="dxr_text.cpp"
-				>
-			</File>
-			<File
 				RelativePath="dxrcopy.cpp"
 				>
 			</File>
@@ -813,10 +809,6 @@
 			</File>
 			<File
 				RelativePath=".\dxerr8.h"
-				>
-			</File>
-			<File
-				RelativePath=".\dxr_text.h"
 				>
 			</File>
 			<File

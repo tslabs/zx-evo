@@ -99,10 +99,19 @@ struct BORDSIZE
 typedef void (*RENDER_FUNC)(u8 *, u32);
 struct RENDER
 {
-   const char *name;
-   RENDER_FUNC func;
-   const char *nick;
-   unsigned flags;
+   const char *name;	// displayed on config GUI
+   RENDER_FUNC func;	// called function
+   const char *nick;	// used in *.ini
+   unsigned flags;		// used 
+};
+
+typedef void (*DRIVER_FUNC)(void);
+struct DRIVER
+{
+   const char *name;	// displayed on config GUI
+   DRIVER_FUNC func;	// called function
+   const char *nick;	// used in *.ini
+   unsigned flags;		// used 
 };
 
 typedef void (*DRAWER_FUNC)(int);
@@ -569,6 +578,18 @@ void ConvRgb16ToBgr24(u8 *dst, u8 *scrbuf, int dx);
 void ConvRgb15ToBgr24(u8 *dst, u8 *scrbuf, int dx);
 void ConvPal8ToBgr24(u8 *dst, u8 *scrbuf, int dx);
 extern TColorConverter ConvBgr24;
+
+// Guys, I REALLY HATE those jerks who made all that mess I'm about to re-factor.
+// Now and today I'm starting this heroic challenge.
+// TSL
+// 17.10.2013
+
+// video flippers
+
+
+
+// video overlay 
+
 // flags for video filters
                                 // misc options
 #define RF_BORDER   0x00000002   // no multicolor painter, read directly from spectrum memory

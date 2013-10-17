@@ -783,38 +783,6 @@ INT_PTR CALLBACK ChipDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
    return 1;
 }
 
-INT_PTR CALLBACK fir_dlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
-{
-   ::dlg = dlg;
-   if (msg == WM_INITDIALOG) {
-      setcheck(IDC_SIMPLE, (c1.rsm.mode == RSM_SIMPLE));
-      setcheck(IDC_FIR0, (c1.rsm.mode == RSM_FIR0));
-      setcheck(IDC_FIR1, (c1.rsm.mode == RSM_FIR1));
-      setcheck(IDC_FIR2, (c1.rsm.mode == RSM_FIR2));
-      SendDlgItemMessage(dlg, IDC_FRAMES, TBM_SETRANGE, 0, MAKELONG(2,8));
-      SendDlgItemMessage(dlg, IDC_FRAMES, TBM_SETPOS, 1, c1.rsm.mix_frames);
-   enable_slider:
-      DWORD en = !getcheck(IDC_SIMPLE);
-      EnableWindow(GetDlgItem(dlg, IDC_FRAMES), en);
-      EnableWindow(GetDlgItem(dlg, IDC_FRAMES_BOX), en);
-      return 0;
-   }
-   if (msg == WM_SYSCOMMAND && (wp & 0xFFF0) == SC_CLOSE) EndDialog(dlg, 0);
-   if (msg != WM_COMMAND) return 0;
-   unsigned id = LOWORD(wp), code = HIWORD(wp);
-   if (id == IDCANCEL) EndDialog(dlg, 0);
-   if (id == IDOK) {
-      if (getcheck(IDC_SIMPLE)) c1.rsm.mode = RSM_SIMPLE;
-      if (getcheck(IDC_FIR0)) c1.rsm.mode = RSM_FIR0;
-      if (getcheck(IDC_FIR1)) c1.rsm.mode = RSM_FIR1;
-      if (getcheck(IDC_FIR2)) c1.rsm.mode = RSM_FIR2;
-      c1.rsm.mix_frames = (unsigned char)SendDlgItemMessage(dlg, IDC_FRAMES, TBM_GETPOS, 0, 0);
-      EndDialog(dlg, 0);
-   }
-   if (code == BN_CLICKED && (id == IDC_FIR0 || id == IDC_FIR1 || id == IDC_FIR2 || id == IDC_SIMPLE)) goto enable_slider;
-   return 0;
-}
-
 INT_PTR CALLBACK VideoDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
 {
    ::dlg = dlg; unsigned id, code;
@@ -858,7 +826,6 @@ INT_PTR CALLBACK VideoDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
    if (msg == WM_COMMAND) {
       id = LOWORD(wp), code = HIWORD(wp);
       if (id == IDC_FONT) { font_setup(dlg); return 1; }
-      if (id == IDC_FIR) { DialogBox(hIn, MAKEINTRESOURCE(IDD_FIR), dlg, fir_dlg); return 1; }
       if ((id == IDC_NOFLIC || id == IDC_FAST_SL) && code == BN_CLICKED) goto filter_changed;
       if (code == CBN_SELCHANGE && id == IDC_BORDERSIZE) {
          c1.bordersize = (u8)SendDlgItemMessage(dlg, IDC_BORDERSIZE, CB_GETCURSEL, 0, 0);

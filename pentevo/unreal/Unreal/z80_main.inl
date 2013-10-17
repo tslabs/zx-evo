@@ -239,7 +239,7 @@ void z80loop()
 	while (cpu.t < conf.frame)
 	{
 		// Baseconf NMI breakpoints
-		if (comp.pBF & 0x10)
+		if (comp.pBF & 0x10)	// ! add here MM_ATM3 check !
 			if (cpu.pc == comp.pBD)
 				nmi_pending = 1;
 

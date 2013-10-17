@@ -321,9 +321,6 @@
     <ClCompile Include="zxevo.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="dxr_text.cpp">
-      <Filter>Sources</Filter>
-    </ClCompile>
     <ClCompile Include="dxrframe.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
@@ -402,9 +399,6 @@
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="dxerr8.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="dxr_text.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="dxrend.h">

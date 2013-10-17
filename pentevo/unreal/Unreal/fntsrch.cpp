@@ -2,7 +2,6 @@
 #include "resource.h"
 #include "emul.h"
 #include "vars.h"
-#include "dxr_text.h"
 #include "util.h"
 
 #ifdef MOD_SETTINGS
@@ -369,30 +368,6 @@ void fnt_search(HWND dlg)
    set_data(dlg);
 }
 
-void save_font()
-{
-   unsigned chr = 1, line = 0x100, shift = 4;
-   if (linear) chr = 8, line = 1;
-   if (right) shift = 0;
-   unsigned char *dst = fontdata2;
-
-   unsigned j; //Alone Coder 0.36.7
-   for (unsigned i = 0; i < 0x100; i++) {
-      if (!i || i == 0x20) continue;
-      if (!rmask[i]) continue;
-      unsigned chardata = font_address + i*chr;
-      unsigned char sum = 0;
-      for (/*unsigned*/ j = 0; j < fontsize; j++) sum |= font_base[(chardata + j*line) & font_maxmem];
-      if (!((sum >> shift) & 0x0F)) continue;
-      *dst++ = (unsigned char)i;
-      for (j = 0; j < 8; j++)
-         *dst++ = j < fontsize?
-                   (font_base[(chardata + j*line) & font_maxmem] >> shift) & 0x0F : 0;
-   }
-   *dst = 0;
-   fontdata = fontdata2;
-}
-
 void FontFromFile(HWND dlg)
 {
    OPENFILENAME ofn = { 0 };
@@ -478,7 +453,6 @@ INT_PTR CALLBACK fonts_dlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
    if (id == IDC_FILE) FontFromFile(dlg);
    if (id == IDC_FIND) fnt_search(dlg);
    if (id == IDCANCEL) EndDialog(dlg, 0);
-   if (id == IDOK) save_font(), EndDialog(dlg, 0);
 
    return 0;
 }
