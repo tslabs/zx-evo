@@ -1,6 +1,6 @@
-Migrator v1.0 by Budder/MGN 2012
+Migrator v1.1 by Budder/MGN 2013
 
-Утилита предназначенная для простого перехода с конфигурации "Base" на конфигурацию от TS-Labs.
+Утилита предназначенная для простого перехода с конфигурации "Base" на конфигурацию TS&BASE (переключение между конфигураций: Alt + Ctrl + F12).
 
 Пошаговый алгоритм позволяет без особых знаний:
 1. прошить TS-Bios,
@@ -12,4 +12,9 @@ Migrator v1.0 by Budder/MGN 2012
 Все шаги сопроваждаются подсказками и комментариями.
 Так же есть поддержка 2х языков: английского и русского.
 
-P.S. все замечания и предложения оставляем на форуме: http://forum.tslabs.info, либо на e-mail: budder@mail.ru
+Полезные ссылки:
+TS-Conf F.A.Q.: http://tslabs.info/forum/viewtopic.php?f=35&t=157
+TS&BASE Thread: http://tslabs.info/forum/viewtopic.php?f=31&t=189
+
+P.S. все замечания и предложения оставляем на форуме: http://tslabs.info/forum, либо на e-mail: budder@mail.ru
+
