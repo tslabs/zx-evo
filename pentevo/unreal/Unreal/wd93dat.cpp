@@ -19,7 +19,7 @@ char FDD::test()
    if (r == IDCANCEL) return 0;
    if (r == IDNO) return 2;
    // r == IDYES
-   unsigned char *image = (unsigned char*)malloc(sizeof snbuf);
+   u8 *image = (u8*)malloc(sizeof snbuf);
    memcpy(image, snbuf, sizeof snbuf);
    savesnap(index());
    memcpy(snbuf, image, sizeof snbuf);
@@ -61,7 +61,7 @@ void FDD::newdisk(unsigned cyls, unsigned sides)
    unsigned len = MAX_TRACK_LEN;
    unsigned len2 = len + (len/8) + ((len & 7) ? 1 : 0);
    rawsize = align_by(cyls * sides * len2, 4096);
-   rawdata = (unsigned char*)VirtualAlloc(0, rawsize, MEM_COMMIT, PAGE_READWRITE);
+   rawdata = (u8*)VirtualAlloc(0, rawsize, MEM_COMMIT, PAGE_READWRITE);
    // ZeroMemory(rawdata, rawsize); // already done by VirtualAlloc
 
    for (unsigned i = 0; i < cyls; i++)
@@ -73,7 +73,7 @@ void FDD::newdisk(unsigned cyls, unsigned sides)
    // comp.wd.trkcache.clear(); // already done in free()
 }
 
-int FDD::read(unsigned char type)
+int FDD::read(u8 type)
 {
    int ok = 0;
    switch(type)

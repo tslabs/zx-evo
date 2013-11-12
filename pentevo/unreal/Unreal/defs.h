@@ -18,8 +18,8 @@ struct Z80;
 
 typedef void (Z80FAST *STEPFUNC)(Z80*);
 #define Z80OPCODE void Z80FAST
-typedef unsigned char (Z80FAST *LOGICFUNC)(Z80*, unsigned char byte);
-#define Z80LOGIC unsigned char Z80FAST
+typedef u8 (Z80FAST *LOGICFUNC)(Z80*, u8 byte);
+#define Z80LOGIC u8 Z80FAST
 
 typedef union {
 	u32 p;
@@ -49,8 +49,8 @@ struct TZ80State
         unsigned pc;
         struct
         {
-            unsigned char pcl;
-            unsigned char pch;
+            u8 pcl;
+            u8 pch;
         };
     };
     union
@@ -58,8 +58,8 @@ struct TZ80State
         unsigned sp;
         struct
         {
-            unsigned char spl;
-            unsigned char sph;
+            u8 spl;
+            u8 sph;
         };
     };
     union
@@ -67,8 +67,8 @@ struct TZ80State
         unsigned ir_;
         struct
         {
-            unsigned char r_low;
-            unsigned char i;
+            u8 r_low;
+            u8 i;
         };
     };
     union
@@ -76,21 +76,21 @@ struct TZ80State
         unsigned int_flags;
         struct
         {
-            unsigned char r_hi;
-            unsigned char iff1;
-            unsigned char iff2;
-            unsigned char halted;
+            u8 r_hi;
+            u8 iff1;
+            u8 iff2;
+            u8 halted;
         };
     };
     /*------------------------------*/
     union
     {
         unsigned bc;
-        unsigned short bc16;
+        u16 bc16;
         struct
         {
-            unsigned char c;
-            unsigned char b;
+            u8 c;
+            u8 b;
         };
     };
     union
@@ -98,8 +98,8 @@ struct TZ80State
         unsigned de;
         struct
         {
-            unsigned char e;
-            unsigned char d;
+            u8 e;
+            u8 d;
         };
     };
     union
@@ -107,8 +107,8 @@ struct TZ80State
         unsigned hl;
         struct
         {
-            unsigned char l;
-            unsigned char h;
+            u8 l;
+            u8 h;
         };
     };
     union
@@ -116,8 +116,8 @@ struct TZ80State
         unsigned af;
         struct
         {
-            unsigned char f;
-            unsigned char a;
+            u8 f;
+            u8 a;
         };
     };
     /*------------------------------*/
@@ -126,8 +126,8 @@ struct TZ80State
         unsigned ix;
         struct
         {
-            unsigned char xl;
-            unsigned char xh;
+            u8 xl;
+            u8 xh;
         };
     };
     union
@@ -135,8 +135,8 @@ struct TZ80State
         unsigned iy;
         struct
         {
-            unsigned char yl;
-            unsigned char yh;
+            u8 yl;
+            u8 yh;
         };
     };
     /*------------------------------*/
@@ -147,8 +147,8 @@ struct TZ80State
             unsigned bc;
             struct
             {
-                unsigned char c;
-                unsigned char b;
+                u8 c;
+                u8 b;
             };
         };
         union
@@ -156,8 +156,8 @@ struct TZ80State
             unsigned de;
             struct
             {
-                unsigned char e;
-                unsigned char d;
+                u8 e;
+                u8 d;
             };
         };
         union
@@ -165,8 +165,8 @@ struct TZ80State
             unsigned hl;
             struct
             {
-                unsigned char l;
-                unsigned char h;
+                u8 l;
+                u8 h;
             };
         };
         union
@@ -174,8 +174,8 @@ struct TZ80State
             unsigned af;
             struct
             {
-                unsigned char f;
-                unsigned char a;
+                u8 f;
+                u8 a;
             };
         };
     } alt;
@@ -184,14 +184,14 @@ struct TZ80State
         unsigned memptr; // undocumented register
         struct
         {
-            unsigned char meml;
-            unsigned char memh;
+            u8 meml;
+            u8 memh;
         };
     };
     unsigned eipos, haltpos;
 	bool intnew;
     /*------------------------------*/
-    unsigned char im;
+    u8 im;
     bool nmi_in_progress;
 	u32 tscache[TS_CACHE_SIZE];
 };
@@ -207,9 +207,9 @@ struct TMemIf
 
 struct Z80 : public TZ80State
 {
-   unsigned char tmp0, tmp1, tmp3;
+   u8 tmp0, tmp1, tmp3;
    unsigned rate;
-   unsigned short last_branch;
+   u16 last_branch;
    unsigned trace_curs, trace_top, trace_mode;
    unsigned mem_curs, mem_top, mem_second;
    unsigned pc_trflags;
@@ -218,7 +218,7 @@ struct Z80 : public TZ80State
    unsigned dbg_stopsp;
    unsigned dbg_loop_r1;
    unsigned dbg_loop_r2;
-   unsigned char dbgchk; // Признак наличия активных брекпоинтов
+   u8 dbgchk; // Признак наличия активных брекпоинтов
    bool int_pend; // На входе int есть активное прерывание
    bool int_gate; // Разрешение внешних прерываний (1-разрешены/0 - запрещены)
 
@@ -284,14 +284,14 @@ struct Z80 : public TZ80State
    u8 DirectRm(unsigned addr) const { return *DirectMem(addr); } // direct read memory in debuger
    void DirectWm(unsigned addr, u8 val) { *DirectMem(addr) = val; } // direct write memory in debuger
 /*
-   virtual unsigned char rm(unsigned addr) = 0;
-   virtual void wm(unsigned addr, unsigned char val) = 0;
+   virtual u8 rm(unsigned addr) = 0;
+   virtual void wm(unsigned addr, u8 val) = 0;
    */
    virtual u8 *DirectMem(unsigned addr) const = 0; // get direct memory pointer in debuger
 
-   virtual unsigned char in(unsigned port) = 0;
-   virtual void out(unsigned port, unsigned char val) = 0;
-   virtual unsigned char m1_cycle() = 0; // [vv] Не зависит от процессора (вынести в библиотеку)
+   virtual u8 in(unsigned port) = 0;
+   virtual void out(unsigned port, u8 val) = 0;
+   virtual u8 m1_cycle() = 0; // [vv] Не зависит от процессора (вынести в библиотеку)
    virtual u8 IntVec() = 0; // Функция возвращающая значение вектора прерывания для im2
    virtual void CheckNextFrame() = 0; // Проверка и обновления счетчика кадров и тактов внутри прерывания
    virtual void retn() = 0; // Вызывается в конце инструкции retn (должна сбрасывать флаг nmi_in_progress и обновлять раскладку памяти)

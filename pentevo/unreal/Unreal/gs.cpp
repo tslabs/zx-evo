@@ -32,7 +32,7 @@ void make_gs_volume(unsigned level)
 //#include "gshle.cpp"
 #endif
 
-unsigned char in_gs(unsigned char port)
+u8 in_gs(u8 port)
 {
 
 #ifdef MOD_GSZ80
@@ -46,7 +46,7 @@ unsigned char in_gs(unsigned char port)
    return 0xFF;
 }
 
-void out_gs(unsigned char port, unsigned char byte)
+void out_gs(u8 port, u8 byte)
 {
 #ifdef MOD_GSZ80
    if (conf.gs_type == 1) { z80gs::out_gs(port, byte); return; }

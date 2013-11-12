@@ -3,9 +3,9 @@
 struct TRegLayout
 {
    size_t offs;
-   unsigned char width;
-   unsigned char x,y;
-   unsigned char lf,rt,up,dn;
+   u8 width;
+   u8 x,y;
+   u8 lf,rt,up,dn;
 };
 
 extern const TRegLayout regs_layout[];

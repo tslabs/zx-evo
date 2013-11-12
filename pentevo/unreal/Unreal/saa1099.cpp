@@ -79,7 +79,7 @@ static const int amplitude_lookup[16] =
     12*32767/16, 13*32767/16, 14*32767/16, 15*32767/16
 };
 
-static const UINT8 envelope[8][64] =
+static const u8 envelope[8][64] =
 {
     /* zero amplitude */
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -475,7 +475,7 @@ void TSaa1099::start_frame(bufptr_t dst)
 
 unsigned TSaa1099::end_frame(unsigned clk_ticks)
 {
-    uint64_t end_chip_tick = ((passed_clk_ticks + clk_ticks) * chip_clock_rate) / system_clock_rate;
+    u64 end_chip_tick = ((passed_clk_ticks + clk_ticks) * chip_clock_rate) / system_clock_rate;
 
     flush((unsigned)(end_chip_tick - passed_chip_ticks));
 

@@ -13,7 +13,7 @@ struct PHYS_DEVICE
    unsigned hdd_size;
    unsigned spti_id;
    unsigned adapterid, targetid; // ASPI
-   unsigned char idsector[512];
+   u8 idsector[512];
    char filename[512];
    char viewname[512];
 };
@@ -32,8 +32,8 @@ struct ATA_PASSER
    bool loaded() { return (hDevice != INVALID_HANDLE_VALUE); }
    BOOL flush() { return FlushFileBuffers(hDevice); }
    bool seek(unsigned nsector);
-   bool read_sector(unsigned char *dst);
-   bool write_sector(unsigned char *src);
+   bool read_sector(u8 *dst);
+   bool write_sector(u8 *src);
 
    ATA_PASSER() { hDevice = INVALID_HANDLE_VALUE; }
    ~ATA_PASSER() { close(); }
@@ -46,7 +46,7 @@ struct ATAPI_PASSER
 
    CDB cdb;
    unsigned passed_length;
-   unsigned char sense[MAX_SENSE_LEN]; unsigned senselen;
+   u8 sense[MAX_SENSE_LEN]; unsigned senselen;
 
    static unsigned identify(PHYS_DEVICE *outlist, int max);
 
@@ -59,19 +59,19 @@ struct ATAPI_PASSER
    bool loaded() { return ((hDevice != INVALID_HANDLE_VALUE) || (dev)); } //Alone Coder (CD doesn't initialize (although works) if another device isn't set)
 
    int pass_through(void *buf, int bufsize);
-   int read_atapi_id(unsigned char *idsector, char prefix);
+   int read_atapi_id(u8 *idsector, char prefix);
 
    int SEND_ASPI_CMD(void *buf, int buf_sz);
    int SEND_SPTI_CMD(void *buf, int buf_sz);
 
    bool seek(unsigned nsector);
-   bool read_sector(unsigned char *dst);
+   bool read_sector(u8 *dst);
 
    ATAPI_PASSER() { hDevice = INVALID_HANDLE_VALUE; dev = 0; }
    ~ATAPI_PASSER() { close(); }
 };
 
-void make_ata_string(unsigned char *dst, unsigned n_words, const char *src);
+void make_ata_string(u8 *dst, unsigned n_words, const char *src);
 void swap_bytes(char *dst, BYTE *src, unsigned n_words);
 void print_device_name(char *dst, PHYS_DEVICE *dev);
 void init_aspi();

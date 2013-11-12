@@ -9,11 +9,11 @@
 #include "font16.h"
 #include "util.h"
 
-unsigned char txtscr[80*30*2];
+u8 txtscr[80*30*2];
 
 static struct
 {
-   unsigned char x,y,dx,dy,c;
+   u8 x,y,dx,dy,c;
 } frames[20];
 
 unsigned nfr;
@@ -24,13 +24,13 @@ void debugflip()
        return;
    setpal(0);
 
-   unsigned char * const bptr = gdibuf;
+   u8 * const bptr = gdibuf;
 
    if (show_scrshot) {
       memcpy(save_buf, rbuf, rb2_offs);
       paint_scr((show_scrshot == 1)? 0 : 2);
-      unsigned char *dst = bptr + wat_y*16*640+wat_x*8;
-      unsigned char *src = rbuf+temp.scx/4*(temp.b_top+192/2-wat_sz*16/2);
+      u8 *dst = bptr + wat_y*16*640+wat_x*8;
+      u8 *src = rbuf+temp.scx/4*(temp.b_top+192/2-wat_sz*16/2);
       src += temp.scx/8-37/2*2;
       for (unsigned y = 0; y < wat_sz*16; y++) {
          for (unsigned x = 0; x < 37; x++) {
@@ -44,14 +44,14 @@ void debugflip()
 
    // print text
    int x,y;
-   unsigned char *tptr = txtscr;
+   u8 *tptr = txtscr;
    for (y = 0; y < 16*30*640; y+=16*640)
    {
       for (x = 0; x < 80; x++, tptr++)
       {
          unsigned ch = *tptr, at = tptr[80*30];
          if (at == 0xFF) continue; // transparent color
-         const unsigned char *fnt = &font16[ch*16];
+         const u8 *fnt = &font16[ch*16];
          at <<= 4;
          for (int yy = 0; yy < 16; yy++, fnt++)
          {
@@ -64,7 +64,7 @@ void debugflip()
    // show frames
    for (unsigned i = 0; i < nfr; i++)
    {
-      unsigned char a1 = (frames[i].c | 0x08) * 0x11;
+      u8 a1 = (frames[i].c | 0x08) * 0x11;
       y = frames[i].y*16-1;
       for (x = 8*frames[i].x-1; x < (frames[i].x+frames[i].dx)*8; x++) bptr[y*640+x] = a1;
       y = (frames[i].y+frames[i].dy)*16;
@@ -82,7 +82,7 @@ void debugflip()
    gdibmp.header.bmiHeader.biBitCount = temp.obpp;
 }
 
-void frame(unsigned x, unsigned y, unsigned dx, unsigned dy, unsigned char attr)
+void frame(unsigned x, unsigned y, unsigned dx, unsigned dy, u8 attr)
 {
    frames[nfr].x = x;
    frames[nfr].y = y;
@@ -92,21 +92,21 @@ void frame(unsigned x, unsigned y, unsigned dx, unsigned dy, unsigned char attr)
    nfr++;
 }
 
-void tprint(unsigned x, unsigned y, const char *str, unsigned char attr)
+void tprint(unsigned x, unsigned y, const char *str, u8 attr)
 {
    for (unsigned ptr = y*80 + x; *str; str++, ptr++) {
       txtscr[ptr] = *str; txtscr[ptr+80*30] = attr;
    }
 }
 
-void tprint_fg(unsigned x, unsigned y, const char *str, unsigned char attr)
+void tprint_fg(unsigned x, unsigned y, const char *str, u8 attr)
 {
    for (unsigned ptr = y*80 + x; *str; str++, ptr++) {
       txtscr[ptr] = *str; txtscr[ptr+80*30] = (txtscr[ptr+80*30] & 0xF0) + attr;
    }
 }
 
-void filledframe(unsigned x, unsigned y, unsigned dx, unsigned dy, unsigned char color)
+void filledframe(unsigned x, unsigned y, unsigned dx, unsigned dy, u8 color)
 {
    for (unsigned yy = y; yy < (y+dy); yy++)
       for (unsigned xx = x; xx < (x+dx); xx++)
@@ -116,7 +116,7 @@ void filledframe(unsigned x, unsigned y, unsigned dx, unsigned dy, unsigned char
    frame(x,y,dx,dy,FFRAME_FRAME);
 }
 
-void fillattr(unsigned x, unsigned y, unsigned dx, unsigned char color)
+void fillattr(unsigned x, unsigned y, unsigned dx, u8 color)
 {
    for (unsigned xx = x; xx < (x+dx); xx++)
       txtscr[y*80+xx+30*80] = color;
@@ -137,7 +137,7 @@ unsigned inputhex(unsigned x, unsigned y, unsigned sz, bool hex)
           str[i] = ' ';
       for (i = 0; i < sz; i++)
       {
-         unsigned vl = (unsigned char)str[i];
+         unsigned vl = (u8)str[i];
          tprint(x+i,y,(char*)&vl,(i==cr) ? W_INPUTCUR : W_INPUTBG);
       }
 
@@ -200,13 +200,13 @@ unsigned inputhex(unsigned x, unsigned y, unsigned sz, bool hex)
       if (hex)
       {
          if ((key >= '0' && key <= '9') || (key >= 'A' && key <= 'F'))
-             str[cr++] = (unsigned char)key;
+             str[cr++] = (u8)key;
       }
       else
       {
          u8 Kbd[256];
          GetKeyboardState(Kbd);
-         unsigned short k;
+         u16 k;
          if (ToAscii(key, 0, Kbd, &k, 0) == 1)
          {
              char m;
@@ -268,7 +268,7 @@ void paint_items(MENUDEF *menu)
    tprint(menu_x, menu_y, ln, MENU_HEADER);
 
    for (/*unsigned*/ item = 0; item < menu->n_items; item++) {
-      unsigned char color = MENU_ITEM;
+      u8 color = MENU_ITEM;
       if (menu->items[item].flags & MENUITEM::DISABLED) color = MENU_ITEM_DIS;
       else if (item == menu->pos) color = MENU_CURSOR;
       format_item(ln, maxlen, menu->items[item].text, menu->items[item].flags);

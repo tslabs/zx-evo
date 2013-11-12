@@ -45,7 +45,7 @@ void TRKCACHE::seek(FDD *d, unsigned cyl, unsigned side, SEEK_MODE fs)
       h->s = h->id[1];
       h->n = h->id[2];
       h->l = h->id[3];
-      h->crc = *(unsigned short*)(trkd+i+6);
+      h->crc = *(u16*)(trkd+i+6);
       h->c1 = (wd93_crc(trkd+i+1, 5) == h->crc);
       h->data = 0;
       h->datlen = 0;
@@ -63,7 +63,7 @@ void TRKCACHE::seek(FDD *d, unsigned cyl, unsigned side, SEEK_MODE fs)
          {
             h->datlen = 128 << (h->l & 3); // [vv] FD1793 use only 2 lsb of sector size code
             h->data = trkd + j + 2;
-            h->c2 = (wd93_crc(h->data-1, h->datlen+1) == *(unsigned short*)(h->data+h->datlen));
+            h->c2 = (wd93_crc(h->data-1, h->datlen+1) == *(u16*)(h->data+h->datlen));
          }
          break;
       }
@@ -75,7 +75,7 @@ void TRKCACHE::format()
    memset(trkd, 0, trklen);
    memset(trki, 0, trklen/8 + ((trklen&7) ? 1:0));
 
-   unsigned char *dst = trkd;
+   u8 *dst = trkd;
 
    unsigned i;
    memset(dst, 0x4E, 80); dst += 80; // gap4a
@@ -117,7 +117,7 @@ void TRKCACHE::format()
 
 //         if (sechdr->l > 5) errexit("strange sector"); // [vv]
          unsigned len = 128 << (sechdr->l & 3); // data
-         if (sechdr->data != (unsigned char*)1)
+         if (sechdr->data != (u8*)1)
              memcpy(dst, sechdr->data, len);
          else
              memset(dst, 0, len);
@@ -149,14 +149,14 @@ void TRKCACHE::dump()
 }
 #endif
 
-int TRKCACHE::write_sector(unsigned sec, unsigned char *data)
+int TRKCACHE::write_sector(unsigned sec, u8 *data)
 {
    const SECHDR *h = get_sector(sec);
    if (!h || !h->data)
        return 0;
    unsigned sz = h->datlen;
    memcpy(h->data, data, sz);
-   *(unsigned short*)(h->data+sz) = (unsigned short)wd93_crc(h->data-1, sz+1);
+   *(u16*)(h->data+sz) = (u16)wd93_crc(h->data-1, sz+1);
    return sz;
 }
 

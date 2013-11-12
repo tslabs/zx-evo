@@ -65,8 +65,8 @@ class TSaa1099 : public saa1099_state,  public SNDRENDER
 private:
    unsigned chip_clock_rate;
    unsigned system_clock_rate;
-   uint64_t passed_chip_ticks;
-   uint64_t passed_clk_ticks;
+   u64 passed_chip_ticks;
+   u64 passed_clk_ticks;
 
    unsigned t;
 public:
@@ -88,7 +88,7 @@ private:
 
 extern TSaa1099 Saa1099;
 
-//void saa1099_control_w(ATTR_UNUSED device_t *device, ATTR_UNUSED offs_t offset, ATTR_UNUSED UINT8 data);
-//void saa1099_data_w(ATTR_UNUSED device_t *device, ATTR_UNUSED offs_t offset, ATTR_UNUSED UINT8 data);
+//void saa1099_control_w(ATTR_UNUSED device_t *device, ATTR_UNUSED offs_t offset, ATTR_UNUSED u8 data);
+//void saa1099_data_w(ATTR_UNUSED device_t *device, ATTR_UNUSED offs_t offset, ATTR_UNUSED u8 data);
 
 #endif /* __SAA1099_H__ */

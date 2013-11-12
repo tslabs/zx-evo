@@ -16,11 +16,11 @@ struct CHEATDLG
    void SetControls();
    void Search();
 
-   unsigned char *lastsnap;
-   unsigned char *bitmask;
+   u8 *lastsnap;
+   u8 *bitmask;
    unsigned searchSize;
    unsigned nFound;
-   unsigned char wordmode, hex;
+   u8 wordmode, hex;
 
    CHEATDLG() { lastsnap = 0; bitmask = 0; nFound = -1; mode = S_NEW; }
    ~CHEATDLG() { free(lastsnap); free(bitmask);  }
@@ -34,7 +34,7 @@ void CHEATDLG::Search()
    if (nFound == -1) searchSize = conf.ramsize*1024;
    searchSize = min(searchSize, conf.ramsize*1024);
 
-   bitmask = (unsigned char*)realloc(bitmask, searchSize/8);
+   bitmask = (u8*)realloc(bitmask, searchSize/8);
    if (nFound == -1) memset(bitmask, 0xFF, searchSize/8);
 
    unsigned i;
@@ -67,7 +67,7 @@ void CHEATDLG::Search()
       case S_INC:
       case S_DEC:
       {
-         unsigned char *ptr1, *ptr2;
+         u8 *ptr1, *ptr2;
          if (mode == S_INC) ptr1 = memory, ptr2 = lastsnap;
          else ptr2 = memory, ptr1 = lastsnap;
 
@@ -101,7 +101,7 @@ void CHEATDLG::Search()
       }
    }
 
-   lastsnap = (unsigned char*)realloc(lastsnap, searchSize);
+   lastsnap = (u8*)realloc(lastsnap, searchSize);
    memcpy(lastsnap, memory, searchSize);
    ShowResults();
 }

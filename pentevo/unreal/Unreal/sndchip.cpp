@@ -1,4 +1,5 @@
 #include "std.h"
+#include "sysdefs.h"
 #include "emul.h"
 #include "vars.h"
 #include "emul_2203.h"
@@ -35,7 +36,7 @@ unsigned SNDCHIP::end_frame(unsigned clk_ticks)
 {
    // adjusting 't' with whole history will fix accumulation of rounding errors
 
-   uint64_t end_chip_tick = ((passed_clk_ticks + clk_ticks) * chip_clock_rate) / system_clock_rate;
+   u64 end_chip_tick = ((passed_clk_ticks + clk_ticks) * chip_clock_rate) / system_clock_rate;
 
    flush( (unsigned) (end_chip_tick - passed_chip_ticks) );
    unsigned res = SNDRENDER::end_frame(t);
@@ -94,7 +95,7 @@ void SNDCHIP::flush(unsigned chiptick) // todo: noaction at (temp.sndblock || !c
           };
           if (fmsoundon0 == 0) {
             //FMbufOUT=(int)(FMbuf*conf.sound.ay/8192*0.7f);
-            FMbufOUT=((((INT16)FMbufs[FMbufN])*FMbufMUL)>>16);
+            FMbufOUT=((((i16)FMbufs[FMbufN])*FMbufMUL)>>16);
           }
           else FMbufOUT=0;
         }
@@ -106,13 +107,13 @@ void SNDCHIP::flush(unsigned chiptick) // todo: noaction at (temp.sndblock || !c
    }
 }
 
-void SNDCHIP::select(unsigned char nreg)
+void SNDCHIP::select(u8 nreg)
 {
    if (chiptype == CHIP_AY) nreg &= 0x0F;
    activereg = nreg;
 }
 
-void SNDCHIP::write(unsigned timestamp, unsigned char val)
+void SNDCHIP::write(unsigned timestamp, u8 val)
 {
    if (activereg >= 0x20 && conf.sound.ay_chip == CHIP_YM2203)
    {
@@ -201,7 +202,7 @@ void SNDCHIP::write(unsigned timestamp, unsigned char val)
    }
 }
 
-unsigned char SNDCHIP::read()
+u8 SNDCHIP::read()
 {
    if (activereg >= 0x10) return 0xFF;
    return reg[activereg & 0x0F];
@@ -223,7 +224,7 @@ void SNDCHIP::set_timings(unsigned system_clock_rate, unsigned chip_clock_rate, 
    SNDCHIP::system_clock_rate = system_clock_rate;
    SNDCHIP::chip_clock_rate = chip_clock_rate;
 
-   mult_const = (unsigned) (((uint64_t)chip_clock_rate << MULT_C_1) / system_clock_rate);
+   mult_const = (unsigned) (((u64)chip_clock_rate << MULT_C_1) / system_clock_rate);
    SNDRENDER::set_timings(chip_clock_rate, sample_rate);
    passed_chip_ticks = passed_clk_ticks = 0;
    t = 0; ns = 0xFFFF;
@@ -231,7 +232,7 @@ void SNDCHIP::set_timings(unsigned system_clock_rate, unsigned chip_clock_rate, 
    nextfmtickfloat = 0.; //Alone Coder
    nextfmtick = 0; //Alone Coder
    ayticks_per_fmtick = (float)chip_clock_rate/conf.sound.fq /*44100*/; //Alone Coder
-   FMbufMUL=(UINT16)(((float)conf.sound.ay_vol/8192 /* =0..1 */)*0.1f*65536); //Alone Coder 0.36.4
+   FMbufMUL=(u16)(((float)conf.sound.ay_vol/8192 /* =0..1 */)*0.1f*65536); //Alone Coder 0.36.4
 
    apply_regs();
 }
@@ -240,7 +241,7 @@ void SNDCHIP::set_volumes(unsigned global_vol, const SNDCHIP_VOLTAB *voltab, con
 {
    for (int j = 0; j < 6; j++)
       for (int i = 0; i < 32; i++)
-         vols[j][i] = (unsigned) (((uint64_t)global_vol * voltab->v[i] * stereo->raw[j])/(65535*100*3));
+         vols[j][i] = (unsigned) (((u64)global_vol * voltab->v[i] * stereo->raw[j])/(65535*100*3));
 }
 
 void SNDCHIP::reset(unsigned timestamp)
@@ -260,8 +261,8 @@ void SNDCHIP::reset(unsigned timestamp)
 
 void SNDCHIP::apply_regs(unsigned timestamp)
 {
-   for (unsigned char r = 0; r < 16; r++) {
-      select(r); unsigned char p = reg[r];
+   for (u8 r = 0; r < 16; r++) {
+      select(r); u8 p = reg[r];
       /* clr cached values */
       write(timestamp, p ^ 1); write(timestamp, p);
    }

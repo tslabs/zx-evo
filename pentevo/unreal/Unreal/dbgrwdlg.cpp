@@ -47,7 +47,7 @@
 enum FILEDLG_MODE { FDM_LOAD = 0, FDM_SAVE, FDM_DISASM };
 
 unsigned addr = 0, end = 0xFFFF;
-unsigned char *memdata;
+u8 *memdata;
 unsigned rw_drive, rw_trk, rw_cyl, rw_tsec, rw_rsec, rw_side;
 char fname[20] = "", trdname[9] = "12345678", trdext[2] = "C";
 
@@ -114,7 +114,7 @@ void write_mem()
 void read_mem()
 {
    Z80 &cpu = CpuMgr.Cpu();
-   unsigned char *ptr = memdata;
+   u8 *ptr = memdata;
    for (unsigned a1 = addr; a1 <= end; a1++)
      *ptr++ = cpu.DirectRm(a1);
 }
@@ -252,13 +252,13 @@ char wr_trdos_file()
 
    read_mem();
 
-   unsigned char hdr[16];
+   u8 hdr[16];
    memcpy(hdr, trdname, 8);
    hdr[8] = *trdext;
 
    unsigned sz = end-addr+1;
-   *(unsigned short*)(hdr+9) = addr;
-   *(unsigned short*)(hdr+11) = sz;
+   *(u16*)(hdr+9) = addr;
+   *(u16*)(hdr+11) = sz;
    hdr[13] = u8(align_by(sz, 0x100) / 0x100); // sector size
 
    fdd->optype |= 1;
@@ -278,7 +278,7 @@ void mon_load()
    if (!handle_menu(&menu))
        return;
 
-   unsigned char bf[0x10000];
+   u8 bf[0x10000];
    memdata = bf;
 
    switch (menu.pos)
@@ -329,7 +329,7 @@ void mon_save()
 
    if (!handle_menu(&menu)) return;
 
-   unsigned char bf[0x10000]; memdata = bf;
+   u8 bf[0x10000]; memdata = bf;
 
    switch (menu.pos)
    {

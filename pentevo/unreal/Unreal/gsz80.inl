@@ -1,16 +1,16 @@
 // Адрес может превышать 0xFFFF
 // (чтобы в каждой команде работы с регистрами не делать &= 0xFFFF)
-Z80INLINE unsigned char rm(unsigned addr)
+Z80INLINE u8 rm(unsigned addr)
 {
    addr &= 0xFFFF;
 #ifdef Z80_DBG
-   unsigned char *membit = z80gs::membits + (addr & 0xFFFF);
+   u8 *membit = z80gs::membits + (addr & 0xFFFF);
    *membit |= MEMBITS_R;
    dbgbreak |= (*membit & MEMBITS_BPR);
    gscpu.dbgbreak |= (*membit & MEMBITS_BPR);
 #endif
 
-   unsigned char byte = *am_r(addr);
+   u8 byte = *am_r(addr);
    if ((addr & 0xE000) == 0x6000)
        gs_byte_to_dac(addr, byte);
    return byte;
@@ -18,11 +18,11 @@ Z80INLINE unsigned char rm(unsigned addr)
 
 // Адрес может превышать 0xFFFF
 // (чтобы в каждой команде работы с регистрами не делать &= 0xFFFF)
-Z80INLINE void wm(unsigned addr, unsigned char val)
+Z80INLINE void wm(unsigned addr, u8 val)
 {
    addr &= 0xFFFF;
 #ifdef Z80_DBG
-   unsigned char *membit = z80gs::membits + (addr & 0xFFFF);
+   u8 *membit = z80gs::membits + (addr & 0xFFFF);
    *membit |= MEMBITS_W;
    dbgbreak |= (*membit & MEMBITS_BPW);
    gscpu.dbgbreak |= (*membit & MEMBITS_BPW);

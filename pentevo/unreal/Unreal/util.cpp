@@ -65,7 +65,7 @@ unsigned __int64 GetCPUFrequency()
    LARGE_INTEGER Frequency;
    LARGE_INTEGER Start;
    LARGE_INTEGER Stop;
-   unsigned long long c1, c2, c3, c4, c;
+   u64 c1, c2, c3, c4, c;
    timeBeginPeriod(1);
    QueryPerformanceFrequency(&Frequency);
    Sleep(20);
@@ -110,13 +110,13 @@ int ishex(char c)
    return (isdigit(c) || (tolower(c) >= 'a' && tolower(c) <= 'f'));
 }
 
-unsigned char hex(char p)
+u8 hex(char p)
 {
    p = tolower(p);
    return (p < 'a') ? p-'0' : p-'a'+10;
 }
 
-unsigned char hex(const char *p)
+u8 hex(const char *p)
 {
    return 0x10*hex(p[0]) + hex(p[1]);
 }

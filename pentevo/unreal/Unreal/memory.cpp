@@ -29,7 +29,7 @@ void set_banks()
    // these flags will be re-calculated
    comp.flags &= ~(CF_DOSPORTS | CF_Z80FBUS | CF_LEAVEDOSRAM | CF_LEAVEDOSADR | CF_SETDOSROM);
 
-   unsigned char *bank0, *bank3;
+   u8 *bank0, *bank3;
 
    if (comp.flags & CF_TRDOS)
        bank0 = (comp.p7FFD & 0x10) ? base_dos_rom : base_sys_rom;
@@ -66,7 +66,7 @@ void set_banks()
          // то обрабатывать rom по стандарту gmx
          comp.profrom_bank = ((comp.p7EFD >> 4) & 3) & temp.profrom_mask;
          {
-             unsigned char *base = ROM_BASE_M + (comp.profrom_bank * 64*1024);
+             u8 *base = ROM_BASE_M + (comp.profrom_bank * 64*1024);
              base_128_rom = base + 0*PAGE;
              base_sos_rom = base + 1*PAGE;
              base_sys_rom = base + 2*PAGE;
@@ -94,7 +94,7 @@ void set_banks()
       {
          bank += ((comp.p1FFD & 0x10) >> 1) + ((comp.p1FFD & 0x80) >> 3) + ((comp.p7FFD & 0x80) >> 2);
          bank3 = page_ram(bank & temp.ram_mask);
-         unsigned char rom1 = (comp.p1FFD >> 2) & 2;
+         u8 rom1 = (comp.p1FFD >> 2) & 2;
          if (comp.flags & CF_TRDOS) rom1 ^= 2;
          switch (rom1+((comp.p7FFD & 0x10) >> 4))
          {
@@ -203,8 +203,8 @@ void set_banks()
          for (unsigned bank = 0; bank < 4; bank++)
          {
             // lvd added 6 or 3 bits from 7FFD to page number insertion in pentevo (was only 3 as in atm2)
-            unsigned int mem7ffd = (comp.p7FFD & 7) | ( (comp.p7FFD & 0xE0)>>2 );
-            unsigned int mask7ffd = 0x07;
+            u32 mem7ffd = (comp.p7FFD & 7) | ( (comp.p7FFD & 0xE0)>>2 );
+            u32 mask7ffd = 0x07;
 
             if ( conf.mem_model==MM_ATM3 && ( !(comp.pEFF7 & EFF7_LOCKMEM) ) )
                 mask7ffd = 0x3F;
@@ -313,7 +313,7 @@ void set_banks()
    if (bankr[3] >= ROM_BASE_M) bankw[3] = TRASH_M;
 
 
-   unsigned char dosflags = CF_LEAVEDOSRAM;
+   u8 dosflags = CF_LEAVEDOSRAM;
    if (conf.mem_model == MM_PENTAGON || conf.mem_model == MM_PROFI)
        dosflags = CF_LEAVEDOSADR;
 
@@ -330,7 +330,7 @@ void set_banks()
 
    if (comp.flags & CF_CACHEON)
    {
-      unsigned char *cpage = CACHE_M;
+      u8 *cpage = CACHE_M;
       if (conf.cache == 32 && !(comp.p7FFD & 0x10)) cpage += PAGE;
       bankr[0] = bankw[0] = cpage;
       // if (comp.pEFF7 & EFF7_ROCACHE) bankw[0] = TRASH_M; //Alone Coder 0.36.4
@@ -361,7 +361,7 @@ void set_banks()
 
 void set_scorp_profrom(unsigned read_address)
 {
-   static unsigned char switch_table[] =
+   static u8 switch_table[] =
    {
       0,1,2,3,
       3,3,3,2,
@@ -369,7 +369,7 @@ void set_scorp_profrom(unsigned read_address)
       1,0,1,0
    };
    comp.profrom_bank = switch_table[read_address*4 + comp.profrom_bank] & temp.profrom_mask;
-   unsigned char *base = ROM_BASE_M + (comp.profrom_bank * 64*1024);
+   u8 *base = ROM_BASE_M + (comp.profrom_bank * 64*1024);
    base_128_rom = base + 0*PAGE;
    base_sos_rom = base + 1*PAGE;
    base_sys_rom = base + 2*PAGE;
@@ -440,26 +440,26 @@ void set_mode(ROM_MODE mode)
    set_banks();
 }
 
-unsigned char cmosBCD(unsigned char binary)
+u8 cmosBCD(u8 binary)
 {
    if (!(cmos[11] & 4)) binary = (binary % 10) + 0x10*((binary/10)%10);
    return binary;
 }
 
-unsigned char cmos_read()
+u8 cmos_read()
 {
    static SYSTEMTIME st;
    static bool UF = false;
    static unsigned Seconds = 0;
-   static unsigned long long last_tsc = 0ULL;
-   unsigned char reg = comp.cmos_addr;
-   unsigned char rv;
+   static u64 last_tsc = 0ULL;
+   u8 reg = comp.cmos_addr;
+   u8 rv;
    if (conf.cmos == 2)
        reg &= 0x3F;
 
    if ((1 << reg) & ((1<<0)|(1<<2)|(1<<4)|(1<<6)|(1<<7)|(1<<8)|(1<<9)|(1<<12)))
    {
-      unsigned long long tsc = rdtsc();
+      u64 tsc = rdtsc();
       // [vv] Часы читаются не чаще двух раз в секунду
       if ((tsc-last_tsc) >= 25 * temp.ticks_frame)
       {
@@ -498,7 +498,7 @@ unsigned char cmos_read()
    return cmos[reg];
 }
 
-void cmos_write(unsigned char val)
+void cmos_write(u8 val)
 {
    if (conf.cmos == 2) comp.cmos_addr &= 0x3F;
 
@@ -517,7 +517,7 @@ void cmos_write(unsigned char val)
    cmos[comp.cmos_addr] = val;
 }
 
-void NVRAM::write(unsigned char val)
+void NVRAM::write(u8 val)
 {
    const int SCL = 0x40, SDA = 0x10, WP = 0x20,
              SDA_1 = 0xFF, SDA_0 = 0xBF,

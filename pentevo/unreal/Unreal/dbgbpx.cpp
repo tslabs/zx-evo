@@ -54,7 +54,7 @@ unsigned calc(const Z80 *cpu, unsigned *script)
          arith:                sp--;  break;
          case DB_CHAR:
          case DB_SHORT:        x = *script++; goto push;
-         case DB_PCHAR:        x = *(unsigned char*)*script++; goto push;
+         case DB_PCHAR:        x = *(u8*)*script++; goto push;
          case DB_PSHORT:       x = 0xFFFF & *(unsigned*)*script++; goto push;
          case DB_PINT:         x = *(unsigned*)*script++; goto push;
          case DB_PFUNC:        x = ((func_t)*script++)(); goto push;
@@ -75,7 +75,7 @@ static bool __cdecl get_dos_flag()
    {                                               \
       unsigned reg;                                \
       const void *ptr;                             \
-      unsigned char size;                          \
+      u8 size;                          \
    } var[] =                                       \
    {                                               \
                                                    \
@@ -121,12 +121,12 @@ static bool __cdecl get_dos_flag()
    }
 
 
-unsigned char toscript(char *script, unsigned *dst)
+u8 toscript(char *script, unsigned *dst)
 {
    unsigned *d1 = dst;
    static struct {
-      unsigned short op;
-      unsigned char prior;
+      u16 op;
+      u8 prior;
    } prio[] = {
       { '(', 10 },
       { ')', 0 },
@@ -167,7 +167,7 @@ unsigned char toscript(char *script, unsigned *dst)
 
    while (*script)
    {
-      if (*(unsigned char*)script <= ' ')
+      if (*(u8*)script <= ' ')
       {
           script++;
           continue;
@@ -216,7 +216,7 @@ unsigned char toscript(char *script, unsigned *dst)
          continue;
       }
       // find operation
-      unsigned char pr = 0xFF;
+      u8 pr = 0xFF;
       unsigned r = *script++;
       if (strchr("<>=&|-!", (char)r) && strchr("<>=&|", *script))
          r = r + 0x100 * (*script++);
@@ -406,7 +406,7 @@ void FillMemBox(HWND dlg, unsigned address)
    Z80 &cpu = CpuMgr.Cpu();
    unsigned end; //Alone Coder 0.36.7
    for (unsigned start = 0; start < 0x10000; ) {
-      const unsigned char mask = MEMBITS_BPR | MEMBITS_BPW;
+      const u8 mask = MEMBITS_BPR | MEMBITS_BPW;
       if (!(cpu.membits[start] & mask)) { start++; continue; }
       unsigned active = cpu.membits[start];
       for (/*unsigned*/ end = start; end < 0xFFFF && !((active ^ cpu.membits[end+1]) & mask); end++);
@@ -480,7 +480,7 @@ set_buttons_and_return:
    if (msg == WM_SYSCOMMAND && (wp & 0xFFF0) == SC_CLOSE) EndDialog(dlg, 0);
    if (msg != WM_COMMAND) return 0;
 
-   unsigned id = LOWORD(wp), code = HIWORD(wp); unsigned char mask = 0;
+   unsigned id = LOWORD(wp), code = HIWORD(wp); u8 mask = 0;
    if (id == IDCANCEL || id == IDOK) EndDialog(dlg, 0);
    char tmp[0x200];
 
@@ -541,7 +541,7 @@ set_buttons_and_return:
          MessageBox(dlg, "Invalid watch address / range", 0, MB_ICONERROR);
          return 1;
       }
-      unsigned char mask = 0;
+      u8 mask = 0;
       if (IsDlgButtonChecked(dlg, IDC_MEM_R) == BST_CHECKED) mask |= MEMBITS_BPR;
       if (IsDlgButtonChecked(dlg, IDC_MEM_W) == BST_CHECKED) mask |= MEMBITS_BPW;
 

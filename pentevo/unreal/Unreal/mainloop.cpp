@@ -47,14 +47,14 @@ void spectrum_frame()
    if (!cpu.iff1 || // int disabled in CPU
         ((conf.mem_model == MM_ATM710/* || conf.mem_model == MM_ATM3*/) && !(comp.pFF77 & 0x20))) // int disabled by ATM hardware -- lvd removed int disabling in pentevo (atm3)
    {
-      unsigned char *mp = am_r(cpu.pc);
+      u8 *mp = am_r(cpu.pc);
       if (cpu.halted)
       {
           strcpy(statusline, "CPU HALTED");
           statcnt = 10;
       }
-      if (*(unsigned short*)mp == WORD2(0x18,0xFE) ||
-          ((*mp == 0xC3) && *(unsigned short*)(mp+1) == (unsigned short)cpu.pc))
+      if (*(u16*)mp == WORD2(0x18,0xFE) ||
+          ((*mp == 0xC3) && *(u16*)(mp+1) == (u16)cpu.pc))
       {
          strcpy(statusline, "CPU STOPPED");
          statcnt = 10;
@@ -69,11 +69,11 @@ void spectrum_frame()
 
 void do_idle()
 {
-   static volatile unsigned long long last_cpu = rdtsc();
+   static volatile u64 last_cpu = rdtsc();
    for (;;)
    {
       asm_pause();
-      volatile unsigned long long cpu = rdtsc();
+      volatile u64 cpu = rdtsc();
       if ((cpu-last_cpu) >= temp.ticks_frame)
           break;
 
@@ -94,7 +94,7 @@ void do_idle()
 
 void mainloop(const bool &Exit)
 {
-   unsigned char skipped = 0;
+   u8 skipped = 0;
    while (!Exit)
 	{
 		temp.sndblock = !conf.sound.enabled;

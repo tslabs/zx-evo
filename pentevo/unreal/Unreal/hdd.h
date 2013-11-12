@@ -4,49 +4,49 @@ struct ATA_DEVICE
    unsigned c,h,s,lba;
    union
    {
-      unsigned char regs[12];
+      u8 regs[12];
       struct
       {
-         unsigned char data;
-         unsigned char err;             // for write, features
+         u8 data;
+         u8 err;             // for write, features
          union
          {
-            unsigned char count;
-            unsigned char intreason;
+            u8 count;
+            u8 intreason;
          };
-         unsigned char sec;
+         u8 sec;
          union
          {
-            unsigned short cyl;
-            unsigned short atapi_count;
+            u16 cyl;
+            u16 atapi_count;
             struct
             {
-               unsigned char cyl_l;
-               unsigned char cyl_h;
+               u8 cyl_l;
+               u8 cyl_h;
             };
          };
-         unsigned char devhead;
-         unsigned char status;          // for write, cmd
+         u8 devhead;
+         u8 status;          // for write, cmd
          /*                  */
-         unsigned char control;         // reg8 - control (CS1,DA=6)
-         unsigned char feat;
-         unsigned char cmd;
-         unsigned char reserved;        // reserved
+         u8 control;         // reg8 - control (CS1,DA=6)
+         u8 feat;
+         u8 cmd;
+         u8 reserved;        // reserved
       } reg;
    };
-   unsigned char intrq;
-   unsigned char readonly;
-   unsigned char device_id;             // 0x00 - master, 0x10 - slave
-   unsigned char atapi;                 // flag for CD-ROM device
+   u8 intrq;
+   u8 readonly;
+   u8 device_id;             // 0x00 - master, 0x10 - slave
+   u8 atapi;                 // flag for CD-ROM device
 
-   unsigned char read(unsigned n_reg);
-   void write(unsigned n_reg, unsigned char data);
+   u8 read(unsigned n_reg);
+   void write(unsigned n_reg, u8 data);
    unsigned read_data();
    void write_data(unsigned data);
-   unsigned char read_intrq();
+   u8 read_intrq();
 
-   char exec_ata_cmd(unsigned char cmd);
-   char exec_atapi_cmd(unsigned char cmd);
+   char exec_ata_cmd(u8 cmd);
+   char exec_atapi_cmd(u8 cmd);
 
    enum RESET_TYPE { RESET_HARD, RESET_SOFT, RESET_SRST };
    void reset_signature(RESET_TYPE mode = RESET_SOFT);
@@ -111,7 +111,7 @@ struct ATA_DEVICE
    HD_STATE state;
    unsigned transptr, transcount;
    unsigned phys_dev;
-   unsigned char transbf[0xFFFF]; // ATAPI is able to tranfer 0xFFFF bytes. passing more leads to error
+   u8 transbf[0xFFFF]; // ATAPI is able to tranfer 0xFFFF bytes. passing more leads to error
 
    void handle_atapi_packet();
    void handle_atapi_packet_emulate();
@@ -125,15 +125,15 @@ struct ATA_DEVICE
 struct ATA_PORT
 {
    ATA_DEVICE dev[2];
-   unsigned char read_high, write_high;
+   u8 read_high, write_high;
 
    ATA_PORT() { dev[0].device_id = 0, dev[1].device_id = 0x10; reset(); }
 
-   unsigned char read(unsigned n_reg);
-   void write(unsigned n_reg, unsigned char data);
+   u8 read(unsigned n_reg);
+   void write(unsigned n_reg, u8 data);
    unsigned read_data();
    void write_data(unsigned data);
-   unsigned char read_intrq();
+   u8 read_intrq();
 
    void reset();
 };

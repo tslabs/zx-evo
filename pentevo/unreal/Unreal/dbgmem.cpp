@@ -20,7 +20,7 @@ void findsector(unsigned addr)
    errexit("internal diskeditor error");
 }
 
-unsigned char *editam(unsigned addr)
+u8 *editam(unsigned addr)
 {
    Z80 &cpu = CpuMgr.Cpu();
    if (editor == ED_CMOS) return &cmos[addr & (sizeof(cmos)-1)];
@@ -32,17 +32,17 @@ unsigned char *editam(unsigned addr)
    findsector(addr); return edited_track.hdr[sector].data + addr - sector_offset;
 }
 
-void editwm(unsigned addr, unsigned char byte)
+void editwm(unsigned addr, u8 byte)
 {
    if (editrm(addr) == byte) return;
-   unsigned char *ptr = editam(addr);
+   u8 *ptr = editam(addr);
    if (!ptr) return; *ptr = byte;
    if (editor == ED_MEM || editor == ED_CMOS || editor == ED_NVRAM) return;
    if (editor == ED_PHYS) { comp.wd.fdd[mem_disk].optype |= 2; return; }
    comp.wd.fdd[mem_disk].optype |= 1;
    // recalc sector checksum
    findsector(addr);
-   *(unsigned short*)(edited_track.hdr[sector].data + edited_track.hdr[sector].datlen) =
+   *(u16*)(edited_track.hdr[sector].data + edited_track.hdr[sector].datlen) =
       wd93_crc(edited_track.hdr[sector].data - 1, edited_track.hdr[sector].datlen + 1);
 }
 
@@ -104,7 +104,7 @@ redraw:
          for (unsigned dx = 0; dx < 32; dx++)
          {
             if (ptr == cpu.mem_curs) cx = dx+5;
-            unsigned char c = editrm(ptr); ptr = memadr(ptr+1);
+            u8 c = editrm(ptr); ptr = memadr(ptr+1);
             line[dx+5] = c ? c : '.';
          }
       }
@@ -113,7 +113,7 @@ redraw:
          for (unsigned dx = 0; dx < 8; dx++)
          {
             if (ptr == cpu.mem_curs) cx = (mem_ascii) ? dx+29 : dx*3 + 5 + cpu.mem_second;
-            unsigned char c = editrm(ptr); ptr = memadr(ptr+1);
+            u8 c = editrm(ptr); ptr = memadr(ptr+1);
             sprintf(line+5+3*dx, "%02X", c); line[7+3*dx] = ' ';
             line[29+dx] = c ? c : '.';
          }
@@ -215,13 +215,13 @@ char dispatch_mem()
    {
       u8 Kbd[256];
       GetKeyboardState(Kbd);
-      unsigned short k;
+      u16 k;
       if (ToAscii(input.lastkey,0,Kbd,&k,0) != 1)
           return 0;
       k &= 0xFF;
       if (k < 0x20 || k >= 0x80)
           return 0;
-      editwm(cpu.mem_curs, (unsigned char)k);
+      editwm(cpu.mem_curs, (u8)k);
       mright();
       return 1;
    }
@@ -229,8 +229,8 @@ char dispatch_mem()
    {
       if ((input.lastkey >= '0' && input.lastkey <= '9') || (input.lastkey >= 'A' && input.lastkey <= 'F'))
       {
-         unsigned char k = (input.lastkey >= 'A') ? input.lastkey-'A'+10 : input.lastkey-'0';
-         unsigned char c = editrm(cpu.mem_curs);
+         u8 k = (input.lastkey >= 'A') ? input.lastkey-'A'+10 : input.lastkey-'0';
+         u8 c = editrm(cpu.mem_curs);
          if (cpu.mem_second) editwm(cpu.mem_curs, (c & 0xF0) | k);
          else editwm(cpu.mem_curs, (c & 0x0F) | (k << 4));
          mright();

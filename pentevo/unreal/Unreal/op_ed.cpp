@@ -21,7 +21,7 @@ Z80OPCODE ope_41(Z80 *cpu) { // out (c),b
 //#ifdef Z80_COMMON
 Z80OPCODE ope_42(Z80 *cpu) { // sbc hl,bc
    cpu->memptr = cpu->hl+1;
-   unsigned char fl = NF;
+   u8 fl = NF;
    fl |= (((cpu->hl & 0x0FFF) - (cpu->bc & 0x0FFF) - (cpu->af & CF)) >> 8) & 0x10; /* HF */
    unsigned tmp = (cpu->hl & 0xFFFF) - (cpu->bc & 0xFFFF) - (cpu->af & CF);
    if (tmp & 0x10000) fl |= CF;
@@ -86,7 +86,7 @@ Z80OPCODE ope_49(Z80 *cpu) { // out (c),c
 //#ifdef Z80_COMMON
 Z80OPCODE ope_4A(Z80 *cpu) { // adc hl,bc
    cpu->memptr = cpu->hl+1;
-   unsigned char fl = (((cpu->hl & 0x0FFF) + (cpu->bc & 0x0FFF) + (cpu->af & CF)) >> 8) & 0x10; /* HF */
+   u8 fl = (((cpu->hl & 0x0FFF) + (cpu->bc & 0x0FFF) + (cpu->af & CF)) >> 8) & 0x10; /* HF */
    unsigned tmp = (cpu->hl & 0xFFFF) + (cpu->bc & 0xFFFF) + (cpu->af & CF);
    if (tmp & 0x10000) fl |= CF;
    if (!(tmp & 0xFFFF)) fl |= ZF;
@@ -143,7 +143,7 @@ Z80OPCODE ope_51(Z80 *cpu) { // out (c),d
 //#ifdef Z80_COMMON
 Z80OPCODE ope_52(Z80 *cpu) { // sbc hl,de
    cpu->memptr = cpu->hl+1;
-   unsigned char fl = NF;
+   u8 fl = NF;
    fl |= (((cpu->hl & 0x0FFF) - (cpu->de & 0x0FFF) - (cpu->af & CF)) >> 8) & 0x10; /* HF */
    unsigned tmp = (cpu->hl & 0xFFFF) - (cpu->de & 0xFFFF) - (cpu->af & CF);
    if (tmp & 0x10000) fl |= CF;
@@ -199,7 +199,7 @@ Z80OPCODE ope_59(Z80 *cpu) { // out (c),e
 //#ifdef Z80_COMMON
 Z80OPCODE ope_5A(Z80 *cpu) { // adc hl,de
    cpu->memptr = cpu->hl+1;
-   unsigned char fl = (((cpu->hl & 0x0FFF) + (cpu->de & 0x0FFF) + (cpu->af & CF)) >> 8) & 0x10; /* HF */
+   u8 fl = (((cpu->hl & 0x0FFF) + (cpu->de & 0x0FFF) + (cpu->af & CF)) >> 8) & 0x10; /* HF */
    unsigned tmp = (cpu->hl & 0xFFFF) + (cpu->de & 0xFFFF) + (cpu->af & CF);
    if (tmp & 0x10000) fl |= CF;
    if (!(tmp & 0xFFFF)) fl |= ZF;
@@ -254,7 +254,7 @@ Z80OPCODE ope_61(Z80 *cpu) { // out (c),h
 //#ifdef Z80_COMMON
 Z80OPCODE ope_62(Z80 *cpu) { // sbc hl,hl
    cpu->memptr = cpu->hl+1;
-   unsigned char fl = NF;
+   u8 fl = NF;
    fl |= (cpu->f & CF) << 4; /* HF - copy from CF */
    unsigned tmp = 0-(cpu->af & CF);
    if (tmp & 0x10000) fl |= CF;
@@ -273,7 +273,7 @@ Z80OPCODE ope_62(Z80 *cpu) { // sbc hl,hl
 
 //#ifndef Z80_COMMON
 Z80OPCODE ope_67(Z80 *cpu) { // rrd
-   unsigned char tmp = cpu->MemIf->rm(cpu->hl);
+   u8 tmp = cpu->MemIf->rm(cpu->hl);
    cpu->memptr = cpu->hl+1;
    cpu->MemIf->wm(cpu->hl, (cpu->a << 4) | (tmp >> 4));
    cpu->a = (cpu->a & 0xF0) | (tmp & 0x0F);
@@ -297,7 +297,7 @@ Z80OPCODE ope_69(Z80 *cpu) { // out (c),l
 //#ifdef Z80_COMMON
 Z80OPCODE ope_6A(Z80 *cpu) { // adc hl,hl
    cpu->memptr = cpu->hl+1;
-   unsigned char fl = ((cpu->h << 1) & 0x10); /* HF */
+   u8 fl = ((cpu->h << 1) & 0x10); /* HF */
    unsigned tmp = (cpu->hl & 0xFFFF)*2 + (cpu->af & CF);
    if (tmp & 0x10000) fl |= CF;
    if (!(tmp & 0xFFFF)) fl |= ZF;
@@ -316,7 +316,7 @@ Z80OPCODE ope_6A(Z80 *cpu) { // adc hl,hl
 
 //#ifndef Z80_COMMON
 Z80OPCODE ope_6F(Z80 *cpu) { // rld
-   unsigned char tmp = cpu->MemIf->rm(cpu->hl);
+   u8 tmp = cpu->MemIf->rm(cpu->hl);
    cpu->memptr = cpu->hl+1;
    cpu->MemIf->wm(cpu->hl, (cpu->a & 0x0F) | (tmp << 4));
    cpu->a = (cpu->a & 0xF0) | (tmp >> 4);
@@ -338,7 +338,7 @@ Z80OPCODE ope_71(Z80 *cpu) { // out (c),0
 //#ifdef Z80_COMMON
 Z80OPCODE ope_72(Z80 *cpu) { // sbc hl,sp
    cpu->memptr = cpu->hl+1;
-   unsigned char fl = NF;
+   u8 fl = NF;
    fl |= (((cpu->hl & 0x0FFF) - (cpu->sp & 0x0FFF) - (cpu->af & CF)) >> 8) & 0x10; /* HF */
    unsigned tmp = (cpu->hl & 0xFFFF) - (cpu->sp & 0xFFFF) - (cpu->af & CF);
    if (tmp & 0x10000) fl |= CF;
@@ -388,10 +388,10 @@ Z80OPCODE ope_79(Z80 *cpu) { // out (c),a
 //#ifdef Z80_COMMON
 Z80OPCODE ope_7A(Z80 *cpu) { // adc hl,sp
    cpu->memptr = cpu->hl+1;
-   unsigned char fl = (((cpu->hl & 0x0FFF) + (cpu->sp & 0x0FFF) + (cpu->af & CF)) >> 8) & 0x10; /* HF */
+   u8 fl = (((cpu->hl & 0x0FFF) + (cpu->sp & 0x0FFF) + (cpu->af & CF)) >> 8) & 0x10; /* HF */
    unsigned tmp = (cpu->hl & 0xFFFF) + (cpu->sp & 0xFFFF) + (cpu->af & CF);
    if (tmp & 0x10000) fl |= CF;
-   if (!(unsigned short)tmp) fl |= ZF;
+   if (!(u16)tmp) fl |= ZF;
    int ri = (int)(short)cpu->hl + (int)(short)cpu->sp + (int)(cpu->af & CF);
    if (ri < -0x8000 || ri >= 0x8000) fl |= PV;
    cpu->hl = tmp;
@@ -418,7 +418,7 @@ Z80OPCODE ope_7B(Z80 *cpu) { // ld sp,(nnnn)
 //#ifndef Z80_COMMON
 Z80OPCODE ope_A0(Z80 *cpu) { // ldi
    cputact(8);
-   unsigned char tempbyte = cpu->MemIf->rm(cpu->hl++);
+   u8 tempbyte = cpu->MemIf->rm(cpu->hl++);
    cpu->MemIf->wm(cpu->de++, tempbyte);
    tempbyte += cpu->a; tempbyte = (tempbyte & F3) + ((tempbyte << 4) & F5);
    cpu->f = (cpu->f & ~(NF|HF|PV|F3|F5)) + tempbyte;
@@ -426,8 +426,8 @@ Z80OPCODE ope_A0(Z80 *cpu) { // ldi
 }
 Z80OPCODE ope_A1(Z80 *cpu) { // cpi
    cputact(8);
-   unsigned char cf = cpu->f & CF;
-   unsigned char tempbyte = cpu->MemIf->rm(cpu->hl++);
+   u8 cf = cpu->f & CF;
+   u8 tempbyte = cpu->MemIf->rm(cpu->hl++);
    cpu->f = cpf8b[cpu->a*0x100 + tempbyte] + cf;
    if (--cpu->bc16) cpu->f |= PV;
    cpu->memptr++;
@@ -447,7 +447,7 @@ Z80OPCODE ope_A3(Z80 *cpu) { // outi
 }
 Z80OPCODE ope_A8(Z80 *cpu) { // ldd
    cputact(8);
-   unsigned char tempbyte = cpu->MemIf->rm(cpu->hl--);
+   u8 tempbyte = cpu->MemIf->rm(cpu->hl--);
    cpu->MemIf->wm(cpu->de--, tempbyte);
    tempbyte += cpu->a; tempbyte = (tempbyte & F3) + ((tempbyte << 4) & F5);
    cpu->f = (cpu->f & ~(NF|HF|PV|F3|F5)) + tempbyte;
@@ -455,8 +455,8 @@ Z80OPCODE ope_A8(Z80 *cpu) { // ldd
 }
 Z80OPCODE ope_A9(Z80 *cpu) { // cpd
    cputact(8);
-   unsigned char cf = cpu->f & CF;
-   unsigned char tempbyte = cpu->MemIf->rm(cpu->hl--);
+   u8 cf = cpu->f & CF;
+   u8 tempbyte = cpu->MemIf->rm(cpu->hl--);
    cpu->f = cpf8b[cpu->a*0x100 + tempbyte] + cf;
    if (--cpu->bc16) cpu->f |= PV;
    cpu->memptr--;
@@ -476,7 +476,7 @@ Z80OPCODE ope_AB(Z80 *cpu) { // outd
 }
 Z80OPCODE ope_B0(Z80 *cpu) { // ldir
    cputact(8);
-   unsigned char tempbyte = cpu->MemIf->rm(cpu->hl++);
+   u8 tempbyte = cpu->MemIf->rm(cpu->hl++);
    cpu->MemIf->wm(cpu->de++, tempbyte);
    tempbyte += cpu->a; tempbyte = (tempbyte & F3) + ((tempbyte << 4) & F5);
    cpu->f = (cpu->f & ~(NF|HF|PV|F3|F5)) + tempbyte;
@@ -485,8 +485,8 @@ Z80OPCODE ope_B0(Z80 *cpu) { // ldir
 Z80OPCODE ope_B1(Z80 *cpu) { // cpir
    cpu->memptr++;
    cputact(8);
-   unsigned char cf = cpu->f & CF;
-   unsigned char tempbyte = cpu->MemIf->rm(cpu->hl++);
+   u8 cf = cpu->f & CF;
+   u8 tempbyte = cpu->MemIf->rm(cpu->hl++);
    cpu->f = cpf8b[cpu->a*0x100 + tempbyte] + cf;
    if (--cpu->bc16) {
       cpu->f |= PV;
@@ -512,7 +512,7 @@ Z80OPCODE ope_B3(Z80 *cpu) { // otir
 }
 Z80OPCODE ope_B8(Z80 *cpu) { // lddr
    cputact(8);
-   unsigned char tempbyte = cpu->MemIf->rm(cpu->hl--);
+   u8 tempbyte = cpu->MemIf->rm(cpu->hl--);
    cpu->MemIf->wm(cpu->de--, tempbyte);
    tempbyte += cpu->a; tempbyte = (tempbyte & F3) + ((tempbyte << 4) & F5);
    cpu->f = (cpu->f & ~(NF|HF|PV|F3|F5)) + tempbyte;
@@ -521,8 +521,8 @@ Z80OPCODE ope_B8(Z80 *cpu) { // lddr
 Z80OPCODE ope_B9(Z80 *cpu) { // cpdr
    cpu->memptr--;
    cputact(8);
-   unsigned char cf = cpu->f & CF;
-   unsigned char tempbyte = cpu->MemIf->rm(cpu->hl--);
+   u8 cf = cpu->f & CF;
+   u8 tempbyte = cpu->MemIf->rm(cpu->hl--);
    cpu->f = cpf8b[cpu->a*0x100 + tempbyte] + cf;
    if (--cpu->bc16) {
       cpu->f |= PV;
@@ -590,7 +590,7 @@ STEPFUNC const ext_opcode[0x100] = {
 
 Z80OPCODE op_ED(Z80 *cpu)
 {
-   unsigned char opcode = cpu->m1_cycle();
+   u8 opcode = cpu->m1_cycle();
    (ext_opcode[opcode])(cpu);
 }
 //#endif

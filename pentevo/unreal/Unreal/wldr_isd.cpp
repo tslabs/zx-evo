@@ -5,7 +5,7 @@
 
 void FDD::format_isd()
 {
-   static const unsigned char sn[] = { 1, 2, 3, 4, 9 };
+   static const u8 sn[] = { 1, 2, 3, 4, 9 };
 
    newdisk(80, 2);
 
@@ -21,7 +21,7 @@ void FDD::format_isd()
             t.hdr[s].n = n; t.hdr[s].l = 3;
             t.hdr[s].c = c; t.hdr[s].s = 0;
             t.hdr[s].c1 = t.hdr[s].c2 = 0;
-            t.hdr[s].data = (unsigned char*)1;
+            t.hdr[s].data = (u8*)1;
          }
          t.format();
       }
@@ -30,7 +30,7 @@ void FDD::format_isd()
 
 int FDD::read_isd()
 {
-   static const unsigned char sn[] = { 1, 2, 3, 4, 9 };
+   static const u8 sn[] = { 1, 2, 3, 4, 9 };
 
    format_isd();
 

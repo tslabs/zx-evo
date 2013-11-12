@@ -19,7 +19,7 @@ void ATA_DEVICE::exec_mode_select()
 
    struct {
       SCSI_PASS_THROUGH_DIRECT p;
-      unsigned char sense[0x40];
+      u8 sense[0x40];
    } srb = { 0 }, dst;
 
    srb.p.Length = sizeof(SCSI_PASS_THROUGH_DIRECT);
@@ -112,9 +112,9 @@ void ATA_DEVICE::configure(IDE_CONFIG *cfg)
       if (dev->type == ATA_NTHDD)
       {
          // read geometry from id sector
-         c = *(unsigned short*)(phys[phys_dev].idsector+2);
-         h = *(unsigned short*)(phys[phys_dev].idsector+6);
-         s = *(unsigned short*)(phys[phys_dev].idsector+12);
+         c = *(u16*)(phys[phys_dev].idsector+2);
+         h = *(u16*)(phys[phys_dev].idsector+6);
+         s = *(u16*)(phys[phys_dev].idsector+12);
          lba = *(unsigned*)(phys[phys_dev].idsector+0x78);
          if (!lba)
              lba = c*h*s;
@@ -148,10 +148,10 @@ void ATA_PORT::reset()
    dev[1].reset(ATA_DEVICE::RESET_HARD);
 }
 
-unsigned char ATA_PORT::read(unsigned n_reg)
+u8 ATA_PORT::read(unsigned n_reg)
 {
 #ifdef DUMP_HDD_IO
-unsigned char val = dev[0].read(n_reg) & dev[1].read(n_reg); printf("R%X:%02X ", n_reg, val); return val;
+u8 val = dev[0].read(n_reg) & dev[1].read(n_reg); printf("R%X:%02X ", n_reg, val); return val;
 #endif
    return dev[0].read(n_reg) & dev[1].read(n_reg);
 }
@@ -164,7 +164,7 @@ unsigned val = dev[0].read_data() & dev[1].read_data(); printf("r%04X ", val & 0
    return dev[0].read_data() & dev[1].read_data();
 }
 
-void ATA_PORT::write(unsigned n_reg, unsigned char data)
+void ATA_PORT::write(unsigned n_reg, u8 data)
 {
 #ifdef DUMP_HDD_IO
 printf("R%X=%02X ", n_reg, data);
@@ -182,10 +182,10 @@ printf("w%04X ", data & 0xFFFF);
    dev[1].write_data(data);
 }
 
-unsigned char ATA_PORT::read_intrq()
+u8 ATA_PORT::read_intrq()
 {
 #ifdef DUMP_HDD_IO
-unsigned char i = dev[0].read_intrq() & dev[1].read_intrq(); printf("i%d ", !!i); return i;
+u8 i = dev[0].read_intrq() & dev[1].read_intrq(); printf("i%d ", !!i); return i;
 #endif
    return dev[0].read_intrq() & dev[1].read_intrq();
 }
@@ -215,13 +215,13 @@ void ATA_DEVICE::command_ok()
    reg.status = STATUS_DRDY | STATUS_DSC;
 }
 
-unsigned char ATA_DEVICE::read_intrq()
+u8 ATA_DEVICE::read_intrq()
 {
    if (!loaded() || ((reg.devhead ^ device_id) & 0x10) || (reg.control & CONTROL_nIEN)) return 0xFF;
    return intrq? 0xFF : 0x00;
 }
 
-unsigned char ATA_DEVICE::read(unsigned n_reg)
+u8 ATA_DEVICE::read(unsigned n_reg)
 {
    if (!loaded())
        return 0xFF;
@@ -280,7 +280,7 @@ unsigned ATA_DEVICE::read_data()
    return result;
 }
 
-char ATA_DEVICE::exec_ata_cmd(unsigned char cmd)
+char ATA_DEVICE::exec_ata_cmd(u8 cmd)
 {
 //   printf(__FUNCTION__" cmd=%02X\n", cmd);
    // EXECUTE DEVICE DIAGNOSTIC for both ATA and ATAPI
@@ -397,7 +397,7 @@ char ATA_DEVICE::exec_ata_cmd(unsigned char cmd)
    return 0;
 }
 
-char ATA_DEVICE::exec_atapi_cmd(unsigned char cmd)
+char ATA_DEVICE::exec_atapi_cmd(u8 cmd)
 {
    if (!atapi)
        return 0;
@@ -445,7 +445,7 @@ char ATA_DEVICE::exec_atapi_cmd(unsigned char cmd)
    return 0;
 }
 
-void ATA_DEVICE::write(unsigned n_reg, unsigned char data)
+void ATA_DEVICE::write(unsigned n_reg, u8 data)
 {
 //   printf("dev=%d, reg=%d, data=%02X\n", device_id, n_reg, data);
    if (!loaded())
@@ -495,7 +495,7 @@ void ATA_DEVICE::write_data(unsigned data)
        return;
    if (/* (reg.status & (STATUS_DRQ | STATUS_BSY)) != STATUS_DRQ ||*/ transptr >= transcount)
        return;
-   *(unsigned short*)(transbf + transptr*2) = (unsigned short)data; transptr++;
+   *(u16*)(transbf + transptr*2) = (u16)data; transptr++;
    if (transptr < transcount)
        return;
    // look to state, prepare next block
@@ -540,11 +540,11 @@ char ATA_DEVICE::seek()
    {
       if (reg.cyl >= c || (unsigned)(reg.devhead & 0x0F) >= h || reg.sec > s || !reg.sec)
       {
-//          printf("seek error: chs %4d/%02d/%02d\n", *(unsigned short*)(regs+4), (reg.devhead & 0x0F), reg.sec);
+//          printf("seek error: chs %4d/%02d/%02d\n", *(u16*)(regs+4), (reg.devhead & 0x0F), reg.sec);
           goto seek_err;
       }
       pos = (reg.cyl * h + (reg.devhead & 0x0F)) * s + reg.sec - 1;
-//      printf("chs %4d/%02d/%02d: %8d\n", *(unsigned short*)(regs+4), (reg.devhead & 0x0F), reg.sec, pos);
+//      printf("chs %4d/%02d/%02d: %8d\n", *(u16*)(regs+4), (reg.devhead & 0x0F), reg.sec, pos);
    }
 //printf("[seek %I64d]", ((__int64)pos) << 9);
    if (!ata_p.seek(pos))
@@ -670,7 +670,7 @@ void ATA_DEVICE::next_sector()
        return;
    }
    reg.sec = 1;
-   unsigned char head = (reg.devhead & 0x0F) + 1;
+   u8 head = (reg.devhead & 0x0F) + 1;
    if (head < h)
    {
        reg.devhead = (reg.devhead & 0xF0) | head;
@@ -860,22 +860,22 @@ void ATA_DEVICE::prepare_id()
       make_ata_string(transbf+54, 20, "UNREAL SPECCY HARD DRIVE IMAGE");
       make_ata_string(transbf+20, 10, "0000");
       make_ata_string(transbf+46,  4, VERS_STRING);
-      *(unsigned short*)transbf = 0x045A;
-      ((unsigned short*)transbf)[1] = (unsigned short)c;
-      ((unsigned short*)transbf)[3] = (unsigned short)h;
-      ((unsigned short*)transbf)[6] = (unsigned short)s;
+      *(u16*)transbf = 0x045A;
+      ((u16*)transbf)[1] = (u16)c;
+      ((u16*)transbf)[3] = (u16)h;
+      ((u16*)transbf)[6] = (u16)s;
       *(unsigned*)(transbf+60*2) = lba;
-      ((unsigned short*)transbf)[20] = 3; // a dual ported multi-sector buffer capable of simultaneous transfers with a read caching capability
-      ((unsigned short*)transbf)[21] = 512; // cache size=256k
-      ((unsigned short*)transbf)[22] = 4; // ECC bytes
-      ((unsigned short*)transbf)[49] = 0x200; // LBA supported
-      ((unsigned short*)transbf)[80] = 0x3E; // support specifications up to ATA-5
-      ((unsigned short*)transbf)[81] = 0x13; // ATA/ATAPI-5 T13 1321D revision 3
-      ((unsigned short*)transbf)[82] = 0x60; // supported look-ahead and write cache
+      ((u16*)transbf)[20] = 3; // a dual ported multi-sector buffer capable of simultaneous transfers with a read caching capability
+      ((u16*)transbf)[21] = 512; // cache size=256k
+      ((u16*)transbf)[22] = 4; // ECC bytes
+      ((u16*)transbf)[49] = 0x200; // LBA supported
+      ((u16*)transbf)[80] = 0x3E; // support specifications up to ATA-5
+      ((u16*)transbf)[81] = 0x13; // ATA/ATAPI-5 T13 1321D revision 3
+      ((u16*)transbf)[82] = 0x60; // supported look-ahead and write cache
 
       // make checksum
       transbf[510] = 0xA5;
-      unsigned char cs = 0;
+      u8 cs = 0;
       for (unsigned i = 0; i < 511; i++)
           cs += transbf[i];
       transbf[511] = 0-cs;

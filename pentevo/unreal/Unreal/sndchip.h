@@ -23,12 +23,12 @@ extern const char * const ay_chips[];
 #endif
 struct AYREGS
 {
-   unsigned short fA, fB, fC;
-   unsigned char noise, mix;
-   unsigned char vA, vB, vC;
-   unsigned short envT;
-   unsigned char env;
-   unsigned char portA, portB;
+   u16 fA, fB, fC;
+   u8 noise, mix;
+   u8 vA, vB, vC;
+   u16 envT;
+   u8 env;
+   u8 portA, portB;
 };
 #pragma pack(pop)
 
@@ -41,11 +41,11 @@ class SNDCHIP : public SNDRENDER
    //FMSAMPLE FMbuf; //1 sample //Dexus
 #define FMBUFSIZE (1) //Alone Coder
    FMSAMPLE FMbufs[FMBUFSIZE]; //Alone Coder
-   UINT16 FMbufN; //Alone Coder
+   u16 FMbufN; //Alone Coder
    int FMbufOUT; //1 sample for add to AY output //Alone Coder
-   UINT16 FMbufMUL; //conf.sound.ay/8192*0.7f //Alone Coder
+   u16 FMbufMUL; //conf.sound.ay/8192*0.7f //Alone Coder
    float nextfmtickfloat,ayticks_per_fmtick; //Alone Coder
-   unsigned int nextfmtick; //Alone Coder
+   u32 nextfmtick; //Alone Coder
 
    enum CHIP_TYPE { CHIP_AY, CHIP_YM, CHIP_YM2203, CHIP_MAX }; //Dexus
    static const char *get_chipname(CHIP_TYPE i) { return ay_chips[i]; }
@@ -61,9 +61,9 @@ class SNDCHIP : public SNDRENDER
 
    // set of functions that fills buffer in emulation progress
    void start_frame(bufptr_t dst);
-   void select(unsigned char nreg);
-   void write(unsigned timestamp, unsigned char val);
-   unsigned char read();
+   void select(u8 nreg);
+   void write(unsigned timestamp, u8 val);
+   u8 read();
    unsigned end_frame(unsigned clk_ticks);
 
    SNDCHIP();
@@ -73,9 +73,9 @@ class SNDCHIP : public SNDRENDER
    void start_frame() { start_frame(dstpos); }
 
    // for monitoring, chip can't report this values
-   unsigned char get_activereg() { return activereg; }
-   unsigned char get_r13_reloaded() { return r13_reloaded; }
-   unsigned char get_reg(unsigned nreg) { return reg[nreg]; }
+   u8 get_activereg() { return activereg; }
+   u8 get_r13_reloaded() { return r13_reloaded; }
+   u8 get_reg(unsigned nreg) { return reg[nreg]; }
    unsigned get_env() { return env; }
 
  private:
@@ -88,18 +88,18 @@ class SNDCHIP : public SNDRENDER
    unsigned fa, fb, fc, fn, fe;
    unsigned mult_const;
 
-   unsigned char activereg, r13_reloaded;
+   u8 activereg, r13_reloaded;
 
    unsigned vols[6][32];
    CHIP_TYPE chiptype;
 
    union {
-      unsigned char reg[16];
+      u8 reg[16];
       struct AYREGS r;
    };
 
    unsigned chip_clock_rate, system_clock_rate;
-   uint64_t passed_chip_ticks, passed_clk_ticks;
+   u64 passed_chip_ticks, passed_clk_ticks;
    void flush(unsigned chiptick);
    void apply_regs(unsigned timestamp = 0);
 };
@@ -107,9 +107,9 @@ class SNDCHIP : public SNDRENDER
 struct AYOUT
 {
    unsigned timestamp; // in system ticks
-   unsigned char reg_num;
-   unsigned char reg_value;
-   unsigned char res1, res2; // padding
+   u8 reg_num;
+   u8 reg_value;
+   u8 res1, res2; // padding
 };
 
 // output volumes (#0000-#FFFF) for given envelope state or R8-R10 value

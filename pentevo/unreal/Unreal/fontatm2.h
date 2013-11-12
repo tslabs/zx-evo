@@ -1,2 +1,2 @@
 #pragma once
-extern unsigned char fontatm2[2048];
+extern u8 fontatm2[2048];

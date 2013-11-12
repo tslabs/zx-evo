@@ -39,8 +39,8 @@ void err_win32(DWORD errcode = 0xFFFFFFFF);
 void __declspec(noreturn) errexit(const char *err, ...);
 void color(int ink = CONSCLR_DEFAULT);
 int ishex(char c);
-unsigned char hex(char p);
-unsigned char hex(const char *p);
+u8 hex(char p);
+u8 hex(const char *p);
 
 unsigned process_msgs();
 char dispatch(action *table);

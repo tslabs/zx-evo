@@ -33,14 +33,14 @@ public:
 
    virtual u8 *DirectMem(unsigned addr) const override; // get direct memory pointer in debuger
 /*
-   virtual unsigned char rm(unsigned addr) override;
-   virtual unsigned char dbgrm(unsigned addr) override;
-   virtual void wm(unsigned addr, unsigned char val) override;
-   virtual void dbgwm(unsigned addr, unsigned char val) override;
+   virtual u8 rm(unsigned addr) override;
+   virtual u8 dbgrm(unsigned addr) override;
+   virtual void wm(unsigned addr, u8 val) override;
+   virtual void dbgwm(unsigned addr, u8 val) override;
 */
-   virtual unsigned char m1_cycle() override;
-   virtual unsigned char in(unsigned port) override;
-   virtual void out(unsigned port, unsigned char val) override;
+   virtual u8 m1_cycle() override;
+   virtual u8 in(unsigned port) override;
+   virtual void out(unsigned port, u8 val) override;
    virtual u8 IntVec() override;
    virtual void CheckNextFrame() override;
    virtual void retn() override;

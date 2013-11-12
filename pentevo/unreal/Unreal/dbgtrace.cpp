@@ -14,7 +14,7 @@
 int disasm_line(unsigned addr, char *line)
 {
    Z80 &cpu = CpuMgr.Cpu();
-   unsigned char dbuf[16+129/*Alone Code 0.36.7*/];
+   u8 dbuf[16+129/*Alone Code 0.36.7*/];
    int i; //Alone Coder 0.36.7
    for (/*int*/ i = 0; i < 16; i++) dbuf[i] = cpu.DirectRm(addr+i);
    sprintf(line, "%04X ", addr); int ptr = 5;
@@ -48,7 +48,7 @@ unsigned tracewndflags()
 {
    Z80 &cpu = CpuMgr.Cpu();
    unsigned readptr = cpu.pc, base = cpu.hl;
-   unsigned char opcode = 0; unsigned char ed = 0;
+   u8 opcode = 0; u8 ed = 0;
    for (;;)
    {
       opcode = cpu.DirectRm(readptr++);
@@ -92,12 +92,12 @@ unsigned tracewndflags()
        goto jp;
    }
 
-   static const unsigned char flags[] = { ZF,CF,PV,SF };
+   static const u8 flags[] = { ZF,CF,PV,SF };
 
    if ((opcode & 0xC1) == 0xC0)
    {
-      unsigned char flag = flags[(opcode >> 4) & 3];
-      unsigned char res = cpu.f & flag;
+      u8 flag = flags[(opcode >> 4) & 3];
+      u8 res = cpu.f & flag;
       if (!(opcode & 0x08))
           res ^= flag;
       if (!res)
@@ -126,15 +126,15 @@ unsigned tracewndflags()
    {
       if (!opcode || opcode == 0x08)
           return 0;
-      int offs = (signed char)cpu.DirectRm(readptr++);
+      int offs = (char)cpu.DirectRm(readptr++);
       unsigned addr = (offs + readptr) | TWF_BRANCH;
       if (opcode == 0x18)
           return addr; // jr
       if (opcode == 0x10)
           return (cpu.b==1)? 0 : addr | TWF_LOOPCMD; // djnz
 
-      unsigned char flag = flags[(opcode >> 4) & 1]; // jr cc
-      unsigned char res = cpu.f & flag;
+      u8 flag = flags[(opcode >> 4) & 1]; // jr cc
+      u8 res = cpu.f & flag;
       if (!(opcode & 0x08))
           res ^= flag;
       return res? addr | TWF_LOOPCMD : 0;
@@ -162,7 +162,7 @@ void showtrace()
    cpu.nextpc = (cpu.pc + disasm_line(cpu.pc, line)) & 0xFFFF;
    unsigned pc = cpu.trace_top;
    asmii = -1;
-   unsigned char atr0 = (activedbg == WNDTRACE) ? W_SEL : W_NORM;
+   u8 atr0 = (activedbg == WNDTRACE) ? W_SEL : W_NORM;
    unsigned ii; //Alone Coder 0.36.7
    for (/*unsigned*/ ii = 0; ii < trace_size; ii++)
    {
@@ -171,7 +171,7 @@ void showtrace()
       char *ptr = line+strlen(line);
       while (ptr < line+32) *ptr++ = ' '; line[32] = 0;
 
-      unsigned char atr = (pc == cpu.pc)? W_TRACEPOS : atr0;
+      u8 atr = (pc == cpu.pc)? W_TRACEPOS : atr0;
       if (cpu.membits[pc] & MEMBITS_BPX) atr = (atr&~7)|2;
       tprint(trace_x, trace_y+ii, line, atr);
 
@@ -189,7 +189,7 @@ void showtrace()
          {
             unsigned addr = cpu.pc_trflags & 0xFFFF;
             unsigned arr = (addr <= cpu.pc)? 0x18 : 0x19; // up/down arrow
-            unsigned char color = (pc == cpu.trace_curs && activedbg == WNDTRACE && cpu.trace_mode == 2)? W_TRACE_JINFO_CURS_FG : W_TRACE_JINFO_NOCURS_FG;
+            u8 color = (pc == cpu.trace_curs && activedbg == WNDTRACE && cpu.trace_mode == 2)? W_TRACE_JINFO_CURS_FG : W_TRACE_JINFO_NOCURS_FG;
             if (cpu.pc_trflags & TWF_BRADDR) sprintf(line, "%04X%c", addr, arr), tprint_fg(trace_x+32-5, trace_y+ii, line, color);
             else tprint_fg(trace_x+32-1, trace_y+ii, (char*)&arr, color);
          }
@@ -205,7 +205,7 @@ void showtrace()
    }
    cpu.trpc[ii] = pc;
 
-   unsigned char dbuf[16];
+   u8 dbuf[16];
    int i; //Alone Coder
    for (/*int*/ i = 0; i < 16; i++) dbuf[i] = cpu.DirectRm(cpu.trace_curs+i);
    int len = disasm(dbuf, cpu.trace_curs, 0) - dbuf; strcpy(asmpc, asmbuf);
@@ -243,10 +243,10 @@ void push_pos()
 unsigned cpu_up(unsigned ip)
 {
    Z80 &cpu = CpuMgr.Cpu();
-   unsigned char buf1[0x10];
+   u8 buf1[0x10];
    unsigned p1 = (ip > sizeof buf1) ? ip - sizeof buf1 : 0;
    for (unsigned i = 0; i < sizeof buf1; i++) buf1[i] = cpu.DirectRm(p1+i);
-   unsigned char *dispos = buf1, *prev;
+   u8 *dispos = buf1, *prev;
    do {
       prev = dispos;
       dispos = disasm(dispos, 0, 0);
@@ -301,7 +301,7 @@ void center()
       {
          char *p; //Alone Coder 0.36.7
          for (/*char * */p = str+strlen(str)-1; p >= str && *p == ' '; *p-- = 0);
-         unsigned char dump[8]; unsigned i;
+         u8 dump[8]; unsigned i;
          for (p = str, i = 0; ishex(*p) && ishex(p[1]); p+=2)
             dump[i++] = hex(p);
          if (*p) continue;
@@ -311,7 +311,7 @@ void center()
       }
       else
       {
-         unsigned sz = assemble_cmd((unsigned char*)str, cpu.trace_curs);
+         unsigned sz = assemble_cmd((u8*)str, cpu.trace_curs);
          if (sz)
          {
             for (unsigned i = 0; i < sz; i++)
@@ -338,7 +338,7 @@ char dispatch_trace()
 void cfindtext()
 {
    Z80 &cpu = CpuMgr.Cpu();
-   unsigned char oldmode = editor; editor = ED_MEM;
+   u8 oldmode = editor; editor = ED_MEM;
    unsigned rs = find1dlg(cpu.trace_curs);
    editor = oldmode;
    if (rs != -1)
@@ -347,7 +347,7 @@ void cfindtext()
 void cfindcode()
 {
    Z80 &cpu = CpuMgr.Cpu();
-   unsigned char oldmode = editor; editor = ED_MEM;
+   u8 oldmode = editor; editor = ED_MEM;
    unsigned rs = find2dlg(cpu.trace_curs);
    editor = oldmode;
    if (rs != -1)
@@ -531,7 +531,7 @@ void mon_step()
 void mon_stepover()
 {
    Z80 &cpu = CpuMgr.Cpu();
-   unsigned char trace = 1;
+   u8 trace = 1;
 
    // call,rst
    if (cpu.pc_trflags & TWF_CALLCMD)

@@ -56,8 +56,8 @@ const char *fix_titles[FIX_LAST] = {
 };
 
 
-unsigned char whatfix = 0, whatsnd = 0;
-unsigned char fixmode = -1;
+u8 whatfix = 0, whatsnd = 0;
+u8 fixmode = -1;
 int mul0 = 100, mul1 = 1000;
 
 void chfix(int dx)
@@ -348,7 +348,7 @@ void main_save()
    sound_stop();
    if (conf.cmos)
        save_nv();
-   unsigned char optype = 0;
+   u8 optype = 0;
    for (int i = 0; i < 4; i++)
    {
       if (!comp.wd.fdd[i].test())

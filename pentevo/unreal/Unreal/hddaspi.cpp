@@ -24,17 +24,17 @@ void init_aspi()
    hASPICompletionEvent = CreateEvent(0,0,0,0);
 }
 
-int SEND_ASPI_CMD(int adapter_id, int read_id, CDB *cdb, int CDB_sz, unsigned char *sense, unsigned char *buf, int buf_sz, int flag)
+int SEND_ASPI_CMD(int adapter_id, int read_id, CDB *cdb, int CDB_sz, u8 *sense, u8 *buf, int buf_sz, int flag)
 {
    SRB_ExecSCSICmd SRB = { 0 };
    SRB.SRB_Cmd        = SC_EXEC_SCSI_CMD;
-   SRB.SRB_HaId       = (unsigned char)adapter_id;
+   SRB.SRB_HaId       = (u8)adapter_id;
    SRB.SRB_Flags      = flag | SRB_EVENT_NOTIFY;
    SRB.SRB_Target     = read_id;
    SRB.SRB_BufPointer = buf;
    SRB.SRB_BufLen     = buf_sz;
    SRB.SRB_SenseLen   = sizeof(SRB.SenseArea);
-   SRB.SRB_CDBLen     = (unsigned char)CDB_sz;
+   SRB.SRB_CDBLen     = (u8)CDB_sz;
    SRB.SRB_PostProc   = hASPICompletionEvent;
    memcpy(SRB.CDBByte, cdb, CDB_sz);
 
@@ -48,17 +48,17 @@ int SEND_ASPI_CMD(int adapter_id, int read_id, CDB *cdb, int CDB_sz, unsigned ch
    return SRB.SRB_Status;
 }
 
-int SEND_ASPI_INQR(int adapter_id, int read_id, CDB *cdb, int CDB_sz, unsigned char *sense, unsigned char *buf, int buf_sz, int flag)
+int SEND_ASPI_INQR(int adapter_id, int read_id, CDB *cdb, int CDB_sz, u8 *sense, u8 *buf, int buf_sz, int flag)
 {
    SRB_ExecSCSICmd SRB = { 0 };
    SRB.SRB_Cmd        = SC_EXEC_SCSI_CMD;
-   SRB.SRB_HaId       = (unsigned char)adapter_id;
+   SRB.SRB_HaId       = (u8)adapter_id;
    SRB.SRB_Flags      = flag | SRB_EVENT_NOTIFY;
    SRB.SRB_Target     = read_id;
    SRB.SRB_BufPointer = buf;
    SRB.SRB_BufLen     = buf_sz;
    SRB.SRB_SenseLen   = sizeof(SRB.SenseArea);
-   SRB.SRB_CDBLen     = (unsigned char)CDB_sz;
+   SRB.SRB_CDBLen     = (u8)CDB_sz;
    SRB.SRB_PostProc   = hASPICompletionEvent;
    memcpy(SRB.CDBByte, cdb, CDB_sz);
 

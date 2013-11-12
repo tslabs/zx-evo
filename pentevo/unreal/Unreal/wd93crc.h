@@ -1,5 +1,5 @@
 #pragma once
 
-unsigned wd93_crc(unsigned char *ptr, unsigned size);
-unsigned short crc16(unsigned char *buf, unsigned size);
-void crc32(int &crc, unsigned char *buf, unsigned len);
+unsigned wd93_crc(u8 *ptr, unsigned size);
+u16 crc16(u8 *buf, unsigned size);
+void crc32(int &crc, u8 *buf, unsigned len);

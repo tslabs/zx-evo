@@ -6,20 +6,20 @@
 
 int FDD::write_td0(FILE *ff)
 {
-   unsigned char zerosec[256] = { 0 };
-   unsigned char td0hdr[12] = { 0 };
+   u8 zerosec[256] = { 0 };
+   u8 td0hdr[12] = { 0 };
 
-   *(unsigned short*)td0hdr = WORD2('T','D');
-   td0hdr[4] = 21; td0hdr[6] = 2; td0hdr[9] = (unsigned char)sides;
+   *(u16*)td0hdr = WORD2('T','D');
+   td0hdr[4] = 21; td0hdr[6] = 2; td0hdr[9] = (u8)sides;
    if (*dsc) td0hdr[7] = 0x80;
-   *(unsigned short*)(td0hdr + 10) = crc16(td0hdr, 10);
+   *(u16*)(td0hdr + 10) = crc16(td0hdr, 10);
    fwrite(td0hdr, 1, 12, ff);
    if (*dsc) {
-      unsigned char inf[0x200] = { 0 };
+      u8 inf[0x200] = { 0 };
       strcpy((char*)inf+10, dsc);
       unsigned len = strlen(dsc)+1;
       *(unsigned*)(inf+2) = len;
-      *(unsigned short*)inf = crc16(inf+2, len+8);
+      *(u16*)inf = crc16(inf+2, len+8);
       fwrite(inf, 1, len+10, ff);
    }
 
@@ -27,17 +27,17 @@ int FDD::write_td0(FILE *ff)
    for (/*unsigned*/ c = 0; c < cyls; c++)
       for (unsigned s = 0; s < sides; s++) {
          t.seek(this,c,s,LOAD_SECTORS);
-         unsigned char bf[16];
+         u8 bf[16];
          *bf = t.s;
          bf[1] = c, bf[2] = s;
-         bf[3] = (unsigned char)crc16(bf, 3);
+         bf[3] = (u8)crc16(bf, 3);
          fwrite(bf, 1, 4, ff);
          for (unsigned sec = 0; sec < t.s; sec++) {
             if (!t.hdr[sec].data) { t.hdr[sec].data = zerosec, t.hdr[sec].datlen = 256, t.hdr[sec].l = 1; }
             *(unsigned*)bf = *(unsigned*)&t.hdr[sec];
             bf[4] = 0; // flags
-            bf[5] = (unsigned char)crc16(t.hdr[sec].data, t.hdr[sec].datlen);
-            *(unsigned short*)(bf+6) = t.hdr[sec].datlen + 1;
+            bf[5] = (u8)crc16(t.hdr[sec].data, t.hdr[sec].datlen);
+            *(u16*)(bf+6) = t.hdr[sec].datlen + 1;
             bf[8] = 0; // compression type = none
             fwrite(bf, 1, 9, ff);
             if (fwrite(t.hdr[sec].data, 1, t.hdr[sec].datlen, ff) != t.hdr[sec].datlen) return 0;
@@ -49,7 +49,7 @@ int FDD::write_td0(FILE *ff)
 }
 
 
-unsigned unpack_lzh(unsigned char *src, unsigned size, unsigned char *buf);
+unsigned unpack_lzh(u8 *src, unsigned size, u8 *buf);
 
 // No ID address field was present for this sector,
 // but there is a data field. The sector information in
@@ -79,7 +79,7 @@ int FDD::read_td0()
 {
    if (*(short*)snbuf == WORD2('t','d'))
    { // packed disk
-      unsigned char *tmp = (unsigned char*)malloc(snapsize);
+      u8 *tmp = (u8*)malloc(snapsize);
       memcpy(tmp, snbuf+12, snapsize-12);
       snapsize = 12+unpack_lzh(tmp, snapsize-12, snbuf+12);
       ::free(tmp);
@@ -89,24 +89,24 @@ int FDD::read_td0()
    char dscbuffer[sizeof(dsc)];
    *dscbuffer = 0;
 
-   unsigned char *start = snbuf+12;
+   u8 *start = snbuf+12;
    if (snbuf[7] & 0x80) // coment record
    {
       start += 10;
-      unsigned len = *(unsigned short*)(snbuf+14);
+      unsigned len = *(u16*)(snbuf+14);
       start += len;
       if (len >= sizeof dsc)
           len = sizeof(dsc)-1;
       memcpy(dscbuffer, snbuf+12+10, len);
       dscbuffer[len] = 0;
    }
-   unsigned char *td0_src = start;
+   u8 *td0_src = start;
 
    unsigned max_cyl = 0, max_head = 0;
 
    for (;;)
    {
-      unsigned char s = *td0_src; // Sectors
+      u8 s = *td0_src; // Sectors
       if (s == 0xFF)
           break;
       max_cyl = max(max_cyl, td0_src[1]); // PhysTrack
@@ -114,14 +114,14 @@ int FDD::read_td0()
       td0_src += 4; // sizeof(track_rec)
       for (; s; s--)
       {
-         unsigned char flags = td0_src[4];
+         u8 flags = td0_src[4];
          td0_src += 6; // sizeof(sec_rec)
 
          assert(td0_src <= snbuf + snapsize);
 
          if (td0_src > snbuf + snapsize)
              return 0;
-         td0_src += *(unsigned short*)td0_src + 2; // data_len
+         td0_src += *(u16*)td0_src + 2; // data_len
       }
    }
    newdisk(max_cyl+1, max_head+1);
@@ -130,9 +130,9 @@ int FDD::read_td0()
    td0_src = start;
    for (;;)
    {
-      unsigned char t0[16384];
-      unsigned char *dst = t0;
-      unsigned char *trkh = td0_src;
+      u8 t0[16384];
+      u8 *dst = t0;
+      u8 *trkh = td0_src;
       td0_src += 4; // sizeof(track_rec)
 
       if (*trkh == 0xFF)
@@ -145,17 +145,17 @@ int FDD::read_td0()
       {
          TTd0Sec *SecHdr = (TTd0Sec *)td0_src;
          unsigned sec_size = 128U << (SecHdr->n & 3); // [vv]
-         unsigned char flags = SecHdr->flags;
+         u8 flags = SecHdr->flags;
 //         printf("fl=%x\n", flags);
 //         printf("c=%d, h=%d, s=%d, n=%d\n", SecHdr->c, SecHdr->h, SecHdr->s, SecHdr->n);
          if (flags & (TD0_SEC_NO_ID | TD0_SEC_NO_DATA | TD0_SEC_NO_DATA2)) // skip sectors with no data & sectors without headers
          {
              td0_src += sizeof(TTd0Sec); // sizeof(sec_rec)
 
-             unsigned src_size = *(unsigned short*)td0_src;
+             unsigned src_size = *(u16*)td0_src;
 //             printf("sz=%d\n", src_size);
              td0_src += 2; // data_len
-             unsigned char *end_packed_data = td0_src + src_size;
+             u8 *end_packed_data = td0_src + src_size;
 /*
              u8 method = *td0_src++;
              printf("m=%d\n", method);
@@ -172,9 +172,9 @@ int FDD::read_td0()
                  }
              case 1:
                  {
-                     unsigned n = *(unsigned short*)td0_src;
+                     unsigned n = *(u16*)td0_src;
                      td0_src += 2;
-                     unsigned short data = *(unsigned short*)td0_src;
+                     u16 data = *(u16*)td0_src;
                      printf("len=%d, data=%04X\n", n, data);
                      break;
                  }
@@ -194,9 +194,9 @@ int FDD::read_td0()
 
          td0_src += sizeof(TTd0Sec); // sizeof(sec_rec)
 
-         unsigned src_size = *(unsigned short*)td0_src;
+         unsigned src_size = *(u16*)td0_src;
          td0_src += 2; // data_len
-         unsigned char *end_packed_data = td0_src + src_size;
+         u8 *end_packed_data = td0_src + src_size;
 
          memset(dst, 0, sec_size);
 
@@ -207,18 +207,18 @@ int FDD::read_td0()
                break;
             case 1:  // repeated 2-byte pattern
             {
-               unsigned n = *(unsigned short*)td0_src;
+               unsigned n = *(u16*)td0_src;
                td0_src += 2;
-               unsigned short data = *(unsigned short*)td0_src;
+               u16 data = *(u16*)td0_src;
                for (unsigned i = 0; i < n; i++)
-                  *(unsigned short*)(dst+2*i) = data;
+                  *(u16*)(dst+2*i) = data;
                break;
             }
             case 2: // RLE block
             {
-               unsigned short data;
-               unsigned char s;
-               unsigned char *d0 = dst;
+               u16 data;
+               u8 s;
+               u8 *d0 = dst;
                do
                {
                   switch (*td0_src++)
@@ -229,11 +229,11 @@ int FDD::read_td0()
                         break;
                      case 1:    // repeated fragment
                         s = *td0_src++;
-                        data = *(unsigned short*)td0_src;
+                        data = *(u16*)td0_src;
                         td0_src += 2;
                         for ( ; s; s--)
                         {
-                            *(unsigned short*)dst = data;
+                            *(u16*)dst = data;
                             dst += 2;
                         }
                         break;
@@ -260,7 +260,7 @@ int FDD::read_td0()
 // ------------------------------------------------------ LZH unpacker
 
 
-unsigned char *packed_ptr, *packed_end;
+u8 *packed_ptr, *packed_end;
 
 int readChar(void)
 {
@@ -268,7 +268,7 @@ int readChar(void)
   else return -1;
 }
 
-unsigned char d_code[256] =
+u8 d_code[256] =
 {
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -304,7 +304,7 @@ unsigned char d_code[256] =
         0x38, 0x39, 0x3A, 0x3B, 0x3C, 0x3D, 0x3E, 0x3F,
 };
 
-unsigned char d_len[256] =
+u8 d_len[256] =
 {
         0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03,
         0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03,
@@ -346,7 +346,7 @@ const int F = 60;       // lookahead buffer size
 const int THRESHOLD =   2;
 const int NIL = N;      // leaf of tree
 
-unsigned char text_buf[N + F - 1];
+u8 text_buf[N + F - 1];
 
 const int N_CHAR = (256 - THRESHOLD + F);       // kinds of characters (character code = 0..N_CHAR-1)
 const int T =   (N_CHAR * 2 - 1);       // size of table
@@ -354,7 +354,7 @@ const int R = (T - 1);                  // position of root
 const int MAX_FREQ = 0x8000;            // updates tree when the
                                     // root frequency comes to this value.
 
-unsigned short freq[T + 1];        // frequency table
+u16 freq[T + 1];        // frequency table
 
 short prnt[T + N_CHAR]; // pointers to parent nodes, except for the
                         // elements [T..T + N_CHAR - 1] which are used to get
@@ -365,7 +365,7 @@ short son[T];           // pointers to child nodes (son[], son[] + 1)
 int r;
 
 unsigned getbuf;
-unsigned char getlen;
+u8 getlen;
 
 int GetBit(void)      /* get one bit */
 {
@@ -526,7 +526,7 @@ int DecodePosition(void)
   return c | (i & 0x3f);
 }
 
-unsigned unpack_lzh(unsigned char *src, unsigned size, unsigned char *buf)
+unsigned unpack_lzh(u8 *src, unsigned size, u8 *buf)
 {
   packed_ptr = src; packed_end = src+size;
   int i, j, k, c;

@@ -16,7 +16,7 @@
 const int size_x[3] = { 256, 320, 448 };
 const int size_y[3] = { 192, 240, 320 };
 
-unsigned char active = 0, pause = 0;
+u8 active = 0, pause = 0;
 
 static const DWORD SCU_SCALE1 = 0x10;
 static const DWORD SCU_SCALE2 = 0x20;
@@ -254,7 +254,7 @@ void flip()
 
 HWAVEOUT hwo = 0;
 WAVEHDR wq[MAXWQSIZE];
-unsigned char wbuffer[MAXWQSIZE*MAXDSPIECE];
+u8 wbuffer[MAXWQSIZE*MAXDSPIECE];
 unsigned wqhead, wqtail;
 
 void do_sound_none()
@@ -496,7 +496,7 @@ void adjust_mouse_cursor()
 }
 
 HCURSOR crs[9];
-unsigned char mousedirs[9] = { 10, 8, 9, 2, 0, 1, 6, 4, 5 };
+u8 mousedirs[9] = { 10, 8, 9, 2, 0, 1, 6, 4, 5 };
 
 void updatebitmap()
 {

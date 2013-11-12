@@ -4,9 +4,6 @@
 #define forceinline __forceinline
 #define fastcall             // parameters in registers
 
-typedef unsigned long long uint64_t;
-typedef uint64_t QWORD;
-
 typedef unsigned long long u64;
 typedef signed long long i64;
 typedef unsigned long u32;

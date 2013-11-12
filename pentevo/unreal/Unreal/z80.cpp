@@ -42,7 +42,7 @@ void flush_gs_z80();
    #define z80dbg z80fast
 #endif
 
-void out(unsigned port, unsigned char val);
+void out(unsigned port, u8 val);
 
 u8 Rm(u32 addr)
 {

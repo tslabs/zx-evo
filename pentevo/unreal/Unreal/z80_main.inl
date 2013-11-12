@@ -1,12 +1,12 @@
 
 // Адрес может превышать 0xFFFF
 // (чтобы в каждой команде работы с регистрами не делать &= 0xFFFF)
-unsigned char rm(unsigned addr)
+u8 rm(unsigned addr)
 {
    addr &= 0xFFFF;
 
 #ifdef Z80_DBG
-   unsigned char *membit = membits + (addr & 0xFFFF);
+   u8 *membit = membits + (addr & 0xFFFF);
    *membit |= MEMBITS_R;
    dbgbreak |= (*membit & MEMBITS_BPR);
    cpu.dbgbreak |= (*membit & MEMBITS_BPR);
@@ -15,7 +15,7 @@ unsigned char rm(unsigned addr)
 #ifdef MOD_GSZ80
    if ((temp.gsdmaon!=0) && ( (conf.mem_model==MM_PENTAGON) || (conf.mem_model==MM_ATM3) ) && ((addr & 0xc000)==0) && ((comp.pEFF7 & EFF7_ROCACHE)==0))
     {
-     unsigned char *tmp;
+     u8 *tmp;
      tmp = GSRAM_M+((temp.gsdmaaddr-1) & 0x1FFFFF);
      temp.gsdmaaddr = (temp.gsdmaaddr + 1) & 0x1FFFFF;
      z80gs::flush_gs_z80();
@@ -44,12 +44,12 @@ unsigned char rm(unsigned addr)
 
 // Адрес может превышать 0xFFFF
 // (чтобы в каждой команде работы с регистрами не делать &= 0xFFFF)
-void wm(unsigned addr, unsigned char val)
+void wm(unsigned addr, u8 val)
 {
    addr &= 0xFFFF;
 
 #ifdef Z80_DBG
-   unsigned char *membit = membits + (addr & 0xFFFF);
+   u8 *membit = membits + (addr & 0xFFFF);
    *membit |= MEMBITS_W;
    dbgbreak |= (*membit & MEMBITS_BPW);
    cpu.dbgbreak |= (*membit & MEMBITS_BPW);
@@ -58,7 +58,7 @@ void wm(unsigned addr, unsigned char val)
 #ifdef MOD_GSZ80
    if ((temp.gsdmaon!=0) && ( (conf.mem_model==MM_PENTAGON) || (conf.mem_model==MM_ATM3) ) && ((addr & 0xc000)==0))
     {
-     unsigned char *tmp;
+     u8 *tmp;
      tmp = GSRAM_M+temp.gsdmaaddr;
      *tmp = val;
      temp.gsdmaaddr++;
@@ -116,7 +116,7 @@ void wm(unsigned addr, unsigned char val)
        return;
    }
 
-   unsigned char *a = bankw[(addr >> 14) & 3];
+   u8 *a = bankw[(addr >> 14) & 3];
 #ifndef TRASH_PAGE
    if (!a)
        return;
@@ -130,7 +130,7 @@ void wm(unsigned addr, unsigned char val)
    *a = val;
 }
 
-Z80INLINE unsigned char m1_cycle(Z80 *cpu)
+Z80INLINE u8 m1_cycle(Z80 *cpu)
 {
    if ((conf.mem_model == MM_PENTAGON) &&
        ((comp.pEFF7 & (EFF7_CMOS | EFF7_4BPP)) == (EFF7_CMOS | EFF7_4BPP)))
@@ -183,7 +183,7 @@ void Z80FAST step()
        cpu.t += (cpu.t & 1);
 //~todo
 //[vv]   unsigned oldt=cpu.t; //0.37
-   unsigned char opcode = m1_cycle(&cpu);
+   u8 opcode = m1_cycle(&cpu);
    (normal_opcode[opcode])(&cpu);
 
 /* [vv]

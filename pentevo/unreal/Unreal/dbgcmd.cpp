@@ -11,7 +11,7 @@
 #include "gui.h"
 #include "util.h"
 
-void out(unsigned port, unsigned char val);
+void out(unsigned port, u8 val);
 
 unsigned find1dlg(unsigned start)
 {
@@ -51,7 +51,7 @@ unsigned find2dlg(unsigned start)
    sscanf(str, "%x", &mask); mask = _byteswap_ulong(mask);
    unsigned i; //Alone Coder 0.36.7
    for (unsigned ptr = memadr(start+1); ptr != start; ptr = memadr(ptr+1)) {
-      unsigned char *cd = (unsigned char*)&code, *ms = (unsigned char*)&mask;
+      u8 *cd = (u8*)&code, *ms = (u8*)&mask;
       for (/*unsigned*/ i = 0; i < 4; i++)
          if ((editrm(memadr(ptr+i)) & ms[i]) != (cd[i] & ms[i])) break;
       if (i == 4) return ptr;
@@ -73,7 +73,7 @@ void mon_fill()
 
    static char fillpattern[10] = "00";
 
-   unsigned char pattern[4];
+   u8 pattern[4];
    unsigned fillsize = 0;
 
    strcpy(str, fillpattern);
@@ -160,7 +160,7 @@ void editextbank()
        return;
    unsigned x = input2(ports_x+5, ports_y+2, dgb_extval);
    if (x != -1)
-       out(dbg_extport, (unsigned char)x);
+       out(dbg_extport, (u8)x);
 }
 
 void mon_nxt()
@@ -188,7 +188,7 @@ void mon_switch_dump()
 void mon_tool()
 {
    Z80 &cpu = CpuMgr.Cpu();
-   static unsigned char unref = 0xCF;
+   static u8 unref = 0xCF;
    if (ripper) {
       OPENFILENAME ofn = { 0 };
       char savename[0x200]; *savename = 0;
@@ -223,7 +223,7 @@ void mon_tool()
       tprint(tool_x+1,tool_y+4, "unref. byte:", FFRAME_INSIDE);
       unsigned ub;
       if ((ub = input2(tool_x+14,tool_y+4,unref)) == -1) { ripper = 0; return; }
-      unref = (unsigned char)ub;
+      unref = (u8)ub;
       if (ripper)
           for (unsigned i = 0; i < 0x10000; i++)
               cpu.membits[i] &= ~(MEMBITS_R | MEMBITS_W);

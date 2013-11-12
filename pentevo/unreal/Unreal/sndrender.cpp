@@ -38,7 +38,7 @@ void SNDRENDER::update(unsigned timestamp, unsigned l, unsigned r)
        return;
 
 //[vv]   unsigned endtick = (timestamp * mult_const) >> MULT_C;
-   uint64_t endtick = (timestamp * (uint64_t)sample_rate * TICK_F) / clock_rate;
+   u64 endtick = (timestamp * (u64)sample_rate * TICK_F) / clock_rate;
    flush( (unsigned) (base_tick + endtick) );
    mix_l = l; mix_r = r;
 }
@@ -46,8 +46,8 @@ void SNDRENDER::update(unsigned timestamp, unsigned l, unsigned r)
 unsigned SNDRENDER::end_frame(unsigned clk_ticks)
 {
    // adjusting 'clk_ticks' with whole history will fix accumulation of rounding errors
-   //uint64_t endtick = ((passed_clk_ticks + clk_ticks) * mult_const) >> MULT_C;
-   uint64_t endtick = ((passed_clk_ticks + clk_ticks) * (uint64_t)sample_rate * TICK_F) / clock_rate;
+   //u64 endtick = ((passed_clk_ticks + clk_ticks) * mult_const) >> MULT_C;
+   u64 endtick = ((passed_clk_ticks + clk_ticks) * (u64)sample_rate * TICK_F) / clock_rate;
    flush( (unsigned) (endtick - passed_snd_ticks) );
 
    unsigned ready_samples = dstpos - dst_start;
@@ -69,8 +69,8 @@ unsigned SNDRENDER::end_frame(unsigned clk_ticks)
 unsigned SNDRENDER::end_empty_frame(unsigned clk_ticks)
 {
    // adjusting 'clk_ticks' with whole history will fix accumulation of rounding errors
-   //uint64_t endtick = ((passed_clk_ticks + clk_ticks) * mult_const) >> MULT_C;
-   uint64_t endtick = ((passed_clk_ticks + clk_ticks) * (uint64_t)sample_rate * TICK_F) / clock_rate;
+   //u64 endtick = ((passed_clk_ticks + clk_ticks) * mult_const) >> MULT_C;
+   u64 endtick = ((passed_clk_ticks + clk_ticks) * (u64)sample_rate * TICK_F) / clock_rate;
    tick = (unsigned)(endtick-passed_snd_ticks); // flush(endtick-passed_snd_ticks);
    // todo: change dstpos!
 
@@ -95,7 +95,7 @@ void SNDRENDER::set_timings(unsigned clock_rate, unsigned sample_rate)
    tick = 0; dstpos = dst_start = 0;
    passed_snd_ticks = passed_clk_ticks = 0;
 
-   mult_const = (unsigned) (((uint64_t)sample_rate << (MULT_C+TICK_FF)) / clock_rate);
+   mult_const = (unsigned) (((u64)sample_rate << (MULT_C+TICK_FF)) / clock_rate);
 }
 
 

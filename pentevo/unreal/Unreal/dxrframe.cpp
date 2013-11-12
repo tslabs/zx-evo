@@ -5,7 +5,7 @@
 #include "dxrcopy.h"
 #include "util.h"
 
-void _render_black(unsigned char *dst, unsigned pitch)
+void _render_black(u8 *dst, unsigned pitch)
 {
    unsigned dx = ((temp.rflags & RF_OVR) ? temp.ox : temp.rsx)*temp.obpp/8;
    unsigned filler = (temp.rflags & RF_OVR)? WORD4(0,0x80,0,0x80) : 0;
@@ -16,10 +16,10 @@ void _render_black(unsigned char *dst, unsigned pitch)
    }
 }
 
-void rend_frame8(unsigned char *dst, unsigned pitch)
+void rend_frame8(u8 *dst, unsigned pitch)
 {
    if (!conf.updateb) return;
-   unsigned char *src = rbuf; unsigned scx = temp.scx, delta = scx/4;
+   u8 *src = rbuf; unsigned scx = temp.scx, delta = scx/4;
    unsigned y; //Alone Coder 0.36.7
    for (/*unsigned*/ y = 0; y < temp.b_top; y++) {
       line8(dst, src, t.sctab8[0]); dst += pitch;
@@ -39,10 +39,10 @@ void rend_frame8(unsigned char *dst, unsigned pitch)
    }
 }
 
-void rend_frame_8d1(unsigned char *dst, unsigned pitch)
+void rend_frame_8d1(u8 *dst, unsigned pitch)
 {
    if (!conf.updateb) return;
-   unsigned char *src = rbuf; unsigned scx = temp.scx, delta = scx/4;
+   u8 *src = rbuf; unsigned scx = temp.scx, delta = scx/4;
    unsigned y; //Alone Coder 0.36.7
    for (/*unsigned*/ y = 0; y < temp.b_top; y++) {
       line8d(dst, src, t.sctab8d[0]); dst += pitch;
@@ -62,10 +62,10 @@ void rend_frame_8d1(unsigned char *dst, unsigned pitch)
    }
 }
 
-void rend_frame_8d(unsigned char *dst, unsigned pitch)
+void rend_frame_8d(u8 *dst, unsigned pitch)
 {
    if (!conf.updateb) return;
-   unsigned char *src = rbuf; unsigned scx = temp.scx, delta = scx/4;
+   u8 *src = rbuf; unsigned scx = temp.scx, delta = scx/4;
    unsigned y; //Alone Coder 0.36.7
    for (/*unsigned*/ y = 0; y < temp.b_top; y++) {
       line8d(dst, src, t.sctab8d[0]); dst += pitch;
@@ -91,10 +91,10 @@ void rend_frame_8d(unsigned char *dst, unsigned pitch)
    }
 }
 
-void rend_frame16(unsigned char *dst, unsigned pitch)
+void rend_frame16(u8 *dst, unsigned pitch)
 {
    if (!conf.updateb) return;
-   unsigned char *src = rbuf; unsigned scx = temp.scx, delta = scx/4;
+   u8 *src = rbuf; unsigned scx = temp.scx, delta = scx/4;
    unsigned y; //Alone Coder 0.36.7
    for (/*unsigned*/ y = 0; y < temp.b_top; y++) {
       line16(dst, src, t.sctab16[0]);
@@ -114,10 +114,10 @@ void rend_frame16(unsigned char *dst, unsigned pitch)
    }
 }
 
-void rend_frame_16d1(unsigned char *dst, unsigned pitch)
+void rend_frame_16d1(u8 *dst, unsigned pitch)
 {
    if (!conf.updateb) return;
-   unsigned char *src = rbuf; unsigned scx = temp.scx, delta = scx/4;
+   u8 *src = rbuf; unsigned scx = temp.scx, delta = scx/4;
    unsigned y; //Alone Coder 0.36.7
    for (/*unsigned*/ y = 0; y < temp.b_top; y++) {
       line16d(dst, src, t.sctab16d[0]); dst += pitch;
@@ -137,10 +137,10 @@ void rend_frame_16d1(unsigned char *dst, unsigned pitch)
    }
 }
 
-void rend_frame_16d(unsigned char *dst, unsigned pitch)
+void rend_frame_16d(u8 *dst, unsigned pitch)
 {
    if (!conf.updateb) return;
-   unsigned char *src = rbuf; unsigned scx = temp.scx, delta = scx/4;
+   u8 *src = rbuf; unsigned scx = temp.scx, delta = scx/4;
    unsigned y; //Alone Coder 0.36.7
    for (/*unsigned*/ y = 0; y < temp.b_top; y++) {
       line16d(dst, src, t.sctab16d[0]); dst += pitch;
@@ -166,10 +166,10 @@ void rend_frame_16d(unsigned char *dst, unsigned pitch)
    }
 }
 
-void rend_frame32(unsigned char *dst, unsigned pitch)
+void rend_frame32(u8 *dst, unsigned pitch)
 {
    if (!conf.updateb) return;
-   unsigned char *src = rbuf; unsigned scx = temp.scx, delta = scx/4;
+   u8 *src = rbuf; unsigned scx = temp.scx, delta = scx/4;
    unsigned y; //Alone Coder 0.36.7
    for (/*unsigned*/ y = 0; y < temp.b_top; y++) {
       line32(dst, src, t.sctab32[0]); dst += pitch;
@@ -189,10 +189,10 @@ void rend_frame32(unsigned char *dst, unsigned pitch)
    }
 }
 
-void rend_frame_32d1(unsigned char *dst, unsigned pitch)
+void rend_frame_32d1(u8 *dst, unsigned pitch)
 {
    if (!conf.updateb) return;
-   unsigned char *src = rbuf; unsigned scx = temp.scx, delta = scx/4;
+   u8 *src = rbuf; unsigned scx = temp.scx, delta = scx/4;
    unsigned y; //Alone Coder 0.36.7
    for (/*unsigned*/ y = 0; y < temp.b_top; y++) {
       line32d(dst, src, t.sctab32[0]); dst += pitch;
@@ -212,10 +212,10 @@ void rend_frame_32d1(unsigned char *dst, unsigned pitch)
    }
 }
 
-void rend_frame_32d(unsigned char *dst, unsigned pitch)
+void rend_frame_32d(u8 *dst, unsigned pitch)
 {
    if (!conf.updateb) return;
-   unsigned char *src = rbuf; unsigned scx = temp.scx, delta = scx/4;
+   u8 *src = rbuf; unsigned scx = temp.scx, delta = scx/4;
    unsigned y; //Alone Coder 0.36.7
    for (/*unsigned*/ y = 0; y < temp.b_top; y++) {
       line32d(dst, src, t.sctab32[0]); dst += pitch;

@@ -39,17 +39,17 @@ u16 spec_colors[16] = {
 };
 
 #ifdef CACHE_ALIGNED
-CACHE_ALIGNED unsigned char rbuf[sizeof_rbuf];
-#else // __declspec(align) not available, force QWORD align with old method
+CACHE_ALIGNED u8 rbuf[sizeof_rbuf];
+#else // __declspec(align) not available, force u64 align with old method
 __int64 rbuf__[sizeof_rbuf/sizeof(__int64)];
-unsigned char * const rbuf = (unsigned char*)rbuf__;
+u8 * const rbuf = (u8*)rbuf__;
 #endif
 
 CACHE_ALIGNED u32 vbuf[2][sizeof_vbuf];
 VCTR vid;
 
-unsigned char * const rbuf_s = rbuf + rb2_offs; // frames to mix with noflic and resampler filters
-unsigned char * const save_buf = rbuf_s + rb2_offs*MAX_BUFFERS; // used in monitor
+u8 * const rbuf_s = rbuf + rb2_offs; // frames to mix with noflic and resampler filters
+u8 * const save_buf = rbuf_s + rb2_offs*MAX_BUFFERS; // used in monitor
 
 T t;
 
@@ -59,7 +59,7 @@ unsigned vmode;  // what are drawing: 0-not visible, 1-border, 2-screen
 unsigned prev_t; // last drawn pixel
 unsigned *atrtab;
 
-unsigned char colortab[0x100];// map zx attributes to pc attributes
+u8 colortab[0x100];// map zx attributes to pc attributes
 // colortab shifted to 8 and 24
 unsigned colortab_s8[0x100];
 unsigned colortab_s24[0x100];
@@ -160,7 +160,7 @@ void video_permanent_tables()
       for (unsigned byte = 0; byte < 0x100; byte++)
          t.vdtab[0][pl][byte] = _mm_slli_pi32(t.vdtab[0][0][byte], pl);
    for (i = 0; i < sizeof t.vdtab[0]; i++)
-      ((unsigned char*)t.vdtab[1])[i] = ((unsigned char*)t.vdtab[0])[i] & 0x0F;
+      ((u8*)t.vdtab[1])[i] = ((u8*)t.vdtab[0])[i] & 0x0F;
    _mm_empty();
    #endif
 
@@ -186,8 +186,8 @@ void create_palette()
    if ((temp.rflags & RF_8BPCH) && temp.obpp == 8) temp.rflags |= RF_GRAY, conf.flashcolor = 0;
 
    PALETTE_OPTIONS *pl = &pals[conf.pal];
-   unsigned char brights[4] = { pl->ZZ, pl->ZN, pl->NN, pl->BB };
-   unsigned char brtab[16] =
+   u8 brights[4] = { pl->ZZ, pl->ZN, pl->NN, pl->BB };
+   u8 brtab[16] =
       //  ZZ      NN      ZZ      BB
       { pl->ZZ, pl->ZN, pl->ZZ, pl->ZB,    // ZZ
         pl->ZN, pl->NN, pl->ZN, pl->NB,    // NN
@@ -231,10 +231,10 @@ void make_colortab(char flash_active)
 
    for (unsigned a = 0; a < 0x100; a++)
    {
-      unsigned char ink = a & 7;
-      unsigned char paper = (a >> 3) & 7;
-      unsigned char bright = (a >> 6) & 1;
-      unsigned char flash = (a >> 7) & 1;
+      u8 ink = a & 7;
+      u8 paper = (a >> 3) & 7;
+      u8 bright = (a >> 6) & 1;
+      u8 flash = (a >> 7) & 1;
 
       if (ink)
           ink |= bright << 3; // no bright for 0th color
@@ -244,7 +244,7 @@ void make_colortab(char flash_active)
 
       if (flash_active && flash)
       {
-          unsigned char t = ink;
+          u8 t = ink;
           ink = paper;
           paper = t;
       }
@@ -263,10 +263,10 @@ void make_colortab(char flash_active)
 // make attrtab: pc-attr + 0x100*pixel -> palette index
 void attr_tables()
 {
-   unsigned char flashcolor = (temp.rflags & RF_MON)? 0 : conf.flashcolor;
+   u8 flashcolor = (temp.rflags & RF_MON)? 0 : conf.flashcolor;
    for (unsigned a = 0; a < 0x100; a++)
    {
-      unsigned char ink = (a & 0x0F), paper = (a >> 4);
+      u8 ink = (a & 0x0F), paper = (a >> 4);
       if (flashcolor)
           paper = (paper & 7) + (ink & 8); // paper_bright from ink
 
@@ -282,7 +282,7 @@ void attr_tables()
       }
       else if (temp.rflags & RF_PALB)
       { //----------------------------- for bilinear
-         unsigned char b0,b1, r0,r1, g0,g1;
+         u8 b0,b1, r0,r1, g0,g1;
          b0 = (paper >> 0) & 1, r0 = (paper >> 1) & 1, g0 = (paper >> 2) & 1;
          b1 = (ink >> 0) & 1, r1 = (ink >> 1) & 1, g1 = (ink >> 2) & 1;
 
@@ -297,12 +297,12 @@ void attr_tables()
             b1 *= 2, r1 *= 2, g1 *=2;
          }
 
-         unsigned char br1 = (ink >> 3) & 1;
+         u8 br1 = (ink >> 3) & 1;
          if (r1) r1 += br1;
          if (g1) g1 += br1;
          if (b1) b1 += br1;
 
-         unsigned char br0 = (paper >> 3) & 1;
+         u8 br0 = (paper >> 3) & 1;
          if (r0) r0 += br0;
          if (g0) g0 += br0;
          if (b0) b0 += br0;
@@ -619,7 +619,7 @@ void apply_video()
    //printf("Window dimensions: %ux%u\n", temp.ox, temp.oy);
 }
 
-__inline unsigned char *raypointer()
+__inline u8 *raypointer()
 {
 //   if (prev_t > conf.frame)
 //       return rbuf + rb2_offs;
@@ -631,7 +631,7 @@ __inline unsigned char *raypointer()
 
 __inline void clear_until_ray()
 {
-//   unsigned char *dst = raypointer();
+//   u8 *dst = raypointer();
 //   while (dst < rbuf + rb2_offs) *dst++ = 0, *dst++ = 0x55;
 }
 
@@ -817,7 +817,7 @@ void init_frame()
    init_memcycles();
 
    // recreate colors with flash attribute
-/*    unsigned char frame = (unsigned char)comp.frame_counter;
+/*    u8 frame = (u8)comp.frame_counter;
     if (!(frame & 15) )
        make_colortab(frame & 16);
 

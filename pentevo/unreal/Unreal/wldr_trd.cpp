@@ -60,7 +60,7 @@ struct TSclHdr
 
 void FDD::format_trd()
 {
-   static const unsigned char lv[3][16] =
+   static const u8 lv[3][16] =
     { { 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16 },
       { 1,9,2,10,3,11,4,12,5,13,6,14,7,15,8,16 },
       { 1,12,7,2,13,8,3,14,9,4,15,10,5,16,11,6 } };
@@ -75,7 +75,7 @@ void FDD::format_trd()
             t.hdr[sn].n = s, t.hdr[sn].l = 1;
             t.hdr[sn].c = c, t.hdr[sn].s = 0;
             t.hdr[sn].c1 = t.hdr[sn].c2 = 0;
-            t.hdr[sn].data = (unsigned char*)1;
+            t.hdr[sn].data = (u8*)1;
          }
          t.format();
       }
@@ -100,7 +100,7 @@ void FDD::emptydisk()
     t.write_sector(9, Sec9Hdr->data); // update sector CRC
 }
 
-int FDD::addfile(unsigned char *hdr, unsigned char *data)
+int FDD::addfile(u8 *hdr, u8 *data)
 {
     t.seek(this, 0, 0, LOAD_SECTORS);
     const SECHDR *Sec9Hdr = t.get_sector(9);
@@ -223,7 +223,7 @@ int FDD::read_scl()
       Sec9->FreeSecCnt = size;     // free sec
       t.write_sector(9, s8->data); // update sector CRC
    }
-   unsigned char *data = snbuf + sizeof(TSclHdr) + SclHdr->FileCnt * sizeof(TTrdDirEntryBase);
+   u8 *data = snbuf + sizeof(TSclHdr) + SclHdr->FileCnt * sizeof(TTrdDirEntryBase);
    for (i = 0; i < SclHdr->FileCnt; i++)
    {
       if (!addfile((u8 *)&SclHdr->Files[i], data))
@@ -258,13 +258,13 @@ int FDD::read_trd()
 
 int FDD::write_trd(FILE *ff)
 {
-   static unsigned char zerosec[256] = { 0 };
+   static u8 zerosec[256] = { 0 };
 
    for (unsigned i = 0; i < 2560; i++)
    {
       t.seek(this, i>>5, (i>>4) & 1, LOAD_SECTORS);
       const SECHDR *hdr = t.get_sector((i & 0x0F)+1);
-      unsigned char *ptr = zerosec;
+      u8 *ptr = zerosec;
       if (hdr && hdr->data)
           ptr = hdr->data;
       if (fwrite(ptr, 1, 256, ff) != 256)

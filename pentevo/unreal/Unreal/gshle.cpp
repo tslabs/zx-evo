@@ -8,7 +8,7 @@
 #include "sound.h"
 
 #ifdef MOD_GSBASS
-void GSHLE::set_busy(unsigned char newval)
+void GSHLE::set_busy(u8 newval)
 {
    busy = chan[0].busy = chan[1].busy = chan[2].busy = chan[3].busy = newval;
 }
@@ -37,16 +37,16 @@ void GSHLE::applyconfig()
        setmodvol(modvol);
 }
 
-unsigned char GSHLE::in(unsigned char port)
+u8 GSHLE::in(u8 port)
 {
    if (port == 0xBB) return gsstat;
    if (!resptr) return 0xFF; // no data available
-   unsigned char byte = *resptr;
+   u8 byte = *resptr;
    if (resmode) resptr++, resmode--; // goto next byte
    return byte;
 }
 
-void GSHLE::out(unsigned char port, unsigned char byte)
+void GSHLE::out(u8 port, u8 byte)
 {
    if (port == 0xB3) {
       if (!load_stream) {
@@ -157,19 +157,19 @@ void GSHLE::out(unsigned char port, unsigned char byte)
          break;
       case 0x48: // set loop start
          resmod2 = 2;
-         *(unsigned char*)&sample[cur_fx].loop = *data_in;
-         to_ptr = 1+(unsigned char*)&sample[cur_fx].loop;
+         *(u8*)&sample[cur_fx].loop = *data_in;
+         to_ptr = 1+(u8*)&sample[cur_fx].loop;
          break;
       case 0x49: // set loop end
          resmod2 = 2;
-         *(unsigned char*)&sample[cur_fx].end = *data_in;
-         to_ptr = 1+(unsigned char*)&sample[cur_fx].end;
+         *(u8*)&sample[cur_fx].end = *data_in;
+         to_ptr = 1+(u8*)&sample[cur_fx].end;
          break;
       case 0x60: // get song pos
-         *gstmp = (unsigned char)modgetpos();
+         *gstmp = (u8)modgetpos();
          break;
       case 0x61: // get pattern pos
-         *gstmp = (unsigned char)(modgetpos() >> 16);
+         *gstmp = (u8)(modgetpos() >> 16);
          break;
       case 0x62: // get mixed pos
          i = modgetpos();
@@ -236,7 +236,7 @@ void GSHLE::out(unsigned char port, unsigned char byte)
    }
 }
 
-void GSHLE::start_fx(unsigned fx, unsigned ch, unsigned char vol, unsigned char note)
+void GSHLE::start_fx(unsigned fx, unsigned ch, u8 vol, u8 note)
 {  
    unsigned i; //Alone Coder 0.36.7
    if (!fx) fx = cur_fx; // fx=0 - use default

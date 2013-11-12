@@ -3,7 +3,7 @@
 #include "wd93crc.h"
 
 // for WD1793 engine
-unsigned wd93_crc(unsigned char *ptr, unsigned size)
+unsigned wd93_crc(u8 *ptr, unsigned size)
 {
    unsigned crc = 0xCDB4;
    while (size--) {
@@ -14,7 +14,7 @@ unsigned wd93_crc(unsigned char *ptr, unsigned size)
    return _byteswap_ushort(crc); // return crc & 0xFFFF;
 }
 
-static unsigned short crcTab[256] =
+static u16 crcTab[256] =
    { 0x0000, 0x97A0, 0xB9E1, 0x2E41, 0xE563, 0x72C3, 0x5C82, 0xCB22,
      0xCAC7, 0x5D67, 0x7326, 0xE486, 0x2FA4, 0xB804, 0x9645, 0x01E5,
      0x032F, 0x948F, 0xBACE, 0x2D6E, 0xE64C, 0x71EC, 0x5FAD, 0xC80D,
@@ -49,7 +49,7 @@ static unsigned short crcTab[256] =
      0x4CD2, 0xDB72, 0xF533, 0x6293, 0xA9B1, 0x3E11, 0x1050, 0x87F0 };
 
 // for TD0
-unsigned short crc16(unsigned char *buf, unsigned size)
+u16 crc16(u8 *buf, unsigned size)
 {
    unsigned crc = 0;
    while (size--) crc = (crc>>8) ^ crcTab[(crc&0xff) ^ *buf++];
@@ -57,7 +57,7 @@ unsigned short crc16(unsigned char *buf, unsigned size)
 }
 
 // for UDI
-void crc32(int &crc, unsigned char *buf, unsigned len)
+void crc32(int &crc, u8 *buf, unsigned len)
 {
    while (len--) {
       crc ^= -1 ^ *buf++;

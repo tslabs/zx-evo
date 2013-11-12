@@ -110,9 +110,9 @@ private:
 
     void Thread();
     void StreamClose();
-    QWORD StreamLen();
+    u64 StreamLen();
     DWORD StreamRead(void *Buffer, DWORD Length);
-    BOOL StreamSeek(QWORD offset);
+    BOOL StreamSeek(u64 offset);
 
     static unsigned CALLBACK Thread(void *This)
     {
@@ -123,13 +123,13 @@ private:
     static void CALLBACK StreamClose(void *This)
     { ((TVs1001 *)This)->StreamClose(); }
 
-    static QWORD CALLBACK StreamLen(void *This)
+    static u64 CALLBACK StreamLen(void *This)
     { return ((TVs1001 *)This)->StreamLen(); }
 
     static DWORD CALLBACK StreamRead(void *Buffer, DWORD Length, void *This)
     { return ((TVs1001 *)This)->StreamRead(Buffer, Length); }
 
-    static BOOL CALLBACK StreamSeek(QWORD offset, void *This)
+    static BOOL CALLBACK StreamSeek(u64 offset, void *This)
     { return ((TVs1001 *)This)->StreamSeek(offset); }
 
     static const char *State2Str(TState State);

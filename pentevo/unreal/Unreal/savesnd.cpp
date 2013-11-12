@@ -6,7 +6,7 @@
 #include "memory.h"
 #include "util.h"
 
-unsigned char wavhdr[]= {
+u8 wavhdr[]= {
    0x52,0x49,0x46,0x46,0xcc,0xf6,0x3e,0x00,
    0x57,0x41,0x56,0x45,0x66,0x6d,0x74,0x20,
    0x10,0x00,0x00,0x00,0x01,0x00,0x02,0x00,
@@ -17,12 +17,12 @@ unsigned char wavhdr[]= {
 #pragma pack(1)
 static struct
 {
-   unsigned short sig;
-   unsigned char stereo;
-   unsigned short start;
+   u16 sig;
+   u8 stereo;
+   u16 start;
    unsigned ayfq;
-   unsigned char intfq;
-   unsigned short year;
+   u8 intfq;
+   u16 year;
    unsigned rawsize;
 } vtxheader;
 #pragma pack()
@@ -50,7 +50,7 @@ void savesnddialog()
          MessageBox(wnd, "WAV save done", "Save sound", MB_ICONINFORMATION);
       } else { // vtx
          savesndtype = 0;
-         unsigned char *newb = (unsigned char*)malloc(vtxbuffilled);
+         u8 *newb = (u8*)malloc(vtxbuffilled);
          for (/*unsigned*/ end = 0; end < (int)vtxbuffilled && silence(end); end += 14);
          vtxbuffilled -= end; memcpy(vtxbuf, vtxbuf+end, vtxbuffilled);
          for (end = vtxbuffilled; end && silence(end-14); end -= 14);
@@ -87,7 +87,7 @@ void savesnddialog()
          fclose(ff); DeleteFile("vtx.lzh");
          DialogBox(hIn, MAKEINTRESOURCE(IDD_VTX), wnd, VtxDlg);
          vtxheader.sig = (vtxchip & 1) ? WORD2('y','m') : WORD2('a','y');
-         static unsigned char ste[] = { 1, 2, 0 };
+         static u8 ste[] = { 1, 2, 0 };
          vtxheader.stereo = ste[vtxchip/2];
          vtxheader.ayfq = conf.sound.ayfq;
          vtxheader.intfq = 50;
@@ -166,7 +166,7 @@ INT_PTR CALLBACK VtxDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
 
 int dopoke(int really)
 {
-   for (unsigned char *ptr = snbuf; *ptr; ) {
+   for (u8 *ptr = snbuf; *ptr; ) {
       while (*ptr == ' ' || *ptr == ':' || *ptr == ';' || *ptr == ',') ptr++;
       unsigned num = 0;
       while (isdigit(*ptr)) num = num*10 + (*ptr++ - '0');

@@ -66,7 +66,7 @@ class SNDRENDER
    int oldright,useright,olduseright,oldfrmright; //Alone Coder
 
 //   unsigned clock_rate, sample_rate;
-   uint64_t passed_clk_ticks, passed_snd_ticks;
+   u64 passed_clk_ticks, passed_snd_ticks;
    unsigned mult_const;
 
    void flush(unsigned endtick);
@@ -75,7 +75,7 @@ class SNDRENDER
 union SNDSAMPLE
 {
    unsigned sample; // left/right channels in low/high WORDs
-   struct { unsigned short left, right; } ch; // or left/right separately
+   struct { u16 left, right; } ch; // or left/right separately
 };
 
 struct SNDOUT

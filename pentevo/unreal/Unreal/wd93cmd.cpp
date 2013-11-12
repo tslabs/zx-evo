@@ -244,7 +244,7 @@ void WD1793::process()
                rqs = DRQ; status |= WDS_DRQ;
             } else {
                unsigned len = (128 << (seldrive->t.hdr[foundid].l & 3)) + 1; //[vv]
-               unsigned char sc[2056];
+               u8 sc[2056];
                if (rwptr < len)
                   memcpy(sc, seldrive->t.trkd + seldrive->t.trklen - rwptr, rwptr), memcpy(sc + rwptr, seldrive->t.trkd, len - rwptr);
                else memcpy(sc, seldrive->t.trkd + rwptr - len, len);
@@ -290,7 +290,7 @@ void WD1793::process()
                 break;
             }
 
-            unsigned char marker = 0, byte = data;
+            u8 marker = 0, byte = data;
             unsigned crc;
             switch(data)
             {
@@ -360,7 +360,7 @@ void WD1793::process()
 
             if (!(cmd & 0xE0) || (cmd & CMD_SEEK_TRKUPD)) track += stepdirection;
             seldrive->track += stepdirection;
-            if (seldrive->track == (unsigned char)-1) seldrive->track = 0;
+            if (seldrive->track == (u8)-1) seldrive->track = 0;
             if (seldrive->track >= MAX_PHYS_CYL) seldrive->track = MAX_PHYS_CYL;
             seldrive->t.clear();
 
@@ -498,7 +498,7 @@ void WD1793::load()
    seldrive->t.seek(seldrive, seldrive->track, side, LOAD_SECTORS);
 }
 
-unsigned char WD1793::in(unsigned char port)
+u8 WD1793::in(u8 port)
 {
    process();
 
@@ -527,7 +527,7 @@ unsigned char WD1793::in(unsigned char port)
    return 0xFF;
 }
 
-void WD1793::out(unsigned char port, unsigned char val)
+void WD1793::out(u8 port, u8 val)
 {
    process();
 

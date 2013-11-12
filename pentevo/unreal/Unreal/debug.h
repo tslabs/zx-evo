@@ -104,26 +104,26 @@ public:
 extern TCpuMgr CpuMgr;
 extern DBGWND activedbg;
 extern unsigned dbg_extport;
-extern unsigned char dgb_extval; // extended memory port like 1FFD or DFFD
+extern u8 dgb_extval; // extended memory port like 1FFD or DFFD
 
 extern unsigned mem_sz;
 extern unsigned mem_disk;
 extern unsigned mem_track;
 extern unsigned mem_max;
 
-extern unsigned char mem_dump;
+extern u8 mem_dump;
 extern unsigned show_scrshot;
-extern unsigned char editor;
-extern unsigned char mem_ascii;
-extern unsigned char mem_dump;
+extern u8 editor;
+extern u8 mem_ascii;
+extern u8 mem_dump;
 
 extern unsigned ripper; // ripper mode (none/read/write)
 
 extern unsigned user_watches[3];
 extern unsigned regs_curs;
 
-extern unsigned char trace_labels;
+extern u8 trace_labels;
 
-unsigned char isbrk(const Z80 &cpu); // is there breakpoints active or any other reason to use debug z80 loop?
+u8 isbrk(const Z80 &cpu); // is there breakpoints active or any other reason to use debug z80 loop?
 void debugscr();
 void debug_events(Z80 *cpu);

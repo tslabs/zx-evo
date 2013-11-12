@@ -9,14 +9,14 @@ void atm_memswap()
    if (!conf.atm.mem_swap) return;
    // swap memory address bits A5-A7 and A8-A10
    for (unsigned start_page = 0; start_page < conf.ramsize*1024; start_page += 2048) {
-      unsigned char buffer[2048], *bank = memory + start_page;
+      u8 buffer[2048], *bank = memory + start_page;
       for (unsigned addr = 0; addr < 2048; addr++)
          buffer[addr] = bank[(addr & 0x1F) + ((addr >> 3) & 0xE0) + ((addr << 3) & 0x700)];
       memcpy(bank, buffer, 2048);
    }
 }
 
-void AtmApplySideEffectsWhenChangeVideomode(unsigned char val)
+void AtmApplySideEffectsWhenChangeVideomode(u8 val)
 {
     int NewVideoMode = (val & 7);
     int OldVideoMode = (comp.pFF77 & 7);
@@ -277,7 +277,7 @@ void set_turbo(void)
 	}
 }
 
-void set_atm_FF77(unsigned port, unsigned char val)
+void set_atm_FF77(unsigned port, u8 val)
 {
    if ((comp.pFF77 ^ val) & 1)
        atm_memswap();
@@ -295,9 +295,9 @@ void set_atm_FF77(unsigned port, unsigned char val)
    set_banks();
 }
 
-void set_atm_aFE(unsigned char addr)
+void set_atm_aFE(u8 addr)
 {
-   unsigned char old_aFE = comp.aFE;
+   u8 old_aFE = comp.aFE;
    comp.aFE = addr;
    if ((addr ^ old_aFE) & 0x40) atm_memswap();
    if ((addr ^ old_aFE) & 0x80) set_banks();
@@ -305,7 +305,7 @@ void set_atm_aFE(unsigned char addr)
 
 static u8 atm_pal[0x10] = { 0 };
 
-void atm_writepal(unsigned char val)
+void atm_writepal(u8 val)
 {
    // assert(comp.border_attr < 0x10); // commented (tsl)
    atm_pal[comp.ts.border & 0xF] = val;
@@ -326,7 +326,7 @@ u8 atm_readpal()
    return atm_pal[comp.ts.border & 0xF];
 }
 
-unsigned char atm450_z(unsigned t)
+u8 atm450_z(unsigned t)
 {
    // PAL hardware gives 3 zeros in secret short time intervals
    if (conf.frame < 80000) { // NORMAL SPEED mode

@@ -36,7 +36,7 @@ static void wtline(const char *name, unsigned ptr, unsigned y)
    Z80 &cpu = CpuMgr.Cpu();
    for (unsigned dx = 0; dx < 8; dx++)
    {
-      unsigned char c = cpu.DirectRm(ptr++);
+      u8 c = cpu.DirectRm(ptr++);
       sprintf(line+5+3*dx, "%02X", c);
       line[7+3*dx] = ' ';
       line[29+dx] = c ? c : '.';
@@ -238,7 +238,7 @@ void showdos()
 //    T:00/01
 //    S:00/00
 //[vv]   if (conf.trdos_present) comp.wd.process();
-   char ln[64]; unsigned char atr = conf.trdos_present ? W_OTHER : W_OTHEROFF;
+   char ln[64]; u8 atr = conf.trdos_present ? W_OTHER : W_OTHEROFF;
    sprintf(ln, "CD:%02X%02X", comp.wd.cmd, comp.wd.data);
    tprint(dos_x, dos_y, ln, atr);
    sprintf(ln, "STAT:%02X", comp.wd.status);
@@ -263,8 +263,8 @@ void showdos()
 //    TRK:31,SEC:01
 //    DISK:A,SIDE:0
 
-   char ln[64]; unsigned char atr = conf.trdos_present ? 0x20 : 0x27;
-   sprintf(ln, "STAT:00000000"); unsigned char stat = in_trdos(0x1F);
+   char ln[64]; u8 atr = conf.trdos_present ? 0x20 : 0x27;
+   sprintf(ln, "STAT:00000000"); u8 stat = in_trdos(0x1F);
    for (int i = 0; i < 7; i++) ln[i+5] = (stat & (0x80 >> i)) ? '1':'0';
    tprint(dos_x, dos_y+1, ln, atr);
    sprintf(ln, "CMD:%02X,STA:%02X", comp.trdos.cmd, stat);

@@ -31,34 +31,34 @@ void __cdecl SetLastT();
 
 #pragma pack(8)
 
-void out(unsigned port, unsigned char val);
-unsigned char in(unsigned port);
+void out(unsigned port, u8 val);
+u8 in(unsigned port);
 
-Z80INLINE unsigned char m1_cycle(Z80 *cpu)
+Z80INLINE u8 m1_cycle(Z80 *cpu)
 {
    cpu->r_low++; cputact(4);
    return cpu->MemIf->rm(cpu->pc++);
 }
 
 /*
-unsigned char TMainZ80::rm(unsigned addr) { return z80fast::rm(addr); }
+u8 TMainZ80::rm(unsigned addr) { return z80fast::rm(addr); }
 
-unsigned char TMainZ80::dbgrm(unsigned addr) { return ::rmdbg(addr); }
+u8 TMainZ80::dbgrm(unsigned addr) { return ::rmdbg(addr); }
 
-void TMainZ80::wm(unsigned addr, unsigned char val) { z80fast::wm(addr, val); }
+void TMainZ80::wm(unsigned addr, u8 val) { z80fast::wm(addr, val); }
 
-void TMainZ80::dbgwm(unsigned addr, unsigned char val) { ::wmdbg(addr, val); }
+void TMainZ80::dbgwm(unsigned addr, u8 val) { ::wmdbg(addr, val); }
 */
 u8 *TMainZ80::DirectMem(unsigned addr) const
 {
     return am_r(addr);
 }
 
-unsigned char TMainZ80::m1_cycle() { return ::m1_cycle(this); }
+u8 TMainZ80::m1_cycle() { return ::m1_cycle(this); }
 
-unsigned char TMainZ80::in(unsigned port) { return ::in(port); }
+u8 TMainZ80::in(unsigned port) { return ::in(port); }
 
-void TMainZ80::out(unsigned port, unsigned char val) { ::out(port, val); }
+void TMainZ80::out(unsigned port, u8 val) { ::out(port, val); }
 
 u8 TMainZ80::IntVec()
 {
@@ -156,7 +156,7 @@ unsigned TCpuMgr::CurrentCpu = 0;
 GSHLE gs;
 #endif
 
-unsigned char dbgbreak = 0;
+u8 dbgbreak = 0;
 
 
 CONFIG conf;
@@ -171,36 +171,36 @@ SNDCHIP ay[2];
 SNDCOUNTER sndcounter;
 
 
-unsigned char *base_sos_rom, *base_dos_rom, *base_128_rom, *base_sys_rom;
+u8 *base_sos_rom, *base_dos_rom, *base_128_rom, *base_sys_rom;
 
 #ifdef CACHE_ALIGNED
 ATTR_ALIGN(4096)
-unsigned char memory[PAGE*MAX_PAGES];
-#else // __declspec(align) not available, force QWORD align with old method
+u8 memory[PAGE*MAX_PAGES];
+#else // __declspec(align) not available, force u64 align with old method
 __int64 memory__[PAGE*MAX_PAGES/sizeof(__int64)];
-unsigned char * const memory = (unsigned char*)memory__;
+u8 * const memory = (u8*)memory__;
 #endif
 
 #ifdef MOD_VID_VD
-CACHE_ALIGNED unsigned char vdmem[4][0x2000];
+CACHE_ALIGNED u8 vdmem[4][0x2000];
 #endif
 
-unsigned char membits[0x10000];
-unsigned char *bankr[4];	// memory pointers to memory (RAM/ROM/cache) mapped in four Z80 windows
-unsigned char *bankw[4];
-unsigned char bankm[4];		// bank mode: 0 - ROM / 1 - RAM
-unsigned char cmos[0x100];
-unsigned char nvram[0x800];
+u8 membits[0x10000];
+u8 *bankr[4];	// memory pointers to memory (RAM/ROM/cache) mapped in four Z80 windows
+u8 *bankw[4];
+u8 bankm[4];		// bank mode: 0 - ROM / 1 - RAM
+u8 cmos[0x100];
+u8 nvram[0x800];
 
 unsigned sndplaybuf[PLAYBUFSIZE];
 unsigned spbsize;
 
 FILE *savesnd;
-unsigned char savesndtype; // 0-none,1-wave,2-vtx
-unsigned char *vtxbuf; unsigned vtxbufsize, vtxbuffilled;
+u8 savesndtype; // 0-none,1-wave,2-vtx
+u8 *vtxbuf; unsigned vtxbufsize, vtxbuffilled;
 
-unsigned char trdos_load, trdos_save, trdos_format, trdos_seek; // for leds
-unsigned char needclr; // clear screenbuffer before rendering
+u8 trdos_load, trdos_save, trdos_format, trdos_seek; // for leds
+u8 needclr; // clear screenbuffer before rendering
 
 HWND wnd; HINSTANCE hIn;
 
@@ -221,8 +221,8 @@ const TMemModel mem_model[N_MM_MODELS] =
     { "Quorum", "QUORUM",                    MM_QUORUM, 1024, RAM_128 | RAM_1024 },
 };
 
-unsigned char kbdpc[VK_MAX]; // add cells for mouse & joystick
-unsigned char kbdpcEX[6]; //Dexus
+u8 kbdpc[VK_MAX]; // add cells for mouse & joystick
+u8 kbdpcEX[6]; //Dexus
 keyports inports[VK_MAX];
 
 char statusline[128];
@@ -231,7 +231,7 @@ unsigned statcnt;
 char arcbuffer[0x2000]; // extensions and command lines for archivers
 char skiparc[0x400]; // ignore this files in archive
 
-unsigned char exitflag = 0; // avoid call exit() twice
+u8 exitflag = 0; // avoid call exit() twice
 
 // beta128 vars
 unsigned trd_toload = 0; // drive to load
@@ -244,7 +244,7 @@ unsigned snapsize;
 
 // conditional breakpoints support
 unsigned brk_port_in, brk_port_out;
-unsigned char brk_port_val;
+u8 brk_port_val;
 
 virtkeyt pckeys[] =
 {
@@ -582,14 +582,14 @@ PALETTE_OPTIONS pals[32] = {{"default",0x00,0x80,0xC0,0xE0,0xFF,0xC8,0xFF,0x00,0
 
 #pragma pack()
 
-unsigned char snbuf[4*1048576]; // large temporary buffer (for reading snapshots)
-unsigned char gdibuf[2*1048576];
+u8 snbuf[4*1048576]; // large temporary buffer (for reading snapshots)
+u8 gdibuf[2*1048576];
 
 // on-screen watches block
 unsigned watch_script[4][64];
-unsigned char watch_enabled[4];
-unsigned char used_banks[MAX_PAGES];
-unsigned char trace_rom=1, trace_ram=1;
+u8 watch_enabled[4];
+u8 used_banks[MAX_PAGES];
+u8 trace_rom=1, trace_ram=1;
 
 DWORD WinVerMajor;
 DWORD WinVerMinor;

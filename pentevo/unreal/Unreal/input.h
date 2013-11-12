@@ -2,9 +2,9 @@
 
 class TKeyboardBuffer
 {
-    unsigned char buffer[256];
-    unsigned char push;
-    unsigned char pop;
+    u8 buffer[256];
+    u8 push;
+    u8 pop;
     bool full;
     bool enabled;
 
@@ -25,7 +25,7 @@ public:
         full = false;
     }
 
-    void Push(unsigned char key)
+    void Push(u8 key)
     {
         if (!full)
         {
@@ -35,13 +35,13 @@ public:
         }        
     }
 
-    unsigned char Pop()
+    u8 Pop()
     {
         if (!full)
         {
             if (push != pop)
             {
-                unsigned char key = buffer[pop++];
+                u8 key = buffer[pop++];
                 if (pop == sizeof(buffer)) pop = 0;
                 return key;
             }
@@ -54,15 +54,15 @@ public:
 struct ATM_KBD
 {
    union {
-      unsigned char zxkeys[8];
+      u8 zxkeys[8];
       unsigned zxdata[2];
    };
-   unsigned char mode, R7, lastscan, cmd;
-   unsigned char kR1, kR2, kR3, kR4, kR5;
+   u8 mode, R7, lastscan, cmd;
+   u8 kR1, kR2, kR3, kR4, kR5;
 
-   void processzx(unsigned scancode, unsigned char pressed);
-   unsigned char read(unsigned char scan, unsigned char zxdata);
-   void setkey(unsigned scancode, unsigned char pressed);
+   void processzx(unsigned scancode, u8 pressed);
+   u8 read(u8 scan, u8 zxdata);
+   void setkey(unsigned scancode, u8 pressed);
    void reset();
    void clear();
 };
@@ -72,13 +72,13 @@ struct K_INPUT
 #pragma pack(push, 1)
    union
    {
-      volatile unsigned char kbd[16];
+      volatile u8 kbd[16];
       volatile unsigned kbd_x4[4];
    };
 
    union
    { // without keymatrix effect
-      volatile unsigned char rkbd[16];
+      volatile u8 rkbd[16];
       volatile unsigned rkbd_x4[4];
    };
 #pragma pack(pop)
@@ -89,12 +89,12 @@ struct K_INPUT
 
    int msx, msy, msx_prev, msy_prev, ay_x0, ay_y0;
    unsigned ay_reset_t;
-   unsigned char mbuttons, ayR14;
+   u8 mbuttons, ayR14;
 
-   volatile unsigned char kjoy;
-   unsigned char mousejoy;
-   unsigned char kbdled, mouse_joy_led;
-   unsigned char firedelay, firestate; // autofire vars
+   volatile u8 kjoy;
+   u8 mousejoy;
+   u8 kbdled, mouse_joy_led;
+   u8 firedelay, firestate; // autofire vars
 
    ATM_KBD atm51;
    TKeyboardBuffer buffer;
@@ -102,22 +102,22 @@ struct K_INPUT
    unsigned stick_delay;
    int prev_wheel;
 
-   unsigned char *textbuffer;
+   u8 *textbuffer;
    unsigned textoffset, textsize;
-   unsigned char tdelay, tdata, wheel; //0.36.6 from 0.35b2
+   u8 tdelay, tdata, wheel; //0.36.6 from 0.35b2
 
-   unsigned char kempston_mx();
-   unsigned char kempston_my();
+   u8 kempston_mx();
+   u8 kempston_my();
 
-   unsigned char aymouse_rd();
-   void aymouse_wr(unsigned char val);
+   u8 aymouse_rd();
+   void aymouse_wr(u8 val);
 
    void clear_zx();
-   inline void press_zx(unsigned char key);
+   inline void press_zx(u8 key);
    bool process_pc_layout();
    void make_matrix();
    char readdevices();
-   unsigned char read(unsigned char scan);
+   u8 read(u8 scan);
    u8 read_quorum(u8 scan);
    void paste();
 

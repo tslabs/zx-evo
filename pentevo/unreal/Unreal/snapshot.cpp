@@ -59,14 +59,14 @@ void GdiplusShutdown()
     if (gdiplusToken) GdiplusShutdown(gdiplusToken);
 }
 
-unsigned char what_is(char *filename)
+u8 what_is(char *filename)
 {
    FILE *ff = fopen(filename, "rb");
    if (!ff) return snNOFILE;
    snapsize = fread(snbuf, 1, sizeof snbuf, ff);
    fclose(ff);
    if (snapsize == sizeof snbuf) return snTOOLARGE;
-   unsigned char type = snUNKNOWN;
+   u8 type = snUNKNOWN;
    char *ptr = strrchr(filename, '.');
    unsigned ext = ptr? (*(int*)(ptr+1) | 0x20202020) : 0;
    if (snapsize < 32) return type;
@@ -99,13 +99,13 @@ unsigned char what_is(char *filename)
           if (snapsize >= 9 + nfiles * 14 + nsec * 0x100)
               type = snSCL;
       }
-      if (!memcmp(snbuf, "FDI", 3) && *(unsigned short*)(snbuf+4) <= MAX_CYLS && *(unsigned short*)(snbuf+6) <= 2) type = snFDI;
+      if (!memcmp(snbuf, "FDI", 3) && *(u16*)(snbuf+4) <= MAX_CYLS && *(u16*)(snbuf+6) <= 2) type = snFDI;
       if (((*(short*)snbuf|0x2020) == WORD2('t','d')) && snbuf[4] >= 10 && snbuf[4] <= 21 && snbuf[9] <= 2) type = snTD0;
       if (*(unsigned*)snbuf == WORD4('U','D','I','!') && *(unsigned*)(snbuf+4)==snapsize-4 && snbuf[9] < MAX_CYLS && snbuf[10]<2 && !snbuf[8]) type = snUDI;
    }
    if (snapsize > 10 && !memcmp(snbuf, "ZXTape!\x1A", 8)) type = snTZX;
    if (snapsize > 0x22 && !memcmp(snbuf, "Compressed Square Wave\x1A", 23)) type = snCSW;
-   if (*(unsigned short*)snbuf == WORD2('S','P') && *(unsigned short*)(snbuf+2)+0x26 == (int)snapsize) type = snSP;
+   if (*(u16*)snbuf == WORD2('S','P') && *(u16*)(snbuf+2)+0x26 == (int)snapsize) type = snSP;
    return type;
 }
 
@@ -113,7 +113,7 @@ int loadsnap(char *filename)
 {
    if (load_arc(filename))
        return 1;
-   unsigned char type = what_is(filename);
+   u8 type = what_is(filename);
 
    if (type >= snHOB)
    {
@@ -312,9 +312,9 @@ int readSNA128()
    memcpy(page_ram(5), hdr->page5, PAGE);
    memcpy(page_ram(2), hdr->page2, PAGE);
    memcpy(page_ram((hdr->p7FFD & 7)), hdr->active_page, PAGE);
-   unsigned char *newpage = snbuf+0xC01F;
-   unsigned char mapped = 0x24 | (1 << (hdr->p7FFD & 7));
-   for (unsigned char i = 0; i < 8; i++)
+   u8 *newpage = snbuf+0xC01F;
+   u8 mapped = 0x24 | (1 << (hdr->p7FFD & 7));
+   for (u8 i = 0; i < 8; i++)
       if (!(mapped & (1 << i))) {
          memcpy(memory + PAGE*i, newpage, PAGE); newpage += PAGE;
       }
@@ -379,7 +379,7 @@ int writeSNA(FILE *ff)
    hdr->p7FFD = comp.p7FFD;
    hdr->pFE = comp.pFE; comp.border_attr = comp.pFE & 7;
    unsigned savesize = sizeof(hdrSNA128);
-   unsigned char mapped = 0x24 | (1 << (comp.p7FFD & 7));
+   u8 mapped = 0x24 | (1 << (comp.p7FFD & 7));
    if (comp.p7FFD == 0x30)
    { // save 48k
       mapped = 0xFF;
@@ -392,19 +392,19 @@ int writeSNA(FILE *ff)
    memcpy(hdr->page2, memory+PAGE*2, PAGE);
    memcpy(hdr->active_page, memory+PAGE*(comp.p7FFD & 7), PAGE);
    if (fwrite(hdr, 1, savesize, ff) != savesize) return 0;
-   for (unsigned char i = 0; i < 8; i++)
+   for (u8 i = 0; i < 8; i++)
       if (!(mapped & (1 << i))) {
          if (fwrite(memory + PAGE*i, 1, PAGE, ff) != PAGE) return 0;
       }
    return 1;
 }
 
-void unpack_page(unsigned char *dst, int dstlen, unsigned char *src, int srclen)
+void unpack_page(u8 *dst, int dstlen, u8 *src, int srclen)
 {
    memset(dst, 0, dstlen);
    while (srclen > 0 && dstlen > 0) {
-      if (srclen >= 4 && *(unsigned short*)src == WORD2(0xED, 0xED)) {
-         for (unsigned char i = src[2]; i; i--)
+      if (srclen >= 4 && *(u16*)src == WORD2(0xED, 0xED)) {
+         for (u8 i = src[2]; i; i--)
             *dst++ = src[3], dstlen--;
          srclen -= 4; src += 4;
       } else *dst++ = *src++, dstlen--, srclen--;
@@ -415,8 +415,8 @@ int readZ80()
 {
    //conf.mem_model = MM_PENTAGON; conf.ramsize = 128;  // molodcov_alex
    hdrZ80 *hdr = (hdrZ80*)snbuf;
-   unsigned char *ptr = snbuf + 30;
-   unsigned char model48k = (hdr->model < 3);
+   u8 *ptr = snbuf + 30;
+   u8 model48k = (hdr->model < 3);
    reset((model48k|(hdr->p7FFD & 0x10)) ? RM_SOS : RM_128);
    if (hdr->flags == 0xFF)
        hdr->flags = 1;
@@ -428,22 +428,22 @@ int readZ80()
 
       while (ptr < snbuf+snapsize)
       {
-         unsigned char *p48[] =
+         u8 *p48[] =
          {
                 base_sos_rom, 0, 0, 0,
                 page_ram(2), page_ram(0), 0, 0,
                 page_ram(5), 0, 0, 0
          };
-         unsigned char *p128[] =
+         u8 *p128[] =
          {
                 base_sos_rom, base_dos_rom, base_128_rom, page_ram(0),
                 page_ram(1), page_ram(2), page_ram(3), page_ram(4),
                 page_ram(5), page_ram(6), page_ram(7), 0
          };
-         unsigned len = *(unsigned short*)ptr;
+         unsigned len = *(u16*)ptr;
          if (ptr[2] > 11)
              return 0;
-         unsigned char *dstpage = model48k ? p48[ptr[2]] : p128[ptr[2]];
+         u8 *dstpage = model48k ? p48[ptr[2]] : p128[ptr[2]];
          if (!dstpage)
              return 0;
          ptr += 3;
@@ -457,7 +457,7 @@ int readZ80()
    else
    {
       int len = snapsize - 30;
-      unsigned char *mem48 = ptr;
+      u8 *mem48 = ptr;
       if (hdr->flags & 0x20)
          unpack_page(mem48 = snbuf + 4*PAGE, 3*PAGE, ptr, len);
       memcpy(memory + PAGE*5, mem48, PAGE);
@@ -626,8 +626,8 @@ void opensnap(int index)
 }
 
 const int mx_typs = (1+4*6);
-unsigned char snaps[mx_typs]; unsigned exts[mx_typs], drvs[mx_typs]; int snp;
-static void addref(LPSTR &ptr, unsigned char sntype, const char *ref, unsigned drv, unsigned ext)
+u8 snaps[mx_typs]; unsigned exts[mx_typs], drvs[mx_typs]; int snp;
+static void addref(LPSTR &ptr, u8 sntype, const char *ref, unsigned drv, unsigned ext)
 {
    strcpy(ptr, ref); ptr += strlen(ptr)+1;
    strcpy(ptr, ref+strlen(ref)+1); ptr += strlen(ptr)+1;
@@ -756,7 +756,7 @@ void ConvPal8ToBgr24(u8 *dst, u8 *scrbuf, int dx)
     u8 *ds = dst;
     for (unsigned i = 0; i < temp.oy; i++) // convert to BGR24 format
     {
-       unsigned char *src = scrbuf + i*dx;
+       u8 *src = scrbuf + i*dx;
        for (unsigned y = 0; y < temp.ox; y++)
        {
           ds[0] = pal0[src[y]].peBlue;
@@ -773,7 +773,7 @@ void ConvRgb15ToBgr24(u8 *dst, u8 *scrbuf, int dx)
     u8 *ds = dst;
     for (unsigned i = 0; i < temp.oy; i++) // convert to BGR24 format
     {
-       unsigned char *src = scrbuf + i*dx;
+       u8 *src = scrbuf + i*dx;
        for (unsigned y = 0; y < temp.ox; y++)
        {
           unsigned xx;
@@ -793,7 +793,7 @@ void ConvRgb16ToBgr24(u8 *dst, u8 *scrbuf, int dx)
     u8 *ds = dst;
     for (unsigned i = 0; i < temp.oy; i++) // convert to BGR24 format
     {
-       unsigned char *src = scrbuf + i*dx;
+       u8 *src = scrbuf + i*dx;
        for (unsigned y = 0; y < temp.ox; y++)
        {
           unsigned xx;
@@ -813,7 +813,7 @@ void ConvYuy2ToBgr24(u8 *dst, u8 *scrbuf, int dx)
     u8 *ds = dst;
     for (unsigned i = 0; i < temp.oy; i++) // convert to BGR24 format
     {
-        unsigned char *src = scrbuf + i*dx;
+        u8 *src = scrbuf + i*dx;
         for (unsigned y = 0; y < temp.ox; y++)
         {
             unsigned xx;
@@ -841,7 +841,7 @@ void ConvBgr32ToBgr24(u8 *dst, u8 *scrbuf, int dx)
     u8 *ds = dst;
     for (unsigned i = 0; i < temp.oy; i++) // convert to BGR24 format
     {
-       unsigned char *src = scrbuf + i*dx;
+       u8 *src = scrbuf + i*dx;
        for (unsigned x = 0; x < temp.ox; x++)
        {
           ds[0] = src[0];
@@ -878,8 +878,8 @@ char* SaveScreenshot(const char* prefix, unsigned counter)
    if (conf.scrshot != SS_SCR)
    {
       unsigned dx = temp.ox * temp.obpp / 8;
-      unsigned char *scrbuf_unaligned = (unsigned char*)malloc(dx * temp.oy + CACHE_LINE);
-      unsigned char *scrbuf = (unsigned char*)align_by(scrbuf_unaligned, CACHE_LINE);
+      u8 *scrbuf_unaligned = (u8*)malloc(dx * temp.oy + CACHE_LINE);
+      u8 *scrbuf = (u8*)align_by(scrbuf_unaligned, CACHE_LINE);
       memset(scrbuf, 0, dx * temp.oy);
       renders[conf.render].func(scrbuf, dx); // render to memory buffer (PAL8, YUY2, RGB15, RGB16, RGB32)
       u8 *ds = (u8 *)malloc(((temp.ox * 3 + 3) & ~3) * temp.oy);

@@ -3,8 +3,8 @@
 #include "vars.h"
 #include "util.h"
 
-static const unsigned char sn0[] = { 1, 2, 3, 4, 9 };
-static const unsigned char sn[] = { 1, 2, 3, 4, 5 };
+static const u8 sn0[] = { 1, 2, 3, 4, 9 };
+static const u8 sn[] = { 1, 2, 3, 4, 5 };
 
 void FDD::format_pro()
 {
@@ -22,7 +22,7 @@ void FDD::format_pro()
             t.hdr[s].n = n; t.hdr[s].l = 3;
             t.hdr[s].c = c; t.hdr[s].s = h;
             t.hdr[s].c1 = t.hdr[s].c2 = 0;
-            t.hdr[s].data = (unsigned char*)1;
+            t.hdr[s].data = (u8*)1;
          }
          t.format();
       }
