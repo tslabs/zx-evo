@@ -368,14 +368,14 @@ static int subt = 0;
 
 	u32 s = (vid.ygctr << 8);
 	u8 *scr = page_ram(comp.ts.vpage & 0xF8);
-	u32 t = (vid.xctr + (comp.ts.g_offsx >> 1)) & 0xFF;
+	u32 t = (vid.xctr + (comp.ts.g_xoffs >> 1)) & 0xFF;
 	vid.xctr += n;
 	u32 p0, p1;
 	u8 p;
 	u32 vptr = vid.vptr;
 	u16 vcyc = vid.memvidcyc[vid.line];
 
-	if (comp.ts.g_offsx & 1)		// odd offset - left pixel
+	if (comp.ts.g_xoffs & 1)		// odd offset - left pixel
 	{
 		n--; vid.t_next++;
 		p = scr[s + t++]; t &= 0xFF;
@@ -404,7 +404,7 @@ static int subt = 0;
 		}
 	}
 
-	if (comp.ts.g_offsx & 1)		// odd offset - right pixel
+	if (comp.ts.g_xoffs & 1)		// odd offset - right pixel
 	{
 		p = scr[s + t];
 		p0 = vid.clut[(comp.ts.gpal << 4) | ((p >> 4) & 0x0F)];
@@ -424,7 +424,7 @@ void draw_ts256(int n)
 {
 	u32 s = (vid.ygctr << 9);
 	u8 *scr = page_ram(comp.ts.vpage & 0xF0);
-	u32 t = (vid.xctr + comp.ts.g_offsx) & 0x1FF;
+	u32 t = (vid.xctr + comp.ts.g_xoffs) & 0x1FF;
 	vid.xctr += n * 2;
 	u32 vptr = vid.vptr;
 	u16 vcyc = vid.memvidcyc[vid.line];

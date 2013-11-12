@@ -689,20 +689,20 @@ void update_screen()
 			if (!tact)		// start of pixel line
 			{
 				vid.xctr = 0;
-				comp.ts.g_offsx = comp.ts.g_offsx_d;			// reload X-offset
+				comp.ts.g_xoffs = comp.ts.g_xoffs_d;			// reload X-offset
 				comp.ts.vpage = comp.ts.vpage_d;	// reload Video Page
 				comp.ts.palsel = comp.ts.palsel_d;	// reload Palette Select
 
 				vid.yctr++;
-				if (!comp.ts.g_offsy_updated)	// was Y-offset updated?
+				if (!comp.ts.g_yoffs_updated)	// was Y-offset updated?
 				{
 					vid.ygctr++;					// no - just increment old
 					vid.ygctr &= 0x1FF;
 				}
 				else
 				{
-					vid.ygctr = comp.ts.g_offsy;		// yes - reload X-offset
-					comp.ts.g_offsy_updated = 0;
+					vid.ygctr = comp.ts.g_yoffs;		// yes - reload X-offset
+					comp.ts.g_yoffs_updated = 0;
 				}
 			}
 
@@ -728,6 +728,14 @@ void update_screen()
 					t = vid.t_next - t; n -= t; tact += t;
 
 					if ((vid.t_next % VID_TACTS) == vid.raster.r_ts && conf.mem_model == MM_TSL)
+						/* Here TSU is rendered at the end of pixel line.
+						On real H/W it is rendered in the PREVIOUS line to visible.
+						The only conventional TSU registers that should be respected:
+						t0x_offs, t1x_offs, t0gpage, t1gpage.
+						Changing other registers on-the-fly will result in unpredicted behaviour on H/W,
+						so, we ignore their correct emulation.
+						When written by CPU values are actualized in the next to next line.
+						E.g. while written in line 0 actualized in line 2. */
 						render_ts(), draw_ts();
 				}
 
@@ -810,8 +818,8 @@ void init_frame()
    vid.t_next = 0;
    vid.vptr = 0;
    vid.yctr = -1;
-   vid.ygctr = comp.ts.g_offsy - 1;
-   comp.ts.g_offsy_updated = 0;
+   vid.ygctr = comp.ts.g_yoffs - 1;
+   comp.ts.g_yoffs_updated = 0;
    vid.flash = comp.frame_counter & 0x10;
    init_raster();
    init_memcycles();

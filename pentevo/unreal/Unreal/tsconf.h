@@ -119,15 +119,11 @@ typedef struct {
 	u8 vpage;
 	u8 vpage_d;		// *_d - line-delayed
 	u8 tmpage;
-	u8 tmpage_d;
-	u8 t0gpage;
-	u8 t0gpage_d;
-	u8 t1gpage;
-	u8 t1gpage_d;
+	u8 t0gpage[3];
+	u8 t1gpage[3];
 	u8 sgpage;
-	u8 sgpage_d;
 	u8 border;
-	u8 g_offsy_updated;
+	u8 g_yoffs_updated;
 
 	union {
 		u8 vconf;
@@ -166,58 +162,60 @@ typedef struct {
 	u8 palsel_d;
 
 	union {
-		u16 g_offsx:9;
+		u16 g_xoffs:9;
 		struct {
-			u8 g_offsxl:8;
-			u8 g_offsxh:1;
+			u8 g_xoffsl:8;
+			u8 g_xoffsh:1;
 		};
 	};
 
 	union {
-		u16 g_offsx_d:9;
+		u16 g_xoffs_d:9;
 		struct {
-			u8 g_offsxl_d:8;
-			u8 g_offsxh_d:1;
+			u8 g_xoffsl_d:8;
+			u8 g_xoffsh_d:1;
 		};
 	};
 
 	union {
-		u16 g_offsy:9;
+		u16 g_yoffs:9;
 		struct {
-			u8 g_offsyl:8;
-			u8 g_offsyh:1;
+			u8 g_yoffsl:8;
+			u8 g_yoffsh:1;
 		};
 	};
 
 	union {
-		u16 t0_offsx:9;
+		u16 t0_xoffs:9;
 		struct {
-			u8 t0_offsxl:8;
-			u8 t0_offsxh:1;
+			u8 t0_xoffsl:8;
+			u8 t0_xoffsh:1;
+		};
+	};
+	u16 t0_xoffs_d[2];
+
+	union {
+		u16 t0_yoffs:9;
+		struct {
+			u8 t0_yoffsl:8;
+			u8 t0_yoffsh:1;
 		};
 	};
 
 	union {
-		u16 t0_offsy:9;
+		u16 t1_xoffs:9;
 		struct {
-			u8 t0_offsyl:8;
-			u8 t0_offsyh:1;
+			u8 t1_xoffsl:8;
+			u8 t1_xoffsh:1;
 		};
 	};
+	u16 t1_xoffs_d[2];
 
 	union {
-		u16 t1_offsx:9;
+		u16 t1_yoffs:9;
 		struct {
-			u8 t1_offsxl:8;
-			u8 t1_offsxh:1;
-		};
-	};
-
-	union {
-		u16 t1_offsy:9;
-		struct {
-			u8 t1_offsyl:8;
-			u8 t1_offsyh:1;
+			u8 t1_yoffsl:8;
+			u8 t1_yoffsh:1;
 		};
 	};
 

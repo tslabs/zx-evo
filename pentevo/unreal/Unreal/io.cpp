@@ -227,13 +227,13 @@ void out(unsigned port, u8 val)
 
 			case TSW_T0GPAGE: {
 				update_screen();
-				comp.ts.t0gpage = val;
+				comp.ts.t0gpage[0] = val;
 				break;
 			}
 
 			case TSW_T1GPAGE: {
 				update_screen();
-				comp.ts.t1gpage = val;
+				comp.ts.t1gpage[0] = val;
 				break;
 			}
 
@@ -263,75 +263,75 @@ void out(unsigned port, u8 val)
 
 			case TSW_GXOFFSL: {
 				update_screen();
-				comp.ts.g_offsxl_d = val;
+				comp.ts.g_xoffsl_d = val;
 				break;
 			}
 
 			case TSW_GXOFFSH: {
 				update_screen();
-				comp.ts.g_offsxh_d = val & 1;
+				comp.ts.g_xoffsh_d = val & 1;
 				break;
 			}
 
 			case TSW_GYOFFSL: {
 				update_screen();
-				comp.ts.g_offsyl = val;
-				comp.ts.g_offsy_updated = 1;
+				comp.ts.g_yoffsl = val;
+				comp.ts.g_yoffs_updated = 1;
 				break;
 			}
 
 			case TSW_GYOFFSH: {
 				update_screen();
-				comp.ts.g_offsyh = val & 1;
-				comp.ts.g_offsy_updated = 1;
+				comp.ts.g_yoffsh = val & 1;
+				comp.ts.g_yoffs_updated = 1;
 				break;
 			}
 
 			case TSW_T0XOFFSL: {
 				update_screen();
-				comp.ts.t0_offsxl = val;
+				comp.ts.t0_xoffsl = val;
 				break;
 			}
 
 			case TSW_T0XOFFSH: {
 				update_screen();
-				comp.ts.t0_offsxh = val & 1;
+				comp.ts.t0_xoffsh = val & 1;
 				break;
 			}
 
 			case TSW_T0YOFFSL: {
 				update_screen();
-				comp.ts.t0_offsyl = val;
+				comp.ts.t0_yoffsl = val;
 				break;
 			}
 
 			case TSW_T0YOFFSH: {
 				update_screen();
-				comp.ts.t0_offsyh = val & 1;
+				comp.ts.t0_yoffsh = val & 1;
 				break;
 			}
 
 			case TSW_T1XOFFSL: {
 				update_screen();
-				comp.ts.t1_offsxl = val;
+				comp.ts.t1_xoffsl = val;
 				break;
 			}
 
 			case TSW_T1XOFFSH: {
 				update_screen();
-				comp.ts.t1_offsxh = val & 1;
+				comp.ts.t1_xoffsh = val & 1;
 				break;
 			}
 
 			case TSW_T1YOFFSL: {
 				update_screen();
-				comp.ts.t1_offsyl = val;
+				comp.ts.t1_yoffsl = val;
 				break;
 			}
 
 			case TSW_T1YOFFSH: {
 				update_screen();
-				comp.ts.t1_offsyh = val & 1;
+				comp.ts.t1_yoffsh = val & 1;
 				break;
 			}
 
