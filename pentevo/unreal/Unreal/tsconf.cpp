@@ -213,8 +213,7 @@ void dma (u8 val)
 void render_tile(u8 page, u32 tnum, u8 line, u32 x, u8 pal, u8 xf, u8 n)
 {
 	/* check if number of allowed DRAM cycles per line (448) not exceeded */
-	vid.memtscyc[vid.line - 1] += n * 2;
-	if ((vid.memcpucyc[vid.line - 1] + vid.memvidcyc[vid.line - 1] + vid.memtscyc[vid.line - 1]) > 448)
+	if ((vid.memcpucyc[vid.line - 1] + vid.memvidcyc[vid.line - 1] + vid.memtsscyc[vid.line - 1] + vid.memtstcyc[vid.line - 1]) > 448)
 		return;
 
 	u8 *g = page_ram(page & 0xF8) + ((tnum & 0xFC0) << 5) + (line << 8);
@@ -242,8 +241,8 @@ u32 snum;
 
 void render_tile_layer(u8 layer)
 {
-	u32 y = (vid.yctr + (layer ? comp.ts.t1_offsy : comp.ts.t0_offsy)) & 0x1FF;
-	u32 x = (layer ? comp.ts.t1_offsx : comp.ts.t0_offsx);
+	u32 y = (vid.yctr + (layer ? comp.ts.t1_yoffs : comp.ts.t0_yoffs)) & 0x1FF;
+	u32 x = (layer ? comp.ts.t1_xoffs_d[1] : comp.ts.t0_xoffs_d[1]);
 	TILE_t *tmap = (TILE_t*)(page_ram(comp.ts.tmpage) + ((y & 0x1F8) << 5));
 	u32 ox = (x >> 3) & 0x3F;
 	u32 l = (layer << 6);
@@ -252,14 +251,77 @@ void render_tile_layer(u8 layer)
 	{
 		TILE_t t = tmap[(ox + i) & 0x3F | l];
 		if ((layer ? comp.ts.t1z_en : comp.ts.t0z_en) || t.tnum)
+		{
 			render_tile(
-				(layer ? comp.ts.t1gpage : comp.ts.t0gpage),				// page
+				(layer ? comp.ts.t1gpage[2] : comp.ts.t0gpage[2]),			// page
 				t.tnum,														// tile number
 				(y ^ (t.yflp ? 7 : 0)) & 7,									// line offset (3 bit)
 				(i << 3) - (x % 8),											// x coordinate in buffer (masked 0x1FF in func)
 				((layer ? comp.ts.t1pal : comp.ts.t0pal) << 2) | t.pal,		// palette
 				t.xflp, 1													// x flip, x size
 			);
+			vid.memtstcyc[vid.line - 1] += 2;
+		}
+	}
+}
+
+void render_sprite()
+{
+	//sfile_dump();
+	SPRITE_t s = spr[snum];
+	u8 ys = ((s.ys + 1) << 3);
+	u32 l = (vid.yctr - s.y) & 0x1FF;
+
+	if (l < ys)
+	{
+		render_tile(
+			comp.ts.sgpage,					// page
+			s.tnum,							// tile number
+			(u8)(s.yflp ? (ys - l - 1) : l),	// line offset (3 bit)
+			s.x,							// x coordinate in buffer (masked 0x1FF in func)
+			s.pal,							// palette
+			s.xflp, s.xs + 1				// x flip, x size
+		);
+		vid.memtsscyc[vid.line - 1] += (s.xs + 1) * 2;
+	}
+}
+
+void render_sprite_layer()
+{
+	for (; snum < 85; snum++)
+	{
+		if (spr[snum].act)
+			render_sprite();
+		if (spr[snum].leap)
+			{ snum++; break; }
+	}
+}
+
+void render_ts()
+{
+	comp.ts.t0gpage[2] = comp.ts.t0gpage[1];
+	comp.ts.t0gpage[1] = comp.ts.t0gpage[0];
+	comp.ts.t1gpage[2] = comp.ts.t1gpage[1];
+	comp.ts.t1gpage[1] = comp.ts.t1gpage[0];
+	comp.ts.t0_xoffs_d[1] = comp.ts.t0_xoffs_d[0];
+	comp.ts.t0_xoffs_d[0] = comp.ts.t0_xoffs;
+	comp.ts.t1_xoffs_d[1] = comp.ts.t1_xoffs_d[0];
+	comp.ts.t1_xoffs_d[0] = comp.ts.t1_xoffs;
+	
+	memset(vid.tsline, 0, 360);
+	snum = 0;
+
+	for (u32 layer=0; layer < 5; layer++)
+	{
+		if (layer == 0 || layer == 2 || layer == 4)
+			if (comp.ts.s_en)
+				{ render_sprite_layer(); continue; }
+		if (layer == 1)
+			if (comp.ts.t0_en)
+				{ render_tile_layer(0); continue; }
+		if (layer == 3)
+			if (comp.ts.t1_en)
+				{ render_tile_layer(1); continue; }
 	}
 }
 
@@ -280,54 +342,6 @@ void sfile_dump()
 		fprintf(f, "%d\tx:%d\ty:%d\tact:%d\tleap:%d\txs:%d\tys:%d\ttnum:%5d\txf:%d\tyf:%d\tpal:%d\r", i, s.x, s.y, s.act, s.leap, (s.xs+1)*8, (s.ys+1)*8, s.tnum, s.xflp, s.yflp, s.pal);
 	}
 	fclose(f);
-}
-
-void render_sprite()
-{
-	//sfile_dump();
-	SPRITE_t s = spr[snum];
-	u8 ys = ((s.ys + 1) << 3);
-	u32 l = (vid.yctr - s.y) & 0x1FF;
-
-	if (l < ys)
-		render_tile(
-			comp.ts.sgpage,					// page
-			s.tnum,							// tile number
-			(u8)(s.yflp ? (ys - l - 1) : l),	// line offset (3 bit)
-			s.x,							// x coordinate in buffer (masked 0x1FF in func)
-			s.pal,							// palette
-			s.xflp, s.xs + 1				// x flip, x size
-		);
-}
-
-void render_sprite_layer()
-{
-	for (; snum < 85; snum++)
-	{
-		if (spr[snum].act)
-			render_sprite();
-		if (spr[snum].leap)
-			{ snum++; break; }
-	}
-}
-
-void render_ts()
-{
-	memset(vid.tsline, 0, 360);
-	snum = 0;
-
-	for (u32 layer=0; layer < 5; layer++)
-	{
-		if (layer == 0 || layer == 2 || layer == 4)
-			if (comp.ts.s_en)
-				{ render_sprite_layer(); continue; }
-		if (layer == 1)
-			if (comp.ts.t0_en)
-				{ render_tile_layer(0); continue; }
-		if (layer == 3)
-			if (comp.ts.t1_en)
-				{ render_tile_layer(1); continue; }
-	}
 }
 
 // TS-Config init
@@ -353,8 +367,8 @@ void tsinit(void)
 	comp.ts.vconf = comp.ts.vconf_d = 0;
 	comp.ts.tsconf = 0;
 	comp.ts.palsel = comp.ts.palsel_d = 15;
-	comp.ts.g_offsx = 0;
-	comp.ts.g_offsy = 0;
+	comp.ts.g_xoffs = 0;
+	comp.ts.g_yoffs = 0;
 	
 	comp.intpos = 2;	// pentagon standard
 }

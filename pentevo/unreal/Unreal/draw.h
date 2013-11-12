@@ -66,7 +66,8 @@ struct VCTR
 	u8		tsline[512];	// TS buffer (indexed colors)
 	u16		memvidcyc[320];	// number of memory cycles used in every video line by video
 	u16		memcpucyc[320];	// number of memory cycles used in every video line by CPU
-	u16		memtscyc[320];	// number of memory cycles used in every video line by TS
+	u16		memtsscyc[320];	// number of memory cycles used in every video line by TS sprites
+	u16		memtstcyc[320];	// number of memory cycles used in every video line by TS tiles
 };
 
 #define MAX_FONT_TABLES 0x62000

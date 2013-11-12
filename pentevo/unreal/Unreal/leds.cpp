@@ -484,7 +484,8 @@ void init_memcycles(void)
 {
    memset(vid.memcpucyc, 0, 320 * sizeof(vid.memcpucyc[0]));
    memset(vid.memvidcyc, 0, 320 * sizeof(vid.memvidcyc[0]));
-   memset(vid.memtscyc,  0, 320 * sizeof( vid.memtscyc[0]));
+   memset(vid.memtsscyc, 0, 320 * sizeof(vid.memtsscyc[0]));
+   memset(vid.memtstcyc, 0, 320 * sizeof(vid.memtstcyc[0]));
 }
 
 void show_memcycle(u16 num, u32 col, u8 init, u32 vbpi)
@@ -533,9 +534,10 @@ void show_memcycles(void)
 		vbp = i * 896;
 		vbuf[vid.buf][vbp+15]  = bar;
 		vbuf[vid.buf][vbp+128] = bar;
-		show_memcycle(vid.memcpucyc[i], 0x40FF90, 1, vbp + 16);
-		show_memcycle(vid.memvidcyc[i], 0xFFFF90, 0, 0);
-		show_memcycle(vid.memtscyc[i], 0xFF9090, 0, 0);
+		show_memcycle(vid.memcpucyc[i], 0x40FF90, 1, vbp + 16);		// CPU
+		show_memcycle(vid.memvidcyc[i], 0xFFFF90, 0, 0);			// Video
+		show_memcycle(vid.memtstcyc[i], 0xFF9090, 0, 0);			// TSU Tiles
+		show_memcycle(vid.memtsscyc[i], 0xC040FF, 0, 0);			// TSU Sprites
 	}
 	
 }
