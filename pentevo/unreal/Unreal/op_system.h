@@ -1,6 +1,6 @@
 #pragma once
 
-Z80INLINE void handle_int(Z80 *cpu, unsigned char vector)
+Z80INLINE void handle_int(Z80 *cpu, u8 vector)
 {
    unsigned intad;
    if (cpu->im < 2) {

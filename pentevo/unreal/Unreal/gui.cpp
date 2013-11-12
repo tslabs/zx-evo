@@ -12,12 +12,12 @@
 #include "leds.h"
 #include "util.h"
 
-void setcheck(unsigned ID, unsigned char state = 1)
+void setcheck(unsigned ID, u8 state = 1)
 {
    CheckDlgButton(dlg, ID, state ? BST_CHECKED : BST_UNCHECKED);
 }
 
-unsigned char getcheck(unsigned ID)
+u8 getcheck(unsigned ID)
 {
    return (IsDlgButtonChecked(dlg, ID) == BST_CHECKED);
 }
@@ -390,10 +390,10 @@ INT_PTR CALLBACK UlaDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
          if (id == IDC_ULAPRESET) {
             unsigned pre = SendDlgItemMessage(dlg, IDC_ULAPRESET, CB_GETCURSEL, 0, 0);
             if (pre == num_ula) pre = -1;
-            c1.ula_preset = (unsigned char)pre;
+            c1.ula_preset = (u8)pre;
             if (pre == -1) return 1;
             CONFIG tmp = conf;
-            conf.ula_preset = (unsigned char)pre; load_ula_preset();
+            conf.ula_preset = (u8)pre; load_ula_preset();
             c1.frame = /*conf.frame*/frametime/*Alone Coder*/, c1.intfq = conf.intfq, c1.intlen = conf.intlen, c1.t_line = conf.t_line,
             c1.paper = conf.paper, c1.even_M1 = conf.even_M1, c1.border_4T = conf.border_4T;
             c1.floatbus = conf.floatbus, c1.floatdos = conf.floatdos;
@@ -486,9 +486,9 @@ void HddDlg_show_info(int device)
    if (*c1.ide[device].image == '<') {
       unsigned drive = find_hdd_device(c1.ide[device].image);
       if (drive < MAX_PHYS_HD_DRIVES + MAX_PHYS_CD_DRIVES) {
-         c = ((unsigned short*)phys[drive].idsector)[1];
-         h = ((unsigned short*)phys[drive].idsector)[3];
-         s = ((unsigned short*)phys[drive].idsector)[6];
+         c = ((u16*)phys[drive].idsector)[1];
+         h = ((u16*)phys[drive].idsector)[3];
+         s = ((u16*)phys[drive].idsector)[6];
          l = *(unsigned*)(phys[drive].idsector+0x78);
          if (!l) l = c*h*s;
          readonly = 1;
@@ -592,7 +592,7 @@ void HddDlg_show_size(unsigned id, unsigned sectors)
    unsigned __int64 sz = ((unsigned __int64)sectors) << 9;
    char num[64]; int ptr = 0, tri = 0;
    for (;;) {
-      num[ptr++] = (unsigned char)(sz % 10) + '0';
+      num[ptr++] = (u8)(sz % 10) + '0';
       sz /= 10; if (!sz) break;
       if (++tri == 3) num[ptr++] = ',', tri = 0;
    }
@@ -747,7 +747,7 @@ INT_PTR CALLBACK ChipDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
          SendMessage(aybox, CB_ADDSTRING, 0, (LPARAM)ay_schemes[i]);
 
       aybox = GetDlgItem(dlg, IDC_CHIP_VOL);
-      for (unsigned char UCi = 0; UCi < num_ayvols; UCi++) //Alone Coder
+      for (u8 UCi = 0; UCi < num_ayvols; UCi++) //Alone Coder
          SendMessage(aybox, CB_ADDSTRING, 0, (LPARAM)ayvols[UCi]); //Alone Coder
 
       aybox = GetDlgItem(dlg, IDC_CHIP_STEREO);
@@ -763,10 +763,10 @@ INT_PTR CALLBACK ChipDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
    NMHDR *nm = (NMHDR*)lp;
    if (nm->code == PSN_KILLACTIVE) {
       c1.sound.ayfq = getint(IDC_CHIP_CLK);
-      c1.sound.ay_chip = (unsigned char)SendDlgItemMessage(dlg, IDC_CHIP_BUS, CB_GETCURSEL, 0, 0);
-      c1.sound.ay_scheme = (unsigned char)SendDlgItemMessage(dlg, IDC_CHIP_SCHEME, CB_GETCURSEL, 0, 0);
-      c1.sound.ay_vols = (unsigned char)SendDlgItemMessage(dlg, IDC_CHIP_VOL, CB_GETCURSEL, 0, 0);
-      c1.sound.ay_stereo = (unsigned char)SendDlgItemMessage(dlg, IDC_CHIP_STEREO, CB_GETCURSEL, 0, 0);
+      c1.sound.ay_chip = (u8)SendDlgItemMessage(dlg, IDC_CHIP_BUS, CB_GETCURSEL, 0, 0);
+      c1.sound.ay_scheme = (u8)SendDlgItemMessage(dlg, IDC_CHIP_SCHEME, CB_GETCURSEL, 0, 0);
+      c1.sound.ay_vols = (u8)SendDlgItemMessage(dlg, IDC_CHIP_VOL, CB_GETCURSEL, 0, 0);
+      c1.sound.ay_stereo = (u8)SendDlgItemMessage(dlg, IDC_CHIP_STEREO, CB_GETCURSEL, 0, 0);
       c1.sound.ay_samples = getcheck(IDC_CHIP_DIGITAL);
    }
    if (nm->code == PSN_SETACTIVE) {
@@ -892,7 +892,7 @@ INT_PTR CALLBACK VideoDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
       c1.flashcolor = getcheck(IDC_FLASH);
       c1.noflic = getcheck(IDC_NOFLIC);
       c1.alt_nf = getcheck(IDC_ALT_NOFLIC);
-      c1.videoscale = (unsigned char)(SendDlgItemMessage(dlg, IDC_VIDEOSCALE, TBM_GETPOS, 0, 0));
+      c1.videoscale = (u8)(SendDlgItemMessage(dlg, IDC_VIDEOSCALE, TBM_GETPOS, 0, 0));
    }
 
    if (nm->code == PSN_SETACTIVE)
@@ -989,7 +989,7 @@ upd:  for (int i = 0; i < sizeof slider/sizeof*slider; i++) {
       for (char *ptr = fname; *ptr; ptr++)
          if (*ptr == '|' || *ptr == '<' || *ptr == '>' ||
              *ptr == '?' || *ptr == '/' || *ptr == '\\' ||
-             *ptr == '"' || *ptr == ':' || *ptr == '*' || *(unsigned char*)ptr < ' ')
+             *ptr == '"' || *ptr == ':' || *ptr == '*' || *(u8*)ptr < ' ')
             *ptr = ' ';
       ofn.lStructSize = (WinVerMajor < 5) ? OPENFILENAME_SIZE_VERSION_400 : sizeof(OPENFILENAME);
       ofn.lpstrFilter = "Amiga music module (MOD)\0*.mod\0";
@@ -1245,7 +1245,7 @@ INT_PTR CALLBACK LedsDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
    ::dlg = dlg;
    if (msg == WM_USER || (!block && msg == WM_COMMAND && (HIWORD(wp)==EN_CHANGE || HIWORD(wp)==BN_CLICKED)))
    {
-      unsigned char ld_on = getcheck(IDC_LED_ON);
+      u8 ld_on = getcheck(IDC_LED_ON);
       c1.led.enabled = ld_on;
       c1.led.perf_t = getcheck(IDC_PERF_T);
       c1.led.flash_ay_kbd = getcheck(IDC_LED_AYKBD);
@@ -1256,7 +1256,7 @@ INT_PTR CALLBACK LedsDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
          if (!*b1 || !*b2) continue; // skip first notification with empty controls
          unsigned a = (atoi(b1) & 0xFFFF) + ((atoi(b2) & 0x7FFF) << 16);
          if (IsDlgButtonChecked(dlg, ids[i][0]) == BST_CHECKED) a |= 0x80000000;
-         unsigned char x = ld_on && (a & 0x80000000);
+         u8 x = ld_on && (a & 0x80000000);
          EnableWindow(GetDlgItem(dlg, ids[i][0]), ld_on);
          EnableWindow(GetDlgItem(dlg, ids[i][1]), x);
          EnableWindow(GetDlgItem(dlg, ids[i][2]), x);
@@ -1298,9 +1298,9 @@ INT_PTR CALLBACK LedsDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
       SendDlgItemMessage(dlg, IDC_LED_BPP, TBM_SETPOS, 1, pos);
       for (unsigned i = 0; i < NUM_LEDS; i++) {
          unsigned a = (&c1.led.ay)[i];
-         char bf[16]; sprintf(bf, "%d", (signed short)(a & 0xFFFF));
+         char bf[16]; sprintf(bf, "%d", (i16)(a & 0xFFFF));
          SendDlgItemMessage(dlg, ids[i][1], WM_SETTEXT, 0, (LPARAM)bf);
-         sprintf(bf, "%d", (signed short)(((a >> 16) & 0x7FFF) + ((a >> 15) & 0x8000)));
+         sprintf(bf, "%d", (i16)(((a >> 16) & 0x7FFF) + ((a >> 15) & 0x8000)));
          SendDlgItemMessage(dlg, ids[i][2], WM_SETTEXT, 0, (LPARAM)bf);
          setcheck(ids[i][0], a >> 31);
       }

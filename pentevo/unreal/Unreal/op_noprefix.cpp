@@ -97,7 +97,7 @@ Z80OPCODE op_0F(Z80 *cpu) { // rrca
 //#ifndef Z80_COMMON
 Z80OPCODE op_10(Z80 *cpu) { // djnz rr
    if (--cpu->b) {
-      signed char offs = (char)cpu->MemIf->rm(cpu->pc);
+      char offs = (char)cpu->MemIf->rm(cpu->pc);
       cpu->last_branch = cpu->pc-1;
       cpu->memptr = cpu->pc += offs+1, cputact(9);
    } else cpu->pc++, cputact(4);
@@ -134,14 +134,14 @@ Z80OPCODE op_16(Z80 *cpu) { // ld d,nn
 //#endif
 //#ifdef Z80_COMMON
 Z80OPCODE op_17(Z80 *cpu) { // rla
-   unsigned char new_a = (cpu->a << 1) + (cpu->f & 1);
+   u8 new_a = (cpu->a << 1) + (cpu->f & 1);
    cpu->f = rlcaf[cpu->a] | (cpu->f & (SF | ZF | PV)); // use same table with rlca
    cpu->a = new_a;
 }
 //#endif
 //#ifndef Z80_COMMON
 Z80OPCODE op_18(Z80 *cpu) { // jr rr
-   signed char offs = (char)cpu->MemIf->rm(cpu->pc);
+   char offs = (char)cpu->MemIf->rm(cpu->pc);
    cpu->last_branch = cpu->pc-1;
    cpu->pc += offs+1;
    cpu->memptr = cpu->pc;
@@ -186,7 +186,7 @@ Z80OPCODE op_1E(Z80 *cpu) { // ld e,nn
 //#endif
 //#ifdef Z80_COMMON
 Z80OPCODE op_1F(Z80 *cpu) { // rra
-   unsigned char new_a = (cpu->a >> 1) + (cpu->f << 7);
+   u8 new_a = (cpu->a >> 1) + (cpu->f << 7);
    cpu->f = rrcaf[cpu->a] | (cpu->f & (SF | ZF | PV)); // use same table with rrca
    cpu->a = new_a;
 }
@@ -194,7 +194,7 @@ Z80OPCODE op_1F(Z80 *cpu) { // rra
 //#ifndef Z80_COMMON
 Z80OPCODE op_20(Z80 *cpu) { // jr nz, rr
    if (!(cpu->f & ZF)) {
-      signed char offs = (char)cpu->MemIf->rm(cpu->pc);
+      char offs = (char)cpu->MemIf->rm(cpu->pc);
       cpu->last_branch = cpu->pc-1;
       cpu->memptr = cpu->pc += offs+1, cputact(8);
    } else cpu->pc++, cputact(3);
@@ -238,14 +238,14 @@ Z80OPCODE op_26(Z80 *cpu) { // ld h,nn
 //#endif
 //#ifdef Z80_COMMON
 Z80OPCODE op_27(Z80 *cpu) { // daa
-   cpu->af = *(unsigned short*)
+   cpu->af = *(u16*)
       (daatab+(cpu->a+0x100*((cpu->f & 3) + ((cpu->f >> 2) & 4)))*2);
 }
 //#endif
 //#ifndef Z80_COMMON
 Z80OPCODE op_28(Z80 *cpu) { // jr z,rr
    if ((cpu->f & ZF)) {
-      signed char offs = (char)cpu->MemIf->rm(cpu->pc);
+      char offs = (char)cpu->MemIf->rm(cpu->pc);
       cpu->last_branch = cpu->pc-1;
       cpu->memptr = cpu->pc += offs+1, cputact(8);
    } else cpu->pc++, cputact(3);
@@ -299,7 +299,7 @@ Z80OPCODE op_2F(Z80 *cpu) { // cpl
 //#ifndef Z80_COMMON
 Z80OPCODE op_30(Z80 *cpu) { // jr nc, rr
    if (!(cpu->f & CF)) {
-      signed char offs = (char)cpu->MemIf->rm(cpu->pc);
+      char offs = (char)cpu->MemIf->rm(cpu->pc);
       cpu->last_branch = cpu->pc-1;
       cpu->memptr = cpu->pc += offs+1, cputact(8);
    } else cpu->pc++, cputact(3);
@@ -327,14 +327,14 @@ Z80OPCODE op_33(Z80 *cpu) { // inc sp
 //#endif
 //#ifndef Z80_COMMON
 Z80OPCODE op_34(Z80 *cpu) { // inc (hl)
-   unsigned char hl = cpu->MemIf->rm(cpu->hl);
+   u8 hl = cpu->MemIf->rm(cpu->hl);
    inc8(cpu, hl);
 //   wm(cpu->hl, hl);
    cputact(7);
    cpu->MemIf->wm(cpu->hl, hl); //Alone Coder
 }
 Z80OPCODE op_35(Z80 *cpu) { // dec (hl)
-   unsigned char hl = cpu->MemIf->rm(cpu->hl);
+   u8 hl = cpu->MemIf->rm(cpu->hl);
    dec8(cpu, hl);
 //   wm(cpu->hl, hl);
    cputact(7);
@@ -354,7 +354,7 @@ Z80OPCODE op_37(Z80 *cpu) { // scf
 //#ifndef Z80_COMMON
 Z80OPCODE op_38(Z80 *cpu) { // jr c,rr
    if ((cpu->f & CF)) {
-      signed char offs = (char)cpu->MemIf->rm(cpu->pc);
+      char offs = (char)cpu->MemIf->rm(cpu->pc);
       cpu->last_branch = cpu->pc-1;
       cpu->memptr = cpu->pc += offs+1, cputact(8);
    } else cpu->pc++, cputact(3);

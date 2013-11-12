@@ -15,8 +15,8 @@
 extern const DRIVER drivers[];
 extern size_t renders_count;
 
-extern unsigned char active;
-extern unsigned char pause;
+extern u8 active;
+extern u8 pause;
 
 extern LPDIRECTDRAW2 dd;
 extern LPDIRECTDRAWSURFACE sprim;

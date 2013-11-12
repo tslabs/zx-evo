@@ -6,18 +6,18 @@
 int FDD::read_fdi()
 {
    newdisk(snbuf[4], snbuf[6]);
-   strncpy(dsc, (char*)snbuf + *(unsigned short*)(snbuf+8), sizeof dsc);
+   strncpy(dsc, (char*)snbuf + *(u16*)(snbuf+8), sizeof dsc);
 
    int res = 1;
-   unsigned char *trk = snbuf + 0x0E + *(unsigned short*)(snbuf+0x0C);
-   unsigned char *dat = snbuf + *(unsigned short*)(snbuf+0x0A);
+   u8 *trk = snbuf + 0x0E + *(u16*)(snbuf+0x0C);
+   u8 *dat = snbuf + *(u16*)(snbuf+0x0A);
 
    for (unsigned c = 0; c < snbuf[4]; c++)
    {
       for (unsigned s = 0; s < snbuf[6]; s++)
       {
          t.seek(this, c,s, JUST_SEEK);
-         unsigned char *t0 = dat + *(unsigned*)trk;
+         u8 *t0 = dat + *(unsigned*)trk;
          unsigned ns = trk[6]; trk += 7;
          for (unsigned sec = 0; sec < ns; sec++)
          {
@@ -27,7 +27,7 @@ int FDD::read_fdi()
                 t.hdr[sec].data = 0;
             else
             {
-               t.hdr[sec].data = t0 + *(unsigned short*)(trk+5);
+               t.hdr[sec].data = t0 + *(u16*)(trk+5);
                if (t.hdr[sec].data+128 > snbuf+snapsize)
                    return 0;
                t.hdr[sec].c2 = (trk[4] & (1<<(trk[3] & 3))) ? 0:2; // [vv]
@@ -60,11 +60,11 @@ int FDD::write_fdi(FILE *ff)
    unsigned tlen = strlen(dsc)+1;
    unsigned hsize = 14+(total_s+cyls*sides)*7;
    *(unsigned*)snbuf = WORD4('F','D','I',0);
-   *(unsigned short*)(snbuf+4) = cyls;
-   *(unsigned short*)(snbuf+6) = sides;
-   *(unsigned short*)(snbuf+8) = hsize;
-   *(unsigned short*)(snbuf+0x0A) = hsize + tlen;
-   *(unsigned short*)(snbuf+0x0C) = 0;
+   *(u16*)(snbuf+4) = cyls;
+   *(u16*)(snbuf+6) = sides;
+   *(u16*)(snbuf+8) = hsize;
+   *(u16*)(snbuf+0x0A) = hsize + tlen;
+   *(u16*)(snbuf+0x0C) = 0;
    fwrite(snbuf, 1, 14, ff);
    unsigned trkoffs = 0;
    for (c = 0; c < cyls; c++)

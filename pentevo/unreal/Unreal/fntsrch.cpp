@@ -6,14 +6,14 @@
 
 #ifdef MOD_SETTINGS
 unsigned font_maxmem = 0xFFFF;
-unsigned char r21=1, r30=1, r41=1, r61=1, r80=1, rae=1, rf0=0, roth=0;
-unsigned char linear = 0, right = 1, x100 = 1;
-unsigned char rmask[0x100];
+u8 r21=1, r30=1, r41=1, r61=1, r80=1, rae=1, rf0=0, roth=0;
+u8 linear = 0, right = 1, x100 = 1;
+u8 rmask[0x100];
 unsigned font_address;
-unsigned char fontdata2[0x900*2];
+u8 fontdata2[0x900*2];
 unsigned fontsize = 8;
 static unsigned block_font_dialog = 0;
-unsigned char *font_base;
+u8 *font_base;
 
 
 void update_rmask()
@@ -85,7 +85,7 @@ void paint_font(HWND dlg, int paint=0)
       y = y*20 + ((y>>2)&3) * 2;
       x += 10, y += 10;
       for (unsigned i = 0; i < fontsize; i++) {
-         unsigned char byte = font_base[(font_address + i*next_pixel + ch*next_char) & font_maxmem];
+         u8 byte = font_base[(font_address + i*next_pixel + ch*next_char) & font_maxmem];
          unsigned *t0 = t1;
          if (right || !rmask[ch]) t0 = t2;
          *(unsigned*)(buf+sz*(y+2*i) + x) = t0[byte >> 6];
@@ -115,7 +115,7 @@ void paint_font(HWND dlg, int paint=0)
    SetDlgItemText(dlg, IDC_ADDRESS, ln);
 }
 
-unsigned char pattern[12][8];
+u8 pattern[12][8];
 
 void kill_pattern(unsigned x, unsigned y, unsigned mode)
 {
@@ -161,11 +161,11 @@ unsigned count_lnk(unsigned mode)
    return result;
 }
 
-static union { unsigned v32; unsigned char v8[4]; } c_map0[16];
-static union { unsigned v32; unsigned char v8[4]; } c_map1[16];
-static union { unsigned v32; unsigned char v8[4]; } c_map2[16];
-static union { unsigned v32; unsigned char v8[4]; } c_map3[16];
-static union { unsigned v32; unsigned char v8[4]; } c_map4[16];
+static union { unsigned v32; u8 v8[4]; } c_map0[16];
+static union { unsigned v32; u8 v8[4]; } c_map1[16];
+static union { unsigned v32; u8 v8[4]; } c_map2[16];
+static union { unsigned v32; u8 v8[4]; } c_map3[16];
+static union { unsigned v32; u8 v8[4]; } c_map4[16];
 
 void create_maps()
 {
@@ -213,7 +213,7 @@ unsigned linked_empties(unsigned sym)
    return count_lnk(0);
 }
 
-unsigned char is_font()
+u8 is_font()
 {
    const int max_err = 2;
    int err = 0;
@@ -306,7 +306,7 @@ inline int pretest_font(unsigned pix, unsigned chr, unsigned shift)
    // check non-spaces
    for (i = 0; i < 0x100; i++) {
       if (!rmask[i]) continue;
-      unsigned char s = 0;
+      u8 s = 0;
       for (unsigned k = 0; k < fontsize; k++)
          s += (font_base[(font_address + k*pix + i*chr) & font_maxmem] >> shift) & 0x0F;
       if (!s) return 0;

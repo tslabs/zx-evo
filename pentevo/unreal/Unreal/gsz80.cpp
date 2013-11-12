@@ -15,25 +15,25 @@ namespace z80gs
 unsigned __int64 gs_t_states; // inc'ed with GSCPUINT every gs int
 unsigned __int64 gscpu_t_at_frame_start; // gs_t_states+gscpu.t when spectrum frame begins
 
-Z80INLINE unsigned char rm(unsigned addr);
+Z80INLINE u8 rm(unsigned addr);
 u8 dbgrm(u32 addr);
-Z80INLINE void wm(unsigned addr, unsigned char val);
+Z80INLINE void wm(unsigned addr, u8 val);
 void dbgwm(u32 addr, u8 val);
 Z80INLINE u8 *am_r(u32 addr);
-Z80INLINE unsigned char m1_cycle(Z80 *cpu);
-unsigned char in(unsigned port);
-void out(unsigned port, unsigned char val);
+Z80INLINE u8 m1_cycle(Z80 *cpu);
+u8 in(unsigned port);
+void out(unsigned port, u8 val);
 // FIXME: Сделать переключаемый интерфейс в зависимости от флага gscpu.dbgchk
 namespace z80fast
 {
-Z80INLINE unsigned char rm(unsigned addr);
-Z80INLINE void wm(unsigned addr, unsigned char val);
+Z80INLINE u8 rm(unsigned addr);
+Z80INLINE void wm(unsigned addr, u8 val);
 }
 
 namespace z80dbg
 {
-Z80INLINE unsigned char rm(unsigned addr);
-Z80INLINE void wm(unsigned addr, unsigned char val);
+Z80INLINE u8 rm(unsigned addr);
+Z80INLINE void wm(unsigned addr, u8 val);
 }
 
 u8 Rm(u32 addr)
@@ -62,17 +62,17 @@ u8 *TGsZ80::DirectMem(unsigned addr) const
     return z80gs::am_r(addr);
 }
 
-unsigned char TGsZ80::m1_cycle()
+u8 TGsZ80::m1_cycle()
 {
     return z80gs::m1_cycle(this);
 }
 
-unsigned char TGsZ80::in(unsigned port)
+u8 TGsZ80::in(unsigned port)
 {
     return z80gs::in(port);
 }
 
-void TGsZ80::out(unsigned port, unsigned char val)
+void TGsZ80::out(unsigned port, u8 val)
 {
     z80gs::out(port, val);
 }
@@ -105,12 +105,12 @@ u8 *gsbankr[4] = { ROM_GS_M, GSRAM_M + 3 * PAGE, ROM_GS_M, ROM_GS_M + PAGE }; //
 u8 *gsbankw[4] = { TRASH_M, GSRAM_M + 3 * PAGE, TRASH_M, TRASH_M }; // bank pointers for write
 
 unsigned gs_v[4];
-unsigned char gsvol[4], gsbyte[4];
+u8 gsvol[4], gsbyte[4];
 unsigned led_gssum[4], led_gscnt[4];
-unsigned char gsdata_in, gsdata_out, gspage = 0;
-unsigned char gscmd, gsstat;
+u8 gsdata_in, gsdata_out, gspage = 0;
+u8 gscmd, gsstat;
 
-unsigned long long mult_gs, mult_gs2;
+u64 mult_gs, mult_gs2;
 
 // ngs
 u8 ngs_mode_pg1; // page ex number
@@ -241,13 +241,13 @@ u8 in_gs(unsigned port)
    return 0xFF;
 }
 
-static void gs_byte_to_dac(unsigned addr, unsigned char byte)
+static void gs_byte_to_dac(unsigned addr, u8 byte)
 {
    flush_gs_sound();
    unsigned chan = (addr>>8) & 3;
    gsbyte[chan] = byte;
 //   gs_v[chan] = (gsbyte[chan] * gs_vfx[gsvol[chan]]) >> 8;
-   gs_v[chan] = ((signed char)(gsbyte[chan]-0x80) * (signed)gs_vfx[gsvol[chan]]) /256 + gs_vfx[33]; //!psb
+   gs_v[chan] = ((char)(gsbyte[chan]-0x80) * (signed)gs_vfx[gsvol[chan]]) /256 + gs_vfx[33]; //!psb
    led_gssum[chan] += byte;
    led_gscnt[chan]++;
 }
@@ -294,7 +294,7 @@ void __cdecl BankNames(int i, char *Name)
 }
 
 
-Z80INLINE unsigned char m1_cycle(Z80 *cpu)
+Z80INLINE u8 m1_cycle(Z80 *cpu)
 {
    cpu->r_low++; cputact(4);
    return cpu->MemIf->rm(cpu->pc++);
@@ -329,7 +329,7 @@ static inline void UpdateMemMapping()
     }
 }
 
-void out(unsigned port, unsigned char val)
+void out(unsigned port, u8 val)
 {
 //   printf(__FUNCTION__" port=0x%X, val=0x%X\n", (port & 0xFF), val);
    switch (port & 0xFF)
@@ -355,7 +355,7 @@ void out(unsigned port, unsigned char val)
          unsigned chan = (port & 0x0F)-6; val &= 0x3F;
          gsvol[chan] = val;
 //         gs_v[chan] = (gsbyte[chan] * gs_vfx[gsvol[chan]]) >> 8;
-         gs_v[chan] = ((signed char)(gsbyte[chan]-0x80) * (signed)gs_vfx[gsvol[chan]]) /256 + gs_vfx[33]; //!psb
+         gs_v[chan] = ((char)(gsbyte[chan]-0x80) * (signed)gs_vfx[gsvol[chan]]) /256 + gs_vfx[33]; //!psb
          return;
       }
       case 0x0A: gsstat = (gsstat & 0x7F) | (gspage << 7); return;
@@ -436,7 +436,7 @@ void out(unsigned port, unsigned char val)
    }
 }
 
-unsigned char in(unsigned port)
+u8 in(unsigned port)
 {
    switch (port & 0xFF)
    {

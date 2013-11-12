@@ -42,7 +42,7 @@ void showregs()
    Z80 &cpu = CpuMgr.Cpu();
    const TZ80State &prevcpu = CpuMgr.PrevCpu();
 
-   unsigned char atr = (activedbg == WNDREGS) ? W_SEL : W_NORM;
+   u8 atr = (activedbg == WNDREGS) ? W_SEL : W_NORM;
    char line[40];
    tprint(regs_x,regs_y+0, "af:**** af'**** sp:**** ir: ****", atr);
    tprint(regs_x,regs_y+1, "bc:**** bc'**** pc:**** t:******", atr);
@@ -64,7 +64,7 @@ void showregs()
    {
       unsigned mask = (1 << regs_layout[i].width) - 1;
       unsigned val = mask & *(unsigned*)(PCHAR((TZ80State*)&cpu)+regs_layout[i].offs);
-      unsigned char atr1 = atr;
+      u8 atr1 = atr;
       if (activedbg == WNDREGS && i == regs_curs)
           atr1 = W_CURS;
       if (val != (mask & *(unsigned*)(PCHAR(&prevcpu)+regs_layout[i].offs)))
@@ -82,9 +82,9 @@ void showregs()
       tprint(regs_x + regs_layout[i].x, regs_y + regs_layout[i].y, bf, atr1);
    }
    static const char flg[] = "SZ5H3PNCsz.h.pnc";
-   for (unsigned char q = 0; q < 8; q++)
+   for (u8 q = 0; q < 8; q++)
    {
-      unsigned ln; unsigned char atr1 = atr;
+      unsigned ln; u8 atr1 = atr;
       if (activedbg == WNDREGS && regs_curs == (unsigned)(q+18)) atr1 = W_CURS;
       ln = flg[q+((cpu.af & (0x80>>q)) ? 0 : 8)];
       if ((0x80>>q)&(cpu.f^prevcpu.f)) atr1 |= 0x08;
@@ -103,9 +103,9 @@ void renter()
    Z80 &cpu = CpuMgr.Cpu();
    debugscr();
    debugflip();
-   unsigned char sz = regs_layout[regs_curs].width;
+   u8 sz = regs_layout[regs_curs].width;
    unsigned val = ((1 << sz) - 1) & *(unsigned*)(PCHAR((TZ80State*)&cpu) + regs_layout[regs_curs].offs);
-   unsigned char *ptr = PUCHAR((TZ80State*)&cpu) + regs_layout[regs_curs].offs;
+   u8 *ptr = PUCHAR((TZ80State*)&cpu) + regs_layout[regs_curs].offs;
    if ((sz == 8 || sz == 16) && ((input.lastkey >= '0' && input.lastkey <= '9') || (input.lastkey >= 'A' && input.lastkey <= 'F')))
       PostThreadMessage(GetCurrentThreadId(), WM_KEYDOWN, input.lastkey, 1);
    switch (sz)
@@ -118,7 +118,7 @@ void renter()
       case 16:
          val = input4(regs_x + regs_layout[regs_curs].x, regs_y + regs_layout[regs_curs].y, val);
          if (val != -1)
-             *(unsigned short*)ptr = val;
+             *(u16*)ptr = val;
          break;
       case 1:
          *ptr ^= 1; break;
@@ -158,7 +158,7 @@ void rcodejump()
     if (regs_layout[regs_curs].width == 16)
     {
          activedbg = WNDTRACE;
-         cpu.trace_curs = cpu.trace_top = *(unsigned short*)(PCHAR((TZ80State*)&cpu) + regs_layout[regs_curs].offs);
+         cpu.trace_curs = cpu.trace_top = *(u16*)(PCHAR((TZ80State*)&cpu) + regs_layout[regs_curs].offs);
     }
 }
 void rdatajump()
@@ -168,7 +168,7 @@ void rdatajump()
     {
         activedbg = WNDMEM;
         editor = ED_MEM;
-        cpu.mem_curs = *(unsigned short*)(PCHAR((TZ80State*)&cpu) + regs_layout[regs_curs].offs);
+        cpu.mem_curs = *(u16*)(PCHAR((TZ80State*)&cpu) + regs_layout[regs_curs].offs);
     }
 }
 

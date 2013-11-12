@@ -94,7 +94,7 @@ CACHE_ALIGNED struct T
       };
    };
 
-   unsigned char attrtab[0x200]; // pc attribute + bit (pixel on/off) -> palette index
+   u8 attrtab[0x200]; // pc attribute + bit (pixel on/off) -> palette index
 
    CACHE_ALIGNED union {
       unsigned p4bpp8[2][0x100];   // ATM EGA screen. EGA byte -> raw video data: 2 pixels (doubled) (p2p2p1p1)
@@ -122,8 +122,8 @@ CACHE_ALIGNED struct T
 
    union {
       struct { // 8bpp
-         CACHE_ALIGNED unsigned char scale2buf[8][sc2lines_width];    // temp buffer for scale2x,3x filter
-         CACHE_ALIGNED unsigned char scale4buf[8][sc2lines_width];    // temp buffer for scale4x filter
+         CACHE_ALIGNED u8 scale2buf[8][sc2lines_width];    // temp buffer for scale2x,3x filter
+         CACHE_ALIGNED u8 scale4buf[8][sc2lines_width];    // temp buffer for scale4x filter
       };
       struct // 32 bpp
       {
@@ -143,7 +143,7 @@ CACHE_ALIGNED struct T
    unsigned atrtab_hwmc[256]; // attribute for HWMC
    unsigned atm_pal_map[0x100]; // atm palette port value -> palette index
    struct {   // for AlCo-384
-      unsigned char *s, *a;
+      u8 *s, *a;
    } alco[304][8];
 
    #ifdef MOD_VID_VD
@@ -155,7 +155,7 @@ CACHE_ALIGNED struct T
 struct videopoint
 {
    unsigned next_t;
-   unsigned char *screen_ptr;
+   u8 *screen_ptr;
    union {
       unsigned nextvmode;  // for vmode=1
       unsigned atr_offs;   // for vmode=2
@@ -192,13 +192,13 @@ static const int rb2_offs = MAX_HEIGHT*MAX_WIDTH_P;
 static const int sizeof_rbuf = rb2_offs*(MAX_BUFFERS+2);
 static const int sizeof_vbuf = VID_HEIGHT*VID_WIDTH*2;
 #ifdef CACHE_ALIGNED
-extern CACHE_ALIGNED unsigned char rbuf[sizeof_rbuf];
-#else // __declspec(align) not available, force QWORD align with old method
-extern unsigned char * const rbuf;
+extern CACHE_ALIGNED u8 rbuf[sizeof_rbuf];
+#else // __declspec(align) not available, force u64 align with old method
+extern u8 * const rbuf;
 #endif
 
-extern unsigned char * const save_buf;
-extern unsigned char colortab[0x100];// map zx attributes to pc attributes
+extern u8 * const save_buf;
+extern u8 colortab[0x100];// map zx attributes to pc attributes
 // colortab shifted to 8 and 24
 extern unsigned colortab_s8[0x100];
 extern unsigned colortab_s24[0x100];
@@ -207,7 +207,7 @@ extern unsigned *atrtab;
 extern T t;
 
 extern PALETTEENTRY pal0[0x100]; // emulator palette
-extern unsigned char * const rbuf_s; // frames to mix with noflic and resampler filters
+extern u8 * const rbuf_s; // frames to mix with noflic and resampler filters
 extern unsigned vmode;  // what are drawing: 0-not visible, 1-border, 2-screen
 extern videopoint *vcurr;
 

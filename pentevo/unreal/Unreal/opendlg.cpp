@@ -17,7 +17,7 @@ struct FILEPREVIEWINFO
 
    void PreviewTRD(char *filename);
    void PreviewSCL(char *filename);
-   void Preview(unsigned char *cat);
+   void Preview(u8 *cat);
 
 } FilePreviewInfo;
 
@@ -43,7 +43,7 @@ void FILEPREVIEWINFO::OnChange()
    #if 0 // too slow for every file
    TRKCACHE t;
    FDD TestDrive;
-   unsigned char type = what_is(filename);
+   u8 type = what_is(filename);
    if (type < snSCL) return;
    TestDrive.emptydisk();
    if (!TestDrive.read(type)) return;
@@ -57,11 +57,11 @@ void FILEPREVIEWINFO::OnChange()
    if (!stricmp(ext, "scl")) PreviewSCL(filename);
 }
 
-void FILEPREVIEWINFO::Preview(unsigned char *cat)
+void FILEPREVIEWINFO::Preview(u8 *cat)
 {
    ::dlg = innerdlg.h;
-   unsigned char bas = getcheck(IDC_PREVIEW_BASIC);
-   unsigned char del = getcheck(IDC_PREVIEW_ERASED);
+   u8 bas = getcheck(IDC_PREVIEW_BASIC);
+   u8 del = getcheck(IDC_PREVIEW_ERASED);
 
    int count = 0;
    char fn[10];
@@ -92,7 +92,7 @@ void FILEPREVIEWINFO::Preview(unsigned char *cat)
 
 void FILEPREVIEWINFO::PreviewTRD(char *filename)
 {
-   unsigned char cat[0x800];
+   u8 cat[0x800];
    FILE *ff = fopen(filename, "rb");
    int sz = fread(cat, 1, 0x800, ff);
    fclose(ff);
@@ -102,15 +102,15 @@ void FILEPREVIEWINFO::PreviewTRD(char *filename)
 
 void FILEPREVIEWINFO::PreviewSCL(char *filename)
 {
-   unsigned char cat[0x800] = { 0 };
-   unsigned char hdr[16];
+   u8 cat[0x800] = { 0 };
+   u8 hdr[16];
 
    FILE *ff = fopen(filename, "rb");
    unsigned sz = fread(hdr, 1, 9, ff), count = 0;
 
    if (sz == 9 && !memcmp(hdr, "SINCLAIR", 8)) {
       unsigned max = hdr[8]; sz = max*14;
-      unsigned char *cat1 = (unsigned char*)alloca(sz);
+      u8 *cat1 = (u8*)alloca(sz);
       if (fread(cat1, 1, sz, ff) == sz) {
          for (unsigned i = 0; i < sz; i += 14) {
             memcpy(cat+count*0x10, cat1+i, 14);

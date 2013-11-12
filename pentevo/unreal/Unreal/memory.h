@@ -3,8 +3,8 @@
 void set_mode(ROM_MODE mode);
 void set_banks();
 void set_scorp_profrom(unsigned read_address);
-void cmos_write(unsigned char val);
-unsigned char cmos_read();
+void cmos_write(u8 val);
+u8 cmos_read();
 void rand_ram();
 
 Z80INLINE u8 *am_r(unsigned addr)

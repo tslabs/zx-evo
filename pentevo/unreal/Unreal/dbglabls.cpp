@@ -48,7 +48,7 @@ unsigned MON_LABELS::add_name(char *name)
    return result;
 }
 
-void MON_LABELS::clear(unsigned char *start, unsigned size)
+void MON_LABELS::clear(u8 *start, unsigned size)
 {
    unsigned dst = 0;
    for (unsigned src = 0; src < n_pairs; src++)
@@ -73,7 +73,7 @@ void MON_LABELS::sort()
    qsort(pairs, n_pairs, sizeof(MON_LABEL), labels_sort_func);
 }
 
-void MON_LABELS::add(unsigned char *address, char *name)
+void MON_LABELS::add(u8 *address, char *name)
 {
    if (n_pairs >= align_by(n_pairs, 1024))
       pairs = (MON_LABEL*)realloc(pairs, sizeof(MON_LABEL) * align_by(n_pairs+1, 1024));
@@ -82,7 +82,7 @@ void MON_LABELS::add(unsigned char *address, char *name)
    n_pairs++;
 }
 
-char *MON_LABELS::find(unsigned char *address)
+char *MON_LABELS::find(u8 *address)
 {
    unsigned l = 0, r = n_pairs;
    for (;;) {
@@ -93,7 +93,7 @@ char *MON_LABELS::find(unsigned char *address)
    }
 }
 
-unsigned MON_LABELS::load(char *filename, unsigned char *base, unsigned size)
+unsigned MON_LABELS::load(char *filename, u8 *base, unsigned size)
 {
    FILE *in = fopen(filename, "rt");
    if (!in)
@@ -158,7 +158,7 @@ unsigned MON_LABELS::load(char *filename, unsigned char *base, unsigned size)
    return loaded;
 }
 
-unsigned MON_LABELS::alasm_chain_len(unsigned char *page, unsigned offset, unsigned &end)
+unsigned MON_LABELS::alasm_chain_len(u8 *page, unsigned offset, unsigned &end)
 {
    unsigned count = 0;
    for (;;) {
@@ -166,7 +166,7 @@ unsigned MON_LABELS::alasm_chain_len(unsigned char *page, unsigned offset, unsig
       unsigned s1 = page[offset], sz = s1 & 0x3F;
       if (!s1 || offset == 0x3E00) { end = offset+1; return count; }
       if (sz < 6) return 0;
-      unsigned char sym = page[offset+sz-1];
+      u8 sym = page[offset+sz-1];
       if (sym >= '0' && sym <= '9') return 0;
       for (unsigned ptr = 5; ptr < sz; ptr++)
          if (!alasm_valid_char[page[offset+ptr]]) return 0;
@@ -198,14 +198,14 @@ void MON_LABELS::find_alasm()
 void MON_LABELS::import_alasm(unsigned offset, char *caption)
 {
    clear_ram();
-   unsigned char *base = RAM_BASE_M + offset;
+   u8 *base = RAM_BASE_M + offset;
    for (;;) { // #FE00/FF00/FFFC - end of labels?
-      unsigned char sz = *base; if (!sz) break;
+      u8 sz = *base; if (!sz) break;
       if (!(sz & 0xC0)) {
          char lbl[64]; unsigned ptr = 0;
          for (unsigned k = sz; k > 5;) k--, lbl[ptr++] = base[k]; lbl[ptr] = 0;
-         unsigned val = *(unsigned short*)(base+1);
-         unsigned char *bs;
+         unsigned val = *(u16*)(base+1);
+         u8 *bs;
          switch (val & 0xC000) {
             case 0x4000: bs = page_ram(5); break;
             case 0x8000: bs = page_ram(2); break;
@@ -240,13 +240,13 @@ void MON_LABELS::import_xas()
    clear_ram(); unsigned count = 0;
    int i; //Alone Coder 0.36.7
    for (int k = 0; k < 2; k++) {
-      unsigned char *ptr = RAM_BASE_M + base + (k? 0x3FFD : 0x1FFD);
+      u8 *ptr = RAM_BASE_M + base + (k? 0x3FFD : 0x1FFD);
       for (;;) {
          if (ptr[2] < 5 || (ptr[2] & 0x80)) break;
          char lbl[16]; for (/*int*/ i = 0; i < 7; i++) lbl[i] = ptr[i-7];
          for (i = 7; i && lbl[i-1]==' '; i--); lbl[i] = 0;
-         unsigned val = *(unsigned short*)ptr;
-         unsigned char *bs;
+         unsigned val = *(u16*)ptr;
+         u8 *bs;
          switch (val & 0xC000) {
             case 0x4000: bs = page_ram(5); break;
             case 0x8000: bs = page_ram(2); break;
@@ -315,7 +315,7 @@ void MON_LABELS::import_file()
    //MessageBox(GetForegroundWindow(), tmp, "unreal discovered changes in user labels", MB_OK | MB_ICONINFORMATION);//removed by Alone Coder
 }
 
-void load_labels(char *filename, unsigned char *base, unsigned size)
+void load_labels(char *filename, u8 *base, unsigned size)
 {
    mon_labels.load(filename, base, size);
 }
@@ -334,10 +334,10 @@ void ShowLabels()
    char *s; //Alone Coder 0.36.7
    for (unsigned p = 0; p < 4; p++)
    {
-      unsigned char *base = am_r(p*PAGE);
+      u8 *base = am_r(p*PAGE);
       for (unsigned i = 0; i < mon_labels.n_pairs; i++)
       {
-         unsigned char *label = mon_labels.pairs[i].address;
+         u8 *label = mon_labels.pairs[i].address;
          if (label < base || label >= base + PAGE)
              continue;
          char *name = mon_labels.pairs[i].name_offs + mon_labels.names;

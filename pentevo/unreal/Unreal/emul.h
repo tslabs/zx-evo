@@ -124,7 +124,7 @@ struct IDE_CONFIG
 {
    char image[512];
    unsigned c,h,s,lba;
-   unsigned char readonly;
+   u8 readonly;
    u8 cd;
 };
 
@@ -147,64 +147,64 @@ struct CONFIG
 
    unsigned soundbuffer, refresh;
 
-   unsigned char flashcolor, noflic, fast_sl, alt_nf;
-   unsigned char frameskip, frameskipmax;
-   unsigned char flip, fullscr;
+   u8 flashcolor, noflic, fast_sl, alt_nf;
+   u8 frameskip, frameskipmax;
+   u8 flip, fullscr;
 
-   unsigned char lockmouse;
-   unsigned char detect_video;
-   unsigned char tape_traps;
-   unsigned char ulaplus;
-   unsigned char tape_autostart;
+   u8 lockmouse;
+   u8 detect_video;
+   u8 tape_traps;
+   u8 ulaplus;
+   u8 tape_autostart;
    SSHOT_FORMAT scrshot;
    char scrshot_path[FILENAME_MAX];
 
-   unsigned char ch_size;
-   unsigned char EFF7_mask;
-   unsigned char reset_rom;
-   unsigned char use_romset;
+   u8 ch_size;
+   u8 EFF7_mask;
+   u8 reset_rom;
+   u8 use_romset;
 
-   unsigned char updateb, bordersize;
+   u8 updateb, bordersize;
    unsigned framex;
    unsigned framexsize;
    unsigned framey;
    unsigned frameysize;
-   unsigned char even_M1, border_4T;
+   u8 even_M1, border_4T;
 
-   unsigned char floatbus, floatdos;
+   u8 floatbus, floatdos;
    bool portff;
 
    int modem_port; //, modem_scheme;
-   unsigned char fdd_noise;
+   u8 fdd_noise;
 
-   unsigned char trdos_present, trdos_interleave;
-   unsigned char trdos_traps, wd93_nodelay;
-   unsigned char trdos_wp[4];
+   u8 trdos_present, trdos_interleave;
+   u8 trdos_traps, wd93_nodelay;
+   u8 trdos_wp[4];
 
-   unsigned char cache;
-   unsigned char cmos;
-   unsigned char smuc;
-   unsigned char ula_preset;
+   u8 cache;
+   u8 cmos;
+   u8 smuc;
+   u8 ula_preset;
 
-   unsigned char gs_type;
-   unsigned char pixelscroll;
-   unsigned char sleepidle;
-   unsigned char rsrvd1_;
-   unsigned char ConfirmExit;
+   u8 gs_type;
+   u8 pixelscroll;
+   u8 sleepidle;
+   u8 rsrvd1_;
+   u8 ConfirmExit;
 
-   unsigned char highpriority;
-   unsigned char videoscale;
+   u8 highpriority;
+   u8 videoscale;
 
    MEM_MODEL mem_model;
    unsigned ramsize, romsize;
 
    IDE_SCHEME ide_scheme;
    IDE_CONFIG ide[2];
-   unsigned char ide_skip_real;
-   unsigned char cd_aspi;
+   u8 ide_skip_real;
+   u8 cd_aspi;
 
-   unsigned char soundfilter; //Alone Coder (IDC_SOUNDFILTER)
-   unsigned char RejectDC;
+   u8 soundfilter; //Alone Coder (IDC_SOUNDFILTER)
+   u8 RejectDC;
    struct
    {
       unsigned fq, ayfq, saa1099fq;
@@ -212,28 +212,28 @@ struct CONFIG
       int beeper_vol, micout_vol, micin_vol, ay_vol, aydig_vol,
           covoxFB_vol, covoxDD_vol, sd_vol, gs_vol, bass_vol;
       VOID_FUNC do_sound;
-      unsigned char enabled, gsreset, dsprimary;
-      unsigned char ay_chip, ay_scheme, ay_stereo, ay_vols, ay_samples;
+      u8 enabled, gsreset, dsprimary;
+      u8 ay_chip, ay_scheme, ay_stereo, ay_vols, ay_samples;
       unsigned ay_stereo_tab[6], ay_voltab[32];
    } sound;
 
    struct {
       unsigned firenum;
-      unsigned char altlock, fire, firedelay;
-      unsigned char paste_hold, paste_release, paste_newline;
-      unsigned char mouse, mouseswap, kjoy, keymatrix, joymouse;
-      unsigned char keybpcmode;
-      signed char mousescale;
-      unsigned char mousewheel; // enum MOUSE_WHEEL_MODE //0.36.6 from 0.35b2
+      u8 altlock, fire, firedelay;
+      u8 paste_hold, paste_release, paste_newline;
+      u8 mouse, mouseswap, kjoy, keymatrix, joymouse;
+      u8 keybpcmode;
+      char mousescale;
+      u8 mousewheel; // enum MOUSE_WHEEL_MODE //0.36.6 from 0.35b2
       zxkeymap *active_zxk;
       unsigned JoyId;
    } input;
 
    struct {
-      unsigned char enabled;
-      unsigned char flash_ay_kbd;
-      unsigned char perf_t;
-      unsigned char reserved1;
+      u8 enabled;
+      u8 flash_ay_kbd;
+      u8 perf_t;
+      u8 reserved1;
       unsigned bandBpp;
       #define NUM_LEDS 7
       unsigned ay;
@@ -246,19 +246,19 @@ struct CONFIG
    } led;
 
    struct {
-      unsigned char mem_swap;
-      unsigned char xt_kbd;
-      unsigned char reserved1;
+      u8 mem_swap;
+      u8 xt_kbd;
+      u8 reserved1;
    } atm;
 
-   unsigned char use_comp_pal;
+   u8 use_comp_pal;
    unsigned pal, num_pals;      // selected palette and total number of pals
    unsigned minres;             // min. screen x-resolution
    unsigned scanbright;         // scanlines intensity
 
    struct {
-      unsigned char mix_frames;
-      unsigned char mode; // RSM_MODE
+      u8 mix_frames;
+      u8 mode; // RSM_MODE
    } rsm;
 
    char sos_rom_path[FILENAME_MAX];
@@ -288,7 +288,7 @@ struct CONFIG
 
    char ngs_sd_card_path[FILENAME_MAX];
 
-   unsigned char zc;
+   u8 zc;
    char zc_sd_card_path[FILENAME_MAX];
 
    char atariset[64]; // preset for atari mode
@@ -303,10 +303,10 @@ struct TEMP
 {
    unsigned rflags;    // render_func flags
    unsigned border_add, border_and;   // for scorpion 4T border update
-   unsigned char *base, *base_2;  // pointers to Spectrum screen memory
-   unsigned char rom_mask, ram_mask;
-   unsigned char evenM1_C0; // C0 for scorpion, 00 for pentagon
-   unsigned char hi15; // 0 - 16bit color, 1 - 15bit color, 2 - YUY2 colorspace
+   u8 *base, *base_2;  // pointers to Spectrum screen memory
+   u8 rom_mask, ram_mask;
+   u8 evenM1_C0; // C0 for scorpion, 00 for pentagon
+   u8 hi15; // 0 - 16bit color, 1 - 15bit color, 2 - YUY2 colorspace
    unsigned snd_frame_samples;  // samples / frame
    unsigned snd_frame_ticks;    // sound ticks / frame
    unsigned cpu_t_at_frame_start;
@@ -329,26 +329,26 @@ struct TEMP
    unsigned shift_mask; // for 16/32 bit modes masks low bits of color components
 
    struct { // led coords
-      unsigned char *ay;
-      unsigned char *perf;
-      unsigned char *load;
-      unsigned char *input;
-      unsigned char *time;
-      unsigned char *osw;
-      unsigned char *memband;
-      unsigned char *fdd;
+      u8 *ay;
+      u8 *perf;
+      u8 *load;
+      u8 *input;
+      u8 *time;
+      u8 *osw;
+      u8 *memband;
+      u8 *fdd;
 
       __int64 tape_started;
    } led;
-   unsigned char profrom_mask;
-   unsigned char comp_pal_changed;
+   u8 profrom_mask;
+   u8 comp_pal_changed;
 
    // CPU features
-   unsigned char mmx, sse, sse2;
+   u8 mmx, sse, sse2;
    u64 cpufq;        // x86 t-states per second
    unsigned ticks_frame; // x86 t-states in frame
 
-   unsigned char vidblock, sndblock, inputblock, frameskip;
+   u8 vidblock, sndblock, inputblock, frameskip;
    bool Gdiplus;
    unsigned gsdmaaddr;
    u8 gsdmaon;
@@ -431,19 +431,19 @@ struct NVRAM
 {
    enum EEPROM_STATE { IDLE = 0, RCV_CMD, RCV_ADDR, RCV_DATA, SEND_DATA, RD_ACK };
    unsigned address;
-   unsigned char datain, dataout, bitsin, bitsout;
-   unsigned char state;
-   unsigned char prev;
-   unsigned char out;
-   unsigned char out_z;
+   u8 datain, dataout, bitsin, bitsout;
+   u8 state;
+   u8 prev;
+   u8 out;
+   u8 out_z;
 
-   void write(unsigned char val);
+   void write(u8 val);
 };
 
 struct COMPUTER
 {
-   unsigned char p7FFD, pFE, pEFF7, pXXXX;
-   unsigned char pDFFD, pFDFD, p1FFD, pFF77;
+   u8 p7FFD, pFE, pEFF7, pXXXX;
+   u8 pDFFD, pFDFD, p1FFD, pFF77;
    TSPORTS_t ts;
    u16 cram[256];
    u16 sfile[256];
@@ -452,7 +452,7 @@ struct COMPUTER
    u8 p00, p80FD; // quorum
    __int64 t_states; // inc with conf.frame by each frame
    unsigned frame_counter; // inc each frame
-   unsigned char aFE, aFB; // ATM 4.50 system ports
+   u8 aFE, aFB; // ATM 4.50 system ports
    unsigned pFFF7[8]; // ATM 7.10 / ATM3(4Mb) memory map
    // |7ffd|rom|b7b6|b5..b0| b7b6 = 0 for atm2
 
@@ -470,36 +470,36 @@ struct COMPUTER
    };
    u8 pBE, pBF;
 
-   unsigned char flags;
-   unsigned char border_attr;
-   unsigned char cmos_addr;
-   unsigned char pVD;
+   u8 flags;
+   u8 border_attr;
+   u8 cmos_addr;
+   u8 pVD;
 
    #ifdef MOD_VID_VD
-   unsigned char *vdbase;
+   u8 *vdbase;
    #endif
 
-   unsigned char pFFBA, p7FBA; // SMUC
-   unsigned char res1, res2;
+   u8 pFFBA, p7FBA; // SMUC
+   u8 res1, res2;
 
-   unsigned char p0F, p1F, p4F, p5F; // soundrive
+   u8 p0F, p1F, p4F, p5F; // soundrive
    struct WD1793 wd;
    struct NVRAM nvram;
    struct {
       __int64 edge_change;
-      unsigned char *play_pointer; // or NULL if tape stopped
-      unsigned char *end_of_tape;  // where to stop tape
+      u8 *play_pointer; // or NULL if tape stopped
+      u8 *end_of_tape;  // where to stop tape
       unsigned index;    // current tape block
       unsigned tape_bit;
 //      SNDRENDER sound; //Alone Coder
    } tape;
    SNDRENDER tape_sound; //Alone Coder
-   unsigned char comp_pal[0x10];
-   unsigned char ulaplus_cram[64];
-   unsigned char ulaplus_mode;
-   unsigned char ulaplus_reg;
-   unsigned char ide_hi_byte_r, ide_hi_byte_w, ide_hi_byte_w1, ide_read, ide_write; // high byte in IDE i/o
-   unsigned char profrom_bank;
+   u8 comp_pal[0x10];
+   u8 ulaplus_cram[64];
+   u8 ulaplus_mode;
+   u8 ulaplus_reg;
+   u8 ide_hi_byte_r, ide_hi_byte_w, ide_hi_byte_w1, ide_read, ide_write; // high byte in IDE i/o
+   u8 profrom_bank;
 };
 
 // bits for COMPUTER::flags
@@ -515,7 +515,7 @@ struct COMPUTER
 #define TAPE_QUANTUM 64
 struct tzx_block
 {
-   unsigned char *data;
+   u8 *data;
    unsigned datasize;    // data size, in bytes
    unsigned pause;
    union {
@@ -528,8 +528,8 @@ struct tzx_block
       };
       unsigned param;
    };
-   unsigned char type; // 0-playable, 1-pulses, 10-20 - info, etc...
-   unsigned char crc; // xor of all bytes
+   u8 type; // 0-playable, 1-pulses, 10-20 - info, etc...
+   u8 crc; // xor of all bytes
    char desc[128];
 };
 
@@ -544,19 +544,19 @@ struct SNDVAL {
 
 struct virtkeyt {
    const char *name;
-   unsigned short virtkey;
+   u16 virtkey;
 };
 
 struct keyports
 {
-  volatile unsigned char *port1, *port2;
-  unsigned char mask1, mask2;
+  volatile u8 *port1, *port2;
+  u8 mask1, mask2;
 };
 
 struct zxkey {
   const char *name;
-  volatile unsigned char * /*const*/ port; //Alone Coder
-  /*const*/ unsigned char mask; //Alone Coder
+  volatile u8 * /*const*/ port; //Alone Coder
+  /*const*/ u8 mask; //Alone Coder
 };
 
 struct zxkeymap {
@@ -568,7 +568,7 @@ struct zxkeymap {
 struct action {
    const char *name;
    void (*func)();
-   unsigned short k1, k2, k3, k4;
+   u16 k1, k2, k3, k4;
 };
 
 typedef void (*TColorConverter)(u8 *dst, u8 *scrbuf, int dx);

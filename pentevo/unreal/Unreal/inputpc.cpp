@@ -3,7 +3,7 @@
 #include "vars.h"
 #include "inputpc.h"
 
-const unsigned short dik_scan[256] =
+const u16 dik_scan[256] =
 {
     0x0000,
     0x0076, // DIK_ESCAPE

@@ -10,10 +10,10 @@ const int MAX_SEC = 256;
 
 struct SECHDR
 {
-   unsigned char c,s,n,l;
-   unsigned short crc;
-   unsigned char c1, c2; // flags: correct CRCs in address and data
-   unsigned char *data, *id;
+   u8 c,s,n,l;
+   u16 crc;
+   u8 c1, c2; // flags: correct CRCs in address and data
+   u8 *data, *id;
    unsigned datlen;
    unsigned crcd;        // used to load specific CRC from FDI-file
 };
@@ -28,7 +28,7 @@ struct TRKCACHE
 
    // generic track data
    unsigned trklen;
-   unsigned char *trkd, *trki;       // pointer to data inside UDI
+   u8 *trkd, *trki;       // pointer to data inside UDI
    unsigned ts_byte;                 // cpu.t per byte
    SEEK_MODE sf;                     // flag: is sectors filled
    unsigned s;                       // no. of sectors
@@ -38,8 +38,8 @@ struct TRKCACHE
 
    void set_i(unsigned pos) { trki[pos/8] |= 1 << (pos&7); }
    void clr_i(unsigned pos) { trki[pos/8] &= ~(1 << (pos&7)); }
-   unsigned char test_i(unsigned pos) { return trki[pos/8] & (1 << (pos&7)); }
-   void write(unsigned pos, unsigned char byte, char index)
+   u8 test_i(unsigned pos) { return trki[pos/8] & (1 << (pos&7)); }
+   void write(unsigned pos, u8 byte, char index)
    {
        if (!trkd)
            return;
@@ -53,7 +53,7 @@ struct TRKCACHE
 
    void seek(FDD *d, unsigned cyl, unsigned side, SEEK_MODE fs);
    void format(); // before use, call seek(d,c,s,JUST_SEEK), set s and hdr[]
-   int write_sector(unsigned sec, unsigned char *data); // call seek(d,c,s,LOAD_SECTORS)
+   int write_sector(unsigned sec, u8 *data); // call seek(d,c,s,LOAD_SECTORS)
    const SECHDR *get_sector(unsigned sec) const; // before use, call fill(d,c,s,LOAD_SECTORS)
 
    void dump();
@@ -73,18 +73,18 @@ struct FDD
    // drive data
 
    __int64 motor;       // 0 - not spinning, >0 - time when it'll stop
-   unsigned char track; // head position
+   u8 track; // head position
 
    // disk data
 
-   unsigned char *rawdata;              // used in VirtualAlloc/VirtualFree
+   u8 *rawdata;              // used in VirtualAlloc/VirtualFree
    unsigned rawsize;
    unsigned cyls, sides;
    unsigned trklen[MAX_CYLS][2];
-   unsigned char *trkd[MAX_CYLS][2];
-   unsigned char *trki[MAX_CYLS][2];
-   unsigned char optype; // bits: 0-not modified, 1-write sector, 2-format track
-   unsigned char snaptype;
+   u8 *trkd[MAX_CYLS][2];
+   u8 *trki[MAX_CYLS][2];
+   u8 optype; // bits: 0-not modified, 1-write sector, 2-format track
+   u8 snaptype;
 
    TRKCACHE t; // used in read/write image
    char name[0x200];
@@ -97,10 +97,10 @@ struct FDD
    void format_trd();
    void emptydisk();
    void newdisk(unsigned cyls, unsigned sides);
-   int addfile(unsigned char *hdr, unsigned char *data);
+   int addfile(u8 *hdr, u8 *data);
    void addboot();
 
-   int read(unsigned char snType);
+   int read(u8 snType);
 
    int read_scl();
    int read_hob();
@@ -159,15 +159,15 @@ struct WD1793
 
    WDSTATE state, state2;
 
-   unsigned char cmd;
-   unsigned char data, track, sector;
-   unsigned char rqs, status;
+   u8 cmd;
+   u8 data, track, sector;
+   u8 rqs, status;
    u8 idx_status;
 
    unsigned drive, side;                // update this with changing 'system'
 
-   signed char stepdirection;
-   unsigned char system;                // beta128 system register
+   char stepdirection;
+   u8 system;                // beta128 system register
 
    unsigned idx_cnt; // idx counter
 
@@ -223,8 +223,8 @@ struct WD1793
       SYS_HLT       = 0x08
    };
 
-   unsigned char in(unsigned char port);
-   void out(unsigned char port, unsigned char val);
+   u8 in(u8 port);
+   void out(u8 port, u8 val);
 
    void process();
    void find_marker();

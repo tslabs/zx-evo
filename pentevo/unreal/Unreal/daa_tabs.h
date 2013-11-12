@@ -1,2 +1,2 @@
 #pragma once
-extern const unsigned char daatab[];
+extern const u8 daatab[];

@@ -1,10 +1,10 @@
 #pragma once
 
-unsigned char *editam(unsigned addr);
+u8 *editam(unsigned addr);
 
-__inline unsigned char editrm(unsigned addr)
+__inline u8 editrm(unsigned addr)
 {
-   unsigned char *ptr = editam(addr);
+   u8 *ptr = editam(addr);
    return ptr? *ptr : 0;
 }
 

@@ -8,7 +8,7 @@ struct TAPEINFO
 };
 extern TAPEINFO *tapeinfo;
 extern unsigned tape_infosize;
-extern unsigned char *tape_image;
+extern u8 *tape_image;
 extern unsigned tape_pulse[];
 
 void start_tape();
@@ -17,7 +17,7 @@ void closetape();
 void reset_tape();
 
 void find_tape_index();
-unsigned char tape_bit(); // used in io.cpp & sound.cpp
+u8 tape_bit(); // used in io.cpp & sound.cpp
 
 void tape_traps();
 void fast_tape();

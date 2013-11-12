@@ -16,13 +16,13 @@ extern CACHE_ALIGNED u32 vbuf[2][sizeof_vbuf];
 
 unsigned pitch;
 
-void text_i(unsigned char *dst, const char *text, unsigned char ink, unsigned off = 0)
+void text_i(u8 *dst, const char *text, u8 ink, unsigned off = 0)
 {
-   unsigned char mask = 0xF0; ink &= 0x0F;
-   for (unsigned char *x = (unsigned char*)text; *x; x++) {
-      unsigned char *d0 = dst;
+   u8 mask = 0xF0; ink &= 0x0F;
+   for (u8 *x = (u8*)text; *x; x++) {
+      u8 *d0 = dst;
       for (unsigned y = 0; y < 8; y++) {
-         unsigned char byte = font[(*x)*8+y];
+         u8 byte = font[(*x)*8+y];
          d0[0] = (byte >> off) + (d0[0] & ~(0xFC >> off));
          d0[1] = (d0[1] & 0xF0) + ink;
          if (off > 2) {
@@ -35,22 +35,22 @@ void text_i(unsigned char *dst, const char *text, unsigned char ink, unsigned of
    }
 }
 
-static void text_16(unsigned char *dst, const char *text, unsigned char attr)
+static void text_16(u8 *dst, const char *text, u8 attr)
 {
    for (; *text; text++, dst += 2)
       for (unsigned y = 0; y < 16; y++)
-         dst[y*pitch] = font16[16 * *(unsigned char*)text + y],
+         dst[y*pitch] = font16[16 * *(u8*)text + y],
          dst[y*pitch+1] = attr;
 }
 
-unsigned char *aypos;
-void paint_led(unsigned level, unsigned char at)
+u8 *aypos;
+void paint_led(unsigned level, u8 at)
 {
    if (level) {
       if (level > 15) level = 15, at = 0x0E;
       unsigned mask = (0xFFFF0000 >> level) & 0xFFFF;
       aypos[0] = mask >> 8;
-      aypos[2] = (unsigned char)mask;
+      aypos[2] = (u8)mask;
       aypos[1] = (aypos[1] & 0xF0) + at, aypos[3] = (aypos[3] & 0xF0) + at;
    }
    aypos += pitch;
@@ -59,16 +59,16 @@ void paint_led(unsigned level, unsigned char at)
 void ay_led()
 {
    aypos = temp.led.ay;
-   unsigned char sum=0;
+   u8 sum=0;
 
    int max_ay = (conf.sound.ay_scheme > AY_SCHEME_PSEUDO)? 2 : 1;
    for (int n_ay = 0; n_ay < max_ay; n_ay++) {
       for (int i = 0; i < 3; i++) {
-         unsigned char r_mix = ay[n_ay].get_reg(7);
-         unsigned char tone = (r_mix >> i) & 1,
+         u8 r_mix = ay[n_ay].get_reg(7);
+         u8 tone = (r_mix >> i) & 1,
                        noise = (r_mix >> (i+3)) & 1;
-         unsigned char c1 = 0, c2 = 0;
-         unsigned char v = ay[n_ay].get_reg(i+8);
+         u8 c1 = 0, c2 = 0;
+         u8 v = ay[n_ay].get_reg(i+8);
          if (!tone) c1 = c2 = 0x0F;
          if (!noise) c2 = 0x0E;
          if (v & 0x10) {
@@ -182,7 +182,7 @@ void ay_led()
 
 void load_led()
 {
-   char ln[20]; unsigned char diskcolor = 0;
+   char ln[20]; u8 diskcolor = 0;
 
 #ifdef GS_BASS
    if (gs.loadmod) {
@@ -206,7 +206,7 @@ void load_led()
    } else if (trdos_seek) {
       trdos_seek--;
    } else if (comp.tape.play_pointer) {
-      static unsigned char tapeled[11*2] = {
+      static u8 tapeled[11*2] = {
          0x7F, 0xFE, 0x80, 0x01, 0x80, 0x01, 0x93, 0xC9, 0xAA, 0x55, 0x93, 0xC9,
          0x80, 0x01, 0x8F, 0xF1, 0x80, 0x01, 0xB5, 0xA9, 0xFF, 0xFF };
       const int tapecolor = 0x51;
@@ -219,7 +219,7 @@ void load_led()
       if (time < 0) {
          find_tape_index(); time = 0;
          temp.led.tape_started = comp.t_states;
-         unsigned char *ptr = tape_image + tapeinfo[comp.tape.index].pos;
+         u8 *ptr = tape_image + tapeinfo[comp.tape.index].pos;
          if (ptr == comp.tape.play_pointer && comp.tape.index)
             comp.tape.index--, ptr = tape_image + tapeinfo[comp.tape.index].pos;
          for (; ptr < comp.tape.play_pointer; ptr++)
@@ -235,7 +235,7 @@ void load_led()
          int i; //Alone Coder 0.36.7
          for (/*int*/ i = 0; i < 7; i++, ptr = (unsigned*)((char*)ptr+pitch))
             *ptr = (*ptr & WORD4(0,0xF0,0,0xF0)) | WORD4(0x3F,diskcolor,0xFC,diskcolor);
-         static unsigned char disk[] = { 0x38, 0x1C, 0x3B, 0x9C, 0x3B, 0x9C, 0x3B, 0x9C, 0x38,0x1C };
+         static u8 disk[] = { 0x38, 0x1C, 0x3B, 0x9C, 0x3B, 0x9C, 0x3B, 0x9C, 0x38,0x1C };
          for (i = 0; i < 5; i++, ptr = (unsigned*)((char*)ptr+pitch))
             *ptr = (*ptr & WORD4(0,0xF0,0,0xF0)) | WORD4(disk[2*i],diskcolor,disk[2*i+1],diskcolor);
       }
@@ -270,9 +270,9 @@ void perf_led()
       sprintf(bf, "%2.2f fps", p_fps), PSZ = 5;
    text_i(temp.led.perf, bf, 0x0E);
    if (cpu.haltpos) {
-      unsigned char *ptr = temp.led.perf + pitch*8;
+      u8 *ptr = temp.led.perf + pitch*8;
       unsigned xx; //Alone Coder 0.36.7
-      for (/*unsigned*/ xx = 0; xx < PSZ; xx++) *(unsigned short*)(ptr+xx*2) = 0x9A00;
+      for (/*unsigned*/ xx = 0; xx < PSZ; xx++) *(u16*)(ptr+xx*2) = 0x9A00;
       unsigned mx = cpu.haltpos*PSZ*8/conf.frame;
       for (xx = 1; xx < mx; xx++) ptr[(xx>>2)&0xFE] |= (0x80 >> (xx & 7));
    }
@@ -281,7 +281,7 @@ void perf_led()
 void input_led()
 {
    if (input.kbdled != 0xFF) {
-      unsigned char k0 = 0x99, k1 = 0x9F, k2 = 0x90;
+      u8 k0 = 0x99, k1 = 0x9F, k2 = 0x90;
       if (input.keymode == K_INPUT::KM_PASTE_HOLD) k0 = 0xAA, k1 = 0xAF, k2 = 0xA0;
       if (input.keymode == K_INPUT::KM_PASTE_RELEASE) k0 = 0x22, k1 = 0x2F, k2 = 0x20;
 
@@ -300,8 +300,8 @@ void input_led()
       temp.led.input[pitch*5+3] = (input.kbdled & 0x40)? k2 : k1;
       temp.led.input[pitch*7+3] = (input.kbdled & 0x80)? k2 : k1;
    }
-   static unsigned char joy[] =   { 0x10, 0x38, 0x1C, 0x1C, 0x1C, 0x1C, 0x08, 0x00, 0x7E, 0xFF, 0x00, 0xE7 };
-   static unsigned char mouse[] = { 0x0C, 0x12, 0x01, 0x79, 0xB5, 0xB5, 0xB5, 0xFC, 0xFC, 0xFC, 0xFC, 0x78 };
+   static u8 joy[] =   { 0x10, 0x38, 0x1C, 0x1C, 0x1C, 0x1C, 0x08, 0x00, 0x7E, 0xFF, 0x00, 0xE7 };
+   static u8 mouse[] = { 0x0C, 0x12, 0x01, 0x79, 0xB5, 0xB5, 0xB5, 0xFC, 0xFC, 0xFC, 0xFC, 0x78 };
    if (input.mouse_joy_led & 2)
       for (int i = 0; i < sizeof joy; i++)
          temp.led.input[4 + pitch*i] = joy[i],
@@ -316,11 +316,11 @@ void input_led()
 #ifdef MOD_MONITOR
 void debug_led()
 {
-   unsigned char *ptr = temp.led.osw;
+   u8 *ptr = temp.led.osw;
    if (trace_rom | trace_ram) {
       set_banks();
       if (trace_rom) {
-         const unsigned char off = 0x01, on = 0x0C;
+         const u8 off = 0x01, on = 0x0C;
          text_i(ptr + 2,           "B48", used_banks[(base_sos_rom - memory) / PAGE] ? on : off);
          text_i(ptr + 8,           "DOS", used_banks[(base_dos_rom - memory) / PAGE] ? on : off);
          text_i(ptr + pitch*8 + 2, "128", used_banks[(base_128_rom - memory) / PAGE] ? on : off);
@@ -350,23 +350,23 @@ void debug_led()
 #endif
 
 #ifdef MOD_MEMBAND_LED
-void show_mband(unsigned char *dst, unsigned start)
+void show_mband(u8 *dst, unsigned start)
 {
    char xx[8]; sprintf(xx, "%02X", start >> 8);
    text_i(dst, xx, 0x0B); dst += 4;
 
    Z80 &cpu = CpuMgr.Cpu();
-   unsigned char band[128];
+   u8 band[128];
    unsigned i; //Alone Coder 0.36.7
    for (/*unsigned*/ i = 0; i < 128; i++) {
-      unsigned char res = 0;
+      u8 res = 0;
       for (unsigned q = 0; q < conf.led.bandBpp; q++)
          res |= cpu.membits[start++];
       band[i] = res;
    }
 
    for (unsigned p = 0; p < 16; p++, dst+=2) {
-      unsigned char r=0, w=0, x=0;
+      u8 r=0, w=0, x=0;
       for (unsigned b = 0; b < 8; b++) {
          r *= 2, w *= 2, x *= 2;
          if (band[p*8+b] & MEMBITS_R) r |= 1;
@@ -374,7 +374,7 @@ void show_mband(unsigned char *dst, unsigned start)
          if (band[p*8+b] & MEMBITS_X) x |= 1;
       }
 
-      unsigned char t = (p && !(p & 3))? 0x7F : 0xFF;
+      u8 t = (p && !(p & 3))? 0x7F : 0xFF;
 
       dst[0*pitch] = t; dst[0*pitch+1] = 0x9B;
 
@@ -397,7 +397,7 @@ void show_mband(unsigned char *dst, unsigned start)
 
 void memband_led()
 {
-   unsigned char *dst = temp.led.memband;
+   u8 *dst = temp.led.memband;
    for (unsigned start = 0x0000; start < 0x10000;) {
       show_mband(dst, start);
       start += conf.led.bandBpp * 128;
@@ -430,7 +430,7 @@ void done_leds()
 
 void ay_kbd()
 {
-   static unsigned char pA, pB, pC;
+   static u8 pA, pB, pC;
    static unsigned prev_keyled = -1;
 
    KEYBOARD_INDICATOR_PARAMETERS InputBuffer;

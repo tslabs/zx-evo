@@ -8,29 +8,7 @@
 #ifndef BASS_H
 #define BASS_H
 
-#ifdef _WIN32 // Windows
 #include <wtypes.h>
-typedef unsigned __int64 QWORD;
-#else // OSX
-#include <stdint.h>
-#define WINAPI
-#define CALLBACK
-typedef uint8_t BYTE;
-typedef uint16_t WORD;
-typedef uint32_t DWORD;
-typedef uint64_t QWORD;
-#ifndef __OBJC__
-typedef int BOOL;
-#endif
-#define TRUE 1
-#define FALSE 0
-#define LOBYTE(a) (BYTE)(a)
-#define HIBYTE(a) (BYTE)((a)>>8)
-#define LOWORD(a) (WORD)(a)
-#define HIWORD(a) (WORD)((a)>>16)
-#define MAKEWORD(a,b) (WORD)(((a)&0xff)|((b)<<8))
-#define MAKELONG(a,b) (DWORD)(((a)&0xffff)|((b)<<16))
-#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -438,9 +416,9 @@ RETURN : Number of bytes written. Set the BASS_STREAMPROC_END flag to end
 
 // User file stream callback functions
 typedef void (CALLBACK FILECLOSEPROC)(void *user);
-typedef QWORD (CALLBACK FILELENPROC)(void *user);
+typedef u64 (CALLBACK FILELENPROC)(void *user);
 typedef DWORD (CALLBACK FILEREADPROC)(void *buffer, DWORD length, void *user);
-typedef BOOL (CALLBACK FILESEEKPROC)(QWORD offset, void *user);
+typedef BOOL (CALLBACK FILESEEKPROC)(u64 offset, void *user);
 
 typedef struct {
 	FILECLOSEPROC *close;
@@ -579,7 +557,7 @@ typedef struct {
 	char OriginatorReference[32];	// reference of the originator
 	char OriginationDate[10];		// date of creation (yyyy-mm-dd)
 	char OriginationTime[8];		// time of creation (hh-mm-ss)
-	QWORD TimeReference;			// first sample count since midnight (little-endian)
+	u64 TimeReference;			// first sample count since midnight (little-endian)
 	WORD Version;					// BWF version (little-endian)
 	BYTE UMID[64];					// SMPTE UMID
 	BYTE Reserved[190];
@@ -754,10 +732,10 @@ BOOL BASSDEF(BASS_SetEAXParameters)(int env, float vol, float decay, float damp)
 BOOL BASSDEF(BASS_GetEAXParameters)(DWORD *env, float *vol, float *decay, float *damp);
 #endif
 
-HMUSIC BASSDEF(BASS_MusicLoad)(BOOL mem, const void *file, QWORD offset, DWORD length, DWORD flags, DWORD freq);
+HMUSIC BASSDEF(BASS_MusicLoad)(BOOL mem, const void *file, u64 offset, DWORD length, DWORD flags, DWORD freq);
 BOOL BASSDEF(BASS_MusicFree)(HMUSIC handle);
 
-HSAMPLE BASSDEF(BASS_SampleLoad)(BOOL mem, const void *file, QWORD offset, DWORD length, DWORD max, DWORD flags);
+HSAMPLE BASSDEF(BASS_SampleLoad)(BOOL mem, const void *file, u64 offset, DWORD length, DWORD max, DWORD flags);
 HSAMPLE BASSDEF(BASS_SampleCreate)(DWORD length, DWORD freq, DWORD chans, DWORD max, DWORD flags);
 BOOL BASSDEF(BASS_SampleFree)(HSAMPLE handle);
 BOOL BASSDEF(BASS_SampleSetData)(HSAMPLE handle, const void *buffer);
@@ -769,11 +747,11 @@ DWORD BASSDEF(BASS_SampleGetChannels)(HSAMPLE handle, HCHANNEL *channels);
 BOOL BASSDEF(BASS_SampleStop)(HSAMPLE handle);
 
 HSTREAM BASSDEF(BASS_StreamCreate)(DWORD freq, DWORD chans, DWORD flags, STREAMPROC *proc, void *user);
-HSTREAM BASSDEF(BASS_StreamCreateFile)(BOOL mem, const void *file, QWORD offset, QWORD length, DWORD flags);
+HSTREAM BASSDEF(BASS_StreamCreateFile)(BOOL mem, const void *file, u64 offset, u64 length, DWORD flags);
 HSTREAM BASSDEF(BASS_StreamCreateURL)(const char *url, DWORD offset, DWORD flags, DOWNLOADPROC *proc, void *user);
 HSTREAM BASSDEF(BASS_StreamCreateFileUser)(DWORD system, DWORD flags, const BASS_FILEPROCS *proc, void *user);
 BOOL BASSDEF(BASS_StreamFree)(HSTREAM handle);
-QWORD BASSDEF(BASS_StreamGetFilePosition)(HSTREAM handle, DWORD mode);
+u64 BASSDEF(BASS_StreamGetFilePosition)(HSTREAM handle, DWORD mode);
 DWORD BASSDEF(BASS_StreamPutData)(HSTREAM handle, const void *buffer, DWORD length);
 DWORD BASSDEF(BASS_StreamPutFileData)(HSTREAM handle, const void *buffer, DWORD length);
 
@@ -788,8 +766,8 @@ BOOL BASSDEF(BASS_RecordSetInput)(int input, DWORD flags, float volume);
 DWORD BASSDEF(BASS_RecordGetInput)(int input, float *volume);
 HRECORD BASSDEF(BASS_RecordStart)(DWORD freq, DWORD chans, DWORD flags, RECORDPROC *proc, void *user);
 
-double BASSDEF(BASS_ChannelBytes2Seconds)(DWORD handle, QWORD pos);
-QWORD BASSDEF(BASS_ChannelSeconds2Bytes)(DWORD handle, double pos);
+double BASSDEF(BASS_ChannelBytes2Seconds)(DWORD handle, u64 pos);
+u64 BASSDEF(BASS_ChannelSeconds2Bytes)(DWORD handle, double pos);
 DWORD BASSDEF(BASS_ChannelGetDevice)(DWORD handle);
 BOOL BASSDEF(BASS_ChannelSetDevice)(DWORD handle, DWORD device);
 DWORD BASSDEF(BASS_ChannelIsActive)(DWORD handle);
@@ -809,12 +787,12 @@ BOOL BASSDEF(BASS_ChannelSet3DAttributes)(DWORD handle, int mode, float min, flo
 BOOL BASSDEF(BASS_ChannelGet3DAttributes)(DWORD handle, DWORD *mode, float *min, float *max, DWORD *iangle, DWORD *oangle, float *outvol);
 BOOL BASSDEF(BASS_ChannelSet3DPosition)(DWORD handle, const BASS_3DVECTOR *pos, const BASS_3DVECTOR *orient, const BASS_3DVECTOR *vel);
 BOOL BASSDEF(BASS_ChannelGet3DPosition)(DWORD handle, BASS_3DVECTOR *pos, BASS_3DVECTOR *orient, BASS_3DVECTOR *vel);
-QWORD BASSDEF(BASS_ChannelGetLength)(DWORD handle, DWORD mode);
-BOOL BASSDEF(BASS_ChannelSetPosition)(DWORD handle, QWORD pos, DWORD mode);
-QWORD BASSDEF(BASS_ChannelGetPosition)(DWORD handle, DWORD mode);
+u64 BASSDEF(BASS_ChannelGetLength)(DWORD handle, DWORD mode);
+BOOL BASSDEF(BASS_ChannelSetPosition)(DWORD handle, u64 pos, DWORD mode);
+u64 BASSDEF(BASS_ChannelGetPosition)(DWORD handle, DWORD mode);
 DWORD BASSDEF(BASS_ChannelGetLevel)(DWORD handle);
 DWORD BASSDEF(BASS_ChannelGetData)(DWORD handle, void *buffer, DWORD length);
-HSYNC BASSDEF(BASS_ChannelSetSync)(DWORD handle, DWORD type, QWORD param, SYNCPROC *proc, void *user);
+HSYNC BASSDEF(BASS_ChannelSetSync)(DWORD handle, DWORD type, u64 param, SYNCPROC *proc, void *user);
 BOOL BASSDEF(BASS_ChannelRemoveSync)(DWORD handle, HSYNC sync);
 HDSP BASSDEF(BASS_ChannelSetDSP)(DWORD handle, DSPPROC *proc, void *user, int priority);
 BOOL BASSDEF(BASS_ChannelRemoveDSP)(DWORD handle, HDSP dsp);

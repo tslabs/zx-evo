@@ -296,7 +296,7 @@ bool ATA_PASSER::seek(unsigned nsector)
    return (code != INVALID_SET_FILE_POINTER || GetLastError() == NO_ERROR);
 }
 
-bool ATA_PASSER::read_sector(unsigned char *dst)
+bool ATA_PASSER::read_sector(u8 *dst)
 {
    DWORD sz = 0;
    if (!ReadFile(hDevice, dst, 512, &sz, 0))
@@ -306,7 +306,7 @@ bool ATA_PASSER::read_sector(unsigned char *dst)
    return true;
 }
 
-bool ATA_PASSER::write_sector(unsigned char *src)
+bool ATA_PASSER::write_sector(u8 *src)
 {
    DWORD sz = 0;
    return (WriteFile(hDevice, src, 512, &sz, 0) && sz == 512);
@@ -355,7 +355,7 @@ unsigned ATAPI_PASSER::identify(PHYS_DEVICE *outlist, int max)
 
          SRB_HAInquiry SRB = { 0 };
          SRB.SRB_Cmd        = SC_HA_INQUIRY;
-         SRB.SRB_HaId       = (unsigned char)adapterid;
+         SRB.SRB_HaId       = (u8)adapterid;
          DWORD ASPIStatus = _SendASPI32Command(&SRB);
 
          if (ASPIStatus != SS_COMP) break;
@@ -450,7 +450,7 @@ int ATAPI_PASSER::SEND_SPTI_CMD(void *databuf, int bufsize)
 
    struct {
       SCSI_PASS_THROUGH_DIRECT p;
-      unsigned char sense[MAX_SENSE_LEN];
+      u8 sense[MAX_SENSE_LEN];
    } srb = { 0 }, dst;
 
    srb.p.Length = sizeof(SCSI_PASS_THROUGH_DIRECT);
@@ -483,7 +483,7 @@ printf("data:"); dump1((BYTE*)databuf, 0x40);
    return 1;
 }
 
-int ATAPI_PASSER::read_atapi_id(unsigned char *idsector, char prefix)
+int ATAPI_PASSER::read_atapi_id(u8 *idsector, char prefix)
 {
    memset(&cdb, 0, sizeof(CDB));
    memset(idsector, 0, 512);
@@ -528,7 +528,7 @@ int ATAPI_PASSER::read_atapi_id(unsigned char *idsector, char prefix)
    return 1 + (inq.DeviceType == 5);
 }
 
-bool ATAPI_PASSER::read_sector(unsigned char *dst)
+bool ATAPI_PASSER::read_sector(u8 *dst)
 {
    DWORD sz = 0;
    if (!ReadFile(hDevice, dst, 2048, &sz, 0))
@@ -546,12 +546,12 @@ bool ATAPI_PASSER::seek(unsigned nsector)
    return (code != INVALID_SET_FILE_POINTER || GetLastError() == NO_ERROR);
 }
 
-void make_ata_string(unsigned char *dst, unsigned n_words, const char *src)
+void make_ata_string(u8 *dst, unsigned n_words, const char *src)
 {
    unsigned i; //Alone Coder 0.36.7
    for (/*unsigned*/ i = 0; i < n_words*2 && src[i]; i++) dst[i] = src[i];
    while (i < n_words*2) dst[i++] = ' ';
-   unsigned char tmp;
+   u8 tmp;
    for (i = 0; i < n_words*2; i += 2)
       tmp = dst[i], dst[i] = dst[i+1], dst[i+1] = tmp;
 }
@@ -600,10 +600,10 @@ int ATAPI_PASSER::SEND_ASPI_CMD(void *buf, int buf_sz)
 {
    SRB_ExecSCSICmd SRB = { 0 };
    SRB.SRB_Cmd        = SC_EXEC_SCSI_CMD;
-   SRB.SRB_HaId       = (unsigned char)dev->adapterid;
+   SRB.SRB_HaId       = (u8)dev->adapterid;
    SRB.SRB_Flags      = SRB_DIR_IN | SRB_EVENT_NOTIFY | SRB_ENABLE_RESIDUAL_COUNT;
-   SRB.SRB_Target     = (unsigned char)dev->targetid;
-   SRB.SRB_BufPointer = (unsigned char*)buf;
+   SRB.SRB_Target     = (u8)dev->targetid;
+   SRB.SRB_BufPointer = (u8*)buf;
    SRB.SRB_BufLen     = buf_sz;
    SRB.SRB_SenseLen   = sizeof(SRB.SenseArea);
    SRB.SRB_CDBLen     = ATAPI_CDB_SIZE;

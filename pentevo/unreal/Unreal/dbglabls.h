@@ -1,7 +1,7 @@
 #pragma once
 struct MON_LABEL
 {
-    unsigned char *address;
+    u8 *address;
     unsigned name_offs;
 };
 
@@ -16,17 +16,17 @@ struct MON_LABELS
    ~MON_LABELS() { free(pairs), free(names); stop_watching_labels(); }
 
    unsigned add_name(char *name);
-   void clear(unsigned char *start, unsigned size);
+   void clear(u8 *start, unsigned size);
    void clear_ram() { clear(RAM_BASE_M, MAX_RAM_PAGES*PAGE); }
    void sort();
 
-   char *find(unsigned char *address);
-   void add(unsigned char *address, char *name);
-   unsigned load(char *filename, unsigned char *base, unsigned size);
+   char *find(u8 *address);
+   void add(u8 *address, char *name);
+   unsigned load(char *filename, u8 *base, unsigned size);
 
 
    char xas_errstr[80];
-   unsigned char xaspage;
+   u8 xaspage;
    void find_xas();
 
    enum { MAX_ALASM_LTABLES = 16 };
@@ -34,7 +34,7 @@ struct MON_LABELS
    unsigned alasm_found_tables;
    unsigned alasm_offset[MAX_ALASM_LTABLES];
    unsigned alasm_count[MAX_ALASM_LTABLES];
-   unsigned alasm_chain_len(unsigned char *page, unsigned offset, unsigned &end);
+   unsigned alasm_chain_len(u8 *page, unsigned offset, unsigned &end);
    void find_alasm();
 
    void import_menu();
@@ -53,7 +53,7 @@ struct MON_LABELS
 
 extern MON_LABELS mon_labels;
 
-void load_labels(char *filename, unsigned char *base, unsigned size);
+void load_labels(char *filename, u8 *base, unsigned size);
 void mon_show_labels();
 void init_labels(char* filename);
 

@@ -14,16 +14,16 @@ typedef BOOL  (WINAPI *TSetConfig)(DWORD,DWORD);
 typedef DWORD (WINAPI *TGetConfig)(DWORD);
 
 typedef BOOL  (WINAPI *TMusicFree)(HMUSIC);
-typedef HMUSIC(WINAPI *TMusicLoad)(BOOL,void*,QWORD,DWORD,DWORD,DWORD);
+typedef HMUSIC(WINAPI *TMusicLoad)(BOOL,void*,u64,DWORD,DWORD,DWORD);
 typedef BOOL  (WINAPI *TChannelPause)(DWORD);
 typedef BOOL  (WINAPI *TChannelPlay)(DWORD,BOOL);
 typedef BOOL (WINAPI *TChannelStop)(DWORD);
 
-typedef QWORD (WINAPI *TChannelGetPosition)(DWORD handle, DWORD mode);
-typedef BOOL  (WINAPI *TChannelSetPosition)(DWORD,QWORD,DWORD);
+typedef u64 (WINAPI *TChannelGetPosition)(DWORD handle, DWORD mode);
+typedef BOOL  (WINAPI *TChannelSetPosition)(DWORD,u64,DWORD);
 typedef DWORD (WINAPI *TChannelGetLevel)(DWORD);
 typedef BOOL  (WINAPI *TChannelFlags)(DWORD,DWORD,DWORD);
-typedef double (WINAPI *TChannelBytes2Seconds)(DWORD,QWORD);
+typedef double (WINAPI *TChannelBytes2Seconds)(DWORD,u64);
 typedef BOOL  (WINAPI *TChannelSetAttribute)(DWORD,DWORD,float);
 typedef DWORD (WINAPI *TChannelIsActive)(DWORD handle);
 

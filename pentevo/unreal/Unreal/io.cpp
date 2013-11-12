@@ -19,7 +19,7 @@
 	extern FILE *f_log_FE_out;
 #endif
 
-void out(unsigned port, unsigned char val)
+void out(unsigned port, u8 val)
 {
 
    port &= 0xFFFF;
@@ -642,7 +642,7 @@ void out(unsigned port, unsigned char val)
              goto write_hdd;
          }
 
-         if ((unsigned char)port == 0x1F && conf.sound.ay_scheme == AY_SCHEME_POS)
+         if ((u8)port == 0x1F && conf.sound.ay_scheme == AY_SCHEME_POS)
          {
              comp.active_ay = val & 1;
              return;
@@ -676,7 +676,7 @@ void out(unsigned port, unsigned char val)
    }
 
    #ifdef MOD_VID_VD
-   if ((unsigned char)port == 0xDF)
+   if ((u8)port == 0xDF)
    {
        comp.pVD = val;
        comp.vdbase = (comp.pVD & 4)? vdmem[comp.pVD & 3] : 0;
@@ -715,7 +715,7 @@ void out(unsigned port, unsigned char val)
 
 
       update_screen();
-      unsigned char new_border = (val & 7);
+      u8 new_border = (val & 7);
 
 	  if (conf.mem_model == MM_ATM710 || conf.mem_model == MM_ATM3 || conf.mem_model == MM_ATM450)
 		// BRIGHT for ATM border
@@ -725,7 +725,7 @@ void out(unsigned port, unsigned char val)
 
       if (conf.mem_model == MM_ATM450)
 	  {
-          set_atm_aFE((unsigned char)port);
+          set_atm_aFE((u8)port);
 		  init_raster();
 	  }
 
@@ -746,7 +746,7 @@ void out(unsigned port, unsigned char val)
    if (!(port & 2))
    {
 
-      if (conf.sound.covoxDD && (unsigned char)port == 0xDD)
+      if (conf.sound.covoxDD && (u8)port == 0xDD)
       { // port DD - covox
 //         __debugbreak();
          flush_dig_snd();
@@ -888,10 +888,10 @@ set1FFD:
    if (conf.sound.sd && (port & 0xAF) == 0x0F)
    { // soundrive
 //      __debugbreak();
-      if ((unsigned char)port == 0x0F) comp.p0F = val;
-      if ((unsigned char)port == 0x1F) comp.p1F = val;
-      if ((unsigned char)port == 0x4F) comp.p4F = val;
-      if ((unsigned char)port == 0x5F) comp.p5F = val;
+      if ((u8)port == 0x0F) comp.p0F = val;
+      if ((u8)port == 0x1F) comp.p1F = val;
+      if ((u8)port == 0x4F) comp.p4F = val;
+      if ((u8)port == 0x5F) comp.p5F = val;
       flush_dig_snd();
       sd_l = (conf.sound.sd_vol * (comp.p0F+comp.p1F)) >> 8;
       sd_r = (conf.sound.sd_vol * (comp.p4F+comp.p5F)) >> 8;
@@ -983,7 +983,7 @@ set1FFD:
        modem.write((port >> 8) & 7, val);
 }
 
-__inline unsigned char in1(unsigned port)
+__inline u8 in1(unsigned port)
 {
    port &= 0xFFFF;
    brk_port_in = port;
@@ -1150,8 +1150,8 @@ __inline unsigned char in1(unsigned port)
          if (port)
              return hdd.read(port);
          unsigned v = hdd.read_data();
-         comp.ide_read = (unsigned char)(v >> 8);
-         return (unsigned char)v;
+         comp.ide_read = (u8)(v >> 8);
+         return (u8)v;
       }
 
       if ((port & 0x18A3) == (0xFFFE & 0x18A3))
@@ -1181,7 +1181,7 @@ __inline unsigned char in1(unsigned port)
          }
       }
 
-      unsigned char p1 = (unsigned char)port;
+      u8 p1 = (u8)port;
 
       if (conf.mem_model == MM_PROFI) // molodcov_alex
       {
@@ -1288,7 +1288,7 @@ __inline unsigned char in1(unsigned port)
          return input.mbuttons;
       }
       input.mouse_joy_led |= 2;
-      unsigned char res = (conf.input.kjoy)? input.kjoy : 0xFF;
+      u8 res = (conf.input.kjoy)? input.kjoy : 0xFF;
       if (conf.mem_model == MM_SCORP || conf.mem_model == MM_PROFSCORP)
          res = (res & 0x1F) | (comp.wd.in(0xFF) & 0xE0);
       return res;
@@ -1320,12 +1320,12 @@ __inline unsigned char in1(unsigned port)
 
    if ((port & 0x8202) == (0x7FFD & 0x8202) && (conf.mem_model == MM_ATM710 || conf.ide_scheme == IDE_ATM))
    { // ATM-2 IDE+DAC/ADC
-      unsigned char irq = 0x40;
+      u8 irq = 0x40;
       if (conf.ide_scheme == IDE_ATM) irq = (hdd.read_intrq() & 0x40);
       return irq + 0x3F;
    }
 
-   if ((unsigned char)port == 0xFD && conf.sound.ay_scheme)
+   if ((u8)port == 0xFD && conf.sound.ay_scheme)
    {
       if ((conf.sound.ay_scheme == AY_SCHEME_CHRV) && (conf.sound.ay_chip == (SNDCHIP::CHIP_YM2203)) && (tfmstatuson0 == 0))
           return 0x7f /*always ready*/; //Alone Coder 0.36.6
@@ -1341,7 +1341,7 @@ __inline unsigned char in1(unsigned port)
    { // FB/7B //Alone Coder 0.36.6 (for MODPLAYi)
       if (conf.mem_model == MM_ATM450)
       {
-         comp.aFB = (unsigned char)port;
+         comp.aFB = (u8)port;
          set_banks();
       }
       else if (conf.cache)
@@ -1375,7 +1375,7 @@ __inline unsigned char in1(unsigned port)
    return 0xFF;
 }
 
-unsigned char in(unsigned port)
+u8 in(unsigned port)
 {
    brk_port_val = in1(port);
    return brk_port_val;

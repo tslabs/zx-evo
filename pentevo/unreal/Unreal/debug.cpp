@@ -15,20 +15,20 @@
 
 #ifdef MOD_MONITOR
 
-unsigned char trace_labels;
+u8 trace_labels;
 
 unsigned show_scrshot;
 unsigned user_watches[3] = { 0x4000, 0x8000, 0xC000 };
 
 unsigned mem_sz = 8;
 unsigned mem_disk, mem_track, mem_max;
-unsigned char mem_ascii;
-unsigned char mem_dump;
-unsigned char editor = ED_MEM;
+u8 mem_ascii;
+u8 mem_dump;
+u8 editor = ED_MEM;
 
 unsigned regs_curs;
 unsigned dbg_extport;
-unsigned char dgb_extval; // extended memory port like 1FFD or DFFD
+u8 dgb_extval; // extended memory port like 1FFD or DFFD
 
 unsigned ripper; // ripper mode (none/read/write)
 
@@ -240,7 +240,7 @@ sleep:
 void debug_events(Z80 *cpu)
 {
    unsigned pc = cpu->pc & 0xFFFF;
-   unsigned char *membit = cpu->membits + pc;
+   u8 *membit = cpu->membits + pc;
    *membit |= MEMBITS_X;
    cpu->dbgbreak |= (*membit & MEMBITS_BPX);
    dbgbreak |= (*membit & MEMBITS_BPX);
@@ -286,7 +286,7 @@ void debug_events(Z80 *cpu)
 
 #endif // MOD_MONITOR
 
-unsigned char isbrk(const Z80 &cpu) // is there breakpoints active or any other reason to use debug z80 loop?
+u8 isbrk(const Z80 &cpu) // is there breakpoints active or any other reason to use debug z80 loop?
 {
 #ifndef MOD_DEBUGCORE
    return 0;
@@ -303,7 +303,7 @@ unsigned char isbrk(const Z80 &cpu) // is there breakpoints active or any other 
    #ifdef MOD_MONITOR
    if (cpu.cbpn)
        return 1;
-   unsigned char res = 0;
+   u8 res = 0;
    for (int i = 0; i < 0x10000; i++)
        res |= cpu.membits[i];
    return (res & (MEMBITS_BPR | MEMBITS_BPW | MEMBITS_BPX));

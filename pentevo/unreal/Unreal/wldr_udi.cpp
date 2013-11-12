@@ -7,8 +7,8 @@
 struct UDI
 {
    char label[3];
-   unsigned char cyls;
-   unsigned char sides;
+   u8 cyls;
+   u8 sides;
 };
 
 int FDD::read_udi()
@@ -16,7 +16,7 @@ int FDD::read_udi()
    free();
    unsigned c,s;
    unsigned mem = 0;
-   unsigned char *ptr = snbuf + 0x10;
+   u8 *ptr = snbuf + 0x10;
 
    for (c = 0; c <= snbuf[9]; c++)
    {
@@ -24,7 +24,7 @@ int FDD::read_udi()
       {
          if (*ptr)
              return 0;
-         unsigned sz = *(unsigned short*)(ptr+1);
+         unsigned sz = *(u16*)(ptr+1);
          sz += sz/8 + ((sz & 7)? 1 : 0);
          mem += sz;
          ptr += 3 + sz;
@@ -36,15 +36,15 @@ int FDD::read_udi()
    cyls = snbuf[9]+1;
    sides = snbuf[10]+1;
    rawsize = align_by(mem, 4096);
-   rawdata = (unsigned char*)VirtualAlloc(0, rawsize, MEM_COMMIT, PAGE_READWRITE);
+   rawdata = (u8*)VirtualAlloc(0, rawsize, MEM_COMMIT, PAGE_READWRITE);
    ptr = snbuf+0x10;
-   unsigned char *dst = rawdata;
+   u8 *dst = rawdata;
 
    for (c = 0; c < cyls; c++)
    {
       for (s = 0; s < sides; s++)
       {
-         unsigned sz = *(unsigned short*)(ptr+1);
+         unsigned sz = *(u16*)(ptr+1);
          trklen[c][s] = sz;
          trkd[c][s] = dst;
          trki[c][s] = dst + sz;
@@ -68,13 +68,13 @@ int FDD::write_udi(FILE *ff)
    snbuf[10] = sides-1;
    *(unsigned*)(snbuf+12) = 0;
 
-   unsigned char *dst = snbuf+0x10;
+   u8 *dst = snbuf+0x10;
    for (unsigned c = 0; c < cyls; c++)
       for (unsigned s = 0; s < sides; s++)
       {
          *dst++ = 0;
          unsigned len = trklen[c][s];
-         *(unsigned short*)dst = len; dst += 2;
+         *(u16*)dst = len; dst += 2;
          memcpy(dst, trkd[c][s], len); dst += len;
          len = (len+7)/8;
          memcpy(dst, trki[c][s], len); dst += len;

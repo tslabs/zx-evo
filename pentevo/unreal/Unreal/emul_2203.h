@@ -1,13 +1,6 @@
 #pragma once
-/*
-typedef unsigned int UINT32;
-typedef signed int INT32;
-typedef unsigned short UINT16;
-typedef signed short INT16;
-typedef unsigned char UINT8;
-typedef signed char INT8;
-*/
-typedef INT16 stream_sample_t;
+
+typedef i16 stream_sample_t;
 typedef stream_sample_t FMSAMPLE;
 
 /* select bit size of output : 8 or 16 */
@@ -24,39 +17,39 @@ typedef stream_sample_t FMSAMPLE;
 /* struct describing a single operator (SLOT) */
 typedef struct
 {
-    INT32	*DT;		/* detune          :dt_tab[DT] */
-    UINT8	KSR;		/* key scale rate  :3-KSR */
-    UINT32	ar;		/* attack rate  */
-    UINT32	d1r;		/* decay rate   */
-    UINT32	d2r;		/* sustain rate */
-    UINT32	rr;		/* release rate */
-    UINT8	ksr;		/* key scale rate  :kcode>>(3-KSR) */
-    UINT32	mul;		/* multiple        :ML_TABLE[ML] */
+    i32	*DT;		/* detune          :dt_tab[DT] */
+    u8	KSR;		/* key scale rate  :3-KSR */
+    u32	ar;		/* attack rate  */
+    u32	d1r;		/* decay rate   */
+    u32	d2r;		/* sustain rate */
+    u32	rr;		/* release rate */
+    u8	ksr;		/* key scale rate  :kcode>>(3-KSR) */
+    u32	mul;		/* multiple        :ML_TABLE[ML] */
 
     /* Phase Generator */
-    UINT32	phase;		/* phase counter */
-    UINT32	Incr;		/* phase step */
+    u32	phase;		/* phase counter */
+    u32	Incr;		/* phase step */
 
     /* Envelope Generator */
-    UINT8	state;		/* phase type */
-    UINT32	tl;		/* total level: TL << 3 */
-    INT32	volume;		/* envelope counter */
-    UINT32	sl;		/* sustain level:sl_table[SL] */
-    UINT32	vol_out;	/* current output from EG circuit (without AM from LFO) */
+    u8	state;		/* phase type */
+    u32	tl;		/* total level: TL << 3 */
+    i32	volume;		/* envelope counter */
+    u32	sl;		/* sustain level:sl_table[SL] */
+    u32	vol_out;	/* current output from EG circuit (without AM from LFO) */
 
-    UINT8	eg_sh_ar;	/*  (attack state) */
-    UINT8	eg_sel_ar;	/*  (attack state) */
-    UINT8	eg_sh_d1r;	/*  (decay state) */
-    UINT8	eg_sel_d1r;	/*  (decay state) */
-    UINT8	eg_sh_d2r;	/*  (sustain state) */
-    UINT8	eg_sel_d2r;	/*  (sustain state) */
-    UINT8	eg_sh_rr;	/*  (release state) */
-    UINT8	eg_sel_rr;	/*  (release state) */
+    u8	eg_sh_ar;	/*  (attack state) */
+    u8	eg_sel_ar;	/*  (attack state) */
+    u8	eg_sh_d1r;	/*  (decay state) */
+    u8	eg_sel_d1r;	/*  (decay state) */
+    u8	eg_sh_d2r;	/*  (sustain state) */
+    u8	eg_sel_d2r;	/*  (sustain state) */
+    u8	eg_sh_rr;	/*  (release state) */
+    u8	eg_sel_rr;	/*  (release state) */
 
-    UINT8	ssg;		/* SSG-EG waveform */
-    UINT8	ssgn;		/* SSG-EG negated output */
+    u8	ssg;		/* SSG-EG waveform */
+    u8	ssgn;		/* SSG-EG negated output */
 
-    UINT32	key;		/* 0=last key was KEY OFF, 1=KEY ON */
+    u32	key;		/* 0=last key was KEY OFF, 1=KEY ON */
 
 } FM_SLOT;
 
@@ -64,24 +57,24 @@ typedef struct
 {
     FM_SLOT	SLOT[4];	/* four SLOTs (operators) */
 
-    UINT8	ALGO;		/* algorithm */
-    UINT8	FB;		/* feedback shift */
-    INT32	op1_out[2];	/* op1 output for feedback */
+    u8	ALGO;		/* algorithm */
+    u8	FB;		/* feedback shift */
+    i32	op1_out[2];	/* op1 output for feedback */
 
-    INT32	*connect1;	/* SLOT1 output pointer */
-    INT32	*connect2;	/* SLOT2 output pointer */
-    INT32	*connect3;	/* SLOT3 output pointer */
-    INT32	*connect4;	/* SLOT4 output pointer */
+    i32	*connect1;	/* SLOT1 output pointer */
+    i32	*connect2;	/* SLOT2 output pointer */
+    i32	*connect3;	/* SLOT3 output pointer */
+    i32	*connect4;	/* SLOT4 output pointer */
 
-    INT32	*mem_connect;/* where to put the delayed sample (MEM) */
-    INT32	mem_value;	/* delayed sample (MEM) value */
+    i32	*mem_connect;/* where to put the delayed sample (MEM) */
+    i32	mem_value;	/* delayed sample (MEM) value */
 
-    INT32	pms;		/* channel PMS */
-    UINT8	ams;		/* channel AMS */
+    i32	pms;		/* channel PMS */
+    u8	ams;		/* channel AMS */
 
-    UINT32	fc;		/* fnum,blk:adjusted to sample rate */
-    UINT8	kcode;		/* key code:                        */
-    UINT32	block_fnum;	/* current blk/fnum value for this slot (can be different betweeen slots of one channel in 3slot mode) */
+    u32	fc;		/* fnum,blk:adjusted to sample rate */
+    u8	kcode;		/* key code:                        */
+    u32	block_fnum;	/* current blk/fnum value for this slot (can be different betweeen slots of one channel in 3slot mode) */
 } FM_CH;
 
 typedef struct
@@ -95,19 +88,19 @@ typedef struct
 #if FM_BUSY_FLAG_SUPPORT
     double	BusyExpire;	/* ExpireTime of Busy clear */
 #endif
-    UINT8	address;	/* address register     */
-    UINT8	irq;		/* interrupt level      */
-    UINT8	irqmask;	/* irq mask             */
-    UINT8	status;		/* status flag          */
-    UINT32	mode;		/* mode  CSM / 3SLOT    */
-    UINT8	prescaler_sel;/* prescaler selector */
-    UINT8	fn_h;		/* freq latch           */
+    u8	address;	/* address register     */
+    u8	irq;		/* interrupt level      */
+    u8	irqmask;	/* irq mask             */
+    u8	status;		/* status flag          */
+    u32	mode;		/* mode  CSM / 3SLOT    */
+    u8	prescaler_sel;/* prescaler selector */
+    u8	fn_h;		/* freq latch           */
     int	TA;		/* timer a              */
     int	TAC;		/* timer a counter      */
-    UINT8	TB;		/* timer b              */
+    u8	TB;		/* timer b              */
     int	TBC;		/* timer b counter      */
     /* local time tables */
-    INT32	dt_tab[8][32];/* DeTune table       */
+    i32	dt_tab[8][32];/* DeTune table       */
     /* Extention Timer and IRQ handler */
 //	FM_TIMERHANDLER	Timer_Handler;
 //	FM_IRQHANDLER	IRQ_Handler;
@@ -121,37 +114,37 @@ typedef struct
 /* OPN 3slot struct */
 typedef struct
 {
-    UINT32  fc[3];			/* fnum3,blk3: calculated */
-    UINT8	fn_h;			/* freq3 latch */
-    UINT8	kcode[3];		/* key code */
-    UINT32	block_fnum[3];	/* current fnum value for this slot (can be different betweeen slots of one channel in 3slot mode) */
+    u32  fc[3];			/* fnum3,blk3: calculated */
+    u8	fn_h;			/* freq3 latch */
+    u8	kcode[3];		/* key code */
+    u32	block_fnum[3];	/* current fnum value for this slot (can be different betweeen slots of one channel in 3slot mode) */
 } FM_3SLOT;
 
 /* OPN/A/B common state */
 typedef struct
 {
-    UINT8	type;			/* chip type */
+    u8	type;			/* chip type */
     FM_ST	ST;			/* general state */
     FM_3SLOT SL3;			/* 3 slot mode state */
     FM_CH	*P_CH;			/* pointer of CH */
 
-    UINT32	eg_cnt;			/* global envelope generator counter */
-    UINT32	eg_timer;		/* global envelope generator counter works at frequency = chipclock/64/3 */
-    UINT32	eg_timer_add;	/* step of eg_timer */
-    UINT32	eg_timer_overflow;/* envelope generator timer overlfows every 3 samples (on real chip) */
+    u32	eg_cnt;			/* global envelope generator counter */
+    u32	eg_timer;		/* global envelope generator counter works at frequency = chipclock/64/3 */
+    u32	eg_timer_add;	/* step of eg_timer */
+    u32	eg_timer_overflow;/* envelope generator timer overlfows every 3 samples (on real chip) */
 
 
     /* there are 2048 FNUMs that can be generated using FNUM/BLK registers
         but LFO works with one more bit of a precision so we really need 4096 elements */
 
-    UINT32	fn_table[2048];	/* fnumber->increment counter */
+    u32	fn_table[2048];	/* fnumber->increment counter */
 
 } FM_OPN;
 
 /* here's the virtual YM2203(OPN) */
 typedef struct
 {
-    UINT8 REGS[256];		/* registers         */
+    u8 REGS[256];		/* registers         */
     FM_OPN OPN;				/* OPN state         */
     FM_CH CH[3];			/* channel state     */
 } YM2203;
@@ -198,13 +191,13 @@ void YM2203UpdateOne(void *chip, FMSAMPLE *buffer, int length);
 ** Write
 ** return : InterruptLevel
 */
-int YM2203Write(void *chip,int a,unsigned char v);
+int YM2203Write(void *chip,int a,u8 v);
 
 /*
 ** Read
 ** return : InterruptLevel
 */
-unsigned char YM2203Read(void *chip,int a);
+u8 YM2203Read(void *chip,int a);
 
 /*
 **  Timer OverFlow

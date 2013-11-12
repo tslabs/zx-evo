@@ -1,4 +1,5 @@
 #include "std.h"
+#include "sysdefs.h"
 #include "resource.h"
 #include "mods.h"
 #include "emul_2203.h"
@@ -24,12 +25,6 @@
 #define INVALID_SET_FILE_POINTER (DWORD)-1
 #endif
 
-typedef unsigned int UINT32;
-typedef signed int INT32;
-typedef unsigned short UINT16;
-typedef signed short INT16;
-typedef unsigned char UINT8;
-typedef signed char INT8;
 unsigned frametime = 111111; //Alone Coder (GUI value for conf.frame)
 
 #ifdef LOG_FE_OUT

@@ -31,7 +31,7 @@ void draw_screen()
    }
 //   if (comp.pEFF7 & EFF7_GIGASCREEN) { draw_border1(); draw_gigascreen_no_border(); return; } //Alone Coder
 
-   unsigned char *dst = rbuf;
+   u8 *dst = rbuf;
    unsigned br = comp.border_attr * 0x11001100;
 
    unsigned i;
@@ -54,7 +54,7 @@ void draw_screen()
 
       for (x = 0; x < 32; x++)
       {
-//[vv]   *(volatile unsigned char*)dst;
+//[vv]   *(volatile u8*)dst;
 //         *dst++ = temp.base[t.scrtab[y] + x];
 //         *dst++ = colortab[temp.base[atrtab[y] + x]];
       }
@@ -76,11 +76,11 @@ void draw_screen()
 
 void draw_gigascreen_no_border()
 {
-   unsigned char *dst = rbuf + (temp.b_top * temp.scx + temp.b_left) / 4;
-   unsigned char * const screen = page_ram(5);
+   u8 *dst = rbuf + (temp.b_top * temp.scx + temp.b_left) / 4;
+   u8 * const screen = page_ram(5);
    unsigned offset = (comp.frame_counter & 1)? 0 : 2*PAGE;
    for (int y = 0; y < 192; y++) {
-      *(volatile unsigned char*)dst;
+      *(volatile u8*)dst;
       for (unsigned x = 0; x < 32; x++) {
          dst[2*x+0] = screen[t.scrtab[y] + x + offset];
          dst[2*x+1] = colortab[screen[atrtab[y] + x + offset]];

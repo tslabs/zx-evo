@@ -64,7 +64,7 @@ void ISA_MODEM::io()
 {
    if (!hPort || hPort == INVALID_HANDLE_VALUE)
        return;
-   unsigned char temp[BSIZE];
+   u8 temp[BSIZE];
 
    int needwrite = whead - wtail;
    if (needwrite < 0)
@@ -111,7 +111,7 @@ void ISA_MODEM::setup_int()
 {
    reg[6] &= ~0x10;
 
-   unsigned char mask = reg[5] & 1;
+   u8 mask = reg[5] & 1;
    if (reg[5] & 0x20) mask |= 2, reg[6] |= 0x10;
    if (reg[5] & 0x1E) mask |= 4;
    // if (mask & reg[1]) cpu.nmi()
@@ -123,7 +123,7 @@ void ISA_MODEM::setup_int()
    else reg[2] = 1;
 }
 
-void ISA_MODEM::write(unsigned nreg, unsigned char value)
+void ISA_MODEM::write(unsigned nreg, u8 value)
 {
    DCB dcb;
 
@@ -202,11 +202,11 @@ void ISA_MODEM::write(unsigned nreg, unsigned char value)
    }
 }
 
-unsigned char ISA_MODEM::read(unsigned nreg)
+u8 ISA_MODEM::read(unsigned nreg)
 {
    if (nreg < 2 && (reg[3] & 0x80)) return div[nreg];
 
-   unsigned char result = reg[nreg];
+   u8 result = reg[nreg];
 
    if (nreg == 0)
    { // read char from buffer

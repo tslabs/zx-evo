@@ -276,7 +276,7 @@ u16 TVs1001::GetDecodeTime()
     if (!Mp3Stream)
         return 0;
 
-    QWORD Pos = BASS::ChannelGetPosition(Mp3Stream, BASS_POS_BYTE);
+    u64 Pos = BASS::ChannelGetPosition(Mp3Stream, BASS_POS_BYTE);
     double Time = BASS::ChannelBytes2Seconds(Mp3Stream, Pos);
     return (u16)Time;
 }
@@ -352,7 +352,7 @@ void TVs1001::StreamClose()
 }
 
 // bass asynchronous callback
-QWORD TVs1001::StreamLen()
+u64 TVs1001::StreamLen()
 {
     return 0;
 }
@@ -372,7 +372,7 @@ DWORD TVs1001::StreamRead(void *Buffer, DWORD Length)
 }
 
 // bass asynchronous callback
-BOOL TVs1001::StreamSeek(QWORD offset)
+BOOL TVs1001::StreamSeek(u64 offset)
 {
     return FALSE;
 }

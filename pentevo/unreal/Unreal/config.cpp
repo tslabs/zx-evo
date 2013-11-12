@@ -21,7 +21,7 @@ void loadkeys(action*);
 void loadzxkeys(CONFIG*);
 void load_arch(const char*);
 
-unsigned load_rom(const char *path, unsigned char *bank, unsigned max_banks = 1)
+unsigned load_rom(const char *path, u8 *bank, unsigned max_banks = 1)
 {
    if (!*path) { norom: memset(bank, 0xFF, max_banks*PAGE); return 0; }
    char tmp[FILENAME_MAX]; strcpy(tmp, path);
@@ -57,7 +57,7 @@ void load_atm_font()
 {
    FILE *ff = fopen("SGEN.ROM", "rb");
    if (!ff) return;
-   unsigned char font[0x800];
+   u8 font[0x800];
    unsigned sz = fread(font, 1, 0x800, ff);
    if (sz == 0x800) {
       color(CONSCLR_INFO);
@@ -142,7 +142,7 @@ void load_romset(CONFIG *conf, const char *romset)
    addpath(conf->sys_rom_path);
 }
 
-void add_presets(const char *section, const char *prefix0, unsigned *num, char **tab, unsigned char *curr)
+void add_presets(const char *section, const char *prefix0, unsigned *num, char **tab, u8 *curr)
 {
    *num = 0;
    char buf[0x7F00], defval[64];
@@ -168,7 +168,7 @@ void add_presets(const char *section, const char *prefix0, unsigned *num, char *
          *setptr++ = 0;
 
          if (!stricmp(tab[*num], defval))
-             *curr = (unsigned char)*num;
+             *curr = (u8)*num;
          (*num)++;
       }
       while (*ptr) ptr++;
@@ -186,8 +186,8 @@ void load_ula_preset()
    unsigned t1, t2, t3, t4, t5;
    sscanf(line, "%d,%d,%d,%d,%d,%d,%d,%d,%d,%u", &/*conf.frame*/frametime/*Alone Coder*/, &conf.paper,
        &conf.t_line, &conf.intfq, &conf.intlen, &t1, &t2, &t3, &t4, &t5);
-   conf.even_M1 = (unsigned char)t1; conf.border_4T = (unsigned char)t2;
-   conf.floatbus = (unsigned char)t3; conf.floatdos = (unsigned char)t4;
+   conf.even_M1 = (u8)t1; conf.border_4T = (u8)t2;
+   conf.floatbus = (u8)t3; conf.floatdos = (u8)t4;
    conf.portff = t5 & 1;
 }
 
@@ -882,7 +882,7 @@ void apply_memory()
          romsize = load_rom(conf.mem_model == MM_ATM710 ? conf.atm2_rom_path : conf.atm3_rom_path, ROM_BASE_M, 64);
          if (romsize != 64 && romsize != 128 && romsize != 512 && romsize != 1024)
             errexit("invalid ROM size for ATM bios");
-         unsigned char *lastpage = ROM_BASE_M + (romsize - 64) * 1024;
+         u8 *lastpage = ROM_BASE_M + (romsize - 64) * 1024;
          base_sos_rom = lastpage + 0*PAGE;
          base_dos_rom = lastpage + 1*PAGE;
          base_128_rom = lastpage + 2*PAGE;

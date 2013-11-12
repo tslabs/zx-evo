@@ -105,6 +105,7 @@
 //fnum= fq*2.3575
 /* globals */
 #include "std.h"
+#include "sysdefs.h"
 #include "emul_2203.h"
 
 #define TYPE_SSG    0x01    /* SSG support          */
@@ -170,14 +171,14 @@
 
 #define logerror(a,b,c,d,e)
 
-#define SC(db) (UINT32) ( db * (4.0/ENV_STEP) )
-static const UINT32 sl_table[16]={
+#define SC(db) (u32) ( db * (4.0/ENV_STEP) )
+static const u32 sl_table[16]={
  SC( 0),SC( 1),SC( 2),SC(3 ),SC(4 ),SC(5 ),SC(6 ),SC( 7),
  SC( 8),SC( 9),SC(10),SC(11),SC(12),SC(13),SC(14),SC(31)
 };
 #undef SC
 
-static const UINT8 eg_inc[19*RATE_STEPS]={
+static const u8 eg_inc[19*RATE_STEPS]={
 
 /*cycle:0 1  2 3  4 5  6 7*/
 
@@ -209,7 +210,7 @@ static const UINT8 eg_inc[19*RATE_STEPS]={
 #define O(a) (a*RATE_STEPS)
 
 /*note that there is no O(17) in this table - it's directly in the code */
-static const UINT8 eg_rate_select[32+64+32]={	/* Envelope Generator rates (32 + 64 rates + 32 RKS) */
+static const u8 eg_rate_select[32+64+32]={	/* Envelope Generator rates (32 + 64 rates + 32 RKS) */
 /* 32 infinite time rates */
 O(18),O(18),O(18),O(18),O(18),O(18),O(18),O(18),
 O(18),O(18),O(18),O(18),O(18),O(18),O(18),O(18),
@@ -252,7 +253,7 @@ O(16),O(16),O(16),O(16),O(16),O(16),O(16),O(16)
 #undef O
 
 #define O(a) (a*1)
-static const UINT8 eg_rate_shift[32+64+32]={	/* Envelope Generator counter shifts (32 + 64 rates + 32 RKS) */
+static const u8 eg_rate_shift[32+64+32]={	/* Envelope Generator counter shifts (32 + 64 rates + 32 RKS) */
 /* 32 infinite time rates */
 O(0),O(0),O(0),O(0),O(0),O(0),O(0),O(0),
 O(0),O(0),O(0),O(0),O(0),O(0),O(0),O(0),
@@ -293,7 +294,7 @@ O( 0),O( 0),O( 0),O( 0),O( 0),O( 0),O( 0),O( 0)
 };
 #undef O
 
-static const UINT8 dt_tab[4 * 32]={
+static const u8 dt_tab[4 * 32]={
 /* this is YM2151 and YM2612 phase increment data (in 10.10 fixed point format)*/
 /* FD=0 */
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -321,12 +322,12 @@ static const UINT8 dt_tab[4 * 32]={
 
 /* OPN key frequency number -> key code follow table */
 /* fnum higher 4bit -> keycode lower 2bit */
-static const UINT8 opn_fktable[16] = {0,0,0,0,0,0,0,1,2,3,3,3,3,3,3,3};
+static const u8 opn_fktable[16] = {0,0,0,0,0,0,0,1,2,3,3,3,3,3,3,3};
 
-static INT16/*signed int*/ tl_tab[TL_TAB_LEN];
+static i16 tl_tab[TL_TAB_LEN];
 
 /* sin waveform table in 'decibel' scale */
-static UINT16/*unsigned int*/ sin_tab[SIN_LEN];
+static u16 sin_tab[SIN_LEN];
 
 /* current chip state */
 static void	*_cur_chip = 0;	/* pointer of current chip struct */
@@ -334,10 +335,10 @@ static FM_ST	*_State;			/* basic status */
 static FM_CH	*_cch[3];		/* pointer of FM channels */
 
 
-static INT32	_m2,_c1,_c2;		/* Phase Modulation input for operators 2,3,4 */
-static INT32	_mem;			/* one sample delay memory */
+static i32	_m2,_c1,_c2;		/* Phase Modulation input for operators 2,3,4 */
+static i32	_mem;			/* one sample delay memory */
 
-static INT32	_out_fm[3];		/* outputs of working channels */
+static i32	_out_fm[3];		/* outputs of working channels */
 
 /* limitter */
 
@@ -460,7 +461,7 @@ void TimerBOver(FM_ST *ST)
 
 
 #if FM_BUSY_FLAG_SUPPORT
-UINT8 FM_STATUS_FLAG(FM_ST *ST)
+u8 FM_STATUS_FLAG(FM_ST *ST)
 {
     if ( ST->BusyExpire )
     {
@@ -509,12 +510,12 @@ void FM_KEYOFF(FM_CH *CH , int s )
 /* set algorithm connection */
 static void setup_connection( FM_CH *CH, int ch )
 {
-    INT32 *carrier = &_out_fm[ch];
+    i32 *carrier = &_out_fm[ch];
 
-    INT32 **om1 = &CH->connect1;
-    INT32 **oc1 = &CH->connect2;
-    INT32 **om2 = &CH->connect3;
-    INT32 **memc = &CH->mem_connect;
+    i32 **om1 = &CH->connect1;
+    i32 **oc1 = &CH->connect2;
+    i32 **om2 = &CH->connect3;
+    i32 **memc = &CH->mem_connect;
 
     switch( CH->ALGO ){
     case 0:
@@ -609,7 +610,7 @@ void set_tl(FM_CH *CH,FM_SLOT *SLOT , int v)
 /* set attack rate & key scale #5x */
 void set_ar_ksr(FM_CH *CH,FM_SLOT *SLOT,int v)
 {
-    UINT8 old_KSR = SLOT->KSR;
+    u8 old_KSR = SLOT->KSR;
 
     SLOT->ar = (v&0x1f) ? 32 + ((v&0x1f)<<1) : 0;
 
@@ -664,22 +665,22 @@ void set_sl_rr(FM_SLOT *SLOT,int v)
     SLOT->eg_sel_rr = eg_rate_select[SLOT->rr  + SLOT->ksr];
 }
 
-signed int op_calc(UINT32 phase, unsigned int env, signed int pm)
+i32 op_calc(u32 phase, u32 env, i32 pm)
 {
-    UINT32 p;
+    u32 p;
 
-    p = (env<<3) + sin_tab[ ( ((signed int)((phase & ~FREQ_MASK) + (pm<<15))) >> FREQ_SH ) & SIN_MASK ];
+    p = (env<<3) + sin_tab[ ( ((i32)((phase & ~FREQ_MASK) + (pm<<15))) >> FREQ_SH ) & SIN_MASK ];
 
     if (p >= TL_TAB_LEN)
         return 0;
     return tl_tab[p];
 }
 
-signed int op_calc1(UINT32 phase, unsigned int env, signed int pm)
+i32 op_calc1(u32 phase, u32 env, i32 pm)
 {
-    UINT32 p;
+    u32 p;
 
-    p = (env<<3) + sin_tab[ ( ((signed int)((phase & ~FREQ_MASK) + pm      )) >> FREQ_SH ) & SIN_MASK ];
+    p = (env<<3) + sin_tab[ ( ((i32)((phase & ~FREQ_MASK) + pm      )) >> FREQ_SH ) & SIN_MASK ];
 
     if (p >= TL_TAB_LEN)
         return 0;
@@ -689,9 +690,9 @@ signed int op_calc1(UINT32 phase, unsigned int env, signed int pm)
 
 void chan_calc(FM_OPN *OPN, FM_CH *CH)
 {
-    unsigned int eg_out;
+    u32 eg_out;
 
-    UINT32 AM = 0;//LFO_AM >> CH->ams;
+    u32 AM = 0;//LFO_AM >> CH->ams;
 
     _m2 = _c1 = _c2 = _mem = 0;
 
@@ -699,7 +700,7 @@ void chan_calc(FM_OPN *OPN, FM_CH *CH)
 
     eg_out = CH->SLOT[SLOT1].vol_out;
     {
-        INT32 out = CH->op1_out[0] + CH->op1_out[1];
+        i32 out = CH->op1_out[0] + CH->op1_out[1];
         CH->op1_out[0] = CH->op1_out[1];
 
         if ( !CH->connect1 ){
@@ -794,7 +795,7 @@ void refresh_fc_eg_chan(FM_CH *CH )
 }
 
 /* initialize time tables */
-static void init_timetables( FM_ST *ST , const UINT8 *dttable )
+static void init_timetables( FM_ST *ST , const u8 *dttable )
 {
     int i,d;
     double rate;
@@ -808,8 +809,8 @@ static void init_timetables( FM_ST *ST , const UINT8 *dttable )
     for (d = 0;d <= 3;d++){
         for (i = 0;i <= 31;i++){
             rate = ((double)dttable[d*32 + i]) * SIN_LEN  * ST->freqbase  * (1<<FREQ_SH) / ((double)(1<<20));
-            ST->dt_tab[d][i]   = (INT32) rate;
-            ST->dt_tab[d+4][i] = -(INT32) rate;
+            ST->dt_tab[d][i]   = (i32) rate;
+            ST->dt_tab[d+4][i] = -(i32) rate;
 #if 0
             logerror("FM.C: DT [%2i %2i] = %8x  \n", d, i, ST->dt_tab[d][i] );
 #endif
@@ -845,8 +846,8 @@ static void reset_channels( FM_ST *ST , FM_CH *CH , int num )
 /* initialize generic tables */
 static int init_tables(void)
 {
-    signed int i,x;
-    signed int n;
+    i32 i,x;
+    i32 n;
     double o,m;
 
     for (x=0; x<TL_RES_LEN; x++)
@@ -865,13 +866,13 @@ static int init_tables(void)
             n = n>>1;
                         /* 11 bits here (rounded) */
         n <<= 2;		/* 13 bits here (as in real chip) */
-        tl_tab[ x*2 + 0 ] = n;
-        tl_tab[ x*2 + 1 ] = -n;
+        tl_tab[ x*2 + 0 ] = (u16)n;
+        tl_tab[ x*2 + 1 ] = (u16)(-n);
 
         for (i=1; i<13; i++)
         {
-            tl_tab[ x*2+0 + i*2*TL_RES_LEN ] =  n>>i;
-            tl_tab[ x*2+1 + i*2*TL_RES_LEN ] = -(n>>i);
+            tl_tab[ x*2+0 + i*2*TL_RES_LEN ] =  (u16)(n>>i);
+            tl_tab[ x*2+1 + i*2*TL_RES_LEN ] = (u16)(-(n>>i));
         }
     }
     /*logerror("FM.C: TL_TAB_LEN = %i elements (%i bytes)\n",TL_TAB_LEN, (int)sizeof(tl_tab));*/
@@ -896,7 +897,7 @@ static int init_tables(void)
         else
             n = n>>1;
 
-        sin_tab[ i ] = n*2 + (m>=0.0? 0: 1 );
+        sin_tab[ i ] = (u16)(n * 2 + (m >= 0.0 ? 0 : 1));
 //		printf("FM.C: sin [%4i]= %4i (tl_tab value=%5i)\n", i, sin_tab[i],tl_tab[sin_tab[i]]);
     }
 
@@ -928,9 +929,9 @@ void CSMKeyControll(FM_CH *CH)
 
 __inline void advance_eg_channel(FM_OPN *OPN, FM_SLOT *SLOT)
 {
-    unsigned int out;
-    unsigned int swap_flag = 0;
-    unsigned int i;
+    u32 out;
+    u32 swap_flag = 0;
+    u32 i;
 
 
     i = 4; /* four operators per channel */
@@ -960,7 +961,7 @@ __inline void advance_eg_channel(FM_OPN *OPN, FM_SLOT *SLOT)
                 {
                     SLOT->volume += 4 * eg_inc[SLOT->eg_sel_d1r + ((OPN->eg_cnt>>SLOT->eg_sh_d1r)&7)];
 
-                    if ( (UINT32)SLOT->volume >= SLOT->sl )
+                    if ( (u32)SLOT->volume >= SLOT->sl )
                         SLOT->state = EG_SUS;
                 }
             }
@@ -970,7 +971,7 @@ __inline void advance_eg_channel(FM_OPN *OPN, FM_SLOT *SLOT)
                 {
                     SLOT->volume += eg_inc[SLOT->eg_sel_d1r + ((OPN->eg_cnt>>SLOT->eg_sh_d1r)&7)];
 
-                    if ( (UINT32)SLOT->volume >= SLOT->sl )
+                    if ( (u32)SLOT->volume >= SLOT->sl )
                         SLOT->state = EG_SUS;
                 }
             }
@@ -1045,7 +1046,7 @@ __inline void advance_eg_channel(FM_OPN *OPN, FM_SLOT *SLOT)
 
         }
 
-        out = SLOT->tl + ((UINT32)SLOT->volume);
+        out = SLOT->tl + ((u32)SLOT->volume);
 
         if ((SLOT->ssg&0x08) && (SLOT->ssgn&2) && (SLOT->state != EG_OFF/*Alone Coder*/))	/* negate output (changes come from alternate bit, init comes from attack bit) */
             out ^= 511/*Alone Coder*/; //((1<<ENV_BITS)-1); /* 1023 */
@@ -1064,7 +1065,7 @@ __inline void advance_eg_channel(FM_OPN *OPN, FM_SLOT *SLOT)
 
 enum { SS_INT8, SS_UINT8, SS_INT16, SS_UINT16, SS_INT32, SS_UINT32, SS_INT, SS_DOUBLE, SS_FLOAT};
 
-void ss_register_entry(const char *module, int instance, const char *name, int type, void *data, unsigned int size)
+void ss_register_entry(const char *module, int instance, const char *name, int type, void *data, u32 size)
 {
     int i;
     FILE* logfile=fopen("logfile.log", "a+");
@@ -1073,19 +1074,19 @@ void ss_register_entry(const char *module, int instance, const char *name, int t
 
     fprintf(logfile,"%20s:%3d [%10s]: ",module,instance,name);
 
-    if (type==SS_INT8) { fprintf(logfile,"INT8   "); for (i=0;i<(int)size;i++) fprintf(logfile,"[%2x]#%+02x ",i,((signed char*)data)[i]); }
-    if (type==SS_INT16) { fprintf(logfile,"INT16  "); for (i=0;i<(int)size;i++) fprintf(logfile,"[%2x]#%+04x ",i,((signed short*)data)[i]); }
-    if (type==SS_INT32) { fprintf(logfile,"INT32  "); for (i=0;i<(int)size;i++) fprintf(logfile,"[%2x]#%+08x ",i,((signed int*)data)[i]); }
+    if (type==SS_INT8) { fprintf(logfile,"char   "); for (i=0;i<(int)size;i++) fprintf(logfile,"[%2x]#%+02x ",i,((char*)data)[i]); }
+    if (type==SS_INT16) { fprintf(logfile,"i16  "); for (i=0;i<(int)size;i++) fprintf(logfile,"[%2x]#%+04x ",i,((i16*)data)[i]); }
+    if (type==SS_INT32) { fprintf(logfile,"i32  "); for (i=0;i<(int)size;i++) fprintf(logfile,"[%2x]#%+08x ",i,((i32*)data)[i]); }
     if (type==SS_UINT8&&size==256) {
-        fprintf(logfile,"UINT8  ");
+        fprintf(logfile,"u8  ");
         for (i=0;i<(int)size;i++) {
             if (i%16==0) fprintf(logfile,"\n");
-            fprintf(logfile,"[%02x]#%02x ",i,((unsigned char*)data)[i]);
+            fprintf(logfile,"[%02x]#%02x ",i,((u8*)data)[i]);
         }
     }
-    else if (type==SS_UINT8) { fprintf(logfile,"UINT8  "); for (i=0;i<(int)size;i++) fprintf(logfile,"[%2x]#%02x ",i,((unsigned char*)data)[i]); }
-    if (type==SS_UINT16) { fprintf(logfile,"UINT16 "); for (i=0;i<(int)size;i++) fprintf(logfile,"[%2x]#%04x ",i,((unsigned short*)data)[i]); }
-    if (type==SS_UINT32) { fprintf(logfile,"UINT32 "); for (i=0;i<(int)size;i++) fprintf(logfile,"[%2x]#%08x ",i,((unsigned int*)data)[i]); }
+    else if (type==SS_UINT8) { fprintf(logfile,"u8  "); for (i=0;i<(int)size;i++) fprintf(logfile,"[%2x]#%02x ",i,((u8*)data)[i]); }
+    if (type==SS_UINT16) { fprintf(logfile,"u16 "); for (i=0;i<(int)size;i++) fprintf(logfile,"[%2x]#%04x ",i,((u16*)data)[i]); }
+    if (type==SS_UINT32) { fprintf(logfile,"u32 "); for (i=0;i<(int)size;i++) fprintf(logfile,"[%2x]#%08x ",i,((u32*)data)[i]); }
 
     if (type==SS_INT) { fprintf(logfile,"INT    "); fprintf(logfile,"    %d ",((int*)data)[0]); }
     if (type==SS_DOUBLE) { fprintf(logfile,"DOUBLE "); for (i=0;i<(int)size;i++) fprintf(logfile,"[%d]%f ",i,((double*)data)[i]); }
@@ -1097,22 +1098,22 @@ void ss_register_entry(const char *module, int instance, const char *name, int t
     return;
 }
 
-void state_save_register_UINT8 (const char *module, int instance, const char *name, UINT8 *val, unsigned size)
+void state_save_register_UINT8 (const char *module, int instance, const char *name, u8 *val, unsigned size)
 { ss_register_entry(module, instance, name, SS_UINT8, val, size); }
 
-void state_save_register_INT8  (const char *module, int instance, const char *name, INT8 *val, unsigned size)
+void state_save_register_INT8  (const char *module, int instance, const char *name, char *val, unsigned size)
 { ss_register_entry(module, instance, name, SS_INT8, val, size); }
 
-void state_save_register_UINT16(const char *module, int instance, const char *name, UINT16 *val, unsigned size)
+void state_save_register_UINT16(const char *module, int instance, const char *name, u16 *val, unsigned size)
 { ss_register_entry(module, instance, name, SS_UINT16, val, size); }
 
-void state_save_register_INT16 (const char *module, int instance, const char *name, INT16 *val, unsigned size)
+void state_save_register_INT16 (const char *module, int instance, const char *name, i16 *val, unsigned size)
 { ss_register_entry(module, instance, name, SS_INT16, val, size); }
 
-void state_save_register_UINT32(const char *module, int instance, const char *name, UINT32 *val, unsigned size)
+void state_save_register_UINT32(const char *module, int instance, const char *name, u32 *val, unsigned size)
 { ss_register_entry(module, instance, name, SS_UINT32, val, size); }
 
-void state_save_register_INT32 (const char *module, int instance, const char *name, INT32 *val, unsigned size)
+void state_save_register_INT32 (const char *module, int instance, const char *name, i32 *val, unsigned size)
 { ss_register_entry(module, instance, name, SS_INT32, val, size); }
 
 void state_save_register_int   (const char *module, int instance, const char *name, int *val)
@@ -1187,8 +1188,8 @@ static void OPNSetPres(FM_OPN *OPN , int pres , int TimerPres, int SSGpres)
     OPN->ST.freqbase = 1.0;
 #endif
 
-    OPN->eg_timer_add  = (UINT32)((1<<EG_SH)  *  OPN->ST.freqbase);
-    OPN->eg_timer_overflow = (UINT32)(( 3 ) * (1<<EG_SH));
+    OPN->eg_timer_add  = (u32)((1<<EG_SH)  *  OPN->ST.freqbase);
+    OPN->eg_timer_overflow = (u32)(( 3 ) * (1<<EG_SH));
 
     /* Timer base time */
     OPN->ST.TimerBase = 1.0/((double)OPN->ST.clock / (double)TimerPres);
@@ -1206,7 +1207,7 @@ static void OPNSetPres(FM_OPN *OPN , int pres , int TimerPres, int SSGpres)
     {
         /* freq table for octave 7 */
         /* OPN phase increment counter = 20bit */
-        OPN->fn_table[i] = (UINT32)( (double)i * 64 * OPN->ST.freqbase * (1<<(FREQ_SH-10)) );
+        OPN->fn_table[i] = (u32)( (double)i * 64 * OPN->ST.freqbase * (1<<(FREQ_SH-10)) );
         /* -10 because chip works with 10.10 fixed point, while we use 16.16 */
     }
 
@@ -1215,7 +1216,7 @@ static void OPNSetPres(FM_OPN *OPN , int pres , int TimerPres, int SSGpres)
 /* write a OPN mode register 0x20-0x2f */
 static void OPNWriteMode(FM_OPN *OPN, int r, int v)
 {
-    UINT8 c;
+    u8 c;
     FM_CH *CH;
 
     switch(r){
@@ -1254,7 +1255,7 @@ static void OPNWriteReg(FM_OPN *OPN, int r, int v)
     FM_CH *CH;
     FM_SLOT *SLOT;
 
-    UINT8 c = OPN_CHAN(r);
+    u8 c = OPN_CHAN(r);
 
     if (c == 3) return; /* 0xX3,0xX7,0xXB,0xXF */
 
@@ -1373,8 +1374,8 @@ static void OPNWriteReg(FM_OPN *OPN, int r, int v)
         switch( OPN_SLOT(r) ){
         case 0:		/* 0xa0-0xa2 : FNUM1 */
             {
-                UINT32 fn = (((UINT32)( (OPN->ST.fn_h)&7))<<8) + v;
-                UINT8 blk = OPN->ST.fn_h>>3;
+                u32 fn = (((u32)( (OPN->ST.fn_h)&7))<<8) + v;
+                u8 blk = OPN->ST.fn_h>>3;
                 /* keyscale code */
                 CH->kcode = (blk<<2) | opn_fktable[fn >> 7];
                 /* phase increment counter */
@@ -1392,8 +1393,8 @@ static void OPNWriteReg(FM_OPN *OPN, int r, int v)
         case 2:		/* 0xa8-0xaa : 3CH FNUM1 */
             if (r < 0x100)
             {
-                UINT32 fn = (((UINT32)(OPN->SL3.fn_h&7))<<8) + v;
-                UINT8 blk = OPN->SL3.fn_h>>3;
+                u32 fn = (((u32)(OPN->SL3.fn_h&7))<<8) + v;
+                u8 blk = OPN->SL3.fn_h>>3;
                 /* keyscale code */
                 OPN->SL3.kcode[c]= (blk<<2) | opn_fktable[fn >> 7];
                 /* phase increment counter */
@@ -1685,7 +1686,7 @@ void YM2203Shutdown(void *chip)
 }
 
 /* YM2203 I/O interface */
-int YM2203Write(void *chip,int a,UINT8 v)
+int YM2203Write(void *chip,int a,u8 v)
 {
     YM2203 *F2203 = (YM2203 *)chip;
     FM_OPN *OPN = &F2203->OPN;
@@ -1728,11 +1729,11 @@ int YM2203Write(void *chip,int a,UINT8 v)
     return OPN->ST.irq;
 }
 
-UINT8 YM2203Read(void *chip,int a)
+u8 YM2203Read(void *chip,int a)
 {
     YM2203 *F2203 = (YM2203 *)chip;
     int addr = F2203->OPN.ST.address;
-    UINT8 ret = 0;
+    u8 ret = 0;
 
     if ( !(a&1) )
     {	/* status port */

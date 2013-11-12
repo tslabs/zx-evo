@@ -1,7 +1,7 @@
 #pragma once
 
 extern char asmbuf[0x40];
-extern unsigned char asmresult[24];
+extern u8 asmresult[24];
 
-unsigned char *disasm(unsigned char *cmd, unsigned current, char labels);
-int assemble_cmd(unsigned char *cmd, unsigned addr);
+u8 *disasm(u8 *cmd, unsigned current, char labels);
+int assemble_cmd(u8 *cmd, unsigned addr);

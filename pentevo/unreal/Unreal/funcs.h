@@ -22,10 +22,10 @@ void trdos_traps();
 void tape_traps();
 void fast_tape();
 void reset_tape();
-unsigned char tape_bit();
+u8 tape_bit();
 
-void out(unsigned port, unsigned char val);
-unsigned char in(unsigned port);
+void out(unsigned port, u8 val);
+u8 in(unsigned port);
 void set_banks();
 
 void applyconfig();
@@ -33,8 +33,8 @@ void apply_video();
 void apply_gs();
 void setup_dlg();
 void savesnddialog();
-void load_labels(char *filename, unsigned char *base, unsigned size);
-unsigned char isbrk();
+void load_labels(char *filename, u8 *base, unsigned size);
+u8 isbrk();
 
 void prepare_chunks();
 void prepare_chunks32();
@@ -55,9 +55,9 @@ void reset(ROM_MODE mode);
 
 void debug_events(Z80 *cpu);
 
-void render_small(unsigned char *dst, unsigned pitch);
+void render_small(u8 *dst, unsigned pitch);
 
 int loadsnap(char *filename);
-unsigned char what_is(char *filename);
+u8 what_is(char *filename);
 
-unsigned char getcheck(unsigned ID);
+u8 getcheck(unsigned ID);

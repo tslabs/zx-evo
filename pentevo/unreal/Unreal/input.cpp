@@ -10,7 +10,7 @@
 #include "debug.h"
 #include "util.h"
 
-unsigned char pastekeys[0x80-0x20] =
+u8 pastekeys[0x80-0x20] =
 {
    // s     !     "     #     $     %     &     '     (     )     *     +     ,     -   .       /
    0x71, 0xB1, 0xD1, 0xB3, 0xB4, 0xB5, 0xC5, 0xC4, 0xC3, 0xC2, 0xF5, 0xE3, 0xF4, 0xE4, 0xF3, 0x85,
@@ -26,7 +26,7 @@ unsigned char pastekeys[0x80-0x20] =
    0x51, 0x21, 0x24, 0x12, 0x25, 0x54, 0x05, 0x22, 0x03, 0x55, 0x02, 0x94, 0x92, 0x95, 0x91, 0xC4
 }; //`=0x83, 127=' - Alone Coder
 
-unsigned char ruspastekeys[64] =
+u8 ruspastekeys[64] =
 {
     'A','B','W','G','D','E','V','Z','I','J','K','L','M','N','O','P',
     'R','S','T','U','F','H','C','^','[',']',127,'Y','X','\\',64,'Q',
@@ -41,7 +41,7 @@ void K_INPUT::clear_zx()
        kbd_x4[i] = -1;
 }
 
-inline void K_INPUT::press_zx(unsigned char key)
+inline void K_INPUT::press_zx(u8 key)
 {
    if (key & 0x08)
        kbd[0] &= ~1; // caps
@@ -68,7 +68,7 @@ bool K_INPUT::process_pc_layout()
 
 void K_INPUT::make_matrix()
 {
-   unsigned char altlock = conf.input.altlock? (kbdpc[DIK_LMENU] | kbdpc[DIK_RMENU]) & 0x80 : 0;
+   u8 altlock = conf.input.altlock? (kbdpc[DIK_LMENU] | kbdpc[DIK_RMENU]) & 0x80 : 0;
    int i;
 
    kjoy = 0xFF;
@@ -141,7 +141,7 @@ void K_INPUT::make_matrix()
             break;
          }
          tdelay = conf.input.paste_hold;
-         unsigned char kdata = textbuffer[textoffset++];
+         u8 kdata = textbuffer[textoffset++];
          if (kdata == 0x0D)
          {
             if (textoffset < textsize && textbuffer[textoffset] == 0x0A) textoffset++;
@@ -236,10 +236,10 @@ char K_INPUT::readdevices()
       dijoyst->Poll();
       DIJOYSTATE js;
       readdevice(&js, sizeof js, (LPDIRECTINPUTDEVICE)dijoyst);
-      if ((signed short)js.lX < 0) kbdpc[VK_JLEFT] = 0x80;
-      if ((signed short)js.lX > 0) kbdpc[VK_JRIGHT] = 0x80;
-      if ((signed short)js.lY < 0) kbdpc[VK_JUP] = 0x80;
-      if ((signed short)js.lY > 0) kbdpc[VK_JDOWN] = 0x80;
+      if ((i16)js.lX < 0) kbdpc[VK_JLEFT] = 0x80;
+      if ((i16)js.lX > 0) kbdpc[VK_JRIGHT] = 0x80;
+      if ((i16)js.lY < 0) kbdpc[VK_JUP] = 0x80;
+      if ((i16)js.lY > 0) kbdpc[VK_JDOWN] = 0x80;
 
       for (i = 0; i < 32; i++)
       {
@@ -267,7 +267,7 @@ char K_INPUT::readdevices()
       readmouse(&md);
       if (conf.input.mouseswap)
       {
-          unsigned char t = md.rgbButtons[0];
+          u8 t = md.rgbButtons[0];
           md.rgbButtons[0] = md.rgbButtons[1];
           md.rgbButtons[1] = t;
       }
@@ -327,7 +327,7 @@ char K_INPUT::readdevices()
        memset(kbdpc, 0, sizeof(kbdpc));
    else
    {
-      static unsigned char kbdpc_prev[VK_MAX];
+      static u8 kbdpc_prev[VK_MAX];
       if (!dbgbreak && buffer.Enabled())
           memcpy(kbdpc_prev, kbdpc, sizeof(kbdpc));
 
@@ -351,14 +351,14 @@ char K_INPUT::readdevices()
    return lastkey? 1 : 0;
 }
 
-void K_INPUT::aymouse_wr(unsigned char val)
+void K_INPUT::aymouse_wr(u8 val)
 {
    // reset by edge bit6: 1->0
    if (ayR14 & ~val & 0x40) ay_x0 = ay_y0 = 8, ay_reset_t = cpu.t;
    ayR14 = val;
 }
 
-unsigned char K_INPUT::aymouse_rd()
+u8 K_INPUT::aymouse_rd()
 {
    unsigned coord;
    if (ayR14 & 0x40) {
@@ -379,21 +379,21 @@ unsigned char K_INPUT::aymouse_rd()
    return 0xC0 | (coord & 0x0F) | (mbuttons << 4);
 }
 
-unsigned char K_INPUT::kempston_mx()
+u8 K_INPUT::kempston_mx()
 {
    int x = (cpu.t*msx + (conf.frame - cpu.t)*msx_prev) / conf.frame;
-   return (unsigned char)x;
+   return (u8)x;
 }
 
-unsigned char K_INPUT::kempston_my()
+u8 K_INPUT::kempston_my()
 {
    int y = (cpu.t*msy + (conf.frame - cpu.t)*msy_prev) / conf.frame;
-   return (unsigned char)y;
+   return (u8)y;
 }
 
-unsigned char K_INPUT::read(unsigned char scan)
+u8 K_INPUT::read(u8 scan)
 {
-   unsigned char res = 0xBF | (tape_bit() & 0x40);
+   u8 res = 0xBF | (tape_bit() & 0x40);
    kbdled &= scan;
 
    if (conf.atm.xt_kbd)
@@ -440,23 +440,23 @@ void K_INPUT::paste()
       if (ptr) {
          keymode = KM_PASTE_RELEASE; tdelay = 1;
          textsize = strlen((char*)ptr) + 1;
-         memcpy(textbuffer = (unsigned char*)malloc(textsize), ptr, textsize);
+         memcpy(textbuffer = (u8*)malloc(textsize), ptr, textsize);
          GlobalUnlock(hClip);
       }
    }
    CloseClipboard();
 }
 
-unsigned char ATM_KBD::read(unsigned char scan, unsigned char zxdata)
+u8 ATM_KBD::read(u8 scan, u8 zxdata)
 {
-   unsigned char t;
+   u8 t;
 
    if (R7) {
       if (R7 == 1) cmd = scan;
       switch (cmd & 0x3F) {
          case 1:
          {
-            static const unsigned char ver[4] = { 6,0,1,0 };
+            static const u8 ver[4] = { 6,0,1,0 };
             R7 = 0; return ver[cmd >> 6];
          }
          case 7: clear(); R7 = 0; return 0xFF; // clear data buffer in mode0
@@ -514,7 +514,7 @@ unsigned char ATM_KBD::read(unsigned char scan, unsigned char zxdata)
    {
       case 0:
       {
-         unsigned char res = zxdata | 0x1F;
+         u8 res = zxdata | 0x1F;
          for (unsigned i = 0; i < 8; i++)
             if (!(scan & (1 << i))) res &= zxkeys[i];
          return res;
@@ -534,9 +534,9 @@ unsigned char ATM_KBD::read(unsigned char scan, unsigned char zxdata)
    return 0xFF;
 }
 
-void ATM_KBD::processzx(unsigned scancode, unsigned char pressed)
+void ATM_KBD::processzx(unsigned scancode, u8 pressed)
 {
-   static const unsigned char L_4B6[] =
+   static const u8 L_4B6[] =
    {
       0x39, 0x31, 0x32, 0x33, 0x34, 0x35, 0x45, 0x44,
       0x43, 0x42, 0x41, 0xE4, 0xE2, 0x49, 0x3B, 0x21,
@@ -556,14 +556,14 @@ void ATM_KBD::processzx(unsigned scancode, unsigned char pressed)
    if (scancode >= sizeof L_4B6)
        return;
 
-   unsigned char x = L_4B6[scancode];
+   u8 x = L_4B6[scancode];
    if (x & 0x08) { if (pressed) zxkeys[0] &= ~1; else zxkeys[0] |= 1; }
    if (x & 0x80) { if (pressed) zxkeys[7] &= ~2; else zxkeys[7] |= 2; }
 
    if (!(x & 7))
        return;
 
-   unsigned char data = 1 << ((x & 7) - 1);
+   u8 data = 1 << ((x & 7) - 1);
    x = (x >> 4) & 7;
 
    if (pressed)
@@ -572,10 +572,10 @@ void ATM_KBD::processzx(unsigned scancode, unsigned char pressed)
        zxkeys[x] |= data;
 }
 
-void ATM_KBD::setkey(unsigned scancode, unsigned char pressed)
+void ATM_KBD::setkey(unsigned scancode, u8 pressed)
 {
    if (!(mode & 3)) processzx(scancode, pressed);
-   lastscan = (unsigned char)scancode;
+   lastscan = (u8)scancode;
    if (!pressed) { lastscan |= 0x80; return; }
 
    kR3 &= 0x80; // keep rus/lat, clear alt,ctrl,shift, num/scroll/caps lock
@@ -587,7 +587,7 @@ void ATM_KBD::setkey(unsigned scancode, unsigned char pressed)
    if (kbdpc[DIK_SCROLL] & 1) kR3 |= 0x40;
    kR4 = 0; if (kbdpc[DIK_RSHIFT] & 0x80) kR4++;
 
-   static const unsigned char L_400[] =
+   static const u8 L_400[] =
    {
       0x1B, 0x00, 0x31, 0x00, 0x32, 0x00, 0x33, 0x00, 0x34, 0x00, 0x35, 0x00, 0x36, 0x00, 0x37, 0x00,
       0x38, 0x00, 0x39, 0x00, 0x30, 0x00, 0x2D, 0x00, 0x3D, 0x00, 0x08, 0x00, 0x09, 0x00, 0x51, 0x00,
@@ -607,7 +607,7 @@ void ATM_KBD::setkey(unsigned scancode, unsigned char pressed)
    kR5 = L_400[index+1];
 
    if ((kR5 & 0x30) == 0x30) zxdata[0] = zxdata[1] = 0xFFFFFFFF;
-   static const unsigned char L_511[] = { 0x76, 0x70, 0x74, 0xAD, 0x72, 0xB5, 0x73, 0xAB, 0x77, 0x71, 0x75, 0x78, 0x79 };
+   static const u8 L_511[] = { 0x76, 0x70, 0x74, 0xAD, 0x72, 0xB5, 0x73, 0xAB, 0x77, 0x71, 0x75, 0x78, 0x79 };
    if ((scancode & 0x100) && (kR5 & 0x40)) kR2 |= 0x80;
    if (kR5 & 0x80) {
       if (scancode & 0x100) kR2 = L_511[(scancode & 0xFF) - 0x47];

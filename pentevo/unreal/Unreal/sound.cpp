@@ -74,8 +74,8 @@ void flush_snd_frame()
 
          if (conf.sound.ay_scheme == AY_SCHEME_PSEUDO)
          {
-            unsigned char last = ay[0].get_r13_reloaded()? 13 : 12;
-            for (unsigned char r = 0; r <= last; r++)
+            u8 last = ay[0].get_r13_reloaded()? 13 : 12;
+            for (u8 r = 0; r <= last; r++)
                ay[1].select(r), ay[1].write(0, ay[0].get_reg(r));
          }
       }
@@ -84,7 +84,7 @@ void flush_snd_frame()
       {
          if (!vtxbuf)
          {
-            vtxbuf = (unsigned char*)malloc(32768);
+            vtxbuf = (u8*)malloc(32768);
             vtxbufsize = 32768;
             vtxbuffilled = 0;
          }
@@ -92,10 +92,10 @@ void flush_snd_frame()
          if (vtxbuffilled + 14 >= vtxbufsize)
          {
             vtxbufsize += 32768;
-            vtxbuf = (unsigned char*)realloc(vtxbuf, vtxbufsize);
+            vtxbuf = (u8*)realloc(vtxbuf, vtxbufsize);
          }
 
-         for (unsigned char r = 0; r < 14; r++)
+         for (u8 r = 0; r < 14; r++)
             vtxbuf[vtxbuffilled+r] = ay[0].get_reg(r);
 
          if (!ay[0].get_r13_reloaded())

@@ -1,4 +1,5 @@
 #include "std.h"
+#include "sysdefs.h"
 #include "emul.h"
 #include "vars.h"
 #include "draw.h"

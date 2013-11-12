@@ -58,12 +58,12 @@ const WCHAR* WINAPI DXGetErrorDescription8W(HRESULT hr);
 //
 //  Desc:  Outputs a formatted error message to the debug stream
 //
-//  Args:  CHAR* strFile   The current file, typically passed in using the 
+//  Args:  char* strFile   The current file, typically passed in using the 
 //                         __FILE__ macro.
 //         DWORD dwLine    The current line number, typically passed in using the 
 //                         __LINE__ macro.
 //         HRESULT hr      An HRESULT that will be traced to the debug stream.
-//         CHAR* strMsg    A string that will be traced to the debug stream (may be NULL)
+//         char* strMsg    A string that will be traced to the debug stream (may be NULL)
 //         BOOL bPopMsgBox If TRUE, then a message box will popup also containing the passed info.
 //
 //  Return: The hr that was passed in.  
