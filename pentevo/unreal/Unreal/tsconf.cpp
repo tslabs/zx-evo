@@ -299,15 +299,6 @@ void render_sprite_layer()
 
 void render_ts()
 {
-	comp.ts.t0gpage[2] = comp.ts.t0gpage[1];
-	comp.ts.t0gpage[1] = comp.ts.t0gpage[0];
-	comp.ts.t1gpage[2] = comp.ts.t1gpage[1];
-	comp.ts.t1gpage[1] = comp.ts.t1gpage[0];
-	comp.ts.t0_xoffs_d[1] = comp.ts.t0_xoffs_d[0];
-	comp.ts.t0_xoffs_d[0] = comp.ts.t0_xoffs;
-	comp.ts.t1_xoffs_d[1] = comp.ts.t1_xoffs_d[0];
-	comp.ts.t1_xoffs_d[0] = comp.ts.t1_xoffs;
-	
 	memset(vid.tsline, 0, 360);
 	snum = 0;
 
