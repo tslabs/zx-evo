@@ -672,26 +672,44 @@ void update_screen()
 
 	while (vid.t_next < min(cput, VID_TACTS * VID_LINES))		// iterate until current CPU tact or to the frame end
 	{
-		u32 line = (vid.t_next / VID_TACTS);	// number of line in raster
-		u32 tact = vid.t_next % VID_TACTS;		// number of tact in line
+		u32 line = (vid.t_next / VID_TACTS);	// line in raster
+		u32 tact = vid.t_next % VID_TACTS;		// tact in line
 		int n = min(cput - vid.t_next, VID_TACTS - tact);	// number of tacts to be rendered in this line
 
-		if (!tact)		// start of video line - reload of gfx params
-			if (comp.ts.vconf != comp.ts.vconf_d) {
+		// start of video line - reload all strobed gfx params
+		if (!tact)
+		{
+			// VConfig
+			if (comp.ts.vconf != comp.ts.vconf_d)
+			{
 				comp.ts.vconf = comp.ts.vconf_d;
 				init_raster();
 			}
 
-		if ((line < vid.raster.u_brd) || (line >= vid.raster.d_brd))	// border line?
+			comp.ts.g_xoffs = comp.ts.g_xoffs_d;	// gfx X-offset
+			comp.ts.vpage = comp.ts.vpage_d;		// Video Page
+			comp.ts.palsel = comp.ts.palsel_d;		// Palette Selector
+
+			comp.ts.t0gpage[2] = comp.ts.t0gpage[1];
+			comp.ts.t0gpage[1] = comp.ts.t0gpage[0];
+			comp.ts.t1gpage[2] = comp.ts.t1gpage[1];
+			comp.ts.t1gpage[1] = comp.ts.t1gpage[0];
+			comp.ts.t0_xoffs_d[1] = comp.ts.t0_xoffs_d[0];
+			comp.ts.t0_xoffs_d[0] = comp.ts.t0_xoffs;
+			comp.ts.t1_xoffs_d[1] = comp.ts.t1_xoffs_d[0];
+			comp.ts.t1_xoffs_d[0] = comp.ts.t1_xoffs;
+		}
+
+		// border only line
+		if ((line < vid.raster.u_brd) || (line >= vid.raster.d_brd))
 			draw_border(n);
+
+		// pixel line
 		else
 		{
 			if (!tact)		// start of pixel line
 			{
 				vid.xctr = 0;
-				comp.ts.g_xoffs = comp.ts.g_xoffs_d;			// reload X-offset
-				comp.ts.vpage = comp.ts.vpage_d;	// reload Video Page
-				comp.ts.palsel = comp.ts.palsel_d;	// reload Palette Select
 
 				vid.yctr++;
 				if (!comp.ts.g_yoffs_updated)	// was Y-offset updated?
