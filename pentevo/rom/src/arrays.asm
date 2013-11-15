@@ -50,7 +50,7 @@ OPTTAB0
 
 		defw OPT_CFQ, SEL_CFQ   ; address of option desc, address of option choices
 		defw OPT_CCH, SEL_ONF
-		defw OPT_80L, SEL_ONF
+		defw OPT_80L, SEL_LCK
 		defw OPT_B1T, SEL_BOT
 		defw OPT_B1B, SEL_BTB
 		defw OPT_B2T, SEL_BOT
@@ -65,7 +65,7 @@ OPTTAB0
 ; string - option
 OPT_CFQ    defb 4, low(cfrq), 'CPU Speed, MHz:', 0
 OPT_CCH    defb 2, low(cach), 'CPU Cache:', 0
-OPT_80L    defb 3, low(l128), '128k Lock:', 0
+OPT_80L    defb 4, low(l128), '#7FFD span:', 0
 OPT_B1T    defb 5, low(b1to), 'Reset to:', 0
 OPT_B1B    defb 4, low(b1tb), '  bank:', 0
 OPT_B2T    defb 5, low(b2to), 'CS Reset to:', 0
@@ -107,6 +107,12 @@ SEL_ONF
         defb ' OFF', 0
 		defb '  ON', 0
 		defb 'Auto', 0
+
+SEL_LCK
+        defb '     512k', 0
+		defb '     128k', 0
+		defb '128k Auto', 0
+		defb '    1024k', 0
 
 SEL_ZPL
         defb 'Default', 0   ; 0
