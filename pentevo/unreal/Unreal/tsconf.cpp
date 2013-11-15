@@ -210,11 +210,13 @@ void dma (u8 val)
 
 // TS Engine
 
-void render_tile(u8 page, u32 tnum, u8 line, u32 x, u8 pal, u8 xf, u8 n)
+u8 render_tile(u8 page, u32 tnum, u8 line, u32 x, u8 pal, u8 xf, u8 n)
 {
+	u8 cnt = 0;		// used to calculate RAM cycles usage
+
 	/* check if number of allowed DRAM cycles per line (448) not exceeded */
 	if ((vid.memcpucyc[vid.line - 1] + vid.memvidcyc[vid.line - 1] + vid.memtsscyc[vid.line - 1] + vid.memtstcyc[vid.line - 1]) > 448)
-		return;
+		return 0;
 
 	u8 *g = page_ram(page & 0xF8) + ((tnum & 0xFC0) << 5) + (line << 8);
 	x += (xf ? (n * 8 - 1) : 0);
@@ -222,8 +224,21 @@ void render_tile(u8 page, u32 tnum, u8 line, u32 x, u8 pal, u8 xf, u8 n)
 	i8 a = xf ? -1 : 1;
 	u8 c;
 	u32 ox = (tnum & 0x3F) << 2;
-	for (u32 i=0; i<n; i++)
+	for (u32 i=0; i<n; i++)		// draw 8 pixels per iteration
 	{
+		//if (!((vid.tsline[x & 0x1FF] &
+		//	vid.tsline[(x + a) & 0x1FF] &
+		//	vid.tsline[(x + 2*a) & 0x1FF] &
+		//	vid.tsline[(x + 3*a) & 0x1FF])
+		//	& 0x0F))
+			cnt++;
+		//if (!((vid.tsline[(x + 4*a) & 0x1FF] &
+		//	vid.tsline[(x + 5*a) & 0x1FF] &
+		//	vid.tsline[(x + 6*a) & 0x1FF] &
+		//	vid.tsline[(x + 7*a) & 0x1FF])
+		//	& 0x0F))
+			cnt++;
+		
 		if (c = g[ox + 0] & 0xF0) vid.tsline[x & 0x1FF] = pal | (c >> 4); x += a;
 		if (c = g[ox + 0] & 0x0F) vid.tsline[x & 0x1FF] = pal | c; x += a;
 		if (c = g[ox + 1] & 0xF0) vid.tsline[x & 0x1FF] = pal | (c >> 4); x += a;
@@ -234,6 +249,8 @@ void render_tile(u8 page, u32 tnum, u8 line, u32 x, u8 pal, u8 xf, u8 n)
 		if (c = g[ox + 3] & 0x0F) vid.tsline[x & 0x1FF] = pal | c; x += a;
 		ox = (ox + 4) & 0xFF;
 	}
+
+	return cnt;
 }
 
 SPRITE_t *spr = (SPRITE_t*)comp.sfile;
@@ -252,7 +269,7 @@ void render_tile_layer(u8 layer)
 		TILE_t t = tmap[(ox + i) & 0x3F | l];
 		if ((layer ? comp.ts.t1z_en : comp.ts.t0z_en) || t.tnum)
 		{
-			render_tile(
+			vid.memtstcyc[vid.line - 1] += render_tile(
 				(layer ? comp.ts.t1gpage[2] : comp.ts.t0gpage[2]),			// page
 				t.tnum,														// tile number
 				(y ^ (t.yflp ? 7 : 0)) & 7,									// line offset (3 bit)
@@ -260,7 +277,6 @@ void render_tile_layer(u8 layer)
 				((layer ? comp.ts.t1pal : comp.ts.t0pal) << 2) | t.pal,		// palette
 				t.xflp, 1													// x flip, x size
 			);
-			vid.memtstcyc[vid.line - 1] += 2;
 		}
 	}
 }
@@ -274,7 +290,7 @@ void render_sprite()
 
 	if (l < ys)
 	{
-		render_tile(
+		vid.memtsscyc[vid.line - 1] += render_tile(
 			comp.ts.sgpage,					// page
 			s.tnum,							// tile number
 			(u8)(s.yflp ? (ys - l - 1) : l),	// line offset (3 bit)
@@ -282,7 +298,6 @@ void render_sprite()
 			s.pal,							// palette
 			s.xflp, s.xs + 1				// x flip, x size
 		);
-		vid.memtsscyc[vid.line - 1] += (s.xs + 1) * 2;
 	}
 }
 
