@@ -331,8 +331,7 @@ Z80OPCODE ope_70(Z80 *cpu) { // in (c)
 Z80OPCODE ope_71(Z80 *cpu) { // out (c),0
    cputact(4);
    cpu->memptr = cpu->bc+1;
-   cpu->out(cpu->bc, 0);
-   // cpu->out(cpu->bc, 255);	// for NMOS CPUs
+   cpu->out(cpu->bc, cpu->outc0);
 }
 //#endif
 //#ifdef Z80_COMMON

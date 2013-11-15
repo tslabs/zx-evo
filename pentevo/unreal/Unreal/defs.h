@@ -209,6 +209,7 @@ struct Z80 : public TZ80State
 {
    u8 tmp0, tmp1, tmp3;
    unsigned rate;
+   u8 outc0;
    u16 last_branch;
    unsigned trace_curs, trace_top, trace_mode;
    unsigned mem_curs, mem_top, mem_second;
