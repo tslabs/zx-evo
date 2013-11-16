@@ -18,6 +18,7 @@ module dma (
 	output wire dma_act,
 	output reg  [15:0] data,
 	output wire [ 7:0] wraddr,
+	output wire int_start,
 
 // Z80
 	input  wire [7:0] zdata,
@@ -296,5 +297,11 @@ module dma (
 				d_addr[20:13] <= zdata;
 		end
 
+	// INT generation
+	reg dma_act_r;
+	always @(posedge clk)
+		dma_act_r <= dma_act;
 
+	assign int_start = !dma_act && dma_act_r;
+	
 endmodule
