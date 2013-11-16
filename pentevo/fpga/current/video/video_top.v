@@ -59,8 +59,9 @@ module video_top (
     input wire vint_begh_wr,
 
 // ZX controls
-    input wire        res,
-	output wire       int_start,
+    input wire  res,
+	output wire int_start,
+	output wire	line_start_s,
 
 // DRAM interface
 	output wire [20:0] video_addr,
@@ -134,7 +135,6 @@ module video_top (
 
 // synchro
 	wire frame_start;
-	wire line_start_s;
 	wire pix_start;
 	wire tv_pix_start;
     wire vga_pix_start;
