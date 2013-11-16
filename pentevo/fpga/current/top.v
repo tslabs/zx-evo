@@ -254,7 +254,8 @@ module top(
     // wire [1:0] turbo =  2'b00;
 	wire cache_en = sysconf[2];
 	wire [7:0] border;
-	wire int_start;
+	wire int_start_frm;
+	wire int_start_dma;
 
 	wire [7:0] dout_ram;
 	wire [7:0] dout_ports;
@@ -569,7 +570,7 @@ module top(
 		.zma            (zma),
 		.cram_we        (cram_we),
 		.sfile_we       (sfile_we),
-		.int_start      (int_start)
+		.int_start      (int_start_frm)
 
 	);
 
@@ -707,6 +708,10 @@ module top(
     wire z80_ide_cs1_n;
     wire z80_ide_req;
     wire z80_ide_rnw;
+	
+	wire [2:0] im2v_frm;
+	wire [2:0] im2v_dma;
+	wire [7:0] intmask;
 
 	zports zports(
                     .zclk       (zclk),
@@ -791,7 +796,9 @@ module top(
 
 					.sysconf	(sysconf),
 					.memconf	(memconf),
-					.im2vect	(im2vect),
+					.im2v_frm	(im2v_frm),
+					.im2v_dma	(im2v_dma),
+					.intmask	(intmask),
 					.fddvirt	(fddvirt),
                     .drive_sel  (vg_a),
                     .dos        (dos),
@@ -840,6 +847,7 @@ module top(
 		.clk		(fclk),
 		.c2		    (c2),
         .rst_n		(rst_n),
+		.int_start	(int_start_dma),
 
 		.zdata		(d),
 		.dmaport_wr	(dmaport_wr),
@@ -875,7 +883,13 @@ module top(
 
 	zint zint(
 		.clk(fclk),
-		.int_start(int_start),
+		.res(res),
+		.im2vect(im2vect),
+		.im2v_frm(im2v_frm),
+		.im2v_dma(im2v_dma),
+		.intmask(intmask),
+		.int_start_frm(int_start_frm),
+		.int_start_dma(int_start_dma),
 		.vdos(vdos),
 		.intack(intack),
 		.int_n(int_n)
