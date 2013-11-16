@@ -67,6 +67,7 @@ module zports(
 	output reg [3:0] fddvirt,
 	
 	output reg [2:0] im2v_frm,
+	output reg [2:0] im2v_lin,
 	output reg [2:0] im2v_dma,
 	output reg [7:0] intmask,
 
@@ -338,7 +339,8 @@ module zports(
 	localparam VSINTH		= 8'h24;
 	localparam IM2VECT		= 8'h25;
 		localparam INTFRM		= 3'b000;
-		localparam INTDMA		= 3'b001;
+		localparam INTLIN		= 3'b001;
+		localparam INTDMA		= 3'b010;
 	localparam DMALEN		= 8'h26;
 	localparam DMACTRL		= 8'h27;
 	localparam DMANUM		= 8'h28;
@@ -441,6 +443,8 @@ module zports(
 			begin
 				if (din[6:4] == INTFRM)
 					im2v_frm <= din[3:1];
+				if (din[6:4] == INTLIN)
+					im2v_lin <= din[3:1];
 				if (din[6:4] == INTDMA)
 					im2v_dma <= din[3:1];
 			end

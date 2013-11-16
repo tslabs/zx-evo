@@ -207,7 +207,8 @@ module top(
 
 
 
-	assign nmi_n=gen_nmi ? 1'b0 : 1'bZ;
+	// assign nmi_n = gen_nmi ? 1'b0 : 1'bZ;
+	assign nmi_n = 1'bZ;
 
 	assign res= ~rst_n;
 
@@ -254,6 +255,7 @@ module top(
     // wire [1:0] turbo =  2'b00;
 	wire cache_en = sysconf[2];
 	wire [7:0] border;
+	wire int_start_lin;
 	wire int_start_frm;
 	wire int_start_dma;
 
@@ -570,7 +572,8 @@ module top(
 		.zma            (zma),
 		.cram_we        (cram_we),
 		.sfile_we       (sfile_we),
-		.int_start      (int_start_frm)
+		.int_start      (int_start_frm),
+		.line_start_s   (int_start_lin)
 
 	);
 
@@ -710,6 +713,7 @@ module top(
     wire z80_ide_rnw;
 	
 	wire [2:0] im2v_frm;
+	wire [2:0] im2v_lin;
 	wire [2:0] im2v_dma;
 	wire [7:0] intmask;
 
@@ -797,6 +801,7 @@ module top(
 					.sysconf	(sysconf),
 					.memconf	(memconf),
 					.im2v_frm	(im2v_frm),
+					.im2v_lin	(im2v_lin),
 					.im2v_dma	(im2v_dma),
 					.intmask	(intmask),
 					.fddvirt	(fddvirt),
@@ -886,8 +891,10 @@ module top(
 		.res(res),
 		.im2vect(im2vect),
 		.im2v_frm(im2v_frm),
+		.im2v_lin(im2v_lin),
 		.im2v_dma(im2v_dma),
 		.intmask(intmask),
+		.int_start_lin(int_start_lin),
 		.int_start_frm(int_start_frm),
 		.int_start_dma(int_start_dma),
 		.vdos(vdos),
@@ -897,17 +904,17 @@ module top(
 
 
 	znmi znmi(
-		.rst_n(rst_n),
-		.fclk(fclk),
-		.zpos(zpos),
-		.zneg(zneg),
+		// .rst_n(rst_n),
+		// .fclk(fclk),
+		// .zpos(zpos),
+		// .zneg(zneg),
 
-		.rfsh_n(rfsh_n),
+		// .rfsh_n(rfsh_n),
 
-		.int_start(int_start),
+		// .int_start(int_start),
 
-		.set_nmi(set_nmi),
-		.clr_nmi(clr_nmi)
+		// .set_nmi(set_nmi),
+		// .clr_nmi(clr_nmi)
 
 		// .in_nmi (in_nmi),	// commented to disable
 		// .gen_nmi(gen_nmi)
