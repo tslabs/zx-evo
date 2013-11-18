@@ -1251,7 +1251,7 @@ SDWRP61:ELPM    DATA,Z+
 ; - - - - - - - - - - - - - - - - - - -
 ;out:   DATA
 SD_WAIT_NOTFF:
-        LDI     TEMP,32
+        LDI     TEMP,255
 SDWNFF2:SER     DATA
         RCALL   SD_EXCHANGE
         CPI     DATA,$FF
