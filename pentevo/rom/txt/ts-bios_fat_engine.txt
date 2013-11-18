@@ -1,0 +1,112 @@
+﻿
+* Every function returns error code in regA. See table below.
+
+──┌───────────────────────────────────────────────────
+00│READ512
+  │Sector read
+  │   
+  │i: CDE - Address
+  │   B - Number of sectors to process
+  │
+  │o: CDE - Address
+──┼───────────────────────────────────────────────────
+01│WRITE512
+  │Sector write
+  │   
+  │i: CDE - Address
+  │   B - Number of sectors to process
+  │
+  │o: CDE - Address
+──┼───────────────────────────────────────────────────
+02│SEEK0
+  │Set file pointer to sector 0
+──┼───────────────────────────────────────────────────
+03│SEEK512
+  │Set file pointer to sector
+  │   
+  │i: CDE - Sector number
+──┼───────────────────────────────────────────────────
+04│SKIP512
+  │Sector seek/skip
+  │   
+  │i: B - Number of sectors to process
+──┴───────────────────────────────────────────────────
+
+──┌───────────────────────────────────────────────────
+10│FENTRY
+  │Search for entry in current dir
+  │   
+  │i: HL - pointer to FES
+  │   
+  │o: DEHL - file length if file found
+  │   
+  │SEEK0 function is automatically called after dir entry found
+──┼───────────────────────────────────────────────────
+11│SETDIR
+  │Set dir found by FENTRY active
+──┼───────────────────────────────────────────────────
+12│MKFILE
+  │Create file entry in current dir
+  │   
+  │i: HL - pointer to FES
+  │   BCDE - length
+  │   
+  │SEEK0 function is automatically called after file creation
+──┼───────────────────────────────────────────────────
+13│MKDIR
+  │Create dir entry in current dir
+  │
+  │i: HL - pointer to FES
+──┼───────────────────────────────────────────────────
+14│DELFILE
+  │Delete dir entry in current dir
+  │
+  │i: HL - pointer to FES
+──┼───────────────────────────────────────────────────
+15│SETROOT
+  │Set Root dir of current partition active
+──┴───────────────────────────────────────────────────
+
+──┌───────────────────────────────────────────────────
+20│CRTSTREAM
+  │Create stream
+  │
+  │i: B - device (0 - SD, 1 - HDD Master, 2 - HDD Slave
+  │   C - partition (0-7)
+  │
+  │o: C - stream number
+  │
+  │SETROOT function is automatically called after stream creation
+──┼───────────────────────────────────────────────────
+21│SELSTREAM
+  │Select stream
+  │
+  │i: C - Stream number
+──┼───────────────────────────────────────────────────
+22│DELSTREAM
+  │Delete stream
+  │
+  │i: C - Stream number
+──┴───────────────────────────────────────────────────
+
+File Entry Structure (FES):
++ 0 	1	flag: #00 - file / #10 - dir
++ 1 	N	name+extension
++ N+1	1	\0 padder
+
+Name for 8.3 format:
++ 0 	8	name: UPPER case
++ 8 	1	"." padder
++ 9 	3	extension: UPPER case
+
+
+Error codes:
+ 0 - OK
+ 1 - Entry not found
+ 2 - Not enough space
+ 8 - Device not found
+ 9 - Device not ready
+10 - Partition not found
+16 - Write protection
+24 - Wrong stream
+25 - Stream not ready

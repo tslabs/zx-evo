@@ -1,0 +1,178 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>3.16 Floating Point Support</TITLE>
+<META NAME="description" CONTENT="3.16 Floating Point Support">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="next" HREF="node93.html">
+<LINK REL="previous" HREF="node91.html">
+<LINK REL="up" HREF="node38.html">
+<LINK REL="next" HREF="node93.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html1938"
+  HREF="node93.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html1932"
+  HREF="node38.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html1926"
+  HREF="node91.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html1934"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html1936"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1939"
+  HREF="node93.html">3.17 Library Routines</A>
+<B> Up:</B> <A NAME="tex2html1933"
+  HREF="node38.html">3. Using SDCC</A>
+<B> Previous:</B> <A NAME="tex2html1927"
+  HREF="node91.html">3.15 int (16 bit)</A>
+ &nbsp; <B>  <A NAME="tex2html1935"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html1937"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H1><A NAME="SECTION004160000000000000000"></A><A NAME="2391"></A>
+<BR>
+3.16 Floating Point Support
+</H1>
+
+<P>
+SDCC supports IEEE (single precision 4 bytes) floating point numbers.
+The floating point support routines are derived from gcc's floatlib.c
+and consist of the following routines:
+<BR>
+<P>
+<DIV ALIGN="CENTER">
+<TABLE CELLPADDING=3 BORDER="1">
+<TR><TD ALIGN="LEFT">Function</TD>
+<TD ALIGN="LEFT">Description</TD>
+</TR>
+<TR><TD ALIGN="LEFT">_fsadd.c</TD>
+<TD ALIGN="LEFT">add floating point numbers</TD>
+</TR>
+<TR><TD ALIGN="LEFT">_fssub.c</TD>
+<TD ALIGN="LEFT">subtract floating point numbers</TD>
+</TR>
+<TR><TD ALIGN="LEFT">_fsdiv.c</TD>
+<TD ALIGN="LEFT">divide floating point numbers</TD>
+</TR>
+<TR><TD ALIGN="LEFT">_fsmul.c</TD>
+<TD ALIGN="LEFT">multiply floating point numbers</TD>
+</TR>
+<TR><TD ALIGN="LEFT">_fs2uchar.c</TD>
+<TD ALIGN="LEFT">convert floating point to unsigned char</TD>
+</TR>
+<TR><TD ALIGN="LEFT">_fs2char.c</TD>
+<TD ALIGN="LEFT">convert floating point to signed char</TD>
+</TR>
+<TR><TD ALIGN="LEFT">_fs2uint.c</TD>
+<TD ALIGN="LEFT">convert floating point to unsigned int</TD>
+</TR>
+<TR><TD ALIGN="LEFT">_fs2int.c</TD>
+<TD ALIGN="LEFT">convert floating point to signed int</TD>
+</TR>
+<TR><TD ALIGN="LEFT">_fs2ulong.c</TD>
+<TD ALIGN="LEFT">convert floating point to unsigned long</TD>
+</TR>
+<TR><TD ALIGN="LEFT">_fs2long.c</TD>
+<TD ALIGN="LEFT">convert floating point to signed long</TD>
+</TR>
+<TR><TD ALIGN="LEFT">_uchar2fs.c</TD>
+<TD ALIGN="LEFT">convert unsigned char to floating point</TD>
+</TR>
+<TR><TD ALIGN="LEFT">_char2fs.c</TD>
+<TD ALIGN="LEFT">convert char to floating point number</TD>
+</TR>
+<TR><TD ALIGN="LEFT">_uint2fs.c</TD>
+<TD ALIGN="LEFT">convert unsigned int to floating point</TD>
+</TR>
+<TR><TD ALIGN="LEFT">_int2fs.c</TD>
+<TD ALIGN="LEFT">convert int to floating point numbers</TD>
+</TR>
+<TR><TD ALIGN="LEFT">_ulong2fs.c</TD>
+<TD ALIGN="LEFT">convert unsigned long to floating point number</TD>
+</TR>
+<TR><TD ALIGN="LEFT">_long2fs.c</TD>
+<TD ALIGN="LEFT">convert long to floating point number</TD>
+</TR>
+</TABLE>
+<BR></DIV>
+<P>
+<DIV ALIGN="CENTER">
+</DIV>
+<P>
+
+
+<P>
+These support routines are developed in ANSI-C so there is room for
+space and speed improvement<A NAME="tex2html10"
+  HREF="footnode.html#foot5511"><SUP>3.8</SUP></A>. Note if all these routines are used simultaneously the data space
+might overflow. For serious floating point usage the large model might
+be needed. Also notice that you don't have to call this routines directly.
+The compiler will use them automatically every time a floating point
+operation is required.
+<P><P>
+<BR>
+
+
+<P>
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html1938"
+  HREF="node93.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html1932"
+  HREF="node38.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html1926"
+  HREF="node91.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html1934"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html1936"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1939"
+  HREF="node93.html">3.17 Library Routines</A>
+<B> Up:</B> <A NAME="tex2html1933"
+  HREF="node38.html">3. Using SDCC</A>
+<B> Previous:</B> <A NAME="tex2html1927"
+  HREF="node91.html">3.15 int (16 bit)</A>
+ &nbsp; <B>  <A NAME="tex2html1935"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html1937"
+  HREF="node190.html">Index</A></B> 
+<!--End of Navigation Panel-->
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

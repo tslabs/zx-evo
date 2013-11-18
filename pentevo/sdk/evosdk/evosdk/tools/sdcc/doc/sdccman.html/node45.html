@@ -1,0 +1,102 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>3.1.6 Using ar to Create and Manage Libraries</TITLE>
+<META NAME="description" CONTENT="3.1.6 Using ar to Create and Manage Libraries">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="previous" HREF="node44.html">
+<LINK REL="up" HREF="node39.html">
+<LINK REL="next" HREF="node46.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html1228"
+  HREF="node46.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html1222"
+  HREF="node39.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html1218"
+  HREF="node44.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html1224"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html1226"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1229"
+  HREF="node46.html">3.2 Command Line Options</A>
+<B> Up:</B> <A NAME="tex2html1223"
+  HREF="node39.html">3.1 Compiling</A>
+<B> Previous:</B> <A NAME="tex2html1219"
+  HREF="node44.html">3.1.5 Using sdcclib to</A>
+ &nbsp; <B>  <A NAME="tex2html1225"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html1227"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H2><A NAME="SECTION00416000000000000000"></A><A NAME="767"></A>
+<BR>
+3.1.6 Using ar to Create and Manage Libraries
+</H2>
+
+<P>
+Support for ar format libraries was introduced in sdcc 2.9.0. Ar is
+a standard archive managing utility on unices (Linux, Mac OS X, several
+unix flavors) so it is not included in the sdcc package.
+<BR>
+<BR>
+For Windows platform you can find ar utility in GNU binutils package
+included in several projects: Cygwin at http://www.cygwin.com/,
+MinGW at http://www.mingw.org/.
+<BR>
+<BR>
+Both the GNU and BSD ar format variants are suppurated by asxxxx linkers.
+Ar doesn't understand the asxxxx object file format, so there is a
+special version of ranlib distributed with sdcc, called asranlib,
+which produces the ar symbol lookup table.
+<BR>
+<BR>
+To create a library containing asxxxx object files, you should use
+the following sequence:
+<BR>
+<P>
+<I><B>ar -Sq &lt;library name&gt;.lib &lt;list of .rel files&gt;</B></I>
+
+<P>
+<I><B>asranlib &lt;library name&gt;.lib</B></I>
+
+<P>
+
+<P><P>
+<BR>
+
+
+<P>
+<BR><HR>
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

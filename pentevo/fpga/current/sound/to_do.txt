@@ -1,0 +1,54 @@
+HUS
+
+---------------------------------
+
+FSM1
+Processes channels table and samples per channel.
+Generates list of addresses for smaples wave data reading.
+Increments addresses and process loops.
+
+FSM2
+Reads samples wave data from RAM.
+Fills the output DAC buffer.
+
+FSM3
+Outputs wave stream to DAC.
+
+---------------------------------
+
+FPRAM1
+Samples control table
+(in port: Z80 / out port: FSM1)
+512 organized as 32 channels x 16:
+        1 - control
+        3 - start address
+        3 - end address
+        3 - loop address
+        2 - increments
+        2 - volume left/right
+        2 - (unused)
+
+FPRAM2
+(in port: FSM1 / out port: FSM1)
+Counting array
+256 oranized as 32 channels x 8 bytes:
+        2 - sub-address
+        3 - current address to read from
+        1 - status of sample processing (stall/fwd/bck)
+        2 - (unused)
+
+FPRAM3
+Addresses buffer
+(in port: FSM1 / out port: FSM2)
+256 is organized as 2 x 128:
+    32 channels x 4 bytes:
+        3 - address
+        1 - sample type
+
+FPRAM4
+Wave-form buffer
+(in port: FSM2 / out port: FSM3)
+512 organized as 2 x 256:
+    64 samples x 4 bytes:
+        2 - 16 bit left
+        2 - 16 bit right

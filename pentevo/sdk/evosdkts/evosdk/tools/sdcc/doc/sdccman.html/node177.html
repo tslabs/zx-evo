@@ -1,0 +1,102 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>8.1.9 Bit-rotation</TITLE>
+<META NAME="description" CONTENT="8.1.9 Bit-rotation">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="next" HREF="node178.html">
+<LINK REL="previous" HREF="node176.html">
+<LINK REL="up" HREF="node168.html">
+<LINK REL="next" HREF="node178.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html3357"
+  HREF="node178.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html3351"
+  HREF="node168.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html3345"
+  HREF="node176.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html3353"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html3355"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html3358"
+  HREF="node178.html">8.1.10 Nibble and Byte</A>
+<B> Up:</B> <A NAME="tex2html3352"
+  HREF="node168.html">8.1 Optimizations</A>
+<B> Previous:</B> <A NAME="tex2html3346"
+  HREF="node176.html">8.1.8 Bit-shifting Operations.</A>
+ &nbsp; <B>  <A NAME="tex2html3354"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html3356"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H2><A NAME="SECTION00919000000000000000"></A><A NAME="3977"></A>
+<BR>
+8.1.9 Bit-rotation
+</H2>
+
+<P>
+A special case of the bit-shift operation is bit rotation<A NAME="3978"></A>,
+SDCC recognizes the following expression to be a left bit-rotation:
+
+<P>
+<BLOCKQUOTE>
+<TT><B>unsigned</B>&nbsp;&nbsp;char i;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/*
+unsigned is needed for rotation */ </TT>&nbsp;
+<BR><TT>... </TT>&nbsp;
+<BR><TT>i = ((i &lt;&lt; 1) | (i &gt;&gt; 7));</TT> 
+<BR><TT>...</TT>
+
+</BLOCKQUOTE>
+will generate the following code:
+
+<P>
+<BLOCKQUOTE>
+<TT>mov&nbsp;&nbsp;a,_i </TT>&nbsp;
+<BR><TT>rl&nbsp;&nbsp;&nbsp;a </TT>&nbsp;
+<BR><TT>mov&nbsp;&nbsp;_i,a</TT>
+
+</BLOCKQUOTE>
+SDCC uses pattern matching on the parse tree to determine this operation.Variations
+of this case will also be recognized as bit-rotation, i.e.: 
+
+<P>
+<BLOCKQUOTE>
+<TT>i = ((i &gt;&gt; 7) | (i &lt;&lt; 1)); /* left-bit rotation */</TT>
+
+</BLOCKQUOTE>
+
+<P>
+<BR><HR>
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

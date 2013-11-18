@@ -1,0 +1,99 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>3.10.3 Semaphore locking (mcs51/ds390)</TITLE>
+<META NAME="description" CONTENT="3.10.3 Semaphore locking (mcs51/ds390)">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="previous" HREF="node75.html">
+<LINK REL="up" HREF="node73.html">
+<LINK REL="next" HREF="node77.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html1710"
+  HREF="node77.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html1704"
+  HREF="node73.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html1700"
+  HREF="node75.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html1706"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html1708"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1711"
+  HREF="node77.html">3.11 Functions using private</A>
+<B> Up:</B> <A NAME="tex2html1705"
+  HREF="node73.html">3.10 Enabling and Disabling</A>
+<B> Previous:</B> <A NAME="tex2html1701"
+  HREF="node75.html">3.10.2 Enabling and Disabling</A>
+ &nbsp; <B>  <A NAME="tex2html1707"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html1709"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H2><A NAME="SECTION004103000000000000000"></A><A NAME="1734"></A>
+<BR>
+3.10.3 Semaphore locking (mcs51/ds390)
+</H2>
+
+<P>
+Some architectures (mcs51/ds390) have an atomic<A NAME="1735"></A> bit
+test and clear instruction. These type of instructions are typically
+used in preemptive multitasking systems, where a routine f.e. claims
+the use of a data structure ('acquires a lock<A NAME="1736"></A> on it'),
+makes some modifications and then releases the lock when the data
+structure is consistent again. The instruction may also be used if
+interrupt and non-interrupt code have to compete for a resource. With
+the atomic bit test and clear instruction interrupts<A NAME="1737"></A>
+don't have to be disabled for the locking operation. 
+
+<P>
+SDCC generates this instruction if the source follows this pattern:
+
+<P>
+<BLOCKQUOTE>
+<TT>volatile<A NAME="1739"></A> bit resource_is_free; </TT>&nbsp;
+<BR>&nbsp;
+<BR><TT>if (resource_is_free) </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;{ </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;resource_is_free=0; </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;... </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;resource_is_free=1;</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;} </TT>
+
+</BLOCKQUOTE>
+Note, mcs51 and ds390 support only an atomic<A NAME="1748"></A> bit test
+and <I>clear</I> instruction (as opposed to atomic bit test and <I>set).</I>
+
+<P>
+<BR><HR>
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

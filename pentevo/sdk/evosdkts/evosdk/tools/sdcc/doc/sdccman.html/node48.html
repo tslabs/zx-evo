@@ -1,0 +1,163 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>3.2.2 Preprocessor Options</TITLE>
+<META NAME="description" CONTENT="3.2.2 Preprocessor Options">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="next" HREF="node49.html">
+<LINK REL="previous" HREF="node47.html">
+<LINK REL="up" HREF="node46.html">
+<LINK REL="next" HREF="node49.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html1281"
+  HREF="node49.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html1275"
+  HREF="node46.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html1269"
+  HREF="node47.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html1277"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html1279"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1282"
+  HREF="node49.html">3.2.3 Linker Options</A>
+<B> Up:</B> <A NAME="tex2html1276"
+  HREF="node46.html">3.2 Command Line Options</A>
+<B> Previous:</B> <A NAME="tex2html1270"
+  HREF="node47.html">3.2.1 Processor Selection Options</A>
+ &nbsp; <B>  <A NAME="tex2html1278"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html1280"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H2><A NAME="SECTION00422000000000000000"></A><A NAME="818"></A><A NAME="819"></A><A NAME="820"></A>
+<BR>
+3.2.2 Preprocessor Options
+</H2>
+
+<P>
+
+<UL>
+<LI>[<B>-I&lt;path&gt;<A NAME="823"></A></B>] The additional location where
+the preprocessor will look for &lt;..h&gt; or ``..h'' files.
+</LI>
+<LI>[<B>-D&lt;macro[=value]&gt;<A NAME="826"></A></B>] Command
+line definition of macros. Passed to the preprocessor.
+</LI>
+<LI>[<B>-M<A NAME="827"></A></B>] Tell the preprocessor to output a rule
+suitable for make describing the dependencies of each object file.
+For each source file, the preprocessor outputs one make-rule whose
+target is the object file name for that source file and whose dependencies
+are all the files `#include'd in it. This rule may be a single line
+or may be continued with `&#92;'-newline if it is long.
+The list of rules is printed on standard output instead of the preprocessed
+C program. `-M' implies `-E<A NAME="829"></A>'.
+</LI>
+<LI>[<B>-C<A NAME="830"></A></B>] Tell the preprocessor not to discard comments.
+Used with the `-E' option.
+</LI>
+<LI>[<B>-MM<A NAME="831"></A></B>] Like `-M' but the output mentions only
+the user header files included with `#include ``file&#34;'.
+System header files included with `#include &lt;file&gt;' are omitted.
+</LI>
+<LI>[<B>-Aquestion(answer)<A NAME="834"></A></B>] Assert
+the answer answer for question, in case it is tested with a preprocessor
+conditional such as `#if #question(answer)'. `-A-' disables the
+standard assertions that normally describe the target machine.
+</LI>
+<LI>[<B>-Umacro<A NAME="835"></A></B>] Undefine macro macro. `-U' options
+are evaluated after all `-D' options, but before any `-include' and
+`-imacros' options.
+</LI>
+<LI>[<B>-dM<A NAME="836"></A></B>] Tell the preprocessor to output only
+a list of the macro definitions that are in effect at the end of preprocessing.
+Used with the `-E' option.
+</LI>
+<LI>[<B>-dD<A NAME="837"></A></B>] Tell the preprocessor to pass all macro
+definitions into the output, in their proper sequence in the rest
+of the output.
+</LI>
+<LI>[<B>-dN<A NAME="838"></A></B>] Like `-dD' except that the macro arguments
+and contents are omitted. Only `#define name' is included in the
+output.
+</LI>
+<LI>[<B>-pedantic-parse-number<A NAME="839"></A><A NAME="840"></A></B><B><U><FONT SIZE="+1"><A NAME="lyx:-pedantic-parse-number"></A></FONT></U></B>] Pedantic
+parse numbers so that situations like 0xfe-LO_B(3) are parsed properly
+and the macro LO_B(3) gets expanded. See also #pragma pedantic_parse_number
+ite:pedantic_parse_number in section<A HREF="node101.html#sec:Pragmas">3.19</A>
+<I>Note: this functionality is not in conformance with C99 standard!</I>
+</LI>
+<LI>[<B>-Wp&nbsp;preprocessorOption[,preprocessorOption]</B><A NAME="846"></A>...] Pass
+the preprocessorOption to the preprocessor <TT>sdcpp</TT><A NAME="848"></A>.
+SDCC uses an adapted version of the GNU Compiler Collection<A NAME="849"></A>
+preprocessor <I>cpp</I> (<I>gcc</I> http://gcc.gnu.org/). If
+you need more dedicated options please refer to the GCC&nbsp;CPP&nbsp;Manual
+at http://www.gnu.org/software/gcc/onlinedocs/.
+</LI>
+</UL>
+<P><P>
+<BR>
+
+
+<P>
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html1281"
+  HREF="node49.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html1275"
+  HREF="node46.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html1269"
+  HREF="node47.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html1277"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html1279"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1282"
+  HREF="node49.html">3.2.3 Linker Options</A>
+<B> Up:</B> <A NAME="tex2html1276"
+  HREF="node46.html">3.2 Command Line Options</A>
+<B> Previous:</B> <A NAME="tex2html1270"
+  HREF="node47.html">3.2.1 Processor Selection Options</A>
+ &nbsp; <B>  <A NAME="tex2html1278"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html1280"
+  HREF="node190.html">Index</A></B> 
+<!--End of Navigation Panel-->
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

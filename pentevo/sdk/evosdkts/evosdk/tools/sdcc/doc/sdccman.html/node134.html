@@ -1,0 +1,183 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>4.6.14 Interrupts</TITLE>
+<META NAME="description" CONTENT="4.6.14 Interrupts">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="next" HREF="node135.html">
+<LINK REL="previous" HREF="node133.html">
+<LINK REL="up" HREF="node120.html">
+<LINK REL="next" HREF="node135.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html2649"
+  HREF="node135.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html2643"
+  HREF="node120.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html2637"
+  HREF="node133.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html2645"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html2647"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html2650"
+  HREF="node135.html">4.6.15 Generic Pointers</A>
+<B> Up:</B> <A NAME="tex2html2644"
+  HREF="node120.html">4.6 The PIC16 port</A>
+<B> Previous:</B> <A NAME="tex2html2638"
+  HREF="node133.html">4.6.13 Function return values</A>
+ &nbsp; <B>  <A NAME="tex2html2646"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html2648"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H2><A NAME="SECTION005614000000000000000">
+4.6.14 Interrupts</A>
+</H2>
+
+<P>
+An interrupt<A NAME="3170"></A> service routine (ISR) is declared
+using the <I>interrupt</I> keyword.
+
+<P>
+
+<DL COMPACT>
+<DT>
+<DD>void&nbsp;isr(void)&nbsp;interrupt&nbsp;<I>n</I>
+
+<P>
+{
+
+<P>
+...
+
+<P>
+}
+</DD>
+</DL><I>n</I> is the interrupt number, which for PIC18F devices can be:
+
+<P>
+<DIV ALIGN="CENTER">
+<TABLE CELLPADDING=3 BORDER="1">
+<TR><TD ALIGN="CENTER"><I>n</I></TD>
+<TD ALIGN="CENTER">Interrupt Vector</TD>
+<TD ALIGN="CENTER">Interrupt Vector Address</TD>
+</TR>
+<TR><TD ALIGN="CENTER">0</TD>
+<TD ALIGN="CENTER">RESET vector</TD>
+<TD ALIGN="CENTER">0x000000</TD>
+</TR>
+<TR><TD ALIGN="CENTER">1</TD>
+<TD ALIGN="CENTER">HIGH priority interrupts</TD>
+<TD ALIGN="CENTER">0x000008</TD>
+</TR>
+<TR><TD ALIGN="CENTER">2</TD>
+<TD ALIGN="CENTER">LOW priority interrupts</TD>
+<TD ALIGN="CENTER">0x000018</TD>
+</TR>
+</TABLE>
+</DIV>
+<P>
+<DIV ALIGN="CENTER">
+</DIV>
+
+<P>
+When generating assembly code for ISR the code generator places a
+<SMALL>GOTO </SMALL>instruction at the <I>Interrupt Vector Address</I> which
+points at the generated ISR. This single GOTO instruction is part
+of an automatically generated <I>interrupt entry point</I> function.
+The actuall ISR code is placed as normally would in the code space.
+Upon interrupt request, the GOTO instruction is executed which jumps
+to the ISR code. When declaring interrupt functions as _naked this
+GOTO instruction is <B>not</B> generated. The whole interrupt functions
+is therefore placed at the Interrupt Vector Address of the specific
+interrupt. This is not a problem for the LOW priority interrupts,
+but it is a problem for the RESET and the HIGH priority interrupts
+because code may be written at the next interrupt's vector address
+and cause indeterminate program behaviour if that interrupt is raised.<A NAME="tex2html18"
+  HREF="footnode.html#foot5597"><SUP>4.2</SUP></A>
+<P>
+<I>n</I> may be omitted. This way a function is generated similar
+to an ISR, but it is not assigned to any interrupt.
+
+<P>
+When entering an interrupt, currently the PIC16<A NAME="3190"></A> port
+automatically saves the following registers:
+
+<P>
+
+<UL>
+<LI>WREG
+</LI>
+<LI>STATUS
+</LI>
+<LI>BSR
+</LI>
+<LI>PROD (PRODL and PRODH)
+</LI>
+<LI>FSR0 (FSR0L and FSR0H)
+</LI>
+</UL>
+These registers are restored upon return from the interrupt routine.<A NAME="tex2html19"
+  HREF="footnode.html#foot3193"><SUP>4.3</SUP></A>
+<P>
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html2649"
+  HREF="node135.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html2643"
+  HREF="node120.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html2637"
+  HREF="node133.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html2645"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html2647"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html2650"
+  HREF="node135.html">4.6.15 Generic Pointers</A>
+<B> Up:</B> <A NAME="tex2html2644"
+  HREF="node120.html">4.6 The PIC16 port</A>
+<B> Previous:</B> <A NAME="tex2html2638"
+  HREF="node133.html">4.6.13 Function return values</A>
+ &nbsp; <B>  <A NAME="tex2html2646"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html2648"
+  HREF="node190.html">Index</A></B> 
+<!--End of Navigation Panel-->
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

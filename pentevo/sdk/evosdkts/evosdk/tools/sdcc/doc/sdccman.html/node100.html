@@ -1,0 +1,126 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>3.18.2 DS390 Memory Model</TITLE>
+<META NAME="description" CONTENT="3.18.2 DS390 Memory Model">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="previous" HREF="node99.html">
+<LINK REL="up" HREF="node98.html">
+<LINK REL="next" HREF="node101.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html2066"
+  HREF="node101.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html2060"
+  HREF="node98.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html2056"
+  HREF="node99.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html2062"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html2064"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html2067"
+  HREF="node101.html">3.19 Pragmas</A>
+<B> Up:</B> <A NAME="tex2html2061"
+  HREF="node98.html">3.18 Memory Models</A>
+<B> Previous:</B> <A NAME="tex2html2057"
+  HREF="node99.html">3.18.1 MCS51 Memory Models</A>
+ &nbsp; <B>  <A NAME="tex2html2063"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html2065"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H2><A NAME="SECTION004182000000000000000"></A><A NAME="2517"></A><A NAME="2518"></A>
+<BR>
+3.18.2 DS390 Memory Model
+</H2>
+
+<P>
+The only model supported is Flat 24<A NAME="2519"></A>.
+This generates code for the 24 bit contiguous addressing mode of the
+Dallas DS80C390 part. In this mode, up to four meg of external RAM
+or code space can be directly addressed. See the data sheets at www.dalsemi.com
+for further information on this part.
+<BR>
+<BR>
+Note that the compiler does not generate any code to place the processor
+into 24 bitmode (although <I>tinibios</I> in the ds390 libraries will
+do that for you). If you don't use <I>tinibios</I><A NAME="2522"></A>,
+the boot loader or similar code must ensure that the processor is
+in 24 bit contiguous addressing mode before calling the SDCC startup
+code.
+<BR>
+<BR>
+Like the <I>--model-large</I> option, variables will by default
+be placed into the XDATA segment. 
+<BR>
+<BR>
+Segments may be placed anywhere in the 4 meg address space using the
+usual --*-loc options. Note that if any segments are located
+above 64K, the -r flag must be passed to the linker to generate the
+proper segment relocations, and the Intel HEX output format must be
+used. The -r flag can be passed to the linker by using the option
+<I>-Wl-r</I> on the SDCC command line. However, currently the linker
+can not handle code segments &gt; 64k.
+
+<P>
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html2066"
+  HREF="node101.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html2060"
+  HREF="node98.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html2056"
+  HREF="node99.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html2062"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html2064"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html2067"
+  HREF="node101.html">3.19 Pragmas</A>
+<B> Up:</B> <A NAME="tex2html2061"
+  HREF="node98.html">3.18 Memory Models</A>
+<B> Previous:</B> <A NAME="tex2html2057"
+  HREF="node99.html">3.18.1 MCS51 Memory Models</A>
+ &nbsp; <B>  <A NAME="tex2html2063"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html2065"
+  HREF="node190.html">Index</A></B> 
+<!--End of Navigation Panel-->
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

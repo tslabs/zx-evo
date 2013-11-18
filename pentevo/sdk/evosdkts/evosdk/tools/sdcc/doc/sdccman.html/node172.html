@@ -1,0 +1,161 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>8.1.4 Loop Optimizations</TITLE>
+<META NAME="description" CONTENT="8.1.4 Loop Optimizations">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="next" HREF="node173.html">
+<LINK REL="previous" HREF="node171.html">
+<LINK REL="up" HREF="node168.html">
+<LINK REL="next" HREF="node173.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html3287"
+  HREF="node173.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html3281"
+  HREF="node168.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html3275"
+  HREF="node171.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html3283"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html3285"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html3288"
+  HREF="node173.html">8.1.5 Loop Reversing</A>
+<B> Up:</B> <A NAME="tex2html3282"
+  HREF="node168.html">8.1 Optimizations</A>
+<B> Previous:</B> <A NAME="tex2html3276"
+  HREF="node171.html">8.1.3 Copy-Propagation</A>
+ &nbsp; <B>  <A NAME="tex2html3284"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html3286"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H2><A NAME="SECTION00914000000000000000"></A><A NAME="3834"></A><A NAME="sub:Loop-Optimizations"></A>
+<BR>
+8.1.4 Loop Optimizations
+</H2>
+
+<P>
+Two types of loop optimizations are done by SDCC <I>loop invariant</I>
+lifting and <I>strength reduction</I> of loop induction variables.
+In addition to the strength reduction the optimizer marks the induction
+variables and the register allocator tries to keep the induction variables
+in registers for the duration of the loop. Because of this preference
+of the register allocator<A NAME="3838"></A>, loop induction
+optimization causes an increase in register pressure, which may cause
+unwanted spilling of other temporary variables into the stack<A NAME="3839"></A>
+/ data space. The compiler will generate a warning message when it
+is forced to allocate extra space either on the stack or data space.
+If this extra space allocation is undesirable then induction optimization
+can be eliminated either for the entire source file (with --noinduction
+option) or for a given function only using #pragma&nbsp;noinduction<A NAME="3840"></A>.
+<BR>
+<BR>
+Loop Invariant:
+
+<P>
+<BLOCKQUOTE>
+<TT>for (i = 0 ; i &lt; 100 ; i ++) </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;f += k + l;</TT>
+
+</BLOCKQUOTE>
+changed to
+
+<P>
+<BLOCKQUOTE>
+<TT>itemp = k + l; </TT>&nbsp;
+<BR><TT>for (i = 0; i &lt; 100; i++) </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;f += itemp;</TT>
+
+</BLOCKQUOTE>
+As mentioned previously some loop invariants are not as apparent,
+all static address computations are also moved out of the loop.
+<BR>
+<BR>
+Strength Reduction<A NAME="3850"></A>, this optimization substitutes
+an expression by a cheaper expression:
+
+<P>
+<BLOCKQUOTE>
+<TT>for (i=0;i &lt; 100; i++)</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;ar[i*5] = i*3;</TT>
+
+</BLOCKQUOTE>
+changed to
+
+<P>
+<BLOCKQUOTE>
+<TT>itemp1 = 0; </TT>&nbsp;
+<BR><TT>itemp2 = 0; </TT>&nbsp;
+<BR><TT>for (i=0;i&lt; 100;i++) { </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;ar[itemp1] = itemp2; </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;itemp1 += 5; </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;itemp2 += 3; </TT>&nbsp;
+<BR><TT>}</TT>
+
+</BLOCKQUOTE>
+The more expensive multiplication<A NAME="3866"></A> is changed
+to a less expensive addition.
+
+<P>
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html3287"
+  HREF="node173.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html3281"
+  HREF="node168.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html3275"
+  HREF="node171.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html3283"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html3285"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html3288"
+  HREF="node173.html">8.1.5 Loop Reversing</A>
+<B> Up:</B> <A NAME="tex2html3282"
+  HREF="node168.html">8.1 Optimizations</A>
+<B> Previous:</B> <A NAME="tex2html3276"
+  HREF="node171.html">8.1.3 Copy-Propagation</A>
+ &nbsp; <B>  <A NAME="tex2html3284"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html3286"
+  HREF="node190.html">Index</A></B> 
+<!--End of Navigation Panel-->
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

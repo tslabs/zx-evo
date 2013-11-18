@@ -1,0 +1,85 @@
+Of videomodes
+-------------
+
+
+1. Palette
+----------
+
+CRAM has 256 cells and is 15 bits wide. It codes color info as following:
++--------------------+
+| 15     8  7      0 |
+| xRRrrrGG  gggBBbbb |
++--------------------+
+RR/GG/BB is Pentevo video-DAC and rrr/ggg/bbb are PWM 'boost'.
+If you not intend to use PWN functionality, just set rrr/ggg/bbb to 3'b000
+to obtain regular Pentevo colors.
+When any of RR/GG/BB are 2'b11, the correspondent rrr/ggg/bbb are ignored
+as DAC value of 2'b11 simply cannot be 'boosted'.
+x is ignored value.
+
+Mode ZX uses palette cells #F0-#F7 for BRIGHT 0 and #F8-#FF for BRIGHT 1.
+
+Mode HC (16c) uses palette cells #E0-#EF.
+
+Mode XC (256c) uses palette cells #00-#FF.
+
+Text mode uses the same palette that ZX.
+
+
+2. Addresses
+------------
+
+Mode ZX is at offset of #0000 and #1800 at selected video page as usually.
+
+Mode 16c occupies 8 pages, so 32 screens can be selected.
+It is located at pages 0-7 starting from the visible page selected (bits 0-2 are ignored).
+Example:
+Page 5 selected: graphics at pages 0-7 at #C000-#FFFF.
+
+Mode 256c occupies 16 pages, so 16 screens can be selected.
+It is located at pages 0-15 starting from the visible page selected (bits 0-3 are ignored).
+Example:
+Page 5 selected: graphics at pages 0-15 at #C000-#FFFF.
+
+Text mode occupies 16kB of text + 2 kB of font.
+Text area is located at visible page selected (bit 0 is ignored).
+Font is located at next to visible page at offset #0000.
+Example:
+Page 5 selected: text at page 4 at #C000-#FFFF,
+font at page 5 at #C000-$CFFF.
+The attributes in this mode are:
++----------+
+| 7      0 |
+| IGRBigrb |
++----------+
+IGRB is paper color for the symbol, and igrb is ink color.
+
+
+3. Raster constants
+-------------------
+
+	hp_beg[0] = 9'd140;	// 256 (88-52-256-52)
+	hp_beg[1] = 9'd108;	// 320 (88-20-320-20)
+	hp_beg[2] = 9'd108;	// 320 (88-20-320-20)
+	hp_beg[3] = 9'd88;	// 360 (88-0-360-0)
+    
+	hp_end[0] = 9'd396;	// 256
+	hp_end[1] = 9'd428;	// 320
+	hp_end[2] = 9'd428;	// 320
+	hp_end[3] = 9'd448;	// 360
+    
+	vp_beg[0] = 9'd080;	// 192 (32-48-192-32)
+	vp_beg[1] = 9'd076;	// 200 (32-44-200-44)
+	vp_beg[2] = 9'd056;	// 240 (32-24-240-24)
+	vp_beg[3] = 9'd032;	// 288 (32-0-288-0)
+    
+	vp_end[0] = 9'd272;	// 192
+	vp_end[1] = 9'd276;	// 200
+	vp_end[2] = 9'd296;	// 240
+	vp_end[3] = 9'd320;	// 288
+    
+	x_tile[0] = 6'd33;	// 256
+	x_tile[1] = 6'd41;	// 320
+	x_tile[2] = 6'd41;	// 320
+	x_tile[3] = 6'd46;	// 360
+

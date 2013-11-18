@@ -1,0 +1,61 @@
+HUS
+
+Flow description
+
+1.
+FSM1 fills the FIFO with sound stream.
+When it works, z80 is BUSRQ-ed.
+It starts when FIFO is 1/2 full or less, stops when it is full,
+or when number of samples per tick reaches 0.
+In latter case the int and status for CPU asserted.
+After CPU updated channels file, it starts the FSM1 again.
+
+
+---------------------------------
+
+FSM1
+Processes channels file and samples per channel.
+Reads byte from RAM (per channel).
+Multiplies it by volumes and adds to adders for left/right channels.
+Generates the wave stream and writes it into the buffer.
+Increments addresses and processes loops.
+
+FSM2
+Outputs wave stream to DAC.
+
+---------------------------------
+
+FPRAM1
+Channels file
+(in port: Z80 / out port: FSM1)
+448 (of 512), organized as 32 channels x 7 x 16bit:
+        1 - control
+        3 - start address
+        3 - end address
+        3 - loop address
+        2 - increments
+        2 - volume left/right
+        2 - (unused)
+
+FPRAM2
+(in port: FSM1 / out port: FSM1)
+Counting array
+256 organized as 32 channels x 8 bytes:
+        2 - sub-address
+        3 - current address to read from
+        1 - status of channel (stall/fwd/bck)
+        2 - (unused)
+
+FPRAM3
+Wave-form buffer
+(in port: FSM1 / out port: FSM2)
+512 organized as 2 x 256:
+    64 samples x 4 bytes:
+        2 - 16 bit left
+        2 - 16 bit right
+
+---------------------------------
+
+Steps for FSM1:
+    1 - get addr for reading (reload ? FPRAM1.start address : FPRAM2.current address to read from)
+    2 - 

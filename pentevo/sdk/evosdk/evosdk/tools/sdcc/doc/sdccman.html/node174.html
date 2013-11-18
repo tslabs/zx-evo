@@ -1,0 +1,86 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>8.1.6 Algebraic Simplifications</TITLE>
+<META NAME="description" CONTENT="8.1.6 Algebraic Simplifications">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="next" HREF="node175.html">
+<LINK REL="previous" HREF="node173.html">
+<LINK REL="up" HREF="node168.html">
+<LINK REL="next" HREF="node175.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html3315"
+  HREF="node175.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html3309"
+  HREF="node168.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html3303"
+  HREF="node173.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html3311"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html3313"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html3316"
+  HREF="node175.html">8.1.7 'switch' Statements</A>
+<B> Up:</B> <A NAME="tex2html3310"
+  HREF="node168.html">8.1 Optimizations</A>
+<B> Previous:</B> <A NAME="tex2html3304"
+  HREF="node173.html">8.1.5 Loop Reversing</A>
+ &nbsp; <B>  <A NAME="tex2html3312"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html3314"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H2><A NAME="SECTION00916000000000000000">
+8.1.6 Algebraic Simplifications</A>
+</H2>
+
+<P>
+SDCC does numerous algebraic simplifications, the following is a small
+sub-set of these optimizations.
+
+<P>
+<BLOCKQUOTE>
+<TT>i = j + 0;&nbsp;&nbsp;&nbsp;&nbsp; /* changed to: */&nbsp;&nbsp;&nbsp;&nbsp; i = j; </TT>&nbsp;
+<BR><TT>i /= 2;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /* changed to: */&nbsp;&nbsp;&nbsp;&nbsp; i &gt;&gt;=
+1; </TT>&nbsp;
+<BR><TT>i = j - j;&nbsp;&nbsp;&nbsp;&nbsp; /* changed to: */&nbsp;&nbsp;&nbsp;&nbsp; i = 0; </TT>&nbsp;
+<BR><TT>i = j / 1;&nbsp;&nbsp;&nbsp;&nbsp; /* changed to: */&nbsp;&nbsp;&nbsp;&nbsp; i = j;</TT>
+
+</BLOCKQUOTE>
+Note the subexpressions<A NAME="3887"></A> given above are generally
+introduced by macro expansions or as a result of copy/constant propagation.
+
+<P>
+<BR><HR>
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

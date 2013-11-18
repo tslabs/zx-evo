@@ -1,0 +1,191 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>1.4 Compatibility with previous
+versions</TITLE>
+<META NAME="description" CONTENT="1.4 Compatibility with previous
+versions">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="next" HREF="node7.html">
+<LINK REL="previous" HREF="node5.html">
+<LINK REL="up" HREF="node2.html">
+<LINK REL="next" HREF="node7.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html554"
+  HREF="node7.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html548"
+  HREF="node2.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html542"
+  HREF="node5.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html550"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html552"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html555"
+  HREF="node7.html">1.5 System Requirements</A>
+<B> Up:</B> <A NAME="tex2html549"
+  HREF="node2.html">1. Introduction</A>
+<B> Previous:</B> <A NAME="tex2html543"
+  HREF="node5.html">1.3 Typographic conventions</A>
+ &nbsp; <B>  <A NAME="tex2html551"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html553"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H1><A NAME="SECTION00240000000000000000"></A><A NAME="sec:Compatibility-with-previous"></A><A NAME="102"></A>
+<BR>
+1.4 Compatibility with previous
+versions
+</H1>
+
+<P>
+Newer versions have usually numerous bug fixes compared with the previous
+version. But we also sometimes introduce some incompatibilities with
+older versions. Not just for the fun of it, but to make the compiler
+more stable, efficient and ANSI compliant<A NAME="103"></A>
+(see section <A HREF="node182.html#sub:ANSI-Compliance">8.2</A> for ANSI-Compliance). 
+<BR>
+<P>
+
+<UL>
+<LI>short is now equivalent to int (16 bits), it used to be equivalent
+to char (8 bits) which is not ANSI compliant. To maintain compatibility,
+old programs may be compiled using the --short-is-8bits commandline
+option (see lyx:-short-is-8bits).
+</LI>
+<LI>the default directory for gcc-builds where include, library and documentation
+files are stored is now in /usr/local/share.
+</LI>
+<LI>char type parameters to vararg<A NAME="107"></A> functions are
+casted to int unless explicitly casted and <B>--std-c89<A NAME="108"></A></B>
+and <B>--std-c99<A NAME="109"></A></B> command line option
+are not defined , e.g.: 
+<BR><TT>&nbsp;&nbsp;char a=3;</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;printf (&#34;%d %c&#92;n&#34;,
+a, (char)a);</TT>
+<BR>
+will push a as an int and as a char resp if <B>--std-c89<A NAME="115"></A></B>
+and <B>--std-c99<A NAME="116"></A></B> command line options
+are not defined,
+<BR>
+will push a as two ints if <B>--std-c89<A NAME="117"></A></B>
+or <B>--std-c99<A NAME="118"></A></B> command line option is
+defined.
+</LI>
+<LI>option --regextend has been removed.
+</LI>
+<LI>option --noregparms has been removed.
+</LI>
+<LI>option --stack-after-data has been removed.
+</LI>
+<LI>bit<A NAME="119"></A> and sbit<A NAME="120"></A><A NAME="121"></A> types now consistently
+behave like the C99 _Bool type with respect to type conversion<A NAME="122"></A><A NAME="123"></A>.
+The most common incompatibility resulting from this change is related
+to bit toggling<A NAME="124"></A> idioms, e.g.:
+<BR><TT>&nbsp;&nbsp;bit b;</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;b = ~<A NAME="127"></A>b; /* equivalent
+to b=1 instead of toggling b */</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;b = !b; /* toggles b */</TT>&nbsp;
+<BR>
+In previous versions, both forms would have toggled the bit.
+</LI>
+<LI>in older versions, the preprocessor was always called with <B>--std-c99<A NAME="134"></A></B>
+regardless of the <B>--std-xxx</B> setting. This is no longer
+true, and can cause compilation failures on code built with <B>--std-c89<A NAME="136"></A></B>
+but using c99 preprocessor features, such as one-line (//) comments
+</LI>
+<LI>in versions older then 2.8.4 the pic16 *printf() and printf_tiny()
+library functions supported undocumented and not standard compliant
+'b' binary format specifier (&#34;%b&#34;, &#34;%hb&#34;
+and &#34;%lb&#34;). The 'b' specifier is now disabled by
+default. It can be enabled by defining BINARY_SPECIFIER macro in
+files device/lib/pic16/libc/stdio/vfprintf.c and device/lib/pic16/libc/stdio/printf_tiny.c
+and recompiling the library.
+</LI>
+<LI>in versions older then 2.8.5 the unnamed bitfield structure members
+participated in initialization, which is not conforming with ISO/IEC
+9899:1999 standard (see section Section 6.7.8 Initialization, clause
+9)
+<BR>
+<BR>
+Old behavior, before version 2.8.5:&nbsp;
+<BR><TT>&nbsp;&nbsp;struct {</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;int a : 2;</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;char&nbsp; : 2;</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;int b : 2;</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;} s = {1, 2, 3};</TT>
+<BR><TT>/* s.a = 1, s.b = 3 */</TT>
+<BR>
+<BR>
+New behavior:&nbsp;
+<BR><TT>&nbsp;&nbsp;struct {</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;int a : 2;</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;char&nbsp; : 2;</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;int b : 2;</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;} s = {1, 2};</TT>
+<BR><TT>/* s.a = 1, s.b = 2 */</TT>
+</LI>
+</UL>
+
+<P>
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html554"
+  HREF="node7.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html548"
+  HREF="node2.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html542"
+  HREF="node5.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html550"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html552"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html555"
+  HREF="node7.html">1.5 System Requirements</A>
+<B> Up:</B> <A NAME="tex2html549"
+  HREF="node2.html">1. Introduction</A>
+<B> Previous:</B> <A NAME="tex2html543"
+  HREF="node5.html">1.3 Typographic conventions</A>
+ &nbsp; <B>  <A NAME="tex2html551"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html553"
+  HREF="node190.html">Index</A></B> 
+<!--End of Navigation Panel-->
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

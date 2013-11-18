@@ -1,0 +1,96 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>8.1.3 Copy-Propagation</TITLE>
+<META NAME="description" CONTENT="8.1.3 Copy-Propagation">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="next" HREF="node172.html">
+<LINK REL="previous" HREF="node170.html">
+<LINK REL="up" HREF="node168.html">
+<LINK REL="next" HREF="node172.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html3273"
+  HREF="node172.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html3267"
+  HREF="node168.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html3261"
+  HREF="node170.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html3269"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html3271"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html3274"
+  HREF="node172.html">8.1.4 Loop Optimizations</A>
+<B> Up:</B> <A NAME="tex2html3268"
+  HREF="node168.html">8.1 Optimizations</A>
+<B> Previous:</B> <A NAME="tex2html3262"
+  HREF="node170.html">8.1.2 Dead-Code Elimination</A>
+ &nbsp; <B>  <A NAME="tex2html3270"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html3272"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H2><A NAME="SECTION00913000000000000000"></A><A NAME="3817"></A>
+<BR>
+8.1.3 Copy-Propagation
+</H2>
+
+<P>
+<BLOCKQUOTE>
+<TT>int f() { </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;int i, j; </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;i = 10; </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;j = i; </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;return j; </TT>&nbsp;
+<BR><TT>}</TT>
+
+</BLOCKQUOTE>
+will be changed to 
+
+<P>
+<BLOCKQUOTE>
+<TT>int f() { </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;int i, j; </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;i = 10; </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;j = 10; </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;return 10; </TT>&nbsp;
+<BR><TT>}</TT>
+
+</BLOCKQUOTE>
+Note: the dead stores created by this copy propagation will be eliminated
+by dead-code elimination.
+
+<P>
+<BR><HR>
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

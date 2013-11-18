@@ -1,0 +1,336 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>3.12.1 MCS51/DS390 Startup Code</TITLE>
+<META NAME="description" CONTENT="3.12.1 MCS51/DS390 Startup Code">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="next" HREF="node80.html">
+<LINK REL="previous" HREF="node78.html">
+<LINK REL="up" HREF="node78.html">
+<LINK REL="next" HREF="node80.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html1755"
+  HREF="node80.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html1749"
+  HREF="node78.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html1743"
+  HREF="node78.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html1751"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html1753"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1756"
+  HREF="node80.html">3.12.2 HC08 Startup Code</A>
+<B> Up:</B> <A NAME="tex2html1750"
+  HREF="node78.html">3.12 Startup Code</A>
+<B> Previous:</B> <A NAME="tex2html1744"
+  HREF="node78.html">3.12 Startup Code</A>
+ &nbsp; <B>  <A NAME="tex2html1752"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html1754"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H2><A NAME="SECTION004121000000000000000">
+3.12.1 MCS51/DS390 Startup Code</A>
+</H2>
+
+<P>
+The compiler triggers the linker to link certain initialization modules
+from the runtime library<A NAME="1774"></A> called crt&lt;something&gt;.
+Only the necessary ones are linked, for instance crtxstack.asm (GSINIT1,
+GSINIT5) is not linked unless the --xstack option is used.
+These modules are highly entangled by the use of special segments/areas,
+but a common layout is shown below:
+
+<P>
+<BLOCKQUOTE>
+<TT><B><FONT SIZE="-1">(main.asm)</FONT></B></TT></BLOCKQUOTE>
+<P>
+<BLOCKQUOTE>
+</BLOCKQUOTE>
+<P>
+<BLOCKQUOTE><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;.area HOME (CODE)</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">__interrupt_vect:</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ljmp __sdcc_gsinit_startup</FONT></TT></BLOCKQUOTE>
+<P>
+<BLOCKQUOTE>
+</BLOCKQUOTE>
+<P>
+<BLOCKQUOTE><TT><B><FONT SIZE="-1">(crtstart.asm)</FONT></B></TT></BLOCKQUOTE>
+<P>
+<BLOCKQUOTE>
+</BLOCKQUOTE>
+<P>
+<BLOCKQUOTE><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;.area GSINIT0 (CODE)</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">__sdcc_gsinit_startup::</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mov sp,#__start__stack
+- 1</FONT></TT></BLOCKQUOTE>
+<P>
+<BLOCKQUOTE>
+</BLOCKQUOTE>
+<P>
+<BLOCKQUOTE><TT><B><FONT SIZE="-1">(crtxstack.asm)</FONT></B></TT></BLOCKQUOTE>
+<P>
+<BLOCKQUOTE>
+</BLOCKQUOTE>
+<P>
+<BLOCKQUOTE><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;.area GSINIT1 (CODE)</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">__sdcc_init_xstack::</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">; Need to initialize in GSINIT1 in case the
+user's __sdcc_external_startup uses the xstack.</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mov __XPAGE,#(__start__xstack
+&gt;&gt; 8)</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mov _spx,#__start__xstack</FONT></TT></BLOCKQUOTE>
+<P>
+<BLOCKQUOTE>
+</BLOCKQUOTE>
+<P>
+<BLOCKQUOTE><TT><B><FONT SIZE="-1">(crtstart.asm)</FONT></B></TT></BLOCKQUOTE>
+<P>
+<BLOCKQUOTE>
+</BLOCKQUOTE>
+<P>
+<BLOCKQUOTE><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;.area GSINIT2 (CODE)</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;lcall __sdcc_external_startup</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mov a,dpl</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;jz __sdcc_init_data</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ljmp __sdcc_program_startup</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">__sdcc_init_data:</FONT></TT></BLOCKQUOTE>
+<P>
+<BLOCKQUOTE>
+</BLOCKQUOTE>
+<P>
+<BLOCKQUOTE><TT><B><FONT SIZE="-1">(crtxinit.asm)</FONT></B></TT></BLOCKQUOTE>
+<P>
+<BLOCKQUOTE>
+</BLOCKQUOTE>
+<P>
+<BLOCKQUOTE><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;.area GSINIT3 (CODE)</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">__mcs51_genXINIT::</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mov r1,#l_XINIT</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mov a,r1</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;orl a,#(l_XINIT &gt;&gt; 8)</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;jz 00003$</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mov r2,#((l_XINIT+255) &gt;&gt;
+8)</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mov dptr,#s_XINIT</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mov r0,#s_XISEG</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mov __XPAGE,#(s_XISEG &gt;&gt;
+8)</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">00001$:&nbsp;clr a</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;movc a,@a+dptr</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;movx @r0,a</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;inc dptr</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;inc r0</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;cjne r0,#0,00002$</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;inc __XPAGE</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">00002$:&nbsp;djnz r1,00001$</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;djnz r2,00001$</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mov __XPAGE,#0xFF</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">00003$:</FONT></TT></BLOCKQUOTE>
+<P>
+<BLOCKQUOTE>
+</BLOCKQUOTE>
+<P>
+<BLOCKQUOTE><TT><B><FONT SIZE="-1">(crtclear.asm)</FONT></B></TT></BLOCKQUOTE>
+<P>
+<BLOCKQUOTE>
+</BLOCKQUOTE>
+<P>
+<BLOCKQUOTE><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;.area GSINIT4 (CODE)</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">__mcs51_genRAMCLEAR::</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;clr a</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mov r0,#(l_IRAM-1)</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">00004$:&nbsp;mov @r0,a</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;djnz r0,00004$</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">; _mcs51_genRAMCLEAR() end</FONT></TT></BLOCKQUOTE>
+<P>
+<BLOCKQUOTE>
+</BLOCKQUOTE>
+<P>
+<BLOCKQUOTE><TT><B><FONT SIZE="-1">(crtxclear.asm)</FONT></B></TT></BLOCKQUOTE>
+<P>
+<BLOCKQUOTE>
+</BLOCKQUOTE>
+<P>
+<BLOCKQUOTE><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;.area GSINIT4 (CODE)</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">__mcs51_genXRAMCLEAR::</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mov r0,#l_PSEG</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mov a,r0</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;orl a,#(l_PSEG &gt;&gt; 8)</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;jz 00006$</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mov r1,#s_PSEG</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mov __XPAGE,#(s_PSEG &gt;&gt;
+8)</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;clr a</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">00005$:&nbsp;movx @r1,a</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;inc r1</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;djnz r0,00005$</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">00006$:</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mov r0,#l_XSEG</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mov a,r0</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;orl a,#(l_XSEG &gt;&gt; 8)</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;jz 00008$</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mov r1,#((l_XSEG + 255) &gt;&gt;
+8)</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mov dptr,#s_XSEG</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;clr a</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">00007$:&nbsp;movx @dptr,a</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;inc dptr</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;djnz r0,00007$</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;djnz r1,00007$</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">00008$:</FONT></TT></BLOCKQUOTE>
+<P>
+<BLOCKQUOTE>
+</BLOCKQUOTE>
+<P>
+<BLOCKQUOTE><TT><B><FONT SIZE="-1">(crtxstack.asm)</FONT></B></TT></BLOCKQUOTE>
+<P>
+<BLOCKQUOTE>
+</BLOCKQUOTE>
+<P>
+<BLOCKQUOTE><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;.area GSINIT5 (CODE)</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">; Need to initialize in GSINIT5 because __mcs51_genXINIT
+modifies __XPAGE</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">; and __mcs51_genRAMCLEAR modifies _spx.</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mov __XPAGE,#(__start__xstack
+&gt;&gt; 8)</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mov _spx,#__start__xstack</FONT></TT></BLOCKQUOTE>
+<P>
+<BLOCKQUOTE>
+</BLOCKQUOTE>
+<P>
+<BLOCKQUOTE><TT><B><FONT SIZE="-1">(application modules)</FONT></B></TT></BLOCKQUOTE>
+<P>
+<BLOCKQUOTE>
+</BLOCKQUOTE>
+<P>
+<BLOCKQUOTE><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;.area GSINIT (CODE)</FONT></TT></BLOCKQUOTE>
+<P>
+<BLOCKQUOTE>
+</BLOCKQUOTE>
+<P>
+<BLOCKQUOTE><TT><B><FONT SIZE="-1">(main.asm)</FONT></B></TT></BLOCKQUOTE>
+<P>
+<BLOCKQUOTE>
+</BLOCKQUOTE>
+<P>
+<BLOCKQUOTE><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;.area GSFINAL (CODE)</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ljmp __sdcc_program_startup</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">;----------------------------</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">; Home</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">;----------------------------</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;.area HOME (CODE)</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;.area CSEG (CODE)</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">__sdcc_program_startup:</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;lcall _main</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">; return from main will lock up</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sjmp .</FONT></TT></BLOCKQUOTE>
+<P>
+<BLOCKQUOTE>
+
+</BLOCKQUOTE>
+One of these modules (crtstart.asm) contains a call to the C routine
+<I>_sdcc_external_startup()<A NAME="2003"></A></I>
+at the start of the CODE area. This routine is also in the runtime
+library<A NAME="2004"></A> and returns 0 by default. If this
+routine returns a non-zero value, the static &amp; global variable initialization
+will be skipped and the function main will be invoked. Otherwise static
+&amp; global variables will be initialized before the function main is
+invoked. You could add an <I>_sdcc_external_startup()</I> routine
+to your program to override the default if you need to setup hardware
+or perform some other critical operation prior to static &amp; global
+variable initialization<A NAME="2006"></A>. On some mcs51
+variants xdata<A NAME="2007"></A> memory has
+to be explicitly enabled before it can be accessed or if the watchdog<A NAME="2008"></A>
+needs to be disabled, this is the place to do it. The startup code
+clears all internal data memory, 256 bytes by default, but from 0
+to n-1 if <I>--iram-size<A NAME="2009"></A>n</I> is
+used. (recommended for Chipcon CC1010).
+
+<P>
+See also the compiler options <I>--no-xinit</I>-<I>opt</I><A NAME="2012"></A>,
+<I>--main-return</I><A NAME="2014"></A> and section <A HREF="node104.html#sub:MCS51-variants">4.1</A>
+about MCS51-variants.
+<BR>
+<P>
+While these initialization modules are meant as generic startup code
+there might be the need for customization. Let's assume the return
+value of <I>_sdcc_external_startup()</I> in <I>crtstart.asm</I>
+should not be checked (or <I>_sdcc_external_startup()</I> should
+not be called at all). The recommended way would be to copy <I>crtstart.asm</I>
+(f.e. from http://sdcc.svn.sourceforge.net/viewvc/*checkout*/sdcc/trunk/sdcc/device/lib/mcs51/crtstart.asm)
+into the source directory, adapt it there, then assemble it with <I>asx8051
+-plosgff</I><A NAME="tex2html6"
+  HREF="footnode.html#foot5446"><SUP>3.4</SUP></A><I> crtstart.asm</I> and when linking your project explicitly specify
+<I>crtstart.rel</I>. As a bonus a listing of the relocated object
+file <I>crtstart.rst</I> is generated.
+
+<P>
+
+<P><P>
+<BR>
+
+
+<P>
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html1755"
+  HREF="node80.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html1749"
+  HREF="node78.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html1743"
+  HREF="node78.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html1751"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html1753"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1756"
+  HREF="node80.html">3.12.2 HC08 Startup Code</A>
+<B> Up:</B> <A NAME="tex2html1750"
+  HREF="node78.html">3.12 Startup Code</A>
+<B> Previous:</B> <A NAME="tex2html1744"
+  HREF="node78.html">3.12 Startup Code</A>
+ &nbsp; <B>  <A NAME="tex2html1752"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html1754"
+  HREF="node190.html">Index</A></B> 
+<!--End of Navigation Panel-->
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

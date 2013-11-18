@@ -1,0 +1,1209 @@
+﻿[!] - Исправлена серьезная ошибка
+[+] - Добавлен новый функционал
+[-] - Убран ненужный/устаревший функцинал
+[*] - Мелкие исправления
+[@] - Функционал изменен
+[?] - Функционал добавлен но не проверен
+
+        version 0.01b                   3 sep 2001
+
+* first version
+
+
+
+        version 0.02b                   6 sep 2001
+
+* i was very surprised with a lot of e-mails, that came in two days after
+  first release; thank you all for support!
+
+! fixed bug with mouse cursor visible, fixed settings dialog
+  for leds and memory model [suggested by Maxim A. Vasilyev]
+
++ disk rotation emulated [thanks to Mac Buster for Beta 128 timings]
+
+
+        version 0.03b                  10 sep 2001
+
+! fixed bug when TRDOS reads index even if no disk, that appared in 0.02b
+! fixed kempston mouse [credits to Kuba Adamowicz]
++ added SwapButtons and MouseSpeed
+! fixed small bug in tape traps
++ fully customizable keyboard
++ kempston joystick on keyboard
++ keymatrix effect
++ 1T screen update for best border effects and multicolors
++ faster screen output mode without border and multicolors for slow PCs
++ load from archives and archives inside archives ;=)
+! fixed bug when boot not attached to SCL
+* several speed optimizations
++ new video filter - chunky 2x2
++ new video filter - smart scaling. sorry, not optimized yet
+
+
+        version 0.04b                  17 sep 2001
+
+! changed load dialog [suggested by Maxim Vasilyev]
+* 'smart scaling' filter optimized
+! fixed directory for qsave/qload
++ FDI read/write, but can't format and use write_protection flag
+! fixed HALT emulation
+! fixed fadeout (envelope #01) and envelope #0E on AY chip
++ all syncronization in INI: monitor refresh, int freq, VSync option, etc...
+  read <notes.rus> how to make smooth screen repaint
+! more accurate AY tones, especially high frequencies
++ new video filter - 'nice colors'
+
+
+        version 0.05b                  24 sep 2001
+
+! fixed one more bug in load dialog [reported by Maxim Vasilyev]
++ preset for AY Chip = none [suggested by Maxim Vasilyev]
++ added YM chip: sound is same with AY, but FFFD behavior is different
+! small changes in beta 128 emulation
++ emulated write protection flag (FDI-from header, TRD,SCL-from R/O attribute)
++ multiple command lines for one archive format [suggested by Maxim Vasilyev]
+! fixed (finally!) AY envelope
++ General Sound (MOD player not complete) [credits to Shiru Otaku for GSPAK.ZIP]
++ memory models: pentagon-1024, extension on ports #DFFD,#1FFD,#FDFD
++ display exception position and registers on crash (for bugreports)
+
+        version 0.06b                  26 sep 2001
+
+! fixed AY envelope [ looks like a tradition ;-) ] - now really, i hope
+! logarithmic volume tables for General Sound
+! many improvements in MOD-player, but still not complete
++ reads zero-padded .TAP files [suggested by Georgy Lomsadze]
++ monitor shows contents of memory extension port
+* changed fps led [suggested by Vitaliy Pigo]
+! fixed bug when GS (almost) always plays wrong sample
++ digital filter for general sound
++ kempston joystick on mouse - not really playable, just for fun
+
+
+        version 0.07b                   1 oct 2001
+
+* yesterday i've received 100th e-mail concerning emulator :)
+  no doubt - ZX platform will never die !
+! works in windows NT4 [bug reported by Georgy Lomsadze]
+! fixed terrible bug in GS sample player [thanks to Vitaliy Pigo]
+* INI option: LEDS\PerfShowT, coz some people wants to see t-states, many don't
+! mod-player: set tempo ignored (what the difference in speed and tempo?)
+  now music in 'green beret' works better [bugreported by Moroz]
+! killed clicks in GS player [bugreported by Moroz]
++ conditional breakpoints (uses c-like expressions of any complexity); breaks
+  to range, port in/out, on instruction, on memory change superseded by this
+  powerful feature and removed as obsolete. RTFM before use
+@ fixed blah-blah in documentation about 'disk spinning is not emulated'
+  it's emulated since version 0.02
+! monitor: enabled save and load block (just forgot to bind keys to this funcs)
+  strange, that nobody noticed that
+! monitor: fixed bug in 'set bank'
+! better TR-DOS, now Unreal Megademo (by KSA) works, if trdos traps disabled.
+  (Z80S, R80, RealSpectrum failed to emulate this demo) [bugreported by Drew]
++ runs without soundcard (sound\fq=0 in INI) [suggested by Alexey Kravchenko]
++ INI option for autosave TRD/FDI
++ monitor: general sound status/fxplayer dialog
+- removed memory ATM-1024
++ MMX simple video filter - it's first assembly routine in emul.
+  in future versions i'll replace most filters using MMX and
+  bilinear CPU expensive filters using 3DNow!
++ unbelievable video filter - chunky filtered (look to REFRESH or LIFEFORMS)
+  not fully optimized, but will be recoded with 3DNow! in future versions
+  [thanx to Mr.Dsteuz//Proxium for this excellent idea]
+
+
+        version 0.08b                   8 oct 2001
+
+! fixed MOD-saver [reported by Shiru Otaku]
++ INI: MISC\DIR [suggested by too many people to list them all]
+! fixed portz selection (for RST7 crazy coding style :) [thanks to Paul Pavlov]
+! killed screen flicks when tracing on F8 [reported by Max Vasilyev]
++ monitor: added stack window
+* changed font in monitor: it's grievous, that people prefer PC font instead of
+  native Speccy charsets, but i've added a nice gfx as a compensation :)
+  [stolen from XL-DESIGN - sorry, guys]
++ able to debug borders/multicolors: screen updates when tracing with F8
++ emulated pentagon with AY on 3.5 MHz [suggested by Shiru Otaku]
++ changed GS dialog
+! a bit fixed INT signal, but not perfect - differs by 1T from real pentagon :(
+* some video filters removed, some mmx-optimized
++ video: motion blur for jumpin scrolls[thanks to Ms.Dsteuz for fast algorithm]
+! able to load uncompressed Z80 2.01 [thanks to Dmitry Sanarin for files]
++ monitor: watches
++ monitor: text dump mode [suggested by Max Vasilyev and Ironfist]
++ border only mode for debugging border effects [suggested by Mad Cat]
++ INI option: MISC\RESET
+! monitor: fixed PgUp/PgDn [reported by Ironfist]
+! fixed terrible bug in tape loader (with max speed) [thanks to Dmitry Sanarin]
+! fixed speech on rasputin & robocop [reported by Dmitry Sanarin], but added
+  new bug: AY does not play when tone period = 0
+! separate tables for AY and YM
+! AY: rewritten noise, fixed period, noise rand() from AY_Emul
+
+
+        version 0.09b                  10 oct 2001
+
+! fixed rare bug in AY
+! changed BMP-saver [suggested by diver]
+! changed palettes for all chunky filters, small changes in chunkFX filter
+
+
+        version 0.10b                  not released to public
+
+! fixed clicks in mod-player [bugreported by Moroz]
+! fixed diskette saving led (broken in version 0.07)
+* speed optimizations in video (using 486+ opcodes in conjuction with MMX)
+* one filter rewritten in MMX
+! changed SNA loader - now may load incorrect files [bug found by Ironfist]
++ hotkeys for selectin' AY/YM,ABC/ACB on the fly [suggested by Max Vasilyev]
+! fixed bug in BMP screenshot for 'small' and 'scanlines' modes
+! emulated GS bug: cmd #3E loads _*unsigned*_ samples [thanks to Moroz]
+* tested monitor with 100Hz refresh - great! for setting rate in windows 95
+  use PowerStrip or similar utility, for NT/2000 edit emul.ini
+! undone INT changes, made in 0.08
+
+
+        version 0.11b                  18 oct 2001
+
+! monitor: bit 6 in beta 128 port #FF displays right [thanks to Alex Makeev]
+! monitor: repaint screen on task switching [bugreported by Alex Makeev]
+* documented many bugs - read unreal.txt
+! changed palette for noflic2 [suggested by diver]
+! black background in 'small' and 'scanlines' filters [suggested by many people]
+! fixed loading of too long tapes [bugreported by Andrew Moonlight]
++ video filter: using hardware blitter [idea by Alex Baskakov]
++ monitor: stepover(F8) trace rst/call with stack params at one step (rst#28)
++ sticky keys mode [completely stolen from ZX_Emul, read description there]
+
+
+        version 0.12b                  22 oct 2001
+
+* fantastic (>50%) speedup for CPU with 32 byte L1 cache line (K6-2)
+  probably poison for intel pentium-I, but i don't care
+  [thanks to AMD's "Processor Code Optimization Application Note"]
++ hi-color chunky filters, designed especially for LIFEFORMS [hi, Placebo!]
+  filtered 2x2 chunky allows read all texts in demo and does not loose colors
+* in next version some 8-bit filters will be removed. mail me, if you need them
+* small speed optimizations in Z80 core
+! load dialog remembers last dir [suggested by Alexey Kravchenko]
+! screenshot saving to emulator directory
+
+
+        version 0.16b                  26 oct 2001
+
+* drastically improved overall sound quality [thanks to Hacker KAY]
+! 'save VTX' does not ignore chip, stereo layout, and 3.5mhz mode
+* changed monitor save/load [suggested by Ironfist]
+! always loop MOD in GS player [suggested by Moroz]
++ monitor: ripper's tool [idea by Ironfist]
++ Hobeta loader (read doc) [suggested by Mr.Dsteuz]
++ FLASH-COLOR [thanks to Mad Cat for description]
++ INI option to hide video filters, that do not work on your system
+? gameport joystick as kempston (not tested - just copied code from DirectX SDK)
+
+
+        version 0.16b2                 31 oct 2001
+
+* slightly increased quality and speed for 2x2 hicolor chunky
+! able to load 48K qsaves [bugreported by Kuba Adamowicz]
+! fixed some bugs in keyboard layout [bugreported by Alexey Kravchenko]
+! load dialog: fixed masks for hobeta and fdi [bugreported by Paul Pavlov]
+! may work in 15-bit hicolor (not tested) [thanks to Vitaliy Pigo for techinfo]
+
+
+        version 0.17b                   5 nov 2001
+
+! fixed bug in 15-bit hicolor (not tested)
+* MCR optimized for any (K5,K6,K7,P-I,P-II,P-III) cpu, not only for K6-2
++ scorpion timings (available from INI) [s.b. Alexey Kravchenko]
+! monitor: fixed bug in GS samples preview
++ hardware multicolor [s.b. Nuts and Mr.Dsteuz]
++ support for ZS Scorpion Service ROM 2.94 [s.b. many people]
++ customizable (from INI and GUI) ROM sets [s.b. many people]
++ memory model: ZS Scorpion 1024K
+- removed many useless 8-bit filters. i've received only one request for
+  keeping them, so i think 16-bit modes much better
+
+
+        version 0.18b                  26 nov 2001
+
+! monitor: LD (nnnn),HL and LD HL,(nnnn) assembles now to short (not #ED) form
+! fixed bug in short #7FFD addressation [thanks to Paul Pavlov]
+! fixed port #FF (broken in 0.17?) [thanks to Alexey Kravchenko]
+! finally found lost 3T in MCR. now exact pentagon border
+! some changes in beta128 timing [thanks to Max Vasilyev], but still incomplete
+! monitor: fixed flipping video pages in dialogs using GDI
+! monitor: update MCR on every trace step
+- monitor: removed logo [alas, found a copyright owner :)]
++ led: current time [s.b. Alone Coder]
++ INI: GSReset [s.b. Ilya Podrezov and Necromancer]
+* small changes in INI:SYSTEM.KEYS
++ monitor: save cursor positions [s.b. Alone Coder]
++ monitor: context jumps [s.b. Alone Coder]
+! shame on me - fixed bugs in Z80 (not all) [thanks to Alone Coder]
++ GS: LPT covox mode
+* small changes in INI:LEDS
++ autofire [s.b. Alexey Kravchenko]
++ DirectSound for w95. delay=2frames, if DS driver uses hardware acceleration
+  (also select out_ds.dll in winamp;) [damn,i've got >10 requests for this shit]
++ user palettes on hotkeys [s.b. diver]
++ CMOS+RTC [s.b. Pawel Kislyak]
++ hotkey for quick saving disk images and cmos
+
+
+        version 0.18b2                 29 nov 2001
+
+! fixed bugs in palette for some filters (appared in 0.18)
+* some hi-color speed optimizations (but still 32 bit instructions)
++ "new" video filter for chunky demos
++ INI: ShareCPU [s.b. Dexus]
+
+
+        version 0.19b                  19 dec 2001
+
+* completely rewritten video engine: requires video overlay hardware, but works
+  in windowed mode; plz review hardware requirements
+* changed AY Chip=digital (added anti-vibratto, ambience effect, etc...)
+- GS: removed MOD player (b'coz it suxx), now able to exploit BASS Sound System
++ 512x192
++ added 5 fast, but low-resolution hicolor chunky modes
+! fixed bugs in GS [found by diver]
++ unreal api [s.b. PoP HL^exult]
+* +10% speedup in z80 emulation
++ monitor: on-screen watches
++ on-screen watches trace used RAM/ROM banks [s.b. Mad Cat]
+? fixed bugs in gamepad/joystick (?)
++ TD0 read/write [thanks to Alex Baskakov for HalfElf's sources]
++ video filter: color tv (not optimized -> slow)
+
+
+        version 0.19b2                 21 dec 2001
+
+! TD0 reader updated for TD0 v21
+
+
+        version 0.19b3                 24 dec 2001
+
+! video: supported pixel format RGB555
+! fixed bug in windowed mode [found by Ilya Hromenkov]
++ video filter ch4true - best quality
+
+
+        version 0.19b4                 25 dec 2001
+
+! video: supported MPEG1 YUY2 (for nVidia cards), some video code cleanup
+* video filter 'color tv' optimized
+! fixed EI:HALT [thanks to Alone Coder]
+! 'fixed' bug in beta128 [found by Larchenko Eugene]
+
+
+        version 0.19b5                 28 dec 2001
+
+! fixed ds driver for win98. INI:DSoundBuffer is obsolete (auto-detection)
+  sounddrv=wave will be removed in next version
+! fixed windowed mode bugs in win98
++ monitor: disasm to file [s.b. Sergey Bulba]
++ monitor: INS/DEL in line editor
+! monitor: fixed bug in read block from file
+
+
+        version 0.20 final              9 jan 2002
+
+* first not-a-beta, though not all bugz fixed
++ open source
+- soundchip tables are wrong again (opensource restrictions, see sound.cpp)
++ check against loading same disk image to different drives [s.b. Alone Coder]
+! fixed ch2hw,ch4hw for nVidia cards
+* more flexible video settings
++ monitor: select active window with mouse [s.b. Sergey Bulba]
+! GS/MOD: fixed bug in position jump [found by Ironfist]
+! dialogs do not trash main window while dragging over it [s.b. Alex Baskakov]
++ keyboard layouts can be selected without restarting emul [s.b. Flying]
+* faq updated
++ INI: DSPrimary may be for win98 (win2k works well in both modes)
+
+
+        version 0.20 fix #1            29 mar 2002
+
+* +5% z80 speedup when monitor not used
+! RTC day_of_week [fb Alone Coder]
++ video renderer: standart win32 GDI
+* new sound mixer: always max quality
++ clock-precise ay/ym emulation (in prev. versions i've used a simulation)
+! fixed covox on port #DD
++ video: wide border [esp. for ZX-Time]
++ #EFF7 bit2 and bit3
++ video: new screen mode [from ZX-Guide#2]
++ video: works in 320x200, 320x240, 400x300, 512x384, 800x600 modes
++ boot auto-appends to disk in any format, not only to SCL
+* new engine for WD1793 emulator:
+!   complete emulation of all WD93 commands and status register
+!   right CRC in address and sector [thnx to AlCo for track dumps]
+!   complete timings (insult, powerup works as real with traps=0,fast=0)
++   FDDs LED
++   load/save unreal disk image format
++   built-in converter HOBETA -> TRD <-> TD0 <-> UDI <-> FDI <- SCL
+! TD0 writer updates CRC
+! able to load TD0 with description [fb AlCo]
+* many cosmetic bugfixes/flicfixes/improvements
+
+
+        version 0.20 fix #2             1 apr 2002
+
+! fixed FDD_MOTOR bug [fb SirX]
+! fixed ay sound [fb SirX]
+! fixed bugs in FDI loader [fb SirX]
+! fixed FDD step bug
+
+
+        version 0.20 fix #2.5          10 apr 2002
+
+! fixed ay envelopes #0E and #0A [fb SirX and Alex Makeev]
+
+
+        version 0.20 light edition     19 apr 2002
+
+- shit removed
+* some MCR optimizations
++ separate reading left and right shift,control,alt
++ direct access to video hardware, full speed on iP100 (without sound)
+  use 50/100/150hz modes - set EGATiming in INI for your display
+
+
+        version 0.21b                  20 may 2002
+
+* video output +20% faster
+- removed filters: sgdi, motion blur, flashcolor. removed leds: FDD (too ugly)
++ resizable-window video mode for accelerated cards (recommended for GeForce1-4)
++ chunky modes through hardware bilinear filter (realtime in gf2/1600x1200x32)
+* leds: при указании координат возможны отступы снизу или справа от границы экр
+* all tape routines completely rewritten (maybe reading WAVs in next versions)
+- tape traps removed. pls press NumLock or enjoy loading process
+! load TZX with direct recording and loops [thnx to Dmitry Sanarin for files]
+! better support for TZX info blocks: messages, hardware info, pokes, etc...
++ CSW loader (hacked from couple examples, if you have specification, mail me)
+* monitor: disassembly window acts like STS 3.2
++ General Sound low-level emulation [greets to PSB/Halloween & Adventurer #13]
+  (GS firmware sux (details in notes.rus). use BASS for 16b/8ch)
+* faster emulation of DDCB/FDCB opcodes
+! speed-up & bug-fix wd93 emulation [thanx to Alone Coder for tests on real zx]
+! block read/write when FDD motor is not spinning
+* support for new version of UDI format, read <udi.rus>
++ executable file is not UPX'ed (+2% faster loading)
+
+
+        version 0.21b2                 31 may 2002
+
+! updated sound mixer [fb Siril, thanks to SirX for bugreport]
+! save/load dialogs don't clear background in 8bit fullscreen mode
+! correct CSW loader [thanks to Ramsoft for docs]
+! TZX loader updated to format version 1.13
+* minor video optimizations
++ loader for .SP snapshots
++ monitor: diskeditor [sb Alone Coder]
+
+
+        version 0.21 light edition     17 jun 2002
+
+* as usual, 'lite' release
+
+
+        version 0.21b3                 25 jun 2002
+
+! diskeditor fix [released 10 jun 2002]
+* Z80 emulation +8% faster
+* video output optimizations
+! fixed bug in AY mixer, much faster AY/YM emulation
++ new unreal soundchip: YM-turbo (headphones recommended)
++ custom AY volume/stereo presets (+bonus - over 10 ripped volume tables)
++ ULA presets
+* flash-color is back
+
+
+        version 0.21b3LE               25 jun 2002
+
++ monitor works better, but still incomplete functionality
+
+
+        version 0.21b4
+
+! fixed: 0.21b3 could not load ULA/AY presets on win9x
+! fixed: TRD writer saves last accessed track instead of trk 0 [fb AlCo]
++ F1 invokes help on bound keys (requires IE4.0 or later)
+! fixed bilinear filter (crashed in 0.21b3)
+! fixed small bug in flash-color, now may work with bilinear filter
+! fixed 'nopaper' mode
+* video sub-system rewritten. overlay in 'double' mode don't pervert colors
++ profi ROM and screen (to run CP/M, find profi.rom and cpm.udi)
+  profi service ROM can start only when BETA128 delays enabled
++ pentagon service ROMs (details in service.rus)
++ my service ROM included in archive (service.rom)
++ pentagon 256K, pentagon 128SR (service ROM on #7FFD)
++ #EFF7 switches 512x192 and HWMC, #DFFD - 512x240
+  (without changing screen mode - always 50fps, even if switching each frame)
+- unreal API removed, looks like nobody uses it
++ configurable scanlines brightness
+* if some ROM not defined in ROMSET, it substitutes with #FF's
++ gui: config page EFF7 - set/reset/lock arbitrary bits of #EFF7
++ filter anti-64 for reading e-zines: converts 4x8 fonts to 8x8/8x16 on the fly
+  to run on slow pc's, unset 'update border' and set 'low quality'. works only
+  with known fonts. i've used fonts from heresy, body and others,,, (sorry ppl)
+
+
+        version 0.21b5
+
+! monitor: fixed stupid bug in 'watches' window, added Alt-F, Alt-S, Ctrl-U
+! fixed HIMEM=PENTSR - #7FFD bit 4 should not lock #7FFD bit 7
+* recompiled with vc7, separate versions for pentium and p-II
+  in virtue of this amazing compiler unreal runs on pentium-166MMX!
+! monitor: Alt-S,Alt-C,Alt-P didn't work in registers window
+* all asm fragments removed from Z80 engine, now it's pure portable C++
+! TZX loader: fixed overflow on too long description strings [fb Ir0n Man]
++ video: AlCo-384 on #EFF7 bit 6
+* anti-64: more fonts
+
+
+        version 0.22b
+
+! fixed: emul played ay-envelope #0B instead of #01 [fb Mad Cat]
+! Z80: fixed DD,CB and FD,CB opcodes [thanks to Kamill Karimov]
+! fixed many small bugs in TZX loader
+! fixed bugs in WD1793 and FDD emulation
++ text64: detect per-pixel scrolling and 6x4 fonts, font searcher
+- text64: pre-defined fonts removed [(c) restriction]
+
+
+        version 0.23b                  13 sep 2004
+
+- win95/98/ME are no longer supported
+- NT4.0 (directX 3.0) is no longer supported
+- no special version for P5,K6 CPUs. code optimized for P6/K7
+! a bit better AY sound, still not perfect [acn#32]. btw, AlCo, border=wide is able to display 300 lines for 384x304 screen (pls read unreal.txt)
++ faster AY emulation
+! AltLock=1 could freeze keyboard, fixed
+! fixed crash on playing zero-length GS samples
++ mouse buttons and wheel can be bound to spectrum keyboard
++ ini:[ARC]SkipFiles - ignore archive descriptions
++ anti-text64 font setup: "find next" searches through left/right,linear/planes
+* improved font searcher in anti-text64 font setup
+
+
+        version 0.24b                  26 oct 2004
+
+* increased filter order in sound engine (better AY sound)
++ ATM 7.10 128/512/1024 (requires BIOS to setup memory) thanx to Timonin Maxim
++ ATM 7.10 video modes (palette does not work)
+
+
+        version 0.24b2                  5 nov 2004
+
+! fixed bug in WD1793 engine (ZX-Power#3, ATM CP/M)
+! flash attribute in AlCo384 screen mode
+! unable to edit ascii memory dump in monitor
+! fixed saving ATM screenshot from windowed mode
+! fixed screen repaint in pause mode [fb Gambler]
++ ATM palette
++ ATM7.10 128/256/512/1024kb ROM
+* minor ATM bugfixes/improvements
++ able to load config from command line (unreal.exe -i cfg.ini)
++ added atm2.ini, slowcomp.ini
+
+
+        version 0.24b3 bugfix release  11 nov 2004
+
+! fixed ATM text-mode attribute [fb Gambler]
+! fixed loading from archives - broken since 0.24b2 [fb Paul Pavlov]
+
+
+        version 0.25b                  15 jan 2005
+
++ ATM screen mode #7 [thanks to Timonin Maxim for scrshots]
+! fixed bugs in sound engine [fb Alex Fill]
+* FDD led shows current track
+* BestView, ZX-Power, etc now works with [BETA128] Fast=1
+* "disk modified" flag shown in BETA128 settings [sb AlCo]
+! fixed small bug in Z80 [fb AlCo]
+! fixed bug in service ROM emulation [fb AlCo]
+! reset should not clear Z80 registers [fb AlCo]
++ BASIC-48 labels from file "sos.l" shown in monitor (Ctrl-L)
+  unfortunately, i have no BASIC-128 and TR-DOS labels
+! fixed crash on Alt-Tab with dsprimary=1 [fb AlCo]
+! fixed screen update when returning from full-screen in gdi/overlay mode
++ ATM/Nemo ATA HDD emulation [alpha]. works with images and real drives
+@ ini: changed ROMSET=pentagon (some soft expect tr-dos in service ROM)
+! fixed saving/loading snapshots (Snowball, Return to Eden)
++ XAS7 labels shown in monitor (Ctrl-A,Ctrl-L). for XAS 128k config
++ alasm labels shown in monitor (Ctrl-Shift-A,Ctrl-L) [thanx to Alco for docs]
+
+
+        version 0.26b                  27 jan 2005
+
+! HDD emulation: fixed reading in CHS mode, when it goes to next track/head
+@ changed ini: [SOUND]SoundBuffer=2 (less sound delay for 1GHz+ CPU)
++ jump to address under cursor from registers window [sb AlCo]
++ cache size option: 16/32K
+* new gui/ini design for selection of model, romset and memory size
++ ULA option: "unstable data bus" [sb AlCo]
+! invoking monitor from full-screen mode has switched screen resolution
++ Scorpion PROF-ROM (useless without SMUC hardware) [greetz to jtn, Neu Animal]
+* able to load XAS/ALASM labels from PENTAGON-256/512 high-memory
+* added "cancel" button when replacing unsaved disk or exit [sb Vitamin, AlCo]
+* selecting normal/double switches window size in GDI mode [sb elf/2]
+* centered picture of 384x304 video mode when border=none,small [sb AlCo]
++ ATM XT keyboard [thanx to Kamil Karimov for 8051 disasm]
+! saving snapshots/images with dots in filename [fb lvd]
+
+
+        version 0.27b                  27 feb 2005
+
+! asm/disasm of DD/FD+ED (out (c),xl, etc) [fb MadCat]
+@ ini [SOUND]SoundBuffer=2 changed back to 6 (was unstable)
+! fixed bug in GS emulation [fb Moroz]
+* trace step removes "cpu halted" mode [sb lvd]
+! disk image filename was not changed after "Save As" [sb AlCo]
++ memory R/W breakpoints. new gui for bp manager (Alt-C)
+* switching to/from ATM XT mode without resetting controller [sb Gambler]
++ tactmeter [sb Spectre]
+! noflic did not work in 8-bit and GDI modes with scanlines
++ GIGASCREEN on #EFF7 bit 4, without multicolors yet (use with noflic)
++ option for alternative (interlaced) noflic algoritm for filter=double
++ paste text from clipboard [sb Alco, elf/2]
+* anti-text64: fonts from ACE,PC20 in default fontset
++ anti-text64: search font in external file
++ anti-text64 detects inverted characters [sb AlCo]
+! closing on ALT-F4 sometimes didn't ask "save? yes,no,cancel"
+* register #0B bit 2 of CMOS RTC controls binary/BCD mode
+* new option [VIDEO]DetectModel (description in unreal.ini)
++ Kondrat'yev ISA modem [mapped to windows driver for real modem]
+
+
+        version 0.28b                  28 mar 2005
+
+! pc joystick/gamepad did not work since 0.27 [fb Terazini]
++ pc joystick/gamepad can be bound to any keys, not only kempston joystick
+  please create new keyboard layouts with JLEFT=6,JRIGHT=7,JUP=9,... etc...
++ AY mouse [thanx to [bETA]mEN for scheme]
+* mouse coords updated (interpolated) every Z80 cycle, not every frame
++ loading labels from user.l for external assemblers [sb Kurles^HS^CPU]
+  label format is 'PP:AAAA nnn', PP - page, AAAA - offset, nnn - text
+* flash-color options read from ini [sb Agent Cooper]
+@ ini: [SOUND] Fq=48000 by default (supported by most AC'97's. for others,
+  consult soundcard manual or set default 44100)
++ Scorpion SMUC: PROFROM,IDE,CMOS,NVRAM [thanx to Neu Animal for scheme scan]
+* press F12 to reset in default mode, as specified in ini: [MISC]Reset
+* GS emulation code re-organized in object-oriented way
++ monitor: jump to label [sb Kurles^HS^CPU]
+* edit MODS.H to compile size-optimized versions without unnecessary parts
+@ fixed errata in documentation [thanx to AlCo]
+
+
+        version 0.29b                  29 may 2005
+
+* added ATA-1 compatibility (address registers after read/write) [fb Blade]
+! fixed bug in sound engine, that cause crash after long running
++ AY 2nd chip: Turbo-AY (POS), Turbo-sound (NedoPC) and Quadro-AY schemes
+  monitor: Alt-Y switches active chip
++ frame resampler: converts spectrum 50hz-int into 60/75/80/... hz display
+  refresh, has built-in low-pass filters to handle 3color and noflic.
+  set [VIDEO]Refresh to maximum for you monitor in 640x480 (75,85 or 100 hz)
+! fixed bug in .Z80 loader [fb Terazini]
+! General Sound was accidentally disabled in 0.28b
+! fixed INTRQ bug in ATM HDD scheme
+! fixed GS volume tables in low level mode [fb psb]
+! fixed bugs in GS Z80 [fb psb]
+! fixed bug in on-screen watches [fb MadCat]
+! fixed reset keys inside monitor
+
+
+        version 0.30b                   1 aug 2005
+
+! fixed bug in TV+noflic [fb AlCo]
++ video filters menu on F4 / SHIFT-F4
+! fixed general sound BASS mode: sound effects not played (bug since ver 0.28)
+! OSD GS led continue show volume after sample stop for looped samples
+! fixed bug in frame resampler - crash on full border mode [fb Alex/AT]
+! fixed bug in frame resampler that caused additional flicker
+* better contrast in frame resampler (less frames to mix => more contrast)
++ frame resampler works with all renders, for slow (less then 600mhz)
+  machines use 8-bit ddraw driver. it is b/w and does not use MMX
+  probably there are bugs with ddraw/ddrawh. ddrawt/blt/ovr work fine
+@ for LCD monitors, pls use refresh=60 with "frame resampler": LCDs can't
+  switch pixels so fast and picture worse with higher rates
+* added SMUC version ports (#5FBA & #5FBE) [sb deathsoft]
+* border (port #FE) not cleared on reset [sb deathsoft]
++ KAY-256/1024: himem,ROMs (note that ROMs in the net have invalid pages order)
+- scorpion port #1FFD decoded as in real scheme. pentagon soft may not work
+* some changes in overlay render (may not work on old vcards, i don't care)
+! removed unnecessary screen mode switches when entering monitor
++ modem: speccy able to control transfer mode and rate [code by Alex/AT]
+! modem: fixed bug - could read trash byte from input buffer [fb Alex/AT]
++ IDE/ATAPI cdrom (needs physical drive or windows-level emulated device)
+
+
+        version 0.31b                  24 aug 2005
+
+! atapi: sense key not placed into error register on ATAPI error
+! atapi: fixed bug in ATAPI commands, that don't return data block
+! atapi: fixed bug with DRQ on end of ATAPI data block
+! gs: "save mod" was disabled since 0.28b [fb TJ]
+! fixed bug in window size after leaving fullscreen [fb Tj]
++ new funny led shows R/W/X dynamic in spectrum memory [sb Raider]
++ keyboard shortcuts in windowed mode: Alt-1, Alt-2, Alt-3
++ 4x scale video filter [sb Shiru Otaku] (set minres=1024 to avoid 1280x960)
++ shows condition hit and jp/ret/call direction in trace window [sb Dexus]
++ monitor: Alt-F9 shows only ray-painted screen area
++ monitor: Alt-S cycles through watches / screen dump / ray-painted
+- monitor: mon.render hotkey is deleted (as obsolete)
+* monitor: detection internal loop exit when tracing loop on F8 [sb Dexus]
++ monitor: fill memory with pattern [sb Raider]
+* FDD & FDC code comletely rewritten, bugs may appear
+! when saving disk image, prefer original format as default, not TRD
+! CacheVox works fine with [BETA128]Fast=0. no other emul can handle this yet
+! better WD1793 sector write emulation (overwrite old gap and data AM)
++ monitor: more fields in beta128 panel (see docs)
+@ visual ini-file editor available at http://realsoftmakers.nm.ru/RSM.files/download.htm
+
+
+        version 0.32b                   4 sep 2005
+
++ monitor: jump destination marked with arrow [sb Dexus]
++ ini option "HighPriority"
++ non-bluring scale 2x,3x,4x, developed in AdvanceMAME project (MMX-rewritten)
+@ scale3x is not MMX-vectorized and slower then scale4x
+@ if your monitor displays only up to 1024x768, use border=none for scale4x
+! better FDD emulation: BestView works with [beta128]fast=0 [fb Kubas]
+! temporary hacks in scorpion trdos replaced accordingly to scheme
+! better FDC emulation: adjusted timeouts in fast=1 mode
+@ [beta128]IL is 2 by default in INI: speed-up #3D13 loaders in fast=0 mode
+! no crash on 1280x1024 scrshots: dynamic buffer size
+
+
+        version 0.32b2                 21 sep 2005
+
+! fixed bug (only drive A: can be used) [fb Strunov]
+! fixed bug in FDD delays [fb Kubas]
+* some changes in multicolor renderer [sb AlCo]
+* Pentagon-1024: #7FFD.5 is a 48k mode lock when #EFF7.2=1 [sb AlCo]
+* color console output
+* AdvMAME scale 2x,4x optimized for SSE2
+
+
+        version 0.33b                   7 dec 2005
+
+* monitor: importing ALASM labels with searching in whole memory
++ monitor: Alt-M to edit model-specific high memory port [sb Spectre]
++ monitor: transfer data between FDD image and spectrum memory [sb AlCo]
++ Alt-F6 - memory (cheat) searcher [sb Kpa3]
++ SAM style video drive (disabled by default, edit mods.h and recompile)
++ Alone Coder's 4bpp video mode (on #EFF7 bit 5)
++ TRD/SCL preview in save/load dialogs [sb 3HAXAPb]
++ added "AUTOLOAD" ini section [sb AlCo]
++ load file with drag'n'drop from explorer window
+* mouse capture on left-click to main window (Shift+ESC still works)
+! restored fire function in "joystick on mouse" mode
+! fixed small bug in HOBETA loader [fb AlCo]
+* GLUK 6.1 is used as default system ROM
+
+
+        version 0.34b                  22 jan 2006
+
+! correct border color after snapshot loading [fb [bETA]mEN]
+! fixed bug in ATM memswap on RG0 [fb AlCo]
+! fixed rare crashes on reading port #FF
+! fixed bugs (not all) in CD-ROM emulation [fb AlCo]
++ Z80 INT length emulation (Adventurer#13 intro works with right timings)
+* ignore some unwanted mouse clicks and keyboard pushes [sb AlCo]
++ complete emulation of ATM-TURBO 4.50 [thanks to Doronetty and Max Timonin]
+
+
+        version 0.35b                  22 jul 2006
+
+! Z80: fixed flags after ADD IX/IY,SP instruction
+! Z80: fixed undoc flags after LDI(R)/LDD(R)
+! Z80: fixed undoc flags after CPI(R)/CPD(R)
+- Z80: undoc flags for IN<I|D>[R] / OUT<I|D>[R] not ready yet
+! Z80: MEMPTR implemented (as described in boo_boo & Kladov research)
+! anti-text64 now works in ATM-TURBO models [fb AlCo]
+! monitor: don't waste CPU time in spectrum screen view (F9) [fb AlCo]
+* changes in HDD/CDROM code: physical layer moved to separate classes
+! GS: fixed unused port#BB bits (some games rely on it) [fb moroz]
++ CD-ROM access via SPTI (native WinNT) or ASPI (3rd-party wnaspi32.dll)
+* used my SNDRENDER library for sound & AY emulation (easier & reusable)
+* implemented 16/32bpp renders for ATM-1,2 640x200 screen mode
+* improved GS quality: high-level emulation mode playing samples using BASS
+@ please upgrade BASS to version 2.3 (API changed)
+
+
+        version 0.35b2                  9 aug 2006
+
+! GS: fixed MOD seeking in BASS mode [fb molodcov_alex]
+! HDD: fixed crash when master or slave device absent
+! floppy image loader can read images with very short gaps (CABALGS5.TD0, etc)
++ mouse wheel on high bits of #FAFD port (see ini: Wheel=KEMPSTON) [sb AlCo]
++ KeybPCMode (see ini). when enabled, simulates pc keyboard [sb 3HAXAPb]
+
+
+        version 0.36b                  28 feb 2007 (Alone Coder)
+
++ поддержка YM2203 (TurboSound FM) интегрирована Dexus'ом с изменениями Alone Coder'а. Теперь исправленная эмуляция (TurboFM Revision C). YM2203 support (TurboSound FM) was integrated by Dexus with Alone Coder's changes. Fixed emulation now (TurboFM Revision C)
+* исходники теперь компилируются под MSVC6 (было MSVC7). Sources are now compiled by MSVC6 (was MSVC7)
+- в связи с этим выброшены фильтры AdvMAME, FrameResampler. Because of that the filters AdvMAME and FrameResampler are removed
+! цвет на точку по EFF7 bit0, мультиколор перенесён на bit5. Colour-per-pixel mode is set by EFF7 bit0, and hardware multicolour mode is moved to bit5
+! исправлена загрузка 48k снапшотов, если до этого был установлен режим Pentagon 1024k: вместо 0-й ставилась 32-я банка памяти. Fixed loading of 48k snapshots, if Pentagon 1024k mode was before: 32nd bank was set instead of 0th
+! сброс в 48k на Pentagon 1024k включал 32-ю банку. Reset to 48k was setting 32nd bank on Pentagon 1024k
+- убита защита от выгрузки sna в режимах >128k, теперь можно отгружаться в Walker'е. SNA saving protection in >128k modes is now removed, so Walker may be saved
+! максимальная длина дорожки увеличена до 7000 байт - теперь работает игра "Шибениця" (gallows.td0). Если какая-то программа перестала работать, СООБЩАЙТЕ! Maximum track length is increased to 7000 bytes, and Gallows game works now. PLEASE REPORT if some program ceases to work!
++ русская версия хелпа. Russian version of help
++ название последнего загруженного диска выводится в заголовке окна эмулятора. A name of last loaded disk is shown in a title of emulator window
+! вываливалось при обращении к IDE-устройству, если одно из IDE-устройств не было настроено. Crashed while addressing IDE device if one of IDE devices was not set
+! CD-ROM не работал под Windows 9x, теперь работает. Сделан обход глюка, который возникает вот здесь, по непонятной мне причине: CD-ROM did not work in Windows 9x, it works now. Walkaround of bug, that appears here, was made:
+
+
+        version 0.36.1                  10 mar 2007 (Alone Coder)
+
+! буфер на 256 значений YM2203 убран - мешает цифровому звуку через YM2203. Buffer for 256 YM2203 samples is removed - it hampered the digital sound via YM2203
++ ввод из клипборда теперь поддерживает и русские символы (кроме двух:
+заглавная Ё понимается как Е, заглавный Ъ - как апостроф). Paste from clipboard understands Cyrillic letters
+* убрано окошко, извещающее об изменении файла user.l (sb Elfh). Messagebox "unreal discovered changes in user labels" is removed
+* дополнен хелп (обязательно посмотрите раздел "несовместимость"!). More info in help (please look "bugs and incompatibilities")
+* дополнен комплект файлов. File set is filled up
+
+
+        version 0.36.2                  28 mar 2007 (Alone Coder)
+
+! клавиши в max speed режиме опрашиваются каждый фрейм:
+temp.inputblock = 0;//temp.vidblock;
+а то не всегда реагировало на NumLock в max speed режиме.
+Keys in max speed mode are scanned every frame, for better responsibility
+of NumLock in max speed mode.
+! звуковой буфер не чистился (sound_stop()) в меню Save disk
+(main_save(), correct_exit()).
+Sound buffer was not cleared in Save disk menu
+! вываливался при показе меток длиной 10 (sb Elfh).
+Emulator crashed when tried to display 10 char long labels
+* 0 не показывается как метка.
+0 is no more shown as a label
+! что-то исправлено в интерфейсе с BASS.DLL (fb molodcov_alex):
+if (!BASS_ChannelPlay(hmod, FALSE)) reportError("BASS_ChannelPlay() [music]");
+Something fixed in BASS.DLL interface
+! порт #7ffd на Скорпионе дешифровался неправильно (теперь с учётом A12, как
+#1ffd) - не работала листалка ACNews.
+Port #7ffd in Scorpion mode was deciphered without A12 -
+ACNews lister failed to work
+
+
+        version 0.36.3                  28 apr 2007 (Alone Coder)
+
+! исправлена палитра. Palette is fixed
+! Z80: в операциях записи в память сама запись (wm()) делается после увеличения
+счётчика тактов (cpu->t+=) (если два байта, то 2 раза cpu->t+=). Важно для мультиколоров.
+Z80: memory write procedure (wm()) in memory write operations is called after increasing
+the tick counter (cpu->t+=) (in two-byte operations cpu->t+= is made twice).
+Important for multicolors
+! исправлена русская буква "м" в anti-text64 - показывалась как "m".
+Anti-text64: fixed Russian letter "м"
+! TurboSound FM: FM часть заглушена в 4 раза в соответствии с реальным устройством.
+TurboSound FM: FM is 4 times more quiet as in real device
+! поставлен шумопонижающий фильтр (нужно для beeper'а). Кто знает как -
+помогите убрать щелчки на границах 20ms кадров! Если просто заполнять первые
+2-4 отсчёта кадра предыдущим значением, то щелчки на бипере исчезают,
+но появляются щелчки на AY... Noise reduction filter
+added (for beeper music). Please help to remove that clicks in boundaries of 20ms frames!
+If I simply fill the first 2 to 4 samples of a frame with preceding value, then
+the beeper clicks are disappearing, but AY clicks appear...
+! звуковой буфер не чистился в меню Save sound. Sound buffer was not cleared
+in Save sound menu
+
+
+        version 0.36.4                  14 jun 2007 (Alone Coder)
+
+! шумопонижающий фильтр можно выключить в меню и в ini. Lowpass filter may be triggered in menu and in .ini-file
+! в eff7 (bit 4) вместо Gigascreen работает выключение турбо-режима (ставится 71680 тактов) - в соответствии с реальной машиной (кнопка W в Mr Gluk Reset Service). Звук при каждом переключении переинициализируется. Gigascreen mode (eff7 bit 4) changed to turbo mode off, as in real Pentagon 1024SL 2.x (key W in Mr Gluk Reset Service). Turbo off sets 71680 ticks per frame. The sound is re-initialized when this bit switched
+! в eff7 (bit 3) вместо Read only cache работает включение 0-го банка ОЗУ в область 0000-3fff - в соответствии с реальной машиной. Read only cache (eff7 bit 3) changed to "RAM0 in 0000-3fff" mode, as in real Pentagon 1024SL 2.x
+! немного исправлена громкость FM. FM volume slightly fixed
+! PSB: половина правого канала GS слышна в левом и наоборот. Half of GS right channel is mixed to the left channel and vice versa
+! PSB: исправление щелчков громкости в GS. Reduced volume clicks in GS
+
+
+        version 0.36.5                  29 jul 2007 (Alone Coder)
+
+! исправлен глюк прошлой версии с вводом числа тактов в кадре. Fixed framesize bug of previous version
+! диалог POKE ругался на что угодно. POKE did not work
+! при сохранении trd под другим именем обновляется имя в титуле. When trd disk is saved under another name, that name is shown in emulator window title
+! LVD: в z80asm исправлены операции ALU a,r. Fixed ALU a,r operations in assembler/disassembler
+! Deathsoft: в modem неправильно ставилось число бит в байте. Fixed wrong number of bits in byte for modem
+! PSB: новая версия ПЗУ General Sound. New version of General Sound ROM
+
+
+        version 0.36.6                  17 oct 2007 (Alone Coder)
+
++ окно эмулятора возникает в центре рабочего стола (из расчёта размера double). Emulator window appears in the middle of the screen (for "double" size of emulator screen)
+! убрано выпадение при показе длинных меток в отладчике. Fixed crash while showing long labels in debugger
++ неполная дешифрация кэша (для MODPLAYi) (scor). Cache access is decoded by 1 address line (for MODPLAYi)
+! определялся TFM, когда есть только TS. TFM was detected by Spectrum software when only TS was present
+! звуковой буфер не чистился при вызове хелпа. Sound buffer was not cleared in help window
++ настройка способа работы колеса мыши в ini. Mouse wheel mode setup in ini
+* в ini исправлены секции ROM и по умолчанию поставлен DSPrimary=0. ROM sections in ini fixed, and DSPrimary=0 by default
+
+
+        version 0.36.7                  18 nov 2007 (Alone Coder)
+
+! Digital Studio не работало на TurboSound, т.к. по сбросу включался 0-й AY (KYV).
+Digital Studio did not work with TurboSound enabled because 0th AY was on
+- заштопал ещё две дыры в показе меток, теперь вроде не вываливается (Elfh).
+Two more holes fixed in show labels in debugger, so it does not crash any more
+- эмулятор не компилировался на более новых компиляторах (из-за локальных меток цикла
+и нетипизированных const и static) (DeathSoft). Emulator sources were incompatible
+with modern compilers (local loop labels and omission of explicit types for const and static labels)
+
+
+        version 0.37.0                  8 feb 2008 (Alone Coder)
+
++ General Sound 2MB (Dmitry Demyanenko)
+- под XP не работало чтение таблицы партиций с CD (выдавало длину 65535), теперь насильно формируется длина 2048. CD partition table under XP returned wrong length of 65535 (fixed to 2048).
++ NMI в области ПЗУ игнорируются (иначе не работает теневой монитор). NMI is ignored when ROM area is executed (Scorpion shadow monitor wants this).
++ от турбо-режима зависит число тактов в команде (t=(t+1)>>1), теперь исключены выпадания при частом переключении режима. Turbo mode reduces number of t-stated in every command (t=(t+1)>>1), and shutdowns because of switching turbo frequently are now fixed.
++ программное переключение турбо-режима на ATM Turbo 7.10. Software turbo mode switching in ATM Turbo 7.10
+* соответственно, по умолчанию в кадре снова 71680 тактов, однако включен турбо-режим (выключение - клавишей W в Mr Gluk Reset Service). By default 71680 t-states are in frame again, with turbo on though (switch it off with W key in Mr Gluk Reset Service).
++ в Mr Gluk Service (6.4) исправлено выключение турбо-режима при выходе в бейсик и др. Mr Gluk Reset Service (6.4) fixed to correctly set turbo mode when in quits to BASIC etc.
+
+
+        version 0.37.1                 14 sep 2008 (Alone Coder)
+
+-в нетурбо-режиме на пентагоне насильно ставилось 71680 тактов
+pentagon had 71680 ticks per frame in noturbo mode unregardless to setup
++клавиатура компьютера Орель БК-08 (Sergey V. Korop)
+Orel' BK-08 keyboard added
+*немного пофикшенная версия Глюка (не работал PC128, доктор теперь по reset+G, потом цифра - номер диска, но нужно инициализировать TR-DOS)
+Mr Gluk Reset Service slightly fixed (PC128 did not work, disk doctor moved to reset+G then drive number, but TR-DOS must be initialised)
++новая палитра от pulsar
+new palette from pulsar
+
+
+        version 0.37.2                 16 sep 2008 (deathsoft)
+
++ В отладчике добавлен указатель исходной точки для команд меняющих PC (актуально, когда надо посмотреть откуда делался JP, RET и т.п.)
++ Исправлена поддержка nmi в режиме скорпиона, теперь в сервис монитор можно без проблем входить из basic 48.
+
+
+        version 0.37.3                 13 feb 2009 (deathsoft)
+
+! Проблемы с захватом аудиобуфера для проигрывания 0 байт
+(Буфер проигрывался быстрее чем в него рендерились данные, когда частота кадров > 50Гц)
+
+! Исправлены ошибки с обработкой событий в отладчике (меню и поля ввода)
+Не обрабатывалась перерисовка
+
+В режиме скорпиона:
+- Неправильно декодировались 7FFD и 1FFD, переделано на соответствие с
+платой SC16 (зеленая).
+
+- Отклюено декодирование пентагоновского порта EFF7 (нет такого порта в скорпионе и не было никогда)
+- Неправильно декодировался порт FE (по A0=0), сделано по схеме SC16
+
+ Исправлена грубая ошибка в эмуляции ВГ93:
+! В ВГ93 код размера сектора содержит всего 2 бита (размеры 128-1024 байта),
+остальные биты просто игнорируются. В эмуляторе же использовались все биты из
+размера сектора в заголовке сектора. Это приводило к тому что образы в которых размер сектора
+равен 5 (101) вообще не читались (а на самом деле сектоа должны читаться как сектора с кодом 01)
+(Такая же проблема замечена и в zxmak и в elf/2 плугинах к FAR)
+
+! Длина дорожки выставлена в 6250 байт (максимально возможная теоретическая длина дорожки)
+(о чем неоднократно писал Alexandr Medvedev, подробности в документации на формат udi)
+(Alco - учи мат часть!!!)
+! В загрузчике td0 сделана обработка флагов (пока на начальном уровне,
+пропускаются сектора без заголовков и сектора без данных)
+заработала игра gallows
+
++ В процедуре форматирования дорожки gap1 сокращен с 50 байт до 40
+(это неправильно, нужно расчитывать исходя из реального количества секторов и их размера,
+ для стандартных форматов использовать 50, а для форматов типа 10 секторов по 512 байт
+ - расчитаное значение, иначе длинна дорожки превысит максимальную)
+
+* Неправильно обрабатывался параметр wParam у сообщения WM_SYSCOMMAND (не накладывалась маска 0xFFF0).
+* Зарезервированые 4 младших бита wParam использовались для своих нужд (переделано на WM_USER+xxx)
+
+* Исправлена ошибка с обработкой цифрового звука (звук от спикера и магнитофона
+обрабатывался неверно, сначала записывался звуковой буфер, а потом обновлялись
+переменные которые используются для формирования звука (а нужно было наоборот),
+из за этого в звуковом буфере постоянно оставался последний проигранный звук и при
+остановке/продолжении звука были слышны щелчки)
+
+- Заблокирован режим турбо в пентагоне.
+(Реализованный режим турбо - неприемлем, т.к. после сброса режим турбо всегда включен
+и нет возможности его выключить (при каждом сбросе турбо опять включается))
+
+! Исправлена ошибка с инициализацией указателя на данные для расчета crc для ВГ93
+(раньше этот указатель инициализировался только при команде байте F5, запись CRC).
+Заработала программа dobrota.
+
+!Исправлена обработка звуковых буферов нулевой длины при проигрывании через WaveMapper.
+Заработала программа fuckemul.
+
+! Исправлена обработка nmi для скорпиона, теперь сигнал nmi активен в течение 1 кадра.
+
++ Переименованы настройки в ini файле (Добавлен суффикс Vol)
+Beeper -> BeeperVol
+MicOut -> MicOutVol
+MicIn -> MicInVol
+AY -> AYVol
+CovoxFB -> CovoxFBVol
+CovoxDD -> CovoxDDVol
+SD -> SDVol
+GS -> GSVol
+BASS -> BASSVol
+
++ Добавлены настройки для отключения soundrive и covox:
+SD
+CovoxFB
+CovoxDD
+
+! Исправлена ошибка в эмуляции дисковода. Не везде делалась проверка на превышение
+максимального номера дорожки. (В ADS30 заработал тест на максимальное количество дорожек).
+
++ Сделана обработка средней кнопки мыши (раньше для нее все было предусмотренно, но самой обработки события,
+по непонятной причине, не было).
+
+! Вернул на место фильтры AdvMAME и Frame Resampler (которые отключил Alone Coder).
+
++ Добавлена опция RejectDC в ini файл для включения/выключения подавления постоянной
+составляющей в звуке.
+
+* Исправлена ошибка при загрузке образа пзу, если путь к новому образу больше предыдущего (molodcov_alex)
++ Добавлена опция ConfirmExit в ini файл для включения/выключения подтверждения при выходе.
+
++ Добавлены следующие патчи от molodcov_alex'а:
+Поддержка IDE profi
+Поддержка часов profi
+Исправлено поведение порта 7FFDh
+У экрана profi не щелкались страницы
+Дешифрация расширенных портов profi (платы v5.xx)
+Изменено расположение страниц ПЗУ под реальный profi
+* Функция applyconfig() вызывалась два раза подряд (в init_all() и сразу же после нее),
+в результате двоились сообщения ошибок при запуске эмуля
+
++ Реализована поддержка NeoGS (не полностью), работает как в режиме совместимости со старым ГС, так и в расширеном режиме.
+Работает MP3 плеер сделанный савелием. MP3 проигрываются через bass.dll (эмуляция кодека VS1001).
+NeoGS работает ТОЛЬКО в режиме реального z80.
+
++ Реализована поддержка SD карты (пока только read only), в режиме NeoGS и в режиме Z-контроллера (можно использовать сразу 2 SD карты).
+ Работает FatAll.
++ Отладчик переделан на работу с любым числом процессоров, переключение процессоров выполняется Ctrl + ~ (настраивается в ini файле).
++ Добавлен пресет ULA для ATM (скопирован с пентагоновского но отключено unstable bus in dos)
+
+
+        version 0.37.3.fix1             16 feb 2009 (deathsoft)
+
+* Исправлен статус выдаваемый hdd по reset (molodcov_alex)
++ Tape traps (molodcov_alex)
+* При загрузке снапшотов убрано выставление конфигурации pentagon 128 (molodcov_alex)
+
+* Неверно обрабатывлись пути (всегда как относительные если второй символ не двоеточие),
+не указать \\.\X:
+
+! Исправлен расчет тактов в отладчике (сделано попроцессорно, в предыдущей версии оба процессора меняли одну переменную
+и брался неверный счетчик тактов, из за этого выдавался мусор).
+
+! В предыдущей версии добавил неверно доьавил патчи от molodcov_alex'а
+(переключение profi экрана, и блокировку 7FFD по DFFD.4), теперь исправлено.
+
+! Восстановлен режим ввода символов в PC режиме (был выкинут из сорцов AlCo, в US0.35b2 присутствовал),
+в ini файл добавлена опция KeybPCMode (как в US0.35b2)
+-Ошибка с определением NEMO-A8 из ini файла (появилась в 0.37.3)
+
+
+        version 0.37.3.fix2             24 feb 2009 (deathsoft)
+
+! Восстановлены настройки AdvMAME (были отключены AlCo)
++ Добавлена ATA команда 0x91 (INITIALIZE DEVICE PARAMETERS) (molodcov_alex)
+
+* Исправлена ошибка с вылетом при минимизации окна, если render = blt
+(отсутствовала проверка на минимизацию окна и на пустую клиентскую зону окна)
+
+* Переделан выбор модемов в GUI, теперь кроме модемов можно выбрать и COM порты доступные на PC.
+(поддерживаются порты COM1...COM255)
+
+* Исправлена ошибка со звуковым буфером в direct sound (неверно вычислялось смещение в буфере)
+* Исправлена ошибка с переполнением в фильтре DC (использовался unsigned short вместо short)
+(Alone Coder, DDp)
+
+
+        version 0.37.3.fix3             11 may 2009 (deathsoft)
+
++ Добавлена модель памяти sectrum +3
++ Добавлена палитра profi (molodcov_alex)
+@ Параметр в ini UseAtmPalette -> UsePalette
+- Убрано timeBeginPeriod(1)
++ Добавлены команды ATA 0x40, 0x41 (verify sectors) (SinglWolf)
+! Исправлена ошибка обработки identify device, из за которой для реальных hdd выдавалась информация (SinglWolf)
+как для образов.
+
++ В smuc добавлена поддержка бита 7 порта FFBA (переключение HDD регистров) (SinglWolf).
+@ Для KAY ПЗУ вибирается теперь только через пресеты
+(Стандарта не было, в kay-1024 старший разряд пзу мог переключатся от /DOS или от DOS
+выбиралось джампером J5)
+
+! Исправлена обработка di/halt (раньше выполнене команд продолжалось после halt)
+* Исправлены ошибки в эмуляции hdd(установка готовности в команде чтения сектора
+и пересчет текущих секторов/головок/цилиндров)
+
+! Запись в память в отладчике сделана по процессорно (раньше запись всегда происходила на cpu0)
+! Отображение watches и sp всегда показывало память cpu0 (savelij)
+! Исправлена работа брекпонитов в многопроцессорном режим (savelij)
++ Сделана поддержка .isd формата образов дискет (образы дискет is-dos, аналог .trd совместимо с mktrd и winisd)
+* Не работал запрос подтверждения при выходе эмулятора по ошибке
++ Сделано сохранение измененных образов дискет при выходе по ошибке
+
+
+        version 0.37.3.fix4              7 nov 2009 (deathsoft)
+
+* Совместимость с win98 в диалогах открытия/сохранения файлов
+* Имена файлов в отладчике можно задавать русскими буквами
+! Клавиатура обрабатывается через DirectInput
+- Убрано мелькание в отладчике по step over (мелькает только на call/rst)
+* Исправлена ошибка при чтении блоков длинной больше 255 из CSW формата (DDp)
+* Исправлена ошибка в декодировании портов Z-Controller'а, которая приводила
+ к конфликтам с портом EFF7
+* Исправлена ошибка с отменой загрузки образов через диалог опций (beta128/load)
+! Исправлена ошибка с переключением страниц памяти в режиме +3 (transman)
++ Поддержка скриншотов в png
++ Поддержка видео в виде серии png (сделано в виде эксперимента, тормозит)
+! Исправлена ошибка форматирования дискет (при сохранении trd образа в нулевом треке был мусор)
+* Исправлено именование банков ПЗУ в отладчике (теперь SVMn только для скорпиона)
+! Исправлена ошибка в отладчике при многопроцессорной отладке (savelij)
++ Исправлена работа gs-z80 при частоте кадров не равной 50Гц
+! Исправлена серьезная ошибка со сбросом ngs (при сбросе была рассинхронизация
+cpu ngs и cpu спектрума)
+! Исправлена ошибка с выбором банков памяти ngs при сбросе (savelij)
++ Добавлен ngs dma
+! Исправлена ошибка с условными точками останова в ngs (AlCo)
++ Добавлен atm scroll (работает catdemo) (screw)
++ Сделан режим reset to trdos для atm1 и atm2
+* Исправлена формула пересчета палитры, теперь результирующие цвета имеют диапазон 0..255
++ Реализован бит UF в RTC, заработало отображение часов в мониторе Scorpion'а (savelij)
++ Добавлено открытие DOS портов по D2 в 1FFD для Scorpion'а
++ Добавлен DDp scroll для pentagon в 16c режиме (исключен режим 384x304) (DDp)
++ При открытии hdd образа lba расчитывается автоматически, а chs устанавливается в 0/0/0
++ Настройки в GUI поддержки колеса мыши (были в 0.35b2)
++ Сохранение восстановление текущего каталога в диалогах open/save
++ Добавлена поддержка работы с CD образами напрямую (опции CD0=1, CD1=1 в ini файле)
+* Исправлена ошибка с формированием 9го сектора в trd (при загрузке scl и hobeta) (savelij)
+* Исправлена ошибка с порчей номера текущего регистра AY при выходе из отладчика
+* Испавлена ошибка с проверкой параметров ВГ93 (screw)
++ Добавлена возможноть монохромного режима высокого разрешения для profi (molodcov_alex)
++ Добавлена команда ata 0x50 (format track)
+! Исправлена ошибка с автоматическим добавлением boot.b на дискеты с не tr-dos форматом
++ Исправлена ошибка ВГ93 (отсутствовало состояние BUSY в команде seek) из-за этого
+ profi-dos вис на опросе готовности (проверялся переход READY->BUSY->READY)
+
+
+        version 0.37.3.fix5              16 jun 2010 (deathsoft)
+
+* Исправлена ошибка с блокировкой памяти через EFF7 на pentagon 1024 (VELESOFT)
++ Поддержка z80 снапшотов для +3 (VELESOFT)
++ Вывод сообщения об ошибке при неправильном размере rom для ngs (jtn)
++ Добавлена поддержка записи на sdcard
++ Проверка параметров ata команды 0x91 (Initialize device parameters) (savelij)
++ Добавлен автодетект lba для образов hdd у которых в ini файле прописано lba=0
+* Исправлена ошибка ВГ93 (отсутствовало состояние BUSY в командах read/write)
+* Исправлена ошибка ВГ93 (при отсутствии диска в командах read/write BUSY должно быть бесконечно долго)
++ Добавлены команды 9 и 10 для sd карт
+* Исправлена ошибка с путями к образам hdd
+! Исправлена ошибка с восстановлением surface'ов при отрисовке через blt
++ Сделана поддержка .pro формата образов дискет (образы дискет cp/m profi, аналог .trd совместимо с ZX Disk Studio)
+! Исправлена ошибка с добавлением boot в trd образы
+
+
+        version 0.37.4                   18 jan 2011 (deathsoft)
+
+* Убраны задержки позиционирования в tr-dos traps
++ Добавлена ide часть от divide
++ Добавлен режим divide на портах nemoide (работает inir/otir)
++ Добавлена поддержка quorum 128/1024
++ Добавлен выбор джойстиков через ini файл
++ Добавлена поддержка 32 кнопок для джойстика
+! Исправлена обработка прерываний и команды halt (раньше в отладчике halt выполнялся как nop не ожидая прихода прерывания) (psb)
++ Добавлена поддержка ATM3 (4Мб)
++ Добавлена индикация блокировки 48k в отладчике (только для 7ffd)
++ Добавлена натройка порта FF (включение/выключение)
++ Добавлены SSE2 версии фильтров normal и double
++ Добавлены фильтры advmame 2x и 3x для 32bpp
++ Добавлен фильтр triple (масштабирование 3x)
++ Добавлена поддержа saa1099 (включается через ini файл)
+! Исправлены ошибки ВГ93 (заработал журнал zx expert из udi образа) (fk0, jtn, savelij)
+
+
+        version 0.37.5                   23 feb 2011 (deathsoft)
+
+* Исправлена обработка чекбокса Port FF
+* Исправлен сброс в trdos для ATM2/3 (был испорчен при добавлении памяти ATM3)
+! Исправлены коды условий для команды Dx в ВГ93 (биты обрабатывались задом наперед)
+! Исправлена обработка команды Dx в ВГ93 (после этой команды не обновлялся статус, было испорчено в прошлой версии)
+* Исправлено редактирвоание поля intlen в gui (раньше пресет не менялся на custom)
++ Добавлен выбор размера памяти для ngs (через ini файл)
+* Исправлена обработка команд чтения ВГ93 в режиме no delays (в RDS заработал пункт analyze track)
+* Исправлена невозможность редактирования расширенного порта памяти в отладчике (было испорчено при в одной из предыдущих версий) (witchcraft)
+* Исправлена поддержка NT4
++ Добавлена фильтр 1x для режимов 16c (pentagon и ATM1/2/3)
++ Добавлена опция масштабирования окна (winscale, через ini файл) 
++ Добавлен новый драйвер видеовывода через direct 3d 9
+  (аппаратное масштабирование без размазывания картинки, при этом выбирать фильтр normal
+  и winscale 2 или 3)
+* Не было проверки на нулевой указатель при неверной версии bass.dll (AlCo)
+* Исправлена ошибка с деинициализацией vs1001
++ Добавлена поддержка сохранения/загрузки списка брекпоинтов bpx.ini
+  формат:
+  r0=0x1000-0x1100
+  r - r/w/x
+  0 - номер процессора (0 - спектрум, 1 - ngs)
+  адрес начала диапазона, адрес конца диапазона
+  (можно указывать толкьо адрес начала, если брекпоинт на 1 байт)
+
+        version 0.37.6                   13 sep 2011 (deathsoft)
++ Увеличена точность вычисления fps
+* При включенных брекпоинтах неверно инициализировался видеорежим ATM1/2/3
++ Добавлен режим редактирования cmos/nvram в окне дампа (сочетание кнопок в ini - mon.switchdump)
+! Исправлено переключение sinclair<->textmode для ATM2/3
+* Исправлена обработка брекпоинтов при выполнении первой инструкции обработчика прерывания (было испорчено в предыдущей версии)
+* Исправлена загрузка scl
+* Исправлена обработка меток из users.l с указанным номером банка
+! Неправильно обрабатывались пути к реальным hdd в ini файле (Budder)
++ Добавлено размонтирование всех разделов на реальных hdd
++ Добавлена программная загрузка шрифта на ATM3
++ Добавлено чтение портов ATM3
++ Добавлено чтение палитры на ATM3
++ Добавлена обработка NMI на ATM3
++ Добавлена проверка выхода за пределы CHS параметров HDD при загрузке конфига
++ В условные брекпоинты добавлена команда DOS (признак активности дос портов) (можно использовать выражения вида !DOS && ((IN & 0FF) == 1F))
++ Добавлен вывод активности DOS портов в отладчике
++ Добавлено чтение CTS в эмуляции модема
+* Исправлена обработка kempston mouse (не работала в trdos) (savelij)
+! Не проверялось переполнение каталога дикеты (trd) при добавлении файлов (Петр)
++ Добавлен выбор дисковода по умолчанию в который грузятся образы из командной строки эмулятора и при drag & drop (Петр)
+  (параметр DefaultDrive в ini)
+
+        version 0.37.7                   10 apr 2012 (thims)
+
++ Добавлены фиксы lvd {
+  модель памяти пентевы - порт EFF7 и мегабайт через 7FFD;
+  прерывания через FF77 невозможно запретить;
+  Доступны видеомоды через EFF7: алко16ц и хардваре мультиколор;
+  впилен текстовый режим #7 (1страничный);
+  выпилен ATM2 256х192 текстовый режим;
+  запись фонтрома сделана как в железе - по любому адресу, а не только по 0-2047;
+  впилено RAM0 в 0000-3FFF через EFF7, не тестировал; }
+- Убраны зависимости от ddraw.lib, а тажке libpng и иже с ней
+- Убрана всяческая поддержка win9x
+* Работа с графическими форматами переведена на gdiplus
++ Добавлен формат скриншотов GIF
++ Добавлен новый параметр конфигурации ScrShotDir: папка для скриншотов
++ Добавлена поддержка ps/2 клавиатуры пентевы
++ Добавлено чтение версии базовой конфигурации и бутлоадера пентевы
++ Добавлено управление статусом capslock пентевы
++ Добавлена поддержка ключей командной строки /b и /l (см. доки)
++ Makefile для MinGW, протестировано на версии 4.6.2
+* вроде еще каких-то пару фиксов по мелочи, где-то что-то падало при неверных параметрах и т.п.
+
+		version 0.37.8					10 jul 2012 (ts-labs)
+
++ Added TS-Configuration

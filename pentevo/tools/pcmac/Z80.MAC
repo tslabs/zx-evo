@@ -1,0 +1,604 @@
+
+;*******************************************************
+;*                                                     *
+;*             Z80 MACRO DEFINITION                    *
+;*             ====================                    *
+;*                                                     *
+;*  Defined by Peter Verhas                            *
+;*                                                     *
+;*                                                     *
+;*******************************************************
+
+;
+;Register constants
+;
+const	_SS	:=	(B,C,D,E,H,L,(HL\),A)
+const	_SDD	:=	(BC,DE,HL,SP)
+const	_SQQ	:=	(BC,DE,HL,AF)
+const	_SPP	:=	(BC,DE,IX,SP)
+const	_SRR	:=	(BC,DE,IY,SP)
+const	_SII	:=	(HL,IX,IY)
+const	_SXX	:=	(IX,IY)
+const	_SDB	:=	(BC,DE)
+const	_SIR	:=	(I,R)
+
+;
+;Condition constants
+;
+
+const	_SCE	:=	(NZ,Z,NC,C,PO,PE,P,M)
+const	_SCC	:=	(NZ,Z,NC,C)
+
+;
+;Instruction constants
+;
+
+const	_SAR	:=	(ADD,ADC,SUB,SBC,AND,XOR,OR,CP)
+const	_SROT	:=	(RLC,RRC,RL,RR,SLA,SRA,SLI,SRL)
+const	_SROTA	:=	(RLCA,RRCA,RLA,RRA)
+const	_SBIT	:=	(BIT,RES,SET)
+const	_SID	:=	(INC,DEC)
+const	_SGC	:=	(DAA,CPL,SCF,CCF)
+const	_SADS	:=	(ADD,ADC,__GAP__,SBC)
+
+;
+;
+;Pseudo op macro definitions
+
+macro("ORG\  *",NUMERIC)
+$	:=doreloc(#0)
+endm
+
+macro("DS\  *",NUMERIC)
+$	:=	doreloc($+#0)
+endm
+
+
+;
+;
+;Standard Z80 instruction set
+;============================
+;
+;1) 8 Bit load group
+;===================
+
+macro("LD\  *,*",_SS,_SS)
+#if	#0 == 6 && #1 == 6
+#error	"LD (HL),(HL) is invalid."
+#endif
+	DB	40h+(#0<<3)+#1
+endm
+
+macro("LD\  *,*",_SS,NUMERIC)
+	DB	6h+(#0<<3),#1
+endm
+
+macro("LD\  *,(**)",_SS,_SXX,NUMERIC)
+	db	0ddh+(#1<<5),46h+(#0<<3),#2
+endm
+
+macro("LD\  (**),*",_SXX,NUMERIC,_SS)
+	db	0ddh+(#0<<5),70h+#2,#1
+endm
+
+macro("LD\  (**),*",_SXX,NUMERIC,NUMERIC)
+	db	0ddh+(#0<<5),36h,#1,#2
+endm
+
+macro("LD\  A,(*)",_SDB)
+	db	0ah + (#0<<4)
+endm
+
+macro("LD\  (*),A",_SDB)
+	db	02h + (#0<<4)
+endm
+
+macro("LD\  A,*",_SIR)
+	db	0edh,57h + (#0<<3)
+endm
+
+macro("LD\  *,A",_SIR)
+	db	0edh,047h + (#0<<3)
+endm
+
+macro("LD\  A,(*)",LABEL)
+	db	3ah
+	dw	#0
+endm
+
+macro("LD\  A,(*)",NUMERIC)
+	db	3ah
+	dw	#0
+endm
+
+macro("LD\  (*),A",LABEL)
+	db	32h
+	dw	#0
+endm
+
+macro("LD\  (*),A",NUMERIC)
+	db	32h
+	dw	#0
+endm
+
+macro("LDI")
+	db	0edh,0a0h
+endm
+
+macro("LDIR")
+	db	0edh,0b0h
+endm
+
+macro("LDD")
+	db	0edh,0a8h
+endm
+
+macro("LDDR")
+	db	0edh,0b8h
+endm
+
+;
+;
+; 2) 16 Bit load group
+; ====================
+;
+
+macro("LD\  *,*",_SDD,LABEL)
+	db	1 + (#0<<4)
+	dw	#1
+endm
+
+macro("LD\  *,*",_SDD,NUMERIC)
+	db	1 + (#0<<4)
+	dw	#1
+endm
+
+macro("LD\  *,*",_SXX,LABEL)
+	db	0ddh + (#0<<5),21h
+	dw	#1
+endm
+
+macro("LD\  *,*",_SXX,NUMERIC)
+	db	0ddh + (#0<<5),21h
+	dw	#1
+endm
+
+macro("LD\  *,(*)",_SDD,LABEL)
+#if	#0 == 2
+	db	2ah	;HL is a special case
+#else
+	db	0edh,4bh + (#0<<4)
+#endif
+	dw	#1
+endm
+
+macro("LD\  *,(*)",_SDD,NUMERIC)
+#if	#0 == 2
+	db	2ah	;HL is a special case
+#else
+	db	0edh,4bh + (#0<<4)
+#endif
+	dw	#1
+endm
+
+macro("LD\  (*),*",LABEL,_SDD)
+#if	#1 == 2
+	db	22h	;HL is a special case
+#else
+	db	0edh,43h + (#1<<4)
+#endif
+	dw	#0
+endm
+macro("LD\  (*),*",NUMERIC,_SDD)
+#if	#1 == 2
+	db	22h	;HL is a special case
+#else
+	db	0edh,43h + (#1<<4)
+#endif
+	dw	#0
+endm
+
+macro("LD\  *,(*)",_SXX,LABEL)
+	db	0ddh + (#0<<5),2ah
+	dw	#1
+endm
+
+macro("LD\  *,(*)",_SXX,NUMERIC)
+	db	0ddh + (#0<<5),2ah
+	dw	#1
+endm
+
+macro("LD\  (*),*",LABEL,_SXX)
+	db	0ddh + (#1<<5),22h
+	dw	#0
+endm
+
+macro("LD\  (*),*",NUMERIC,_SXX)
+	db	0ddh + (#1<<5),22h
+	dw	#0
+endm
+
+macro("LD\  SP,*",_SII)
+#if	#0
+	db	0bdh + (#0<<5)
+#endif
+	db	0f9h
+endm
+
+macro("PUSH\  *",_SQQ)
+	db	0c5h + (#0<<4)
+endm
+
+macro("POP\  *",_SQQ)
+	db	0c1h + (#0<<4)
+endm
+
+macro("PUSH\  *",_SXX)
+	db	0ddh + (#0<<5),0e5h
+endm
+
+macro("POP\  *",_SXX)
+	db	0ddh + (#0<<5),0e1h
+endm
+
+macro("EX\  DE,HL")
+	db	0ebh
+endm
+
+macro("EX\  AF,AF")
+	db	08h
+endm
+
+macro("EX\  (SP),*",_SII)
+#if	#0
+	db	0bdh + (#0<<5)
+#endif
+	db	0e3h
+endm
+
+macro("EXX")
+	db	0d9h
+endm
+
+
+;
+;
+; 3) 16 Bit arithmetic group
+; ==========================
+;
+
+macro("ADD\  HL,*",_SDD)
+	db	9 + (#0<<4)
+endm
+
+macro("ADD\  IX,*",_SPP)
+	db	0ddh,9 + (#0<<4)
+endm
+
+macro("ADD\  IY,*",_SRR)
+	db	0fdh,9 + (#0<<4)
+endm
+
+macro("ADC\  HL,*",_SDD)
+	db	0edh,4ah + (#0<<4)
+endm
+
+macro("SBC\  HL,*",_SDD)
+	db	0edh,42H + (#0<<4)
+endm
+
+macro("*\  *",_SID,_SDD)
+	db	3 + (#0<<3) + (#1<<4)
+endm
+;
+;
+; 4) 8 Bit arithmetic group
+; =========================
+;
+
+macro("*\  *",_SAR,_SS)
+	db	80h + (#0<<3) + #1
+endm
+
+macro("*\  A,*",_SADS,_SS)
+	db	80h + (#0<<3) + #1
+endm
+
+macro("*\  *",_SAR,NUMERIC)
+	db	0c6h + (#0<<3),#1
+endm
+
+macro("*\  A,*",_SADS,NUMERIC)
+	db	0c6h + (#0<<3),#1
+endm
+
+macro("*\  (**)",_SAR,_SXX,NUMERIC)
+	db 	0ddh + (#1<<5),86h + (#0<<3),#2
+endm
+
+macro("*\  A,(**)",_SADS,_SXX,NUMERIC)
+	db	0ddh + (#1<<5),86h + (#0<<3),#2
+endm
+
+macro("*\  *",_SID,_SS)
+	db	4 + #0 + (#1<<3)
+endm
+
+;macro("*\  (HL)",_SID)
+;	db	34h + #0
+;endm
+
+macro("*\  (**)",_SID,_SXX,NUMERIC)
+	db 	0ddh + (#1<<5),34h + #0,#2
+endm
+
+macro("CPI")
+	db 	0edh,0a1h
+endm
+
+macro("CPIR")
+	db	0edh,0b1h
+endm
+
+macro("CPD")
+	db	0edh,0a9h
+endm
+
+macro("CPDR")
+	db 	0edh,0b9h
+endm
+
+;
+;
+; 5)General purpose arithmetic and CPU control
+;
+
+macro("*",_SGC)
+	db	27h+(#0<<3)
+endm
+
+macro("NOP")
+	db	0
+endm
+
+macro("NEG")
+	db	0edh,44h
+endm
+
+macro("HALT")
+	db	76h
+endm
+
+macro("DI")
+	db	0f3h
+endm
+
+macro("EI")
+	db	0fbh
+endm
+
+macro("IM\  *",NUMERIC)
+#if #0<0 || #0>2
+#error 	"Invalid interrupt mode."
+#endif
+	db	0edh
+#if	#0
+	db	4eh + (#0<<3)
+#else
+	db	46h
+#endif
+endm
+
+
+;
+;
+; 6) Rotate and shift group
+; =========================
+;
+
+macro("*",_SROTA)
+	db	7 + (#0<<3)
+endm
+
+macro("*\  *",_SROT,_SS)
+	db	0cbh,#1 + (#0<<3)
+endm
+
+macro("*\  (**)",_SROT,_SXX,NUMERIC)
+	db	0ddh + (#1<<5),0cbh,#2,6 + (#0<<3)
+endm
+
+macro("RLD")
+	db	0edh,6fh
+endm
+
+macro("RRD")
+	db	0edh,067h
+endm
+
+;
+;
+; 7) Bit test and set group
+; =========================
+;
+
+macro("*\  *,*",_SBIT,NUMERIC,_SS)
+#if #1<0 || #1>7
+#error	"Invalid bit number!"
+#endif
+	db	0cbh,40h + (#0<<6) + (#1<<3) + #2
+endm
+
+macro("*\  *,(**)",_SBIT,NUMERIC,_SXX,NUMERIC)
+#if #1<0 || #1>7
+#error	"Invalid bit number!"
+#endif
+	db	0ddh + (#2<<5),0cbh,#3,46h + (#0<<6) + (#1<<3)
+endm
+
+;
+;
+; 8) Jump and call group
+; ======================
+;
+
+macro("JP\  *,*",_SCE,LABEL)
+	db	0c2h + (#0<<3)
+	dw	#1
+endm
+
+macro("JP\  *,*",_SCE,NUMERIC)
+	db	0c2h + (#0<<3)
+	dw	#1
+endm
+
+macro("CALL\  *,*",_SCE,LABEL)
+	db	0c4h + (#0<<3)
+	dw	#1
+endm
+
+macro("CALL\  *,*",_SCE,NUMERIC)
+	db	0c4h + (#0<<3)
+	dw	#1
+endm
+
+macro("RST\  *",NUMERIC)
+#if #0<0 || #0>56
+#error	"Invalid restart address"
+#elsif #0<8
+	db	0c7h + (#0<<3)
+#elsif #0 % 8 
+#error	"Invalid restart address"
+#else
+	db	0c7h + #0
+#endif
+endm
+
+macro("JP\  *",LABEL)
+	db	0c3h
+	dw	#0
+endm
+
+macro("JP\  *",NUMERIC)
+	db	0c3h
+	dw	#0
+endm
+
+macro("CALL\  *",LABEL)
+	db	0cdh
+	dw	#0
+endm
+
+macro("CALL\  *",NUMERIC)
+	db	0cdh
+	dw	#0
+endm
+
+macro("JR\  *,*",_SCC,LABEL)
+	db	20h + (#0<<3)
+	drb	doreloc(#1)
+endm
+
+macro("JR\  *,*",_SCC,NUMERIC)
+	db	20h + (#0<<3)
+	drb	doreloc(#1)
+endm
+
+macro("JR\  *",LABEL)
+	db	18h
+	drb	doreloc(#0)
+endm
+macro("JR\  *",NUMERIC)
+	db	18h
+	drb	doreloc(#0)
+endm
+
+macro("JP\  (*)",_SII)
+#if	#0
+	db	0ddh + (#0<<5)
+#endif
+	db	0e9h
+endm
+
+macro("DJNZ\  *",NUMERIC)
+	db	10h
+	db	#0-($+1)
+endm
+
+;
+;
+; 9) Return group
+; ===============
+;
+
+macro("RET")
+	db	0c9h
+endm
+
+macro("RET\  *",_SCE)
+	db	0c0h + (#0<<3)
+endm
+
+macro("RET I")
+	db	0edh,4dh
+endm
+
+macro("RET N")
+	db	0edh,45h
+endm
+
+;
+;
+; 10) Input / Output group
+; ========================
+;
+macro("IN\  A,(*)",NUMERIC)
+	db	0dbh,#0
+endm
+
+macro("OUT\  (*),A",NUMERIC)
+	db	0d3h,#0
+endm
+
+macro("IN\  *,(C)",_SS)
+	db	0edh,40h + (#0<<3)
+endm
+
+macro("OUT\  (C),*",_SS)
+	db	0edh,41h + (#0<<3)
+endm
+
+macro("INI")
+	db	0edh,0a2h
+endm
+
+macro("INIR")
+	db	0edh,0b2h
+endm
+
+macro("OUTI")
+	db	0edh,0a3h
+endm
+
+macro("OTIR")
+	db	0edh,0b3h
+endm
+
+macro("IND")
+	db	0edh,0aah
+endm
+
+macro("INDR")
+	db	0edh,0bah
+endm
+
+macro("OUTD")
+	db	0edh,0abh
+endm
+
+macro("OTDR")
+	db	0edh,0bbh
+endm
+
+;	END
+

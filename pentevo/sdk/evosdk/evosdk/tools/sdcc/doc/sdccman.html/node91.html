@@ -1,0 +1,162 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>3.15 int (16 bit) and long (32 bit)
+Support</TITLE>
+<META NAME="description" CONTENT="3.15 int (16 bit) and long (32 bit)
+Support">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="next" HREF="node92.html">
+<LINK REL="previous" HREF="node86.html">
+<LINK REL="up" HREF="node38.html">
+<LINK REL="next" HREF="node92.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html1924"
+  HREF="node92.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html1918"
+  HREF="node38.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html1912"
+  HREF="node90.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html1920"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html1922"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1925"
+  HREF="node92.html">3.16 Floating Point Support</A>
+<B> Up:</B> <A NAME="tex2html1919"
+  HREF="node38.html">3. Using SDCC</A>
+<B> Previous:</B> <A NAME="tex2html1913"
+  HREF="node90.html">3.14.4 Assembler Routine (reentrant)</A>
+ &nbsp; <B>  <A NAME="tex2html1921"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html1923"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H1><A NAME="SECTION004150000000000000000"></A><A NAME="2377"></A><A NAME="2378"></A>
+<BR>
+3.15 int (16 bit) and long (32 bit)
+Support
+</H1>
+
+<P>
+For signed &amp; unsigned int (16 bit) and long (32 bit) variables, division,
+multiplication and modulus operations are implemented by support routines.
+These support routines are all developed in ANSI-C to facilitate porting
+to other MCUs, although some model specific assembler optimizations
+are used. The following files contain the described routines, all
+of them can be found in &lt;installdir&gt;/share/sdcc/lib.
+<BR>
+<P>
+<DIV ALIGN="CENTER">
+<TABLE CELLPADDING=3 BORDER="1">
+<TR><TH ALIGN="LEFT"><B>Function</B></TH>
+<TH ALIGN="LEFT"><B>Description</B></TH>
+</TR>
+<TR><TD ALIGN="LEFT">_mulint.c</TD>
+<TD ALIGN="LEFT">16 bit multiplication</TD>
+</TR>
+<TR><TD ALIGN="LEFT">_divsint.c</TD>
+<TD ALIGN="LEFT">signed 16 bit division (calls _divuint)</TD>
+</TR>
+<TR><TD ALIGN="LEFT">_divuint.c</TD>
+<TD ALIGN="LEFT">unsigned 16 bit division</TD>
+</TR>
+<TR><TD ALIGN="LEFT">_modsint.c</TD>
+<TD ALIGN="LEFT">signed 16 bit modulus (calls _moduint)</TD>
+</TR>
+<TR><TD ALIGN="LEFT">_moduint.c</TD>
+<TD ALIGN="LEFT">unsigned 16 bit modulus</TD>
+</TR>
+<TR><TD ALIGN="LEFT">_mullong.c</TD>
+<TD ALIGN="LEFT">32 bit multiplication</TD>
+</TR>
+<TR><TD ALIGN="LEFT">_divslong.c</TD>
+<TD ALIGN="LEFT">signed 32 division (calls _divulong)</TD>
+</TR>
+<TR><TD ALIGN="LEFT">_divulong.c</TD>
+<TD ALIGN="LEFT">unsigned 32 division</TD>
+</TR>
+<TR><TD ALIGN="LEFT">_modslong.c</TD>
+<TD ALIGN="LEFT">signed 32 bit modulus (calls _modulong)</TD>
+</TR>
+<TR><TD ALIGN="LEFT">_modulong.c</TD>
+<TD ALIGN="LEFT">unsigned 32 bit modulus</TD>
+</TR>
+</TABLE>
+<BR></DIV>
+<P>
+<DIV ALIGN="CENTER">
+</DIV>
+
+<P>
+Since they are compiled as <I>non-reentrant</I><A NAME="2387"></A>,
+interrupt<A NAME="2388"></A> service routines should not do any of
+the above operations. If this is unavoidable then the above routines
+will need to be compiled with the <I>--stack-auto<A NAME="2389"></A></I>
+option, after which the source program will have to be compiled with
+<I>--int-long-reent<A NAME="2390"></A></I> option. Notice
+that you don't have to call these routines directly. The compiler
+will use them automatically every time an integer operation is required.
+
+<P>
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html1924"
+  HREF="node92.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html1918"
+  HREF="node38.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html1912"
+  HREF="node90.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html1920"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html1922"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1925"
+  HREF="node92.html">3.16 Floating Point Support</A>
+<B> Up:</B> <A NAME="tex2html1919"
+  HREF="node38.html">3. Using SDCC</A>
+<B> Previous:</B> <A NAME="tex2html1913"
+  HREF="node90.html">3.14.4 Assembler Routine (reentrant)</A>
+ &nbsp; <B>  <A NAME="tex2html1921"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html1923"
+  HREF="node190.html">Index</A></B> 
+<!--End of Navigation Panel-->
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

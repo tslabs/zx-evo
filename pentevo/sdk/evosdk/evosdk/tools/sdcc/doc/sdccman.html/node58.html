@@ -1,0 +1,105 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>3.3 Environment variables</TITLE>
+<META NAME="description" CONTENT="3.3 Environment variables">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="next" HREF="node59.html">
+<LINK REL="previous" HREF="node46.html">
+<LINK REL="up" HREF="node38.html">
+<LINK REL="next" HREF="node59.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html1419"
+  HREF="node59.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html1413"
+  HREF="node38.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html1407"
+  HREF="node57.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html1415"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html1417"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1420"
+  HREF="node59.html">3.4 Storage Class Language</A>
+<B> Up:</B> <A NAME="tex2html1414"
+  HREF="node38.html">3. Using SDCC</A>
+<B> Previous:</B> <A NAME="tex2html1408"
+  HREF="node57.html">3.2.11 Redirecting output on</A>
+ &nbsp; <B>  <A NAME="tex2html1416"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html1418"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H1><A NAME="SECTION00430000000000000000"></A><A NAME="1186"></A>
+<BR>
+3.3 Environment variables
+</H1>
+
+<P>
+SDCC recognizes the following environment variables:
+
+<P>
+
+<UL>
+<LI>[<B>SDCC_LEAVE_SIGNALS<A NAME="1189"></A></B>] SDCC
+installs a signal handler<A NAME="1190"></A> to be able to delete
+temporary files after an user break (&#94;C) or an exception.
+If this environment variable is set, SDCC won't install the signal
+handler in order to be able to debug SDCC.
+</LI>
+<LI>[<B>TMP,&nbsp;TEMP,&nbsp;TMPDIR<A NAME="1192"></A></B>] Path,
+where temporary files will be created. The order of the variables
+is the search order. In a standard *nix environment these variables
+are not set, and there's no need to set them. On Windows it's recommended
+to set one of them.
+</LI>
+<LI>[<B>SDCC_HOME<A NAME="1194"></A></B>] Path, see section <A HREF="node12.html#sub:Install-paths">2.2</A>&nbsp;''
+Install Paths''.
+</LI>
+<LI>[<B>SDCC_INCLUDE<A NAME="1196"></A></B>] Path, see section
+<A HREF="node13.html#sub:Search-Paths">2.3</A>&nbsp;''Search Paths''.
+</LI>
+<LI>[<B>SDCC_LIB<A NAME="1198"></A></B>] Path, see section <A HREF="node13.html#sub:Search-Paths">2.3</A>&nbsp;''Search
+Paths''..
+</LI>
+</UL>There are some more environment variables recognized by SDCC, but
+these are solely used for debugging purposes. They can change or disappear
+very quickly, and will never be documented.
+<P><P>
+<BR>
+
+
+<P>
+<BR><HR>
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

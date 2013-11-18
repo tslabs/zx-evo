@@ -1,0 +1,8 @@
+- conf version display
+- clock
+- bank de-highlight when BD selected
+- NVRAM checksum
+- help window
+- palette editor
+- CMOS editor
+- clock setup

@@ -1,0 +1,270 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>3.1.5 Using sdcclib to Create and Manage Libraries</TITLE>
+<META NAME="description" CONTENT="3.1.5 Using sdcclib to Create and Manage Libraries">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="next" HREF="node45.html">
+<LINK REL="previous" HREF="node43.html">
+<LINK REL="up" HREF="node39.html">
+<LINK REL="next" HREF="node45.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html1216"
+  HREF="node45.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html1210"
+  HREF="node39.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html1204"
+  HREF="node43.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html1212"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html1214"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1217"
+  HREF="node45.html">3.1.6 Using ar to</A>
+<B> Up:</B> <A NAME="tex2html1211"
+  HREF="node39.html">3.1 Compiling</A>
+<B> Previous:</B> <A NAME="tex2html1205"
+  HREF="node43.html">3.1.4 Projects with Additional</A>
+ &nbsp; <B>  <A NAME="tex2html1213"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html1215"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H2><A NAME="SECTION00415000000000000000"></A><A NAME="714"></A>
+<BR>
+3.1.5 Using sdcclib to Create and Manage Libraries
+</H2>
+
+<P>
+Alternatively, instead of having a .rel file for each entry on the
+library file as described in the preceding section, sdcclib can be
+used to embed all the modules belonging to such library in the library
+file itself. This results in a larger library file, but it greatly
+reduces the number of disk files accessed by the linker.  Additionally,
+the packed library file contains an index of all include modules and
+symbols that significantly speeds up the linking process. To display
+a list of options supported by sdcclib type:
+<BR>
+<P>
+<I><B>sdcclib -?<A NAME="715"></A></B></I>
+<BR>
+<BR>
+To create a new library file, start by compiling all the required
+modules. For example:
+<BR>
+<P>
+<I><B>sdcc -c _divsint.c</B></I>
+
+<P>
+<I><B>sdcc -c _divuint.c</B></I>
+
+<P>
+<I><B>sdcc -c _modsint.c</B></I>
+
+<P>
+<I><B>sdcc -c _moduint.c</B></I>
+
+<P>
+<I><B>sdcc -c _mulint.c</B></I>
+<BR>
+<P>
+This will create files _divsint.rel, _divuint.rel, _modsint.rel,
+_moduint.rel, and _mulint.rel. The next step is to add the .rel
+files to the library file:
+<BR>
+<P>
+<I><B>sdcclib libint.lib _divsint.rel</B></I><B><A NAME="723"></A></B>
+
+<P>
+<I><B>sdcclib libint.lib _divuint.rel</B></I>
+
+<P>
+<I><B>sdcclib libint.lib _modsint.rel</B></I>
+
+<P>
+<I><B>sdcclib libint.lib _moduint.rel</B></I>
+
+<P>
+<I><B>sdcclib libint.lib _mulint.rel</B></I>
+<BR>
+<P>
+Or, if you preffer:
+<BR>
+<P>
+<I><B>sdcclib libint.lib _divsint.rel _divuint.rel _modsint.rel
+_moduint.rel _mulint.rel</B></I>
+<BR>
+<P>
+If the file already exists in the library, it will be replaced. If
+a list of .rel files is available, you can tell sdcclib to add those
+files to a library. For example, if the file 'myliblist.txt' contains
+<BR>
+<P>
+<I><B>_divsint.rel</B></I>
+
+<P>
+<I><B>_divuint.rel</B></I>
+
+<P>
+<I><B>_modsint.rel</B></I>
+
+<P>
+<I><B>_moduint.rel</B></I>
+
+<P>
+<I><B>_mulint.rel</B></I>
+<BR>
+<P>
+Use
+<BR>
+<P>
+<I><B>sdcclib -l libint.lib myliblist.txt</B></I>
+<BR>
+<P>
+Additionally, you can instruct sdcclib to compiles the files before
+adding them to the library. This is achieved using the environment
+variables SDCCLIB_CC and/or SDCCLIB_AS. For example:
+<BR>
+<P>
+<I><B>set SDCCLIB_CC=sdcc -c</B></I>
+
+<P>
+<I><B>sdcclib -l libint.lib myliblist.txt</B></I>
+<BR>
+<P>
+To see what modules and symbols are included in the library, options
+-s and -m are available. For example:
+<BR>
+<BR><I><B>sdcclib -s libint.lib</B></I><B><A NAME="742"></A></B>
+<BR><TT>_divsint.rel:</TT>
+
+<P>
+<TT>__divsint_a_1_1</TT>
+
+<P>
+<TT>__divsint_PARM_2</TT>
+
+<P>
+<TT>__divsint</TT>&nbsp;
+<BR><TT>_divuint.rel:</TT>
+
+<P>
+<TT>__divuint_a_1_1</TT>
+
+<P>
+<TT>__divuint_PARM_2</TT>
+
+<P>
+<TT>__divuint_reste_1_1</TT>
+
+<P>
+<TT>__divuint_count_1_1</TT>
+
+<P>
+<TT>__divuint</TT>&nbsp;
+<BR><TT>_modsint.rel:</TT>
+
+<P>
+<TT>__modsint_a_1_1</TT>
+
+<P>
+<TT>__modsint_PARM_2</TT>
+
+<P>
+<TT>__modsint</TT>&nbsp;
+<BR><TT>_moduint.rel:</TT>
+
+<P>
+<TT>__moduint_a_1_1</TT>
+
+<P>
+<TT>__moduint_PARM_2</TT>
+
+<P>
+<TT>__moduint_count_1_1</TT>
+
+<P>
+<TT>__moduint</TT>&nbsp;
+<BR><TT>_mulint.rel:</TT>
+
+<P>
+<TT>__mulint_PARM_2</TT>
+
+<P>
+<TT>__mulint</TT>
+<BR>
+<P>
+If the source files are compiled using --debug<A NAME="766"></A>,
+the corresponding debug information file .adb will be include in the
+library file as well. The library files created with sdcclib are plain
+text files, so they can be viewed with a text editor. It is not recommended
+to modify a library file created with sdcclib using a text editor,
+as there are file indexes numbers located across the file used by
+the linker to quickly locate the required module to link. Once a .rel
+file (as well as a .adb file) is added to a library using sdcclib,
+it can be safely deleted, since all the information required for linking
+is embedded in the library file itself. Library files created using
+sdcclib are used as described in the preceding sections.
+
+<P>
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html1216"
+  HREF="node45.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html1210"
+  HREF="node39.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html1204"
+  HREF="node43.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html1212"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html1214"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1217"
+  HREF="node45.html">3.1.6 Using ar to</A>
+<B> Up:</B> <A NAME="tex2html1211"
+  HREF="node39.html">3.1 Compiling</A>
+<B> Previous:</B> <A NAME="tex2html1205"
+  HREF="node43.html">3.1.4 Projects with Additional</A>
+ &nbsp; <B>  <A NAME="tex2html1213"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html1215"
+  HREF="node190.html">Index</A></B> 
+<!--End of Navigation Panel-->
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

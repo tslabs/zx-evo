@@ -1,0 +1,104 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>2.4.2 Building SDCC on Mac OS X</TITLE>
+<META NAME="description" CONTENT="2.4.2 Building SDCC on Mac OS X">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="next" HREF="node17.html">
+<LINK REL="previous" HREF="node15.html">
+<LINK REL="up" HREF="node14.html">
+<LINK REL="next" HREF="node17.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html728"
+  HREF="node17.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html722"
+  HREF="node14.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html716"
+  HREF="node15.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html724"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html726"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html729"
+  HREF="node17.html">2.4.3 Cross compiling SDCC</A>
+<B> Up:</B> <A NAME="tex2html723"
+  HREF="node14.html">2.4 Building SDCC</A>
+<B> Previous:</B> <A NAME="tex2html717"
+  HREF="node15.html">2.4.1 Building SDCC on</A>
+ &nbsp; <B>  <A NAME="tex2html725"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html727"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H2><A NAME="SECTION00342000000000000000">
+2.4.2 Building SDCC on Mac OS X</A>
+</H2>
+
+<P>
+Follow the instruction for Linux.
+<BR>
+<BR>
+On Mac OS X 10.2.x it was reported, that the default gcc (version
+3.1 20020420 (prerelease)) fails to compile SDCC. Fortunately there's
+also gcc 2.9.x installed, which works fine. This compiler can be selected
+by running 'configure' with:
+
+<P>
+
+<DL COMPACT>
+<DT>
+<DD>./configure&nbsp;CC=gcc2&nbsp;CXX=g++2
+</DD>
+</DL>Universal (ppc and i386) binaries can be produced on Mac OS X 10.4.x
+with Xcode. Run 'configure' with:
+
+<P>
+
+<DL COMPACT>
+<DT>
+<DD>./configure&nbsp;&#92;
+
+<P>
+LDFLAGS=&#34;-Wl,-syslibroot,/Developer/SDKs/MacOSX10.4u.sdk&nbsp;-arch&nbsp;i386&nbsp;-arch&nbsp;ppc&#34;&nbsp;&#92;
+
+<P>
+CXXFLAGS&nbsp;=&nbsp;&#34;-O2&nbsp;-isysroot&nbsp;/Developer/SDKs/MacOSX10.4u.sdk&nbsp;-arch&nbsp;i386&nbsp;-arch&nbsp;ppc&#34;&nbsp;&#92;
+
+<P>
+CFLAGS&nbsp;=&nbsp;&#34;-O2&nbsp;-isysroot&nbsp;/Developer/SDKs/MacOSX10.4u.sdk&nbsp;-arch&nbsp;i386&nbsp;-arch&nbsp;ppc&#34;
+</DD>
+</DL>
+<P>
+<BR><HR>
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

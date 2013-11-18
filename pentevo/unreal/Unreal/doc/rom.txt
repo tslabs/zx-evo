@@ -1,0 +1,23 @@
+﻿48.rom - оригинальная прошивка от ZX Spectrum 48k
+2006.rom - 48k прошивка 2006 года (отличается исправлением багов оригинала) - не для 128 бейсика!
+atm103rs.rom - прошивка ATM Turbo 1
+xBIOS132+sl.rom - прошивка ATM Turbo 2+
+bios_1_07_13 - BIOS 1.07.13 для ATM2+
+QC_3_05.rom - Quick Commander (вместо 128 бейсика)
+scorp295.rom - старая скорпионовская прошивка 2.95
+scorp_prof401.rom - профПЗУ 4.01 для Scorpion (с поддержкой SMUC)
+profi.rom - прошивка для Profi
+pentagon.rom - стандартная прошивка для pentagon basic 48, basic 128 с пунктом tr-dos в меню
+kay1024.rom - прошивка для KAY 1024, 2000, JV Kramis 0.3
+kay1024b.rom - прошивка для KAY 1024, 1998, JV Kramis 0.2
+trd503.rom - tr-dos 5.03
+trd504tm.rom - tr-dos 5.04tm
+bootgs.rom - прошивка для ngs (на базе gs1.05a)
+ts-bios.rom - BIOS for TS-Configuration (includes: TS BIOS Setup and start code, 128 basic ROM (32 kB), tr-dos 5.04T)
+
+Дополнительные rom (не входят в компект)
+48for128.rom - 48k прошивка для 128 бейсика
+128tr!.rom - 128k прошивка с TR-DOS'ом наверху
+DOS6_10E.rom - TR-DOS с исправленными глюками и поддержкой рамдиска (см. Info Guide #7)
+GLUKPEN.rom - Mr Gluk Reset Service 6.5R (фикс для US0.37.1 - дискдоктор по reset+G и номер диска) (см. Info Guide #7)
+GLUKATM.rom - версия Глюка для ATM Turbo 2+ (на реале работать не может, нужна для разработки TR-DOS программ под ATM)
