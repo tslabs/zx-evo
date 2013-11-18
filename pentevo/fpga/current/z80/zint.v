@@ -4,6 +4,7 @@
 module zint
 (
 	input  wire clk,
+	input  wire zclk,
 	input  wire res,
 	input  wire int_start_frm,
 	input  wire int_start_lin,
@@ -70,7 +71,7 @@ module zint
 			int_frm <= 1'b0;
 		else if (int_start_frm && !vdos)
 			int_frm <= 1'b1;
-		else if (intack_s)		// priority 0
+		else if (intctr_fin || intack_s)		// priority 0
 			int_frm <= 1'b0;
 
 	reg int_lin;
@@ -91,4 +92,16 @@ module zint
 		else if (intack_s && !int_frm && !int_lin)		// priority 2
 			int_dma <= 1'b0;
 
+// INT counter
+	reg [4:0] intctr;
+	wire intctr_fin = &intctr;   // 32 clks
+	
+	always @(posedge zclk, posedge int_start_lin)
+	begin
+		if (int_start_lin)
+			intctr <= 0;
+		else if (!intctr_fin)
+			intctr <= intctr + 1;
+	end
+			
 endmodule

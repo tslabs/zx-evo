@@ -888,6 +888,7 @@ module top(
 
 	zint zint(
 		.clk(fclk),
+		.zclk(clkz_out),
 		.res(res),
 		.im2vect(im2vect),
 		.im2v_frm(im2v_frm),
