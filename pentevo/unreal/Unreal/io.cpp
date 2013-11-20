@@ -143,244 +143,299 @@ void out(unsigned port, u8 val)
 	   switch (p2) {
 
 		// system
-			case TSW_SYSCONF: {
+			case TSW_SYSCONF:
+			{
 				comp.ts.sysconf = val;
 				set_clk();
-				break;
 			}
-
-			case TSW_HSINT: {
+			break;
+			
+			case TSW_INTMASK:
+			{
+				printf("INTMASK written. PC = %04X\r\n", cpu.pc);
+			}
+			break;
+			
+			case TSW_INTVECT:
+			{
+				printf("INTVECT written. PC = %04X\r\n", cpu.pc);
+			}
+			break;
+			
+			case TSW_HSINT:
+			{
 				comp.ts.hsint = val;
 				comp.intpos = ((comp.ts.hsint > (conf.t_line-1)) || (comp.ts.vsinth > 319)) ? -1 : (comp.ts.vsint * conf.t_line + comp.ts.hsint);
 				cpu.intnew = true;
-				break;
 			}
-			case TSW_VSINTL: {
+			break;
+			
+			case TSW_VSINTL:
+			{
 				comp.ts.vsintl = val;
 				comp.intpos = ((comp.ts.hsint > (conf.t_line-1)) || (comp.ts.vsinth > 319)) ? -1 : (comp.ts.vsint * conf.t_line + comp.ts.hsint);
 				cpu.intnew = true;
-				break;
 			}
-			case TSW_VSINTH: {
+			break;
+			
+			case TSW_VSINTH:
+			{
 				comp.ts.vsinth = val;
 				comp.intpos = ((comp.ts.hsint > (conf.t_line-1)) || (comp.ts.vsinth > 319)) ? -1 : (comp.ts.vsint * conf.t_line + comp.ts.hsint);
 				cpu.intnew = true;
-				break;
 			}
+			break;
+			
 	    // memory
-			case TSW_MEMCONF: {
+			case TSW_MEMCONF:
+			{
 				comp.ts.memconf = val;
 				comp.p7FFD &= ~0x10;
 				comp.p7FFD |= (val & 1) << 4;
 				set_banks();
-				break;
 			}
+			break;
 
-			case TSW_PAGE0: {
+			case TSW_PAGE0:
+			{
 				comp.ts.page[0] = val;
 				set_banks();
-				break;
 			}
+			break;
 
-			case TSW_PAGE1: {
+			case TSW_PAGE1:
+			{
 				comp.ts.page[1] = val;
 				set_banks();
-				break;
 			}
+			break;
 
-			case TSW_PAGE2: {
+			case TSW_PAGE2:
+			{
 				comp.ts.page[2] = val;
 				set_banks();
-				break;
 			}
+			break;
 
-			case TSW_PAGE3: {
+			case TSW_PAGE3:
+			{
 				comp.ts.page[3] = val;
 				set_banks();
-				break;
 			}
+			break;
 
-			case TSW_FMADDR: {
+			case TSW_FMADDR:
+			{
 				comp.ts.fmaddr = val;
-				break;
 			}
+			break;
 
 		// video
-			case TSW_VCONF: {
+			case TSW_VCONF:
+			{
 				update_screen();
 				comp.ts.vconf_d = val;
-				break;
 			}
+			break;
 
-			case TSW_VPAGE: {
+			case TSW_VPAGE:
+			{
 				update_screen();
 				comp.ts.vpage_d = val;
 				set_banks();
-				break;
 			}
+			break;
 
-			case TSW_TMPAGE: {
+			case TSW_TMPAGE:
+			{
 				update_screen();
 				comp.ts.tmpage = val;
-				break;
 			}
+			break;
 
-			case TSW_T0GPAGE: {
+			case TSW_T0GPAGE:
+			{
 				update_screen();
 				comp.ts.t0gpage[0] = val;
-				break;
 			}
+			break;
 
-			case TSW_T1GPAGE: {
+			case TSW_T1GPAGE:
+			{
 				update_screen();
 				comp.ts.t1gpage[0] = val;
-				break;
 			}
+			break;
 
-			case TSW_SGPAGE: {
+			case TSW_SGPAGE:
+			{
 				update_screen();
 				comp.ts.sgpage = val;
-				break;
 			}
+			break;
 
-			case TSW_BORDER: {
+			case TSW_BORDER:
+			{
 				update_screen();
 				comp.ts.border = val;
-				break;
 			}
+			break;
 
-			case TSW_TSCONF: {
+			case TSW_TSCONF:
+			{
 				update_screen();
 				comp.ts.tsconf = val;
-				break;
 			}
+			break;
 
-			case TSW_PALSEL: {
+			case TSW_PALSEL:
+			{
 				update_screen();
 				comp.ts.palsel_d = val;
-				break;
 			}
+			break;
 
-			case TSW_GXOFFSL: {
+			case TSW_GXOFFSL:
+			{
 				update_screen();
 				comp.ts.g_xoffsl_d = val;
-				break;
 			}
+			break;
 
-			case TSW_GXOFFSH: {
+			case TSW_GXOFFSH:
+			{
 				update_screen();
 				comp.ts.g_xoffsh_d = val & 1;
-				break;
 			}
+			break;
 
-			case TSW_GYOFFSL: {
+			case TSW_GYOFFSL:
+			{
 				update_screen();
 				comp.ts.g_yoffsl = val;
 				comp.ts.g_yoffs_updated = 1;
-				break;
 			}
+			break;
 
-			case TSW_GYOFFSH: {
+			case TSW_GYOFFSH:
+			{
 				update_screen();
 				comp.ts.g_yoffsh = val & 1;
 				comp.ts.g_yoffs_updated = 1;
-				break;
 			}
+			break;
 
-			case TSW_T0XOFFSL: {
+			case TSW_T0XOFFSL:
+			{
 				update_screen();
 				comp.ts.t0_xoffsl = val;
-				break;
 			}
+			break;
 
-			case TSW_T0XOFFSH: {
+			case TSW_T0XOFFSH:
+			{
 				update_screen();
 				comp.ts.t0_xoffsh = val & 1;
-				break;
 			}
+			break;
 
-			case TSW_T0YOFFSL: {
+			case TSW_T0YOFFSL:
+			{
 				update_screen();
 				comp.ts.t0_yoffsl = val;
-				break;
 			}
+			break;
 
-			case TSW_T0YOFFSH: {
+			case TSW_T0YOFFSH:
+			{
 				update_screen();
 				comp.ts.t0_yoffsh = val & 1;
-				break;
 			}
+			break;
 
-			case TSW_T1XOFFSL: {
+			case TSW_T1XOFFSL:
+			{
 				update_screen();
 				comp.ts.t1_xoffsl = val;
-				break;
 			}
+			break;
 
-			case TSW_T1XOFFSH: {
+			case TSW_T1XOFFSH:
+			{
 				update_screen();
 				comp.ts.t1_xoffsh = val & 1;
-				break;
 			}
+			break;
 
-			case TSW_T1YOFFSL: {
+			case TSW_T1YOFFSL:
+			{
 				update_screen();
 				comp.ts.t1_yoffsl = val;
-				break;
 			}
+			break;
 
-			case TSW_T1YOFFSH: {
+			case TSW_T1YOFFSH:
+			{
 				update_screen();
 				comp.ts.t1_yoffsh = val & 1;
-				break;
 			}
+			break;
 
 		// dma
-			case TSW_DMASAL: {
+			case TSW_DMASAL:
+			{
 				comp.ts.dmasaddrl = val &0xFE;
-				break;
 			}
+			break;
 
-			case TSW_DMASAH: {
+			case TSW_DMASAH:
+			{
 				comp.ts.dmasaddrh = val & 0x3F;
-				break;
 			}
+			break;
 
-			case TSW_DMASAX: {
+			case TSW_DMASAX:
+			{
 				comp.ts.dmasaddrx = val;
-				break;
 			}
+			break;
 
-			case TSW_DMADAL: {
+			case TSW_DMADAL:
+			{
 				comp.ts.dmadaddrl = val &0xFE;
-				break;
 			}
+			break;
 
-			case TSW_DMADAH: {
+			case TSW_DMADAH:
+			{
 				comp.ts.dmadaddrh = val & 0x3F;
-				break;
 			}
+			break;
 
-			case TSW_DMADAX: {
+			case TSW_DMADAX:
+			{
 				comp.ts.dmadaddrx = val;
-				break;
 			}
+			break;
 
-			case TSW_DMALEN: {
+			case TSW_DMALEN:
+			{
 				comp.ts.dmalen = val;
-				break;
 			}
+			break;
 
-			case TSW_DMANUM: {
+			case TSW_DMANUM:
+			{
 				comp.ts.dmanum = val;
-				break;
 			}
+			break;
 
-			case TSW_DMACTR: {
+			case TSW_DMACTR:
+			{
 				dma(val);
 				update_screen();
-				break;
 			}
+			break;
 		}
    }
 
@@ -1030,7 +1085,8 @@ __inline u8 in1(unsigned port)
        // TS-Config extensions ports
 	   switch (p2) {
 
-			case TSR_STATUS: {
+			case TSR_STATUS:
+			{
 				tmp = comp.ts.pwr_up;
 				comp.ts.pwr_up = 0x00;
 				return tmp;

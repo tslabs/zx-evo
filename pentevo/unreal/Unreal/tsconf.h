@@ -32,11 +32,12 @@
 #define		TSW_HSINT       0x22
 #define		TSW_VSINTL      0x23
 #define		TSW_VSINTH      0x24
-#define		TSW_INTV 	    0x25
+#define		TSW_INTVECT	    0x25
 #define		TSW_DMALEN      0x26
 #define		TSW_DMACTR      0x27
 #define		TSW_DMANUM      0x28
 #define		TSW_FDDVIRT     0x29
+#define		TSW_INTMASK     0x2A
 
 #define		TSW_T0XOFFSL 	0x40
 #define		TSW_T0XOFFSH 	0x41
