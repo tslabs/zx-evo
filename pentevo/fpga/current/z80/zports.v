@@ -427,9 +427,6 @@ module zports(
             rampage[3] <= {2'b0, lock128_3 ? {din[5], din[7:6]} : ({1'b0, lock128 ? 2'b0 : din[7:6]}), din[2:0]};
         end
 
-        else if (porteff7_wr)
-			memconf[7:6] <= din[2] ? 2'b01 : 2'b11;
-		
 		else if (portxt_wr)
 		begin
 			if (hoa[7:2] == RAMPAGE[7:2])
