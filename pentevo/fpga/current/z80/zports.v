@@ -413,7 +413,7 @@ module zports(
 			intmask <= 8'b1;
 			fddvirt <= 4'b0;
 			sysconf <= 8'h01;       // turbo 7 MHz
-			memconf <= 8'h04;       // no map
+			memconf <= 8'h04;       // no map, 512k
 
 			rampage[0] <= 8'h00;
 			rampage[1] <= 8'h05;
@@ -421,15 +421,16 @@ module zports(
 			rampage[3] <= 8'h00;
 		end
 
-        else
-       	if (p7ffd_wr)
+        else if (p7ffd_wr)
         begin
             memconf[0] <= din[4];
             rampage[3] <= {2'b0, lock128_3 ? {din[5], din[7:6]} : ({1'b0, lock128 ? 2'b0 : din[7:6]}), din[2:0]};
         end
 
-		else
-		if (portxt_wr)
+        else if (porteff7_wr)
+			memconf[7:6] <= din[2] ? 2'b01 : 2'b11;
+		
+		else if (portxt_wr)
 		begin
 			if (hoa[7:2] == RAMPAGE[7:2])
 				rampage[hoa[1:0]] <= din;
@@ -517,39 +518,39 @@ module zports(
 
 
 // xxF7
-	wire portf7_wr = ((loa==PORTF7) && (a[8]==1'b1) && port_wr && (!dos || vdos));
-	wire portf7_rd = ((loa==PORTF7) && (a[8]==1'b1) && port_rd && (!dos || vdos));
-
-
-// EFF7 port
-    reg [7:0] peff7;
-	always @(posedge clk)
-		if (rst)
-			peff7 <= 8'h00;
-		else if (!a[12] && portf7_wr && !dos)   // #EEF7 in dos is not accessible
-			peff7 <= din;
+	wire portf7 = (loa==PORTF7) && (a[8]==1'b1) && (!dos || vdos);		// #xxF7 are not accessible in DOS
+	wire portf7_wr = portf7 && port_wr;
+	wire portf7_rd = portf7 && port_rd;
+	wire porteff7_wr = !a[12] && portf7_wr;   // #EFF7 w, gluclock_en
+	wire portdff7_wr = !a[13] && portf7_wr;   // #DFF7 w, gluclock_addr
+	wire portbff7 = !a[14] && portf7; 		  // #BFF7 r/w, gluclock_data
+	wire portbff7_wr = portbff7 && port_wr;   // #BFF7 w
 
 
 // gluclock ports
-	wire gluclock_on = peff7[7] || dos;        // in dos mode EEF7 is not accessible, gluclock access is ON in dos mode.
+    reg gluclock_en;
+	always @(posedge clk)
+		if (rst)
+			gluclock_en <= 1'b0;
+		else if (porteff7_wr)
+			gluclock_en <= din[7];
+
+	wire gluclock_on = gluclock_en || dos;		// in dos mode EEF7 is not accessible, gluclock access is ON in DOS mode.
 
 	always @(posedge zclk)
-		if (gluclock_on && portf7_wr) // gluclocks on
-			if( !a[13] ) // $DFF7 - addr reg
-				gluclock_addr <= din;
+		if (gluclock_on && portdff7_wr) 		// gluclocks on
+			gluclock_addr <= din;
 
-
-// write to wait registers
+	// write to wait registers
 	always @(posedge zclk)
 	begin
 		// gluclocks
-		if (gluclock_on && portf7_wr && !a[14]) // $BFF7 - data reg
+		if (gluclock_on && portbff7_wr)
 			wait_write <= din;
 		// com ports
 		else if (comport_wr) // $F8EF..$FFEF - comports
 			wait_write <= din;
 	end
-
 
 // comports
 	wire comport_wr   = ((loa==COMPORT) && port_wr);
@@ -561,8 +562,8 @@ module zports(
 
 
 // wait from wait registers
-	// ACHTUNG!!!! here portxx_wr are ON Z80 CLOCK! logic must change when moving to clk strobes
-	assign wait_start_gluclock = (gluclock_on && !a[14] && (portf7_rd || portf7_wr)); // $BFF7 - gluclock r/w
+	// ATTENCAO!!!! here portxx_wr are ON Z80 CLOCK! logic must change when moving to clk strobes
+	assign wait_start_gluclock = (gluclock_on && portbff7);		// #BFF7 - gluclock r/w
 	assign wait_start_comport = (comport_rd || comport_wr);
 
 	always @(posedge zclk) // wait rnw - only meanful during wait
