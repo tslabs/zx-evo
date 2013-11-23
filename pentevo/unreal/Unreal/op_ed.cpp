@@ -177,9 +177,9 @@ Z80OPCODE ope_56(Z80 *cpu) { // im 1
 Z80OPCODE ope_57(Z80 *cpu)
 { // ld a,i
    cpu->a = cpu->i;
-   cpu->f = (log_f[cpu->a] | (cpu->f & CF)) & ~PV;
-   if (cpu->iff1 && (cpu->t+10 < cpu->tpi))
-       cpu->f |= PV;
+   cpu->f = (log_f[cpu->r_low & 0x7F] | (cpu->f & CF)) & ~PV;	// fucking dirty fix until clarified
+   if (cpu->iff2 && ((cpu->t+10 < cpu->tpi) || cpu->eipos+8==cpu->t))
+      cpu->f |= PV;
    cputact(1);
 }
 //#endif
@@ -234,7 +234,7 @@ Z80OPCODE ope_5F(Z80 *cpu)
    cpu->a = (cpu->r_low & 0x7F) | cpu->r_hi;
    cpu->f = (log_f[cpu->a] | (cpu->f & CF)) & ~PV;
    if (cpu->iff2 && ((cpu->t+10 < cpu->tpi) || cpu->eipos+8==cpu->t))
-       cpu->f |= PV;
+      cpu->f |= PV;
    cputact(1);
 }
 //#endif
