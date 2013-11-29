@@ -1,0 +1,215 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>1.1 About SDCC</TITLE>
+<META NAME="description" CONTENT="1.1 About SDCC">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="next" HREF="node4.html">
+<LINK REL="previous" HREF="node2.html">
+<LINK REL="up" HREF="node2.html">
+<LINK REL="next" HREF="node4.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html512"
+  HREF="node4.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html506"
+  HREF="node2.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html500"
+  HREF="node2.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html508"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html510"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html513"
+  HREF="node4.html">1.2 Open Source</A>
+<B> Up:</B> <A NAME="tex2html507"
+  HREF="node2.html">1. Introduction</A>
+<B> Previous:</B> <A NAME="tex2html501"
+  HREF="node2.html">1. Introduction</A>
+ &nbsp; <B>  <A NAME="tex2html509"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html511"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H1><A NAME="SECTION00210000000000000000">
+1.1 About SDCC</A>
+</H1>
+
+<P>
+<B>SDCC</B> (<I>S</I>mall <I>D</I>evice <I>C</I> <I>C</I>ompiler)
+is free open source, retargettable, optimizing ANSI-C compiler by
+<B>Sandeep Dutta</B> designed for 8 bit Microprocessors. The current
+version targets Intel MCS51 based Microprocessors (8031, 8032, 8051,
+8052<A NAME="75"></A>, etc.), Dallas DS80C390
+variants, Freescale (formerly Motorola) HC08 and Zilog Z80 based MCUs.
+It can be retargeted for other microprocessors, support for Microchip
+PIC, Atmel AVR is under development. The entire source code for the
+compiler is distributed under GPL. SDCC uses ASXXXX<A NAME="76"></A>
+&amp; ASLINK<A NAME="77"></A>, an free open source retargetable assembler
+&amp; linker. SDCC has extensive language extensions suitable for utilizing
+various microcontrollers and underlying hardware effectively. 
+<BR>
+<BR>
+In addition to the MCU specific optimizations SDCC also does a host
+of standard optimizations like:
+
+<P>
+
+<UL>
+<LI>global sub expression elimination, 
+</LI>
+<LI>loop optimizations (loop invariant, strength reduction of induction
+variables and loop reversing), 
+</LI>
+<LI>constant folding &amp; propagation, 
+</LI>
+<LI>copy propagation, 
+</LI>
+<LI>dead code elimination 
+</LI>
+<LI>jump tables for <I>switch</I> statements.
+</LI>
+</UL>
+For the back-end SDCC uses a global register allocation scheme which
+should be well suited for other 8 bit MCUs. 
+<BR>
+<BR>
+The peep hole optimizer uses a rule based substitution mechanism which
+is MCU independent. 
+<BR>
+<BR>
+Supported data-types are:
+
+<P>
+<TABLE CELLPADDING=3 BORDER="1">
+<TR><TD ALIGN="CENTER">type</TD>
+<TD ALIGN="CENTER">width</TD>
+<TD ALIGN="CENTER">default</TD>
+<TD ALIGN="CENTER">signed range</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=100>unsigned range</TD>
+</TR>
+<TR><TD ALIGN="CENTER">bool</TD>
+<TD ALIGN="CENTER">1 bit</TD>
+<TD ALIGN="CENTER">unsigned</TD>
+<TD ALIGN="CENTER">-</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=100>0, 1</TD>
+</TR>
+<TR><TD ALIGN="CENTER">char</TD>
+<TD ALIGN="CENTER">8 bits, 1 byte</TD>
+<TD ALIGN="CENTER">signed</TD>
+<TD ALIGN="CENTER">-128, +127</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=100>0, +255</TD>
+</TR>
+<TR><TD ALIGN="CENTER">short</TD>
+<TD ALIGN="CENTER">16 bits, 2 bytes</TD>
+<TD ALIGN="CENTER">signed</TD>
+<TD ALIGN="CENTER">-32.768, +32.767</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=100>0, +65.535</TD>
+</TR>
+<TR><TD ALIGN="CENTER">int</TD>
+<TD ALIGN="CENTER">16 bits, 2 bytes</TD>
+<TD ALIGN="CENTER">signed</TD>
+<TD ALIGN="CENTER">-32.768, +32.767</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=100>0, +65.535</TD>
+</TR>
+<TR><TD ALIGN="CENTER">long</TD>
+<TD ALIGN="CENTER">32 bits, 4 bytes</TD>
+<TD ALIGN="CENTER">signed</TD>
+<TD ALIGN="CENTER">-2.147.483.648, +2.147.483.647</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=100>0, +4.294.967.295</TD>
+</TR>
+<TR><TD ALIGN="CENTER">float</TD>
+<TD ALIGN="CENTER">4 bytes IEEE 754</TD>
+<TD ALIGN="CENTER">signed</TD>
+<TD ALIGN="CENTER">&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=100>1.175494351E-38, 3.402823466E+38</TD>
+</TR>
+<TR><TD ALIGN="CENTER">pointer</TD>
+<TD ALIGN="CENTER">1, 2, 3 or 4 bytes</TD>
+<TD ALIGN="CENTER">generic</TD>
+<TD ALIGN="CENTER">&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=100>&nbsp;</TD>
+</TR>
+</TABLE>
+<BR>
+The compiler also allows <I>inline assembler code</I> to be embedded
+anywhere in a function. In addition, routines developed in assembly
+can also be called.
+<BR>
+<BR>
+SDCC also provides an option (--cyclomatic) to report the relative
+complexity of a function. These functions can then be further optimized,
+or hand coded in assembly if needed. 
+<BR>
+<BR>
+SDCC also comes with a companion source level debugger SDCDB. The
+debugger currently uses ucSim, a free open source simulator for 8051
+and other micro-controllers.
+<BR>
+<BR>
+The latest SDCC version can be downloaded from http://sdcc.sourceforge.net/snap.php.
+<I>Please note: the compiler will probably always be some steps
+ahead of this documentation</I><B><A NAME="87"></A></B><A NAME="tex2html1"
+  HREF="footnode.html#foot88"><SUP>1.1</SUP></A><B>.</B>
+
+<P>
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html512"
+  HREF="node4.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html506"
+  HREF="node2.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html500"
+  HREF="node2.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html508"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html510"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html513"
+  HREF="node4.html">1.2 Open Source</A>
+<B> Up:</B> <A NAME="tex2html507"
+  HREF="node2.html">1. Introduction</A>
+<B> Previous:</B> <A NAME="tex2html501"
+  HREF="node2.html">1. Introduction</A>
+ &nbsp; <B>  <A NAME="tex2html509"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html511"
+  HREF="node190.html">Index</A></B> 
+<!--End of Navigation Panel-->
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

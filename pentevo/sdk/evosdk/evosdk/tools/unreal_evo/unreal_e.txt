@@ -1,0 +1,658 @@
+----------------------------------------------------------------------
+                      UnrealSpeccy 0.36.6 by SMT
+----------------------------------------------------------------------
+
+        contents
+
+                1. features
+                2. system requirements
+                3. keys in emulator
+                4. bugs and incompatibilities
+                5. greets
+                6. license
+
+
+----------------------------------------------------------------------
+
+features
+
+
+  cpu
+        Z80: all (un)documented commands and flags
+
+
+  memory
+
+        Pentagon 128/512/1024 and 48K ROM
+        Scorpion 256/1024 RAM and 64K ROM
+        Scorpion PROF-ROM with SMUC support (128/256/512K)
+        KAY-256/1024 and 64K ROM
+        Profi 1024 RAM/ROM and memory mapper
+        ATM TURBO 1 v4.50 512/1024 RAM, 64-1024K ROM
+        ATM TURBO 2+ v7.10 128/512/1024 RAM, 64-1024K ROM
+        cache 16/32K
+        CMOS/RTC: russian chip (512Bu1, 64 bytes, 1st day is monday) or
+          pc-compatible (DALLAS, 256 bytes, 1st day of week is sunday)
+        SMUC RTC and NVRAM (24LC16)
+
+  sound
+
+        beeper, tape saving and loading tones
+
+        AY-3-8910/YM2149: excellent sound emulation, including digital
+        and unusual effects, parallel ports on R14/R15 are not emulated
+
+        Turbo-AY (Turbo-Sound): two AY(or YM) chips by PoS and NedoPC schemes
+
+        TurboSound FM: two YM2203 chips (6 AY channels + 6 FM channels)
+
+        also there is 'unreal' (not available in real Spectrum) mode:
+        playing AY music using digital player - emul plays three sound samples
+        with volumes and frequencies taken from corresponding AY registers
+        and 'pseudo-turbo' - two parallel YM chips with some phase shift
+
+        two covoxes - Pentagon (port #FB) & Scorpion (port #DD)
+
+        SounDrive
+
+        saving sound to WAV or VTX (VTX - good format for AY sound, much
+        more compact than PSG, but you need lha.exe somewhere in %PATH%)
+
+        General Sound - FX & MOD player through BASS sound system.
+        You can save music and listen it in your favourite mod-player
+
+        General Sound low level emulation (including internal Z80 on 12MHz,
+        512Kb onboard memory, internal ports and DACs)
+
+        BASS offers higher quality and more sound channels than low-level
+        emulation. Low-level emulation is useful for programs altering the
+        firmware player and using second Z80 for their own needs. In general,
+        use BASS for games, and low-level emulation for advanced sound/music
+        editors (RIFF tracker)
+
+  video
+
+        several video drivers, from simple and fastest to complex bi-linear
+        filtering, that upsamples Spectrum display to 512x384 * 64 colors;
+        'noflic' filter is specially for programs fast switching two screens
+        to get more colors;
+        several chunky filters for 21st century demos
+
+        amazing video filter: Anti-Text64. Designed for reading e-zines.
+        It converts 4x8 fonts to 8x8 or 8x16 on the fly and saves your eyes
+
+        multicolors are fixed for Pentagon & Scorpion, 1T screen update
+        for all border effects
+
+        able to emulate scorpion timings, including scorpion border update
+
+        nopaper mode for debugging border effects
+
+        flash-color (using 128 ink colors with black paper when FLASH bit on)
+
+        hi-res modes: Pentagon 512x192, Profi 512x240, ATM
+        (works with 'double' video filter)
+
+        ATM-TURBO color video modes (works with 'double' video filter):
+        text mode 80x25, EGA mode 320x200, 640x200.
+        To use custom text-mode font, place your "SGEN.ROM" to unreal directory.
+        Don't use border=none with ATM video modes
+
+        Pentagon 384x304 mode [see ZX-Guide#2, AlCoNews#32]
+
+        Pentagon color-per-pixel mode [see Info Guide#8, #9]
+
+        hardware multicolor
+
+        attribute port #FF
+
+
+  tune-up video/sound with hotkeys
+
+        change video settings, such as number of t-states/frame, t-states/line,
+        fix with grey+, grey-, grey*
+
+        t-states/frame is a computer speed, so it's easy to adjust speed in
+        fast (or slow) games in very wide range for comfortable playing
+
+        alt+grey*, grey-, grey+ selects soundchip (AY/YM) and
+        stereo mode (ABC/ACB), or palette
+
+
+  beta 128 disk interface
+
+        implemented all FDC WD1793 commands, including read/format track
+
+        traps for read/write sector - more then 256 times speedup
+
+
+  tape
+
+        full TAP and TZX support
+
+        CSW support
+
+        tape browser
+
+        auto-start tape when accessing to ROM load routine
+
+        fast loading: UnrealSpeccy is able to recognize loader logic
+           and speed up loader by removing delay loops and edge detection loops.
+           (Of course, UnrealSpeccy leaves original t-states timing,
+           so max speed mode must be enabled for fast loading - press NumLock)
+           With this technique any 128K game may be loaded in 10-20 secs.
+           I've developed this feature independent from RAMSOFT, but looks like
+           they used the same idea in RS 0.90.38...
+           For really fast loading, also choose 'normal' video driver
+
+
+  IDE
+
+        UnrealSpeccy is able to use KAY, SCORPION and ATM-2 IDE interfaces with
+        two devices on it (hard disks or CD-ROMs)
+
+        for hard disks you may use image file or Spectrum drive, connected to
+        computer. CD-ROM requires physical or windows-level emulated device
+
+        schemes supported:
+        Nemo - controller for ZX-BUS manufactured by Nemo and NedoPC
+        ATM - ATM TURBO 2+ v7.10
+        Nemo(A8) - Nemo scheme modification: uses A8 instead of A0 to
+                   select high/low byte of 16bit data (easy to
+                   transfer sector with just two commands INIR:INIR)
+        SMUC - IDE controller for ZS Scorpion
+
+  modem
+
+        ISA modem, configured to use COM1 ports 03F8-03FF
+        translated to Spectrum's ports #F8EF-#FFEF.
+        Modem interrupt (translated to Spectrum NMI) is not emulated
+        Host computer should have installed windows driver for real modem.
+        At least ping/dns by Kamil Karimov tested and works fine
+        with empty 'modem initialization string'
+
+
+  input devices
+
+        fully customizable keyboard
+        copy text from clipboard via emulation of Spectrum keyboard
+        AY-mouse (KORVET mouse, connected to AY-3-8910/12 port A)
+        kempston mouse with adjustable speed and swap-buttons option,
+        mouse wheel included (D7..D4 in buttons' port or UP/DOWN keys)
+        kempston joystick on keyboard
+        kempston joystick on mouse (joystick will follow mouse cursor)
+        mouse wheel and buttons can be bound to any zx keys or kempston
+        PC joystick/gamepad can be bound to any zx keys or kempston
+        sticky keys mode [stolen from ZX_Emul, read description there]
+        autofire (with adjustable key and period)
+
+  files
+
+        reading:
+
+           SP, SNA and Z80 (all versions, 48k and 128k)
+           TAP, TZX, CSW
+           FDI, TRD, SCL, TD0, UDI
+                  if disk image does not contain boot.B, it may be appended.
+                  Disk images for every drive may be loaded automatically
+                  at start of UnrealSpeccy
+           HOBETA format - appends file to existing disk; if no disk, then empty
+                  TR-DOS disk will be created. Best use with command line:
+                  unreal.exe prog.$B prog.$C   <- will be placed on same disk
+                  You can also load it from 'F3' dialog, but only by one file
+
+        writing:
+
+           SNA 48k and 128k
+           TRD, FDI, UDI
+           TD0  (saved unpacked, so expect saved file larger than loaded)
+           SCR, BMP (screenshots)
+           WAV, VTX
+
+
+        disk images converter:
+
+           emulator can open disk image in any format (TRD/TD0/FDI/SCL/UDI)
+           and save it to any other format
+
+
+  leds
+
+        1. AY volume/status. Just for fun. White color - tone, yellow - noise,
+           green - envelope; also shows YM2203 and GS volumes
+
+        2. perfomance leds. One displays how much Z80 t-states is between two
+           interrupts. While watching some demo you can see how much time
+           takes one or another effect. Second led shows PC framerate - at
+           normal speed it must be 50. If it is less, then your CPU is too
+           slow, and sound may be jerky - try to select faster video driver,
+           disable some devices, increase skipframe or decrease t-states
+           per int. When running on max speed, framerate shows how fast you
+           computer is. For example, 800 fps is 16 times faster than
+           Spectrum, so average game will load in 20 secs.
+
+        3. input led. Shows which input devices are active - keyboard, mouse,
+           kempston joystick. For keyboard, displays queried keyrows.
+           One example: I've noticed, that in KOL0BOK2 intro active keyrows
+           are <B>-<SPACE> and A-G. <SPACE> is an exit, but why program
+           scans <A>-<G> ? I've pressed <A>, and I saw that now program
+           queries <Y>-<P>. After pressing A+P, program queries <CAPS>-<V>.
+           When pressing A+P+X active keyrow areonly <B>-<SPACE>. So, I've
+           found cheat without digging in program code! (Another way was to
+           set breakpoint on reading port #FE and analyze code nearby)
+
+        4. loading led. When saving/loading from disk, emulator shows
+           blue or red diskette. When formatting track, yellow disk is
+           displayed. When loading from tape, emulator displays
+           cassette picture and progress for current block (or 'PS' - tape
+           silence)
+
+        5. local time - for those ZX Spectrum fans, who spend all their
+           time with virtual Spectrum
+
+        6. on-screen watches - display used RAM and ROM banks in last frame,
+           count user-defined expressions
+
+        7. using leds on AT keyboard to display AY amplitude peaks
+
+
+        leds look strange when flash-color is enabled. It's not a bug
+
+
+  monitor
+
+        software that in PC world is called 'debugger', in Spectrum world
+        is often called 'monitor'
+
+        find text or code.
+        Using mask: code matches when ((code & mask) == (pattern & mask))
+
+        unlimited number of code breakpoints
+
+        conditional breakpoints of any complexity, uses C-like expression
+        syntax (with this feature can be easily done: breakpoint on range,
+        breakpoint to port in and out, on instruction, etc..)
+
+        memory access breakpoints (on reading/writing/executing of given memory
+        areas)
+
+        built-in Z80 assembler/disassembler
+
+        save-load memory blocks
+
+        disk editor
+
+        ripper's tool: for ripping routines with their data.
+        Marks which bytes were read/written, and saves whole 64kb memory,
+        replacing unreferenced bytes with user-defined byte (default is #CF)
+
+        hotkeys to save/restore cursor position in disasm window
+
+        hotkeys for location instruction operand in Z80 or dump window
+
+        on-screen watches: show memory areas addressed by register pairs
+
+
+  GUI
+
+        all settings, that present in INI file, may be changed in GUI
+        (but will not be saved, for permanent effect edit INI file)
+
+        easy entering POKEs, if you don't want to use monitor or use
+        HEX addresses. Delimiters for numbers are space, comma, colon,
+        semicolon - so POKEs can be cut'n'pasted from any cheats collection
+
+        loading from archives. Now supported: CAB,ZIP,RAR.
+        You can add your own archivers to INI file
+
+----------------------------------------------------------------------
+
+system requirements
+
+        Windows 95 or higher, or NT (not tested).
+        Windows 2000/XP/2003 are required for real HDD support.
+
+        for running UnrealSpeccy you need:
+
+            Pentium-166 CPU MMX for basic functionality
+            Celeron-266 CPU for Profi/Pentagon/ATM/Anti-Text64 hi-res modes
+            Celeron-400 CPU for GS low-level emulation
+            UnrealSpeccy eats only 12Mb of RAM, so
+             if you've started Windows, then memory is enough
+            2D accelerared video card with hardware support of
+             video overlays and color keying for overlay modes
+            3D accelerared video card for hardware chunky bilinear filter
+            2 Mb of video memory in fullscreen
+            4 Mb of video memory for windowed mode
+            16-bit sound card [optional, but recommended]
+
+
+        if you have such hardware, but emulator runs slow, try the
+        following:
+
+            0. install latest directX and videocard drivers
+            1. increase sound buffer size (especially for Win95) in INI file
+            2. select video filter='small', video driver='ddraw'
+            3. disable vsync
+            4. set 'ShareCPU=0' in INI file
+            5. do not use General Sound low-level emulation
+            6. do not use YM2203
+            7. set 'skipframe=4' in INI file
+            8. set 'Frame=30000' in INI file (if nothing else does not work)
+            9. disable sound (without sound emulator runs much faster)
+
+        this should help
+
+
+----------------------------------------------------------------------
+
+keys in emulator
+
+these are default keys, can be changed in INI file
+
+
+Ctrl-F1         monitor
+Shift-ESC       only for windowed mode: give mouse to emulator or to MS Windows
+Alt-F1          help on keys
+F1              options/GUI
+F2              write snapshot/disk image
+Alt-F2          quicksave to qsave1.sna
+Ctrl-F2         quicksave to qsave2.sna
+Shift-F2        quicksave to qsave3.sna
+F3              read snapshot/tape/disk image
+Alt-F3          quickload from qsave1.sna
+Ctrl-F3         quickload from qsave2.sna
+Shift-F3        quickload from qsave3.sna
+(SHIFT+)F4      select video driver (filter)
+Alt-F4          exit emulator
+F5              start/stop saving sound (WAV or VTX formats).
+                May be used from monitor: set breakpoint to
+                start/stop routines and save;
+                when saving to vtx, start and end silence are wiped
+F6              enter POKE(s)
+Alt-F6          search in memory for changed values (cheats, etc)
+F7              start/stop tape
+Shift-F7        tape browser
+Alt-F8          screenshot
+F9              quicksave all altered disk images and CMOS
+Alt-Shift-F11   NMI
+Alt-F11         NMI to cache
+Ctrl-F11        NMI to TR-DOS ("magic")
+F12             reset to default mode, as specified in INI file
+Ctrl-Shift-F12  reset to basic-128
+Ctrl-F12        reset TR-DOS (128)
+Shift-F12       reset to 48 basic, but port 7FFD unlocked
+Alt-Shift-F12   reset to 48 basic, port 7FFD locked
+Alt-F12         reset to system ROM
+Ctrl-Alt-F12    reset to cache
+pause/break     pause
+grey/           leds on/off
+grey*           select parameter to change: t-states/int (speed), fix, etc...
+Alt+grey*       select parameter to change: AY/palette
+grey+,grey-     change sound/video parameter (press with SHIFT for finetuning)
+NumLock         max speed on/off (no sound on max speed)
+Alt-NumLock     toggle autofire on/off
+Alt-Ctrl-Z      toggle ATM XT(AT)-keyboard controller on/off
+Alt-Enter       toggle full-screen mode
+Alt-Shift-Ins   copy text from clipboard to keyboard buffer
+Alt-1           set window size to 1x scale in windowed mode
+Alt-2           set window size to 2x scale, useful for hardware-stretched
+                modes like overlay and blitter
+Alt-3           maximize window
+
+
+keys in monitor
+
+(CTRL,SHIFT,ALT+)F1,F2,F3,F5,F11,F12 - see above
+Ctrl-F1         exit, run program
+F7              step
+F8              trace, skip calls and loops
+F9              show Spectrum screen
+Shift-F9        show alternative 128k screen
+Alt-F9          show screen until painted point with border, mc and 2-scr 
+effects
+F11             run program until address (SP)
+TAB             next window
+SHIFT-TAB       previous window
+Alt-D           toggle text/hex dump
+Alt-B           write to port 7FFD (select bank / screen)
+Alt-M           write to model-specific extended memory port (like 
+#1FFD,#FDFD,#DFFD,...)
+Alt-P           enter POKE(s)
+Alt-F6          search in memory for changed values (cheats, etc)
+Alt-R           load memory block from file
+Alt-W           save memory block to file
+Alt-F           fill memory block with hex pattern
+                (note: to copy block, please use save+load)
+Alt-G           General Sound status (double-click - play sample)
+Alt-T           ripper's tool
+Alt-O           configure on-screen watches
+Alt-U           disasm to file
+Alt-S           cycle screenshot (ray-painted) / screendump (screen memory) / 
+watches
+Alt-F           render current frame to video buffer without border and MC 
+effects
+Ctrl-U          set user-defined watch address
+Ctrl-L          view labels, visible for Z80 in current memory state
+Ctrl-J          select and go to label
+Alt-C           breakpoints manager
+Alt-Y           switch active sound chip in Turbo-Sound mode
+
+
+       manager can handle 3 types of breakpoints:
+
+       1. conditional breakpoints and on-screen watches
+       are using C expression syntax.
+
+       operators (in priority order):
+         () ! ~ M(x) -> * % / + - >> << > < == = <= >= != & ^ | && ||
+       operands:
+         a,b,c,d,e,h,l,bc,de,hl                 - common registers
+         a',b',c',d',e',h',l',bc',de',hl'       - alternative registers
+         ix,iy,pc,sp,i,r                        - control registers
+         FD     - memory port #FD (also known as #7FFD)
+         OUT    - port used in 'OUT' command (or 0FFFFFFFF when no outs)
+         IN     - port used in 'IN'  command (or 0FFFFFFFF when no ins)
+         VAL    - read/written value to port (only meaningful when OUT != 
+0FFFFFFFF or IN != 0FFFFFFFF)
+         numbers - hex, must start with digit: DFFD - wrong, 0DFFD - right
+         characters - must be enclosed in single quotes ('A','B',etc..)
+       All calculations use 32-bit unsigned interger arithmetic.
+       If you are not familiar with C, use brackets as much as possible, due to
+       non-intuitive operator's precedence, e.g.
+       out & 0FF == 0FE   is treated as 'out & (0FF == 0FE)' <- always 0
+
+       M(x) is byte from memory address x (same as x->0)
+       '=' is an alias for '==' (for Pascal programmers)
+
+       examples:
+
+           (out+1) | (in+1)       - in/out to any port
+           (in & 8001) == 0       - read keyboard row from <B> to <SPACE>
+           !(out & 1)             - any out to port #FE
+           (out & 0FF)==0BB && (val==0F3 || val==0F4) - reset General Sound
+           (out & 0FF)==0FD && (val&7)==3   - set 3rd memory page
+           (FD & 7) == 3                    - the same
+           M(pc)==0CB && pc->1 >= 10 && pc->1 <= 17
+                - set break on executing instruction "rl <reg>"
+
+       I hope, these examples will be enough to get idea
+
+       note: double-click on breakpoint to edit it
+
+       2. execution breakpoints (also set in CPU window by pressing SPACE).
+          In manager window it is easy to setup breakpoint on execution
+          range like 6000-FFFF
+
+       3. breakpoints on reading/writing memory. Similar to execution
+          breakpoints, but have flags "R" and "W" to issue interrupt on
+          reading/writing memory address (flags may be set together)
+
+
+monitor: registers window
+
+Cursor          select register
+ENTER,0-F       change register
+Ctrl+A,F,B,D,H,S,P,X,Y,I,R,M,1,2 edit A,F,BC,DE,HL,SP,PC,IX,IY,I,R,IM,IFF1,IFF2
+Alt+S,Z,5,H,3,P,N,C              toggle flag
+'               go to value under cursor in CPU window
+;               go to value under cursor in memory window
+
+
+monitor: CPU window
+
+F4              trace to cursor
+Alt-F7          find text
+Ctrl-F7         find code with mask
+HOME            go to PC
+Ctrl-G          go to address
+SPACE           set/reset breakpoint under cursor
+ENTER           edit Z80 instruction, opcode bytes or cursor address
+A-X             assemble new Z80 instruction
+Z               set PC to cursor
+Ctrl-1,.,Ctrl-8 save current position to slot 1-8
+1-8             save current position to stack, go to saved position in slot 1-8
+Backspace       restore position from jumpstack
+'               push cursor position and go to instruction operand
+;               jump to instruction operand in data window
+Ctrl-A          reading labels from XAS or ALASM, using 3 methods:
+   1. XAS7: assembler should be in bank 6 (or bank #46 for Pentagon-512)
+   2. ALASM: version 4.42-5.0x should be in 128k-memory (pages 1-7)
+   3. ALASM+STS: STS should be in bank#7 (or bank #47 for Pentagon-512)
+
+
+monitor: memory window
+
+Alt-F7          find text in memory / disk track
+Ctrl-F7         find code with mask in memory / disk track
+Cursor,Home,End,PgUp,PgDn        move
+Ctrl-G                           go to address
+Ctrl-M                           select memory editor
+Ctrl-V                           select disk editor (physical track)
+Ctrl-O                           select disk editor (logical sectors)
+Ctrl-T                           select disk/track/sector in diskeditor
+Ctrl-TAB                         move to hex/ascii
+Ctrl+S,P,B,D,H,X,Y               go to SP,PC,BC,DE,HL,IX,IY
+other keys                       edit
+
+monitor: Beta 128 window
+
+here is a typical FDC indicator content
+CD:1820
+STAT:21
+SECT:09
+T:01/01
+S:3C/00
+
+first line is command and data register (cmd18,data20 - seek track 20)
+2nd line - status register
+3rd line - sector register
+4th line - actual FDD head position and track register
+5th line - Beta disk system register and DRQ/INTRQ port
+
+----------------------------------------------------------------------
+
+bugs and incompatibilities
+
+
+   some programs, such as Manic Miner and Lode Runner, require
+   old 48K ROM (1982.rom), while some other programs require
+   ZX Spectrum 128 ROM (48for128.rom + 128tr!.rom)
+
+   some TR-DOS programs (Unreal Megademo by KSA, Street Fighter)
+   work only if TR-DOS traps are disabled and all delays enabled
+
+   Profi service ROM can work only when all TR-DOS delays are enabled
+
+   Bumpy does not work in default configuration, it tries to read port
+   #FFDF for kempston joystick - so disable kempston mouse before
+   playing [bug found by Paul Pavlov]
+
+   sounddrv=wave does not work with CTSB128PCI (Creative Sound Blaster),
+   there is a bug in drivers for this card. [bug found by Nuts]
+
+   some ABS adventures (ALIEN.SCL, LENIN.SCL) do not work with TR-DOS 5.04TM,
+   use version 5.03 - it is most compatible [bug found by Paul Pavlov]
+
+   Vixen 1,2,3 - incompatible with SounDrive [bug found by Paul Pavlov]
+   Fernandez - incompatible with SounDrive [bug found by Shadow Maker]
+
+   port #FF sometimes is not responding when SkipFrame!=0
+   (the same to SkipFrameMaxSpeed!=0 and max speed mode)
+
+   Scorpion 'MAGIC' generates NMI even if PC < #4000, but shadow
+   monitor is not designed for this situation and may crash
+
+   CacheVox by AlCo requires TR-DOS delays enabled and [BETA128] IL=1
+
+   If the emulator after returning of focus seems to have a sticky key,
+   press Scroll Lock, deactivate blinking key, then press Scroll Lock again.
+
+   If emulator control keys work wrong after returning of focus, press Enter,
+   and keys must go normal.
+   
+   If emulator hangs with General Sound, try DSPrimary=0.
+
+   If emulator crashes with General Sound, try GSType=Z80.
+   
+   If Kempston Joystick doesn't work, go to menu, press NumLock there,
+then go off menu.
+
+   In case of bad sound, try DSPrimary=1 (may crash emulator eventually!)
+or SoundDrv=wave in .ini.
+
+Download sys.trd (for drive B:) from http://alonecoder.narod.ru/zx/SYS.rar
+Download xBIOS for ATM Turbo2+ from http://atmturbo.nedopc.com/
+Get WNASPI32.DLL from Ahead Nero or from Ahead website
+
+BASS.DLL v2.3 was taken from http://www.un4seen.com/ 
+
+----------------------------------------------------------------------
+
+greetings from SMT:
+
+   * dj.Z, IMP and MIC - I enjoyed your music a lot !
+   * Nik-O and Fatal Snipe - for adherence to ay scene
+   * Hacker KAY - thanks for most accurate information about AY/YM
+   * Paul Pavlov - maintainer of largest TR-DOS archive
+   * Raul Gomez Sanchez (author of R80)
+   * Stalker - thanks for STS
+   * Placebo, Extreme, Digital Reality, CBS - for quality demos
+   * V_Soft (Roman Scherbakov) - for Vortex format
+   * Sergey Bulba - for AY_Emul
+   * Alone Coder - you keep Spectrum alive
+   * Ian Luck - thanks for BASS
+   * SirX - just a hello
+   * all ZX Spectrum fans - Speccy is da best!
+
+
+special thanks to people, who were interested in
+UnrealSpeccy's development and sent me info about hard/soft:
+
+   * Maxim Vasilyev - sent me many bugreports
+   * Mac Buster - some info about beta 128 disk interface
+   * Shiru Otaku - sent me GSPAK.ZIP
+   * Alexey Kravchenko - Scorpion timing info
+   * Vitaliy Pigo - testing and benchmarking
+   * Alex Baskakov - helped me with TD0 format
+   * Alone Coder - thnx for many info about Pentagon hardware
+   * Dexus - for integrating YM2203 support
+   * Maksagor - ATM information
+   * and many others, who emailed me congratulations/suggestions/etc
+
+----------------------------------------------------------------------
+
+license
+
+        UnrealSpeccy is completely freeware. You may use this emulator
+        and its sources without any restrictions. You may use the
+        sources in your own emul or to release bugfixed/new versions.
+        in this case you do not have to release updated source code,
+        (unlike GNU Public License requires, for example). You may port
+        emulator to any other platform (but there are many
+        MSVC-specific language constructions, so it's doubtful that
+        you can compile it with another compiler)
+
+E-mail of current developer: alone_coder!mail.ru, dmitry.alonecoder!gmail.com
+Send me bug reports, ideas, and changed source lines.
+

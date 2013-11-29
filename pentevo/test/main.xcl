@@ -1,0 +1,8 @@
+-cZ80
+-Hff
+//-Fraw-binary
+-Fintel-extended
+-Z(CODE)RCODE,CODE,CDATA0,CONST,CSTR,CCSTR,FONT=8003
+-Z(DATA)DATA0,IDATA0,UDATA0,ECSTR,TEMP,CSTACK+80=5B00
+--image_input=font6x8.bin,font,FONT,1
+-xehmisn

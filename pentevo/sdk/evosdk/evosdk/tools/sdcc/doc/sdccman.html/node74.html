@@ -1,0 +1,100 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>3.10.1 Critical Functions and Critical Statements</TITLE>
+<META NAME="description" CONTENT="3.10.1 Critical Functions and Critical Statements">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="next" HREF="node75.html">
+<LINK REL="previous" HREF="node73.html">
+<LINK REL="up" HREF="node73.html">
+<LINK REL="next" HREF="node75.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html1684"
+  HREF="node75.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html1678"
+  HREF="node73.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html1672"
+  HREF="node73.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html1680"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html1682"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1685"
+  HREF="node75.html">3.10.2 Enabling and Disabling</A>
+<B> Up:</B> <A NAME="tex2html1679"
+  HREF="node73.html">3.10 Enabling and Disabling</A>
+<B> Previous:</B> <A NAME="tex2html1673"
+  HREF="node73.html">3.10 Enabling and Disabling</A>
+ &nbsp; <B>  <A NAME="tex2html1681"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html1683"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H2><A NAME="SECTION004101000000000000000">
+3.10.1 Critical Functions and Critical Statements</A>
+</H2>
+
+<P>
+A special keyword may be associated with a block or a function declaring
+it as <I>critical</I>. SDCC will generate code to disable all interrupts<A NAME="1695"></A>
+upon entry to a critical function and restore the interrupt enable
+to the previous state before returning. Nesting critical functions
+will need one additional byte on the stack<A NAME="1696"></A> for each
+call.
+
+<P>
+<BLOCKQUOTE>
+<TT>int foo () __critical<A NAME="1698"></A><A NAME="1699"></A>
+</TT>&nbsp;
+<BR><TT>{ </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;... </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;... </TT>&nbsp;
+<BR><TT>}</TT>
+
+</BLOCKQUOTE>
+The critical attribute maybe used with other attributes like <I>reentrant.</I>
+<BR>
+The keyword <I>critical</I> may also be used to disable interrupts
+more locally:
+
+<P>
+<BLOCKQUOTE>
+<TT>__critical{ i++; }</TT>
+
+</BLOCKQUOTE>
+More than one statement could have been included in the block.
+
+<P>
+<BR><HR>
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

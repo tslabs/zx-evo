@@ -1,0 +1,365 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="gsz80.inl" />
+    <None Include="res\cur00000.cur" />
+    <None Include="res\cur00001.cur" />
+    <None Include="res\cur00002.cur" />
+    <None Include="res\cur00003.cur" />
+    <None Include="res\cur00004.cur" />
+    <None Include="res\cur00005.cur" />
+    <None Include="res\cur00006.cur" />
+    <None Include="res\cur00007.cur" />
+    <None Include="res\cur00008.cur" />
+    <None Include="res\main.ico" />
+    <None Include="z80_main.inl" />
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="res\Unreal.manifest" />
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="lib\dinput.lib" />
+    <Library Include="lib\dxerr8.lib" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="atm.cpp" />
+    <ClCompile Include="cheat.cpp" />
+    <ClCompile Include="config.cpp" />
+    <ClCompile Include="daa_tabs.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="dbgbpx.cpp" />
+    <ClCompile Include="dbgcmd.cpp" />
+    <ClCompile Include="dbglabls.cpp" />
+    <ClCompile Include="dbgmem.cpp" />
+    <ClCompile Include="dbgoth.cpp" />
+    <ClCompile Include="dbgpaint.cpp" />
+    <ClCompile Include="dbgreg.cpp" />
+    <ClCompile Include="dbgrwdlg.cpp" />
+    <ClCompile Include="dbgtrace.cpp" />
+    <ClCompile Include="debug.cpp" />
+    <ClCompile Include="depack.cpp" />
+    <ClCompile Include="draw.cpp" />
+    <ClCompile Include="drawers.cpp" />
+    <ClCompile Include="drawnomc.cpp" />
+    <ClCompile Include="dx.cpp" />
+    <ClCompile Include="dxerr.cpp" />
+    <ClCompile Include="dxrcopy.cpp" />
+    <ClCompile Include="dxrend.cpp" />
+    <ClCompile Include="dxrframe.cpp" />
+    <ClCompile Include="emul.cpp" />
+    <ClCompile Include="emulkeys.cpp" />
+    <ClCompile Include="emul_2203.cpp" />
+    <ClCompile Include="fntsrch.cpp" />
+    <ClCompile Include="font.cpp" />
+    <ClCompile Include="font14.cpp" />
+    <ClCompile Include="font16.cpp" />
+    <ClCompile Include="font8.cpp" />
+    <ClCompile Include="fontatm2.cpp" />
+    <ClCompile Include="fontdata.cpp" />
+    <ClCompile Include="getopt.cpp" />
+    <ClCompile Include="gs.cpp" />
+    <ClCompile Include="gshlbass.cpp" />
+    <ClCompile Include="gshle.cpp" />
+    <ClCompile Include="gsz80.cpp" />
+    <ClCompile Include="gui.cpp" />
+    <ClCompile Include="hdd.cpp" />
+    <ClCompile Include="hddaspi.cpp" />
+    <ClCompile Include="hddio.cpp" />
+    <ClCompile Include="iehelp.cpp" />
+    <ClCompile Include="init.cpp" />
+    <ClCompile Include="input.cpp" />
+    <ClCompile Include="inputpc.cpp" />
+    <ClCompile Include="io.cpp" />
+    <ClCompile Include="keydefs.cpp" />
+    <ClCompile Include="leds.cpp" />
+    <ClCompile Include="mainloop.cpp" />
+    <ClCompile Include="memory.cpp" />
+    <ClCompile Include="modem.cpp" />
+    <ClCompile Include="opendlg.cpp" />
+    <ClCompile Include="op_cb.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="op_dd.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="op_ddcb.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="op_ed.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="op_fd.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="op_noprefix.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="saa1099.cpp" />
+    <ClCompile Include="savesnd.cpp" />
+    <ClCompile Include="sdcard.cpp" />
+    <ClCompile Include="snapshot.cpp" />
+    <ClCompile Include="sndbuffer.cpp" />
+    <ClCompile Include="sndchip.cpp" />
+    <ClCompile Include="sndcounter.cpp" />
+    <ClCompile Include="sndrender.cpp" />
+    <ClCompile Include="snd_bass.cpp" />
+    <ClCompile Include="sound.cpp" />
+    <ClCompile Include="std.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="tables.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="tape.cpp" />
+    <ClCompile Include="tsconf.cpp" />
+    <ClCompile Include="util.cpp" />
+    <ClCompile Include="vars.cpp" />
+    <ClCompile Include="vs1001.cpp" />
+    <ClCompile Include="wd93cmd.cpp" />
+    <ClCompile Include="wd93crc.cpp" />
+    <ClCompile Include="wd93dat.cpp" />
+    <ClCompile Include="wd93trk.cpp" />
+    <ClCompile Include="wldr_fdi.cpp" />
+    <ClCompile Include="wldr_isd.cpp" />
+    <ClCompile Include="wldr_pro.cpp" />
+    <ClCompile Include="wldr_td0.cpp" />
+    <ClCompile Include="wldr_trd.cpp" />
+    <ClCompile Include="wldr_udi.cpp" />
+    <ClCompile Include="z80.cpp" />
+    <ClCompile Include="z80asm.cpp" />
+    <ClCompile Include="zc.cpp" />
+    <ClCompile Include="zxevo.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="atm.h" />
+    <ClInclude Include="bass.h" />
+    <ClInclude Include="cheat.h" />
+    <ClInclude Include="config.h" />
+    <ClInclude Include="daa_tabs.h" />
+    <ClInclude Include="dbgbpx.h" />
+    <ClInclude Include="dbgcmd.h" />
+    <ClInclude Include="dbglabls.h" />
+    <ClInclude Include="dbgmem.h" />
+    <ClInclude Include="dbgoth.h" />
+    <ClInclude Include="dbgpaint.h" />
+    <ClInclude Include="dbgreg.h" />
+    <ClInclude Include="dbgrwdlg.h" />
+    <ClInclude Include="dbgtrace.h" />
+    <ClInclude Include="ddk.h" />
+    <ClInclude Include="debug.h" />
+    <ClInclude Include="defs.h" />
+    <ClInclude Include="depack.h" />
+    <ClInclude Include="draw.h" />
+    <ClInclude Include="drawers.h" />
+    <ClInclude Include="drawnomc.h" />
+    <ClInclude Include="dx.h" />
+    <ClInclude Include="dxerr.h" />
+    <ClInclude Include="dxerr8.h" />
+    <ClInclude Include="dxrcopy.h" />
+    <ClInclude Include="dxrend.h" />
+    <ClInclude Include="dxrframe.h" />
+    <ClInclude Include="emul.h" />
+    <ClInclude Include="emulkeys.h" />
+    <ClInclude Include="emul_2203.h" />
+    <ClInclude Include="fntsrch.h" />
+    <ClInclude Include="font.h" />
+    <ClInclude Include="font14.h" />
+    <ClInclude Include="font16.h" />
+    <ClInclude Include="font8.h" />
+    <ClInclude Include="fontatm2.h" />
+    <ClInclude Include="fontdata.h" />
+    <ClInclude Include="funcs.h" />
+    <ClInclude Include="getopt.h" />
+    <ClInclude Include="gs.h" />
+    <ClInclude Include="gshlbass.h" />
+    <ClInclude Include="gshle.h" />
+    <ClInclude Include="gsz80.h" />
+    <ClInclude Include="gui.h" />
+    <ClInclude Include="hdd.h" />
+    <ClInclude Include="hddio.h" />
+    <ClInclude Include="iehelp.h" />
+    <ClInclude Include="init.h" />
+    <ClInclude Include="input.h" />
+    <ClInclude Include="inputpc.h" />
+    <ClInclude Include="leds.h" />
+    <ClInclude Include="mainloop.h" />
+    <ClInclude Include="memory.h" />
+    <ClInclude Include="modem.h" />
+    <ClInclude Include="mods.h" />
+    <ClInclude Include="opendlg.h" />
+    <ClInclude Include="op_dd.h" />
+    <ClInclude Include="op_ed.h" />
+    <ClInclude Include="op_fd.h" />
+    <ClInclude Include="op_noprefix.h" />
+    <ClInclude Include="op_system.h" />
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="saa1099.h" />
+    <ClInclude Include="savesnd.h" />
+    <ClInclude Include="sdcard.h" />
+    <ClInclude Include="snapshot.h" />
+    <ClInclude Include="sndbuffer.h" />
+    <ClInclude Include="sndchip.h" />
+    <ClInclude Include="sndcounter.h" />
+    <ClInclude Include="sndrender.h" />
+    <ClInclude Include="snd_bass.h" />
+    <ClInclude Include="sound.h" />
+    <ClInclude Include="std.h" />
+    <ClInclude Include="sysdefs.h" />
+    <ClInclude Include="tables.h" />
+    <ClInclude Include="tape.h" />
+    <ClInclude Include="tsconf.h" />
+    <ClInclude Include="util.h" />
+    <ClInclude Include="vars.h" />
+    <ClInclude Include="vs1001.h" />
+    <ClInclude Include="wd93.h" />
+    <ClInclude Include="wd93crc.h" />
+    <ClInclude Include="wd93dat.h" />
+    <ClInclude Include="z80.h" />
+    <ClInclude Include="z80asm.h" />
+    <ClInclude Include="z80_main.h" />
+    <ClInclude Include="zc.h" />
+    <ClInclude Include="zxevo.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Unreal.rc" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{B9C745E9-52E2-48EA-9D6A-7AE42133B56E}</ProjectGuid>
+    <RootNamespace>Unreal</RootNamespace>
+    <ProjectName>Unreal</ProjectName>
+    <SccProjectName>
+    </SccProjectName>
+    <SccAuxPath>
+    </SccAuxPath>
+    <SccLocalPath>
+    </SccLocalPath>
+    <SccProvider>
+    </SccProvider>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <GenerateManifest>false</GenerateManifest>
+    <OutDir>bin\$(Configuration)\</OutDir>
+    <IntDir>bin\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <GenerateManifest>false</GenerateManifest>
+    <OutDir>bin\$(Configuration)\</OutDir>
+    <IntDir>bin\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <ExceptionHandling>false</ExceptionHandling>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;USE_SND_EXTERNAL_BUFFER;_DEBUG;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <MultiProcessorCompilation>false</MultiProcessorCompilation>
+      <ErrorReporting>Prompt</ErrorReporting>
+      <PrecompiledHeaderFile>std.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <DelayLoadDLLs>gdiplus.dll</DelayLoadDLLs>
+      <AdditionalDependencies>delayimp.lib;gdiplus.lib;kernel32.lib;user32.lib;gdi32.lib;shell32.lib;comdlg32.lib;comctl32.lib;winmm.lib;setupapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <LinkErrorReporting>PromptImmediately</LinkErrorReporting>
+    </Link>
+    <ProjectReference />
+    <PostBuildEvent>
+      <Command>copy /y "$(ProjectDir)lib\*.dll" "$(TargetDir)"
+copy /y "$(ProjectDir)cfg\*.*" "$(TargetDir)"
+md "$(TargetDir)"rom
+copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)"rom</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Full</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MultiProcessorCompilation>false</MultiProcessorCompilation>
+      <MinimalRebuild>false</MinimalRebuild>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>false</ExceptionHandling>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;USE_SND_EXTERNAL_BUFFER;NDEBUG;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>std.h</PrecompiledHeaderFile>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <ErrorReporting>Prompt</ErrorReporting>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <DelayLoadDLLs>gdiplus.dll</DelayLoadDLLs>
+      <AdditionalDependencies>delayimp.lib;gdiplus.lib;kernel32.lib;user32.lib;gdi32.lib;shell32.lib;comdlg32.lib;comctl32.lib;winmm.lib;setupapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <LinkErrorReporting>PromptImmediately</LinkErrorReporting>
+    </Link>
+    <ProjectReference />
+    <PostBuildEvent>
+      <Command>copy /y "$(ProjectDir)lib\*.dll" "$(TargetDir)"
+copy /y "$(ProjectDir)cfg\*.*" "$(TargetDir)"
+md "$(TargetDir)"rom
+copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)"rom
+md "$(TargetDir)..\tmp"
+md "$(TargetDir)..\tmp\rom"
+copy /y "$(ProjectDir)lib\*.dll" "$(TargetDir)..\tmp"
+copy /y "$(ProjectDir)cfg\*.*" "$(TargetDir)..\tmp"
+copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)..\tmp\rom"
+copy /y "$(TargetPath)" "$(TargetDir)..\tmp"
+cd /d "$(TargetDir)..\tmp"
+7z a -t7z -r -mx9 -y -i!* ..\unreal.7z *.*
+</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

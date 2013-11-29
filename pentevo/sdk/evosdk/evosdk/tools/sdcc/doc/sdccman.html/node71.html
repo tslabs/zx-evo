@@ -1,0 +1,84 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>3.9.3 HC08 Interrupt Service Routines</TITLE>
+<META NAME="description" CONTENT="3.9.3 HC08 Interrupt Service Routines">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="next" HREF="node72.html">
+<LINK REL="previous" HREF="node70.html">
+<LINK REL="up" HREF="node68.html">
+<LINK REL="next" HREF="node72.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html1641"
+  HREF="node72.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html1635"
+  HREF="node68.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html1629"
+  HREF="node70.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html1637"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html1639"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1642"
+  HREF="node72.html">3.9.4 Z80 Interrupt Service</A>
+<B> Up:</B> <A NAME="tex2html1636"
+  HREF="node68.html">3.9 Interrupt Service Routines</A>
+<B> Previous:</B> <A NAME="tex2html1630"
+  HREF="node70.html">3.9.2 MCS51/DS390 Interrupt Service</A>
+ &nbsp; <B>  <A NAME="tex2html1638"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html1640"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H2><A NAME="SECTION00493000000000000000"></A><A NAME="1676"></A>
+<BR>
+3.9.3 HC08 Interrupt Service Routines
+</H2>
+
+<P>
+Since the number of interrupts<A NAME="1677"></A> available is
+chip specific and the interrupt vector table always ends at the last
+byte of memory, the interrupt numbers corresponds to the interrupt
+vectors in reverse order of address. For example, interrupt 1 will
+use the interrupt vector at 0xfffc, interrupt 2 will use the interrupt
+vector at 0xfffa, and so on. However, interrupt 0 (the reset vector
+at 0xfffe) is not redefinable in this way; instead see section <A HREF="node78.html#sub:Startup-Code">3.12</A>
+for details on customizing startup.
+<P><P>
+<BR>
+
+
+<P>
+<BR><HR>
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

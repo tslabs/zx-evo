@@ -1,0 +1,204 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>2.4.5 Building SDCC Using Microsoft Visual C++ 6.0/NET (MSVC)</TITLE>
+<META NAME="description" CONTENT="2.4.5 Building SDCC Using Microsoft Visual C++ 6.0/NET (MSVC)">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="next" HREF="node20.html">
+<LINK REL="previous" HREF="node18.html">
+<LINK REL="up" HREF="node14.html">
+<LINK REL="next" HREF="node20.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html770"
+  HREF="node20.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html764"
+  HREF="node14.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html758"
+  HREF="node18.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html766"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html768"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html771"
+  HREF="node20.html">2.4.6 Building SDCC Using</A>
+<B> Up:</B> <A NAME="tex2html765"
+  HREF="node14.html">2.4 Building SDCC</A>
+<B> Previous:</B> <A NAME="tex2html759"
+  HREF="node18.html">2.4.4 Building SDCC using</A>
+ &nbsp; <B>  <A NAME="tex2html767"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html769"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H2><A NAME="SECTION00345000000000000000">
+2.4.5 Building SDCC Using Microsoft Visual C++ 6.0/NET (MSVC)</A>
+</H2>
+
+<P>
+Download the source package either from the SDCC Subversion repository
+or from the snapshot builds http://sdcc.sourceforge.net/snap.php,
+it will be named something like sdcc-src-yyyymmdd-rrrr.tar.bz2. SDCC
+is distributed with all the projects, workspaces, and files you need
+to build it using Visual C++ 6.0/NET (except for SDCDB and ucSim).
+The workspace name is 'sdcc.dsw'. Please note that as it is now, all
+the executables are created in a folder called sdcc&#92;bin_vc.
+Once built you need to copy the executables from sdcc&#92;bin_vc
+to sdcc&#92;bin before running SDCC. 
+<BR>
+<BR>
+WARNING: Visual studio is very picky with line terminations; it expects
+the 0x0d, 0x0a DOS style line endings, not the 0x0a Unix style line
+endings. When using the Subversion repository it's easiest to configure
+the svn client to convert automatically for you. If however you are
+getting a message such as &#34;This makefile was not generated
+by Developer Studio etc. etc.'' when opening the sdcc.dsw workspace
+or any of the *.dsp projects, then you need to convert the Unix
+style line endings to DOS style line endings. To do so you can use
+the ''unix2dos'' utility freely available on the internet. Doug
+Hawkins reported in the sdcc-user list that this works:
+<BR>
+<BR>
+C:&#92;Programming&#92;SDCC&gt; unix2dos sdcc.dsw
+<BR>
+C:&#92;Programming&#92;SDCC&gt; for /R %I in (*.dsp)
+do @unix2dos &#34;%I&#34;
+<BR>
+<BR>
+In order to build SDCC with MSVC you need win32 executables of bison.exe,
+flex.exe, and gawk.exe. One good place to get them is here http://unxutils.sourceforge.net
+<BR>
+<BR>
+Download the file UnxUtils<A NAME="462"></A>.zip. Now you have to install
+the utilities and setup MSVC so it can locate the required programs.
+Here there are two alternatives (choose one!):
+
+<P>
+
+<OL>
+<LI>The easy way:
+<BR>
+<BR>
+a) Extract UnxUtils.zip to your C:&#92; hard disk PRESERVING
+the original paths, otherwise bison won't work. (If you are using
+WinZip make certain that 'Use folder names' is selected)
+<BR>
+<BR>
+b) In the Visual C++ IDE click Tools, Options, select the Directory
+tab, in 'Show directories for:' select 'Executable files', and in
+the directories window add a new path: 'C:&#92;user&#92;local&#92;wbin',
+click ok.
+<BR>
+<BR>(As a side effect, you get a bunch of Unix utilities that could be
+useful, such as diff and patch.)
+</LI>
+<LI>A more compact way:
+<BR>
+<BR>
+This one avoids extracting a bunch of files you may not use, but requires
+some extra work:
+<BR>
+<BR>
+a) Create a directory were to put the tools needed, or use a directory
+already present. Say for example 'C:&#92;util'.
+<BR>
+<BR>
+b) Extract 'bison.exe', 'bison.hairy', 'bison.simple', 'flex.exe',
+and gawk.exe to such directory WITHOUT preserving the original paths.
+(If you are using WinZip make certain that 'Use folder names' is not
+selected)
+<BR>
+<BR>
+c) Rename bison.exe to '_bison.exe'.
+<BR>
+<BR>
+d) Create a batch file 'bison.bat' in 'C:&#92;util&#92;'
+and add these lines: 
+<BR>&nbsp;&nbsp;set BISON_SIMPLE=C:&#92;util&#92;bison.simple
+
+<BR>&nbsp;&nbsp;set BISON_HAIRY=C:&#92;util&#92;bison.hairy
+<BR>&nbsp;&nbsp;_bison %1 %2 %3 %4 %5 %6 %7 %8 %9
+<BR>
+<BR>
+Steps 'c' and 'd' are needed because bison requires by default that
+the files 'bison.simple' and 'bison.hairy' reside in some weird Unix
+directory, '/usr/local/share/' I think. So it is necessary to tell
+bison where those files are located if they are not in such directory.
+That is the function of the environment variables BISON_SIMPLE and
+BISON_HAIRY.
+<BR>
+<BR>
+e) In the Visual C++ IDE click Tools, Options, select the Directory
+tab, in 'Show directories for:' select 'Executable files', and in
+the directories window add a new path: 'c:&#92;util', click
+ok. Note that you can use any other path instead of 'c:&#92;util',
+even the path where the Visual C++ tools are, probably: 'C:&#92;Program
+Files&#92;Microsoft Visual Studio&#92;Common&#92;Tools'.
+So you don't have to execute step 'e' :)
+</LI>
+</OL>
+That is it. Open 'sdcc.dsw' in Visual Studio, click 'build all', when
+it finishes copy the executables from sdcc&#92;bin_vc
+to sdcc&#92;bin, and you can compile using SDCC.
+
+<P>
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html770"
+  HREF="node20.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html764"
+  HREF="node14.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html758"
+  HREF="node18.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html766"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html768"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html771"
+  HREF="node20.html">2.4.6 Building SDCC Using</A>
+<B> Up:</B> <A NAME="tex2html765"
+  HREF="node14.html">2.4 Building SDCC</A>
+<B> Previous:</B> <A NAME="tex2html759"
+  HREF="node18.html">2.4.4 Building SDCC using</A>
+ &nbsp; <B>  <A NAME="tex2html767"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html769"
+  HREF="node190.html">Index</A></B> 
+<!--End of Navigation Panel-->
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

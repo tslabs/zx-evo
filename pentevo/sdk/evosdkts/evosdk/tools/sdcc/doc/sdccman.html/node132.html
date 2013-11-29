@@ -1,0 +1,129 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>4.6.12 Functions</TITLE>
+<META NAME="description" CONTENT="4.6.12 Functions">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="next" HREF="node133.html">
+<LINK REL="previous" HREF="node131.html">
+<LINK REL="up" HREF="node120.html">
+<LINK REL="next" HREF="node133.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html2621"
+  HREF="node133.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html2615"
+  HREF="node120.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html2609"
+  HREF="node131.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html2617"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html2619"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html2622"
+  HREF="node133.html">4.6.13 Function return values</A>
+<B> Up:</B> <A NAME="tex2html2616"
+  HREF="node120.html">4.6 The PIC16 port</A>
+<B> Previous:</B> <A NAME="tex2html2610"
+  HREF="node131.html">4.6.11 Stack</A>
+ &nbsp; <B>  <A NAME="tex2html2618"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html2620"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H2><A NAME="SECTION005612000000000000000">
+4.6.12 Functions</A>
+</H2>
+
+<P>
+In addition to the standard SDCC function keywords, PIC16<A NAME="3145"></A>
+port makes available two more:
+
+<P>
+<DL>
+<DT><STRONG>wparam<A NAME="3147"></A></STRONG></DT>
+<DD>Use the WREG to pass one byte of
+the first function argument. This improves speed but you may not use
+this for functions with arguments that are called via function pointers,
+otherwise the first byte of the first parameter will get lost. Usage:
+</DD>
+</DL>
+
+<DL COMPACT>
+<DT>
+<DD>void&nbsp;func_wparam(int&nbsp;a)&nbsp;wparam
+
+<P>
+{
+
+<P>
+&nbsp;&nbsp;&nbsp;&nbsp;/*&nbsp;WREG&nbsp;hold&nbsp;the&nbsp;lower&nbsp;part&nbsp;of&nbsp;a&nbsp;*/
+
+<P>
+&nbsp;&nbsp;&nbsp;&nbsp;/*&nbsp;the&nbsp;high&nbsp;part&nbsp;of&nbsp;a&nbsp;is&nbsp;stored&nbsp;in&nbsp;FSR2+2&nbsp;(or&nbsp;+3&nbsp;for&nbsp;large&nbsp;stack&nbsp;model)&nbsp;*/
+
+<P>
+...
+
+<P>
+}
+</DD>
+
+<DT><STRONG>shadowregs<A NAME="3156"></A></STRONG></DT>
+<DD>When entering/exiting an
+ISR, it is possible to take advantage of the PIC18F hardware shadow
+registers which hold the values of WREG, STATUS and BSR registers.
+This can be done by adding the keyword <I>shadowregs</I> before the
+<I>interrupt</I> keyword in the function's header.
+</DD>
+</DL>
+
+<DL COMPACT>
+<DT>
+<DD>void&nbsp;isr_shadow(void)&nbsp;shadowregs&nbsp;interrupt&nbsp;1
+
+<P>
+{
+
+<P>
+...
+
+<P>
+}
+</DD>
+</DL><I>shadowregs</I> instructs the code generator not to store/restore
+WREG, STATUS, BSR when entering/exiting the ISR.
+
+<P>
+<BR><HR>
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

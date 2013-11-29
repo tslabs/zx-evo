@@ -1,0 +1,198 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>6. TIPS</TITLE>
+<META NAME="description" CONTENT="6. TIPS">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="next" HREF="node156.html">
+<LINK REL="previous" HREF="node139.html">
+<LINK REL="up" HREF="sdccman.html">
+<LINK REL="next" HREF="node149.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html2908"
+  HREF="node149.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html2902"
+  HREF="sdccman.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html2896"
+  HREF="node147.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html2904"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html2906"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html2909"
+  HREF="node149.html">6.1 Porting code from</A>
+<B> Up:</B> <A NAME="tex2html2903"
+  HREF="sdccman.html">SDCC Compiler User Guide</A>
+<B> Previous:</B> <A NAME="tex2html2897"
+  HREF="node147.html">5.1.7 Interfacing SDCDB with</A>
+ &nbsp; <B>  <A NAME="tex2html2905"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html2907"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H1><A NAME="SECTION00700000000000000000">
+6. TIPS</A>
+</H1>
+
+<P>
+Here are a few guidelines that will help the compiler generate more
+efficient code, some of the tips are specific to this compiler others
+are generally good programming practice.
+
+<P>
+
+<UL>
+<LI>Use the smallest data type to represent your data-value. If it is
+known in advance that the value is going to be less than 256 then
+use an 'unsigned char' instead of a 'short' or 'int'. Please note,
+that ANSI C requires both signed and unsigned chars to be promoted
+to 'signed int'<A NAME="3457"></A> before doing any operation. This promotion<A NAME="3459"></A><A NAME="type_promotion"></A>can be omitted, if the result is the same. The effect of the promotion
+rules together with the sign-extension is often surprising:
+
+<P>
+<BLOCKQUOTE>
+<TT>unsigned char uc = 0xfe;</TT>&nbsp;
+<BR><TT>if (uc * uc &lt; 0) /* this is true! */</TT>&nbsp;
+<BR><TT>{</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;....</TT>&nbsp;
+<BR><TT>}</TT>
+
+</BLOCKQUOTE>
+<TT>uc * uc</TT> is evaluated as <TT>(int) uc * (int) uc =
+(int) 0xfe * (int) 0xfe = (int) 0xfc04 = -1024</TT>. 
+<BR>
+Another one:
+
+<P>
+<BLOCKQUOTE>
+<TT>(unsigned char) -12 / (signed char) -3 = ...</TT>
+
+</BLOCKQUOTE>
+No, the result is not 4:
+
+<P>
+<BLOCKQUOTE>
+<TT>(int) (unsigned char) -12 / (int) (signed char) -3 =</TT>&nbsp;
+<BR><TT>(int) (unsigned char) 0xf4 / (int) (signed char) 0xfd =</TT>&nbsp;
+<BR><TT>(int) 0x00f4 / (int) 0xfffd =</TT>&nbsp;
+<BR><TT>(int) 0x00f4 / (int) 0xfffd =</TT>&nbsp;
+<BR><TT>(int) 244 / (int) -3 =</TT>&nbsp;
+<BR><TT>(int) -81 = (int) 0xffaf;</TT>
+
+</BLOCKQUOTE>
+Don't complain, that gcc gives you a different result. gcc uses 32
+bit ints, while SDCC uses 16 bit ints. Therefore the results are different.
+<BR>
+From ''comp.lang.c FAQ'':
+
+<P>
+<BLOCKQUOTE>
+<I>If well-defined overflow characteristics are important and negative
+values are not, or if you want to steer clear of sign-extension problems
+when manipulating bits or bytes, use one of the corresponding unsigned
+types. (Beware when mixing signed and unsigned values in expressions,
+though.)</I>
+<BR><I>Although character types (especially unsigned char) can be used
+as &#34;tiny&#34; integers, doing so is sometimes more trouble
+than it's worth, due to unpredictable sign extension and increased
+code size.</I>
+
+</BLOCKQUOTE>
+</LI>
+<LI>Use unsigned when it is known in advance that the value is not going
+to be negative. This helps especially if you are doing division or
+multiplication, bit-shifting or are using an array index.
+</LI>
+<LI>NEVER jump into a LOOP.
+</LI>
+<LI>Declare the variables to be local<A NAME="3489"></A> whenever
+possible, especially loop control variables (induction).
+</LI>
+<LI>Have a look at the assembly listing to get a ''feeling'' for the
+code generation.
+</LI>
+</UL>
+
+<P>
+<BR><HR>
+<!--Table of Child-Links-->
+<A NAME="CHILD_LINKS"><STRONG>Subsections</STRONG></A>
+
+<UL>
+<LI><A NAME="tex2html2910"
+  HREF="node149.html">6.1 Porting code from or to other compilers</A>
+<LI><A NAME="tex2html2911"
+  HREF="node150.html">6.2 Tools included in the distribution</A>
+<LI><A NAME="tex2html2912"
+  HREF="node151.html">6.3 Documentation included in the distribution</A>
+<LI><A NAME="tex2html2913"
+  HREF="node152.html">6.4 Related open source tools</A>
+<LI><A NAME="tex2html2914"
+  HREF="node153.html">6.5 Related documentation / recommended reading</A>
+<LI><A NAME="tex2html2915"
+  HREF="node154.html">6.6 Application notes specifically for SDCC</A>
+<LI><A NAME="tex2html2916"
+  HREF="node155.html">6.7 Some Questions</A>
+</UL>
+<!--End of Table of Child-Links-->
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html2908"
+  HREF="node149.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html2902"
+  HREF="sdccman.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html2896"
+  HREF="node147.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html2904"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html2906"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html2909"
+  HREF="node149.html">6.1 Porting code from</A>
+<B> Up:</B> <A NAME="tex2html2903"
+  HREF="sdccman.html">SDCC Compiler User Guide</A>
+<B> Previous:</B> <A NAME="tex2html2897"
+  HREF="node147.html">5.1.7 Interfacing SDCDB with</A>
+ &nbsp; <B>  <A NAME="tex2html2905"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html2907"
+  HREF="node190.html">Index</A></B> 
+<!--End of Navigation Panel-->
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

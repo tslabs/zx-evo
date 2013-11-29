@@ -1,0 +1,202 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>4.1.3 Bankswitching</TITLE>
+<META NAME="description" CONTENT="4.1.3 Bankswitching">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="previous" HREF="node106.html">
+<LINK REL="up" HREF="node104.html">
+<LINK REL="next" HREF="node108.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html2219"
+  HREF="node108.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html2213"
+  HREF="node104.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html2209"
+  HREF="node106.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html2215"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html2217"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html2220"
+  HREF="node108.html">4.2 DS400 port</A>
+<B> Up:</B> <A NAME="tex2html2214"
+  HREF="node104.html">4.1 MCS51 variants</A>
+<B> Previous:</B> <A NAME="tex2html2210"
+  HREF="node106.html">4.1.2 Other Features available</A>
+ &nbsp; <B>  <A NAME="tex2html2216"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html2218"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+<!--Table of Child-Links-->
+<A NAME="CHILD_LINKS"><STRONG>Subsections</STRONG></A>
+
+<UL>
+<LI><A NAME="tex2html2221"
+  HREF="node107.html#SECTION00513100000000000000">4.1.3.1 Hardware</A>
+<LI><A NAME="tex2html2222"
+  HREF="node107.html#SECTION00513200000000000000">4.1.3.2 Software</A>
+</UL>
+<!--End of Table of Child-Links-->
+<HR>
+
+<H2><A NAME="SECTION00513000000000000000">
+4.1.3 Bankswitching</A>
+</H2>
+
+<P>
+Bankswitching<A NAME="2774"></A> (a.k.a. code banking<A NAME="2775"></A>)
+is a technique to increase the code space above the 64k limit of the
+8051.
+
+<P>
+
+<H3><A NAME="SECTION00513100000000000000">
+4.1.3.1 Hardware</A>
+</H3>
+
+<P>
+<TABLE CELLPADDING=3 BORDER="1">
+<TR><TD ALIGN="CENTER" COLSPAN=1>8000-FFFF</TD>
+<TD ALIGN="CENTER">bank1</TD>
+<TD ALIGN="CENTER">bank2</TD>
+<TD ALIGN="CENTER">bank3</TD>
+</TR>
+<TR><TD ALIGN="CENTER" COLSPAN=1>0000-7FFF</TD>
+<TD ALIGN="CENTER">common</TD>
+<TD ALIGN="CENTER" COLSPAN=2>&nbsp;</TD>
+</TR>
+<TR><TD ALIGN="CENTER" COLSPAN=4>SiLabs C8051F120 example</TD>
+</TR>
+</TABLE>
+<BR>
+<BR>
+Usually the hardware uses some sfr (an output port or an internal
+sfr) to select a bank and put it in the banked area of the memory
+map. The selected bank usually becomes active immediately upon assignment
+to this sfr and when running inside a bank it will switch out this
+code it is currently running. Therefor you cannot jump or call directly
+from one bank to another and need to use a so-called trampoline in
+the common area. For SDCC an example trampoline is in crtbank.asm
+and you may need to change it to your 8051 derivative or schematic.
+The presented code is written for the C8051F120.
+<BR>
+<BR>
+When calling a banked function SDCC will put the LSB of the functions
+address in register R0, the MSB in R1 and the bank in R2 and then
+call this trampoline <I>__sdcc_banked_call</I>. The current selected
+bank is saved on the stack, the new bank is selected and an indirect
+jump is made. When the banked function returns it jumps to <I>__sdcc_banked_ret</I>
+which restores the previous bank and returns to the caller.
+
+<P>
+
+<H3><A NAME="SECTION00513200000000000000">
+4.1.3.2 Software</A>
+</H3>
+
+<P>
+When writing banked software using SDCC you need to use some special
+keywords and options. You also need to take over a bit of work from
+the linker.
+<BR>
+<BR>
+To create a function that can be called from another bank it requires
+the keyword <I>banked</I><A NAME="2804"></A>. The caller must see this
+in the prototype of the callee and the callee needs it for a proper
+return. Called functions within the same bank as the caller do not
+need the <I>banked</I> keyword nor do functions in the common area.
+Beware: SDCC does not know or check if functions are in the same bank.
+This is your responsibility!
+<BR>
+<BR>
+Normally all functions you write end up in the segment CSEG. If you
+want a function explicitly to reside in the common area put it in
+segment HOME. This applies for instance to interrupt service routines
+as they should not be banked.
+
+<P>
+Functions that need to be in a switched bank must be put in a named
+segment. The name can be mostly anything up to eight characters (e.g.
+BANK1). To do this you either use --codeseg BANK1 (See <A HREF="node55.html#lyx:-codeseg">3.2.9</A>)
+on the command line when compiling or #pragma codeseg BANK1 (See
+<A HREF="node101.html#sec:Pragmas">3.19</A>) at the top of the C source file. The segment name
+always applies to the whole source file and generated object so functions
+for different banks need to be defined in different source files.
+<BR>
+<BR>
+When linking your objects you need to tell the linker where to put
+your segments. To do this you use the following command line option
+to SDCC: -Wl-b BANK1=0x18000 (See <A HREF="node49.html#lyx:-Wl_option">3.2.3</A>). This sets
+the virtual start address of this segment. It sets the banknumber
+to 0x01 and maps the bank to 0x8000 and up. The linker will not check
+for overflows, again this is your responsibility.
+
+<P>
+
+<P><P>
+<BR>
+
+
+<P>
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html2219"
+  HREF="node108.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html2213"
+  HREF="node104.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html2209"
+  HREF="node106.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html2215"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html2217"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html2220"
+  HREF="node108.html">4.2 DS400 port</A>
+<B> Up:</B> <A NAME="tex2html2214"
+  HREF="node104.html">4.1 MCS51 variants</A>
+<B> Previous:</B> <A NAME="tex2html2210"
+  HREF="node106.html">4.1.2 Other Features available</A>
+ &nbsp; <B>  <A NAME="tex2html2216"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html2218"
+  HREF="node190.html">Index</A></B> 
+<!--End of Navigation Panel-->
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

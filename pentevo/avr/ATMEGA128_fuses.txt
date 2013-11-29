@@ -1,0 +1,27 @@
+
+avreal/WIN32  -  AVR controllers LPT programmer by Redchuk Alexandr
+v1.25rev5 (Jan 15 2007 20:02:38)  http://www.ln.com.ua/~real/avreal
+bug-reports, suggestions and so on mail to avreal@real.kiev.ua
+
+Command:
+ -ab -p1 +atmega128
+Device connected, MEGA128 detected
+Chip not locked
+Fuses
+  OSCCAL	= A2, A1, 9B, 9C
+!  BODLEVEL  	= 0
+!  BODEN     	= 0
+!  SUT       	= 3
+!  CKSEL     	= F
+  BLB1      	= 3
+  BLB0      	= 3
+  OCDEN     	= 1
+  JTAGEN    	= 0
+!  CKOPT     	= 0
+!  EESAVE    	= 0
+  BOOTSZ    	= 0
+  BOOTRST   	= 1
+!  M103C     	= 1
+  WDTON     	= 1
+Reset pin released
+Adapter disabled

@@ -1,0 +1,175 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>3.2.8 Optimization Options</TITLE>
+<META NAME="description" CONTENT="3.2.8 Optimization Options">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="next" HREF="node55.html">
+<LINK REL="previous" HREF="node53.html">
+<LINK REL="up" HREF="node46.html">
+<LINK REL="next" HREF="node55.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html1365"
+  HREF="node55.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html1359"
+  HREF="node46.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html1353"
+  HREF="node53.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html1361"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html1363"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1366"
+  HREF="node55.html">3.2.9 Other Options</A>
+<B> Up:</B> <A NAME="tex2html1360"
+  HREF="node46.html">3.2 Command Line Options</A>
+<B> Previous:</B> <A NAME="tex2html1354"
+  HREF="node53.html">3.2.7 GBZ80 Options</A>
+ &nbsp; <B>  <A NAME="tex2html1362"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html1364"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H2><A NAME="SECTION00428000000000000000"></A><A NAME="988"></A><A NAME="989"></A>
+<BR>
+3.2.8 Optimization Options
+</H2>
+
+<P>
+
+<UL>
+<LI>[<B>--nogcse<A NAME="992"></A></B>] Will not do global subexpression
+elimination, this option may be used when the compiler creates undesirably
+large stack/data spaces to store compiler temporaries (<I>s</I>pill
+<I>loc</I>ations, sloc<A NAME="995"></A>). A warning message
+will be generated when this happens and the compiler will indicate
+the number of extra bytes it allocated. It is recommended that this
+option NOT be used, #pragma&nbsp;nogcse<A NAME="996"></A> can be
+used to turn off global subexpression elimination<A NAME="997"></A>
+for a given function only.
+</LI>
+<LI>[<B>--noinvariant<A NAME="998"></A></B>] Will not do
+loop invariant optimizations, this may be turned off for reasons explained
+for the previous option. For more details of loop optimizations performed
+see Loop Invariants in section <A HREF="node172.html#sub:Loop-Optimizations">8.1.4</A>. It is
+recommended that this option NOT be used, #pragma&nbsp;noinvariant<A NAME="1000"></A>
+can be used to turn off invariant optimizations for a given function
+only.
+</LI>
+<LI>[<B>--noinduction<A NAME="1001"></A></B>] Will not do
+loop induction optimizations, see section strength reduction for more
+details. It is recommended that this option is NOT used, #pragma&nbsp;noinduction<A NAME="1002"></A>
+can be used to turn off induction optimizations for a given function
+only.
+</LI>
+<LI>[<B>--nojtbound<A NAME="1003"></A></B>]  Will not generate
+boundary condition check when switch statements<A NAME="1004"></A>
+are implemented using jump-tables. See section <A HREF="node175.html#sub:_switch_-Statements">8.1.7</A>&nbsp;Switch
+Statements for more details. It is recommended that this option is
+NOT used, #pragma&nbsp;nojtbound<A NAME="1006"></A> can be used
+to turn off boundary checking for jump tables for a given function
+only.
+</LI>
+<LI>[<B>--noloopreverse<A NAME="1007"></A></B>] Will not
+do loop reversal <A NAME="1008"></A>optimization.
+</LI>
+<LI>[--<B>nolabelopt</B>] <A NAME="1010"></A>Will not optimize
+labels (makes the dumpfiles more readable).
+</LI>
+<LI>[<B>--no-xinit-opt<A NAME="1011"></A></B>] Will not
+memcpy initialized data from code space into xdata space. This saves
+a few bytes in code space if you don't have initialized data<A NAME="1012"></A>.
+</LI>
+<LI>[<B>--nooverlay<A NAME="1013"></A></B>]  The compiler will
+not overlay parameters and local variables of any function, see section
+Parameters and local variables for more details.
+</LI>
+<LI>[<B>--no-peep<A NAME="1014"></A></B>] Disable peep-hole optimization
+with built-in rules.
+</LI>
+<LI>[<B>--peep-file</B><A NAME="1016"></A>&nbsp;&lt;filename&gt;] This
+option can be used to use additional rules to be used by the peep
+hole optimizer. See section <A HREF="node181.html#sub:Peephole-Optimizer">8.1.13</A>&nbsp;Peep Hole
+optimizations for details on how to write these rules.
+</LI>
+<LI>[<B>--peep-asm<A NAME="1018"></A></B>] Pass the inline assembler
+code through the peep hole optimizer. This can cause unexpected changes
+to inline assembler code, please go through the peephole optimizer<A NAME="1019"></A>
+rules defined in the source file tree '&lt;target&gt;/peeph.def' before
+using this option.
+</LI>
+<LI>[<B>--opt-code-speed<A NAME="1020"></A></B>] The compiler
+will optimize code generation towards fast code, possibly at the expense
+of code size.
+</LI>
+<LI>[<B>--opt-code-size<A NAME="1021"></A></B>] The compiler
+will optimize code generation towards compact code, possibly at the
+expense of code speed.
+</LI>
+</UL>
+<P><P>
+<BR>
+
+
+<P>
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html1365"
+  HREF="node55.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html1359"
+  HREF="node46.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html1353"
+  HREF="node53.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html1361"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html1363"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1366"
+  HREF="node55.html">3.2.9 Other Options</A>
+<B> Up:</B> <A NAME="tex2html1360"
+  HREF="node46.html">3.2 Command Line Options</A>
+<B> Previous:</B> <A NAME="tex2html1354"
+  HREF="node53.html">3.2.7 GBZ80 Options</A>
+ &nbsp; <B>  <A NAME="tex2html1362"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html1364"
+  HREF="node190.html">Index</A></B> 
+<!--End of Navigation Panel-->
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

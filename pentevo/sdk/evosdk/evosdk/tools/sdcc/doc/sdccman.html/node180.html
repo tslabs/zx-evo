@@ -1,0 +1,159 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>8.1.12 Higher Order Byte / Higher Order Word</TITLE>
+<META NAME="description" CONTENT="8.1.12 Higher Order Byte / Higher Order Word">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="next" HREF="node181.html">
+<LINK REL="previous" HREF="node179.html">
+<LINK REL="up" HREF="node168.html">
+<LINK REL="next" HREF="node181.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html3399"
+  HREF="node181.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html3393"
+  HREF="node168.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html3387"
+  HREF="node179.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html3395"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html3397"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html3400"
+  HREF="node181.html">8.1.13 Peephole Optimizer</A>
+<B> Up:</B> <A NAME="tex2html3394"
+  HREF="node168.html">8.1 Optimizations</A>
+<B> Previous:</B> <A NAME="tex2html3388"
+  HREF="node179.html">8.1.11 Highest Order Bit</A>
+ &nbsp; <B>  <A NAME="tex2html3396"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html3398"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H2><A NAME="SECTION009112000000000000000"></A><A NAME="4070"></A><A NAME="4071"></A>
+<BR>
+8.1.12 Higher Order Byte / Higher Order Word
+</H2>
+
+<P>
+It is also frequently required to obtain a higher order byte or word
+of a larger integral type (long, int or short types). SDCC recognizes
+the following expressions to yield the higher order byte or word and
+generates optimized code for it, e.g.:
+
+<P>
+<BLOCKQUOTE>
+<TT>unsigned int gint; </TT>&nbsp;
+<BR><TT>unsigned long int glong; </TT>&nbsp;
+<BR>&nbsp;
+<BR><TT>foo () { </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;unsigned char hob1, hob2; </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;unsigned int how1, how2; </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;... </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;hob1 = (gint &gt;&gt; 8) &amp; 0xFF; </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;hob2 = glong &gt;&gt; 24; </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;how1 = (glong &gt;&gt; 16) &amp; 0xFFFF; </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;how2 = glong &gt;&gt; 8; </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;.. </TT>&nbsp;
+<BR><TT>}</TT>
+
+</BLOCKQUOTE>
+will generate the following code:
+
+<P>
+<BLOCKQUOTE>
+<TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 91 ;&nbsp;
+hob.c 15 </TT>&nbsp;
+<BR><TT>0037 85*01*06&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 92&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+mov&nbsp;&nbsp; _foo_hob1_1_1,(_gint + 1) </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 93 ;&nbsp;
+hob.c 16 </TT>&nbsp;
+<BR><TT>003A 85*05*07&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 94&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+mov&nbsp;&nbsp; _foo_hob2_1_1,(_glong + 3) </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 95 ;&nbsp;
+hob.c 17 </TT>&nbsp;
+<BR><TT>003D 85*04*08&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 96&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+mov&nbsp;&nbsp; _foo_how1_1_1,(_glong + 2) </TT>&nbsp;
+<BR><TT>0040 85*05*09&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 97&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+mov&nbsp;&nbsp; (_foo_how1_1_1 + 1),(_glong + 3) </TT>&nbsp;
+<BR><TT>0043 85*03*0A&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 98&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+mov&nbsp;&nbsp; _foo_how2_1_1,(_glong + 1) </TT>&nbsp;
+<BR><TT>0046 85*04*0B&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 99&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+mov&nbsp;&nbsp; (_foo_how2_1_1 + 1),(_glong + 2) </TT>
+
+</BLOCKQUOTE>
+Again, variations of these cases may <I>not</I> be recognized. They
+are standard C expressions, so I heartily recommend these be the only
+way to get the higher order byte/word, (it is portable). Of course
+it will be recognized even if it is embedded in other expressions,
+e.g.:
+
+<P>
+<BLOCKQUOTE>
+<TT>xyz = gint + ((gint &gt;&gt; 8) &amp; 0xFF);</TT>
+
+</BLOCKQUOTE>
+will still be recognized.
+
+<P>
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html3399"
+  HREF="node181.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html3393"
+  HREF="node168.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html3387"
+  HREF="node179.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html3395"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html3397"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html3400"
+  HREF="node181.html">8.1.13 Peephole Optimizer</A>
+<B> Up:</B> <A NAME="tex2html3394"
+  HREF="node168.html">8.1 Optimizations</A>
+<B> Previous:</B> <A NAME="tex2html3388"
+  HREF="node179.html">8.1.11 Highest Order Bit</A>
+ &nbsp; <B>  <A NAME="tex2html3396"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html3398"
+  HREF="node190.html">Index</A></B> 
+<!--End of Navigation Panel-->
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

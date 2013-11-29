@@ -1,0 +1,159 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>3.14.4 Assembler Routine (reentrant)</TITLE>
+<META NAME="description" CONTENT="3.14.4 Assembler Routine (reentrant)">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="previous" HREF="node89.html">
+<LINK REL="up" HREF="node86.html">
+<LINK REL="next" HREF="node91.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html1910"
+  HREF="node91.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html1904"
+  HREF="node86.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html1900"
+  HREF="node89.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html1906"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html1908"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1911"
+  HREF="node91.html">3.15 int (16 bit)</A>
+<B> Up:</B> <A NAME="tex2html1905"
+  HREF="node86.html">3.14 Interfacing with Assembler</A>
+<B> Previous:</B> <A NAME="tex2html1901"
+  HREF="node89.html">3.14.3 Assembler Routine (non-reentrant)</A>
+ &nbsp; <B>  <A NAME="tex2html1907"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html1909"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H2><A NAME="SECTION004144000000000000000">
+3.14.4 Assembler Routine (reentrant)</A>
+</H2>
+
+<P>
+In this case<A NAME="2339"></A><A NAME="2340"></A>
+the second parameter<A NAME="2341"></A> onwards will be passed
+on the stack, the parameters are pushed from right to left i.e. before
+the call the second leftmost parameter will be on the top of the stack
+(the leftmost parameter is passed in registers). Here is an example:
+
+<P>
+<BLOCKQUOTE>
+<TT>extern int asm_func(unsigned char, unsigned char, unsigned
+char) reentrant;</TT>&nbsp;
+<BR>&nbsp;
+<BR><TT>int c_func (unsigned char i, unsigned char j, unsigned char
+k) reentrant </TT>&nbsp;
+<BR><TT>{ </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;return asm_func(i,j,k); </TT>&nbsp;
+<BR><TT>} </TT>&nbsp;
+<BR>&nbsp;
+<BR><TT>int main() </TT>&nbsp;
+<BR><TT>{ </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;return c_func(10,9,8); </TT>&nbsp;
+<BR><TT>}</TT>
+
+</BLOCKQUOTE>
+The corresponding (unoptimized) assembler routine is:
+
+<P>
+<BLOCKQUOTE>
+<TT>.globl _asm_func </TT>&nbsp;
+<BR><TT>_asm_func: </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;push&nbsp;_bp </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;mov&nbsp;&nbsp;_bp,sp&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;;stack contains: _bp, return
+address, second parameter, third parameter</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;mov&nbsp;&nbsp;r2,dpl</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;mov&nbsp;&nbsp;a,_bp</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;add&nbsp;&nbsp;a,#0xfd&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;;calculate pointer to the
+second parameter</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;mov&nbsp;&nbsp;r0,a </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;mov&nbsp;&nbsp;a,_bp </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;add&nbsp;&nbsp;a,#0xfc&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;;calculate pointer to the
+rightmost parameter</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;mov&nbsp;&nbsp;r1,a </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;mov&nbsp;&nbsp;a,@r0</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;add&nbsp;&nbsp;a,@r1</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;add&nbsp;&nbsp;a,r2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;;calculate the result (=
+sum of all three parameters)</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;mov&nbsp;&nbsp;dpl,a&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;;return value goes into
+dptr (cast into int)</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;mov&nbsp;&nbsp;dph,#0x00 </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;mov&nbsp;&nbsp;sp,_bp </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;pop&nbsp;&nbsp;_bp </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;ret</TT>
+
+</BLOCKQUOTE>
+The compiling and linking procedure remains the same, however note
+the extra entry &amp; exit linkage required for the assembler code, _bp
+is the stack frame pointer and is used to compute the offset into
+the stack for parameters and local variables.
+<P><P>
+<BR>
+
+
+<P>
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html1910"
+  HREF="node91.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html1904"
+  HREF="node86.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html1900"
+  HREF="node89.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html1906"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html1908"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1911"
+  HREF="node91.html">3.15 int (16 bit)</A>
+<B> Up:</B> <A NAME="tex2html1905"
+  HREF="node86.html">3.14 Interfacing with Assembler</A>
+<B> Previous:</B> <A NAME="tex2html1901"
+  HREF="node89.html">3.14.3 Assembler Routine (non-reentrant)</A>
+ &nbsp; <B>  <A NAME="tex2html1907"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html1909"
+  HREF="node190.html">Index</A></B> 
+<!--End of Navigation Panel-->
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

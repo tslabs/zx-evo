@@ -1,0 +1,140 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>2.4.9 VPATH feature</TITLE>
+<META NAME="description" CONTENT="2.4.9 VPATH feature">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="previous" HREF="node22.html">
+<LINK REL="up" HREF="node14.html">
+<LINK REL="next" HREF="node24.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html824"
+  HREF="node24.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html818"
+  HREF="node14.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html814"
+  HREF="node22.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html820"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html822"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html825"
+  HREF="node24.html">2.5 Building the Documentation</A>
+<B> Up:</B> <A NAME="tex2html819"
+  HREF="node14.html">2.4 Building SDCC</A>
+<B> Previous:</B> <A NAME="tex2html815"
+  HREF="node22.html">2.4.8 Windows Install Using</A>
+ &nbsp; <B>  <A NAME="tex2html821"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html823"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H2><A NAME="SECTION00349000000000000000"></A><A NAME="514"></A>
+<BR>
+2.4.9 VPATH feature
+</H2>
+
+<P>
+SDCC supports the VPATH feature provided by configure and make. It
+allows to separate the source and build trees. Here's an example:
+
+<P>
+<TT>cd ~&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#
+cd $HOME</TT>
+
+<P>
+<TT>tar -xjf sdcc-src-yyyymmdd-rrrr.tar.bz2&nbsp;# extract source
+to directory sdcc</TT>
+
+<P>
+<TT>mkdir sdcc.build&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#
+put output in sdcc.build</TT>
+
+<P>
+<TT>cd sdcc.build</TT>
+
+<P>
+<TT>../sdcc/configure&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#
+configure is doing all the magic!</TT>
+
+<P>
+<TT>make</TT>
+
+<P>
+That's it! <B>configure</B> will create the directory
+tree will all the necessary Makefiles in ~/sdcc.build.
+It automagically computes the variables srcdir, top_srcdir and top_buildir
+for each directory. After running <B>make</B> the generated files
+will be in ~/sdcc.build, while the source files stay
+in ~/sdcc.
+<BR>
+This is not only usefull for building different binaries, e.g. when
+cross compiling. It also gives you a much better overview in the source
+tree when all the generated files are not scattered between the source
+files. And the best thing is: if you want to change a file you can
+leave the original file untouched in the source directory. Simply
+copy it to the build directory, edit it, enter `make clean', `rm Makefile.dep'
+and `make'. <B>make</B> will do the rest for you!
+
+<P>
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html824"
+  HREF="node24.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html818"
+  HREF="node14.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html814"
+  HREF="node22.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html820"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html822"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html825"
+  HREF="node24.html">2.5 Building the Documentation</A>
+<B> Up:</B> <A NAME="tex2html819"
+  HREF="node14.html">2.4 Building SDCC</A>
+<B> Previous:</B> <A NAME="tex2html815"
+  HREF="node22.html">2.4.8 Windows Install Using</A>
+ &nbsp; <B>  <A NAME="tex2html821"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html823"
+  HREF="node190.html">Index</A></B> 
+<!--End of Navigation Panel-->
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

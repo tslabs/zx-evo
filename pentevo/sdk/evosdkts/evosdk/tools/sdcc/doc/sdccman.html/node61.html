@@ -1,0 +1,182 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>3.4.2 Z80/Z180 Storage Class Language Extensions</TITLE>
+<META NAME="description" CONTENT="3.4.2 Z80/Z180 Storage Class Language Extensions">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="next" HREF="node62.html">
+<LINK REL="previous" HREF="node60.html">
+<LINK REL="up" HREF="node59.html">
+<LINK REL="next" HREF="node62.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html1487"
+  HREF="node62.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html1481"
+  HREF="node59.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html1475"
+  HREF="node60.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html1483"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html1485"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1488"
+  HREF="node62.html">3.4.3 HC08 Storage Class</A>
+<B> Up:</B> <A NAME="tex2html1482"
+  HREF="node59.html">3.4 Storage Class Language</A>
+<B> Previous:</B> <A NAME="tex2html1476"
+  HREF="node60.html">3.4.1 MCS51/DS390 Storage Class</A>
+ &nbsp; <B>  <A NAME="tex2html1484"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html1486"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+<!--Table of Child-Links-->
+<A NAME="CHILD_LINKS"><STRONG>Subsections</STRONG></A>
+
+<UL>
+<LI><A NAME="tex2html1489"
+  HREF="node61.html#SECTION00442100000000000000">3.4.2.1 sfr (in/out to 8-bit addresses)</A>
+<LI><A NAME="tex2html1490"
+  HREF="node61.html#SECTION00442200000000000000">3.4.2.2 banked sfr (in/out to 16-bit addresses)</A>
+<LI><A NAME="tex2html1491"
+  HREF="node61.html#SECTION00442300000000000000">3.4.2.3 sfr (in0/out0 to 8 bit addresses on Z180/HD64180)</A>
+</UL>
+<!--End of Table of Child-Links-->
+<HR>
+
+<H2><A NAME="SECTION00442000000000000000"></A><A NAME="1404"></A>
+<BR>
+3.4.2 Z80/Z180 Storage Class Language Extensions
+</H2>
+
+<P>
+
+<H3><A NAME="SECTION00442100000000000000"></A><A NAME="1405"></A><A NAME="1406"></A>
+<BR>
+3.4.2.1 sfr (in/out to 8-bit addresses)
+</H3>
+
+<P>
+The Z80<A NAME="1407"></A> family has separate address spaces for memory
+and <I>i</I>nput/<I>o</I>utput memory. I/O memory<A NAME="1410"></A><A NAME="1411"></A><A NAME="1412"></A>
+is accessed with special instructions, e.g.:
+
+<P>
+<BLOCKQUOTE>
+<TT>sfr at 0x78 IoPort;&nbsp;&nbsp;/* define a var in I/O space at 78h
+called IoPort */ </TT>
+
+</BLOCKQUOTE>
+Writing 0x01 to this variable generates the assembly code:
+
+<P>
+<BLOCKQUOTE>
+<TT>3E 01&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ld a,#0x01</TT>&nbsp;
+<BR><TT>D3 78&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;out (_IoPort),a </TT>
+
+</BLOCKQUOTE>
+
+<P>
+
+<H3><A NAME="SECTION00442200000000000000"></A><A NAME="1421"></A><A NAME="1422"></A>
+<BR>
+3.4.2.2 banked sfr (in/out to 16-bit addresses)
+</H3>
+
+<P>
+The keyword <I>banked</I> is used to support 16 bit addresses in I/O
+memory e.g.:
+
+<P>
+<BLOCKQUOTE>
+<TT>sfr banked at<A NAME="1425"></A><A NAME="1426"></A> 0x123 IoPort; </TT>
+
+</BLOCKQUOTE>
+Writing 0x01 to this variable generates the assembly code:
+
+<P>
+<BLOCKQUOTE>
+<TT>01 23 01&nbsp;&nbsp;&nbsp;ld bc,#_IoPort</TT>&nbsp;
+<BR><TT>3E 01&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ld a,#0x01 </TT>&nbsp;
+<BR><TT>ED 79&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;out (c),a </TT>
+
+</BLOCKQUOTE>
+
+<P>
+
+<H3><A NAME="SECTION00442300000000000000"></A><A NAME="1433"></A><A NAME="1434"></A><A NAME="1435"></A><A NAME="1436"></A>
+<BR>
+3.4.2.3 sfr (in0/out0 to 8 bit addresses on Z180/HD64180)
+</H3>
+
+<P>
+The compiler option --portmode<A NAME="1437"></A>=180
+(80) and a compiler #pragma&nbsp;portmode<A NAME="1438"></A>
+z180 (z80) is used to turn on (off) the Z180/HD64180 port addressing
+instructions <TT>in0/out0</TT> instead of <TT>in/out</TT>. If you
+include the file z180.h this will be set automatically.
+<P><P>
+<BR>
+
+
+<P>
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html1487"
+  HREF="node62.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html1481"
+  HREF="node59.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html1475"
+  HREF="node60.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html1483"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html1485"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1488"
+  HREF="node62.html">3.4.3 HC08 Storage Class</A>
+<B> Up:</B> <A NAME="tex2html1482"
+  HREF="node59.html">3.4 Storage Class Language</A>
+<B> Previous:</B> <A NAME="tex2html1476"
+  HREF="node60.html">3.4.1 MCS51/DS390 Storage Class</A>
+ &nbsp; <B>  <A NAME="tex2html1484"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html1486"
+  HREF="node190.html">Index</A></B> 
+<!--End of Navigation Panel-->
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

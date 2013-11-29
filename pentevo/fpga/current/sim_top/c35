@@ -1,0 +1,5 @@
+#!/bin/bash
+
+vcom -novopt -f vcom.opt
+vlog -sv -novopt -incr +define+C35MHZ=1 -f vlog.opt
+

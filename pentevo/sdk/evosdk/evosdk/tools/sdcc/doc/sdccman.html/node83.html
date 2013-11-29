@@ -1,0 +1,250 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>3.13.1 A Step by Step Introduction</TITLE>
+<META NAME="description" CONTENT="3.13.1 A Step by Step Introduction">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="next" HREF="node84.html">
+<LINK REL="previous" HREF="node82.html">
+<LINK REL="up" HREF="node82.html">
+<LINK REL="next" HREF="node84.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html1812"
+  HREF="node84.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html1806"
+  HREF="node82.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html1800"
+  HREF="node82.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html1808"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html1810"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1813"
+  HREF="node84.html">3.13.2 Naked Functions</A>
+<B> Up:</B> <A NAME="tex2html1807"
+  HREF="node82.html">3.13 Inline Assembler Code</A>
+<B> Previous:</B> <A NAME="tex2html1801"
+  HREF="node82.html">3.13 Inline Assembler Code</A>
+ &nbsp; <B>  <A NAME="tex2html1809"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html1811"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H2><A NAME="SECTION004131000000000000000"></A><A NAME="sub:A-Step-by_Assembler_Introduction"></A>
+<BR>
+3.13.1 A Step by Step Introduction
+</H2>
+
+<P>
+Starting from a small snippet of c-code this example shows for the
+MCS51 how to use inline assembly, access variables, a function parameter
+and an array in xdata memory. The example uses an MCS51 here but is
+easily adapted for other architectures. This is a buffer routine which
+should be optimized:
+
+<P>
+<BLOCKQUOTE>
+<TT><FONT SIZE="-1">unsigned char __far<A NAME="2040"></A><A NAME="2041"></A>
+__at<A NAME="2042"></A><A NAME="2043"></A>(0x7f00) buf[0x100];<A NAME="2045"></A></FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">unsigned char head, tail;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/*
+if interrupts<A NAME="2047"></A> are involved see</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;section
+<A HREF="node69.html#sub:Common-interrupt-pitfall-volatile">3.9.1.1</A> about</FONT></TT><TT><B><FONT SIZE="-1">volatile</FONT></B></TT><FONT SIZE="-1"> </FONT><TT><FONT SIZE="-1">*/</FONT></TT>&nbsp;
+<BR><TT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">void to_buffer( unsigned char c ) </FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">{</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;if( head != (unsigned char)(tail-1)
+)&nbsp;/* cast</FONT></TT><FONT SIZE="-1"> </FONT><TT><B><FONT SIZE="-1">needed</FONT></B></TT><TT><FONT SIZE="-1">to avoid promotion<A NAME="2060"></A><A NAME="2061"></A>
+to integer */</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;buf[ head++ ] = c;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/*
+access to a 256 byte aligned array */</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">} </FONT></TT></BLOCKQUOTE>
+<P>
+<BLOCKQUOTE>
+
+</BLOCKQUOTE>
+If the code snippet (assume it is saved in buffer.c) is compiled with
+SDCC then a corresponding buffer.asm file is generated. We define
+a new function <TT>to_buffer_asm()</TT> in file buffer.c in which
+we cut and paste the generated code, removing unwanted comments and
+some ':'. Then add ''<B>_asm</B>'' and ''<B>_endasm;</B>''<A NAME="tex2html7"
+  HREF="footnode.html#foot2074"><SUP>3.5</SUP></A> to the beginning and the end of the function body:
+
+<P>
+<BLOCKQUOTE>
+<TT><FONT SIZE="-1">/* With a cut and paste from the .asm file,
+we have something to start with.</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;The function is not yet OK! (registers
+aren't saved) */ </FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">void to_buffer_asm( unsigned char c ) </FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">{ </FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;_asm<A NAME="2080"></A><A NAME="2081"></A></FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;mov&nbsp;&nbsp;r2,dpl </FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">;buffer.c if( head != (unsigned char)(tail-1)
+)&nbsp;/* cast</FONT></TT><FONT SIZE="-1"> </FONT><TT><B><FONT SIZE="-1">needed</FONT></B></TT><TT><FONT SIZE="-1">to avoid promotion<A NAME="2087"></A><A NAME="2088"></A>
+to integer */</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;mov&nbsp;&nbsp;a,_tail </FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;dec&nbsp;&nbsp;a </FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;mov&nbsp;&nbsp;r3,a </FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;mov&nbsp;&nbsp;a,_head </FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;cjne a,ar3,00106$ </FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;ret</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">00106$: </FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">;buffer.c buf[ head++ ] = c; /* access to
+a 256 byte aligned array */<A NAME="2100"></A></FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;mov&nbsp;&nbsp;r3,_head </FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;inc&nbsp;&nbsp;_head </FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;mov&nbsp;&nbsp;dpl,r3 </FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;mov&nbsp;&nbsp;dph,#(_buf &gt;&gt; 8) </FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;mov&nbsp;&nbsp;a,r2 </FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;movx @dptr,a </FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">00103$: </FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;ret</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;_endasm<A NAME="2109"></A><A NAME="2110"></A>;</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">} </FONT></TT></BLOCKQUOTE>
+<P>
+<BLOCKQUOTE>
+
+</BLOCKQUOTE>
+The new file buffer.c should compile with only one warning about the
+unreferenced function argument 'c'. Now we hand-optimize the assembly
+code and insert an #define USE_ASSEMBLY (1) and finally have:
+
+<P>
+<BLOCKQUOTE>
+<TT><FONT SIZE="-1">unsigned char __far __at(0x7f00) buf[0x100];</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">unsigned char head, tail;</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">#define USE_ASSEMBLY (1)</FONT></TT>&nbsp;
+<BR><TT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">#if !USE_ASSEMBLY</FONT></TT>&nbsp;
+<BR><TT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">void to_buffer( unsigned char c )</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">{</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;if( head != (unsigned char)(tail-1)
+)</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;buf[ head++ ] = c;</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">}</FONT></TT>&nbsp;
+<BR><TT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">#else</FONT></TT>&nbsp;
+<BR><TT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">void to_buffer( unsigned char c )</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">{</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;c; // to avoid warning: unreferenced
+function argument</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;_asm<A NAME="2132"></A><A NAME="2133"></A></FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;; save used registers here. </FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;; If we were still using r2,r3
+we would have to push them here. </FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">; if( head != (unsigned char)(tail-1) )</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mov&nbsp; a,_tail</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;dec&nbsp; a</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;xrl&nbsp; a,_head</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;; we could do an ANL a,#0x0f
+here to use a smaller buffer (see below)</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;jz&nbsp;&nbsp; t_b_end$</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;;</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">; buf[ head++ ] = c;</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mov&nbsp; a,dpl&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;;
+dpl holds lower byte of function argument</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mov&nbsp; dpl,_head&nbsp;&nbsp;&nbsp;; buf
+is 0x100 byte aligned so head can be used directly</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mov&nbsp; dph,#(_buf&gt;&gt;8)</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;movx @dptr,a</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;inc&nbsp;_head</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;; we could do an ANL _head,#0x0f
+here to use a smaller buffer (see above)</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">t_b_end$:</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;; restore used registers here
+</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp;&nbsp;_endasm<A NAME="2152"></A><A NAME="2153"></A>;</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">}</FONT></TT>&nbsp;
+<BR><TT><FONT SIZE="-1">#endif</FONT></TT></BLOCKQUOTE>
+<P>
+<BLOCKQUOTE>
+
+</BLOCKQUOTE>
+The inline assembler code can contain any valid code understood by
+the assembler, this includes any assembler directives and comment
+lines. The assembler does not like some characters like ':' or '''
+in comments. You'll find an 100+ pages assembler manual in sdcc/as/doc/asxhtm.html<A NAME="2158"></A><A NAME="2159"></A>
+or online at http://sdcc.svn.sourceforge.net/viewvc/*checkout*/sdcc/trunk/sdcc/as/doc/asxhtm.html&nbsp;.
+
+<P>
+The compiler does not do any validation of the code within the <TT>_asm<A NAME="2161"></A><A NAME="2162"></A>
+... _endasm<FONT SIZE="-1"><A NAME="2163"></A><A NAME="2164"></A></FONT>;</TT>
+keyword pair. Specifically it will not know which registers are used
+and thus register pushing/popping<A NAME="2166"></A> has to be done
+manually. 
+
+<P>
+It is recommended that each assembly instruction (including labels)
+be placed in a separate line (as the example shows). When the --<I>peep-asm<A NAME="2167"></A></I>
+command line option is used, the inline assembler code will be passed
+through the peephole optimizer<A NAME="2168"></A>. There are
+only a few (if any) cases where this option makes sense, it might
+cause some unexpected changes in the inline assembler code. Please
+go through the peephole optimizer rules defined in file <I>SDCCpeeph.def</I>
+before using this option.
+
+<P>
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html1812"
+  HREF="node84.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html1806"
+  HREF="node82.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html1800"
+  HREF="node82.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html1808"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html1810"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1813"
+  HREF="node84.html">3.13.2 Naked Functions</A>
+<B> Up:</B> <A NAME="tex2html1807"
+  HREF="node82.html">3.13 Inline Assembler Code</A>
+<B> Previous:</B> <A NAME="tex2html1801"
+  HREF="node82.html">3.13 Inline Assembler Code</A>
+ &nbsp; <B>  <A NAME="tex2html1809"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html1811"
+  HREF="node190.html">Index</A></B> 
+<!--End of Navigation Panel-->
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

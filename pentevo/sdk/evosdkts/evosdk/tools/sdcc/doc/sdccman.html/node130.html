@@ -1,0 +1,117 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>4.6.10 Memory Models</TITLE>
+<META NAME="description" CONTENT="4.6.10 Memory Models">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="next" HREF="node131.html">
+<LINK REL="previous" HREF="node129.html">
+<LINK REL="up" HREF="node120.html">
+<LINK REL="next" HREF="node131.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html2593"
+  HREF="node131.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html2587"
+  HREF="node120.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html2581"
+  HREF="node129.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html2589"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html2591"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html2594"
+  HREF="node131.html">4.6.11 Stack</A>
+<B> Up:</B> <A NAME="tex2html2588"
+  HREF="node120.html">4.6 The PIC16 port</A>
+<B> Previous:</B> <A NAME="tex2html2582"
+  HREF="node129.html">4.6.9 Adding New Devices</A>
+ &nbsp; <B>  <A NAME="tex2html2590"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html2592"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H2><A NAME="SECTION005610000000000000000">
+4.6.10 Memory Models</A>
+</H2>
+
+<P>
+The following memory models are supported by the PIC16 port:
+
+<P>
+
+<UL>
+<LI>small model
+</LI>
+<LI>large model
+</LI>
+</UL>
+Memory model affects the default size of pointers within the source.
+The sizes are shown in the next table:
+
+<P>
+<DIV ALIGN="CENTER">
+<TABLE CELLPADDING=3 BORDER="1">
+<TR><TD ALIGN="CENTER">Pointer sizes according to memory model</TD>
+<TD ALIGN="CENTER">small model</TD>
+<TD ALIGN="CENTER">large model</TD>
+</TR>
+<TR><TD ALIGN="CENTER">code pointers</TD>
+<TD ALIGN="CENTER" COLSPAN=1>16-bits</TD>
+<TD ALIGN="CENTER">24-bits</TD>
+</TR>
+<TR><TD ALIGN="CENTER">data pointers</TD>
+<TD ALIGN="CENTER" COLSPAN=1>16-bits</TD>
+<TD ALIGN="CENTER">16-bits</TD>
+</TR>
+</TABLE>
+</DIV>
+<P>
+<DIV ALIGN="CENTER">
+</DIV>
+
+<P>
+It is advisable that all sources within a project are compiled with
+the same memory model. If one wants to override the default memory
+model, this can be done by declaring a pointer as <B>far</B> or
+<B>near</B>. Far selects large memory model's pointers, while near
+selects small memory model's pointers.
+
+<P>
+The standard device libraries (see <A HREF="node127.html#sub:PIC16_Header-Files">4.6.7</A>)
+contain no reference to pointers, so they can be used with both memory
+models.
+
+<P>
+<BR><HR>
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

@@ -1,0 +1,147 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>4.6.15 Generic Pointers</TITLE>
+<META NAME="description" CONTENT="4.6.15 Generic Pointers">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="next" HREF="node136.html">
+<LINK REL="previous" HREF="node134.html">
+<LINK REL="up" HREF="node120.html">
+<LINK REL="next" HREF="node136.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html2663"
+  HREF="node136.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html2657"
+  HREF="node120.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html2651"
+  HREF="node134.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html2659"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html2661"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html2664"
+  HREF="node136.html">4.6.16 PIC16 C Libraries</A>
+<B> Up:</B> <A NAME="tex2html2658"
+  HREF="node120.html">4.6 The PIC16 port</A>
+<B> Previous:</B> <A NAME="tex2html2652"
+  HREF="node134.html">4.6.14 Interrupts</A>
+ &nbsp; <B>  <A NAME="tex2html2660"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html2662"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H2><A NAME="SECTION005615000000000000000">
+4.6.15 Generic Pointers</A>
+</H2>
+
+<P>
+Generic pointers are implemented in PIC16 port as 3-byte (24-bit)
+types. There are 3 types of generic pointers currently implemented
+data, code and eeprom pointers. They are differentiated by the value
+of the 7th and 6th bits of the upper byte:
+
+<P>
+<DIV ALIGN="CENTER">
+<TABLE CELLPADDING=3 BORDER="1">
+<TR><TD ALIGN="CENTER">pointer type</TD>
+<TD ALIGN="CENTER">7th bit</TD>
+<TD ALIGN="CENTER">6th bit</TD>
+<TD ALIGN="CENTER">rest of the pointer</TD>
+<TD ALIGN="LEFT">description</TD>
+</TR>
+<TR><TD ALIGN="CENTER">data</TD>
+<TD ALIGN="CENTER">1</TD>
+<TD ALIGN="CENTER">0</TD>
+<TD ALIGN="CENTER"><TT><I><I>uuuuuu uuuuxxxx xxxxxxxx</I></I></TT></TD>
+<TD ALIGN="LEFT">a 12-bit data pointer in data RAM memory</TD>
+</TR>
+<TR><TD ALIGN="CENTER">code</TD>
+<TD ALIGN="CENTER">0</TD>
+<TD ALIGN="CENTER">0</TD>
+<TD ALIGN="CENTER"><TT><I><I>uxxxxx xxxxxxxx xxxxxxxx</I></I></TT></TD>
+<TD ALIGN="LEFT">a 21-bit code pointer in FLASH memory</TD>
+</TR>
+<TR><TD ALIGN="CENTER">eeprom</TD>
+<TD ALIGN="CENTER">0</TD>
+<TD ALIGN="CENTER">1</TD>
+<TD ALIGN="CENTER"><TT><I><I>uuuuuu uuuuuuxx xxxxxxxx</I></I></TT></TD>
+<TD ALIGN="LEFT">a 10-bit eeprom pointer in EEPROM memory</TD>
+</TR>
+<TR><TD ALIGN="CENTER">(unimplemented)</TD>
+<TD ALIGN="CENTER">1</TD>
+<TD ALIGN="CENTER">1</TD>
+<TD ALIGN="CENTER"><TT><I><I>xxxxxx xxxxxxxx xxxxxxxx</I></I></TT></TD>
+<TD ALIGN="LEFT">unimplemented pointer type</TD>
+</TR>
+</TABLE>
+</DIV>
+<P>
+<DIV ALIGN="CENTER">
+</DIV>
+
+<P>
+Generic pointer are read and written with a set of library
+functions which read/write 1, 2, 3, 4 bytes.
+
+<P>
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html2663"
+  HREF="node136.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html2657"
+  HREF="node120.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html2651"
+  HREF="node134.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html2659"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html2661"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html2664"
+  HREF="node136.html">4.6.16 PIC16 C Libraries</A>
+<B> Up:</B> <A NAME="tex2html2658"
+  HREF="node120.html">4.6 The PIC16 port</A>
+<B> Previous:</B> <A NAME="tex2html2652"
+  HREF="node134.html">4.6.14 Interrupts</A>
+ &nbsp; <B>  <A NAME="tex2html2660"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html2662"
+  HREF="node190.html">Index</A></B> 
+<!--End of Navigation Panel-->
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>
