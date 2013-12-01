@@ -97,11 +97,11 @@ top.rbf: ../../../fpga/current/quartus/top.rbf
 
 $(FPGACORE): top.rbf baseconf.rbf egg.rbf
 	../../../tools/mhmt/mhmt -maxwin2048 top.rbf top.mlz
-	avr-objcopy -I binary -O elf32-avr --rename-section .data=.progmem.data,contents,alloc,load,readonly,data --redefine-sym _binary_top_mlz_start=fpga0 top.mlz top.o
+	avr-objcopy -I binary -O elf32-avr -B avr:51 --rename-section .data=.progmem.data,contents,alloc,load,readonly,data --redefine-sym _binary_top_mlz_start=fpga0 top.mlz top.o
 	../../../tools/mhmt/mhmt -maxwin2048 baseconf.rbf baseconf.mlz
-	avr-objcopy -I binary -O elf32-avr --rename-section .data=.progmem.data,contents,alloc,load,readonly,data --redefine-sym _binary_baseconf_mlz_start=fpga1 baseconf.mlz baseconf.o
+	avr-objcopy -I binary -O elf32-avr -B avr:51 --rename-section .data=.progmem.data,contents,alloc,load,readonly,data --redefine-sym _binary_baseconf_mlz_start=fpga1 baseconf.mlz baseconf.o
 	../../../tools/mhmt/mhmt -maxwin2048 egg.rbf egg.mlz
-	avr-objcopy -I binary -O elf32-avr --rename-section .data=.progmem.data,contents,alloc,load,readonly,data --redefine-sym _binary_egg_mlz_start=fpga2 egg.mlz egg.o
+	avr-objcopy -I binary -O elf32-avr -B avr:51 --rename-section .data=.progmem.data,contents,alloc,load,readonly,data --redefine-sym _binary_egg_mlz_start=fpga2 egg.mlz egg.o
 
 %.hex: $(TARGET)
 	avr-objcopy -O ihex $(HEX_FLASH_FLAGS)  $< $@
@@ -113,7 +113,7 @@ $(FPGACORE): top.rbf baseconf.rbf egg.rbf
 	avr-objdump -h -S $< > $@
 
 size: ${TARGET}
-	@echo
+	@echo .
 	@avr-size -C --mcu=${MCU} ${TARGET}
 
 zxevo_beta.bin: core.hex core.eep
