@@ -9,7 +9,7 @@ wcIN    EQU     #6006
 		org		0x7e00
         DS      16,0
         DB      "WildCommanderMDL"
-        DB      #02
+        DB      #03
         DB      0
 
         DB      2
