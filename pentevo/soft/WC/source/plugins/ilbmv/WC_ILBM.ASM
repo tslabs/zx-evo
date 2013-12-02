@@ -239,13 +239,11 @@ ClearScreen:
         XOR     A
         CALL    SetPage3Video
 
-        LD      A,255
+        LD      A,#FF
         CALL    DMATrans        
         LD      B,159
-        LD      A,5
-        CALL    DMATrans
-        LD      B,255
-        LD      A,6
+        LD      C,255
+        LD      A,7
         CALL    DMATrans
         
         LD      HL,0,(0xC000),HL
@@ -254,9 +252,9 @@ ClearScreen:
         LD      A,0
         CALL    DMATrans
         
-        LD      A,254
+        LD      A,#FE
         CALL    DMATrans
-        LD      A,254
+        LD      A,#FE
         CALL    DMATrans
         RET
 
