@@ -6,10 +6,10 @@
 VCONFIG         equ $00AF
 STATUS          equ $00AF
 VPAGE           equ $01AF
-XOFFSL          equ $02AF
-XOFFSH          equ $03AF
-YOFFSL          equ $04AF
-YOFFSH          equ $05AF
+GXOFFSL         equ $02AF
+GXOFFSH         equ $03AF
+GYOFFSL         equ $04AF
+GYOFFSH         equ $05AF
 TSCONFIG        equ $06AF
 PALSEL          equ $07AF
 BORDER          equ $0FAF
@@ -40,6 +40,14 @@ DMASTATUS       equ $27AF
 DMANUM          equ $28AF
 FDDVIRT         equ $29AF
 INTMASK         equ $2AAF
+T0XOFFSL        equ $40AF
+T0XOFFSH        equ $41AF
+T0YOFFSL        equ $42AF
+T0YOFFSH        equ $43AF
+T1XOFFSL        equ $44AF
+T1XOFFSH        equ $45AF
+T1YOFFSL        equ $46AF
+T1YOFFSH        equ $47AF
 
 ; TS parameters
 FM_EN           equ $10
