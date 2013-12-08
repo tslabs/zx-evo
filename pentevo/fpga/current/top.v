@@ -476,7 +476,7 @@ module top(
 		.c1(c1),
 		.c2(c2),
 		.c3(c3),
-		.rddata(dram_rd_r),
+		// .rddata(dram_rd_r),
 		.wrdata(dram_wrdata),
 		.bsel(dbsel),
 		.ra(dram_ra),
@@ -585,7 +585,7 @@ module top(
 		.video_addr(video_addr),
 		.video_bw(video_bw),
 		.video_go(go),
-		.dram_rdata_r(dram_rd_r),	  // reg'ed, should be latched by c3
+		// .dram_rdata_r(dram_rd_r),	  // reg'ed, should be latched by c3
    		.dram_rdata(dram_rd),			   // raw, should be latched by c2
 		.video_strobe(video_strobe),
 		.video_next(video_next),

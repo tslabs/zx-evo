@@ -18,7 +18,7 @@ module zint
 	input wire [7:0] intmask,
 	output wire [7:0] im2vect,
 	
-	output reg  int_n
+	output wire int_n
 );
 
 	// In VDOS INTs are focibly disabled.

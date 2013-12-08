@@ -92,7 +92,7 @@ module arbiter(
 	input wire        dma_req,
 	input wire        dma_z80_lp,
 	input wire        dma_rnw,
-	output reg        dma_next,
+	output wire       dma_next,
 
 // TS
 	input wire [20:0] ts_addr,

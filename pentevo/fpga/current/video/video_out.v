@@ -2,7 +2,6 @@
 
 `include "../include/tune.v"
 
-// `define FLICKER
 
 
 module video_out (
@@ -31,9 +30,9 @@ module video_out (
 // video data
 	input wire [7:0] vplex_in,
 	input wire [7:0] vgaplex,
-	output reg [1:0] vred,
-    output reg [1:0] vgrn,
-    output reg [1:0] vblu,
+	output wire [1:0] vred,
+    output wire [1:0] vgrn,
+    output wire [1:0] vblu,
 	
     input wire [2:0] tst
 );
