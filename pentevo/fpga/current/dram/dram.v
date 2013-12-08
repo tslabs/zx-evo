@@ -43,7 +43,7 @@ module dram(
 	input wire req,         // request for read/write cycle
 	input wire [20:0] addr, // access address of 16bit word: addr[0] selects between rras0_n and rras1_n,
 							// addr[10:1] goes to row address, addr[20:11] goes to column address
-	output reg [15:0] rddata, // data just read
+	// output reg [15:0] rddata, // data just read
 	input wire [15:0] wrdata, // data to be written
 	input wire  [1:0] bsel,   // positive byte select for write: bsel[0] is for wrdata[7:0], bsel[1] is for wrdata[15:8]
 	input wire rnw            // READ/nWRITE
@@ -143,9 +143,9 @@ module dram(
 	assign rd = rwe_n ? 16'hZZZZ : int_wrdata;
 
 // read data from DRAM
-	always @(posedge clk)
-		if (c2 & read)
-			rddata <= rd;
+	// always @(posedge clk)
+		// if (c2 & read)
+			// rddata <= rd;
 
 	// reset must be synchronous here in order to preserve
 	// DRAM state while other modules reset, but we have only

@@ -30,7 +30,7 @@ module video_ts (
     input wire [7:0] t0gpage,
     input wire [7:0] t1gpage,
     input wire [7:0] sgpage,
-	input reg  [7:0] tmpage,
+	input wire [7:0] tmpage,
 	input wire [5:0] num_tiles,
 	input wire [8:0] t0x_offs,
 	input wire [8:0] t1x_offs,
