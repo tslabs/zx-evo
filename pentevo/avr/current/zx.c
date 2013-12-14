@@ -69,11 +69,12 @@ UBYTE zx_spi_send(UBYTE addr, UBYTE data, UBYTE mask)
 	return ret;
 }
 
+	UBYTE reset_type;
+
 void zx_task(UBYTE operation) // zx task, tracks when there is need to send new keymap to the fpga
 {
 	static UBYTE prev_code;
 	static UBYTE task_state;
-	static UBYTE reset_type;
 
 	UBYTE was_data;
 	UBYTE code,keynum,keybit;
@@ -349,7 +350,7 @@ void to_zx(UBYTE scancode, UBYTE was_E0, UBYTE was_release)
 				{
 					//hard reset
 					flags_register |= FLAG_HARD_RESET;
-					t.tb.b1=t.tb.b1=NO_KEY;
+					t.tb.b1=NO_KEY;
 				}
 				break;
 		}//switch
@@ -407,7 +408,7 @@ void to_zx(UBYTE scancode, UBYTE was_E0, UBYTE was_release)
 					egg = 1;
 					//hard reset
 					flags_register |= FLAG_HARD_RESET;
-					t.tb.b1=t.tb.b1=NO_KEY;
+					t.tb.b1=NO_KEY;
 				}
 				break;
 			//F12
@@ -420,7 +421,7 @@ void to_zx(UBYTE scancode, UBYTE was_E0, UBYTE was_release)
 					eeprom_write_byte( (UBYTE*)0x0fff, !eeprom_read_byte((const UBYTE*)0x0fff) );
 					//hard reset
 					flags_register |= FLAG_HARD_RESET;
-					t.tb.b1=t.tb.b1=NO_KEY;
+					t.tb.b1=NO_KEY;
 					break;
 				}
 				else if ( !was_release ) kb_status |= KB_F12_MASK;
