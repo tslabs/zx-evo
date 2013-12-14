@@ -1,20 +1,20 @@
 # Disk DescriptorFile
 version=1
 encoding="windows-1251"
-CID=8ce726bb
+CID=c4238f33
 parentCID=ffffffff
 createType="monolithicFlat"
 
 # Extent description
-RW 2097152 FLAT "wc.hdd" 0
+RW 208896 FLAT "wc.img" 0
 
 # The Disk Data Base 
 #DDB
 
-ddb.adapterType = "ide"
-ddb.geometry.sectors = "63"
-ddb.geometry.heads = "16"
-ddb.geometry.cylinders = "2080"
-ddb.uuid = "60 00 C2 9d fc bd 38 0d-4d 35 7d 07 cd 98 ea b5"
-ddb.longContentID = "38cc257ecc074c173a06af3bb4ef3b85"
 ddb.virtualHWVersion = "7"
+ddb.longContentID = "47a2f03e140c24d586e73e53735f6780"
+ddb.uuid = "60 00 C2 91 04 bc 6d 73-6f 72 f3 af 62 ce 37 99"
+ddb.geometry.cylinders = "207"
+ddb.geometry.heads = "16"
+ddb.geometry.sectors = "63"
+ddb.adapterType = "ide"

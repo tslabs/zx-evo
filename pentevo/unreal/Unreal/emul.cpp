@@ -122,13 +122,8 @@ int main(int argc, char **argv)
    printf("Intel C++ Compiler: %d.%02d\n", __ICL/100, __ICL % 100);
 #endif
    color();
-   // http://sourceforge.net/projects/unrealspeccy
-   // http://alonecoder.narod.ru
-   // http://dlcorp.ucoz.ru/forum/22
-   // http://dlcorp.nedopc.com/viewforum.php?f=8
-   // https://zx-evo-fpga.googlecode.com/svn/branches/tslabs/pentevo/unreal
    printf("new versions & sources ->\n");
-   printf("   https://zx-evo-fpga.googlecode.com/svn/branches/tslabs/pentevo/unreal\n");
+   printf("   https://zx-evo-fpga.googlecode.com/hg/pentevo/unreal\n");
 
 #ifndef DEBUG
    SetUnhandledExceptionFilter(filter);
