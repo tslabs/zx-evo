@@ -33,11 +33,14 @@ PLANE2_PALETTE	equ 15
 
 	org $8000
 	; this address is arbitrary, you are free to use any
-	; note that example uses window $C000, so org addr and stack should be set to lower values
+	; note that example uses window $C000 for banks access, so org addr and stack should be set to lower values
 
-	; turn of border to prevent noise on video while configuring
+	; turn off graphics to prevent noise on video while configuring
 	ld bc, VCONFIG
 	ld a, VID_NOGFX
+	out (c), a
+	ld b, high TSCONFIG
+	xor a
 	out (c), a
 
 	; fill TileMap with incrementing values

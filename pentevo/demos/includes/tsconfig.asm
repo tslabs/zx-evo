@@ -102,11 +102,53 @@ DMA_ASZ         equ $08
 
 DMA_RAM         equ $01
 DMA_BLT         equ $81
+DMA_FILL	    equ $04
 DMA_SPI_RAM     equ $02
 DMA_RAM_SPI     equ $82
 DMA_IDE_RAM     equ $03
 DMA_RAM_IDE     equ $83
-DMA_FILL_RAM    equ $04
 DMA_RAM_CRAM    equ $84
 DMA_RAM_SFILE   equ $85
 
+; SPRITES
+SP_XF			equ $80
+SP_YF			equ $80
+SP_LEAP			equ $40
+SP_ACT			equ $20
+SP_SIZE8		equ $00
+SP_SIZE16		equ $02
+SP_SIZE24		equ $04
+SP_SIZE32		equ $06
+SP_SIZE40		equ $08
+SP_SIZE48		equ $0A
+SP_SIZE56		equ $0C
+SP_SIZE64		equ $0E
+
+SP_PAL_MASK		equ $F0
+
+SP_XF_W			equ $8000
+SP_YF_W			equ $8000
+SP_LEAP_W		equ $4000
+SP_ACT_W		equ $2000
+SP_SIZE8_W		equ $0000
+SP_SIZE16_W		equ $0200
+SP_SIZE24_W		equ $0400
+SP_SIZE32_W		equ $0600
+SP_SIZE48_W		equ $0A00
+SP_SIZE56_W		equ $0C00
+SP_SIZE64_W		equ $0E00
+
+SP_X_MASK_W		equ $01FF
+SP_Y_MASK_W		equ $01FF
+SP_TNUM_MASK_W	equ $0FFF
+SP_PAL_MASK_W	equ $F000
+
+; TILES
+TL_XF			equ $40
+TL_YF			equ $80
+
+TL_XF_W			equ $4000
+TL_YF_W			equ $8000
+
+TL_TNUM_MASK_W	equ $0FFF
+TL_PAL_MASK_W	equ $3000
