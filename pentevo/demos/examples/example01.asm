@@ -60,7 +60,7 @@ PLANE2_PALETTE	equ 15
 EX01_03:
 	ld b, 64
 	ld a, d
-	or (PLANE1_PALETTE & 3) << 4
+	or (PLANE1_PALETTE << TL_PAL_BS) & TL_PAL_MASK
 	ld c, a
 EX01_01:
 	ld (hl), e
@@ -76,7 +76,7 @@ EX01_01:
 
 	ld b, 64
 	ld a, d
-	or (PLANE2_PALETTE & 3) << 4
+	or (PLANE2_PALETTE << TL_PAL_BS) & TL_PAL_MASK
 	ld c, a
 EX01_02:
 	ld (hl), e
@@ -110,7 +110,7 @@ EX01_02:
 
 	; set palette selector for all planes
 	ld b, high PALSEL
-	ld a, PLANE0_PALETTE | ((PLANE1_PALETTE & $0C) << 2) | ((PLANE2_PALETTE & $0C) << 4)
+	ld a, PLANE0_PALETTE | (((PLANE1_PALETTE >> 2) << PAL_T0PAL_BS) & PAL_T0PAL_MASK) | (((PLANE2_PALETTE >> 2) << PAL_T1PAL_BS) & PAL_T1PAL_MASK)
 	out (c), a
 
 	; zeroing scrollers to avoid surprises from previous usage
