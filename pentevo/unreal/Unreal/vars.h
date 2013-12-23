@@ -5,6 +5,9 @@
 
 #define ROMLED_TIME 16
 
+#define SNDBUFSZ (4*1048576) // large temporary buffer (for reading snapshots)
+#define GDIBUFSZ (448*320*4*4*4)	// Quad size, 32 bit, 448x320 max
+
 #pragma pack(8)
 struct PALETTE_OPTIONS
 { // custom palettes
@@ -171,8 +174,8 @@ extern u8 trace_ram;
 
 extern TMainZ80 cpu;
 extern u8 dbgbreak;
-extern u8 snbuf[4*1048576]; // large temporary buffer (for reading snapshots)
-extern u8 gdibuf[2*1048576];
+extern u8 snbuf[SNDBUFSZ];		// large temporary buffer (for reading snapshots)
+extern u8 gdibuf[GDIBUFSZ];
 
 extern SNDCHIP ay[2];
 
