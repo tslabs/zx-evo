@@ -312,8 +312,12 @@
     <PostBuildEvent>
       <Command>copy /y "$(ProjectDir)lib\*.dll" "$(TargetDir)"
 copy /y "$(ProjectDir)cfg\*.*" "$(TargetDir)"
-md "$(TargetDir)"rom
-copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)"rom</Command>
+md "$(TargetDir)rom"
+copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)rom"
+copy "$(ProjectDir)cfg\hdd\wc.7z" "$(TargetDir)"
+cd /d "$(TargetDir)"
+7z e wc.7z
+</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -344,17 +348,22 @@ copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)"rom</Command>
     </Link>
     <ProjectReference />
     <PostBuildEvent>
-      <Command>copy /y "$(ProjectDir)lib\*.dll" "$(TargetDir)"
-copy /y "$(ProjectDir)cfg\*.*" "$(TargetDir)"
-md "$(TargetDir)"rom
-copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)"rom
+      <Command>rd /q /s "$(TargetDir)rom"
+rd /q /s "$(TargetDir)..\tmp"
 md "$(TargetDir)..\tmp"
 md "$(TargetDir)..\tmp\rom"
+md "$(TargetDir)rom"
+copy /y "$(ProjectDir)lib\*.dll" "$(TargetDir)"
+copy /y "$(ProjectDir)cfg\*.*" "$(TargetDir)"
+copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)"rom
 copy /y "$(ProjectDir)lib\*.dll" "$(TargetDir)..\tmp"
 copy /y "$(ProjectDir)cfg\*.*" "$(TargetDir)..\tmp"
 copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)..\tmp\rom"
 copy /y "$(TargetPath)" "$(TargetDir)..\tmp"
+copy "$(ProjectDir)cfg\hdd\wc.7z" "$(TargetDir)..\tmp"
 cd /d "$(TargetDir)..\tmp"
+7z e wc.7z
+del "$(TargetDir)..\tmp\wc.7z"
 7z a -t7z -r -mx9 -y -i!* ..\unreal.7z *.*
 </Command>
     </PostBuildEvent>

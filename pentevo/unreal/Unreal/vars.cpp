@@ -582,8 +582,8 @@ PALETTE_OPTIONS pals[32] = {{"default",0x00,0x80,0xC0,0xE0,0xFF,0xC8,0xFF,0x00,0
 
 #pragma pack()
 
-u8 snbuf[4*1048576]; // large temporary buffer (for reading snapshots)
-u8 gdibuf[2*1048576];
+u8 snbuf[SNDBUFSZ];
+u8 gdibuf[GDIBUFSZ];
 
 // on-screen watches block
 unsigned watch_script[4][64];
