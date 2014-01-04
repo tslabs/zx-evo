@@ -71,7 +71,7 @@ OPT_B1B    defb 4, low(b1tb), '  bank:', 0
 OPT_B2T    defb 5, low(b2to), 'CS Reset to:', 0
 OPT_B2B    defb 4, low(b2tb), '  bank:', 0
 OPT_B1D    defb 4, low(bdev), 'Boot Device:', 0
-OPT_ZPL    defb 6, low(zpal), 'ZX Palette:', 0
+OPT_ZPL    defb 7, low(zpal), 'ZX Palette:', 0
 OPT_NGR    defb 2, low(nres), 'NGS Reset:', 0
 
 ; -- choices
@@ -115,12 +115,13 @@ SEL_LCK
 		defb '    1024k', 0
 
 SEL_ZPL
-        defb 'Default', 0   ; 0
-		defb 'B.black', 0   ; 1
-		defb '   Pale', 0   ; 2
-		defb '   Dark', 0   ; 3
-		defb 'Grayscl', 0   ; 4
-		defb ' Custom', 0   ; 5
+        defb 'Default', 0
+		defb 'B.black', 0
+		defb '  Light', 0
+		defb '   Pale', 0
+		defb '   Dark', 0
+		defb 'Grayscl', 0
+		defb ' Custom', 0
 
 
 ; -- palette
@@ -134,6 +135,24 @@ pal_bb               ; bright black
         defw h'4200
         defw h'4210
         defw h'2108
+        defw h'0018
+        defw h'6000
+        defw h'6018
+        defw h'0300
+        defw h'0318
+        defw h'6300
+        defw h'6318
+
+pal_lgt              ; light
+        defw h'0000
+        defw h'0014
+        defw h'5000
+        defw h'5014
+        defw h'0280
+        defw h'0294
+        defw h'5280
+        defw h'5294
+        defw h'0000
         defw h'0018
         defw h'6000
         defw h'6018
