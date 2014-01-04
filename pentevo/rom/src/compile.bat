@@ -1,5 +1,7 @@
 echo off
 
+set IAR=c:\Tools\PROG\IAR ewz80\z80\bin
+
 mhmt.exe -hst 866_code.fnt
 bin2defb.exe 866_code.fnt.hst 866_code.asm
 mhmt.exe -hst  rslsys.bin

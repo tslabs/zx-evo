@@ -68,19 +68,22 @@ RESET
 ; Palette
         ld a, (zpal)
         ld hl, pal_puls
-        or a                ; 0
+        or a
         jr z, RES_2
         ld hl, pal_bb
-        dec a               ; 1
+        dec a
+        jr z, RES_2
+        ld hl, pal_lgt
+        dec a
         jr z, RES_2
         ld hl, pal_pale
-        dec a               ; 2
+        dec a
         jr z, RES_2
         ld hl, pal_dark
-        dec a               ; 3
+        dec a
         jr z, RES_2
         ld hl, pal_gsc
-        dec a               ; 4
+        dec a
         jr z, RES_2
         ld hl, cpal
 RES_2
