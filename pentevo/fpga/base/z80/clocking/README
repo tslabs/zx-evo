@@ -1,0 +1,48 @@
+клок на Z80 и клок на fpga
+
+DS0001.BMP - задержка от спада fclk - 9.5ns, опережение от фронта 8ns
+
+
+DS0002.BMP
+DS0003.BMP
+DS0004.BMP
+DS0005.BMP
+
+
+TMPZ84C00AP-8, задержки выходных сигналов от фронтов клока на зетник
+
+DS0006.BMP mreq m1
+DS0007.BMP mreq m1
+DS0008.BMP mreq mem
+DS0009.BMP mreq mem
+DS0010.BMP mreq mem
+DS0011.BMP rd   m1
+DS0012.BMP rd   mem
+DS0013.BMP wr   mem
+
+=17/22ns
+
+
+Z84C0010 PEC
+
+DS0014.BMP mreq m1
+DS0015.BMP mreq mem
+DS0016.BMP mreq mem
+DS0017.BMP rd   m1
+DS0018.BMP rd   mem
+DS0019.BMP rd   mem
+DS0020.BMP wr   mem
+
+=15/16ns
+
+
+Z0840008PSC
+
+DS0021.BMP mreq mem
+DS0022.BMP mreq m1
+DS0023.BMP rd   m1
+DS0024.BMP rd   mem
+DS0025.BMP wr   mem
+
+=34/30ns
+
