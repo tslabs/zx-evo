@@ -38,7 +38,7 @@ HEX_EEPROM_FLAGS += --change-section-lma .eeprom=0 --no-change-warnings
 OBJECTS = zx.o interrupts.o main.o ps2.o spi.o depacker_dirty.o rs232.o rtc.o atx.o joystick.o version.o tape.o kbmap.o
 
 ## Objects explicitly added by the user
-FPGACORE = top.o baseconf.o egg.o
+FPGACORE = tsconf.o baseconf.o egg.o
 
 ## Build
 all: clean $(TARGET) core.hex core.eep core.lss size zxevo_beta.bin
@@ -91,12 +91,15 @@ kbmap.o: ../kbmap.c ../kbmap.h
 $(TARGET): $(OBJECTS) $(FPGACORE)
 	 @$(CC) $(LDFLAGS) $(OBJECTS) $(FPGACORE) -o $(TARGET)
 
-top.rbf: ../../../fpga/current/quartus/top.rbf
-	@cp ../../../fpga/current/quartus/top.rbf top.rbf
+tsconf.rbf: ../../../fpga/current/quartus/top.rbf
+	@cp ../../../fpga/current/quartus/top.rbf tsconf.rbf
 
-$(FPGACORE): top.rbf baseconf.rbf egg.rbf
-	@$(MHMT) -maxwin2048 top.rbf top.mlz >nul
-	@avr-objcopy -I binary -O elf32-avr -B avr:51 --rename-section .data=.progmem.data,contents,alloc,load,readonly,data --redefine-sym _binary_top_mlz_start=fpga0 top.mlz top.o
+baseconf.rbf: ../../../fpga/base/quartus/top.rbf
+	@cp ../../../fpga/base/quartus/top.rbf baseconf.rbf
+
+$(FPGACORE): tsconf.rbf baseconf.rbf egg.rbf
+	@$(MHMT) -maxwin2048 tsconf.rbf tsconf.mlz >nul
+	@avr-objcopy -I binary -O elf32-avr -B avr:51 --rename-section .data=.progmem.data,contents,alloc,load,readonly,data --redefine-sym _binary_tsconf_mlz_start=fpga0 tsconf.mlz tsconf.o
 	@$(MHMT) -maxwin2048 baseconf.rbf baseconf.mlz >nul
 	@avr-objcopy -I binary -O elf32-avr -B avr:51 --rename-section .data=.progmem.data,contents,alloc,load,readonly,data --redefine-sym _binary_baseconf_mlz_start=fpga1 baseconf.mlz baseconf.o
 	@$(MHMT) -maxwin2048 egg.rbf egg.mlz >nul
@@ -125,8 +128,9 @@ zxevo_release.bin: core.hex core.eep
 .PHONY: clean
 clean:
 	 @echo >core.dummy
-	 @echo >top.dummy
-	 @rm -rf $(OBJECTS) $(FPGACORE) dep core.* top.* baseconf.mlz egg.mlz
+	 @echo >tsconf.dummy
+	 @echo >baseconf.dummy
+	 @rm -rf $(OBJECTS) $(FPGACORE) dep core.* tsconf.* baseconf.* egg.mlz
 	 @mkdir dep
 
 ## program chip
