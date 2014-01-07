@@ -28,7 +28,7 @@ module sound(
 		if (covox_wr)
 				val <= din;
 		else if (beeper_wr)
-				val <= (beeper_mux ? din[3] : din[4]) ? 8'h7F : 8'h00;
+				val <= (beeper_mux ? din[3] : din[4]) ? 8'hFF : 8'h00;
 
 `ifdef SDM
 // SD modulator

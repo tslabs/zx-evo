@@ -409,6 +409,7 @@ module top(
 	zbus zxbus
 	(
 		.iorq(iorq),
+		.iorq_n(iorq_n),
 		.rd(rd),
 		.iorq1_n(iorq1_n),
 		.iorq2_n(iorq2_n),
