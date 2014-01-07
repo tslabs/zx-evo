@@ -24,7 +24,8 @@ module zbus(
 
 
 
-	assign iorq1_n = iorq_n | porthit;
+	// assign iorq1_n = iorq_n | porthit;
+	assign iorq1_n = iorq_n;
 
 	assign iorq2_n = iorq1_n | iorqge1;
 
