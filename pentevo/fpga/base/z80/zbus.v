@@ -29,7 +29,7 @@ module zbus(
 
 	assign iorq2_n = iorq1_n | iorqge1;
 
-	assign drive_ff = ( (~(iorq2_n|iorqge2)) & (~rd_n) ) | (~(m1_n|iorq_n));
+	assign drive_ff = ( (~(iorq2_n|iorqge2)) & (~rd_n)  && !porthit) | (~(m1_n|iorq_n));
 
 
 

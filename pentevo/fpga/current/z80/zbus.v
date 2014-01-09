@@ -24,9 +24,9 @@ module zbus(
 
 	// assign iorq1_n = !iorq | porthit;	// iorq is masked my M1_n!
 	assign iorq1_n = iorq_n;
-	assign iorq2_n = iorq1_n | iorqge1;
+	assign iorq2_n = iorq1_n || iorqge1;
 	
-	assign drive_ff = ~(iorq2_n | iorqge2) & rd;
+	assign drive_ff = !iorq2_n && !iorqge2 && !porthit && rd;
 
 
 endmodule
