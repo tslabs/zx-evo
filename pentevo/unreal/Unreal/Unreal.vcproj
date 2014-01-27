@@ -558,6 +558,10 @@
 				>
 			</File>
 			<File
+				RelativePath="savevid.cpp"
+				>
+			</File>
+			<File
 				RelativePath="sdcard.cpp"
 				>
 			</File>
@@ -969,6 +973,10 @@
 			</File>
 			<File
 				RelativePath=".\savesnd.h"
+				>
+			</File>
+			<File
+				RelativePath=".\savevid.h"
 				>
 			</File>
 			<File

@@ -948,36 +948,3 @@ void main_scrshot()
       counter++;
    }
 }
-
-static void VideoFrameSaver()
-{
-   static unsigned counter = 0;
-   if (SaveScreenshot("video", counter))
-      counter++;
-}
-
-static void VideoNullSaver()
-{
-}
-
-TVideoSaver VideoSaver = VideoNullSaver;
-
-void main_savevideo()
-{
-   static bool StartSave = false;
-
-   if (!StartSave)
-   {
-       sprintf(statusline, "start saving video");
-       StartSave = true;
-       VideoSaver = VideoFrameSaver;
-   }
-   else
-   {
-       sprintf(statusline, "stop saving video");
-       StartSave = false;
-       VideoSaver = VideoNullSaver;
-   }
-
-   statcnt = 30;
-}

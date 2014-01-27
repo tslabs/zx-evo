@@ -333,6 +333,9 @@
     <ClCompile Include="depack.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
+    <ClCompile Include="savevid.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="atm.h">
@@ -597,6 +600,9 @@
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="depack.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="savevid.h">
       <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>

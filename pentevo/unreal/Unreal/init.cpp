@@ -138,6 +138,8 @@ void __declspec(noreturn) exit()
    exitflag = 1;
    if (savesndtype)
        savesnddialog();
+   if (videosaver_state)
+     main_savevideo();  // stop saving video
 
    if (!normal_exit)
        done_fdd(false);
