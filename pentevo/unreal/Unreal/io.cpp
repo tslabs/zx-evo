@@ -157,13 +157,13 @@ void out(unsigned port, u8 val)
 
 			case TSW_INTMASK:
 			{
-				printf("INTMASK written. OUT (%02XAF), %02X, PC: %04X\r\n", p2, val, cpu.pc);
+				//printf("INTMASK written. OUT (%02XAF), %02X, PC: %04X\r\n", p2, val, cpu.pc);
 			}
 			break;
 			
 			case TSW_INTVECT:
 			{
-				printf("INTVECT written. OUT (%02XAF), %02X, PC: %04X\r\n", p2, val, cpu.pc);
+				//printf("INTVECT written. OUT (%02XAF), %02X, PC: %04X\r\n", p2, val, cpu.pc);
 			}
 			break;
 			
@@ -440,7 +440,7 @@ void out(unsigned port, u8 val)
 				if (val & 0x40)
 					printf("Illegal DMA mode! OUT (%02XAF), %02X, PC: %04X\r\n", p2, val, cpu.pc);
 				if ((val & 0x07) == 5)
-					printf("DMA SFILE. OUT (%02XAF), %02X, PC: %04X\r\n", p2, val, cpu.pc);
+					//printf("DMA SFILE. OUT (%02XAF), %02X, PC: %04X\r\n", p2, val, cpu.pc);
 
 				dma(val);
 				update_screen();
