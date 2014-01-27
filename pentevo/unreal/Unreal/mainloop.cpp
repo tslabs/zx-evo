@@ -101,7 +101,9 @@ void mainloop(const bool &Exit)
 		temp.inputblock = temp.vidblock && conf.sound.enabled;
 
 		spectrum_frame();
-		VideoSaver();
+		//VideoSaver();
+    if (videosaver_state)
+      savevideo_gfx();  // flush gfx to video saver
 
 		if (skipped < temp.frameskip)
 		{
@@ -122,6 +124,8 @@ void mainloop(const bool &Exit)
 
 		if (!temp.sndblock)
 		{
+      if (videosaver_state)
+        savevideo_snd();  // flush snd to video saver
 			do_sound();
 			Vs1001.Play();
 		}

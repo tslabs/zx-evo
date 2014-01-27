@@ -443,6 +443,11 @@ void load_config(const char *fname)
        }
    }
 
+   GetPrivateProfileString(video, "ffmpeg.exec", "ffmpeg.exe", conf.ffmpeg.exec, sizeof conf.ffmpeg.exec, ininame);
+   GetPrivateProfileString(video, "ffmpeg.parm", nil, conf.ffmpeg.parm, sizeof conf.ffmpeg.parm, ininame);
+   GetPrivateProfileString(video, "ffmpeg.vout", "video#.avi", conf.ffmpeg.vout, sizeof conf.ffmpeg.vout, ininame);
+   conf.ffmpeg.newcons = GetPrivateProfileInt(video, "ffmpeg.newconsole", 1, ininame);
+
    conf.trdos_present = GetPrivateProfileInt(beta128, "beta128", 1, ininame);
    conf.trdos_traps = GetPrivateProfileInt(beta128, "Traps", 1, ininame);
    conf.wd93_nodelay = GetPrivateProfileInt(beta128, "Fast", 1, ininame);

@@ -4,6 +4,7 @@
 #include "defs.h"
 #include "sndrender.h"
 #include "tsconf.h"
+#include "savevid.h"
 
 #define EMUL_DEBUG
 #define TRASH_PAGE
@@ -297,6 +298,13 @@ struct CONFIG
    char appendboot[FILENAME_MAX];
    char workdir[FILENAME_MAX];
    u8 profi_monochrome;
+
+   struct {
+     char exec[VS_MAX_FFPATH];  // ffmpeg path/name
+     char parm[VS_MAX_FFPARM];  // enc. parameters for ffmpeg
+     char vout[VS_MAX_FFVOUT];  // output video file name
+     u8 newcons;                // open new console for ffmpeg
+   } ffmpeg;
 };
 
 struct TEMP
