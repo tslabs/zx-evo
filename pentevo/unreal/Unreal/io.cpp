@@ -80,7 +80,7 @@ void out(unsigned port, u8 val)
    #endif
 
    // z-controller
-   if (conf.zc && p1 == 0x57 )
+   if (conf.zc && p1 == 0x57)
    {
       if ((port & 0x80FF) == 0x8057 && conf.mem_model == MM_ATM3
          &&(comp.flags & CF_DOSPORTS))
@@ -1089,7 +1089,7 @@ __inline u8 in1(unsigned port)
    #endif
 
    // z-controller
-   if (conf.zc && p1 == 0x57)
+   if (conf.zc && (p1 == 0x57) || (p1 == 0x77))
    {
       // no shadow-mode ZXEVO patch here since 0x57 port in read mode is the same
       // as in noshadow-mode, i.e. no A15 is used to decode port.
