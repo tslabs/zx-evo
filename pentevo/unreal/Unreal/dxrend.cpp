@@ -106,26 +106,28 @@ void render_3x(u8 *dst, u32 pitch)
 
 	for (u32 i=0; i<conf.frameysize; i++)
 	{
-		RGB32 *src1 = src;
-		u8 *dst1 = dst;
-		for (u32 j=0; j<(pitch/12); j++)
-		{
-			RGB32 p1 = *src1++; RGB32 p2 = *src1++;
-			*dst++ = p1.b;
-			*dst++ = p1.g;
-			*dst++ = p1.r;
-			dst++;
-			*dst++ = (p1.b + p2.b) >> 1;
-			*dst++ = (p1.g + p2.g) >> 1;
-			*dst++ = (p1.r + p2.r) >> 1;
-			dst++;
-			*dst++ = p2.b;
-			*dst++ = p2.g;
-			*dst++ = p2.r;
-			dst++;
-		}
-		memcpy (dst, dst1, pitch); dst += pitch;
-		memcpy (dst, dst1, pitch); dst += pitch;
+    for (u8 k=0; k<3; k++)
+    {
+		  RGB32 *src1 = src;
+		  u8 *dst1 = dst;
+		  for (u32 j=0; j<(pitch/12); j++)
+		  {
+			  RGB32 p1 = *src1++; RGB32 p2 = *src1++;
+			  *dst1++ = p1.b;
+			  *dst1++ = p1.g;
+			  *dst1++ = p1.r;
+			  dst1++;
+			  *dst1++ = (p1.b + p2.b) >> 1;
+			  *dst1++ = (p1.g + p2.g) >> 1;
+			  *dst1++ = (p1.r + p2.r) >> 1;
+			  dst1++;
+			  *dst1++ = p2.b;
+			  *dst1++ = p2.g;
+			  *dst1++ = p2.r;
+			  dst1++;
+		  }
+      dst += pitch;
+    }
 		src += VID_WIDTH * 2;
 	}
 }
@@ -139,15 +141,15 @@ void render_4x(u8 *dst, u32 pitch)
 
 	for (u32 i=0; i<conf.frameysize; i++)
 	{
-		u32 *src1 = src;
-		u32 *dst1 = (u32*)dst;
-		for (u32 j=0; j<(pitch/8); j++)
-			*dst1++ = *src1, *dst1++ = *src1++;
-		memcpy ((u8*)dst1, dst, pitch); dst1 += pitch/4;
-		memcpy ((u8*)dst1, dst, pitch); dst1 += pitch/4;
-		memcpy ((u8*)dst1, dst, pitch);
+    for (u8 k=0; k<4; k++)
+    {
+		  u32 *src1 = src;
+		  u32 *dst1 = (u32*)dst;
+		  for (u32 j=0; j<(pitch/8); j++)
+        *dst1++ = *src1, *dst1++ = *src1++;
 		
-		dst += pitch*4;
+		  dst += pitch;
+    }
 		src += VID_WIDTH * 2;
 	}
 }
