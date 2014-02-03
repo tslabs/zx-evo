@@ -163,11 +163,11 @@ void set_banks()
 			tmp += comp.ts.page[0] & 0xFC;
 		}
 
-		if (comp.ts.w0_ram)
+		if (comp.ts.w0_ram || comp.ts.vdos)
 		// RAM at #0000
 		{
 			bankm[0] = 1;
-			bank0 = page_ram(tmp);
+			bank0 = page_ram(comp.ts.vdos ? 0xFF : tmp);
 		}
 
 		else
@@ -312,11 +312,12 @@ void set_banks()
    if (bankr[2] >= ROM_BASE_M) bankw[2] = TRASH_M;
    if (bankr[3] >= ROM_BASE_M) bankw[3] = TRASH_M;
 
-
    u8 dosflags = CF_LEAVEDOSRAM;
+   if (conf.mem_model == MM_TSL && comp.ts.vdos)
+       dosflags = 0;
    if (conf.mem_model == MM_PENTAGON || conf.mem_model == MM_PROFI)
        dosflags = CF_LEAVEDOSADR;
-
+   
    if (comp.flags & CF_TRDOS)
    {
        comp.flags |= dosflags | CF_DOSPORTS;

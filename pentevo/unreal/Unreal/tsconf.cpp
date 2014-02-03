@@ -362,6 +362,7 @@ void tsinit(void)
 	comp.ts.im2vect = 255;
 	comp.ts.fddvirt = 0;
 	comp.ts.vdos = 0;
+  comp.ts.vdos_m1 = 0;
 
 	comp.ts.sysconf = 1;		// turbo 7MHz for TS-Conf
 	comp.ts.memconf = 0;

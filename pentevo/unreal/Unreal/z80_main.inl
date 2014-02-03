@@ -138,6 +138,11 @@ Z80INLINE u8 m1_cycle(Z80 *cpu)
    if ((conf.mem_model == MM_PENTAGON) &&
       ((comp.pEFF7 & (EFF7_384 | EFF7_4BPP)) == (EFF7_384 | EFF7_4BPP)))
        temp.offset_hscroll++;
+   if (conf.mem_model == MM_TSL && comp.ts.vdos_m1) {
+      comp.ts.vdos    = 1;
+      comp.ts.vdos_m1 = 0;
+      set_banks();
+   }
    cpu->r_low++;// = (cpu->r & 0x80) + ((cpu->r+1) & 0x7F);
    cputact(4);
    return rm(cpu->pc++);

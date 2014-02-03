@@ -152,6 +152,7 @@ void out(unsigned port, u8 val)
 
 			case TSW_FDDVIRT:
 			{
+        comp.ts.fddvirt = val & 0x0F;
 			}
 			break;
 
@@ -686,8 +687,32 @@ void out(unsigned port, u8 val)
       } // quorum
       else if ((p1 & 0x1F) == 0x1F) // 1F, 3F, 5F, 7F, FF
       {
-          comp.wd.out(p1, val);
-          return;
+        if (conf.mem_model == MM_TSL)
+        {
+          if (comp.ts.vdos)
+          { // vdos_on
+            if (p1 == 0xFF)
+            { // out vgsys
+              comp.wd.out(p1, val);
+              return;
+            }
+            else
+            { // out vg
+              comp.ts.vdos = 0;
+              set_banks();
+              return;
+            }
+          }
+          else if ((1<<comp.wd.drive) == comp.ts.fddvirt)
+          { // vdos_off
+            comp.ts.vdos = 1;
+            set_banks();
+            return;
+          }
+        }
+        // physical drive
+        comp.wd.out(p1, val);
+        return;
       }
       // don't return - out to port #FE works in trdos!
    }
@@ -1311,7 +1336,23 @@ __inline u8 in1(unsigned port)
           // DF = 1101|1111b порт мыши
           // FF = 1111|1111b
       else if ((p1 & 0x9F) == 0x1F || p1 == 0xFF) // 1F, 3F, 5F, 7F, FF
-          return comp.wd.in(p1);
+      {
+        if (conf.mem_model == MM_TSL)
+        {
+          if (comp.ts.vdos)
+          { // vdos_on
+            comp.ts.vdos = 0;
+            set_banks();
+            return 0xFF;
+          }
+          else if ((1<<comp.wd.drive) & comp.ts.fddvirt)
+          { // vdos_off
+            comp.ts.vdos_m1 = 1;
+            return 0xFF;
+          }
+        }
+        return comp.wd.in(p1); // physical drive
+      }
    }
    else // не dos
    {
