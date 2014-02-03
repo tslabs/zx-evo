@@ -95,6 +95,10 @@ RES_2
         xtr
         xta fddvirt
 
+;INT offset
+        ld a, (into)
+        xta hsint
+        
         ld hl, RESET2
         ld de, res_buf
         ld bc, RESET2_END - RESET2
