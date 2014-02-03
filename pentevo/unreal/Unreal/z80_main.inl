@@ -224,7 +224,8 @@ void step1()
 void try_int()
 {
 	if (!cpu.iff1 ||	// int NOT enabled in CPU
-		((conf.mem_model == MM_ATM710) && !(comp.pFF77 & 0x20))) // int enabled by ATM hardware -- lvd added no int disabling in pentevo (atm3)
+		((conf.mem_model == MM_ATM710) && !(comp.pFF77 & 0x20)) || // int enabled by ATM hardware -- lvd added no int disabling in pentevo (atm3)
+    ((conf.mem_model == MM_TSL) && (comp.ts.vdos || comp.ts.vdos_m1))) // int disabled in vdos after r/w vg ports
 		return;
 		
 	else	// int enabled
