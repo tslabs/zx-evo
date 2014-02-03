@@ -641,9 +641,13 @@ void WD1793::out(u8 port, u8 val)
    if (port & 0x80) // FF
    { // system
       drive = val & 3;
-      side = ~(val >> 4) & 1;
       seldrive = &fdd[drive];
       seldrive->t.clear();
+
+      if (conf.mem_model == MM_TSL && comp.ts.vdos)
+        return;
+
+      side = ~(val >> 4) & 1;
 
       if (!(val & 0x04))
       { // reset
