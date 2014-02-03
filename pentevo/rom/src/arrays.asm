@@ -41,11 +41,11 @@ ERR_ME3
 ; -- options tab
 OPTTAB0
         defw h'0707     ; X, Y coord of box
-        defw h'0F20     ; X, Y size of box
+        defw h'1020     ; X, Y size of box
         defw h'0A0A     ; X, Y coord of list top
         defw h'080C     ; X, Y coord of header text
         defb h'8C       ; attrs
-        defb 10          ; number of options
+        defb 11          ; number of options
         defb 'Select NVRAM options:', 0
 
 		defw OPT_CFQ, SEL_CFQ   ; address of option desc, address of option choices
@@ -58,6 +58,7 @@ OPTTAB0
 		defw OPT_B1D, SEL_BDV
 		defw OPT_ZPL, SEL_ZPL
 		defw OPT_NGR, SEL_ONF
+		defw OPT_INT, SEL_07
 
 ; -- option text
 ; byte - number of choices
@@ -73,6 +74,7 @@ OPT_B2B    defb 4, low(b2tb), '  bank:', 0
 OPT_B1D    defb 4, low(bdev), 'Boot Device:', 0
 OPT_ZPL    defb 7, low(zpal), 'ZX Palette:', 0
 OPT_NGR    defb 2, low(nres), 'NGS Reset:', 0
+OPT_INT    defb 8, low(into), 'INT Offset:', 0
 
 ; -- choices
 ; string - choice
@@ -123,6 +125,14 @@ SEL_ZPL
 		defb 'Grayscl', 0
 		defb ' Custom', 0
 
+SEL_07  defb '0', 0
+        defb '1', 0
+        defb '2', 0
+        defb '3', 0
+        defb '4', 0
+        defb '5', 0
+        defb '6', 0
+        defb '7', 0
 
 ; -- palette
 pal_bb               ; bright black

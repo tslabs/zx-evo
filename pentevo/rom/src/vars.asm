@@ -81,6 +81,7 @@ b2tb            defs 1      ; CS Boot bank
 l128            defs 1      ; Lock 128
 zpal            defs 1      ; ZX palette
 nres            defs 1      ; NGS Reset
+into            defs 1      ; INT offset
 cpal            defs 32     ; Custom palette (array)
 nvcs            defs 2      ; checksum - must be last in the declaration
 
