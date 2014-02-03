@@ -377,5 +377,5 @@ void tsinit(void)
 	comp.ts.g_xoffs = 0;
 	comp.ts.g_yoffs = 0;
 	
-	comp.intpos = 2;	// pentagon standard
+	comp.intpos = 1;
 }

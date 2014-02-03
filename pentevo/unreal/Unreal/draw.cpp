@@ -670,7 +670,7 @@ void update_screen()
 {
 	u32 cput = (cpu.t >= conf.frame) ? (VID_TACTS * VID_LINES) : cpu.t;
 
-	while (vid.t_next < min(cput, VID_TACTS * VID_LINES))		// iterate until current CPU tact or to the frame end
+	while (vid.t_next < min(cput - 1, VID_TACTS * VID_LINES))		// iterate until current CPU tact or to the frame end
 	{
 		u32 line = (vid.t_next / VID_TACTS);	// line in raster
 		u32 tact = vid.t_next % VID_TACTS;		// tact in line
@@ -841,57 +841,6 @@ void init_frame()
    vid.flash = comp.frame_counter & 0x10;
    init_raster();
    init_memcycles();
-
-   // recreate colors with flash attribute
-/*    u8 frame = (u8)comp.frame_counter;
-    if (!(frame & 15) )
-       make_colortab(frame & 16);
-
-   prev_t = -1; // block MCR
-   temp.base_2 = 0; // block paper trace
-   */
-   if (temp.vidblock)
-       return;
-
-/* [vv] Отключен, т.к. этот бит использyется для DDp scroll
-   // AlCo384 - no border/paper rendering
-   if (comp.pEFF7 & EFF7_384)
-       return;
-*/
-   // GIGASCREEN - no paper rendering
-//   if (comp.pEFF7 & EFF7_GIGASCREEN) goto allow_border; //Alone Coder
-
-   // disable multicolors, border still works
-   /*
-   if ((temp.rflags & RF_BORDER) || // chunk/etc filter
-       (conf.mem_model == MM_PROFI && (comp.pDFFD & 0x80)) ||   // profi hires screen
-       ((conf.mem_model == MM_ATM710 || conf.mem_model == MM_ATM3)&& (comp.pFF77 & 7) != 3) ||  // ATM-2 hires screen
-       (conf.mem_model == MM_ATM450 && (comp.aFE & 0x60) != 0x60)) // ATM-1 hires screen
-   {
-       if ((conf.mem_model == MM_ATM710 || conf.mem_model == MM_ATM3))
-       {
-           // ATM2, один из расширенных видеорежимов
-           AtmVideoCtrl.PrepareFrameATM2(comp.pFF77 & 7);
-       }
-
-       if (conf.mem_model == MM_ATM450)
-       {
-           // ATM1, один из расширенных видеорежимов
-           AtmVideoCtrl.PrepareFrameATM1( (comp.aFE >> 5) & 3 );
-
-       }
-
-      // if border update disabled, dont show anything on zx-screen
-      if (!conf.updateb)
-          return;
-   }
-		   */
-
-   // paper + border
-   // temp.base_2 = temp.base;
-//allow_border:
-   //prev_t = vmode = 0;
-   //vcurr = video;
 }
 
 void load_spec_colors()

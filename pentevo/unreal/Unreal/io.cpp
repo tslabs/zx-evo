@@ -152,7 +152,7 @@ void out(unsigned port, u8 val)
 
 			case TSW_FDDVIRT:
 			{
-        comp.ts.fddvirt = val & 0x0F;
+				comp.ts.fddvirt = val & 0x0F;
 			}
 			break;
 
@@ -171,7 +171,7 @@ void out(unsigned port, u8 val)
 			case TSW_HSINT:
 			{
 				comp.ts.hsint = val;
-				comp.intpos = ((comp.ts.hsint > (conf.t_line-1)) || (comp.ts.vsinth > 319)) ? -1 : (comp.ts.vsint * conf.t_line + comp.ts.hsint);
+				comp.intpos = ((comp.ts.hsint > (conf.t_line-1)) || (comp.ts.vsinth > 319)) ? -1 : (comp.ts.vsint * conf.t_line + comp.ts.hsint + 1);
 				cpu.intnew = true;
 			}
 			break;
@@ -179,7 +179,7 @@ void out(unsigned port, u8 val)
 			case TSW_VSINTL:
 			{
 				comp.ts.vsintl = val;
-				comp.intpos = ((comp.ts.hsint > (conf.t_line-1)) || (comp.ts.vsinth > 319)) ? -1 : (comp.ts.vsint * conf.t_line + comp.ts.hsint);
+				comp.intpos = ((comp.ts.hsint > (conf.t_line-1)) || (comp.ts.vsinth > 319)) ? -1 : (comp.ts.vsint * conf.t_line + comp.ts.hsint + 1);
 				cpu.intnew = true;
 			}
 			break;
@@ -187,7 +187,7 @@ void out(unsigned port, u8 val)
 			case TSW_VSINTH:
 			{
 				comp.ts.vsinth = val;
-				comp.intpos = ((comp.ts.hsint > (conf.t_line-1)) || (comp.ts.vsinth > 319)) ? -1 : (comp.ts.vsint * conf.t_line + comp.ts.hsint);
+				comp.intpos = ((comp.ts.hsint > (conf.t_line-1)) || (comp.ts.vsinth > 319)) ? -1 : (comp.ts.vsint * conf.t_line + comp.ts.hsint + 1);
 				cpu.intnew = true;
 			}
 			break;
