@@ -68,6 +68,7 @@ zes             defs 1
 
 
 ; -- NVRAM cells
+; ATTENTION! When changing NVRAM cells declaration, update 'nv_def' array!
                 org nv_buf + nv_1st
 fddv            defs 1      ; FDDVirt (#29AF copy)  // non-removable #B0
 cfrq            defs 1      ; CPU freq              // non-removable #B1
@@ -78,7 +79,7 @@ b1to            defs 1      ; Boot option
 b1tb            defs 1      ; Boot bank
 b2to            defs 1      ; CS Boot option
 b2tb            defs 1      ; CS Boot bank
-l128            defs 1      ; Lock 128
+l128            defs 1      ; #7FFD Span
 zpal            defs 1      ; ZX palette
 nres            defs 1      ; NGS Reset
 into            defs 1      ; INT offset

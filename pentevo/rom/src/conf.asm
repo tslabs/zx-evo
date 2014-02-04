@@ -110,8 +110,8 @@ res_buf         equ h'5000      ; |
 nv_buf          equ h'5D00      ; | LSB should be 0 !!
 vars            equ h'5B00      ; /
 
-stck            equ h'6000
-nv_1st          equ h'B0
+stck            equ h'6000      ; stack pointer
+nv_1st          equ h'B0        ; first NVRAM cell
 
 
 ; -- video config

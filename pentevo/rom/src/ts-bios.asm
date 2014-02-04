@@ -25,12 +25,11 @@ MAIN
         out (254), a
 
         call READ_NVRAM
-        ; call CALC_CRC
-        ; push af
-        ; call nz, LOAD_DEFAULTS
-        ; pop af
-        ; jp nz, SETUP        ; CRC error
-
+        call CALC_CRC
+        jr z, MN2
+        call LOAD_DEFAULTS    ; if NVRAM CRC16 error - load defaults and run SETUP
+        jp SETUP
+MN2
         inxt xstatus
         bit 6, a
         jr z, MN1             ; check if first boot after conf loading
@@ -98,7 +97,7 @@ RES_2
 ;INT offset
         ld a, (into)
         xta hsint
-        
+
         ld hl, RESET2
         ld de, res_buf
         ld bc, RESET2_END - RESET2
@@ -640,25 +639,34 @@ KBP6
         ret
 
 CALC_CRC
-        ld hl, nv_buf
-        ld de, 0
-        ld b, nv_size - 2
-CC0
-        ld a, d
-        add a, (hl)
-        ld d, a
-        ld a, e
-        xor (hl)
-        ld e, a
-        inc hl
-        djnz CC0
-
-        ld a, e
-        cp (hl)
+        ld de, nv_buf + nv_1st
+        ld c, nv_size - 2
+        call CRC16
+        ld a, (de)
+        cp l
         ret nz
-        inc hl
-        ld a, d
-        cp (hl)
+        inc de
+        ld a, (de)
+        cp h
+        ret
+
+CRC16	ld	hl, h'FFFF
+CRC1	ld	a, (de)
+        inc	de
+        xor	h
+        ld	h, a
+        ld	b, 8
+CRC2	add	hl, hl
+        jr	nc, CRC3
+        ld	a, h
+        xor	h'10
+        ld	h, a
+        ld	a, l
+        xor	h'21
+        ld	l, a
+CRC3    djnz CRC2
+        dec	c
+        jr	nz, CRC1
         ret
 
 READ_NVRAM
@@ -681,17 +689,15 @@ RNV1
         ret
 
 LOAD_DEFAULTS
-        ld hl, nv_buf + nv_1st
-        ld d, h
-        ld e, l
-        inc de
-        ld bc, nv_size - 1
+        ld hl, nv_def
+        ld de, nv_buf + nv_1st
+        ld bc, nv_size - 2
         ld (hl), b
         ldir
 
 WRITE_NVRAM
         call CALC_CRC
-        ld (nvcs), de
+        ld (nvcs), hl
 
         outf7 shadow, shadow_on
 
