@@ -317,6 +317,38 @@ keys_caps
 keys_symb
         defb 0, ':`?/~|\\{}   <>!@#$%_)(', 39, '&', 34, '; ][', 13, '=+-^ ', 14, '.,*'
 
+; -- NVRAM default values
+nv_def
+        defb 0      ; FDDVirt OFF
+        defb 0      ; CPU clock 3.5MHz
+        defb 0      ; boot device SD Z-contr
+        defb 1      ; CPU Cache ON
+        defb 0      ; Boot from ROM #00
+        defb 0      ; Boot bank TR-DOS
+        defb 3      ; CS Boot from Boot Device boot.$c
+        defb 0      ; CS Boot TR-DOS
+        defb 1      ; #7FFD Span 128kB
+        defb 0      ; ZX palette Default
+        defb 0      ; NGS Reset OFF
+        defb 1      ; INT offset 1
+        ; Custom palette
+        defw 0  << 10 + 0  << 5 + 0 
+        defw 2  << 10 + 2  << 5 + 2 
+        defw 4  << 10 + 4  << 5 + 4 
+        defw 6  << 10 + 6  << 5 + 6 
+        defw 8  << 10 + 8  << 5 + 8 
+        defw 10 << 10 + 10 << 5 + 10
+        defw 12 << 10 + 12 << 5 + 12
+        defw 14 << 10 + 14 << 5 + 14
+        defw 1  << 10 + 1  << 5 + 1 
+        defw 3  << 10 + 3  << 5 + 3 
+        defw 5  << 10 + 5  << 5 + 5 
+        defw 7  << 10 + 7  << 5 + 7 
+        defw 9  << 10 + 9  << 5 + 9 
+        defw 11 << 10 + 11 << 5 + 11
+        defw 13 << 10 + 13 << 5 + 13
+        defw 15 << 10 + 15 << 5 + 15
+
 font8
 #include "866_code.asm"
 

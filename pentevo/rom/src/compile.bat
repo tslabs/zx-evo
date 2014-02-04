@@ -12,6 +12,7 @@ bin2defb.exe tsfat.bin tsfat.asm
 
 "%IAR%\az80.exe" ts-bios.asm -l ts-bios.lst
 "%IAR%\xlink.exe" -Hff -f ts-bios.xcl ts-bios.r01
+if ERRORLEVEL 1 pause
 del ts-bios.r01
 
 "%IAR%\az80.exe" starter.asm
@@ -30,4 +31,3 @@ copy /b ts-bios.bin + trdos504T.rom + rc1_96.rom + 48.rom "../bin/ts-bios-rc196.
 copy ts-bios.bin "../bin/ts-bios.bin"
 del ts-bios.bin
 
-if ERRORLEVEL 1 pause
