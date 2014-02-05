@@ -7,7 +7,7 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#include "afxres.h"
+#include <atlres.h>
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
 
@@ -752,7 +752,7 @@ END
 
 2 TEXTINCLUDE 
 BEGIN
-    "#include ""afxres.h""\0"
+    "#include <atlres.h>\0"
 END
 
 3 TEXTINCLUDE 
@@ -766,19 +766,12 @@ END
 
 /////////////////////////////////////////////////////////////////////////////
 //
-// RT_MANIFEST
-//
-
-1                       RT_MANIFEST             "res\\unreal.manifest"
-
-/////////////////////////////////////////////////////////////////////////////
-//
 // Version
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,37,7,1
- PRODUCTVERSION 0,37,7,1
+ FILEVERSION 0,37,9,0
+ PRODUCTVERSION 0,37,9,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -786,7 +779,7 @@ VS_VERSION_INFO VERSIONINFO
  FILEFLAGS 0x0L
 #endif
  FILEOS 0x40004L
- FILETYPE 0x0L
+ FILETYPE 0x1L
  FILESUBTYPE 0x0L
 BEGIN
     BLOCK "StringFileInfo"
@@ -794,12 +787,12 @@ BEGIN
         BLOCK "040904b0"
         BEGIN
             VALUE "FileDescription", "UnrealSpeccy"
-            VALUE "FileVersion", "0.37.7.1"
+            VALUE "FileVersion", "0.37.9.0"
             VALUE "InternalName", "Unreal"
-            VALUE "LegalCopyright", "Copyright (C) 2001-2012"
+            VALUE "LegalCopyright", "Copyright (C) 2001-2014"
             VALUE "OriginalFilename", "Unreal.exe"
             VALUE "ProductName", "UnrealSpeccy"
-            VALUE "ProductVersion", "0.37.7.1"
+            VALUE "ProductVersion", "0.37.9.0"
         END
     END
     BLOCK "VarFileInfo"

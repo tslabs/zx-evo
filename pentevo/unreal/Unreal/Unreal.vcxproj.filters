@@ -50,11 +50,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Manifest Include="res\Unreal.manifest">
-      <Filter>Resources</Filter>
-    </Manifest>
-  </ItemGroup>
-  <ItemGroup>
     <Library Include="lib\dinput.lib">
       <Filter>Resources</Filter>
     </Library>
