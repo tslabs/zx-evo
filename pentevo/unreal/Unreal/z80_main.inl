@@ -232,7 +232,7 @@ void try_int()
 	{
 		if (cpu.t == cpu.eipos)		// if INT issued right after EI, it's delayed for 1 opcode
 			step1();
-			handle_int(&cpu, cpu.IntVec()); // Начало обработки int (запись в стек адреса возврата и т.п.)
+		handle_int(&cpu, cpu.IntVec()); // Начало обработки int (запись в стек адреса возврата и т.п.)
 	}
 }
 

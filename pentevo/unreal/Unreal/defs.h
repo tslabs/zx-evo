@@ -251,7 +251,7 @@ struct Z80 : public TZ80State
    const TMemIf *DbgMemIf; // Интерфейс памяти для поддержки отладчика (брекпоинты на доступ к памяти)
    const TMemIf *MemIf; // Текущий активный интерфейс памяти
 
-   void reset() { int_flags = ir_ = pc = 0; im = 0; last_branch = 0; int_pend = false; int_pend = false; int_gate = true; }
+   void reset() { int_flags = ir_ = pc = 0; im = 0; last_branch = 0; int_pend = false; int_gate = true; }
    Z80(u32 Idx, TBankNames BankNames, TStep Step, TDelta Delta,
        TSetLastT SetLastT, u8 *membits, const TMemIf *FastMemIf, const TMemIf *DbgMemIf) :
        Idx(Idx), 
