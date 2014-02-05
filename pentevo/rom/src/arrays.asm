@@ -331,6 +331,9 @@ nv_def
         defb 0      ; ZX palette Default
         defb 0      ; NGS Reset OFF
         defb 1      ; INT offset 1
+
+        defs 18     ; dummy
+        
         ; Custom palette
         defw 0  << 10 + 0  << 5 + 0 
         defw 2  << 10 + 2  << 5 + 2 

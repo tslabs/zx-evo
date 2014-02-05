@@ -639,8 +639,8 @@ KBP6
         ret
 
 CALC_CRC
-        ld de, nv_buf + nv_1st
-        ld c, nv_size - 2
+        ld de, nv_buf + nv_1st + 1      ; 1st cell FDDVirt is ignored
+        ld c, nv_size - 3
         call CRC16
         ld a, (de)
         cp l
