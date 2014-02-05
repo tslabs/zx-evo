@@ -25,9 +25,6 @@
     <None Include="z80_main.inl" />
   </ItemGroup>
   <ItemGroup>
-    <Manifest Include="res\Unreal.manifest" />
-  </ItemGroup>
-  <ItemGroup>
     <Library Include="lib\dinput.lib" />
     <Library Include="lib\dxerr8.lib" />
   </ItemGroup>
@@ -281,14 +278,14 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <GenerateManifest>false</GenerateManifest>
+    <GenerateManifest>true</GenerateManifest>
     <OutDir>bin\$(Configuration)\</OutDir>
-    <IntDir>bin\$(Configuration)\</IntDir>
+    <IntDir>tmp\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <GenerateManifest>false</GenerateManifest>
+    <GenerateManifest>true</GenerateManifest>
     <OutDir>bin\$(Configuration)\</OutDir>
-    <IntDir>bin\$(Configuration)\</IntDir>
+    <IntDir>tmp\$(Configuration)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -303,24 +300,27 @@
       <MultiProcessorCompilation>false</MultiProcessorCompilation>
       <ErrorReporting>Prompt</ErrorReporting>
       <PrecompiledHeaderFile>std.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>wtl</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <DelayLoadDLLs>gdiplus.dll</DelayLoadDLLs>
       <AdditionalDependencies>delayimp.lib;gdiplus.lib;kernel32.lib;user32.lib;gdi32.lib;shell32.lib;comdlg32.lib;comctl32.lib;winmm.lib;setupapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <LinkErrorReporting>PromptImmediately</LinkErrorReporting>
+      <AdditionalManifestDependencies>type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'</AdditionalManifestDependencies>
     </Link>
     <ProjectReference />
     <PostBuildEvent>
       <Command>copy /y "$(ProjectDir)lib\*.dll" "$(TargetDir)"
 copy /y "$(ProjectDir)cfg\*.*" "$(TargetDir)"
-md "$(TargetDir)rom"
+if not exist "$(TargetDir)rom\" md "$(TargetDir)rom"
 copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)rom"
-copy "$(ProjectDir)cfg\hdd\wc.7z" "$(TargetDir)"
-cd /d "$(TargetDir)"
-7z e -y wc.7z
+..\..\tools\7z\7z.exe e -y -bd -o"$(TargetDir)" .\cfg\hdd\wc.7z
 </Command>
     </PostBuildEvent>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>wtl</AdditionalIncludeDirectories>
+    </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -339,6 +339,8 @@ cd /d "$(TargetDir)"
       <PrecompiledHeaderFile>std.h</PrecompiledHeaderFile>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <ErrorReporting>Prompt</ErrorReporting>
+      <StringPooling>true</StringPooling>
+      <AdditionalIncludeDirectories>wtl</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>false</GenerateDebugInformation>
@@ -347,28 +349,24 @@ cd /d "$(TargetDir)"
       <DelayLoadDLLs>gdiplus.dll</DelayLoadDLLs>
       <AdditionalDependencies>delayimp.lib;gdiplus.lib;kernel32.lib;user32.lib;gdi32.lib;shell32.lib;comdlg32.lib;comctl32.lib;winmm.lib;setupapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <LinkErrorReporting>PromptImmediately</LinkErrorReporting>
+      <AdditionalManifestDependencies>type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'</AdditionalManifestDependencies>
     </Link>
     <ProjectReference />
     <PostBuildEvent>
       <Command>rd /q /s "$(TargetDir)rom"
-rd /q /s "$(TargetDir)..\tmp"
-md "$(TargetDir)..\tmp"
-md "$(TargetDir)..\tmp\rom"
 md "$(TargetDir)rom"
 copy /y "$(ProjectDir)lib\*.dll" "$(TargetDir)"
 copy /y "$(ProjectDir)cfg\*.*" "$(TargetDir)"
-copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)"rom
-copy /y "$(ProjectDir)lib\*.dll" "$(TargetDir)..\tmp"
-copy /y "$(ProjectDir)cfg\*.*" "$(TargetDir)..\tmp"
-copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)..\tmp\rom"
-copy /y "$(TargetPath)" "$(TargetDir)..\tmp"
-copy "$(ProjectDir)cfg\hdd\wc.7z" "$(TargetDir)..\tmp"
-cd /d "$(TargetDir)..\tmp"
-7z e -y wc.7z
-del "$(TargetDir)..\tmp\wc.7z"
-7z a -t7z -r -mx9 -y -i!* ..\unreal.7z *.*
+copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)rom"
+..\..\tools\7z\7z.exe e -y -bd -o"$(TargetDir)" .\cfg\hdd\wc.7z
+..\..\tools\7z\7z.exe a -r -mx9 -y -bd "$(TargetDir)..\unreal.7z" "$(TargetDir)*"
 </Command>
+      <Message>
+      </Message>
     </PostBuildEvent>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>wtl</AdditionalIncludeDirectories>
+    </ResourceCompile>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
