@@ -474,15 +474,13 @@ void draw_border(int n)
 }
 
 // TS Line
-void draw_ts()
-// called at the end of pixel line, vptr points on 1st pix of the right border
+void draw_ts(u32 vptr)
 {
-	int s_pix = (vid.raster.r_brd - vid.raster.l_brd) * 2;
-	u32 vptr = vid.vptr - s_pix * 2;
-	for (int i = 0; i < (s_pix); i++)
-	{
-		if (vid.tsline[i] & 0xF)	// if pixel is not transparent
-			vbuf[vid.buf][vptr] = vbuf[vid.buf][vptr+1] = vid.clut[vid.tsline[i]];
-		vptr += 2;
-	}
+  u8 linebuf = (vid.line & 1) ^ 1;
+  u32 max = vid.line_pos + ((vid.vptr - vptr) >> 1);
+  for (; vid.line_pos < max; vid.line_pos++, vptr += 2)
+  {
+    if (vid.tsline[linebuf][vid.line_pos] & 0xF) // if pixel is not transparent
+      vbuf[vid.buf][vptr] = vbuf[vid.buf][vptr+1] = vid.clut[vid.tsline[linebuf][vid.line_pos]];
+  }
 }

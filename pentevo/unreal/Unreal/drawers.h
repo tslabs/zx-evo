@@ -15,4 +15,4 @@ void draw_ts16(int n);
 void draw_ts256(int n);
 void draw_nul(int n);
 void draw_border(int n);
-void draw_ts();
+void draw_ts(u32 vptr);
