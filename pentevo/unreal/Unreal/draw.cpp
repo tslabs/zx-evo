@@ -722,6 +722,12 @@ void update_screen()
 					vid.ygctr = comp.ts.g_yoffs;		// yes - reload X-offset
 					comp.ts.g_yoffs_updated = 0;
 				}
+				if (conf.mem_model == MM_TSL && line < vid.raster.d_brd)
+				{
+					vid.line = (u16)line-1;
+					render_ts();
+					vid.line_pos = 0;
+				}
 			}
 
 			while (n > 0)		// draw pixel line (border + pixels + border)
@@ -742,19 +748,10 @@ void update_screen()
 					m = min((u32)n, vid.raster.r_brd - tact);
 					u32 t = vid.t_next;
 					vid.line = (u16)line;
+					u32 vptr = vid.vptr;
 					drawers[vid.mode].func(m);
+					if (conf.mem_model == MM_TSL) draw_ts(vptr);
 					t = vid.t_next - t; n -= t; tact += t;
-
-					if ((vid.t_next % VID_TACTS) == vid.raster.r_ts && conf.mem_model == MM_TSL)
-						/* Here TSU is rendered at the end of pixel line.
-						On real H/W it is rendered in the PREVIOUS line to visible.
-						The only conventional TSU registers that should be respected:
-						t0x_offs, t1x_offs, t0gpage, t1gpage.
-						Changing other registers on-the-fly will result in unpredicted behaviour on H/W,
-						so, we ignore their correct emulation.
-						When written by CPU values are actualized in the next to next line.
-						E.g. while written in line 0 actualized in line 2. */
-						render_ts(), draw_ts();
 				}
 
 				else

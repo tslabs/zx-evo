@@ -10,6 +10,7 @@
 #include "memory.h"
 #include "gui.h"
 #include "util.h"
+#include "leds.h"
 
 void out(unsigned port, u8 val);
 
@@ -121,6 +122,8 @@ void mon_scr(char alt)
 
    memcpy(save_buf, rbuf, rb2_offs);
    paint_scr(alt);
+   if (conf.bordersize == 5)
+     show_memcycles();
    flip(); if (conf.noflic) flip();
    memcpy(rbuf, save_buf, rb2_offs);
 
