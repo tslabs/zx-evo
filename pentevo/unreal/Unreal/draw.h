@@ -10,6 +10,8 @@
 #define VID_WIDTH 448
 #define VID_HEIGHT 320
 
+#define MEM_CYCLES VID_TACTS*2
+
 enum VMODE
 {
 	M_BRD=0	,	// Border only
@@ -50,7 +52,7 @@ struct RASTER
 
 struct VCTR
 {
-	u32 	clut[256];		// TS palette LUT in trucolor
+	u32 	clut[256];		// TS palette LUT in truecolor
 	RASTER 	raster;			// raster parameters
 	VMODE	mode;			// renderer mode
 	VMODE	mode_next;		// renderer mode, delayed to the start of the line
@@ -63,12 +65,13 @@ struct VCTR
 	u32 	buf;			// active video buffer
 	u32 	flash;			// flash counter
 	u16		line;			// current rendered line
-	u16		line_pos;	// current rendered position in line
+	u16		line_pos;	// current rendered position in line (used for TS)
 	u8		tsline[2][512];	// TS buffers (indexed colors)
 	u16		memvidcyc[320];	// number of memory cycles used in every video line by video
 	u16		memcpucyc[320];	// number of memory cycles used in every video line by CPU
 	u16		memtsscyc[320];	// number of memory cycles used in every video line by TS sprites
 	u16		memtstcyc[320];	// number of memory cycles used in every video line by TS tiles
+	u16		memdmacyc[320]; // number of memory cycles used in every video line by DMA
 };
 
 #define MAX_FONT_TABLES 0x62000

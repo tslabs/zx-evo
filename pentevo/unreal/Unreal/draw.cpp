@@ -722,11 +722,11 @@ void update_screen()
 					vid.ygctr = comp.ts.g_yoffs;		// yes - reload X-offset
 					comp.ts.g_yoffs_updated = 0;
 				}
-				if (conf.mem_model == MM_TSL && line < vid.raster.d_brd)
+				// render TSU first pixel line to the buffer at last upper border line
+				if (conf.mem_model == MM_TSL && line == vid.raster.u_brd)
 				{
 					vid.line = (u16)line-1;
 					render_ts();
-					vid.line_pos = 0;
 				}
 			}
 
@@ -761,6 +761,12 @@ void update_screen()
 					draw_border(m);
 					n -= m; tact += m;
 				}
+			}
+			// render TSU pixel line to the buffer for next video line
+			if (conf.mem_model == MM_TSL && tact == VID_TACTS && line < vid.raster.d_brd)
+			{
+				vid.line = (u16)line;
+				render_ts();
 			}
 		}
 	}

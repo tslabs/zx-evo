@@ -390,37 +390,37 @@ void out(unsigned port, u8 val)
 		// dma
 			case TSW_DMASAL:
 			{
-				comp.ts.dmasaddrl = val &0xFE;
+				comp.ts.dma.saddrl = val &0xFE;
 			}
 			break;
 
 			case TSW_DMASAH:
 			{
-				comp.ts.dmasaddrh = val & 0x3F;
+				comp.ts.dma.saddrh = val & 0x3F;
 			}
 			break;
 
 			case TSW_DMASAX:
 			{
-				comp.ts.dmasaddrx = val;
+				comp.ts.dma.saddrx = val;
 			}
 			break;
 
 			case TSW_DMADAL:
 			{
-				comp.ts.dmadaddrl = val &0xFE;
+				comp.ts.dma.daddrl = val &0xFE;
 			}
 			break;
 
 			case TSW_DMADAH:
 			{
-				comp.ts.dmadaddrh = val & 0x3F;
+				comp.ts.dma.daddrh = val & 0x3F;
 			}
 			break;
 
 			case TSW_DMADAX:
 			{
-				comp.ts.dmadaddrx = val;
+				comp.ts.dma.daddrx = val;
 			}
 			break;
 
@@ -438,15 +438,40 @@ void out(unsigned port, u8 val)
 
 			case TSW_DMACTR:
 			{
-				if (val & 0x40)
-					printf("Illegal DMA mode! OUT (%02XAF), %02X, PC: %04X\r\n", p2, val, cpu.pc);
+				//if (val & 0x40)
+					//printf("Illegal DMA mode! OUT (%02XAF), %02X, PC: %04X\r\n", p2, val, cpu.pc);
 				/*
         if ((val & 0x07) == 5)
 					printf("DMA SFILE. OUT (%02XAF), %02X, PC: %04X\r\n", p2, val, cpu.pc);
         */
 
-				dma(val);
-				update_screen();
+				//dma(val);
+				//update_screen();
+
+				/* val must be:
+				 * rw|dev
+				 *  x|001 - RAM/BLT
+				 *  x|010 - SPI
+				 *  x|011 - IDE
+				 *  x|100 - FILL/CRAM
+				 *  1|101 - SFILE
+				 * any other values are ignored
+				 */
+				if ((val & 0x07) != 0x00 && (val & 0x06) != 0x06 && (val & 0x87) != 0x05)
+				{
+					comp.ts.dma.ctrl   = val;
+					comp.ts.dma.next_t = cpu.t + VID_TACTS - (cpu.t % VID_TACTS);
+					comp.ts.dma.len    = comp.ts.dmalen+1;
+					comp.ts.dma.num    = comp.ts.dmanum+1;
+					comp.ts.dma.line   = cpu.t / VID_TACTS;
+					comp.ts.dma.m1     = comp.ts.dma.asz ? 0x3FFE00 : 0x3FFF00;
+					comp.ts.dma.m2     = comp.ts.dma.asz ? 0x0001FF : 0x0000FF;
+					comp.ts.dma.asize  = comp.ts.dma.asz ? 512 : 256;
+					comp.ts.dma.state  = 0;
+					comp.ts.dma.act    = 1;
+				}
+				else
+					printf("Illegal DMA mode! OUT (%02XAF), %02X, PC: %04X\r\n", p2, val, cpu.pc);
 			}
 			break;
 
@@ -1142,7 +1167,7 @@ __inline u8 in1(unsigned port)
 				return comp.ts.page[3];
 
 			case TSR_DMASTATUS:
-				return 0;
+				return comp.ts.dma.act<<7;
 	   }
 	}
 

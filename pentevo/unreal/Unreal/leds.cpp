@@ -486,6 +486,7 @@ void init_memcycles(void)
    memset(vid.memvidcyc, 0, 320 * sizeof(vid.memvidcyc[0]));
    memset(vid.memtsscyc, 0, 320 * sizeof(vid.memtsscyc[0]));
    memset(vid.memtstcyc, 0, 320 * sizeof(vid.memtstcyc[0]));
+   memset(vid.memdmacyc, 0, 320 * sizeof(vid.memdmacyc[0]));
 }
 
 void show_memcycle(u16 num, u32 col, u8 init, u32 vbpi)
@@ -499,7 +500,7 @@ static u32 *vidbuf;
 		vidbuf = &vbuf[vid.buf][vbpi];
 	}
 	
-	if (cnt > 128)
+	if (cnt > 112)
 		return;
 
 	num /= 4;
@@ -538,6 +539,7 @@ void show_memcycles(void)
 		show_memcycle(vid.memvidcyc[i], 0xFFFF90, 0, 0);			// Video
 		show_memcycle(vid.memtstcyc[i], 0xFF9090, 0, 0);			// TSU Tiles
 		show_memcycle(vid.memtsscyc[i], 0xC040FF, 0, 0);			// TSU Sprites
+		show_memcycle(vid.memdmacyc[i], 0xFFFFFF, 0, 0);
 	}
 	
 }
