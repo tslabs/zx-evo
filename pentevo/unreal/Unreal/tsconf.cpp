@@ -33,6 +33,300 @@ void update_clut(u8 addr)
 }
 
 // DMA procedures
+#define ss_inc(Num)	ss = comp.ts.dma.s_algn ? ((ss & comp.ts.dma.m1) | ((ss + 2*Num) & comp.ts.dma.m2)) : ((ss + 2*Num) & 0x3FFFFF)
+#define dd_inc(Num)	dd = comp.ts.dma.d_algn ? ((dd & comp.ts.dma.m1) | ((dd + 2*Num) & comp.ts.dma.m2)) : ((dd + 2*Num) & 0x3FFFFF)
+
+u16 dma_ram(u16 memcyc)
+{
+  u32 &ss = comp.ts.dma.saddr;
+  u32 &dd = comp.ts.dma.daddr;
+
+  u16 n = 0;
+
+  for (; n < MEM_CYCLES - memcyc && comp.ts.dma.len; n++)
+  {
+    if (comp.ts.dma.state)
+    {
+      u16 *d = (u16*)(dd + RAM_BASE_M);
+      *d = comp.ts.dma.data;
+      comp.ts.dma.state = 0;
+      comp.ts.dma.len--;
+      dd_inc(1);
+    }
+    else
+    {
+      u16 *s = (u16*)(ss + RAM_BASE_M);
+      comp.ts.dma.data = *s;
+      comp.ts.dma.state = 1;
+      ss_inc(1);
+    }
+  }
+  return n;
+}
+
+u16 dma_blt(u16 memcyc)
+{
+  u32 &ss = comp.ts.dma.saddr;
+  u32 &dd = comp.ts.dma.daddr;
+
+  u16 data;
+  u16 *s, *d;
+  u16 n = 0;
+
+  for (; n < MEM_CYCLES - memcyc && comp.ts.dma.len; n++)
+  {
+    switch (comp.ts.dma.state)
+    {
+    case 0:
+      s = (u16*)(ss + RAM_BASE_M);
+      comp.ts.dma.data = *s;
+      comp.ts.dma.state = 1;
+      ss_inc(1);
+      break;
+    case 1:
+      d = (u16*)(dd + RAM_BASE_M);
+      data = 0;
+      if (comp.ts.dma.asz)
+      {
+        data |= (comp.ts.dma.data & 0xFF00) ? (comp.ts.dma.data & 0xFF00) : (*d & 0xFF00);
+        data |= (comp.ts.dma.data & 0x00FF) ? (comp.ts.dma.data & 0x00FF) : (*d & 0x00FF);
+      }
+      else
+      {
+        data |= (comp.ts.dma.data & 0xF000) ? (comp.ts.dma.data & 0xF000) : (*d & 0xF000);
+        data |= (comp.ts.dma.data & 0x0F00) ? (comp.ts.dma.data & 0x0F00) : (*d & 0x0F00);
+        data |= (comp.ts.dma.data & 0x00F0) ? (comp.ts.dma.data & 0x00F0) : (*d & 0x00F0);
+        data |= (comp.ts.dma.data & 0x000F) ? (comp.ts.dma.data & 0x000F) : (*d & 0x000F);
+      }
+      comp.ts.dma.data = data;
+      comp.ts.dma.state = 2;
+      break;
+    case 2:
+      d = (u16*)(dd + RAM_BASE_M);
+      *d = comp.ts.dma.data;
+      comp.ts.dma.state = 0;
+      comp.ts.dma.len--;
+      dd_inc(1);
+      break;
+    }
+  }
+  return n;
+}
+
+u16 dma_spi(u16 memcyc)
+{
+  u32 &ss = comp.ts.dma.saddr;
+  u32 &dd = comp.ts.dma.daddr;
+
+  u16 n = min(MEM_CYCLES - memcyc, comp.ts.dma.len);
+  comp.ts.dma.len -= n;
+
+  if (comp.ts.dma.rw)
+  {
+    for (u16 i = 0; i < n; i++)
+    {
+      u16 *s = (u16*)(ss + RAM_BASE_M);
+      u16 data = *s;
+      Zc.Wr(0x57, data & 0xFF);
+      Zc.Wr(0x57, data >> 8);
+      ss_inc(1);
+    }
+    dd_inc(n);
+  }
+  else
+  {
+    for (u16 i = 0; i < n; i++)
+    {
+      u16 *d = (u16*)(dd + RAM_BASE_M);
+      u16 data = Zc.Rd(0x57);
+      data |= Zc.Rd(0x57) << 8;
+      *d = data;
+      dd_inc(1);
+    }
+    ss_inc(n);
+  }
+  return n;
+}
+
+u16 dma_ide(u16 memcyc)
+{
+  u32 &ss = comp.ts.dma.saddr;
+  u32 &dd = comp.ts.dma.daddr;
+
+  u16 n = min(MEM_CYCLES - memcyc, comp.ts.dma.len);
+  comp.ts.dma.len -= n;
+
+  if (comp.ts.dma.rw)
+  {
+    for (u16 i = 0; i < n; i++)
+    {
+      u16 *s = (u16*)(ss + RAM_BASE_M);
+      hdd.write_data(*s);
+      ss_inc(1);
+    }
+    dd_inc(n);
+  }
+  else
+  {
+    for (u16 i = 0; i < n; i++)
+    {
+      u16 *d = (u16*)(dd + RAM_BASE_M);
+      *d = (u16)hdd.read_data();
+      dd_inc(1);
+    }
+    ss_inc(n);
+  }
+  return n;
+}
+
+u16 dma_cram(u16 memcyc)
+{
+  u32 &ss = comp.ts.dma.saddr;
+  u32 &dd = comp.ts.dma.daddr;
+
+  u16 n = min(MEM_CYCLES - memcyc, comp.ts.dma.len);
+  comp.ts.dma.len -= n;
+
+  for (u16 i = 0; i < n; i++)
+  {
+    u16 *s = (u16*)(ss + RAM_BASE_M);
+    u16 d = (dd >> 1) & 0xFF;
+    comp.cram[d] = *s;
+    update_clut(d);
+    ss_inc(1); dd_inc(1);
+  }
+  return n;
+}
+
+u16 dma_fill(u16 memcyc)
+{
+  u32 &ss = comp.ts.dma.saddr;
+  u32 &dd = comp.ts.dma.daddr;
+
+  u16 i;
+
+  if (comp.ts.dma.state == 0)
+  {
+    u16 *s = (u16*)(ss + RAM_BASE_M);
+    comp.ts.dma.data = *s;
+    comp.ts.dma.state = 1;
+    comp.ts.dma.len++;
+    i = 1;
+    ss_inc(1);
+  }
+  else i = 0;
+
+  u16 n = min(MEM_CYCLES - memcyc, comp.ts.dma.len);
+  comp.ts.dma.len -= n;
+
+  for (; i < n; i++)
+  {
+    u16 *d = (u16*)(dd + RAM_BASE_M);
+    *d = comp.ts.dma.data;
+    dd_inc(1);
+  }
+  return n;
+}
+
+u16 dma_sfile(u16 memcyc)
+{
+  u32 &ss = comp.ts.dma.saddr;
+  u32 &dd = comp.ts.dma.daddr;
+
+  u16 n = min(MEM_CYCLES - memcyc, comp.ts.dma.len);
+  comp.ts.dma.len -= n;
+
+  for (u16 i = 0; i < n; i++)
+  {
+    u16 *s = (u16*)(ss + RAM_BASE_M);
+    u16 d = (dd >> 1) & 0xFF;
+    comp.sfile[d] = *s;
+    ss_inc(1); dd_inc(1);
+  }
+  return n;
+}
+
+void dma()
+{
+  update_screen();
+
+  u16 memcyc = vid.memcpucyc[comp.ts.dma.line] +
+               vid.memtsscyc[comp.ts.dma.line] +
+               vid.memtstcyc[comp.ts.dma.line] +
+               vid.memvidcyc[comp.ts.dma.line];
+
+  for (; memcyc < MEM_CYCLES;)
+  {
+    if (comp.ts.dma.num == 0) {
+      comp.ts.dma.act = 0;
+      return;
+    }
+
+    u16 n;
+
+    switch (comp.ts.dma.dev)
+    {
+    case DMA_RAM:
+      if (comp.ts.dma.rw)
+        n = dma_blt(memcyc);
+      else
+        n = dma_ram(memcyc);
+      break;
+    case DMA_SPI:
+      n = dma_spi(memcyc);
+      break;
+    case DMA_IDE:
+      n = dma_ide(memcyc);
+      break;
+    case DMA_CRAM:
+      if (comp.ts.dma.rw)
+        n = dma_cram(memcyc);
+      else
+        n = dma_fill(memcyc);
+      break;
+    case DMA_SFILE:
+      if (comp.ts.dma.rw)
+      {
+        n = dma_sfile(memcyc);
+        break;
+      }
+      // else use default case
+    default:
+      n = 0;
+      comp.ts.dma.len = 0;
+      break;
+    }
+
+    memcyc += n;
+    vid.memdmacyc[comp.ts.dma.line] += n;
+
+    if (comp.ts.dma.len == 0)
+    {
+      if (comp.ts.dma.s_algn)
+        comp.ts.dma.saddr = (comp.ts.dma.saddr & comp.ts.dma.m1) + comp.ts.dma.asize;
+
+      if (comp.ts.dma.d_algn)
+        comp.ts.dma.daddr = (comp.ts.dma.saddr & comp.ts.dma.m1) + comp.ts.dma.asize;
+
+      comp.ts.dma.num--;
+      comp.ts.dma.len = comp.ts.dmalen+1;
+    }
+  }
+
+  if (++comp.ts.dma.line == VID_LINES) {
+    comp.ts.dma.line = 0;
+    comp.ts.dma.next_t = 0;
+  }
+  else {
+    comp.ts.dma.next_t += VID_TACTS;
+  }
+}
+
+/*
+#undef ss_inc
+#undef dd_inc
+
+// DMA procedures
 #define ss_inc	ss = ctrl.s_algn ? ((ss & m1) | ((ss + 2) & m2)) : ((ss + 2) & 0x3FFFFF)
 #define dd_inc	dd = ctrl.d_algn ? ((dd & m1) | ((dd + 2) & m2)) : ((dd + 2) & 0x3FFFFF)
 
@@ -50,18 +344,18 @@ void dma (u8 val)
 	u32 m2 = ctrl.asz ? 0x1FF : 0xFF;
 	iter1st = 1;
 
-	u16 sv = *(u16*)(comp.ts.dmasaddr + RAM_BASE_M);
+	u16 sv = *(u16*)(comp.ts.dma.saddr + RAM_BASE_M);
 	
 	for (i=0; i<(comp.ts.dmanum + 1); i++)
 	{
-		ss = comp.ts.dmasaddr;
-		dd = comp.ts.dmadaddr;
+		ss = comp.ts.dma.saddr;
+		dd = comp.ts.dma.daddr;
 
 		switch (ctrl.dev)
 		{
 			case DMA_RAM:
 			
-				/* Blitter */
+				// Blitter
 				if (ctrl.rw)
 				{
 					for (j=0; j<(comp.ts.dmalen + 1); j++)
@@ -91,7 +385,7 @@ void dma (u8 val)
 					}
 				}
 
-				/* RAM to RAM */
+				// RAM to RAM
 				else
 				{
 					for (j=0; j<(comp.ts.dmalen + 1); j++)
@@ -107,7 +401,7 @@ void dma (u8 val)
 
 			case DMA_SPI:
 			
-				/* RAM to SPI and SPI to RAM */
+				// RAM to SPI and SPI to RAM 
 				for (j=0; j<(comp.ts.dmalen + 1); j++)
 				{
 					s = (u16*)(ss + RAM_BASE_M);
@@ -128,7 +422,7 @@ void dma (u8 val)
 
 			case DMA_IDE:
 			
-				/* RAM to IDE and IDE to RAM */
+				// RAM to IDE and IDE to RAM
 				for (j=0; j<(comp.ts.dmalen + 1); j++)
 				{
 					s = (u16*)(ss + RAM_BASE_M);
@@ -148,7 +442,7 @@ void dma (u8 val)
 			// RAM to CRAM or RAM filler
 			case DMA_CRAM:
 			
-				/* CRAM */
+				// CRAM
 				if (ctrl.rw)
 				{
 					for (j=0; j<(comp.ts.dmalen + 1); j++)
@@ -161,7 +455,7 @@ void dma (u8 val)
 					}
 				}
 				
-				/* RAM filler */
+				// RAM filler
 				else
 				{
 					if (iter1st)
@@ -182,7 +476,7 @@ void dma (u8 val)
 
 			case DMA_SFILE:
 			
-				/* SFILE */
+				// SFILE
 				if (ctrl.rw)
 				{
 					for (j=0; j<(comp.ts.dmalen + 1); j++)
@@ -197,17 +491,17 @@ void dma (u8 val)
 		}
 
 		if (ctrl.s_algn)
-			comp.ts.dmasaddr += ctrl.asz ? 512 : 256;
+			comp.ts.dma.saddr += ctrl.asz ? 512 : 256;
 		else
-			comp.ts.dmasaddr = ss;
+			comp.ts.dma.saddr = ss;
 
 		if (ctrl.d_algn)
-			comp.ts.dmadaddr += ctrl.asz ? 512 : 256;
+			comp.ts.dma.daddr += ctrl.asz ? 512 : 256;
 		else
-			comp.ts.dmadaddr = dd;
+			comp.ts.dma.daddr = dd;
 	}
 }
-
+*/
 // TS Engine
 
 u8 render_tile(u8 page, u32 tnum, u8 line, u32 x, u8 pal, u8 xf, u8 n)
@@ -329,6 +623,7 @@ void render_ts()
 			if (comp.ts.t1_en)
 				{ render_tile_layer(1); continue; }
 	}
+	vid.line_pos = 0;
 }
 
 // This used to debug SFILE operations
@@ -362,10 +657,11 @@ void tsinit(void)
 	comp.ts.im2vect = 255;
 	comp.ts.fddvirt = 0;
 	comp.ts.vdos = 0;
-  comp.ts.vdos_m1 = 0;
+	comp.ts.vdos_m1 = 0;
 
 	comp.ts.sysconf = 1;		// turbo 7MHz for TS-Conf
 	comp.ts.memconf = 0;
+	comp.ts.dma.act = 0;		// disable DMA on startup
 
 	comp.ts.hsint = 2;
 	comp.ts.vsint = 0;

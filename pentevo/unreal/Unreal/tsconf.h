@@ -248,26 +248,47 @@ typedef struct {
 	u8 dmalen;
 	u8 dmanum;
 
-	union {
-		u32 dmasaddr:22;
-		struct {
-			u32 dmasaddrl:8;
-			u32 dmasaddrh:6;
-			u32 dmasaddrx:8;
-		};
-	};
-
-	union {
-		u32 dmadaddr:22;
-		struct {
-			u32 dmadaddrl:8;
-			u32 dmadaddrh:6;
-			u32 dmadaddrx:8;
-		};
-	};
-
+  // dma controller state
+  struct {
+    union {
+      u8 ctrl; // dma ctrl value
+      struct {
+        u8 dev:3;
+        u8 asz:1;
+        u8 d_algn:1;
+        u8 s_algn:1;
+        u8 z80_lp:1;
+        u8 rw:1;
+      };
+    };
+    u16 len;
+    u16 num;
+    union { // source address of dma transaction
+      u32 saddr;
+      struct {
+        u32 saddrl:8;
+        u32 saddrh:6;
+        u32 saddrx:8;
+      };
+    };
+    union { // destination address of dma transaction
+      u32 daddr;
+      struct {
+        u32 daddrl:8;
+        u32 daddrh:6;
+        u32 daddrx:8;
+      };
+    };
+    u32 next_t; // next tact to transfer data
+    u16 line; // number of pixel video line
+    u32 m1; // mask 1 (used for address arithmetic)
+    u32 m2; // mask 2 (used for address arithmetic)
+    u32 asize; // align size
+    u16 data; // data (used by transactions based on state)
+    u8 state; // state of dma transaction
+    u8 act; // 0 - dma inactive, 1 - dma active
+  } dma;
 } TSPORTS_t;
-
 
 typedef	union {
 	u8 ctrl;
@@ -281,9 +302,16 @@ typedef	union {
 	};
 } DMACTRL_t;
 
-
 // functions
 void update_clut(u8);
-void dma (u8);
+//void dma (u8);
+void dma();
+u16 dma_ram(u16 memcyc);
+u16 dma_blt(u16 memcyc);
+u16 dma_spi(u16 memcyc);
+u16 dma_ide(u16 memcyc);
+u16 dma_cram(u16 memcyc);
+u16 dma_fill(u16 memcyc);
+u16 dma_sfile(u16 memcyc);
 void render_ts();
 void tsinit(void);
