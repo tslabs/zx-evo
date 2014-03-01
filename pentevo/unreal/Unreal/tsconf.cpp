@@ -306,7 +306,7 @@ void dma()
         comp.ts.dma.saddr = (comp.ts.dma.saddr & comp.ts.dma.m1) + comp.ts.dma.asize;
 
       if (comp.ts.dma.d_algn)
-        comp.ts.dma.daddr = (comp.ts.dma.saddr & comp.ts.dma.m1) + comp.ts.dma.asize;
+        comp.ts.dma.daddr = (comp.ts.dma.daddr & comp.ts.dma.m1) + comp.ts.dma.asize;
 
       comp.ts.dma.num--;
       comp.ts.dma.len = comp.ts.dmalen+1;
