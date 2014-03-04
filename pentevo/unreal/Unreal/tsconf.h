@@ -290,21 +290,8 @@ typedef struct {
   } dma;
 } TSPORTS_t;
 
-typedef	union {
-	u8 ctrl;
-	struct {
-		u8 dev:3;
-		u8 asz:1;
-		u8 d_algn:1;
-		u8 s_algn:1;
-		u8 z80_lp:1;
-		u8 rw:1;
-	};
-} DMACTRL_t;
-
 // functions
 void update_clut(u8);
-//void dma (u8);
 void dma();
 u16 dma_ram(u16 memcyc);
 u16 dma_blt(u16 memcyc);
