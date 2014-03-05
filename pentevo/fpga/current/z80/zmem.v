@@ -49,6 +49,7 @@ module zmem(
   	output wire dos_on,
 	output wire dos_off,
 	output wire vdos,
+	output reg pre_vdos,
 	input wire vdos_on,
 	input wire vdos_off,
 
@@ -116,7 +117,7 @@ module zmem(
     // vdos turn on/off is delayed till next opfetch due to INIR that writes right after iord cycle
 	assign vdos = opfetch ? pre_vdos : vdos_r;	// vdos appears as soon as first opfetch
 
-    reg pre_vdos, vdos_r;
+    reg vdos_r;
 	always @(posedge clk)
 	if (rst || vdos_off)
 	begin

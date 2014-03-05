@@ -9,7 +9,7 @@ module zint
 	input  wire int_start_frm,
 	input  wire int_start_lin,
 	input  wire int_start_dma,
-	input  wire vdos,
+	input  wire vdos,       // pre_vdos
 	input  wire intack,
 	
 	input wire [2:0] im2v_frm,
@@ -67,18 +67,18 @@ module zint
 // INT generating
 	reg int_frm;
 	always @(posedge clk)
-		if (res || dis_int_frm)
+		if (res || dis_int_frm || vdos)
 			int_frm <= 1'b0;
-		else if (int_start_frm && !vdos)
+		else if (int_start_frm)
 			int_frm <= 1'b1;
 		else if (intctr_fin || intack_s)		// priority 0
 			int_frm <= 1'b0;
 
 	reg int_lin;
 	always @(posedge clk)
-		if (res || dis_int_lin)
+		if (res || dis_int_lin || vdos)
 			int_lin <= 1'b0;
-		else if (int_start_lin && !vdos)
+		else if (int_start_lin)
 			int_lin <= 1'b1;
 		else if (intack_s && !int_frm)		// priority 1
 			int_lin <= 1'b0;
