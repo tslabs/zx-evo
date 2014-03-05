@@ -7,8 +7,8 @@ PROJECT = core
 MCU = atmega128
 TARGET = core.elf
 CC = avr-gcc
-MHMT = "../../../tools/mhmt/mhmt"
-MKFW = "../../../tools/make_fw/make_fw"
+MHMT = "../../../tools/mhmt/mhmt.exe"
+MKFW = "../../../tools/make_fw/make_fw.exe"
 
 ## Options common to compile, link and assembly rules
 COMMON = -mmcu=$(MCU)
