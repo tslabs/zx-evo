@@ -455,7 +455,6 @@ struct COMPUTER
    TSPORTS_t ts;
    u16 cram[256];
    u16 sfile[256];
-   unsigned intpos;
    u8 p7EFD; // gmx
    u8 p00, p80FD; // quorum
    __int64 t_states; // inc with conf.frame by each frame

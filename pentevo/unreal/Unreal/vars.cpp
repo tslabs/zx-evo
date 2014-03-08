@@ -63,7 +63,12 @@ void TMainZ80::out(unsigned port, u8 val) { ::out(port, val); }
 u8 TMainZ80::IntVec()
 {
     if (conf.mem_model == MM_TSL)
-		return comp.ts.im2vect;
+    {
+      if (comp.ts.intctrl.frame_pend) return comp.ts.im2vect[INT_FRAME];
+      if (comp.ts.intctrl.line_pend)  return comp.ts.im2vect[INT_LINE];
+      if (comp.ts.intctrl.dma_pend)   return comp.ts.im2vect[INT_DMA];
+      return 0xFF;
+    }
 	else
 		return (comp.flags & CF_Z80FBUS)? u8(rdtsc() & 0xFF) : 0xFF;
 }
