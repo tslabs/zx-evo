@@ -258,6 +258,7 @@ void dma()
   for (; memcyc < MEM_CYCLES;)
   {
     if (comp.ts.dma.num == 0) {
+      comp.ts.intctrl.new_dma = true;
       comp.ts.dma.act = 0;
       return;
     }
@@ -474,7 +475,12 @@ void tsinit(void)
 	comp.ts.page[3] = 0;
 
 	comp.ts.fmaddr = 0;
-	comp.ts.im2vect = 255;
+	comp.ts.im2vect[INT_FRAME] = 0xFF;
+	comp.ts.im2vect[INT_LINE]  = 0xEF;
+	comp.ts.im2vect[INT_DMA]   = 0xDF;
+	comp.ts.intmask = 1 << INT_FRAME;
+	comp.ts.intctrl.frame_t = 0;
+  
 	comp.ts.fddvirt = 0;
 	comp.ts.vdos = 0;
 	comp.ts.vdos_m1 = 0;
@@ -492,6 +498,4 @@ void tsinit(void)
 	comp.ts.palsel = comp.ts.palsel_d = 15;
 	comp.ts.g_xoffs = 0;
 	comp.ts.g_yoffs = 0;
-	
-	comp.intpos = 1;
 }

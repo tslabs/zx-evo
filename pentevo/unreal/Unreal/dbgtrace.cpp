@@ -10,6 +10,8 @@
 #include "z80asm.h"
 #include "op_system.h"
 #include "util.h"
+#include "draw.h"
+#include "emulkeys.h"
 
 int disasm_line(unsigned addr, char *line)
 {
@@ -509,13 +511,104 @@ void __cdecl SetLastT()
 
 void mon_step()
 {
+  Z80 &cpu = CpuMgr.Cpu();
+  TZ80State &prevcpu = CpuMgr.PrevCpu();
+
+  cpu.SetLastT();
+  prevcpu = cpu;
+
+  cpu.Step();
+  cpu.CheckNextFrame();
+
+  // Baseconf NMI trap
+  if (conf.mem_model == MM_ATM3 && (comp.pBF & 0x10) && (cpu.pc == comp.pBD))
+    nmi_pending = 1;
+
+  // NMI processing
+  if (nmi_pending)
+  {
+    if (conf.mem_model == MM_ATM3)
+    {
+      nmi_pending = 0;
+      cpu.nmi_in_progress = true;
+      set_banks();
+      m_nmi(RM_NOCHANGE);
+    }
+    else if (conf.mem_model == MM_PROFSCORP || conf.mem_model == MM_SCORP)
+    {
+      nmi_pending--;
+      if (cpu.pc > 0x4000)
+      {
+        m_nmi(RM_DOS);
+        nmi_pending = 0;
+      }
+    }
+    else
+      nmi_pending = 0;
+  } // end if (nmi_pending)
+
+  // Baseconf NMI
+  if (comp.pBE)
+  {
+    if (conf.mem_model == MM_ATM3 && comp.pBE == 1)
+    {
+      cpu.nmi_in_progress = false;
+      set_banks();
+    }
+    comp.pBE--;
+  }
+
+  // INT processing
+  if (conf.mem_model == MM_TSL)
+  {
+    bool vdos = comp.ts.vdos || comp.ts.vdos_m1;
+
+    // Frame INT
+    if (comp.ts.intctrl.new_frame && ((cpu.t - comp.ts.intctrl.frame_t) < conf.intlen))
+    {
+      comp.ts.intctrl.new_frame = false;
+      if (!vdos) comp.ts.intctrl.frame_pend = comp.ts.intframe;
+    }
+    else if (comp.ts.intctrl.frame_pend && ((cpu.t - comp.ts.intctrl.frame_t) >= conf.intlen))
+      comp.ts.intctrl.frame_pend = 0;
+
+    // Line INT
+    if (cpu.t >= comp.ts.intctrl.line_t)
+    {
+      comp.ts.intctrl.line_t += VID_TACTS;
+      if (!vdos) comp.ts.intctrl.line_pend = comp.ts.intline;
+    }
+
+    // DMA INT
+    if (comp.ts.intctrl.new_dma)
+    {
+      comp.ts.intctrl.new_dma = false;
+      comp.ts.intctrl.dma_pend = comp.ts.intdma;
+    }
+
+    if (comp.ts.intctrl.pend && !vdos) cpu.int_pend = true;
+    else cpu.int_pend = false;
+  } // Reset INT
+  else if (cpu.t >= conf.intlen)
+    cpu.int_pend = false;
+
+  if (cpu.int_pend && cpu.iff1 && cpu.t != cpu.eipos && cpu.int_gate)
+  {
+    handle_int(&cpu, cpu.IntVec());
+  }
+
+  cpu.trace_curs = cpu.pc;
+}
+/*
+void mon_step()
+{
    Z80 &cpu = CpuMgr.Cpu();
    TZ80State &prevcpu = CpuMgr.PrevCpu();
    
    cpu.SetLastT();
    prevcpu = cpu;
 //   CpuMgr.CopyToPrev();
-   if (cpu.t >= conf.intlen)
+   if ((cpu.t - comp.intpos + 1) >= conf.intlen)
        cpu.int_pend = false;
    cpu.Step();
    if (cpu.int_pend && cpu.iff1 && cpu.t != cpu.eipos && // int enabled in CPU not issued after EI
@@ -527,7 +620,7 @@ void mon_step()
    cpu.CheckNextFrame();
    cpu.trace_curs = cpu.pc;
 }
-
+*/
 void mon_stepover()
 {
    Z80 &cpu = CpuMgr.Cpu();

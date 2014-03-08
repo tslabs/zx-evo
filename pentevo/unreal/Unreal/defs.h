@@ -189,7 +189,6 @@ struct TZ80State
         };
     };
     unsigned eipos, haltpos;
-	bool intnew;
     /*------------------------------*/
     u8 im;
     bool nmi_in_progress;

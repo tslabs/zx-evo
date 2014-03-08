@@ -226,7 +226,7 @@ void step1()
 #endif
 	step();
 }
-
+/*
 void try_int()
 {
 	if (!cpu.iff1 ||	// int NOT enabled in CPU
@@ -241,11 +241,128 @@ void try_int()
 		handle_int(&cpu, cpu.IntVec()); // Начало обработки int (запись в стек адреса возврата и т.п.)
 	}
 }
+*/
 
+void z80loop_TSL()
+{
+  cpu.haltpos = 0;
+  comp.ts.intctrl.new_frame = true;
+  comp.ts.intctrl.line_t = comp.ts.intline ? 0 : VID_TACTS;
+
+  while (cpu.t < conf.frame)
+  {
+    bool vdos = comp.ts.vdos || comp.ts.vdos_m1;
+
+    // Frame INT
+    if (comp.ts.intctrl.new_frame && ((cpu.t - comp.ts.intctrl.frame_t) < conf.intlen))
+    {
+      comp.ts.intctrl.new_frame = false;
+      if (!vdos) comp.ts.intctrl.frame_pend = comp.ts.intframe;
+    }
+    else if (comp.ts.intctrl.frame_pend && ((cpu.t - comp.ts.intctrl.frame_t) >= conf.intlen))
+      comp.ts.intctrl.frame_pend = 0;
+
+    // Line INT
+    if (cpu.t >= comp.ts.intctrl.line_t)
+    {
+      comp.ts.intctrl.line_t += VID_TACTS;
+      if (!vdos) comp.ts.intctrl.line_pend = comp.ts.intline;
+    }
+
+    // DMA INT
+    if (comp.ts.intctrl.new_dma)
+    {
+      comp.ts.intctrl.new_dma = false;
+      comp.ts.intctrl.dma_pend = comp.ts.intdma;
+    }
+
+    if (comp.ts.intctrl.pend && cpu.iff1 && cpu.t != cpu.eipos && !vdos) // int disabled in vdos after r/w vg ports
+    {
+      handle_int(&cpu, cpu.IntVec());
+    }
+
+    step1();
+  }
+}
+
+void z80loop_other()
+{
+  cpu.haltpos = 0;
+  cpu.int_pend = true;
+
+  while (cpu.t < conf.frame)
+  {
+    // Baseconf NMI trap
+    if (conf.mem_model == MM_ATM3 && (comp.pBF & 0x10) && (cpu.pc == comp.pBD))
+      nmi_pending = 1;
+
+    // NMI processing
+    if (nmi_pending)
+    {
+      if (conf.mem_model == MM_ATM3)
+      {
+        nmi_pending = 0;
+        cpu.nmi_in_progress = true;
+        set_banks();
+        m_nmi(RM_NOCHANGE);
+        continue;
+      }
+      else if (conf.mem_model == MM_PROFSCORP || conf.mem_model == MM_SCORP)
+      {
+        nmi_pending--;
+        if (cpu.pc > 0x4000)
+        {
+          m_nmi(RM_DOS);
+          nmi_pending = 0;
+        }
+      }
+      else
+        nmi_pending = 0;
+    } // end if (nmi_pending)
+
+    // Baseconf NMI
+    if (comp.pBE)
+    {
+      if (conf.mem_model == MM_ATM3 && comp.pBE == 1)
+      {
+        cpu.nmi_in_progress = false;
+        set_banks();
+      }
+      comp.pBE--;
+    }
+
+    // Reset INT
+    if (cpu.int_pend && (cpu.t >= conf.intlen))
+      cpu.int_pend = false;
+
+    // INT
+    if (cpu.int_pend && cpu.iff1 && // INT enabled in CPU
+      cpu.t != cpu.eipos &&         // INT disabled after EI
+      cpu.int_gate)                 // INT enabled by ATM hardware (no INT disabling in PentEvo)
+    {
+      handle_int(&cpu, cpu.IntVec());
+    }
+
+    step1();
+  } // end while (cpu.t < conf.intlen)
+}
+
+
+void z80loop()
+{
+  if (conf.mem_model == MM_TSL)
+    z80loop_TSL();
+  else
+    z80loop_other();
+}
+
+/*
 void z80loop()
 {
    cpu.haltpos = 0;
    cpu.intnew = true;
+   comp.ts.intctrl.new_frame = 1;
+   comp.ts.intctrl.line_t = comp.ts.intline ? 0 : VID_TACTS;
    
 	// main loop
 	while (cpu.t < conf.frame)
@@ -279,12 +396,34 @@ void z80loop()
 				nmi_pending = 0;
 		}
 
-		// INT loop
-		if (cpu.intnew && ((cpu.t - comp.intpos + 1) < conf.intlen))
-		{
+    if (conf.mem_model == MM_TSL)
+    {
+      // Generate frame INT
+      if (cpu.intnew && ((cpu.t - comp.ts.intctrl.frame_t) < conf.intlen))
+      {
+        cpu.intnew = false;
+        comp.ts.intctrl.frame_pend = comp.ts.intframe;
+      }
+      else if (comp.ts.intctrl.frame_pend && ((cpu.t - comp.ts.intctrl.frame_t + 1) >= conf.intlen))
+        comp.ts.intctrl.frame_pend = 0;
+
+      // Generate line INT
+      if (comp.ts.intline && cpu.t >= comp.ts.intctrl.line_t)
+      {
+        comp.ts.intctrl.line_pend = comp.ts.intline;
+        comp.ts.intctrl.line_t += VID_TACTS;
+      }
+
+      if (comp.ts.intctrl.pend)
+        try_int();
+
+      step1();
+    }
+    else if (cpu.intnew && (cpu.t < conf.intlen))
+		{ // INT loop
 			cpu.int_pend = true;
 			cpu.intnew = false;
-			while (cpu.int_pend && ((cpu.t - comp.intpos + 1) < conf.intlen))
+			while (cpu.int_pend && (cpu.t < conf.intlen))
 			{
 				try_int();
 				step1();
@@ -311,15 +450,16 @@ void z80loop()
 		// if (cpu.halted)
 			// break;
 		
-/*
-     if (cpu.halted)
-    {
-        //cpu.t += 4, cpu.r = (cpu.r & 0x80) + ((cpu.r+1) & 0x7F); continue;
-        unsigned st = (conf.frame-cpu.t-1)/4+1;
-        cpu.t += 4*st;
-        cpu.r_low += st;
-        break;
-    }
-*/  
+//
+//     if (cpu.halted)
+//    {
+//        //cpu.t += 4, cpu.r = (cpu.r & 0x80) + ((cpu.r+1) & 0x7F); continue;
+//        unsigned st = (conf.frame-cpu.t-1)/4+1;
+//        cpu.t += 4*st;
+//        cpu.r_low += st;
+//        break;
+//    }
+//  
 	}
 }
+*/

@@ -670,7 +670,7 @@ void update_screen()
 {
 	u32 cput = (cpu.t >= conf.frame) ? (VID_TACTS * VID_LINES) : cpu.t;
 
-	while (vid.t_next < min(cput - 1, VID_TACTS * VID_LINES))		// iterate until current CPU tact or to the frame end
+	while (vid.t_next < min(cput, VID_TACTS * VID_LINES))		// iterate until current CPU tact or to the frame end
 	{
 		u32 line = (vid.t_next / VID_TACTS);	// line in raster
 		u32 tact = vid.t_next % VID_TACTS;		// tact in line
