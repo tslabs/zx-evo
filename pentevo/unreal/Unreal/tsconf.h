@@ -64,6 +64,11 @@
 #define		DMA_CRAM		0x04
 #define		DMA_SFILE		0x05
 
+// INT
+#define   INT_FRAME   0x00
+#define   INT_LINE    0x01
+#define   INT_DMA     0x02
+
 // Sprite Descriptor
 typedef struct {
 	u16 y:9;
@@ -110,10 +115,34 @@ typedef struct {
 		};
 	} ;
 
-	u8 im2vect;
+	union {
+		u8 intmask;
+		struct {
+			u8 intframe:1;
+			u8 intline:1;
+			u8 intdma:1;
+		};
+	};
+	u8 im2vect[8];
+
+	struct {
+		bool new_frame; // generate new frame INT
+		bool new_dma;   // generate new DMA INT
+		u32 frame_t;    // frame INT position int tacts
+		u32 line_t;     // line INT position int tacts
+		union {
+			u8 pend;
+			struct {
+				u8 frame_pend:1;
+				u8 line_pend:1;
+				u8 dma_pend:1;
+			};
+		};
+	} intctrl;
+
 	u8 fddvirt;
 	u8 vdos;
-  u8 vdos_m1;
+	u8 vdos_m1;
 	u8 pwr_up;
 
 

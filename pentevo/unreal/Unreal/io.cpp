@@ -158,37 +158,38 @@ void out(unsigned port, u8 val)
 
 			case TSW_INTMASK:
 			{
-				//printf("INTMASK written. OUT (%02XAF), %02X, PC: %04X\r\n", p2, val, cpu.pc);
+				comp.ts.intmask = val & 0x07;
+				comp.ts.intctrl.pend &= val & 0x07;
 			}
 			break;
 			
 			case TSW_INTVECT:
 			{
-				//printf("INTVECT written. OUT (%02XAF), %02X, PC: %04X\r\n", p2, val, cpu.pc);
+				comp.ts.im2vect[(val >> 4) & 0x07] = (val & 0x0E) | (0xF1 ^ (val & 0x70));
 			}
 			break;
 			
 			case TSW_HSINT:
 			{
 				comp.ts.hsint = val;
-				comp.intpos = ((comp.ts.hsint > (conf.t_line-1)) || (comp.ts.vsinth > 319)) ? -1 : (comp.ts.vsint * conf.t_line + comp.ts.hsint + 1);
-				cpu.intnew = true;
+				comp.ts.intctrl.frame_t = ((comp.ts.hsint > (conf.t_line-1)) || (comp.ts.vsinth > 319)) ? -1 : (comp.ts.vsint * conf.t_line + comp.ts.hsint);
+				comp.ts.intctrl.new_frame = (comp.ts.intctrl.frame_t >= cpu.t && comp.ts.intctrl.frame_t < conf.frame) ? true : false;
 			}
 			break;
 			
 			case TSW_VSINTL:
 			{
 				comp.ts.vsintl = val;
-				comp.intpos = ((comp.ts.hsint > (conf.t_line-1)) || (comp.ts.vsinth > 319)) ? -1 : (comp.ts.vsint * conf.t_line + comp.ts.hsint + 1);
-				cpu.intnew = true;
+				comp.ts.intctrl.frame_t = ((comp.ts.hsint > (conf.t_line-1)) || (comp.ts.vsinth > 319)) ? -1 : (comp.ts.vsint * conf.t_line + comp.ts.hsint);
+				comp.ts.intctrl.new_frame = (comp.ts.intctrl.frame_t >= cpu.t && comp.ts.intctrl.frame_t < conf.frame) ? true : false;
 			}
 			break;
 			
 			case TSW_VSINTH:
 			{
 				comp.ts.vsinth = val;
-				comp.intpos = ((comp.ts.hsint > (conf.t_line-1)) || (comp.ts.vsinth > 319)) ? -1 : (comp.ts.vsint * conf.t_line + comp.ts.hsint + 1);
-				cpu.intnew = true;
+				comp.ts.intctrl.frame_t = ((comp.ts.hsint > (conf.t_line-1)) || (comp.ts.vsinth > 319)) ? -1 : (comp.ts.vsint * conf.t_line + comp.ts.hsint);
+				comp.ts.intctrl.new_frame = (comp.ts.intctrl.frame_t >= cpu.t && comp.ts.intctrl.frame_t < conf.frame) ? true : false;
 			}
 			break;
 			

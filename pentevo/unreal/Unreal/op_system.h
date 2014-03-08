@@ -21,4 +21,12 @@ Z80INLINE void handle_int(Z80 *cpu, u8 vector)
    cpu->halted = 0;
    cpu->iff1 = cpu->iff2 = 0;
    cpu->int_pend = false;
+   if (conf.mem_model == MM_TSL)
+   {
+     if (comp.ts.intctrl.frame_pend) comp.ts.intctrl.frame_pend = 0;
+     else
+     if (comp.ts.intctrl.line_pend)  comp.ts.intctrl.line_pend  = 0;
+     else
+     if (comp.ts.intctrl.dma_pend)   comp.ts.intctrl.dma_pend   = 0;
+   }
 }
