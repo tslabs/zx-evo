@@ -1,0 +1,110 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>8.1.1 Sub-expression Elimination</TITLE>
+<META NAME="description" CONTENT="8.1.1 Sub-expression Elimination">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="next" HREF="node170.html">
+<LINK REL="previous" HREF="node168.html">
+<LINK REL="up" HREF="node168.html">
+<LINK REL="next" HREF="node170.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html3245"
+  HREF="node170.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html3239"
+  HREF="node168.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html3233"
+  HREF="node168.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html3241"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html3243"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html3246"
+  HREF="node170.html">8.1.2 Dead-Code Elimination</A>
+<B> Up:</B> <A NAME="tex2html3240"
+  HREF="node168.html">8.1 Optimizations</A>
+<B> Previous:</B> <A NAME="tex2html3234"
+  HREF="node168.html">8.1 Optimizations</A>
+ &nbsp; <B>  <A NAME="tex2html3242"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html3244"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H2><A NAME="SECTION00911000000000000000"></A><A NAME="3770"></A>
+<BR>
+8.1.1 Sub-expression Elimination
+</H2>
+
+<P>
+The compiler does local and <I>g</I>lobal <I>c</I>ommon <I>s</I>ubexpression
+<I>e</I>limination, e.g.: 
+
+<P>
+<BLOCKQUOTE>
+<TT>i = x + y + 1; </TT>&nbsp;
+<BR><TT>j = x + y;</TT>
+
+</BLOCKQUOTE>
+will be translated to
+
+<P>
+<BLOCKQUOTE>
+<TT>iTemp = x + y; </TT>&nbsp;
+<BR><TT>i = iTemp + 1; </TT>&nbsp;
+<BR><TT>j = iTemp;</TT>
+
+</BLOCKQUOTE>
+Some subexpressions are not as obvious as the above example, e.g.:
+
+<P>
+<BLOCKQUOTE>
+<TT>a-&gt;b[i].c = 10; </TT>&nbsp;
+<BR><TT>a-&gt;b[i].d = 11;</TT>
+
+</BLOCKQUOTE>
+In this case the address arithmetic a-&gt;b[i] will be computed only
+once; the equivalent code in C would be.
+
+<P>
+<BLOCKQUOTE>
+<TT>iTemp = a-&gt;b[i]; </TT>&nbsp;
+<BR><TT>iTemp.c = 10; </TT>&nbsp;
+<BR><TT>iTemp.d = 11;</TT>
+
+</BLOCKQUOTE>
+The compiler will try to keep these temporary variables in registers.
+
+<P>
+<BR><HR>
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

@@ -1,0 +1,121 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>3.1.4 Projects with Additional Libraries</TITLE>
+<META NAME="description" CONTENT="3.1.4 Projects with Additional Libraries">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="next" HREF="node44.html">
+<LINK REL="previous" HREF="node42.html">
+<LINK REL="up" HREF="node39.html">
+<LINK REL="next" HREF="node44.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html1202"
+  HREF="node44.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html1196"
+  HREF="node39.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html1190"
+  HREF="node42.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html1198"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html1200"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1203"
+  HREF="node44.html">3.1.5 Using sdcclib to</A>
+<B> Up:</B> <A NAME="tex2html1197"
+  HREF="node39.html">3.1 Compiling</A>
+<B> Previous:</B> <A NAME="tex2html1191"
+  HREF="node42.html">3.1.3 Projects with Multiple</A>
+ &nbsp; <B>  <A NAME="tex2html1199"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html1201"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H2><A NAME="SECTION00414000000000000000"></A><A NAME="704"></A>
+<BR>
+3.1.4 Projects with Additional Libraries
+</H2>
+
+<P>
+Some reusable routines may be compiled into a library, see the documentation
+for the assembler and linkage editor (which are in &lt;installdir&gt;/share/sdcc/doc)
+for how to create a <I>.lib<A NAME="705"></A></I> library file. Libraries
+created in this manner can be included in the command line. Make sure
+you include the -L &lt;library-path&gt; option to tell the linker where
+to look for these files if they are not in the current directory.
+Here is an example, assuming you have the source file <I>foomain.c</I>
+and a library <I>foolib.lib</I> in the directory <I>mylib</I> (if
+that is not the same as your current project):
+<BR>
+<BR><I><B>sdcc foomain.c foolib.lib -L mylib</B></I>
+<BR>
+<BR>
+Note here that <I>mylib</I> must be an absolute path name.
+<BR>
+<BR>
+The most efficient way to use libraries is to keep separate modules
+in separate source files. The lib file now should name all the modules.rel<A NAME="712"></A>
+files. For an example see the standard library file <I>libsdcc.lib</I>
+in the directory &lt;installdir&gt;/share/lib/small.
+
+<P>
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html1202"
+  HREF="node44.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html1196"
+  HREF="node39.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html1190"
+  HREF="node42.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html1198"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html1200"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1203"
+  HREF="node44.html">3.1.5 Using sdcclib to</A>
+<B> Up:</B> <A NAME="tex2html1197"
+  HREF="node39.html">3.1 Compiling</A>
+<B> Previous:</B> <A NAME="tex2html1191"
+  HREF="node42.html">3.1.3 Projects with Multiple</A>
+ &nbsp; <B>  <A NAME="tex2html1199"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html1201"
+  HREF="node190.html">Index</A></B> 
+<!--End of Navigation Panel-->
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

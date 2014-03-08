@@ -1,0 +1,280 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>4.6.2 Port Specific Options</TITLE>
+<META NAME="description" CONTENT="4.6.2 Port Specific Options">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="next" HREF="node123.html">
+<LINK REL="previous" HREF="node121.html">
+<LINK REL="up" HREF="node120.html">
+<LINK REL="next" HREF="node123.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html2474"
+  HREF="node123.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html2468"
+  HREF="node120.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html2462"
+  HREF="node121.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html2470"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html2472"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html2475"
+  HREF="node123.html">4.6.3 Environment Variables</A>
+<B> Up:</B> <A NAME="tex2html2469"
+  HREF="node120.html">4.6 The PIC16 port</A>
+<B> Previous:</B> <A NAME="tex2html2463"
+  HREF="node121.html">4.6.1 Global Options</A>
+ &nbsp; <B>  <A NAME="tex2html2471"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html2473"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+<!--Table of Child-Links-->
+<A NAME="CHILD_LINKS"><STRONG>Subsections</STRONG></A>
+
+<UL>
+<LI><A NAME="tex2html2476"
+  HREF="node122.html#SECTION00562100000000000000">4.6.2.1 Code Generation Options</A>
+<LI><A NAME="tex2html2477"
+  HREF="node122.html#SECTION00562200000000000000">4.6.2.2 Optimization Options</A>
+<LI><A NAME="tex2html2478"
+  HREF="node122.html#SECTION00562300000000000000">4.6.2.3 Assembling Options</A>
+<LI><A NAME="tex2html2479"
+  HREF="node122.html#SECTION00562400000000000000">4.6.2.4 Linking Options</A>
+<LI><A NAME="tex2html2480"
+  HREF="node122.html#SECTION00562500000000000000">4.6.2.5 Debugging Options</A>
+</UL>
+<!--End of Table of Child-Links-->
+<HR>
+
+<H2><A NAME="SECTION00562000000000000000"></A><A NAME="2914"></A>
+<BR>
+4.6.2 Port Specific Options
+</H2>
+
+<P>
+The port specific options appear after the global options in the sdcc
+--help output.
+
+<P>
+
+<H3><A NAME="SECTION00562100000000000000">
+4.6.2.1 Code Generation Options</A>
+</H3>
+
+<P>
+These options influence the generated assembler code.
+
+<P>
+<DL>
+<DT><STRONG>--pstack-model=[model]</STRONG></DT>
+<DD>Used in conjunction with the command
+above. Defines the stack model to be used, valid stack models are:
+
+<P>
+
+<UL>
+<LI>[<I>small</I>] Selects small stack model. 8 bit stack and frame
+pointers. Supports 256 bytes stack size.
+</LI>
+<LI>[<I>large</I>] Selects large stack model. 16 bit stack and frame
+pointers. Supports 65536 bytes stack size.
+</LI>
+</UL>
+</DD>
+<DT><STRONG>--pno-banksel</STRONG></DT>
+<DD>Do not generate BANKSEL assembler directives.
+</DD>
+<DT><STRONG>--extended</STRONG></DT>
+<DD>Enable extended instruction set/literal offset
+addressing mode. Use with care!
+</DD>
+</DL>
+
+<P>
+
+<H3><A NAME="SECTION00562200000000000000">
+4.6.2.2 Optimization Options</A>
+</H3>
+
+<P>
+<DL>
+<DT><STRONG>--obanksel=n</STRONG></DT>
+<DD>Set optimization level for inserting BANKSELs.
+<BR>
+<P>
+
+<UL>
+<LI>[0] no optimization
+</LI>
+<LI>[1] checks previous used register and if it is the same then does
+not emit BANKSEL, accounts only for labels.
+</LI>
+<LI>[2] tries to check the location of (even different) symbols and
+removes BANKSELs if they are in the same bank. 
+<BR><I>Important: There might be problems if the linker script has
+data sections across bank borders!</I>
+</LI>
+</UL>
+</DD>
+<DT><STRONG>--denable-peeps</STRONG></DT>
+<DD>Force the usage of peepholes. Use with care.
+</DD>
+<DT><STRONG>--no-optimize-goto</STRONG></DT>
+<DD>Do not use (conditional) BRA instead of
+GOTO.
+</DD>
+<DT><STRONG>--optimize-cmp</STRONG></DT>
+<DD>Try to optimize some compares.
+</DD>
+<DT><STRONG>--optimize-df</STRONG></DT>
+<DD>Analyze the dataflow of the generated code and
+improve it.
+</DD>
+</DL>
+
+<P>
+
+<H3><A NAME="SECTION00562300000000000000">
+4.6.2.3 Assembling Options</A>
+</H3>
+
+<P>
+<DL>
+<DT><STRONG>--asm=</STRONG></DT>
+<DD>Sets the full path and name of an external assembler
+to call.
+</DD>
+<DT><STRONG>--mplab-comp</STRONG></DT>
+<DD>MPLAB<A NAME="2945"></A> compatibility option.
+Currently only suppresses special gpasm directives.
+</DD>
+</DL>
+
+<P>
+
+<H3><A NAME="SECTION00562400000000000000">
+4.6.2.4 Linking Options</A>
+</H3>
+
+<P>
+<DL>
+<DT><STRONG>--link=</STRONG></DT>
+<DD>Sets the full path and name of an external linker
+to call.
+</DD>
+<DT><STRONG>--preplace-udata-with=[kword]</STRONG></DT>
+<DD>Replaces the default udata
+keyword for allocating unitialized data variables with [kword].
+Valid keywords are: &#34;udata_acs&#34;, &#34;udata_shr&#34;,
+&#34;udata_ovr&#34;.
+</DD>
+<DT><STRONG>--ivt-loc=n</STRONG></DT>
+<DD>Place the interrupt vector table at address <I>n</I>.
+Useful for bootloaders.
+</DD>
+<DT><STRONG>--nodefaultlibs</STRONG></DT>
+<DD>Do not link default libraries when linking.
+</DD>
+<DT><STRONG>--use-crt=</STRONG></DT>
+<DD>Use a custom run-time module instead of the defaults.
+</DD>
+<DT><STRONG>--no-crt</STRONG></DT>
+<DD>Don't link the default run-time modules
+</DD>
+</DL>
+
+<P>
+
+<H3><A NAME="SECTION00562500000000000000">
+4.6.2.5 Debugging Options</A>
+</H3>
+
+<P>
+Debugging options enable extra debugging information in the output
+files.
+
+<P>
+<DL>
+<DT><STRONG>--debug-xtra</STRONG></DT>
+<DD>Similar to --debug<A NAME="2967"></A>, but
+dumps more information.
+</DD>
+<DT><STRONG>--debug-ralloc</STRONG></DT>
+<DD>Force register allocator to dump &lt;source&gt;.d
+file with debugging information. &lt;source&gt; is the name of the file
+being compiled.
+</DD>
+<DT><STRONG>--pcode-verbose</STRONG></DT>
+<DD>Enable pcode debugging information in translation.
+</DD>
+<DT><STRONG>--calltree</STRONG></DT>
+<DD>Dump call tree in .calltree file.
+</DD>
+<DT><STRONG>--gstack</STRONG></DT>
+<DD>Trace push/pops for stack pointer overflow.
+</DD>
+</DL>
+
+<P>
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html2474"
+  HREF="node123.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html2468"
+  HREF="node120.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html2462"
+  HREF="node121.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html2470"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html2472"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html2475"
+  HREF="node123.html">4.6.3 Environment Variables</A>
+<B> Up:</B> <A NAME="tex2html2469"
+  HREF="node120.html">4.6 The PIC16 port</A>
+<B> Previous:</B> <A NAME="tex2html2463"
+  HREF="node121.html">4.6.1 Global Options</A>
+ &nbsp; <B>  <A NAME="tex2html2471"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html2473"
+  HREF="node190.html">Index</A></B> 
+<!--End of Navigation Panel-->
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

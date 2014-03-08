@@ -1,0 +1,237 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>3.9.1 General Information</TITLE>
+<META NAME="description" CONTENT="3.9.1 General Information">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="next" HREF="node70.html">
+<LINK REL="previous" HREF="node68.html">
+<LINK REL="up" HREF="node68.html">
+<LINK REL="next" HREF="node70.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html1609"
+  HREF="node70.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html1603"
+  HREF="node68.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html1597"
+  HREF="node68.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html1605"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html1607"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1610"
+  HREF="node70.html">3.9.2 MCS51/DS390 Interrupt Service</A>
+<B> Up:</B> <A NAME="tex2html1604"
+  HREF="node68.html">3.9 Interrupt Service Routines</A>
+<B> Previous:</B> <A NAME="tex2html1598"
+  HREF="node68.html">3.9 Interrupt Service Routines</A>
+ &nbsp; <B>  <A NAME="tex2html1606"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html1608"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+<!--Table of Child-Links-->
+<A NAME="CHILD_LINKS"><STRONG>Subsections</STRONG></A>
+
+<UL>
+<LI><A NAME="tex2html1611"
+  HREF="node69.html#SECTION00491100000000000000">3.9.1.1 Common interrupt pitfall:
+variable not declared <I>volatile</I></A>
+<LI><A NAME="tex2html1612"
+  HREF="node69.html#SECTION00491200000000000000">3.9.1.2 Common interrupt
+pitfall: <I>non-atomic access</I></A>
+<LI><A NAME="tex2html1613"
+  HREF="node69.html#SECTION00491300000000000000">3.9.1.3 Common interrupt
+pitfall: <I>stack overflow</I></A>
+<LI><A NAME="tex2html1614"
+  HREF="node69.html#SECTION00491400000000000000">3.9.1.4 Common interrupt
+pitfall: <I>use of non-reentrant functions</I></A>
+</UL>
+<!--End of Table of Child-Links-->
+<HR>
+
+<H2><A NAME="SECTION00491000000000000000">
+3.9.1 General Information</A>
+</H2>
+
+<P>
+SDCC allows <I>i</I>nterrupt <I>s</I>ervice <I>r</I>outines to be
+coded in C, with some extended keywords.
+
+<P>
+<BLOCKQUOTE>
+<TT>void timer_isr (void) __interrupt (1) __using (1) </TT>&nbsp;
+<BR><TT>{ </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;... </TT>&nbsp;
+<BR><TT>}</TT>
+
+</BLOCKQUOTE>
+The optional number following the <I>interrupt<A NAME="1616"></A><A NAME="1617"></A></I>
+keyword is the interrupt number this routine will service. When present,
+the compiler will insert a call to this routine in the interrupt vector
+table<A NAME="1618"></A> for the interrupt number specified.
+If you have multiple source files in your project, interrupt service
+routines can be present in any of them, but a prototype of the isr
+MUST be present or included in the file that contains the function
+<I>main</I>. The optional (8051 specific) keyword <I>using<A NAME="1620"></A><A NAME="1621"></A></I>
+can be used to tell the compiler to use the specified register bank
+when generating code for this function. 
+<BR>
+Interrupt service routines open the door for some very interesting
+bugs:
+
+<P>
+
+<H3><A NAME="SECTION00491100000000000000"></A><A NAME="sub:Common-interrupt-pitfall-volatile"></A>
+<BR>
+3.9.1.1 Common interrupt pitfall:
+variable not declared <I>volatile</I>
+</H3>
+
+<P>
+If an interrupt service routine changes variables which are accessed
+by other functions these variables have to be declared <I>volatile</I><A NAME="1625"></A>.
+See http://en.wikipedia.org/wiki/Volatile_variable .
+
+<P>
+
+<H3><A NAME="SECTION00491200000000000000"></A><A NAME="sub:Common-interrupt-pitfall-non-atomic"></A>
+<BR>
+3.9.1.2 Common interrupt
+pitfall: <I>non-atomic access</I>
+</H3>
+
+<P>
+If the access to these variables is not <I>atomic<A NAME="1629"></A></I>
+(i.e. the processor needs more than one instruction for the access
+and could be interrupted while accessing the variable) the interrupt
+must be disabled during the access to avoid inconsistent data. 
+<BR>
+Access to 16 or 32 bit variables is obviously not atomic on 8 bit
+CPUs and should be protected by disabling interrupts. You're not automatically
+on the safe side if you use 8 bit variables though. We need an example
+here: f.e. on the 8051 the harmless looking ''<TT>flags&nbsp;|=&nbsp;0x80;</TT>''
+is not atomic if <TT>flags</TT> resides in xdata. Setting ''<TT>flags&nbsp;|=&nbsp;0x40;</TT>''
+from within an interrupt routine might get lost if the interrupt occurs
+at the wrong time. ''<TT>counter&nbsp;+=&nbsp;8;</TT>'' is not atomic on
+the 8051 even if <TT>counter</TT> is located in data memory.
+<BR>
+Bugs like these are hard to reproduce and can cause a lot of trouble. 
+
+<P>
+
+<H3><A NAME="SECTION00491300000000000000"></A><A NAME="sub:Common-interrupt-pitfall-stack-overflow"></A>
+<BR>
+3.9.1.3 Common interrupt
+pitfall: <I>stack overflow</I>
+</H3>
+
+<P>
+The return address and the registers used in the interrupt service
+routine are saved on the stack<A NAME="1637"></A> so there must be sufficient
+stack space. If there isn't variables or registers (or even the return
+address itself) will be corrupted. This <I>stack overflow</I><A NAME="1639"></A>
+is most likely to happen if the interrupt occurs during the ''deepest''
+subroutine when the stack is already in use for f.e. many return addresses.
+
+<P>
+
+<H3><A NAME="SECTION00491400000000000000"></A><A NAME="sub:Common-interrupt-pitfall-non-reentrant"></A>
+<BR>
+3.9.1.4 Common interrupt
+pitfall: <I>use of non-reentrant functions</I>
+</H3>
+
+<P>
+A special note here, int (16 bit) and long (32 bit) integer division<A NAME="1642"></A>,
+multiplication<A NAME="1643"></A> &amp; modulus<A NAME="1644"></A> and
+floating-point<A NAME="1645"></A> operations are implemented
+using external support routines. If an interrupt service routine needs
+to do any of these operations then the support routines (as mentioned
+in a following section) will have to be recompiled using the <I>--stack-auto<A NAME="1646"></A></I>
+option and the source file will need to be compiled using the <I>--int-long-reent</I><A NAME="1648"></A>
+compiler option. 
+<BR>
+Note, the type promotion<A NAME="1649"></A> required by ANSI C
+can cause 16 bit routines to be used without the programmer being aware of it. See f.e. the cast <TT><B>(unsigned
+char)(tail-1)</B></TT> <B>within the if clause in section <A HREF="node83.html#sub:A-Step-by_Assembler_Introduction">3.13.1</A>.</B>
+
+<P>
+Calling other functions from an interrupt service routine is not recommended,
+avoid it if possible. Note that when some function is called from
+an interrupt service routine it should be preceded by a #pragma&nbsp;nooverlay<A NAME="1653"></A>
+if it is not reentrant. Furthermore nonreentrant functions should
+not be called from the main program while the interrupt service routine
+might be active. They also must not be called from low priority interrupt
+service routines while a high priority interrupt service routine might
+be active. You could use semaphores or make the function <I>critical</I>
+if all parameters are passed in registers.
+<BR>
+Also see section <A HREF="node67.html#sub:Overlaying">3.8</A>&nbsp;about Overlaying and section
+<A HREF="node77.html#sub:Functions-using-private-banks">3.11</A>&nbsp;about Functions using private
+register banks.
+<P><P>
+<BR>
+
+
+<P>
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html1609"
+  HREF="node70.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html1603"
+  HREF="node68.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html1597"
+  HREF="node68.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html1605"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html1607"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1610"
+  HREF="node70.html">3.9.2 MCS51/DS390 Interrupt Service</A>
+<B> Up:</B> <A NAME="tex2html1604"
+  HREF="node68.html">3.9 Interrupt Service Routines</A>
+<B> Previous:</B> <A NAME="tex2html1598"
+  HREF="node68.html">3.9 Interrupt Service Routines</A>
+ &nbsp; <B>  <A NAME="tex2html1606"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html1608"
+  HREF="node190.html">Index</A></B> 
+<!--End of Navigation Panel-->
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

@@ -1,0 +1,111 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>4.6.18 Known Bugs</TITLE>
+<META NAME="description" CONTENT="4.6.18 Known Bugs">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="previous" HREF="node137.html">
+<LINK REL="up" HREF="node120.html">
+<LINK REL="next" HREF="node139.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html2707"
+  HREF="node139.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html2701"
+  HREF="node120.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html2697"
+  HREF="node137.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html2703"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html2705"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html2708"
+  HREF="node139.html">5. Debugging</A>
+<B> Up:</B> <A NAME="tex2html2702"
+  HREF="node120.html">4.6 The PIC16 port</A>
+<B> Previous:</B> <A NAME="tex2html2698"
+  HREF="node137.html">4.6.17 PIC16 Port -</A>
+ &nbsp; <B>  <A NAME="tex2html2704"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html2706"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+<!--Table of Child-Links-->
+<A NAME="CHILD_LINKS"><STRONG>Subsections</STRONG></A>
+
+<UL>
+<LI><A NAME="tex2html2709"
+  HREF="node138.html#SECTION005618100000000000000">4.6.18.1 Extended Instruction Set</A>
+<LI><A NAME="tex2html2710"
+  HREF="node138.html#SECTION005618200000000000000">4.6.18.2 Regression Tests</A>
+</UL>
+<!--End of Table of Child-Links-->
+<HR>
+
+<H2><A NAME="SECTION005618000000000000000">
+4.6.18 Known Bugs</A>
+</H2>
+
+<P>
+
+<H3><A NAME="SECTION005618100000000000000">
+4.6.18.1 Extended Instruction Set</A>
+</H3>
+
+<P>
+The PIC16 port emits code which is incompatible with the extended
+instruction set available with many newer devices. Make sure to always
+explicitly disable it, usually using
+
+<P>
+<TT>static __code char __at(__CONFIG4L) conf4l = /* more
+flags &amp; */ _XINST_OFF_4L;</TT>
+
+<P>
+Some devices (namely 18f2455, 18f2550, 18f4455, and 18f4550)
+use _ENHCPU_OFF_4L instead of _XINST_OFF_4L.
+
+<P>
+
+<H3><A NAME="SECTION005618200000000000000">
+4.6.18.2 Regression Tests</A>
+</H3>
+
+<P>
+The PIC16 port currently passes most but not all of the tests in SDCC's
+regression test<A NAME="3309"></A> suite (see section
+<A HREF="node165.html#sec:Quality-control">7.9</A>), thus no automatic regression tests are
+currently performed for the PIC16 target.
+
+<P>
+<BR><HR>
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

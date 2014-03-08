@@ -1,0 +1,6 @@
+    #FF - vDOS Traps
+    #FE - vDOS Drivers
+#FC,#FD - vDOS Tables
+#F8-#FB - virtual ROM
+    #F7 - ts-bios FAT engine
+#F0-#F6 - buffer

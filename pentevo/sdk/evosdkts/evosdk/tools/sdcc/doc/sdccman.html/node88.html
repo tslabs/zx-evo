@@ -1,0 +1,88 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>3.14.2 Registers usage</TITLE>
+<META NAME="description" CONTENT="3.14.2 Registers usage">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="next" HREF="node89.html">
+<LINK REL="previous" HREF="node87.html">
+<LINK REL="up" HREF="node86.html">
+<LINK REL="next" HREF="node89.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html1884"
+  HREF="node89.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html1878"
+  HREF="node86.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html1872"
+  HREF="node87.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html1880"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html1882"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1885"
+  HREF="node89.html">3.14.3 Assembler Routine (non-reentrant)</A>
+<B> Up:</B> <A NAME="tex2html1879"
+  HREF="node86.html">3.14 Interfacing with Assembler</A>
+<B> Previous:</B> <A NAME="tex2html1873"
+  HREF="node87.html">3.14.1 Global Registers used</A>
+ &nbsp; <B>  <A NAME="tex2html1881"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html1883"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H2><A NAME="SECTION004142000000000000000">
+3.14.2 Registers usage</A>
+</H2>
+
+<P>
+Unless the called function is declared as <TT>_naked</TT><A NAME="2291"></A>,
+or the --callee-saves<A NAME="2292"></A>/--all-callee-saves
+command line option or the corresponding callee_saves pragma are
+used, the caller will save the registers (<I>R0-R7</I>) around the
+call, so the called function can destroy they content freely.
+
+<P>
+If the called function is not declared as <TT>_naked</TT>, the caller
+will swap register banks around the call, if caller and callee use
+different register banks (having them defined by the <TT>_using</TT>
+modifier). 
+
+<P>
+The called function can also use <I>DPL</I>, <I>DPH</I>, <I>B</I>
+and <I>ACC</I> observing that they are used for parameter/return value
+passing.
+
+<P>
+<BR><HR>
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

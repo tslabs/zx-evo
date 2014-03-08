@@ -1,0 +1,181 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>3.20 Defines Created by the Compiler</TITLE>
+<META NAME="description" CONTENT="3.20 Defines Created by the Compiler">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="previous" HREF="node101.html">
+<LINK REL="up" HREF="node38.html">
+<LINK REL="next" HREF="node103.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html2092"
+  HREF="node103.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html2086"
+  HREF="node38.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html2082"
+  HREF="node101.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html2088"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html2090"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html2093"
+  HREF="node103.html">4. Notes on supported</A>
+<B> Up:</B> <A NAME="tex2html2087"
+  HREF="node38.html">3. Using SDCC</A>
+<B> Previous:</B> <A NAME="tex2html2083"
+  HREF="node101.html">3.19 Pragmas</A>
+ &nbsp; <B>  <A NAME="tex2html2089"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html2091"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H1><A NAME="SECTION004200000000000000000">
+3.20 Defines Created by the Compiler</A>
+</H1>
+
+<P>
+The compiler creates the following #defines<A NAME="2710"></A><A NAME="2711"></A>:
+<BR>
+<P>
+<TABLE CELLPADDING=3 BORDER="1">
+<TR><TH ALIGN="LEFT" VALIGN="TOP" WIDTH=216> 
+<B>#define</B> </TH>
+<TH ALIGN="LEFT" VALIGN="TOP" WIDTH=216> <B>Description</B></TH>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=216>
+
+SDCC<A NAME="2719"></A>  </TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=216> Always defined. Since version 2.5.6 the version number as an int (ex.
+256)</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=216> 
+ 
+SDCC_mcs51<A NAME="2720"></A> or SDCC_ds390<A NAME="2721"></A>
+or SDCC_z80<A NAME="2722"></A>, etc. </TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=216> depending on the model used (e.g.: -mds390)</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=216> 
+ 
+__mcs51<A NAME="2723"></A>, __ds390<A NAME="2724"></A>, __hc08<A NAME="2725"></A>,
+__z80<A NAME="2726"></A>, etc </TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=216> depending on the model used (e.g. -mz80)</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=216> 
+ 
+SDCC_STACK_AUTO<A NAME="2727"></A> </TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=216> when <I>--stack-auto</I> option is used</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=216> 
+ 
+SDCC_MODEL_SMALL<A NAME="2729"></A> </TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=216> when <I>--model-small</I> is used</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=216> 
+ 
+SDCC_MODEL_MEDIUM<A NAME="2731"></A> </TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=216> when <I>--model-medium</I> is used</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=216> 
+ 
+SDCC_MODEL_LARGE<A NAME="2733"></A> </TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=216> when <I>--model-large</I> is used</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=216> 
+ 
+SDCC_USE_XSTACK<A NAME="2735"></A> </TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=216> when <I>--xstack</I> option is used</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=216> 
+ 
+SDCC_STACK_TENBIT<A NAME="2737"></A>  </TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=216> when <I>-mds390</I> is used</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=216> 
+ 
+SDCC_MODEL_FLAT24<A NAME="2739"></A> </TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=216> when <I>-mds390</I> is used</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=216> 
+ 
+SDCC_REVISION<A NAME="2741"></A> </TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=216> Always defined. SDCC svn revision number</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=216> 
+ 
+SDCC_PARMS_IN_BANK1<A NAME="2742"></A> </TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=216> when <I>--parms-in-bank1</I> is used</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=216> 
+ 
+SDCC_FLOAT_REENT<A NAME="2744"></A> </TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=216> when <I>--float-reent</I> is used</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=216> 
+ 
+SDCC_INT_LONG_REENT<A NAME="2746"></A> </TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=216> when <I>--int-long-reent</I> is used</TD>
+</TR>
+</TABLE>
+
+<P>
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html2092"
+  HREF="node103.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html2086"
+  HREF="node38.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html2082"
+  HREF="node101.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html2088"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html2090"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html2093"
+  HREF="node103.html">4. Notes on supported</A>
+<B> Up:</B> <A NAME="tex2html2087"
+  HREF="node38.html">3. Using SDCC</A>
+<B> Previous:</B> <A NAME="tex2html2083"
+  HREF="node101.html">3.19 Pragmas</A>
+ &nbsp; <B>  <A NAME="tex2html2089"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html2091"
+  HREF="node190.html">Index</A></B> 
+<!--End of Navigation Panel-->
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

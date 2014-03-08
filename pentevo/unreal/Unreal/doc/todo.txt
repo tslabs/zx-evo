@@ -1,0 +1,30 @@
+Tests:
+- check TheLink Turbo switching for Pentagon config
+
+Bugs:
+- Wrong multicolor rendering: truncate tcpu to lower limit of attribute address
+- Add WnR=1 to CRAM and SFILE DMA, otherwise ignore
+- Incorrect exit from DEBUG in Bomber (paging?)
+- Probably incorrect DOS on/off behaviour with regard to RAM at #0000 (MEMCONFIG)
+- 3x and 4x renderers on Win7 crash Unreal
+
+Missing features:
+- ld a,r and ld a,i tacts not recalculated for Turbo (op_ed.cpp.177 and op_ed.cpp.232)
+- leds
+- ATM3 wrong palette update in Personal Nightmare demo due to fine ATM3 port decode (PN uses coarse addressing)
+- NoFlic (in some renderers)
+- VDOS
+- other clones full compatibility
+- TheLink doesn't compile on TSconf (probably missing #EFF7 features)
+
+To Do:
+- Save settings to .ini
+- Carry out Debugger into separate window
+- Add all models resources to Debugger
+- Save .avi using VFW
+- Add some workaround for TR-DOS timeouts on 7+ Turbo
+- Separate reset() and res_init() procedures
+- Add res_init() to SNA load when TS-conf active
+
+X-factors:
+- Regular lags/glitches in when Process Explorer ON

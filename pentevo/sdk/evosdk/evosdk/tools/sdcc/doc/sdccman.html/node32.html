@@ -1,0 +1,182 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>2.9 Components of SDCC</TITLE>
+<META NAME="description" CONTENT="2.9 Components of SDCC">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="previous" HREF="node27.html">
+<LINK REL="up" HREF="node10.html">
+<LINK REL="next" HREF="node33.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html950"
+  HREF="node33.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html944"
+  HREF="node10.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html940"
+  HREF="node31.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html946"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html948"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html951"
+  HREF="node33.html">2.9.1 sdcc - The</A>
+<B> Up:</B> <A NAME="tex2html945"
+  HREF="node10.html">2. Installing SDCC</A>
+<B> Previous:</B> <A NAME="tex2html941"
+  HREF="node31.html">2.8.4 What the ''make</A>
+ &nbsp; <B>  <A NAME="tex2html947"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html949"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H1><A NAME="SECTION00390000000000000000">
+2.9 Components of SDCC</A>
+</H1>
+
+<P>
+SDCC is not just a compiler, but a collection of tools by various
+developers. These include linkers, assemblers, simulators and other
+components. Here is a summary of some of the components. Note that
+the included simulator and assembler have separate documentation which
+you can find in the source package in their respective directories.
+As SDCC grows to include support for other processors, other packages
+from various developers are included and may have their own sets of
+documentation.
+<BR>
+<BR>
+You might want to look at the files which are installed in &lt;installdir&gt;.
+At the time of this writing, we find the following programs for gcc-builds:
+<BR> 
+<BR>
+In &lt;installdir&gt;/bin:
+
+<P>
+
+<UL>
+<LI>sdcc - The compiler.
+</LI>
+<LI>sdcpp - The C preprocessor.
+</LI>
+<LI>asx8051 - The assembler for 8051 type processors.
+</LI>
+<LI>as-z80<B>,</B> as-gbz80 - The Z80 and GameBoy Z80 assemblers.
+</LI>
+<LI>aslink -The linker for 8051 type processors.
+</LI>
+<LI>link-z80<B>,</B> link-gbz80 - The Z80 and GameBoy Z80 linkers.
+</LI>
+<LI>s51 - The ucSim 8051 simulator.
+</LI>
+<LI>sdcdb - The source debugger.
+</LI>
+<LI>packihx - A tool to pack (compress) Intel hex files.
+</LI>
+</UL>
+In &lt;installdir&gt;/share/sdcc/include
+
+<P>
+
+<UL>
+<LI>the include files
+</LI>
+</UL>
+In &lt;installdir&gt;/share/sdcc/lib
+
+<P>
+
+<UL>
+<LI>the subdirs src and small, large, z80, gbz80 and ds390 with the precompiled
+relocatables.
+</LI>
+</UL>
+In &lt;installdir&gt;/share/sdcc/doc
+
+<P>
+
+<UL>
+<LI>the documentation
+</LI>
+</UL>
+As development for other processors proceeds, this list will expand
+to include executables to support processors like AVR, PIC, etc.
+
+<P>
+<BR><HR>
+<!--Table of Child-Links-->
+<A NAME="CHILD_LINKS"><STRONG>Subsections</STRONG></A>
+
+<UL>
+<LI><A NAME="tex2html952"
+  HREF="node33.html">2.9.1 sdcc - The Compiler</A>
+<LI><A NAME="tex2html953"
+  HREF="node34.html">2.9.2 sdcpp - The C-Preprocessor</A>
+<LI><A NAME="tex2html954"
+  HREF="node35.html">2.9.3 as<I>xxxx</I>, aslink, link-<I>xxx</I> - The Assemblers and Linkage
+Editors</A>
+<LI><A NAME="tex2html955"
+  HREF="node36.html">2.9.4 s51 - The Simulator</A>
+<LI><A NAME="tex2html956"
+  HREF="node37.html">2.9.5 sdcdb - Source Level Debugger</A>
+</UL>
+<!--End of Table of Child-Links-->
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html950"
+  HREF="node33.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html944"
+  HREF="node10.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html940"
+  HREF="node31.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html946"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html948"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html951"
+  HREF="node33.html">2.9.1 sdcc - The</A>
+<B> Up:</B> <A NAME="tex2html945"
+  HREF="node10.html">2. Installing SDCC</A>
+<B> Previous:</B> <A NAME="tex2html941"
+  HREF="node31.html">2.8.4 What the ''make</A>
+ &nbsp; <B>  <A NAME="tex2html947"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html949"
+  HREF="node190.html">Index</A></B> 
+<!--End of Navigation Panel-->
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

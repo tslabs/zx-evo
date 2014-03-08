@@ -1,0 +1,478 @@
+
+;*******************************************************
+;*                                                     *
+;*             APU MACRO DEFINITION                    *
+;*             ====================                    *
+;*                                                     *
+;*  Defined by TS-Labs                                 *
+;*                                                     *
+;*                                                     *
+;*******************************************************
+
+
+; Wait conditions
+const	_WI	:=	(FOR, NOT) 
+const	_WC	:=	(IS, LESS, GREATER, NOT)
+
+; Condition constants
+const	_JCF0 := (ALWAYS, Z, C, NZ, G, LE, GE, N)
+const	_JCF1 := (P, SL, SLE, SG, SGE, H, NH, NEVER)
+const	_JCC0 := (ALWAYS, EQUAL, LESS, NOT_EQUAL, GREATER, LESS_EQUAL, GREATER_EQUAL, NEGATIVE)
+const	_JCC1 := (POSITIVE, SIGNED_LESS, SIGNED_LESS_EQUAL, SIGNED_GREATER, SIGNED_GREATER_EQUAL, HALF_CARRY, NOT_HALF_CARRY, NEVER)
+
+; Port constants
+const	_PRW0 := (sram_addr, sram_data, dram_addr, dram_data, timer, covox, border)
+const	_PRW1 := (none)
+const	_PRR0 := (sram_data, dram_data, timer, hcnt, vcnt)
+const	_PRR1 := (none)
+
+; Pin constants
+const	_PNW0 := (apu_req, apu_dram_bsel0, apu_dram_bsel1, apu_dram_rnw)
+const	_PNW1 := (none)
+const	_PNW2 := (none)
+const	_PNW3 := (none)
+const	_PNR0 := (none, timer_end, apu_strobe, hsync_start, hblank, vsync, vblank, line_start)
+const	_PNR1 := (none)
+const	_PNR2 := (none)
+const	_PNR3 := (none)
+
+; Sync strobe constants
+const	_SST := (cbeg, post_cbeg, pre_cend, cend)
+
+
+;--- Pseudo op macro definitions ------------------------------
+
+macro("ORG\  *",NUMERIC)
+$	:=doreloc(#0)
+endm
+
+macro("DS\  *",NUMERIC)
+$	:=	doreloc($+#0)
+endm
+
+
+;--- Instructions ---------------------------------------------
+
+;-- LD ------------------------
+
+; ld dst, src
+macro("LD\  R*, R*", NUMERIC, NUMERIC)
+	DB	00h + #1, 80h + #0
+endm
+
+; ld dst, imm8
+macro("LD\  R*, *", NUMERIC, NUMERIC)
+	DB	#1, 00h + #0
+endm
+
+; ld sz, dst, src
+macro("LD\  * R*, R*", NUMERIC, NUMERIC, NUMERIC)
+#if	#0 & 7 || #0 > 32
+#error	"SZ parameter must be 8, 16, 24 or 32."
+#endif 
+	DB	00h + #2 + ((#0-8)<<1), 80h + #1
+endm
+
+
+;-- AND -----------------------
+
+; and dst, src
+macro("AND\  R*, R*", NUMERIC, NUMERIC)
+	DB	40h + #1, 80h + #0
+endm
+
+; and dst, imm8
+macro("AND\  R*, *", NUMERIC, NUMERIC)
+	DB	#1, 10h + #0
+endm
+
+; and sz, dst, src
+macro("AND\  * R*, R*", NUMERIC, NUMERIC, NUMERIC)
+#if	#0 & 7 || #0 > 32
+#error	"SZ parameter must be 8, 16, 24 or 32."
+#endif 
+	DB	40h + #2 + ((#0-8)<<1), 80h + #1
+endm
+
+
+;-- OR ------------------------
+
+; or dst, src
+macro("OR\  R*, R*", NUMERIC, NUMERIC)
+	DB	80h + #1, 80h + #0
+endm
+
+; or dst, imm8
+macro("OR\  R*, *", NUMERIC, NUMERIC)
+	DB	#1, 20h + #0
+endm
+
+; or sz, dst, src
+macro("OR\  * R*, R*", NUMERIC, NUMERIC, NUMERIC)
+#if	#0 & 7 || #0 > 32
+#error	"SZ parameter must be 8, 16, 24 or 32."
+#endif 
+	DB	80h + #2 + ((#0-8)<<1), 80h + #1
+endm
+
+
+;-- XOR -----------------------
+
+; xor dst, src
+macro("XOR\  R*, R*", NUMERIC, NUMERIC)
+	DB	0C0h + #1, 80h + #0
+endm
+
+; xor dst, imm8
+macro("XOR\  R*, *", NUMERIC, NUMERIC)
+	DB	#1, 30h + #0
+endm
+
+; xor sz, dst, src
+macro("XOR\  * R*, R*", NUMERIC, NUMERIC, NUMERIC)
+#if	#0 & 7 || #0 > 32
+#error	"SZ parameter must be 8, 16, 24 or 32."
+#endif 
+	DB	0C0h + #2 + ((#0-8)<<1), 80h + #1
+endm
+
+
+;-- ADD -----------------------
+
+; add dst, src
+macro("ADD\  R*, R*", NUMERIC, NUMERIC)
+	DB	00h + #1, 90h + #0
+endm
+
+; add dst, imm8
+macro("ADD\  R*, *", NUMERIC, NUMERIC)
+	DB	#1, 40h + #0
+endm
+
+; add sz, dst, src
+macro("ADD\  * R*, R*", NUMERIC, NUMERIC, NUMERIC)
+#if	#0 & 7 || #0 > 32
+#error	"SZ parameter must be 8, 16, 24 or 32."
+#endif 
+	DB	00h + #2 + ((#0-8)<<1), 90h + #1
+endm
+
+
+;-- SUB -----------------------
+
+; sub dst, src
+macro("SUB\  R*, R*", NUMERIC, NUMERIC)
+	DB	40h + #1, 90h + #0
+endm
+
+; sub dst, imm8
+macro("SUB\  R*, *", NUMERIC, NUMERIC)
+	DB	#1, 50h + #0
+endm
+
+; sub sz, dst, src
+macro("SUB\  * R*, R*", NUMERIC, NUMERIC, NUMERIC)
+#if	#0 & 7 || #0 > 32
+#error	"SZ parameter must be 8, 16, 24 or 32."
+#endif 
+	DB	40h + #2 + ((#0-8)<<1), 90h + #1
+endm
+
+
+;-- CMP -----------------------
+
+; cmp dst, src
+macro("CMP\  R*, R*", NUMERIC, NUMERIC)
+	DB	80h + #1, 90h + #0
+endm
+
+; cmp dst, imm8
+macro("CMP\  R*, *", NUMERIC, NUMERIC)
+	DB	#1, 60h + #0
+endm
+
+; cmp sz, dst, src
+macro("CMP\  * R*, R*", NUMERIC, NUMERIC, NUMERIC)
+#if	#0 & 7 || #0 > 32
+#error	"SZ parameter must be 8, 16, 24 or 32."
+#endif 
+	DB	80h + #2 + ((#0-8)<<1), 90h + #1
+endm
+
+
+;-- TST -----------------------
+
+; tst dst, src
+macro("TST\  R*, R*", NUMERIC, NUMERIC)
+	DB	0C0h + #1, 90h + #0
+endm
+
+; tst dst, imm8
+macro("TST\  R*, *", NUMERIC, NUMERIC)
+	DB	#1, 70h + #0
+endm
+
+; tst sz, dst, src
+macro("TST\  * R*, R*", NUMERIC, NUMERIC, NUMERIC)
+#if	#0 & 7 || #0 > 32
+#error	"SZ parameter must be 8, 16, 24 or 32."
+#endif 
+	DB	0C0h + #2 + ((#0-8)<<1), 90h + #1
+endm
+
+
+;-- INC -----------------------
+
+; inc src
+macro("INC\  R*", NUMERIC)
+	DB	00h + #0, 0F0h
+endm
+
+; inc sz, src
+macro("INC\  * R*", NUMERIC, NUMERIC)
+#if	#0 & 7 || #0 > 32
+#error	"SZ parameter must be 8, 16, 24 or 32."
+#endif 
+	DB	00h + #1 + ((#0-8)<<1), 0F0h
+endm
+
+
+;-- DEC -----------------------
+
+; dec src
+macro("DEC\  R*", NUMERIC)
+	DB	40h + #0, 0F0h
+endm
+
+; dec sz, src
+macro("DEC\  * R*", NUMERIC, NUMERIC)
+#if	#0 & 7 || #0 > 32
+#error	"SZ parameter must be 8, 16, 24 or 32."
+#endif 
+	DB	40h + #1 + ((#0-8)<<1), 0F0h
+endm
+
+
+;-- CPL -----------------------
+
+; cpl src
+macro("CPL\  R*", NUMERIC)
+	DB	80h + #0, 0F0h
+endm
+
+; cpl sz, src
+macro("CPL\  * R*", NUMERIC, NUMERIC)
+#if	#0 & 7 || #0 > 32
+#error	"SZ parameter must be 8, 16, 24 or 32."
+#endif 
+	DB	80h + #1 + ((#0-8)<<1), 0F0h
+endm
+
+
+;-- NEG -----------------------
+
+; neg src
+macro("NEG\  R*", NUMERIC)
+	DB	0C0h + #0, 0F0h
+endm
+
+; neg sz, src
+macro("NEG\  * R*", NUMERIC, NUMERIC)
+#if	#0 & 7 || #0 > 32
+#error	"SZ parameter must be 8, 16, 24 or 32."
+#endif 
+	DB	0C0h + #1 + ((#0-8)<<1), 0F0h
+endm
+
+
+;-- HALT ----------------------
+
+macro("HALT")
+	DB 0FFh, 0FFh
+endm
+
+
+;-- JMP -----------------------
+
+; jr rel8
+macro("JR\  *", LABEL)
+	DB	doureloc(#0 - $>>1)
+	DB	0D0h
+endm
+
+; jr jcf rel8
+macro("JR\  * *", _JCF0, LABEL)
+	DB	doureloc(#1 - $>>1)
+	DB	0D0h + #0
+endm
+
+macro("JR\  * *", _JCF1, LABEL)
+	DB	doureloc(#1 - $>>1)
+	DB	0D8h + #0
+endm
+
+; jr jcc rel8
+macro("JR\  * *", _JCC0, LABEL)
+	DB	doureloc(#1 - $>>1)
+	DB	0D0h + #0
+endm
+
+macro("JR\  * *", _JCC1, LABEL)
+	DB	doureloc(#1 - $>>1)
+	DB	0D8h + #0
+endm
+
+
+;-- WAIT ----------------------
+
+; wait strobe
+macro("WAIT\  *", _SST)
+	DB	0 | (#0<<6), 0FAh
+endm
+
+; wait pin
+macro("WAIT\  *", _PNR0)
+	DB	00h | #0, 0FBh
+endm
+
+macro("WAIT\  *", _PNR1)
+	DB	08h | #0, 0FBh
+endm
+
+macro("WAIT\  *", _PNR2)
+	DB	10h | #0, 0FBh
+endm
+
+macro("WAIT\  *", _PNR3)
+	DB	18h | #0, 0FBh
+endm
+
+; wait for|not pin
+macro("WAIT\  * *", _WI, _PNR0)
+	DB	00h | #1 | (#0<<5), 0FBh
+endm
+
+macro("WAIT\  * *", _WI, _PNR1)
+	DB	08h | #1 | (#0<<5), 0FBh
+endm
+
+macro("WAIT\  * *", _WI, _PNR2)
+	DB	10h | #1 | (#0<<5), 0FBh
+endm
+
+macro("WAIT\  * *", _WI, _PNR3)
+	DB	18h | #1 | (#0<<5), 0FBh
+endm
+
+; wait pin, strobe
+macro("WAIT\  *, *", _PNR0, _SST)
+	DB	00h | #0 | (#1<<6), 0FAh
+endm
+
+macro("WAIT\  *, *", _PNR1, _SST)
+	DB	08h | #0 | (#1<<6), 0FAh
+endm
+
+macro("WAIT\  *, *", _PNR1, _SST)
+	DB	10h | #0 | (#1<<6), 0FAh
+endm
+
+macro("WAIT\  *, *", _PNR1, _SST)
+	DB	18h | #0 | (#1<<6), 0FAh
+endm
+
+; wait for|not pin, strobe
+macro("WAIT\  * *, *", _WI, _PNR0, _SST)
+	DB	00h | #1 | (#2<<6) | (#0<<5), 0FAh
+endm
+
+macro("WAIT\  * *, *", _WI, _PNR1, _SST)
+	DB	08h | #1 | (#2<<6) | (#0<<5), 0FAh
+endm
+
+macro("WAIT\  * *, *", _WI, _PNR2, _SST)
+	DB	10h | #1 | (#2<<6) | (#0<<5), 0FAh
+endm
+
+macro("WAIT\  * *, *", _WI, _PNR3, _SST)
+	DB	18h | #1 | (#2<<6) | (#0<<5), 0FAh
+endm
+
+; wait (port) reg
+macro("WAIT\	(*) R*", _PRR0, NUMERIC)
+	DB	00h | 30h + #1, 0B0h + #0
+endm
+
+macro("WAIT\	(*) R*", _PRR1, NUMERIC)
+	DB	00h | 30h + #1, 0B8h + #0
+endm
+
+; wait (port) wc reg
+macro("WAIT\	(*) * R*", _PRR0, _WC, NUMERIC)
+	DB	00h | 30h | (#1<<6) + #2, 0B0h + #0
+endm
+
+macro("WAIT\	(*) * R*", _PRR1, _WC, NUMERIC)
+	DB	00h | 30h | (#1<<6) + #2, 0B8h + #0
+endm
+
+; wait sz (port) reg
+macro("WAIT\	* (*) R*", NUMERIC, _PRR0, NUMERIC)
+	DB	00h | (#0<<4) + #2, 0B0h + #1
+endm
+
+macro("WAIT\	* (*) R*", NUMERIC, _PRR1, NUMERIC)
+	DB	00h | (#0<<4) + #2, 0B8h + #1
+endm
+
+; wait sz (port) wc reg
+macro("WAIT\	* (*) * R*", NUMERIC, _PRR0, _WC, NUMERIC)
+	DB	00h | (#0<<4) | (#2<<6) + #3, 0B0h + #1
+endm
+
+macro("WAIT\	* (*) * R*", NUMERIC, _PRR1, _WC, NUMERIC)
+	DB	00h | (#0<<4) | (#2<<6) + #3, 0B8h + #1
+endm
+
+
+;-- OUT -----------------------
+
+; out (port), reg
+macro("OUT\  (*), R*", _PRW0, NUMERIC)
+	DB	80h | 30h + #0, 0C0h + #1
+endm
+
+macro("OUT\  (*), R*", _PRW1, NUMERIC)
+	DB	88h | 30h + #0, 0C0h + #1
+endm
+
+; out sz (port), reg
+macro("OUT\  * (*), R*", NUMERIC, _PRW0, NUMERIC)
+	DB	80h | (#0<<4) + #1, 0C0h + #2
+endm
+
+macro("OUT\  * (*), R*", NUMERIC, _PRW1, NUMERIC)
+	DB	88h | (#0<<4) + #1, 0C0h + #2
+endm
+
+
+;-- IN ------------------------
+
+; in reg, (port)
+macro("IN\	R*, (*)", NUMERIC, _PRR0)
+	DB	00h | 30h + #1, 0C0h + #0
+endm
+
+macro("IN\	R*, (*)", NUMERIC, _PRR1)
+	DB	08h | 30h + #1, 0C0h + #0
+endm
+
+; in sz (port), reg
+macro("IN\  * R*, (*)", NUMERIC, NUMERIC, _PRR0)
+	DB	00h | (#0<<4) + #2, 0C0h + #1
+endm
+
+macro("IN\  * R*, (*)", NUMERIC, NUMERIC, _PRR1)
+	DB	08h | (#0<<4) + #2, 0C0h + #1
+endm
+

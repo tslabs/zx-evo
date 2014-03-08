@@ -1,0 +1,154 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>3.14.3 Assembler Routine (non-reentrant)</TITLE>
+<META NAME="description" CONTENT="3.14.3 Assembler Routine (non-reentrant)">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="next" HREF="node90.html">
+<LINK REL="previous" HREF="node88.html">
+<LINK REL="up" HREF="node86.html">
+<LINK REL="next" HREF="node90.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html1898"
+  HREF="node90.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html1892"
+  HREF="node86.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html1886"
+  HREF="node88.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html1894"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html1896"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1899"
+  HREF="node90.html">3.14.4 Assembler Routine (reentrant)</A>
+<B> Up:</B> <A NAME="tex2html1893"
+  HREF="node86.html">3.14 Interfacing with Assembler</A>
+<B> Previous:</B> <A NAME="tex2html1887"
+  HREF="node88.html">3.14.2 Registers usage</A>
+ &nbsp; <B>  <A NAME="tex2html1895"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html1897"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H2><A NAME="SECTION004143000000000000000">
+3.14.3 Assembler Routine (non-reentrant)</A>
+</H2>
+
+<P>
+In the following example<A NAME="2301"></A><A NAME="2302"></A>
+the function c_func calls an assembler routine asm_func, which takes
+two parameters<A NAME="2303"></A>.
+
+<P>
+<BLOCKQUOTE>
+<TT>extern int asm_func(unsigned char, unsigned char);</TT>&nbsp;
+<BR>&nbsp;
+<BR><TT>int c_func (unsigned char i, unsigned char j)</TT>&nbsp;
+<BR><TT>{</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;return asm_func(i,j);</TT>&nbsp;
+<BR><TT>}</TT>&nbsp;
+<BR>&nbsp;
+<BR><TT>int main()</TT>&nbsp;
+<BR><TT>{</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;return c_func(10,9);</TT>&nbsp;
+<BR><TT>}</TT>
+
+</BLOCKQUOTE>
+The corresponding assembler function is:
+
+<P>
+<BLOCKQUOTE>
+<TT>.globl _asm_func_PARM_2 </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;.globl _asm_func </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;.area OSEG </TT>&nbsp;
+<BR><TT>_asm_func_PARM_2:</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;.ds    1 </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;.area CSEG </TT>&nbsp;
+<BR><TT>_asm_func: </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mov&nbsp;&nbsp;&nbsp;&nbsp;a,dpl </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;add&nbsp;&nbsp;&nbsp;&nbsp;a,_asm_func_PARM_2 </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mov&nbsp;&nbsp;&nbsp;&nbsp;dpl,a </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mov&nbsp;&nbsp;&nbsp;&nbsp;dph<A NAME="2328"></A>,#0x00
+</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ret</TT>
+
+</BLOCKQUOTE>
+The parameter naming convention is _&lt;function_name&gt;_PARM_&lt;n&gt;,
+where n is the parameter number starting from 1, and counting from
+the left. The first parameter is passed in <I>DPH</I>, <I>DPL</I>,
+<I>B</I> and <I>ACC</I> according to the description above. The variable
+name for the second parameter will be _&lt;function_name&gt;_PARM_2.
+<BR>
+<BR>
+Assemble the assembler routine with the following command:
+<BR>
+<BR><I><B>asx8051 -losg asmfunc.asm</B></I>
+<BR>
+<BR>
+Then compile and link the assembler routine to the C source file with
+the following command:
+<BR>
+<BR><I><B>sdcc cfunc.c asmfunc.rel</B></I>
+
+<P>
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html1898"
+  HREF="node90.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html1892"
+  HREF="node86.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html1886"
+  HREF="node88.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html1894"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html1896"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1899"
+  HREF="node90.html">3.14.4 Assembler Routine (reentrant)</A>
+<B> Up:</B> <A NAME="tex2html1893"
+  HREF="node86.html">3.14 Interfacing with Assembler</A>
+<B> Previous:</B> <A NAME="tex2html1887"
+  HREF="node88.html">3.14.2 Registers usage</A>
+ &nbsp; <B>  <A NAME="tex2html1895"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html1897"
+  HREF="node190.html">Index</A></B> 
+<!--End of Navigation Panel-->
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

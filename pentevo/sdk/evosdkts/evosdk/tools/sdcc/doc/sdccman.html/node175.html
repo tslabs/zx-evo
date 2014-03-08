@@ -1,0 +1,217 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>8.1.7 'switch' Statements</TITLE>
+<META NAME="description" CONTENT="8.1.7 'switch' Statements">
+<META NAME="keywords" CONTENT="sdccman">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="sdccman.css">
+
+<LINK REL="next" HREF="node176.html">
+<LINK REL="previous" HREF="node174.html">
+<LINK REL="up" HREF="node168.html">
+<LINK REL="next" HREF="node176.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html3329"
+  HREF="node176.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html3323"
+  HREF="node168.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html3317"
+  HREF="node174.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html3325"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html3327"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html3330"
+  HREF="node176.html">8.1.8 Bit-shifting Operations.</A>
+<B> Up:</B> <A NAME="tex2html3324"
+  HREF="node168.html">8.1 Optimizations</A>
+<B> Previous:</B> <A NAME="tex2html3318"
+  HREF="node174.html">8.1.6 Algebraic Simplifications</A>
+ &nbsp; <B>  <A NAME="tex2html3326"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html3328"
+  HREF="node190.html">Index</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H2><A NAME="SECTION00917000000000000000"></A><A NAME="sub:_switch_-Statements"></A><A NAME="3889"></A>
+<BR>
+8.1.7 'switch' Statements
+</H2>
+
+<P>
+SDCC can optimize switch statements to jump tables<A NAME="3890"></A>.
+It makes the decision based on an estimate of the generated code size.
+SDCC is quite liberal in the requirements for jump table generation: 
+
+<P>
+
+<UL>
+<LI>The labels need not be in order, and the starting number need not
+be one or zero, the case labels are in numerical sequence or not too
+many case labels are missing.
+
+<P>
+<BLOCKQUOTE>
+<TT>switch(i) {&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;switch
+(i) { </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;case 4: ...&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;case
+0: ... </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;case 5: ...&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;case
+1: ... </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;case 3: ...&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;case 6: ...&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;case
+3: ... </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;case 7: ...&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;case
+4: ... </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;case 8: ...&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;case
+5: ... </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;case 9: ...&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;case
+6: ... </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;case 10: ...&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;case
+7: ... </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp;case 11: ...&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;case
+8: ... </TT>&nbsp;
+<BR><TT>}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</TT>
+
+</BLOCKQUOTE>
+Both the above switch statements will be implemented using a jump-table.
+The example to the right side is slightly more efficient as the check
+for the lower boundary of the jump-table is not needed.
+
+<P>
+</LI>
+<LI>The number of case labels is not larger than supported by the target
+architecture.
+</LI>
+<LI>If the case labels are not in numerical sequence ('gaps' between cases)
+SDCC checks whether a jump table with additionally inserted dummy
+cases is still attractive. 
+</LI>
+<LI>If the starting number is not zero and a check for the lower boundary
+of the jump-table can thus be eliminated SDCC might insert dummy cases
+0, ... .
+</LI>
+</UL>
+Switch statements which have large gaps in the numeric sequence or
+those that have too many case labels can be split into more than one
+switch statement for efficient code generation, e.g.:
+
+<P>
+<BLOCKQUOTE>
+<TT>switch (i) { </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;case 1: ... </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;case 2: ... </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;case 3: ... </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;case 4: ... </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;case 5: ... </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;case 6: ... </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;case 7: ... </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;case 101: ... </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;case 102: ... </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;case 103: ... </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;case 104: ... </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;case 105: ... </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;case 106: ... </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;case 107: ... </TT>&nbsp;
+<BR><TT>}</TT>
+
+</BLOCKQUOTE>
+If the above switch statement is broken down into two switch statements
+
+<P>
+<BLOCKQUOTE>
+<TT>switch (i) { </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;case 1: ... </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;case 2: ... </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;case 3: ... </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;case 4: ... </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;case 5: ... </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;case 6: ... </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;case 7: ... </TT>&nbsp;
+<BR><TT>}</TT>
+
+</BLOCKQUOTE>
+and
+
+<P>
+<BLOCKQUOTE>
+<TT>switch (i) { </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;case 101: ... </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;case 102: ... </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;case 103: ... </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;case 104: ... </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;case 105: ... </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;case 106: ... </TT>&nbsp;
+<BR><TT>&nbsp;&nbsp;case 107: ... </TT>&nbsp;
+<BR><TT>}</TT>
+
+</BLOCKQUOTE>
+then both the switch statements will be implemented using jump-tables
+whereas the unmodified switch statement will not be.
+
+<P>
+The pragma nojtbound<A NAME="3946"></A> can be used to turn
+off checking the <I>j</I>ump <I>t</I>able <I>bound</I>aries. It has
+no effect if a default label is supplied. Use of this pragma is dangerous:
+if the switch<A NAME="3950"></A> argument is not matched by
+a case statement the processor will happily jump into Nirvana.
+
+<P>
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html3329"
+  HREF="node176.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html3323"
+  HREF="node168.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html3317"
+  HREF="node174.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html3325"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A> 
+<A NAME="tex2html3327"
+  HREF="node190.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.png"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html3330"
+  HREF="node176.html">8.1.8 Bit-shifting Operations.</A>
+<B> Up:</B> <A NAME="tex2html3324"
+  HREF="node168.html">8.1 Optimizations</A>
+<B> Previous:</B> <A NAME="tex2html3318"
+  HREF="node174.html">8.1.6 Algebraic Simplifications</A>
+ &nbsp; <B>  <A NAME="tex2html3326"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp; <B>  <A NAME="tex2html3328"
+  HREF="node190.html">Index</A></B> 
+<!--End of Navigation Panel-->
+<ADDRESS>
+
+2009-03-22
+</ADDRESS>
+</BODY>
+</HTML>

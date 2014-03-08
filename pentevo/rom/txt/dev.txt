@@ -1,0 +1,11 @@
+This is internal development doc.
+Add all necessary info here.
+
+
+Memory page map:
+----------------
+
+F4-F7   Virtual ROM
+F8-F9   Screen for BIOS Setup
+FA-FE   VDOS Drivers
+FF      VDOS traps

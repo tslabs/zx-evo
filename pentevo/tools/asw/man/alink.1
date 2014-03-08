@@ -1,0 +1,64 @@
+.TH alink 1
+
+.SH NAME
+.B alink \- link (reloacatable) object files created by AS
+
+.SH SYNTAX
+.B alink
+<source file(s)> <target file> [options]
+
+.SH DESCRIPTION
+
+alink will one day be a the linker companion tool to asl.  It is work
+in progress, and it won't be of much use for most users in its current
+state.  Contact the author (see below) if you want to experiment with
+it.
+
+.SH COMMAND-LINE PARAMETERS
+
+.TP
+.B -v
+
+be more verbose while linking.
+
+.SH NATIONAL LANGUAGE SUPPORT
+
+alink supports national languages in the same way as AS.  See the manual
+page for asl(1) for maore information about this.
+
+.SH RETURN CODES
+
+.B alink
+may return with the following codes:
+.TP
+.B 0
+no errors.
+.TP
+.B 1
+incorrect command line parameters.
+.TP
+.B 2
+I/O-error.
+.TP
+.B 3
+An input file had an incorrect format.
+
+.SH EXAMPLES
+
+.SH TIPS
+
+Calling ALINK without any arguments will print a short help
+listing all command line parameters.
+
+.SH SEE ALSO
+
+asl(1), pbind(1), plist(1) p2hex(1), p2bin(1)
+
+.SH BUGS
+
+In its current (incomplete) state, this program is a bug by itself ;-)
+
+.SH AUTHOR(S)
+
+Alfred Arnold (alfred@ccac.rwth-aachen.de)
+
