@@ -391,37 +391,37 @@ void out(unsigned port, u8 val)
 		// dma
 			case TSW_DMASAL:
 			{
-				comp.ts.dma.saddrl = val &0xFE;
+				comp.ts.saddrl = val &0xFE;
 			}
 			break;
 
 			case TSW_DMASAH:
 			{
-				comp.ts.dma.saddrh = val & 0x3F;
+				comp.ts.saddrh = val & 0x3F;
 			}
 			break;
 
 			case TSW_DMASAX:
 			{
-				comp.ts.dma.saddrx = val;
+				comp.ts.saddrx = val;
 			}
 			break;
 
 			case TSW_DMADAL:
 			{
-				comp.ts.dma.daddrl = val &0xFE;
+				comp.ts.daddrl = val &0xFE;
 			}
 			break;
 
 			case TSW_DMADAH:
 			{
-				comp.ts.dma.daddrh = val & 0x3F;
+				comp.ts.daddrh = val & 0x3F;
 			}
 			break;
 
 			case TSW_DMADAX:
 			{
-				comp.ts.dma.daddrx = val;
+				comp.ts.daddrx = val;
 			}
 			break;
 
@@ -468,6 +468,8 @@ void out(unsigned port, u8 val)
 					comp.ts.dma.m1     = comp.ts.dma.asz ? 0x3FFE00 : 0x3FFF00;
 					comp.ts.dma.m2     = comp.ts.dma.asz ? 0x0001FF : 0x0000FF;
 					comp.ts.dma.asize  = comp.ts.dma.asz ? 512 : 256;
+					comp.ts.dma.saddr  = comp.ts.saddr;
+					comp.ts.dma.daddr  = comp.ts.daddr;
 					comp.ts.dma.state  = 0;
 					comp.ts.dma.act    = 1;
 				}

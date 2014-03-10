@@ -304,10 +304,20 @@ void dma()
     if (comp.ts.dma.len == 0)
     {
       if (comp.ts.dma.s_algn)
-        comp.ts.dma.saddr = (comp.ts.dma.saddr & comp.ts.dma.m1) + comp.ts.dma.asize;
+      {
+        comp.ts.saddr += comp.ts.dma.asize;
+        comp.ts.dma.saddr = comp.ts.saddr;
+      }
+      else
+        comp.ts.saddr = comp.ts.dma.saddr;
 
       if (comp.ts.dma.d_algn)
-        comp.ts.dma.daddr = (comp.ts.dma.daddr & comp.ts.dma.m1) + comp.ts.dma.asize;
+      {
+        comp.ts.daddr += comp.ts.dma.asize;
+        comp.ts.dma.daddr = comp.ts.daddr;
+      }
+      else
+        comp.ts.daddr = comp.ts.dma.daddr;
 
       comp.ts.dma.num--;
       comp.ts.dma.len = comp.ts.dmalen+1;

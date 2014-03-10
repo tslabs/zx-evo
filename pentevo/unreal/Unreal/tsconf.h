@@ -276,6 +276,22 @@ typedef struct {
 // -- dma --
 	u8 dmalen;
 	u8 dmanum;
+  union { // source address of dma transaction
+    u32 saddr;
+    struct {
+      u32 saddrl:8;
+      u32 saddrh:6;
+      u32 saddrx:8;
+    };
+  };
+  union { // destination address of dma transaction
+    u32 daddr;
+    struct {
+      u32 daddrl:8;
+      u32 daddrh:6;
+      u32 daddrx:8;
+    };
+  };
 
   // dma controller state
   struct {
@@ -292,22 +308,8 @@ typedef struct {
     };
     u16 len;
     u16 num;
-    union { // source address of dma transaction
-      u32 saddr;
-      struct {
-        u32 saddrl:8;
-        u32 saddrh:6;
-        u32 saddrx:8;
-      };
-    };
-    union { // destination address of dma transaction
-      u32 daddr;
-      struct {
-        u32 daddrl:8;
-        u32 daddrh:6;
-        u32 daddrx:8;
-      };
-    };
+    u32 saddr;  // source address of dma transaction
+    u32 daddr;  // destination address of dma transaction
     u32 next_t; // next tact to transfer data
     u16 line; // number of pixel video line
     u32 m1; // mask 1 (used for address arithmetic)
