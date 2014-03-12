@@ -727,6 +727,7 @@ void update_screen()
 				{
 					vid.line = (u16)line-1;
 					render_ts();
+					vid.yctr++;
 				}
 			}
 
