@@ -11,6 +11,7 @@ module video_render (
 // video controls
 	input wire hvpix,
 	input wire nogfx,
+	input wire notsu,
 	input wire flash,
 	input wire hires,
 	input wire [3:0] psel,
@@ -73,7 +74,7 @@ module video_render (
 
 	
 // video plex muxer
-	wire [7:0] video = !hvpix ? border_in : (|tsdata_in[3:0] ? tsdata_in : (nogfx ? border_in : pix[render_mode]));
+	wire [7:0] video = !hvpix ? border_in : ((|tsdata_in[3:0] && !notsu) ? tsdata_in : (nogfx ? border_in : pix[render_mode]));
 	assign vplex_out = hires ? {temp, video[3:0]} : video;		// in hi-res plex contains two pixels 4 bits each
 	
 	reg [3:0] temp;

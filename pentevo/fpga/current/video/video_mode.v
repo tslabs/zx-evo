@@ -33,6 +33,7 @@ module video_mode (
 	output wire pix_stb,
 	output wire	fetch_stb,
 	output wire nogfx,
+	output wire notsu,
 
 // video data
 	input wire [15:0] txt_char,
@@ -50,6 +51,7 @@ module video_mode (
 
     wire [1:0] vmod = vconf[1:0];
 	wire [1:0] rres = vconf[7:6];
+	assign notsu = vconf[4];
 	assign nogfx = vconf[5];
 
 
