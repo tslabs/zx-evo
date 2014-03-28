@@ -751,7 +751,7 @@ void update_screen()
 					vid.line = (u16)line;
 					u32 vptr = vid.vptr;
 					drawers[vid.mode].func(m);
-					if (conf.mem_model == MM_TSL) draw_ts(vptr);
+					if (conf.mem_model == MM_TSL && !comp.ts.notsu) draw_ts(vptr);
 					t = vid.t_next - t; n -= t; tact += t;
 				}
 
