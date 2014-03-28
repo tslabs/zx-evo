@@ -160,7 +160,8 @@ typedef struct {
 		u8 vconf;
 		struct {
 			u8 vmode:2;
-			u8 _02:3;
+			u8 _02:2;
+			u8 notsu:1;
 			u8 nogfx:1;
 			u8 rres:2;
 		};

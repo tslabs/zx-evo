@@ -190,7 +190,7 @@ u16 dma_cram(u16 memcyc)
   for (u16 i = 0; i < n; i++)
   {
     u16 *s = (u16*)(ss + RAM_BASE_M);
-    u16 d = (dd >> 1) & 0xFF;
+    u8 d = (dd >> 1) & 0xFF;
     comp.cram[d] = *s;
     update_clut(d);
     ss_inc(1); dd_inc(1);
@@ -335,47 +335,36 @@ void dma()
 
 // TS Engine
 
-u8 render_tile(u8 page, u32 tnum, u8 line, u32 x, u8 pal, u8 xf, u8 n)
+int render_tile(u8 page, u32 tnum, u8 line, u32 x, u8 pal, u8 xf, u8 n)
 {
-	u8 cnt = 0;		// used to calculate RAM cycles usage
-
 	/* check if number of allowed DRAM cycles per line (448) not exceeded */
 	if ((vid.memcpucyc[vid.line] + vid.memvidcyc[vid.line] + vid.memtsscyc[vid.line] + vid.memtstcyc[vid.line]) > 448)
 		return 0;
 
-	u8 *g = page_ram(page & 0xF8) + ((tnum & 0xFC0) << 5) + (line << 8);
-	x += (xf ? (n * 8 - 1) : 0);
-	pal <<= 4;
-	i8 a = xf ? -1 : 1;
-	u8 c;
-	u32 ox = (tnum & 0x3F) << 2;
-	for (u32 i=0; i<n; i++)		// draw 8 pixels per iteration
-	{
-		//if (!((vid.tsline[x & 0x1FF] &
-		//	vid.tsline[(x + a) & 0x1FF] &
-		//	vid.tsline[(x + 2*a) & 0x1FF] &
-		//	vid.tsline[(x + 3*a) & 0x1FF])
-		//	& 0x0F))
-			cnt++;
-		//if (!((vid.tsline[(x + 4*a) & 0x1FF] &
-		//	vid.tsline[(x + 5*a) & 0x1FF] &
-		//	vid.tsline[(x + 6*a) & 0x1FF] &
-		//	vid.tsline[(x + 7*a) & 0x1FF])
-		//	& 0x0F))
-			cnt++;
-		
-		if (c = g[ox + 0] & 0xF0) vid.tsline[vid.line & 1][x & 0x1FF] = pal | (c >> 4); x += a;
-		if (c = g[ox + 0] & 0x0F) vid.tsline[vid.line & 1][x & 0x1FF] = pal | c; x += a;
-		if (c = g[ox + 1] & 0xF0) vid.tsline[vid.line & 1][x & 0x1FF] = pal | (c >> 4); x += a;
-		if (c = g[ox + 1] & 0x0F) vid.tsline[vid.line & 1][x & 0x1FF] = pal | c; x += a;
-		if (c = g[ox + 2] & 0xF0) vid.tsline[vid.line & 1][x & 0x1FF] = pal | (c >> 4); x += a;
-		if (c = g[ox + 2] & 0x0F) vid.tsline[vid.line & 1][x & 0x1FF] = pal | c; x += a;
-		if (c = g[ox + 3] & 0xF0) vid.tsline[vid.line & 1][x & 0x1FF] = pal | (c >> 4); x += a;
-		if (c = g[ox + 3] & 0x0F) vid.tsline[vid.line & 1][x & 0x1FF] = pal | c; x += a;
-		ox = (ox + 4) & 0xFF;
-	}
+	if (!comp.ts.notsu)
+    {
+        u8 *g = page_ram(page & 0xF8) + ((tnum & 0xFC0) << 5) + (line << 8);
+        x += (xf ? (n * 8 - 1) : 0);
+        pal <<= 4;
+        i8 a = xf ? -1 : 1;
+        u8 c;
+        u32 ox = (tnum & 0x3F) << 2;
+        
+        for (u32 i=0; i<n; i++)		// draw 8 pixels per iteration
+        {
+            if (c = g[ox + 0] & 0xF0) vid.tsline[vid.line & 1][x & 0x1FF] = pal | (c >> 4); x += a;
+            if (c = g[ox + 0] & 0x0F) vid.tsline[vid.line & 1][x & 0x1FF] = pal | c; x += a;
+            if (c = g[ox + 1] & 0xF0) vid.tsline[vid.line & 1][x & 0x1FF] = pal | (c >> 4); x += a;
+            if (c = g[ox + 1] & 0x0F) vid.tsline[vid.line & 1][x & 0x1FF] = pal | c; x += a;
+            if (c = g[ox + 2] & 0xF0) vid.tsline[vid.line & 1][x & 0x1FF] = pal | (c >> 4); x += a;
+            if (c = g[ox + 2] & 0x0F) vid.tsline[vid.line & 1][x & 0x1FF] = pal | c; x += a;
+            if (c = g[ox + 3] & 0xF0) vid.tsline[vid.line & 1][x & 0x1FF] = pal | (c >> 4); x += a;
+            if (c = g[ox + 3] & 0x0F) vid.tsline[vid.line & 1][x & 0x1FF] = pal | c; x += a;
+            ox = (ox + 4) & 0xFF;
+        }
+    }
 
-	return cnt;
+	return n * 2;
 }
 
 SPRITE_t *spr = (SPRITE_t*)comp.sfile;
@@ -394,7 +383,8 @@ void render_tile_layer(u8 layer)
 		TILE_t t = tmap[(ox + i) & 0x3F | l];
 		if ((layer ? comp.ts.t1z_en : comp.ts.t0z_en) || t.tnum)
 		{
-			vid.memtstcyc[vid.line] += render_tile(
+			vid.memtstcyc[vid.line] += render_tile
+            (
 				(layer ? comp.ts.t1gpage[2] : comp.ts.t0gpage[2]),			// page
 				t.tnum,														// tile number
 				(y ^ (t.yflp ? 7 : 0)) & 7,									// line offset (3 bit)
@@ -415,7 +405,8 @@ void render_sprite()
 
 	if (l < ys)
 	{
-		vid.memtsscyc[vid.line] += render_tile(
+		vid.memtsscyc[vid.line] += render_tile
+        (
 			comp.ts.sgpage,					// page
 			s.tnum,							// tile number
 			(u8)(s.yflp ? (ys - l - 1) : l),	// line offset (3 bit)
@@ -490,7 +481,7 @@ void tsinit(void)
 	comp.ts.im2vect[INT_DMA]   = 0xDF;
 	comp.ts.intmask = 1 << INT_FRAME;
 	comp.ts.intctrl.frame_t = 0;
-  
+
 	comp.ts.fddvirt = 0;
 	comp.ts.vdos = 0;
 	comp.ts.vdos_m1 = 0;
