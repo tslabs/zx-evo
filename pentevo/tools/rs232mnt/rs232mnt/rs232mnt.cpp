@@ -1,17 +1,6 @@
-// rs232mnt.cpp : Defines the entry point for the console application.
-//
 
 #include "stdafx.h"
 #include <commctrl.h>
-
-typedef unsigned long long u64;
-typedef signed long long i64;
-typedef unsigned long u32;
-typedef signed long i32;
-typedef unsigned short u16;
-typedef signed short i16;
-typedef unsigned char u8;
-typedef signed char i8;
 
 #define TRD_SZ	256*16*255
 #define	BAUD	115200
@@ -19,61 +8,79 @@ typedef signed char i8;
 #define	ANS1	0xCC
 #define	ANS2	0xEE
 
-struct REQ {
-	u16	ack;
-	u8	drv;
-	u8	op;
-	u8	trk;
-	u8	sec;
-	u8	crc;
+enum OPCODE : U8
+{
+    OP_RD = 5,
+    OP_WR = 6
 };
 
-HANDLE			hPort;
-DCB				PortDCB; 
-COMMTIMEOUTS	CommTimeouts; 
-_TCHAR*			trd[4];
-u8				buf[256+1];
-u8				img[4][TRD_SZ];
-u8				drvs = 0;
-REQ				req;
-int				baud = BAUD;
-int				log = 0;
-_TCHAR*			cport = TEXT("COM1");
-u8				ans[2];
+enum STATE
+{
+    ST_IDLE = 0,
+    ST_RECEIVE_DATA
+};
 
-#define OP_RD	5
-#define OP_WR	6
+#pragma pack (push, 1)
+
+typedef struct
+{
+	U16     ack;
+	U8      drv;
+	OPCODE	op;
+	U8      trk;
+	U8      sec;
+	U8      crc;
+} REQ;
+
+typedef struct
+{
+	U8      ack[2];
+	U8      data[256];
+	U8      crc;
+} SECT;
+
+#pragma pack (pop)
+
+    HANDLE			hPort;
+    DCB				PortDCB;
+    COMMTIMEOUTS	CommTimeouts;
+    int				baud = BAUD;
+    int				log = 0;
+    _TCHAR*			cport = TEXT("COM1");
+    _TCHAR*			trd[4];
+    U8				drvs = 0;
+    U8				img[4][TRD_SZ];
 
 void configure()
 {
 	PortDCB.fBinary = TRUE;						// Binary mode; no EOF check
-	PortDCB.fParity = FALSE;					// No parity checking 
-	PortDCB.fDsrSensitivity = FALSE;			// DSR sensitivity 
-	PortDCB.fErrorChar = FALSE;					// Disable error replacement 
-	PortDCB.fOutxDsrFlow = FALSE;				// No DSR output flow control 
+	PortDCB.fParity = FALSE;					// No parity checking
+	PortDCB.fDsrSensitivity = FALSE;			// DSR sensitivity
+	PortDCB.fErrorChar = FALSE;					// Disable error replacement
+	PortDCB.fOutxDsrFlow = FALSE;				// No DSR output flow control
 	PortDCB.fAbortOnError = FALSE;				// Do not abort reads/writes on error
-	PortDCB.fNull = FALSE;						// Disable null stripping 
-	PortDCB.fTXContinueOnXoff = FALSE;			// XOFF continues Tx 
+	PortDCB.fNull = FALSE;						// Disable null stripping
+	PortDCB.fTXContinueOnXoff = FALSE;			// XOFF continues Tx
 
-    PortDCB.BaudRate = baud;            
-	PortDCB.ByteSize = 8;            
-    PortDCB.Parity = NOPARITY;                   
-	PortDCB.StopBits =  ONESTOPBIT;          
-	PortDCB.fOutxCtsFlow = FALSE;				// No CTS output flow control 
-    PortDCB.fDtrControl = DTR_CONTROL_DISABLE;	// DTR flow control type 
-    PortDCB.fOutX = FALSE;						// No XON/XOFF out flow control 
-    PortDCB.fInX = FALSE;						// No XON/XOFF in flow control 
-    PortDCB.fRtsControl = RTS_CONTROL_DISABLE;	// RTS flow control 
+    PortDCB.BaudRate = baud;
+	PortDCB.ByteSize = 8;
+    PortDCB.Parity = NOPARITY;
+	PortDCB.StopBits =  ONESTOPBIT;
+	PortDCB.fOutxCtsFlow = FALSE;				// No CTS output flow control
+    PortDCB.fDtrControl = DTR_CONTROL_DISABLE;	// DTR flow control type
+    PortDCB.fOutX = FALSE;						// No XON/XOFF out flow control
+    PortDCB.fInX = FALSE;						// No XON/XOFF in flow control
+    PortDCB.fRtsControl = RTS_CONTROL_DISABLE;	// RTS flow control
 }
 
 int configuretimeout()
 {
-	//memset(&CommTimeouts, 0x00, sizeof(CommTimeouts)); 
-	CommTimeouts.ReadIntervalTimeout = 50; 
-	CommTimeouts.ReadTotalTimeoutConstant = 50; 
+	//memset(&CommTimeouts, 0x00, sizeof(CommTimeouts));
+	CommTimeouts.ReadIntervalTimeout = 50;
+	CommTimeouts.ReadTotalTimeoutConstant = 50;
 	CommTimeouts.ReadTotalTimeoutMultiplier = 10;
 	CommTimeouts.WriteTotalTimeoutMultiplier = 10;
-	CommTimeouts.WriteTotalTimeoutConstant = 50; 
+	CommTimeouts.WriteTotalTimeoutConstant = 50;
    return 1;
 }
 
@@ -123,11 +130,29 @@ int parse_args(int argc, _TCHAR* argv[])
 	return drvs;
 }
 
+U8 update_xor(U8 xor, U8 *ptr, int num)
+{
+
+    while (num--)
+        xor ^= *ptr++;
+
+    return xor;
+}
+
 //-------------------------------------------------------------------------------------------------------------------
 int _tmain(int argc, _TCHAR* argv[])
 {
+    U8				fifo_in_buf[512];
+    U8              uart_in_buf[512];
+
+    FIFO            fifo_in;
+    REQ				req;
+    SECT            sect;
+
 	DWORD dwRead, dwWrite;
 	FILE *f;
+    STATE state = ST_IDLE;
+    U8 *disk_ptr;
 
 	printf("\n\r");
 
@@ -157,56 +182,81 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	hPort = CreateFile (cport,
 						GENERIC_READ | GENERIC_WRITE,
-						0,                                  
-						NULL,                             
+						0,
+						NULL,
 						OPEN_EXISTING,
-						FILE_ATTRIBUTE_NORMAL,                     
-			            NULL); 
+						FILE_ATTRIBUTE_NORMAL,
+			            NULL);
 
 	if (hPort == INVALID_HANDLE_VALUE)
 	{
 		wprintf(L"Can't open %s\n\r", cport);
 		return 3;
 	}
+
 	else
 		wprintf(L"%s opened successfully\n\r\n\r", cport);
-	
-    PortDCB.DCBlength = sizeof(DCB); 
+
+    PortDCB.DCBlength = sizeof(DCB);
     GetCommState(hPort, &PortDCB);
 	configure();
-	GetCommTimeouts (hPort, &CommTimeouts);
+	GetCommTimeouts(hPort, &CommTimeouts);
 	configuretimeout();
 	SetCommState (hPort, &PortDCB);
 
-	ans[0] = ANS1;
-	ans[1] = ANS2;
+    fifo_init(&fifo_in, fifo_in_buf, sizeof(fifo_in_buf));
+
 	while (1)
 	{
-		OVERLAPPED osReader = {0};
+		ReadFile(hPort, uart_in_buf, fifo_free(fifo_in), &dwRead, NULL);
+        fifo_put(&fifo_in, uart_in_buf, dwRead);
 
-		osReader.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
-		ReadFile(hPort, &req, 7, &dwRead, &osReader);
-		if (!dwRead)
-		{
-			SleepEx(10, NULL);
-			continue;
-		}
-		if (req.op != OP_RD) continue;
-		
-		req.drv &= 3;
-		req.sec &= 15;
-		if (log)
-			printf("Op: %d\tDrv: %d\tTrk: %d\tSec: %d\n\r", req.op, req.drv, req.trk, req.sec);
-		DWORD offs = (req.trk * 16 + req.sec) * 256;
-		u8 *t = img[req.drv] + offs;
-		u8 crc = ANS1 ^ ANS2;
-		WriteFile(hPort, ans, 2, &dwWrite, NULL);
-		WriteFile(hPort, t, 256, &dwWrite, NULL);
-		for (int i=0; i<256; i++)
-			crc ^= *t++;
-		WriteFile(hPort, &crc, 1, &dwWrite, NULL);
+        while (fifo_used(fifo_in))
+        {
+            if (state == ST_IDLE)
+            {
+                if (!fifo_get(&fifo_in, (U8 *)&req, sizeof(req)))
+                    break;      // not enough data
+
+                else
+                {
+                    req.drv &= 3;
+                    req.sec &= 15;
+                    disk_ptr = img[req.drv] + ((req.trk * 16 + req.sec) * sizeof(sect.data));
+
+                    if (log) printf("Op: %d\tDrv: %d\tTrk: %d\tSec: %d\n\r", req.op, req.drv, req.trk, req.sec);
+
+                    if (req.op == OP_RD)
+                    {
+                        sect.ack[0] = ANS1; sect.ack[1] = ANS2;
+                        memcpy(sect.data, disk_ptr, sizeof(sect.data));
+                        sect.crc = update_xor(ANS1 ^ ANS2, disk_ptr, sizeof(sect.data));
+                        WriteFile(hPort, &sect, sizeof(sect), &dwWrite, NULL);
+                    }
+
+                    else if (req.op == OP_WR)
+                    {
+                        state = ST_RECEIVE_DATA;
+                    }
+
+                    else
+                        if (log) printf("Wrong operation!\n\r");
+                }
+            }
+
+            else if (state == ST_RECEIVE_DATA)
+            {
+                if (!fifo_get(&fifo_in, (U8 *)&sect, sizeof(sect)))
+                    break;      // not enough data
+                    
+                else
+                {
+                    memcpy(disk_ptr, sect.data, sizeof(sect.data));
+                    state = ST_IDLE;
+                }
+            }
+        }
 	}
 
 	return 0;
 }
-
