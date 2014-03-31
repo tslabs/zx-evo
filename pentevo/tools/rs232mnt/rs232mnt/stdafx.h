@@ -12,4 +12,5 @@
 #include <memory.h>
 #include <tchar.h>
 #include <sys/stat.h>
-
+#include "types.h"
+#include "fifo.h"

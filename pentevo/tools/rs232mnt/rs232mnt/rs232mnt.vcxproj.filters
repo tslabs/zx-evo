@@ -26,5 +26,8 @@
     <ClCompile Include="rs232mnt.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="fifo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
