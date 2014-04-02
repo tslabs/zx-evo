@@ -62,43 +62,36 @@ FL_EMPTY:
         .DB     "   empty   ",0
 FL_ZXBAS48:
         .DB     $A8,$02,$99,$0C ;0C9902A8
-        .DB     "zx basic48 ",0
+        .DB     "ZX Basic48 ",0
 FL_ZXBAS128:
         .DB     $C8,$59,$C0,$83 ;83C059C8
-        .DB     "zx basic128",0
+        .DB     "ZX Basic128",0
 FL_TRDOS:
         .DB     $71,$06,$7A,$7A ;7A7A0671
-        .DB     "tr-dos     ",0
+        .DB     "TR-DOS     ",0
 FL_ALCOGLUKPEN:
         .DB     $44,$6F,$D7,$87 ;87D76F44
-        .DB     "alcoglukpen",0
-FL_HEGLUK:
-        .DB     "HEGL"
-        .DB     "hegluk     ",0
-FL_EVODOS:
-        .DB     "EVOD"
-        .DB     "evodos     ",0
-FL_ADDONS:
-        .DB     "ADDO"
-        .DB     "addons     ",0
-FL_RST08:
-        .DB     "RST_"
-        .DB     "rst_08     ",0
-FL_PROF13:
-        .DB     "PROF"
-        .DB     "prof-rom   ",0
+        .DB     "AlCoGLUKpen",0
+FL_EMPT2:
+        .DB     $AD,$33,$52,$BE ;BE5233AD
+        .DB     " * empty*  ",0
 FL_QC3:
         .DB     "QC 3"
-        .DB     "qc3.xx     ",0
+        .DB     "QC3.xx     ",0
 FL_ATM2CPM:
         .DB     $1E,$65,$1E,$B3 ;B31E651E
-        .DB     "atm2_cpm   ",0
+        .DB     "ATM2_CPM   ",0
 FL_XBIOSMENU:
         .DB     $BC,$A4,$2C,$29 ;292CA4BC
-        .DB     "xbios stmnu",0
+        .DB     "xBIOS stmnu",0
 FL_VTRDOS:
         .DB     $27,$2E,$23,$68 ;68232E27
-        .DB     "vtr-dos    ",0
+        .DB     "vTR-dos    ",0
+FL_TSBIOS:
+        .DB     $FF,$63,$9B,$15 ;159B63FF
+        .DB     "TS-BIOS    ",0
+FL_PROFKA:
+        .DB     "PROFKA     ",0
 ;
 MSG_FP_DIR:
         .DB     " <DIR>",$B3,0
@@ -406,57 +399,91 @@ FL_DET_CHIP9:
         CLR     COUNT
         CLR     WH
         CLR     TMP2
-FL_DET_ROM_6:
+FL_DET_ROM_00:
         STH     FLSH_COUNT,COUNT
         STH     FLSH_ADR1,WH
         STH     FLSH_ADR2,TMP2
         LDIZ    FL_UNKNOWN*2
         STSZ    FL_TMP0
+        SER     COUNT
 
         LDIZ    FL_BUFFER
         LDIX    $0400
-        SER     COUNT
         RCALL   F_READFLASH
         STS     FL_TMP2,COUNT
 
         GETMEM  4
+        LDIZ    FL_BUFFER+$00FF
+        LD      DATA,Z+
+        CPI     DATA,$02
+        BRNE    FL_DET_ROM_10
+        LD      DATA,Z+
+        CPI     DATA,$01
+        BRNE    FL_DET_ROM_11
+        ADIW    ZL,1
+        LD      DATA,Z+
+        CPI     DATA,$C9
+        BRNE    FL_DET_ROM_11
+        LDIZ    FL_PROFKA*2
+        RJMP    FL_DET_ROM_12
+
+FL_DET_ROM_10:
+        CPI     DATA,$14
+        BRNE    FL_DET_ROM_11
+        LD      DATA,Z+
+        CPI     DATA,$01
+        BRNE    FL_DET_ROM_11
+        LD      DATA,Z+
+        CPI     DATA,$06
+        BRNE    FL_DET_ROM_11
+        LDIZ    FL_PROFKA*2
+        RJMP    FL_DET_ROM_12
+
+FL_DET_ROM_11:
         LDIZ    FL_BUFFER+$0096
         LDIX    $016F
         RCALL   RAM_CRC32
         LDIZ    FL_ZXBAS48*2
         RCALL   FL_CRC_CMP
-        BREQ    FL_DET_ROM_1
+        BREQ    FL_DET_ROM_12
 
         LDIZ    FL_BUFFER+$0080
         LDIX    $0080
         RCALL   RAM_CRC32
         LDIZ    FL_ZXBAS128*2
         RCALL   FL_CRC_CMP
-        BREQ    FL_DET_ROM_1
+        BREQ    FL_DET_ROM_12
 
         LDIZ    FL_BUFFER+$0363
         LDIX    $0008
         RCALL   RAM_CRC32
         LDIZ    FL_VTRDOS*2
         RCALL   FL_CRC_CMP
-        BREQ    FL_DET_ROM_1
+        BREQ    FL_DET_ROM_12
 
         LDIZ    FL_BUFFER+$0000
         LDIX    $0007
         RCALL   RAM_CRC32
         LDIZ    FL_XBIOSMENU*2
         RCALL   FL_CRC_CMP
-        BREQ    FL_DET_ROM_1
+        BREQ    FL_DET_ROM_12
+
+        LDIZ    FL_BUFFER+$0000
+        LDIX    $0010
+        RCALL   RAM_CRC32
+        LDIZ    FL_TSBIOS*2
+        RCALL   FL_CRC_CMP
+        BREQ    FL_DET_ROM_12
 
         LDIZ    FL_BUFFER+$0000
         LDIX    $0038
         RCALL   RAM_CRC32
         LDIZ    FL_ATM2CPM*2
         RCALL   FL_CRC_CMP
-        BRNE    FL_DET_ROM_2
-FL_DET_ROM_1:
+        BRNE    FL_DET_ROM_13
+FL_DET_ROM_12:
         STSZ    FL_TMP0
-FL_DET_ROM_2:
+FL_DET_ROM_13:
         FREEMEM 4
 
         CLR     WL
@@ -469,15 +496,15 @@ FL_DET_ROM_2:
         RCALL   FPGA_REG
         LDS     COUNT,FL_TMP2
         RCALL   F_IN
-        RJMP    FL_CHKEMPT2
-FL_CHKEMPT1:
+        RJMP    FL_DET_ROM_21
+FL_DET_ROM_20:
         RCALL   FPGA_SAME_REG
-FL_CHKEMPT2:
+FL_DET_ROM_21:
         AND     COUNT,DATA
         RCALL   CRC32_UPDATE
         ADIW    WL,1
         SBIW    XL,1
-        BRNE    FL_CHKEMPT1
+        BRNE    FL_DET_ROM_20
         STS     FL_TMP2,COUNT
 
         LDH     WH,FLSH_ADR1
@@ -488,31 +515,11 @@ FL_CHKEMPT2:
         RCALL   F_READFLASH
         LDIZ    FL_EMPTY*2
         INC     COUNT
-        BRNE    FL_DET_ROM_3
+        BRNE    FL_DET_ROM_30
         STSZ    FL_TMP0
-FL_DET_ROM_3:
+FL_DET_ROM_30:
 
         GETMEM  4
-        LDIZ    FL_BUFFER+$03F8
-        LDD     R0,Z+0
-        LDD     R1,Z+1
-        LDD     R2,Z+2
-        LDD     R3,Z+3
-        LDIZ    FL_HEGLUK*2
-        RCALL   FL_CRC_CMP
-        BREQ    FL_DET_ROM_4
-        LDIZ    FL_EVODOS*2
-        RCALL   FL_CRC_CMP
-        BREQ    FL_DET_ROM_4
-        LDIZ    FL_ADDONS*2
-        RCALL   FL_CRC_CMP
-        BREQ    FL_DET_ROM_4
-        LDIZ    FL_RST08*2
-        RCALL   FL_CRC_CMP
-        BREQ    FL_DET_ROM_4
-        LDIZ    FL_PROF13*2
-        RCALL   FL_CRC_CMP
-        BREQ    FL_DET_ROM_4
 
         LDIZ    FL_BUFFER+$019B
         LDD     R0,Z+0
@@ -521,26 +528,66 @@ FL_DET_ROM_3:
         LDD     R3,Z+3
         LDIZ    FL_QC3*2
         RCALL   FL_CRC_CMP
-        BREQ    FL_DET_ROM_4
+        BREQ    FL_DET_ROM_32
 
         LDIZ    FL_BUFFER+$012F
         LDIX    $0209
         RCALL   RAM_CRC32
         LDIZ    FL_ALCOGLUKPEN*2
         RCALL   FL_CRC_CMP
-        BREQ    FL_DET_ROM_4
+        BREQ    FL_DET_ROM_32
+        LDIZ    FL_EMPT2*2
+        RCALL   FL_CRC_CMP
+        BRNE    FL_DET_ROM_31
+        LDS     DATA,FL_TMP2
+        INC     DATA
+        BREQ    FL_DET_ROM_32
 
+FL_DET_ROM_31:
         LDIZ    FL_BUFFER+$03B0
         LDIX    $0040
         RCALL   RAM_CRC32
         LDIZ    FL_TRDOS*2
         RCALL   FL_CRC_CMP
-        BRNE    FL_DET_ROM_5
-FL_DET_ROM_4:
+        BRNE    FL_DET_ROM_33
+FL_DET_ROM_32:
         STSZ    FL_TMP0
-FL_DET_ROM_5:
+FL_DET_ROM_33:
+
         FREEMEM 4
 
+        LDIZ    FL_BUFFER+$03F8
+        LDI     COUNT,6
+FL_DET_ROM_34:
+        LD      DATA,Z+
+        CPI     DATA,$20
+        BRCS    FL_DET_ROM_37
+        CPI     DATA,$7F
+        BRCC    FL_DET_ROM_37
+        DEC     COUNT
+        BRNE    FL_DET_ROM_34
+
+        LDIZ    FL_BUFFER+$03F8
+        LDIX    FL_CONTENT+5
+        LDH     DATA,FLSH_COUNT
+        LDI     TEMP,16
+        MUL     DATA,TEMP
+        ADD     XL,R0
+        ADC     XH,R1
+        LDI     COUNT,6
+FL_DET_ROM_35:
+        LD      DATA,Z+
+        ST      X+,DATA
+        DEC     COUNT
+        BRNE    FL_DET_ROM_35
+        LDI     COUNT,5
+FL_DET_ROM_36:
+        ST      X+,NULL
+        DEC     COUNT
+        BRNE    FL_DET_ROM_36
+        RJMP    FL_DET_ROM_40
+
+FL_DET_ROM_37:
         LDSZ    FL_TMP0
         LDIX    FL_CONTENT+5
         LDH     DATA,FLSH_COUNT
@@ -549,21 +596,23 @@ FL_DET_ROM_5:
         ADD     XL,R0
         ADC     XH,R1
         LDI     COUNT,11
-FL_DET_ROM_8:
+FL_DET_ROM_38:
         LPM     DATA,Z+
         ST      X+,DATA
         DEC     COUNT
-        BRNE    FL_DET_ROM_8
+        BRNE    FL_DET_ROM_38
+
+FL_DET_ROM_40:
         RCALL   FL_SHOWCONTENT
 
         CALL    INKEY
-        BREQ    FL_DET_ROM_7
+        BREQ    FL_DET_ROM_41
         SBRC    TEMP,PS2K_BIT_EXTKEY
-        RJMP    FL_DET_ROM_7
+        RJMP    FL_DET_ROM_41
         CPI     DATA,KEY_ESC
-        BRNE    FL_DET_ROM_7
+        BRNE    FL_DET_ROM_41
         RJMP    FLSH_EXIT
-FL_DET_ROM_7:
+FL_DET_ROM_41:
         LDH     WH,FLSH_ADR1
         LDH     TMP2,FLSH_ADR2
         LDI     TEMP,$40
@@ -572,7 +621,7 @@ FL_DET_ROM_7:
         LDH     COUNT,FLSH_COUNT
         INC     COUNT
         SBRS    COUNT,5 ; COUNT==32 ?
-        RJMP    FL_DET_ROM_6
+        RJMP    FL_DET_ROM_00
 
         RCALL   CRC32_RELEASE
         LDIZ    MSG_FL_CRC*2
@@ -912,6 +961,7 @@ FL_EX39:LDH     COUNT,FLSH_COUNT
         LDIZ    MLMSG_FL_VERIFY*2
         CALL    SCR_PRINTMLSTR
 
+        STH     FLSH_TEMP3,NULL
         LDI     COUNT,0
 FL_EX40:STH     FLSH_COUNT,COUNT
         LDIZ    FL_CONTENT
@@ -972,7 +1022,6 @@ FL_EX42:LDH     COUNT,FLSH_COUNT
         MOV     DATA,TMP2
         CALL    FPGA_REG
         STH     FLSH_TEMP2,NULL
-        STH     FLSH_TEMP3,NULL
         LDIX    1365 ;16384/12
 FL_EX45:STH     FLSH_TEMP0,XL
         STH     FLSH_TEMP1,XH
@@ -1038,6 +1087,7 @@ FL_EX91:CALL    WINDOW
 
         LDIZ    MLMSG_FLRES1*2
         LDH     DATA,FLSH_TEMP3
+        TST     DATA
         BREQ    FL_EX92
         LDIZ    MLMSG_FLRES2*2
 FL_EX92:CALL    SCR_PRINTMLSTR
