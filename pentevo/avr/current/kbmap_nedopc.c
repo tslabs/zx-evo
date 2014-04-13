@@ -291,7 +291,7 @@ NO_KEY,NO_KEY  // 7F
 /** User map offset in EEPROM */
 #define user_kbmap 0
 /** User map (extent E0) offset in EEPROM */
-#define user_kbmap_E0 512
+#define user_kbmap_E0 256
 
 //for loading user map (pointer to start eeprom)
 //const void* saved_kbmap = (void*)0;
@@ -357,7 +357,7 @@ KBMAP_VALUE kbmap_get(UBYTE scancode, UBYTE was_E0)
 			//user map
 			if ( scancode )
 			{
-				UWORD tblptr = scancode*2 + (was_E0)?user_kbmap_E0:user_kbmap;
+				UWORD tblptr = scancode*2 + ( (was_E0)?user_kbmap_E0:user_kbmap );
 				ret.tb.b1 = eeprom_read_byte((UBYTE*)tblptr++ );
 				ret.tb.b2 = eeprom_read_byte((UBYTE*)tblptr );
 			}
