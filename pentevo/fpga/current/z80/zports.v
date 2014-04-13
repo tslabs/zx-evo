@@ -118,7 +118,6 @@ module zports(
 	output reg  [ 2:0] comport_addr,
 	output wire        wait_start_gluclock, // begin wait from some ports
 	output wire        wait_start_comport,  //
-	output reg         wait_rnw,   // whether it was read(=1) or write(=0)
 	output reg  [ 7:0] wait_write,
 	input  wire [ 7:0] wait_read
 
@@ -564,16 +563,6 @@ module zports(
 	// ACHTUNG!!!! here portxx_wr are ON Z80 CLOCK! logic must change when moving to clk strobes
 	assign wait_start_gluclock = (gluclock_on && !a[14] && (portf7_rd || portf7_wr)); // $BFF7 - gluclock r/w
 	assign wait_start_comport = (comport_rd || comport_wr);
-
-	always @(posedge zclk) // wait rnw - only meanful during wait
-	begin
-		if (port_wr)
-			wait_rnw <= 1'b0;
-
-		if (port_rd)
-			wait_rnw <= 1'b1;
-	end
-
 
 // IDE ports
     // do NOT generate IDE write, if neither of ide_wrhi|lo latches set and writing to NIDE10

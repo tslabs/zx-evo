@@ -146,7 +146,6 @@ module top(
     wire [4:0] kj_port_data;
     wire [7:0] mus_port_data;
     wire [7:0] wait_read,wait_write;
-    wire wait_rnw;
     wire wait_start_gluclock;
     wire wait_start_comport;
     wire wait_end;
@@ -620,7 +619,7 @@ module top(
         .spidi(spidi),
         .spido(spido),
         .spick(spick),
-        .status_in({/* wait_rnw */ wr_n, waits[6:0]}),
+        .status_in({wr_n, waits[6:0]}),
         .genrst(genrst),
         .rstrom(rstrom),
         .kbd_out(kbd_data),
@@ -635,7 +634,6 @@ module top(
         .comport_addr(comport_addr),
         .wait_write(wait_write),
         .wait_read(wait_read),
-        .wait_rnw(wait_rnw),
         .wait_end(wait_end),
         .config0({not_used[7:6], cfg_sync_pol, cfg_60hz, beeper_mux, tape_read, set_nmi[0], cfg_vga_on})
     );
@@ -807,7 +805,6 @@ module top(
         .comport_addr(comport_addr),
         .wait_start_gluclock(wait_start_gluclock),
         .wait_start_comport(wait_start_comport),
-        .wait_rnw(wait_rnw),
         .wait_read(wait_read),
         .wait_write(wait_write),
         .porthit(porthit),
