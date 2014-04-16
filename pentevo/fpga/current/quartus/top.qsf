@@ -155,32 +155,6 @@ set_location_assignment PIN_187 -to rwe_n
 set_location_assignment PIN_189 -to rlcas_n
 set_location_assignment PIN_190 -to rras0_n
 set_location_assignment PIN_90 -to ide_d[13]
-set_location_assignment PIN_169 -to dram_ra[4]
-set_location_assignment PIN_170 -to dram_ra[3]
-set_location_assignment PIN_172 -to dram_ra[5]
-set_location_assignment PIN_173 -to dram_ra[2]
-set_location_assignment PIN_174 -to dram_ra[6]
-set_location_assignment PIN_175 -to dram_ra[1]
-set_location_assignment PIN_176 -to dram_ra[7]
-set_location_assignment PIN_177 -to dram_ra[0]
-set_location_assignment PIN_179 -to dram_ra[8]
-set_location_assignment PIN_180 -to dram_ra[9]
-set_location_assignment PIN_191 -to dram_rd[8]
-set_location_assignment PIN_192 -to dram_rd[7]
-set_location_assignment PIN_193 -to dram_rd[9]
-set_location_assignment PIN_195 -to dram_rd[6]
-set_location_assignment PIN_196 -to dram_rd[10]
-set_location_assignment PIN_197 -to dram_rd[5]
-set_location_assignment PIN_198 -to dram_rd[11]
-set_location_assignment PIN_199 -to dram_rd[4]
-set_location_assignment PIN_200 -to dram_rd[12]
-set_location_assignment PIN_202 -to dram_rd[3]
-set_location_assignment PIN_203 -to dram_rd[13]
-set_location_assignment PIN_204 -to dram_rd[2]
-set_location_assignment PIN_205 -to dram_rd[14]
-set_location_assignment PIN_206 -to dram_rd[1]
-set_location_assignment PIN_207 -to dram_rd[15]
-set_location_assignment PIN_208 -to dram_rd[0]
 
 # Classic Timing Assignments
 # ==========================
@@ -216,7 +190,7 @@ set_global_assignment -name FITTER_EFFORT "STANDARD FIT"
 set_global_assignment -name SLOW_SLEW_RATE ON
 set_global_assignment -name AUTO_PACKED_REGISTERS NORMAL
 set_global_assignment -name FIT_ONLY_ONE_ATTEMPT OFF
-set_global_assignment -name SEED 4
+set_global_assignment -name SEED 7
 set_global_assignment -name ROUTER_TIMING_OPTIMIZATION_LEVEL MINIMUM
 set_global_assignment -name PLACEMENT_EFFORT_MULTIPLIER 1.0
 set_global_assignment -name ROUTER_EFFORT_MULTIPLIER 1.0
@@ -228,7 +202,6 @@ set_global_assignment -name CARRY_OUT_PINS_LCELL_INSERT OFF
 
 # Assembler Assignments
 # =====================
-set_global_assignment -name USE_CONFIGURATION_DEVICE OFF
 set_global_assignment -name GENERATE_RBF_FILE ON
 set_global_assignment -name ON_CHIP_BITSTREAM_DECOMPRESSION OFF
 
@@ -353,3 +326,29 @@ set_global_assignment -name MIF_FILE ../video/mem/video_cram.mif
 set_global_assignment -name ZIP_VECTOR_WAVEFORM_FILE ../sim_vw/dram.cvwf
 set_global_assignment -name RESERVE_ALL_UNUSED_PINS_NO_OUTPUT_GND "AS INPUT TRI-STATED"
 set_global_assignment -name OPTIMIZE_MULTI_CORNER_TIMING OFF
+set_location_assignment PIN_169 -to ra[4]
+set_location_assignment PIN_170 -to ra[3]
+set_location_assignment PIN_172 -to ra[5]
+set_location_assignment PIN_173 -to ra[2]
+set_location_assignment PIN_174 -to ra[6]
+set_location_assignment PIN_175 -to ra[1]
+set_location_assignment PIN_176 -to ra[7]
+set_location_assignment PIN_177 -to ra[0]
+set_location_assignment PIN_179 -to ra[8]
+set_location_assignment PIN_180 -to ra[9]
+set_location_assignment PIN_191 -to rd[8]
+set_location_assignment PIN_192 -to rd[7]
+set_location_assignment PIN_193 -to rd[9]
+set_location_assignment PIN_195 -to rd[6]
+set_location_assignment PIN_196 -to rd[10]
+set_location_assignment PIN_197 -to rd[5]
+set_location_assignment PIN_198 -to rd[11]
+set_location_assignment PIN_199 -to rd[4]
+set_location_assignment PIN_200 -to rd[12]
+set_location_assignment PIN_202 -to rd[3]
+set_location_assignment PIN_203 -to rd[13]
+set_location_assignment PIN_204 -to rd[2]
+set_location_assignment PIN_205 -to rd[14]
+set_location_assignment PIN_206 -to rd[1]
+set_location_assignment PIN_207 -to rd[15]
+set_location_assignment PIN_208 -to rd[0]

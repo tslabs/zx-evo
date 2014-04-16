@@ -43,8 +43,8 @@ module top(
     output iorq2_n,
 
     // DRAM
-    inout [15:0] dram_rd,
-    output [9:0] dram_ra,
+    inout [15:0] rd,
+    output [9:0] ra,
     output rwe_n,
     output rucas_n,
     output rlcas_n,
@@ -206,6 +206,8 @@ module top(
     wire ena_ports;
     wire drive_ff;
 
+    wire [15:0] dram_wd;
+	assign rd = rwe_n ? 16'hZZZZ : dram_wd;
     assign d = ena_ram ? dout_ram :(ena_ports ? dout_ports :(intack ? im2vect :(drive_ff ? 8'hFF : 8'bZZZZZZZZ)));
     // assign d = ena_ram ? dout_ram :(ena_ports ? dout_ports :(drive_ff ? 8'hFF : 8'bZZZZZZZZ));
     // assign d = ena_ram ? dout_ram :(ena_ports ? dout_ports : 8'bZZZZZZZZ);
@@ -293,8 +295,8 @@ module top(
     wire rst;
     wire m1;
     wire rfsh;
-    wire rd;
-    wire wr;
+    wire zrd;
+    wire zwr;
     wire iorq;
     wire iorq_s;
     // wire iorq_s2;
@@ -410,7 +412,7 @@ module top(
     (
         .iorq(iorq),
         .iorq_n(iorq_n),
-        .rd(rd),
+        .rd(zrd),
         .iorq1_n(iorq1_n),
         .iorq2_n(iorq2_n),
         .iorqge1(iorqge1),
@@ -461,7 +463,7 @@ module top(
         .cpu_latch(cpu_latch),
         .cpu_addr(cpu_addr),
         // .cpu_rddata(dram_rd_r),    // registered
-        .cpu_rddata(dram_rd),           // raw
+        .cpu_rddata(rd),           // raw
         .cpu_stall(cpu_stall),
         .cpu_next(cpu_next),
         .turbo(turbo)
@@ -481,8 +483,8 @@ module top(
         // .rddata(dram_rd_r),
         .wrdata(dram_wrdata),
         .bsel(dbsel),
-        .ra(dram_ra),
-        .rd(dram_rd),
+        .ra(ra),
+        .dram_wd(dram_wd),
         .rwe_n(rwe_n),
         .rucas_n(rucas_n),
         .rlcas_n(rlcas_n),
@@ -507,7 +509,7 @@ module top(
         .cpu_addr(cpu_addr),
         .cpu_wrdata    (d),
         .cpu_req(cpu_req),
-        .cpu_rnw(rd),
+        .cpu_rnw(zrd),
         .cpu_wrbsel(cpu_wrbsel),
         .cpu_next(cpu_next),
         .cpu_strobe(cpu_strobe),
@@ -588,7 +590,7 @@ module top(
         .video_bw(video_bw),
         .video_go(go),
         // .dram_rdata_r(dram_rd_r),      // reg'ed, should be latched by c3
-           .dram_rdata(dram_rd),               // raw, should be latched by c2
+           .dram_rdata(rd),               // raw, should be latched by c2
         .video_strobe(video_strobe),
         .video_next(video_next),
         .video_pre_next(video_pre_next),
@@ -601,7 +603,6 @@ module top(
         .tm_addr(tm_addr),
         .tm_req(tm_req),
         .tm_next(tm_next),
-        .a(a),
         .d(d),
         .zmd(zmd),
         .zma(zma),
@@ -687,8 +688,8 @@ module top(
         .rst(rst),
         .m1(m1),
         .rfsh(rfsh),
-        .rd(rd),
-        .wr(wr),
+        .rd(zrd),
+        .wr(zwr),
         .iorq(iorq),
         .iorq_s(iorq_s),
         // .iorq_s2    (iorq_s2),
@@ -722,8 +723,8 @@ module top(
         .a(a),
         .rst(rst),
         .opfetch(opfetch),
-        .rd(rd),
-        .wr(wr),
+        .rd(zrd),
+        .wr(zwr),
         .rdwr(rdwr),
         .iorq(iorq),
         .iord(iord),
@@ -824,7 +825,7 @@ module top(
         .dram_rnw(dma_rnw),
         .dram_req(dma_req),
         .dma_z80_lp(dma_z80_lp),
-        .dram_rddata(dram_rd),
+        .dram_rddata(rd),
         .dram_wrdata(dma_wrdata),
         .dram_next(dma_next),
         .data(dma_data),
