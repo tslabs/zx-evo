@@ -162,13 +162,7 @@ void out(unsigned port, u8 val)
 				comp.ts.intctrl.pend &= val & 0x07;
 			}
 			break;
-			
-			case TSW_INTVECT:
-			{
-				comp.ts.im2vect[(val >> 4) & 0x07] = (val & 0x0E) | (0xF1 ^ (val & 0x70));
-			}
-			break;
-			
+
 			case TSW_HSINT:
 			{
 				comp.ts.hsint = val;
@@ -176,7 +170,7 @@ void out(unsigned port, u8 val)
 				comp.ts.intctrl.new_frame = (comp.ts.intctrl.frame_t >= cpu.t && comp.ts.intctrl.frame_t < conf.frame) ? true : false;
 			}
 			break;
-			
+
 			case TSW_VSINTL:
 			{
 				comp.ts.vsintl = val;
@@ -184,7 +178,7 @@ void out(unsigned port, u8 val)
 				comp.ts.intctrl.new_frame = (comp.ts.intctrl.frame_t >= cpu.t && comp.ts.intctrl.frame_t < conf.frame) ? true : false;
 			}
 			break;
-			
+
 			case TSW_VSINTH:
 			{
 				comp.ts.vsinth = val;
@@ -192,7 +186,7 @@ void out(unsigned port, u8 val)
 				comp.ts.intctrl.new_frame = (comp.ts.intctrl.frame_t >= cpu.t && comp.ts.intctrl.frame_t < conf.frame) ? true : false;
 			}
 			break;
-			
+
 	    // memory
 			case TSW_MEMCONF:
 			{
@@ -1051,7 +1045,7 @@ set1FFD:
 		  turbo((comp.pEFF7 & EFF7_GIGASCREEN) ? 2 : 1);
 	  if (conf.mem_model==MM_ATM3)
 		  set_turbo();
-	  
+
 	  init_raster();
 
 	  /*

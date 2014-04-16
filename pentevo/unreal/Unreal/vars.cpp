@@ -64,11 +64,19 @@ u8 TMainZ80::IntVec()
 {
     if (conf.mem_model == MM_TSL)
     {
-      if (comp.ts.intctrl.frame_pend) return comp.ts.im2vect[INT_FRAME];
-      if (comp.ts.intctrl.line_pend)  return comp.ts.im2vect[INT_LINE];
-      if (comp.ts.intctrl.dma_pend)   return comp.ts.im2vect[INT_DMA];
-      return 0xFF;
+      if (comp.ts.intctrl.frame_pend)
+        return comp.ts.im2vect[INT_FRAME];
+
+      else if (comp.ts.intctrl.line_pend)
+        return comp.ts.im2vect[INT_LINE];
+
+      else if (comp.ts.intctrl.dma_pend)
+        return comp.ts.im2vect[INT_DMA];
+
+      else
+        return 0xFF;
     }
+
 	else
 		return (comp.flags & CF_Z80FBUS)? u8(rdtsc() & 0xFF) : 0xFF;
 }
@@ -303,38 +311,38 @@ virtkeyt pckeys[] =
 
    { "JLEFT", VK_JLEFT }, { "JRIGHT", VK_JRIGHT },
    { "JUP", VK_JUP }, { "JDOWN", VK_JDOWN }, { "JFIRE", VK_JFIRE },
-   { "JB0", VK_JB0 }, 
-   { "JB1", VK_JB1 }, 
-   { "JB2", VK_JB2 }, 
-   { "JB3", VK_JB3 }, 
-   { "JB4", VK_JB4 }, 
-   { "JB5", VK_JB5 }, 
-   { "JB6", VK_JB6 }, 
-   { "JB7", VK_JB7 }, 
-   { "JB8", VK_JB8 }, 
-   { "JB9", VK_JB9 }, 
-   { "JB10", VK_JB10 }, 
-   { "JB11", VK_JB11 }, 
-   { "JB12", VK_JB12 }, 
-   { "JB13", VK_JB13 }, 
-   { "JB14", VK_JB14 }, 
-   { "JB15", VK_JB15 }, 
-   { "JB16", VK_JB16 }, 
-   { "JB17", VK_JB17 }, 
-   { "JB18", VK_JB18 }, 
-   { "JB19", VK_JB19 }, 
-   { "JB20", VK_JB20 }, 
-   { "JB21", VK_JB21 }, 
-   { "JB22", VK_JB22 }, 
-   { "JB23", VK_JB23 }, 
-   { "JB24", VK_JB24 }, 
-   { "JB25", VK_JB25 }, 
-   { "JB26", VK_JB26 }, 
-   { "JB27", VK_JB27 }, 
-   { "JB28", VK_JB28 }, 
-   { "JB29", VK_JB29 }, 
-   { "JB30", VK_JB30 }, 
-   { "JB31", VK_JB31 }, 
+   { "JB0", VK_JB0 },
+   { "JB1", VK_JB1 },
+   { "JB2", VK_JB2 },
+   { "JB3", VK_JB3 },
+   { "JB4", VK_JB4 },
+   { "JB5", VK_JB5 },
+   { "JB6", VK_JB6 },
+   { "JB7", VK_JB7 },
+   { "JB8", VK_JB8 },
+   { "JB9", VK_JB9 },
+   { "JB10", VK_JB10 },
+   { "JB11", VK_JB11 },
+   { "JB12", VK_JB12 },
+   { "JB13", VK_JB13 },
+   { "JB14", VK_JB14 },
+   { "JB15", VK_JB15 },
+   { "JB16", VK_JB16 },
+   { "JB17", VK_JB17 },
+   { "JB18", VK_JB18 },
+   { "JB19", VK_JB19 },
+   { "JB20", VK_JB20 },
+   { "JB21", VK_JB21 },
+   { "JB22", VK_JB22 },
+   { "JB23", VK_JB23 },
+   { "JB24", VK_JB24 },
+   { "JB25", VK_JB25 },
+   { "JB26", VK_JB26 },
+   { "JB27", VK_JB27 },
+   { "JB28", VK_JB28 },
+   { "JB29", VK_JB29 },
+   { "JB30", VK_JB30 },
+   { "JB31", VK_JB31 },
 };
 const size_t pckeys_count = _countof(pckeys);
 
