@@ -66,9 +66,6 @@ module zports(
 	output reg [7:0] memconf,
 	output reg [3:0] fddvirt,
 	
-	output reg [2:0] im2v_frm,
-	output reg [2:0] im2v_lin,
-	output reg [2:0] im2v_dma,
 	output reg [7:0] intmask,
 
 	output wire [8:0] dmaport_wr,
@@ -336,10 +333,6 @@ module zports(
 	localparam HSINT		= 8'h22;
 	localparam VSINTL		= 8'h23;
 	localparam VSINTH		= 8'h24;
-	localparam IM2VECT		= 8'h25;
-		localparam INTFRM		= 3'b000;
-		localparam INTLIN		= 3'b001;
-		localparam INTDMA		= 3'b010;
 	localparam DMALEN		= 8'h26;
 	localparam DMACTRL		= 8'h27;
 	localparam DMANUM		= 8'h28;
@@ -408,7 +401,6 @@ module zports(
 		if (rst)
 		begin
 			fmaddr[4] <= 1'b0;
-			im2v_frm <= 3'b111;
 			intmask <= 8'b1;
 			fddvirt <= 4'b0;
 			sysconf <= 8'h01;       // turbo 7 MHz
@@ -438,15 +430,6 @@ module zports(
 				sysconf <= din;
 			if (hoa == MEMCONF)
 				memconf <= din;
-			if (hoa == IM2VECT)
-			begin
-				if (din[6:4] == INTFRM)
-					im2v_frm <= din[3:1];
-				if (din[6:4] == INTLIN)
-					im2v_lin <= din[3:1];
-				if (din[6:4] == INTDMA)
-					im2v_dma <= din[3:1];
-			end
 			if (hoa == FDDVIRT)
 				fddvirt <= din[3:0];
 			if (hoa == INTMASK)

@@ -333,9 +333,6 @@ module top(
     wire z80_ide_req;
     wire z80_ide_rnw;
 
-    wire [2:0] im2v_frm;
-    wire [2:0] im2v_lin;
-    wire [2:0] im2v_dma;
     wire [7:0] intmask;
 
     wire dma_act;
@@ -784,9 +781,6 @@ module top(
         .fmaddr(fmaddr),
         .sysconf(sysconf),
         .memconf(memconf),
-        .im2v_frm(im2v_frm),
-        .im2v_lin(im2v_lin),
-        .im2v_dma(im2v_dma),
         .intmask(intmask),
         .fddvirt(fddvirt),
         .drive_sel(vg_a),
@@ -850,9 +844,6 @@ module top(
         .zclk(clkz_out),
         .res(res),
         .im2vect(im2vect),
-        .im2v_frm(im2v_frm),
-        .im2v_lin(im2v_lin),
-        .im2v_dma(im2v_dma),
         .intmask(intmask),
         .int_start_lin(int_start_lin),
         .int_start_frm(int_start_frm),
