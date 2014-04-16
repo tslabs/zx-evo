@@ -23,7 +23,6 @@ module video_top (
 	output wire	csync,
 
 // Z80 controls
-	input wire [15:0] a,
 	input wire [ 7:0] d,
 	input wire [15:0] zmd,
 	input wire [ 7:0] zma,
@@ -175,9 +174,6 @@ module video_top (
     wire tsr_rdy;
 
 // TS-line
-	// wire [8:0] ts_waddr = a[8:0];
-	// wire [7:0] ts_wdata = {d[7:1], 1'b1};
-	// wire ts_we = c3;
 	wire [8:0] ts_waddr;
 	wire [7:0] ts_wdata;
 	wire ts_we;

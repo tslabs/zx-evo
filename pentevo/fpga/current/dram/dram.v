@@ -21,7 +21,7 @@
 //rddata:XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX< read  >XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 //
 // comments:
-// rucas_n, rlcas_n, rras0_n, rras1_n, rwe_n, ra[] could be made 'fast output register'
+// rucas_n, rlcas_n, rras0_n, rras1_n, rwe_n, dram_ra[] could be made 'fast output register'
 //
 // rst_n is resynced before use and acts as req inhibit. so while in reset, dram regenerates and isn't corrupted
 
@@ -33,7 +33,7 @@ module dram(
 
 // DRAM pins
 	output reg [9:0] ra,
-	inout wire [15:0] rd,
+	output reg [15:0] dram_wd,
 	output reg rwe_n,
 	output reg rucas_n,
 	output reg rlcas_n,
@@ -68,9 +68,7 @@ module dram(
 // incoming data latch
 	reg [15:0] int_wrdata;
 	always @(posedge clk) if (c0)      // changed: now wrdata is latched 1 clk later - at c0 of current cycle (NOT at c3 of previous as before)
-    begin
-		int_wrdata <= wrdata;
-    end
+		dram_wd <= wrdata;
 
 // incoming addr and bsel latch
 	reg [20:0] int_addr;
@@ -139,13 +137,10 @@ module dram(
 	always @(negedge clk)		// here is a problem to fit to pins fast output regs
 		ra <= c0 ? int_addr[10:1] : int_addr[20:11];
 
-// DRAM data bus control
-	assign rd = rwe_n ? 16'hZZZZ : int_wrdata;
-
 // read data from DRAM
 	// always @(posedge clk)
 		// if (c2 & read)
-			// rddata <= rd;
+			// rddata <= dram_rd;
 
 	// reset must be synchronous here in order to preserve
 	// DRAM state while other modules reset, but we have only
