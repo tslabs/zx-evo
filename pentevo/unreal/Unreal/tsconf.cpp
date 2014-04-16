@@ -477,9 +477,9 @@ void tsinit(void)
 
 	comp.ts.fmaddr = 0;
 	comp.ts.im2vect[INT_FRAME] = 0xFF;
-	comp.ts.im2vect[INT_LINE]  = 0xEF;
-	comp.ts.im2vect[INT_DMA]   = 0xDF;
-	comp.ts.intmask = 1 << INT_FRAME;
+	comp.ts.im2vect[INT_LINE]  = 0xFD;
+	comp.ts.im2vect[INT_DMA]   = 0xFB;
+	comp.ts.intmask = 1;
 	comp.ts.intctrl.frame_t = 0;
 
 	comp.ts.fddvirt = 0;
