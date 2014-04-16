@@ -64,6 +64,7 @@ module zports(
 
 	output reg [7:0] sysconf,
 	output reg [7:0] memconf,
+	output reg [3:0] cacheconf,
 	output reg [3:0] fddvirt,
 	
 	output reg [7:0] intmask,
@@ -338,6 +339,7 @@ module zports(
 	localparam DMANUM		= 8'h28;
 	localparam FDDVIRT		= 8'h29;
 	localparam INTMASK		= 8'h2A;
+	localparam CACHECONF	= 8'h2B;
 
 	localparam XSTAT		= 8'h00;
 	localparam DMASTAT		= 8'h27;
@@ -405,6 +407,7 @@ module zports(
 			fddvirt <= 4'b0;
 			sysconf <= 8'h01;       // turbo 7 MHz
 			memconf <= 8'h04;       // no map
+			cacheconf <= 4'h0;      // no cache
 
 			rampage[0] <= 8'h00;
 			rampage[1] <= 8'h05;
@@ -424,14 +427,25 @@ module zports(
 		begin
 			if (hoa[7:2] == RAMPAGE[7:2])
 				rampage[hoa[1:0]] <= din;
+                
 			if (hoa == FMADDR)
 				fmaddr <= din[4:0];
+                
 			if (hoa == SYSCONF)
+            begin
 				sysconf <= din;
+                cacheconf <= {4{din[2]}};
+            end
+                
+			if (hoa == CACHECONF)
+				cacheconf <= din[3:0];
+            
 			if (hoa == MEMCONF)
 				memconf <= din;
+                
 			if (hoa == FDDVIRT)
 				fddvirt <= din[3:0];
+                
 			if (hoa == INTMASK)
 				intmask <= din;
 		end

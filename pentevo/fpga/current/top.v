@@ -192,8 +192,7 @@ module top(
     assign rompg4   =  rompg[4];
 
     wire [1:0] turbo =  sysconf[1:0];
-    // wire [1:0] turbo =  2'b00;
-    wire cache_en = sysconf[2];
+    wire [3:0] cacheconf;
     wire [7:0] border;
     wire int_start_lin;
     wire int_start_frm;
@@ -443,7 +442,7 @@ module top(
         .memconf(memconf[3:0]),
         .xt_page(xt_page),
         .rompg(rompg),
-        .cache_en(cache_en),
+        .cache_en(cacheconf[3:0]),
         .romoe_n(romoe_n),
         .romwe_n(romwe_n),
         .csrom(csrom),
@@ -780,6 +779,7 @@ module top(
         .xt_page(xt_page),
         .fmaddr(fmaddr),
         .sysconf(sysconf),
+        .cacheconf(cacheconf),
         .memconf(memconf),
         .intmask(intmask),
         .fddvirt(fddvirt),
