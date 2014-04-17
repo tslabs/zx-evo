@@ -207,9 +207,7 @@ module top(
 
     wire [15:0] dram_wd;
 	assign rd = rwe_n ? 16'hZZZZ : dram_wd;
-    assign d = ena_ram ? dout_ram :(ena_ports ? dout_ports :(intack ? im2vect :(drive_ff ? 8'hFF : 8'bZZZZZZZZ)));
-    // assign d = ena_ram ? dout_ram :(ena_ports ? dout_ports :(drive_ff ? 8'hFF : 8'bZZZZZZZZ));
-    // assign d = ena_ram ? dout_ram :(ena_ports ? dout_ports : 8'bZZZZZZZZ);
+    assign d = ena_ram ? dout_ram : (ena_ports ? dout_ports : (intack ? im2vect : (drive_ff ? 8'hFF : 8'bZZZZZZZZ)));
 
     wire rampage_wr;        // ports #10AF-#13AF
     wire [7:0] memconf;

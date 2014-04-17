@@ -22,11 +22,13 @@ module zint
 	// For Frame, Line INT its generation is blocked, it will be lost.
 	// For DMA INT only its output is blocked, so DMA ISR will will be processed as soon as returned from VDOS.
 
-	localparam IM2FRM = 8'hFF;
-	localparam IM2LIN = 8'hFD;
-	localparam IM2DMA = 8'hFB;
-
-    assign im2vect = int_frm ? IM2FRM : (int_lin ? IM2LIN : (int_dma ? IM2DMA : 8'hFF));
+	assign im2vect = {vect[int_sel]};
+    
+	wire [7:0] vect [0:3];
+	assign vect[INTFRM] = 8'hFF;
+	assign vect[INTLIN] = 8'hFD;
+	assign vect[INTDMA] = 8'hFB;
+	assign vect[INTDUM] = 8'hFF;
     
 	assign int_n = int_all ? 1'b0 : 1'bZ;
 	wire int_all = int_frm || int_lin || (int_dma && !vdos);
@@ -35,13 +37,30 @@ module zint
 	wire dis_int_lin = !intmask[1];
 	wire dis_int_dma = !intmask[2];
     
-// INT ack re-sync
+// INT source latch
 	wire intack_s = intack && !intack_r;
 
 	reg intack_r;
 	always @(posedge clk)
 		intack_r <= intack;
 
+	localparam INTFRM = 2'b00;
+	localparam INTLIN = 2'b01;
+	localparam INTDMA = 2'b10;
+	localparam INTDUM = 2'b11;
+    
+	reg [1:0] int_sel;
+	always @(posedge clk)
+		if (intack_s)
+		begin
+			if (int_frm)
+				int_sel <= INTFRM;		// priority 0
+			else if (int_lin)
+				int_sel <= INTLIN;		// priority 1
+			else if (int_dma)
+				int_sel <= INTDMA;		// priority 2
+		end
+        
 // INT generating
 	reg int_frm;
 	always @(posedge clk)
