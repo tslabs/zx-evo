@@ -74,6 +74,13 @@ int _tmain(int argc, _TCHAR* argv[])
 	FILE *f_pal;
 	FILE *f_btm;
 
+	if (argc != 2)
+	{
+		printf("TGA to TS converter by TS-Labs\n");
+		printf("Usage: tga2ts.exe <input>.tga\n");
+		return 1;
+	}
+    
 // loading levels map
 	if (!(f_map = _wfopen(L"levels.map", L"r")))
 		goto fatal;
