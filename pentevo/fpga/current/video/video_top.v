@@ -122,8 +122,10 @@ module video_top (
 	wire tv_hires;
 	wire vga_hires;
 	wire v60hz;
-	wire nogfx;
-	wire notsu;
+	wire nogfx = vconf[5];
+	wire notsu = vconf[4];
+	// wire gfxovr = vconf[3];
+	wire gfxovr;
 	wire tv_blank;
 
 // counters
@@ -263,8 +265,6 @@ module video_top (
 		.pix_start	    (pix_start),
 		.tv_hires		(tv_hires),
 		.vga_hires	    (vga_hires),
-		.nogfx		    (nogfx),
-		.notsu		    (notsu),
 		.pix_stb	    (pix_stb),
 		.render_mode	(render_mode),
 		.video_addr	    (video_addr),
@@ -419,6 +419,7 @@ module video_top (
 		.hvpix 	        (hvpix),
 		.nogfx			(nogfx),
 		.notsu			(notsu),
+		.gfxovr			(gfxovr),
 		.flash			(flash),
 		.hires			(tv_hires),
 		.psel			(scnt),
@@ -431,8 +432,6 @@ module video_top (
 );
 
 	video_out video_out (
-		.tst			(tst),	// DEBUG!!!
-		
 		.clk			(clk),
 		.f0				(f0),
 		.c3				(c3),
