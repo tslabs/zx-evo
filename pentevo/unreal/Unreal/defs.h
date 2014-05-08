@@ -289,6 +289,16 @@ struct Z80 : public TZ80State
    */
    virtual u8 *DirectMem(unsigned addr) const = 0; // get direct memory pointer in debuger
 
+   virtual u8 rd(u32 addr) {
+     tt += rate * 3;
+     return MemIf->rm(addr);
+   }
+
+   virtual void wd(u32 addr, u8 val) {
+      tt += rate * 3;
+      MemIf->wm(addr, val);
+   }
+
    virtual u8 in(unsigned port) = 0;
    virtual void out(unsigned port, u8 val) = 0;
    virtual u8 m1_cycle() = 0; // [vv] Не зависит от процессора (вынести в библиотеку)

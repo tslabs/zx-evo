@@ -123,6 +123,8 @@ typedef struct
 		};
 	} ;
 
+	bool cache_miss;
+
 	u8 hsint;
 	union
     {

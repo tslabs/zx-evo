@@ -94,6 +94,8 @@ public:
 */
    virtual u8 *DirectMem(unsigned addr) const override; // get direct memory pointer in debuger
 
+   u8 rd(u32 addr) override;
+
    virtual u8 m1_cycle() override;
    virtual u8 in(unsigned port) override;
    virtual void out(unsigned port, u8 val) override;

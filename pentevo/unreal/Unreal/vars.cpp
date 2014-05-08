@@ -34,12 +34,6 @@ void __cdecl SetLastT();
 void out(unsigned port, u8 val);
 u8 in(unsigned port);
 
-Z80INLINE u8 m1_cycle(Z80 *cpu)
-{
-   cpu->r_low++; cputact(4);
-   return cpu->MemIf->rm(cpu->pc++);
-}
-
 /*
 u8 TMainZ80::rm(unsigned addr) { return z80fast::rm(addr); }
 
@@ -54,7 +48,34 @@ u8 *TMainZ80::DirectMem(unsigned addr) const
     return am_r(addr);
 }
 
-u8 TMainZ80::m1_cycle() { return ::m1_cycle(this); }
+u8 TMainZ80::rd(u32 addr)
+{
+  u8 tempbyte = MemIf->rm(addr);
+
+  // Align 14MHz CPU memory request to 7MHz DRAM cycle
+  // request can be satisfied only in the next DRAM cycle
+  if (comp.ts.cache_miss && rate == 0x40)
+    tt += (tt & 0x40) ? 0x40 * 6 : 0x40 * 5;
+  else
+    tt += rate * 3;
+
+  return tempbyte;
+}
+
+u8 TMainZ80::m1_cycle()
+{
+  r_low++;
+  u8 tempbyte = MemIf->rm(pc++);
+
+  // Align 14MHz CPU memory request to 7MHz DRAM cycle
+  // request can be satisfied only in the next DRAM cycle
+  if (comp.ts.cache_miss && rate == 0x40)
+    tt = (tt + 0x40 * 7) &0xFFFFFF80;
+  else
+    tt += rate * 4;
+
+  return tempbyte;
+}
 
 u8 TMainZ80::in(unsigned port) { return ::in(port); }
 

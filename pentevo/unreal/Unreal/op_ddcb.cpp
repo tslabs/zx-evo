@@ -169,17 +169,17 @@ Z80INLINE void Z80FAST ddfd(Z80 *cpu, u8 opcode)
    if (opcode == 0xCB) {
 
       unsigned ptr; // pointer to DDCB operand
-      ptr = ((op1 == 0xDD) ? cpu->ix:cpu->iy) + (char)cpu->MemIf->rm(cpu->pc++);
+      ptr = ((op1 == 0xDD) ? cpu->ix:cpu->iy) + (char)cpu->rd(cpu->pc++);
       cpu->memptr = ptr;
       // DDCBnnXX,FDCBnnXX increment R by 2, not 3!
       opcode = cpu->m1_cycle(); cpu->r_low--;
-      u8 byte = (logic_ix_opcode[opcode])(cpu, cpu->MemIf->rm(ptr));
-      if ((opcode & 0xC0) == 0x40) { cputact(8); return; } // bit n,rm
+      u8 byte = (logic_ix_opcode[opcode])(cpu, cpu->rd(ptr));
+      cputact(5);
+      if ((opcode & 0xC0) == 0x40) return; // bit n,rm
 
       // select destination register for shift/res/set
       *(&cpu->c + reg_offset[opcode & 7]) = byte;
-      cpu->MemIf->wm(ptr, byte);
-      cputact(11);
+      cpu->wd(ptr, byte);
       return;
    }
 
