@@ -34,13 +34,15 @@ u8 rm(unsigned addr)
 		{
 			u32 cached_address = (comp.ts.page[window] << 5) | ((addr >> 9) & 0x1F);
 			u16 cache_pointer = addr & 0x1FF;
-			if (!comp.ts.cache || (cpu.tscache[cache_pointer] != cached_address))
+			if (comp.ts.cache_miss = (!comp.ts.cache || (cpu.tscache[cache_pointer] != cached_address)))
 				vid.memcpucyc[cpu.t / 224]++;		// кеш промазинг
 			cpu.tscache[cache_pointer] = cached_address;
 		}
 		else
 			vid.memcpucyc[cpu.t / 224]++;
 	}
+	else
+		comp.ts.cache_miss = false;
 
    return *am_r(addr);
 }
@@ -149,9 +151,7 @@ Z80INLINE u8 m1_cycle(Z80 *cpu)
       comp.ts.vdos_m1 = 0;
       set_banks();
    }
-   cpu->r_low++;// = (cpu->r & 0x80) + ((cpu->r+1) & 0x7F);
-   cputact(4);
-   return rm(cpu->pc++);
+   return cpu->m1_cycle();
 }
 
 void Z80FAST step()
@@ -226,22 +226,6 @@ void step1()
 #endif
 	step();
 }
-/*
-void try_int()
-{
-	if (!cpu.iff1 ||	// int NOT enabled in CPU
-		((conf.mem_model == MM_ATM710) && !(comp.pFF77 & 0x20)) || // int enabled by ATM hardware -- lvd added no int disabling in pentevo (atm3)
-    ((conf.mem_model == MM_TSL) && (comp.ts.vdos || comp.ts.vdos_m1))) // int disabled in vdos after r/w vg ports
-		return;
-		
-	else	// int enabled
-	{
-		if (cpu.t == cpu.eipos)		// if INT issued right after EI, it's delayed for 1 opcode
-			step1();
-		handle_int(&cpu, cpu.IntVec()); // Начало обработки int (запись в стек адреса возврата и т.п.)
-	}
-}
-*/
 
 void z80loop_TSL()
 {
@@ -355,111 +339,3 @@ void z80loop()
   else
     z80loop_other();
 }
-
-/*
-void z80loop()
-{
-   cpu.haltpos = 0;
-   cpu.intnew = true;
-   comp.ts.intctrl.new_frame = 1;
-   comp.ts.intctrl.line_t = comp.ts.intline ? 0 : VID_TACTS;
-   
-	// main loop
-	while (cpu.t < conf.frame)
-	{
-		// Baseconf NMI breakpoints
-		if (comp.pBF & 0x10)	// ! add here MM_ATM3 check !
-			if (cpu.pc == comp.pBD)
-				nmi_pending = 1;
-
-		// NMI processing
-		if (nmi_pending)
-		{
-			if (conf.mem_model == MM_ATM3)
-			{
-				nmi_pending = 0;
-				cpu.nmi_in_progress = true;
-				set_banks();
-				m_nmi(RM_NOCHANGE);
-			}
-			else if ((conf.mem_model == MM_PROFSCORP || conf.mem_model == MM_SCORP))
-			{
-				nmi_pending = 0;
-				if (cpu.pc >= 0x4000)
-				{
-					// printf("pc=%x\n", cpu.pc);
-					::m_nmi(RM_DOS);
-					nmi_pending = 0;
-				}
-			}
-			else
-				nmi_pending = 0;
-		}
-
-    if (conf.mem_model == MM_TSL)
-    {
-      // Generate frame INT
-      if (cpu.intnew && ((cpu.t - comp.ts.intctrl.frame_t) < conf.intlen))
-      {
-        cpu.intnew = false;
-        comp.ts.intctrl.frame_pend = comp.ts.intframe;
-      }
-      else if (comp.ts.intctrl.frame_pend && ((cpu.t - comp.ts.intctrl.frame_t + 1) >= conf.intlen))
-        comp.ts.intctrl.frame_pend = 0;
-
-      // Generate line INT
-      if (comp.ts.intline && cpu.t >= comp.ts.intctrl.line_t)
-      {
-        comp.ts.intctrl.line_pend = comp.ts.intline;
-        comp.ts.intctrl.line_t += VID_TACTS;
-      }
-
-      if (comp.ts.intctrl.pend)
-        try_int();
-
-      step1();
-    }
-    else if (cpu.intnew && (cpu.t < conf.intlen))
-		{ // INT loop
-			cpu.int_pend = true;
-			cpu.intnew = false;
-			while (cpu.int_pend && (cpu.t < conf.intlen))
-			{
-				try_int();
-				step1();
-			}
-			
-			cpu.int_pend = false;
-			cpu.eipos = -1;
-		}
-		else
-		step1();
-
-		// Baseconf NMI
-		if (comp.pBE)
-		{
-			if (comp.pBE == 1 && conf.mem_model == MM_ATM3)
-			{
-				cpu.nmi_in_progress = false;
-				set_banks();
-			}
-			comp.pBE--;
-		}
-
-
-		// if (cpu.halted)
-			// break;
-		
-//
-//     if (cpu.halted)
-//    {
-//        //cpu.t += 4, cpu.r = (cpu.r & 0x80) + ((cpu.r+1) & 0x7F); continue;
-//        unsigned st = (conf.frame-cpu.t-1)/4+1;
-//        cpu.t += 4*st;
-//        cpu.r_low += st;
-//        break;
-//    }
-//  
-	}
-}
-*/
