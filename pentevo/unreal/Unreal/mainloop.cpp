@@ -33,6 +33,7 @@ void spectrum_frame()
        z80fast::z80loop();
    }
 
+   dma();
    update_screen();
 
    if (modem.open_port)
