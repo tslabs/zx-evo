@@ -24,7 +24,8 @@ u8 rm(unsigned addr)
 #endif
 
 	// TS-conf DMA
-	if (conf.mem_model == MM_TSL && comp.ts.dma.act && cpu.t >= comp.ts.dma.next_t) dma();
+	if (conf.mem_model == MM_TSL && comp.ts.dma.act && (cpu.t >= comp.ts.dma.next_t)) 
+		dma();
 
 	// TS-conf cache model
 	u8 window = (addr >> 14) & 3;
@@ -106,7 +107,8 @@ void wm(unsigned addr, u8 val)
 				temp.fm_tmp = val;
 
 	// TS-conf DMA
-	if (conf.mem_model == MM_TSL && comp.ts.dma.act && cpu.t >= comp.ts.dma.next_t) dma();
+	if (conf.mem_model == MM_TSL && comp.ts.dma.act && (cpu.t >= comp.ts.dma.next_t)) 
+		dma();
 
 	// TS-conf cache model
 	if (conf.mem_model == MM_TSL)
