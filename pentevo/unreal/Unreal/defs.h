@@ -192,7 +192,8 @@ struct TZ80State
     /*------------------------------*/
     u8 im;
     bool nmi_in_progress;
-	u32 tscache[TS_CACHE_SIZE];
+	u32 tscache_addr[TS_CACHE_SIZE];
+  u8  tscache_data[TS_CACHE_SIZE];
 };
 
 typedef u8 (* TRm)(u32 addr);
