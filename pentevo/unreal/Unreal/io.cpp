@@ -146,9 +146,16 @@ void out(unsigned port, u8 val)
 			case TSW_SYSCONF:
 			{
 				comp.ts.sysconf = val;
+        comp.ts.cacheconf = comp.ts.cache ? 0x0F : 0x00;
 				set_clk();
 			}
 			break;
+
+      case TSW_CACHECONF:
+      {
+        comp.ts.cacheconf = val & 0x0F;
+      }
+      break;
 
 			case TSW_FDDVIRT:
 			{
