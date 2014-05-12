@@ -123,17 +123,17 @@ typedef struct
 		};
 	} ;
 
-  union
-  {
-    u8 cacheconf;
-    struct
-    {
-      u8 cache_win0:1;
-      u8 cache_win1:1;
-      u8 cache_win2:1;
-      u8 cache_win3:1;
-    };
-  };
+	union
+	{
+		u8 cacheconf;
+		struct
+		{
+			u8 cache_win0:1;
+			u8 cache_win1:1;
+			u8 cache_win2:1;
+			u8 cache_win3:1;
+		};
+	};
 	bool cache_miss;
 
 	u8 hsint;

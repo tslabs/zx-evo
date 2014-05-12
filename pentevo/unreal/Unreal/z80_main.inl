@@ -35,14 +35,14 @@ u8 rm(unsigned addr)
 		{
 			u32 cached_address = (comp.ts.page[window] << 5) | ((addr >> 9) & 0x1F);
 			u16 cache_pointer = addr & 0x1FF;
-      u8 cache_win = addr >> 14;
+			u8 cache_win = addr >> 14;
 			if (comp.ts.cache_miss = (!(comp.ts.cacheconf & (1 << cache_win)) || (cpu.tscache_addr[cache_pointer] != cached_address)))
-      {
+			{
 				vid.memcpucyc[cpu.t / 224]++;		// кеш промазинг
-        cpu.tscache_data[cache_pointer] = *am_r(addr);
-        cpu.tscache_addr[cache_pointer] = cached_address;
-      }
-      return cpu.tscache_data[cache_pointer];
+				cpu.tscache_data[cache_pointer] = *am_r(addr);
+				cpu.tscache_addr[cache_pointer] = cached_address;
+			}
+			return cpu.tscache_data[cache_pointer];
 		}
 		else
 			vid.memcpucyc[cpu.t / 224]++;
