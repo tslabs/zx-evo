@@ -489,7 +489,7 @@ void tsinit(void)
 	comp.ts.sysconf = 1;		// turbo 7MHz for TS-Conf
 	comp.ts.memconf = 0;
 	comp.ts.dma.act = 0;		// disable DMA on startup
-  comp.ts.cacheconf = 0;  // disable cache
+	comp.ts.cacheconf = 0;  // disable cache
 
 	comp.ts.hsint = 2;
 	comp.ts.vsint = 0;
