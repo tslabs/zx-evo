@@ -593,12 +593,12 @@ void opensnap(int index)
       x += strlen(x)+1, x += strlen(x)+1;
 
    char fline[0x400];
-   const char *src = "all (sna,z80,sp,tap,tzx,csw,trd,scl,fdi,td0,udi,isd,pro,hobeta)\0*.sna;*.z80;*.sp;*.tap;*.tzx;*.csw;*.trd;*.scl;*.td0;*.udi;*.fdi;*.isd;*.pro;*.$?;*.!?<\0"
+   const char *src = "all (sna,spg,z80,sp,tap,tzx,csw,trd,scl,fdi,td0,udi,isd,pro,hobeta)\0*.sna;*.spg;*.z80;*.sp;*.tap;*.tzx;*.csw;*.trd;*.scl;*.td0;*.udi;*.fdi;*.isd;*.pro;*.$?;*.!?<\0"
                "Disk B (trd,scl,fdi,td0,udi,isd,pro,hobeta)\0*.trd;*.scl;*.fdi;*.udi;*.td0;*.isd;*.pro;*.$?<\0"
                "Disk C (trd,scl,fdi,td0,udi,isd,pro,hobeta)\0*.trd;*.scl;*.fdi;*.udi;*.td0;*.isd;*.pro;*.$?<\0"
                "Disk D (trd,scl,fdi,td0,udi,isd,pro,hobeta)\0*.trd;*.scl;*.fdi;*.udi;*.td0;*.isd;*.pro;*.$?<\0\0>";
    if (!conf.trdos_present)
-      src = "ZX files (sna,z80,tap,tzx,csw)\0*.sna;*.z80;*.tap;*.tzx;*.csw<\0\0>";
+      src = "ZX files (sna,spg,z80,tap,tzx,csw)\0*.sna;*.spg;*.z80;*.tap;*.tzx;*.csw<\0\0>";
    for (char *dst = fline; *src != '>'; src++)
       if (*src == '<') strcpy(dst, mask), dst += strlen(dst);
       else *dst++ = *src;
