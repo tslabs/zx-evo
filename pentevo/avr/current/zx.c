@@ -305,6 +305,7 @@ void zx_clr_kb(void)
 void to_zx(UBYTE scancode, UBYTE was_E0, UBYTE was_release)
 {
 	KBMAP_VALUE t;
+    static UBYTE beep_out_mode = 0;
 
 	//F7 code (0x83) converted to 0x7F
 	if( !was_E0 && (scancode == 0x83) ) scancode = 0x7F;
@@ -321,12 +322,27 @@ void to_zx(UBYTE scancode, UBYTE was_E0, UBYTE was_release)
 			case  0x14:
 				if ( !was_release ) kb_status |= KB_CTRL_MASK;
 				else kb_status &= ~KB_CTRL_MASK;
-				break;
+			break;
+
 			//Right Alt
 			case  0x11:
 				if ( !was_release ) kb_status |= KB_ALT_MASK;
 				else kb_status &= ~KB_ALT_MASK;
-				break;
+			break;
+
+			//Win
+			case  0x1F:     // Left
+			case  0x27:     // Right
+				if (!was_release) kb_status |= KB_WIN_MASK;
+				else kb_status &= ~KB_WIN_MASK;
+			break;
+
+			//Menu
+			case  0x2F:
+				if (!was_release) kb_status |= KB_MENU_MASK;
+				else kb_status &= ~KB_MENU_MASK;
+			break;
+
 			//Print Screen
 			case 0x7C:
 				//set/reset NMI
@@ -340,7 +356,8 @@ void to_zx(UBYTE scancode, UBYTE was_E0, UBYTE was_release)
 					flags_ex_register &= ~FLAG_EX_NMI; //reset flag
 					zx_set_config( 0 ); //reset NMI to Z80
 				}
-				break;
+			break;
+
 			//Del
 			case 0x71:
 				//Ctrl-Alt-Del pressed
@@ -352,9 +369,10 @@ void to_zx(UBYTE scancode, UBYTE was_E0, UBYTE was_release)
 					flags_register |= FLAG_HARD_RESET;
 					t.tb.b1=NO_KEY;
 				}
-				break;
-		}//switch
+			break;
+		}
 	}
+
 	else
 	{
 		//additional functionality from ps/2 keyboard
@@ -362,42 +380,74 @@ void to_zx(UBYTE scancode, UBYTE was_E0, UBYTE was_release)
 		{
 			//Scroll Lock
 			case 0x7E:
-				//check key of vga mode switcher
+				// VGA mode
 				if ( !was_release )
-				{
-					if (kb_status & (KB_LSHIFT_MASK | KB_RSHIFT_MASK))
-						zx_mode_switcher(MODE_60HZ);
-					else if (kb_status & KB_CTRL_MASK)
-						zx_mode_switcher(MODE_POL);
-					else
-						zx_mode_switcher(MODE_VGA);
-				}
-				break;
-			//Num Lock
-			case 0x77:
-				//check key of tapeout mode switcher
-				if ( !was_release ) zx_mode_switcher(MODE_TAPEOUT);
-				break;
+					zx_mode_switcher(MODE_VGA);
+			break;
+
+			// F1
+            case 0x05:
+                // Floppy swap
+				if (!was_release && (kb_status & KB_MENU_MASK))
+                    zx_mode_switcher(MODE_FSWAP);
+            break;
+
+			// F2
+            case 0x06:
+                // Tape In sound
+                if (!was_release && (kb_status & KB_MENU_MASK))
+                {
+                    beep_out_mode = (beep_out_mode < 2) ? (beep_out_mode + 1) : 0;
+                    modes_register &= ~(MODE_TSOUND | MODE_TAPEOUT);
+
+                    if (beep_out_mode & 1)
+                        modes_register |= MODE_TAPEOUT;
+
+                    if (beep_out_mode & 2)
+                        modes_register |= MODE_TSOUND;
+
+                    zx_mode_switcher(0);
+                }
+            break;
+
+			// F3
+            case 0x04:
+                // 50/60 Hz
+				if (!was_release && (kb_status & KB_MENU_MASK))
+                    zx_mode_switcher(MODE_60HZ);
+            break;
+
+			// F4
+            case 0x0C:
+                // Sync Polarity
+				if (!was_release && (kb_status & KB_MENU_MASK))
+                    zx_mode_switcher(MODE_POL);
+            break;
+
 			//Left Shift
 			case  0x12:
 				if ( !was_release ) kb_status |= KB_LSHIFT_MASK;
 				else kb_status &= ~KB_LSHIFT_MASK;
-				break;
+			break;
+
 			//Right Shift
 			case  0x59:
 				if ( !was_release ) kb_status |= KB_RSHIFT_MASK;
 				else kb_status &= ~KB_RSHIFT_MASK;
-				break;
+            break;
+
 			//Left Ctrl
 			case  0x14:
 				if ( !was_release ) kb_status |= KB_CTRL_MASK;
 				else kb_status &= ~KB_CTRL_MASK;
-				break;
+			break;
+
 			//Left Alt
 			case  0x11:
 				if ( !was_release ) kb_status |= KB_ALT_MASK;
 				else kb_status &= ~KB_ALT_MASK;
-				break;
+			break;
+
 			//F11
 			case  0x78:
 				// easter egg
@@ -410,7 +460,8 @@ void to_zx(UBYTE scancode, UBYTE was_E0, UBYTE was_release)
 					flags_register |= FLAG_HARD_RESET;
 					t.tb.b1=NO_KEY;
 				}
-				break;
+			break;
+
 			//F12
 			case  0x07:
 				// switch config
@@ -426,14 +477,15 @@ void to_zx(UBYTE scancode, UBYTE was_E0, UBYTE was_release)
 				}
 				else if ( !was_release ) kb_status |= KB_F12_MASK;
 				else kb_status &= ~KB_F12_MASK;
-				break;
+			break;
+
 			//keypad '+','-','*' - set ps2mouse resolution
 			case  0x79:
 			case  0x7B:
 			case  0x7C:
 				if ( !was_release ) ps2mouse_set_resolution(scancode);
-				break;
-		}//switch
+			break;
+		}
 	}
 
 	if( t.tb.b1!=NO_KEY )
@@ -568,7 +620,7 @@ void zx_wait_task(UBYTE status)
 			addr = zx_spi_send(SPI_GLUK_ADDR, data, 0);
 			if ( status&0x80 ) data = gluk_get_reg(addr);
 			break;
-			
+
 		case ZXW_KONDR_RS232:
 			addr = zx_spi_send(SPI_RS232_ADDR, data, 0);
 			if ( status&0x80 ) data = rs232_zx_read(addr);
@@ -624,11 +676,13 @@ void zx_mode_switcher(UBYTE mode)
 
 void zx_set_config(UBYTE flags)
 {
-	//send configuration to FPGA
-	zx_spi_send(SPI_CONFIG_REG,
-		(modes_register&MODE_VIDEO_MASK) |
-		((modes_register&MODE_TAPEOUT)?SPI_TAPEOUT_MODE_FLAG:0) |
-		((flags_ex_register&FLAG_EX_NMI)?SPI_CONFIG_NMI_FLAG:0) |
-		(flags & ~(MODE_VIDEO_MASK|SPI_TAPEOUT_MODE_FLAG|SPI_CONFIG_NMI_FLAG)),
-		0x7F);
+	UBYTE modes = (modes_register & MODE_FSWAP) |
+                  (modes_register & MODE_TSOUND) |
+                  (modes_register & MODE_VIDEO_MASK) |
+                  ((modes_register & MODE_TAPEOUT) ? SPI_TAPEOUT_MODE_FLAG : 0) |
+                  ((flags_ex_register & FLAG_EX_NMI) ? SPI_CONFIG_NMI_FLAG : 0) |
+                  (flags & ~(MODE_VIDEO_MASK | SPI_TAPEOUT_MODE_FLAG | SPI_CONFIG_NMI_FLAG));
+
+    //send configuration to FPGA
+	zx_spi_send(SPI_CONFIG_REG, modes, 0x7F);
 }

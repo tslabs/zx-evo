@@ -65,8 +65,9 @@ module zports(
 	output reg [7:0] sysconf,
 	output reg [7:0] memconf,
 	output reg [3:0] cacheconf,
-	output reg [3:0] fddvirt,
-	
+	input wire cfg_floppy_swap,
+    output reg [3:0] fddvirt,
+
 	output reg [7:0] intmask,
 
 	output wire [8:0] dmaport_wr,
@@ -103,7 +104,7 @@ module zports(
 	input  wire        vg_drq,  // from vg93 module - drq + irq read
 	output wire        vg_cs_n,
 	output wire        vg_wrFF,
-   	output reg  [1:0]  drive_sel,    // disk drive selection
+   	output wire [1:0]  drive_sel,    // disk drive selection
 
 // SPI
 	output reg         sdcs_n,
@@ -127,7 +128,7 @@ module zports(
 	localparam PORTXT = 8'hAF;
 	localparam PORTF7 = 8'hF7;
 	localparam COVOX  = 8'hFB;
-	
+
 	localparam NIDE10 = 8'h10;
 	localparam NIDE11 = 8'h11;
 	localparam NIDE30 = 8'h30;
@@ -427,25 +428,25 @@ module zports(
 		begin
 			if (hoa[7:2] == RAMPAGE[7:2])
 				rampage[hoa[1:0]] <= din;
-                
+
 			if (hoa == FMADDR)
 				fmaddr <= din[4:0];
-                
+
 			if (hoa == SYSCONF)
             begin
 				sysconf <= din;
                 cacheconf <= {4{din[2]}};
             end
-                
+
 			if (hoa == CACHECONF)
 				cacheconf <= din[3:0];
-            
+
 			if (hoa == MEMCONF)
 				memconf <= din;
-                
+
 			if (hoa == FDDVIRT)
 				fddvirt <= din[3:0];
-                
+
 			if (hoa == INTMASK)
 				intmask <= din;
 		end
@@ -461,7 +462,6 @@ module zports(
 		else if (p7ffd_wr && !lock128_3)
 			lock48 <= din[5];
 
-
 // AY control
 	wire ay_hit = (loa==PORTFD) & a[15];
 
@@ -471,9 +471,9 @@ module zports(
         ay_bdir <= ay_hit & iowr;
     end
 
-
 // VG93
-    wire virt_vg = fddvirt[drive_sel];
+    wire virt_vg = fddvirt[drive_sel_raw];
+    assign drive_sel = {drive_sel_raw[1], drive_sel_raw[0] ^ cfg_floppy_swap};
 
     assign vg_cs_n = !(iorw && vg_port && dos && !vdos && !virt_vg);
     assign vg_wrFF = wr && iorq_s && vgsys_port && dos && !vdos && !virt_vg;
@@ -482,10 +482,10 @@ module zports(
     assign vdos_off = rdwr && iorq_s && vg_port && vdos;
 
     // write drive number
+    reg [1:0] drive_sel_raw;
     always @(posedge clk)
-        if (iowr_s & vgsys_port & dos)
-            drive_sel <= din[1:0];
-
+        if (iowr_s && vgsys_port && dos)
+            drive_sel_raw <= din;
 
 // SD card (Z-control¸r compatible)
 	wire sdcfg_wr;
@@ -571,14 +571,14 @@ module zports(
 	assign ide_cs0_n = !ide_cs0;
 	assign ide_cs1_n = !ide_cs1;
 
-	
+
 	always @(posedge clk)
 		if (ide_req)
 			ide_stall <= 1'b1;
 		else if (ide_ready)
 			ide_stall <= 1'b0;
-	
-	
+
+
 	// control read & write triggers, which allow nemo-divide mod to work.
 	// read trigger:
 	reg ide_rd_trig;  // nemo-divide read trigger

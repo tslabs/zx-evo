@@ -6,6 +6,7 @@ module zint
 	input  wire clk,
 	input  wire zclk,
 	input  wire res,
+	input  wire wait_n,
 	input  wire int_start_frm,
 	input  wire int_start_lin,
 	input  wire int_start_dma,
@@ -23,21 +24,21 @@ module zint
 	// For DMA INT only its output is blocked, so DMA ISR will will be processed as soon as returned from VDOS.
 
 	assign im2vect = {vect[int_sel]};
-    
+
 	wire [7:0] vect [0:3];
 	assign vect[INTFRM] = 8'hFF;
 	assign vect[INTLIN] = 8'hFD;
 	assign vect[INTDMA] = 8'hFB;
 	assign vect[INTDUM] = 8'hFF;
-    
+
 	assign int_n = int_all ? 1'b0 : 1'bZ;
 	wire int_all = int_frm || int_lin || (int_dma && !vdos);
 
 	wire dis_int_frm = !intmask[0];
 	wire dis_int_lin = !intmask[1];
 	wire dis_int_dma = !intmask[2];
-    
-// INT source latch
+
+// ~INT source latch
 	wire intack_s = intack && !intack_r;
 
 	reg intack_r;
@@ -48,7 +49,7 @@ module zint
 	localparam INTLIN = 2'b01;
 	localparam INTDMA = 2'b10;
 	localparam INTDUM = 2'b11;
-    
+
 	reg [1:0] int_sel;
 	always @(posedge clk)
 		if (intack_s)
@@ -60,8 +61,8 @@ module zint
 			else if (int_dma)
 				int_sel <= INTDMA;		// priority 2
 		end
-        
-// INT generating
+
+// ~INT generating
 	reg int_frm;
 	always @(posedge clk)
 		if (res || dis_int_frm || vdos)
@@ -89,15 +90,20 @@ module zint
 		else if (intack_s && !int_frm && !int_lin)		// priority 2
 			int_dma <= 1'b0;
 
-// INT counter
-	reg [4:0] intctr;
-	wire intctr_fin = &intctr;   // 32 clks
+// ~WAIT resync
+	reg wait_r;
+    always @(posedge zclk)
+        wait_r <= !wait_n;
+
+// ~INT counter
+	reg [5:0] intctr;
+	wire intctr_fin = intctr[5];   // 32 clks
 
 	always @(posedge zclk, posedge int_start_lin)
 	begin
 		if (int_start_lin)
 			intctr <= 0;
-		else if (!intctr_fin)
+		else if (!intctr_fin && !wait_r)
 			intctr <= intctr + 1;
 	end
 

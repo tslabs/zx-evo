@@ -62,6 +62,8 @@ module slavespi
 
 	// Configuration
     output wire [ 7:0] config0, // config bits for overall system
+    output wire        cfg_stb,
+    output wire        tape_in_bit,
 
 	input  wire [ 7:0] wait_write,
 	output wire [ 7:0] wait_read,
@@ -194,7 +196,9 @@ module slavespi
 			kbd_out_cnt <= kbd_out_cnt + 6'b1;
 
 	// registers data-in
-	always @(posedge fclk)
+    assign cfg_stb = scs_n_01 && sel_cfg0;
+    assign tape_in_bit = cfg0_reg_in[2];
+    	always @(posedge fclk)
 	begin
 		if (kbd_bit_stb)
 			kbd_reg[6:0] <= { sdo, kbd_reg[6:1] };
@@ -211,7 +215,7 @@ module slavespi
 		if (!scs_n && sel_cfg0 && sck_01)
 			cfg0_reg_in[7:0] <= { sdo, cfg0_reg_in[7:1] };
 
-		if (scs_n_01 && sel_cfg0)
+		if (cfg_stb)
 			cfg0_reg_out <= cfg0_reg_in;
 	end
 

@@ -140,6 +140,10 @@ extern volatile UBYTE modes_register;
 /** VGA sync polarity (0 - positive / 1 - negative). */
 #define MODE_POL 0x20
 #define MODE_VIDEO_MASK (MODE_VGA|MODE_60HZ|MODE_POL)
+/** Floppy swap (0 - normal, 1 - A/C swapped with B/D. */
+#define MODE_FSWAP 0x40
+/** Tape In sound (0 - off, 1 - on. */
+#define MODE_TSOUND 0x80
 
 /** Type extensions of gluk registers. */
 extern volatile UBYTE ext_type_gluk;

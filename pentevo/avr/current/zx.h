@@ -90,6 +90,10 @@ extern UBYTE zx_realkbd[11];
 #define KB_RSHIFT_MASK 0x08
 /** PS/2 keyboard F12 key status. */
 #define KB_F12_MASK    0x10
+/** PS/2 keyboard WIN key status. */
+#define KB_WIN_MASK    0x20
+/** PS/2 keyboard MENU key status. */
+#define KB_MENU_MASK   0x40
 /** PS/2 keyboard CTRL,ALT,DEL mapped status (set = mapped all keys). */
 #define KB_CTRL_ALT_DEL_MAPPED_MASK 0x80
 /** PS/2 keyboard control keys status (for additional functons). */

@@ -779,6 +779,8 @@ module top(
 		.iorq_n(iorq_n),
 		.m1_n  (m1_n  ),
 
+		.wait_n(spiint_n), // spiint_n is 1-0 signal, wait_n is Z-0
+
 		.int_n(int_n)
 	);
 
