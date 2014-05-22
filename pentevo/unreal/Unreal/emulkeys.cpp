@@ -29,8 +29,9 @@ void main_pause()
    active = 0;
    adjust_mouse_cursor();
 
-   while (!process_msgs());
-   eat();
+   while (!process_msgs())
+	   Sleep(100);
+	//eat();
 
    active = 1; adjust_mouse_cursor();
    sound_play();
