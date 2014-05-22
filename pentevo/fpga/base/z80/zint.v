@@ -16,6 +16,8 @@ module zint
 	input  wire iorq_n,
 	input  wire m1_n,
 
+	input  wire wait_n,
+
 	output reg  int_n
 );
 
@@ -23,6 +25,7 @@ module zint
 
 	reg [9:0] intctr;
 
+	reg [1:0] wr;
 
 
 `ifdef SIMULATE
@@ -32,12 +35,14 @@ module zint
 	end
 `endif
 
+	always @(posedge fclk)
+		wr[1:0] <= { wr[0], wait_n };
 
 	always @(posedge fclk)
 	begin
 		if( int_start )
 			intctr <= 10'd0;
-		else if( !intctr[9:8] )
+		else if( !intctr[9:8] && wr[1] )
 			intctr <= intctr + 10'd1;
 	end
 

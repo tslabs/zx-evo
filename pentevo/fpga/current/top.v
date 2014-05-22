@@ -159,7 +159,12 @@ module top(
     wire cfg_sync_pol;
     wire cfg_vga_on;
     wire [1:0] set_nmi;
-
+    wire cfg_tape_sound;
+    wire cfg_floppy_swap;
+    wire cfg_stb;
+    wire tape_in_bit;
+    wire [7:0] config0 = {cfg_tape_sound, cfg_floppy_swap, cfg_sync_pol, cfg_60hz, beeper_mux, tape_read, set_nmi[0], cfg_vga_on};    // tape in as bit2 is also configured in slavespi.v
+    
     // nmi signals
     wire gen_nmi;
     wire clr_nmi;
@@ -625,12 +630,14 @@ module top(
         .mus_ystb(mus_ystb),
         .mus_btnstb(mus_btnstb),
         .kj_stb(kj_stb),
+        .cfg_stb(cfg_stb),
+        .tape_in_bit(tape_in_bit),
         .gluclock_addr(gluclock_addr),
         .comport_addr(comport_addr),
         .wait_write(wait_write),
         .wait_read(wait_read),
         .wait_end(wait_end),
-        .config0({not_used[7:6], cfg_sync_pol, cfg_60hz, beeper_mux, tape_read, set_nmi[0], cfg_vga_on})
+        .config0(config0)
     );
 
     zkbdmus zkbdmus
@@ -781,6 +788,7 @@ module top(
         .memconf(memconf),
         .intmask(intmask),
         .fddvirt(fddvirt),
+        .cfg_floppy_swap(cfg_floppy_swap),
         .drive_sel(vg_a),
         .dos(dos),
         .vdos(vdos),
@@ -841,6 +849,7 @@ module top(
         .clk(fclk),
         .zclk(clkz_out),
         .res(res),
+        .wait_n(wait_n),
         .im2vect(im2vect),
         .intmask(intmask),
         .int_start_lin(int_start_lin),
@@ -954,8 +963,10 @@ module top(
         .beeper_wr(beeper_wr),
         .covox_wr(covox_wr),
         .beeper_mux(beeper_mux),
+        .tapein_wr(cfg_stb),
+        .tape_sound(cfg_tape_sound),
+        .tape_in(tape_in_bit),
         .sound_bit(beep)
     );
 
 endmodule
-
