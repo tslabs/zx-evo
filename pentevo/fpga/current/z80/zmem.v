@@ -226,14 +226,12 @@ module zmem(
 	always @(posedge clk)
 	if (rst)
 		stall14_fin <= 1'b0;
-	else if (stall14_fin && ((opfetch && cc[0]) || (memrd && cc[1])))
+	else if (stall14_fin && ((opfetch && c1) || (memrd && c2)))
 		stall14_fin <= 1'b0;
 	else if (cpu_next && c3 && cpu_req && (opfetch || memrd))
 		stall14_fin <= 1'b1;
 
-    wire [1:0] cc = turbo[0] ? {c1, c0} : {c2, c1};	// normal or overclock
-
-// cache
+    // cache
 	// wire cache_hit = (ch_addr[7:2] != 6'b011100) && (cpu_hi_addr == cache_a) && cache_v;	// debug for BM
 	wire cache_hit = (cpu_hi_addr == cache_a) && cache_v;	// asynchronous signal meaning that address requested by CPU is cached and valid
 	wire cache_hit_en = cache_hit && cache_en[win];
