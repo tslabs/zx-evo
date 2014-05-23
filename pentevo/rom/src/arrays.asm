@@ -64,7 +64,7 @@ OPTTAB0
 ; byte - number of choices
 ; byte - address in NVRAM
 ; string - option
-OPT_CFQ    defb 4, low(cfrq), 'CPU Speed, MHz:', 0
+OPT_CFQ    defb 3, low(cfrq), 'CPU Speed, MHz:', 0
 OPT_CCH    defb 2, low(cach), 'CPU Cache:', 0
 OPT_80L    defb 4, low(l128), '#7FFD span:', 0
 OPT_B1T    defb 5, low(b1to), 'Reset to:', 0
@@ -82,7 +82,6 @@ SEL_CFQ
 		defb '       3.5', 0
         defb '         7', 0
 		defb '        14', 0
-		defb 'overclk 14', 0
 
 SEL_BOT
 		defb '   ROM #00', 0
