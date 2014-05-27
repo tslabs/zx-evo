@@ -764,7 +764,7 @@ void update_screen()
 				}
 			}
 			// render TSU pixel line to the buffer for next video line
-			if (conf.mem_model == MM_TSL && tact == VID_TACTS && line < vid.raster.d_brd)
+			if (conf.mem_model == MM_TSL && tact == VID_TACTS && line < (vid.raster.d_brd-1))
 			{
 				vid.line = (u16)line;
 				render_ts();
