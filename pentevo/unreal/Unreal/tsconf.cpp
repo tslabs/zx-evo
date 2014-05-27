@@ -482,6 +482,9 @@ void tsinit(void)
 	comp.ts.intmask = 1;
 	comp.ts.intctrl.frame_t = 0;
 
+	for (u16 i = 0; i < TS_CACHE_SIZE; i++)
+		cpu.tscache_addr[i] = -1;
+
 	comp.ts.fddvirt = 0;
 	comp.ts.vdos = 0;
 	comp.ts.vdos_m1 = 0;
