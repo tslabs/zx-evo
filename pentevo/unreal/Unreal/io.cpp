@@ -942,14 +942,16 @@ set1FFD:
          if ((comp.p7FFD ^ val) & 0x08)
              update_screen();
 
-         comp.p7FFD = val;
+         comp.p7FFD = (conf.mem_model == MM_TSL && comp.ts.lck128 == 3) ? (val & 0xDF) : val;
 		 comp.ts.vpage = comp.ts.vpage_d = (val & 8) ? 7 : 5;
 
 		 // In TS Memory Model the actual value of #7FFD ignored, and page3 is used instead
 			if (comp.ts.lck128 == 0)
-				comp.ts.page[3] = ((val & 0xC0) >> 3) | (val & 0x07);		// no lock
+				comp.ts.page[3] = ((val & 0xC0) >> 3) | (val & 0x07);		// lock 512
 			else if (comp.ts.lck128 == 1)
 				comp.ts.page[3] = val & 0x07;		// lock 128
+			else if (comp.ts.lck128 == 3)
+				comp.ts.page[3] = (val & 0x20) | ((val & 0xC0) >> 3) | (val & 0x07); // lock 1024
 			else 	// auto
 			{
 				if ((port >> 13) & 1)
