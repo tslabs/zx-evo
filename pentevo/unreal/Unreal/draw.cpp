@@ -845,6 +845,7 @@ void init_frame()
    vid.flash = comp.frame_counter & 0x10;
    init_raster();
    init_memcycles();
+   comp.ts.dma.line = 0;
 }
 
 void load_spec_colors()

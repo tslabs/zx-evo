@@ -43,7 +43,7 @@ u16 dma_ram(u16 memcyc)
 
   u16 n = 0;
 
-  for (; n < MEM_CYCLES - memcyc && comp.ts.dma.len; n++)
+  for (; (n < (MEM_CYCLES - memcyc)) && comp.ts.dma.len; n++)
   {
     if (comp.ts.dma.state)
     {
@@ -250,14 +250,18 @@ void dma()
 {
   update_screen();
 
+  if (comp.ts.dma.line >= VID_LINES)
+    return;
+
   u16 memcyc = vid.memcpucyc[comp.ts.dma.line] +
                vid.memtsscyc[comp.ts.dma.line] +
                vid.memtstcyc[comp.ts.dma.line] +
                vid.memvidcyc[comp.ts.dma.line];
 
-  for (; memcyc < MEM_CYCLES;)
+  while (memcyc < MEM_CYCLES)
   {
-    if (comp.ts.dma.num == 0) {
+    if (comp.ts.dma.num == 0)
+	{
       comp.ts.intctrl.new_dma = true;
       comp.ts.dma.act = 0;
       return;
@@ -324,11 +328,13 @@ void dma()
     }
   }
 
-  if (++comp.ts.dma.line == VID_LINES) {
+  if (++comp.ts.dma.line == VID_LINES)
+  {
     comp.ts.dma.line = 0;
     comp.ts.dma.next_t = 0;
   }
-  else {
+  else
+  {
     comp.ts.dma.next_t += VID_TACTS;
   }
 }
@@ -349,7 +355,7 @@ int render_tile(u8 page, u32 tnum, u8 line, u32 x, u8 pal, u8 xf, u8 n)
         i8 a = xf ? -1 : 1;
         u8 c;
         u32 ox = (tnum & 0x3F) << 2;
-        
+
         for (u32 i=0; i<n; i++)		// draw 8 pixels per iteration
         {
             if (c = g[ox + 0] & 0xF0) vid.tsline[vid.line & 1][x & 0x1FF] = pal | (c >> 4); x += a;
