@@ -71,6 +71,7 @@ enum MEM_MODEL
    MM_PROFSCORP,
    MM_KAY,
    MM_QUORUM,
+   MM_LSY256,
    N_MM_MODELS
 };
 
@@ -277,6 +278,7 @@ struct CONFIG
    char plus3_rom_path[FILENAME_MAX];
    char quorum_rom_path[FILENAME_MAX];
    char tsl_rom_path[FILENAME_MAX];
+   char lsy_rom_path[FILENAME_MAX];
 
    #ifdef MOD_GSZ80
    unsigned gs_ramsize;
@@ -453,6 +455,7 @@ struct COMPUTER
    u8 p7FFD, pFE, pEFF7, pXXXX;
    u8 pDFFD, pFDFD, p1FFD, pFF77;
    TSPORTS_t ts;
+   u8 pLSY256;
    u16 cram[256];
    u16 sfile[256];
    u8 p7EFD; // gmx
@@ -518,6 +521,12 @@ struct COMPUTER
 #define CF_CACHEON      0x20    // cache active
 #define CF_Z80FBUS      0x40    // unstable data bus
 #define CF_PROFROM      0x80    // PROF-ROM active
+
+// LSY256 - BarmaleyM's Orel' extension
+#define PF_DV0			0x01	// RAM r/w at #0000 page selector
+#define PF_BLKROM		0x02	// RAM/!ROM at #0000
+#define PF_EMUL			0x08	// page mode at #0000
+#define PF_PA3			0x10	// page bit3 at #C000
 
 #define TAPE_QUANTUM 64
 struct tzx_block

@@ -316,12 +316,12 @@ typedef struct
 		u8 memconf;
 		struct
         {
-			u8 rom128:1;	// unused in Unreal - taken from the #7FFD
+			u8 rom128:1;	// unused - taken from the #7FFD
 			u8 w0_we:1;
 			u8 w0_map_n:1;
 			u8 w0_ram:1;
 			u8 _03:2;
-			u8 lck128:2;	// 00 - no lock, 01 - lock128, 1x - auto (!a13)
+			u8 lck128:2;	// 00 - lock512, 01 - lock128, 10 - auto (!a13), 11 - lock1024
 		};
 	};
 

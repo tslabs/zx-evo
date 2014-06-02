@@ -74,6 +74,7 @@ u8 TMainZ80::m1_cycle()
   else
     tt += rate * 4;
 
+  cpu.opcode = tempbyte;
   return tempbyte;
 }
 
@@ -258,6 +259,7 @@ const TMemModel mem_model[N_MM_MODELS] =
     { "ZS Scorpion + PROF ROM", "PROFSCORP", MM_PROFSCORP, 256,  RAM_256 | RAM_1024 },
     { "Nemo's KAY", "KAY",                   MM_KAY, 256,  RAM_256 | RAM_1024 },
     { "Quorum", "QUORUM",                    MM_QUORUM, 1024, RAM_128 | RAM_1024 },
+    { "Orel' BK-08 (LSY)", "LSY256",         MM_LSY256, 256, RAM_256 }
 };
 
 u8 kbdpc[VK_MAX]; // add cells for mouse & joystick
