@@ -83,6 +83,7 @@ char *MemDlg_get_bigrom()
 {
    if (c1.mem_model == MM_PENTAGON) return c1.pent_rom_path;
    if (c1.mem_model == MM_TSL) return c1.tsl_rom_path;
+   if (c1.mem_model == MM_LSY256) return c1.lsy_rom_path;
    if (c1.mem_model == MM_ATM450) return c1.atm1_rom_path;
    if (c1.mem_model == MM_ATM710) return c1.atm2_rom_path;
    if (c1.mem_model == MM_ATM3) return c1.atm3_rom_path;

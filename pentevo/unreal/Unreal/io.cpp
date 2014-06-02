@@ -137,6 +137,12 @@ void out(unsigned port, u8 val)
        }
    }
 
+   if ((conf.mem_model == MM_LSY256) && (p1 == 0x7B))
+   {
+		comp.pLSY256 = val;
+		set_banks();
+   }
+
    if ((conf.mem_model == MM_TSL) && (p1 == 0xAF))
    {
        // TS-Config extensions ports
@@ -872,16 +878,17 @@ void out(unsigned port, u8 val)
    // #xD
    if (!(port & 2))
    {
-
+      // port DD - covox
       if (conf.sound.covoxDD && (u8)port == 0xDD)
-      { // port DD - covox
+      {
 //         __debugbreak();
          flush_dig_snd();
          covDD_vol = val*conf.sound.covoxDD_vol/0x100;
          return;
       }
 
-      if (!(port & 0x8000)) // zx128 port (#7FFD port)
+      // zx128 port and related - !!! rewrite it using switch
+      if (!(port & 0x8000))
       {
          // 0001xxxxxxxxxx0x (bcig4)
          if ((port & 0xF002) == (0x1FFD & 0xF002) && conf.mem_model == MM_PLUS3)
@@ -918,47 +925,62 @@ set1FFD:
          // 01xxxxxxxx1xxx01 (sc16 green)
          if ((port & 0xC023) != (0x7FFD & 0xC023) && (conf.mem_model == MM_SCORP || conf.mem_model == MM_PROFSCORP))
              return;
+
          // 0xxxxxxxxxx11x0x
          if ((port & 0x801A) != (0x7FFD & 0x801A) && (conf.mem_model == MM_QUORUM))
              return;
 
-         // 7FFD
+         // 7FFD blocker if 48 lock bit is set
          if (comp.p7FFD & 0x20)
          { // 48k lock
             // #EFF7.2 forces lock
-            if ((comp.pEFF7 & EFF7_LOCKMEM) && conf.mem_model == MM_PENTAGON && conf.ramsize == 1024)
+            if (conf.mem_model == MM_PENTAGON && conf.ramsize == 1024 && (comp.pEFF7 & EFF7_LOCKMEM))
                 return;
 
-            if ((comp.pEFF7 & EFF7_LOCKMEM) && conf.mem_model == MM_ATM3) // lvd added eff7 to atm3
+            if (conf.mem_model == MM_ATM3 && (comp.pEFF7 & EFF7_LOCKMEM))
                 return;
 
-            // if not pentagon-1024 or pentevo (atm3) --(added by lvd)-- or profi with #DFFD.4 set, apply lock
-            if (!((conf.ramsize == 1024 && conf.mem_model == MM_PENTAGON) ||
-                  (conf.mem_model == MM_ATM3)                             ||
-                  (conf.mem_model == MM_PROFI && (comp.pDFFD & 0x10)))) // molodcov_alex
+            // if not pentevo (atm3) or profi with #DFFD.4 set, apply lock
+            if (!((conf.mem_model == MM_ATM3)                             ||
+                  (conf.mem_model == MM_PROFI && (comp.pDFFD & 0x10))     ||
+                  (conf.mem_model == MM_TSL) && (comp.ts.lck128 == 3)))
                 return;
          }
 
          if ((comp.p7FFD ^ val) & 0x08)
              update_screen();
 
-         comp.p7FFD = (conf.mem_model == MM_TSL && comp.ts.lck128 == 3) ? (val & 0xDF) : val;
+         comp.p7FFD = val;      // all models apart from TSL will deal with this variable
 		 comp.ts.vpage = comp.ts.vpage_d = (val & 8) ? 7 : 5;
 
 		 // In TS Memory Model the actual value of #7FFD ignored, and page3 is used instead
-			if (comp.ts.lck128 == 0)
-				comp.ts.page[3] = ((val & 0xC0) >> 3) | (val & 0x07);		// lock 512
-			else if (comp.ts.lck128 == 1)
-				comp.ts.page[3] = val & 0x07;		// lock 128
-			else if (comp.ts.lck128 == 3)
-				comp.ts.page[3] = (val & 0x20) | ((val & 0xC0) >> 3) | (val & 0x07); // lock 1024
-			else 	// auto
-			{
-				if ((port >> 13) & 1)
-					comp.ts.page[3] = ((val & 0xC0) >> 3) | (val & 0x07);		// out(c), R = no lock
-				else
-					comp.ts.page[3] = val & 0x07;		// out(#FD), a = lock128
-			}
+            u8 lock128auto = !(!(cpu.opcode & 0x80) ^ !(cpu.opcode & 0x40));    // out(c), R = no lock or out(#FD), a = lock128
+            u8 page128  = val & 0x07;
+            u8 page512  = ((val & 0xC0) >> 3) | (val & 0x07);
+            u8 page1024 = (val & 0x20) | ((val & 0xC0) >> 3) | (val & 0x07);
+            
+            switch (comp.ts.lck128)
+            {
+                // 512kB
+                case 0:
+                    comp.ts.page[3] = page512;
+                break;
+                
+                // 128kB
+                case 1:
+                    comp.ts.page[3] = page128;
+                break;
+                
+                // 512/128kB auto
+                case 2:
+                    comp.ts.page[3] = lock128auto ? page128 : page512;
+                break;
+                
+                // 1024kB
+                case 3:
+                    comp.ts.page[3] = page1024;
+                break;
+            }
 
          set_banks();
          return;

@@ -289,6 +289,7 @@ void load_config(const char *fname)
    GetPrivateProfileString(rom, "PLUS3", nil, conf.plus3_rom_path, sizeof conf.plus3_rom_path, ininame);
    GetPrivateProfileString(rom, "QUORUM", nil, conf.quorum_rom_path, sizeof conf.quorum_rom_path, ininame);
    GetPrivateProfileString(rom, "TSL", nil, conf.tsl_rom_path, sizeof conf.tsl_rom_path, ininame);
+   GetPrivateProfileString(rom, "LSY", nil, conf.lsy_rom_path, sizeof conf.lsy_rom_path, ininame);
    #ifdef MOD_GSZ80
    GetPrivateProfileString(rom, "GS", nil, conf.gs_rom_path, sizeof conf.gs_rom_path, ininame);
    addpath(conf.gs_rom_path);
@@ -304,6 +305,7 @@ void load_config(const char *fname)
    addpath(conf.plus3_rom_path);
    addpath(conf.quorum_rom_path);
    addpath(conf.tsl_rom_path);
+   addpath(conf.lsy_rom_path);
 //[vv]   addpath(conf.kay_rom_path);
 
    GetPrivateProfileString(rom, "ROMSET", "default", line, sizeof line, ininame);
@@ -861,6 +863,13 @@ void apply_memory()
       base_sys_rom = page_rom(3);
    break;
 
+   case MM_LSY256:
+      base_128_rom = page_rom(0);
+      base_sos_rom = page_rom(1);
+      base_dos_rom = page_rom(3);
+      base_sys_rom = page_rom(2);
+   break;
+
    default:
       base_sys_rom = page_rom(0);
       base_dos_rom = page_rom(1);
@@ -913,6 +922,7 @@ void apply_memory()
          case MM_PLUS3: romname = conf.plus3_rom_path; break;
          case MM_QUORUM: romname = conf.quorum_rom_path; break;
          case MM_TSL: romname = conf.tsl_rom_path; break;
+		 case MM_LSY256: romname = conf.lsy_rom_path; break;
 
          default:
              errexit("ROMSET should be defined for this memory model");

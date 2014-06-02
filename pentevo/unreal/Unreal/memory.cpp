@@ -8,15 +8,13 @@
 // input: ports 7FFD,1FFD,DFFD,FFF7,FF77,EFF7, flags CF_TRDOS,CF_CACHEON
 void set_banks()
 {
-   u8 tmp;
-   
+   // set default values for memory windows
    bankw[1] = bankr[1] = page_ram(5);
    bankw[2] = bankr[2] = page_ram(2);
    bankm[0] = 0;
    bankm[1] = bankm[2] = bankm[3] = 1;
 
    // screen begining
-   // temp.base = memory + ((comp.p7FFD & 8) ? 7*PAGE : 5*PAGE);
    temp.base = memory + comp.ts.vpage * PAGE;
 /*
    if (conf.mem_model == MM_QUORUM)
@@ -148,6 +146,8 @@ void set_banks()
 
       case MM_TSL:
 	  {
+        u8 tmp;
+
 		if (comp.ts.w0_map_n)
 		/* linear */
 			tmp = comp.ts.page[0];
@@ -159,14 +159,14 @@ void set_banks()
 				tmp = (comp.p7FFD & 0x10) ? 1 : 0;
 			else
 				tmp = (comp.p7FFD & 0x10) ? 3 : 2;
-			
+
 			tmp += comp.ts.page[0] & 0xFC;
 		}
 
 		if (comp.ts.w0_ram || comp.ts.vdos)
 		// RAM at #0000
 		{
-			bankm[0] = 1;
+			bankm[0] = comp.ts.w0_we;
 			bank0 = page_ram(comp.ts.vdos ? 0xFF : tmp);
 		}
 
@@ -180,9 +180,8 @@ void set_banks()
 		bankr[1] = bankw[1] = page_ram(comp.ts.page[1]);
 		bankr[2] = bankw[2] = page_ram(comp.ts.page[2]);
 		bank3  = page_ram(comp.ts.page[3]);
-
-		break;
 	  }
+      break;
 
       case MM_ATM3:
          if (comp.pBF & 1) // shaden
@@ -206,7 +205,7 @@ void set_banks()
             u32 mem7ffd = (comp.p7FFD & 7) | ( (comp.p7FFD & 0xE0)>>2 );
             u32 mask7ffd = 0x07;
 
-            if ( conf.mem_model==MM_ATM3 && ( !(comp.pEFF7 & EFF7_LOCKMEM) ) )
+            if (conf.mem_model==MM_ATM3 && (!(comp.pEFF7 & EFF7_LOCKMEM)))
                 mask7ffd = 0x3F;
 
             switch (comp.pFFF7[i+bank] & 0x300)
@@ -237,8 +236,8 @@ void set_banks()
                 bank0 = page_ram(0x00);
         }
 
-         break;
       }
+      break;
 
       case MM_PLUS3:
       {
@@ -270,8 +269,8 @@ void set_banks()
               bank0 = bankr[0];
               bank3 = bankr[3];
           }
-          break;
       }
+      break;
 
       case MM_QUORUM:
       {
@@ -298,8 +297,43 @@ void set_banks()
 
           bank |= ((comp.p7FFD & 0xC0) >> 3) | (comp.p7FFD & 0x20);
           bank3 = page_ram(bank & temp.ram_mask);
-          break;
       }
+      break;
+
+      case MM_LSY256:
+      // ROM banks: 0 - 128, 1 - 48, 2 - sys, 3 - trd
+      {
+		switch (comp.pLSY256 & (PF_EMUL | PF_BLKROM))
+        {
+            // #0000: ROM, LSY-Setup
+            case 0:
+                bank0 = base_sys_rom;
+            break;
+
+            // #0000: ROM, default
+            case PF_EMUL:
+            break;
+
+            // #0000: RAM 12/13 (DV0 - selector), r/w
+            case PF_BLKROM:
+                bank0 = page_ram((comp.pLSY256 & PF_DV0) ? 13 : 12);
+                bankm[0] = 1;
+            break;
+
+            // #0000: RAM 8-11, r/o
+            case PF_EMUL | PF_BLKROM:
+            {
+                if (comp.flags & CF_TRDOS)
+                    bank0 = page_ram((comp.p7FFD & 0x10) ? 11 : 10);
+                else
+                    bank0 = page_ram((comp.p7FFD & 0x10) ? 9 : 8);
+            }
+            break;
+        }
+
+        bank3 = page_ram((comp.p7FFD & 0x07) | (comp.pLSY256 & PF_PA3));
+      }
+      break;
 
       default: bank3 = page_ram(0);
    }
@@ -317,7 +351,7 @@ void set_banks()
        dosflags = 0;
    if (conf.mem_model == MM_PENTAGON || conf.mem_model == MM_PROFI)
        dosflags = CF_LEAVEDOSADR;
-   
+
    if (comp.flags & CF_TRDOS)
    {
        comp.flags |= dosflags | CF_DOSPORTS;

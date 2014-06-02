@@ -188,6 +188,7 @@ struct TZ80State
             u8 memh;
         };
     };
+	u8 opcode;
     unsigned eipos, haltpos;
     /*------------------------------*/
     u8 im;

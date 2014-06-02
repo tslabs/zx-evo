@@ -92,6 +92,7 @@ void reset(ROM_MODE mode)
    comp.t_states = 0; comp.frame_counter = 0;
    comp.p7FFD = comp.pDFFD = comp.pFDFD = comp.p1FFD = 0;
    comp.p7EFD = 0;
+   comp.pLSY256 = 0;
 
    comp.ulaplus_mode=0;
    comp.ulaplus_reg=0;
@@ -102,6 +103,9 @@ void reset(ROM_MODE mode)
 		turbo(2);		// turbo 2x (7MHz) for TS-Conf
    else
 		turbo(1);		// turbo 1x (3.5MHz) for all other clones
+        
+   if (conf.mem_model == MM_LSY256)
+        mode = RM_SYS;
    
    switch (mode)
    {
