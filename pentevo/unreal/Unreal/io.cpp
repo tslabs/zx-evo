@@ -942,13 +942,9 @@ set1FFD:
                 return;
          }
 
-         if ((comp.p7FFD ^ val) & 0x08)
-             update_screen();
-
-         comp.p7FFD = val;      // all models apart from TSL will deal with this variable
-		 comp.ts.vpage = comp.ts.vpage_d = (val & 8) ? 7 : 5;
-
 		 // In TS Memory Model the actual value of #7FFD ignored, and page3 is used instead
+         if (conf.mem_model == MM_TSL)
+         {
             u8 lock128auto = !(!(cpu.opcode & 0x80) ^ !(cpu.opcode & 0x40));    // out(c), R = no lock or out(#FD), a = lock128
             u8 page128  = val & 0x07;
             u8 page512  = ((val & 0xC0) >> 3) | (val & 0x07);
@@ -974,8 +970,16 @@ set1FFD:
                 // 1024kB
                 case 3:
                     comp.ts.page[3] = page1024;
+                    val &= ~0x20;
                 break;
             }
+         }
+
+         if ((comp.p7FFD ^ val) & 0x08)
+             update_screen();
+             
+         comp.p7FFD = val;      // all models apart from TSL will deal with this variable
+		 comp.ts.vpage = comp.ts.vpage_d = (val & 8) ? 7 : 5;
 
          set_banks();
          return;
