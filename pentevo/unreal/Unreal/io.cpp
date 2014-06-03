@@ -932,18 +932,13 @@ set1FFD:
 
          // 7FFD blocker if 48 lock bit is set
          if (comp.p7FFD & 0x20)
-         { // 48k lock
+         {
             // #EFF7.2 forces lock
-            if (conf.mem_model == MM_PENTAGON && conf.ramsize == 1024 && (comp.pEFF7 & EFF7_LOCKMEM))
+            if (((conf.mem_model == MM_PENTAGON && conf.ramsize == 1024) || (conf.mem_model == MM_ATM3)) && (comp.pEFF7 & EFF7_LOCKMEM))
                 return;
 
-            if (conf.mem_model == MM_ATM3 && (comp.pEFF7 & EFF7_LOCKMEM))
-                return;
-
-            // if not pentevo (atm3) or profi with #DFFD.4 set, apply lock
-            if (!((conf.mem_model == MM_ATM3)                             ||
-                  (conf.mem_model == MM_PROFI && (comp.pDFFD & 0x10))     ||
-                  (conf.mem_model == MM_TSL) && (comp.ts.lck128 == 3)))
+            // if not profi with #DFFD.4 set, apply lock
+            if (!(conf.mem_model == MM_PROFI && (comp.pDFFD & 0x10)))
                 return;
          }
 
