@@ -41,6 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
+				AdditionalIncludeDirectories="wtl"
 				PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;USE_SND_EXTERNAL_BUFFER;_DEBUG;_MBCS"
 				MinimalRebuild="true"
 				ExceptionHandling="0"
@@ -62,6 +63,7 @@
 			<Tool
 				Name="VCResourceCompilerTool"
 				Culture="1033"
+				AdditionalIncludeDirectories="wtl"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -128,6 +130,7 @@
 				Optimization="3"
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"
+				AdditionalIncludeDirectories="wtl"
 				PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;USE_SND_EXTERNAL_BUFFER;_DEBUG;_MBCS"
 				ExceptionHandling="0"
 				RuntimeLibrary="0"
@@ -147,6 +150,7 @@
 			<Tool
 				Name="VCResourceCompilerTool"
 				Culture="1033"
+				AdditionalIncludeDirectories="wtl"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
