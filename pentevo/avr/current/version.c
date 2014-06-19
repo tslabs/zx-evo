@@ -33,6 +33,12 @@ UBYTE GetVersionByte(UBYTE index)
 				//PS2 keyboards log
 				return ps2keyboard_from_log();
 			}
+
+			case EXT_TYPE_RDCFG:
+			{
+				// read config byte
+				return (index==0) ? modes_register : 0xFF;
+			}
 		}
 	}
 	return (UBYTE)0xFF;
