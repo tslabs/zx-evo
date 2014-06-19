@@ -7,15 +7,22 @@ PROJECT = core
 MCU = atmega128
 TARGET = core.elf
 CC = avr-gcc
-MHMT = "../../../tools/mhmt/mhmt.exe"
-MKFW = "../../../tools/make_fw/make_fw.exe"
+ifeq ($(OS),Windows_NT)
+EXE = ".exe"
+DEVNULL = "nul"
+else
+EXE = ""
+DEVNULL = "/dev/null"
+endif
+MHMT = "../../../tools/mhmt/mhmt$(EXE)"
+MKFW = "../../../tools/make_fw/make_fw$(EXE)"
 
 ## Options common to compile, link and assembly rules
 COMMON = -mmcu=$(MCU)
 
 ## Compile options common for all C compilation units.
 CFLAGS = $(COMMON)
-CFLAGS += -Wall -gdwarf-2 -std=gnu99 -Os -DF_CPU=11059200UL
+CFLAGS += -Wall -Wextra -gdwarf-2 -std=gnu99 -Os -DF_CPU=11059200UL
 CFLAGS += -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums -fdata-sections -ffunction-sections
 CFLAGS += -MD -MP -MT $(*F).o -MF dep/$(@F).d
 
@@ -100,11 +107,11 @@ baseconf.rbf: ../../../fpga/base/quartus/top.rbf
 	@cp ../../../fpga/base/quartus/top.rbf baseconf.rbf
 
 $(FPGACORE): tsconf.rbf baseconf.rbf egg.rbf
-	@$(MHMT) -maxwin2048 tsconf.rbf tsconf.mlz >nul
+	@$(MHMT) -maxwin2048 tsconf.rbf tsconf.mlz >$(DEVNULL)
 	@avr-objcopy -I binary -O elf32-avr -B avr:51 --rename-section .data=.progmem.data,contents,alloc,load,readonly,data --redefine-sym _binary_tsconf_mlz_start=fpga0 tsconf.mlz tsconf.o
-	@$(MHMT) -maxwin2048 baseconf.rbf baseconf.mlz >nul
+	@$(MHMT) -maxwin2048 baseconf.rbf baseconf.mlz >$(DEVNULL)
 	@avr-objcopy -I binary -O elf32-avr -B avr:51 --rename-section .data=.progmem.data,contents,alloc,load,readonly,data --redefine-sym _binary_baseconf_mlz_start=fpga1 baseconf.mlz baseconf.o
-	@$(MHMT) -maxwin2048 egg.rbf egg.mlz >nul
+	@$(MHMT) -maxwin2048 egg.rbf egg.mlz >$(DEVNULL)
 	@avr-objcopy -I binary -O elf32-avr -B avr:51 --rename-section .data=.progmem.data,contents,alloc,load,readonly,data --redefine-sym _binary_egg_mlz_start=fpga2 egg.mlz egg.o
 
 %.hex: $(TARGET)
@@ -121,10 +128,10 @@ size: ${TARGET}
 	@avr-size -C --mcu=${MCU} ${TARGET}
 
 zxevo_beta.bin: core.hex core.eep
-	@$(MKFW) core.hex core.eep zxevo_beta.bin version.txt >nul
+	@$(MKFW) core.hex core.eep zxevo_beta.bin version.txt >$(DEVNULL)
 
 zxevo_release.bin: core.hex core.eep
-	@$(MKFW) core.hex core.eep zxevo_release.bin version.txt >nul
+	@$(MKFW) core.hex core.eep zxevo_release.bin version.txt >$(DEVNULL)
 
 ## Clean target
 .PHONY: clean
