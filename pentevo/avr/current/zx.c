@@ -282,7 +282,7 @@ void zx_task(UBYTE operation) // zx task, tracks when there is need to send new 
 
 void zx_clr_kb(void)
 {
-	BYTE i;
+	UBYTE i;
 
 	for( i=0; i<sizeof(zx_map)/sizeof(zx_map[0]); i++ )
 	{
@@ -517,8 +517,8 @@ void update_keys(UBYTE zxcode, UBYTE was_release)
 //		if( !zx_fifo_isfull() )
 //			zx_fifo_put( (was_release ? 0 : PRESS_MASK) | zxcode );
 //	}
-	else if( zxcode < 40 ); // ordinary keys too
-	{
+//	else if( zxcode < 40 ) // ordinary keys too
+//	{
 		if( was_release )
 		{
 			if( zx_counters[zxcode] && !(--zx_counters[zxcode]) ) // left-to-right evaluation and shortcutting
@@ -535,7 +535,7 @@ void update_keys(UBYTE zxcode, UBYTE was_release)
 					zx_fifo_put( PRESS_MASK | zxcode );
 			}
 		}
-	}
+//	}
 }
 
 void zx_fifo_put(UBYTE input)
