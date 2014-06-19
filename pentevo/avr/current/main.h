@@ -153,7 +153,8 @@ extern volatile UBYTE ext_type_gluk;
 #define EXT_TYPE_BOOTLOADER_VERSION   1
 /** Type is PS2 keyboards log. */
 #define EXT_TYPE_PS2KEYBOARDS_LOG     2
-
+/** Type is reading some config bytes. */
+#define EXT_TYPE_RDCFG                3
 
 /** Data buffer. */
 extern UBYTE dbuf[];
