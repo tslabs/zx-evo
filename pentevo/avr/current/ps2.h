@@ -104,6 +104,8 @@ extern volatile UBYTE ps2mouse_cmd;
 #define PS2MOUSE_CMD_GET_TYPE       0xF2
 /** Command to set resolution PS2 mouse. */
 #define PS2MOUSE_CMD_SET_RESOLUTION 0xE8
+/** Command enable PS2 mouse. */
+#define PS2MOUSE_CMD_ENABLE         0xF4
 
 /** PS/2 mouse task. */
 void ps2mouse_task(void);
