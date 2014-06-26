@@ -1,5 +1,6 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include <avr/eeprom.h>
 #include <util/twi.h>
 
 #include "pins.h"
@@ -158,6 +159,28 @@ static UBYTE days_of_months()
 	if ( (tmp == 28) && ( ( gluk_regs[GLUK_REG_YEAR]&0x03 ) == 0 ) ) tmp++;
 
 	return tmp;
+}
+
+static UBYTE read_eeprom(UBYTE offset)
+{
+	UWORD ptr = gluk_regs[GLUK_REG_A];
+	ptr = (ptr<<4) + (0x0F&offset);
+
+	//wait for eeprom
+	eeprom_busy_wait();
+
+	return eeprom_read_byte((UBYTE*)ptr);
+}
+
+static void write_eeprom(UBYTE offset, UBYTE data)
+{
+	UWORD ptr = gluk_regs[GLUK_REG_A];
+	ptr = (ptr<<4) + (0x0F&offset);
+
+	//wait for eeprom
+	eeprom_busy_wait();
+
+	eeprom_write_byte ((UBYTE*)ptr, data);
 }
 
 void rtc_init(void)
@@ -340,8 +363,16 @@ UBYTE gluk_get_reg(UBYTE index)
 	{
 		if ( index >= 0xF0 )
 		{
-			//read version
-			tmp = GetVersionByte( index&0x0F );
+			if ( (gluk_regs[GLUK_REG_C]&GLUK_C_EEPROM_FLAG)!=0 )
+			{
+				//read from eeprom
+				tmp = read_eeprom(index);
+			}
+			else
+			{
+				//read version
+				tmp = GetVersionByte( index&0x0F );
+			}
 		}
 		else
 		{
@@ -425,6 +456,11 @@ void gluk_set_reg(UBYTE index, UBYTE data)
 		{
 			switch( index )
 			{
+				case GLUK_REG_A:
+					//EEPROM address
+					gluk_regs[GLUK_REG_A]=data;
+					break;
+
 				case GLUK_REG_B:
 					//BCD or Hex mode set
 					gluk_regs[GLUK_REG_B]=(data&GLUK_B_DATA_MODE)|GLUK_B_INIT_VALUE;
@@ -444,6 +480,11 @@ void gluk_set_reg(UBYTE index, UBYTE data)
 						//set led on keyboard
 						ps2keyboard_send_cmd(PS2KEYBOARD_CMD_SETLED);
 					}
+					if ( (data&GLUK_C_EEPROM_FLAG) != (gluk_regs[GLUK_REG_C]&GLUK_C_EEPROM_FLAG) )
+					{
+						//switch EEPROM mode
+						gluk_regs[GLUK_REG_C] = gluk_regs[GLUK_REG_C]^GLUK_C_EEPROM_FLAG;
+					}
 					break;
 			}
 		}
@@ -452,8 +493,16 @@ void gluk_set_reg(UBYTE index, UBYTE data)
 	{
 		if ( index >= 0xF0 )
 		{
-			//set version data type
-			SetVersionType( data );
+			if ( (gluk_regs[GLUK_REG_C]&GLUK_C_EEPROM_FLAG)!=0 )
+			{
+				//write to eeprom
+				write_eeprom(index, data);
+			}
+			else
+			{
+				//set version data type
+				SetVersionType( data );
+			}
 		}
 		else
 		{

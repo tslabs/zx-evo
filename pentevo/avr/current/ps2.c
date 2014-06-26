@@ -235,13 +235,23 @@ void ps2keyboard_task(void)
 		to_log("KBerr\r\n");
 #endif
 		//TODO: чета делать
-
-		//reset command
-		ps2keyboard_cmd_count = 0;
-		ps2keyboard_cmd = 0;
+		if ( ps2keyboard_cmd != PS2KEYBOARD_CMD_RESET )
+		{
+			//set cmd  RESET
+			ps2keyboard_cmd = PS2KEYBOARD_CMD_RESET;
+			ps2keyboard_cmd_count = 3;
+		}
+		else
+		{
+			//reset command
+			ps2keyboard_cmd = 0;
+			ps2keyboard_cmd_count = 0;
+		}
 
 		//reset buffer
 		zx_clr_kb();
+
+		return;
 	}
 
 	if ( ps2keyboard_count!=0 ) return; // not received anything
@@ -437,6 +447,7 @@ const UBYTE ps2mouse_init_sequence[] =
 	"\xF3\x64"  // set sample rate 100  |     scroll
 	"\xF3\x50"  // set sample rate 80   |         mode
 	"\xF2"      // get device type
+//	"\xE8\x02"  // set resolution to 4 count/mm 
 	"\xE6"      // set scaling 1:1
 	"\xF3\x64"  // set sample rate 100
 	"\xF4"      // enable
@@ -726,8 +737,11 @@ void ps2mouse_task(void)
 						{
 							ps2mouse_resp_count = 0;
 							//reset command
-							ps2mouse_cmd = 0;
+							//ps2mouse_cmd = 0;
 							flags_ex_register &= ~FLAG_EX_PS2MOUSE_CMD;
+
+							//WARNING! some mouses need enable command after changing resolution
+							ps2mouse_cmd = PS2MOUSE_CMD_ENABLE;
 						}
 						else
 						{
