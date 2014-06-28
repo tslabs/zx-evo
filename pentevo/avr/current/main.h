@@ -159,13 +159,19 @@ extern volatile UBYTE modes_register;
 /** Type extensions of gluk registers. */
 extern volatile UBYTE ext_type_gluk;
 /** Type is baseconfiguration version. */
-#define EXT_TYPE_BASECONF_VERSION     0
+#define EXT_TYPE_BASECONF_VERSION     0x00
 /** Type is bootloader version. */
-#define EXT_TYPE_BOOTLOADER_VERSION   1
+#define EXT_TYPE_BOOTLOADER_VERSION   0x01
 /** Type is PS2 keyboards log. */
-#define EXT_TYPE_PS2KEYBOARDS_LOG     2
+#define EXT_TYPE_PS2KEYBOARDS_LOG     0x02
 /** Type is reading some config bytes. */
-#define EXT_TYPE_RDCFG                3
+#define EXT_TYPE_RDCFG                0x03
+/** Type is reading SEGA Joystick 1. */
+#define EXT_TYPE_RDSJ1                0x20
+/** Type is reading SEGA Joystick 2. */
+#define EXT_TYPE_RDSJ2                0x21
+/** Type is SPI Flash via JTAG. */
+#define EXT_TYPE_SPIFL                0x80
 
 /** Data buffer. */
 extern UBYTE dbuf[];
