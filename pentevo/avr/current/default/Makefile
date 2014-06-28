@@ -44,7 +44,7 @@ HEX_EEPROM_FLAGS += --set-section-flags=.eeprom="alloc,load"
 HEX_EEPROM_FLAGS += --change-section-lma .eeprom=0 --no-change-warnings
 
 ## Objects that must be built in order to link
-OBJECTS = zx.o interrupts.o main.o ps2.o spi.o depacker_dirty.o rs232.o rtc.o atx.o joystick.o version.o tape.o kbmap.o
+OBJECTS = zx.o interrupts.o main.o ps2.o spi.o depacker_dirty.o rs232.o rtc.o atx.o joystick.o version.o tape.o kbmap.o spiflash.o
 
 ## Objects explicitly added by the user
 FPGACORE = tsconf.o baseconf.o egg.o
@@ -94,6 +94,9 @@ tape.o: ../tape.c ../tape.h
 	@$(CC) $(INCLUDES) $(CFLAGS) -c  $<
 
 kbmap.o: ../kbmap.c ../kbmap.h
+	@$(CC) $(INCLUDES) $(CFLAGS) -c  $<
+
+spiflash.o: ../spiflash.c ../spiflash.h
 	@$(CC) $(INCLUDES) $(CFLAGS) -c  $<
 
 ##Link

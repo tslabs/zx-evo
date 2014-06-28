@@ -11,7 +11,8 @@ typedef uint16_t UWORD;
 typedef  int32_t  LONG;
 typedef uint32_t ULONG;
 
-
+#define TRUE  1
+#define FALSE 0
 
 #endif
 

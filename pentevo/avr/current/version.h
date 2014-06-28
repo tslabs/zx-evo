@@ -41,6 +41,6 @@ UBYTE GetVersionByte(UBYTE index);
  * Set version type.
  * @param type [in] - 0: base configuration, 1: bootloader
  */
-void SetVersionType(UBYTE type);
+void SetVersionType(UBYTE index, UBYTE type);
 
 #endif //__VERSION_H__

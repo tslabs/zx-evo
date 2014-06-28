@@ -371,7 +371,7 @@ UBYTE gluk_get_reg(UBYTE index)
 			else
 			{
 				//read version
-				tmp = GetVersionByte( index&0x0F );
+				tmp = GetVersionByte(index);
 			}
 		}
 		else
@@ -501,7 +501,7 @@ void gluk_set_reg(UBYTE index, UBYTE data)
 			else
 			{
 				//set version data type
-				SetVersionType( data );
+				SetVersionType(index, data);
 			}
 		}
 		else
