@@ -23,10 +23,6 @@ u8 rm(unsigned addr)
     }
 #endif
 
-	// TS-conf DMA
-	if (conf.mem_model == MM_TSL && comp.ts.dma.act && (cpu.t >= comp.ts.dma.next_t)) 
-		dma();
-
 	// TS-conf cache model
 	u8 window = (addr >> 14) & 3;
 	if (bankm[window])		// RAM hit
@@ -39,6 +35,7 @@ u8 rm(unsigned addr)
 			if (comp.ts.cache_miss = (!(comp.ts.cacheconf & (1 << cache_win)) || (cpu.tscache_addr[cache_pointer] != cached_address)))
 			{
 				vid.memcpucyc[cpu.t / 224]++;		// кеш промазинг
+				vid.memcyc_lcmd++;
 				cpu.tscache_data[cache_pointer] = *am_r(addr);
 				cpu.tscache_addr[cache_pointer] = cached_address;
 			}
@@ -94,14 +91,12 @@ void wm(unsigned addr, u8 val)
 			{
 				case TSF_CRAM:
 				{
-					update_screen();
 					comp.cram[(addr >> 1) & 0xFF] = ((val << 8) | temp.fm_tmp) & 0x7FFF;		// 15 bits of CRAM data
 					update_clut((addr >> 1) & 0xFF);
 					break;
 				}
 				case TSF_SFILE:
 				{
-					update_screen();
 					comp.sfile[(addr >> 1) & 0xFF] = (val << 8) | temp.fm_tmp;
 					break;
 				}
@@ -111,21 +106,16 @@ void wm(unsigned addr, u8 val)
 			// remember temp value
 				temp.fm_tmp = val;
 
-	// TS-conf DMA
-	if (conf.mem_model == MM_TSL && comp.ts.dma.act && (cpu.t >= comp.ts.dma.next_t)) 
-		dma();
-
 	// TS-conf cache model
 	if (conf.mem_model == MM_TSL)
 	{
 		u16 cache_pointer = addr & 0x1FF;
 		cpu.tscache_addr[cache_pointer] = -1;
-		vid.memcpucyc[cpu.t / 224]++;
+		//vid.memcpucyc[cpu.t / 224]++;
 	}
 
    if ((conf.mem_model == MM_ATM3) && (comp.pBF & 4) /*&& ((addr & 0xF800) == 0)*/ ) // Разрешена загрузка шрифта для ATM3 // lvd: any addr is possible in ZXEVO
    {
-       update_screen();
        unsigned idx = ((addr&0x07F8) >> 3) | ((addr & 7) << 8);
        fontatm2[idx] = val;
        return;
@@ -138,10 +128,6 @@ void wm(unsigned addr, u8 val)
 #endif
    a += (addr & (PAGE-1));
 
-   if (*a == val)
-     return;
-
-   update_screen();
    *a = val;
 }
 
@@ -267,12 +253,14 @@ void z80loop_TSL()
       comp.ts.intctrl.dma_pend = comp.ts.intdma;
     }
 
+    vid.memcyc_lcmd = 0; // new command, start accumulate number of busy memcycles
+
     if (comp.ts.intctrl.pend && cpu.iff1 && cpu.t != cpu.eipos && !vdos) // int disabled in vdos after r/w vg ports
     {
       handle_int(&cpu, cpu.IntVec());
     }
-
     step1();
+    update_screen(); // update screen, TSU, DMA
   }
 }
 
@@ -326,6 +314,8 @@ void z80loop_other()
     if (cpu.int_pend && (cpu.t >= conf.intlen))
       cpu.int_pend = false;
 
+    vid.memcyc_lcmd = 0; // new command, start accumulate number of busy memcycles
+
     // INT
     if (cpu.int_pend && cpu.iff1 && // INT enabled in CPU
       cpu.t != cpu.eipos &&         // INT disabled after EI
@@ -335,6 +325,7 @@ void z80loop_other()
     }
 
     step1();
+    update_screen(); // update screen, TSU, DMA
   } // end while (cpu.t < conf.intlen)
 }
 

@@ -45,14 +45,12 @@ void out(unsigned port, u8 val)
 		   {
 		   case 0:	// CRAM
 			   {
-					update_screen();
 					comp.ulaplus_cram[comp.ulaplus_reg] = val;
 			   }
 			   break;
 
 		   case 64:	// MODE
 			   {
-					update_screen();
 					comp.ulaplus_mode = val & 1;
 			   }
 			   break;
@@ -247,14 +245,12 @@ void out(unsigned port, u8 val)
 		// video
 			case TSW_VCONF:
 			{
-				update_screen();
 				comp.ts.vconf_d = val;
 			}
 			break;
 
 			case TSW_VPAGE:
 			{
-				update_screen();
 				comp.ts.vpage_d = val;
 				set_banks();
 			}
@@ -262,70 +258,60 @@ void out(unsigned port, u8 val)
 
 			case TSW_TMPAGE:
 			{
-				update_screen();
 				comp.ts.tmpage = val;
 			}
 			break;
 
 			case TSW_T0GPAGE:
 			{
-				update_screen();
 				comp.ts.t0gpage[0] = val;
 			}
 			break;
 
 			case TSW_T1GPAGE:
 			{
-				update_screen();
 				comp.ts.t1gpage[0] = val;
 			}
 			break;
 
 			case TSW_SGPAGE:
 			{
-				update_screen();
 				comp.ts.sgpage = val;
 			}
 			break;
 
 			case TSW_BORDER:
 			{
-				update_screen();
 				comp.ts.border = val;
 			}
 			break;
 
 			case TSW_TSCONF:
 			{
-				update_screen();
 				comp.ts.tsconf = val;
 			}
 			break;
 
 			case TSW_PALSEL:
 			{
-				update_screen();
 				comp.ts.palsel_d = val;
 			}
 			break;
 
 			case TSW_GXOFFSL:
 			{
-				update_screen();
 				comp.ts.g_xoffsl_d = val;
 			}
 			break;
 
 			case TSW_GXOFFSH:
 			{
-				update_screen();
 				comp.ts.g_xoffsh_d = val & 1;
 			}
 			break;
 
 			case TSW_GYOFFSL:
 			{
-				update_screen();
 				comp.ts.g_yoffsl = val;
 				comp.ts.g_yoffs_updated = 1;
 			}
@@ -333,7 +319,6 @@ void out(unsigned port, u8 val)
 
 			case TSW_GYOFFSH:
 			{
-				update_screen();
 				comp.ts.g_yoffsh = val & 1;
 				comp.ts.g_yoffs_updated = 1;
 			}
@@ -341,56 +326,48 @@ void out(unsigned port, u8 val)
 
 			case TSW_T0XOFFSL:
 			{
-				update_screen();
 				comp.ts.t0_xoffsl = val;
 			}
 			break;
 
 			case TSW_T0XOFFSH:
 			{
-				update_screen();
 				comp.ts.t0_xoffsh = val & 1;
 			}
 			break;
 
 			case TSW_T0YOFFSL:
 			{
-				update_screen();
 				comp.ts.t0_yoffsl = val;
 			}
 			break;
 
 			case TSW_T0YOFFSH:
 			{
-				update_screen();
 				comp.ts.t0_yoffsh = val & 1;
 			}
 			break;
 
 			case TSW_T1XOFFSL:
 			{
-				update_screen();
 				comp.ts.t1_xoffsl = val;
 			}
 			break;
 
 			case TSW_T1XOFFSH:
 			{
-				update_screen();
 				comp.ts.t1_xoffsh = val & 1;
 			}
 			break;
 
 			case TSW_T1YOFFSL:
 			{
-				update_screen();
 				comp.ts.t1_yoffsl = val;
 			}
 			break;
 
 			case TSW_T1YOFFSH:
 			{
-				update_screen();
 				comp.ts.t1_yoffsh = val & 1;
 			}
 			break;
@@ -467,18 +444,8 @@ void out(unsigned port, u8 val)
 				 */
 				if ((val & 0x07) != 0x00 && (val & 0x06) != 0x06 && (val & 0x87) != 0x05)
 				{
-					comp.ts.dma.ctrl   = val;
-					comp.ts.dma.next_t = cpu.t + VID_TACTS - (cpu.t % VID_TACTS);
-					comp.ts.dma.len    = comp.ts.dmalen+1;
-					comp.ts.dma.num    = comp.ts.dmanum+1;
-					comp.ts.dma.line   = cpu.t / VID_TACTS;
-					comp.ts.dma.m1     = comp.ts.dma.asz ? 0x3FFE00 : 0x3FFF00;
-					comp.ts.dma.m2     = comp.ts.dma.asz ? 0x0001FF : 0x0000FF;
-					comp.ts.dma.asize  = comp.ts.dma.asz ? 512 : 256;
-					comp.ts.dma.saddr  = comp.ts.saddr;
-					comp.ts.dma.daddr  = comp.ts.daddr;
-					comp.ts.dma.state  = 0;
-					comp.ts.dma.act    = 1;
+					comp.ts.dma.ctrl = val;
+					comp.ts.dma.state = DMA_ST_INIT;
 				}
 				else
 					printf("Illegal DMA mode! OUT (%02XAF), %02X, PC: %04X\r\n", p2, val, cpu.pc);
@@ -607,7 +574,6 @@ void out(unsigned port, u8 val)
 
          if (p1 == 0x77) // xx77
          {
-             update_screen();
 			 set_atm_FF77(port, val);
 			 set_turbo();
 			 init_raster();
@@ -846,8 +812,6 @@ void out(unsigned port, u8 val)
           flush_dig_snd();
       }
 
-
-      update_screen();
       u8 new_border = (val & 7);
 
 	  if (conf.mem_model == MM_ATM710 || conf.mem_model == MM_ATM3 || conf.mem_model == MM_ATM450)
@@ -975,9 +939,6 @@ set1FFD:
             }
          }
 
-         if ((comp.p7FFD ^ val) & 0x08)
-             update_screen();
-             
          comp.p7FFD = val;      // all models apart from TSL will deal with this variable
 		 comp.ts.vpage = comp.ts.vpage_d = (val & 8) ? 7 : 5;
 
@@ -1066,7 +1027,6 @@ set1FFD:
 
    if ( (port == 0xEFF7) && ( (conf.mem_model==MM_PENTAGON) || (conf.mem_model==MM_ATM3) ) ) // lvd added eff7 to atm3
    {
-      update_screen();
 	  u8 oldpEFF7 = comp.pEFF7; //Alone Coder 0.36.4
       comp.pEFF7 = (comp.pEFF7 & conf.EFF7_mask) | (val & ~conf.EFF7_mask);
       // comp.pEFF7 |= EFF7_GIGASCREEN; // [vv] disable turbo
@@ -1194,7 +1154,7 @@ __inline u8 in1(unsigned port)
 				return comp.ts.page[3];
 
 			case TSR_DMASTATUS:
-				return comp.ts.dma.act<<7;
+				return (comp.ts.dma.state == DMA_ST_NOP) ? 0x00 : 0x80;
 	   }
 	}
 
@@ -1534,7 +1494,6 @@ __inline u8 in1(unsigned port)
 
    if (conf.portff && (p1 == 0xFF))
    {
-      update_screen();
       if (vmode != 2) return 0xFF; // ray is not in paper
       unsigned ula_t = (cpu.t+temp.border_add) & temp.border_and;
       return temp.base[vcurr->atr_offs + (ula_t - vcurr[-1].next_t)/4];
