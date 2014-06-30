@@ -638,7 +638,6 @@ __inline void clear_until_ray()
 void paint_scr(char alt) // alt=0/1 - main/alt screen, alt=2 - ray-painted
 {
    if (alt == 2) {
-      update_screen();
       clear_until_ray();
    } else {
 	   // !!! here need to handle comp.ts.vpage somehow, now it's unhandled
@@ -665,112 +664,124 @@ DRAWER drawers[] = {
 	{ draw_atm3tx	}	// ATM Text Linear
 };
 
-// Draws raster until current tact
+u32 get_free_memcycles(int dram_t)
+{
+  if (vid.memcyc_lcmd >= dram_t)
+    return 0;
+
+  u32 memcycles = vid.memcpucyc[vid.line] + vid.memvidcyc[vid.line] + vid.memtstcyc[vid.line] + vid.memtsscyc[vid.line] + vid.memdmacyc[vid.line];
+  
+  if (memcycles >= MEM_CYCLES)
+    return 0;
+
+  u32 free_t = dram_t - vid.memcyc_lcmd;
+  free_t = min(free_t, MEM_CYCLES - memcycles);
+
+  return free_t;
+}
+
 void update_screen()
 {
-	u32 cput = (cpu.t >= conf.frame) ? (VID_TACTS * VID_LINES) : cpu.t;
+  // Get tact of cpu state in current frame
+  u32 cput = (cpu.t >= conf.frame) ? (VID_TACTS * VID_LINES) : cpu.t;
 
-	while (vid.t_next < min(cput, VID_TACTS * VID_LINES))		// iterate until current CPU tact or to the frame end
-	{
-		u32 line = (vid.t_next / VID_TACTS);	// line in raster
-		u32 tact = vid.t_next % VID_TACTS;		// tact in line
-		int n = min(cput - vid.t_next, VID_TACTS - tact);	// number of tacts to be rendered in this line
+  while (vid.t_next < cput)
+  {
+    // Calculate tacts for drawing in current video line
+    int n = min(cput - vid.t_next, (u32)VID_TACTS - vid.line_pos);
+    int dram_t = n << 1;
 
-		// start of video line - reload all strobed gfx params
-		if (!tact)
-		{
-			// VConfig
-			if (comp.ts.vconf != comp.ts.vconf_d)
-			{
-				comp.ts.vconf = comp.ts.vconf_d;
-				init_raster();
-			}
+    // Start of new video line
+    if (!vid.line_pos)
+    {
+      if (comp.ts.vconf != comp.ts.vconf_d)
+      {
+        comp.ts.vconf = comp.ts.vconf_d;
+        init_raster();
+      }
 
-			comp.ts.g_xoffs = comp.ts.g_xoffs_d;	// gfx X-offset
-			comp.ts.vpage = comp.ts.vpage_d;		// Video Page
-			comp.ts.palsel = comp.ts.palsel_d;		// Palette Selector
+      comp.ts.g_xoffs = comp.ts.g_xoffs_d;  // GFX X offset
+      comp.ts.vpage   = comp.ts.vpage_d;    // Video Page
+      comp.ts.palsel  = comp.ts.palsel_d;   // Palette Selector
 
-			comp.ts.t0gpage[2] = comp.ts.t0gpage[1];
-			comp.ts.t0gpage[1] = comp.ts.t0gpage[0];
-			comp.ts.t1gpage[2] = comp.ts.t1gpage[1];
-			comp.ts.t1gpage[1] = comp.ts.t1gpage[0];
-			comp.ts.t0_xoffs_d[1] = comp.ts.t0_xoffs_d[0];
-			comp.ts.t0_xoffs_d[0] = comp.ts.t0_xoffs;
-			comp.ts.t1_xoffs_d[1] = comp.ts.t1_xoffs_d[0];
-			comp.ts.t1_xoffs_d[0] = comp.ts.t1_xoffs;
-		}
+      comp.ts.t0gpage[2] = comp.ts.t0gpage[1];
+      comp.ts.t0gpage[1] = comp.ts.t0gpage[0];
+      comp.ts.t1gpage[2] = comp.ts.t1gpage[1];
+      comp.ts.t1gpage[1] = comp.ts.t1gpage[0];
+      comp.ts.t0_xoffs_d[1] = comp.ts.t0_xoffs_d[0];
+      comp.ts.t0_xoffs_d[0] = comp.ts.t0_xoffs;
+      comp.ts.t1_xoffs_d[1] = comp.ts.t1_xoffs_d[0];
+      comp.ts.t1_xoffs_d[0] = comp.ts.t1_xoffs;
 
-		// border only line
-		if ((line < vid.raster.u_brd) || (line >= vid.raster.d_brd))
-			draw_border(n);
+      vid.ts_pos = 0;
 
-		// pixel line
-		else
-		{
-			if (!tact)		// start of pixel line
-			{
-				vid.xctr = 0;
+      // set new task for tsu
+      comp.ts.tsu.state = TSS_INIT;
+    }
 
-				vid.yctr++;
-				if (!comp.ts.g_yoffs_updated)	// was Y-offset updated?
-				{
-					vid.ygctr++;					// no - just increment old
-					vid.ygctr &= 0x1FF;
-				}
-				else
-				{
-					vid.ygctr = comp.ts.g_yoffs;		// yes - reload X-offset
-					comp.ts.g_yoffs_updated = 0;
-				}
-				// render TSU first pixel line to the buffer at last upper border line
-				if (conf.mem_model == MM_TSL && line == vid.raster.u_brd)
-				{
-					vid.line = (u16)line-1;
-					render_ts();
-					vid.yctr++;
-				}
-			}
+    // Render upper and bottom border
+    if (vid.line < vid.raster.u_brd || vid.line >= vid.raster.d_brd)
+    {
+      draw_border(n);
+      vid.line_pos += n;
+    }
+    else
+    {
+      // Start of new video line
+      if (!vid.line_pos)
+      {
+        vid.xctr = 0; // clear X video counter
+        vid.yctr++;   // increment Y video counter
 
-			while (n > 0)		// draw pixel line (border + pixels + border)
-			{
-				u32 m;
+        if (!comp.ts.g_yoffs_updated) // was Y-offset updated?
+        { // no - just increment old
+          vid.ygctr++;
+          vid.ygctr &= 0x1FF;
+        }
+        else
+        { // yes - reload Y-offset
+          vid.ygctr = comp.ts.g_yoffs;
+          comp.ts.g_yoffs_updated = 0;
+        }
+      }
 
-				if (tact < vid.raster.l_brd)
-				// left border
-				{
-					m = min((u32)n, vid.raster.l_brd - tact);
-					draw_border(m); n -= m; tact += m;
-					vid.vptr_pix = vid.vptr;
-				}
+      // Render left border
+      if (vid.line_pos < vid.raster.l_brd)
+      {
+        u32 m = min((u32)n, vid.raster.l_brd - vid.line_pos);
+        draw_border(m); n -= m;
+        vid.line_pos += (u16)m;
+      }
+      // Render pixel graphics
+      if (n > 0 && vid.line_pos < vid.raster.r_brd)
+      {
+        u32 m = min((u32)n, vid.raster.r_brd - vid.line_pos);
+        u32 t = vid.t_next; // store tact of video controller
+        u32 vptr = vid.vptr;
+        drawers[vid.mode].func(m);
+        if (conf.mem_model == MM_TSL) draw_ts(vptr);
+        t = vid.t_next - t; // calculate tacts used by drawers func
+        n -= t; vid.line_pos += (u16)t;
+      }
+      // Render right border
+      if (n > 0)
+      {
+        u32 m = min(n, VID_TACTS - vid.line_pos);
+        draw_border(m); n -= m;
+        vid.line_pos += (u16)m;
+      }
+    }
+    u32 free_t = get_free_memcycles(dram_t); // get free memcyc of last command
+    free_t = render_ts(free_t);
+    dma(free_t);
 
-				else if (tact < vid.raster.r_brd)
-				// pixels & TS
-				{
-					m = min((u32)n, vid.raster.r_brd - tact);
-					u32 t = vid.t_next;
-					vid.line = (u16)line;
-					u32 vptr = vid.vptr;
-					drawers[vid.mode].func(m);
-					if (conf.mem_model == MM_TSL && !comp.ts.notsu) draw_ts(vptr);
-					t = vid.t_next - t; n -= t; tact += t;
-				}
+    // calculate busy tacts for the next line
+    vid.memcyc_lcmd = (vid.memcyc_lcmd > dram_t) ? (vid.memcyc_lcmd - dram_t) : 0;
 
-				else
-				// right border or border line
-				{
-					m = min((u32)n, VID_TACTS - tact);
-					draw_border(m);
-					n -= m; tact += m;
-				}
-			}
-			// render TSU pixel line to the buffer for next video line
-			if (conf.mem_model == MM_TSL && tact == VID_TACTS && line < (vid.raster.d_brd-1))
-			{
-				vid.line = (u16)line;
-				render_ts();
-			}
-		}
-	}
+    // if line is full, then go to the next line
+    if (vid.line_pos == VID_TACTS)
+      vid.line_pos = 0, vid.line++;
+  }
 }
 
 void init_raster()
@@ -839,13 +850,14 @@ void init_frame()
    vid.buf ^= 1;
    vid.t_next = 0;
    vid.vptr = 0;
-   vid.yctr = -1;
+   vid.yctr = 0;
    vid.ygctr = comp.ts.g_yoffs - 1;
+   vid.line = 0;
+   vid.line_pos = 0;
    comp.ts.g_yoffs_updated = 0;
    vid.flash = comp.frame_counter & 0x10;
    init_raster();
    init_memcycles();
-   comp.ts.dma.line = 0;
 }
 
 void load_spec_colors()

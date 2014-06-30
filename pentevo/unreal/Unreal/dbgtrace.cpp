@@ -13,6 +13,8 @@
 #include "draw.h"
 #include "emulkeys.h"
 
+extern VCTR vid;
+
 int disasm_line(unsigned addr, char *line)
 {
    Z80 &cpu = CpuMgr.Cpu();
@@ -517,6 +519,8 @@ void mon_step()
   cpu.SetLastT();
   prevcpu = cpu;
 
+  vid.memcyc_lcmd = 0; // new command, start accumulate number of busy memcycles
+
   cpu.Step();
   cpu.CheckNextFrame();
 
@@ -596,31 +600,11 @@ void mon_step()
   {
     handle_int(&cpu, cpu.IntVec());
   }
+  update_screen(); // update screen, TSU, DMA
 
   cpu.trace_curs = cpu.pc;
 }
-/*
-void mon_step()
-{
-   Z80 &cpu = CpuMgr.Cpu();
-   TZ80State &prevcpu = CpuMgr.PrevCpu();
-   
-   cpu.SetLastT();
-   prevcpu = cpu;
-//   CpuMgr.CopyToPrev();
-   if ((cpu.t - comp.intpos + 1) >= conf.intlen)
-       cpu.int_pend = false;
-   cpu.Step();
-   if (cpu.int_pend && cpu.iff1 && cpu.t != cpu.eipos && // int enabled in CPU not issued after EI
-       cpu.int_gate) // int enabled by ATM hardware
-   {
-      handle_int(&cpu, cpu.IntVec());
-   }
 
-   cpu.CheckNextFrame();
-   cpu.trace_curs = cpu.pc;
-}
-*/
 void mon_stepover()
 {
    Z80 &cpu = CpuMgr.Cpu();
@@ -638,28 +622,6 @@ void mon_stepover()
        trace = 0;
        cpu.dbg_stophere = cpu.nextpc;
    }
-
-/* [vv]
-   // jr cc,$-xx, jp cc,$-xx
-   else if ((cpu.pc_trflags & TWF_LOOPCMD) && (cpu.pc_trflags & 0xFFFF) < (cpu.pc & 0xFFFF))
-   {
-      cpu.dbg_stopsp = cpu.sp & 0xFFFF;
-      cpu.dbg_stophere = cpu.nextpc,
-      cpu.dbg_loop_r1 = cpu.pc_trflags & 0xFFFF;
-      cpu.dbg_loop_r2 = cpu.pc & 0xFFFF;
-      trace = 0;
-   }
-*/
-
-/* [vv]
-   else if (cpu.pc_trflags & TWF_BRANCH)
-       trace = 1;
-   else
-   {
-       trace = 1;
-       cpu.dbg_stophere = cpu.nextpc;
-   }
-*/
 
    if (trace)
    {

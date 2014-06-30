@@ -58,20 +58,21 @@ struct VCTR
 	VMODE	mode_next;		// renderer mode, delayed to the start of the line
 	u32 	t_next;			// next tact to be rendered
 	u32		vptr;			// address in videobuffer
-	u32		vptr_pix;		// address in videobuffer of 1st pixel (used to render TS)
 	u32		xctr;			// videocontroller X counter
 	u32		yctr;			// videocontroller absolute Y counter (used for TS)
 	u32		ygctr;			// videocontroller graphics Y counter (used for graphics)
 	u32 	buf;			// active video buffer
 	u32 	flash;			// flash counter
 	u16		line;			// current rendered line
-	u16		line_pos;	// current rendered position in line (used for TS)
+	u16		line_pos;	// current rendered position in line
+	u16		ts_pos;		// current rendered position in tsline
 	u8		tsline[2][512];	// TS buffers (indexed colors)
 	u16		memvidcyc[320];	// number of memory cycles used in every video line by video
 	u16		memcpucyc[320];	// number of memory cycles used in every video line by CPU
 	u16		memtsscyc[320];	// number of memory cycles used in every video line by TS sprites
 	u16		memtstcyc[320];	// number of memory cycles used in every video line by TS tiles
 	u16		memdmacyc[320]; // number of memory cycles used in every video line by DMA
+	u16		memcyc_lcmd;	// number of memory cycles used in last command
 };
 
 #define MAX_FONT_TABLES 0x62000

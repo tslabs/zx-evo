@@ -32,58 +32,134 @@ void update_clut(u8 addr)
 	vid.clut[addr] = (r << 16) | (g <<8) | b;
 }
 
-// DMA procedures
-#define ss_inc(Num)	ss = comp.ts.dma.s_algn ? ((ss & comp.ts.dma.m1) | ((ss + 2*Num) & comp.ts.dma.m2)) : ((ss + 2*Num) & 0x3FFFFF)
-#define dd_inc(Num)	dd = comp.ts.dma.d_algn ? ((dd & comp.ts.dma.m1) | ((dd + 2*Num) & comp.ts.dma.m2)) : ((dd + 2*Num) & 0x3FFFFF)
-
-u16 dma_ram(u16 memcyc)
+void dma_init()
 {
-  u32 &ss = comp.ts.dma.saddr;
-  u32 &dd = comp.ts.dma.daddr;
+  comp.ts.dma.len = comp.ts.dmalen + 1;
+  comp.ts.dma.num = comp.ts.dmanum;
 
-  u16 n = 0;
+  comp.ts.dma.saddr = comp.ts.saddr;
+  comp.ts.dma.daddr = comp.ts.daddr;
 
-  for (; (n < (MEM_CYCLES - memcyc)) && comp.ts.dma.len; n++)
+  comp.ts.dma.m1 = comp.ts.dma.asz ? 0x3FFE00 : 0x3FFF00;
+  comp.ts.dma.m2 = comp.ts.dma.asz ? 0x0001FF : 0x0000FF;
+
+  comp.ts.dma.asize = comp.ts.dma.asz ? 512 : 256;
+
+  comp.ts.dma.dstate = DMA_DS_NONE;
+
+  switch (comp.ts.dma.dev)
   {
-    if (comp.ts.dma.state)
-    {
-      u16 *d = (u16*)(dd + RAM_BASE_M);
-      *d = comp.ts.dma.data;
-      comp.ts.dma.state = 0;
-      comp.ts.dma.len--;
-      dd_inc(1);
-    }
-    else
-    {
-      u16 *s = (u16*)(ss + RAM_BASE_M);
-      comp.ts.dma.data = *s;
-      comp.ts.dma.state = 1;
-      ss_inc(1);
-    }
+  case DMA_RAM:
+    comp.ts.dma.state = comp.ts.dma.rw ? DMA_ST_BLT : DMA_ST_RAM;
+    break;
+  case DMA_SPI:
+    comp.ts.dma.state = comp.ts.dma.rw ? DMA_ST_SPI_W : DMA_ST_SPI_R;
+    break;
+  case DMA_IDE:
+    comp.ts.dma.state = comp.ts.dma.rw ? DMA_ST_IDE_W : DMA_ST_IDE_R;
+    break;
+  case DMA_CRAM:
+    comp.ts.dma.state = comp.ts.dma.rw ? DMA_ST_CRAM : DMA_ST_FILL;
+    break;
+  case DMA_SFILE:
+    comp.ts.dma.state = comp.ts.dma.rw ? DMA_ST_SFILE : DMA_ST_NOP;
+    break;
+  default:
+    comp.ts.dma.state = DMA_ST_NOP;
+    break;
   }
-  return n;
 }
 
-u16 dma_blt(u16 memcyc)
+void dma_next_burst()
+{
+  if (comp.ts.dma.s_algn) // source align ?
+  {
+    comp.ts.saddr += comp.ts.dma.asize; // add align offset to dma source address
+    comp.ts.dma.saddr = comp.ts.saddr;  // copy new address to dma structure
+  }
+  else
+    comp.ts.saddr = comp.ts.dma.saddr;  // copy address to dma source address
+
+  if (comp.ts.dma.d_algn) // destination align ?
+  {
+    comp.ts.daddr += comp.ts.dma.asize; // add align offset to dma destination address
+    comp.ts.dma.daddr = comp.ts.daddr;  // copy new address to dma structure
+  }
+  else
+    comp.ts.daddr = comp.ts.dma.daddr;  // copy address to dma source address
+
+  if (comp.ts.dma.num)
+  {
+    comp.ts.dma.num--;
+    comp.ts.dma.len = comp.ts.dmalen + 1;
+  }
+  else
+  {
+    comp.ts.dma.state = DMA_ST_NOP;
+  }
+}
+
+#define ss_inc() ss = comp.ts.dma.s_algn ? ((ss & comp.ts.dma.m1) | ((ss + 2) & comp.ts.dma.m2)) : ((ss + 2) & 0x3FFFFF)
+#define dd_inc() dd = comp.ts.dma.d_algn ? ((dd & comp.ts.dma.m1) | ((dd + 2) & comp.ts.dma.m2)) : ((dd + 2) & 0x3FFFFF)
+
+u32 dma_ram(u32 n)
 {
   u32 &ss = comp.ts.dma.saddr;
   u32 &dd = comp.ts.dma.daddr;
 
-  u16 data;
-  u16 *s, *d;
-  u16 n = 0;
-
-  for (; n < MEM_CYCLES - memcyc && comp.ts.dma.len; n++)
+  for (; n > 0; n--)
   {
-    switch (comp.ts.dma.state)
+    if (!comp.ts.dma.len) // burst is empty
     {
-    case 0:
+      dma_next_burst();     // get next burst
+      if (!comp.ts.dma.len) // no new burst
+        return n;
+    }
+
+    if (comp.ts.dma.dstate == DMA_DS_NONE) // data is empty ?
+    { // read data
+      u16 *s = (u16*)(ss + RAM_BASE_M);
+      comp.ts.dma.data = *s;
+      comp.ts.dma.dstate = DMA_DS_DATA;
+    }
+    else
+    { // write data
+      u16 *d = (u16*)(dd + RAM_BASE_M);
+      *d = comp.ts.dma.data;
+      comp.ts.dma.dstate = DMA_DS_NONE;
+      comp.ts.dma.len--;
+      ss_inc();
+      dd_inc();
+    }
+  }
+  return 0;
+}
+
+u32 dma_blt(u32 n)
+{
+  u32 &ss = comp.ts.dma.saddr;
+  u32 &dd = comp.ts.dma.daddr;
+
+  u16 *s, *d;
+  u16 data;
+
+  for (; n > 0; n--)
+  {
+    if (!comp.ts.dma.len) // burst is empty
+    {
+      dma_next_burst();     // get next burst
+      if (!comp.ts.dma.len) // no new burst
+        return n;
+    }
+
+    switch (comp.ts.dma.dstate)
+    {
+    case DMA_DS_NONE: // read data
       s = (u16*)(ss + RAM_BASE_M);
       comp.ts.dma.data = *s;
-      comp.ts.dma.state = 1;
-      ss_inc(1);
+      comp.ts.dma.dstate = DMA_DS_DATA;
       break;
-    case 1:
+    case DMA_DS_DATA: // blitting data
       d = (u16*)(dd + RAM_BASE_M);
       data = 0;
       if (comp.ts.dma.asz)
@@ -99,359 +175,489 @@ u16 dma_blt(u16 memcyc)
         data |= (comp.ts.dma.data & 0x000F) ? (comp.ts.dma.data & 0x000F) : (*d & 0x000F);
       }
       comp.ts.dma.data = data;
-      comp.ts.dma.state = 2;
+      comp.ts.dma.dstate = DMA_DS_BLIT;
       break;
-    case 2:
+    case DMA_DS_BLIT: // write data
       d = (u16*)(dd + RAM_BASE_M);
       *d = comp.ts.dma.data;
-      comp.ts.dma.state = 0;
+      comp.ts.dma.dstate = DMA_DS_NONE;
       comp.ts.dma.len--;
-      dd_inc(1);
+      ss_inc();
+      dd_inc();
       break;
     }
   }
-  return n;
+  return 0;
 }
 
-u16 dma_spi(u16 memcyc)
+u32 dma_spi_r(u32 n)
+{
+  u32 &dd = comp.ts.dma.daddr;
+
+  for (; n > 0; n--)
+  {
+    if (!comp.ts.dma.len) // burst is empty
+    {
+      dma_next_burst();     // get next burst
+      if (!comp.ts.dma.len) // no new burst
+        return n;
+    }
+
+    u16 *d = (u16*)(dd + RAM_BASE_M);
+    u16 data = Zc.Rd(0x57);
+    data |= Zc.Rd(0x57) << 8;
+    *d = data;
+    comp.ts.dma.len--;
+    dd_inc();
+  }
+
+  return 0;
+}
+
+u32 dma_spi_w(u32 n)
+{
+  u32 &ss = comp.ts.dma.saddr;
+
+  for (; n > 0; n--)
+  {
+    if (!comp.ts.dma.len) // burst is empty
+    {
+      dma_next_burst();     // get next burst
+      if (!comp.ts.dma.len) // no new burst
+        return n;
+    }
+
+    u16 *s = (u16*)(ss + RAM_BASE_M);
+    u16 data = *s;
+    Zc.Wr(0x57, data & 0xFF);
+    Zc.Wr(0x57, data >> 8);
+    comp.ts.dma.len--;
+    ss_inc();
+  }
+
+  return 0;
+}
+
+u32 dma_ide_r(u32 n)
+{
+  u32 &dd = comp.ts.dma.daddr;
+
+  for (; n > 0; n--)
+  {
+    if (!comp.ts.dma.len) // burst is empty
+    {
+      dma_next_burst();     // get next burst
+      if (!comp.ts.dma.len) // no new burst
+        return n;
+    }
+
+    u16 *d = (u16*)(dd + RAM_BASE_M);
+    *d = hdd.read_data();
+    comp.ts.dma.len--;
+    dd_inc();
+  }
+
+  return 0;
+}
+
+u32 dma_ide_w(u32 n)
+{
+  u32 &ss = comp.ts.dma.saddr;
+
+  for (; n > 0; n--)
+  {
+    if (!comp.ts.dma.len) // burst is empty
+    {
+      dma_next_burst();     // get next burst
+      if (!comp.ts.dma.len) // no new burst
+        return n;
+    }
+
+    u16 *s = (u16*)(ss + RAM_BASE_M);
+    hdd.write_data(*s);
+    comp.ts.dma.len--;
+    ss_inc();
+  }
+
+  return 0;
+}
+
+u32 dma_fill(u32 n)
 {
   u32 &ss = comp.ts.dma.saddr;
   u32 &dd = comp.ts.dma.daddr;
 
-  u16 n = min(MEM_CYCLES - memcyc, comp.ts.dma.len);
-  comp.ts.dma.len -= n;
+  if (comp.ts.dma.dstate == DMA_DS_NONE && n > 0) // no data and have free memcyc
+  {
+    u16 *s = (u16*)(ss + RAM_BASE_M);
+    comp.ts.dma.data = *s;            // read data
+    comp.ts.dma.dstate = DMA_DS_DATA; // set data state as valid
+    ss_inc();
+    n--;
+  }
 
-  if (comp.ts.dma.rw)
+  for (; n > 0; n--)
   {
-    for (u16 i = 0; i < n; i++)
+    if (!comp.ts.dma.len) // burst is empty
     {
-      u16 *s = (u16*)(ss + RAM_BASE_M);
-      u16 data = *s;
-      Zc.Wr(0x57, data & 0xFF);
-      Zc.Wr(0x57, data >> 8);
-      ss_inc(1);
+      dma_next_burst();     // get next burst
+      if (!comp.ts.dma.len) // no new burst
+        return n;
     }
-    dd_inc(n);
+
+    u16 *d = (u16*)(dd + RAM_BASE_M);
+    *d = comp.ts.dma.data;
+    comp.ts.dma.len--;
+    dd_inc();
   }
-  else
-  {
-    for (u16 i = 0; i < n; i++)
-    {
-      u16 *d = (u16*)(dd + RAM_BASE_M);
-      u16 data = Zc.Rd(0x57);
-      data |= Zc.Rd(0x57) << 8;
-      *d = data;
-      dd_inc(1);
-    }
-    ss_inc(n);
-  }
-  return n;
+  return 0;
 }
 
-u16 dma_ide(u16 memcyc)
+u32 dma_cram(u32 n)
 {
   u32 &ss = comp.ts.dma.saddr;
   u32 &dd = comp.ts.dma.daddr;
 
-  u16 n = min(MEM_CYCLES - memcyc, comp.ts.dma.len);
-  comp.ts.dma.len -= n;
-
-  if (comp.ts.dma.rw)
+  for (; n > 0; n--)
   {
-    for (u16 i = 0; i < n; i++)
+    if (!comp.ts.dma.len) // burst is empty
     {
-      u16 *s = (u16*)(ss + RAM_BASE_M);
-      hdd.write_data(*s);
-      ss_inc(1);
+      dma_next_burst();     // get next burst
+      if (!comp.ts.dma.len) // no new burst
+        return n;
     }
-    dd_inc(n);
-  }
-  else
-  {
-    for (u16 i = 0; i < n; i++)
-    {
-      u16 *d = (u16*)(dd + RAM_BASE_M);
-      *d = (u16)hdd.read_data();
-      dd_inc(1);
-    }
-    ss_inc(n);
-  }
-  return n;
-}
 
-u16 dma_cram(u16 memcyc)
-{
-  u32 &ss = comp.ts.dma.saddr;
-  u32 &dd = comp.ts.dma.daddr;
-
-  u16 n = min(MEM_CYCLES - memcyc, comp.ts.dma.len);
-  comp.ts.dma.len -= n;
-
-  for (u16 i = 0; i < n; i++)
-  {
     u16 *s = (u16*)(ss + RAM_BASE_M);
     u8 d = (dd >> 1) & 0xFF;
     comp.cram[d] = *s;
     update_clut(d);
-    ss_inc(1); dd_inc(1);
+    comp.ts.dma.len--;
+    ss_inc();
+    dd_inc();
   }
-  return n;
+
+  return 0;
 }
 
-u16 dma_fill(u16 memcyc)
+u32 dma_sfile(u32 n)
 {
   u32 &ss = comp.ts.dma.saddr;
   u32 &dd = comp.ts.dma.daddr;
 
-  u16 i;
-
-  if (comp.ts.dma.state == 0)
+  for (; n > 0; n--)
   {
+    if (!comp.ts.dma.len) // burst is empty
+    {
+      dma_next_burst();     // get next burst
+      if (!comp.ts.dma.len) // no new burst
+        return n;
+    }
+
     u16 *s = (u16*)(ss + RAM_BASE_M);
-    comp.ts.dma.data = *s;
-    comp.ts.dma.state = 1;
-    comp.ts.dma.len++;
-    i = 1;
-    ss_inc(1);
-  }
-  else i = 0;
-
-  u16 n = min(MEM_CYCLES - memcyc, comp.ts.dma.len);
-  comp.ts.dma.len -= n;
-
-  for (; i < n; i++)
-  {
-    u16 *d = (u16*)(dd + RAM_BASE_M);
-    *d = comp.ts.dma.data;
-    dd_inc(1);
-  }
-  return n;
-}
-
-u16 dma_sfile(u16 memcyc)
-{
-  u32 &ss = comp.ts.dma.saddr;
-  u32 &dd = comp.ts.dma.daddr;
-
-  u16 n = min(MEM_CYCLES - memcyc, comp.ts.dma.len);
-  comp.ts.dma.len -= n;
-
-  for (u16 i = 0; i < n; i++)
-  {
-    u16 *s = (u16*)(ss + RAM_BASE_M);
-    u16 d = (dd >> 1) & 0xFF;
+    u8 d = (dd >> 1) & 0xFF;
     comp.sfile[d] = *s;
-    ss_inc(1); dd_inc(1);
+    comp.ts.dma.len--;
+    ss_inc();
+    dd_inc();
   }
-  return n;
+
+  return 0;
 }
 
-void dma()
-{
-  update_screen();
+DMA_TASK DMATask[] = {
+  { dma_ram },
+  { dma_blt },
+  { dma_spi_r },
+  { dma_spi_w },
+  { dma_ide_r },
+  { dma_ide_w },
+  { dma_fill },
+  { dma_cram },
+  { dma_sfile }
+};
 
-  if (comp.ts.dma.line >= VID_LINES)
+void dma(u32 tacts)
+{
+  // get new task for dma
+  if (comp.ts.dma.state == DMA_ST_INIT)
+    dma_init();
+
+  // if no task for dma
+  if (comp.ts.dma.state == DMA_ST_NOP)
     return;
 
-  u16 memcyc = vid.memcpucyc[comp.ts.dma.line] +
-               vid.memtsscyc[comp.ts.dma.line] +
-               vid.memtstcyc[comp.ts.dma.line] +
-               vid.memvidcyc[comp.ts.dma.line];
-
-  while (memcyc < MEM_CYCLES)
-  {
-    if (comp.ts.dma.num == 0)
-	{
-      comp.ts.intctrl.new_dma = true;
-      comp.ts.dma.act = 0;
-      return;
-    }
-
-    u16 n;
-
-    switch (comp.ts.dma.dev)
-    {
-    case DMA_RAM:
-      if (comp.ts.dma.rw)
-        n = dma_blt(memcyc);
-      else
-        n = dma_ram(memcyc);
-      break;
-    case DMA_SPI:
-      n = dma_spi(memcyc);
-      break;
-    case DMA_IDE:
-      n = dma_ide(memcyc);
-      break;
-    case DMA_CRAM:
-      if (comp.ts.dma.rw)
-        n = dma_cram(memcyc);
-      else
-        n = dma_fill(memcyc);
-      break;
-    case DMA_SFILE:
-      if (comp.ts.dma.rw)
-      {
-        n = dma_sfile(memcyc);
-        break;
-      }
-      // else use default case
-    default:
-      n = 0;
-      comp.ts.dma.len = 0;
-      break;
-    }
-
-    memcyc += n;
-    vid.memdmacyc[comp.ts.dma.line] += n;
-
-    if (comp.ts.dma.len == 0)
-    {
-      if (comp.ts.dma.s_algn)
-      {
-        comp.ts.saddr += comp.ts.dma.asize;
-        comp.ts.dma.saddr = comp.ts.saddr;
-      }
-      else
-        comp.ts.saddr = comp.ts.dma.saddr;
-
-      if (comp.ts.dma.d_algn)
-      {
-        comp.ts.daddr += comp.ts.dma.asize;
-        comp.ts.dma.daddr = comp.ts.daddr;
-      }
-      else
-        comp.ts.daddr = comp.ts.dma.daddr;
-
-      comp.ts.dma.num--;
-      comp.ts.dma.len = comp.ts.dmalen+1;
-    }
-  }
-
-  if (++comp.ts.dma.line == VID_LINES)
-  {
-    comp.ts.dma.line = 0;
-    comp.ts.dma.next_t = 0;
-  }
-  else
-  {
-    comp.ts.dma.next_t += VID_TACTS;
-  }
+  // do task
+  tacts -= DMATask[comp.ts.dma.state].task(tacts);
+  vid.memdmacyc[vid.line] += (u16)tacts;
 }
 
 // TS Engine
 
-int render_tile(u8 page, u32 tnum, u8 line, u32 x, u8 pal, u8 xf, u8 n)
-{
-	/* check if number of allowed DRAM cycles per line (448) not exceeded */
-	if ((vid.memcpucyc[vid.line] + vid.memvidcyc[vid.line] + vid.memtsscyc[vid.line] + vid.memtstcyc[vid.line]) > 448)
-		return 0;
-
-	if (!comp.ts.notsu)
-    {
-        u8 *g = page_ram(page & 0xF8) + ((tnum & 0xFC0) << 5) + (line << 8);
-        x += (xf ? (n * 8 - 1) : 0);
-        pal <<= 4;
-        i8 a = xf ? -1 : 1;
-        u8 c;
-        u32 ox = (tnum & 0x3F) << 2;
-
-        for (u32 i=0; i<n; i++)		// draw 8 pixels per iteration
-        {
-            if (c = g[ox + 0] & 0xF0) vid.tsline[vid.line & 1][x & 0x1FF] = pal | (c >> 4); x += a;
-            if (c = g[ox + 0] & 0x0F) vid.tsline[vid.line & 1][x & 0x1FF] = pal | c; x += a;
-            if (c = g[ox + 1] & 0xF0) vid.tsline[vid.line & 1][x & 0x1FF] = pal | (c >> 4); x += a;
-            if (c = g[ox + 1] & 0x0F) vid.tsline[vid.line & 1][x & 0x1FF] = pal | c; x += a;
-            if (c = g[ox + 2] & 0xF0) vid.tsline[vid.line & 1][x & 0x1FF] = pal | (c >> 4); x += a;
-            if (c = g[ox + 2] & 0x0F) vid.tsline[vid.line & 1][x & 0x1FF] = pal | c; x += a;
-            if (c = g[ox + 3] & 0xF0) vid.tsline[vid.line & 1][x & 0x1FF] = pal | (c >> 4); x += a;
-            if (c = g[ox + 3] & 0x0F) vid.tsline[vid.line & 1][x & 0x1FF] = pal | c; x += a;
-            ox = (ox + 4) & 0xFF;
-        }
-    }
-
-	return n * 2;
-}
-
 SPRITE_t *spr = (SPRITE_t*)comp.sfile;
 u32 snum;
 
-void render_tile_layer(u8 layer)
+void init_tmap_layer()
 {
-	u32 y = (vid.yctr + (layer ? comp.ts.t1_yoffs : comp.ts.t0_yoffs)) & 0x1FF;
-	u32 x = (layer ? comp.ts.t1_xoffs_d[1] : comp.ts.t0_xoffs_d[1]);
-	TILE_t *tmap = (TILE_t*)(page_ram(comp.ts.tmpage) + ((y & 0x1F8) << 5));
-	u32 ox = (x >> 3) & 0x3F;
-	u32 l = (layer << 6);
-
-	for (u32 i=0; i<46; i++)
-	{
-		TILE_t t = tmap[(ox + i) & 0x3F | l];
-		if ((layer ? comp.ts.t1z_en : comp.ts.t0z_en) || t.tnum)
-		{
-			vid.memtstcyc[vid.line] += render_tile
-            (
-				(layer ? comp.ts.t1gpage[2] : comp.ts.t0gpage[2]),			// page
-				t.tnum,														// tile number
-				(y ^ (t.yflp ? 7 : 0)) & 7,									// line offset (3 bit)
-				(i << 3) - (x % 8),											// x coordinate in buffer (masked 0x1FF in func)
-				((layer ? comp.ts.t1pal : comp.ts.t0pal) << 2) | t.pal,		// palette
-				t.xflp, 1													// x flip, x size
-			);
-		}
-	}
+  if (!(comp.ts.t0_en || comp.ts.t1_en))
+  {
+    comp.ts.tsu.state = comp.ts.tsu.render ? TSS_SPR_RENDER : TSS_NOP;
+    return;
+  }
+  u32 y = (u32)vid.line + 17 - vid.raster.u_brd; // calculate y position of TileMap reader task
+  u32 y0 = (y + comp.ts.t0_yoffs) & 0x1FF; // calculate y graphic position for layer 0
+  u32 y1 = (y + comp.ts.t1_yoffs) & 0x1FF; // calculate y graphic position for layer 1
+  comp.ts.tsu.tmbpos[0] = ((y0 & 0x18) | (y & 0x07)) << 3; // calculate TileMap buffer position for layer 0
+  comp.ts.tsu.tmbpos[1] = ((y1 & 0x18) | (y & 0x07)) << 3 | 0x100; // calculate TileMap buffer position for layer 1
+  u8 *ptr = page_ram(comp.ts.tmpage);
+  comp.ts.tsu.tmap[0] = (TILE_t*)(page_ram(comp.ts.tmpage) + ((y0 & 0x1F8) << 5) + ((y & 0x07) << 4)); // calculate TileMap pointer for layer 0
+  comp.ts.tsu.tmap[1] = (TILE_t*)(page_ram(comp.ts.tmpage) + ((y1 & 0x1F8) << 5) + ((y & 0x07) << 4) + 0x80); // calculate TileMap pointer for layer 1
+  comp.ts.tsu.tmsize = comp.ts.t0_en << 3; // Set TileMap iteration for layer 0
+  return;
 }
 
-void render_sprite()
+u32 read_tmap_layer(u32 n)
 {
-	//sfile_dump();
-	SPRITE_t s = spr[snum];
-	u8 ys = ((s.ys + 1) << 3);
-	u32 l = (vid.yctr - s.y) & 0x1FF;
+  u8 &layer  = comp.ts.tsu.layer;
+  u16 &tmbpos = comp.ts.tsu.tmbpos[comp.ts.tsu.layer];
 
-	if (l < ys)
-	{
-		vid.memtsscyc[vid.line] += render_tile
-        (
-			comp.ts.sgpage,					// page
-			s.tnum,							// tile number
-			(u8)(s.yflp ? (ys - l - 1) : l),	// line offset (3 bit)
-			s.x,							// x coordinate in buffer (masked 0x1FF in func)
-			s.pal,							// palette
-			s.xflp, s.xs + 1				// x flip, x size
-		);
-	}
+  for (; n > 0; n--) // while have free memcycles
+  {
+    if (!comp.ts.tsu.tmsize) // No iteration for active layer
+    {
+      layer = 1 - layer; // switch layer between 0 <=> 1
+      if (layer) // active layer is 1 ?
+      {
+        comp.ts.tsu.tmsize = comp.ts.t1_en << 3; // set TileMap iteration for this layer if it enabled
+        return read_tmap_layer(n); // read TileMap for layer 1
+      }
+      // Set new TSU state
+      comp.ts.tsu.state = comp.ts.tsu.render ? TSS_SPR_RENDER : TSS_NOP;
+      return n;
+    }
+    comp.ts.tsu.tmbuf[tmbpos].data = comp.ts.tsu.tmap[layer][0]; // read Tile data
+    comp.ts.tsu.tmap[layer]++;
+
+    // Prepare palette for rendering
+    comp.ts.tsu.tmbuf[tmbpos].pal = comp.ts.tsu.tmbuf[tmbpos].data.pal << 4;
+
+    // Set first line for rendering
+    if (comp.ts.tsu.tmbuf[tmbpos].data.yflp)
+      comp.ts.tsu.tmbuf[tmbpos].line = 7;
+    else
+      comp.ts.tsu.tmbuf[tmbpos].line = 0;
+
+    // Set first position for rendering
+    if (comp.ts.tsu.tmbuf[tmbpos].data.xflp)
+      comp.ts.tsu.tmbuf[tmbpos].offset = 7, comp.ts.tsu.tmbuf[tmbpos].pos_dir = -1;
+    else
+      comp.ts.tsu.tmbuf[tmbpos].offset = 0, comp.ts.tsu.tmbuf[tmbpos].pos_dir = 1;
+
+    comp.ts.tsu.tmsize--;
+    tmbpos++;
+    vid.memtstcyc[vid.line]++;
+  }
+  return 0;
 }
 
-void render_sprite_layer()
+void init_tile()
 {
-	for (; snum < 85; snum++)
-	{
-		if (spr[snum].act)
-			render_sprite();
-		if (spr[snum].leap)
-			{ snum++; break; }
-	}
+  while (comp.ts.tsu.tnum < comp.ts.tsu.tmax) // have tiles in this line, which must be processed
+  {
+    comp.ts.tsu.tm = comp.ts.tsu.tmbptr[comp.ts.tsu.tnum & 0x3F];
+    comp.ts.tsu.tnum++;
+
+    comp.ts.tsu.pos = comp.ts.tsu.next_pos; // set next position for the graphic line buffer
+    comp.ts.tsu.next_pos = (comp.ts.tsu.next_pos + 8) & 0x1FF; // calculate new next position
+
+    if (comp.ts.tsu.tz_en || comp.ts.tsu.tm.data.tnum) // draw this tile ?
+    {
+      comp.ts.tsu.line = (comp.ts.tsu.y ^ comp.ts.tsu.tm.line) & 0x07; // calculate line for render
+      comp.ts.tsu.gptr = page_ram(comp.ts.tsu.gpage) + ((comp.ts.tsu.tm.data.tnum & 0xFC0) << 5) + (comp.ts.tsu.line << 8) + ((comp.ts.tsu.tm.data.tnum & 0x3F) << 2); // calculate graphic pointer for this tile
+      comp.ts.tsu.pal = comp.ts.tsu.tpal | comp.ts.tsu.tm.pal; // Merge tile palette bits and palette selector bits
+      comp.ts.tsu.pos = (comp.ts.tsu.pos + comp.ts.tsu.tm.offset) & 0x1FF; // calculate start position in graphic line buffer for render this tile
+      comp.ts.tsu.pos_dir = comp.ts.tsu.tm.pos_dir; // save position direction
+      comp.ts.tsu.gsize = 2; // set 2 graphic iteration for render this tile
+      break;
+    }
+  }
 }
 
-void render_ts()
+void init_sprite()
 {
-	memset(vid.tsline[vid.line & 1], 0, 360);
-	snum = 0;
+  while (comp.ts.tsu.snum < 85)
+  {
+    if (comp.ts.tsu.leap) // if previous sprite is last in current layer
+    {
+      comp.ts.tsu.state = (comp.ts.tsu.layer < 2) ? TSS_TILE_RENDER : TSS_NOP; // Set new TSU state
+      return;
+    }
 
-	for (u32 layer=0; layer < 5; layer++)
-	{
-		if (layer == 0 || layer == 2 || layer == 4)
-			if (comp.ts.s_en)
-				{ render_sprite_layer(); continue; }
-		if (layer == 1)
-			if (comp.ts.t0_en)
-				{ render_tile_layer(0); continue; }
-		if (layer == 3)
-			if (comp.ts.t1_en)
-				{ render_tile_layer(1); continue; }
-	}
-	vid.line_pos = 0;
+    comp.ts.tsu.spr = spr[comp.ts.tsu.snum]; // load sprite into tsu
+    comp.ts.tsu.snum++;
+
+    if (comp.ts.tsu.spr.act) // sprite is active
+    {
+      comp.ts.tsu.leap = comp.ts.tsu.spr.leap; // copy leap flag
+      u16 ysize = (comp.ts.tsu.spr.ys + 1) << 3; // calculate sprite size by y
+      u16 y = (vid.yctr - comp.ts.tsu.spr.y) & 0x1FF;
+      if (y < ysize) // part of sprite present at current line
+      {
+        u16 xsize = (comp.ts.tsu.spr.xs + 1) << 3; // calculate sprite size by x
+        comp.ts.tsu.pos = comp.ts.tsu.spr.xflp ? (comp.ts.tsu.spr.x + xsize - 1) : comp.ts.tsu.spr.x;
+        comp.ts.tsu.pos_dir = comp.ts.tsu.spr.xflp ? -1 : 1;
+        comp.ts.tsu.line = comp.ts.tsu.spr.yflp ? (ysize - y) : y;
+        comp.ts.tsu.gptr = page_ram(comp.ts.tsu.gpage) + ((comp.ts.tsu.spr.tnum & 0xFC0) << 5) + (comp.ts.tsu.line << 8) + ((comp.ts.tsu.spr.tnum & 0x3F) << 2); // calculate graphic pointer for this sprite
+        comp.ts.tsu.pal = comp.ts.tsu.spr.pal << 4; // Set prepared palette
+        comp.ts.tsu.gsize = (comp.ts.tsu.spr.xs + 1) << 1;
+        break;
+      }
+    }
+  }
+}
+
+void render_tile()
+{
+  u8 c;
+
+  c = comp.ts.tsu.gptr[0]; comp.ts.tsu.gptr++; // read color from graphic page for active layer
+
+  if (c & 0xF0) vid.tsline[vid.line & 1][comp.ts.tsu.pos] = comp.ts.tsu.pal | (c >> 4); // draw 0-3 pixels
+  comp.ts.tsu.pos += comp.ts.tsu.pos_dir; comp.ts.tsu.pos &= 0x1FF; // go to the next position in graphic line buffer
+  if (c & 0x0F) vid.tsline[vid.line & 1][comp.ts.tsu.pos] = comp.ts.tsu.pal | (c & 0x0F); // draw 4-7 pixels
+  comp.ts.tsu.pos += comp.ts.tsu.pos_dir; comp.ts.tsu.pos &= 0x1FF; // go to the next position in graphic line buffer
+
+  c = comp.ts.tsu.gptr[0]; comp.ts.tsu.gptr++;
+
+  if (c & 0xF0) vid.tsline[vid.line & 1][comp.ts.tsu.pos] = comp.ts.tsu.pal | (c >> 4);
+  comp.ts.tsu.pos += comp.ts.tsu.pos_dir; comp.ts.tsu.pos &= 0x1FF;
+  if (c & 0x0F) vid.tsline[vid.line & 1][comp.ts.tsu.pos] = comp.ts.tsu.pal | (c & 0x0F);
+  comp.ts.tsu.pos += comp.ts.tsu.pos_dir; comp.ts.tsu.pos &= 0x1FF;
+}
+
+void init_tile_layer()
+{
+  if (!(comp.ts.tsu.layer ? comp.ts.t1_en : comp.ts.t0_en)) // is current layer not active
+  {
+    comp.ts.tsu.state = TSS_SPR_RENDER; // set next state
+    comp.ts.tsu.layer++; // set next layer
+    return;
+  }
+  comp.ts.tsu.y = (vid.yctr + (comp.ts.tsu.layer ? comp.ts.t1_yoffs : comp.ts.t0_yoffs)) & 0x1FF; // calculate y position in active tile layer
+  u32 x = (comp.ts.tsu.layer ? comp.ts.t1_xoffs_d[1] : comp.ts.t0_xoffs_d[1]); // calculate x position in active tile layer
+  comp.ts.tsu.tnum = (x >> 3) & 0x3F; // set first number of tile for render
+  comp.ts.tsu.tmax = comp.ts.tsu.tnum + 46; // set end number of tile for render
+  comp.ts.tsu.tmbptr = comp.ts.tsu.tmbuf + ((comp.ts.tsu.y & 0x18) << 3) + (comp.ts.tsu.layer << 8); // pointer to the TileMap line in buffer
+  comp.ts.tsu.gpage = (comp.ts.tsu.layer ? comp.ts.t1gpage[2] : comp.ts.t0gpage[2]) & 0xF8; // get graphic page for active layer
+  comp.ts.tsu.tpal = (comp.ts.tsu.layer ? comp.ts.t1pal : comp.ts.t0pal) << 6; // Prepared Tile palette selector
+  comp.ts.tsu.tz_en = comp.ts.tsu.layer ? comp.ts.t1z_en : comp.ts.t0z_en; // get tz_en flag of active layer
+  comp.ts.tsu.pos = (0 - (x & 7)) & 0x1FF; // calculate start position in graphic line buffer
+  comp.ts.tsu.next_pos = comp.ts.tsu.pos; // next position in graphic line buffer set equal as pos (it will change in init_tile())
+  comp.ts.tsu.gsize = 0;
+}
+
+u32 render_tile_layer(u32 n)
+{
+  for (; n > 0; n--) // while have free tacts
+  {
+    if (!comp.ts.tsu.gsize) // if this end of graphics iteration for current tile
+    {
+      init_tile(); // get new tile
+      if (!comp.ts.tsu.gsize) // no new tile
+      {
+        comp.ts.tsu.state = TSS_SPR_RENDER; // set next task
+        comp.ts.tsu.layer++; // set next layer
+        return n;
+      }
+    }
+    render_tile();
+    vid.memtstcyc[vid.line]++;
+    comp.ts.tsu.gsize--;
+  }
+  return 0;
+}
+
+void init_sprite_layer()
+{
+  if (!comp.ts.tsu.layer) // Begin render of first graphic layer in current line
+  {
+    memset(&vid.tsline[vid.line & 1], 0, 512); // Clear graphic line buffer before render
+    comp.ts.tsu.snum = 0; // Reset Sprite number
+  }
+
+  if (!comp.ts.s_en) // not active Sprite layer
+  {
+    comp.ts.tsu.state = (comp.ts.tsu.layer < 2) ? TSS_TILE_RENDER : TSS_NOP; // Set next TSU state
+    return;
+  }
+
+  comp.ts.tsu.gpage = comp.ts.sgpage;
+  comp.ts.tsu.leap = false;
+  comp.ts.tsu.gsize = 0;
+}
+
+
+u32 render_sprite_layer(u32 n)
+{
+  for (; n > 0; n--) // while have free tacts
+  {
+    if (!comp.ts.tsu.gsize) // if this end of graphic iteration for current sprite
+    {
+      init_sprite(); // get new sprite
+      if (!comp.ts.tsu.gsize) // no new sprite
+      {
+        comp.ts.tsu.state = (comp.ts.tsu.layer < 2) ? TSS_TILE_RENDER : TSS_NOP; // set next task
+        return n;
+      }
+    }
+    render_tile();
+    vid.memtsscyc[vid.line]++;
+    comp.ts.tsu.gsize--;
+  }
+  return n;
+}
+
+TSU_TASK TSUTask[] = {
+  { init_tmap_layer, read_tmap_layer },
+  { init_tile_layer, render_tile_layer },
+  { init_sprite_layer, render_sprite_layer }
+};
+
+u32 render_ts(u32 tacts)
+{
+  if (comp.ts.tsu.state == TSS_NOP)
+  {
+    comp.ts.tsu.prev_state = TSS_NOP;
+    return tacts;
+  }
+
+  // Have new TSU state ?
+  if (comp.ts.tsu.prev_state != comp.ts.tsu.state)
+  {
+    if (comp.ts.tsu.state == TSS_INIT) // Start of new line
+    {
+      comp.ts.tsu.tmap_read = ((u32)vid.line + 17 >= vid.raster.u_brd && (u32)vid.line + 9 < vid.raster.d_brd); // need to read TileMap in this line ?
+      comp.ts.tsu.render = ((u32)vid.line + 1 >= vid.raster.u_brd && (u32)vid.line + 1 < vid.raster.d_brd); // need render graphic in this line ?
+
+      // Set first state at this line
+      if (comp.ts.tsu.render) comp.ts.tsu.state = TSS_SPR_RENDER; // set first task for render graphic
+      if (comp.ts.tsu.tmap_read) comp.ts.tsu.state = TSS_TMAP_READ; // need processed this task first (overlapped state)
+      if (comp.ts.tsu.state == TSS_INIT) // no task for this line ?
+      {
+        comp.ts.tsu.state = TSS_NOP; // set state as no operation in this line
+        return tacts;
+      }
+      comp.ts.tsu.layer = 0; // Any task begin at layer 0
+    }
+    comp.ts.tsu.prev_state = comp.ts.tsu.state; // Save current state
+    TSUTask[comp.ts.tsu.state].init_task(); // initialization task for current state
+    if (comp.ts.tsu.prev_state != comp.ts.tsu.state) return render_ts(tacts); // if state changed process it
+  }
+
+  tacts = TSUTask[comp.ts.tsu.state].task(tacts); // do task
+  if (comp.ts.tsu.prev_state != comp.ts.tsu.state) // if state changed process it
+    tacts = render_ts(tacts);
+
+  return tacts; // return free tacts
 }
 
 // This used to debug SFILE operations
@@ -497,7 +703,7 @@ void tsinit(void)
 
 	comp.ts.sysconf = 1;		// turbo 7MHz for TS-Conf
 	comp.ts.memconf = 0;
-	comp.ts.dma.act = 0;		// disable DMA on startup
+	comp.ts.dma.state = DMA_ST_NOP;		// disable DMA on startup
 	comp.ts.cacheconf = 0;  // disable cache
 
 	comp.ts.hsint = 2;

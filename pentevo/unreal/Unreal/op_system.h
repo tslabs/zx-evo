@@ -10,7 +10,7 @@ Z80INLINE void handle_int(Z80 *cpu, u8 vector)
       intad = cpu->MemIf->rm(vec) + 0x100*cpu->MemIf->rm(vec+1);
    }
 
-   if (cpu->MemIf->rm(cpu->pc) == 0x76) // int on halt command
+   if (cpu->DirectRm(cpu->pc) == 0x76) // int on halt command
        cpu->pc++;
 
    cputact((cpu->im < 2) ? 13 : 19);

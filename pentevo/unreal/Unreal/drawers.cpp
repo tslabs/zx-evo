@@ -54,6 +54,7 @@ void draw_zx(int n)
 		u8 p = scr[g];	// pixels
 		u8 c = scr[a];	// attributes
 		vcyc++;
+		vid.memcyc_lcmd++;
 
 		if (conf.ulaplus && comp.ulaplus_mode)
 		{
@@ -277,6 +278,7 @@ void draw_tstx(int n)
 		hires_draw
 		vid.xctr = (vid.xctr + 1) & 0x7F;
 		vcyc += 2;
+		vid.memcyc_lcmd += 2;
 	}
 	vid.vptr = vptr;
 	vid.memvidcyc[vid.line] = vcyc;
@@ -384,7 +386,7 @@ static int subt = 0;
 		subt++;
 		if (subt > 3)
 		{
-			subt = 0; vcyc++;
+			subt = 0; vcyc++; vid.memcyc_lcmd++;
 		}
 
 	}
@@ -400,7 +402,7 @@ static int subt = 0;
 		subt += 2;
 		if (subt > 3)
 		{
-			subt -= 4; vcyc++;
+			subt -= 4; vcyc++; vid.memcyc_lcmd++;
 		}
 	}
 
@@ -412,7 +414,7 @@ static int subt = 0;
 		subt++;
 		if (subt > 3)
 		{
-			subt = 0; vcyc++;
+			subt = 0; vcyc++; vid.memcyc_lcmd++;
 		}
 	}
 	vid.vptr = vptr;
@@ -436,6 +438,7 @@ void draw_ts256(int n)
 		p = vid.clut[scr[s + t++]]; t &= 0x1FF;
 		vbuf[vid.buf][vptr] = vbuf[vid.buf][vptr+1] = p; vptr += 2;
 		vcyc++;
+		vid.memcyc_lcmd++;
 	}
 	vid.vptr = vptr;
 	vid.memvidcyc[vid.line] = vcyc;
@@ -476,11 +479,11 @@ void draw_border(int n)
 // TS Line
 void draw_ts(u32 vptr)
 {
-  u8 linebuf = (vid.line & 1) ^ 1;
-  u32 max = vid.line_pos + ((vid.vptr - vptr) >> 1);
-  for (; vid.line_pos < max; vid.line_pos++, vptr += 2)
+  u8 n = (vid.line ^ 1) & 1;
+  u32 max = (vid.vptr - vptr) >> 1;
+  for (u32 i = 0; i < max; i++, vptr += 2, vid.ts_pos++)
   {
-    if (vid.tsline[linebuf][vid.line_pos] & 0xF) // if pixel is not transparent
-      vbuf[vid.buf][vptr] = vbuf[vid.buf][vptr+1] = vid.clut[vid.tsline[linebuf][vid.line_pos]];
+    if (vid.tsline[n][vid.ts_pos] & 0x0F)
+      vbuf[vid.buf][vptr] = vbuf[vid.buf][vptr + 1] = vid.clut[vid.tsline[n][vid.ts_pos]];
   }
 }

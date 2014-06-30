@@ -81,6 +81,51 @@ enum INTSRC
     INT_DMA
 };
 
+enum DMA_STATE
+{
+  DMA_ST_RAM    = 0,
+  DMA_ST_BLT    = 1,
+  DMA_ST_SPI_R  = 2,
+  DMA_ST_SPI_W  = 3,
+  DMA_ST_IDE_R  = 4,
+  DMA_ST_IDE_W  = 5,
+  DMA_ST_FILL   = 6,
+  DMA_ST_CRAM   = 7,
+  DMA_ST_SFILE  = 8,
+  DMA_ST_INIT,
+  DMA_ST_NOP
+};
+
+enum DMA_DATA_STATE
+{
+  DMA_DS_NONE,
+  DMA_DS_DATA,
+  DMA_DS_BLIT
+};
+
+enum TS_STATE
+{
+  TSS_TMAP_READ   = 0,
+  TSS_TILE_RENDER = 1,
+  TSS_SPR_RENDER  = 2,
+  TSS_INIT,
+  TSS_NOP
+};
+
+typedef void (*INITIAL_FUNCTION)();
+typedef u32 (*TASK_FUNCTION)(u32);
+
+typedef struct  
+{
+  INITIAL_FUNCTION init_task;
+  TASK_FUNCTION task;
+} TSU_TASK;
+
+typedef struct  
+{
+  TASK_FUNCTION task;
+} DMA_TASK;
+
 // Sprite Descriptor
 typedef struct
 {
@@ -106,6 +151,17 @@ typedef struct
 	u16 xflp:1;
 	u16 yflp:1;
 } TILE_t;
+
+// TileMap description
+typedef struct 
+{
+  u8 line;
+  u8 offset;
+  i8 pos_dir;
+  u8 pal;
+  TILE_t data;
+} TMAP_t;
+
 
 typedef struct
 {
@@ -379,28 +435,52 @@ typedef struct
     };
     u16 len;
     u16 num;
-    u32 saddr;  // source address of dma transaction
-    u32 daddr;  // destination address of dma transaction
-    u32 next_t; // next tact to transfer data
-    u16 line; // number of pixel video line
-    u32 m1; // mask 1 (used for address arithmetic)
-    u32 m2; // mask 2 (used for address arithmetic)
-    u32 asize; // align size
-    u16 data; // data (used by transactions based on state)
-    u8 state; // state of dma transaction
-    u8 act; // 0 - dma inactive, 1 - dma active
+    u32 saddr;      // source address of dma transaction
+    u32 daddr;      // destination address of dma transaction
+    u32 m1;         // mask 1 (used for address arithmetic)
+    u32 m2;         // mask 2 (used for address arithmetic)
+    u32 asize;      // align size
+    u16 data;       // data (used by transactions based on state)
+    u8 dstate;  // state of data (0 - empty, 1 - have data, 2 - have blitted data)
+    u8 state;       // state of dma transaction
   } dma;
+
+  struct  
+  {
+    u32 y;                // Y coordinate of graphic layers
+    u8 tnum;              // Tile number for render
+    u8 tmax;              // Max Tile number for render
+    u8 tpal;              // Prepared Tile palette selector
+    u8 pal;               // Prepared Tile palette
+    u16 pos;              // Position in line buffer
+    u16 next_pos;         // Next position in line buffer
+    u16 pos_dir;          // Direction of rendering to buffer
+    u8 line;              // Number of rendering line in tiles
+    u8 gpage;             // Graphic Page
+    u8 gsize;             // Size of graphic iterations
+    u8 tz_en;             // Enable rendering Tile with number 0
+    u8 *gptr;             // Pointer to the Tile graphic
+    TMAP_t *tmbptr;       // Pointer to the TileMap buffer
+    bool leap;            // Flag of last sprite in current layer
+    u8 snum;              // Number of Sprite
+    TMAP_t tm;            // TileMap data for render
+    SPRITE_t spr;         // Sprite data for render
+
+    TILE_t *tmap[2];      // TileMap pointers for layers
+    u8 tmsize;            // Number of elements which need read from TileMap for current layer
+    u16 tmbpos[2];        // Position in TileMap buffer for each layer
+    TMAP_t tmbuf[512];    // TileMap buffer
+
+    u8 state;             // TSU state
+    u8 prev_state;        // Previous TSU state
+    u8 layer;             // Active layer (0, 1, 2, etc)
+    bool tmap_read;       // Flag for read TileMap in current line
+    bool render;          // Flag for render graphic in current line
+  } tsu;
 } TSPORTS_t;
 
 // functions
 void update_clut(u8);
-void dma();
-u16 dma_ram(u16 memcyc);
-u16 dma_blt(u16 memcyc);
-u16 dma_spi(u16 memcyc);
-u16 dma_ide(u16 memcyc);
-u16 dma_cram(u16 memcyc);
-u16 dma_fill(u16 memcyc);
-u16 dma_sfile(u16 memcyc);
-void render_ts();
+void dma(u32 tacts);
+u32 render_ts(u32 tacts);
 void tsinit(void);
