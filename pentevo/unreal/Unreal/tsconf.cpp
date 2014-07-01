@@ -95,6 +95,7 @@ void dma_next_burst()
   }
   else
   {
+    comp.ts.intctrl.new_dma = true;
     comp.ts.dma.state = DMA_ST_NOP;
   }
 }
@@ -493,11 +494,11 @@ void init_sprite()
     }
 
     comp.ts.tsu.spr = spr[comp.ts.tsu.snum]; // load sprite into tsu
+    comp.ts.tsu.leap = comp.ts.tsu.spr.leap; // copy leap flag
     comp.ts.tsu.snum++;
 
     if (comp.ts.tsu.spr.act) // sprite is active
     {
-      comp.ts.tsu.leap = comp.ts.tsu.spr.leap; // copy leap flag
       u16 ysize = (comp.ts.tsu.spr.ys + 1) << 3; // calculate sprite size by y
       u16 y = (vid.yctr - comp.ts.tsu.spr.y) & 0x1FF;
       if (y < ysize) // part of sprite present at current line
