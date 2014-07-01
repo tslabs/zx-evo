@@ -504,9 +504,9 @@ void init_sprite()
       if (y < ysize) // part of sprite present at current line
       {
         u16 xsize = (comp.ts.tsu.spr.xs + 1) << 3; // calculate sprite size by x
-        comp.ts.tsu.pos = comp.ts.tsu.spr.xflp ? (comp.ts.tsu.spr.x + xsize - 1) : comp.ts.tsu.spr.x;
+        comp.ts.tsu.pos = comp.ts.tsu.spr.xflp ? ((comp.ts.tsu.spr.x + xsize - 1) & 0x1FF) : comp.ts.tsu.spr.x;
         comp.ts.tsu.pos_dir = comp.ts.tsu.spr.xflp ? -1 : 1;
-        comp.ts.tsu.line = comp.ts.tsu.spr.yflp ? (ysize - y) : y;
+        comp.ts.tsu.line = comp.ts.tsu.spr.yflp ? (ysize - y - 1) : y;
         comp.ts.tsu.gptr = page_ram(comp.ts.tsu.gpage) + ((comp.ts.tsu.spr.tnum & 0xFC0) << 5) + (comp.ts.tsu.line << 8) + ((comp.ts.tsu.spr.tnum & 0x3F) << 2); // calculate graphic pointer for this sprite
         comp.ts.tsu.pal = comp.ts.tsu.spr.pal << 4; // Set prepared palette
         comp.ts.tsu.gsize = (comp.ts.tsu.spr.xs + 1) << 1;
