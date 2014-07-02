@@ -69,10 +69,11 @@ U8 conv_levels(U8 lvl_in)
 int _tmain(int argc, _TCHAR* argv[])
 {
 	TGA_HEADER header;
-	FILE *f_tga;
-	FILE *f_map;
-	FILE *f_pal;
-	FILE *f_btm;
+	FILE *f_tga = NULL;
+	FILE *f_map = NULL;
+	FILE *f_pal = NULL;
+	FILE *f_btm = NULL;
+	FILE *f_btm4 = NULL;
 
 	if (argc != 2)
 	{
@@ -155,22 +156,41 @@ int _tmain(int argc, _TCHAR* argv[])
 
 // extract bitmap
 	static _TCHAR fbtm[256];
+	static _TCHAR fbtm4[256];
     static U8 buf[65536];
+    static U8 buf4[65536];
 
 	wcscpy(fbtm, argv[1]);
 	wcscat(fbtm, L".pix");
+	wcscpy(fbtm4, argv[1]);
+	wcscat(fbtm4, L".pix4");
 
 	if (!(f_btm = _wfopen(fbtm, L"wb")))
+		goto fatal;
+
+	if (!(f_btm4 = _wfopen(fbtm4, L"wb")))
 		goto fatal;
 
 // to do: add checker for image origin top/bottom
 
     for (int i = 0; i < header.image_height; i++)
     {
+        int p = 0;
+        
         if (fread(buf, 1, header.image_width, f_tga) != header.image_width)
             goto fatal;
 
         if (fwrite(buf, 1, header.image_width, f_btm) != header.image_width)
+            goto fatal;
+            
+        for (int j = 0; j < header.image_width;)
+        {
+            U8 c = (buf[j++] & 15) << 4;
+            c |= buf[j++] & 15;
+            buf4[p++] = c;
+        }
+        
+        if (fwrite(buf4, 1, p, f_btm4) != p)
             goto fatal;
     }
 
