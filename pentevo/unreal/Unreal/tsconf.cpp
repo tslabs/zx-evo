@@ -405,13 +405,14 @@ void init_tmap_layer()
     return;
   }
   u32 y = (u32)vid.line + 17 - vid.raster.u_brd; // calculate y position of TileMap reader task
-  u32 y0 = (y + comp.ts.t0_yoffs) & 0x1FF; // calculate y graphic position for layer 0
-  u32 y1 = (y + comp.ts.t1_yoffs) & 0x1FF; // calculate y graphic position for layer 1
-  comp.ts.tsu.tmbpos[0] = ((y0 & 0x18) | (y & 0x07)) << 3; // calculate TileMap buffer position for layer 0
-  comp.ts.tsu.tmbpos[1] = ((y1 & 0x18) | (y & 0x07)) << 3 | 0x100; // calculate TileMap buffer position for layer 1
+  u32 y_line = y & 0x07; // calculate line for current TileMap row
+  u32 y0 = (y - y_line + comp.ts.t0_yoffs) & 0x1FF; // calculate y graphic position for layer 0
+  u32 y1 = (y - y_line + comp.ts.t1_yoffs) & 0x1FF; // calculate y graphic position for layer 1
+  comp.ts.tsu.tmbpos[0] = (u16)((y0 & 0x18) | y_line) << 3; // calculate TileMap buffer position for layer 0
+  comp.ts.tsu.tmbpos[1] = (u16)((y1 & 0x18) | y_line) << 3 | 0x100; // calculate TileMap buffer position for layer 1
   u8 *ptr = page_ram(comp.ts.tmpage);
-  comp.ts.tsu.tmap[0] = (TILE_t*)(page_ram(comp.ts.tmpage) + ((y0 & 0x1F8) << 5) + ((y & 0x07) << 4)); // calculate TileMap pointer for layer 0
-  comp.ts.tsu.tmap[1] = (TILE_t*)(page_ram(comp.ts.tmpage) + ((y1 & 0x1F8) << 5) + ((y & 0x07) << 4) + 0x80); // calculate TileMap pointer for layer 1
+  comp.ts.tsu.tmap[0] = (TILE_t*)(page_ram(comp.ts.tmpage) + ((y0 & 0x1F8) << 5) + (y_line << 4)); // calculate TileMap pointer for layer 0
+  comp.ts.tsu.tmap[1] = (TILE_t*)(page_ram(comp.ts.tmpage) + ((y1 & 0x1F8) << 5) + (y_line << 4) + 0x80); // calculate TileMap pointer for layer 1
   comp.ts.tsu.tmsize = comp.ts.t0_en << 3; // Set TileMap iteration for layer 0
   return;
 }
