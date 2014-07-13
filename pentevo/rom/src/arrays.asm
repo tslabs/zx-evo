@@ -317,6 +317,7 @@ keys_symb
         defb 0, ':`?/~|\\{}   <>!@#$%_)(', 39, '&', 34, '; ][', 13, '=+-^ ', 14, '.,*'
 
 ; -- NVRAM default values
+; ATTENTION! When changing NVRAM cells declaration, update 'nv_def' array in vars.asm!
 nv_def
         defb 0      ; FDDVirt OFF
         defb 0      ; CPU clock 3.5MHz
@@ -331,7 +332,7 @@ nv_def
         defb 0      ; NGS Reset OFF
         defb 1      ; INT offset 1
 
-        defs 18     ; dummy
+        defs 10     ; dummy
         
         ; Custom palette
         defw 0  << 10 + 0  << 5 + 0 

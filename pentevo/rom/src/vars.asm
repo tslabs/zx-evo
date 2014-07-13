@@ -83,7 +83,7 @@ l128            defs 1      ; #7FFD Span
 zpal            defs 1      ; ZX palette
 nres            defs 1      ; NGS Reset
 into            defs 1      ; INT offset
-                defs 18     ; dummy
+                defs 10     ; dummy
 cpal            defs 32     ; Custom palette (array)
 nvcs            defs 2      ; checksum - must be last in the declaration
 
