@@ -18,6 +18,7 @@
 l1  ld (hl), a
     inc l
     jr nz, l1
+    inc h
 l2  ld (hl), a
     inc l
     jr nz, l2
