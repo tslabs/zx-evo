@@ -51,6 +51,10 @@ T1YOFFSH        equ $47AF
 ; TS parameters
 FM_EN           equ $10
 
+; FPGA arrays
+FM_CRAM         equ $0000
+FM_SFILE        equ #0200
+
 ; VIDEO
 VID_256X192     equ $00
 VID_320X200     equ $40
