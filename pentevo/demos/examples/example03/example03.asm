@@ -22,6 +22,8 @@ l2  ld (hl), a
     inc l
     jr nz, l2
     
+    out (c), a      ; close FPGA arrays at #0000
+    
 	; zeroing scrollers to avoid surprises from previous usage
 	ld b, high GXOFFSL : out (c), a
 	ld b, high GXOFFSH : out (c), a
