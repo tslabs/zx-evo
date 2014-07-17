@@ -1,7 +1,5 @@
 
-; This is a  example of Frame and Line maskable interrupt sources
-; Run it from TR-DOS:
-;   RUN "ex02a" CODE
+; This is an initer of sprite arrays and scrollers
 
     device zxspectrum48
 	include "tsconfig.asm"
