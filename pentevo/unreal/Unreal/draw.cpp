@@ -708,10 +708,8 @@ void update_screen()
       comp.ts.t0gpage[1] = comp.ts.t0gpage[0];
       comp.ts.t1gpage[2] = comp.ts.t1gpage[1];
       comp.ts.t1gpage[1] = comp.ts.t1gpage[0];
-      comp.ts.t0_xoffs_d[1] = comp.ts.t0_xoffs_d[0];
-      comp.ts.t0_xoffs_d[0] = comp.ts.t0_xoffs;
-      comp.ts.t1_xoffs_d[1] = comp.ts.t1_xoffs_d[0];
-      comp.ts.t1_xoffs_d[0] = comp.ts.t1_xoffs;
+      comp.ts.t0_xoffs_d = comp.ts.t0_xoffs;
+      comp.ts.t1_xoffs_d = comp.ts.t1_xoffs;
 
       vid.ts_pos = 0;
 
