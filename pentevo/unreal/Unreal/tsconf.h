@@ -331,7 +331,7 @@ typedef struct
 			u8 t0_xoffsh:1;
 		};
 	};
-	u16 t0_xoffs_d[2];
+	u16 t0_xoffs_d;
 
 	union
     {
@@ -352,7 +352,7 @@ typedef struct
 			u8 t1_xoffsh:1;
 		};
 	};
-	u16 t1_xoffs_d[2];
+	u16 t1_xoffs_d;
 
 	union
     {

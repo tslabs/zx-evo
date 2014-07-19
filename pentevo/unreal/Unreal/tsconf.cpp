@@ -545,7 +545,7 @@ void init_tile_layer()
     return;
   }
   comp.ts.tsu.y = (vid.yctr + (comp.ts.tsu.layer ? comp.ts.t1_yoffs : comp.ts.t0_yoffs)) & 0x1FF; // calculate y position in active tile layer
-  u32 x = (comp.ts.tsu.layer ? comp.ts.t1_xoffs_d[1] : comp.ts.t0_xoffs_d[1]); // calculate x position in active tile layer
+  u32 x = (comp.ts.tsu.layer ? comp.ts.t1_xoffs_d : comp.ts.t0_xoffs_d); // calculate x position in active tile layer
   comp.ts.tsu.tnum = (x >> 3) & 0x3F; // set first number of tile for render
   comp.ts.tsu.tmax = comp.ts.tsu.tnum + 46; // set end number of tile for render
   comp.ts.tsu.tmbptr = comp.ts.tsu.tmbuf + ((comp.ts.tsu.y & 0x18) << 3) + (comp.ts.tsu.layer << 8); // pointer to the TileMap line in buffer
