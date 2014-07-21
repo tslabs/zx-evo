@@ -99,9 +99,9 @@ module zint
 	reg [5:0] intctr;
 	wire intctr_fin = intctr[5];   // 32 clks
 
-	always @(posedge zclk, posedge int_start_lin)
+	always @(posedge zclk, posedge int_start_frm)
 	begin
-		if (int_start_lin)
+		if (int_start_frm)
 			intctr <= 0;
 		else if (!intctr_fin && !wait_r)
 			intctr <= intctr + 1;
