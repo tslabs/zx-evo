@@ -538,7 +538,7 @@ void render_tile()
 
 void init_tile_layer()
 {
-  if (!(comp.ts.tsu.layer ? comp.ts.t1_en : comp.ts.t0_en)) // is current layer not active
+  if (!(comp.ts.tsu.layer ? comp.ts.t1_en : comp.ts.t0_en) || comp.ts.notsu) // is current layer not active or flag notsu is set
   {
     comp.ts.tsu.state = TSS_SPR_RENDER; // set next state
     comp.ts.tsu.layer++; // set next layer
@@ -586,7 +586,7 @@ void init_sprite_layer()
     comp.ts.tsu.snum = 0; // Reset Sprite number
   }
 
-  if (!comp.ts.s_en) // not active Sprite layer
+  if (!comp.ts.s_en || comp.ts.notsu) // not active Sprite layer or flag notsu is set
   {
     comp.ts.tsu.state = (comp.ts.tsu.layer < 2) ? TSS_TILE_RENDER : TSS_NOP; // Set next TSU state
     return;
