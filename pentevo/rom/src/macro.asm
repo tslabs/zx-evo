@@ -1,6 +1,24 @@
 
 ; ------- MACRO definitions
 
+cally   macro addr
+        ld iy, $+7
+        jp addr
+        endm
+
+rety    macro
+        jp (iy)
+        endm
+        
+callx   macro addr
+        ld ix, $+7
+        jp addr
+        endm
+
+retx    macro
+        jp (ix)
+        endm
+        
 ; -- port macros
 
 ; write to F7
