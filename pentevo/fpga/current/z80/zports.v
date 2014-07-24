@@ -1,6 +1,6 @@
 // PentEvo project (c) NedoPC 2008-2010
 
-`include "../include/tune.v"
+`include "tune.v"
 
 module zports(
 
@@ -86,6 +86,7 @@ module zports(
 	input  wire [ 1:0] rstrom,
 	input  wire        tape_read,
 
+`ifndef IDE_VDAC
 // IDE interface
 	input  wire [15:0] ide_in,
 	output wire [15:0] ide_out,
@@ -95,6 +96,7 @@ module zports(
 	input  wire        ide_stb,
 	input  wire        ide_ready,
 	output reg		   ide_stall,
+`endif
 
 	input  wire [ 4:0] keys_in, // keys (port FE)
 	input  wire [ 7:0] mus_in,  // mouse (xxDF)
@@ -129,6 +131,7 @@ module zports(
 	localparam PORTF7 = 8'hF7;
 	localparam COVOX  = 8'hFB;
 
+`ifndef IDE_VDAC
 	localparam NIDE10 = 8'h10;
 	localparam NIDE11 = 8'h11;
 	localparam NIDE30 = 8'h30;
@@ -146,6 +149,7 @@ module zports(
 	localparam NIDEA8 = 8'hA8;
 	localparam NIDEC8 = 8'hC8;
 	localparam NIDEE8 = 8'hE8;
+`endif
 
 	localparam VGCOM  = 8'h1F;
 	localparam VGTRK  = 8'h3F;
@@ -168,18 +172,22 @@ module zports(
     assign porthit =
             ((loa==PORTFE) || (loa==PORTXT) || (loa==PORTFD) || (loa==COVOX))
 		 || ((loa==PORTF7) && !dos)
+`ifndef IDE_VDAC
          || ide_all
+`endif
 		 || ((vg_port || vgsys_port) && dos)
          || ((loa==KJOY) && !dos)
 		 || (loa==KMOUSE)
          || (((loa==SDCFG) || (loa==SDDAT)) && (!dos || vdos))
          || (loa==COMPORT);
 
+`ifndef IDE_VDAC
 	wire ide_all = ide_even || ide_port11;
 	wire ide_even = (loa[2:0] == 3'b000) && (loa[3] != loa[4]);			// even ports
     wire ide_port11 = (loa==NIDE11);									// 11
     wire ide_port10 = (loa==NIDE10);									// 10
     wire ide_portc8 = (loa==NIDEC8);									// C8
+`endif
 
     wire vg_port = (loa==VGCOM) | (loa==VGTRK) | (loa==VGSEC) | (loa==VGDAT);
     wire vgsys_port = (loa==VGSYS);
@@ -215,7 +223,6 @@ module zports(
 
 //    wire no_ide = 1'b0;     // this should be compiled conditionally
 
-
 // reading ports
 	always @*
 	begin
@@ -223,17 +230,23 @@ module zports(
 		PORTFE:
 			dout = {1'b1, tape_read, 1'b0, keys_in};
 
+`ifndef IDE_VDAC
 		NIDE10,NIDE30,NIDE50,NIDE70,NIDE90,NIDEB0,NIDED0,NIDEF0,NIDE08,NIDE28,NIDE48,NIDE68,NIDE88,NIDEA8,NIDEC8,NIDEE8:
 			dout = iderdeven;
 		NIDE11:
 			dout = iderdodd;
+`endif
 
         PORTXT:
             begin
             case (hoa)
 
             XSTAT:
-                dout = {1'b0, pwr_up_reg, 6'b0};
+`ifdef IDE_VDAC
+                dout = {1'b0, pwr_up_reg, 6'h01};
+`else
+                dout = {1'b0, pwr_up_reg, 6'h00};
+`endif
 
             DMASTAT:
                 dout = {dma_act, 7'b0};
@@ -557,6 +570,7 @@ module zports(
 	assign wait_start_gluclock = (gluclock_on && !a[14] && (portf7_rd || portf7_wr)); // $BFF7 - gluclock r/w
 	assign wait_start_comport = (comport_rd || comport_wr);
 
+`ifndef IDE_VDAC
 // IDE ports
     // do NOT generate IDE write, if neither of ide_wrhi|lo latches set and writing to NIDE10
 	wire ide_cs0 = ide_even && !ide_portc8;
@@ -658,5 +672,6 @@ module zports(
 	wire [7:0] ideout1 = ide_wrhi_latch ? idewrreg[15:8] : din[ 7:0];
 	wire [7:0] ideout0 = ide_wrlo_latch ? idewrreg[ 7:0] : din[ 7:0];
     assign ide_out = {ideout1, ideout0};
+`endif
 
 endmodule

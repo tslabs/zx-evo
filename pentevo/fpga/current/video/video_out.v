@@ -1,8 +1,6 @@
 // This module generates video for DAC
 
-`include "../include/tune.v"
-
-
+`include "tune.v"
 
 module video_out (
 
@@ -33,10 +31,18 @@ module video_out (
 	output wire [1:0] vred,
     output wire [1:0] vgrn,
     output wire [1:0] vblu,
+	output wire [4:0] vred_raw,
+    output wire [4:0] vgrn_raw,
+    output wire [4:0] vblu_raw,
+    output wire vdac_mode,
 	
     input wire [2:0] tst
 );
 
+    assign vred_raw = vpix[14:10];
+    assign vgrn_raw = vpix[9:5];
+    assign vblu_raw = vpix[4:0];
+    assign vdac_mode = vpixel[15];
 
 // TV/VGA mux
 	reg [7:0] vplex;
@@ -49,8 +55,8 @@ module video_out (
     wire blank = vga_on ? vga_blank : tv_blank;
     wire hires = vga_on ? vga_hires : tv_hires;
 
-	// wire [14:0] vpix = blank1 ? 15'b0 : vpixel;
-	wire [14:0] vpix = blank1 ? 15'b0 : (vpixel ^ {tst[1], tst[1], 3'b0, tst[2], tst[2], 3'b0, tst[0], tst[0], 3'b0});
+	wire [14:0] vpix = blank1 ? 15'b0 : vpixel;
+	// wire [14:0] vpix = blank1 ? 15'b0 : (vpixel ^ {tst[1], tst[1], 3'b0, tst[2], tst[2], 3'b0, tst[0], tst[0], 3'b0});
 	// wire [14:0] vpix = blank1 ? 15'b0 : (vpixel & 15'b111001110011100);		// test for 373 colors
 	// wire [14:0] vpix = blank1 ? 15'b0 : (vpixel & 15'b110001100011000);		// test for 64 colors
 
@@ -67,9 +73,6 @@ module video_out (
 	wire [2:0] igrn = vpix[ 7: 5];
 	wire [1:0] cblu = vpix[ 4: 3];
 	wire [2:0] iblu = vpix[ 2: 0];
-
-
-`ifndef FLICKER
 
 // prepare and clocking two phases of output
 	reg [1:0] red0;
@@ -89,36 +92,17 @@ module video_out (
 		blu1 <= (!pwm[iblu][{phase, 1'b1}] | &cblu) ? cblu : (cblu + 2'b1);
 	end
 
-
+`ifdef IDE_VDAC
+// no PWM	
+    assign vred = cred;
+	assign vgrn = cgrn;
+	assign vblu = cblu;
+`else
 // output muxing for 56MHz PWM resolution
 	assign vred = clk ? red1 : red0;
 	assign vgrn = clk ? grn1 : grn0;
 	assign vblu = clk ? blu1 : blu0;
-	// assign vred = cred;	// test NO PWM
-	// assign vgrn = cgrn;	// test NO PWM
-	// assign vblu = cblu;	// test NO PWM
-
-`else
-
-// frame flicker (373 colors)
-
-	reg [1:0] red;
-	reg [1:0] grn;
-	reg [1:0] blu;
-
-	always @(posedge clk)
-	begin
-        red <= (!ired[2] | vga_line | &cred) ? cred : (cred + 2'b1);
-        grn <= (!igrn[2] | vga_line | &cgrn) ? cgrn : (cgrn + 2'b1);
-        blu <= (!iblu[2] | vga_line | &cblu) ? cblu : (cblu + 2'b1);
-    end
-
-	assign vred = red;
-	assign vgrn = grn;
-	assign vblu = blu;
-
 `endif
-
 
 // PWM phase
 	reg [1:0] ph;
@@ -126,7 +110,6 @@ module video_out (
 		ph <= ph + 2'b1;
 
 	wire [1:0] phase = {vga_on ? vga_line : ph[1], ph[0]};
-
 
 // PWM
 	wire [7:0] pwm[0:7];
@@ -139,9 +122,8 @@ module video_out (
 	assign pwm[6] = 8'b11010111;
 	assign pwm[7] = 8'b11011111;
 
-
 // CRAM
-    wire [14:0] vpixel;
+    wire [15:0] vpixel;
 
 	video_cram video_cram(
 		.clock	    (clk),
@@ -151,6 +133,5 @@ module video_out (
 	    .rdaddress	(vdata),
 	    .q			(vpixel)
 );
-
 
 endmodule

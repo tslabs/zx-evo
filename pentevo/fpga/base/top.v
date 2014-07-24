@@ -1,4 +1,4 @@
-`include "../include/tune.v"
+`include "tune.v"
 
 // Pentevo project (c) NedoPC 2008-2012
 //
@@ -69,12 +69,13 @@ module top(
 
 	// IDE
 	output [2:0] ide_a,
+`ifdef IDE_VDAC
+	output [15:0] ide_d,
+`else
 	inout [15:0] ide_d,
-
+`endif
 	output ide_dir,
-
 	input ide_rdy,
-
 	output ide_cs0_n,
 	output ide_cs1_n,
 	output ide_rs_n,
@@ -228,14 +229,21 @@ module top(
 
 	assign ide_rs_n = rst_n;
 
-	assign ide_d = idedataout ? ideout : 16'hZZZZ;
 	assign idein = ide_d;
 
+`ifndef IDE_VDAC
+	assign ide_d = idedataout ? ideout : 16'hZZZZ;
 	assign ide_dir = ~idedataout;
-
-
-
-
+`else
+    assign ide_d[ 4: 0] = {vred, vred, vred[1]};
+    assign ide_d[ 9: 5] = {vgrn, vgrn, vgrn[1]};
+    assign ide_d[14:10] = {vblu, vblu, vblu[1]};
+    assign ide_d[15] = 1'b1;    // always 0-31 luma scale
+    assign ide_dir = 1'b0;      // always output
+    assign ide_a[1] = !fclk;
+    assign ide_a[2] = vhsync;
+    assign ide_cs1_n = vvsync;
+`endif
 
 	wire [7:0] peff7;
 	wire [7:0] p7ffd;
@@ -698,7 +706,9 @@ module top(
 	               .p7ffd(p7ffd), .peff7(peff7), .mreq_n(mreq_n), .m1_n(m1_n), .dos(dos),
 	               .vg_intrq(intrq), .vg_drq(drq), .vg_wrFF(vg_wrFF), .vg_cs_n(vg_cs_n),
 	               .idein(idein), .ideout(ideout), .idedataout(idedataout),
+`ifndef IDE_VDAC
 	               .ide_a(ide_a), .ide_cs0_n(ide_cs0_n), .ide_cs1_n(ide_cs1_n),
+`endif
 	               .ide_wr_n(ide_wr_n), .ide_rd_n(ide_rd_n),
 
 		       .sd_cs_n_val(zx_sdcs_n_val),

@@ -2,7 +2,7 @@
 //
 // most of pentevo ports are here
 
-`include "../include/tune.v"
+`include "tune.v"
 
 module zports(
 
@@ -265,7 +265,9 @@ module zports(
 		if( (loa==PORTFE) || (loa==PORTF6) ||
 		    (loa==PORTFD) ||
 
+`ifndef IDE_VDAC
 		    `IS_PORT_NIDE(loa) ||
+`endif
 //		    (loa==NIDE10) || (loa==NIDE11) || (loa==NIDE30) || (loa==NIDE50) || (loa==NIDE70) ||
 //		    (loa==NIDE90) || (loa==NIDEB0) || (loa==NIDED0) || (loa==NIDEF0) || (loa==NIDEC8) ||
 
@@ -364,11 +366,12 @@ module zports(
 			dout = { 1'b1, tape_read, 1'b0, keys_in };
 
 
+`ifndef IDE_VDAC
 		`NIDE_REGS:
 			dout = iderdeven;
 		NIDE11:
 			dout = iderdodd;
-
+`endif
 
 		//PORTFD:
 

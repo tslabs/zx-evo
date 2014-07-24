@@ -1,7 +1,7 @@
 
 // Decoding and strobing of z80 signals
 
-`include "../include/tune.v"
+`include "tune.v"
 
 module zsignals(
 

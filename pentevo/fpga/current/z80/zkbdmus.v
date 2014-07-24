@@ -2,7 +2,7 @@
 //
 // MUXes mouse and kbd data in two single databusses for zports
 
-`include "../include/tune.v"
+`include "tune.v"
 
 module zkbdmus(
 

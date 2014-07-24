@@ -1,9 +1,10 @@
-`include "../include/tune.v"
+`include "tune.v"
 
 // PentEvo project (c) NedoPC 2008-2009
 //
 // manages ZX-bus IORQ-IORQGE stuff and free bus content
 //
+
 module zbus(
 
 	input iorq,
@@ -21,12 +22,14 @@ module zbus(
 	output drive_ff
 );
 
-
-	// assign iorq1_n = !iorq | porthit;	// iorq is masked my M1_n!
-	assign iorq1_n = iorq_n;
 	assign iorq2_n = iorq1_n || iorqge1;
-	
-	assign drive_ff = !iorq2_n && !iorqge2 && !porthit && rd;
 
+`ifdef FREE_IORQ
+	assign iorq1_n = iorq_n;
+	assign drive_ff = !iorq2_n && !iorqge2 && !porthit && rd;
+`else
+	assign iorq1_n = !iorq || porthit;	            // iorq is masked my M1_n!
+    assign drive_ff = !iorq2_n && !iorqge2 & rd;
+`endif
 
 endmodule

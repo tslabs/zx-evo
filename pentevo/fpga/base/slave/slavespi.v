@@ -5,7 +5,7 @@
 
 
 
-`include "../include/tune.v"
+`include "tune.v"
 
 module slavespi(
 

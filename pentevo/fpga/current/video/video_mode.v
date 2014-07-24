@@ -1,6 +1,6 @@
 // This module decodes video modes
 
-`include "../include/tune.v"
+`include "tune.v"
 
 
 module video_mode (

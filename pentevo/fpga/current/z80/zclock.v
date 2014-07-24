@@ -22,7 +22,7 @@
 // 3. clock switch 14-7-3.5 only at RFSH
 
 
-`include "../include/tune.v"
+`include "tune.v"
 
 module zclock(
 

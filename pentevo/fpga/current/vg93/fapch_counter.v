@@ -1,7 +1,7 @@
 // counter-based 'fapch', based on pentagon design, with filter and adopted to
 // 28mhz
 
-`include "../include/tune.v"
+`include "tune.v"
 
 
 module fapch_counter

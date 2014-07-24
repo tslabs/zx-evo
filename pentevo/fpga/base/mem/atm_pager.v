@@ -6,7 +6,7 @@
 //
 // contain ports 3FF7,7FF7,BFF7,FFF7 as well as 37F7, 77F7, B7F7, F7F7
 
-`include "../include/tune.v"
+`include "tune.v"
 
 module atm_pager(
 

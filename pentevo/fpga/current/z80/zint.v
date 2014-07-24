@@ -1,5 +1,5 @@
 
-`include "../include/tune.v"
+`include "tune.v"
 
 module zint
 (
@@ -32,7 +32,7 @@ module zint
 	assign vect[INTDUM] = 8'hFF;
 
 	assign int_n = int_all ? 1'b0 : 1'bZ;
-	wire int_all = int_frm || int_lin || (int_dma && !vdos);
+	wire int_all = (int_frm || int_lin || int_dma) && !vdos;
 
 	wire dis_int_frm = !intmask[0];
 	wire dis_int_lin = !intmask[1];
@@ -65,16 +65,16 @@ module zint
 // ~INT generating
 	reg int_frm;
 	always @(posedge clk)
-		if (res || dis_int_frm || vdos)
+		if (res || dis_int_frm)
 			int_frm <= 1'b0;
 		else if (int_start_frm)
 			int_frm <= 1'b1;
-		else if (intctr_fin || intack_s)		// priority 0
+		else if (intack_s || intctr_fin )		// priority 0
 			int_frm <= 1'b0;
 
 	reg int_lin;
 	always @(posedge clk)
-		if (res || dis_int_lin || vdos)
+		if (res || dis_int_lin)
 			int_lin <= 1'b0;
 		else if (int_start_lin)
 			int_lin <= 1'b1;
@@ -103,7 +103,7 @@ module zint
 	begin
 		if (int_start_frm)
 			intctr <= 0;
-		else if (!intctr_fin && !wait_r)
+		else if (!intctr_fin && !wait_r && !vdos)
 			intctr <= intctr + 1;
 	end
 

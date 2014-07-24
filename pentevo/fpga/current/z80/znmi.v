@@ -2,7 +2,7 @@
 //
 // NMI generation
 
-`include "../include/tune.v"
+`include "tune.v"
 
 module znmi
 (
