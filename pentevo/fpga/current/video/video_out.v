@@ -21,7 +21,7 @@ module video_out (
 	input wire [3:0] palsel,
 
 // Z80 pins
-	input  wire [14:0] cram_data_in,
+	input  wire [15:0] cram_data_in,
 	input  wire [7:0] cram_addr_in,
 	input  wire cram_we,
 

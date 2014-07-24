@@ -451,7 +451,7 @@ module video_top (
 		.tv_hires		(tv_hires),
 		.vga_hires		(vga_hires),
 		.cram_addr_in	(zma),
-		.cram_data_in	(zmd[14:0]),
+		.cram_data_in	(zmd[15:0]),
 		.cram_we		(cram_we),
 	    .vplex_in		(vplex),
 	    .vgaplex		(vgaplex),
