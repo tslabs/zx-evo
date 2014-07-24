@@ -4,6 +4,7 @@
 //
 // manages ZX-bus IORQ-IORQGE stuff and free bus content
 //
+
 module zbus(
 
 	input iorq_n,
@@ -23,16 +24,14 @@ module zbus(
 );
 
 
-
-	// assign iorq1_n = iorq_n | porthit;
-	assign iorq1_n = iorq_n;
-
 	assign iorq2_n = iorq1_n | iorqge1;
 
-	assign drive_ff = ( (~(iorq2_n|iorqge2)) & (~rd_n)  && !porthit) | (~(m1_n|iorq_n));
-
-
-
-
+`ifdef FREE_IORQ
+	assign iorq1_n = iorq_n;
+    assign drive_ff = ( (~(iorq2_n|iorqge2)) & (~rd_n)  && !porthit) | (~(m1_n|iorq_n));
+`else
+	assign iorq1_n = iorq_n | porthit;
+    assign drive_ff = ( (~(iorq2_n|iorqge2)) & (~rd_n) ) | (~(m1_n|iorq_n));
+`endif
 
 endmodule

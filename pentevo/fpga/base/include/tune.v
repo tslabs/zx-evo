@@ -8,3 +8,4 @@
 //`define DRAMMEM_VERBOSE
 //`define FETCH_VERBOSE
 
+// `define FREE_IORQ       // for non-blocked by internal ports !IORQ
