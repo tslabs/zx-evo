@@ -1,4 +1,4 @@
-`include "../include/tune.v"
+`include "tune.v"
 
 // This is the Tile Sprite Processing Unit
 

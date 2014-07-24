@@ -1,4 +1,4 @@
-`include "../include/tune.v"
+`include "tune.v"
 
 // Pentevo project(c) NedoPC 2008-2011
 //
@@ -69,7 +69,11 @@ module top(
 
     // IDE
     output [2:0] ide_a,
+`ifdef IDE_VDAC
+    output [15:0] ide_d,
+`else
     inout [15:0] ide_d,
+`endif
     output ide_dir,         // rnw
     output ide_cs0_n,
     output ide_cs1_n,
@@ -122,8 +126,6 @@ module top(
 
     // assign tst[2] = iord_s;
     // assign tst[1] = iorq_s;
-
-    defparam myrst.RST_CNT_SIZE = 6;
 
     wire f0, f1, h0, h1, c0, c1, c2, c3;
     wire rst_n; // global reset
@@ -328,13 +330,37 @@ module top(
 
     wire [7:0] sysconf;
     wire [3:0] fddvirt;
+    
+    wire [4:0] vred_raw;
+    wire [4:0] vgrn_raw;
+    wire [4:0] vblu_raw;
+    wire vdac_mode;
+
+`ifndef IDE_VDAC
+    assign ide_d = ide_dir ? 16'hZZZZ : ide_out;
+`else
+    assign ide_d[ 4: 0] = vred_raw;
+    assign ide_d[ 9: 5] = vgrn_raw;
+    assign ide_d[14:10] = vblu_raw;
+    assign ide_d[15] = vdac_mode;
+    assign ide_dir = 1'b0;      // always output
+    assign ide_a[1] = !fclk;
+    assign ide_a[2] = vhsync;
+    assign ide_cs1_n = vvsync;
+`endif
 
     wire [15:0] z80_ide_out;
     wire z80_ide_cs0_n;
     wire z80_ide_cs1_n;
     wire z80_ide_req;
     wire z80_ide_rnw;
-
+    wire [15:0] dma_ide_out;
+    wire dma_ide_req;
+    wire dma_ide_rnw;
+    wire ide_stb;
+    wire ide_ready;
+    wire [15:0] ide_out;
+    
     wire [7:0] intmask;
 
     wire dma_act;
@@ -345,10 +371,6 @@ module top(
 
     wire dma_sfile_we;
 
-    wire [15:0] dma_ide_out;
-    wire dma_ide_req;
-    wire dma_ide_rnw;
-
     wire cpu_spi_req;
     wire dma_spi_req;
     wire spi_rdy;
@@ -357,11 +379,6 @@ module top(
     wire [7:0] cpu_spi_din;
     wire [7:0] dma_spi_din;
     wire [7:0] spi_dout;
-
-    wire ide_stb;
-    wire ide_ready;
-    wire [15:0] ide_out;
-    assign ide_d = ide_dir ? 16'hZZZZ : ide_out;
 
     // wire [1:0] vg_ddrv;
     // assign vg_a[0] = vg_ddrv[0] ? 1'b1 : 1'b0; // possibly open drain?
@@ -403,7 +420,9 @@ module top(
         .dos_on(dos_on),
         .vdos_off(vdos_off),
         .cpu_stall(cpu_stall),
+`ifndef IDE_VDAC
         .ide_stall(ide_stall),
+`endif
         .external_port(external_port)
     );
 
@@ -552,6 +571,10 @@ module top(
         .vred(vred),
         .vgrn(vgrn),
         .vblu(vblu),
+        .vred_raw(vred_raw),
+        .vgrn_raw(vgrn_raw),
+        .vblu_raw(vblu_raw),
+        .vdac_mode(vdac_mode),
         .hsync(vhsync),
         .vsync(vvsync),
         .csync(vcsync),
@@ -747,6 +770,7 @@ module top(
         .sd_dataout(spi_dout),
         .sd_datain(cpu_spi_din),
         .sdcs_n(sdcs_n),
+`ifndef IDE_VDAC
         .ide_in(ide_d),
         .ide_out(z80_ide_out),
         .ide_cs0_n(z80_ide_cs0_n),
@@ -755,6 +779,7 @@ module top(
         .ide_stb(ide_stb),
         .ide_ready(ide_ready),
         .ide_stall(ide_stall),
+`endif
         .border_wr(border_wr),
         .zborder_wr(zborder_wr),
         .zvpage_wr(zvpage_wr),
@@ -832,16 +857,18 @@ module top(
         .wraddr(dma_wraddr),
         .cram_we(dma_cram_we),
         .sfile_we(dma_sfile_we),
-        .spi_req(dma_spi_req),
-        .spi_stb(spi_stb),
-        .spi_start(spi_start),
-        .spi_rddata(spi_dout),
-        .spi_wrdata(dma_spi_din),
+`ifndef IDE_VDAC
         .ide_in(ide_d),
         .ide_out(dma_ide_out),
         .ide_req(dma_ide_req),
         .ide_rnw(dma_ide_rnw),
-        .ide_stb(ide_stb)
+        .ide_stb(ide_stb),
+`endif
+        .spi_req(dma_spi_req),
+        .spi_stb(spi_stb),
+        .spi_start(spi_start),
+        .spi_rddata(spi_dout),
+        .spi_wrdata(dma_spi_din)
     );
 
     zint zint
@@ -930,6 +957,7 @@ module top(
         .speed(2'b00)        // this is 14 MHz at 28 Mhz Altera clock
     );
 
+`ifndef IDE_VDAC
     ide ide
     (
         // .tst(tst),
@@ -954,6 +982,7 @@ module top(
         .z80_req(z80_ide_req),
         .z80_rnw(!rd_n)            // this should be the direct Z80 signal
     );
+`endif
 
     sound sound
     (

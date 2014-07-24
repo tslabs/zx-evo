@@ -57,7 +57,7 @@
 //  to the known state from any operational state, set speed=0 and start=1 for 8 clks
 //  (that starts Fclk/Fspi=2 speed transfer for sure), then remain start=0, speed=0 for at least 18 clks.
 
-`include "../include/tune.v"
+`include "tune.v"
 
 
 module spi(

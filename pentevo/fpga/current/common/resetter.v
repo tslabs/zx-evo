@@ -1,4 +1,4 @@
-`include "../include/tune.v"
+`include "tune.v"
 
 module resetter(
 
@@ -8,7 +8,7 @@ module resetter(
 
 	rst_out_n );
 
-parameter RST_CNT_SIZE = 4;
+parameter RST_CNT_SIZE = 6;
 
 
 	input clk;

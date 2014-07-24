@@ -1,4 +1,4 @@
-`include "../include/tune.v"
+`include "tune.v"
 
 // This module renders pixels into TS-line for tiles/sprites
 // Task execution is initiated by 'tsr_go' (one 'clk' period strobe).

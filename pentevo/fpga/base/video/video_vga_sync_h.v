@@ -1,4 +1,4 @@
-`include "../include/tune.v"
+`include "tune.v"
 
 // PentEvo project (c) NedoPC 2010-2011
 //

@@ -1,6 +1,6 @@
 // This module fetches video data from DRAM
 
-`include "../include/tune.v"
+`include "tune.v"
 
 
 module video_fetch (

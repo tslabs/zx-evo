@@ -2,7 +2,7 @@
 //
 // wait generator for Z80
 
-`include "../include/tune.v"
+`include "tune.v"
 
 
 module zwait(

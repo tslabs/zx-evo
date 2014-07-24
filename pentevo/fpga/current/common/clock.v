@@ -13,7 +13,7 @@
 // c3	|____________————|	period = 7		duty = 25%		phase = 270
 
 
-`include "../include/tune.v"
+`include "tune.v"
 
 module clock (
 

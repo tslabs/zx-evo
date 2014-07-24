@@ -2,7 +2,7 @@
 //
 // break function: when CPU M1 address equals to predefined, NMI is generated
 
-`include "../include/tune.v"
+`include "tune.v"
 
 module zbreak
 (

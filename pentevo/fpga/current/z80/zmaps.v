@@ -1,6 +1,6 @@
 // This module makes mapping z80 memory accesses into FPGA EABs
 
-`include "../include/tune.v"
+`include "tune.v"
 
 
 module zmaps(

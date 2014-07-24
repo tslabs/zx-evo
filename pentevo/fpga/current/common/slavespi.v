@@ -2,7 +2,7 @@
 //
 // fpga SPI slave device.
 
-`include "../include/tune.v"
+`include "tune.v"
 
 // In:
 //  SCS_n = 1 - reg number

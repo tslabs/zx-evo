@@ -2,7 +2,7 @@
 //
 // SPI hub: arbitrating between AVR and Z80 accesses to SDcard via SPI.
 
-`include "../include/tune.v"
+`include "tune.v"
 
 module spihub(
 

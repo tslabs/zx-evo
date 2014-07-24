@@ -50,12 +50,16 @@ OBJECTS = zx.o interrupts.o main.o ps2.o spi.o depacker_dirty.o rs232.o rtc.o at
 FPGACORE = tsconf.o baseconf.o egg.o
 
 ## Build
-all: clean $(TARGET) core.hex core.eep core.lss size zxevo_beta.bin
-	@mv zxevo_beta.bin zxevo_fw.bin
+all: 
+	make norm
+	make vdac
 
-release: clean $(TARGET) core.hex core.eep core.lss size zxevo_release.bin
-	@mv zxevo_release.bin zxevo_fw.bin
+norm: clean norm.rbf $(TARGET) core.hex core.eep core.lss size
+	@$(MKFW) core.hex core.eep zxevo_fw.bin version.txt >$(DEVNULL)
 
+vdac: clean vdac.rbf $(TARGET) core.hex core.eep core.lss size
+	@$(MKFW) core.hex core.eep zxevo_fw_vdac.bin version_vdac.txt >$(DEVNULL)
+    
 ## Compile
 zx.o: ../zx.c ../zx.h
 	@$(CC) $(INCLUDES) $(CFLAGS) -c  $<
@@ -103,18 +107,20 @@ spiflash.o: ../spiflash.c ../spiflash.h
 $(TARGET): $(OBJECTS) $(FPGACORE)
 	 @$(CC) $(LDFLAGS) $(OBJECTS) $(FPGACORE) -o $(TARGET)
 
-tsconf.rbf: ../../../fpga/current/quartus/top.rbf
+norm.rbf: ../../../fpga/current/quartus/top.rbf ../../../fpga/base/quartus/top.rbf
 	@cp ../../../fpga/current/quartus/top.rbf tsconf.rbf
-
-baseconf.rbf: ../../../fpga/base/quartus/top.rbf
 	@cp ../../../fpga/base/quartus/top.rbf baseconf.rbf
+
+vdac.rbf: ../../../fpga/current/quartus_vdac/top.rbf ../../../fpga/base/quartus_vdac/top.rbf
+	@cp ../../../fpga/current/quartus_vdac/top.rbf tsconf.rbf
+	@cp ../../../fpga/base/quartus_vdac/top.rbf baseconf.rbf
 
 $(FPGACORE): tsconf.rbf baseconf.rbf egg.rbf
 	@$(MHMT) -maxwin2048 tsconf.rbf tsconf.mlz >$(DEVNULL)
-	@avr-objcopy -I binary -O elf32-avr -B avr:51 --rename-section .data=.progmem.data,contents,alloc,load,readonly,data --redefine-sym _binary_tsconf_mlz_start=fpga0 tsconf.mlz tsconf.o
 	@$(MHMT) -maxwin2048 baseconf.rbf baseconf.mlz >$(DEVNULL)
-	@avr-objcopy -I binary -O elf32-avr -B avr:51 --rename-section .data=.progmem.data,contents,alloc,load,readonly,data --redefine-sym _binary_baseconf_mlz_start=fpga1 baseconf.mlz baseconf.o
 	@$(MHMT) -maxwin2048 egg.rbf egg.mlz >$(DEVNULL)
+	@avr-objcopy -I binary -O elf32-avr -B avr:51 --rename-section .data=.progmem.data,contents,alloc,load,readonly,data --redefine-sym _binary_tsconf_mlz_start=fpga0 tsconf.mlz tsconf.o
+	@avr-objcopy -I binary -O elf32-avr -B avr:51 --rename-section .data=.progmem.data,contents,alloc,load,readonly,data --redefine-sym _binary_baseconf_mlz_start=fpga1 baseconf.mlz baseconf.o
 	@avr-objcopy -I binary -O elf32-avr -B avr:51 --rename-section .data=.progmem.data,contents,alloc,load,readonly,data --redefine-sym _binary_egg_mlz_start=fpga2 egg.mlz egg.o
 
 %.hex: $(TARGET)
@@ -129,12 +135,6 @@ $(FPGACORE): tsconf.rbf baseconf.rbf egg.rbf
 size: ${TARGET}
 	@echo .
 	@avr-size -C --mcu=${MCU} ${TARGET}
-
-zxevo_beta.bin: core.hex core.eep
-	@$(MKFW) core.hex core.eep zxevo_beta.bin version.txt >$(DEVNULL)
-
-zxevo_release.bin: core.hex core.eep
-	@$(MKFW) core.hex core.eep zxevo_release.bin version.txt >$(DEVNULL)
 
 ## Clean target
 .PHONY: clean

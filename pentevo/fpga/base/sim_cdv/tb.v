@@ -1,6 +1,6 @@
 // simulate together CPU, DRAM and VIDEO FETCH
 
-`include "../include/tune.v"
+`include "tune.v"
 
 module tb_cdv;
 

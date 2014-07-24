@@ -1,4 +1,4 @@
-`include "../include/tune.v"
+`include "tune.v"
 
 // This module is a video top-level
 
@@ -17,6 +17,12 @@ module video_top (
 	output wire	[1:0] vgrn,
 	output wire	[1:0] vblu,
 
+// video raw (for 15 bit DAC)
+	output wire	[4:0] vred_raw,
+	output wire	[4:0] vgrn_raw,
+	output wire	[4:0] vblu_raw,
+	output wire	vdac_mode,
+    
 // video syncs
 	output wire	hsync,
 	output wire	vsync,
@@ -451,7 +457,11 @@ module video_top (
 	    .vgaplex		(vgaplex),
 		.vred			(vred),
 	    .vgrn			(vgrn),
-	    .vblu			(vblu)
+	    .vblu			(vblu),
+		.vred_raw		(vred_raw),
+	    .vgrn_raw		(vgrn_raw),
+	    .vblu_raw		(vblu_raw),
+	    .vdac_mode		(vdac_mode)
 );
 
 
