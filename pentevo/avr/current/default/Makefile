@@ -110,10 +110,12 @@ $(TARGET): $(OBJECTS) $(FPGACORE)
 norm.rbf: ../../../fpga/current/quartus/top.rbf ../../../fpga/base/quartus/top.rbf
 	@cp ../../../fpga/current/quartus/top.rbf tsconf.rbf
 	@cp ../../../fpga/base/quartus/top.rbf baseconf.rbf
+	@cp ../../../fpga/tennis/quartus/zxevo_tennis_compatible.rbf egg.rbf
 
 vdac.rbf: ../../../fpga/current/quartus_vdac/top.rbf ../../../fpga/base/quartus_vdac/top.rbf
 	@cp ../../../fpga/current/quartus_vdac/top.rbf tsconf.rbf
 	@cp ../../../fpga/base/quartus_vdac/top.rbf baseconf.rbf
+	@cp ../../../fpga/tennis/quartus_vdac/zxevo_tennis_compatible.rbf egg.rbf
 
 $(FPGACORE): tsconf.rbf baseconf.rbf egg.rbf
 	@$(MHMT) -maxwin2048 tsconf.rbf tsconf.mlz >$(DEVNULL)
