@@ -1,0 +1,45 @@
+
+-------------------------------------------------------
+Functions
+-------------------------------------------------------
+
+Number  Name    Description
+
+(A - func number, C - return value)
+00      GCCLK   Get CPU Clock
+01      GCCHE   Get CPU Cache
+02      GFDDV   Get FDDVirt
+03      GBDEV   Get Boot Device
+04      GBSRC   Get Boot Source
+05      GBCSR   Get CS Boot Source
+06      GBBNK   Get Boot Bank
+07      GBCBN   Get CS Boot Bank
+08      GFDSP   Get #7FFD Span
+09      GZXPN   Get ZX Palette Preset Number
+0A      GNGSR   Get NGS Reset
+0B      GINTO   Get INT Offset
+70      GCCRC   Check CRC Valid
+
+(A - func number, HL - address)
+20      GZXPV   Get ZX Palette Values
+
+(A - func number, C - argument value)
+80      SCCLK   Set CPU Clock
+81      SCCHE   Set CPU Cache
+82      SFDDV   Set FDDVirt
+83      SBDEV   Set Boot Device
+84      SBSRC   Set Boot Source
+85      SBCSR   Set CS Boot Source
+86      SBBNK   Set Boot Bank
+87      SBCBN   Set CS Boot Bank
+88      SFDSP   Set #7FFD Span
+89      SZXPN   Set ZX Palette Preset Number
+8A      SNGSR   Set NGS Reset
+8B      SINTO   Set INT Offset
+
+(A - func number, HL - address)
+A0      SZXPV   Set ZX Palette Values
+
+(A - func number)
+F0      SCCRC   Set Calculated CRC
+F1      SDEFS   Set Defaults
