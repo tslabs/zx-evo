@@ -21,7 +21,7 @@ Number  Name    Description
 70      GCCRC   Check CRC Valid
 
 (A - func number, HL - address)
-20      GZXPV   Get ZX Palette Values
+20      GZXPV   Get Custom Palette Values
 
 (A - func number, C - argument value)
 80      SCCLK   Set CPU Clock
@@ -38,7 +38,7 @@ Number  Name    Description
 8B      SINTO   Set INT Offset
 
 (A - func number, HL - address)
-A0      SZXPV   Set ZX Palette Values
+A0      SZXPV   Set Custom Palette Values
 
 (A - func number)
 F0      SCCRC   Set Calculated CRC
