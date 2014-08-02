@@ -1107,8 +1107,9 @@ __inline u8 in1(unsigned port)
    {
 	   if (port == 0xFF3B)
 	   {
-		   if (!(comp.ulaplus_reg && 0xC0))		// ULA+ DATA
-			   return comp.ulaplus_cram[comp.ulaplus_reg];
+		   	// ULA+ DATA
+			u8 c = (!(comp.ulaplus_reg & 0xC0) && (comp.ulaplus_mode & 1)) ? comp.ulaplus_cram[comp.ulaplus_reg] : 0xFF;
+			return c;
 	   }
    }
 
