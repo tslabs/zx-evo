@@ -130,9 +130,22 @@ struct IDE_CONFIG
    u8 cd;
 };
 
-enum RSM_MODE { RSM_SIMPLE, RSM_FIR0, RSM_FIR1, RSM_FIR2 };
+enum RSM_MODE 
+{ 
+	RSM_SIMPLE, RSM_FIR0, RSM_FIR1, RSM_FIR2 
+};
 
-enum SSHOT_FORMAT { SS_SCR = 0, SS_BMP = 1, SS_PNG = 2, SS_GIF = 3, SS_LAST };
+enum SSHOT_FORMAT 
+{ 
+	SS_SCR = 0, SS_BMP = 1, SS_PNG = 2, SS_GIF = 3, SS_LAST 
+};
+
+enum ULAPLUS
+{
+	UPLS_TYPE1 = 0,
+	UPLS_TYPE2,
+	UPLS_NONE
+};
 
 struct zxkeymap ;
 
