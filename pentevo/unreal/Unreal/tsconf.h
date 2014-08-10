@@ -112,6 +112,20 @@ enum TS_STATE
   TSS_NOP
 };
 
+enum TS_PWRUP
+{
+	TS_PWRUP_ON = 0x40,
+	TS_PWRUP_OFF = 0x00
+};
+
+enum TS_VDAC
+{
+	TS_VDAC_OFF = 0x00,
+	TS_VDAC_3 = 0x01,
+	TS_VDAC_4 = 0x02,
+	TS_VDAC_5 = 0x03
+};
+
 typedef void (*INITIAL_FUNCTION)();
 typedef u32 (*TASK_FUNCTION)(u32);
 
@@ -237,7 +251,7 @@ typedef struct
 	u8 vdos;
 	u8 vdos_m1;
 	u8 pwr_up;
-
+	u8 vdac;
 
 // -- video --
 	u8 vpage;

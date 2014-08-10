@@ -10,6 +10,66 @@ extern VCTR vid;
 extern CACHE_ALIGNED u32 vbuf[2][sizeof_vbuf];
 extern u8 fontatm2[2048];
 
+// ULA+ color models:
+//
+// val  red/grn     blue1       blue2
+// 0    00000000    00000000    00000000
+// 1    00100100
+// 2    01001001
+// 3    01101101    01101101    01101101
+// 4    10010010                10010010
+// 5    10110110    10110110
+// 6    11011011
+// 7    11111111    11111111    11111111
+
+// ULA+ palette cell select:
+// bit5 - FLASH
+// bit4 - BRIGHT
+// bit3 - 0 - INK / 1 - PAPER
+// bits0..2 - INK / PAPER
+
+#define col_def(a) (((a) << 5) | ((a) << 2) |  ((a) >> 1))
+#define col_r(a) (col_def(a) << 16)
+#define col_g(a) (col_def(a) << 8)
+#define col_b(a) (col_def(a))
+
+    const u32 cr[8] =
+    {
+        col_r(0),
+        col_r(1),
+        col_r(2),
+        col_r(3),
+        col_r(4),
+        col_r(5),
+        col_r(6),
+        col_r(7)
+    };
+
+    const u32 cg[8] =
+    {
+        col_g(0),
+        col_g(1),
+        col_g(2),
+        col_g(3),
+        col_g(4),
+        col_g(5),
+        col_g(6),
+        col_g(7)
+    };
+
+    const u32 cb[2][4] =
+    {
+        col_b(0),
+        col_b(3),
+        col_b(5),
+        col_b(7),
+
+        col_b(0),
+        col_b(3),
+        col_b(4),
+        col_b(7)
+    };
+
 #define sinc_draw \
 	vbuf[vid.buf][vptr   ] = vbuf[vid.buf][vptr+ 1] = ((p << 1) & 0x100) ? p1 : p0;	\
 	vbuf[vid.buf][vptr+ 2] = vbuf[vid.buf][vptr+ 3] = ((p << 2) & 0x100) ? p1 : p0;	\
@@ -47,6 +107,8 @@ void draw_zx(int n)
 	u8 *scr = page_ram(comp.ts.vpage);
 	u32 vptr = vid.vptr;
 	u16 vcyc = vid.memvidcyc[vid.line];
+    u8 upmod = conf.ulaplus;
+    u8 tsgpal = comp.ts.gpal << 4;
 
 	for (; n > 0; n -= 4, vid.t_next += 4, vid.xctr++, g++, a++)
 	{
@@ -56,17 +118,13 @@ void draw_zx(int n)
 		vcyc++;
 		vid.memcyc_lcmd++;
 
-		if (conf.ulaplus && comp.ulaplus_mode)
+		if ((upmod != UPLS_NONE) && comp.ulaplus_mode)
 		{
-			// FIX ME! blue should be 000 011 101 111 or 000 011 100 111 (1st is preferred)
-            const u32 cr[8] = { 0, 2359296, 4784128, 7143424, 9568256, 11927552, 14352384, 16711680 };
-			const u32 cg[8] = { 0, 9216, 18688, 27904, 37376, 46592, 56064, 65280 };
-			const u32 cb[4] = { 0, 85, 170, 255 };
 			u32 psel = (c & 0xC0) >> 2;
 			u32 ink = comp.ulaplus_cram[psel + (c & 7)];
 			u32 paper = comp.ulaplus_cram[psel + ((c >> 3) & 7) + 8];
-			p0 = cr[(paper & 0x1C) >> 2] | cg[(paper & 0xE0) >> 5] | cb[paper & 0x03];
-			p1 = cr[(ink & 0x1C) >> 2] | cg[(ink & 0xE0) >> 5] | cb[ink & 0x03];
+			p0 = cr[(paper & 0x1C) >> 2] | cg[(paper & 0xE0) >> 5] | cb[upmod][paper & 0x03];
+			p1 = cr[(ink & 0x1C) >> 2] | cg[(ink & 0xE0) >> 5] | cb[upmod][ink & 0x03];
 		}
 
 		else
@@ -74,8 +132,8 @@ void draw_zx(int n)
 			if ((c & 0x80) && (comp.frame_counter & 0x10))
 				p ^= 0xFF; // flash
 			u32 b = (c & 0x40) >> 3;
-			p0 = vid.clut[(comp.ts.gpal << 4) | b | ((c >> 3) & 0x07)];	// color for 'PAPER'
-			p1 = vid.clut[(comp.ts.gpal << 4) | b | (c & 0x07)];			// color for 'INK'
+			p0 = vid.clut[tsgpal | b | ((c >> 3) & 0x07)];	// color for 'PAPER'
+			p1 = vid.clut[tsgpal | b | (c & 0x07)];			// color for 'INK'
 		}
 
 		sinc_draw
@@ -124,7 +182,7 @@ void draw_p384(int n)
 
 	u32 vptr = vid.vptr;
 	u16 vcyc = vid.memvidcyc[vid.line];
-	
+
 	for (u32 o = 0; n > 0; n -= 4, vid.t_next += 4, vid.xctr++, o = (o + 1) & 7)
 	{
 		// select X segment

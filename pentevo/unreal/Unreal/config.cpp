@@ -273,7 +273,6 @@ void load_config(const char *fname)
    conf.sleepidle = GetPrivateProfileInt(misc, "ShareCPU", 0, ininame);
    conf.highpriority = GetPrivateProfileInt(misc, "HighPriority", 0, ininame);
    conf.tape_traps = GetPrivateProfileInt(misc, "TapeTraps", 1, ininame);
-   conf.ulaplus = GetPrivateProfileInt(misc, "ULAPLUS", 1, ininame);
    cpu.outc0 = GetPrivateProfileInt(misc, "OUT_C_0", 1, ininame);
    conf.tape_autostart = GetPrivateProfileInt(misc, "TapeAutoStart", 1, ininame);
    conf.EFF7_mask = GetPrivateProfileInt(misc, "EFF7mask", 0, ininame);
@@ -290,10 +289,12 @@ void load_config(const char *fname)
    GetPrivateProfileString(rom, "QUORUM", nil, conf.quorum_rom_path, sizeof conf.quorum_rom_path, ininame);
    GetPrivateProfileString(rom, "TSL", nil, conf.tsl_rom_path, sizeof conf.tsl_rom_path, ininame);
    GetPrivateProfileString(rom, "LSY", nil, conf.lsy_rom_path, sizeof conf.lsy_rom_path, ininame);
+   
    #ifdef MOD_GSZ80
    GetPrivateProfileString(rom, "GS", nil, conf.gs_rom_path, sizeof conf.gs_rom_path, ininame);
    addpath(conf.gs_rom_path);
    #endif
+   
    addpath(conf.pent_rom_path);
    addpath(conf.atm1_rom_path);
    addpath(conf.atm2_rom_path);
@@ -315,10 +316,27 @@ void load_config(const char *fname)
 	   conf.use_romset = 0;
 
    conf.smuc = GetPrivateProfileInt(misc, "SMUC", 0, ininame);
+   
+   // CMOS
    GetPrivateProfileString(misc, "CMOS", nil, line, sizeof line, ininame);
    conf.cmos = 0;
-   if (!strnicmp(line, "DALLAS", 6)) conf.cmos=1;
-   if (!strnicmp(line, "512Bu1", 6)) conf.cmos=2;
+   if (!strcmp(line, "DALLAS")) conf.cmos = 1;
+   if (!strcmp(line, "512Bu1")) conf.cmos = 2;
+   
+   // ULA+
+   GetPrivateProfileString(misc, "ULAPLUS", nil, line, sizeof line, ininame);
+   conf.ulaplus = UPLS_NONE;
+   if (!strcmp(line, "TYPE1")) conf.ulaplus = UPLS_TYPE1;
+   if (!strcmp(line, "TYPE2")) conf.ulaplus = UPLS_TYPE2;
+   
+   // TS VDAC
+   GetPrivateProfileString(misc, "TS_VDAC", nil, line, sizeof line, ininame);
+   comp.ts.vdac = TS_VDAC_OFF;
+   if (!strcmp(line, "3BIT")) comp.ts.vdac = TS_VDAC_3;
+   if (!strcmp(line, "4BIT")) comp.ts.vdac = TS_VDAC_4;
+   if (!strcmp(line, "5BIT")) comp.ts.vdac = TS_VDAC_5;
+   
+   // Cache
    conf.cache = GetPrivateProfileInt(misc, "Cache", 0, ininame);
    if (conf.cache && conf.cache!=16 && conf.cache!=32) conf.cache = 0;
    GetPrivateProfileString(misc, "HIMEM", nil, line, sizeof line, ininame);
@@ -966,7 +984,7 @@ void apply_memory()
 void applyconfig()
 {
    // set POWER_UP bit for TS-Config
-   comp.ts.pwr_up = 0x40;
+   comp.ts.pwr_up = TS_PWRUP_ON;
    
    //[vv] disable turbo
    comp.pEFF7 |= EFF7_GIGASCREEN;

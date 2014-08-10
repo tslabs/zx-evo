@@ -9,7 +9,41 @@
 
 extern VCTR vid;
 
-const u8 pwm[] = { 0,10,21,31,42,53,63,74,85,95,106,117,127,138,149,159,170,181,191,202,213,223,234,245,255 };
+    const u8 pwm[32] =
+    {
+        0,
+        10,
+        21,
+        31,
+        42,
+        53,
+        63,
+        74,
+        85,
+        95,
+        106,
+        117,
+        127,
+        138,
+        149,
+        159,
+        170,
+        181,
+        191,
+        202,
+        213,
+        223,
+        234,
+        245,
+        255,
+        255,
+        255,
+        255,
+        255,
+        255,
+        255,
+        255
+    };
 
 // convert CRAM data to precalculated renderer tables
 void update_clut(u8 addr)
@@ -18,16 +52,52 @@ void update_clut(u8 addr)
 	u8 r = (t >> 10) & 0x1F;
 	u8 g = (t >> 5) & 0x1F;
 	u8 b = t & 0x1F;
+    u8 s = t || 0;
 
-	// video PWM correction
-	r = (r > 24) ? 24 : r;
-	g = (g > 24) ? 24 : g;
-	b = (b > 24) ? 24 : b;
+    switch (comp.ts.vdac)
+    {
+        case TS_VDAC_5:
+            if (!s)
+                goto pwm_set;
 
-	// coerce to TrueÚ Color values
-	r = pwm[r];
-	g = pwm[g];
-	b = pwm[b];
+            else
+            {
+                r = r << 3;       // Ccccc000 model
+                g = g << 3;
+                b = b << 3;
+            }
+        break;
+        
+        case TS_VDAC_4:
+            if (!s)
+                goto pwm_set;       // FIX ME! Here must be clone-specific PWM
+
+            else
+            {
+                r = ((r << 3) & 0xF0) | (r >> 1);      // CcccCccc model
+                g = ((g << 3) & 0xF0) | (g >> 1);
+                b = ((b << 3) & 0xF0) | (b >> 1);
+            }
+        break;
+        
+        case TS_VDAC_3:
+            if (!s)
+                goto pwm_set;       // FIX ME! Here must be clone-specific PWM
+
+            else
+            {
+                r = ((r << 3) & 0xE0) | ((r >> 1) & 0x0E);       // Ccc0Ccc0 model
+                g = ((g << 3) & 0xE0) | ((g >> 1) & 0x0E);
+                b = ((b << 3) & 0xE0) | ((b >> 1) & 0x0E);
+            }
+        break;
+
+        default:
+        pwm_set:
+            r = pwm[r];
+            g = pwm[g];
+            b = pwm[b];
+    }
 
 	vid.clut[addr] = (r << 16) | (g <<8) | b;
 }

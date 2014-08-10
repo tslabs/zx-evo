@@ -30,7 +30,7 @@ void out(unsigned port, u8 val)
 	 // if (p1 == 0xFD)
 		// printf("out (%04X), %02X\n", port, val);
 
-   if (conf.ulaplus)
+   if (conf.ulaplus != UPLS_NONE)
    {
 	   /* ULA+ register select */
 	   if (port == 0xBF3B)
@@ -1143,8 +1143,8 @@ __inline u8 in1(unsigned port)
 
 			case TSR_STATUS:
 			{
-				tmp = comp.ts.pwr_up;
-				comp.ts.pwr_up = 0x00;
+				tmp = comp.ts.pwr_up | comp.ts.vdac;
+				comp.ts.pwr_up = TS_PWRUP_OFF;
 				return tmp;
 			}
 

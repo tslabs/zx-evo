@@ -91,7 +91,7 @@ void wm(unsigned addr, u8 val)
 			{
 				case TSF_CRAM:
 				{
-					comp.cram[(addr >> 1) & 0xFF] = ((val << 8) | temp.fm_tmp) & 0x7FFF;		// 15 bits of CRAM data
+					comp.cram[(addr >> 1) & 0xFF] = ((val << 8) | temp.fm_tmp);
 					update_clut((addr >> 1) & 0xFF);
 					break;
 				}
