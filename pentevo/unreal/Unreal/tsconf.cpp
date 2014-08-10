@@ -52,7 +52,7 @@ void update_clut(u8 addr)
 	u8 r = (t >> 10) & 0x1F;
 	u8 g = (t >> 5) & 0x1F;
 	u8 b = t & 0x1F;
-    u8 s = t || 0;
+    int s = t & 0x8000;
 
     switch (comp.ts.vdac)
     {
@@ -86,9 +86,9 @@ void update_clut(u8 addr)
 
             else
             {
-                r = ((r << 3) & 0xE0) | ((r >> 1) & 0x0E);       // Ccc0Ccc0 model
-                g = ((g << 3) & 0xE0) | ((g >> 1) & 0x0E);
-                b = ((b << 3) & 0xE0) | ((b >> 1) & 0x0E);
+                r = ((r << 3) & 0xE0) | (r & 0x1C) | (r >> 3);       // CccCccCc model
+                g = ((g << 3) & 0xE0) | (g & 0x1C) | (g >> 3);
+                b = ((b << 3) & 0xE0) | (b & 0x1C) | (b >> 3);
             }
         break;
 
