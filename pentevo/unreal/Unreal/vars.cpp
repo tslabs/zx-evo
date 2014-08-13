@@ -314,6 +314,7 @@ virtkeyt pckeys[] =
    { "SHIFT", DIK_SHIFT }, { "ALT", DIK_MENU }, { "CONTROL", DIK_CONTROL },
    { "LSHIFT", DIK_LSHIFT }, { "LALT", DIK_LMENU }, { "LCONTROL", DIK_LCONTROL },
    { "RSHIFT", DIK_RSHIFT }, { "RALT", DIK_RMENU }, { "RCONTROL", DIK_RCONTROL },
+   { "MENU", DIK_APPS },
 
    { "INS", DIK_INSERT }, { "HOME", DIK_HOME }, { "PGUP", DIK_PRIOR },
    { "DEL", DIK_DELETE }, { "END", DIK_END },   { "PGDN", DIK_NEXT },
