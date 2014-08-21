@@ -6,7 +6,6 @@
 #include "tsconf.h"
 #include "sdcard.h"
 #include "zc.h"
-#include "z80.h"
 
 extern VCTR vid;
 
@@ -775,7 +774,6 @@ void tsinit(void)
 	comp.ts.vdos_m1 = 0;
 
 	comp.ts.sysconf = 1;		// turbo 7MHz for TS-Conf
-	set_clk();
 	comp.ts.memconf = 0;
 	comp.ts.dma.state = DMA_ST_NOP;		// disable DMA on startup
 	comp.ts.cacheconf = 0;  // disable cache

@@ -14,6 +14,7 @@
 #include "op_noprefix.h"
 #include "fontatm2.h"
 #include "util.h"
+#include "z80.h"
 
 extern VCTR vid;
 
@@ -100,7 +101,7 @@ void reset(ROM_MODE mode)
    tsinit();
 
    if (conf.mem_model == MM_TSL)
-		turbo(2);		// turbo 2x (7MHz) for TS-Conf
+		set_clk();		// turbo 2x (7MHz) for TS-Conf
    else
 		turbo(1);		// turbo 1x (3.5MHz) for all other clones
         
@@ -193,5 +194,5 @@ void set_clk(void)
 		case 2: turbo(4); break;
 		case 3: turbo(4); break;
 	}
-  comp.ts.intctrl.frame_len = (conf.intlen * cpu.rate) >> 8;
+	comp.ts.intctrl.frame_len = (conf.intlen * cpu.rate) >> 8;
 }
