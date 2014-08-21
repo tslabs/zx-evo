@@ -63,6 +63,10 @@ void spectrum_frame()
    cpu.t -= conf.frame;
    cpu.eipos -= conf.frame;
    comp.frame_counter++;
+   if (conf.mem_model == MM_TSL)
+   {
+     comp.ts.intctrl.last_cput -= conf.frame;
+   }
 }
 
 void do_idle()

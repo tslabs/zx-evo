@@ -193,4 +193,5 @@ void set_clk(void)
 		case 2: turbo(4); break;
 		case 3: turbo(4); break;
 	}
+  comp.ts.intctrl.frame_len = (conf.intlen * cpu.rate) >> 8;
 }

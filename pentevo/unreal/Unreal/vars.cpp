@@ -114,8 +114,8 @@ void TMainZ80::CheckNextFrame()
        int_pend = true;
        if (conf.mem_model == MM_TSL)
        {
-         comp.ts.intctrl.new_frame = true;
          comp.ts.intctrl.line_t = comp.ts.intline ? 0 : conf.t_line;
+         comp.ts.intctrl.last_cput -= conf.frame;
        }
    }
 }

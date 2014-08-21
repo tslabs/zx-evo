@@ -231,9 +231,11 @@ typedef struct
 
 	struct
     {
-		bool new_frame; // generate new frame INT
 		bool new_dma;   // generate new DMA INT
+		u32 last_cput;  // last cpu tacts (used by frame INT)
+		u32 frame_cnt;  // frame INT counter
 		u32 frame_t;    // frame INT position int tacts
+		u32 frame_len;  // frame INT len
 		u32 line_t;     // line INT position int tacts
 		union
         {
@@ -498,3 +500,4 @@ void update_clut(u8);
 void dma(u32 tacts);
 u32 render_ts(u32 tacts);
 void tsinit(void);
+void TSFrameINT(bool vdos);

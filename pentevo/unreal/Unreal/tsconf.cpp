@@ -6,6 +6,7 @@
 #include "tsconf.h"
 #include "sdcard.h"
 #include "zc.h"
+#include "z80.h"
 
 extern VCTR vid;
 
@@ -774,6 +775,7 @@ void tsinit(void)
 	comp.ts.vdos_m1 = 0;
 
 	comp.ts.sysconf = 1;		// turbo 7MHz for TS-Conf
+	set_clk();
 	comp.ts.memconf = 0;
 	comp.ts.dma.state = DMA_ST_NOP;		// disable DMA on startup
 	comp.ts.cacheconf = 0;  // disable cache
@@ -787,4 +789,30 @@ void tsinit(void)
 	comp.ts.palsel = comp.ts.palsel_d = 15;
 	comp.ts.g_xoffs = 0;
 	comp.ts.g_yoffs = 0;
+}
+
+void TSFrameINT(bool vdos)
+{
+  // Frame INT
+  if (!comp.ts.intctrl.frame_pend)
+  {
+    bool f1 = (cpu.t - comp.ts.intctrl.frame_t) < comp.ts.intctrl.frame_len; // INT signal in current frame
+    bool f2 = (comp.ts.intctrl.frame_t + comp.ts.intctrl.frame_len) > conf.frame; // INT signal is transferred from the previous frame
+    bool new_frame = cpu.t < comp.ts.intctrl.last_cput; // is it new frame ?
+
+    if (f1 || (f2 && new_frame))
+    {
+      comp.ts.intctrl.frame_pend = comp.ts.intframe;
+      comp.ts.intctrl.frame_cnt = cpu.t - comp.ts.intctrl.frame_t + (f1 ? 0 : conf.frame);
+    }
+  }
+  else if (vdos) { /* No Operation */ }
+  else if (comp.ts.intctrl.frame_pend && ((comp.ts.intctrl.frame_cnt + (cpu.t - comp.ts.intctrl.last_cput)) < comp.ts.intctrl.frame_len))
+  {
+    comp.ts.intctrl.frame_cnt += (cpu.t - comp.ts.intctrl.last_cput);
+  }
+  else
+    comp.ts.intctrl.frame_pend = false;
+
+  comp.ts.intctrl.last_cput = cpu.t;
 }

@@ -567,14 +567,7 @@ void mon_step()
   {
     bool vdos = comp.ts.vdos || comp.ts.vdos_m1;
 
-    // Frame INT
-    if (comp.ts.intctrl.new_frame && ((cpu.t - comp.ts.intctrl.frame_t) < conf.intlen))
-    {
-      comp.ts.intctrl.new_frame = false;
-      if (!vdos) comp.ts.intctrl.frame_pend = comp.ts.intframe;
-    }
-    else if (comp.ts.intctrl.frame_pend && ((cpu.t - comp.ts.intctrl.frame_t) >= conf.intlen))
-      comp.ts.intctrl.frame_pend = 0;
+    TSFrameINT(vdos);
 
     // Line INT
     if (cpu.t >= comp.ts.intctrl.line_t)
