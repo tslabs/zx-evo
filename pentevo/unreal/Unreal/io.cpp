@@ -177,24 +177,21 @@ void out(unsigned port, u8 val)
 			case TSW_HSINT:
 			{
 				comp.ts.hsint = val;
-				comp.ts.intctrl.frame_t = ((comp.ts.hsint > (conf.t_line-1)) || (comp.ts.vsinth > 319)) ? -1 : (comp.ts.vsint * conf.t_line + comp.ts.hsint);
-				comp.ts.intctrl.new_frame = (comp.ts.intctrl.frame_t >= cpu.t && comp.ts.intctrl.frame_t < conf.frame) ? true : false;
+				comp.ts.intctrl.frame_t = ((comp.ts.hsint > (conf.t_line-1)) || (comp.ts.vsint > 319)) ? -1 : (comp.ts.vsint * conf.t_line + comp.ts.hsint);
 			}
 			break;
 
 			case TSW_VSINTL:
 			{
 				comp.ts.vsintl = val;
-				comp.ts.intctrl.frame_t = ((comp.ts.hsint > (conf.t_line-1)) || (comp.ts.vsinth > 319)) ? -1 : (comp.ts.vsint * conf.t_line + comp.ts.hsint);
-				comp.ts.intctrl.new_frame = (comp.ts.intctrl.frame_t >= cpu.t && comp.ts.intctrl.frame_t < conf.frame) ? true : false;
+				comp.ts.intctrl.frame_t = ((comp.ts.hsint > (conf.t_line-1)) || (comp.ts.vsint > 319)) ? -1 : (comp.ts.vsint * conf.t_line + comp.ts.hsint);
 			}
 			break;
 
 			case TSW_VSINTH:
 			{
 				comp.ts.vsinth = val;
-				comp.ts.intctrl.frame_t = ((comp.ts.hsint > (conf.t_line-1)) || (comp.ts.vsinth > 319)) ? -1 : (comp.ts.vsint * conf.t_line + comp.ts.hsint);
-				comp.ts.intctrl.new_frame = (comp.ts.intctrl.frame_t >= cpu.t && comp.ts.intctrl.frame_t < conf.frame) ? true : false;
+				comp.ts.intctrl.frame_t = ((comp.ts.hsint > (conf.t_line-1)) || (comp.ts.vsint > 319)) ? -1 : (comp.ts.vsint * conf.t_line + comp.ts.hsint);
 			}
 			break;
 
@@ -704,7 +701,7 @@ void out(unsigned port, u8 val)
               return;
             }
           }
-          else if ((1<<comp.wd.drive) == comp.ts.fddvirt)
+          else if ((1<<comp.wd.drive) & comp.ts.fddvirt)
           { // vdos_off
             comp.ts.vdos = 1;
             set_banks();
