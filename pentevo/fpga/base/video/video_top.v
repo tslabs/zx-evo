@@ -33,8 +33,8 @@ module video_top(
 
 
 	// external video outputs
-	output wire [ 1:0] vred,
-	output wire [ 1:0] vgrn,
+	output wire [ 2:0] vred,
+	output wire [ 2:0] vgrn,
 	output wire [ 1:0] vblu,
 	output wire        vhsync,
 	output wire        vvsync,
@@ -151,8 +151,8 @@ module video_top(
 	wire [3:0] pixels;
 
 
-	wire [5:0] color;
-	wire [5:0] vga_color;
+	wire [7:0] color;
+	wire [7:0] vga_color;
 
 
 	wire [2:0] typos;

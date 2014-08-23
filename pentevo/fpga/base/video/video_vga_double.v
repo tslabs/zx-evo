@@ -30,10 +30,10 @@ module video_vga_double(
 	input  wire        hsync_start,
 
 	input  wire        scanin_start,
-	input  wire [ 5:0] pix_in,
+	input  wire [ 7:0] pix_in,
 
 	input  wire        scanout_start,
-	output reg  [ 5:0] pix_out
+	output reg  [ 7:0] pix_out
 );
 /*
 addressing of non-overlapping pages:
@@ -101,9 +101,9 @@ pg0 pg1
 	always @(posedge clk)
 	begin
 		if( ptr_out[9:8]!=2'b11 )
-			pix_out <= data_out[5:0];
+			pix_out <= data_out;
 		else
-			pix_out <= 6'd0;
+			pix_out <= 8'd0;
 	end
 
 
@@ -113,7 +113,7 @@ pg0 pg1
 	mem1536 line_buf( .clk(clk),
 
 	                  .wraddr({ptr_in[9:8], pages, ptr_in[7:0]}),
-	                  .wrdata({2'b00,pix_in}),
+	                  .wrdata(pix_in),
 	                  .wr_stb(wr_stb),
 
 	                  .rdaddr({ptr_out[9:8], (~pages), ptr_out[7:0]}),
