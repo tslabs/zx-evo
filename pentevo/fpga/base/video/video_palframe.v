@@ -57,7 +57,7 @@ module video_palframe(
 
 	output wire [ 5:0] palcolor, // just for palette readback
 
-	output wire [ 5:0] color
+	output wire [ 7:0] color
 );
 	reg [7:0] palette_read;	
 
@@ -142,7 +142,11 @@ module video_palframe(
 	//
 	assign blu = palette_read[1:0];
 
-	assign color = (hblank | vblank) ? 6'd0 : {grn,red,blu};
+`ifdef IDE_VDAC
+	assign color = (hblank | vblank) ? 8'd0 : {palette_read[4:2], palette_read[7:5], palette_read[1:0]};
+`else
+	assign color = (hblank | vblank) ? 8'd0 : {grn, 1'b0, red, 1'b0, blu};
+`endif
 
 
 endmodule

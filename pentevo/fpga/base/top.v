@@ -137,6 +137,14 @@ module top(
 	output spiint_n
 );
 
+    wire [2:0] red;
+    wire [2:0] grn;
+    wire [1:0] blu;
+
+    assign vred = red[2:1];
+    assign vgrn = grn[2:1];
+    assign vblu = blu[1:0];
+    
 	wire dos;
 
 
@@ -259,9 +267,10 @@ module top(
 	assign ide_d = idedataout ? ideout : 16'hZZZZ;
 	assign ide_dir = ~idedataout;
 `else
-    assign ide_d[ 4: 0] = {vred, vred, vred[1]};
-    assign ide_d[ 9: 5] = {vgrn, vgrn, vgrn[1]};
-    assign ide_d[14:10] = {vblu, vblu, vblu[1]};
+    wire [2:0] pblu = {blu, |blu};     //The missing lowest blue bit is set to OR of the other two blue bits (Bb becomes 000 for 00, and Bb1 for anything else).
+    assign ide_d[ 4: 0] = {red, red[2:1]};
+    assign ide_d[ 9: 5] = {grn, grn[2:1]};
+    assign ide_d[14:10] = {pblu, pblu[2:1]};
     assign ide_d[15] = 1'b1;    // always 0-31 luma scale
     assign ide_dir = 1'b0;      // always output
     assign ide_a[1] = !fclk;
@@ -643,9 +652,9 @@ module top(
 
 		.clk(fclk),
 
-		.vred(vred),
-		.vgrn(vgrn),
-		.vblu(vblu),
+		.vred(red),
+		.vgrn(grn),
+		.vblu(blu),
 		.vhsync(vhsync),
 		.vvsync(vvsync),
 		.vcsync(vcsync),
