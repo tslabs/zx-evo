@@ -1,11 +1,31 @@
-`include "tune.v"
-
-// Pentevo project (c) NedoPC 2010,2011,2012
+// ZX-Evo Base Configuration (c) NedoPC 2008,2009,2010,2011,2012,2013,2014
 //
 // top module for video output.
-//
-//
+
+/*
+    This file is part of ZX-Evo Base Configuration firmware.
+
+    ZX-Evo Base Configuration firmware is free software:
+    you can redistribute it and/or modify it under the terms of
+    the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    ZX-Evo Base Configuration firmware is distributed in the hope that
+    it will be useful, but WITHOUT ANY WARRANTY; without even
+    the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+    See the GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with ZX-Evo Base Configuration firmware.
+    If not, see <http://www.gnu.org/licenses/>.
+*/
+
+
+
 // note: the only bandwidths currently in use are 1/8 and 1/4.
+
+`include "tune.v"
 
 module video_top(
 
@@ -36,8 +56,7 @@ module video_top(
 	                               // 3'b000 - 320x200 16 colors
 	                               // 3'b110 - 80x25 text mode
 	                               // 3'b??? (others) - not defined yet
-
-
+	
 
 	input  wire        scr_page,   // screen page (bit 3 of 7FFD)
 
@@ -64,6 +83,13 @@ module video_top(
 	// atm palette write strobe adn data
 	input  wire        atm_palwr,
 	input  wire [ 5:0] atm_paldata,
+
+
+	input  wire        up_ena,
+	input  wire        up_palwr,
+	input  wire [ 5:0] up_paladdr,
+	input  wire [ 7:0] up_paldata,
+
 
 
 	output wire        int_start,
@@ -131,6 +157,12 @@ module video_top(
 
 	wire [2:0] typos;
 
+	
+	// ulaplus related
+	wire [ 1:0] up_palsel;
+	wire [ 2:0] up_paper;
+	wire [ 2:0] up_ink;
+	wire        up_pixel;
 
 
 	// decode video modes
@@ -291,6 +323,11 @@ module video_top(
 
 		.pixels(pixels),
 
+		.up_palsel(up_palsel),
+		.up_paper (up_paper ),
+		.up_ink   (up_ink   ),
+		.up_pixel (up_pixel ),
+
 
 		.fnt_a (fnt_a ),
 		.fnt_d (fnt_d ),
@@ -308,6 +345,9 @@ module video_top(
 		.hblank(hblank),
 		.vblank(vblank),
 
+		.hsync_start(hsync_start),
+		.vsync      (vsync      ),
+
 		.hpix(hpix),
 		.vpix(vpix),
 
@@ -316,6 +356,16 @@ module video_top(
 
 		.atm_palwr  (atm_palwr  ),
 		.atm_paldata(atm_paldata),
+		
+		.up_palsel(up_palsel),
+		.up_paper (up_paper ),
+		.up_ink   (up_ink   ),
+		.up_pixel (up_pixel ),
+		
+		.up_ena    (up_ena    ),
+		.up_paladdr(up_paladdr),
+		.up_paldata(up_paldata),
+		.up_palwr  (up_palwr  ),
 
 		.color(color),
 

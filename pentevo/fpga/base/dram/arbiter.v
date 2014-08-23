@@ -1,12 +1,25 @@
-`include "tune.v"
-
-// PentEvo project (c) NedoPC 2008-2011
+// ZX-Evo Base Configuration (c) NedoPC 2008,2009,2010,2011,2012,2013,2014
 //
 // DRAM arbiter. Shares DRAM between processor and video data fetcher
-//
 
+/*
+    This file is part of ZX-Evo Base Configuration firmware.
 
+    ZX-Evo Base Configuration firmware is free software:
+    you can redistribute it and/or modify it under the terms of
+    the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
 
+    ZX-Evo Base Configuration firmware is distributed in the hope that
+    it will be useful, but WITHOUT ANY WARRANTY; without even
+    the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+    See the GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with ZX-Evo Base Configuration firmware.
+    If not, see <http://www.gnu.org/licenses/>.
+*/
 
 
 // 14.06.2011:
@@ -16,28 +29,27 @@
 //
 // Now it is a REQUIREMENT for 'go' signal only starting and ending on
 // beginning of DRAM cycle (i.e. right after 'cend' strobe).
-//
 
 
 // 13.06.2011:
-// Придётся потребовать, чтоб go устанавливался сразу после cend (у меня [lvd] это так).
-// это для того, чтобы процессор на 14мгц мог заранее и в любой момент знать, на
-// сколько завейтиться. Вместо cpu_ack введем другой сигнал, который в течение всего
-// драм-цикла будет показывать, чей может быть следующий цикл - процессора или только
-// видео. По сути это и будет также cpu_ack, но валидный в момент cpu_req (т.е.
-// в момент cend) и ранее.
+// РџСЂРёРґС‘С‚СЃСЏ РїРѕС‚СЂРµР±РѕРІР°С‚СЊ, С‡С‚РѕР± go СѓСЃС‚Р°РЅР°РІР»РёРІР°Р»СЃСЏ СЃСЂР°Р·Сѓ РїРѕСЃР»Рµ cend (Сѓ РјРµРЅСЏ [lvd] СЌС‚Рѕ С‚Р°Рє).
+// СЌС‚Рѕ РґР»СЏ С‚РѕРіРѕ, С‡С‚РѕР±С‹ РїСЂРѕС†РµСЃСЃРѕСЂ РЅР° 14РјРіС† РјРѕРі Р·Р°СЂР°РЅРµРµ Рё РІ Р»СЋР±РѕР№ РјРѕРјРµРЅС‚ Р·РЅР°С‚СЊ, РЅР°
+// СЃРєРѕР»СЊРєРѕ Р·Р°РІРµР№С‚РёС‚СЊСЃСЏ. Р’РјРµСЃС‚Рѕ cpu_ack РІРІРµРґРµРј РґСЂСѓРіРѕР№ СЃРёРіРЅР°Р», РєРѕС‚РѕСЂС‹Р№ РІ С‚РµС‡РµРЅРёРµ РІСЃРµРіРѕ
+// РґСЂР°Рј-С†РёРєР»Р° Р±СѓРґРµС‚ РїРѕРєР°Р·С‹РІР°С‚СЊ, С‡РµР№ РјРѕР¶РµС‚ Р±С‹С‚СЊ СЃР»РµРґСѓСЋС‰РёР№ С†РёРєР» - РїСЂРѕС†РµСЃСЃРѕСЂР° РёР»Рё С‚РѕР»СЊРєРѕ
+// РІРёРґРµРѕ. РџРѕ СЃСѓС‚Рё СЌС‚Рѕ Рё Р±СѓРґРµС‚ С‚Р°РєР¶Рµ cpu_ack, РЅРѕ РІР°Р»РёРґРЅС‹Р№ РІ РјРѕРјРµРЅС‚ cpu_req (С‚.Рµ.
+// РІ РјРѕРјРµРЅС‚ cend) Рё СЂР°РЅРµРµ.
 
 // 12.06.2011:
-// проблема: если цпу просит цикл чтения, а его дать не могут,
-// то он должен держать cpu_req. однако, снять он его может
-// только по cpu_strobe, при этом также отправится еще один
-// запрос чтения!!!
-// решение: добавить сигнал cpu_ack, по которому узнаётся, что
-// арбитр зохавал запрос (записи или чтения), который будет
-// совпадать с нынешним cpu_strobe на записи (cbeg), а будущий
-// cpu_strobe сделать только как строб данных на зохаванном
-// запросе чтеня.
-// это, возможно, позволит удалить всякие cpu_waitcyc...
+// РїСЂРѕР±Р»РµРјР°: РµСЃР»Рё С†РїСѓ РїСЂРѕСЃРёС‚ С†РёРєР» С‡С‚РµРЅРёСЏ, Р° РµРіРѕ РґР°С‚СЊ РЅРµ РјРѕРіСѓС‚,
+// С‚Рѕ РѕРЅ РґРѕР»Р¶РµРЅ РґРµСЂР¶Р°С‚СЊ cpu_req. РѕРґРЅР°РєРѕ, СЃРЅСЏС‚СЊ РѕРЅ РµРіРѕ РјРѕР¶РµС‚
+// С‚РѕР»СЊРєРѕ РїРѕ cpu_strobe, РїСЂРё СЌС‚РѕРј С‚Р°РєР¶Рµ РѕС‚РїСЂР°РІРёС‚СЃСЏ РµС‰Рµ РѕРґРёРЅ
+// Р·Р°РїСЂРѕСЃ С‡С‚РµРЅРёСЏ!!!
+// СЂРµС€РµРЅРёРµ: РґРѕР±Р°РІРёС‚СЊ СЃРёРіРЅР°Р» cpu_ack, РїРѕ РєРѕС‚РѕСЂРѕРјСѓ СѓР·РЅР°С‘С‚СЃСЏ, С‡С‚Рѕ
+// Р°СЂР±РёС‚СЂ Р·РѕС…Р°РІР°Р» Р·Р°РїСЂРѕСЃ (Р·Р°РїРёСЃРё РёР»Рё С‡С‚РµРЅРёСЏ), РєРѕС‚РѕСЂС‹Р№ Р±СѓРґРµС‚
+// СЃРѕРІРїР°РґР°С‚СЊ СЃ РЅС‹РЅРµС€РЅРёРј cpu_strobe РЅР° Р·Р°РїРёСЃРё (cbeg), Р° Р±СѓРґСѓС‰РёР№
+// cpu_strobe СЃРґРµР»Р°С‚СЊ С‚РѕР»СЊРєРѕ РєР°Рє СЃС‚СЂРѕР± РґР°РЅРЅС‹С… РЅР° Р·РѕС…Р°РІР°РЅРЅРѕРј
+// Р·Р°РїСЂРѕСЃРµ С‡С‚РµРЅСЏ.
+// СЌС‚Рѕ, РІРѕР·РјРѕР¶РЅРѕ, РїРѕР·РІРѕР»РёС‚ СѓРґР°Р»РёС‚СЊ РІСЃСЏРєРёРµ cpu_waitcyc...
 
 
 // Arbitration is made on full 8-cycle access blocks. Each cycle is defined by dram.v and consists of 4 fpga clocks.
@@ -72,6 +84,8 @@
 //
 // key signals are go and cpu_req, sampled at the end of each dram cycle. Must be set to the module
 // one clock cycle earlier the clock of the beginning current dram cycle
+
+`include "tune.v"
 
 module arbiter(
 

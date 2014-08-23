@@ -1,6 +1,25 @@
-// Pentevo project (c) NedoPC 2011
+// ZX-Evo Base Configuration (c) NedoPC 2008,2009,2010,2011,2012,2013,2014
 //
 // NMI generation
+
+/*
+    This file is part of ZX-Evo Base Configuration firmware.
+
+    ZX-Evo Base Configuration firmware is free software:
+    you can redistribute it and/or modify it under the terms of
+    the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    ZX-Evo Base Configuration firmware is distributed in the hope that
+    it will be useful, but WITHOUT ANY WARRANTY; without even
+    the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+    See the GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with ZX-Evo Base Configuration firmware.
+    If not, see <http://www.gnu.org/licenses/>.
+*/
 
 `include "tune.v"
 
@@ -145,7 +164,7 @@ module znmi
 		in_nmi_2 <= 1'b0;
 	else // posedge fclk
 	begin
-		if( nmi_start && (!in_nmi) && last_m1_rom )
+		if( nmi_start && (!in_nmi) /*&& last_m1_rom*/ ) // fix for NMI page after execution of 0066 opcode everywhere
 			in_nmi_2 <= 1'b1;
 		else if( rfsh_n_reg[1] && (!rfsh_n_reg[0]) && last_m1_0066 )
 			in_nmi_2 <= 1'b0;
@@ -159,7 +178,7 @@ module znmi
 	begin
 		if( pending_clr && (!clr_count[1]) )
 			in_nmi <= 1'b0;
-		else if( (nmi_start && (!in_nmi) && (!last_m1_rom))                      ||
+		else if( /*(nmi_start && (!in_nmi) && (!last_m1_rom))                      ||*/
 		         (rfsh_n_reg[1] && (!rfsh_n_reg[0]) && last_m1_0066 && in_nmi_2) )
 			in_nmi <= 1'b1;
 	end

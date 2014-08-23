@@ -1,8 +1,28 @@
-`include "tune.v"
-
-// PentEvo project (c) NedoPC 2008-2009
+// ZX-Evo Base Configuration (c) NedoPC 2008,2009,2010,2011,2012,2013,2014
 //
 // DRAM controller. performs accesses to DRAM.
+
+/*
+    This file is part of ZX-Evo Base Configuration firmware.
+
+    ZX-Evo Base Configuration firmware is free software:
+    you can redistribute it and/or modify it under the terms of
+    the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    ZX-Evo Base Configuration firmware is distributed in the hope that
+    it will be useful, but WITHOUT ANY WARRANTY; without even
+    the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+    See the GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with ZX-Evo Base Configuration firmware.
+    If not, see <http://www.gnu.org/licenses/>.
+*/
+
+
+//
 //
 // state:          | RD1   | RD2   | RD3   | RD4   | WR1   | WR2   | WR3   | WR4   | RFSH1 | RFSH2 | RFSH3 | RFSH4 |
 // clk: ___/```\___/```\___/```\___/```\___/```\___/```\___/```\___/```\___/```\___/```\___/```\___/```\___/```\___/```\__
@@ -26,6 +46,8 @@
 //  single clock polarity (and here they are driven by negative edge, while CAS/RAS by positive)
 //
 // rst_n is resynced before use and acts as req inhibit. so while in reset, dram regenerates and isn't corrupted
+
+`include "tune.v"
 
 module dram(
 
