@@ -1,8 +1,27 @@
-`include "tune.v"
-
-// Pentevo project (c) NedoPC 2008-2012
+// ZX-Evo Base Configuration (c) NedoPC 2008,2009,2010,2011,2012,2013,2014
 //
 // top-level
+
+/*
+    This file is part of ZX-Evo Base Configuration firmware.
+
+    ZX-Evo Base Configuration firmware is free software:
+    you can redistribute it and/or modify it under the terms of
+    the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    ZX-Evo Base Configuration firmware is distributed in the hope that
+    it will be useful, but WITHOUT ANY WARRANTY; without even
+    the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+    See the GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with ZX-Evo Base Configuration firmware.
+    If not, see <http://www.gnu.org/licenses/>.
+*/
+
+`include "tune.v"
 
 module top(
 
@@ -199,6 +218,11 @@ module top(
 	wire intrq,drq;
 	wire vg_wrFF;
 
+
+	wire        up_ena;
+	wire [ 5:0] up_paladdr;
+	wire [ 7:0] up_paldata;
+	wire        up_palwr;
 
 
 
@@ -650,6 +674,11 @@ module top(
 
 		.atm_palwr  (atm_palwr  ),
 		.atm_paldata(atm_paldata),
+		
+		.up_ena    (up_ena    ),
+		.up_paladdr(up_paladdr),
+		.up_paldata(up_paldata),
+		.up_palwr  (up_palwr  ),
 
 		.int_start(int_start),
 
@@ -769,6 +798,11 @@ module top(
 
 		.palcolor(palcolor),
 		.fontrom_readback(fontrom_readback),
+	
+		.up_ena    (up_ena    ),
+		.up_paladdr(up_paladdr),
+		.up_paldata(up_paldata),
+		.up_palwr  (up_palwr  ),
 
 		.external_port(external_port),
 

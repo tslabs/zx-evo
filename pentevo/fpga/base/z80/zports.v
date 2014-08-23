@@ -1,6 +1,25 @@
-// PentEvo project (c) NedoPC 2008-2012
+// ZX-Evo Base Configuration (c) NedoPC 2008,2009,2010,2011,2012,2013,2014
 //
 // most of pentevo ports are here
+
+/*
+    This file is part of ZX-Evo Base Configuration firmware.
+
+    ZX-Evo Base Configuration firmware is free software:
+    you can redistribute it and/or modify it under the terms of
+    the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    ZX-Evo Base Configuration firmware is distributed in the hope that
+    it will be useful, but WITHOUT ANY WARRANTY; without even
+    the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+    See the GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with ZX-Evo Base Configuration firmware.
+    If not, see <http://www.gnu.org/licenses/>.
+*/
 
 `include "tune.v"
 
@@ -117,6 +136,13 @@ module zports(
 	input  wire [ 5:0] palcolor,
 	input  wire [ 7:0] fontrom_readback,
 
+	// ulaplus
+	output reg         up_ena,
+	output reg  [ 5:0] up_paladdr,
+	output wire [ 7:0] up_paldata,
+	output wire        up_palwr,
+
+
 
 	// NMI generation
 	output reg         set_nmi,
@@ -179,6 +205,8 @@ module zports(
 
 	localparam COVOX   = 8'hFB;
 
+	
+	localparam ULAPLUS = 8'h3B;
 
 
 
@@ -246,7 +274,7 @@ module zports(
 
 
 	reg [7:0] savport [3:0];
-
+	reg [5:0] vgFF;
 
 
 
@@ -284,7 +312,9 @@ module zports(
 
 		    ( (loa==ATMF7)&&shadow ) || ( (loa==ATM77)&&shadow ) ||
 
-		    ( loa==ZXEVBF ) || ( loa==ZXEVBE) || ( loa==ZXEVBRK) || ( loa==COMPORT )
+		    ( loa==ZXEVBF ) || ( loa==ZXEVBE) || ( loa==ZXEVBRK) || ( loa==COMPORT ) ||
+
+		    ( loa==ULAPLUS)
 		  )
 
 
@@ -376,7 +406,7 @@ module zports(
 		//PORTFD:
 
 		VGSYS:
-			dout = { vg_intrq, vg_drq, 6'b111111 };
+			dout = { vg_intrq, vg_drq, vgFF }; // 6'b111111 };
 
 		SAVPORT1, SAVPORT2, SAVPORT3, SAVPORT4:
 			dout = savport[ loa[6:5] ];
@@ -412,6 +442,10 @@ module zports(
 			dout = portbemux;
 		end
 
+		ULAPLUS: begin
+			dout = up_lastwritten;
+		end
+
 
 		default:
 			dout = 8'hFF;
@@ -432,6 +466,8 @@ module zports(
 	                      ( (loa==PORTF7) && (a[8]==1'b0) && port_rd &&   shadow  ) ;
 
 	assign vg_wrFF = ( ( (loa==VGSYS)&&shadow ) && port_wr);
+	always @(posedge zclk) if( vg_wrFF )
+		vgFF <= din[5:0];
 
 	assign comport_wr   = ( (loa==COMPORT) && port_wr);
 	assign comport_rd   = ( (loa==COMPORT) && port_rd);
@@ -884,6 +920,7 @@ module zports(
 // now:             543210 -> 4205xx31
 
 	5'hE: portbemux = fontrom_readback;
+	5'hF: portbemux = { 4'bXXXX, border };
 
 	5'h10: portbemux = brk_addr[7:0];
 	5'h11: portbemux = brk_addr[15:8];
@@ -909,6 +946,41 @@ module zports(
 	end
 
 
+
+
+	// ULAPLUS ports
+	reg [7:0] up_lastwritten;
+	reg up_select; // 0 -- ena/dis, 1 -- palette write
+	//
+	wire up_wr = port_wr_fclk && (loa==ULAPLUS);
+	//
+	always @(posedge fclk)
+	if( up_wr && !a[14] )
+	begin
+		if( !din[7] &&  din[6] )
+		begin
+			up_select <= 1'b1;
+		end
+
+		if( !din[7] && !din[6] )
+		begin
+			up_select <= 1'b0;
+			up_paladdr[5:0] <= din[5:0];
+		end
+	end
+	//
+	always @(posedge fclk) if( up_wr && a[14] )
+		up_lastwritten <= din;
+	//
+	assign up_palwr = up_wr && a[14] && !up_select;
+	//
+	always @(posedge fclk, negedge rst_n)
+	if( !rst_n )
+		up_ena <= 1'b0;
+	else if( up_wr && a[14] && up_select )
+		up_ena <= din[0];
+	//
+	assign up_paldata = {din[4:2],din[7:5],din[1:0]}; // G3R3B2 to R3G3B2
 
 endmodule
 

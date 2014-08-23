@@ -1,0 +1,92 @@
+
+ I/O ports
+
+ULAplus is controlled by two ports.
+
+0xBF3B is the register port (write only)
+
+The byte output will be interpreted as follows:
+
+Bits 0-5: Select the register sub-group
+Bits 6-7: Select the register group. Two groups are currently available:
+
+     00 - palette group
+
+          When this group is selected, the sub-group determines the
+          entry in the palette table (0-63).
+
+     01 - mode group
+
+          The sub-group must be zero (colour) or one (greyscale). Sub-group entries 2-63 are reserved.
+
+0xFF3B is the data port (read/write)
+
+When the palette group is selected, the byte written will describe the color.
+
+When the mode group is selected, the byte output will be interpreted as follows:
+
+Bit 0: Palette mode select; on when set.
+
+Implementations that support the Timex video modes use the #FF register to set the video mode, as per the Timex machines.
+It is left to the individual implementations to determine if reading the port returns the previous write or the floating bus.
+
+
+RGB palette entries
+G3R3B2 encoding
+
+For a device using the RGB colour space the palette entry is interpreted as follows
+
+Bits 0-1: Blue intensity.
+Bits 2-4: Red intensity.
+Bits 5-7: Green intensity.
+
+This colour space uses a sub-set of 9-bit RGB. The missing lowest blue bit is set to OR of the other two blue bits
+(Bb becomes 000 for 00, and Bb1 for anything else). This gives access to a fixed half the potential 512 colour palette.
+The reduces the jump in intensity in the lower range in the earlier version of the specification.
+It also means the standard palette can now be represented by the ULAplus palette.
+
+
+Greyscale palette entries
+
+In greyscale mode, each palette entry describes an intensity from zero to 255. This can be achieved by simply removing the colour from the output signal.
+Software
+
+A rapidly growing collection of software is available including a palette editor, palette files to re-colour existing games,
+a 6-bit RGB colour extension to CP/M plus, a slideshow of converted Commodore 64 hi-res pictures,
+and brand new games, all of which can be found at [﻿http://sites.google.com/site/ulaplus/home].
+
+The palette editor enables you to create a palette for use with existing software without needing to rewrite the software.
+You can save the palette and load it before loading the original software as normal.
+In this way all existing software can be re-coloured without any programming knowledge required.
+
+An introduction to using the ULAplus palette from BASIC is also available [1]
+Limitations
+
+Although in theory 64 colours can be displayed at once, in practice this is usually not possible except when displaying colour bars,
+because the four CLUTs are mutually exclusive; it is not possible to mix colours from two CLUTs in the same cell.
+Emulation
+
+The 64 colour mode lookup table is organized as 4 palettes of 16 colours.
+
+Bits 7 and 6 of each Spectrum attribute byte (normally used for FLASH and BRIGHT) will be used as an index value (0-3)
+to select one of the four colour palettes.
+
+Each colour palette has 16 entries (8 for INK, 8 for PAPER). Bits 0 to 2 (INK) and 3 to 5 (PAPER) of the attribute byte
+will be used as indexes to retrieve colour data from the selected palette.
+
+With the standard Spectrum display, the BORDER colour is the same as the PAPER colour in the first CLUT.
+For example BORDER 0 would set the border to the same colour as PAPER 0 (with the BRIGHT and FLASH bits not set).
+
+The complete index can be calculated as
+
+ink_colour = (FLASH * 2 + BRIGHT) * 16 + INK
+paper_colour = (FLASH * 2 + BRIGHT) * 16 + PAPER + 8
+
+When scaling 3-bits of colour data to more bits for emulators that operate in high colour mode,
+simply concatenate the bits repeatedly and then truncate to as many bits as needed. For example, for 8-bits the following conversion should be used:
+
+    76543210
+    hmlhmlhm
+
+where h is the high bit, m is the middle bit, and l is the low bit of the original 3-bit value.
+
