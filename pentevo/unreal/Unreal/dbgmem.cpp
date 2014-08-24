@@ -99,6 +99,7 @@ redraw:
         #define tprh(a,b,c,d) sprintf(line, "%s: %02X", (c), (d)); tprint(mem_x + (a), mem_y + (b), line, W_NORM);
         #define tprd(a,b,c,d) sprintf(line, "%s: %d", (c), (d)); tprint(mem_x + (a), mem_y + (b), line, W_NORM);
         #define tprs(a,b,c,d) sprintf(line, "%s: %s", (c), (d)); tprint(mem_x + (a), mem_y + (b), line, W_NORM);
+        #define tprc(a,b,c,d) sprintf(line, "%s:%s", (c), (d)); tprint(mem_x + (a), mem_y + (b), line, W_NORM);
         #define tprl(a,b,c) sprintf(line, "%s", (c)); tprint(mem_x + (a), mem_y + (b), line, W_NORM);
         #define tprn(a,b,c) sprintf(line, "%d", (c)); tprint(mem_x + (a), mem_y + (b), line, W_NORM);
 
@@ -162,13 +163,13 @@ redraw:
         tprn(15,  3, comp.ts.intline);
         tprn(19,  3, comp.ts.intframe);
 
-        tprd(10,  5, "GX ", comp.ts.g_xoffs);
-        tprd(10,  6, "GY ", comp.ts.g_yoffs);
-        tprd(10,  7, "T0X", comp.ts.t0_xoffs);
-        tprd(10,  8, "T0Y", comp.ts.t0_yoffs);
-        tprd(10,  9, "T1X", comp.ts.t1_xoffs);
-        tprd(10, 10, "T1Y", comp.ts.t1_yoffs);
-        tprh(10, 11, "Brd", comp.ts.border);
+        tprd(9,  5, "GX ", comp.ts.g_xoffs);
+        tprd(9,  6, "GY ", comp.ts.g_yoffs);
+        tprd(9,  7, "T0X", comp.ts.t0_xoffs);
+        tprd(9,  8, "T0Y", comp.ts.t0_yoffs);
+        tprd(9,  9, "T1X", comp.ts.t1_xoffs);
+        tprd(9, 10, "T1Y", comp.ts.t1_yoffs);
+        tprh(9, 11, "Brd", comp.ts.border);
         
         tprl(21,  0, "SP T1 T0 T1Z T0Z");
         tprn(22,  1, comp.ts.s_en);
@@ -187,10 +188,10 @@ redraw:
         
         tprh(23,  5, "FMAddr", comp.ts.fmaddr);
         
-        tprs(17,  7, "RAM0", d_onoff[comp.ts.w0_ram]);
-        tprs(17,  8, "MAP0", d_onoff[!comp.ts.w0_we]);
-        tprs(18,  9, "WE0", d_onoff[comp.ts.w0_map_n]);
-        tprs(18, 10, "Lck", d_lock[comp.ts.lck128]);
+        tprc(18,  7, "RAM0", d_onoff[comp.ts.w0_ram]);
+        tprc(18,  8, "MAP0", d_onoff[!comp.ts.w0_we]);
+        tprc(19,  9, "WE0", d_onoff[comp.ts.w0_map_n]);
+        tprc(19, 10, "Lck", d_lock[comp.ts.lck128]);
         
         tprs(27,  7, "DMA", "");
         tprx(27,  8, "S", comp.ts.dma.saddr >> 14, comp.ts.dma.saddr & 0x3FFF);
