@@ -174,7 +174,7 @@ void mon_nxt()
 }
 
 void mon_prv() { mon_nxt(); mon_nxt(); }
-void mon_dump() { mem_dump ^= 1; mem_sz = mem_dump ? 32:8; }
+void mon_dump() { mem_dump = (mem_dump == 2) ? 0 : mem_dump + 1; mem_sz = mem_dump ? 32:8; }
 
 void mon_switch_dump()
 {
