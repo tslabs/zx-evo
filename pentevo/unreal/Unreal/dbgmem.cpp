@@ -92,38 +92,150 @@ void showmem()
        mem_max = sizeof(nvram);
 
 redraw:
-   cpu.mem_curs = memadr(cpu.mem_curs);
-   cpu.mem_top = memadr(cpu.mem_top);
-   for (ii = 0; ii < mem_size; ii++)
+    if (mem_dump == 2)
+    {	 // tsconf
+        #define tprx(a,b,c,d,e) sprintf(line, "%s: %02X:%04X", (c), (d), (e)); tprint(mem_x + (a), mem_y + (b), line, W_NORM);
+        #define tpre(a,b,c,d,e) sprintf(line, "%s: %d:%d", (c), (d), (e)); tprint(mem_x + (a), mem_y + (b), line, W_NORM);
+        #define tprh(a,b,c,d) sprintf(line, "%s: %02X", (c), (d)); tprint(mem_x + (a), mem_y + (b), line, W_NORM);
+        #define tprd(a,b,c,d) sprintf(line, "%s: %d", (c), (d)); tprint(mem_x + (a), mem_y + (b), line, W_NORM);
+        #define tprs(a,b,c,d) sprintf(line, "%s: %s", (c), (d)); tprint(mem_x + (a), mem_y + (b), line, W_NORM);
+        #define tprl(a,b,c) sprintf(line, "%s", (c)); tprint(mem_x + (a), mem_y + (b), line, W_NORM);
+        #define tprn(a,b,c) sprintf(line, "%d", (c)); tprint(mem_x + (a), mem_y + (b), line, W_NORM);
+
+        const char d_onoff[2][4] = {"dis", "ena"};
+        const char d_vmode[4][5] = {"ZX  ", "16c ", "256c", "text"};
+        const char d_rres[4][8] = {"256x192", "320x200", "320x240", "360x288"};
+        const char d_clk[4][7] = {"3.5MHz", "7MHz  ", "14MHz ", "unk   "};
+        const char d_lock[4][5] = {"512", "128", "aut", "1MB"};
+        const char d_dma[16][8] = 
+        {
+            "unk    ",
+            "unk    ",
+            "RAM-RAM",
+            "BLT-RAM",
+            "SPI-RAM",
+            "RAM-SPI",
+            "IDE-RAM",
+            "RAM-IDE",
+            "FIL-RAM",
+            "RAM-CRM",
+            "unk    ",
+            "RAM-SFL",
+            "unk    ",
+            "unk    ",
+            "unk    ",
+            "unk    "
+        };
+
+        const char d_dmast[11][6] = 
+        {
+            "RAM  ",
+            "BLT  ",
+            "SPI_R",
+            "SPI_W",
+            "IDE_R",
+            "IDE_W",
+            "FILL ",
+            "CRAM ",
+            "SFILE",
+            "INIT ",
+            "NOP  "
+        };
+
+        tprs(0,  0, "VMod", d_vmode[comp.ts.vmode]);
+        tprd(0,  1, "RRes", comp.ts.rres);
+        tprs(0,  2, "Gfx ", d_onoff[!comp.ts.nogfx]);
+        tprs(0,  3, "TSU ", d_onoff[!comp.ts.notsu]);
+        tprh(0,  4, "Vpg ", comp.ts.vpage);
+        tprh(0,  5, "Spg ", comp.ts.sgpage);
+        tprh(0,  6, "T0pg", comp.ts.t0gpage[2]);
+        tprh(0,  7, "T1pg", comp.ts.t1gpage[2]);
+        tprh(0,  8, "TMpg", comp.ts.tmpage);
+        tprh(0,  9, "Gpal", comp.ts.gpal);
+        tprh(0, 10, "T0pl", comp.ts.t0pal << 2);
+        tprh(0, 11, "T1pl", comp.ts.t1pal << 2);
+
+        tprd(12,  0, "HSI", comp.ts.hsint);
+        tprd(12,  1, "VSI", comp.ts.vsint);
+        tprl(10,  2, "DMA LIN FRM");
+        tprn(11,  3, comp.ts.intdma);
+        tprn(15,  3, comp.ts.intline);
+        tprn(19,  3, comp.ts.intframe);
+
+        tprd(10,  5, "GX ", comp.ts.g_xoffs);
+        tprd(10,  6, "GY ", comp.ts.g_yoffs);
+        tprd(10,  7, "T0X", comp.ts.t0_xoffs);
+        tprd(10,  8, "T0Y", comp.ts.t0_yoffs);
+        tprd(10,  9, "T1X", comp.ts.t1_xoffs);
+        tprd(10, 10, "T1Y", comp.ts.t1_yoffs);
+        tprh(10, 11, "Brd", comp.ts.border);
+        
+        tprl(21,  0, "SP T1 T0 T1Z T0Z");
+        tprn(22,  1, comp.ts.s_en);
+        tprn(25,  1, comp.ts.t1_en);
+        tprn(28,  1, comp.ts.t0_en);
+        tprn(31,  1, comp.ts.t1z_en);
+        tprn(34,  1, comp.ts.t0z_en);
+        
+        tprs(23,  3, "CLK", d_clk[comp.ts.zclk]);
+        
+        tprl(23,  4, "Cache: ");
+        tprn(30,  4, comp.ts.cache_win0);
+        tprn(32,  4, comp.ts.cache_win1);
+        tprn(34,  4, comp.ts.cache_win2);
+        tprn(36,  4, comp.ts.cache_win3);
+        
+        tprh(23,  5, "FMAddr", comp.ts.fmaddr);
+        
+        tprs(17,  7, "RAM0", d_onoff[comp.ts.w0_ram]);
+        tprs(17,  8, "MAP0", d_onoff[!comp.ts.w0_we]);
+        tprs(18,  9, "WE0", d_onoff[comp.ts.w0_map_n]);
+        tprs(18, 10, "Lck", d_lock[comp.ts.lck128]);
+        
+        tprs(27,  7, "DMA", "");
+        tprx(27,  8, "S", comp.ts.dma.saddr >> 14, comp.ts.dma.saddr & 0x3FFF);
+        tprx(27,  9, "D", comp.ts.dma.daddr >> 14, comp.ts.dma.daddr & 0x3FFF);
+        tpre(27, 10, "L", comp.ts.dma.num, comp.ts.dma.len * 2);
+        tprs(27, 11, "St", d_dmast[comp.ts.dma.state]);
+    }
+
+   else
    {
-      unsigned ptr = memadr(cpu.mem_top + ii*mem_sz);
-      sprintf(line, "%04X ", ptr);
-      unsigned cx = 0;
-      if (mem_dump)
-      {  // 0000 0123456789ABCDEF0123456789ABCDEF
-         for (unsigned dx = 0; dx < 32; dx++)
-         {
-            if (ptr == cpu.mem_curs) cx = dx+5;
-            u8 c = editrm(ptr); ptr = memadr(ptr+1);
-            line[dx+5] = c ? c : '.';
-         }
-      }
-      else 
-      {  // 0000 11 22 33 44 55 66 77 88 abcdefgh
-         for (unsigned dx = 0; dx < 8; dx++)
-         {
-            if (ptr == cpu.mem_curs) cx = (mem_ascii) ? dx+29 : dx*3 + 5 + cpu.mem_second;
-            u8 c = editrm(ptr); ptr = memadr(ptr+1);
-            sprintf(line+5+3*dx, "%02X", c); line[7+3*dx] = ' ';
-            line[29+dx] = c ? c : '.';
-         }
-      }
-      line[37] = 0;
-      tprint(mem_x, mem_y+ii, line, (activedbg == WNDMEM) ? W_SEL : W_NORM);
-      cursor_found |= cx;
-      if (cx && (activedbg == WNDMEM))
-         txtscr[(mem_y+ii)*80+mem_x+cx+80*30] = W_CURS;
+	cpu.mem_curs = memadr(cpu.mem_curs);
+	cpu.mem_top = memadr(cpu.mem_top);
+	for (ii = 0; ii < mem_size; ii++)
+	{
+	   unsigned ptr = memadr(cpu.mem_top + ii*mem_sz);
+	   sprintf(line, "%04X ", ptr);
+	   unsigned cx = 0;
+	   if (!mem_dump)
+	   {  // 0000 11 22 33 44 55 66 77 88 abcdefgh
+	      for (unsigned dx = 0; dx < 8; dx++)
+	      {
+	         if (ptr == cpu.mem_curs) cx = (mem_ascii) ? dx+29 : dx*3 + 5 + cpu.mem_second;
+	         u8 c = editrm(ptr); ptr = memadr(ptr+1);
+	         sprintf(line+5+3*dx, "%02X", c); line[7+3*dx] = ' ';
+	         line[29+dx] = c ? c : '.';
+	      }
+	   }
+	   else
+	   {  // 0000 0123456789ABCDEF0123456789ABCDEF
+	      for (unsigned dx = 0; dx < 32; dx++)
+	      {
+	         if (ptr == cpu.mem_curs) cx = dx+5;
+	         u8 c = editrm(ptr); ptr = memadr(ptr+1);
+	         line[dx+5] = c ? c : '.';
+	      }
+	   }
+
+	   line[37] = 0;
+	   tprint(mem_x, mem_y+ii, line, (activedbg == WNDMEM) ? W_SEL : W_NORM);
+	   cursor_found |= cx;
+	   if (cx && (activedbg == WNDMEM))
+	      txtscr[(mem_y+ii)*80+mem_x+cx+80*30] = W_CURS;
+	}
    }
+
    if (!cursor_found) { cursor_found=1; cpu.mem_top=cpu.mem_curs & ~(mem_sz-1); goto redraw; }
 title:
    const char *MemName = 0;
