@@ -341,7 +341,8 @@ void set_banks()
    bankw[0] = bankr[0] = bank0;
    bankw[3] = bankr[3] = bank3;
 
-   if (bankr[0] >= ROM_BASE_M || (conf.mem_model == MM_TSL && !comp.ts.w0_we)) bankw[0] = TRASH_M;
+   if (bankr[0] >= ROM_BASE_M ||
+     (conf.mem_model == MM_TSL && !comp.ts.w0_we && !(comp.ts.vdos || comp.ts.vdos_m1))) bankw[0] = TRASH_M;
    if (bankr[1] >= ROM_BASE_M) bankw[1] = TRASH_M;
    if (bankr[2] >= ROM_BASE_M) bankw[2] = TRASH_M;
    if (bankr[3] >= ROM_BASE_M) bankw[3] = TRASH_M;
