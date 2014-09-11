@@ -13,6 +13,10 @@ module video_sync (
 	input wire [8:0] hpix_end,
 	input wire [8:0] vpix_beg,
 	input wire [8:0] vpix_end,
+	input wire [8:0] hpix_beg_ts,
+	input wire [8:0] hpix_end_ts,
+	input wire [8:0] vpix_beg_ts,
+	input wire [8:0] vpix_end_ts,
 	input wire [4:0] go_offs,
 	input wire [1:0] x_offs,
 	input wire [7:0] hint_beg,
@@ -35,6 +39,7 @@ module video_sync (
 	output wire vpix,
 	output wire v_ts,
 	output wire hvpix,
+	output wire hvtspix,
 	output wire tv_blank,
 	output wire vga_blank,
 	output wire vga_line,
@@ -144,11 +149,11 @@ module video_sync (
 
 
     // TS-line counter
-    assign ts_raddr = hcount - hpix_beg;
+    assign ts_raddr = hcount - hpix_beg_ts;
 
 	always @(posedge clk)
 		if (ts_start_coarse)
-			lcount <= vcount - vpix_beg + 9'b1;
+			lcount <= vcount - vpix_beg_ts + 9'b1;
 
 
 // Y offset re-latch trigger
@@ -194,12 +199,15 @@ module video_sync (
 	assign vga_line = (hcount >= HPERIOD/2);
 
 	assign hvpix = hpix && vpix;
-	
 	assign hpix = (hcount >= hpix_beg) && (hcount < hpix_end);
-	
-	assign vpix = (vcount >= vpix_beg)        && (vcount < vpix_end);			// vertical pixels window
-	assign v_ts = (vcount >= (vpix_beg - 1))  && (vcount < (vpix_end - 1));		// vertical TS window
-    assign v_pf = (vcount >= (vpix_beg - 17)) && (vcount < (vpix_end - 9));		// vertical tilemap prefetch window
+	assign vpix = (vcount >= vpix_beg) && (vcount < vpix_end);
+    
+	assign hvtspix = htspix && vtspix;
+	wire htspix = (hcount >= hpix_beg_ts) && (hcount < hpix_end_ts);
+	wire vtspix = (vcount >= vpix_beg_ts) && (vcount < vpix_end_ts);
+    
+	assign v_ts = (vcount >= (vpix_beg_ts - 1))  && (vcount < (vpix_end_ts - 1));	// vertical TS window
+    assign v_pf = (vcount >= (vpix_beg_ts - 17)) && (vcount < (vpix_end_ts - 9));	// vertical tilemap prefetch window
 
     always @(posedge clk)
 		video_go <= (hcount >= (hpix_beg - go_offs - x_offs)) && (hcount < (hpix_end - go_offs - x_offs + 4)) && vpix && !nogfx;
@@ -210,7 +218,7 @@ module video_sync (
 	assign frame_start = line_start && (vcount == (vperiod - 1));
 	wire vis_start = line_start && (vcount == (vblnk_end - 1));
 	assign pix_start = hcount == (hpix_beg - x_offs - 1);
-	wire ts_start_coarse = hcount == (hpix_beg - 1);
+	wire ts_start_coarse = hcount == (hpix_beg_ts - 1);
 	assign ts_start = c3 && ts_start_coarse;
 	assign int_start = (hcount == {hint_beg, 1'b0}) && (vcount == vint_beg) && c0;
 

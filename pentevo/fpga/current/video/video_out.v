@@ -92,17 +92,17 @@ module video_out (
 		blu1 <= (!pwm[iblu][{phase, 1'b1}] | &cblu) ? cblu : (cblu + 2'b1);
 	end
 
-`ifdef IDE_VDAC
+// `ifdef IDE_VDAC
 // no PWM	
-    assign vred = cred;
-	assign vgrn = cgrn;
-	assign vblu = cblu;
-`else
+    // assign vred = cred;
+	// assign vgrn = cgrn;
+	// assign vblu = cblu;
+// `else
 // output muxing for 56MHz PWM resolution
 	assign vred = clk ? red1 : red0;
 	assign vgrn = clk ? grn1 : grn0;
 	assign vblu = clk ? blu1 : blu0;
-`endif
+// `endif
 
 // PWM phase
 	reg [1:0] ph;

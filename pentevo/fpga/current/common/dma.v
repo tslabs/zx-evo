@@ -28,7 +28,6 @@ module dma (
 	input  wire [15:0] dram_rddata,
 	output wire [15:0] dram_wrdata,
 	output wire		dram_req,
-	output reg		 dma_z80_lp,
 	output wire		dram_rnw,
 	input  wire		dram_next,
 
@@ -168,7 +167,6 @@ module dma (
 	if (dma_launch)			// write to DMACtrl - launch of DMA burst
 	begin
 		dma_wnr <= zdata[7];
-		dma_z80_lp <= zdata[6];
 		dma_salgn <= zdata[5];
 		dma_dalgn <= zdata[4];
 		dma_asz <= zdata[3];

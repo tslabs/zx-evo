@@ -90,14 +90,12 @@ module arbiter(
 	input wire [20:0] dma_addr,
 	input wire [15:0] dma_wrdata,
 	input wire        dma_req,
-	input wire        dma_z80_lp,
 	input wire        dma_rnw,
 	output wire       dma_next,
 
 // TS
 	input wire [20:0] ts_addr,
 	input wire 	      ts_req,
-	input wire 	      ts_z80_lp,
 	output wire       ts_pre_next,
 	output wire       ts_next,
 
@@ -172,7 +170,6 @@ module arbiter(
 // next cycle decision
     wire [CYCLES-1:0] cyc_dev = tm_req ? CYC_TM : (ts_req ? CYC_TS : CYC_DMA);
     wire dev_req = ts_req || tm_req || dma_req;
-    // wire dev_over_cpu = (((ts_req || tm_req) && ts_z80_lp) || (dma_req && dma_z80_lp)) && int_n;		// CPU gets higher priority to acknowledge the INT
     wire dev_over_cpu = 0;
 
 	always @*

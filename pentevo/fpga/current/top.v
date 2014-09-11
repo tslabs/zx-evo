@@ -245,14 +245,12 @@ module top(
     wire [20:0] dma_addr;
     wire [15:0] dma_wrdata;
     wire dma_req;
-    wire dma_z80_lp;
     wire dma_rnw;
     wire dma_next;
     wire dma_strobe;
 
     wire [20:0] ts_addr;
     wire ts_req;
-    wire ts_z80_lp;
     wire ts_pre_next;
     wire ts_next;
 
@@ -542,11 +540,9 @@ module top(
         .dma_addr(dma_addr),
         .dma_wrdata(dma_wrdata),
         .dma_req(dma_req),
-        .dma_z80_lp    (dma_z80_lp),
         .dma_rnw(dma_rnw),
         .dma_next(dma_next),
         .ts_req(ts_req),
-        .ts_z80_lp(ts_z80_lp),
         .ts_addr(ts_addr),
         .ts_pre_next(ts_pre_next),
         .ts_next(ts_next),
@@ -618,7 +614,6 @@ module top(
         .video_pre_next(video_pre_next),
         .next_video(next_video),
         .ts_req(ts_req),
-        .ts_z80_lp(ts_z80_lp),
         .ts_pre_next(ts_pre_next),
         .ts_addr(ts_addr),
         .ts_next(ts_next),
@@ -849,7 +844,6 @@ module top(
         .dram_addr(dma_addr),
         .dram_rnw(dma_rnw),
         .dram_req(dma_req),
-        .dma_z80_lp(dma_z80_lp),
         .dram_rddata(rd),
         .dram_wrdata(dma_wrdata),
         .dram_next(dma_next),
@@ -874,7 +868,7 @@ module top(
     zint zint
     (
         .clk(fclk),
-        .zclk(clkz_out),
+        .zpos(zpos),
         .res(res),
         .wait_n(wait_n),
         .im2vect(im2vect),

@@ -10,6 +10,7 @@ module video_render (
 
 // video controls
 	input wire hvpix,
+	input wire hvtspix,
 	input wire nogfx,
 	input wire notsu,
 	input wire gfxovr,
@@ -77,7 +78,7 @@ module video_render (
     wire gfx_visible = (pixv[render_mode] && !nogfx);
     wire [7:0] video1 = tsu_visible ? tsdata_in : (nogfx ? border_in : pix[render_mode]);
 	wire [7:0] video2 = gfx_visible ? pix[render_mode] : (tsu_visible ? tsdata_in : border_in);
-    wire [7:0] video = !hvpix ? border_in : (gfxovr ? video2 : video1);
+    wire [7:0] video = hvpix ? (gfxovr ? video2 : video1) : ((hvtspix && tsu_visible) ? tsdata_in : border_in);
 	assign vplex_out = hires ? {temp, video[3:0]} : video;		// in hi-res plex contains two pixels 4 bits each
 
 	reg [3:0] temp;
