@@ -80,7 +80,6 @@ module video_top (
 	input  wire        video_strobe,
 	output wire [20:0] ts_addr,
 	output wire        ts_req,
-	output wire        ts_z80_lp,
 	input  wire        ts_pre_next,
 	input  wire        ts_next,
 	output wire [20:0] tm_addr,
@@ -96,9 +95,6 @@ module video_top (
 );
 
 	// wire [2:0] tst;
-
-
-    assign ts_z80_lp = tsconf[4];
 
 // video config
 	wire [7:0] vpage;      // re-latched at line_start
@@ -121,6 +117,10 @@ module video_top (
 	wire [8:0] hpix_end;
 	wire [8:0] vpix_beg;
 	wire [8:0] vpix_end;
+    wire [8:0] hpix_beg_ts;
+    wire [8:0] hpix_end_ts;
+    wire [8:0] vpix_beg_ts;
+    wire [8:0] vpix_end_ts;
 	wire [5:0] x_tiles;
     wire [9:0] x_offs_mode;
     wire [4:0] go_offs;
@@ -130,8 +130,6 @@ module video_top (
 	wire v60hz;
 	wire nogfx = vconf[5];
 	wire notsu = vconf[4];
-	// wire gfxovr = vconf[3];
-	wire gfxovr;
 	wire tv_blank;
 
 // counters
@@ -154,6 +152,7 @@ module video_top (
 	wire hpix;
 	wire vpix;
 	wire hvpix;
+	wire hvtspix;
 	wire frame;
 	wire flash;
 	wire pix_stb;
@@ -235,7 +234,11 @@ module video_top (
         .palsel         (palsel),
         .hint_beg       (hint_beg),
         .vint_beg       (vint_beg),
-		// .int_start		(int_start),	// uncomment to enable VSINT auto-increment
+`ifdef XTR_FEAT
+		.int_start		(int_start),
+`else
+		.int_start		(1'b0),
+`endif
         .tsconf         (tsconf),
         .tmpage         (tmpage),
         .t0gpage        (t0gpage),
@@ -258,10 +261,19 @@ module video_top (
 		.txt_char	    (fetch_temp[15:0]),
 		.gx_offs		(gx_offs),
 		.x_offs_mode	(x_offs_mode),
+`ifdef XTR_FEAT
+        .ts_rres_ext    (tsconf[0]),
+`else
+        .ts_rres_ext    (1'b0),
+`endif
 		.hpix_beg	    (hpix_beg),
 		.hpix_end	    (hpix_end),
 		.vpix_beg	    (vpix_beg),
 		.vpix_end	    (vpix_end),
+        .hpix_beg_ts    (hpix_beg_ts),
+        .hpix_end_ts    (hpix_end_ts),
+        .vpix_beg_ts    (vpix_beg_ts),
+        .vpix_end_ts    (vpix_end_ts),
 		.x_tiles	    (x_tiles),
         .go_offs        (go_offs),
         .cnt_col        (cnt_col),
@@ -288,6 +300,10 @@ module video_top (
 		.hpix_end		(hpix_end),
 		.vpix_beg		(vpix_beg),
 		.vpix_end		(vpix_end),
+        .hpix_beg_ts    (hpix_beg_ts),
+        .hpix_end_ts    (hpix_end_ts),
+        .vpix_beg_ts    (vpix_beg_ts),
+        .vpix_end_ts    (vpix_end_ts),
         .go_offs        (go_offs),
         .x_offs         (x_offs_mode[1:0]),
         .y_offs_wr      (gy_offsl_wr || gy_offsh_wr),
@@ -322,6 +338,7 @@ module video_top (
 		.v_ts			(v_ts),
 		.vpix			(vpix),
 		.hvpix			(hvpix),
+		.hvtspix		(hvtspix),
 		.nogfx			(nogfx),
 		.cfg_60hz		(cfg_60hz),
 		.sync_pol		(sync_pol),
@@ -423,9 +440,14 @@ module video_top (
 		.clk		    (clk),
 		.c1			    (c1),
 		.hvpix 	        (hvpix),
+		.hvtspix        (hvtspix),
 		.nogfx			(nogfx),
 		.notsu			(notsu),
-		.gfxovr			(gfxovr),
+`ifdef XTR_FEAT
+        .gfxovr			(vconf[3]),
+`else
+        .gfxovr			(1'b0),
+`endif
 		.flash			(flash),
 		.hires			(tv_hires),
 		.psel			(scnt),

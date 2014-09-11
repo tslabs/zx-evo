@@ -11,6 +11,7 @@ module video_mode (
 // video config
 	input wire [7:0] vpage,
 	input wire [7:0] vconf,
+	input wire ts_rres_ext,
 	input wire v60hz,
 
 // video parameters & mode controls
@@ -20,6 +21,10 @@ module video_mode (
 	output wire [8:0] hpix_end,
 	output wire [8:0] vpix_beg,
 	output wire [8:0] vpix_end,
+    output wire [8:0] hpix_beg_ts,
+    output wire [8:0] hpix_end_ts,
+    output wire [8:0] vpix_beg_ts,
+    output wire [8:0] vpix_end_ts,
 	output wire [5:0] x_tiles,
 	output wire [4:0] go_offs,
 	output wire [3:0] fetch_sel,
@@ -200,7 +205,13 @@ module video_mode (
 	assign hpix_end = hp_end[rres];
 	assign vpix_beg = vp_beg[rres];
 	assign vpix_end = vp_end[rres];
-	assign x_tiles = x_tile[rres];
+    
+    assign hpix_beg_ts = ts_rres_ext ? hp_beg[3] : hp_beg[rres];
+    assign hpix_end_ts = ts_rres_ext ? hp_end[3] : hp_end[rres];
+    assign vpix_beg_ts = ts_rres_ext ? vp_beg[3] : vp_beg[rres];
+    assign vpix_end_ts = ts_rres_ext ? vp_end[3] : vp_end[rres];
+    
+	assign x_tiles = ts_rres_ext ? x_tile[3] : x_tile[rres];
 
 
 // videomode addresses

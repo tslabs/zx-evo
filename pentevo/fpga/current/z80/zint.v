@@ -4,7 +4,7 @@
 module zint
 (
 	input  wire clk,
-	input  wire zclk,
+	input  wire zpos,
 	input  wire res,
 	input  wire wait_n,
 	input  wire int_start_frm,
@@ -92,19 +92,19 @@ module zint
 
 // ~WAIT resync
 	reg wait_r;
-    always @(posedge zclk)
+    always @(posedge clk)
         wait_r <= !wait_n;
 
 // ~INT counter
 	reg [5:0] intctr;
 	wire intctr_fin = intctr[5];   // 32 clks
 
-	always @(posedge zclk, posedge int_start_frm)
+	always @(posedge clk, posedge int_start_frm)
 	begin
 		if (int_start_frm)
-			intctr <= 0;
-		else if (!intctr_fin && !wait_r && !vdos)
-			intctr <= intctr + 1;
+			intctr <= 1'b0;
+		else if (zpos && !intctr_fin && !wait_r && !vdos)
+			intctr <= intctr + 1'b1;
 	end
 
 endmodule
