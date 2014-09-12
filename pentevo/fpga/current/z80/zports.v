@@ -243,7 +243,7 @@ module zports(
 
             XSTAT:
 `ifdef IDE_VDAC
-                dout = {1'b0, pwr_up_reg, 6'h01};
+                dout = {1'b0, pwr_up_reg, 6'h03};
 `else
                 dout = {1'b0, pwr_up_reg, 6'h00};
 `endif
@@ -419,7 +419,7 @@ module zports(
 			fmaddr[4] <= 1'b0;
 			intmask <= 8'b1;
 			fddvirt <= 4'b0;
-			sysconf <= 8'h01;       // turbo 7 MHz
+			sysconf <= 8'h00;       // 3.5 MHz
 			memconf <= 8'h04;       // no map
 			cacheconf <= 4'h0;      // no cache
 

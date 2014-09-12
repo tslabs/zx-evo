@@ -107,7 +107,7 @@ module video_ports (
 
         else
         begin
-            if (zborder_wr  )   border          <= {5'b11110, d[2:0]};
+            if (zborder_wr  )   border          <= {palsel[3:0], 1'b0, d[2:0]};
             if (border_wr   )   border          <= d;
 			if (gy_offsl_wr	)   gy_offs[7:0]    <= d;
 			if (gy_offsh_wr	)   gy_offs[8]      <= d[0];
@@ -132,12 +132,6 @@ module video_ports (
 			if (t1x_offsh_wr)   t1x_offs_r[8]   <= d[0];
 			if (t0gpage_wr	)   t0gpage_r       <= d;
 			if (t1gpage_wr	)   t1gpage_r       <= d;
-			// if (t0x_offsl_wr)   t0x_offs[7:0] <= d;
-			// if (t0x_offsh_wr)   t0x_offs[8]   <= d[0];
-			// if (t1x_offsl_wr)   t1x_offs[7:0] <= d;
-			// if (t1x_offsh_wr)   t1x_offs[8]   <= d[0];
-			// if (t0gpage_wr	)   t0gpage       <= d;
-			// if (t1gpage_wr	)   t1gpage       <= d;
         end
 
 
