@@ -12,3 +12,9 @@ typedef signed char			I8;
 
 #define lo(a)	(U8)(a)
 #define hi(a)	(U8)((a) >> 8)
+
+enum BOOL : U8
+{
+    FALSE = 0,
+    TRUE
+};

@@ -53,15 +53,23 @@ enum
 U8 levels[25];
 U8 temp[8];
 
+    BOOL vdac_en = FALSE;
+
 U8 conv_levels(U8 lvl_in)
 {
     int i;
 
-    for (i = 24; i >= 0; i--)
-	{
-        if (lvl_in >= levels[i])
-            break;
-	}
+    if (vdac_en)
+        i = lvl_in >> 3;
+    
+    else
+    {
+        for (i = 24; i >= 0; i--)
+        {
+            if (lvl_in >= levels[i])
+                break;
+        }
+    }
 
 	return i;
 }
@@ -75,13 +83,20 @@ int _tmain(int argc, _TCHAR* argv[])
 	FILE *f_btm = NULL;
 	FILE *f_btm4 = NULL;
 
-	if (argc != 2)
+	if (argc < 2)
 	{
 		printf("TGA to TS converter by TS-Labs\n");
-		printf("Usage: tga2ts.exe <input>.tga\n");
+		printf("Usage: tga2ts.exe <input>.tga [-v]\n");
+		printf("-v - enable VDAC palette\n");
 		return 1;
 	}
-    
+
+    if (argc > 2)   // HELLLLLISH QnD FIX!
+    {
+        vdac_en = TRUE;
+        goto no_levels_map;
+    }
+
 // loading levels map
 	if (!(f_map = _wfopen(L"levels.map", L"r")))
 		goto fatal;
@@ -95,6 +110,8 @@ int _tmain(int argc, _TCHAR* argv[])
     }
 
 	fclose(f_map);
+
+no_levels_map:
 
 // parse TGA file header
 	if (!(f_tga = _wfopen(argv[1], L"rb")))
@@ -176,20 +193,20 @@ int _tmain(int argc, _TCHAR* argv[])
     for (int i = 0; i < header.image_height; i++)
     {
         int p = 0;
-        
+
         if (fread(buf, 1, header.image_width, f_tga) != header.image_width)
             goto fatal;
 
         if (fwrite(buf, 1, header.image_width, f_btm) != header.image_width)
             goto fatal;
-            
+
         for (int j = 0; j < header.image_width;)
         {
             U8 c = (buf[j++] & 15) << 4;
             c |= buf[j++] & 15;
             buf4[p++] = c;
         }
-        
+
         if (fwrite(buf4, 1, p, f_btm4) != p)
             goto fatal;
     }
