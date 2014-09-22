@@ -11,8 +11,8 @@ void set_banks()
    // set default values for memory windows
    bankw[1] = bankr[1] = page_ram(5);
    bankw[2] = bankr[2] = page_ram(2);
-   bankm[0] = 0;
-   bankm[1] = bankm[2] = bankm[3] = 1;
+   bankm[0] = BANKM_ROM;
+   bankm[1] = bankm[2] = bankm[3] = BANKM_RAM;
 
    // screen begining
    temp.base = memory + comp.ts.vpage * PAGE;
@@ -160,20 +160,20 @@ void set_banks()
 			else
 				tmp = (comp.p7FFD & 0x10) ? 3 : 2;
 
-			tmp += comp.ts.page[0] & 0xFC;
+			tmp |= comp.ts.page[0] & 0xFC;
 		}
 
 		if (comp.ts.w0_ram || comp.ts.vdos)
 		// RAM at #0000
 		{
-			bankm[0] = comp.ts.w0_we;
+			bankm[0] = comp.ts.w0_we ? BANKM_RAM : BANKM_ROM;
 			bank0 = page_ram(comp.ts.vdos ? 0xFF : tmp);
 		}
 
 		else
 		{
 		// ROM at #0000
-			bankm[0] = 0;
+			bankm[0] = BANKM_ROM;
 			bank0 = page_rom(tmp & 0x1F);
 		}
 
@@ -317,7 +317,7 @@ void set_banks()
             // #0000: RAM 12/13 (DV0 - selector), r/w
             case PF_BLKROM:
                 bank0 = page_ram((comp.pLSY256 & PF_DV0) ? 13 : 12);
-                bankm[0] = 1;
+                bankm[0] = BANKM_RAM;
             break;
 
             // #0000: RAM 8-11, r/o
@@ -343,6 +343,7 @@ void set_banks()
 
    if (bankr[0] >= ROM_BASE_M ||
      (conf.mem_model == MM_TSL && !comp.ts.w0_we && !comp.ts.vdos)) bankw[0] = TRASH_M;
+
    if (bankr[1] >= ROM_BASE_M) bankw[1] = TRASH_M;
    if (bankr[2] >= ROM_BASE_M) bankw[2] = TRASH_M;
    if (bankr[3] >= ROM_BASE_M) bankw[3] = TRASH_M;
