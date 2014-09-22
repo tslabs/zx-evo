@@ -189,8 +189,8 @@ redraw:
         tprh(23,  5, "FMAddr", comp.ts.fmaddr);
         
         tprc(18,  7, "RAM0", d_onoff[comp.ts.w0_ram]);
-        tprc(18,  8, "MAP0", d_onoff[!comp.ts.w0_we]);
-        tprc(19,  9, "WE0", d_onoff[comp.ts.w0_map_n]);
+        tprc(18,  8, "MAP0", d_onoff[!comp.ts.w0_map_n]);
+        tprc(19,  9, "WE0", d_onoff[comp.ts.w0_we]);
         tprc(19, 10, "Lck", d_lock[comp.ts.lck128]);
         
         tprs(27,  7, "DMA", "");

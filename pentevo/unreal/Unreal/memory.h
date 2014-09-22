@@ -17,3 +17,9 @@ Z80INLINE u8 *am_r(unsigned addr)
 //u8 rmdbg(u32 addr);
 //void wmdbg(u32 addr, u8 val);
 //u8 *MemDbg(u32 addr);
+
+enum BANKM
+{
+    BANKM_ROM = 0,
+    BANKM_RAM
+};

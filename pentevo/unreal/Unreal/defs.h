@@ -284,10 +284,11 @@ struct Z80 : public TZ80State
    void SetDbgMemIf() { MemIf = DbgMemIf; }
 
    u8 DirectRm(unsigned addr) const { return *DirectMem(addr); } // direct read memory in debuger
-   void DirectWm(unsigned addr, u8 val) { // direct write memory in debuger
+   void DirectWm(unsigned addr, u8 val) 
+   { // direct write memory in debuger
      *DirectMem(addr) = val;
-     u16 cache_pointer = addr & 0x1FF;
-     tscache_addr[cache_pointer] = -1;
+     u16 cache_pointer = addr & 0x1FE;
+     tscache_addr[cache_pointer] = tscache_addr[cache_pointer + 1] = -1;	// write invalidates 16 bit
    }
 /*
    virtual u8 rm(unsigned addr) = 0;
