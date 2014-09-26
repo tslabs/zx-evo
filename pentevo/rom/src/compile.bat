@@ -1,35 +1,39 @@
 @echo off
 
-set IAR=c:\Tools\PROG\IAR ewz80\z80\bin
+REM --- Prepare folders ---
+set OBJ=obj
+set ROM=rom
+if exist %OBJ% rd /s /q %OBJ%
+md %OBJ%
 
-mhmt.exe -hst 866_code.fnt >nul
-bin2defb.exe 866_code.fnt.hst 866_code.asm >nul
-mhmt.exe -hst  rslsys.bin >nul
-bin2defb.exe rslsys.bin.hst rslsys.asm >nul
-mhmt.exe -hst sysvars.bin >nul
-bin2defb.exe sysvars.bin.hst sysvars.asm >nul
-bin2defb.exe tsfat.bin tsfat.asm >nul
+REM --- Prepare binaries ---
+mhmt.exe -hst 866_code.fnt "%OBJ%\866_code.fnt.hst" >nul
+bin2defb.exe "%OBJ%\866_code.fnt.hst" "%OBJ%\866_code.inc" >nul
+mhmt.exe -hst rslsys.bin "%OBJ%\rslsys.bin.hst" >nul
+bin2defb.exe "%OBJ%\rslsys.bin.hst" "%OBJ%\rslsys.inc" >nul
+mhmt.exe -hst sysvars.bin "%OBJ%\sysvars.bin.hst" >nul
+bin2defb.exe "%OBJ%\sysvars.bin.hst" "%OBJ%\sysvars.inc" >nul
+bin2defb.exe tsfat.bin "%OBJ%\tsfat.inc" >nul
 
-"%IAR%\az80.exe" ts-bios.asm -l ts-bios.lst
-"%IAR%\xlink.exe" -Hff -f ts-bios.xcl ts-bios.r01
-if ERRORLEVEL 1 pause
-del ts-bios.r01
+REM --- Compile sources ---
+set CC="%IAR%\iccz80.exe" -ml -s8 -uu -P -v0 -e -xDFT -T -i -q -K	-I"%IAR%\..\inc" -I"..\pff" -L"%OBJ%/"
+set AC="%IAR%\az80.exe" -I"%OBJ%" -uu -L"%OBJ%/" -O"%OBJ%/"
+set LC="%IAR%\xlink.exe" -cz80 -Fraw-binary -xmisn -Hff
 
-"%IAR%\az80.exe" starter.asm
-"%IAR%\xlink.exe" -f starter.xcl starter.r01
-del starter.r01
+%AC% ts-bios.asm
+%LC% -Z(CODE)CODE=0000-3FFF "%OBJ%\ts-bios.r01" -o "%OBJ%\ts-bios.bin" -l "%OBJ%\ts-bios.map"
 
-copy /b header.bin + starter.bin "../bin/TS-BIOS.$C"
-rem del starter.bin
+REM --- Make binaries ---
+..\..\tools\fsplit\fsplit.exe %ROM%\zxevo.rom 65536
 
-..\..\tools\fsplit\fsplit.exe zxevo.rom 65536
+copy /b "%OBJ%\ts-bios.bin" + "%ROM%\trdos504T.rom" + "%ROM%\128.rom" "..\bin\ts-bios.rom"
+copy /b "%OBJ%\ts-bios.bin" + "%ROM%\trdos504T.rom" + "%ROM%\128.rom" + "%ROM%\zxevo.rom.1" "..\bin\zxevo.rom"
+copy /b "%OBJ%\ts-bios.bin" + "%ROM%\trdos504T.rom" + "%ROM%\glukpen.rom" + "%ROM%\48.rom" "..\bin\ts-bios-gluk.rom"
+copy /b "%OBJ%\ts-bios.bin" + "%ROM%\trdos504T.rom" + "%ROM%\qc3_11.rom" + "%ROM%\48.rom" "..\bin\ts-bios-qc311.rom"
+copy /b "%OBJ%\ts-bios.bin" + "%ROM%\trdos504T.rom" + "%ROM%\rc1_96.rom" + "%ROM%\48.rom" "..\bin\ts-bios-rc196.rom"
 
-copy /b ts-bios.bin + trdos504T.rom + 128.rom "../bin/ts-bios.rom"
-copy /b ts-bios.bin + trdos504T.rom + 128.rom + zxevo.rom.1 "../bin/zxevo.rom"
-copy /b ts-bios.bin + trdos504T.rom + glukpen.rom + 48.rom "../bin/ts-bios-gluk.rom"
-copy /b ts-bios.bin + trdos504T.rom + qc3_11.rom + 48.rom "../bin/ts-bios-qc311.rom"
-copy /b ts-bios.bin + trdos504T.rom + rc1_96.rom + 48.rom "../bin/ts-bios-rc196.rom"
+REM --- Clean up ---
+del "%ROM%\*.0"
+del "%ROM%\*.1"
 
-copy ts-bios.bin "../bin/ts-bios.bin"
-del ts-bios.bin
-
+pause
