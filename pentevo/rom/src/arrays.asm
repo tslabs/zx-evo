@@ -353,10 +353,10 @@ nv_def
         defw 15 << 10 + 15 << 5 + 15
 
 font8
-#include "866_code.asm"
+#include "866_code.inc"
 
 rslsys
-#include "rslsys.asm"
+#include "rslsys.inc"
 
 sysvars
-#include "sysvars.asm"
+#include "sysvars.inc"

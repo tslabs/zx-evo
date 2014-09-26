@@ -953,6 +953,6 @@ SYM
 #include "restarts.asm"
 
         org TSFAT
-#include "tsfat.asm"
+#include "tsfat.inc"
 
         end
