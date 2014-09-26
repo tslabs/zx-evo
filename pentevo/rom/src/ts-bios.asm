@@ -946,6 +946,7 @@ SYM
         inc l
         ret
 
+#include "biosapi.asm"
 #include "booter.asm"
 #include "dehst.asm"
 #include "arrays.asm"
