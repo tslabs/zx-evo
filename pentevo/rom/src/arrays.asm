@@ -319,18 +319,18 @@ keys_symb
 ; -- NVRAM default values
 ; ATTENTION! When changing NVRAM cells declaration, update 'nv_def' array in vars.asm!
 nv_def
-        defb 0      ; FDDVirt OFF
-        defb 0      ; CPU clock 3.5MHz
-        defb 0      ; boot device SD Z-contr
-        defb 1      ; CPU Cache ON
-        defb 0      ; Boot from ROM #00
-        defb 0      ; Boot bank TR-DOS
-        defb 3      ; CS Boot from Boot Device boot.$c
-        defb 0      ; CS Boot TR-DOS
-        defb 1      ; #7FFD Span 128kB
-        defb 0      ; ZX palette Default
-        defb 0      ; NGS Reset OFF
-        defb 1      ; INT offset 1
+        defb 0      ; FDDVirt [OFF]
+        defb 0      ; CPU clock [3.5MHz]
+        defb 0      ; boot device [SD Z-contr]
+        defb 1      ; CPU Cache [ON]
+        defb 0      ; Boot from [ROM #00]
+        defb 0      ; Boot bank [TR-DOS]
+        defb 3      ; CS Boot from [Boot Device boot.$c]
+        defb 0      ; CS Boot bank [TR-DOS]
+        defb 1      ; #7FFD Span [128kB]
+        defb 0      ; ZX palette [Default]
+        defb 0      ; NGS Reset [OFF]
+        defb 1      ; INT offset [1]
 
         defs 10     ; dummy
         

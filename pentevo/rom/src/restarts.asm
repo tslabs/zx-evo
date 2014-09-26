@@ -1,17 +1,20 @@
 
 ; -- RST 08-30
+
 ; wait for DMA end
-        org DWT
+        org DWT         ; 8
         xtbc dstatus
 DWT1    inf
         ret p
         jr DWT1
 
-        org h'10
+; TS-FAT driver entry
+        org TSF         ; 16
         jp TSFAT
 
-        org h'18
-        ret
+; TS-BIOS API entry
+        org BAPI        ; 24
+        jp BIOSAPI
 
         org h'20
         ret
@@ -45,7 +48,7 @@ IM11
         ret
 
 
-; -- NMI        
+; -- NMI
         org h'66
 NMI
         retn

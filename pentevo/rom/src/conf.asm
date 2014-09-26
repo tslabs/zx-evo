@@ -95,12 +95,15 @@ win1            equ 0x4000
 win2            equ 0x8000
 win3            equ 0xC000
 
+; -- Restarts
+DWT             equ 8
+TSF             equ 16
+BAPI            equ 24
 
-; -- restarts
-DWT             equ h'8
+; -- ROM addresses
 TSFAT           equ h'2000
 
-; -- addresses
+; -- RAM addresses
 sys_var         equ h'5C00
 rslsys_addr     equ h'4000
 

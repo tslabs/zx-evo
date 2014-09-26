@@ -1,14 +1,14 @@
-echo off
+@echo off
 
 set IAR=c:\Tools\PROG\IAR ewz80\z80\bin
 
-mhmt.exe -hst 866_code.fnt
-bin2defb.exe 866_code.fnt.hst 866_code.asm
-mhmt.exe -hst  rslsys.bin
-bin2defb.exe rslsys.bin.hst rslsys.asm
-mhmt.exe -hst sysvars.bin
-bin2defb.exe sysvars.bin.hst sysvars.asm
-bin2defb.exe tsfat.bin tsfat.asm
+mhmt.exe -hst 866_code.fnt >nul
+bin2defb.exe 866_code.fnt.hst 866_code.asm >nul
+mhmt.exe -hst  rslsys.bin >nul
+bin2defb.exe rslsys.bin.hst rslsys.asm >nul
+mhmt.exe -hst sysvars.bin >nul
+bin2defb.exe sysvars.bin.hst sysvars.asm >nul
+bin2defb.exe tsfat.bin tsfat.asm >nul
 
 "%IAR%\az80.exe" ts-bios.asm -l ts-bios.lst
 "%IAR%\xlink.exe" -Hff -f ts-bios.xcl ts-bios.r01
