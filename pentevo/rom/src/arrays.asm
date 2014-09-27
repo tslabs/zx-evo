@@ -62,19 +62,19 @@ OPTTAB0
 
 ; -- option text
 ; byte - number of choices
-; byte - address in NVRAM
+; word - address in NVRAM vars
 ; string - option
-OPT_CFQ    defb 3, low(cfrq), 'CPU Speed, MHz:', 0
-OPT_CCH    defb 2, low(cach), 'CPU Cache:', 0
-OPT_80L    defb 4, low(l128), '#7FFD span:', 0
-OPT_B1T    defb 5, low(b1to), 'Reset to:', 0
-OPT_B1B    defb 4, low(b1tb), '  bank:', 0
-OPT_B2T    defb 5, low(b2to), 'CS Reset to:', 0
-OPT_B2B    defb 4, low(b2tb), '  bank:', 0
-OPT_B1D    defb 4, low(bdev), 'Boot Device:', 0
-OPT_ZPL    defb 7, low(zpal), 'ZX Palette:', 0
-OPT_NGR    defb 2, low(nres), 'NGS Reset:', 0
-OPT_INT    defb 8, low(into), 'INT Offset:', 0
+OPT_CFQ    defb 3, low(cfrq), high(cfrq), 'CPU Speed, MHz:', 0
+OPT_CCH    defb 2, low(cach), high(cach), 'CPU Cache:', 0
+OPT_80L    defb 4, low(l128), high(l128), '#7FFD span:', 0
+OPT_B1T    defb 5, low(b1to), high(b1to), 'Reset to:', 0
+OPT_B1B    defb 4, low(b1tb), high(b1tb), '  bank:', 0
+OPT_B2T    defb 5, low(b2to), high(b2to), 'CS Reset to:', 0
+OPT_B2B    defb 4, low(b2tb), high(b2tb), '  bank:', 0
+OPT_B1D    defb 4, low(bdev), high(bdev), 'Boot Device:', 0
+OPT_ZPL    defb 7, low(zpal), high(zpal), 'ZX Palette:', 0
+OPT_NGR    defb 2, low(nres), high(nres), 'NGS Reset:', 0
+OPT_INT    defb 8, low(into), high(into), 'INT Offset:', 0
 
 ; -- choices
 ; string - choice
@@ -354,9 +354,6 @@ nv_def
 
 font8
 #include "866_code.inc"
-
-rslsys
-#include "rslsys.inc"
 
 sysvars
 #include "sysvars.inc"

@@ -1,4 +1,18 @@
+
+        PUBLIC biosapi
+
+; -----------------------------------
+; -- external modules
+
+#include "conf.asm"
+#include "macro.asm"
+
+        RSEG CODE
+
+; -----------------------------------
 ; BIOS API
 
-BIOSAPI
+biosapi:
     ret
+
+    end
