@@ -1,23 +1,27 @@
 
-; ------- definitions
+; -----------------------------------
+; -- RAM addresses
+stackp          equ h'6000
+res_buf         equ h'5000
+sys_var         equ h'5C00
+rslsys_addr     equ h'4000
 
+; -----------------------------------
 ; -- ports
 extp            equ 0xAF
 pf7             equ 0xF7
 
-    
 ; -- F7 port regs
 shadow          equ 0xEF
 nvaddr          equ 0xDF
 nvdata          equ 0xBF
 
-
 ; F7 parameters
 shadow_on       equ 0x80
 shadow_off      equ 0x00
 
-
-; -- TS-config port regs
+; -----------------------------------
+; -- TS-config regs
 xstatus         equ 0x00
 dstatus         equ 0x27
 
@@ -59,10 +63,9 @@ dmactr          equ 0x27
 dmanum          equ 0x28
 fddvirt         equ 0x29
 
-
+; -----------------------------------
 ; TS parameters
 fm_en           equ 0x10
-
 
 ; video modes
 rres_256x192    equ 0x00
@@ -74,7 +77,6 @@ mode_16c        equ 1
 mode_256c       equ 2
 mode_text       equ 3
 mode_nogfx      equ 0x20
-
 
 ; DMA modes
 dma_wnr         equ 0x80
@@ -88,44 +90,25 @@ dma_dev_ide     equ 0x03
 dma_dev_crm     equ 0x04
 dma_dev_sfl     equ 0x05
 
-    
+; -----------------------------------
 ; -- RAM windows
 win0            equ 0x0000
 win1            equ 0x4000
 win2            equ 0x8000
 win3            equ 0xC000
 
-; -- Restarts
-DWT             equ 8
-TSF             equ 16
-BAPI            equ 24
-
-; -- ROM addresses
-TSFAT           equ h'2000
-
-; -- RAM addresses
-sys_var         equ h'5C00
-rslsys_addr     equ h'4000
-
-pal_addr        equ h'6000      ; \ 
-fat_bufs        equ h'4000      ; | 
-res_buf         equ h'5000      ; |
-nv_buf          equ h'5D00      ; | LSB should be 0 !!
-vars            equ h'5B00      ; /
-
-stck            equ h'6000      ; stack pointer
-nv_1st          equ h'B0        ; first NVRAM cell
-
+; -----------------------------------
+; -- h/w constants
+pal_seg         equ h'00        ; memory segment used for CRAM addressing
 
 ; -- video config
 txpage          equ h'F6
 pal_sel         equ h'F
 
-
 ; -- pages config
 vrompage        equ h'F8
 
-
+; -----------------------------------
 ; -- UI colors
 box_norm        equ h'8F
 opt_norm        equ h'89
@@ -133,7 +116,7 @@ opt_hgl         equ h'79
 sel_norm        equ h'8F
 err_norm        equ h'0A
 
-
+; -----------------------------------
 ; events
 ev_kb_help      equ h'01
 ev_kb_up        equ h'02
