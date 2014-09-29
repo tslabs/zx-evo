@@ -23,37 +23,38 @@ u8 rm(unsigned addr)
     }
 #endif
 
-	// TS-conf cache model
 	u8 window = (addr >> 14) & 3;
-    u8 rdata = *am_r(addr);
-	comp.ts.cache_miss = false;
 
 	if (bankm[window] == BANKM_RAM)		// RAM hit
 	{
+        // TS-conf cache model
 		if (conf.mem_model == MM_TSL)
 		{
-			u16 cached_address = (comp.ts.page[window] << 5) | ((addr >> 9) & 0x1F);	// {page[7:0], addr[13:9]}
+            // pentevo version for 16 bit DRAM/cache
+			u32 cached_address = (comp.ts.page[window] << 5) | ((addr >> 9) & 0x1F);	// {page[7:0], addr[13:9]}
 			u16 cache_pointer = addr & 0x1FF;	// addr[8:0]
+			comp.ts.cache_miss = !(comp.ts.cacheconf & (1 << window)) || (cpu.tscache_addr[cache_pointer] != cached_address);
 
-			if (!(comp.ts.cacheconf & (1 << window)) || (cpu.tscache_addr[cache_pointer] != cached_address))
-			// cache miss
+            if (comp.ts.cache_miss)
 			{
-				cpu.tscache_data[cache_pointer & ~1] = *am_r(addr & ~1);
+                cpu.tscache_data[cache_pointer & ~1] = *am_r(addr & ~1);
 				cpu.tscache_data[cache_pointer | 1] = *am_r(addr | 1);
-				cpu.tscache_addr[cache_pointer & ~1] = cached_address;
-				cpu.tscache_addr[cache_pointer | 1] = cached_address;
-                rdata = cpu.tscache_data[cache_pointer];
-                comp.ts.cache_miss = true;
+				cpu.tscache_addr[cache_pointer & ~1] = cpu.tscache_addr[cache_pointer | 1] = cached_address;     // set cache tags for two subsequent 8-bit addresses
 				vid.memcpucyc[cpu.t / 224]++;
 				vid.memcyc_lcmd++;
 			}
+
+            return cpu.tscache_data[cache_pointer];
 		}
 
 		else
 			vid.memcpucyc[cpu.t / 224]++;
 	}
 
-   return rdata;
+	else
+		comp.ts.cache_miss = false;
+
+   return *am_r(addr);
 }
 
 // Адрес может превышать 0xFFFF
@@ -115,9 +116,10 @@ void wm(unsigned addr, u8 val)
 	// TS-conf cache model
 	if (conf.mem_model == MM_TSL)
 	{
-		u16 cache_pointer = addr & 0x1FF;
-		cpu.tscache_addr[cache_pointer] = -1;
-		//vid.memcpucyc[cpu.t / 224]++;
+		// pentevo version for 16 bit DRAM/cache
+        u16 cache_pointer = addr & 0x1FE;
+		cpu.tscache_addr[cache_pointer] = cpu.tscache_addr[cache_pointer + 1] = -1;    // invalidate two 8-bit addresses
+		vid.memcpucyc[cpu.t / 224]++;
 	}
 
    if ((conf.mem_model == MM_ATM3) && (comp.pBF & 4) /*&& ((addr & 0xF800) == 0)*/ ) // Разрешена загрузка шрифта для ATM3 // lvd: any addr is possible in ZXEVO

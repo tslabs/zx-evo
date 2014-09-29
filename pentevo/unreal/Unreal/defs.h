@@ -255,7 +255,7 @@ struct Z80 : public TZ80State
    void reset() { int_flags = ir_ = pc = 0; im = 0; last_branch = 0; int_pend = false; int_gate = true; }
    Z80(u32 Idx, TBankNames BankNames, TStep Step, TDelta Delta,
        TSetLastT SetLastT, u8 *membits, const TMemIf *FastMemIf, const TMemIf *DbgMemIf) :
-       Idx(Idx), 
+       Idx(Idx),
        BankNames(BankNames),
        Step(Step), Delta(Delta), SetLastT(SetLastT), membits(membits),
        FastMemIf(FastMemIf), DbgMemIf(DbgMemIf)
@@ -283,25 +283,25 @@ struct Z80 : public TZ80State
    void SetFastMemIf() { MemIf = FastMemIf; }
    void SetDbgMemIf() { MemIf = DbgMemIf; }
 
-   u8 DirectRm(unsigned addr) const { return *DirectMem(addr); } // direct read memory in debuger
-   void DirectWm(unsigned addr, u8 val) 
-   { // direct write memory in debuger
-     *DirectMem(addr) = val;
-     u16 cache_pointer = addr & 0x1FE;
-     tscache_addr[cache_pointer] = tscache_addr[cache_pointer + 1] = -1;	// write invalidates 16 bit
-   }
+   // direct read memory in debuger
+   u8 DirectRm(unsigned addr) const { return *DirectMem(addr); }
+
+   // direct write memory in debuger
+   void DirectWm(unsigned addr, u8 val) { *DirectMem(addr) = val; }
 /*
    virtual u8 rm(unsigned addr) = 0;
    virtual void wm(unsigned addr, u8 val) = 0;
    */
    virtual u8 *DirectMem(unsigned addr) const = 0; // get direct memory pointer in debuger
 
-   virtual u8 rd(u32 addr) {
+   virtual u8 rd(u32 addr)
+   {
      tt += rate * 3;
      return MemIf->rm(addr);
    }
 
-   virtual void wd(u32 addr, u8 val) {
+   virtual void wd(u32 addr, u8 val)
+   {
       tt += rate * 3;
       MemIf->wm(addr, val);
    }
