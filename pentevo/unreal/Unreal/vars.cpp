@@ -84,8 +84,14 @@ void TMainZ80::out(unsigned port, u8 val) { ::out(port, val); }
 
 u8 TMainZ80::IntVec()
 {
+  
+  tt += rate * 3; // pass 3 tacts before read INT vector
+
     if (conf.mem_model == MM_TSL)
     {
+      // check status of frame INT
+      TSFrameINT(comp.ts.vdos || comp.ts.vdos_m1);
+
       if (comp.ts.intctrl.frame_pend)
         return comp.ts.im2vect[INT_FRAME];
 
