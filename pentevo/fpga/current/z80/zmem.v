@@ -69,35 +69,37 @@ module zmem(
 	output wire [2:0] tst
 );
 
-	// assign tst = {ramwr_s, cpu_req, intt};
-	assign tst = {1'b0, cpu_stall, 1'b0};
-	// assign tst = ttt;
-	// reg [2:0] ttt;
-	// always@*
-		// if (cpu_req)
-			// ttt = 4;
-		// else
-			// ttt = 0;
-
+// controls
+    wire rom128   = memconf[0];
+    wire w0_we    = memconf[1];
+    wire w0_map_n = memconf[2];
+    wire w0_ram   = memconf[3];
 
 // pager
     wire [1:0] win = za[15:14];
     wire win0 = ~|win;
-    wire rw_en = !win0 || memconf[1] || vdos;
+    wire ramwr_en = !win0 || w0_we || vdos;
+    wire rom_n_ram = win0 && !w0_ram && !vdos;
     wire [7:0] page = xtpage[win];
 
-	assign rompg = xtpage[0][4:0];
-    assign csrom = win0 && !memconf[3] && !vdos;
-
     wire [7:0] xtpage[0:3];
-    assign xtpage[0] = vdos ? 8'hFF : {xt_page[7:2], memconf[2] ? xt_page[1:0] : {~dos, memconf[0]}};
+    assign xtpage[0] = vdos ? 8'hFF : {xt_page[7:2], w0_map_n ? xt_page[1:0] : {~dos, rom128}};
     assign xtpage[1] = xt_page[15:8];
     assign xtpage[2] = xt_page[23:16];
     assign xtpage[3] = xt_page[31:24];
 
+// ROM chip
+    assign csrom = rom_n_ram;
+	assign romoe_n = !memrd;
+	assign romwe_n = !(memwr && w0_we);
+	assign rompg = xtpage[0][4:0];
+
+// RAM
+	assign zd_ena = !rom_n_ram && memrd;
+	wire ramreq = !rom_n_ram && ((memrd && !cache_hit_en) || (memwr && ramwr_en));
 
 // DOS signal control
-	assign dos_on = win0 && opfetch_s && (za[13:8]==6'h3D) && memconf[0] && !memconf[2];
+	assign dos_on = win0 && opfetch_s && (za[13:8]==6'h3D) && rom128 && !w0_map_n;
 	assign dos_off = !win0 && opfetch_s && !vdos;
 
 	assign dos = (dos_on || dos_off) ^^ dos_r;		// to make dos appear 1 clock earlier than dos_r
@@ -111,7 +113,6 @@ module zmem(
 			dos_r <= 1'b0;
 	else if (dos_on)
 			dos_r <= 1'b1;
-
 
 // VDOS signal control
     // vdos turn on/off is delayed till next opfetch due to INIR that writes right after iord cycle
@@ -129,7 +130,6 @@ module zmem(
 	else if (opfetch_s)
 		vdos_r <= pre_vdos;
 
-
 // address, data in and data out
 	assign cpu_wrbsel = za[0];
 	assign cpu_addr[20:0] = {page, za[13:1]};
@@ -137,34 +137,18 @@ module zmem(
 	assign zd_out = ~cpu_wrbsel ? mem_d[7:0] : mem_d[15:8];
 
 // Z80 controls
-	assign romoe_n = !memrd;
-	assign romwe_n = !(memwr && rw_en);
-
-	wire ramreq = mreq && !csrom;
-	wire ramrd = memrd && !csrom;
-	wire ramwr = memwr && !csrom && rw_en;
-	wire ramwr_s = memwr_s && !csrom && rw_en;
-	assign zd_ena = memrd && !csrom;
-	
 	assign cpu_req = turbo14 ? cpureq_14 : cpureq_357;
 	assign cpu_stall = turbo14 ? stall14 : stall357;
-
 	wire turbo14 = turbo[1];
-		
+
 // 7/3.5MHz support
-	wire cpureq_357 = (ramrd_zs && !cache_hit_en) || ramwr_zs;
+	wire cpureq_357 = ramreq && !ramreq_r;
 	wire stall357 = cpureq_357 && !cpu_next;
 
-	wire ramwr_zs = ramwr && !ramwr_zr;
-	wire ramrd_zs = ramrd && !ramrd_zr;
-
-	reg ramrd_zr, ramwr_zr;
+	reg ramreq_r;
 	always @(posedge clk)
 		if (c3 && !cpu_stall)
-		begin
-			ramrd_zr <= ramrd;
-			ramwr_zr <= ramwr;
-		end
+			ramreq_r <= ramreq;
 
 // 14MHz support
 	// wait tables:
@@ -189,16 +173,16 @@ module zmem(
 
 	// memrd, opfetch - wait till c3 && cpu_next,
 	// memwr - wait till cpu_next
-	
+
 	wire cpureq_14 = dram_beg || pending_cpu_req;
 	wire stall14 = stall14_ini || stall14_cyc || stall14_fin;
-	
-	wire dram_beg = (!cache_hit_en || memwr) && zneg && ramreq_s_n;
-	
-	wire ramreq_s_n = ramreq_r_n && ramreq;
-	reg ramreq_r_n;
-	always @(posedge clk) if (zneg)
-		ramreq_r_n <= !mreq;
+
+	wire dram_beg = ramreq && !pre_ramreq_r && zneg;
+
+	reg pre_ramreq_r;
+	always @(posedge clk)
+        if (zneg)
+            pre_ramreq_r <= ramreq;
 
 	reg pending_cpu_req;
 	always @(posedge clk)
@@ -235,7 +219,7 @@ module zmem(
 	// wire cache_hit = (ch_addr[7:2] != 6'b011100) && (cpu_hi_addr == cache_a) && cache_v;	// debug for BM
 	wire cache_hit = (cpu_hi_addr == cache_a) && cache_v;	// asynchronous signal meaning that address requested by CPU is cached and valid
 	wire cache_hit_en = cache_hit && cache_en[win];
-	wire cache_inv = ramwr_s && cache_hit;		// cache invalidation should be only performed if write happens to cached address
+	wire cache_inv = cache_hit && !rom_n_ram && memwr_s && ramwr_en;    // cache invalidation should be only performed if write happens to cached address
 
 	wire [12:0] cpu_hi_addr = {page[7:0], za[13:9]};
 	wire [12:0] cache_a;
