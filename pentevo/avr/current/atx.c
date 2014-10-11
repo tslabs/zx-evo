@@ -58,7 +58,7 @@ void atx_power_task(void)
 
 	if ( atx_counter > 680 )
 	{
-		if ( !(SOFTRES_PIN & (1<<SOFTRES)) || (kb_status & KB_F12_MASK) )
+		if ( !(SOFTRES_PIN & (1<<SOFTRES)) || (kb_ctrl_status[0] & KB_F12_MASK) )
 		{
 			//atx power off or F12 button pressed (~2 sec)
 

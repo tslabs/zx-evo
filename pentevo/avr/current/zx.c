@@ -24,7 +24,9 @@ volatile UBYTE zx_mouse_x;
 volatile UBYTE zx_mouse_y;
 
 // PS/2 keyboard control keys status (for additional functons)
-volatile UBYTE kb_status;
+volatile UBYTE kb_ctrl_status[2];
+// PS/2 keyboard control keys mapped to zx keyboard (mapped keys not used in additional functions)
+volatile UBYTE kb_ctrl_mapped[2];
 
 #define ZX_FIFO_SIZE 256 /* do not change this since it must be exactly byte-wise */
 
@@ -87,6 +89,18 @@ void zx_task(UBYTE operation) // zx task, tracks when there is need to send new 
 
 		zx_clr_kb();
 
+		//check control keys whoes mapped to zx keyboard
+		//(mapped keys not used in additional functions)
+		kb_ctrl_mapped[0] = 0;
+		kb_ctrl_mapped[1] = 0;
+		if( kbmap_get(0x14,0).tw != (UWORD)NO_KEY+(((UWORD)NO_KEY)<<8) ) kb_ctrl_mapped[0] |= KB_LCTRL_MASK;
+		if( kbmap_get(0x14,1).tw != (UWORD)NO_KEY+(((UWORD)NO_KEY)<<8) ) kb_ctrl_mapped[0] |= KB_RCTRL_MASK;
+		if(     kbmap_get(0x11,0).tw != (UWORD)NO_KEY+(((UWORD)NO_KEY)<<8) ) kb_ctrl_mapped[0] |= KB_LALT_MASK;
+		if( kbmap_get(0x11,1).tw != (UWORD)NO_KEY+(((UWORD)NO_KEY)<<8) ) kb_ctrl_mapped[0] |= KB_RALT_MASK;
+		if( kbmap_get(0x1F,1).tw != (UWORD)NO_KEY+(((UWORD)NO_KEY)<<8) ) kb_ctrl_mapped[1] |= KB_LWIN_MASK_1;
+		if( kbmap_get(0x27,1).tw != (UWORD)NO_KEY+(((UWORD)NO_KEY)<<8) ) kb_ctrl_mapped[1] |= KB_RWIN_MASK_1;
+		if( kbmap_get(0x2F,1).tw != (UWORD)NO_KEY+(((UWORD)NO_KEY)<<8) ) kb_ctrl_mapped[1] |= KB_MENU_MASK_1;
+	   /*
 		//detect if CTRL-ALT-DEL keys mapped
 //		if ( ((kbmap[0x14*2] == NO_KEY) && (kbmap[0x14*2+1] == NO_KEY)) ||
 //			 ((kbmap[0x11*2] == NO_KEY) && (kbmap[0x11*2+1] == NO_KEY)) ||
@@ -96,13 +110,14 @@ void zx_task(UBYTE operation) // zx task, tracks when there is need to send new 
 			(kbmap_get(0x11,1).tw == (UWORD)NO_KEY+(((UWORD)NO_KEY)<<8)) )
 		{
 			//not mapped
-			kb_status &= ~KB_CTRL_ALT_DEL_MAPPED_MASK;
+			kb_ctrl_status[0] &= ~KB_CTRL_ALT_DEL_MAPPED_MASK;
 		}
 		else
 		{
 			//mapped
-			kb_status |= KB_CTRL_ALT_DEL_MAPPED_MASK;
+			kb_ctrl_status[0] |= KB_CTRL_ALT_DEL_MAPPED_MASK;
 		}
+		*/
 	}
 	else /*if(operation==ZX_TASK_WORK)*/
 
@@ -298,13 +313,14 @@ void zx_clr_kb(void)
 		zx_counters[i] = 0;
 	}
 
-	kb_status = 0;
+	kb_ctrl_status[0] = 0;
+	kb_ctrl_status[1] = 0;
 }
 
 void to_zx(UBYTE scancode, UBYTE was_E0, UBYTE was_release)
 {
 	KBMAP_VALUE t;
-    static UBYTE beep_out_mode = 0;
+	static UBYTE beep_out_mode = 0;
 
 	//F7 code (0x83) converted to 0x7F
 	if( !was_E0 && (scancode == 0x83) ) scancode = 0x7F;
@@ -317,29 +333,34 @@ void to_zx(UBYTE scancode, UBYTE was_E0, UBYTE was_release)
 		//additional functionality from ps/2 keyboard
 		switch( scancode )
 		{
+			//Right Alt (Alt Gr)
+			case  0x11:
+				if ( !was_release ) kb_ctrl_status[0] |= KB_RALT_MASK;
+				else kb_ctrl_status[0] &= ~KB_RALT_MASK;
+			break;
+
 			//Right Ctrl
 			case  0x14:
-				if ( !was_release ) kb_status |= KB_CTRL_MASK;
-				else kb_status &= ~KB_CTRL_MASK;
+				if ( !was_release ) kb_ctrl_status[0] |= KB_RCTRL_MASK;
+				else kb_ctrl_status[0] &= ~KB_RCTRL_MASK;
 			break;
 
-			//Right Alt
-			case  0x11:
-				if ( !was_release ) kb_status |= KB_ALT_MASK;
-				else kb_status &= ~KB_ALT_MASK;
+			//Left Win
+			case  0x1F:
+				if (!was_release) kb_ctrl_status[1] |= KB_LWIN_MASK_1;
+				else kb_ctrl_status[1] &= ~KB_LWIN_MASK_1;
 			break;
 
-			//Win
-			case  0x1F:     // Left
-			case  0x27:     // Right
-				if (!was_release) kb_status |= KB_WIN_MASK;
-				else kb_status &= ~KB_WIN_MASK;
+			// Right Win
+			case  0x27:
+				if (!was_release) kb_ctrl_status[1] |= KB_RWIN_MASK_1;
+				else kb_ctrl_status[1] &= ~KB_RWIN_MASK_1;
 			break;
 
 			//Menu
 			case  0x2F:
-				if (!was_release) kb_status |= KB_MENU_MASK;
-				else kb_status &= ~KB_MENU_MASK;
+				if (!was_release) kb_ctrl_status[1] |= KB_MENU_MASK_1;
+				else kb_ctrl_status[1] &= ~KB_MENU_MASK_1;
 			break;
 
 			//Print Screen
@@ -361,8 +382,9 @@ void to_zx(UBYTE scancode, UBYTE was_E0, UBYTE was_release)
 			case 0x71:
 				//Ctrl-Alt-Del pressed
 				if ( ( !was_release ) &&
-					 ( !(kb_status & KB_CTRL_ALT_DEL_MAPPED_MASK) ) &&
-					 ( (kb_status & (KB_CTRL_MASK|KB_ALT_MASK)) == (KB_CTRL_MASK|KB_ALT_MASK) ) )
+					 /*( !(kb_status & KB_CTRL_ALT_DEL_MAPPED_MASK) ) &&*/
+					 ( (kb_ctrl_status[0]&(~kb_ctrl_mapped[0])&(KB_LCTRL_MASK|KB_RCTRL_MASK)) !=0 ) &&
+					 ( (kb_ctrl_status[0]&(~kb_ctrl_mapped[0])&(KB_LALT_MASK|KB_RALT_MASK)) !=0 ) )
 				{
 					//hard reset
 					flags_register |= FLAG_HARD_RESET;
@@ -385,74 +407,72 @@ void to_zx(UBYTE scancode, UBYTE was_E0, UBYTE was_release)
 			break;
 
 			// F1
-            case 0x05:
-                // Floppy swap
-				if (!was_release && (kb_status & KB_MENU_MASK))
-                    zx_mode_switcher(MODE_FSWAP);
-            break;
+			case 0x05:
+				// Floppy swap
+				if (!was_release && (kb_ctrl_status[1] & ~kb_ctrl_mapped[1] & KB_MENU_MASK_1))
+					zx_mode_switcher(MODE_FSWAP);
+				break;
 
 			// F2
-            case 0x06:
-                // Tape In sound
-                if (!was_release && (kb_status & KB_MENU_MASK))
-                {
-                    beep_out_mode = (beep_out_mode < 2) ? (beep_out_mode + 1) : 0;
-                    modes_register &= ~(MODE_TSOUND | MODE_TAPEOUT);
+			case 0x06:
+				// Tape In sound
+				if (!was_release && (kb_ctrl_status[1] & ~kb_ctrl_mapped[1] & KB_MENU_MASK_1))
+				{
+					beep_out_mode = (beep_out_mode < 2) ? (beep_out_mode + 1) : 0;
+					modes_register &= ~(MODE_TSOUND | MODE_TAPEOUT);
 
-                    if (beep_out_mode & 1)
-                        modes_register |= MODE_TAPEOUT;
-
-                    if (beep_out_mode & 2)
-                        modes_register |= MODE_TSOUND;
-
-                    zx_mode_switcher(0);
-                }
-            break;
+					if (beep_out_mode & 1)
+						modes_register |= MODE_TAPEOUT;
+					if (beep_out_mode & 2)
+						modes_register |= MODE_TSOUND;
+					zx_mode_switcher(0);
+				}
+				break;
 
 			// F3
-            case 0x04:
-                // 50/60 Hz
-				if (!was_release && (kb_status & KB_MENU_MASK))
-                    zx_mode_switcher(MODE_60HZ);
-            break;
+			case 0x04:
+				// 50/60 Hz
+				if (!was_release && (kb_ctrl_status[1] & ~kb_ctrl_mapped[1] & KB_MENU_MASK_1))
+					zx_mode_switcher(MODE_60HZ);
+				break;
 
 			// F4
-            case 0x0C:
-                // Sync Polarity
-				if (!was_release && (kb_status & KB_MENU_MASK))
-                    zx_mode_switcher(MODE_POL);
-            break;
+			case 0x0C:
+				// Sync Polarity
+				if (!was_release && (kb_ctrl_status[1] & ~kb_ctrl_mapped[1] & KB_MENU_MASK_1))
+					zx_mode_switcher(MODE_POL);
+				break;
 
 			//Left Shift
 			case  0x12:
-				if ( !was_release ) kb_status |= KB_LSHIFT_MASK;
-				else kb_status &= ~KB_LSHIFT_MASK;
+				if ( !was_release ) kb_ctrl_status[0] |= KB_LSHIFT_MASK;
+				else kb_ctrl_status[0] &= ~KB_LSHIFT_MASK;
 			break;
 
 			//Right Shift
 			case  0x59:
-				if ( !was_release ) kb_status |= KB_RSHIFT_MASK;
-				else kb_status &= ~KB_RSHIFT_MASK;
-            break;
+				if ( !was_release ) kb_ctrl_status[0] |= KB_RSHIFT_MASK;
+				else kb_ctrl_status[0] &= ~KB_RSHIFT_MASK;
+				break;
 
 			//Left Ctrl
 			case  0x14:
-				if ( !was_release ) kb_status |= KB_CTRL_MASK;
-				else kb_status &= ~KB_CTRL_MASK;
-			break;
+				if ( !was_release ) kb_ctrl_status[0] |= KB_LCTRL_MASK;
+				else kb_ctrl_status[0] &= ~KB_LCTRL_MASK;
+				break;
 
 			//Left Alt
 			case  0x11:
-				if ( !was_release ) kb_status |= KB_ALT_MASK;
-				else kb_status &= ~KB_ALT_MASK;
+				if ( !was_release ) kb_ctrl_status[0] |= KB_LALT_MASK;
+				else kb_ctrl_status[0] &= ~KB_LALT_MASK;
 			break;
 
 			//F11
 			case  0x78:
 				// easter egg
 				if ( ( !was_release ) &&
-					 ( !(kb_status & KB_CTRL_ALT_DEL_MAPPED_MASK) ) &&
-					 ( (kb_status & (KB_CTRL_MASK|KB_ALT_MASK)) == (KB_CTRL_MASK|KB_ALT_MASK) ) )
+					 ( !(kb_ctrl_status[0] & KB_CTRL_ALT_DEL_MAPPED_MASK) ) &&
+					 ( (kb_ctrl_status[0] & (KB_LCTRL_MASK|KB_RCTRL_MASK)) && (kb_ctrl_status[0] & (KB_LALT_MASK|KB_RALT_MASK)) ) )
 				{
 					egg = 1;
 					//hard reset
@@ -465,8 +485,8 @@ void to_zx(UBYTE scancode, UBYTE was_E0, UBYTE was_release)
 			case  0x07:
 				// switch config
 				if ( ( !was_release ) &&
-					 ( !(kb_status & KB_CTRL_ALT_DEL_MAPPED_MASK) ) &&
-					 ( (kb_status & (KB_CTRL_MASK|KB_ALT_MASK)) == (KB_CTRL_MASK|KB_ALT_MASK) ) )
+					 ( !(kb_ctrl_status[0] & KB_CTRL_ALT_DEL_MAPPED_MASK) ) &&
+					 ( (kb_ctrl_status[0] & (KB_LCTRL_MASK|KB_RCTRL_MASK)) && (kb_ctrl_status[0] & (KB_LALT_MASK|KB_RALT_MASK)) ) )
 				{
 					eeprom_write_byte( (UBYTE*)0x0fff, !eeprom_read_byte((const UBYTE*)0x0fff) );
 					//hard reset
@@ -474,8 +494,8 @@ void to_zx(UBYTE scancode, UBYTE was_E0, UBYTE was_release)
 					t.tb.b1=NO_KEY;
 					break;
 				}
-				else if ( !was_release ) kb_status |= KB_F12_MASK;
-				else kb_status &= ~KB_F12_MASK;
+				else if ( !was_release ) kb_ctrl_status[0] |= KB_F12_MASK;
+				else kb_ctrl_status[0] &= ~KB_F12_MASK;
 			break;
 
 			//keypad '+','-','*' - set ps2mouse resolution

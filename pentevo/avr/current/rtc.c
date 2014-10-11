@@ -15,7 +15,7 @@
 //if want Log than comment next string
 #undef LOGENABLE
 
-volatile UBYTE gluk_regs[14];
+volatile UBYTE gluk_regs[15];
 
 //stop transmit
 static void tw_send_stop(void)
@@ -356,7 +356,31 @@ UBYTE gluk_get_reg(UBYTE index)
 
 			//3 bit - SD card detect
 			//2 bit - SD WRP detect
-			tmp = tmp | (((~SD_PIN)&((1<<SDWRP)|(1<<SDDET)))>>2);
+			tmp |= (((~SD_PIN)&((1<<SDWRP)|(1<<SDDET)))>>2);
+
+			//0 - bit numlock led status on read
+			if ( (PS2KEYBOARD_LED_NUMLOCK&modes_register)!=0 )
+			{
+				tmp |= GLUK_C_NUM_LED_FLAG;
+			}
+			else
+			{
+				tmp &= ~GLUK_C_NUM_LED_FLAG;
+			}
+		}
+
+		if ( index == GLUK_REG_D )
+		{
+			//return keyboard statuses
+			tmp &= ~(KB_LCTRL_MASK|KB_RCTRL_MASK|KB_LALT_MASK|KB_RALT_MASK|KB_LSHIFT_MASK|KB_RSHIFT_MASK|KB_F12_MASK);
+			tmp |= (kb_ctrl_status[0]&(KB_LCTRL_MASK|KB_RCTRL_MASK|KB_LALT_MASK|KB_RALT_MASK|KB_LSHIFT_MASK|KB_RSHIFT_MASK|KB_F12_MASK));
+		}
+
+		if ( index == GLUK_REG_E )
+		{
+			//return keyboard statuses
+			tmp &= ~(KB_LWIN_MASK_1|KB_RWIN_MASK_1|KB_MENU_MASK_1);
+			tmp |= (kb_ctrl_status[1]&(KB_LWIN_MASK_1|KB_RWIN_MASK_1|KB_MENU_MASK_1));
 		}
 	}
 	else
