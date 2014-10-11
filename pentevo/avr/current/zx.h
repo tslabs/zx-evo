@@ -80,24 +80,33 @@ extern UBYTE zx_realkbd[11];
 	UBYTE reset_type;
 };*/
 
-/** PS/2 keyboard CTRL key status. */
-#define KB_CTRL_MASK   0x01
-/** PS/2 keyboard ALT key status. */
-#define KB_ALT_MASK    0x02
+/** PS/2 keyboard LCTRL key status. */
+#define KB_LCTRL_MASK   0x01
+/** PS/2 keyboard LCTRL key status. */
+#define KB_RCTRL_MASK   0x02
+/** PS/2 keyboard LALT key status. */
+#define KB_LALT_MASK    0x04
+/** PS/2 keyboard LALT key status. */
+#define KB_RALT_MASK    0x08
 /** PS/2 keyboard LEFT SHIFT key status. */
-#define KB_LSHIFT_MASK 0x04
+#define KB_LSHIFT_MASK  0x10
 /** PS/2 keyboard RIGHT SHIFT key status. */
-#define KB_RSHIFT_MASK 0x08
+#define KB_RSHIFT_MASK  0x20
 /** PS/2 keyboard F12 key status. */
-#define KB_F12_MASK    0x10
-/** PS/2 keyboard WIN key status. */
-#define KB_WIN_MASK    0x20
-/** PS/2 keyboard MENU key status. */
-#define KB_MENU_MASK   0x40
+#define KB_F12_MASK     0x40
 /** PS/2 keyboard CTRL,ALT,DEL mapped status (set = mapped all keys). */
 #define KB_CTRL_ALT_DEL_MAPPED_MASK 0x80
+/** The _1 suffix in these defines indicate that they are in kb_ctrl_status[1] */
+/** PS/2 keyboard WIN key status. */
+#define KB_LWIN_MASK_1  0x01
+/** PS/2 keyboard WIN key status. */
+#define KB_RWIN_MASK_1  0x02
+/** PS/2 keyboard MENU key status. */
+#define KB_MENU_MASK_1  0x04
 /** PS/2 keyboard control keys status (for additional functons). */
-extern volatile UBYTE kb_status;
+extern volatile UBYTE kb_ctrl_status[2];
+/** PS/2 keyboard control keys mapped to zx keyboard (mapped keys not used in additional functions). */
+extern volatile UBYTE kb_ctrl_mapped[2];
 
 
 #define ZX_TASK_INIT 0
