@@ -198,7 +198,7 @@ void TSdCard::Wr(u8 Val)
 //                printf(__FUNCTION__" ST_RD_DATA, Addr = 0x%X, write to disk\n", Arg);
                 fseek(Image, Arg, SEEK_SET);
                 fwrite(Buf, DataBlockLen, 1, Image);
-                NextState = ST_WR_DATA_RESP;
+                NextState = ST_RD_CRC16_1;
             }
         }
         break;
@@ -215,7 +215,7 @@ void TSdCard::Wr(u8 Val)
                 fseek(Image, WrPos, SEEK_SET);
                 fwrite(Buf, DataBlockLen, 1, Image);
                 WrPos += DataBlockLen;
-                NextState = ST_RD_DATA_SIG_MUL;
+                NextState = ST_RD_CRC16_1;
             }
         }
         break;
@@ -346,9 +346,11 @@ u8 TSdCard::Rd()
         {
         case ST_R1:
             CurrState = ST_DELAY_S;
+			DataDelay = 32;		// should be carried out to .ini
             return 0;
         case ST_DELAY_S:
-            CurrState = ST_STARTBLOCK;
+            if (!DataDelay--)
+				CurrState = ST_STARTBLOCK;
             return 0xFF;
         case ST_STARTBLOCK:
             CurrState = ST_WR_DATA;
@@ -380,9 +382,11 @@ u8 TSdCard::Rd()
         {
         case ST_R1:
             CurrState = ST_DELAY_S;
+			DataDelay = 32;		// should be carried out to .ini
             return 0;
         case ST_DELAY_S:
-            CurrState = ST_STARTBLOCK;
+            if (!DataDelay--)
+                CurrState = ST_STARTBLOCK;
             return 0xFF;
         case ST_STARTBLOCK:
             CurrState = ST_IDLE;
@@ -498,7 +502,7 @@ u8 TSdCard::Rd()
         {
         case ST_R1:
             CurrState = ST_RD_DATA_SIG;
-            return 0xFE;
+            return 0x00;
 
         case ST_WR_DATA_RESP:
         {
@@ -561,9 +565,8 @@ TSdCard::TState TSdCard::GetRespondType()
             return ST_R7;
 
         case CMD_WRITE_BLOCK:
-            return ST_RD_DATA_SIG;
         case CMD_WRITE_MULTIPLE_BLOCK:
-            return ST_RD_DATA_SIG_MUL;
+            return ST_R1;
         }
     }
     else
