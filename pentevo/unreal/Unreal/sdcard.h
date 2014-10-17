@@ -78,6 +78,7 @@ class TSdCard
     TCmd Cmd;
     u32 DataBlockLen;
     u32 DataCnt;
+	u32 DataDelay;
 
     u8 Buf[4096];
 
