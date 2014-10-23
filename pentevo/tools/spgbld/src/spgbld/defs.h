@@ -107,6 +107,7 @@ struct HDR {
 
 struct BLK {
 	char fname[128];
+	int offset;
 	int size;
 	u8 data[16384];
 };

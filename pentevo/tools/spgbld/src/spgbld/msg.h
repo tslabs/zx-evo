@@ -22,7 +22,7 @@
 #define RC_0BLK		7
 #define ER_0BLK		Zero blocks defined!
 #define RC_BIG		8
-#define ER_BIG		Block is LARGER than 16384 bytes!
+#define ER_BIG		Block is too BIG!
 #define RC_ZERO		9
 #define ER_ZERO		Block is ZERO size!
 #define RC_MHMT		10

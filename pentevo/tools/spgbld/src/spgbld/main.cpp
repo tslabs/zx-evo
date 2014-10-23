@@ -28,7 +28,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		case M_UNP:
 		{
 			load_spg(conf.in_fname);
-			// save_ini(conf.out_fname);
+			save_ini(conf.out_fname);
 			save_files();
 			error(RC_OK);
 		}
