@@ -95,7 +95,7 @@ void load_ini(_TCHAR *name)
 	char v2[256];
 	int a = 0;
 	int b = 0;
-	conf.n_blocks = 0;
+    int nblk = 0;
 
 	FILE* f = _wfopen(name, L"rt");
 	if (!f)
@@ -197,25 +197,56 @@ void load_ini(_TCHAR *name)
 		// block
 		if (!strcmp(t, STR(F_BLK)))
 		{
-			sscanf(v, "%[^ ,\t]%*[ ,\t]%[^ ,\t]%*[ ,\t]%s", v1, v2, v);
+			int size;
+            int offset = 0;
+
+            sscanf(v, "%[^ ,\t]%*[ ,\t]%[^ ,\t]%*[ ,\t]%s", v1, v2, v);
 			a = num(v1);
 			b = num(v2);
 
 			if (a & 0x1FF)
 				error(RC_ALGN);
 
-			if ((a < 49152) || (a > 65024))
+			if ((a < 0xC000) || (a > 0xFE00))
 				error(RC_ADDR);
 
-			printf("Block:\t\tStart: #%04X  Page: #%02X  File: %s\n", a, b, v);
+			a -= 0xC000;
+            
+            printf("Block:\t\tStart: #%04X  Page: #%02X  File: %s\n", a, b, v);
 
-			hdr.blk[conf.n_blocks].addr = (a - 49152) >> 9;
-			hdr.blk[conf.n_blocks].page = b;
-			strncpy(blk[conf.n_blocks].fname, v, sizeof(blk[conf.n_blocks].fname));
-			conf.n_blocks++;
+            struct stat st;
+            stat(v, &st);
+            size = st.st_size;
 
-			if (conf.n_blocks == 256)
-				break;
+            if (size < 0)
+            {
+                printf("%s: ", v);
+                error(RC_FILE);
+            }
+
+            if (size == 0)
+            {
+                printf("%s: ", v);
+                error(RC_ZERO);
+            }
+
+			while (size)
+            {
+                int curr_size = min(size, 0x4000 - a);
+                strncpy(blk[nblk].fname, v, sizeof(blk[nblk].fname));
+                hdr.blk[nblk].addr = a >> 9;
+                hdr.blk[nblk].page = b++;
+                blk[nblk].offset = offset;
+                blk[nblk].size = curr_size;
+
+                a = 0;
+                offset += curr_size;
+                size -= curr_size;
+
+                if (++nblk == 256)
+                    goto end_of_ini;
+            }
+
 			continue;
 		}
 
@@ -224,10 +255,12 @@ void load_ini(_TCHAR *name)
 		error(RC_UNK);
 	}
 
-	if (!conf.n_blocks)
+end_of_ini:
+	if (!nblk)
 		error(RC_0BLK);
 
-	hdr.num_blk = conf.n_blocks;
+	conf.n_blocks = nblk;
+    hdr.num_blk = conf.n_blocks;
 	hdr.blk[conf.n_blocks - 1].last = 1;
 
 	fclose(f);
@@ -335,34 +368,11 @@ void save_spg(_TCHAR* name)
 
 void load_files()
 {
-	struct stat st;
-
-	for (int i=0; i<conf.n_blocks; i++)
+	for (int i = 0; i < conf.n_blocks; i++)
 	{
-		st.st_size = -1;
-		stat(blk[i].fname, &st);
-
-		if (st.st_size < 0)
-		{
-			printf("%s: ", blk[i].fname);
-			error(RC_FILE);
-		}
-
-		if (st.st_size > 16384)
-		{
-			printf("%s: ", blk[i].fname);
-			error(RC_BIG);
-		}
-
-		if (st.st_size == 0)
-		{
-			printf("%s: ", blk[i].fname);
-			error(RC_ZERO);
-		}
-
 		FILE* f = fopen(blk[i].fname, "rb");
-		blk[i].size = st.st_size;
 		hdr.blk[i].size = sz(blk[i].size);
+        fseek(f, blk[i].offset, SEEK_SET);
 		fread(blk[i].data, 1, blk[i].size, f);
 		fclose(f);
 	}
