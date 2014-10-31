@@ -2,11 +2,8 @@
 # Makefile for the project pentevo
 ###############################################################################
 
+
 ## General Flags
-PROJECT = core
-MCU = atmega128
-TARGET = core.elf
-CC = avr-gcc
 ifeq ($(OS),Windows_NT)
 EXE = ".exe"
 DEVNULL = "nul"
@@ -14,27 +11,32 @@ else
 EXE = ""
 DEVNULL = "/dev/null"
 endif
+
+PROJECT = core
+TARGET = $(PROJECT).elf
+MCU = atmega128
+CC = avr-gcc
+
 MHMT = "../../../tools/mhmt/mhmt$(EXE)"
 MKFW = "../../../tools/make_fw/make_fw$(EXE)"
 
-## Options common to compile, link and assembly rules
-COMMON = -mmcu=$(MCU)
+## Programmator Settings
+TARGET_AD = m128
+# PROGRAMMER = usbtiny
+PROGRAMMER = usbasp
+HFUSE = 0xC1
+LFUSE = 0xDF
+LOCK = 0x3F
+
+AP = ../../../tools/avrdude/
+AD = "$(AP)avrdude$(EXE)" -q -q -u -C "$(AP)avrdude.conf" -c $(PROGRAMMER) -p $(TARGET_AD)
 
 ## Compile options common for all C compilation units.
-CFLAGS = $(COMMON)
-CFLAGS += -Wall -Wextra -gdwarf-2 -std=gnu99 -Os -DF_CPU=11059200UL
+CFLAGS = -mmcu=$(MCU)
+CFLAGS += -Os -flto -Wall -Wextra -gdwarf-2 -std=gnu99
 CFLAGS += -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums -fdata-sections -ffunction-sections
-CFLAGS += -MD -MP -MT $(*F).o -MF dep/$(@F).d
-
-## Assembly specific flags
-ASMFLAGS = $(COMMON)
-ASMFLAGS += $(CFLAGS)
-ASMFLAGS += -x assembler-with-cpp -Wa,-gdwarf2
-
-## Linker flags
-LDFLAGS = $(COMMON)
-LDFLAGS += $(CFLAGS)
-LDFLAGS += -Wl,-Map=core.map -Wl,--gc-sections,--relax
+CFLAGS += -DF_CPU=11059200UL
+CFLAGS += -Wl,--gc-sections,--relax,-Map=$(PROJECT).map
 
 ## Intel Hex file production flags
 HEX_FLASH_FLAGS = -R .eeprom
@@ -44,79 +46,34 @@ HEX_EEPROM_FLAGS += --set-section-flags=.eeprom="alloc,load"
 HEX_EEPROM_FLAGS += --change-section-lma .eeprom=0 --no-change-warnings
 
 ## Objects that must be built in order to link
-OBJECTS = zx.o interrupts.o main.o ps2.o spi.o depacker_dirty.o rs232.o rtc.o atx.o joystick.o version.o tape.o kbmap.o spiflash.o
+SOURCES = ../main.c ../zx.c ../interrupts.c ../ps2.c ../spi.c ../depacker_dirty.c ../rs232.c ../rtc.c ../atx.c ../joystick.c ../version.c ../tape.c ../kbmap.c ../spiflash.c
+HEADERS = ../zx.h ../ps2.h ../spi.h ../depacker_dirty.h ../rs232.h ../rtc.h ../atx.h ../joystick.h ../version.h ../tape.h ../kbmap.h ../spiflash.h
 
 ## Objects explicitly added by the user
 FPGACORE = tsconf.o baseconf.o egg.o
 
 ## Build
-all: 
+all:
 	make norm
 	make vdac
 
-norm: clean norm.rbf $(TARGET) core.hex core.eep core.lss size
-	@$(MKFW) core.hex core.eep zxevo_fw.bin version.txt >$(DEVNULL)
+norm: clean quartus $(FPGACORE) compile core size
+	@$(MKFW) $(PROJECT).hex $(PROJECT).eep zxevo_fw.bin version.txt >$(DEVNULL)
 
-vdac: clean vdac.rbf $(TARGET) core.hex core.eep core.lss size
-	@$(MKFW) core.hex core.eep zxevo_fw_vdac.bin version_vdac.txt >$(DEVNULL)
-    
-## Compile
-zx.o: ../zx.c ../zx.h
-	@$(CC) $(INCLUDES) $(CFLAGS) -c  $<
+vdac: clean quartus_vdac $(FPGACORE) compile core size
+	@$(MKFW) $(PROJECT).hex $(PROJECT).eep zxevo_fw_vdac.bin version_vdac.txt >$(DEVNULL)
 
-interrupts.o: ../interrupts.c
-	@$(CC) $(INCLUDES) $(CFLAGS) -c  $<
+## Compile and link
+compile: $(SOURCES) $(HEADERS)
+	@$(CC) $(SOURCES) $(FPGACORE) $(CFLAGS) -o $(TARGET)
 
-main.o: ../main.c
-	@$(CC) $(INCLUDES) $(CFLAGS) -c  $<
+## Copy FPGA bitstreams
+quart%:
+	@cp ../../../fpga/current/$@/top.rbf tsconf.rbf
+	@cp ../../../fpga/base/$@/top.rbf baseconf.rbf
+	@cp ../../../fpga/tennis/$@/zxevo_tennis_compatible.rbf egg.rbf
 
-ps2.o: ../ps2.c ../ps2.h
-	@$(CC) $(INCLUDES) $(CFLAGS) -c  $<
-
-spi.o: ../spi.c ../spi.h
-	@$(CC) $(INCLUDES) $(CFLAGS) -c  $<
-
-depacker_dirty.o: ../depacker_dirty.c ../depacker_dirty.h
-	@$(CC) $(INCLUDES) $(CFLAGS) -c  $<
-
-rs232.o: ../rs232.c ../rs232.h
-	@$(CC) $(INCLUDES) $(CFLAGS) -c  $<
-
-rtc.o: ../rtc.c ../rtc.h
-	@$(CC) $(INCLUDES) $(CFLAGS) -c  $<
-
-atx.o: ../atx.c ../atx.h
-	@$(CC) $(INCLUDES) $(CFLAGS) -c  $<
-
-joystick.o: ../joystick.c ../joystick.h
-	@$(CC) $(INCLUDES) $(CFLAGS) -c  $<
-
-version.o: ../version.c ../version.h
-	@$(CC) $(INCLUDES) $(CFLAGS) -c  $<
-
-tape.o: ../tape.c ../tape.h
-	@$(CC) $(INCLUDES) $(CFLAGS) -c  $<
-
-kbmap.o: ../kbmap.c ../kbmap.h
-	@$(CC) $(INCLUDES) $(CFLAGS) -c  $<
-
-spiflash.o: ../spiflash.c ../spiflash.h
-	@$(CC) $(INCLUDES) $(CFLAGS) -c  $<
-
-##Link
-$(TARGET): $(OBJECTS) $(FPGACORE)
-	 @$(CC) $(LDFLAGS) $(OBJECTS) $(FPGACORE) -o $(TARGET)
-
-norm.rbf: ../../../fpga/current/quartus/top.rbf ../../../fpga/base/quartus/top.rbf
-	@cp ../../../fpga/current/quartus/top.rbf tsconf.rbf
-	@cp ../../../fpga/base/quartus/top.rbf baseconf.rbf
-	@cp ../../../fpga/tennis/quartus/zxevo_tennis_compatible.rbf egg.rbf
-
-vdac.rbf: ../../../fpga/current/quartus_vdac/top.rbf ../../../fpga/base/quartus_vdac/top.rbf
-	@cp ../../../fpga/current/quartus_vdac/top.rbf tsconf.rbf
-	@cp ../../../fpga/base/quartus_vdac/top.rbf baseconf.rbf
-	@cp ../../../fpga/tennis/quartus_vdac/zxevo_tennis_compatible.rbf egg.rbf
-
+## Prepare FPGA bitstreams
 $(FPGACORE): tsconf.rbf baseconf.rbf egg.rbf
 	@$(MHMT) -maxwin2048 tsconf.rbf tsconf.mlz >$(DEVNULL)
 	@$(MHMT) -maxwin2048 baseconf.rbf baseconf.mlz >$(DEVNULL)
@@ -125,28 +82,33 @@ $(FPGACORE): tsconf.rbf baseconf.rbf egg.rbf
 	@avr-objcopy -I binary -O elf32-avr -B avr:51 --rename-section .data=.progmem.data,contents,alloc,load,readonly,data --redefine-sym _binary_baseconf_mlz_start=fpga1 baseconf.mlz baseconf.o
 	@avr-objcopy -I binary -O elf32-avr -B avr:51 --rename-section .data=.progmem.data,contents,alloc,load,readonly,data --redefine-sym _binary_egg_mlz_start=fpga2 egg.mlz egg.o
 
-%.hex: $(TARGET)
-	@avr-objcopy -O ihex $(HEX_FLASH_FLAGS)  $< $@
-
-%.eep: $(TARGET)
-	@avr-objcopy $(HEX_EEPROM_FLAGS) -O ihex $< $@ || exit 0
-
-%.lss: $(TARGET)
-	@avr-objdump -h -S $< > $@
+core: $(TARGET)
+	@avr-objcopy -O ihex $(HEX_FLASH_FLAGS) $< $@.hex
+	@avr-objcopy $(HEX_EEPROM_FLAGS) -O ihex $< $@.eep || exit 0
 
 size: ${TARGET}
-	@echo .
 	@avr-size -C --mcu=${MCU} ${TARGET}
 
 ## Clean target
 .PHONY: clean
 clean:
-	 @echo >core.dummy
+	 @echo >$(PROJECT).dummy
 	 @echo >tsconf.dummy
 	 @echo >baseconf.dummy
-	 @rm -rf $(OBJECTS) $(FPGACORE) dep core.* tsconf.* baseconf.* egg.mlz
-	 @mkdir dep
+	 @echo >egg.dummy
+	 @rm -rf $(FPGACORE) core.* tsconf.* baseconf.* egg.*
 
 ## program chip
-pgm: core.hex
-	@pgm.bat core.hex
+flash: $(PROJECT).hex
+	@$(AD) -B 0.5 \
+	-U flash:w:"$(PROJECT).hex":a
+
+fuses:
+	@$(AD) -B 20 \
+	-U hfuse:w:$(HFUSE):m \
+	-U lfuse:w:$(LFUSE):m \
+	-U lock:w:$(LOCK):m
+
+read:
+	@$(AD) -B 1 -U flash:r:"flash.bin":r
+	@$(AD) -B 1 -U eeprom:r:"eeprom.bin":r
