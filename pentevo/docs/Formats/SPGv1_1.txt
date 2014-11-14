@@ -34,12 +34,15 @@ Offset  Bytes   Bits     Description
 03Dh    1                Minute
 03Eh    1                Hour
 03Fh    1       1        Picture: 0 - disabled / 1 - enabled
-                1        Needs keypress after loading: 0 - no, 1 - yes
                 2        Compression type (0 - NONE, 1 - MLZ, 2 - HRUST)
-                4        Reserved
+                1        Needs keypress after loading: 0 - no, 1 - yes
+                2        Graphics mode
+                2        Reserved
 040h    1       8        Video Page used for picture display
 041h    1                Picture data size (0 - 512b, 255 - 128kB)
-042h    14               Reserved
+042h    3                Size of RO section, sectors
+045h    3                Size of RW section, sectors
+048h    8                Reserved
 050h    32               Creator utility string
 070h    144              Reserved
 100h    768              Blocks descriptors (repeated up to 256 times)
