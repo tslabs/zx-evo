@@ -1022,7 +1022,7 @@ set1FFD:
        return;
    }
 
-   if ( (port == 0xEFF7) && ( (conf.mem_model==MM_PENTAGON) || (conf.mem_model==MM_ATM3) ) ) // lvd added eff7 to atm3
+   if ( (port == 0xEFF7) && ( (conf.mem_model==MM_PENTAGON) || (conf.mem_model==MM_ATM3) || (conf.mem_model==MM_TSL) ) ) // lvd added eff7 to atm3
    {
 	  u8 oldpEFF7 = comp.pEFF7; //Alone Coder 0.36.4
       comp.pEFF7 = (comp.pEFF7 & conf.EFF7_mask) | (val & ~conf.EFF7_mask);
@@ -1049,7 +1049,9 @@ set1FFD:
           set_banks(); //Alone Coder 0.36.4
       return;
    }
-   if (conf.cmos && (((comp.pEFF7 & EFF7_CMOS) && conf.mem_model == MM_PENTAGON) || conf.mem_model == MM_ATM3 || conf.mem_model == MM_TSL))
+   if (conf.cmos && (((comp.pEFF7 & EFF7_CMOS) && conf.mem_model == MM_PENTAGON) ||            // check bit 7 port EFF7 for Pentagon
+     (conf.mem_model == MM_TSL && ((comp.pEFF7 & EFF7_CMOS) || (comp.flags & CF_DOSPORTS))) || // check bit 7 port EFF7 or active DOS for TSConf
+     conf.mem_model == MM_ATM3))                                                               // ATM3
    {
       unsigned mask = ((conf.mem_model == MM_ATM3) && (comp.flags & CF_DOSPORTS)) ? ~0x100 : 0xFFFF;
       mask = (conf.mem_model == MM_TSL) ? 0xFFFF : mask;
@@ -1478,7 +1480,9 @@ __inline u8 in1(unsigned port)
       return 0xFF;
    }
 
-   if (conf.cmos && ((comp.pEFF7 & EFF7_CMOS) || conf.mem_model == MM_ATM3) || conf.mem_model == MM_TSL)
+   if (conf.cmos && ((comp.pEFF7 & EFF7_CMOS) || // check 7 bit port EFF7
+     conf.mem_model == MM_ATM3 || // ATM3
+     (((comp.pEFF7 & EFF7_CMOS) || (comp.flags & CF_DOSPORTS)) && conf.mem_model == MM_TSL))) // check bit 7 port EFF7 or active DOS for TSConf
    {
       unsigned mask = ((conf.mem_model == MM_ATM3) && (comp.flags & CF_DOSPORTS)) ? ~0x100 : 0xFFFF;
 	  mask = (conf.mem_model == MM_TSL) ? 0xFFFF : mask;
