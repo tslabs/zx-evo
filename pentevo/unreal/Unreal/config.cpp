@@ -276,6 +276,7 @@ void load_config(const char *fname)
    cpu.outc0 = GetPrivateProfileInt(misc, "OUT_C_0", 1, ininame);
    conf.tape_autostart = GetPrivateProfileInt(misc, "TapeAutoStart", 1, ininame);
    conf.EFF7_mask = GetPrivateProfileInt(misc, "EFF7mask", 0, ininame);
+   conf.spg_mem_init = GetPrivateProfileInt(misc, "SPGMemInit", 0, ininame);
    
    GetPrivateProfileString(rom, "PENTAGON", nil, conf.pent_rom_path, sizeof conf.pent_rom_path, ininame);
    GetPrivateProfileString(rom, "ATM1", nil, conf.atm1_rom_path, sizeof conf.atm1_rom_path, ininame);

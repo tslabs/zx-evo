@@ -182,6 +182,22 @@ int readSPG()
 	tsinit();
 	load_spec_colors();
 	reset_sound();
+
+  switch (conf.spg_mem_init)
+  {
+  default:
+    break;
+  case 1: // random memory initialization
+    for (u32 i = 0; i < PAGE * MAX_RAM_PAGES; i++)
+    {
+      u8 byte = rand();
+      RAM_BASE_M[i] = byte;
+    }
+    break;
+  case 2: // zero memory initialization
+    memset(RAM_BASE_M, 0, PAGE * MAX_RAM_PAGES);
+    break;
+  }
 	
 	cpu.iy = 0x5C3A;
 	cpu.alt.hl = 0x2758;
