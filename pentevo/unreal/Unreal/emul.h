@@ -178,6 +178,7 @@ struct CONFIG
    u8 EFF7_mask;
    u8 reset_rom;
    u8 use_romset;
+   u8 spg_mem_init;
 
    u8 updateb, bordersize;
    unsigned framex;
