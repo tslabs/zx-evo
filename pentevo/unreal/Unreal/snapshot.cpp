@@ -11,6 +11,7 @@
 #include "z80.h"
 #include "util.h"
 #include "depack.h"
+#include <ctime>
 
 using namespace Gdiplus;
 ULONG_PTR gdiplusToken = 0;
@@ -190,6 +191,7 @@ int readSPG()
   case 1: // random memory initialization
     for (u32 i = 0; i < PAGE * MAX_RAM_PAGES; i++)
     {
+      srand(time(NULL));
       u8 byte = rand();
       RAM_BASE_M[i] = byte;
     }
