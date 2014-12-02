@@ -87,7 +87,7 @@ core: $(TARGET)
 	@avr-objcopy $(HEX_EEPROM_FLAGS) -O ihex $< $@.eep || exit 0
 
 size: ${TARGET}
-	@avr-size -C --mcu=${MCU} ${TARGET}
+	@avr-size ${TARGET}
 
 ## Clean target
 .PHONY: clean
