@@ -436,11 +436,13 @@ module top(
 
 	wire [ 7:0] page [0:3];
 	wire [ 3:0] romnram;
+	wire [ 3:0] wrdisable;
 
 	// for reading back data via xxBE port
 	wire [ 7:0] rd_pages [0:7];
 	wire [ 7:0] rd_ramnrom;
 	wire [ 7:0] rd_dos7ffd;
+	wire [ 7:0] rd_wrdisables;
 
 	generate
 
@@ -449,47 +451,49 @@ module top(
 		for(i=0;i<4;i=i+1)
 		begin : instantiate_atm_pagers
 
-			atm_pager #( .ADDR(i) )
-			          atm_pager( .rst_n(rst_n),
-			                     .fclk (fclk),
-			                     .zpos (zpos),
-			                     .zneg (zneg),
-
-			                     .za(a),
-			                     .zd(d),
-			                     .mreq_n(mreq_n),
-			                     .rd_n  (rd_n),
-			                     .m1_n  (m1_n),
-
-			                     .pager_off(pager_off),
-
-			                     .pent1m_ROM   (pent1m_ROM),
-			                     .pent1m_page  (pent1m_page),
-			                     .pent1m_ram0_0(pent1m_ram0_0),
-			                     .pent1m_1m_on (pent1m_1m_on),
-
-
-			                     .in_nmi(in_nmi),
-
-			                     .atmF7_wr(atmF7_wr_fclk),
-
-			                     .dos(dos),
-
-			                     .dos_turn_on (dos_turn_on[i]),
-			                     .dos_turn_off(dos_turn_off[i]),
-
-			                     .zclk_stall(zclk_stall[i]),
-
-			                     .page   (page[i]),
-			                     .romnram(romnram[i]),
-
-
-			                     .rd_page0  (rd_pages[i  ]),
-			                     .rd_page1  (rd_pages[i+4]),
-
-			                     .rd_ramnrom( {rd_ramnrom[i+4], rd_ramnrom[i]} ),
-			                     .rd_dos7ffd( {rd_dos7ffd[i+4], rd_dos7ffd[i]} )
-			                   );
+			atm_pager #( .ADDR(i) ) atm_pager
+			(
+				.rst_n(rst_n),
+				.fclk (fclk),
+				.zpos (zpos),
+				.zneg (zneg),
+                                
+				.za(a),
+				.zd(d),
+				.mreq_n(mreq_n),
+				.rd_n  (rd_n),
+				.m1_n  (m1_n),
+                                
+				.pager_off(pager_off),
+                                
+				.pent1m_ROM   (pent1m_ROM),
+				.pent1m_page  (pent1m_page),
+				.pent1m_ram0_0(pent1m_ram0_0),
+				.pent1m_1m_on (pent1m_1m_on),
+                                
+                                
+				.in_nmi(in_nmi),
+                                
+				.atmF7_wr(atmF7_wr_fclk),
+                                
+				.dos(dos),
+                                
+				.dos_turn_on (dos_turn_on[i]),
+				.dos_turn_off(dos_turn_off[i]),
+                                
+				.zclk_stall(zclk_stall[i]),
+                                
+				.page     (page[i]     ),
+				.romnram  (romnram[i]  ),
+                        	.wrdisable(wrdisable[i]),        
+                                
+				.rd_page0  (rd_pages[i  ]),
+				.rd_page1  (rd_pages[i+4]),
+                                
+				.rd_ramnrom   ( {rd_ramnrom   [i+4], rd_ramnrom   [i]} ),
+				.rd_dos7ffd   ( {rd_dos7ffd   [i+4], rd_dos7ffd   [i]} ),
+				.rd_wrdisables( {rd_wrdisables[i+4], rd_wrdisables[i]} )
+			);
 		end
 
 	endgenerate
@@ -551,6 +555,11 @@ module top(
 		.win1_page(page[1]),
 		.win2_page(page[2]),
 		.win3_page(page[3]),
+
+		.win0_wrdisable(wrdisable[0]),
+		.win1_wrdisable(wrdisable[1]),
+		.win2_wrdisable(wrdisable[2]),
+		.win3_wrdisable(wrdisable[3]),
 
 		.romrw_en(romrw_en),
 
@@ -802,8 +811,9 @@ module top(
 		          rd_pages[3], rd_pages[2],
 		          rd_pages[1], rd_pages[0] }),
 
-		.ramnroms( rd_ramnrom ),
-		.dos7ffds( rd_dos7ffd ),
+		.ramnroms  ( rd_ramnrom    ),
+		.dos7ffds  ( rd_dos7ffd    ),
+		.wrdisables( rd_wrdisables ),
 
 		.palcolor(palcolor),
 		.fontrom_readback(fontrom_readback),

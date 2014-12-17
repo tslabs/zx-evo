@@ -132,6 +132,7 @@ module zports(
 	input  wire [63:0] pages,
 	input  wire [ 7:0] ramnroms,
 	input  wire [ 7:0] dos7ffds,
+	input  wire [ 7:0] wrdisables,
 
 	input  wire [ 5:0] palcolor,
 	input  wire [ 7:0] fontrom_readback,
@@ -924,6 +925,8 @@ module zports(
 
 	5'h10: portbemux = brk_addr[7:0];
 	5'h11: portbemux = brk_addr[15:8];
+
+	5'h12: portbemux = wrdisables;
 
 	default: portbemux = 8'bXXXXXXXX;
 
