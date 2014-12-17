@@ -287,7 +287,11 @@ struct Z80 : public TZ80State
    u8 DirectRm(unsigned addr) const { return *DirectMem(addr); }
 
    // direct write memory in debuger
-   void DirectWm(unsigned addr, u8 val) { *DirectMem(addr) = val; }
+   void DirectWm(unsigned addr, u8 val) {
+     *DirectMem(addr) = val;
+     u16 cache_pointer = addr & 0x1FF;
+     tscache_addr[cache_pointer] = -1; // write invalidates flag
+   }
 /*
    virtual u8 rm(unsigned addr) = 0;
    virtual void wm(unsigned addr, u8 val) = 0;
