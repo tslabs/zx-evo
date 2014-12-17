@@ -77,6 +77,11 @@ module zmem(
 	input  wire [ 7:0] win2_page, //
 	input  wire [ 7:0] win3_page, //
 
+	input  wire        win0_wrdisable, // ==1 - no write is possible to window
+	input  wire        win1_wrdisable,
+	input  wire        win2_wrdisable,
+	input  wire        win3_wrdisable,
+
 
 	input  wire        romrw_en,
 
@@ -107,7 +112,7 @@ module zmem(
 	wire [1:0] win;
 	reg [7:0] page;
 	reg romnram;
-
+	reg wrdisable;
 
 
 
@@ -154,23 +159,27 @@ module zmem(
 	always @*
 	case( win )
 		2'b00: begin
-			page    = win0_page;
-			romnram = win0_romnram;
+			page      = win0_page;
+			romnram   = win0_romnram;
+			wrdisable = win0_wrdisable;
 		end
 
 		2'b01: begin
-			page    = win1_page;
-			romnram = win1_romnram;
+			page      = win1_page;
+			romnram   = win1_romnram;
+			wrdisable = win1_wrdisable;
 		end
 
 		2'b10: begin
-			page    = win2_page;
-			romnram = win2_romnram;
+			page      = win2_page;
+			romnram   = win2_romnram;
+			wrdisable = win2_wrdisable;
 		end
 
 		2'b11: begin
-			page    = win3_page;
-			romnram = win3_romnram;
+			page      = win3_page;
+			romnram   = win3_romnram;
+			wrdisable = win3_wrdisable;
 		end
 	endcase
 
@@ -184,7 +193,7 @@ module zmem(
 
 
 
-	assign romwe_n = wr_n | mreq_n | (~romrw_en);
+	assign romwe_n = wr_n | mreq_n | (~romrw_en) | wrdisable;
 	assign romoe_n = rd_n | mreq_n;
 
 	assign csrom = romnram; // positive polarity!
@@ -195,7 +204,7 @@ module zmem(
 
 	assign ramreq = (~mreq_n) && (~romnram) && rfsh_n;
 	assign ramrd = ramreq & (~rd_n);
-	assign ramwr = ramreq & (~wr_n);
+	assign ramwr = (ramreq & (~wr_n)) & (~wrdisable);
 
 	always @(posedge fclk)
 	if( cend && (!cpu_stall) )
@@ -228,7 +237,7 @@ module zmem(
 	// access type
 	assign opfetch = (~mreq_n) && (~m1_n);
 	assign memrd   = (~mreq_n) && (~rd_n);
-	assign memwr   = (~mreq_n) &&   rd_n && rfsh_n;
+	assign memwr   = (~mreq_n) &&   rd_n && rfsh_n && (!wrdisable);
 
 
 	// wait tables: 

@@ -4,7 +4,7 @@
 //  with additions to support 4m addressable memory
 //  and pent1m mode.
 //
-// contain ports 3FF7,7FF7,BFF7,FFF7 as well as 37F7, 77F7, B7F7, F7F7
+// contain ports xFF7, x7F7, xBF7
 
 /*
     This file is part of ZX-Evo Base Configuration firmware.
@@ -68,12 +68,14 @@ module atm_pager(
 
 	output reg  [ 7:0] page,
 	output reg         romnram,
+	output reg         wrdisable,
 
 	// output for xxBE port read
 	output wire	[ 7:0] rd_page0,
 	output wire	[ 7:0] rd_page1,
 	output wire [ 1:0] rd_dos7ffd,
-	output wire [ 1:0] rd_ramnrom
+	output wire [ 1:0] rd_ramnrom,
+	output wire [ 1:0] rd_wrdisables
 );
 	parameter ADDR = 2'b00;
 
@@ -82,6 +84,8 @@ module atm_pager(
 
 	reg [ 1:0] ramnrom; // ram(=1) or rom(=0)
 	reg [ 1:0] dos_7ffd; // =1 7ffd bits (ram) or DOS enter mode (rom) for given page
+
+	reg [ 1:0] wrdisables; // for each map
 
 	reg mreq_n_reg, rd_n_reg, m1_n_reg;
 
@@ -98,7 +102,7 @@ module atm_pager(
 	//
 	assign rd_dos7ffd = dos_7ffd;
 	assign rd_ramnrom = ramnrom;
-
+	assign rd_wrdisables = wrdisables;
 
 
 	// paging function, does not set pages, ramnrom, dos_7ffd
@@ -107,13 +111,16 @@ module atm_pager(
 	begin
 		if( pager_off )
 		begin // atm no pager mode - each window has same ROM
-			romnram <= 1'b1;
-			page    <= 8'hFF;
+			romnram   <= 1'b1;
+			page      <= 8'hFF;
+			wrdisable <= 1'b0;
 		end
 		else // pager on
 		begin
 			if( (ADDR==2'b00) && (pent1m_ram0_0 || in_nmi) ) // pent ram0 OR nmi
 			begin
+				wrdisable <= 1'b0;
+				
 				if( in_nmi )
 				begin
 					romnram <= 1'b0;
@@ -127,6 +134,8 @@ module atm_pager(
 			end
 			else
 			begin
+				wrdisable <= wrdisables[ pent1m_ROM ];
+				
 				romnram <= ~ramnrom[ pent1m_ROM ];
 
 				if( dos_7ffd[ pent1m_ROM ] ) // 7ffd memmap switching
@@ -160,11 +169,50 @@ module atm_pager(
 
 	// port reading: sets pages, ramnrom, dos_7ffd
 	//
-	always @(posedge fclk) if( atmF7_wr )
+	always @(posedge fclk, negedge rst_n)
+	if( !rst_n )
+	begin
+		wrdisables <= 2'b00;
+	end
+	else if( atmF7_wr )
 	begin
 		if( za[15:14]==ADDR )
-		begin
-			if( za[11] ) // xff7 ports - 1 meg
+		case( {za[11],za[10]} )
+			2'b10: begin // xxBF7 port -- ROM/RAM readonly bit
+				wrdisables[ pent1m_ROM ] <= zd[0];
+			end
+
+			default: begin
+				// nothing
+			end
+		endcase
+	end
+	//
+	always @(posedge fclk)
+	if( atmF7_wr )
+	begin
+		if( za[15:14]==ADDR )
+		case( {za[11],za[10]} )
+			2'b11: begin // xFF7 port
+				pages   [ pent1m_ROM ] <= ~{ 2'b11, zd[5:0] };
+				ramnrom [ pent1m_ROM ] <= zd[6];
+				dos_7ffd[ pent1m_ROM ] <= zd[7];
+			end
+
+			2'b01: begin // x7F7 port
+				pages   [ pent1m_ROM ] <= ~zd;
+				ramnrom [ pent1m_ROM ] <= 1'b1; // RAM on
+				// dos_7ffd - UNCHANGED!!! (possibility to use 7ffd 1m and 128k addressing in the whole 4m!)
+			end
+
+			default: begin
+				// nothing
+			end
+
+		endcase
+	end
+
+/*			if( za[11] ) // xff7 ports - 1 meg
 			begin
 				pages   [ pent1m_ROM ] <= ~{ 2'b11, zd[5:0] };
 				ramnrom [ pent1m_ROM ] <= zd[6];
@@ -175,9 +223,7 @@ module atm_pager(
 				pages   [ pent1m_ROM ] <= ~zd;
 				ramnrom [ pent1m_ROM ] <= 1'b1; // RAM on
 				// dos_7ffd - UNCHANGED!!! (possibility to use 7ffd 1m and 128k addressing in the whole 4m!)
-			end
-		end
-	end
+			end*/
 
 
 	// DOS turn on/turn off
@@ -224,12 +270,12 @@ module atm_pager(
 	// 3 clocks @ 28 MHz
 	always @(posedge fclk)
 	begin
-		// ïåðåêëþ÷åíèå â ÄÎÑ ïçó ïðîèñõîäèò çà ïîëòàêòà z80 äî òîãî, êàê
-		// z80 ñ÷èòàåò äàííûå. ò.å. ó ïçó ïîëòàêòà äëÿ âûäà÷è íîâûõ äàííûõ.
-		// 3.5ìãö - 140 íàí, 7ìãö - 70 íàí, 14ìãö - 35 íàí.
-		// äëÿ ïçóõè 120íñ íà 14ìãö íàäî åùå 3 ïîëòàêòà äîáàâèòü, èëè äðóãèìè
-		// ñëîâàìè, äîáàâèòü ê ëþáîé çàäåðæêå íà ëþáîé ÷àñòîòå ìèíèìóì 3 òàêòà
-		// 28 ìãö.
+		// Ð¿ÐµÑ€ÐµÐºÐ»ÑŽÑ‡ÐµÐ½Ð¸Ðµ Ð² Ð”ÐžÐ¡ Ð¿Ð·Ñƒ Ð¿Ñ€Ð¾Ð¸ÑÑ…Ð¾Ð´Ð¸Ñ‚ Ð·Ð° Ð¿Ð¾Ð»Ñ‚Ð°ÐºÑ‚Ð° z80 Ð´Ð¾ Ñ‚Ð¾Ð³Ð¾, ÐºÐ°Ðº
+		// z80 ÑÑ‡Ð¸Ñ‚Ð°ÐµÑ‚ Ð´Ð°Ð½Ð½Ñ‹Ðµ. Ñ‚.Ðµ. Ñƒ Ð¿Ð·Ñƒ Ð¿Ð¾Ð»Ñ‚Ð°ÐºÑ‚Ð° Ð´Ð»Ñ Ð²Ñ‹Ð´Ð°Ñ‡Ð¸ Ð½Ð¾Ð²Ñ‹Ñ… Ð´Ð°Ð½Ð½Ñ‹Ñ….
+		// 3.5Ð¼Ð³Ñ† - 140 Ð½Ð°Ð½, 7Ð¼Ð³Ñ† - 70 Ð½Ð°Ð½, 14Ð¼Ð³Ñ† - 35 Ð½Ð°Ð½.
+		// Ð´Ð»Ñ Ð¿Ð·ÑƒÑ…Ð¸ 120Ð½Ñ Ð½Ð° 14Ð¼Ð³Ñ† Ð½Ð°Ð´Ð¾ ÐµÑ‰Ðµ 3 Ð¿Ð¾Ð»Ñ‚Ð°ÐºÑ‚Ð° Ð´Ð¾Ð±Ð°Ð²Ð¸Ñ‚ÑŒ, Ð¸Ð»Ð¸ Ð´Ñ€ÑƒÐ³Ð¸Ð¼Ð¸
+		// ÑÐ»Ð¾Ð²Ð°Ð¼Ð¸, Ð´Ð¾Ð±Ð°Ð²Ð¸Ñ‚ÑŒ Ðº Ð»ÑŽÐ±Ð¾Ð¹ Ð·Ð°Ð´ÐµÑ€Ð¶ÐºÐµ Ð½Ð° Ð»ÑŽÐ±Ð¾Ð¹ Ñ‡Ð°ÑÑ‚Ð¾Ñ‚Ðµ Ð¼Ð¸Ð½Ð¸Ð¼ÑƒÐ¼ 3 Ñ‚Ð°ÐºÑ‚Ð°
+		// 28 Ð¼Ð³Ñ†.
 		if( dos_turn_on )
 		begin
 			stall_count[2] <= 1'b1; // count: 000(stop) -> 101 -> 110 -> 111 -> 000(stop)
