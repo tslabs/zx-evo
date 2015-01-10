@@ -117,13 +117,10 @@ int main(int argc, char **argv)
 
    color(CONSCLR_TITLE);
    printf("UnrealSpeccy %s by SMT and Others, %s\n", VERS_STRING_, __DATE__);
-   printf("Integrated YM2203 version 1.4A by Tatsuyuki Satoh, Jarek Burczynski, Alone Coder\n"); //Dexus
 #ifdef __ICL
    printf("Intel C++ Compiler: %d.%02d\n", __ICL/100, __ICL % 100);
 #endif
    color();
-   printf("new versions & sources ->\n");
-   printf("   https://zx-evo-fpga.googlecode.com/hg/pentevo/unreal\n");
 
 #ifndef DEBUG
    SetUnhandledExceptionFilter(filter);

@@ -87,7 +87,6 @@ void init_all(int argc, char **argv)
    temp.Minimized = false;
 
    init_z80tables();
-   video_permanent_tables();
    init_ie_help();
    load_config(config);
    //make_samples();
