@@ -1,36 +1,48 @@
 #pragma once
 
-#define SB_VER		SPG Builder ver.1.0 by TS-Labs
-#define SB_CRT		Created by SPG Builder ver.1.0
-#define SB_PAK		Used MHMT packer by LVD
+#define SB_VER    SPG Builder ver.1.0 by TS-Labs
+#define SB_CRT    Created by SPG Builder ver.1.0
+#define SB_PAK    Used MHMT packer by LVD
 
 // error codes and messages
-#define RC_OK		0
-#define ER_OK		DONE!
-#define RC_ARG		1
-#define ER_ARG		Wrong argument!
-#define RC_INI		2
-#define ER_INI		Wrong .ini!
-#define RC_UNK		3
-#define ER_UNK		Unknown tag!
-#define RC_ALGN		4
-#define ER_ALGN		Block address is not a 512 multiple!
-#define RC_FILE		5
-#define ER_FILE		File NOT found!
-#define RC_PACK		6
-#define ER_PACK		Compression method not supported!
-#define RC_0BLK		7
-#define ER_0BLK		Zero blocks defined!
-#define RC_BIG		8
-#define ER_BIG		Block is too BIG!
-#define RC_ZERO		9
-#define ER_ZERO		Block is ZERO size!
-#define RC_MHMT		10
-#define ER_MHMT		No mhmt.exe found! Place it in PATH or current dir.
-#define RC_VER		11
-#define ER_VER		Unsupported SPG version!
-#define RC_ADDR		12
-#define ER_ADDR		Block Address is not in 49152-65024 span!
+enum RC_ERR
+{
+  RC_OK = 0,
+  RC_ARG,
+  RC_INI,
+  RC_UNK,
+  RC_ALGN,
+  RC_FNFD,
+  RC_FERR,
+  RC_PACK,
+  RC_0BLK,
+  RC_BIG,
+  RC_ZERO,
+  RC_MHMT,
+  RC_VER,
+  RC_ADDR,
+  RC_MALC
+};
+
+#define ER_OK     DONE!
+#define ER_ARG    Wrong argument!
+#define ER_INI    Wrong .ini!
+#define ER_UNK    Unknown tag!
+#define ER_ALGN   Block address is not a 512 multiple!
+#define ER_FNFD   File not found!
+#define ER_FERR   File error!
+#define ER_PACK   Compression method not supported!
+#define ER_0BLK   Zero blocks defined!
+#define ER_BIG    Block is too BIG!
+#define ER_ZERO   Block is zero size!
+#define ER_MHMT   No mhmt.exe found! Place it in PATH or current dir.
+#define ER_VER    Unsupported SPG version!
+#define ER_ADDR   Block Address is not in 49152-65024 span!
+#define ER_MALC   Malloc error!
+
+#define	error(a) { \
+  printf(STR(ER_##a)); \
+  printf("\n\n"); \
+  exit(RC_##a); }
 
 void print_help();
-void error(int);
