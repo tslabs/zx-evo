@@ -518,7 +518,7 @@ u8 TSdCard::Rd()
         {
         case ST_R1:
             CurrState = ST_RD_DATA_SIG_MUL;
-            return 0xFE;
+            return 0x00;    // !!! check this !!!
         case ST_WR_DATA_RESP:
         {
             CurrState = ST_RD_DATA_SIG_MUL;
