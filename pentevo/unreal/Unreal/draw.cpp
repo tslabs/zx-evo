@@ -102,74 +102,6 @@ void AtmVideoController::PrepareFrameATM1(int VideoMode)
 
 AtmVideoController AtmVideoCtrl;
 
-void video_permanent_tables()
-{
-	vid.buf = 0;
-
-	// pixel doubling table
-   unsigned i; //Alone Coder 0.36.7
-   for (/*unsigned*/ i = 0; i < 0x100; i++) {
-      unsigned res = 0;
-      for (int j = 0x80; j; j/=2) {
-         res <<= 2; if (i & j) res |= 3;
-      }
-      t.dbl[i] = res;
-   }
-
-   for (i = 0; i < 0x100; i++) {
-      unsigned r1 = 0, r2 = 0;
-      if (i & 0x01) r1++,        r2 += 1;
-      if (i & 0x02) r1++,        r2 += 1;
-      if (i & 0x04) r1++,        r2 += 0x100;
-      if (i & 0x08) r1++,        r2 += 0x100;
-      if (i & 0x10) r1 += 0x100, r2 += 0x10000;
-      if (i & 0x20) r1 += 0x100, r2 += 0x10000;
-      if (i & 0x40) r1 += 0x100, r2 += 0x1000000;
-      if (i & 0x80) r1 += 0x100, r2 += 0x1000000;
-      // low byte of settab - number of pixels in low nibble of i
-      // high byte of low word of settab - number of pixels in high nibble of i
-      t.settab[i] = r1;
-      t.settab2[i] = r2*4; // *4 - convert square 2x2 to 4x4
-   }
-
-   i = 0; // calc screen addresses
-   for (int p = 0; p < 4; p++)
-      for (int y = 0; y < 8; y++)
-         for (int o = 0; o < 8; o++, i++)
-            t.scrtab[i] = p*0x800 + y*0x20 + o*0x100,
-            t.atrtab_hwmc[i] = t.scrtab[i] + 0x2000,
-            t.atrtab[i] = 0x1800 + (p*8+y)*32;
-
-   // alco table
-   static unsigned disp_0[] = { 0x0018, 0x2000, 0x2008, 0x2010, 0x2018, 0x0008 };
-   static unsigned base_s[] = { 0x10000, 0x14000, 0x14800, 0x15000, 0x11800 };
-   static unsigned base_a[] = { 0x11000, 0x15800, 0x15900, 0x15A00, 0x11300 };
-   for (unsigned y = 0; y < 304; y++)
-      for (unsigned x = 0; x < 6; x++) {
-         unsigned disp = disp_0[x] + (y & 0x38)*4;
-         ::t.alco[y][x].a = memory + base_a[y/64] + disp;
-         ::t.alco[y][x].s = memory + base_s[y/64] + disp + (y & 7)*0x100;
-      }
-
-   #ifdef MOD_VID_VD
-   // this code is only for ygrbYGRB palette
-   for (unsigned byte = 0; byte < 0x100; byte++)
-      for (int bit = 0; bit < 8; bit++)
-         t.vdtab[0][0][byte].m64_u8[7-bit] = (byte & (1 << bit))? 0x11 : 0;
-   for (int pl = 1; pl < 4; pl++)
-      for (unsigned byte = 0; byte < 0x100; byte++)
-         t.vdtab[0][pl][byte] = _mm_slli_pi32(t.vdtab[0][0][byte], pl);
-   for (i = 0; i < sizeof t.vdtab[0]; i++)
-      ((u8*)t.vdtab[1])[i] = ((u8*)t.vdtab[0])[i] & 0x0F;
-   _mm_empty();
-   #endif
-
-   temp.offset_vscroll_prev = 0;
-   temp.offset_vscroll = 0;
-   temp.offset_hscroll_prev = 0;
-   temp.offset_hscroll = 0;
-}
-
 unsigned getYUY2(unsigned r, unsigned g, unsigned b)
 {
    int y = (int)(0.29*r + 0.59*g + 0.14*b);
@@ -683,7 +615,7 @@ u32 get_free_memcycles(int dram_t)
 void update_screen()
 {
   // Get tact of cpu state in current frame
-  u32 cput = (cpu.t >= conf.frame) ? (VID_TACTS * VID_LINES) : cpu.t;
+  u32 cput = (cpu.t>= conf.frame) ? (VID_TACTS * VID_LINES) : cpu.t;
 
   while (vid.t_next < cput)
   {
