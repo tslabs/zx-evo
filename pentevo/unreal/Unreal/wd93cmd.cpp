@@ -212,9 +212,16 @@ void WD1793::process()
                       break;
                   }
                }
+               
                if ((cmd & 0xF0) == 0xC0) // read address
+               {
                   if (!seldrive->t.hdr[foundid].c1)
                       status |= WDS_CRCERR;
+               }
+               
+               else if ((cmd & 0xF0) == 0xE0) // read track
+                  status |= WDS_LOST;
+               
                state = S_IDLE;
             }
             break;
