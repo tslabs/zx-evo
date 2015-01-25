@@ -501,3 +501,4 @@ void dma(u32 tacts);
 u32 render_ts(u32 tacts);
 void tsinit(void);
 void TSFrameINT(bool vdos);
+void invalidate_ts_cache();
