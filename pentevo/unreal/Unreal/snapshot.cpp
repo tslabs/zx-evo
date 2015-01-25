@@ -11,6 +11,7 @@
 #include "z80.h"
 #include "util.h"
 #include "depack.h"
+#include "tsconf.h"
 #include <ctime>
 
 using namespace Gdiplus;
@@ -96,7 +97,7 @@ u8 what_is(char *filename)
           {
               nsec += snbuf[9+14*i+13];
           }
-          
+
           if (snapsize >= 9 + nfiles * 14 + nsec * 0x100)
               type = snSCL;
       }
@@ -114,6 +115,9 @@ int loadsnap(char *filename)
 {
    if (load_arc(filename))
        return 1;
+
+   tsinit();
+
    u8 type = what_is(filename);
 
    if (type >= snHOB)
@@ -173,14 +177,13 @@ int readSPG()
 {
 	hdrSPG1_0 *hdr10 = (hdrSPG1_0*)snbuf;
 	hdrSPG0_2 *hdr02 = (hdrSPG0_2*)snbuf;
-	
+
 	if (memcmp(&hdr10->sign, "SpectrumProg", 12))
 		return 0;
 	u8 type = hdr10->ver;
 	if ((type != 0) && (type != 1) && (type != 2) && (type != 0x10))
 		return 0;
-		
-	tsinit();
+
 	load_spec_colors();
 	reset_sound();
 
@@ -200,13 +203,13 @@ int readSPG()
     memset(RAM_BASE_M, 0, PAGE * MAX_RAM_PAGES);
     break;
   }
-	
+
 	cpu.iy = 0x5C3A;
 	cpu.alt.hl = 0x2758;
 	cpu.i = 63;
 	cpu.im = 1;
 	comp.p7FFD = 16;
-	
+
 	/* SPG ver.1.0 */
 	if (type == 0x10)
 	{
@@ -215,7 +218,7 @@ int readSPG()
 		cpu.iff1 = (hdr10->clk & 4) ? 1 : 0;
 		comp.ts.zclk = hdr10->clk & 3;
 		comp.ts.page[3] = hdr10->win3_pg;
-		
+
 		u8 *data = &hdr10->data;
 		for (u8 i = 0; i < hdr10->n_blk; i++)
 		{
@@ -228,23 +231,23 @@ int readSPG()
 				case 0x00:
 					memcpy(zxram, data, size);
 					break;
-				
+
 				case 0x01:
 					demlz(zxram, data, size);
 					break;
-				
+
 				case 0x02:
 					dehrust(zxram, data, size);
 					break;
 			}
-			
+
 			data += size;
-			
+
 			if (hdr10->blocks[i].addr & 0x80)
 				break;
 		}
 	}
-	
+
 	/* SPG ver.0.x */
 	else
 	{
@@ -253,20 +256,20 @@ int readSPG()
 		cpu.iff1 = 0;
 		comp.ts.zclk = 0;
 		comp.ts.page[3] = hdr02->win3_pg & ((type == 2) ? 15 : 7);
-		
+
 		if (hdr02->vars_len)
 		{
 			u16 addr;
-			
+
 			if (!hdr02->vars_addr)
 				addr = 0x5B00;
 			else
 				addr = hdr02->vars_addr;
 			addr -= 0x4000;		// fucking crotch for only loading to the lower memory
-				
+
 			memcpy(page_ram(5) + addr, hdr02->vars, hdr02->vars_len);
 		}
-		
+
 		u8 *data = &hdr02->data;
 		for (u8 i = 0; i < 15; i++)
 		{
@@ -278,7 +281,7 @@ int readSPG()
 				size += 1536;
 			u8 page = hdr02->blocks[i].page & ((type == 2) ? 15 : 7);
 			int offs = (addr < 0xC000) ? (addr - 0x8000) : (addr - 0xC000);
-			
+
 			if (addr < 0xC000)
 			{
 				int sz = ((size + offs) > 0x4000) ? (0x4000 - offs) : size;
@@ -287,29 +290,29 @@ int readSPG()
 				size -= sz;
 				data += sz;
 			}
-			
+
 			if (size)
 			{
 				memcpy(page_ram(page) + offs, data, size);
 				data += size;
 			}
-			
+
 			if (type != 2)		// for ver. 0.0 and 0.1 there are 4 dummy bytes in every block descriptor
 				i++;
 		}
-		
+
 		if (hdr02->pgmgr_addr)
 		{
 			// const u8 mgr[] = {0xC5, 0x01, 0xAF, 0x13, 0xED, 0x79, 0xC1, 0xC9};	// TS-conf
 			const u8 mgr[] = {0xC5, 0x4F, 0xE6, 0xF8, 0x79, 0x28, 0x04, 0xE6, 0x07, 0xF6, 0x40, 0xF6, 0x10, 0x01, 0xFD, 0x7F, 0xED, 0x79, 0xC1, 0xC9};	// Pentagon
 			memcpy(page_ram(5) + hdr02->pgmgr_addr - 0x4000, mgr, sizeof(mgr));
 		}
-		
+
 	}
-	
+
 	set_clk();
 	set_banks();
-	
+
 	snbuf[0x20] = 0;	// to avoid garbage in header
 	SetWindowText(wnd, (char*)snbuf);
 	return 1;
@@ -882,8 +885,8 @@ char* SaveScreenshot(const char* prefix, unsigned counter)
    }
 
    static char fname[FILENAME_MAX];
-   strcpy(fname, conf.scrshot_path);   
-   
+   strcpy(fname, conf.scrshot_path);
+
    sprintf(fname + strlen(fname), "\\%s%06u.%s", prefix, counter, SSHOT_EXT[conf.scrshot]);
 
    FILE* fileShot = 0;
@@ -939,7 +942,7 @@ char* SaveScreenshot(const char* prefix, unsigned counter)
       else
       {
          //static png_color bkgColor = {127, 127, 127};
-         Bitmap bmp(temp.ox, temp.oy, (temp.ox * 3 + 3) & ~3, PixelFormat24bppRGB, ds); 
+         Bitmap bmp(temp.ox, temp.oy, (temp.ox * 3 + 3) & ~3, PixelFormat24bppRGB, ds);
 
          size_t fname_len = strlen(fname);
          wchar_t* fnameW = new wchar_t[fname_len + 1];

@@ -751,6 +751,12 @@ void sfile_dump()
 	fclose(f);
 }
 
+void invalidate_ts_cache()
+{
+	for (u16 i = 0; i < TS_CACHE_SIZE; i++)
+		cpu.tscache_addr[i] = -1;
+}
+
 // TS-Config init
 void tsinit(void)
 {
@@ -766,14 +772,11 @@ void tsinit(void)
 	comp.ts.intmask = 1;
 	comp.ts.intctrl.frame_t = 0;
 
-	for (u16 i = 0; i < TS_CACHE_SIZE; i++)
-		cpu.tscache_addr[i] = -1;
-
 	comp.ts.fddvirt = 0;
 	comp.ts.vdos = 0;
 	comp.ts.vdos_m1 = 0;
 
-	comp.ts.sysconf = 1;		// turbo 7MHz for TS-Conf
+	comp.ts.sysconf = 0;		// 3.5MHz for TS-Conf
 	comp.ts.memconf = 0;
 	comp.ts.dma.state = DMA_ST_NOP;		// disable DMA on startup
 	comp.ts.cacheconf = 0;  // disable cache
@@ -787,6 +790,8 @@ void tsinit(void)
 	comp.ts.palsel = comp.ts.palsel_d = 15;
 	comp.ts.g_xoffs = 0;
 	comp.ts.g_yoffs = 0;
+
+	invalidate_ts_cache();
 }
 
 void TSFrameINT(bool vdos)
