@@ -116,7 +116,7 @@ int loadsnap(char *filename)
    if (load_arc(filename))
        return 1;
 
-   tsinit();
+   invalidate_ts_cache();
 
    u8 type = what_is(filename);
 
