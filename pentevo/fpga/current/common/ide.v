@@ -55,26 +55,11 @@ module ide(
 	input wire         z80_cs0_n,
 	input wire         z80_cs1_n,
 	input wire         z80_req,
-	input wire         z80_rnw,
-	
-	output reg [2:0] tst
+	input wire         z80_rnw
 );
 
 
-	// DEBUG!!!
-	always @*
-		if (go)
-			tst = 3;
-		else if (!ide_rd_n || !ide_wr_n)
-			tst = !ide_rd_n ? 4 : 2;
-		else if (!ide_cs0_n)
-			tst = 6;
-		else if (rdy_stb)
-			tst = 5;
-		else
-			tst = 0;
-	
-    assign ide_out = dma_req ? dma_out : z80_out;
+  assign ide_out = dma_req ? dma_out : z80_out;
 	assign ide_a = dma_req ? 3'b0 : z80_a;
 	wire dir = dma_req ? dma_rnw : z80_rnw;
 	wire cs0_n = dma_req ? 1'b0 : z80_cs0_n;

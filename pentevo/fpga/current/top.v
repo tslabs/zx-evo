@@ -124,9 +124,6 @@ module top(
     // assign ide_rdy = clkz_out;
     // assign vg_wf_de = clkz_out;
 
-    // assign tst[2] = iord_s;
-    // assign tst[1] = iorq_s;
-
     wire f0, f1, h0, h1, c0, c1, c2, c3;
     wire rst_n; // global reset
     wire genrst;
@@ -166,7 +163,7 @@ module top(
     wire cfg_stb;
     wire tape_in_bit;
     wire [7:0] config0 = {cfg_tape_sound, cfg_floppy_swap, cfg_sync_pol, cfg_60hz, beeper_mux, tape_read, set_nmi[0], cfg_vga_on};    // tape in as bit2 is also configured in slavespi.v
-    
+
     // nmi signals
     wire gen_nmi;
     wire clr_nmi;
@@ -287,8 +284,6 @@ module top(
     wire t1gpage_wr;
     wire sgpage_wr;
 
-    wire [2:0] tst;
-
     wire [15:0]       zmd;
     wire [7:0]       zma;
     wire cram_we;
@@ -307,10 +302,10 @@ module top(
     wire rdwr;
     wire iord;
     wire iowr;
-    wire iorw;
+    wire iordwr;
     wire iord_s;
     wire iowr_s;
-    wire iorw_s;
+    wire iordwr_s;
     wire memrd;
     wire memwr;
     wire memrw;
@@ -323,12 +318,16 @@ module top(
 
     wire [31:0] xt_page;
 
+`ifdef FDR
+    wire [9:0] dmaport_wr;
+`else
     wire [8:0] dmaport_wr;
+`endif
     wire [4:0] fmaddr;
 
     wire [7:0] sysconf;
-    wire [3:0] fddvirt;
-    
+    wire [7:0] fddvirt;
+
     wire [4:0] vred_raw;
     wire [4:0] vgrn_raw;
     wire [4:0] vblu_raw;
@@ -342,8 +341,12 @@ module top(
     assign ide_d[14:10] = vblu_raw;
     assign ide_d[15] = vdac_mode;
     assign ide_dir = 1'b0;      // always output
+    assign ide_a[0] = 1'bZ;
     assign ide_a[1] = !fclk;
     assign ide_a[2] = vhsync;
+    assign ide_rd_n = 1'bZ;
+    assign ide_wr_n = 1'bZ;
+    assign ide_cs0_n = 1'bZ;
     assign ide_cs1_n = vvsync;
 `endif
 
@@ -358,7 +361,7 @@ module top(
     wire ide_stb;
     wire ide_ready;
     wire [15:0] ide_out;
-    
+
     wire [7:0] intmask;
 
     wire dma_act;
@@ -439,9 +442,6 @@ module top(
 
     zmem z80mem
     (
-        // .tst(tst),
-        //.dbg_arb(dbg_arb),    // DEBUG !!!
-        //.testkey(beeper_mux),    // DEBUG !!!
         .clk(fclk),
         .c0(c0),
         .c1(c1),
@@ -553,7 +553,6 @@ module top(
 
     video_top video_top
     (
-        .tst(tst),
         .clk(fclk),
         .res(res),
         .f0(f0),
@@ -717,10 +716,10 @@ module top(
         .rdwr(rdwr),
         .iord(iord),
         .iowr(iowr),
-        .iorw(iorw),
+        .iordwr(iordwr),
         .iord_s(iord_s),
         .iowr_s(iowr_s),
-        .iorw_s(iorw_s),
+        .iordwr_s(iordwr_s),
         .memrd(memrd),
         .memwr(memwr),
         .memrw(memrw),
@@ -748,12 +747,12 @@ module top(
         .iorq(iorq),
         .iord(iord),
         .iowr(iowr),
-        .iorw(iorw),
+        .iordwr(iordwr),
         .iorq_s(iorq_s),
         // .iorq_s2    (iorq_s2),
         .iord_s(iord_s),
         .iowr_s(iowr_s),
-        .iorw_s(iorw_s),
+        .iordwr_s(iordwr_s),
         .ay_bdir(ay_bdir),
         .ay_bc1(ay_bc1),
         .rstrom(rstrom),
@@ -808,6 +807,11 @@ module top(
         .memconf(memconf),
         .intmask(intmask),
         .fddvirt(fddvirt),
+`ifdef FDR
+        .fdr_cnt(fdr_cnt),
+        .fdr_en(fdr_en),
+        .fdr_cnt_lat(fdr_cnt_lat),
+`endif
         .cfg_floppy_swap(cfg_floppy_swap),
         .drive_sel(vg_a),
         .dos(dos),
@@ -859,10 +863,37 @@ module top(
         .ide_stb(ide_stb),
 `endif
         .spi_req(dma_spi_req),
-        .spi_stb(spi_stb),
-        .spi_start(spi_start),
+        .spi_stb(spi_start),
         .spi_rddata(spi_dout),
         .spi_wrdata(dma_spi_din)
+`ifdef FDR
+        ,
+        .fdr_in(fdr_rle),
+        .fdr_req(fdr_req),
+        .fdr_stb(fdr_stb),
+        .fdr_stop(fdr_stop)
+`endif
+    );
+
+    wire [7:0] fdr_rle;
+    wire [18:0] fdr_cnt;
+    wire fdr_req;
+    wire fdr_stb;
+    wire fdr_stop;
+    wire fdr_en;
+    wire fdr_cnt_lat;
+    
+    fddrip fddrip
+    (
+        .clk(fclk),
+        .rdat_n(rdat_b_n),
+        .reset(!fdr_en),
+        .cnt_latch(fdr_cnt_lat),
+        .data(fdr_rle),
+        .data_cnt_l(fdr_cnt),
+        .req(fdr_req),
+        .stb(fdr_stb),
+        .stop(fdr_stop)
     );
 
     zint zint
@@ -935,7 +966,6 @@ module top(
 
     spi spi
     (
-        // .tst(tst),
         .clk(fclk),
         .sck(sdclk),
         .sdo(sddo),
@@ -943,7 +973,6 @@ module top(
         .cpu_req(cpu_spi_req),
         .dma_req(dma_spi_req),
         // .rdy(spi_rdy),
-        .stb(spi_stb),
         .start(spi_start),
         .cpu_din(cpu_spi_din),
         .dma_din(dma_spi_din),
@@ -954,7 +983,6 @@ module top(
 `ifndef IDE_VDAC
     ide ide
     (
-        // .tst(tst),
         .clk(fclk),
         .reset(res),
         .rdy_stb(ide_stb),

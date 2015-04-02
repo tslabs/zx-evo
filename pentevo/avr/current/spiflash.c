@@ -62,11 +62,12 @@ void sfi_send(UBYTE d)
 
 UBYTE sfi_recv(void)
 {
-    #define sfi_recv_bit(a)  PORTF = c0; PORTF = c1; if (PINF & _BV(SFI_BIT_DATA0)) d |= (a)
+    #define sfi_recv_bit(a)  *c2 = c0; *c2 = c1; if (PINF & _BV(SFI_BIT_DATA0)) d |= (a)
     
     UBYTE d = 0;
     UBYTE c0 = PORTF & ~_BV(SFI_BIT_DCLK);
     UBYTE c1 = c0 | _BV(SFI_BIT_DCLK);
+    volatile UBYTE* c2 = PORTF;
     
     sfi_recv_bit(128);
     sfi_recv_bit(64);

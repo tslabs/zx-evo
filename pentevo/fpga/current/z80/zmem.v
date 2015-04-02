@@ -61,12 +61,7 @@ module zmem(
 	input  wire        cpu_next,
 	input  wire        cpu_strobe,
 	input  wire        cpu_latch,
-	output wire        cpu_stall,    // for zclock
-
-	input wire testkey,		// DEBUG!!!
-
-	input wire intt,		// DEBUG!!!
-	output wire [2:0] tst
+	output wire        cpu_stall    // for zclock
 );
 
 // controls

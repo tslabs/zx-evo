@@ -59,9 +59,7 @@ module video_ts (
 	output wire [20:0] dram_addr,
 	output wire        dram_req,
 	input  wire        dram_next,
-	input  wire [15:0] dram_rdata,
-
-	output wire [2:0] tst
+	input  wire [15:0] dram_rdata
 );
 
 
@@ -85,26 +83,6 @@ module video_ts (
 
 
 // Layer selectors control
-
-	// DEBUG !!!
-	assign tst = lyr;
-	reg [2:0] lyr;
-	always@*
-		// if (layer_active[S0])
-			// lyr = 2;
-		// else if (layer_active[S1])
-			// lyr = 6;
-		// else if (layer_active[S2])
-			// lyr = 4;
-		// else if (layer_active[TM])
-			// lyr = 1;
-		// else if (layer_active[T0])
-			// lyr = 3;
-		// else if (layer_active[T1])
-			// lyr = 5;
-		// else lyr = 0;
-		lyr = 0;
-		// lyr = sr_valid;
 
 	localparam LAYERS = 6;		// Total number of layers to process
 	localparam TM = 0;		// Individual layers
