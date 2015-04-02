@@ -29,7 +29,7 @@ module zsignals(
 	output wire rdwr,
 	output wire iord,
 	output wire iowr,
-	output wire iorw,
+	output wire iordwr,
 	output wire memrd,
 	output wire memwr,
 	output wire memrw,
@@ -41,7 +41,7 @@ module zsignals(
 	output wire mreq_s,
 	output wire iord_s,
 	output wire iowr_s,
-	output wire iorw_s,
+	output wire iordwr_s,
 	output wire memrd_s,
 	output wire memwr_s,
 	output wire memrw_s,
@@ -63,7 +63,7 @@ module zsignals(
     assign rdwr = rd || wr;
     assign iord = iorq && rd;
     assign iowr = iorq && wr;
-    assign iorw = iorq && rdwr;
+    assign iordwr = iorq && rdwr;
     assign memrd = mreq && rd;
     assign memwr = mreq && !rd;
     assign memrw = mreq && rdwr;
@@ -75,7 +75,7 @@ module zsignals(
 	assign mreq_s = mreq_r[0] && !mreq_r[1];
 	assign iord_s = iorq_s && rd;
     assign iowr_s = iorq_s && wr;
-    assign iorw_s = iorq_s && rdwr;
+    assign iordwr_s = iorq_s && rdwr;
     assign memrd_s = mreq_s && rd;
     assign memwr_s = mreq_s && !rd;
     assign memrw_s = mreq_s && rdwr;

@@ -267,7 +267,7 @@ module top(
 	assign ide_d = idedataout ? ideout : 16'hZZZZ;
 	assign ide_dir = ~idedataout;
 `else
-    wire [2:0] pblu = {blu, |blu};     //The missing lowest blue bit is set to OR of the other two blue bits (Bb becomes 000 for 00, and Bb1 for anything else).
+    wire [2:0] pblu = {blu, blu[0]};     //The missing lowest blue bit is set to OR of the other two blue bits (Bb becomes 000 for 00, and Bb1 for anything else).
     assign ide_d[ 4: 0] = {red, red[2:1]};
     assign ide_d[ 9: 5] = {grn, grn[2:1]};
     assign ide_d[14:10] = {pblu, pblu[2:1]};

@@ -1,4 +1,6 @@
-# Copyright (C) 1991-2008 Altera Corporation
+# -------------------------------------------------------------------------- #
+#
+# Copyright (C) 1991-2009 Altera Corporation
 # Your use of Altera Corporation's design tools, logic functions 
 # and other software and tools, and its AMPP partner logic 
 # functions, and any output files from any of the foregoing 
@@ -11,16 +13,27 @@
 # programming logic devices manufactured by Altera and sold by 
 # Altera or its authorized distributors.  Please refer to the 
 # applicable agreement for further details.
-
-
-# The default values for assignments are stored in the file
+#
+# -------------------------------------------------------------------------- #
+#
+# Quartus II
+# Version 9.0 Build 132 02/25/2009 SJ Full Version
+# Date created = 00:37:17  April 01, 2015
+#
+# -------------------------------------------------------------------------- #
+#
+# Notes:
+#
+# 1) The default values for assignments are stored in the file:
 #		top_assignment_defaults.qdf
-# If this file doesn't exist, and for assignments not listed, see file
+#    If this file doesn't exist, see file:
 #		assignment_defaults.qdf
-
-# Altera recommends that you do not modify this file. This
-# file is updated automatically by the Quartus II software
-# and any changes you make may be lost or overwritten.
+#
+# 2) Altera recommends that you do not modify this file. This
+#    file is updated automatically by the Quartus II software
+#    and any changes you make may be lost or overwritten.
+#
+# -------------------------------------------------------------------------- #
 
 
 
@@ -31,6 +44,49 @@ set_global_assignment -name PROJECT_CREATION_TIME_DATE "19:03:44  NOVEMBER 07, 2
 set_global_assignment -name LAST_QUARTUS_VERSION 9.0
 set_global_assignment -name MESSAGE_SUPPRESSION_RULE_FILE top.srf
 set_global_assignment -name SMART_RECOMPILE ON
+set_global_assignment -name VERILOG_FILE ../common/fddrip.v
+set_global_assignment -name VERILOG_FILE ../z80/mem/cache_addr.v
+set_global_assignment -name VERILOG_FILE ../z80/mem/cache_data.v
+set_global_assignment -name VERILOG_FILE ../video/mem/video_tsline1.v
+set_global_assignment -name VERILOG_FILE ../video/mem/video_tsline0.v
+set_global_assignment -name VERILOG_FILE ../video/mem/video_sfile.v
+set_global_assignment -name VERILOG_FILE ../video/mem/video_cram.v
+set_global_assignment -name VERILOG_FILE ../video/mem/video_tmbuf.v
+set_global_assignment -name VERILOG_FILE ../video/mem/video_vmem.v
+set_global_assignment -name VERILOG_FILE ../video/video_ts_render.v
+set_global_assignment -name VERILOG_FILE ../video/video_ts.v
+set_global_assignment -name VERILOG_FILE ../common/slavespi.v
+set_global_assignment -name VERILOG_FILE ../common/dma.v
+set_global_assignment -name VERILOG_FILE ../common/ide.v
+set_global_assignment -name VERILOG_FILE ../video/video_ports.v
+set_global_assignment -name VERILOG_FILE ../video/video_top.v
+set_global_assignment -name VERILOG_FILE ../video/video_mode.v
+set_global_assignment -name VERILOG_FILE ../video/video_sync.v
+set_global_assignment -name VERILOG_FILE ../video/video_fetch.v
+set_global_assignment -name VERILOG_FILE ../video/video_render.v
+set_global_assignment -name VERILOG_FILE ../video/video_out.v
+set_global_assignment -name VERILOG_FILE ../sound/sound.v
+set_global_assignment -name VERILOG_FILE ../z80/zsignals.v
+set_global_assignment -name VERILOG_FILE ../z80/zmaps.v
+set_global_assignment -name VERILOG_FILE ../z80/znmi.v
+set_global_assignment -name VERILOG_FILE ../z80/zwait.v
+set_global_assignment -name VERILOG_FILE ../z80/zkbdmus.v
+set_global_assignment -name VERILOG_FILE ../z80/zports.v
+set_global_assignment -name VERILOG_FILE ../z80/zclock.v
+set_global_assignment -name VERILOG_FILE ../z80/zint.v
+set_global_assignment -name VERILOG_FILE ../z80/zmem.v
+set_global_assignment -name VERILOG_FILE ../z80/zbus.v
+set_global_assignment -name VERILOG_FILE ../vg93/vg93.v
+set_global_assignment -name VERILOG_FILE ../vg93/fapch_counter.v
+set_global_assignment -name VERILOG_FILE ../vg93/fapch_zek.v
+set_global_assignment -name VERILOG_FILE ../dram/dram.v
+set_global_assignment -name VERILOG_FILE ../dram/arbiter.v
+set_global_assignment -name VERILOG_FILE ../common/clock.v
+set_global_assignment -name VERILOG_FILE ../common/spi.v
+set_global_assignment -name VERILOG_FILE ../common/resetter.v
+set_global_assignment -name VERILOG_FILE ../top.v
+set_global_assignment -name MIF_FILE ../video/mem/video_cram.mif
+set_global_assignment -name ZIP_VECTOR_WAVEFORM_FILE ../sim_vw/dram.cvwf
 
 # Pin & Location Assignments
 # ==========================
@@ -155,6 +211,32 @@ set_location_assignment PIN_187 -to rwe_n
 set_location_assignment PIN_189 -to rlcas_n
 set_location_assignment PIN_190 -to rras0_n
 set_location_assignment PIN_90 -to ide_d[13]
+set_location_assignment PIN_169 -to ra[4]
+set_location_assignment PIN_170 -to ra[3]
+set_location_assignment PIN_172 -to ra[5]
+set_location_assignment PIN_173 -to ra[2]
+set_location_assignment PIN_174 -to ra[6]
+set_location_assignment PIN_175 -to ra[1]
+set_location_assignment PIN_176 -to ra[7]
+set_location_assignment PIN_177 -to ra[0]
+set_location_assignment PIN_179 -to ra[8]
+set_location_assignment PIN_180 -to ra[9]
+set_location_assignment PIN_191 -to rd[8]
+set_location_assignment PIN_192 -to rd[7]
+set_location_assignment PIN_193 -to rd[9]
+set_location_assignment PIN_195 -to rd[6]
+set_location_assignment PIN_196 -to rd[10]
+set_location_assignment PIN_197 -to rd[5]
+set_location_assignment PIN_198 -to rd[11]
+set_location_assignment PIN_199 -to rd[4]
+set_location_assignment PIN_200 -to rd[12]
+set_location_assignment PIN_202 -to rd[3]
+set_location_assignment PIN_203 -to rd[13]
+set_location_assignment PIN_204 -to rd[2]
+set_location_assignment PIN_205 -to rd[14]
+set_location_assignment PIN_206 -to rd[1]
+set_location_assignment PIN_207 -to rd[15]
+set_location_assignment PIN_208 -to rd[0]
 
 # Classic Timing Assignments
 # ==========================
@@ -179,6 +261,7 @@ set_global_assignment -name IGNORE_LCELL_BUFFERS ON
 set_global_assignment -name IGNORE_CASCADE_BUFFERS ON
 set_global_assignment -name AUTO_RESOURCE_SHARING ON
 set_global_assignment -name CASCADE_CHAIN_LENGTH 8
+set_global_assignment -name SAVE_DISK_SPACE OFF
 
 # Fitter Assignments
 # ==================
@@ -190,7 +273,7 @@ set_global_assignment -name FITTER_EFFORT "STANDARD FIT"
 set_global_assignment -name SLOW_SLEW_RATE ON
 set_global_assignment -name AUTO_PACKED_REGISTERS NORMAL
 set_global_assignment -name FIT_ONLY_ONE_ATTEMPT OFF
-set_global_assignment -name SEED 13
+set_global_assignment -name SEED 50
 set_global_assignment -name ROUTER_TIMING_OPTIMIZATION_LEVEL MINIMUM
 set_global_assignment -name PLACEMENT_EFFORT_MULTIPLIER 1.0
 set_global_assignment -name ROUTER_EFFORT_MULTIPLIER 1.0
@@ -199,11 +282,13 @@ set_global_assignment -name FITTER_AGGRESSIVE_ROUTABILITY_OPTIMIZATION AUTOMATIC
 set_global_assignment -name OPTIMIZE_IOC_REGISTER_PLACEMENT_FOR_TIMING OFF
 set_global_assignment -name NORMAL_LCELL_INSERT OFF
 set_global_assignment -name CARRY_OUT_PINS_LCELL_INSERT OFF
+set_global_assignment -name OPTIMIZE_MULTI_CORNER_TIMING OFF
 
 # Assembler Assignments
 # =====================
 set_global_assignment -name GENERATE_RBF_FILE ON
 set_global_assignment -name ON_CHIP_BITSTREAM_DECOMPRESSION OFF
+set_global_assignment -name RESERVE_ALL_UNUSED_PINS_NO_OUTPUT_GND "AS INPUT TRI-STATED"
 
 # Simulator Assignments
 # =====================
@@ -282,74 +367,3 @@ set_instance_assignment -name GLOBAL_SIGNAL ON -to clkz_in
 
 # end ENTITY(top)
 # ---------------
-set_global_assignment -name VERILOG_FILE ../z80/mem/cache_addr.v
-set_global_assignment -name VERILOG_FILE ../z80/mem/cache_data.v
-set_global_assignment -name VERILOG_FILE ../video/mem/video_tsline1.v
-set_global_assignment -name VERILOG_FILE ../video/mem/video_tsline0.v
-set_global_assignment -name VERILOG_FILE ../video/mem/video_sfile.v
-set_global_assignment -name VERILOG_FILE ../video/mem/video_cram.v
-set_global_assignment -name VERILOG_FILE ../video/mem/video_tmbuf.v
-set_global_assignment -name VERILOG_FILE ../video/mem/video_vmem.v
-set_global_assignment -name VERILOG_FILE ../video/video_ts_render.v
-set_global_assignment -name VERILOG_FILE ../video/video_ts.v
-set_global_assignment -name VERILOG_FILE ../common/slavespi.v
-set_global_assignment -name VERILOG_FILE ../common/dma.v
-set_global_assignment -name VERILOG_FILE ../common/ide.v
-set_global_assignment -name VERILOG_FILE ../video/video_ports.v
-set_global_assignment -name VERILOG_FILE ../video/video_top.v
-set_global_assignment -name VERILOG_FILE ../video/video_mode.v
-set_global_assignment -name VERILOG_FILE ../video/video_sync.v
-set_global_assignment -name VERILOG_FILE ../video/video_fetch.v
-set_global_assignment -name VERILOG_FILE ../video/video_render.v
-set_global_assignment -name VERILOG_FILE ../video/video_out.v
-set_global_assignment -name VERILOG_FILE ../sound/sound.v
-set_global_assignment -name VERILOG_FILE ../z80/zsignals.v
-set_global_assignment -name VERILOG_FILE ../z80/zmaps.v
-set_global_assignment -name VERILOG_FILE ../z80/znmi.v
-set_global_assignment -name VERILOG_FILE ../z80/zwait.v
-set_global_assignment -name VERILOG_FILE ../z80/zkbdmus.v
-set_global_assignment -name VERILOG_FILE ../z80/zports.v
-set_global_assignment -name VERILOG_FILE ../z80/zclock.v
-set_global_assignment -name VERILOG_FILE ../z80/zint.v
-set_global_assignment -name VERILOG_FILE ../z80/zmem.v
-set_global_assignment -name VERILOG_FILE ../z80/zbus.v
-set_global_assignment -name VERILOG_FILE ../vg93/vg93.v
-set_global_assignment -name VERILOG_FILE ../vg93/fapch_counter.v
-set_global_assignment -name VERILOG_FILE ../vg93/fapch_zek.v
-set_global_assignment -name VERILOG_FILE ../dram/dram.v
-set_global_assignment -name VERILOG_FILE ../dram/arbiter.v
-set_global_assignment -name VERILOG_FILE ../common/clock.v
-set_global_assignment -name VERILOG_FILE ../common/spi.v
-set_global_assignment -name VERILOG_FILE ../common/resetter.v
-set_global_assignment -name VERILOG_FILE ../top.v
-set_global_assignment -name MIF_FILE ../video/mem/video_cram.mif
-set_global_assignment -name ZIP_VECTOR_WAVEFORM_FILE ../sim_vw/dram.cvwf
-set_global_assignment -name RESERVE_ALL_UNUSED_PINS_NO_OUTPUT_GND "AS INPUT TRI-STATED"
-set_global_assignment -name OPTIMIZE_MULTI_CORNER_TIMING OFF
-set_location_assignment PIN_169 -to ra[4]
-set_location_assignment PIN_170 -to ra[3]
-set_location_assignment PIN_172 -to ra[5]
-set_location_assignment PIN_173 -to ra[2]
-set_location_assignment PIN_174 -to ra[6]
-set_location_assignment PIN_175 -to ra[1]
-set_location_assignment PIN_176 -to ra[7]
-set_location_assignment PIN_177 -to ra[0]
-set_location_assignment PIN_179 -to ra[8]
-set_location_assignment PIN_180 -to ra[9]
-set_location_assignment PIN_191 -to rd[8]
-set_location_assignment PIN_192 -to rd[7]
-set_location_assignment PIN_193 -to rd[9]
-set_location_assignment PIN_195 -to rd[6]
-set_location_assignment PIN_196 -to rd[10]
-set_location_assignment PIN_197 -to rd[5]
-set_location_assignment PIN_198 -to rd[11]
-set_location_assignment PIN_199 -to rd[4]
-set_location_assignment PIN_200 -to rd[12]
-set_location_assignment PIN_202 -to rd[3]
-set_location_assignment PIN_203 -to rd[13]
-set_location_assignment PIN_204 -to rd[2]
-set_location_assignment PIN_205 -to rd[14]
-set_location_assignment PIN_206 -to rd[1]
-set_location_assignment PIN_207 -to rd[15]
-set_location_assignment PIN_208 -to rd[0]
-set_global_assignment -name SAVE_DISK_SPACE OFF

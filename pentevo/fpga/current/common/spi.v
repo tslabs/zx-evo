@@ -68,7 +68,6 @@ module spi(
 	input  wire       sdi,      //
 
 // controls
-	output wire       stb,      // ready strobe, 1 clock length
 	output wire       start,    // start strobe, 1 clock length
 	// output wire       rdy,      // ready (idle) - when module can accept data
 	output reg        bsync,    // for vs1001
@@ -84,24 +83,9 @@ module spi(
 	output reg  [7:0] dout,
 	
 // configuration
-	input  wire [1:0] speed,    // =2'b00 - sck full speed (1/2 of clk), =2'b01 - half (1/4 of clk), =2'b10 - one fourth (1/8 of clk), =2'b11 - one eighth (1/16 of clk)
-	
-	output reg [2:0] tst
-
+	input  wire [1:0] speed    // =2'b00 - sck full speed (1/2 of clk), =2'b01 - half (1/4 of clk), =2'b10 - one fourth (1/8 of clk), =2'b11 - one eighth (1/16 of clk)
 );
 
-
-	always @*
-		if (stb)
-			tst = 5;
-		else if (start)
-			tst = 3;
-		else if (dma_req)
-			tst = 1;
-		else if (cpu_req)
-			tst = 4;
-		else tst = 0;
-	
 	wire req = cpu_req || dma_req;
 	wire [7:0] din = dma_req ? dma_din : cpu_din;
 
@@ -122,12 +106,10 @@ module spi(
 
 	assign sck = counter[0];
 	wire rdy = counter[4];         // =0 when transmission in progress
-	assign stb = stb_r && !rdy;
 	assign start = req && rdy;
 
 	reg [6:0] shiftin; 	// shifting in data from sdi before emitting it on dout
 	reg [4:0] counter; 	// handles transmission
-	reg stb_r;
 	always @(posedge clk)
 	begin
 		if (g_ena)
@@ -136,20 +118,16 @@ module spi(
 			begin
 				counter <= 5'b0; 	// rdy = 0; sck = 0;
 				bsync <= 1'b1; 		// begin bsync pulse
-				stb_r <= 1'b0;
 			end
 
 			else
 			begin
 				if (!sck) // on the rising edge of sck
 				begin
-      	            shiftin[6:0] <= {shiftin[5:0], sdi};
+          shiftin[6:0] <= {shiftin[5:0], sdi};
 
 					if (&counter[3:1] && !rdy)
-					begin
 						dout <= {shiftin[6:0], sdi}; // update dout at the last sck rising edge
-						stb_r <= 1'b1;
-					end
 				end
 
 				else // on the falling edge of sck

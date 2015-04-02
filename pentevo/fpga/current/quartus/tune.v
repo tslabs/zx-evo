@@ -11,4 +11,6 @@
 
 // `define IDE_VDAC        // for VideoDAC instead of IDE
 
-// `define XTR_FEAT        // extra features, in only IDE-less version
+// `define XTR_FEAT        // extra features, in only IDEless version
+
+// `define FDR        // FDD Ripper version
