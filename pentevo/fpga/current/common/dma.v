@@ -90,16 +90,25 @@ module dma (
 
 // devices
   localparam DEV_RAM = 3'b0001;
-  localparam DEV_BLT = 4'b1001;
+  localparam DEV_BLT1 = 4'b1001;
+`ifdef XTR_FEAT
+  localparam DEV_BLT2 = 4'b0110;
+`endif
   localparam DEV_FIL = 4'b0100;
   localparam DEV_SPI = 3'b010;
   localparam DEV_IDE = 3'b011;
   localparam DEV_CRM = 4'b1100;
   localparam DEV_SFL = 4'b1101;
   localparam DEV_FDD = 4'b0101;
+  
   wire [3:0] devsel = {dma_wnr, device};
-  wire dv_ram = (devsel == DEV_RAM) || (devsel == DEV_BLT) || (devsel == DEV_FIL);
-  wire dv_blt = (devsel == DEV_BLT);
+`ifdef XTR_FEAT
+  wire dv_ram = (devsel == DEV_RAM) || (devsel == DEV_BLT1) || (devsel == DEV_BLT2) || (devsel == DEV_FIL);
+  wire dv_blt = (devsel == DEV_BLT1) || (devsel == DEV_BLT2);
+`else
+  wire dv_ram = (devsel == DEV_RAM) || (devsel == DEV_BLT1) || (devsel == DEV_FIL);
+  wire dv_blt = (devsel == DEV_BLT1);
+`endif
   wire dv_fil = (devsel == DEV_FIL);
   wire dv_spi = (device == DEV_SPI);
   wire dv_ide = (device == DEV_IDE);
@@ -139,16 +148,40 @@ module dma (
   assign ide_rnw = state_rd;
 
   // blitter
-  wire [15:0] blt_rddata = {blt_data_h, blt_data_l};
-  wire [7:0] blt_data_h = dma_asz ? blt_data32 : {blt_data3, blt_data2};
-  wire [7:0] blt_data_l = dma_asz ? blt_data10 : {blt_data1, blt_data0};
-  wire [7:0] blt_data32 = |data[15:8] ? data[15:8] : dram_rddata[15:8];
-  wire [7:0] blt_data10 = |data[7:0] ? data[7:0] : dram_rddata[7:0];
-  wire [3:0] blt_data3 = |data[15:12] ? data[15:12] : dram_rddata[15:12];
-  wire [3:0] blt_data2 = |data[11:8] ? data[11:8] : dram_rddata[11:8];
-  wire [3:0] blt_data1 = |data[7:4] ? data[7:4] : dram_rddata[7:4];
-  wire [3:0] blt_data0 = |data[3:0] ? data[3:0] : dram_rddata[3:0];
+`ifdef XTR_FEAT
+  wire [15:0] blt_rddata = (devsel == DEV_BLT1) ? blt1_rddata : blt2_rddata;
+`else
+  wire [15:0] blt_rddata = blt1_rddata;
+`endif
+  
+  // Mode 1
+  wire [15:0] blt1_rddata = {blt1_data_h, blt1_data_l};
+  wire [7:0] blt1_data_h = dma_asz ? blt1_data32 : {blt1_data3, blt1_data2};
+  wire [7:0] blt1_data_l = dma_asz ? blt1_data10 : {blt1_data1, blt1_data0};
+  wire [7:0] blt1_data32 = |data[15:8] ? data[15:8] : dram_rddata[15:8];
+  wire [7:0] blt1_data10 = |data[7:0] ? data[7:0] : dram_rddata[7:0];
+  wire [3:0] blt1_data3 = |data[15:12] ? data[15:12] : dram_rddata[15:12];
+  wire [3:0] blt1_data2 = |data[11:8] ? data[11:8] : dram_rddata[11:8];
+  wire [3:0] blt1_data1 = |data[7:4] ? data[7:4] : dram_rddata[7:4];
+  wire [3:0] blt1_data0 = |data[3:0] ? data[3:0] : dram_rddata[3:0];
 
+`ifdef XTR_FEAT
+  // Mode 2
+  wire [15:0] blt2_rddata = {blt2_data_1, blt2_data_0};
+  wire [7:0] blt2_data_1 = dma_asz ? blt2_8_data1 : {blt2_4_data3, blt2_4_data2};
+  wire [7:0] blt2_data_0 = dma_asz ? blt2_8_data0 : {blt2_4_data1, blt2_4_data0};
+
+  localparam msk = 8'd255;
+  
+  wire [7:0] blt2_8_data0 = (((data[7:0] + dram_rddata[7:0]) && dma_opt) > msk) ? msk : (data[7:0] + dram_rddata[7:0]);
+  wire [7:0] blt2_8_data1 = (((data[15:8] + dram_rddata[15:8]) && dma_opt) > msk) ? msk : (data[15:8] + dram_rddata[15:8]);
+  
+  wire [3:0] blt2_4_data0 = (((data[3:0] + dram_rddata[3:0]) > msk[3:0]) && dma_opt) ? msk[3:0] : (data[3:0] + dram_rddata[3:0]);
+  wire [3:0] blt2_4_data1 = (((data[7:4] + dram_rddata[7:4]) > msk[3:0]) && dma_opt) ? msk[3:0] : (data[7:4] + dram_rddata[7:4]);
+  wire [3:0] blt2_4_data2 = (((data[11:8] + dram_rddata[11:8]) > msk[3:0]) && dma_opt) ? msk[3:0] : (data[11:8] + dram_rddata[11:8]);
+  wire [3:0] blt2_4_data3 = (((data[15:12] + dram_rddata[15:12]) > msk[3:0]) && dma_opt) ? msk[3:0] : (data[15:12] + dram_rddata[15:12]);
+`endif
+  
 // data aquiring
   always @(posedge clk)
     if (state_rd)
@@ -206,11 +239,13 @@ module dma (
   reg phase;        // 0 - read / 1 - write
   reg phase_blt;      // 0 - source / 1 - destination
   reg bsel;        // 0 - lsb / 1 - msb
+  reg dma_opt;
 
   always @(posedge clk)
   if (dma_launch)      // write to DMACtrl - launch of DMA burst
   begin
     dma_wnr <= zdata[7];
+    dma_opt <= zdata[6];
     dma_salgn <= zdata[5];
     dma_dalgn <= zdata[4];
     dma_asz <= zdata[3];
