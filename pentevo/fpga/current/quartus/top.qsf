@@ -18,7 +18,7 @@
 #
 # Quartus II
 # Version 9.0 Build 132 02/25/2009 SJ Full Version
-# Date created = 00:37:05  April 01, 2015
+# Date created = 06:30:07  April 05, 2015
 #
 # -------------------------------------------------------------------------- #
 #
@@ -273,7 +273,7 @@ set_global_assignment -name FITTER_EFFORT "STANDARD FIT"
 set_global_assignment -name SLOW_SLEW_RATE ON
 set_global_assignment -name AUTO_PACKED_REGISTERS NORMAL
 set_global_assignment -name FIT_ONLY_ONE_ATTEMPT OFF
-set_global_assignment -name SEED 18
+set_global_assignment -name SEED 1
 set_global_assignment -name ROUTER_TIMING_OPTIMIZATION_LEVEL MINIMUM
 set_global_assignment -name PLACEMENT_EFFORT_MULTIPLIER 1.0
 set_global_assignment -name ROUTER_EFFORT_MULTIPLIER 1.0
@@ -356,9 +356,9 @@ set_global_assignment -name INCREMENTAL_VECTOR_INPUT_SOURCE ../sim_vw/dram.cvwf
 	set_instance_assignment -name CLOCK_SETTINGS "Z80 clock" -to clkz_in
 	set_instance_assignment -name CLOCK_SETTINGS "SPI clock" -to spick
 	set_instance_assignment -name CUT ON -from clkz_in -to fclk
-	set_instance_assignment -name CUT ON -from dram_rd -to "zmem:z80mem|rd_buf"
-	set_instance_assignment -name CUT ON -from "zmem:z80mem|rd_buf" -to d
 	set_instance_assignment -name CUT ON -from "zclock:zclock|zclk_out" -to clkz_out
+	set_instance_assignment -name CUT ON -from "zsignals:zsignals|mreq_r" -to "dram:dram|int_addr"
+	set_instance_assignment -name CUT ON -from "zmem:z80mem|zd_out" -to d
 
 	# Fitter Assignments
 	# ==================

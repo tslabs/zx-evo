@@ -60,6 +60,7 @@ module zports(
   output wire [31:0] xt_page,
 
   output reg [4:0] fmaddr,
+  input wire regs_we,
 
   output reg [7:0] sysconf,
   output reg [7:0] memconf,
@@ -172,8 +173,8 @@ module zports(
   localparam COMPORT = 8'hEF;     // F8EF..FFEF - rs232 ports
 
 
-  wire [7:0] loa=a[7:0];
-  wire [7:0] hoa=a[15:8];
+  wire [7:0] loa = a[7:0];
+  wire [7:0] hoa = regs_we ? a[7:0] : a[15:8];
 
     assign porthit =
             ((loa==PORTFE) || (loa==PORTXT) || (loa==PORTFD) || (loa==COVOX))
@@ -436,7 +437,7 @@ module zports(
   assign beeper_wr = portfe_wr;
   wire portfe_wr = (loa==PORTFE) && iowr_s;
   assign covox_wr  = (loa==COVOX) && iowr_s;
-  wire portxt_wr = (loa==PORTXT) && iowr_s;
+  wire portxt_wr = ((loa==PORTXT) && iowr_s) || regs_we;
   wire portxt_rd = (loa==PORTXT) && iord_s;
 
   reg [7:0] rampage[0:3];
