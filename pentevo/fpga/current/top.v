@@ -288,6 +288,7 @@ module top(
     wire [7:0]       zma;
     wire cram_we;
     wire sfile_we;
+    wire regs_we;
 
     wire rst;
     wire m1;
@@ -689,7 +690,8 @@ module top(
         .dma_cram_we(dma_cram_we),
         .dma_sfile_we(dma_sfile_we),
         .cram_we(cram_we),
-        .sfile_we(sfile_we)
+        .sfile_we(sfile_we),
+        .regs_we(regs_we)
     );
 
     zsignals zsignals
@@ -802,6 +804,7 @@ module top(
         .sgpage_wr(sgpage_wr),
         .xt_page(xt_page),
         .fmaddr(fmaddr),
+        .regs_we(regs_we),
         .sysconf(sysconf),
         .cacheconf(cacheconf),
         .memconf(memconf),
