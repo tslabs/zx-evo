@@ -1082,12 +1082,14 @@ count           defs 1
 duhl            defs 2
 dude            defs 2
 lstcat          defs 4      ; active dir
-blknum          defs 4
+blknum          defs 4; sector number to proceed
 dahl            defs 2      ; see hdd proc.
 dade            defs 2
 drvre           defs 1
 device          defs 1; 0 - SD, 1 - HDD Master, 2 - HDD Slave
+blkt            defs 1; SD block scale (x1/x512)
 zes             defs 1
+
 
 ; -----------------------------------
 ; -- FAT driver buffers

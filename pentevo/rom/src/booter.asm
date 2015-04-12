@@ -1,15 +1,3 @@
-
-p_conf  equ h'77
-p_data  equ h'57
-cmd_12  equ h'4c
-cmd_18  equ h'52
-cmd_25  equ h'59
-cmd_55  equ h'77
-cmd_58  equ h'7a
-cmd_59  equ h'7b
-acmd_41 equ h'69
-
-
 ;---------------------------------------
 
 start   push bc
@@ -406,7 +394,7 @@ ldbpb   ld (addtop), hl
     ;inc hl
     ;jp nc, fhdd
     ;djnz five
-        
+
         ld hl, (lobu + 11)
         ld a, h
         dec a
@@ -615,8 +603,20 @@ tos     xor a
 ;   SD DRIVER
 ;---------------------------------------
 
-ini_sd  call sd__off
-        ret
+sdcnf   equ h'77; ZC spi configuration port
+data    equ h'57; ZC spi data port
+
+cmd_1   equ %01000000+1; init
+cmd_12  equ %01000000+12;stop transmission
+cmd_16  equ %01000000+16;block size
+cmd_18  equ %01000000+18;mult read
+acmd_41 equ %01000000+41;init (sdc only)
+cmd_55  equ %01000000+55;app cmd
+cmd_58  equ %01000000+58;read OCR
+
+cmd00   defb 0x40, 0, 0, 0, 0, 0x95;   Software reset
+cmd08   defb 0x48, 0, 0, 1, 0xAA, 0x87;Check voltage range (SDCv2 only)
+cmd16   defb 0x50, 0, 0, 2, 0, 0xFF;   Change R/W block size
 
 ;=======================================
 xpozi_sd
@@ -627,33 +627,34 @@ proz_sd ld (blknum), hl
         ld (blknum+2), de
         ret
 
-;hl, in da kudy a, secs
+;i:HL - Address
+;   A - Blocks
+;o:HL - NEW Address
+
 rddse_sd
         ld de, (blknum)
         ld bc, (blknum+2)
         ex af, af'
-        ld a, cmd_18
-        call secm200
+        call cmd18
+        jr nz, $
         ex af, af'
 rd1     ex af, af'
-        call in_out
-        cp h'fe
-        jr nz, $-5
+        call wtdo
+        cp h'FE
+        jr nz,$-5
         call reads
         ex af, af'
         dec a
         jr nz, rd1
-        ld a, cmd_12
-        call out_com
-        call in_out
-        inc a
-        jr nz, $-4
-        jp cs_high
+
+        call cmd12
+        call snb
+        jp csh
         
 ;---------------------------------------
 reads   push bc
         push de
-        ld bc, p_data
+        ld bc, data
         inir
         inir
         in a, (c)
@@ -664,7 +665,7 @@ reads   push bc
 
 ;---------------------------------------
 ;detecting device:
-        
+
 sel_dev_sd
 ;i:        a - n of dev
         or a
@@ -676,142 +677,204 @@ sel_dev_sd
         ld de, 0
         ret
 
-;---------------------------------------
-sd_init call cs_high
-        ld bc, p_data
-        ld de, h'10ff
-        out (c), e
-        dec d
-        jr nz, $-3
-        xor a
-        ex af, af'
-zaw001  ld hl, cmd00
-        call outcom
-        call in_out
-        ex af, af'
-        dec a
-        jr z, zaw003
-        ex af, af'
-        dec a
-        jr nz, zaw001
-        ld hl, cmd08
-        call outcom
-        call in_out
-        rept 3
-        in h, (c)
-        nop
-        endr
-        in h, (c)
-        ld hl, 0
-        bit 2, a
-        jr nz, zaw006
-        
-        ld h, h'40
-zaw006  ld a, cmd_55
-        call out_com
-        call in_out
-        ld a, acmd_41
-        out (c), a
-        nop
-        out (c), h
-        nop
-        out (c), l
-        nop
-        out (c), l
-        nop
-        out (c), l
-        ld a, h'ff
-        out (c), a
-        call in_out
-        and a
-        jr nz, zaw006
-        
-zaw004  ld a, cmd_59
-        call out_com
-        call in_out
-        and a
-        jr nz, zaw004
-        
-zaw005  ld hl, cmd16
-        call outcom
-        call in_out
-        and a
-        jr nz, zaw005
-        
-cs_high push de
-        push bc
-        ld e, 3
-        ld bc, p_conf
-        out (c), e
-        ld e, 0
-        ld c, p_data
-        out (c), e
-        pop bc
-        pop de
+ini_sd  call sdoff
         ret
 
-zaw003  call sd__off
+;---------------------------------------
+sd_init 
+        call csh
+        ld de, 512+10
+        call cycl
+
+        call cmd0
+        jp nz, nosd
+        dec a
+        jp nz, nosd
+
+        call cmd8
+        push af
+        in e, (c)
+        in e, (c)
+        in h, (c)
+        in l, (c)
+        pop af
+        jr nz, nosd
+        bit 2, a
+        jr z, sdnew
+;-------
+sdold   ld de, 8000
+aa      dec de
+        ld a, d
+        or e
+        jr z, lc
+        ld h, 0
+        call acmd41
+        jr nz, aa
+        cp 1
+        jr z, aa
+        or a
+        jr nz, lc
+;sdv1 detected
+        jr fbs
+;-------
+lc      ld de, 8000
+oo      dec de
+        ld a, d
+        or e
+        jr z, nosd
+        call cmd1
+        jr nz, oo
+        cp 1
+        jr z, oo
+        or a
+        jr nz, nosd
+;mmc ver.3 detected
+        jr fbs
+;-------
+sdnew   ld de, h'01AA
+        or a
+        sbc hl, de
+        jr nz, nosd
+
+        ld de, 8000
+yy      dec de
+        ld a, d
+        or e
+        jr z, nosd
+        ld h, h'40
+        call acmd41
+        jr nz, yy
+        cp 1
+        jr z, yy
+        or a
+        jr nz, nosd
+;sdv2 detected
+
+        call cmd58
+        jr nz, nosd
+        ld bc, data
+        in a, (c)
+        in l, (c)
+        in l, (c)
+        in l, (c)
+        bit 6, a
+        jr z, fbs;sdv2 byte address
+;sdv2 block address
+
+        ld a, 1
+sdfnd   ld (blkt), a
+        xor a
+        jr csh
+;-------
+fbs     call cmdi6
+        jr nz, nosd
+        or a
+        jr z, sdfnd
+;-------
+nosd    call sdoff
         ld a, 1
         ret
-
-sd__off xor a
-        out (p_conf), a
-        out (p_data), a
-        ret
-
-cs__low push de
-        push bc
-        ld bc, p_conf
-        ld e, 1
-        out (c), e
-        pop bc
-        pop de
-        ret
-
-outcom  call cs__low
-        push bc
-        ld bc, p_data
-        rept 6
-        outi
-        nop
-        endr
+;---------------------------------------
+csh     push bc
+        push af
+        ld bc, sdcnf
+        ld a, %00000011
+        out (c), a
+        ld bc, data
+        ld a, h'FF
+        out (c), a
+        pop af
         pop bc
         ret
+        
+csl     push bc
+        push af
+        ld bc, sdcnf
+        ld a, %00000001
+        out (c), a
+        ld bc, data
+        ld a, h'FF
+        out (c), a
+        pop af
+        pop bc
+        jp wait
 
-out_com push bc
-        call cs__low
-        ld bc, p_data
+snb     push bc
+        push af
+        ld b,16
+snbb    xor a
+        in a,(data)
+        djnz snbb
+        pop af
+        pop bc
+        ret
+
+cycl    ld bc, data
+cy      ld a, h'FF
+        out (c), a
+        dec de
+        ld a, d
+        or e
+        jr nz, cy
+        ret
+;-------
+cmdo    call csh
+        call csl
+cmdx    push bc
+        ld bc, data
         out (c), a
         xor a
-        rept 3
         out (c), a
-        nop
-        endr
+        out (c), a
+        out (c), a
         out (c), a
         dec a
         out (c), a
         pop bc
         ret
+cmd1    ld a, cmd_1
+        call cmdo
+        jp resp
+cmd12   ld a, cmd_12
+        call cmdx
+        xor a
+        in a, (data)
+        jp resp
+cmd55   ld a, cmd_55
+        call cmdo
+        jp resp
+cmd58   ld a, cmd_58
+        call cmdo
+        jp resp
+;-------
+acmd41  call cmd55
+        call csh
+        call csl
 
-secm200 push hl
+        ld bc, data
+        ld a, acmd_41
+        out (c), a
+        ld l, 0
+        out (c), h
+        out (c), l
+        out (c), l
+        out (c), l
+        dec l
+        out (c), l
+        jp resp
+;-------
+cmd18   call csh
+        call csl
+        push hl
+        push bc
         push de
-        push bc
-        push af
-        push bc
-        ld bc, p_data
-        ld a, cmd_58
-        call out_com
-        call in_out
-        in a, (c)
-        nop
-        in h, (c)
-        nop
-        in h, (c)
-        nop
-        in h, (c)
-        bit 6, a
-        pop hl
-        jr nz, secn200
+
+        ld l, c
+        ld h, b
+
+        ld a, (blkt)
+        or a
+        jr nz, cmzz
         ex de, hl
         add hl, hl
         ex de, hl
@@ -819,37 +882,77 @@ secm200 push hl
         ld h, l
         ld l, d
         ld d, e
-        ld e, 0
-secn200 pop af
-        ld bc, p_data
+        ld e, a
+
+cmzz    ld a, cmd_18
+        ld bc, data
         out (c), a
-        nop
         out (c), h
-        nop
         out (c), l
-        nop
         out (c), d
-        nop
         out (c), e
-        ld a, h'ff
+        ld a, h'FF
         out (c), a
-        pop bc
+        
         pop de
+        pop bc
         pop hl
+        jp resp
+;-------
+cmdi6   ld hl, cmd16
+        jr cmd
+cmd8    ld hl, cmd08
+        jr cmd
+cmd0    ld hl, cmd00
+cmd     call csh
+        call csl
+        ld bc, data
+        outi
+        outi
+        outi
+        outi
+        outi
+        outi
+
+resp    push de
+        push bc
+        ld bc, data
+        ld d, 10
+resz    in a, (c)
+        bit 7, a
+        jr z, rez
+        dec d
+        jr nz, resz
+        inc d
+rez     pop bc
+        pop de
+        ret
+;-------
+wtdo    push bc
+        ld bc, data
+        in a, (c)
+        cp h'FF
+        jr z, $-4
+        pop bc
         ret
 
-in_out  push bc
-        push de
-        ld de, h'10ff
-        ld bc, p_data
-in_wait in a, (c)
-        cp e
-        jr nz, in_exit
-in_next dec d
-        jr nz, in_wait
-in_exit pop de
+wait    push bc
+        push af
+        ld bc, data
+        in a, (c)
+        inc a
+        jr nz, $-3
+        pop af
         pop bc
         ret
+;-------
+sdoff   xor a
+        out (sdcnf), a
+        out (data), a
+        ret
+;---------------------------------------
+
+
 
 ;---------------------------------------
 ;   IDE NEMO DRIVER
@@ -863,8 +966,17 @@ proz_nemo
         ld h, d
         ld d, e
         ld e, a
-
+        
 ;DE,cyl H,head L,sec
+
+        ld (blknum), hl
+        LD (blknum+2), de
+        RET
+
+rereg   push hl
+        push de
+        ld hl, (blknum)
+        ld de, (blknum+2)
 
         ld a, h
         and %00001111
@@ -879,8 +991,10 @@ proz_nemo
         out (c), d
         ld c, h'90
         out (c), e
+        pop de
+        pop hl
         RET
-		
+
 ;---------------------------------------
 rpoz    ld bc, h'ffd0
         in a, (c)
@@ -895,16 +1009,20 @@ rpoz    ld bc, h'ffd0
         ret
 
 ;---------------------------------------
+;---------------------------------------
 ;hl,in da kudy a,secs
 
 rddse_nemo
         push af
+        call drdy
         ld bc, h'50
         out (c), a
+        call rereg
         ld a, h'20
         call comah
         pop bc
 rdh1    push bc
+        call waitdrq
         call reads_nemo
         call ready
         pop bc
@@ -920,16 +1038,23 @@ reads_nemo
 
 ;---------------------------------------
 sel_sla ld a, h'F0
-        ld (drvre), a
+sel_ide ld (drvre), a
         ld bc, h'D0
         out (c), a
-        ld bc, h'F0
-        in a, (c)
+        
+        ld de, 0
+sdr     call loll
         rlca
+        ret nc
+        dec de
+        ld a, d
+        or e
+        jr nz, sdr
+        scf
         ret
 
 sel_mas ld a, h'E0
-        jr sel_sla+2
+        jr sel_ide
 
 ;---------------------------------------
 dv2     call sel_sla
@@ -943,16 +1068,17 @@ sel_dev_nemo
         dec a
         jr z,dv2
         call sel_mas
-drdet   ld a, h'08
+drdet   jr c, ru
+        ld a, h'08
         call comm
-        ld hl, 16384
-ydet    ld bc, h'f0
-        in a, (c)
-        rlca
-        jr nc, rrr
         call error_7
         jr c, rrr
 
+        ld hl, 16384
+ydet    call loll
+        rlca
+        jr nc, rrr
+        
         call hult
 		
         dec hl
@@ -964,19 +1090,23 @@ ydet    ld bc, h'f0
         jr ru
 
 rrr     ld de, 0
-        ld h, d
-        ld l, e
+        ld hl, 2
         call xpozi_nemo
-        ld bc, h'f0
+        call rereg
         ld a, h'ec
-        out (c), a
+        call comm
         
         call hult2
         
         call rpoz
         ld a, d
         or e
+        or h
+        jr nz, ru
+        ld a, l
+        cp 2
         jr z, kru
+        
 ;ld hl,#eb14
 ;or a:sbc hl,de:ret z;atapi
 ru      ld a, 1
@@ -1001,22 +1131,39 @@ haalt   add a, (ix+0)
         djnz haalt
         ret
 ;---------------------------------------
-comah   ld bc, h'f0
-        out (c), a
-ready   ld bc, h'f0
+loll    ld bc, h'f0
         in a, (c)
+        ret
+
+comah   call comm
+ready   call loll
         rlca
         ret nc
         jr ready
 
+waitdrq call loll
+        and 8
+        ret nz
+        jr waitdrq
+
+drdy    call loll
+        and %11000000
+        cp %01000000
+        ret z
+        jr drdy
+
 comm    ld bc, h'f0
         out (c), a
         ret
-		
+
 error_7 ld bc, h'f0
         in a, (c)
         rrca
         ret
+
+;---------------------------------------
+
+
 
 ;=======================================
 ide_ini ld a, (device)
@@ -1076,10 +1223,7 @@ to_sel_dev_nemo
         ld a, c
         jp sel_dev_nemo
 ;---------------------------------------        
-file1   defb "BOOT    $C "
-
 ;---------------------------------------
-cmd00   defb 0x40, 0, 0, 0, 0, 0x95
-cmd08   defb 0x48, 0, 0, 1, 0xaa, 0x87
-cmd16   defb 0x50, 0, 0, 2, 0, 0xff
+;---------------------------------------
+file1   defb "BOOT    $C "
 
