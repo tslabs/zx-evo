@@ -1,5 +1,6 @@
-MD20    .ASM - main module
+﻿MD20    .ASM - main module
 WCFX    .ASM - main functions
+WCIF    .ASM - interface module
 WCVLS   .ASM - variables and structures
 PS2P    .ASM - PS/2 handler (stand-alone)
 WCVW    .ASM - viewers, SPG/$C runner, WMF loader
@@ -15,7 +16,7 @@ DSDNGS  .ASM - source of SD(NGS) driver
 DOS_SDGS.COD - compiled code
 
 CORE32  .ASM - kernel (only FAT32)
-WDOSFC28.COD - compiled code
+WDOSFC30.COD - compiled code
 
 FONT32L .CDB - font
 GIG_PAL .CDB - palette for gigascreen
