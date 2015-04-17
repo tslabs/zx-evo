@@ -686,10 +686,15 @@ sd_init
         ld de, 512+10
         call cycl
 
+        ld de, 8000
+sdwt    dec de
+        ld a, d
+        or e
+        jp z, nosd
         call cmd0
-        jp nz, nosd
+        jr nz, sdwt
         dec a
-        jp nz, nosd
+        jr nz, sdwt
 
         call cmd8
         push af
@@ -698,7 +703,7 @@ sd_init
         in h, (c)
         in l, (c)
         pop af
-        jr nz, nosd
+        jr nz, sdwt
         bit 2, a
         jr z, sdnew
 ;-------
