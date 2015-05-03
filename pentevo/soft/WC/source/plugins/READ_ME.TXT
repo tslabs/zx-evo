@@ -311,6 +311,23 @@ Main Functions:
   ¦o: D - Y (след строка)
   ¦   E - X (без изменений)
 --+---------------------------------------------------
+84¦SCRLWOW
+  ¦сдвинуть содержимое области
+  ¦i: D - Y
+  ¦   E - X
+  ¦   B - Height
+  ¦   C - Width
+  ¦   A'- [7]:%1 - with attributes
+  ¦           %0 - chars only
+  ¦       [6]:%1 - clear source side (after scroll)
+  ¦           %0 - don't clear
+  ¦     [5-2]:%0000 - 1 char step
+  ¦           %1111 - 16 chars step
+  ¦     [1-0]:%00 - scroll down
+  ¦           %01 - up
+  ¦           %10 - right
+  ¦           %11 - left
+--+---------------------------------------------------
 13¦DMAPL
   ¦работа с DMA
   ¦i: A' - тип операции
@@ -510,26 +527,34 @@ File Operations:
   ¦o:NZ - устройство или раздел не найдены
   ¦   Z - можно начинать работать с потоком
 --+---------------------------------------------------
-58¦MKFILE (obsolete)
-  ¦создание файла в активном каталоге
-  ¦i:DE(12) - name(8)+ext(3)+flag(1)
-  ¦                     flag:#00 - file
-  ¦                          #10 - dir
-  ¦   HL(4) - File Size (bytes)
+58¦FindNext
+  ¦получение очередного имени файла/каталога
+  ¦(сбрасывается после GDIR)
+  ¦i:DE - Address
+  ¦   A - [7]:%1 - only short names
+  ¦     [6-5]:reserved
+  ¦       [4]:%1 - enable created time field
+  ¦       [3]:%1 - enable created date field
+  ¦       [2]:%1 - enable size field
+  ¦     [1-0]:%00 find next Entry
+  ¦           %01 find next File
+  ¦           %10 find next DIR
+  ¦           %11 reserved
   ¦
-  ¦o:NZ - Operation failed
-  ¦   Z - File created
-  ¦        o:ENTRY(32) [use TENTRY]
-  ¦          [DE,HL] - First Cluster Number
-  ¦[после создания файла происходит позиционирование
-  ¦[на его начало!!!
+  ¦o: Z - End Of Dir
+  ¦  NZ - Buffer updated
+  ¦  DE - [size(4)],
+  ¦       [date(2)],
+  ¦       [time(2)],
+  ¦       flag(1),Entry Name(1-255),0
 --+---------------------------------------------------
 59¦FENTRY
   ¦поиск файла/каталога в активной директории
-  ¦i:HL - flag(1),name(1-12),#00
+  ¦(так же можно подавать путь к файлу/каталогу)
+  ¦i:HL - flag(1),name/path(1-255/1-XXX),#00
   ¦flag:#00 - file
   ¦     #10 - dir
-  ¦name:"NAME.TXT","DIR"...
+  ¦name:"name.txt","directory"...
   ¦
   ¦o: Z - entry not found
   ¦  NZ - [DE,HL] - file length
@@ -549,7 +574,7 @@ File Operations:
 --+---------------------------------------------------
 72¦MKfile
   ¦создание файла в активном каталоге
-  ¦i:HL - flag(1),legth(4),name(1-12),#00
+  ¦i:HL - flag(1),legth(4),name(1-255),#00
   ¦
   ¦o:NZ - Operation failed
   ¦   Z - File created
@@ -560,10 +585,25 @@ File Operations:
 --+---------------------------------------------------
 73¦MKdir
   ¦создание каталога в активной директории
-  ¦i:HL - name(1-12),#00
+  ¦i:HL - name(1-255),#00
   ¦
   ¦o:NZ - Operation failed
   ¦   Z - Directory created
+--+---------------------------------------------------
+74¦REName
+  ¦переименование файла/каталога
+  ¦i:HL - flag(1),oldname(1-255),0
+  ¦  DE - newname(1-255),0
+  ¦
+  ¦o: Z - not found 
+  ¦  NZ - success
+--+---------------------------------------------------
+75¦DelFl
+  ¦удаление файла
+  ¦i: HL - flag(1),name(1-255),#00
+  ¦
+  ¦o:  Z - File Not Found
+  ¦   NZ - File Deleted
 --+---------------------------------------------------
 
 
