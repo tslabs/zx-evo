@@ -15,7 +15,8 @@ DOS_SDZC.COD - compiled code
 DSDNGS  .ASM - source of SD(NGS) driver
 DOS_SDGS.COD - compiled code
 
-CORE32  .ASM - kernel (only FAT32)
+KERNEL  .ASM - kernel
+CORE32  .ASM - fat driver (only FAT32)
 WDOSFC30.COD - compiled code
 
 FONT32L .CDB - font
