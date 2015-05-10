@@ -17,7 +17,7 @@ DOS_SDGS.COD - compiled code
 
 KERNEL  .ASM - kernel
 CORE32  .ASM - fat driver (only FAT32)
-WDOSFC30.COD - compiled code
+WDOSFC32.COD - compiled code
 
 FONT32L .CDB - font
 GIG_PAL .CDB - palette for gigascreen
