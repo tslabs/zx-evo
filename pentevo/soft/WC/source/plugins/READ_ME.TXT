@@ -7,6 +7,7 @@ gsplayer    - полноценный GS плеер, проигрывает MP3, 
 video_pl    - экспериментальный плагин, Video Player (пока-что может проигрывать видео 256 x 2,4,6,...,192)
 bmpview     - BMP Viewer & Sprite Cutter. Поддерживает 8bit BMP до 512x512. Режет 16/256c спрайты!
 ilbmview    - IFF/ILBM Viewer. предназначен для просмотра файлов в формате IFF/ILBM
+tapsna      - TAP mounter and SNA launcher. запускает SNA файлы и монтирует TAP на RAM диск
 
 PLUG01.ASM - пример плагина (стартовый плагин)
 PLUG02.ASM - ещё один пример
