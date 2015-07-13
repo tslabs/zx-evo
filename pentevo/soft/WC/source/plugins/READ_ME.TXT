@@ -628,7 +628,7 @@ File Operations:
   ¦i:HL - flag(1),oldname(1-255),0
   ¦  DE - newname(1-255),0
   ¦
-  ¦o: Z - not found 
+  ¦o: Z - not found or new name already exists
   ¦  NZ - success
 --+---------------------------------------------------
 75¦DelFl
