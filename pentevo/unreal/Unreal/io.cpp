@@ -1,5 +1,6 @@
 ﻿#include "std.h"
 #include "emul.h"
+#include "funcs.h"
 #include "vars.h"
 #include "draw.h"
 #include "memory.h"
@@ -141,321 +142,8 @@ void out(unsigned port, u8 val)
 		set_banks();
    }
 
-   if ((conf.mem_model == MM_TSL) && (p1 == 0xAF))
-   {
-       // TS-Config extensions ports
-	   switch (p2) {
-
-		// system
-			case TSW_SYSCONF:
-			{
-				comp.ts.sysconf = val;
-				comp.ts.cacheconf = comp.ts.cache ? 0x0F : 0x00;
-				set_clk();
-			}
-			break;
-
-			case TSW_CACHECONF:
-			{
-				comp.ts.cacheconf = val & 0x0F;
-			}
-			break;
-
-			case TSW_FDDVIRT:
-			{
-				comp.ts.fddvirt = val & 0x0F;
-			}
-			break;
-
-			case TSW_INTMASK:
-			{
-				comp.ts.intmask = val & 0x07;
-				comp.ts.intctrl.pend &= val & 0x07;
-			}
-			break;
-
-			case TSW_HSINT:
-			{
-				comp.ts.hsint = val;
-				comp.ts.intctrl.frame_t = ((comp.ts.hsint > (conf.t_line-1)) || (comp.ts.vsint > 319)) ? -1 : (comp.ts.vsint * conf.t_line + comp.ts.hsint);
-			}
-			break;
-
-			case TSW_VSINTL:
-			{
-				comp.ts.vsintl = val;
-				comp.ts.intctrl.frame_t = ((comp.ts.hsint > (conf.t_line-1)) || (comp.ts.vsint > 319)) ? -1 : (comp.ts.vsint * conf.t_line + comp.ts.hsint);
-			}
-			break;
-
-			case TSW_VSINTH:
-			{
-				comp.ts.vsinth = val;
-				comp.ts.intctrl.frame_t = ((comp.ts.hsint > (conf.t_line-1)) || (comp.ts.vsint > 319)) ? -1 : (comp.ts.vsint * conf.t_line + comp.ts.hsint);
-			}
-			break;
-
-	    // memory
-			case TSW_MEMCONF:
-			{
-				comp.ts.memconf = val;
-				comp.p7FFD &= ~0x10;
-				comp.p7FFD |= (val & 1) << 4;
-				set_banks();
-			}
-			break;
-
-			case TSW_PAGE0:
-			{
-				comp.ts.page[0] = val;
-				set_banks();
-			}
-			break;
-
-			case TSW_PAGE1:
-			{
-				comp.ts.page[1] = val;
-				set_banks();
-			}
-			break;
-
-			case TSW_PAGE2:
-			{
-				comp.ts.page[2] = val;
-				set_banks();
-			}
-			break;
-
-			case TSW_PAGE3:
-			{
-				comp.ts.page[3] = val;
-				set_banks();
-			}
-			break;
-
-			case TSW_FMADDR:
-			{
-				comp.ts.fmaddr = val;
-			}
-			break;
-
-		// video
-			case TSW_VCONF:
-			{
-				comp.ts.vconf_d = val;
-			}
-			break;
-
-			case TSW_VPAGE:
-			{
-				comp.ts.vpage_d = val;
-				set_banks();
-			}
-			break;
-
-			case TSW_TMPAGE:
-			{
-				comp.ts.tmpage = val;
-			}
-			break;
-
-			case TSW_T0GPAGE:
-			{
-				comp.ts.t0gpage[0] = val;
-			}
-			break;
-
-			case TSW_T1GPAGE:
-			{
-				comp.ts.t1gpage[0] = val;
-			}
-			break;
-
-			case TSW_SGPAGE:
-			{
-				comp.ts.sgpage = val;
-			}
-			break;
-
-			case TSW_BORDER:
-			{
-				comp.ts.border = val;
-			}
-			break;
-
-			case TSW_TSCONF:
-			{
-				comp.ts.tsconf = val;
-			}
-			break;
-
-			case TSW_PALSEL:
-			{
-				comp.ts.palsel_d = val;
-			}
-			break;
-
-			case TSW_GXOFFSL:
-			{
-				comp.ts.g_xoffsl_d = val;
-			}
-			break;
-
-			case TSW_GXOFFSH:
-			{
-				comp.ts.g_xoffsh_d = val & 1;
-			}
-			break;
-
-			case TSW_GYOFFSL:
-			{
-				comp.ts.g_yoffsl = val;
-				comp.ts.g_yoffs_updated = 1;
-			}
-			break;
-
-			case TSW_GYOFFSH:
-			{
-				comp.ts.g_yoffsh = val & 1;
-				comp.ts.g_yoffs_updated = 1;
-			}
-			break;
-
-			case TSW_T0XOFFSL:
-			{
-				comp.ts.t0_xoffsl = val;
-			}
-			break;
-
-			case TSW_T0XOFFSH:
-			{
-				comp.ts.t0_xoffsh = val & 1;
-			}
-			break;
-
-			case TSW_T0YOFFSL:
-			{
-				comp.ts.t0_yoffsl = val;
-			}
-			break;
-
-			case TSW_T0YOFFSH:
-			{
-				comp.ts.t0_yoffsh = val & 1;
-			}
-			break;
-
-			case TSW_T1XOFFSL:
-			{
-				comp.ts.t1_xoffsl = val;
-			}
-			break;
-
-			case TSW_T1XOFFSH:
-			{
-				comp.ts.t1_xoffsh = val & 1;
-			}
-			break;
-
-			case TSW_T1YOFFSL:
-			{
-				comp.ts.t1_yoffsl = val;
-			}
-			break;
-
-			case TSW_T1YOFFSH:
-			{
-				comp.ts.t1_yoffsh = val & 1;
-			}
-			break;
-
-		// dma
-			case TSW_DMASAL:
-			{
-				comp.ts.saddrl = val &0xFE;
-			}
-			break;
-
-			case TSW_DMASAH:
-			{
-				comp.ts.saddrh = val & 0x3F;
-			}
-			break;
-
-			case TSW_DMASAX:
-			{
-				comp.ts.saddrx = val;
-			}
-			break;
-
-			case TSW_DMADAL:
-			{
-				comp.ts.daddrl = val &0xFE;
-			}
-			break;
-
-			case TSW_DMADAH:
-			{
-				comp.ts.daddrh = val & 0x3F;
-			}
-			break;
-
-			case TSW_DMADAX:
-			{
-				comp.ts.daddrx = val;
-			}
-			break;
-
-			case TSW_DMALEN:
-			{
-				comp.ts.dmalen = val;
-			}
-			break;
-
-			case TSW_DMANUM:
-			{
-				comp.ts.dmanum = val;
-			}
-			break;
-
-			case TSW_DMACTR:
-			{
-				//if (val & 0x40)
-					//printf("Illegal DMA mode! OUT (%02XAF), %02X, PC: %04X\r\n", p2, val, cpu.pc);
-				/*
-        if ((val & 0x07) == 5)
-					printf("DMA SFILE. OUT (%02XAF), %02X, PC: %04X\r\n", p2, val, cpu.pc);
-        */
-
-				//dma(val);
-				//update_screen();
-
-				/* val must be:
-				 * rw|dev
-				 *  x|001 - RAM/BLT
-				 *  x|010 - SPI
-				 *  x|011 - IDE
-				 *  x|100 - FILL/CRAM
-				 *  1|101 - SFILE
-				 * any other values are ignored
-				 */
-				if ((val & 0x07) != 0x00 && (val & 0x06) != 0x06 && (val & 0x87) != 0x05)
-				{
-					comp.ts.dma.ctrl = val;
-					comp.ts.dma.state = DMA_ST_INIT;
-				}
-				else
-					printf("Illegal DMA mode! OUT (%02XAF), %02X, PC: %04X\r\n", p2, val, cpu.pc);
-			}
-			break;
-
-			default:
-			{
-				printf("Illegal port! OUT (%02XAF), %02X, PC: %04X\r\n", p2, val, cpu.pc);
-			}
-			break;
-		}
-   }
+  if ((conf.mem_model == MM_TSL) && (p1 == 0xAF))
+    ts_ext_port_wr(p2, val);
 
    if (conf.mem_model == MM_ATM3)
    {
@@ -1507,6 +1195,234 @@ u8 in(unsigned port)
 {
    brk_port_val = in1(port);
    return brk_port_val;
+}
+
+// TS-Config extensions ports
+void ts_ext_port_wr(u8 port, u8 val)
+{
+  switch (port)
+  {
+      // system
+    case TSW_SYSCONF:
+      comp.ts.sysconf = val;
+      comp.ts.cacheconf = comp.ts.cache ? 0x0F : 0x00;
+      set_clk();
+    break;
+
+    case TSW_CACHECONF:
+      comp.ts.cacheconf = val & 0x0F;
+    break;
+
+    case TSW_FDDVIRT:
+      comp.ts.fddvirt = val & 0x0F;
+    break;
+
+    case TSW_INTMASK:
+      comp.ts.intmask = val & 0x07;
+      comp.ts.intctrl.pend &= val & 0x07;
+    break;
+
+    case TSW_HSINT:
+      comp.ts.hsint = val;
+      comp.ts.intctrl.frame_t = ((comp.ts.hsint > (conf.t_line-1)) || (comp.ts.vsint > 319)) ? -1 : (comp.ts.vsint * conf.t_line + comp.ts.hsint);
+    break;
+
+    case TSW_VSINTL:
+      comp.ts.vsintl = val;
+      comp.ts.intctrl.frame_t = ((comp.ts.hsint > (conf.t_line-1)) || (comp.ts.vsint > 319)) ? -1 : (comp.ts.vsint * conf.t_line + comp.ts.hsint);
+    break;
+
+    case TSW_VSINTH:
+      comp.ts.vsinth = val;
+      comp.ts.intctrl.frame_t = ((comp.ts.hsint > (conf.t_line-1)) || (comp.ts.vsint > 319)) ? -1 : (comp.ts.vsint * conf.t_line + comp.ts.hsint);
+    break;
+
+    // memory
+    case TSW_MEMCONF:
+      comp.ts.memconf = val;
+      comp.p7FFD &= ~0x10;
+      comp.p7FFD |= (val & 1) << 4;
+      set_banks();
+    break;
+
+    case TSW_PAGE0:
+      comp.ts.page[0] = val;
+      set_banks();
+    break;
+
+    case TSW_PAGE1:
+      comp.ts.page[1] = val;
+      set_banks();
+    break;
+
+    case TSW_PAGE2:
+      comp.ts.page[2] = val;
+      set_banks();
+    break;
+
+    case TSW_PAGE3:
+      comp.ts.page[3] = val;
+      set_banks();
+    break;
+
+    case TSW_FMADDR:
+      comp.ts.fmaddr = val;
+    break;
+
+    // video
+    case TSW_VCONF:
+      comp.ts.vconf_d = val;
+    break;
+
+    case TSW_VPAGE:
+      comp.ts.vpage_d = val;
+      set_banks();
+    break;
+
+    case TSW_TMPAGE:
+      comp.ts.tmpage = val;
+    break;
+
+    case TSW_T0GPAGE:
+      comp.ts.t0gpage[0] = val;
+    break;
+
+    case TSW_T1GPAGE:
+      comp.ts.t1gpage[0] = val;
+    break;
+
+    case TSW_SGPAGE:
+      comp.ts.sgpage = val;
+    break;
+
+    case TSW_BORDER:
+      comp.ts.border = val;
+    break;
+
+    case TSW_TSCONF:
+      comp.ts.tsconf = val;
+    break;
+
+    case TSW_PALSEL:
+      comp.ts.palsel_d = val;
+    break;
+
+    case TSW_GXOFFSL:
+      comp.ts.g_xoffsl_d = val;
+    break;
+
+    case TSW_GXOFFSH:
+      comp.ts.g_xoffsh_d = val & 1;
+    break;
+
+    case TSW_GYOFFSL:
+      comp.ts.g_yoffsl = val;
+      comp.ts.g_yoffs_updated = 1;
+    break;
+
+    case TSW_GYOFFSH:
+      comp.ts.g_yoffsh = val & 1;
+      comp.ts.g_yoffs_updated = 1;
+    break;
+
+    case TSW_T0XOFFSL:
+      comp.ts.t0_xoffsl = val;
+    break;
+
+    case TSW_T0XOFFSH:
+      comp.ts.t0_xoffsh = val & 1;
+    break;
+
+    case TSW_T0YOFFSL:
+      comp.ts.t0_yoffsl = val;
+    break;
+
+    case TSW_T0YOFFSH:
+      comp.ts.t0_yoffsh = val & 1;
+    break;
+
+    case TSW_T1XOFFSL:
+      comp.ts.t1_xoffsl = val;
+    break;
+
+    case TSW_T1XOFFSH:
+      comp.ts.t1_xoffsh = val & 1;
+    break;
+
+    case TSW_T1YOFFSL:
+      comp.ts.t1_yoffsl = val;
+    break;
+
+    case TSW_T1YOFFSH:
+      comp.ts.t1_yoffsh = val & 1;
+    break;
+
+  // dma
+    case TSW_DMASAL:
+      comp.ts.saddrl = val &0xFE;
+    break;
+
+    case TSW_DMASAH:
+      comp.ts.saddrh = val & 0x3F;
+    break;
+
+    case TSW_DMASAX:
+      comp.ts.saddrx = val;
+    break;
+
+    case TSW_DMADAL:
+      comp.ts.daddrl = val &0xFE;
+    break;
+
+    case TSW_DMADAH:
+      comp.ts.daddrh = val & 0x3F;
+    break;
+
+    case TSW_DMADAX:
+      comp.ts.daddrx = val;
+    break;
+
+    case TSW_DMALEN:
+      comp.ts.dmalen = val;
+    break;
+
+    case TSW_DMANUM:
+      comp.ts.dmanum = val;
+    break;
+
+    case TSW_DMACTR:
+      //if (val & 0x40)
+        //printf("Illegal DMA mode! OUT (%02XAF), %02X, PC: %04X\r\n", p2, val, cpu.pc);
+      /*
+        if ((val & 0x07) == 5)
+        printf("DMA SFILE. OUT (%02XAF), %02X, PC: %04X\r\n", p2, val, cpu.pc);
+        */
+
+      //dma(val);
+      //update_screen();
+
+      /* val must be:
+      * rw|dev
+      *  x|001 - RAM/BLT
+      *  x|010 - SPI
+      *  x|011 - IDE
+      *  x|100 - FILL/CRAM
+      *  1|101 - SFILE
+      * any other values are ignored
+      */
+      if ((val & 0x07) != 0x00 && (val & 0x06) != 0x06 && (val & 0x87) != 0x05)
+      {
+        comp.ts.dma.ctrl = val;
+        comp.ts.dma.state = DMA_ST_INIT;
+      }
+      else
+        printf("Illegal DMA mode! OUT (%02XAF), %02X, PC: %04X\r\n", port, val, cpu.pc);
+    break;
+
+    default:
+      printf("Illegal port! OUT (%02XAF), %02X, PC: %04X\r\n", port, val, cpu.pc);
+    break;
+  }
 }
 
 #undef in_trdos

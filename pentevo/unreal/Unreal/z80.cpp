@@ -1,5 +1,6 @@
 #include "std.h"
 #include "emul.h"
+#include "funcs.h"
 #include "vars.h"
 #include "draw.h"
 #include "memory.h"
