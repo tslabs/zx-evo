@@ -452,7 +452,7 @@ void load_config(const char *fname)
    }
 
    GetPrivateProfileString(video, "ScrShotDir", ".", conf.scrshot_path, sizeof conf.scrshot_path, ininame);
-   addpath(conf.scrshot_path);
+   // addpath(conf.scrshot_path);
    GetPrivateProfileString(video, "ScrShot", nil, line, sizeof line, ininame);
    conf.scrshot = SS_SCR;
    for (int i = 0; i < sizeof(SSHOT_EXT) / sizeof(SSHOT_EXT[0]); i++)
