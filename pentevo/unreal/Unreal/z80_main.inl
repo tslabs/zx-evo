@@ -23,36 +23,36 @@ u8 rm(unsigned addr)
     }
 #endif
 
-	u8 window = (addr >> 14) & 3;
+  u8 window = (addr >> 14) & 3;
 
-	if (bankm[window] == BANKM_RAM)		// RAM hit
-	{
+  if (bankm[window] == BANKM_RAM)    // RAM hit
+  {
         // TS-conf cache model
-		if (conf.mem_model == MM_TSL)
-		{
+    if (conf.mem_model == MM_TSL)
+    {
             // pentevo version for 16 bit DRAM/cache
-			u32 cached_address = (comp.ts.page[window] << 5) | ((addr >> 9) & 0x1F);	// {page[7:0], addr[13:9]}
-			u16 cache_pointer = addr & 0x1FF;	// addr[8:0]
-			comp.ts.cache_miss = !(comp.ts.cacheconf & (1 << window)) || (cpu.tscache_addr[cache_pointer] != cached_address);
+      u32 cached_address = (comp.ts.page[window] << 5) | ((addr >> 9) & 0x1F);  // {page[7:0], addr[13:9]}
+      u16 cache_pointer = addr & 0x1FF;  // addr[8:0]
+      comp.ts.cache_miss = !(comp.ts.cacheconf & (1 << window)) || (cpu.tscache_addr[cache_pointer] != cached_address);
 
             if (comp.ts.cache_miss)
-			{
+      {
                 cpu.tscache_data[cache_pointer & ~1] = *am_r(addr & ~1);
-				cpu.tscache_data[cache_pointer | 1] = *am_r(addr | 1);
-				cpu.tscache_addr[cache_pointer & ~1] = cpu.tscache_addr[cache_pointer | 1] = cached_address;     // set cache tags for two subsequent 8-bit addresses
-				vid.memcpucyc[cpu.t / 224]++;
-				vid.memcyc_lcmd++;
-			}
+        cpu.tscache_data[cache_pointer | 1] = *am_r(addr | 1);
+        cpu.tscache_addr[cache_pointer & ~1] = cpu.tscache_addr[cache_pointer | 1] = cached_address;     // set cache tags for two subsequent 8-bit addresses
+        vid.memcpucyc[cpu.t / 224]++;
+        vid.memcyc_lcmd++;
+      }
 
             return cpu.tscache_data[cache_pointer];
-		}
+    }
 
-		else
-			vid.memcpucyc[cpu.t / 224]++;
-	}
+    else
+      vid.memcpucyc[cpu.t / 224]++;
+  }
 
-	else
-		comp.ts.cache_miss = false;
+  else
+    comp.ts.cache_miss = false;
 
    return *am_r(addr);
 }
@@ -89,38 +89,49 @@ void wm(unsigned addr, u8 val)
    }
 #endif
 
-   // TS palette load
-   if ((conf.mem_model == MM_TSL) && (comp.ts.fm_en))
-		if (((addr >> 12) & 0x0F) == comp.ts.fm_addr)
-			if (addr & 1)
-			// write to FPGA RAM
-			switch ((addr >> 9) & 0x07)
-			{
-				case TSF_CRAM:
-				{
-					comp.cram[(addr >> 1) & 0xFF] = ((val << 8) | temp.fm_tmp);
-					update_clut((addr >> 1) & 0xFF);
-					break;
-				}
-				case TSF_SFILE:
-				{
-					comp.sfile[(addr >> 1) & 0xFF] = (val << 8) | temp.fm_tmp;
-					break;
-				}
-			}
+  // write to FPGA mapped area
+  if ((conf.mem_model == MM_TSL) && (comp.ts.fm_en) && (((addr >> 12) & 0x0F) == comp.ts.fm_addr))
+  {
+    // 256 byte arrays
+    if (((addr >> 8) & 0x0F) == TSF_REGS)
+      ts_ext_port_wr(addr & 0xFF, val);
+    
+    // 512 byte arrays
+    else
+    {
+      if (addr & 1)
+      {
+        switch ((addr >> 9) & 0x07)
+        {
+          case TSF_CRAM:
+          {
+            comp.cram[(addr >> 1) & 0xFF] = ((val << 8) | temp.fm_tmp);
+            update_clut((addr >> 1) & 0xFF);
+            break;
+          }
+          
+          // 
+          case TSF_SFILE:
+          {
+            comp.sfile[(addr >> 1) & 0xFF] = (val << 8) | temp.fm_tmp;
+            break;
+          }
+        }
+      }
+      else
+      // remember temp value
+        temp.fm_tmp = val;
+    }
+  }
 
-			else
-			// remember temp value
-				temp.fm_tmp = val;
-
-	// TS-conf cache model
-	if (conf.mem_model == MM_TSL)
-	{
-		// pentevo version for 16 bit DRAM/cache
+  // TS-conf cache model
+  if (conf.mem_model == MM_TSL)
+  {
+    // pentevo version for 16 bit DRAM/cache
         u16 cache_pointer = addr & 0x1FE;
-		cpu.tscache_addr[cache_pointer] = cpu.tscache_addr[cache_pointer + 1] = -1;    // invalidate two 8-bit addresses
-		vid.memcpucyc[cpu.t / 224]++;
-	}
+    cpu.tscache_addr[cache_pointer] = cpu.tscache_addr[cache_pointer + 1] = -1;    // invalidate two 8-bit addresses
+    vid.memcpucyc[cpu.t / 224]++;
+  }
 
    if ((conf.mem_model == MM_ATM3) && (comp.pBF & 4) /*&& ((addr & 0xF800) == 0)*/ ) // Разрешена загрузка шрифта для ATM3 // lvd: any addr is possible in ZXEVO
    {
@@ -161,7 +172,7 @@ void Z80FAST step()
    {
       if (cpu.pch == 0x3D)
       {
-           comp.flags |= CF_TRDOS;	// !!! add here TS memconf behaviour !!!
+           comp.flags |= CF_TRDOS;  // !!! add here TS memconf behaviour !!!
            set_banks();
       }
    }
@@ -223,9 +234,9 @@ void Z80FAST step()
 void step1()
 {
 #ifdef Z80_DBG
-	debug_events(&cpu);
+  debug_events(&cpu);
 #endif
-	step();
+  step();
 }
 
 void z80loop_TSL()

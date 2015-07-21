@@ -24,8 +24,9 @@ void fast_tape();
 void reset_tape();
 u8 tape_bit();
 
-void out(unsigned port, u8 val);
+void out(unsigned, u8);
 u8 in(unsigned port);
+void ts_ext_port_wr(u8, u8);
 void set_banks();
 
 void applyconfig();
