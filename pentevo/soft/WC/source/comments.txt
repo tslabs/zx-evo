@@ -1,0 +1,11 @@
+﻿FAT engine errors:
+1 - long name is not valid (mkfile, mkdir)
+2 - short name index fatality (mkfile, mkdir)
+3 - long name already exists  (mkfile, mkdir)
+4 - short name already exists (mkfile, mkdir)
+
+8 - not found
+
+16 - no free space
+
+255 - unknown error
