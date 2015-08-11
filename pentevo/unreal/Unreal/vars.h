@@ -2,6 +2,7 @@
 #include "emul_2203.h"
 #include "sndchip.h"
 #include "saa1099.h"
+#include "sound/dev_moonsound.h"
 
 #define ROMLED_TIME 16
 

@@ -39,6 +39,7 @@ void init_snd_frame()
    }
 
    Saa1099.start_frame();
+   zxmmoonsound.start_frame();
 
    #ifdef MOD_GS
    init_gs_frame();
@@ -105,6 +106,7 @@ void flush_snd_frame()
       }
    }
    Saa1099.end_frame(endframe);
+   zxmmoonsound.end_frame(endframe);
 
    sound.end_frame(endframe);
    // if (comp.tape.play_pointer) // play tape pulses
@@ -126,6 +128,7 @@ void flush_snd_frame()
    }
 
    sndcounter.count(Saa1099);
+   sndcounter.count(zxmmoonsound);
 
 #ifdef MOD_GS
    #ifdef MOD_GSZ80
@@ -219,6 +222,7 @@ void restart_sound()
    }
 
    Saa1099.set_timings(cpufq, conf.sound.saa1099fq, conf.sound.fq);
+   zxmmoonsound.set_timings(cpufq, 33868800, conf.sound.fq);
 
    // comp.tape.sound.clear();
    #ifdef MOD_GS

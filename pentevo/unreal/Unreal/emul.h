@@ -224,7 +224,7 @@ struct CONFIG
    struct
    {
       unsigned fq, ayfq, saa1099fq;
-      int covoxFB, covoxDD, sd, saa1099;
+      int covoxFB, covoxDD, sd, saa1099, moonsound;
       int beeper_vol, micout_vol, micin_vol, ay_vol, aydig_vol,
           covoxFB_vol, covoxDD_vol, sd_vol, gs_vol, bass_vol;
       VOID_FUNC do_sound;
@@ -298,6 +298,8 @@ struct CONFIG
    unsigned gs_ramsize;
    char gs_rom_path[FILENAME_MAX];
    #endif
+
+   char moonsound_rom_path[FILENAME_MAX];
 
    #ifdef MOD_MONITOR
    char sos_labels_path[FILENAME_MAX];

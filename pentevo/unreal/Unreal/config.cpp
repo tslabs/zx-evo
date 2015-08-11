@@ -295,6 +295,9 @@ void load_config(const char *fname)
    GetPrivateProfileString(rom, "GS", nil, conf.gs_rom_path, sizeof conf.gs_rom_path, ininame);
    addpath(conf.gs_rom_path);
    #endif
+
+   GetPrivateProfileString(rom, "MOONSOUND", nil, conf.moonsound_rom_path, sizeof conf.moonsound_rom_path, ininame);
+   addpath(conf.moonsound_rom_path);
    
    addpath(conf.pent_rom_path);
    addpath(conf.atm1_rom_path);
@@ -541,6 +544,7 @@ void load_config(const char *fname)
    conf.sound.sd = GetPrivateProfileInt(sound, "SD", 0, ininame);
    conf.sound.sd_vol = GetPrivateProfileInt(sound, "SDVol", 4000, ininame);
    conf.sound.saa1099 = GetPrivateProfileInt(sound, "Saa1099", 0, ininame);
+   conf.sound.moonsound = GetPrivateProfileInt(sound, "MoonSound", 0, ininame);
 
    #ifdef MOD_GS
    conf.sound.gs_vol = GetPrivateProfileInt(sound, "GSVol", 8000, ininame);
@@ -827,6 +831,8 @@ void apply_memory()
    }
    #endif
 
+   zxmmoonsound.load_rom(conf.moonsound_rom_path);
+		
    if (conf.ramsize != 128 && conf.ramsize != 256 && conf.ramsize != 512 && conf.ramsize != 1024 && conf.ramsize != 4096)
       conf.ramsize = 0;
    if (!(mem_model[conf.mem_model].availRAMs & conf.ramsize)) {

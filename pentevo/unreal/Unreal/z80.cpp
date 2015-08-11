@@ -71,6 +71,7 @@ void reset_sound(void)
    ay[0].reset();
    ay[1].reset();
    Saa1099.reset();
+   zxmmoonsound.reset();
 
    if (conf.sound.ay_scheme == AY_SCHEME_CHRV)
         out(0xfffd,0xff);

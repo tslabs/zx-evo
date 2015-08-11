@@ -78,6 +78,16 @@ void out(unsigned port, u8 val)
    }
    #endif
 
+   // ZXM-MoonSound
+   if ( conf.sound.moonsound && 
+		!(comp.flags & CF_DOSPORTS) &&
+	    (((p1 & 0xFC) == 0xC4) ||
+	     ((p1 & 0xFE) == 0x7E)) )
+   {
+	   if ( zxmmoonsound.write( port, val ) )
+		   return;
+   }
+
    // z-controller
    if (conf.zc && p1 == 0x57)
    {
@@ -814,6 +824,18 @@ __inline u8 in1(unsigned port)
    if ((port & 0xF7) == 0xB3 && conf.gs_type)
        return in_gs(port);
    #endif
+
+   // ZXM-MoonSound
+   if ( conf.sound.moonsound &&
+	    !(comp.flags & CF_DOSPORTS) &&
+		(((p1 & 0xFC) == 0xC4) ||
+	     ((p1 & 0xFE) == 0x7E) ) )
+   {
+	   u8 val = 0xFF;
+
+	   if ( zxmmoonsound.read( port, val ) )
+		   return val;
+   }
 
    // z-controller
    if (conf.zc && (p1 == 0x57) || (p1 == 0x77))

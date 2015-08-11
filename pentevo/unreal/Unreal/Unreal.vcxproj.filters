@@ -10,6 +10,12 @@
     <Filter Include="Sources">
       <UniqueIdentifier>{1f95ed37-fb57-438e-81cc-6645dbdb2e3d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Sources\sound">
+      <UniqueIdentifier>{cb2d362d-9afc-46c8-a806-6263902417f5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Headers\sound">
+      <UniqueIdentifier>{eb0e5da6-3e7b-465f-9c25-986a749167a7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\main.ico">
@@ -331,6 +337,15 @@
     <ClCompile Include="savevid.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
+    <ClCompile Include="sound\ymf278.cpp">
+      <Filter>Sources\sound</Filter>
+    </ClCompile>
+    <ClCompile Include="sound\dev_moonsound.cpp">
+      <Filter>Sources\sound</Filter>
+    </ClCompile>
+    <ClCompile Include="sound\ymf262.cpp">
+      <Filter>Sources\sound</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="atm.h">
@@ -599,6 +614,15 @@
     </ClInclude>
     <ClInclude Include="savevid.h">
       <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="sound\ymf262.h">
+      <Filter>Headers\sound</Filter>
+    </ClInclude>
+    <ClInclude Include="sound\dev_moonsound.h">
+      <Filter>Headers\sound</Filter>
+    </ClInclude>
+    <ClInclude Include="sound\ymf278.h">
+      <Filter>Headers\sound</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
