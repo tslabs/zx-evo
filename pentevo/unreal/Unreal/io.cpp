@@ -1391,26 +1391,7 @@ void ts_ext_port_wr(u8 port, u8 val)
     break;
 
     case TSW_DMACTR:
-      //if (val & 0x40)
-        //printf("Illegal DMA mode! OUT (%02XAF), %02X, PC: %04X\r\n", p2, val, cpu.pc);
-      /*
-        if ((val & 0x07) == 5)
-        printf("DMA SFILE. OUT (%02XAF), %02X, PC: %04X\r\n", p2, val, cpu.pc);
-        */
-
-      //dma(val);
-      //update_screen();
-
-      /* val must be:
-      * rw|dev
-      *  x|001 - RAM/BLT
-      *  x|010 - SPI
-      *  x|011 - IDE
-      *  x|100 - FILL/CRAM
-      *  1|101 - SFILE
-      * any other values are ignored
-      */
-      if ((val & 0x07) != 0x00 && (val & 0x06) != 0x06 && (val & 0x87) != 0x05)
+      if (1)	// !!!
       {
         comp.ts.dma.ctrl = val;
         comp.ts.dma.state = DMA_ST_INIT;

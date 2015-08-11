@@ -1,5 +1,8 @@
 #pragma once
 
+typedef void (*INITIAL_FUNCTION)();
+typedef u32 (*TASK_FUNCTION)(u32);
+
 // TS ext port #AF registers
 enum TSREGS
 {
@@ -64,16 +67,6 @@ enum FMAPSDEV
     TSF_REGS    = 0x04  // 0100 a[11:8]
 };
 
-// DMA devices
-enum DMADEV
-{
-    DMA_RAM      = 0x01,
-    DMA_SPI      = 0x02,
-    DMA_IDE      = 0x03,
-    DMA_CRAM     = 0x04,
-    DMA_SFILE    = 0x05
-};
-
 // INT
 enum INTSRC
 {
@@ -82,26 +75,53 @@ enum INTSRC
     INT_DMA
 };
 
+// DMA devices
+enum DMADEV
+{
+    DMA_RES1     = 0x00,
+    DMA_RAMRAM   = 0x01,
+    DMA_SPIRAM   = 0x02,
+    DMA_IDERAM   = 0x03,
+    DMA_FILLRAM  = 0x04,
+    DMA_RES2     = 0x05,
+    DMA_BLT2RAM  = 0x06,
+    DMA_RES3     = 0x07,
+    DMA_RES4     = 0x08,
+    DMA_BLT1RAM  = 0x09,
+    DMA_RAMSPI   = 0x0A,
+    DMA_RAMIDE   = 0x0B,
+    DMA_RAMCRAM  = 0x0C,
+    DMA_RAMSFILE = 0x0D,
+    DMA_RES5     = 0x0E,
+    DMA_RES6     = 0x0F
+};
+
 enum DMA_STATE
 {
-  DMA_ST_RAM    = 0,
-  DMA_ST_BLT    = 1,
-  DMA_ST_SPI_R  = 2,
-  DMA_ST_SPI_W  = 3,
-  DMA_ST_IDE_R  = 4,
-  DMA_ST_IDE_W  = 5,
-  DMA_ST_FILL   = 6,
-  DMA_ST_CRAM   = 7,
-  DMA_ST_SFILE  = 8,
+  DMA_ST_RAM,
+  DMA_ST_BLT1,
+  DMA_ST_BLT2,
+  DMA_ST_SPI_R,
+  DMA_ST_SPI_W,
+  DMA_ST_IDE_R,
+  DMA_ST_IDE_W,
+  DMA_ST_FILL,
+  DMA_ST_CRAM,
+  DMA_ST_SFILE,
   DMA_ST_INIT,
   DMA_ST_NOP
 };
 
+typedef struct
+{
+  TASK_FUNCTION task;
+} DMA_TASK;
+
 enum DMA_DATA_STATE
 {
-  DMA_DS_NONE,
-  DMA_DS_DATA,
-  DMA_DS_BLIT
+  DMA_DS_READ,
+  DMA_DS_BLIT,
+  DMA_DS_WRITE
 };
 
 enum TS_STATE
@@ -127,19 +147,11 @@ enum TS_VDAC
   TS_VDAC_5 = 0x03
 };
 
-typedef void (*INITIAL_FUNCTION)();
-typedef u32 (*TASK_FUNCTION)(u32);
-
-typedef struct  
+typedef struct
 {
   INITIAL_FUNCTION init_task;
   TASK_FUNCTION task;
 } TSU_TASK;
-
-typedef struct  
-{
-  TASK_FUNCTION task;
-} DMA_TASK;
 
 // Sprite Descriptor
 typedef struct
@@ -168,7 +180,7 @@ typedef struct
 } TILE_t;
 
 // TileMap description
-typedef struct 
+typedef struct
 {
   u8 line;
   u8 offset;
@@ -177,22 +189,37 @@ typedef struct
   TILE_t data;
 } TMAP_t;
 
+typedef union
+{
+  u16 w;
+  struct
+  {
+    u8 b0;
+    u8 b1;
+  };
+  struct
+  {
+    u8 n0:4;
+    u8 n1:4;
+    u8 n2:4;
+    u8 n3:4;
+  };
+} BLT16;
 
 typedef struct
 {
-
 // -- system --
   union
-    {
+  {
     u8 sysconf;
     struct
-        {
+    {
       u8 zclk:2;
       u8 cache:1;
       u8 ayclk:2;
       u8 _01:3;
     };
-  } ;
+  };
 
   union
   {
@@ -209,19 +236,20 @@ typedef struct
 
   u8 hsint;
   union
-    {
+  {
     u16 vsint:9;
     struct
-        {
+    {
       u8 vsintl:8;
       u8 vsinth:1;
     };
   } ;
 
-  union {
+  union
+  {
     u8 intmask;
     struct
-        {
+    {
       u8 intframe:1;
       u8 intline:1;
       u8 intdma:1;
@@ -231,7 +259,7 @@ typedef struct
   u8 im2vect[8];
 
   struct
-    {
+  {
     bool new_dma;   // generate new DMA INT
     u32 last_cput;  // last cpu tacts (used by frame INT)
     u32 frame_cnt;  // frame INT counter
@@ -239,10 +267,10 @@ typedef struct
     u32 frame_len;  // frame INT len
     u32 line_t;     // line INT position int tacts
     union
-        {
+    {
       u8 pend;
       struct
-            {
+      {
         u8 frame_pend:1;
         u8 line_pend:1;
         u8 dma_pend:1;
@@ -270,7 +298,7 @@ typedef struct
     {
     u8 vconf;
     struct
-        {
+    {
       u8 vmode:2;
       u8 _02:2;
       u8 notsu:1;
@@ -281,10 +309,10 @@ typedef struct
   u8 vconf_d;
 
   union
-    {
+  {
     u8 tsconf;
     struct
-        {
+    {
       u8 t0ys_en:1;
       u8 t1ys_en:1;
       u8 t0z_en:1;
@@ -298,10 +326,10 @@ typedef struct
   u8 tsconf_d;
 
   union
-    {
+  {
     u8 palsel;
     struct
-        {
+    {
       u8 gpal:4;
       u8 t0pal:2;
       u8 t1pal:2;
@@ -310,40 +338,40 @@ typedef struct
   u8 palsel_d;
 
   union
-    {
+  {
     u16 g_xoffs:9;
     struct
-        {
+    {
       u8 g_xoffsl:8;
       u8 g_xoffsh:1;
     };
   };
 
   union
-    {
+  {
     u16 g_xoffs_d:9;
     struct
-        {
+    {
       u8 g_xoffsl_d:8;
       u8 g_xoffsh_d:1;
     };
   };
 
   union
-    {
+  {
     u16 g_yoffs:9;
     struct
-        {
+    {
       u8 g_yoffsl:8;
       u8 g_yoffsh:1;
     };
   };
 
   union
-    {
+  {
     u16 t0_xoffs:9;
     struct
-        {
+    {
       u8 t0_xoffsl:8;
       u8 t0_xoffsh:1;
     };
@@ -351,20 +379,20 @@ typedef struct
   u16 t0_xoffs_d;
 
   union
-    {
+  {
     u16 t0_yoffs:9;
     struct
-        {
+    {
       u8 t0_yoffsl:8;
       u8 t0_yoffsh:1;
     };
   };
 
   union
-    {
+  {
     u16 t1_xoffs:9;
     struct
-        {
+    {
       u8 t1_xoffsl:8;
       u8 t1_xoffsh:1;
     };
@@ -372,10 +400,10 @@ typedef struct
   u16 t1_xoffs_d;
 
   union
-    {
+  {
     u16 t1_yoffs:9;
     struct
-        {
+    {
       u8 t1_yoffsl:8;
       u8 t1_yoffsh:1;
     };
@@ -385,10 +413,10 @@ typedef struct
   u8 page[4];
 
   union
-    {
+  {
     u8 memconf;
     struct
-        {
+    {
       u8 rom128:1;  // unused - taken from the #7FFD
       u8 w0_we:1;
       u8 w0_map_n:1;
@@ -399,10 +427,10 @@ typedef struct
   };
 
   union
-    {
+  {
     u8 fmaddr;
     struct
-        {
+    {
       u8 fm_addr:4;
       u8 fm_en:1;
     };
@@ -411,7 +439,7 @@ typedef struct
 // -- dma --
   u8 dmalen;
   u8 dmanum;
-    
+
   union
   { // source address of dma transaction
     u32 saddr;
@@ -422,7 +450,7 @@ typedef struct
       u32 saddrx:8;
     };
   };
-  
+
   union
   { // destination address of dma transaction
     u32 daddr;
@@ -446,7 +474,7 @@ typedef struct
         u8 asz:1;
         u8 d_algn:1;
         u8 s_algn:1;
-        u8 z80_lp:1;
+        u8 opt:1;
         u8 rw:1;
       };
     };
@@ -462,7 +490,7 @@ typedef struct
     u8 state;       // state of dma transaction
   } dma;
 
-  struct  
+  struct
   {
     u32 y;                // Y coordinate of graphic layers
     u8 tnum;              // Tile number for render

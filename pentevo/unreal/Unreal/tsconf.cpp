@@ -67,7 +67,7 @@ void update_clut(u8 addr)
                 b = b << 3;
             }
         break;
-        
+
         case TS_VDAC_4:
             if (!s)
                 goto pwm_set;       // FIX ME! Here must be clone-specific PWM
@@ -79,7 +79,7 @@ void update_clut(u8 addr)
                 b = ((b << 3) & 0xF0) | (b >> 1);
             }
         break;
-        
+
         case TS_VDAC_3:
             if (!s)
                 goto pwm_set;       // FIX ME! Here must be clone-specific PWM
@@ -115,28 +115,23 @@ void dma_init()
 
   comp.ts.dma.asize = comp.ts.dma.asz ? 512 : 256;
 
-  comp.ts.dma.dstate = DMA_DS_NONE;
+  comp.ts.dma.dstate = DMA_DS_READ;
 
-  switch (comp.ts.dma.dev)
+  u8 mode = (comp.ts.dma.rw << 3) | comp.ts.dma.dev;
+
+  switch (mode)
   {
-  case DMA_RAM:
-    comp.ts.dma.state = comp.ts.dma.rw ? DMA_ST_BLT : DMA_ST_RAM;
-    break;
-  case DMA_SPI:
-    comp.ts.dma.state = comp.ts.dma.rw ? DMA_ST_SPI_W : DMA_ST_SPI_R;
-    break;
-  case DMA_IDE:
-    comp.ts.dma.state = comp.ts.dma.rw ? DMA_ST_IDE_W : DMA_ST_IDE_R;
-    break;
-  case DMA_CRAM:
-    comp.ts.dma.state = comp.ts.dma.rw ? DMA_ST_CRAM : DMA_ST_FILL;
-    break;
-  case DMA_SFILE:
-    comp.ts.dma.state = comp.ts.dma.rw ? DMA_ST_SFILE : DMA_ST_NOP;
-    break;
-  default:
-    comp.ts.dma.state = DMA_ST_NOP;
-    break;
+    case DMA_RAMRAM  : comp.ts.dma.state = DMA_ST_RAM; break;
+    case DMA_SPIRAM  : comp.ts.dma.state = DMA_ST_SPI_R; break;
+    case DMA_IDERAM  : comp.ts.dma.state = DMA_ST_IDE_R; break;
+    case DMA_FILLRAM : comp.ts.dma.state = DMA_ST_FILL; break;
+    case DMA_BLT2RAM : comp.ts.dma.state = DMA_ST_BLT2; break;
+    case DMA_BLT1RAM : comp.ts.dma.state = DMA_ST_BLT1; break;
+    case DMA_RAMSPI  : comp.ts.dma.state = DMA_ST_SPI_W; break;
+    case DMA_RAMIDE  : comp.ts.dma.state = DMA_ST_IDE_W; break;
+    case DMA_RAMCRAM : comp.ts.dma.state = DMA_ST_CRAM; break;
+    case DMA_RAMSFILE: comp.ts.dma.state = DMA_ST_SFILE; break;
+    default          : comp.ts.dma.state = DMA_ST_NOP;
   }
 }
 
@@ -187,17 +182,17 @@ u32 dma_ram(u32 n)
         return n;
     }
 
-    if (comp.ts.dma.dstate == DMA_DS_NONE) // data is empty ?
+    if (comp.ts.dma.dstate == DMA_DS_READ)
     { // read data
       u16 *s = (u16*)(ss + RAM_BASE_M);
       comp.ts.dma.data = *s;
-      comp.ts.dma.dstate = DMA_DS_DATA;
+      comp.ts.dma.dstate = DMA_DS_WRITE;
     }
     else
     { // write data
       u16 *d = (u16*)(dd + RAM_BASE_M);
       *d = comp.ts.dma.data;
-      comp.ts.dma.dstate = DMA_DS_NONE;
+      comp.ts.dma.dstate = DMA_DS_READ;
       comp.ts.dma.len--;
       ss_inc();
       dd_inc();
@@ -206,13 +201,10 @@ u32 dma_ram(u32 n)
   return 0;
 }
 
-u32 dma_blt(u32 n)
+u32 dma_blt1(u32 n)
 {
   u32 &ss = comp.ts.dma.saddr;
   u32 &dd = comp.ts.dma.daddr;
-
-  u16 *s, *d;
-  u16 data;
 
   for (; n > 0; n--)
   {
@@ -225,36 +217,103 @@ u32 dma_blt(u32 n)
 
     switch (comp.ts.dma.dstate)
     {
-    case DMA_DS_NONE: // read data
-      s = (u16*)(ss + RAM_BASE_M);
-      comp.ts.dma.data = *s;
-      comp.ts.dma.dstate = DMA_DS_DATA;
+      // read data
+      case DMA_DS_READ:
+        comp.ts.dma.data = *(u16*)(ss + RAM_BASE_M);
+        comp.ts.dma.dstate = DMA_DS_BLIT;
       break;
-    case DMA_DS_DATA: // blitting data
-      d = (u16*)(dd + RAM_BASE_M);
-      data = 0;
-      if (comp.ts.dma.asz)
+
+      // blit data
+      case DMA_DS_BLIT:
       {
-        data |= (comp.ts.dma.data & 0xFF00) ? (comp.ts.dma.data & 0xFF00) : (*d & 0xFF00);
-        data |= (comp.ts.dma.data & 0x00FF) ? (comp.ts.dma.data & 0x00FF) : (*d & 0x00FF);
+        BLT16 d0, d1, blit;
+        d0.w = comp.ts.dma.data;
+        d1.w = *(u16*)(dd + RAM_BASE_M);
+
+        if (comp.ts.dma.asz)
+        {
+          blit.b0 = (d0.b0 & 0xFF) ? d0.b0 : d1.b0;
+          blit.b1 = (d0.b1 & 0xFF) ? d0.b1 : d1.b1;
+        }
+        else
+        {
+          blit.n0 = (d0.n0 & 0xF) ? d0.n0 : d1.n0;
+          blit.n1 = (d0.n1 & 0xF) ? d0.n1 : d1.n1;
+          blit.n2 = (d0.n2 & 0xF) ? d0.n2 : d1.n2;
+          blit.n3 = (d0.n3 & 0xF) ? d0.n3 : d1.n3;
+        }
+        comp.ts.dma.data = blit.w;
+        comp.ts.dma.dstate = DMA_DS_WRITE;
       }
-      else
-      {
-        data |= (comp.ts.dma.data & 0xF000) ? (comp.ts.dma.data & 0xF000) : (*d & 0xF000);
-        data |= (comp.ts.dma.data & 0x0F00) ? (comp.ts.dma.data & 0x0F00) : (*d & 0x0F00);
-        data |= (comp.ts.dma.data & 0x00F0) ? (comp.ts.dma.data & 0x00F0) : (*d & 0x00F0);
-        data |= (comp.ts.dma.data & 0x000F) ? (comp.ts.dma.data & 0x000F) : (*d & 0x000F);
-      }
-      comp.ts.dma.data = data;
-      comp.ts.dma.dstate = DMA_DS_BLIT;
       break;
-    case DMA_DS_BLIT: // write data
-      d = (u16*)(dd + RAM_BASE_M);
-      *d = comp.ts.dma.data;
-      comp.ts.dma.dstate = DMA_DS_NONE;
-      comp.ts.dma.len--;
-      ss_inc();
-      dd_inc();
+
+      // write data
+      case DMA_DS_WRITE:
+        *(u16*)(dd + RAM_BASE_M) = comp.ts.dma.data;
+        comp.ts.dma.dstate = DMA_DS_READ;
+        comp.ts.dma.len--;
+        ss_inc();
+        dd_inc();
+      break;
+    }
+  }
+  return 0;
+}
+
+u32 dma_blt2(u32 n)
+{
+  u32 &ss = comp.ts.dma.saddr;
+  u32 &dd = comp.ts.dma.daddr;
+
+  for (; n > 0; n--)
+  {
+    if (!comp.ts.dma.len) // burst is empty
+    {
+      dma_next_burst();     // get next burst
+      if (!comp.ts.dma.len) // no new burst
+        return n;
+    }
+
+    switch (comp.ts.dma.dstate)
+    {
+      // read data
+      case DMA_DS_READ:
+        comp.ts.dma.data = *(u16*)(ss + RAM_BASE_M);
+        comp.ts.dma.dstate = DMA_DS_BLIT;
+      break;
+
+      // blit data
+      case DMA_DS_BLIT:
+      {
+        BLT16 d0, d1, blit;
+        d0.w = comp.ts.dma.data;
+        d1.w = *(u16*)(dd + RAM_BASE_M);
+        bool sat = comp.ts.dma.opt;
+
+        if (comp.ts.dma.asz)
+        {
+          blit.b0 = (((d0.b0 + d1.b0) > 0xFF) && sat) ? 0xFF : (d0.b0 + d1.b0);
+          blit.b1 = (((d0.b1 + d1.b1) > 0xFF) && sat) ? 0xFF : (d0.b1 + d1.b1);
+        }
+        else
+        {
+          blit.n0 = (((d0.n0 + d1.n0) > 0xF) && sat) ? 0xF : (d0.n0 + d1.n0);
+          blit.n1 = (((d0.n1 + d1.n1) > 0xF) && sat) ? 0xF : (d0.n1 + d1.n1);
+          blit.n2 = (((d0.n2 + d1.n2) > 0xF) && sat) ? 0xF : (d0.n2 + d1.n2);
+          blit.n3 = (((d0.n3 + d1.n3) > 0xF) && sat) ? 0xF : (d0.n3 + d1.n3);
+        }
+        comp.ts.dma.data = blit.w;
+        comp.ts.dma.dstate = DMA_DS_WRITE;
+      }
+      break;
+
+      // write data
+      case DMA_DS_WRITE:
+        *(u16*)(dd + RAM_BASE_M) = comp.ts.dma.data;
+        comp.ts.dma.dstate = DMA_DS_READ;
+        comp.ts.dma.len--;
+        ss_inc();
+        dd_inc();
       break;
     }
   }
@@ -358,11 +417,11 @@ u32 dma_fill(u32 n)
   u32 &ss = comp.ts.dma.saddr;
   u32 &dd = comp.ts.dma.daddr;
 
-  if (comp.ts.dma.dstate == DMA_DS_NONE && n > 0) // no data and have free memcyc
+  if ((comp.ts.dma.dstate == DMA_DS_READ) && (n > 0)) // need to read data and have free memcyc
   {
     u16 *s = (u16*)(ss + RAM_BASE_M);
     comp.ts.dma.data = *s;            // read data
-    comp.ts.dma.dstate = DMA_DS_DATA; // set data state as valid
+    comp.ts.dma.dstate = DMA_DS_WRITE; // set data state as valid
     ss_inc();
     n--;
   }
@@ -435,15 +494,17 @@ u32 dma_sfile(u32 n)
   return 0;
 }
 
-DMA_TASK DMATask[] = {
-  { dma_ram },
-  { dma_blt },
+DMA_TASK DMATask[] =
+{
+  { dma_ram   },
+  { dma_blt1  },
+  { dma_blt2  },
   { dma_spi_r },
   { dma_spi_w },
   { dma_ide_r },
   { dma_ide_w },
-  { dma_fill },
-  { dma_cram },
+  { dma_fill  },
+  { dma_cram  },
   { dma_sfile }
 };
 
