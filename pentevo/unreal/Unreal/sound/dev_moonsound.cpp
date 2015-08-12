@@ -16,8 +16,6 @@ friend class ZXMMoonSound;
 public:
 	ZXMMoonSound_priv();
 	~ZXMMoonSound_priv();
-	
-	void reset( EmuTime t );
 
 private:
 	YMF262 *ymf262;

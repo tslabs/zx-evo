@@ -234,7 +234,7 @@ void SNDCHIP::set_timings(unsigned system_clock_rate, unsigned chip_clock_rate, 
    ayticks_per_fmtick = (float)chip_clock_rate/conf.sound.fq /*44100*/; //Alone Coder
    FMbufMUL=(u16)(((float)conf.sound.ay_vol/8192 /* =0..1 */)*0.1f*65536); //Alone Coder 0.36.4
 
-   apply_regs();
+   //apply_regs();
 }
 
 void SNDCHIP::set_volumes(unsigned global_vol, const SNDCHIP_VOLTAB *voltab, const SNDCHIP_PANTAB *stereo)
