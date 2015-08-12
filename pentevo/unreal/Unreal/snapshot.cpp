@@ -321,6 +321,7 @@ int readSPG()
 int readSNA128()
 {
    // conf.mem_model = MM_PENTAGON; conf.ramsize = 128;
+	reset(RM_NOCHANGE);
    hdrSNA128 *hdr = (hdrSNA128*)snbuf;
    // reset(hdr->trdos? RM_DOS : RM_SOS);
    cpu.alt.af = hdr->altaf; cpu.alt.bc = hdr->altbc;
