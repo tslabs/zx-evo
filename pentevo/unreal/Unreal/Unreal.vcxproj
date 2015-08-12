@@ -121,10 +121,7 @@
     <ClCompile Include="snd_bass.cpp" />
     <ClCompile Include="sound.cpp" />
     <ClCompile Include="sound\dev_moonsound.cpp" />
-    <ClCompile Include="sound\ymf262.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Use</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Use</PrecompiledHeader>
-    </ClCompile>
+    <ClCompile Include="sound\ymf262.cpp" />
     <ClCompile Include="sound\ymf278.cpp" />
     <ClCompile Include="std.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

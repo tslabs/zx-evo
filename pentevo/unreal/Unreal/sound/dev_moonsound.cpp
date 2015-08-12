@@ -16,12 +16,8 @@ friend class ZXMMoonSound;
 public:
 	ZXMMoonSound_priv();
 	~ZXMMoonSound_priv();
-
-	void init( unsigned chip_clock_rate, unsigned sample_rate );
-
+	
 	void reset( EmuTime t );
-
-	void process_sample();
 
 private:
 	YMF262 *ymf262;
@@ -29,15 +25,11 @@ private:
 
 	YMF278 *ymf278;
 	int opl4latch;
-
-	unsigned chip_clock_rate, sample_rate;
 };
 
-ZXMMoonSound_priv::ZXMMoonSound_priv() :
-	chip_clock_rate( 0 ),
-	sample_rate( 0 )
+ZXMMoonSound_priv::ZXMMoonSound_priv()
 {
-	EmuTime t = 0;
+	EmuTime t = cpu.t;
 
 	ymf262 = new YMF262( 0, t, this );
 	ymf262->setSampleRate(44100, 1);
@@ -55,7 +47,8 @@ ZXMMoonSound_priv::~ZXMMoonSound_priv()
 }
 
 /*  */
-ZXMMoonSound::ZXMMoonSound()
+ZXMMoonSound::ZXMMoonSound() :
+	system_clock_rate( 0 )
 {
 	d = new ZXMMoonSound_priv();
 	reset();
@@ -79,7 +72,7 @@ int ZXMMoonSound::load_rom(char *path)
 
 void ZXMMoonSound::reset()
 {
-	EmuTime systemTime = passed_clk_ticks;
+	EmuTime systemTime = cpu.t;
 	d->ymf262->reset( systemTime );
 	d->ymf278->reset( systemTime );
 }
@@ -88,7 +81,7 @@ bool ZXMMoonSound::write( u8 port, u8 val )
 {
 	//printf("ZXM-MoonSound write(%.2x, %.2x)\n", port, val);
 
-	EmuTime systemTime = passed_clk_ticks;
+	EmuTime systemTime = cpu.t;
 
 	if ( (port & 0xFE) == 0x7E )
 	{
@@ -128,7 +121,7 @@ bool ZXMMoonSound::read( u8 port, u8 &val )
 {
 	//printf("ZXM-MoonSound read(%.2x)\n", port);
 
-	EmuTime systemTime = passed_clk_ticks;
+	EmuTime systemTime = cpu.t;
 
 	if ( (port & 0xFE) == 0x7E )
 	{
