@@ -108,8 +108,8 @@ enum DMA_STATE
   DMA_ST_FILL,
   DMA_ST_CRAM,
   DMA_ST_SFILE,
-  DMA_ST_INIT,
-  DMA_ST_NOP
+  DMA_ST_NOP,
+  DMA_ST_INIT
 };
 
 typedef struct
@@ -126,25 +126,25 @@ enum DMA_DATA_STATE
 
 enum TS_STATE
 {
-  TSS_TMAP_READ   = 0,
-  TSS_TILE_RENDER = 1,
-  TSS_SPR_RENDER  = 2,
+  TSS_TMAP_READ,
+  TSS_TILE_RENDER,
+  TSS_SPR_RENDER,
   TSS_INIT,
   TSS_NOP
 };
 
 enum TS_PWRUP
 {
-  TS_PWRUP_ON = 0x40,
+  TS_PWRUP_ON  = 0x40,
   TS_PWRUP_OFF = 0x00
 };
 
 enum TS_VDAC
 {
   TS_VDAC_OFF = 0x00,
-  TS_VDAC_3 = 0x01,
-  TS_VDAC_4 = 0x02,
-  TS_VDAC_5 = 0x03
+  TS_VDAC_3   = 0x01,
+  TS_VDAC_4   = 0x02,
+  TS_VDAC_5   = 0x03
 };
 
 typedef struct

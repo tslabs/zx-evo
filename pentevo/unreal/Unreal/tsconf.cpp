@@ -494,6 +494,12 @@ u32 dma_sfile(u32 n)
   return 0;
 }
 
+u32 dma_nop(u32 n)
+{
+  return 0;
+}
+
+// order must be equal to enum DMA_STATE in tsconf.h
 DMA_TASK DMATask[] =
 {
   { dma_ram   },
@@ -508,19 +514,23 @@ DMA_TASK DMATask[] =
   { dma_sfile }
 };
 
+// DMA task
 void dma(u32 tacts)
 {
-  // get new task for dma
-  if (comp.ts.dma.state == DMA_ST_INIT)
-    dma_init();
+  if (comp.ts.dma.state != DMA_ST_NOP)
+  {
+    // get new task for dma
+    if (comp.ts.dma.state == DMA_ST_INIT)
+    {
+      dma_init();
+      if (comp.ts.dma.state == DMA_ST_NOP)
+        return;
+    }
 
-  // if no task for dma
-  if (comp.ts.dma.state == DMA_ST_NOP)
-    return;
-
-  // do task
-  tacts -= DMATask[comp.ts.dma.state].task(tacts);
-  vid.memdmacyc[vid.line] += (u16)tacts;
+    // do task
+    tacts -= DMATask[comp.ts.dma.state].task(tacts);
+    vid.memdmacyc[vid.line] += (u16)tacts;
+  }
 }
 
 // TS Engine
@@ -632,7 +642,7 @@ void init_sprite()
     if (comp.ts.tsu.spr.act) // sprite is active
     {
       u16 ysize = (comp.ts.tsu.spr.ys + 1) << 3; // calculate sprite size by y
-      u16 y = (vid.yctr - comp.ts.tsu.spr.y) & 0x1FF;
+      u16 y = (vid.line - vid.raster.u_brd + 1 - comp.ts.tsu.spr.y) & 0x1FF;
       if (y < ysize) // part of sprite present at current line
       {
         u16 xsize = (comp.ts.tsu.spr.xs + 1) << 3; // calculate sprite size by x
@@ -675,7 +685,7 @@ void init_tile_layer()
     comp.ts.tsu.layer++; // set next layer
     return;
   }
-  comp.ts.tsu.y = (vid.yctr + (comp.ts.tsu.layer ? comp.ts.t1_yoffs : comp.ts.t0_yoffs)) & 0x1FF; // calculate y position in active tile layer
+  comp.ts.tsu.y = (vid.line - vid.raster.u_brd + 1 + (comp.ts.tsu.layer ? comp.ts.t1_yoffs : comp.ts.t0_yoffs)) & 0x1FF; // calculate y position in active tile layer
   u32 x = (comp.ts.tsu.layer ? comp.ts.t1_xoffs_d : comp.ts.t0_xoffs_d); // calculate x position in active tile layer
   comp.ts.tsu.tnum = (x >> 3) & 0x3F; // set first number of tile for render
   comp.ts.tsu.tmax = comp.ts.tsu.tnum + 46; // set end number of tile for render
@@ -763,27 +773,34 @@ u32 render_ts(u32 tacts)
     return tacts;
   }
 
-  // Have new TSU state ?
+  // have new TSU state?
   if (comp.ts.tsu.prev_state != comp.ts.tsu.state)
   {
     if (comp.ts.tsu.state == TSS_INIT) // Start of new line
     {
-      comp.ts.tsu.tmap_read = ((u32)vid.line + 17 >= vid.raster.u_brd && (u32)vid.line + 9 < vid.raster.d_brd); // need to read TileMap in this line ?
-      comp.ts.tsu.render = ((u32)vid.line + 1 >= vid.raster.u_brd && (u32)vid.line + 1 < vid.raster.d_brd); // need render graphic in this line ?
+      comp.ts.tsu.tmap_read = ((((u32)vid.line + 17) >= vid.raster.u_brd) && (((u32)vid.line + 9) <= vid.raster.d_brd)); // need to read TileMap in this line ?
+      comp.ts.tsu.render = ((((u32)vid.line + 1) >= vid.raster.u_brd) && (((u32)vid.line + 1) <= vid.raster.d_brd)); // need render graphic in this line ?
 
       // Set first state at this line
-      if (comp.ts.tsu.render) comp.ts.tsu.state = TSS_SPR_RENDER; // set first task for render graphic
-      if (comp.ts.tsu.tmap_read) comp.ts.tsu.state = TSS_TMAP_READ; // need processed this task first (overlapped state)
-      if (comp.ts.tsu.state == TSS_INIT) // no task for this line ?
+      if (comp.ts.tsu.tmap_read)
+        comp.ts.tsu.state = TSS_TMAP_READ;
+      else if (comp.ts.tsu.render)
+        comp.ts.tsu.state = TSS_SPR_RENDER;
+      else
       {
         comp.ts.tsu.state = TSS_NOP; // set state as no operation in this line
         return tacts;
       }
-      comp.ts.tsu.layer = 0; // Any task begin at layer 0
+
+      comp.ts.tsu.layer = 0;  // start from layer 0
     }
-    comp.ts.tsu.prev_state = comp.ts.tsu.state; // Save current state
-    TSUTask[comp.ts.tsu.state].init_task(); // initialization task for current state
-    if (comp.ts.tsu.prev_state != comp.ts.tsu.state) return render_ts(tacts); // if state changed process it
+    
+    comp.ts.tsu.prev_state = comp.ts.tsu.state; // save current state
+    TSUTask[comp.ts.tsu.state].init_task();   // initialize task for current state
+    
+    // process state if changed
+    if (comp.ts.tsu.prev_state != comp.ts.tsu.state) 
+      return render_ts(tacts); 
   }
 
   tacts = TSUTask[comp.ts.tsu.state].task(tacts); // do task
