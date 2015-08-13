@@ -520,12 +520,14 @@ File Operations:
   ¦i:HL - Address
   ¦   B - Blocks (512b)
   ¦o:HL - New Value
+  ¦   A - EndOfChain (#0F)
 --+---------------------------------------------------
 49¦SAVE512
   ¦потоковая запись файла
   ¦i:HL - Address
   ¦   B - Blocks (512b)
   ¦o:HL - New Value
+  ¦   A - EndOfChain (#0F)
 --+---------------------------------------------------
 50¦GIPAGPL
   ¦позиционировать на начало файла
