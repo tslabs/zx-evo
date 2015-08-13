@@ -1,4 +1,10 @@
 ;---------------------------------------
+;i: B - Device
+;       0 - SD(ZC)
+;       1 - IDE Nemo Master
+;       2 - IDE Nemo Slave
+;       3 - IDE Smuc Master
+;       4 - IDE Smuc Slave
 
 start   push bc
         ld hl, nsdc
@@ -599,6 +605,7 @@ tos     xor a
         ret
 
         
+        
 ;---------------------------------------
 ;   SD DRIVER
 ;---------------------------------------
@@ -962,6 +969,16 @@ sdoff   xor a
 ;---------------------------------------
 ;   IDE NEMO DRIVER
 ;---------------------------------------
+cmd_nemo  equ h'f0  ;command/state
+drv_nemo  equ h'ffd0;drive/head
+cylh_nemo equ h'b0  ;cyl high
+cyll_nemo equ h'90  ;cyl low
+secr_nemo equ h'70  ;sec
+blks_nemo equ h'50  ;counter
+erro_nemo equ h'30  ;error/ext
+dath_nemo equ h'11  ;data high
+datl_nemo equ h'10  ;data low
+;---------------------------------------
 
 xpozi_nemo
         ld (lthl), hl
@@ -988,28 +1005,28 @@ rereg   push hl
         ld h, a
         ld a, (drvre)
         or h
-        ld bc, h'FFD0
+        ld bc, drv_nemo
         out (c), a
-        ld c, h'70
+        ld bc, secr_nemo
         out (c), l
-        ld c, h'B0
+        ld bc, cylh_nemo
         out (c), d
-        ld c, h'90
+        ld bc, cyll_nemo
         out (c), e
         pop de
         pop hl
         RET
 
 ;---------------------------------------
-rpoz    ld bc, h'ffd0
+rpoz    ld bc, drv_nemo
         in a, (c)
         and h'0f
         ld h,a
-        ld c, h'70
+        ld bc, secr_nemo
         in l, (c)
-        ld c, h'b0
+        ld bc, cylh_nemo
         in d, (c)
-        ld c, h'90
+        ld bc, cyll_nemo
         in e, (c)
         ret
 
@@ -1019,8 +1036,10 @@ rpoz    ld bc, h'ffd0
 
 rddse_nemo
         push af
+        ex af, af'
         call drdy
-        ld bc, h'50
+        ld bc, blks_nemo
+        ex af, af'
         out (c), a
         call rereg
         ld a, h'20
@@ -1036,15 +1055,51 @@ rdh1    push bc
 
 ;---------------------------------------
 reads_nemo
-        ld bc, h'0010
-        inir
-        inir
+        ld e, low(datl_nemo)
+        ld d, low(dath_nemo)
+        ld b, high(datl_nemo)
+        ld a, h'20
+re1_nemo
+        ld c, e
+        ini
+        ld c, d
+        ini
+        ld c, e
+        ini
+        ld c, d
+        ini
+        ld c, e
+        ini
+        ld c, d
+        ini
+        ld c, e
+        ini
+        ld c, d
+        ini
+        ld c, e
+        ini
+        ld c, d
+        ini
+        ld c, e
+        ini
+        ld c, d
+        ini
+        ld c, e
+        ini
+        ld c, d
+        ini
+        ld c, e
+        ini
+        ld c, d
+        ini
+        dec a
+        jp nz, re1_nemo
         ret
 
 ;---------------------------------------
-sel_sla ld a, h'F0
+sel_sla ld a, h'F0 ; %11110000 = 1 + lba + 1 + dev + %0000
 sel_ide ld (drvre), a
-        ld bc, h'D0
+        ld bc, drv_nemo
         out (c), a
         
         ld de, 0
@@ -1058,7 +1113,7 @@ sdr     call loll
         scf
         ret
 
-sel_mas ld a, h'E0
+sel_mas ld a, h'E0 ; %11100000 = 1 + lba + 1 + dev + %0000
         jr sel_ide
 
 ;---------------------------------------
@@ -1136,7 +1191,7 @@ haalt   add a, (ix+0)
         djnz haalt
         ret
 ;---------------------------------------
-loll    ld bc, h'f0
+loll    ld bc, cmd_nemo
         in a, (c)
         ret
 
@@ -1157,11 +1212,11 @@ drdy    call loll
         ret z
         jr drdy
 
-comm    ld bc, h'f0
+comm    ld bc, cmd_nemo
         out (c), a
         ret
 
-error_7 ld bc, h'f0
+error_7 ld bc, cmd_nemo
         in a, (c)
         rrca
         ret
@@ -1170,38 +1225,328 @@ error_7 ld bc, h'f0
 
 
 
+;---------------------------------------
+;   IDE SMUC DRIVER
+;---------------------------------------
+cmd_smuc  equ h'ffbe  ;command/state
+drv_smuc  equ h'febe  ;drive/head
+cylh_smuc equ h'fdbe  ;cyl high
+cyll_smuc equ h'fcbe  ;cyl low
+secr_smuc equ h'fbbe  ;sec
+blks_smuc equ h'fabe  ;counter
+erro_smuc equ h'f9be  ;error/ext
+dath_smuc equ h'd8be  ;data high
+datl_smuc equ h'f8be  ;data low
+
+conf_smuc equ h'ffba
+;---------------------------------------
+
+ini_smuc
+        ld bc, conf_smuc
+        ld a, %00000001
+        out (c), a
+        ret
+
+xpozi_smuc
+        ld (lthl), hl
+        ld (ltde), de
+proz_smuc
+        ld a, h
+        ld h, d
+        ld d, e
+        ld e, a
+        
+;DE,cyl H,head L,sec
+
+        ld (blknum), hl
+        LD (blknum+2), de
+        ret
+
+rereg_smuc
+        push hl
+        push de
+        ld hl, (blknum)
+        ld de, (blknum+2)
+
+        ld a, h
+        and %00001111
+        ld h, a
+        ld a, (drvre)
+        or h
+        ld bc, drv_smuc
+        out (c), a
+        ld bc, secr_smuc
+        out (c), l
+        ld bc, cylh_smuc
+        out (c), d
+        ld bc, cyll_smuc
+        out (c), e
+        pop de
+        pop hl
+        ret
+
+;---------------------------------------
+rpoz_smuc
+        ld bc, drv_smuc
+        in a, (c)
+        and h'0f
+        ld h,a
+        ld bc, secr_smuc
+        in l, (c)
+        ld bc, cylh_smuc
+        in d, (c)
+        ld bc, cyll_smuc
+        in e, (c)
+        ret
+
+;---------------------------------------
+;---------------------------------------
+;hl,in da kudy a,secs
+
+rddse_smuc
+        push af
+        ex af, af'
+        call drdy_smuc
+        ld bc, blks_smuc
+        ex af, af'
+        out (c), a
+        call rereg_smuc
+        ld a, h'20
+        call comah_smuc
+        pop bc
+rdh1_smuc
+        push bc
+        call waitdrq_smuc
+        call reads_smuc
+        call ready_smuc
+        pop bc
+        djnz rdh1_smuc
+        ret
+
+;---------------------------------------
+reads_smuc
+        ld e, high(datl_smuc)
+        ld d, high(dath_smuc)
+        ld c, low(datl_smuc)
+        ld a, h'40
+re1_smuc
+        ld b, e
+        ini
+        ld b, d
+        ini
+        ld b, e
+        ini
+        ld b, d
+        ini
+        ld b, e
+        ini
+        ld b, d
+        ini
+        ld b, e
+        ini
+        ld b, d
+        ini
+        dec a
+        jp nz, re1_smuc
+        ret
+
+;---------------------------------------
+sel_sla_smuc
+        ld a, h'F0 ; %11110000 = 1 + lba + 1 + dev + %0000
+sel_ide_smuc
+        ld (drvre), a
+        ld bc, drv_smuc
+        out (c), a
+        
+        ld de, 0
+sdr_smuc
+        call loll_smuc
+        rlca
+        ret nc
+        dec de
+        ld a, d
+        or e
+        jr nz, sdr_smuc
+        scf
+        ret
+
+sel_mas_smuc
+        ld a, h'E0 ; %11100000 = 1 + lba + 1 + dev + %0000
+        jr sel_ide_smuc
+
+;---------------------------------------
+dv2_smuc
+        call sel_sla_smuc
+        jr drdet_smuc
+;-------
+sel_dev_smuc
+;i:a - n of dev
+        cp 2
+        jr nc, ru_smuc
+		
+        dec a
+        jr z,dv2_smuc
+        call sel_mas_smuc
+drdet_smuc
+        jr c, ru_smuc
+        ld a, h'08
+        call comm_smuc
+        call error_7_smuc
+        jr c, rrr_smuc
+
+        ld hl, 16384
+ydet_smuc
+        call loll_smuc
+        rlca
+        jr nc, rrr_smuc
+        
+        call hult_smuc
+		
+        dec hl
+        ld a, h
+        or l
+        jr nz, ydet_smuc
+
+        ld de, 500
+        jr ru_smuc
+
+rrr_smuc
+        ld de, 0
+        ld hl, 2
+        call xpozi_smuc
+        call rereg_smuc
+        ld a, h'ec
+        call comm_smuc
+        
+        call hult2_smuc
+        
+        call rpoz_smuc
+        ld a, d
+        or e
+        or h
+        jr nz, ru_smuc
+        ld a, l
+        cp 2
+        jr z, kru_smuc
+        
+;ld hl,#eb14
+;or a:sbc hl,de:ret z;atapi
+ru_smuc
+        ld a, 1
+        or a
+        ret
+;-------
+kru_smuc
+        ld hl, lobu
+        call reads_smuc
+        ld de, 0
+        xor a
+        ret
+
+hult2_smuc
+        ld hl, 192
+huu_smuc
+        call hult_smuc
+        dec hl
+        ld a, h
+        or l
+        jr nz, huu_smuc
+        ret
+hult_smuc
+        ld b, 0
+haalt_smuc
+        add a, (ix+0)
+        djnz haalt_smuc
+        ret
+;---------------------------------------
+loll_smuc
+        ld bc, cmd_smuc
+        in a, (c)
+        ret
+
+comah_smuc
+        call comm_smuc
+ready_smuc
+        call loll_smuc
+        rlca
+        ret nc
+        jr ready_smuc
+
+waitdrq_smuc
+        call loll_smuc
+        and 8
+        ret nz
+        jr waitdrq_smuc
+
+drdy_smuc
+        call loll_smuc
+        and %11000000
+        cp %01000000
+        ret z
+        jr drdy_smuc
+
+comm_smuc
+        ld bc, cmd_smuc
+        out (c), a
+        ret
+
+error_7_smuc 
+        ld bc, cmd_smuc
+        in a, (c)
+        rrca
+        ret
+
+;---------------------------------------
+
+
 ;=======================================
 ide_ini ld a, (device)
         or a
         jp z, ini_sd
+        cp 3
+        jp z, ini_smuc
+        cp 4
+        jp z, ini_smuc
         ret
 		
 xpozi   ld a, (device)
-        or a
+        or a         ;0
         jp z, xpozi_sd
-        dec a
+        dec a        ;1
         jp z, xpozi_nemo
-        dec a
+        dec a        ;2
         jp z, xpozi_nemo
+        dec a        ;3
+        jp z, xpozi_smuc
+        dec a        ;4
+        jp z, xpozi_smuc
         ret
 		
 proz    ld a, (device)
-        or a
+        or a         ;0
         jp z, proz_sd
-        dec a
+        dec a        ;1
         jp z, proz_nemo
-        dec a
+        dec a        ;2
         jp z, proz_nemo
+        dec a        ;3
+        jp z, proz_smuc
+        dec a        ;4
+        jp z, proz_smuc
         ret
 
 rddse   ld c, a
         ld a, (device)
-        or a
+        or a         ;0
         jr z, to_rddse_sd
-        dec a
+        dec a        ;1
         jr z, to_rddse_nemo
-        dec a
+        dec a        ;2
         jr z, to_rddse_nemo
+        dec a        ;3
+        jr z, to_rddse_smuc
+        dec a        ;4
+        jr z, to_rddse_smuc
         ld a, c
         ret
 to_rddse_sd
@@ -1210,15 +1555,22 @@ to_rddse_sd
 to_rddse_nemo
         ld a, c
         jp rddse_nemo
+to_rddse_smuc
+        ld a, c
+        jp rddse_smuc
 		
 sel_dev ld c, a
         ld a, (device)
-        or a
+        or a         ;0
         jr z, to_sel_dev_sd
-        dec a
+        dec a        ;1
         jr z, to_sel_dev_nemo
-        dec a
+        dec a        ;2
         jr z, to_sel_dev_nemo
+        dec a        ;3
+        jr z, to_sel_dev_smuc
+        dec a        ;4
+        jr z, to_sel_dev_smuc
         ld c, a
         ret
 to_sel_dev_sd
@@ -1227,6 +1579,9 @@ to_sel_dev_sd
 to_sel_dev_nemo
         ld a, c
         jp sel_dev_nemo
+to_sel_dev_smuc
+        ld a, c
+        jp sel_dev_smuc
 ;---------------------------------------        
 ;---------------------------------------
 ;---------------------------------------

@@ -254,18 +254,24 @@ RES_BT_BD       ; boot.$c
     jr z, RES_BD_XX		; SD Card
     inc b
     dec a       ;1
-    jr z, RES_BD_XX		; HDD Master
+    jr z, RES_BD_XX		; IDE Nemo Master
     inc b
     dec a       ;2
-    jr z, RES_BD_XX		; HDD Slave
+    jr z, RES_BD_XX		; IDE Nemo Slave
     dec a       ;3
     jr z, RES_BD_RS
+    inc b
+    dec a       ;4
+    jr z, RES_BD_XX     ; IDE Smuc Master
+    inc b
+    dec a       ;5
+    jr z, RES_BD_XX     ; IDE Smuc Slave
     jr $
 
 RES_BT_SR       ; sys.rom
     jr $
 
-RES_BD_XX       ; SD Card, HDD Master, HDD Slave (B = device)
+RES_BD_XX       ; SD Card, Nemo Master, Nemo Slave, Smuc Master, Smuc Slave (B = device)
     push de
     call start  ; a = Return code: 1 - no device, 2 - FAT32 not found, 3 - file not found
     call c, BT_ERROR

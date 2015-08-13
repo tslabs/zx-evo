@@ -1,4 +1,12 @@
-﻿FAT engine errors:
+﻿Device codes:
+0 - ide (nemo/master)
+1 - sd (zc)
+2 - sd (ngs)
+3 - ide (smuc/master)
+4 - ide (smuc/slave)
+5 - ide (nemo/slave)
+
+FAT engine errors:
 1 - long name is not valid (mkfile, mkdir)
 2 - short name index fatality (mkfile, mkdir)
 3 - long name already exists  (mkfile, mkdir)
