@@ -94,6 +94,7 @@ char *MemDlg_get_bigrom()
    if (c1.mem_model == MM_KAY) return c1.kay_rom_path;
    if (c1.mem_model == MM_PLUS3) return c1.plus3_rom_path;
    if (c1.mem_model == MM_QUORUM) return c1.quorum_rom_path;
+   if (c1.mem_model == MM_PHOENIX) return c1.phoenix_rom_path;
    return 0;
 }
 
@@ -164,7 +165,7 @@ void change_rombank(int dx, int reload)
 
    sz /= 1024;
 
-   if ((c1.mem_model == MM_SCORP || c1.mem_model == MM_PROFI || c1.mem_model == MM_KAY) && sz != 64)
+   if ((c1.mem_model == MM_SCORP || c1.mem_model == MM_PROFI || c1.mem_model == MM_KAY || c1.mem_model == MM_PHOENIX ) && sz != 64)
        goto err;
    if ((c1.mem_model == MM_ATM710 || c1.mem_model == MM_ATM3) && sz != 64 && sz != 128 && sz != 256 && sz != 512 && sz != 1024)
        goto err;
@@ -220,6 +221,7 @@ void mem_set_sizes()
    EnableWindow(GetDlgItem(dlg, IDC_RAM256),  (mems & RAM_256)?  1:0);
    EnableWindow(GetDlgItem(dlg, IDC_RAM512),  (mems & RAM_512)?  1:0);
    EnableWindow(GetDlgItem(dlg, IDC_RAM1024), (mems & RAM_1024)? 1:0);
+   EnableWindow(GetDlgItem(dlg, IDC_RAM2048), (mems & RAM_2048)? 1:0);
    EnableWindow(GetDlgItem(dlg, IDC_RAM4096), (mems & RAM_4096)? 1:0);
 
    char ok = 1;
@@ -227,6 +229,7 @@ void mem_set_sizes()
    if (getcheck(IDC_RAM256) && !(mems & RAM_256))  ok = 0;
    if (getcheck(IDC_RAM512) && !(mems & RAM_512))  ok = 0;
    if (getcheck(IDC_RAM1024)&& !(mems & RAM_1024)) ok = 0;
+   if (getcheck(IDC_RAM2048)&& !(mems & RAM_2048)) ok = 0;
    if (getcheck(IDC_RAM4096)&& !(mems & RAM_4096)) ok = 0;
 
    if (!ok) {
@@ -234,11 +237,13 @@ void mem_set_sizes()
       setcheck(IDC_RAM256, 0);
       setcheck(IDC_RAM512, 0);
       setcheck(IDC_RAM1024,0);
+	  setcheck(IDC_RAM2048,0);
       setcheck(IDC_RAM4096,0);
       if (best == 128) setcheck(IDC_RAM128);
       if (best == 256) setcheck(IDC_RAM256);
       if (best == 512) setcheck(IDC_RAM512);
       if (best == 1024)setcheck(IDC_RAM1024);
+	  if (best == 2048)setcheck(IDC_RAM2048);
       if (best == 4096)setcheck(IDC_RAM4096);
    }
 
@@ -321,6 +326,7 @@ INT_PTR CALLBACK MemDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
       if (getcheck(IDC_RAM256)) c1.ramsize = 256;
       if (getcheck(IDC_RAM512)) c1.ramsize = 512;
       if (getcheck(IDC_RAM1024))c1.ramsize = 1024;
+	  if (getcheck(IDC_RAM2048))c1.ramsize = 2048;
       if (getcheck(IDC_RAM4096))c1.ramsize = 4096;
 
       c1.smuc = getcheck(IDC_SMUC);
@@ -332,6 +338,7 @@ INT_PTR CALLBACK MemDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
       setcheck(IDC_RAM256, (c1.ramsize == 256));
       setcheck(IDC_RAM512, (c1.ramsize == 512));
       setcheck(IDC_RAM1024,(c1.ramsize == 1024));
+	  setcheck(IDC_RAM2048,(c1.ramsize == 2048));
       setcheck(IDC_RAM4096,(c1.ramsize == 4096));
       setcheck(IDC_SINGLE_ROM, !c1.use_romset);
       setcheck(IDC_CUSTOM_ROM, c1.use_romset);
@@ -806,12 +813,12 @@ INT_PTR CALLBACK VideoDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
       for (i = 0; i < (int)c1.num_pals; i++)
          SendMessage(box, CB_ADDSTRING, 0, (LPARAM)pals[i].name);
       SendMessage(box, CB_SETCURSEL, c1.pal, 0);
-      box = GetDlgItem(dlg, IDC_FONTHEIGHT);
+      /*box = GetDlgItem(dlg, IDC_FONTHEIGHT);
       SendMessage(box, CB_ADDSTRING, 0, (LPARAM)"5pix, scroll");
       SendMessage(box, CB_ADDSTRING, 0, (LPARAM)"6pix, scroll");
       SendMessage(box, CB_ADDSTRING, 0, (LPARAM)"7pix, scroll");
       SendMessage(box, CB_ADDSTRING, 0, (LPARAM)"8pix, scroll");
-      SendMessage(box, CB_ADDSTRING, 0, (LPARAM)"8pix, fixed");
+      SendMessage(box, CB_ADDSTRING, 0, (LPARAM)"8pix, fixed");*/
       unsigned index = c1.fontsize - 5;
       if (!c1.pixelscroll && index == 3) index++;
       SendMessage(box, CB_SETCURSEL, index, 0);
@@ -826,8 +833,8 @@ INT_PTR CALLBACK VideoDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
    }
    if (msg == WM_COMMAND) {
       id = LOWORD(wp), code = HIWORD(wp);
-      if (id == IDC_FONT) { font_setup(dlg); return 1; }
-      if ((id == IDC_NOFLIC || id == IDC_FAST_SL) && code == BN_CLICKED) goto filter_changed;
+      //if (id == IDC_FONT) { font_setup(dlg); return 1; }
+      if ((id == IDC_NOFLIC /*|| id == IDC_FAST_SL*/) && code == BN_CLICKED) goto filter_changed;
       if (code == CBN_SELCHANGE && id == IDC_BORDERSIZE) {
          c1.bordersize = (u8)SendDlgItemMessage(dlg, IDC_BORDERSIZE, CB_GETCURSEL, 0, 0);
 	  }
@@ -838,7 +845,8 @@ INT_PTR CALLBACK VideoDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
          DWORD f = renders[filt_n].flags;
          RENDER_FUNC rend = renders[filt_n].func;
 
-         DWORD sh = (f & (RF_USE32AS16 | RF_USEC32)) ? SW_SHOW : SW_HIDE;
+		 DWORD sh;
+         /*sh = (f & (RF_USE32AS16 | RF_USEC32)) ? SW_SHOW : SW_HIDE;
          ShowWindow(GetDlgItem(dlg, IDC_CH_TITLE), sh);
          ShowWindow(GetDlgItem(dlg, IDC_CH2), sh);
          ShowWindow(GetDlgItem(dlg, IDC_CH4), sh);
@@ -847,25 +855,25 @@ INT_PTR CALLBACK VideoDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
          ShowWindow(GetDlgItem(dlg, IDC_B_TITLE), sh);
          ShowWindow(GetDlgItem(dlg, IDC_B0), sh);
          ShowWindow(GetDlgItem(dlg, IDC_B1), sh);
-         ShowWindow(GetDlgItem(dlg, IDC_B2), sh);
+         ShowWindow(GetDlgItem(dlg, IDC_B2), sh);*/
 
          sh = (f & RF_BORDER)? SW_HIDE : SW_SHOW;
          ShowWindow(GetDlgItem(dlg, IDC_FLASH), sh);
 
-         if (!(f & RF_2X) || getcheck(IDC_FAST_SL) || !getcheck(IDC_NOFLIC)) sh = SW_HIDE;
+         //if (!(f & RF_2X) || getcheck(IDC_FAST_SL) || !getcheck(IDC_NOFLIC)) sh = SW_HIDE;
          ShowWindow(GetDlgItem(dlg, IDC_ALT_NOFLIC), sh);
 
-         sh = (f & (RF_USEFONT)) ? SW_SHOW : SW_HIDE;
+         /*sh = (f & (RF_USEFONT)) ? SW_SHOW : SW_HIDE;
          ShowWindow(GetDlgItem(dlg, IDC_FNTTITLE), sh);
          ShowWindow(GetDlgItem(dlg, IDC_FONTHEIGHT), sh);
-         ShowWindow(GetDlgItem(dlg, IDC_FONT), sh);
+         ShowWindow(GetDlgItem(dlg, IDC_FONT), sh);*/
 
          sh = (f & RF_DRIVER)? SW_SHOW : SW_HIDE;
          ShowWindow(GetDlgItem(dlg, IDC_REND_TITLE), sh);
          ShowWindow(GetDlgItem(dlg, IDC_RENDER), sh);
 
          sh = (f & RF_2X) && (f & (RF_DRIVER | RF_USEC32))? SW_SHOW : SW_HIDE;
-         ShowWindow(GetDlgItem(dlg, IDC_FAST_SL), sh);
+         //ShowWindow(GetDlgItem(dlg, IDC_FAST_SL), sh);
 
       }
       return 1;
@@ -876,24 +884,24 @@ INT_PTR CALLBACK VideoDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
 
    if (nm->code == PSN_KILLACTIVE)
    {
-      unsigned index = SendDlgItemMessage(dlg, IDC_FONTHEIGHT, CB_GETCURSEL, 0, 0);
+      /*unsigned index = SendDlgItemMessage(dlg, IDC_FONTHEIGHT, CB_GETCURSEL, 0, 0);
       c1.pixelscroll = (index == 4)? 0 : 1;
-      c1.fontsize = (index == 4)? 8 : index + 5;
+      c1.fontsize = (index == 4)? 8 : index + 5;*/
       c1.render = SendDlgItemMessage(dlg, IDC_VIDEOFILTER, CB_GETCURSEL, 0, 0);
       c1.driver = SendDlgItemMessage(dlg, IDC_RENDER, CB_GETCURSEL, 0, 0);
       c1.frameskip = getint(IDE_SKIP1);
       c1.minres = getint(IDE_MINX);
       c1.frameskipmax = getint(IDE_SKIP2);
       c1.scanbright = getint(IDE_SCBRIGHT);
-      c1.fast_sl = getcheck(IDC_FAST_SL);
+      //c1.fast_sl = getcheck(IDC_FAST_SL);
       c1.scrshot = (SSHOT_FORMAT)SendDlgItemMessage(dlg, IDC_SCRSHOT, CB_GETCURSEL, 0, 0);
       c1.flip = getcheck(IDC_FLIP);
-      c1.updateb = getcheck(IDC_UPDB);
+      //c1.updateb = getcheck(IDC_UPDB);
       c1.pal = SendDlgItemMessage(dlg, IDC_PALETTE, CB_GETCURSEL, 0, 0);
       c1.flashcolor = getcheck(IDC_FLASH);
       c1.noflic = getcheck(IDC_NOFLIC);
       c1.alt_nf = getcheck(IDC_ALT_NOFLIC);
-      c1.videoscale = (u8)(SendDlgItemMessage(dlg, IDC_VIDEOSCALE, TBM_GETPOS, 0, 0));
+      //c1.videoscale = (u8)(SendDlgItemMessage(dlg, IDC_VIDEOSCALE, TBM_GETPOS, 0, 0));
    }
 
    if (nm->code == PSN_SETACTIVE)
@@ -906,14 +914,14 @@ INT_PTR CALLBACK VideoDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
       SendDlgItemMessage(dlg, IDC_SCRSHOT, CB_SETCURSEL, c1.scrshot, 0);
 
       setcheck(IDC_FLIP, c1.flip);
-      setcheck(IDC_UPDB, c1.updateb);
+      //setcheck(IDC_UPDB, c1.updateb);
       setcheck(IDC_FLASH, c1.flashcolor);
       setcheck(IDC_NOFLIC, c1.noflic);
       setcheck(IDC_ALT_NOFLIC, c1.alt_nf);
-      setcheck(IDC_FAST_SL, c1.fast_sl);
+      //setcheck(IDC_FAST_SL, c1.fast_sl);
 
-      SendDlgItemMessage(dlg, IDC_VIDEOSCALE, TBM_SETRANGE, 0, MAKELONG(1,4));
-      SendDlgItemMessage(dlg, IDC_VIDEOSCALE, TBM_SETPOS, 1, c1.videoscale);
+      /*SendDlgItemMessage(dlg, IDC_VIDEOSCALE, TBM_SETRANGE, 0, MAKELONG(1,4));
+      SendDlgItemMessage(dlg, IDC_VIDEOSCALE, TBM_SETPOS, 1, c1.videoscale);*/
 
       lastpage = "VIDEO";
       goto filter_changed;

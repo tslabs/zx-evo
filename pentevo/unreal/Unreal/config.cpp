@@ -290,6 +290,7 @@ void load_config(const char *fname)
    GetPrivateProfileString(rom, "QUORUM", nil, conf.quorum_rom_path, sizeof conf.quorum_rom_path, ininame);
    GetPrivateProfileString(rom, "TSL", nil, conf.tsl_rom_path, sizeof conf.tsl_rom_path, ininame);
    GetPrivateProfileString(rom, "LSY", nil, conf.lsy_rom_path, sizeof conf.lsy_rom_path, ininame);
+   GetPrivateProfileString(rom, "PHOENIX", nil, conf.phoenix_rom_path, sizeof conf.phoenix_rom_path, ininame);
    
    #ifdef MOD_GSZ80
    GetPrivateProfileString(rom, "GS", nil, conf.gs_rom_path, sizeof conf.gs_rom_path, ininame);
@@ -311,6 +312,7 @@ void load_config(const char *fname)
    addpath(conf.quorum_rom_path);
    addpath(conf.tsl_rom_path);
    addpath(conf.lsy_rom_path);
+   addpath(conf.phoenix_rom_path);
 //[vv]   addpath(conf.kay_rom_path);
 
    GetPrivateProfileString(rom, "ROMSET", "default", line, sizeof line, ininame);
@@ -833,7 +835,8 @@ void apply_memory()
 
    zxmmoonsound.load_rom(conf.moonsound_rom_path);
 		
-   if (conf.ramsize != 128 && conf.ramsize != 256 && conf.ramsize != 512 && conf.ramsize != 1024 && conf.ramsize != 4096)
+   if (conf.ramsize != 128 && conf.ramsize != 256 && conf.ramsize != 512 &&
+	   conf.ramsize != 1024 && conf.ramsize != 2048 && conf.ramsize != 4096)
       conf.ramsize = 0;
    if (!(mem_model[conf.mem_model].availRAMs & conf.ramsize)) {
       conf.ramsize = mem_model[conf.mem_model].defaultRAM;
@@ -854,6 +857,7 @@ void apply_memory()
 
    case MM_ATM450:
    case MM_PROFI:
+   case MM_PHOENIX:
       base_sys_rom = page_rom(0);
       base_dos_rom = page_rom(1);
       base_128_rom = page_rom(2);
@@ -948,6 +952,7 @@ void apply_memory()
          case MM_QUORUM: romname = conf.quorum_rom_path; break;
          case MM_TSL: romname = conf.tsl_rom_path; break;
 		 case MM_LSY256: romname = conf.lsy_rom_path; break;
+		 case MM_PHOENIX: romname = conf.phoenix_rom_path; break;
 
          default:
              errexit("ROMSET should be defined for this memory model");

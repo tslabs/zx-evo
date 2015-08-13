@@ -335,6 +335,28 @@ void set_banks()
       }
       break;
 
+	  case MM_PHOENIX:
+         bank = (comp.p7FFD & 0x07) |
+				((comp.p7FFD & 0x80) >> 4) |
+				(comp.p1FFD & 0x50) |
+				((comp.p1FFD & 0x80) >> 2 );
+         bank3 = RAM_BASE_M + (bank & temp.ram_mask)*PAGE;
+
+         if (comp.p1FFD & 2) bank0 = base_sys_rom;
+		 else if (comp.p1FFD & 8)
+		 {
+			if (comp.flags & CF_TRDOS)
+				if  (comp.p7FFD & 16) bank0 = base_sos_rom;
+				else bank0 = base_128_rom;
+			else
+				if  (comp.p7FFD & 16) bank0 = base_dos_rom;
+				else bank0 = base_sys_rom;
+		 }
+         if (comp.p1FFD & 1) bank0 = RAM_BASE_M + 0*PAGE;
+
+		 if (comp.pEFF7 & 0x80) comp.flags |= CF_DOSPORTS;
+         break;
+
       default: bank3 = page_ram(0);
    }
 

@@ -265,7 +265,8 @@ const TMemModel mem_model[N_MM_MODELS] =
     { "ZS Scorpion + PROF ROM", "PROFSCORP", MM_PROFSCORP, 256,  RAM_256 | RAM_1024 },
     { "Nemo's KAY", "KAY",                   MM_KAY, 256,  RAM_256 | RAM_1024 },
     { "Quorum", "QUORUM",                    MM_QUORUM, 1024, RAM_128 | RAM_1024 },
-    { "Orel' BK-08 (LSY)", "LSY256",         MM_LSY256, 256, RAM_256 }
+    { "Orel' BK-08 (LSY)", "LSY256",         MM_LSY256, 256, RAM_256 },
+	{ "ZXM-Phoenix v1.0", "PHOENIX",         MM_PHOENIX, 1024, RAM_1024 | RAM_2048 },
 };
 
 u8 kbdpc[VK_MAX]; // add cells for mouse & joystick

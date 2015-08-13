@@ -72,12 +72,13 @@ enum MEM_MODEL
    MM_KAY,
    MM_QUORUM,
    MM_LSY256,
+   MM_PHOENIX,
    N_MM_MODELS
 };
 
 enum ROM_MODE { RM_NOCHANGE=0, RM_SOS, RM_DOS, RM_SYS, RM_128, RM_CACHE };
 
-const int RAM_128 = 128, RAM_256 = 256, RAM_512 = 512, RAM_1024 = 1024, RAM_4096 = 4096;
+const int RAM_128 = 128, RAM_256 = 256, RAM_512 = 512, RAM_1024 = 1024, RAM_2048 = 2048, RAM_4096 = 4096;
 
 struct TMemModel
 {
@@ -293,6 +294,7 @@ struct CONFIG
    char quorum_rom_path[FILENAME_MAX];
    char tsl_rom_path[FILENAME_MAX];
    char lsy_rom_path[FILENAME_MAX];
+   char phoenix_rom_path[FILENAME_MAX];
 
    #ifdef MOD_GSZ80
    unsigned gs_ramsize;

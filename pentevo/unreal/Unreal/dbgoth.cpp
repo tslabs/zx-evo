@@ -199,6 +199,7 @@ void showports()
       case MM_SCORP:
       case MM_PROFSCORP:
       case MM_PLUS3:
+	  case MM_PHOENIX:
          dbg_extport = 0x1FFD; dgb_extval = comp.p1FFD;
       break;
       case MM_PROFI:
