@@ -21,11 +21,7 @@ start   push bc
 
         call ide_ini
 ;-------
-        ld a, (device)
-        or a
-        jr z, one_dev
-        dec a
-one_dev call sel_dev
+        call sel_dev
         jr nz, no_dev
 
         call hdd
@@ -1057,7 +1053,6 @@ rdh1    push bc
 reads_nemo
         ld e, low(datl_nemo)
         ld d, low(dath_nemo)
-        ld b, high(datl_nemo)
         ld a, h'20
 re1_nemo
         ld c, e
@@ -1097,67 +1092,94 @@ re1_nemo
         ret
 
 ;---------------------------------------
-sel_sla ld a, h'F0 ; %11110000 = 1 + lba + 1 + dev + %0000
-sel_ide ld (drvre), a
-        ld bc, drv_nemo
-        out (c), a
-        
-        ld de, 0
-sdr     call loll
-        rlca
-        ret nc
-        dec de
-        ld a, d
-        or e
-        jr nz, sdr
-        scf
-        ret
 
+sel_mas_sla_nemo
+        jr z, sel_sla
 sel_mas ld a, h'E0 ; %11100000 = 1 + lba + 1 + dev + %0000
         jr sel_ide
+sel_sla ld a, h'F0 ; %11110000 = 1 + lba + 1 + dev + %0000
+sel_ide ld (drvre), a
+
+        ld bc, drv_nemo
+        ;ld a, (drvre)
+        out (c), a
+        ret
 
 ;---------------------------------------
-dv2     call sel_sla
-        jr drdet
-;-------
+
 sel_dev_nemo
 ;i:a - n of dev
-        cp 2
+        or a
+        jr z, ru
+        cp 3
         jr nc, ru
 		
-        dec a
-        jr z,dv2
-        call sel_mas
-drdet   jr c, ru
+        cp 2 ;        2 - IDE Nemo Slave
+        call sel_mas_sla_nemo
+
         ld a, h'08
         call comm
-        call error_7
-        jr c, rrr
 
-        ld hl, 16384
+            ;ld a, 1
+            ;out (254), a
+
+        ld hl, 8192 ; ~8 seconds on 14mhz
 ydet    call loll
-        rlca
-        jr nc, rrr
-        
+        bit 7, a ; BSY
+        jr z, ggg
+;bit 0, a ; ERR
+;jr nz, ggg
+
         call hult
-		
+
         dec hl
         ld a, h
         or l
         jr nz, ydet
 
-        ld de, 500
+rrr     ld de, 500
         jr ru
 
-rrr     ld de, 0
+ggg         ;ld a, 2
+            ;out (254), a
+
+        ld de, 0
         ld hl, 2
         call xpozi_nemo
         call rereg
+;-------
         ld a, h'ec
         call comm
-        
-        call hult2
-        
+
+            ;ld a, 3
+            ;out (254), a
+
+        ld hl, 8
+        call wsdr ; wait BSY
+        jr nz, ru
+
+            ;ld a, 4
+            ;out (254), a
+
+        ld hl, lobu
+        push hl
+        call reads_nemo
+        pop hl
+
+            ;ld a, 5
+            ;out (254), a
+
+        ld a, (hl)
+        ld b, 0
+nia     inc hl
+        cp (hl)
+        jr nz, lia
+        djnz nia
+        jr ru
+;-------
+lia         ;ld a, 6
+            ;out (254), a
+
         call rpoz
         ld a, d
         or e
@@ -1166,33 +1188,38 @@ rrr     ld de, 0
         ld a, l
         cp 2
         jr z, kru
-        
+
+            ;ld a, 7
+            ;out (254), a
+
 ;ld hl,#eb14
 ;or a:sbc hl,de:ret z;atapi
 ru      ld a, 1
         or a
         ret
 ;-------
-kru     ld hl, lobu
-        call reads_nemo
-        ld de, 0
+kru     ld de, 0
         xor a
+
+             ;out (254), a
+
         ret
 
-hult2   ld hl, 192
-huu     call hult
-        dec hl
-        ld a, h
-        or l
-        jr nz, huu
-        ret
+;hult2   ld hl, 192
+;huu     call hult
+;        dec hl
+;        ld a, h
+;        or l
+;        jr nz, huu
+;        ret
 hult    ld b, 0
 haalt   add a, (ix+0)
+        add a, (ix+0)
         djnz haalt
         ret
 ;---------------------------------------
 loll    ld bc, cmd_nemo
-        in a, (c)
+        in a, (c) ; BSY + DRDY + DF + SERV/DSC + DRQ + X + X + ERR/CHK
         ret
 
 comah   call comm
@@ -1219,6 +1246,30 @@ comm    ld bc, cmd_nemo
 error_7 ld bc, cmd_nemo
         in a, (c)
         rrca
+        ret
+
+;i: HL - Counter
+wsdr    ld de, 0
+        call sdr
+        ret z
+        
+        dec hl
+        ld a, h
+        or l
+        jr nz, wsdr
+        inc a
+        ret
+
+;i: DE - Counter        
+sdr     call loll
+        bit 7, a
+        ret z
+
+        dec de
+        ld a, d
+        or e
+        jr nz, sdr
+        inc a
         ret
 
 ;---------------------------------------
@@ -1351,75 +1402,99 @@ re1_smuc
         ret
 
 ;---------------------------------------
+sel_mas_sla_smuc
+        jr z, sel_sla_smuc
+sel_mas_smuc
+        ld a, h'E0 ; %11100000 = 1 + lba + 1 + dev + %0000
+        jr sel_ide_smuc
 sel_sla_smuc
         ld a, h'F0 ; %11110000 = 1 + lba + 1 + dev + %0000
 sel_ide_smuc
         ld (drvre), a
+
         ld bc, drv_smuc
+        ;ld a, (drvre)
         out (c), a
-        
-        ld de, 0
-sdr_smuc
-        call loll_smuc
-        rlca
-        ret nc
-        dec de
-        ld a, d
-        or e
-        jr nz, sdr_smuc
-        scf
         ret
 
-sel_mas_smuc
-        ld a, h'E0 ; %11100000 = 1 + lba + 1 + dev + %0000
-        jr sel_ide_smuc
-
 ;---------------------------------------
-dv2_smuc
-        call sel_sla_smuc
-        jr drdet_smuc
-;-------
+
 sel_dev_smuc
 ;i:a - n of dev
-        cp 2
-        jr nc, ru_smuc
-		
-        dec a
-        jr z,dv2_smuc
-        call sel_mas_smuc
-drdet_smuc
+        cp 3
         jr c, ru_smuc
+        cp 5
+        jr nc, ru_smuc
+
+		cp 4 ;        4 - IDE Smuc Slave
+        call sel_mas_sla_smuc
+
         ld a, h'08
         call comm_smuc
-        call error_7_smuc
-        jr c, rrr_smuc
 
-        ld hl, 16384
+            ;ld a, 1
+            ;out (254), a
+
+        ld hl, 8192 ; ~8 seconds on 14mhz
 ydet_smuc
         call loll_smuc
-        rlca
-        jr nc, rrr_smuc
+        bit 7, a ; BSY
+        jr z, ggg_smuc
+;bit 0, a ; ERR
+;jr nz, ggg
+
+        call hult
         
-        call hult_smuc
-		
         dec hl
         ld a, h
         or l
         jr nz, ydet_smuc
 
+rrr_smuc
         ld de, 500
         jr ru_smuc
 
-rrr_smuc
+ggg_smuc    ;ld a, 2
+            ;out (254), a
+
         ld de, 0
         ld hl, 2
         call xpozi_smuc
         call rereg_smuc
+;-------
         ld a, h'ec
         call comm_smuc
         
-        call hult2_smuc
-        
+            ;ld a, 3
+            ;out (254), a
+
+        ld hl, 8
+        call wsdr_smuc ; wait BSY
+        jr nz, ru_smuc
+
+            ;ld a, 4
+            ;out (254), a
+
+        ld hl, lobu
+        push hl
+        call reads_smuc
+        pop hl
+
+            ;ld a, 5
+            ;out (254), a
+
+        ld a, (hl)
+        ld b, 0
+nia_smuc
+        inc hl
+        cp (hl)
+        jr nz, lia_smuc
+        djnz nia_smuc
+        jr ru_smuc
+;-------
+lia_smuc    ;ld a, 6
+            ;out (254), a
+
         call rpoz_smuc
         ld a, d
         or e
@@ -1428,36 +1503,24 @@ rrr_smuc
         ld a, l
         cp 2
         jr z, kru_smuc
-        
+
+            ;ld a, 7
+            ;out (254), a
+
 ;ld hl,#eb14
 ;or a:sbc hl,de:ret z;atapi
-ru_smuc
-        ld a, 1
+ru_smuc ld a, 1
         or a
         ret
 ;-------
 kru_smuc
-        ld hl, lobu
-        call reads_smuc
         ld de, 0
         xor a
+
+             ;out (254), a
+
         ret
 
-hult2_smuc
-        ld hl, 192
-huu_smuc
-        call hult_smuc
-        dec hl
-        ld a, h
-        or l
-        jr nz, huu_smuc
-        ret
-hult_smuc
-        ld b, 0
-haalt_smuc
-        add a, (ix+0)
-        djnz haalt_smuc
-        ret
 ;---------------------------------------
 loll_smuc
         ld bc, cmd_smuc
@@ -1496,6 +1559,31 @@ error_7_smuc
         rrca
         ret
 
+;i: HL - Counter
+wsdr_smuc
+        ld de, 0
+        call sdr_smuc
+        ret z
+        
+        dec hl
+        ld a, h
+        or l
+        jr nz, wsdr_smuc
+        inc a
+        ret
+
+;i: DE - Counter        
+sdr_smuc
+        call loll_smuc
+        bit 7, a
+        ret z
+
+        dec de
+        ld a, d
+        or e
+        jr nz, sdr_smuc
+        inc a
+        ret
 ;---------------------------------------
 
 
@@ -1534,9 +1622,11 @@ proz    ld a, (device)
         dec a        ;4
         jp z, proz_smuc
         ret
-
+        
+;-------
 rddse   ld c, a
         ld a, (device)
+        
         or a         ;0
         jr z, to_rddse_sd
         dec a        ;1
@@ -1547,8 +1637,10 @@ rddse   ld c, a
         jr z, to_rddse_smuc
         dec a        ;4
         jr z, to_rddse_smuc
+        
         ld a, c
         ret
+        
 to_rddse_sd
         ld a, c
         jp rddse_sd
@@ -1558,9 +1650,11 @@ to_rddse_nemo
 to_rddse_smuc
         ld a, c
         jp rddse_smuc
-		
-sel_dev ld c, a
-        ld a, (device)
+        
+;-------		
+sel_dev ld a, (device)
+        ld c, a
+        
         or a         ;0
         jr z, to_sel_dev_sd
         dec a        ;1
@@ -1571,8 +1665,10 @@ sel_dev ld c, a
         jr z, to_sel_dev_smuc
         dec a        ;4
         jr z, to_sel_dev_smuc
+        
         ld c, a
         ret
+        
 to_sel_dev_sd
         ld a, c
         jp sel_dev_sd

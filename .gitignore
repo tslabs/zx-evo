@@ -47,3 +47,8 @@ pentevo/rom/src/866_code.fnt.hst
 pentevo/rom/src/866_code.asm
 pentevo/rom/bin/TS-BIOS.$C
 pentevo/fpga/current/quartus/serv_req_info.txt
+
+*.r01
+*.inc
+pentevo/rom/src/obj/ts-bios.html
+pentevo/rom/src/obj/ts-bios.bin
