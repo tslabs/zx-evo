@@ -35,7 +35,6 @@
 #define IDC_C8                                  147
 #define IDE_FRAME                               1013
 #define IDE_LINE                                1014
-#define IDE_PAPER                               1015
 #define IDC_LED_ON                              1019
 #define IDC_LED_AY                              1020
 #define IDC_LED_AY_X                            1021
@@ -297,3 +296,4 @@
 #define IDC_WHEEL_KEYBOARD                      10254
 #define IDC_WHEEL_KEMPSTON                      10256
 #define IDC_RAM2048                             40000
+#define IDE_INTSTART                            40000

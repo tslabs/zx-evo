@@ -68,7 +68,7 @@ void chfix(int dx)
       switch (whatfix) {
          case FIX_FRAME: value = (conf.frame += dx); break;
          case FIX_LINE: value = (conf.t_line += dx); break;
-         case FIX_PAPER: value = (conf.paper += dx); break;
+         //case FIX_PAPER: value = (conf.paper += dx); break;
          case FIX_NOPAPER: value = (conf.nopaper ^= dx?1:0); break;
          case FIX_HWNC: value = (comp.pEFF7 ^= dx?EFF7_HWMC:0)? 1 : 0; break;
       }

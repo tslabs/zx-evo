@@ -173,8 +173,10 @@ Z80INLINE void Z80FAST ddfd(Z80 *cpu, u8 opcode)
       cpu->memptr = ptr;
       // DDCBnnXX,FDCBnnXX increment R by 2, not 3!
       opcode = cpu->m1_cycle(); cpu->r_low--;
-      u8 byte = (logic_ix_opcode[opcode])(cpu, cpu->rd(ptr));
-      cputact(5);
+	  cputact(1);
+
+      u8 byte = (logic_ix_opcode[opcode])(cpu, cpu->rd(ptr));     
+	  cputact(1);
       if ((opcode & 0xC0) == 0x40) return; // bit n,rm
 
       // select destination register for shift/res/set

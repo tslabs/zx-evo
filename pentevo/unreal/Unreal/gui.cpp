@@ -388,7 +388,7 @@ INT_PTR CALLBACK UlaDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
    }
    if (msg == WM_COMMAND && !block) {
       unsigned id = LOWORD(wp), code = HIWORD(wp);
-      if ((code == EN_CHANGE && (id==IDE_FRAME || id==IDE_LINE || id==IDE_INT || id==IDE_INT_LEN || id==IDE_PAPER))
+      if ((code == EN_CHANGE && (id==IDE_FRAME || id==IDE_LINE || id==IDE_INT || id==IDE_INT_LEN || id==IDE_INTSTART))
           || (code == BN_CLICKED && (id==IDC_EVENM1 || id==IDC_4TBORDER || id==IDC_FLOAT_BUS || id==IDC_FLOAT_DOS || id==IDC_PORT_FF)))
       {
          c1.ula_preset = -1;
@@ -403,7 +403,7 @@ INT_PTR CALLBACK UlaDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
             CONFIG tmp = conf;
             conf.ula_preset = (u8)pre; load_ula_preset();
             c1.frame = /*conf.frame*/frametime/*Alone Coder*/, c1.intfq = conf.intfq, c1.intlen = conf.intlen, c1.t_line = conf.t_line,
-            c1.paper = conf.paper, c1.even_M1 = conf.even_M1, c1.border_4T = conf.border_4T;
+            c1.intstart = conf.intstart, c1.even_M1 = conf.even_M1, c1.border_4T = conf.border_4T;
             c1.floatbus = conf.floatbus, c1.floatdos = conf.floatdos;
             c1.portff = conf.portff;
             conf = tmp;
@@ -416,7 +416,7 @@ INT_PTR CALLBACK UlaDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
    if (nm->code == PSN_KILLACTIVE) {
       c1.frame = getint(IDE_FRAME);
       c1.t_line = getint(IDE_LINE);
-      c1.paper = getint(IDE_PAPER);
+      c1.intstart = getint(IDE_INTSTART);
       c1.intfq = getint(IDE_INT);
       c1.intlen = getint(IDE_INT_LEN);
       c1.nopaper = getcheck(IDC_NOPAPER);
@@ -444,7 +444,7 @@ refresh:
       block=1;
       setint(IDE_FRAME, c1.frame);
       setint(IDE_LINE, c1.t_line);
-      setint(IDE_PAPER, c1.paper);
+      setint(IDE_INTSTART, c1.intstart);
       setint(IDE_INT, c1.intfq);
       setint(IDE_INT_LEN, c1.intlen);
       setcheck(IDC_NOPAPER, c1.nopaper);

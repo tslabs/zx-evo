@@ -729,7 +729,7 @@ set1FFD:
       // comp.pEFF7 |= EFF7_GIGASCREEN; // [vv] disable turbo
 
 	  if (conf.mem_model==MM_PENTAGON)
-		  turbo((comp.pEFF7 & EFF7_GIGASCREEN) ? 2 : 1);
+		  turbo((comp.pEFF7 & EFF7_GIGASCREEN) ? 1 : 2);
 	  if (conf.mem_model==MM_ATM3)
 		  set_turbo();
 

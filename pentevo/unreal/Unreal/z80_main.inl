@@ -277,8 +277,18 @@ void z80loop_TSL()
 
 void z80loop_other()
 {
+	bool int_occured = false;
+	unsigned int_start = conf.intstart;
+	unsigned int_end = conf.intstart + conf.intlen;
+
   cpu.haltpos = 0;
-  cpu.int_pend = true;
+
+	if ( int_end >= conf.frame )
+	{
+		int_end -= conf.frame;
+		cpu.int_pend = true;
+		int_occured = true;
+	}
 
   while (cpu.t < conf.frame)
   {
@@ -322,8 +332,14 @@ void z80loop_other()
     }
 
     // Reset INT
-    if (cpu.int_pend && (cpu.t >= conf.intlen))
-      cpu.int_pend = false;
+	if ( !int_occured && cpu.t >= int_start) 
+	{
+		int_occured = true;
+		cpu.int_pend = true;
+	}
+
+	if ( cpu.int_pend && (cpu.t >= int_end) )
+		cpu.int_pend = false;
 
     vid.memcyc_lcmd = 0; // new command, start accumulate number of busy memcycles
 

@@ -117,7 +117,7 @@ void TMainZ80::CheckNextFrame()
        t -= conf.frame;
        eipos -= conf.frame;
        comp.frame_counter++;
-       int_pend = true;
+       //int_pend = true;
        if (conf.mem_model == MM_TSL)
        {
          comp.ts.intctrl.line_t = comp.ts.intline ? 0 : conf.t_line;

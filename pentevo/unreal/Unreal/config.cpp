@@ -11,6 +11,7 @@
 #include "sound.h"
 #include "sdcard.h"
 #include "zc.h"
+#include "atm.h"
 #include "util.h"
 #include "config.h"
 
@@ -184,7 +185,7 @@ void load_ula_preset()
    static char defaults[] = "71680,17989,224,50,32,0,0";
    GetPrivateProfileString("ULA", name, defaults, line, sizeof line, ininame);
    unsigned t1, t2, t3, t4, t5;
-   sscanf(line, "%d,%d,%d,%d,%d,%d,%d,%d,%d,%u", &/*conf.frame*/frametime/*Alone Coder*/, &conf.paper,
+   sscanf(line, "%d,%d,%d,%d,%d,%d,%d,%d,%d,%u", &/*conf.frame*/frametime/*Alone Coder*/, &conf.intstart,
        &conf.t_line, &conf.intfq, &conf.intlen, &t1, &t2, &t3, &t4, &t5);
    conf.even_M1 = (u8)t1; conf.border_4T = (u8)t2;
    conf.floatbus = (u8)t3; conf.floatdos = (u8)t4;
@@ -373,7 +374,8 @@ void load_config(const char *fname)
 
    sscanf(line, "COM%d", &conf.modem_port);
 
-   conf.paper = GetPrivateProfileInt(ula, "Paper", 17989, ininame);
+   //conf.paper = GetPrivateProfileInt(ula, "Paper", 17989, ininame);
+   conf.intstart = GetPrivateProfileInt(ula, "intstart", 0, ininame);
    conf.t_line = GetPrivateProfileInt(ula, "Line", 224, ininame);
    conf.intfq = GetPrivateProfileInt(ula, "int", 50, ininame);
    conf.intlen = GetPrivateProfileInt(ula, "intlen", 32, ininame);
@@ -999,7 +1001,7 @@ void applyconfig()
    comp.ts.pwr_up = TS_PWRUP_ON;
    
    //[vv] disable turbo
-   comp.pEFF7 |= EFF7_GIGASCREEN;
+   //comp.pEFF7 |= EFF7_GIGASCREEN;
 
 //Alone Coder 0.36.4
    conf.frame = frametime;
@@ -1025,6 +1027,11 @@ void applyconfig()
    load_atariset();
    apply_video();
    apply_sound();
+
+	if (conf.mem_model==MM_PENTAGON)
+		turbo((comp.pEFF7 & EFF7_GIGASCREEN) ? 1 : 2);
+	if (conf.mem_model==MM_ATM3)
+		set_turbo();
 
    hdd.dev[0].configure(conf.ide+0);
    hdd.dev[1].configure(conf.ide+1);

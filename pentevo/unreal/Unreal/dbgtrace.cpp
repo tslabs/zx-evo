@@ -586,8 +586,21 @@ void mon_step()
     if (comp.ts.intctrl.pend && !vdos) cpu.int_pend = true;
     else cpu.int_pend = false;
   } // Reset INT
-  else if (cpu.t >= conf.intlen)
-    cpu.int_pend = false;
+  else 
+	{
+		unsigned int_start = conf.intstart;
+		unsigned int_end = conf.intstart + conf.intlen;
+
+		cpu.int_pend = false;
+		if ( (cpu.t >= int_start) && (cpu.t < int_end) )
+			cpu.int_pend = true;
+		else if ( int_end >= conf.frame )
+		{
+			int_end -= conf.frame;
+			if ( (cpu.t >= int_start) || (cpu.t < int_end) )
+				cpu.int_pend = true;
+		}
+	}
 
   if (cpu.int_pend && cpu.iff1 && cpu.t != cpu.eipos && cpu.int_gate)
   {
