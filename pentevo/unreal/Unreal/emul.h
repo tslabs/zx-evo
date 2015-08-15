@@ -152,11 +152,10 @@ struct zxkeymap ;
 
 struct CONFIG
 {
-   //unsigned paper;  // start of paper
    unsigned t_line; // t-states per line
    unsigned frame;  // t-states per frame
    unsigned intfq;  // usually 50Hz
-   unsigned intstart;
+   unsigned intstart;	// int start
    unsigned intlen; // length of INT signal (for Z80)
    unsigned nopaper;// hide paper
 

@@ -210,6 +210,7 @@ struct Z80 : public TZ80State
 {
    u8 tmp0, tmp1, tmp3;
    unsigned rate;
+   bool vm1;	// halt handling type
    u8 outc0;
    u16 last_branch;
    unsigned trace_curs, trace_top, trace_mode;
@@ -223,6 +224,7 @@ struct Z80 : public TZ80State
    u8 dbgchk; // Признак наличия активных брекпоинтов
    bool int_pend; // На входе int есть активное прерывание
    bool int_gate; // Разрешение внешних прерываний (1-разрешены/0 - запрещены)
+   unsigned halt_cycle;
 
    #define MAX_CBP 16
    unsigned cbp[MAX_CBP][128]; // Условия для условных брекпоинтов

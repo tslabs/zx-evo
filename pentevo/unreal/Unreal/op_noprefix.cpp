@@ -558,6 +558,7 @@ Z80OPCODE op_76(Z80 *cpu) { // halt
 
    cpu->pc--;
    cpu->halted = 1;
+   cpu->halt_cycle = 0;
 }
 //#endif
 //#ifndef Z80_COMMON

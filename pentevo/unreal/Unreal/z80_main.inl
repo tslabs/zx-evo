@@ -201,13 +201,25 @@ void Z80FAST step()
    if (comp.tape.play_pointer && !conf.sound.enabled)
        fast_tape();
 
-//todo if (comp.turbo)cpu.t-=tbias[cpu.dt]
-   if (cpu.pch & temp.evenM1_C0)
-       cpu.t += (cpu.t & 1);
 //~todo
 //[vv]   unsigned oldt=cpu.t; //0.37
-   u8 opcode = m1_cycle(&cpu);
-   (normal_opcode[opcode])(&cpu);
+	if ( cpu.vm1 && cpu.halted )
+	{
+		cpu.tt += cpu.rate * 1;
+		if ( ++ cpu.halt_cycle == 4 )
+		{
+			cpu.r_low += 1;
+			cpu.halt_cycle = 0;
+		}
+	}
+	else
+	{
+		if (cpu.pch & temp.evenM1_C0)
+			cpu.tt += (cpu.tt & cpu.rate);
+
+		u8 opcode = m1_cycle(&cpu);
+		(normal_opcode[opcode])(&cpu);
+	}
 
 /* [vv]
 //todo if (comp.turbo)cpu.t-=tbias[cpu.t-oldt]
@@ -277,7 +289,7 @@ void z80loop_TSL()
 
 void z80loop_other()
 {
-	bool int_occured = false;
+	bool int_occurred = false;
 	unsigned int_start = conf.intstart;
 	unsigned int_end = conf.intstart + conf.intlen;
 
@@ -287,7 +299,7 @@ void z80loop_other()
 	{
 		int_end -= conf.frame;
 		cpu.int_pend = true;
-		int_occured = true;
+		int_occurred = true;
 	}
 
   while (cpu.t < conf.frame)
@@ -332,9 +344,9 @@ void z80loop_other()
     }
 
     // Reset INT
-	if ( !int_occured && cpu.t >= int_start) 
+	if ( !int_occurred && cpu.t >= int_start) 
 	{
-		int_occured = true;
+		int_occurred = true;
 		cpu.int_pend = true;
 	}
 
