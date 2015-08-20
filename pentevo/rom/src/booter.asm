@@ -25,14 +25,14 @@ start   push bc
         jr nz, no_dev
 
         call hdd
-		jr nz, no_fat
+        jr nz, no_fat
 
         ld hl, file1
         ld de, entry
         ld bc, 11
         ldir
         call srhdrn; Z - file not found
-		jr z, no_file
+        jr z, no_file
 
         ld (lobu), hl
         ld (lobu + 2), de
@@ -62,22 +62,22 @@ thg     ld b, 1
 
         ld ix, sysvars
         ld de, sys_var
-		call DEHRUST
+        call DEHRUST
 
         pop de
-		xor a
+        xor a
         ret
 
 no_dev  ld a, 1
         jr er_exit
-		
-no_fat	ld a, 2	
+
+no_fat  ld a, 2
         jr er_exit
-		
+
 no_file ld a, 3
 er_exit scf
         ret
-		
+
 ;---------------------------------------
 ;read data from fat32 (flow)
         
@@ -1113,15 +1113,15 @@ sel_dev_nemo
         jr z, ru
         cp 3
         jr nc, ru
-		
+
         cp 2 ;        2 - IDE Nemo Slave
         call sel_mas_sla_nemo
 
         ld a, h'08
         call comm
 
-        ld hl, 4096
-        call ydet  ; wait BSY ~4 seconds on 14mhz
+        ld hl, 49*4
+        call ydet  ; wait BSY ~4 seconds
         jr nz, ru
 
         ld de, 0
@@ -1132,11 +1132,11 @@ sel_dev_nemo
         ld a, h'ec
         call comm
 
-        ld hl, 4096
-        call ydet  ; wait BSY ~4 seconds on 14mhz
+        ld hl, 49*4
+        call ydet  ; wait BSY ~4 seconds
         jr nz, ru
-        ld hl, 1024
-        call drqwt ; wait DRQ ~1 second on 14mhz
+        ld hl, 49*1
+        call drqwt ; wait DRQ ~1 second
         jr z, ru
 
         ld hl, lobu
@@ -1160,10 +1160,15 @@ kru     ld de, 0
         ret
 
 ;---------------------------------------
-hult    ld b, 0
-haalt   add a, (ix+0)
-        add a, (ix+0)
-        djnz haalt
+pause   call hult
+        dec hl
+        ld a, h
+        or l
+        jr nz, pause
+        ret
+
+hult    ei
+        halt
         ret
 ;---------------------------------------
 loll    ld bc, cmd_nemo
@@ -1241,6 +1246,9 @@ ini_smuc
         ld bc, conf_smuc
         ld a, %00000001
         out (c), a
+
+        ld hl, 1
+        call pause
         ret
 
 xpozi_smuc
@@ -1370,15 +1378,15 @@ sel_dev_smuc
         jr c, ru_smuc
         cp 5
         jr nc, ru_smuc
-		
+
         cp 4 ;        4 - IDE Smuc Slave
         call sel_mas_sla_smuc
 
         ld a, h'08
         call comm_smuc
 
-        ld hl, 4096
-        call ydet_smuc  ; wait BSY ~4 seconds on 14mhz
+        ld hl, 49*4
+        call ydet_smuc  ; wait BSY ~4 seconds
         jr nz, ru_smuc
 
         ld de, 0
@@ -1389,11 +1397,11 @@ sel_dev_smuc
         ld a, h'ec
         call comm_smuc
 
-        ld hl, 4096
-        call ydet_smuc  ; wait BSY ~4 seconds on 14mhz
+        ld hl, 49*4
+        call ydet_smuc  ; wait BSY ~4 seconds
         jr nz, ru_smuc
-        ld hl, 1024
-        call drqwt_smuc ; wait DRQ ~1 second on 14mhz
+        ld hl, 49*1
+        call drqwt_smuc ; wait DRQ ~1 second
         jr z, ru_smuc
 
         ld hl, lobu
@@ -1490,7 +1498,7 @@ ide_ini ld a, (device)
         cp 4
         jp z, ini_smuc
         ret
-		
+
 xpozi   ld a, (device)
         or a         ;0
         jp z, xpozi_sd
@@ -1503,7 +1511,7 @@ xpozi   ld a, (device)
         dec a        ;4
         jp z, xpozi_smuc
         ret
-		
+
 proz    ld a, (device)
         or a         ;0
         jp z, proz_sd
@@ -1516,7 +1524,7 @@ proz    ld a, (device)
         dec a        ;4
         jp z, proz_smuc
         ret
-        
+
 ;-------
 rddse   ld c, a
         ld a, (device)
@@ -1531,10 +1539,10 @@ rddse   ld c, a
         jr z, to_rddse_smuc
         dec a        ;4
         jr z, to_rddse_smuc
-        
+
         ld a, c
         ret
-        
+
 to_rddse_sd
         ld a, c
         jp rddse_sd
@@ -1544,11 +1552,11 @@ to_rddse_nemo
 to_rddse_smuc
         ld a, c
         jp rddse_smuc
-        
-;-------		
+
+;-------
 sel_dev ld a, (device)
         ld c, a
-        
+
         or a         ;0
         jr z, to_sel_dev_sd
         dec a        ;1
@@ -1562,7 +1570,7 @@ sel_dev ld a, (device)
         
         ld c, a
         ret
-        
+
 to_sel_dev_sd
         ld a, c
         jp sel_dev_sd
@@ -1572,7 +1580,7 @@ to_sel_dev_nemo
 to_sel_dev_smuc
         ld a, c
         jp sel_dev_smuc
-;---------------------------------------        
+;---------------------------------------
 ;---------------------------------------
 ;---------------------------------------
 file1   defb "BOOT    $C "

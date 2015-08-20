@@ -30,11 +30,11 @@ ERR_MEZ
 ERR_ME0
         defb 'UNKNOWN ERROR!', 0
 ERR_ME1
-		defb 'Boot-Device NOT READY!', 0
+        defb 'Boot-Device NOT READY!', 0
 ERR_ME2
         defb 'FAT32 NOT FOUND!', 0
 ERR_ME3
-		defb 'boot.$c NOT FOUND!', 0
+        defb 'boot.$c NOT FOUND!', 0
 
 
 ; ------- tabs
@@ -48,17 +48,17 @@ OPTTAB0
         defb 11          ; number of options
         defb 'Select NVRAM options:', 0
 
-		defw OPT_CFQ, SEL_CFQ   ; address of option desc, address of option choices
-		defw OPT_CCH, SEL_ONF
-		defw OPT_80L, SEL_LCK
-		defw OPT_B1T, SEL_BOT
-		defw OPT_B1B, SEL_BTB
-		defw OPT_B2T, SEL_BOT
-		defw OPT_B2B, SEL_BTB
-		defw OPT_B1D, SEL_BDV
-		defw OPT_ZPL, SEL_ZPL
-		defw OPT_NGR, SEL_ONF
-		defw OPT_INT, SEL_07
+        defw OPT_CFQ, SEL_CFQ   ; address of option desc, address of option choices
+        defw OPT_CCH, SEL_ONF
+        defw OPT_80L, SEL_LCK
+        defw OPT_B1T, SEL_BOT
+        defw OPT_B1B, SEL_BTB
+        defw OPT_B2T, SEL_BOT
+        defw OPT_B2B, SEL_BTB
+        defw OPT_B1D, SEL_BDV
+        defw OPT_ZPL, SEL_ZPL
+        defw OPT_NGR, SEL_ONF
+        defw OPT_INT, SEL_07
 
 ; -- option text
 ; byte - number of choices
@@ -79,24 +79,24 @@ OPT_INT    defb 8, low(into), high(into), 'INT Offset:', 0
 ; -- choices
 ; string - choice
 SEL_CFQ
-		defb '       3.5', 0
+        defb '       3.5', 0
         defb '         7', 0
-		defb '        14', 0
+        defb '        14', 0
 
 SEL_BOT
-		defb '   ROM #00', 0
-		defb '   ROM #04', 0
-		defb '   RAM #'
+        defb '   ROM #00', 0
+        defb '   ROM #04', 0
+        defb '   RAM #'
         hex8 vrompage
         defb 0
-		defb 'BD boot.$c', 0
-		defb 'BD sys.rom', 0
+        defb 'BD boot.$c', 0
+        defb 'BD sys.rom', 0
 
 SEL_BTB
         defb '    TR-DOS', 0
-		defb '  Basic 48', 0
-		defb ' Basic 128', 0
-		defb '       SYS', 0
+        defb '  Basic 48', 0
+        defb ' Basic 128', 0
+        defb '       SYS', 0
 
 SEL_BDV
         defb 'SD Z-contr', 0
@@ -108,23 +108,23 @@ SEL_BDV
 
 SEL_ONF
         defb ' OFF', 0
-		defb '  ON', 0
-		defb 'Auto', 0
+        defb '  ON', 0
+        defb 'Auto', 0
 
 SEL_LCK
         defb '     512k', 0
-		defb '     128k', 0
-		defb '128k Auto', 0
-		defb '    1024k', 0
+        defb '     128k', 0
+        defb '128k Auto', 0
+        defb '    1024k', 0
 
 SEL_ZPL
         defb 'Default', 0
-		defb 'B.black', 0
-		defb '  Light', 0
-		defb '   Pale', 0
-		defb '   Dark', 0
-		defb 'Grayscl', 0
-		defb ' Custom', 0
+        defb 'B.black', 0
+        defb '  Light', 0
+        defb '   Pale', 0
+        defb '   Dark', 0
+        defb 'Grayscl', 0
+        defb ' Custom', 0
 
 SEL_07  defb '0', 0
         defb '1', 0

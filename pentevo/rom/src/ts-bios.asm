@@ -1,7 +1,7 @@
 
     PUBLIC tsbios
     PUBLIC tsfat
-	PUBLIC IM1_ISR
+    PUBLIC IM1_ISR
 
     EXTERN DWT
 
@@ -251,13 +251,13 @@ RES_BT_BD       ; boot.$c
     ld a, (bdev)
     or a    ;0
     ld b, 0
-    jr z, RES_BD_XX		; SD Card
+    jr z, RES_BD_XX     ; SD Card
     inc b
     dec a       ;1
-    jr z, RES_BD_XX		; IDE Nemo Master
+    jr z, RES_BD_XX     ; IDE Nemo Master
     inc b
     dec a       ;2
-    jr z, RES_BD_XX		; IDE Nemo Slave
+    jr z, RES_BD_XX     ; IDE Nemo Slave
     dec a       ;3
     jr z, RES_BD_RS
     inc b
@@ -273,8 +273,10 @@ RES_BT_SR       ; sys.rom
 
 RES_BD_XX       ; SD Card, Nemo Master, Nemo Slave, Smuc Master, Smuc Slave (B = device)
     push de
+ide_takoj_ide
     call start  ; a = Return code: 1 - no device, 2 - FAT32 not found, 3 - file not found
     call c, BT_ERROR
+    jr c, ide_takoj_ide
     pop af
     push de
 
@@ -319,8 +321,9 @@ BT_ERROR
 
     pmsgc ERR_ME, 5, err_norm
     pmsgc ERR_MEZ, 9, err_norm
-		pop af
+    pop af
 
+    ld b, a
     dec a
     ld de, ERR_ME1
     jr z, BTE1
@@ -330,16 +333,20 @@ BT_ERROR
     dec a
     ld de, ERR_ME3
     jr z, BTE1
-		ld de, ERR_ME0
+    ld de, ERR_ME0
 
 BTE1
+    push bc
     ld h, 7
     ld b, err_norm
     call PRINT_MSG_C
-
-    di
-		halt
-		ret
+    pop af
+    dec a
+    jr nz, $
+    ld a, (device)
+    ld b, a
+    scf
+    ret
 
 ; ------- BIOS Setup
 
@@ -834,7 +841,7 @@ DMAFILL
     xt dmanum, 0
     xt dmalen, 126
     xt dmactr, dma_dev_mem    ; Run last burst
-	jp DWT
+    jp DWT
 
 LD_S_PAL
     ld hl, pal_bb
