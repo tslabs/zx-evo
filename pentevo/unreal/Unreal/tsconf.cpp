@@ -139,7 +139,7 @@ void dma_next_burst()
 {
   if (comp.ts.dma.s_algn) // source align ?
   {
-    comp.ts.saddr += comp.ts.dma.asize; // add align offset to dma source address
+    comp.ts.saddr = (comp.ts.saddr + comp.ts.dma.asize) & 0x3FFFFF; // add align offset to dma source address
     comp.ts.dma.saddr = comp.ts.saddr;  // copy new address to dma structure
   }
   else
@@ -147,7 +147,7 @@ void dma_next_burst()
 
   if (comp.ts.dma.d_algn) // destination align ?
   {
-    comp.ts.daddr += comp.ts.dma.asize; // add align offset to dma destination address
+    comp.ts.daddr = (comp.ts.daddr + comp.ts.dma.asize) & 0x3FFFFF; // add align offset to dma destination address
     comp.ts.dma.daddr = comp.ts.daddr;  // copy new address to dma structure
   }
   else
