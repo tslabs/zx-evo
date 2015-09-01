@@ -100,7 +100,7 @@ module dma (
   localparam DEV_CRM = 4'b1100;
   localparam DEV_SFL = 4'b1101;
   localparam DEV_FDD = 4'b0101;
-  
+
   wire [3:0] devsel = {dma_wnr, device};
 `ifdef XTR_FEAT
   wire dv_ram = (devsel == DEV_RAM) || (devsel == DEV_BLT1) || (devsel == DEV_BLT2) || (devsel == DEV_FIL);
@@ -129,7 +129,7 @@ module dma (
 
   assign cram_we = dev_req && dv_crm && state_wr;
   assign sfile_we = dev_req && dv_sfl && state_wr;
-  
+
 `ifdef FDR
   // FDD
   wire fdr_int_stb = dv_fdd && fdr_stb;
@@ -153,7 +153,7 @@ module dma (
 `else
   wire [15:0] blt_rddata = blt1_rddata;
 `endif
-  
+
   // Mode 1
   wire [15:0] blt1_rddata = {blt1_data_h, blt1_data_l};
   wire [7:0] blt1_data_h = dma_asz ? blt1_data32 : {blt1_data3, blt1_data2};
@@ -172,16 +172,24 @@ module dma (
   wire [7:0] blt2_data_0 = dma_asz ? blt2_8_data0 : {blt2_4_data1, blt2_4_data0};
 
   localparam msk = 8'd255;
-  
-  wire [7:0] blt2_8_data0 = (((data[7:0] + dram_rddata[7:0]) && dma_opt) > msk) ? msk : (data[7:0] + dram_rddata[7:0]);
-  wire [7:0] blt2_8_data1 = (((data[15:8] + dram_rddata[15:8]) && dma_opt) > msk) ? msk : (data[15:8] + dram_rddata[15:8]);
-  
-  wire [3:0] blt2_4_data0 = (((data[3:0] + dram_rddata[3:0]) > msk[3:0]) && dma_opt) ? msk[3:0] : (data[3:0] + dram_rddata[3:0]);
-  wire [3:0] blt2_4_data1 = (((data[7:4] + dram_rddata[7:4]) > msk[3:0]) && dma_opt) ? msk[3:0] : (data[7:4] + dram_rddata[7:4]);
-  wire [3:0] blt2_4_data2 = (((data[11:8] + dram_rddata[11:8]) > msk[3:0]) && dma_opt) ? msk[3:0] : (data[11:8] + dram_rddata[11:8]);
-  wire [3:0] blt2_4_data3 = (((data[15:12] + dram_rddata[15:12]) > msk[3:0]) && dma_opt) ? msk[3:0] : (data[15:12] + dram_rddata[15:12]);
+
+  wire [8:0] sum80 = data[7:0] + dram_rddata[7:0];
+  wire [8:0] sum81 = data[15:8] + dram_rddata[15:8];
+
+  wire [4:0] sum40 = data[3:0] + dram_rddata[3:0];
+  wire [4:0] sum41 = data[7:4] + dram_rddata[7:4];
+  wire [4:0] sum42 = data[11:8] + dram_rddata[11:8];
+  wire [4:0] sum43 = data[15:12] + dram_rddata[15:12];
+
+  wire [7:0] blt2_8_data0 = ((sum80 > msk) && dma_opt) ? msk : sum80[7:0];
+  wire [7:0] blt2_8_data1 = ((sum81 > msk) && dma_opt) ? msk : sum81[7:0];
+
+  wire [3:0] blt2_4_data0 = ((sum40 > msk[3:0]) && dma_opt) ? msk[3:0] : sum40[3:0];
+  wire [3:0] blt2_4_data1 = ((sum41 > msk[3:0]) && dma_opt) ? msk[3:0] : sum41[3:0];
+  wire [3:0] blt2_4_data2 = ((sum42 > msk[3:0]) && dma_opt) ? msk[3:0] : sum42[3:0];
+  wire [3:0] blt2_4_data3 = ((sum43 > msk[3:0]) && dma_opt) ? msk[3:0] : sum43[3:0];
 `endif
-  
+
 // data aquiring
   always @(posedge clk)
     if (state_rd)

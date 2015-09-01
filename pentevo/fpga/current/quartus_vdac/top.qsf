@@ -273,7 +273,7 @@ set_global_assignment -name FITTER_EFFORT "STANDARD FIT"
 set_global_assignment -name SLOW_SLEW_RATE ON
 set_global_assignment -name AUTO_PACKED_REGISTERS NORMAL
 set_global_assignment -name FIT_ONLY_ONE_ATTEMPT OFF
-set_global_assignment -name SEED 10
+set_global_assignment -name SEED 49
 set_global_assignment -name ROUTER_TIMING_OPTIMIZATION_LEVEL MINIMUM
 set_global_assignment -name PLACEMENT_EFFORT_MULTIPLIER 1.0
 set_global_assignment -name ROUTER_EFFORT_MULTIPLIER 1.0
@@ -301,9 +301,9 @@ set_global_assignment -name INCREMENTAL_VECTOR_INPUT_SOURCE ../sim_vw/dram.cvwf
 
 	# Classic Timing Assignments
 	# ==========================
-	set_global_assignment -name BASED_ON_CLOCK_SETTINGS "FPGA clock" -section_id "Z80 clock"
-	set_global_assignment -name MULTIPLY_BASE_CLOCK_PERIOD_BY 2 -section_id "Z80 clock"
-	set_global_assignment -name OFFSET_FROM_BASE_CLOCK "-8 ns" -section_id "Z80 clock"
+set_global_assignment -name BASED_ON_CLOCK_SETTINGS "FPGA clock" -section_id "Z80 clock"
+set_global_assignment -name MULTIPLY_BASE_CLOCK_PERIOD_BY 2 -section_id "Z80 clock"
+set_global_assignment -name OFFSET_FROM_BASE_CLOCK "-8 ns" -section_id "Z80 clock"
 
 # end CLOCK(Z80 clock)
 # --------------------
@@ -313,7 +313,7 @@ set_global_assignment -name INCREMENTAL_VECTOR_INPUT_SOURCE ../sim_vw/dram.cvwf
 
 	# Classic Timing Assignments
 	# ==========================
-	set_global_assignment -name FMAX_REQUIREMENT "28 MHz" -section_id "FPGA clock"
+set_global_assignment -name FMAX_REQUIREMENT "28 MHz" -section_id "FPGA clock"
 
 # end CLOCK(FPGA clock)
 # ---------------------
@@ -323,7 +323,7 @@ set_global_assignment -name INCREMENTAL_VECTOR_INPUT_SOURCE ../sim_vw/dram.cvwf
 
 	# Classic Timing Assignments
 	# ==========================
-	set_global_assignment -name FMAX_REQUIREMENT "5.5296 MHz" -section_id "SPI clock"
+set_global_assignment -name FMAX_REQUIREMENT "5.5296 MHz" -section_id "SPI clock"
 
 # end CLOCK(SPI clock)
 # --------------------
@@ -333,37 +333,37 @@ set_global_assignment -name INCREMENTAL_VECTOR_INPUT_SOURCE ../sim_vw/dram.cvwf
 
 	# Pin & Location Assignments
 	# ==========================
-	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to clkz_out
-	set_instance_assignment -name FAST_OUTPUT_REGISTER OFF -to rwe_n
-	set_instance_assignment -name FAST_OUTPUT_REGISTER OFF -to rras0_n
-	set_instance_assignment -name FAST_OUTPUT_REGISTER OFF -to rras1_n
-	set_instance_assignment -name FAST_OUTPUT_REGISTER OFF -to rucas_n
-	set_instance_assignment -name FAST_OUTPUT_REGISTER OFF -to rlcas_n
-	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to dram_ra[4]
-	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to dram_ra[3]
-	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to dram_ra[5]
-	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to dram_ra[2]
-	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to dram_ra[6]
-	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to dram_ra[1]
-	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to dram_ra[7]
-	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to dram_ra[0]
-	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to dram_ra[8]
-	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to dram_ra[9]
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to clkz_out
+set_instance_assignment -name FAST_OUTPUT_REGISTER OFF -to rwe_n
+set_instance_assignment -name FAST_OUTPUT_REGISTER OFF -to rras0_n
+set_instance_assignment -name FAST_OUTPUT_REGISTER OFF -to rras1_n
+set_instance_assignment -name FAST_OUTPUT_REGISTER OFF -to rucas_n
+set_instance_assignment -name FAST_OUTPUT_REGISTER OFF -to rlcas_n
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to dram_ra[4]
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to dram_ra[3]
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to dram_ra[5]
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to dram_ra[2]
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to dram_ra[6]
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to dram_ra[1]
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to dram_ra[7]
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to dram_ra[0]
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to dram_ra[8]
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to dram_ra[9]
 
 	# Classic Timing Assignments
 	# ==========================
-	set_instance_assignment -name CLOCK_SETTINGS "FPGA clock" -to fclk
-	set_instance_assignment -name CLOCK_SETTINGS "Z80 clock" -to clkz_in
-	set_instance_assignment -name CLOCK_SETTINGS "SPI clock" -to spick
-	set_instance_assignment -name CUT ON -from clkz_in -to fclk
-	set_instance_assignment -name CUT ON -from "zclock:zclock|zclk_out" -to clkz_out
-	set_instance_assignment -name CUT ON -from "zsignals:zsignals|mreq_r" -to "dram:dram|int_addr"
-	set_instance_assignment -name CUT ON -from "zmem:z80mem|zd_out" -to d
+set_instance_assignment -name CLOCK_SETTINGS "FPGA clock" -to fclk
+set_instance_assignment -name CLOCK_SETTINGS "Z80 clock" -to clkz_in
+set_instance_assignment -name CLOCK_SETTINGS "SPI clock" -to spick
+set_instance_assignment -name CUT ON -from clkz_in -to fclk
+set_instance_assignment -name CUT ON -from "zclock:zclock|zclk_out" -to clkz_out
+set_instance_assignment -name CUT ON -from "zsignals:zsignals|mreq_r" -to "dram:dram|int_addr"
+set_instance_assignment -name CUT ON -from "zmem:z80mem|zd_out" -to d
 
 	# Fitter Assignments
 	# ==================
-	set_instance_assignment -name GLOBAL_SIGNAL ON -to fclk
-	set_instance_assignment -name GLOBAL_SIGNAL ON -to clkz_in
+set_instance_assignment -name GLOBAL_SIGNAL ON -to fclk
+set_instance_assignment -name GLOBAL_SIGNAL ON -to clkz_in
 
 # end ENTITY(top)
 # ---------------
