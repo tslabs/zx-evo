@@ -46,6 +46,17 @@
 
 /** ZX configuration register. */
 #define SPI_CONFIG_REG   0x50
+
+/** ZX status register. */
+#define SPI_STATUS_REG   0x60
+
+/** ZX status RS-232 data received. */
+#define SPI_STATUS_REG_RX   0x01
+
+/** ZX status RS-232 data transmitter available. */
+#define SPI_STATUS_REG_TX   0x02
+
+
 /** ZX NMI bit flag of configuration register. */
 #define SPI_CONFIG_NMI_FLAG 0x02
 /** ZX $FE.D6 (tape in) bit flag of configuration register. */
@@ -133,6 +144,7 @@ UBYTE zx_fifo_isfull(void);
 UBYTE zx_fifo_isempty(void);
 UBYTE zx_fifo_get(void);
 UBYTE zx_fifo_copy(void);
+void res_beeper_tapein();
 
 /**
  * ZX mouse button register.

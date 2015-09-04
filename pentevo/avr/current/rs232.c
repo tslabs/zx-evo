@@ -3,6 +3,7 @@
 
 #include "mytypes.h"
 #include "rs232.h"
+#include "zx.h"
 #include "pins.h"
 
 //if want Log than comment next string
@@ -413,4 +414,17 @@ void rs232_task(void)
 		}
 		rs232_MSR |= 0x10;
 	}
+
+  // status for TS-Conf
+  char status = 0;
+
+  // Rx data available
+  if (rs232_LSR & 0x01)
+    status |= SPI_STATUS_REG_RX;
+
+  // Rx space available
+  if ((rs232_FO_end != rs232_FO_start) || (rs232_LSR & 0x20))
+    status |= SPI_STATUS_REG_TX;
+
+  zx_spi_send(SPI_STATUS_REG, status, 0x7F);
 }

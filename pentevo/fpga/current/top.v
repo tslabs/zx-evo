@@ -153,17 +153,35 @@ module top(
     wire [6:0] waits;
 
     // config signals
-    wire [7:0] not_used;
-    wire cfg_60hz;
-    wire cfg_sync_pol;
-    wire cfg_vga_on;
-    wire [1:0] set_nmi;
     wire cfg_tape_sound;
     wire cfg_floppy_swap;
-    wire cfg_stb;
-    wire tape_in_bit;
-    wire [7:0] config0 = {cfg_tape_sound, cfg_floppy_swap, cfg_sync_pol, cfg_60hz, beeper_mux, tape_read, set_nmi[0], cfg_vga_on};    // tape in as bit2 is also configured in slavespi.v
+    wire cfg_sync_pol;
+    wire cfg_60hz;
+    wire beeper_mux; // what is mixed to FPGA beeper output - beeper(0) or tapeout(1)
+    wire tape_read;  // tapein data
+    wire set_nmi;
+    wire cfg_vga_on;
+    wire [7:0] config0 =
+    {
+      cfg_tape_sound,   // bit 7
+      cfg_floppy_swap,  // bit 6
+      cfg_sync_pol,     // bit 5
+      cfg_60hz,         // bit 4
+      beeper_mux,       // bit 3
+      tape_read,        // bit 2
+      set_nmi,          // bit 1
+      cfg_vga_on        // bit 0
+    };
 
+    // status signals
+    wire rx_rdy;
+    wire tx_rdy;
+    wire [1:0] status0 =
+    {
+      tx_rdy,     // bit 1
+      rx_rdy      // bit 0
+    };
+    
     // nmi signals
     wire gen_nmi;
     wire clr_nmi;
@@ -176,13 +194,10 @@ module top(
     wire [7:0] tobesent;
     wire intrq,drq;
     wire vg_wrFF;
-    wire [1:0] rstrom;
     wire zclk = clkz_in;
 
     // assign nmi_n = gen_nmi ? 1'b0 : 1'bZ;
     wire go;
-    wire tape_read; // data for tapein
-    wire beeper_mux; // what is mixed to FPGA beeper output - beeper(0) or tapeout(1)
     wire beeper_wr, covox_wr;
     wire external_port;
     wire ide_stall;
@@ -210,7 +225,7 @@ module top(
     wire drive_ff;
 
     wire [15:0] dram_wd;
-	assign rd = rwe_n ? 16'hZZZZ : dram_wd;
+	  assign rd = rwe_n ? 16'hZZZZ : dram_wd;
     assign d = ena_ram ? dout_ram : (ena_ports ? dout_ports : (intack ? im2vect : (drive_ff ? 8'hFF : 8'bZZZZZZZZ)));
 
     wire rampage_wr;        // ports #10AF-#13AF
@@ -639,7 +654,6 @@ module top(
         .spick(spick),
         .status_in({wr_n, waits[6:0]}),
         .genrst(genrst),
-        .rstrom(rstrom),
         .kbd_out(kbd_data),
         .kbd_out_sel(kbd_data_sel),
         .kbd_stb(kbd_stb),
@@ -648,14 +662,13 @@ module top(
         .mus_ystb(mus_ystb),
         .mus_btnstb(mus_btnstb),
         .kj_stb(kj_stb),
-        .cfg_stb(cfg_stb),
-        .tape_in_bit(tape_in_bit),
         .gluclock_addr(gluclock_addr),
         .comport_addr(comport_addr),
         .wait_write(wait_write),
         .wait_read(wait_read),
         .wait_end(wait_end),
-        .config0(config0)
+        .config0(config0),
+        .status0(status0)
     );
 
     zkbdmus zkbdmus
@@ -751,13 +764,11 @@ module top(
         .iowr(iowr),
         .iordwr(iordwr),
         .iorq_s(iorq_s),
-        // .iorq_s2    (iorq_s2),
         .iord_s(iord_s),
         .iowr_s(iowr_s),
         .iordwr_s(iordwr_s),
         .ay_bdir(ay_bdir),
         .ay_bc1(ay_bc1),
-        .rstrom(rstrom),
         .vg_intrq(intrq),
         .vg_drq(drq),
         .vg_cs_n(vg_cs_n),
@@ -827,6 +838,8 @@ module top(
         .mus_in(mus_port_data),
         .kj_in(kj_port_data),
         .tape_read(tape_read),
+        .rx_rdy(rx_rdy),
+        .tx_rdy(tx_rdy),
         .beeper_wr(beeper_wr),
         .covox_wr(covox_wr),
         .gluclock_addr(gluclock_addr),
@@ -885,7 +898,7 @@ module top(
     wire fdr_stop;
     wire fdr_en;
     wire fdr_cnt_lat;
-    
+
     fddrip fddrip
     (
         .clk(fclk),
@@ -1017,9 +1030,8 @@ module top(
         .beeper_wr(beeper_wr),
         .covox_wr(covox_wr),
         .beeper_mux(beeper_mux),
-        .tapein_wr(cfg_stb),
         .tape_sound(cfg_tape_sound),
-        .tape_in(tape_in_bit),
+        .tape_in(tape_read),
         .sound_bit(beep)
     );
 

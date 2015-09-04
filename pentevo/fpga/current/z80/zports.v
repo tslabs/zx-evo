@@ -79,7 +79,7 @@ module zports(
 `endif
   input  wire       dma_act,
 
-  output reg [7:0] intmask,
+  output reg [7:0]  intmask,
 
   input  wire        dos,
   input  wire        vdos,
@@ -91,8 +91,10 @@ module zports(
   output wire        covox_wr,
   output wire        beeper_wr,
 
-  input  wire [ 1:0] rstrom,
   input  wire        tape_read,
+
+  input  wire        rx_rdy,
+  input  wire        tx_rdy,
 
 `ifndef IDE_VDAC
 // IDE interface
@@ -103,7 +105,7 @@ module zports(
   output wire        ide_req,
   input  wire        ide_stb,
   input  wire        ide_ready,
-  output reg       ide_stall,
+  output reg         ide_stall,
 `endif
 
   input  wire [ 4:0] keys_in, // keys (port FE)
@@ -131,6 +133,18 @@ module zports(
   input  wire [ 7:0] wait_read
 
 );
+
+`ifdef FDR
+  localparam FDR_VER = 1'b1;
+`else
+  localparam FDR_VER = 1'b0;
+`endif
+
+`ifdef IDE_VDAC
+  localparam VDAC_VER = 2'h3;
+`else
+  localparam VDAC_VER = 2'h0;
+`endif
 
   localparam PORTFE = 8'hFE;
   localparam PORTFD = 8'hFD;
@@ -249,24 +263,12 @@ module zports(
             case (hoa)
 
             XSTAT:
-`ifdef FDR
-  `ifdef IDE_VDAC
-                dout = {1'b0, pwr_up_reg, 1'b1, 5'h03};
-  `else
-                dout = {1'b0, pwr_up_reg, 1'b1, 5'h00};
-  `endif
-`else
-  `ifdef IDE_VDAC
-                dout = {1'b0, pwr_up_reg, 6'h03};
-  `else
-                dout = {1'b0, pwr_up_reg, 6'h00};
-  `endif
-`endif
+                dout = {1'b0, pwr_up_reg, FDR_VER, tx_rdy, rx_rdy, 1'b0, VDAC_VER};
 
             DMASTAT:
                 dout = {dma_act, 7'b0};
 
-            RAMPAGE+8'd2, RAMPAGE+8'd3:
+            RAMPAGE + 8'd2, RAMPAGE + 8'd3:
                 dout = rampage[hoa[1:0]];
 
 `ifdef FDR
@@ -592,9 +594,8 @@ module zports(
 
   always @(posedge zclk)
     if (gluclock_on && portf7_wr) // gluclocks on
-      if( !a[13] ) // $DFF7 - addr reg
+      if(!a[13]) // $DFF7 - addr reg
         gluclock_addr <= din;
-
 
 // write to wait registers
   always @(posedge zclk)
@@ -607,15 +608,13 @@ module zports(
       wait_write <= din;
   end
 
-
 // comports
-  wire comport_wr   = ((loa==COMPORT) && port_wr);
-  wire comport_rd   = ((loa==COMPORT) && port_rd);
+  wire comport_wr   = ((loa == COMPORT) && port_wr);
+  wire comport_rd   = ((loa == COMPORT) && port_rd);
 
   always @(posedge zclk)
     if (comport_wr || comport_rd)
       comport_addr <= a[10:8];
-
 
 // wait from wait registers
   // ACHTUNG!!!! here portxx_wr are ON Z80 CLOCK! logic must change when moving to clk strobes
@@ -629,10 +628,9 @@ module zports(
   wire ide_cs1 = ide_portc8;
   wire ide_rd = rd && !(ide_rd_latch && ide_port10);
   wire ide_wr = wr && !(!ide_wrlo_latch && !ide_wrhi_latch && ide_port10);
-    assign ide_req = iorq_s && ide_even && (ide_rd || ide_wr);
+  assign ide_req = iorq_s && ide_even && (ide_rd || ide_wr);
   assign ide_cs0_n = !ide_cs0;
   assign ide_cs1_n = !ide_cs1;
-
 
   always @(posedge clk)
     if (ide_req)
@@ -652,7 +650,6 @@ module zports(
       ide_rd_trig <= 1'b0;
   end
 
-
     // two triggers for write sequence
   reg ide_wrlo_trig,  ide_wrhi_trig;  // nemo-divide write triggers
   always @(posedge zclk)
@@ -668,7 +665,6 @@ module zports(
     else
       ide_wrlo_trig <= 1'b0;
   end
-
 
   // normal read: #10(low), #11(high)
   // divide read: #10(low), #10(high)
@@ -725,5 +721,4 @@ module zports(
   wire [7:0] ideout0 = ide_wrlo_latch ? idewrreg[ 7:0] : din[ 7:0];
     assign ide_out = {ideout1, ideout0};
 `endif
-
 endmodule
