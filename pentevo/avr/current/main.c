@@ -93,7 +93,7 @@ void hardware_init(void)
 int main()
 {
 	egg = 0;
-	
+
 start:
 
 	hardware_init();
@@ -158,9 +158,11 @@ start:
 	}
 	else
 	switch (eeprom_read_byte((const UBYTE*)0x0fff))
-	{	case 0:
+	{
+    case 0:
 			curFpga = GET_FAR_ADDRESS(fpga1);
-			break;
+		break;
+
 		default:
 			curFpga = GET_FAR_ADDRESS(fpga0);
 	}
@@ -230,6 +232,7 @@ start:
 	kbmap_init();
 	zx_init();
 	rtc_init();
+  zx_mode_switcher(modes_register & MODE_TAPEIN);  // disable Tape-In sound on reset
 
 #ifdef LOGENABLE
 	to_log("zx_init OK\r\n");

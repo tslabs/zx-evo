@@ -38,43 +38,18 @@ UBYTE zx_fifo_out_ptr;
 UBYTE zx_counters[40]; // filter ZX keystrokes here to assure every is pressed and released only once
 UBYTE zx_map[5]; // keys bitmap. send order: LSbit first, from [4] to [0]
 
-UBYTE beep_out_mode = 0;
-
 volatile UBYTE shift_pause;
 
 UBYTE zx_realkbd[11];
 
 extern UBYTE egg;
 
-void set_beeper_mode()
-{
-  modes_register &= ~(MODE_TSOUND | MODE_TAPEOUT);
-
-  if (beep_out_mode & 1)
-    modes_register |= MODE_TAPEOUT;
-    
-  if (beep_out_mode & 2)
-    modes_register |= MODE_TSOUND;
-    
-  zx_mode_switcher(0);
-}
-
-void res_beeper_tapein()
-{
-  if (beep_out_mode == 2)
-  {
-    beep_out_mode = 0;
-    set_beeper_mode();
-  }
-}
-
 void zx_init(void)
 {
   zx_fifo_in_ptr = zx_fifo_out_ptr = 0;
 
   zx_task(ZX_TASK_INIT);
-  res_beeper_tapein();
-  
+
   //reset Z80
   zx_spi_send(SPI_RST_REG, 0, 0);
 }
@@ -120,7 +95,7 @@ void zx_task(UBYTE operation) // zx task, tracks when there is need to send new 
     kb_ctrl_mapped[1] = 0;
     if( kbmap_get(0x14,0).tw != (UWORD)NO_KEY+(((UWORD)NO_KEY)<<8) ) kb_ctrl_mapped[0] |= KB_LCTRL_MASK;
     if( kbmap_get(0x14,1).tw != (UWORD)NO_KEY+(((UWORD)NO_KEY)<<8) ) kb_ctrl_mapped[0] |= KB_RCTRL_MASK;
-    if(     kbmap_get(0x11,0).tw != (UWORD)NO_KEY+(((UWORD)NO_KEY)<<8) ) kb_ctrl_mapped[0] |= KB_LALT_MASK;
+    if( kbmap_get(0x11,0).tw != (UWORD)NO_KEY+(((UWORD)NO_KEY)<<8) ) kb_ctrl_mapped[0] |= KB_LALT_MASK;
     if( kbmap_get(0x11,1).tw != (UWORD)NO_KEY+(((UWORD)NO_KEY)<<8) ) kb_ctrl_mapped[0] |= KB_RALT_MASK;
     if( kbmap_get(0x1F,1).tw != (UWORD)NO_KEY+(((UWORD)NO_KEY)<<8) ) kb_ctrl_mapped[1] |= KB_LWIN_MASK_1;
     if( kbmap_get(0x27,1).tw != (UWORD)NO_KEY+(((UWORD)NO_KEY)<<8) ) kb_ctrl_mapped[1] |= KB_RWIN_MASK_1;
@@ -445,8 +420,21 @@ void to_zx(UBYTE scancode, UBYTE was_E0, UBYTE was_release)
         //  2 - tape in
         if (!was_release && (kb_ctrl_status[1] & ~kb_ctrl_mapped[1] & KB_MENU_MASK_1))
         {
-          beep_out_mode = (beep_out_mode < 2) ? (beep_out_mode + 1) : 0;
-          set_beeper_mode();
+          UBYTE m;
+          switch (modes_register & (MODE_TAPEIN | MODE_TAPEOUT))
+          {
+            case 0:
+              m = MODE_TAPEOUT;
+            break;
+            
+            case MODE_TAPEIN:
+              m = MODE_TAPEIN;
+            break;
+            
+            default:
+              m = MODE_TAPEOUT | MODE_TAPEIN;
+          }
+          zx_mode_switcher(m);
         }
         break;
 
@@ -717,15 +705,19 @@ void zx_mode_switcher(UBYTE mode)
   ps2keyboard_send_cmd(PS2KEYBOARD_CMD_SETLED);
 }
 
-void zx_set_config(UBYTE flags)
+void zx_set_config(UBYTE f)
 {
-  UBYTE modes = (modes_register & MODE_FSWAP) |
-                  (modes_register & MODE_TSOUND) |
-                  (modes_register & MODE_VIDEO_MASK) |
-                  ((modes_register & MODE_TAPEOUT) ? SPI_TAPEOUT_MODE_FLAG : 0) |
-                  ((flags_ex_register & FLAG_EX_NMI) ? SPI_CONFIG_NMI_FLAG : 0) |
-                  (flags & ~(MODE_VIDEO_MASK | SPI_TAPEOUT_MODE_FLAG | SPI_CONFIG_NMI_FLAG));
+  UBYTE m = modes_register;
+  UBYTE fm = flags_ex_register;
+  UBYTE modes = (m & MODE_TAPEIN) |                                 // config0[7]
+                (m & MODE_FSWAP) |                                  // config0[6]
+                (m & MODE_POL) |                                    // config0[5]
+                (m & MODE_60HZ) |                                   // config0[4]
+                ((m & MODE_TAPEOUT) ? SPI_TAPEOUT_MODE_FLAG : 0) |  // config0[3]
+                (f & SPI_TAPE_FLAG) |                               // config0[2]
+                ((fm & FLAG_EX_NMI) ? SPI_CONFIG_NMI_FLAG : 0) |    // config0[1]
+                (m & MODE_VGA);                                     // config0[0]
 
-    //send configuration to FPGA
+  //send configuration to FPGA
   zx_spi_send(SPI_CONFIG_REG, modes, 0x7F);
 }

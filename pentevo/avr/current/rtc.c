@@ -201,9 +201,6 @@ void rtc_init(void)
 
 	//restore mode register from NVRAM (CAPS LED off on init)
 	modes_register = rtc_read(RTC_COMMON_MODE_REG) & ~(MODE_CAPSLED);
-
-	//set modes on fpga
-	zx_set_config(0);
 }
 
 void rtc_write(UBYTE addr, UBYTE data)

@@ -144,7 +144,7 @@ extern volatile UBYTE flags_ex_register;
 
 /** Common modes register. */
 extern volatile UBYTE modes_register;
-/** VGA mode (0 - not set/1 - set). */
+  /** VGA mode (0 - not set/1 - set). */
 #define MODE_VGA 0x01
 /** Tapeout mode (0 - beeper or pwm mode/1 - tapeout). */
 #define MODE_TAPEOUT 0x02
@@ -154,11 +154,10 @@ extern volatile UBYTE modes_register;
 #define MODE_60HZ 0x10
 /** VGA sync polarity (0 - positive / 1 - negative). */
 #define MODE_POL 0x20
-#define MODE_VIDEO_MASK (MODE_VGA|MODE_60HZ|MODE_POL)
 /** Floppy swap (0 - normal, 1 - A/C swapped with B/D. */
 #define MODE_FSWAP 0x40
 /** Tape In sound (0 - off, 1 - on. */
-#define MODE_TSOUND 0x80
+#define MODE_TAPEIN 0x80
 
 /** Type extensions of gluk registers. */
 extern volatile UBYTE ext_type_gluk;

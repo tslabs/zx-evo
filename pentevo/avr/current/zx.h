@@ -144,7 +144,6 @@ UBYTE zx_fifo_isfull(void);
 UBYTE zx_fifo_isempty(void);
 UBYTE zx_fifo_get(void);
 UBYTE zx_fifo_copy(void);
-void res_beeper_tapein();
 
 /**
  * ZX mouse button register.
@@ -194,10 +193,6 @@ void zx_mode_switcher(UBYTE mode);
 
 /**
  * Set configuration register on zx.
- * @param flags [in] - bit 2: SPI_TAPE_FLAG
- *                     bit 5: not used
- *                     bit 6: not used
- *                     bit 7: not used
  */
 void zx_set_config(UBYTE flags);
 
