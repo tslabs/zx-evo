@@ -1,18 +1,19 @@
 #ifndef MYTYPES_H
 #define MYTYPES_H
 
+typedef  int8_t s8;
+typedef uint8_t u8;
 
-typedef  int8_t  BYTE;
-typedef uint8_t UBYTE;
+typedef  int16_t s16;
+typedef uint16_t u16;
 
-typedef  int16_t  WORD;
-typedef uint16_t UWORD;
-
-typedef  int32_t  LONG;
-typedef uint32_t ULONG;
+typedef  int32_t s32;
+typedef uint32_t u32;
 
 #define TRUE  1
 #define FALSE 0
 
-#endif
+#define max(a,b)   (((a) > (b)) ? (a) : (b))
+#define min(a,b)   (((a) < (b)) ? (a) : (b))
 
+#endif

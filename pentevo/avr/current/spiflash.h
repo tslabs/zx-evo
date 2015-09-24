@@ -74,8 +74,8 @@ enum
 #define SF_STAT_MASK_BPRT             0x1C  // for 4-128 Mbit, add here other flashes
 
 /** SF read. */
-UBYTE spi_flash_read(UBYTE index);
+u8 spi_flash_read(u8 index);
 /** SF write. */
-void spi_flash_write(UBYTE index, UBYTE data);
+void spi_flash_write(u8 index, u8 data);
 
 #endif //__SPIFLASH_H__

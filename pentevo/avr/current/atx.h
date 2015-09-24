@@ -12,7 +12,7 @@
  */
 
 /** Counter for atx power off delay. */
-extern volatile UWORD atx_counter;
+extern volatile u16 atx_counter;
 
 /** Wait for press "soft reset" to ATX power on. */
 void wait_for_atx_power(void);

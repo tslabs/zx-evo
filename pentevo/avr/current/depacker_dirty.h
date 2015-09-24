@@ -21,12 +21,12 @@
 void  depacker_dirty(void);
 
 /** */
-UBYTE get_bits_dirty(UBYTE numbits);
-WORD get_bigdisp_dirty(void);
+u8 get_bits_dirty(u8 numbits);
+s16 get_bigdisp_dirty(void);
 
 /** */
-void put_byte(UBYTE);
-void repeat(WORD,UBYTE);
+void put_byte(u8);
+void repeat(s16,u8);
 
 #endif
 

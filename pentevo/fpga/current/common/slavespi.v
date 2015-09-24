@@ -75,7 +75,7 @@ module slavespi
   assign kbd_out     = {sdo, shift_in[7:1]};
   assign kbd_stb     = kbd_bit_stb && &kbd_out_cnt[2:0];
   assign kbd_out_sel = kbd_out_cnt[5:3];
-  assign mus_out     = mouse_buf;
+  assign mus_out     = shift_in;
   assign mus_xstb    = sel_musxcr && scs_n_01;
   assign mus_ystb    = sel_musycr && scs_n_01;
   assign mus_btnstb  = sel_musbtn && scs_n_01;
@@ -143,7 +143,6 @@ module slavespi
   wire sel_kbdreg = (regnum[7:4] == 4'h1) && !regnum[0]; // $10
   wire sel_kbdstb = (regnum[7:4] == 4'h1) &&  regnum[0]; // $11
 
-  wire sel_muskj  = regnum[7:4] == 4'h2; // $2x
   wire sel_musxcr = (regnum[7:4] == 4'h2) && (regnum[1:0] == 2'b00); // $20
   wire sel_musycr = (regnum[7:4] == 4'h2) && (regnum[1:0] == 2'b01); // $21
   wire sel_musbtn = (regnum[7:4] == 4'h2) && (regnum[1:0] == 2'b10); // $22
@@ -172,7 +171,6 @@ module slavespi
 
   // registers data-in
   reg [7:0] shift_in;   // register for shifting in
-  reg [7:0] mouse_buf;  // mouse register
   reg [7:0] wait_reg;   // wait data out register
   reg [7:0] cfg0_reg;   // config register
   reg [7:0] stat_reg;   // status register
@@ -181,9 +179,6 @@ module slavespi
   begin
     if (!scs_n && sck_01)
       shift_in[7:0] <= {sdo, shift_in[7:1]};
-
-    if (scs_n_01 && sel_muskj)
-      mouse_buf <= shift_in;
 
     if (scs_n_01 && sel_waitreg)
       wait_reg <= shift_in;

@@ -44,7 +44,7 @@
  *
  * @subsection ver_2011_05_11 Version 11.05.2011
  *
- * - Direct load UBRR on RS232 mode [if (DLM&0x80)!=0 ].
+ * - Direct load UBRR on RS232 mode [if (DLM & 0x80)!=0 ].
  * - Control PLL (ICS501M) via PE2,PE3. Set it to 2X.
  *
  * @subsection ver_2011_04_26 Version 26.04.2011
@@ -115,7 +115,7 @@
  */
 
 /** Common flag register. */
-extern volatile UBYTE flags_register;
+extern volatile u8 flags_register;
 /** Direction for ps2 mouse data (0 - Receive/1 - Send). */
 #define FLAG_PS2MOUSE_DIRECTION 0x01
 /** Type of ps2 mouse (0 - classical [3bytes in packet]/1 - msoft [4bytes in packet]). */
@@ -134,7 +134,7 @@ extern volatile UBYTE flags_register;
 #define FLAG_HARD_RESET         0x80
 
 /** Common extension flag register. */
-extern volatile UBYTE flags_ex_register;
+extern volatile u8 flags_ex_register;
 /** Ps2 mouse command (0 - not/1 - process). */
 #define FLAG_EX_PS2MOUSE_CMD    0x01
 /** Ps2 keyboard map (0 - default/1 - user). */
@@ -143,7 +143,7 @@ extern volatile UBYTE flags_ex_register;
 #define FLAG_EX_NMI             0x04
 
 /** Common modes register. */
-extern volatile UBYTE modes_register;
+extern volatile u8 modes_register;
   /** VGA mode (0 - not set/1 - set). */
 #define MODE_VGA 0x01
 /** Tapeout mode (0 - beeper or pwm mode/1 - tapeout). */
@@ -160,7 +160,7 @@ extern volatile UBYTE modes_register;
 #define MODE_TAPEIN 0x80
 
 /** Type extensions of gluk registers. */
-extern volatile UBYTE ext_type_gluk;
+extern volatile u8 ext_type_gluk;
 /** Type is baseconfiguration version. */
 #define EXT_TYPE_BASECONF_VERSION     0x00
 /** Type is bootloader version. */
@@ -177,15 +177,15 @@ extern volatile UBYTE ext_type_gluk;
 #define EXT_TYPE_SPIFL                0x80
 
 /** Data buffer. */
-extern UBYTE dbuf[];
+extern u8 dbuf[];
 
 /** FPGA data index. */
-extern volatile ULONG curFpga;
+extern volatile u32 curFpga;
 
 /**
  * Writes specified length of buffer to SPI.
  * @param size [in] - size of buffer.
  */
-void put_buffer(UWORD size);
+void put_buffer(u16 size);
 
 #endif //__MAIN_H__

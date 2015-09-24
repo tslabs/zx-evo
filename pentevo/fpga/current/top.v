@@ -181,7 +181,7 @@ module top(
       tx_rdy,     // bit 1
       rx_rdy      // bit 0
     };
-    
+
     // nmi signals
     wire gen_nmi;
     wire clr_nmi;
@@ -652,7 +652,7 @@ module top(
         .spidi(spidi),
         .spido(spido),
         .spick(spick),
-        .status_in({wr_n, waits[6:0]}),
+        .status_in({wr_n, 5'b0, waits[1:0]}),
         .genrst(genrst),
         .kbd_out(kbd_data),
         .kbd_out_sel(kbd_data_sel),

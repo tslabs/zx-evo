@@ -6,17 +6,17 @@
 #include "depacker_dirty.h"
 
 
-UWORD dbpos; // current position in buffer (wrappable)
+u16 dbpos; // current position in buffer (wrappable)
 
-UBYTE bitstream;
-UBYTE bitcount;
+u8 bitstream;
+u8 bitcount;
 
 void depacker_dirty(void)
 {
-	UBYTE j;
+	u8 j;
 
-	UBYTE bits;
-	WORD disp;
+	u8 bits;
+	s16 disp;
 
 
 	dbpos=0;
@@ -36,28 +36,28 @@ void depacker_dirty(void)
 		j=0;
 
 		// get 1st bit - either OUTBYTE or beginning of LZ code
-		if( get_bits_dirty(1) )
+		if (get_bits_dirty(1))
 		{ // OUTBYTE
 			put_byte(NEXT_BYTE);
 		}
 		else
 		{ // LZ code
-			switch( get_bits_dirty(2) )
+			switch (get_bits_dirty(2))
 			{
 			case 0: // 000
-				repeat( 0xFFF8|get_bits_dirty(3) ,1);
+				repeat(0xFFF8|get_bits_dirty(3) ,1);
 				break;
 			case 1: // 001
-				repeat( 0xFF00|NEXT_BYTE ,2);
+				repeat(0xFF00|NEXT_BYTE ,2);
 				break;
 			case 2: // 010
 				repeat(get_bigdisp_dirty(),3);
 				break;
 			case 3: // 011
 				// extract num of length bits
-				do j++; while( !get_bits_dirty(1) );
+				do j++; while(!get_bits_dirty(1));
 
-				if( j<8 ) // check for exit code
+				if (j<8) // check for exit code
 				{
 					// get length bits itself
 					bits=get_bits_dirty(j);
@@ -68,12 +68,12 @@ void depacker_dirty(void)
 			}
 		}
 
-	} while( j<8 );
+	} while(j<8);
 
 
-	if( (DBMASK&dbpos) )
+	if ((DBMASK & dbpos))
 	{
-		put_buffer(DBMASK&dbpos);
+		put_buffer(DBMASK & dbpos);
 	}
 
 }
@@ -81,44 +81,44 @@ void depacker_dirty(void)
 
 
 
-void repeat(WORD disp,UBYTE len)
+void repeat(s16 disp,u8 len)
 { // repeat len bytes with disp displacement (negative)
   // uses dbpos & dbuf
 
-	UBYTE i; // since length is no more than 255
+	u8 i; // since length is no more than 255
 
 	for(i=0;i<len;i++)
 	{
-		put_byte(dbuf[DBMASK&(dbpos+disp)]);
+		put_byte(dbuf[DBMASK & (dbpos+disp)]);
 	}
 }
 
 
 
 
-void put_byte(UBYTE byte)
+void put_byte(u8 byte)
 {
 	dbuf[dbpos]=byte;
 	dbpos = DBMASK & (dbpos+1);
 
-	if( !dbpos )
+	if (!dbpos)
 	{
 		put_buffer(DBSIZE);
 	}
 }
 
 
-UBYTE get_bits_dirty(UBYTE numbits)
+u8 get_bits_dirty(u8 numbits)
 { // gets bits in a byte-wise style, no checks
   // numbits must be >0
 
-	UBYTE bits;
+	u8 bits;
 
 	bits=0;
 
 	do
 	{
-		if( !(bitcount--) )
+		if (!(bitcount--))
 		{
 			bitcount=7;
 			bitstream=NEXT_BYTE;
@@ -132,13 +132,13 @@ UBYTE get_bits_dirty(UBYTE numbits)
 	return bits;
 }
 
-WORD get_bigdisp_dirty(void)
+s16 get_bigdisp_dirty(void)
 { // fetches 'big' displacement (-1..-4352)
   // returns negative displacement
 
-	UBYTE bits;
+	u8 bits;
 
-	if( get_bits_dirty(1) )
+	if (get_bits_dirty(1))
 	{ // longer displacement
 		bits=get_bits_dirty(4);
 		return (((0xF0|bits)-1)<<8)|NEXT_BYTE;

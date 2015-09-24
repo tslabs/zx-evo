@@ -8,9 +8,9 @@
 #include "zx.h"
 #include "spiflash.h"
 
-ULONG sf_addr = 0;
-UBYTE sf_state = SF_ST_INACT;
-UBYTE sfi_wr_en = FALSE;
+u32 sf_addr = 0;
+u8 sf_state = SF_ST_INACT;
+u8 sfi_wr_en = FALSE;
 
 void sfi_cs_off(void)
 {
@@ -26,7 +26,7 @@ void sfi_cs_on(void)
 // Enable SFI, disable JTAG
 void sfi_enable(void)
 {
-    UBYTE m = MCUCSR | _BV(JTD);
+    u8 m = MCUCSR | _BV(JTD);
     MCUCSR = m; MCUCSR = m;
     DDRF = (DDRF & ~_BV(SFI_BIT_DATA0)) | _BV(SFI_BIT_NCSO) | _BV(SFI_BIT_ASDO) | _BV(SFI_BIT_DCLK);
     PORTF |= _BV(SFI_BIT_DATA0) | _BV(SFI_BIT_NCSO) | _BV(SFI_BIT_DCLK);
@@ -36,19 +36,19 @@ void sfi_enable(void)
 // Disable SFI, enable JTAG
 void sfi_disable(void)
 {
-    UBYTE m = MCUCSR & ~_BV(JTD);
+    u8 m = MCUCSR & ~_BV(JTD);
     MCUCSR = m; MCUCSR = m;
     sf_state = SF_ST_INACT;
 }
 
-void sfi_send(UBYTE d)
+void sfi_send(u8 d)
 {
     #define sfi_send_bit(a)  if (d & (a)) { PORTF = c01; PORTF = c11; } else { PORTF = c00; PORTF = c10; }
     
-    UBYTE c00 = PORTF & ~(_BV(SFI_BIT_DCLK) | _BV(SFI_BIT_ASDO));
-    UBYTE c01 = c00 | _BV(SFI_BIT_ASDO);
-    UBYTE c10 = c00 | _BV(SFI_BIT_DCLK);
-    UBYTE c11 = c01 | _BV(SFI_BIT_DCLK);
+    u8 c00 = PORTF & ~(_BV(SFI_BIT_DCLK) | _BV(SFI_BIT_ASDO));
+    u8 c01 = c00 | _BV(SFI_BIT_ASDO);
+    u8 c10 = c00 | _BV(SFI_BIT_DCLK);
+    u8 c11 = c01 | _BV(SFI_BIT_DCLK);
     
     sfi_send_bit(128);
     sfi_send_bit(64); 
@@ -60,14 +60,14 @@ void sfi_send(UBYTE d)
     sfi_send_bit(1);
 }
 
-UBYTE sfi_recv(void)
+u8 sfi_recv(void)
 {
     #define sfi_recv_bit(a)  *c2 = c0; *c2 = c1; if (PINF & _BV(SFI_BIT_DATA0)) d |= (a)
     
-    UBYTE d = 0;
-    UBYTE c0 = PORTF & ~_BV(SFI_BIT_DCLK);
-    UBYTE c1 = c0 | _BV(SFI_BIT_DCLK);
-    volatile UBYTE* c2 = PORTF;
+    u8 d = 0;
+    u8 c0 = PORTF & ~_BV(SFI_BIT_DCLK);
+    u8 c1 = c0 | _BV(SFI_BIT_DCLK);
+    volatile u8 *c2 = PORTF;
     
     sfi_recv_bit(128);
     sfi_recv_bit(64);
@@ -81,27 +81,27 @@ UBYTE sfi_recv(void)
     return d;
 }
 
-void sfi_cmd_h(UBYTE c)
+void sfi_cmd_h(u8 c)
 {
     sfi_cs_on();
     sfi_send(c);
 }
 
-void sfi_cmd_ha(UBYTE c)
+void sfi_cmd_ha(u8 c)
 {
     sfi_cmd_h(c);
-    sfi_send((UBYTE)(sf_addr >> 16));
-    sfi_send((UBYTE)(sf_addr >> 8));
-    sfi_send((UBYTE)(sf_addr));
+    sfi_send((u8)(sf_addr >> 16));
+    sfi_send((u8)(sf_addr >> 8));
+    sfi_send((u8)(sf_addr));
 }
 
-void sfi_cmd(UBYTE c)
+void sfi_cmd(u8 c)
 {
     sfi_cmd_h(c);
     sfi_cs_off();
 }
 
-UBYTE sfi_cmd_r(UBYTE c)
+u8 sfi_cmd_r(u8 c)
 {
     sfi_cmd_h(c);
     c = sfi_recv();
@@ -109,7 +109,7 @@ UBYTE sfi_cmd_r(UBYTE c)
     return c;
 }
 
-void sfi_cmd_w(UBYTE c, UBYTE d)
+void sfi_cmd_w(u8 c, u8 d)
 {
     sfi_cmd_h(c);
     sfi_send(d);
@@ -130,7 +130,7 @@ void sfi_wren(void)
     }
 }
 
-UBYTE sf_status(void)
+u8 sf_status(void)
 {
     switch (sf_state)
     {
@@ -161,7 +161,7 @@ UBYTE sf_status(void)
 }
 
 // Execute SF command
-void sf_command(UBYTE cmd)
+void sf_command(u8 cmd)
 {
     cmd &= SPIFL_MASK_CMD;
 
@@ -217,7 +217,7 @@ void sf_command(UBYTE cmd)
 }
 
 // Write SF control
-void sf_ctrl(UBYTE data)
+void sf_ctrl(u8 data)
 {
     if (data & SPIFL_MASK_EN)
     // SF enabled
@@ -236,7 +236,7 @@ void sf_ctrl(UBYTE data)
         sfi_disable();   // enable JTAG
 }
 
-UBYTE spi_flash_read(UBYTE index)
+u8 spi_flash_read(u8 index)
 {
     switch (index)
     {
@@ -251,16 +251,16 @@ UBYTE spi_flash_read(UBYTE index)
 
         case SPIFL_REG_A0:
             // SF low addr
-            return (UBYTE)(sf_addr);
+            return (u8)(sf_addr);
         break;
 
         case SPIFL_REG_A1:
             // SF high addr
-            return (UBYTE)(sf_addr >> 8);
+            return (u8)(sf_addr >> 8);
 
         case SPIFL_REG_A2:
             // SF ext addr
-            return (UBYTE)(sf_addr >> 16);
+            return (u8)(sf_addr >> 16);
 
         case SPIFL_REG_VER:
             // SF version
@@ -270,7 +270,7 @@ UBYTE spi_flash_read(UBYTE index)
     return 0xFF;
 }
 
-void spi_flash_write(UBYTE index, UBYTE data)
+void spi_flash_write(u8 index, u8 data)
 {
     switch (index)
     {
@@ -299,13 +299,13 @@ void spi_flash_write(UBYTE index, UBYTE data)
         case SPIFL_REG_A1:
             // SF high addr
             sf_addr &= 0xFFFF00FF;
-            sf_addr |= (ULONG)data << 8;
+            sf_addr |= (u32)data << 8;
         break;
 
         case SPIFL_REG_A2:
             // SF ext addr
             sf_addr &= 0xFF00FFFF;
-            sf_addr |= (ULONG)data << 16;
+            sf_addr |= (u32)data << 16;
         break;
     }
 }

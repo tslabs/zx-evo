@@ -10,7 +10,7 @@
 #include "kbmap.h"
 #include "rs232.h"
 
-const UBYTE default_kbmap[] PROGMEM =
+const u8 default_kbmap[] PROGMEM =
 {
 NO_KEY,NO_KEY, // 00
 NO_KEY,NO_KEY, // 01 F9
@@ -149,7 +149,7 @@ NO_KEY,NO_KEY, // 7E Scroll Lock
 NO_KEY,NO_KEY  // 7F F7 !!!Warning real code is 0x83 is (converted to 0x7F)
 };
 
-const UBYTE default_kbmap_E0[] PROGMEM =
+const u8 default_kbmap_E0[] PROGMEM =
 {
 NO_KEY,NO_KEY, // 00
 NO_KEY,NO_KEY, // 01
@@ -297,8 +297,8 @@ NO_KEY,NO_KEY  // 7F
 //const void* saved_kbmap = (void*)0;
 
 //pointers to map
-//UBYTE* kbmap;
-//UBYTE* kbmap_E0;
+//u8* kbmap;
+//u8* kbmap_E0;
 
 //if want Log than comment next string
 #undef LOGENABLE
@@ -323,8 +323,8 @@ void kbmap_init(void)
 //	eeprom_read_block(dbuf, saved_kbmap, 2);
 
 	//check signature
-	if ( (eeprom_read_byte((UBYTE*)user_kbmap)=='K') &&
-	     (eeprom_read_byte((UBYTE*)user_kbmap+1)=='B') )
+	if ((eeprom_read_byte((u8*)user_kbmap)=='K') && 
+	     (eeprom_read_byte((u8*)user_kbmap+1)=='B'))
 	{
 		//read from eeprom
 //		eeprom_read_block(kbmap, saved_kbmap, sizeof(default_kbmap)+sizeof(default_kbmap_E0));
@@ -346,27 +346,27 @@ void kbmap_init(void)
 	}
 }
 
-KBMAP_VALUE kbmap_get(UBYTE scancode, UBYTE was_E0)
+KBMAP_VALUE kbmap_get(u8 scancode, u8 was_E0)
 {
 	KBMAP_VALUE ret = {{NO_KEY,NO_KEY}};
 
-	if( scancode < 0x7F )
+	if (scancode < 0x7F)
 	{
-		if( flags_ex_register&FLAG_EX_PS2KEYBOARD_MAP )
+		if (flags_ex_register & FLAG_EX_PS2KEYBOARD_MAP)
 		{
 			//user map
-			if ( scancode )
+			if (scancode)
 			{
-				UWORD tblptr = scancode*2 + ( (was_E0)?user_kbmap_E0:user_kbmap );
-				ret.tb.b1 = eeprom_read_byte((UBYTE*)tblptr++ );
-				ret.tb.b2 = eeprom_read_byte((UBYTE*)tblptr );
+				u16 tblptr = scancode*2 + ((was_E0)?user_kbmap_E0:user_kbmap);
+				ret.tb.b1 = eeprom_read_byte((u8*)tblptr++);
+				ret.tb.b2 = eeprom_read_byte((u8*)tblptr);
 			}
 		}
 		else
 		{
 			//default map
-			ULONG tblptr = scancode*2;
-			if( was_E0 )
+			u32 tblptr = scancode*2;
+			if (was_E0)
 			{
 				tblptr += GET_FAR_ADDRESS(default_kbmap_E0);
 			}
@@ -374,22 +374,22 @@ KBMAP_VALUE kbmap_get(UBYTE scancode, UBYTE was_E0)
 			{
 				tblptr += GET_FAR_ADDRESS(default_kbmap);
 			}
-			ret.tb.b1 = pgm_read_byte_far( tblptr++ );
-			ret.tb.b2 = pgm_read_byte_far( tblptr );
+			ret.tb.b1 = pgm_read_byte_far(tblptr++);
+			ret.tb.b2 = pgm_read_byte_far(tblptr);
 		}
 	}
 #ifdef LOGENABLE
 {
 	char log_map[] = "MP..:..,..\r\n";
-	UBYTE b = scancode;
-	log_map[2] = ((b >> 4) <= 9 )?'0'+(b >> 4):'A'+(b >> 4)-10;
-	log_map[3] = ((b & 0x0F) <= 9 )?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
+	u8 b = scancode;
+	log_map[2] = ((b >> 4) <= 9)?'0'+(b >> 4):'A'+(b >> 4)-10;
+	log_map[3] = ((b & 0x0F) <= 9)?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
 	b = ret.tb.b1;
-	log_map[5] = ((b >> 4) <= 9 )?'0'+(b >> 4):'A'+(b >> 4)-10;
-	log_map[6] = ((b & 0x0F) <= 9 )?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
+	log_map[5] = ((b >> 4) <= 9)?'0'+(b >> 4):'A'+(b >> 4)-10;
+	log_map[6] = ((b & 0x0F) <= 9)?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
 	b = ret.tb.b2;
-	log_map[8] = ((b >> 4) <= 9 )?'0'+(b >> 4):'A'+(b >> 4)-10;
-	log_map[9] = ((b & 0x0F) <= 9 )?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
+	log_map[8] = ((b >> 4) <= 9)?'0'+(b >> 4):'A'+(b >> 4)-10;
+	log_map[9] = ((b & 0x0F) <= 9)?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
 	to_log(log_map);
 }
 #endif

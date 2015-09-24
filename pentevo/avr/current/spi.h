@@ -17,7 +17,7 @@ void spi_init(void);
  * @return received data
  * @param byte [in] - data to send
  */
-UBYTE spi_send(UBYTE byte);
+u8 spi_send(u8 byte);
 
 #endif
 

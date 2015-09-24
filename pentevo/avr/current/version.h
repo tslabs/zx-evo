@@ -35,12 +35,12 @@
  * @return version byte
  * @param index [in] - index of byte (0x00..0x0F)
  */
-UBYTE GetVersionByte(UBYTE index);
+u8 GetVersionByte(u8 index);
 
 /**
  * Set version type.
  * @param type [in] - 0: base configuration, 1: bootloader
  */
-void SetVersionType(UBYTE index, UBYTE type);
+void SetVersionType(u8 index, u8 type);
 
 #endif //__VERSION_H__

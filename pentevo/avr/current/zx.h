@@ -72,23 +72,23 @@
 #define SPI_RS232_ADDR 0x42
 
 /** Send/recv data for spi registers. */
-UBYTE zx_spi_send(UBYTE addr, UBYTE data, UBYTE mask);
+u8 zx_spi_send(u8 addr, u8 data, u8 mask);
 
 
 /** Pause between (CS|SS) and not(CS|SS). */
 #define SHIFT_PAUSE 8
 /** Pause between (CS|SS) and not(CS|SS) counter. */
-extern volatile UBYTE shift_pause;
+extern volatile u8 shift_pause;
 
 // real keys bitmap. send order: LSbit first, from [4] to [0]
 // [5]..[9] - received data
 // [10] - end scan flag
-extern UBYTE zx_realkbd[11];
+extern u8 zx_realkbd[11];
 
 /*struct zx {
-	UBYTE counters[40];
-	UBYTE map[5]; // send order: LSbit first, from [4] to [0]
-	UBYTE reset_type;
+	u8 counters[40];
+	u8 map[5]; // send order: LSbit first, from [4] to [0]
+	u8 reset_type;
 };*/
 
 /** PS/2 keyboard LCTRL key status. */
@@ -115,9 +115,9 @@ extern UBYTE zx_realkbd[11];
 /** PS/2 keyboard MENU key status. */
 #define KB_MENU_MASK_1  0x04
 /** PS/2 keyboard control keys status (for additional functons). */
-extern volatile UBYTE kb_ctrl_status[2];
+extern volatile u8 kb_ctrl_status[2];
 /** PS/2 keyboard control keys mapped to zx keyboard (mapped keys not used in additional functions). */
-extern volatile UBYTE kb_ctrl_mapped[2];
+extern volatile u8 kb_ctrl_mapped[2];
 
 
 #define ZX_TASK_INIT 0
@@ -127,23 +127,23 @@ extern volatile UBYTE kb_ctrl_mapped[2];
  * Interchange via SPI.
  * @param operation [in] - operation type.
  */
-void zx_task(UBYTE operation);
+void zx_task(u8 operation);
 
 void zx_init(void);
 
-void to_zx(UBYTE scancode, UBYTE was_E0, UBYTE was_release);
+void to_zx(u8 scancode, u8 was_E0, u8 was_release);
 
-void update_keys(UBYTE zxcode, UBYTE was_release);
+void update_keys(u8 zxcode, u8 was_release);
 
 /** Clear zx keyboard buffers. */
 void zx_clr_kb(void);
 
 
-void  zx_fifo_put(UBYTE input);
-UBYTE zx_fifo_isfull(void);
-UBYTE zx_fifo_isempty(void);
-UBYTE zx_fifo_get(void);
-UBYTE zx_fifo_copy(void);
+void  zx_fifo_put(u8 input);
+u8 zx_fifo_isfull(void);
+u8 zx_fifo_isempty(void);
+u8 zx_fifo_get(void);
+u8 zx_fifo_copy(void);
 
 /**
  * ZX mouse button register.
@@ -154,47 +154,53 @@ UBYTE zx_fifo_copy(void);
  * 1	- right button (0, if pressed);
  * 0	- left button (0, if pressed).
  */
-extern volatile UBYTE zx_mouse_button;
+extern u8 zx_mouse_button;
 
 /** ZX mouse X coordinate register. */
-extern volatile UBYTE zx_mouse_x;
+extern u8 zx_mouse_x;
 
 /** ZX mouse Y coordinate register. */
-extern volatile UBYTE zx_mouse_y;
+extern u8 zx_mouse_y;
 
 /**
  * Reset ZX mouse registers to default value.
  * @param enable [in] - 0: values like no mouse connected, other: values like mouse connected
  */
-void zx_mouse_reset(UBYTE enable);
+void zx_mouse_reset(u8 enable);
 
 /** Send values of ZX mouse registers to fpga. */
 void zx_mouse_task(void);
 
 
-/** Gluk clock ZX port out. */
-#define ZXW_GLUK_CLOCK  0x01
+/** Wait port access mode R/nW */
+#define ZXW_MODE 0x80
 
 /** Kondratiev's modem ZX port out. */
 #define ZXW_KONDR_RS232 0x02
+
+/** Gluk clock ZX port out. */
+#define ZXW_GLUK_CLOCK  0x01
+
+/** Wait port sources mask */
+#define ZXW_MASK (ZXW_GLUK_CLOCK | ZXW_KONDR_RS232)
 
 /**
  * Work with WAIT ports.
  * @param status [in] - bit 7 - CPU is 0 -write, 1-read wait port
  *		                bits 6..0 is index of port
  */
-void zx_wait_task(UBYTE status);
+void zx_wait_task(u8 status);
 
 /**
  * Switch mode on ZX.
  * @param mode - mode flag
  */
-void zx_mode_switcher(UBYTE mode);
+void zx_mode_switcher(u8 mode);
 
 /**
  * Set configuration register on zx.
  */
-void zx_set_config(UBYTE flags);
+void zx_set_config(u8 flags);
 
 #endif
 

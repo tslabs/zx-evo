@@ -22,14 +22,14 @@
  * @param count - counter.
  * @param shifter - received bits.
  */
-UBYTE ps2_decode(UBYTE count, UWORD shifter);
+u8 ps2_decode(u8 count, u16 shifter);
 
 /**
  * Encode (prepare) sended data.
  * @return encoded data.
  * @param data - data to send.
  */
-UWORD ps2_encode(UBYTE data);
+u16 ps2_encode(u8 data);
 
 /** Timeout value for PS/2 keyboard. */
 #define PS2KEYBOARD_TIMEOUT 20
@@ -49,15 +49,15 @@ UWORD ps2_encode(UBYTE data);
 #define PS2KEYBOARD_LED_SCROLLOCK 0x01
 
 /** Received PS/2 keyboard data register. */
-extern volatile UWORD ps2keyboard_shifter;
+extern volatile u16 ps2keyboard_shifter;
 /** Counter of current PS/2 keyboard data bit. */
-extern volatile UBYTE ps2keyboard_count;
+extern volatile u8 ps2keyboard_count;
 /** Timeout register for detecting PS/2 keyboard timeouts. */
-extern volatile UBYTE ps2keyboard_timeout;
+extern volatile u8 ps2keyboard_timeout;
 /** Counter of stages PS/2 keyboard command. */
-extern volatile UBYTE ps2keyboard_cmd_count;
+extern volatile u8 ps2keyboard_cmd_count;
 /** Current PS/2 keyboard command (0 - none). */
-extern volatile UBYTE ps2keyboard_cmd;
+extern volatile u8 ps2keyboard_cmd;
 
 /** Reset PS2 keyboard log. */
 void ps2keyboard_reset_log(void);
@@ -66,13 +66,13 @@ void ps2keyboard_reset_log(void);
  * Get data from PS2 keyboard log.
  * @return data byte (0 - log empty, 0xFF - log overload).
  */
-UBYTE ps2keyboard_from_log(void);
+u8 ps2keyboard_from_log(void);
 
 /**
  * Send command to PS/2 keboard.
  * @param cmd [in] - command.
  */
-void ps2keyboard_send_cmd(UBYTE cmd);
+void ps2keyboard_send_cmd(u8 cmd);
 
 /** PS/2 keyboard task. */
 void ps2keyboard_task(void);
@@ -81,22 +81,22 @@ void ps2keyboard_task(void);
  * Parsing PS/2 keboard recived bytes .
  * @param recbyte [in] - received byte.
  */
-void ps2keyboard_parse(UBYTE recbyte);
+void ps2keyboard_parse(u8 recbyte);
 
 /** Timeout for waiting response from mouse. */
 #define PS2MOUSE_TIMEOUT 20
 /** Received/sended PS/2 mouse data register. */
-extern volatile UWORD ps2mouse_shifter;
+extern volatile u16 ps2mouse_shifter;
 /** Counter of current PS/2 mouse data bit. */
-extern volatile UBYTE ps2mouse_count;
+extern volatile u8 ps2mouse_count;
 /** Timeout register for detecting PS/2 mouse timeouts. */
-extern volatile UBYTE ps2mouse_timeout;
+extern volatile u8 ps2mouse_timeout;
 /** Index of PS/2 mouse initialization step (@see ps2mouse_init_sequence). */
-extern volatile UBYTE ps2mouse_initstep;
+extern volatile u8 ps2mouse_initstep;
 /** Counter of PS/2 mouse response bytes. */
-extern volatile UBYTE ps2mouse_resp_count;
+extern volatile u8 ps2mouse_resp_count;
 /** Current PS/2 keyboard command (0 - none). */
-extern volatile UBYTE ps2mouse_cmd;
+extern volatile u8 ps2mouse_cmd;
 
 /** Command to reset PS2 mouse. */
 #define PS2MOUSE_CMD_RESET          0xFF
@@ -118,7 +118,7 @@ void ps2mouse_task(void);
  *        <B>0x79</B> (keypad '+') - inc resolution;
  *        <B>0x7B</B> (keypad '-') - dec resolution.
  */
-void ps2mouse_set_resolution(UBYTE code);
+void ps2mouse_set_resolution(u8 code);
 
 #endif //PS2_H
 

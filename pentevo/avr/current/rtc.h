@@ -34,14 +34,14 @@ void rtc_init(void);
  * @param addr [in] - address of internal register on RTC
  * @param data [in] - data to write
  */
-void rtc_write(UBYTE addr, UBYTE data);
+void rtc_write(u8 addr, u8 data);
 
 /**
  * Read byte from RTC.
  * @return data
  * @param addr [in] - address of internal register on RTC
  */
-UBYTE rtc_read(UBYTE addr);
+u8 rtc_read(u8 addr);
 
 
 /** Seconds register index. */
@@ -110,14 +110,14 @@ void gluk_inc(void);
  * @return registers data
  * @param index [in] - index of Gluck clock register
  */
-UBYTE gluk_get_reg(UBYTE index);
+u8 gluk_get_reg(u8 index);
 
 /**
  * Set Gluk clock registers data.
  * @param index [in] - index of Gluck clock register
  * @param data [in] - data
  */
-void gluk_set_reg(UBYTE index, UBYTE data);
+void gluk_set_reg(u8 index, u8 data);
 
 
 #endif //__RTC_H__

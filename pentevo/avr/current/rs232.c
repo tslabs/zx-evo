@@ -17,39 +17,39 @@
 //Registers for 16550 emulation:
 
 //Divisor Latch LSB
-static UBYTE rs232_DLL;
+static u8 rs232_DLL;
 //Divisor Latch MSB
-static UBYTE rs232_DLM;
+static u8 rs232_DLM;
 //Interrupt Enable
-static UBYTE rs232_IER;
+static u8 rs232_IER;
 //Interrupt Identification
-static UBYTE rs232_ISR;
+static u8 rs232_ISR;
 //FIFO Control
-static UBYTE rs232_FCR;
+static u8 rs232_FCR;
 //Line Control
-static UBYTE rs232_LCR;
+static u8 rs232_LCR;
 //Modem Control
-static UBYTE rs232_MCR;
+static u8 rs232_MCR;
 //Line Status
-static UBYTE rs232_LSR;
+static u8 rs232_LSR;
 //Modem Status
-static UBYTE rs232_MSR;
+static u8 rs232_MSR;
 //Scratch Pad
-static UBYTE rs232_SCR;
+static u8 rs232_SCR;
 //Fifo In
-static UBYTE rs232_FI[256];
-static UBYTE rs232_FI_start;
-static UBYTE rs232_FI_end;
+static u8 rs232_FI[256];
+static u8 rs232_FI_start;
+static u8 rs232_FI_end;
 //Fifo Out
-static UBYTE rs232_FO[256];
-static UBYTE rs232_FO_start;
-static UBYTE rs232_FO_end;
+static u8 rs232_FO[256];
+static u8 rs232_FO_start;
+static u8 rs232_FO_end;
 
 void rs232_init(void)
 {
 	// Set baud rate
-	UBRR1H = (UBYTE)(UBRR115200>>8);
-	UBRR1L = (UBYTE)UBRR115200;
+	UBRR1H = (u8)(UBRR115200>>8);
+	UBRR1L = (u8)UBRR115200;
 	// Clear reg
 	UCSR1A = 0;
 	// Enable receiver and transmitter
@@ -72,10 +72,10 @@ void rs232_init(void)
 	rs232_FO_start = rs232_FO_end = 0;
 }
 
-void rs232_transmit( UBYTE data )
+void rs232_transmit(u8 data)
 {
 	// Wait for empty transmit buffer
-	while ( !( UCSR1A & (1<<UDRE)) );
+	while (!(UCSR1A & (1<<UDRE)));
 	// Put data into buffer, sends the data
 	UDR1 = data;
 }
@@ -83,7 +83,7 @@ void rs232_transmit( UBYTE data )
 //#ifdef LOGENABLE
 void to_log(char* ptr)
 {
-	while( (*ptr)!=0 )
+	while((*ptr)!=0)
 	{
 		rs232_transmit(*ptr);
 		ptr++;
@@ -95,30 +95,30 @@ void to_log(char* ptr)
 //after DLL or DLM changing
 void rs232_set_baud(void)
 {
-	if ( rs232_DLM | rs232_DLL )
+	if (rs232_DLM | rs232_DLL)
 	{
-		if( (rs232_DLM&0x80)!=0 )
+		if ((rs232_DLM & 0x80)!=0)
 		{
 			//AVR mode - direct load UBRR
-			UBRR1H = 0x7F&rs232_DLM;
+			UBRR1H = 0x7F & rs232_DLM;
 			UBRR1L = rs232_DLL;
 		}
 		else
 		{
 			//default mode - like 16550
-			ULONG i = BAUD115200/ ((((UWORD)rs232_DLM)<<8) + rs232_DLL);
-			UWORD rate = ((F_CPU/16)/i)-1;
+			u32 i = BAUD115200/ ((((u16)rs232_DLM)<<8) + rs232_DLL);
+			u16 rate = ((F_CPU/16)/i)-1;
 			// Set baud rate
-			UBRR1H = (UBYTE)(rate>>8);
-			UBRR1L = (UBYTE)rate;
+			UBRR1H = (u8)(rate>>8);
+			UBRR1L = (u8)rate;
 		}
 	}
 	else
 	{
-		// If( ( rs232_DLM==0 ) && ( rs232_DLL==0 ) )
+		// if ((rs232_DLM==0) && (rs232_DLL==0))
 		// set rate to 256000 baud
-		UBRR1H = (UBYTE)(UBRR256000>>8);
-		UBRR1L = (UBYTE)UBRR256000;
+		UBRR1H = (u8)(UBRR256000>>8);
+		UBRR1L = (u8)UBRR256000;
 	}
 }
 
@@ -126,10 +126,10 @@ void rs232_set_baud(void)
 void rs232_set_format(void)
 {
 	//set word length and stopbits
-	UBYTE format = ((rs232_LCR&0x07)<<1);
+	u8 format = ((rs232_LCR & 0x07)<<1);
 
 	//set parity (only "No parity","Odd","Even" supported)
-	switch( rs232_LCR&0x38 )
+	switch (rs232_LCR & 0x38)
 	{
 		case 0x08:
 			//odd parity
@@ -145,20 +145,20 @@ void rs232_set_format(void)
 	UCSR1C = format;
 }
 
-void rs232_zx_write(UBYTE index, UBYTE data)
+void rs232_zx_write(u8 index, u8 data)
 {
 #ifdef LOGENABLE
 	char log_write[] = "A..D..W\r\n";
-	log_write[1] = ((index >> 4) <= 9 )?'0'+(index >> 4):'A'+((index >> 4)-10);
-	log_write[2] = ((index & 0x0F) <= 9 )?'0'+(index & 0x0F):'A'+(index & 0x0F)-10;
-	log_write[4] = ((data >> 4) <= 9 )?'0'+(data >> 4):'A'+((data >> 4)-10);
-	log_write[5] = ((data & 0x0F) <= 9 )?'0'+(data & 0x0F):'A'+((data & 0x0F)-10);
+	log_write[1] = ((index >> 4) <= 9)?'0'+(index >> 4):'A'+((index >> 4)-10);
+	log_write[2] = ((index & 0x0F) <= 9)?'0'+(index & 0x0F):'A'+(index & 0x0F)-10;
+	log_write[4] = ((data >> 4) <= 9)?'0'+(data >> 4):'A'+((data >> 4)-10);
+	log_write[5] = ((data & 0x0F) <= 9)?'0'+(data & 0x0F):'A'+((data & 0x0F)-10);
 	to_log(log_write);
 #endif
-	switch( index )
+	switch (index)
 	{
 	case 0:
-		if ( rs232_LCR & 0x80 )
+		if (rs232_LCR & 0x80)
 		{
 			rs232_DLL = data;
 			rs232_set_baud();
@@ -166,8 +166,8 @@ void rs232_zx_write(UBYTE index, UBYTE data)
 		else
 		{
 			//place byte to fifo out
-			if ( ( rs232_FO_end != rs232_FO_start ) ||
-			     ( rs232_LSR&0x20 ) )
+			if ((rs232_FO_end != rs232_FO_start) ||
+			     (rs232_LSR & 0x20))
 			{
 				rs232_FO[rs232_FO_end++] = data;
 
@@ -182,7 +182,7 @@ void rs232_zx_write(UBYTE index, UBYTE data)
 		break;
 
 	case 1:
-		if ( rs232_LCR & 0x80 )
+		if (rs232_LCR & 0x80)
 		{
 			//write to DLM
 			rs232_DLM = data;
@@ -196,24 +196,24 @@ void rs232_zx_write(UBYTE index, UBYTE data)
 		break;
 
 	case 2:
-		if( data&1 )
+		if (data & 1)
 		{
 			//FIFO always enable
-			if( data&(1<<1) )
+			if (data & (1<<1))
 			{
 				//receive FIFO reset
 				rs232_FI_start = rs232_FI_end = 0;
 				//set empty FIFO flag and clear overrun flag
 				rs232_LSR &= ~(0x03);
 			}
-			if( data&(1<<2) )
+			if (data & (1<<2))
 			{
 				//tramsmit FIFO reset
 				rs232_FO_start = rs232_FO_end = 0;
 				//set fifo is empty flag
 				rs232_LSR |= 0x60;
 			}
-			rs232_FCR = data&0xC9;
+			rs232_FCR = data & 0xC9;
 		}
 		break;
 
@@ -225,7 +225,7 @@ void rs232_zx_write(UBYTE index, UBYTE data)
 	case 4:
 		//bit 7-5 not used and set to '0'
 		rs232_MCR = data & 0x1F;
-		if ( data&(1<<1) )
+		if (data & (1<<1))
 		{
 			//clear RTS
 			RS232RTS_PORT &= ~(_BV(RS232RTS));
@@ -251,24 +251,24 @@ void rs232_zx_write(UBYTE index, UBYTE data)
 	}
 }
 
-UBYTE rs232_zx_read(UBYTE index)
+u8 rs232_zx_read(u8 index)
 {
-	UBYTE data = 0;
-	switch( index )
+	u8 data = 0;
+	switch (index)
 	{
 	case 0:
-		if ( rs232_LCR & 0x80 )
+		if (rs232_LCR & 0x80)
 		{
 			data = rs232_DLL;
 		}
 		else
 		{
 			//get byte from fifo in
-			if ( rs232_LSR&0x01 )
+			if (rs232_LSR & 0x01)
 			{
 				data = rs232_FI[rs232_FI_start++];
 
-				if( rs232_FI_start == rs232_FI_end )
+				if (rs232_FI_start == rs232_FI_end)
 				{
 					//set empty FIFO flag
 					rs232_LSR &= ~(0x01);
@@ -278,7 +278,7 @@ UBYTE rs232_zx_read(UBYTE index)
 		break;
 
 	case 1:
-		if ( rs232_LCR & 0x80 )
+		if (rs232_LCR & 0x80)
 		{
 			data = rs232_DLM;
 		}
@@ -316,14 +316,14 @@ UBYTE rs232_zx_read(UBYTE index)
 		break;
 	}
 #ifdef LOGENABLE
-	static UBYTE last = 0;
-	if ( last!=index )
+	static u8 last = 0;
+	if (last!=index)
 	{
 		char log_read[] = "A..D..R\r\n";
-		log_read[1] = ((index >> 4) <= 9 )?'0'+(index >> 4):'A'+((index >> 4)-10);
-		log_read[2] = ((index & 0x0F) <= 9 )?'0'+(index & 0x0F):'A'+(index & 0x0F)-10;
-		log_read[4] = ((data >> 4) <= 9 )?'0'+(data >> 4):'A'+((data >> 4)-10);
-		log_read[5] = ((data & 0x0F) <= 9 )?'0'+(data & 0x0F):'A'+((data & 0x0F)-10);
+		log_read[1] = ((index >> 4) <= 9)?'0'+(index >> 4):'A'+((index >> 4)-10);
+		log_read[2] = ((index & 0x0F) <= 9)?'0'+(index & 0x0F):'A'+(index & 0x0F)-10;
+		log_read[4] = ((data >> 4) <= 9)?'0'+(data >> 4):'A'+((data >> 4)-10);
+		log_read[5] = ((data & 0x0F) <= 9)?'0'+(data & 0x0F):'A'+((data & 0x0F)-10);
 		to_log(log_read);
 		last = index;
 	}
@@ -334,13 +334,13 @@ UBYTE rs232_zx_read(UBYTE index)
 void rs232_task(void)
 {
 	//send data
-	if( (rs232_LSR&0x20)==0 )
+	if ((rs232_LSR & 0x20)==0)
 	{
-		if ( UCSR1A&_BV(UDRE) )
+		if (UCSR1A & _BV(UDRE))
 		{
 			UDR1 = rs232_FO[rs232_FO_start++];
 
-			if( rs232_FO_start == rs232_FO_end )
+			if (rs232_FO_start == rs232_FO_end)
 			{
 				//set fifo is empty flag
 				rs232_LSR |= 0x60;
@@ -349,11 +349,11 @@ void rs232_task(void)
 	}
 
 	//receive data
-	if( UCSR1A&_BV(RXC) )
+	if (UCSR1A & _BV(RXC))
 	{
-		BYTE b = UDR1;
-		if( (rs232_FI_end == rs232_FI_start) &&
-		    (rs232_LSR&0x01) )
+		s8 b = UDR1;
+		if ((rs232_FI_end == rs232_FI_start) && 
+		    (rs232_LSR & 0x01))
 		{
 			//set overrun flag
 			rs232_LSR|=0x02;
@@ -368,7 +368,7 @@ void rs232_task(void)
 	}
 
 	//statuses
-	if( UCSR1A&_BV(FE) )
+	if (UCSR1A & _BV(FE))
 	{
 		//frame error
 		rs232_LSR |= 0x08;
@@ -378,7 +378,7 @@ void rs232_task(void)
 		rs232_LSR &= ~(0x08);
 	}
 
-	if( UCSR1A&_BV(UPE) )
+	if (UCSR1A & _BV(UPE))
 	{
 		//parity error
 		rs232_LSR |= 0x04;
@@ -388,10 +388,10 @@ void rs232_task(void)
 		rs232_LSR &= ~(0x04);
 	}
 
-	if( RS232CTS_PIN&_BV(RS232CTS) )
+	if (RS232CTS_PIN & _BV(RS232CTS))
 	{
 		//CTS clear
-		if( (rs232_MSR&0x10)!=0 )
+		if ((rs232_MSR & 0x10)!=0)
 		{
 #ifdef LOGENABLE
 			to_log("CTS\r\n");
@@ -404,7 +404,7 @@ void rs232_task(void)
 	else
 	{
 		//CTS set
-		if( (rs232_MSR&0x10)==0 )
+		if ((rs232_MSR & 0x10)==0)
 		{
 #ifdef LOGENABLE
 			to_log("CTS\r\n");
@@ -426,5 +426,5 @@ void rs232_task(void)
   if ((rs232_FO_end != rs232_FO_start) || (rs232_LSR & 0x20))
     status |= SPI_STATUS_REG_TX;
 
-  zx_spi_send(SPI_STATUS_REG, status, 0x7F);
+  zx_spi_send(SPI_STATUS_REG, status, ZXW_MASK);
 }

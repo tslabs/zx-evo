@@ -24,36 +24,36 @@
 #undef LOGENABLE
 
 /** FPGA data pointer [far address] (linker symbol). */
-extern const ULONG fpga0 PROGMEM;
-extern const ULONG fpga1 PROGMEM;
-extern const ULONG fpga2 PROGMEM;
+extern const u32 fpga0 PROGMEM;
+extern const u32 fpga1 PROGMEM;
+extern const u32 fpga2 PROGMEM;
 
 // FPGA data index..
-volatile ULONG curFpga;
+volatile u32 curFpga;
 
 // Common flag register.
-volatile UBYTE flags_register;
-volatile UBYTE flags_ex_register;
+volatile u8 flags_register;
+volatile u8 flags_ex_register;
 
 // Common modes register.
-volatile UBYTE modes_register;
+volatile u8 modes_register;
 
 // Type extensions of gluk registers
-volatile UBYTE ext_type_gluk;
+volatile u8 ext_type_gluk;
 
 // Buffer for depacking FPGA configuration.
 // You can USED for other purposed after setup FPGA.
-UBYTE dbuf[DBSIZE];
+u8 dbuf[DBSIZE];
 
-UBYTE egg;
+u8 egg;
 
-void put_buffer(UWORD size)
+void put_buffer(u16 size)
 {
 	// writes specified length of buffer to the output
-	UBYTE * ptr = dbuf;
+	u8 *ptr = dbuf;
 
 	do
-		spi_send( *(ptr++) );
+		spi_send(*(ptr++));
 			while(--size);
 }
 
@@ -102,21 +102,21 @@ start:
 #ifdef LOGENABLE
 	to_log("VER:");
 	{
-		UBYTE b,i;
-		ULONG version = 0x1DFF0;
+		u8 b,i;
+		u32 version = 0x1DFF0;
 		char VER[]="..";
-		for( i=0; i<12; i++)
+		for(i=0; i<12; i++)
 		{
 			dbuf[i] = pgm_read_byte_far(version+i);
 		}
 		dbuf[i]=0;
 		to_log((char*)dbuf);
 		to_log(" ");
-		UBYTE b1 = pgm_read_byte_far(version+12);
-		UBYTE b2 = pgm_read_byte_far(version+13);
-		UBYTE day = b1&0x1F;
-		UBYTE mon = ((b2<<3)+(b1>>5))&0x0F;
-		UBYTE year = (b2>>1)&0x3F;
+		u8 b1 = pgm_read_byte_far(version+12);
+		u8 b2 = pgm_read_byte_far(version+13);
+		u8 day = b1 & 0x1F;
+		u8 mon = ((b2<<3)+(b1>>5)) & 0x0F;
+		u8 year = (b2>>1) & 0x3F;
 		VER[0] = '0'+(day/10);
 		VER[1] = '0'+(day%10);
 		to_log(VER);
@@ -130,11 +130,11 @@ start:
 		to_log(VER);
 		to_log("\r\n");
 		//
-		for( i=0; i<16; i++)
+		for(i=0; i<16; i++)
 		{
 			b = pgm_read_byte_far(version+i);
-			VER[0] = ((b >> 4) <= 9 )?'0'+(b >> 4):'A'+(b >> 4)-10;
-			VER[1] = ((b & 0x0F) <= 9 )?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
+			VER[0] = ((b >> 4) <= 9)?'0'+(b >> 4):'A'+(b >> 4)-10;
+			VER[1] = ((b & 0x0F) <= 9)?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
 			to_log(VER);
 		}
 		to_log("\r\n");
@@ -148,7 +148,7 @@ start:
 	DDRF |= (1<<nCONFIG); // pull low for a time
 	_delay_ms(50);
 	DDRF &= ~(1<<nCONFIG);
-	while( !(PINF & (1<<nSTATUS)) ); // wait ready
+	while(!(PINF & (1<<nSTATUS))); // wait ready
 
 	// prepare for data fetching
 	if (egg)
@@ -157,7 +157,7 @@ start:
 		egg = 0;
 	}
 	else
-	switch (eeprom_read_byte((const UBYTE*)0x0fff))
+	switch (eeprom_read_byte((const u8*)0x0fff))
 	{
     case 0:
 			curFpga = GET_FAR_ADDRESS(fpga1);
@@ -170,18 +170,18 @@ start:
 #ifdef LOGENABLE
 	{
 	char log_fpga[]="F........\r\n";
-	UBYTE b = (UBYTE)((curFpga>>24)&0xFF);
-	log_fpga[1] = ((b >> 4) <= 9 )?'0'+(b >> 4):'A'+(b >> 4)-10;
-	log_fpga[2] = ((b & 0x0F) <= 9 )?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
-	b = (UBYTE)((curFpga>>16)&0xFF);
-	log_fpga[3] = ((b >> 4) <= 9 )?'0'+(b >> 4):'A'+(b >> 4)-10;
-	log_fpga[4] = ((b & 0x0F) <= 9 )?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
-	b = (UBYTE)((curFpga>>8)&0xFF);
-	log_fpga[5] = ((b >> 4) <= 9 )?'0'+(b >> 4):'A'+(b >> 4)-10;
-	log_fpga[6] = ((b & 0x0F) <= 9 )?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
-	b = (UBYTE)(curFpga&0xFF);
-	log_fpga[7] = ((b >> 4) <= 9 )?'0'+(b >> 4):'A'+(b >> 4)-10;
-	log_fpga[8] = ((b & 0x0F) <= 9 )?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
+	u8 b = (u8)((curFpga>>24) & 0xFF);
+	log_fpga[1] = ((b >> 4) <= 9)?'0'+(b >> 4):'A'+(b >> 4)-10;
+	log_fpga[2] = ((b & 0x0F) <= 9)?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
+	b = (u8)((curFpga>>16) & 0xFF);
+	log_fpga[3] = ((b >> 4) <= 9)?'0'+(b >> 4):'A'+(b >> 4)-10;
+	log_fpga[4] = ((b & 0x0F) <= 9)?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
+	b = (u8)((curFpga>>8) & 0xFF);
+	log_fpga[5] = ((b >> 4) <= 9)?'0'+(b >> 4):'A'+(b >> 4)-10;
+	log_fpga[6] = ((b & 0x0F) <= 9)?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
+	b = (u8)(curFpga & 0xFF);
+	log_fpga[7] = ((b >> 4) <= 9)?'0'+(b >> 4):'A'+(b >> 4)-10;
+	log_fpga[8] = ((b & 0x0F) <= 9)?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
 	to_log(log_fpga);
 	}
 #endif
@@ -255,19 +255,19 @@ start:
 		rs232_task();
 
 		//event from SPI
-		if ( flags_register&FLAG_SPI_INT )
+		if (flags_register & FLAG_SPI_INT)
 		{
 			//get status byte
-			UBYTE status;
+			u8 status;
 			nSPICS_PORT &= ~(1<<nSPICS);
 			nSPICS_PORT |= (1<<nSPICS);
 			status = spi_send(0);
-			zx_wait_task( status );
+			zx_wait_task(status);
 		}
 
 		atx_power_task();
 	}
-	while( (flags_register&FLAG_HARD_RESET) == 0 );
+	while((flags_register & FLAG_HARD_RESET) == 0);
 
 	goto start;
 }

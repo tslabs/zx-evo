@@ -9,11 +9,11 @@
 
 void tape_task(void)
 {
-	UBYTE temp = ( TAPEIN_PIN & (1<<TAPEIN) )? FLAG_LAST_TAPE_VALUE:0;
-	if ( (flags_register&FLAG_LAST_TAPE_VALUE)^temp )
+	u8 temp = (TAPEIN_PIN & (1<<TAPEIN))? FLAG_LAST_TAPE_VALUE:0;
+	if ((flags_register & FLAG_LAST_TAPE_VALUE)^temp)
 	{
-		zx_set_config( (temp)?SPI_TAPE_FLAG:0 );
-		if ( temp )
+		zx_set_config((temp)?SPI_TAPE_FLAG:0);
+		if (temp)
 		{
 			flags_register |= FLAG_LAST_TAPE_VALUE;
 		}

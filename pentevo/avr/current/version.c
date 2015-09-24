@@ -6,12 +6,12 @@
 #include "spiflash.h"
 
 //base configuration version string pointer [far address of PROGMEM]
-const ULONG baseVersionAddr = 0x1DFF0;
+const u32 baseVersionAddr = 0x1DFF0;
 
 //bootloader version string pointer [far address of PROGMEM]
-const ULONG bootVersionAddr = 0x1FFF0;
+const u32 bootVersionAddr = 0x1FFF0;
 
-UBYTE GetVersionByte(UBYTE index)
+u8 GetVersionByte(u8 index)
 {
 	index &= 0x0F;
 
@@ -19,11 +19,11 @@ UBYTE GetVersionByte(UBYTE index)
 	{
 		case EXT_TYPE_BASECONF_VERSION:
 			//base configuration version
-			return (UBYTE)pgm_read_byte_far(baseVersionAddr+(ULONG)index);
+			return (u8)pgm_read_byte_far(baseVersionAddr+(u32)index);
 
 		case EXT_TYPE_BOOTLOADER_VERSION:
 			//bootloader version
-			return (UBYTE)pgm_read_byte_far(bootVersionAddr+(ULONG)index);
+			return (u8)pgm_read_byte_far(bootVersionAddr+(u32)index);
 
 		case EXT_TYPE_PS2KEYBOARDS_LOG:
 			//PS2 keyboards log
@@ -40,7 +40,7 @@ UBYTE GetVersionByte(UBYTE index)
 	return 0xFF;
 }
 
-void SetVersionType(UBYTE index, UBYTE type)
+void SetVersionType(u8 index, u8 type)
 {
 	index &= 0x0F;
 
