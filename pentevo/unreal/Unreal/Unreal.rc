@@ -123,7 +123,7 @@ FONT 8, "MS Sans Serif", 0, 0, 1
     PUSHBUTTON      "&Add", IDB_CBP_ADD, 127, 41, 25, 14, 0, WS_EX_LEFT
     PUSHBUTTON      "&Del", IDB_CBP_DEL, 155, 41, 27, 14, 0, WS_EX_LEFT
     LISTBOX         IDC_CBP, 7, 58, 176, 112, WS_TABSTOP | WS_VSCROLL | LBS_NOINTEGRALHEIGHT | LBS_NOTIFY, WS_EX_LEFT
-    GROUPBOX        "", IDC_STATIC, 186, 13, 8, 157, 0, WS_EX_LEFT
+    GROUPBOX        "", IDC_STATIC, 186, 13, 90, 160, 0, WS_EX_LEFT
     LTEXT           "E&xecution breakpoints", IDC_STATIC, 189, 7, 76, 8, SS_LEFT, WS_EX_LEFT
     LTEXT           "enter breakpoint address", IDC_STATIC, 189, 22, 80, 8, SS_LEFT, WS_EX_LEFT
     LTEXT           "or range like 4000-7FFF", IDC_STATIC, 189, 30, 80, 8, SS_LEFT, WS_EX_LEFT
@@ -131,7 +131,7 @@ FONT 8, "MS Sans Serif", 0, 0, 1
     PUSHBUTTON      "&Del", IDB_BPX_DEL, 218, 58, 26, 14, 0, WS_EX_LEFT
     PUSHBUTTON      "&Add", IDB_BPX_ADD, 246, 58, 25, 14, 0, WS_EX_LEFT
     LISTBOX         IDC_BPX, 189, 75, 83, 95, WS_TABSTOP | WS_VSCROLL | LBS_NOINTEGRALHEIGHT | LBS_NOTIFY, WS_EX_LEFT
-    GROUPBOX        "", IDC_STATIC, 277, 13, 8, 157, 0, WS_EX_LEFT
+    GROUPBOX        "", IDC_STATIC, 277, 13, 89, 160, 0, WS_EX_LEFT
     LTEXT           "&Memory access", IDC_STATIC, 280, 6, 76, 8, SS_LEFT, WS_EX_LEFT
     LTEXT           "enter breakpoint address", IDC_STATIC, 280, 22, 80, 8, SS_LEFT, WS_EX_LEFT
     LTEXT           "or range like 4000-7FFF", IDC_STATIC, 280, 30, 80, 8, SS_LEFT, WS_EX_LEFT
@@ -141,7 +141,7 @@ FONT 8, "MS Sans Serif", 0, 0, 1
     PUSHBUTTON      "&Del", IDB_MEM_DEL, 309, 58, 26, 14, 0, WS_EX_LEFT
     PUSHBUTTON      "&Add", IDB_MEM_ADD, 337, 58, 25, 14, 0, WS_EX_LEFT
     LISTBOX         IDC_MEM, 280, 75, 83, 95, WS_TABSTOP | WS_VSCROLL | LBS_NOINTEGRALHEIGHT | LBS_NOTIFY, WS_EX_LEFT
-    LTEXT           "Note: double-click to any list box to edit selected breakpoint", IDC_STATIC, 7, 172, 295, 8, SS_LEFT, WS_EX_LEFT
+    LTEXT           "Note: double-click to any list box to edit selected breakpoint", IDC_STATIC, 7, 175, 295, 8, SS_LEFT, WS_EX_LEFT
 }
 
 

@@ -237,6 +237,22 @@ sleep:
    sound_play();
 }
 
+void debug_cond_check(Z80 *cpu)
+{
+	if (cpu->cbpn)
+	{
+		cpu->r_low = (cpu->r_low & 0x7F) + cpu->r_hi;
+		for (unsigned i = 0; i < cpu->cbpn; i++)
+		{
+			if (calc(cpu, cpu->cbp[i]))
+			{
+				cpu->dbgbreak |= 1;
+				dbgbreak |= 1;
+			}
+		}
+	}
+}
+
 void debug_events(Z80 *cpu)
 {
    unsigned pc = cpu->pc & 0xFFFF;
@@ -265,20 +281,9 @@ void debug_events(Z80 *cpu)
       }
    }
 
-   if (cpu->cbpn)
-   {
-      cpu->r_low = (cpu->r_low & 0x7F) + cpu->r_hi;
-      for (unsigned i = 0; i < cpu->cbpn; i++)
-      {
-         if (calc(cpu, cpu->cbp[i]))
-         {
-             cpu->dbgbreak = 1;
-             dbgbreak = 1;
-         }
-      }
-   }
-
+   debug_cond_check(cpu);
    brk_port_in = brk_port_out = -1; // reset only when breakpoints active
+   brk_mem_rd = brk_mem_wr = -1;	// reset only when breakpoints active
 
    if (cpu->dbgbreak)
        debug(cpu);

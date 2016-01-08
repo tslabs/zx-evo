@@ -293,6 +293,8 @@ unsigned snapsize;
 // conditional breakpoints support
 unsigned brk_port_in, brk_port_out;
 u8 brk_port_val;
+unsigned brk_mem_rd, brk_mem_wr;
+u8 brk_mem_val;
 
 virtkeyt pckeys[] =
 {

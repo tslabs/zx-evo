@@ -467,6 +467,9 @@ Alt-Y           switch active sound chip in Turbo-Sound mode
          IN     - port used in 'IN'  command (or 0FFFFFFFF when no ins)
          VAL    - read/written value to port (only meaningful when OUT !=
 0FFFFFFFF or IN != 0FFFFFFFF)
+         RD     - address used in memory read operation
+         WR     - address used in memory write operation
+         MDT    - data read/written to memory
          numbers - hex, must start with digit: DFFD - wrong, 0DFFD - right
          characters - must be enclosed in single quotes ('A','B',etc..)
        All calculations use 32-bit unsigned interger arithmetic.

@@ -82,7 +82,10 @@ static bool __cdecl get_dos_flag()
       { WORD4('D','O','S',0), (const void *)get_dos_flag, 0 },  \
       { WORD4('O','U','T',0), &brk_port_out, 4 },  \
       { WORD2('I','N'), &brk_port_in, 4 },         \
-      { WORD4('V','A','L',0), &brk_port_val, 1 },  \
+	  { WORD4('V','A','L',0), &brk_port_val, 1 },  \
+	  { WORD2('R','D'), &brk_mem_rd, 4 },		   \
+      { WORD2('W','R'), &brk_mem_wr, 4 },          \
+	  { WORD4('M','D','T',0), &brk_mem_val, 1 }, \
       { WORD2('F','D'), &comp.p7FFD, 1 },          \
                                                    \
       { WORD4('A','F','\'',0), &cpu.alt.af, 2 },   \
@@ -181,7 +184,7 @@ u8 toscript(char *script, unsigned *dst)
          script += 3; continue;
       }
 
-      if (isalnum(*script) && *script != 'M')
+      if ( isalnum(*script) )
       {
          unsigned r = -1, p = *(unsigned*)script;
          unsigned ln = 0;
@@ -190,6 +193,7 @@ u8 toscript(char *script, unsigned *dst)
             unsigned mask = 0xFF; ln = 1;
             if (regs[i].reg & 0xFF00) mask = 0xFFFF, ln = 2;
             if (regs[i].reg & 0xFF0000) mask = 0xFFFFFF, ln = 3;
+			if (regs[i].reg & 0xFF000000) mask = 0xFFFFFFFF, ln = 4;
             if (regs[i].reg == (p & mask)) { r = i; break; }
          }
          if (r != -1)
@@ -204,16 +208,19 @@ u8 toscript(char *script, unsigned *dst)
                default: errexit("BUG01");
             }
             *dst++ = (unsigned)regs[r].ptr;
+
+			continue;
          }
-         else
+         else if ( *script != 'M' )
          { // number
             if (*script > 'F') return 0;
             for (r = 0; isalnum(*script) && *script <= 'F'; script++)
                r = r*0x10 + ((*script >= 'A') ? *script-'A'+10 : *script-'0');
             *dst++ = DB_SHORT;
             *dst++ = r;
+
+			continue;
          }
-         continue;
       }
       // find operation
       u8 pr = 0xFF;

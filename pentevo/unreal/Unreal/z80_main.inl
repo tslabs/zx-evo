@@ -19,7 +19,8 @@ u8 rm(unsigned addr)
      tmp = GSRAM_M+((temp.gsdmaaddr-1) & 0x1FFFFF);
      temp.gsdmaaddr = (temp.gsdmaaddr + 1) & 0x1FFFFF;
      z80gs::flush_gs_z80();
-     return *tmp;
+     brk_mem_val = *tmp;
+	 goto ret;
     }
 #endif
 
@@ -44,7 +45,8 @@ u8 rm(unsigned addr)
         vid.memcyc_lcmd++;
       }
 
-            return cpu.tscache_data[cache_pointer];
+            brk_mem_val = cpu.tscache_data[cache_pointer];
+			goto ret;
     }
 
     else
@@ -54,7 +56,16 @@ u8 rm(unsigned addr)
   else
     comp.ts.cache_miss = false;
 
-   return *am_r(addr);
+   brk_mem_val = *am_r(addr);
+
+ret:
+#ifdef Z80_DBG
+	brk_mem_rd = addr;
+	/* this is sloooow */
+	debug_cond_check(&cpu);
+#endif
+
+   return brk_mem_val;
 }
 
 // Адрес может превышать 0xFFFF
@@ -68,6 +79,11 @@ void wm(unsigned addr, u8 val)
    *membit |= MEMBITS_W;
    dbgbreak |= (*membit & MEMBITS_BPW);
    cpu.dbgbreak |= (*membit & MEMBITS_BPW);
+
+	brk_mem_wr = addr;
+    brk_mem_val = val;
+	/* this is sloooow */
+	debug_cond_check(&cpu);
 #endif
 
 #ifdef MOD_GSZ80

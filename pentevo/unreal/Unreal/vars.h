@@ -71,7 +71,8 @@ enum
 enum
 {
    MEMBITS_R = 0x01, MEMBITS_W = 0x02, MEMBITS_X = 0x04,
-   MEMBITS_BPR = 0x10, MEMBITS_BPW = 0x20, MEMBITS_BPX = 0x40
+   MEMBITS_BPR = 0x10, MEMBITS_BPW = 0x20, MEMBITS_BPX = 0x40,
+   MEMBITS_BPC = 0x80
 };
 
 struct GDIBMP
@@ -168,6 +169,9 @@ extern K_INPUT input;
 extern unsigned brk_port_in;
 extern unsigned brk_port_out;
 extern u8 brk_port_val;
+extern unsigned brk_mem_rd;
+extern unsigned brk_mem_wr;
+extern u8 brk_mem_val;
 
 extern unsigned watch_script[4][64];
 extern u8 watch_enabled[4];
