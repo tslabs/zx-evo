@@ -14,46 +14,104 @@
 extern VCTR vid;
 extern CACHE_ALIGNED u32 vbuf[2][sizeof_vbuf];
 
-unsigned pitch;
+extern u8 pause;
 
-void text_i(u8 *dst, const char *text, u8 ink, unsigned off = 0)
+static unsigned pitch;
+
+static const u32 out_pal[16] = 
+{
+	0x000000, 0x0000C0, 0xC00000, 0xC000C0, 0x00C000, 0x00C0C0, 0xC0C000, 0xC0C0C0,
+	0x000000, 0x0000FF, 0xFF0000, 0xFF00FF, 0x00FF00, 0x00FFFF, 0xFFFF00, 0xFFFFFF
+};
+
+#define DRAW_PIX(p,c) *(u32*)(p) = out_pal[(c)]
+
+static inline void draw_line( u32 *ptr, u8 ink, int len, int x = 0, int y = 0 )
+{
+	ptr += x + y * pitch;
+	ink &= 0xF;
+	while ( len -- )
+		*(ptr ++) = out_pal[ink];
+}
+
+static inline void draw_bitmap( u32 *ptr, u8 ink, u8 *bmp, int width = 8, int height = 1, int x = 0, int y = 0 )
+{
+	ptr += x + y * pitch;
+	
+	for ( int y = 0; y < height; y++)
+	{
+		u32 *line = ptr;
+		for ( int x = 0; x < width / 8; x ++ )
+		{
+			u8 byte = *(bmp ++);
+
+			for ( int b = 0; (b < 8) && ((x * 8 + b) < width) ; b ++ )
+			{
+				*(line ++) = (byte & (0x80 >> b)) ? out_pal[ink & 0xF] : out_pal[(ink >> 4) & 0xF];
+			}
+		}
+		ptr += pitch;
+	}
+}
+
+static inline void draw_bitmap_tr( u32 *ptr, u8 ink, u8 *bmp, int width = 8, int height = 1, int x = 0, int y = 0 )
+{
+	ptr += x * 2 + y * pitch;
+	ink &= 0xF;
+	
+	for ( int y = 0; y < height; y++)
+	{
+		u32 *line = ptr;
+		for ( int x = 0; x < width / 8; x ++ )
+		{
+			u8 byte = *(bmp ++);
+
+			for ( int b = 0; (b < 8) && ((x * 8 + b) < width) ; b ++ )
+			{
+				if ( byte & (0x80 >> b) )
+					*line = out_pal[ink];
+				line ++;
+			}
+		}
+		ptr += pitch;
+	}
+}
+
+void text_i(u32 *dst, const char *text, u8 ink, unsigned off = 0)
 {
    u8 mask = 0xF0; ink &= 0x0F;
    for (u8 *x = (u8*)text; *x; x++) {
-      u8 *d0 = dst;
+      u32 *d0 = dst + off;
       for (unsigned y = 0; y < 8; y++) {
          u8 byte = font[(*x)*8+y];
-         d0[0] = (byte >> off) + (d0[0] & ~(0xFC >> off));
-         d0[1] = (d0[1] & 0xF0) + ink;
-         if (off > 2) {
-            d0[2] = (byte << (8-off)) + (d0[2] & ~(0xFC << (8-off)));
-            d0[3] = (d0[3] & 0xF0) + ink;
-         }
+
+		 for (int b = 0; b < 6; b ++)
+		 {
+			 if ( byte & (0x80 >> b) )
+				d0[b] = out_pal[ink];
+		 }
+
          d0 += pitch;
       }
-      off += 6; if (off & 8) off -= 8, dst += 2;
+      dst += 6;
    }
 }
 
-static void text_16(u8 *dst, const char *text, u8 attr)
+static void text_16(u32 *dst, const char *text, u8 attr)
 {
-   for (; *text; text++, dst += 2)
+   /*for (; *text; text++, dst += 2)
       for (unsigned y = 0; y < 16; y++)
          dst[y*pitch] = font16[16 * *(u8*)text + y],
-         dst[y*pitch+1] = attr;
+         dst[y*pitch+1] = attr;*/
 }
 
-u8 *aypos;
+u32 *aypos;
 void paint_led(unsigned level, u8 at)
 {
-   if (level) {
-      if (level > 15) level = 15, at = 0x0E;
-      unsigned mask = (0xFFFF0000 >> level) & 0xFFFF;
-      aypos[0] = mask >> 8;
-      aypos[2] = (u8)mask;
-      aypos[1] = (aypos[1] & 0xF0) + at, aypos[3] = (aypos[3] & 0xF0) + at;
-   }
-   aypos += pitch;
+	u32 *ptr = aypos;
+	if (level > 15) level = 15, at = 0x0E;
+	draw_line( aypos, at, level );
+	aypos += pitch;
 }
 
 void ay_led()
@@ -176,7 +234,6 @@ void ay_led()
       paint_led(v, a);
       paint_led(0, 0);
    }
-
    #endif
 }
 
@@ -210,11 +267,7 @@ void load_led()
          0x7F, 0xFE, 0x80, 0x01, 0x80, 0x01, 0x93, 0xC9, 0xAA, 0x55, 0x93, 0xC9,
          0x80, 0x01, 0x8F, 0xF1, 0x80, 0x01, 0xB5, 0xA9, 0xFF, 0xFF };
       const int tapecolor = 0x51;
-      for (int i = 0; i < 11; i++)
-         temp.led.load[pitch*i+0] = tapeled[2*i],
-         temp.led.load[pitch*i+1] = tapecolor,
-         temp.led.load[pitch*i+2] = tapeled[2*i+1],
-         temp.led.load[pitch*i+3] = tapecolor;
+	  draw_bitmap( temp.led.load, tapecolor, tapeled, 16, 11 );
       int time = (int)(temp.led.tape_started + tapeinfo[comp.tape.index].t_size - comp.t_states);
       if (time < 0) {
          find_tape_index(); time = 0;
@@ -227,23 +280,20 @@ void load_led()
       }
       time /= (conf.frame * conf.intfq);
       sprintf(ln, "%X:%02d", time/60, time % 60);
-      text_i(temp.led.load + pitch*12 - 2, ln, 0x0D);
+      text_i(temp.led.load + pitch*12 - 8, ln, 0x0D);
    }
-   if (diskcolor | trdos_seek) {
-      if (diskcolor) {
-         unsigned *ptr = (unsigned*)temp.led.load;
-         int i; //Alone Coder 0.36.7
-         for (/*int*/ i = 0; i < 7; i++, ptr = (unsigned*)((char*)ptr+pitch))
-            *ptr = (*ptr & WORD4(0,0xF0,0,0xF0)) | WORD4(0x3F,diskcolor,0xFC,diskcolor);
-         static u8 disk[] = { 0x38, 0x1C, 0x3B, 0x9C, 0x3B, 0x9C, 0x3B, 0x9C, 0x38,0x1C };
-         for (i = 0; i < 5; i++, ptr = (unsigned*)((char*)ptr+pitch))
-            *ptr = (*ptr & WORD4(0,0xF0,0,0xF0)) | WORD4(disk[2*i],diskcolor,disk[2*i+1],diskcolor);
-      }
-      if (comp.wd.seldrive->track != 0xFF) {
-         sprintf(ln, "%02X", comp.wd.seldrive->track*2 + comp.wd.side);
-         text_i(temp.led.load + pitch - 4, ln, 0x05 + (diskcolor & 8));
-      }
-   }
+	if (diskcolor | trdos_seek) {
+		if (diskcolor) {
+			for (int i = 0; i < 7; i++)
+				draw_line( temp.led.load, diskcolor, 12, 2, i );
+			static u8 disk[] = { 0x38, 0x1C, 0x3B, 0x9C, 0x3B, 0x9C, 0x3B, 0x9C, 0x38,0x1C };
+			draw_bitmap_tr( temp.led.load, diskcolor, disk, 16, 5, 0, 7 );
+		}
+		if (comp.wd.seldrive->track != 0xFF) {
+			sprintf(ln, "%02X", comp.wd.seldrive->track*2 + comp.wd.side);
+			text_i(temp.led.load + pitch - 4 * 4, ln, 0x05 + (diskcolor & 8));
+		}
+	}
 }
 
 static unsigned p_frames = 1;
@@ -263,68 +313,57 @@ __inline void update_perf_led()
 
 void perf_led()
 {
-   char bf[0x20]; unsigned PSZ;
-   if (conf.led.perf_t)
-      sprintf(bf, "%6d*%2.2f", cpu.haltpos ? cpu.haltpos : cpu.t, p_fps), PSZ = 7;
-   else
-      sprintf(bf, "%2.2f fps", p_fps), PSZ = 5;
-   text_i(temp.led.perf, bf, 0x0E);
-   if (cpu.haltpos) {
-      u8 *ptr = temp.led.perf + pitch*8;
-      unsigned xx; //Alone Coder 0.36.7
-      for (/*unsigned*/ xx = 0; xx < PSZ; xx++) *(u16*)(ptr+xx*2) = 0x9A00;
-      unsigned mx = cpu.haltpos*PSZ*8/conf.frame;
-      for (xx = 1; xx < mx; xx++) ptr[(xx>>2)&0xFE] |= (0x80 >> (xx & 7));
-   }
+	char bf[0x20]; unsigned PSZ;
+	if (conf.led.perf_t)
+		sprintf(bf, "%6d*%2.2f", cpu.haltpos ? cpu.haltpos : cpu.t, p_fps), PSZ = 7;
+	else
+		sprintf(bf, "%2.2f fps", p_fps), PSZ = 5;
+	text_i(temp.led.perf, bf, 0x0E);
+	if (cpu.haltpos) {
+		draw_line( temp.led.perf, 0x9, PSZ*8, 0, 8 );
+		draw_line( temp.led.perf, 0xA, cpu.haltpos*PSZ*8/conf.frame, 1, 8 );
+	}
 }
 
 void input_led()
 {
    if (input.kbdled != 0xFF) {
-      u8 k0 = 0x99, k1 = 0x9F, k2 = 0x90;
-      if (input.keymode == K_INPUT::KM_PASTE_HOLD) k0 = 0xAA, k1 = 0xAF, k2 = 0xA0;
-      if (input.keymode == K_INPUT::KM_PASTE_RELEASE) k0 = 0x22, k1 = 0x2F, k2 = 0x20;
+      u8 k0 = 0x9, k1 = 0xF, k2 = 0x0;
+      if (input.keymode == K_INPUT::KM_PASTE_HOLD) k0 = 0xA;
+      if (input.keymode == K_INPUT::KM_PASTE_RELEASE) k0 = 0x2;
 
-      int i; //Alone Coder 0.36.7
-      for (/*int*/ i = 0; i < 5; i++)
-         temp.led.input[1+i*2*pitch] = temp.led.input[3+i*2*pitch] = k0;
-      for (i = 0; i < 4; i++)
-         temp.led.input[pitch*(2*i+1)] = 0x7F,
-         temp.led.input[pitch*(2*i+1)+2] = 0xFE;
-      temp.led.input[pitch*1+1] = (input.kbdled & 0x08)? k2 : k1;
-      temp.led.input[pitch*3+1] = (input.kbdled & 0x04)? k2 : k1;
-      temp.led.input[pitch*5+1] = (input.kbdled & 0x02)? k2 : k1;
-      temp.led.input[pitch*7+1] = (input.kbdled & 0x01)? k2 : k1;
-      temp.led.input[pitch*1+3] = (input.kbdled & 0x10)? k2 : k1;
-      temp.led.input[pitch*3+3] = (input.kbdled & 0x20)? k2 : k1;
-      temp.led.input[pitch*5+3] = (input.kbdled & 0x40)? k2 : k1;
-      temp.led.input[pitch*7+3] = (input.kbdled & 0x80)? k2 : k1;
+      for (int i = 0; i < 4*2+1; i++)
+	  {
+		  draw_line( temp.led.input, k0, 16, 0, i );
+	  }
+
+	  for (int i = 0; i < 4; i++)
+	  {
+		  draw_line( temp.led.input, (input.kbdled & (0x08 >> i))? k2 : k1, 7, 1, i * 2 + 1 );
+		  draw_line( temp.led.input, (input.kbdled & (0x10 << i))? k2 : k1, 7, 8, i * 2 + 1 );
+	  }
    }
    static u8 joy[] =   { 0x10, 0x38, 0x1C, 0x1C, 0x1C, 0x1C, 0x08, 0x00, 0x7E, 0xFF, 0x00, 0xE7 };
    static u8 mouse[] = { 0x0C, 0x12, 0x01, 0x79, 0xB5, 0xB5, 0xB5, 0xFC, 0xFC, 0xFC, 0xFC, 0x78 };
    if (input.mouse_joy_led & 2)
-      for (int i = 0; i < sizeof joy; i++)
-         temp.led.input[4 + pitch*i] = joy[i],
-         temp.led.input[4 + pitch*i+1] = (temp.led.input[4 + pitch*i+1] & 0xF0) + 0x0F;
+	   draw_bitmap_tr( temp.led.input, 0xF, joy, 8, sizeof(joy), 4 * 2 );
    if (input.mouse_joy_led & 1)
-      for (int i = 0; i < sizeof mouse; i++)
-         temp.led.input[6 + pitch*i] = mouse[i],
-         temp.led.input[6 + pitch*i+1] = (temp.led.input[6 + pitch*i+1] & 0xF0) + 0x0F;
+	   draw_bitmap_tr( temp.led.input, 0xF, mouse, 8, sizeof(mouse), 6 * 2 );
    input.mouse_joy_led = 0; input.kbdled = 0xFF;
 }
 
 #ifdef MOD_MONITOR
 void debug_led()
 {
-   u8 *ptr = temp.led.osw;
+   u32 *ptr = temp.led.osw;
    if (trace_rom | trace_ram) {
       set_banks();
       if (trace_rom) {
          const u8 off = 0x01, on = 0x0C;
-         text_i(ptr + 2,           "B48", used_banks[(base_sos_rom - memory) / PAGE] ? on : off);
-         text_i(ptr + 8,           "DOS", used_banks[(base_dos_rom - memory) / PAGE] ? on : off);
-         text_i(ptr + pitch*8 + 2, "128", used_banks[(base_128_rom - memory) / PAGE] ? on : off);
-         text_i(ptr + pitch*8 + 8, "SYS", used_banks[(base_sys_rom - memory) / PAGE] ? on : off);
+         text_i(ptr + 2*4,           "B48", used_banks[(base_sos_rom - memory) / PAGE] ? on : off);
+         text_i(ptr + 8*4,           "DOS", used_banks[(base_dos_rom - memory) / PAGE] ? on : off);
+         text_i(ptr + pitch*8 + 2*4, "128", used_banks[(base_128_rom - memory) / PAGE] ? on : off);
+         text_i(ptr + pitch*8 + 8*4, "SYS", used_banks[(base_sys_rom - memory) / PAGE] ? on : off);
          ptr += pitch*16;
       }
       if (trace_ram) {
@@ -350,54 +389,56 @@ void debug_led()
 #endif
 
 #ifdef MOD_MEMBAND_LED
-void show_mband(u8 *dst, unsigned start)
+void show_mband(u32 *dst, unsigned start)
 {
-   char xx[8]; sprintf(xx, "%02X", start >> 8);
-   text_i(dst, xx, 0x0B); dst += 4;
+	unsigned i;
+	char xx[8]; sprintf(xx, "%02X", start >> 8);
+	text_i(dst, xx, 0x0B); dst += 4*4;
 
-   Z80 &cpu = CpuMgr.Cpu();
-   u8 band[128];
-   unsigned i; //Alone Coder 0.36.7
-   for (/*unsigned*/ i = 0; i < 128; i++) {
-      u8 res = 0;
-      for (unsigned q = 0; q < conf.led.bandBpp; q++)
-         res |= cpu.membits[start++];
-      band[i] = res;
-   }
+	Z80 &cpu = CpuMgr.Cpu();
+	u8 band[128];
+	for (i = 0; i < 128; i++) {
+		u8 res = 0;
+		for (unsigned q = 0; q < conf.led.bandBpp; q++)
+			res |= cpu.membits[start++];
+		band[i] = res;
+	}
 
-   for (unsigned p = 0; p < 16; p++, dst+=2) {
-      u8 r=0, w=0, x=0;
-      for (unsigned b = 0; b < 8; b++) {
-         r *= 2, w *= 2, x *= 2;
-         if (band[p*8+b] & MEMBITS_R) r |= 1;
-         if (band[p*8+b] & MEMBITS_W) w |= 1;
-         if (band[p*8+b] & MEMBITS_X) x |= 1;
-      }
+	for ( i = 0; i < 8; i ++ )
+		DRAW_PIX(dst + pitch * i, 0xB);
+	dst ++;
 
-      u8 t = (p && !(p & 3))? 0x7F : 0xFF;
+	for ( unsigned p = 0; p < 16*8; p++, dst++ ) {
+		u8 r = 0x1, w = 0x1, x = 0x1;
+		u8 t = 0xB;
+		
+		if ( band[p] & MEMBITS_R ) r = 0xC;
+		if ( band[p] & MEMBITS_W ) w = 0xA;
+		if ( band[p] & MEMBITS_X ) x = 0xF;
 
-      dst[0*pitch] = t; dst[0*pitch+1] = 0x9B;
+		if ( p && !(p & 0x1F) ) t = 0x9;
 
-      dst[1*pitch] = r; dst[1*pitch+1] = 0x1C;
-      dst[2*pitch] = r; dst[2*pitch+1] = 0x1C;
-      dst[3*pitch] = w; dst[3*pitch+1] = 0x1A;
-      dst[4*pitch] = w; dst[4*pitch+1] = 0x1A;
-      dst[5*pitch] = x; dst[5*pitch+1] = 0x1F;
-      dst[6*pitch] = x; dst[6*pitch+1] = 0x1F;
+		DRAW_PIX(dst + pitch * 0, t);
+		DRAW_PIX(dst + pitch * 1, r);
+		DRAW_PIX(dst + pitch * 2, r);
+		DRAW_PIX(dst + pitch * 3, w);
+		DRAW_PIX(dst + pitch * 4, w);
+		DRAW_PIX(dst + pitch * 5, x);
+		DRAW_PIX(dst + pitch * 6, x);
+		DRAW_PIX(dst + pitch * 7, t);		 
+	}
 
-      dst[7*pitch] = t; dst[7*pitch+1] = 0x9B;
-   }
+	for ( i = 0; i < 8; i ++ )
+		DRAW_PIX(dst + pitch * i, 0xB);
+	dst ++;
 
-   sprintf(xx, "%02X", (start-1) >> 8);
-   text_i(dst, xx, 0x0B, 2);
-
-   for (i = 0; i < 8; i++)
-      dst[i*pitch] |= 0x80, dst[i*pitch - 17*2] |= 0x01;
+	sprintf(xx, "%02X", (start-1) >> 8);
+	text_i(dst, xx, 0x0B, 2);
 }
 
 void memband_led()
 {
-   u8 *dst = temp.led.memband;
+   u32 *dst = temp.led.memband;
    for (unsigned start = 0x0000; start < 0x10000;) {
       show_mband(dst, start);
       start += conf.led.bandBpp * 128;
@@ -451,6 +492,7 @@ void ay_kbd()
 
 void key_led()
 {
+#if 0
    #define key_x 1
    #define key_y 1
    int i; //Alone Coder 0.36.7
@@ -466,6 +508,7 @@ void key_led()
          text_16(rbuf+2*x+y*pitch*16,(char*)&a,at);
       }
    }
+#endif
 }
 
 void time_led()
@@ -544,31 +587,60 @@ void show_memcycles(void)
 	
 }
 
-// Вызывается раз в кадр
-void showleds()
+static void update_led_ptrs( u32 *dst )
 {
-   led_updtime = rdtsc();
-   update_perf_led();
+	for (int i = 0; i < NUM_LEDS; i++) {
+		unsigned z = *(&conf.led.ay + i);
+		int x = (signed short)(z & 0xFFFF);
+		int y = (signed short)(((z >> 16) & 0x7FFF) + ((z >> 15) & 0x8000));
+		if (x < 0) x += temp.ox;
+		if (y < 0) y += temp.oy;
+		*(&temp.led.ay+i) = (z & 0x80000000) ? dst + x + y*pitch : 0;
+	}
+}
 
-   if (temp.vidblock) return;
+// Вызывается раз в кадр
+void showleds( u32 *dst, unsigned bpitch )
+{
+	led_updtime = rdtsc();
+	update_perf_led();
 
-   pitch = temp.scx/4;
+	if (temp.vidblock) return;
 
-   if (statcnt) { statcnt--; text_i(rbuf + ((pitch/2-strlen(statusline)*6/8) & 0xFE) + (temp.scy-10)*pitch, statusline, 0x09); }
+	pitch = bpitch / 4;
 
-   if (!conf.led.enabled) return;
+	if (statcnt)
+	{
+		int x, y;
+		statcnt--;
+		x = (temp.ox - strlen(statusline)*6) / 2;
+		y = temp.oy-10; vbuf[vid.buf];
+		text_i(dst + x + y * pitch, statusline, 0x09);
+	}
 
-   if (temp.led.ay) ay_led();
-   if (temp.led.perf) perf_led();
-   if (temp.led.load) load_led();
-   if (temp.led.input) input_led();
-   if (temp.led.time) time_led();
+	if ( pause )
+	{
+		int x, y;
+		x = temp.ox - 8*4;
+		y = 0;
+		text_i(dst + x + y * pitch, "pause", 0x0F);
+	}
+
+	if (!conf.led.enabled) return;
+
+	update_led_ptrs( dst );
+
+	if (temp.led.ay) ay_led();
+	if (temp.led.perf) perf_led();
+	if (temp.led.load) load_led();
+	if (temp.led.input) input_led();
+	if (temp.led.time) time_led();
 #ifdef MOD_MONITOR
-   if (temp.led.osw) debug_led();
+	if (temp.led.osw) debug_led();
 #endif
 #ifdef MOD_MEMBAND_LED
-   if (temp.led.memband) memband_led();
+	if (temp.led.memband) memband_led();
 #endif
-   if (conf.led.flash_ay_kbd && hndKbdDev) ay_kbd();
-   if (input.keymode == K_INPUT::KM_KEYSTICK) key_led();
+	if (conf.led.flash_ay_kbd && hndKbdDev) ay_kbd();
+	if (input.keymode == K_INPUT::KM_KEYSTICK) key_led();
 }

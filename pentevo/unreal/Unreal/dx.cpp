@@ -11,6 +11,7 @@
 #include "sound.h"
 #include "savesnd.h"
 #include "emulkeys.h"
+#include "leds.h"
 #include "util.h"
 
 const int size_x[3] = { 256, 320, 448 };
@@ -94,6 +95,8 @@ static void FlipGdi()
         gdi_frame();
     }
     renders[conf.render].func(gdibuf, temp.ox*temp.obpp/8); // render to memory buffer
+	showleds((u32*)gdibuf, temp.ox*temp.obpp/8);
+
     // copy bitmap to gdi dc
     SetDIBitsToDevice(temp.gdidc, temp.gx, temp.gy, temp.ox, temp.oy, 0, 0, 0, temp.oy, gdibuf, &gdibmp.header, DIB_RGB_COLORS);
 }
@@ -120,6 +123,7 @@ restore_lost:;
    }
 
    renders[conf.render].func((u8 *)desc.lpSurface, desc.lPitch);
+   showleds((u32*)desc.lpSurface, desc.lPitch);
 
    surf1->Unlock(0);
 
@@ -171,6 +175,7 @@ static void FlipD3d()
     }
 
     renders[conf.render].func((u8 *)Rect.pBits, Rect.Pitch);
+	showleds((u32*)Rect.pBits, Rect.Pitch);
 
     SurfTexture->UnlockRect();
 

@@ -1052,10 +1052,12 @@ INT_PTR CALLBACK TapeDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
    if (nm->code == PSN_KILLACTIVE) {
       comp.tape.index = SendDlgItemMessage(dlg, IDC_TAPE, LB_GETCURSEL, 0, 0);
       c1.tape_autostart = getcheck(IDC_TAPE_AUTOSTART);
+	  c1.tape_traps = getcheck(IDC_TAPE_TRAPS);
    }
    if (nm->code == PSN_SETACTIVE) {
       SendDlgItemMessage(dlg, IDC_TAPE, LB_SETCURSEL, comp.tape.index, 0);
       setcheck(IDC_TAPE_AUTOSTART, c1.tape_autostart);
+	  setcheck(IDC_TAPE_TRAPS, c1.tape_traps);
       lastpage = "TAPE";
    }
    if (nm->code == PSN_APPLY) dlgok = 1;

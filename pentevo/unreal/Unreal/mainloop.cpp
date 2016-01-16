@@ -37,10 +37,14 @@ void spectrum_frame()
        modem.io();
 
 	flush_snd_frame();
+
+	if (videosaver_state)
+      savevideo_gfx();  // flush clean gfx to video saver
+
 	if (conf.bordersize == 5)
 		show_memcycles();
    //flush_frame();
-   // showleds();
+   //showleds();
 
    if (!cpu.iff1 || // int disabled in CPU
         ((conf.mem_model == MM_ATM710/* || conf.mem_model == MM_ATM3*/) && !(comp.pFF77 & 0x20))) // int disabled by ATM hardware -- lvd removed int disabling in pentevo (atm3)
@@ -104,8 +108,6 @@ void mainloop(const bool &Exit)
 
 		spectrum_frame();
 		//VideoSaver();
-    if (videosaver_state)
-      savevideo_gfx();  // flush gfx to video saver
 
 		if (skipped < temp.frameskip)
 		{

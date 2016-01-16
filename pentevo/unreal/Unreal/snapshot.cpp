@@ -184,6 +184,7 @@ int readSPG()
 	if ((type != 0) && (type != 1) && (type != 2) && (type != 0x10))
 		return 0;
 
+	reset(RM_NOCHANGE);
 	load_spec_colors();
 	reset_sound();
 

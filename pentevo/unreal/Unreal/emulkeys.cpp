@@ -17,13 +17,16 @@
 #include "init.h"
 #include "z80.h"
 #include "emulkeys.h"
+#include "draw.h"
 #include "util.h"
+
+extern VCTR vid;
+extern CACHE_ALIGNED u32 vbuf[2][sizeof_vbuf];
 
 void main_pause()
 {
-   text_i(rbuf+temp.scx/2-8,"pause",0x0F); flip();
-
    pause = 1;
+   flip();
    sound_stop();
    updatebitmap();
    active = 0;

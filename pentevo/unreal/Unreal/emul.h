@@ -357,14 +357,14 @@ struct TEMP
    unsigned shift_mask; // for 16/32 bit modes masks low bits of color components
 
    struct { // led coords
-      u8 *ay;
-      u8 *perf;
-      u8 *load;
-      u8 *input;
-      u8 *time;
-      u8 *osw;
-      u8 *memband;
-      u8 *fdd;
+      u32 *ay;
+      u32 *perf;
+      u32 *load;
+      u32 *input;
+      u32 *time;
+      u32 *osw;
+      u32 *memband;
+      u32 *fdd;
 
       __int64 tape_started;
    } led;

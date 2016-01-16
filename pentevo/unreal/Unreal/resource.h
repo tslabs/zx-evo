@@ -296,4 +296,5 @@
 #define IDC_WHEEL_KEYBOARD                      10254
 #define IDC_WHEEL_KEMPSTON                      10256
 #define IDC_RAM2048                             40000
+#define IDC_TAPE_TRAPS                          40000
 #define IDE_INTSTART                            40000
