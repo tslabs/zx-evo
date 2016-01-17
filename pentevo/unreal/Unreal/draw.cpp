@@ -187,11 +187,12 @@ void make_colortab(char flash_active)
       colortab_s8[a] = color << 8;
       colortab_s24[a] = color << 24;
    }
-
+#if 0
    if (conf.mem_model == MM_ATM710 || conf.mem_model == MM_ATM3 || conf.mem_model == MM_ATM450)
        atm_zc_tables(); // update with new flash bit
+#endif
 }
-
+#if 0
 // make attrtab: pc-attr + 0x100*pixel -> palette index
 void attr_tables()
 {
@@ -514,11 +515,11 @@ void video_color_tables()
    }
    setpal(0);
 }
-
+#endif
 void set_video()
 {
    set_vidmode();
-   video_color_tables();
+   //video_color_tables();
 }
 
 void apply_video()

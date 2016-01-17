@@ -539,7 +539,7 @@ static void StartD3d(HWND Wnd);
 static void DoneD3d(bool DeInitDll = true);
 static void SetVideoModeD3d();
 
-INT_PTR CALLBACK WndProc(HWND hwnd,UINT uMessage,WPARAM wparam,LPARAM lparam)
+static INT_PTR CALLBACK WndProc(HWND hwnd,UINT uMessage,WPARAM wparam,LPARAM lparam)
 {
    static bool moving = false;
 
@@ -646,14 +646,15 @@ INT_PTR CALLBACK WndProc(HWND hwnd,UINT uMessage,WPARAM wparam,LPARAM lparam)
          FillRect(temp.gdidc, &rc, br);
          DeleteObject(br);
       }
-      else if (hbm && !active)
+      else if (hbm /*&& !active*/)
       {
-//       printf("%s, WM_PAINT\n", __FUNCTION__);
-         HDC hcom = CreateCompatibleDC(temp.gdidc);
+	     //printf("%s, WM_PAINT\n", __FUNCTION__);
+         /*HDC hcom = CreateCompatibleDC(temp.gdidc);
          HGDIOBJ PrevObj = SelectObject(hcom, hbm);
          BitBlt(temp.gdidc, 0, 0, bm_dx, bm_dy, hcom, 0, 0, SRCCOPY);
          SelectObject(hcom, PrevObj);
-         DeleteDC(hcom);
+         DeleteDC(hcom);*/
+		 drivers[conf.driver].func();
       }
    }
 
@@ -1517,8 +1518,7 @@ void start_dx()
        printrdi("IDirectInputDevice::SetCooperativeLevel() (keyboard)", r);
        exit();
    }
-
-
+   
    if ((r = di->CreateDevice(GUID_SysMouse, &dimouse, 0)) == DI_OK)
    {
       if ((r = dimouse->SetDataFormat(&c_dfDIMouse)) != DI_OK)

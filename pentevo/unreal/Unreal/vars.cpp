@@ -249,6 +249,7 @@ u8 trdos_load, trdos_save, trdos_format, trdos_seek; // for leds
 u8 needclr; // clear screenbuffer before rendering
 
 HWND wnd; HINSTANCE hIn;
+HWND debug_wnd;
 
 char droppedFile[512];
 
@@ -298,48 +299,48 @@ u8 brk_mem_val;
 
 virtkeyt pckeys[] =
 {
-   { "ESC", DIK_ESCAPE },
-   { "F1", DIK_F1 }, { "F2", DIK_F2 }, { "F3", DIK_F3 },
-   { "F4", DIK_F4 }, { "F5", DIK_F5 }, { "F6", DIK_F6 },
-   { "F7", DIK_F7 }, { "F8", DIK_F8 }, { "F9", DIK_F9 },
-   { "F10", DIK_F10 }, { "F11", DIK_F11 }, { "F12", DIK_F12 },
-   { "PRSCR", DIK_SYSRQ }, { "SCLOCK", DIK_SCROLL }, { "PAUSE", DIK_PAUSE },
+   { "ESC", DIK_ESCAPE, VK_ESCAPE },
+   { "F1", DIK_F1, VK_F1 }, { "F2", DIK_F2, VK_F2 }, { "F3", DIK_F3, VK_F3 },
+   { "F4", DIK_F4, VK_F4 }, { "F5", DIK_F5, VK_F5 }, { "F6", DIK_F6, VK_F6 },
+   { "F7", DIK_F7, VK_F7 }, { "F8", DIK_F8, VK_F8 }, { "F9", DIK_F9, VK_F9 },
+   { "F10", DIK_F10, VK_F10 }, { "F11", DIK_F11, VK_F11 }, { "F12", DIK_F12, VK_F12 },
+   { "PRSCR", DIK_SYSRQ, VK_PRINT }, { "SCLOCK", DIK_SCROLL, VK_SCROLL }, { "PAUSE", DIK_PAUSE, VK_PAUSE },
 
-   { "1", DIK_1 }, { "2", DIK_2 }, { "3", DIK_3 }, { "4", DIK_4 }, { "5", DIK_5 },
-   { "6", DIK_6 }, { "7", DIK_7 }, { "8", DIK_8 }, { "9", DIK_9 }, { "0", DIK_0 },
+   { "1", DIK_1, '1' }, { "2", DIK_2, '2' }, { "3", DIK_3, '3' }, { "4", DIK_4, '4' }, { "5", DIK_5, '5' },
+   { "6", DIK_6, '6' }, { "7", DIK_7, '7' }, { "8", DIK_8, '8' }, { "9", DIK_9, '9' }, { "0", DIK_0, '0' },
 
-   { "Q", DIK_Q }, { "W", DIK_W }, { "E", DIK_E }, { "R", DIK_R }, { "T", DIK_T },
-   { "Y", DIK_Y }, { "U", DIK_U }, { "I", DIK_I }, { "O", DIK_O }, { "P", DIK_P },
-   { "A", DIK_A }, { "S", DIK_S }, { "D", DIK_D }, { "F", DIK_F }, { "G", DIK_G },
-   { "H", DIK_H }, { "J", DIK_J }, { "K", DIK_K }, { "L", DIK_L },
-   { "Z", DIK_Z }, { "X", DIK_X }, { "C", DIK_C }, { "V", DIK_V }, { "B", DIK_B },
-   { "N", DIK_N }, { "M", DIK_M },
+   { "Q", DIK_Q, 'Q' }, { "W", DIK_W, 'W' }, { "E", DIK_E, 'E' }, { "R", DIK_R, 'R' }, { "T", DIK_T, 'T' },
+   { "Y", DIK_Y, 'Y' }, { "U", DIK_U, 'U' }, { "I", DIK_I, 'I' }, { "O", DIK_O, 'O' }, { "P", DIK_P, 'P' },
+   { "A", DIK_A, 'A' }, { "S", DIK_S, 'S' }, { "D", DIK_D, 'D' }, { "F", DIK_F, 'F' }, { "G", DIK_G, 'G' },
+   { "H", DIK_H, 'H' }, { "J", DIK_J, 'J' }, { "K", DIK_K, 'K' }, { "L", DIK_L, 'L' },
+   { "Z", DIK_Z, 'Z' }, { "X", DIK_X, 'X' }, { "C", DIK_C, 'C' }, { "V", DIK_V, 'V' }, { "B", DIK_B, 'B' },
+   { "N", DIK_N, 'N' }, { "M", DIK_M, 'M' },
 
-   { "MINUS", DIK_MINUS }, { "PLUS", DIK_EQUALS }, { "BACK", DIK_BACK },
-   { "TAB", DIK_TAB }, { "LB", DIK_LBRACKET }, { "RB", DIK_RBRACKET },
-   { "CAPS", DIK_CAPITAL }, { "TIL", DIK_GRAVE }, { "SPACE", DIK_SPACE },
-   { "COL", DIK_SEMICOLON }, { "QUOTE", DIK_APOSTROPHE }, { "ENTER", DIK_RETURN },
-   { "COMMA", DIK_COMMA }, { "POINT", DIK_PERIOD }, { "SLASH", DIK_SLASH }, { "BACKSL", DIK_BACKSLASH },
-   { "SHIFT", DIK_SHIFT }, { "ALT", DIK_MENU }, { "CONTROL", DIK_CONTROL },
-   { "LSHIFT", DIK_LSHIFT }, { "LALT", DIK_LMENU }, { "LCONTROL", DIK_LCONTROL },
-   { "RSHIFT", DIK_RSHIFT }, { "RALT", DIK_RMENU }, { "RCONTROL", DIK_RCONTROL },
-   { "MENU", DIK_APPS },
+   { "MINUS", DIK_MINUS, VK_OEM_MINUS }, { "PLUS", DIK_EQUALS, VK_OEM_PLUS }, { "BACK", DIK_BACK, VK_BACK },
+   { "TAB", DIK_TAB, VK_TAB }, { "LB", DIK_LBRACKET, VK_OEM_4 }, { "RB", DIK_RBRACKET, VK_OEM_6 },
+   { "CAPS", DIK_CAPITAL, VK_CAPITAL }, { "TIL", DIK_GRAVE, VK_OEM_3 }, { "SPACE", DIK_SPACE, VK_SPACE },
+   { "COL", DIK_SEMICOLON, VK_OEM_1 }, { "QUOTE", DIK_APOSTROPHE, VK_OEM_7 }, { "ENTER", DIK_RETURN, VK_RETURN },
+   { "COMMA", DIK_COMMA, VK_OEM_COMMA }, { "POINT", DIK_PERIOD, VK_OEM_PERIOD }, { "SLASH", DIK_SLASH, VK_OEM_2 }, { "BACKSL", DIK_BACKSLASH, VK_OEM_5 },
+   { "SHIFT", DIK_SHIFT, VK_SHIFT }, { "ALT", DIK_MENU, VK_MENU }, { "CONTROL", DIK_CONTROL, VK_CONTROL },
+   { "LSHIFT", DIK_LSHIFT, VK_LSHIFT }, { "LALT", DIK_LMENU, VK_LMENU }, { "LCONTROL", DIK_LCONTROL, VK_LCONTROL },
+   { "RSHIFT", DIK_RSHIFT, VK_RSHIFT }, { "RALT", DIK_RMENU, VK_RMENU }, { "RCONTROL", DIK_RCONTROL, VK_RCONTROL },
+   { "MENU", DIK_APPS, VK_APPS },
 
-   { "INS", DIK_INSERT }, { "HOME", DIK_HOME }, { "PGUP", DIK_PRIOR },
-   { "DEL", DIK_DELETE }, { "END", DIK_END },   { "PGDN", DIK_NEXT },
+   { "INS", DIK_INSERT, VK_INSERT }, { "HOME", DIK_HOME, VK_HOME }, { "PGUP", DIK_PRIOR, VK_PRIOR },
+   { "DEL", DIK_DELETE, VK_DELETE }, { "END", DIK_END, VK_END },   { "PGDN", DIK_NEXT, VK_NEXT },
 
-   { "UP", DIK_UP }, { "DOWN", DIK_DOWN }, { "LEFT", DIK_LEFT }, { "RIGHT", DIK_RIGHT },
+   { "UP", DIK_UP, VK_UP }, { "DOWN", DIK_DOWN, VK_DOWN }, { "LEFT", DIK_LEFT, VK_LEFT }, { "RIGHT", DIK_RIGHT, VK_RIGHT },
 
-   { "NUMLOCK", DIK_NUMLOCK }, { "GRDIV", DIK_DIVIDE },
-   { "GRMUL", DIK_MULTIPLY }, { "GRSUB", DIK_SUBTRACT }, { "GRADD", DIK_ADD },
+   { "NUMLOCK", DIK_NUMLOCK, VK_NUMLOCK }, { "GRDIV", DIK_DIVIDE, VK_DIVIDE },
+   { "GRMUL", DIK_MULTIPLY, VK_MULTIPLY }, { "GRSUB", DIK_SUBTRACT, VK_SUBTRACT }, { "GRADD", DIK_ADD, VK_ADD },
    { "GRENTER", DIK_NUMPADENTER },
 
-   { "N0", DIK_NUMPAD0 }, { "N1", DIK_NUMPAD1 }, { "N2", DIK_NUMPAD2 },
-   { "N3", DIK_NUMPAD3 }, { "N4", DIK_NUMPAD4 }, { "N5", DIK_NUMPAD5 },
-   { "N6", DIK_NUMPAD6 }, { "N7", DIK_NUMPAD7 }, { "N8", DIK_NUMPAD8 },
-   { "N9", DIK_NUMPAD9 }, { "NP", DIK_DECIMAL },
+   { "N0", DIK_NUMPAD0, VK_NUMPAD0 }, { "N1", DIK_NUMPAD1, VK_NUMPAD1 }, { "N2", DIK_NUMPAD2, VK_NUMPAD2 },
+   { "N3", DIK_NUMPAD3, VK_NUMPAD3 }, { "N4", DIK_NUMPAD4, VK_NUMPAD4 }, { "N5", DIK_NUMPAD5, VK_NUMPAD5 },
+   { "N6", DIK_NUMPAD6, VK_NUMPAD6 }, { "N7", DIK_NUMPAD7, VK_NUMPAD7 }, { "N8", DIK_NUMPAD8, VK_NUMPAD8 },
+   { "N9", DIK_NUMPAD9, VK_NUMPAD9 }, { "NP", DIK_DECIMAL, VK_DECIMAL },
 
-   { "LMB", VK_LMB }, { "RMB", VK_RMB }, { "MMB", VK_MMB },
+   { "LMB", VK_LMB, VK_LBUTTON }, { "RMB", VK_RMB, VK_RBUTTON }, { "MMB", VK_MMB, VK_MBUTTON },
    { "MWU", VK_MWU }, { "MWD", VK_MWD },
 
    { "JLEFT", VK_JLEFT }, { "JRIGHT", VK_JRIGHT },
@@ -628,6 +629,7 @@ const size_t zxk_maps_count = _countof(zxk_maps);
 PALETTEENTRY syspalette[0x100];
 
 GDIBMP gdibmp = { { { sizeof(BITMAPINFOHEADER), 320, -240, 1, 32, BI_RGB, 0 } } };
+GDIBMP debug_gdibmp = { { { sizeof(BITMAPINFOHEADER), 640, -480, 1, 8, BI_RGB, 0 } } };
 
 PALETTE_OPTIONS pals[32] = {{"default",0x00,0x80,0xC0,0xE0,0xFF,0xC8,0xFF,0x00,0x00,0x00,0xFF,0x00,0x00,0x00,0xFF}};
 
@@ -635,6 +637,7 @@ PALETTE_OPTIONS pals[32] = {{"default",0x00,0x80,0xC0,0xE0,0xFF,0xC8,0xFF,0x00,0
 
 u8 snbuf[SNDBUFSZ];
 u8 gdibuf[GDIBUFSZ];
+u8 debug_gdibuf[DBG_GDIBUFSZ];
 
 // on-screen watches block
 unsigned watch_script[4][64];

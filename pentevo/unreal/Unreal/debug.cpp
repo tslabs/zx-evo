@@ -11,6 +11,7 @@
 #include "dbgoth.h"
 #include "dbglabls.h"
 #include "dbgbpx.h"
+#include "dbgcmd.h"
 #include "util.h"
 
 #ifdef MOD_MONITOR
@@ -155,7 +156,8 @@ void debug(Z80 *cpu)
    temp.rflags = RF_MONITOR;
    needclr = 1;
    dbgbreak = 1;
-   set_video();
+   //set_video();
+   ShowWindow( debug_wnd, SW_SHOW );
 
    CpuMgr.SetCurrentCpu(cpu->GetIdx());
    TZ80State *prevcpu = &CpuMgr.PrevCpu(cpu->GetIdx());
@@ -194,6 +196,8 @@ sleep:
              needclr--;
              goto repaint_dbg;
          }
+		 if (!dbgbreak)
+			 goto leave_dbg;	/* ugh... too much gotos... */
          Sleep(20);
       }
       if (activedbg == WNDREGS && dispatch_more(ac_regs) > 0)
@@ -228,12 +232,14 @@ sleep:
       goto sleep;
    }
 
+leave_dbg:
    *prevcpu = *cpu;
 //   CpuMgr.CopyToPrev();
    cpu->SetLastT();
    temp.scale = temp.mon_scale;
    temp.rflags = RF_GDI;
-   apply_video();
+   //apply_video();
+   ShowWindow( debug_wnd, SW_HIDE );
    sound_play();
 }
 
@@ -315,4 +321,66 @@ u8 isbrk(const Z80 &cpu) // is there breakpoints active or any other reason to u
    #endif
 
 #endif
+}
+
+
+/* ===================== */
+
+static LRESULT APIENTRY DebugWndProc(HWND hwnd,UINT uMessage,WPARAM wparam,LPARAM lparam)
+{
+	PAINTSTRUCT ps; 
+    HDC hdc;
+
+	if (uMessage == WM_CLOSE)
+	{
+		mon_emul();
+		return 0;
+	}
+
+	if (uMessage == WM_PAINT)
+	{
+		u8 * const bptr = debug_gdibuf;
+		hdc = BeginPaint(hwnd, &ps); 
+		SetDIBitsToDevice(hdc, 0, 0, 640, 480, 0, 0, 0, 480, bptr, &debug_gdibmp.header, DIB_RGB_COLORS);
+		EndPaint(hwnd, &ps);
+		return 0L;
+	}
+
+	return DefWindowProc(hwnd, uMessage, wparam, lparam);
+}
+
+void init_debug()
+{
+	WNDCLASS  wc = { 0 };
+	RECT ClRect;
+	DWORD dwStyle = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
+
+	wc.lpfnWndProc = (WNDPROC)DebugWndProc;
+	wc.hInstance = hIn;
+	wc.lpszClassName = "DEBUG_WND";
+	wc.hIcon = NULL;
+	wc.hCursor = LoadCursor(0, IDC_ARROW);
+	RegisterClass(&wc);
+
+	debug_wnd = CreateWindow("DEBUG_WND", "UnrealSpeccy debugger", dwStyle,
+                    CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, 0, 0, hIn, NULL);
+    
+	ClRect.left = 0;
+	ClRect.top = 0;
+	ClRect.right = 640 - 1;
+	ClRect.bottom = 480 - 1;
+	AdjustWindowRect( &ClRect, dwStyle, FALSE );
+	SetWindowPos( debug_wnd, NULL, 0, 0, ClRect.right - ClRect.left + 1, ClRect.bottom - ClRect.top + 1, SWP_NOMOVE );
+
+	for (unsigned i = 0; i < 0x100; i++)
+	{
+		unsigned y = (i & 8) ? 0xFF : 0xC0;
+		unsigned r = (i & 2) ? y : 0;
+		unsigned g = (i & 4) ? y : 0;
+		unsigned b = (i & 1) ? y : 0;
+
+		debug_gdibmp.header.bmiColors[i].rgbRed   = r;
+		debug_gdibmp.header.bmiColors[i].rgbGreen = g;
+		debug_gdibmp.header.bmiColors[i].rgbBlue  = b;
+	}
 }

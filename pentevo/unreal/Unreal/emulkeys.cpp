@@ -104,7 +104,7 @@ void chfix(int dx)
          if (conf.pal == conf.num_pals) conf.pal = 0;
          if (conf.pal == -1) conf.pal = conf.num_pals-1;
          sprintf(statusline, "Palette: %s", pals[conf.pal].name);
-         video_color_tables();
+         //video_color_tables();
          return;
    }
    apply_sound();

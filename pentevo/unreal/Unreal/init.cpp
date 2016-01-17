@@ -18,6 +18,7 @@
 #include "dbglabls.h"
 #include "util.h"
 #include "getopt.h"
+#include "debug.h"
 
 void cpu_info()
 {
@@ -97,6 +98,7 @@ void init_all(int argc, char **argv)
    init_tape();
    init_hdd_cd();
    start_dx();
+   init_debug();
    applyconfig();
    main_reset();
    autoload();

@@ -8,6 +8,7 @@
 
 #define SNDBUFSZ (4*1048576) // large temporary buffer (for reading snapshots)
 #define GDIBUFSZ (448*320*4*4*4)	// Quad size, 32 bit, 448x320 max
+#define DBG_GDIBUFSZ (640*480)	// Quad size, 32 bit, 448x320 max
 
 #pragma pack(8)
 struct PALETTE_OPTIONS
@@ -133,6 +134,7 @@ extern DWORD WinVerMinor;
 extern HWND wnd;
 extern HWND dlg;
 extern HINSTANCE hIn;
+extern HWND debug_wnd;
 extern unsigned nowait;
 
 extern action ac_main[];
@@ -183,6 +185,7 @@ extern TMainZ80 cpu;
 extern u8 dbgbreak;
 extern u8 snbuf[SNDBUFSZ];		// large temporary buffer (for reading snapshots)
 extern u8 gdibuf[GDIBUFSZ];
+extern u8 debug_gdibuf[DBG_GDIBUFSZ];
 
 extern SNDCHIP ay[2];
 
@@ -194,7 +197,7 @@ extern u8 bankm[4];		// bank mode: 0 - ROM / 1 - RAM
 extern GSHLE gs;
 #endif
 
-extern GDIBMP gdibmp;
+extern GDIBMP gdibmp, debug_gdibmp;
 extern u8 needclr; // clear screenbuffer before rendering
 extern DWORD mousepos;  // left-clicked point in monitor
 extern PALETTEENTRY syspalette[0x100];

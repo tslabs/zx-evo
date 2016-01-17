@@ -578,7 +578,7 @@ struct SNDVAL {
 
 struct virtkeyt {
    const char *name;
-   u16 virtkey;
+   u16 di_key, virtkey;
 };
 
 struct keyports
