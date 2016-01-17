@@ -198,6 +198,7 @@ extern AtmVideoController AtmVideoCtrl;
 static const int rb2_offs = MAX_HEIGHT*MAX_WIDTH_P;
 static const int sizeof_rbuf = rb2_offs*(MAX_BUFFERS+2);
 static const int sizeof_vbuf = VID_HEIGHT*VID_WIDTH*2;
+/* not really needed anymore */
 #ifdef CACHE_ALIGNED
 extern CACHE_ALIGNED u8 rbuf[sizeof_rbuf];
 #else // __declspec(align) not available, force u64 align with old method

@@ -243,7 +243,13 @@ char dispatch(action *table)
        loadsnap(droppedFile);
        *droppedFile = 0;
    }
-   if (!input.readdevices())
+   if ( dbgbreak )
+   {
+	   input.lastkey = process_msgs();
+	   if ( !input.lastkey )
+		   return 0;
+   }
+   else if (!input.readdevices())
        return 0;
 
    dispatch_more(table);

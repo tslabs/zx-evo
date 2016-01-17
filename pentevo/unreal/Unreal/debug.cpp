@@ -156,6 +156,7 @@ void debug(Z80 *cpu)
    temp.rflags = RF_MONITOR;
    needclr = 1;
    dbgbreak = 1;
+   flip();
    //set_video();
    ShowWindow( debug_wnd, SW_SHOW );
 
@@ -241,6 +242,7 @@ leave_dbg:
    //apply_video();
    ShowWindow( debug_wnd, SW_HIDE );
    sound_play();
+   input.nokb = 20;
 }
 
 void debug_cond_check(Z80 *cpu)
