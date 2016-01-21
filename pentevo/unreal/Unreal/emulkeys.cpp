@@ -413,7 +413,7 @@ void wnd_resize(int scale)
    ShowWindow(wnd, SW_RESTORE);
    DWORD style = GetWindowLong(wnd, GWL_STYLE);
    RECT rc = { 0, 0, temp.ox * scale, temp.oy * scale };
-   AdjustWindowRect(&rc, style, 0);
+   AdjustWindowRect(&rc, style, bool(GetMenu(wnd)));
    SetWindowPos(wnd, 0, 0, 0, rc.right - rc.left, rc.bottom - rc.top, SWP_NOCOPYBITS | SWP_NOMOVE | SWP_NOOWNERZORDER | SWP_NOZORDER);
    if (temp.rflags & RF_2X)
        scale *= 2;

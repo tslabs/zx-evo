@@ -13,6 +13,10 @@
 #include "emulkeys.h"
 #include "leds.h"
 #include "util.h"
+// for menu
+#include "snapshot.h"
+#include "funcs.h"
+#include "tape.h"
 
 const int size_x[3] = { 256, 320, 448 };
 const int size_y[3] = { 192, 240, 320 };
@@ -49,6 +53,8 @@ LPDIRECTDRAWCLIPPER clip;
 
 static HANDLE EventBufStop = 0;
 unsigned dsoffset, dsbuffer = DSBUFFER;
+
+static HMENU main_menu;
 
 /* ---------------------- renders ------------------------- */
 
@@ -687,6 +693,121 @@ static INT_PTR CALLBACK WndProc(HWND hwnd,UINT uMessage,WPARAM wparam,LPARAM lpa
       return 0;
    }
 
+	if (uMessage == WM_COMMAND)
+	{
+		int disk;
+		switch(wparam){
+			// File menu
+			case ID_EXIT: correct_exit();
+
+			case ID_LOAD: opensnap(); break;
+	
+			case ID_SAVE: savesnap(); break;
+			case ID_SAVE_DISKB: disk=1; goto save_disk;
+			case ID_SAVE_DISKC: disk=2; goto save_disk;
+			case ID_SAVE_DISKD: disk=3; goto save_disk;
+save_disk:
+				sound_stop();
+				savesnap(disk);
+				eat();
+				sound_play();
+				break;
+
+			case ID_QUICKLOAD_1: qload1(); break;
+			case ID_QUICKLOAD_2: qload2(); break;
+			case ID_QUICKLOAD_3: qload3(); break;
+			case ID_QUICKSAVE_1: qsave1(); break;
+			case ID_QUICKSAVE_2: qsave2(); break;
+			case ID_QUICKSAVE_3: qsave3(); break;
+
+			case ID_RESET: main_reset(); break;
+			case ID_RESET_128: main_reset128(); break;
+			case ID_RESET_48: main_resetbas(); break;
+			case ID_RESET_DOS: main_resetdos(); break;
+			case ID_RESET_SERVICE: main_resetsys(); break;
+			case ID_RESET_CACHE: main_resetcache(); break;
+			case ID_RESET_GS: reset_gs(); break;
+
+			case ID_NMI: main_nmi(); break;
+			case ID_NMI_DOS: main_nmidos(); break;
+			case ID_NMI_CACHE: main_nmicache(); break;
+
+			case ID_AUDIOREC: savesnddialog(); break;
+			case ID_MAKESCREENSHOT: main_scrshot(); break;
+
+			// Options menu
+			case ID_SETTINGS: setup_dlg(); break;
+			case ID_VIDEOFILTER: main_selectfilter(); break;
+			case ID_FULLSCREEN: main_fullscr(); break;
+
+			// Options speed
+			case ID_MAXIMUMSPEED: main_maxspeed(); break;
+
+			case ID_TAPE_CONTROL: main_starttape(); break;
+			case ID_USETAPETRAPS: conf.tape_traps^=1; break;
+			case ID_AUTOSTARTTAPE: conf.tape_autostart^=1; break;
+
+			// Debugger
+			case IDM_DEBUGGER: main_debug(); break;
+			/*case ID_DEBUGGER_BREAKPOINTS: mon_bpdialog(); break;
+			case ID_DEBUGGER_POKES: main_poke(); break;
+		
+			case ID_DEBUGGER_STEP: mon_step(); break;
+			case ID_DEBUGGER_STEPOVER: mon_stepover(); break;
+
+			case ID_MON_WATCHES: show_scrshot=0; break;
+			case ID_MON_SCREENSHOT: show_scrshot=1; break;
+			case ID_MON_SCREENDUMP: show_scrshot=2; break;	*/
+
+			// Help
+			case ID_HELP_SHORTKEYS: main_help(); break;
+			//case ID_ABOUT: DialogBox(hIn, MAKEINTRESOURCE(IDD_ABOUT), wnd, aboutdlg); break;
+		}
+		//needclr=1;
+	}
+	if (uMessage == WM_INITMENU)
+	{
+		if( wparam==(WPARAM)main_menu)
+		{
+			sound_stop();
+			ModifyMenu(main_menu,ID_SAVE_DISKB,
+				(comp.wd.fdd[1].rawdata?MF_ENABLED:MF_GRAYED|MF_DISABLED),ID_SAVE_DISKB,"Disk B");
+			ModifyMenu(main_menu,ID_SAVE_DISKC,
+				(comp.wd.fdd[2].rawdata?MF_ENABLED:MF_GRAYED|MF_DISABLED),ID_SAVE_DISKC,"Disk C");
+			ModifyMenu(main_menu,ID_SAVE_DISKD,
+				(comp.wd.fdd[3].rawdata?MF_ENABLED:MF_GRAYED|MF_DISABLED),ID_SAVE_DISKD,"Disk D");
+
+			ModifyMenu(main_menu,ID_AUDIOREC,MF_BYCOMMAND,ID_AUDIOREC,savesndtype?"Stop audio recording":"Start audio recording");
+		  
+			ModifyMenu(main_menu,ID_MAXIMUMSPEED,
+				(conf.sound.enabled?MF_UNCHECKED:MF_CHECKED),ID_MAXIMUMSPEED,"Maximum speed");
+
+			ModifyMenu(main_menu,ID_TAPE_CONTROL,
+				(tape_infosize?MF_ENABLED:MF_GRAYED|MF_DISABLED),ID_TAPE_CONTROL,comp.tape.play_pointer?"Stop tape":"Start tape");
+			ModifyMenu(main_menu,ID_USETAPETRAPS,
+				(conf.tape_traps?MF_CHECKED:MF_UNCHECKED),ID_USETAPETRAPS,"Use tape traps");
+			ModifyMenu(main_menu,ID_AUTOSTARTTAPE,
+				(conf.tape_autostart?MF_CHECKED:MF_UNCHECKED),ID_AUTOSTARTTAPE,"Autostart tape");
+
+			ModifyMenu(main_menu,ID_DEBUGGER,MF_BYCOMMAND,ID_DEBUGGER,dbgbreak?"Leave debugger":"Enter debugger");
+			ModifyMenu(main_menu,ID_DEBUGGER_BREAKPOINTS,
+				(dbgbreak?MF_ENABLED:MF_GRAYED|MF_DISABLED),ID_DEBUGGER_BREAKPOINTS,"Breakpoints manager");
+			ModifyMenu(main_menu,ID_DEBUGGER_POKES,
+				(dbgbreak?MF_ENABLED:MF_GRAYED|MF_DISABLED),ID_DEBUGGER_POKES,"Enter pokes");
+			ModifyMenu(main_menu,ID_DEBUGGER_STEP,
+				(dbgbreak?MF_ENABLED:MF_GRAYED|MF_DISABLED),ID_DEBUGGER_STEP,"Step");
+			ModifyMenu(main_menu,ID_DEBUGGER_STEPOVER,
+				(dbgbreak?MF_ENABLED:MF_GRAYED|MF_DISABLED),ID_DEBUGGER_STEPOVER,"Step over");
+
+			/*ModifyMenu(main_menu,ID_MON_WATCHES,
+				(show_scrshot==0?MF_CHECKED:MF_UNCHECKED),ID_MON_WATCHES,"Watches");
+			ModifyMenu(main_menu,ID_MON_SCREENSHOT,
+				(show_scrshot==1?MF_CHECKED:MF_UNCHECKED),ID_MON_SCREENSHOT,"Screen memory");
+			ModifyMenu(main_menu,ID_MON_SCREENDUMP,
+				(show_scrshot==2?MF_CHECKED:MF_UNCHECKED),ID_MON_SCREENDUMP,"Ray-painted");*/
+		}
+	}
+
    return DefWindowProc(hwnd, uMessage, wparam, lparam);
 }
 
@@ -956,6 +1077,7 @@ void set_vidmode()
    else
    {
       // restore window position to last saved position in non-fullscreen mode
+	   SetMenu(wnd,main_menu);
       ShowWindow(wnd, SW_SHOWNORMAL);
       if (temp.rflags & RF_GDI)
       {
@@ -1353,6 +1475,7 @@ void start_dx()
    wnd = CreateWindow("EMUL_WND", "UnrealSpeccy", WS_VISIBLE|WS_OVERLAPPEDWINDOW,
                     winx, winy, 0, 0, 0, 0, hIn, NULL);
 //                    winx, winy, cx, cy, 0, 0, hIn, NULL);
+   main_menu = LoadMenu(hIn, MAKEINTRESOURCE(IDR_MAINMENU));
 
    DragAcceptFiles(wnd, 1);
 
@@ -1604,3 +1727,4 @@ void done_dx()
    DoneD3d();
    if (wnd) DestroyWindow(wnd);
 }
+

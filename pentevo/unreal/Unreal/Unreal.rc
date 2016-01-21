@@ -11,6 +11,89 @@
 
 
 //
+// Menu resources
+//
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+IDR_MAINMENU MENU
+{
+    POPUP "File"
+    {
+        MENUITEM "Load...", ID_LOAD
+        POPUP "Save"
+        {
+            MENUITEM "Snapshot/Disk A", ID_SAVE
+            MENUITEM "Disk B", ID_SAVE_DISKB
+            MENUITEM "Disk C", ID_SAVE_DISKC
+            MENUITEM "Disk D", ID_SAVE_DISKD
+        }
+        POPUP "Quick load"
+        {
+            MENUITEM "1", ID_QUICKLOAD_1
+            MENUITEM "2", ID_QUICKLOAD_2
+            MENUITEM "3", ID_QUICKLOAD_3
+        }
+        POPUP "Quick save"
+        {
+            MENUITEM "1", ID_QUICKSAVE_1
+            MENUITEM "2", ID_QUICKSAVE_2
+            MENUITEM "3", ID_QUICKSAVE_3
+        }
+        MENUITEM SEPARATOR
+        MENUITEM "Start audio recording", ID_AUDIOREC
+        MENUITEM "Make screenshot", ID_MAKESCREENSHOT
+        MENUITEM SEPARATOR
+        MENUITEM "Exit", ID_EXIT
+    }
+    POPUP "Emulation"
+    {
+        POPUP "Reset"
+        {
+            MENUITEM "Default", ID_RESET
+            MENUITEM SEPARATOR
+            MENUITEM "Basic 128", ID_RESET_128
+            MENUITEM "Basic 48", ID_RESET_48
+            MENUITEM "TR-DOS", ID_RESET_DOS
+            MENUITEM "Service", ID_RESET_SERVICE
+            MENUITEM "Cache", ID_RESET_CACHE
+            MENUITEM SEPARATOR
+            MENUITEM "GeneralSound", ID_RESET_GS
+        }
+        POPUP "NMI"
+        {
+            MENUITEM "Generate", ID_NMI
+            MENUITEM SEPARATOR
+            MENUITEM "TR-DOS", ID_NMI_DOS
+            MENUITEM "Cache", ID_NMI_CACHE
+        }
+        MENUITEM SEPARATOR
+        POPUP "Speed"
+        {
+            MENUITEM "Maximum speed", ID_MAXIMUMSPEED
+        }
+        MENUITEM SEPARATOR
+        POPUP "Tape"
+        {
+            MENUITEM "Start/stop tape", ID_TAPE_CONTROL
+            MENUITEM SEPARATOR
+            MENUITEM "Use tape traps", ID_USETAPETRAPS
+            MENUITEM "Autostart tape", ID_AUTOSTARTTAPE
+        }
+        MENUITEM SEPARATOR
+        MENUITEM "Video filter", ID_VIDEOFILTER
+        MENUITEM "Fullscreen", ID_FULLSCREEN
+        MENUITEM "Settings", ID_SETTINGS
+    }
+    MENUITEM "Debugger", IDM_DEBUGGER
+    POPUP "Help"
+    {
+        MENUITEM "Shortkeys", ID_HELP_SHORTKEYS
+        MENUITEM "About", 40057
+    }
+}
+
+
+
+//
 // Dialog resources
 //
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
