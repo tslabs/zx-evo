@@ -619,7 +619,7 @@ del_mem:
 
 void mon_bpdialog()
 {
-   DialogBox(hIn, MAKEINTRESOURCE(IDD_COND), wnd, conddlg);
+   DialogBox(hIn, MAKEINTRESOURCE(IDD_COND), debug_wnd, conddlg);
 }
 
 INT_PTR CALLBACK watchdlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)

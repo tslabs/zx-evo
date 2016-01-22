@@ -13,8 +13,13 @@
 #include "dbgbpx.h"
 #include "dbgcmd.h"
 #include "util.h"
+#include "resource.h"
+#include "emulkeys.h"
+#include "dbgrwdlg.h"
 
 #ifdef MOD_MONITOR
+
+static HMENU debug_menu;
 
 u8 trace_labels;
 
@@ -348,6 +353,28 @@ static LRESULT APIENTRY DebugWndProc(HWND hwnd,UINT uMessage,WPARAM wparam,LPARA
 		return 0L;
 	}
 
+	if (uMessage == WM_COMMAND)
+	{
+		switch(wparam){
+			case IDM_DEBUG_RUN: mon_emul(); break;
+
+			case IDM_DEBUG_STEP: mon_step(); break;
+			case IDM_DEBUG_STEPOVER: mon_stepover(); break;
+			case IDM_DEBUG_TILLRETURN: mon_exitsub(); break;
+			case IDM_DEBUG_RUNTOCURSOR: chere(); break;
+
+			case IDM_BREAKPOINT_TOGGLE: cbpx(); break;
+			case IDM_BREAKPOINT_MANAGER: mon_bpdialog(); break;
+
+			case IDM_MON_LOADBLOCK: mon_load(); break;
+			case IDM_MON_SAVEBLOCK: mon_save(); break;
+			case IDM_MON_FILLBLOCK: mon_fill(); break;
+
+			case IDM_MON_RIPPER: mon_tool(); break;
+		}
+		needclr = 1;
+	}
+
 	return DefWindowProc(hwnd, uMessage, wparam, lparam);
 }
 
@@ -360,18 +387,19 @@ void init_debug()
 	wc.lpfnWndProc = (WNDPROC)DebugWndProc;
 	wc.hInstance = hIn;
 	wc.lpszClassName = "DEBUG_WND";
-	wc.hIcon = NULL;
+	wc.hIcon = LoadIcon(hIn, MAKEINTRESOURCE(IDI_MAIN));
 	wc.hCursor = LoadCursor(0, IDC_ARROW);
 	RegisterClass(&wc);
 
+	debug_menu = LoadMenu(hIn, MAKEINTRESOURCE(IDR_DEBUGMENU));
 	debug_wnd = CreateWindow("DEBUG_WND", "UnrealSpeccy debugger", dwStyle,
-                    CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, 0, 0, hIn, NULL);
+                    CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, wnd, debug_menu, hIn, NULL);
     
 	ClRect.left = 0;
 	ClRect.top = 0;
 	ClRect.right = 640 - 1;
 	ClRect.bottom = 480 - 1;
-	AdjustWindowRect( &ClRect, dwStyle, FALSE );
+	AdjustWindowRect( &ClRect, dwStyle, GetMenu(debug_wnd) != 0 );
 	SetWindowPos( debug_wnd, NULL, 0, 0, ClRect.right - ClRect.left + 1, ClRect.bottom - ClRect.top + 1, SWP_NOMOVE );
 
 	for (unsigned i = 0; i < 0x100; i++)
