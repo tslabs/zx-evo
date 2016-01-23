@@ -15,7 +15,7 @@ void GSHLE::reportError(const char *err)
    printf("BASS library reports error in %s\n", err);
    color(CONSCLR_ERRCODE);
    printf("error code is 0x%04X\n", BASS::ErrorGetCode());
-   exit();
+   //exit();
 }
 
 void GSHLE::runBASS()
@@ -157,6 +157,7 @@ void GSHLE::cont_mod()
 
 void GSHLE::startfx(CHANNEL *ch, float pan)
 {
+	runBASS();
    initChannels();
 
    float vol = (ch->volume * conf.sound.gs_vol) / float(8000*64);
@@ -197,6 +198,7 @@ void GSHLE::flush_gs_frame()
 
 void GSHLE::debug_note(unsigned i)
 {
+	runBASS();
    GSHLE::CHANNEL ch = { 0 };
    ch.volume = 64; ch.ptr = 0;
    ch.start = sample[i].start;
