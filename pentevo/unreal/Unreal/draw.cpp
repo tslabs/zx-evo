@@ -15,7 +15,8 @@ const RASTER raster[R_MAX] = {
 	{ R_320_200, 76, 276, 54, 214, 214 },
 	{ R_320_240, 56, 296, 54, 214, 214 },
 	{ R_360_288, 32, 320, 44, 224, 0 },
-	{ R_384_304, 16, 320, 32, 224, 0 }
+	{ R_384_304, 16, 320, 32, 224, 0 },
+	{ R_512_240, 56, 296, 70, 198, 0 },
 };
 
 // Default color table: 0RRrrrGG gggBBbbb
@@ -579,22 +580,7 @@ void paint_scr(char alt) // alt=0/1 - main/alt screen, alt=2 - ray-painted
    }
 }
 
-DRAWER drawers[] = {
-	{ draw_border	},	// Border only
-	{ draw_nul		},	// Non-existing mode
-	{ draw_zx		},	// Sinclair
-	{ draw_pmc 		},	// Pentagon Multicolor
-	{ draw_p16 		},	// Pentagon 16c
-	{ draw_p384		},	// Pentagon 384x304
-	{ draw_phr		},	// Pentagon HiRes
-	{ draw_ts16		},	// TS 16c
-	{ draw_ts256	},	// TS 256c
-	{ draw_tstx		},	// TS Text
-	{ draw_atm16	},	// ATM 16c
-	{ draw_atmhr	},	// ATM HiRes
-	{ draw_atm2tx	},	// ATM Text
-	{ draw_atm3tx	}	// ATM Text Linear
-};
+extern DRAWER drawers[];
 
 u32 get_free_memcycles(int dram_t)
 {
@@ -769,6 +755,12 @@ void init_raster()
 		if ((comp.pEFF7 & m) == EFF7_512) { vid.mode = M_PHR; return; }
 		if ((comp.pEFF7 & m) == EFF7_384) { vid.raster = raster[R_384_304]; vid.mode = M_P384; return; }
 		vid.mode = M_NUL; return;
+	}
+
+	if (conf.mem_model == MM_PROFI && (comp.pDFFD & 0x80))
+	{
+		vid.raster = raster[R_512_240];
+		vid.mode = M_PROFI; return;
 	}
 
 	// Sinclair

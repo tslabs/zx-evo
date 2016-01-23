@@ -546,3 +546,55 @@ void draw_ts(u32 vptr)
       vbuf[vid.buf][vptr] = vbuf[vid.buf][vptr + 1] = vid.clut[vid.tsline[n][vid.ts_pos]];
   }
 }
+
+// Profi
+void draw_profi(int n)
+{
+	u32 g = ((vid.ygctr & 0x07) << 8) | ((vid.ygctr & 0x38) << 2) | ((vid.ygctr & 0xC0) << 5) | (vid.xctr & 0x1F);
+	u8 *scr = page_ram(comp.p7FFD & 8 ? 6 : 4);
+	u32 vptr = vid.vptr;
+	u16 vcyc = vid.memvidcyc[vid.line];
+    u8 tsgpal = comp.ts.gpal << 4;
+
+	for (; n > 0; n -= 4, vid.t_next += 4, vid.xctr++, g++)
+	{
+		u32 p0, p1;
+		u8 p, c = (comp.pFE & 7) | ((comp.pFE & 7 ^ 7) << 3);
+		
+		p = scr[g | 0x2000];
+		if ( !conf.profi_monochrome )
+			c = scr[g | 0x2000 | PAGE*0x34];
+		p0 = vid.clut[tsgpal | ((c & 0x80) >> 4) | ((c >> 3) & 0x07)];	// color for 'PAPER'
+		p1 = vid.clut[tsgpal | ((c & 0x40) >> 3) | (c & 0x07)];			// color for 'INK'
+		hires_draw
+
+		p = scr[g];
+		if ( !conf.profi_monochrome )
+			c = scr[g | PAGE*0x34];
+		p0 = vid.clut[tsgpal | ((c & 0x80) >> 4) | ((c >> 3) & 0x07)];	// color for 'PAPER'
+		p1 = vid.clut[tsgpal | ((c & 0x40) >> 3) | (c & 0x07)];			// color for 'INK'
+		hires_draw
+
+		vcyc += 2;
+	}
+	vid.vptr = vptr;
+	vid.memvidcyc[vid.line] = vcyc;
+}
+
+DRAWER drawers[] = {
+	{ draw_border	},	// Border only
+	{ draw_nul		},	// Non-existing mode
+	{ draw_zx		},	// Sinclair
+	{ draw_pmc 		},	// Pentagon Multicolor
+	{ draw_p16 		},	// Pentagon 16c
+	{ draw_p384		},	// Pentagon 384x304
+	{ draw_phr		},	// Pentagon HiRes
+	{ draw_ts16		},	// TS 16c
+	{ draw_ts256	},	// TS 256c
+	{ draw_tstx		},	// TS Text
+	{ draw_atm16	},	// ATM 16c
+	{ draw_atmhr	},	// ATM HiRes
+	{ draw_atm2tx	},	// ATM Text
+	{ draw_atm3tx	},	// ATM Text linear
+	{ draw_profi	},	// Profi
+};

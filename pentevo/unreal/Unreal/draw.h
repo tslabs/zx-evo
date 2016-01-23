@@ -27,7 +27,8 @@ enum VMODE
 	M_ATM16	,	// ATM 16c
 	M_ATMHR	,	// ATM HiRes
 	M_ATMTX	,	// ATM Text
-	M_ATMTL		// ATM Text Linear
+	M_ATMTL ,	// ATM Text Linear
+	M_PROFI ,	// Profi
 };
 
 enum RASTER_N
@@ -37,6 +38,7 @@ enum RASTER_N
 	R_320_240,		// TS
 	R_360_288,		// TS
 	R_384_304,		// AlCo
+	R_512_240,		// Profi
 	R_MAX
 };
 

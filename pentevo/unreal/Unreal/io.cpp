@@ -81,6 +81,7 @@ void out(unsigned port, u8 val)
    // ZXM-MoonSound
    if ( conf.sound.moonsound && 
 		!(comp.flags & CF_DOSPORTS) &&
+		(conf.mem_model == MM_PROFI ? !(comp.pDFFD & 0x80) : 1) &&
 	    (((p1 & 0xFC) == 0xC4) ||
 	     ((p1 & 0xFE) == 0x7E)) )
    {
@@ -525,8 +526,13 @@ void out(unsigned port, u8 val)
       {
         if (!(port & 0x80) && (comp.pDFFD & 0x80))
         {
-          comp.comp_pal[(~comp.pFE) & 0xF] = ~(port>>8);
-          temp.comp_pal_changed = 1;
+			int addr = (comp.pFE ^ 0xF) | 0xF0;
+			int val = ~(port>>8) & 0xFF;
+			comp.cram[addr] =
+				((val & 0x03) << 3) |	// b
+				((val & 0x1C) << 10) |	// r
+				((val & 0xE0) << 2);	// g
+			update_clut(addr);
         }
       }
 
@@ -830,6 +836,7 @@ __inline u8 in1(unsigned port)
    // ZXM-MoonSound
    if ( conf.sound.moonsound &&
 	    !(comp.flags & CF_DOSPORTS) &&
+		(conf.mem_model == MM_PROFI ? !(comp.pDFFD & 0x80) : 1) &&
 		(((p1 & 0xFC) == 0xC4) ||
 	     ((p1 & 0xFE) == 0x7E) ) )
    {
