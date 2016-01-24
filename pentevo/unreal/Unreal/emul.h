@@ -69,6 +69,7 @@ enum MEM_MODEL
    MM_PLUS3,
    MM_SCORP,
    MM_PROFSCORP,
+   MM_GMX,
    MM_KAY,
    MM_QUORUM,
    MM_LSY256,
@@ -288,6 +289,7 @@ struct CONFIG
    char atm3_rom_path[FILENAME_MAX];
    char scorp_rom_path[FILENAME_MAX];
    char prof_rom_path[FILENAME_MAX];
+   char gmx_rom_path[FILENAME_MAX];
    char profi_rom_path[FILENAME_MAX];
    char kay_rom_path[FILENAME_MAX];
    char plus3_rom_path[FILENAME_MAX];
@@ -472,12 +474,12 @@ struct COMPUTER
 {
    u8 p7FFD, pFE, pEFF7, pXXXX;
    u8 pDFFD, pFDFD, p1FFD, pFF77;
+   u8 p7EFD, p78FD, p7AFD, p7CFD, gmx_config, gmx_magic_shift; // gmx
+   u8 p00, p80FD; // quorum
    TSPORTS_t ts;
    u8 pLSY256;
    u16 cram[256];
    u16 sfile[256];
-   u8 p7EFD; // gmx
-   u8 p00, p80FD; // quorum
    __int64 t_states; // inc with conf.frame by each frame
    unsigned frame_counter; // inc each frame
    u8 aFE, aFB; // ATM 4.50 system ports

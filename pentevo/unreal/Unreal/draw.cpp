@@ -580,8 +580,6 @@ void paint_scr(char alt) // alt=0/1 - main/alt screen, alt=2 - ray-painted
    }
 }
 
-extern DRAWER drawers[];
-
 u32 get_free_memcycles(int dram_t)
 {
   if (vid.memcyc_lcmd >= dram_t)
@@ -761,6 +759,12 @@ void init_raster()
 	{
 		vid.raster = raster[R_512_240];
 		vid.mode = M_PROFI; return;
+	}
+
+	if (conf.mem_model == MM_GMX && (comp.p7EFD & 0x08))
+	{
+		vid.raster = raster[R_320_200];
+		vid.mode = M_GMX; return;
 	}
 
 	// Sinclair

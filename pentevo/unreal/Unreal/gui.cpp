@@ -90,6 +90,7 @@ char *MemDlg_get_bigrom()
    if (c1.mem_model == MM_PROFI) return c1.profi_rom_path;
    if (c1.mem_model == MM_SCORP) return c1.scorp_rom_path;
    if (c1.mem_model == MM_PROFSCORP) return c1.prof_rom_path;
+   if (c1.mem_model == MM_GMX) return c1.gmx_rom_path;
  //[vv] kay-1024 не имел стандартной раскладки ПЗУ (раскладка переключалась джампером J5)
    if (c1.mem_model == MM_KAY) return c1.kay_rom_path;
    if (c1.mem_model == MM_PLUS3) return c1.plus3_rom_path;
@@ -170,6 +171,8 @@ void change_rombank(int dx, int reload)
    if ((c1.mem_model == MM_ATM710 || c1.mem_model == MM_ATM3) && sz != 64 && sz != 128 && sz != 256 && sz != 512 && sz != 1024)
        goto err;
    if (c1.mem_model == MM_PROFSCORP && sz != 128 && sz != 256 && sz != 512 && sz != 1024)
+       goto err;
+   if (c1.mem_model == MM_GMX && sz != 512 && sz != 1024)
        goto err;
 
    if ((unsigned)(pg+dx) < sz/256)

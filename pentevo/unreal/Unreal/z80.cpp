@@ -94,7 +94,7 @@ void reset(ROM_MODE mode)
    } //Alone Coder 0.36.4
    comp.t_states = 0; comp.frame_counter = 0;
    comp.p7FFD = comp.pDFFD = comp.pFDFD = comp.p1FFD = 0;
-   comp.p7EFD = 0;
+   comp.p7EFD = comp.p78FD = comp.p7AFD = comp.p7CFD = comp.gmx_config = comp.gmx_magic_shift = 0;
    comp.pLSY256 = 0;
 
    comp.ulaplus_mode=0;

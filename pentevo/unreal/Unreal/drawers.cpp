@@ -100,7 +100,7 @@ extern u8 fontatm2[2048];
 	vptr += 8;
 
 // Sinclair
-void draw_zx(int n)
+static void draw_zx(int n)
 {
 	u32 g = ((vid.ygctr & 0x07) << 8) + ((vid.ygctr & 0x38) << 2) + ((vid.ygctr & 0xC0) << 5) + (vid.xctr & 0x1F);
 	u32 a = ((vid.ygctr & 0xF8) << 2) + (vid.xctr & 0x1F) + 0x1800;
@@ -143,7 +143,7 @@ void draw_zx(int n)
 }
 
 // Pentagon multicolor
-void draw_pmc(int n)
+static void draw_pmc(int n)
 {
 	u32 g = ((vid.ygctr & 0x07) << 8) + ((vid.ygctr & 0x38) << 2) + ((vid.ygctr & 0xC0) << 5) + (vid.xctr & 0x1F);
 	u8 *scr = page_ram(comp.ts.vpage);
@@ -165,7 +165,7 @@ void draw_pmc(int n)
 }
 
 // AlCo 384x304
-void draw_p384(int n)
+static void draw_p384(int n)
 {
 	u8 *scr = page_ram(comp.ts.vpage & 0xFE);
 	u32 g = ((vid.ygctr & 0x07) << 8) | ((vid.ygctr & 0x38) << 2);	// 'raw' values, page4, only 64 lines addressing, no column address
@@ -206,7 +206,7 @@ void draw_p384(int n)
 }
 
 // Sinclair double screen (debug)
-void draw_zxw(int n)
+static void draw_zxw(int n)
 {
 	u32 g = ((vid.ygctr & 0x07) << 8) + ((vid.ygctr & 0x38) << 2) + ((vid.ygctr & 0xC0) << 5) + (vid.xctr & 0x1F);
 	u32 a = ((vid.ygctr & 0xF8) << 2) + (vid.xctr & 0x1F) + 0x1800;
@@ -239,7 +239,7 @@ void draw_zxw(int n)
 }
 
 // Pentagon 16c
-void draw_p16(int n)
+static void draw_p16(int n)
 {
 	u32 g = ((vid.ygctr & 0x07) << 8) + ((vid.ygctr & 0x38) << 2) + ((vid.ygctr & 0xC0) << 5) + (vid.xctr & 0x1F);
 	u8 *scr = page_ram(comp.ts.vpage);
@@ -264,7 +264,7 @@ void draw_p16(int n)
 }
 
 // ATM 16c
-void draw_atm16(int n)
+static void draw_atm16(int n)
 {
 	u32 g = vid.ygctr * 40 + vid.xctr;
 	u8 *scr = page_ram(comp.ts.vpage);
@@ -289,7 +289,7 @@ void draw_atm16(int n)
 }
 
 // ATM HiRes
-void draw_atmhr(int n)
+static void draw_atmhr(int n)
 {
 	u32 g = vid.ygctr * 40 + vid.xctr;
 	u8 *scr = page_ram(comp.ts.vpage);
@@ -317,7 +317,7 @@ void draw_atmhr(int n)
 }
 
 // TS text
-void draw_tstx(int n)
+static void draw_tstx(int n)
 {
 	vid.xctr &= 0x7F;
 	u8 *scr = page_ram(comp.ts.vpage);			// video memory address
@@ -344,7 +344,7 @@ void draw_tstx(int n)
 }
 
 // ATM2 text
-void draw_atm2tx(int n)
+static void draw_atm2tx(int n)
 {
 	u8 *scrs = page_ram(comp.ts.vpage);		// video memory symbols address
 	u8 *scra = page_ram(comp.ts.vpage-4);	// video memory attrs address
@@ -373,7 +373,7 @@ void draw_atm2tx(int n)
 }
 
 // ATM3 text
-void draw_atm3tx(int n)
+static void draw_atm3tx(int n)
 {
 	u8 *scr = page_ram(comp.ts.vpage & 2 | 8);		// video memory address
 	u8 *fnt = fontatm2;						// font address
@@ -401,7 +401,7 @@ void draw_atm3tx(int n)
 }
 
 // Pentagon 512x192
-void draw_phr(int n)
+static void draw_phr(int n)
 {
 	u32 g = ((vid.ygctr & 0x07) << 8) + ((vid.ygctr & 0x38) << 2) + ((vid.ygctr & 0xC0) << 5) + (vid.xctr & 0x1F);
 	u8 *scr = page_ram(comp.ts.vpage);
@@ -423,7 +423,7 @@ void draw_phr(int n)
 }
 
 // TS 16c
-void draw_ts16(int n)
+static void draw_ts16(int n)
 {
 static int subt = 0;
 
@@ -481,7 +481,7 @@ static int subt = 0;
 }
 
 // TS 256c
-void draw_ts256(int n)
+static void draw_ts256(int n)
 {
 	u32 s = (vid.ygctr << 9);
 	u8 *scr = page_ram(comp.ts.vpage & 0xF0);
@@ -504,7 +504,7 @@ void draw_ts256(int n)
 }
 
 // Null
-void draw_nul(int n)
+static void draw_nul(int n)
 {
 	u32 vptr = vid.vptr;
 	RGB32 p;
@@ -548,7 +548,7 @@ void draw_ts(u32 vptr)
 }
 
 // Profi
-void draw_profi(int n)
+static void draw_profi(int n)
 {
 	u32 g = ((vid.ygctr & 0x07) << 8) | ((vid.ygctr & 0x38) << 2) | ((vid.ygctr & 0xC0) << 5) | (vid.xctr & 0x1F);
 	u8 *scr = page_ram(comp.p7FFD & 8 ? 6 : 4);
@@ -581,6 +581,39 @@ void draw_profi(int n)
 	vid.memvidcyc[vid.line] = vcyc;
 }
 
+// GMX
+static void draw_gmx(int n)
+{
+	int g = vid.xctr + vid.ygctr * 80 + (((comp.p7CFD << 8) + comp.p7AFD) & 0x3FFF);
+	u8 *scr = page_ram(comp.p7FFD & 8 ? 0x3B : 0x39);
+	u32 vptr = vid.vptr;
+	u16 vcyc = vid.memvidcyc[vid.line];
+    u8 tsgpal = comp.ts.gpal << 4;
+
+	for (; n > 0; n -= 2, vid.t_next += 2, vid.xctr++, g++)
+	{
+		u32 p0, p1;
+		u8 p, c;
+
+		/* loop screen */
+		if ( g >= 16000 )
+			g -= 16000;
+	
+		p = scr[g];
+		c = scr[g + PAGE*0x40];
+		if ((c & 0x80) && (comp.frame_counter & 0x10))
+			p ^= 0xFF; // flash
+		u32 b = (c & 0x40) >> 3;
+		p0 = vid.clut[tsgpal | b | ((c >> 3) & 0x07)];	// color for 'PAPER'
+		p1 = vid.clut[tsgpal | b | (c & 0x07)];			// color for 'INK'
+		hires_draw	
+
+		vcyc ++;
+	}
+	vid.vptr = vptr;
+	vid.memvidcyc[vid.line] = vcyc;
+}
+
 DRAWER drawers[] = {
 	{ draw_border	},	// Border only
 	{ draw_nul		},	// Non-existing mode
@@ -597,4 +630,5 @@ DRAWER drawers[] = {
 	{ draw_atm2tx	},	// ATM Text
 	{ draw_atm3tx	},	// ATM Text linear
 	{ draw_profi	},	// Profi
+	{ draw_gmx		},	// GMX
 };

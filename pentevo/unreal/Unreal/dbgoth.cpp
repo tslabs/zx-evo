@@ -157,9 +157,9 @@ void __cdecl BankNames(int i, char *Name)
         strcpy(Name, "TRDOS");
     if (bankr[i] == base_128_rom)
         strcpy(Name, "B128K");
-    if (bankr[i] == base_sys_rom && (conf.mem_model == MM_PROFSCORP || conf.mem_model == MM_SCORP))
+    if (bankr[i] == base_sys_rom && (conf.mem_model == MM_PROFSCORP || conf.mem_model == MM_SCORP || conf.mem_model == MM_GMX))
         strcpy(Name, "SVM  ");
-    if ((conf.mem_model == MM_PROFSCORP || conf.mem_model == MM_SCORP) && IsRom && rom_bank > 3)
+    if ((conf.mem_model == MM_PROFSCORP || conf.mem_model == MM_SCORP || conf.mem_model == MM_GMX) && IsRom && rom_bank > 3)
         sprintf(Name, "ROM%2X", rom_bank);
 
     if (bankr[i] == CACHE_M)
@@ -198,6 +198,7 @@ void showports()
       case MM_KAY:
       case MM_SCORP:
       case MM_PROFSCORP:
+	  case MM_GMX:
       case MM_PLUS3:
 	  case MM_PHOENIX:
          dbg_extport = 0x1FFD; dgb_extval = comp.p1FFD;

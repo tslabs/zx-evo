@@ -469,6 +469,57 @@ void out(unsigned port, u8 val)
        set_banks();
        return;
    }
+   
+	if ( conf.mem_model == MM_GMX )
+	{
+		if ((port & 0xFF) == 0x00)
+		{
+			comp.p00 = val;
+			if (comp.p00 & 8)
+			{
+				comp.gmx_magic_shift = 0x88 | (comp.p00 & 7);
+			
+				if (!(comp.p00 & 0x10))
+					cpu.reset();
+					//reset(RM_NOCHANGE);
+			}	
+			return;
+		}
+		
+		if ((p1 & 0x23) == (0xFD & 0x23))
+		{
+			switch ( p2 )
+			{
+				case 0x1F:
+					comp.p1FFD = val;
+					set_banks();
+					return;
+				case 0xDF:
+					comp.pDFFD = val;
+					set_banks();
+					return;
+				case 0x7E:
+					if (comp.p00 & 0x10)
+						comp.p7EFD = (val&0x8F) | (comp.p7EFD&0x70);
+					else
+						comp.p7EFD = val;
+					turbo(comp.p7EFD & 0x80 ? 2 : 1);
+					set_banks();
+					init_raster();
+					return;
+				case 0x78:
+					comp.p78FD = val;
+					set_banks();
+					return;
+				case 0x7A:
+					comp.p7AFD = val;
+					return;
+				case 0x7C:
+					comp.p7CFD = val;
+					return;
+			}
+		}
+	}
 
    #ifdef MOD_VID_VD
    if ((u8)port == 0xDF)
@@ -483,7 +534,7 @@ void out(unsigned port, u8 val)
    bool pFE;
 
    // scorp  xx1xxx10 /dos=1 (sc16 green)
-   if ((conf.mem_model == MM_SCORP || conf.mem_model == MM_PROFSCORP) && !(comp.flags & CF_DOSPORTS))
+   if ((conf.mem_model == MM_SCORP || conf.mem_model == MM_PROFSCORP || conf.mem_model == MM_GMX) && !(comp.flags & CF_DOSPORTS))
        pFE = ((port & 0x23) == (0xFE & 0x23));
    else if (conf.mem_model == MM_QUORUM) // 1xx11xx0
        pFE = ((port & 0x99) == (0xFE & 0x99));
@@ -527,7 +578,7 @@ void out(unsigned port, u8 val)
         if (!(port & 0x80) && (comp.pDFFD & 0x80))
         {
 			int addr = (comp.pFE ^ 0xF) | 0xF0;
-			int val = ~(port>>8) & 0xFF;
+			int val = ~p2;
 			comp.cram[addr] =
 				((val & 0x03) << 3) |	// b
 				((val & 0x1C) << 10) |	// r
@@ -563,22 +614,15 @@ void out(unsigned port, u8 val)
              goto set1FFD;
 
          // 00xxxxxxxx1xxx01 (sc16 green)
-         if ((port & 0xC023) == (0x1FFD & 0xC023) && ( (conf.mem_model == MM_SCORP) || (conf.mem_model == MM_PROFSCORP) ))
+         if ( (port & 0xC023) == (0x1FFD & 0xC023) &&
+			 ((conf.mem_model == MM_SCORP) || (conf.mem_model == MM_PROFSCORP)) )
          {
 set1FFD:
             comp.p1FFD = val;
             set_banks();
             return;
          }
-
-         // gmx
-         if (port == 0x7EFD && conf.mem_model == MM_PROFSCORP)
-         {
-            comp.p7EFD = val;
-            set_banks();
-            return;
-         }
-
+		 
          if (conf.mem_model == MM_ATM450 && (port & 0x8202) == (0x7DFD & 0x8202))
          {
              atm_writepal(val);
@@ -588,7 +632,8 @@ set1FFD:
          // if (conf.mem_model == MM_ATM710 && (port & 0x8202) != (0x7FFD & 0x8202)) return; // strict 7FFD decoding on ATM-2
 
          // 01xxxxxxxx1xxx01 (sc16 green)
-         if ((port & 0xC023) != (0x7FFD & 0xC023) && (conf.mem_model == MM_SCORP || conf.mem_model == MM_PROFSCORP))
+         if ((port & 0xC023) != (0x7FFD & 0xC023) &&
+			 (conf.mem_model == MM_SCORP || conf.mem_model == MM_PROFSCORP || conf.mem_model == MM_GMX))
              return;
 
          // 0xxxxxxxxxx11x0x
@@ -604,6 +649,9 @@ set1FFD:
 
             // if not profi with #DFFD.4 set, apply lock
             if (!(conf.mem_model == MM_PROFI && (comp.pDFFD & 0x10)))
+                return;
+
+			if (!(conf.mem_model == MM_GMX && (comp.p7EFD & 0x04)))
                 return;
          }
 
@@ -652,6 +700,7 @@ set1FFD:
       {
           comp.pDFFD = val;
           set_banks();
+		  init_raster();
           return;
       }
 
@@ -1135,16 +1184,46 @@ __inline u8 in1(unsigned port)
       }
       input.mouse_joy_led |= 2;
       u8 res = (conf.input.kjoy)? input.kjoy : 0xFF;
-      if (conf.mem_model == MM_SCORP || conf.mem_model == MM_PROFSCORP)
+      if (conf.mem_model == MM_SCORP || conf.mem_model == MM_PROFSCORP || conf.mem_model == MM_GMX)
          res = (res & 0x1F) | (comp.wd.in(0xFF) & 0xE0);
       return res;
    }
+
+   if ((conf.mem_model == MM_GMX) && (port & 0x23) == (0xFD & 0x23))
+   {
+		unsigned char tmp;
+		switch ( p2 )
+		{
+			case 0x7A:
+				return (comp.p7FFD & 7)
+					| ((comp.p1FFD & 0x10) >> 1)
+					| ((comp.pDFFD & 7) << 4)
+					| ((comp.pFE & 1) << 7);
+			case 0x7E:
+				return ((comp.p7FFD & 0x20) >> 5)
+					| ((comp.p7FFD & 8) >> 2)
+					| ((comp.p7EFD & 0x80) >> 5)
+					| (comp.p7EFD & 8)
+					| ((comp.p00 & 0x80) >> 3)
+					| (comp.p00 & 0x20)
+					| ((comp.p1FFD & 1) << 6)
+					| ((comp.pFE & 4) << 5);
+			case 0x78:
+				tmp = (comp.p78FD & 0x7F) | ((comp.pFE & 2) << 6);
+				tmp |= (comp.gmx_magic_shift&1);
+				comp.gmx_magic_shift >>= 1;			
+				return tmp;
+		}
+	}
+
+   if ((port & 0x8023) == (0xFD & 0x8023) && (conf.mem_model == MM_SCORP || conf.mem_model == MM_PROFSCORP))
+		turbo(port & 0x4000 ? 2 : 1);
 
    // port #FE
    bool pFE;
 
    // scorp  xx1xxx10 (sc16)
-   if ((conf.mem_model == MM_SCORP || conf.mem_model == MM_PROFSCORP) && !(comp.flags & CF_DOSPORTS))
+   if ((conf.mem_model == MM_SCORP || conf.mem_model == MM_PROFSCORP || conf.mem_model == MM_GMX) && !(comp.flags & CF_DOSPORTS))
        pFE = ((port & 0x23) == (0xFE & 0x23));
    else if (conf.mem_model == MM_QUORUM) // 1xx11xx0
        pFE = ((port & 0x99) == (0xFE & 0x99));

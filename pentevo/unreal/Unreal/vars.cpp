@@ -263,6 +263,7 @@ const TMemModel mem_model[N_MM_MODELS] =
     { "ZX-Spectrum +3", "PLUS3",             MM_PLUS3, 128,  RAM_128 },
     { "ZS Scorpion", "SCORPION",             MM_SCORP, 256,  RAM_256 | RAM_1024 },
     { "ZS Scorpion + PROF ROM", "PROFSCORP", MM_PROFSCORP, 256,  RAM_256 | RAM_1024 },
+	{ "ZS Scorpion + GMX", "GMX",			 MM_GMX, 2048,  RAM_2048 },
     { "Nemo's KAY", "KAY",                   MM_KAY, 256,  RAM_256 | RAM_1024 },
     { "Quorum", "QUORUM",                    MM_QUORUM, 1024, RAM_128 | RAM_1024 },
     { "Orel' BK-08 (LSY)", "LSY256",         MM_LSY256, 256, RAM_256 },

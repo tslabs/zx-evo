@@ -29,6 +29,14 @@ void set_banks()
 
    u8 *bank0, *bank3;
 
+	if (conf.mem_model == MM_GMX)
+	{
+		base_128_rom = ROM_BASE_M + ((comp.p7EFD>>4)&7) * 64*1024 + 0*PAGE;
+		base_sos_rom = ROM_BASE_M + ((comp.p7EFD>>4)&7) * 64*1024 + 1*PAGE;
+		base_sys_rom = ROM_BASE_M + ((comp.p7EFD>>4)&7) * 64*1024 + 2*PAGE;
+		base_dos_rom = ROM_BASE_M + ((comp.p7EFD>>4)&7) * 64*1024 + 3*PAGE;
+	}
+
    if (comp.flags & CF_TRDOS)
        bank0 = (comp.p7FFD & 0x10) ? base_dos_rom : base_sys_rom;
    else
@@ -87,6 +95,22 @@ void set_banks()
                  comp.flags &= ~CF_PROFROM;
          }
          break;
+
+	  case MM_GMX:
+			bank |= ((comp.p1FFD & 0x10) >> 1) | ((comp.pDFFD & 7) << 4);
+			bankw[2] = bankr[2] = RAM_BASE_M + ((comp.p78FD ^ 2) & temp.ram_mask)*PAGE;
+			bank3 = RAM_BASE_M + (bank & temp.ram_mask)*PAGE;
+			if (comp.p1FFD & 2)
+				bank0 = base_sys_rom;
+			if (comp.p1FFD & 1)
+				bank0 = page_ram(0);
+			if (comp.p1FFD & 4)
+			{
+				comp.flags |= CF_DOSPORTS;
+				bank0 = base_dos_rom;
+			}
+			//bank0 += ((comp.p7EFD >> 4) & 7)*PAGE;
+			break;
 
       case MM_KAY:
       {

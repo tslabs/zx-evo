@@ -286,6 +286,7 @@ void load_config(const char *fname)
    GetPrivateProfileString(rom, "ATM3", nil, conf.atm3_rom_path, sizeof conf.atm3_rom_path, ininame);
    GetPrivateProfileString(rom, "SCORP", nil, conf.scorp_rom_path, sizeof conf.scorp_rom_path, ininame);
    GetPrivateProfileString(rom, "PROFROM", nil, conf.prof_rom_path, sizeof conf.prof_rom_path, ininame);
+   GetPrivateProfileString(rom, "GMX", nil, conf.gmx_rom_path, sizeof conf.gmx_rom_path, ininame);
    GetPrivateProfileString(rom, "PROFI", nil, conf.profi_rom_path, sizeof conf.profi_rom_path, ininame);
    GetPrivateProfileString(rom, "KAY", nil, conf.kay_rom_path, sizeof conf.kay_rom_path, ininame);
    GetPrivateProfileString(rom, "PLUS3", nil, conf.plus3_rom_path, sizeof conf.plus3_rom_path, ininame);
@@ -308,6 +309,7 @@ void load_config(const char *fname)
    addpath(conf.atm3_rom_path);
    addpath(conf.scorp_rom_path);
    addpath(conf.prof_rom_path);
+   addpath(conf.gmx_rom_path);
    addpath(conf.profi_rom_path);
    addpath(conf.kay_rom_path);
    addpath(conf.plus3_rom_path);
@@ -939,6 +941,12 @@ void apply_memory()
       {
          romsize = load_rom(conf.prof_rom_path, ROM_BASE_M, 16);
          if (romsize != 64 && romsize != 128 && romsize != 256)
+            errexit("invalid PROF-ROM size");
+      }
+	  else if (conf.mem_model == MM_GMX)
+      {
+         romsize = load_rom(conf.gmx_rom_path, ROM_BASE_M, 32);
+         if (romsize != 512)
             errexit("invalid PROF-ROM size");
       }
       else

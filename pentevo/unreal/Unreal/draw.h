@@ -29,6 +29,7 @@ enum VMODE
 	M_ATMTX	,	// ATM Text
 	M_ATMTL ,	// ATM Text Linear
 	M_PROFI ,	// Profi
+	M_GMX   ,	// GMX
 };
 
 enum RASTER_N
