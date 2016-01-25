@@ -294,7 +294,7 @@ void z80loop_TSL()
 
     vid.memcyc_lcmd = 0; // new command, start accumulate number of busy memcycles
 
-    if (comp.ts.intctrl.pend && cpu.iff1 && cpu.t != cpu.eipos && !vdos) // int disabled in vdos after r/w vg ports
+    if (comp.ts.intctrl.pend && cpu.iff1 && (cpu.t != cpu.eipos) && !vdos) // int disabled in vdos after r/w vg ports
     {
       handle_int(&cpu, cpu.IntVec());
     }
@@ -373,7 +373,7 @@ void z80loop_other()
 
     // INT
     if (cpu.int_pend && cpu.iff1 && // INT enabled in CPU
-      cpu.t != cpu.eipos &&         // INT disabled after EI
+      (cpu.t != cpu.eipos) &&         // INT disabled after EI
       cpu.int_gate)                 // INT enabled by ATM hardware (no INT disabling in PentEvo)
     {
       handle_int(&cpu, cpu.IntVec());
