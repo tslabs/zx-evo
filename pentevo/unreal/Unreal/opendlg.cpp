@@ -24,7 +24,7 @@ struct FILEPREVIEWINFO
 void FILEPREVIEWINFO::OnResize()
 {
    const int dlgbase = 280;
-   const int listbase = 136;
+   const int listbase = 163;
 
    RECT dlgrc; GetWindowRect(dlg.h, &dlgrc);
    list.dy = (dlgrc.bottom - dlgrc.top) - dlgbase + listbase;
