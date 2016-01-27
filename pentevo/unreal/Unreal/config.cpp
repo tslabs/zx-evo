@@ -703,17 +703,20 @@ void load_config(const char *fname)
       if (h > 16)
       {
           sprintf(line, "HDD%d heads count > 16 : %u\n", ide_device, h);
-          errexit(line);
+          errmsg(line);
+		  continue;
       }
       if (s > 63)
       {
           sprintf(line, "error HDD%d sectors count > 63 : %u\n", ide_device, s);
-          errexit(line);
+          errmsg(line);
+		  continue;
       }
       if (c > 16383)
       {
           sprintf(line, "error HDD%d cylinders count > 16383 : %u\n", ide_device, c);
-          errexit(line);
+          errmsg(line);
+		  continue;
       }
 
       conf.ide[ide_device].c = c;

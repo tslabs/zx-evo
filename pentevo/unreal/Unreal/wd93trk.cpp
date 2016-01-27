@@ -132,7 +132,7 @@ void TRKCACHE::format()
       }
    }
    if (dst > trklen + trkd)
-       errexit("track too long");
+       errmsg("track too long");
    while (dst < trkd + trklen)
        *dst++ = 0x4E;
 }

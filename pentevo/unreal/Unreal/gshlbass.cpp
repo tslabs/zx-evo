@@ -41,7 +41,10 @@ void GSHLE::runBASS()
       color(CONSCLR_WARNING);
       printf("warning: can't use default BASS device, trying silence\n");
       if (!BASS::Init(-2, 11025, 0, wnd, 0))
-          errexit("can't init BASS");
+	  {
+          errmsg("can't init BASS");
+		  return;
+	  }
    }
 
    Initialized = true;

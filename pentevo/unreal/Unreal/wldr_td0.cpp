@@ -245,7 +245,8 @@ int FDD::read_td0()
             }
             default: // error!
             shit:
-               errexit("bad TD0 file");
+               errmsg("bad TD0 file");
+			   return 0;
          }
          dst += sec_size;
          td0_src = end_packed_data;
