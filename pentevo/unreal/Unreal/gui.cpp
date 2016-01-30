@@ -939,15 +939,18 @@ static struct
    unsigned ID;
    int *value;
 } slider[] = {
-   { IDC_SND_BEEPER,  &c1.sound.beeper_vol  },
-   { IDC_SND_MICOUT,  &c1.sound.micout_vol  },
-   { IDC_SND_MICIN,   &c1.sound.micin_vol   },
-   { IDC_SND_AY,      &c1.sound.ay_vol      },
-   { IDC_SND_COVOXFB, &c1.sound.covoxFB_vol },
-   { IDC_SND_COVOXDD, &c1.sound.covoxDD_vol },
-   { IDC_SND_SD,      &c1.sound.sd_vol      },
-   { IDC_SND_BASS,    &c1.sound.bass_vol    },
-   { IDC_SND_GS,      &c1.sound.gs_vol      },
+   { IDC_SND_BEEPER,		&c1.sound.beeper_vol		},
+   { IDC_SND_MICOUT,		&c1.sound.micout_vol		},
+   { IDC_SND_MICIN,			&c1.sound.micin_vol			},
+   { IDC_SND_AY,			&c1.sound.ay_vol			},
+   { IDC_SND_SAA,			&c1.sound.saa1099_vol		},
+   { IDC_SND_COVOXFB,		&c1.sound.covoxFB_vol		},
+   { IDC_SND_COVOXDD,		&c1.sound.covoxDD_vol		},
+   { IDC_SND_COVOXPROFI,	&c1.sound.covoxProfi_vol	},
+   { IDC_SND_SD,			&c1.sound.sd_vol			},
+   { IDC_SND_BASS,			&c1.sound.bass_vol			},
+   { IDC_SND_GS,			&c1.sound.gs_vol			},
+   { IDC_SND_MOONSOUND,		&c1.sound.moonsound_vol		},
 };
 
 INT_PTR CALLBACK SoundDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
@@ -1526,3 +1529,4 @@ void setup_dlg()
 }
 
 #endif
+

@@ -5,6 +5,7 @@ extern int covFB_vol;
 extern int covDD_vol;
 extern int sd_l;
 extern int sd_r;
+extern int covProfiL, covProfiR;
 
 void apply_sound();
 void restart_sound();

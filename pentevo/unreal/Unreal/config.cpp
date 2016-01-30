@@ -548,10 +548,13 @@ void load_config(const char *fname)
    conf.sound.covoxFB_vol = GetPrivateProfileInt(sound, "CovoxFBVol", 8192, ininame);
    conf.sound.covoxDD = GetPrivateProfileInt(sound, "CovoxDD", 0, ininame);
    conf.sound.covoxDD_vol = GetPrivateProfileInt(sound, "CovoxDDVol", 4000, ininame);
+   conf.sound.covoxProfi_vol = GetPrivateProfileInt(sound, "CovoxProfiVol", 4000, ininame);
    conf.sound.sd = GetPrivateProfileInt(sound, "SD", 0, ininame);
    conf.sound.sd_vol = GetPrivateProfileInt(sound, "SDVol", 4000, ininame);
    conf.sound.saa1099 = GetPrivateProfileInt(sound, "Saa1099", 0, ininame);
+   conf.sound.saa1099_vol = GetPrivateProfileInt(sound, "Saa1099Vol", 4000, ininame);
    conf.sound.moonsound = GetPrivateProfileInt(sound, "MoonSound", 0, ininame);
+   conf.sound.moonsound_vol = GetPrivateProfileInt(sound, "MoonSoundVol", 4000, ininame);
 
    #ifdef MOD_GS
    conf.sound.gs_vol = GetPrivateProfileInt(sound, "GSVol", 8000, ininame);

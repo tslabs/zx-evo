@@ -227,8 +227,9 @@ struct CONFIG
    {
       unsigned fq, ayfq, saa1099fq;
       int covoxFB, covoxDD, sd, saa1099, moonsound;
-      int beeper_vol, micout_vol, micin_vol, ay_vol, aydig_vol,
-          covoxFB_vol, covoxDD_vol, sd_vol, gs_vol, bass_vol;
+      int beeper_vol, micout_vol, micin_vol, ay_vol, aydig_vol, saa1099_vol;
+      int covoxFB_vol, covoxDD_vol, sd_vol, covoxProfi_vol;
+	  int gs_vol, bass_vol, moonsound_vol;
       VOID_FUNC do_sound;
       u8 enabled, gsreset, dsprimary;
       u8 ay_chip, ay_scheme, ay_stereo, ay_vols, ay_samples;

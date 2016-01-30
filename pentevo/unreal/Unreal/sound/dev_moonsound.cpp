@@ -154,9 +154,9 @@ bool ZXMMoonSound::read( u8 port, u8 &val )
 void ZXMMoonSound::set_timings(unsigned system_clock_rate, unsigned chip_clock_rate, unsigned sample_rate)
 {
 	d->ymf262->setSampleRate( sample_rate, 1 );
-	d->ymf262->setVolume(1);
+	d->ymf262->setVolume(1 * (conf.sound.moonsound_vol / 8192.0)); // doesn't work
 	d->ymf278->setSampleRate( sample_rate, 1 );
-	d->ymf278->setVolume(2000);
+	d->ymf278->setVolume(2000 * (conf.sound.moonsound_vol / 8192.0));
 	
 	chip_clock_rate = sample_rate;
 

@@ -295,53 +295,67 @@ void out(unsigned port, u8 val)
       {
           if ((comp.p7FFD & 0x10) && (comp.pDFFD & 0x20)) // modified ports
           {
-              // BDI ports
-              if ((p1 & 0x9F) == 0x83) // WD93 ports
-              {
-                  comp.wd.out((p1 & 0x60) | 0x1F, val);
-                  return;
-              }
-
               if ((p1 & 0xE3) == 0x23) // port FF
               {
                   comp.wd.out(0xFF, val);
                   return;
               }
 
-              // RTC
-              if ((port & 0x9F) == 0x9F && conf.cmos)
-              {
-                if (port & 0x20)
-                {
-                    comp.cmos_addr = val;
-                    return;
-                }
-                cmos_write(val);
-                return;
-              }
+			  switch ( p1 & 0x9F )
+			  {
+			    case 0x83:	// WG93
+					comp.wd.out((p1 & 0x60) | 0x1F, val);
+					return;
 
-              // IDE (AB=10101011, CB=11001011, EB=11101011)
-              if ((p1 & 0x9F) == 0x8B && (conf.ide_scheme == IDE_PROFI))
-              {
-                  if (p1 & 0x40)
-                  {    // cs1
-                      if (!(p1 & 0x20))
-                      {
-                          comp.ide_write = val;
-                          return;
-                      }
-                      port >>= 8;
-                      goto write_hdd;
-                  }
+				case 0x87:	// VV55
+					if ( conf.sound.covoxProfi_vol > 0 )
+					{
+						// with covox
+						flush_dig_snd();
+						if ( (port & 0x60) == 0x40 )
+							covProfiL = (val*conf.sound.covoxProfi_vol) >> 8;
+						if ( (port & 0x60) == 0x20 )
+							covProfiR = (val*conf.sound.covoxProfi_vol) >> 8;
+					}
+					return;
 
-                  // cs3
-                  if (p1 & 0x20)
-                  {
-                      if (((port>>8) & 7) == 6)
-                          hdd.write(8, val);
-                      return;
-                  }
-              }
+				case 0x9F:	// RTC
+					if ( conf.cmos )
+					{
+						if (port & 0x20)
+						{
+							comp.cmos_addr = val;
+							return;
+						}
+						cmos_write(val);
+						return;
+					}
+					break;
+
+				case 0x8B:	// IDE (AB=10101011, CB=11001011, EB=11101011)
+					if ( conf.ide_scheme == IDE_PROFI )
+					{
+						if (p1 & 0x40)
+						{    // cs1
+							if (!(p1 & 0x20))
+							{
+								comp.ide_write = val;
+								return;
+							}
+							port >>= 8;
+							goto write_hdd;
+						}
+
+						// cs3
+						if (p1 & 0x20)
+						{
+							if (((port>>8) & 7) == 6)
+								hdd.write(8, val);
+							return;
+						}
+					}
+					break;				
+			  }
           }
           else
           {
@@ -461,6 +475,23 @@ void out(unsigned port, u8 val)
                  return; // invalid CS0,CS1
              goto write_hdd_5;
          }
+
+		 if ( conf.mem_model == MM_PROFI )
+		 {
+			if ( (port & 0x83) == 0x03 ) // VV55
+			{
+				if ( conf.sound.covoxProfi_vol > 0 )
+				{
+					// with covox
+					flush_dig_snd();
+					if ( (port & 0x60) == 0x40 )
+						covProfiL = (val*conf.sound.covoxProfi_vol) >> 8;
+					if ( (port & 0x60) == 0x20 )
+						covProfiR = (val*conf.sound.covoxProfi_vol) >> 8;
+				}
+				return;
+			}
+		}
    }
 
    if (p1 == 0x00 && conf.mem_model == MM_QUORUM)

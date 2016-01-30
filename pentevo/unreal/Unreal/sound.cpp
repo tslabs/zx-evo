@@ -11,6 +11,7 @@ extern SNDCHIP ay[2];
 extern SNDCOUNTER sndcounter;
 
 int spkr_dig = 0, mic_dig = 0, covFB_vol = 0, covDD_vol = 0, sd_l = 0, sd_r = 0;
+int covProfiL = 0, covProfiR = 0;
 
 void flush_dig_snd()
 {
@@ -20,7 +21,7 @@ void flush_dig_snd()
    unsigned mono = (spkr_dig+mic_dig+covFB_vol+covDD_vol);
 //   printf("mono=%u\n", mono);
 //[vv]   
-sound.update(cpu.t - temp.cpu_t_at_frame_start, mono + sd_l, mono + sd_r);
+sound.update(cpu.t - temp.cpu_t_at_frame_start, mono + sd_l + covProfiL, mono + sd_r + covProfiR);
 }
 
 void init_snd_frame()
