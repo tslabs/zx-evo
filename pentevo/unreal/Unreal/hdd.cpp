@@ -859,7 +859,6 @@ void ATA_DEVICE::prepare_id()
       memset(transbf, 0, 512);
       make_ata_string(transbf+54, 20, "UNREAL SPECCY HARD DRIVE IMAGE");
       make_ata_string(transbf+20, 10, "0000");
-      make_ata_string(transbf+46,  4, VERS_STRING);
       *(u16*)transbf = 0x045A;
       ((u16*)transbf)[1] = (u16)c;
       ((u16*)transbf)[3] = (u16)h;

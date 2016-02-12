@@ -221,6 +221,8 @@ struct CONFIG
    u8 ide_skip_real;
    u8 cd_aspi;
 
+   u32 sd_delay;
+   
    u8 soundfilter; //Alone Coder (IDC_SOUNDFILTER)
    u8 RejectDC;
    struct

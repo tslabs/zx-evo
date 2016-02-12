@@ -344,35 +344,44 @@ u8 TSdCard::Rd()
     case CMD_READ_SINGLE_BLOCK:
         switch(CurrState)
         {
-        case ST_R1:
-            CurrState = ST_DELAY_S;
-			DataDelay = 32;		// should be carried out to .ini
-            return 0;
-        case ST_DELAY_S:
-            if (!DataDelay--)
-				CurrState = ST_STARTBLOCK;
-            return 0xFF;
-        case ST_STARTBLOCK:
-            CurrState = ST_WR_DATA;
-            DataCnt = 0;
-            return 0xFE;
-        case ST_WR_DATA:
-        {
-            u8 Val = Buf[DataCnt++];
-            if (DataCnt == DataBlockLen)
-            {
+          i32 cpu_dt;
+
+          case ST_R1:
+              CurrState = ST_DELAY_S;
+              InitialCPUt = cpu.t;
+              return 0;
+
+          case ST_DELAY_S:
+              cpu_dt = cpu.t - InitialCPUt;
+              if (cpu_dt < 0)
+                cpu_dt += conf.frame;
+              if (cpu_dt >= conf.sd_delay)
+                CurrState = ST_STARTBLOCK;
+              return 0xFF;
+
+          case ST_STARTBLOCK:
+              CurrState = ST_WR_DATA;
+              DataCnt = 0;
+              return 0xFE;
+
+          case ST_WR_DATA:
+          {
+              u8 Val = Buf[DataCnt++];
+              if (DataCnt == DataBlockLen)
+              {
                 DataCnt = 0;
                 CurrState = ST_WR_CRC16_1;
-            }
-            return Val;
-        }
-        case ST_WR_CRC16_1:
-            CurrState = ST_WR_CRC16_2;
-            return 0xFF; // crc
-        case ST_WR_CRC16_2:
-            CurrState = ST_IDLE;
-            Cmd = CMD_INVALID;
-            return 0xFF; // crc
+              }
+              return Val;
+          }
+
+          case ST_WR_CRC16_1:
+              CurrState = ST_WR_CRC16_2;
+              return 0xFF; // crc
+          case ST_WR_CRC16_2:
+              CurrState = ST_IDLE;
+              Cmd = CMD_INVALID;
+              return 0xFF; // crc
         }
 //        Cmd = CMD_INVALID;
     break;
@@ -380,38 +389,46 @@ u8 TSdCard::Rd()
     case CMD_READ_MULTIPLE_BLOCK:
         switch(CurrState)
         {
-        case ST_R1:
-            CurrState = ST_DELAY_S;
-			DataDelay = 32;		// should be carried out to .ini
-            return 0;
-        case ST_DELAY_S:
-            if (!DataDelay--)
+          i32 cpu_dt;
+
+          case ST_R1:
+              CurrState = ST_DELAY_S;
+              InitialCPUt = cpu.t;
+              return 0;
+
+          case ST_DELAY_S:
+              cpu_dt = cpu.t - InitialCPUt;
+              if (cpu_dt < 0)
+                cpu_dt += conf.frame;
+              if (cpu_dt >= conf.sd_delay)
                 CurrState = ST_STARTBLOCK;
-            return 0xFF;
-        case ST_STARTBLOCK:
-            CurrState = ST_IDLE;
-            DataCnt = 0;
-            return 0xFE;
-        case ST_IDLE:
-        {
-            if (DataCnt<DataBlockLen)
-            {
+              return 0xFF;
+
+          case ST_STARTBLOCK:
+              CurrState = ST_IDLE;
+              DataCnt = 0;
+              return 0xFE;
+
+          case ST_IDLE:
+          {
+              if (DataCnt<DataBlockLen)
+              {
                 u8 Val = Buf[DataCnt++];
                 if (DataCnt == DataBlockLen)
                     fread(Buf, DataBlockLen, 1, Image);
                 return Val;
-            }
-            else if (DataCnt>(DataBlockLen+8))
-            {
+              }
+              else if (DataCnt>(DataBlockLen+8))
+              {
                 DataCnt=0;
                 return 0xFE; // next startblock
-            }
-            else
-            {
+              }
+              else
+              {
                 DataCnt++;
                 return 0xFF; // crc & pause
-            }
-        }
+              }
+          }
 
 /*
         case ST_R1:

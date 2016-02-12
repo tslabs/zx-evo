@@ -254,12 +254,6 @@ void load_config(const char *fname)
    addpath(conf.sos_labels_path, "sos.l");
    #endif
 
-   GetPrivateProfileString("*", "UNREAL", nil, line, sizeof line, ininame);
-   int a,b,c;
-   sscanf(line, "%u.%u.%u", &a, &b, &c);
-   if ((((a << 8U) | b) != VER_HL) || (c != (VER_A & 0x7F)))
-       errexit("wrong ini-file version");
-
    GetPrivateProfileString(misc, "Help",  "help_eng.html", helpname, sizeof helpname, ininame);
    addpath(helpname);
 
@@ -785,6 +779,7 @@ void load_config(const char *fname)
        addpath(conf.zc_sd_card_path);
        if (conf.zc_sd_card_path[0])
            printf("ZC SDCARD=`%s'\n", conf.zc_sd_card_path);
+       conf.sd_delay = GetPrivateProfileInt(zc, "SDDelay", 1000, ininame);
    }
 
    GetPrivateProfileString("AUTOLOAD", "DefaultDrive", nil, line, sizeof(line), ininame);
