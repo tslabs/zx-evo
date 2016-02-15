@@ -530,9 +530,9 @@ int assemble(unsigned addr)
             {
                if (!ishex(*cc)) goto nextcmd;
                in = scanhex(&cc);
-               int x = in-(int)addr+cmdb-cm-1;
+               i16 x = in-(int)addr+cmdb-cm-1;
                if (x > 0x7F || x < -0x80) goto nextcmd;
-               *(char*)cm = x; cm++;
+               *(char*)cm = (char)x; cm++;
                break;
             }
             case _ib: // immediate byte at cm
