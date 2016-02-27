@@ -52,3 +52,5 @@ pentevo/fpga/current/quartus/serv_req_info.txt
 *.inc
 pentevo/rom/src/obj/ts-bios.html
 pentevo/rom/src/obj/ts-bios.bin
+db
+incremental_db
