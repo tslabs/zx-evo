@@ -90,7 +90,7 @@ module zports(
 	//
 	output reg  [ 7:0] gluclock_addr,
 	//
-	output reg  [ 2:0] comport_addr,
+	output reg  [ 7:0] comport_addr,
 	//
 	output wire        wait_start_gluclock, // begin wait from some ports
 	output wire        wait_start_comport,  //
@@ -722,7 +722,7 @@ module zports(
 	always @(posedge zclk)
 	begin
 		if( comport_wr || comport_rd )
-			comport_addr <= a[10:8 ];
+			comport_addr <= a[15:8 ];
 	end
 
 

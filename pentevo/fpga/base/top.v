@@ -181,7 +181,7 @@ module top(
 	wire wait_start_comport;
 	wire wait_end;
 	wire [7:0] gluclock_addr;
-	wire [2:0] comport_addr;
+	wire [7:0] comport_addr;
 	wire [6:0] waits;
 
 

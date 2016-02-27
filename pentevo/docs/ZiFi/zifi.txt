@@ -1,0 +1,27 @@
+Address         Mode Name Description
+0x00EF..0xBFEF  R    DR   Data register. Get byte from input FIFO. Input FIFO must not be empty (IFR > 0).
+0x00EF..0xBFEF  W    DR   Data register. Put byte into output FIFO. Output FIFO must not be full (OFR < 255).
+
+Address Mode Name Description
+0xC0EF  R    IFR  Input FIFO Used Register. 0 - input FIFO is empty, 255 - input FIFO is full.
+0xC1EF  R    OFR  Output FIFO Free Register. 0 - output FIFO is full, 255 - output FIFO is empty.
+
+Address Mode Name Description
+0xC7EF  W    CR   Command register. Command set depends on API mode selected.
+
+  All mode commands:
+    Code     Command      Description
+    000000oi Clear FIFOs  i: 1 - clear input FIFO, o: 1 - clear output FIFO.
+    11110mmm Set API mode or disable API:
+              0     API disabled.
+              1     transparent: all data is sent/received to/from external UART directly.
+              2..7  reserved.
+    11111111 Get Version  Returns API version. ER=0xFF - no API available.
+
+Address Mode Name Description
+0xC7EF  R    ER   Error register - command execution result code. Depends on command issued.
+
+  All mode responses:
+    Code Description
+    0x00 OK - no error.
+    0xFF REJ - command rejected.

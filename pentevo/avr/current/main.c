@@ -97,8 +97,8 @@ int main()
 start:
 
 	hardware_init();
-
 	rs232_init();
+
 #ifdef LOGENABLE
 	to_log("VER:");
 	{

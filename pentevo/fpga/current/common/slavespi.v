@@ -58,7 +58,7 @@ module slavespi
 
     // Glucklock and Comport
   input  wire [ 7:0] gluclock_addr,
-  input  wire [ 2:0] comport_addr,
+  input  wire [ 7:0] comport_addr,
 
   // Configuration
   output wire [ 7:0] config0,

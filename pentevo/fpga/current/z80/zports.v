@@ -126,7 +126,7 @@ module zports(
 
 // WAIT-ports related
   output reg  [ 7:0] gluclock_addr,
-  output reg  [ 2:0] comport_addr,
+  output reg  [ 7:0] comport_addr,
   output wire        wait_start_gluclock, // begin wait from some ports
   output wire        wait_start_comport,  //
   output reg  [ 7:0] wait_write,
@@ -614,7 +614,7 @@ module zports(
 
   always @(posedge zclk)
     if (comport_wr || comport_rd)
-      comport_addr <= a[10:8];
+      comport_addr <= a[15:8];
 
 // wait from wait registers
   // ACHTUNG!!!! here portxx_wr are ON Z80 CLOCK! logic must change when moving to clk strobes
