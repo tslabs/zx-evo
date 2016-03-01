@@ -32,8 +32,9 @@ Until initialization sequence performed API is disabled and the only command rec
 
 Initialization sequence:
 - Send 'Set API mode = 1' command,
+- Send 'Get Version' command,
 - Read highest supported API mode from ER,
-- Select required API mode.
+- Select desired API mode.
 
 zifi_init:
   ; select API mode 1
@@ -44,6 +45,6 @@ zifi_init:
   ld a, 0xFF
   out (c), a
   in a, (c)
-  ; select required API mode
+  ; select desired API mode, if need
   ld a, mode  ; possible values are 0xF2..0xF7
   out (c), a
