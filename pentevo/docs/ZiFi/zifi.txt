@@ -1,6 +1,6 @@
 Address         Mode Name Description
 0x00EF..0xBFEF  R    DR   Data register. Get byte from input FIFO. Input FIFO must not be empty (IFR > 0).
-0x00EF..0xBFEF  W    DR   Data register. Put byte into output FIFO. Output FIFO must not be full (OFR < 255).
+0x00EF..0xBFEF  W    DR   Data register. Put byte into output FIFO. Output FIFO must not be full (OFR > 0).
 
 Address Mode Name Description
 0xC0EF  R    IFR  Input FIFO Used Register. 0 - input FIFO is empty, 255 - input FIFO is full.
@@ -16,7 +16,7 @@ Address Mode Name Description
               0     API disabled.
               1     transparent: all data is sent/received to/from external UART directly.
               2..7  reserved.
-    11111111 Get Version  Returns API version. ER=0xFF - no API available.
+    11111111 Get Version  Returns highest supported API version. ER=0xFF - no API available.
 
 Address Mode Name Description
 0xC7EF  R    ER   Error register - command execution result code. Depends on command issued.
@@ -25,3 +25,25 @@ Address Mode Name Description
     Code Description
     0x00 OK - no error.
     0xFF REJ - command rejected.
+
+--------------------
+
+Until initialization sequence performed API is disabled and the only command recognized is 'Set API mode'.
+
+Initialization sequence:
+- Send 'Set API mode = 1' command,
+- Read highest supported API mode from ER,
+- Select required API mode.
+
+zifi_init:
+  ; select API mode 1
+  ld bc, 0xC7EF
+  ld a, 0xF1
+  out (c), a
+  ; get highest supported API mode
+  ld a, 0xFF
+  out (c), a
+  in a, (c)
+  ; select required API mode
+  ld a, mode  ; possible values are 0xF2..0xF7
+  out (c), a
