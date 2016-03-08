@@ -10,14 +10,14 @@
  */
 
 /** Init spi interface. */
-void spi_init(void);
+#define spi_init() {SPCR=0b01110000;SPSR=0b00000001;}
 
 /**
  * SPI data interchange.
  * @return received data
  * @param byte [in] - data to send
  */
-u8 spi_send(u8 byte);
+#define spi_send(byte) ({SPDR=(byte);while(!(SPSR&(1<<SPIF)));SPDR;})
 
 #endif
 

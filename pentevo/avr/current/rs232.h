@@ -1,5 +1,16 @@
 #ifndef RS232_H
-#define RS232_H
+#define RS232_H 1
+
+#ifdef __ASSEMBLER__
+/* ------------------------------------------------------------------------- */
+.extern zf_rxbuff
+.extern zf_rx_hd
+.extern zf_rx_tl
+.extern zf_txbuff
+.extern zf_tx_hd
+.extern zf_tx_tl
+/* ------------------------------------------------------------------------- */
+#else //__ASSEMBLER__
 
 void rs232_init(void);
 void rs232_transmit(u8 data);
@@ -86,5 +97,7 @@ void rs232_task(void);
 
 /** ZiFi version. */
 #define ZF_VER            0x01
+
+#endif //__ASSEMBLER__
 
 #endif //RS232_H

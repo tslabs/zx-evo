@@ -33,73 +33,78 @@ FIFO rs232_out(rs232_FO, sizeof(rs232_FO));
 
 static u8 zf_api;
 static u8 zf_err;
-static u8 zf_FI[255];
-static u8 zf_FO[255];
-FIFO zf_in(zf_FI, sizeof(zf_FI));
-FIFO zf_out(zf_FO, sizeof(zf_FO));
+u8 zf_rxbuff[256];
+volatile u8 zf_rx_hd;
+u8 zf_rx_tl;
+u8 zf_txbuff[256];
+u8 zf_tx_hd;
+volatile u8 zf_tx_tl;
 
-void wifi_init(void)
+static inline
+void zifi_init(void)
 {
-	// Set baud rate
-	UBRR0H = (u8)(UBRR115200 >> 8);
-	UBRR0L = (u8)UBRR115200;
-	UCSR0A = 0;   // Clear reg
-	UCSR0B = _BV(RXEN)|_BV(TXEN);   // Enable receiver and transmitter
-	UCSR0C = _BV(USBS)|_BV(UCSZ0)|_BV(UCSZ1);   // Set frame format: 8data, 1stop bit
-
-	// Set default values
+  // Set default values
   zf_api = 0;
   zf_err = 0;
-  zf_in.clear();
-  zf_out.clear();
+  zf_rx_hd=0;
+  zf_rx_tl=0;
+  zf_tx_hd=0;
+  zf_tx_tl=0;
+  // Set baud rate
+  UBRR0H = (u8)(UBRR115200 >> 8);
+  UBRR0L = (u8)UBRR115200;
+  UCSR0A = 0;
+  UCSR0C = _BV(USBS)|_BV(UCSZ0)|_BV(UCSZ1); // Set frame format: 8data (2stop bit - for TX only)
+  UCSR0B = _BV(RXCIE)|_BV(RXEN)|_BV(TXEN);  // Enable transmitter, receiver and receiver's interrupt
 }
 
+static inline
 void kondr_init(void)
 {
-	// Set baud rate
-	UBRR1H = (u8)(UBRR115200>>8);
-	UBRR1L = (u8)UBRR115200;
-	UCSR1A = 0;   // Clear reg
-	UCSR1B = _BV(RXEN)|_BV(TXEN);   // Enable receiver and transmitter
-	UCSR1C = _BV(USBS)|_BV(UCSZ0)|_BV(UCSZ1);   // Set frame format: 8data, 1stop bit
+  // Set baud rate
+  UBRR1H = (u8)(UBRR115200>>8);
+  UBRR1L = (u8)UBRR115200;
+  UCSR1A = 0;   // Clear reg
+  UCSR1C = _BV(USBS)|_BV(UCSZ0)|_BV(UCSZ1); // Set frame format: 8data (2stop bit - for TX only)
+  UCSR1B = _BV(RXEN)|_BV(TXEN);             // Enable receiver and transmitter
 
-	// Set default values
-	rs232_DLM = 0;
-	rs232_DLL = 0x01;
-	rs232_IER = 0;
-	rs232_FCR = 0x01; //FIFO always enable
-	rs232_ISR = 0x01;
-	rs232_LCR = 0;
-	rs232_MCR = 0;
-	rs232_LSR = 0x60;
-	rs232_MSR = 0xA0; //DSR=CD=1, RI=0
-	rs232_SCR = 0xFF;
+  // Set default values
+  rs232_DLM = 0;
+  rs232_DLL = 0x01;
+  rs232_IER = 0;
+  rs232_FCR = 0x01; //FIFO always enable
+  rs232_ISR = 0x01;
+  rs232_LCR = 0;
+  rs232_MCR = 0;
+  rs232_LSR = 0x60;
+  rs232_MSR = 0xA0; //DSR=CD=1, RI=0
+  rs232_SCR = 0xFF;
   rs232_in.clear();
   rs232_out.clear();
 }
 
 void rs232_init(void)
 {
-  wifi_init();
+  zifi_init();
   kondr_init();
 }
 
 void rs232_transmit(u8 data)
 {
-	// Wait for empty transmit buffer
-	while (!(UCSR1A & (1<<UDRE)));
-	// Put data into buffer, sends the data
-	UDR1 = data;
+  // Wait for empty transmit buffer
+  while (!(UCSR1A & (1<<UDRE)));
+  // Put data into buffer, sends the data
+  UDR1 = data;
 }
 
 //#ifdef LOGENABLE
 void to_log(char* ptr)
 {
-	while((*ptr)!=0)
-	{
-		rs232_transmit(*ptr);
-		ptr++;
-	}
+  while((*ptr)!=0)
+  {
+    rs232_transmit(*ptr);
+    ptr++;
+  }
 }
 //#endif
 
@@ -107,65 +112,65 @@ void to_log(char* ptr)
 //after DLL or DLM changing
 void rs232_set_baud(void)
 {
-	if (rs232_DLM | rs232_DLL)
-	{
-		if ((rs232_DLM & 0x80)!=0)
-		{
-			//AVR mode - direct load UBRR
-			UBRR1H = 0x7F & rs232_DLM;
-			UBRR1L = rs232_DLL;
-		}
-		else
-		{
-			//default mode - like 16550
-			u32 i = BAUD115200/ ((((u16)rs232_DLM)<<8) + rs232_DLL);
-			u16 rate = ((F_CPU/16)/i)-1;
-			// Set baud rate
-			UBRR1H = (u8)(rate>>8);
-			UBRR1L = (u8)rate;
-		}
-	}
-	else
-	{
-		// if ((rs232_DLM==0) && (rs232_DLL==0))
-		// set rate to 256000 baud
-		UBRR1H = (u8)(UBRR256000>>8);
-		UBRR1L = (u8)UBRR256000;
-	}
+  if (rs232_DLM | rs232_DLL)
+  {
+    if ((rs232_DLM & 0x80)!=0)
+    {
+      //AVR mode - direct load UBRR
+      UBRR1H = 0x7F & rs232_DLM;
+      UBRR1L = rs232_DLL;
+    }
+    else
+    {
+      //default mode - like 16550
+      u32 i = BAUD115200/ ((((u16)rs232_DLM)<<8) + rs232_DLL);
+      u16 rate = ((F_CPU/16)/i)-1;
+      // Set baud rate
+      UBRR1H = (u8)(rate>>8);
+      UBRR1L = (u8)rate;
+    }
+  }
+  else
+  {
+    // if ((rs232_DLM==0) && (rs232_DLL==0))
+    // set rate to 256000 baud
+    UBRR1H = (u8)(UBRR256000>>8);
+    UBRR1L = (u8)UBRR256000;
+  }
 }
 
 //after LCR changing
 void rs232_set_format(void)
 {
-	//set word length and stopbits
-	u8 format = ((rs232_LCR & 0x07)<<1);
+  //set word length and stopbits
+  u8 format = ((rs232_LCR & 0x07)<<1);
 
-	//set parity (only "No parity","Odd","Even" supported)
-	switch (rs232_LCR & 0x38)
-	{
-		case 0x08:
-			//odd parity
-			format |= _BV(UPM0)|_BV(UPM1);
-			break;
-		case 0x18:
-			//even parity
-			format |= _BV(UPM1);
-			break;
-		//default - parity not used
-	}
+  //set parity (only "No parity","Odd","Even" supported)
+  switch (rs232_LCR & 0x38)
+  {
+    case 0x08:
+      //odd parity
+      format |= _BV(UPM0)|_BV(UPM1);
+      break;
+    case 0x18:
+      //even parity
+      format |= _BV(UPM1);
+      break;
+    //default - parity not used
+  }
 
-	UCSR1C = format;
+  UCSR1C = format;
 }
 
 void rs232_zx_write(u8 index, u8 data)
 {
 #ifdef LOGENABLE
-	char log_write[] = "A..D..W\r\n";
-	log_write[1] = ((index >> 4) <= 9)?'0'+(index >> 4):'A'+((index >> 4)-10);
-	log_write[2] = ((index & 0x0F) <= 9)?'0'+(index & 0x0F):'A'+(index & 0x0F)-10;
-	log_write[4] = ((data >> 4) <= 9)?'0'+(data >> 4):'A'+((data >> 4)-10);
-	log_write[5] = ((data & 0x0F) <= 9)?'0'+(data & 0x0F):'A'+((data & 0x0F)-10);
-	to_log(log_write);
+  char log_write[] = "A..D..W\r\n";
+  log_write[1] = ((index >> 4) <= 9)?'0'+(index >> 4):'A'+((index >> 4)-10);
+  log_write[2] = ((index & 0x0F) <= 9)?'0'+(index & 0x0F):'A'+(index & 0x0F)-10;
+  log_write[4] = ((data >> 4) <= 9)?'0'+(data >> 4):'A'+((data >> 4)-10);
+  log_write[5] = ((data & 0x0F) <= 9)?'0'+(data & 0x0F):'A'+((data & 0x0F)-10);
+  to_log(log_write);
 #endif
 
   // ZiFi
@@ -183,32 +188,36 @@ void rs232_zx_write(u8 index, u8 data)
 
     else if (zf_api)
     {
+      // get API version
+      if ((data & ZF_GETVER_MASK) == ZF_GETVER)
+        zf_err = ZF_VER;
       // clear FIFOs
-      if ((data & ZF_CLRFIFO_MASK) == ZF_CLRFIFO)
+      else if ((data & ZF_CLRFIFO_MASK) == ZF_CLRFIFO)
       {
         if (data & ZF_CLRFIFO_IN)
-          zf_in.clear();
+        { cli(); zf_rx_hd=0; zf_rx_tl=0; sei(); }
 
         if (data & ZF_CLRFIFO_OUT)
-          zf_out.clear();
+        { zf_tx_hd=0; zf_tx_tl=0; }
       }
-
-      // get API version
-      else if ((data & ZF_GETVER_MASK) == ZF_GETVER)
-        zf_err = ZF_VER;
     }
+    
   }
 
   else if (index <= ZF_DR_REG_LIM)
   {
     // data write
-    if (zf_api)
-      zf_out.put_byte(data);
+    if (zf_api==1)
+    {
+     while( (zf_tx_tl-zf_tx_hd-1)==0 );
+     zf_txbuff[zf_tx_hd++]=data;
+     UCSR0B|=_BV(UDRIE0);
+    }
   }
 
   // Kondratyev
   else switch (index)
-	{
+  {
     case UART_DAT_DLL_REG:
       if (rs232_LCR & 0x80)
       {
@@ -224,7 +233,7 @@ void rs232_zx_write(u8 index, u8 data)
 
         rs232_LSR &= ~(0x60);
       }
-		break;
+    break;
 
     case UART_IER_DLM_REG:
       if (rs232_LCR & 0x80)
@@ -238,7 +247,7 @@ void rs232_zx_write(u8 index, u8 data)
         //bit 7-4 not used and set to '0'
         rs232_IER = data & 0x0F;
       }
-		break;
+    break;
 
     case UART_FCR_ISR_REG:
       if (data & 1)
@@ -260,12 +269,12 @@ void rs232_zx_write(u8 index, u8 data)
         }
         rs232_FCR = data & 0xC9;
       }
-		break;
+    break;
 
     case UART_LCR_REG:
       rs232_LCR = data;
       rs232_set_format();
-		break;
+    break;
 
     case UART_MCR_REG:
       //bit 7-5 not used and set to '0'
@@ -280,47 +289,49 @@ void rs232_zx_write(u8 index, u8 data)
         //set RTS
         RS232RTS_PORT |= _BV(RS232RTS);
       }
-		break;
+    break;
 
     case UART_LSR_REG:
       //rs232_LSR = data;
-		break;
+    break;
 
     case UART_MSR_REG:
       //rs232_MSR = data;
-		break;
+    break;
 
     case UART_SPR_REG:
       rs232_SCR = data;
-		break;
-	}
+    break;
+  }
 }
 
 u8 rs232_zx_read(u8 index)
 {
-	u8 data = 0;
+  u8 data = 0;
 
   // ZiFi
   if (index <= ZF_CR_ER_REG)
   {
     data = 0xFF;
 
-    if (zf_api)
+    if (zf_api==1)
     {
       // data read
       if (index <= ZF_DR_REG_LIM)
-        data = zf_in.get_byte();
-
+      {
+       if (zf_rx_tl!=zf_rx_hd)
+        data=zf_rxbuff[zf_rx_tl++];
+      }
       else switch (index)
       {
         // FIFO in used read
         case ZF_IFR_REG:
-          data = zf_in.used;
+          data=zf_rx_hd-zf_rx_tl;
         break;
 
         // FIFO out free read
         case ZF_OFR_REG:
-          data = zf_out.free;
+          data=zf_tx_tl-zf_tx_hd-1;
         break;
 
         // error code read
@@ -333,15 +344,15 @@ u8 rs232_zx_read(u8 index)
 
   // Kondratyev
   else switch (index)
-	{
-	case UART_DAT_DLL_REG:
-		if (rs232_LCR & 0x80)
-		{
-			data = rs232_DLL;
-		}
-		else
-		{
-			if (rs232_in.used)
+  {
+  case UART_DAT_DLL_REG:
+    if (rs232_LCR & 0x80)
+    {
+      data = rs232_DLL;
+    }
+    else
+    {
+      if (rs232_in.used)
         //get byte from fifo in
         data = rs232_in.get_byte();
 
@@ -350,154 +361,140 @@ u8 rs232_zx_read(u8 index)
         rs232_LSR |= 0x01;
       else
         rs232_LSR &= ~0x01;
-		}
-		break;
+    }
+    break;
 
-	case UART_IER_DLM_REG:
-		if (rs232_LCR & 0x80)
-		{
-			data = rs232_DLM;
-		}
-		else
-		{
-			data = rs232_IER;
-		}
-		break;
+  case UART_IER_DLM_REG:
+    if (rs232_LCR & 0x80)
+    {
+      data = rs232_DLM;
+    }
+    else
+    {
+      data = rs232_IER;
+    }
+    break;
 
-	case UART_FCR_ISR_REG:
-		data = rs232_ISR;
-		break;
+  case UART_FCR_ISR_REG:
+    data = rs232_ISR;
+    break;
 
-	case UART_LCR_REG:
-		data = rs232_LCR;
-		break;
+  case UART_LCR_REG:
+    data = rs232_LCR;
+    break;
 
-	case UART_MCR_REG:
-		data = rs232_MCR;
-		break;
+  case UART_MCR_REG:
+    data = rs232_MCR;
+    break;
 
-	case UART_LSR_REG:
-		data = rs232_LSR;
-		break;
+  case UART_LSR_REG:
+    data = rs232_LSR;
+    break;
 
-	case UART_MSR_REG:
-		//DSR=CD=1
-		data = rs232_MSR;
-		//clear flags
-		rs232_MSR &= 0xF0;
-		break;
+  case UART_MSR_REG:
+    //DSR=CD=1
+    data = rs232_MSR;
+    //clear flags
+    rs232_MSR &= 0xF0;
+    break;
 
-	case UART_SPR_REG:
-		data = rs232_SCR;
-		break;
-	}
+  case UART_SPR_REG:
+    data = rs232_SCR;
+    break;
+  }
 #ifdef LOGENABLE
-	static u8 last = 0;
-	if (last!=index)
-	{
-		char log_read[] = "A..D..R\r\n";
-		log_read[1] = ((index >> 4) <= 9)?'0'+(index >> 4):'A'+((index >> 4)-10);
-		log_read[2] = ((index & 0x0F) <= 9)?'0'+(index & 0x0F):'A'+(index & 0x0F)-10;
-		log_read[4] = ((data >> 4) <= 9)?'0'+(data >> 4):'A'+((data >> 4)-10);
-		log_read[5] = ((data & 0x0F) <= 9)?'0'+(data & 0x0F):'A'+((data & 0x0F)-10);
-		to_log(log_read);
-		last = index;
-	}
+  static u8 last = 0;
+  if (last!=index)
+  {
+    char log_read[] = "A..D..R\r\n";
+    log_read[1] = ((index >> 4) <= 9)?'0'+(index >> 4):'A'+((index >> 4)-10);
+    log_read[2] = ((index & 0x0F) <= 9)?'0'+(index & 0x0F):'A'+(index & 0x0F)-10;
+    log_read[4] = ((data >> 4) <= 9)?'0'+(data >> 4):'A'+((data >> 4)-10);
+    log_read[5] = ((data & 0x0F) <= 9)?'0'+(data & 0x0F):'A'+((data & 0x0F)-10);
+    to_log(log_read);
+    last = index;
+  }
 #endif
-	return data;
+  return data;
 }
 
 void rs232_task(void)
 {
-  // ZiFi
-	//send data
-	if (zf_out.used)
-	{
-		if (UCSR0A & _BV(UDRE))
-			UDR0 = zf_out.get_byte();
-	}
 
-	//receive data
-	if (UCSR0A & _BV(RXC))
-	{
-    if (zf_in.free)
-      zf_in.put_byte(UDR0);
-	}
-  
   // Kondratyev
-	//send data
-	if (rs232_out.used)
-	{
-		if (UCSR1A & _BV(UDRE))
-		{
-			UDR1 = rs232_out.get_byte();
+  //send data
+  if (rs232_out.used)
+  {
+    if (UCSR1A & _BV(UDRE))
+    {
+      UDR1 = rs232_out.get_byte();
 
       //set fifo is empty flag
-			if (!rs232_out.used)
-				rs232_LSR |= 0x60;
-		}
-	}
+      if (!rs232_out.used)
+        rs232_LSR |= 0x60;
+    }
+  }
 
-	//receive data
-	if (UCSR1A & _BV(RXC))
-	{
+  //receive data
+  if (UCSR1A & _BV(RXC))
+  {
     if (rs232_in.free)
       rs232_in.put_byte(UDR1);
     else
       //set overrun flag
-			rs232_LSR |= 0x02;
+      rs232_LSR |= 0x02;
 
-		//set data received flag
-		rs232_LSR |= 0x01;
-	}
+    //set data received flag
+    rs232_LSR |= 0x01;
+  }
 
-	//statuses
-	if (UCSR1A & _BV(FE))
-	{
-		//frame error
-		rs232_LSR |= 0x08;
-	}
-	else
-	{
-		rs232_LSR &= ~(0x08);
-	}
+  //statuses
+  if (UCSR1A & _BV(FE))
+  {
+    //frame error
+    rs232_LSR |= 0x08;
+  }
+  else
+  {
+    rs232_LSR &= ~(0x08);
+  }
 
-	if (UCSR1A & _BV(UPE))
-	{
-		//parity error
-		rs232_LSR |= 0x04;
-	}
-	else
-	{
-		rs232_LSR &= ~(0x04);
-	}
+  if (UCSR1A & _BV(UPE))
+  {
+    //parity error
+    rs232_LSR |= 0x04;
+  }
+  else
+  {
+    rs232_LSR &= ~(0x04);
+  }
 
-	if (RS232CTS_PIN & _BV(RS232CTS))
-	{
-		//CTS clear
-		if ((rs232_MSR & 0x10)!=0)
-		{
+  if (RS232CTS_PIN & _BV(RS232CTS))
+  {
+    //CTS clear
+    if ((rs232_MSR & 0x10)!=0)
+    {
 #ifdef LOGENABLE
-			to_log("CTS\r\n");
+      to_log("CTS\r\n");
 #endif
-			//CTS changed - set flag
-			rs232_MSR |= 0x01;
-		}
-		rs232_MSR &= ~(0x10);
-	}
-	else
-	{
-		//CTS set
-		if ((rs232_MSR & 0x10)==0)
-		{
+      //CTS changed - set flag
+      rs232_MSR |= 0x01;
+    }
+    rs232_MSR &= ~(0x10);
+  }
+  else
+  {
+    //CTS set
+    if ((rs232_MSR & 0x10)==0)
+    {
 #ifdef LOGENABLE
-			to_log("CTS\r\n");
+      to_log("CTS\r\n");
 #endif
-			//CTS changed - set flag
-			rs232_MSR |= 0x01;
-		}
-		rs232_MSR |= 0x10;
-	}
+      //CTS changed - set flag
+      rs232_MSR |= 0x01;
+    }
+    rs232_MSR |= 0x10;
+  }
 
   // status for TS-Conf
   char status = 0;
