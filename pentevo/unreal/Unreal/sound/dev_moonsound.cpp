@@ -33,7 +33,7 @@ ZXMMoonSound_priv::ZXMMoonSound_priv()
 	ymf262->setSampleRate(44100, 1);
 	ymf262->setVolume(32767 * 2 / 10);
 
-	ymf278 = new YMF278( 0, 4096*1024, 2048*1024, t );
+	ymf278 = new YMF278( 0, 4096, 2048*1024, t );
 	ymf278->setSampleRate(44100, 1);
 	ymf278->setVolume(32767 * 2 / 10);
 }
