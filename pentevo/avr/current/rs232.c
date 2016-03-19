@@ -1,5 +1,6 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include <util/atomic.h>
 
 #include "mytypes.h"
 #include "rs232.h"
@@ -194,14 +195,16 @@ void rs232_zx_write(u8 index, u8 data)
       // clear FIFOs
       else if ((data & ZF_CLRFIFO_MASK) == ZF_CLRFIFO)
       {
-        if (data & ZF_CLRFIFO_IN)
-        { cli(); zf_rx_hd=0; zf_rx_tl=0; sei(); }
-
-        if (data & ZF_CLRFIFO_OUT)
-        { zf_tx_hd=0; zf_tx_tl=0; }
+        ATOMIC_BLOCK(ATOMIC_FORCEON)
+        {
+          if (data & ZF_CLRFIFO_IN)
+          { zf_rx_hd=0; zf_rx_tl=0; }
+          if (data & ZF_CLRFIFO_OUT)
+          { zf_tx_hd=0; zf_tx_tl=0; }
+        }
       }
     }
-    
+
   }
 
   else if (index <= ZF_DR_REG_LIM)
@@ -209,9 +212,11 @@ void rs232_zx_write(u8 index, u8 data)
     // data write
     if (zf_api==1)
     {
-     while( (zf_tx_tl-zf_tx_hd-1)==0 );
-     zf_txbuff[zf_tx_hd++]=data;
-     UCSR0B|=_BV(UDRIE0);
+      if (zf_tx_tl-zf_tx_hd-1)
+      {
+        zf_txbuff[zf_tx_hd++]=data;
+        UCSR0B|=_BV(UDRIE0);
+      }
     }
   }
 
