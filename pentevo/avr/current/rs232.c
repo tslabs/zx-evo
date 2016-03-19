@@ -6,6 +6,7 @@
 #include "zx.h"
 #include "pins.h"
 #include "fifo.h"
+#include <util/atomic.h>
 
 // if want Log than comment next string
 #undef LOGENABLE
@@ -16,59 +17,56 @@
 #define UBRR256000 (((F_CPU/16)/BAUD256000)-1)
 
 // Registers for 16550 emulation
-static u8 rs232_DLL; //Divisor Latch LSB
-static u8 rs232_DLM; //Divisor Latch MSB
-static u8 rs232_IER; //Interrupt Enable
-static u8 rs232_ISR; //Interrupt Identification
-static u8 rs232_FCR; //FIFO Control
-static u8 rs232_LCR; //Line Control
-static u8 rs232_MCR; //Modem Control
-static u8 rs232_LSR; //Line Status
-static u8 rs232_MSR; //Modem Status
-static u8 rs232_SCR; //Scratch Pad
-static u8 rs232_FI[16];
-static u8 rs232_FO[16];
-FIFO rs232_in(rs232_FI, sizeof(rs232_FI));
-FIFO rs232_out(rs232_FO, sizeof(rs232_FO));
+u8 rs232_DLL; //Divisor Latch LSB
+u8 rs232_DLM; //Divisor Latch MSB
+u8 rs232_IER; //Interrupt Enable
+u8 rs232_ISR; //Interrupt Identification
+u8 rs232_FCR; //FIFO Control
+u8 rs232_LCR; //Line Control
+u8 rs232_MCR; //Modem Control
+volatile u8 rs232_LSR; //Line Status
+u8 rs232_MSR; //Modem Status
+u8 rs232_SCR; //Scratch Pad
+u8 rs_rxbuff[256];
+volatile u8 rs_rx_hd;
+volatile u8 rs_rx_tl;
+u8 rs_txbuff[256];
+volatile u8 rs_tx_hd;
+volatile u8 rs_tx_tl;
 
 static u8 zf_api;
 static u8 zf_err;
 u8 zf_rxbuff[256];
 volatile u8 zf_rx_hd;
-u8 zf_rx_tl;
+volatile u8 zf_rx_tl;
 u8 zf_txbuff[256];
-u8 zf_tx_hd;
+volatile u8 zf_tx_hd;
 volatile u8 zf_tx_tl;
 
 static inline
 void zifi_init(void)
 {
-  // Set default values
+  // init runtime
   zf_api = 0;
   zf_err = 0;
-  zf_rx_hd=0;
-  zf_rx_tl=0;
-  zf_tx_hd=0;
-  zf_tx_tl=0;
-  // Set baud rate
+  zf_rx_hd = 0;
+  zf_rx_tl = 0;
+  zf_tx_hd = 0;
+  zf_tx_tl = 0;
+
+  // init h/w
   UBRR0H = (u8)(UBRR115200 >> 8);
   UBRR0L = (u8)UBRR115200;
   UCSR0A = 0;
-  UCSR0C = _BV(USBS)|_BV(UCSZ0)|_BV(UCSZ1); // Set frame format: 8data (2stop bit - for TX only)
+  // UCSR0C = _BV(USBS)|_BV(UCSZ0)|_BV(UCSZ1); // Set frame format: 8 data bits, 2 stop bits (for TX only)
+  UCSR0C = _BV(UCSZ0)|_BV(UCSZ1);   // Set frame format: 8 data bits, 1 stop bit
   UCSR0B = _BV(RXCIE)|_BV(RXEN)|_BV(TXEN);  // Enable transmitter, receiver and receiver's interrupt
 }
 
 static inline
 void kondr_init(void)
 {
-  // Set baud rate
-  UBRR1H = (u8)(UBRR115200>>8);
-  UBRR1L = (u8)UBRR115200;
-  UCSR1A = 0;   // Clear reg
-  UCSR1C = _BV(USBS)|_BV(UCSZ0)|_BV(UCSZ1); // Set frame format: 8data (2stop bit - for TX only)
-  UCSR1B = _BV(RXEN)|_BV(TXEN);             // Enable receiver and transmitter
-
-  // Set default values
+  // init runtime
   rs232_DLM = 0;
   rs232_DLL = 0x01;
   rs232_IER = 0;
@@ -79,8 +77,18 @@ void kondr_init(void)
   rs232_LSR = 0x60;
   rs232_MSR = 0xA0; //DSR=CD=1, RI=0
   rs232_SCR = 0xFF;
-  rs232_in.clear();
-  rs232_out.clear();
+  rs_rx_hd = 0;
+  rs_rx_tl = 0;
+  rs_tx_hd = 0;
+  rs_tx_tl = 0;
+
+  // init h/w
+  UBRR1H = (u8)(UBRR115200>>8);
+  UBRR1L = (u8)UBRR115200;
+  UCSR1A = 0;   // Clear reg
+  // UCSR1C = _BV(USBS)|_BV(UCSZ0)|_BV(UCSZ1);  // Set frame format: 8 data bits, 2 stop bits (for TX only)
+  UCSR1C = _BV(UCSZ0)|_BV(UCSZ1);  // Set frame format: 8 data bits, 1 stop bit
+  UCSR1B = _BV(RXCIE)|_BV(RXEN)|_BV(TXEN);   // Enable receiver, transmitter and receiver's interrupt
 }
 
 void rs232_init(void)
@@ -174,6 +182,7 @@ void rs232_zx_write(u8 index, u8 data)
 #endif
 
   // ZiFi
+  // Command Register
   if (index == ZF_CR_ER_REG)
   // command write
   {
@@ -191,27 +200,47 @@ void rs232_zx_write(u8 index, u8 data)
       // get API version
       if ((data & ZF_GETVER_MASK) == ZF_GETVER)
         zf_err = ZF_VER;
+
       // clear FIFOs
       else if ((data & ZF_CLRFIFO_MASK) == ZF_CLRFIFO)
       {
         if (data & ZF_CLRFIFO_IN)
-        { cli(); zf_rx_hd=0; zf_rx_tl=0; sei(); }
+        {
+          ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+          {
+            zf_rx_hd = 0;
+            zf_rx_tl = 0;
+          }
+        }
 
         if (data & ZF_CLRFIFO_OUT)
-        { zf_tx_hd=0; zf_tx_tl=0; }
+        {
+          ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+          {
+            zf_tx_hd = 0;
+            zf_tx_tl = 0;
+            UCSR0B &= ~_BV(UDRIE0);
+          }
+        }
       }
     }
-    
+
   }
 
+  // Data Register
   else if (index <= ZF_DR_REG_LIM)
   {
     // data write
-    if (zf_api==1)
+    if (zf_api == 1)
     {
-     while( (zf_tx_tl-zf_tx_hd-1)==0 );
-     zf_txbuff[zf_tx_hd++]=data;
-     UCSR0B|=_BV(UDRIE0);
+      ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+      {
+        if ((zf_tx_tl - zf_tx_hd - 1) != 0)
+        {
+          zf_txbuff[zf_tx_hd++] = data;
+          UCSR0B |= _BV(UDRIE0);
+        }
+      }
     }
   }
 
@@ -227,11 +256,17 @@ void rs232_zx_write(u8 index, u8 data)
 
       else
       {
-        if (rs232_out.free)
-          //place byte to fifo out
-          rs232_out.put_byte(data);
+        //place byte to fifo out
+        ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+        {
+          if ((rs_tx_tl - rs_tx_hd - 1) != 0)
+          {
+            rs_txbuff[rs_tx_hd++] = data;
+            UCSR1B |= _BV(UDRIE1);
+          }
 
-        rs232_LSR &= ~(0x60);
+          rs232_LSR &= ~(0x60);
+        }
       }
     break;
 
@@ -256,14 +291,23 @@ void rs232_zx_write(u8 index, u8 data)
         if (data & (1<<1))
         {
           //receive FIFO reset
-          rs232_in.clear();
+          ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+          {
+            rs_rx_hd = 0;
+            rs_rx_tl = 0;
+          }
           //set empty FIFO flag and clear overrun flag
           rs232_LSR &= ~(0x03);
         }
         if (data & (1<<2))
         {
           //tramsmit FIFO reset
-          rs232_out.clear();
+          ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+          {
+            rs_tx_hd = 0;
+            rs_tx_tl = 0;
+            UCSR1B &= ~_BV(UDRIE1);
+          }
           //set fifo is empty flag
           rs232_LSR |= 0x60;
         }
@@ -314,24 +358,33 @@ u8 rs232_zx_read(u8 index)
   {
     data = 0xFF;
 
-    if (zf_api==1)
+    if (zf_api == 1)
     {
       // data read
       if (index <= ZF_DR_REG_LIM)
       {
-       if (zf_rx_tl!=zf_rx_hd)
-        data=zf_rxbuff[zf_rx_tl++];
+        ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+        {
+          if (zf_rx_tl != zf_rx_hd)
+            data = zf_rxbuff[zf_rx_tl++];
+        }
       }
       else switch (index)
       {
         // FIFO in used read
         case ZF_IFR_REG:
-          data=zf_rx_hd-zf_rx_tl;
+          ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+          {
+            data = zf_rx_hd - zf_rx_tl;
+          }
         break;
 
         // FIFO out free read
         case ZF_OFR_REG:
-          data=zf_tx_tl-zf_tx_hd-1;
+          ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+          {
+            data = zf_tx_tl - zf_tx_hd - 1;
+          }
         break;
 
         // error code read
@@ -352,15 +405,18 @@ u8 rs232_zx_read(u8 index)
     }
     else
     {
-      if (rs232_in.used)
-        //get byte from fifo in
-        data = rs232_in.get_byte();
+      //get byte from fifo in
+      ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+      {
+        if (rs_rx_tl != rs_rx_hd)
+          data = rs_rxbuff[rs_rx_tl++];
 
-      //set empty FIFO flag
-      if (rs232_in.used)
-        rs232_LSR |= 0x01;
-      else
-        rs232_LSR &= ~0x01;
+        //set empty FIFO flag
+        if (rs_rx_tl != rs_rx_hd)
+          rs232_LSR |= 0x01;
+        else
+          rs232_LSR &= ~0x01;
+      }
     }
     break;
 
@@ -420,34 +476,7 @@ u8 rs232_zx_read(u8 index)
 
 void rs232_task(void)
 {
-
   // Kondratyev
-  //send data
-  if (rs232_out.used)
-  {
-    if (UCSR1A & _BV(UDRE))
-    {
-      UDR1 = rs232_out.get_byte();
-
-      //set fifo is empty flag
-      if (!rs232_out.used)
-        rs232_LSR |= 0x60;
-    }
-  }
-
-  //receive data
-  if (UCSR1A & _BV(RXC))
-  {
-    if (rs232_in.free)
-      rs232_in.put_byte(UDR1);
-    else
-      //set overrun flag
-      rs232_LSR |= 0x02;
-
-    //set data received flag
-    rs232_LSR |= 0x01;
-  }
-
   //statuses
   if (UCSR1A & _BV(FE))
   {
@@ -496,16 +525,18 @@ void rs232_task(void)
     rs232_MSR |= 0x10;
   }
 
+/*
   // status for TS-Conf
   char status = 0;
 
   // Rx data available
-  if (rs232_in.used)
+  if (rs_rx_tl != rs_rx_hd)
     status |= SPI_STATUS_REG_RX;
 
   // Tx space available
-  if (rs232_out.free)
+  if ((zf_tx_tl - zf_tx_hd - 1) != 0)
     status |= SPI_STATUS_REG_TX;
 
   zx_spi_send(SPI_STATUS_REG, status, ZXW_MASK);
+*/
 }

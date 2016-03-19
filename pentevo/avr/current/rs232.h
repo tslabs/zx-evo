@@ -3,6 +3,14 @@
 
 #ifdef __ASSEMBLER__
 /* ------------------------------------------------------------------------- */
+.extern rs_rxbuff
+.extern rs_rx_hd
+.extern rs_rx_tl
+.extern rs_txbuff
+.extern rs_tx_hd
+.extern rs_tx_tl
+.extern rs232_LSR
+
 .extern zf_rxbuff
 .extern zf_rx_hd
 .extern zf_rx_tl
