@@ -70,58 +70,56 @@ static bool __cdecl get_dos_flag()
     return (comp.flags & CF_DOSPORTS) != 0;
 }
 
-#define DECL_REGS(var, cpu)                        \
-   static struct                                   \
-   {                                               \
-      unsigned reg;                                \
-      const void *ptr;                             \
-      u8 size;                          \
-   } var[] =                                       \
-   {                                               \
-                                                   \
-      { WORD4('D','O','S',0), (const void *)get_dos_flag, 0 },  \
-      { WORD4('O','U','T',0), &brk_port_out, 4 },  \
-      { WORD2('I','N'), &brk_port_in, 4 },         \
-	  { WORD4('V','A','L',0), &brk_port_val, 1 },  \
-	  { WORD2('R','D'), &brk_mem_rd, 4 },		   \
-      { WORD2('W','R'), &brk_mem_wr, 4 },          \
-	  { WORD4('M','D','T',0), &brk_mem_val, 1 }, \
-      { WORD2('F','D'), &comp.p7FFD, 1 },          \
-                                                   \
-      { WORD4('A','F','\'',0), &cpu.alt.af, 2 },   \
-      { WORD4('B','C','\'',0), &cpu.alt.bc, 2 },   \
-      { WORD4('D','E','\'',0), &cpu.alt.de, 2 },   \
-      { WORD4('H','L','\'',0), &cpu.alt.hl, 2 },   \
-      { WORD2('A','\''), &cpu.alt.a, 1 },          \
-      { WORD2('F','\''), &cpu.alt.f, 1 },          \
-      { WORD2('B','\''), &cpu.alt.b, 1 },          \
-      { WORD2('C','\''), &cpu.alt.c, 1 },          \
-      { WORD2('D','\''), &cpu.alt.d, 1 },          \
-      { WORD2('E','\''), &cpu.alt.e, 1 },          \
-      { WORD2('H','\''), &cpu.alt.h, 1 },          \
-      { WORD2('L','\''), &cpu.alt.l, 1 },          \
-                                                   \
-      { WORD2('A','F'), &cpu.af, 2 },              \
-      { WORD2('B','C'), &cpu.bc, 2 },              \
-      { WORD2('D','E'), &cpu.de, 2 },              \
-      { WORD2('H','L'), &cpu.hl, 2 },              \
-      { 'A', &cpu.a, 1 },                          \
-      { 'F', &cpu.f, 1 },                          \
-      { 'B', &cpu.b, 1 },                          \
-      { 'C', &cpu.c, 1 },                          \
-      { 'D', &cpu.d, 1 },                          \
-      { 'E', &cpu.e, 1 },                          \
-      { 'H', &cpu.h, 1 },                          \
-      { 'L', &cpu.l, 1 },                          \
-                                                   \
-      { WORD2('P','C'), &cpu.pc, 2 },              \
-      { WORD2('S','P'), &cpu.sp, 2 },              \
-      { WORD2('I','X'), &cpu.ix, 2 },              \
-      { WORD2('I','Y'), &cpu.iy, 2 },              \
-                                                   \
-      { 'I', &cpu.i, 1 },                          \
-      { 'R', &cpu.r_low, 1 },                      \
-   }
+#define DECL_REGS(var, cpu)                       \
+  static BPXR var[] =                             \
+  {                                               \
+    { WORD4('D','O','S',0), (const void *)get_dos_flag, 0 },  \
+    { WORD4('O','U','T',0), &brk_port_out, 4 },   \
+    { WORD2('I','N'), &brk_port_in, 4 },          \
+    { WORD4('V','A','L',0), &brk_port_val, 1 },   \
+    { WORD2('R','D'), &brk_mem_rd, 4 },           \
+    { WORD2('W','R'), &brk_mem_wr, 4 },           \
+    { WORD4('M','D','T',0), &brk_mem_val, 1 },    \
+    { WORD2('F','D'), &comp.p7FFD, 1 },           \
+    { WORD4('P','G','0',0), &comp.ts.page[0], 1 },\
+    { WORD4('P','G','1',0), &comp.ts.page[1], 1 },\
+    { WORD4('P','G','2',0), &comp.ts.page[2], 1 },\
+    { WORD4('P','G','3',0), &comp.ts.page[3], 1 },\
+                                                  \
+    { WORD4('A','F','\'',0), &cpu.alt.af, 2 },    \
+    { WORD4('B','C','\'',0), &cpu.alt.bc, 2 },    \
+    { WORD4('D','E','\'',0), &cpu.alt.de, 2 },    \
+    { WORD4('H','L','\'',0), &cpu.alt.hl, 2 },    \
+    { WORD2('A','\''), &cpu.alt.a, 1 },           \
+    { WORD2('F','\''), &cpu.alt.f, 1 },           \
+    { WORD2('B','\''), &cpu.alt.b, 1 },           \
+    { WORD2('C','\''), &cpu.alt.c, 1 },           \
+    { WORD2('D','\''), &cpu.alt.d, 1 },           \
+    { WORD2('E','\''), &cpu.alt.e, 1 },           \
+    { WORD2('H','\''), &cpu.alt.h, 1 },           \
+    { WORD2('L','\''), &cpu.alt.l, 1 },           \
+                                                  \
+    { WORD2('A','F'), &cpu.af, 2 },               \
+    { WORD2('B','C'), &cpu.bc, 2 },               \
+    { WORD2('D','E'), &cpu.de, 2 },               \
+    { WORD2('H','L'), &cpu.hl, 2 },               \
+    { 'A', &cpu.a, 1 },                           \
+    { 'F', &cpu.f, 1 },                           \
+    { 'B', &cpu.b, 1 },                           \
+    { 'C', &cpu.c, 1 },                           \
+    { 'D', &cpu.d, 1 },                           \
+    { 'E', &cpu.e, 1 },                           \
+    { 'H', &cpu.h, 1 },                           \
+    { 'L', &cpu.l, 1 },                           \
+                                                  \
+    { WORD2('P','C'), &cpu.pc, 2 },               \
+    { WORD2('S','P'), &cpu.sp, 2 },               \
+    { WORD2('I','X'), &cpu.ix, 2 },               \
+    { WORD2('I','Y'), &cpu.iy, 2 },               \
+                                                  \
+    { 'I', &cpu.i, 1 },                           \
+    { 'R', &cpu.r_low, 1 },                       \
+  }
 
 
 u8 toscript(char *script, unsigned *dst)
@@ -193,7 +191,7 @@ u8 toscript(char *script, unsigned *dst)
             unsigned mask = 0xFF; ln = 1;
             if (regs[i].reg & 0xFF00) mask = 0xFFFF, ln = 2;
             if (regs[i].reg & 0xFF0000) mask = 0xFFFFFF, ln = 3;
-			if (regs[i].reg & 0xFF000000) mask = 0xFFFFFFFF, ln = 4;
+      if (regs[i].reg & 0xFF000000) mask = 0xFFFFFFFF, ln = 4;
             if (regs[i].reg == (p & mask)) { r = i; break; }
          }
          if (r != -1)
@@ -209,7 +207,7 @@ u8 toscript(char *script, unsigned *dst)
             }
             *dst++ = (unsigned)regs[r].ptr;
 
-			continue;
+      continue;
          }
          else if ( *script != 'M' )
          { // number
@@ -219,7 +217,7 @@ u8 toscript(char *script, unsigned *dst)
             *dst++ = DB_SHORT;
             *dst++ = r;
 
-			continue;
+      continue;
          }
       }
       // find operation
@@ -668,7 +666,7 @@ void mon_watchdialog()
 }
 
 void init_bpx(char* file)
-{    
+{
     addpath(BpxFileName, file ? file : "bpx.ini");
     FILE *BpxFile = fopen(BpxFileName, "rt");
     if (!BpxFile) return;

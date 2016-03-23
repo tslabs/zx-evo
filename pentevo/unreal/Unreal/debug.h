@@ -101,6 +101,14 @@ public:
     static unsigned GetCount() { return Count; }
 };
 
+// debug breakpoints format descriptor
+typedef struct
+{
+  unsigned reg;       // token string (e.g. 'DOS','OUT')
+  const void *ptr;    // pointer to variable, containing queried value
+  u8 size;            // size of variable (1, 2, 4) or 0 for address of function: bool func()
+} BPXR;
+
 extern TCpuMgr CpuMgr;
 extern DBGWND activedbg;
 extern unsigned dbg_extport;

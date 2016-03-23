@@ -463,6 +463,7 @@ Alt-Y           switch active sound chip in Turbo-Sound mode
          a',b',c',d',e',h',l',bc',de',hl'       - alternative registers
          ix,iy,pc,sp,i,r                        - control registers
          FD     - memory port #FD (also known as #7FFD)
+         PG0, PG1, PG2, PG3 - TS-conf page registers for memory windows at #0000, #4000, #8000, #C000
          OUT    - port used in 'OUT' command (or 0FFFFFFFF when no outs)
          IN     - port used in 'IN'  command (or 0FFFFFFFF when no ins)
          VAL    - read/written value to port (only meaningful when OUT !=
