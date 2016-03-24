@@ -33,7 +33,7 @@ u8 asm_tab_z80[] =
 
    // fix bug out (c),a => out (0C),a
    2, 0xED, 0x70, 0xFF, 0xFF, // in (c)
-   'i','n',' ','(','c',')',0,
+   'i','n',' ','f',',','(','c',')',0,
    2, 0xED, 0x71, 0xFF, 0xFF, // out (c),0
    'o','u','t',' ','(','c',')',',','0',0,
    2, 0xED, 0x40, 0xFF, 0xC7, // in r8,(c)
