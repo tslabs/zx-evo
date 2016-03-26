@@ -877,8 +877,14 @@ set1FFD:
          return;
       }
    }
-   if ((port & 0xF8FF) == 0xF8EF && modem.open_port)
-       modem.write((port >> 8) & 7, val);
+   if ((port & 0x00FF) == 0x00EF)
+   {
+    u8 hport = (u8)(port >> 8);
+    if (hport >= 0xF8)
+    { if (modem.open_port)  modem.write(hport & 7, val); }
+    else
+    { if (zifi.open_port)  zifi.write(hport, val); }
+   }
 }
 
 __inline u8 in1(unsigned port)
@@ -1323,8 +1329,14 @@ __inline u8 in1(unsigned port)
           return cmos_read();
    }
 
-   if ((port & 0xF8FF) == 0xF8EF && modem.open_port)
-       return modem.read((port >> 8) & 7);
+   if ((port & 0x00FF) == 0x00EF)
+   {
+    u8 hport = (u8)(port >> 8);
+    if (hport >= 0xF8)
+    { if (modem.open_port)  return modem.read(hport & 7); }
+    else
+    { if (zifi.open_port)  return zifi.read(hport); }
+   }
 
    if (conf.portff && (p1 == 0xFF))
    {

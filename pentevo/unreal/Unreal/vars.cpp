@@ -211,6 +211,7 @@ TEMP temp;
 ATA_PORT hdd;   // not in `comp' - not cleared in reset()
 K_INPUT input;
 ISA_MODEM modem;
+ZIFI zifi;
 
 SNDRENDER sound;
 SNDCHIP ay[2];

@@ -149,6 +149,7 @@
     <ClCompile Include="z80.cpp" />
     <ClCompile Include="z80asm.cpp" />
     <ClCompile Include="zc.cpp" />
+    <ClCompile Include="zifi.cpp" />
     <ClCompile Include="zxevo.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -243,6 +244,7 @@
     <ClInclude Include="z80asm.h" />
     <ClInclude Include="z80_main.h" />
     <ClInclude Include="zc.h" />
+    <ClInclude Include="zifi.h" />
     <ClInclude Include="zxevo.h" />
   </ItemGroup>
   <ItemGroup>

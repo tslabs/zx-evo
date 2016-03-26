@@ -193,6 +193,7 @@ struct CONFIG
    bool portff;
 
    int modem_port; //, modem_scheme;
+   int zifi_port;
    u8 fdd_noise;
 
    u8 trdos_present, trdos_interleave;
@@ -416,6 +417,7 @@ enum AY_SCHEME
 #include "hdd.h"
 #include "input.h"
 #include "modem.h"
+#include "zifi.h"
 
 #if defined(MOD_GSZ80) || defined(MOD_GSBASS)
 #include "bass.h"

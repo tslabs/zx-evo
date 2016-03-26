@@ -148,6 +148,7 @@ void __declspec(noreturn) exit()
    done_leds();
    save_nv();
    modem.close();
+   zifi.close();
    done_ie_help();
    done_bpx();
    GdiplusShutdown();

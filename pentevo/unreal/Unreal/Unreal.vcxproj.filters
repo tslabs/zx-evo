@@ -346,6 +346,9 @@
     <ClCompile Include="sound\ymf262.cpp">
       <Filter>Sources\sound</Filter>
     </ClCompile>
+    <ClCompile Include="zifi.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="atm.h">
@@ -623,6 +626,9 @@
     </ClInclude>
     <ClInclude Include="sound\ymf278.h">
       <Filter>Headers\sound</Filter>
+    </ClInclude>
+    <ClInclude Include="zifi.h">
+      <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

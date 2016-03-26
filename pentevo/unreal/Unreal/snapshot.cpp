@@ -195,7 +195,7 @@ int readSPG()
   case 1: // random memory initialization
     for (u32 i = 0; i < PAGE * MAX_RAM_PAGES; i++)
     {
-      srand(time(NULL));
+      srand((unsigned)time(NULL));
       u8 byte = rand();
       RAM_BASE_M[i] = byte;
     }

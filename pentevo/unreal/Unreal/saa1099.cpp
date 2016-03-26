@@ -280,8 +280,8 @@ void TSaa1099::update(unsigned TimeStamp)
     }
 
     /* write sound data to the buffer */
-    unsigned mix_l = output_l * (conf.sound.saa1099_vol / 8192.0) / 6;
-    unsigned mix_r = output_r * (conf.sound.saa1099_vol / 8192.0) / 6;
+    unsigned mix_l = (unsigned)( output_l * (conf.sound.saa1099_vol / 8192.0) / 6 );
+    unsigned mix_r = (unsigned)( output_r * (conf.sound.saa1099_vol / 8192.0) / 6 );
     if ((mix_l ^ SNDRENDER::mix_l) | (mix_r ^ SNDRENDER::mix_r)) // similar check inside update()
         SNDRENDER::update(TimeStamp, mix_l, mix_r);
 }

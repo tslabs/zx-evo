@@ -268,7 +268,7 @@ void load_config(const char *fname)
    conf.sleepidle = GetPrivateProfileInt(misc, "ShareCPU", 0, ininame);
    conf.highpriority = GetPrivateProfileInt(misc, "HighPriority", 0, ininame);
    conf.tape_traps = GetPrivateProfileInt(misc, "TapeTraps", 1, ininame);
-   cpu.vm1 = GetPrivateProfileInt(misc, "Z80_VM1", 0, ininame);
+   cpu.vm1 = GetPrivateProfileInt(misc, "Z80_VM1", 0, ininame) != 0;
    cpu.outc0 = GetPrivateProfileInt(misc, "OUT_C_0", 1, ininame);
    conf.tape_autostart = GetPrivateProfileInt(misc, "TapeAutoStart", 1, ininame);
    conf.EFF7_mask = GetPrivateProfileInt(misc, "EFF7mask", 0, ininame);
@@ -368,8 +368,11 @@ void load_config(const char *fname)
 
    GetPrivateProfileString(misc, "Modem", nil, line, sizeof line, ininame);
    conf.modem_port = 0;
-
    sscanf(line, "COM%d", &conf.modem_port);
+
+   GetPrivateProfileString(misc, "ZiFi", nil, line, sizeof line, ininame);
+   conf.zifi_port = 0;
+   sscanf(line, "COM%d", &conf.zifi_port);
 
    //conf.paper = GetPrivateProfileInt(ula, "Paper", 17989, ininame);
    conf.intstart = GetPrivateProfileInt(ula, "intstart", 0, ininame);
@@ -1033,6 +1036,7 @@ void applyconfig()
    input.clear_zx();
 
    modem.open(conf.modem_port);
+   zifi.open(conf.zifi_port);
 
    load_atariset();
    apply_video();

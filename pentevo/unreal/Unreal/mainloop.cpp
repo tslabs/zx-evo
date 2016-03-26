@@ -36,6 +36,9 @@ void spectrum_frame()
    if (modem.open_port)
        modem.io();
 
+   if (zifi.open_port)
+       zifi.io();
+
 	flush_snd_frame();
 
 	if (videosaver_state)
