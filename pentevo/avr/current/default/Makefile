@@ -15,7 +15,7 @@ endif
 PROJECT = core
 TARGET = $(PROJECT).elf
 MCU = atmega128
-CC = avr-c++
+CC = avr-gcc
 
 MHMT = "../../../tools/mhmt/mhmt$(EXE)"
 MKFW = "../../../tools/make_fw/make_fw$(EXE)"
@@ -33,7 +33,7 @@ AD = "$(AP)avrdude$(EXE)" -q -q -u -C "$(AP)avrdude.conf" -c $(PROGRAMMER) -p $(
 
 ## Compile options common for all C compilation units.
 CFLAGS = -mmcu=$(MCU)
-CFLAGS += -Os -flto -Wall -Wextra -gdwarf-2 -std=c++11
+CFLAGS += -Os -flto -Wall -Wextra -gdwarf-2 -std=gnu99
 CFLAGS += -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums -fdata-sections -ffunction-sections
 CFLAGS += -DF_CPU=11059200UL
 CFLAGS += -Wl,--gc-sections,--relax,-Map=$(PROJECT).map

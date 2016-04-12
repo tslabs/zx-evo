@@ -3,17 +3,29 @@
 
 #ifdef __ASSEMBLER__
 /* ------------------------------------------------------------------------- */
-.extern zf_rxbuff
+.extern dbuf
+
+.extern rs232_LSR
+/* .extern rs_rxbuff */
+.extern rs_rx_hd
+.extern rs_rx_tl
+/* .extern rs_txbuff */
+.extern rs_tx_hd
+.extern rs_tx_tl
+
+/* .extern zf_rxbuff */
 .extern zf_rx_hd
 .extern zf_rx_tl
-.extern zf_txbuff
+/* .extern zf_txbuff */
 .extern zf_tx_hd
 .extern zf_tx_tl
 /* ------------------------------------------------------------------------- */
 #else //__ASSEMBLER__
 
+#include "main.h"
+
 void rs232_init(void);
-void rs232_transmit(u8 data);
+//void rs232_transmit(u8 data);
 
 //#define LOGENABLE
 #ifdef LOGENABLE
@@ -63,16 +75,22 @@ void rs232_task(void);
 #define UART_SPR_REG      0xFF
 
 
-/** DR registers limit. */
+/** ZF_DR registers limit. */
 #define ZF_DR_REG_LIM     0xBF
 
-/** IFR register. */
+/** ZF_IFR register. */
 #define ZF_IFR_REG        0xC0
 
-/** OFR register. */
+/** ZF_OFR register. */
 #define ZF_OFR_REG        0xC1
 
-/** CR/ER register. */
+/** RS_IFR register. */
+#define RS_IFR_REG        0xC2
+
+/** RS_OFR register. */
+#define RS_OFR_REG        0xC3
+
+/** RS/ZF_CR/ER register. */
 #define ZF_CR_ER_REG      0xC7
 
 
@@ -81,6 +99,10 @@ void rs232_task(void);
 #define ZF_CLRFIFO_MASK   0b11111100
 #define ZF_CLRFIFO_IN     0b00000001
 #define ZF_CLRFIFO_OUT    0b00000010
+#define RS_CLRFIFO        0b00000100
+#define RS_CLRFIFO_MASK   0b11111100
+#define RS_CLRFIFO_IN     0b00000001
+#define RS_CLRFIFO_OUT    0b00000010
 
 /** SETAPI command. */
 #define ZF_SETAPI         0b11110000
@@ -99,5 +121,10 @@ void rs232_task(void);
 #define ZF_VER            0x01
 
 #endif //__ASSEMBLER__
+
+#define rs_rxbuff (dbuf+512)
+#define rs_txbuff (dbuf+0)
+#define zf_rxbuff (dbuf+1024)
+#define zf_txbuff (dbuf+256)
 
 #endif //RS232_H

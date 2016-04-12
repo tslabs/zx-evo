@@ -3,6 +3,7 @@
 #include <avr/eeprom.h>
 #include <avr/pgmspace.h>
 #include <util/delay.h>
+#include <util/atomic.h>
 
 #include "mytypes.h"
 #include "zx.h"
@@ -50,6 +51,7 @@ void zx_init(void)
 
   zx_task(ZX_TASK_INIT);
 
+  ATOMIC_BLOCK(ATOMIC_FORCEON) { rs232_init(); }
   //reset Z80
   zx_spi_send(SPI_RST_REG, 0, 0);
 }
@@ -640,6 +642,9 @@ void zx_mouse_task(void)
 
 void zx_wait_task(u8 status)
 {
+  //power led OFF
+  LED_PORT |= 1<<LED;
+
   u8 addr = 0;
   u8 data = 0xFF;
 
@@ -690,6 +695,9 @@ void zx_wait_task(u8 status)
   log_wait[8] = ((data & 0x0F) <= 9)?'0'+(data & 0x0F):'A'+(data & 0x0F)-10;
   to_log(log_wait);
 #endif   */
+
+  //power led ON
+  LED_PORT &= ~(1<<LED);
 }
 
 void zx_mode_switcher(u8 mode)

@@ -117,13 +117,14 @@ start:
   {
     u8 b,i;
     u32 version = 0x1DFF0;
+    u8 tmpbuff[13];
     char VER[]="..";
     for(i=0; i<12; i++)
     {
-      dbuf[i] = pgm_read_byte_far(version+i);
+      tmpbuff[i] = pgm_read_byte_far(version+i);
     }
-    dbuf[i]=0;
-    to_log((char*)dbuf);
+    tmpbuff[i]=0;
+    to_log((char*)tmpbuff);
     to_log(" ");
     u8 b1 = pgm_read_byte_far(version+12);
     u8 b2 = pgm_read_byte_far(version+13);
@@ -203,11 +204,11 @@ start:
   to_log("depacker_dirty OK\r\n");
 #endif
 
-  //power led OFF
-  LED_PORT |= 1<<LED;
+  //power led ON
+  LED_PORT &= ~(1<<LED);
 
-  // start timer (led dimming and timeouts for ps/2)
-  TCCR2 = 0b01110011; // FOC2=0, {WGM21,WGM20}=01, {COM21,COM20}=11, {CS22,CS21,CS20}=011
+  // start timer (timeouts for ps/2)
+  TCCR2 = 0b01000011; // FOC2=0, {WGM21,WGM20}=01, {COM21,COM20}=00, {CS22,CS21,CS20}=011
         // clk/64 clocking,
         // 1/512 overflow rate, total 11.059/32768 = 337.5 Hz interrupt rate
   TIFR = (1<<TOV2);

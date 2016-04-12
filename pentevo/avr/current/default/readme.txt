@@ -10,4 +10,4 @@ USBasp programmer is used by default. You can change it in the Makefile.
 Usage:
 ------
 To switch between configurations press:
-	L_Ctrl + Alt + Insert
+	L_Ctrl + Alt + F12
