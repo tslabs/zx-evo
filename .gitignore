@@ -16,8 +16,6 @@
 *.smsg
 *.rpt
 *.done
-*/db/*
-*/incremental_db/*
 *.sdf
 *.opensdf
 *.suo
@@ -54,3 +52,4 @@ pentevo/rom/src/obj/ts-bios.html
 pentevo/rom/src/obj/ts-bios.bin
 db
 incremental_db
+*.jdi
