@@ -62,7 +62,6 @@ module slavespi
 
   // Configuration
   output wire [ 7:0] config0,
-  output wire [ 1:0] status0,
 
   input  wire [ 7:0] wait_write,
   output wire [ 7:0] wait_read,
@@ -84,7 +83,6 @@ module slavespi
   assign wait_read   = wait_reg;
   assign wait_end    = sel_waitreg && scs_n_01;
   assign config0     = cfg0_reg;
-  assign status0     = stat_reg[1:0];
 
   // re-sync SPI
   reg [2:0] spics_n_sync;
@@ -156,8 +154,6 @@ module slavespi
 
   wire sel_cfg0 = (regnum[7:4] == 4'h5); // $50
 
-  wire sel_stat = (regnum[7:4] == 4'h6); // $60
-
   wire kbd_start = sel_kbdstb && scs_n_01;  // !!! this requires change zx.c for good: kbd_start should be issued BEFORE kbd reg transfer, NOT after
   wire kbd_bit_stb = !scs_n && sel_kbdreg && sck_01;
 
@@ -173,7 +169,6 @@ module slavespi
   reg [7:0] shift_in;   // register for shifting in
   reg [7:0] wait_reg;   // wait data out register
   reg [7:0] cfg0_reg;   // config register
-  reg [7:0] stat_reg;   // status register
 
   always @(posedge fclk)
   begin
@@ -185,8 +180,5 @@ module slavespi
 
     if (scs_n_01 && sel_cfg0)
       cfg0_reg <= shift_in;
-
-    if (scs_n_01 && sel_stat)
-      stat_reg <= shift_in;
   end
 endmodule

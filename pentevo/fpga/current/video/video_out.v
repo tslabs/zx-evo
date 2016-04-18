@@ -97,6 +97,11 @@ module video_out
   assign vred = cred;
   assign vgrn = cgrn;
   assign vblu = cblu;
+`elsif IDE_VDAC2
+// no PWM
+  assign vred = cred;
+  assign vgrn = cgrn;
+  assign vblu = cblu;
 `else
 // output muxing for 56MHz PWM resolution
   assign vred = clk ? red1 : red0;

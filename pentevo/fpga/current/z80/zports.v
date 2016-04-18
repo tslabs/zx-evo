@@ -1,3 +1,4 @@
+
 // PentEvo project (c) NedoPC 2008-2010
 
 `include "tune.v"
@@ -93,10 +94,7 @@ module zports(
 
   input  wire        tape_read,
 
-  input  wire        rx_rdy,
-  input  wire        tx_rdy,
-
-`ifndef IDE_VDAC
+`ifdef IDE_HDD
 // IDE interface
   input  wire [15:0] ide_in,
   output wire [15:0] ide_out,
@@ -119,7 +117,10 @@ module zports(
   output wire [1:0]  drive_sel,    // disk drive selection
 
 // SPI
-  output reg         sdcs_n,
+  output wire        sdcs_n,
+`ifdef IDE_VDAC2
+  output wire        ftcs_n,
+`endif
   output wire        sd_start,
   output wire [ 7:0] sd_datain,
   input  wire [ 7:0] sd_dataout,
@@ -131,8 +132,12 @@ module zports(
   output wire        wait_start_comport,  //
   output reg  [ 7:0] wait_write,
   input  wire [ 7:0] wait_read
-
 );
+
+  assign sdcs_n = spi_cs_n[0];
+`ifdef IDE_VDAC2
+  assign ftcs_n = spi_cs_n[1];
+`endif
 
 `ifdef FDR
   localparam FDR_VER = 1'b1;
@@ -141,9 +146,11 @@ module zports(
 `endif
 
 `ifdef IDE_VDAC
-  localparam VDAC_VER = 2'h3;
+  localparam VDAC_VER = 3'h3;
+`elsif IDE_VDAC2
+  localparam VDAC_VER = 3'h7;
 `else
-  localparam VDAC_VER = 2'h0;
+  localparam VDAC_VER = 3'h0;
 `endif
 
   localparam PORTFE = 8'hFE;
@@ -152,7 +159,7 @@ module zports(
   localparam PORTF7 = 8'hF7;
   localparam COVOX  = 8'hFB;
 
-`ifndef IDE_VDAC
+`ifdef IDE_HDD
   localparam NIDE10 = 8'h10;
   localparam NIDE11 = 8'h11;
   localparam NIDE30 = 8'h30;
@@ -193,7 +200,7 @@ module zports(
     assign porthit =
             ((loa==PORTFE) || (loa==PORTXT) || (loa==PORTFD) || (loa==COVOX))
      || ((loa==PORTF7) && !dos)
-`ifndef IDE_VDAC
+`ifdef IDE_HDD
          || ide_all
 `endif
      || ((vg_port || vgsys_port) && (dos || open_vg))
@@ -202,7 +209,7 @@ module zports(
          || (((loa==SDCFG) || (loa==SDDAT)) && (!dos || vdos))
          || (loa==COMPORT);
 
-`ifndef IDE_VDAC
+`ifdef IDE_HDD
   wire ide_all = ide_even || ide_port11;
   wire ide_even = (loa[2:0] == 3'b000) && (loa[3] != loa[4]);      // even ports
     wire ide_port11 = (loa==NIDE11);                  // 11
@@ -251,7 +258,7 @@ module zports(
     PORTFE:
       dout = {1'b1, tape_read, 1'b0, keys_in};
 
-`ifndef IDE_VDAC
+`ifdef IDE_HDD
     NIDE10,NIDE30,NIDE50,NIDE70,NIDE90,NIDEB0,NIDED0,NIDEF0,NIDE08,NIDE28,NIDE48,NIDE68,NIDE88,NIDEA8,NIDEC8,NIDEE8:
       dout = iderdeven;
     NIDE11:
@@ -263,7 +270,7 @@ module zports(
             case (hoa)
 
             XSTAT:
-                dout = {1'b0, pwr_up_reg, FDR_VER, tx_rdy, rx_rdy, 1'b0, VDAC_VER};
+                dout = {1'b0, pwr_up_reg, FDR_VER, 2'b0, VDAC_VER};
 
             DMASTAT:
                 dout = {dma_act, 7'b0};
@@ -550,10 +557,11 @@ module zports(
         if (vg_wrDS)
             drive_sel_raw <= din;
 
-// SD card (Z-control¸r compatible)
+// SD card (Z-controller compatible)
   wire sdcfg_wr;
-    wire sddat_wr;
-    wire sddat_rd;
+  wire sddat_wr;
+  wire sddat_rd;
+  reg [1:0] spi_cs_n;
 
   assign sdcfg_wr = ((loa==SDCFG) && iowr_s && (!dos || vdos));
   assign sddat_wr = ((loa==SDDAT) && iowr_s && (!dos || vdos));
@@ -562,23 +570,19 @@ module zports(
   // SDCFG write - sdcs_n control
   always @(posedge clk)
     if (rst)
-      sdcs_n <= 1'b1;
+      spi_cs_n <= 2'b11;
     else if (sdcfg_wr)
-      sdcs_n <= din[1];
-
+      spi_cs_n <= {~din[2], din[1]};
 
   // start signal for SPI module with resyncing to fclk
   assign sd_start = sddat_wr || sddat_rd;
 
-
   // data for SPI module
   assign sd_datain = wr ? din : 8'hFF;
-
 
 // xxF7
   wire portf7_wr = ((loa==PORTF7) && (a[8]==1'b1) && port_wr && (!dos || vdos));
   wire portf7_rd = ((loa==PORTF7) && (a[8]==1'b1) && port_rd && (!dos || vdos));
-
 
 // EFF7 port
     reg [7:0] peff7;
@@ -621,7 +625,7 @@ module zports(
   assign wait_start_gluclock = (gluclock_on && !a[14] && (portf7_rd || portf7_wr)); // $BFF7 - gluclock r/w
   assign wait_start_comport = (comport_rd || comport_wr);
 
-`ifndef IDE_VDAC
+`ifdef IDE_HDD
 // IDE ports
     // do NOT generate IDE write, if neither of ide_wrhi|lo latches set and writing to NIDE10
   wire ide_cs0 = ide_even && !ide_portc8;

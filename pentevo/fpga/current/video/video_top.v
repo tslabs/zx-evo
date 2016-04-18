@@ -22,6 +22,9 @@ module video_top (
   output wire  [4:0] vgrn_raw,
   output wire  [4:0] vblu_raw,
   output wire  vdac_mode,
+`ifdef IDE_VDAC2
+  output wire vdac2_msel,
+`endif
 
 // video syncs
   output wire  hsync,
@@ -66,7 +69,8 @@ module video_top (
 // ZX controls
   input wire  res,
   output wire int_start,
-  output wire  line_start_s,
+  output wire line_start_s,
+
 
 // DRAM interface
   output wire [20:0] video_addr,
@@ -126,6 +130,9 @@ module video_top (
   wire v60hz;
   wire nogfx = vconf[5];
   wire notsu = vconf[4];
+`ifdef IDE_VDAC2
+  assign vdac2_msel = vconf[2];
+`endif
   wire tv_blank;
 
 // counters
