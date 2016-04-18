@@ -3,6 +3,7 @@ module ide_video
   // input from IDE
   input wire m_sel,
 
+  // ZX-Evo video input
   input wire o_clk,
   inout wire [4:0] o_r, // [1:0] used as bi-directional bus
   input wire [4:0] o_g,
@@ -11,10 +12,7 @@ module ide_video
   input wire o_hs,
   input wire o_vs,
 
-  // input from FT812
-  input wire ft_miso,
-  input wire ft_int_n,
-  
+  // FT812 video input
   input wire f_clk,
   input wire [7:0] f_r,
   input wire [7:0] f_g,
@@ -22,6 +20,10 @@ module ide_video
   input wire f_hs,
   input wire f_vs,
 
+  // FT812 SPI input
+  input wire ft_miso,
+  input wire ft_int_n,
+  
   // output to VDAC
   output wire v_clk,
   output wire [7:0] v_r,
