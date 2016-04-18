@@ -5,7 +5,7 @@ module ide_video
 
   // ZX-Evo video input
   input wire o_clk,
-  inout wire [4:0] o_r, // [1:0] used as bi-directional bus
+  inout wire [4:0] o_r, // [0] used as bi-directional bus
   input wire [4:0] o_g,
   input wire [4:0] o_b,
   input wire pal_sel,
@@ -21,7 +21,6 @@ module ide_video
   input wire f_vs,
 
   // FT812 SPI input
-  input wire ft_miso,
   input wire ft_int_n,
   
   // output to VDAC
@@ -34,8 +33,8 @@ module ide_video
 );
 
   // control bus mux
-  assign o_r[1:0] = m_sel ? {ft_int_n, ft_miso} : 2'bZZ;
-  assign o_r[4:2] = 3'bZZZ;
+  assign o_r[0] = m_sel ? ft_int_n : 1'bZ;
+  assign o_r[4:1] = 4'bZZZ;
 
   // video output selector
   assign v_clk = m_sel ? f_clk : o_clk;
