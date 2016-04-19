@@ -69,7 +69,7 @@ module top(
   // IDE
 `ifdef IDE_HDD
   inout [15:0] ide_d,
-  input ide_rs_n,
+  output ide_rs_n,
 `elsif IDE_VDAC
   output [15:0] ide_d,
   input ide_rs_n,
@@ -83,8 +83,9 @@ module top(
   output ide_cs1_n,
   output ide_rd_n,
   output ide_wr_n,
+  input ide_rdy,
 
-  // VG93 and diskdrive
+  // VG93 and FDD
   output vg_clk,
 
   output vg_cs_n,
@@ -105,27 +106,21 @@ module top(
   input vg_drq,
   input vg_irq,
   input vg_wd,
+  input vg_wf_de,  // unused
 
-  // serial links(atmega-fpga, sdcard)
+  // SPI SD-Card
   output sdcs_n,
   output sdclk,
   output sddo,
   input  sddi,
 
+  // SPI Atmega-FPGA
   input spics_n,
   input spick,
   input spido,
   output spidi,
-  output spiint_n,
-
-  // unused
-  input ide_rdy,
-  input vg_wf_de
+  output spiint_n
 );
-
-  // assign ide_rs_n = !cpu_next;
-  // assign ide_rdy = clkz_out;
-  // assign vg_wf_de = clkz_out;
 
   wire f0, f1, h0, h1, c0, c1, c2, c3;
   wire rst_n; // global reset
@@ -203,6 +198,10 @@ module top(
   assign rompg2   =  rompg[2];
   assign rompg3   =  rompg[3];
   assign rompg4   =  rompg[4];
+
+`ifdef IDE_HDD
+  assign ide_rs_n = rst_n;
+`endif
 
   wire [1:0] turbo =  sysconf[1:0];
   wire [3:0] cacheconf;
@@ -359,35 +358,39 @@ module top(
   assign ide_cs0_n = 1'bZ;
   assign ide_cs1_n = vvsync;
 `elsif IDE_VDAC2
-  assign ide_d[ 0] = 1'bZ;      // unused
-  assign ide_d[ 1] = vred_raw[0];
-  assign ide_d[ 2] = vred_raw[1];
-  assign ide_d[ 3] = vred_raw[2];
-  assign ide_d[ 4] = vred_raw[3];
-  assign ide_d[ 5] = vred_raw[4];
-  assign ide_d[ 6] = vgrn_raw[0];
-  assign ide_d[ 7] = vgrn_raw[1];
-  assign ide_d[ 8] = vgrn_raw[3];
-  assign ide_d[ 9] = vgrn_raw[4];
-  assign ide_d[10] = vblu_raw[0];
-  assign ide_d[11] = vblu_raw[1];
-  assign ide_d[12] = vblu_raw[2];
-  assign ide_d[13] = vblu_raw[3];
-  assign ide_d[14] = vblu_raw[4];
-  assign ide_d[15] = vdac_mode; // PAL_SEL
-  assign ide_rs_n = vgrn_raw[2];
-  assign ide_dir = vdac2_msel || !ftcs_n;   // selects SPI direction (0 - output, 1 - input)
-  assign ide_a[0] = sdclk;
-  assign ide_a[1] = sddo;
+  assign ide_d[ 0] = vdac2_msel ? 1'bZ : vgrn_raw[2];
+  assign ide_d[ 1] = vdac2_msel ? 1'bZ : vred_raw[0];
+  assign ide_d[ 2] = vdac2_msel ? 1'bZ : vred_raw[1];
+  assign ide_d[ 3] = vdac2_msel ? 1'bZ : vred_raw[2];
+  assign ide_d[ 4] = vdac2_msel ? 1'bZ : vred_raw[3];
+  assign ide_d[ 5] = vdac2_msel ? 1'bZ : vred_raw[4];
+  assign ide_d[ 6] = vdac2_msel ? 1'bZ : vgrn_raw[0];
+  assign ide_d[ 7] = vdac2_msel ? 1'bZ : vgrn_raw[1];
+  assign ide_d[ 8] = vdac2_msel ? 1'bZ : vgrn_raw[3];
+  assign ide_d[ 9] = vdac2_msel ? 1'bZ : vgrn_raw[4];
+  assign ide_d[10] = vdac2_msel ? 1'bZ : vblu_raw[0];
+  assign ide_d[11] = vdac2_msel ? 1'bZ : vblu_raw[1];
+  assign ide_d[12] = vdac2_msel ? 1'bZ : vblu_raw[2];
+  assign ide_d[13] = vdac2_msel ? 1'bZ : vblu_raw[3];
+  assign ide_d[14] = vdac2_msel ? 1'bZ : vblu_raw[4];
+  assign ide_d[15] = vdac2_msel ? 1'bZ : vdac_mode;  // PAL_SEL
+  assign ide_rs_n = vgrn_raw[2]; // for lame RevA
+  assign ide_dir = vdac2_msel;   // 0 - output, 1 - input
+  assign ide_a[0] = sdclk;  // FT812 SCK
+  assign ide_a[1] = sddo;   // FT812 MOSI
   assign ide_a[2] = !fclk;
-  assign ide_rd_n = ftcs_n;
+  assign ide_rd_n = ftcs_n; // FT812 CS_n
   assign ide_wr_n = vdac2_msel;
   assign ide_cs0_n = vhsync;
   assign ide_cs1_n = vvsync;
-  
-  wire ftdi = ide_d[1];
-  wire ftint_n = ide_d[0];
+
   wire vdac2_msel;
+  wire ftdi = ide_rdy;      // FT812 MISO
+  wire int_start_ft = ftint_r[1] && !ftint_r[0];
+
+  reg [1:0] ftint_r;
+  always @(posedge fclk)
+    ftint_r <= {ftint_r[0], ide_d[0]}; // FT812 INT_n
 `endif
 
   wire [15:0] z80_ide_out;
@@ -947,7 +950,11 @@ module top(
     .wait_n(wait_n),
     .im2vect(im2vect),
     .intmask(intmask),
+`ifdef IDE_VDAC2
+    .int_start_lin(vdac2_msel ? int_start_ft : int_start_lin),
+`else
     .int_start_lin(int_start_lin),
+`endif
     .int_start_frm(int_start_frm),
     .int_start_dma(int_start_dma),
     .vdos(pre_vdos),
