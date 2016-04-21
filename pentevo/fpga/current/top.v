@@ -417,7 +417,6 @@ module top(
 
   wire cpu_spi_req;
   wire dma_spi_req;
-  wire spi_rdy;
   wire spi_stb;
   wire spi_start;
   wire [7:0] cpu_spi_din;
@@ -1020,14 +1019,12 @@ module top(
     .sck(sdclk),
     .sdo(sddo),
     .sdi(!sdcs_n ? sddi : ftdi),
-    .cpu_req(cpu_spi_req),
     .dma_req(dma_spi_req),
-    // .rdy(spi_rdy),
-    .start(spi_start),
-    .cpu_din(cpu_spi_din),
     .dma_din(dma_spi_din),
-    .dout(spi_dout),
-    .speed(2'b00)        // this is 14 MHz at 28 Mhz Altera clock
+    .cpu_req(cpu_spi_req),
+    .cpu_din(cpu_spi_din),
+    .start(spi_start),
+    .dout(spi_dout)
   );
 
 `ifdef IDE_HDD
