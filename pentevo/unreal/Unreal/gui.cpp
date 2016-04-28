@@ -1078,14 +1078,14 @@ void FillModemList(HWND box)
    for (unsigned port = 1; port < 256; port++)
    {
       HANDLE hPort;
-      if (modem.open_port == port)
-          hPort = modem.hPort;
+      if (zf232.rs_open_port == port)
+          hPort = zf232.rs_hPort;
       else
       {
          char portName[11];
          _snprintf(portName, _countof(portName), "\\\\.\\COM%d", port);
 
-         hPort = CreateFile(portName, GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, 0, 0);
+         hPort = CreateFile(portName, 0, 0, 0, OPEN_EXISTING, 0, 0);
          if (hPort == INVALID_HANDLE_VALUE)
              continue;
       }
@@ -1120,7 +1120,7 @@ void FillModemList(HWND box)
          _snprintf(portName, _countof(portName), "COM%d:", port);
          ComboBox_AddString(box, portName);
       }
-      if (modem.open_port != port)
+      if (zf232.rs_open_port != port)
           CloseHandle(hPort);
    }
 }

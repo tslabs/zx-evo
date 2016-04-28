@@ -416,8 +416,7 @@ enum AY_SCHEME
 #include "hddio.h"
 #include "hdd.h"
 #include "input.h"
-#include "modem.h"
-#include "zifi.h"
+#include "zf232.h"
 
 #if defined(MOD_GSZ80) || defined(MOD_GSBASS)
 #include "bass.h"

@@ -205,9 +205,6 @@
     <ClCompile Include="memory.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="modem.cpp">
-      <Filter>Sources</Filter>
-    </ClCompile>
     <ClCompile Include="op_cb.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
@@ -346,7 +343,7 @@
     <ClCompile Include="sound\ymf262.cpp">
       <Filter>Sources\sound</Filter>
     </ClCompile>
-    <ClCompile Include="zifi.cpp">
+    <ClCompile Include="zf232.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
   </ItemGroup>
@@ -501,9 +498,6 @@
     <ClInclude Include="memory.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="modem.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
     <ClInclude Include="mods.h">
       <Filter>Headers</Filter>
     </ClInclude>
@@ -627,7 +621,7 @@
     <ClInclude Include="sound\ymf278.h">
       <Filter>Headers\sound</Filter>
     </ClInclude>
-    <ClInclude Include="zifi.h">
+    <ClInclude Include="zf232.h">
       <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>

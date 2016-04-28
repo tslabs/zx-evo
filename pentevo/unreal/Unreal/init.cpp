@@ -147,8 +147,8 @@ void __declspec(noreturn) exit()
    done_gs();
    done_leds();
    save_nv();
-   modem.close();
-   zifi.close();
+   zf232.rs_close();
+   zf232.zf_close();
    done_ie_help();
    done_bpx();
    GdiplusShutdown();

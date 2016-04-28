@@ -1035,8 +1035,8 @@ void applyconfig()
    input.firedelay = 1; // if conf.input.fire changed
    input.clear_zx();
 
-   modem.open(conf.modem_port);
-   zifi.open(conf.zifi_port);
+   zf232.rs_open(conf.modem_port);
+   zf232.zf_open(conf.zifi_port);
 
    load_atariset();
    apply_video();

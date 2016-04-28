@@ -33,11 +33,8 @@ void spectrum_frame()
        z80fast::z80loop();
    }
 
-   if (modem.open_port)
-       modem.io();
-
-   if (zifi.open_port)
-       zifi.io();
+   if (zf232.open_port)
+       zf232.io();
 
 	flush_snd_frame();
 

@@ -163,8 +163,7 @@ extern u8 *base_dos_rom;
 extern u8 *base_128_rom;
 extern u8 *base_sys_rom;
 
-extern ISA_MODEM modem;
-extern ZIFI zifi;
+extern ZF232 zf232;
 extern K_INPUT input;
 
 extern unsigned brk_port_in;

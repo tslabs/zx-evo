@@ -83,7 +83,6 @@
     <ClCompile Include="leds.cpp" />
     <ClCompile Include="mainloop.cpp" />
     <ClCompile Include="memory.cpp" />
-    <ClCompile Include="modem.cpp" />
     <ClCompile Include="opendlg.cpp" />
     <ClCompile Include="op_cb.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
@@ -149,7 +148,7 @@
     <ClCompile Include="z80.cpp" />
     <ClCompile Include="z80asm.cpp" />
     <ClCompile Include="zc.cpp" />
-    <ClCompile Include="zifi.cpp" />
+    <ClCompile Include="zf232.cpp" />
     <ClCompile Include="zxevo.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -206,7 +205,6 @@
     <ClInclude Include="leds.h" />
     <ClInclude Include="mainloop.h" />
     <ClInclude Include="memory.h" />
-    <ClInclude Include="modem.h" />
     <ClInclude Include="mods.h" />
     <ClInclude Include="opendlg.h" />
     <ClInclude Include="op_dd.h" />
@@ -244,7 +242,7 @@
     <ClInclude Include="z80asm.h" />
     <ClInclude Include="z80_main.h" />
     <ClInclude Include="zc.h" />
-    <ClInclude Include="zifi.h" />
+    <ClInclude Include="zf232.h" />
     <ClInclude Include="zxevo.h" />
   </ItemGroup>
   <ItemGroup>
