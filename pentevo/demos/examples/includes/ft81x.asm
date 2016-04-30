@@ -294,156 +294,187 @@ FT_REG_TRACKER_4          equ 0x309010
   endm
 
   macro FT_CLEAR c, s, t
-    defd (38<<24) | (((c) & 1) <<2 ) | (((s) & 1) << 1) | (((t) & 1) << 0)
+    defd (38 << 24) | (((c) & 1) <<2 ) | (((s) & 1) << 1) | (((t) & 1) << 0)
   endm
 
-; -- Constants
-FT_REPEAT                 equ 1
-FT_REPLACE                equ 2
-FT_RGB332                 equ 4
-FT_RGB565                 equ 7
-FT_SRC_ALPHA              equ 2
-FT_TEXT8X8                equ 9
-FT_TEXTVGA                equ 10
-FT_TOUCHMODE_CONTINUOUS   equ 3
-FT_TOUCHMODE_FRAME        equ 2
-FT_TOUCHMODE_OFF          equ 0
-FT_TOUCHMODE_ONESHOT      equ 1
-FT_AW_SAMPLES             equ 1
-FT_ZERO                   equ 0
+; -- Test functions
+FT_NEVER          equ 0
+FT_LESS           equ 1
+FT_LEQUAL         equ 2
+FT_GREATER        equ 3
+FT_GEQUAL         equ 4
+FT_EQUAL          equ 5
+FT_NOTEQUAL       equ 6
+FT_ALWAYS         equ 7
 
-FT_ADC_DIFFERENTIAL  equ 1
-FT_ADC_SINGLE_ENDED  equ 0
-FT_ADPCM_SAMPLES     equ 2
-FT_ALWAYS            equ 7
+; -- Primitives
+FT_BITMAPS        equ 1
+FT_POINTS         equ 2
+FT_LINES          equ 3
+FT_LINE_STRIP     equ 4
+FT_EDGE_STRIP_R   equ 5
+FT_EDGE_STRIP_L   equ 6
+FT_EDGE_STRIP_A   equ 7
+FT_EDGE_STRIP_B   equ 8
+FT_RECTS          equ 9
+
+; -- Formats
 FT_ARGB1555          equ 0
+FT_L1                equ 1
+FT_L4                equ 2
+FT_L8                equ 3
+FT_RGB332            equ 4
 FT_ARGB2             equ 5
 FT_ARGB4             equ 6
+FT_RGB565            equ 7
+FT_PALETTED          equ 8  ; deprecated???
+FT_TEXT8X8           equ 9
+FT_TEXTVGA           equ 10
 FT_BARGRAPH          equ 11
-FT_BILINEAR          equ 1
-FT_BITMAPS           equ 1
-FT_BORDER            equ 0
-FT_POINTS            equ 2
-FT_RECTS             equ 9
+FT_PALETTED565       equ 14
+FT_PALETTED4444      equ 15
+FT_PALETTED8         equ 16
+FT_L2                equ 17
 
-FT_KEEP                 equ 1
-FT_L1                   equ 1
-FT_L4                   equ 2
-FT_L8                   equ 3
-FT_LEQUAL               equ 2
-FT_LESS                 equ 1
-FT_LINEAR_SAMPLES       equ 0
-FT_LINES                equ 3
-FT_LINE_STRIP           equ 4
-FT_NEAREST              equ 0
-FT_NEVER                equ 0
-FT_NOTEQUAL             equ 6
+; -- Blend functions
+FT_ZERO                 equ 0
 FT_ONE                  equ 1
-FT_ONE_MINUS_DST_ALPHA  equ 5
-FT_ONE_MINUS_SRC_ALPHA  equ 4
-FT_OPT_CENTER           equ 1536
-FT_OPT_CENTERX          equ 512
-FT_OPT_CENTERY          equ 1024
-FT_OPT_FLAT             equ 256
-FT_OPT_MONO             equ 1
-FT_OPT_NOBACK           equ 4096
-FT_OPT_NODL             equ 2
-FT_OPT_NOHANDS          equ 49152
-FT_OPT_NOHM             equ 16384
-FT_OPT_NOPOINTER        equ 16384
-FT_OPT_NOSECS           equ 32768
-FT_OPT_NOTICKS          equ 8192
-FT_OPT_RIGHTX           equ 2048
-FT_OPT_SIGNED           equ 256
-FT_PALETTED             equ 8
-
-FT_DECR                 equ 4
-FT_DECR_WRAP            equ 7
-FT_DLSWAP_DONE          equ 0
-FT_DLSWAP_FRAME         equ 2
-FT_DLSWAP_LINE          equ 1
+FT_SRC_ALPHA            equ 2
 FT_DST_ALPHA            equ 3
-FT_EDGE_STRIP_A         equ 7
-FT_EDGE_STRIP_B         equ 8
-FT_EDGE_STRIP_L         equ 6
-FT_EDGE_STRIP_R         equ 5
-FT_EQUAL                equ 5
-FT_GEQUAL               equ 4
-FT_GREATER              equ 3
+FT_ONE_MINUS_SRC_ALPHA  equ 4
+FT_ONE_MINUS_DST_ALPHA  equ 5
+
+; -- Stencil operations
+FT_KEEP                 equ 1
+FT_REPLACE              equ 2
 FT_INCR                 equ 3
-FT_INCR_WRAP            equ 6
+FT_DECR                 equ 4
+FT_INVERT               equ 5
+FT_INCR_WRAP            equ 6 ; undocumented???
+FT_DECR_WRAP            equ 7 ; undocumented???
+
+; -- Bitmap wrap mode
+FT_REPEAT     equ 1
+FT_BORDER     equ 0
+
+; -- Bitmap filtering mode
+FT_NEAREST    equ 0
+FT_BILINEAR   equ 1
+
+; -- DL_SWAP modes
+FT_DLSWAP_DONE          equ 0
+FT_DLSWAP_LINE          equ 1
+FT_DLSWAP_FRAME         equ 2
+
+; -- INT sources
+FT_INT_SWAP             equ 1
+FT_INT_TOUCH            equ 2
+FT_INT_TAG              equ 4
+FT_INT_SOUND            equ 8
+FT_INT_PLAYBACK         equ 16
 FT_INT_CMDEMPTY         equ 32
 FT_INT_CMDFLAG          equ 64
 FT_INT_CONVCOMPLETE     equ 128
-FT_INT_PLAYBACK         equ 16
-FT_INT_SOUND            equ 8
-FT_INT_SWAP             equ 1
-FT_INT_TAG              equ 4
-FT_INT_TOUCH            equ 2
-FT_INVERT               equ 5
 
-FT_GPU_NUMCHAR_PERFONT equ 128
-FT_GPU_FONT_TABLE_SIZE equ 148
+; -- Playback formats
+FT_LINEAR_SAMPLES       equ 0
+FT_ULAW_SAMPLES         equ 1
+FT_ADPCM_SAMPLES        equ 2
+
+; -- Touch ADC modes
+FT_ADC_SINGLE_ENDED     equ 0
+FT_ADC_DIFFERENTIAL     equ 1
+
+; -- Touch modes
+FT_TOUCHMODE_OFF        equ 0
+FT_TOUCHMODE_ONESHOT    equ 1
+FT_TOUCHMODE_FRAME      equ 2
+FT_TOUCHMODE_CONTINUOUS equ 3
+
+; -- Constants
+FT_DL_SIZE              equ 8 * 1024  ; 8KB Display List buffer size
+FT_CMD_FIFO_SIZE        equ 4 * 1024  ; 4KB coprocessor Fifo size
+FT_CMD_SIZE             equ 4         ; 4 byte per coprocessor command of EVE
+FT_CMDBUF_SIZE          equ 4096
+FT_GPU_NUMCHAR_PERFONT  equ 128
+FT_GPU_FONT_TABLE_SIZE  equ 148
 
 ; -- Coprocessor commands
-FT_DL_SIZE         equ 8 * 1024  ; 8KB Display List buffer size
-FT_CMD_FIFO_SIZE   equ 4 * 1024  ; 4KB coprocessor Fifo size
-FT_CMD_SIZE        equ 4         ; 4 byte per coprocessor command of EVE
-FT_CMDBUF_SIZE     equ 4096
+FT_CMD_APPEND           equ 0xFFFFFF00 + 30
+FT_CMD_BGCOLOR          equ 0xFFFFFF00 + 9
+FT_CMD_BITMAP_TRANSFORM equ 0xFFFFFF00 + 33
+FT_CMD_BUTTON           equ 0xFFFFFF00 + 13
+FT_CMD_CALIBRATE        equ 0xFFFFFF00 + 21
+FT_CMD_CLOCK            equ 0xFFFFFF00 + 20
+FT_CMD_COLDSTART        equ 0xFFFFFF00 + 50
+FT_CMD_CRC              equ 0xFFFFFF00 + 3
+FT_CMD_DIAL             equ 0xFFFFFF00 + 45
+FT_CMD_DLSTART          equ 0xFFFFFF00 + 0
+FT_CMD_EXECUTE          equ 0xFFFFFF00 + 7
+FT_CMD_FGCOLOR          equ 0xFFFFFF00 + 10
+FT_CMD_GAUGE            equ 0xFFFFFF00 + 19
+FT_CMD_GETMATRIX        equ 0xFFFFFF00 + 51
+FT_CMD_GETPOINT         equ 0xFFFFFF00 + 8
+FT_CMD_GETPROPS         equ 0xFFFFFF00 + 37
+FT_CMD_GETPTR           equ 0xFFFFFF00 + 35
+FT_CMD_GRADCOLOR        equ 0xFFFFFF00 + 52
+FT_CMD_GRADIENT         equ 0xFFFFFF00 + 11
+FT_CMD_HAMMERAUX        equ 0xFFFFFF00 + 4
+FT_CMD_IDCT             equ 0xFFFFFF00 + 6
+FT_CMD_INFLATE          equ 0xFFFFFF00 + 34
+FT_CMD_INTERRUPT        equ 0xFFFFFF00 + 2
+FT_CMD_KEYS             equ 0xFFFFFF00 + 14
+FT_CMD_LOADIDENTITY     equ 0xFFFFFF00 + 38
+FT_CMD_LOADIMAGE        equ 0xFFFFFF00 + 36
+FT_CMD_LOGO             equ 0xFFFFFF00 + 49
+FT_CMD_MARCH            equ 0xFFFFFF00 + 5
+FT_CMD_MEMCPY           equ 0xFFFFFF00 + 29
+FT_CMD_MEMCRC           equ 0xFFFFFF00 + 24
+FT_CMD_MEMSET           equ 0xFFFFFF00 + 27
+FT_CMD_MEMWRITE         equ 0xFFFFFF00 + 26
+FT_CMD_MEMZERO          equ 0xFFFFFF00 + 28
+FT_CMD_NUMBER           equ 0xFFFFFF00 + 46
+FT_CMD_PROGRESS         equ 0xFFFFFF00 + 15
+FT_CMD_REGREAD          equ 0xFFFFFF00 + 25
+FT_CMD_ROTATE           equ 0xFFFFFF00 + 41
+FT_CMD_SCALE            equ 0xFFFFFF00 + 40
+FT_CMD_SCREENSAVER      equ 0xFFFFFF00 + 47
+FT_CMD_SCROLLBAR        equ 0xFFFFFF00 + 17
+FT_CMD_SETFONT          equ 0xFFFFFF00 + 43
+FT_CMD_SETMATRIX        equ 0xFFFFFF00 + 42
+FT_CMD_SKETCH           equ 0xFFFFFF00 + 48
+FT_CMD_SLIDER           equ 0xFFFFFF00 + 16
+FT_CMD_SNAPSHOT         equ 0xFFFFFF00 + 31
+FT_CMD_SPINNER          equ 0xFFFFFF00 + 22
+FT_CMD_STOP             equ 0xFFFFFF00 + 23
+FT_CMD_SWAP             equ 0xFFFFFF00 + 1
+FT_CMD_TEXT             equ 0xFFFFFF00 + 12
+FT_CMD_TOGGLE           equ 0xFFFFFF00 + 18
+FT_CMD_TOUCH_TRANSFORM  equ 0xFFFFFF00 + 32
+FT_CMD_TRACK            equ 0xFFFFFF00 + 44
+FT_CMD_TRANSLATE        equ 0xFFFFFF00 + 39
 
-FT_CMD_APPEND           equ 4294967070
-FT_CMD_BGCOLOR          equ 4294967049
-FT_CMD_BITMAP_TRANSFORM equ 4294967073
-FT_CMD_BUTTON           equ 4294967053
-FT_CMD_CALIBRATE        equ 4294967061
-FT_CMD_CLOCK            equ 4294967060
-FT_CMD_COLDSTART        equ 4294967090
-FT_CMD_CRC              equ 4294967043
-FT_CMD_DIAL             equ 4294967085
-FT_CMD_DLSTART          equ 4294967040
-FT_CMD_EXECUTE          equ 4294967047
-FT_CMD_FGCOLOR          equ 4294967050
-FT_CMD_GAUGE            equ 4294967059
-FT_CMD_GETMATRIX        equ 4294967091
-FT_CMD_GETPOINT         equ 4294967048
-FT_CMD_GETPROPS         equ 4294967077
-FT_CMD_GETPTR           equ 4294967075
-FT_CMD_GRADCOLOR        equ 4294967092
-FT_CMD_GRADIENT         equ 4294967051
-FT_CMD_HAMMERAUX        equ 4294967044
-FT_CMD_IDCT             equ 4294967046
-FT_CMD_INFLATE          equ 4294967074
-FT_CMD_INTERRUPT        equ 4294967042
-FT_CMD_KEYS             equ 4294967054
-FT_CMD_LOADIDENTITY     equ 4294967078
-FT_CMD_LOADIMAGE        equ 4294967076
-FT_CMD_LOGO             equ 4294967089
-FT_CMD_MARCH            equ 4294967045
-FT_CMD_MEMCPY           equ 4294967069
-FT_CMD_MEMCRC           equ 4294967064
-FT_CMD_MEMSET           equ 4294967067
-FT_CMD_MEMWRITE         equ 4294967066
-FT_CMD_MEMZERO          equ 4294967068
-FT_CMD_NUMBER           equ 4294967086
-FT_CMD_PROGRESS         equ 4294967055
-FT_CMD_REGREAD          equ 4294967065
-FT_CMD_ROTATE           equ 4294967081
-FT_CMD_SCALE            equ 4294967080
-FT_CMD_SCREENSAVER      equ 4294967087
-FT_CMD_SCROLLBAR        equ 4294967057
-FT_CMD_SETFONT          equ 4294967083
-FT_CMD_SETMATRIX        equ 4294967082
-FT_CMD_SKETCH           equ 4294967088
-FT_CMD_SLIDER           equ 4294967056
-FT_CMD_SNAPSHOT         equ 4294967071
-FT_CMD_SPINNER          equ 4294967062
-FT_CMD_STOP             equ 4294967063
-FT_CMD_SWAP             equ 4294967041
-FT_CMD_TEXT             equ 4294967052
-FT_CMD_TOGGLE           equ 4294967058
-FT_CMD_TOUCH_TRANSFORM  equ 4294967072
-FT_CMD_TRACK            equ 4294967084
-FT_CMD_TRANSLATE        equ 4294967079
+; -- Parameter options
+FT_OPT_3D               equ 0
+FT_OPT_RGB565           equ 0
+FT_OPT_MONO             equ 1
+FT_OPT_NODL             equ 2
+FT_OPT_FLAT             equ 256
+FT_OPT_SIGNED           equ 256
+FT_OPT_CENTERX          equ 512
+FT_OPT_CENTERY          equ 1024
+FT_OPT_CENTER           equ 1536
+FT_OPT_RIGHTX           equ 2048
+FT_OPT_NOBACK           equ 4096
+FT_OPT_NOTICKS          equ 8192
+FT_OPT_NOHM             equ 16384
+FT_OPT_NOPOINTER        equ 16384
+FT_OPT_NOSECS           equ 32768
+FT_OPT_NOHANDS          equ 49152
+FT_OPT_NOTEAR           equ 4
+FT_OPT_FULLSCREEN       equ 8
+FT_OPT_MEDIAFIFO        equ 16
+FT_OPT_SOUND            equ 32
 
 ; -- Function macros
   macro FT_ON
