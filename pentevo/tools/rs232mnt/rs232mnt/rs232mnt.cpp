@@ -53,12 +53,13 @@ U8 uart_in_buf[512];
 
 void print_help()
 {
-  printf("RS-232 VDOS Mounter,  (c) 2013 TS-Labs inc.\n\r\n\r");
-  printf("Command line parameters (any is optional):\n\r");
-  printf("-a|b|c|d <filename.trd>\n\r\tTRD image to be mounted on drive A-D (up to 4 images)\n\r");
-  printf("-com\n\r\tSerial port name (default = COM1)\n\r");
-  printf("-baud\n\r\tUART Baudrate (default = %d)\n\r", BAUD);
-  printf("-log\n\r\tPrint log for disk operations\n\r\n\r", BAUD);
+  printf("RS-232 VDOS Mounter,  (c) 2013 TS-Labs inc.\n\n");
+  printf("Command line parameters (any is optional):\n");
+  printf("-a|b|c|d <filename.trd>\n\tTRD image to be mounted on drive A-D (up to 4 images)\n");
+  printf("-com\n\tSerial port name (default = COM1)\n");
+  printf("-baud\n\tUART Baudrate (default = %d)\n", BAUD);
+  printf("-slowpoke\n\tInsert delays into transmit\n");
+  printf("-log\n\tScroll log for disk operations\n\n");
 }
 
 int parse_arg(int argc, _TCHAR* argv[], _TCHAR* arg, int n)
@@ -118,7 +119,7 @@ int _tmain(int argc, _TCHAR* argv[])
   FILE *f;
   STATE state = ST_IDLE;
 
-  printf("\n\r");
+  printf("\n");
 
   if (!parse_args(argc, argv))
   {
@@ -132,12 +133,12 @@ int _tmain(int argc, _TCHAR* argv[])
     {
       if (!(f = _wfopen(trd[i], L"r")))
       {
-        wprintf(L"Can't open: %s\n\r", trd[i]);
+        wprintf(L"Can't open: %s\n", trd[i]);
         return 2;
       }
       else
       {
-        wprintf(L"%s opened successfully\n\r", trd[i]);
+        wprintf(L"%s opened successfully\n", trd[i]);
         fread(img[i], 1, TRD_SZ, f);
         fclose(f);
       }
@@ -148,11 +149,11 @@ int _tmain(int argc, _TCHAR* argv[])
 
   if (hPort == INVALID_HANDLE_VALUE)
   {
-    wprintf(L"Can't open %s\n\r", cport);
+    wprintf(L"Can't open %s\n", cport);
     return 3;
   }
   else
-    wprintf(L"%s opened successfully\n\r\n\r", cport);
+    wprintf(L"%s opened successfully\n\n", cport);
 
   COMMTIMEOUTS times;
   times.ReadIntervalTimeout = MAXDWORD;
@@ -218,10 +219,10 @@ int _tmain(int argc, _TCHAR* argv[])
               printf("Op: %d\tDrv: %d\tTrk: %d\tSec: %d \r", req.op, req.drv, req.trk, req.sec);
 
             if (req.drv > 3)
-              if (log) printf("Wrong drive!\n\r");
+              if (log) printf("Wrong drive!\n");
 
             if (req.sec > 15)
-              if (log) printf("Wrong sector!\n\r");
+              if (log) printf("Wrong sector!\n");
 
             disk_ptr = img[req.drv] + ((req.trk * 16 + req.sec) * sizeof(sect.data));
 
@@ -254,7 +255,7 @@ int _tmain(int argc, _TCHAR* argv[])
               break;
 
               default:
-                if (log) printf("Wrong operation!\n\r");
+                if (log) printf("Wrong operation!\n");
                 state = ST_IDLE;
             }
           }
