@@ -43,7 +43,8 @@ typedef struct
 
 U8 img[4][TRD_SZ];
 int baud = BAUD;
-bool log = true;
+bool log = false;
+bool slow = false;
 _TCHAR* cport = TEXT("COM1");
 _TCHAR* trd[4];
 U8 drvs = 0;
@@ -79,7 +80,10 @@ int parse_args(int argc, _TCHAR* argv[])
     cport = argv[i];
 
   if (i = parse_arg(argc, argv, L"-log", 0))
-    log = 1;
+    log = true;
+
+  if (i = parse_arg(argc, argv, L"-slowpoke", 0))
+    slow = true;
 
   if (i = parse_arg(argc, argv, L"-a", 1))
     { trd[0] = argv[i]; drvs++; }
@@ -171,7 +175,7 @@ int _tmain(int argc, _TCHAR* argv[])
   PortDCB.BaudRate = baud;
   PortDCB.ByteSize = 8;
   PortDCB.Parity = NOPARITY;
-  PortDCB.StopBits =  ONESTOPBIT;
+  PortDCB.StopBits = ONESTOPBIT;
   PortDCB.fOutxCtsFlow = FALSE;        // No CTS output flow control
   PortDCB.fDtrControl = DTR_CONTROL_DISABLE;  // DTR flow control type
   PortDCB.fOutX = FALSE;            // No XON/XOFF out flow control
@@ -208,7 +212,10 @@ int _tmain(int argc, _TCHAR* argv[])
             goto cont1;
           else
           {
-            if (log) printf("Op: %d\tDrv: %d\tTrk: %d\tSec: %d\n\r", req.op, req.drv, req.trk, req.sec);
+            if (log) 
+              printf("Op: %d\tDrv: %d\tTrk: %d\tSec: %d\n", req.op, req.drv, req.trk, req.sec);
+            else
+              printf("Op: %d\tDrv: %d\tTrk: %d\tSec: %d \r", req.op, req.drv, req.trk, req.sec);
 
             if (req.drv > 3)
               if (log) printf("Wrong drive!\n\r");
@@ -225,7 +232,20 @@ int _tmain(int argc, _TCHAR* argv[])
                 sect.ack[1] = ANS2;
                 memcpy(sect.data, disk_ptr, sizeof(sect.data));
                 sect.crc = update_xor(ANS1 ^ ANS2, disk_ptr, sizeof(sect.data));
-                WriteFile(hPort, &sect, sizeof(sect), &dwWrite, NULL);
+                
+                {
+                  U8 *ptr = (U8*)&sect;
+                  int cnt = sizeof(sect);
+                  
+                  while (cnt)
+                  {
+                    int sz = min(64, cnt);
+                    WriteFile(hPort, ptr, sz, &dwWrite, NULL);
+                    if (slow) Sleep(1);
+                    ptr += sz;
+                    cnt -= sz;
+                  }
+                }
                 state = ST_IDLE;
               break;
 
