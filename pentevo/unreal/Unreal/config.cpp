@@ -340,6 +340,9 @@ void load_config(const char *fname)
    if (!strcmp(line, "4BIT")) comp.ts.vdac = TS_VDAC_4;
    if (!strcmp(line, "5BIT")) comp.ts.vdac = TS_VDAC_5;
    
+   // TS VDAC2 (FT812)
+   comp.ts.vdac2 = GetPrivateProfileInt(misc, "TS_VDAC2", 0, ininame);
+   
    // Cache
    conf.cache = GetPrivateProfileInt(misc, "Cache", 0, ininame);
    if (conf.cache && conf.cache!=16 && conf.cache!=32) conf.cache = 0;

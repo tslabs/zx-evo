@@ -23,129 +23,126 @@
 void out(unsigned port, u8 val)
 {
 
-   port &= 0xFFFF;
-   u8 p1 = (port & 0xFF);
-   u8 p2 = ((port >>8) & 0xFF);
-   brk_port_out = port; brk_port_val = val;
+  port &= 0xFFFF;
+  u8 p1 = (port & 0xFF);
+  u8 p2 = ((port >>8) & 0xFF);
+  brk_port_out = port; brk_port_val = val;
 
-	 // if (p1 == 0xFD)
-		// printf("out (%04X), %02X\n", port, val);
+  // if (p1 == 0xFD)
+  // printf("out (%04X), %02X\n", port, val);
 
-   if (conf.ulaplus != UPLS_NONE)
-   {
-	   /* ULA+ register select */
-	   if (port == 0xBF3B)
-	   {
-		   comp.ulaplus_reg = val;
-	   }
+  if (conf.ulaplus != UPLS_NONE)
+  {
+    /* ULA+ register select */
+    if (port == 0xBF3B)
+    {
+    comp.ulaplus_reg = val;
+    }
 
-	   /* ULA+ data */
-	   if (port == 0xFF3B)
-	   {
-		   switch (comp.ulaplus_reg & 0xC0)
-		   {
-		   case 0:	// CRAM
-			   {
-					comp.ulaplus_cram[comp.ulaplus_reg] = val;
-			   }
-			   break;
+    /* ULA+ data */
+    if (port == 0xFF3B)
+    {
+      switch (comp.ulaplus_reg & 0xC0)
+      {
+        case 0:	// CRAM
+          comp.ulaplus_cram[comp.ulaplus_reg] = val;
+        break;
 
-		   case 64:	// MODE
-			   {
-					comp.ulaplus_mode = val & 1;
-			   }
-			   break;
+        case 64:	// MODE
+          comp.ulaplus_mode = val & 1;
+        break;
 
-		   default:
-			   break;
-		   }
-	   }
-   }
+        default:
+          break;
+      }
+    }
+  }
 
-   #ifdef MOD_GS
-   // 10111011 | BB
-   // 10110011 | B3
-   // 00110011 | 33
-   if (p1 == 0x33 && conf.gs_type) // 33
-   {
-       out_gs(port, val);
-       return;
-   }
-   if ((port & 0xF7) == 0xB3 && conf.gs_type) // BB, B3
-   {
-       out_gs(port, val);
-       return;
-   }
-   #endif
+  #ifdef MOD_GS
+  // 10111011 | BB
+  // 10110011 | B3
+  // 00110011 | 33
+  if (p1 == 0x33 && conf.gs_type) // 33
+  {
+    out_gs(port, val);
+    return;
+  }
 
-   // ZXM-MoonSound
-   if ( conf.sound.moonsound && 
-		!(comp.flags & CF_DOSPORTS) &&
-		(conf.mem_model == MM_PROFI ? !(comp.pDFFD & 0x80) : 1) &&
-	    (((p1 & 0xFC) == 0xC4) ||
-	     ((p1 & 0xFE) == 0x7E)) )
-   {
-	   if ( zxmmoonsound.write( port, val ) )
-		   return;
-   }
+  if ((port & 0xF7) == 0xB3 && conf.gs_type) // BB, B3
+  {
+    out_gs(port, val);
+    return;
+  }
+  #endif
 
-   // z-controller
-   if (conf.zc && p1 == 0x57)
-   {
-      if ((port & 0x80FF) == 0x8057 && conf.mem_model == MM_ATM3
-         &&(comp.flags & CF_DOSPORTS))
-         return;
-       Zc.Wr(port, val);
-       return;
-   }
+  // ZXM-MoonSound
+  if ( conf.sound.moonsound &&
+  !(comp.flags & CF_DOSPORTS) &&
+  (conf.mem_model == MM_PROFI ? !(comp.pDFFD & 0x80) : 1) &&
+    (((p1 & 0xFC) == 0xC4) ||
+      ((p1 & 0xFE) == 0x7E)) )
+  {
+    if ( zxmmoonsound.write( port, val ) )
+    return;
+  }
 
-   // divide на nemo портах
-   if (conf.ide_scheme == IDE_NEMO_DIVIDE)
-   {
-       if ((port & 0x1E) == 0x10) // rrr1000x
-       {
-           if (p1 == 0x11)
-           {
-               comp.ide_write = val;
-               comp.ide_hi_byte_w = 0;
-               comp.ide_hi_byte_w1 = 1;
-               return;
-           }
+  // z-controller
+  if (conf.zc && ((p1 == 0x57) || (p1 == 0x77)))
+  {
+    if (((port & 0x80FF) == 0x8057) && (conf.mem_model == MM_ATM3) && (comp.flags & CF_DOSPORTS))
+      return;
 
-           if ((port & 0xFE) == 0x10)
-           {
-               comp.ide_hi_byte_w ^= 1;
+    Zc.Wr(port, val);
+    return;
+  }
 
-               if (comp.ide_hi_byte_w1) // Была запись в порт 0x11 (старший байт уже запомнен)
-               {
-                   comp.ide_hi_byte_w1 = 0;
-               }
-               else
-               {
-                   if (comp.ide_hi_byte_w) // Запоминаем младший байт
-                   {
-                       comp.ide_write = val;
-                       return;
-                   }
-                   else // Меняем старший и младший байты местами (как этого ожидает write_hdd_5)
-                   {
-                       u8 tmp = comp.ide_write;
-                       comp.ide_write = val;
-                       val = tmp;
-                   }
-               }
-           }
-           else
-           {
-               comp.ide_hi_byte_w = 0;
-           }
-           goto write_hdd_5;
-       }
-       else if (p1 == 0xC8)
-       {
-           return hdd.write(8, val);
-       }
-   }
+  // divide на nemo портах
+  if (conf.ide_scheme == IDE_NEMO_DIVIDE)
+  {
+      if ((port & 0x1E) == 0x10) // rrr1000x
+      {
+          if (p1 == 0x11)
+          {
+              comp.ide_write = val;
+              comp.ide_hi_byte_w = 0;
+              comp.ide_hi_byte_w1 = 1;
+              return;
+          }
+
+          if ((port & 0xFE) == 0x10)
+          {
+              comp.ide_hi_byte_w ^= 1;
+
+              if (comp.ide_hi_byte_w1) // Была запись в порт 0x11 (старший байт уже запомнен)
+              {
+                  comp.ide_hi_byte_w1 = 0;
+              }
+              else
+              {
+                  if (comp.ide_hi_byte_w) // Запоминаем младший байт
+                  {
+                      comp.ide_write = val;
+                      return;
+                  }
+                  else // Меняем старший и младший байты местами (как этого ожидает write_hdd_5)
+                  {
+                      u8 tmp = comp.ide_write;
+                      comp.ide_write = val;
+                      val = tmp;
+                  }
+              }
+          }
+          else
+          {
+              comp.ide_hi_byte_w = 0;
+          }
+          goto write_hdd_5;
+      }
+      else if (p1 == 0xC8)
+      {
+          return hdd.write(8, val);
+      }
+  }
 
    if ((conf.mem_model == MM_LSY256) && (p1 == 0x7B))
    {
@@ -354,7 +351,7 @@ void out(unsigned port, u8 val)
 							return;
 						}
 					}
-					break;				
+					break;
 			  }
           }
           else
@@ -500,7 +497,7 @@ void out(unsigned port, u8 val)
        set_banks();
        return;
    }
-   
+
 	if ( conf.mem_model == MM_GMX )
 	{
 		if ((port & 0xFF) == 0x00)
@@ -509,14 +506,14 @@ void out(unsigned port, u8 val)
 			if (comp.p00 & 8)
 			{
 				comp.gmx_magic_shift = 0x88 | (comp.p00 & 7);
-			
+
 				if (!(comp.p00 & 0x10))
 					cpu.reset();
 					//reset(RM_NOCHANGE);
-			}	
+			}
 			return;
 		}
-		
+
 		if ((p1 & 0x23) == (0xFD & 0x23))
 		{
 			switch ( p2 )
@@ -656,7 +653,7 @@ set1FFD:
             set_banks();
             return;
          }
-		 
+
          if (conf.mem_model == MM_ATM450 && (port & 0x8202) == (0x7DFD & 0x8202))
          {
              atm_writepal(val);
@@ -696,24 +693,24 @@ set1FFD:
             u8 page128  = val & 0x07;
             u8 page512  = ((val & 0xC0) >> 3) | (val & 0x07);
             u8 page1024 = (val & 0x20) | ((val & 0xC0) >> 3) | (val & 0x07);
-            
+
             switch (comp.ts.lck128)
             {
                 // 512kB
                 case 0:
                     comp.ts.page[3] = page512;
                 break;
-                
+
                 // 128kB
                 case 1:
                     comp.ts.page[3] = page128;
                 break;
-                
+
                 // 512/128kB auto
                 case 2:
                     comp.ts.page[3] = lock128auto ? page128 : page512;
                 break;
-                
+
                 // 1024kB
                 case 3:
                     comp.ts.page[3] = page1024;
@@ -1245,7 +1242,7 @@ __inline u8 in1(unsigned port)
 			case 0x78:
 				tmp = (comp.p78FD & 0x7F) | ((comp.pFE & 2) << 6);
 				tmp |= (comp.gmx_magic_shift&1);
-				comp.gmx_magic_shift >>= 1;			
+				comp.gmx_magic_shift >>= 1;
 				return tmp;
 		}
 	}

@@ -18,6 +18,7 @@
 #include "dbglabls.h"
 #include "util.h"
 #include "getopt.h"
+#include "ft812.h"
 
 void cpu_info()
 {
@@ -109,6 +110,15 @@ void init_all(int argc, char **argv)
        printf("warning: gdiplus.dll was not loaded, only SCR and BMP screenshots available\n");
    }
 
+   if (comp.ts.vdac2)
+   {
+     if (!vdac2::open_ft8xx())
+     {
+       color(CONSCLR_WARNING);
+       printf("warning: ft8xx library was not loaded\n");
+     }
+   }
+   
    load_errors = 0;
    trd_toload = 0;
    *(DWORD*)trd_loaded = 0; // clear loaded flags, don't see autoload'ed images

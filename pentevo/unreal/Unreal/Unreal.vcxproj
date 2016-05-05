@@ -25,6 +25,7 @@
     <None Include="z80_main.inl" />
   </ItemGroup>
   <ItemGroup>
+    <Library Include="ft8xx\ft8xxemu.lib" />
     <Library Include="lib\dinput.lib" />
     <Library Include="lib\dxerr8.lib" />
   </ItemGroup>
@@ -65,6 +66,7 @@
     <ClCompile Include="font8.cpp" />
     <ClCompile Include="fontatm2.cpp" />
     <ClCompile Include="fontdata.cpp" />
+    <ClCompile Include="ft812.cpp" />
     <ClCompile Include="getopt.cpp" />
     <ClCompile Include="gs.cpp" />
     <ClCompile Include="gshlbass.cpp" />
@@ -189,6 +191,15 @@
     <ClInclude Include="font8.h" />
     <ClInclude Include="fontatm2.h" />
     <ClInclude Include="fontdata.h" />
+    <ClInclude Include="ft812.h" />
+    <ClInclude Include="ft8xx\FT_CoPro_Cmds.h" />
+    <ClInclude Include="ft8xx\FT_DataTypes.h" />
+    <ClInclude Include="ft8xx\FT_Emulator.h" />
+    <ClInclude Include="ft8xx\FT_EmulatorMain.h" />
+    <ClInclude Include="ft8xx\FT_Gpu.h" />
+    <ClInclude Include="ft8xx\FT_Gpu_Hal.h" />
+    <ClInclude Include="ft8xx\FT_Hal_Utils.h" />
+    <ClInclude Include="ft8xx\FT_Platform.h" />
     <ClInclude Include="funcs.h" />
     <ClInclude Include="getopt.h" />
     <ClInclude Include="gs.h" />
@@ -311,9 +322,10 @@
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <DelayLoadDLLs>gdiplus.dll</DelayLoadDLLs>
-      <AdditionalDependencies>delayimp.lib;gdiplus.lib;kernel32.lib;user32.lib;gdi32.lib;shell32.lib;comdlg32.lib;comctl32.lib;winmm.lib;setupapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>delayimp.lib;gdiplus.lib;kernel32.lib;user32.lib;gdi32.lib;shell32.lib;comdlg32.lib;comctl32.lib;winmm.lib;setupapi.lib;ft8xxemu.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <LinkErrorReporting>PromptImmediately</LinkErrorReporting>
       <AdditionalManifestDependencies>type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'</AdditionalManifestDependencies>
+      <AdditionalLibraryDirectories>ft8xx;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <ProjectReference />
     <PostBuildEvent>
@@ -353,9 +365,10 @@ copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)rom"
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <DelayLoadDLLs>gdiplus.dll</DelayLoadDLLs>
-      <AdditionalDependencies>delayimp.lib;gdiplus.lib;kernel32.lib;user32.lib;gdi32.lib;shell32.lib;comdlg32.lib;comctl32.lib;winmm.lib;setupapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>delayimp.lib;gdiplus.lib;kernel32.lib;user32.lib;gdi32.lib;shell32.lib;comdlg32.lib;comctl32.lib;winmm.lib;setupapi.lib;ft8xxemu.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <LinkErrorReporting>PromptImmediately</LinkErrorReporting>
       <AdditionalManifestDependencies>type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'</AdditionalManifestDependencies>
+      <AdditionalLibraryDirectories>ft8xx;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <ProjectReference />
     <PostBuildEvent>
