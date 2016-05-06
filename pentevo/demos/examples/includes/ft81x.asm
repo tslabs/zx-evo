@@ -297,6 +297,34 @@ FT_REG_TRACKER_4          equ 0x309010
     defd (38 << 24) | (((c) & 1) <<2 ) | (((s) & 1) << 1) | (((t) & 1) << 0)
   endm
 
+  macro FT_VERTEX_FORMAT frac
+    defd (39 << 24) | (frac & 7)
+  endm
+
+  macro FT_BITMAP_LAYOUT_H linestride, height
+    defd (40 << 24) | (((linestride) & 3) << 2) | (((height) & 3) << 0)
+  endm
+
+  macro FT_BITMAP_SIZE_H width, height
+    defd (41 << 24) | (((width) & 3) << 2) | (((height) & 3) << 0)
+  endm
+  
+  macro FT_PALETTE_SOURCE addr
+    defd (42 << 24) | (addr & 0x3FFFFF)
+  endm
+
+  macro FT_VERTEX_TRANSLATE_X x
+    defd (43 << 24) | (x & 0x1FFFF)
+  endm
+
+  macro FT_VERTEX_TRANSLATE_Y y
+    defd (44 << 24) | (y & 0x1FFFF)
+  endm
+
+  macro FT_NOP
+    defd (45 << 24)
+  endm
+
 ; -- Test functions
 FT_NEVER          equ 0
 FT_LESS           equ 1
