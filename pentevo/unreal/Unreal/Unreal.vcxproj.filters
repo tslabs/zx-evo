@@ -65,9 +65,6 @@
     <Library Include="lib\dxerr8.lib">
       <Filter>Resources</Filter>
     </Library>
-    <Library Include="ft8xx\ft8xxemu.lib">
-      <Filter>Sources\ft8xx</Filter>
-    </Library>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="atm.cpp">
