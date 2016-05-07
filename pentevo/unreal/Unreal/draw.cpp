@@ -12,6 +12,7 @@
 
 const RASTER raster[R_MAX] = {
 	{ R_256_192, 80, 272, 70, 70+128, 198 },
+	//{ R_256_192, 80, 272, 58, 186, 198 },
 	{ R_320_200, 76, 276, 54, 214, 214 },
 	{ R_320_240, 56, 296, 54, 214, 214 },
 	{ R_360_288, 32, 320, 44, 224, 0 },
@@ -188,11 +189,12 @@ void make_colortab(char flash_active)
       colortab_s8[a] = color << 8;
       colortab_s24[a] = color << 24;
    }
-
+#if 0
    if (conf.mem_model == MM_ATM710 || conf.mem_model == MM_ATM3 || conf.mem_model == MM_ATM450)
        atm_zc_tables(); // update with new flash bit
+#endif
 }
-
+#if 0
 // make attrtab: pc-attr + 0x100*pixel -> palette index
 void attr_tables()
 {
@@ -515,11 +517,11 @@ void video_color_tables()
    }
    setpal(0);
 }
-
+#endif
 void set_video()
 {
    set_vidmode();
-   video_color_tables();
+   //video_color_tables();
 }
 
 void apply_video()
@@ -570,14 +572,14 @@ __inline void clear_until_ray()
 
 void paint_scr(char alt) // alt=0/1 - main/alt screen, alt=2 - ray-painted
 {
-   if (alt == 2) {
+   /*if (alt == 2) {
       clear_until_ray();
    } else {
 	   // !!! here need to handle comp.ts.vpage somehow, now it's unhandled
       if (alt) comp.p7FFD ^= 8, set_banks();
 		draw_screen();
       if (alt) comp.p7FFD ^= 8, set_banks();
-   }
+   }*/
 }
 
 u32 get_free_memcycles(int dram_t)

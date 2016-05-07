@@ -104,7 +104,7 @@ void chfix(int dx)
          if (conf.pal == conf.num_pals) conf.pal = 0;
          if (conf.pal == -1) conf.pal = conf.num_pals-1;
          sprintf(statusline, "Palette: %s", pals[conf.pal].name);
-         video_color_tables();
+         //video_color_tables();
          return;
    }
    apply_sound();
@@ -413,7 +413,7 @@ void wnd_resize(int scale)
    ShowWindow(wnd, SW_RESTORE);
    DWORD style = GetWindowLong(wnd, GWL_STYLE);
    RECT rc = { 0, 0, temp.ox * scale, temp.oy * scale };
-   AdjustWindowRect(&rc, style, 0);
+   AdjustWindowRect(&rc, style, GetMenu(wnd) != 0 );
    SetWindowPos(wnd, 0, 0, 0, rc.right - rc.left, rc.bottom - rc.top, SWP_NOCOPYBITS | SWP_NOMOVE | SWP_NOOWNERZORDER | SWP_NOZORDER);
    if (temp.rflags & RF_2X)
        scale *= 2;

@@ -135,3 +135,5 @@ extern u8 trace_labels;
 u8 isbrk(const Z80 &cpu); // is there breakpoints active or any other reason to use debug z80 loop?
 void debugscr();
 void debug_events(Z80 *cpu);
+
+void init_debug();

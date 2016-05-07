@@ -83,6 +83,7 @@ static const int sc2lines_width = MAX_WIDTH*2;
 
 CACHE_ALIGNED struct T
 {
+#if 0
    struct { // switch palette/color values
       // 8bit
       unsigned sctab8[2][16*0x100];  //4 bits data+pc-attribute -> 4 palette pixels
@@ -128,7 +129,7 @@ CACHE_ALIGNED struct T
          unsigned zctab32ad[2][2*0x100];// 1 bit  data+pc-attribute -> 1 pixel
       };
    };
-
+#endif
    union {
       struct { // 8bpp
          CACHE_ALIGNED u8 scale2buf[8][sc2lines_width];    // temp buffer for scale2x,3x filter
@@ -200,6 +201,7 @@ extern AtmVideoController AtmVideoCtrl;
 static const int rb2_offs = MAX_HEIGHT*MAX_WIDTH_P;
 static const int sizeof_rbuf = rb2_offs*(MAX_BUFFERS+2);
 static const int sizeof_vbuf = VID_HEIGHT*VID_WIDTH*2;
+/* not really needed anymore */
 #ifdef CACHE_ALIGNED
 extern CACHE_ALIGNED u8 rbuf[sizeof_rbuf];
 #else // __declspec(align) not available, force u64 align with old method

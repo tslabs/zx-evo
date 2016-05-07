@@ -1189,7 +1189,7 @@ void loadzxkeys(CONFIG *conf)
       inports[i].mask1 = inports[i].mask2 = 0xFF;
       for (unsigned j = 0; j < pckeys_count; j++)
       {
-         if (pckeys[j].virtkey == i)
+         if (pckeys[j].di_key == i)
          {
             GetPrivateProfileString(section, pckeys[j].name, "", line, sizeof line, ininame);
             s = strtok(line, " ;");

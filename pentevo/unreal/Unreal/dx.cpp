@@ -13,6 +13,10 @@
 #include "emulkeys.h"
 #include "leds.h"
 #include "util.h"
+// for menu
+#include "snapshot.h"
+#include "funcs.h"
+#include "tape.h"
 
 const int size_x[3] = { 256, 320, 448 };
 const int size_y[3] = { 192, 240, 320 };
@@ -49,6 +53,8 @@ LPDIRECTDRAWCLIPPER clip;
 
 static HANDLE EventBufStop = 0;
 unsigned dsoffset, dsbuffer = DSBUFFER;
+
+static HMENU main_menu;
 
 /* ---------------------- renders ------------------------- */
 
@@ -539,7 +545,7 @@ static void StartD3d(HWND Wnd);
 static void DoneD3d(bool DeInitDll = true);
 static void SetVideoModeD3d();
 
-INT_PTR CALLBACK WndProc(HWND hwnd,UINT uMessage,WPARAM wparam,LPARAM lparam)
+static INT_PTR CALLBACK WndProc(HWND hwnd,UINT uMessage,WPARAM wparam,LPARAM lparam)
 {
    static bool moving = false;
 
@@ -646,14 +652,15 @@ INT_PTR CALLBACK WndProc(HWND hwnd,UINT uMessage,WPARAM wparam,LPARAM lparam)
          FillRect(temp.gdidc, &rc, br);
          DeleteObject(br);
       }
-      else if (hbm && !active)
+      else if (hbm /*&& !active*/)
       {
-//       printf("%s, WM_PAINT\n", __FUNCTION__);
-         HDC hcom = CreateCompatibleDC(temp.gdidc);
+	     //printf("%s, WM_PAINT\n", __FUNCTION__);
+         /*HDC hcom = CreateCompatibleDC(temp.gdidc);
          HGDIOBJ PrevObj = SelectObject(hcom, hbm);
          BitBlt(temp.gdidc, 0, 0, bm_dx, bm_dy, hcom, 0, 0, SRCCOPY);
          SelectObject(hcom, PrevObj);
-         DeleteDC(hcom);
+         DeleteDC(hcom);*/
+		 drivers[conf.driver].func();
       }
    }
 
@@ -685,6 +692,112 @@ INT_PTR CALLBACK WndProc(HWND hwnd,UINT uMessage,WPARAM wparam,LPARAM lparam)
       DragFinish(hDrop);
       return 0;
    }
+
+	if (uMessage == WM_COMMAND)
+	{
+		int disk = -1;
+		switch(wparam){
+			// File menu
+			case IDM_EXIT: correct_exit();
+
+			case IDM_LOAD: opensnap(); break;
+	
+			case IDM_SAVE: savesnap(); break;
+			case IDM_SAVE_DISKB: disk=1; goto save_disk;
+			case IDM_SAVE_DISKC: disk=2; goto save_disk;
+			case IDM_SAVE_DISKD: disk=3; goto save_disk;
+save_disk:
+				sound_stop();
+				savesnap(disk);
+				eat();
+				sound_play();
+				break;
+
+			case IDM_QUICKLOAD_1: qload1(); break;
+			case IDM_QUICKLOAD_2: qload2(); break;
+			case IDM_QUICKLOAD_3: qload3(); break;
+			case IDM_QUICKSAVE_1: qsave1(); break;
+			case IDM_QUICKSAVE_2: qsave2(); break;
+			case IDM_QUICKSAVE_3: qsave3(); break;
+
+			case IDM_RESET: main_reset(); break;
+			case IDM_RESET_128: main_reset128(); break;
+			case IDM_RESET_48: main_resetbas(); break;
+			case IDM_RESET_DOS: main_resetdos(); break;
+			case IDM_RESET_SERVICE: main_resetsys(); break;
+			case IDM_RESET_CACHE: main_resetcache(); break;
+			case IDM_RESET_GS: reset_gs(); break;
+
+			case IDM_NMI: main_nmi(); break;
+			case IDM_NMI_DOS: main_nmidos(); break;
+			case IDM_NMI_CACHE: main_nmicache(); break;
+
+			case IDM_POKE: main_poke(); break;
+
+			case IDM_AUDIOREC: savesnddialog(); break;
+			case IDM_MAKESCREENSHOT: main_scrshot(); break;
+
+			case IDM_SETTINGS: setup_dlg(); break;
+			case IDM_VIDEOFILTER: main_selectfilter(); break;
+			case IDM_FULLSCREEN: main_fullscr(); break;
+
+			case IDM_MAXIMUMSPEED: main_maxspeed(); break;
+
+			case IDM_TAPE_CONTROL: main_starttape(); break;
+			case IDM_USETAPETRAPS: conf.tape_traps^=1; break;
+			case IDM_AUTOSTARTTAPE: conf.tape_autostart^=1; break;
+
+			// Debugger
+			case IDM_DEBUGGER: main_debug(); break;
+
+			// Help
+			case IDM_HELP_SHORTKEYS: main_help(); break;
+			//case IDM_HELP_ABOUT: DialogBox(hIn, MAKEINTRESOURCE(IDD_ABOUT), wnd, aboutdlg); break;
+		}
+		//needclr=1;
+	}
+	if (uMessage == WM_INITMENU)
+	{
+		if( wparam==(WPARAM)main_menu)
+		{
+			sound_stop();
+			ModifyMenu(main_menu,IDM_SAVE_DISKB,
+				(comp.wd.fdd[1].rawdata?MF_ENABLED:MF_GRAYED|MF_DISABLED),IDM_SAVE_DISKB,"Disk B");
+			ModifyMenu(main_menu,IDM_SAVE_DISKC,
+				(comp.wd.fdd[2].rawdata?MF_ENABLED:MF_GRAYED|MF_DISABLED),IDM_SAVE_DISKC,"Disk C");
+			ModifyMenu(main_menu,IDM_SAVE_DISKD,
+				(comp.wd.fdd[3].rawdata?MF_ENABLED:MF_GRAYED|MF_DISABLED),IDM_SAVE_DISKD,"Disk D");
+
+			ModifyMenu(main_menu,IDM_AUDIOREC,MF_BYCOMMAND,IDM_AUDIOREC,savesndtype?"Stop audio recording":"Start audio recording");
+		  
+			ModifyMenu(main_menu,IDM_MAXIMUMSPEED,
+				(conf.sound.enabled?MF_UNCHECKED:MF_CHECKED),IDM_MAXIMUMSPEED,"Maximum speed");
+
+			ModifyMenu(main_menu,IDM_TAPE_CONTROL,
+				(tape_infosize?MF_ENABLED:MF_GRAYED|MF_DISABLED),IDM_TAPE_CONTROL,comp.tape.play_pointer?"Stop tape":"Start tape");
+			ModifyMenu(main_menu,IDM_USETAPETRAPS,
+				(conf.tape_traps?MF_CHECKED:MF_UNCHECKED),IDM_USETAPETRAPS,"Use tape traps");
+			ModifyMenu(main_menu,IDM_AUTOSTARTTAPE,
+				(conf.tape_autostart?MF_CHECKED:MF_UNCHECKED),IDM_AUTOSTARTTAPE,"Autostart tape");
+
+			/*ModifyMenu(main_menu,IDM_DEBUGGER,MF_BYCOMMAND,IDM_DEBUGGER,dbgbreak?"Leave debugger":"Enter debugger");
+			ModifyMenu(main_menu,IDM_DEBUGGER_BREAKPOINTS,
+				(dbgbreak?MF_ENABLED:MF_GRAYED|MF_DISABLED),IDM_DEBUGGER_BREAKPOINTS,"Breakpoints manager");
+			ModifyMenu(main_menu,IDM_DEBUGGER_POKES,
+				(dbgbreak?MF_ENABLED:MF_GRAYED|MF_DISABLED),IDM_DEBUGGER_POKES,"Enter pokes");
+			ModifyMenu(main_menu,IDM_DEBUGGER_STEP,
+				(dbgbreak?MF_ENABLED:MF_GRAYED|MF_DISABLED),IDM_DEBUGGER_STEP,"Step");
+			ModifyMenu(main_menu,IDM_DEBUGGER_STEPOVER,
+				(dbgbreak?MF_ENABLED:MF_GRAYED|MF_DISABLED),IDM_DEBUGGER_STEPOVER,"Step over");*/
+
+			/*ModifyMenu(main_menu,IDM_MON_WATCHES,
+				(show_scrshot==0?MF_CHECKED:MF_UNCHECKED),IDM_MON_WATCHES,"Watches");
+			ModifyMenu(main_menu,IDM_MON_SCREENSHOT,
+				(show_scrshot==1?MF_CHECKED:MF_UNCHECKED),IDM_MON_SCREENSHOT,"Screen memory");
+			ModifyMenu(main_menu,IDM_MON_SCREENDUMP,
+				(show_scrshot==2?MF_CHECKED:MF_UNCHECKED),IDM_MON_SCREENDUMP,"Ray-painted");*/
+		}
+	}
 
    return DefWindowProc(hwnd, uMessage, wparam, lparam);
 }
@@ -955,6 +1068,7 @@ void set_vidmode()
    else
    {
       // restore window position to last saved position in non-fullscreen mode
+	   SetMenu(wnd,main_menu);
       ShowWindow(wnd, SW_SHOWNORMAL);
       if (temp.rflags & RF_GDI)
       {
@@ -1349,8 +1463,9 @@ void start_dx()
    int winx = rect1.left + (rect1.right - rect1.left - cx) / 2;
    int winy = rect1.top + (rect1.bottom - rect1.top - cy) / 2;
 
+   main_menu = LoadMenu(hIn, MAKEINTRESOURCE(IDR_MAINMENU));
    wnd = CreateWindow("EMUL_WND", "UnrealSpeccy", WS_VISIBLE|WS_OVERLAPPEDWINDOW,
-                    winx, winy, 0, 0, 0, 0, hIn, NULL);
+                    winx, winy, 0, 0, 0, main_menu, hIn, NULL);
 //                    winx, winy, cx, cy, 0, 0, hIn, NULL);
 
    DragAcceptFiles(wnd, 1);
@@ -1517,8 +1632,7 @@ void start_dx()
        printrdi("IDirectInputDevice::SetCooperativeLevel() (keyboard)", r);
        exit();
    }
-
-
+   
    if ((r = di->CreateDevice(GUID_SysMouse, &dimouse, 0)) == DI_OK)
    {
       if ((r = dimouse->SetDataFormat(&c_dfDIMouse)) != DI_OK)
@@ -1604,3 +1718,4 @@ void done_dx()
    DoneD3d();
    if (wnd) DestroyWindow(wnd);
 }
+

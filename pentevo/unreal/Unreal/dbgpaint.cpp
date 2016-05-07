@@ -20,66 +20,64 @@ unsigned nfr;
 
 void debugflip()
 {
-   if (!active)
-       return;
-   setpal(0);
+	/*if (!active)
+		return;
+	setpal(0);*/
 
-   u8 * const bptr = gdibuf;
+	u8 * const bptr = debug_gdibuf;
 
-   if (show_scrshot) {
-      memcpy(save_buf, rbuf, rb2_offs);
-      paint_scr((show_scrshot == 1)? 0 : 2);
-      u8 *dst = bptr + wat_y*16*640+wat_x*8;
-      u8 *src = rbuf+temp.scx/4*(temp.b_top+192/2-wat_sz*16/2);
-      src += temp.scx/8-37/2*2;
-      for (unsigned y = 0; y < wat_sz*16; y++) {
-         for (unsigned x = 0; x < 37; x++) {
-            *(unsigned*)(dst+x*8+0) = t.sctab8[0][(src[x*2] >>  4) + src[2*x+1]*16];
-            *(unsigned*)(dst+x*8+4) = t.sctab8[0][(src[x*2] & 0xF) + src[2*x+1]*16];
-         }
-         src += temp.scx/4, dst += 640;
-      }
-      memcpy(rbuf, save_buf, rb2_offs);
-   }
+	/*if (show_scrshot) {
+		memcpy(save_buf, rbuf, rb2_offs);
+		paint_scr((show_scrshot == 1)? 0 : 2);
+		u8 *dst = bptr + wat_y*16*640+wat_x*8;
+		u8 *src = rbuf+temp.scx/4*(temp.b_top+192/2-wat_sz*16/2);
+		src += temp.scx/8-37/2*2;
+		for (unsigned y = 0; y < wat_sz*16; y++) {
+			for (unsigned x = 0; x < 37; x++) {
+			*(unsigned*)(dst+x*8+0) = t.sctab8[0][(src[x*2] >>  4) + src[2*x+1]*16];
+			*(unsigned*)(dst+x*8+4) = t.sctab8[0][(src[x*2] & 0xF) + src[2*x+1]*16];
+			}
+			src += temp.scx/4, dst += 640;
+		}
+		memcpy(rbuf, save_buf, rb2_offs);
+	}*/
 
-   // print text
-   int x,y;
-   u8 *tptr = txtscr;
-   for (y = 0; y < 16*30*640; y+=16*640)
-   {
-      for (x = 0; x < 80; x++, tptr++)
-      {
-         unsigned ch = *tptr, at = tptr[80*30];
-         if (at == 0xFF) continue; // transparent color
-         const u8 *fnt = &font16[ch*16];
-         at <<= 4;
-         for (int yy = 0; yy < 16; yy++, fnt++)
-         {
-            *(unsigned*)(bptr+y+640*yy+x*8+0) = t.sctab8[0][(*fnt >>  4) + at];
-            *(unsigned*)(bptr+y+640*yy+x*8+4) = t.sctab8[0][(*fnt & 0xF) + at];
-         }
-      }
-   }
+	// print text
+	int x,y;
+	u8 *tptr = txtscr;
+	for (y = 0; y < 16*30*640; y+=16*640)
+	{
+		for (x = 0; x < 80; x++, tptr++)
+		{
+			unsigned ch = *tptr, at = tptr[80*30];
+			if (at == 0xFF) continue; // transparent color
+			const u8 *fnt = &font16[ch*16];
+			for (int yy = 0; yy < 16; yy++, fnt++)
+				for (int i = 0; i < 8; i ++)
+					*(bptr+y+640*yy+x*8+i) = (*fnt & (0x80 >> i)) ? (at & 0xF) : (at >> 4);
+		}
+	}
 
-   // show frames
-   for (unsigned i = 0; i < nfr; i++)
-   {
-      u8 a1 = (frames[i].c | 0x08) * 0x11;
-      y = frames[i].y*16-1;
-      for (x = 8*frames[i].x-1; x < (frames[i].x+frames[i].dx)*8; x++) bptr[y*640+x] = a1;
-      y = (frames[i].y+frames[i].dy)*16;
-      for (x = 8*frames[i].x-1; x < (frames[i].x+frames[i].dx)*8; x++) bptr[y*640+x] = a1;
-      x = frames[i].x*8-1;
-      for (y = 16*frames[i].y; y < (frames[i].y+frames[i].dy)*16; y++) bptr[y*640+x] = a1;
-      x = (frames[i].x+frames[i].dx)*8;
-      for (y = 16*frames[i].y; y < (frames[i].y+frames[i].dy)*16; y++) bptr[y*640+x] = a1;
-   }
+	// show frames
+	for (unsigned i = 0; i < nfr; i++)
+	{
+		u8 a1 = (frames[i].c | 0x08) * 0x11;
+		y = frames[i].y*16-1;
+		for (x = 8*frames[i].x-1; x < (frames[i].x+frames[i].dx)*8; x++) bptr[y*640+x] = a1;
+		y = (frames[i].y+frames[i].dy)*16;
+		for (x = 8*frames[i].x-1; x < (frames[i].x+frames[i].dx)*8; x++) bptr[y*640+x] = a1;
+		x = frames[i].x*8-1;
+		for (y = 16*frames[i].y; y < (frames[i].y+frames[i].dy)*16; y++) bptr[y*640+x] = a1;
+		x = (frames[i].x+frames[i].dx)*8;
+		for (y = 16*frames[i].y; y < (frames[i].y+frames[i].dy)*16; y++) bptr[y*640+x] = a1;
+	}
 
-   gdibmp.header.bmiHeader.biBitCount = 8;
-   if (needclr)
-       gdi_frame();
-   SetDIBitsToDevice(temp.gdidc, temp.gx, temp.gy, 640, 480, 0, 0, 0, 480, bptr, &gdibmp.header, DIB_RGB_COLORS);
-   gdibmp.header.bmiHeader.biBitCount = temp.obpp;
+	/*gdibmp.header.bmiHeader.biBitCount = 8;
+	if (needclr)
+		gdi_frame();
+	SetDIBitsToDevice(temp.debug_gdidc, temp.gx, temp.gy, 640, 480, 0, 0, 0, 480, bptr, &gdibmp.header, DIB_RGB_COLORS);
+	gdibmp.header.bmiHeader.biBitCount = temp.obpp;*/
+	InvalidateRect( debug_wnd, NULL, FALSE );
 }
 
 void frame(unsigned x, unsigned y, unsigned dx, unsigned dy, u8 attr)

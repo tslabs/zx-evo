@@ -331,7 +331,7 @@ char K_INPUT::readdevices()
       if (!dbgbreak && buffer.Enabled())
           memcpy(kbdpc_prev, kbdpc, sizeof(kbdpc));
 
-      ReadKeyboard(kbdpc);
+	  ReadKeyboard(kbdpc);
 
       if (!dbgbreak && input.buffer.Enabled()) // TODO: нажатие и отжатие ESC попадает в буфер
       {

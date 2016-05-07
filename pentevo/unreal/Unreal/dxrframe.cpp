@@ -5,6 +5,7 @@
 #include "dxrcopy.h"
 #include "util.h"
 
+#if 0
 void _render_black(u8 *dst, unsigned pitch)
 {
    unsigned dx = ((temp.rflags & RF_OVR) ? temp.ox : temp.rsx)*temp.obpp/8;
@@ -240,7 +241,7 @@ void rend_frame_32d(u8 *dst, unsigned pitch)
       src += delta;
    }
 }
-
+#endif
 void gdi_frame()
 {
    RECT rc, r0;

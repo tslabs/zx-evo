@@ -372,8 +372,15 @@ void WD1793::process()
             seldrive->t.clear();
 
             static const unsigned steps[] = { 6,12,20,30 };
-            if (!conf.wd93_nodelay) next += steps[cmd & CMD_SEEK_RATE]*Z80FQ/1000;
-            if (!conf.wd93_nodelay && conf.fdd_noise) Beep((stepdirection > 0)? 600 : 800, 2);
+            if (!conf.wd93_nodelay)
+			{
+				next += steps[cmd & CMD_SEEK_RATE]*Z80FQ/1000;
+				if ( conf.fdd_noise == 1 )
+					Beep((stepdirection > 0)? 600 : 800, 2);
+				else if ( conf.fdd_noise == 2 )
+					PlaySound((stepdirection > 0)? "trk_inc.wav" : "trk_dec.wav",
+							  0,SND_FILENAME|SND_ASYNC|SND_NODEFAULT);
+			}
 
             state2 = (cmd & 0xE0)? S_VERIFY : S_SEEK;
             state = S_WAIT; break;

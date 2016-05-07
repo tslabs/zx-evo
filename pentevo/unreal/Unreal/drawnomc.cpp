@@ -4,6 +4,7 @@
 #include "draw.h"
 #include "drawnomc.h"
 
+#if 0
 void draw_border1()
 {
    unsigned br = comp.border_attr * 0x11001100;
@@ -89,3 +90,4 @@ void draw_gigascreen_no_border()
       dst += temp.scx / 4;
    }
 }
+#endif

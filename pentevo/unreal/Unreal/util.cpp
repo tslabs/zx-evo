@@ -204,43 +204,32 @@ void eat() // eat messages
    Sleep(20); while (process_msgs()) Sleep(10);
 }
 
+static u8 kbd_vk[VK_MAX];
 char dispatch_more(action *table)
 {
    if (!table)
        return -1;
 
-   kbdpc[0] = 0x80; // nil button is always pressed
+    GetKeyboardState( kbd_vk );
+	if (input.lastkey)
+    {
+        kbd_vk[input.lastkey] = 0x80;
+    }
+
+   kbd_vk[0] = 0x80; // nil button is always pressed
 
 //   __debugbreak();
    while (table->name)
    {
 //      printf("%02X|%02X|%02X|%02X\n", table->k1, table->k2, table->k3, table->k4);
-      unsigned k[4] = { table->k1, table->k2, table->k3, table->k4 };
-      unsigned b[4];
 
-      for (unsigned i =0; i< 4; i++)
-      {
-          switch(k[i])
-          {
-          case DIK_MENU:
-              b[i] = kbdpc[DIK_LMENU] | kbdpc[DIK_RMENU];
-          break;
-          case DIK_CONTROL:
-              b[i] = kbdpc[DIK_LCONTROL] | kbdpc[DIK_RCONTROL];
-          break;
-          case DIK_SHIFT:
-              b[i] = kbdpc[DIK_LSHIFT] | kbdpc[DIK_RSHIFT];
-          break;
-          default:
-              b[i] = kbdpc[k[i]];
-          }
-      }
-
-      if (b[0] & b[1] & b[2] & b[3] & 0x80)
+	   if ( kbd_vk[table->k1] & kbd_vk[table->k2] &
+           kbd_vk[table->k3] & kbd_vk[table->k4] & 0x80 )
       {
          table->func();
          return 1;
       }
+
       table++;
    }
    return -1;
@@ -254,7 +243,13 @@ char dispatch(action *table)
        loadsnap(droppedFile);
        *droppedFile = 0;
    }
-   if (!input.readdevices())
+   if ( dbgbreak )
+   {
+	   input.lastkey = process_msgs();
+	   if ( !input.lastkey )
+		   return 0;
+   }
+   else if (!input.readdevices())
        return 0;
 
    dispatch_more(table);

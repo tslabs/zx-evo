@@ -117,7 +117,7 @@ void mon_emul()
 
 void mon_scr(char alt)
 {
-   temp.scale = temp.mon_scale;
+   /*temp.scale = temp.mon_scale;
    apply_video();
 
    memcpy(save_buf, rbuf, rb2_offs);
@@ -131,7 +131,7 @@ void mon_scr(char alt)
    temp.rflags = RF_MONITOR;
    temp.mon_scale = temp.scale;
    temp.scale = 1;
-   set_video();
+   set_video();*/
 }
 
 void mon_scr0() { mon_scr(0); }

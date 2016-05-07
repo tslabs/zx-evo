@@ -5,7 +5,7 @@
 #include "dxrcopy.h"
 
 // #define QUAD_BUFFER  // tests show that this variant is slower, even in noflic mode
-
+#if 0
 void line32_nf(u8 *dst, u8 *src, unsigned *tab)
 {
    for (unsigned x = 0; x < temp.scx*4; x += 32) {
@@ -1057,3 +1057,4 @@ void rend_copy8q_nf(u8 *dst, unsigned pitch)
       src += delta;
    }
 }
+#endif

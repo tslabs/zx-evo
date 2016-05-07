@@ -11,6 +11,118 @@
 
 
 //
+// Menu resources
+//
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+IDR_DEBUGMENU MENU
+{
+    POPUP "Monitor"
+    {
+        MENUITEM "Load block", IDM_MON_LOADBLOCK
+        MENUITEM "Save block", IDM_MON_SAVEBLOCK
+        MENUITEM "Fill block", IDM_MON_FILLBLOCK
+        MENUITEM SEPARATOR
+        MENUITEM "Ripper's tool", IDM_MON_RIPPER
+    }
+    POPUP "Debug"
+    {
+        MENUITEM "Continue", IDM_DEBUG_RUN
+        MENUITEM SEPARATOR
+        MENUITEM "Step into", IDM_DEBUG_STEP
+        MENUITEM "Step over", IDM_DEBUG_STEPOVER
+        MENUITEM "Till return", IDM_DEBUG_TILLRETURN
+        MENUITEM "Run to cursor", IDM_DEBUG_RUNTOCURSOR
+    }
+    POPUP "Breakpoints"
+    {
+        MENUITEM "Toggle breakpoint", IDM_BREAKPOINT_TOGGLE
+        MENUITEM "Manager", IDM_BREAKPOINT_MANAGER
+    }
+}
+
+
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_DEFAULT
+IDR_MAINMENU MENU
+{
+    POPUP "File"
+    {
+        MENUITEM "Load...", IDM_LOAD
+        POPUP "Save"
+        {
+            MENUITEM "Snapshot/Disk A", IDM_SAVE
+            MENUITEM "Disk B", IDM_SAVE_DISKB
+            MENUITEM "Disk C", IDM_SAVE_DISKC
+            MENUITEM "Disk D", IDM_SAVE_DISKD
+        }
+        POPUP "Quick load"
+        {
+            MENUITEM "1", IDM_QUICKLOAD_1
+            MENUITEM "2", IDM_QUICKLOAD_2
+            MENUITEM "3", IDM_QUICKLOAD_3
+        }
+        POPUP "Quick save"
+        {
+            MENUITEM "1", IDM_QUICKSAVE_1
+            MENUITEM "2", IDM_QUICKSAVE_2
+            MENUITEM "3", IDM_QUICKSAVE_3
+        }
+        MENUITEM SEPARATOR
+        MENUITEM "Start audio recording", IDM_AUDIOREC
+        MENUITEM "Make screenshot", IDM_MAKESCREENSHOT
+        MENUITEM SEPARATOR
+        MENUITEM "Exit", IDM_EXIT
+    }
+    POPUP "Emulation"
+    {
+        MENUITEM "Pause", IDM_PAUSE, GRAYED
+        MENUITEM "Maximum speed", IDM_MAXIMUMSPEED
+        MENUITEM SEPARATOR
+        POPUP "Reset"
+        {
+            MENUITEM "Default", IDM_RESET
+            MENUITEM SEPARATOR
+            MENUITEM "Basic 128", IDM_RESET_128
+            MENUITEM "Basic 48", IDM_RESET_48
+            MENUITEM "TR-DOS", IDM_RESET_DOS
+            MENUITEM "Service", IDM_RESET_SERVICE
+            MENUITEM "Cache", IDM_RESET_CACHE
+            MENUITEM SEPARATOR
+            MENUITEM "GeneralSound", IDM_RESET_GS
+        }
+        POPUP "NMI"
+        {
+            MENUITEM "Generate", IDM_NMI
+            MENUITEM SEPARATOR
+            MENUITEM "TR-DOS", IDM_NMI_DOS
+            MENUITEM "Cache", IDM_NMI_CACHE
+        }
+        MENUITEM "Poke", IDM_POKE
+        MENUITEM SEPARATOR
+        POPUP "Tape"
+        {
+            MENUITEM "Start/stop tape", IDM_TAPE_CONTROL
+            MENUITEM SEPARATOR
+            MENUITEM "Use tape traps", IDM_USETAPETRAPS
+            MENUITEM "Autostart tape", IDM_AUTOSTARTTAPE
+        }
+        MENUITEM SEPARATOR
+        MENUITEM "Video filter", IDM_VIDEOFILTER
+        MENUITEM "Fullscreen", IDM_FULLSCREEN
+        MENUITEM SEPARATOR
+        MENUITEM "Settings", IDM_SETTINGS
+    }
+    MENUITEM "Debugger", IDM_DEBUGGER
+    POPUP "Help"
+    {
+        MENUITEM "Shortkeys", IDM_HELP_SHORTKEYS
+        MENUITEM "About", IDM_HELP_ABOUT, GRAYED
+    }
+}
+
+
+
+//
 // Dialog resources
 //
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
