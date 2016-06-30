@@ -3,7 +3,8 @@
   include "tsconfig.asm"
   include "ft81x.asm"
 
-; 640x480@57Hz, fmul = 3 (24Mhz)
+; 640x480@57Hz (24Mhz)
+; F_MUL     equ 3
 ; H_FPORCH  equ 16
 ; H_SYNC    equ 96
 ; H_BPORCH  equ 48
@@ -13,7 +14,8 @@
 ; V_BPORCH  equ 31
 ; V_VISIBLE equ 480
 
-; 640x480@74Hz, fmul = 4 (32Mhz)
+; 640x480@74Hz (32Mhz)
+; F_MUL     equ 4 
 ; H_FPORCH  equ 24
 ; H_SYNC    equ 40
 ; H_BPORCH  equ 128
@@ -23,7 +25,8 @@
 ; V_BPORCH  equ 28
 ; V_VISIBLE equ 480
 
-; 640x480@76Hz, fmul = 4 (32Mhz)
+; 640x480@76Hz (32Mhz)
+; F_MUL     equ 4
 ; H_FPORCH  equ 16
 ; H_SYNC    equ 96
 ; H_BPORCH  equ 48
@@ -33,17 +36,19 @@
 ; V_BPORCH  equ 31
 ; V_VISIBLE equ 480
 
-; 800x600@60Hz, fmul = 5 (40Mhz)
-; H_FPORCH  equ 40
-; H_SYNC    equ 128
-; H_BPORCH  equ 88
-; H_VISIBLE equ 800
-; V_FPORCH  equ 1
-; V_SYNC    equ 4
-; V_BPORCH  equ 23
-; V_VISIBLE equ 600
+; 800x600@60Hz (40Mhz)
+F_MUL     equ 5
+H_FPORCH  equ 40
+H_SYNC    equ 128
+H_BPORCH  equ 88
+H_VISIBLE equ 800
+V_FPORCH  equ 1
+V_SYNC    equ 4
+V_BPORCH  equ 23
+V_VISIBLE equ 600
 
-; 800x600@69Hz, fmul = 6 (48Mhz)
+; 800x600@69Hz (48Mhz)
+; F_MUL     equ 6
 ; H_FPORCH  equ 56
 ; H_SYNC    equ 120
 ; H_BPORCH  equ 64
@@ -53,7 +58,8 @@
 ; V_BPORCH  equ 23
 ; V_VISIBLE equ 600
 
-; 800x600@85Hz, fmul = 7 (56Mhz)
+; 800x600@85Hz (56Mhz)
+; F_MUL     equ 7
 ; H_FPORCH  equ 32
 ; H_SYNC    equ 64
 ; H_BPORCH  equ 152
@@ -63,17 +69,19 @@
 ; V_BPORCH  equ 27
 ; V_VISIBLE equ 600
 
-; 1024x768@59Hz, fmul = 8 (64Mhz)
-H_FPORCH  equ 24
-H_SYNC    equ 136
-H_BPORCH  equ 160
-H_VISIBLE equ 1024
-V_FPORCH  equ 3
-V_SYNC    equ 6
-V_BPORCH  equ 29
-V_VISIBLE equ 768
+; 1024x768@59Hz (64Mhz)
+; F_MUL     equ 8
+; H_FPORCH  equ 24
+; H_SYNC    equ 136
+; H_BPORCH  equ 160
+; H_VISIBLE equ 1024
+; V_FPORCH  equ 3
+; V_SYNC    equ 6
+; V_BPORCH  equ 29
+; V_VISIBLE equ 768
 
-; 1024x768@67Hz, fmul = 9 (72Mhz)
+; 1024x768@67Hz (72Mhz)
+; F_MUL     equ 9
 ; H_FPORCH  equ 24
 ; H_SYNC    equ 136
 ; H_BPORCH  equ 144
@@ -83,7 +91,8 @@ V_VISIBLE equ 768
 ; V_BPORCH  equ 29
 ; V_VISIBLE equ 768
 
-; 1024x768@76Hz, fmul = 10 (80Mhz)
+; 1024x768@76Hz (80Mhz)
+; F_MUL     equ 10
 ; H_FPORCH  equ 16
 ; H_SYNC    equ 96
 ; H_BPORCH  equ 176
@@ -107,7 +116,7 @@ codestart:
     FT_DELAY 65535
     FT_CMD FT_CMD_SLEEP
     FT_DELAY 65535
-    FT_CMDP FT_CMD_CLKSEL, 8 | 192
+    FT_CMDP FT_CMD_CLKSEL, F_MUL | 192
     FT_ACTIVE
     FT_ACTIVE
     FT_DELAY 65535
