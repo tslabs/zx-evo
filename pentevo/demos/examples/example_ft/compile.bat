@@ -8,6 +8,4 @@ set INC=..\includes
 
 %SJ% --inc=%INC% --lst=%PRJ%.lst %PRJ%.asm
 
-mount.bat
-
 pause

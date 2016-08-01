@@ -16,6 +16,7 @@ FT_RAM_REG         equ 0x302000   ; Registers
 FT_RAM_CMD         equ 0x308000   ; Coprocessor command buffer
 
 ; -- Commands
+FT_CMD_ACTIVE      equ 0x00   ; cc 00 00
 FT_CMD_STANDBY     equ 0x41   ; cc 00 00
 FT_CMD_SLEEP       equ 0x42   ; cc 00 00
 FT_CMD_PWRDOWN     equ 0x43   ; cc 00 00
@@ -132,17 +133,12 @@ FT_REG_TRACKER_2          equ 0x309008
 FT_REG_TRACKER_3          equ 0x30900C
 FT_REG_TRACKER_4          equ 0x309010
 
+FT_REG_MEDIAFIFO_READ     equ 0x309014
+FT_REG_MEDIAFIFO_WRITE    equ 0x309018
+
 ; -- DL macros
   macro FT_DISPLAY
-    defd 0 << 24
-  endm
-
-  macro FT_VERTEX2F x, y
-    defd (1 << 30) | (((x) & 32767) << 15) | (((y) & 32767) << 0)
-  endm
-
-  macro FT_VERTEX2II x, y, handle, cell
-    defd (2<<30) | (((x) & 511) << 21) | (((y) & 511) << 12) | (((handle) & 31) << 7) | (((cell) & 127) << 0)
+    defd (0 << 24)
   endm
 
   macro FT_BITMAP_SOURCE addr
@@ -150,7 +146,7 @@ FT_REG_TRACKER_4          equ 0x309010
   endm
 
   macro FT_CLEAR_COLOR_RGB red, green, blue
-    defd (2<<24) | (((red) & 255) << 16) | (((green) & 255) << 8) | (((blue) & 255) << 0)
+    defd (2 << 24) | (((red) & 255) << 16) | (((green) & 255) << 8) | (((blue) & 255) << 0)
   endm
 
   macro FT_TAG s
@@ -325,6 +321,14 @@ FT_REG_TRACKER_4          equ 0x309010
     defd (45 << 24)
   endm
 
+  macro FT_VERTEX2F x, y
+    defd (64 << 24) | (((x) & 32767) << 15) | (((y) & 32767) << 0)
+  endm
+
+  macro FT_VERTEX2II x, y, handle, cell
+    defd (128 << 24) | (((x) & 511) << 21) | (((y) & 511) << 12) | (((handle) & 31) << 7) | (((cell) & 127) << 0)
+  endm
+
 ; -- Test functions
 FT_NEVER          equ 0
 FT_LESS           equ 1
@@ -436,6 +440,7 @@ FT_CMD_CALIBRATE        equ 0xFFFFFF00 + 21
 FT_CMD_CLOCK            equ 0xFFFFFF00 + 20
 FT_CMD_COLDSTART        equ 0xFFFFFF00 + 50
 FT_CMD_CRC              equ 0xFFFFFF00 + 3
+FT_CMD_CSKETCH          equ 0xFFFFFF00 + 53 ; Deprecated
 FT_CMD_DIAL             equ 0xFFFFFF00 + 45
 FT_CMD_DLSTART          equ 0xFFFFFF00 + 0
 FT_CMD_EXECUTE          equ 0xFFFFFF00 + 7
@@ -456,23 +461,31 @@ FT_CMD_LOADIDENTITY     equ 0xFFFFFF00 + 38
 FT_CMD_LOADIMAGE        equ 0xFFFFFF00 + 36
 FT_CMD_LOGO             equ 0xFFFFFF00 + 49
 FT_CMD_MARCH            equ 0xFFFFFF00 + 5
+FT_CMD_MEDIAFIFO        equ 0xFFFFFF00 + 57
 FT_CMD_MEMCPY           equ 0xFFFFFF00 + 29
 FT_CMD_MEMCRC           equ 0xFFFFFF00 + 24
 FT_CMD_MEMSET           equ 0xFFFFFF00 + 27
 FT_CMD_MEMWRITE         equ 0xFFFFFF00 + 26
 FT_CMD_MEMZERO          equ 0xFFFFFF00 + 28
 FT_CMD_NUMBER           equ 0xFFFFFF00 + 46
+FT_CMD_PLAYVIDEO        equ 0xFFFFFF00 + 58
 FT_CMD_PROGRESS         equ 0xFFFFFF00 + 15
 FT_CMD_REGREAD          equ 0xFFFFFF00 + 25
+FT_CMD_ROMFONT          equ 0xFFFFFF00 + 63
 FT_CMD_ROTATE           equ 0xFFFFFF00 + 41
 FT_CMD_SCALE            equ 0xFFFFFF00 + 40
 FT_CMD_SCREENSAVER      equ 0xFFFFFF00 + 47
 FT_CMD_SCROLLBAR        equ 0xFFFFFF00 + 17
+FT_CMD_SETBASE          equ 0xFFFFFF00 + 56
 FT_CMD_SETFONT          equ 0xFFFFFF00 + 43
+FT_CMD_SETFONT2         equ 0xFFFFFF00 + 59
 FT_CMD_SETMATRIX        equ 0xFFFFFF00 + 42
+FT_CMD_SETROTATE        equ 0xFFFFFF00 + 54
+FT_CMD_SETSCRATCH       equ 0xFFFFFF00 + 60
 FT_CMD_SKETCH           equ 0xFFFFFF00 + 48
 FT_CMD_SLIDER           equ 0xFFFFFF00 + 16
 FT_CMD_SNAPSHOT         equ 0xFFFFFF00 + 31
+FT_CMD_SNAPSHOT2        equ 0xFFFFFF00 + 55
 FT_CMD_SPINNER          equ 0xFFFFFF00 + 22
 FT_CMD_STOP             equ 0xFFFFFF00 + 23
 FT_CMD_SWAP             equ 0xFFFFFF00 + 1
@@ -481,28 +494,145 @@ FT_CMD_TOGGLE           equ 0xFFFFFF00 + 18
 FT_CMD_TOUCH_TRANSFORM  equ 0xFFFFFF00 + 32
 FT_CMD_TRACK            equ 0xFFFFFF00 + 44
 FT_CMD_TRANSLATE        equ 0xFFFFFF00 + 39
+FT_CMD_VIDEOFRAME       equ 0xFFFFFF00 + 65
+FT_CMD_VIDEOSTART       equ 0xFFFFFF00 + 64
 
 ; -- Parameter options
 FT_OPT_3D               equ 0
-FT_OPT_RGB565           equ 0
-FT_OPT_MONO             equ 1
-FT_OPT_NODL             equ 2
-FT_OPT_FLAT             equ 256
-FT_OPT_SIGNED           equ 256
+FT_OPT_CENTER           equ 1536
 FT_OPT_CENTERX          equ 512
 FT_OPT_CENTERY          equ 1024
-FT_OPT_CENTER           equ 1536
-FT_OPT_RIGHTX           equ 2048
+FT_OPT_FLAT             equ 256
+FT_OPT_FULLSCREEN       equ 8
+FT_OPT_MEDIAFIFO        equ 16
+FT_OPT_MONO             equ 1
 FT_OPT_NOBACK           equ 4096
-FT_OPT_NOTICKS          equ 8192
+FT_OPT_NODL             equ 2
+FT_OPT_NOHANDS          equ 49152
 FT_OPT_NOHM             equ 16384
 FT_OPT_NOPOINTER        equ 16384
 FT_OPT_NOSECS           equ 32768
-FT_OPT_NOHANDS          equ 49152
+FT_OPT_NOTICKS          equ 8192
 FT_OPT_NOTEAR           equ 4
-FT_OPT_FULLSCREEN       equ 8
-FT_OPT_MEDIAFIFO        equ 16
+FT_OPT_RIGHTX           equ 2048
+FT_OPT_RGB565           equ 0
+FT_OPT_SIGNED           equ 256
 FT_OPT_SOUND            equ 32
+
+; -- Video mode macros
+  macro ft_mode_tab F_MUL, H_FPORCH, H_SYNC, H_BPORCH, H_VISIBLE, V_FPORCH, V_SYNC, V_BPORCH, V_VISIBLE
+  db F_MUL
+  dw H_FPORCH
+  dw H_FPORCH + H_SYNC
+  dw H_FPORCH + H_SYNC + H_BPORCH
+  dw H_VISIBLE
+  dw H_FPORCH + H_SYNC + H_BPORCH + H_VISIBLE
+  dw V_FPORCH - 1
+  dw V_FPORCH + V_SYNC - 1
+  dw V_FPORCH + V_SYNC + V_BPORCH - 1
+  dw V_VISIBLE
+  dw V_FPORCH + V_SYNC + V_BPORCH + V_VISIBLE
+  endm
+
+; -- Video modes
+; 640x480@57Hz (24Mhz)
+F0_MUL     equ 3
+H0_FPORCH  equ 16
+H0_SYNC    equ 96
+H0_BPORCH  equ 48
+H0_VISIBLE equ 640
+V0_FPORCH  equ 11
+V0_SYNC    equ 2
+V0_BPORCH  equ 31
+V0_VISIBLE equ 480
+
+; 640x480@74Hz (32Mhz)
+F1_MUL     equ 4 
+H1_FPORCH  equ 24
+H1_SYNC    equ 40
+H1_BPORCH  equ 128
+H1_VISIBLE equ 640
+V1_FPORCH  equ 9
+V1_SYNC    equ 3
+V1_BPORCH  equ 28
+V1_VISIBLE equ 480
+
+; 640x480@76Hz (32Mhz)
+F2_MUL     equ 4
+H2_FPORCH  equ 16
+H2_SYNC    equ 96
+H2_BPORCH  equ 48
+H2_VISIBLE equ 640
+V2_FPORCH  equ 11
+V2_SYNC    equ 2
+V2_BPORCH  equ 31
+V2_VISIBLE equ 480
+
+; 800x600@60Hz (40Mhz)
+F3_MUL     equ 5
+H3_FPORCH  equ 40
+H3_SYNC    equ 128
+H3_BPORCH  equ 88
+H3_VISIBLE equ 800
+V3_FPORCH  equ 1
+V3_SYNC    equ 4
+V3_BPORCH  equ 23
+V3_VISIBLE equ 600
+
+; 800x600@69Hz (48Mhz)
+F4_MUL     equ 6
+H4_FPORCH  equ 56
+H4_SYNC    equ 120
+H4_BPORCH  equ 64
+H4_VISIBLE equ 800
+V4_FPORCH  equ 37
+V4_SYNC    equ 6
+V4_BPORCH  equ 23
+V4_VISIBLE equ 600
+
+; 800x600@85Hz (56Mhz)
+F5_MUL     equ 7
+H5_FPORCH  equ 32
+H5_SYNC    equ 64
+H5_BPORCH  equ 152
+H5_VISIBLE equ 800
+V5_FPORCH  equ 1
+V5_SYNC    equ 3
+V5_BPORCH  equ 27
+V5_VISIBLE equ 600
+
+; 1024x768@59Hz (64Mhz)
+F6_MUL     equ 8
+H6_FPORCH  equ 24
+H6_SYNC    equ 136
+H6_BPORCH  equ 160
+H6_VISIBLE equ 1024
+V6_FPORCH  equ 3
+V6_SYNC    equ 6
+V6_BPORCH  equ 29
+V6_VISIBLE equ 768
+
+; 1024x768@67Hz (72Mhz)
+F7_MUL     equ 9
+H7_FPORCH  equ 24
+H7_SYNC    equ 136
+H7_BPORCH  equ 144
+H7_VISIBLE equ 1024
+V7_FPORCH  equ 3
+V7_SYNC    equ 6
+V7_BPORCH  equ 29
+V7_VISIBLE equ 768
+
+; 1024x768@76Hz (80Mhz)
+F8_MUL     equ 10
+H8_FPORCH  equ 16
+H8_SYNC    equ 96
+H8_BPORCH  equ 176
+H8_VISIBLE equ 1024
+V8_FPORCH  equ 1
+V8_SYNC    equ 3
+V8_BPORCH  equ 28
+V8_VISIBLE equ 768
 
 ; -- Function macros
   macro FT_ON
