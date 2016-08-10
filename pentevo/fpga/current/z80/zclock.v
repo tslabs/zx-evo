@@ -42,7 +42,7 @@ module zclock
   input wire vdos_off,
 
 `ifdef PENT_312
-  input wire intack,
+  input wire boost_start,
   input wire [4:0] hcnt,
   input wire upper8,
 `endif
@@ -69,7 +69,7 @@ module zclock
   reg t_boost;
   reg [4:0] hcnt_r;
   always @(posedge clk)
-    if (intack && !t_boost)
+    if (boost_start && !t_boost)
     begin
       t_boost <= 1'b1;
       hcnt_r <= hcnt;

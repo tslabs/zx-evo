@@ -299,6 +299,7 @@ module top(
   wire regs_we;
 
 `ifdef PENT_312
+  wire boost_start;
   wire [4:0] hcnt;
   wire upper8;
 `endif
@@ -473,7 +474,7 @@ module top(
     .ide_stall(ide_stall),
 `endif
 `ifdef PENT_312
-    .intack(intack),
+    .boost_start(boost_start),
     .hcnt(hcnt),
     .upper8(upper8),
 `endif
@@ -968,6 +969,9 @@ module top(
     .int_start_lin(vdac2_msel ? int_start_ft : int_start_lin),
 `else
     .int_start_lin(int_start_lin),
+`endif
+`ifdef PENT_312
+    .boost_start(boost_start),
 `endif
     .int_start_frm(int_start_frm),
     .int_start_dma(int_start_dma),
