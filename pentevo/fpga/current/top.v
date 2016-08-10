@@ -218,7 +218,7 @@ module top(
   wire drive_ff;
 
   wire [15:0] dram_wd;
- assign rd = rwe_n ? 16'hZZZZ : dram_wd;
+  assign rd = rwe_n ? 16'hZZZZ : dram_wd;
   assign d = ena_ram ? dout_ram : (ena_ports ? dout_ports : (intack ? im2vect : (drive_ff ? 8'hFF : 8'bZZZZZZZZ)));
 
   wire rampage_wr;        // ports #10AF-#13AF
@@ -298,6 +298,11 @@ module top(
   wire sfile_we;
   wire regs_we;
 
+`ifdef PENT_312
+  wire [4:0] hcnt;
+  wire upper8;
+`endif
+  
   wire rst;
   wire m1;
   wire rfsh;
@@ -358,6 +363,7 @@ module top(
   assign ide_cs0_n = 1'bZ;
   assign ide_cs1_n = vvsync;
 `elsif IDE_VDAC2
+  wire ftcs_n;
   assign ide_d[ 0] = vdac2_msel ? 1'bZ : vgrn_raw[2];
   assign ide_d[ 1] = vdac2_msel ? 1'bZ : vred_raw[0];
   assign ide_d[ 2] = vdac2_msel ? 1'bZ : vred_raw[1];
@@ -465,6 +471,11 @@ module top(
     .cpu_stall(cpu_stall),
 `ifdef IDE_HDD
     .ide_stall(ide_stall),
+`endif
+`ifdef PENT_312
+    .intack(intack),
+    .hcnt(hcnt),
+    .upper8(upper8),
 `endif
     .external_port(external_port)
   );
@@ -664,6 +675,10 @@ module top(
     .tm_addr(tm_addr),
     .tm_req(tm_req),
     .tm_next(tm_next),
+`ifdef PENT_312
+    .hcnt(hcnt),
+    .upper8(upper8),
+`endif
     .d(d),
     .zmd(zmd),
     .zma(zma),

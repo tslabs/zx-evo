@@ -56,9 +56,9 @@ module video_out
   wire blank = vga_on ? vga_blank : tv_blank;
   wire hires = vga_on ? vga_hires : tv_hires;
 
-  wire [14:0] vpix = blank1 ? 15'b0 : vpixel;
-  // wire [14:0] vpix = blank1 ? 15'b0 : (vpixel & 15'b111001110011100);    // test for 373 colors
-  // wire [14:0] vpix = blank1 ? 15'b0 : (vpixel & 15'b110001100011000);    // test for 64 colors
+  wire [14:0] vpix = blank1 ? 15'b0 : vpixel[14:0];
+  // wire [14:0] vpix = blank1 ? 15'b0 : (vpixel[14:0] & 15'b111001110011100);    // test for 373 colors
+  // wire [14:0] vpix = blank1 ? 15'b0 : (vpixel[14:0] & 15'b110001100011000);    // test for 64 colors
 
   reg blank1;         // GOVNOKOD!!!!!!!!!!!!!!!!!!!!!
   always @(posedge clk)

@@ -27,16 +27,16 @@ module video_top (
 `endif
 
 // video syncs
-  output wire  hsync,
-  output wire  vsync,
-  output wire  csync,
+  output wire hsync,
+  output wire vsync,
+  output wire csync,
 
 // Z80 controls
   input wire [ 7:0] d,
   input wire [15:0] zmd,
   input wire [ 7:0] zma,
-  input wire       cram_we,
-  input wire       sfile_we,
+  input wire cram_we,
+  input wire sfile_we,
 
 // port write strobes
   input wire zborder_wr,
@@ -70,7 +70,10 @@ module video_top (
   input wire  res,
   output wire int_start,
   output wire line_start_s,
-
+`ifdef PENT_312
+  output wire [4:0] hcnt,
+  output wire upper8,
+`endif
 
 // DRAM interface
   output wire [20:0] video_addr,
@@ -328,6 +331,10 @@ module video_top (
     .cnt_row        (cnt_row),
     .cptr           (cptr),
     .scnt           (scnt),
+`ifdef PENT_312
+    .hcnt           (hcnt),
+    .upper8         (upper8),
+`endif
     .frame          (frame),
     .flash          (flash),
     .pix_stb        (pix_stb),

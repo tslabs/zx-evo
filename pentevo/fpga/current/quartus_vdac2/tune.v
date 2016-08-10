@@ -16,3 +16,5 @@
 `define XTR_FEAT        // extra features, in only IDEless version
 
 // `define FDR        // FDD Ripper version
+
+// `define PENT_312    // for Pentagon 71680 tacts emulation with 312 video lines
