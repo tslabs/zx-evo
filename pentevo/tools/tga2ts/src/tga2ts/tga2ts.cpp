@@ -54,6 +54,7 @@ U8 levels[25];
 U8 temp[8];
 
     BOOL vdac_en = FALSE;
+    BOOL flip    = TRUE;
 
 U8 conv_levels(U8 lvl_in)
 {
@@ -80,6 +81,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	FILE *f_tga = NULL;
 	FILE *f_map = NULL;
 	FILE *f_pal = NULL;
+    FILE *f_pal4 = NULL;
 	FILE *f_btm = NULL;
 	FILE *f_btm4 = NULL;
 
@@ -146,13 +148,25 @@ no_levels_map:
         printf("Image is of a wrong color map resolution! Only 24 bit supported.\n");
         goto fatal2;
     }
-
+    
+    if (header.image_descriptor & 0x20)
+    {
+        flip = FALSE;
+    }
+    
 // convert color map to 0RRrrrGG gggBBbbb format
 	static _TCHAR fpal[256];
 	wcscpy(fpal, argv[1]);
 	wcscat(fpal, L".pal");
 
+    static _TCHAR fpal4[256];
+	wcscpy(fpal4, argv[1]);
+	wcscat(fpal4, L".pal4");
+
 	if (!(f_pal = _wfopen(fpal, L"wb")))
+		goto fatal;
+
+    if (!(f_pal4 = _wfopen(fpal4, L"wb")))
 		goto fatal;
 
     for (int i = header.color_map_first_index; i < header.color_map_length; i++)
@@ -165,11 +179,14 @@ no_levels_map:
         cmap_ts = conv_levels(temp[0]);
         cmap_ts |= conv_levels(temp[1]) << 5;
         cmap_ts |= conv_levels(temp[2]) << 10;
+        if (vdac_en) cmap_ts |= 0x8000; // wbcbz7 note: сам не пофиксишь - никто не пофиксит :)
 
         fwrite(&cmap_ts, 1, sizeof(cmap_ts), f_pal);
+        if (i < 16) fwrite(&cmap_ts, 1, sizeof(cmap_ts), f_pal4);
     }
 
     fclose(f_pal);
+    fclose(f_pal4);
 
 // extract bitmap
 	static _TCHAR fbtm[256];
@@ -190,12 +207,18 @@ no_levels_map:
 
 // to do: add checker for image origin top/bottom
 
+    int pos = ftell(f_tga);
+
+    if (flip) fseek(f_tga, (header.image_height-1)*header.image_width, SEEK_CUR);
+
     for (int i = 0; i < header.image_height; i++)
     {
         int p = 0;
 
         if (fread(buf, 1, header.image_width, f_tga) != header.image_width)
             goto fatal;
+
+        if (flip) fseek(f_tga, -2*header.image_width, SEEK_CUR);
 
         if (fwrite(buf, 1, header.image_width, f_btm) != header.image_width)
             goto fatal;
