@@ -50,11 +50,14 @@ enum
     TGA_IMAGE_ORIGIN_TOP   = 0x20
 };
 
-U8 levels[25];
+// default levels.map
+U8 levels[25] = {0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140,
+                 150, 160, 170, 180, 190, 200, 210, 220, 230, 240};
 U8 temp[8];
 
-    BOOL vdac_en = FALSE;
-    BOOL flip    = TRUE;
+BOOL vdac_en = FALSE;
+BOOL flip    = TRUE;
+BOOL align   = TRUE;
 
 U8 conv_levels(U8 lvl_in)
 {
@@ -85,23 +88,32 @@ int _tmain(int argc, _TCHAR* argv[])
 	FILE *f_btm = NULL;
 	FILE *f_btm4 = NULL;
 
+    printf("TGA to TS converter by TS-Labs\n");
+    printf("remixed by wbcbz7 zz.oq.zolb\n");
+    printf("------------\n");
+
 	if (argc < 2)
 	{
-		printf("TGA to TS converter by TS-Labs\n");
-		printf("Usage: tga2ts.exe <input>.tga [-v]\n");
+		printf("Usage: tga2ts.exe <input>.tga [-v] [-a]\n");
 		printf("-v - enable VDAC palette\n");
+        printf("-a - do not align picture to 16bit boundary\n");
 		return 1;
 	}
 
-    if (argc > 2)   // HELLLLLISH QnD FIX!
+    for (int i = 2; i < argc; i++)
     {
-        vdac_en = TRUE;
-        goto no_levels_map;
+        static _TCHAR arg[256];
+        wcscpy(arg, argv[i]);
+        _wcsupr(arg);
+        if ((wcsstr(arg, L"V"))) vdac_en = TRUE; 
+        if ((wcsstr(arg, L"A"))) align   = FALSE;
     }
+
+    if (vdac_en) goto no_levels_map;
 
 // loading levels map
 	if (!(f_map = _wfopen(L"levels.map", L"r")))
-		goto fatal;
+		goto no_levels_map;
 
     for (int i = 0; i < 25; i++)
     {
@@ -154,6 +166,8 @@ no_levels_map:
         flip = FALSE;
     }
     
+    printf("Source picture -> %dx%d, %d color %s\n", header.image_width, header.image_height, header.color_map_length, (vdac_en ? "(VDAC)" : "")); 
+
 // convert color map to 0RRrrrGG gggBBbbb format
 	static _TCHAR fpal[256];
 	wcscpy(fpal, argv[1]);
@@ -193,6 +207,9 @@ no_levels_map:
 	static _TCHAR fbtm4[256];
     static U8 buf[65536];
     static U8 buf4[65536];
+    
+    memset(buf,  0, 65536);
+    memset(buf4, 0, 65536);
 
 	wcscpy(fbtm, argv[1]);
 	wcscat(fbtm, L".pix");
@@ -205,9 +222,8 @@ no_levels_map:
 	if (!(f_btm4 = _wfopen(fbtm4, L"wb")))
 		goto fatal;
 
-// to do: add checker for image origin top/bottom
-
-    int pos = ftell(f_tga);
+    int pitch_256c = (align ?  (header.image_width + 1) & ~1      : header.image_width); // da fix!
+    int pitch_16c  = (align ? ((header.image_width + 3) & ~3) / 2 : header.image_width / 2); // da fix!
 
     if (flip) fseek(f_tga, (header.image_height-1)*header.image_width, SEEK_CUR);
 
@@ -220,7 +236,7 @@ no_levels_map:
 
         if (flip) fseek(f_tga, -2*header.image_width, SEEK_CUR);
 
-        if (fwrite(buf, 1, header.image_width, f_btm) != header.image_width)
+        if (fwrite(buf, 1, pitch_256c, f_btm) != pitch_256c)
             goto fatal;
 
         for (int j = 0; j < header.image_width;)
@@ -230,11 +246,13 @@ no_levels_map:
             buf4[p++] = c;
         }
 
-        if (fwrite(buf4, 1, p, f_btm4) != p)
+        if (fwrite(buf4, 1, pitch_16c, f_btm4) != pitch_16c)
             goto fatal;
     }
 
     fclose(f_btm);
+
+    printf("Output picture -> %dx%d, 256c_pitch = %d, 16c_pitch = %d\n", header.image_width, header.image_height, pitch_256c, pitch_16c);
 
 	return 0;
 
