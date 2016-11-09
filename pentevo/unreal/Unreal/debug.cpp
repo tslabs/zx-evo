@@ -158,10 +158,11 @@ void debug(Z80 *cpu)
    sound_stop();
    temp.mon_scale = temp.scale;
    temp.scale = 1;
-   temp.rflags = RF_MONITOR;
    needclr = 1;
    dbgbreak = 1;
    flip();
+   unsigned int oldrflags = temp.rflags;
+   temp.rflags = RF_MONITOR;
    //set_video();
    ShowWindow( debug_wnd, SW_SHOW );
 
@@ -243,7 +244,8 @@ leave_dbg:
 //   CpuMgr.CopyToPrev();
    cpu->SetLastT();
    temp.scale = temp.mon_scale;
-   temp.rflags = RF_GDI;
+   //temp.rflags = RF_GDI; // facepalm.jpg
+   temp.rflags = oldrflags;
    //apply_video();
    ShowWindow( debug_wnd, SW_HIDE );
    sound_play();
