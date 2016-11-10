@@ -85,13 +85,14 @@ void showhelppp(const char *anchor = 0) //Alone Coder 0.36.6
       }
       Show(fgwin, pmk, 0,0,0);
       pmk->Release();
-
+#if 0
       if (dbgbreak)
       {
           temp.rflags = RF_MONITOR;
           set_video();
       }
       else
+#endif
       {
           if (restore_video)
               apply_video();
