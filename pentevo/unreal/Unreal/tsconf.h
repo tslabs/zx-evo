@@ -522,8 +522,20 @@ typedef struct
     u8 layer;             // Active layer (0, 1, 2, etc)
     bool tmap_read;       // Flag for read TileMap in current line
     bool render;          // Flag for render graphic in current line
+    struct {
+        u8 t0;
+        u8 t1;
+        u8 s;
+        u8 gfx;
+    } toggle;         // TSU layers toggle
   } tsu;
 } TSPORTS_t;
+
+
+extern HWND tsu_toggle_wnd;
+// tsu toggle layers critical section - since our toggle dialog is not modal
+// we can get into a trouble because comp.ts.tsu.toggle is a shared resource
+extern CRITICAL_SECTION tsu_toggle_cr;
 
 // functions
 void update_clut(u8);
@@ -532,3 +544,5 @@ u32 render_ts(u32 tacts);
 void tsinit(void);
 void TSFrameINT(bool vdos);
 void invalidate_ts_cache();
+
+void main_tsutoggle();

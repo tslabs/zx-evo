@@ -706,11 +706,12 @@ void init_raster()
 	if (conf.mem_model == MM_TSL)
 	{
 		vid.raster = raster[comp.ts.rres];
-		if (comp.ts.nogfx) { vid.mode = M_BRD; return; }
-		if (comp.ts.vmode == 0) { vid.mode = M_ZX; return; }
-		if (comp.ts.vmode == 1) { vid.mode = M_TS16; return; }
-		if (comp.ts.vmode == 2) { vid.mode = M_TS256; return; }
-		if (comp.ts.vmode == 3) { vid.mode = M_TSTX; return; }
+		EnterCriticalSection(&tsu_toggle_cr); // wbcbz7 note: huhuhuhuhuhuh...dirty code :)
+		if ((comp.ts.nogfx) || (!comp.ts.tsu.toggle.gfx)) { vid.mode = M_BRD; LeaveCriticalSection(&tsu_toggle_cr); return; }
+		if (comp.ts.vmode == 0) { vid.mode = M_ZX; LeaveCriticalSection(&tsu_toggle_cr); return; }
+		if (comp.ts.vmode == 1) { vid.mode = M_TS16; LeaveCriticalSection(&tsu_toggle_cr); return; }
+		if (comp.ts.vmode == 2) { vid.mode = M_TS256; LeaveCriticalSection(&tsu_toggle_cr); return; }
+		if (comp.ts.vmode == 3) { vid.mode = M_TSTX; LeaveCriticalSection(&tsu_toggle_cr); return; }
 	}
 
 	u8 m = EFF7_4BPP | EFF7_HWMC;

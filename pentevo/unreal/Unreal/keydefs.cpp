@@ -67,6 +67,7 @@ action ac_main[] =
    { "main.sizem", main_sizem },
    { "main.memsearch", main_cheat },
    { "main.help", main_help },
+   { "main.tsutoggle", main_tsutoggle },
 
    { 0, 0 },
 };

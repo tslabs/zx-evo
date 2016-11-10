@@ -142,6 +142,8 @@ void init_all(int argc, char **argv)
 
    SetCurrentDirectory(conf.workdir);
 //   timeBeginPeriod(1);
+
+   InitializeCriticalSection(&tsu_toggle_cr);
 }
 
 void __declspec(noreturn) exit()

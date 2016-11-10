@@ -6,6 +6,7 @@
 #include "tsconf.h"
 #include "sdcard.h"
 #include "zc.h"
+#include "resource.h"
 
 extern VCTR vid;
 
@@ -44,6 +45,12 @@ extern VCTR vid;
         255,
         255
     };
+
+
+HWND tsu_toggle_wnd;
+// tsu toggle layers critical section - since our toggle dialog is not modal
+// we can get into a trouble because comp.ts.tsu.toggle is a shared resource
+CRITICAL_SECTION tsu_toggle_cr;
 
 // convert CRAM data to precalculated renderer tables
 void update_clut(u8 addr)
@@ -767,10 +774,23 @@ TSU_TASK TSUTask[] = {
 
 u32 render_ts(u32 tacts)
 {
+
+  // save and set toggle bits
+  u8 old_s_en = comp.ts.s_en, old_t0_en = comp.ts.t0_en, old_t1_en = comp.ts.t1_en;
+  u32 rtn;
+
+  EnterCriticalSection(&tsu_toggle_cr);
+  comp.ts.s_en  &= comp.ts.tsu.toggle.s;
+  comp.ts.t0_en &= comp.ts.tsu.toggle.t0;
+  comp.ts.t1_en &= comp.ts.tsu.toggle.t1;
+  LeaveCriticalSection(&tsu_toggle_cr);
+
   if (comp.ts.tsu.state == TSS_NOP)
   {
     comp.ts.tsu.prev_state = TSS_NOP;
-    return tacts;
+    //return tacts;
+    rtn = tacts;
+    goto fin;
   }
 
   // have new TSU state?
@@ -789,7 +809,9 @@ u32 render_ts(u32 tacts)
       else
       {
         comp.ts.tsu.state = TSS_NOP; // set state as no operation in this line
-        return tacts;
+        //return tacts;
+        rtn = tacts;
+        goto fin;
       }
 
       comp.ts.tsu.layer = 0;  // start from layer 0
@@ -799,15 +821,27 @@ u32 render_ts(u32 tacts)
     TSUTask[comp.ts.tsu.state].init_task();   // initialize task for current state
     
     // process state if changed
-    if (comp.ts.tsu.prev_state != comp.ts.tsu.state) 
-      return render_ts(tacts); 
+    if (comp.ts.tsu.prev_state != comp.ts.tsu.state) {
+      //return render_ts(tacts);
+      rtn = render_ts(tacts);
+      goto fin;
+    }
   }
 
   tacts = TSUTask[comp.ts.tsu.state].task(tacts); // do task
   if (comp.ts.tsu.prev_state != comp.ts.tsu.state) // if state changed process it
     tacts = render_ts(tacts);
 
-  return tacts; // return free tacts
+  rtn = tacts;
+
+  // ugh..gotos =)
+fin:
+  // restore layer enable bits
+  comp.ts.s_en   = old_s_en;
+  comp.ts.t0_en  = old_t0_en;
+  comp.ts.t1_en  = old_t1_en;
+
+  return rtn; // return free tacts
 }
 
 // This used to debug SFILE operations
@@ -869,6 +903,11 @@ void tsinit(void)
 	comp.ts.g_xoffs = 0;
 	comp.ts.g_yoffs = 0;
 
+	comp.ts.tsu.toggle.gfx = TRUE;
+	comp.ts.tsu.toggle.s   = TRUE;
+	comp.ts.tsu.toggle.t0  = TRUE;
+	comp.ts.tsu.toggle.t1  = TRUE;
+
 	invalidate_ts_cache();
 }
 
@@ -896,4 +935,61 @@ void TSFrameINT(bool vdos)
     comp.ts.intctrl.frame_pend = false;
 
   comp.ts.intctrl.last_cput = cpu.t;
+}
+
+INT_PTR CALLBACK tsu_toggle_dlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
+    switch(msg) {
+        case WM_INITDIALOG:
+        case WM_SHOWWINDOW:
+            if (msg == WM_INITDIALOG) {
+                RECT wndrect, dlgrect;
+                GetWindowRect(wnd, &wndrect);
+                GetWindowRect(dlg, &dlgrect);
+                MoveWindow(dlg, wndrect.right + 30, dlgrect.top, dlgrect.right - dlgrect.left, dlgrect.bottom - dlgrect.top, FALSE);
+            }
+
+            EnterCriticalSection(&tsu_toggle_cr);
+            CheckDlgButton(dlg, IDC_TSUTOGGLE_GFX,    (comp.ts.tsu.toggle.gfx ? BST_CHECKED : BST_UNCHECKED));
+            CheckDlgButton(dlg, IDC_TSUTOGGLE_TILE0,  (comp.ts.tsu.toggle.t0  ? BST_CHECKED : BST_UNCHECKED));
+            CheckDlgButton(dlg, IDC_TSUTOGGLE_TILE1,  (comp.ts.tsu.toggle.t1  ? BST_CHECKED : BST_UNCHECKED));
+            CheckDlgButton(dlg, IDC_TSUTOGGLE_SPRITE, (comp.ts.tsu.toggle.s   ? BST_CHECKED : BST_UNCHECKED));
+            LeaveCriticalSection(&tsu_toggle_cr);
+            break;
+        case WM_COMMAND:
+            EnterCriticalSection(&tsu_toggle_cr);
+            switch(LOWORD(wp)) {
+                u32 chk;
+                case IDC_TSUTOGGLE_GFX:
+                    chk = IsDlgButtonChecked(dlg, IDC_TSUTOGGLE_GFX);
+                    comp.ts.tsu.toggle.gfx = (chk == BST_CHECKED ? TRUE : FALSE);
+                    break;
+                case IDC_TSUTOGGLE_TILE0:
+                    chk = IsDlgButtonChecked(dlg, IDC_TSUTOGGLE_TILE0);
+                    comp.ts.tsu.toggle.t0  = (chk == BST_CHECKED ? TRUE : FALSE);
+                    break;
+                case IDC_TSUTOGGLE_TILE1:
+                    chk = IsDlgButtonChecked(dlg, IDC_TSUTOGGLE_TILE1);
+                    comp.ts.tsu.toggle.t1  = (chk == BST_CHECKED ? TRUE : FALSE);
+                    break;
+                case IDC_TSUTOGGLE_SPRITE:
+                    chk = IsDlgButtonChecked(dlg, IDC_TSUTOGGLE_SPRITE);
+                    comp.ts.tsu.toggle.s   = (chk == BST_CHECKED ? TRUE : FALSE);
+                break;
+            };
+            LeaveCriticalSection(&tsu_toggle_cr);
+            break;
+        case WM_DESTROY:
+        case WM_CLOSE:
+            DestroyWindow(dlg);
+            break;
+        default:
+            break;
+    }
+
+    return FALSE;
+}
+
+void main_tsutoggle() {
+    tsu_toggle_wnd = CreateDialog(hIn, MAKEINTRESOURCE(IDD_TSUTOGGLE), wnd, tsu_toggle_dlg);
+    ShowWindow(tsu_toggle_wnd, SW_SHOW);
 }

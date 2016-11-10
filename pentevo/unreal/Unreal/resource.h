@@ -35,6 +35,7 @@
 #define IDC_C8                                  147
 #define IDR_DEBUGMENU                           151
 #define IDR_MAINMENU                            152
+#define IDD_TSUTOGGLE                           153
 #define IDE_FRAME                               1013
 #define IDE_LINE                                1014
 #define IDC_LED_ON                              1019
@@ -350,3 +351,7 @@
 #define IDM_HELP_ABOUT                          40033
 #define IDM_POKE                                40034
 #define IDM_DEBUGGER                            40040
+#define IDC_TSUTOGGLE_GFX                       40044
+#define IDC_TSUTOGGLE_TILE0                     40045
+#define IDC_TSUTOGGLE_TILE1                     40046
+#define IDC_TSUTOGGLE_SPRITE                    40047

@@ -435,6 +435,8 @@ void correct_exit()
    if (!done_fdd(true))
        return;
 
+   DeleteCriticalSection(&tsu_toggle_cr);
+
    nowait = 1;
    normal_exit = true;
    exit();
