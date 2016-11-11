@@ -124,6 +124,11 @@ void handle_mouse()
          if (my-regs_y == regs_layout[i].y && mx-regs_x-regs_layout[i].x < delta) regs_curs = i;
       }
    }
+   if (mx >= banks_x && my >= banks_y+1 && mx < banks_x+7 && my < banks_y+5) {
+       needclr++; activedbg = WNDBANKS;
+       selbank = my-(banks_y+1);
+   } else selbank = -1;
+
    if (mousepos & 0x80000000) { // right-click
       enum { IDM_BPX=1, IDM_SOME_OTHER };
       HMENU menu = CreatePopupMenu();
@@ -229,6 +234,10 @@ sleep:
           continue;
       }
       if (activedbg == WNDMEM && dispatch_mem())
+      {
+          continue;
+      }
+      if (activedbg == WNDBANKS && dispatch_banks())
       {
           continue;
       }

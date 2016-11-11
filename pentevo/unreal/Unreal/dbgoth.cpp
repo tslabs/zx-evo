@@ -5,6 +5,7 @@
 #include "debug.h"
 #include "dbgpaint.h"
 #include "util.h"
+#include "memory.h" // for benter()
 
 namespace z80dbg
 {
@@ -168,6 +169,7 @@ void __cdecl BankNames(int i, char *Name)
         strcpy(Name, "CACH1");
 }
 
+unsigned int selbank = -1;
 void showbanks()
 {
    Z80 &cpu = CpuMgr.Cpu();
@@ -178,9 +180,42 @@ void showbanks()
       strcpy(ln, "?????");
       cpu.BankNames(i, ln);
       tprint(banks_x+2, banks_y+i+1, ln, bankr[i]!=bankw[i] ? W_BANKRO : W_BANK);
+      if (selbank == i) {
+          txtscr[(80*(banks_y+i+1))+(banks_x+5)+80*30] = txtscr[(80*(banks_y+i+1))+(banks_x+6)+80*30] = W_CURS;
+      }
    }
    frame(banks_x, banks_y+1, 7, 4, FRAME);
    tprint(banks_x, banks_y, "pages", W_TITLE);
+}
+
+// врезка побырому
+void benter() {
+   Z80 &cpu = CpuMgr.Cpu();
+   debugscr();
+   debugflip();
+
+   char bankstr[64] = {0}; cpu.BankNames(selbank, bankstr);
+   unsigned val; sscanf(&bankstr[3], "%x", &val);
+
+   if ((input.lastkey >= '0' && input.lastkey <= '9') || (input.lastkey >= 'A' && input.lastkey <= 'F'))
+      PostThreadMessage(GetCurrentThreadId(), WM_KEYDOWN, input.lastkey, 1);
+
+   val = input2(banks_x+5, banks_y+selbank+1, val);
+   if (val != -1) {
+       // set new bank
+       comp.ts.page[selbank] = val;
+       set_banks();
+   }
+}
+
+int dispatch_banks() {
+   if ((conf.mem_model == MM_TSL) && (selbank != -1) &&
+       ((input.lastkey >= '0' && input.lastkey <= '9') || (input.lastkey >= 'A' && input.lastkey <= 'F')))
+   {
+      benter();
+      return 1;
+   }
+   return 0;
 }
 
 void showports()

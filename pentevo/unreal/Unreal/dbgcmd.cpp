@@ -171,6 +171,8 @@ void mon_nxt()
    if (activedbg == WNDREGS) activedbg = WNDTRACE;
    else if (activedbg == WNDTRACE) activedbg = WNDMEM;
    else if (activedbg == WNDMEM) activedbg = WNDREGS;
+
+   if (activedbg == WNDBANKS) activedbg = WNDREGS;
 }
 
 void mon_prv() { mon_nxt(); mon_nxt(); }
