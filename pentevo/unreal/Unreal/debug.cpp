@@ -135,9 +135,10 @@ void handle_mouse()
          AppendMenu(menu, MF_STRING, 0, "to menu, so");
          AppendMenu(menu, MF_STRING, 0, "No Stuff Here");
       }
+      POINT globalpos; GetCursorPos(&globalpos);
       int cmd = TrackPopupMenu(menu, TPM_RETURNCMD | TPM_NONOTIFY | TPM_LEFTALIGN | TPM_TOPALIGN,
-         (mousepos & 0xFFFF) + temp.client.left,
-         ((mousepos>>16) & 0x7FFF) + temp.client.top, 0, wnd, 0);
+          globalpos.x,
+          globalpos.y, 0, wnd, 0);
       DestroyMenu(menu);
       if (cmd == IDM_BPX) cbpx();
       //if (cmd == IDM_SOME_OTHER) some_other();
