@@ -105,8 +105,16 @@ int _tmain(int argc, _TCHAR* argv[])
         static _TCHAR arg[256];
         wcscpy(arg, argv[i]);
         _wcsupr(arg);
-        if ((wcsstr(arg, L"V"))) vdac_en = TRUE; 
-        if ((wcsstr(arg, L"A"))) align   = FALSE;
+
+        if ((wcsstr(arg, L"V"))) 
+        {
+            vdac_en = TRUE; continue; 
+        }
+
+        if ((wcsstr(arg, L"A"))) 
+        {
+            align   = FALSE; continue;
+        }
     }
 
     if (vdac_en) goto no_levels_map;
