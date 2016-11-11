@@ -808,6 +808,7 @@ void load_config(const char *fname)
    loadkeys(ac_regs);
    loadkeys(ac_trace);
    loadkeys(ac_mem);
+   loadkeys(ac_banks);
 #endif
    temp.scale = GetPrivateProfileInt(video, "winscale", 1, ininame);
 }

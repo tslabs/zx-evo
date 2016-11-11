@@ -126,8 +126,8 @@ void handle_mouse()
    }
    if (mx >= banks_x && my >= banks_y+1 && mx < banks_x+7 && my < banks_y+5) {
        needclr++; activedbg = WNDBANKS;
-       selbank = my-(banks_y+1);
-   } else selbank = -1;
+       selbank = my-(banks_y+1); showbank = true;
+   } else showbank = false;
 
    if (mousepos & 0x80000000) { // right-click
       enum { IDM_BPX=1, IDM_SOME_OTHER };
@@ -222,6 +222,10 @@ sleep:
           continue;
       }
       if (activedbg == WNDMEM && dispatch_more(ac_mem) > 0)
+      {
+          continue;
+      }
+      if (activedbg == WNDBANKS && dispatch_more(ac_banks) > 0)
       {
           continue;
       }

@@ -241,4 +241,15 @@ action ac_mem[] =
    { 0, 0 },
 };
 
+action ac_banks[] =
+{
+   { "mem.up", bup },
+   { "mem.down", bdown },
+   { "reg.edit", benter },
+
+   ac_mon
+
+   { 0, 0 },
+};
+
 #endif // MOD_MONITOR

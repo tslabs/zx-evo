@@ -169,25 +169,30 @@ void __cdecl BankNames(int i, char *Name)
         strcpy(Name, "CACH1");
 }
 
-unsigned int selbank = -1;
+unsigned int selbank = 0, showbank = false;
 void showbanks()
 {
    Z80 &cpu = CpuMgr.Cpu();
    for (int i = 0; i < 4; i++)
    {
       char ln[64]; sprintf(ln, "%d:", i);
-      tprint(banks_x, banks_y+i+1, ln, W_OTHEROFF);
+      char attr = ((selbank == i)&&(showbank) ? (W_OTHEROFF & 0xF) | W_CURS : W_OTHEROFF | (activedbg == WNDBANKS ? 0x10 : 0));
+      tprint(banks_x, banks_y+i+1, ln, attr);
       strcpy(ln, "?????");
       cpu.BankNames(i, ln);
-      tprint(banks_x+2, banks_y+i+1, ln, bankr[i]!=bankw[i] ? W_BANKRO : W_BANK);
-      if (selbank == i) {
-          txtscr[(80*(banks_y+i+1))+(banks_x+5)+80*30] = txtscr[(80*(banks_y+i+1))+(banks_x+6)+80*30] = W_CURS;
-      }
+      attr = ((selbank == i)&&(showbank) ? W_CURS : ((bankr[i]!=bankw[i] ? W_BANKRO : W_BANK) | (activedbg == WNDBANKS ? 0x10 : 0)));
+      tprint(banks_x+2, banks_y+i+1, ln, attr);
    }
    frame(banks_x, banks_y+1, 7, 4, FRAME);
    tprint(banks_x, banks_y, "pages", W_TITLE);
 }
 
+void bdown() {
+    selbank++; selbank &= 3;
+}
+void bup() {
+    selbank--; selbank &= 3;
+}
 // врезка побырому
 void benter() {
    Z80 &cpu = CpuMgr.Cpu();
