@@ -55,9 +55,12 @@ U8 levels[25] = {0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140,
                  150, 160, 170, 180, 190, 200, 210, 220, 230, 240};
 U8 temp[8];
 
+BOOL shift16c = FALSE;
 BOOL vdac_en = FALSE;
 BOOL flip    = TRUE;
 BOOL align   = TRUE;
+
+U32 first_index = 0;
 
 U8 conv_levels(U8 lvl_in)
 {
@@ -92,13 +95,15 @@ int _tmain(int argc, _TCHAR* argv[])
     printf("remixed by wbcbz7 zz.oq.zolb\n");
     printf("------------\n");
 
-	if (argc < 2)
-	{
-		printf("Usage: tga2ts.exe <input>.tga [-v] [-a]\n");
-		printf("-v - enable VDAC palette\n");
-        printf("-a - do not align picture to 16bit boundary\n");
-		return 1;
-	}
+    if (argc < 2)
+    {
+        printf("Usage: tga2ts.exe <input>.tga [-v] [-a]\n");
+        printf("-v    - enable VDAC palette\n");
+        printf("-a    - do not align picture to 16bit boundary\n");
+        printf("-s    - shift color indices in bitmap for 16c if palette starts from >0 offset\n"); 
+        printf("-i[x] - start palette from [x] index for 16c (includes -s)\n"); 
+        return 1;
+    }
 
     for (int i = 2; i < argc; i++)
     {
@@ -114,6 +119,17 @@ int _tmain(int argc, _TCHAR* argv[])
         if ((wcsstr(arg, L"A"))) 
         {
             align   = FALSE; continue;
+        }
+
+        if ((wcsstr(arg, L"S"))) 
+        {
+            shift16c  = TRUE; continue;
+        }
+
+        if (wcsstr(arg, L"I"))
+        {
+            if (!swscanf(wcsstr(arg, L"I") + wcslen(L"I"), L"%d", &first_index)) first_index = 0;
+            shift16c  = TRUE; continue;
         }
     }
 
@@ -176,6 +192,13 @@ no_levels_map:
     
     printf("Source picture -> %dx%d, %d color %s\n", header.image_width, header.image_height, header.color_map_length, (vdac_en ? "(VDAC)" : "")); 
 
+    /*
+    if (first_index != 0) {
+        header.color_map_first_index = (U16)first_index;
+        fseek(f_tga, header.color_map_first_index * (header.color_map_bpp / 8), SEEK_CUR);
+    }
+    */
+
 // convert color map to 0RRrrrGG gggBBbbb format
 	static _TCHAR fpal[256];
 	wcscpy(fpal, argv[1]);
@@ -191,7 +214,8 @@ no_levels_map:
     if (!(f_pal4 = _wfopen(fpal4, L"wb")))
 		goto fatal;
 
-    for (int i = header.color_map_first_index; i < header.color_map_length; i++)
+    U32 j = 0; 
+    for (int i = header.color_map_first_index; i < header.color_map_length; i++, j++)
     {
         static U16 cmap_ts;
 
@@ -204,7 +228,7 @@ no_levels_map:
         if (vdac_en) cmap_ts |= 0x8000; // wbcbz7 note: сам не пофиксишь - никто не пофиксит :)
 
         fwrite(&cmap_ts, 1, sizeof(cmap_ts), f_pal);
-        if (i < 16) fwrite(&cmap_ts, 1, sizeof(cmap_ts), f_pal4);
+        if ((j >= first_index) && (j < (first_index + 16))) fwrite(&cmap_ts, 1, sizeof(cmap_ts), f_pal4);
     }
 
     fclose(f_pal);
@@ -215,6 +239,7 @@ no_levels_map:
 	static _TCHAR fbtm4[256];
     static U8 buf[65536];
     static U8 buf4[65536];
+    U32 indexshift = (shift16c ? header.color_map_first_index : 0); // color map index shift for 16c images
     
     memset(buf,  0, 65536);
     memset(buf4, 0, 65536);
@@ -249,8 +274,8 @@ no_levels_map:
 
         for (int j = 0; j < header.image_width;)
         {
-            U8 c = (buf[j++] & 15) << 4;
-            c |= buf[j++] & 15;
+            U8 c = ((buf[j++] - indexshift) & 15) << 4;
+            c |= (buf[j++] - indexshift) & 15;
             buf4[p++] = c;
         }
 
