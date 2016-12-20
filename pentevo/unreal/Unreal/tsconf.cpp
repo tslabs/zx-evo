@@ -980,7 +980,7 @@ INT_PTR CALLBACK tsu_toggle_dlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
             break;
         case WM_DESTROY:
         case WM_CLOSE:
-            DestroyWindow(dlg);
+            ShowWindow(dlg, SW_HIDE);
             break;
         default:
             break;
@@ -990,6 +990,6 @@ INT_PTR CALLBACK tsu_toggle_dlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
 }
 
 void main_tsutoggle() {
-    tsu_toggle_wnd = CreateDialog(hIn, MAKEINTRESOURCE(IDD_TSUTOGGLE), wnd, tsu_toggle_dlg);
+    if (!tsu_toggle_wnd) tsu_toggle_wnd = CreateDialog(hIn, MAKEINTRESOURCE(IDD_TSUTOGGLE), wnd, tsu_toggle_dlg);
     ShowWindow(tsu_toggle_wnd, SW_SHOW);
 }
