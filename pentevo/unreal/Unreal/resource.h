@@ -36,6 +36,7 @@
 #define IDR_DEBUGMENU                           151
 #define IDR_MAINMENU                            152
 #define IDD_TSUTOGGLE                           153
+#define IDC_VDAC                                1000
 #define IDE_FRAME                               1013
 #define IDE_LINE                                1014
 #define IDC_LED_ON                              1019

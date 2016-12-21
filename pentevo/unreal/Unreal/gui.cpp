@@ -11,6 +11,7 @@
 #include "snapshot.h"
 #include "leds.h"
 #include "util.h"
+#include "tsconf.h"
 
 void setcheck(unsigned ID, u8 state = 1)
 {
@@ -816,6 +817,10 @@ INT_PTR CALLBACK VideoDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
       for (i = 0; i < (int)c1.num_pals; i++)
          SendMessage(box, CB_ADDSTRING, 0, (LPARAM)pals[i].name);
       SendMessage(box, CB_SETCURSEL, c1.pal, 0);
+      box = GetDlgItem(dlg, IDC_VDAC);
+      for (i = 0; i < TS_VDAC::last; i++)
+         SendMessage(box, CB_ADDSTRING, 0, (LPARAM)ts_vdac_names[i].name);
+      SendMessage(box, CB_SETCURSEL, comp.ts.vdac, 0);
       /*box = GetDlgItem(dlg, IDC_FONTHEIGHT);
       SendMessage(box, CB_ADDSTRING, 0, (LPARAM)"5pix, scroll");
       SendMessage(box, CB_ADDSTRING, 0, (LPARAM)"6pix, scroll");
@@ -841,7 +846,10 @@ INT_PTR CALLBACK VideoDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
       if (code == CBN_SELCHANGE && id == IDC_BORDERSIZE) {
          c1.bordersize = (u8)SendDlgItemMessage(dlg, IDC_BORDERSIZE, CB_GETCURSEL, 0, 0);
 	  }
-	  
+	  if (code == CBN_SELCHANGE && id == IDC_VDAC) {
+          comp.ts.vdac = ts_vdac_names[(u8)SendDlgItemMessage(dlg, IDC_VDAC, CB_GETCURSEL, 0, 0)].value;
+          goto filter_changed;
+	  }
       if (code == CBN_SELCHANGE && id == IDC_VIDEOFILTER) {
    filter_changed:
          unsigned filt_n = SendDlgItemMessage(dlg, IDC_VIDEOFILTER, CB_GETCURSEL, 0, 0);
@@ -877,6 +885,9 @@ INT_PTR CALLBACK VideoDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
 
          sh = (f & RF_2X) && (f & (RF_DRIVER | RF_USEC32))? SW_SHOW : SW_HIDE;
          //ShowWindow(GetDlgItem(dlg, IDC_FAST_SL), sh);
+
+         // update CLUT
+         for (i = 0; i < 256; i++) update_clut(i);
 
       }
       return 1;

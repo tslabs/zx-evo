@@ -10,7 +10,16 @@
 
 extern VCTR vid;
 
-    const u8 pwm[32] =
+TS_VDAC_NAME ts_vdac_names[] =
+{
+    { "2 bit (PWM)",           TS_VDAC_OFF, "NONE"},
+    { "3 bit",                 TS_VDAC_3,   "3BIT"},
+    { "4 bit",                 TS_VDAC_4,   "4BIT"},
+    { "5 bit (IDE Video-DAC)", TS_VDAC_5,   "5BIT"},
+    { 0,0,0 }
+};
+
+const u8 pwm[32] =
     {
         0,
         10,

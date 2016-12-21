@@ -220,6 +220,7 @@ void load_config(const char *fname)
 {
    char line[FILENAME_MAX];
    load_errors = 0;
+   unsigned long i;
 
    GetModuleFileName(0, ininame, sizeof ininame);
    strlwr(ininame); *(unsigned*)(strstr(ininame, ".exe")+1) = WORD4('i','n','i',0);
@@ -336,10 +337,16 @@ void load_config(const char *fname)
    // TS VDAC
    GetPrivateProfileString(misc, "TS_VDAC", nil, line, sizeof line, ininame);
    comp.ts.vdac = TS_VDAC_OFF;
+   /*
    if (!strcmp(line, "3BIT")) comp.ts.vdac = TS_VDAC_3;
    if (!strcmp(line, "4BIT")) comp.ts.vdac = TS_VDAC_4;
    if (!strcmp(line, "5BIT")) comp.ts.vdac = TS_VDAC_5;
-   
+   */
+   for (i = 0; i < TS_VDAC::last; i++)
+       if (!strnicmp(line, ts_vdac_names[i].nick, strlen(ts_vdac_names[i].nick)))
+         comp.ts.vdac = ts_vdac_names[i].value;
+
+
    // TS VDAC2 (FT812)
    comp.ts.vdac2 = GetPrivateProfileInt(misc, "TS_VDAC2", 0, ininame);
    
@@ -348,7 +355,6 @@ void load_config(const char *fname)
    if (conf.cache && conf.cache!=16 && conf.cache!=32) conf.cache = 0;
    GetPrivateProfileString(misc, "HIMEM", nil, line, sizeof line, ininame);
    conf.mem_model = MM_PENTAGON;
-   unsigned i; //Alone Coder 0.36.7
    for (/*unsigned*/ i = 0; i < N_MM_MODELS; i++)
       if (!strnicmp(line, mem_model[i].shortname, strlen(mem_model[i].shortname)))
          conf.mem_model = mem_model[i].Model;

@@ -146,6 +146,7 @@ extern action ac_mem[];
 extern RENDER renders[];
 extern BORDSIZE bordersizes[];
 extern VOID_FUNC prebuffers[];
+extern TS_VDAC_NAME ts_vdac_names[];
 
 extern const TMemModel mem_model[N_MM_MODELS];
 
