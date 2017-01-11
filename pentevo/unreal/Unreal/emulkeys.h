@@ -47,5 +47,6 @@ void main_size1();
 void main_size2();
 void main_sizem();
 void main_help();
+void main_flictoggle();
 void mon_help();
 void m_nmi(ROM_MODE page);

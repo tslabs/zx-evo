@@ -68,6 +68,7 @@ action ac_main[] =
    { "main.memsearch", main_cheat },
    { "main.help", main_help },
    { "main.tsutoggle", main_tsutoggle },
+   { "main.flictoggle", main_flictoggle },
 
    { 0, 0 },
 };
