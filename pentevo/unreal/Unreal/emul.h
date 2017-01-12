@@ -253,6 +253,7 @@ struct CONFIG
 
    struct {
       u8 enabled;
+      u8 status;
       u8 flash_ay_kbd;
       u8 perf_t;
       u8 reserved1;
