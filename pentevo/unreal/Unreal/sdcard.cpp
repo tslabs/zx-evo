@@ -355,7 +355,7 @@ u8 TSdCard::Rd()
               cpu_dt = cpu.t - InitialCPUt;
               if (cpu_dt < 0)
                 cpu_dt += conf.frame;
-              if (cpu_dt >= conf.sd_delay)
+              if ((u32)cpu_dt >= conf.sd_delay)
                 CurrState = ST_STARTBLOCK;
               return 0xFF;
 
@@ -400,7 +400,7 @@ u8 TSdCard::Rd()
               cpu_dt = cpu.t - InitialCPUt;
               if (cpu_dt < 0)
                 cpu_dt += conf.frame;
-              if (cpu_dt >= conf.sd_delay)
+              if ((u32)cpu_dt >= conf.sd_delay)
                 CurrState = ST_STARTBLOCK;
               return 0xFF;
 

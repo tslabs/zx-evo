@@ -375,12 +375,12 @@ void main_fullscr()
    }
 }
 
-void main_flictoggle() 
+void main_flictoggle()
 {
-   conf.noflic ^=1;
+   conf.noflic ^= 1;
    apply_video();
-   
-   sprintf(statusline, (conf.noflic ? "noflic: on" : "noflic : off"));
+
+   sprintf(statusline, "noflic: %s", conf.noflic ? "on" : "off");
 }
 
 void main_mouse()
