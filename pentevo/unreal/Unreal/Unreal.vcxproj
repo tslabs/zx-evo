@@ -120,6 +120,7 @@
     <ClCompile Include="sndrender.cpp" />
     <ClCompile Include="snd_bass.cpp" />
     <ClCompile Include="sound.cpp" />
+    <ClCompile Include="sound\ayx32.cpp" />
     <ClCompile Include="sound\dev_moonsound.cpp" />
     <ClCompile Include="sound\ymf262.cpp" />
     <ClCompile Include="sound\ymf278.cpp" />
@@ -234,6 +235,7 @@
     <ClInclude Include="sndrender.h" />
     <ClInclude Include="snd_bass.h" />
     <ClInclude Include="sound.h" />
+    <ClInclude Include="sound\ayx32.h" />
     <ClInclude Include="sound\dev_moonsound.h" />
     <ClInclude Include="sound\ymf262.h" />
     <ClInclude Include="sound\ymf278.h" />

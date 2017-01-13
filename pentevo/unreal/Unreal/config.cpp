@@ -354,11 +354,11 @@ void load_config(const char *fname)
    GetPrivateProfileString(misc, "HIMEM", nil, line, sizeof line, ininame);
    conf.mem_model = MM_PENTAGON;
    for (i = 0; i < N_MM_MODELS; i++)
-      if (!strnicmp(line, mem_model[i].shortname, strlen(mem_model[i].shortname)))
-      {
-        conf.mem_model = mem_model[i].Model;
-        break;
-      }
+     if (!strnicmp(line, mem_model[i].shortname, strlen(mem_model[i].shortname)))
+     {
+       conf.mem_model = mem_model[i].Model;
+       break;
+     }
 
    conf.ramsize = GetPrivateProfileInt(misc, "RamSize", 128, ininame);
 
@@ -580,19 +580,20 @@ void load_config(const char *fname)
 
    GetPrivateProfileString(ay, "Chip", nil, line, sizeof line, ininame);
    conf.sound.ay_chip = SNDCHIP::CHIP_YM;
-   if (!strnicmp(line, "AY", 2)) conf.sound.ay_chip = SNDCHIP::CHIP_AY;
-   if (!strnicmp(line, "YM2203", 6)) conf.sound.ay_chip = SNDCHIP::CHIP_YM2203;else //Dexus
-   if (!strnicmp(line, "YM", 2)) conf.sound.ay_chip = SNDCHIP::CHIP_YM;
+   if (!strnicmp(line, "YM2203", 6)) conf.sound.ay_chip = SNDCHIP::CHIP_YM2203;
+   else if (!strnicmp(line, "YM", 2)) conf.sound.ay_chip = SNDCHIP::CHIP_YM;
+   else if (!strnicmp(line, "AY", 2)) conf.sound.ay_chip = SNDCHIP::CHIP_AY;
 
    conf.sound.ay_samples = GetPrivateProfileInt(ay, "UseSamples", 0, ininame);
 
    GetPrivateProfileString(ay, "Scheme", nil, line, sizeof line, ininame);
    conf.sound.ay_scheme = AY_SCHEME_NONE;
    if (!strnicmp(line, "default", 7)) conf.sound.ay_scheme = AY_SCHEME_SINGLE;
-   if (!strnicmp(line, "PSEUDO", 6)) conf.sound.ay_scheme = AY_SCHEME_PSEUDO;
-   if (!strnicmp(line, "QUADRO", 6)) conf.sound.ay_scheme = AY_SCHEME_QUADRO;
-   if (!strnicmp(line, "POS", 3)) conf.sound.ay_scheme = AY_SCHEME_POS;
-   if (!strnicmp(line, "CHRV", 4)) conf.sound.ay_scheme = AY_SCHEME_CHRV;
+   else if (!strnicmp(line, "PSEUDO", 6)) conf.sound.ay_scheme = AY_SCHEME_PSEUDO;
+   else if (!strnicmp(line, "QUADRO", 6)) conf.sound.ay_scheme = AY_SCHEME_QUADRO;
+   else if (!strnicmp(line, "AYX32", 5)) conf.sound.ay_scheme = AY_SCHEME_AYX32;
+   else if (!strnicmp(line, "CHRV", 4)) conf.sound.ay_scheme = AY_SCHEME_CHRV;
+   else if (!strnicmp(line, "POS", 3)) conf.sound.ay_scheme = AY_SCHEME_POS;
 
    GetPrivateProfileString(input, "ZXKeyMap", "default", conf.zxkeymap, sizeof conf.zxkeymap, ininame);
    conf.input.active_zxk = &zxk_maps[0];
