@@ -12,6 +12,7 @@
 #include "z80.h"
 #include "tape.h"
 #include "zxevo.h"
+#include "sound/ayx32.h"
 
 #ifdef LOG_FE_OUT
   extern FILE *f_log_FE_in;
@@ -24,9 +25,10 @@ void out(unsigned port, u8 val)
 {
 
   port &= 0xFFFF;
-  u8 p1 = (port & 0xFF);
-  u8 p2 = ((port >>8) & 0xFF);
-  brk_port_out = port; brk_port_val = val;
+  u8 p1 = (port & 0xFF);          // lower 8 bits of port address
+  u8 p2 = ((port >> 8) & 0xFF);   // higher 8 bits of port address
+  brk_port_out = port;
+  brk_port_val = val;
 
   // if (p1 == 0xFD)
   // printf("out (%04X), %02X\n", port, val);
@@ -761,28 +763,63 @@ set1FFD:
           return;
       }
 
+      // FFFD - PSG address
       if ((port & 0xC0FF) == 0xC0FD)
-      { // A15=A14=1, FxFD - AY select register
-         if ((conf.sound.ay_scheme == AY_SCHEME_CHRV) && ((val & 0xF8) == 0xF8)) //Alone Coder
+      {
+         // switch active PSG via NedoPC scheme
+         switch (conf.sound.ay_scheme)
          {
-             if (conf.sound.ay_chip == (SNDCHIP::CHIP_YM2203))
+           case AY_SCHEME_CHRV:
+             if ((val & 0xF8) == 0xF8)
              {
+               if (conf.sound.ay_chip == (SNDCHIP::CHIP_YM2203))
+               {
                  fmsoundon0 = val & 4;
                  tfmstatuson0 = val & 2;
-             } //Alone Coder 0.36.6
-             comp.active_ay = val & 1;
-         };
-         unsigned n_ay = (conf.sound.ay_scheme == AY_SCHEME_QUADRO)? (port >> 12) & 1 : comp.active_ay;
-         ay[n_ay].select(val);
+               }
+               comp.active_ay = val & 1;
+             };
+           break;
+           
+           case AY_SCHEME_AYX32:
+             if ((val & 0xF8) == 0xF8)
+               comp.active_ay = ~val & 1;
+           break;
+         
+           case AY_SCHEME_QUADRO:
+             comp.active_ay = (port >> 12) & 1;
+           break;
+         }
+
+         ayx32.reg = val;
+         if ((conf.sound.ay_scheme == AY_SCHEME_AYX32) && (val >= 16))
+           ayx32.write_addr(val);
+         else
+           ay[comp.active_ay].select(val);
          return;
       }
 
-      if ((port & 0xC000)==0x8000 && conf.sound.ay_scheme)
-      {  // BFFD - AY data register
-         unsigned n_ay = (conf.sound.ay_scheme == AY_SCHEME_QUADRO)? (port >> 12) & 1 : comp.active_ay;
-         ay[n_ay].write(temp.sndblock? 0 : cpu.t, val);
+      // BFFD - PSG data
+      if (((port & 0xC000) == 0x8000) && conf.sound.ay_scheme)
+      {
+         u8 n_ay;
+         switch (conf.sound.ay_scheme)
+         {
+           case AY_SCHEME_QUADRO:
+             n_ay = (port >> 12) & 1;
+           break;
+           
+           default:
+             n_ay = comp.active_ay;
+         }
+         
+         if ((conf.sound.ay_scheme == AY_SCHEME_AYX32) && (ayx32.reg >= 16))
+           ayx32.write(temp.sndblock ? 0 : cpu.t, val);
+         else
+           ay[n_ay].write(temp.sndblock ? 0 : cpu.t, val);
+
          if (conf.input.mouse == 2 && ay[n_ay].get_activereg() == 14)
-             input.aymouse_wr(val);
+           input.aymouse_wr(val);
          return;
       }
       return;
@@ -821,7 +858,7 @@ set1FFD:
       ( (conf.mem_model == MM_PENTAGON) || (conf.mem_model == MM_ATM3) ||
       (conf.mem_model == MM_TSL) || (conf.mem_model == MM_PHOENIX) ) ) // lvd added eff7 to atm3
    {
-    u8 oldpEFF7 = comp.pEFF7; //Alone Coder 0.36.4
+    u8 oldpEFF7 = comp.pEFF7;
       comp.pEFF7 = (comp.pEFF7 & conf.EFF7_mask) | (val & ~conf.EFF7_mask);
       // comp.pEFF7 |= EFF7_GIGASCREEN; // [vv] disable turbo
 
@@ -843,7 +880,7 @@ set1FFD:
       }
 */
       if ((comp.pEFF7 ^ oldpEFF7) & (EFF7_ROCACHE | EFF7_LOCKMEM))
-          set_banks(); //Alone Coder 0.36.4
+          set_banks();
       return;
    }
    if (conf.cmos && (((comp.pEFF7 & EFF7_CMOS) && conf.mem_model == MM_PENTAGON) ||            // check bit 7 port EFF7 for Pentagon
@@ -1285,27 +1322,48 @@ __inline u8 in1(unsigned port)
       return val;
    }
 
+   // ATM-2 IDE+DAC/ADC
    if ((port & 0x8202) == (0x7FFD & 0x8202) && (conf.mem_model == MM_ATM710 || conf.ide_scheme == IDE_ATM))
-   { // ATM-2 IDE+DAC/ADC
+   {
       u8 irq = 0x40;
       if (conf.ide_scheme == IDE_ATM) irq = (hdd.read_intrq() & 0x40);
       return irq + 0x3F;
    }
 
-   if ((u8)port == 0xFD && conf.sound.ay_scheme)
+   // xxFD - AY
+   if ((p1 == 0xFD) && conf.sound.ay_scheme)
    {
       if ((conf.sound.ay_scheme == AY_SCHEME_CHRV) && (conf.sound.ay_chip == (SNDCHIP::CHIP_YM2203)) && (tfmstatuson0 == 0))
-          return 0x7f /*always ready*/; //Alone Coder 0.36.6
-      if ((port & 0xC0FF) != 0xC0FD) return 0xFF;
-      unsigned n_ay = (conf.sound.ay_scheme == AY_SCHEME_QUADRO)? (port >> 12) & 1 : comp.active_ay;
-      // else FxFD - read selected AY register
-      if (conf.input.mouse == 2 && ay[n_ay].get_activereg() == 14) { input.mouse_joy_led |= 1; return input.aymouse_rd(); }
-      return ay[n_ay].read();
+        return 0x7F;  // always ready
+
+      if ((p2 & 0xC0) != 0xC0)
+        return 0xFF;
+
+      u8 n_ay;
+      if (conf.sound.ay_scheme == AY_SCHEME_QUADRO)
+        n_ay = (port >> 12) & 1;
+      else
+        n_ay = comp.active_ay;
+        
+      // read selected AY register
+      if (conf.input.mouse == 2 && (ay[n_ay].get_activereg() == 14))
+      {
+        input.mouse_joy_led |= 1;
+        return input.aymouse_rd();
+      }
+
+      u8 rc;
+      if ((conf.sound.ay_scheme == AY_SCHEME_AYX32) && (ayx32.reg >= 16))
+        rc = ayx32.read();
+      else
+        rc = ay[n_ay].read();
+      
+      return rc;
    }
 
 //   if ((port & 0x7F) == 0x7B) { // FB/7B
    if ((port & 0x04) == 0x00)
-   { // FB/7B //Alone Coder 0.36.6 (for MODPLAYi)
+   { // FB/7B (for MODPLAYi)
       if (conf.mem_model == MM_ATM450)
       {
          comp.aFB = (u8)port;

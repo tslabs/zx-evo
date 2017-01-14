@@ -8,6 +8,7 @@
 #include "z80.h"
 #include "util.h"
 #include "sndcounter.h"
+#include "sound/ayx32.h"
 
 namespace z80fast
 {
@@ -214,8 +215,8 @@ ZF232 zf232;
 
 SNDRENDER sound;
 SNDCHIP ay[2];
+SNDAYX32 ayx32;
 SNDCOUNTER sndcounter;
-
 
 u8 *base_sos_rom, *base_dos_rom, *base_128_rom, *base_sys_rom;
 

@@ -3,6 +3,7 @@
 #include "sndchip.h"
 #include "saa1099.h"
 #include "sound/dev_moonsound.h"
+#include "sound/ayx32.h"
 
 #define ROMLED_TIME 16
 
@@ -189,6 +190,7 @@ extern u8 gdibuf[GDIBUFSZ];
 extern u8 debug_gdibuf[DBG_GDIBUFSZ];
 
 extern SNDCHIP ay[2];
+extern SNDAYX32 ayx32;
 
 extern u8 *bankr[4];
 extern u8 *bankw[4];

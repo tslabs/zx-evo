@@ -145,8 +145,7 @@ enum TS_VDAC
   TS_VDAC_3   = 0x01,
   TS_VDAC_4   = 0x02,
   TS_VDAC_5   = 0x03,
-
-  last                  // wbcbz7 note: sorry :)
+  TS_VDAC_MAX
 };
 
 typedef struct {

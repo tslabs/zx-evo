@@ -158,7 +158,7 @@ void change_rombank(int dx, int reload)
        sz = ftell(ff);
        fclose(ff);
    }
-   
+
    if (!sz || (sz & 0xFFFF))
    {
        err: MessageBox(dlg, "Invalid ROM size", "error", MB_ICONERROR | MB_OK);
@@ -818,7 +818,7 @@ INT_PTR CALLBACK VideoDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
          SendMessage(box, CB_ADDSTRING, 0, (LPARAM)pals[i].name);
       SendMessage(box, CB_SETCURSEL, c1.pal, 0);
       box = GetDlgItem(dlg, IDC_VDAC);
-      for (i = 0; i < TS_VDAC::last; i++)
+      for (i = 0; i < TS_VDAC_MAX; i++)
          SendMessage(box, CB_ADDSTRING, 0, (LPARAM)ts_vdac_names[i].name);
       SendMessage(box, CB_SETCURSEL, comp.ts.vdac, 0);
       /*box = GetDlgItem(dlg, IDC_FONTHEIGHT);
@@ -887,8 +887,8 @@ INT_PTR CALLBACK VideoDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
          //ShowWindow(GetDlgItem(dlg, IDC_FAST_SL), sh);
 
          // update CLUT
-         for (i = 0; i < 256; i++) update_clut(i);
-
+         for (i = 0; i < 256; i++)
+           update_clut(i);
       }
       return 1;
    }

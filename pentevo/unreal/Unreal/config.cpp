@@ -220,7 +220,7 @@ void load_config(const char *fname)
 {
    char line[FILENAME_MAX];
    load_errors = 0;
-   unsigned long i;
+   u32 i;
 
    GetModuleFileName(0, ininame, sizeof ininame);
    strlwr(ininame); *(unsigned*)(strstr(ininame, ".exe")+1) = WORD4('i','n','i',0);
@@ -274,7 +274,7 @@ void load_config(const char *fname)
    conf.tape_autostart = GetPrivateProfileInt(misc, "TapeAutoStart", 1, ininame);
    conf.EFF7_mask = GetPrivateProfileInt(misc, "EFF7mask", 0, ininame);
    conf.spg_mem_init = GetPrivateProfileInt(misc, "SPGMemInit", 0, ininame);
-   
+
    GetPrivateProfileString(rom, "PENTAGON", nil, conf.pent_rom_path, sizeof conf.pent_rom_path, ininame);
    GetPrivateProfileString(rom, "ATM1", nil, conf.atm1_rom_path, sizeof conf.atm1_rom_path, ininame);
    GetPrivateProfileString(rom, "ATM2", nil, conf.atm2_rom_path, sizeof conf.atm2_rom_path, ininame);
@@ -289,7 +289,7 @@ void load_config(const char *fname)
    GetPrivateProfileString(rom, "TSL", nil, conf.tsl_rom_path, sizeof conf.tsl_rom_path, ininame);
    GetPrivateProfileString(rom, "LSY", nil, conf.lsy_rom_path, sizeof conf.lsy_rom_path, ininame);
    GetPrivateProfileString(rom, "PHOENIX", nil, conf.phoenix_rom_path, sizeof conf.phoenix_rom_path, ininame);
-   
+
    #ifdef MOD_GSZ80
    GetPrivateProfileString(rom, "GS", nil, conf.gs_rom_path, sizeof conf.gs_rom_path, ininame);
    addpath(conf.gs_rom_path);
@@ -297,7 +297,7 @@ void load_config(const char *fname)
 
    GetPrivateProfileString(rom, "MOONSOUND", nil, conf.moonsound_rom_path, sizeof conf.moonsound_rom_path, ininame);
    addpath(conf.moonsound_rom_path);
-   
+
    addpath(conf.pent_rom_path);
    addpath(conf.atm1_rom_path);
    addpath(conf.atm2_rom_path);
@@ -321,43 +321,45 @@ void load_config(const char *fname)
 	   conf.use_romset = 0;
 
    conf.smuc = GetPrivateProfileInt(misc, "SMUC", 0, ininame);
-   
+
    // CMOS
    GetPrivateProfileString(misc, "CMOS", nil, line, sizeof line, ininame);
    conf.cmos = 0;
    if (!strcmp(line, "DALLAS")) conf.cmos = 1;
    if (!strcmp(line, "512Bu1")) conf.cmos = 2;
-   
+
    // ULA+
    GetPrivateProfileString(misc, "ULAPLUS", nil, line, sizeof line, ininame);
    conf.ulaplus = UPLS_NONE;
    if (!strcmp(line, "TYPE1")) conf.ulaplus = UPLS_TYPE1;
    if (!strcmp(line, "TYPE2")) conf.ulaplus = UPLS_TYPE2;
-   
+
    // TS VDAC
    GetPrivateProfileString(misc, "TS_VDAC", nil, line, sizeof line, ininame);
    comp.ts.vdac = TS_VDAC_OFF;
-   /*
-   if (!strcmp(line, "3BIT")) comp.ts.vdac = TS_VDAC_3;
-   if (!strcmp(line, "4BIT")) comp.ts.vdac = TS_VDAC_4;
-   if (!strcmp(line, "5BIT")) comp.ts.vdac = TS_VDAC_5;
-   */
-   for (i = 0; i < TS_VDAC::last; i++)
-       if (!strnicmp(line, ts_vdac_names[i].nick, strlen(ts_vdac_names[i].nick)))
-         comp.ts.vdac = ts_vdac_names[i].value;
-
+   for (i = 0; i < TS_VDAC_MAX; i++)
+     if (strnicmp(line, ts_vdac_names[i].nick, strlen(ts_vdac_names[i].nick)) == 0)
+     {
+       comp.ts.vdac = ts_vdac_names[i].value;
+       break;
+     }
 
    // TS VDAC2 (FT812)
-   comp.ts.vdac2 = GetPrivateProfileInt(misc, "TS_VDAC2", 0, ininame);
-   
+   comp.ts.vdac2 = (GetPrivateProfileInt(misc, "TS_VDAC2", 0, ininame) != 0);
+
    // Cache
    conf.cache = GetPrivateProfileInt(misc, "Cache", 0, ininame);
    if (conf.cache && conf.cache!=16 && conf.cache!=32) conf.cache = 0;
+
    GetPrivateProfileString(misc, "HIMEM", nil, line, sizeof line, ininame);
    conf.mem_model = MM_PENTAGON;
-   for (/*unsigned*/ i = 0; i < N_MM_MODELS; i++)
-      if (!strnicmp(line, mem_model[i].shortname, strlen(mem_model[i].shortname)))
-         conf.mem_model = mem_model[i].Model;
+   for (i = 0; i < N_MM_MODELS; i++)
+     if (!strnicmp(line, mem_model[i].shortname, strlen(mem_model[i].shortname)))
+     {
+       conf.mem_model = mem_model[i].Model;
+       break;
+     }
+
    conf.ramsize = GetPrivateProfileInt(misc, "RamSize", 128, ininame);
 
    GetPrivateProfileString(misc, "DIR", nil, conf.workdir, sizeof conf.workdir, ininame);
@@ -578,19 +580,20 @@ void load_config(const char *fname)
 
    GetPrivateProfileString(ay, "Chip", nil, line, sizeof line, ininame);
    conf.sound.ay_chip = SNDCHIP::CHIP_YM;
-   if (!strnicmp(line, "AY", 2)) conf.sound.ay_chip = SNDCHIP::CHIP_AY;
-   if (!strnicmp(line, "YM2203", 6)) conf.sound.ay_chip = SNDCHIP::CHIP_YM2203;else //Dexus
-   if (!strnicmp(line, "YM", 2)) conf.sound.ay_chip = SNDCHIP::CHIP_YM;
+   if (!strnicmp(line, "YM2203", 6)) conf.sound.ay_chip = SNDCHIP::CHIP_YM2203;
+   else if (!strnicmp(line, "YM", 2)) conf.sound.ay_chip = SNDCHIP::CHIP_YM;
+   else if (!strnicmp(line, "AY", 2)) conf.sound.ay_chip = SNDCHIP::CHIP_AY;
 
    conf.sound.ay_samples = GetPrivateProfileInt(ay, "UseSamples", 0, ininame);
 
    GetPrivateProfileString(ay, "Scheme", nil, line, sizeof line, ininame);
    conf.sound.ay_scheme = AY_SCHEME_NONE;
    if (!strnicmp(line, "default", 7)) conf.sound.ay_scheme = AY_SCHEME_SINGLE;
-   if (!strnicmp(line, "PSEUDO", 6)) conf.sound.ay_scheme = AY_SCHEME_PSEUDO;
-   if (!strnicmp(line, "QUADRO", 6)) conf.sound.ay_scheme = AY_SCHEME_QUADRO;
-   if (!strnicmp(line, "POS", 3)) conf.sound.ay_scheme = AY_SCHEME_POS;
-   if (!strnicmp(line, "CHRV", 4)) conf.sound.ay_scheme = AY_SCHEME_CHRV;
+   else if (!strnicmp(line, "PSEUDO", 6)) conf.sound.ay_scheme = AY_SCHEME_PSEUDO;
+   else if (!strnicmp(line, "QUADRO", 6)) conf.sound.ay_scheme = AY_SCHEME_QUADRO;
+   else if (!strnicmp(line, "AYX32", 5)) conf.sound.ay_scheme = AY_SCHEME_AYX32;
+   else if (!strnicmp(line, "CHRV", 4)) conf.sound.ay_scheme = AY_SCHEME_CHRV;
+   else if (!strnicmp(line, "POS", 3)) conf.sound.ay_scheme = AY_SCHEME_POS;
 
    GetPrivateProfileString(input, "ZXKeyMap", "default", conf.zxkeymap, sizeof conf.zxkeymap, ininame);
    conf.input.active_zxk = &zxk_maps[0];
@@ -852,7 +855,7 @@ void apply_memory()
    #endif
 
    zxmmoonsound.load_rom(conf.moonsound_rom_path);
-		
+
    if (conf.ramsize != 128 && conf.ramsize != 256 && conf.ramsize != 512 &&
 	   conf.ramsize != 1024 && conf.ramsize != 2048 && conf.ramsize != 4096)
       conf.ramsize = 0;
@@ -1021,7 +1024,7 @@ void applyconfig()
 {
    // set POWER_UP bit for TS-Config
    comp.ts.pwr_up = TS_PWRUP_ON;
-   
+
    //[vv] disable turbo
    //comp.pEFF7 |= EFF7_GIGASCREEN;
 

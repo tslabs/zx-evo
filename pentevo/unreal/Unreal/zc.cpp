@@ -23,7 +23,7 @@ void TZc::Wr(u32 Port, u8 Val)
       Val &= 7;
     
       if ((comp.ts.vdac2) && ((Cfg & 4) != (Val & 4)))
-        vdac2::set_ss(Val & 4);
+        vdac2::set_ss((Val & 4) != 0);
       
       Cfg = Val;
     break;

@@ -352,6 +352,9 @@
     <ClCompile Include="ft812.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
+    <ClCompile Include="sound\ayx32.cpp">
+      <Filter>Sources\sound</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="atm.h">
@@ -656,6 +659,9 @@
     </ClInclude>
     <ClInclude Include="ft8xx\FT_Platform.h">
       <Filter>Sources\ft8xx</Filter>
+    </ClInclude>
+    <ClInclude Include="sound\ayx32.h">
+      <Filter>Headers\sound</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
