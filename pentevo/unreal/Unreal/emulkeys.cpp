@@ -136,12 +136,6 @@ void main_leds()
    sprintf(statusline, "leds %s", conf.led.enabled ? "on" : "off"); statcnt = 50;
 }
 
-void main_status()
-{
-   conf.led.status ^= 1;
-   sprintf(statusline, "status line %s", conf.led.status ? "on" : "off"); statcnt = 50;
-}
-
 void main_maxspeed()
 {
    conf.sound.enabled ^= 1;

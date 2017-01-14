@@ -15,7 +15,6 @@ void main_decfix();
 void main_incfix10();
 void main_decfix10();
 void main_leds();
-void main_status();
 void main_maxspeed();
 void main_selectfilter();
 void main_selectdriver();

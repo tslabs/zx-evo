@@ -609,7 +609,7 @@ void showleds( u32 *dst, unsigned bpitch )
 
 	pitch = bpitch / 4;
 
-	if ((statcnt) && (conf.led.status))
+	if (statcnt)
 	{
 		int x, y;
 		statcnt--;
