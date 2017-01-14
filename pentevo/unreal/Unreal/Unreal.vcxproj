@@ -327,6 +327,8 @@
       <LinkErrorReporting>PromptImmediately</LinkErrorReporting>
       <AdditionalManifestDependencies>type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'</AdditionalManifestDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <MinimumRequiredVersion>5.1</MinimumRequiredVersion>
+      <SubSystem>Console</SubSystem>
     </Link>
     <ProjectReference />
     <PostBuildEvent>
@@ -371,6 +373,8 @@ copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)rom"
       <AdditionalManifestDependencies>type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'</AdditionalManifestDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>/SAFESEH:NO %(AdditionalOptions)</AdditionalOptions>
+      <MinimumRequiredVersion>5.1</MinimumRequiredVersion>
+      <SubSystem>Console</SubSystem>
     </Link>
     <ProjectReference />
     <PostBuildEvent>
