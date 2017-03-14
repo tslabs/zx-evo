@@ -701,7 +701,7 @@ static INT_PTR CALLBACK WndProc(HWND hwnd,UINT uMessage,WPARAM wparam,LPARAM lpa
 			case IDM_EXIT: correct_exit();
 
 			case IDM_LOAD: opensnap(); break;
-	
+
 			case IDM_SAVE: savesnap(); break;
 			case IDM_SAVE_DISKB: disk=1; goto save_disk;
 			case IDM_SAVE_DISKC: disk=2; goto save_disk;
@@ -769,7 +769,7 @@ save_disk:
 				(comp.wd.fdd[3].rawdata?MF_ENABLED:MF_GRAYED|MF_DISABLED),IDM_SAVE_DISKD,"Disk D");
 
 			ModifyMenu(main_menu,IDM_AUDIOREC,MF_BYCOMMAND,IDM_AUDIOREC,savesndtype?"Stop audio recording":"Start audio recording");
-		  
+
 			ModifyMenu(main_menu,IDM_MAXIMUMSPEED,
 				(conf.sound.enabled?MF_UNCHECKED:MF_CHECKED),IDM_MAXIMUMSPEED,"Maximum speed");
 
@@ -1483,7 +1483,7 @@ void start_dx()
 
    InitCommonControls();
 
-   HRESULT r;
+   HRESULT r = E_UNEXPECTED;
    LPDIRECTDRAW dd0;
 
    HMODULE hDdraw = LoadLibrary("ddraw.dll");
@@ -1606,10 +1606,21 @@ void start_dx()
       conf.sound.do_sound = do_sound_none;
    }
 
-   LPDIRECTINPUT di;
-   r = DirectInputCreate(hIn,0x0500,&di,0);
+   r = E_UNEXPECTED;
+   LPDIRECTINPUT di = { 0 };
+   HMODULE hDinput = LoadLibrary("dinput.dll");
+   if (hDinput)
+   {
+       typedef HRESULT(WINAPI * DIRECTINPUTCREATE) (HINSTANCE, DWORD, LPDIRECTINPUTA*, LPUNKNOWN);
+       DIRECTINPUTCREATE DirectInputCreateA = (DIRECTINPUTCREATE)GetProcAddress(hDinput, "DirectInputCreateA");
+       if (DirectInputCreateA)
+       {
+           r = DirectInputCreateA(hIn, 0x0500, &di, 0);
+           if (r != DI_OK) r = DirectInputCreateA(hIn, 0x0300, &di, 0);
+       }
+   }
 
-   if ((r != DI_OK) && (r = DirectInputCreate(hIn,0x0300,&di,0)) != DI_OK)
+   if (r != DI_OK)
    {
        printrdi("DirectInputCreate()", r);
        exit();
@@ -1632,7 +1643,7 @@ void start_dx()
        printrdi("IDirectInputDevice::SetCooperativeLevel() (keyboard)", r);
        exit();
    }
-   
+
    if ((r = di->CreateDevice(GUID_SysMouse, &dimouse, 0)) == DI_OK)
    {
       if ((r = dimouse->SetDataFormat(&c_dfDIMouse)) != DI_OK)

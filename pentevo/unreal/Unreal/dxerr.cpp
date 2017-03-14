@@ -2,19 +2,49 @@
 #include "emul.h"
 #include "vars.h"
 #include "util.h"
+#include <vfwmsgs.h>
+#include <dmerror.h>
+#include <mmsystem.h>
+
+typedef struct {
+    HRESULT      hr;
+    const CHAR*  resultA;
+    const WCHAR* resultW;
+    const CHAR*  descriptionA;
+    const WCHAR* descriptionW;
+} error_info;
+
+#include "dxerrors.h"
+
+const char * WINAPI DXGetErrorString8A(HRESULT hr)
+{
+    unsigned int i, j, k = 0;
+
+    for (i = sizeof(info) / sizeof(info[0]); i != 0; i /= 2) {
+        j = k + (i / 2);
+        if (hr == info[j].hr)
+            return info[j].resultA;
+        if ((unsigned int)hr > (unsigned int)info[j].hr) {
+            k = j + 1;
+            i--;
+        }
+    }
+
+    return "Unknown";
+}
 
 #ifdef EMUL_DEBUG
-#include "dxerr8.h"
+
 void printrdd(const char *pr, HRESULT r)
 {
    color(CONSCLR_ERROR);
-   printf("%s: %s\n", pr, DXGetErrorString8(r));
+   printf("%s: %s\n", pr, DXGetErrorString8A(r));
 }
 
 void printrdi(const char *pr, HRESULT r)
 {
    color(CONSCLR_ERROR);
-   printf("%s: %s\n", pr, DXGetErrorString8(r));
+   printf("%s: %s\n", pr, DXGetErrorString8A(r));
 }
 
 void printrmm(const char *pr, HRESULT r)
@@ -40,7 +70,7 @@ void printrmm(const char *pr, HRESULT r)
 void printrds(const char *pr, HRESULT r)
 {
    color(CONSCLR_ERROR);
-   printf("%s: %s\n", pr, DXGetErrorString8(r));
+   printf("%s: %s\n", pr, DXGetErrorString8A(r));
 }
 #else
 #define printrdd(x,y)
