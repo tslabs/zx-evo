@@ -19,42 +19,19 @@ TS_VDAC_NAME ts_vdac_names[] =
     { 0,0,0 }
 };
 
-const u8 pwm[32] =
+// linear PWM palette
+const u8 pwm_lin[32] =
     {
-        0,
-        10,
-        21,
-        31,
-        42,
-        53,
-        63,
-        74,
-        85,
-        95,
-        106,
-        117,
-        127,
-        138,
-        149,
-        159,
-        170,
-        181,
-        191,
-        202,
-        213,
-        223,
-        234,
-        245,
-        255,
-        255,
-        255,
-        255,
-        255,
-        255,
-        255,
-        255
+          0,  10,  21,  31,  42,  53,  63,  74,  85,  95, 106, 117, 127, 138, 149, 159,
+		170, 181, 191, 202, 213, 223, 234, 245, 255, 255, 255, 255, 255, 255, 255, 255
     };
 
+// real PWM palette, gamma 2.2, base color values #00-#5D-#A2-#FF (thx to DDp)
+const u8 pwm[32] =
+    {
+          0,  36,  50,  60,  68,  75,  82,  88,  93, 105, 115, 124, 133, 141, 148, 155,
+		162, 177, 190, 203, 215, 226, 236, 246, 255, 255, 255, 255, 255, 255, 255, 255
+    };
 
 HWND tsu_toggle_wnd;
 // tsu toggle layers critical section - since our toggle dialog is not modal
@@ -73,9 +50,11 @@ void update_clut(u8 addr)
     switch (comp.ts.vdac)
     {
         case TS_VDAC_5:
-            if (!s)
-                goto pwm_set;
-
+            if (!s) {
+				r = pwm_lin[r];
+				g = pwm_lin[g];
+				b = pwm_lin[b];   
+			}
             else
             {
                 r = r << 3;       // Ccccc000 model
@@ -85,8 +64,11 @@ void update_clut(u8 addr)
         break;
 
         case TS_VDAC_4:
-            if (!s)
-                goto pwm_set;       // FIX ME! Here must be clone-specific PWM
+            if (!s) {
+				r = pwm_lin[r];
+				g = pwm_lin[g];
+				b = pwm_lin[b];   
+			}						// FIX ME! Here must be clone-specific PWM
 
             else
             {
@@ -97,8 +79,11 @@ void update_clut(u8 addr)
         break;
 
         case TS_VDAC_3:
-            if (!s)
-                goto pwm_set;       // FIX ME! Here must be clone-specific PWM
+            if (!s) {
+				r = pwm_lin[r];
+				g = pwm_lin[g];
+				b = pwm_lin[b];   
+			}						// FIX ME! Here must be clone-specific PWM
 
             else
             {
