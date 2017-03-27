@@ -213,11 +213,6 @@ static void FlipD3d()
         __debugbreak();
     }
 
-    Hr = D3dDev->Present(0, 0, 0, 0);
-    if (FAILED(Hr))
-    {
-        __debugbreak();
-    }
     SurfBackBuffer0->Release();
     SurfBackBuffer1->Release();
 }
