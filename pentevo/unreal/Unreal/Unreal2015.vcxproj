@@ -385,6 +385,7 @@ copy /y "$(ProjectDir)lib\*.dll" "$(TargetDir)"
 copy /y "$(ProjectDir)cfg\*.*" "$(TargetDir)"
 copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)rom"
 copy /y "$(ProjectDir)doc\*.*" "$(TargetDir)doc"
+del /q "$(TargetDir)..\unreal.7z"
 ..\..\tools\7z\7z.exe e -y -bd -o"$(TargetDir)" .\cfg\hdd\wc.7z
 ..\..\tools\7z\7z.exe a -r -mx9 -y -bd "$(TargetDir)..\unreal.7z" "$(TargetDir)*"
 </Command>

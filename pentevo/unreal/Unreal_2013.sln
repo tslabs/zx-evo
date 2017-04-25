@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Unreal", "Unreal\Unreal.vcxproj", "{B9C745E9-52E2-48EA-9D6A-7AE42133B56E}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Unreal", "Unreal\Unreal2013.vcxproj", "{B9C745E9-52E2-48EA-9D6A-7AE42133B56E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
