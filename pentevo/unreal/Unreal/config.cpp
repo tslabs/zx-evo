@@ -497,6 +497,7 @@ void load_config(const char *fname)
    addpath(conf.appendboot);
 
    conf.led.enabled = GetPrivateProfileInt(leds, "leds", 1, ininame);
+   conf.led.status = GetPrivateProfileInt(leds, "status", 1, ininame);
    conf.led.flash_ay_kbd = GetPrivateProfileInt(leds, "KBD_AY", 1, ininame);
    conf.led.perf_t = GetPrivateProfileInt(leds, "PerfShowT", 0, ininame);
    conf.led.bandBpp = GetPrivateProfileInt(leds, "BandBpp", 512, ininame);

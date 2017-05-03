@@ -136,6 +136,12 @@ void main_leds()
    sprintf(statusline, "leds %s", conf.led.enabled ? "on" : "off"); statcnt = 50;
 }
 
+void main_status()
+{
+   conf.led.status ^= 1;
+   sprintf(statusline, "status line %s", conf.led.status ? "on" : "off"); statcnt = 50;
+}
+
 void main_maxspeed()
 {
    conf.sound.enabled ^= 1;
@@ -380,7 +386,7 @@ void main_flictoggle()
    conf.noflic ^= 1;
    apply_video();
 
-   sprintf(statusline, "noflic: %s", conf.noflic ? "on" : "off");
+   sprintf(statusline, "noflic %s", conf.noflic ? "on" : "off"); statcnt = 30;
 }
 
 void main_mouse()

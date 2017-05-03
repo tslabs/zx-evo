@@ -28,6 +28,7 @@ action ac_main[] =
    { "main.incfix10", main_incfix10 },
    { "main.decfix10", main_decfix10 },
    { "main.leds", main_leds },
+   { "main.status", main_status },
    { "main.maxspeed", main_maxspeed },
    { "main.selectfilter", main_selectfilter },
    { "main.selectdriver", main_selectdriver },

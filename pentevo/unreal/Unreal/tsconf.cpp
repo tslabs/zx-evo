@@ -94,7 +94,6 @@ void update_clut(u8 addr)
         break;
 
         default:
-        pwm_set:
             r = pwm[r];
             g = pwm[g];
             b = pwm[b];
