@@ -90,6 +90,8 @@ module top(
 	output [2:0] ide_a,
 `ifdef IDE_VDAC
 	output [15:0] ide_d,
+`elsif IDE_VDAC2
+	output [15:0] ide_d,
 `else
 	inout [15:0] ide_d,
 `endif
@@ -144,7 +146,7 @@ module top(
     assign vred = red[2:1];
     assign vgrn = grn[2:1];
     assign vblu = blu[1:0];
-    
+
 	wire dos;
 
 
@@ -253,40 +255,62 @@ module top(
 	assign res= ~rst_n;
 
 
-
-
-
-
-
-
-	assign ide_rs_n = rst_n;
-
 	assign idein = ide_d;
 
-`ifndef IDE_VDAC
+`ifdef IDE_HDD
+	assign ide_rs_n = rst_n;
 	assign ide_d = idedataout ? ideout : 16'hZZZZ;
 	assign ide_dir = ~idedataout;
-`else
-    wire [2:0] pblu = {blu, blu[0]};     //The missing lowest blue bit is set to OR of the other two blue bits (Bb becomes 000 for 00, and Bb1 for anything else).
-    assign ide_d[ 4: 0] = {red, red[2:1]};
-    assign ide_d[ 9: 5] = {grn, grn[2:1]};
-    assign ide_d[14:10] = {pblu, pblu[2:1]};
-    assign ide_d[15] = 1'b1;    // always 0-31 luma scale
-    assign ide_dir = 1'b0;      // always output
-    assign ide_a[1] = !fclk;
-    assign ide_a[2] = vhsync;
-    assign ide_cs1_n = vvsync;
+`elsif IDE_VDAC
+	assign ide_rs_n = rst_n;
+  assign ide_d[ 4: 0] = {red, red[2:1]};
+  assign ide_d[ 9: 5] = {grn, grn[2:1]};
+  assign ide_d[14:10] = {blu, blu[0], blu};   // The missing lowest blue bit is set to OR of the other two blue bits (Bb becomes 000 for 00, and Bb1 for anything else).
+  assign ide_d[15] = 1'b1;    // always 0-31 luma scale
+  assign ide_dir = 1'b0;      // always output
+  assign ide_a[1] = !fclk;
+  assign ide_a[2] = vhsync;
+  assign ide_cs1_n = vvsync;
+  assign ide_rd_n = 1'b0;
+  assign ide_wr_n = 1'b0;
+`elsif IDE_VDAC2
+  wire ftcs_n;
+  wire [4:0] vred_raw = {red, red[2:1]};
+  wire [4:0] vgrn_raw = {grn, grn[2:1]};
+  wire [4:0] vblu_raw = {blu, blu[0], blu};   // The missing lowest blue bit is set to OR of the other two blue bits (Bb becomes 000 for 00, and Bb1 for anything else).
+  assign ide_d[ 0] = vgrn_raw[2];
+  assign ide_d[ 1] = vred_raw[0];
+  assign ide_d[ 2] = vred_raw[1];
+  assign ide_d[ 3] = vred_raw[2];
+  assign ide_d[ 4] = vred_raw[3];
+  assign ide_d[ 5] = vred_raw[4];
+  assign ide_d[ 6] = vgrn_raw[0];
+  assign ide_d[ 7] = vgrn_raw[1];
+  assign ide_d[ 8] = vgrn_raw[3];
+  assign ide_d[ 9] = vgrn_raw[4];
+  assign ide_d[10] = vblu_raw[0];
+  assign ide_d[11] = vblu_raw[1];
+  assign ide_d[12] = vblu_raw[2];
+  assign ide_d[13] = vblu_raw[3];
+  assign ide_d[14] = vblu_raw[4];
+  assign ide_d[15] = 1'b1;    // always 0-31 luma scale
+  assign ide_rs_n = vgrn_raw[2]; // for lame RevA
+  assign ide_dir = 1'b0;      // always output
+  assign ide_a[0] = 1'b0;  // FT812 SCK
+  assign ide_a[1] = 1'b0;  // FT812 MOSI
+  assign ide_a[2] = !fclk;
+  assign ide_rd_n = 1'b1; // FT812 CS_n
+  assign ide_wr_n = 1'b0;
+  assign ide_cs0_n = vhsync;
+  assign ide_cs1_n = vvsync;
 `endif
 
 	wire [7:0] peff7;
 	wire [7:0] p7ffd;
 
-
 	wire romrw_en;
 	wire cpm_n;
 	wire fnt_wr;
-
-
 
 	wire cpu_req,cpu_rnw,cpu_wrbsel,cpu_strobe;
 	wire [20:0] cpu_addr;
@@ -457,39 +481,39 @@ module top(
 				.fclk (fclk),
 				.zpos (zpos),
 				.zneg (zneg),
-                                
+
 				.za(a),
 				.zd(d),
 				.mreq_n(mreq_n),
 				.rd_n  (rd_n),
 				.m1_n  (m1_n),
-                                
+
 				.pager_off(pager_off),
-                                
+
 				.pent1m_ROM   (pent1m_ROM),
 				.pent1m_page  (pent1m_page),
 				.pent1m_ram0_0(pent1m_ram0_0),
 				.pent1m_1m_on (pent1m_1m_on),
-                                
-                                
+
+
 				.in_nmi(in_nmi),
-                                
+
 				.atmF7_wr(atmF7_wr_fclk),
-                                
+
 				.dos(dos),
-                                
+
 				.dos_turn_on (dos_turn_on[i]),
 				.dos_turn_off(dos_turn_off[i]),
-                                
+
 				.zclk_stall(zclk_stall[i]),
-                                
+
 				.page     (page[i]     ),
 				.romnram  (romnram[i]  ),
-                        	.wrdisable(wrdisable[i]),        
-                                
+                        	.wrdisable(wrdisable[i]),
+
 				.rd_page0  (rd_pages[i  ]),
 				.rd_page1  (rd_pages[i+4]),
-                                
+
 				.rd_ramnrom   ( {rd_ramnrom   [i+4], rd_ramnrom   [i]} ),
 				.rd_dos7ffd   ( {rd_dos7ffd   [i+4], rd_dos7ffd   [i]} ),
 				.rd_wrdisables( {rd_wrdisables[i+4], rd_wrdisables[i]} )
@@ -526,7 +550,7 @@ module top(
 	(
 		.fclk (fclk ),
 		.rst_n(rst_n),
-		
+
 		.zpos(zpos),
 		.zneg(zneg),
 
@@ -534,16 +558,16 @@ module top(
 		.post_cbeg(post_cbeg),
 		.pre_cend (pre_cend ),
 		.cend     (cend     ),
-		
+
 		.za    (a       ),
 		.zd_in (d       ),
-		.zd_out(dout_ram), 
-		.zd_ena(ena_ram ), 
+		.zd_out(dout_ram),
+		.zd_ena(ena_ram ),
 		.m1_n  (m1_n    ),
-		.rfsh_n(rfsh_n  ), 
-		.iorq_n(iorq_n  ), 
+		.rfsh_n(rfsh_n  ),
+		.iorq_n(iorq_n  ),
 		.mreq_n(mreq_n  ),
-		.rd_n  (rd_n    ), 
+		.rd_n  (rd_n    ),
 		.wr_n  (wr_n    ),
 
 		.win0_romnram(romnram[0]),
@@ -692,7 +716,7 @@ module top(
 
 		.atm_palwr  (atm_palwr  ),
 		.atm_paldata(atm_paldata),
-		
+
 		.up_ena    (up_ena    ),
 		.up_paladdr(up_paladdr),
 		.up_paldata(up_paldata),
@@ -753,10 +777,10 @@ module top(
 	               .p7ffd(p7ffd), .peff7(peff7), .mreq_n(mreq_n), .m1_n(m1_n), .dos(dos),
 	               .vg_intrq(intrq), .vg_drq(drq), .vg_wrFF(vg_wrFF), .vg_cs_n(vg_cs_n),
 	               .idein(idein), .ideout(ideout), .idedataout(idedataout),
-`ifndef IDE_VDAC
+`ifdef IDE_HDD
 	               .ide_a(ide_a), .ide_cs0_n(ide_cs0_n), .ide_cs1_n(ide_cs1_n),
-`endif
 	               .ide_wr_n(ide_wr_n), .ide_rd_n(ide_rd_n),
+`endif
 
 		       .sd_cs_n_val(zx_sdcs_n_val),
 		       .sd_cs_n_stb(zx_sdcs_n_stb),
@@ -817,7 +841,7 @@ module top(
 
 		.palcolor(palcolor),
 		.fontrom_readback(fontrom_readback),
-	
+
 		.up_ena    (up_ena    ),
 		.up_paladdr(up_paladdr),
 		.up_paldata(up_paldata),

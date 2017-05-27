@@ -35,5 +35,5 @@
 // `define FREE_IORQ       // for non-blocked by internal ports !IORQ
 
 // `define IDE_HDD         // for IDE HDD
-`define IDE_VDAC        // for VideoDAC instead of IDE
-// `define IDE_VDAC2       // for VideoDAC2 instead of IDE
+// `define IDE_VDAC        // for VideoDAC instead of IDE
+`define IDE_VDAC2       // for VideoDAC2 instead of IDE

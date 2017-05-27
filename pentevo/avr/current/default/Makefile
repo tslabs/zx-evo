@@ -15,7 +15,7 @@ endif
 PROJECT = core
 TARGET = $(PROJECT).elf
 MCU = atmega128
-CC = avr-gcc
+CC = avr-c++
 
 MHMT = "../../../tools/mhmt/mhmt$(EXE)"
 MKFW = "../../../tools/make_fw/make_fw$(EXE)"
@@ -33,7 +33,7 @@ AD = "$(AP)avrdude$(EXE)" -q -q -u -C "$(AP)avrdude.conf" -c $(PROGRAMMER) -p $(
 
 ## Compile options common for all C compilation units.
 CFLAGS = -mmcu=$(MCU)
-CFLAGS += -Os -flto -Wall -Wextra -gdwarf-2 -std=gnu99
+CFLAGS += -Os -flto -Wall -Wextra -gdwarf-2 -std=c++11
 CFLAGS += -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums -fdata-sections -ffunction-sections
 CFLAGS += -DF_CPU=11059200UL
 CFLAGS += -Wl,--gc-sections,--relax,-Map=$(PROJECT).map
@@ -56,12 +56,16 @@ FPGACORE = tsconf.o baseconf.o egg.o
 all:
 	make norm
 	make vdac
+	make vdac2
 
 norm: clean quartus $(FPGACORE) compile core size
 	@$(MKFW) $(PROJECT).hex $(PROJECT).eep zxevo_fw.bin version.txt >$(DEVNULL)
 
 vdac: clean quartus_vdac $(FPGACORE) compile core size
 	@$(MKFW) $(PROJECT).hex $(PROJECT).eep zxevo_fw_vdac.bin version_vdac.txt >$(DEVNULL)
+
+vdac2: clean quartus_vdac2 $(FPGACORE) compile core size
+	@$(MKFW) $(PROJECT).hex $(PROJECT).eep zxevo_fw_vdac2.bin version_vdac2.txt >$(DEVNULL)
 
 ## Compile and link
 compile: $(SOURCES) $(HEADERS)
