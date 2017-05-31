@@ -1,5 +1,13 @@
 
-    include "ft81x.asm"
+  include "ft81x.asm"
+
+  ifndef MF_SIZE
+  define MF_SIZE 256
+  endif
+
+  ifndef MF_ADDR
+  define MF_ADDR 0
+  endif
 
 ; --------------------
     macro ft_cmd cmd

@@ -6,7 +6,7 @@ BALL_SIZE       equ     10
 BAT_SIZE        equ     50
 BAT_MAX_SPEED   equ     15
 
-                org     $8000
+                org     $6000
                 jp      main
   include "ft_func.asm"
 
