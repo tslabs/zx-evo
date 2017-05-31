@@ -273,7 +273,7 @@ set_global_assignment -name FITTER_EFFORT "STANDARD FIT"
 set_global_assignment -name SLOW_SLEW_RATE ON
 set_global_assignment -name AUTO_PACKED_REGISTERS NORMAL
 set_global_assignment -name FIT_ONLY_ONE_ATTEMPT OFF
-set_global_assignment -name SEED 38
+set_global_assignment -name SEED 26
 set_global_assignment -name ROUTER_TIMING_OPTIMIZATION_LEVEL MINIMUM
 set_global_assignment -name PLACEMENT_EFFORT_MULTIPLIER 1.0
 set_global_assignment -name ROUTER_EFFORT_MULTIPLIER 1.0

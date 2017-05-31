@@ -390,6 +390,7 @@ module top(
   assign ide_wr_n = vdac2_msel;
   assign ide_cs0_n = vhsync;
   assign ide_cs1_n = vvsync;
+  wire ft_int = ide_d[1];
 
   wire vdac2_msel;
   wire ftdi = ide_rdy;      // FT812 MISO
@@ -397,7 +398,7 @@ module top(
 
   reg [1:0] ftint_r;
   always @(posedge fclk)
-    ftint_r <= {ftint_r[0], ide_d[0]}; // FT812 INT_n
+    ftint_r <= {ftint_r[0], ft_int}; // FT812 INT_n
 `endif
 
   wire [15:0] z80_ide_out;
