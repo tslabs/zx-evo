@@ -43,7 +43,7 @@ loop
                 ; halt
                 ; ft_rd8  FT_REG_INT_FLAGS
                 ; ---
-                
+
                 ; --- for software interrupt polling
                 call wait_int
                 ; ---
@@ -563,10 +563,6 @@ wait_int        ft_rd8  FT_REG_INT_FLAGS
                 ret
 
 ;--------------- displaylist data
-  ifdef BALL_CIRCLE
-dl_ball2        FT_VERTEX2F 409 << 4, 309 << 4
-  endif
-
 dl1_start
                 FT_CLEAR_COLOR_RGB   0,  21,   0
                 FT_CLEAR 1, 1, 1
@@ -591,22 +587,22 @@ dl_lscore       FT_VERTEX2II 300,  20, 31, '0'
                 FT_VERTEX2II 475,  20, 31, '0'
                 FT_END
 
-  ifdef BALL_CIRCLE
                 FT_COLOR_RGB 255, 255, 255
+
+  ifdef BALL_CIRCLE
                 FT_BEGIN FT_POINTS
                 FT_POINT_SIZE 6 << 4
 dl_ball1        FT_VERTEX2F 405 << 4, 305 << 4
                 FT_END
   endif
-                
+
   ifdef BALL_RECT
-                FT_COLOR_RGB 255, 255, 255
                 FT_BEGIN FT_RECTS
 dl_ball1        FT_VERTEX2F 400 << 4, 300 << 4
 dl_ball2        FT_VERTEX2F 409 << 4, 309 << 4
                 FT_END
   endif
-                
+
                 FT_COLOR_RGB   0, 255, 255
                 FT_BEGIN FT_RECTS
 dl_lbat1        FT_VERTEX2F 40 << 4, 260 << 4
@@ -619,6 +615,10 @@ dl_rbat2        FT_VERTEX2F 759 << 4, 349 << 4
                 FT_DISPLAY
 
 DL1_SIZE        equ     ($-dl1_start)>>2
+
+  ifdef BALL_CIRCLE
+dl_ball2        FT_VERTEX2F 409 << 4, 309 << 4
+  endif
 
 ;---------------
 
