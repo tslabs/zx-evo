@@ -68,6 +68,9 @@ module top(
 `ifdef IDE_VDAC
  output [2:0] ide_a,
  output [15:0] ide_d,
+`elsif IDE_VDAC2
+ output [2:0] ide_a,
+ output [15:0] ide_d,
 `else
  input [2:0] ide_a,
  input [15:0] ide_d,
@@ -143,15 +146,47 @@ module top(
  assign ide_a[1] = !fclk;
  assign ide_a[2] = vhsync;
  assign ide_cs1_n = vvsync;
-`else
- assign ide_dir   = 1'b1;
- assign ide_cs1_n = 1'b1;
-`endif
-
  assign ide_rs_n  = 1'b0;
  assign ide_cs0_n = 1'b1;
  assign ide_rd_n  = 1'b1;
  assign ide_wr_n  = 1'b1;
+`elsif IDE_VDAC2
+ wire [4:0] vred_raw = { vred[1:0], vred[1:0], vred[1] };
+ wire [4:0] vgrn_raw = { vgrn[1:0], vgrn[1:0], vgrn[1] };
+ wire [4:0] vblu_raw = { vblu[1:0], vblu[1:0], vblu[1] };
+ assign ide_d[ 0] = vgrn_raw[2];
+ assign ide_d[ 1] = vred_raw[0];
+ assign ide_d[ 2] = vred_raw[1];
+ assign ide_d[ 3] = vred_raw[2];
+ assign ide_d[ 4] = vred_raw[3];
+ assign ide_d[ 5] = vred_raw[4];
+ assign ide_d[ 6] = vgrn_raw[0];
+ assign ide_d[ 7] = vgrn_raw[1];
+ assign ide_d[ 8] = vgrn_raw[3];
+ assign ide_d[ 9] = vgrn_raw[4];
+ assign ide_d[10] = vblu_raw[0];
+ assign ide_d[11] = vblu_raw[1];
+ assign ide_d[12] = vblu_raw[2];
+ assign ide_d[13] = vblu_raw[3];
+ assign ide_d[14] = vblu_raw[4];
+ assign ide_d[15] = 1'b1;    // always 0-31 luma scale
+ assign ide_rs_n = vgrn_raw[2]; // for lame RevA
+ assign ide_dir = 1'b0;      // always output
+ assign ide_a[0] = 1'b0;  // FT812 SCK
+ assign ide_a[1] = 1'b0;  // FT812 MOSI
+ assign ide_a[2] = !fclk;
+ assign ide_rd_n = 1'b1; // FT812 CS_n
+ assign ide_wr_n = 1'b0;
+ assign ide_cs0_n = vhsync;
+ assign ide_cs1_n = vvsync;
+`else
+ assign ide_dir   = 1'b1;
+ assign ide_cs1_n = 1'b1;
+ assign ide_rs_n  = 1'b0;
+ assign ide_cs0_n = 1'b1;
+ assign ide_rd_n  = 1'b1;
+ assign ide_wr_n  = 1'b1;
+`endif
 
  assign a[15:0]   = 16'hffff;
  assign rompg0_n  = 1'b0;
