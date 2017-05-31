@@ -91,7 +91,7 @@ u8 TMainZ80::IntVec()
     if (conf.mem_model == MM_TSL)
     {
       // check status of frame INT
-      TSFrameINT(comp.ts.vdos || comp.ts.vdos_m1);
+      ts_frame_int(comp.ts.vdos || comp.ts.vdos_m1);
 
       if (comp.ts.intctrl.frame_pend)
         return comp.ts.im2vect[INT_FRAME];

@@ -267,12 +267,13 @@ typedef struct
 
   struct
   {
-    bool new_dma;   // generate new DMA INT
-    u32 last_cput;  // last cpu tacts (used by frame INT)
-    u32 frame_cnt;  // frame INT counter
-    u32 frame_t;    // frame INT position int tacts
-    u32 frame_len;  // frame INT len
-    u32 line_t;     // line INT position int tacts
+    bool new_dma;     // generate new DMA INT
+    u32 last_cput;    // last cpu tacts (used by frame INT)
+    u32 frame_cnt;    // frame INT counter
+    u32 frame_t;      // frame INT position int tacts
+    u32 frame_len;    // frame INT len
+    u32 line_t;       // line INT position int tacts
+    
     union
     {
       u8 pend;
@@ -308,7 +309,8 @@ typedef struct
     struct
     {
       u8 vmode:2;
-      u8 _02:2;
+      u8 ft_en:1;
+      u8 gfxovr:1;
       u8 notsu:1;
       u8 nogfx:1;
       u8 rres:2;
@@ -546,10 +548,12 @@ extern CRITICAL_SECTION tsu_toggle_cr;
 
 // functions
 void update_clut(u8);
-void dma(u32 tacts);
-u32 render_ts(u32 tacts);
+void dma(u32);
+u32 render_ts(u32);
 void tsinit(void);
-void TSFrameINT(bool vdos);
+void ts_frame_int(bool);
+void ts_line_int(bool);
+void ts_dma_int(bool);
 void invalidate_ts_cache();
 
 void main_tsutoggle();

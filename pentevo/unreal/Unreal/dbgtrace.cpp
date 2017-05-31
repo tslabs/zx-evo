@@ -403,7 +403,7 @@ void chere()
     cpu.dbgbreak = 0;
     dbgbreak = 0;
     cpu.dbgchk = 1;
- 
+
     cpu.dbg_stophere = cpu.trace_curs;
 }
 
@@ -567,26 +567,13 @@ void mon_step()
   {
     bool vdos = comp.ts.vdos || comp.ts.vdos_m1;
 
-    TSFrameINT(vdos);
+    ts_frame_int(vdos);
+    ts_line_int(vdos);
+    ts_dma_int(vdos);
 
-    // Line INT
-    if (cpu.t >= comp.ts.intctrl.line_t)
-    {
-      comp.ts.intctrl.line_t += VID_TACTS;
-      if (!vdos) comp.ts.intctrl.line_pend = comp.ts.intline;
-    }
-
-    // DMA INT
-    if (comp.ts.intctrl.new_dma)
-    {
-      comp.ts.intctrl.new_dma = false;
-      comp.ts.intctrl.dma_pend = comp.ts.intdma;
-    }
-
-    if (comp.ts.intctrl.pend && !vdos) cpu.int_pend = true;
-    else cpu.int_pend = false;
+    cpu.int_pend = comp.ts.intctrl.pend && !vdos;
   } // Reset INT
-  else 
+  else
 	{
 		unsigned int_start = conf.intstart;
 		unsigned int_end = conf.intstart + conf.intlen;

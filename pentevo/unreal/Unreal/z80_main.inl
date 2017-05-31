@@ -270,27 +270,16 @@ void step1()
 void z80loop_TSL()
 {
   cpu.haltpos = 0;
-  comp.ts.intctrl.line_t = comp.ts.intline ? 0 : VID_TACTS;
+  // comp.ts.intctrl.line_t = comp.ts.intline ? 0 : VID_TACTS;
+  comp.ts.intctrl.line_t = 0;
 
   while (cpu.t < conf.frame)
   {
     bool vdos = comp.ts.vdos || comp.ts.vdos_m1;
 
-    TSFrameINT(vdos);
-
-    // Line INT
-    if (cpu.t >= comp.ts.intctrl.line_t)
-    {
-      comp.ts.intctrl.line_t += VID_TACTS;
-      if (!vdos) comp.ts.intctrl.line_pend = comp.ts.intline;
-    }
-
-    // DMA INT
-    if (comp.ts.intctrl.new_dma)
-    {
-      comp.ts.intctrl.new_dma = false;
-      comp.ts.intctrl.dma_pend = comp.ts.intdma;
-    }
+    ts_frame_int(vdos);
+    ts_line_int(vdos);
+    ts_dma_int(vdos);
 
     vid.memcyc_lcmd = 0; // new command, start accumulate number of busy memcycles
 

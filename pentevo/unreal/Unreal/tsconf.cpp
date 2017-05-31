@@ -7,6 +7,7 @@
 #include "sdcard.h"
 #include "zc.h"
 #include "resource.h"
+#include "ft812.h"
 
 extern VCTR vid;
 
@@ -53,7 +54,7 @@ void update_clut(u8 addr)
             if (!s) {
 				r = pwm_lin[r];
 				g = pwm_lin[g];
-				b = pwm_lin[b];   
+				b = pwm_lin[b];
 			}
             else
             {
@@ -67,7 +68,7 @@ void update_clut(u8 addr)
             if (!s) {
 				r = pwm_lin[r];
 				g = pwm_lin[g];
-				b = pwm_lin[b];   
+				b = pwm_lin[b];
 			}						// FIX ME! Here must be clone-specific PWM
 
             else
@@ -82,7 +83,7 @@ void update_clut(u8 addr)
             if (!s) {
 				r = pwm_lin[r];
 				g = pwm_lin[g];
-				b = pwm_lin[b];   
+				b = pwm_lin[b];
 			}						// FIX ME! Here must be clone-specific PWM
 
             else
@@ -809,10 +810,10 @@ u32 render_ts(u32 tacts)
 
       comp.ts.tsu.layer = 0;  // start from layer 0
     }
-    
+
     comp.ts.tsu.prev_state = comp.ts.tsu.state; // save current state
     TSUTask[comp.ts.tsu.state].init_task();   // initialize task for current state
-    
+
     // process state if changed
     if (comp.ts.tsu.prev_state != comp.ts.tsu.state) {
       //return render_ts(tacts);
@@ -904,14 +905,13 @@ void tsinit(void)
 	invalidate_ts_cache();
 }
 
-void TSFrameINT(bool vdos)
+void ts_frame_int(bool vdos)
 {
-  // Frame INT
   if (!comp.ts.intctrl.frame_pend)
   {
     bool f1 = (cpu.t - comp.ts.intctrl.frame_t) < comp.ts.intctrl.frame_len; // INT signal in current frame
     bool f2 = (comp.ts.intctrl.frame_t + comp.ts.intctrl.frame_len) > conf.frame; // INT signal is transferred from the previous frame
-    bool new_frame = cpu.t < comp.ts.intctrl.last_cput; // is it new frame ?
+    bool new_frame = cpu.t < comp.ts.intctrl.last_cput; // is it new frame ? - !!! check this !!!
 
     if (f1 || (f2 && new_frame))
     {
@@ -928,6 +928,32 @@ void TSFrameINT(bool vdos)
     comp.ts.intctrl.frame_pend = false;
 
   comp.ts.intctrl.last_cput = cpu.t;
+}
+
+void ts_line_int(bool vdos)
+{
+  if (cpu.t >= comp.ts.intctrl.line_t)
+  {
+    comp.ts.intctrl.line_t += VID_TACTS;
+    bool pre_pend;
+
+    if (comp.ts.vdac2 && comp.ts.ft_en)
+      pre_pend = vdac2::process_line();
+    else
+      pre_pend = true;
+
+    if (!vdos)
+      comp.ts.intctrl.line_pend = pre_pend && comp.ts.intline; // !!! incorrect behaviour, pending flag must be processed after VDOS
+  }
+}
+
+void ts_dma_int(bool vdos)
+{
+  if (comp.ts.intctrl.new_dma)
+  {
+    comp.ts.intctrl.new_dma = false;
+    comp.ts.intctrl.dma_pend = comp.ts.intdma;   // !!! possibly incorrect behaviour (VDOS)
+  }
 }
 
 INT_PTR CALLBACK tsu_toggle_dlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
