@@ -8,25 +8,42 @@ BAT_MAX_SPEED   equ     15
 
                 org     $6000
                 jp      main
+
   include "ft_func.asm"
 
 main            ei
                 ld      hl, vm_800_600_60Hz
+                ; ld      hl, vm_1024_768_76Hz
                 call    ft_init
+
                 ft_wr16 FT_REG_SOUND,0x6100
                 ft_wr8  FT_REG_PLAY,1
                 ft_wr8  FT_REG_VOL_SOUND,0xff
 
+                ft_wr8  FT_REG_INT_MASK,FT_INT_SWAP
+                ft_wr8  FT_REG_INT_EN,1
+
                 call    load_displaylist
-                halt
 
                 ld      bc,VCONFIG
-                ld      a,0x34
+                ld      a,VID_FT812
+                out     (c),a
+                ld      bc,INTMASK
+                ld      a,INT_MSK_LINE
                 out     (c),a
 
 ;---------------
 
-loop            halt
+loop
+                ; --- for hardware interrupt
+                ; halt
+                ; ft_rd8  FT_REG_INT_FLAGS
+                ; ---
+                
+                ; --- for software interrupt polling
+                call wait_int
+                ; ---
+
                 ld      a,4
                 out     (0xfe),a
                 call    load_displaylist
@@ -534,7 +551,11 @@ ldl1            outi
                 ld a, FT_DLSWAP_FRAME
                 out (SPI_DATA), a
                 FT_OFF
+                ret
 
+wait_int        ft_rd8  FT_REG_INT_FLAGS
+                and FT_INT_SWAP
+                jr z, wait_int
                 ret
 
 ;--------------- displaylist data
