@@ -1,4 +1,8 @@
 
+  ; --- uncomment either
+  ; define BALL_RECT
+  define BALL_CIRCLE
+
   output "main.bin"
   include "tsconfig.asm"
 
@@ -559,6 +563,9 @@ wait_int        ft_rd8  FT_REG_INT_FLAGS
                 ret
 
 ;--------------- displaylist data
+  ifdef BALL_CIRCLE
+dl_ball2        FT_VERTEX2F 409 << 4, 309 << 4
+  endif
 
 dl1_start
                 FT_CLEAR_COLOR_RGB   0,  21,   0
@@ -584,11 +591,24 @@ dl_lscore       FT_VERTEX2II 300,  20, 31, '0'
                 FT_VERTEX2II 475,  20, 31, '0'
                 FT_END
 
-                FT_BEGIN FT_RECTS
+  ifdef BALL_CIRCLE
                 FT_COLOR_RGB 255, 255, 255
+                FT_BEGIN FT_POINTS
+                FT_POINT_SIZE 6 << 4
+dl_ball1        FT_VERTEX2F 405 << 4, 305 << 4
+                FT_END
+  endif
+                
+  ifdef BALL_RECT
+                FT_COLOR_RGB 255, 255, 255
+                FT_BEGIN FT_RECTS
 dl_ball1        FT_VERTEX2F 400 << 4, 300 << 4
 dl_ball2        FT_VERTEX2F 409 << 4, 309 << 4
+                FT_END
+  endif
+                
                 FT_COLOR_RGB   0, 255, 255
+                FT_BEGIN FT_RECTS
 dl_lbat1        FT_VERTEX2F 40 << 4, 260 << 4
 dl_lbat2        FT_VERTEX2F 49 << 4, 309 << 4
                 FT_COLOR_RGB 255, 255,   0
