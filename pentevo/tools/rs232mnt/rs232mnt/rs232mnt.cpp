@@ -131,7 +131,7 @@ int _tmain(int argc, _TCHAR* argv[])
   {
     if (trd[i])
     {
-      if (!(f = _wfopen(trd[i], L"r")))
+      if (!(f = _wfopen(trd[i], L"rb")))
       {
         wprintf(L"Can't open: %s\n", trd[i]);
         return 2;
