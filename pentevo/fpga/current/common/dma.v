@@ -119,7 +119,7 @@ module dma (
 `endif
 
   wire dev_req = dma_act && state_dev;
-  wire dev_stb = cram_we || sfile_we || ide_int_stb || (byte_sw_stb && bsel);
+  wire dev_stb = cram_we || sfile_we || ide_int_stb || (byte_sw_stb && bsel && dma_act);
 
 `ifdef FDR
   wire byte_sw_stb = spi_int_stb || fdr_int_stb;
