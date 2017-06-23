@@ -1,8 +1,5 @@
 
 #include "stdafx.h"
-#include "defs.h"
-#include "msg.h"
-#include "func.h"
 
 HDR hdr;
 BLK blk[256];
@@ -18,8 +15,7 @@ int _tmain(int argc, _TCHAR* argv[])
     case M_BLD:
       load_ini(conf.in_fname);
       load_files();
-      if (conf.packer != PM_NONE)
-        pack_blocks();
+      pack_blocks();
       save_spg(conf.out_fname);
     break;
 

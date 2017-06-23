@@ -1,3 +1,4 @@
+
 #pragma once
 
 typedef unsigned long long u64;
@@ -41,6 +42,7 @@ typedef signed char i8;
 #define F_MONTH month
 #define F_YEAR  year
 #define F_BLK   block
+#define F_CMP   compression
 
 enum C_MOD
 {
@@ -58,6 +60,14 @@ enum C_PACK
   PM_HST
 };
 
+static const char *pack_txt[] =
+{
+  "auto",
+  "none",
+  "mlz",
+  "hrust"
+};
+
 struct CONF
 {
   C_PACK packer;
@@ -65,6 +75,7 @@ struct CONF
   _TCHAR* in_fname;
   _TCHAR* out_fname;
   int n_blocks;
+  bool verbose;
 };
 
 #pragma pack(push)
@@ -119,5 +130,6 @@ struct BLK
   char fname[1024];
   int offset;
   int size;
+  C_PACK packer;
   u8 data[16384];
 };

@@ -1,5 +1,0 @@
-- Add HEX numbers
-- Change all file functions to _TCHAR (or wchar)
-- Add thorough error handlings
-
-- Add all paths relative to current (?)

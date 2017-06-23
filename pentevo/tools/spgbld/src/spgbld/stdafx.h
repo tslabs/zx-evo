@@ -1,7 +1,3 @@
-// stdafx.h : include file for standard system include files,
-// or project specific include files that are used frequently, but
-// are changed infrequently
-//
 
 #pragma once
 
@@ -15,3 +11,6 @@
 #include <time.h>
 #include <sys/stat.h>
 #include <process.h>
+#include "defs.h"
+#include "func.h"
+#include "msg.h"

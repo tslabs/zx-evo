@@ -1,16 +1,14 @@
+
 #include "stdafx.h"
-#include "defs.h"
-#include "func.h"
-#include "msg.h"
 
 extern HDR hdr;
 extern BLK blk[256];
 extern CONF conf;
 
-int parse_arg(int argc, _TCHAR* argv[], _TCHAR* arg, int n)
+int parse_arg(int argc, _TCHAR* argv[], _TCHAR* arg)
 {
-  for (int i=1; i<argc; i++)
-    if (!wcscmp(argv[i], arg) && (argc-1) >= (i+n))
+  for (int i = 1; i < argc; i++)
+    if (!wcscmp(argv[i], arg))
       return i + 1;
 
   return 0;
@@ -20,24 +18,27 @@ void parse_args(int argc, _TCHAR* argv[])
 {
   int i;
   conf.packer = PM_AUTO;
+  conf.verbose = false;
 
-  if (i = parse_arg(argc, argv, L"-b", 2))
+  if (i = parse_arg(argc, argv, L"-v"))
+    conf.verbose = true;
+
+  if (i = parse_arg(argc, argv, L"-b"))
   {
     conf.mode = M_BLD;
     conf.in_fname = argv[i];
     conf.out_fname = argv[i+1];
-    if (i = parse_arg(argc, argv, L"-c", 1))
+    if (i = parse_arg(argc, argv, L"-c"))
       conf.packer = (C_PACK)_wtoi(argv[i]);
     return;
   }
-
-  if (i = parse_arg(argc, argv, L"-u", 1))
+  else if (i = parse_arg(argc, argv, L"-u"))
   {
     conf.mode = M_UNP;
     conf.in_fname = argv[i];
     return;
   }
-
+  
   print_help();
   error(ARG);
 }
@@ -108,10 +109,11 @@ void load_ini(_TCHAR *name)
     fscanf(f, "%256[^ =\n\r\t]%*[ =]%256[^\n\r]%*c", t, v);
     if (!*t)
     {
-      fscanf(f, "%*c"); continue;
+      fscanf(f, "%*c");
+      continue;
     }
 
-    if (t[0] == ';')
+    else if (t[0] == ';')
       continue;
 
     strlwr(t);
@@ -121,54 +123,48 @@ void load_ini(_TCHAR *name)
     {
       strncpy(hdr.desc, v, 32);
       printf("Description:\t%s\n", v);
-      continue;
     }
 
     // stack address
-    if (!strcmp(t, STR(F_SP)))
+    else if (!strcmp(t, STR(F_SP)))
     {
       hdr.sp = (u16)num(v);
       printf("SP:\t\t#%04X\n", hdr.sp);
-      continue;
     }
 
     // resident address
-    if (!strcmp(t, STR(F_RES)))
+    else if (!strcmp(t, STR(F_RES)))
     {
       hdr.resid = (u16)num(v);
       printf("Resident at:\t#%04X\n", hdr.resid);
-      continue;
     }
 
     // pager address
-    if (!strcmp(t, STR(F_PAGER)))
+    else if (!strcmp(t, STR(F_PAGER)))
     {
       hdr.pager = (u16)num(v);
       if (hdr.pager)
         printf("Pager at:\t#%04X\n", hdr.pager);
       else
         printf("Pager:\t\tNot used\n");
-      continue;
     }
 
     // start address
-    if (!strcmp(t, STR(F_START)))
+    else if (!strcmp(t, STR(F_START)))
     {
       hdr.start = (u16)num(v);
       printf("Start:\t\t#%04X\n", hdr.start);
-      continue;
     }
 
     // page3
-    if (!strcmp(t, STR(F_PAGE3)))
+    else if (!strcmp(t, STR(F_PAGE3)))
     {
       hdr.page3 = (u8)num(v);
       printf("Page #C000:\t#%02X\n", hdr.page3);
-      continue;
     }
 
     // clock
-    if (!strcmp(t, STR(F_CLOCK)))
+    else if (!strcmp(t, STR(F_CLOCK)))
     {
       hdr.clk = (u8)num(v);
       printf("Clock:\t\t");
@@ -180,11 +176,10 @@ void load_ini(_TCHAR *name)
         case 3: { printf("14+"); break; }
       }
       printf(" MHz\n");
-      continue;
     }
 
     // INT
-    if (!strcmp(t, STR(F_INT)))
+    else if (!strcmp(t, STR(F_INT)))
     {
       hdr.ei = num(v);
       printf("Interrupts:\t");
@@ -192,11 +187,17 @@ void load_ini(_TCHAR *name)
         printf("EI\n");
       else
         printf("DI\n");
-      continue;
+    }
+
+    // compression
+    else if (!strcmp(t, STR(F_CMP)))
+    {
+      conf.packer = (C_PACK)num(v);
+      printf("Compression: \t%s\n", pack_txt[conf.packer + 1]);
     }
 
     // block
-    if (!strcmp(t, STR(F_BLK)))
+    else if (!strcmp(t, STR(F_BLK)))
     {
       int size;
       int offset = 0;
@@ -208,10 +209,7 @@ void load_ini(_TCHAR *name)
       if (a & 0x1FF)
         error(ALGN);
 
-      if ((a < 0xC000) || (a > 0xFE00))
-        error(ADDR);
-
-      a -= 0xC000;
+      a &= 0x3FFF;
 
       printf("Block:\t\tStart: #%04X  Page: #%02X  File: %s\n", a, b, v);
 
@@ -239,6 +237,7 @@ void load_ini(_TCHAR *name)
         hdr.blk[nblk].page = b++;
         blk[nblk].offset = offset;
         blk[nblk].size = curr_size;
+        blk[nblk].packer = conf.packer;
 
         a = 0;
         offset += curr_size;
@@ -247,13 +246,14 @@ void load_ini(_TCHAR *name)
         if (++nblk == 256)
           goto end_of_ini;
       }
-
-      continue;
     }
 
     // unknown tag
-    printf("%s: ", t);
-    error(UNK);
+    else
+    {
+      printf("%s: ", t);
+      error(UNK);
+    }
   }
 
 end_of_ini:
@@ -292,9 +292,10 @@ void pack_blocks()
   int s1, s2, sz1, sz2;
   C_PACK p;
 
-  for (int i=0; i<conf.n_blocks; i++)
+  for (int i = 0; i < conf.n_blocks; i++)
   {
     char f1n[16], f2n[16], f3n[16];
+    char cmdl[256];
     rand_name(f1n); rand_name(f2n); rand_name(f3n);
 
     // add errors check here!!!
@@ -305,15 +306,17 @@ void pack_blocks()
     s1 = s2 = 16384;
     sz1 = sz2 = 31;
 
-    if (conf.packer == PM_AUTO || conf.packer == PM_MLZ)
+    if ((blk[i].packer == PM_AUTO) || (blk[i].packer == PM_MLZ))
     {
-      if (_spawnlp(_P_WAIT, "mhmt.exe", "dummy", "-mlz", f1n, f2n, NULL) < 0) error(MHMT);
+      sprintf(cmdl, "mhmt.exe -mlz %s %s", f1n, f2n);
+      if (_spawnlp(_P_WAIT, "cmd.exe", "/c", cmdl, conf.verbose ? "" : ">nul", NULL) < 0) error(MHMT);
       stat(f2n, &st); s1 = st.st_size; sz1 = sz(st.st_size);
     }
 
-    if (conf.packer == PM_AUTO || conf.packer == PM_HST)
+    if ((blk[i].packer == PM_AUTO) || (blk[i].packer == PM_HST))
     {
-      if (_spawnlp(_P_WAIT, "mhmt.exe", "dummy", "-hst", f1n, f3n, NULL) < 0) error(MHMT);
+      sprintf(cmdl, "mhmt.exe -hst %s %s", f1n, f3n);
+      if (_spawnlp(_P_WAIT, "cmd.exe", "/c", cmdl, conf.verbose ? "" : ">nul", NULL) < 0) error(MHMT);
       stat(f3n, &st); s2 = st.st_size; sz2 = sz(st.st_size);
     }
 
@@ -367,7 +370,7 @@ void load_files()
   {
     FILE* f = fopen(blk[i].fname, "rb");
     if (!f) error(FNFD);
-    
+
     hdr.blk[i].size = sz(blk[i].size);
       fseek(f, blk[i].offset, SEEK_SET);
     fread(blk[i].data, 1, blk[i].size, f);
