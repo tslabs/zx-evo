@@ -1,0 +1,292 @@
+<SDCCLIB>
+
+<INDEX>
+       504
+<MODULE>
+func_c_0 11
+.__.ABS.
+_getkey
+</MODULE>
+
+<MODULE>
+func_c_1 666
+.__.ABS.
+_anykey_press
+</MODULE>
+
+<MODULE>
+func_c_2 1221
+.__.ABS.
+_anykey_release
+</MODULE>
+
+<MODULE>
+func_c_3 1778
+.__.ABS.
+_anykey
+</MODULE>
+
+<MODULE>
+func_c_4 2370
+.__.ABS.
+_putc
+</MODULE>
+
+<MODULE>
+func_c_5 2948
+.__.ABS.
+_putchar
+</MODULE>
+
+<MODULE>
+func_c_6 3512
+.__.ABS.
+_di
+</MODULE>
+
+<MODULE>
+func_c_7 4012
+.__.ABS.
+_ei
+</MODULE>
+
+</INDEX>
+
+<FILES>
+
+<FILE>
+func_c_0
+<REL>
+XL2
+H 9 areas 2 global symbols
+M func_c_0
+O -mz80
+S .__.ABS. Def0000
+A _CODE size 14 flags 0 addr 0
+S _getkey Def0000
+A _DATA size 0 flags 0 addr 0
+A _INITIALIZED size 0 flags 0 addr 0
+A _DABS size 0 flags 8 addr 0
+A _HOME size 0 flags 0 addr 0
+A _GSINIT size 0 flags 0 addr 0
+A _GSFINAL size 0 flags 0 addr 0
+A _INITIALIZER size 0 flags 0 addr 0
+A _CABS size 0 flags 8 addr 0
+T 00 00
+R 00 00 00 00
+T 00 00 01 FE FE 2E 00
+R 00 00 00 00
+T 05 00
+R 00 00 00 00
+T 05 00 ED 78 26 05
+R 00 00 00 00
+T 09 00
+R 00 00 00 00
+T 09 00 1F D0 2C 25 20 FA CB 00 38 F2 C9
+R 00 00 00 00
+</REL>
+<ADB>
+</ADB>
+</FILE>
+
+<FILE>
+func_c_1
+<REL>
+XL2
+H 9 areas 2 global symbols
+M func_c_1
+O -mz80
+S .__.ABS. Def0000
+A _CODE size 9 flags 0 addr 0
+S _anykey_press Def0000
+A _DATA size 0 flags 0 addr 0
+A _INITIALIZED size 0 flags 0 addr 0
+A _DABS size 0 flags 8 addr 0
+A _HOME size 0 flags 0 addr 0
+A _GSINIT size 0 flags 0 addr 0
+A _GSFINAL size 0 flags 0 addr 0
+A _INITIALIZER size 0 flags 0 addr 0
+A _CABS size 0 flags 8 addr 0
+T 00 00
+R 00 00 00 00
+T 00 00
+R 00 00 00 00
+T 00 00 AF DB FE 2F E6 1F 28 F8 C9
+R 00 00 00 00
+</REL>
+<ADB>
+</ADB>
+</FILE>
+
+<FILE>
+func_c_2
+<REL>
+XL2
+H 9 areas 2 global symbols
+M func_c_2
+O -mz80
+S .__.ABS. Def0000
+A _CODE size 9 flags 0 addr 0
+S _anykey_release Def0000
+A _DATA size 0 flags 0 addr 0
+A _INITIALIZED size 0 flags 0 addr 0
+A _DABS size 0 flags 8 addr 0
+A _HOME size 0 flags 0 addr 0
+A _GSINIT size 0 flags 0 addr 0
+A _GSFINAL size 0 flags 0 addr 0
+A _INITIALIZER size 0 flags 0 addr 0
+A _CABS size 0 flags 8 addr 0
+T 00 00
+R 00 00 00 00
+T 00 00
+R 00 00 00 00
+T 00 00 AF DB FE 2F E6 1F 20 F8 C9
+R 00 00 00 00
+</REL>
+<ADB>
+</ADB>
+</FILE>
+
+<FILE>
+func_c_3
+<REL>
+XL2
+H 9 areas 4 global symbols
+M func_c_3
+O -mz80
+S .__.ABS. Def0000
+S _anykey_release Ref0000
+S _anykey_press Ref0000
+A _CODE size 6 flags 0 addr 0
+S _anykey Def0000
+A _DATA size 0 flags 0 addr 0
+A _INITIALIZED size 0 flags 0 addr 0
+A _DABS size 0 flags 8 addr 0
+A _HOME size 0 flags 0 addr 0
+A _GSINIT size 0 flags 0 addr 0
+A _GSFINAL size 0 flags 0 addr 0
+A _INITIALIZER size 0 flags 0 addr 0
+A _CABS size 0 flags 8 addr 0
+T 00 00
+R 00 00 00 00
+T 00 00 CD 00 00 C3 00 00
+R 00 00 00 00 02 03 01 00 02 06 02 00
+</REL>
+<ADB>
+</ADB>
+</FILE>
+
+<FILE>
+func_c_4
+<REL>
+XL2
+H 9 areas 2 global symbols
+M func_c_4
+O -mz80
+S .__.ABS. Def0000
+A _CODE size 13 flags 0 addr 0
+S _putc Def0000
+A _DATA size 0 flags 0 addr 0
+A _INITIALIZED size 0 flags 0 addr 0
+A _DABS size 0 flags 8 addr 0
+A _HOME size 0 flags 0 addr 0
+A _GSINIT size 0 flags 0 addr 0
+A _GSFINAL size 0 flags 0 addr 0
+A _INITIALIZER size 0 flags 0 addr 0
+A _CABS size 0 flags 8 addr 0
+T 00 00
+R 00 00 00 00
+T 00 00 FD 21 02 00 FD 39 FD 7E 00 D6 0D C8 FD 7E
+R 00 00 00 00
+T 0E 00 00 D6 0A C0 C9
+R 00 00 00 00
+</REL>
+<ADB>
+</ADB>
+</FILE>
+
+<FILE>
+func_c_5
+<REL>
+XL2
+H 9 areas 3 global symbols
+M func_c_5
+O -mz80
+S _putc Ref0000
+S .__.ABS. Def0000
+A _CODE size C flags 0 addr 0
+S _putchar Def0000
+A _DATA size 0 flags 0 addr 0
+A _INITIALIZED size 0 flags 0 addr 0
+A _DABS size 0 flags 8 addr 0
+A _HOME size 0 flags 0 addr 0
+A _GSINIT size 0 flags 0 addr 0
+A _GSFINAL size 0 flags 0 addr 0
+A _INITIALIZER size 0 flags 0 addr 0
+A _CABS size 0 flags 8 addr 0
+T 00 00
+R 00 00 00 00
+T 00 00 21 02 00 39 7E F5 33 CD 00 00 33 C9
+R 00 00 00 00 02 0A 00 00
+</REL>
+<ADB>
+</ADB>
+</FILE>
+
+<FILE>
+func_c_6
+<REL>
+XL2
+H 9 areas 2 global symbols
+M func_c_6
+O -mz80
+S .__.ABS. Def0000
+A _CODE size 2 flags 0 addr 0
+S _di Def0000
+A _DATA size 0 flags 0 addr 0
+A _INITIALIZED size 0 flags 0 addr 0
+A _DABS size 0 flags 8 addr 0
+A _HOME size 0 flags 0 addr 0
+A _GSINIT size 0 flags 0 addr 0
+A _GSFINAL size 0 flags 0 addr 0
+A _INITIALIZER size 0 flags 0 addr 0
+A _CABS size 0 flags 8 addr 0
+T 00 00
+R 00 00 00 00
+T 00 00 F3 C9
+R 00 00 00 00
+</REL>
+<ADB>
+</ADB>
+</FILE>
+
+<FILE>
+func_c_7
+<REL>
+XL2
+H 9 areas 2 global symbols
+M func_c_7
+O -mz80
+S .__.ABS. Def0000
+A _CODE size 2 flags 0 addr 0
+S _ei Def0000
+A _DATA size 0 flags 0 addr 0
+A _INITIALIZED size 0 flags 0 addr 0
+A _DABS size 0 flags 8 addr 0
+A _HOME size 0 flags 0 addr 0
+A _GSINIT size 0 flags 0 addr 0
+A _GSFINAL size 0 flags 0 addr 0
+A _INITIALIZER size 0 flags 0 addr 0
+A _CABS size 0 flags 8 addr 0
+T 00 00
+R 00 00 00 00
+T 00 00 FB C9
+R 00 00 00 00
+</REL>
+<ADB>
+</ADB>
+</FILE>
+
+</FILES>
+
+</SDCCLIB>

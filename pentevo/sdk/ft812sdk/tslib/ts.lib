@@ -1,0 +1,44 @@
+<SDCCLIB>
+
+<INDEX>
+       104
+<MODULE>
+tsfunc_c_0 11
+.__.ABS.
+_ts_wreg
+</MODULE>
+
+</INDEX>
+
+<FILES>
+
+<FILE>
+tsfunc_c_0
+<REL>
+XL2
+H 9 areas 2 global symbols
+M tsfunc_c_0
+O -mz80
+S .__.ABS. Def0000
+A _CODE size C flags 0 addr 0
+S _ts_wreg Def0000
+A _DATA size 0 flags 0 addr 0
+A _INITIALIZED size 0 flags 0 addr 0
+A _DABS size 0 flags 8 addr 0
+A _HOME size 0 flags 0 addr 0
+A _GSINIT size 0 flags 0 addr 0
+A _GSFINAL size 0 flags 0 addr 0
+A _INITIALIZER size 0 flags 0 addr 0
+A _CABS size 0 flags 8 addr 0
+T 00 00
+R 00 00 00 00
+T 00 00 21 02 00 39 46 23 0E AF 7E ED 79 C9
+R 00 00 00 00
+</REL>
+<ADB>
+</ADB>
+</FILE>
+
+</FILES>
+
+</SDCCLIB>
