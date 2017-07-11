@@ -321,103 +321,103 @@ _ft_modes
 </MODULE>
 
 <MODULE>
-ft812func_c_1 40493
+ft812func_c_1 40751
 .__.ABS.
 _ft_cmdp
 </MODULE>
 
 <MODULE>
-ft812func_c_2 41096
+ft812func_c_2 41354
 .__.ABS.
 _ft_cmd
 </MODULE>
 
 <MODULE>
-ft812func_c_3 41705
+ft812func_c_3 41963
 .__.ABS.
 _ft_wr8
 </MODULE>
 
 <MODULE>
-ft812func_c_4 42352
+ft812func_c_4 42610
 .__.ABS.
 _ft_wr16
 </MODULE>
 
 <MODULE>
-ft812func_c_5 43012
+ft812func_c_5 43270
 .__.ABS.
 _ft_rd8
 </MODULE>
 
 <MODULE>
-ft812func_c_6 43671
+ft812func_c_6 43929
 .__.ABS.
 _ft_rd16
 </MODULE>
 
 <MODULE>
-ft812func_c_7 44340
+ft812func_c_7 44598
 .__.ABS.
 _ft_delay
 </MODULE>
 
 <MODULE>
-ft812func_c_8 44925
+ft812func_c_8 45183
 .__.ABS.
 _ft_init
 </MODULE>
 
 <MODULE>
-ft812func_c_9 48598
+ft812func_c_9 48856
 .__.ABS.
 _ft_start_write
 </MODULE>
 
 <MODULE>
-ft812func_c_10 49214
+ft812func_c_10 49472
 .__.ABS.
 _ft_finish_write
 </MODULE>
 
 <MODULE>
-ft812func_c_11 49932
+ft812func_c_11 50190
 .__.ABS.
 _ft_write
 </MODULE>
 
 <MODULE>
-ft812func_c_12 50737
+ft812func_c_12 50995
 .__.ABS.
 _ft_write_dl
 </MODULE>
 
 <MODULE>
-ft812func_c_13 51485
+ft812func_c_13 51743
 .__.ABS.
 _ft_swap
 </MODULE>
 
 <MODULE>
-ft812func_c_14 52069
+ft812func_c_14 52327
 .__.ABS.
 _ft_wait_int
 </MODULE>
 
 <MODULE>
-ft812math_c_0 52678
+ft812math_c_0 52936
 .__.ABS.
 _sintab
 </MODULE>
 
 <MODULE>
-ft812math_c_1 55594
+ft812math_c_1 55852
 .__.ABS.
 _rsin
 </MODULE>
 
 <MODULE>
-ft812math_c_2 57047
+ft812math_c_2 57305
 .__.ABS.
 _rcos
 </MODULE>
@@ -2220,7 +2220,7 @@ H 9 areas 2 global symbols
 M ft812func_c_0
 O -mz80
 S .__.ABS. Def0000
-A _CODE size B4 flags 0 addr 0
+A _CODE size EA flags 0 addr 0
 S _ft_modes Def0000
 A _DATA size 0 flags 0 addr 0
 A _INITIALIZED size 0 flags 0 addr 0
@@ -2256,7 +2256,15 @@ T 8C 00 1D 00 00 03 09 01 18 00 88 00 90 00 00 04
 R 00 00 00 00
 T 9A 00 03 00 06 00 1D 00 00 03 0A 01 10 00 60 00
 R 00 00 00 00
-T A8 00 B0 00 00 04 01 00 03 00 1C 00 00 03
+T A8 00 B0 00 00 04 01 00 03 00 1C 00 00 03 07 01
+R 00 00 00 00
+T B6 00 18 00 38 00 7C 00 80 02 01 00 03 00 26 00
+R 00 00 00 00
+T C4 00 00 04 09 01 6E 00 28 00 DC 00 00 05 05 00
+R 00 00 00 00
+T D2 00 05 00 14 00 D0 02 09 01 5D 00 28 00 BB 00
+R 00 00 00 00
+T E0 00 00 05 05 00 05 00 14 00 D0 02
 R 00 00 00 00
 </REL>
 <ADB>

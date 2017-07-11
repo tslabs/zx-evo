@@ -4,16 +4,16 @@
 // Types
 typedef struct
 {
-  u8 f_mul;
-  u8 f_div;
-  u16 h_fporch;
-  u16 h_sync;
-  u16 h_bporch;
-  u16 h_visible;
-  u16 v_fporch;
-  u16 v_sync;
-  u16 v_bporch;
-  u16 v_visible;
+  u8 f_mul;       // PLL multiplier
+  u8 f_div;       // Pixel Clock divisor
+  u16 h_fporch;   // Horizontal front porch size
+  u16 h_sync;     // Horizontal sync size
+  u16 h_bporch;   // Horizontal back porch size
+  u16 h_visible;  // Horizontal visible area size
+  u16 v_fporch;   // Vertical front porch size
+  u16 v_sync;     // Vertical sync size
+  u16 v_bporch;   // Vertical back porch size
+  u16 v_visible;  // Vertical visible area size
 } FT_MODE;
 
 enum  // const FT_MODE ft_modes[] in ft812func.c
@@ -28,6 +28,9 @@ enum  // const FT_MODE ft_modes[] in ft812func.c
   FT_MODE_7,
   FT_MODE_8,
   FT_MODE_9,
+  FT_MODE_10,
+  FT_MODE_11,
+  FT_MODE_12,
 };
 
 // SPI

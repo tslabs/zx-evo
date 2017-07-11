@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <defs.h>
-#include <gamelib.h>
+#include <sdklib.h>
 #include <ft812.h>
 #include <ft812lib.h>
 #include <ts.h>

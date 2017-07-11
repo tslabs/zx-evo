@@ -1,6 +1,6 @@
 
 #include "defs.h"
-#include "gamelib.h"
+#include "sdklib.h"
 
 // Key functions
 u8 getkey() __naked

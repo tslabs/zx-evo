@@ -1,11 +1,47 @@
 <SDCCLIB>
 
 <INDEX>
-       104
+       515
 <MODULE>
 tsfunc_c_0 11
 .__.ABS.
 _ts_wreg
+</MODULE>
+
+<MODULE>
+tsfunc_c_1 550
+.__.ABS.
+_ts_set_dma_saddr
+</MODULE>
+
+<MODULE>
+tsfunc_c_2 1617
+.__.ABS.
+_ts_set_dma_daddr
+</MODULE>
+
+<MODULE>
+tsfunc_c_3 2684
+.__.ABS.
+_ts_set_dma_saddr_p
+</MODULE>
+
+<MODULE>
+tsfunc_c_4 3462
+.__.ABS.
+_ts_set_dma_daddr_p
+</MODULE>
+
+<MODULE>
+tsfunc_c_5 4240
+.__.ABS.
+_ts_set_dma_size
+</MODULE>
+
+<MODULE>
+tsfunc_c_6 4955
+.__.ABS.
+_ts_dma_wait
 </MODULE>
 
 </INDEX>
@@ -34,6 +70,229 @@ T 00 00
 R 00 00 00 00
 T 00 00 21 02 00 39 46 23 0E AF 7E ED 79 C9
 R 00 00 00 00
+</REL>
+<ADB>
+</ADB>
+</FILE>
+
+<FILE>
+tsfunc_c_1
+<REL>
+XL2
+H 9 areas 3 global symbols
+M tsfunc_c_1
+O -mz80
+S _ts_wreg Ref0000
+S .__.ABS. Def0000
+A _CODE size 5E flags 0 addr 0
+S _ts_set_dma_saddr Def0000
+A _DATA size 0 flags 0 addr 0
+A _INITIALIZED size 0 flags 0 addr 0
+A _DABS size 0 flags 8 addr 0
+A _HOME size 0 flags 0 addr 0
+A _GSINIT size 0 flags 0 addr 0
+A _GSFINAL size 0 flags 0 addr 0
+A _INITIALIZER size 0 flags 0 addr 0
+A _CABS size 0 flags 8 addr 0
+T 00 00
+R 00 00 00 00
+T 00 00 21 02 00 39 46 C5 33 3E 1A F5 33 CD 00 00
+R 00 00 00 00 02 0E 00 00
+T 0E 00 F1 F5 FD 21 04 00 FD 39 FD 56 00 FD 4E 01
+R 00 00 00 00
+T 1C 00 FD 5E 02 FD 6E 03 F1 06 08
+R 00 00 00 00
+T 25 00
+R 00 00 00 00
+T 25 00 CB 3D CB 1B CB 19 CB 1A 10 F6 1E 1B D5 CD
+R 00 00 00 00
+T 33 00 00 00 F1 F5 FD 21 04 00 FD 39 FD 56 00 FD
+R 00 00 00 00 02 02 00 00
+T 41 00 4E 01 FD 5E 02 FD 6E 03 F1 06 0E
+R 00 00 00 00
+T 4C 00
+R 00 00 00 00
+T 4C 00 CB 3D CB 1B CB 19 CB 1A 10 F6 1E 1C D5 CD
+R 00 00 00 00
+T 5A 00 00 00 F1 C9
+R 00 00 00 00 02 02 00 00
+</REL>
+<ADB>
+</ADB>
+</FILE>
+
+<FILE>
+tsfunc_c_2
+<REL>
+XL2
+H 9 areas 3 global symbols
+M tsfunc_c_2
+O -mz80
+S _ts_wreg Ref0000
+S .__.ABS. Def0000
+A _CODE size 5E flags 0 addr 0
+S _ts_set_dma_daddr Def0000
+A _DATA size 0 flags 0 addr 0
+A _INITIALIZED size 0 flags 0 addr 0
+A _DABS size 0 flags 8 addr 0
+A _HOME size 0 flags 0 addr 0
+A _GSINIT size 0 flags 0 addr 0
+A _GSFINAL size 0 flags 0 addr 0
+A _INITIALIZER size 0 flags 0 addr 0
+A _CABS size 0 flags 8 addr 0
+T 00 00
+R 00 00 00 00
+T 00 00 21 02 00 39 46 C5 33 3E 1D F5 33 CD 00 00
+R 00 00 00 00 02 0E 00 00
+T 0E 00 F1 F5 FD 21 04 00 FD 39 FD 56 00 FD 4E 01
+R 00 00 00 00
+T 1C 00 FD 5E 02 FD 6E 03 F1 06 08
+R 00 00 00 00
+T 25 00
+R 00 00 00 00
+T 25 00 CB 3D CB 1B CB 19 CB 1A 10 F6 1E 1E D5 CD
+R 00 00 00 00
+T 33 00 00 00 F1 F5 FD 21 04 00 FD 39 FD 56 00 FD
+R 00 00 00 00 02 02 00 00
+T 41 00 4E 01 FD 5E 02 FD 6E 03 F1 06 0E
+R 00 00 00 00
+T 4C 00
+R 00 00 00 00
+T 4C 00 CB 3D CB 1B CB 19 CB 1A 10 F6 1E 1F D5 CD
+R 00 00 00 00
+T 5A 00 00 00 F1 C9
+R 00 00 00 00 02 02 00 00
+</REL>
+<ADB>
+</ADB>
+</FILE>
+
+<FILE>
+tsfunc_c_3
+<REL>
+XL2
+H 9 areas 3 global symbols
+M tsfunc_c_3
+O -mz80
+S _ts_wreg Ref0000
+S .__.ABS. Def0000
+A _CODE size 2D flags 0 addr 0
+S _ts_set_dma_saddr_p Def0000
+A _DATA size 0 flags 0 addr 0
+A _INITIALIZED size 0 flags 0 addr 0
+A _DABS size 0 flags 8 addr 0
+A _HOME size 0 flags 0 addr 0
+A _GSINIT size 0 flags 0 addr 0
+A _GSFINAL size 0 flags 0 addr 0
+A _INITIALIZER size 0 flags 0 addr 0
+A _CABS size 0 flags 8 addr 0
+T 00 00
+R 00 00 00 00
+T 00 00 21 02 00 39 46 C5 33 3E 1A F5 33 CD 00 00
+R 00 00 00 00 02 0E 00 00
+T 0E 00 F1 21 03 00 39 46 0E 00 C5 33 3E 1B F5 33
+R 00 00 00 00
+T 1C 00 CD 00 00 F1 21 04 00 39 56 1E 1C D5 CD
+R 00 00 00 00 02 03 00 00
+T 29 00 00 00 F1 C9
+R 00 00 00 00 02 02 00 00
+</REL>
+<ADB>
+</ADB>
+</FILE>
+
+<FILE>
+tsfunc_c_4
+<REL>
+XL2
+H 9 areas 3 global symbols
+M tsfunc_c_4
+O -mz80
+S _ts_wreg Ref0000
+S .__.ABS. Def0000
+A _CODE size 2D flags 0 addr 0
+S _ts_set_dma_daddr_p Def0000
+A _DATA size 0 flags 0 addr 0
+A _INITIALIZED size 0 flags 0 addr 0
+A _DABS size 0 flags 8 addr 0
+A _HOME size 0 flags 0 addr 0
+A _GSINIT size 0 flags 0 addr 0
+A _GSFINAL size 0 flags 0 addr 0
+A _INITIALIZER size 0 flags 0 addr 0
+A _CABS size 0 flags 8 addr 0
+T 00 00
+R 00 00 00 00
+T 00 00 21 02 00 39 46 C5 33 3E 1D F5 33 CD 00 00
+R 00 00 00 00 02 0E 00 00
+T 0E 00 F1 21 03 00 39 46 0E 00 C5 33 3E 1E F5 33
+R 00 00 00 00
+T 1C 00 CD 00 00 F1 21 04 00 39 56 1E 1F D5 CD
+R 00 00 00 00 02 03 00 00
+T 29 00 00 00 F1 C9
+R 00 00 00 00 02 02 00 00
+</REL>
+<ADB>
+</ADB>
+</FILE>
+
+<FILE>
+tsfunc_c_5
+<REL>
+XL2
+H 9 areas 3 global symbols
+M tsfunc_c_5
+O -mz80
+S _ts_wreg Ref0000
+S .__.ABS. Def0000
+A _CODE size 25 flags 0 addr 0
+S _ts_set_dma_size Def0000
+A _DATA size 0 flags 0 addr 0
+A _INITIALIZED size 0 flags 0 addr 0
+A _DABS size 0 flags 8 addr 0
+A _HOME size 0 flags 0 addr 0
+A _GSINIT size 0 flags 0 addr 0
+A _GSFINAL size 0 flags 0 addr 0
+A _INITIALIZER size 0 flags 0 addr 0
+A _CABS size 0 flags 8 addr 0
+T 00 00
+R 00 00 00 00
+T 00 00 D1 C1 C5 D5 CB 38 CB 19 41 05 C5 33 3E 26
+R 00 00 00 00
+T 0E 00 F5 33 CD 00 00 F1 21 04 00 39 46 05 C5 33
+R 00 00 00 00 02 05 00 00
+T 1C 00 3E 28 F5 33 CD 00 00 F1 C9
+R 00 00 00 00 02 07 00 00
+</REL>
+<ADB>
+</ADB>
+</FILE>
+
+<FILE>
+tsfunc_c_6
+<REL>
+XL2
+H 9 areas 2 global symbols
+M tsfunc_c_6
+O -mz80
+S .__.ABS. Def0000
+A _CODE size A flags 0 addr 0
+S _ts_dma_wait Def0000
+A _DATA size 0 flags 0 addr 0
+A _INITIALIZED size 0 flags 0 addr 0
+A _DABS size 0 flags 8 addr 0
+A _HOME size 0 flags 0 addr 0
+A _GSINIT size 0 flags 0 addr 0
+A _GSFINAL size 0 flags 0 addr 0
+A _INITIALIZER size 0 flags 0 addr 0
+A _CABS size 0 flags 8 addr 0
+T 00 00
+R 00 00 00 00
+T 00 00 06 27 0E AF
+R 00 00 00 00
+T 04 00
+R 00 00 00 00
+T 04 00 ED 70 FA 04 00 C9
+R 00 00 00 00 00 05 00 00
 </REL>
 <ADB>
 </ADB>
