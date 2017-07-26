@@ -766,6 +766,8 @@ set1FFD:
       // FFFD - PSG address
       if ((port & 0xC0FF) == 0xC0FD)
       {
+         // printf("Reg: %d\n", val);
+
          // switch active PSG via NedoPC scheme
          switch (conf.sound.ay_scheme)
          {
@@ -780,12 +782,12 @@ set1FFD:
                comp.active_ay = val & 1;
              };
            break;
-           
+
            case AY_SCHEME_AYX32:
              if ((val & 0xF8) == 0xF8)
                comp.active_ay = ~val & 1;
            break;
-         
+
            case AY_SCHEME_QUADRO:
              comp.active_ay = (port >> 12) & 1;
            break;
@@ -802,17 +804,19 @@ set1FFD:
       // BFFD - PSG data
       if (((port & 0xC000) == 0x8000) && conf.sound.ay_scheme)
       {
+         // printf("Write: %d\n", val);
+
          u8 n_ay;
          switch (conf.sound.ay_scheme)
          {
            case AY_SCHEME_QUADRO:
              n_ay = (port >> 12) & 1;
            break;
-           
+
            default:
              n_ay = comp.active_ay;
          }
-         
+
          if ((conf.sound.ay_scheme == AY_SCHEME_AYX32) && (ayx32.reg >= 16))
            ayx32.write(temp.sndblock ? 0 : cpu.t, val);
          else
@@ -989,7 +993,7 @@ __inline u8 in1(unsigned port)
 
       case TSR_STATUS:
       {
-        tmp = comp.ts.pwr_up | comp.ts.vdac;
+        tmp = comp.ts.pwr_up | (comp.ts.vdac2 ? TS_VDAC2 : comp.ts.vdac);
         comp.ts.pwr_up = TS_PWRUP_OFF;
         return tmp;
       }
@@ -1344,7 +1348,7 @@ __inline u8 in1(unsigned port)
         n_ay = (port >> 12) & 1;
       else
         n_ay = comp.active_ay;
-        
+
       // read selected AY register
       if (conf.input.mouse == 2 && (ay[n_ay].get_activereg() == 14))
       {
@@ -1357,7 +1361,8 @@ __inline u8 in1(unsigned port)
         rc = ayx32.read();
       else
         rc = ay[n_ay].read();
-      
+
+      // printf("Read: %d\n", rc);
       return rc;
    }
 
