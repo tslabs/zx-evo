@@ -592,7 +592,8 @@ File Operations:
   ¦i:IX - Active panel!!!
   ¦  HL - File number (1-2047)
   ¦  DE - Address [#8000-#BFFF!]
-  ¦       (if HL=0; o:BC - count of marked files)
+  ¦       (if HL=0; o:BC - count of marked files,
+  ¦                   NZ - marked files founded)
   ¦  
   ¦o:NZ - File not found or other error
   ¦   Z - File name received ("name.ext",0)
@@ -730,16 +731,17 @@ File Operations:
   ¦    Z - File/DIR Not Found
   ¦   NZ - File/DIR Deleted
 --+---------------------------------------------------
+Flag:
+#00 - file
+#10 - DIR
+
 FAT engine error codes:
 1 - long name is not valid (mkfile, mkdir, rename, delete)
 2 - short name index fatality (mkfile, mkdir, rename)
 3 - long name already exists  (mkfile, mkdir, rename)
 4 - short name already exists (mkfile, mkdir, rename)
-
 8 - source file/dir not found (rename, delete)
-
 16 - not enough space (dir expanding, mkdir, mkfile)
-
 255 - unknown error (\o/)
 
 
