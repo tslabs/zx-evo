@@ -19,6 +19,19 @@ void ts_wreg(u8 a, u8 v) __naked
   __endasm;
 }
 
+u8 ts_rreg(u8 a) __naked
+{
+  a;  // to avoid SDCC warning
+  __asm
+    ld hl, #2
+    add hl, sp
+    ld b, (hl)
+    ld c, #0xAF
+    in l, (c)
+    ret
+  __endasm;
+}
+
 void ts_set_dma_saddr(u32 a)
 {
   ts_wreg(TS_DMASADDRL, (u8)a);

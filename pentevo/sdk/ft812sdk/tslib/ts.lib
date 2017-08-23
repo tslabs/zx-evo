@@ -1,7 +1,7 @@
 <SDCCLIB>
 
 <INDEX>
-       515
+       575
 <MODULE>
 tsfunc_c_0 11
 .__.ABS.
@@ -11,35 +11,41 @@ _ts_wreg
 <MODULE>
 tsfunc_c_1 550
 .__.ABS.
+_ts_rreg
+</MODULE>
+
+<MODULE>
+tsfunc_c_2 1083
+.__.ABS.
 _ts_set_dma_saddr
 </MODULE>
 
 <MODULE>
-tsfunc_c_2 1617
+tsfunc_c_3 2150
 .__.ABS.
 _ts_set_dma_daddr
 </MODULE>
 
 <MODULE>
-tsfunc_c_3 2684
+tsfunc_c_4 3217
 .__.ABS.
 _ts_set_dma_saddr_p
 </MODULE>
 
 <MODULE>
-tsfunc_c_4 3462
+tsfunc_c_5 3995
 .__.ABS.
 _ts_set_dma_daddr_p
 </MODULE>
 
 <MODULE>
-tsfunc_c_5 4240
+tsfunc_c_6 4773
 .__.ABS.
 _ts_set_dma_size
 </MODULE>
 
 <MODULE>
-tsfunc_c_6 4955
+tsfunc_c_7 5488
 .__.ABS.
 _ts_dma_wait
 </MODULE>
@@ -79,8 +85,35 @@ R 00 00 00 00
 tsfunc_c_1
 <REL>
 XL2
-H 9 areas 3 global symbols
+H 9 areas 2 global symbols
 M tsfunc_c_1
+O -mz80
+S .__.ABS. Def0000
+A _CODE size A flags 0 addr 0
+S _ts_rreg Def0000
+A _DATA size 0 flags 0 addr 0
+A _INITIALIZED size 0 flags 0 addr 0
+A _DABS size 0 flags 8 addr 0
+A _HOME size 0 flags 0 addr 0
+A _GSINIT size 0 flags 0 addr 0
+A _GSFINAL size 0 flags 0 addr 0
+A _INITIALIZER size 0 flags 0 addr 0
+A _CABS size 0 flags 8 addr 0
+T 00 00
+R 00 00 00 00
+T 00 00 21 02 00 39 46 0E AF ED 68 C9
+R 00 00 00 00
+</REL>
+<ADB>
+</ADB>
+</FILE>
+
+<FILE>
+tsfunc_c_2
+<REL>
+XL2
+H 9 areas 3 global symbols
+M tsfunc_c_2
 O -mz80
 S _ts_wreg Ref0000
 S .__.ABS. Def0000
@@ -122,11 +155,11 @@ R 00 00 00 00 02 02 00 00
 </FILE>
 
 <FILE>
-tsfunc_c_2
+tsfunc_c_3
 <REL>
 XL2
 H 9 areas 3 global symbols
-M tsfunc_c_2
+M tsfunc_c_3
 O -mz80
 S _ts_wreg Ref0000
 S .__.ABS. Def0000
@@ -168,11 +201,11 @@ R 00 00 00 00 02 02 00 00
 </FILE>
 
 <FILE>
-tsfunc_c_3
+tsfunc_c_4
 <REL>
 XL2
 H 9 areas 3 global symbols
-M tsfunc_c_3
+M tsfunc_c_4
 O -mz80
 S _ts_wreg Ref0000
 S .__.ABS. Def0000
@@ -202,11 +235,11 @@ R 00 00 00 00 02 02 00 00
 </FILE>
 
 <FILE>
-tsfunc_c_4
+tsfunc_c_5
 <REL>
 XL2
 H 9 areas 3 global symbols
-M tsfunc_c_4
+M tsfunc_c_5
 O -mz80
 S _ts_wreg Ref0000
 S .__.ABS. Def0000
@@ -236,11 +269,11 @@ R 00 00 00 00 02 02 00 00
 </FILE>
 
 <FILE>
-tsfunc_c_5
+tsfunc_c_6
 <REL>
 XL2
 H 9 areas 3 global symbols
-M tsfunc_c_5
+M tsfunc_c_6
 O -mz80
 S _ts_wreg Ref0000
 S .__.ABS. Def0000
@@ -268,11 +301,11 @@ R 00 00 00 00 02 07 00 00
 </FILE>
 
 <FILE>
-tsfunc_c_6
+tsfunc_c_7
 <REL>
 XL2
 H 9 areas 2 global symbols
-M tsfunc_c_6
+M tsfunc_c_7
 O -mz80
 S .__.ABS. Def0000
 A _CODE size A flags 0 addr 0

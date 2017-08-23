@@ -178,42 +178,18 @@ u16 ft_rd16(u16 a) __naked
   __endasm;
 }
 
-void ft_delay(u8 a) __naked
-{
-  a;  // to avoid SDCC warning
-  __asm
-    ld hl, #2
-    add hl, sp
-    ld b, (hl)
-c1: halt
-    djnz c1
-    ret
-  __endasm;
-}
-
 void ft_init(u8 m)
 {
   const FT_MODE *mode = &ft_modes[m];
 
+  // power up FT812
   ft_cmd(FT_CMD_RST_PULSE);
-  ft_delay(18);
   ft_cmd(FT_CMD_CLKEXT);
-  ft_delay(6);
-  ft_cmd(FT_CMD_SLEEP);
-  ft_delay(6);
-
   ft_cmdp(FT_CMD_CLKSEL, mode->f_mul | 0xC0);
-
   ft_cmd(FT_CMD_ACTIVE);
-  ft_cmd(FT_CMD_ACTIVE);
-  ft_delay(6);
-
-  ft_wr8(FT_REG_PCLK, mode->f_div);
-  ft_wr8(FT_REG_PCLK_POL, 0);
-  ft_wr8(FT_REG_CSPREAD, 0);
-  ft_wr8(FT_REG_INT_MASK, FT_INT_SWAP);
-  ft_wr8(FT_REG_INT_EN, 1);
-
+  while (ft_rd8(FT_REG_ID) != FT_ID);
+  
+  // set up video mode
   ft_wr16(FT_REG_HSYNC0 , mode->h_fporch);
   ft_wr16(FT_REG_HSYNC1 , mode->h_fporch + mode->h_sync);
   ft_wr16(FT_REG_HOFFSET, mode->h_fporch + mode->h_sync + mode->h_bporch);
@@ -224,6 +200,13 @@ void ft_init(u8 m)
   ft_wr16(FT_REG_VOFFSET, mode->v_fporch + mode->v_sync + mode->v_bporch - 1);
   ft_wr16(FT_REG_VCYCLE , mode->v_fporch + mode->v_sync + mode->v_bporch + mode->v_visible);
   ft_wr16(FT_REG_VSIZE  , mode->v_visible);
+
+  // set up clock and interrupts
+  ft_wr8(FT_REG_PCLK, mode->f_div);
+  ft_wr8(FT_REG_PCLK_POL, 0);
+  ft_wr8(FT_REG_CSPREAD, 0);
+  ft_wr8(FT_REG_INT_MASK, FT_INT_SWAP);
+  ft_wr8(FT_REG_INT_EN, 1);
 }
 
 void ft_start_write(u32 a)

@@ -9,7 +9,7 @@ sdasz80 -o obj/crt0.rel ../sdklib/crt0.s
 if errorlevel 1 pause & exit
 
 xcopy /b /y obj\crt0.rel %SDCC%\lib\z80\ >nul
-sdcc -I ../sdklib -I ../ft812lib -I ../tslib -mz80 --std-sdcc11 --opt-code-speed -Wl-b_CODE=0x0040 -Wl-b_DATA=0xB000 src/main.c ../ft812lib/ft812.lib ../tslib/ts.lib ../sdklib/sdk.lib -o obj/out.hex
+sdcc -Isrc -I../sdklib -I../ft812lib -I../tslib -mz80 --std-sdcc11 --opt-code-speed -Wl-b_CODE=0x0040 -Wl-b_DATA=0xB000 src/main.c ../ft812lib/ft812.lib ../tslib/ts.lib ../sdklib/sdk.lib -o obj/out.hex
 if errorlevel 1 pause & exit
 if exist obj/out.hex hex2bin obj/out.hex >nul
 

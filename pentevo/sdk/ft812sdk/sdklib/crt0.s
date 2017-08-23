@@ -30,7 +30,6 @@
   ; run main()
   ld sp, #0xC000
   im 1
-  ei
   jp _main
 
 	.org	0x38

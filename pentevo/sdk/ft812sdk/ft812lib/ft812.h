@@ -60,6 +60,9 @@ enum  // const FT_MODE ft_modes[] in ft812func.c
 #define FT_CMD_CLKSEL      0x61   // cc xx 00 -> [5:0] - mul, [7:6] - PLL range (0 for mul=0..3, 1 for mul=4..5)
 #define FT_CMD_RST_PULSE   0x68   // cc 00 00
 
+// ID
+#define FT_ID   0x7C
+
 // Registers
 #define FT_REG_ID                 0x302000
 #define FT_REG_FRAMES             0x302004
@@ -162,16 +165,6 @@ enum  // const FT_MODE ft_modes[] in ft812func.c
 #define FT_REG_MEDIAFIFO_READ     0x309014
 #define FT_REG_MEDIAFIFO_WRITE    0x309018
 
-// Test functions
-#define FT_NEVER          0
-#define FT_LESS           1
-#define FT_LEQUAL         2
-#define FT_GREATER        3
-#define FT_GEQUAL         4
-#define FT_EQUAL          5
-#define FT_NOTEQUAL       6
-#define FT_ALWAYS         7
-
 // Primitives
 #define FT_BITMAPS        1
 #define FT_POINTS         2
@@ -208,14 +201,24 @@ enum  // const FT_MODE ft_modes[] in ft812func.c
 #define FT_ONE_MINUS_SRC_ALPHA  4
 #define FT_ONE_MINUS_DST_ALPHA  5
 
+// Stencil test functions
+#define FT_NEVER          0
+#define FT_LESS           1
+#define FT_LEQUAL         2
+#define FT_GREATER        3
+#define FT_GEQUAL         4
+#define FT_EQUAL          5
+#define FT_NOTEQUAL       6
+#define FT_ALWAYS         7
+
 // Stencil operations
-#define FT_KEEP                 1
-#define FT_REPLACE              2
-#define FT_INCR                 3
-#define FT_DECR                 4
-#define FT_INVERT               5
-#define FT_INCR_WRAP            6 // undocumented???
-#define FT_DECR_WRAP            7 // undocumented???
+#define FT_KEEP           1
+#define FT_REPLACE        2
+#define FT_INCR           3
+#define FT_DECR           4
+#define FT_INVERT         5
+#define FT_INCR_WRAP      6 // undocumented???
+#define FT_DECR_WRAP      7 // undocumented???
 
 // Bitmap wrap mode
 #define FT_REPEAT     1
@@ -256,9 +259,8 @@ enum  // const FT_MODE ft_modes[] in ft812func.c
 #define FT_TOUCHMODE_CONTINUOUS 3
 
 // Constants
-#define FT_DL_SIZE              (8 * 1024)  // 8KB Display List buffer size
-#define FT_CMD_FIFO_SIZE        (4 * 1024)  // 4KB coprocessor Fifo size
-#define FT_CMD_SIZE             4           // 4 byte per coprocessor command of EVE
-#define FT_CMDBUF_SIZE          4096
+#define FT_DL_SIZE              8192  // 8KB Display List buffer size
+#define FT_CMD_FIFO_SIZE        4096  // 4KB coprocessor Fifo size
+#define FT_CMD_SIZE             4     // 4 byte per coprocessor command of EVE
 #define FT_GPU_NUMCHAR_PERFONT  128
 #define FT_GPU_FONT_TABLE_SIZE  148
