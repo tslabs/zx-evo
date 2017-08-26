@@ -72,16 +72,20 @@ void main()
 
   {
     u8 p = 16;
-    u32 a = FT_RAM_G;
     u32 s = 745728;
-  
+    
+    ts_set_dma_saddr_p(0, p);
+    ts_set_dma_size(256, 64);
+    ft_start_write(FT_RAM_G);
+
     while (s)
     {
-      ts_wreg(TS_PAGE3, p++);
-      ft_write(a, (u8*)0xC000, 4096);
-      a += 16384;
+      ts_wreg(TS_DMACTR, TS_DMA_RAM_SPI);
+      ts_dma_wait();
       s -= min(16384, s);
     }
+
+    ft_spi_unsel();
   }
 
   {

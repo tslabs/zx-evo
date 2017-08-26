@@ -34,10 +34,7 @@ void load_pic_dma(u8 p)
     s -= min(16384, s);
   }
 
-  __asm;
-    ld a, #SPI_FT_CS_OFF
-    out (SPI_CTRL), a
-  __endasm;
+  ft_spi_unsel();
 }
 
 void main()

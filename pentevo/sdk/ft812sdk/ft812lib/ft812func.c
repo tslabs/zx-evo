@@ -22,6 +22,24 @@ const FT_MODE ft_modes[] =
   {9,  1, 93, 40,  187, 1280, 5,  5, 20, 720},   // 12: 1280x720@60Hz (72MHz)
 };
 
+void ft_spi_sel() __naked
+{
+  __asm
+    ld a, #SPI_FT_CS_ON
+    out (SPI_CTRL), a
+    ret
+  __endasm;
+}
+
+void ft_spi_unsel() __naked
+{
+  __asm
+    ld a, #SPI_FT_CS_OFF
+    out (SPI_CTRL), a
+    ret
+  __endasm;
+}
+
 void ft_cmdp(u8 a, u8 v) __naked
 {
   a;  // to avoid SDCC warning
@@ -178,18 +196,19 @@ u16 ft_rd16(u16 a) __naked
   __endasm;
 }
 
+// power up FT812, set up clocks and interrupts
 void ft_init(u8 m)
 {
   const FT_MODE *mode = &ft_modes[m];
 
-  // power up FT812
-  ft_cmd(FT_CMD_RST_PULSE);
+  ft_cmd(FT_CMD_PWRDOWN);
+  ft_cmd(FT_CMD_ACTIVE);
+  ft_cmd(FT_CMD_SLEEP);
   ft_cmd(FT_CMD_CLKEXT);
   ft_cmdp(FT_CMD_CLKSEL, mode->f_mul | 0xC0);
   ft_cmd(FT_CMD_ACTIVE);
   while (ft_rd8(FT_REG_ID) != FT_ID);
   
-  // set up video mode
   ft_wr16(FT_REG_HSYNC0 , mode->h_fporch);
   ft_wr16(FT_REG_HSYNC1 , mode->h_fporch + mode->h_sync);
   ft_wr16(FT_REG_HOFFSET, mode->h_fporch + mode->h_sync + mode->h_bporch);
@@ -200,16 +219,15 @@ void ft_init(u8 m)
   ft_wr16(FT_REG_VOFFSET, mode->v_fporch + mode->v_sync + mode->v_bporch - 1);
   ft_wr16(FT_REG_VCYCLE , mode->v_fporch + mode->v_sync + mode->v_bporch + mode->v_visible);
   ft_wr16(FT_REG_VSIZE  , mode->v_visible);
-
-  // set up clock and interrupts
-  ft_wr8(FT_REG_PCLK, mode->f_div);
+  
   ft_wr8(FT_REG_PCLK_POL, 0);
   ft_wr8(FT_REG_CSPREAD, 0);
+  ft_wr8(FT_REG_PCLK, mode->f_div);
   ft_wr8(FT_REG_INT_MASK, FT_INT_SWAP);
   ft_wr8(FT_REG_INT_EN, 1);
 }
 
-void ft_start_write(u32 a)
+void ft_start_write(u32 a) __naked
 {
   a;  // to avoid SDCC warning
 
@@ -234,10 +252,10 @@ void ft_start_write(u32 a)
   __endasm;
 }
 
-void ft_finish_write(void *addr, u16 size)
+void ft_finish_write(void *a, u16 s) __naked
 {
-  size;  // to avoid SDCC warning
-  addr;  // to avoid SDCC warning
+  s;  // to avoid SDCC warning
+  a;  // to avoid SDCC warning
 
   __asm
     ld hl, #2
@@ -278,6 +296,71 @@ void ft_write_dl(void *addr, u16 size)
 {
   ft_start_write(FT_RAM_DL);
   ft_finish_write(addr, size);
+}
+
+void ft_start_read(u32 a) __naked
+{
+  a;  // to avoid SDCC warning
+
+  __asm
+    ld a, #SPI_FT_CS_ON
+    out (SPI_CTRL), a
+
+    ld hl, #2
+    add hl, sp
+    ld e, (hl)
+    inc hl
+    ld d, (hl)
+    inc hl
+    ld a, (hl)
+    out (SPI_DATA), a
+    ld a, d
+    out (SPI_DATA), a
+    ld a, e
+    out (SPI_DATA), a
+    out (SPI_DATA), a
+    ret
+  __endasm;
+}
+
+void ft_finish_read(void *a, u16 s) __naked
+{
+  s;  // to avoid SDCC warning
+  a;  // to avoid SDCC warning
+
+  __asm
+    ld hl, #2
+    add hl, sp
+    ld e, (hl)
+    inc hl
+    ld d, (hl)
+    inc hl
+    ld a, (hl)
+    inc hl
+    ld h, (hl)
+    ld l, a
+    ex de, hl
+
+    ld c, #SPI_DATA
+l1: ini
+    ini
+    ini
+    ini
+    dec de
+    ld a, d
+    or e
+    jr nz, l1
+
+    ld a, #SPI_FT_CS_OFF
+    out (SPI_CTRL), a
+    ret
+  __endasm;
+}
+
+void ft_read(u32 ft_addr, void *addr, u16 size)
+{
+  ft_start_read(ft_addr);
+  ft_finish_read(addr, size);
 }
 
 void ft_swap()

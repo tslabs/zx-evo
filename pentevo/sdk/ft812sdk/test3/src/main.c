@@ -23,10 +23,10 @@ void dl(u32 a)
 void main()
 {
   u16 i, j;
-  
+
   init_runtime();
-  ei();
   ft_init(FT_MODE_3);
+  ts_wreg(TS_VCONFIG, 4);
 
   dlist = (u32*)0x4000;
   dlp = 0;
@@ -45,15 +45,15 @@ void main()
   dl(ft_Vertex2f(rsin(80, 21845) + 400, rcos(80, 21845) + 300));
   dl(ft_ColorRGB(0, 0, 255));
   dl(ft_Vertex2f(rsin(80, 43690) + 400, rcos(80, 43690) + 300));
-  
+
   dl(ft_ClearColorA(32));
   dl(ft_ColorMask(0, 0, 0, 1));
   dl(ft_Clear(1, 1, 1));
-  
+
   dl(ft_BlendFunc(FT_ONE, FT_ONE));
   dl(ft_Begin(FT_POINTS));
   dl(ft_ColorA(20));
-  
+
   for (i = 120, j = 0; j <= 255; i -= 5, j += 20)
   {
     dl(ft_PointSize(i << 4));
@@ -66,17 +66,11 @@ void main()
   dl(ft_Begin(FT_RECTS));
   dl(ft_Vertex2f(0, 0));
   dl(ft_Vertex2f(799, 599));
-  
+
   dl(ft_Display());
 
   ft_write_dl(dlist, dlp);
   ft_wr8(FT_REG_DLSWAP, FT_DLSWAP_FRAME);
-
-  __asm
-    ld bc, #0x00AF
-    ld a, #4
-    out (c), a
-  __endasm;
 
   while (1);
 }
