@@ -5,6 +5,7 @@ extern const char* SSHOT_EXT[4];
 
 void addpath(char *dst, const char *fname = 0);
 void load_ula_preset();
+void save_ram();
 void save_nv();
 void load_romset(CONFIG *conf, const char *romset);
 void applyconfig();

@@ -353,6 +353,12 @@ void main_autofire()
    sprintf(statusline, "autofire %s", conf.input.fire ? "on" : "off"), statcnt = 30;
 }
 
+void main_save_ram()
+{
+  save_ram();
+  sprintf(statusline, "RAM dump saved"), statcnt = 30;
+}
+
 void main_save()
 {
    sound_stop();

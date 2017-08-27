@@ -59,6 +59,7 @@ action ac_main[] =
    { "main.qload3", qload3 },
    { "main.keystick", main_keystick },
    { "main.autofire", main_autofire },
+   { "main.saveram", main_save_ram },
    { "main.saveall", main_save },
    { "main.lockmouse", main_mouse },
    { "main.xtkbd", main_atmkbd },

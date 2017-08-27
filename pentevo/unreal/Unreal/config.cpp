@@ -119,6 +119,13 @@ void addpath(char *dst, const char *fname)
    strcpy(dst, tmp);
 }
 
+void save_ram()
+{
+   char line[0x200]; addpath(line, "ram.bin");
+   FILE *f0 = fopen(line, "wb");
+   if (f0) fwrite(RAM_BASE_M, 1, conf.ramsize * 1024, f0), fclose(f0);
+}
+
 void save_nv()
 {
    char line[0x200]; addpath(line, "CMOS");
