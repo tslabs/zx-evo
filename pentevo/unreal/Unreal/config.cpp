@@ -121,8 +121,7 @@ void addpath(char *dst, const char *fname)
 
 void save_ram()
 {
-   char line[0x200]; addpath(line, "ram.bin");
-   FILE *f0 = fopen(line, "wb");
+   FILE *f0 = fopen("ram.bin", "wb");
    if (f0) fwrite(RAM_BASE_M, 1, conf.ramsize * 1024, f0), fclose(f0);
 }
 
