@@ -15,10 +15,12 @@ sdcc-lib-split.exe ft812func.c >>lib.lst
 if errorlevel 1 pause & exit
 sdcc-lib-split.exe ft812math.c >>lib.lst
 if errorlevel 1 pause & exit
+sdcc-lib-split.exe ft812cp.c   >>lib.lst
+if errorlevel 1 pause & exit
 
 for /f %%i in (lib.lst) do (
   echo %%i
-  sdcc -mz80 --std-sdcc11 --opt-code-speed -c %%i -o %%i.rel
+  sdcc -I../../tslib -mz80 --std-sdcc11 --opt-code-speed -c %%i -o %%i.rel
   if errorlevel 1 pause & exit
   sdcclib ../ft812.lib %%i.rel
   if errorlevel 1 pause & exit
