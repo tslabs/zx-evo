@@ -18,14 +18,14 @@
   
   ; set RAM pages sequentially
   ld b, #0x10
-  ld a, #8
-  out (c), a      ; PAGE0 = 8
+  xor a
+  out (c), a      ; PAGE0 = 0
   inc b        
   inc a
-  out (c), a      ; PAGE1 = 9
+  out (c), a      ; PAGE1 = 1
   inc b           
   inc a
-  out (c), a      ; PAGE2 = 10
+  out (c), a      ; PAGE2 = 2
   
   ; run main()
   ld sp, #0xC000

@@ -17,8 +17,7 @@ ren obj\out.bin code.C
 copy ..\sdklib\warning.scr obj\warning.C >nul
 
 trdtool # %1.trd >nul
-REM trdtool + %PRJ%.trd res/boot.$b obj/warning.C obj/code.C >nul
-trdtool + %1.trd res/boot.$b obj/code.C >nul
+trdtool + %1.trd ../sdklib/boot.$b obj/code.C >nul
 if errorlevel 1 pause & exit
 
 spgbld.exe -b res/spg.ini %1.spg
