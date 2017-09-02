@@ -8,69 +8,56 @@
 #include <ts.h>
 #include <tslib.h>
 
-void init_runtime()
-{
-}
-
-u32 *dlist;
-u16 dlp;
-
-void dl(u32 a)
-{
-  dlist[dlp++] = a;
-}
+u8 cmdl[0x800];
 
 void main()
 {
   u16 i, j;
 
-  init_runtime();
   ft_init(FT_MODE_3);
   ts_wreg(TS_VCONFIG, 4);
 
-  dlist = (u32*)0x4000;
-  dlp = 0;
+  ft_ccmd_start(cmdl);
+  ft_VertexFormat(0);
+  ft_ClearColorRGB(0, 0, 0);
+  ft_Clear(1, 1, 1);
 
-  dl(ft_VertexFormat(0));
-  dl(ft_ClearColorRGB(0, 0, 0));
-  dl(ft_Clear(1, 1, 1));
+  ft_ColorA(255);
+  ft_Begin(FT_POINTS);
+  ft_PointSize(100 << 4);
+  ft_BlendFunc(FT_SRC_ALPHA, FT_ONE);
+  ft_ColorRGB(255, 0, 0);
+  ft_Vertex2f(rsin(80, 0) + 400, rcos(80, 0) + 300);
+  ft_ColorRGB(0, 255, 0);
+  ft_Vertex2f(rsin(80, 21845) + 400, rcos(80, 21845) + 300);
+  ft_ColorRGB(0, 0, 255);
+  ft_Vertex2f(rsin(80, 43690) + 400, rcos(80, 43690) + 300);
 
-  dl(ft_ColorA(255));
-  dl(ft_Begin(FT_POINTS));
-  dl(ft_PointSize(100 << 4));
-  dl(ft_BlendFunc(FT_SRC_ALPHA, FT_ONE));
-  dl(ft_ColorRGB(255, 0, 0));
-  dl(ft_Vertex2f(rsin(80, 0) + 400, rcos(80, 0) + 300));
-  dl(ft_ColorRGB(0, 255, 0));
-  dl(ft_Vertex2f(rsin(80, 21845) + 400, rcos(80, 21845) + 300));
-  dl(ft_ColorRGB(0, 0, 255));
-  dl(ft_Vertex2f(rsin(80, 43690) + 400, rcos(80, 43690) + 300));
+  ft_ClearColorA(32);
+  ft_ColorMask(0, 0, 0, 1);
+  ft_Clear(1, 1, 1);
 
-  dl(ft_ClearColorA(32));
-  dl(ft_ColorMask(0, 0, 0, 1));
-  dl(ft_Clear(1, 1, 1));
-
-  dl(ft_BlendFunc(FT_ONE, FT_ONE));
-  dl(ft_Begin(FT_POINTS));
-  dl(ft_ColorA(20));
+  ft_BlendFunc(FT_ONE, FT_ONE);
+  ft_Begin(FT_POINTS);
+  ft_ColorA(20);
 
   for (i = 120, j = 0; j <= 255; i -= 5, j += 20)
   {
-    dl(ft_PointSize(i << 4));
-    dl(ft_Vertex2f(400, 300));
+    ft_PointSize(i << 4);
+    ft_Vertex2f(400, 300);
   }
 
-  dl(ft_ColorRGB(0, 0, 0));
-  dl(ft_ColorMask(1, 1, 1, 1));
-  dl(ft_BlendFunc(FT_ONE_MINUS_DST_ALPHA, FT_DST_ALPHA));
-  dl(ft_Begin(FT_RECTS));
-  dl(ft_Vertex2f(0, 0));
-  dl(ft_Vertex2f(799, 599));
+  ft_ColorRGB(0, 0, 0);
+  ft_ColorMask(1, 1, 1, 1);
+  ft_BlendFunc(FT_ONE_MINUS_DST_ALPHA, FT_DST_ALPHA);
+  ft_Begin(FT_RECTS);
+  ft_Vertex2f(0, 0);
+  ft_Vertex2f(799, 599);
 
-  dl(ft_Display());
-
-  ft_write_dl(dlist, dlp);
-  ft_wr8(FT_REG_DLSWAP, FT_DLSWAP_FRAME);
+  ft_Display();
+  ft_ccmd(FT_CCMD_SWAP);
+  ft_ccmd_write();
+  ft_cp_wait();
 
   while (1);
 }

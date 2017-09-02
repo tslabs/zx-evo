@@ -8,73 +8,77 @@
 #include <ts.h>
 #include <tslib.h>
 
-void init_runtime()
-{
-}
+u8 cmdl[0x180];
 
-u32 *dlist;
-u16 dlp;
-
-void dl(u32 a)
+void print_string(const char *s, u16 x, u16 y)
 {
-  dlist[dlp++] = a;
+  int i = 0;
+  char c;
+
+  while (c = s[i++])
+  {
+    ft_Cell(c);
+    ft_Vertex2f(x, y);
+    x += 9;
+  }
 }
 
 void main()
 {
-  init_runtime();
-
   ts_wreg(TS_VCONFIG, 4);
-  // ft_init(FT_MODE_0);
-  // ft_init(FT_MODE_3);
   ft_init(FT_MODE_7);
 
-  dlist = (u32*)0x3200;
-  dlp = 0;
+  ft_ccmd_start(cmdl);
+  ft_VertexFormat(0);
+  ft_ClearColorRGB(0, 0, 0);
+  ft_Clear(1, 1, 1);
 
-  dl(ft_VertexFormat(0));
-  dl(ft_ClearColorRGB(0, 0, 0));
-  dl(ft_Clear(1, 1, 1));
+  ft_ColorRGB(255, 255, 255);
+  // ft_ColorRGB(255, 0, 0);
+  ft_LineWidth(24);
 
-  dl(ft_ColorRGB(255, 255, 255));
-  // dl(ft_ColorRGB(255, 0, 0));
-  dl(ft_LineWidth(24));
-  
-  dl(ft_Begin(FT_LINE_STRIP));
-  dl(ft_Vertex2f(0, 0));
-  dl(ft_Vertex2f(1023, 0));
-  dl(ft_Vertex2f(1023, 767));
-  dl(ft_Vertex2f(0, 767));
-  dl(ft_Vertex2f(0, 0));
+  ft_Begin(FT_LINE_STRIP);
+  ft_Vertex2f(0, 0);
+  ft_Vertex2f(1023, 0);
+  ft_Vertex2f(1023, 767);
+  ft_Vertex2f(0, 767);
+  ft_Vertex2f(0, 0);
 
-  dl(ft_Begin(FT_LINE_STRIP));
-  dl(ft_Vertex2f(0, 0));
-  dl(ft_Vertex2f(799, 0));
-  dl(ft_Vertex2f(799, 599));
-  dl(ft_Vertex2f(0, 599));
-  dl(ft_Vertex2f(0, 0));
+  ft_Begin(FT_LINE_STRIP);
+  ft_Vertex2f(0, 0);
+  ft_Vertex2f(799, 0);
+  ft_Vertex2f(799, 599);
+  ft_Vertex2f(0, 599);
+  ft_Vertex2f(0, 0);
 
-  dl(ft_Begin(FT_LINE_STRIP));
-  dl(ft_Vertex2f(0, 0));
-  dl(ft_Vertex2f(639, 0));
-  dl(ft_Vertex2f(639, 479));
-  dl(ft_Vertex2f(0, 479));
-  dl(ft_Vertex2f(0, 0));
+  ft_Begin(FT_LINE_STRIP);
+  ft_Vertex2f(0, 0);
+  ft_Vertex2f(639, 0);
+  ft_Vertex2f(639, 479);
+  ft_Vertex2f(0, 479);
+  ft_Vertex2f(0, 0);
 
-  dl(ft_Begin(FT_POINTS));
-  dl(ft_PointSize(100 << 4));
-  dl(ft_BlendFunc(FT_SRC_ALPHA, FT_ONE));
-  dl(ft_ColorRGB(255, 0, 0));
-  dl(ft_Vertex2f(rsin(80, 32768) + 320, rcos(80, 32768) + 240));
-  dl(ft_ColorRGB(0, 255, 0));
-  dl(ft_Vertex2f(rsin(80, 21845 + 32768) + 320, rcos(80, 21845 + 32768) + 240));
-  dl(ft_ColorRGB(0, 0, 255));
-  dl(ft_Vertex2f(rsin(80, 43690 - 32768) + 320, rcos(80, 43690 - 32768) + 240));
+  ft_Begin(FT_POINTS);
+  ft_PointSize(100 << 4);
+  ft_BlendFunc(FT_SRC_ALPHA, FT_ONE);
+  ft_ColorRGB(255, 0, 0);
+  ft_Vertex2f(rsin(80, 32768) + 320, rcos(80, 32768) + 240);
+  ft_ColorRGB(0, 255, 0);
+  ft_Vertex2f(rsin(80, 21845 + 32768) + 320, rcos(80, 21845 + 32768) + 240);
+  ft_ColorRGB(0, 0, 255);
+  ft_Vertex2f(rsin(80, 43690 - 32768) + 320, rcos(80, 43690 - 32768) + 240);
 
-  dl(ft_Display());
+  ft_Begin(FT_BITMAPS);
+  ft_BitmapHandle(18);
+  ft_ColorRGB(120, 100, 255);
+  print_string("640x480", 572, 461);
+  print_string("800x600", 732, 581);
+  print_string("1024x768", 947, 749);
 
-  ft_write_dl(dlist, dlp);
-  ft_swap();
+  ft_Display();
+  ft_ccmd(FT_CCMD_SWAP);
+  ft_ccmd_write();
+  ft_cp_wait();
 
   while (1);
 }

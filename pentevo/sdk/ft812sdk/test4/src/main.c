@@ -1,4 +1,6 @@
 
+#define USE_DMA
+
 #include <stdio.h>
 #include <string.h>
 #include <defs.h>
@@ -8,86 +10,59 @@
 #include <ts.h>
 #include <tslib.h>
 
-void init_runtime()
-{
-}
-
-u32 *dlist;
-u16 dlp;
-
-void dl(u32 a)
-{
-  dlist[dlp++] = a;
-}
-
-void load_pic(u8 p)
-{
-  u32 a = FT_RAM_G;
-  u32 s = 240000;
-
-  while (s)
-  {
-    ts_wreg(TS_PAGE3, p++);
-    ft_write(a, (u8*)0xC000, 4096);
-    a += 16384;
-    s -= min(16384, s);
-  }
-}
+u8 cmdl[0x800];
 
 void main()
 {
-  init_runtime();
   ft_init(FT_MODE_3);
   ts_wreg(TS_VCONFIG, 4);
 
-  dlist = (u32*)0x8000;
-  dlp = 0;
+  ft_ccmd_start(cmdl);
+  ft_VertexFormat(0);
+  ft_Clear(1, 1, 1);
+  ft_ColorRGB(255, 255, 255);
 
-  dl(ft_VertexFormat(0));
-  dl(ft_Clear(1, 1, 1));
-  dl(ft_ColorRGB(255, 255, 255));
+  ft_BitmapHandle(0);
+  ft_BitmapSource(FT_RAM_G + 0);
+  ft_BitmapLayout(FT_L1, 100, 600);
+  ft_BitmapSize(FT_NEAREST, FT_BORDER, FT_BORDER, 800, 600);
 
-  dl(ft_BitmapHandle(0));
-  dl(ft_BitmapSource(FT_RAM_G + 0));
-  dl(ft_BitmapLayout(FT_L1, 100, 600));
-  dl(ft_BitmapLayoutX(100, 600));
-  dl(ft_BitmapSize(FT_NEAREST, FT_BORDER, FT_BORDER, 800, 600));
-  dl(ft_BitmapSizeX(800, 600));
+  ft_BitmapHandle(1);
+  ft_BitmapSource(FT_RAM_G + 120000);
+  ft_BitmapLayout(FT_RGB565, 400, 150);
+  ft_BitmapSize(FT_NEAREST, FT_BORDER, FT_BORDER, 800, 600);
 
-  dl(ft_BitmapHandle(1));
-  dl(ft_BitmapSource(FT_RAM_G + 120000));
-  dl(ft_BitmapLayout(FT_RGB565, 400, 150));
-  dl(ft_BitmapLayoutX(400, 150));
-  dl(ft_BitmapSize(FT_NEAREST, FT_BORDER, FT_BORDER, 800, 600));
-  dl(ft_BitmapSizeX(800, 600));
+  ft_Begin(FT_BITMAPS);
+  ft_BlendFunc(FT_ONE, FT_ZERO);
+  ft_ColorA(85);
+  ft_Vertex2ii(0, 0, 0, 0);
+  ft_BlendFunc(FT_ONE, FT_ONE);
+  ft_ColorA(170);
+  ft_Vertex2ii(0, 0, 0, 1);
 
-  dl(ft_Begin(FT_BITMAPS));
-  dl(ft_BlendFunc(FT_ONE, FT_ZERO));
-  dl(ft_ColorA(85));
-  dl(ft_Vertex2ii(0, 0, 0, 0));
-  dl(ft_BlendFunc(FT_ONE, FT_ONE));
-  dl(ft_ColorA(170));
-  dl(ft_Vertex2ii(0, 0, 0, 1));
+  ft_ColorMask(1, 1, 1, 0);
+  ft_BitmapTransformA(64);
+  ft_BitmapTransformE(64);
+  ft_BlendFunc(FT_DST_ALPHA, FT_ZERO);
+  ft_Vertex2ii(0, 0, 1, 1);
+  ft_BlendFunc(FT_ONE_MINUS_DST_ALPHA, FT_ONE);
+  ft_Vertex2ii(0, 0, 1, 0);
 
-  dl(ft_ColorMask(1, 1, 1, 0));
-  dl(ft_BitmapTransformA(64));
-  dl(ft_BitmapTransformE(64));
-  dl(ft_BlendFunc(FT_DST_ALPHA, FT_ZERO));
-  dl(ft_Vertex2ii(0, 0, 1, 1));
-  dl(ft_BlendFunc(FT_ONE_MINUS_DST_ALPHA, FT_ONE));
-  dl(ft_Vertex2ii(0, 0, 1, 0));
-
-  dl(ft_Display());
-
-  ft_write_dl(dlist, dlp);
-  ft_wr8(FT_REG_DLSWAP, FT_DLSWAP_FRAME);
+  ft_Display();
+  ft_ccmd(FT_CCMD_SWAP);
+  ft_ccmd_write();
+  ft_cp_wait();
 
   while (1)
   {
     u8 i;
     for (i = 16; i <= 64; i += 16)
     {
-      load_pic(i);
+#ifdef USE_DMA
+      ft_load_ram_dma((u8*)0xC000, i, FT_RAM_G, 240000);
+#else
+      ft_load_ram_p((u8*)0xC000, i, FT_RAM_G, 240000);
+#endif
       anykey();
     }
   }

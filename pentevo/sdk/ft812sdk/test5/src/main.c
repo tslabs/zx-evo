@@ -8,21 +8,10 @@
 #include <ts.h>
 #include <tslib.h>
 
-void init_runtime()
-{
-}
-
-u32 *dlist;
-u16 dlp;
-
-void dl(u32 a)
-{
-  dlist[dlp++] = a;
-}
+u8 cmdl[0x800];
 
 void main()
 {
-  init_runtime();
   ft_init(FT_MODE_3);
   ts_wreg(TS_VCONFIG, 4);
 
@@ -47,60 +36,56 @@ void main()
       pal[a + 256] = ir + ig + ib;
     }
   }
-  ft_write(FT_RAM_G + 6912, (u32*)0x9000, 1024 >> 2);
+  ft_write((u8*)0x9000, FT_RAM_G + 6912, 1024);
 
   // prepare DL
-  dlist = (u32*)0x8000;
-  dlp = 0;
-
-  dl(ft_Clear(1, 1, 1));
-  dl(ft_ColorRGB(255, 255, 255));
-  dl(ft_VertexTranslateX(144 << 4));
-  dl(ft_VertexTranslateY(108 << 4));
-  dl(ft_Begin(FT_BITMAPS));
+  ft_ccmd_start(cmdl);
+  ft_Clear(1, 1, 1);
+  ft_ColorRGB(255, 255, 255);
+  ft_VertexTranslateX(144 << 4);
+  ft_VertexTranslateY(108 << 4);
+  ft_Begin(FT_BITMAPS);
 
   // pixels
   {
     u8 i;
 
-    dl(ft_BitmapHandle(0));
-    dl(ft_BitmapLayout(FT_L1, 32, 1));
-    dl(ft_BitmapSize(FT_NEAREST, FT_BORDER, FT_BORDER, 512, 2));
-    dl(ft_BitmapSizeX(512, 2));
-    dl(ft_BitmapTransformA(128));
-    dl(ft_BitmapTransformE(128));
+    ft_BitmapHandle(0);
+    ft_BitmapLayout(FT_L1, 32, 1);
+    ft_BitmapSize(FT_NEAREST, FT_BORDER, FT_BORDER, 512, 2);
+    ft_BitmapTransformA(128);
+    ft_BitmapTransformE(128);
 
-    dl(ft_BitmapSource(FT_RAM_G));
+    ft_BitmapSource(FT_RAM_G);
     for (i = 0; i < 128; i++)
-      dl(ft_Vertex2ii(0, i << 1, 0, ((i & 7) << 3) + ((i >> 3) & 7) + (i & 64)));
+      ft_Vertex2ii(0, i << 1, 0, ((i & 7) << 3) + ((i >> 3) & 7) + (i & 64));
 
-    dl(ft_BitmapSource(FT_RAM_G + 4096));
+    ft_BitmapSource(FT_RAM_G + 4096);
     for (i = 128; i < 192; i++)
-      dl(ft_Vertex2ii(0, i << 1, 0, ((i & 7) << 3) + ((i >> 3) & 7)));
+      ft_Vertex2ii(0, i << 1, 0, ((i & 7) << 3) + ((i >> 3) & 7));
   }
 
   // attributes
-  dl(ft_ColorMask(1, 1, 1, 0));
-  dl(ft_BitmapHandle(0));
-  dl(ft_BitmapSource(FT_RAM_G + 6144));
-  dl(ft_BitmapLayout(FT_PALETTED565, 32, 24));
-  dl(ft_BitmapSize(FT_NEAREST, FT_BORDER, FT_BORDER, 512, 384));
-  // dl(ft_BitmapSize(FT_BILINEAR, FT_BORDER, FT_BORDER, 512, 384));
-  dl(ft_BitmapSizeX(512, 384));
+  ft_ColorMask(1, 1, 1, 0);
+  ft_BitmapHandle(0);
+  ft_BitmapSource(FT_RAM_G + 6144);
+  ft_BitmapLayout(FT_PALETTED565, 32, 24);
+  ft_BitmapSize(FT_NEAREST, FT_BORDER, FT_BORDER, 512, 384);
+  // ft_BitmapSize(FT_BILINEAR, FT_BORDER, FT_BORDER, 512, 384);
 
-  dl(ft_BitmapTransformA(16));
-  dl(ft_BitmapTransformE(16));
-  dl(ft_PaletteSource(FT_RAM_G + 6912));
-  dl(ft_BlendFunc(FT_DST_ALPHA, FT_ZERO));
-  dl(ft_Vertex2ii(0, 0, 0, 0));
-  dl(ft_PaletteSource(FT_RAM_G + 6912 + 512));
-  dl(ft_BlendFunc(FT_ONE_MINUS_DST_ALPHA, FT_ONE));
-  dl(ft_Vertex2ii(0, 0, 0, 0));
+  ft_BitmapTransformA(16);
+  ft_BitmapTransformE(16);
+  ft_PaletteSource(FT_RAM_G + 6912);
+  ft_BlendFunc(FT_DST_ALPHA, FT_ZERO);
+  ft_Vertex2ii(0, 0, 0, 0);
+  ft_PaletteSource(FT_RAM_G + 6912 + 512);
+  ft_BlendFunc(FT_ONE_MINUS_DST_ALPHA, FT_ONE);
+  ft_Vertex2ii(0, 0, 0, 0);
 
-  dl(ft_Display());
-
-  ft_write_dl(dlist, dlp);
-  ft_wr8(FT_REG_DLSWAP, FT_DLSWAP_FRAME);
+  ft_Display();
+  ft_ccmd(FT_CCMD_SWAP);
+  ft_ccmd_write();
+  ft_cp_wait();
 
   while (1)
   {
@@ -108,7 +93,7 @@ void main()
     for (i = 0; i < 7; i++)
     {
       ts_wreg(TS_PAGE3, 16 + i);
-      ft_write(FT_RAM_G, (u32*)0xC000, 6912 >> 2);
+      ft_write((u8*)0xC000, FT_RAM_G, 6912);
       anykey();
     }
   }
