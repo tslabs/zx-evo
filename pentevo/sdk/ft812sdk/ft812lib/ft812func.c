@@ -152,13 +152,13 @@ bool ft_load_cfifo_dma(void *h, u8 p, u32 s)
     ft_spi_unsel();
 
     m += z, s -= z;
-    if (m >= 16384) m -= 16384, p++;
+    if (m >= 16384) m -= 16384;
   }
 
   return true;
 }
 
-void ft_load_ram(void *h, u8 p, u32 a, u32 s)
+void ft_load_ram_p(void *h, u8 p, u32 a, u32 s)
 {
   u16 m = (u16)h & 0x3FFF;
 
@@ -168,15 +168,45 @@ void ft_load_ram(void *h, u8 p, u32 a, u32 s)
     ts_wreg(TS_PAGE3, p);
     ft_write((u8*)(m | 0xC000), a, z);
 
-    m += z;
-    a += z;
-    s -= z;
+    m += z; a += z; s -= z;
 
     if (m >= 16384)
     {
       m -= 16384;
       p++;
     }
+  }
+}
+
+void ft_load_ram_dma(void *h, u8 p, u32 a, u32 s)
+{
+  u16 m = (u16)h & 0x3FFF;
+  ts_set_dma_saddr_p(m, p);
+
+  while (s)
+  {
+    u16 z = min(16384 - m, min(16384, s));
+    ft_start_write(a);
+
+    if (z >> 9)
+    {
+      ts_set_dma_size(512, z >> 9);
+      ts_wreg(TS_DMACTR, TS_DMA_RAM_SPI);
+      ts_dma_wait();
+    }
+
+    if (z & 0x1FF)
+    {
+      ts_set_dma_size(z & 0x1FF, 1);
+      ts_wreg(TS_DMACTR, TS_DMA_RAM_SPI);
+      ts_dma_wait();
+    }
+
+    ft_spi_unsel();
+
+    m += z; a += z; s -= z;
+
+    if (m >= 16384) m -= 16384;
   }
 }
 
