@@ -336,7 +336,7 @@
 copy /y "$(ProjectDir)cfg\*.*" "$(TargetDir)"
 if not exist "$(TargetDir)rom\" md "$(TargetDir)rom"
 copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)rom"
-..\..\tools\7z\7z.exe e -y -bd -o"$(TargetDir)" .\cfg\hdd\wc.7z
+$(SolutionDir)..\tools\7z\7z.exe e -y -bd -o"$(TargetDir)" $(ProjectDir)cfg\hdd\wc.7z
 </Command>
     </PostBuildEvent>
     <ResourceCompile>
