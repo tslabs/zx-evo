@@ -7,6 +7,7 @@
 #include "dbgpaint.h"
 #include "dbgmem.h"
 #include "dbgrwdlg.h"
+#include "dbgoth.h"
 #include "memory.h"
 #include "gui.h"
 #include "util.h"
@@ -170,10 +171,11 @@ void mon_nxt()
 {
    if (activedbg == WNDREGS) activedbg = WNDTRACE;
    else if (activedbg == WNDTRACE) activedbg = WNDMEM;
-   else if (activedbg == WNDMEM) activedbg = WNDREGS;
+   else if (activedbg == WNDMEM) {activedbg = WNDBANKS; showbank = true;}
+   else if (activedbg == WNDBANKS) {activedbg = WNDREGS; showbank = false;}
 }
 
-void mon_prv() { mon_nxt(); mon_nxt(); }
+void mon_prv() { mon_nxt(); mon_nxt(); mon_nxt();}
 void mon_dump() { mem_dump = (mem_dump == 2) ? 0 : mem_dump + 1; mem_sz = mem_dump ? 32:8; }
 
 void mon_switch_dump()
