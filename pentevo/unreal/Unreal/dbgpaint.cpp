@@ -9,67 +9,54 @@
 #include "font16.h"
 #include "util.h"
 
-u8 txtscr[80*30*2];
+u8 txtscr[DEBUG_TEXT_WIDTH * DEBUG_TEXT_HEIGHT * 2];
 
 static struct
 {
    u8 x,y,dx,dy,c;
-} frames[20];
+} frames[50];
 
 unsigned nfr;
 
 void debugflip()
 {
-	/*if (!active)
-		return;
-	setpal(0);*/
-
-	u8 * const bptr = debug_gdibuf;
-
-	/*if (show_scrshot) {
-		memcpy(save_buf, rbuf, rb2_offs);
-		paint_scr((show_scrshot == 1)? 0 : 2);
-		u8 *dst = bptr + wat_y*16*640+wat_x*8;
-		u8 *src = rbuf+temp.scx/4*(temp.b_top+192/2-wat_sz*16/2);
-		src += temp.scx/8-37/2*2;
-		for (unsigned y = 0; y < wat_sz*16; y++) {
-			for (unsigned x = 0; x < 37; x++) {
-			*(unsigned*)(dst+x*8+0) = t.sctab8[0][(src[x*2] >>  4) + src[2*x+1]*16];
-			*(unsigned*)(dst+x*8+4) = t.sctab8[0][(src[x*2] & 0xF) + src[2*x+1]*16];
-			}
-			src += temp.scx/4, dst += 640;
-		}
-		memcpy(rbuf, save_buf, rb2_offs);
-	}*/
+  int x, y;
 
 	// print text
-	int x,y;
-	u8 *tptr = txtscr;
-	for (y = 0; y < 16*30*640; y+=16*640)
-	{
-		for (x = 0; x < 80; x++, tptr++)
-		{
-			unsigned ch = *tptr, at = tptr[80*30];
-			if (at == 0xFF) continue; // transparent color
-			const u8 *fnt = &font16[ch*16];
-			for (int yy = 0; yy < 16; yy++, fnt++)
-				for (int i = 0; i < 8; i ++)
-					*(bptr+y+640*yy+x*8+i) = (*fnt & (0x80 >> i)) ? (at & 0xF) : (at >> 4);
-		}
-	}
+	for (int y = 0; y < DEBUG_TEXT_HEIGHT; y++)
+    for (int x = 0; x < DEBUG_TEXT_WIDTH; x++)
+    {
+      u8 atr = txtscr[(y * DEBUG_TEXT_WIDTH) + x + DEBUG_TEXT_SIZE];
+      if (atr == 0xFF) continue;   // transparent color
+      u8 chr = txtscr[(y * DEBUG_TEXT_WIDTH) + x];
+      int bp = (y * DEBUG_WND_WIDTH * 16) + (x * 8);
+
+      for (int by = 0; by < 16; by++)
+      {
+        u8 f = font16[(chr * 16) + by];
+
+        for (int bx = 0; bx < 8; bx++)
+        {
+          debug_gdibuf[bp + bx] = (f & 0x80) ?  (atr & 0xF) : (atr >> 4);
+          f <<= 1;
+        }
+
+        bp += DEBUG_WND_WIDTH;
+      }
+    }
 
 	// show frames
 	for (unsigned i = 0; i < nfr; i++)
 	{
 		u8 a1 = (frames[i].c | 0x08) * 0x11;
 		y = frames[i].y*16-1;
-		for (x = 8*frames[i].x-1; x < (frames[i].x+frames[i].dx)*8; x++) bptr[y*640+x] = a1;
+		for (x = 8*frames[i].x-1; x < (frames[i].x+frames[i].dx)*8; x++) debug_gdibuf[y * DEBUG_WND_WIDTH + x] = a1;
 		y = (frames[i].y+frames[i].dy)*16;
-		for (x = 8*frames[i].x-1; x < (frames[i].x+frames[i].dx)*8; x++) bptr[y*640+x] = a1;
+		for (x = 8*frames[i].x-1; x < (frames[i].x+frames[i].dx)*8; x++) debug_gdibuf[y * DEBUG_WND_WIDTH + x] = a1;
 		x = frames[i].x*8-1;
-		for (y = 16*frames[i].y; y < (frames[i].y+frames[i].dy)*16; y++) bptr[y*640+x] = a1;
+		for (y = 16*frames[i].y; y < (frames[i].y+frames[i].dy)*16; y++) debug_gdibuf[y * DEBUG_WND_WIDTH + x] = a1;
 		x = (frames[i].x+frames[i].dx)*8;
-		for (y = 16*frames[i].y; y < (frames[i].y+frames[i].dy)*16; y++) bptr[y*640+x] = a1;
+		for (y = 16*frames[i].y; y < (frames[i].y+frames[i].dy)*16; y++) debug_gdibuf[y * DEBUG_WND_WIDTH + x] = a1;
 	}
 
 	/*gdibmp.header.bmiHeader.biBitCount = 8;
@@ -92,15 +79,15 @@ void frame(unsigned x, unsigned y, unsigned dx, unsigned dy, u8 attr)
 
 void tprint(unsigned x, unsigned y, const char *str, u8 attr)
 {
-   for (unsigned ptr = y*80 + x; *str; str++, ptr++) {
-      txtscr[ptr] = *str; txtscr[ptr+80*30] = attr;
+   for (unsigned ptr = y * DEBUG_TEXT_WIDTH + x; *str; str++, ptr++) {
+      txtscr[ptr] = *str; txtscr[ptr+ DEBUG_TEXT_WIDTH * DEBUG_TEXT_HEIGHT] = attr;
    }
 }
 
 void tprint_fg(unsigned x, unsigned y, const char *str, u8 attr)
 {
-   for (unsigned ptr = y*80 + x; *str; str++, ptr++) {
-      txtscr[ptr] = *str; txtscr[ptr+80*30] = (txtscr[ptr+80*30] & 0xF0) + attr;
+   for (unsigned ptr = y* DEBUG_TEXT_WIDTH + x; *str; str++, ptr++) {
+      txtscr[ptr] = *str; txtscr[ptr+ DEBUG_TEXT_WIDTH * DEBUG_TEXT_HEIGHT] = (txtscr[ptr+ DEBUG_TEXT_WIDTH * DEBUG_TEXT_HEIGHT] & 0xF0) + attr;
    }
 }
 
@@ -108,8 +95,8 @@ void filledframe(unsigned x, unsigned y, unsigned dx, unsigned dy, u8 color)
 {
    for (unsigned yy = y; yy < (y+dy); yy++)
       for (unsigned xx = x; xx < (x+dx); xx++)
-         txtscr[yy*80+xx] = ' ',
-         txtscr[yy*80+xx+30*80] = color;
+         txtscr[yy * DEBUG_TEXT_WIDTH + xx] = ' ',
+         txtscr[yy * DEBUG_TEXT_WIDTH  + xx + DEBUG_TEXT_HEIGHT * DEBUG_TEXT_WIDTH] = color;
    nfr = 0; // delete other frames while dialog
    frame(x,y,dx,dy,FFRAME_FRAME);
 }
@@ -117,7 +104,15 @@ void filledframe(unsigned x, unsigned y, unsigned dx, unsigned dy, u8 color)
 void fillattr(unsigned x, unsigned y, unsigned dx, u8 color)
 {
    for (unsigned xx = x; xx < (x+dx); xx++)
-      txtscr[y*80+xx+30*80] = color;
+      txtscr[y* DEBUG_TEXT_WIDTH + xx + DEBUG_TEXT_HEIGHT * DEBUG_TEXT_WIDTH] = color;
+}
+
+void fillrect(unsigned x, unsigned y, unsigned dx, unsigned dy, u8 color)
+{
+	for (unsigned yy = y; yy < (y + dy); yy++)
+		for (unsigned xx = x; xx < (x + dx); xx++)
+			txtscr[yy * DEBUG_TEXT_WIDTH + xx] = ' ',
+			txtscr[yy * DEBUG_TEXT_WIDTH + xx + DEBUG_TEXT_HEIGHT * DEBUG_TEXT_WIDTH] = color;
 }
 
 char str[0x80];
@@ -252,7 +247,7 @@ void format_item(char *dst, unsigned width, const char *text, MENUITEM::FLAGS fl
 
 void paint_items(MENUDEF *menu)
 {
-   char ln[80]; unsigned item;
+   char ln[DEBUG_TEXT_WIDTH]; unsigned item;
 
    unsigned maxlen = strlen(menu->title);
    for (item = 0; item < menu->n_items; item++) {
@@ -260,7 +255,7 @@ void paint_items(MENUDEF *menu)
       maxlen = max(maxlen, sz);
    }
    unsigned menu_dx = maxlen+2, menu_dy = menu->n_items + 3;
-   unsigned menu_x = (80 - menu_dx)/2, menu_y = (30 - menu_dy)/2;
+   unsigned menu_x = (DEBUG_TEXT_WIDTH - menu_dx)/2, menu_y = (DEBUG_TEXT_HEIGHT - menu_dy)/2;
    filledframe(menu_x, menu_y, menu_dx, menu_dy, MENU_INSIDE);
    format_item(ln, maxlen, menu->title, MENUITEM::CENTER);
    tprint(menu_x, menu_y, ln, MENU_HEADER);

@@ -61,7 +61,7 @@ unsigned memadr(unsigned addr)
 void showmem()
 {
    Z80 &cpu = CpuMgr.Cpu();
-   char line[80]; unsigned ii;
+   char line[DEBUG_TEXT_WIDTH]; unsigned ii;
    unsigned cursor_found = 0;
    if (mem_dump) mem_ascii = 1, mem_sz = 32; else mem_sz = 8;
 
@@ -92,58 +92,58 @@ void showmem()
        mem_max = sizeof(nvram);
 
 redraw:
-    if (mem_dump == 2)
-    {	 // tsconf
-        #define tprx(a,b,c,d,e) sprintf(line, "%s: %02X:%04X", (c), (d), (e)); tprint(mem_x + (a), mem_y + (b), line, W_NORM);
-        #define tpre(a,b,c,d,e) sprintf(line, "%s: %d:%d", (c), (d), (e)); tprint(mem_x + (a), mem_y + (b), line, W_NORM);
-        #define tprh(a,b,c,d) sprintf(line, "%s: %02X", (c), (d)); tprint(mem_x + (a), mem_y + (b), line, W_NORM);
-        #define tprd(a,b,c,d) sprintf(line, "%s: %d", (c), (d)); tprint(mem_x + (a), mem_y + (b), line, W_NORM);
-        #define tprs(a,b,c,d) sprintf(line, "%s: %s", (c), (d)); tprint(mem_x + (a), mem_y + (b), line, W_NORM);
-        #define tprc(a,b,c,d) sprintf(line, "%s:%s", (c), (d)); tprint(mem_x + (a), mem_y + (b), line, W_NORM);
-        #define tprl(a,b,c) sprintf(line, "%s", (c)); tprint(mem_x + (a), mem_y + (b), line, W_NORM);
-        #define tprn(a,b,c) sprintf(line, "%d", (c)); tprint(mem_x + (a), mem_y + (b), line, W_NORM);
+   if (mem_dump == 2)
+   {	 // tsconf
+#define tprx(a,b,c,d,e) sprintf(line, "%s: %02X:%04X", (c), (d), (e)); tprint(mem_x + (a), mem_y + (b), line, W_NORM);
+#define tpre(a,b,c,d,e) sprintf(line, "%s: %d:%d", (c), (d), (e)); tprint(mem_x + (a), mem_y + (b), line, W_NORM);
+#define tprh(a,b,c,d) sprintf(line, "%s: %02X", (c), (d)); tprint(mem_x + (a), mem_y + (b), line, W_NORM);
+#define tprd(a,b,c,d) sprintf(line, "%s: %d", (c), (d)); tprint(mem_x + (a), mem_y + (b), line, W_NORM);
+#define tprs(a,b,c,d) sprintf(line, "%s: %s", (c), (d)); tprint(mem_x + (a), mem_y + (b), line, W_NORM);
+#define tprc(a,b,c,d) sprintf(line, "%s:%s", (c), (d)); tprint(mem_x + (a), mem_y + (b), line, W_NORM);
+#define tprl(a,b,c) sprintf(line, "%s", (c)); tprint(mem_x + (a), mem_y + (b), line, W_NORM);
+#define tprn(a,b,c) sprintf(line, "%d", (c)); tprint(mem_x + (a), mem_y + (b), line, W_NORM);
 
-        const char d_onoff[2][4] = {"dis", "ena"};
-        const char d_vmode[4][5] = {"ZX  ", "16c ", "256c", "text"};
-        const char d_rres[4][8] = {"256x192", "320x200", "320x240", "360x288"};
-        const char d_clk[4][7] = {"3.5MHz", "7MHz  ", "14MHz ", "unk   "};
-        const char d_lock[4][5] = {"512", "128", "aut", "1MB"};
-        const char d_dma[16][8] = 
-        {
-            "unk    ",
-            "unk    ",
-            "RAM-RAM",
-            "BLT-RAM",
-            "SPI-RAM",
-            "RAM-SPI",
-            "IDE-RAM",
-            "RAM-IDE",
-            "FIL-RAM",
-            "RAM-CRM",
-            "unk    ",
-            "RAM-SFL",
-            "unk    ",
-            "unk    ",
-            "unk    ",
-            "unk    "
-        };
+	   const char d_onoff[2][4] = {"dis", "ena"};
+	   const char d_vmode[4][5] = {"ZX  ", "16c ", "256c", "text"};
+	   const char d_rres[4][8] = {"256x192", "320x200", "320x240", "360x288"};
+	   const char d_clk[4][7] = {"3.5MHz", "7MHz  ", "14MHz ", "unk   "};
+	   const char d_lock[4][5] = {"512", "128", "aut", "1MB"};
+	   const char d_dma[16][8] =
+	   {
+	   "unk    ",
+	   "unk    ",
+	   "RAM-RAM",
+	   "BLT-RAM",
+	   "SPI-RAM",
+	   "RAM-SPI",
+	   "IDE-RAM",
+	   "RAM-IDE",
+	   "FIL-RAM",
+	   "RAM-CRM",
+	   "unk    ",
+	   "RAM-SFL",
+	   "unk    ",
+	   "unk    ",
+	   "unk    ",
+	   "unk    "
+   };
 
-        const char d_dmast[11][6] = 
-        {
-            "RAM  ",
-            "BLT  ",
-            "SPI_R",
-            "SPI_W",
-            "IDE_R",
-            "IDE_W",
-            "FILL ",
-            "CRAM ",
-            "SFILE",
-            "INIT ",
-            "NOP  "
-        };
+   const char d_dmast[11][6] =
+   {
+	   "RAM  ",
+	   "BLT  ",
+	   "SPI_R",
+	   "SPI_W",
+	   "IDE_R",
+	   "IDE_W",
+	   "FILL ",
+	   "CRAM ",
+	   "SFILE",
+	   "INIT ",
+	   "NOP  "
+   };
 
-        tprs(0,  0, "VMod", d_vmode[comp.ts.vmode]);
+   tprs(0,  0, "VMod", d_vmode[comp.ts.vmode]);
         tprd(0,  1, "RRes", comp.ts.rres);
         tprs(0,  2, "Gfx ", d_onoff[!comp.ts.nogfx]);
         tprs(0,  3, "TSU ", d_onoff[!comp.ts.notsu]);
@@ -170,29 +170,29 @@ redraw:
         tprd(9,  9, "T1X", comp.ts.t1_xoffs);
         tprd(9, 10, "T1Y", comp.ts.t1_yoffs);
         tprh(9, 11, "Brd", comp.ts.border);
-        
+
         tprl(21,  0, "SP T1 T0 T1Z T0Z");
         tprn(22,  1, comp.ts.s_en);
         tprn(25,  1, comp.ts.t1_en);
         tprn(28,  1, comp.ts.t0_en);
         tprn(31,  1, comp.ts.t1z_en);
         tprn(34,  1, comp.ts.t0z_en);
-        
+
         tprs(23,  3, "CLK", d_clk[comp.ts.zclk]);
-        
+
         tprl(23,  4, "Cache: ");
         tprn(30,  4, comp.ts.cache_win0);
         tprn(32,  4, comp.ts.cache_win1);
         tprn(34,  4, comp.ts.cache_win2);
         tprn(36,  4, comp.ts.cache_win3);
-        
+
         tprh(23,  5, "FMAddr", comp.ts.fmaddr);
-        
+
         tprc(18,  7, "RAM0", d_onoff[comp.ts.w0_ram]);
         tprc(18,  8, "MAP0", d_onoff[!comp.ts.w0_map_n]);
         tprc(19,  9, "WE0", d_onoff[comp.ts.w0_we]);
         tprc(19, 10, "Lck", d_lock[comp.ts.lck128]);
-        
+
         tprs(27,  7, "DMA", "");
         tprx(27,  8, "S", comp.ts.dma.saddr >> 14, comp.ts.dma.saddr & 0x3FFF);
         tprx(27,  9, "D", comp.ts.dma.daddr >> 14, comp.ts.dma.daddr & 0x3FFF);
@@ -233,7 +233,7 @@ redraw:
 	   tprint(mem_x, mem_y+ii, line, (activedbg == WNDMEM) ? W_SEL : W_NORM);
 	   cursor_found |= cx;
 	   if (cx && (activedbg == WNDMEM))
-	      txtscr[(mem_y+ii)*80+mem_x+cx+80*30] = W_CURS;
+	      txtscr[(mem_y+ii) * DEBUG_TEXT_WIDTH + mem_x + cx + DEBUG_TEXT_WIDTH * DEBUG_TEXT_HEIGHT] = W_CURS;
 	}
    }
 

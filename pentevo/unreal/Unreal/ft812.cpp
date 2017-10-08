@@ -235,7 +235,7 @@ namespace vdac2
   void close_ft8xx()
   {
     if ( ft8xxemu_hdl )
-      FreeLibrary(ft8xxemu_hdl);
+      //FreeLibrary(ft8xxemu_hdl);
     ft8xxemu_hdl = 0;
   }
 

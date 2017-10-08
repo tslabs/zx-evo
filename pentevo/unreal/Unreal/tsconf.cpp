@@ -105,6 +105,9 @@ void update_clut(u8 addr)
 
 void dma_init()
 {
+  comp.ts.dma_saved.saddr = comp.ts.saddr;
+  comp.ts.dma_saved.daddr = comp.ts.daddr;
+
   comp.ts.dma.len = comp.ts.dmalen + 1;
   comp.ts.dma.num = comp.ts.dmanum;
 
@@ -522,7 +525,7 @@ void dma(u32 tacts)
   {
     // get new task for dma
     if (comp.ts.dma.state == DMA_ST_INIT)
-    {
+    {	  
       dma_init();
       if (comp.ts.dma.state == DMA_ST_NOP)
         return;

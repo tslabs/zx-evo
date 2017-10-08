@@ -501,6 +501,13 @@ typedef struct
     u8 state;       // state of dma transaction
   } dma;
 
+  // saved state
+  struct
+  {
+	  u32 saddr;      // source address of dma transaction
+	  u32 daddr;      // destination address of dma transaction
+  } dma_saved;
+
   struct
   {
     u32 y;                // Y coordinate of graphic layers

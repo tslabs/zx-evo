@@ -52,9 +52,9 @@ void showwatch()
    {
       for (unsigned y = 0; y < wat_sz; y++)
          for (unsigned x = 0; x < 37; x++)
-            txtscr[80*30 +  (wat_y+y)*80 + (wat_x+x)] = 0xFF;
+            txtscr[DEBUG_TEXT_WIDTH * DEBUG_TEXT_HEIGHT +  (wat_y+y) * DEBUG_TEXT_WIDTH + (wat_x+x)] = 0xFF;
    }
-   else 
+   else
    {
       Z80 &cpu = CpuMgr.Cpu();
       wtline("PC", cpu.pc, 0);
@@ -189,7 +189,7 @@ void showports()
    sprintf(ln, "  FE:%02X", comp.pFE);
    tprint(ports_x, ports_y, ln, W_OTHER);
    sprintf(ln, "7FFD:%02X", comp.p7FFD);
-   tprint(ports_x, ports_y+1, ln, (comp.p7FFD & 0x20) && 
+   tprint(ports_x, ports_y+1, ln, (comp.p7FFD & 0x20) &&
    !((conf.mem_model == MM_PENTAGON && conf.ramsize == 1024) ||
      (conf.mem_model == MM_PROFI && (comp.pDFFD & 0x10))) ? W_48K : W_OTHER);
 

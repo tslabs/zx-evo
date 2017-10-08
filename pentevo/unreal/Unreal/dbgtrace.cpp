@@ -184,7 +184,7 @@ void showtrace()
          asmii = ii;
          if (activedbg == WNDTRACE)
             for (unsigned q = 0; q < cs[cpu.trace_mode][1]; q++)
-               txtscr[80*30 + (trace_y+ii)*80 + trace_x + cs[cpu.trace_mode][0] + q] = W_CURS;
+               txtscr[DEBUG_TEXT_WIDTH * DEBUG_TEXT_HEIGHT + (trace_y+ii) * DEBUG_TEXT_WIDTH + trace_x + cs[cpu.trace_mode][0] + q] = W_CURS;
       }
 
       if (cpu.pc_trflags & TWF_BRANCH)

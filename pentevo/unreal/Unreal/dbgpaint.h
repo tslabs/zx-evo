@@ -1,5 +1,7 @@
 #pragma once
 
+#include "debug.h"
+
 struct MENUITEM
 {
    const char *text;
@@ -14,12 +16,13 @@ struct MENUDEF
    unsigned pos;
 };
 
-extern u8 txtscr[80*30*2];
+extern u8 txtscr[DEBUG_TEXT_WIDTH * DEBUG_TEXT_HEIGHT * 2];
 extern char str[0x80];
 extern unsigned nfr;
 
 void filledframe(unsigned x, unsigned y, unsigned dx, unsigned dy, u8 color = FFRAME_INSIDE);
 void fillattr(unsigned x, unsigned y, unsigned dx, u8 color = FFRAME_INSIDE);
+void fillrect(unsigned x, unsigned y, unsigned dx, unsigned dy, u8 color = FFRAME_INSIDE);
 void tprint(unsigned x, unsigned y, const char *str, u8 attr);
 void tprint_fg(unsigned x, unsigned y, const char *str, u8 attr);
 unsigned inputhex(unsigned x, unsigned y, unsigned sz, bool hex);

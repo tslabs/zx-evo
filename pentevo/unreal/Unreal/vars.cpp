@@ -631,7 +631,7 @@ const size_t zxk_maps_count = _countof(zxk_maps);
 PALETTEENTRY syspalette[0x100];
 
 GDIBMP gdibmp = { { { sizeof(BITMAPINFOHEADER), 320, -240, 1, 32, BI_RGB, 0 } } };
-GDIBMP debug_gdibmp = { { { sizeof(BITMAPINFOHEADER), 640, -480, 1, 8, BI_RGB, 0 } } };
+GDIBMP debug_gdibmp = { { { sizeof(BITMAPINFOHEADER), DEBUG_WND_WIDTH, -DEBUG_WND_HEIGHT, 1, 8, BI_RGB, 0 } } };
 
 PALETTE_OPTIONS pals[32] = {{"default",0x00,0x80,0xC0,0xE0,0xFF,0xC8,0xFF,0x00,0x00,0x00,0xFF,0x00,0x00,0x00,0xFF}};
 

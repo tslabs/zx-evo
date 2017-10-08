@@ -4,12 +4,13 @@
 #include "saa1099.h"
 #include "sound/dev_moonsound.h"
 #include "sound/ayx32.h"
+#include "debug.h"
 
 #define ROMLED_TIME 16
 
 #define SNDBUFSZ (4*1048576) // large temporary buffer (for reading snapshots)
 #define GDIBUFSZ (448*320*4*4*4)	// Quad size, 32 bit, 448x320 max
-#define DBG_GDIBUFSZ (640*480)	// Quad size, 32 bit, 448x320 max
+#define DBG_GDIBUFSZ (DEBUG_WND_WIDTH*DEBUG_WND_HEIGHT)	// Quad size, 32 bit, 448x320 max
 
 #pragma pack(8)
 struct PALETTE_OPTIONS

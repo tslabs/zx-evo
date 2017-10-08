@@ -543,15 +543,16 @@ static void SetVideoModeD3d();
 static INT_PTR CALLBACK WndProc(HWND hwnd,UINT uMessage,WPARAM wparam,LPARAM lparam)
 {
    static bool moving = false;
-
-   if (uMessage == WM_QUIT) // never heppens
+   // printf("WM_x = %04X\n", uMessage);
+   
+   if ((uMessage == WM_QUIT) || (uMessage == WM_NCDESTROY))
    {
 //       __debugbreak();
 //       printf("WM_QUIT\n");
        exit();
    }
 
-   if (uMessage == WM_CLOSE) // never heppens
+   if (uMessage == WM_CLOSE)
    {
 //       __debugbreak();
 //       printf("WM_CLOSE\n");

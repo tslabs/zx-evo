@@ -57,6 +57,9 @@ unsigned find2dlg(unsigned start);
 #include "dbgoth.cpp"
 */
 
+void show_tsconf();
+void init_tsconf();
+
 void debugscr()
 {
    memset(txtscr, BACKGR_CH, sizeof txtscr/2);
@@ -72,6 +75,7 @@ void debugscr()
    showbanks();
    showports();
    showdos();
+   show_tsconf();
 
 #if 1
    show_time();
@@ -191,7 +195,7 @@ repaint_dbg:
          cpu->trace_top = cpu->trace_curs;
          debugscr();
       }
-      
+
       debugflip();
 
 sleep:
@@ -338,7 +342,7 @@ u8 isbrk(const Z80 &cpu) // is there breakpoints active or any other reason to u
 
 static LRESULT APIENTRY DebugWndProc(HWND hwnd,UINT uMessage,WPARAM wparam,LPARAM lparam)
 {
-	PAINTSTRUCT ps; 
+	PAINTSTRUCT ps;
     HDC hdc;
 
 	if (uMessage == WM_CLOSE)
@@ -350,8 +354,8 @@ static LRESULT APIENTRY DebugWndProc(HWND hwnd,UINT uMessage,WPARAM wparam,LPARA
 	if (uMessage == WM_PAINT)
 	{
 		u8 * const bptr = debug_gdibuf;
-		hdc = BeginPaint(hwnd, &ps); 
-		SetDIBitsToDevice(hdc, 0, 0, 640, 480, 0, 0, 0, 480, bptr, &debug_gdibmp.header, DIB_RGB_COLORS);
+		hdc = BeginPaint(hwnd, &ps);
+		SetDIBitsToDevice(hdc, 0, 0, DEBUG_WND_WIDTH, DEBUG_WND_HEIGHT, 0, 0, 0, DEBUG_WND_HEIGHT, bptr, &debug_gdibmp.header, DIB_RGB_COLORS);
 		EndPaint(hwnd, &ps);
 		return 0L;
 	}
@@ -395,13 +399,16 @@ void init_debug()
 	RegisterClass(&wc);
 
 	debug_menu = LoadMenu(hIn, MAKEINTRESOURCE(IDR_DEBUGMENU));
+	//debug_wnd = CreateWindow("DEBUG_WND", "UnrealSpeccy debugger", dwStyle,
+    //                CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, wnd, debug_menu, hIn, NULL);
+
 	debug_wnd = CreateWindow("DEBUG_WND", "UnrealSpeccy debugger", dwStyle,
-                    CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, wnd, debug_menu, hIn, NULL);
-    
+		CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, nullptr, debug_menu, hIn, NULL);
+
 	ClRect.left = 0;
 	ClRect.top = 0;
-	ClRect.right = 640 - 1;
-	ClRect.bottom = 480 - 1;
+	ClRect.right = DEBUG_WND_WIDTH - 1;
+	ClRect.bottom = DEBUG_WND_HEIGHT - 1;
 	AdjustWindowRect( &ClRect, dwStyle, GetMenu(debug_wnd) != 0 );
 	SetWindowPos( debug_wnd, NULL, 0, 0, ClRect.right - ClRect.left + 1, ClRect.bottom - ClRect.top + 1, SWP_NOMOVE );
 
@@ -416,4 +423,6 @@ void init_debug()
 		debug_gdibmp.header.bmiColors[i].rgbGreen = g;
 		debug_gdibmp.header.bmiColors[i].rgbBlue  = b;
 	}
+
+	init_tsconf();
 }
