@@ -355,6 +355,12 @@
     <ClCompile Include="sound\ayx32.cpp">
       <Filter>Sources\sound</Filter>
     </ClCompile>
+    <ClCompile Include="dbgtsconf.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="dbgwidgets.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="atm.h">
@@ -662,6 +668,12 @@
     </ClInclude>
     <ClInclude Include="sound\ayx32.h">
       <Filter>Headers\sound</Filter>
+    </ClInclude>
+    <ClInclude Include="dbgtsconf.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="dbgwidgets.h">
+      <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

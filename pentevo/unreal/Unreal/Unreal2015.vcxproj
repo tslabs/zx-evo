@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -45,6 +45,8 @@
     <ClCompile Include="dbgreg.cpp" />
     <ClCompile Include="dbgrwdlg.cpp" />
     <ClCompile Include="dbgtrace.cpp" />
+    <ClCompile Include="dbgtsconf.cpp" />
+    <ClCompile Include="dbgwidgets.cpp" />
     <ClCompile Include="debug.cpp" />
     <ClCompile Include="depack.cpp" />
     <ClCompile Include="draw.cpp" />
@@ -168,6 +170,8 @@
     <ClInclude Include="dbgreg.h" />
     <ClInclude Include="dbgrwdlg.h" />
     <ClInclude Include="dbgtrace.h" />
+    <ClInclude Include="dbgtsconf.h" />
+    <ClInclude Include="dbgwidgets.h" />
     <ClInclude Include="ddk.h" />
     <ClInclude Include="debug.h" />
     <ClInclude Include="defs.h" />
@@ -272,20 +276,21 @@
     </SccLocalPath>
     <SccProvider>
     </SccProvider>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v110_xp</PlatformToolset>
+    <PlatformToolset>v140_xp</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v110_xp</PlatformToolset>
+    <PlatformToolset>v140_xp</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -338,7 +343,7 @@
 copy /y "$(ProjectDir)cfg\*.*" "$(TargetDir)"
 if not exist "$(TargetDir)rom\" md "$(TargetDir)rom"
 copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)rom"
-..\..\tools\7z\7z.exe e -y -bd -o"$(TargetDir)" .\cfg\hdd\wc.7z
+call "$(ProjectDir)build\makewc.bat" $(TargetDir)
 </Command>
     </PostBuildEvent>
     <ResourceCompile>
@@ -388,7 +393,7 @@ copy /y "$(ProjectDir)cfg\*.*" "$(TargetDir)"
 copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)rom"
 copy /y "$(ProjectDir)doc\*.*" "$(TargetDir)doc"
 del /q "$(TargetDir)..\unreal.7z"
-..\..\tools\7z\7z.exe e -y -bd -o"$(TargetDir)" .\cfg\hdd\wc.7z
+call "$(ProjectDir)build\makewc.bat" $(TargetDir)
 ..\..\tools\7z\7z.exe a -r -mx9 -y -bd "$(TargetDir)..\unreal.7z" "$(TargetDir)*"
 </Command>
       <Message>
