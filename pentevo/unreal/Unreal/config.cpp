@@ -908,10 +908,10 @@ void apply_memory()
    break;
 
    case MM_TSL:
-      base_sys_rom = 0;
-      base_dos_rom = 0;
-      base_128_rom = 0;
-      base_sos_rom = 0;
+      base_sys_rom = page_rom(0);
+      base_dos_rom = page_rom(1);
+      base_128_rom = page_rom(2);
+      base_sos_rom = page_rom(3);
    break;
 
    case MM_KAY:
