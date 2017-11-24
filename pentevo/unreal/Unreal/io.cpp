@@ -436,6 +436,10 @@ void out(unsigned port, u8 val)
    }
    else // не dos
    {
+         // VG93 free access in TS-Conf (FDDVirt.7 = 1)
+         if ((conf.mem_model == MM_TSL) && (comp.ts.fddvirt & 0x80) && ((p1 & 0x1F) == 0x1F)) // 1F, 3F, 5F, 7F, FF
+           comp.wd.out(p1, val);
+         
          if (((port & 0xA3) == 0xA3) && (conf.ide_scheme == IDE_DIVIDE))
          {
              if (p1 == 0xA3)
@@ -1429,7 +1433,7 @@ void ts_ext_port_wr(u8 port, u8 val)
     break;
 
     case TSW_FDDVIRT:
-      comp.ts.fddvirt = val & 0x0F;
+      comp.ts.fddvirt = val & 0x8F;
     break;
 
     case TSW_INTMASK:
