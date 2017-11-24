@@ -1223,6 +1223,10 @@ __inline u8 in1(unsigned port)
    }
    else // не dos
    {
+       // VG93 free access in TS-Conf (FDDVirt.7 = 1)
+       if ((conf.mem_model == MM_TSL) && (comp.ts.fddvirt & 0x80) && ((p1 & 0x1F) == 0x1F)) // 1F, 3F, 5F, 7F, FF
+         return comp.wd.in(p1);
+         
        if (((port & 0xA3) == 0xA3) && (conf.ide_scheme == IDE_DIVIDE))
        {
            if (p1 == 0xA3)
