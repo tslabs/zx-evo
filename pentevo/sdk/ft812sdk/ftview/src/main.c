@@ -53,9 +53,6 @@ u32 filesize;
 u8 file_ext;
 u8 call_type;
 
-u32 *dlist;
-u16 dlp;
-
 // --- Extensions ---------------------------
 enum
 {

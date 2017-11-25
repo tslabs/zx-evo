@@ -1,5 +1,5 @@
 
 set PRJ=test2
 
-call ..\sdklib\build.bat %PRJ%
-REM call ..\sdklib\mount.bat %PRJ%
+call ..\lib\sdk\build.bat %PRJ%
+REM call ..\lib\sdk\mount.bat %PRJ%
