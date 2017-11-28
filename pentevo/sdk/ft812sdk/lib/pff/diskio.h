@@ -36,6 +36,8 @@ typedef enum {
 #define SEND_IF_COND        (0x40+8)
 #define SET_BLOCKLEN        (0x40+16)
 #define READ_SINGLE_BLOCK   (0x40+17)
+#define READ_MULTIPLE_BLOCK (0x40+18)
+#define STOP_TRANSMISSION   (0x40+12)
 #define WRITE_BLOCK         (0x40+24)
 
 #define ZC_SD_CFG   0x77

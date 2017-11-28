@@ -1,6 +1,6 @@
 
 // Low level disk I/O module for ZC
-// (c) TSL 2014
+// (c) TSL
 //
 // -------------------------------------------
 // This module uses some IAR-specific things,
@@ -158,7 +158,7 @@ void sd_skip(u16 a)
     ld d, (hl)
     ex de, hl
     ld bc, #-16
-4$:    
+4$:
     ld a, h
     or a
     jr nz, 2$
@@ -199,17 +199,17 @@ void sd_skip(u16 a)
 u8 sd_cmd(u8 cmd, u32 arg)
 {
   u8 rc;
-  u8 n;
-
+  u8 i;
+  
   // ACMD<n> is the command sequence of CMD55, CMD<n>
   if (cmd & 0x80)
   {
     cmd &= 0x7F;
     if ((rc = sd_cmd(APP_CMD, 0)) > 1) goto exit;
+    sd_cs_off(); sd_wr(0xFF);
   }
 
   // select the card
-  sd_cs_off(); sd_wr(0xFF);
   sd_cs_on(); sd_wr(0xFF);
 
   // send command packet
@@ -218,11 +218,17 @@ u8 sd_cmd(u8 cmd, u32 arg)
   sd_wr(((u8*)&arg)[2]);
   sd_wr(((u8*)&arg)[1]);
   sd_wr(((u8*)&arg)[0]);
-  sd_wr((cmd == GO_IDLE_STATE) ? 0x95 : ((cmd == SEND_IF_COND) ? 0x87 : 0x01));   // real CRCs for certain commands of dummy + stop
+  sd_wr((cmd == GO_IDLE_STATE) ? 0x95 : ((cmd == SEND_IF_COND) ? 0x87 : 0x01));   // real CRCs for certain commands or dummy + stop
 
   // receive command response
-  n = 10;
-  while (((rc = sd_rd()) & 0x80) && --n);
+  i = 10;
+  if (cmd == STOP_TRANSMISSION)
+  {
+    sd_skip(4);
+    while ((rc = (sd_rd() != 0xFF)) && --i);
+  }
+  else
+    while (((rc = sd_rd()) & 0x80) && --i);
 
 exit:
   return rc;
@@ -237,7 +243,7 @@ DSTATUS disk_initialize (void)
   DSTATUS stat = STA_NOINIT;
   u8 buf[4];
   u8 cmd;
-  u16 i = (u16)-1;
+  u16 i = 65000;
   ctype = CT_NONE;
 
   sd_cs_off();
@@ -254,7 +260,7 @@ DSTATUS disk_initialize (void)
     if ((buf[2] != 0x01) || (buf[3] != 0xAA)) goto exit;
 
     // wait for leaving idle state (ACMD41 with HCS bit)
-    while ((sd_cmd(SEND_OP_COND_SD, 1UL << 30) != 0) && --i);
+    while ((sd_cmd(SEND_OP_COND_SD, 1UL << 30)) && --i);
     if (!i) goto exit;
 
     // check CCS bit in the OCR
@@ -282,7 +288,7 @@ DSTATUS disk_initialize (void)
     }
 
     // wait for leaving idle state
-    while ((sd_cmd(cmd, 0) != 0) && --i);
+    while ((sd_cmd(cmd, 0)) && --i);
     if (!i)
     {
       ctype = CT_NONE;
@@ -290,7 +296,7 @@ DSTATUS disk_initialize (void)
     }
 
     // set R/W block length to 512
-    if (sd_cmd(SET_BLOCKLEN, 512) != 0)
+    if (sd_cmd(SET_BLOCKLEN, 512))
       ctype = CT_NONE;
   }
 
@@ -310,50 +316,38 @@ DRESULT disk_readp
     UINT count      // Byte count to read
 )
 {
-  DRESULT res = RES_ERROR;
-  u16 i;
-  u8 d;
+  DRESULT rc = RES_ERROR;
+  u16 rsz = min(count, 512 - offset);
+  u16 ssz = offset;
 
-  *(u16*)0x4000 = (u16)buff;
-  *(u32*)0x4002 = (u16)sector;
-  *(u16*)0x4006 = (u16)offset;
-  *(u16*)0x4008 = (u16)count;
-  
   if (!(ctype & CT_BLOCK)) sector *= 512;
+  if (sd_cmd(READ_MULTIPLE_BLOCK, sector)) goto exit;
 
   while (count)
   {
-    u16 rsz;
-
-    // send read command and wait for data packet
-    if (sd_cmd(READ_SINGLE_BLOCK, sector) != 0) goto exit;
-    i = (u16)-1;
+    u16 i = 65000;
+    u8 d;
+  
     while (((d = sd_rd()) == 0xFF) && --i);
     if (d != 0xFE) goto exit;
-
-    if (offset)
-    {
-      rsz = min(count, 512 - offset);
-      sd_skip(offset);
-      offset = 0;
-    }
-    else
-      rsz = min(count, 512);
-
+  
+    sd_skip(ssz);
     sd_recv(buff, rsz);
-    sd_skip(512 - offset - rsz);
+    sd_skip(512 - ssz - rsz);
     sd_skip(2);     // Skip CRC
-    *(u16*)0x5800 = (u16)buff;  // !!!
     buff += rsz;
     count -= rsz;
-    sector += (ctype & CT_BLOCK) ? 1 : 512;
+    rsz = min(count, 512);
+    ssz = 0;
   }
 
-  res = RES_OK;
+  if (sd_cmd(STOP_TRANSMISSION, 0)) goto exit;
+  rc = RES_OK;
+
 exit:
   sd_rel();   // release SPI
 
-  return res;
+  return rc;
 }
 
 // Write Partial Sector
@@ -363,9 +357,8 @@ DRESULT disk_writep
   DWORD sector        // Sector number (LBA) or Number of bytes to send
 )
 {
-  DRESULT res = RES_ERROR;
+  DRESULT rc = RES_ERROR;
   static u16 write_cnt;
-  u16 i;
 
   // return RES_OK;
 
@@ -375,7 +368,7 @@ DRESULT disk_writep
     u16 cnt = min((u16)sector, write_cnt);
     write_cnt -= cnt;
     sd_send((u8*)buff, cnt);
-    res = RES_OK;
+    rc = RES_OK;
     goto ret;
   }
 
@@ -385,29 +378,29 @@ DRESULT disk_writep
     if (sector)
     {
       if (!(ctype & CT_BLOCK)) sector *= 512;
-      if (sd_cmd(WRITE_BLOCK, sector) != 0) goto exit;
+      if (sd_cmd(WRITE_BLOCK, sector)) goto exit;
 
       // data block header
       sd_wr(0xFF); sd_wr(0xFE);
       write_cnt = 512;
-      res = RES_OK;
+      rc = RES_OK;
       goto ret;
     }
 
     // Finalize write process
     else
     {
-      sd_skip(write_cnt + 2);   // left bytes and CRC
+      u16 i = 65000;
 
+      sd_skip(write_cnt + 2);   // left bytes and CRC
       sd_rd();    // dummy byte read for ZC latency
       if ((sd_rd() & 0x1F) != 0x05) goto exit;
 
       // receive data resp and wait for end of write process in timeout of 300ms
-      i = (u16)-1;
       while ((sd_rd() != 0xFF) && --i);
       if (!i) goto exit;
 
-      res = RES_OK;
+      rc = RES_OK;
     }
   }
 
@@ -415,5 +408,5 @@ exit:
   sd_rel();   // release SPI
 
 ret:
-  return res;
+  return rc;
 }
