@@ -193,7 +193,11 @@ void out(unsigned port, u8 val)
        }
    }
 
-   if (comp.flags & CF_DOSPORTS)
+   // VG93 free access in TS-Conf (FDDVirt.7 = 1)
+   if ((conf.mem_model == MM_TSL) && (comp.ts.fddvirt & 0x80) && ((p1 & 0x1F) == 0x1F)) // 1F, 3F, 5F, 7F, FF
+     comp.wd.out(p1, val);
+   
+   else if (comp.flags & CF_DOSPORTS)
    {
       if (conf.mem_model == MM_ATM3 && (p1 & 0x1F) == 0x0F && !(((p1 >> 5) - 1) & 4))
       {
@@ -203,7 +207,6 @@ void out(unsigned port, u8 val)
           // 8F = 100|01111b
           comp.wd_shadow[(p1 >> 5) - 1] = val;
       }
-
 
       if (conf.ide_scheme == IDE_ATM && (port & 0x1F) == 0x0F)
       {
@@ -436,56 +439,52 @@ void out(unsigned port, u8 val)
    }
    else // не dos
    {
-         // VG93 free access in TS-Conf (FDDVirt.7 = 1)
-         if ((conf.mem_model == MM_TSL) && (comp.ts.fddvirt & 0x80) && ((p1 & 0x1F) == 0x1F)) // 1F, 3F, 5F, 7F, FF
-           comp.wd.out(p1, val);
-         
-         if (((port & 0xA3) == 0xA3) && (conf.ide_scheme == IDE_DIVIDE))
+     if (((port & 0xA3) == 0xA3) && (conf.ide_scheme == IDE_DIVIDE))
+     {
+         if (p1 == 0xA3)
          {
-             if (p1 == 0xA3)
+             comp.ide_hi_byte_w ^= 1;
+             if (comp.ide_hi_byte_w)
              {
-                 comp.ide_hi_byte_w ^= 1;
-                 if (comp.ide_hi_byte_w)
-                 {
-                     comp.ide_write = val;
-                     return;
-                 }
-                 u8 tmp = comp.ide_write;
                  comp.ide_write = val;
-                 val = tmp;
+                 return;
              }
-             else
-             {
-                 comp.ide_hi_byte_w = 0;
-             }
-             port >>= 2;
-             goto write_hdd;
+             u8 tmp = comp.ide_write;
+             comp.ide_write = val;
+             val = tmp;
          }
-
-         if ((u8)port == 0x1F && conf.sound.ay_scheme == AY_SCHEME_POS)
+         else
          {
-             comp.active_ay = val & 1;
+             comp.ide_hi_byte_w = 0;
+         }
+         port >>= 2;
+         goto write_hdd;
+     }
+
+     if ((u8)port == 0x1F && conf.sound.ay_scheme == AY_SCHEME_POS)
+     {
+         comp.active_ay = val & 1;
+         return;
+     }
+
+     if (!(port & 6) && (conf.ide_scheme == IDE_NEMO || conf.ide_scheme == IDE_NEMO_A8))
+     {
+         unsigned hi_byte = (conf.ide_scheme == IDE_NEMO)? (port & 1) : (port & 0x100);
+         if (hi_byte)
+         {
+             comp.ide_write = val;
              return;
          }
-
-         if (!(port & 6) && (conf.ide_scheme == IDE_NEMO || conf.ide_scheme == IDE_NEMO_A8))
+         if ((port & 0x18) == 0x08)
          {
-             unsigned hi_byte = (conf.ide_scheme == IDE_NEMO)? (port & 1) : (port & 0x100);
-             if (hi_byte)
-             {
-                 comp.ide_write = val;
-                 return;
-             }
-             if ((port & 0x18) == 0x08)
-             {
-                 if ((port & 0xE0) == 0xC0)
-                     hdd.write(8, val);
-                 return;
-             } // CS1=0,CS0=1,reg=6
-             if ((port & 0x18) != 0x10)
-                 return; // invalid CS0,CS1
-             goto write_hdd_5;
-         }
+             if ((port & 0xE0) == 0xC0)
+                 hdd.write(8, val);
+             return;
+         } // CS1=0,CS0=1,reg=6
+         if ((port & 0x18) != 0x10)
+             return; // invalid CS0,CS1
+         goto write_hdd_5;
+     }
 
      if ( conf.mem_model == MM_PROFI )
      {
@@ -1093,7 +1092,11 @@ __inline u8 in1(unsigned port)
       return val;
    }
 
-   if (comp.flags & CF_DOSPORTS)
+   // VG93 free access in TS-Conf (FDDVirt.7 = 1)
+   if ((conf.mem_model == MM_TSL) && (comp.ts.fddvirt & 0x80) && ((p1 & 0x1F) == 0x1F)) // 1F, 3F, 5F, 7F, FF
+     return comp.wd.in(p1);
+         
+   else if (comp.flags & CF_DOSPORTS)
    {
       if (conf.mem_model == MM_ATM3 && (p1 & 0x1F) == 0x0F && !(((p1 >> 5) - 1) & 4))
       {
@@ -1223,10 +1226,6 @@ __inline u8 in1(unsigned port)
    }
    else // не dos
    {
-       // VG93 free access in TS-Conf (FDDVirt.7 = 1)
-       if ((conf.mem_model == MM_TSL) && (comp.ts.fddvirt & 0x80) && ((p1 & 0x1F) == 0x1F)) // 1F, 3F, 5F, 7F, FF
-         return comp.wd.in(p1);
-         
        if (((port & 0xA3) == 0xA3) && (conf.ide_scheme == IDE_DIVIDE))
        {
            if (p1 == 0xA3)
