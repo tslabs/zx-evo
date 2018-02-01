@@ -138,7 +138,7 @@ public:
 	void on_paint() override
 	{
 		draw_reg_frame("Bitmap");
-		draw_port("VPage", comp.ts.page[3]);
+		draw_port("VPage", comp.ts.vpage);
 		draw_hl_port('X', comp.ts.g_xoffsh, comp.ts.g_xoffsl, comp.ts.g_xoffs);
 		draw_hl_port('Y', comp.ts.g_yoffsh, comp.ts.g_yoffsl, comp.ts.g_yoffs);
 	}
