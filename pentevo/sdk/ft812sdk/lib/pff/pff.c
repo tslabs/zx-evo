@@ -400,7 +400,7 @@ FRESULT pf_mount (
 
   FatFs = 0;
 
-  if (disk_initialize() & STA_NOINIT)  /* Check if the drive is ready or not */
+  if (disk_initialize())  /* Check if the drive is ready or not */
     return FR_NOT_READY;
 
   /* Search FAT partition on the drive */
