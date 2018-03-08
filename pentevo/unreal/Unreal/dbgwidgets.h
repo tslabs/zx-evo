@@ -9,8 +9,8 @@ using namespace std;
 #define	W_REGVAL	0x51
 #define	W_BITS		0x04
 #define	W_EQ		0x04
-#define W_LEDOFF	0x50
-#define W_LEDON 	0x20
+//#define W_LEDOFF	0x50
+#define W_LEDON 	0x50
 
 
 
