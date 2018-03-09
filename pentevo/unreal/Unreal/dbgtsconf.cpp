@@ -137,6 +137,9 @@ public:
 
 	void on_paint() override
 	{
+		set_xy(19, 0);
+		draw_led("EN", !comp.ts.nogfx);
+
 		draw_reg_frame("Bitmap");
 		draw_port("VPage", comp.ts.vpage);
 		draw_hl_port('X', comp.ts.g_xoffsh, comp.ts.g_xoffsl, comp.ts.g_xoffs);
@@ -274,7 +277,7 @@ public:
 		draw_bit("S_ALIGN", 5, comp.ts.dma.s_algn);
 		draw_bit("D_ALIGN", 4, comp.ts.dma.d_algn);
 		draw_bit("A_SZ", 3, comp.ts.dma.asz);
-		draw_bit("DDEV", 20, d_dma, comp.ts.dma.dev + (comp.ts.dma.rw << 3));
+		draw_bit("DDEV", 20, d_dma, (comp.ts.dma.dev << 1) + comp.ts.dma.rw);
 	}
 };
 

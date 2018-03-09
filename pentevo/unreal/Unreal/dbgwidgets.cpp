@@ -129,7 +129,9 @@ void dbg_control::draw_hex24(char* title, int bits, u32 val) const
 		.next_col();
 
 	(*canvas_)
-		.draw_hex(val, 6, W_NORM);
+		.draw_hex(val >> 14, 2, W_NORM).move_x_to_len()
+		.draw_text(":", W_EQ).move_x_to_len()
+		.draw_hex(val & 0x3FFF, 4, W_NORM);
 
 	next_row();
 }
@@ -194,7 +196,7 @@ void dbg_control::draw_hl_port(char prefix, u8 hval, u8 lval, u16 val) const
 	(*canvas_)
 		.draw_text(line1, W_NORM).move_x_to_len()
 		.draw_text("= ", W_EQ).move_x_to_len()
-		.draw_hex(lval, 4, W_NORM).move_x_to_len()
+		.draw_hex(val, 4, W_NORM).move_x_to_len()
 		.draw_text(" ").move_x_to_len();
 
 	next_row();
@@ -240,7 +242,7 @@ void dbg_control::draw_led(char* title, u8 on) const
 	if (on & 1)
 		(*canvas_).draw_text(title, W_LEDON).move_x_to_len();
 	else
-		(*canvas_).draw_text(title, W_LEDOFF).move_x_to_len();
+		(*canvas_).move(strlen(title), 0);
 }
 
 void dbg_control::set_xy(int x, int y) const
