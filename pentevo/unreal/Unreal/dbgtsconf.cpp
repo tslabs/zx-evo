@@ -260,12 +260,12 @@ public:
 		next_row();
 
 		// draw_xhl_port('S', comp.ts.saddrx, comp.ts.saddrh, comp.ts.saddrl);
-		draw_hex24("SRC", -1, comp.ts.saddr);
+		draw_hex24("     SRC", -1, comp.ts.saddr);
 		draw_hex24("CURR SRC", -1, comp.ts.dma.saddr);
 		next_row();
 
 		// draw_xhl_port('D', comp.ts.daddrx, comp.ts.daddrh, comp.ts.daddrl);
-		draw_hex24("DST", -1, comp.ts.daddr);
+		draw_hex24("     DST", -1, comp.ts.daddr);
 		draw_hex24("CURR DST", -1, comp.ts.dma.daddr);
 		next_row();
 
