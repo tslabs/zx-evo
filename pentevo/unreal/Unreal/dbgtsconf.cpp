@@ -257,19 +257,23 @@ public:
 		set_xy(15, 0);
 		draw_led("ACTIVE", comp.ts.dma.state != DMA_ST_NOP);
 		next_row();
+		next_row();
 
+		// draw_xhl_port('S', comp.ts.saddrx, comp.ts.saddrh, comp.ts.saddrl);
 		draw_hex24("SRC", -1, comp.ts.saddr);
-		draw_xhl_port('S', comp.ts.saddrx, comp.ts.saddrh, comp.ts.saddrl);
-		draw_hex24("CURR_SRC", -1, comp.ts.dma.saddr);
+		draw_hex24("CURR SRC", -1, comp.ts.dma.saddr);
 		next_row();
 
+		// draw_xhl_port('D', comp.ts.daddrx, comp.ts.daddrh, comp.ts.daddrl);
 		draw_hex24("DST", -1, comp.ts.daddr);
-		draw_xhl_port('D', comp.ts.daddrx, comp.ts.daddrh, comp.ts.daddrl);
-		draw_hex24("CURR_DST", -1, comp.ts.dma.daddr);
+		draw_hex24("CURR DST", -1, comp.ts.dma.daddr);
 		next_row();
 
-		draw_hex8_inline("LEN", comp.ts.dmalen);
-		draw_hex8_inline(" NUM", comp.ts.dmanum);
+		draw_hex8_inline("     NUM", comp.ts.dmanum);
+		draw_hex8_inline(" LEN", comp.ts.dmalen);
+		next_row();
+		draw_hex8_inline("CURR NUM", comp.ts.dma.num);
+		draw_hex8_inline(" LEN", comp.ts.dma.len);
 		next_row();
 		next_row();
 		draw_port("CTRL", comp.ts.dma.ctrl);
