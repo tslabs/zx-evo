@@ -147,6 +147,18 @@ public:
 	}
 };
 
+class sprites_control : public dbg_control
+{
+public:
+	explicit sprites_control() : dbg_control(1) { }
+
+	void on_paint() override
+	{
+		draw_reg_frame("Sprites");
+		draw_port("SGPage", comp.ts.sgpage);
+	}
+};
+
 class tiles0_control : public dbg_control
 {
 public:
@@ -161,8 +173,8 @@ public:
 		next_row();
 
 		draw_port("T0GPage", comp.ts.t0gpage[2]);
-		draw_hl_port('X', comp.ts.t0_xoffsh, comp.ts.t0_xoffsl, comp.ts.t0_xoffs);
-		draw_hl_port('Y', comp.ts.t0_yoffsh, comp.ts.t0_yoffsl, comp.ts.t0_yoffs);
+		draw_hex16("X", 16, comp.ts.t0_xoffs);
+		draw_hex16("Y", 16, comp.ts.t0_yoffs);
 	}
 };
 
@@ -181,8 +193,8 @@ public:
 		next_row();
 
 		draw_port("T1GPage", comp.ts.t1gpage[2]);
-		draw_hl_port('X', comp.ts.t1_xoffsh, comp.ts.t1_xoffsl, comp.ts.t1_xoffs);
-		draw_hl_port('Y', comp.ts.t1_yoffsh, comp.ts.t1_yoffsl, comp.ts.t1_yoffs);
+		draw_hex16("X", 16, comp.ts.t1_xoffs);
+		draw_hex16("Y", 16, comp.ts.t1_yoffs);
 	}
 };
 
@@ -248,7 +260,7 @@ public:
 class dma_control : public dbg_control
 {
 public:
-	explicit dma_control() : dbg_control(17) { }
+	explicit dma_control() : dbg_control(15) { }
 
 	void on_paint() override
 	{
@@ -256,7 +268,6 @@ public:
 
 		set_xy(15, 0);
 		draw_led("ACTIVE", comp.ts.dma.state != DMA_ST_NOP);
-		next_row();
 		next_row();
 
 		// draw_xhl_port('S', comp.ts.saddrx, comp.ts.saddrh, comp.ts.saddrl);
@@ -340,6 +351,7 @@ void init_regs_page()
 	col_1.add_item(new fmaddr_control());
 	col_1.add_item(new mempages_control());
 
+	col_2.add_item(new sprites_control());
 	col_2.add_item(new dma_control());
 	col_2.add_item(new interrupt_control());
 	col_2.add_item(new intmask_control());

@@ -13,6 +13,7 @@
 #include "tape.h"
 #include "zxevo.h"
 #include "sound/ayx32.h"
+#include "util.h"
 
 #ifdef LOG_FE_OUT
   extern FILE *f_log_FE_in;
@@ -1614,17 +1615,19 @@ void ts_ext_port_wr(u8 port, u8 val)
     break;
 
     case TSW_DMACTR:
-      if (1)  // !!!
+      if (comp.ts.dma.state == DMA_ST_NOP)
       {
         comp.ts.dma.ctrl = val;
         comp.ts.dma.state = DMA_ST_INIT;
       }
       else
-        printf("Illegal DMA mode! OUT (%02XAF), %02X, PC: %04X\r\n", port, val, cpu.pc);
+      {
+        color(CONSCLR_WARNING); printf("Cannot write to DMA when it is active! PC = %02X:%04X\r\n", comp.ts.page[cpu.pc >> 14], cpu.pc);
+      }
     break;
 
     default:
-      printf("Illegal port! OUT (%02XAF), %02X, PC: %04X\r\n", port, val, cpu.pc);
+      color(CONSCLR_WARNING); printf("Illegal port! OUT (%02XAF), %02X, PC = %02X:%04X\r\n", port, val, comp.ts.page[cpu.pc >> 14], cpu.pc);
     break;
   }
 }
