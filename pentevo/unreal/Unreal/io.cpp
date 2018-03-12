@@ -22,6 +22,21 @@
   extern FILE *f_log_FE_out;
 #endif
 
+bool assert_dma_active()
+{
+  bool rc = true;
+
+  if (comp.ts.dma.state != DMA_ST_NOP)
+  {
+    color(CONSCLR_WARNING);
+    printf("Cannot write to DMA when it is active! PC = %02X:%04X\r\n", comp.ts.page[cpu.pc >> 14], cpu.pc);
+    color(CONSCLR_DEFAULT);
+    rc = false;
+  }
+
+  return rc;
+}
+
 void out(unsigned port, u8 val)
 {
 
@@ -440,7 +455,7 @@ void out(unsigned port, u8 val)
          // VG93 free access in TS-Conf (FDDVirt.7 = 1)
          if ((conf.mem_model == MM_TSL) && (comp.ts.fddvirt & 0x80) && ((p1 & 0x1F) == 0x1F)) // 1F, 3F, 5F, 7F, FF
            comp.wd.out(p1, val);
-         
+
          if (((port & 0xA3) == 0xA3) && (conf.ide_scheme == IDE_DIVIDE))
          {
              if (p1 == 0xA3)
@@ -1227,7 +1242,7 @@ __inline u8 in1(unsigned port)
        // VG93 free access in TS-Conf (FDDVirt.7 = 1)
        if ((conf.mem_model == MM_TSL) && (comp.ts.fddvirt & 0x80) && ((p1 & 0x1F) == 0x1F)) // 1F, 3F, 5F, 7F, FF
          return comp.wd.in(p1);
-         
+
        if (((port & 0xA3) == 0xA3) && (conf.ide_scheme == IDE_DIVIDE))
        {
            if (p1 == 0xA3)
@@ -1583,46 +1598,50 @@ void ts_ext_port_wr(u8 port, u8 val)
 
   // dma
     case TSW_DMASAL:
-      comp.ts.saddrl = val &0xFE;
+      if (assert_dma_active())
+        comp.ts.saddrl = val &0xFE;
     break;
 
     case TSW_DMASAH:
-      comp.ts.saddrh = val & 0x3F;
+      if (assert_dma_active())
+        comp.ts.saddrh = val & 0x3F;
     break;
 
     case TSW_DMASAX:
-      comp.ts.saddrx = val;
+      if (assert_dma_active())
+        comp.ts.saddrx = val;
     break;
 
     case TSW_DMADAL:
-      comp.ts.daddrl = val &0xFE;
+      if (assert_dma_active())
+        comp.ts.daddrl = val &0xFE;
     break;
 
     case TSW_DMADAH:
-      comp.ts.daddrh = val & 0x3F;
+      if (assert_dma_active())
+        comp.ts.daddrh = val & 0x3F;
     break;
 
     case TSW_DMADAX:
-      comp.ts.daddrx = val;
+      if (assert_dma_active())
+        comp.ts.daddrx = val;
     break;
 
     case TSW_DMALEN:
-      comp.ts.dmalen = val;
+      if (assert_dma_active())
+        comp.ts.dmalen = val;
     break;
 
     case TSW_DMANUM:
-      comp.ts.dmanum = val;
+      if (assert_dma_active())
+        comp.ts.dmanum = val;
     break;
 
     case TSW_DMACTR:
-      if (comp.ts.dma.state == DMA_ST_NOP)
+      if (assert_dma_active())
       {
         comp.ts.dma.ctrl = val;
         comp.ts.dma.state = DMA_ST_INIT;
-      }
-      else
-      {
-        color(CONSCLR_WARNING); printf("Cannot write to DMA when it is active! PC = %02X:%04X\r\n", comp.ts.page[cpu.pc >> 14], cpu.pc);
       }
     break;
 
