@@ -116,7 +116,7 @@ int main(int argc, char **argv)
    SetConsoleCtrlHandler(ConsoleHandler, TRUE);
 
    color(CONSCLR_TITLE);
-   printf("UnrealSpeccy by SMT and Others, Build %s\n", __DATE__);
+   printf("UnrealSpeccy by SMT and Others\nBuild date: %s, %s\n\n", __DATE__, __TIME__);
 #ifdef __ICL
    printf("Intel C++ Compiler: %d.%02d\n", __ICL/100, __ICL % 100);
 #endif
