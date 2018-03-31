@@ -1,0 +1,40 @@
+
+To use SPI Flash Interface:
+
+0. Open GluClock ports          OUT #EFF7, 0x80
+1. Disable EEPROM operations    OUT #DFF7, 0x0C : OUT #BFF7, 0
+2. Select SFI                   OUT #DFF7, 0xF0 : OUT #BFF7, 0x10
+3. Write/read SFI regs          OUT #DFF7, #F1..#FF : IN/OUT #BFF7
+x. Deselect SFI                 OUT #DFF7, 0xF0 : OUT #BFF7, 0
+y. Close GluClock ports         OUT #EFF7, 0
+
+
+Registers:
+
+EXTSW  0x00 (W)  - select another GluClock (0/1 version etc.)
+CMD    0x01 (W)  - execute command
+STAT   0x01 (R)  - read status
+A0     0x02 (RW) - set address LSB to be accessed in SPI Flash
+A1     0x03 (RW) - set address HSB to be accessed in SPI Flash
+A2     0x04 (RW) - set address MSB to be accessed in SPI Flash
+DATA   0x08 (RW) - read or write data from SPI Flash
+VER    0x0F (R)  - read SFI version
+
+
+Commands:
+
+NOP    0x00 - No command
+ENA    0x01 - Enable SFI, disable JTAG pins
+DIS    0x02 - Disable SFI, enable JTAG pins
+END    0x03 - End current command
+ID     0x04 - Read Flash chip ID
+READ   0x05 - Read Flash
+WRITE  0x06 - Write Flash
+ERSBLK 0x07 - Erase bulk
+ERSSEC 0x08 - Erase sector
+
+
+Statuses:
+
+BSY  0x01 - Busy
+ERR  0x02 - Error
