@@ -4,6 +4,7 @@ To use SPI Flash Interface:
 0. Open GluClock ports          OUT #EFF7, 0x80
 1. Disable EEPROM operations    OUT #DFF7, 0x0C : OUT #BFF7, 0
 2. Select SFI                   OUT #DFF7, 0xF0 : OUT #BFF7, 0x10
+3. Enable SFI                   OUT #DFF7, 0xF1 : OUT #BFF7, 0x01
 3. Write/read SFI regs          OUT #DFF7, #F1..#FF : IN/OUT #BFF7
 x. Deselect SFI                 OUT #DFF7, 0xF0 : OUT #BFF7, 0
 y. Close GluClock ports         OUT #EFF7, 0
