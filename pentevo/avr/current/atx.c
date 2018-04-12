@@ -76,6 +76,7 @@ void atx_power_task(void)
   {
     //soft reset (reset Z80 only)
     zx_mode_switcher(modes_register & MODE_TAPEIN);  // disable Tape-In sound on reset
+    zx_spi_send(SPI_RST_REG, 1, ZXW_MASK);
     zx_spi_send(SPI_RST_REG, 0, ZXW_MASK);
   }
   last_count = atx_counter;

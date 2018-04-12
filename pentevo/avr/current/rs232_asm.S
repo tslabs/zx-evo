@@ -41,6 +41,9 @@ USART1_RX_vect:
 .Lu1rx9:sbr     r20,0x01
         sts     rs232_LSR,r20
 
+        ldi     r24,0
+        sts     rs_tmo_cnt,r24
+
         pop     r20
         pop     r27
         pop     r26
@@ -125,7 +128,11 @@ USART0_RX_vect:
         andi    r25,0x01
         sts     zf_rx_hd,r24
         sts     zf_rx_hd+1,r25
+
 .Lu0rx9:
+        ldi     r24,0
+        sts     zf_tmo_cnt,r24
+
         pop     r20
         pop     r27
         pop     r26

@@ -57,8 +57,7 @@ module slavespi
   output wire        kj_stb,
 
     // Glucklock and Comport
-  input  wire [ 7:0] gluclock_addr,
-  input  wire [ 7:0] comport_addr,
+  input  wire [ 7:0] wait_addr,
 
   // Configuration
   output wire [ 7:0] config0,
@@ -67,7 +66,7 @@ module slavespi
   output wire [ 7:0] wait_read,
   output wire        wait_end,
 
-  output wire        genrst  // positive pulse causes Z80 reset
+  output reg         genrst  // positive pulse causes Z80 reset
 );
 
   // output data
@@ -79,10 +78,9 @@ module slavespi
   assign mus_ystb    = sel_musycr && scs_n_01;
   assign mus_btnstb  = sel_musbtn && scs_n_01;
   assign kj_stb      = sel_kj     && scs_n_01;
-  assign genrst      = sel_rstreg && scs_n_01;
   assign wait_read   = wait_reg;
   assign wait_end    = sel_waitreg && scs_n_01;
-  assign config0     = cfg0_reg;
+  assign config0     = {cfg0_reg[7:6], int_wtp, cfg0_reg[4:0]};
 
   // re-sync SPI
   reg [2:0] spics_n_sync;
@@ -120,10 +118,8 @@ module slavespi
   begin
     if (sel_waitreg)
       data_in = wait_write;
-    else if (sel_gluadr)
-      data_in = gluclock_addr;
-    else if (sel_comadr)
-      data_in = comport_addr;
+    else if (sel_gluadr || sel_comadr)
+      data_in = wait_addr;
     else data_in = 8'hFF;
   end
 
@@ -165,6 +161,8 @@ module slavespi
     else if (kbd_bit_stb)
       kbd_out_cnt <= kbd_out_cnt + 6'b1;
 
+  wire int_wtp = scs_n_01 && sel_cfg0 && shift_in[5];
+      
   // registers data-in
   reg [7:0] shift_in;   // register for shifting in
   reg [7:0] wait_reg;   // wait data out register
@@ -180,5 +178,8 @@ module slavespi
 
     if (scs_n_01 && sel_cfg0)
       cfg0_reg <= shift_in;
+
+    if (scs_n_01 && sel_rstreg)
+      genrst <= shift_in[0];
   end
 endmodule

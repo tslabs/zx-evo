@@ -53,6 +53,7 @@ void zx_init(void)
 
   ATOMIC_BLOCK(ATOMIC_FORCEON) { rs232_init(); }
   //reset Z80
+  zx_spi_send(SPI_RST_REG, 1, 0);
   zx_spi_send(SPI_RST_REG, 0, 0);
 }
 
@@ -138,7 +139,7 @@ void zx_task(u8 operation) // zx task, tracks when there is need to send new key
       {
         //NMI button pressed
         flags_ex_register |= FLAG_EX_NMI; //set flag
-        zx_set_config(0); //set NMI to Z80
+        zx_set_config(); //set NMI to Z80
       }
     }
     else
@@ -147,7 +148,7 @@ void zx_task(u8 operation) // zx task, tracks when there is need to send new key
       {
         //NMI button pressed
         flags_ex_register &= ~FLAG_EX_NMI; //reset flag
-        zx_set_config(0); //reset NMI to Z80
+        zx_set_config(); //reset NMI to Z80
       }
     }
 
@@ -370,12 +371,12 @@ void to_zx(u8 scancode, u8 was_E0, u8 was_release)
         if (((flags_ex_register & FLAG_EX_NMI)==0) && (was_release==0))
         {
           flags_ex_register |= FLAG_EX_NMI; //set flag
-          zx_set_config(0); //set NMI to Z80
+          zx_set_config(); //set NMI to Z80
         }
         else if (((flags_ex_register & FLAG_EX_NMI)!=0) && (was_release!=0))
         {
           flags_ex_register &= ~FLAG_EX_NMI; //reset flag
-          zx_set_config(0); //reset NMI to Z80
+          zx_set_config(); //reset NMI to Z80
         }
       break;
 
@@ -448,11 +449,10 @@ void to_zx(u8 scancode, u8 was_E0, u8 was_release)
         break;
 
       // F4
-      case 0x0C:
-        // Sync Polarity
-        if (!was_release && (kb_ctrl_status[1] & ~kb_ctrl_mapped[1] & KB_MENU_MASK_1))
-          zx_mode_switcher(MODE_POL);
-        break;
+      // case 0x0C:
+        // if (!was_release && (kb_ctrl_status[1] & ~kb_ctrl_mapped[1] & KB_MENU_MASK_1))
+          // zx_mode_switcher(MODE_POL);
+      // break;
 
       //Left Shift
       case  0x12:
@@ -642,8 +642,7 @@ void zx_mouse_task(void)
 
 void zx_wait_task(u8 status)
 {
-  //power led OFF
-  LED_PORT |= 1<<LED;
+  // LED_PORT |= 1<<LED;  //power led OFF (for debug)
 
   u8 addr = 0;
   u8 data = 0xFF;
@@ -696,8 +695,7 @@ void zx_wait_task(u8 status)
   to_log(log_wait);
 #endif   */
 
-  //power led ON
-  LED_PORT &= ~(1<<LED);
+  // LED_PORT &= ~(1<<LED);   // power led ON (for debug)
 }
 
 void zx_mode_switcher(u8 mode)
@@ -706,7 +704,7 @@ void zx_mode_switcher(u8 mode)
   modes_register ^= mode;
 
   //send configuration to FPGA
-  zx_set_config((flags_register & FLAG_LAST_TAPE_VALUE)?SPI_TAPE_FLAG:0);
+  zx_set_config();
 
   //save mode register to RTC NVRAM
   rtc_write(RTC_COMMON_MODE_REG, modes_register);
@@ -715,19 +713,8 @@ void zx_mode_switcher(u8 mode)
   ps2keyboard_send_cmd(PS2KEYBOARD_CMD_SETLED);
 }
 
-void zx_set_config(u8 f)
+void zx_set_config()
 {
-  u8 m = modes_register;
-  u8 fm = flags_ex_register;
-  u8 modes = (m & MODE_TAPEIN) |                                 // config0[7]
-                (m & MODE_FSWAP) |                                  // config0[6]
-                (m & MODE_POL) |                                    // config0[5]
-                (m & MODE_60HZ) |                                   // config0[4]
-                ((m & MODE_TAPEOUT) ? SPI_TAPEOUT_MODE_FLAG : 0) |  // config0[3]
-                (f & SPI_TAPE_FLAG) |                               // config0[2]
-                ((fm & FLAG_EX_NMI) ? SPI_CONFIG_NMI_FLAG : 0) |    // config0[1]
-                (m & MODE_VGA);                                     // config0[0]
-
-  //send configuration to FPGA
-  zx_spi_send(SPI_CONFIG_REG, modes, ZXW_MASK);
+  u8 m = (modes_register & (MODE_TAPEIN | MODE_FSWAP | MODE_WTP_INT | MODE_60HZ | MODE_TAPEOUT | MODE_VGA)) | (flags_register & FLAG_LAST_TAPE_VALUE) | (flags_ex_register & FLAG_EX_NMI);
+  zx_spi_send(SPI_CONFIG_REG, m, ZXW_MASK);
 }

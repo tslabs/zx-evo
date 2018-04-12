@@ -13,6 +13,7 @@
 #include "atx.h"
 #include "rtc.h"
 
+// PS/2 Timeouts INT
 ISR(TIMER2_OVF_vect)
 {
 	static s8 scankbd=0;
@@ -214,6 +215,22 @@ ISR(INT6_vect)
 {
 	flags_register |= FLAG_SPI_INT;
 	EIFR = (1<<INTF6);
+}
+
+// SysTick INT
+ISR(TIMER1_COMPA_vect)
+{
+	u8 t;
+  
+  // flags_register |= FLAG_SYSTICK_INT;
+  
+  t = rs_tmo_cnt;
+  if (t < 255)
+    rs_tmo_cnt = t + 1;
+  
+  t = zf_tmo_cnt;
+  if (t < 255)
+    zf_tmo_cnt = t + 1;;
 }
 
  // RTC up data

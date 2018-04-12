@@ -33,9 +33,9 @@ u8 GetVersionByte(u8 index)
 			// read config byte
 			return (index == 0) ? modes_register : 0xFF;
 
-        case EXT_TYPE_SPIFL:
-            // read from SPI Flash interface
-            return spi_flash_read(index);
+    case EXT_TYPE_SPIFL:
+      // read from SPI Flash interface
+      return spi_flash_read(index);
 	}
 	return 0xFF;
 }
@@ -46,12 +46,12 @@ void SetVersionType(u8 index, u8 type)
 
     switch (ext_type_gluk)
     {
-        case EXT_TYPE_SPIFL:
-            // write to SPI Flash interface
-            spi_flash_write(index, type);
-        break;
+      case EXT_TYPE_SPIFL:
+        // write to SPI Flash interface
+        spi_flash_write(index, type);
+      break;
 
-        default:
-            ext_type_gluk = type;
+      default:
+        ext_type_gluk = type;
     }
 }

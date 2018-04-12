@@ -434,7 +434,7 @@ void gluk_set_reg(u8 index, u8 data)
 
 	if (index < sizeof(gluk_regs)/sizeof(gluk_regs[0]))
 	{
-		if (index<10)
+		if (index < 10)
 		{
 			//write to clock registers
 			if ((gluk_regs[GLUK_REG_B] & GLUK_B_DATA_MODE) == 0)
@@ -514,7 +514,7 @@ void gluk_set_reg(u8 index, u8 data)
 	{
 		if (index >= 0xF0)
 		{
-			if ((gluk_regs[GLUK_REG_C] & GLUK_C_EEPROM_FLAG)!=0)
+			if (gluk_regs[GLUK_REG_C] & GLUK_C_EEPROM_FLAG)
 			{
 				//write to eeprom
 				write_eeprom(index, data);

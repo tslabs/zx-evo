@@ -79,6 +79,8 @@ module zports(
   output wire [8:0] dmaport_wr,
 `endif
   input  wire       dma_act,
+  output reg [1:0]  dmawpdev,
+
 
   output reg [7:0]  intmask,
 
@@ -126,8 +128,7 @@ module zports(
   input  wire [ 7:0] sd_dataout,
 
 // WAIT-ports related
-  output reg  [ 7:0] gluclock_addr,
-  output reg  [ 7:0] comport_addr,
+  output reg  [ 7:0] wait_addr,
   output wire        wait_start_gluclock, // begin wait from some ports
   output wire        wait_start_comport,  //
   output reg  [ 7:0] wait_write,
@@ -341,7 +342,6 @@ module zports(
             pwr_up <= 1'b0;
         end
 
-
 // writing ports
 
 //#nnAF
@@ -364,88 +364,90 @@ module zports(
   localparam T1YOFFSL    = 8'h46;
   localparam T1YOFFSH    = 8'h47;
 
-  localparam RAMPAGE    = 8'h10;  // this covers #10-#13
+  localparam RAMPAGE   = 8'h10;  // this covers #10-#13
   localparam FMADDR    = 8'h15;
   localparam TMPAGE    = 8'h16;
-  localparam T0GPAGE    = 8'h17;
-  localparam T1GPAGE    = 8'h18;
+  localparam T0GPAGE   = 8'h17;
+  localparam T1GPAGE   = 8'h18;
   localparam SGPAGE    = 8'h19;
-  localparam DMASADDRL  = 8'h1A;
-  localparam DMASADDRH  = 8'h1B;
-  localparam DMASADDRX  = 8'h1C;
-  localparam DMADADDRL  = 8'h1D;
-  localparam DMADADDRH  = 8'h1E;
-  localparam DMADADDRX  = 8'h1F;
+  localparam DMASADDRL = 8'h1A;
+  localparam DMASADDRH = 8'h1B;
+  localparam DMASADDRX = 8'h1C;
+  localparam DMADADDRL = 8'h1D;
+  localparam DMADADDRH = 8'h1E;
+  localparam DMADADDRX = 8'h1F;
 
-  localparam SYSCONF    = 8'h20;
-  localparam MEMCONF    = 8'h21;
-  localparam HSINT    = 8'h22;
+  localparam SYSCONF   = 8'h20;
+  localparam MEMCONF   = 8'h21;
+  localparam HSINT     = 8'h22;
   localparam VSINTL    = 8'h23;
   localparam VSINTH    = 8'h24;
+  localparam DMAWPD    = 8'h25;
   localparam DMALEN    = 8'h26;
-  localparam DMACTRL    = 8'h27;
+  localparam DMACTRL   = 8'h27;
   localparam DMANUM    = 8'h28;
-  localparam FDDVIRT    = 8'h29;
-  localparam INTMASK    = 8'h2A;
-  localparam CACHECONF  = 8'h2B;
+  localparam FDDVIRT   = 8'h29;
+  localparam INTMASK   = 8'h2A;
+  localparam CACHECONF = 8'h2B;
+  localparam DMAWPA    = 8'h2D;
 
-  localparam XSTAT    = 8'h00;
-  localparam DMASTAT    = 8'h27;
+  localparam XSTAT     = 8'h00;
+  localparam DMASTAT   = 8'h27;
 
 `ifdef FDR
-  localparam DMANUMH    = 8'h2C;
+  localparam DMANUMH   = 8'h2C;
   localparam FRCTRL    = 8'h30;
   localparam FRCNT0    = 8'h30;
   localparam FRCNT1    = 8'h31;
   localparam FRCNT2    = 8'h32;
 `endif
 
-  assign dmaport_wr[0] = portxt_wr & (hoa == DMASADDRL);
-  assign dmaport_wr[1] = portxt_wr & (hoa == DMASADDRH);
-  assign dmaport_wr[2] = portxt_wr & (hoa == DMASADDRX);
-  assign dmaport_wr[3] = portxt_wr & (hoa == DMADADDRL);
-  assign dmaport_wr[4] = portxt_wr & (hoa == DMADADDRH);
-  assign dmaport_wr[5] = portxt_wr & (hoa == DMADADDRX);
-  assign dmaport_wr[6] = portxt_wr & (hoa == DMALEN);
-  assign dmaport_wr[7] = portxt_wr & (hoa == DMACTRL);
-  assign dmaport_wr[8] = portxt_wr & (hoa == DMANUM);
+  assign dmaport_wr[0] = portxt_wr && (hoa == DMASADDRL);
+  assign dmaport_wr[1] = portxt_wr && (hoa == DMASADDRH);
+  assign dmaport_wr[2] = portxt_wr && (hoa == DMASADDRX);
+  assign dmaport_wr[3] = portxt_wr && (hoa == DMADADDRL);
+  assign dmaport_wr[4] = portxt_wr && (hoa == DMADADDRH);
+  assign dmaport_wr[5] = portxt_wr && (hoa == DMADADDRX);
+  assign dmaport_wr[6] = portxt_wr && (hoa == DMALEN);
+  assign dmaport_wr[7] = portxt_wr && (hoa == DMACTRL);
+  assign dmaport_wr[8] = portxt_wr && (hoa == DMANUM);
 `ifdef FDR
-  assign dmaport_wr[9] = portxt_wr & (hoa == DMANUMH);
+  assign dmaport_wr[9] = portxt_wr && (hoa == DMANUMH);
 `endif
 
-  assign zborder_wr   = portfe_wr;
-  assign border_wr    = (portxt_wr & (hoa == XBORDER));
-  assign zvpage_wr  =  p7ffd_wr;
-  assign vpage_wr      = (portxt_wr & (hoa == VPAGE ));
-  assign vconf_wr      = (portxt_wr & (hoa == VCONF ));
-  assign gx_offsl_wr  = (portxt_wr & (hoa == GXOFFSL));
-  assign gx_offsh_wr  = (portxt_wr & (hoa == GXOFFSH));
-  assign gy_offsl_wr  = (portxt_wr & (hoa == GYOFFSL));
-  assign gy_offsh_wr  = (portxt_wr & (hoa == GYOFFSH));
-  assign t0x_offsl_wr  = (portxt_wr & (hoa == T0XOFFSL));
-  assign t0x_offsh_wr  = (portxt_wr & (hoa == T0XOFFSH));
-  assign t0y_offsl_wr  = (portxt_wr & (hoa == T0YOFFSL));
-  assign t0y_offsh_wr  = (portxt_wr & (hoa == T0YOFFSH));
-  assign t1x_offsl_wr  = (portxt_wr & (hoa == T1XOFFSL));
-  assign t1x_offsh_wr  = (portxt_wr & (hoa == T1XOFFSH));
-  assign t1y_offsl_wr  = (portxt_wr & (hoa == T1YOFFSL));
-  assign t1y_offsh_wr  = (portxt_wr & (hoa == T1YOFFSH));
-  assign tsconf_wr  = (portxt_wr & (hoa == TSCONF));
-  assign palsel_wr  = (portxt_wr & (hoa == PALSEL));
-  assign tmpage_wr  = (portxt_wr & (hoa == TMPAGE));
-  assign t0gpage_wr  = (portxt_wr & (hoa == T0GPAGE));
-  assign t1gpage_wr  = (portxt_wr & (hoa == T1GPAGE));
-  assign sgpage_wr  = (portxt_wr & (hoa == SGPAGE));
-  assign hint_beg_wr  = (portxt_wr & (hoa == HSINT ));
-  assign vint_begl_wr = (portxt_wr & (hoa == VSINTL));
-  assign vint_begh_wr = (portxt_wr & (hoa == VSINTH));
+  assign zborder_wr    = portfe_wr;
+  assign border_wr     = (portxt_wr && (hoa == XBORDER));
+  assign zvpage_wr     = p7ffd_wr;
+  assign vpage_wr      = (portxt_wr && (hoa == VPAGE ));
+  assign vconf_wr      = (portxt_wr && (hoa == VCONF ));
+  assign gx_offsl_wr   = (portxt_wr && (hoa == GXOFFSL));
+  assign gx_offsh_wr   = (portxt_wr && (hoa == GXOFFSH));
+  assign gy_offsl_wr   = (portxt_wr && (hoa == GYOFFSL));
+  assign gy_offsh_wr   = (portxt_wr && (hoa == GYOFFSH));
+  assign t0x_offsl_wr  = (portxt_wr && (hoa == T0XOFFSL));
+  assign t0x_offsh_wr  = (portxt_wr && (hoa == T0XOFFSH));
+  assign t0y_offsl_wr  = (portxt_wr && (hoa == T0YOFFSL));
+  assign t0y_offsh_wr  = (portxt_wr && (hoa == T0YOFFSH));
+  assign t1x_offsl_wr  = (portxt_wr && (hoa == T1XOFFSL));
+  assign t1x_offsh_wr  = (portxt_wr && (hoa == T1XOFFSH));
+  assign t1y_offsl_wr  = (portxt_wr && (hoa == T1YOFFSL));
+  assign t1y_offsh_wr  = (portxt_wr && (hoa == T1YOFFSH));
+  assign tsconf_wr     = (portxt_wr && (hoa == TSCONF));
+  assign palsel_wr     = (portxt_wr && (hoa == PALSEL));
+  assign tmpage_wr     = (portxt_wr && (hoa == TMPAGE));
+  assign t0gpage_wr    = (portxt_wr && (hoa == T0GPAGE));
+  assign t1gpage_wr    = (portxt_wr && (hoa == T1GPAGE));
+  assign sgpage_wr     = (portxt_wr && (hoa == SGPAGE));
+  assign hint_beg_wr   = (portxt_wr && (hoa == HSINT ));
+  assign vint_begl_wr  = (portxt_wr && (hoa == VSINTL));
+  assign vint_begh_wr  = (portxt_wr && (hoa == VSINTH));
 `ifdef FDR
-  assign fdr_cnt_lat = (portxt_rd & (hoa == FRCNT0));
+  assign fdr_cnt_lat   = (portxt_rd && (hoa == FRCNT0));
 `endif
 
   assign beeper_wr = portfe_wr;
   wire portfe_wr = (loa==PORTFE) && iowr_s;
-  assign covox_wr  = (loa==COVOX) && iowr_s;
+  assign covox_wr = (loa==COVOX) && iowr_s;
   wire portxt_wr = ((loa==PORTXT) && iowr_s) || regs_we;
   wire portxt_rd = (loa==PORTXT) && iord_s;
 
@@ -460,7 +462,6 @@ module zports(
     always @(posedge clk)
     if (opfetch)
       m1_lock128 <= !(din[7] ^ din[6]);
-
 
   always @(posedge clk)
     if (rst)
@@ -482,12 +483,11 @@ module zports(
 `endif
     end
 
-        else
-         if (p7ffd_wr)
-        begin
-            memconf[0] <= din[4];
-            rampage[3] <= {2'b0, lock128_3 ? {din[5], din[7:6]} : ({1'b0, lock128 ? 2'b0 : din[7:6]}), din[2:0]};
-        end
+    else if (p7ffd_wr)
+    begin
+        memconf[0] <= din[4];
+        rampage[3] <= {2'b0, lock128_3 ? {din[5], din[7:6]} : ({1'b0, lock128 ? 2'b0 : din[7:6]}), din[2:0]};
+    end
 
     else
     if (portxt_wr)
@@ -499,11 +499,14 @@ module zports(
         fmaddr <= din[4:0];
 
       if (hoa == SYSCONF)
-            begin
+      begin
         sysconf <= din;
-                cacheconf <= {4{din[2]}};
-            end
+          cacheconf <= {4{din[2]}};
+      end
 
+      if (hoa == DMAWPD)
+        dmawpdev <= din[1:0];
+        
       if (hoa == CACHECONF)
         cacheconf <= din[3:0];
 
@@ -521,7 +524,6 @@ module zports(
       if (hoa == INTMASK)
         intmask <= din;
     end
-
 
 // 7FFD port
   wire p7ffd_wr = !a[15] && (loa==PORTFD) && iowr_s && !lock48;
@@ -596,29 +598,33 @@ module zports(
 // gluclock ports
   wire gluclock_on = peff7[7] || dos;        // in dos mode EEF7 is not accessible, gluclock access is ON in dos mode.
 
-  always @(posedge zclk)
-    if (gluclock_on && portf7_wr) // gluclocks on
-      if(!a[13]) // $DFF7 - addr reg
-        gluclock_addr <= din;
+// comports
+  wire comport_wr   = ((loa == COMPORT) && port_wr);
+  wire comport_rd   = ((loa == COMPORT) && port_rd);
 
 // write to wait registers
   always @(posedge zclk)
   begin
     // gluclocks
-    if (gluclock_on && portf7_wr && !a[14]) // $BFF7 - data reg
-      wait_write <= din;
+    if (gluclock_on && portf7_wr)
+    begin
+      if (!a[14]) // $BFF7 - data reg
+        wait_write <= din;
+    
+      if (!a[13]) // $DFF7 - addr reg
+        wait_addr <= din;
+    end
+    
     // com ports
-    else if (comport_wr) // $F8EF..$FFEF - comports
+    if (comport_wr) // $xxEF
       wait_write <= din;
-  end
 
-// comports
-  wire comport_wr   = ((loa == COMPORT) && port_wr);
-  wire comport_rd   = ((loa == COMPORT) && port_rd);
-
-  always @(posedge zclk)
     if (comport_wr || comport_rd)
-      comport_addr <= a[15:8];
+      wait_addr <= a[15:8];
+
+    if ((loa==PORTXT) && (hoa == DMAWPA))
+      wait_addr <= din;
+  end
 
 // wait from wait registers
   // ACHTUNG!!!! here portxx_wr are ON Z80 CLOCK! logic must change when moving to clk strobes
@@ -687,7 +693,6 @@ module zports(
       idewrreg[ 7:0] <= din;
   end
 
-
   // generate read cycles for IDE as usual, except for reading #10
   // instead of #11 for high byte (nemo-divide). I use additional latch
   // since 'ide_rd_trig' clears during second Z80 IO read cycle to #10
@@ -704,7 +709,6 @@ module zports(
             ide_wrhi_latch <= ide_wrhi_trig;
         end
 
-
   // data read by Z80 from IDE
   wire idein_lo_rd  = port_rd && ide_port10 && (!ide_rd_trig);                      // while high part is remembered here
   wire [7:0] iderdodd = iderdreg[15:8];                                               // read data from "odd" port (#11)
@@ -718,7 +722,6 @@ module zports(
       iderdreg <= ide_in;
         // if (idein_lo_rd)
       // idehiin <= ide_in[15:8];
-
 
   // data written to IDE from Z80
   wire [7:0] ideout1 = ide_wrhi_latch ? idewrreg[15:8] : din[ 7:0];

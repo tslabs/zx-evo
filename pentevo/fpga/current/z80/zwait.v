@@ -4,61 +4,56 @@
 
 `include "tune.v"
 
-
 module zwait(
-
+	input  wire fclk,
 	input  wire rst_n,
-
 	input  wire wait_start_gluclock,
 	input  wire wait_start_comport,
-
 	input  wire wait_end,
-
-	output reg  [6:0] waits,
-
+	input  wire dma_wtp_req,
+	output wire dma_wtp_stb,
+  input  wire [1:0] dmawpdev,
+	input  wire wr_n,
+	output wire [1:0] wait_status,
+	output wire wait_status_wrn,
 	output wire wait_n,
 	output wire spiint_n
 );
 
+	assign spiint_n = !(wait_status_glu || wait_status_com || wait_status_dma);
+	assign wait_n = wait_cpu ? 1'b0 : 1'bZ;
+  assign wait_status = wait_status_dma ? (1'b1 << dmawpdev) : {wait_status_com, wait_status_glu};
+  assign wait_status_wrn = wait_status_dma ? 1'b1 : wr_n;
+  assign dma_wtp_stb = !wtp_stb && wait_off;
 
-`ifdef SIMULATE
-	initial
-	begin
-//		force waits = 7'd0;
-		waits <= 7'd0;
-	end
-`endif
+	wire wait_off = wait_end || !rst_n;
+	wire wait_off_dma = dma_wtp_stb || !rst_n;
+  wire wait_cpu = wait_status_glu || wait_status_com;
 
+  reg wait_status_glu;
+  reg wait_status_com;
+	reg wait_status_dma;
 
-	wire wait_off_n;
-	assign wait_off_n = (~wait_end) & rst_n;
+	always @(posedge wait_start_gluclock, posedge wait_off)
+	if (wait_off)
+		wait_status_glu <= 1'b0;
+	else if (wait_start_gluclock)
+		wait_status_glu <= 1'b1;
 
-	// RS-flipflops
-	//
-	always @(posedge wait_start_gluclock, negedge wait_off_n)
-	if( !wait_off_n )
-		waits[0] <= 1'b0;
-	else if( wait_start_gluclock )
-		waits[0] <= 1'b1;
-	//
-	always @(posedge wait_start_comport, negedge wait_off_n)
-	if( !wait_off_n )
-		waits[1] <= 1'b0;
-	else if( wait_start_comport )
-		waits[1] <= 1'b1;
+	always @(posedge wait_start_comport, posedge wait_off)
+	if (wait_off)
+		wait_status_com <= 1'b0;
+	else if (wait_start_comport)
+		wait_status_com <= 1'b1;
 
-	always @(posedge wait_end) // just dummy for future extensions
-	begin
-		waits[6:2] <= 5'd0;
-	end
+	always @(posedge fclk)
+	if (wait_off_dma)
+		wait_status_dma <= 1'b0;
+	else if (dma_wtp_req)
+		wait_status_dma <= 1'b1;
 
-
-	assign spiint_n = ~|waits;
-`ifndef SIMULATE
-	assign wait_n = spiint_n ? 1'bZ : 1'b0;
-`else
-	assign wait_n = 1'bZ;
-`endif
-
+  reg wtp_stb;
+  always @(posedge fclk)
+    wtp_stb <= wait_off;
 
 endmodule

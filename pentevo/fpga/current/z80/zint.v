@@ -10,6 +10,7 @@ module zint
   input wire int_start_frm,
   input wire int_start_lin,
   input wire int_start_dma,
+  input wire int_start_wtp,
   input wire vdos,           // pre_vdos
   input wire intack,
 `ifdef PENT_312
@@ -32,14 +33,15 @@ module zint
   assign vect[INTFRM] = 8'hFF;
   assign vect[INTLIN] = 8'hFD;
   assign vect[INTDMA] = 8'hFB;
-  assign vect[INTDUM] = 8'hFF;
+  assign vect[INTWTP] = 8'hF9;
 
   assign int_n = int_all ? 1'b0 : 1'bZ;
-  wire int_all = (int_frm || int_lin || int_dma) && !vdos;
+  wire int_all = (int_frm || int_lin || int_dma || int_wtp) && !vdos;
 
   wire dis_int_frm = !intmask[0];
   wire dis_int_lin = !intmask[1];
   wire dis_int_dma = !intmask[2];
+  wire dis_int_wtp = !intmask[3];
 
 `ifdef PENT_312
   assign boost_start = intack_s || intctr_fin_s;
@@ -59,7 +61,7 @@ module zint
   localparam INTFRM = 2'b00;
   localparam INTLIN = 2'b01;
   localparam INTDMA = 2'b10;
-  localparam INTDUM = 2'b11;
+  localparam INTWTP = 2'b11;
 
   reg [1:0] int_sel;
   always @(posedge clk)
@@ -71,6 +73,8 @@ module zint
         int_sel <= INTLIN;    // priority 1
       else if (int_dma)
         int_sel <= INTDMA;    // priority 2
+      else if (int_wtp)
+        int_sel <= INTWTP;    // priority 3
     end
 
 // ~INT generating
@@ -100,6 +104,15 @@ module zint
       int_dma <= 1'b1;
     else if (intack_s && !int_frm && !int_lin)    // priority 2
       int_dma <= 1'b0;
+
+  reg int_wtp;
+  always @(posedge clk)
+    if (res || dis_int_wtp)
+      int_wtp <= 1'b0;
+    else if (int_start_wtp)
+      int_wtp <= 1'b1;
+    else if (intack_s && !int_frm && !int_lin && !int_dma)    // priority 3
+      int_wtp <= 1'b0;
 
 // ~WAIT resync
   reg wait_r;

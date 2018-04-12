@@ -41,6 +41,12 @@ module dma (
   output wire spi_req,
   input  wire spi_stb,
 
+// WTPORT interface
+  input  wire [7:0] wtp_rddata,
+  // output wire [7:0] wtp_wrdata,
+  output wire wtp_req,
+  input  wire wtp_stb,
+
 // IDE interface
   input  wire [15:0] ide_in,
   output wire [15:0] ide_out,
@@ -100,31 +106,36 @@ module dma (
   localparam DEV_CRM = 4'b1100;
   localparam DEV_SFL = 4'b1101;
   localparam DEV_FDD = 4'b0101;
+  localparam DEV_WTP = 4'b0111;
 
-  wire [3:0] devsel = {dma_wnr, device};
+  wire [2:0] dev_bid = device[2:0];   // bidirectional
+  wire [3:0] dev_uni = device[3:0];   // unidirectional
+  wire dma_wnr = device[3];           // 0 - device to RAM / 1 - RAM to device
+  
 `ifdef XTR_FEAT
-  wire dv_ram = (devsel == DEV_RAM) || (devsel == DEV_BLT1) || (devsel == DEV_BLT2) || (devsel == DEV_FIL);
-  wire dv_blt = (devsel == DEV_BLT1) || (devsel == DEV_BLT2);
+  wire dv_ram = (dev_uni == DEV_RAM) || (dev_uni == DEV_BLT1) || (dev_uni == DEV_BLT2) || (dev_uni == DEV_FIL);
+  wire dv_blt = (dev_uni == DEV_BLT1) || (dev_uni == DEV_BLT2);
 `else
-  wire dv_ram = (devsel == DEV_RAM) || (devsel == DEV_BLT1) || (devsel == DEV_FIL);
-  wire dv_blt = (devsel == DEV_BLT1);
+  wire dv_ram = (dev_uni == DEV_RAM) || (dev_uni == DEV_BLT1) || (dev_uni == DEV_FIL);
+  wire dv_blt = (dev_uni == DEV_BLT1);
 `endif
-  wire dv_fil = (devsel == DEV_FIL);
-  wire dv_spi = (device == DEV_SPI);
-  wire dv_ide = (device == DEV_IDE);
-  wire dv_crm = (devsel == DEV_CRM);
-  wire dv_sfl = (devsel == DEV_SFL);
+  wire dv_fil = (dev_uni == DEV_FIL);
+  wire dv_spi = (dev_bid == DEV_SPI);
+  wire dv_ide = (dev_bid == DEV_IDE);
+  wire dv_crm = (dev_uni == DEV_CRM);
+  wire dv_sfl = (dev_uni == DEV_SFL);
+  wire dv_wtp = (dev_uni == DEV_WTP);
 `ifdef FDR
-  wire dv_fdd = (devsel == DEV_FDD);
+  wire dv_fdd = (dev_uni == DEV_FDD);
 `endif
 
   wire dev_req = dma_act && state_dev;
   wire dev_stb = cram_we || sfile_we || ide_int_stb || (byte_sw_stb && bsel && dma_act);
 
 `ifdef FDR
-  wire byte_sw_stb = spi_int_stb || fdr_int_stb;
+  wire byte_sw_stb = spi_int_stb || wtp_int_stb || fdr_int_stb;
 `else
-  wire byte_sw_stb = spi_int_stb;
+  wire byte_sw_stb = spi_int_stb || wtp_int_stb;
 `endif
 
   assign cram_we = dev_req && dv_crm && state_wr;
@@ -140,6 +151,10 @@ module dma (
   wire spi_int_stb = dv_spi && spi_stb;
   assign spi_wrdata = {8{state_rd}} | (bsel ? data[15:8] : data[7:0]);  // send FF on read cycles
   assign spi_req = dev_req && dv_spi;
+  
+  // WTPORT
+  wire wtp_int_stb = dv_wtp && wtp_stb;
+  assign wtp_req = dev_req && dv_wtp;
 
   // IDE
   wire ide_int_stb = dv_ide && ide_stb;
@@ -149,7 +164,7 @@ module dma (
 
   // blitter
 `ifdef XTR_FEAT
-  wire [15:0] blt_rddata = (devsel == DEV_BLT1) ? blt1_rddata : blt2_rddata;
+  wire [15:0] blt_rddata = (dev_uni == DEV_BLT1) ? blt1_rddata : blt2_rddata;
 `else
   wire [15:0] blt_rddata = blt1_rddata;
 `endif
@@ -208,6 +223,14 @@ module dma (
           data[7:0] <= spi_rddata;
       end
 
+      if (wtp_int_stb)
+      begin
+        if (bsel)
+          data[15:8] <= wtp_rddata;
+        else
+          data[7:0] <= wtp_rddata;
+      end
+
 `ifdef FDR
       if (fdr_int_stb)
       begin
@@ -239,8 +262,7 @@ module dma (
   //  0    1      0      read dst
   //  1    1      0      write dst
 
-  reg [2:0] device;
-  reg dma_wnr;      // 0 - device to RAM / 1 - RAM to device
+  reg [3:0] device;
   reg dma_salgn;
   reg dma_dalgn;
   reg dma_asz;
@@ -252,12 +274,11 @@ module dma (
   always @(posedge clk)
   if (dma_launch)      // write to DMACtrl - launch of DMA burst
   begin
-    dma_wnr <= zdata[7];
     dma_opt <= zdata[6];
     dma_salgn <= zdata[5];
     dma_dalgn <= zdata[4];
     dma_asz <= zdata[3];
-    device <= zdata[2:0];
+    device <= {zdata[7], zdata[2:0]};
     phase <= 1'b0;
     phase_blt <= 1'b0;
     bsel <= 1'b0;

@@ -9,7 +9,7 @@
 #include "spiflash.h"
 
 u32 sf_addr = 0;
-u8 sf_state = SF_ST_INACT;
+u8 sf_state = SF_ST_NONE;
 u8 sfi_wr_en = FALSE;
 
 void sfi_cs_off(void)
@@ -30,7 +30,6 @@ void sfi_enable(void)
     MCUCSR = m; MCUCSR = m;
     DDRF = (DDRF & ~_BV(SFI_BIT_DATA0)) | _BV(SFI_BIT_NCSO) | _BV(SFI_BIT_ASDO) | _BV(SFI_BIT_DCLK);
     PORTF |= _BV(SFI_BIT_DATA0) | _BV(SFI_BIT_NCSO) | _BV(SFI_BIT_DCLK);
-    sf_state = SF_ST_IDLE;
 }
 
 // Disable SFI, enable JTAG
@@ -38,22 +37,21 @@ void sfi_disable(void)
 {
     u8 m = MCUCSR & ~_BV(JTD);
     MCUCSR = m; MCUCSR = m;
-    sf_state = SF_ST_INACT;
 }
 
 void sfi_send(u8 d)
 {
     #define sfi_send_bit(a)  if (d & (a)) { PORTF = c01; PORTF = c11; } else { PORTF = c00; PORTF = c10; }
-    
+
     u8 c00 = PORTF & ~(_BV(SFI_BIT_DCLK) | _BV(SFI_BIT_ASDO));
     u8 c01 = c00 | _BV(SFI_BIT_ASDO);
     u8 c10 = c00 | _BV(SFI_BIT_DCLK);
     u8 c11 = c01 | _BV(SFI_BIT_DCLK);
-    
+
     sfi_send_bit(128);
-    sfi_send_bit(64); 
-    sfi_send_bit(32); 
-    sfi_send_bit(16); 
+    sfi_send_bit(64);
+    sfi_send_bit(32);
+    sfi_send_bit(16);
     sfi_send_bit(8);
     sfi_send_bit(4);
     sfi_send_bit(2);
@@ -63,11 +61,11 @@ void sfi_send(u8 d)
 u8 sfi_recv(void)
 {
     #define sfi_recv_bit(a) PORTF = c0; PORTF = c1; if (PINF & _BV(SFI_BIT_DATA0)) d |= (a)
-    
+
     u8 d = 0;
     u8 c0 = PORTF & ~_BV(SFI_BIT_DCLK);
     u8 c1 = c0 | _BV(SFI_BIT_DCLK);
-    
+
     sfi_recv_bit(128);
     sfi_recv_bit(64);
     sfi_recv_bit(32);
@@ -76,7 +74,7 @@ u8 sfi_recv(void)
     sfi_recv_bit(4);
     sfi_recv_bit(2);
     sfi_recv_bit(1);
-    
+
     return d;
 }
 
@@ -134,25 +132,24 @@ u8 sf_status(void)
     switch (sf_state)
     {
         case SF_ST_IDLE:
-            return SPIFL_STAT_ACT;
+            return SPIFL_STAT_NULL;
 
         case SF_ST_BUSY:
-            return SPIFL_STAT_ACT | SPIFL_STAT_BSY;
+            return SPIFL_STAT_BSY;
 
         case SF_ST_FBUSY:
             if (sfi_cmd_r(SF_CMD_RDSTAT) & SF_STAT_MASK_WIP)
-                return SPIFL_STAT_ACT | SPIFL_STAT_BSY;
-
+                return SPIFL_STAT_BSY;
             else
             {
                 sf_state = SF_ST_IDLE;
-                return SPIFL_STAT_ACT;
+                return SPIFL_STAT_NULL;
             }
 
         case SF_ST_ERR:
             sf_state = SF_ST_IDLE;
             sfi_cs_off();
-            return SPIFL_STAT_ACT | SPIFL_STAT_ERR;
+            return SPIFL_STAT_ERR;
 
         default:
             return SPIFL_STAT_NULL;
@@ -162,15 +159,22 @@ u8 sf_status(void)
 // Execute SF command
 void sf_command(u8 cmd)
 {
-    cmd &= SPIFL_MASK_CMD;
-
-    if (cmd == SPIFL_CMD_DONE)
+    switch (cmd)
     {
-        sfi_cs_off();
-        sf_state = SF_ST_IDLE;
+        case SPIFL_CMD_ENA:
+            sfi_enable();
+        break;
+        
+        case SPIFL_CMD_DIS:
+            sfi_disable();
+        break;
+        
+        case SPIFL_CMD_END:
+            sfi_cs_off();
+            sf_state = SF_ST_IDLE;
         return;
     }
-    
+
     if (sf_state == SF_ST_FBUSY)
     {
         if (!(sfi_cmd_r(SF_CMD_RDSTAT) & SF_STAT_MASK_WIP))
@@ -215,54 +219,34 @@ void sf_command(u8 cmd)
     }
 }
 
-// Write SF control
-void sf_ctrl(u8 data)
-{
-    if (data & SPIFL_MASK_EN)
-    // SF enabled
-    {
-        if (sf_state == SF_ST_INACT)
-        // enable SFI
-            sfi_enable();
-
-        else
-        // execute command
-            sf_command(data);
-    }
-
-    else
-        // disable SFI
-        sfi_disable();   // enable JTAG
-}
-
 u8 spi_flash_read(u8 index)
 {
     switch (index)
     {
+        // SF data
         case SPIFL_REG_DATA:
-            // SF data
             sf_addr++;
             return sfi_recv();
 
+        // SF status
         case SPIFL_REG_STAT:
-            // SF status
             return sf_status();
 
+        // SF low addr
         case SPIFL_REG_A0:
-            // SF low addr
             return (u8)(sf_addr);
         break;
 
+        // SF high addr
         case SPIFL_REG_A1:
-            // SF high addr
             return (u8)(sf_addr >> 8);
 
+        // SF ext addr
         case SPIFL_REG_A2:
-            // SF ext addr
             return (u8)(sf_addr >> 16);
 
+        // SF version
         case SPIFL_REG_VER:
-            // SF version
             return SPIFL_VER;
     }
 
@@ -273,36 +257,36 @@ void spi_flash_write(u8 index, u8 data)
 {
     switch (index)
     {
+        // SF data
         case SPIFL_REG_DATA:
-            // SF data
             sf_addr++;
             sfi_send(data);
         break;
 
-        case SPIFL_REG_CTRL:
-            // SF control
-            sf_ctrl(data);
+        // SF command
+        case SPIFL_REG_CMD:
+            sf_command(data);
         break;
 
+        // select another Glu Ext register
         case SPIFL_REG_EXTSW:
-            // select another Glu Ext register
             ext_type_gluk = data;
         break;
 
+        // SF low addr
         case SPIFL_REG_A0:
-            // SF low addr
             sf_addr &= 0xFFFFFF00;
             sf_addr |= data;
         break;
 
+        // SF high addr
         case SPIFL_REG_A1:
-            // SF high addr
             sf_addr &= 0xFFFF00FF;
             sf_addr |= (u32)data << 8;
         break;
 
+        // SF ext addr
         case SPIFL_REG_A2:
-            // SF ext addr
             sf_addr &= 0xFF00FFFF;
             sf_addr |= (u32)data << 16;
         break;

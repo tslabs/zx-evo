@@ -198,7 +198,7 @@ module slavespi(
 	assign sel_gluadr  = ( (regnum[7:4]==4'h4) && (regnum[1:0]==2'b01) ); // $41
 	assign sel_comadr  = ( (regnum[7:4]==4'h4) && (regnum[1:0]==2'b10) ); // $42
 	//
-	assign sel_cfg0 = (regnum[7:4]==4'h5); // $50
+	assign sel_cfg0    = (regnum[7:4]==4'h5); // $50
 	//
 	assign sel_sddata = ( (regnum[7:4]==4'h6) && !regnum[0] ); // $60
 	assign sel_sdctrl = ( (regnum[7:4]==4'h6) &&  regnum[0] ); // $61

@@ -48,13 +48,6 @@
 #define SPI_CONFIG_REG   0x50
 
 
-/** ZX NMI bit flag of configuration register. */
-#define SPI_CONFIG_NMI_FLAG 0x02
-/** ZX $FE.D6 (tape in) bit flag of configuration register. */
-#define SPI_TAPE_FLAG 0x04
-/** ZX tapeout mode bit flag of configuration register. */
-#define SPI_TAPEOUT_MODE_FLAG 0x08
-
 /** ZX all data for wait registers. */
 #define SPI_WAIT_DATA  0x40
 /** ZX Gluk address register. */
@@ -191,7 +184,6 @@ void zx_mode_switcher(u8 mode);
 /**
  * Set configuration register on zx.
  */
-void zx_set_config(u8 flags);
+void zx_set_config();
 
 #endif
-

@@ -90,18 +90,17 @@ void hardware_init(void)
   ACSR = 0x80; // DISABLE analog comparator
 }
 
-
 void waittask(void)
 {
-  //get status byte
-  u8 status;
-  nSPICS_PORT &= ~(1<<nSPICS);
-  nSPICS_PORT |= (1<<nSPICS);
-  status = spi_send(0);
-  zx_wait_task(status);
+  if (flags_register & FLAG_SPI_INT)
+  {
+    //get status byte
+    nSPICS_PORT &= ~(1<<nSPICS);
+    nSPICS_PORT |= (1<<nSPICS);
+    u8 status = spi_send(0);
+    zx_wait_task(status);
+  }
 }
-
-
 
 int main()
 {
@@ -205,15 +204,21 @@ start:
 #endif
 
   //power led ON
-  LED_PORT &= ~(1<<LED);
+  LED_PORT &= ~_BV(LED);
 
-  // start timer (timeouts for ps/2)
+  // start timer2 (timeouts for ps/2)
   TCCR2 = 0b01000011; // FOC2=0, {WGM21,WGM20}=01, {COM21,COM20}=00, {CS22,CS21,CS20}=011
         // clk/64 clocking,
         // 1/512 overflow rate, total 11.059/32768 = 337.5 Hz interrupt rate
-  TIFR = (1<<TOV2);
-  TIMSK = (1<<TOIE2);
+  TIFR = _BV(TOV2);
 
+  // start timer1 (SysTick)
+  TCCR1A = 0;
+  TCCR1B = _BV(WGM12) | _BV(CS10);
+  OCR1A = 11059;  // 11.059MHz, thus 1ms Systick
+
+  // enable interrupts
+  TIMSK = (_BV(TOIE2) | _BV(OCIE1A));
 
   //init counters and registers
   ps2keyboard_count = 12;
@@ -260,42 +265,14 @@ start:
   //main loop
   do
   {
-    tape_task();
-
-    //event from SPI
-    if (flags_register & FLAG_SPI_INT)  waittask();
-
-    ps2mouse_task();
-
-    //event from SPI
-    if (flags_register & FLAG_SPI_INT)  waittask();
-
-    ps2keyboard_task();
-
-    //event from SPI
-    if (flags_register & FLAG_SPI_INT)  waittask();
-
-    zx_task(ZX_TASK_WORK);
-
-    //event from SPI
-    if (flags_register & FLAG_SPI_INT)  waittask();
-
-    zx_mouse_task();
-
-    //event from SPI
-    if (flags_register & FLAG_SPI_INT)  waittask();
-
-    joystick_task();
-
-    //event from SPI
-    if (flags_register & FLAG_SPI_INT)  waittask();
-
-    rs232_task();
-
-    //event from SPI
-    if (flags_register & FLAG_SPI_INT)  waittask();
-
-    atx_power_task();
+    tape_task();           waittask();
+    ps2mouse_task();       waittask();
+    ps2keyboard_task();    waittask();
+    zx_task(ZX_TASK_WORK); waittask();
+    zx_mouse_task();       waittask();
+    joystick_task();       waittask();
+    rs232_task();          waittask();
+    atx_power_task();      waittask();
   }
   while((flags_register & FLAG_HARD_RESET) == 0);
 

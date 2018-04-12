@@ -74,7 +74,7 @@ module top(
   output [15:0] ide_d,
   input ide_rs_n,
 `elsif IDE_VDAC2
-  inout [15:0] ide_d,
+  output [15:0] ide_d,
   output ide_rs_n,
 `endif
   output [2:0] ide_a,
@@ -134,7 +134,7 @@ module top(
   wire [7:0] zports_dout;
   wire zports_dataout;
   wire porthit;
-  // wire [39:0] kbd_data;
+  wire [1:0] dmawpdev;
   wire [7:0] kbd_data;
   wire [2:0] kbd_data_sel;
   wire [7:0] mus_data;
@@ -146,14 +146,13 @@ module top(
   wire wait_start_gluclock;
   wire wait_start_comport;
   wire wait_end;
-  wire [7:0] gluclock_addr;
-  wire [7:0] comport_addr;
-  wire [6:0] waits;
+  wire [7:0] wait_addr;
+  wire [1:0] wait_status;
 
   // config signals
   wire cfg_tape_sound;
   wire cfg_floppy_swap;
-  wire cfg_sync_pol;
+  wire int_start_wtp;
   wire cfg_60hz;
   wire beeper_mux; // what is mixed to FPGA beeper output - beeper(0) or tapeout(1)
   wire tape_read;  // tapein data
@@ -163,7 +162,7 @@ module top(
   {
     cfg_tape_sound,   // bit 7
     cfg_floppy_swap,  // bit 6
-    cfg_sync_pol,     // bit 5
+    int_start_wtp,    // bit 5
     cfg_60hz,         // bit 4
     beeper_mux,       // bit 3
     tape_read,        // bit 2
@@ -420,7 +419,6 @@ module top(
   wire [15:0] dma_data;
   wire [7:0] dma_wraddr;
   wire dma_cram_we;
-
   wire dma_sfile_we;
 
   wire cpu_spi_req;
@@ -430,6 +428,10 @@ module top(
   wire [7:0] cpu_spi_din;
   wire [7:0] dma_spi_din;
   wire [7:0] spi_dout;
+  
+  wire dma_wtp_req;
+  wire dma_wtp_stb;
+  wire wait_status_wrn;
 
   // wire [1:0] vg_ddrv;
   // assign vg_a[0] = vg_ddrv[0] ? 1'b1 : 1'b0; // possibly open drain?
@@ -633,7 +635,6 @@ module top(
     .csync(vcsync),
     // .cfg_60hz(cfg_60hz),        // uncomment to enable 60Hz VGA timings
     .cfg_60hz(1),
-    .sync_pol(cfg_sync_pol),
     .vga_on(cfg_vga_on),
     .border_wr(border_wr),
     .zborder_wr(zborder_wr),
@@ -698,7 +699,7 @@ module top(
     .spidi(spidi),
     .spido(spido),
     .spick(spick),
-    .status_in({wr_n, 5'b0, waits[1:0]}),
+    .status_in({wait_status_wrn, 5'b0, wait_status[1:0]}),
     .genrst(genrst),
     .kbd_out(kbd_data),
     .kbd_out_sel(kbd_data_sel),
@@ -708,8 +709,7 @@ module top(
     .mus_ystb(mus_ystb),
     .mus_btnstb(mus_btnstb),
     .kj_stb(kj_stb),
-    .gluclock_addr(gluclock_addr),
-    .comport_addr(comport_addr),
+    .wait_addr(wait_addr),
     .wait_write(wait_write),
     .wait_read(wait_read),
     .wait_end(wait_end),
@@ -882,14 +882,14 @@ module top(
     .vdos_off(vdos_off),
     .dmaport_wr(dmaport_wr),
     .dma_act(dma_act),
+    .dmawpdev(dmawpdev),
     .keys_in(kbd_port_data),
     .mus_in(mus_port_data),
     .kj_in(kj_port_data),
     .tape_read(tape_read),
     .beeper_wr(beeper_wr),
     .covox_wr(covox_wr),
-    .gluclock_addr(gluclock_addr),
-    .comport_addr(comport_addr),
+    .wait_addr(wait_addr),
     .wait_start_gluclock(wait_start_gluclock),
     .wait_start_comport(wait_start_comport),
     .wait_read(wait_read),
@@ -927,7 +927,11 @@ module top(
     .spi_req(dma_spi_req),
     .spi_stb(spi_start),
     .spi_rddata(spi_dout),
-    .spi_wrdata(dma_spi_din)
+    .spi_wrdata(dma_spi_din),
+    .wtp_req(dma_wtp_req),
+    .wtp_stb(dma_wtp_stb),
+    .wtp_rddata(mus_data)   // data must be available 1 clk earlier than wait_data (mus_data = shift_in in slavespi.v)
+    // .wtp_wrdata(dma_wtp_din)
 `ifdef FDR
     ,
     .fdr_in(fdr_rle),
@@ -976,6 +980,7 @@ module top(
 `endif
     .int_start_frm(int_start_frm),
     .int_start_dma(int_start_dma),
+    .int_start_wtp(int_start_wtp),
     .vdos(pre_vdos),
     .intack(intack),
     .int_n(int_n)
@@ -997,12 +1002,18 @@ module top(
 
   zwait zwait
   (
+    .fclk(fclk),
     .wait_start_gluclock(wait_start_gluclock),
     .wait_start_comport(wait_start_comport),
+    .dma_wtp_req(dma_wtp_req),
+    .dma_wtp_stb(dma_wtp_stb),
+    .dmawpdev(dmawpdev),
+    .wr_n(wr_n),
     .wait_end(wait_end),
     .rst_n(rst_n),
     .wait_n(wait_n),
-    .waits(waits),
+    .wait_status(wait_status),
+    .wait_status_wrn(wait_status_wrn),
     .spiint_n(spiint_n)
   );
 

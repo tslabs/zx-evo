@@ -2,7 +2,6 @@
 #define RS232_H 1
 
 #ifdef __ASSEMBLER__
-/* ------------------------------------------------------------------------- */
 .extern dbuf
 
 .extern rs232_LSR
@@ -19,10 +18,12 @@
 /* .extern zf_txbuff */
 .extern zf_tx_hd
 .extern zf_tx_tl
-/* ------------------------------------------------------------------------- */
 #else //__ASSEMBLER__
 
 #include "main.h"
+
+extern volatile u8 rs_tmo_cnt;
+extern volatile u8 zf_tmo_cnt;
 
 void rs232_init(void);
 //void rs232_transmit(u8 data);
@@ -90,8 +91,39 @@ void rs232_task(void);
 /** RS_OFR register. */
 #define RS_OFR_REG        0xC3
 
-/** RS/ZF_CR/ER register. */
-#define ZF_CR_ER_REG      0xC7
+/** RS/ZF_IMR register. */
+#define ZF_IMR_REG        0xC4
+
+/** RS/ZF_ISR register. */
+#define ZF_ISR_REG        0xC4
+
+/** ZF_IBTR register. */
+#define ZF_IBTR_REG       0xC5
+
+/** ZF_ITOR register. */
+#define ZF_ITOR_REG       0xC6
+
+/** RS/ZF_CR register. */
+#define ZF_CR_REG         0xC7
+
+/** RS/ZF_ER register. */
+#define ZF_ER_REG         0xC7
+
+/** RS_IBTR register. */
+#define RS_IBTR_REG       0xC8
+
+/** RS_ITOR register. */
+#define RS_ITOR_REG       0xC9
+
+/** ZF_registers limit. */
+#define ZF_REG_LIM        0xCF
+
+
+/** Interrupt masks. */
+#define ZF_IMR_IBT        0x01
+#define ZF_IMR_ITO        0x02
+#define RS_IMR_IBT        0x04
+#define RS_IMR_ITO        0x08
 
 
 /** CLRFIFO command. */
@@ -111,7 +143,6 @@ void rs232_task(void);
 /** GETVER command. */
 #define ZF_GETVER         0b11111111
 #define ZF_GETVER_MASK    0b11111111
-
 
 /** OK result. */
 #define ZF_OK_RES         0x00

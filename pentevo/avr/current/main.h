@@ -120,16 +120,16 @@ extern volatile u8 flags_register;
 #define FLAG_PS2MOUSE_DIRECTION 0x01
 /** Type of ps2 mouse (0 - classical [3bytes in packet]/1 - msoft [4bytes in packet]). */
 #define FLAG_PS2MOUSE_TYPE      0x02
-/** Ps2 mouse data for zx (0 - not ready/1 - ready). */
-#define FLAG_PS2MOUSE_ZX_READY  0x04
+/** Last tape in bit value. */
+#define FLAG_LAST_TAPE_VALUE    0x04
 /** Spi interrupt detected (0 - not received/1 - received). */
 #define FLAG_SPI_INT            0x08
 /** Direction for ps2 keyboard data (0 - Receive/1 - Send). */
 #define FLAG_PS2KEYBOARD_DIRECTION  0x10
-/** Version type (0 - BaseConf /1 - BootLoader). */
-//#define FLAG_VERSION_TYPE       0x20
-/** Last tape in bit value. */
-#define FLAG_LAST_TAPE_VALUE    0x40
+/** SysTick event. */
+#define FLAG_SYSTICK_INT        0x20
+/** Ps2 mouse data for zx (0 - not ready/1 - ready). */
+#define FLAG_PS2MOUSE_ZX_READY  0x40
 /** Hard reset flag (1 - enable hard reset). */
 #define FLAG_HARD_RESET         0x80
 
@@ -137,27 +137,27 @@ extern volatile u8 flags_register;
 extern volatile u8 flags_ex_register;
 /** Ps2 mouse command (0 - not/1 - process). */
 #define FLAG_EX_PS2MOUSE_CMD    0x01
-/** Ps2 keyboard map (0 - default/1 - user). */
-#define FLAG_EX_PS2KEYBOARD_MAP 0x02
 /** NMI interrupt set (0 - not/1 - set). */
-#define FLAG_EX_NMI             0x04
+#define FLAG_EX_NMI             0x02
+/** Ps2 keyboard map (0 - default/1 - user). */
+#define FLAG_EX_PS2KEYBOARD_MAP 0x04
 
 /** Common modes register. */
 extern volatile u8 modes_register;
   /** VGA mode (0 - not set/1 - set). */
-#define MODE_VGA 0x01
+#define MODE_VGA          0x01
 /** Tapeout mode (0 - beeper or pwm mode/1 - tapeout). */
-#define MODE_TAPEOUT 0x02
-/** CAPS LED mode (0 - off/1 - on). */
-#define MODE_CAPSLED 0x04
+#define MODE_CAPSLED      0x04
 /** 60Hz mode (0 - 320 lines / 1 - 262 lines). */
-#define MODE_60HZ 0x10
+#define MODE_TAPEOUT      0x08
+/** CAPS LED mode (0 - off/1 - on). */
+#define MODE_60HZ         0x10
 /** VGA sync polarity (0 - positive / 1 - negative). */
-#define MODE_POL 0x20
+#define MODE_WTP_INT      0x20
 /** Floppy swap (0 - normal, 1 - A/C swapped with B/D. */
-#define MODE_FSWAP 0x40
+#define MODE_FSWAP        0x40
 /** Tape In sound (0 - off, 1 - on. */
-#define MODE_TAPEIN 0x80
+#define MODE_TAPEIN       0x80
 
 /** Type extensions of gluk registers. */
 extern volatile u8 ext_type_gluk;
@@ -169,12 +169,8 @@ extern volatile u8 ext_type_gluk;
 #define EXT_TYPE_PS2KEYBOARDS_LOG     0x02
 /** Type is reading some config bytes. */
 #define EXT_TYPE_RDCFG                0x03
-/** Type is reading SEGA Joystick 1. */
-#define EXT_TYPE_RDSJ1                0x20
-/** Type is reading SEGA Joystick 2. */
-#define EXT_TYPE_RDSJ2                0x21
-/** Type is SPI Flash via JTAG. */
-#define EXT_TYPE_SPIFL                0x80
+/** Type is SPI Flash Interface. */
+#define EXT_TYPE_SPIFL                0x10
 
 /** Data buffer. */
 extern u8 dbuf[];
