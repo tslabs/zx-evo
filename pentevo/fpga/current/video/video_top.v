@@ -378,14 +378,13 @@ module video_top (
     .line      (lcount),
     .v_ts      (v_ts),
 
-`ifndef FDR
+`ifdef FDR
+     .tsconf        (0),
+`else
     .tsconf         (tsconf),
     // .tsconf         ({3'b0, tsconf[4:0]}),  // no TSU
+    // .tsconf         ({1'b0, tsconf[6:0]}),  // no sprites
     // .tsconf         ({tsconf[7], 2'b00, tsconf[4:0]}),    // no tiles
-    // .tsconf         ({tsconf[7], 1'b0, tsconf[5:0]}),    // only tiles0
-    // .tsconf         ({tsconf[7:6], 1'b0, tsconf[4:0]}),  // only tiles1
-`else
-     .tsconf        (0),
 `endif
      .t0gpage       (t0gpage),
      .t1gpage       (t1gpage),

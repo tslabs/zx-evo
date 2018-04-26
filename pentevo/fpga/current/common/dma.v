@@ -343,13 +343,13 @@ module dma (
       b_len <= zdata;
 
     if (dma_num)
-`ifndef FDR
-      b_num <= zdata;
-`else
+`ifdef FDR
       b_num[7:0] <= zdata;
 
     if (dma_numh)
       b_num[9:8] <= zdata[1:0];
+`else
+      b_num <= zdata;
 `endif
   end
 

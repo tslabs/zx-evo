@@ -541,7 +541,8 @@ module zports(
     assign ay_bdir = ay_hit & iowr;
 
 // VG93
-    wire virt_vg = fddvirt[drive_sel_raw];
+    wire [3:0] fddvrt = fddvirt[3:0];
+    wire virt_vg = fddvrt[drive_sel_raw];
     wire open_vg = fddvirt[7];
     assign drive_sel = {drive_sel_raw[1], drive_sel_raw[0] ^ cfg_floppy_swap};
 

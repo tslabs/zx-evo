@@ -1049,7 +1049,11 @@ module top(
     .clk(fclk),
     .sck(sdclk),
     .sdo(sddo),
+`ifdef IDE_VDAC2
     .sdi(!sdcs_n ? sddi : ftdi),
+`else
+    .sdi(sddi),
+`endif
     .dma_req(dma_spi_req),
     .dma_din(dma_spi_din),
     .cpu_req(cpu_spi_req),
