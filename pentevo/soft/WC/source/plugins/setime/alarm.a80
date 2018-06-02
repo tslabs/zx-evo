@@ -1,0 +1,672 @@
+;//////////////////////////////////////////////////////////////
+;/////////////////////////  SETime  v0.1i /////////////////////
+;//////////////////////////////////////////////////////////////
+;//                  by Doctor Max 17-Dec-2017               //
+;//                        Jun-2018                          //
+;//                    https://t.me/drmax_gc                 //
+;//////////////////////////////////////////////////////////////
+pCMOS_ADDR	EQU	#DFF7
+pCMOS_DATA	EQU	#BFF7
+pCMOS_CONF	EQU	#EFF7
+;////////////////////////////
+START:
+	call	GEDPL
+
+	xor	a
+	ld	(upd_time),a
+	ld	(upd_date),a
+
+	ld	ix,wc_win_time
+	call	PRWOW
+.lp1	
+	call	updateTXTime
+	call	updateTXDate
+
+	ld	hl,(ix + WC_WINDOW_2.wnd_txt)
+	ld	de,#0101
+	call	TXTPR
+
+	call	CURSOR
+.lp	ei : halt
+	call	UPPP	: call nz,cur_up
+	call	DWWW	: call nz,cur_dn
+	call	ESC	: jr nz,.esc
+	call	ENKE	: jr z,.lp1
+
+	ld	a,(ix + WC_WINDOW_2.cur_pos)
+	cp	2
+	jp	z,.time
+	cp	3
+	jp	z,.date
+	cp	5
+	jr	nz,.lp1
+
+; TODO set date&time
+
+	ld	hl,sTime
+	call	HL2HEX		;hours
+	ld	(hours),a
+	inc	hl		;skip ":"
+	call	HL2HEX		;minutes
+	ld	(minutes),a
+	inc	hl		;skip ":"
+	call	HL2HEX		;seconds
+	ld	(seconds),a
+
+	ld	hl,sDate
+	call	HL2HEX		;date
+	ld	(date),a
+	inc	hl		;skip "/"
+	call	HL2HEX		;month
+	ld	(month),a
+	inc	hl		;skip "/"
+	call	HL2HEX		;year
+	ld	(year),a
+
+	call	setRTC
+
+.esc	call	RRESB
+	xor	a
+	ret
+
+.time	call	CURSER
+	call	InputTime
+	ld	a,-1
+	ld	(upd_time),a
+	jp	.lp1
+
+.date	call	CURSER
+	call	InputDate
+	ld	a,-1
+	ld	(upd_date),a
+	jp	.lp1
+
+;////////////////////////////
+
+cur_up:	ld	a,(ix + WC_WINDOW_2.cur_pos)
+	cp	2
+	ret	z
+	call	CURSER
+	ld	a,(ix + WC_WINDOW_2.cur_pos)
+	dec	a
+	cp	4
+	jr	nz,.f
+	sub	1
+.f	ld	(ix + WC_WINDOW_2.cur_pos),a
+	ld	hl,(ix + WC_WINDOW_2.wnd_txt)
+	ld	de,#0101
+	call	TXTPR
+	jp	CURSOR
+
+cur_dn:	ld	a,(ix + WC_WINDOW_2.cur_pos)
+	cp	(ix + WC_WINDOW_2.cur_stop)
+	ret	nc
+	call	CURSER
+
+	ld	a,(ix + WC_WINDOW_2.cur_pos)
+	inc	a
+	cp	4
+	jp	nz,.f
+	ld	a,5
+.f	ld	(ix + WC_WINDOW_2.cur_pos),a
+	ld	hl,(ix + WC_WINDOW_2.wnd_txt)
+	ld	de,#0101
+	call	TXTPR
+	jp	CURSOR
+
+;////////////////////////////
+
+updateTXTime:
+	ld	a,(upd_time)
+	or	a
+	ret	nz
+	call	getRTC
+	ld	hl,sTime
+	ld	a,(hours)
+	call	HEX2HL
+	inc	hl
+	ld	a,(minutes)
+	call	HEX2HL
+	inc	hl
+	ld	a,(seconds)
+	call	HEX2HL
+	ret
+
+updateTXDate:
+	ld	a,(upd_date)
+	or	a
+	ret	nz
+	call	getRTC
+	ld	hl,sDate
+	ld	a,(date)
+	call	HEX2HL
+	inc	hl
+	ld	a,(month)
+	call	HEX2HL
+	inc	hl
+	ld	a,(year)
+	call	HEX2HL
+	ret
+
+;////////////////////////////
+
+InputDate:
+	xor	a
+	ld	(cur_pos),a
+.loop
+	ei : halt
+
+	ld	ix,wc_win_time
+	ld	hl,sDate
+	ld	de,#030E
+	call	TXTPR
+	call	Cursor_str
+	call	ENKE : jp nz,.exit
+
+	ld	a,0
+	exa
+	call	KBSCN
+	jr	z,.loop
+	ld	c,a
+
+	ld	hl,sDate
+	ld	a,(cur_pos)
+	ld	e,a
+	ld	d,0
+	add	hl,de
+
+	cp	0
+	jr	z,.sd0
+	cp	1
+	jr	z,.sd1
+	cp	3
+	jr	z,.sm0
+	cp	4
+	jr	z,.sm1
+	cp	6
+	jp	z,.sy0
+	cp	7
+	jp	z,.sy1
+	jp	.loop
+
+.exit
+	ret
+
+.sd0	ld	a,c
+	cp	"0"
+	jr	z,.d0
+	cp	"1"
+	jr	z,.d0
+	cp	"2"
+	jr	z,.d0
+	cp	"3"
+	jr	z,.d0
+	jp	.loop
+.d0	ld	(hl),c
+	ld	a,(cur_pos)
+	inc	a
+	ld	(cur_pos),a
+	jp	.loop
+
+.sd1	ld	a,c
+	cp	#30
+	jr	c,.d1
+	cp	#40
+	jr	nc,.d1
+	dec	hl
+	ld	a,(hl)
+	inc	hl
+	cp	"3"
+	jr	nz,.d11
+	ld	a,c
+	cp	"2"
+	jr	nc,.d1
+
+.d11	ld	(hl),c
+	ld	a,(cur_pos)
+	inc	a
+	inc	a
+	ld	(cur_pos),a
+.d1	jp	.loop
+
+
+.sm0	ld	a,c
+	cp	"0"
+	jr	z,.m0
+	cp	"1"
+	jr	z,.m0
+	jp	.loop
+.m0	ld	(hl),c
+	ld	a,(cur_pos)
+	inc	a
+	ld	(cur_pos),a
+	jp	.loop
+
+.sm1	ld	a,c
+	cp	#30
+	jr	c,.m1
+	cp	#40
+	jr	nc,.m1
+	dec	hl
+	ld	a,(hl)
+	inc	hl
+	cp	"1"
+	jr	nz,.m11
+	ld	a,c
+	cp	"3"
+	jr	nc,.m1
+
+.m11	ld	(hl),c
+	ld	a,(cur_pos)
+	inc	a
+	inc	a
+	ld	(cur_pos),a
+.m1	jp	.loop
+
+.sy0	ld	a,c
+	cp	#30
+	jr	c,.y0
+	cp	#40
+	jr	nc,.y0
+	ld	(hl),c
+	ld	a,(cur_pos)
+	inc	a
+	ld	(cur_pos),a
+.y0	jp	.loop
+
+.sy1	ld	a,c
+	cp	#30
+	jr	c,.y0
+	cp	#40
+	jr	nc,.y0
+	ld	(hl),c
+	jp	.loop
+
+;////////////////////////////
+
+Cursor_str:
+	call	GADRW
+	push	hl
+
+	ld	hl,cur_atr
+	push	hl
+	ld	b,32
+	ld	(hl),_cyan << 4 | _bright_white
+	inc	hl
+	djnz	$-3
+	pop	hl
+
+	ld	a,(cur_pos)
+	ld	e,a
+	ld	d,0
+	add	hl,de
+	ld	(hl),_bright_white
+	sbc	hl,de
+
+	pop	de
+	dec	d
+	set	7,e
+	ld	bc,8
+	ldir
+	ret
+
+;////////////////////////////
+
+InputTime:
+	xor	a
+	ld	(cur_pos),a
+
+.loop
+	ei : halt
+
+	ld	ix,wc_win_time
+	ld	hl,sTime
+	ld	de,#020E
+	call	TXTPR
+	call	Cursor_str
+	call	ENKE : jp nz,.exit
+
+	ld	a,0
+	exa
+	call	KBSCN
+	jr	z,.loop
+	ld	c,a
+
+	ld	hl,sTime
+	ld	a,(cur_pos)
+	ld	e,a
+	ld	d,0
+	add	hl,de
+
+	cp	0
+	jr	z,.sh0
+	cp	1
+	jr	z,.sh1
+	cp	3
+	jr	z,.sm0
+	cp	4
+	jr	z,.sm1
+	cp	6
+	jr	z,.ss0
+	cp	7
+	jr	z,.ss1
+	jr	.loop
+
+.sh0	ld	a,c
+	cp	"0"
+	jr	z,.p0
+	cp	"1"
+	jr	z,.p0
+	cp	"2"
+	jr	z,.p0
+	jp	.loop
+.p0	ld	(hl),c
+	ld	a,(cur_pos)
+	inc	a
+	ld	(cur_pos),a
+	jp	.loop
+
+.sh1	ld	a,c
+	cp	#30
+	jr	c,.h1
+	cp	#40
+	jr	nc,.h1
+	dec	hl
+	ld	a,(hl)
+	inc	hl
+	cp	"2"
+	jr	nz,.h11
+	ld	a,c
+	cp	"4"
+	jr	nc,.h1
+
+.h11	ld	(hl),c
+	ld	a,(cur_pos)
+	inc	a
+	inc	a
+	ld	(cur_pos),a
+.h1	jp	.loop
+
+.sm0	ld	a,c
+	cp	#30
+	jr	c,.m1
+	cp	#36
+	jr	nc,.m1
+	ld	(hl),a
+	ld	a,(cur_pos)
+	inc	a
+	ld	(cur_pos),a
+.m1	jp	.loop
+
+.sm1	ld	a,c
+	cp	#30
+	jr	c,.m2
+	cp	#40
+	jr	nc,.m2
+	ld	(hl),a
+	ld	a,(cur_pos)
+	inc	a
+	inc	a
+	ld	(cur_pos),a
+.m2	jp	.loop
+
+.ss0	ld	a,c
+	cp	#30
+	jr	c,.s1
+	cp	#36
+	jr	nc,.s1
+	ld	(hl),a
+	ld	a,(cur_pos)
+	inc	a
+	ld	(cur_pos),a
+.s1	jp	.loop
+
+.ss1	ld	a,c
+	cp	#30
+	jr	c,.s2
+	cp	#40
+	jr	nc,.s2
+	ld	(hl),a
+.s2	jp	.loop
+
+.exit
+	ret
+
+;////////////////////////////
+
+WAIT_ESC_KEY:
+.lp	halt
+	call	ESC
+	jr	z,.lp
+	ret
+
+;////////////////////////////
+
+getRTC:
+	ld	a,#80
+	ld	bc,pCMOS_CONF
+	out	(c),a
+
+	ld	a,#0B
+	ld	b,high pCMOS_ADDR
+	out	(c),a
+	ld	a,#82
+	ld	b,high pCMOS_DATA
+	out	(c),a
+
+; seconds
+	ld	a,#00
+	ld	b,high pCMOS_ADDR
+	out	(c),a
+	ld	b,high pCMOS_DATA
+	in	a,(c)
+	ld	(seconds),a
+
+; minutes
+	ld	a,#02
+	ld	b,high pCMOS_ADDR
+	out	(c),a
+	ld	b,high pCMOS_DATA
+	in	a,(c)
+	ld	(minutes),a
+
+;hours
+	ld	a,#04
+	ld	b,high pCMOS_ADDR
+	out	(c),a
+	ld	b,high pCMOS_DATA
+	in	a,(c)
+	ld	(hours),a
+
+;date
+	ld	a,#07
+	ld	b,high pCMOS_ADDR
+	out	(c),a
+	ld	b,high pCMOS_DATA
+	in	a,(c)
+	ld	(date),a
+
+;month
+	ld	a,#08
+	ld	b,high pCMOS_ADDR
+	out	(c),a
+	ld	b,high pCMOS_DATA
+	in	a,(c)
+	ld	(month),a
+
+;year
+	ld	a,#09
+	ld	b,high pCMOS_ADDR
+	out	(c),a
+	ld	b,high pCMOS_DATA
+	in	a,(c)
+	ld	(year),a
+
+
+	ld	a,#0B
+	ld	b,high pCMOS_ADDR
+	out	(c),a
+	ld	a,#02
+	ld	b,high pCMOS_DATA
+	out	(c),a
+
+	ld	a,#00
+	ld	bc,pCMOS_CONF
+;	out	(c),a
+	ret
+
+setRTC:
+	ld	a,#80
+	ld	bc,pCMOS_CONF
+	out	(c),a
+
+	ld	a,#0B
+	ld	b,high pCMOS_ADDR
+	out	(c),a
+	ld	a,#82
+	ld	b,high pCMOS_DATA
+	out	(c),a
+
+; seconds
+	ld	a,#00
+	ld	b,high pCMOS_ADDR
+	out	(c),a
+	ld	a,(seconds)
+	ld	b,high pCMOS_DATA
+	out	(c),a
+
+; minutes
+	ld	a,#02
+	ld	b,high pCMOS_ADDR
+	out	(c),a
+	ld	a,(minutes)
+	ld	b,high pCMOS_DATA
+	out	(c),a
+
+;hours
+	ld	a,#04
+	ld	b,high pCMOS_ADDR
+	out	(c),a
+	ld	a,(hours)
+	ld	b,high pCMOS_DATA
+	out	(c),a
+
+;date
+	ld	a,#07
+	ld	b,high pCMOS_ADDR
+	out	(c),a
+	ld	a,(date)
+	ld	b,high pCMOS_DATA
+	out	(c),a
+
+;month
+	ld	a,#08
+	ld	b,high pCMOS_ADDR
+	out	(c),a
+	ld	a,(month)
+	ld	b,high pCMOS_DATA
+	out	(c),a
+
+;year
+	ld	a,#09
+	ld	b,high pCMOS_ADDR
+	out	(c),a
+	ld	a,(year)
+	ld	b,high pCMOS_DATA
+	out	(c),a
+
+	ld	a,#0B
+	ld	b,high pCMOS_ADDR
+	out	(c),a
+	ld	a,#02
+	ld	b,high pCMOS_DATA
+	out	(c),a
+
+	ld	a,#00
+	ld	bc,pCMOS_CONF
+;	out	(c),a
+	ret
+
+;////////////////////////////
+
+; i: a - number
+; hl: hex buff
+; o:
+; hl+2
+HEX2HL:
+	push	af
+	rra
+	rra
+	rra
+	rra
+	call	.h
+	pop	af
+.h	and	#0F
+	add	a,#90
+	daa
+	adc	a,#40
+	daa
+	ld	(hl),a
+	inc	hl
+	ret
+
+HL2HEX:
+	ld	a,(hl)
+	inc	hl
+	sub	"0"
+	add	a,a
+	add	a,a
+	add	a,a
+	add	a,a
+	ld	c,a
+	ld	a,(hl)
+	inc	hl
+	sub	"0"
+	or	c
+	ret
+
+;////////////////////////////
+upd_time	DB	0	;flag for update time in menu
+upd_date	DB	0	;flag for update date in menu
+cur_pos		DB	0	;cursor position
+cur_atr		DS	32,0	;attribute string with cursor
+
+seconds		DB	#00
+minutes		DB	#00
+hours		DB	#00
+day		DB	#00
+date		DB	#17
+month		DB	#12
+year		DB	#17
+
+;////////////////////////////
+
+wc_win_time		//WC_WINDOW_2
+/*type*/		DB	#C2 + 3
+/*cur_col_mask*/	DB	0
+/*xy_pos*/		DB	27,10
+/*xy_size*/		DB	25,7
+/*attr*/		DB	_white << 4 | _bright_white
+/*res0*/		DB	0
+/*restore_addr*/	DW	0
+/*div0*/		DB	0
+/*div1*/		DB	0
+/*cur_pos*/		DB	2
+/*cur_stop*/		DB	5
+/*cur_col*/		DB	_cyan <<4 | _bright_white
+/*win_col*/		DB	0
+/*hdr_txt*/		DW	0
+/*ftr_txt*/		DW	0
+/*wnd_txt*/		DW	txt_wnd_time
+txt_wnd_time		DB	#0D
+			DB	" Input time: ", #FE
+			DW	sTime
+			DB	#0D
+			DB	" Input date: ",#FE
+			DW	sDate
+			DB	#0D,#0D
+			DB	#0E, 7,7,"[", _blue, _blue, " Just TIME IT ", 7,7, "]"
+			DB	0
+sTime			DB	"00:00:00", 0
+sDate			DB	"17/12/17", 0
+

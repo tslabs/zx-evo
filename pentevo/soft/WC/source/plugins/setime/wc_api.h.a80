@@ -1,0 +1,365 @@
+// WildCommander API Header
+// asm version based on ft812sdk by tsl
+
+//---------------------------------------
+// Addresses
+_WCINT		EQU	0x5BFF	// адрес обработки int wild commander
+_PAGE0		EQU	0x6000	// номер страницы подключенной с адреса 0x0000-0x3fff
+_PAGE1		EQU	0x6001	// номер страницы подключенной с адреса 0x4000-0x7fff
+_PAGE2		EQU	0x6002	// номер страницы подключенной с адреса 0x8000-0xdfff
+_PAGE3		EQU	0x6003	// номер страницы подключенной с адреса 0xc000-0xffff
+_ABT		EQU	0x6004	// флаг выставляется, если был нажат ESC
+_ENT		EQU	0x6005	// флаг выставляется, если был нажат ENTER
+_WCAPI		EQU	0x6006	// точка доступа к функциям
+_TMN		EQU	0x6009	// синхра. переменная-таймер, инкрементится по инту
+
+//---------------------------------------
+// API functions
+_MNGC_PL	EQU	0x00	// включение страницы на 0xC000 (из выделенного блока)
+				// нумерация совпадает с использующейся в +36
+				// i:A' - номер страницы (от 0)
+				// 0xFF - страница с фонтом (1го текстового экрана)
+				// 0xFE - первый текстовый экран (в нём панели)
+_MNG0_PL	EQU	0x78
+_MNG8_PL	EQU	0x79
+
+_PRWOW		EQU	0x01	// вывод окна на экран
+				// i:IX - адрес по которому лежит структура окна (SOW)
+
+_RRESB		EQU	0x02	// cтирание окна (восстановление информации)
+				// i:IX - SOW
+
+_PRSRW		EQU	0x03	// печать строки в окне
+				// i:IX - SOW
+				// HL - Text addres (должен быть в 0x8000-0xBFFF!)
+				// D - Y
+				// E - X
+				// BC - Length
+
+_PRIAT		EQU	0x04	// выставление цвета (вызывается сразу после PRSRW)
+				// i:PRSRW - выставленные координаты и длина
+				// A' - цвет
+
+_GADRW		EQU	0x05	// получение адреса в окне
+				// i:IX - SOW
+				// D - Y
+				// E - X
+				// o:HL - Address
+
+_CURSOR		EQU	0x06	// печать курсора
+				// i:IX - SOW
+
+_CURSER		EQU	0x07	// стирание курсора (восстановление цвета)
+				// i:IX - SOW
+
+_YN		EQU	0x08	// меню ok/cancel
+				// i:A'
+				// 0x01 - инициализация (вычисляет координаты)
+				// 0x00 - обработка нажатий (вызывать раз в фрейм)
+				// 0xFF - выход
+				// o:NZ - выбран CANCEL
+				// Z - выбран OK
+
+_ISTR		EQU	0x09	// редактирование строки
+				// i:A'
+				// 0xFF - инициализация (рисует курсор)
+				// i:HL - адрес строки
+				// DE - CURMAX+CURNOW (длина строки + начальная позиция курсора в ней)
+				// 0x00 - опрос клавиатуры
+				// >опрашивает LF,RG,BackSpace
+				// >собственно редактируется строка
+				// >нужно вызывать каждый фрейм
+				// 0x01 - выход (стирает курсор)
+
+_NORK		EQU	0x0A	// перевод байта в HEX (текстовый формат)
+				// i:HL - Text Address
+				// A - Value
+
+_TXTPR		EQU	0x0B	// вывод текста в окне
+				// i:IX - SOW (структура должна лежать в #8000-#BFFF, #0000-#3FFF)
+				// HL - адрес текста (строки/абзаца) (должен быть в #8000-#BFFF, #0000-#3FFF!)
+				// D - Y (внутри окна)
+				// E - X (внутри окна)
+				//
+				// o: D - Y (след строка)
+				// E - X (без изменений)
+
+_DMAPL		EQU	0x0D	// работа с DMA
+				// i: A' - тип операции
+				// 0x00 - инит S и D (BHL - Source, CDE - Destination)
+				// 0x01 - инит S (BHL)
+				// 0x02 - инит D (CDE)
+				// 0x03 - инит S с пагой из окна (HL, B - 0-3 [номер окна])
+				// 0x04 - инит D с пагой из окна (HL, B - 0-3 [номер окна])
+				// 0x05 - выставление DMA_T (B - кол-во бёрстов)
+				// 0x06 - выставление DMA_N (B - размер бёрста)
+				//
+				// 0xFD - запуск без ожидания завершения (o:NZ - DMA занята)
+				// 0xFE - запуск с ожиданием завершения (o:NZ - DMA занята)
+				// 0xFF - ожидание готовности дма
+				//
+				// в функциях 0x00-0x02 формат B/C следующий:
+				// [7]:%1 - выбор страницы из блока выделенного плагину (0-5)
+				// %0 - выбор страницы из видео буферов (0-31)
+				// [6-0]:номер страницы
+
+_TURBOPL	EQU	0x0E 	// i:B - выбор Z80/AY
+				// 0x00 - меняется частота Z80
+				// i:C - %00 - 3.5 MHz
+				// %01 - 7 MHz
+				// %10 - 14 MHz
+				// %11 - 28 MHz (в данный момент 14MHz)
+				// 0x01 - меняется частота AY
+				// i:C - %00 - 1.75 MHz
+				// %01 - 1.7733 MHz
+				// %10 - 3.5 MHz
+				// %11 - 3.546 MHz
+
+_GEDPL		EQU	0x0F	// восстановление палитры, всех офсетов и txt режима
+				// ! обязательно вызывать при запуске плагина!
+				// (включает основной txt экран)
+				// i:none
+
+// клавиатура: NZ - клавиша нажата
+//--------------------------------------------------
+_SPKE		EQU	0x10	// (SPACE)
+_UPPP		EQU	0x11	// (UP Arrow)
+_DWWW		EQU	0x12	// (Down Arrow)
+_LFFF		EQU	0x13	// (Left Arrow)
+_RGGG		EQU	0x14	// (Right Arrow)
+_TABK		EQU	0x15	// (Tab)
+_ENKE		EQU	0x16	// (Enter)
+_ESC		EQU	0x17	// (Escape)
+_BSPC		EQU	0x18	// (Backspace)
+_PGU		EQU	0x19	// (pgUP)
+_PGD		EQU	0x1A	// (pgDN)
+_HOME		EQU	0x1B
+_END		EQU	0x1C
+_F1		EQU	0x1D
+_F2		EQU	0x1E
+_F3		EQU	0x1F
+_F4		EQU	0x20
+_F5		EQU	0x21
+_F6		EQU	0x22
+_F7		EQU	0x23
+_F8		EQU	0x24
+_F9		EQU	0x25
+_F10		EQU	0x26
+_ALT		EQU	0x27
+_SHIFT		EQU	0x28
+_CTRL		EQU	0x29
+_KBSCN		EQU	0x2A	// опрос клавиш
+				// i:A' - обработчик
+				// 0x00 - учитывает SHIFT (TAI1/TAI2)
+				// 0x01 - всегда выдает код из TAI1
+				// o: NZ: A - TAI1/TAI2 (see PS2P.ASM)
+				// Z: A=0x00 - unknown key
+				// A=0xFF - buffer end
+
+_DEL		EQU	0x2B	// (Delete)
+_INS		EQU	0x55	// (Insert)
+_CAPS		EQU	0x2C	// (Caps Lock)
+_ANYK		EQU	0x2D	// any key
+_USPO		EQU	0x2E	// pause for keyboard ready (recomended for NUSP)
+_NUSP		EQU	0x2F	// waiting for any key
+
+
+// работа с файлами:
+//---------------------------------------
+_LOAD512	EQU	0x30	// потоковая загрузка файла
+				// i:HL - Address
+				// B - Blocks (512b)
+				// o:HL - New Value
+
+_SAVE512	EQU	0x31	// потоковая запись файла
+				// i:HL - Address
+				// B - Blocks (512b)
+				// o:HL - New Value
+
+_GIPAGPL	EQU	0x32	// позиционировать на начало файла
+				// (сразу после запуска плагина — уже вызвана)
+
+_TENTRY 	EQU	0x33	// получить ENTRY(32) из коммандера
+				// (структура как в каталоге FAT32)
+				// i:DE - Address
+				// o:DE(32) - ENTRY
+
+_CHTOSEP	EQU	0x34	// разложение цепочки активного файла в сектора
+				// i:DE - BUFFER (куда кидать номера секторов)
+				// BC - BUFFER END (=BUFFER+BUFFERlenght)
+
+_TENTRYN	EQU	0x35	// reserved ???
+
+_TMRKDFL	EQU	0x36	// получить заголовок маркированного файла
+				// i:HL - File number (1-2047)
+				// DE - Address (32byte buffer) [0x8000-0xBFFF!]
+				// (if HL=0// o:BC - count of marked files)
+				// o:NZ - File not found or other error
+				// Z - Buffer updated
+				// >так же делается позиционированиена на начало этого файла!!!
+				// >соотв. функции LOAD512/SAVE512 будут читать/писать этот файл от начала.
+
+_TMRKNXT	EQU	0x37	// reserved ???
+
+_STREAM		EQU	0x39	// работа с потоками
+				// i:D - номер потока (0/1)
+				// B - устройство: 0-SD(ZC)
+				// 1-Nemo IDE Master
+				// 2-Nemo IDE Slave
+				// C - раздел (не учитывается)
+				// BC=0xFFFF: включает поток из D (не возвращает флагов)
+				// иначе создает/пересоздает поток.
+				// o:NZ - устройство или раздел не найдены
+				// Z - можно начинать работать с потоком
+
+//!!!DEPRECATE!!! use 0x48!
+_MKFILE		EQU	0x3A	// создание файла в активном каталоге
+				// i:DE(12) - name(8)+ext(3)+flag(1)
+				// HL(4) - File Size
+				// o:NZ - Operation failed
+				// A - type of error (in next versions!)
+				// Z - File created
+				// ENTRY(32) [use TENTRY]
+
+_FENTRY 	EQU	0x3B	// поиск файла/каталога в активной директории
+				// i:HL - flag(1),name(1-12),0x00
+				// flag:0x00 - file
+				// 0x10 - dir
+				// name:"NAME.TXT","DIR"...
+				// o: Z - entry not found
+				// NZ - CALL GFILE/GDIR for activating file/dir
+				// [DE,HL] - file length
+
+_LOAD256	EQU	0x3C	// reserved ???
+_LOADNONE	EQU	0x3D	// reserved ???
+
+_GFILE		EQU	0x3E	// выставить указатель на начало найденного файла
+				// (вызывается после FENTRY!)
+
+_GDIR 		EQU	0x3F	// сделать найденный каталог активным
+				// (вызывается после FENTRY!)
+
+_MKfile		EQU	0x48	// создание файла в активном каталоге
+				// i:HL - flag(1),length(4),name(1-255),#00
+				// o: A - Error Code
+				// NZ - Operation failed
+				// Z - File created
+				// o:ENTRY(32) [use TENTRY]
+				// [после создания файла происходит позиционирование
+				// [на его начало!!!
+
+_MKdir		EQU	0x49	// создание каталога в активной директории
+				// i:HL - name(1-255),#00
+				// o: A - Error Code
+				// NZ - Operation failed
+				// Z - Directory created
+				// [после создания каталога, на таковой установлено
+				// [позиционирование, как на файл!!!
+				// [если нужно сделать созданный каталог активным, то
+				// [вызываем функцию FENTRY...
+						
+_REName		EQU	0x4A	// переименование файла/каталога
+				// i:HL - flag(1),oldname(1-255),0
+				// DE - newname(1-255),0
+				// o: A - Error Code
+				//  Z - not found or new name already exists
+				//  NZ - success
+_DelFl		EQU	0x4B	// удаление файла/каталога
+				// i: HL - flag(1),name(1-255),#00
+				// o:  A - Error Code
+				// Z - File/DIR Not Found
+				// NZ - File/DIR Deleted
+
+				//Flag:
+				//#00 - file
+				//#10 - DIR
+
+				// FAT engine error codes:
+				// 1 - long name is not valid (mkfile, mkdir, rename, delete)
+				// 2 - short name index fatality (mkfile, mkdir, rename)
+				// 3 - long name already exists  (mkfile, mkdir, rename)
+				// 4 - short name already exists (mkfile, mkdir, rename)
+				// 8 - source file/dir not found (rename, delete)
+				// 16 - not enough space (dir expanding, mkdir, mkfile)
+				// 255 - unknown error (\o/)
+
+// работа с режимами графики
+//---------------------------------------
+_MNGV_PL	EQU	0x40	// включение видео страницы
+				// i:A' - номер видео страницы
+				// 0x00 - основной экран (тхт)
+				// >палитра выставляется автоматом
+				// >как и все режимы и смещения
+				// 0x01 - 1й видео буфер (16 страниц)
+				// 0x02 - 2й видео буфер (16 страниц)
+
+_MNGCVPL	EQU	0x41	// включение страницы из видео буферов
+				// i:A' - номер страницы
+				// 0x00-0x0F - страницы из 1го видео буфера
+				// 0x10-0x1F - страницы из 2го видео буфера
+
+_GVmod		EQU	0x42	// включение видео режима (разрешение+тип)
+				// i:A' - видео режим
+				// [7-6]: %00 - 256x192
+				// %01 - 320x200
+				// %10 - 320x240
+				// %11 - 360x288
+				// [5-2]: %0000
+				// [1-0]: %00 - ZX
+				// %01 - 16c
+				// %10 - 256c
+				// %11 - txt
+
+_GYoff		EQU	0x43	// выставление смещения экрана по Y
+				// i:HL - Y (0-511)
+
+_GXoff		EQU	0x44	// выставление смещения экрана по X
+				// i:HL - X (0-511)
+
+_GVtm		EQU	0x69	// выставление страницы для TileMap
+_GVtl		EQU	0x70	// выставление страницы для TileGraphics
+_GVsgp		EQU	0x71	// выставление страницы для SpriteGraphics
+
+	STRUCT	WC_WINDOW_1
+type		BYTE 1
+cur_col_mask	BYTE
+x_pos		BYTE
+y_pos		BYTE
+x_size		BYTE
+y_size		BYTE
+attr		BYTE
+res0		BYTE
+restore_addr	WORD
+div0		BYTE
+div1		BYTE
+hdr_txt		WORD
+ftr_txt		WORD
+wnd_txt		WORD
+	ENDS
+
+	STRUCT	WC_WINDOW_2
+type		BYTE 2
+cur_col_mask	BYTE
+x_pos		BYTE
+y_pos		BYTE
+x_size		BYTE
+y_size		BYTE
+attr		BYTE
+res0		BYTE
+restore_addr	WORD
+div0		BYTE
+div1		BYTE
+cur_pos		BYTE
+cur_stop	BYTE
+cur_col		BYTE
+win_col		BYTE
+hdr_txt		WORD
+ftr_txt		WORD
+wnd_txt		WORD
+	ENDS
+
+	STRUCT	WC_FILENAME
+type		DB
+size		DD
+name		DB
+	ENDS

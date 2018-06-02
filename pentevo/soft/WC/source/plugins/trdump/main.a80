@@ -1,0 +1,147 @@
+	DEVICE PENTAGON128
+
+	INCLUDE "wc_api.h.a80"
+	INCLUDE "colors.h.a80"
+
+startCode
+	ORG #0000
+	INCLUDE "wc_header.a80"
+
+	ALIGN 512
+ 	DISP #8000
+mainStart
+	INCLUDE "trdump.a80"
+	INCLUDE "fdd.a80"
+	INCLUDE "print.a80"
+
+	IFUSED PRWOW
+PRWOW:
+	ld	a,_PRWOW
+	jp	_WCAPI
+	ENDIF
+
+	IFUSED RRESB
+RRESB:
+	ld	a,_RRESB
+	jp	_WCAPI
+	ENDIF
+
+	IFUSED TXTPR
+TXTPR:
+	ld	a,_TXTPR
+	jp	_WCAPI
+	ENDIF
+
+	IFUSED GADRW
+GADRW:
+	ld a,_GADRW
+	jp _WCAPI
+	ENDIF
+
+	IFUSED CURSOR
+CURSOR:
+	ld a,_CURSOR
+	jp _WCAPI
+	ENDIF
+
+	IFUSED CURSER
+CURSER:
+	ld a,_CURSER
+	jp _WCAPI
+	ENDIF
+
+	IFUSED ISTR
+ISTR:
+	ld a,_ISTR
+	jp _WCAPI
+	ENDIF
+
+	IFUSED GEDPL
+GEDPL:
+	ld a,_GEDPL
+	jp _WCAPI
+	ENDIF
+
+	IFUSED MKfile
+MKfile:
+	ld a,_MKfile
+	jp _WCAPI
+	ENDIF
+
+	IFUSED MKdir
+MKdir:
+	ld a,_MKdir
+	jp _WCAPI
+	ENDIF
+
+	IFUSED LOAD512
+LOAD512:
+	ld a,_LOAD512
+	jp _WCAPI
+	ENDIF
+
+	IFUSED SAVE512
+SAVE512:
+	ld a,_SAVE512
+	jp _WCAPI
+	ENDIF
+
+	IFUSED MNGCVPL
+MNGCVPL:
+	exa
+	ld a,_MNGCVPL
+	jp _WCAPI
+	ENDIF
+
+	IFUSED MNGC_PL
+MNGC_PL:
+	exa
+	ld a,_MNGC_PL
+	jp _WCAPI
+	ENDIF
+
+	IFUSED ESC
+ESC:
+	ld a,_ESC
+	jp _WCAPI
+	ENDIF
+
+	IFUSED ENKE
+ENKE:
+	ld a,_ENKE
+	jp _WCAPI
+	ENDIF
+
+	IFUSED NUSP
+NUSP:
+	ld a,_NUSP
+	jp _WCAPI
+	ENDIF
+
+	IFUSED USPO
+USPO:
+	ld a,_USPO
+	jp _WCAPI
+	ENDIF
+
+
+	IFUSED UPPP
+UPPP:	
+	ld a,_UPPP
+	jp _WCAPI
+	ENDIF
+
+	IFUSED DWWW
+DWWW:
+	ld a,_DWWW
+	jp _WCAPI
+	ENDIF
+
+track_buffer
+
+mainEnd
+	ENT
+
+endCode
+
+	SAVEBIN "TRDUMP.WMF", startCode, endCode-startCode

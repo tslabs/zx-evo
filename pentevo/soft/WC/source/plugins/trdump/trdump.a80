@@ -1,0 +1,1169 @@
+;//////////////////////////////////////////////////////////////
+;/////////////////////// TRD Dumper v0.56i ////////////////////
+;//////////////////////////////////////////////////////////////
+;//                  by Doctor Max 13-Dec-2017               //
+;//                          Jun-2018                        //
+;//                    https://t.me/drmax_gc                 //
+;//////////////////////////////////////////////////////////////
+FDDVirt		EQU	#29AF
+;////////////////////////////
+SYM_R		EQU	1
+SYM_W		EQU	2
+SYM_V		EQU	3
+SYM_F		EQU	4
+SYM_BROKEN	EQU	5
+SYM_DB		EQU	6
+SYM_FE		EQU	7
+;////////////////////////////
+START:	push	af, de, hl
+	call	GEDPL
+	pop	hl, de, af
+
+	or	a
+	jr	z,WRITER
+	cp	4
+	jr	z,WRITER
+	cp	3
+	ret	nz
+	jp	DUMPER
+
+WRITER:
+	ld	bc,FDDVirt
+	ld	a,#80
+	out	(c),a
+;; DEHL - filesize
+	rr e : rr h
+	rr e : rr h
+	rr e : rr h
+	rr e : rr h
+	ld	a,h
+	ld	(TRDTRACKS),a
+
+	call	SetFont
+
+	call	SELECT_DRIVE : jp nz,.exit
+	call	FDD_INIT : jp c,.err_ndsk
+
+	ld	a,1
+	call	MNGC_PL
+	call	MakeTrackBuffer
+	ld	a,0
+	call	MNGC_PL
+
+	ld	a,0
+	ld	(exit_stat),a
+	dec	a
+	ld	(cfg_wdata),a
+
+	call	PRINT_WRITE_WINDOW
+
+	ld	de,0		;d - track	;e - sector
+
+	ld	a,(TRDTRACKS)
+	ld	b,a
+
+.lpt	ld	a,b
+	or	a
+	jp	z,.done
+
+;formatting track
+	ld	c,3		;format counter
+.lpf
+	ld	a,d
+	ld	(TRACK),a
+	call	FDD_SEEK
+	jp	c,.err_ndsk
+	call	FDD_SYSRG
+
+	ld	a,_red << 4 | _bright_yellow
+	ld	(HDCOL),a
+	ld	a,SYM_F
+	ld	(HDSYM),a
+	call	PRINT_HD
+	call	PRINT_TRACK
+
+	ld	a,1
+	push	bc, de, hl
+	call	MNGC_PL
+	pop	hl, de, bc
+
+	push	bc, de, hl
+	call	FDD_FORMAT_TRACK
+	pop	hl, de, bc
+
+	ld	a,0
+	push	bc, de, hl
+	call	MNGC_PL
+	pop	hl, de, bc
+
+	jr	nc,.fok
+	cp	ERROR_NODISK
+	jp	z,.err_ndsk
+	cp	ERROR_WRPROTECT
+	jp	z,.err_wrp
+	jp	.err_format
+.fok
+	ld	a,(cfg_wdata)
+	or	a
+	jp	z,.vok
+;load track data
+	ld	hl,track_buffer
+	push	bc,de,hl
+	ld	b,8
+	call	LOAD512
+	pop	hl,de,bc
+
+;writing data
+	ld	a,_green << 4 | _bright_yellow
+	ld	(HDCOL),a
+	ld	a,SYM_W
+	ld	(HDSYM),a
+	call	PRINT_HD
+.lps
+	ld	a,e
+	ld	(SECTOR),a
+
+	call	PRINT_TRACK
+
+	push	bc,de,hl
+	call	FDD_WRITE_SECTOR
+	pop	hl,de,bc
+
+	jr	nc,.ok
+	cp	ERROR_NODISK
+	jp	z,.err_ndsk
+	cp	ERROR_WRPROTECT
+	jp	z,.err_wrp
+	cp	ERROR_BREAK
+	jp	z,.break
+
+.ok
+	push	de
+	ld	de,256
+	add	hl,de
+	pop	de
+
+	inc	e	;inc sector
+	ld	a,e
+	and	#0F
+	ld	e,a
+	jr	nz,.lps
+;track saved
+
+;verify sectors
+	ld	a,SYM_V
+	ld	(HDSYM),a
+	call	PRINT_HD
+
+	call	VERIFY
+	jr	nc,.vok
+	dec	c
+	jp	nz,.lpf
+
+	ld	a,_red << 4 | _bright_red
+	ld	(HDCOL),a
+.vok	ld	a,SYM_DB
+	ld	(HDSYM),a
+	call	PRINT_HD
+
+	inc	d	;inc track
+	dec	b
+	jp	.lpt
+
+.break
+	call	FDD_STOP
+	ld	ix,wc_win_error
+	ld	de,txt_break
+	ld	(ix+WC_WINDOW_1.wnd_txt),de
+	call	PRWOW
+	call	WAIT_ESC_KEY
+	call	RRESB
+	jr	.exit
+
+.done
+	call	FDD_RESTORE
+
+.exit
+	call	FDD_STOP
+
+	ld	ix,wc_win_dump
+	call	RRESB
+
+	ld	bc,FDDVirt
+	ld	a,0
+	out	(c),a
+
+;; restore font
+	call	SetFont
+
+	ld	a,(exit_stat)
+	ret
+
+.err_format
+	call	FDD_STOP
+
+	ld	ix,wc_win_error
+	ld	de,txt_eformat
+	ld	(ix+WC_WINDOW_1.wnd_txt),de
+	call	PRWOW
+	call	WAIT_ESC_KEY
+	call	RRESB
+	jp	.exit
+
+.err_wrp
+	call	FDD_STOP
+
+	ld	ix,wc_win_error
+	ld	de,txt_wrp
+	ld	(ix+WC_WINDOW_1.wnd_txt),de
+	call	PRWOW
+	call	WAIT_ESC_KEY
+	call	RRESB
+	jp	.exit
+
+.err_write
+	push	bc, de, hl
+
+	ld	ix,wc_win_error_rai
+	call	PRWOW
+.lpk	ei : halt
+	call	KEY_R	: jr z,.retry
+	call	KEY_A	: jr z,.abort
+	call	KEY_I	: jr z,.ignore
+	jr	.lpk
+
+.retry	ld	ix,wc_win_error_rai
+	call	RRESB
+	pop	hl, de, bc
+	jp	.lpt
+
+.abort	ld	ix,wc_win_error_rai
+	call	RRESB
+	pop	hl, de, bc
+	jp	.done
+
+.ignore	ld	ix,wc_win_error_rai
+	call	RRESB
+
+	ld	a,_red << 4 | _bright_yellow
+	ld	(HDCOL),a
+	pop	hl, de, bc
+	jp	.ok
+
+.err_ndsk
+	cp	ERROR_NOFDD
+	jr	z,.err_nfdd
+
+	call	FDD_STOP
+
+	ld	ix,wc_win_error
+	ld	de,txt_nodisk
+	ld	(ix+WC_WINDOW_1.wnd_txt),de
+	call	PRWOW
+	call	WAIT_ESC_KEY
+	call	RRESB
+	jp	.exit
+
+.err_nfdd
+	call	FDD_STOP
+
+	ld	ix,wc_win_error
+	ld	de,txt_nofdd
+	ld	(ix+WC_WINDOW_1.wnd_txt),de
+	call	PRWOW
+	call	WAIT_ESC_KEY
+	call	RRESB
+	jp	.exit
+
+.err_file
+	ld	ix,wc_win_error_file_exist
+	call	PRWOW
+	call	WAIT_ESC_KEY
+	ld	ix,wc_win_error_file_exist
+	call	RRESB
+	jp	.exit
+
+;///////////////////////////////////////////////////////////////////////////////
+;i: track buffer
+;
+VERIFY:
+	push	bc, de, hl
+
+	ld	hl,track_buffer
+
+	ld	e,0
+.chlp
+	ld	a,e
+	ld	(SECTOR),a
+
+	call	PRINT_TRACK
+
+	push	bc ,de ,hl
+	call	FDD_CHECK_SECTOR
+	pop	hl, de, bc
+
+	ld	a,(verify_error)
+	or	a
+	jr	nz,.bad
+
+	push	de
+	ld	de,256
+	add	hl,de
+	pop	de
+
+	inc	e
+	ld	a,e
+	and	#0F
+	ld	e,a
+	jr	nz,.chlp
+
+	pop	hl, de, bc
+	xor	a
+	ret
+
+.bad	pop	hl, de, bc
+	scf
+	ret
+
+;///////////////////////////////////////////////////////////////////////////////
+
+DUMPER:
+	ld	bc,FDDVirt
+	ld	a,#80
+	out	(c),a
+
+	ld	a,160
+	ld	(TRDTRACKS),a
+	sub	160
+	srl	a
+	add	a,"0"
+	ld	(txt_tracks+1),a
+
+	call	SetFont
+
+	call	SELECT : jp nz,.exit
+
+;; TODO detect extra-tracks
+;	call	detectExtraTracks
+
+	ld	hl,filename
+	call	MKfile : jp nz,.err_file
+
+	call	FDD_INIT : jp c,.err_ndsk
+
+	call	PRINT_DUMP_WINDOW
+
+	ld	de,0		;d - track	;e - sector
+	ld	a,(TRDTRACKS)
+	ld	b,a
+.lpt
+	ld	a,b
+	or	a
+	jp	z,.done
+
+	call	CLEAR_BUFF
+
+	ld	hl,track_buffer
+	ld	a,d
+	ld	(TRACK),a
+	call	FDD_SEEK
+	jp	c,.err_ndsk
+	call	FDD_SYSRG
+
+	ld	a,_green << 4 | _bright_cyan
+	ld	(HDCOL),a
+	ld	a,#B1
+	ld	(HDSYM),a
+	ld	a,SYM_DB
+	ld	(RDSYM),a
+	call	PRINT_HD
+
+.lps
+	ld	a,e
+	ld	(SECTOR),a
+
+	call	PRINT_TRACK
+
+	push	bc,de,hl
+	call	FDD_READ_SECTOR
+	pop	hl,de,bc
+
+	jr	nc,.ok
+	cp	ERROR_NODISK
+	jp	z,.err_ndsk
+	cp	ERROR_READ
+	jp	z,.err_read
+	cp	ERROR_BREAK
+	jp	z,.break
+	jp	.err_read
+
+.ok	push	de
+	ld	de,256
+	add	hl,de
+	pop	de
+
+	inc	e	;inc sector
+	ld	a,e
+	and	#0F
+	ld	e,a
+	jr	nz,.lps
+
+	ld	a,(RDSYM)
+	ld	(HDSYM),a
+	call	PRINT_HD
+
+	inc	d	;inc track
+
+	push	bc,de,hl
+	ld	hl,track_buffer
+	ld	b,8
+	call	SAVE512
+	pop	hl,de,bc
+
+	dec	b
+	jp	.lpt
+
+.break
+	call	FDD_STOP
+	ld	ix,wc_win_error
+	ld	de,txt_break
+	ld	(ix+WC_WINDOW_1.wnd_txt),de
+	call	PRWOW
+	call	WAIT_ESC_KEY
+	call	RRESB
+	jr	.exit
+
+.done
+	call	FDD_RESTORE
+
+.exit
+	call	FDD_STOP
+
+	ld	ix,wc_win_dump
+	call	RRESB
+
+	ld	bc,FDDVirt
+	ld	a,0
+	out	(c),a
+;; restore font
+	call	SetFont
+	ld	a,3
+	ret
+
+.err_read
+	push	bc, de, hl
+
+	ld	ix,wc_win_error_rai
+	call	PRWOW
+.lpk	ei : halt
+	call	KEY_R	: jr z,.retry
+	call	KEY_A	: jr z,.abort
+	call	KEY_I	: jr z,.ignore
+	jr	.lpk
+
+.retry
+	ld	ix,wc_win_error_rai
+	call	RRESB
+	pop	hl, de, bc
+	jp	.lpt
+
+.abort	ld	ix,wc_win_error_rai
+	call	RRESB
+	pop	hl, de, bc
+	jp	.done
+
+.ignore	ld	ix,wc_win_error_rai
+	call	RRESB
+
+	ld	a,_green << 4 | _bright_red
+	ld	(HDCOL),a
+	ld	a,#FF
+	ld	(RDSYM),a
+
+;// TODO: put ignored sector to table
+
+	pop	hl, de, bc
+	jp	.ok
+
+.err_ndsk
+	cp	ERROR_NOFDD
+	jr	z,.err_nfdd
+
+	call	FDD_STOP
+
+	ld	ix,wc_win_error
+	ld	de,txt_nodisk
+	ld	(ix+WC_WINDOW_1.wnd_txt),de
+	call	PRWOW
+	call	WAIT_ESC_KEY
+	call	RRESB
+	jp	.exit
+
+.err_nfdd
+	call	FDD_STOP
+
+	ld	ix,wc_win_error
+	ld	de,txt_nofdd
+	ld	(ix+WC_WINDOW_1.wnd_txt),de
+	call	PRWOW
+	call	WAIT_ESC_KEY
+	call	RRESB
+	jp	.exit
+
+.err_file
+	ld	ix,wc_win_error_file_exist
+	call	PRWOW
+	call	WAIT_ESC_KEY
+	ld	ix,wc_win_error_file_exist
+	call	RRESB
+	jp	.exit
+
+;///////////////////////////////////
+KEY_R:	ld	a,#FB		;FBFE - QWERT
+	in	a,(#FE)
+	bit	3,a		;R
+	ret
+KEY_A:	ld	a,#FD		;FDFE - ASDFG
+	in	a,(#FE)
+	bit	0,a		;A
+	ret
+KEY_I:	ld	a,#DF		;DFFE - POIUY
+	in	a,(#FE)
+	bit	2,a		;I
+	ret
+KEY_SPACE:
+	ld	a,#7F
+	in	a,(#FE)
+	bit	0,a
+	ret
+; o: !CF if break pressed
+KEY_BREAK:
+	ld	a,#7F
+	in	a,(#FE)
+	rra
+	ret	c
+	ld	a,#FE
+	in	a,(#FE)
+	rra
+	ret
+WAIT_ESC_KEY:
+.lp	halt
+	call	ESC
+	jr	z,.lp
+	ret
+;///////////////////////////////////
+detectExtraTracks:
+	ld	d,160
+
+	ld	a,d
+	ld	(TRACK),a
+	call	FDD_SEEK
+	jp	c,.err_ndsk
+	call	FDD_SYSRG
+
+	xor	a
+	ret
+
+;	ld	hl,track_buffer
+;	call	FDD_READ_SEC
+;	call	FDD_STAT
+;	and	#7F
+
+.err_ndsk
+	scf
+	ret
+;///////////////////////////////////
+SELECT:
+	ld	a,(DRIVE)
+	add	a,"A"
+	ld	(txt_drive),a
+
+	ld	ix,wc_win_dump_start
+	call	PRWOW
+.lp1	call	CURSOR
+.lp	ei : halt
+	call	UPPP	: call nz,cur_up
+	call	DWWW	: call nz,cur_dn
+	call	ESC	: jr nz,.esc
+	call	ENKE	: jr z,.lp
+
+	ld	a,(ix + WC_WINDOW_2.cur_pos)
+	cp	2
+	jr	z,.seldrv
+	cp	3
+	jr	z,.selfnm
+	cp	4
+	jr	z,.seltracks
+	cp	8
+	jr	nz,.lp
+
+	call	RRESB
+	xor	a
+	ret
+
+.esc	call	RRESB
+	ld	a,1
+	ld	(exit_stat),a
+	xor	a
+	dec	a
+	ret
+
+.seltracks
+	ld	a,(TRDTRACKS)
+	add	a,2
+	cp	172
+	jr	nz,$+4
+	ld	a,160
+	ld	(TRDTRACKS),a
+	sub	160
+	srl	a
+	add	a,"0"
+	ld	(txt_tracks+1),a
+;; filesize calc
+	ld	a,(TRDTRACKS)
+	sub	160
+	add	a,a
+	ld	l,a
+	ld	h,0
+	ld	de,filesizes
+	add	hl,de
+	ld	de,filename+1
+	ld	bc,4
+	ldir
+
+	call	CURSER
+	ld	hl,(ix + WC_WINDOW_2.wnd_txt)
+	ld	de,#0101
+	call	TXTPR
+	jr	.lp1	
+
+.seldrv
+	ld	a,(DRIVE)
+	inc	a
+	and	3
+	ld	(DRIVE),a
+	add	a,"A"
+	ld	(txt_drive),a
+
+	call	CURSER
+	ld	hl,(ix + WC_WINDOW_2.wnd_txt)
+	ld	de,#0101
+	call	TXTPR
+	jp	.lp1
+
+.selfnm
+	call	CURSER
+
+	ex	af,af'
+	exx
+	ld	a,#FD
+	ld	hl,8
+	exx
+	ex	af,af'
+	ld	hl,txt_filename
+	ld	de,#030F
+	ld	bc,#0800
+	call	ISTR
+.lp2
+	halt
+	call	ENKE
+	jr	nz,.ent
+
+	ex	af,af'
+	ld	a,0
+	ex	af,af'
+	call	ISTR
+	ex	af,af'
+	ld	a,2
+	ex	af,af'
+	call	ISTR
+	jr	.lp2
+
+.ent	ex	af,af'
+	ld	a,1
+	ex	af,af'
+	call	ISTR
+	ld	hl,txt_filename
+	ld	de,filename+5
+	ld	bc,8
+	ldir
+	ex	hl,de
+	ld	(hl),"."
+	jp	.lp1
+
+
+SELECT_DRIVE:
+	ld	ix,wc_win_select_drive
+	call	PRWOW
+	call	CURSOR
+.lp	ei : halt
+	call	UPPP	: call nz,cur_up
+	call	DWWW	: call nz,cur_dn
+	call	ESC	: jr nz,.esc
+	call	ENKE	: jr z,.lp
+
+	ld	a,(ix + WC_WINDOW_2.cur_pos)
+	sub	2
+	ld	(DRIVE),a
+	call	RRESB
+	xor	a
+	ret
+
+.esc	call	RRESB
+	ld	a,1
+	ld	(exit_stat),a
+	xor	a
+	dec	a
+	ret
+
+cur_up:	ld	a,(ix + WC_WINDOW_2.cur_pos)
+	cp	2
+	ret	z
+	call	CURSER
+	ld	a,(ix + WC_WINDOW_2.cur_pos)
+	dec	a
+	cp	7
+	jr	nz,.f
+	sub	2
+.f	ld	(ix + WC_WINDOW_2.cur_pos),a
+	ld	hl,(ix + WC_WINDOW_2.wnd_txt)
+	ld	de,#0101
+	call	TXTPR
+	jp	CURSOR
+
+cur_dn:	ld	a,(ix + WC_WINDOW_2.cur_pos)
+	cp	(ix + WC_WINDOW_2.cur_stop)
+	ret	nc
+	call	CURSER
+
+	ld	a,(ix + WC_WINDOW_2.cur_pos)
+	inc	a
+	cp	6
+	jp	nz,.f
+	ld	a,8
+.f	ld	(ix + WC_WINDOW_2.cur_pos),a
+	ld	hl,(ix + WC_WINDOW_2.wnd_txt)
+	ld	de,#0101
+	call	TXTPR
+	jp	CURSOR
+
+HDCOL	DB	_blue << 4 | _bright_cyan
+HDSYM	DB	#B1
+RDSYM	DB	SYM_DB
+
+;print head
+PRINT_HD:
+	push	af, bc, de, hl
+	ld	hl,#0202
+	ld	a,(TRACK)
+	ld	c,a
+	rrca
+	rrca
+	rrca
+	rrca
+	rrca
+	and	#07
+	ld	d,a
+	ld	a,c
+	and	#1F
+	ld	e,a
+	add	hl,de
+	ex	hl,de
+	ld	ix,wc_win_dump
+	call	GADRW
+	ld	bc,(HDCOL)
+	ld	(hl),b
+	set	7,l
+	ld	(hl),c
+	pop	hl, de, bc, af
+	ret
+
+PRINT_TRACK:
+	push	bc, de, hl
+
+	ld	ix,wc_win_dump
+	ld	d,(ix + WC_WINDOW_1.y_size)
+	dec	d
+	dec	d
+	ld	a,(ix + WC_WINDOW_1.x_pos)
+	add	a,7
+	ld	e,a
+
+	call	GADRW
+
+	ex	hl,de
+
+	ld	a,(TRACK)
+	call	A2DEC8
+
+	ld	hl,NUMBUFF
+
+	ld	a,(hl)
+	cp	"0"
+	jr	z,.np1
+	ldi
+	ldi
+	jr	.ex
+
+.np1	inc	hl
+	ld	a,(hl)
+	cp	"0"
+	jr	z,.np2
+	ldi
+	jr	.ex
+
+.np2	inc	hl
+.ex	ldi
+	ld	a,"/"
+	ld	(de),a
+	inc	e
+
+	ld	a,(SECTOR)
+	call	A2DEC8
+	dec	hl
+	ldi
+	ldi
+
+	pop	hl, de, bc
+	ret
+
+PRINT_DUMP_BAR:
+	ld	c, _green << 4 | _bright_cyan
+	ld	b,#B0
+	ld	(HDCOL),bc
+	ld	a,(TRDTRACKS)
+	ld	b,a
+	xor	a
+	ld	c,a
+.lp	ld	a,c
+	ld	(TRACK),a
+	cp	160
+	jr	c,.nx
+	ld	a,SYM_FE
+	ld	(HDSYM),a
+.nx	call	PRINT_HD
+	inc	c
+	djnz	.lp
+	ret
+
+PRINT_DUMP_WINDOW:
+	ld	ix,wc_win_dump
+	ld	de,txt_hdr_dump
+	ld	(ix+WC_WINDOW_1.hdr_txt),de
+	ld	a,_green << 4 | _bright_white
+	jr	PRINT_DWIN
+
+PRINT_WRITE_WINDOW:
+	ld	ix,wc_win_dump
+	ld	de,txt_hdr_write
+	ld	(ix+WC_WINDOW_1.hdr_txt),de
+	ld	a,_red << 4 | _bright_white
+PRINT_DWIN:
+	ld	(ix+WC_WINDOW_1.attr),a
+	call	PRWOW
+	call	PRINT_DUMP_BAR
+	ld	ix,wc_win_dump
+	ld	de,#0908
+	call	GADRW
+	push	hl
+	ld	a,(TRDTRACKS)
+	call	A2DEC8
+	ld	hl,NUMBUFF
+	pop	de
+	ld	bc,3
+	ldir
+	ret
+
+;///////////////////////////////////
+CLEAR_BUFF:
+	push	bc,de,hl
+	ld	hl,track_buffer
+	ld	de,hl
+	inc	de
+	ld	(hl),#FF
+	ld	bc,16*256-1
+	ldir
+	pop	hl,de,bc
+	ret
+
+SetFont:
+	ld	a,#FF
+	call	MNGC_PL
+
+	ld	hl,UDG
+	ld	a,SYM_DB
+	call	SetFontSym
+	ld	a,#B0
+	call	SetFontSym
+	ld	a,#B1
+	call	SetFontSym
+	ld	a,SYM_R
+	call	SetFontSym
+	ld	a,SYM_W
+	call	SetFontSym
+	ld	a,SYM_V
+	call	SetFontSym
+	ld	a,SYM_F
+	call	SetFontSym
+	ld	a,SYM_BROKEN
+	call	SetFontSym
+	ld 	a,SYM_FE
+
+;; swap symbols between font & udg
+SetFontSym:
+	push	hl
+	ld	l,a
+	ld	h,0
+	add	hl,hl
+	add	hl,hl
+	add	hl,hl
+	ld	de,#C000
+	add	hl,de
+	ex	de,hl
+	pop	hl
+	ld	b,8
+.lp	ld	c,(hl)
+	ld	a,(de)
+	ld	(hl),a
+	ld	a,c
+	ld	(de),a
+	inc	hl
+	inc	de
+	djnz	.lp
+	ret
+
+UDG
+	DB	%00000000
+	DB	%01111110
+	DB	%01111110
+	DB	%01111110
+	DB	%01111110
+	DB	%01111110
+	DB	%01111110
+	DB	%01111110
+
+	DB	%00000000
+	DB	%01111110
+	DB	%01000010
+	DB	%01000010
+	DB	%01000010
+	DB	%01000010
+	DB	%01000010
+	DB	%01111110
+
+	DB	%00000000
+	DB	%01111110
+	DB	%01000010
+	DB	%01011010
+	DB	%01011010
+	DB	%01011010
+	DB	%01000010
+	DB	%01111110
+; [R]
+	DB	%00000000
+	DB	%01111110
+	DB	%01000110
+	DB	%01011010
+	DB	%01001110
+	DB	%01011010
+	DB	%01011010
+	DB	%01111110
+; [W]
+	DB	%00000000
+	DB	%01111110
+	DB	%01011010
+	DB	%01011010
+	DB	%01000010
+	DB	%01000010
+	DB	%01100110
+	DB	%01111110
+; [V]
+	DB	%00000000
+	DB	%01111110
+	DB	%01100010
+	DB	%01011110
+	DB	%01011110
+	DB	%01011110
+	DB	%01100010
+	DB	%01111110
+; [F]
+	DB	%00000000
+	DB	%01111110
+	DB	%01000010
+	DB	%01011110
+	DB	%01000110
+	DB	%01011110
+	DB	%01011110
+	DB	%01111110
+
+	DB	%00000000
+	DB	%01111110
+	DB	%01111110
+	DB	%01101110
+	DB	%01010100
+	DB	%00111010
+	DB	%01111110
+	DB	%01111110
+
+	DB	%00000000
+	DB	%00000000
+	DB	%00111100
+	DB	%00111100
+	DB	%00111100
+	DB	%00111100
+	DB	%00000000
+	DB	%00000000
+
+
+;////////////////////////////
+exit_stat		DB	0
+cfg_wdata		DB	0
+;////////////////////////////
+filename		DB	#00			;flag 0x00 - file; 0x01 - dir
+			DD	80*2*16*256		;filesize trd image
+			DB	"TRDump00.TRD", #00
+filesizes		DD	80*2*16*256
+			DD	81*2*16*256
+			DD	82*2*16*256
+			DD	83*2*16*256
+			DD	84*2*16*256
+			DD	85*2*16*256
+TRDTRACKS		DB	160			;number of tracks (160 by default)
+
+;//////////////////////////// Windows
+wc_win_error		//WC_WINDOW_1
+/*type*/		DB	#81+3
+/*cur_col_mask*/	DB	0
+/*xy_pos*/		DB	24,11
+/*xy_size*/		DB	32,5
+/*attr*/		DB	_red << 4 | _bright_white
+/*res0*/		DB	0
+/*restore_addr*/	DW	0
+/*div0*/		DB	0
+/*div1*/		DB	0
+/*hdr_txt*/		DW	0
+/*ftr_txt*/		DW	0
+/*wnd_txt*/		DW	0
+
+txt_wrp			DB	#0D, #0E, "Write protect!", 0
+txt_eformat		DB	#0D, #0E, "Format error!", 0
+txt_nodisk		DB	#0D, #0E, "No disk", 0
+txt_nofdd		DB	#0D, #0E, "No drive", 0
+txt_break		DB	#0D, #0E, "Break", 0
+
+wc_win_error_file_exist	//WC_WINDOW_1
+/*type*/		DB	#81+3
+/*cur_col_mask*/	DB	0
+/*xy_pos*/		DB	24,11
+/*xy_size*/		DB	32,5
+/*attr*/		DB	_red << 4 | _bright_white
+/*res0*/		DB	0
+/*restore_addr*/	DW	0
+/*div0*/		DB	0
+/*div1*/		DB	0
+/*hdr_txt*/		DW	txt_hdr_error
+/*ftr_txt*/		DW	0
+/*wnd_txt*/		DW	txt_file_exist
+txt_hdr_error		DB	#0E, 9, " Error ", 0
+txt_file_exist		DB	#0D, #0E, "Dump file exist", 0
+
+HOTKEY_COLOR	EQU	_yellow
+
+wc_win_error_rai	//WC_WINDOW_1
+/*type*/		DB	#81+3
+/*cur_col_mask*/	DB	0
+/*xy_pos*/		DB	24,10
+/*xy_size*/		DB	32,7
+/*attr*/		DB	_red << 4 | _bright_white
+/*res0*/		DB	0
+/*restore_addr*/	DW	0
+/*div0*/		DB	0
+/*div1*/		DB	0
+/*hdr_txt*/		DW	txt_hdr_error
+/*ftr_txt*/		DW	0
+/*wnd_txt*/		DW	txt_wnd_rai
+txt_wnd_rai		DB	#0D, #0E, " Error ", #0D, #0D
+			DB	#0E
+			DB	"[", HOTKEY_COLOR, HOTKEY_COLOR, "R", _white, _white, "]etry "
+			DB	"[", HOTKEY_COLOR, HOTKEY_COLOR, "A", _white, _white, "]bort "
+			DB	"[", HOTKEY_COLOR, HOTKEY_COLOR, "I", _white, _white, "]gnore", 0
+
+wc_win_select_drive	//WC_WINDOW_2 2,0,32,10,15,8,0x7F,0,0,0,0,2,5,0xF0,0,txt_hdr_select,0,txt_wnd_select
+/*type*/		DB	#C2+3
+/*cur_col_mask*/	DB	0
+/*xy_pos*/		DB	32,10
+/*xy_size*/		DB	15,8
+/*attr*/		DB	_white << 4 | _bright_white
+/*res0*/		DB	0
+/*restore_addr*/	DW	0
+/*div0*/		DB	0
+/*div1*/		DB	0
+/*cur_pos*/		DB	2
+/*cur_stop*/		DB	5
+/*cur_col*/		DB	_cyan << 4 | _bright_white
+/*win_col*/		DB	0
+/*hdr_txt*/		DW	txt_hdr_select
+/*ftr_txt*/		DW	0
+/*wnd_txt*/		DW	txt_wnd_select
+txt_hdr_select		DB	#0E, 9, " Write to: ", 0
+txt_wnd_select		DB	#0D
+			DB	#0E, "Drive [A]", #0D
+			DB	#0E, "Drive [B]", #0D
+			DB	#0E, "Drive [C]", #0D
+			DB	#0E, "Drive [D]", 0
+
+wc_win_dump		//WC_WINDOW_1
+/*type*/		DB	#81+3
+/*cur_col_mask*/	DB	0
+/*xy_pos*/		DB	22,8
+/*xy_size*/		DB	32+4,11
+/*attr*/		DB	_green << 4 | _bright_white
+/*res0*/		DB	0
+/*restore_addr*/	DW	0
+/*div0*/		DB	0
+/*div1*/		DB	2
+/*hdr_txt*/		DW	txt_hdr_dump
+/*ftr_txt*/		DW	0
+/*wnd_txt*/		DW	txt_wnd_dump
+txt_hdr_dump		DB	#0E, 9, " Dumping... ", 0
+txt_hdr_write		DB	#0E, 9, " Writing... ", 0
+txt_wnd_dump		DB	#0C, 8, "Tracks:", #0B, 17, "T/S:", 0
+
+wc_win_dump_start	//WC_WINDOW_2
+/*type*/		DB	#C2+3
+/*cur_col_mask*/	DB	0
+/*xy_pos*/		DB	26,8
+/*xy_size*/		DB	28,10
+/*attr*/		DB	_white << 4 | _bright_white
+/*res0*/		DB	0
+/*restore_addr*/	DW	0
+/*div0*/		DB	0
+/*div1*/		DB	2
+/*cur_pos*/		DB	2
+/*cur_stop*/		DB	8
+/*cur_col*/		DB	_cyan << 4 | _bright_white
+/*win_col*/		DB	0
+/*hdr_txt*/		DW	txt_hdr_dstart
+/*ftr_txt*/		DW	0
+/*wnd_txt*/		DW	txt_wnd_dstart
+
+txt_hdr_dstart		DB	#0E, 9, " Select ", 0
+txt_wnd_dstart		DB	#0D
+			DB	"        Drive:", 8, #FE
+			DW	txt_drive
+			DB	#0D
+			DB	"     Filename:", 8, #FE
+			DW	txt_filename
+			DB	#0D
+			DB	"       Tracks:", 8, #FE
+			DW	txt_tracks
+			DB	#0D
+			DB	"         Type:", #FE
+			DW	txt_filetype
+			DB	#0D, #0D, #0D
+			DB	#0E, "[", _yellow, _yellow, " Just DUMP IT ", 7, 7, "]"
+			DB	0
+txt_filename		DB	"TRDump00", 0
+txt_drive		DB	"A", 0
+txt_tracks		DB	"80", 0
+txt_filetype		DB	"TRD", 0

@@ -1,0 +1,19 @@
+_B	EQU	%1
+_R	EQU	%10
+_G	EQU	%100
+_Y	EQU	%1000
+
+_blue		EQU	_B
+_red		EQU	_R
+_magenta	EQU	(_R | _B)
+_green		EQU	_G
+_cyan		EQU	(_G | _B)
+_yellow		EQU	(_G | _R)
+_white		EQU	(_B | _R | _G)
+_bright_blue	EQU	(_Y | _B)
+_bright_red	EQU	(_Y | _R)
+_bright_magenta	EQU	(_Y | _R | _B)
+_bright_green	EQU	(_Y | _G)
+_bright_cyan	EQU	(_Y | _G | _B)
+_bright_yellow	EQU	(_Y | _G | _R)
+_bright_white	EQU	(_Y | _B | _R | _G)

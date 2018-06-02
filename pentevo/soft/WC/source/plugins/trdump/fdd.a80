@@ -1,0 +1,583 @@
+;//////////////////////////////////////////////////////////////
+;////////////////// VG93 (WD1793) routines v0.9 ///////////////
+;//////////////////////////////////////////////////////////////
+;//                  by Doctor Max 10-Dec-2017               //
+;//                    https://t.me/drmax_gc                 //
+;//////////////////////////////////////////////////////////////
+
+;////////////////////////////
+_COUNT			EQU	_TMN		;interrupt counter (Wild Commander)
+;////////////////////////////
+
+VG_REG_CMD		EQU	#1F
+VG_REG_STAT		EQU	#1F
+VG_REG_TRK		EQU	#3F
+VG_REG_SEC		EQU	#5F
+VG_REG_DAT		EQU	#7F
+VG_REG_SYS		EQU	#FF
+
+VG_CMD_RESTORE		EQU	#00		;0000HVRR
+VG_CMD_SEEK		EQU	#10		;0001HVRR
+VG_CMD_STEP		EQU	#20		;001THVRR
+VG_CMD_STEP_IN		EQU	#40		;010THVRR
+VG_CMD_STEP_OUT		EQU	#60		;011THVRR
+VG_CMD_READ_SECTOR	EQU	#80		;100MSECA
+VG_CMD_WRITE_SECTOR	EQU	#A0		;101MSEC0
+VG_CMD_READ_ADDR	EQU	#C0		;11000E00
+VG_CMD_READ_TRACK	EQU	#E0		;11100E00
+VG_CMD_WRITE_TRACK	EQU	#F0		;11110E00
+VG_CMD_INTERRUPT	EQU	#D0		;1101IIII
+
+VG_FLAG_V		EQU	00000100b	;Verify flag (bit 2)
+VG_FLAG_H		EQU	00001000b	;Head Loading flag (bit 3)
+VG_FLAG_U		EQU	00010000b	;Update Track Register flag (bit 4)
+VG_FLAG_M		EQU	00010000b	;Multiple Record flag
+;////////////////////////////
+TRACK			DB	0		;LOGIC TRACK NUMBER 0-159
+SECTOR			DB	0		;SECTOR NUMBER
+DRIVE			DB	0		;DRIVE NUMBER
+STAT			DB	0		;STATUS REG
+;////////////////////////////
+ERROR_OK		EQU	0
+ERROR_SEEK		EQU	1
+ERROR_READ		EQU	2
+ERROR_WRITE		EQU	3
+ERROR_WRPROTECT		EQU	4
+ERROR_NODISK		EQU	5
+ERROR_NOFDD		EQU	6
+ERROR_BREAK		EQU	7
+
+;////////////////////////////
+;i:	D - logic track (0-159)
+;	E - sector (from 0)
+;	HL - sector buffer
+;o:	CF & A - error code
+;////////////////////////////
+FDD_READ_SECTOR:
+	ld	c,3
+.rep1	ld	b,10
+.rep0	call	KEY_BREAK
+	jr	nc,.break
+	ld	a,e
+	call	FDD_READ_SEC
+	in	a,(VG_REG_STAT)
+	and	#7F
+	jr	z,.ok
+	bit	0,a
+	jr	nz,.nds
+	djnz	.rep0
+
+	call	FDD_RESTORE
+	ld	a,d
+	call	FDD_SEEK
+	jr	c,.nds
+
+	dec	c
+	jr	nz,.rep1
+
+	ld	a,ERROR_READ
+	scf
+	ret
+.ok	xor	a
+	ld	a,ERROR_OK
+	ret
+.nds	ld	a,ERROR_NODISK
+	scf
+	ret
+.break	ld	a,ERROR_BREAK
+	scf
+	ret
+
+;////////////////////////////
+;i:	A - sector (from 0)
+;	HL - sector buffer
+;////////////////////////////
+FDD_READ_SEC:
+	di
+	inc	a
+	out	(VG_REG_SEC),a
+	ld	a,VG_CMD_READ_SECTOR
+	out	(VG_REG_CMD),a
+	push	bc, de, hl
+	ld	c,VG_REG_DAT
+	call	vg_rd_w
+	pop	hl, de, bc
+	ei
+	ret
+
+vg_rd_w	ld	b,16
+.lp	in	a,(VG_REG_SYS)
+	and	#C0
+	jr	nz,vg_rd.ini
+	dec	de
+	ld	a,d
+	or	e
+	jr	nz,.lp
+	djnz	.lp
+	ret
+vg_rd	in	a,(VG_REG_SYS)
+	and	#C0
+	jr	z,vg_rd
+	ret	m			;ret on intrq, else drq
+.ini	ini
+	jr	vg_rd
+
+;////////////////////////////
+verify_error	DB	0
+FDD_CHECK_SECTOR:
+	ld	c,3
+.rep1	ld	b,10
+.rep0	ld	a,e
+	call	FDD_CHECK_SEC
+	ld	a,(verify_error)
+	or	a
+	jr	z,.ok
+	djnz	.rep0
+	call	FDD_RESTORE
+	dec	c
+	jr	nz,.rep1
+	ld	a,ERROR_READ
+	scf
+	ret
+.ok	xor	a
+	ld	a,ERROR_OK
+	ret
+
+;////////////////////////////
+;i:	A - sector (from 0)
+;i:	HL - sector buffer
+;o: 	CF - error
+;////////////////////////////
+FDD_CHECK_SEC:
+	di
+	inc	a
+	out	(VG_REG_SEC),a
+	ld	a,VG_CMD_READ_SECTOR
+	out	(VG_REG_CMD),a
+	xor	a
+	ld	(verify_error),a
+	push	bc, de, hl
+	ld	c,VG_REG_DAT
+	call	vg_ck_w
+	pop	hl, de, bc
+	ei
+	ret
+
+vg_ck_w	ld	b,16
+.lp	in	a,(VG_REG_SYS)
+	and	#C0
+	jr	nz,vg_ck.in
+	dec	de
+	ld	a,d
+	or	e
+	jr	nz,.lp
+	djnz	.lp
+	ret
+
+vg_ck	in	a,(VG_REG_SYS)
+	and	#C0
+	jr	z,vg_ck
+	ret	m			;ret on intrq, else drq
+.in	in	a,(c)
+	cp	(hl)
+	inc	hl
+	jr	z,vg_ck
+	ld	a,1
+	ld	(verify_error),a
+	jr	vg_ck
+
+;////////////////////////////
+;i:	D - logic track (0-159)
+;	E - sector (from 0)
+;	HL - sector buffer
+;o:	CF & A - error code
+;////////////////////////////
+FDD_WRITE_SECTOR:
+	ld	c,3
+.rep1	ld	b,10
+.rep0	call	KEY_BREAK
+	jr	nc,.break
+	ld	a,e
+	call	FDD_WRITE_SEC
+	in	a,(VG_REG_STAT)
+	and	#7F
+	jr	z,.ok
+	bit	0,a
+	jr	nz,.nds
+	bit	6,a
+	jr	nz,.wrp
+	djnz	.rep0
+
+	call	FDD_RESTORE
+	ld	a,d
+	call	FDD_SEEK
+	jr	c,.nds
+
+	dec	c
+	jr	nz,.rep1
+
+.wrerr	ld	a,ERROR_WRITE
+	scf
+	ret
+
+.wrp	ld	a,ERROR_WRPROTECT
+	scf
+	ret
+.ok	xor	a
+	ld	a,ERROR_OK
+	ret
+.nds	ld	a,ERROR_NODISK
+	scf
+	ret
+.break	ld	a,ERROR_BREAK
+	scf
+	ret
+
+;////////////////////////////
+;i:	A - sector (from 0)
+;	HL - sector buffer
+;////////////////////////////
+FDD_WRITE_SEC:
+	di
+	inc	a
+	out	(VG_REG_SEC),a
+	ld	a,VG_CMD_WRITE_SECTOR
+	out	(VG_REG_CMD),a
+	push	bc, de, hl
+	ld	c,VG_REG_DAT
+	call	vg_wr_w
+	pop	hl, de, bc
+	ei
+	ret
+
+vg_wr_w	ld	b,16
+.lp	in	a,(VG_REG_SYS)
+	and	#C0
+	jr	nz,vg_wr.outi
+	dec	de
+	ld	a,d
+	or	e
+	jr	nz,.lp
+	djnz	.lp
+	ret
+
+vg_wr	in	a,(VG_REG_SYS)
+	and	#C0
+	jr	z,vg_wr
+	ret	m			;ret on intrq, else drq
+.outi	outi
+	jr	vg_wr
+
+;////////////////////////////
+;i:	HL - track buffer
+;////////////////////////////
+FDD_READ_TRK:
+	di
+	push	bc,de
+	ld	a,VG_CMD_READ_TRACK
+	out	(VG_REG_CMD),a
+	ld	c,VG_REG_DAT
+	call	vg_rd_w
+	pop	de,bc
+	ei
+	ret
+
+;////////////////////////////
+;i:	HL - track buffer
+;////////////////////////////
+FDD_WRITE_TRK:
+	di
+	push	bc,de
+	ld	a,VG_CMD_WRITE_TRACK
+	out	(VG_REG_CMD),a
+	ld	c,VG_REG_DAT
+	call	vg_wr_w
+	pop	de,bc
+	ei
+	ret
+
+;////////////////////////////
+FDD_FORMAT_TRACK:
+	ld	b,3
+.lp1	push	bc
+
+	ld	hl,trknums
+	ld	b,0
+	ld	a,1		;set side flag
+	or	a
+	jr	z,.lp-1
+	ld	a,(TRACK)
+	and	1
+	ex	af,af'
+.lp	ld	e,(hl)
+	inc	hl
+	ld	d,(hl)
+	inc	hl
+	ld	a,(TRACK)
+	ld	c,a
+	srl	a
+	ld	(de),a		;track
+	inc	de
+	ex	af,af'
+	ld	(de),a		;side
+	ex	af,af'
+	inc	de
+	ld	a,b		;
+	sub	c		;interleave
+	and	#0F		;
+	inc	a
+	ld	(de),a		;sector
+	inc	b
+	ld	a,b
+	cp	16
+	jr	nz,.lp
+
+	pop	bc
+
+	ld	hl,#C000
+	call	FDD_WRITE_TRK
+	in	a,(VG_REG_STAT)
+	bit	0,a
+	jr	nz,.nds		;no disk
+	bit	6,a
+	jr	nz,.wrp		;write protect
+	and	#20
+	jr	z,.ok
+
+	djnz	.lp1
+
+	ld	a,ERROR_WRITE
+	scf
+	ret
+
+.wrp	ld	a,ERROR_WRPROTECT
+	scf
+	ret
+.ok	xor	a
+	ld	a,ERROR_OK
+	ret
+.nds	ld	a,ERROR_NODISK
+	scf
+	ret
+
+;////////////////////////////
+;i:	HL - track buffer
+;////////////////////////////
+MakeTrackBuffer:
+	ld	hl,#C000
+	ld	de,trknums
+	ld	bc,#504E
+	call	MKTBF
+	ld	bc,#0C00
+	call	MKTBF
+	ld	bc,#03F6	;C2
+	call	MKTBF
+	ld	(hl),#FC
+	inc	hl
+
+	ld	a,1
+.lp	ld	bc,#384E
+	call	MKTBF
+	ld	bc,#0C00
+	call	MKTBF
+	ld	bc,#03F5	;A1
+	call	MKTBF
+	ld	(hl),#FE	;IAM
+	inc	hl
+
+	ex	de,hl		;put addr
+	ld	(hl),e		;
+	inc	hl		;
+	ld	(hl),d		;
+	inc	hl		;
+	ex	de,hl		;
+
+	ld	(hl),0		;track
+	inc	hl
+	ld	(hl),0		;side
+	inc	hl
+	ld	(hl),0		;sector
+	inc	hl
+	ld	(hl),1		;length
+	inc	hl
+	ld	(hl),#F7	;CRC
+	inc	hl
+	ld	bc,#164E
+	call	MKTBF
+	ld	bc,#0C00
+	call	MKTBF
+
+	ld	bc,#03F5	;A1
+	call	MKTBF
+	ld	(hl),#FB	;DAM
+	inc	hl
+	ld	bc,0		;data
+	call	MKTBF
+	ld	(hl),#F7
+	inc	hl
+	inc	a
+	cp	17
+	jr	nz,.lp
+	ld	bc,#004E
+	call	MKTBF
+	call	MKTBF
+MKTBF:	ld	(hl),c
+	inc	hl
+	djnz	MKTBF
+	ret
+trknums	defs	16*2, 0
+;////////////////////////////
+FDD_SYSRG:
+	push	af
+	push	bc
+	ld	a,(DRIVE)
+	and	3
+	ld	c,a
+	ld	a,(TRACK)
+	srl	a
+	ld	a,#2C
+	jr	c,$+4
+	ld	a,#3C
+	or	c
+	out	(VG_REG_SYS),a
+	pop	bc
+	pop	af
+	ret
+
+;////////////////////////////
+;i:	A - logic track number (0-159)
+;o:	CF & A - error code
+;////////////////////////////
+FDD_SEEK:
+	srl	a
+	call	vg_cmd_seek
+	call	vg_wait_busy
+
+	call	vg_wait_index
+	jr	z,.iok
+
+	ld	a,VG_CMD_RESTORE
+	out	(VG_REG_CMD),a
+
+	ld	a,ERROR_NODISK
+	scf
+	ret
+
+.iok	call	vg_wait_free
+	xor	a
+	ld	a,ERROR_OK
+	ret
+
+;////////////////////////////
+;o:	CF & A - error code
+;////////////////////////////
+FDD_INIT:
+	ld	a,(DRIVE)
+	or	#3C
+	out	(VG_REG_SYS),a
+	dec	a
+	jr	nz,$-1
+	ld	(TRACK),a
+
+	call	vg_cmd_int
+
+	xor	a
+	ld	(_COUNT),a
+
+	call	vg_cmd_restore
+
+.lp	in	a,(VG_REG_STAT)
+	bit	2,a			;TR00
+	jr	nz,.dok
+	ld	a,(_COUNT)
+	cp	100			;waiting 2 seconds
+	jr	c,.lp
+
+	call	FDD_STOP
+
+	ld	a,ERROR_NOFDD
+	scf
+	ret
+
+.dok	call	vg_wait_index
+	jr	nc,.iok
+
+	call	FDD_STOP
+
+	ld	a,ERROR_NODISK
+	scf
+	ret
+
+.iok	call	vg_wait_free
+	xor	a
+	ld	a,ERROR_OK
+	ret
+;////////////////////////////
+FDD_STOP:
+	call	vg_cmd_int
+	ld	a,VG_CMD_RESTORE
+	out	(VG_REG_CMD),a
+	ret
+;////////////////////////////
+FDD_STAT:
+	in	a,(VG_REG_STAT)
+	ld	(STAT),a
+	ret
+;////////////////////////////
+FDD_RESTORE:
+	call	vg_cmd_restore
+	call	vg_wait_intrq
+	ret
+;////////////////////////////
+vg_cmd_restore
+	ld	a,VG_CMD_RESTORE | VG_FLAG_H
+	out	(VG_REG_CMD),a
+	ret
+;////////////////////////////
+vg_cmd_seek
+	out	(VG_REG_DAT),a
+	ld	a,VG_CMD_SEEK | VG_FLAG_H
+	out	(VG_REG_CMD),a
+	ret
+;////////////////////////////
+vg_cmd_int
+	push	bc
+	ld	a,VG_CMD_INTERRUPT
+	out	(VG_REG_CMD),a
+	ld	b,0
+	djnz	$
+	pop	bc
+	ret
+;////////////////////////////
+;o:	CF - error
+vg_wait_index
+	xor	a
+	ld	(_COUNT),a
+.lp	in	a,(VG_REG_STAT)
+	bit	1,a			;INDEX
+	jr	nz,.iok
+	ld	a,(_COUNT)
+	cp	100			;waiting 2 seconds
+	jr	c,.lp
+	scf
+	ret
+.iok	xor	a
+	ret
+;////////////////////////////
+vg_wait_intrq
+	in	a,(VG_REG_SYS)
+	rlca
+	jr	nc,vg_wait_intrq
+	ret
+;////////////////////////////
+vg_wait_free
+	in	a,(VG_REG_STAT)
+	rrca
+	jr	c,vg_wait_free
+	ret
+;////////////////////////////
+vg_wait_busy
+	in	a,(VG_REG_STAT)
+	rrca
+	jr	nc,vg_wait_busy
+	ret
