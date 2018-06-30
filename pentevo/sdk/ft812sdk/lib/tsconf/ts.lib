@@ -1,7 +1,7 @@
 <SDCCLIB>
 
 <INDEX>
-       575
+       640
 <MODULE>
 tsfunc_c_0 11
 .__.ABS.
@@ -46,6 +46,12 @@ _ts_set_dma_size
 
 <MODULE>
 tsfunc_c_7 5488
+.__.ABS.
+_ts_dma_start
+</MODULE>
+
+<MODULE>
+tsfunc_c_8 6067
 .__.ABS.
 _ts_dma_wait
 </MODULE>
@@ -304,8 +310,36 @@ R 00 00 00 00 02 07 00 00
 tsfunc_c_7
 <REL>
 XL2
-H 9 areas 2 global symbols
+H 9 areas 3 global symbols
 M tsfunc_c_7
+O -mz80
+S _ts_wreg Ref0000
+S .__.ABS. Def0000
+A _CODE size D flags 0 addr 0
+S _ts_dma_start Def0000
+A _DATA size 0 flags 0 addr 0
+A _INITIALIZED size 0 flags 0 addr 0
+A _DABS size 0 flags 8 addr 0
+A _HOME size 0 flags 0 addr 0
+A _GSINIT size 0 flags 0 addr 0
+A _GSFINAL size 0 flags 0 addr 0
+A _INITIALIZER size 0 flags 0 addr 0
+A _CABS size 0 flags 8 addr 0
+T 00 00
+R 00 00 00 00
+T 00 00 21 02 00 39 56 1E 27 D5 CD 00 00 F1 C9
+R 00 00 00 00 02 0B 00 00
+</REL>
+<ADB>
+</ADB>
+</FILE>
+
+<FILE>
+tsfunc_c_8
+<REL>
+XL2
+H 9 areas 2 global symbols
+M tsfunc_c_8
 O -mz80
 S .__.ABS. Def0000
 A _CODE size A flags 0 addr 0

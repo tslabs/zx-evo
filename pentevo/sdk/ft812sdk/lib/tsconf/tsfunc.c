@@ -66,6 +66,11 @@ void ts_set_dma_size(u16 l, u16 n)
   ts_wreg(TS_DMANUM, (u8)(n - 1));
 }
 
+void ts_dma_start(u8 mode)
+{
+  ts_wreg(TS_DMACTR, mode);
+}
+
 void ts_dma_wait() __naked
 {
   __asm

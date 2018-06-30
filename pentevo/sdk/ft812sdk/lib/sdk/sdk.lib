@@ -39,13 +39,13 @@ _putchar
 </MODULE>
 
 <MODULE>
-func_c_6 3512
+func_c_6 3545
 .__.ABS.
 _di
 </MODULE>
 
 <MODULE>
-func_c_7 4012
+func_c_7 4045
 .__.ABS.
 _ei
 </MODULE>
@@ -214,7 +214,7 @@ M func_c_5
 O -mz80
 S _putc Ref0000
 S .__.ABS. Def0000
-A _CODE size C flags 0 addr 0
+A _CODE size F flags 0 addr 0
 S _putchar Def0000
 A _DATA size 0 flags 0 addr 0
 A _INITIALIZED size 0 flags 0 addr 0
@@ -226,8 +226,10 @@ A _INITIALIZER size 0 flags 0 addr 0
 A _CABS size 0 flags 8 addr 0
 T 00 00
 R 00 00 00 00
-T 00 00 21 02 00 39 7E F5 33 CD 00 00 33 C9
+T 00 00 21 02 00 39 7E F5 33 CD 00 00 33 21 00 00
 R 00 00 00 00 02 0A 00 00
+T 0E 00 C9
+R 00 00 00 00
 </REL>
 <ADB>
 </ADB>

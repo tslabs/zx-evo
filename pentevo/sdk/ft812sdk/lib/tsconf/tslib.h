@@ -1,11 +1,12 @@
 
 #pragma once
 
-void ts_wreg(u8 a, u8 v);
-u8 ts_rreg(u8 a);
-void ts_set_dma_saddr(u32 a);
-void ts_set_dma_daddr(u32 a);
-void ts_set_dma_saddr_p(u16 a, u8 p);
-void ts_set_dma_daddr_p(u16 a, u8 p);
-void ts_set_dma_size(u16 l, u16 n);
+void ts_wreg(u8, u8);
+u8 ts_rreg(u8);
+void ts_set_dma_saddr(u32);
+void ts_set_dma_daddr(u32);
+void ts_set_dma_saddr_p(u16, u8);
+void ts_set_dma_daddr_p(u16, u8);
+void ts_set_dma_size(u16, u16);
+void ts_dma_start(u8);
 void ts_dma_wait();

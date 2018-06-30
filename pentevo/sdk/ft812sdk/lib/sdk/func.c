@@ -69,9 +69,10 @@ void putc(u8 c)
   }
 }
 
-void putchar(u8 c)
+_PUTCHAR_PROTO
 {
   putc(c);
+  return 0;
 }
 
 // CPU functions
