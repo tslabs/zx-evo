@@ -325,6 +325,7 @@
       <ErrorReporting>Prompt</ErrorReporting>
       <PrecompiledHeaderFile>std.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>wtl</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -338,11 +339,12 @@
     </Link>
     <ProjectReference />
     <PostBuildEvent>
-      <Command>copy /y "$(ProjectDir)lib\*.dll" "$(TargetDir)"
+      <Command>rd /q /s "$(TargetDir)rom"
+md "$(TargetDir)rom"
+copy /y "$(ProjectDir)lib\*.dll" "$(TargetDir)"
 copy /y "$(ProjectDir)cfg\*.*" "$(TargetDir)"
-if not exist "$(TargetDir)rom\" md "$(TargetDir)rom"
 copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)rom"
-call "$(ProjectDir)build\makewc.bat" $(TargetDir)
+"$(ProjectDir)..\..\tools\robimg\robimg.exe" -p=$(TargetDir)wc.img -s=102400 -C="$(ProjectDir)..\..\soft\wc\exe",""
 </Command>
     </PostBuildEvent>
     <ResourceCompile>
@@ -368,6 +370,8 @@ call "$(ProjectDir)build\makewc.bat" $(TargetDir)
       <ErrorReporting>Prompt</ErrorReporting>
       <StringPooling>true</StringPooling>
       <AdditionalIncludeDirectories>wtl</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <EnableParallelCodeGeneration>true</EnableParallelCodeGeneration>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>false</GenerateDebugInformation>
@@ -378,7 +382,7 @@ call "$(ProjectDir)build\makewc.bat" $(TargetDir)
       <LinkErrorReporting>PromptImmediately</LinkErrorReporting>
       <AdditionalManifestDependencies>type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'</AdditionalManifestDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalOptions>/SAFESEH:NO %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/SAFESEH:NO /LTCG:OFF %(AdditionalOptions)</AdditionalOptions>
       <MinimumRequiredVersion>5.1</MinimumRequiredVersion>
       <SubSystem>Console</SubSystem>
     </Link>
@@ -391,9 +395,9 @@ copy /y "$(ProjectDir)lib\*.dll" "$(TargetDir)"
 copy /y "$(ProjectDir)cfg\*.*" "$(TargetDir)"
 copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)rom"
 copy /y "$(ProjectDir)doc\*.*" "$(TargetDir)doc"
-del /q "$(TargetDir)..\unreal.7z"
-call "$(ProjectDir)build\makewc.bat" $(TargetDir)
-..\..\tools\7z\7z.exe a -r -mx9 -y -bd "$(TargetDir)..\unreal.7z" "$(TargetDir)*"
+if exist "$(TargetDir)..\unreal.7z" del /q "$(TargetDir)..\unreal.7z"
+"$(ProjectDir)..\..\tools\robimg\robimg.exe" -p=$(TargetDir)wc.img -s=102400 -C="$(ProjectDir)..\..\soft\wc\exe",""
+"$(ProjectDir)..\..\tools\7z\7z.exe" a -r -mx=9 -mm=BZip2 -mmt=on -y -bd "$(TargetDir)..\unreal.7z" "$(TargetDir)*"
 </Command>
       <Message>
       </Message>
