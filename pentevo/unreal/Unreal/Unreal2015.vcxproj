@@ -322,7 +322,7 @@
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-      <MultiProcessorCompilation>false</MultiProcessorCompilation>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ErrorReporting>Prompt</ErrorReporting>
       <PrecompiledHeaderFile>std.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>wtl</AdditionalIncludeDirectories>
@@ -339,12 +339,12 @@
     </Link>
     <ProjectReference />
     <PostBuildEvent>
-      <Command>copy /y "$(ProjectDir)lib\*.dll" "$(TargetDir)"
+      <Command>rd /q /s "$(TargetDir)rom"
+md "$(TargetDir)rom"
+copy /y "$(ProjectDir)lib\*.dll" "$(TargetDir)"
 copy /y "$(ProjectDir)cfg\*.*" "$(TargetDir)"
-if not exist "$(TargetDir)rom\" md "$(TargetDir)rom"
 copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)rom"
-call "$(ProjectDir)build\makewc.bat" $(TargetDir)
-</Command>
+"$(ProjectDir)..\..\tools\robimg\robimg.exe" -p=$(TargetDir)wc.img -s=102400 -C="$(ProjectDir)..\..\soft\wc\exe"</Command>
     </PostBuildEvent>
     <ResourceCompile>
       <AdditionalIncludeDirectories>wtl</AdditionalIncludeDirectories>
@@ -356,7 +356,7 @@ call "$(ProjectDir)build\makewc.bat" $(TargetDir)
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <MultiProcessorCompilation>false</MultiProcessorCompilation>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <ExceptionHandling>Sync</ExceptionHandling>
@@ -392,9 +392,9 @@ copy /y "$(ProjectDir)lib\*.dll" "$(TargetDir)"
 copy /y "$(ProjectDir)cfg\*.*" "$(TargetDir)"
 copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)rom"
 copy /y "$(ProjectDir)doc\*.*" "$(TargetDir)doc"
-del /q "$(TargetDir)..\unreal.7z"
-call "$(ProjectDir)build\makewc.bat" $(TargetDir)
-..\..\tools\7z\7z.exe a -r -mx9 -y -bd "$(TargetDir)..\unreal.7z" "$(TargetDir)*"
+if exist "$(TargetDir)..\unreal.7z" del /q "$(TargetDir)..\unreal.7z"
+"$(ProjectDir)..\..\tools\robimg\robimg.exe" -p=$(TargetDir)wc.img -s=102400 -C="$(ProjectDir)..\..\soft\wc\exe",""
+"$(ProjectDir)..\..\tools\7z\7z.exe" a -r -mx=9 -mm=BZip2 -mmt=on -y -bd "$(TargetDir)..\unreal.7z" "$(TargetDir)*" -xr!*.ipdb -xr!*.iobj
 </Command>
       <Message>
       </Message>
