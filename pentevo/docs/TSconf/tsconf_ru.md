@@ -1,4 +1,4 @@
-# TS-Configuration
+﻿# TS-Configuration
 
 ## Features
 
