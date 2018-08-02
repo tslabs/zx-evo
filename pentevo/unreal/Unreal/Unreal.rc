@@ -660,7 +660,7 @@ FONT 8, "MS Sans Serif", 0, 0, 1
 {
     LTEXT           "Renderer", IDC_STATIC, 7, 22, 38, 8, SS_LEFT
     COMBOBOX        IDC_VIDEOFILTER, 89, 20, 117, 60, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
-    LTEXT           "Diplay Driver", IDC_REND_TITLE, 7, 9, 41, 8, SS_LEFT
+    LTEXT           "Display Driver", IDC_REND_TITLE, 7, 9, 48, 8, SS_LEFT
     COMBOBOX        IDC_RENDER, 89, 7, 117, 60, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
     AUTOCHECKBOX    "VS&ync", IDC_FLIP, 7, 75, 32, 10
     AUTOCHECKBOX    "Flash-&Color", IDC_FLASH, 7, 93, 50, 10
