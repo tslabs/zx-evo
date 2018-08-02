@@ -906,6 +906,8 @@ void tsinit(void)
 	comp.ts.tsu.toggle.t1  = TRUE;
 
 	invalidate_ts_cache();
+
+    SendMessage(tsu_toggle_wnd, WM_SHOWWINDOW, 0, 0);
 }
 
 void ts_frame_int(bool vdos)
