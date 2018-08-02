@@ -818,7 +818,7 @@ INT_PTR CALLBACK VideoDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
          SendMessage(box, CB_ADDSTRING, 0, (LPARAM)pals[i].name);
       SendMessage(box, CB_SETCURSEL, c1.pal, 0);
       box = GetDlgItem(dlg, IDC_VDAC);
-      for (i = 0; i < TS_VDAC_MAX; i++)
+      for (i = 0; ts_vdac_names[i].name; i++)
          SendMessage(box, CB_ADDSTRING, 0, (LPARAM)ts_vdac_names[i].name);
       SendMessage(box, CB_SETCURSEL, comp.ts.vdac, 0);
       /*box = GetDlgItem(dlg, IDC_FONTHEIGHT);
@@ -845,6 +845,7 @@ INT_PTR CALLBACK VideoDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
       if ((id == IDC_NOFLIC /*|| id == IDC_FAST_SL*/) && code == BN_CLICKED) goto filter_changed;
       if (code == CBN_SELCHANGE && id == IDC_BORDERSIZE) {
          c1.bordersize = (u8)SendDlgItemMessage(dlg, IDC_BORDERSIZE, CB_GETCURSEL, 0, 0);
+         goto filter_changed;
 	  }
 	  if (code == CBN_SELCHANGE && id == IDC_VDAC) {
           comp.ts.vdac = ts_vdac_names[(u8)SendDlgItemMessage(dlg, IDC_VDAC, CB_GETCURSEL, 0, 0)].value;

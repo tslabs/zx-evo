@@ -670,4 +670,4 @@ char presetbuf[0x4000], *setptr = presetbuf;
 #include "fontatm2.cpp"
 */
 
-const char * const ay_schemes[] = { "no soundchip", "single chip", "pseudo-turbo", "quadro-AY", "turbo-AY // POS", "turbo-sound // NedoPC" };
+const char * const ay_schemes[] = { "no soundchip", "single chip", "pseudo-turbo", "quadro-AY", "turbo-AY // POS", "turbo-sound // NedoPC", "AYX-32" };
