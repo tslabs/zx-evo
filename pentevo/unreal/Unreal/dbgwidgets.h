@@ -36,6 +36,7 @@ protected:
 	void draw_hex16(char* title, int bits, u16 val) const;
 	void draw_hex24(char* title, int bits, u32 val) const;
 	void draw_bit_d(char* title, int bits, u8 val) const;
+    void draw_bit_h(char * title, int bits, u8 val) const;
 	void draw_port(char* title, u8 val) const;
 	void draw_hl_port(char prefix, u8 hval, u8 lval, u16 val) const;
 	void draw_xhl_port(char prefix, u8 xval, u8 hval, u8 lval) const;

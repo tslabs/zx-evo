@@ -206,9 +206,9 @@ public:
 	void on_paint() override
 	{
 		draw_reg_frame("PalSel", &comp.ts.palsel);
-		draw_bit_d("T1PAL", 76, comp.ts.t1pal);
-		draw_bit_d("T0PAL", 54, comp.ts.t0pal);
-		draw_bit_d("GPAL", 30, comp.ts.gpal);
+		draw_bit_h("T1PAL", 76, comp.ts.t1pal << 2);
+		draw_bit_h("T0PAL", 54, comp.ts.t0pal << 2);
+		draw_bit_h("GPAL",  30, comp.ts.gpal);
 	}
 };
 

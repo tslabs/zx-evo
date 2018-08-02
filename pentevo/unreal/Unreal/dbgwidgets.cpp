@@ -153,6 +153,23 @@ void dbg_control::draw_bit_d(char* title, int bits, u8 val) const
 	next_row();
 }
 
+void dbg_control::draw_bit_h(char* title, int bits, u8 val) const
+{
+    check_parent();
+    draw_bits_range(bits);
+
+    (*canvas_)
+        .draw_text(title, W_NORM)
+        .next_col()
+        .draw_text("=", W_EQ)
+        .next_col();
+
+    (*canvas_)
+        .draw_hex(val, 2, W_NORM);
+
+    next_row();
+}
+
 void dbg_control::draw_port(char* title, u8 val) const
 {
 	check_parent();
