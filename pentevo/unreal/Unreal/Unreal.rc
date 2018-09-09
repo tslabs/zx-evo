@@ -2,6 +2,9 @@
 // Copyright (C) 2006-2011
 // http://www.resedit.net
 
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include <prsht.h>
+#undef APSTUDIO_HIDDEN_SYMBOLS
 #include <windows.h>
 #include <commctrl.h>
 #include <richedit.h>

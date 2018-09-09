@@ -241,7 +241,7 @@ void SNDCHIP::set_volumes(unsigned global_vol, const SNDCHIP_VOLTAB *voltab, con
 {
    for (int j = 0; j < 6; j++)
       for (int i = 0; i < 32; i++)
-         vols[j][i] = (unsigned) (((u64)global_vol * voltab->v[i] * stereo->raw[j])/(65535*100*3));
+         vols[j][i] = (unsigned) (((u64)global_vol * voltab->v[i] * stereo->raw[j])/(65535*15*3));
 }
 
 void SNDCHIP::reset(unsigned timestamp)
