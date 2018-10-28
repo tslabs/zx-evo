@@ -60,7 +60,7 @@ R/W - register or register bit access. R - read, W - write.
 
 ## Achitecture
 
-(Here should be a drawing of a universal beauty, but I still cannot handle it...)
+(Here should be a figure, but I still cannot handle it...)
 
 ## Programming model
 
@@ -115,23 +115,6 @@ Only RAM can be mapped into *windows* 1..3.
 
 RAM or ROM can be mapped into *window* 0. See description below.
 
-#### Регистр MemConfig
-
-| Bit         | 7         | 6         | 5    | 4    | 3      | 2       | 1     | 0      |
-| ----------- | --------- | --------- | ---- | ---- | ------ | ------- | ----- | ------ |
-| Name        | LCK128[1] | LCK128[0] | -    | -    | W0_RAM | !W0_MAP | W0_WE | ROM128 |
-| R/W         | W         | W         | -    | -    | W      | W       | W     | W      |
-| Reset value | 0         | 0         | x    | x    | 0      | 1       | 0     | 0      |
-
-* Биты 7:6 - выбор режима ограничений порта #7FFD,
-* Биты 5:4 - зарезервированы,
-* Бит 3 - выбор ROM/RAM,
-* Бит 2 - отключение маппинга,
-* Бит 1 - разрешение записи в ROM/RAM,
-* Бит 0 - выбор страниц маппинга.
-
-С помощью бита *W0_WE* регистра **MemConfig** можно запретить (значение 0) или разрешить (значение 1) запись в окно 0. Для страниц RAM - это просто запрет записи данных. Для ROM запись будет производится на флеш память.
-
 #### Маппинг страниц в окне 0
 
 В нулевом окне можно отображать страницы RAM/ROM в двух режимах:
@@ -164,7 +147,7 @@ LCK128[1:0]|Режим порта #7FFD| Подстановка бит в рег
 -----------|-----------------|--------------------------------------
 00         | 512кБ        | Page3[4:0] = #7FFD[7:6], #7FFD[2:0]
 01         | 128кБ         | Page3[2:0] = #7FFD[2:0]
-10         | Авто            | See description below 
+10         | Авто            | See description below
 11         | 1024кБ        | Page3[5:0] = #7FFD[5], #7FFD[7:6], #7FFD[2:0]
 
 При записи значений в порт #7FFD в режимах 128кБ, 512кБ и 1024кБ, биты, отвечающие за переключение страниц, записываются в младшие разряды регистра **Page3**.
@@ -198,7 +181,43 @@ In 14MHz mode each access to RAM is delayed to be synchronized with DRAM Control
 
 Cache has no effect in 3.5 and 7MHz modes.
 
-#### Регистр SysConfig
+#### Частота процессора
+
+Всего поддерживается 3 режима работы процессора: 3.5MHz, 7.0MHz, 14.0MHz. Два младших бита регистра **SysConfig** позволяют выбрать один из этих режимов согласно следующей таблице:
+
+ZCLK[1:0]| MHz
+---------|----
+00       |3.5
+01       |7.0
+10       |14.0
+11       |зарезервировано
+
+#### Кэш
+
+В TS конфигурации можно включить кэширование всех запросов на чтение/запись между процессором и RAM. Запросы к ROM не кэшируются.
+
+Отображаемая процессору память (64кб) условно делится на 4 окна по 16 килобайт и для каждого такого окна в регистре **CacheConfig** предусмотрен соответствующий бит, который включает или отключает кэшироване в этом окне.
+
+### Registers
+
+#### MemConfig
+
+| Bit         | 7         | 6         | 5    | 4    | 3      | 2       | 1     | 0      |
+| ----------- | --------- | --------- | ---- | ---- | ------ | ------- | ----- | ------ |
+| Name        | LCK128[1] | LCK128[0] | -    | -    | W0_RAM | !W0_MAP | W0_WE | ROM128 |
+| R/W         | W         | W         | -    | -    | W      | W       | W     | W      |
+| Reset value | 0         | 0         | x    | x    | 0      | 1       | 0     | 0      |
+
+* Биты 7:6 - выбор режима ограничений порта #7FFD,
+* Биты 5:4 - зарезервированы,
+* Бит 3 - выбор ROM/RAM,
+* Бит 2 - отключение маппинга,
+* Бит 1 - разрешение записи в ROM/RAM,
+* Бит 0 - выбор страниц маппинга.
+
+С помощью бита *W0_WE* регистра **MemConfig** можно запретить (значение 0) или разрешить (значение 1) запись в окно 0. Для страниц RAM - это просто запрет записи данных. Для ROM запись будет производится на флеш память.
+
+#### SysConfig
 
 Bit        |7|6|5|4|3|2|1|0
 -----------|-|-|-|-|-|-|-|-|
@@ -210,24 +229,8 @@ Reset value|x|x|x|x|x|0|0|0
 * Бит 2 - разрешение кэширования запросов в RAM,
 * Биты 1:0 - управление частотой процессора
 
-##### Частота процессора
+#### CacheConfig
 
-Всего поддерживается 3 режима работы процессора: 3.5MHz, 7.0MHz, 14.0MHz. Два младших бита регистра **SysConfig** позволяют выбрать один из этих режимов согласно следующей таблице:
-
-ZCLK[1:0]| MHz
----------|----
-00       |3.5
-01       |7.0
-10       |14.0
-11       |зарезервировано
-
-##### Кэш
-
-В TS конфигурации можно включить кэширование всех запросов на чтение/запись между процессором и RAM. Запросы к ROM не кэшируются.
-
-Отображаемая процессору память (64кб) условно делится на 4 окна по 16 килобайт и для каждого такого окна в регистре **CacheConfig** предусмотрен соответствующий бит, который включает или отключает кэшироване в этом окне.
-
-#### Регистр CacheConfig
 	Биты 7  6  5  4    3       2       1       0
 	     -  -  -  - EN_C000 EN_8000 EN_4000 EN_0000
 	R/W                W       W       W       W
@@ -252,6 +255,10 @@ LD DE, #FE00
 LD BC, #0200
 LDIR
 ```
+
+#### Page0..3
+
+#### FMAddr
 
 ## Контроллер прерываний
 
@@ -283,7 +290,7 @@ DMA     |    2    | #FB
 
 ### Registers
 
-#### Регистр INTMask
+#### INTMask
 
 Биты | 7 |  6  | 5  | 4 |  3 |  2  |   1  |   0
 -----|---|-----|----|---|----|-----|------|-----
@@ -296,17 +303,30 @@ Init | x |  x  | x  | x |  x |  0  |   0  |   1
 * Бит 1 - разрешение источника *LINE*,
 * Бит 0 - разрешение источника *FRAME*,
 
-## Графика
+#### HSINT
 
-The video hardware generates signals for correct video displaying on TV or VGA. It includes blanking fields and visible area. 
-Each frame contains 320 lines and each line is 448 7MHz pixel periods long.
+#### VSINTL
 
-**Vertical timings**
+#### VSINTH
 
-| Line number | Field             |
-| ------------------ | --------------------- |
-| 0-31               | Vertical Blank        |
-| 32-319             | Vertical Visible Area |
+## Graphics
+
+### Video signals
+
+The hardware generates video signals for TV (PAL) and VGA. Originally video signal is generated for PAL TV. Each TV frame contains 320 lines and each TV line contains 448 7MHz pixel periods.
+
+320 lines are non-standard for TV signal and support for this was made for historical reasons. The ZX clone 'Penatagon-128' has an error on its board which adds extra 8 lines to 312 lines of TV PAL standard. This increases number of T-states that CPU executes during the video frame and thus became a feature of ex-USSR demoscene. Some displays may be incompatible with such video signal and won't show the picture properly.
+
+The scan-doubler converts TV signal on-the-fly for VGA displays. In the VGA signal each TV line is doubled, so VGA frame contains 640 lines, but VGA line has twice shorter period than TV line. Each TV line is written into a dedicated line buffer at the time when it's displayed on TV. After the whole line is written the scan-doubler reads it twice and displays it on VGA.
+
+<u>***Please notice:***</u>
+The scan-doubler delay should be taken into account in raster effects that use CRAM dynamic change. Line buffer contains indexed pixels (not a true color) and uses the same CRAM as TV output. CRAM change effect designed for TV output will affect VGA output also, but since VGA output is delayed for one TV line it will cause color change one line before currently displayed in VGA output.
+
+### Raster timings
+
+For convenience raster timings are described in terms of TV video signal.
+
+Each TV frame includes blanking fields and visible area.
 
 **Horizontal timings**
 
@@ -315,42 +335,133 @@ Each frame contains 320 lines and each line is 448 7MHz pixel periods long.
 | 0-87           | Horizontal Blank        |
 | 88-447         | Horizontal Visible Area |
 
+**Vertical timings**
 
-### Modes
+| Line number | Field             |
+| ------------------ | --------------------- |
+| 0-31               | Vertical Blank        |
+| 32-319             | Vertical Visible Area |
+
+The visible area contains border and pixels. The size of pixel area depends on bits *RRES*[1:0] of **VConfig** register.
+
+**Horizontal timings**
+
+| RRES[1:0] | Left border area, pixels | Horizontal pixel area, pixels | Right border area, pixels |
+| --------- | ------------------------ | ----------------------------- | ------------------------- |
+| 00        | 52                       | 256                           | 52                        |
+| 01        | 20                       | 320                           | 20                        |
+| 10        | 20                       | 320                           | 20                        |
+| 11        | 0                        | 360                           | 0                         |
+
+**Vertical timings**
+
+| RRES[1:0] | Upper border area, lines | Vertical pixel area, lines | Lower border area, lines |
+| --------- | ------------------------ | -------------------------- | ------------------------ |
+| 00        | 48                       | 192                        | 48                       |
+| 01        | 44                       | 200                        | 44                       |
+| 10        | 24                       | 240                        | 24                       |
+| 11        | 0                        | 288                        | 0                        |
+
+### Graphic modes
+
+There are four video modes supported: 
+
+- classic ZX, 
+- 16 colors per pixel, 
+- 256 colors per pixel,
+- text.
+
+The graphic mode of the video controller is selected with bits *VM*[1:0] of **VConfig** register.
+
+| VM[1:0] | Mode |
+| ------- | ---- |
+| 00      | ZX   |
+| 01      | 16c  |
+| 10      | 256c |
+| 11      | Text |
+
+
 
 #### ZX
+
 #### 16c
 #### 256c
 #### text
 
-### raster sizes
-### screen page
+### Screen page
 ### CRAM
 #### VDAC mode
 #### PWM mode
 #### DMA
-### scrolls
+### Scrolls
+### TSU
+
+#### Features
+#### Bitmap
+
+#### Tiles
+
+##### Overview
+
+##### Tile map
+#### Sprites
+##### Overview
+
+##### SFILE
+
 ### Registers
 
-## TSU
-### Features
-### tiles
-Overview
+#### VConfig
 
-#### bitmap
-#### tile map
-#### scrolls
-#### registers
+#### VPage
 
-### sprites
-Overview
+#### GXOffsL
 
-#### SFILE
-#### registers
+#### GXOffsH
+
+#### GYOffsL
+
+#### GYOffsH
+
+#### T0XOffsL
+
+#### T0XOffsH
+
+#### T0YOffsL
+
+#### T0YOffsH
+
+#### T1XOffsL
+
+#### T1XOffsH
+
+#### T1YOffsL
+
+#### T1YOffsH
+
+#### TSConfig
+
+#### PalSel
+
+#### Border
+
+#### TMPage
+
+#### T0GPage
+
+#### T1GPage
+
+#### SGPage
 
 ## Контроллер DMA
 
-Контроллер DMA позволяет передавать данные между памятью и устройствами, минуя процессор. В один момент времени может быть запущена лишь одна DMA транзакция.
+Контроллер DMA позволяет передавать данные между памятью и устройствами без участия процессора. 
+
+Скорость передачи данных ограничена скоростью работы контроллера памяти, загруженностью памяти обращениями и скоростью периферийных устройств.
+
+<u>***Обратите внимание:***</u>
+
+Одновременно может выполняться лишь одна DMA транзакция.
 
 Для управления DMA предусмотрены следующие регистры:
 
@@ -367,7 +478,9 @@ DMA транзакция производит передачу данных бл
 
 Значения в регистрах **DMALen** и **DMANum** должны быть на единицу меньше, т.к. они находятся в диапазоне 1 - 256.
 
-### Регистр DMACtrl
+### Registers
+
+#### DMACtrl
 
 	Биты  7   6   5      4     3    2  1  0
 	     W/R  - S_ALGN D_ALGN A_SZ DDEV[2:0]
@@ -416,7 +529,7 @@ DMA транзакция производит передачу данных бл
 
 Читается один WORD из источника и это значение используется для заполнения приемника.
 
-### Регистр DMAStatus
+#### DMAStatus
 
 	Биты    7    6  5  4  3  2  1  0
 	     DMA_ACT -  -  -  -  -  -  -
@@ -429,6 +542,28 @@ DMA транзакция производит передачу данных бл
 Состояние DMA транзакции можно определить по биту *DMA_ACT* регистра **DMAStatus**. По окончанию транзакции генерируется соответствующее прерывание, если оно было разрешено. Подробнее об этом можно узнать в разделе [Контроллер прерываний][interrupts].
 
 **Внимание!** Данные, передаваемые с помощью DMA не кэшируются, поэтому работать с ними необходимо через окна памяти для которых отключено кэширование, либо после транзакций производить инвалидацию кэша. Подробнее о работе кэша описано в разделе [Кэширование запросов к RAM][cpu#cache].
+
+#### DMASAddrL
+
+#### DMASAddrH
+
+#### DMASAddrX
+
+#### DMADAddrL
+
+#### DMADAddrH
+
+#### DMADAddrX
+
+#### DMAWPDev
+
+#### DMALen
+
+#### DMANum
+
+#### DMANumH
+
+#### DMAWPAddr
 
 ## Sound
 
@@ -450,10 +585,38 @@ DMA транзакция производит передачу данных бл
 
 ### Registers
 
+#### FDDVirt
+
+## Miscellaneous
+
+### Version detect
+
+### Registers
+
+#### Status
+
+## Configuration extensions
+
+### FDD Ripper
+
+### Registers
+
+#### FRCtrl
+
+#### FRCnt0
+
+#### FRCnt1
+
+#### FRCnt2
+
 ## Pentagon-128 compatibility
 
-## Version detect
+### Video controller
+
+### INT position
 
 ## Credits
 
 Special thanks to: Earl (Dmitry Limonov) for initial version of this datasheet in Russian.
+
+(+++ everybody)
