@@ -36,13 +36,7 @@
 
 ## Conventions
 
-### Register access
-
-When writing unused bits in a register must always be written with 0, if not specified otherwise. This is to maintain compatibility with future versions of configuration.
-
-When reading unused bits in a register must be ignored.
-
-### Formating
+### Formating and styles
 
 The following formatting is used in this document.
 
@@ -66,25 +60,37 @@ R/W - register or register bit access. R - read, W - write.
 
 ## Achitecture
 
+(Here should be a drawing of a universal beauty, but I still cannot handle it...)
+
 ## Programming model
 
 Hardware in TS-Configuration is controlled via dedicated pull of ports with common address #nnAF. They can be written and/or read. Their access modes are specified in descriptions.
 
-Some of legacy ports are also provided like Z-Controller, Gluclock and Pentagon-128 ports. See correspondent sections for their description.
+Z-Controller, Gluclock and Pentagon-128 ports are also supported. See correspondent sections for their description.
 
 It is also possible to access #nnAF registers for write by writing memory in pre-configured addresses using **FMAddr** register.
 
-Dedicated memory files like color RAM and sprite descriptors are also accessed using **FMAddr**.
-
-## Registers
+Dedicated memory files, e.g. color RAM and sprite descriptors are only accessed using **FMAddr**.
 
 ### Register access
 
 Access to TS-Configuration registers is performed via set of CPU ports with address #nnAF, where lower A0..A7 address part is #AF and higher A8..A15 is a register number.
 
+Some hardware internal registers are more than 8 bits wide. They are split to a number of #nnAF registers.
 
+On Reset some registers are initialized with default values.
+
+<u>***Please notice:***</u>
+
+Unused bits in a register must always be written 0, if not specified otherwise. This is to maintain compatibility with future versions of configuration.
+
+When reading from a register unused bits must be ignored.
 
 ### FMAPS
+
+### Registers table
+
+Currently available in this [file](TSconf.xls).
 
 ## Процессор и память
 
@@ -279,10 +285,11 @@ DMA     |    2    | #FB
 
 #### Регистр INTMask
 
-	Биты  7   6   5   4   3   2    1    0
-	      -   -   -   -   -  DMA LINE FRAME
-	R/W                       W    W    W
-	Init  x   x   x   x   x   0    0    1
+Биты | 7 |  6  | 5  | 4 |  3 |  2  |   1  |   0
+-----|---|-----|----|---|----|-----|------|-----
+-    | - |  -  | -  | - |  - | DMA | LINE | FRAME
+R/W  |   |     |    |   |    |  W  |   W  |   W
+Init | x |  x  | x  | x |  x |  0  |   0  |   1
 
 * Биты 7:3 - зарезервированы,
 * Бит 2 - разрешение источника *DMA*,
@@ -290,6 +297,24 @@ DMA     |    2    | #FB
 * Бит 0 - разрешение источника *FRAME*,
 
 ## Графика
+
+The video hardware generates signals for correct video displaying on TV or VGA. It includes blanking fields and visible area. 
+Each frame contains 320 lines and each line is 448 7MHz pixel periods long.
+
+**Vertical timings**
+
+| Line number | Field             |
+| ------------------ | --------------------- |
+| 0-31               | Vertical Blank        |
+| 32-319             | Vertical Visible Area |
+
+**Horizontal timings**
+
+| Pixel number | Field              |
+| -------------- | ----------------------- |
+| 0-87           | Horizontal Blank        |
+| 88-447         | Horizontal Visible Area |
+
 
 ### Modes
 
@@ -305,7 +330,7 @@ DMA     |    2    | #FB
 #### PWM mode
 #### DMA
 ### scrolls
-### registers
+### Registers
 
 ## TSU
 ### Features
@@ -325,7 +350,7 @@ Overview
 
 ## Контроллер DMA
 
-Контроллер DMA позволяет передавать данные между такими устройствами компьютера как RAM, IDE, SPI, CRAM и SFILE минуя процессор. Во время передачи данных процессор может быть занят чем-то другим. В один момент времени может быть запущена лишь одна DMA транзакция.
+Контроллер DMA позволяет передавать данные между памятью и устройствами, минуя процессор. В один момент времени может быть запущена лишь одна DMA транзакция.
 
 Для управления DMA предусмотрены следующие регистры:
 
@@ -424,6 +449,8 @@ DMA транзакция производит передачу данных бл
 ## VDOS
 
 ### Registers
+
+## Pentagon-128 compatibility
 
 ## Version detect
 
