@@ -617,15 +617,15 @@ dialog_lp1:
     cp #KEY_TRU
     jp z,dialog_pgup
     cp #KEY_DOWN
-    jr z,dialog_dn
-    cp #KEY_RIGHT
     jp z,dialog_dn
+    cp #KEY_RIGHT
+    jp z,dialog_pgdn
     cp #KEY_LEFT
-    jr z,dialog_up
+    jp z,dialog_pgup
     cp #KEY_UP
-    jr z,dialog_up
+    jp z,dialog_up
     cp #KEY_ENTER
-    jr z,dialog_ent
+    jp z,dialog_ent
     cp #KEY_SPACE
     jp z,dialog_sp
 
