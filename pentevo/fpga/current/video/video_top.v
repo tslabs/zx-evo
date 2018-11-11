@@ -351,6 +351,7 @@ module video_top (
     .hvpix          (hvpix),
     .hvtspix        (hvtspix),
     .nogfx          (nogfx),
+    .vga_on         (vga_on),
     .cfg_60hz       (cfg_60hz),
     .v60hz          (v60hz),
     .video_go       (video_go),
