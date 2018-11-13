@@ -979,7 +979,6 @@ void set_vidmode()
    if (temp.rflags & RF_4X) temp.ox *= 4, temp.oy *= 4;
    if (temp.rflags & RF_64x48) temp.ox = 64, temp.oy = 48;
    if (temp.rflags & RF_128x96) temp.ox = 128, temp.oy = 96;
-   if (temp.rflags & RF_MON) temp.ox = 640, temp.oy = 480;
 
 //   printf("temp.ox=%d, temp.oy=%d\n", temp.ox, temp.oy);
 
@@ -993,8 +992,6 @@ void set_vidmode()
        temp.obpp = 32;
    if ((temp.rflags & (RF_GDI|RF_8BPCH)) == (RF_GDI|RF_8BPCH))
        temp.obpp = 32;
-   if ((temp.rflags & RF_MONITOR) == RF_MONITOR)	// temporary fix!!!
-       temp.obpp = 8;
 
    if (conf.fullscr || ((temp.rflags & RF_MON) && desc.dwHeight < 480))
    {
