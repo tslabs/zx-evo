@@ -89,8 +89,7 @@ const DRIVER drivers[] =
 {
    { "gdi device context",   FlipGdi, "gdi",    RF_GDI },
    { "hardware blitter",     FlipBlt, "blt",    RF_CLIP },
-   { "hardware 3d",          FlipD3d, "d3d",    RF_D3D },
-   { 0,0,0,0 }
+   { "hardware 3d",          FlipD3d, "d3d",    RF_D3D }
 };
 
 static void FlipGdi()
@@ -109,6 +108,7 @@ static void FlipGdi()
 
 static void FlipBlt()
 {
+	if (!surf1) return; // !!!
 restore_lost:;
    DDSURFACEDESC desc;
    desc.dwSize = sizeof desc;
@@ -158,7 +158,8 @@ restore_lost:;
 
 static void FlipD3d()
 {
-    if (!SUCCEEDED(D3dDev->BeginScene()))
+	if (!D3dDev) return; // !!!
+	if (!SUCCEEDED(D3dDev->BeginScene()))
         return;
 
     HRESULT Hr;

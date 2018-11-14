@@ -13,6 +13,8 @@ typedef signed short i16;
 typedef unsigned char u8;
 typedef signed char i8;
 
+#define countof(a)  (sizeof(a) / sizeof(a[0]))
+
 #ifdef _MSC_VER
 #define ATTR_ALIGN(x) __declspec(align(x))
 #endif

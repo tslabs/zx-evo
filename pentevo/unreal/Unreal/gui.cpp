@@ -802,25 +802,31 @@ INT_PTR CALLBACK VideoDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
    if (msg == WM_INITDIALOG)
    {
       HWND box = GetDlgItem(dlg, IDC_VIDEOFILTER);
-      for (i = 0; renders[i].func; i++)
+
+      for (i = 0; renders[i].func; i++)   // !!! i < countof(drivers)
          SendMessage(box, CB_ADDSTRING, 0, (LPARAM)renders[i].name);
       SendMessage(box, CB_SETCURSEL, c1.render, 0);
+
       box = GetDlgItem(dlg, IDC_BORDERSIZE);
-      for (i = 0; bordersizes[i].name; i++)
+      for (i = 0; bordersizes[i].name; i++)   // !!! i < countof(drivers)
          SendMessage(box, CB_ADDSTRING, 0, (LPARAM)bordersizes[i].name);
       SendMessage(box, CB_SETCURSEL, c1.bordersize, 0);
+
       box = GetDlgItem(dlg, IDC_RENDER);
-      for (i = 0; drivers[i].name; i++)
+      for (i = 0; i < countof(drivers); i++)
          SendMessage(box, CB_ADDSTRING, 0, (LPARAM)drivers[i].name);
       SendMessage(box, CB_SETCURSEL, c1.driver, 0);
+
       box = GetDlgItem(dlg, IDC_PALETTE);
       for (i = 0; i < (int)c1.num_pals; i++)
          SendMessage(box, CB_ADDSTRING, 0, (LPARAM)pals[i].name);
       SendMessage(box, CB_SETCURSEL, c1.pal, 0);
+
       box = GetDlgItem(dlg, IDC_VDAC);
-      for (i = 0; ts_vdac_names[i].name; i++)
+      for (i = 0; ts_vdac_names[i].name; i++)   // !!! i < countof(drivers)
          SendMessage(box, CB_ADDSTRING, 0, (LPARAM)ts_vdac_names[i].name);
       SendMessage(box, CB_SETCURSEL, comp.ts.vdac, 0);
+
       /*box = GetDlgItem(dlg, IDC_FONTHEIGHT);
       SendMessage(box, CB_ADDSTRING, 0, (LPARAM)"5pix, scroll");
       SendMessage(box, CB_ADDSTRING, 0, (LPARAM)"6pix, scroll");

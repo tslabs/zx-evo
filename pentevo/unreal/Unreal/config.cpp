@@ -445,7 +445,7 @@ void load_config(const char *fname)
 
    GetPrivateProfileString(video, "driver", nil, line, sizeof line, ininame);
 //   conf.driver = DRIVER_DDRAW;
-   for (i = 0; drivers[i].nick; i++)
+   for (i = 0; i < countof(drivers); i++)
       if (!strnicmp(line, drivers[i].nick, strlen(drivers[i].nick)))
          conf.driver = i;
 
