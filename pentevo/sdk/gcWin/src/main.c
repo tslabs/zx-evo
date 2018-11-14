@@ -132,8 +132,8 @@ const GC_WINDOW_t wndInfo =
 const GC_WINDOW_t wndDialog =
 {
 /*type*/        GC_WND_DIALOG,
-/*xy*/          10,8,
-/*wh*/          55,18,
+/*xy*/          10,4,
+/*wh*/          55,24,
 /*attr*/        (WIN_COL_CYAN<<4) | WIN_COL_BLACK,
 /*frame_type*/  0,
 /*frame_attr*/  (WIN_COL_CYAN<<4) | WIN_COL_BRIGHT_WHITE,
@@ -145,11 +145,57 @@ const GC_WINDOW_t wndDialog =
 /*menu_ptr*/    (u16)&dlgTest
 };
 
+
+const GC_DITEM_t itmItemNMH1 =
+{
+/*type*/        DI_NUMBER,
+/*id*/          0,
+/*xy*/          1,12,
+/*wh*/          10,0,
+/*flags*/       {0,0,0,0,0,0,0,0},
+/*vartype*/     {DWORD,1,0,0,0,0,0},
+/*hotkey*/      0,
+/*select*/      0,
+/*var*/         (u32)&itmNUM1,
+/*name*/        "32b HEX Number:"INK_BRIGHT_CYAN,
+/*handler*/     0
+};
+
+const GC_DITEM_t itmItemNMH2 =
+{
+/*type*/        DI_NUMBER,
+/*id*/          0,
+/*xy*/          1,13,
+/*wh*/          10,0,
+/*flags*/       {0,0,0,0,0,0,0,0},
+/*vartype*/     {WORD,1,0,0,0,0,0},
+/*hotkey*/      0,
+/*select*/      0,
+/*var*/         (u16)&itmNUM2,
+/*name*/        "16b HEX Number:"INK_BRIGHT_CYAN,
+/*handler*/     0
+};
+
+const GC_DITEM_t itmItemNMH3 =
+{
+/*type*/        DI_NUMBER,
+/*id*/          0,
+/*xy*/          1,14,
+/*wh*/          10,0,
+/*flags*/       {0,0,0,0,0,0,0,0},
+/*vartype*/     {BYTE,1,0,0,0,0,0},
+/*hotkey*/      0,
+/*select*/      0,
+/*var*/         (u8)&itmNUM3,
+/*name*/        " 8b HEX Number:"INK_BRIGHT_CYAN,
+/*handler*/     0
+};
+
 const GC_DITEM_t itmItemNM1 =
 {
 /*type*/        DI_NUMBER,
 /*id*/          0,
-/*xy*/          28,9,
+/*xy*/          28,12,
 /*wh*/          10,0,
 /*flags*/       {0,0,0,0,0,0,0,0},
 /*vartype*/     {DWORD,0,0,0,0,0,0},
@@ -164,7 +210,7 @@ const GC_DITEM_t itmItemNM2 =
 {
 /*type*/        DI_NUMBER,
 /*id*/          0,
-/*xy*/          28,10,
+/*xy*/          28,13,
 /*wh*/          10,0,
 /*flags*/       {0,0,0,0,0,0,0,0},
 /*vartype*/     {WORD,0,0,0,0,0,0},
@@ -179,7 +225,7 @@ const GC_DITEM_t itmItemNM3 =
 {
 /*type*/        DI_NUMBER,
 /*id*/          0,
-/*xy*/          28,11,
+/*xy*/          28,14,
 /*wh*/          10,0,
 /*flags*/       {0,0,0,0,0,0,0,0},
 /*vartype*/     {BYTE,0,0,0,0,0,0},
@@ -232,22 +278,6 @@ const GC_DITEM_t itmItemG3 =
 /*select*/      0,
 /*var*/         0,
 /*name*/        INK_BRIGHT_BLUE MARK_CENTER"Group3",
-/*handler*/     0
-};
-
-const GC_DITEM_t itmItemHD1 =
-{
-/*type*/        DI_HDIV,
-/*id*/          0,
-/*xy*/          0,12,
-/*wh*/          0,0,
-/*flags*/       {0,0,0,0,0,0,0,0},
-/*vartype*/     {0,0,0,0,0,0,0},
-/*hotkey*/      0,
-/*select*/      0,
-/*var*/         0,
-/*name*/        INK_BRIGHT_GREEN
-                " Horizontal divider ",
 /*handler*/     0
 };
 
@@ -416,11 +446,27 @@ const GC_DITEM_t itmItemED1 =
 /*handler*/     0
 };
 
+const GC_DITEM_t itmItemHD1 =
+{
+/*type*/        DI_HDIV,
+/*id*/          0,
+/*xy*/          0,18,
+/*wh*/          0,0,
+/*flags*/       {0,0,0,0,0,0,0,0},
+/*vartype*/     {0,0,0,0,0,0,0},
+/*hotkey*/      0,
+/*select*/      0,
+/*var*/         0,
+/*name*/        INK_BRIGHT_GREEN
+                " Horizontal divider ",
+/*handler*/     0
+};
+
 const GC_DITEM_t itmItemBtnOK =
 {
 /*type*/        DI_BUTTON,
 /*id*/          BUTTON_OK,
-/*xy*/          3,14,
+/*xy*/          3,20,
 /*wh*/          20,0,
 /*flags*/       {0,0,0,0,0,0,0,1},
 /*vartype*/     {0,0,0,0,0,0,0},
@@ -435,7 +481,7 @@ const GC_DITEM_t itmItemBtnCN =
 {
 /*type*/        DI_BUTTON,
 /*id*/          BUTTON_CANCEL,
-/*xy*/          30,14,
+/*xy*/          30,20,
 /*wh*/          20,0,
 /*flags*/       {0,0,0,0,0,0,0,1},
 /*vartype*/     {0,0,0,0,0,0,0},
@@ -533,7 +579,7 @@ const GC_DITEM_t *dlgInfoItemsList[] =
 const GC_DIALOG_t dlgTest =
 {
 /*current*/             0,
-/*all_count*/           20,
+/*all_count*/           23,
 /*act_count*/           12,
 /*cur_attr*/            (WIN_COL_CYAN<<4) | WIN_COL_BRIGHT_YELLOW,
 /*box_attr*/            (WIN_COL_CYAN<<4) | WIN_COL_BLUE,
@@ -553,6 +599,7 @@ const GC_DITEM_t *dlgTestItemsList[] =
     &itmItemED1, &itmItemLBX1,
     &itmItemBtnOK, &itmItemBtnCN,
     &itmItemHD1, &itmItemTX1,
+    &itmItemNMH1, &itmItemNMH2, &itmItemNMH3,
     &itmItemNM1, &itmItemNM2, &itmItemNM3,
     &itmItemG1, &itmItemG2, &itmItemG3
 };

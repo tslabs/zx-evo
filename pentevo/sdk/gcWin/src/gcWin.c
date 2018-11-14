@@ -965,7 +965,6 @@ dialog_sel_radio:
     __endasm;
 }
 
-
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 u8 gcFindPrevTabItem(GC_DIALOG_t *dlg) __naked __z88dk_fastcall
 {
@@ -1577,6 +1576,7 @@ print_item_button:
 print_item_number:
     call print_item_text
 
+;; set local window coords
     ld a,e
     ld (win_x),a
     ld (cur_x),a
@@ -1584,6 +1584,63 @@ print_item_number:
     ld l,<#di_var (ix)
     ld h,<#di_var+1 (ix)  ; HL - var address
     ld a,<#di_vartype (ix)
+    ld c,a
+    and #4
+    jr z,print_itm_dec
+    ld a,c
+    and #3
+    jr z,print_itm_h8
+    cp #2
+    jr z,print_itm_h32
+
+print_itm_h16:
+    ld a,(hl)
+    inc hl
+    ld h,(hl)
+    ld l,a
+    push ix
+    ld ix,#ascbuff+1
+    call hexasc16
+    ld (ix),#0
+    pop ix
+    ld hl,#ascbuff
+    ld (hl),#0x0F
+    jp strprnz
+
+print_itm_h8:
+    ld a,(hl)
+    push ix
+    ld ix,#ascbuff+1
+    call hexasc8
+    ld (ix),#0
+    pop ix
+    ld hl,#ascbuff
+    ld (hl),#0x0F
+    jp strprnz
+
+print_itm_h32:
+    push de
+    ld e,(hl)
+    inc hl
+    ld d,(hl)
+    inc hl
+    ld a,(hl)
+    inc hl
+    ld h,(hl)
+    ld l,a
+    ex de,hl
+    push ix
+    ld ix,#ascbuff+1
+    call hexasc32
+    ld (ix),#0
+    pop ix
+    pop de
+    ld hl,#ascbuff
+    ld (hl),#0x0F
+    jp strprnz
+
+print_itm_dec:
+    ld a,c
     and #3
     jr z,print_itm_d8
     cp #1

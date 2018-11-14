@@ -403,6 +403,10 @@ u8 gcSimpleVMenu(GC_SVMENU_t *svmnu) __naked __z88dk_fastcall;
 void gcPrintSVMCursor(GC_SVMENU_t *svmnu) __naked __z88dk_fastcall;
 void gcRestoreSVMCursor(GC_SVMENU_t *svmnu) __naked __z88dk_fastcall;
 
+void gcPrintHex8(u8 num) __naked __z88dk_fastcall;
+void gcPrintHex16(u16 num) __naked __z88dk_fastcall;
+void gcPrintHex32(u32 num) __naked __z88dk_fastcall;
+
 void gcPrintDec8(u8 num) __naked __z88dk_fastcall;
 void gcPrintDec16(u16 num) __naked __z88dk_fastcall;
 void gcPrintDec32(u32 num) __naked __z88dk_fastcall;
