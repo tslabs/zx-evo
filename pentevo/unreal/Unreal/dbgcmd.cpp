@@ -167,16 +167,37 @@ void editextbank()
        out(dbg_extport, (u8)x);
 }
 
-void mon_nxt()
+void mon_aux()
 {
-   if (activedbg == WNDREGS) activedbg = WNDTRACE;
-   else if (activedbg == WNDTRACE) activedbg = WNDMEM;
-   else if (activedbg == WNDMEM) {activedbg = WNDBANKS; showbank = true;}
-   else if (activedbg == WNDBANKS) {activedbg = WNDREGS; showbank = false;}
+  switch (activedbg)
+  {
+    case WNDBANKS:
+      showbank = true;
+    break;
+    
+    default:
+      showbank = false;
+    break;
+  }
 }
 
-void mon_prv() { mon_nxt(); mon_nxt(); mon_nxt();}
-void mon_dump() { mem_dump = (mem_dump == 2) ? 0 : mem_dump + 1; mem_sz = mem_dump ? 32:8; }
+void mon_nxt()
+{
+   activedbg = (activedbg == WNDMEM) ? WNDBANKS : (DBGWND)((int)activedbg - 1);
+   mon_aux();
+}
+
+void mon_prv()
+{ 
+   activedbg = (activedbg == WNDBANKS) ? WNDMEM : (DBGWND)((int)activedbg + 1);
+   mon_aux();
+}
+
+void mon_dump()
+{ 
+  mem_dump = (mem_dump + 1) & 1; 
+  mem_sz = mem_dump ? 32 : 8; 
+}
 
 void mon_switch_dump()
 {
