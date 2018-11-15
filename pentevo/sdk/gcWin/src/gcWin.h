@@ -169,14 +169,20 @@ typedef enum
     QWORD   = 3
 }  GCIV_SIZE_t;
 
+typedef enum
+{
+    DEC     = 0,
+    HEX     = 1,
+    BIN     = 2
+} GCIV_TYPE_t;
+
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 //:: DIALOG ITEM VARIABLE TYPE STRUCTURE
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 typedef struct
 {
     GCIV_SIZE_t     DIV_SIZE    :2;
-    unsigned        DIV_HEX     :1;
-    unsigned        bit3        :1;
+    GCIV_TYPE_t     DIV_TYPE    :2;
     unsigned        bit4        :1;
     unsigned        bit5        :1;
     unsigned        bit6        :1;
