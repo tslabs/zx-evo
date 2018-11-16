@@ -2,9 +2,9 @@
 //::                     Window System                       ::
 //::                  by dr_max^gc (c)2018                   ::
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
 #include "defs.h"
 #include "tsio.h"
-#include "colors.h"
 #include "keyboard.h"
 #include "gcWin.h"
 #include "numbers.h"
@@ -237,9 +237,9 @@ void gcSetLinkedMessage(u16 **ptr) __naked __z88dk_fastcall
 }
 
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-u8 gcWindowHandler(GC_WINDOW_t *wnd)
+BTN_TYPE_t gcWindowHandler(GC_WINDOW_t *wnd)
 {
-    u8 rc;
+    BTN_TYPE_t rc;
     u16 *ptr;
 
     rc = 0;
@@ -262,7 +262,7 @@ u8 gcWindowHandler(GC_WINDOW_t *wnd)
 }
 
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-u8 gcMessageBox(MB_TYPE_t type, char *header, char *message)
+BTN_TYPE_t gcMessageBox(MB_TYPE_t type, char *header, char *message)
 {
 u8 i, j, len;
 u8 x, y;
