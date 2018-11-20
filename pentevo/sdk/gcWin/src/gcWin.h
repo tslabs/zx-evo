@@ -114,7 +114,6 @@ typedef enum
     GC_WND_NOMENU = ((u8)0x00),
     GC_WND_SVMENU = ((u8)0x01),
     GC_WND_DIALOG = ((u8)0x02),
-    GC_WND_SHADOW = ((u8)0x80),     //not yet
 } GC_WND_TYPE_t;
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -124,6 +123,7 @@ typedef enum
 {
     GC_FRM_SINGLE = ((u8)0x00),
     GC_FRM_DOUBLE = ((u8)0x01),     //fix me
+    GC_FRM_SHADOW = ((u8)0x80),     //not yet
 } GC_FRM_TYPE_t;
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::

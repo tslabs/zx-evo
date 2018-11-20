@@ -288,7 +288,7 @@ GC_DITEM_t *dlgItemList[4];
     wnd.width = len + 2;
     wnd.hight = i + 3 + 3;
     wnd.attr = (WIN_COL_WHITE<<4) | WIN_COL_BLACK;
-    wnd.frame_type = 0;
+    wnd.frame_type = GC_FRM_SINGLE | GC_FRM_SHADOW;
     wnd.frame_attr = (WIN_COL_WHITE<<4) | WIN_COL_BRIGHT_WHITE;
     wnd.header_txt = header;
     wnd.window_txt = 0;
@@ -1768,7 +1768,7 @@ void gcDrawWindow(u8 x, u8 y, u8 width, u8 hight, u8 attr, u8 frame_type, u8 fra
 ;; select frameset
     ld de,#frame_set1
     ld a,<#_ft (ix)
-    or a
+    and #0x7F
     jr z,.+2+3
     ld de,#frame_set2
     ld (frame_set_addr),de
@@ -1824,10 +1824,16 @@ void gcDrawWindow(u8 x, u8 y, u8 width, u8 hight, u8 attr, u8 frame_type, u8 fra
     ld c,<#_fa (ix)
     call winfrm_prn
 
+;; check shadow flag
+    ld a,<#_ft (ix)
+    and #0x80
+    jr z,1$
+
 ;; print shadow
     ld a,#0x01
     call set_attr
     call set_attr
+1$:
 
 ;; y++
     inc d
@@ -1855,10 +1861,16 @@ void gcDrawWindow(u8 x, u8 y, u8 width, u8 hight, u8 attr, u8 frame_type, u8 fra
     ld a,#sym_right_bottom
     call winfrm_prn
 
+;; check shadow flag
+    ld a,<#_ft (ix)
+    and #0x80
+    jr z,2$
+
 ;; print shadow
     ld a,#0x01
     call set_attr
     call set_attr
+2$:
 
 ;; y++
     inc d
@@ -1868,11 +1880,17 @@ void gcDrawWindow(u8 x, u8 y, u8 width, u8 hight, u8 attr, u8 frame_type, u8 fra
     inc e
     inc e
 
+;; check shadow flag
+    ld a,<#_ft (ix)
+    and #0x80
+    jr z,3$
+
 ;; print bottom shadow
     ld b,<#_w (ix)
     ld a,#0x01
     call set_attr
     djnz .-3
+3$:
 
     pop ix
     ret
