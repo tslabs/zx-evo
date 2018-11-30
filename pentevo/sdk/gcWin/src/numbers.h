@@ -303,18 +303,16 @@ hexasc8:
     rra
     rra
     and #0x0F
-    add a,#0x90
     daa
-    adc a,#0x40
-    daa
+    add #0xF0
+    adc #0x40
     ld 0 (ix),a
     inc ix
     pop af
     and #0x0F
-    add a,#0x90
     daa
-    adc a,#0x40
-    daa
+    add #0xF0
+    adc #0x40
     ld 0 (ix),a
     inc ix
     ret
