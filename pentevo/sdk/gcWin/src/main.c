@@ -2,7 +2,6 @@
 //::                     Window System                       ::
 //::                  by dr_max^gc (c)2018                   ::
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
 #include <stdio.h>
 #include <string.h>
 #include "defs.h"
@@ -50,6 +49,7 @@ void exec()
     }
 }
 
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 void main(void)
 {
     //gcSetFontSym(0xF0, sym1);
@@ -62,6 +62,8 @@ void main(void)
 
 // setup linked messages
     gcSetLinkedMessage(msg_arr);
+
+//    while(gcGetKey() != KEY_ENTER);
 
     gcPrintWindow(&wndMain);
     gcPrintWindow(&wndTest1);
@@ -88,7 +90,7 @@ void main(void)
 
     gcWindowHandler(&wndInfo);
 
-    select = gcMessageBox(MB_RETRYABORTIGNORE, "MessageBox",
+    select = gcMessageBox(MB_RETRYABORTIGNORE, GC_FRM_SINGLE, "MessageBox",
                 INK_BRIGHT_WHITE
                 "Lorem ipsum dolor sit amet, consectetur\r"
                 INK_GREEN

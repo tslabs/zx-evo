@@ -2,7 +2,6 @@
 //::                     Window System                       ::
 //::                  by dr_max^gc (c)2018                   ::
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
 #include "defs.h"
 #include "tsio.h"
 #include "keyboard.h"
@@ -26,12 +25,12 @@ void gcVars (void)
     dlg_current             .equ    #00 ; byte  (current item)
     dlg_all_count           .equ    #01 ; byte  (count of all items)
     dlg_act_count           .equ    #02 ; byte  (count of active items)
-    dlg_cur_attr            .equ    #03
-    dlg_box_attr            .equ    #04
-    dlg_btn_focus_attr      .equ    #05
-    dlg_btn_unfocus_attr    .equ    #06
-    dlg_lbox_focus_attr     .equ    #07
-    dlg_lbox_unfocus_attr   .equ    #08
+    dlg_cur_attr            .equ    #03 ; byte  (cursor attribute)
+    dlg_box_attr            .equ    #04 ; byte  (DI_SINGLEBOX attribute)
+    dlg_btn_focus_attr      .equ    #05 ; byte  (DI_BUTTON focus attribute)
+    dlg_btn_unfocus_attr    .equ    #06 ; byte  (DI_BUTTON unfocus attribute)
+    dlg_lbox_focus_attr     .equ    #07 ; byte  (DI_LISTBOX (and other) attribute)
+    dlg_lbox_unfocus_attr   .equ    #08 ; byte
     dlg_items               .equ    #09 ; word  (pointer to items)
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;; struct GC_WINDOW
@@ -46,9 +45,7 @@ void gcVars (void)
     frame_attr              .equ    #07 ; byte
     header_txt              .equ    #08 ; word
     window_txt              .equ    #10 ; word
-    save_pg                 .equ    #12 ; byte
-    save_addr               .equ    #13 ; word
-    menu_ptr                .equ    #15 ; word
+    menu_ptr                .equ    #12 ; word
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;; struct GC_DITEM_t
 ;; dialog item descriptor offsets
@@ -79,8 +76,11 @@ void gcVars (void)
     DI_LISTVIEW             .equ    #11 ; not yet
     DI_NUMBER               .equ    #12 ; unsigned decimal 32/16/8
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    SYM_TRI                 .equ    #0xD8
     SYM_RADIO               .equ    #0xD0
     SYM_CHECK               .equ    #0xD4
+    SYM_BTNUP               .equ    #0xF2
+    SYM_BTNDN               .equ    #0xF4
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;; macros
     .macro  LD_IXHL
@@ -203,11 +203,22 @@ cfg_listbox_unfocus_attr:
 ;  right_divider    +10
 ;  horizontal_bar   +11
 ;;
+frame_set0:
+    .db 0x20,0xDB,0xDB,0xDB,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0xC4
 frame_set1:
-    .db 0x20, 0xDB, 0xDB, 0xDB, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0xC4
+    .db 0x20,0xDB,0xDB,0xDB,0x04,0x05,0x06,0x07,0x08,0x09,0x0A,0xC4
 frame_set2:
-    //.db 0x20, 0xC9, 0xCD, 0xBB, 0xBA, 0xBA, 0xC8, 0xCD, 0xBC, 0xC7, 0xB6
-    .db 0x20, 0x0D, 0x0E, 0x0F, 0x10, 0x11, 0x12, 0x13, 0x14, 0xC7, 0xB6, 0xC4
+    .db 0x20,0xC9,0xCD,0xBB,0xBA,0xBA,0xC8,0xCD,0xBC,0xC7,0xB6,0xC4
+//    .db 0x20, 0x0D, 0x0E, 0x0F, 0x10, 0x11, 0x12, 0x13, 0x14, 0xC7, 0xB6, 0xC4
+frame_set0_noheader:
+    .db 0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0xC4
+frame_set1_noheader:
+    .db 0x20,0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x0A,0xC4
+frame_set2_noheader:
+    .db 0x20,0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x0A,0xC4
+;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+symbol_tri:
+    .db 0x01, 0x03, 0x07, 0x0F, 0x1F, 0x3F, 0x7F, 0xFF
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ascbuff:
     .ds 15
@@ -262,7 +273,7 @@ BTN_TYPE_t gcWindowHandler(GC_WINDOW_t *wnd)
 }
 
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-BTN_TYPE_t gcMessageBox(MB_TYPE_t type, char *header, char *message)
+BTN_TYPE_t gcMessageBox(MB_TYPE_t type, GC_FRM_TYPE_t frame, char *header, char *message)
 {
 u8 i, j, len;
 u8 x, y;
@@ -288,7 +299,7 @@ GC_DITEM_t *dlgItemList[4];
     wnd.width = len + 2;
     wnd.hight = i + 3 + 3;
     wnd.attr = (WIN_COL_WHITE<<4) | WIN_COL_BLACK;
-    wnd.frame_type = GC_FRM_SINGLE | GC_FRM_SHADOW;
+    wnd.frame_type = frame;
     wnd.frame_attr = (WIN_COL_WHITE<<4) | WIN_COL_BRIGHT_WHITE;
     wnd.header_txt = header;
     wnd.window_txt = 0;
@@ -1118,7 +1129,11 @@ void gcPrintDialogCursor(GC_DITEM_t *ditm) __naked __z88dk_fastcall
     jr nz,4$
     ld a,(cfg_listbox_focus_attr)
     jr 3$
-4$:
+4$: cp #DI_EDIT
+    jr nz,5$
+    ld a,(cfg_listbox_focus_attr)
+    jr 3$
+
 5$:
     ld a,(cfg_cur_attr)
 3$: call set_attr
@@ -1262,20 +1277,15 @@ gc_print_dialog_item_ret0$:
 ;;   HL - string address
 ;;   DE - YX coords
 print_item_edit:
-    call print_item_text
     push de
+    call print_item_text
+    pop de
     ld b,<#di_width (ix)
     ld a,(cfg_listbox_unfocus_attr)
     ld (sym_attr),a
     ld c,a
     call set_attr
     djnz .-3
-    pop de
-    push de
-    ld l,<#di_var (ix)
-    ld h,<#di_var+1 (ix)
-    call print_item_text
-    pop de
     ret
 
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -1766,12 +1776,25 @@ void gcDrawWindow(u8 x, u8 y, u8 width, u8 hight, u8 attr, u8 frame_type, u8 fra
     add ix,sp
 
 ;; select frameset
-    ld de,#frame_set1
+    ld de,#frame_set0
     ld a,<#_ft (ix)
     and #0x7F
-    jr z,.+2+3
+    or a
+    jr z,9$
+    ld de,#frame_set1
+    cp #1
+    jr z,9$
     ld de,#frame_set2
-    ld (frame_set_addr),de
+    cp #2
+    jr z,9$
+    ld de,#frame_set0_noheader
+    cp #0x40
+    jr z,9$
+    ld de,#frame_set1_noheader
+    cp #0x41
+    jr z,9$
+    ld de,#frame_set2_noheader
+9$: ld (frame_set_addr),de
 
     ld e,<#_x (ix)
     ld d,<#_y (ix)
@@ -1827,7 +1850,7 @@ void gcDrawWindow(u8 x, u8 y, u8 width, u8 hight, u8 attr, u8 frame_type, u8 fra
 ;; check shadow flag
     ld a,<#_ft (ix)
     and #0x80
-    jr z,1$
+    jr nz,1$
 
 ;; print shadow
     ld a,#0x01
@@ -1864,7 +1887,7 @@ void gcDrawWindow(u8 x, u8 y, u8 width, u8 hight, u8 attr, u8 frame_type, u8 fra
 ;; check shadow flag
     ld a,<#_ft (ix)
     and #0x80
-    jr z,2$
+    jr nz,2$
 
 ;; print shadow
     ld a,#0x01
@@ -1883,7 +1906,7 @@ void gcDrawWindow(u8 x, u8 y, u8 width, u8 hight, u8 attr, u8 frame_type, u8 fra
 ;; check shadow flag
     ld a,<#_ft (ix)
     and #0x80
-    jr z,3$
+    jr nz,3$
 
 ;; print bottom shadow
     ld b,<#_w (ix)
@@ -1977,6 +2000,11 @@ void gcPrintWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall
     ld sp,hl
 ;;}
 
+;; check GC_FRM_NOHEADER flag
+    ld a,<#frame_type (ix)
+    and #0x40
+    jr nz,1$
+
 ;; set colors
     ld a,<#frame_attr (ix)
     rlca
@@ -1998,11 +2026,23 @@ void gcPrintWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall
     or h
     call nz,strprnz_center
 
+;; print spectrum stripes
     ld hl,#header_str
-    ld e,<#x (ix)
-    inc e
+    ld a,<#width (ix)
+    add a,<#x (ix)
+    sub #6
+    ld e,a
     call strprnz
+    ld a,<#frame_attr (ix)
+    and #0x0F
+    ld c,a
+    ld a,#((5|8)<<4)
+    or c
+    ld c,a
+    ld a,#SYM_TRI
+    call sym_prn
 
+1$:
 ;; set colors
     ld a,<#window_attr (ix)
     ld (win_attr),a
@@ -2024,9 +2064,11 @@ void gcPrintWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall
     ret
 
 header_str:
-    .db 0x07, 0x02, 0xD8, 0x20
-    .db 0x07, 0x06, 0xD8, 0x20
-    .db 0x07, 0x04, 0xD8, 0x00
+    .db 0x07, 0x0A, SYM_TRI
+    .db 0x08, 0x0A, 0x07, 0x0E, SYM_TRI
+    .db 0x08, 0x0E, 0x07, 0x0C, SYM_TRI
+    .db 0x08, 0x0C, 0x07, 0x0D, SYM_TRI
+    .db 0x00
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;; set attribute
 ;; i:
