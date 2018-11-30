@@ -12,9 +12,6 @@ OBJEXT      := rel
 HEXEXT      := hex
 OUTEXT      := spg
 
-#Flags, Libraries and Includes
-LIB         := -L$(LIBDIR) -static-libstdc++ -lm -pthread -lwsutils -lstdc++fs -lmosquitto -llog4cpp -lcontracts -lprotobuf
-
 ASMFLAGS    := -g
 CXXFLAGS    := --std-c11 -mz80 --no-std-crt0 --opt-code-speed
 LNKFLAGS    := --std-c11 -mz80 --no-std-crt0 --opt-code-speed -Wl-b_CODE=0x0200 -Wl-b_DATA=0xB000
