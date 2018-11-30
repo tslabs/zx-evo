@@ -22,8 +22,8 @@ LNKFLAGS    := -mz80 --no-std-crt0 -Wl-b_CODE=0x0200 -Wl-b_DATA=0xB000
 CXX         := sdcc
 ASM         := sdasz80
 
-ASMSRC      := $(wildcard src/*.$(ASMEXT))
-CXXSRC      := $(wildcard src/*.$(CXXEXT))
+ASMSRC      := $(wildcard $(SRCDIR)/*.$(ASMEXT))
+CXXSRC      := $(wildcard $(SRCDIR)/*.$(CXXEXT))
 OBJECTS     := $(patsubst $(SRCDIR)/%, $(BUILDDIR)/%, $(ASMSRC:.$(ASMEXT)=.$(OBJEXT)))
 OBJECTS     += $(patsubst $(SRCDIR)/%, $(BUILDDIR)/%, $(CXXSRC:.$(CXXEXT)=.$(OBJEXT)))
 STRIP       := strip
