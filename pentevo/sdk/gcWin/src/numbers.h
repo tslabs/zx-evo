@@ -1,3 +1,7 @@
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+//::                     Window System                       ::
+//::                  by dr_max^gc (c)2018                   ::
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 void gcPrintDec8(u8 num) __naked __z88dk_fastcall
 {
@@ -89,6 +93,9 @@ decasc32:
 
     call DEC32_4
     call decasc32_dig
+;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+;HL - 16bit NUMBER
+;IX - ASCII BUFFER
 decasc16:
     call DEC32_5
     call decasc32_dig
@@ -158,7 +165,7 @@ DEC32_4:
     exx
     jr divdc32
 DEC32_5:
-    ld	  de,#0         ;Hi
+    ld de,#0            ;Hi
     exx
     ld de,#10000        ;Lo
     exx
@@ -171,7 +178,15 @@ DEC32_7:
     jr divdc16
 DEC32_8:
     ld de,#10           ;Lo
-    jr divdc16
+
+divdc16:
+    ld a,#0x2F
+    inc a
+    or a
+    sbc hl,de
+    jr nc,divdc16+2
+    add hl,de
+    ret
 
 divdc32:
     ld a,#0x2F
@@ -187,14 +202,121 @@ divdc32:
     exx
     adc hl,de
     ret
+  __endasm;
+}
 
-divdc16:
-    ld a,#0x2F
-    inc a
-    or a
-    sbc hl,de
-    jr nc,divdc16+2
-    add hl,de
+void gcPrintHex8(u8 num) __naked __z88dk_fastcall
+{
+    num;        // to avoid SDCC warning
+
+  __asm
+;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+; print 8bit hexadecimal number
+; i:
+;   L = 8bit NUMBER
+;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    ld a,l
+    push ix
+    ld ix,#ascbuff
+    call hexasc8
+    ld (ix),#0
+    pop ix
+    ld hl,#ascbuff
+    ld a,(cur_x)
+    ld e,a
+    ld a,(cur_y)
+    ld d,a
+    jp strprnz
+  __endasm;
+}
+
+void gcPrintHex16(u16 num) __naked __z88dk_fastcall
+{
+    num;        // to avoid SDCC warning
+
+  __asm
+;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+; print 16bit hexadecimal number
+; i:
+;   HL = 16bit NUMBER
+;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    push ix
+    ld ix,#ascbuff
+    call hexasc16
+    ld (ix),#0
+    pop ix
+    ld hl,#ascbuff
+    ld a,(cur_x)
+    ld e,a
+    ld a,(cur_y)
+    ld d,a
+    jp strprnz
+  __endasm;
+}
+
+void gcPrintHex32(u32 num) __naked __z88dk_fastcall
+{
+    num;        // to avoid SDCC warning
+
+  __asm
+;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+; print 32bit hexadecimal number
+; i:
+;   HLDE = 32bit NUMBER
+;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    push ix
+    ld ix,#ascbuff
+    call hexasc32
+    ld (ix),#0
+    pop ix
+    ld hl,#ascbuff
+    ld a,(cur_x)
+    ld e,a
+    ld a,(cur_y)
+    ld d,a
+    jp strprnz
+
+;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+;DEHL - 32bit NUMBER
+;IX - ASCII BUFFER
+hexasc32:
+    ld a,d
+    call hexasc8
+    ld a,e
+    call hexasc8
+
+;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+;HL - 16bit NUMBER
+;IX - ASCII BUFFER
+hexasc16:
+    ld a,h
+    call hexasc8
+    ld a,l
+
+;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+;A - 8bit NUMBER
+;IX - ASCII BUFFER
+hexasc8:
+    push af
+    rra
+    rra
+    rra
+    rra
+    and #0x0F
+    add a,#0x90
+    daa
+    adc a,#0x40
+    daa
+    ld 0 (ix),a
+    inc ix
+    pop af
+    and #0x0F
+    add a,#0x90
+    daa
+    adc a,#0x40
+    daa
+    ld 0 (ix),a
+    inc ix
     ret
   __endasm;
 }

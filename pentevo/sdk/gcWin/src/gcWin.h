@@ -9,33 +9,11 @@
 //      - add flag - shadow&header
 // add input number
 
-
 #define SCREEN_WIDTH    80
 #define SCREEN_HIGHT    30
 
 #define EIHALT __asm__("ei\n halt\n");
 #define DIHALT __asm__("di\n halt\n");
-
-// MESSAGEBOX TYPE
-typedef enum
-{
-    MB_OK               = 0,
-    MB_OKCANCEL         = 1,
-    MB_YESNO            = 2,
-    MB_YESNOCANCEL      = 3,
-    MB_RETRYABORTIGNORE = 4
-} MB_TYPE_t;
-
-//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-// DIALOG BUTTONS
-//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-#define BUTTON_OK               0xFF
-#define BUTTON_CANCEL           0xFE
-#define BUTTON_YES              0xFD
-#define BUTTON_NO               0xFC
-#define BUTTON_RETRY            0xFB
-#define BUTTON_ABORT            0xFA
-#define BUTTON_IGNORE           0xF9
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 // STRING MARKUP DEFINITIONS
@@ -79,30 +57,93 @@ typedef enum
 #define PAPER_BRIGHT_CYAN       "\b\xD"
 #define PAPER_BRIGHT_YELLOW     "\b\xE"
 #define PAPER_BRIGHT_WHITE      "\b\xF"
-//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+//:: WINDOW COLORS
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 typedef enum
 {
-    GC_WND_NOMENU = 0,
-    GC_WND_SVMENU = 1,
-    GC_WND_DIALOG = 2,
+    WIN_COL_BLACK           = ((u8)0x00),
+    WIN_COL_BLUE            = ((u8)0x01),
+    WIN_COL_RED		        = ((u8)0x02),
+    WIN_COL_MAGENTA         = ((u8)0x03),
+    WIN_COL_GREEN	        = ((u8)0x04),
+    WIN_COL_CYAN	        = ((u8)0x05),
+    WIN_COL_YELLOW	        = ((u8)0x06),
+    WIN_COL_WHITE	        = ((u8)0x07),
+    WIN_COL_BRIGHT_BLUE	    = ((u8)0x09),
+    WIN_COL_BRIGHT_RED      = ((u8)0x0A),
+    WIN_COL_BRIGHT_MAGENTA	= ((u8)0x0B),
+    WIN_COL_BRIGHT_GREEN    = ((u8)0x0C),
+    WIN_COL_BRIGHT_CYAN     = ((u8)0x0D),
+    WIN_COL_BRIGHT_YELLOW   = ((u8)0x0E),
+    WIN_COL_BRIGHT_WHITE    = ((u8)0x0F)
+} WIN_COLORS_t;
+
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+//:: MESSAGEBOX TYPES
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+typedef enum
+{
+    MB_OK               = ((u8)0),
+    MB_OKCANCEL         = ((u8)1),
+    MB_YESNO            = ((u8)2),
+    MB_YESNOCANCEL      = ((u8)3),
+    MB_RETRYABORTIGNORE = ((u8)4)
+} MB_TYPE_t;
+
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+//:: DIALOG BUTTONS
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+typedef enum
+{
+    BUTTON_OK           = ((u8)0xFF),
+    BUTTON_CANCEL       = ((u8)0xFE),
+    BUTTON_YES          = ((u8)0xFD),
+    BUTTON_NO           = ((u8)0xFC),
+    BUTTON_RETRY        = ((u8)0xFB),
+    BUTTON_ABORT        = ((u8)0xFA),
+    BUTTON_IGNORE       = ((u8)0xF9)
+} BTN_TYPE_t;
+
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+//:: WINDOW TYPES
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+typedef enum
+{
+    GC_WND_NOMENU = ((u8)0x00),
+    GC_WND_SVMENU = ((u8)0x01),
+    GC_WND_DIALOG = ((u8)0x02),
 } GC_WND_TYPE_t;
 
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+//:: FRAME TYPES
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+typedef enum
+{
+    GC_FRM_SINGLE = ((u8)0x00),
+    GC_FRM_DOUBLE = ((u8)0x01),     //fix me
+    GC_FRM_SHADOW = ((u8)0x80),     //not yet
+} GC_FRM_TYPE_t;
+
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+//:: WINDOW DESCRIPTOR
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 typedef struct
 {
-    GC_WND_TYPE_t   type;   // +0
-    u8  x;                  // +1
-    u8  y;                  // +2
-    u8  width;              // +3
-    u8  hight;              // +4
-    u8  attr;               // +5
-    u8  frame_type;         // +6
-    u8  frame_attr;         // +7
-    u8  *header_txt;        // +8
-    u8  *window_txt;        // +10
-    u8  save_pg;            // +12
-    u16 save_addr;          // +13
-    u16 *menu_ptr;          // +15
+    GC_WND_TYPE_t   type;       // +0
+    u8  x;                      // +1
+    u8  y;                      // +2
+    u8  width;                  // +3
+    u8  hight;                  // +4
+    WIN_COLORS_t  attr;         // +5
+    GC_FRM_TYPE_t frame_type;   // +6
+    WIN_COLORS_t frame_attr;    // +7
+    u8  *header_txt;            // +8
+    u8  *window_txt;            // +10
+    u8  save_pg;                // +12
+    u16 save_addr;              // +13
+    u16 *menu_ptr;              // +15
 } GC_WINDOW_t;
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -141,26 +182,27 @@ typedef struct
 */
 
 
-
-
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 //:: DIALOG ITEMS
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 typedef enum
 {
-    DI_TEXT         = 0,
-    DI_HDIV         = 1,
-    DI_SINGLEBOX    = 2,
-    DI_EDIT         = 4,
-    DI_BUTTON       = 7,
-    DI_CHECKBOX     = 8,
-    DI_RADIOBUTTON  = 9,
-    DI_LISTBOX      = 10,
-    DI_LISTVIEW     = 11,
-    DI_NUMBER       = 12,
-    DI_INPUT_NUMBER = 13
+    DI_TEXT         = ((u8)0),
+    DI_HDIV         = ((u8)1),
+    DI_SINGLEBOX    = ((u8)2),
+    DI_EDIT         = ((u8)4),
+    DI_BUTTON       = ((u8)7),
+    DI_CHECKBOX     = ((u8)8),
+    DI_RADIOBUTTON  = ((u8)9),
+    DI_LISTBOX      = ((u8)10),
+    DI_LISTVIEW     = ((u8)11),
+    DI_NUMBER       = ((u8)12),
+    DI_INPUT_NUMBER = ((u8)13)
 } GC_DITEM_TYPE_t;
 
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+// ITEM VAR SIZES
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 typedef enum
 {
     BYTE    = 0,
@@ -170,13 +212,22 @@ typedef enum
 }  GCIV_SIZE_t;
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+// ITEM VAR TYPES
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+typedef enum
+{
+    DEC     = 0,
+    HEX     = 1,
+    BIN     = 2
+} GCIV_TYPE_t;
+
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 //:: DIALOG ITEM VARIABLE TYPE STRUCTURE
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 typedef struct
 {
     GCIV_SIZE_t     DIV_SIZE    :2;
-    unsigned        DIV_HEX     :1;
-    unsigned        bit3        :1;
+    GCIV_TYPE_t     DIV_TYPE    :2;
     unsigned        bit4        :1;
     unsigned        bit5        :1;
     unsigned        bit6        :1;
@@ -191,6 +242,9 @@ typedef struct
     DIF_RIGHT - выравнивание вправо по width
 */
 
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+//:: DIALOG ITEM FLAGS
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 typedef struct
 {
     unsigned    DIF_GRAY    :1;
@@ -202,7 +256,6 @@ typedef struct
     unsigned    DIF_RIGHT   :1;
     unsigned    DIF_TABSTOP :1;
 } GC_DITEM_FLAG_t;
-
 
 typedef struct
 {
@@ -312,7 +365,7 @@ typedef struct
     u8  hotkey;
     u8  select;
     u8  *var;
-    u8  *name;
+    u8  const *name;
     func_t exec;
 } GC_DITEM_t;
 
@@ -372,14 +425,11 @@ typedef struct
 
 void gcSetLinkedMessage(u16 **ptr) __naked __z88dk_fastcall;
 
-u8 gcMessageBox(MB_TYPE_t type, char *header, char *message);
+BTN_TYPE_t gcMessageBox(MB_TYPE_t type, char *header, char *message);
 
-u8 gcWindowHandler(GC_WINDOW_t *wnd);
-
-void gcPrintSymbol(u8 x, u8 y, u8 sym, u8 attr) __naked;
+BTN_TYPE_t gcWindowHandler(GC_WINDOW_t *wnd);
 
 void gcDrawWindow(u8 x, u8 y, u8 width, u8 hight, u8 attr, u8 frame_type, u8 frame_attr) __naked;
-void gcGotoXY(u8 x, u8 y) __naked;
 u8 gcGetMessageLines(u8 *msg) __naked __z88dk_fastcall;
 u8 gcGetMessageMaxLength(u8 *msg) __naked __z88dk_fastcall;
 void gcPrintMessage(u8 *msg) __naked __z88dk_fastcall;
@@ -394,7 +444,6 @@ void gcPrintActiveDialog(GC_DIALOG_t *dlg) __naked __z88dk_fastcall;
 void gcPrintDialogItem(GC_DITEM_t *ditm) __naked __z88dk_fastcall;
 void gcPrintDialogCursor(GC_DITEM_t *ditm) __naked __z88dk_fastcall;
 void gcRestoreDialogCursor(GC_DITEM_t *ditm) __naked __z88dk_fastcall;
-
 u8 gcFindNextTabItem(GC_DIALOG_t *dlg) __naked __z88dk_fastcall;
 u8 gcFindPrevTabItem(GC_DIALOG_t *dlg) __naked __z88dk_fastcall;
 
@@ -402,6 +451,13 @@ u8 gcFindPrevTabItem(GC_DIALOG_t *dlg) __naked __z88dk_fastcall;
 u8 gcSimpleVMenu(GC_SVMENU_t *svmnu) __naked __z88dk_fastcall;
 void gcPrintSVMCursor(GC_SVMENU_t *svmnu) __naked __z88dk_fastcall;
 void gcRestoreSVMCursor(GC_SVMENU_t *svmnu) __naked __z88dk_fastcall;
+
+void gcGotoXY(u8 x, u8 y) __naked;
+void gcPrintSymbol(u8 x, u8 y, u8 sym, u8 attr) __naked;
+
+void gcPrintHex8(u8 num) __naked __z88dk_fastcall;
+void gcPrintHex16(u16 num) __naked __z88dk_fastcall;
+void gcPrintHex32(u32 num) __naked __z88dk_fastcall;
 
 void gcPrintDec8(u8 num) __naked __z88dk_fastcall;
 void gcPrintDec16(u16 num) __naked __z88dk_fastcall;

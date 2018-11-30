@@ -2,6 +2,7 @@
 //::                     Window System                      ::
 //::                  by dr_max^gc (c)2018                  ::
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
 char gcGetKey(void) __naked
 {
   __asm
