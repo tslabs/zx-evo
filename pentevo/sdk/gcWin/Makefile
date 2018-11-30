@@ -13,8 +13,8 @@ HEXEXT      := hex
 OUTEXT      := spg
 
 ASMFLAGS    := -g
-CXXFLAGS    := --std-c11 -mz80 --no-std-crt0 --opt-code-speed
-LNKFLAGS    := --std-c11 -mz80 --no-std-crt0 --opt-code-speed -Wl-b_CODE=0x0200 -Wl-b_DATA=0xB000
+CXXFLAGS    := --std-c11 -mz80 --opt-code-speed
+LNKFLAGS    := -mz80 --no-std-crt0 -Wl-b_CODE=0x0200 -Wl-b_DATA=0xB000
 
 #---------------------------------------------------------------------------------
 #DO NOT EDIT BELOW THIS LINE
