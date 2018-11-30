@@ -22,8 +22,8 @@ LNKFLAGS    := --std-c11 -mz80 --no-std-crt0 --opt-code-speed -Wl-b_CODE=0x0200 
 #---------------------------------------------------------------------------------
 #DO NOT EDIT BELOW THIS LINE
 #---------------------------------------------------------------------------------
-CXX         := c:\Tools\PROG\SDCC\bin\sdcc.exe
-ASM         := c:\Tools\PROG\SDCC\bin\sdasz80
+CXX         := sdcc
+ASM         := sdasz80
 
 ASMSRC      := $(wildcard src/*.$(ASMEXT))
 CXXSRC      := $(wildcard src/*.$(CXXEXT))
