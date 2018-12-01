@@ -37,7 +37,7 @@ directories:
 	@mkdir -p $(BUILDDIR)
 
 #Clean only Objects
-clean:
+clean cleanall:
 	# $(foreach obj, $(OBJECTS), $(RM) -f $(obj))
 	@$(RM) -rf $(BUILDDIR)
 	@$(RM) -rf $(TARGETDIR)

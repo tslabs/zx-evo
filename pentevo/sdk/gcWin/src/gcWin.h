@@ -117,7 +117,8 @@ typedef enum
 {
     GC_FRM_NONE   = ((u8)0x00),
     GC_FRM_SINGLE = ((u8)0x01),
-    GC_FRM_DOUBLE = ((u8)0x02),     //not supported in font
+    GC_FRM_DOUBLE = ((u8)0x02),     //cp866 symbols yet
+    GC_FRM_NOLOGO = ((u8)0x20),
     GC_FRM_NOHEADER = ((u8)0x40),
     GC_FRM_NOSHADOW = ((u8)0x80)
 } GC_FRM_TYPE_t;
@@ -462,3 +463,4 @@ void gcPrintDec16(u16 num) __naked __z88dk_fastcall;
 void gcPrintDec32(u32 num) __naked __z88dk_fastcall;
 
 void gcSetFontSym(u8 sym, u8 *udg) __naked;
+void gcSetPalette();

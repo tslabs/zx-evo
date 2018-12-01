@@ -74,7 +74,7 @@ void gcVars (void)
     DI_RADIOBUTTON          .equ    #09
     DI_LISTBOX              .equ    #10
     DI_LISTVIEW             .equ    #11 ; not yet
-    DI_NUMBER               .equ    #12 ; unsigned decimal 32/16/8
+    DI_NUMBER               .equ    #12
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     SYM_TRI                 .equ    #0xD8
     SYM_RADIO               .equ    #0xD0
@@ -154,16 +154,19 @@ win_attr:
     .db 0
 frm_attr:
     .db 0
+;;
 cur_x:
     .db 0
 cur_y:
     .db 0
+;;
 sym_attr:
     .db 0
 bg_attr:
     .db 0
 inv_attr:
     .db 0
+;;
 linked_ptr:
     .dw 0
 mnu_addr:
@@ -172,7 +175,9 @@ cur_dialog_ptr:
     .dw 0
 frame_set_addr:
     .dw 0
-
+;;
+ascbuff:
+    .ds 15
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;; configuration
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -209,19 +214,12 @@ frame_set1:
     .db 0x20,0xDB,0xDB,0xDB,0x04,0x05,0x06,0x07,0x08,0x09,0x0A,0xC4
 frame_set2:
     .db 0x20,0xC9,0xCD,0xBB,0xBA,0xBA,0xC8,0xCD,0xBC,0xC7,0xB6,0xC4
-//    .db 0x20, 0x0D, 0x0E, 0x0F, 0x10, 0x11, 0x12, 0x13, 0x14, 0xC7, 0xB6, 0xC4
 frame_set0_noheader:
     .db 0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0xC4
 frame_set1_noheader:
     .db 0x20,0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x0A,0xC4
 frame_set2_noheader:
     .db 0x20,0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x0A,0xC4
-;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-symbol_tri:
-    .db 0x01, 0x03, 0x07, 0x0F, 0x1F, 0x3F, 0x7F, 0xFF
-;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-ascbuff:
-    .ds 15
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     __endasm;
 }
@@ -498,7 +496,7 @@ svmnu_dn:
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 void gcRestoreSVMCursor(GC_SVMENU_t *svmnu) __naked __z88dk_fastcall
 {
-    svmnu;    // to avoid SDCC warning
+    svmnu;              // to avoid SDCC warning
 
     __asm
     LD_IXHL
@@ -530,7 +528,7 @@ restore_svm_cursor:
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 void gcPrintSVMCursor(GC_SVMENU_t *svmnu) __naked __z88dk_fastcall
 {
-    svmnu;    // to avoid SDCC warning
+    svmnu;              // to avoid SDCC warning
 
     __asm
     LD_IXHL
@@ -996,8 +994,7 @@ u8 gcFindPrevTabItem(GC_DIALOG_t *dlg) __naked __z88dk_fastcall
     LD_IXHL             ; IX - dialog item descriptor
 
 ;; check TABSTOP bit
-    ld a,<#di_flags (ix)
-    and #0x80
+    bit 7,<#di_flags (ix)
     pop ix
     jr nz,2$
     pop af
@@ -1041,8 +1038,7 @@ u8 gcFindNextTabItem(GC_DIALOG_t *dlg) __naked __z88dk_fastcall
     LD_IXHL             ; IX - dialog item descriptor
 
 ;; check TABSTOP bit
-    ld a,<#di_flags (ix)
-    and #0x80
+    bit 7,<#di_flags (ix)
     pop ix
     jr nz,2$
     pop af
@@ -1304,9 +1300,9 @@ print_item_listbox:
     ld e,a
     ld a,(cfg_listbox_unfocus_attr)
     ld c,a
-    ld a,#0xF4
+    ld a,#SYM_BTNDN
     call sym_prn
-    ld a,#0xF5
+    ld a,#SYM_BTNDN+1
     call sym_prn
     pop de
 
@@ -1710,7 +1706,7 @@ print_itm_d32:
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 void gcStoreWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall
 {
-    wnd;        // to avoid SDCC warning
+    wnd;                // to avoid SDCC warning
 
     __asm
     push ix
@@ -1726,7 +1722,7 @@ void gcStoreWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 void gcRestoreWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall
 {
-    wnd;        // to avoid SDCC warning
+    wnd;                // to avoid SDCC warning
 
     __asm
     push ix
@@ -1778,7 +1774,7 @@ void gcDrawWindow(u8 x, u8 y, u8 width, u8 hight, u8 attr, u8 frame_type, u8 fra
 ;; select frameset
     ld de,#frame_set0
     ld a,<#_ft (ix)
-    and #0x7F
+    and #0x1F
     or a
     jr z,9$
     ld de,#frame_set1
@@ -1847,13 +1843,12 @@ void gcDrawWindow(u8 x, u8 y, u8 width, u8 hight, u8 attr, u8 frame_type, u8 fra
     ld c,<#_fa (ix)
     call winfrm_prn
 
-;; check shadow flag
-    ld a,<#_ft (ix)
-    and #0x80
+;; check GC_FRM_NOSHADOW flag
+    bit 7,<#_ft (ix)
     jr nz,1$
 
 ;; print shadow
-    ld a,#0x01
+    ld a,#0x08
     call set_attr
     call set_attr
 1$:
@@ -1884,13 +1879,12 @@ void gcDrawWindow(u8 x, u8 y, u8 width, u8 hight, u8 attr, u8 frame_type, u8 fra
     ld a,#sym_right_bottom
     call winfrm_prn
 
-;; check shadow flag
-    ld a,<#_ft (ix)
-    and #0x80
+;; check GC_FRM_NOSHADOW flag
+    bit 7,<#_ft (ix)
     jr nz,2$
 
 ;; print shadow
-    ld a,#0x01
+    ld a,#0x08
     call set_attr
     call set_attr
 2$:
@@ -1903,18 +1897,16 @@ void gcDrawWindow(u8 x, u8 y, u8 width, u8 hight, u8 attr, u8 frame_type, u8 fra
     inc e
     inc e
 
-;; check shadow flag
-    ld a,<#_ft (ix)
-    and #0x80
+;; check GC_FRM_NOSHADOW flag
+    bit 7,<#_ft (ix)
     jr nz,3$
 
 ;; print bottom shadow
     ld b,<#_w (ix)
-    ld a,#0x01
+    ld a,#0x08
     call set_attr
     djnz .-3
 3$:
-
     pop ix
     ret
 
@@ -1945,7 +1937,7 @@ winfrm_prn:
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 void gcPrintWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall
 {
-    wnd;        // to avoid SDCC warning
+    wnd;                // to avoid SDCC warning
 
     __asm
     push ix
@@ -2001,8 +1993,7 @@ void gcPrintWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall
 ;;}
 
 ;; check GC_FRM_NOHEADER flag
-    ld a,<#frame_type (ix)
-    and #0x40
+    bit 6,<#frame_type (ix)
     jr nz,1$
 
 ;; set colors
@@ -2025,6 +2016,10 @@ void gcPrintWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall
     ld a,l
     or h
     call nz,strprnz_center
+
+;; check GC_FRM_NOLOGO flag
+    bit 5,<#frame_type (ix)
+    jr nz,1$
 
 ;; print spectrum stripes
     ld hl,#header_str
@@ -2069,6 +2064,7 @@ header_str:
     .db 0x08, 0x0E, 0x07, 0x0C, SYM_TRI
     .db 0x08, 0x0C, 0x07, 0x0D, SYM_TRI
     .db 0x00
+
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;; set attribute
 ;; i:
@@ -2327,7 +2323,7 @@ strlen:
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 u8 gcGetMessageMaxLength(u8 *msg) __naked __z88dk_fastcall
 {
-    msg;        // to avoid SDCC warning
+    msg;            // to avoid SDCC warning
 
     __asm
     push hl
@@ -2354,7 +2350,7 @@ u8 gcGetMessageMaxLength(u8 *msg) __naked __z88dk_fastcall
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 u8 gcGetMessageLines(u8 *msg) __naked __z88dk_fastcall
 {
-    msg;        // to avoid SDCC warning
+    msg;            // to avoid SDCC warning
 
     __asm
     ld b,#0
@@ -2375,8 +2371,8 @@ u8 gcGetMessageLines(u8 *msg) __naked __z88dk_fastcall
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 void gcPrintSymbol(u8 x, u8 y, u8 sym, u8 attr) __naked
 {
-    x, y;       // to avoid SDCC warning
-    sym, attr;  // to avoid SDCC warning
+    x, y;           // to avoid SDCC warning
+    sym, attr;      // to avoid SDCC warning
 
     __asm
     ld hl,#2
@@ -2395,7 +2391,7 @@ void gcPrintSymbol(u8 x, u8 y, u8 sym, u8 attr) __naked
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 void gcPrintMessage(u8 *msg) __naked __z88dk_fastcall
 {
-    msg;        // to avoid SDCC warning
+    msg;            // to avoid SDCC warning
 
     __asm
     ld a,(cur_x)
@@ -2409,7 +2405,7 @@ void gcPrintMessage(u8 *msg) __naked __z88dk_fastcall
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 void gcGotoXY(u8 x, u8 y) __naked
 {
-    x, y;       // to avoid SDCC warning
+    x, y;           // to avoid SDCC warning
     __asm
     ld hl,#2
     add hl,sp
@@ -2465,4 +2461,20 @@ void gcSetFontSym(u8 sym, u8 *udg) __naked
     djnz 1$
     ret
   __endasm;
+}
+
+//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+// setting dark-grey palette to color 8(for shadow) in palette 0x0F
+void gcSetPalette()
+{
+    __asm
+    ld a,#0x10
+    ld bc,#0x15AF
+    out (c),a
+    ld hl,#0x2108
+    ld ((0x0F*32)+(8*2)),hl
+    xor a
+    out (c),a
+    ret
+    __endasm;
 }
