@@ -207,7 +207,7 @@ module zports(
      || ((vg_port || vgsys_port) && (dos || open_vg))
         || ((loa==KJOY) && !dos && !open_vg)
      || (loa==KMOUSE)
-         || (((loa==SDCFG) || (loa==SDDAT)) && (!dos || vdos))
+         || ((loa==SDCFG) || (loa==SDDAT))
          || (loa==COMPORT);
 
 `ifdef IDE_HDD
@@ -566,9 +566,9 @@ module zports(
   wire sddat_rd;
   reg [1:0] spi_cs_n;
 
-  assign sdcfg_wr = ((loa==SDCFG) && iowr_s && (!dos || vdos));
-  assign sddat_wr = ((loa==SDDAT) && iowr_s && (!dos || vdos));
-  assign sddat_rd = ((loa==SDDAT) && iord_s);
+  assign sdcfg_wr = (loa==SDCFG) && iowr_s;
+  assign sddat_wr = (loa==SDDAT) && iowr_s;
+  assign sddat_rd = (loa==SDDAT) && iord_s;
 
   // SDCFG write - sdcs_n control
   always @(posedge clk)
