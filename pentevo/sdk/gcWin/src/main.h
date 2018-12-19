@@ -19,7 +19,7 @@ const GC_WINDOW_t wndMain =
 /*xy*/          0,0,
 /*wh*/          80,30,
 /*attr*/        (WIN_COL_WHITE<<4) | WIN_COL_BRIGHT_WHITE,
-/*frame_type*/  GC_FRM_NONE | GC_FRM_NOSHADOW | GC_FRM_NOLOGO,
+/*frame_type*/  GC_FRM_NONE | GC_FRM_NOHEADER | GC_FRM_NOSHADOW | GC_FRM_NOLOGO,
 /*frame_attr*/  (WIN_COL_WHITE<<4) | WIN_COL_BRIGHT_WHITE,
 /*header_txt*/  INK_BLACK
                 "Main Window",

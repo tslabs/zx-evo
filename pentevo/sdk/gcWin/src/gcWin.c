@@ -1796,13 +1796,20 @@ void gcDrawWindow(u8 x, u8 y, u8 width, u8 hight, u8 attr, u8 frame_type, u8 fra
     ld d,<#_y (ix)
     ld c,<#_fa (ix)
 
-;; print left-upper corner
-    ld a,#sym_left_upper
-    call winfrm_prn
+;; check GC_FRM_NOHEADER flag
+    bit 6,<#_ft (ix)
+    push af
+    call nz,print_window_row
+    pop af
+    jr nz,4$
 
     ld b,<#_w (ix)
     dec b
     dec b
+
+;; print left-upper corner
+    ld a,#sym_left_upper
+    call winfrm_prn
 
 ;; print upper bar
     ld a,#sym_upper
@@ -1816,48 +1823,13 @@ void gcDrawWindow(u8 x, u8 y, u8 width, u8 hight, u8 attr, u8 frame_type, u8 fra
 ;; y++
     inc d
 
-    ld b,<#_h (ix)
+4$: ld b,<#_h (ix)
     dec b
     dec b
 
 ;; y loop
-0$: push bc
-    ld e,<#_x (ix)
-    ld b,<#_w (ix)
-    dec b
-    dec b
-
-;; print left bar
-    ld c,<#_fa (ix)
-    ld a,#sym_left
-    call winfrm_prn
-
-;; print space
-    ld a,#sym_space
-    ld c,<#_a (ix)
-    call winfrm_prn
+    call print_window_row
     djnz .-3
-
-;; print right bar
-    ld a,#sym_right
-    ld c,<#_fa (ix)
-    call winfrm_prn
-
-;; check GC_FRM_NOSHADOW flag
-    bit 7,<#_ft (ix)
-    jr nz,1$
-
-;; print shadow
-    ld a,#0x08
-    call set_attr
-    call set_attr
-1$:
-
-;; y++
-    inc d
-
-    pop bc
-    djnz 0$
 
     ld e,<#_x (ix)
 
@@ -1908,6 +1880,45 @@ void gcDrawWindow(u8 x, u8 y, u8 width, u8 hight, u8 attr, u8 frame_type, u8 fra
     djnz .-3
 3$:
     pop ix
+    ret
+
+;; print window row
+print_window_row:
+    push bc
+    ld e,<#_x (ix)
+    ld b,<#_w (ix)
+    dec b
+    dec b
+
+;; print left bar
+    ld c,<#_fa (ix)
+    ld a,#sym_left
+    call winfrm_prn
+
+;; print space
+    ld a,#sym_space
+    ld c,<#_a (ix)
+    call winfrm_prn
+    djnz .-3
+
+;; print right bar
+    ld a,#sym_right
+    ld c,<#_fa (ix)
+    call winfrm_prn
+
+;; check GC_FRM_NOSHADOW flag
+    bit 7,<#_ft (ix)
+    jr nz,1$
+
+;; print shadow
+    ld a,#0x08
+    call set_attr
+    call set_attr
+1$:
+;; y++
+    inc d
+
+    pop bc
     ret
 
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
