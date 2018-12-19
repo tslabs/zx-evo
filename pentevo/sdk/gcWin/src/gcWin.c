@@ -788,40 +788,36 @@ dialog_ent_list:
 ;; store YX
     push de
 
-;; draw window
-;; count of listbox items
-    ld b,<#di_select (ix)
+;;gcDrawWindow {
     ld a,(cfg_listbox_unfocus_attr)
-    ld c,a
-01$:ei
-    halt
-    push bc
-    push de
-    ld a,(win_w)
-    ld b,a
-    ld a,#sym_left
-    call sym_prn
-    ld a,#0x20
-    call sym_prn
-    djnz .-3
-    ld a,#sym_right
-    call sym_prn
-    pop de
-    inc d
-    pop bc
-    djnz 01$
+    push af
+    inc sp
 
-    ld a,(win_w)
-    ld b,a
+;;set frame type
+    ld a,#0xC1
+    push af
+    inc sp
+
     ld a,(cfg_listbox_unfocus_attr)
-    ld c,a
-    ld a,#sym_left_bottom
-    call sym_prn
-    ld a,#sym_bottom
-    call sym_prn
-    djnz .-3
-    ld a,#sym_right_bottom
-    call sym_prn
+    push af
+    inc sp
+
+;;set width and hight of window
+    ld l,<#di_width (ix)
+;; count of listbox items
+    ld h,<#di_select (ix)
+    inc h
+    push hl
+
+;;set YX coords
+    push de
+
+    call _gcDrawWindow
+
+    ld hl,#7
+    add hl,sp
+    ld sp,hl
+;;}
 
 ;; restore YX
     pop de
