@@ -21,17 +21,21 @@ void gcVars (void)
     svm_current             .equ    #02
     svm_count               .equ    #03
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+;; struct GC_DLG_FLAG_t
+    dlgf_cursor             .equ    #0x80
+
 ;; struct GC_DIALOG
-    dlg_current             .equ    #00 ; byte  (current item)
-    dlg_all_count           .equ    #01 ; byte  (count of all items)
-    dlg_act_count           .equ    #02 ; byte  (count of active items)
-    dlg_cur_attr            .equ    #03 ; byte  (cursor attribute)
-    dlg_box_attr            .equ    #04 ; byte  (DI_SINGLEBOX attribute)
-    dlg_btn_focus_attr      .equ    #05 ; byte  (DI_BUTTON focus attribute)
-    dlg_btn_unfocus_attr    .equ    #06 ; byte  (DI_BUTTON unfocus attribute)
-    dlg_lbox_focus_attr     .equ    #07 ; byte  (DI_LISTBOX (and other) attribute)
-    dlg_lbox_unfocus_attr   .equ    #08 ; byte
-    dlg_items               .equ    #09 ; word  (pointer to items)
+    dlg_flag                .equ    #00 ; byte  (flags)
+    dlg_current             .equ    #01 ; byte  (current item)
+    dlg_all_count           .equ    #02 ; byte  (count of all items)
+    dlg_act_count           .equ    #03 ; byte  (count of active items)
+    dlg_cur_attr            .equ    #04 ; byte  (cursor attribute)
+    dlg_box_attr            .equ    #05 ; byte  (DI_SINGLEBOX attribute)
+    dlg_btn_focus_attr      .equ    #06 ; byte  (DI_BUTTON focus attribute)
+    dlg_btn_unfocus_attr    .equ    #07 ; byte  (DI_BUTTON unfocus attribute)
+    dlg_lbox_focus_attr     .equ    #08 ; byte  (DI_LISTBOX (and other) attribute)
+    dlg_lbox_unfocus_attr   .equ    #09 ; byte  (DI_LISTBOX focus attribute)
+    dlg_items               .equ    #10 ; word  (pointer to items)
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;; struct GC_WINDOW
 ;; window descriptor offsets
@@ -47,6 +51,9 @@ void gcVars (void)
     window_txt              .equ    #10 ; word
     menu_ptr                .equ    #12 ; word
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+;; struct GC_DITEM_FLAG_t;
+    dif_tabstop             .equ    #0x80
+
 ;; struct GC_DITEM_t
 ;; dialog item descriptor offsets
     di_type                 .equ    #00 ; byte
@@ -305,6 +312,7 @@ GC_DITEM_t *dlgItemList[4];
     gcPrintWindow(&wnd);
 
     dlg.current = 0;
+    dlg.flag.DLGF_CURSOR = 1;
     dlg.box_attr = (WIN_COL_RED<<4) | WIN_COL_BRIGHT_WHITE;
     dlg.btn_focus_attr = (WIN_COL_BRIGHT_YELLOW<<4) | WIN_COL_BLACK;
     dlg.btn_unfocus_attr = (WIN_COL_BRIGHT_WHITE<<4) | WIN_COL_BLACK;
@@ -620,6 +628,11 @@ dialog_lp1:
     push hl
 
     call _gcGetKey
+
+    ld a,<#dlg_flag (ix)
+    and #dlgf_cursor
+    jr nz,dialog_leftright
+
     ld a,l
     cp #KEY_INV
     jp z,dialog_pgdn
@@ -637,7 +650,19 @@ dialog_lp1:
     jp z,dialog_ent
     cp #KEY_SPACE
     jp z,dialog_sp
+    pop hl
+    jr dialog_lp1
 
+dialog_leftright:
+    ld a,l
+    cp #KEY_LEFT
+    jp z,dialog_up
+    cp #KEY_RIGHT
+    jp z,dialog_dn
+    cp #KEY_ENTER
+    jp z,dialog_ent
+    cp #KEY_SPACE
+    jp z,dialog_sp
     pop hl
     jr dialog_lp1
 
@@ -788,6 +813,7 @@ dialog_ent_list:
 ;; store YX
     push de
 
+;; build temp window onto stack
 ;;gcDrawWindow {
     ld a,(cfg_listbox_unfocus_attr)
     push af
@@ -827,8 +853,7 @@ dialog_ent_list:
 ;; count of listbox items
     ld b,<#di_select (ix)
     xor a
-dlg_ent_list_lp:
-    push af
+0$: push af
     push bc
     push de
     add a,a
@@ -847,7 +872,7 @@ dlg_ent_list_lp:
     pop bc
     pop af
     inc a
-    djnz dlg_ent_list_lp
+    djnz 0$
 
 ;; build temp vertical menu onto stack
     ld e,<#di_var (ix)
@@ -990,7 +1015,8 @@ u8 gcFindPrevTabItem(GC_DIALOG_t *dlg) __naked __z88dk_fastcall
     LD_IXHL             ; IX - dialog item descriptor
 
 ;; check TABSTOP bit
-    bit 7,<#di_flags (ix)
+    ld a,<#di_flags (ix)
+    and #dif_tabstop
     pop ix
     jr nz,2$
     pop af
@@ -1034,7 +1060,8 @@ u8 gcFindNextTabItem(GC_DIALOG_t *dlg) __naked __z88dk_fastcall
     LD_IXHL             ; IX - dialog item descriptor
 
 ;; check TABSTOP bit
-    bit 7,<#di_flags (ix)
+    ld a,<#di_flags (ix)
+    and #dif_tabstop
     pop ix
     jr nz,2$
     pop af

@@ -59,6 +59,7 @@ void main(void)
 
 // set videomode
     TS_VCONFIG = TS_VID_320X240 | TS_VID_TEXT;
+    gcSetPalette();
 
 // setup linked messages
     gcSetLinkedMessage(msg_arr);

@@ -118,6 +118,7 @@ typedef enum
     GC_FRM_NONE   = ((u8)0x00),
     GC_FRM_SINGLE = ((u8)0x01),
     GC_FRM_DOUBLE = ((u8)0x02),     //cp866 symbols yet
+    GC_FRM_NOGREETZ = ((u8)0x10),
     GC_FRM_NOLOGO = ((u8)0x20),
     GC_FRM_NOHEADER = ((u8)0x40),
     GC_FRM_NOSHADOW = ((u8)0x80)
@@ -251,6 +252,8 @@ typedef struct
     unsigned    DIF_TABSTOP :1;
 } GC_DITEM_FLAG_t;
 
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
 typedef struct
 {
     u8  flags;
@@ -382,10 +385,26 @@ typedef struct
 */
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+//:: DIALOG FLAGS
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+typedef struct
+{
+    unsigned    bit0        :1;
+    unsigned    bit1        :1;
+    unsigned    bit2        :1;
+    unsigned    bit3        :1;
+    unsigned    bit4        :1;
+    unsigned    bit5        :1;
+    unsigned    bit6        :1;
+    unsigned    DLGF_CURSOR :1;
+} GC_DLG_FLAG_t;
+
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 //:: DIALOG STRUCTURE
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 typedef struct
 {
+    GC_DLG_FLAG_t flag;     // dialog flags
     u8  current;            // current item
     u8  all_count;          // count of all items
     u8  act_count;          // count of acive items
