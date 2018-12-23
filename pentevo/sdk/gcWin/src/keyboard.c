@@ -13,25 +13,27 @@ char gcGetKey(void) __naked
 
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     KEY_TRU     .equ    0x04    ;(CS+3)
+    KEY_PGUP    .equ    0x04
     KEY_INV     .equ    0x05    ;(CS+4)
+    KEY_PGDN    .equ    0x05
     KEY_CAPS    .equ    0x06    ;(CS+2)
     KEY_EDIT    .equ    0x07    ;(CS+1)
     KEY_LEFT    .equ    0x08    ;(CS+5)
     KEY_RIGHT   .equ    0x09    ;(CS+8)
     KEY_DOWN    .equ    0x0A    ;(CS+6)
     KEY_UP      .equ    0x0B    ;(CS+7)
-    KEY_DELET   .equ    0x0C    ;(CS+0)
+    KEY_BACK    .equ    0x0C    ;(CS+0)
     KEY_ENTER   .equ    0x0D
     KEY_EXT     .equ    0x0E    ;(SS+CS)
     KEY_GRAPH   .equ    0x0F    ;(CS+9)
-    KEY_PGDN    .equ    0x10    ;(SS+A)
-    KEY_SSENT   .equ    0x11    ;(SS+ENTER)
-    KEY_SSSP    .equ    0x12    ;(SS+SPACE)
-    KEY_DEL     .equ    0x13    ;(SS+W)
-    KEY_INS     .equ    0x14    ;(SS+E)
-    KEY_PGUP    .equ    0x15    ;(SS+Q)
-    KEY_BREAK   .equ    0x16    ;(CS+SP)
-    KEY_CSENT   .equ    0x17    ;(CS+ENTER)
+    KEY_DEL     .equ    0x0F
+    KEY_INS     .equ    0x10    ;(SS+W)
+    KEY_HOME    .equ    0x11    ;(SS+Q)
+    KEY_END     .equ    0x12    ;(SS+E)
+    KEY_SSENT   .equ    0x13    ;(SS+ENTER)
+    KEY_SSSP    .equ    0x14    ;(SS+SPACE)
+    KEY_CSENT   .equ    0x15    ;(CS+ENTER)
+    KEY_BREAK   .equ    0x16    ;(CS+SPACE)
     KEY_SPACE   .equ    0x20
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 inkey:
@@ -254,7 +256,7 @@ keytab:
     .ascii  "HJKL"
     .db     KEY_CSENT
     .ascii  "YUIOP"
-    .db     KEY_DOWN,KEY_UP,KEY_RIGHT,KEY_GRAPH,KEY_DEL
+    .db     KEY_DOWN,KEY_UP,KEY_RIGHT,KEY_GRAPH,KEY_BACK
     .db     KEY_LEFT,KEY_INV,KEY_TRU,KEY_CAPS,KEY_EDIT
     .ascii  "TREWQGFDSAVCXZ"
     .db     0
@@ -267,7 +269,7 @@ keytab:
     .db     0x7F
     .ascii  ';"'
     .ascii  "&'()_%$#@!><"
-    .db     0x03,0x02,0x01
+    .db     KEY_END,KEY_INS,KEY_HOME
     .ascii  "}{\|~/?`:"
     .db     0
 ;; cyrillic cp866 table
@@ -281,7 +283,7 @@ keytab:
     .db     0x88,0x92,0x9C,0,KEY_BREAK              ; хрэ
     .db     0x90,0x8E,0x8B,0x84,KEY_CSENT           ; пнкд
     .db     0x8D,0x83,0x98,0x99,0x87                ; мцьыг
-    .db     KEY_DOWN,KEY_UP,KEY_RIGHT,KEY_GRAPH,KEY_DEL
+    .db     KEY_DOWN,KEY_UP,KEY_RIGHT,KEY_GRAPH,KEY_BACK
     .db     KEY_LEFT,KEY_INV,KEY_TRU,KEY_CAPS,KEY_EDIT
     .db     0x85,0x8A,0x93,0x96,0x89                ; ейсжи
     .db     0x8F,0x80,0x82,0x9B,0x94                ; оюбшт
@@ -291,11 +293,13 @@ keytab:
     .db     KEY_SSENT
     .db     0xE5,0xEA                               ; []
     .db     0x7F
-    .db     0xA6,0xED
-    .ascii  "&'()_%$#@!><"
-    .db     0x03,0x02,0x01
+    .db     0xA6,0xED                               ; Ф Щ
+    .ascii  "&'"
+    .db     0xE5,0xEA                               ; У З
+    .ascii  "_%$#@!><"
+    .db     KEY_END,KEY_INS,KEY_HOME
     .ascii  "}{\|~/?`"
-    .db     0xA6
+    .db     0xA6                                    ; ф
     .db     0
 
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::

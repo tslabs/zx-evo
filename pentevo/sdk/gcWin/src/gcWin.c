@@ -12,7 +12,7 @@ void gcVars (void)
 {
     __asm
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-;; must math with structures in gcWin.h
+;; !!! must math with structures in gcWin.h !!!
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;; struct GC_SVMENU
 ;; simple vertical menu offsets
@@ -167,6 +167,11 @@ cur_x:
 cur_y:
     .db 0
 ;;
+ecursor_x:
+    .db 0
+ecursor_y:
+    .db 0
+;;
 sym_attr:
     .db 0
 bg_attr:
@@ -178,7 +183,9 @@ linked_ptr:
     .dw 0
 mnu_addr:
     .dw 0
-cur_dialog_ptr:
+currrent_window_ptr:
+    .dw 0
+current_dialog_ptr:
     .dw 0
 frame_set_addr:
     .dw 0
@@ -592,7 +599,7 @@ u8 gcDialog(GC_DIALOG_t *dlg) __naked __z88dk_fastcall
 ;; save IX
     push ix
 
-    ld (cur_dialog_ptr),hl
+    ld (current_dialog_ptr),hl
 
     LD_IXHL
 ;; IX - dialog descriptor
@@ -634,9 +641,9 @@ dialog_lp1:
     jr nz,dialog_leftright
 
     ld a,l
-    cp #KEY_INV
+    cp #KEY_PGDN
     jp z,dialog_pgdn
-    cp #KEY_TRU
+    cp #KEY_PGUP
     jp z,dialog_pgup
     cp #KEY_DOWN
     jp z,dialog_dn
@@ -699,6 +706,8 @@ dialog_ent:
     LD_IXHL             ; IX - dialog item addr
 
     ld a,<#di_type (ix)
+    cp #DI_EDIT
+    jp z,dialog_ent_edit
     cp #DI_LISTBOX
     jp z,dialog_ent_list
     cp #DI_BUTTON
@@ -779,6 +788,60 @@ dialog_pgup:
 
     ld a,l
     ld <#dlg_current (ix),a
+    jp dialog_lp
+
+;;:::::::::::::::::::::::::::::
+;; IX - dialog item addr
+;; on stack: dialog descriptor
+dialog_ent_edit:
+;; save current window parameters
+    call save_window_parms
+
+;; set vars
+    ld a,<#di_width (ix)
+    ld (win_w),a
+    ld a,(win_x)
+    add a,<#di_x (ix)
+    ld e,a
+    ld (win_x),a
+    ld a,(win_y)
+    add a,<#di_y (ix)
+    ld (win_y),a
+    ld d,a
+
+    ld a,(cfg_listbox_unfocus_attr)
+    ld (win_attr),a
+    ld (sym_attr),a
+    ld a,(cfg_listbox_unfocus_attr)
+    ld (frm_attr),a
+
+;;gcEditString {
+    push de
+
+    ld a,<#di_width (ix)
+    push af
+    inc sp
+
+    ld l,<#di_name (ix)
+    ld h,<#di_name+1 (ix)
+    push hl
+
+    call _gcEditString
+
+    ld hl,#5
+    add hl,sp
+    ld sp,hl
+;;}
+
+;; restore window parameters
+    call restore_window_parms
+
+    pop ix
+;; IX - dialog descriptor
+
+    push ix
+    pop hl
+    call _gcPrintDialog
     jp dialog_lp
 
 ;;:::::::::::::::::::::::::::::
@@ -988,7 +1051,7 @@ dialog_sel_radio:
     ld d,<#di_var+1 (ix)
     ld a,<#di_select (ix)
     ld (de),a
-    ld hl,(cur_dialog_ptr)
+    ld hl,(current_dialog_ptr)
     call _gcPrintActiveDialog
     jr dialog_sp_exit
 ;;:::::::::::::::::::::::::::::
@@ -1149,9 +1212,7 @@ void gcPrintDialogCursor(GC_DITEM_t *ditm) __naked __z88dk_fastcall
     ld a,(cfg_listbox_focus_attr)
     jr 3$
 4$: cp #DI_EDIT
-    jr nz,5$
-    ld a,(cfg_listbox_focus_attr)
-    jr 3$
+    jr z,6$
 
 5$:
     ld a,(cfg_cur_attr)
@@ -1160,6 +1221,20 @@ void gcPrintDialogCursor(GC_DITEM_t *ditm) __naked __z88dk_fastcall
 
     pop ix
     ret
+
+6$: ld a,(cfg_listbox_unfocus_attr)
+    rrca
+    rrca
+    rrca
+    rrca
+    call set_attr
+    ld a,(cfg_listbox_focus_attr)
+    dec b
+60$:call set_attr
+    djnz 60$
+    pop ix
+    ret
+
     __endasm;
 }
 
@@ -1621,7 +1696,7 @@ print_item_number:
     jr z,print_itm_h8
     cp #2
     jr z,print_itm_h32
-
+;;::::::::::::::::::::::::::::::
 print_itm_h16:
     ld a,(hl)
     inc hl
@@ -1635,7 +1710,7 @@ print_itm_h16:
     ld hl,#ascbuff
     ld (hl),#0x0F
     jp strprnz
-
+;;::::::::::::::::::::::::::::::
 print_itm_h8:
     ld a,(hl)
     push ix
@@ -1646,7 +1721,7 @@ print_itm_h8:
     ld hl,#ascbuff
     ld (hl),#0x0F
     jp strprnz
-
+;;::::::::::::::::::::::::::::::
 print_itm_h32:
     push de
     ld e,(hl)
@@ -1667,7 +1742,7 @@ print_itm_h32:
     ld hl,#ascbuff
     ld (hl),#0x0F
     jp strprnz
-
+;;::::::::::::::::::::::::::::::
 print_itm_dec:
     ld a,c
     and #3
@@ -1675,7 +1750,7 @@ print_itm_dec:
     cp #1
     jr z,print_itm_d16
     jr print_itm_d32
-
+;;::::::::::::::::::::::::::::::
 print_itm_d8:
     push de
     ld l,(hl)
@@ -1691,7 +1766,7 @@ print_itm_d8:
     ld hl,#ascbuff
     ld (hl),#0x0F
     jp strprnz
-
+;;::::::::::::::::::::::::::::::
 print_itm_d16:
     push de
     ld a,(hl)
@@ -1712,7 +1787,7 @@ print_itm_d16:
     ld hl,#ascbuff
     ld (hl),#0x0F
     jp strprnz
-
+;;::::::::::::::::::::::::::::::
 print_itm_d32:
     ld e,(hl)
     inc hl
@@ -1723,6 +1798,164 @@ print_itm_d32:
     ld h,(hl)
     ld l,a
     jp _gcPrintDec32
+    __endasm;
+}
+
+//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+void gcEditString(u8 *str, u8 len, u8 x, u8 y) __naked
+{
+    str,len;                // to avoid SDCC warning
+    x,y;                    // to avoid SDCC warning
+
+    __asm
+;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+;; var offsets
+    _str    .equ #0
+    _len    .equ #2
+    _x      .equ #3
+    _y      .equ #4
+    _offset .equ #-3
+;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    push ix
+    dec sp      ;allocation local var _offset
+    ld ix,#5
+    add ix,sp
+;;
+edit_string_home:
+    xor a
+edit_string_lp1:
+    ld <#_offset (ix),a
+;;
+edit_string_lp:
+    call print_edit_string
+;;
+edit_string_lp0:
+    ei
+    halt
+    call _gcGetKey
+    ld a,l
+    cp #KEY_LEFT
+    jr z,edit_string_left
+    cp #KEY_RIGHT
+    jr z,edit_string_right
+    cp #KEY_BACK
+    jr z,edit_string_delete
+    cp #KEY_INS
+    jr z,edit_string_ins
+    cp #KEY_DEL
+    jr z,edit_string_del
+    cp #KEY_ENTER
+    jp z,edit_string_ent
+    cp #KEY_HOME
+    jr z,edit_string_home
+    cp #KEY_END
+    jr z,edit_string_end
+    cp #0x20
+    jr c,edit_string_lp0
+
+    ex af,af
+    call edit_string_insert_sym
+    ld l,<#_str (ix)
+    ld h,<#_str+1 (ix)
+    ld b,#0
+    ld c,<#_offset (ix)
+    add hl,bc
+    ex af,af
+    ld (hl),a
+;;::::::::::::::::::::::::::::::
+edit_string_right:
+    ld a,<#_offset (ix)
+    inc a
+    cp <#_len (ix)
+    jr nc,edit_string_lp
+    jr edit_string_lp1
+;;::::::::::::::::::::::::::::::
+edit_string_left:
+    ld a,<#_offset (ix)
+    dec a
+    jp m,edit_string_lp
+    jr edit_string_lp1
+;;::::::::::::::::::::::::::::::
+edit_string_end:
+    ld a,<#_len (ix)
+    dec a
+    jr edit_string_lp1
+;;::::::::::::::::::::::::::::::
+edit_string_delete:
+    ld a,<#_offset (ix)
+    dec a
+    jp m,0$
+    ld <#_offset (ix),a
+0$:
+;;::::::::::::::::::::::::::::::
+edit_string_del:
+    call edit_string_delete_sym
+    dec hl
+    ld (hl),#0x20
+    jr edit_string_lp
+;;::::::::::::::::::::::::::::::
+edit_string_ins:
+    call edit_string_insert_sym
+    inc hl
+    inc hl
+    ld (hl),#0x20
+    jr edit_string_lp
+;;::::::::::::::::::::::::::::::
+edit_string_delete_sym:
+    ld l,<#_str (ix)
+    ld h,<#_str+1 (ix)
+    ld c,<#_offset (ix)
+    ld b,#0
+    add hl,bc
+    ld e,l
+    ld d,h
+    inc hl
+    ld a,<#_len (ix)
+    dec a
+    sub <#_offset (ix)
+    ret z
+    ld c,a
+    ldir
+    ret
+;;::::::::::::::::::::::::::::::
+edit_string_insert_sym:
+    ld l,<#_str (ix)
+    ld h,<#_str+1 (ix)
+    ld c,<#_len (ix)
+    dec c
+    ld b,#0
+    add hl,bc
+    ld e,l
+    ld d,h
+    dec hl
+    ld a,<#_len (ix)
+    sub <#_offset (ix)
+    ld c,a
+    lddr
+    ret
+;;::::::::::::::::::::::::::::::
+print_edit_string:
+    ld l,<#_str (ix)
+    ld h,<#_str+1 (ix)
+    ld e,<#_x (ix)
+    ld d,<#_y (ix)
+    push de
+    call strprnz
+    pop de
+    ld a,<#_offset (ix)
+    add a,e
+    ld e,a
+    ld a,(cfg_listbox_focus_attr)
+    rrca
+    rrca
+    rrca
+    rrca
+    jp set_attr
+;;::::::::::::::::::::::::::::::
+edit_string_ent:
+    inc sp      ;free local var
+    pop ix
+    ret
     __endasm;
 }
 

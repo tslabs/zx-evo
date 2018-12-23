@@ -471,6 +471,7 @@ void gcRestoreSVMCursor(GC_SVMENU_t *svmnu) __naked __z88dk_fastcall;
 
 void gcGotoXY(u8 x, u8 y) __naked;
 void gcPrintSymbol(u8 x, u8 y, u8 sym, u8 attr) __naked;
+void gcEditString(u8 *str, u8 len, u8 x, u8 y) __naked;
 
 /* Print numbers*/
 void gcPrintHex8(u8 num) __naked __z88dk_fastcall;
