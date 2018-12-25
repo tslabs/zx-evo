@@ -3,6 +3,9 @@
 //::                  by dr_max^gc (c)2018                   ::
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
+#ifndef GCWIN_H
+#define GCWIN_H
+
 #define SCREEN_WIDTH    80
 #define SCREEN_HIGHT    30
 
@@ -229,20 +232,12 @@ typedef struct
     unsigned        DIV_TEXT    :1; // not yet
 } GC_DITEM_VAR_t;
 
-/*
-описатель флагов
-    DIF_GRAY - неактивный элемент
-    DIF_TABSTOP - стоп-флаг для навигации по клавише TAB (EXT)
-                  (!WARNING! обязательно наличие одного флага)
-    DIF_RIGHT - выравнивание вправо по width
-*/
-
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 //:: DIALOG ITEM FLAGS
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 typedef struct
 {
-    unsigned    DIF_GRAY    :1;     // not yet
+    unsigned    DIF_GRAY    :1;
     unsigned    bit1        :1;
     unsigned    bit2        :1;
     unsigned    bit3        :1;
@@ -345,6 +340,33 @@ column_list - указатель на массив указателей на данные колонок
  * select - должен быть 0x00 (используется для анимации нажатия)
  * name - название элемента
  */
+
+/*
+Описатель элемента диалога
+    id - идентификатор элемента;
+            используется для возвращения
+            нажатой кнопки в диалоге;
+    x,y -  координаты элемента;
+    width - ширина элемента;
+            для элемента checkbox ширина просчитывается автоматически;
+    hight - высота элемента;
+            используется для элемента singlebox;
+            в других элементах значение игнорируется;
+    flags - флаги элемента;
+            DIF_GRAY - неактивный элемент;
+            DIF_TABSTOP - стоп-флаг для навигации по клавише TAB (EXT)
+                            и PgUp PgDn;
+                  (!WARNING! обязательно наличие одного флага)
+            DIF_RIGHT - выравнивание вправо по width;
+    vartype - тип переменной;
+    hotkey - горячая клавиша;
+    select - используется в зависимости от типа элемента;
+    var - указатель на переменную;
+    name - название элемента;
+    exec - указатель на функцию, вызываемую при выборе элемента;
+            может использоваться для изменения активности/неактивности
+            элемента выставлением бита DIF_GRAY;
+*/
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 //:: DIALOG ITEM STRUCTURE
@@ -463,6 +485,8 @@ void gcPrintDialogCursor(GC_DITEM_t *ditm) __naked __z88dk_fastcall;
 void gcRestoreDialogCursor(GC_DITEM_t *ditm) __naked __z88dk_fastcall;
 u8 gcFindNextTabItem(GC_DIALOG_t *dlg) __naked __z88dk_fastcall;
 u8 gcFindPrevTabItem(GC_DIALOG_t *dlg) __naked __z88dk_fastcall;
+u8 gcFindNextItem(GC_DIALOG_t *dlg) __naked __z88dk_fastcall;
+u8 gcFindPrevItem(GC_DIALOG_t *dlg) __naked __z88dk_fastcall;
 
 /* Simple Vertical Menu */
 u8 gcSimpleVMenu(GC_SVMENU_t *svmnu) __naked __z88dk_fastcall;
@@ -484,3 +508,5 @@ void gcPrintDec32(u32 num) __naked __z88dk_fastcall;
 
 void gcSetFontSym(u8 sym, u8 *udg) __naked;
 void gcSetPalette();
+
+#endif /* GCWIN_H */

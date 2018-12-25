@@ -22,7 +22,7 @@ void gcVars (void)
     svm_count               .equ    #03
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;; struct GC_DLG_FLAG_t
-    dlgf_cursor             .equ    #0x80
+    dlgf_cursor_mask        .equ    #0x80
 
 ;; struct GC_DIALOG
     dlg_flag                .equ    #00 ; byte  (flags)
@@ -52,7 +52,8 @@ void gcVars (void)
     menu_ptr                .equ    #12 ; word
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;; struct GC_DITEM_FLAG_t;
-    dif_tabstop             .equ    #0x80
+    dif_grey_mask           .equ    #0x01
+    dif_tabstop_mask        .equ    #0x80
 
 ;; struct GC_DITEM_t
 ;; dialog item descriptor offsets
@@ -75,7 +76,7 @@ void gcVars (void)
     DI_TEXT                 .equ    #00
     DI_HDIV                 .equ    #01
     DI_SINGLEBOX            .equ    #02
-    DI_EDIT                 .equ    #04 ; not yet
+    DI_EDIT                 .equ    #04
     DI_BUTTON               .equ    #07
     DI_CHECKBOX             .equ    #08
     DI_RADIOBUTTON          .equ    #09
@@ -167,11 +168,6 @@ cur_x:
 cur_y:
     .db 0
 ;;
-ecursor_x:
-    .db 0
-ecursor_y:
-    .db 0
-;;
 sym_attr:
     .db 0
 bg_attr:
@@ -181,11 +177,11 @@ inv_attr:
 ;;
 linked_ptr:
     .dw 0
-mnu_addr:
+_current_menu_ptr::
     .dw 0
-currrent_window_ptr:
+_current_window_ptr::
     .dw 0
-current_dialog_ptr:
+_current_dialog_ptr::
     .dw 0
 frame_set_addr:
     .dw 0
@@ -207,6 +203,8 @@ cfg_listbox_focus_attr:
     .db 0b10011111
 cfg_listbox_unfocus_attr:
     .db 0b00010111
+cfg_grey_attr:
+    .db 0x08
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ; window frame symbols array
 ;  space            +00
@@ -302,6 +300,7 @@ GC_DITEM_t *dlgItemList[4];
 
     i = gcGetMessageLines(message);
     len = gcGetMessageMaxLength(message) + 10;
+    if (len<40) len = 40;
     x = (SCREEN_WIDTH - len - 2)>>1;
     y = (SCREEN_HIGHT - i - 6)>>1;
 
@@ -488,9 +487,9 @@ svmnu_up:
     ld a,<#svm_current (ix)
     inc a
     cp <#svm_count (ix)
-    jr nz,1$
+    jr nz,0$
     xor a
-1$: ld <#svm_current (ix),a
+0$: ld <#svm_current (ix),a
     call print_svm_cursor
     jr svmnu_lp
 
@@ -498,11 +497,10 @@ svmnu_dn:
     call restore_svm_cursor
     ld a,<#svm_current (ix)
     dec a
-    cp #0xFF
-    jr nz,2$
+    jp p,0$
     ld a,<#svm_count (ix)
     dec a
-2$: ld <#svm_current (ix),a
+0$: ld <#svm_current (ix),a
     call print_svm_cursor
     jr svmnu_lp
     __endasm;
@@ -526,14 +524,15 @@ restore_svm_cursor:
     dec a
     ld e,a              ; X coord
 
-    ld a,(win_w)
-    ld b,a
 ;; set left sym attr
     ld a,(frm_attr)
     call set_attr
+
+    ld a,(win_w)
+    ld b,a
     ld a,(win_attr)
-    call set_attr
-    djnz .-#3
+    call set_attr_line
+
 ;; set right sym attr
     ld a,(frm_attr)
     jp set_attr
@@ -558,9 +557,6 @@ print_svm_cursor:
     dec a
     ld e,a              ; X coord
 
-    ld a,(win_w)
-    ld b,a
-
 ;; set left sym attr
     ld a,<#svm_attr (ix)
     and #0xF0
@@ -570,14 +566,11 @@ print_svm_cursor:
     or c
     call set_attr
 
-1$: call get_attr
-    and #0x0F
-    ld c,a
+    ld a,(win_w)
+    ld b,a
     ld a,<#svm_attr (ix)
     and #0xF0
-    or c
-    call set_attr
-    djnz 1$
+    call set_attr_line
 
 ;; set right sym attr
     ld a,<#svm_attr (ix)
@@ -599,7 +592,7 @@ u8 gcDialog(GC_DIALOG_t *dlg) __naked __z88dk_fastcall
 ;; save IX
     push ix
 
-    ld (current_dialog_ptr),hl
+    ld (_current_dialog_ptr),hl
 
     LD_IXHL
 ;; IX - dialog descriptor
@@ -637,7 +630,7 @@ dialog_lp1:
     call _gcGetKey
 
     ld a,<#dlg_flag (ix)
-    and #dlgf_cursor
+    and #dlgf_cursor_mask
     jr nz,dialog_leftright
 
     ld a,l
@@ -742,25 +735,22 @@ dialog_dn:
     pop hl
 ;; HL - dialog item address
     call _gcRestoreDialogCursor
-    ld a,<#dlg_current (ix)
-    inc a
-    cp <#dlg_act_count (ix)
-    jr nz,1$
-    xor a
-1$: ld <#dlg_current (ix),a
+    push ix
+    pop hl
+    call _gcFindNextItem
+    ld a,l
+    ld <#dlg_current (ix),a
     jp dialog_lp
 ;;:::::::::::::::::::::::::::::
 dialog_up:
     pop hl
 ;; HL - dialog item address
     call _gcRestoreDialogCursor
-    ld a,<#dlg_current (ix)
-    dec a
-    cp #0xFF
-    jr nz,2$
-    ld a,<#dlg_act_count (ix)
-    dec a
-2$: ld <#dlg_current (ix),a
+    push ix
+    pop hl
+    call _gcFindPrevItem
+    ld a,l
+    ld <#dlg_current (ix),a
     jp dialog_lp
 ;;:::::::::::::::::::::::::::::
 dialog_pgdn:
@@ -775,7 +765,6 @@ dialog_pgdn:
     ld a,l
     ld <#dlg_current (ix),a
     jp dialog_lp
-
 ;;:::::::::::::::::::::::::::::
 dialog_pgup:
     pop hl
@@ -815,7 +804,8 @@ dialog_ent_edit:
     ld a,(cfg_listbox_unfocus_attr)
     ld (frm_attr),a
 
-;;gcEditString {
+;;gcEditString(u8 *str, u8 len, u8 x, u8 y) {
+;; push XY coords
     push de
 
     ld a,<#di_width (ix)
@@ -839,9 +829,6 @@ dialog_ent_edit:
     pop ix
 ;; IX - dialog descriptor
 
-    push ix
-    pop hl
-    call _gcPrintDialog
     jp dialog_lp
 
 ;;:::::::::::::::::::::::::::::
@@ -877,7 +864,7 @@ dialog_ent_list:
     push de
 
 ;; build temp window onto stack
-;;gcDrawWindow {
+;;gcDrawWindow(u8 x, u8 y, u8 width, u8 hight, u8 attr, u8 frame_type, u8 frame_attr) {
     ld a,(cfg_listbox_unfocus_attr)
     push af
     inc sp
@@ -1000,10 +987,26 @@ dialog_sp:
 
     LD_IXHL             ; IX - dialog item addr
 
-;; TODO exec
+;; calling function
     ld e,<#di_exec (ix)
     ld d,<#di_exec+1 (ix)
+    ld a,e
+    or d
+    jr z,1$
 
+    push ix
+    push hl
+
+    ld hl,#0$
+    push hl
+    ex de,hl
+    jp (hl)
+
+0$:
+    pop hl
+    pop ix
+
+1$:
     ld a,<#di_type (ix)
     cp #DI_RADIOBUTTON
     jr z,dialog_sel_radio
@@ -1051,7 +1054,7 @@ dialog_sel_radio:
     ld d,<#di_var+1 (ix)
     ld a,<#di_select (ix)
     ld (de),a
-    ld hl,(current_dialog_ptr)
+    ld hl,(_current_dialog_ptr)
     call _gcPrintActiveDialog
     jr dialog_sp_exit
 ;;:::::::::::::::::::::::::::::
@@ -1079,7 +1082,7 @@ u8 gcFindPrevTabItem(GC_DIALOG_t *dlg) __naked __z88dk_fastcall
 
 ;; check TABSTOP bit
     ld a,<#di_flags (ix)
-    and #dif_tabstop
+    and #dif_tabstop_mask
     pop ix
     jr nz,2$
     pop af
@@ -1124,13 +1127,92 @@ u8 gcFindNextTabItem(GC_DIALOG_t *dlg) __naked __z88dk_fastcall
 
 ;; check TABSTOP bit
     ld a,<#di_flags (ix)
-    and #dif_tabstop
+    and #dif_tabstop_mask
     pop ix
     jr nz,2$
     pop af
     jr 0$
 
 2$: pop af
+    pop ix
+    ld l,a
+    ret
+    __endasm;
+}
+
+//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+u8 gcFindNextItem(GC_DIALOG_t *dlg) __naked __z88dk_fastcall
+{
+    dlg;                    // to avoid SDCC warning
+
+    __asm
+    push ix
+
+    LD_IXHL                 ; IX - dialog descriptor
+
+    ld a,<#dlg_current (ix)
+0$: inc a
+    cp <#dlg_act_count (ix)
+    jr nz,1$
+    xor a
+    pop ix
+    ld l,a
+    ret
+
+1$: push af
+    push ix
+    call get_dialog_item_addr
+    LD_IXHL             ; IX - dialog item descriptor
+
+;; check GREY bit
+    ld a,<#di_flags (ix)
+    and #dif_grey_mask
+    pop ix
+    jr z,2$
+    pop af
+    jr 0$
+
+2$: pop af
+    pop ix
+    ld l,a
+    ret
+    __endasm;
+}
+
+//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+u8 gcFindPrevItem(GC_DIALOG_t *dlg) __naked __z88dk_fastcall
+{
+    dlg;                    // to avoid SDCC warning
+
+    __asm
+    push ix
+
+    LD_IXHL                 ; IX - dialog descriptor
+
+    ld a,<#dlg_current (ix)
+0$: or a
+    jr z,3$
+    dec a
+1$: push af
+    push ix
+    call get_dialog_item_addr
+    LD_IXHL             ; IX - dialog item descriptor
+
+;; check GREY bit
+    ld a,<#di_flags (ix)
+    and #dif_grey_mask
+    pop ix
+    jr z,2$
+    pop af
+    jr 0$
+
+2$: pop af
+    pop ix
+    ld l,a
+    ret
+
+3$: ld a,<#dlg_act_count (ix)
+    dec a
     pop ix
     ld l,a
     ret
@@ -1230,8 +1312,7 @@ void gcPrintDialogCursor(GC_DITEM_t *ditm) __naked __z88dk_fastcall
     call set_attr
     ld a,(cfg_listbox_focus_attr)
     dec b
-60$:call set_attr
-    djnz 60$
+    call nz,set_attr_line
     pop ix
     ret
 
@@ -1375,12 +1456,16 @@ print_item_edit:
     call print_item_text
     pop de
     ld b,<#di_width (ix)
+    ld a,<#di_flags (ix)
+    and #dif_grey_mask
     ld a,(cfg_listbox_unfocus_attr)
-    ld (sym_attr),a
+    jp z,set_attr_line
+    and #0xF0
     ld c,a
-    call set_attr
-    djnz .-3
-    ret
+    ld a,(cfg_grey_attr)
+    and #0x0F
+    or c
+    jp set_attr_line
 
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;; i:
@@ -1409,8 +1494,7 @@ print_item_listbox:
     ld a,(cfg_listbox_unfocus_attr)
     ld (sym_attr),a
     ld b,<#di_width (ix)
-    call set_attr
-    djnz .-3
+    call set_attr_line
     pop de
 
     ld a,#sym_left
@@ -1464,6 +1548,10 @@ print_item_hdiv:
 print_item_check:
     ld c,<#di_var (ix)
     ld b,<#di_var+1 (ix)
+    ld a,<#di_flags (ix)
+    and #dif_grey_mask
+    jr nz,print_item_check_grey
+
     ld a,(bc)
     or a
     ld a,#SYM_CHECK
@@ -1476,6 +1564,36 @@ print_item_check:
     call sym_prn
     pop hl
     jp print_item_text
+
+print_item_check_grey:
+    push de
+    ld a,(bc)
+    or a
+    ld a,#SYM_CHECK
+    jr z,.+2+2
+    add a,#2
+    ld c,#8
+    push hl
+    call sym_prn
+    inc a
+    call sym_prn
+    pop hl
+    call print_item_text
+
+    ld a,(tmp_win_x)
+    add a,<#di_x (ix)
+    ld c,a
+    ld a,e
+    sub c
+    ld b,a
+
+    pop de
+    ld a,(cfg_grey_attr)
+    ld c,a
+    ld a,(win_attr)
+    and #0xF0
+    or c
+    jp set_attr_line
 
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;; i:
@@ -1529,8 +1647,7 @@ print_item_singlebox:
     dec b
     dec b
     ld a,#0xC4
-    call sym_prn
-    djnz .-3
+    call sym_prns
 
 ;; print right-upper corner
     ld a,#0xBF
@@ -1565,8 +1682,7 @@ print_item_singlebox:
     dec b
     dec b
     ld a,#0xC4
-    call sym_prn
-    djnz .-3
+    call sym_prns
 ;; print right-bottom corner
     ld a,#0xD9
     call sym_prn
@@ -1608,8 +1724,7 @@ print_item_button:
     ld a,(cfg_btn_unfocus_attr)
     ld c,a
     ld a,#0x20
-    call sym_prn
-    djnz .-3
+    call sym_prns
     ld a,(win_attr)
     ld c,a
     ld a,#0xDC
@@ -1631,9 +1746,7 @@ print_item_button:
     ld a,(win_attr)
     ld c,a
     ld a,#0xDF
-    call sym_prn
-    djnz .-3
-    ret
+    jp sym_prns
 
 ;; pressed button
 10$:
@@ -1647,8 +1760,7 @@ print_item_button:
     ld a,(cfg_btn_unfocus_attr)
     ld c,a
     ld a,#0x20
-    call sym_prn
-    djnz .-3
+    call sym_prns
     ld a,(win_attr)
     ld c,a
     ld a,#0x20
@@ -1672,9 +1784,7 @@ print_item_button:
     ld a,(win_attr)
     ld c,a
     ld a,#0x20
-    call sym_prn
-    djnz .-3
-    ret
+    jp sym_prns
 
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 print_item_number:
@@ -2132,8 +2242,8 @@ void gcDrawWindow(u8 x, u8 y, u8 width, u8 hight, u8 attr, u8 frame_type, u8 fra
 ;; print bottom shadow
     ld b,<#_w (ix)
     ld a,#0x08
-    call set_attr
-    djnz .-3
+    call set_attr_line
+
 3$:
     pop ix
     ret
@@ -2230,7 +2340,8 @@ void gcPrintWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall
     ld (win_h),a
     ld c,<#menu_ptr (ix)
     ld b,<#menu_ptr + 1 (ix)
-    ld (mnu_addr),bc
+    ld (_current_menu_ptr),bc
+    ld (_current_window_ptr),hl
 
     ld a,<#frame_attr (ix)
     ld (frm_attr),a
@@ -2333,6 +2444,20 @@ header_str:
     .db 0x00
 
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+;; set attribute line
+;; i:
+;;   A - attribute
+;;   B - length
+;;   DE - YX coords
+;; o:
+;;   E++
+;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+set_attr_line:
+    call set_attr
+    djnz .-3
+    ret
+
+;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;; set attribute
 ;; i:
 ;;   A - attribute
@@ -2378,11 +2503,26 @@ winsym_prn:
     ret
 
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+;; print multiple symbols
+;; i:
+;;   A - symbol
+;;   C - attribute
+;;   B - count
+;;   DE - YX coords
+;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+sym_prns:
+    call sym_prn
+    djnz .-3
+    ret
+
+;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;; print symbol
 ;; i:
 ;;   A - symbol
 ;;   C - attribute
 ;;   DE - YX coords
+;; o:
+;;   E++
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 sym_prn:
     ld h,d

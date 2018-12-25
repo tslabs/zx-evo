@@ -2,6 +2,7 @@
 //::                     Window System                      ::
 //::                  by dr_max^gc (c)2018                  ::
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+#include "defs.h"
 
 char gcGetKey(void) __naked
 {
@@ -315,4 +316,18 @@ keymod: .db 0b00010010  ; keyboard mode
                         ; bit 4 - ENABLE CAPS LOCK SWITCH
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     __endasm;
+}
+
+void gcWaitKey(u8 key)
+{
+    do {
+    __asm__("ei\n halt\n");
+    } while (gcGetKey() != key);
+}
+
+void gcWaitNoKey(void)
+{
+    do {
+    __asm__("ei\n halt\n");
+    } while (gcGetKey());
 }
