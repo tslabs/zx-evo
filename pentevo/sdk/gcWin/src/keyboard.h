@@ -23,3 +23,5 @@
 #define KEY_SPACE   0x20
 
 char gcGetKey(void) __naked;
+void gcWaitKey(u8 key);
+void gcWaitNoKey(void);

@@ -2,12 +2,13 @@
 //::                     Window System                       ::
 //::                  by dr_max^gc (c)2018                   ::
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
 #include <stdio.h>
-#include <string.h>
 #include "defs.h"
 #include "tsio.h"
 #include "keyboard.h"
 #include "gcWin.h"
+#include "dialogs.h"
 #include "main.h"
 
 #define EIHALT __asm__("ei\n halt\n");
@@ -24,7 +25,9 @@ u8  itmVarCB21 = 0;
 // checkbox 2.2 var
 u8  itmVarCB22 = 0;
 // checkbox 3 var
-u8  itmVarCB3 = 1;
+u8  itmVarCB3 = 0;
+// checkbox 4 var
+u8 itmVarCB4 = 0;
 // radiobutton var
 u8 itmVarRB1 = 0;
 // listbox var
@@ -36,17 +39,22 @@ u16 itmNUM2 = (u16)-1;
 u8 itmNUM3 = 255;
 
 char c;
-u8 rb, lb, cb11, cb12;
+u8 rb, lb, cb11, cb12, cb21, cb22, cb3, cb4;
 u8 pcx, pcx0, pcy, pca, pcst;   //for putchar
 
 BTN_TYPE_t select;
 
-void exec()
+static void func_cb3()
 {
-    while (1)
-    {
+    itmVarCB11 = ~itmVarCB11;
+    itmVarCB12 = ~itmVarCB12;
+    gcPrintActiveDialog(&dlgTest);
+}
 
-    }
+static void func_cb4()
+{
+    itmItemED1.flags.DIF_GRAY = (itmVarCB4&1);
+    gcPrintActiveDialog(&dlgTest);
 }
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -64,19 +72,25 @@ void main(void)
 // setup linked messages
     gcSetLinkedMessage(msg_arr);
 
-//    while(gcGetKey() != KEY_ENTER);
-
     gcPrintWindow(&wndMain);
+
     gcPrintWindow(&wndTest1);
+    gcWaitKey(KEY_ENTER);
+
     gcPrintWindow(&wndTest2);
+    gcWaitKey(KEY_ENTER);
 
     BORDER = 4;
 
-    rb = cb11 = cb12 = lb = 0;
+    rb = cb11 = cb12 = cb21 = cb22 = cb3 = cb4 = lb = 0;
 
     itmVarRB1 = rb;
     itmVarCB11 = cb11;
     itmVarCB12 = cb12;
+    itmVarCB21 = cb21;
+    itmVarCB22 = cb22;
+    itmVarCB3 = cb3;
+    itmVarCB4 = cb4;
     itmVarLBX11 = lb;
 
     select = gcWindowHandler(&wndDialog);
@@ -86,6 +100,10 @@ void main(void)
             rb = itmVarRB1;
             cb11 = itmVarCB11;
             cb12 = itmVarCB12;
+            cb21 = itmVarCB21;
+            cb22 = itmVarCB22;
+            cb3 = itmVarCB3;
+            cb4 = itmVarCB4;
             lb = itmVarLBX11;
     }
 
@@ -107,7 +125,7 @@ void main(void)
     {
         EIHALT
         c = gcGetKey();
-        if(c > 0x00) putchar(c);
+        if(c >= 0x20) putchar(c);
         if(pcx == 80) pcx = 0;
     }
 

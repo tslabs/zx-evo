@@ -3,5 +3,4 @@
 //::                  by dr_max^gc (c)2018                   ::
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-static void func_cb3();
-static void func_cb4();
+#include "defs.h"
