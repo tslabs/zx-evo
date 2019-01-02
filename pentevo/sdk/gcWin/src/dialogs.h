@@ -1,6 +1,6 @@
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 //::                     Window System                       ::
-//::                  by dr_max^gc (c)2018                   ::
+//::               by dr_max^gc (c)2018-2019                 ::
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 // SIMPLE VERTICAL MENU
@@ -19,7 +19,7 @@ const GC_WINDOW_t wndMain =
 /*xy*/          0,0,
 /*wh*/          80,30,
 /*attr*/        (WIN_COL_WHITE<<4) | WIN_COL_BRIGHT_WHITE,
-/*frame_type*/  GC_FRM_SINGLE | GC_FRM_NOSHADOW | GC_FRM_NOLOGO,
+/*frame_type*/  GC_FRM_NONE | GC_FRM_NOHEADER | GC_FRM_NOSHADOW | GC_FRM_NOLOGO,
 /*frame_attr*/  (WIN_COL_WHITE<<4) | WIN_COL_BRIGHT_WHITE,
 /*header_txt*/  INK_BLACK
                 "Main Window",
@@ -301,7 +301,7 @@ const GC_DITEM_t itmItemCB3 =
 /*hotkey*/      0,
 /*select*/      0,
 /*var*/         (u8)&itmVarCB3,
-/*name*/        MARK_LINK"\x0""3",
+/*name*/        "Enable radiobuttons",
 /*handler*/     func_cb3
 };
 
@@ -335,7 +335,7 @@ const GC_DITEM_t itmItemCB22 =
 /*handler*/     0
 };
 
-const GC_DITEM_t itmItemCB4 =
+GC_DITEM_t itmItemCB4 =
 {
 /*type*/        DI_CHECKBOX,
 /*id*/          0,
@@ -350,13 +350,13 @@ const GC_DITEM_t itmItemCB4 =
 /*handler*/     func_cb4
 };
 
-const GC_DITEM_t itmItemRB1 =
+GC_DITEM_t itmItemRB1 =
 {
 /*type*/        DI_RADIOBUTTON,
 /*id*/          0,
 /*xy*/          1,8,
 /*wh*/          0,0,
-/*flags*/       {0,0,0,0,0,0,0,1},
+/*flags*/       {1,0,0,0,0,0,0,1},
 /*vartype*/     {0,0,0,0,0,0},
 /*hotkey*/      0,
 /*select*/      0,
@@ -365,13 +365,13 @@ const GC_DITEM_t itmItemRB1 =
 /*handler*/     0
 };
 
-const GC_DITEM_t itmItemRB2 =
+GC_DITEM_t itmItemRB2 =
 {
 /*type*/        DI_RADIOBUTTON,
 /*id*/          0,
 /*xy*/          1,9,
 /*wh*/          0,0,
-/*flags*/       {0,0,0,0,0,0,0,0},
+/*flags*/       {1,0,0,0,0,0,0,0},
 /*vartype*/     {0,0,0,0,0,0},
 /*hotkey*/      0,
 /*select*/      1,
@@ -380,13 +380,13 @@ const GC_DITEM_t itmItemRB2 =
 /*handler*/     0
 };
 
-const GC_DITEM_t itmItemRB3 =
+GC_DITEM_t itmItemRB3 =
 {
 /*type*/        DI_RADIOBUTTON,
 /*id*/          0,
 /*xy*/          1,10,
 /*wh*/          0,0,
-/*flags*/       {0,0,0,0,0,0,0,0},
+/*flags*/       {1,0,0,0,0,0,0,0},
 /*vartype*/     {0,0,0,0,0,0},
 /*hotkey*/      0,
 /*select*/      2,
@@ -395,13 +395,13 @@ const GC_DITEM_t itmItemRB3 =
 /*handler*/     0
 };
 
-const GC_DITEM_t itmItemLBX1 =
+GC_DITEM_t itmItemLBX1 =
 {
 /*type*/        DI_LISTBOX,
 /*id*/          0,
 /*xy*/          28,8,
-/*wh*/          20,0,
-/*flags*/       {0,0,0,0,0,0,0,1},
+/*wh*/          18,0,
+/*flags*/       {1,0,0,0,0,0,0,0},
 /*vartype*/     {0,0,0,0,0,0},
 /*hotkey*/      0,
 /*select*/      4, //items count

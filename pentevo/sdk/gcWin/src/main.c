@@ -1,6 +1,6 @@
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 //::                     Window System                       ::
-//::                  by dr_max^gc (c)2018                   ::
+//::               by dr_max^gc (c)2018-2019                 ::
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 #include <stdio.h>
@@ -15,6 +15,7 @@
 #define DIHALT __asm__("di\n halt\n");
 
 #define VPAGE   0x80
+#define SPAGE   0x7F
 
 // checkbox 1.1 var
 u8  itmVarCB11 = 0;
@@ -44,16 +45,18 @@ u8 pcx, pcx0, pcy, pca, pcst;   //for putchar
 
 BTN_TYPE_t select;
 
-static void func_cb3()
+void func_cb3()
 {
-    itmVarCB11 = ~itmVarCB11;
-    itmVarCB12 = ~itmVarCB12;
+    itmItemRB1.flags.DIF_GRAY = (itmVarCB3&1);
+    itmItemRB2.flags.DIF_GRAY = (itmVarCB3&1);
+    itmItemRB3.flags.DIF_GRAY = (itmVarCB3&1);
     gcPrintActiveDialog(&dlgTest);
 }
 
-static void func_cb4()
+void func_cb4()
 {
     itmItemED1.flags.DIF_GRAY = (itmVarCB4&1);
+    itmItemLBX1.flags.DIF_GRAY = (itmVarCB4&1);
     gcPrintActiveDialog(&dlgTest);
 }
 
@@ -67,6 +70,8 @@ void main(void)
 
 // set videomode
     TS_VCONFIG = TS_VID_320X240 | TS_VID_TEXT;
+    TS_TSCONFIG = TS_TSU_SEN;
+
     gcSetPalette();
 
 // setup linked messages
@@ -75,10 +80,10 @@ void main(void)
     gcPrintWindow(&wndMain);
 
     gcPrintWindow(&wndTest1);
-    gcWaitKey(KEY_ENTER);
+//    gcWaitKey(KEY_ENTER);
 
     gcPrintWindow(&wndTest2);
-    gcWaitKey(KEY_ENTER);
+//    gcWaitKey(KEY_ENTER);
 
     BORDER = 4;
 

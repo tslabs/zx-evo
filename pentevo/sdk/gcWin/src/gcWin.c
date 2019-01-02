@@ -1,7 +1,8 @@
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 //::                     Window System                       ::
-//::                  by dr_max^gc (c)2018                   ::
+//::               by dr_max^gc (c)2018-2019                 ::
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
 #include "defs.h"
 #include "tsio.h"
 #include "keyboard.h"
@@ -1073,7 +1074,7 @@ u8 gcFindPrevTabItem(GC_DIALOG_t *dlg) __naked __z88dk_fastcall
 
     ld a,<#dlg_current (ix)
 0$: or a
-    jr z,3$
+    jr z,4$
     dec a
 1$: push af
     push ix
@@ -1083,8 +1084,16 @@ u8 gcFindPrevTabItem(GC_DIALOG_t *dlg) __naked __z88dk_fastcall
 ;; check TABSTOP bit
     ld a,<#di_flags (ix)
     and #dif_tabstop_mask
+    jr nz,3$
     pop ix
-    jr nz,2$
+    pop af
+    jr 0$
+
+;; check GREY bit
+3$: ld a,<#di_flags (ix)
+    and #dif_grey_mask
+    pop ix
+    jr z,2$
     pop af
     jr 0$
 
@@ -1093,7 +1102,7 @@ u8 gcFindPrevTabItem(GC_DIALOG_t *dlg) __naked __z88dk_fastcall
     ld l,a
     ret
 
-3$: ld a,<#dlg_act_count (ix)
+4$: ld a,<#dlg_act_count (ix)
     dec a
     pop ix
     ld l,a
@@ -1128,8 +1137,16 @@ u8 gcFindNextTabItem(GC_DIALOG_t *dlg) __naked __z88dk_fastcall
 ;; check TABSTOP bit
     ld a,<#di_flags (ix)
     and #dif_tabstop_mask
+    jr nz,3$
     pop ix
-    jr nz,2$
+    pop af
+    jr 0$
+
+;; check GREY bit
+3$: ld a,<#di_flags (ix)
+    and #dif_grey_mask
+    pop ix
+    jr z,2$
     pop af
     jr 0$
 
@@ -1474,6 +1491,17 @@ print_item_edit:
 print_item_listbox:
     push hl
 
+    ld a,<#di_flags (ix)
+    and #dif_grey_mask
+    ld a,(cfg_listbox_unfocus_attr)
+    jr z,0$
+    and #0xF0
+    ld c,a
+    ld a,(cfg_grey_attr)
+    and #0x0F
+    or c
+0$: ld c,a
+
 ;; print arrow down
     push de
     ld a,<#di_width (ix)
@@ -1481,8 +1509,6 @@ print_item_listbox:
     dec a
     add a,e
     ld e,a
-    ld a,(cfg_listbox_unfocus_attr)
-    ld c,a
     ld a,#SYM_BTNDN
     call sym_prn
     ld a,#SYM_BTNDN+1
@@ -1491,7 +1517,7 @@ print_item_listbox:
 
 ;; draw attr stripe
     push de
-    ld a,(cfg_listbox_unfocus_attr)
+    ld a,c
     ld (sym_attr),a
     ld b,<#di_width (ix)
     call set_attr_line
@@ -1546,12 +1572,24 @@ print_item_hdiv:
 ;;   HL - string address
 ;;   DE - YX coords
 print_item_check:
-    ld c,<#di_var (ix)
-    ld b,<#di_var+1 (ix)
+    ld a,(sym_attr)
+    push af
+    ld c,a
     ld a,<#di_flags (ix)
     and #dif_grey_mask
-    jr nz,print_item_check_grey
+    jr z,0$
+    ld a,(cfg_grey_attr)
+    and #0x0F
+    ld c,a
+    ld a,(win_attr)
+    and #0xF0
+    or c
+    ld c,a
+0$: ld a,c
+    ld (sym_attr),a
 
+    ld c,<#di_var (ix)
+    ld b,<#di_var+1 (ix)
     ld a,(bc)
     or a
     ld a,#SYM_CHECK
@@ -1563,43 +1601,32 @@ print_item_check:
     inc a
     call sym_prn
     pop hl
-    jp print_item_text
-
-print_item_check_grey:
-    push de
-    ld a,(bc)
-    or a
-    ld a,#SYM_CHECK
-    jr z,.+2+2
-    add a,#2
-    ld c,#8
-    push hl
-    call sym_prn
-    inc a
-    call sym_prn
-    pop hl
     call print_item_text
-
-    ld a,(tmp_win_x)
-    add a,<#di_x (ix)
-    ld c,a
-    ld a,e
-    sub c
-    ld b,a
-
-    pop de
-    ld a,(cfg_grey_attr)
-    ld c,a
-    ld a,(win_attr)
-    and #0xF0
-    or c
-    jp set_attr_line
+    pop af
+    ld (sym_attr),a
+    ret
 
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;; i:
 ;;   HL - string address
 ;;   DE - YX coords
 print_item_radio:
+    ld a,(sym_attr)
+    push af
+    ld c,a
+    ld a,<#di_flags (ix)
+    and #dif_grey_mask
+    jr z,0$
+    ld a,(cfg_grey_attr)
+    and #0x0F
+    ld c,a
+    ld a,(win_attr)
+    and #0xF0
+    or c
+    ld c,a
+0$: ld a,c
+    ld (sym_attr),a
+
     ld c,<#di_var (ix)
     ld b,<#di_var+1 (ix)
     ld a,(bc)
@@ -1613,7 +1640,11 @@ print_item_radio:
     inc a
     call sym_prn
     pop hl
-    jp print_item_text
+    call print_item_text
+
+    pop af
+    ld (sym_attr),a
+    ret
 
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 print_item_singlebox:
@@ -2401,10 +2432,9 @@ void gcPrintWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall
 
 ;; print spectrum stripes
     ld hl,#header_str
-    ld a,<#width (ix)
-    add a,<#x (ix)
-    sub #6
-    ld e,a
+    ld e,<#x (ix)
+    inc e
+
     call strprnz
     ld a,<#frame_attr (ix)
     and #0x0F
