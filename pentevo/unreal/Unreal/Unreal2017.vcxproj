@@ -305,11 +305,13 @@
     <GenerateManifest>true</GenerateManifest>
     <OutDir>bin\$(Configuration)\</OutDir>
     <IntDir>tmp\$(Configuration)\</IntDir>
+    <IncludePath>$(ProjectDir);$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <GenerateManifest>true</GenerateManifest>
     <OutDir>bin\$(Configuration)\</OutDir>
     <IntDir>tmp\$(Configuration)\</IntDir>
+    <IncludePath>$(ProjectDir);$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
