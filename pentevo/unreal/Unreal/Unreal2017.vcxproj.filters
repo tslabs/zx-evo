@@ -19,6 +19,9 @@
     <Filter Include="Sources\ft8xx">
       <UniqueIdentifier>{d427986d-9761-4968-a8cc-f48848aa251a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="debugger">
+      <UniqueIdentifier>{6f7218a8-88df-4f06-8d60-2f543989efb0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\main.ico">
@@ -326,40 +329,40 @@
       <Filter>Sources\sound</Filter>
     </ClCompile>
     <ClCompile Include="debugger\dbgbpx.cpp">
-      <Filter>Sources</Filter>
+      <Filter>debugger</Filter>
     </ClCompile>
     <ClCompile Include="debugger\dbgcmd.cpp">
-      <Filter>Sources</Filter>
+      <Filter>debugger</Filter>
     </ClCompile>
     <ClCompile Include="debugger\dbglabls.cpp">
-      <Filter>Sources</Filter>
+      <Filter>debugger</Filter>
     </ClCompile>
     <ClCompile Include="debugger\dbgmem.cpp">
-      <Filter>Sources</Filter>
+      <Filter>debugger</Filter>
     </ClCompile>
     <ClCompile Include="debugger\dbgoth.cpp">
-      <Filter>Sources</Filter>
+      <Filter>debugger</Filter>
     </ClCompile>
     <ClCompile Include="debugger\dbgpaint.cpp">
-      <Filter>Sources</Filter>
+      <Filter>debugger</Filter>
     </ClCompile>
     <ClCompile Include="debugger\dbgreg.cpp">
-      <Filter>Sources</Filter>
+      <Filter>debugger</Filter>
     </ClCompile>
     <ClCompile Include="debugger\dbgrwdlg.cpp">
-      <Filter>Sources</Filter>
+      <Filter>debugger</Filter>
     </ClCompile>
     <ClCompile Include="debugger\dbgtrace.cpp">
-      <Filter>Sources</Filter>
+      <Filter>debugger</Filter>
     </ClCompile>
     <ClCompile Include="debugger\dbgtsconf.cpp">
-      <Filter>Sources</Filter>
+      <Filter>debugger</Filter>
     </ClCompile>
     <ClCompile Include="debugger\dbgwidgets.cpp">
-      <Filter>Sources</Filter>
+      <Filter>debugger</Filter>
     </ClCompile>
     <ClCompile Include="debugger\debug.cpp">
-      <Filter>Sources</Filter>
+      <Filter>debugger</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -640,40 +643,40 @@
       <Filter>Headers\sound</Filter>
     </ClInclude>
     <ClInclude Include="debugger\dbgbpx.h">
-      <Filter>Headers</Filter>
+      <Filter>debugger</Filter>
     </ClInclude>
     <ClInclude Include="debugger\dbgcmd.h">
-      <Filter>Headers</Filter>
+      <Filter>debugger</Filter>
     </ClInclude>
     <ClInclude Include="debugger\dbglabls.h">
-      <Filter>Headers</Filter>
+      <Filter>debugger</Filter>
     </ClInclude>
     <ClInclude Include="debugger\dbgmem.h">
-      <Filter>Headers</Filter>
+      <Filter>debugger</Filter>
     </ClInclude>
     <ClInclude Include="debugger\dbgoth.h">
-      <Filter>Headers</Filter>
+      <Filter>debugger</Filter>
     </ClInclude>
     <ClInclude Include="debugger\dbgpaint.h">
-      <Filter>Headers</Filter>
+      <Filter>debugger</Filter>
     </ClInclude>
     <ClInclude Include="debugger\dbgreg.h">
-      <Filter>Headers</Filter>
+      <Filter>debugger</Filter>
     </ClInclude>
     <ClInclude Include="debugger\dbgrwdlg.h">
-      <Filter>Headers</Filter>
+      <Filter>debugger</Filter>
     </ClInclude>
     <ClInclude Include="debugger\dbgtrace.h">
-      <Filter>Headers</Filter>
+      <Filter>debugger</Filter>
     </ClInclude>
     <ClInclude Include="debugger\dbgtsconf.h">
-      <Filter>Headers</Filter>
+      <Filter>debugger</Filter>
     </ClInclude>
     <ClInclude Include="debugger\dbgwidgets.h">
-      <Filter>Headers</Filter>
+      <Filter>debugger</Filter>
     </ClInclude>
     <ClInclude Include="debugger\debug.h">
-      <Filter>Headers</Filter>
+      <Filter>debugger</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
