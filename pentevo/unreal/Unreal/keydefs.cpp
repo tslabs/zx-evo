@@ -6,14 +6,14 @@
 #include "gui.h"
 #include "savesnd.h"
 #include "cheat.h"
-#include "dbgreg.h"
-#include "dbgcmd.h"
-#include "dbgoth.h"
-#include "dbgrwdlg.h"
-#include "dbgbpx.h"
-#include "dbgtrace.h"
-#include "dbglabls.h"
-#include "dbgmem.h"
+#include "debugger/dbgreg.h"
+#include "debugger/dbgcmd.h"
+#include "debugger/dbgoth.h"
+#include "debugger/dbgrwdlg.h"
+#include "debugger/dbgbpx.h"
+#include "debugger/dbgtrace.h"
+#include "debugger/dbglabls.h"
+#include "debugger/dbgmem.h"
 
 action ac_main[] =
 {

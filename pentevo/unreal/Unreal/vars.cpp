@@ -2,7 +2,7 @@
 #include "emul.h"
 #include "defs.h"
 #include "vars.h"
-#include "debug.h"
+#include "debugger/debug.h"
 #include "memory.h"
 #include "gsz80.h"
 #include "z80.h"

@@ -5,7 +5,7 @@
 #include "draw.h"
 #include "memory.h"
 #include "tape.h"
-#include "debug.h"
+#include "debugger/debug.h"
 #include "sound.h"
 #include "atm.h"
 #include "tsconf.h"

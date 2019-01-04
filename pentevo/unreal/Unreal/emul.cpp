@@ -9,7 +9,7 @@
 #include "sndcounter.h"
 #include "init.h"
 #include "funcs.h"
-#include "debug.h"
+#include "debugger/debug.h"
 #include "vars.h"
 #include "dx.h"
 #include "draw.h"

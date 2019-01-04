@@ -6,7 +6,7 @@
 #include "config.h"
 #include "draw.h"
 #include "dx.h"
-#include "debug.h"
+#include "debugger/debug.h"
 #include "memory.h"
 #include "sound.h"
 #include "savesnd.h"

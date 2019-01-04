@@ -14,11 +14,11 @@
 #include "savesnd.h"
 #include "wd93dat.h"
 #include "tables.h"
-#include "dbgbpx.h"
-#include "dbglabls.h"
+#include "debugger/dbgbpx.h"
+#include "debugger/dbglabls.h"
 #include "util.h"
 #include "getopt.h"
-#include "debug.h"
+#include "debugger/debug.h"
 #include "ft812.h"
 
 void cpu_info()

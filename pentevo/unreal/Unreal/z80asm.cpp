@@ -3,7 +3,7 @@
 #include "emul.h"
 #include "vars.h"
 #include "memory.h"
-#include "dbglabls.h"
+#include "debugger/dbglabls.h"
 #include "util.h"
 
 char asmbuf[0x40];

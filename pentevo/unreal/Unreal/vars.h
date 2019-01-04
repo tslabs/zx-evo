@@ -4,7 +4,7 @@
 #include "saa1099.h"
 #include "sound/dev_moonsound.h"
 #include "sound/ayx32.h"
-#include "debug.h"
+#include "debugger/debug.h"
 
 #define ROMLED_TIME 16
 

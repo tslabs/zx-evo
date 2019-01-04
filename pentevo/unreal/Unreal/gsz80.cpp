@@ -6,7 +6,7 @@
 #include "gsz80.h"
 #include "vs1001.h"
 #include "sdcard.h"
-#include "debug.h"
+#include "debugger/debug.h"
 #include "op_noprefix.h"
 
 #ifdef MOD_GSZ80
