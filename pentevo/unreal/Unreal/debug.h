@@ -1,126 +1,126 @@
 #pragma once
 
-#define regs_x 1
-#define regs_y 1
+constexpr auto regs_x = 1;
+constexpr auto regs_y = 1;
 
-#define stack_x 72
-#define stack_y 12
-#define stack_size 10
+constexpr auto stack_x = 72;
+constexpr auto stack_y = 12;
+constexpr auto stack_size = 10;
 
-#define ay_x  31
-#define ay_y  28
+constexpr auto ay_x = 31;
+constexpr auto ay_y = 28;
 
-#define time_x 1
-#define time_y 28
+constexpr auto time_x = 1;
+constexpr auto time_y = 28;
 
-#define copy_x 1
-#define copy_y 28
+constexpr auto copy_x = 1;
+constexpr auto copy_y = 28;
 
-#define banks_x 72
-#define banks_y 22
+constexpr auto banks_x = 72;
+constexpr auto banks_y = 22;
 
-#define ports_x 72
-#define ports_y 1
+constexpr auto ports_x = 72;
+constexpr auto ports_y = 1;
 
-#define dos_x 72
-#define dos_y 6
-#define trace_size 21
-#define trace_x 1
-#define trace_y 6
+constexpr auto dos_x = 72;
+constexpr auto dos_y = 6;
+constexpr auto trace_size = 21;
+constexpr auto trace_x = 1;
+constexpr auto trace_y = 6;
 
-#define wat_x 34
-#define wat_y 1
-#define wat_sz 13
+constexpr auto wat_x = 34;
+constexpr auto wat_y = 1;
+constexpr auto wat_sz = 13;
 
-#define mem_size 12
-#define mem_x 34
-#define mem_y 15
+constexpr auto mem_size = 12;
+constexpr auto mem_x = 34;
+constexpr auto mem_y = 15;
 
-#define W_SEL      0x17
-#define W_NORM     0x07
-#define W_CURS     0x30
-#define BACKGR     0x50
-#define FRAME_CURS 0x02
-#define W_TITLE    0x59
-#define W_OTHER    0x40
-#define W_OTHEROFF 0x47
-#define BACKGR_CH  0xB1
-#define W_AYNUM    0x4F
-#define W_AYON     0x41
-#define W_AYOFF    0x40
-#define W_BANK     0x40
-#define W_BANKRO   0x41
-#define W_DIHALT1  0x1A
-#define W_DIHALT2  0x0A
-#define W_TRACEPOS 0x70
-#define W_INPUTCUR 0x60
-#define W_INPUTBG  0x40
-#define W_48K 0x20
-#define W_DOS 0x20
+constexpr auto w_sel = 0x17;
+constexpr auto w_norm = 0x07;
+constexpr auto w_curs = 0x30;
+constexpr auto backgr = 0x50;
+constexpr auto frame_curs = 0x02;
+constexpr auto w_title = 0x59;
+constexpr auto w_other = 0x40;
+constexpr auto w_otheroff = 0x47;
+constexpr auto backgr_ch = 0xB1;
+constexpr auto w_aynum = 0x4F;
+constexpr auto w_ayon = 0x41;
+constexpr auto w_ayoff = 0x40;
+constexpr auto w_bank = 0x40;
+constexpr auto w_bankro = 0x41;
+constexpr auto w_dihalt1 = 0x1A;
+constexpr auto w_dihalt2 = 0x0A;
+constexpr auto w_tracepos = 0x70;
+constexpr auto w_inputcur = 0x60;
+constexpr auto w_inputbg = 0x40;
+constexpr auto w_48_k = 0x20;
+constexpr auto w_dos = 0x20;
 
-#define W_TRACE_JINFO_CURS_FG   0x0D
-#define W_TRACE_JINFO_NOCURS_FG 0x02
-#define W_TRACE_JARROW_FOREGR   0x0D
+constexpr auto w_trace_jinfo_curs_fg = 0x0D;
+constexpr auto w_trace_jinfo_nocurs_fg = 0x02;
+constexpr auto w_trace_jarrow_foregr = 0x0D;
 
-#define FRAME         0x01
-#define FFRAME_FRAME  0x04
+constexpr auto FRAME = 0x01;
+constexpr auto fframe_frame = 0x04;
 
-#define FFRAME_INSIDE 0x50
-#define FFRAME_ERROR  0x52
-#define FRM_HEADER    0xD0
+constexpr auto fframe_inside = 0x50;
+constexpr auto fframe_error = 0x52;
+constexpr auto frm_header = 0xD0;
 
-#define MENU_INSIDE   0x70
-#define MENU_HEADER   0xF0
+constexpr auto menu_inside = 0x70;
+constexpr auto menu_header = 0xF0;
 
-#define MENU_CURSOR   0xE0
-#define MENU_ITEM     MENU_INSIDE
-#define MENU_ITEM_DIS 0x7A
+constexpr auto menu_cursor = 0xE0;
+constexpr auto menu_item = menu_inside;
+constexpr auto menu_item_dis = 0x7A;
 
-#define DEBUG_TEXT_WIDTH	150
-#define	DEBUG_TEXT_HEIGHT	30
-#define DEBUG_TEXT_SIZE		(DEBUG_TEXT_WIDTH * DEBUG_TEXT_HEIGHT)
-#define DEBUG_WND_WIDTH		(DEBUG_TEXT_WIDTH * 8)
-#define DEBUG_WND_HEIGHT	(DEBUG_TEXT_HEIGHT * 16)
+constexpr auto debug_text_width = 150;
+constexpr auto debug_text_height = 30;
+constexpr auto debug_text_size = (debug_text_width * debug_text_height);
+constexpr auto DEBUG_WND_WIDTH = (debug_text_width * 8);
+constexpr auto DEBUG_WND_HEIGHT = (debug_text_height * 16);
 
-enum DBGWND
+enum dbgwnd
 {
-   WNDNO = 0,
-   WNDMEM,
-   WNDTRACE,
-   WNDREGS,
-   WNDBANKS
+	wndno = 0,
+	wndmem,
+	wndtrace,
+	wndregs,
+	wndbanks
 };
 
-enum { ED_MEM, ED_PHYS, ED_LOG, ED_CMOS, ED_NVRAM, ED_MAX };
+enum { ed_mem, ed_phys, ed_log, ed_cmos, ed_nvram, ed_max };
 
-class TCpuMgr
+class t_cpu_mgr final
 {
-    static const unsigned Count;
-    static Z80* Cpus[];
-    static TZ80State PrevCpus[];
-    static unsigned CurrentCpu;
+	static const unsigned Count;
+	static Z80* cpus_[];
+	static TZ80State prev_cpus_[];
+	static unsigned current_cpu_;
 public:
-    static Z80 &Cpu() { return *Cpus[CurrentCpu]; }
-    static Z80 &Cpu(u32 Idx) { return *Cpus[Idx]; }
-    static TZ80State &PrevCpu(u32 Idx) { return PrevCpus[Idx]; }
-    static TZ80State &PrevCpu() { return PrevCpus[CurrentCpu]; }
-    static void SwitchCpu();
-    static unsigned GetCurrentCpu() { return CurrentCpu; }
-    static void SetCurrentCpu(u32 Idx) { CurrentCpu = Idx; }
-    static void CopyToPrev();
-    static unsigned GetCount() { return Count; }
+	static Z80 &get_cpu() { return *cpus_[current_cpu_]; }
+	static Z80 &get_cpu(const u32 idx) { return *cpus_[idx]; }
+	static TZ80State &prev_cpu(const u32 idx) { return prev_cpus_[idx]; }
+	static TZ80State &prev_cpu() { return prev_cpus_[current_cpu_]; }
+	static void switch_cpu();
+	static unsigned get_current_cpu() { return current_cpu_; }
+	static void set_current_cpu(const u32 idx) { current_cpu_ = idx; }
+	static void copy_to_prev();
+	static unsigned get_count() { return Count; }
 };
 
 // debug breakpoints format descriptor
 typedef struct
 {
-  unsigned reg;       // token string (e.g. 'DOS','OUT')
-  const void *ptr;    // pointer to variable, containing queried value
-  u8 size;            // size of variable (1, 2, 4) or 0 for address of function: bool func()
+	unsigned reg;       // token string (e.g. 'DOS','OUT')
+	const void *ptr;    // pointer to variable, containing queried value
+	u8 size;            // size of variable (1, 2, 4) or 0 for address of function: bool func()
 } BPXR;
 
-extern TCpuMgr CpuMgr;
-extern DBGWND activedbg;
+extern t_cpu_mgr cpu_mgr;
+extern dbgwnd activedbg;
 extern unsigned dbg_extport;
 extern u8 dgb_extval; // extended memory port like 1FFD or DFFD
 
@@ -133,7 +133,7 @@ extern u8 mem_dump;
 extern unsigned show_scrshot;
 extern u8 editor;
 extern u8 mem_ascii;
-extern u8 mem_dump;
+
 
 extern unsigned ripper; // ripper mode (none/read/write)
 

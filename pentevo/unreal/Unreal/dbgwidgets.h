@@ -88,7 +88,7 @@ public:
 	void paint();
 };
 
-class dbg_canvas
+class dbg_canvas final
 {
 	u8 attr_ = 0;
 	int base_x_;

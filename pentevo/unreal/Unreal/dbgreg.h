@@ -1,6 +1,6 @@
 #pragma once
 
-struct TRegLayout
+struct t_reg_layout final
 {
    size_t offs;
    u8 width;
@@ -8,7 +8,7 @@ struct TRegLayout
    u8 lf,rt,up,dn;
 };
 
-extern const TRegLayout regs_layout[];
+extern const t_reg_layout regs_layout[];
 extern const size_t regs_layout_count;
 
 void ra();

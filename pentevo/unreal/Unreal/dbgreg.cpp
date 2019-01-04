@@ -5,7 +5,7 @@
 #include "dbgpaint.h"
 #include "dbgreg.h"
 
-const TRegLayout regs_layout[] =
+const t_reg_layout regs_layout[] =
 {
    { offsetof(TZ80State, a)     ,  8,  3, 0, 0, 1, 0, 2 }, //  0 a
    { offsetof(TZ80State, f)     ,  8,  5, 0, 0, 5, 1, 2 }, //  1 f
@@ -39,59 +39,60 @@ const size_t regs_layout_count = _countof(regs_layout);
 
 void showregs()
 {
-   Z80 &cpu = CpuMgr.Cpu();
-   const TZ80State &prevcpu = CpuMgr.PrevCpu();
+	auto& cpu = t_cpu_mgr::get_cpu();
+	const auto& prevcpu = t_cpu_mgr::prev_cpu();
 
-   u8 atr = (activedbg == WNDREGS) ? W_SEL : W_NORM;
-   char line[40];
-   tprint(regs_x,regs_y+0, "af:**** af'**** sp:**** ir: ****", atr);
-   tprint(regs_x,regs_y+1, "bc:**** bc'**** pc:**** t:******", atr);
-   tprint(regs_x,regs_y+2, "de:**** de'**** ix:**** im?,i:**", atr);
-   tprint(regs_x,regs_y+3, "hl:**** hl'**** iy:**** ########", atr);
+	const u8 atr = (activedbg == wndregs) ? w_sel : w_norm;
+	char line[40];
+	tprint(regs_x, regs_y + 0, "af:**** af'**** sp:**** ir: ****", atr);
+	tprint(regs_x, regs_y + 1, "bc:**** bc'**** pc:**** t:******", atr);
+	tprint(regs_x, regs_y + 2, "de:**** de'**** ix:**** im?,i:**", atr);
+	tprint(regs_x, regs_y + 3, "hl:**** hl'**** iy:**** ########", atr);
 
-   if (cpu.halted && !cpu.iff1)
-   {
-      tprint(regs_x+26,regs_y+1,"DiHALT", (activedbg == WNDREGS) ? W_DIHALT1 : W_DIHALT2);
-   }
-   else
-   {
-       sprintf(line, "%6d", cpu.t);
-       tprint(regs_x+26,regs_y+1,line,atr);
-   }
+	if (cpu.halted && !cpu.iff1)
+	{
+		tprint(regs_x + 26, regs_y + 1, "DiHALT", (activedbg == wndregs) ? w_dihalt1 : w_dihalt2);
+	}
+	else
+	{
+		sprintf(line, "%6d", cpu.t);
+		tprint(regs_x + 26, regs_y + 1, line, atr);
+	}
 
-   cpu.r_low = (cpu.r_low & 0x7F) + cpu.r_hi;
-   for (unsigned i = 0; i < regs_layout_count; i++)
-   {
-      unsigned mask = (1 << regs_layout[i].width) - 1;
-      unsigned val = mask & *(unsigned*)(PCHAR((TZ80State*)&cpu)+regs_layout[i].offs);
-      u8 atr1 = atr;
-      if (activedbg == WNDREGS && i == regs_curs)
-          atr1 = W_CURS;
-      if (val != (mask & *(unsigned*)(PCHAR(&prevcpu)+regs_layout[i].offs)))
-          atr1 |= 0x08;
+	cpu.r_low = (cpu.r_low & 0x7F) + cpu.r_hi;
+	for (unsigned i = 0; i < regs_layout_count; i++)
+	{
+		const unsigned mask = (1 << regs_layout[i].width) - 1;
+		const unsigned val = mask & *reinterpret_cast<unsigned*>(PCHAR(static_cast<TZ80State*>(&cpu)) + regs_layout[i].offs);
+		auto atr1 = atr;
+		if (activedbg == wndregs && i == regs_curs)
+			atr1 = w_curs;
+		if (val != (mask & *reinterpret_cast<unsigned*>(PCHAR(&prevcpu) + regs_layout[i].offs)))
+			atr1 |= 0x08;
 
-      char bf[16];
-      switch (regs_layout[i].width)
-      {
-         case  8: sprintf(bf, "%02X", val); break;
-         case 16: sprintf(bf, "%04X", val); break;
-         case  1:
-         case  2: sprintf(bf, "%X", val); break;
-         default: *bf = 0;
-      }
-      tprint(regs_x + regs_layout[i].x, regs_y + regs_layout[i].y, bf, atr1);
-   }
-   static const char flg[] = "SZ5H3PNCsz.h.pnc";
-   for (u8 q = 0; q < 8; q++)
-   {
-      unsigned ln; u8 atr1 = atr;
-      if (activedbg == WNDREGS && regs_curs == (unsigned)(q+18)) atr1 = W_CURS;
-      ln = flg[q+((cpu.af & (0x80>>q)) ? 0 : 8)];
-      if ((0x80>>q)&(cpu.f^prevcpu.f)) atr1 |= 0x08;
-      tprint(regs_x+24+q,regs_y+3,(char*)&ln,  atr1);
-   }
-   tprint(regs_x, regs_y-1, "regs", W_TITLE);
-   frame(regs_x,regs_y,32,4, FRAME);
+		char bf[16];
+		switch (regs_layout[i].width)
+		{
+		case  8: sprintf(bf, "%02X", val); break;
+		case 16: sprintf(bf, "%04X", val); break;
+		case  1:
+		case  2: sprintf(bf, "%X", val); break;
+		default: *bf = 0;
+		}
+		tprint(regs_x + regs_layout[i].x, regs_y + regs_layout[i].y, bf, atr1);
+	}
+	static const char flg[] = "SZ5H3PNCsz.h.pnc";
+	for (u8 q = 0; q < 8; q++)
+	{
+		unsigned ln;
+		auto atr1 = atr;
+		if (activedbg == wndregs && regs_curs == unsigned(q + 18)) atr1 = w_curs;
+		ln = flg[q + ((cpu.af & (0x80 >> q)) ? 0 : 8)];
+		if ((0x80 >> q)&(cpu.f^prevcpu.f)) atr1 |= 0x08;
+		tprint(regs_x + 24 + q, regs_y + 3, reinterpret_cast<char*>(&ln), atr1);
+	}
+	tprint(regs_x, regs_y - 1, "regs", w_title);
+	frame(regs_x, regs_y, 32, 4, FRAME);
 }
 
 void rleft() { regs_curs = regs_layout[regs_curs].lf; }
@@ -100,34 +101,34 @@ void rup() { regs_curs = regs_layout[regs_curs].up; }
 void rdown() { regs_curs = regs_layout[regs_curs].dn; }
 void renter()
 {
-   Z80 &cpu = CpuMgr.Cpu();
-   debugscr();
-   debugflip();
-   u8 sz = regs_layout[regs_curs].width;
-   unsigned val = ((1 << sz) - 1) & *(unsigned*)(PCHAR((TZ80State*)&cpu) + regs_layout[regs_curs].offs);
-   u8 *ptr = PUCHAR((TZ80State*)&cpu) + regs_layout[regs_curs].offs;
-   if ((sz == 8 || sz == 16) && ((input.lastkey >= '0' && input.lastkey <= '9') || (input.lastkey >= 'A' && input.lastkey <= 'F')))
-      PostThreadMessage(GetCurrentThreadId(), WM_KEYDOWN, input.lastkey, 1);
-   switch (sz)
-   {
-      case 8:
-         val = input2(regs_x + regs_layout[regs_curs].x, regs_y + regs_layout[regs_curs].y, val);
-         if (val != -1)
-             *ptr = val;
-         break;
-      case 16:
-         val = input4(regs_x + regs_layout[regs_curs].x, regs_y + regs_layout[regs_curs].y, val);
-         if (val != -1)
-             *(u16*)ptr = val;
-         break;
-      case 1:
-         *ptr ^= 1; break;
-      case 2:
-         *ptr = (*ptr + 1) % 3; break;
-      default: // flags
-         *ptr ^= (1 << (sz-30));
-   }
-   cpu.r_hi = cpu.r_low & 0x80;
+	auto& cpu = t_cpu_mgr::get_cpu();
+	debugscr();
+	debugflip();
+	const auto sz = regs_layout[regs_curs].width;
+	auto val = ((1 << sz) - 1) & *reinterpret_cast<unsigned*>(PCHAR(static_cast<TZ80State*>(&cpu)) + regs_layout[regs_curs].offs);
+	const auto ptr = PUCHAR(static_cast<TZ80State*>(&cpu)) + regs_layout[regs_curs].offs;
+	if ((sz == 8 || sz == 16) && ((input.lastkey >= '0' && input.lastkey <= '9') || (input.lastkey >= 'A' && input.lastkey <= 'F')))
+		PostThreadMessage(GetCurrentThreadId(), WM_KEYDOWN, input.lastkey, 1);
+	switch (sz)
+	{
+	case 8:
+		val = input2(regs_x + regs_layout[regs_curs].x, regs_y + regs_layout[regs_curs].y, val);
+		if (val != UINT_MAX)
+			*ptr = val;
+		break;
+	case 16:
+		val = input4(regs_x + regs_layout[regs_curs].x, regs_y + regs_layout[regs_curs].y, val);
+		if (val != UINT_MAX)
+			*reinterpret_cast<u16*>(ptr) = val;
+		break;
+	case 1:
+		*ptr ^= 1; break;
+	case 2:
+		*ptr = (*ptr + 1) % 3; break;
+	default: // flags
+		*ptr ^= (1 << (sz - 30));
+	}
+	cpu.r_hi = cpu.r_low & 0x80;
 }
 void ra() { regs_curs = 0; input.lastkey = 0; renter(); }
 void rf() { regs_curs = 1; input.lastkey = 0; renter(); }
@@ -154,30 +155,30 @@ void rCF() { regs_curs = 25; renter(); }
 
 void rcodejump()
 {
-    Z80 &cpu = CpuMgr.Cpu();
-    if (regs_layout[regs_curs].width == 16)
-    {
-         activedbg = WNDTRACE;
-         cpu.trace_curs = cpu.trace_top = *(u16*)(PCHAR((TZ80State*)&cpu) + regs_layout[regs_curs].offs);
-    }
+	auto& cpu = t_cpu_mgr::get_cpu();
+	if (regs_layout[regs_curs].width == 16)
+	{
+		activedbg = wndtrace;
+		cpu.trace_curs = cpu.trace_top = *reinterpret_cast<u16*>(PCHAR(static_cast<TZ80State*>(&cpu)) + regs_layout[regs_curs].offs);
+	}
 }
 void rdatajump()
 {
-    Z80 &cpu = CpuMgr.Cpu();
-    if (regs_layout[regs_curs].width == 16)
-    {
-        activedbg = WNDMEM;
-        editor = ED_MEM;
-        cpu.mem_curs = *(u16*)(PCHAR((TZ80State*)&cpu) + regs_layout[regs_curs].offs);
-    }
+	auto& cpu = t_cpu_mgr::get_cpu();
+	if (regs_layout[regs_curs].width == 16)
+	{
+		activedbg = wndmem;
+		editor = ed_mem;
+		cpu.mem_curs = *reinterpret_cast<u16*>(PCHAR(static_cast<TZ80State*>(&cpu)) + regs_layout[regs_curs].offs);
+	}
 }
 
 char dispatch_regs()
 {
-   if ((input.lastkey >= '0' && input.lastkey <= '9') || (input.lastkey >= 'A' && input.lastkey <= 'F'))
-   {
-      renter();
-      return 1;
-   }
-   return 0;
+	if ((input.lastkey >= '0' && input.lastkey <= '9') || (input.lastkey >= 'A' && input.lastkey <= 'F'))
+	{
+		renter();
+		return 1;
+	}
+	return 0;
 }

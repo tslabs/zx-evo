@@ -283,8 +283,8 @@ public:
 		draw_hex8_inline("     NUM", comp.ts.dmanum);
 		draw_hex8_inline(" LEN", comp.ts.dmalen);
 		next_row();
-		draw_hex8_inline("CURR NUM", comp.ts.dma.num);
-		draw_hex8_inline(" LEN", comp.ts.dma.len);
+		draw_hex8_inline("CURR NUM", u8(comp.ts.dma.num));
+		draw_hex8_inline(" LEN", u8(comp.ts.dma.len));
 		next_row();
 		next_row();
 		draw_port("CTRL", comp.ts.dma.ctrl);

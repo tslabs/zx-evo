@@ -44,7 +44,7 @@ void main_pause()
 
 void main_debug()
 {
-   Z80 &cpu = CpuMgr.Cpu();
+   Z80 &cpu = t_cpu_mgr::get_cpu();
 
    cpu.dbgchk = 1;
    cpu.dbgbreak = 1;

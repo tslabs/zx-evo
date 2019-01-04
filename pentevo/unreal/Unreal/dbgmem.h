@@ -4,8 +4,8 @@ u8 *editam(unsigned addr);
 
 __inline u8 editrm(unsigned addr)
 {
-   u8 *ptr = editam(addr);
-   return ptr? *ptr : 0;
+	const auto ptr = editam(addr);
+	return ptr ? *ptr : 0;
 }
 
 unsigned memadr(unsigned addr);

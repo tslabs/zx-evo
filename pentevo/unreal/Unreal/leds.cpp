@@ -395,7 +395,7 @@ void show_mband(u32 *dst, unsigned start)
 	char xx[8]; sprintf(xx, "%02X", start >> 8);
 	text_i(dst, xx, 0x0B); dst += 4*4;
 
-	Z80 &cpu = CpuMgr.Cpu();
+	Z80 &cpu = t_cpu_mgr::get_cpu();
 	u8 band[128];
 	for (i = 0; i < 128; i++) {
 		u8 res = 0;
@@ -445,7 +445,7 @@ void memband_led()
       dst += 10*pitch;
    }
 
-   Z80 &cpu = CpuMgr.Cpu();
+   Z80 &cpu = t_cpu_mgr::get_cpu();
    for (unsigned i = 0; i < 0x10000; i++)
       cpu.membits[i] &= ripper | ~(MEMBITS_R | MEMBITS_W | MEMBITS_X);
 }

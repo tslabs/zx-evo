@@ -423,7 +423,7 @@ void YMF262::setStatus(byte flag)
 	status |= flag;
 	if (status & statusMask) {
 		status |= 0x80;
-		irq.set();
+		IRQHelper::set();
 	}
 }
 
@@ -434,7 +434,7 @@ void YMF262::resetStatus(byte flag)
 	status &= ~flag;
 	if (!(status & statusMask)) {
 		status &= 0x7F;
-		irq.reset();
+		IRQHelper::reset();
 	}
 }
 
@@ -445,10 +445,10 @@ void YMF262::changeStatusMask(byte flag)
 	status &= statusMask;
 	if (status) {
 		status |= 0x80;
-		irq.set();
+		IRQHelper::set();
 	} else {
 		status &= 0x7F;
-		irq.reset();
+		IRQHelper::reset();
 	}
 }
 

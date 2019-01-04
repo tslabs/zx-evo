@@ -53,13 +53,13 @@ void dbg_control::draw_bit(char* title, int bits, const char* val_set[], int val
 	draw_bits_range(bits);
 
 	(*canvas_)
-		.draw_text(title, W_NORM)
+		.draw_text(title, w_norm)
 		.next_col()
 		.draw_text("=", W_EQ)
 		.next_col();
 
 	(*canvas_)
-		.draw_text(val_set[val], W_NORM);
+		.draw_text(val_set[val], w_norm);
 
 	next_row();
 }
@@ -70,13 +70,13 @@ void dbg_control::draw_bit(char* title, int bits, u8 val) const
 	draw_bits_range(bits);
 
 	(*canvas_)
-		.draw_text(title, W_NORM)
+		.draw_text(title, w_norm)
 		.next_col()
 		.draw_text("=", W_EQ)
 		.next_col();
 
   (*canvas_)
-    .draw_text((val & 1) ? "ena" : "dis", W_NORM);
+    .draw_text((val & 1) ? "ena" : "dis", w_norm);
   next_row();
 }
 
@@ -84,20 +84,20 @@ void dbg_control::draw_hex8_inline(char* title, u8 val) const
 {
 	check_parent();
 	(*canvas_)
-		.draw_text(title, W_NORM).move_x_to_len()
+		.draw_text(title, w_norm).move_x_to_len()
 		.draw_text("= ", W_EQ).move_x_to_len()
-		.draw_hex(val, 2, W_NORM).move_x_to_len()
-		.draw_text(" ", W_NORM).move_x_to_len();
+		.draw_hex(val, 2, w_norm).move_x_to_len()
+		.draw_text(" ", w_norm).move_x_to_len();
 }
 
 void dbg_control::draw_dec_inline(char* title, u16 val) const
 {
 	check_parent();
 	(*canvas_)
-		.draw_text(title, W_NORM).move_x_to_len()
+		.draw_text(title, w_norm).move_x_to_len()
 		.draw_text("= ", W_EQ).move_x_to_len()
-		.draw_number(val, W_NORM).move_x_to_len()
-		.draw_text(" ", W_NORM).move_x_to_len();
+		.draw_number(val, w_norm).move_x_to_len()
+		.draw_text(" ", w_norm).move_x_to_len();
 }
 
 void dbg_control::draw_hex16(char* title, int bits, u16 val) const
@@ -106,13 +106,13 @@ void dbg_control::draw_hex16(char* title, int bits, u16 val) const
 	draw_bits_range(bits);
 
 	(*canvas_)
-		.draw_text(title, W_NORM)
+		.draw_text(title, w_norm)
 		.next_col()
 		.draw_text("=", W_EQ)
 		.next_col();
 
 	(*canvas_)
-		.draw_hex(val, 4, W_NORM);
+		.draw_hex(val, 4, w_norm);
 
 	next_row();
 }
@@ -122,16 +122,16 @@ void dbg_control::draw_hex24(char* title, int bits, u32 val) const
 	check_parent();
 
 	(*canvas_)
-		.draw_text(title, W_NORM)
+		.draw_text(title, w_norm)
 		.next_col()
 		.next_col()
 		.draw_text("=", W_EQ)
 		.next_col();
 
 	(*canvas_)
-		.draw_hex(val >> 14, 2, W_NORM).move_x_to_len()
+		.draw_hex(val >> 14, 2, w_norm).move_x_to_len()
 		.draw_text(":", W_EQ).move_x_to_len()
-		.draw_hex(val & 0x3FFF, 4, W_NORM);
+		.draw_hex(val & 0x3FFF, 4, w_norm);
 
 	next_row();
 }
@@ -142,13 +142,13 @@ void dbg_control::draw_bit_d(char* title, int bits, u8 val) const
 	draw_bits_range(bits);
 
 	(*canvas_)
-		.draw_text(title, W_NORM)
+		.draw_text(title, w_norm)
 		.next_col()
 		.draw_text("=", W_EQ)
 		.next_col();
 
 	(*canvas_)
-		.draw_number(val, W_NORM);
+		.draw_number(val, w_norm);
 
 	next_row();
 }
@@ -159,13 +159,13 @@ void dbg_control::draw_bit_h(char* title, int bits, u8 val) const
     draw_bits_range(bits);
 
     (*canvas_)
-        .draw_text(title, W_NORM)
+        .draw_text(title, w_norm)
         .next_col()
         .draw_text("=", W_EQ)
         .next_col();
 
     (*canvas_)
-        .draw_hex(val, 2, W_NORM);
+        .draw_hex(val, 2, w_norm);
 
     next_row();
 }
@@ -175,14 +175,14 @@ void dbg_control::draw_port(char* title, u8 val) const
 	check_parent();
 
 	(*canvas_)
-		.draw_text(title, W_NORM)
+		.draw_text(title, w_norm)
 		.next_col()
 		.next_col()
 		.draw_text("=", W_EQ)
 		.next_col();
 
 	(*canvas_)
-		.draw_hex(val, 2, W_NORM);
+		.draw_hex(val, 2, w_norm);
 
 	next_row();
 }
@@ -198,22 +198,22 @@ void dbg_control::draw_hl_port(char prefix, u8 hval, u8 lval, u16 val) const
 
 	line[1] = 'H';
 	(*canvas_)
-		.draw_text(line, W_NORM).move_x_to_len()
+		.draw_text(line, w_norm).move_x_to_len()
 		.draw_text("= ", W_EQ).move_x_to_len()
-		.draw_hex(hval, 2, W_NORM).move_x_to_len()
+		.draw_hex(hval, 2, w_norm).move_x_to_len()
 		.draw_text(" ").move_x_to_len();
 
 	line[1] = 'L';
 	(*canvas_)
-		.draw_text(line, W_NORM).move_x_to_len()
+		.draw_text(line, w_norm).move_x_to_len()
 		.draw_text("= ", W_EQ).move_x_to_len()
-		.draw_hex(lval, 2, W_NORM).move_x_to_len()
+		.draw_hex(lval, 2, w_norm).move_x_to_len()
 		.draw_text(" ").move_x_to_len();
 
 	(*canvas_)
-		.draw_text(line1, W_NORM).move_x_to_len()
+		.draw_text(line1, w_norm).move_x_to_len()
 		.draw_text("= ", W_EQ).move_x_to_len()
-		.draw_hex(val, 4, W_NORM).move_x_to_len()
+		.draw_hex(val, 4, w_norm).move_x_to_len()
 		.draw_text(" ").move_x_to_len();
 
 	next_row();
@@ -228,23 +228,23 @@ void dbg_control::draw_xhl_port(char prefix, u8 xval, u8 hval, u8 lval) const
 
 	line[1] = 'X';
 	(*canvas_)
-		.draw_text(line, W_NORM).move_x_to_len()
+		.draw_text(line, w_norm).move_x_to_len()
 		.draw_text("= ", W_EQ).move_x_to_len()
-		.draw_hex(xval, 2, W_NORM).move_x_to_len()
+		.draw_hex(xval, 2, w_norm).move_x_to_len()
 		.draw_text(" ").move_x_to_len();
 
 	line[1] = 'H';
 	(*canvas_)
-		.draw_text(line, W_NORM).move_x_to_len()
+		.draw_text(line, w_norm).move_x_to_len()
 		.draw_text("= ", W_EQ).move_x_to_len()
-		.draw_hex(hval, 2, W_NORM).move_x_to_len()
+		.draw_hex(hval, 2, w_norm).move_x_to_len()
 		.draw_text(" ").move_x_to_len();
 
 	line[1] = 'L';
 	(*canvas_)
-		.draw_text(line, W_NORM).move_x_to_len()
+		.draw_text(line, w_norm).move_x_to_len()
 		.draw_text("= ", W_EQ).move_x_to_len()
-		.draw_hex(lval, 2, W_NORM).move_x_to_len()
+		.draw_hex(lval, 2, w_norm).move_x_to_len()
 		.draw_text(" ").move_x_to_len();
 
 	next_row();
@@ -433,7 +433,7 @@ dbg_canvas& dbg_canvas::draw_frame(const int w, int h)
 
 dbg_canvas& dbg_canvas::fill_rect(const int w, const int h)
 {
-	fillrect(base_x_ + x_, base_y_ + y_, w, h, W_NORM);
+	fillrect(base_x_ + x_, base_y_ + y_, w, h, w_norm);
 
 	return *this;
 }
@@ -492,12 +492,12 @@ void dbg_canvas::draw_reg_frame(const dbg_control& control, int h, const char* t
 	set_cols(x + 0, x + 3, x + 12, x + 14);
 	set_xy(x, y);
 
-	draw_text(title, W_TITLE);
+	draw_text(title, w_title);
 	move_x_to_len();
 
 	if (regval != nullptr)
 	{
-		draw_text("=", W_TITLE);
+		draw_text("=", w_title);
 		move_x_to_len();
 		draw_hex(*regval, 2, W_REGVAL);
 	}

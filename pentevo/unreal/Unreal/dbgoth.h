@@ -5,7 +5,7 @@ void mon_setwatch();
 void mon_switchay();
 
 extern unsigned int selbank, showbank;
-void __cdecl BankNames(int i, char *Name);
+void __cdecl BankNames(int i, char *name);
 int dispatch_banks();
 void bup();
 void bdown();
