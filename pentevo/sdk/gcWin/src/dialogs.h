@@ -12,23 +12,47 @@ const GC_SVMENU_t mnuSVM =
 /*count*/       8
 };
 
+const u8 txt_lorem[] =
+"Lorem ipsum dolor sit amet, facer vocent an pri. Volumus iudicabit cum ei.\r"
+"Ipsum quando feugiat te cum, et sea mundi principes assueverit. Eam no\r"
+"lobortis quaerendum definitionem. Velit semper maluisset vix an, te eius\r"
+"omittam cum. Tamquam lobortis tincidunt id pro, quo vocent aliquid ne.\r"
+"Altera mucius qui te. Cum iriure oblique sadipscing ad. Placerat inimicus \r"
+"similique pro an, duo at movet elaboraret accommodare, quo no adhuc denique.\r"
+"Dicunt habemus in pri, reque viderer per no, nec et pertinax delicata. Natum \r"
+"vivendo neglegentur sea ex, mel ex justo principes sadipscing. Vix no quando\r"
+"consectetuer, tation dignissim quo at. An habeo omnesque vis, et laudem\r"
+"lucilius est. Perfecto vulputate ex est. Ad aliquip ponderum insolens sit,\r"
+"quis agam case ad nam.\r"
+"Sit utinam feugait eleifend at, eam eu errem verear, ex eam officiis\r"
+"perfecto ullamcorper.\r"
+"Meis evertitur vulputate per ex, nibh possit sit at. Ex habemus rationibus\r"
+"mediocritatem vis, mel essent eleifend no.\r"
+"At omnis labitur duo. Et sale complectitur pri. Cu sea quidam reprimique.\r"
+"Te sed convenire consequat. Est et equidem mandamus. Aperiam praesent \r"
+"gloriatur an nam, vix veri epicuri inimicus ut.\r"
+"Nulla appareat et sea, quodsi commune ocurreret mei ex. Quo et semper aeterno\r"
+"veritus. His in suas unum meis. Ut vix velit hendrerit.\r";
+
 // MAIN WINDOW
 const GC_WINDOW_t wndMain =
 {
+/*id*/          1,
 /*type*/        GC_WND_NOMENU,
 /*xy*/          0,0,
 /*wh*/          80,30,
 /*attr*/        (WIN_COL_WHITE<<4) | WIN_COL_BRIGHT_WHITE,
-/*frame_type*/  GC_FRM_NONE | GC_FRM_NOHEADER | GC_FRM_NOSHADOW | GC_FRM_NOLOGO,
+/*frame_type*/  GC_FRM_SINGLE | GC_FRM_NOSHADOW | GC_FRM_NOLOGO,
 /*frame_attr*/  (WIN_COL_WHITE<<4) | WIN_COL_BRIGHT_WHITE,
 /*header_txt*/  INK_BLACK
                 "Main Window",
-/*window_txt*/  0,
+/*window_txt*/  txt_lorem,
 /*menu_ptr*/    0
 };
 
 const GC_WINDOW_t wndTest1 =
 {
+/*id*/          2,
 /*type*/        GC_WND_NOMENU,
 /*xy*/          8,5,
 /*wh*/          40,10,
@@ -56,9 +80,10 @@ const GC_WINDOW_t wndTest1 =
 
 const GC_WINDOW_t wndTest2 =
 {
+/*id*/          3,
 /*type*/        GC_WND_NOMENU,
 /*xy*/          35,2,
-/*wh*/          40,8,
+/*wh*/          40,11,
 /*attr*/        (WIN_COL_RED<<4) | WIN_COL_BRIGHT_WHITE,
 /*frame_type*/  GC_FRM_SINGLE,
 /*frame_attr*/  (WIN_COL_RED<<4) | WIN_COL_BRIGHT_YELLOW,
@@ -89,16 +114,20 @@ const GC_WINDOW_t wndTest2 =
                 PAPER_BRIGHT_WHITE "  "
                 "\r"
                 INK_BRIGHT_RED
-                MARK_LINK"\x3\r"
+                MARK_LINK"\x3 1\r"
                 INK_BRIGHT_YELLOW
                 MARK_LINK"\x4\r"
                 INK_BRIGHT_MAGENTA
-                MARK_LINK"\x5\r",
+                MARK_LINK"\x5\r"
+                "\xB9\xBA""Folder\r"
+                "\xBB\xBC""Folder\r"
+                "\xBD\xBE""File\r",
 /*menu_ptr*/    0
 };
 
 const GC_WINDOW_t wndInfo =
 {
+/*id*/          0,
 /*type*/        GC_WND_DIALOG,
 /*xy*/          18,6,
 /*wh*/          40,18,
@@ -113,6 +142,7 @@ const GC_WINDOW_t wndInfo =
 
 const GC_WINDOW_t wndDialog =
 {
+/*id*/          0,
 /*type*/        GC_WND_DIALOG,
 /*xy*/          10,4,
 /*wh*/          55,24,
@@ -217,7 +247,7 @@ const GC_DITEM_t itmItemNM3 =
 
 const GC_DITEM_t itmItemG1 =
 {
-/*type*/        DI_SINGLEBOX,
+/*type*/        DI_GROUPBOX,
 /*id*/          0,
 /*xy*/          0,1,
 /*wh*/          26,4,
@@ -232,7 +262,7 @@ const GC_DITEM_t itmItemG1 =
 
 const GC_DITEM_t itmItemG2 =
 {
-/*type*/        DI_SINGLEBOX,
+/*type*/        DI_GROUPBOX,
 /*id*/          0,
 /*xy*/          27,1,
 /*wh*/          26,4,
@@ -247,7 +277,7 @@ const GC_DITEM_t itmItemG2 =
 
 const GC_DITEM_t itmItemG3 =
 {
-/*type*/        DI_SINGLEBOX,
+/*type*/        DI_GROUPBOX,
 /*id*/          0,
 /*xy*/          0,7,
 /*wh*/          26,5,
@@ -591,8 +621,8 @@ const GC_DITEM_t *dlgTestItemsList[] =
 {
     &itmItemCB11, &itmItemCB12, &itmItemCB3,
     &itmItemCB21, &itmItemCB22, &itmItemCB4, &itmItemED1,
-    &itmItemRB1, &itmItemRB2, &itmItemRB3,
     &itmItemLBX1,
+    &itmItemRB1, &itmItemRB2, &itmItemRB3,
     &itmItemBtnOK, &itmItemBtnCN,
     &itmItemHD1, &itmItemTX1,
     &itmItemNMH1, &itmItemNMH2, &itmItemNMH3,
@@ -617,9 +647,10 @@ const u8 *msg_arr[] =
 /*0*/    "Checkbox ",
 /*1*/   "Radio" MARK_LINK "\x6",
 /*2*/    "Listbox ",
-/*3*/    "linked message 1",
-/*4*/    MARK_CENTER "centered linked message 2",
-/*5*/    MARK_RIGHT "right align linked message 3",
+/*3*/    "linked message",
+/*4*/    MARK_CENTER "centered " MARK_LINK "\x3 2 " MARK_LINK "\x8",
+/*5*/    MARK_RIGHT "right align " MARK_LINK "\x3 3",
 /*6*/    "button",
-/*7*/    "item "
+/*7*/    "item ",
+/*8*/    "test"
 };

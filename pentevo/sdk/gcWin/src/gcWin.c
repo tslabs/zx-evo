@@ -2,12 +2,13 @@
 //::                     Window System                       ::
 //::               by dr_max^gc (c)2018-2019                 ::
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
 #include "defs.h"
 #include "tsio.h"
 #include "keyboard.h"
 #include "gcWin.h"
 #include "numbers.h"
+
+//#define PRINT_DELAY
 
 void gcVars (void)
 {
@@ -31,7 +32,7 @@ void gcVars (void)
     dlg_all_count           .equ    #02 ; byte  (count of all items)
     dlg_act_count           .equ    #03 ; byte  (count of active items)
     dlg_cur_attr            .equ    #04 ; byte  (cursor attribute)
-    dlg_box_attr            .equ    #05 ; byte  (DI_SINGLEBOX attribute)
+    dlg_box_attr            .equ    #05 ; byte  (DI_GROUPBOX attribute)
     dlg_btn_focus_attr      .equ    #06 ; byte  (DI_BUTTON focus attribute)
     dlg_btn_unfocus_attr    .equ    #07 ; byte  (DI_BUTTON unfocus attribute)
     dlg_lbox_focus_attr     .equ    #08 ; byte  (DI_LISTBOX (and other) attribute)
@@ -40,17 +41,18 @@ void gcVars (void)
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;; struct GC_WINDOW
 ;; window descriptor offsets
-    type                    .equ    #00 ; byte
-    x                       .equ    #01 ; byte
-    y                       .equ    #02 ; byte
-    width                   .equ    #03 ; byte
-    hight                   .equ    #04 ; byte
-    window_attr             .equ    #05 ; byte
-    frame_type              .equ    #06 ; byte
-    frame_attr              .equ    #07 ; byte
-    header_txt              .equ    #08 ; word
-    window_txt              .equ    #10 ; word
-    menu_ptr                .equ    #12 ; word
+    id                      .equ    #00 ; byte
+    type                    .equ    #01 ; byte
+    x                       .equ    #02 ; byte
+    y                       .equ    #03 ; byte
+    width                   .equ    #04 ; byte
+    hight                   .equ    #05 ; byte
+    window_attr             .equ    #06 ; byte
+    frame_type              .equ    #07 ; byte
+    frame_attr              .equ    #08 ; byte
+    header_txt              .equ    #09 ; word
+    window_txt              .equ    #11 ; word
+    menu_ptr                .equ    #13 ; word
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;; struct GC_DITEM_FLAG_t;
     dif_grey_mask           .equ    #0x01
@@ -76,7 +78,7 @@ void gcVars (void)
 ;; item types offset
     DI_TEXT                 .equ    #00
     DI_HDIV                 .equ    #01
-    DI_SINGLEBOX            .equ    #02
+    DI_GROUPBOX             .equ    #02
     DI_EDIT                 .equ    #04
     DI_BUTTON               .equ    #07
     DI_CHECKBOX             .equ    #08
@@ -93,14 +95,15 @@ void gcVars (void)
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;; macros
     .macro  LD_IXHL
-    ;ld a,l
-    ;.db #0xDD
-    ;ld l,a
-    ;ld a,h
-    ;.db #0xDD
-    ;ld h,a
     push hl
     pop ix
+    .endm
+
+    .macro LDF_HLHL
+    ld a,(hl)
+    inc hl
+    ld h,(hl)
+    ld l,a
     .endm
 ;;::common:::::::::::::::::::::::::::::::::::::::::::::::::::::
 save_window_parms:
@@ -187,6 +190,15 @@ _current_dialog_ptr::
 frame_set_addr:
     .dw 0
 ;;
+_window_count::
+    .db #0x00
+_current_window_id::
+    .db #0x00
+_vpage::
+    .db #0x80
+_spage::
+    .db #0x82
+;;
 ascbuff:
     .ds 15
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -234,18 +246,109 @@ frame_set1_noheader:
 frame_set2_noheader:
     .db 0x20,0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x0A,0xC4
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+_windows_list::
+    .ds 4*10
+;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     __endasm;
 }
 
-/* *NOTE*
-    - active/inactive items
-    - items hotkey
-    - store data under window
-    - store data under cursor
-    - variable tracking
-    - progressbar item (with vartracking)
-    - color templates
-*/
+void gcWindowsInit(u8 vpage, u8 spage) __naked
+{
+    vpage;              // to avoid SDCC warning
+    spage;              // to avoid SDCC warning
+
+    __asm
+    ld hl,#2
+    add hl,sp
+    ld a,(hl)
+    inc hl
+    ld (_vpage),a
+    ld a,(hl)
+    ld (_spage),a
+
+;; clear shadow screen page
+    ld a,(_spage)
+    ld bc,#0x13AF
+    out (c),a
+    call clear_page3
+
+;; clear video page
+    ld a,(_vpage)
+    ld bc,#0x13AF
+    out (c),a
+    call clear_page3
+
+    xor a
+    ld (_window_count),a
+    ld (_current_window_id),a
+
+;; set im1 ISR
+    di
+    ld hl,#0x0038
+    ld de,#isr38
+    ld (hl),#0xC3
+    inc hl
+    ld (hl),e
+    inc hl
+    ld (hl),d
+    ei
+    ret
+
+clear_page3:
+    ld hl,#0xC000
+    ld de,#0xC001
+    ld bc,#0x3FFF
+    ld (hl),l
+    ldir
+    ret
+
+isr38:
+    push af
+    push bc
+
+    ld	bc,#0x27AF      ;; DMASTATUS
+0$: in	a,(c)
+	and	#0x80
+	jr	nz,2$
+
+    ld bc,#0x1AAF       ;; DMASADDRL
+    xor a
+    out (c),a
+    inc b
+    out (c),a
+    inc b
+    ld a,(_spage)
+    out (c),a
+    inc b
+    xor a
+    out (c),a
+    inc b
+    out (c),a
+    inc b
+    ld a,(_vpage)
+    out (c),a
+    ld b,#0x28          ;; DMANUM
+    ld a,#0xFF
+    out (c),a
+    dec b
+    dec b
+    ld a,#20            ;; DMALEN
+    out (c),a
+    inc b
+    ld a,#0x01
+    out (c),a
+
+    ld	bc,#0x27AF      ;; DMASTATUS
+1$: in	a,(c)
+	and	#0x80
+	jr	nz,1$
+
+2$: pop bc
+    pop af
+    ei
+    ret
+    __endasm;
+}
 
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 void gcSetLinkedMessage(u16 **ptr) __naked __z88dk_fastcall
@@ -259,7 +362,7 @@ void gcSetLinkedMessage(u16 **ptr) __naked __z88dk_fastcall
 }
 
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-BTN_TYPE_t gcWindowHandler(GC_WINDOW_t *wnd)
+BTN_TYPE_t gcExecuteWindow(GC_WINDOW_t *wnd)
 {
     BTN_TYPE_t rc;
     u16 *ptr;
@@ -624,6 +727,7 @@ dialog_lp:
 dialog_lp1:
     ei
     halt
+
     ld a,<#dlg_current (ix)
     call get_dialog_item_addr
     push hl
@@ -674,16 +778,15 @@ dialog_leftright:
 ;;    HL - dialog item address
 ;;:::::::::::::::::::::::::::::
 get_dialog_item_addr:
+    push de
     ld l,a
     ld e,<#dlg_items (ix)
     ld d,<#dlg_items+1 (ix)
     ld h,#0
     add hl,hl
     add hl,de
-    ld a,(hl)
-    inc hl
-    ld h,(hl)
-    ld l,a
+    LDF_HLHL
+    pop de
     ret
 
 ;;:::::::::::::::::::::::::::::
@@ -715,7 +818,7 @@ dialog_exit:
     ld a,#-1
     ld <#di_select (ix),a
     call _gcPrintDialogItem
-    ld b,#10
+    ld b,#5
     ei
     halt
     djnz .-1
@@ -819,6 +922,7 @@ dialog_ent_edit:
 
     call _gcEditString
 
+;; restore stack
     ld hl,#5
     add hl,sp
     ld sp,hl
@@ -865,7 +969,9 @@ dialog_ent_list:
     push de
 
 ;; build temp window onto stack
-;;gcDrawWindow(u8 x, u8 y, u8 width, u8 hight, u8 attr, u8 frame_type, u8 frame_attr) {
+;;gcDrawWindow(u8 id, u8 x, u8 y, u8 width, u8 hight, u8 attr, u8 frame_type, u8 frame_attr) {
+
+;;set frame attr
     ld a,(cfg_listbox_unfocus_attr)
     push af
     inc sp
@@ -875,6 +981,7 @@ dialog_ent_list:
     push af
     inc sp
 
+;;set attr
     ld a,(cfg_listbox_unfocus_attr)
     push af
     inc sp
@@ -889,9 +996,15 @@ dialog_ent_list:
 ;;set YX coords
     push de
 
+    ld a,(_window_count)
+    inc a
+    push af
+    inc sp
+
     call _gcDrawWindow
 
-    ld hl,#7
+;; restore stack
+    ld hl,#8
     add hl,sp
     ld sp,hl
 ;;}
@@ -913,10 +1026,7 @@ dialog_ent_list:
     ld l,<#di_name (ix)
     ld h,<#di_name+1 (ix)  ; HL - name address
     add hl,bc
-    ld a,(hl)
-    inc hl
-    ld h,(hl)
-    ld l,a
+    LDF_HLHL
     call strprnz
     pop de
     inc d
@@ -966,6 +1076,15 @@ dialog_ent_list:
 
 ;; restore window parameters
     call restore_window_parms
+
+;; stop screen update
+    di
+    ld a,(_window_count)
+    push af
+    ld hl,(_current_window_ptr)
+    call _gcPrintWindow
+    pop af
+    ld (_window_count),a
 
     pop ix
 ;; IX - dialog descriptor
@@ -1055,8 +1174,15 @@ dialog_sel_radio:
     ld d,<#di_var+1 (ix)
     ld a,<#di_select (ix)
     ld (de),a
+    ld a,#DI_RADIOBUTTON
+    push af
+    inc sp
     ld hl,(_current_dialog_ptr)
-    call _gcPrintActiveDialog
+    push hl
+    call _gcPrintDialogShownItems
+    ld hl,#3
+    add hl,sp
+    ld sp,hl
     jr dialog_sp_exit
 ;;:::::::::::::::::::::::::::::
     __endasm;
@@ -1232,6 +1358,56 @@ u8 gcFindPrevItem(GC_DIALOG_t *dlg) __naked __z88dk_fastcall
     dec a
     pop ix
     ld l,a
+    ret
+    __endasm;
+}
+
+//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+void gcPrintDialogShownItems(GC_DIALOG_t *dlg, GC_DITEM_TYPE_t type) __naked
+{
+    dlg;                    // to avoid SDCC warning
+    type;                   // to avoid SDCC warning
+
+    __asm
+;;::::::::::::::::::::::::::::::
+;; var offsets
+    _dlg    .equ #0
+    _type   .equ #2
+;;::::::::::::::::::::::::::::::
+    push ix
+    ld ix,#4
+    add ix,sp
+
+    ld l,<#_dlg (ix)
+    ld h,<#_dlg+1 (ix)
+    ld e,<#_type (ix)
+
+    LD_IXHL                 ; IX - dialog descriptor
+
+    ld b,<#dlg_all_count (ix)
+
+0$: push bc
+    push ix
+    push de
+
+    ld a,b
+    dec a
+    call get_dialog_item_addr
+;; HL - dialog item address
+
+    LD_IXHL                 ; IX - dialog item descriptor
+
+    pop de
+    push de
+    ld a,<#di_type (ix)
+    cp e
+    call z,_gcPrintDialogItem
+    pop de
+    pop ix
+    pop bc
+    djnz 0$
+
+    pop ix
     ret
     __endasm;
 }
@@ -1416,8 +1592,8 @@ void gcPrintDialogItem(GC_DITEM_t *ditm) __naked __z88dk_fastcall
     jp z,print_item_text
     cp #DI_HDIV
     jp z,print_item_hdiv
-    cp #DI_SINGLEBOX
-    jp z,print_item_singlebox
+    cp #DI_GROUPBOX
+    jp z,print_item_groupbox
     cp #DI_RADIOBUTTON
     jp z,print_item_radio
     cp #DI_CHECKBOX
@@ -1536,10 +1712,7 @@ print_item_listbox:
     ld c,a
     ld b,#0
     add hl,bc
-    ld a,(hl)
-    inc hl
-    ld h,(hl)
-    ld l,a
+    LDF_HLHL
     jp print_item_text
 
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -1647,7 +1820,7 @@ print_item_radio:
     ret
 
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-print_item_singlebox:
+print_item_groupbox:
     push hl
     push de
 
@@ -1839,10 +2012,7 @@ print_item_number:
     jr z,print_itm_h32
 ;;::::::::::::::::::::::::::::::
 print_itm_h16:
-    ld a,(hl)
-    inc hl
-    ld h,(hl)
-    ld l,a
+    LDF_HLHL
     push ix
     ld ix,#ascbuff+1
     call hexasc16
@@ -1869,10 +2039,7 @@ print_itm_h32:
     inc hl
     ld d,(hl)
     inc hl
-    ld a,(hl)
-    inc hl
-    ld h,(hl)
-    ld l,a
+    LDF_HLHL
     ex de,hl
     push ix
     ld ix,#ascbuff+1
@@ -1910,10 +2077,7 @@ print_itm_d8:
 ;;::::::::::::::::::::::::::::::
 print_itm_d16:
     push de
-    ld a,(hl)
-    inc hl
-    ld h,(hl)
-    ld l,a
+    LDF_HLHL
     push hl
     exx
     pop hl
@@ -1934,10 +2098,7 @@ print_itm_d32:
     inc hl
     ld d,(hl)
     inc hl
-    ld a,(hl)
-    inc hl
-    ld h,(hl)
-    ld l,a
+    LDF_HLHL
     jp _gcPrintDec32
     __endasm;
 }
@@ -1956,11 +2117,33 @@ void gcEditString(u8 *str, u8 len, u8 x, u8 y) __naked
     _x      .equ #3
     _y      .equ #4
     _offset .equ #-3
+    _buflen .equ #80
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     push ix
-    dec sp      ;allocation local var _offset
-    ld ix,#5
+    ld ix,#4
     add ix,sp
+
+;; allocate local vars _offset and _buff
+    ld hl,#-_buflen-1
+    add hl,sp
+    ld (_buff),hl
+    ld sp,hl
+
+;; fill buff
+    ld e,l
+    ld d,h
+    inc de
+    ld bc,#_buflen-1
+    ld (hl),#0x20
+    ldir
+
+;;copy to buff
+    ld l,<#_str (ix)
+    ld h,<#_str+1 (ix)
+    ld de,(_buff)
+    ld b,#0
+    ld c,<#_len (ix)
+    ldir
 ;;
 edit_string_home:
     xor a
@@ -1996,8 +2179,7 @@ edit_string_lp0:
 
     ex af,af
     call edit_string_insert_sym
-    ld l,<#_str (ix)
-    ld h,<#_str+1 (ix)
+    ld hl,(_buff)
     ld b,#0
     ld c,<#_offset (ix)
     add hl,bc
@@ -2043,16 +2225,14 @@ edit_string_ins:
     jr edit_string_lp
 ;;::::::::::::::::::::::::::::::
 edit_string_delete_sym:
-    ld l,<#_str (ix)
-    ld h,<#_str+1 (ix)
+    ld hl,(_buff)
     ld c,<#_offset (ix)
     ld b,#0
     add hl,bc
     ld e,l
     ld d,h
     inc hl
-    ld a,<#_len (ix)
-    dec a
+    ld a,#_buflen-1
     sub <#_offset (ix)
     ret z
     ld c,a
@@ -2060,33 +2240,32 @@ edit_string_delete_sym:
     ret
 ;;::::::::::::::::::::::::::::::
 edit_string_insert_sym:
-    ld l,<#_str (ix)
-    ld h,<#_str+1 (ix)
-    ld c,<#_len (ix)
-    dec c
+    ld hl,(_buff)
+    ld c,#_buflen-1
     ld b,#0
     add hl,bc
     ld e,l
     ld d,h
     dec hl
-    ld a,<#_len (ix)
+    ld a,#_buflen
     sub <#_offset (ix)
     ld c,a
     lddr
     ret
 ;;::::::::::::::::::::::::::::::
 print_edit_string:
-    ld l,<#_str (ix)
-    ld h,<#_str+1 (ix)
+    ld hl,(_buff)
     ld e,<#_x (ix)
     ld d,<#_y (ix)
     push de
-    call strprnz
+    ld b,<#_len (ix)
+    call strprnlen
     pop de
     ld a,<#_offset (ix)
     add a,e
     ld e,a
-    ld a,(cfg_listbox_focus_attr)
+    ld a,(cfg_cur_attr)
+    and #0x0F
     rrca
     rrca
     rrca
@@ -2094,61 +2273,90 @@ print_edit_string:
     jp set_attr
 ;;::::::::::::::::::::::::::::::
 edit_string_ent:
-    inc sp      ;free local var
+    ld hl,(_buff)
+    ld e,<#_str (ix)
+    ld d,<#_str+1 (ix)
+    ld c,<#_len (ix)
+    ld b,#0
+    ldir
+
+;; free
+    ld hl,#_buflen+1
+    add hl,sp
+    ld sp,hl
+
     pop ix
     ret
+_buff:
+    .dw 0
     __endasm;
 }
 
-//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-void gcStoreWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall
+void gcCloseWindow(void) __naked
 {
-    wnd;                // to avoid SDCC warning
-
     __asm
-    push ix
-
-    LD_IXHL             ; IX - window descriptor
-
-
-    pop ix
+    ld a,(_window_count)
+    or a
+    ret z
+    dec a
+    ld (_window_count),a
+    call _gcPrintChainWindows
     ret
     __endasm;
 }
 
-//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-void gcRestoreWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall
+void gcPrintChainWindows(void) __naked
 {
-    wnd;                // to avoid SDCC warning
-
     __asm
-    push ix
-
-    LD_IXHL             ; IX - window descriptor
-
-
-
-    pop ix
+    di
+    ld a,(_window_count)
+    push af
+    ld b,a
+    xor a
+0$: ld (_window_count),a
+    inc a
+    push af
+    push bc
+    ld l,a
+    ld h,#0
+    add hl,hl
+    add hl,hl
+    ld de,#_windows_list
+    add hl,de
+    inc hl  ;skip id
+    inc hl  ;skip flags
+    ld a,(hl)
+    inc hl
+    ld h,(hl)
+    ld l,a
+    call _gcPrintWindow
+    pop bc
+    pop af
+    djnz 0$
+    pop af
+    ld (_window_count),a
+    ei
     ret
     __endasm;
 }
 
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-void gcDrawWindow(u8 x, u8 y, u8 width, u8 hight, u8 attr, u8 frame_type, u8 frame_attr) __naked
+void gcDrawWindow(u8 id, u8 x, u8 y, u8 width, u8 hight, u8 attr, u8 frame_type, u8 frame_attr) __naked
 {
-    x,y,width,hight,attr;   // to avoid SDCC warning
+    id,x,y,width,hight,attr;// to avoid SDCC warning
     frame_type, frame_attr; // to avoid SDCC warning
 
     __asm
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;; var offsets
-    _x      .equ #0
-    _y      .equ #1
-    _w      .equ #2
-    _h      .equ #3
-    _a      .equ #4
-    _ft     .equ #5
-    _fa     .equ #6
+    _id     .equ #0
+    _x      .equ #1
+    _y      .equ #2
+    _w      .equ #3
+    _h      .equ #4
+    _a      .equ #5
+    _ft     .equ #6
+    _fa     .equ #7
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;; frameset symbols offsets
     sym_space           .equ    #00
@@ -2167,6 +2375,10 @@ void gcDrawWindow(u8 x, u8 y, u8 width, u8 hight, u8 attr, u8 frame_type, u8 fra
     push ix
     ld ix,#4
     add ix,sp
+
+;; set window id
+    ld a,<#_id (ix)
+    ld (_current_window_id),a
 
 ;; select frameset
     ld de,#frame_set0
@@ -2329,7 +2541,7 @@ print_window_row:
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 winfrm_prn:
     ld l,a
-    ex af,af
+    push af
     push bc
     ld h,#0
     ld bc,(frame_set_addr)
@@ -2337,7 +2549,7 @@ winfrm_prn:
     ld a,(hl)
     pop bc
     call sym_prn
-    ex af,af
+    pop af
     ret
     __endasm;
 }
@@ -2394,9 +2606,16 @@ void gcPrintWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall
     ld h,<#y (ix)
     push hl
 
+    ld a,(_window_count)
+    inc a
+    ld (_window_count),a
+    ld <#id (ix),a
+    push af
+    inc sp
+
     call _gcDrawWindow
 
-    ld hl,#7
+    ld hl,#8
     add hl,sp
     ld sp,hl
 ;;}
@@ -2463,6 +2682,29 @@ void gcPrintWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall
     or h
     call nz,strprnz
 
+;; store to windows list
+    ld a,<#id (ix)
+    add a,a
+    add a,a
+    ld l,a
+    ld h,#0
+    ld de,#_windows_list
+    add hl,de
+    ex de,hl
+    ld a,<#id (ix)
+    ld (de),a
+    inc de
+    xor a   ;flags
+    ld (de),a
+    inc de
+    push ix
+    pop hl
+    ld a,l
+    ld (de),a
+    inc de
+    ld a,h
+    ld (de),a
+
     pop ix
     ret
 
@@ -2498,11 +2740,27 @@ set_attr_line:
 set_attr:
     ld h,d
     ld l,e
+    inc e
     set 7,h
     set 6,h
+
+;; set z-buff address
+;    set 5,h
+;    ex af,af
+;    ld a,(_current_window_id)
+;; compare with z-buffer
+;    cp (hl)
+;    jr c,0$
+
+;; put new z and set attr
+    ;ld (hl),a
+;    res 5,h
     set 7,l
+;    ex af,af
     ld (hl),a
-    inc e
+    ret
+
+0$: ex af,af
     ret
 
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -2519,17 +2777,6 @@ get_attr:
     set 6,h
     set 7,l
     ld a,(hl)
-    ret
-
-;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-winsym_prn:
-    ld de,(cur_x)
-    ld b,a
-    ld a,(sym_attr)
-    ld c,a
-    ld a,b
-    call sym_prn
-    ld (cur_x),de
     ret
 
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -2553,16 +2800,59 @@ sym_prns:
 ;;   DE - YX coords
 ;; o:
 ;;   E++
+;; corrupt:
+;;   BC`, HL`, AF`
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 sym_prn:
+    #ifdef PRINT_DELAY
+    push bc
+    djnz .-0
+    djnz .-0
+    djnz .-0
+    djnz .-0
+    pop bc
+    #endif // delay
     ld h,d
     ld l,e
+    inc e
     set 7,h
     set 6,h
+
+;; set z-buff address
+;    set 5,h
+;    ex af,af
+;    ld a,(_current_window_id)
+
+;; compare with z-buffer
+;    cp (hl)
+;    jr c,0$
+
+;; put new z and print symbol
+;    ld (hl),a
+;    res 5,h
+;    ex af,af
     ld (hl),a
     set 7,l
     ld (hl),c
-    inc e
+    ret
+
+;0$: ex af,af
+;    ret
+
+strprnlen:
+0$: ld a,(hl)
+    inc hl
+    or a
+    ret z
+    push bc
+    ld bc,(sym_attr)
+    push hl
+    call sym_prn
+    ld a,e
+    ld (cur_x),a
+    pop hl
+    pop bc
+    djnz 0$
     ret
 
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -2737,13 +3027,16 @@ strlen:
     jr z,4$
     cp #0x0F
     jr z,4$
+    cp #0xFE
+    jr z,3$
 
-3$: inc b
+    inc b
 4$: cp #0x0D
-    jr z,8$
+    ret z
     or a
     jr nz,1$
-8$: ret
+    ret
+
 2$: inc hl
     jr 1$
 5$: inc hl
@@ -2753,6 +3046,26 @@ strlen:
     inc hl
     add a,b
     ld b,a
+    jr 1$
+
+;; linked message
+3$: dec b
+    ld a,(hl)
+    inc hl
+    push hl
+    ld l,a
+    ld h,#0
+    add hl,hl
+    push bc
+    ld bc,(linked_ptr)
+    add hl,bc
+    pop bc
+    ld a,(hl)
+    inc hl
+    ld h,(hl)
+    ld l,a
+    call 1$
+    pop hl
     jr 1$
     __endasm;
 }
@@ -2864,7 +3177,8 @@ void gcSetFontSym(u8 sym, u8 *udg) __naked
     __asm
 ;; set font page
     ld bc,#0x13AF
-    ld a,#0x81
+    ld a,(_vpage)
+    xor #0x01
     out (c),a
 
     ld hl,#2

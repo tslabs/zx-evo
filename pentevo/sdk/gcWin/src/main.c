@@ -11,11 +11,13 @@
 #include "dialogs.h"
 #include "main.h"
 
+#define DI __asm__("di\n");
+#define EI __asm__("ei\n");
 #define EIHALT __asm__("ei\n halt\n");
 #define DIHALT __asm__("di\n halt\n");
 
-#define VPAGE   0x80
-#define SPAGE   0x7F
+#define VPAGE   0x80    // video page
+#define SPAGE   0x82    // shadow screen page
 
 // checkbox 1.1 var
 u8  itmVarCB11 = 0;
@@ -43,34 +45,41 @@ char c;
 u8 rb, lb, cb11, cb12, cb21, cb22, cb3, cb4;
 u8 pcx, pcx0, pcy, pca, pcst;   //for putchar
 
+u8 i;
+
 BTN_TYPE_t select;
+
+GC_WIN_NODE_t winlist_nodes[10];
 
 void func_cb3()
 {
-    itmItemRB1.flags.DIF_GRAY = (itmVarCB3&1);
-    itmItemRB2.flags.DIF_GRAY = (itmVarCB3&1);
-    itmItemRB3.flags.DIF_GRAY = (itmVarCB3&1);
-    gcPrintActiveDialog(&dlgTest);
+    itmItemRB1.flags.DIF_GREY = (itmVarCB3&1);
+    itmItemRB2.flags.DIF_GREY = (itmVarCB3&1);
+    itmItemRB3.flags.DIF_GREY = (itmVarCB3&1);
+    gcPrintDialogShownItems(&dlgTest, DI_RADIOBUTTON);
 }
 
 void func_cb4()
 {
-    itmItemED1.flags.DIF_GRAY = (itmVarCB4&1);
-    itmItemLBX1.flags.DIF_GRAY = (itmVarCB4&1);
-    gcPrintActiveDialog(&dlgTest);
+    itmItemED1.flags.DIF_GREY = (itmVarCB4&1);
+    itmItemLBX1.flags.DIF_GREY = (itmVarCB4&1);
+    gcPrintDialogShownItems(&dlgTest, DI_EDIT);
+    gcPrintDialogShownItems(&dlgTest, DI_LISTBOX);
 }
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 void main(void)
 {
+    gcWindowsInit(VPAGE, SPAGE);
+
     //gcSetFontSym(0xF0, sym1);
 
-    TS_PAGE3 = VPAGE;
     TS_VPAGE = VPAGE;
+    TS_PAGE3 = SPAGE;
 
 // set videomode
     TS_VCONFIG = TS_VID_320X240 | TS_VID_TEXT;
-    TS_TSCONFIG = TS_TSU_SEN;
+//    TS_TSCONFIG = TS_TSU_SEN;
 
     gcSetPalette();
 
@@ -98,7 +107,7 @@ void main(void)
     itmVarCB4 = cb4;
     itmVarLBX11 = lb;
 
-    select = gcWindowHandler(&wndDialog);
+    select = gcExecuteWindow(&wndDialog);
     // if press OK button
     if (select == BUTTON_OK)
     {
@@ -111,8 +120,12 @@ void main(void)
             cb4 = itmVarCB4;
             lb = itmVarLBX11;
     }
+    // close dialog window
+    gcCloseWindow();
 
-    gcWindowHandler(&wndInfo);
+    gcExecuteWindow(&wndInfo);
+    // close info window
+    gcCloseWindow();
 
     select = gcMessageBox(MB_RETRYABORTIGNORE, GC_FRM_SINGLE, "MessageBox",
                 INK_BRIGHT_WHITE
@@ -122,6 +135,16 @@ void main(void)
                 INK_BLUE
                 "incididunt ut labore et dolore magna aliqua."
                  );
+    // close messagebox
+    gcCloseWindow();
+    gcWaitKey(KEY_ENTER);
+
+    // close test window 2
+    gcCloseWindow();
+    gcWaitKey(KEY_ENTER);
+
+    // close test window 1
+    gcCloseWindow();
 
     pcx = 0; pcy = 0; pcst = 0;
     pca = (u8)(WIN_COL_BRIGHT_WHITE<<4) | WIN_COL_RED;

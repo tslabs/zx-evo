@@ -132,17 +132,18 @@ typedef enum
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 typedef struct
 {
-    GC_WND_TYPE_t   type;       // +0
-    u8  x;                      // +1
-    u8  y;                      // +2
-    u8  width;                  // +3
-    u8  hight;                  // +4
-    WIN_COLORS_t  attr;         // +5
-    GC_FRM_TYPE_t frame_type;   // +6
-    WIN_COLORS_t frame_attr;    // +7
-    u8  *header_txt;            // +8
-    u8  *window_txt;            // +10
-    u16 *menu_ptr;              // +12
+    u8  id;                     // +0
+    GC_WND_TYPE_t   type;       // +1
+    u8  x;                      // +2
+    u8  y;                      // +3
+    u8  width;                  // +4
+    u8  hight;                  // +5
+    WIN_COLORS_t  attr;         // +6
+    GC_FRM_TYPE_t frame_type;   // +7
+    WIN_COLORS_t frame_attr;    // +8
+    u8  *header_txt;            // +9
+    u8  *window_txt;            // +11
+    u16 *menu_ptr;              // +13
 } GC_WINDOW_t;
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -187,15 +188,14 @@ typedef enum
 {
     DI_TEXT         = ((u8)0),
     DI_HDIV         = ((u8)1),
-    DI_SINGLEBOX    = ((u8)2),
+    DI_GROUPBOX     = ((u8)2),
     DI_EDIT         = ((u8)4),
     DI_BUTTON       = ((u8)7),
     DI_CHECKBOX     = ((u8)8),
     DI_RADIOBUTTON  = ((u8)9),
     DI_LISTBOX      = ((u8)10),
     DI_LISTVIEW     = ((u8)11),
-    DI_NUMBER       = ((u8)12),
-    DI_INPUT_NUMBER = ((u8)13)
+    DI_NUMBER       = ((u8)12)
 } GC_DITEM_TYPE_t;
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -237,7 +237,7 @@ typedef struct
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 typedef struct
 {
-    unsigned    DIF_GRAY    :1;
+    unsigned    DIF_GREY    :1;
     unsigned    bit1        :1;
     unsigned    bit2        :1;
     unsigned    bit3        :1;
@@ -313,7 +313,6 @@ column_list - указатель на массив указателей на данные колонок
 /*
  * DI_EDIT
  * width - ширина поля ввода
- * var -
  * name - указатель на строку
  */
 
@@ -350,7 +349,7 @@ column_list - указатель на массив указателей на данные колонок
     width - ширина элемента;
             для элемента checkbox ширина просчитывается автоматически;
     hight - высота элемента;
-            используется для элемента singlebox;
+            используется для элемента DI_GROUPBOX;
             в других элементах значение игнорируется;
     flags - флаги элемента;
             DIF_GRAY - неактивный элемент;
@@ -365,7 +364,7 @@ column_list - указатель на массив указателей на данные колонок
     name - название элемента;
     exec - указатель на функцию, вызываемую при выборе элемента;
             может использоваться для изменения активности/неактивности
-            элемента выставлением бита DIF_GRAY;
+            элемента выставлением бита DIF_GREY;
 */
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -394,14 +393,14 @@ typedef struct
     all_count - общее количество пунктов
     act_count - количество активных пунктов
     curr_attr - цвет курсора
-    box_attr - цвет элемента SINGLEBOX
-    btn_focus_attr - цвет элемента BUTTON в фокусе
-    btn_unfocus_attr - цвет элемента BUTTON не в фокусе
-    lbox_focus_attr (*) - цвет элемента LISTBOX в фокусе
-    lbox_unfocus_attr(*) - цвет элемента LISTBOX не в фокусе
+    box_attr - цвет элемента DI_GROUPBOX
+    btn_focus_attr - цвет элемента DI_BUTTON в фокусе
+    btn_unfocus_attr - цвет элемента DI_BUTTON не в фокусе
+    lbox_focus_attr (*) - цвет элемента DI_LISTBOX в фокусе
+    lbox_unfocus_attr(*) - цвет элемента DI_LISTBOX не в фокусе
     **items - указатель на массив указателей на элементы диалога
         (ВАЖНО! активные элементы перечисляются первыми, в конце списка
-         пассивные элементы, такие как DI_TEXT, DI_SINGLEBOX, DI_HDIV)
+         пассивные элементы, такие как DI_TEXT, DI_GROUPBOX, DI_HDIV)
 
     * - также используется для DI_EDIT
 */
@@ -431,7 +430,7 @@ typedef struct
     u8  all_count;          // count of all items
     u8  act_count;          // count of acive items
     u8  cur_attr;           // cursor attribute
-    u8  box_attr;           // DI_SINGLEBOX attribute
+    u8  box_attr;           // DI_GROUPBOX attribute
     u8  btn_focus_attr;     // DI_BUTTON focus attribute
     u8  btn_unfocus_attr;   // DI_BUTTON unfocus attribute
     u8  lbox_focus_attr;    // DI_LISTBOX (and other) focus attribute
@@ -462,17 +461,39 @@ typedef struct
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
+/*
+Описатель узла списка окон
+    id - номер окна (0 - узел свободен)
+    flags - флаги окна
+    GC_WINDOW_t *window - указатель на стуктуру окна
+*/
+
+typedef struct GC_WIN_NODE_t
+{
+    u8  id;
+    u8  flags;
+    GC_WINDOW_t *window;
+} GC_WIN_NODE_t;
+
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+void gcWindowsInit(u8 vpage, u8 spage) __naked;
+
 void gcSetLinkedMessage(u16 **ptr) __naked __z88dk_fastcall;
 
 BTN_TYPE_t gcMessageBox(MB_TYPE_t type, GC_FRM_TYPE_t frame, char *header, char *message);
 
-BTN_TYPE_t gcWindowHandler(GC_WINDOW_t *wnd);
+BTN_TYPE_t gcExecuteWindow(GC_WINDOW_t *wnd);
 
-void gcDrawWindow(u8 x, u8 y, u8 width, u8 hight, u8 attr, u8 frame_type, u8 frame_attr) __naked;
+void gcCloseWindow(void) __naked;
+void gcPrintChainWindows(void) __naked;
+
+void gcDrawWindow(u8 id, u8 x, u8 y, u8 width, u8 hight, u8 attr, u8 frame_type, u8 frame_attr) __naked;
 u8 gcGetMessageLines(u8 *msg) __naked __z88dk_fastcall;
 u8 gcGetMessageMaxLength(u8 *msg) __naked __z88dk_fastcall;
 void gcPrintMessage(u8 *msg) __naked __z88dk_fastcall;
 void gcPrintWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall;
+
 void gcScrollUpWindow(u8 x, u8 y, u8 width, u8 hight);
 void gcScrollDownWindow(u8 x, u8 y, u8 width, u8 hight);
 
@@ -480,6 +501,7 @@ void gcScrollDownWindow(u8 x, u8 y, u8 width, u8 hight);
 u8 gcDialog(GC_DIALOG_t *dlg) __naked __z88dk_fastcall;
 void gcPrintDialog(GC_DIALOG_t *dlg) __naked __z88dk_fastcall;
 void gcPrintActiveDialog(GC_DIALOG_t *dlg) __naked __z88dk_fastcall;
+void gcPrintDialogShownItems(GC_DIALOG_t *dlg, GC_DITEM_TYPE_t type) __naked;
 void gcPrintDialogItem(GC_DITEM_t *ditm) __naked __z88dk_fastcall;
 void gcPrintDialogCursor(GC_DITEM_t *ditm) __naked __z88dk_fastcall;
 void gcRestoreDialogCursor(GC_DITEM_t *ditm) __naked __z88dk_fastcall;
