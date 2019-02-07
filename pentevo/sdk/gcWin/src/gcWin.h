@@ -510,6 +510,8 @@ u8 gcFindPrevTabItem(GC_DIALOG_t *dlg) __naked __z88dk_fastcall;
 u8 gcFindNextItem(GC_DIALOG_t *dlg) __naked __z88dk_fastcall;
 u8 gcFindPrevItem(GC_DIALOG_t *dlg) __naked __z88dk_fastcall;
 
+u8 gcFindClickItem(GC_DIALOG_t *dlg) __naked __z88dk_fastcall;
+
 /* Simple Vertical Menu */
 u8 gcSimpleVMenu(GC_SVMENU_t *svmnu) __naked __z88dk_fastcall;
 void gcPrintSVMCursor(GC_SVMENU_t *svmnu) __naked __z88dk_fastcall;

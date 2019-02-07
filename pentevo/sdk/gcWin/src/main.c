@@ -7,6 +7,7 @@
 #include "defs.h"
 #include "tsio.h"
 #include "keyboard.h"
+#include "mouse.h"
 #include "gcWin.h"
 #include "dialogs.h"
 #include "main.h"
@@ -18,6 +19,7 @@
 
 #define VPAGE   0x80    // video page
 #define SPAGE   0x82    // shadow screen page
+#define GPAGE   0x88    // mouse sprite page
 
 // checkbox 1.1 var
 u8  itmVarCB11 = 0;
@@ -45,6 +47,8 @@ char c;
 u8 rb, lb, cb11, cb12, cb21, cb22, cb3, cb4;
 u8 pcx, pcx0, pcy, pca, pcst;   //for putchar
 
+u16 msx;
+
 u8 i;
 
 BTN_TYPE_t select;
@@ -71,6 +75,7 @@ void func_cb4()
 void main(void)
 {
     gcWindowsInit(VPAGE, SPAGE);
+    gcMouseInit(GPAGE);
 
     //gcSetFontSym(0xF0, sym1);
 
@@ -79,7 +84,9 @@ void main(void)
 
 // set videomode
     TS_VCONFIG = TS_VID_320X240 | TS_VID_TEXT;
-//    TS_TSCONFIG = TS_TSU_SEN;
+    TS_TSCONFIG = TS_TSU_SEN;
+
+    gcMouseUpdate();
 
     gcSetPalette();
 
@@ -122,6 +129,8 @@ void main(void)
     }
     // close dialog window
     gcCloseWindow();
+
+    msx = gcGetMouseX();
 
     gcExecuteWindow(&wndInfo);
     // close info window

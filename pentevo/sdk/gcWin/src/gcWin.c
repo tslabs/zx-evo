@@ -5,6 +5,7 @@
 #include "defs.h"
 #include "tsio.h"
 #include "keyboard.h"
+#include "mouse.h"
 #include "gcWin.h"
 #include "numbers.h"
 
@@ -94,17 +95,27 @@ void gcVars (void)
     SYM_BTNDN               .equ    #0xF4
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;; macros
-    .macro  LD_IXHL
+    .macro  MAC_LD_IXHL
     push hl
     pop ix
     .endm
 
-    .macro LDF_HLHL
+    .macro  MAC_LDF_HLHL
     ld a,(hl)
     inc hl
     ld h,(hl)
     ld l,a
     .endm
+
+    .macro  MAC_ITEMCOORD_DE
+    ld a,(win_x)
+    add a,<#di_x (ix)
+    ld e,a              ; X coord
+    ld a,(win_y)
+    add a,<#di_y (ix)
+    ld d,a              ; Y coord
+    .endm
+
 ;;::common:::::::::::::::::::::::::::::::::::::::::::::::::::::
 save_window_parms:
     ld a,(win_x)
@@ -305,6 +316,8 @@ clear_page3:
 isr38:
     push af
     push bc
+    push de
+    push hl
 
     ld	bc,#0x27AF      ;; DMASTATUS
 0$: in	a,(c)
@@ -343,7 +356,11 @@ isr38:
 	and	#0x80
 	jr	nz,1$
 
-2$: pop bc
+2$:
+    call _gcMouseUpdate
+    pop hl
+    pop de
+    pop bc
     pop af
     ei
     ret
@@ -563,7 +580,7 @@ u8 gcSimpleVMenu(GC_SVMENU_t *svmnu) __naked __z88dk_fastcall
 
     __asm
 
-    LD_IXHL
+    MAC_LD_IXHL
 ;; IX - simple vertical menu descriptor
 
     call print_svm_cursor
@@ -571,6 +588,9 @@ u8 gcSimpleVMenu(GC_SVMENU_t *svmnu) __naked __z88dk_fastcall
 svmnu_lp:
     ei
     halt
+
+    call svmnu_get_mouse
+
     call _gcGetKey
     ld a,l
     cp #KEY_DOWN
@@ -607,8 +627,71 @@ svmnu_dn:
 0$: ld <#svm_current (ix),a
     call print_svm_cursor
     jr svmnu_lp
+
+svmnu_get_mouse:
+    ld a,(_mouse_lmb)
+    or a
+    ret nz
+
+;; check bounding box
+    call _gcGetMouseYS
+    ld c,l
+    ld h,<#svm_count (ix)
+    ld a,(win_y)
+    dec a
+    cp l
+;; return if click to header
+    ret z
+    inc a
+    add a,<#svm_margin (ix)
+    add a,h
+    sub l
+    jr c,1$
+    cp h
+    jr nc,1$
+
+    call _gcGetMouseXS
+    ld a,(win_w)
+    ld h,a
+    ld a,(win_x)
+    dec a
+    add a,h
+    sub l
+    jr c,1$
+    cp h
+    jr nc,1$
+
+;; click inside the window
+    ld a,(win_y)
+    add a,<#svm_margin (ix)
+    ld l,a
+    ld a,c
+    sub l
+    cp <#svm_count (ix)
+;; return if last line in the window
+    ret nc
+
+    push af
+    call restore_svm_cursor
+    pop af
+    ld <#svm_current (ix),a
+
+    call print_svm_cursor
+
+    halt
+
+;; pop ret addr
+0$: pop hl
+    ld l,<#svm_current (ix)
+    ret
+
+;; click outside the window
+1$: pop hl
+    ld l,#0xFF
+    ret
     __endasm;
 }
+
 
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 void gcRestoreSVMCursor(GC_SVMENU_t *svmnu) __naked __z88dk_fastcall
@@ -616,7 +699,7 @@ void gcRestoreSVMCursor(GC_SVMENU_t *svmnu) __naked __z88dk_fastcall
     svmnu;              // to avoid SDCC warning
 
     __asm
-    LD_IXHL
+    MAC_LD_IXHL
 ;; IX - simple vertical menu descriptor
 
 restore_svm_cursor:
@@ -649,7 +732,7 @@ void gcPrintSVMCursor(GC_SVMENU_t *svmnu) __naked __z88dk_fastcall
     svmnu;              // to avoid SDCC warning
 
     __asm
-    LD_IXHL
+    MAC_LD_IXHL
 ;; IX - simple vertical menu descriptor
 
 print_svm_cursor:
@@ -688,6 +771,67 @@ print_svm_cursor:
 }
 
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+u8 gcFindClickItem(GC_DIALOG_t *dlg) __naked __z88dk_fastcall
+{
+    dlg;                    // to avoid SDCC warning
+
+    __asm
+    push ix
+    ld a,(_mouse_lmb)
+    or a
+    jr nz,2$
+
+    MAC_LD_IXHL             ; IX - dialog descriptor
+
+    xor a
+0$: push af
+    push ix
+    call get_dialog_item_addr
+    MAC_LD_IXHL             ; IX - dialog item descriptor
+
+    call _gcGetMouseXS
+    ld c,l
+    call _gcGetMouseYS
+    ld b,l
+
+    MAC_ITEMCOORD_DE
+
+    ld a,b
+    cp d
+    jr nz,9$
+    ld a,c
+    sub e
+    jr c,9$
+    cp <#di_width (ix)
+    jr c,1$
+
+9$: pop ix
+    pop af
+    inc a
+    cp <#dlg_act_count (ix)
+    jr nz,0$
+2$: ld l,#0xFF
+    pop ix
+    ret
+
+3$: pop ix
+    pop af
+    jr 2$
+
+;; check GREY bit
+1$: ld a,<#di_flags (ix)
+    and #dif_grey_mask
+    jr nz,3$
+
+    pop ix
+    pop af
+    ld l,a
+    pop ix
+    ret
+    __endasm;
+}
+
+//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 u8 gcDialog(GC_DIALOG_t *dlg) __naked __z88dk_fastcall
 {
     dlg;                    // to avoid SDCC warning
@@ -698,8 +842,7 @@ u8 gcDialog(GC_DIALOG_t *dlg) __naked __z88dk_fastcall
 
     ld (_current_dialog_ptr),hl
 
-    LD_IXHL
-;; IX - dialog descriptor
+    MAC_LD_IXHL             ; IX - dialog descriptor
 
 ;; set var
     ld a,<#dlg_cur_attr (ix)
@@ -725,12 +868,21 @@ dialog_lp:
     call _gcPrintDialogCursor
 
 dialog_lp1:
+    xor a
+    dec a
+    ld (_mouse_lmb),a
     ei
     halt
 
     ld a,<#dlg_current (ix)
     call get_dialog_item_addr
     push hl
+
+    ld hl,(_current_dialog_ptr)
+    call _gcFindClickItem
+    ld a,l
+    cp #0xFF
+    jp nz,dialog_select_mouse
 
     call _gcGetKey
 
@@ -785,9 +937,46 @@ get_dialog_item_addr:
     ld h,#0
     add hl,hl
     add hl,de
-    LDF_HLHL
+    MAC_LDF_HLHL
     pop de
     ret
+
+;;:::::::::::::::::::::::::::::
+dialog_select_mouse:
+    pop hl
+;; HL - dialog item address
+
+    push af
+    ld a,<#dlg_current (ix)
+    call get_dialog_item_addr
+    call _gcRestoreDialogCursor
+    pop af
+    ld <#dlg_current (ix),a
+    call get_dialog_item_addr
+
+;; store item address
+    push hl
+;;
+    call _gcPrintDialogCursor
+
+0$: halt
+    ld a,(_mouse_lmb)
+    or a
+    jr z,0$
+
+    ex (sp),ix
+;; now IX - item address
+    ld a,<#di_type (ix)
+;; exchange back
+    ex (sp),ix
+
+    cp #DI_EDIT
+    jp z,dialog_ent
+    cp #DI_BUTTON
+    jr z,dialog_ent
+    cp #DI_LISTBOX
+    jr z,dialog_ent
+    jp dialog_sp
 
 ;;:::::::::::::::::::::::::::::
 ;; select item by enter
@@ -800,7 +989,7 @@ dialog_ent:
 ;; IX - dialog descriptor
     push ix
 
-    LD_IXHL             ; IX - dialog item addr
+    MAC_LD_IXHL             ; IX - dialog item addr
 
     ld a,<#di_type (ix)
     cp #DI_EDIT
@@ -1026,7 +1215,7 @@ dialog_ent_list:
     ld l,<#di_name (ix)
     ld h,<#di_name+1 (ix)  ; HL - name address
     add hl,bc
-    LDF_HLHL
+    MAC_LDF_HLHL
     call strprnz
     pop de
     inc d
@@ -1068,6 +1257,8 @@ dialog_ent_list:
 
 ;; save selected
     ld a,l
+    cp #0xFF
+    jr z,.+2+1
     ld (de),a
 
 ;; restore stack
@@ -1105,7 +1296,7 @@ dialog_sp:
 
     push ix
 
-    LD_IXHL             ; IX - dialog item addr
+    MAC_LD_IXHL             ; IX - dialog item addr
 
 ;; calling function
     ld e,<#di_exec (ix)
@@ -1196,7 +1387,7 @@ u8 gcFindPrevTabItem(GC_DIALOG_t *dlg) __naked __z88dk_fastcall
     __asm
     push ix
 
-    LD_IXHL                 ; IX - dialog descriptor
+    MAC_LD_IXHL             ; IX - dialog descriptor
 
     ld a,<#dlg_current (ix)
 0$: or a
@@ -1205,7 +1396,7 @@ u8 gcFindPrevTabItem(GC_DIALOG_t *dlg) __naked __z88dk_fastcall
 1$: push af
     push ix
     call get_dialog_item_addr
-    LD_IXHL             ; IX - dialog item descriptor
+    MAC_LD_IXHL             ; IX - dialog item descriptor
 
 ;; check TABSTOP bit
     ld a,<#di_flags (ix)
@@ -1244,7 +1435,7 @@ u8 gcFindNextTabItem(GC_DIALOG_t *dlg) __naked __z88dk_fastcall
     __asm
     push ix
 
-    LD_IXHL                 ; IX - dialog descriptor
+    MAC_LD_IXHL             ; IX - dialog descriptor
 
     ld a,<#dlg_current (ix)
 0$: inc a
@@ -1258,7 +1449,7 @@ u8 gcFindNextTabItem(GC_DIALOG_t *dlg) __naked __z88dk_fastcall
 1$: push af
     push ix
     call get_dialog_item_addr
-    LD_IXHL             ; IX - dialog item descriptor
+    MAC_LD_IXHL             ; IX - dialog item descriptor
 
 ;; check TABSTOP bit
     ld a,<#di_flags (ix)
@@ -1291,7 +1482,7 @@ u8 gcFindNextItem(GC_DIALOG_t *dlg) __naked __z88dk_fastcall
     __asm
     push ix
 
-    LD_IXHL                 ; IX - dialog descriptor
+    MAC_LD_IXHL             ; IX - dialog descriptor
 
     ld a,<#dlg_current (ix)
 0$: inc a
@@ -1305,7 +1496,7 @@ u8 gcFindNextItem(GC_DIALOG_t *dlg) __naked __z88dk_fastcall
 1$: push af
     push ix
     call get_dialog_item_addr
-    LD_IXHL             ; IX - dialog item descriptor
+    MAC_LD_IXHL             ; IX - dialog item descriptor
 
 ;; check GREY bit
     ld a,<#di_flags (ix)
@@ -1330,7 +1521,7 @@ u8 gcFindPrevItem(GC_DIALOG_t *dlg) __naked __z88dk_fastcall
     __asm
     push ix
 
-    LD_IXHL                 ; IX - dialog descriptor
+    MAC_LD_IXHL             ; IX - dialog descriptor
 
     ld a,<#dlg_current (ix)
 0$: or a
@@ -1339,7 +1530,7 @@ u8 gcFindPrevItem(GC_DIALOG_t *dlg) __naked __z88dk_fastcall
 1$: push af
     push ix
     call get_dialog_item_addr
-    LD_IXHL             ; IX - dialog item descriptor
+    MAC_LD_IXHL             ; IX - dialog item descriptor
 
 ;; check GREY bit
     ld a,<#di_flags (ix)
@@ -1382,7 +1573,7 @@ void gcPrintDialogShownItems(GC_DIALOG_t *dlg, GC_DITEM_TYPE_t type) __naked
     ld h,<#_dlg+1 (ix)
     ld e,<#_type (ix)
 
-    LD_IXHL                 ; IX - dialog descriptor
+    MAC_LD_IXHL             ; IX - dialog descriptor
 
     ld b,<#dlg_all_count (ix)
 
@@ -1395,7 +1586,7 @@ void gcPrintDialogShownItems(GC_DIALOG_t *dlg, GC_DITEM_TYPE_t type) __naked
     call get_dialog_item_addr
 ;; HL - dialog item address
 
-    LD_IXHL                 ; IX - dialog item descriptor
+    MAC_LD_IXHL             ; IX - dialog item descriptor
 
     pop de
     push de
@@ -1420,7 +1611,7 @@ void gcPrintActiveDialog(GC_DIALOG_t *dlg) __naked __z88dk_fastcall
     __asm
     push ix
 
-    LD_IXHL                 ; IX - dialog descriptor
+    MAC_LD_IXHL             ; IX - dialog descriptor
 
     ld b,<#dlg_act_count (ix)
     jp print_dialog
@@ -1435,7 +1626,7 @@ void gcPrintDialog(GC_DIALOG_t *dlg) __naked __z88dk_fastcall
     __asm
     push ix
 
-    LD_IXHL                 ; IX - dialog descriptor
+    MAC_LD_IXHL             ; IX - dialog descriptor
 
     ld b,<#dlg_all_count (ix)
 print_dialog:
@@ -1463,14 +1654,9 @@ void gcPrintDialogCursor(GC_DITEM_t *ditm) __naked __z88dk_fastcall
     __asm
     push ix
 
-    LD_IXHL             ; IX - dialog item descriptor
+    MAC_LD_IXHL         ; IX - dialog item descriptor
 
-    ld a,(win_x)
-    add a,<#di_x (ix)
-    ld e,a              ; X coord
-    ld a,(win_y)
-    add a,<#di_y (ix)
-    ld d,a              ; Y coord
+    MAC_ITEMCOORD_DE
 
     ld b,<#di_width (ix)
 
@@ -1520,14 +1706,9 @@ void gcRestoreDialogCursor(GC_DITEM_t *ditm) __naked __z88dk_fastcall
     __asm
     push ix
 
-    LD_IXHL             ; IX - dialog item descriptor
+    MAC_LD_IXHL         ; IX - dialog item descriptor
 
-    ld a,(win_x)
-    add a,<#di_x (ix)
-    ld e,a              ; X coord
-    ld a,(win_y)
-    add a,<#di_y (ix)
-    ld d,a              ; Y coord
+    MAC_ITEMCOORD_DE
 
     ld b,<#di_width (ix)
 
@@ -1560,7 +1741,7 @@ void gcPrintDialogItem(GC_DITEM_t *ditm) __naked __z88dk_fastcall
     push ix
     push hl
 
-    LD_IXHL             ; IX - dalog item descriptor
+    MAC_LD_IXHL         ; IX - dalog item descriptor
 
 ;; save current window parameters
     call save_window_parms
@@ -1712,7 +1893,7 @@ print_item_listbox:
     ld c,a
     ld b,#0
     add hl,bc
-    LDF_HLHL
+    MAC_LDF_HLHL
     jp print_item_text
 
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -2012,7 +2193,7 @@ print_item_number:
     jr z,print_itm_h32
 ;;::::::::::::::::::::::::::::::
 print_itm_h16:
-    LDF_HLHL
+    MAC_LDF_HLHL
     push ix
     ld ix,#ascbuff+1
     call hexasc16
@@ -2039,7 +2220,7 @@ print_itm_h32:
     inc hl
     ld d,(hl)
     inc hl
-    LDF_HLHL
+    MAC_LDF_HLHL
     ex de,hl
     push ix
     ld ix,#ascbuff+1
@@ -2077,7 +2258,7 @@ print_itm_d8:
 ;;::::::::::::::::::::::::::::::
 print_itm_d16:
     push de
-    LDF_HLHL
+    MAC_LDF_HLHL
     push hl
     exx
     pop hl
@@ -2098,7 +2279,7 @@ print_itm_d32:
     inc hl
     ld d,(hl)
     inc hl
-    LDF_HLHL
+    MAC_LDF_HLHL
     jp _gcPrintDec32
     __endasm;
 }
@@ -2124,7 +2305,7 @@ void gcEditString(u8 *str, u8 len, u8 x, u8 y) __naked
     add ix,sp
 
 ;; allocate local vars _offset and _buff
-    ld hl,#-_buflen-1
+    ld hl,#-_buflen-2
     add hl,sp
     ld (_buff),hl
     ld sp,hl
@@ -2144,6 +2325,9 @@ void gcEditString(u8 *str, u8 len, u8 x, u8 y) __naked
     ld b,#0
     ld c,<#_len (ix)
     ldir
+
+    call edit_string_mouse1
+    jr edit_string_lp
 ;;
 edit_string_home:
     xor a
@@ -2156,6 +2340,7 @@ edit_string_lp:
 edit_string_lp0:
     ei
     halt
+    call edit_string_mouse
     call _gcGetKey
     ld a,l
     cp #KEY_LEFT
@@ -2272,6 +2457,38 @@ print_edit_string:
     rrca
     jp set_attr
 ;;::::::::::::::::::::::::::::::
+edit_string_mouse:
+    ld a,(_mouse_lmb)
+    or a
+    ret nz
+edit_string_mouse1:
+    call _gcGetMouseYS
+    ld a,<#_y (ix)
+    cp l
+    jr nz,0$
+
+    call _gcGetMouseXS
+    ld a,l
+    sub <#_x (ix)
+    jr nc,1$
+    cp <#_len (ix)
+    jr c,1$
+
+;; pop ret addr
+0$:  pop hl
+    jp edit_string_ent
+
+1$: ld a,l
+    sub <#_x (ix)
+    cp <#_len (ix)
+    jr nc,0$
+    ld <#_offset (ix),a
+
+;; pop ret addr
+    pop hl
+    jp edit_string_lp
+
+;;::::::::::::::::::::::::::::::
 edit_string_ent:
     ld hl,(_buff)
     ld e,<#_str (ix)
@@ -2281,7 +2498,7 @@ edit_string_ent:
     ldir
 
 ;; free
-    ld hl,#_buflen+1
+    ld hl,#_buflen+2
     add hl,sp
     ld sp,hl
 
@@ -2562,7 +2779,7 @@ void gcPrintWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall
     __asm
     push ix
 
-    LD_IXHL             ; IX - window descriptor
+    MAC_LD_IXHL         ; IX - window descriptor
 
 ;; set variables
     ld d,<#y (ix)
