@@ -409,6 +409,20 @@ The graphic mode of the video controller is selected with bits *VM*[1:0] of **VC
 
 ##### SFILE
 
+##### Sprite Reuse
+
+Sprite Reuse is a special case in sprites programming. It is possible to display more than 85 sprites within a frame if to change sprite descriptors on-the-fly. This mode can be considered as a hack, but it doesn't violate any hardware programming requirements if used correctly.
+
+The following conditions should be met.
+
+1. All write operations of the sprite descriptors must be tied to the line interrupts and a single write sequence must be performed within the same TV line.
+2. Use the following line-to-line sequence to change any of the sprite descriptors:
+   - [ ] Line N: disable a sprite by writing ACT=0.
+   - [ ] Line N+1: change the sprite descriptor, keeping ACT=0.
+   - [ ] Line N+2: enable the sprite by writing ACT=1.
+
+3. Regard the spite Y-coordinate and Y-size. The last visible line of the sprite before its change should be "Line N-1" (from the example above) and the first visible line of the sprite after the change should be "Line N+4".
+
 ### Registers
 
 #### VConfig
