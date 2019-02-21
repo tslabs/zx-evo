@@ -187,7 +187,7 @@ void sd_skip(u16 a)
 u8 sd_acmd(u8 cmd, u32 arg)
 {
   u8 rc;
-  if ((rc = sd_cmd(APP_CMD, 0)) & 0x80) abort(rc);
+  if ((rc = sd_cmd(SDC_APP_CMD, 0)) & 0x80) abort(rc);
   rc = sd_cmd(cmd, arg);
 
 exit:
@@ -210,21 +210,45 @@ u8 sd_cmd(u8 cmd, u32 arg)
 
   // receive command response
   i = 10; while (((rc = sd_rd()) & 0x80) && --i);
+  if (!i) abort(0xFF);
 
-  if (cmd & 0xC0)   // special command responses
+  if (cmd &= 0xC0)   // special command responses
   {
-    if (cmd & CMD_R7)
-      sd_recv(sd_rbuf, 4);
-
-    if (cmd & CMD_R1b)
+    switch (cmd)
     {
-      i = 65000; while ((sd_rd() != 0xFF) && --i);
-      if (!i) abort(0xFF);
+      case SDC_X1:
+        sd_recv(sd_rbuf, 1);
+      break;
+
+      case SDC_X4:
+        sd_recv(sd_rbuf, 4);
+      break;
+
+      case SDC_R1B:
+        i = 65000; while ((sd_rd() != 0xFF) && --i);
+        if (!i) abort(0xFF);
+      break;
     }
   }
 
 exit:
   return rc;
+}
+
+bool sd_wait_dtoken()
+{
+  u16 i = 65000;
+  u8 d;
+
+  while (((d = sd_rd()) == 0xFF) && --i);
+  return d == 0xFE;
+}
+
+bool sd_recv_data(u8 *a, u16 s)
+{
+  if (!sd_wait_dtoken()) return false;
+  sd_recv(a, s);
+  return true;
 }
 
 // FAT-FS functions
@@ -240,36 +264,36 @@ DSTATUS disk_initialize (void)
   sd_cs_off(); sd_skip(512 + 10); sd_cs_on();
 
   sdcrc = 0x95;
-  if (sd_cmd(GO_IDLE_STATE, 0) > 1) abort(STA_NOINIT_IDLE);
+  if (sd_cmd(SDC_GO_IDLE_STATE, 0) > 1) abort(STA_NOINIT_IDLE);
 
   // SDv2
   sdcrc = 0x87;
-  if (sd_cmd(SEND_IF_COND, 0x1AA) == 1)
+  if (sd_cmd(SDC_SEND_IF_COND, 0x1AA) == 1)
   {
     if ((sd_rbuf[2] != 0x01) || (sd_rbuf[3] != 0xAA)) abort(STA_NOINIT_VOLT);  // non compatible voltage range
 
-    while ((sd_acmd(SEND_OP_COND_SD, 0x40000000)) && --i);  // wait for leaving idle state (ACMD41 with HCS bit)
+    while ((sd_acmd(SDC_SEND_OP_COND_SD, 0x40000000)) && --i);  // wait for leaving idle state (ACMD41 with HCS bit)
     if (!i) abort(STA_NOINIT_OPSD);
 
-    if (!sd_cmd(READ_OCR, 0) == 0) abort(STA_NOINIT_OCR);  // check CCS bit in the OCR
-    ctype = (sd_rbuf[0] & 0x40) ? (CT_SD2 | CT_BLOCK) : CT_SD2;     // SDv2 (HC or SC)
+    if (!sd_cmd(SDC_READ_OCR, 0) == 0) abort(STA_NOINIT_OCR);   // check CCS bit in the OCR
+    ctype = (sd_rbuf[0] & 0x40) ? (CT_SDHC | CT_BLOCK) : CT_SD2;     // SDv2 (HC or SC)
   }
 
   // SDv1 or MMCv3
   else
   {
     // SDv1
-    if (sd_acmd(SEND_OP_COND_SD, 0) <= 1)
+    if (sd_acmd(SDC_SEND_OP_COND_SD, 0) <= 1)
     {
       ctype = CT_SD1;
-      while ((sd_acmd(SEND_OP_COND_SD, 0)) && --i);  // wait for leaving idle state
+      while ((sd_acmd(SDC_SEND_OP_COND_SD, 0)) && --i);  // wait for leaving idle state
     }
 
     // MMCv3
     else
     {
       ctype = CT_MMC;
-      while ((sd_cmd(SEND_OP_COND_MMC, 0)) && --i);  // wait for leaving idle state
+      while ((sd_cmd(SDC_SEND_OP_COND_MMC, 0)) && --i);  // wait for leaving idle state
     }
 
     if (!i)
@@ -278,7 +302,7 @@ DSTATUS disk_initialize (void)
       abort(STA_NOINIT_LEAVE);
     }
 
-    if (sd_cmd(SET_BLOCKLEN, 512))  // set R/W block length to 512
+    if (sd_cmd(SDC_SET_BLOCKLEN, 512))  // set R/W block length to 512
       ctype = CT_NONE;
   }
 
@@ -304,16 +328,11 @@ DRESULT disk_readp
 
   sd_cs_on();
   if (!(ctype & CT_BLOCK)) sector *= 512;
-  if (sd_cmd(READ_MULTIPLE_BLOCK, sector)) goto exit;
+  if (sd_cmd(SDC_READ_MULTIPLE_BLOCK, sector)) goto exit;
 
   while (count)
   {
-    u16 i = 65000;
-    u8 d;
-
-    while (((d = sd_rd()) == 0xFF) && --i);
-    if (d != 0xFE) goto exit;
-
+    if (!sd_wait_dtoken()) goto exit;
     sd_skip(ssz);
     sd_recv(buff, rsz);
     sd_skip(512 - ssz - rsz);
@@ -324,7 +343,7 @@ DRESULT disk_readp
     ssz = 0;
   }
 
-  if (sd_cmd(STOP_TRANSMISSION, 0)) goto exit;
+  if (sd_cmd(SDC_STOP_TRANSMISSION, 0)) goto exit;
   rc = RES_OK;
 
 exit:
@@ -350,7 +369,7 @@ DRESULT disk_writep
     {
       sd_cs_on();
       if (!(ctype & CT_BLOCK)) sector *= 512;
-      if (sd_cmd(WRITE_BLOCK, sector)) goto exit;
+      if (sd_cmd(SDC_WRITE_BLOCK, sector)) goto exit;
 
       // data block header
       sd_wr(0xFF); sd_wr(0xFE);

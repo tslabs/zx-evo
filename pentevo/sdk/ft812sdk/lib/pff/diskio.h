@@ -30,22 +30,36 @@ typedef enum {
 // Definitions for MMC/SDC command
 enum
 {
-  CMD_R1b             = 0x80,
-  CMD_R7              = 0x40,
+  // Command modifiers
+  SDC_X1           = 0x40,    // extra 1 byte
+  SDC_X4           = 0x80,    // extra 4 bytes
+  SDC_R1B          = 0xC0,
 
-  GO_IDLE_STATE       = (0),
-  SEND_OP_COND_MMC    = (1),
-  SEND_IF_COND        = (8 | CMD_R7),
-  STOP_TRANSMISSION   = (12 | CMD_R1b),
-  SEND_STATUS         = (13 | CMD_R7),
-  SET_BLOCKLEN        = (16),
-  READ_SINGLE_BLOCK   = (17),
-  READ_MULTIPLE_BLOCK = (18),
-  WRITE_BLOCK         = (24),
-  SEND_OP_COND_SD     = (41),
-  LOCK_UNLOCK         = (42),
-  APP_CMD             = (55),
-  READ_OCR            = (58 | CMD_R7),
+  // CMD
+  SDC_GO_IDLE_STATE         = 0,
+  SDC_SEND_OP_COND_MMC      = 1,
+  SDC_SWITCH_FUNC           = 6,            // R1 + data (64 bytes)
+  SDC_SEND_IF_COND          = 8  | SDC_X4,  // R7 + 4 extra bytes
+  SDC_SEND_CSD              = 9,            // R1 + data (16 bytes)
+  SDC_SEND_CID              = 10,           // R1 + data (16 bytes)
+  SDC_STOP_TRANSMISSION     = 12 | SDC_R1B,
+  SDC_SEND_STATUS           = 13 | SDC_X1,  // R2 + 1 extra byte
+  SDC_SET_BLOCKLEN          = 16,
+  SDC_READ_SINGLE_BLOCK     = 17,
+  SDC_READ_MULTIPLE_BLOCK   = 18,
+  SDC_WRITE_BLOCK           = 24,
+  SDC_WRITE_MULTIPLE_BLOCK  = 25,
+  SDC_PROGRAM_CSD           = 27,
+  SDC_SEND_WRITE_PROT       = 30,
+  SDC_SEND_OP_COND_SD       = 41,
+  SDC_LOCK_UNLOCK           = 42,
+  SDC_APP_CMD               = 55,
+  SDC_READ_OCR              = 58 | SDC_X4,  // R3 + 4 extra bytes
+
+  // ACMD
+  SDC_SD_STATUS             = 13 | SDC_X1,  // R2 + 1 extra byte
+  SDC_SD_SEND_OP_COND       = 41,
+  SDC_SEND_SCR              = 51            // R1 + data (8 bytes)
 };
 
 #define ZC_SD_CFG   0x77
@@ -61,7 +75,8 @@ enum
   CT_MMC   = 0x01,  // MMC ver 3
   CT_SD1   = 0x02,  // SD ver 1
   CT_SD2   = 0x03,  // SD ver 2
-  CT_BLOCK = 0x08   // Block addressing
+  CT_SDHC  = 0x04,  // SDHC
+  CT_BLOCK = 0x10   // Block addressing
 };
 
 // Vars
@@ -87,6 +102,8 @@ u8 sd_cmd(u8, u32);
 u8 sd_acmd(u8, u32);
 void sd_recv(void*, u16);
 void sd_send(void*, u16);
+bool sd_wait_dtoken();
+bool sd_recv_data(u8*, u16);
 
 enum
 {
