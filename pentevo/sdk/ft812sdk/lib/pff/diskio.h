@@ -32,7 +32,7 @@ enum
 {
   CMD_R1b             = 0x80,
   CMD_R7              = 0x40,
-  
+
   GO_IDLE_STATE       = (0),
   SEND_OP_COND_MMC    = (1),
   SEND_IF_COND        = (8 | CMD_R7),
@@ -57,12 +57,11 @@ enum
 // Card type flags
 enum
 {
-  CT_NONE  = 0x00,
-  CT_MMC   = 0x01,               // MMC ver 3
-  CT_SD1   = 0x02,               // SD ver 1
-  CT_SD2   = 0x04,               // SD ver 2
-  CT_SDC   = (CT_SD1 | CT_SD2),  // SD
-  CT_BLOCK = 0x08                // Block addressing
+  CT_NONE  = 0x00,  // No card
+  CT_MMC   = 0x01,  // MMC ver 3
+  CT_SD1   = 0x02,  // SD ver 1
+  CT_SD2   = 0x03,  // SD ver 2
+  CT_BLOCK = 0x08   // Block addressing
 };
 
 // Vars
@@ -92,11 +91,11 @@ void sd_send(void*, u16);
 enum
 {
   STA_INIT         = 0x00, // Drive initialized
-  STA_NOINIT_IDLE  = 0x10, // Drive not initialized - GO_IDLE_STATE error
-  STA_NOINIT_VOLT  = 0x11, // Drive not initialized - non compatible voltage range
-  STA_NOINIT_OPSD  = 0x12, // Drive not initialized - SEND_OP_COND_SD error
-  STA_NOINIT_OCR   = 0x13, // Drive not initialized - READ_OCR error
-  STA_NOINIT_LEAVE = 0x14, // Drive not initialized - error leaving IDLE state
+  STA_NOINIT_IDLE  = 0x01, // Drive not initialized - GO_IDLE_STATE error
+  STA_NOINIT_VOLT  = 0x02, // Drive not initialized - non compatible voltage range
+  STA_NOINIT_OPSD  = 0x03, // Drive not initialized - SEND_OP_COND_SD error
+  STA_NOINIT_OCR   = 0x04, // Drive not initialized - READ_OCR error
+  STA_NOINIT_LEAVE = 0x05, // Drive not initialized - error leaving IDLE state
 };
 
 #define abort(a) { rc = (a); goto exit; }
