@@ -20,14 +20,14 @@ u8 submenu_init()
   u8 rc = disk_initialize();
   printf(C_NORM "Card init: " C_DATA "%s\n", sd_init_txt[rc]);
   printf(C_NORM "Card type: " C_DATA "%s\n", sd_type_txt[ctype & 7]);
-  
+
   if (rc == STA_INIT)
   {
     read_status();
     u8 st = sd_rbuf[0];
-    printf(C_NORM "STATUS:    " C_DATA "%slocked (%02X)\n\n\n", (st & 1) ? "" : "un", st);
+    printf(C_NORM "STATUS:    " C_DATA "%slocked (%02X)\n", (st & 1) ? "" : "un", st);
   }
-  
+
   return rc;
 }
 
@@ -38,11 +38,7 @@ void menu_main()
   printf(C_HEAD "SD Card Utility");
   x0(5); y(3);
   printf(C_BUTN "1. " C_MENU "Card info\n\n");
-  printf(C_BUTN "2. " C_MENU "CID\n\n");
-  printf(C_BUTN "3. " C_MENU "CSD\n\n");
-  printf(C_BUTN "4. " C_MENU "OCR\n\n");
-  printf(C_BUTN "5. " C_MENU "SCR\n\n");
-  printf(C_BUTN "6. " C_ACHT "Lock/Erase\n\n");
+  printf(C_BUTN "0. " C_ACHT "Lock/Erase\n\n");
 }
 
 void menu_info()
@@ -52,59 +48,49 @@ void menu_info()
   printf(C_HEAD "Card Info");
   xy(0, 2);
   submenu_init();
-}
 
-void menu_cid()
-{
-  cls();
-  xy(3, 0);
-  printf(C_HEAD "CID");
+  u8 buf[16];
 
+  // CID
   read_cid();
-  CID cid;
-  parse_cid(&cid);
-  printf(C_DATA "\n\n");
+  bitmax = 127;
+
+  printf(C_INFO "\n\nCID: " C_DATA);
   hexstr(sdbuf, 16);
   printf("\n\n");
 
-  printf("MID: %02X\n", cid.mid);
-  printf("OID: %02X\n", cid.oid[0]);
-  printf("PNM: %02X\n", cid.pnm[0]);
-  printf("PRV: %02X\n", cid.prv);
-  printf("PSN: %02X\n", cid.psn[0]);
-  printf("MDT: %04X\n", cid.mdt);
-}
+  u8 mid = get_bf(127, 8);
+  printf(C_INFO "Manufactorer ID:    " C_DATA "%s (%02X)\n", look_up_mid(mid), mid);
+  
+  get_bfa(buf, 119, 2);
+  printf(C_INFO "OEM/Application ID: " C_DATA "%.2s\n", buf);
+  
+  get_bfa(buf, 103, 5);
+  printf(C_INFO "Product name:       " C_DATA "%.5s\n", buf);
+  
+  get_bfa(buf, 63, 1);
+  printf(C_INFO "Product revision:   " C_DATA "%d.%d\n", buf[0] >> 4, buf[0] & 0x0F);
+  
+  get_bfa(buf, 55, 4);
+  printf(C_INFO "Product serial num: " C_DATA);
+  hexstr(buf, 4);
+  
+  u16 mfd = get_bf(19, 12);
+  printf(C_INFO "\nManufacturing date: " C_DATA "%s %d\n", month_txt[(mfd & 0x0F) - 1], (mfd >> 4) + 2000);
 
-void menu_csd()
-{
-  cls();
-  xy(3, 0);
-  printf(C_HEAD "CSD");
-
+  // CSD
   read_csd();
-  printf(C_DATA "\n\n");
+  printf(C_INFO "\n\nCSD: " C_DATA);
   hexstr(sdbuf, 16);
-}
 
-void menu_ocr()
-{
-  cls();
-  xy(3, 0);
-  printf(C_HEAD "OCR");
-
+  // OCR
   read_ocr();
-  printf(C_DATA "\n\n");
+  printf(C_INFO "\n\nOCR: " C_DATA);
   hexstr(sd_rbuf, 4);
-}
 
-void menu_scr()
-{
-  cls();
-  xy(3, 0);
-  printf(C_HEAD "SCR");
-
+  // SCR
   read_scr();
-  printf(C_DATA "\n\n");
+  printf(C_INFO "\n\nSCR: " C_DATA);
   hexstr(sdbuf, 8);
 }
 
@@ -118,7 +104,7 @@ void menu_lock()
 
   if (rc == STA_INIT)
   {
-    printf(C_BUTN "1. " C_MENU "Set password\n\n");
+    printf(C_BUTN "\n\n1. " C_MENU "Set password\n\n");
     printf(C_BUTN "2. " C_MENU "Clear password\n\n");
     printf(C_BUTN "3. " C_ACHT "Erase card\n\n");
     printf(C_BUTN "4. " C_MENU "Re-detect card\n\n\n\n");
@@ -169,10 +155,6 @@ void menu_disp()
   {
     case M_MAIN:          menu_main(); break;
     case M_INFO:          menu_info(); break;
-    case M_CID:           menu_cid(); break;
-    case M_CSD:           menu_csd(); break;
-    case M_OCR:           menu_ocr(); break;
-    case M_SCR:           menu_scr(); break;
     case M_LOCK:          menu_lock(); break;
     case M_LOCK_SET_PWD:  menu_lock_set_pwd(); break;
     case M_LOCK_CLR_PWD:  menu_lock_clr_pwd(); break;
@@ -196,11 +178,7 @@ bool key_disp()
       switch(key)
       {
         case KEY_1: menu = M_INFO; rc = true; break;
-        case KEY_2: menu = M_CID;  rc = true; break;
-        case KEY_3: menu = M_CSD;  rc = true; break;
-        case KEY_4: menu = M_OCR;  rc = true; break;
-        case KEY_5: menu = M_SCR;  rc = true; break;
-        case KEY_6: menu = M_LOCK; rc = true; break;
+        case KEY_0: menu = M_LOCK; rc = true; break;
       }
     break;
 
@@ -210,7 +188,7 @@ bool key_disp()
       if (key != KEY_NONE)
         { menu = M_LOCK; rc = true; break; }
     break;
-    
+
     case M_LOCK:
       switch(key)
       {
@@ -218,13 +196,13 @@ bool key_disp()
         case KEY_2: menu = M_LOCK_CLR_PWD; rc = true; break;
         case KEY_3: menu = M_LOCK_ERASE; rc = true; break;
         case KEY_4: menu = M_LOCK; rc = true; break;
-        
+
         default:
           if (key != KEY_NONE)
             { menu = M_MAIN; rc = true; break; }
       }
     break;
-    
+
     default:
       if (key != KEY_NONE)
         { menu = M_MAIN; rc = true; break; }

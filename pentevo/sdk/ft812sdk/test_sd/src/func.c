@@ -33,13 +33,23 @@ u16 get_bf(u16 offs, u8 num)
   return get_bits(sdbuf, bitmax - offs, num);
 }
 
-void get_bfa(u8 *ptr, u16 offs, u8 num)
+void get_bfa(void *ptr, u16 offs, u8 num)
 {
+  u8 *_ptr = (u8*)ptr;
   offs = bitmax - offs;
 
   while (num--)
   {
-    *ptr++ = (u8)get_bits(sdbuf, offs, 8);
+    *_ptr++ = (u8)get_bits(sdbuf, offs, 8);
     offs += 8;
   }
+}
+
+const char *look_up_mid(u8 mid)
+{
+  for (u8 i = 0; i < countof(mid_tab); i++)
+    if (mid_tab[i].mid == mid)
+      return mid_tab[i].name;
+
+  return "Unknown";
 }

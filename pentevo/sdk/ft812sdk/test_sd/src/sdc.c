@@ -106,15 +106,3 @@ bool erase_sd()
 
   return true;
 }
-
-void parse_cid(CID *cid)
-{
-  bitmax = 127;
-
-  cid->mid = get_bf(127, 8);
-  get_bfa(cid->oid, 119, 2);
-  get_bfa(cid->pnm, 103, 5);
-  cid->prv = get_bf(63, 8);
-  get_bfa(cid->psn, 55, 4);
-  cid->mdt = get_bf(19, 12);
-}

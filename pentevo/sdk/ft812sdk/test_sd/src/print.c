@@ -12,7 +12,7 @@
 #define C_HEAD "\aD"
 #define C_SEL  "\aE"
 #define C_INFO "\aC"
-#define C_DATA "\aE"
+#define C_DATA "\aF"
 #define C_QUST "\aE"
 #define C_FRAM "\a7"
 
