@@ -199,6 +199,8 @@ u8 sd_cmd(u8 cmd, u32 arg)
   u8 rc;
   u16 i;
 
+  sd_skip(2);   // skip junk
+
   // send command packet
   sd_wr((cmd & 0x3F) | 0x40);
   sd_wr(((u8*)&arg)[3]);
