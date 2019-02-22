@@ -2297,26 +2297,25 @@ void gcEditString(u8 *str, u8 len, u8 x, u8 y) __naked
     _len    .equ #2
     _x      .equ #3
     _y      .equ #4
-    _offset .equ #-3
-    _buflen .equ #80
+    _offset .equ #-5
+    _buflen .equ #32
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     push ix
     ld ix,#4
     add ix,sp
 
 ;; allocate local vars _offset and _buff
-    ld hl,#-_buflen-2
+    ld hl,#-_buflen-1
     add hl,sp
     ld (_buff),hl
     ld sp,hl
 
 ;; fill buff
-    ld e,l
-    ld d,h
-    inc de
-    ld bc,#_buflen-1
-    ld (hl),#0x20
-    ldir
+    ld a,#0x20
+    ld b,#_buflen-1
+    ld (hl),a
+    inc hl
+    djnz .-1-1
 
 ;;copy to buff
     ld l,<#_str (ix)
@@ -2498,7 +2497,7 @@ edit_string_ent:
     ldir
 
 ;; free
-    ld hl,#_buflen+2
+    ld hl,#_buflen+1
     add hl,sp
     ld sp,hl
 
@@ -3082,7 +3081,8 @@ strprnlen:
 ;;      0x08 (BYTE) - paper color (\b)
 ;;      0x09 (BYTE) - shift right on (BYTE) symbols (\t)
 ;;      0x0C - invert attribute (\f)
-;;      0x0D - next line (\r)
+;;      0x0D - carriage return (\r)
+;;      0x0A - line feed (\n) (with CR)
 ;;      0x0E - center align string
 ;;      0x0F - right align string
 ;;      0xFE (BYTE) - string link
@@ -3098,6 +3098,8 @@ strprnz:
     jp z,strprnz_paper
     cp #0x09                ; \t
     jp z,strprnz_tab
+    cp #0x0A                ; \n
+    jp z,strprnz_n
     cp #0x0C                ; \f
     jp z,strprnz_invert
     cp #0x0D                ; \r
@@ -3154,17 +3156,18 @@ strprnz_invert:
     ld (bg_attr),a
     jr strprnz
 
-strprnz_r:
-    ld a,(win_attr)
-    ld (bg_attr),a
-    ld (sym_attr),a
-    ld a,(win_x)
-    ld (cur_x),a
-    ld e,a
+strprnz_n:
     ld a,(cur_y)
     inc a
     ld (cur_y),a
     ld d,a
+strprnz_r:
+    ld a,(win_x)
+    ld (cur_x),a
+    ld e,a
+    ld a,(win_attr)
+    ld (bg_attr),a
+    ld (sym_attr),a
     jp strprnz
 
 strprnz_tab:
@@ -3248,7 +3251,7 @@ strlen:
     jr z,3$
 
     inc b
-4$: cp #0x0D
+4$: cp #0x0A
     ret z
     or a
     jr nz,1$
@@ -3325,7 +3328,7 @@ u8 gcGetMessageLines(u8 *msg) __naked __z88dk_fastcall
     or a
     jr z,0$
     inc hl
-    cp #0x0D
+    cp #0x0A
     jr nz,1$
     inc b
     jr 1$

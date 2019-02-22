@@ -21,6 +21,7 @@
 #define SPAGE   0x82    // shadow screen page
 #define GPAGE   0x88    // mouse sprite page
 
+
 // checkbox 1.1 var
 u8  itmVarCB11 = 0;
 // checkbox 1.2 var
@@ -44,16 +45,39 @@ u16 itmNUM2 = (u16)-1;
 u8 itmNUM3 = 255;
 
 char c;
+u16 i;
+
 u8 rb, lb, cb11, cb12, cb21, cb22, cb3, cb4;
 u8 pcx, pcx0, pcy, pca, pcst;   //for putchar
 
-u16 msx;
-
-u8 i;
-
 BTN_TYPE_t select;
 
-GC_WIN_NODE_t winlist_nodes[10];
+void testMouse()
+{
+    u8 winx = 10;
+    u8 winy = 10;
+
+    wndMouseTest.x = winx;
+    wndMouseTest.y = winy;
+
+    gcPrintWindow(&wndMouseTest);
+    gcGotoXY(winx, winy+8);
+    gcPrintMessage(
+                   INK_BRIGHT_BLUE
+                   MARK_CENTER
+                   "Press SPACE to exit"
+                   INK_BLACK
+                   );
+
+    while(gcGetKey() != KEY_SPACE)
+    {
+        EIHALT
+        gcGotoXY(winx+1, winy+2);
+        gcPrintf("Mouse X:%u  \nMouse Y:%u  \n", gcGetMouseX(), gcGetMouseY());
+    }
+
+    gcCloseWindow();
+}
 
 void func_cb3()
 {
@@ -76,8 +100,6 @@ void main(void)
 {
     gcWindowsInit(VPAGE, SPAGE);
     gcMouseInit(GPAGE);
-
-    //gcSetFontSym(0xF0, sym1);
 
     TS_VPAGE = VPAGE;
     TS_PAGE3 = SPAGE;
@@ -127,10 +149,9 @@ void main(void)
             cb4 = itmVarCB4;
             lb = itmVarLBX11;
     }
+
     // close dialog window
     gcCloseWindow();
-
-    msx = gcGetMouseX();
 
     gcExecuteWindow(&wndInfo);
     // close info window
@@ -138,14 +159,17 @@ void main(void)
 
     select = gcMessageBox(MB_RETRYABORTIGNORE, GC_FRM_SINGLE, "MessageBox",
                 INK_BRIGHT_WHITE
-                "Lorem ipsum dolor sit amet, consectetur\r"
+                "Lorem ipsum dolor sit amet, consectetur\n"
                 INK_GREEN
-                "adipiscing elit, sed do eiusmod tempor\r"
+                "adipiscing elit, sed do eiusmod tempor\n"
                 INK_BLUE
                 "incididunt ut labore et dolore magna aliqua."
                  );
     // close messagebox
     gcCloseWindow();
+
+    testMouse();
+
     gcWaitKey(KEY_ENTER);
 
     // close test window 2
