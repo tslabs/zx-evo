@@ -13,26 +13,26 @@ const GC_SVMENU_t mnuSVM =
 };
 
 const u8 txt_lorem[] =
-"Lorem ipsum dolor sit amet, facer vocent an pri. Volumus iudicabit cum ei.\r"
-"Ipsum quando feugiat te cum, et sea mundi principes assueverit. Eam no\r"
-"lobortis quaerendum definitionem. Velit semper maluisset vix an, te eius\r"
-"omittam cum. Tamquam lobortis tincidunt id pro, quo vocent aliquid ne.\r"
-"Altera mucius qui te. Cum iriure oblique sadipscing ad. Placerat inimicus \r"
-"similique pro an, duo at movet elaboraret accommodare, quo no adhuc denique.\r"
-"Dicunt habemus in pri, reque viderer per no, nec et pertinax delicata. Natum \r"
-"vivendo neglegentur sea ex, mel ex justo principes sadipscing. Vix no quando\r"
-"consectetuer, tation dignissim quo at. An habeo omnesque vis, et laudem\r"
-"lucilius est. Perfecto vulputate ex est. Ad aliquip ponderum insolens sit,\r"
-"quis agam case ad nam.\r"
-"Sit utinam feugait eleifend at, eam eu errem verear, ex eam officiis\r"
-"perfecto ullamcorper.\r"
-"Meis evertitur vulputate per ex, nibh possit sit at. Ex habemus rationibus\r"
-"mediocritatem vis, mel essent eleifend no.\r"
-"At omnis labitur duo. Et sale complectitur pri. Cu sea quidam reprimique.\r"
-"Te sed convenire consequat. Est et equidem mandamus. Aperiam praesent \r"
-"gloriatur an nam, vix veri epicuri inimicus ut.\r"
-"Nulla appareat et sea, quodsi commune ocurreret mei ex. Quo et semper aeterno\r"
-"veritus. His in suas unum meis. Ut vix velit hendrerit.\r";
+"Lorem ipsum dolor sit amet, facer vocent an pri. Volumus iudicabit cum ei.\n"
+"Ipsum quando feugiat te cum, et sea mundi principes assueverit. Eam no\n"
+"lobortis quaerendum definitionem. Velit semper maluisset vix an, te eius\n"
+"omittam cum. Tamquam lobortis tincidunt id pro, quo vocent aliquid ne.\n"
+"Altera mucius qui te. Cum iriure oblique sadipscing ad. Placerat inimicus \n"
+"similique pro an, duo at movet elaboraret accommodare, quo no adhuc denique.\n"
+"Dicunt habemus in pri, reque viderer per no, nec et pertinax delicata. Natum \n"
+"vivendo neglegentur sea ex, mel ex justo principes sadipscing. Vix no quando\n"
+"consectetuer, tation dignissim quo at. An habeo omnesque vis, et laudem\n"
+"lucilius est. Perfecto vulputate ex est. Ad aliquip ponderum insolens sit,\n"
+"quis agam case ad nam.\n"
+"Sit utinam feugait eleifend at, eam eu errem verear, ex eam officiis\n"
+"perfecto ullamcorper.\n"
+"Meis evertitur vulputate per ex, nibh possit sit at. Ex habemus rationibus\n"
+"mediocritatem vis, mel essent eleifend no.\n"
+"At omnis labitur duo. Et sale complectitur pri. Cu sea quidam reprimique.\n"
+"Te sed convenire consequat. Est et equidem mandamus. Aperiam praesent \n"
+"gloriatur an nam, vix veri epicuri inimicus ut.\n"
+"Nulla appareat et sea, quodsi commune ocurreret mei ex. Quo et semper aeterno\n"
+"veritus. His in suas unum meis. Ut vix velit hendrerit.\n";
 
 // MAIN WINDOW
 const GC_WINDOW_t wndMain =
@@ -48,6 +48,21 @@ const GC_WINDOW_t wndMain =
                 "Main Window",
 /*window_txt*/  txt_lorem,
 /*menu_ptr*/    0
+};
+
+GC_WINDOW_t wndMouseTest =
+{
+    /*id*/          0,
+    /*type*/        GC_WND_NOMENU,
+    /*xy*/          0,0,
+    /*wh*/          30,10,
+    /*attr*/        (WIN_COL_WHITE<<4) | WIN_COL_BRIGHT_WHITE,
+    /*frame_type*/  GC_FRM_SINGLE,
+    /*frame_attr*/  (WIN_COL_WHITE<<4) | WIN_COL_BRIGHT_WHITE,
+    /*header_txt*/  INK_BLACK
+                    "Mouse Test",
+    /*window_txt*/  0,
+    /*menu_ptr*/    0
 };
 
 const GC_WINDOW_t wndTest1 =
@@ -66,14 +81,14 @@ const GC_WINDOW_t wndTest1 =
                 INK_YELLOW
                 "number "
                 INK_RED
-                "one\r"
+                "one\n"
                 INK_BRIGHT_WHITE
-                "\xD0\xD1 Radiobutton\r"
-                "\xD2\xD3 Radiobutton\r"
-                "\xD4\xD5 Checkbox\r"
-                "\xD6\xD7 Checkbox\r"
-                MARK_LINK"\x0\r"
-                MARK_LINK"\x1\r"
+                "\xD0\xD1 Radiobutton\n"
+                "\xD2\xD3 Radiobutton\n"
+                "\xD4\xD5 Checkbox\n"
+                "\xD6\xD7 Checkbox\n"
+                MARK_LINK"\x0\n"
+                MARK_LINK"\x1\n"
                 MARK_LINK"\x2",
 /*menu_ptr*/    0
 };
@@ -94,7 +109,7 @@ const GC_WINDOW_t wndTest2 =
                 INK_BRIGHT_GREEN
                 "number "
                 INK_BRIGHT_WHITE
-                "two\r"
+                "two\n"
                 PAPER_BLACK "  "
                 PAPER_BLUE "  "
                 PAPER_RED "  "
@@ -103,7 +118,7 @@ const GC_WINDOW_t wndTest2 =
                 PAPER_CYAN "  "
                 PAPER_YELLOW "  "
                 PAPER_WHITE "  "
-                "\r"
+                "\n"
                 PAPER_BLACK "  "
                 PAPER_BRIGHT_BLUE "  "
                 PAPER_BRIGHT_RED "  "
@@ -112,16 +127,16 @@ const GC_WINDOW_t wndTest2 =
                 PAPER_BRIGHT_CYAN "  "
                 PAPER_BRIGHT_YELLOW "  "
                 PAPER_BRIGHT_WHITE "  "
-                "\r"
+                "\n"
                 INK_BRIGHT_RED
-                MARK_LINK"\x3 1\r"
+                MARK_LINK"\x3 1\n"
                 INK_BRIGHT_YELLOW
-                MARK_LINK"\x4\r"
+                MARK_LINK"\x4\n"
                 INK_BRIGHT_MAGENTA
-                MARK_LINK"\x5\r"
-                "\xB9\xBA""Folder\r"
-                "\xBB\xBC""Folder\r"
-                "\xBD\xBE""File\r",
+                MARK_LINK"\x5\n"
+                "\xB9\xBA""Folder\n"
+                "\xBB\xBC""Folder\n"
+                "\xBD\xBE""File\n",
 /*menu_ptr*/    0
 };
 

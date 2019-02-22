@@ -144,6 +144,7 @@ typedef struct
     u8  *header_txt;            // +9
     u8  *window_txt;            // +11
     u16 *menu_ptr;              // +13
+    u16 *int_proc;              // +15
 } GC_WINDOW_t;
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -521,6 +522,10 @@ void gcGotoXY(u8 x, u8 y) __naked;
 void gcPrintSymbol(u8 x, u8 y, u8 sym, u8 attr) __naked;
 void gcEditString(u8 *str, u8 len, u8 x, u8 y) __naked;
 
+unsigned char* dec2asc8(u8 num) __naked __z88dk_fastcall;
+unsigned char* dec2asc16(u16 num) __naked __z88dk_fastcall;
+unsigned char* dec2asc32(u32 num) __naked __z88dk_fastcall;
+
 /* Print numbers*/
 void gcPrintHex8(u8 num) __naked __z88dk_fastcall;
 void gcPrintHex16(u16 num) __naked __z88dk_fastcall;
@@ -532,5 +537,8 @@ void gcPrintDec32(u32 num) __naked __z88dk_fastcall;
 
 void gcSetFontSym(u8 sym, u8 *udg) __naked;
 void gcSetPalette();
+
+void gcPrintf(char *string, ...) __naked;
+
 
 #endif /* GCWIN_H */

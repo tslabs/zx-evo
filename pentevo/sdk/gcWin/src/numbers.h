@@ -3,11 +3,11 @@
 //::               by dr_max^gc (c)2018-2019                 ::
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-void gcPrintDec8(u8 num) __naked __z88dk_fastcall
+unsigned char* dec2asc8(u8 num) __naked __z88dk_fastcall
 {
     num;        // to avoid SDCC warning
 
-  __asm
+    __asm
     ld h,#0
     ld d,h
     ld e,h
@@ -17,6 +17,50 @@ void gcPrintDec8(u8 num) __naked __z88dk_fastcall
     call decasc8
     pop ix
     ld hl,#ascbuff
+    ret
+    __endasm;
+}
+
+unsigned char* dec2asc16(u16 num) __naked __z88dk_fastcall
+{
+    num;        // to avoid SDCC warning
+
+    __asm
+    push hl
+    exx
+    pop hl
+    exx
+    ld hl,#0
+    ld c,#0
+    push ix
+    ld ix,#ascbuff
+    call decasc16
+    pop ix
+    ld hl,#ascbuff
+    ret
+    __endasm;
+}
+
+unsigned char* dec2asc32(u32 num) __naked __z88dk_fastcall
+{
+    num;        // to avoid SDCC warning
+
+    __asm
+    push ix
+    ld ix,#ascbuff
+    call decasc32
+    pop ix
+    ld hl,#ascbuff
+    ret
+    __endasm;
+}
+
+void gcPrintDec8(u8 num) __naked __z88dk_fastcall
+{
+    num;        // to avoid SDCC warning
+
+  __asm
+    call _dec2asc8
     ld a,(cur_x)
     ld e,a
     ld a,(cur_y)
@@ -30,17 +74,7 @@ void gcPrintDec16(u16 num) __naked __z88dk_fastcall
     num;        // to avoid SDCC warning
 
   __asm
-    push hl
-    exx
-    pop hl
-    exx
-    ld hl,#0
-    ld c,#0
-    push ix
-    ld ix,#ascbuff
-    call decasc16
-    pop ix
-    ld hl,#ascbuff
+    call _dec2asc16
     ld a,(cur_x)
     ld e,a
     ld a,(cur_y)
@@ -59,11 +93,7 @@ void gcPrintDec32(u32 num) __naked __z88dk_fastcall
 ; i:
 ;   HLDE = 32bit NUMBER
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-    push ix
-    ld ix,#ascbuff
-    call decasc32
-    pop ix
-    ld hl,#ascbuff
+    call _dec2asc32
     ld a,(cur_x)
     ld e,a
     ld a,(cur_y)
@@ -302,19 +332,149 @@ hexasc8:
     rra
     rra
     rra
-    and #0x0F
+    or #0xF0
     daa
-    add #0xF0
+    add #0xA0
     adc #0x40
     ld 0 (ix),a
     inc ix
     pop af
-    and #0x0F
+    or #0xF0
     daa
-    add #0xF0
+    add #0xA0
     adc #0x40
     ld 0 (ix),a
     inc ix
     ret
   __endasm;
+}
+
+//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+void gcPrintf(char *string, ...) __naked
+{
+    string;         // to avoid SDCC warning
+
+    __asm
+    push ix
+    ld ix,#4
+    add ix,sp
+;;
+    ld a,(cur_x)
+    ld e,a
+    ld a,(cur_y)
+    ld d,a
+;;
+    ld l,0 (ix)
+    ld h,1 (ix)
+    inc ix
+    inc ix
+
+gc_printf_loop$:
+    ld a,(hl)
+    or a
+    jp z,gc_printf_exit$
+    inc hl
+    cp #0x0A
+    jr z,gc_printf_linefeed$
+    cp #'%'
+    jp nz,gc_printf_char$
+    ld a,(hl)
+    or a
+    jp z,gc_printf_exit$
+    inc hl
+    cp #'h'
+    jp z,gc_printf_short$
+    cp #'u'
+    jp z,gc_printf_udec16$
+    cp #'x'
+    jp z,gc_printf_hex16$
+    cp #'s'
+    jp z,gc_printf_string$
+;;
+gc_printf_char$:
+    ld bc,(sym_attr)
+    push hl
+    call sym_prn
+    ld a,e
+    ld (cur_x),a
+    pop hl
+    jr gc_printf_loop$
+;;
+gc_printf_linefeed$:
+    ld a,(cur_y)
+    inc a
+    ld (cur_y),a
+    ld d,a
+    ld a,(win_x)
+    ld (cur_x),a
+    ld e,a
+    jr gc_printf_loop$
+
+;; %h modificator (short)
+gc_printf_short$:
+    ld a,(hl)
+    inc hl
+    cp #'u'
+    jr z,gc_printf_udec8$
+    cp #'x'
+    jr z,gc_printf_hex8$
+    jr gc_printf_char$
+
+;; %s (string)
+gc_printf_string$:
+    push hl
+    ld l,0 (ix)
+    ld h,1 (ix)
+    inc ix
+    inc ix
+    call strprnz
+    pop hl
+    jr gc_printf_loop$
+
+;; %hx
+gc_printf_hex8$:
+    push hl
+    ld l,0 (ix)
+    inc ix
+    inc ix
+    call _gcPrintHex8
+    pop hl
+    jp gc_printf_loop$
+
+;; %x (hex)
+gc_printf_hex16$:
+    push hl
+    ld l,0 (ix)
+    ld h,1 (ix)
+    inc ix
+    inc ix
+    call _gcPrintHex16
+    pop hl
+    jp gc_printf_loop$
+
+;; %hu
+gc_printf_udec8$:
+    push hl
+    ld l,0 (ix)
+    inc ix
+    inc ix
+    call _gcPrintDec8
+    pop hl
+    jp gc_printf_loop$
+
+;; %u (insigned decimal)
+gc_printf_udec16$:
+    push hl
+    ld l,0 (ix)
+    ld h,1 (ix)
+    inc ix
+    inc ix
+    call _gcPrintDec16
+    pop hl
+    jp gc_printf_loop$
+;;
+gc_printf_exit$:
+    pop ix
+    ret
+    __endasm;
 }

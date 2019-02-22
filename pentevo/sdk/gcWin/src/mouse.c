@@ -3,7 +3,6 @@
 //::               by dr_max^gc (c)2018-2019                 ::
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 #include "defs.h"
-#include "mouse.h"
 
 static u16 mouse_x;
 static u16 mouse_y;
@@ -82,27 +81,27 @@ mouse_img:
     __endasm;
 }
 
-inline u16 gcGetMouseX(void)
+u16 gcGetMouseX(void)
 {
     return mouse_x;
 }
 
-inline u16 gcGetMouseY(void)
+u16 gcGetMouseY(void)
 {
     return mouse_y;
 }
 
-inline u8 gcGetMouseWheel(void)
+u8 gcGetMouseWheel(void)
 {
     return mouse_wheel;
 }
 
-inline u8 gcGetMouseXS(void)
+u8 gcGetMouseXS(void)
 {
     return (mouse_x>>2);
 }
 
-inline u8 gcGetMouseYS(void)
+u8 gcGetMouseYS(void)
 {
     return (mouse_y>>3);
 }
