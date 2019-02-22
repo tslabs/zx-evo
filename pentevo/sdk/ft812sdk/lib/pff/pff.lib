@@ -1,7 +1,7 @@
 <SDCCLIB>
 
 <INDEX>
-      2152
+      2219
 <MODULE>
 diskio_c_0 11
 .__.ABS.
@@ -60,152 +60,158 @@ _sd_cmd
 </MODULE>
 
 <MODULE>
-diskio_c_9 7865
+diskio_c_9 7731
+.__.ABS.
+_sd_wait_busy
+</MODULE>
+
+<MODULE>
+diskio_c_10 8447
 .__.ABS.
 _sd_wait_dtoken
 </MODULE>
 
 <MODULE>
-diskio_c_10 8760
+diskio_c_11 9344
 .__.ABS.
 _sd_recv_data
 </MODULE>
 
 <MODULE>
-diskio_c_11 9507
+diskio_c_12 10091
 .__.ABS.
 _disk_initialize
 </MODULE>
 
 <MODULE>
-diskio_c_12 12787
+diskio_c_13 13371
 .__.ABS.
 _disk_readp
 </MODULE>
 
 <MODULE>
-diskio_c_13 15133
+diskio_c_14 15717
 .__.ABS.
 _disk_writep
 </MODULE>
 
 <MODULE>
-pff_c_0 17536
+pff_c_0 18019
 .__.ABS.
 _mem_set
 _FatFs
 </MODULE>
 
 <MODULE>
-pff_c_1 18331
+pff_c_1 18814
 .__.ABS.
 _mem_cmp
 </MODULE>
 
 <MODULE>
-pff_c_2 19408
+pff_c_2 19891
 .__.ABS.
 _get_fat
 </MODULE>
 
 <MODULE>
-pff_c_3 21336
+pff_c_3 21819
 .__.ABS.
 _clust2sect
 </MODULE>
 
 <MODULE>
-pff_c_4 22839
+pff_c_4 23322
 .__.ABS.
 _get_clust
 </MODULE>
 
 <MODULE>
-pff_c_5 23705
+pff_c_5 24188
 .__.ABS.
 _dir_rewind
 </MODULE>
 
 <MODULE>
-pff_c_6 25351
+pff_c_6 25834
 .__.ABS.
 _dir_next
 </MODULE>
 
 <MODULE>
-pff_c_7 28195
+pff_c_7 28678
 .__.ABS.
 _dir_find
 </MODULE>
 
 <MODULE>
-pff_c_8 30188
+pff_c_8 30671
 .__.ABS.
 _dir_read
 </MODULE>
 
 <MODULE>
-pff_c_9 32186
+pff_c_9 32669
 .__.ABS.
 _create_name
 </MODULE>
 
 <MODULE>
-pff_c_10 34004
+pff_c_10 34487
 .__.ABS.
 _get_fileinfo
 </MODULE>
 
 <MODULE>
-pff_c_11 36172
+pff_c_11 36655
 .__.ABS.
 _follow_path
 </MODULE>
 
 <MODULE>
-pff_c_12 38279
+pff_c_12 38762
 .__.ABS.
 _check_fs
 </MODULE>
 
 <MODULE>
-pff_c_13 39655
+pff_c_13 40138
 .__.ABS.
 _pf_mount
 </MODULE>
 
 <MODULE>
-pff_c_14 48168
+pff_c_14 48651
 .__.ABS.
 _pf_open
 </MODULE>
 
 <MODULE>
-pff_c_15 50121
+pff_c_15 50604
 .__.ABS.
 _pf_read
 </MODULE>
 
 <MODULE>
-pff_c_16 55182
+pff_c_16 55665
 .__.ABS.
 _pf_write
 </MODULE>
 
 <MODULE>
-pff_c_17 61715
+pff_c_17 62198
 .__.ABS.
 _pf_lseek
 </MODULE>
 
 <MODULE>
-pff_c_18 67964
+pff_c_18 68447
 .__.ABS.
 _pf_opendir
 </MODULE>
 
 <MODULE>
-pff_c_19 69607
+pff_c_19 70090
 .__.ABS.
 _pf_readdir
 </MODULE>
@@ -506,7 +512,7 @@ R 00 00 00 00
 diskio_c_8
 <REL>
 XL2
-H 9 areas 8 global symbols
+H 9 areas 9 global symbols
 M diskio_c_8
 O -mz80
 S _sd_rbuf Ref0000
@@ -514,9 +520,10 @@ S _sd_recv Ref0000
 S _sd_skip Ref0000
 S .__.ABS. Def0000
 S _sd_rd Ref0000
+S _sd_wait_busy Ref0000
 S _sdcrc Ref0000
 S _sd_wr Ref0000
-A _CODE size DD flags 0 addr 0
+A _CODE size D0 flags 0 addr 0
 S _sd_cmd Def0000
 A _DATA size 0 flags 0 addr 0
 A _INITIALIZED size 0 flags 0 addr 0
@@ -533,15 +540,15 @@ R 00 00 00 00
 T 0D 00 00 00 F1 DD 7E 04 E6 3F 4F CB F1 41 C5 33
 R 00 00 00 00 02 02 02 00
 T 1B 00 CD 00 00 33 21 05 00 39 EB 6B 62 23 23 23
-R 00 00 00 00 02 03 06 00
+R 00 00 00 00 02 03 07 00
 T 29 00 46 D5 C5 33 CD 00 00 33 D1 6B 62 23 23 46
-R 00 00 00 00 02 07 06 00
+R 00 00 00 00 02 07 07 00
 T 37 00 D5 C5 33 CD 00 00 33 D1 6B 62 23 46 D5 C5
-R 00 00 00 00 02 06 06 00
+R 00 00 00 00 02 06 07 00
 T 45 00 33 CD 00 00 33 D1 1A F5 33 CD 00 00 33 3A
-R 00 00 00 00 02 04 06 00 02 0C 06 00
+R 00 00 00 00 02 04 07 00 02 0C 07 00
 T 53 00 00 00 F5 33 CD 00 00 33 21 02 00 E5 CD
-R 00 00 00 00 02 02 05 00 02 07 06 00
+R 00 00 00 00 02 02 06 00 02 07 07 00
 T 60 00 00 00 F1 01 0A 00
 R 00 00 00 00 02 02 02 00
 T 66 00
@@ -552,45 +559,35 @@ T 74 00 F1
 R 00 00 00 00
 T 75 00
 R 00 00 00 00
-T 75 00 78 B1 20 04 1E FF 18 5C
+T 75 00 78 B1 20 04 1E FF 18 4F
 R 00 00 00 00
 T 7D 00
 R 00 00 00 00
-T 7D 00 DD 7E 04 E6 C0 DD 77 04 B7 28 51 DD 7E 04
+T 7D 00 DD 7E 04 E6 C0 DD 77 04 B7 28 44 DD 7E 04
 R 00 00 00 00
 T 8B 00 D6 40 28 10 DD 7E 04 D6 80 28 1A DD 7E 04
 R 00 00 00 00
-T 99 00 D6 C0 28 24 18 3A
+T 99 00 D6 C0 28 24 18 2D
 R 00 00 00 00
 T 9F 00
 R 00 00 00 00
 T 9F 00 D5 21 01 00 E5 21 00 00 E5 CD 00 00 F1 F1
 R 00 00 00 00 02 08 00 00 02 0C 01 00
-T AD 00 D1 18 29
+T AD 00 D1 18 1C
 R 00 00 00 00
 T B0 00
 R 00 00 00 00
 T B0 00 D5 21 04 00 E5 21 00 00 E5 CD 00 00 F1 F1
 R 00 00 00 00 02 08 00 00 02 0C 01 00
-T BE 00 D1 18 18
+T BE 00 D1 18 0B
 R 00 00 00 00
 T C1 00
 R 00 00 00 00
-T C1 00 01 E8 FD
+T C1 00 D5 CD 00 00 7D D1 B7 20 02 1E FF
+R 00 00 00 00 02 04 05 00
+T CC 00
 R 00 00 00 00
-T C4 00
-R 00 00 00 00
-T C4 00 C5 D5 CD 00 00 D1 C1 2C 28 05 0B 78 B1 20
-R 00 00 00 00 02 05 04 00
-T D2 00 F1
-R 00 00 00 00
-T D3 00
-R 00 00 00 00
-T D3 00 78 B1 20 02 1E FF
-R 00 00 00 00
-T D9 00
-R 00 00 00 00
-T D9 00 6B DD E1 C9
+T CC 00 6B DD E1 C9
 R 00 00 00 00
 </REL>
 <ADB>
@@ -606,6 +603,42 @@ M diskio_c_9
 O -mz80
 S .__.ABS. Def0000
 S _sd_rd Ref0000
+A _CODE size 1B flags 0 addr 0
+S _sd_wait_busy Def0000
+A _DATA size 0 flags 0 addr 0
+A _INITIALIZED size 0 flags 0 addr 0
+A _DABS size 0 flags 8 addr 0
+A _HOME size 0 flags 0 addr 0
+A _GSINIT size 0 flags 0 addr 0
+A _GSFINAL size 0 flags 0 addr 0
+A _INITIALIZER size 0 flags 0 addr 0
+A _CABS size 0 flags 8 addr 0
+T 00 00
+R 00 00 00 00
+T 00 00 01 FF FF
+R 00 00 00 00
+T 03 00
+R 00 00 00 00
+T 03 00 C5 CD 00 00 C1 2C 20 05 0B 78 B1 20 F3
+R 00 00 00 00 02 04 01 00
+T 10 00
+R 00 00 00 00
+T 10 00 78 B1 D6 01 3E 00 17 EE 01 6F C9
+R 00 00 00 00
+</REL>
+<ADB>
+</ADB>
+</FILE>
+
+<FILE>
+diskio_c_10
+<REL>
+XL2
+H 9 areas 3 global symbols
+M diskio_c_10
+O -mz80
+S .__.ABS. Def0000
+S _sd_rd Ref0000
 A _CODE size 2E flags 0 addr 0
 S _sd_wait_dtoken Def0000
 A _DATA size 0 flags 0 addr 0
@@ -618,7 +651,7 @@ A _INITIALIZER size 0 flags 0 addr 0
 A _CABS size 0 flags 8 addr 0
 T 00 00
 R 00 00 00 00
-T 00 00 3B 01 E8 FD
+T 00 00 3B 01 FF FF
 R 00 00 00 00
 T 04 00
 R 00 00 00 00
@@ -644,11 +677,11 @@ R 00 00 00 00
 </FILE>
 
 <FILE>
-diskio_c_10
+diskio_c_11
 <REL>
 XL2
 H 9 areas 4 global symbols
-M diskio_c_10
+M diskio_c_11
 O -mz80
 S _sd_recv Ref0000
 S .__.ABS. Def0000
@@ -679,11 +712,11 @@ R 00 00 00 00 02 03 00 00
 </FILE>
 
 <FILE>
-diskio_c_11
+diskio_c_12
 <REL>
 XL2
 H 9 areas A global symbols
-M diskio_c_11
+M diskio_c_12
 O -mz80
 S _sd_rbuf Ref0000
 S _ctype Ref0000
@@ -818,11 +851,11 @@ R 00 00 00 00 02 04 02 00
 </FILE>
 
 <FILE>
-diskio_c_12
+diskio_c_13
 <REL>
 XL2
 H 9 areas 9 global symbols
-M diskio_c_12
+M diskio_c_13
 O -mz80
 S _ctype Ref0000
 S _sd_cs_off Ref0000
@@ -912,11 +945,11 @@ R 00 00 00 00 02 03 01 00
 </FILE>
 
 <FILE>
-diskio_c_13
+diskio_c_14
 <REL>
 XL2
-H 9 areas A global symbols
-M diskio_c_13
+H 9 areas B global symbols
+M diskio_c_14
 O -mz80
 S _ctype Ref0000
 S _sd_cs_off Ref0000
@@ -925,9 +958,10 @@ S _sd_skip Ref0000
 S .__.ABS. Def0000
 S _sd_cs_on Ref0000
 S _sd_rd Ref0000
+S _sd_wait_busy Ref0000
 S _sd_wr Ref0000
 S _sd_send Ref0000
-A _CODE size EF flags 0 addr 0
+A _CODE size E1 flags 0 addr 0
 S _disk_writep Def0000
 A _DATA size 2 flags 0 addr 0
 A _INITIALIZED size 0 flags 0 addr 0
@@ -945,9 +979,9 @@ T 00 00
 R 00 00 00 00
 T 00 00 DD E5 DD 21 00 00 DD 39 3B DD 36 FF 01 DD
 R 00 00 00 00
-T 0E 00 7E 05 DD B6 04 C2 B4 00 DD 7E 09 DD B6 08
+T 0E 00 7E 05 DD B6 04 C2 A6 00 DD 7E 09 DD B6 08
 R 00 00 00 00 00 08 00 00
-T 1C 00 DD B6 07 DD B6 06 28 57 CD 00 00 3A 00 00
+T 1C 00 DD B6 07 DD B6 06 28 56 CD 00 00 3A 00 00
 R 00 00 00 00 02 0B 05 00 02 0E 00 00
 T 2A 00 CB 67 20 14 06 09
 R 00 00 00 00
@@ -961,51 +995,45 @@ T 42 00
 R 00 00 00 00
 T 42 00 DD 6E 08 DD 66 09 E5 DD 6E 06 DD 66 07 E5
 R 00 00 00 00
-T 50 00 3E 18 F5 33 CD 00 00 F1 F1 33 7D B7 C2
+T 50 00 3E 18 F5 33 CD 00 00 F1 F1 33 7D B7 20 79
 R 00 00 00 00 02 07 02 00
-T 5D 00 E5 00 3E FF F5 33 CD 00 00 33 3E FE F5 33
-R 00 00 00 00 00 02 00 00 02 09 07 00
-T 6B 00 CD 00 00 33 21 00 02 22 00 00 DD 36 FF 00
-R 00 00 00 00 02 03 07 00 00 0A 01 00
-T 79 00 18 6D
-R 00 00 00 00
-T 7B 00
-R 00 00 00 00
-T 7B 00 2A 00 00 23 23 E5 CD 00 00 F1 CD 00 00 CD
-R 00 00 00 00 00 03 01 00 02 09 03 00 02 0D 06 00
-T 89 00 00 00 7D E6 1F 4F 06 00 79 D6 05 B0 20 4E
-R 00 00 00 00 02 02 06 00
-T 97 00 01 E8 FD
-R 00 00 00 00
-T 9A 00
-R 00 00 00 00
-T 9A 00 C5 CD 00 00 C1 2C 28 05 0B 78 B1 20 F3
-R 00 00 00 00 02 04 06 00
-T A7 00
-R 00 00 00 00
-T A7 00 78 B1 28 3A CD 00 00 DD 36 FF 00 18 31
-R 00 00 00 00 02 07 01 00
-T B4 00
-R 00 00 00 00
-T B4 00 DD 5E 06 DD 56 07 21 00 00 7B 96 7A 23 9E
-R 00 00 00 00 00 09 01 00
-T C2 00 38 04 ED 5B 00 00
-R 00 00 00 00 00 06 01 00
-T C8 00
-R 00 00 00 00
-T C8 00 21 00 00 7E 93 77 23 7E 9A 77 DD 4E 04 DD
-R 00 00 00 00 00 03 01 00
-T D6 00 46 05 D5 C5 CD 00 00 F1 F1 DD 36 FF 00 18
+T 5E 00 3E FF F5 33 CD 00 00 33 3E FE F5 33 CD
 R 00 00 00 00 02 07 08 00
-T E4 00 03
+T 6B 00 00 00 33 21 00 02 22 00 00 DD 36 FF 00 18
+R 00 00 00 00 02 02 08 00 00 09 01 00
+T 79 00 60
 R 00 00 00 00
-T E5 00
+T 7A 00
 R 00 00 00 00
-T E5 00 CD 00 00
+T 7A 00 2A 00 00 23 23 E5 CD 00 00 F1 CD 00 00 CD
+R 00 00 00 00 00 03 01 00 02 09 03 00 02 0D 06 00
+T 88 00 00 00 7D E6 1F 4F 06 00 79 D6 05 B0 20 41
+R 00 00 00 00 02 02 06 00
+T 96 00 CD 00 00 7D B7 28 3A CD 00 00 DD 36 FF 00
+R 00 00 00 00 02 03 07 00 02 0A 01 00
+T A4 00 18 31
+R 00 00 00 00
+T A6 00
+R 00 00 00 00
+T A6 00 DD 4E 06 DD 46 07 21 00 00 79 96 78 23 9E
+R 00 00 00 00 00 09 01 00
+T B4 00 38 04 ED 4B 00 00
+R 00 00 00 00 00 06 01 00
+T BA 00
+R 00 00 00 00
+T BA 00 21 00 00 7E 91 77 23 7E 98 77 DD 5E 04 DD
+R 00 00 00 00 00 03 01 00
+T C8 00 56 05 C5 D5 CD 00 00 F1 F1 DD 36 FF 00 18
+R 00 00 00 00 02 07 09 00
+T D6 00 03
+R 00 00 00 00
+T D7 00
+R 00 00 00 00
+T D7 00 CD 00 00
 R 00 00 00 00 02 03 01 00
-T E8 00
+T DA 00
 R 00 00 00 00
-T E8 00 DD 6E FF 33 DD E1 C9
+T DA 00 DD 6E FF 33 DD E1 C9
 R 00 00 00 00
 </REL>
 <ADB>

@@ -59,7 +59,14 @@ enum
   // ACMD
   SDC_SD_STATUS             = 13 | SDC_X1,  // R2 + 1 extra byte
   SDC_SD_SEND_OP_COND       = 41,
-  SDC_SEND_SCR              = 51            // R1 + data (8 bytes)
+  SDC_SEND_SCR              = 51,           // R1 + data (8 bytes)
+  
+  // Lock/unlock operations
+  SDC_UNLOCK      = 0,
+  SDC_SET_PWD     = 1,
+  SDC_CLR_PWD     = 2,
+  SDC_LOCK        = 4,
+  SDC_FORCE_ERASE = 8
 };
 
 #define ZC_SD_CFG   0x77
@@ -102,6 +109,7 @@ u8 sd_cmd(u8, u32);
 u8 sd_acmd(u8, u32);
 void sd_recv(void*, u16);
 void sd_send(void*, u16);
+bool sd_wait_busy();
 bool sd_wait_dtoken();
 bool sd_recv_data(u8*, u16);
 

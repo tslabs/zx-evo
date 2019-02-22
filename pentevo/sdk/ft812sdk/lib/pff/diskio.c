@@ -227,8 +227,7 @@ u8 sd_cmd(u8 cmd, u32 arg)
       break;
 
       case SDC_R1B:
-        i = 65000; while ((sd_rd() != 0xFF) && --i);
-        if (!i) abort(0xFF);
+        if (!sd_wait_busy()) abort(0xFF);
       break;
     }
   }
@@ -237,11 +236,17 @@ exit:
   return rc;
 }
 
+bool sd_wait_busy()
+{
+  u16 i = 65535;
+  while ((sd_rd() == 0xFF) && --i);
+  return i != 0;
+}
+
 bool sd_wait_dtoken()
 {
-  u16 i = 65000;
   u8 d;
-
+  u16 i = 65535;
   while (((d = sd_rd()) == 0xFF) && --i);
   return d == 0xFE;
 }
@@ -382,15 +387,12 @@ DRESULT disk_writep
 
     else  // Finalize write process
     {
-      u16 i = 65000;
-
       sd_skip(write_cnt + 2);   // left bytes and CRC
       sd_rd();    // dummy byte read for ZC latency
       if ((sd_rd() & 0x1F) != 0x05) goto exit;
 
       // receive data resp and wait for end of write process in timeout of 300ms
-      while ((sd_rd() != 0xFF) && --i);
-      if (!i) goto exit;
+      if (!sd_wait_busy()) goto exit;
 
       sd_cs_off();
       rc = RES_OK;
