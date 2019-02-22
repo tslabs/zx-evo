@@ -12,8 +12,22 @@ enum
   M_LOCK,
   M_LOCK_SET_PWD,
   M_LOCK_CLR_PWD,
-  M_LOCK_ERASE
+  M_LOCK_ERASE,
+  M_BFORCE
 };
+
+void print_rc(const char *last_op, u8 rc)
+{
+  u8 i;
+  u8 r = rc;
+  for (i = 0; i < countof (r1_err_txt); i++)
+  {
+    if (r & 1) break;
+    r >>= 1;
+  }
+
+  printf(C_ERR "\n%s, rc: " C_DATA "(%02X) %s\n", last_op, rc, r1_err_txt[i]);
+}
 
 u8 submenu_init()
 {
@@ -23,12 +37,101 @@ u8 submenu_init()
 
   if (rc == STA_INIT)
   {
-    read_status();
+    if (rc = read_status())
+    {
+      print_rc("read_status()", rc);
+      return rc;
+    }
+
     u8 st = sd_rbuf[0];
     printf(C_NORM "STATUS:    " C_DATA "%slocked (%02X)\n", (st & 1) ? "" : "un", st);
   }
 
   return rc;
+}
+
+void submenu_cid()
+{
+  printf(C_INFO "\nCID: " C_DATA);
+  hexstr(sdbuf, 16);
+  printf("\n\n");
+
+  bitmax = 127;
+  u8 buf[16];
+
+  u8 mid = get_bitfield_bits(127, 8);
+  printf(C_INFO "Manufactorer ID:    " C_DATA "%s (%02X)\n", look_up_mid(mid), mid);
+
+  get_bitfield_bytes(119, 2, buf);
+  printf(C_INFO "OEM/Application ID: " C_DATA "%.2s\n", buf);
+
+  get_bitfield_bytes(103, 5, buf);
+  printf(C_INFO "Product name:       " C_DATA "%.5s\n", buf);
+
+  get_bitfield_bytes(63, 1, buf);
+  printf(C_INFO "Product revision:   " C_DATA "%d.%d\n", buf[0] >> 4, buf[0] & 0x0F);
+
+  get_bitfield_bytes(55, 4, buf);
+  printf(C_INFO "Product serial num: " C_DATA);
+  hexstr(buf, 4);
+
+  u16 mfd = get_bitfield_bits(19, 12);
+  printf(C_INFO "\nManufacturing date: " C_DATA "%s %u\n", month_txt[(mfd & 0x0F) - 1], (mfd >> 4) + 2000);
+}
+
+void submenu_csd()
+{
+  printf(C_INFO "\nCSD: " C_DATA);
+  hexstr(sdbuf, 16);
+  printf("\n\n");
+
+  bitmax = 127;
+
+  u8 ver = get_bitfield_bits(127, 2);
+  printf(C_INFO "CSD Version: " C_DATA "%s (%02X)\n", csd_ver_txt[ver], ver);
+  if (ver > 1) return;  // reserved version of CSD
+
+  TRAN_SPEED spd;
+  spd.byte = get_bitfield_bits(103, 8);
+  printf(C_INFO "Max data transfer rate per one line: " C_DATA "%u%sbit/s (%02X)\n", spd_val[spd.value] * spd_mul[spd.unit], spd_unit_txt[spd.unit], spd.byte);
+
+  if (ver == 0)
+  {
+    u16 c_size = get_bitfield_bits(73, 12);
+    u8 c_size_mult = get_bitfield_bits(49, 3);
+    u8 read_bl_len = get_bitfield_bits(83, 4);
+
+    u16 mult = power(2, (c_size_mult + 2));
+    u16 bl_len = power(2, read_bl_len);
+    u32 blocknr = (u32)(c_size + 1) * mult;
+    u64 byte_size = blocknr * bl_len;
+    
+    printf(C_INFO "Device size: " C_DATA "%u MB (C_SIZE = %03X, C_SIZE_MULT = %02X)\n", (u16)(byte_size / 1024 / 1024) , c_size, c_size_mult);
+    printf(C_INFO "Read Block Length: " C_DATA "%u bytes (%02X)\n", bl_len, read_bl_len);
+  }
+  else
+  {
+    u32 c_size = get_bitfield_bits(69, 22);
+    u64 kbyte_size = (u64)(c_size + 1) * 512;
+    
+    printf(C_INFO "Device size: " C_DATA "%u MB (C_SIZE = %s)\n", (u16)(kbyte_size / 1024), hex(&c_size, 3));
+  }
+}
+
+void submenu_ocr()
+{
+  printf(C_INFO "\n\nOCR: " C_DATA);
+  hexstr(sd_rbuf, 4);
+
+  bitmax = 31;
+}
+
+void submenu_scr()
+{
+  printf(C_INFO "\n\nSCR: " C_DATA);
+  hexstr(sdbuf, 8);
+
+  bitmax = 63;
 }
 
 void menu_main()
@@ -43,55 +146,37 @@ void menu_main()
 
 void menu_info()
 {
+  u8 rc;
+
   cls();
   xy(3, 0);
   printf(C_HEAD "Card Info");
   xy(0, 2);
   submenu_init();
 
-  u8 buf[16];
-
   // CID
-  read_cid();
-  bitmax = 127;
-
-  printf(C_INFO "\n\nCID: " C_DATA);
-  hexstr(sdbuf, 16);
-  printf("\n\n");
-
-  u8 mid = get_bf(127, 8);
-  printf(C_INFO "Manufactorer ID:    " C_DATA "%s (%02X)\n", look_up_mid(mid), mid);
-  
-  get_bfa(buf, 119, 2);
-  printf(C_INFO "OEM/Application ID: " C_DATA "%.2s\n", buf);
-  
-  get_bfa(buf, 103, 5);
-  printf(C_INFO "Product name:       " C_DATA "%.5s\n", buf);
-  
-  get_bfa(buf, 63, 1);
-  printf(C_INFO "Product revision:   " C_DATA "%d.%d\n", buf[0] >> 4, buf[0] & 0x0F);
-  
-  get_bfa(buf, 55, 4);
-  printf(C_INFO "Product serial num: " C_DATA);
-  hexstr(buf, 4);
-  
-  u16 mfd = get_bf(19, 12);
-  printf(C_INFO "\nManufacturing date: " C_DATA "%s %d\n", month_txt[(mfd & 0x0F) - 1], (mfd >> 4) + 2000);
+  if (rc = read_cid())
+    print_rc("read_cid()", rc);
+  else
+    submenu_cid();
 
   // CSD
-  read_csd();
-  printf(C_INFO "\n\nCSD: " C_DATA);
-  hexstr(sdbuf, 16);
+  if (rc = read_csd())
+    print_rc("\nread_csd()", rc);
+  else
+    submenu_csd();
 
   // OCR
-  read_ocr();
-  printf(C_INFO "\n\nOCR: " C_DATA);
-  hexstr(sd_rbuf, 4);
+  // if (rc = read_ocr())
+    // print_rc("\nread_ocr()", rc);
+  // else
+    // submenu_ocr();
 
   // SCR
-  read_scr();
-  printf(C_INFO "\n\nSCR: " C_DATA);
-  hexstr(sdbuf, 8);
+  // if (rc = read_scr())
+    // print_rc("\nread_scr()", rc);
+  // else
+    // submenu_scr();
 }
 
 void menu_lock()
@@ -107,7 +192,8 @@ void menu_lock()
     printf(C_BUTN "\n\n1. " C_MENU "Set password\n\n");
     printf(C_BUTN "2. " C_MENU "Clear password\n\n");
     printf(C_BUTN "3. " C_ACHT "Erase card\n\n");
-    printf(C_BUTN "4. " C_MENU "Re-detect card\n\n\n\n");
+    printf(C_BUTN "4. " C_MENU "Bruteforce password\n\n");
+    printf(C_BUTN "\n0. " C_MENU "Re-detect card\n\n\n\n");
   }
   else
   {
@@ -119,18 +205,74 @@ void menu_lock()
   sd_cs_off();
 }
 
+void menu_bforce()
+{
+  xy(0, 20);
+  printf(C_PROC "Bruteforcing:");
+
+  char pw[16];
+  memset(pw, 0, sizeof(pw));
+  u64 try = 0;
+
+  for (u8 len = 1; len < 17; len++)
+  {
+  l1:
+    xy(15, 20);
+    printf(C_INFO "'" C_DATA "%s" C_INFO "' , try: %s" C_DATA, pw, hex(&try, 8));
+
+    for (u8 ltr = 32; ltr; ltr++)
+    {
+      pw[len - 1] = ltr;
+
+      // try to clear PWD
+      try++;
+      lock_unlock_sd_(SDC_CLR_PWD, pw, len);
+      read_status();
+      if (!sd_rbuf[0] & 1)
+      {
+        xy(15, 20);
+        printf("\n\nDone! '%s'", pw);
+        return;
+      }
+    }
+
+    // move to the next PWD
+    pw[len - 1] = 32;
+
+    for (u8 i = len - 1; i; i--)
+    {
+      if (++pw[i - 1])
+        goto l1;
+
+      pw[i - 1] = 32;
+    }
+  }
+
+  printf("\n\nOops...");
+}
+
+const char paswd[] = "123";
+
 void menu_lock_set_pwd()
 {
   printf(C_PROC "Setting password... ");
-  set_password_sd();
-  printf(C_OK "OK\n\n");
+
+  u8 rc;
+  if (rc = set_password_sd(paswd))
+    print_rc("set_password_sd()", rc);
+  else
+    printf(C_OK "OK\n\n");
 }
 
 void menu_lock_clr_pwd()
 {
   printf(C_PROC "Removing password... ");
-  u8 rc = clear_password_sd();
-  printf(C_OK "OK\n\n");
+
+  u8 rc;
+  if (rc = clear_password_sd(paswd))
+    print_rc("clear_password_sd()", rc);
+  else
+    printf(C_OK "OK\n\n");
 }
 
 void menu_lock_erase()
@@ -144,8 +286,12 @@ void menu_lock_erase()
   else
   {
     printf(C_PROC "Erasing card... ");
-    u8 rc = erase_sd();
-    printf(C_OK "OK\n\n");
+
+    u8 rc;
+    if (rc = erase_sd())
+      print_rc("erase_sd()", rc);
+    else
+      printf(C_OK "OK\n\n");
   }
 }
 
@@ -159,6 +305,7 @@ void menu_disp()
     case M_LOCK_SET_PWD:  menu_lock_set_pwd(); break;
     case M_LOCK_CLR_PWD:  menu_lock_clr_pwd(); break;
     case M_LOCK_ERASE:    menu_lock_erase(); break;
+    case M_BFORCE:        menu_bforce(); break;
   }
 }
 
@@ -195,7 +342,8 @@ bool key_disp()
         case KEY_1: menu = M_LOCK_SET_PWD; rc = true; break;
         case KEY_2: menu = M_LOCK_CLR_PWD; rc = true; break;
         case KEY_3: menu = M_LOCK_ERASE; rc = true; break;
-        case KEY_4: menu = M_LOCK; rc = true; break;
+        case KEY_4: menu = M_BFORCE; rc = true; break;
+        case KEY_0: menu = M_LOCK; rc = true; break;
 
         default:
           if (key != KEY_NONE)

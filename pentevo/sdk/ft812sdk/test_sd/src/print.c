@@ -11,8 +11,8 @@
 #define C_CRIT "\aA"
 #define C_HEAD "\aD"
 #define C_SEL  "\aE"
-#define C_INFO "\aC"
-#define C_DATA "\aF"
+#define C_INFO "\aF"
+#define C_DATA "\aC"
 #define C_QUST "\aE"
 #define C_FRAM "\a7"
 
@@ -61,6 +61,18 @@ int putchar(u8 b)
     }
   }
   return 0;
+}
+
+const char *hex(void *ptr, u8 n)
+{
+  static char buf[32];
+  u8 *_ptr = (u8*)ptr;
+  u8 i = 0;
+  
+  for (u8 b = 0; b < n; b++)
+    i += sprintf(&buf[i], "%02X", _ptr[n - b - 1]);
+  
+  return buf;
 }
 
 void hexstr(u8 *ptr, u8 n)

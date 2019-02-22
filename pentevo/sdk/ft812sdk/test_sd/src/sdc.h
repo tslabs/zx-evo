@@ -9,6 +9,17 @@ char *const sd_init_txt[] =
   "Error leaving IDLE state"
 };
 
+char *const r1_err_txt[] =
+{
+  "Idle state",
+  "Erase reset",
+  "Illegal command",
+  "Com CRC error",
+  "Erase sequence error",
+  "Address error",
+  "Parameter error"
+};
+  
 char *const sd_type_txt[] =
 {
   "No card",
@@ -40,6 +51,20 @@ typedef struct
   char *name;
 } MID_TAB;
 
+typedef struct
+{
+  union
+  {
+    struct
+    {
+      u8 unit:3;
+      u8 value:4;
+      u8 _res:1;
+    };
+    u8 byte;
+  };
+} TRAN_SPEED;
+
 const MID_TAB mid_tab[] =
 {
   { 0x00, "Invalid"                      },
@@ -62,3 +87,8 @@ const MID_TAB mid_tab[] =
   { 0x76, "Patriot(?)"                   },
   { 0x82, "Sony(?)"                      },
 };
+
+char *const csd_ver_txt[] = { "1.0", "2.0", "(reserved)", "(reserved)" };
+const u8 spd_mul[] = { 10, 100, 1, 10, 0, 0, 0, 0 };
+const u8 spd_val[] = { 0, 10, 12, 13, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 70, 80 };
+char *const spd_unit_txt[] = { "k", "k", "M", "M", "", "", "", "" };

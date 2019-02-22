@@ -10,6 +10,7 @@
 #include <pff.h>
 #include <diskio.h>
 #include "sdc.h"
+#include "../res/font.h"
 
 FATFS fs;
 DIR dir;
@@ -21,7 +22,6 @@ bool req_unpress;
 u8 sdbuf[64];
 u16 bitmax;
 
-#include "../res/font.h"
 #include "func.c"
 #include "sdc.c"
 #include "print.c"

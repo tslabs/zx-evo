@@ -9,100 +9,121 @@ A 51 (SCR) - <R1> <dtok> <8b> <CRC>
   *Registers data is stored in MSB format
 */
 
-bool read_cid()
+u8 read_cid()
 {
+  u8 rc;
+
   sd_cs_on();
-  sd_cmd(SDC_SEND_CID, 0);
+  rc = sd_cmd(SDC_SEND_CID, 0);
   sd_recv_data(sdbuf, 16);
   sd_cs_off();
 
-  return true;
+  return rc;
 }
 
-bool read_csd()
+u8 read_csd()
 {
+  u8 rc;
+
   sd_cs_on();
-  sd_cmd(SDC_SEND_CSD, 0);
+  rc = sd_cmd(SDC_SEND_CSD, 0);
   sd_recv_data(sdbuf, 16);
   sd_cs_off();
 
-  return true;
+  return rc;
 }
 
-bool read_ocr()
+u8 read_ocr()
 {
+  u8 rc;
+
   sd_cs_on();
-  sd_cmd(SDC_READ_OCR, 0);
+  rc = sd_cmd(SDC_READ_OCR, 0);
   sd_cs_off();
 
-  return true;
+  return rc;
 }
 
-bool read_scr()
+u8 read_scr()
 {
+  u8 rc;
+
   sd_cs_on();
-  sd_acmd(SDC_SEND_SCR, 0);
+  rc = sd_acmd(SDC_SEND_SCR, 0);
   sd_recv_data(sdbuf, 8);
   sd_cs_off();
 
-  return true;
+  return rc;
 }
 
-bool read_status()
+u8 read_status()
 {
+  u8 rc;
+
   sd_cs_on();
-  sd_cmd(SDC_SEND_STATUS, 0);
+  rc = sd_cmd(SDC_SEND_STATUS, 0);
   sd_cs_off();
 
-  return true;
+  return rc;
 }
 
-bool lock_unlock_sd(u8 op)
+u8 lock_unlock_sd_(u8 op, const char *pwd, u8 len)
 {
+  u8 rc;
+
   sd_cs_on();
-  sd_cmd(SDC_SET_BLOCKLEN, 3);
-  sd_cmd(SDC_LOCK_UNLOCK, 0);
+  if (rc = sd_cmd(SDC_SET_BLOCKLEN, len + 2)) goto exit;
+  if (rc = sd_cmd(SDC_LOCK_UNLOCK, 0)) goto exit;
   sd_wr(0xFF); sd_wr(0xFE);         // data block header
   sd_wr(op);                        // operation
-  sd_wr(1);                         // PWD_LEN = 1
-  sd_wr('1');                       // PWD = "1"
-  sd_skip(2 + 32);                  // CRC + shit
-  while (sd_rd() != 0xFF);
+  sd_wr(len);                       // PWD_LEN
+  sd_send(pwd, len);                // PWD
+  sd_skip(2 + 2);                   // CRC + shit
+  if (!sd_wait_busy()) rc = 0xFF;
+exit:
   sd_cs_off();
 
-  return true;
+  return rc;
 }
 
-bool set_password_sd()
+u8 lock_unlock_sd(u8 op, const char *pwd)
 {
-  return lock_unlock_sd(1);         // SET_PWD
+  return lock_unlock_sd_(op, pwd, strlen(pwd));
 }
 
-bool clear_password_sd()
+u8 set_password_sd(const char *pwd)
 {
-  return lock_unlock_sd(2);         // CLR_PWD
+  return lock_unlock_sd(SDC_SET_PWD, pwd);
 }
 
-bool lock_sd()
+u8 clear_password_sd(const char *pwd)
 {
-  return lock_unlock_sd(4);         // LOCK
+  return lock_unlock_sd(SDC_CLR_PWD, pwd);    // CLR_PWD
 }
 
-bool unlock_sd()
+u8 lock_sd(const char *pwd)
 {
-  return lock_unlock_sd(0);         // UNLOCK
+  return lock_unlock_sd(SDC_LOCK, pwd);
 }
 
-bool erase_sd()
+u8 unlock_sd(const char *pwd)
 {
+  return lock_unlock_sd(SDC_UNLOCK, pwd);
+}
+
+u8 erase_sd()
+{
+  u8 rc;
+
   sd_cs_on();
-  sd_cmd(SDC_SET_BLOCKLEN, 1);
-  sd_cmd(SDC_LOCK_UNLOCK, 0);
+  if (rc = sd_cmd(SDC_SET_BLOCKLEN, 1)) goto exit;
+  if (rc = sd_cmd(SDC_LOCK_UNLOCK, 0)) goto exit;
   sd_wr(0xFF); sd_wr(0xFE);         // data block header
-  sd_wr(8);                         // FORCE ERASE
-  sd_skip(2 + 32);                  // CRC + shit
-  while (sd_rd() != 0xFF);
+  sd_wr(SDC_FORCE_ERASE);
+  sd_skip(2 + 2);                   // CRC + shit
+  if (!sd_wait_busy()) rc = 0xFF;
+exit:
   sd_cs_off();
 
-  return true;
+  return rc;
 }

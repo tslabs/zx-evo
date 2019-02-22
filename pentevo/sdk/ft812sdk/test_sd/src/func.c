@@ -5,9 +5,16 @@ void wait(u16 d)
   while (a--);
 }
 
-u16 get_bits(u8 *buf, u16 offs, u8 num)
+u32 power(u32 a, u8 b)
 {
-  u16 rc = 0;
+  u32 p = 1;
+  for (u8 i = 0; i < b; i++) p *= a;
+  return p;
+}
+
+u32 get_bits(u8 *buf, u16 offs, u8 num)
+{
+  u32 rc = 0;
   u16 i = offs >> 3;
   u8 m = 0x80 >> (offs & 7);
   u8 b = buf[i++];
@@ -28,12 +35,12 @@ u16 get_bits(u8 *buf, u16 offs, u8 num)
   return rc;
 }
 
-u16 get_bf(u16 offs, u8 num)
+u16 get_bitfield_bits(u16 offs, u8 num)
 {
   return get_bits(sdbuf, bitmax - offs, num);
 }
 
-void get_bfa(void *ptr, u16 offs, u8 num)
+void get_bitfield_bytes(u16 offs, u8 num, void *ptr)
 {
   u8 *_ptr = (u8*)ptr;
   offs = bitmax - offs;
