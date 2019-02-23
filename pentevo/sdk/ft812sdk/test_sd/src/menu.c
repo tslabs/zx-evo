@@ -114,7 +114,7 @@ void submenu_csd()
     u32 c_size = get_bitfield_bits(69, 22);
     u64 kbyte_size = (u64)(c_size + 1) * 512;
     
-    printf(C_INFO "Device size: " C_DATA "%s MB / %u GB (C_SIZE = %s)\n", dec32(kbyte_size / 1024, 0), (u16)(kbyte_size / 1024 / 1024), hex(&c_size, 3, 1));
+    printf(C_INFO "Device size: " C_DATA "%s MB / %u GB (C_SIZE = %s)\n", dec32(kbyte_size / 1024), (u16)(kbyte_size / 1024 / 1024), hex(&c_size, 3));
   }
 }
 
@@ -218,7 +218,7 @@ void menu_bforce()
   {
   l1:
     xy(15, 20);
-    printf(C_INFO "'" C_DATA "%s" C_INFO "' , try: %s" C_DATA, pw, hex(&try, 8, 0));
+    printf(C_INFO "'" C_DATA "%s" C_INFO "' , try: %s" C_DATA, pw, hex(&try, 8));
 
     for (u8 ltr = 32; ltr; ltr++)
     {
