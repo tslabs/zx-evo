@@ -35,7 +35,7 @@ u32 get_bits(u8 *buf, u16 offs, u8 num)
   return rc;
 }
 
-u16 get_bitfield_bits(u16 offs, u8 num)
+u32 get_bitfield_bits(u16 offs, u8 num)
 {
   return get_bits(sdbuf, bitmax - offs, num);
 }

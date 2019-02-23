@@ -63,16 +63,35 @@ int putchar(u8 b)
   return 0;
 }
 
-const char *hex(void *ptr, u8 n)
+char prn_buf[4][32];
+
+const char *dec32(u32 num, u8 b)
 {
-  static char buf[32];
+  char *p = prn_buf[b];
+  u8 n1 = num / 100000000;
+  u16 n2 = (num % 100000000) / 10000;
+  u16 n3 = num % 10000;
+  
+  if (n1)
+    sprintf(p, "%u%04u%04u", n1, n2, n3);
+  else if (n2)
+    sprintf(p, "%u%04u", n2, n3);
+  else
+    sprintf(p, "%u%", n3);
+  
+  return p;
+}
+
+const char *hex(void *ptr, u8 n, u8 b)
+{
+  char *p = prn_buf[b];
   u8 *_ptr = (u8*)ptr;
   u8 i = 0;
   
   for (u8 b = 0; b < n; b++)
-    i += sprintf(&buf[i], "%02X", _ptr[n - b - 1]);
+    i += sprintf(&p[i], "%02X", _ptr[n - b - 1]);
   
-  return buf;
+  return p;
 }
 
 void hexstr(u8 *ptr, u8 n)
