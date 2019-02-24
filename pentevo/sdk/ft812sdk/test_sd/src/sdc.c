@@ -78,7 +78,7 @@ u8 lock_unlock_sd_(u8 op, const char *pwd, u8 len)
   sd_wr(op);                        // operation
   sd_wr(len);                       // PWD_LEN
   sd_send(pwd, len);                // PWD
-  sd_skip(2 + 2);                   // CRC + shit
+  sd_skip(2 + 8);                   // CRC + shit
   if (!sd_wait_busy()) rc = 0xFF;
 exit:
   sd_cs_off();
@@ -120,8 +120,8 @@ u8 erase_sd()
   if (rc = sd_cmd(SDC_LOCK_UNLOCK, 0)) goto exit;
   sd_wr(0xFF); sd_wr(0xFE);         // data block header
   sd_wr(SDC_FORCE_ERASE);
-  sd_skip(2 + 2);                   // CRC + shit
-  if (!sd_wait_busy()) rc = 0xFF;
+  sd_skip(2 + 8);                   // CRC + shit
+  if (!sd_wait_busy_long()) rc = 0xFF;
 exit:
   sd_cs_off();
 
