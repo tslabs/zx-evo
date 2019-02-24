@@ -1,7 +1,7 @@
 <SDCCLIB>
 
 <INDEX>
-      2219
+      2291
 <MODULE>
 diskio_c_0 11
 .__.ABS.
@@ -62,156 +62,162 @@ _sd_cmd
 <MODULE>
 diskio_c_9 7731
 .__.ABS.
+_sd_wait_busy_long
+</MODULE>
+
+<MODULE>
+diskio_c_10 8569
+.__.ABS.
 _sd_wait_busy
 </MODULE>
 
 <MODULE>
-diskio_c_10 8447
+diskio_c_11 9287
 .__.ABS.
 _sd_wait_dtoken
 </MODULE>
 
 <MODULE>
-diskio_c_11 9344
+diskio_c_12 10184
 .__.ABS.
 _sd_recv_data
 </MODULE>
 
 <MODULE>
-diskio_c_12 10091
+diskio_c_13 10931
 .__.ABS.
 _disk_initialize
 </MODULE>
 
 <MODULE>
-diskio_c_13 13371
+diskio_c_14 14211
 .__.ABS.
 _disk_readp
 </MODULE>
 
 <MODULE>
-diskio_c_14 15717
+diskio_c_15 16557
 .__.ABS.
 _disk_writep
 </MODULE>
 
 <MODULE>
-pff_c_0 18019
+pff_c_0 18859
 .__.ABS.
 _mem_set
 _FatFs
 </MODULE>
 
 <MODULE>
-pff_c_1 18814
+pff_c_1 19654
 .__.ABS.
 _mem_cmp
 </MODULE>
 
 <MODULE>
-pff_c_2 19891
+pff_c_2 20731
 .__.ABS.
 _get_fat
 </MODULE>
 
 <MODULE>
-pff_c_3 21819
+pff_c_3 22659
 .__.ABS.
 _clust2sect
 </MODULE>
 
 <MODULE>
-pff_c_4 23322
+pff_c_4 24162
 .__.ABS.
 _get_clust
 </MODULE>
 
 <MODULE>
-pff_c_5 24188
+pff_c_5 25028
 .__.ABS.
 _dir_rewind
 </MODULE>
 
 <MODULE>
-pff_c_6 25834
+pff_c_6 26674
 .__.ABS.
 _dir_next
 </MODULE>
 
 <MODULE>
-pff_c_7 28678
+pff_c_7 29518
 .__.ABS.
 _dir_find
 </MODULE>
 
 <MODULE>
-pff_c_8 30671
+pff_c_8 31511
 .__.ABS.
 _dir_read
 </MODULE>
 
 <MODULE>
-pff_c_9 32669
+pff_c_9 33509
 .__.ABS.
 _create_name
 </MODULE>
 
 <MODULE>
-pff_c_10 34487
+pff_c_10 35327
 .__.ABS.
 _get_fileinfo
 </MODULE>
 
 <MODULE>
-pff_c_11 36655
+pff_c_11 37495
 .__.ABS.
 _follow_path
 </MODULE>
 
 <MODULE>
-pff_c_12 38762
+pff_c_12 39602
 .__.ABS.
 _check_fs
 </MODULE>
 
 <MODULE>
-pff_c_13 40138
+pff_c_13 40978
 .__.ABS.
 _pf_mount
 </MODULE>
 
 <MODULE>
-pff_c_14 48651
+pff_c_14 49491
 .__.ABS.
 _pf_open
 </MODULE>
 
 <MODULE>
-pff_c_15 50604
+pff_c_15 51444
 .__.ABS.
 _pf_read
 </MODULE>
 
 <MODULE>
-pff_c_16 55665
+pff_c_16 56505
 .__.ABS.
 _pf_write
 </MODULE>
 
 <MODULE>
-pff_c_17 62198
+pff_c_17 63038
 .__.ABS.
 _pf_lseek
 </MODULE>
 
 <MODULE>
-pff_c_18 68447
+pff_c_18 69287
 .__.ABS.
 _pf_opendir
 </MODULE>
 
 <MODULE>
-pff_c_19 70090
+pff_c_19 70930
 .__.ABS.
 _pf_readdir
 </MODULE>
@@ -603,6 +609,46 @@ M diskio_c_9
 O -mz80
 S .__.ABS. Def0000
 S _sd_rd Ref0000
+A _CODE size 32 flags 0 addr 0
+S _sd_wait_busy_long Def0000
+A _DATA size 0 flags 0 addr 0
+A _INITIALIZED size 0 flags 0 addr 0
+A _DABS size 0 flags 8 addr 0
+A _HOME size 0 flags 0 addr 0
+A _GSINIT size 0 flags 0 addr 0
+A _GSFINAL size 0 flags 0 addr 0
+A _INITIALIZER size 0 flags 0 addr 0
+A _CABS size 0 flags 8 addr 0
+T 00 00
+R 00 00 00 00
+T 00 00 01 FF FF 11 FF 00
+R 00 00 00 00
+T 06 00
+R 00 00 00 00
+T 06 00 C5 D5 CD 00 00 D1 C1 2C 28 15 79 C6 FF 4F
+R 00 00 00 00 02 05 01 00
+T 14 00 78 CE FF 47 7B CE FF 5F 7A CE FF 57 B3 B0
+R 00 00 00 00
+T 22 00 B1 20 E1
+R 00 00 00 00
+T 25 00
+R 00 00 00 00
+T 25 00 7A B3 B0 B1 D6 01 3E 00 17 EE 01 6F C9
+R 00 00 00 00
+</REL>
+<ADB>
+</ADB>
+</FILE>
+
+<FILE>
+diskio_c_10
+<REL>
+XL2
+H 9 areas 3 global symbols
+M diskio_c_10
+O -mz80
+S .__.ABS. Def0000
+S _sd_rd Ref0000
 A _CODE size 1B flags 0 addr 0
 S _sd_wait_busy Def0000
 A _DATA size 0 flags 0 addr 0
@@ -619,7 +665,7 @@ T 00 00 01 FF FF
 R 00 00 00 00
 T 03 00
 R 00 00 00 00
-T 03 00 C5 CD 00 00 C1 2C 20 05 0B 78 B1 20 F3
+T 03 00 C5 CD 00 00 C1 2C 28 05 0B 78 B1 20 F3
 R 00 00 00 00 02 04 01 00
 T 10 00
 R 00 00 00 00
@@ -631,11 +677,11 @@ R 00 00 00 00
 </FILE>
 
 <FILE>
-diskio_c_10
+diskio_c_11
 <REL>
 XL2
 H 9 areas 3 global symbols
-M diskio_c_10
+M diskio_c_11
 O -mz80
 S .__.ABS. Def0000
 S _sd_rd Ref0000
@@ -677,11 +723,11 @@ R 00 00 00 00
 </FILE>
 
 <FILE>
-diskio_c_11
+diskio_c_12
 <REL>
 XL2
 H 9 areas 4 global symbols
-M diskio_c_11
+M diskio_c_12
 O -mz80
 S _sd_recv Ref0000
 S .__.ABS. Def0000
@@ -712,11 +758,11 @@ R 00 00 00 00 02 03 00 00
 </FILE>
 
 <FILE>
-diskio_c_12
+diskio_c_13
 <REL>
 XL2
 H 9 areas A global symbols
-M diskio_c_12
+M diskio_c_13
 O -mz80
 S _sd_rbuf Ref0000
 S _ctype Ref0000
@@ -851,11 +897,11 @@ R 00 00 00 00 02 04 02 00
 </FILE>
 
 <FILE>
-diskio_c_13
+diskio_c_14
 <REL>
 XL2
 H 9 areas 9 global symbols
-M diskio_c_13
+M diskio_c_14
 O -mz80
 S _ctype Ref0000
 S _sd_cs_off Ref0000
@@ -945,11 +991,11 @@ R 00 00 00 00 02 03 01 00
 </FILE>
 
 <FILE>
-diskio_c_14
+diskio_c_15
 <REL>
 XL2
 H 9 areas B global symbols
-M diskio_c_14
+M diskio_c_15
 O -mz80
 S _ctype Ref0000
 S _sd_cs_off Ref0000

@@ -110,6 +110,7 @@ u8 sd_acmd(u8, u32);
 void sd_recv(void*, u16);
 void sd_send(void*, u16);
 bool sd_wait_busy();
+bool sd_wait_busy_long();
 bool sd_wait_dtoken();
 bool sd_recv_data(u8*, u16);
 

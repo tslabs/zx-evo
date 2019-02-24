@@ -236,10 +236,17 @@ exit:
   return rc;
 }
 
+bool sd_wait_busy_long()
+{
+  u32 i = 0xFFFFFF;
+  while ((sd_rd() != 0xFF) && --i);
+  return i != 0;
+}
+
 bool sd_wait_busy()
 {
   u16 i = 65535;
-  while ((sd_rd() == 0xFF) && --i);
+  while ((sd_rd() != 0xFF) && --i);
   return i != 0;
 }
 
