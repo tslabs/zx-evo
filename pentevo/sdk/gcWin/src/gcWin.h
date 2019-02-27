@@ -495,8 +495,8 @@ u8 gcGetMessageMaxLength(u8 *msg) __naked __z88dk_fastcall;
 void gcPrintMessage(u8 *msg) __naked __z88dk_fastcall;
 void gcPrintWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall;
 
-void gcScrollUpWindow(u8 x, u8 y, u8 width, u8 hight);
-void gcScrollDownWindow(u8 x, u8 y, u8 width, u8 hight);
+void gcScrollUpWindow(u8 x, u8 y, u8 width, u8 hight) __naked;
+void gcScrollDownWindow(u8 x, u8 y, u8 width, u8 hight) __naked;
 
 /* DIALOG */
 u8 gcDialog(GC_DIALOG_t *dlg) __naked __z88dk_fastcall;

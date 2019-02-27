@@ -72,7 +72,6 @@ void testMouse()
     {
         EIHALT
         gcGotoXY(winx+1, winy+2);
-        gcGotoXY(winx+1, winy+2);
         gcPrintf("Mouse X:%d  \nMouse Y:%d  \n", gcGetMouseX()-(320/2), gcGetMouseY()-(240/2));
         gcPrintf("Mouse X:%u  \nMouse Y:%u  \n", gcGetMouseX(), gcGetMouseY());
         gcPrintf("Mouse X:0x%x  \nMouse Y:0x%x  \n", gcGetMouseX(), gcGetMouseY());
@@ -188,7 +187,17 @@ void main(void)
     {
         EIHALT
         c = gcGetKey();
-        if(c >= 0x20) putchar(c);
+        switch(c)
+        {
+        case KEY_UP:
+            gcScrollUpWindow(1,1,78,27);
+            break;
+        case KEY_DOWN:
+            gcScrollDownWindow(1,1,78,27);
+            break;
+        default:
+            if(c >= 0x20) putchar(c);
+        }
         if(pcx == 80) pcx = 0;
     }
 }

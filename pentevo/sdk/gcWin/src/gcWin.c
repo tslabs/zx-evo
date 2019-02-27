@@ -2551,6 +2551,115 @@ void gcPrintChainWindows(void) __naked
     __endasm;
 }
 
+void gcScrollUpWindow(u8 x, u8 y, u8 width, u8 hight) __naked
+{
+    x,y,width,hight;        // to avoid SDCC warning
+
+    __asm
+    push ix
+    ld ix,#4
+    add ix,sp
+    ld e,0(ix)
+    ld d,1(ix)
+    ld c,2(ix)
+    ld a,3(ix)
+    or a
+    jr z,1$
+    ld b,a
+    set 7,d
+    set 6,d
+    ld l,e
+    ld h,d
+    inc h
+0$: push bc
+    push hl
+    push de
+    ld a,c
+    ex af,af
+    ld b,#0
+    ldir
+    set 7,l
+    set 7,e
+    dec l
+    dec e
+    ex af,af
+    ld c,a
+    lddr
+    pop de
+    pop hl
+    inc h
+    inc d
+    pop bc
+    djnz 0$
+    dec h
+    ld b,a
+    ld a,#0x20
+    ld (hl),a
+    inc l
+    djnz .-1-1
+
+1$: pop ix
+    ret
+    __endasm;
+}
+
+void gcScrollDownWindow(u8 x, u8 y, u8 width, u8 hight) __naked
+{
+    x,y,width,hight;        // to avoid SDCC warning
+
+    __asm
+    push ix
+    ld ix,#4
+    add ix,sp
+    ld e,0(ix)
+    ld d,1(ix)
+    ld c,2(ix)
+    ld a,3(ix)
+    or a
+    jr z,1$
+    ld b,a
+;
+    ld a,d
+    add a,b
+    dec a
+    ld d,a
+;
+    set 7,d
+    set 6,d
+    ld l,e
+    ld h,d
+    inc d
+0$: push bc
+    push hl
+    push de
+    ld a,c
+    ex af,af
+    ld b,#0
+    ldir
+    set 7,l
+    set 7,e
+    dec l
+    dec e
+    ex af,af
+    ld c,a
+    lddr
+    pop de
+    pop hl
+    dec h
+    dec d
+    pop bc
+    djnz 0$
+    inc h
+    ld b,a
+    ld a,#0x20
+    ld (hl),a
+    inc l
+    djnz .-1-1
+1$: pop ix
+    ret
+    __endasm;
+}
+
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 void gcDrawWindow(u8 id, u8 x, u8 y, u8 width, u8 hight, u8 attr, u8 frame_type, u8 frame_attr) __naked
 {
