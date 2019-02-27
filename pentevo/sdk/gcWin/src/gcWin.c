@@ -2259,11 +2259,6 @@ print_itm_d8:
 print_itm_d16:
     push de
     MAC_LDF_HLHL
-    push hl
-    exx
-    pop hl
-    exx
-    ld hl,#0
     ld c,h
     push ix
     ld ix,#ascbuff+1

@@ -55,7 +55,7 @@ GC_WINDOW_t wndMouseTest =
     /*id*/          0,
     /*type*/        GC_WND_NOMENU,
     /*xy*/          0,0,
-    /*wh*/          30,10,
+    /*wh*/          30,12,
     /*attr*/        (WIN_COL_WHITE<<4) | WIN_COL_BRIGHT_WHITE,
     /*frame_type*/  GC_FRM_SINGLE,
     /*frame_attr*/  (WIN_COL_WHITE<<4) | WIN_COL_BRIGHT_WHITE,

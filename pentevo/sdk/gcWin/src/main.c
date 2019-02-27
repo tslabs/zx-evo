@@ -45,7 +45,6 @@ u16 itmNUM2 = (u16)-1;
 u8 itmNUM3 = 255;
 
 char c;
-u16 i;
 
 u8 rb, lb, cb11, cb12, cb21, cb22, cb3, cb4;
 u8 pcx, pcx0, pcy, pca, pcst;   //for putchar
@@ -54,14 +53,14 @@ BTN_TYPE_t select;
 
 void testMouse()
 {
-    u8 winx = 10;
+    u8 winx = 20;
     u8 winy = 10;
 
     wndMouseTest.x = winx;
     wndMouseTest.y = winy;
 
     gcPrintWindow(&wndMouseTest);
-    gcGotoXY(winx, winy+8);
+    gcGotoXY(winx, winy+10);
     gcPrintMessage(
                    INK_BRIGHT_BLUE
                    MARK_CENTER
@@ -73,7 +72,10 @@ void testMouse()
     {
         EIHALT
         gcGotoXY(winx+1, winy+2);
+        gcGotoXY(winx+1, winy+2);
+        gcPrintf("Mouse X:%d  \nMouse Y:%d  \n", gcGetMouseX()-(320/2), gcGetMouseY()-(240/2));
         gcPrintf("Mouse X:%u  \nMouse Y:%u  \n", gcGetMouseX(), gcGetMouseY());
+        gcPrintf("Mouse X:0x%x  \nMouse Y:0x%x  \n", gcGetMouseX(), gcGetMouseY());
     }
 
     gcCloseWindow();
@@ -189,5 +191,4 @@ void main(void)
         if(c >= 0x20) putchar(c);
         if(pcx == 80) pcx = 0;
     }
-
 }

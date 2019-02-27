@@ -522,6 +522,11 @@ void gcGotoXY(u8 x, u8 y) __naked;
 void gcPrintSymbol(u8 x, u8 y, u8 sym, u8 attr) __naked;
 void gcEditString(u8 *str, u8 len, u8 x, u8 y) __naked;
 
+/* number to ascii string */
+unsigned char* dec2asc8s(s8 num) __naked __z88dk_fastcall;
+unsigned char* dec2asc16s(s16 num) __naked __z88dk_fastcall;
+unsigned char* dec2asc32s(s32 num) __naked __z88dk_fastcall;
+
 unsigned char* dec2asc8(u8 num) __naked __z88dk_fastcall;
 unsigned char* dec2asc16(u16 num) __naked __z88dk_fastcall;
 unsigned char* dec2asc32(u32 num) __naked __z88dk_fastcall;
@@ -534,6 +539,10 @@ void gcPrintHex32(u32 num) __naked __z88dk_fastcall;
 void gcPrintDec8(u8 num) __naked __z88dk_fastcall;
 void gcPrintDec16(u16 num) __naked __z88dk_fastcall;
 void gcPrintDec32(u32 num) __naked __z88dk_fastcall;
+
+void gcPrintDec8s(s8 num) __naked __z88dk_fastcall;
+void gcPrintDec16s(s16 num) __naked __z88dk_fastcall;
+void gcPrintDec32s(s32 num) __naked __z88dk_fastcall;
 
 void gcSetFontSym(u8 sym, u8 *udg) __naked;
 void gcSetPalette();
