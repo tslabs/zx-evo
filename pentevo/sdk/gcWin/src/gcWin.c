@@ -3,7 +3,6 @@
 //::               by dr_max^gc (c)2018-2019                 ::
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 #include "defs.h"
-#include "tsio.h"
 #include "keyboard.h"
 #include "mouse.h"
 #include "gcWin.h"
@@ -165,32 +164,32 @@ tmp_win_attr:
 tmp_frm_attr:
     .db 0
 ;; current window vars
-win_x:
+win_x::
     .db 0
-win_y:
+win_y::
     .db 0
-win_w:
+win_w::
     .db 0
-win_h:
+win_h::
     .db 0
-win_attr:
+win_attr::
     .db 0
-frm_attr:
-    .db 0
-;;
-cur_x:
-    .db 0
-cur_y:
+frm_attr::
     .db 0
 ;;
-sym_attr:
+cur_x::
     .db 0
-bg_attr:
-    .db 0
-inv_attr:
+cur_y::
     .db 0
 ;;
-linked_ptr:
+sym_attr::
+    .db 0
+bg_attr::
+    .db 0
+inv_attr::
+    .db 0
+;;
+linked_ptr::
     .dw 0
 _current_menu_ptr::
     .dw 0
@@ -198,7 +197,7 @@ _current_window_ptr::
     .dw 0
 _current_dialog_ptr::
     .dw 0
-frame_set_addr:
+frame_set_addr::
     .dw 0
 ;;
 _window_count::
@@ -210,7 +209,7 @@ _vpage::
 _spage::
     .db #0x82
 ;;
-ascbuff:
+ascbuff::
     .ds 15
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;; configuration
@@ -3123,7 +3122,7 @@ sym_prns:
 ;; corrupt:
 ;;   BC`, HL`, AF`
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-sym_prn:
+sym_prn::
     #ifdef PRINT_DELAY
     push bc
     djnz .-0
@@ -3191,7 +3190,7 @@ strprnlen:
 ;;      0x0F - right align string
 ;;      0xFE (BYTE) - string link
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-strprnz:
+strprnz::
     ld a,(hl)
     inc hl
     or a
@@ -3543,12 +3542,19 @@ void gcSetFontSym(u8 sym, u8 *udg) __naked
 void gcSetPalette()
 {
     __asm
+    ld a,#0x0C          ;W0RAM | W0MAP_N
+    ld bc,#0x21AF       ;MEMCONFIG
+    out (c),a
+    push bc
     ld a,#0x10
     ld bc,#0x15AF
     out (c),a
     ld hl,#0x2108
     ld ((0x0F*32)+(8*2)),hl
     xor a
+    out (c),a
+    pop bc
+    ld a,#0x0E          ;W0RAM | W0MAP_N | W0WE
     out (c),a
     ret
     __endasm;

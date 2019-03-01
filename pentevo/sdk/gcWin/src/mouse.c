@@ -207,6 +207,10 @@ void gcMouseUpdate(void) __naked
     ld (de),a
 
 ; copy sprite descriptor to SFILE
+    ld a,#0x0C          ;W0RAM | W0MAP_N
+    ld bc,#0x21AF       ;MEMCONFIG
+    out (c),a
+    push bc
     ld a,#0x10
     ld bc,#0x15AF       ;FMADDR
     out (c),a
@@ -217,6 +221,9 @@ void gcMouseUpdate(void) __naked
     ldir
     pop bc
     xor a
+    out (c),a
+    pop bc
+    ld a,#0x0E          ;W0RAM | W0MAP_N | W0WE
     out (c),a
     ret
     __endasm;
