@@ -509,11 +509,103 @@ hexasc8::
 }
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+s32 a2d32s(char *string) __naked __z88dk_fastcall
+{
+    string;     // to avoid SDCC warning
+
+  __asm
+    ld a,(hl)
+    cp #'-'
+    jr nz,0$
+    inc hl
+0$: ex af,af
+    call _a2d32
+    ex af,af
+    ret nz
+    ld a,l
+    neg
+    ld l,a
+    ld a,#0
+    sbc a,h
+    ld h,a
+    ld a,#0
+    sbc a,e
+    ld e,a
+    ld a,#0
+    sbc a,d
+    ld d,a
+    ret
+  __endasm;
+}
+
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+u32 a2d32(char *string) __naked __z88dk_fastcall
+{
+    string;     // to avoid SDCC warning
+
+  __asm
+    push hl
+    pop ix
+;
+    ld l,#0
+    ld h,l
+    ld e,l
+    ld d,l
+;
+0$: ld a,(ix)
+    inc ix
+    sub #0x30
+    cp #10
+    ret nc
+    call _mul10
+    add a,l
+    ld l,a
+    ld a,h
+    adc a,#0
+    ld h,a
+    ld a,e
+    adc a,#0
+    ld e,a
+    ld a,d
+    adc a,#0
+    ld d,a
+    jr 0$
+  __endasm;
+}
+
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+u32 mul10(u32 num) __naked __z88dk_fastcall
+{
+    num;        // to avoid SDCC warning
+
+  __asm
+    add hl,hl
+    rl e
+    rl d
+    push de
+    push hl
+    add hl,hl
+    rl e
+    rl d
+    add hl,hl
+    rl e
+    rl d
+    pop bc
+    add hl,bc
+    ex de,hl
+    pop bc
+    adc hl,bc
+    ex de,hl
+    ret
+  __endasm;
+}
+
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 void gcPrintf(char *string, ...) __naked
 {
     string;         // to avoid SDCC warning
 
-    __asm
+  __asm
     push ix
     ld ix,#4
     add ix,sp
@@ -680,5 +772,5 @@ gc_printf_sdec32$:
 gc_printf_exit$:
     pop ix
     ret
-    __endasm;
+  __endasm;
 }

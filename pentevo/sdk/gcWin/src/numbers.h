@@ -21,4 +21,8 @@ void gcPrintHex8(u8 num) __naked __z88dk_fastcall;
 void gcPrintHex16(u16 num) __naked __z88dk_fastcall;
 void gcPrintHex32(u32 num) __naked __z88dk_fastcall;
 
+u32 a2d32(char *string) __naked __z88dk_fastcall;
+s32 a2d32s(char *string) __naked __z88dk_fastcall;
+u32 mul10(u32 num) __naked __z88dk_fastcall;
+
 void gcPrintf(char *string, ...) __naked;

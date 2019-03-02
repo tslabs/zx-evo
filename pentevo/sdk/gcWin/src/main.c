@@ -6,10 +6,7 @@
 #include <stdio.h>
 #include "defs.h"
 #include "tsio.h"
-#include "keyboard.h"
-#include "mouse.h"
 #include "gcWin.h"
-#include "numbers.h"
 #include "dialogs.h"
 #include "main.h"
 
@@ -76,7 +73,7 @@ void testMouse()
         gcPrintf("Mouse X:%d  \nMouse Y:%d  \n", gcGetMouseX()-(320/2), gcGetMouseY()-(240/2));
         gcPrintf("Mouse X:%u  \nMouse Y:%u  \n", gcGetMouseX(), gcGetMouseY());
         gcPrintf("Mouse X:0x%x  \nMouse Y:0x%x  \n", gcGetMouseX(), gcGetMouseY());
-        gcPrintf("32 bit number:%ld\n", (u32)65536);
+        gcPrintf("32 bit number:%ld\n", a2d32s("-1234567890"));
     }
 
     gcCloseWindow();
