@@ -258,7 +258,11 @@ module video_ts (
 	// internal layers control
 	wire [2:0] spr_end = ({3{s_layer_end}} & s_layer[2:0]) | {3{sprites_last}};
 	wire s_layer_end = (sr0_valid && !spr_valid && s_leap) || (sprite_go && s_leap_r);
-	wire sprites_last = sreg == 8'd255;
+    wire sprites_last = sr0_valid && sprites_last_r;
+
+    reg sprites_last_r;
+	always @(posedge clk)
+		sprites_last_r <= sreg == 8'd255;
 
 	reg [2:0] s_layer;
 	always @(posedge clk)

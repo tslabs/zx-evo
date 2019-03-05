@@ -257,7 +257,7 @@ module zports(
   begin
     case (loa)
     PORTFE:
-      dout = {1'b1, tape_read, 1'b0, keys_in};
+      dout = {1'b1, tape_read, 1'b1, keys_in};
 
 `ifdef IDE_HDD
     NIDE10,NIDE30,NIDE50,NIDE70,NIDE90,NIDEB0,NIDED0,NIDEF0,NIDE08,NIDE28,NIDE48,NIDE68,NIDE88,NIDEA8,NIDEC8,NIDEE8:
