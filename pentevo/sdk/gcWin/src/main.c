@@ -187,10 +187,13 @@ void main(void)
         switch(c)
         {
         case KEY_UP:
-            gcScrollUpWindow(1,1,78,27);
+            //gcScrollUpRect(1,1,78,28);
+            gcScrollUpWindow(&wndMain);
+
             break;
         case KEY_DOWN:
-            gcScrollDownWindow(1,1,78,27);
+            //gcScrollDownRect(1,1,78,28);
+            gcScrollDownWindow(&wndMain);
             break;
         default:
             if(c >= 0x20) putchar(c);

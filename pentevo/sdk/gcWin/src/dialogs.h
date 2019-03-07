@@ -155,6 +155,29 @@ const GC_WINDOW_t wndInfo =
 /*menu_ptr*/    (u16)&dlgInfo
 };
 
+const GC_WINDOW_t wndSVMnu =
+{
+/*id*/          0,
+/*type*/        GC_WND_SVMENU,
+/*xy*/          18,6,
+/*wh*/          40,18,
+/*attr*/        (WIN_COL_WHITE<<4) | WIN_COL_BLACK,
+/*frame_type*/  GC_FRM_SINGLE,
+/*frame_attr*/  (WIN_COL_WHITE<<4) | WIN_COL_BRIGHT_WHITE,
+/*header_txt*/  INK_BLACK
+                "SVMenu test",
+/*window_txt*/  0,
+/*menu_ptr*/    (u16)&svmTest
+};
+
+GC_SVMENU_t svmTest =
+{
+/*attr*/        (WIN_COL_BRIGHT_BLUE<<4) | WIN_COL_BRIGHT_WHITE,
+/*margin*/      5,
+/*current*/     0,
+/*count*/       6
+};
+
 const GC_WINDOW_t wndDialog =
 {
 /*id*/          0,

@@ -3,10 +3,7 @@
 //::               by dr_max^gc (c)2018-2019                 ::
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 #include "defs.h"
-#include "keyboard.h"
-#include "mouse.h"
 #include "gcWin.h"
-#include "numbers.h"
 
 //#define PRINT_DELAY
 
@@ -392,12 +389,12 @@ BTN_TYPE_t gcExecuteWindow(GC_WINDOW_t *wnd)
     {
     case GC_WND_SVMENU:
         rc = gcSimpleVMenu((GC_SVMENU_t*)ptr);
-        break;
+    break;
     case GC_WND_DIALOG:
         rc = gcDialog((GC_DIALOG_t*)ptr);
-        break;
+    break;
     default:
-        break;
+    break;
     }
     return rc;
 }
@@ -2547,14 +2544,68 @@ void gcPrintChainWindows(void) __naked
     ld (_window_count),a
     ei
     ret
-    __endasm;
+  __endasm;
 }
 
-void gcScrollUpWindow(u8 x, u8 y, u8 width, u8 hight) __naked
+void gcScrollUpWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall
+{
+    wnd;                // to avoid SDCC warning
+
+  __asm
+    push ix
+    MAC_LD_IXHL
+    ld l,<#width (ix)
+    ld h,<#hight (ix)
+    dec l
+    dec l
+    dec h
+    dec h
+    push hl
+    ld l,<#x (ix)
+    ld h,<#y (ix)
+    inc l
+    inc h
+    push hl
+    call _gcScrollUpRect
+    pop af
+    pop af
+    pop ix
+    ret
+  __endasm;
+}
+
+void gcScrollDownWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall
+{
+    wnd;                // to avoid SDCC warning
+
+  __asm
+    push ix
+    MAC_LD_IXHL
+    ld l,<#width (ix)
+    ld h,<#hight (ix)
+    dec l
+    dec l
+    dec h
+    dec h
+    push hl
+    ld l,<#x (ix)
+    ld h,<#y (ix)
+    inc l
+    inc h
+    push hl
+    call _gcScrollDownRect
+    pop af
+    pop af
+    pop ix
+    ret
+  __endasm;
+}
+
+void gcScrollUpRect(u8 x, u8 y, u8 width, u8 hight) __naked
 {
     x,y,width,hight;        // to avoid SDCC warning
 
-    __asm
+  __asm
     push ix
     ld ix,#4
     add ix,sp
@@ -2563,6 +2614,8 @@ void gcScrollUpWindow(u8 x, u8 y, u8 width, u8 hight) __naked
     ld c,2(ix)
     ld a,3(ix)
     or a
+    jr z,1$
+    dec a
     jr z,1$
     ld b,a
     set 7,d
@@ -2599,14 +2652,14 @@ void gcScrollUpWindow(u8 x, u8 y, u8 width, u8 hight) __naked
 
 1$: pop ix
     ret
-    __endasm;
+  __endasm;
 }
 
-void gcScrollDownWindow(u8 x, u8 y, u8 width, u8 hight) __naked
+void gcScrollDownRect(u8 x, u8 y, u8 width, u8 hight) __naked
 {
     x,y,width,hight;        // to avoid SDCC warning
 
-    __asm
+  __asm
     push ix
     ld ix,#4
     add ix,sp
@@ -2615,6 +2668,8 @@ void gcScrollDownWindow(u8 x, u8 y, u8 width, u8 hight) __naked
     ld c,2(ix)
     ld a,3(ix)
     or a
+    jr z,1$
+    dec a
     jr z,1$
     ld b,a
 ;
@@ -2656,7 +2711,7 @@ void gcScrollDownWindow(u8 x, u8 y, u8 width, u8 hight) __naked
     djnz .-1-1
 1$: pop ix
     ret
-    __endasm;
+  __endasm;
 }
 
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
