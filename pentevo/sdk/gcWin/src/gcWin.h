@@ -529,4 +529,4 @@ void gcPrintSymbol(u8 x, u8 y, u8 sym, u8 attr) __naked;
 void gcEditString(u8 *str, u8 len, u8 x, u8 y) __naked;
 
 void gcSetFontSym(u8 sym, u8 *udg) __naked;
-void gcSetPalette();
+void gcSetPalette(u16 *palette, u8 palsel) __naked;

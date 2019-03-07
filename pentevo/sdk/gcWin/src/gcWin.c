@@ -3593,24 +3593,58 @@ void gcSetFontSym(u8 sym, u8 *udg) __naked
 }
 
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-// setting dark-grey palette to color 8(for shadow) in palette 0x0F
-void gcSetPalette()
+void gcSetPalette(u16 *palette, u8 palsel) __naked
 {
-    __asm
+    palette, palsel;    // to avoid SDCC warning
+
+  __asm
+    ld hl,#2
+    add hl,sp
+    ld e,(hl)
+    inc hl
+    ld d,(hl)
+    inc hl
+    ld a,(hl)
+    and #0x0F
+    push af
+    add a,a
+    add a,a
+    add a,a
+    add a,a
+    ld l,a
+    ld h,#0
+    add hl,hl
+;
     ld a,#0x0C          ;W0RAM | W0MAP_N
     ld bc,#0x21AF       ;MEMCONFIG
     out (c),a
-    push bc
+;
     ld a,#0x10
-    ld bc,#0x15AF
+    ld b,#0x15          ;FMADDR
     out (c),a
-    ld hl,#0x2108
-    ld ((0x0F*32)+(8*2)),hl
+;
+    ex de,hl
+    ld a,l
+    or h
+    jr nz,.+2+3
+    ld hl,#default_palette
+    ld bc,#32
+    ldir
+;
     xor a
+    ld bc,#0x15AF       ;FMADDR
     out (c),a
-    pop bc
+;
+    pop af
+    ld b,#0x07          ;PALSEL
+    out (c),a
+    ld b,#0x21          ;MEMCONFIG
     ld a,#0x0E          ;W0RAM | W0MAP_N | W0WE
     out (c),a
     ret
-    __endasm;
+
+default_palette:
+    .dw 0x0000,0x0010,0x4000,0x4010,0x0200,0x0210,0x4200,0x4210
+	.dw 0x2128,0x0018,0x6000,0x6018,0x0300,0x0318,0x6300,0x6318
+  __endasm;
 }

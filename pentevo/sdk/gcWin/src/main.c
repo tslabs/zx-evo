@@ -108,7 +108,8 @@ void main(void)
     TS_VCONFIG = TS_VID_320X240 | TS_VID_TEXT;
     TS_TSCONFIG = TS_TSU_SEN;
 
-    gcSetPalette();
+// set default palette
+    gcSetPalette(NULL, 0);
 
 // setup linked messages
     gcSetLinkedMessage(msg_arr);
