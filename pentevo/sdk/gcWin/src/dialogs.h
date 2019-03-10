@@ -159,20 +159,27 @@ const GC_WINDOW_t wndSVMnu =
 {
 /*id*/          0,
 /*type*/        GC_WND_SVMENU,
-/*xy*/          18,6,
-/*wh*/          40,18,
-/*attr*/        (WIN_COL_WHITE<<4) | WIN_COL_BLACK,
+/*xy*/          20,8,
+/*wh*/          28,18,
+/*attr*/        (WIN_COL_WHITE<<4) | WIN_COL_BRIGHT_WHITE,
 /*frame_type*/  GC_FRM_SINGLE,
 /*frame_attr*/  (WIN_COL_WHITE<<4) | WIN_COL_BRIGHT_WHITE,
 /*header_txt*/  INK_BLACK
                 "SVMenu test",
-/*window_txt*/  0,
+/*window_txt*/  "\n"INK_BRIGHT_BLUE MARK_CENTER"Please select item...\n"
+                "\n\n\n"
+                MARK_CENTER"Item 1\n"
+                MARK_CENTER"Item 2\n"
+                MARK_CENTER"Item 3\n"
+                MARK_CENTER"Item 4\n"
+                MARK_CENTER"Item 5\n"
+                MARK_CENTER"Item 6\n",
 /*menu_ptr*/    (u16)&svmTest
 };
 
 GC_SVMENU_t svmTest =
 {
-/*attr*/        (WIN_COL_BRIGHT_BLUE<<4) | WIN_COL_BRIGHT_WHITE,
+/*attr*/        (WIN_COL_BRIGHT_BLUE<<4) | WIN_COL_BRIGHT_YELLOW,
 /*margin*/      5,
 /*current*/     0,
 /*count*/       6

@@ -186,6 +186,8 @@ bg_attr::
 inv_attr::
     .db 0
 ;;
+_mouse_type::
+    .db 0
 linked_ptr::
     .dw 0
 _current_menu_ptr::
@@ -317,8 +319,8 @@ isr38:
 
     ld	bc,#0x27AF      ;; DMASTATUS
 0$: in	a,(c)
-	and	#0x80
-	jr	nz,2$
+    and	#0x80
+    jr	nz,2$
 
     ld bc,#0x1AAF       ;; DMASADDRL
     xor a
@@ -349,10 +351,12 @@ isr38:
 
     ld	bc,#0x27AF      ;; DMASTATUS
 1$: in	a,(c)
-	and	#0x80
-	jr	nz,1$
+    and	#0x80
+    jr	nz,1$
 
 2$:
+    ld a,(_mouse_type)
+    ld l,a
     call _gcMouseUpdate
     pop hl
     pop de
@@ -574,10 +578,9 @@ u8 gcSimpleVMenu(GC_SVMENU_t *svmnu) __naked __z88dk_fastcall
 {
     svmnu;      // to avoid SDCC warning
 
-    __asm
+  __asm
 
-    MAC_LD_IXHL
-;; IX - simple vertical menu descriptor
+    MAC_LD_IXHL         ; IX - simple vertical menu descriptor
 
     call print_svm_cursor
 
@@ -625,26 +628,18 @@ svmnu_dn:
     jr svmnu_lp
 
 svmnu_get_mouse:
-    ld a,(_mouse_lmb)
-    or a
-    ret nz
-
 ;; check bounding box
     call _gcGetMouseYS
     ld c,l
     ld h,<#svm_count (ix)
     ld a,(win_y)
-    dec a
-    cp l
-;; return if click to header
-    ret z
-    inc a
     add a,<#svm_margin (ix)
     add a,h
+    dec a
     sub l
-    jr c,1$
+    jr c,0$
     cp h
-    jr nc,1$
+    jr nc,0$
 
     call _gcGetMouseXS
     ld a,(win_w)
@@ -653,9 +648,9 @@ svmnu_get_mouse:
     dec a
     add a,h
     sub l
-    jr c,1$
+    jr c,0$
     cp h
-    jr nc,1$
+    jr nc,0$
 
 ;; click inside the window
     ld a,(win_y)
@@ -664,8 +659,15 @@ svmnu_get_mouse:
     ld a,c
     sub l
     cp <#svm_count (ix)
-;; return if last line in the window
-    ret nc
+    jr nc,0$
+
+    ld c,a
+    ld a,#1
+    ld (_mouse_type),a
+    ld a,(_mouse_lmb)
+    or a
+    ret nz
+    ld a,c
 
     push af
     call restore_svm_cursor
@@ -677,17 +679,15 @@ svmnu_get_mouse:
     halt
 
 ;; pop ret addr
-0$: pop hl
+    pop hl
     ld l,<#svm_current (ix)
     ret
 
-;; click outside the window
-1$: pop hl
-    ld l,#0xFF
+0$: xor a
+    ld (_mouse_type),a
     ret
-    __endasm;
+  __endasm;
 }
-
 
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 void gcRestoreSVMCursor(GC_SVMENU_t *svmnu) __naked __z88dk_fastcall
@@ -752,7 +752,6 @@ print_svm_cursor:
     ld a,(win_w)
     ld b,a
     ld a,<#svm_attr (ix)
-    and #0xF0
     call set_attr_line
 
 ;; set right sym attr
@@ -771,11 +770,25 @@ u8 gcFindClickItem(GC_DIALOG_t *dlg) __naked __z88dk_fastcall
 {
     dlg;                    // to avoid SDCC warning
 
-    __asm
+  __asm
     push ix
+    call _gcFindItem
     ld a,(_mouse_lmb)
     or a
-    jr nz,2$
+    jr z,.+2+2
+    ld l,#0xFF
+    pop ix
+    ret
+  __endasm;
+}
+
+//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+u8 gcFindItem(GC_DIALOG_t *dlg) __naked __z88dk_fastcall
+{
+    dlg;                    // to avoid SDCC warning
+
+  __asm
+    push ix
 
     MAC_LD_IXHL             ; IX - dialog descriptor
 
@@ -807,6 +820,8 @@ u8 gcFindClickItem(GC_DIALOG_t *dlg) __naked __z88dk_fastcall
     cp <#dlg_act_count (ix)
     jr nz,0$
 2$: ld l,#0xFF
+    xor a
+    ld (_mouse_type),a
     pop ix
     ret
 
@@ -819,12 +834,19 @@ u8 gcFindClickItem(GC_DIALOG_t *dlg) __naked __z88dk_fastcall
     and #dif_grey_mask
     jr nz,3$
 
+    ld a,<#di_type (ix)
+    ld l,#1
+    cp #DI_EDIT
+    jr nz,8$
+    inc l
+8$: ld a,l
+    ld (_mouse_type),a
     pop ix
     pop af
     ld l,a
     pop ix
     ret
-    __endasm;
+  __endasm;
 }
 
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -1003,10 +1025,12 @@ dialog_exit:
     ld a,#-1
     ld <#di_select (ix),a
     call _gcPrintDialogItem
+
     ld b,#5
     ei
     halt
     djnz .-1
+
     xor a
     ld <#di_select (ix),a
     call _gcPrintDialogItem
@@ -1077,14 +1101,11 @@ dialog_ent_edit:
 
 ;; set vars
     ld a,<#di_width (ix)
-    ld (win_w),a
     ld a,(win_x)
     add a,<#di_x (ix)
     ld e,a
-    ld (win_x),a
     ld a,(win_y)
     add a,<#di_y (ix)
-    ld (win_y),a
     ld d,a
 
     ld a,(cfg_listbox_unfocus_attr)
@@ -1647,7 +1668,7 @@ void gcPrintDialogCursor(GC_DITEM_t *ditm) __naked __z88dk_fastcall
 {
     ditm;               // to avoid SDCC warning
 
-    __asm
+  __asm
     push ix
 
     MAC_LD_IXHL         ; IX - dialog item descriptor
@@ -1655,7 +1676,6 @@ void gcPrintDialogCursor(GC_DITEM_t *ditm) __naked __z88dk_fastcall
     MAC_ITEMCOORD_DE
 
     ld b,<#di_width (ix)
-
 1$: call get_attr
     and #0xF0
     ld c,a
@@ -1670,12 +1690,9 @@ void gcPrintDialogCursor(GC_DITEM_t *ditm) __naked __z88dk_fastcall
     jr 3$
 4$: cp #DI_EDIT
     jr z,6$
-
-5$:
     ld a,(cfg_cur_attr)
 3$: call set_attr
     djnz 1$
-
     pop ix
     ret
 
@@ -1690,8 +1707,7 @@ void gcPrintDialogCursor(GC_DITEM_t *ditm) __naked __z88dk_fastcall
     call nz,set_attr_line
     pop ix
     ret
-
-    __endasm;
+  __endasm;
 }
 
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -1699,7 +1715,7 @@ void gcRestoreDialogCursor(GC_DITEM_t *ditm) __naked __z88dk_fastcall
 {
     ditm;               // to avoid SDCC warning
 
-    __asm
+  __asm
     push ix
 
     MAC_LD_IXHL         ; IX - dialog item descriptor
@@ -1707,7 +1723,6 @@ void gcRestoreDialogCursor(GC_DITEM_t *ditm) __naked __z88dk_fastcall
     MAC_ITEMCOORD_DE
 
     ld b,<#di_width (ix)
-
 1$: ld a,<#di_type (ix)
     cp #DI_BUTTON
     jr nz,2$
@@ -1724,7 +1739,7 @@ void gcRestoreDialogCursor(GC_DITEM_t *ditm) __naked __z88dk_fastcall
 
     pop ix
     ret
-    __endasm;
+  __endasm;
 }
 
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -2281,7 +2296,7 @@ void gcEditString(u8 *str, u8 len, u8 x, u8 y) __naked
     str,len;                // to avoid SDCC warning
     x,y;                    // to avoid SDCC warning
 
-    __asm
+  __asm
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;; var offsets
     _str    .equ #0
@@ -2448,6 +2463,8 @@ print_edit_string:
     jp set_attr
 ;;::::::::::::::::::::::::::::::
 edit_string_mouse:
+    ld hl,(_current_dialog_ptr)
+    call _gcFindItem
     ld a,(_mouse_lmb)
     or a
     ret nz
@@ -2496,7 +2513,7 @@ edit_string_ent:
     ret
 _buff:
     .dw 0
-    __endasm;
+  __endasm;
 }
 
 void gcCloseWindow(void) __naked
@@ -2753,6 +2770,9 @@ void gcDrawWindow(u8 id, u8 x, u8 y, u8 width, u8 hight, u8 attr, u8 frame_type,
 ;; set window id
     ld a,<#_id (ix)
     ld (_current_window_id),a
+
+    xor a
+    ld (_mouse_type),a
 
 ;; select frameset
     ld de,#frame_set0

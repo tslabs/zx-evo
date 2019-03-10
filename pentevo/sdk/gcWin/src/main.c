@@ -19,7 +19,6 @@
 #define SPAGE   0x82    // shadow screen page
 #define GPAGE   0x88    // mouse sprite page
 
-
 // checkbox 1.1 var
 u8  itmVarCB11 = 0;
 // checkbox 1.2 var
@@ -99,7 +98,7 @@ void func_cb4()
 void main(void)
 {
     gcWindowsInit(VPAGE, SPAGE);
-    gcMouseInit(GPAGE);
+    gcMouseInit(GPAGE, 0);
 
     TS_VPAGE = VPAGE;
     TS_PAGE3 = SPAGE;
@@ -117,10 +116,12 @@ void main(void)
     gcPrintWindow(&wndMain);
 
     gcPrintWindow(&wndTest1);
-//    gcWaitKey(KEY_ENTER);
 
     gcPrintWindow(&wndTest2);
-//    gcWaitKey(KEY_ENTER);
+
+// simple vertical menu test
+    select = gcExecuteWindow(&wndSVMnu);
+    gcCloseWindow();
 
     BORDER = 4;
 
