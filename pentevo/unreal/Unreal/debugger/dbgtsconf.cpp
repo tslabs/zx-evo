@@ -233,12 +233,17 @@ public:
 	void on_paint() override
 	{
 		draw_reg_frame("Misc");
+		set_xy(6, 0);
+
+		draw_led("FDD", comp.ts.fddvirt >> 3);
+		draw_led("FDC", comp.ts.fddvirt >> 2);
+		draw_led("FDB", comp.ts.fddvirt >> 1);
+		draw_led("FDA", comp.ts.fddvirt >> 0);
+		
+		next_row();
+		draw_port("   TMPage", comp.ts.tmpage);
 		draw_port("   Border", comp.ts.border);
 		draw_port("   FDDVirt", comp.ts.fddvirt);
-		draw_led("FDDD", comp.ts.fddvirt >> 3);
-		draw_led("FDDC", comp.ts.fddvirt >> 2);
-		draw_led("FDDB", comp.ts.fddvirt >> 1);
-		draw_led("FDDA", comp.ts.fddvirt >> 0);
 	}
 };
 
