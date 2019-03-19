@@ -5,7 +5,6 @@
 #include "vars.h"
 
 auto tsconf_regs = dbg_canvas(81, 0);
-//auto tsconf_devs = dbg_canvas(81, 0);
 
 const char *d_vmode[] = { "ZX  ", "16c ", "256c", "text" };
 const char *d_rres[] = { "256x192", "320x200", "320x240", "360x288" };
@@ -365,6 +364,23 @@ void init_regs_page()
 void init_tsconf()
 {
 	init_regs_page();
+}
+
+bool on_mouse_tsconf(int mx, int my)
+{
+	if (mx >= tsconf_regs.get_x())
+		return tsconf_regs.handle_mouse(mx - tsconf_regs.get_x(), my);
+
+	auto need_repaint = false;
+	tsconf_regs.iterate([&need_repaint](dbg_control* control)
+	{
+		if (control->is_active) {
+			need_repaint = true;
+			control->is_active = false;
+		}
+	});
+
+	return need_repaint;
 }
 
 void show_tsconf()

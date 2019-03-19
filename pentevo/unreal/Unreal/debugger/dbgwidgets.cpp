@@ -23,6 +23,7 @@ void dbg_control::draw_reg_frame(const char *title, const u8 *value) const
 void dbg_control::draw_bits_range(int bits) const
 {
 	check_parent();
+	auto color = is_active ? W_BITS_ACTIVE : W_BITS;
 
 	char line[3] = "  ";
 
@@ -37,12 +38,12 @@ void dbg_control::draw_bits_range(int bits) const
 			line[1] = static_cast<char>(48 + bits % 10);
 
 		(*canvas_)
-			.draw_text(line, W_BITS)
+			.draw_text(line, color)
 			.move_x_to_len()
-			.draw_text(":", W_BITS);
+			.draw_text(":", color);
 	}
 	else
-		(*canvas_).draw_text("   ", W_BITS);
+		(*canvas_).draw_text("   ", color);
 
 	(*canvas_).next_col();
 }
@@ -53,13 +54,13 @@ void dbg_control::draw_bit(char* title, int bits, const char* val_set[], int val
 	draw_bits_range(bits);
 
 	(*canvas_)
-		.draw_text(title, w_norm)
+		.draw_text(title, is_active ? w_sel : w_norm)
 		.next_col()
-		.draw_text("=", W_EQ)
+		.draw_text("=", is_active ? W_BITS_ACTIVE : W_EQ)
 		.next_col();
 
 	(*canvas_)
-		.draw_text(val_set[val], w_norm);
+		.draw_text(val_set[val], is_active ? w_sel : w_norm);
 
 	next_row();
 }
@@ -70,13 +71,13 @@ void dbg_control::draw_bit(char* title, int bits, u8 val) const
 	draw_bits_range(bits);
 
 	(*canvas_)
-		.draw_text(title, w_norm)
+		.draw_text(title, is_active ? w_sel : w_norm)
 		.next_col()
-		.draw_text("=", W_EQ)
+		.draw_text("=", is_active ? W_BITS_ACTIVE : W_EQ)
 		.next_col();
 
   (*canvas_)
-    .draw_text((val & 1) ? "ena" : "dis", w_norm);
+    .draw_text((val & 1) ? "ena" : "dis", is_active ? w_sel : w_norm);
   next_row();
 }
 
@@ -84,20 +85,20 @@ void dbg_control::draw_hex8_inline(char* title, u8 val) const
 {
 	check_parent();
 	(*canvas_)
-		.draw_text(title, w_norm).move_x_to_len()
-		.draw_text("= ", W_EQ).move_x_to_len()
-		.draw_hex(val, 2, w_norm).move_x_to_len()
-		.draw_text(" ", w_norm).move_x_to_len();
+		.draw_text(title, is_active ? w_sel : w_norm).move_x_to_len()
+		.draw_text("= ", is_active ? W_BITS_ACTIVE : W_EQ).move_x_to_len()
+		.draw_hex(val, 2, is_active ? w_sel : w_norm).move_x_to_len()
+		.draw_text(" ", is_active ? w_sel : w_norm).move_x_to_len();
 }
 
 void dbg_control::draw_dec_inline(char* title, u16 val) const
 {
 	check_parent();
 	(*canvas_)
-		.draw_text(title, w_norm).move_x_to_len()
-		.draw_text("= ", W_EQ).move_x_to_len()
-		.draw_number(val, w_norm).move_x_to_len()
-		.draw_text(" ", w_norm).move_x_to_len();
+		.draw_text(title, is_active ? w_sel : w_norm).move_x_to_len()
+		.draw_text("= ", is_active ? W_BITS_ACTIVE : W_EQ).move_x_to_len()
+		.draw_number(val, is_active ? w_sel : w_norm).move_x_to_len()
+		.draw_text(" ", is_active ? w_sel : w_norm).move_x_to_len();
 }
 
 void dbg_control::draw_hex16(char* title, int bits, u16 val) const
@@ -106,13 +107,13 @@ void dbg_control::draw_hex16(char* title, int bits, u16 val) const
 	draw_bits_range(bits);
 
 	(*canvas_)
-		.draw_text(title, w_norm)
+		.draw_text(title, is_active ? w_sel : w_norm)
 		.next_col()
-		.draw_text("=", W_EQ)
+		.draw_text("=", is_active ? W_BITS_ACTIVE : W_EQ)
 		.next_col();
 
 	(*canvas_)
-		.draw_hex(val, 4, w_norm);
+		.draw_hex(val, 4, is_active ? w_sel : w_norm);
 
 	next_row();
 }
@@ -122,16 +123,16 @@ void dbg_control::draw_hex24(char* title, int bits, u32 val) const
 	check_parent();
 
 	(*canvas_)
-		.draw_text(title, w_norm)
+		.draw_text(title, is_active ? w_sel : w_norm)
 		.next_col()
 		.next_col()
-		.draw_text("=", W_EQ)
+		.draw_text("=", is_active ? W_BITS_ACTIVE : W_EQ)
 		.next_col();
 
 	(*canvas_)
-		.draw_hex(val >> 14, 2, w_norm).move_x_to_len()
-		.draw_text(":", W_EQ).move_x_to_len()
-		.draw_hex(val & 0x3FFF, 4, w_norm);
+		.draw_hex(val >> 14, 2, is_active ? w_sel : w_norm).move_x_to_len()
+		.draw_text(":", is_active ? W_BITS_ACTIVE : W_EQ).move_x_to_len()
+		.draw_hex(val & 0x3FFF, 4, is_active ? w_sel : w_norm);
 
 	next_row();
 }
@@ -142,13 +143,13 @@ void dbg_control::draw_bit_d(char* title, int bits, u8 val) const
 	draw_bits_range(bits);
 
 	(*canvas_)
-		.draw_text(title, w_norm)
+		.draw_text(title, is_active ? w_sel : w_norm)
 		.next_col()
-		.draw_text("=", W_EQ)
+		.draw_text("=", is_active ? W_BITS_ACTIVE : W_EQ)
 		.next_col();
 
 	(*canvas_)
-		.draw_number(val, w_norm);
+		.draw_number(val, is_active ? w_sel : w_norm);
 
 	next_row();
 }
@@ -159,13 +160,13 @@ void dbg_control::draw_bit_h(char* title, int bits, u8 val) const
     draw_bits_range(bits);
 
     (*canvas_)
-        .draw_text(title, w_norm)
+        .draw_text(title, is_active ? w_sel : w_norm)
         .next_col()
-        .draw_text("=", W_EQ)
+        .draw_text("=", is_active ? W_BITS_ACTIVE : W_EQ)
         .next_col();
 
     (*canvas_)
-        .draw_hex(val, 2, w_norm);
+        .draw_hex(val, 2, is_active ? w_sel : w_norm);
 
     next_row();
 }
@@ -175,14 +176,14 @@ void dbg_control::draw_port(char* title, u8 val) const
 	check_parent();
 
 	(*canvas_)
-		.draw_text(title, w_norm)
+		.draw_text(title, is_active ? w_sel : w_norm)
 		.next_col()
 		.next_col()
-		.draw_text("=", W_EQ)
+		.draw_text("=", is_active ? W_BITS_ACTIVE : W_EQ)
 		.next_col();
 
 	(*canvas_)
-		.draw_hex(val, 2, w_norm);
+		.draw_hex(val, 2, is_active ? w_sel : w_norm);
 
 	next_row();
 }
@@ -198,23 +199,23 @@ void dbg_control::draw_hl_port(char prefix, u8 hval, u8 lval, u16 val) const
 
 	line[1] = 'H';
 	(*canvas_)
-		.draw_text(line, w_norm).move_x_to_len()
-		.draw_text("= ", W_EQ).move_x_to_len()
-		.draw_hex(hval, 2, w_norm).move_x_to_len()
-		.draw_text(" ").move_x_to_len();
+		.draw_text(line, is_active ? w_sel : w_norm).move_x_to_len()
+		.draw_text("= ", is_active ? W_BITS_ACTIVE : W_EQ).move_x_to_len()
+		.draw_hex(hval, 2, is_active ? w_sel : w_norm).move_x_to_len()
+		.draw_text(" ", is_active ? w_sel : w_norm).move_x_to_len();
 
 	line[1] = 'L';
 	(*canvas_)
-		.draw_text(line, w_norm).move_x_to_len()
-		.draw_text("= ", W_EQ).move_x_to_len()
-		.draw_hex(lval, 2, w_norm).move_x_to_len()
-		.draw_text(" ").move_x_to_len();
+		.draw_text(line, is_active ? w_sel : w_norm).move_x_to_len()
+		.draw_text("= ", is_active ? W_BITS_ACTIVE : W_EQ).move_x_to_len()
+		.draw_hex(lval, 2, is_active ? w_sel : w_norm).move_x_to_len()
+		.draw_text(" ", is_active ? w_sel : w_norm).move_x_to_len();
 
 	(*canvas_)
-		.draw_text(line1, w_norm).move_x_to_len()
-		.draw_text("= ", W_EQ).move_x_to_len()
-		.draw_hex(val, 4, w_norm).move_x_to_len()
-		.draw_text(" ").move_x_to_len();
+		.draw_text(line1, is_active ? w_sel : w_norm).move_x_to_len()
+		.draw_text("= ", is_active ? W_BITS_ACTIVE : W_EQ).move_x_to_len()
+		.draw_hex(val, 4, is_active ? w_sel : w_norm).move_x_to_len()
+		.draw_text(" ", is_active ? w_sel : w_norm).move_x_to_len();
 
 	next_row();
 }
@@ -228,24 +229,24 @@ void dbg_control::draw_xhl_port(char prefix, u8 xval, u8 hval, u8 lval) const
 
 	line[1] = 'X';
 	(*canvas_)
-		.draw_text(line, w_norm).move_x_to_len()
-		.draw_text("= ", W_EQ).move_x_to_len()
-		.draw_hex(xval, 2, w_norm).move_x_to_len()
-		.draw_text(" ").move_x_to_len();
+		.draw_text(line, is_active ? w_sel : w_norm).move_x_to_len()
+		.draw_text("= ", is_active ? W_BITS_ACTIVE : W_EQ).move_x_to_len()
+		.draw_hex(xval, 2, is_active ? w_sel : w_norm).move_x_to_len()
+		.draw_text(" ", is_active ? w_sel : w_norm).move_x_to_len();
 
 	line[1] = 'H';
 	(*canvas_)
-		.draw_text(line, w_norm).move_x_to_len()
-		.draw_text("= ", W_EQ).move_x_to_len()
-		.draw_hex(hval, 2, w_norm).move_x_to_len()
-		.draw_text(" ").move_x_to_len();
+		.draw_text(line, is_active ? w_sel : w_norm).move_x_to_len()
+		.draw_text("= ", is_active ? W_BITS_ACTIVE : W_EQ).move_x_to_len()
+		.draw_hex(hval, 2, is_active ? w_sel : w_norm).move_x_to_len()
+		.draw_text(" ", is_active ? w_sel : w_norm).move_x_to_len();
 
 	line[1] = 'L';
 	(*canvas_)
-		.draw_text(line, w_norm).move_x_to_len()
-		.draw_text("= ", W_EQ).move_x_to_len()
-		.draw_hex(lval, 2, w_norm).move_x_to_len()
-		.draw_text(" ").move_x_to_len();
+		.draw_text(line, is_active ? w_sel : w_norm).move_x_to_len()
+		.draw_text("= ", is_active ? W_BITS_ACTIVE : W_EQ).move_x_to_len()
+		.draw_hex(lval, 2, is_active ? w_sel : w_norm).move_x_to_len()
+		.draw_text(" ", is_active ? w_sel : w_norm).move_x_to_len();
 
 	next_row();
 }
@@ -304,6 +305,21 @@ void dbg_control::set_parent(dbg_column *column, dbg_canvas *canvas, int y)
 	y_ = y;
 }
 
+bool dbg_control::handle_mouse(int mx, int my)
+{
+	auto need_repaint = false;
+	canvas_->iterate([this, &need_repaint](dbg_control* control)
+	{
+		const auto old = control->is_active;
+		control->is_active = control == this;
+
+		if (old != control->is_active)
+			need_repaint = true;
+	});
+
+	return need_repaint;
+}
+
 
 void dbg_column::move_y(int dy)
 {
@@ -343,9 +359,24 @@ void dbg_column::paint()
 	});
 }
 
+bool dbg_column::handle_mouse(int mx, int my)
+{
+	for(auto control : controls_)
+	{
+		const auto top = control->get_y();
+		const auto bottom = control->get_y() + control->get_h();
 
+		if (top <= my && my <= bottom)
+			return control->handle_mouse(mx, my - top);
+	}
 
+	return false;
+}
 
+vector<dbg_control*> dbg_column::get_controls() const
+{
+	return controls_;
+}
 
 
 void dbg_canvas::print_dbg(char* line, int color)
@@ -431,9 +462,9 @@ dbg_canvas& dbg_canvas::draw_frame(const int w, int h)
 	return *this;
 }
 
-dbg_canvas& dbg_canvas::fill_rect(const int w, const int h)
+dbg_canvas& dbg_canvas::fill_rect(const int w, const int h, u8 attr)
 {
-	fillrect(base_x_ + x_, base_y_ + y_, w, h, w_norm);
+	fillrect(base_x_ + x_, base_y_ + y_, w, h, attr);
 
 	return *this;
 }
@@ -483,6 +514,16 @@ dbg_canvas& dbg_canvas::set_x(int x)
 	return *this;
 }
 
+int dbg_canvas::get_x() const
+{
+	return base_x_;
+}
+
+int dbg_canvas::get_y() const
+{
+	return base_y_;
+}
+
 void dbg_canvas::draw_reg_frame(const dbg_control& control, int h, const char* title, const u8 *regval)
 {
 	const auto x = control.get_column().get_x();
@@ -504,7 +545,7 @@ void dbg_canvas::draw_reg_frame(const dbg_control& control, int h, const char* t
 
 	next_row();
 	draw_frame(w - 1, h);
-	fill_rect(w - 1, h);
+	fill_rect(w - 1, h, control.is_active ? w_sel : w_norm);
 }
 
 dbg_column& dbg_canvas::create_column(int w)
@@ -530,10 +571,31 @@ void dbg_canvas::paint()
 	});
 }
 
+bool dbg_canvas::handle_mouse(int mx, int my)
+{
+	for(auto column : columns_)
+	{
+		const auto left = column->get_x();
+		const auto right = column->get_x() + column->get_w();
+
+		if (left <= mx && mx <= right)
+			return column->handle_mouse(mx - left , my);
+	}
+
+	return false;
+}
+
 void dbg_canvas::add_item(dbg_control* control)
 {
 	if (&control->get_column() == nullptr)
 		throw exception("column not assigned");
 
 	controls_.push_back(control);
+}
+
+void dbg_canvas::iterate(function<void(dbg_control*)> functor)
+{
+	for(auto column: columns_)
+		for(auto control : column->get_controls())
+			functor(control);
 }

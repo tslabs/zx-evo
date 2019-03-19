@@ -2,17 +2,19 @@
 #pragma once
 #include "sysdefs.h"
 #include <vector>
+#include <functional>
 
 
 using namespace std;
 
-#define	W_REGVAL	0x51
-#define	W_BITS		0x04
-#define	W_EQ		0x04
-//#define W_LEDOFF	0x50
-#define W_LEDON 	0x50
+#define	W_REGVAL		0x51
+#define	W_BITS			0x04
+#define	W_EQ			0x04
+#define	W_BITS_ACTIVE	0x14
+#define	W_EQ_ACTIVE		0x14
 
-
+//#define W_LEDOFF		0x50
+#define W_LEDON 		0x50
 
 class dbg_column;
 class dbg_canvas;
@@ -46,6 +48,8 @@ protected:
 	void draw_text_on_line(const char* text, int x, u8 attr) const;
 
 public:
+	bool is_active{};
+
 	virtual ~dbg_control() = default;
 	explicit dbg_control(int h);
 
@@ -55,7 +59,9 @@ public:
 
 	void set_y(int y);
 	void set_parent(dbg_column *column, dbg_canvas *canvas, int y);
-	
+
+	bool handle_mouse(int mx, int my);
+
 	virtual void on_paint() {};
 };
 
@@ -86,6 +92,8 @@ public:
 	}
 	
 	void paint();
+	bool handle_mouse(int mx, int my);
+	vector<dbg_control*> get_controls() const;
 };
 
 class dbg_canvas final
@@ -115,7 +123,7 @@ public:
 	dbg_canvas& next_col();
 	dbg_canvas& move_x_to_len();
 	dbg_canvas& draw_frame(const int w, int h);
-	dbg_canvas& fill_rect(const int w, const int h);
+	dbg_canvas& fill_rect(const int w, const int h, u8 attr);
 	dbg_canvas& draw_text(const char *msg, int color = -1);
 	dbg_canvas& draw_number(const int value, int color = -1);
 	dbg_canvas& draw_hex(const unsigned value, int len = 2, int color = -1);
@@ -123,12 +131,16 @@ public:
 	dbg_canvas& move(int dx, int dy);
 	dbg_canvas& set_x(int x);
 
+	int get_x() const;
+	int get_y() const;
+
 	void draw_reg_frame(const dbg_control& control, int h, const char* title, const u8 *regval = nullptr);
 
 	dbg_column& create_column(int w);
 	void add_item(dbg_control* control);
+	void iterate(function<void(dbg_control*)> functor);
 	
 	void paint();
-
+	bool handle_mouse(int mx, int my);
 	
 };

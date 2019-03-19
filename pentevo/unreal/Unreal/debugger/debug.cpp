@@ -16,6 +16,7 @@
 #include "resource.h"
 #include "emulkeys.h"
 #include "dbgrwdlg.h"
+#include "dbgtsconf.h"
 
 #ifdef MOD_MONITOR
 
@@ -116,6 +117,9 @@ void handle_mouse()
 		selbank = my - (banks_y + 1); showbank = true;
 	}
 	else showbank = false;
+
+	if (on_mouse_tsconf(mx, my))
+		needclr++;
 
 	if (mousepos & 0x80000000) { // right-click
 		enum { idm_bpx = 1, idm_some_other };
