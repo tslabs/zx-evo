@@ -11,6 +11,8 @@ void gcVars (void)
 {
     __asm
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    .globl strlen, strprnz, sym_prn, sym_prns
+;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;; !!! must math with structures in gcWin.h !!!
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;; struct GC_SVMENU
@@ -209,7 +211,7 @@ _spage::
     .db #0x82
 ;;
 ascbuff::
-    .ds 15
+    .ds 32
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;; configuration
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -2331,8 +2333,8 @@ void gcEditString(u8 *str, u8 len, u8 x, u8 y) __naked
     ld c,<#_len (ix)
     ldir
 
-    call edit_string_mouse1
-    jr edit_string_lp
+    ;call edit_string_mouse1
+    ;jr edit_string_lp
 ;;
 edit_string_home:
     xor a
@@ -2737,7 +2739,7 @@ void gcDrawWindow(u8 id, u8 x, u8 y, u8 width, u8 hight, u8 attr, u8 frame_type,
     id,x,y,width,hight,attr;// to avoid SDCC warning
     frame_type, frame_attr; // to avoid SDCC warning
 
-    __asm
+  __asm
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;; var offsets
     _id     .equ #0
@@ -2881,8 +2883,7 @@ void gcDrawWindow(u8 id, u8 x, u8 y, u8 width, u8 hight, u8 attr, u8 frame_type,
     ld a,#0x08
     call set_attr_line
 
-3$:
-    pop ix
+3$: pop ix
     ret
 
 ;; print window row
@@ -2945,7 +2946,7 @@ winfrm_prn:
     call sym_prn
     pop af
     ret
-    __endasm;
+  __endasm;
 }
 
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -2953,7 +2954,7 @@ void gcPrintWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall
 {
     wnd;                // to avoid SDCC warning
 
-    __asm
+  __asm
     push ix
 
     MAC_LD_IXHL         ; IX - window descriptor
@@ -3181,7 +3182,7 @@ get_attr:
 ;;   B - count
 ;;   DE - YX coords
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-sym_prns:
+sym_prns::
     call sym_prn
     djnz .-3
     ret
@@ -3248,6 +3249,122 @@ strprnlen:
     pop bc
     djnz 0$
     ret
+  __endasm;
+}
+
+void putsym(char c) __naked __z88dk_fastcall
+{
+    c;                  // to avoid SDCC warning
+
+  __asm
+    ld a,(pspfx)
+    or a
+    jr nz,putsym_pfx
+    ld a,l
+    cp #0x09                ; \t
+    jp z,putsym_tab
+    cp #0x0A                ; \n
+    jr z,putsym_n
+    cp #0x0D                ; \r
+    jr z,putsym_r
+    ld (pspfx),a
+    cp #0x20
+    ret c
+    xor a
+    ld (pspfx),a
+;;
+putsym_sym:
+    ld a,(win_x)
+    ld e,a
+    ld a,(win_w)
+    add a,e
+    ld e,a
+    ld a,(cur_x)
+    cp e
+    ret nc
+    ld e,a
+    ld (cur_x),a
+    ld a,(cur_y)
+    ld d,a
+    ld a,(sym_attr)
+    ld c,a
+    ld a,l
+    call sym_prn
+    ld a,e
+    ld (cur_x),a
+    ret
+;;
+putsym_n:
+    ld a,(cur_y)
+    inc a
+    ld (cur_y),a
+    ld d,a
+putsym_r:
+    ld a,(win_x)
+    ld (cur_x),a
+    ld e,a
+    ld a,(win_attr)
+    ld (bg_attr),a
+    ld (sym_attr),a
+    ret
+;;
+putsym_tab:
+    ld a,(win_x)
+    ld h,a
+    ld a,(cur_x)
+    sub h
+    add a,#8
+    and #0xF8
+    add a,h
+    ld (cur_x),a
+    ret
+;;
+putsym_pfx:
+    ex af,af
+    xor a
+    ld (pspfx),a
+    ex af,af
+    cp #0x07                ; \a
+    jr z,putsym_ink
+    cp #0x08                ; \b
+    jr z,putsym_paper
+    ret
+;;
+putsym_ink:
+    ld a,l
+    and #0x0F
+    ld l,a
+    ld a,(bg_attr)
+    and #0xF0
+    or l
+    ld (sym_attr),a
+    ret
+;;
+putsym_paper:
+    ld a,l
+    add a,a
+    add a,a
+    add a,a
+    add a,a
+    ld (bg_attr),a
+    ret
+;;
+pspfx:
+    .db 0
+  __endasm;
+}
+
+void gcPrintString(char *str) __naked __z88dk_fastcall
+{
+    str;                // to avoid SDCC warning
+
+  __asm
+    ld a,(cur_x)
+    ld e,a
+    ld a,(cur_y)
+    ld d,a
+    call strprnz
+    ret
 
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;; print zero-terminated string
@@ -3267,9 +3384,9 @@ strprnlen:
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 strprnz::
     ld a,(hl)
-    inc hl
     or a
     ret z
+    inc hl
     cp #0x07                ; \a
     jp z,strprnz_ink
     cp #0x08                ; \b
@@ -3289,11 +3406,12 @@ strprnz::
     cp #0xFE                ; string link
     jp z,strprnz_link
 
-    ld bc,(sym_attr)
     push hl
+    ld l,a
+    ld a,(sym_attr)
+    ld c,a
+    ld a,l
     call sym_prn
-    ld a,e
-    ld (cur_x),a
     pop hl
     jr strprnz
 
@@ -3407,7 +3525,7 @@ strprnz_link:
 ;; o:
 ;;  B - string lenght
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-strlen:
+strlen::
     ld b,#0xFF
 1$: ld a,(hl)
     inc hl
@@ -3465,7 +3583,7 @@ strlen:
     call 1$
     pop hl
     jr 1$
-    __endasm;
+  __endasm;
 }
 
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -3533,20 +3651,6 @@ void gcPrintSymbol(u8 x, u8 y, u8 sym, u8 attr) __naked
     inc hl
     ld c,(hl)
     jp sym_prn
-    __endasm;
-}
-
-//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-void gcPrintMessage(u8 *msg) __naked __z88dk_fastcall
-{
-    msg;            // to avoid SDCC warning
-
-    __asm
-    ld a,(cur_x)
-    ld e,a
-    ld a,(cur_y)
-    ld d,a
-    jp strprnz
     __endasm;
 }
 

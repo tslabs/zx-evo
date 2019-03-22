@@ -3,12 +3,13 @@
 //::               by dr_max^gc (c)2018-2019                 ::
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 #include "defs.h"
+#include "gcWin.h"
 
 char *dec2asc8(u8 num) __naked __z88dk_fastcall
 {
     num;        // to avoid SDCC warning
 
-    __asm
+  __asm
     ld h,#0
     push ix
     ld ix,#ascbuff
@@ -16,7 +17,7 @@ char *dec2asc8(u8 num) __naked __z88dk_fastcall
     pop ix
     ld hl,#ascbuff
     ret
-    __endasm;
+  __endasm;
 }
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -24,7 +25,7 @@ char *dec2asc8s(s8 num) __naked __z88dk_fastcall
 {
     num;        // to avoid SDCC warning
 
-    __asm
+  __asm
     ld h,#0
     push ix
     ld ix,#ascbuff
@@ -39,7 +40,7 @@ char *dec2asc8s(s8 num) __naked __z88dk_fastcall
     pop ix
     ld hl,#ascbuff
     ret
-    __endasm;
+  __endasm;
 }
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -47,14 +48,14 @@ char *dec2asc16(u16 num) __naked __z88dk_fastcall
 {
     num;        // to avoid SDCC warning
 
-    __asm
+  __asm
     push ix
     ld ix,#ascbuff
     call decasc16
     pop ix
     ld hl,#ascbuff
     ret
-    __endasm;
+  __endasm;
 }
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -62,26 +63,19 @@ char *dec2asc16s(s16 num) __naked __z88dk_fastcall
 {
     num;        // to avoid SDCC warning
 
-    __asm
+  __asm
     push ix
     ld ix,#ascbuff
     bit 7,h
     jr z,0$
-; neg HL
-    ld a,l
-    neg
-    ld l,a
-    ld a,#0
-    sbc a,h
-    ld h,a
-;
+    call _neg_hl
     ld (ix),#'-'
     inc ix
 0$: call decasc16
     pop ix
     ld hl,#ascbuff
     ret
-    __endasm;
+  __endasm;
 }
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -89,184 +83,13 @@ char *dec2asc32(u32 num) __naked __z88dk_fastcall
 {
     num;        // to avoid SDCC warning
 
-    __asm
+  __asm
     push ix
-
-    push hl
-    call _get_prn_buf
-
-    push hl
-    pop ix
-
-    pop hl
-    push ix
+    ld ix,#ascbuff
     call decasc32
-
-    pop hl
     pop ix
+    ld hl,#ascbuff
     ret
-    __endasm;
-}
-
-//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-char *dec2asc32s(s32 num) __naked __z88dk_fastcall
-{
-    num;        // to avoid SDCC warning
-
-    __asm
-    push ix
-    push hl
-    call _get_prn_buf
-    push hl
-    pop ix
-    pop hl
-    push ix
-;
-    bit 7,d
-    jr z,0$
-; neg DE:HL
-    ld a,l
-    neg
-    ld l,a
-    ld a,#0
-    sbc a,h
-    ld h,a
-    ld a,#0
-    sbc a,e
-    ld e,a
-    ld a,#0
-    sbc a,d
-    ld d,a
-;
-    ld (ix),#'-'
-    inc ix
-0$: call decasc32
-;
-    pop hl
-    pop ix
-    ret
-    __endasm;
-}
-
-//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-char *get_prn_buf() __naked
-{
-    __asm
-    ld a,(0$)
-    inc a
-    and #3
-    ld (0$),a
-    add a,a
-    add a,a
-    add a,a
-    add a,a
-    add a,a
-    add a,#<1$
-    ld l,a
-    adc a,#>1$
-    sub l
-    ld h,a
-    ret
-0$: .db 0
-1$: .ds 32
-    .ds 32
-    .ds 32
-    .ds 32
-  __endasm;
-}
-
-//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-void gcPrintDec8(u8 num) __naked __z88dk_fastcall
-{
-    num;        // to avoid SDCC warning
-
-  __asm
-    call _dec2asc8
-    ld a,(cur_x)
-    ld e,a
-    ld a,(cur_y)
-    ld d,a
-    jp strprnz
-  __endasm;
-}
-
-//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-void gcPrintDec8s(s8 num) __naked __z88dk_fastcall
-{
-    num;        // to avoid SDCC warning
-
-  __asm
-    call _dec2asc8s
-    ld a,(cur_x)
-    ld e,a
-    ld a,(cur_y)
-    ld d,a
-    jp strprnz
-  __endasm;
-}
-
-//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-void gcPrintDec16(u16 num) __naked __z88dk_fastcall
-{
-    num;        // to avoid SDCC warning
-
-  __asm
-    call _dec2asc16
-    ld a,(cur_x)
-    ld e,a
-    ld a,(cur_y)
-    ld d,a
-    jp strprnz
-  __endasm;
-}
-
-//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-void gcPrintDec16s(s16 num) __naked __z88dk_fastcall
-{
-    num;        // to avoid SDCC warning
-
-  __asm
-    call _dec2asc16s
-    ld a,(cur_x)
-    ld e,a
-    ld a,(cur_y)
-    ld d,a
-    jp strprnz
-  __endasm;
-}
-
-//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-void gcPrintDec32s(s32 num) __naked __z88dk_fastcall
-{
-    num;        // to avoid SDCC warning
-
-  __asm
-    call _dec2asc32s
-    ld a,(cur_x)
-    ld e,a
-    ld a,(cur_y)
-    ld d,a
-    jp strprnz
-  __endasm;
-}
-
-//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-void gcPrintDec32(u32 num) __naked __z88dk_fastcall
-{
-    num;        // to avoid SDCC warning
-
-  __asm
-;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-; print 32bit decimal number
-; i:
-;   DEHL = 32bit NUMBER
-;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-    call _dec2asc32
-    ld a,(cur_x)
-    ld e,a
-    ld a,(cur_y)
-    ld d,a
-    jp strprnz
 
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;DEHL - 32bit NUMBER
@@ -392,78 +215,71 @@ decasc32_dig:
 }
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-void gcPrintHex8(u8 num) __naked __z88dk_fastcall
+char *dec2asc32s(s32 num) __naked __z88dk_fastcall
 {
     num;        // to avoid SDCC warning
 
   __asm
-;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-; print 8bit hexadecimal number
-; i:
-;   L = 8bit NUMBER
-;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-    ld a,l
     push ix
+    ld ix,#ascbuff
+    bit 7,d
+    jr z,0$
+    call _neg_dehl
+    ld (ix),#'-'
+    inc ix
+0$: call decasc32
+    pop ix
+    ld hl,#ascbuff
+    ret
+  __endasm;
+}
+
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+char *hex2asc8(u8 num) __naked __z88dk_fastcall
+{
+    num;        // to avoid SDCC warning
+
+  __asm
+    push ix
+    ld a,l
     ld ix,#ascbuff
     call hexasc8
     ld (ix),#0
     pop ix
     ld hl,#ascbuff
-    ld a,(cur_x)
-    ld e,a
-    ld a,(cur_y)
-    ld d,a
-    jp strprnz
+    ret
   __endasm;
 }
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-void gcPrintHex16(u16 num) __naked __z88dk_fastcall
+char *hex2asc16(u16 num) __naked __z88dk_fastcall
 {
     num;        // to avoid SDCC warning
 
   __asm
-;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-; print 16bit hexadecimal number
-; i:
-;   HL = 16bit NUMBER
-;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     push ix
     ld ix,#ascbuff
     call hexasc16
     ld (ix),#0
     pop ix
     ld hl,#ascbuff
-    ld a,(cur_x)
-    ld e,a
-    ld a,(cur_y)
-    ld d,a
-    jp strprnz
+    ret
   __endasm;
 }
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-void gcPrintHex32(u32 num) __naked __z88dk_fastcall
+char *hex2asc32(u32 num) __naked __z88dk_fastcall
 {
     num;        // to avoid SDCC warning
 
   __asm
-;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-; print 32bit hexadecimal number
-; i:
-;   DEHL = 32bit NUMBER
-;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     push ix
     ld ix,#ascbuff
     call hexasc32
     ld (ix),#0
     pop ix
     ld hl,#ascbuff
-    ld a,(cur_x)
-    ld e,a
-    ld a,(cur_y)
-    ld d,a
-    jp strprnz
+    ret
 
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;DEHL - 32bit NUMBER
@@ -509,6 +325,60 @@ hexasc8::
 }
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+void gcPrintDec8(u8 num) __z88dk_fastcall
+{
+    gcPrintString(dec2asc8(num));
+}
+
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+void gcPrintDec8s(s8 num) __z88dk_fastcall
+{
+    gcPrintString(dec2asc8s(num));
+}
+
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+void gcPrintDec16(u16 num) __z88dk_fastcall
+{
+    gcPrintString(dec2asc16(num));
+}
+
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+void gcPrintDec16s(s16 num) __z88dk_fastcall
+{
+    gcPrintString(dec2asc16s(num));
+}
+
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+void gcPrintDec32s(s32 num) __z88dk_fastcall
+{
+    gcPrintString(dec2asc32s(num));
+}
+
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+void gcPrintDec32(u32 num) __z88dk_fastcall
+{
+    gcPrintString(dec2asc32(num));
+}
+
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+void gcPrintHex8(u8 num) __z88dk_fastcall
+{
+    gcPrintString(hex2asc8(num));
+}
+
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+void gcPrintHex16(u16 num) __z88dk_fastcall
+{
+    gcPrintString(hex2asc16(num));
+}
+
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+void gcPrintHex32(u32 num) __z88dk_fastcall
+{
+    gcPrintString(hex2asc32(num));
+}
+
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 s32 a2d32s(char *string) __naked __z88dk_fastcall
 {
     string;     // to avoid SDCC warning
@@ -522,19 +392,7 @@ s32 a2d32s(char *string) __naked __z88dk_fastcall
     call _a2d32
     ex af,af
     ret nz
-    ld a,l
-    neg
-    ld l,a
-    ld a,#0
-    sbc a,h
-    ld h,a
-    ld a,#0
-    sbc a,e
-    ld e,a
-    ld a,#0
-    sbc a,d
-    ld d,a
-    ret
+    jp _neg_dehl
   __endasm;
 }
 
@@ -553,21 +411,22 @@ u32 a2d32(char *string) __naked __z88dk_fastcall
     ld d,l
 ;
 0$: ld a,(ix)
-    inc ix
     sub #0x30
     cp #10
     ret nc
+    inc ix
     call _mul10
+    ld c,#0
     add a,l
     ld l,a
     ld a,h
-    adc a,#0
+    adc a,c
     ld h,a
     ld a,e
-    adc a,#0
+    adc a,c
     ld e,a
     ld a,d
-    adc a,#0
+    adc a,c
     ld d,a
     jr 0$
   __endasm;
@@ -601,6 +460,44 @@ u32 mul10(u32 num) __naked __z88dk_fastcall
 }
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+s16 neg_hl(s16 num) __naked __z88dk_fastcall
+{
+    num;        // to avoid SDCC warning
+
+  __asm
+    ld a,l
+    neg
+    ld l,a
+    ld a,#0
+    sbc a,h
+    ld h,a
+    ret
+  __endasm;
+}
+
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+s32 neg_dehl(s32 num) __naked __z88dk_fastcall
+{
+    num;        // to avoid SDCC warning
+
+  __asm
+    ld a,l
+    neg
+    ld l,a
+    ld a,#0
+    sbc a,h
+    ld h,a
+    ld a,#0
+    sbc a,e
+    ld e,a
+    ld a,#0
+    sbc a,d
+    ld d,a
+    ret
+  __endasm;
+}
+
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 void gcPrintf(char *string, ...) __naked
 {
     string;         // to avoid SDCC warning
@@ -610,15 +507,14 @@ void gcPrintf(char *string, ...) __naked
     ld ix,#4
     add ix,sp
 ;;
-    ld a,(cur_x)
-    ld e,a
-    ld a,(cur_y)
-    ld d,a
-;;
     ld l,0(ix)
     ld h,1(ix)
 
 gc_printf_loop$:
+    xor a
+    ld (printf_cnt),a
+    ld a,#0x20
+    ld (printf_fil),a
     inc ix
     inc ix
 
@@ -634,7 +530,26 @@ gc_printf_loop1$:
     ld a,(hl)
     or a
     jp z,gc_printf_exit$
-    inc hl
+    cp #0x3A
+    jr nc,0$
+    cp #0x30
+    jr c,gc_printf_char$
+;;
+    jr nz,1$
+    ld a,#0x30
+    ld (printf_fil),a
+
+1$: push ix
+    call _a2d32
+    ld a,l
+    ld (printf_cnt),a
+; !!! IX points to not number symbol in ascii buffer
+    push ix
+    pop hl
+    pop ix
+    ld a,(hl)
+;;
+0$: inc hl
     cp #'h'
     jr z,gc_printf_short$
     cp #'l'
@@ -652,11 +567,9 @@ gc_printf_loop1$:
     ld a,0(ix)
 ;;
 gc_printf_char$:
-    ld bc,(sym_attr)
     push hl
-    call sym_prn
-    ld a,e
-    ld (cur_x),a
+    ld l,a
+    call _putsym
     pop hl
     jr gc_printf_loop1$
 ;;
@@ -664,10 +577,8 @@ gc_printf_linefeed$:
     ld a,(cur_y)
     inc a
     ld (cur_y),a
-    ld d,a
     ld a,(win_x)
     ld (cur_x),a
-    ld e,a
     jr gc_printf_loop1$
 
 ;; %h modificator (short)
@@ -676,6 +587,8 @@ gc_printf_short$:
     inc hl
     cp #'u'
     jr z,gc_printf_udec8$
+    cp #'d'
+    jr z,gc_printf_dec8$
     cp #'x'
     jr z,gc_printf_hex8$
     jr gc_printf_char$
@@ -695,7 +608,7 @@ gc_printf_string$:
     push hl
     ld l,0(ix)
     ld h,1(ix)
-    call strprnz
+    call _gcPrintString
     pop hl
     jp gc_printf_loop$
 
@@ -703,74 +616,142 @@ gc_printf_string$:
 gc_printf_hex8$:
     push hl
     ld l,0(ix)
-    call _gcPrintHex8
-    pop hl
-    jp gc_printf_loop$
+    call _hex2asc8
+    jp gc_printf_buff$
 
 ;; %x (hex)
 gc_printf_hex16$:
     push hl
     ld l,0(ix)
     ld h,1(ix)
-    call _gcPrintHex16
-    pop hl
-    jp gc_printf_loop$
+    call _hex2asc16
+    jp gc_printf_buff$
 
 ;; %hu
 gc_printf_udec8$:
     push hl
     ld l,0(ix)
-    call _gcPrintDec8
-    pop hl
-    jp gc_printf_loop$
+    call _dec2asc8
+    jp gc_printf_buff$
+
+;; %hd
+gc_printf_dec8$:
+    push hl
+    ld l,0(ix)
+    bit 7,l
+    call nz,_neg_hl
+    call _dec2asc8
+    jp gc_printf_buff_s$
 
 ;; %u (unsigned decimal)
 gc_printf_udec16$:
     push hl
     ld l,0(ix)
     ld h,1(ix)
-    call _gcPrintDec16
-    pop hl
-    jp gc_printf_loop$
+    call _dec2asc16
+    jp gc_printf_buff$
 
 ;; %d (signed decimal)
 gc_printf_sdec16$:
     push hl
     ld l,0(ix)
     ld h,1(ix)
-    call _gcPrintDec16s
-    pop hl
-    jp gc_printf_loop$
+    bit 7,h
+    call nz,_neg_hl
+    call _dec2asc16
+    jr gc_printf_buff_s$
 
 ;; %lu
 gc_printf_udec32$:
     push hl
     ld l,0(ix)
     ld h,1(ix)
-    ld e,2(ix)
-    ld d,3(ix)
     inc ix
     inc ix
-    call _gcPrintDec32
-    pop hl
-    jp gc_printf_loop$
+    ld e,0(ix)
+    ld d,1(ix)
+    call _dec2asc32
+    jr gc_printf_buff$
 
 ;; %ld
 gc_printf_sdec32$:
     push hl
     ld l,0(ix)
     ld h,1(ix)
-    ld e,2(ix)
-    ld d,3(ix)
     inc ix
     inc ix
-    call _gcPrintDec32s
+    ld e,0(ix)
+    ld d,1(ix)
+    bit 7,d
+    call nz,_neg_dehl
+    call _dec2asc32
+;;
+gc_printf_buff_s$:
+    push hl
+    call strlen
+    ld a,(printf_fil)
+    cp #0x20
+    jr z,0$
+    bit 7,1(ix)
+    call nz,gc_printf_minus$
+    ld a,(printf_cnt)
+    sub b
+    call nc,gc_printf_spacer$
+    jr 1$
+0$: ld a,(printf_cnt)
+    bit 7,1(ix)
+    jr z,.+2+1
+    inc b
+    sub b
+    call nc,gc_printf_spacer$
+    bit 7,1(ix)
+    call nz,gc_printf_minus$
+1$: pop hl
+    call _gcPrintString
     pop hl
     jp gc_printf_loop$
+;;
+gc_printf_minus$:
+    inc b
+    push hl
+    push bc
+    ld a,#'-'
+    ld l,a
+    call _putsym
+    pop bc
+    pop hl
+    ret
+;;
+gc_printf_buff$:
+    push hl
+    call strlen
+    ld a,(printf_cnt)
+    sub b
+    call nc,gc_printf_spacer$
+    pop hl
+    call _gcPrintString
+    pop hl
+    jp gc_printf_loop$
+;;
+gc_printf_spacer$:
+    ret z
+    ld b,a
+0$: push bc
+    ld a,(printf_fil)
+    ld l,a
+    call _putsym
+    pop bc
+    djnz 0$
+    ret
 
 ;; exit
 gc_printf_exit$:
     pop ix
     ret
+;;
+printf_cnt:
+    .db 0
+printf_fil:
+    .db 0
   __endasm;
 }

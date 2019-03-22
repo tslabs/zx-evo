@@ -24,7 +24,7 @@
 #define MARK_RIGHT              "\x0F"
 #define MARK_LINK               "\xFE"
 
-#define INK_BLACK               "\a\x0"
+#define INK_BLACK               "\a\x80"
 #define INK_BLUE                "\a\x1"
 #define INK_RED                 "\a\x2"
 #define INK_MAGENTA             "\a\x3"
@@ -41,7 +41,7 @@
 #define INK_BRIGHT_YELLOW       "\a\xE"
 #define INK_BRIGHT_WHITE        "\a\xF"
 
-#define PAPER_BLACK             "\b\x0"
+#define PAPER_BLACK             "\b\x80"
 #define PAPER_BLUE              "\b\x1"
 #define PAPER_RED               "\b\x2"
 #define PAPER_MAGENTA           "\b\x3"
@@ -495,7 +495,6 @@ void gcPrintChainWindows(void) __naked;
 void gcDrawWindow(u8 id, u8 x, u8 y, u8 width, u8 hight, u8 attr, u8 frame_type, u8 frame_attr) __naked;
 u8 gcGetMessageLines(u8 *msg) __naked __z88dk_fastcall;
 u8 gcGetMessageMaxLength(u8 *msg) __naked __z88dk_fastcall;
-void gcPrintMessage(u8 *msg) __naked __z88dk_fastcall;
 void gcPrintWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall;
 
 void gcScrollUpWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall;
@@ -526,7 +525,10 @@ void gcRestoreSVMCursor(GC_SVMENU_t *svmnu) __naked __z88dk_fastcall;
 
 void gcGotoXY(u8 x, u8 y) __naked;
 void gcPrintSymbol(u8 x, u8 y, u8 sym, u8 attr) __naked;
-void gcEditString(u8 *str, u8 len, u8 x, u8 y) __naked;
+void gcPrintString(char *str) __naked __z88dk_fastcall;
+void gcEditString(char *str, u8 len, u8 x, u8 y) __naked;
 
 void gcSetFontSym(u8 sym, u8 *udg) __naked;
 void gcSetPalette(u16 *palette, u8 palsel) __naked;
+
+void putsym(char c) __naked __z88dk_fastcall;

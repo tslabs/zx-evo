@@ -52,13 +52,15 @@ void testMouse()
 {
     u8 winx = 20;
     u8 winy = 10;
+    const char *txt_mouse_x = INK_BLUE"Mouse X:"INK_RED;
+    const char *txt_mouse_y = INK_BLUE"Mouse Y:"INK_RED;
 
     wndMouseTest.x = winx;
     wndMouseTest.y = winy;
 
     gcPrintWindow(&wndMouseTest);
-    gcGotoXY(winx, winy+10);
-    gcPrintMessage(
+    gcGotoXY(winx, winy+16);
+    gcPrintString(
                    INK_BRIGHT_BLUE
                    MARK_CENTER
                    "Press SPACE to exit"
@@ -69,10 +71,15 @@ void testMouse()
     {
         EIHALT
         gcGotoXY(winx+1, winy+2);
-        gcPrintf("Mouse X:%d  \nMouse Y:%d  \n", gcGetMouseX()-(320/2), gcGetMouseY()-(240/2));
-        gcPrintf("Mouse X:%u  \nMouse Y:%u  \n", gcGetMouseX(), gcGetMouseY());
-        gcPrintf("Mouse X:0x%x  \nMouse Y:0x%x  \n", gcGetMouseX(), gcGetMouseY());
-        gcPrintf("32 bit number:%ld\n", a2d32s("-1234567890"));
+
+        gcPrintf(INK_BLUE"\tMouse X:"INK_MAGENTA"%04d\n"
+                 INK_BLUE"\tMouse Y:"INK_MAGENTA"%04d\n\n", gcGetMouseX()-(320/2), gcGetMouseY()-(240/2));
+        gcPrintf(INK_BLUE"\tMouse X:"INK_MAGENTA"%4u\n"
+                 INK_BLUE"\tMouse Y:"INK_MAGENTA"%4u\n\n", gcGetMouseX(), gcGetMouseY());
+        gcPrintf(INK_BLUE"\tMouse X:"INK_MAGENTA"%4x\n"
+                 INK_BLUE"\tMouse Y:"INK_MAGENTA"%4x\n\n\n", gcGetMouseX(), gcGetMouseY());
+        gcPrintf(INK_BLUE"32 bit number:"INK_MAGENTA"%12ld\n", a2d32s("-1234567890"));
+        gcPrintf(INK_BLUE"32 bit number:"INK_MAGENTA"%012ld\n", a2d32s("-1234567890"));
     }
 
     gcCloseWindow();
