@@ -36,18 +36,18 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="dbgbpx.cpp" />
-    <ClCompile Include="dbgcmd.cpp" />
-    <ClCompile Include="dbglabls.cpp" />
-    <ClCompile Include="dbgmem.cpp" />
-    <ClCompile Include="dbgoth.cpp" />
-    <ClCompile Include="dbgpaint.cpp" />
-    <ClCompile Include="dbgreg.cpp" />
-    <ClCompile Include="dbgrwdlg.cpp" />
-    <ClCompile Include="dbgtrace.cpp" />
-    <ClCompile Include="dbgtsconf.cpp" />
-    <ClCompile Include="dbgwidgets.cpp" />
-    <ClCompile Include="debug.cpp" />
+    <ClCompile Include="debugger\dbgbpx.cpp" />
+    <ClCompile Include="debugger\dbgcmd.cpp" />
+    <ClCompile Include="debugger\dbglabls.cpp" />
+    <ClCompile Include="debugger\dbgmem.cpp" />
+    <ClCompile Include="debugger\dbgoth.cpp" />
+    <ClCompile Include="debugger\dbgpaint.cpp" />
+    <ClCompile Include="debugger\dbgreg.cpp" />
+    <ClCompile Include="debugger\dbgrwdlg.cpp" />
+    <ClCompile Include="debugger\dbgtrace.cpp" />
+    <ClCompile Include="debugger\dbgtsconf.cpp" />
+    <ClCompile Include="debugger\dbgwidgets.cpp" />
+    <ClCompile Include="debugger\debug.cpp" />
     <ClCompile Include="depack.cpp" />
     <ClCompile Include="draw.cpp" />
     <ClCompile Include="drawers.cpp" />
@@ -161,19 +161,19 @@
     <ClInclude Include="cheat.h" />
     <ClInclude Include="config.h" />
     <ClInclude Include="daa_tabs.h" />
-    <ClInclude Include="dbgbpx.h" />
-    <ClInclude Include="dbgcmd.h" />
-    <ClInclude Include="dbglabls.h" />
-    <ClInclude Include="dbgmem.h" />
-    <ClInclude Include="dbgoth.h" />
-    <ClInclude Include="dbgpaint.h" />
-    <ClInclude Include="dbgreg.h" />
-    <ClInclude Include="dbgrwdlg.h" />
-    <ClInclude Include="dbgtrace.h" />
-    <ClInclude Include="dbgtsconf.h" />
-    <ClInclude Include="dbgwidgets.h" />
+    <ClInclude Include="debugger\dbgbpx.h" />
+    <ClInclude Include="debugger\dbgcmd.h" />
+    <ClInclude Include="debugger\dbglabls.h" />
+    <ClInclude Include="debugger\dbgmem.h" />
+    <ClInclude Include="debugger\dbgoth.h" />
+    <ClInclude Include="debugger\dbgpaint.h" />
+    <ClInclude Include="debugger\dbgreg.h" />
+    <ClInclude Include="debugger\dbgrwdlg.h" />
+    <ClInclude Include="debugger\dbgtrace.h" />
+    <ClInclude Include="debugger\dbgtsconf.h" />
+    <ClInclude Include="debugger\dbgwidgets.h" />
     <ClInclude Include="ddk.h" />
-    <ClInclude Include="debug.h" />
+    <ClInclude Include="debugger\debug.h" />
     <ClInclude Include="defs.h" />
     <ClInclude Include="depack.h" />
     <ClInclude Include="draw.h" />
@@ -276,7 +276,6 @@
     </SccLocalPath>
     <SccProvider>
     </SccProvider>
-    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -306,11 +305,13 @@
     <GenerateManifest>true</GenerateManifest>
     <OutDir>bin\$(Configuration)\</OutDir>
     <IntDir>tmp\$(Configuration)\</IntDir>
+    <IncludePath>$(ProjectDir);$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <GenerateManifest>true</GenerateManifest>
     <OutDir>bin\$(Configuration)\</OutDir>
     <IntDir>tmp\$(Configuration)\</IntDir>
+    <IncludePath>$(ProjectDir);$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
