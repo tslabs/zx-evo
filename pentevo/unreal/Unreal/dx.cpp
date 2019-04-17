@@ -1459,7 +1459,7 @@ void start_dx()
 
    main_menu = LoadMenu(hIn, MAKEINTRESOURCE(IDR_MAINMENU));
    wnd = CreateWindow("EMUL_WND", "UnrealSpeccy", WS_VISIBLE|WS_OVERLAPPEDWINDOW,
-                    winx, winy, 0, 0, 0, main_menu, hIn, NULL);
+                    winx, winy, cx, cy, 0, main_menu, hIn, NULL);
 //                    winx, winy, cx, cy, 0, 0, hIn, NULL);
 
    DragAcceptFiles(wnd, 1);
