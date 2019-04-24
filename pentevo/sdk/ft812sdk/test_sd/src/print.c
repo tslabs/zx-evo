@@ -73,23 +73,6 @@ char *get_prn_buf()
   return buf[sel];
 }
 
-const char *dec32(u32 num)
-{
-  char *p = get_prn_buf();
-  u8 n1 = num / 100000000;
-  u16 n2 = (num % 100000000) / 10000;
-  u16 n3 = num % 10000;
-  
-  if (n1)
-    sprintf(p, "%u%04u%04u", n1, n2, n3);
-  else if (n2)
-    sprintf(p, "%u%04u", n2, n3);
-  else
-    sprintf(p, "%u%", n3);
-  
-  return p;
-}
-
 const char *hex(void *ptr, u8 n)
 {
   char *p = get_prn_buf();

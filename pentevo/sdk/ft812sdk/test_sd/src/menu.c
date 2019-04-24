@@ -13,6 +13,7 @@ enum
   M_LOCK_SET_PWD,
   M_LOCK_CLR_PWD,
   M_LOCK_ERASE,
+  M_ERASE,
   M_BFORCE
 };
 
@@ -31,6 +32,8 @@ void print_rc(const char *last_op, u8 rc)
 
 u8 submenu_init()
 {
+  sd_size = 0;
+
   u8 rc = disk_initialize();
   printf(C_NORM "Card init: " C_DATA "%s\n", sd_init_txt[rc]);
   printf(C_NORM "Card type: " C_DATA "%s\n", sd_type_txt[ctype & 7]);
@@ -47,6 +50,23 @@ u8 submenu_init()
     printf(C_NORM "STATUS:    " C_DATA "%slocked (%02X)\n", (st & 1) ? "" : "un", st);
   }
 
+  if (!read_csd())
+  {
+    bitmax = 127;
+
+    u8 ver = get_bitfield_bits(127, 2);
+    if (ver > 1)    // reserved version of CSD
+      goto exit;
+
+    if (ver == 0)
+      sd_size = (u32)(get_bitfield_bits(73, 12) + 1) * power(2, (get_bitfield_bits(49, 3) + 2));
+    else
+      sd_size = (u32)(get_bitfield_bits(69, 22) + 1) << 10;
+
+    printf(C_NORM "LBA:       " C_DATA "%lu\n", sd_size);
+  }
+
+exit:
   return rc;
 }
 
@@ -105,16 +125,16 @@ void submenu_csd()
     u16 bl_len = power(2, read_bl_len);
     u32 blocknr = (u32)(c_size + 1) * mult;
     u64 byte_size = blocknr * bl_len;
-    
-    printf(C_INFO "Device size: " C_DATA "%u MB (C_SIZE = %03X, C_SIZE_MULT = %02X)\n", (u16)(byte_size / 1024 / 1024) , c_size, c_size_mult);
+
     printf(C_INFO "Read Block Length: " C_DATA "%u bytes (%02X)\n", bl_len, read_bl_len);
+    printf(C_INFO "Device size: " C_DATA "%u MB (C_SIZE = %03X, C_SIZE_MULT = %02X)\n", (u16)(byte_size / 1024 / 1024) , c_size, c_size_mult);
   }
   else
   {
     u32 c_size = get_bitfield_bits(69, 22);
     u64 kbyte_size = (u64)(c_size + 1) * 512;
-    
-    printf(C_INFO "Device size: " C_DATA "%s MB / %u GB (C_SIZE = %s)\n", dec32(kbyte_size / 1024), (u16)(kbyte_size / 1024 / 1024), hex(&c_size, 3));
+
+    printf(C_INFO "Device size: " C_DATA "%lu MB / %u GB (C_SIZE = %s)\n", (u32)(kbyte_size / 1024), (u16)(kbyte_size / 1024 / 1024), hex(&c_size, 3));
   }
 }
 
@@ -192,7 +212,8 @@ void menu_lock()
     printf(C_BUTN "\n\n1. " C_MENU "Set password\n\n");
     printf(C_BUTN "2. " C_MENU "Clear password\n\n");
     printf(C_BUTN "3. " C_ACHT "Erase card\n\n");
-    printf(C_BUTN "4. " C_MENU "Bruteforce password\n\n");
+    printf(C_BUTN "4. " C_ACHT "Erase sectors\n\n");
+    printf(C_BUTN "5. " C_MENU "Bruteforce password\n\n");
     printf(C_BUTN "\n0. " C_MENU "Re-detect card\n\n\n\n");
   }
   else
@@ -295,6 +316,18 @@ void menu_lock_erase()
   }
 }
 
+void menu_erase()
+{
+  read_status();
+  printf(C_PROC "Erasing sectors... ");
+
+  u8 rc;
+  if (rc = erase_sec())
+    print_rc("erase_sd()", rc);
+  else
+    printf(C_OK "OK\n\n");
+}
+
 void menu_disp()
 {
   switch (menu)
@@ -305,6 +338,7 @@ void menu_disp()
     case M_LOCK_SET_PWD:  menu_lock_set_pwd(); break;
     case M_LOCK_CLR_PWD:  menu_lock_clr_pwd(); break;
     case M_LOCK_ERASE:    menu_lock_erase(); break;
+    case M_ERASE:         menu_erase(); break;
     case M_BFORCE:        menu_bforce(); break;
   }
 }
@@ -342,7 +376,8 @@ bool key_disp()
         case KEY_1: menu = M_LOCK_SET_PWD; rc = true; break;
         case KEY_2: menu = M_LOCK_CLR_PWD; rc = true; break;
         case KEY_3: menu = M_LOCK_ERASE; rc = true; break;
-        case KEY_4: menu = M_BFORCE; rc = true; break;
+        case KEY_4: menu = M_ERASE; rc = true; break;
+        case KEY_5: menu = M_BFORCE; rc = true; break;
         case KEY_0: menu = M_LOCK; rc = true; break;
 
         default:

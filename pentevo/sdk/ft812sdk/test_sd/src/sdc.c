@@ -127,3 +127,18 @@ exit:
 
   return rc;
 }
+
+u8 erase_sec()
+{
+  u8 rc;
+
+  sd_cs_on();
+  if (rc = sd_cmd(SDC_ERASE_START_ADDR, 0)) goto exit;
+  if (rc = sd_cmd(SDC_ERASE_END_ADDR, sd_size - 1)) goto exit;
+  if (rc = sd_cmd(SDC_ERASE, 0)) goto exit;
+  if (!sd_wait_busy_long()) rc = 0xFF;
+exit:
+  sd_cs_off();
+
+  return rc;
+}

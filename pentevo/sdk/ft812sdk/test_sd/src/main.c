@@ -21,6 +21,7 @@ u8 menu;
 bool req_unpress;
 u8 sdbuf[64];
 u16 bitmax;
+u32 sd_size;
 
 #include "func.c"
 #include "sdc.c"
