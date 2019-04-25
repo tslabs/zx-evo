@@ -1,0 +1,695 @@
+<SDCCLIB>
+
+<INDEX>
+      1379
+<MODULE>
+zifi_c_0 11
+.__.ABS.
+_zifi_init
+</MODULE>
+
+<MODULE>
+zifi_c_1 826
+.__.ABS.
+_zifi_set_recv_threshold
+</MODULE>
+
+<MODULE>
+zifi_c_2 1412
+.__.ABS.
+_zifi_set_recv_timeout
+</MODULE>
+
+<MODULE>
+zifi_c_3 1996
+.__.ABS.
+_zifi_input_buffer_used
+</MODULE>
+
+<MODULE>
+zifi_c_4 2569
+.__.ABS.
+_zifi_output_buffer_free
+</MODULE>
+
+<MODULE>
+zifi_c_5 3143
+.__.ABS.
+_zifi_receive
+</MODULE>
+
+<MODULE>
+zifi_c_6 3659
+.__.ABS.
+_zifi_send
+</MODULE>
+
+<MODULE>
+zifi_c_7 4163
+.__.ABS.
+_zifi_connect_ap
+</MODULE>
+
+<MODULE>
+zifi_c_8 4679
+.__.ABS.
+_zifi_disconnect_ap
+</MODULE>
+
+<MODULE>
+zifi_c_9 5198
+.__.ABS.
+_zifi_is_connected_ap
+</MODULE>
+
+<MODULE>
+zifi_c_10 5719
+.__.ABS.
+_zifi_connect_server
+</MODULE>
+
+<MODULE>
+zifi_c_11 6241
+.__.ABS.
+_zifi_disconnect_server
+</MODULE>
+
+<MODULE>
+zifi_c_12 6766
+.__.ABS.
+_zifi_is_connected_server
+</MODULE>
+
+<MODULE>
+zifi_c_13 7293
+.__.ABS.
+_zifi_get_fw_version
+</MODULE>
+
+<MODULE>
+zifi_c_14 7815
+.__.ABS.
+_zifi_get_ap_list
+</MODULE>
+
+<MODULE>
+zifi_c_15 8334
+.__.ABS.
+_zifi_rd
+</MODULE>
+
+<MODULE>
+zifi_c_16 8865
+.__.ABS.
+_zifi_wr
+</MODULE>
+
+<MODULE>
+zifi_c_17 9402
+.__.ABS.
+_zifi_wait
+</MODULE>
+
+<MODULE>
+zifi_c_18 10320
+.__.ABS.
+_zifi_rd_fifo
+</MODULE>
+
+<MODULE>
+zifi_c_19 10899
+.__.ABS.
+</MODULE>
+
+</INDEX>
+
+<FILES>
+
+<FILE>
+zifi_c_0
+<REL>
+XL2
+H 9 areas 4 global symbols
+M zifi_c_0
+O -mz80
+S _zifi_rd Ref0000
+S _zifi_wr Ref0000
+S .__.ABS. Def0000
+A _CODE size 2B flags 0 addr 0
+S _zifi_init Def0000
+A _DATA size 0 flags 0 addr 0
+A _INITIALIZED size 0 flags 0 addr 0
+A _DABS size 0 flags 8 addr 0
+A _HOME size 0 flags 0 addr 0
+A _GSINIT size 0 flags 0 addr 0
+A _GSFINAL size 0 flags 0 addr 0
+A _INITIALIZER size 0 flags 0 addr 0
+A _CABS size 0 flags 8 addr 0
+T 00 00
+R 00 00 00 00
+T 00 00 11 C7 03 D5 CD 00 00 F1 11 C7 F1 D5 CD
+R 00 00 00 00 02 07 01 00
+T 0D 00 00 00 F1 11 C7 FF D5 CD 00 00 26 C7 E3 33
+R 00 00 00 00 02 02 01 00 02 0A 01 00
+T 1B 00 CD 00 00 33 7D B7 28 04 21 01 00 C9
+R 00 00 00 00 02 03 00 00
+T 27 00
+R 00 00 00 00
+T 27 00 21 00 00 C9
+R 00 00 00 00
+</REL>
+<ADB>
+</ADB>
+</FILE>
+
+<FILE>
+zifi_c_1
+<REL>
+XL2
+H 9 areas 3 global symbols
+M zifi_c_1
+O -mz80
+S _zifi_wr Ref0000
+S .__.ABS. Def0000
+A _CODE size D flags 0 addr 0
+S _zifi_set_recv_threshold Def0000
+A _DATA size 0 flags 0 addr 0
+A _INITIALIZED size 0 flags 0 addr 0
+A _DABS size 0 flags 8 addr 0
+A _HOME size 0 flags 0 addr 0
+A _GSINIT size 0 flags 0 addr 0
+A _GSFINAL size 0 flags 0 addr 0
+A _INITIALIZER size 0 flags 0 addr 0
+A _CABS size 0 flags 8 addr 0
+T 00 00
+R 00 00 00 00
+T 00 00 21 02 00 39 56 1E C5 D5 CD 00 00 F1 C9
+R 00 00 00 00 02 0B 00 00
+</REL>
+<ADB>
+</ADB>
+</FILE>
+
+<FILE>
+zifi_c_2
+<REL>
+XL2
+H 9 areas 3 global symbols
+M zifi_c_2
+O -mz80
+S _zifi_wr Ref0000
+S .__.ABS. Def0000
+A _CODE size D flags 0 addr 0
+S _zifi_set_recv_timeout Def0000
+A _DATA size 0 flags 0 addr 0
+A _INITIALIZED size 0 flags 0 addr 0
+A _DABS size 0 flags 8 addr 0
+A _HOME size 0 flags 0 addr 0
+A _GSINIT size 0 flags 0 addr 0
+A _GSFINAL size 0 flags 0 addr 0
+A _INITIALIZER size 0 flags 0 addr 0
+A _CABS size 0 flags 8 addr 0
+T 00 00
+R 00 00 00 00
+T 00 00 21 02 00 39 56 1E C6 D5 CD 00 00 F1 C9
+R 00 00 00 00 02 0B 00 00
+</REL>
+<ADB>
+</ADB>
+</FILE>
+
+<FILE>
+zifi_c_3
+<REL>
+XL2
+H 9 areas 3 global symbols
+M zifi_c_3
+O -mz80
+S _zifi_rd Ref0000
+S .__.ABS. Def0000
+A _CODE size 9 flags 0 addr 0
+S _zifi_input_buffer_used Def0000
+A _DATA size 0 flags 0 addr 0
+A _INITIALIZED size 0 flags 0 addr 0
+A _DABS size 0 flags 8 addr 0
+A _HOME size 0 flags 0 addr 0
+A _GSINIT size 0 flags 0 addr 0
+A _GSFINAL size 0 flags 0 addr 0
+A _INITIALIZER size 0 flags 0 addr 0
+A _CABS size 0 flags 8 addr 0
+T 00 00
+R 00 00 00 00
+T 00 00 3E C0 F5 33 CD 00 00 33 C9
+R 00 00 00 00 02 07 00 00
+</REL>
+<ADB>
+</ADB>
+</FILE>
+
+<FILE>
+zifi_c_4
+<REL>
+XL2
+H 9 areas 3 global symbols
+M zifi_c_4
+O -mz80
+S _zifi_rd Ref0000
+S .__.ABS. Def0000
+A _CODE size 9 flags 0 addr 0
+S _zifi_output_buffer_free Def0000
+A _DATA size 0 flags 0 addr 0
+A _INITIALIZED size 0 flags 0 addr 0
+A _DABS size 0 flags 8 addr 0
+A _HOME size 0 flags 0 addr 0
+A _GSINIT size 0 flags 0 addr 0
+A _GSFINAL size 0 flags 0 addr 0
+A _INITIALIZER size 0 flags 0 addr 0
+A _CABS size 0 flags 8 addr 0
+T 00 00
+R 00 00 00 00
+T 00 00 3E C1 F5 33 CD 00 00 33 C9
+R 00 00 00 00 02 07 00 00
+</REL>
+<ADB>
+</ADB>
+</FILE>
+
+<FILE>
+zifi_c_5
+<REL>
+XL2
+H 9 areas 2 global symbols
+M zifi_c_5
+O -mz80
+S .__.ABS. Def0000
+A _CODE size 4 flags 0 addr 0
+S _zifi_receive Def0000
+A _DATA size 0 flags 0 addr 0
+A _INITIALIZED size 0 flags 0 addr 0
+A _DABS size 0 flags 8 addr 0
+A _HOME size 0 flags 0 addr 0
+A _GSINIT size 0 flags 0 addr 0
+A _GSFINAL size 0 flags 0 addr 0
+A _INITIALIZER size 0 flags 0 addr 0
+A _CABS size 0 flags 8 addr 0
+T 00 00
+R 00 00 00 00
+T 00 00 21 00 00 C9
+R 00 00 00 00
+</REL>
+<ADB>
+</ADB>
+</FILE>
+
+<FILE>
+zifi_c_6
+<REL>
+XL2
+H 9 areas 2 global symbols
+M zifi_c_6
+O -mz80
+S .__.ABS. Def0000
+A _CODE size 1 flags 0 addr 0
+S _zifi_send Def0000
+A _DATA size 0 flags 0 addr 0
+A _INITIALIZED size 0 flags 0 addr 0
+A _DABS size 0 flags 8 addr 0
+A _HOME size 0 flags 0 addr 0
+A _GSINIT size 0 flags 0 addr 0
+A _GSFINAL size 0 flags 0 addr 0
+A _INITIALIZER size 0 flags 0 addr 0
+A _CABS size 0 flags 8 addr 0
+T 00 00
+R 00 00 00 00
+T 00 00 C9
+R 00 00 00 00
+</REL>
+<ADB>
+</ADB>
+</FILE>
+
+<FILE>
+zifi_c_7
+<REL>
+XL2
+H 9 areas 2 global symbols
+M zifi_c_7
+O -mz80
+S .__.ABS. Def0000
+A _CODE size 3 flags 0 addr 0
+S _zifi_connect_ap Def0000
+A _DATA size 0 flags 0 addr 0
+A _INITIALIZED size 0 flags 0 addr 0
+A _DABS size 0 flags 8 addr 0
+A _HOME size 0 flags 0 addr 0
+A _GSINIT size 0 flags 0 addr 0
+A _GSFINAL size 0 flags 0 addr 0
+A _INITIALIZER size 0 flags 0 addr 0
+A _CABS size 0 flags 8 addr 0
+T 00 00
+R 00 00 00 00
+T 00 00 2E 01 C9
+R 00 00 00 00
+</REL>
+<ADB>
+</ADB>
+</FILE>
+
+<FILE>
+zifi_c_8
+<REL>
+XL2
+H 9 areas 2 global symbols
+M zifi_c_8
+O -mz80
+S .__.ABS. Def0000
+A _CODE size 3 flags 0 addr 0
+S _zifi_disconnect_ap Def0000
+A _DATA size 0 flags 0 addr 0
+A _INITIALIZED size 0 flags 0 addr 0
+A _DABS size 0 flags 8 addr 0
+A _HOME size 0 flags 0 addr 0
+A _GSINIT size 0 flags 0 addr 0
+A _GSFINAL size 0 flags 0 addr 0
+A _INITIALIZER size 0 flags 0 addr 0
+A _CABS size 0 flags 8 addr 0
+T 00 00
+R 00 00 00 00
+T 00 00 2E 01 C9
+R 00 00 00 00
+</REL>
+<ADB>
+</ADB>
+</FILE>
+
+<FILE>
+zifi_c_9
+<REL>
+XL2
+H 9 areas 2 global symbols
+M zifi_c_9
+O -mz80
+S .__.ABS. Def0000
+A _CODE size 3 flags 0 addr 0
+S _zifi_is_connected_ap Def0000
+A _DATA size 0 flags 0 addr 0
+A _INITIALIZED size 0 flags 0 addr 0
+A _DABS size 0 flags 8 addr 0
+A _HOME size 0 flags 0 addr 0
+A _GSINIT size 0 flags 0 addr 0
+A _GSFINAL size 0 flags 0 addr 0
+A _INITIALIZER size 0 flags 0 addr 0
+A _CABS size 0 flags 8 addr 0
+T 00 00
+R 00 00 00 00
+T 00 00 2E 01 C9
+R 00 00 00 00
+</REL>
+<ADB>
+</ADB>
+</FILE>
+
+<FILE>
+zifi_c_10
+<REL>
+XL2
+H 9 areas 2 global symbols
+M zifi_c_10
+O -mz80
+S .__.ABS. Def0000
+A _CODE size 3 flags 0 addr 0
+S _zifi_connect_server Def0000
+A _DATA size 0 flags 0 addr 0
+A _INITIALIZED size 0 flags 0 addr 0
+A _DABS size 0 flags 8 addr 0
+A _HOME size 0 flags 0 addr 0
+A _GSINIT size 0 flags 0 addr 0
+A _GSFINAL size 0 flags 0 addr 0
+A _INITIALIZER size 0 flags 0 addr 0
+A _CABS size 0 flags 8 addr 0
+T 00 00
+R 00 00 00 00
+T 00 00 2E 01 C9
+R 00 00 00 00
+</REL>
+<ADB>
+</ADB>
+</FILE>
+
+<FILE>
+zifi_c_11
+<REL>
+XL2
+H 9 areas 2 global symbols
+M zifi_c_11
+O -mz80
+S .__.ABS. Def0000
+A _CODE size 3 flags 0 addr 0
+S _zifi_disconnect_server Def0000
+A _DATA size 0 flags 0 addr 0
+A _INITIALIZED size 0 flags 0 addr 0
+A _DABS size 0 flags 8 addr 0
+A _HOME size 0 flags 0 addr 0
+A _GSINIT size 0 flags 0 addr 0
+A _GSFINAL size 0 flags 0 addr 0
+A _INITIALIZER size 0 flags 0 addr 0
+A _CABS size 0 flags 8 addr 0
+T 00 00
+R 00 00 00 00
+T 00 00 2E 01 C9
+R 00 00 00 00
+</REL>
+<ADB>
+</ADB>
+</FILE>
+
+<FILE>
+zifi_c_12
+<REL>
+XL2
+H 9 areas 2 global symbols
+M zifi_c_12
+O -mz80
+S .__.ABS. Def0000
+A _CODE size 3 flags 0 addr 0
+S _zifi_is_connected_server Def0000
+A _DATA size 0 flags 0 addr 0
+A _INITIALIZED size 0 flags 0 addr 0
+A _DABS size 0 flags 8 addr 0
+A _HOME size 0 flags 0 addr 0
+A _GSINIT size 0 flags 0 addr 0
+A _GSFINAL size 0 flags 0 addr 0
+A _INITIALIZER size 0 flags 0 addr 0
+A _CABS size 0 flags 8 addr 0
+T 00 00
+R 00 00 00 00
+T 00 00 2E 01 C9
+R 00 00 00 00
+</REL>
+<ADB>
+</ADB>
+</FILE>
+
+<FILE>
+zifi_c_13
+<REL>
+XL2
+H 9 areas 2 global symbols
+M zifi_c_13
+O -mz80
+S .__.ABS. Def0000
+A _CODE size 3 flags 0 addr 0
+S _zifi_get_fw_version Def0000
+A _DATA size 0 flags 0 addr 0
+A _INITIALIZED size 0 flags 0 addr 0
+A _DABS size 0 flags 8 addr 0
+A _HOME size 0 flags 0 addr 0
+A _GSINIT size 0 flags 0 addr 0
+A _GSFINAL size 0 flags 0 addr 0
+A _INITIALIZER size 0 flags 0 addr 0
+A _CABS size 0 flags 8 addr 0
+T 00 00
+R 00 00 00 00
+T 00 00 2E 01 C9
+R 00 00 00 00
+</REL>
+<ADB>
+</ADB>
+</FILE>
+
+<FILE>
+zifi_c_14
+<REL>
+XL2
+H 9 areas 2 global symbols
+M zifi_c_14
+O -mz80
+S .__.ABS. Def0000
+A _CODE size 3 flags 0 addr 0
+S _zifi_get_ap_list Def0000
+A _DATA size 0 flags 0 addr 0
+A _INITIALIZED size 0 flags 0 addr 0
+A _DABS size 0 flags 8 addr 0
+A _HOME size 0 flags 0 addr 0
+A _GSINIT size 0 flags 0 addr 0
+A _GSFINAL size 0 flags 0 addr 0
+A _INITIALIZER size 0 flags 0 addr 0
+A _CABS size 0 flags 8 addr 0
+T 00 00
+R 00 00 00 00
+T 00 00 2E 01 C9
+R 00 00 00 00
+</REL>
+<ADB>
+</ADB>
+</FILE>
+
+<FILE>
+zifi_c_15
+<REL>
+XL2
+H 9 areas 2 global symbols
+M zifi_c_15
+O -mz80
+S .__.ABS. Def0000
+A _CODE size A flags 0 addr 0
+S _zifi_rd Def0000
+A _DATA size 0 flags 0 addr 0
+A _INITIALIZED size 0 flags 0 addr 0
+A _DABS size 0 flags 8 addr 0
+A _HOME size 0 flags 0 addr 0
+A _GSINIT size 0 flags 0 addr 0
+A _GSFINAL size 0 flags 0 addr 0
+A _INITIALIZER size 0 flags 0 addr 0
+A _CABS size 0 flags 8 addr 0
+T 00 00
+R 00 00 00 00
+T 00 00 21 02 00 39 46 0E EF ED 68 C9
+R 00 00 00 00
+</REL>
+<ADB>
+</ADB>
+</FILE>
+
+<FILE>
+zifi_c_16
+<REL>
+XL2
+H 9 areas 2 global symbols
+M zifi_c_16
+O -mz80
+S .__.ABS. Def0000
+A _CODE size C flags 0 addr 0
+S _zifi_wr Def0000
+A _DATA size 0 flags 0 addr 0
+A _INITIALIZED size 0 flags 0 addr 0
+A _DABS size 0 flags 8 addr 0
+A _HOME size 0 flags 0 addr 0
+A _GSINIT size 0 flags 0 addr 0
+A _GSFINAL size 0 flags 0 addr 0
+A _INITIALIZER size 0 flags 0 addr 0
+A _CABS size 0 flags 8 addr 0
+T 00 00
+R 00 00 00 00
+T 00 00 21 02 00 39 46 23 0E EF 7E ED 79 C9
+R 00 00 00 00
+</REL>
+<ADB>
+</ADB>
+</FILE>
+
+<FILE>
+zifi_c_17
+<REL>
+XL2
+H 9 areas 2 global symbols
+M zifi_c_17
+O -mz80
+S .__.ABS. Def0000
+A _CODE size 52 flags 0 addr 0
+S _zifi_wait Def0000
+A _DATA size 0 flags 0 addr 0
+A _INITIALIZED size 0 flags 0 addr 0
+A _DABS size 0 flags 8 addr 0
+A _HOME size 0 flags 0 addr 0
+A _GSINIT size 0 flags 0 addr 0
+A _GSFINAL size 0 flags 0 addr 0
+A _INITIALIZER size 0 flags 0 addr 0
+A _CABS size 0 flags 8 addr 0
+T 00 00
+R 00 00 00 00
+T 00 00 21 F8 FF 39 F9 21 00 00 39 EB 21 0A 00 39
+R 00 00 00 00
+T 0E 00 01 04 00 ED B0
+R 00 00 00 00
+T 13 00
+R 00 00 00 00
+T 13 00 21 04 00 39 EB 21 00 00 39 01 04 00 ED B0
+R 00 00 00 00
+T 21 00 21 00 00 39 7E C6 FF 77 23 7E CE FF 77 23
+R 00 00 00 00
+T 2F 00 7E CE FF 77 23 7E CE FF 77 FD 21 04 00 FD
+R 00 00 00 00
+T 3D 00 39 FD 7E 03 FD B6 02 FD B6 01 FD B6 00 20
+R 00 00 00 00
+T 4B 00 C7 21 08 00 39 F9 C9
+R 00 00 00 00
+</REL>
+<ADB>
+</ADB>
+</FILE>
+
+<FILE>
+zifi_c_18
+<REL>
+XL2
+H 9 areas 2 global symbols
+M zifi_c_18
+O -mz80
+S .__.ABS. Def0000
+A _CODE size 10 flags 0 addr 0
+S _zifi_rd_fifo Def0000
+A _DATA size 0 flags 0 addr 0
+A _INITIALIZED size 0 flags 0 addr 0
+A _DABS size 0 flags 8 addr 0
+A _HOME size 0 flags 0 addr 0
+A _GSINIT size 0 flags 0 addr 0
+A _GSFINAL size 0 flags 0 addr 0
+A _INITIALIZER size 0 flags 0 addr 0
+A _CABS size 0 flags 8 addr 0
+T 00 00
+R 00 00 00 00
+T 00 00 21 02 00 39 5E 23 56 23 46 0E EF EB ED B2
+R 00 00 00 00
+T 0E 00 C9 C9
+R 00 00 00 00
+</REL>
+<ADB>
+</ADB>
+</FILE>
+
+<FILE>
+zifi_c_19
+<REL>
+XL2
+H 9 areas 1 global symbols
+M zifi_c_19
+O -mz80
+S .__.ABS. Def0000
+A _CODE size 0 flags 0 addr 0
+A _DATA size 0 flags 0 addr 0
+A _INITIALIZED size 0 flags 0 addr 0
+A _DABS size 0 flags 8 addr 0
+A _HOME size 0 flags 0 addr 0
+A _GSINIT size 0 flags 0 addr 0
+A _GSFINAL size 0 flags 0 addr 0
+A _INITIALIZER size 0 flags 0 addr 0
+A _CABS size 0 flags 8 addr 0
+</REL>
+<ADB>
+</ADB>
+</FILE>
+
+</FILES>
+
+</SDCCLIB>
