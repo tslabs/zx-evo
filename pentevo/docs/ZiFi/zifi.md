@@ -31,7 +31,8 @@ E.g if ZIFR was read, ZiFi data will be read from DR.
 
 | Code | Command | Description |
 | ---- | ---- | ---- |
-| 000000oi | CLRFIFO | Clear FIFOs  i: 1 - clear input FIFO, o: 1 - clear output FIFO. |
+| 000000oi | ZFCLRFIFO | Clear FIFOs for ZiFi;  i: 1 - clear input FIFO, o: 1 - clear output FIFO. |
+| 000001oi | RSCLRFIFO | Clear FIFOs for RS-232;  i: 1 - clear input FIFO, o: 1 - clear output FIFO. |
 | 11110mmm | API     | Set API mode or disable API. |
 | 11111111 | VER     | Get Version. ER returns highest supported API version. 0xFF - no API available. |
 
@@ -97,7 +98,7 @@ zifi_init:
   out (c), a
   in a, (c)
   ; select desired API mode, if need
-  ld a, mode  ; possible values are 0xF2..0xF7
+  ld a, mode  ; possible values are 0xF1..0xF7 for APIs 1..7
   out (c), a
 
 ; read 128 bytes from ZiFi
