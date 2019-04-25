@@ -14,7 +14,7 @@ if errorlevel 1 pause & exit
 
 for /f %%i in (lib.lst) do (
   echo %%i
-  sdcc -mz80 --std-sdcc11 --opt-code-speed -c %%i -o %%i.rel
+  sdcc -I../../sdk -mz80 --std-sdcc11 --opt-code-speed -c %%i -o %%i.rel
   if errorlevel 1 pause & exit
   sdcclib ../ts.lib %%i.rel
   if errorlevel 1 pause & exit

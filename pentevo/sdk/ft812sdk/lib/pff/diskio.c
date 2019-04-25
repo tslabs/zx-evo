@@ -4,7 +4,7 @@
 //
 // -------------------------------------------
 
-#include "defs.h"
+#include <defs.h>
 #include "diskio.h"
 #include "pffconf.h"
 

@@ -1,4 +1,4 @@
-#include "ft812types.h"#include "ft812.h"#include "ft812lib.h"void ft_AlphaFunc(u8 func, u8 ref)
+#include <defs.h>#include "ft812.h"#include "ft812lib.h"void ft_AlphaFunc(u8 func, u8 ref)
 {
   ft_ccmd((9UL << 24) | ((func & 7L) << 8) | ((ref & 255L) << 0));
 }

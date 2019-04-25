@@ -1,5 +1,5 @@
 
-#include "defs.h"
+#include <defs.h>
 #include "ts.h"
 #include "tslib.h"
 

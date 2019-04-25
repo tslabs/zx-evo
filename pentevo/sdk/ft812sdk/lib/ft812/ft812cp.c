@@ -1,5 +1,5 @@
 
-#include "ft812types.h"
+#include <defs.h>
 #include "ft812.h"
 #include "ft812lib.h"
 
