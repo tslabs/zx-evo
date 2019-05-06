@@ -83,6 +83,7 @@ const MID_TAB mid_tab[] =
   { 0x28, "Lexar"          },
   { 0x31, "Silicon Power"  },
   { 0x41, "Kingston"       },
+  { 0x45, "Team Group(?)"  },
   { 0x6f, "Silicon Motion" },
   { 0x70, "(?)"            },
   { 0x73, "Fujifilm(?)"    },
