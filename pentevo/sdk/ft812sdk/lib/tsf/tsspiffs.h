@@ -5,6 +5,8 @@
 extern "C" {
 #endif
 
+// #define USE_BLANK_CHECK
+
 typedef unsigned long long u64;
 typedef unsigned long      u32;
 typedef unsigned short     u16;

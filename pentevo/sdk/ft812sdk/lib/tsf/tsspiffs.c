@@ -15,7 +15,9 @@ TSF_RESULT tsf_init_chunk(TSF_CONFIG *cfg, u32 addr)
 {
   cfg->hal_erase_func(addr, cfg->block_size);
 
+#ifdef USE_BLANK_CHECK
   if (tsf_check_blank(cfg, addr, cfg->block_size) == TSF_RES_OK)
+#endif
   {
     u32 magic = TSF_MAGIC;
     cfg->hal_write_func(addr, &magic, sizeof(magic));
