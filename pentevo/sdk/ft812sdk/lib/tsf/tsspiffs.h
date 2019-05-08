@@ -5,7 +5,8 @@
 extern "C" {
 #endif
 
-// #define USE_BLANK_CHECK
+#define TSF_CHECK_BLANK             // to test block after erase
+#define TSF_CHECK_EXIST_ON_CREATE   // to look for existing filename when file is created
 
 typedef unsigned long long u64;
 typedef unsigned long      u32;
@@ -37,7 +38,8 @@ typedef enum
   TSF_RES_FILE_EXISTS,
   TSF_RES_MODE_ERROR,
   TSF_RES_BULK_FULL,
-  TSF_RES_NOT_BLANK
+  TSF_RES_NOT_BLANK,
+  TSF_RES_NO_MORE_FILES
 } TSF_RESULT;
 
 typedef enum
@@ -55,7 +57,13 @@ typedef enum
   TSF_MODE_CREATE_WRITE = TSF_MODE_CREATE | TSF_MODE_WRITE,
 } TSF_MODE;
 
-// typedefs
+typedef enum
+{
+  TSF_LIST_NEXT = 0,
+  TSF_LIST_START
+} TSF_LIST;
+
+// types
 typedef TSF_RESULT (*tsf_read_t)(u32, void*, u32);
 typedef TSF_RESULT (*tsf_write_t)(u32, const void*, u32);
 typedef TSF_RESULT (*tsf_erase_t)(u32, u32);
@@ -126,6 +134,7 @@ TSF_RESULT tsf_close(TSF_FILE*);
 TSF_RESULT tsf_seek(TSF_FILE*, u32);
 TSF_RESULT tsf_delete(TSF_VOLUME*, const char*);
 TSF_RESULT tsf_stat(TSF_VOLUME*, TSF_FILE_STAT*, const char*);
+TSF_RESULT tsf_list(TSF_VOLUME*, u8);
 
 // volume operations
 TSF_RESULT tsf_mount(TSF_CONFIG*, TSF_VOLUME*);

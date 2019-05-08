@@ -15,7 +15,7 @@ TSF_RESULT tsf_init_chunk(TSF_CONFIG *cfg, u32 addr)
 {
   cfg->hal_erase_func(addr, cfg->block_size);
 
-#ifdef USE_BLANK_CHECK
+#ifdef TSF_CHECK_BLANK
   if (tsf_check_blank(cfg, addr, cfg->block_size) == TSF_RES_OK)
 #endif
   {
@@ -173,8 +173,19 @@ TSF_RESULT tsf_create(TSF_FILE *file, const char *name)
   u32 addr;
   u8 fnlen = (u8)strlen(name);
 
-  if (tsf_search(vol, &addr, name) != TSF_RES_FILE_NOT_FOUND)
-    return TSF_RES_FILE_EXISTS;
+#ifdef TSF_CHECK_EXIST_ON_CREATE
+  {
+    TSF_RESULT rc = tsf_search(vol, &addr, name);
+
+    if (rc != TSF_RES_FILE_NOT_FOUND)
+    {
+      if (rc == TSF_RES_OK)
+        return TSF_RES_FILE_EXISTS;
+      else
+        return rc;
+    }
+  }
+#endif
 
   if (tsf_take_new_chunk(vol, TSF_CHUNK_HEAD, &addr) != TSF_RES_OK)
     return TSF_RES_BULK_FULL;
@@ -311,4 +322,37 @@ TSF_RESULT tsf_stat(TSF_VOLUME *vol, TSF_FILE_STAT *stat, const char *name)
 
   vol->cfg->hal_read_func(addr + sizeof(TSF_CHUNK) + offsetof(TSF_HDR, size), &stat->size, sizeof(stat->size));
   return TSF_RES_OK;
+}
+
+TSF_RESULT tsf_list(TSF_VOLUME *vol, u8 flag)
+{
+  static u32 last_addr;
+  TSF_CONFIG *cfg = vol->cfg;
+
+  if (flag == TSF_LIST_START)
+  {
+    last_addr = cfg->bulk_start;
+    return TSF_RES_OK;
+  }
+
+  for (u32 addr = last_addr; addr < (cfg->bulk_start + cfg->bulk_size); addr += cfg->block_size)
+  {
+    TSF_CHUNK chunk;
+    cfg->hal_read_func(addr, &chunk, sizeof(TSF_CHUNK));
+
+    if ((chunk.magic != TSF_MAGIC) || (chunk.type != TSF_CHUNK_HEAD))
+      continue;
+
+    u8 fnlen;
+    cfg->hal_read_func(addr + sizeof(TSF_CHUNK) + offsetof(TSF_HDR, fnlen), &fnlen, sizeof(fnlen));
+    fnlen = min(fnlen, cfg->buf_size - 1);
+    cfg->hal_read_func(addr + sizeof(TSF_CHUNK) + sizeof(TSF_HDR), cfg->buf, fnlen);
+    cfg->buf[fnlen] = 0;
+
+    last_addr = addr + cfg->block_size;
+
+    return TSF_RES_OK;
+  }
+
+  return TSF_RES_NO_MORE_FILES;
 }
