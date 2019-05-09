@@ -111,7 +111,7 @@ typedef struct
   u32 size;             // file size
   u32 seek;             // current pointer
   u32 chunk_addr;       // current chunk address
-  u16 chunk_offset;     // current offset in chunk
+  u32 chunk_offset;     // current offset in chunk
   u32 prev_chunk_addr;  // address of the previous chunk
   u32 next_chunk_addr;  // address of the next chunk
   u8 mode;
