@@ -13,7 +13,7 @@ TSF_RESULT tsf_format(TSF_CONFIG *cfg)
 
 TSF_RESULT tsf_init_chunk(TSF_CONFIG *cfg, u32 addr)
 {
-  cfg->hal_erase_func(addr, cfg->block_size);
+  cfg->hal_erase_func(addr);
 
 #ifdef TSF_CHECK_BLANK
   TSF_RESULT rc = tsf_check_blank(cfg, addr, cfg->block_size);

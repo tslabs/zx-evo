@@ -45,7 +45,7 @@ enum
 enum
 {
   SPIFL_STAT_NULL = 0x00,
-  SPIFL_STAT_BSY  = 0x01,
+  SPIFL_STAT_BUSY = 0x01,
   SPIFL_STAT_ERR  = 0x02
 };
 
@@ -76,14 +76,14 @@ enum
   SF_CMD_WREN   = 0x06,
   SF_CMD_WRDIS  = 0x04,
   SF_CMD_ERBULK = 0xC7,
-  SF_CMD_ERSECT = 0xD8
+  SF_CMD_ERSECT = 0x20
 };
 
 /** SPI Flash status. */
 enum
 {
-  SF_STAT_MASK_WIP  = 0x01,
-  SF_STAT_MASK_BPRT = 0x1C  // for 4-128 Mbit, add here other flashes
+  SF_STAT_BUSY  = 0x01,
+  SF_STAT_WEL   = 0x02
 };
 
 /** SF read. */

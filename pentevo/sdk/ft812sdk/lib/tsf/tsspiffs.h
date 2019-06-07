@@ -6,7 +6,7 @@ extern "C" {
 #endif
 
 #define TSF_CHECK_BLANK             // to test block after erase
-#define TSF_CHECK_EXIST_ON_CREATE   // to look for existing filename when file is created
+// #define TSF_CHECK_EXIST_ON_CREATE   // to look for existing filename when file is created
 
 typedef unsigned long long u64;
 typedef unsigned long      u32;
@@ -66,9 +66,11 @@ typedef enum
 // types
 typedef TSF_RESULT (*tsf_read_t)(u32, void*, u32);
 typedef TSF_RESULT (*tsf_write_t)(u32, const void*, u32);
-typedef TSF_RESULT (*tsf_erase_t)(u32, u32);
+typedef TSF_RESULT (*tsf_erase_t)(u32);
 
+#ifdef _MSC_VER
 #pragma pack(1)
+#endif
 
 typedef struct
 {
@@ -123,7 +125,9 @@ typedef struct
   u32 size;
 } TSF_FILE_STAT;
 
+#ifdef _MSC_VER
 #pragma pack()
+#endif
 
 // functions
 // file operations

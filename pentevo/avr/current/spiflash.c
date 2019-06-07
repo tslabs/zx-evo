@@ -9,8 +9,6 @@
 #include "spiflash.h"
 
 u32 sf_addr = 0;
-u8 sf_state = SF_ST_NONE;
-u8 sfi_wr_en = FALSE;
 
 void sfi_cs_off(void)
 {
@@ -78,15 +76,10 @@ u8 sfi_recv(void)
     return d;
 }
 
-void sfi_cmd_h(u8 c)
+void sfi_cmd_ha(u8 c)
 {
     sfi_cs_on();
     sfi_send(c);
-}
-
-void sfi_cmd_ha(u8 c)
-{
-    sfi_cmd_h(c);
     sfi_send((u8)(sf_addr >> 16));
     sfi_send((u8)(sf_addr >> 8));
     sfi_send((u8)(sf_addr));
@@ -94,13 +87,15 @@ void sfi_cmd_ha(u8 c)
 
 void sfi_cmd(u8 c)
 {
-    sfi_cmd_h(c);
+    sfi_cs_on();
+    sfi_send(c);
     sfi_cs_off();
 }
 
 u8 sfi_cmd_r(u8 c)
 {
-    sfi_cmd_h(c);
+    sfi_cs_on();
+    sfi_send(c);
     c = sfi_recv();
     sfi_cs_off();
     return c;
@@ -108,52 +103,23 @@ u8 sfi_cmd_r(u8 c)
 
 void sfi_cmd_w(u8 c, u8 d)
 {
-    sfi_cmd_h(c);
+    sfi_cs_on();
+    sfi_send(c);
     sfi_send(d);
     sfi_cs_off();
 }
 
 void sfi_wren(void)
 {
-    if (!sfi_wr_en)
-    {
-        if (sfi_cmd_r(SF_CMD_RDSTAT) & SF_STAT_MASK_BPRT)
-        {
-            sfi_cmd(SF_CMD_WREN);
-            sfi_cmd_w(SF_CMD_WRSTAT, 0);
-        }
-
-        sfi_wr_en = TRUE;
-    }
+    sfi_cmd(SF_CMD_WREN);
 }
 
 u8 sf_status(void)
 {
-    switch (sf_state)
-    {
-        case SF_ST_IDLE:
-            return SPIFL_STAT_NULL;
-
-        case SF_ST_BUSY:
-            return SPIFL_STAT_BSY;
-
-        case SF_ST_FBUSY:
-            if (sfi_cmd_r(SF_CMD_RDSTAT) & SF_STAT_MASK_WIP)
-                return SPIFL_STAT_BSY;
-            else
-            {
-                sf_state = SF_ST_IDLE;
-                return SPIFL_STAT_NULL;
-            }
-
-        case SF_ST_ERR:
-            sf_state = SF_ST_IDLE;
-            sfi_cs_off();
-            return SPIFL_STAT_ERR;
-
-        default:
-            return SPIFL_STAT_NULL;
-    }
+    if (sfi_cmd_r(SF_CMD_RDSTAT) & SF_STAT_BUSY)
+        return SPIFL_STAT_BUSY;
+    else
+        return SPIFL_STAT_NULL;
 }
 
 // Execute SF command
@@ -164,58 +130,43 @@ void sf_command(u8 cmd)
         case SPIFL_CMD_ENA:
             sfi_enable();
         break;
-        
+
         case SPIFL_CMD_DIS:
             sfi_disable();
         break;
-        
+
         case SPIFL_CMD_END:
             sfi_cs_off();
-            sf_state = SF_ST_IDLE;
-        return;
-    }
-
-    if (sf_state == SF_ST_FBUSY)
-    {
-        if (!(sfi_cmd_r(SF_CMD_RDSTAT) & SF_STAT_MASK_WIP))
-            sf_state = SF_ST_IDLE;
-    }
-
-    if (sf_state != SF_ST_IDLE)
         return;
 
-    switch (cmd)
-    {
         case SPIFL_CMD_ID:
-            sfi_cmd_ha(SF_CMD_RDID);
-            sf_state = SF_ST_BUSY;
+            sfi_cmd_ha(SF_CMD_RDID);  // 3 dummy bytes
         break;
 
         case SPIFL_CMD_READ:
             sfi_cmd_ha(SF_CMD_RD);
-            sf_state = SF_ST_BUSY;
+            // must be terminated after data transfer
         break;
 
         case SPIFL_CMD_WRITE:
             sfi_wren();
             sfi_cmd_ha(SF_CMD_WR);
-            sf_state = SF_ST_FBUSY;
+            // must be terminated after data transfer
         break;
 
         case SPIFL_CMD_ERSBLK:
             sfi_wren();
             sfi_cmd(SF_CMD_ERBULK);
-            sf_state = SF_ST_FBUSY;
         break;
 
         case SPIFL_CMD_ERSSEC:
             sfi_wren();
             sfi_cmd_ha(SF_CMD_ERSECT);
-            sf_state = SF_ST_FBUSY;
+            sfi_cs_off();
         break;
 
         default:
-            sf_state = SF_ST_IDLE;
+        break;
     }
 }
 
