@@ -60,7 +60,7 @@ After READ command has been issued, data can be transferred for unlimited number
 
 WRITE command can only write data within pages of 256 bytes. Start address can be any, but the data for one command cannot cross the 256 bytes boundary.
 
-After the execution of WRITE, ERSBLK and ERSSEC commands (in a case of WRITE - after the subsequent END), STAT register must be polled until BUSY status asserted.
+After the execution of WRITE, ERSBLK and ERSSEC commands (in a case of WRITE - after the subsequent END), STAT register must be polled while BUSY status asserted.
 
 ## Status
 
@@ -69,6 +69,8 @@ After the execution of WRITE, ERSBLK and ERSSEC commands (in a case of WRITE - a
 | IDLE | 0x00 | Idle |
 | BUSY | 0x01 | Busy |
 | ERR | 0x02 | Error |
+
+Current SFI status is read from the STAT register.
 
 ## Access scenario
 
