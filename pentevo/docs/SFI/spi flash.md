@@ -30,7 +30,7 @@ See GluClock manual for the details of GC ports access.
 
 STAT register returns current SFI state. See below.
 
-Address must be set to A0..A2 registers before any command requiring addressing (READ, WRITE, ERSSEC). A0 stand for the less significant address byte and A2 for the most significant.
+Address must be set to A0..A2 registers before any command requiring addressing (READ, WRITE, ERSSEC). A0 stands for the less significant address byte and A2 for the most significant. The internal state of address is preserved between commands and incremented after each transferred byte.
 
 DATA register is used to send or receive data byte in data transfers.
 
@@ -58,7 +58,7 @@ Commands READ and WRITE start data transfer and must be terminated with END comm
 
 After READ command has been issued, data can be transferred for unlimited number of bytes. The read address is incremented automatically after each byte read.
 
-WRITE command can only write data within pages of 256 bytes. Start address can be any, but the data for one command cannot cross the 256 bytes boundary.
+WRITE command can only write data within pages of 256 bytes. Start address can be any, but the data for a single command cannot cross the 256 bytes boundary. After 256 (or less) bytes have been written the END command must be executed.
 
 After the execution of WRITE, ERSBLK and ERSSEC commands (in a case of WRITE - after the subsequent END), STAT register must be polled while BUSY status asserted.
 
@@ -74,7 +74,7 @@ Current SFI status is read from the STAT register.
 
 ## Access scenario
 
-To use SPI Flash Interface do the following steps.
+To use SPI Flash Interface perform the following steps.
 
 | Step | Activity | Assembly pseudocode |
 | ---- | ---- | ---- |
