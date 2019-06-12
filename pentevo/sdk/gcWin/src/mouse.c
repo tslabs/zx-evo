@@ -32,17 +32,16 @@ void gcMouseInit(u8 gfxpage, u8 palsel) __naked
 ;; prepare sprite
     ld hl,#mouse_img
     ld de,#0xC000
-    ld b,#3*16
-0$: push bc
-    push de
+    ld a,#3*16
+0$: push de
     ldi
     ldi
     ldi
     ldi
     pop de
-    pop bc
     inc d
-    djnz 0$
+    dec a
+    jr nz,0$
 
     ld bc,#0xFBDF
     in a,(c)
@@ -71,9 +70,6 @@ _mouse_mmb::
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 mouse_palsel:
     .db 0
-
-mouse_tile_nums:
-    .dw 0,128,256,384
 
 mouse_img:
     .db 0x80,0x00,0x00,0x00
@@ -158,7 +154,7 @@ void gcMouseUpdate(u8 spr) __naked __z88dk_fastcall
 {
     spr;        // to avoid SDCC warning
 
-    __asm
+  __asm
     push hl
 
     ld bc,#0xFADF
@@ -241,7 +237,7 @@ void gcMouseUpdate(u8 spr) __naked __z88dk_fastcall
     inc de
     ld a,h
     and #0x01
-    or #0x22
+    or #0x40 | #0x20 | #0x02
     ld (de),a
     inc de
     ld hl,(_mouse_x)
@@ -253,17 +249,15 @@ void gcMouseUpdate(u8 spr) __naked __z88dk_fastcall
     ld (de),a
     inc de
 
+; calc tile number (*128)
     pop hl
-    ld h,#0
-    add hl,hl
-    ld bc,#mouse_tile_nums
-    add hl,bc
-    ld a,(hl)
+    xor a
+    srl l
+    rra
     ld (de),a
-    inc hl
     inc de
     ld a,(mouse_palsel)
-    or (hl)
+    or l
     ld (de),a
 
 ; copy sprite descriptor to SFILE
@@ -286,5 +280,5 @@ void gcMouseUpdate(u8 spr) __naked __z88dk_fastcall
     ld a,#0x0E          ;W0RAM | W0MAP_N | W0WE
     out (c),a
     ret
-    __endasm;
+  __endasm;
 }

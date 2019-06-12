@@ -2,6 +2,7 @@
 //::                     Window System                       ::
 //::               by dr_max^gc (c)2018-2019                 ::
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+#include <string.h>
 #include "defs.h"
 #include "gcWin.h"
 
@@ -468,13 +469,14 @@ GC_DITEM_t *dlgItemList[4];
         btnOk.y = i + 2;
         btnOk.width = 10;
         btnOk.hight = 0;
+        *((u8*)(btnOk.flags)) = 0;
         btnOk.select = 0;
         btnOk.name = "Ok";
         break;
 
     case MB_OKCANCEL:
-        dlg.act_count = 2;
         dlg.all_count = 3;
+        dlg.act_count = 2;
         dlgItemList[0] = &btnOk;
         dlgItemList[1] = &btnCancel;
         dlgItemList[2] = &txt;
@@ -485,6 +487,7 @@ GC_DITEM_t *dlgItemList[4];
         btnOk.y = i + 2;
         btnOk.width = 10;
         btnOk.hight = 0;
+        *((u8*)(btnOk.flags)) = 0;
         btnOk.select = 0;
         btnOk.name = "Ok";
 
@@ -494,13 +497,14 @@ GC_DITEM_t *dlgItemList[4];
         btnCancel.y = i + 2;
         btnCancel.width = 10;
         btnCancel.hight = 0;
+        *((u8*)(btnCancel.flags)) = 0;
         btnCancel.select = 0;
         btnCancel.name = "Cancel";
         break;
 
     case MB_YESNO:
-        dlg.act_count = 2;
         dlg.all_count = 3;
+        dlg.act_count = 2;
         dlgItemList[0] = &btnOk;
         dlgItemList[1] = &btnCancel;
         dlgItemList[2] = &txt;
@@ -511,6 +515,7 @@ GC_DITEM_t *dlgItemList[4];
         btnOk.y = i + 2;
         btnOk.width = 11;
         btnOk.hight = 0;
+        *((u8*)(btnOk.flags)) = 0;
         btnOk.select = 0;
         btnOk.name = "Yes";
 
@@ -520,13 +525,14 @@ GC_DITEM_t *dlgItemList[4];
         btnCancel.y = i + 2;
         btnCancel.width = 10;
         btnCancel.hight = 0;
+        *((u8*)(btnCancel.flags)) = 0;
         btnCancel.select = 0;
         btnCancel.name = "No";
         break;
 
     case MB_RETRYABORTIGNORE:
-        dlg.act_count = 3;
         dlg.all_count = 4;
+        dlg.act_count = 3;
         dlgItemList[0] = &btnRetry;
         dlgItemList[1] = &btnAbort;
         dlgItemList[2] = &btnIgnore;
@@ -538,6 +544,7 @@ GC_DITEM_t *dlgItemList[4];
         btnRetry.y = i + 2;
         btnRetry.width = 11;
         btnRetry.hight = 0;
+        *((u8*)(btnRetry.flags)) = 0;
         btnRetry.select = 0;
         btnRetry.name = "Retry";
 
@@ -547,6 +554,7 @@ GC_DITEM_t *dlgItemList[4];
         btnAbort.y = i + 2;
         btnAbort.width = 11;
         btnAbort.hight = 0;
+        *((u8*)(btnAbort.flags)) = 0;
         btnAbort.select = 0;
         btnAbort.name = "Abort";
 
@@ -556,6 +564,7 @@ GC_DITEM_t *dlgItemList[4];
         btnIgnore.y = i + 2;
         btnIgnore.width = 10;
         btnIgnore.hight = 0;
+        *((u8*)(btnIgnore.flags)) = 0;
         btnIgnore.select = 0;
         btnIgnore.name = "Ignore";
         break;
