@@ -207,10 +207,10 @@ typedef enum
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 typedef enum
 {
-    BYTE    = 0,
-    WORD    = 1,
-    DWORD   = 2,
-    QWORD   = 3     // not yet
+    GCIVS_BYTE    = 0,
+    GCIVS_WORD    = 1,
+    GCIVS_DWORD   = 2,
+    GCIVS_QWORD   = 3     // not yet
 }  GCIV_SIZE_t;
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -218,9 +218,9 @@ typedef enum
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 typedef enum
 {
-    DEC     = 0,
-    HEX     = 1,
-    BIN     = 2     // not yet
+    GCIVT_DEC     = 0,
+    GCIVT_HEX     = 1,
+    GCIVT_BIN     = 2     // not yet
 } GCIV_TYPE_t;
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -515,6 +515,7 @@ u8 gcFindNextTabItem(GC_DIALOG_t *dlg) __naked __z88dk_fastcall;
 u8 gcFindPrevTabItem(GC_DIALOG_t *dlg) __naked __z88dk_fastcall;
 u8 gcFindNextItem(GC_DIALOG_t *dlg) __naked __z88dk_fastcall;
 u8 gcFindPrevItem(GC_DIALOG_t *dlg) __naked __z88dk_fastcall;
+u8 gcFindHotkey(GC_DIALOG_t *dlg) __naked __z88dk_fastcall;
 
 u8 gcFindClickItem(GC_DIALOG_t *dlg) __naked __z88dk_fastcall;
 
