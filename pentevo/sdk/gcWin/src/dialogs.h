@@ -55,7 +55,7 @@ GC_WINDOW_t wndMouseTest =
     /*id*/          0,
     /*type*/        GC_WND_NOMENU,
     /*xy*/          0,0,
-    /*wh*/          30,12,
+    /*wh*/          30,18,
     /*attr*/        (WIN_COL_WHITE<<4) | WIN_COL_BRIGHT_WHITE,
     /*frame_type*/  GC_FRM_SINGLE,
     /*frame_attr*/  (WIN_COL_WHITE<<4) | WIN_COL_BRIGHT_WHITE,
@@ -343,10 +343,10 @@ const GC_DITEM_t itmItemCB11 =
 /*wh*/          0,0,
 /*flags*/       {0,0,0,0,0,0,0,1},
 /*vartype*/     {0,0,0,0,0,0},
-/*hotkey*/      0,
+/*hotkey*/      '1',
 /*select*/      0,
 /*var*/         (u8)&itmVarCB11,
-/*name*/        MARK_LINK"\x0""1.1",
+/*name*/        MARK_LINK"\x0""1."INK_BRIGHT_YELLOW"1",
 /*handler*/     0
 };
 
@@ -358,10 +358,10 @@ const GC_DITEM_t itmItemCB12 =
 /*wh*/          0,0,
 /*flags*/       {0,0,0,0,0,0,0,0},
 /*vartype*/     {0,0,0,0,0,0},
-/*hotkey*/      0,
+/*hotkey*/      '2',
 /*select*/      0,
 /*var*/         (u8)&itmVarCB12,
-/*name*/        MARK_LINK"\x0""1.2",
+/*name*/        MARK_LINK"\x0""1."INK_BRIGHT_YELLOW"2",
 /*handler*/     0
 };
 
@@ -373,10 +373,10 @@ const GC_DITEM_t itmItemCB3 =
 /*wh*/          0,0,
 /*flags*/       {0,0,0,0,0,0,0,0},
 /*vartype*/     {0,0,0,0,0,0},
-/*hotkey*/      0,
+/*hotkey*/      'r',
 /*select*/      0,
 /*var*/         (u8)&itmVarCB3,
-/*name*/        "Enable radiobuttons",
+/*name*/        "Enable "INK_BRIGHT_YELLOW"r"INK_BLACK"adiobuttons",
 /*handler*/     func_cb3
 };
 
@@ -418,10 +418,10 @@ GC_DITEM_t itmItemCB4 =
 /*wh*/          0,0,
 /*flags*/       {0,0,0,0,0,0,0,0},
 /*vartype*/     {0,0,0,0,0,0},
-/*hotkey*/      0,
+/*hotkey*/      'e',
 /*select*/      0,
 /*var*/         (u8)&itmVarCB4,
-/*name*/        "Enable edit",
+/*name*/        "Enable "INK_BRIGHT_YELLOW"e"INK_BLACK"dit",
 /*handler*/     func_cb4
 };
 
@@ -539,10 +539,10 @@ const GC_DITEM_t itmItemBtnOK =
 /*wh*/          20,0,
 /*flags*/       {0,0,0,0,0,0,0,1},
 /*vartype*/     {0,0,0,0,0,0},
-/*hotkey*/      0,
+/*hotkey*/      'o',
 /*select*/      0,
 /*var*/         0,
-/*name*/        "Ok",
+/*name*/        PAPER_BRIGHT_WHITE INK_BRIGHT_RED"O"INK_BLACK"k",
 /*handler*/     0
 };
 
@@ -554,10 +554,10 @@ const GC_DITEM_t itmItemBtnCN =
 /*wh*/          20,0,
 /*flags*/       {0,0,0,0,0,0,0,1},
 /*vartype*/     {0,0,0,0,0,0},
-/*hotkey*/      0,
+/*hotkey*/      'c',
 /*select*/      0,
 /*var*/         0,
-/*name*/        "Cancel",
+/*name*/        PAPER_BRIGHT_WHITE INK_BRIGHT_RED"C"INK_BLACK"ancel",
 /*handler*/     0
 };
 

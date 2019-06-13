@@ -397,9 +397,11 @@ BTN_TYPE_t gcExecuteWindow(GC_WINDOW_t *wnd)
     case GC_WND_SVMENU:
         rc = gcSimpleVMenu((GC_SVMENU_t*)ptr);
     break;
+
     case GC_WND_DIALOG:
         rc = gcDialog((GC_DIALOG_t*)ptr);
     break;
+
     default:
     break;
     }
@@ -470,8 +472,9 @@ GC_DITEM_t *dlgItemList[4];
         btnOk.width = 10;
         btnOk.hight = 0;
         *((u8*)(btnOk.flags)) = 0;
+        btnOk.hotkey = 'o';
         btnOk.select = 0;
-        btnOk.name = "Ok";
+        btnOk.name = PAPER_BRIGHT_WHITE INK_BRIGHT_RED"O"INK_BLACK"k";
         break;
 
     case MB_OKCANCEL:
@@ -488,8 +491,9 @@ GC_DITEM_t *dlgItemList[4];
         btnOk.width = 10;
         btnOk.hight = 0;
         *((u8*)(btnOk.flags)) = 0;
+        btnOk.hotkey = 'o';
         btnOk.select = 0;
-        btnOk.name = "Ok";
+        btnOk.name = PAPER_BRIGHT_WHITE INK_BRIGHT_RED"O"INK_BLACK"k";
 
         btnCancel.type = DI_BUTTON;
         btnCancel.id = BUTTON_CANCEL;
@@ -498,8 +502,9 @@ GC_DITEM_t *dlgItemList[4];
         btnCancel.width = 10;
         btnCancel.hight = 0;
         *((u8*)(btnCancel.flags)) = 0;
+        btnCancel.hotkey = 'c';
         btnCancel.select = 0;
-        btnCancel.name = "Cancel";
+        btnCancel.name = PAPER_BRIGHT_WHITE INK_BRIGHT_RED"C"INK_BLACK"ancel";
         break;
 
     case MB_YESNO:
@@ -516,8 +521,9 @@ GC_DITEM_t *dlgItemList[4];
         btnOk.width = 11;
         btnOk.hight = 0;
         *((u8*)(btnOk.flags)) = 0;
+        btnOk.hotkey = 'y';
         btnOk.select = 0;
-        btnOk.name = "Yes";
+        btnOk.name = PAPER_BRIGHT_WHITE INK_BRIGHT_RED"Y"INK_BLACK"es";
 
         btnCancel.type = DI_BUTTON;
         btnCancel.id = BUTTON_NO;
@@ -526,8 +532,9 @@ GC_DITEM_t *dlgItemList[4];
         btnCancel.width = 10;
         btnCancel.hight = 0;
         *((u8*)(btnCancel.flags)) = 0;
+        btnCancel.hotkey = 'n';
         btnCancel.select = 0;
-        btnCancel.name = "No";
+        btnCancel.name = PAPER_BRIGHT_WHITE INK_BRIGHT_RED"N"INK_BLACK"o";
         break;
 
     case MB_RETRYABORTIGNORE:
@@ -545,8 +552,9 @@ GC_DITEM_t *dlgItemList[4];
         btnRetry.width = 11;
         btnRetry.hight = 0;
         *((u8*)(btnRetry.flags)) = 0;
+        btnRetry.hotkey = 'r';
         btnRetry.select = 0;
-        btnRetry.name = "Retry";
+        btnRetry.name = PAPER_BRIGHT_WHITE INK_BRIGHT_RED"R"INK_BLACK"etry";
 
         btnAbort.type = DI_BUTTON;
         btnAbort.id = BUTTON_ABORT;
@@ -555,8 +563,9 @@ GC_DITEM_t *dlgItemList[4];
         btnAbort.width = 11;
         btnAbort.hight = 0;
         *((u8*)(btnAbort.flags)) = 0;
+        btnAbort.hotkey = 'a';
         btnAbort.select = 0;
-        btnAbort.name = "Abort";
+        btnAbort.name = PAPER_BRIGHT_WHITE INK_BRIGHT_RED"A"INK_BLACK"bort";
 
         btnIgnore.type = DI_BUTTON;
         btnIgnore.id = BUTTON_IGNORE;
@@ -565,8 +574,9 @@ GC_DITEM_t *dlgItemList[4];
         btnIgnore.width = 10;
         btnIgnore.hight = 0;
         *((u8*)(btnIgnore.flags)) = 0;
+        btnIgnore.hotkey = 'i';
         btnIgnore.select = 0;
-        btnIgnore.name = "Ignore";
+        btnIgnore.name = PAPER_BRIGHT_WHITE INK_BRIGHT_RED"I"INK_BLACK"gnore";
         break;
 
     default:
@@ -860,6 +870,50 @@ u8 gcFindItem(GC_DIALOG_t *dlg) __naked __z88dk_fastcall
   __endasm;
 }
 
+u8 gcFindHotkey(GC_DIALOG_t *dlg) __naked __z88dk_fastcall
+{
+    dlg;                    // to avoid SDCC warning
+
+  __asm
+    push ix
+
+    MAC_LD_IXHL             ; IX - dialog descriptor
+
+    xor a
+0$: push af
+    push ix
+    call get_dialog_item_addr
+    MAC_LD_IXHL             ; IX - dialog item descriptor
+
+;; check GREY bit
+    ld a,<#di_flags (ix)
+    and #dif_grey_mask
+    jr nz,1$
+
+    ld a,(lastkey)
+    or a
+    jr z,1$
+    ld c,a
+    ld a,<#di_hotkey (ix)
+    cp c
+    jr nz,1$
+    pop ix
+    pop af
+    ld l,a
+    pop ix
+    ret
+
+1$: pop ix
+    pop af
+    inc a
+    cp <#dlg_act_count (ix)
+    jr nz,0$
+    ld l,#0xFF
+    pop ix
+    ret
+  __endasm;
+}
+
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 u8 gcDialog(GC_DIALOG_t *dlg) __naked __z88dk_fastcall
 {
@@ -914,6 +968,14 @@ dialog_lp1:
     jp nz,dialog_select_mouse
 
     call _gcGetKey
+    push hl
+
+    ld hl,(_current_dialog_ptr)
+    call _gcFindHotkey
+    ld a,l
+    cp #0xFF
+    pop hl
+    jp nz,dialog_select_hotkey
 
     ld a,<#dlg_flag (ix)
     and #dlgf_cursor_mask
@@ -969,6 +1031,35 @@ get_dialog_item_addr:
     MAC_LDF_HLHL
     pop de
     ret
+;;:::::::::::::::::::::::::::::
+dialog_select_hotkey:
+    pop hl
+;; HL - dialog item address
+    push af
+    ld a,<#dlg_current (ix)
+    call get_dialog_item_addr
+    call _gcRestoreDialogCursor
+    pop af
+    ld <#dlg_current (ix),a
+    call get_dialog_item_addr
+;; store item address
+    push hl
+;;
+    call _gcPrintDialogCursor
+
+    ex (sp),ix
+;; now IX - item address
+    ld a,<#di_type (ix)
+;; exchange back
+    ex (sp),ix
+
+    cp #DI_EDIT
+    jp z,dialog_ent
+    cp #DI_BUTTON
+    jr z,dialog_ent
+    cp #DI_LISTBOX
+    jr z,dialog_ent
+    jp dialog_sp
 
 ;;:::::::::::::::::::::::::::::
 dialog_select_mouse:
@@ -1688,12 +1779,14 @@ void gcPrintDialogCursor(GC_DITEM_t *ditm) __naked __z88dk_fastcall
 
     ld b,<#di_width (ix)
 1$: call get_attr
-    and #0xF0
+    and #0x0F
     ld c,a
     ld a,<#di_type (ix)
     cp #DI_BUTTON
     jr nz,2$
     ld a,(cfg_btn_focus_attr)
+    and #0xF0
+    or c
     jr 3$
 2$: cp #DI_LISTBOX
     jr nz,4$
