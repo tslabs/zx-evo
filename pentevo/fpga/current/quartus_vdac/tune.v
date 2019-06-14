@@ -18,5 +18,6 @@
 // `define AUTO_INT     // auto-incremented Frame Interrpt
 
 // `define FDR        // FDD Ripper version
+// `define DISABLE_TSU  // use together ^^^
 
 // `define PENT_312    // for Pentagon 71680 tacts emulation with 312 video lines
