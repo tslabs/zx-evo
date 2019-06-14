@@ -12,6 +12,7 @@ typedef signed long s32;
 typedef signed long long    s64;
 typedef u8 bool;
 typedef void (*TASK)();
+typedef void (*func_t)();
 
 // macros
 #define false 0
