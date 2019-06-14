@@ -252,7 +252,6 @@ module video_top (
     .sgpage       (sgpage)
 );
 
-
   video_mode video_mode
   (
     .clk          (clk),
@@ -260,7 +259,13 @@ module video_top (
     .c3           (c3),
     .vpage        (vpage),
     .vconf        (vconf),
+`ifdef FORCE_60HZ
+    .v60hz        (1'b1),
+`elsif ENABLE_60HZ
     .v60hz        (v60hz),
+`else
+    .v60hz        (1'b0),
+`endif
     .fetch_sel    (fetch_sel),
     .fetch_bsl    (fetch_bsl),
     .fetch_cnt    (scnt),
@@ -379,7 +384,7 @@ module video_top (
     .line      (lcount),
     .v_ts      (v_ts),
 
-`ifdef FDR
+`ifdef DISABLE_TSU
      .tsconf        (0),
 `else
     .tsconf         (tsconf),

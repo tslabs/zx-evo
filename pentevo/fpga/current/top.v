@@ -202,7 +202,11 @@ module top(
   assign ide_rs_n = rst_n;
 `endif
 
-  wire [1:0] turbo =  sysconf[1:0];
+`ifdef FORCE_14MHZ
+  wire [1:0] turbo = 2'b10;
+`else
+  wire [1:0] turbo = sysconf[1:0];
+`endif
   wire [3:0] cacheconf;
   wire [7:0] border;
   wire int_start_lin;
@@ -633,8 +637,7 @@ module top(
     .hsync(vhsync),
     .vsync(vvsync),
     .csync(vcsync),
-    // .cfg_60hz(cfg_60hz),        // uncomment to enable 60Hz VGA timings
-    .cfg_60hz(1),
+    .cfg_60hz(cfg_60hz),
     .vga_on(cfg_vga_on),
     .border_wr(border_wr),
     .zborder_wr(zborder_wr),
