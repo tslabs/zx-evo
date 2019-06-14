@@ -275,36 +275,37 @@ keytab:
     .ascii  "}{\|~/?`:"
     .db     0
 ;; cyrillic cp866 table
-    .db     0xA8,0XE2,0xEC,0,KEY_SPACE              ; ить
-    .db     0xE0,0xAE,0xAB,0xA4,KEY_ENTER           ; ролд
-    .db     0xAD,0xA3,0xE8,0xE9,0xA7                ; нгшщз
+    .db     0xA8,0XE2,0xEC,0,KEY_SPACE              ; √®√≤√Љ
+    .db     0xE0,0xAE,0xAB,0xA4,KEY_ENTER           ; √∞√Ѓ√Ђ√§
+    .db     0xAD,0xA3,0xE8,0xE9,0xA7                ; √≠√£√Є√є√І
     .ascii  "6789054321"
-    .db     0xA5,0xAA,0xE3,0xE6,0xA9                ; екуцй
-    .db     0xAF,0xA0,0xA2,0xEB,0xE4                ; павыф
-    .db     0xAC,0xE1,0xE7,0xEF,0x00                ; мсч€
-    .db     0x88,0x92,0x9C,0,KEY_BREAK              ; »“№
-    .db     0x90,0x8E,0x8B,0x84,KEY_CSENT           ; –ќЋƒ
-    .db     0x8D,0x83,0x98,0x99,0x87                ; Ќ√Ўў«
+    .db     0xA5,0xAA,0xE3,0xE6,0xA9                ; √•√™√≥√ґ√©
+    .db     0xAF,0xA0,0xA2,0xEB,0xE4                ; √ѓ√†√Ґ√ї√і
+    .db     0xAC,0xE1,0xE7,0xEF,0x00                ; √ђ√±√Ј√њ
+    .db     0x88,0x92,0x9C,0,KEY_BREAK              ; √И√Т√Ь
+    .db     0x90,0x8E,0x8B,0x84,KEY_CSENT           ; √Р√О√Л√Д
+    .db     0x8D,0x83,0x98,0x99,0x87                ; √Н√Г√Ш√Щ√З
     .db     KEY_DOWN,KEY_UP,KEY_RIGHT,KEY_GRAPH,KEY_BACK
     .db     KEY_LEFT,KEY_INV,KEY_TRU,KEY_CAPS,KEY_EDIT
-    .db     0x85,0x8A,0x93,0x96,0x89                ; ≈ ”÷…
-    .db     0x8F,0x80,0x82,0x9B,0x94                ; ѕј¬џ‘
-    .db     0x8C,0x91,0x97,0x9F,0x00                ; ћ—„я
+    .db     0x85,0x8A,0x93,0x96,0x89                ; √Е√К√У√Ц√Й
+    .db     0x8F,0x80,0x82,0x9B,0x94                ; √П√А√В√Ы√Ф
+    .db     0x8C,0x91,0x97,0x9F,0x00                ; √М√С√Ч√Я
     .db     0x2A,0xA1,0xEE,0x00,KEY_SSSP            ; (*,.)
     .ascii  "^-+="
     .db     KEY_SSENT
     .db     0xE5,0xEA                               ; []
     .db     0x7F
-    .db     0xA6,0xED                               ; ж э
+    .db     0xA6,0xED                               ; √¶ √љ
     .ascii  "&'"
-    .db     0xE5,0xEA                               ; х ъ
+    .db     0xE5,0xEA                               ; √µ √Ї
     .ascii  "_%$#@!><"
     .db     KEY_END,KEY_INS,KEY_HOME
     .ascii  "}{\|~/?`"
-    .db     0xA6                                    ; ∆
+    .db     0xA6                                    ; √Ж
     .db     0
 
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+lastkey::
 key:    .db 0           ; key code
 adel:   .db 1           ; autorepeat delay
 cntr:   .db 30          ; frames counter
