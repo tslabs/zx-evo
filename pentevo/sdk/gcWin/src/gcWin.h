@@ -151,15 +151,36 @@ typedef struct
 } GC_WINDOW_t;
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+//:: SIMPLE VERTICAL MENU FLAGS
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+typedef struct
+{
+    unsigned    bit0        :1;
+    unsigned    bit1        :1;
+    unsigned    bit2        :1;
+    unsigned    bit3        :1;
+    unsigned    bit4        :1;
+    unsigned    bit5        :1;
+    unsigned    bit6        :1;
+    unsigned    SVMF_EXIT   :1;
+} GC_SVM_FLAG_t;
+
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 //:: SIMPLE VERTICAL MENU
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 typedef struct
 {
+    GC_SVM_FLAG_t flags;    // флаги
     u8  attr;               // атрибут цвета
     u8  margin;             // отступ от верха
     u8  current;            // текущая позиция
     u8  count;              // количество пунктов
+    void *cb_cursor;        // *svmcb_cursor_t
+    void *cb_keys;          // *svmcb_keys_t
 } GC_SVMENU_t;
+
+typedef void (*svmcb_cursor_t)(GC_SVMENU_t(*svm));
+typedef void (*svmcb_keys_t)(GC_SVMENU_t(*svm), u8 key);
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 //:: HORIZONTAL MENU
@@ -496,9 +517,12 @@ void gcDrawWindow(u8 id, u8 x, u8 y, u8 width, u8 hight, u8 attr, u8 frame_type,
 u8 gcGetMessageLines(u8 *msg) __naked __z88dk_fastcall;
 u8 gcGetMessageMaxLength(u8 *msg) __naked __z88dk_fastcall;
 void gcPrintWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall;
+void gcSelectWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall;
 
 void gcScrollUpWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall;
 void gcScrollDownWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall;
+
+void gcProgressBar(u8 x, u8 y, u8 width, u8 percent) __naked;
 
 void gcScrollUpRect(u8 x, u8 y, u8 width, u8 hight) __naked;
 void gcScrollDownRect(u8 x, u8 y, u8 width, u8 hight) __naked;

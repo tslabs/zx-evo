@@ -52,8 +52,6 @@ void testMouse()
 {
     u8 winx = 20;
     u8 winy = 10;
-    const char *txt_mouse_x = INK_BLUE"Mouse X:"INK_RED;
-    const char *txt_mouse_y = INK_BLUE"Mouse Y:"INK_RED;
 
     wndMouseTest.x = winx;
     wndMouseTest.y = winy;
@@ -64,7 +62,6 @@ void testMouse()
                    INK_BRIGHT_BLUE
                    MARK_CENTER
                    "Press SPACE to exit"
-                   INK_BLACK
                    );
 
     while(gcGetKey() != KEY_SPACE)
@@ -74,8 +71,8 @@ void testMouse()
 
         gcPrintf(INK_BLUE"\tMouse X:"INK_MAGENTA"%04d\n"
                  INK_BLUE"\tMouse Y:"INK_MAGENTA"%04d\n\n", gcGetMouseX()-(320/2), gcGetMouseY()-(240/2));
-        gcPrintf(INK_BLUE"\tMouse X:"INK_MAGENTA"%4u\n"
-                 INK_BLUE"\tMouse Y:"INK_MAGENTA"%4u\n\n", gcGetMouseX(), gcGetMouseY());
+        gcPrintf(INK_BLUE"\tMouse X:"INK_MAGENTA"%04u\n"
+                 INK_BLUE"\tMouse Y:"INK_MAGENTA"%04u\n\n", gcGetMouseX(), gcGetMouseY());
         gcPrintf(INK_BLUE"\tMouse X:"INK_MAGENTA"%4x\n"
                  INK_BLUE"\tMouse Y:"INK_MAGENTA"%4x\n\n\n", gcGetMouseX(), gcGetMouseY());
         gcPrintf(INK_BLUE"32 bit number:"INK_MAGENTA"%12ld\n", a2d32s("-1234567890"));
@@ -100,6 +97,18 @@ void func_cb4()
     gcPrintDialogShownItems(&dlgTest, DI_EDIT);
     gcPrintDialogShownItems(&dlgTest, DI_LISTBOX);
 }
+
+/*
+void cb_svmcur(GC_SVMENU_t *svm)
+{
+    gcSelectWindow(&wndDialog);
+    gcPrintDialog(&dlgTest);
+    gcGotoXY(40, 10);
+    gcPrintf("Position: %d", (char)svm->current);
+    gcSelectWindow(&wndSVMnu);
+}
+*/
+
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 void main(void)
@@ -126,8 +135,13 @@ void main(void)
 
     gcPrintWindow(&wndTest2);
 
+    pcx = 0; pcy = 0; pcst = 0;
+    pca = (u8)(WIN_COL_BRIGHT_WHITE<<4) | WIN_COL_RED;
+
+
 // simple vertical menu test
     select = gcExecuteWindow(&wndSVMnu);
+
     gcCloseWindow();
 
     BORDER = 4;
@@ -147,6 +161,7 @@ void main(void)
     // if press OK button
     if (select == BUTTON_OK)
     {
+
             rb = itmVarRB1;
             cb11 = itmVarCB11;
             cb12 = itmVarCB12;
@@ -155,6 +170,7 @@ void main(void)
             cb3 = itmVarCB3;
             cb4 = itmVarCB4;
             lb = itmVarLBX11;
+
     }
 
     // close dialog window

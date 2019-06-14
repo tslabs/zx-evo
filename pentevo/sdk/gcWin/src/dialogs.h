@@ -4,13 +4,18 @@
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 // SIMPLE VERTICAL MENU
-const GC_SVMENU_t mnuSVM =
-{
-/*attr*/        (WIN_COL_BRIGHT_CYAN<<4) | WIN_COL_BLACK,
-/*margin*/      1,
-/*current*/     0,
-/*count*/       8
-};
+
+//const GC_SVMENU_t mnuSVM =
+//{
+///*flags*/       {0,0,0,0,0,0,0,0},
+///*attr*/        (WIN_COL_BRIGHT_CYAN<<4) | WIN_COL_BLACK,
+///*margin*/      1,
+///*current*/     0,
+///*count*/       8,
+///*cb_cursor*/   0,
+///*cb_keys*/     0
+//};
+
 
 const u8 txt_lorem[] =
 "Lorem ipsum dolor sit amet, facer vocent an pri. Volumus iudicabit cum ei.\n"
@@ -172,17 +177,20 @@ const GC_WINDOW_t wndSVMnu =
                 MARK_CENTER"Item 2\n"
                 MARK_CENTER"Item 3\n"
                 MARK_CENTER"Item 4\n"
-                MARK_CENTER"Item 5\n"
-                MARK_CENTER"Item 6\n",
+                MARK_CENTER"Item 50\n"
+                MARK_CENTER"Item 600\n",
 /*menu_ptr*/    (u16)&svmTest
 };
 
 GC_SVMENU_t svmTest =
 {
+/*flags*/       {0,0,0,0,0,0,0,1},
 /*attr*/        (WIN_COL_BRIGHT_BLUE<<4) | WIN_COL_BRIGHT_YELLOW,
 /*margin*/      5,
 /*current*/     0,
-/*count*/       6
+/*count*/       6,
+/*cb_cursor*/   0, //cb_svmcur,
+/*cb_keys*/     0
 };
 
 const GC_WINDOW_t wndDialog =

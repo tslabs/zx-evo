@@ -16,12 +16,18 @@ void gcVars (void)
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;; !!! must math with structures in gcWin.h !!!
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+;; struct GC_SVM_FLAG_t
+    svmf_exit_mask           .equ    #0x80
+
 ;; struct GC_SVMENU
 ;; simple vertical menu offsets
-    svm_attr                .equ    #00
-    svm_margin              .equ    #01
-    svm_current             .equ    #02
-    svm_count               .equ    #03
+    svm_flags               .equ    #00
+    svm_attr                .equ    #01
+    svm_margin              .equ    #02
+    svm_current             .equ    #03
+    svm_count               .equ    #04
+    svm_cb_cursor           .equ    #05
+    svm_cb_keys             .equ    #07
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;; struct GC_DLG_FLAG_t
     dlgf_cursor_mask        .equ    #0x80
@@ -595,15 +601,32 @@ GC_DITEM_t *dlgItemList[4];
 }
 
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+void gcPrintSimpleVMenu(GC_SVMENU_t *svmnu) __naked __z88dk_fastcall
+{
+    svmnu;      // to avoid SDCC warning
+
+  __asm
+    push ix
+    MAC_LD_IXHL         ; IX - simple vertical menu descriptor
+
+    call print_svm_cursor
+    pop ix
+    ret
+  __endasm;
+
+}
+
+//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 u8 gcSimpleVMenu(GC_SVMENU_t *svmnu) __naked __z88dk_fastcall
 {
     svmnu;      // to avoid SDCC warning
 
   __asm
-
+    push ix
     MAC_LD_IXHL         ; IX - simple vertical menu descriptor
 
     call print_svm_cursor
+    call svmnu_cb_cursor
 
 svmnu_lp:
     ei
@@ -619,11 +642,23 @@ svmnu_lp:
     jr z,svmnu_dn
     cp #KEY_ENTER
     jr z,svmnu_ent
+    cp #KEY_EXT
+    jr z,svmnu_exit
     jr svmnu_lp
+
+svmnu_exit:
+    ld a,<#svm_flags (ix)
+    and #svmf_exit_mask
+    jr z,svmnu_lp
+    call restore_svm_cursor
+    ld l,#0xFF
+    pop ix
+    ret
 
 svmnu_ent:
     call restore_svm_cursor
     ld l,<#svm_current (ix)
+    pop ix
     ret
 
 svmnu_up:
@@ -635,6 +670,7 @@ svmnu_up:
     xor a
 0$: ld <#svm_current (ix),a
     call print_svm_cursor
+    call svmnu_cb_cursor
     jr svmnu_lp
 
 svmnu_dn:
@@ -646,7 +682,24 @@ svmnu_dn:
     dec a
 0$: ld <#svm_current (ix),a
     call print_svm_cursor
+    call svmnu_cb_cursor
     jr svmnu_lp
+
+svmnu_cb_cursor:
+    ld e,<#svm_cb_cursor (ix)
+    ld d,<#svm_cb_cursor+1 (ix)
+    ld a,e
+    or d
+    ret z
+
+    push ix
+    ld hl,#0$
+    push hl
+    ex de,hl
+    jp (hl)
+
+0$: pop af
+    ret
 
 svmnu_get_mouse:
 ;; check bounding box
@@ -3051,8 +3104,7 @@ winfrm_prn:
   __endasm;
 }
 
-//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-void gcPrintWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall
+void gcSelectWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall
 {
     wnd;                // to avoid SDCC warning
 
@@ -3085,6 +3137,23 @@ void gcPrintWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall
 
     ld a,<#frame_attr (ix)
     ld (frm_attr),a
+
+    pop ix
+    ret
+  __endasm;
+}
+
+//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+void gcPrintWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall
+{
+    wnd;                // to avoid SDCC warning
+
+  __asm
+    call _gcSelectWindow
+
+    push ix
+
+    MAC_LD_IXHL         ; IX - window descriptor
 
 ;;gcDrawWindow {
     ld l,<#frame_type (ix)
@@ -3693,7 +3762,7 @@ u8 gcGetMessageMaxLength(u8 *msg) __naked __z88dk_fastcall
 {
     msg;            // to avoid SDCC warning
 
-    __asm
+  __asm
     push hl
     call _gcGetMessageLines
     ld d,l
@@ -3712,7 +3781,7 @@ u8 gcGetMessageMaxLength(u8 *msg) __naked __z88dk_fastcall
 
 0$: ld l,c
     ret
-    __endasm;
+  __endasm;
 }
 
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -3720,7 +3789,7 @@ u8 gcGetMessageLines(u8 *msg) __naked __z88dk_fastcall
 {
     msg;            // to avoid SDCC warning
 
-    __asm
+  __asm
     ld b,#0
 1$: ld a,(hl)
     or a
@@ -3733,7 +3802,7 @@ u8 gcGetMessageLines(u8 *msg) __naked __z88dk_fastcall
 0$: inc b
     ld l,b
     ret
-    __endasm;
+  __endasm;
 }
 
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -3742,7 +3811,7 @@ void gcPrintSymbol(u8 x, u8 y, u8 sym, u8 attr) __naked
     x, y;           // to avoid SDCC warning
     sym, attr;      // to avoid SDCC warning
 
-    __asm
+  __asm
     ld hl,#2
     add hl,sp
     ld e,(hl)
@@ -3753,14 +3822,34 @@ void gcPrintSymbol(u8 x, u8 y, u8 sym, u8 attr) __naked
     inc hl
     ld c,(hl)
     jp sym_prn
-    __endasm;
+  __endasm;
+}
+
+void gcProgressBar(u8 x, u8 y, u8 width, u8 percent) __naked
+{
+    x, y;           // to avoid SDCC warning
+    width, percent; // to avoid SDCC warning
+
+  __asm
+    ld hl,#2
+    add hl,sp
+    ld e,(hl)
+    inc hl
+    ld d,(hl)
+    inc hl
+    ld c,(hl)
+    inc hl
+    ld b,(hl)
+    di
+    halt
+  __endasm;
 }
 
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 void gcGotoXY(u8 x, u8 y) __naked
 {
     x, y;           // to avoid SDCC warning
-    __asm
+  __asm
     ld hl,#2
     add hl,sp
     ld a,(hl)   ; X
@@ -3770,7 +3859,7 @@ void gcGotoXY(u8 x, u8 y) __naked
     inc hl
     ld (cur_y),a
     ret
-    __endasm;
+  __endasm;
 }
 
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
