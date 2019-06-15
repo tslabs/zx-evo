@@ -35,6 +35,8 @@ u8 itmVarCB4 = 0;
 u8 itmVarRB1 = 0;
 // listbox var
 u8 itmVarLBX11 = 0;
+// svm_current_item var
+u8 svm_current_item = 0;
 
 // numbers
 u32 itmNUM1 = (u32)-1;
@@ -82,6 +84,7 @@ void testMouse()
     gcCloseWindow();
 }
 
+// checkbox1 callback
 void func_cb3()
 {
     itmItemRB1.flags.DIF_GREY = (itmVarCB3&1);
@@ -90,6 +93,7 @@ void func_cb3()
     gcPrintDialogShownItems(&dlgTest, DI_RADIOBUTTON);
 }
 
+// checkbox1 callback
 void func_cb4()
 {
     itmItemED1.flags.DIF_GREY = (itmVarCB4&1);
@@ -98,17 +102,14 @@ void func_cb4()
     gcPrintDialogShownItems(&dlgTest, DI_LISTBOX);
 }
 
-/*
+// SVM callback
 void cb_svmcur(GC_SVMENU_t *svm)
 {
-    gcSelectWindow(&wndDialog);
-    gcPrintDialog(&dlgTest);
-    gcGotoXY(40, 10);
-    gcPrintf("Position: %d", (char)svm->current);
+    gcSelectWindow(&wndSVMInfo);
+    svm_current_item = svm->current;
+    gcPrintDialog(&dlgSVMInfo);
     gcSelectWindow(&wndSVMnu);
 }
-*/
-
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 void main(void)
@@ -135,8 +136,20 @@ void main(void)
 
     gcPrintWindow(&wndTest2);
 
+    gcDrawWindow(0, 9, 19, 52, 3, WIN_COL_WHITE<<4 | WIN_COL_BRIGHT_WHITE, GC_FRM_SINGLE | GC_FRM_NOHEADER, WIN_COL_WHITE<<4 | WIN_COL_BRIGHT_WHITE);
+
+    for(u8 i=0; i<=100; i++)
+    {
+        for(u8 j=0; j<1; j++) EIHALT;
+        gcProgressBar(10, 20, (WIN_COL_GREEN<<4) | WIN_COL_BRIGHT_WHITE, 50, i);
+    }
+
+    //while(1);
+
 // simple vertical menu test
+    gcExecuteWindow(&wndSVMInfo);
     select = gcExecuteWindow(&wndSVMnu);
+    gcCloseWindow();
     gcCloseWindow();
 
     BORDER = 4;
@@ -165,9 +178,7 @@ void main(void)
             cb3 = itmVarCB3;
             cb4 = itmVarCB4;
             lb = itmVarLBX11;
-
     }
-
     // close dialog window
     gcCloseWindow();
 

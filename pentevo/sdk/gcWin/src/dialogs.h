@@ -3,20 +3,6 @@
 //::               by dr_max^gc (c)2018-2019                 ::
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-// SIMPLE VERTICAL MENU
-
-//const GC_SVMENU_t mnuSVM =
-//{
-///*flags*/       {0,0,0,0,0,0,0,0},
-///*attr*/        (WIN_COL_BRIGHT_CYAN<<4) | WIN_COL_BLACK,
-///*margin*/      1,
-///*current*/     0,
-///*count*/       8,
-///*cb_cursor*/   0,
-///*cb_keys*/     0
-//};
-
-
 const u8 txt_lorem[] =
 "Lorem ipsum dolor sit amet, facer vocent an pri. Volumus iudicabit cum ei.\n"
 "Ipsum quando feugiat te cum, et sea mundi principes assueverit. Eam no\n"
@@ -160,6 +146,56 @@ const GC_WINDOW_t wndInfo =
 /*menu_ptr*/    (u16)&dlgInfo
 };
 
+const GC_WINDOW_t wndSVMInfo =
+{
+/*id*/          0,
+/*type*/        GC_WND_INFO,
+/*xy*/          50,4,
+/*wh*/          20,8,
+/*attr*/        (WIN_COL_WHITE<<4) | WIN_COL_BLACK,
+/*frame_type*/  GC_FRM_SINGLE,
+/*frame_attr*/  (WIN_COL_WHITE<<4) | WIN_COL_BRIGHT_WHITE,
+/*header_txt*/  INK_BLACK
+                "SVM Info",
+/*window_txt*/  0,
+/*menu_ptr*/    (u16)&dlgSVMInfo
+};
+
+const GC_DITEM_t itmItemSVMInfoTxt =
+{
+/*type*/        DI_NUMBER,
+/*id*/          0,
+/*xy*/          1,1,
+/*wh*/          2,0,
+/*flags*/       {0,0,0,0,0,0,0,0},
+/*vartype*/     {GCIVS_BYTE, GCIVT_DEC, 0, 0, 0, 0},
+/*hotkey*/      0,
+/*select*/      0,
+/*var*/         (u8)&svm_current_item,
+/*name*/        "Current item:",
+/*handler*/     0
+};
+
+const GC_DIALOG_t dlgSVMInfo =
+{
+/*flag*/                {0,0,0,0,0,0,0,0},
+/*current*/             0,
+/*all_count*/           1,
+/*act_count*/           1,
+/*cur_attr*/            (WIN_COL_CYAN<<4) | WIN_COL_BRIGHT_YELLOW,
+/*box_attr*/            (WIN_COL_CYAN<<4) | WIN_COL_BLUE,
+/*btn_focus_attr*/      (WIN_COL_BRIGHT_YELLOW<<4) | WIN_COL_BLACK,
+/*btn_unfocus_attr*/    (WIN_COL_BRIGHT_WHITE<<4) | WIN_COL_BLACK,
+/*lbox_focus_attr*/     (WIN_COL_BLUE<<4) | WIN_COL_BRIGHT_WHITE,
+/*lbox_unfocus_attr*/   (WIN_COL_BLUE<<4) | WIN_COL_WHITE,
+/*items*/               dlgSVMInfoItemsList
+};
+
+const GC_DITEM_t *dlgSVMInfoItemsList[] =
+{
+    &itmItemSVMInfoTxt
+};
+
 const GC_WINDOW_t wndSVMnu =
 {
 /*id*/          0,
@@ -189,7 +225,7 @@ GC_SVMENU_t svmTest =
 /*margin*/      5,
 /*current*/     0,
 /*count*/       6,
-/*cb_cursor*/   0, //cb_svmcur,
+/*cb_cursor*/   cb_svmcur,
 /*cb_keys*/     0
 };
 
@@ -651,7 +687,6 @@ const GC_DITEM_t *dlgInfoItemsList[] =
     &itmItemInfoCB12,
     &itmItemInfoRB
 };
-
 
 // DIALOG
 const GC_DIALOG_t dlgTest =

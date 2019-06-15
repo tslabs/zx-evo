@@ -98,6 +98,7 @@ void gcVars (void)
     SYM_CHECK               .equ    #0xD4
     SYM_BTNUP               .equ    #0xF2
     SYM_BTNDN               .equ    #0xF4
+    SYM_PRGS                .equ    #0xB0
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;; macros
     .macro  MAC_LD_IXHL
@@ -408,6 +409,10 @@ BTN_TYPE_t gcExecuteWindow(GC_WINDOW_t *wnd)
         rc = gcDialog((GC_DIALOG_t*)ptr);
     break;
 
+    case GC_WND_INFO:
+        gcPrintDialog((GC_DIALOG_t*)ptr);
+    break;
+
     default:
     break;
     }
@@ -621,7 +626,6 @@ u8 gcSimpleVMenu(GC_SVMENU_t *svmnu) __naked __z88dk_fastcall
     svmnu;      // to avoid SDCC warning
 
   __asm
-    push ix
     MAC_LD_IXHL         ; IX - simple vertical menu descriptor
 
     call print_svm_cursor
@@ -655,13 +659,11 @@ svmnu_exit:
     jr z,svmnu_lp
     call restore_svm_cursor
     ld l,#0xFF
-    pop ix
     ret
 
 svmnu_ent:
     call restore_svm_cursor
     ld l,<#svm_current (ix)
-    pop ix
     ret
 
 svmnu_begin:
@@ -1421,7 +1423,10 @@ dialog_ent_list:
 ;; build temp vertical menu onto stack
     ld e,<#di_var (ix)
     ld d,<#di_var+1 (ix)
-
+;; callbacks
+    ld hl,#0
+    push hl
+    push hl
     ld a,<#di_select (ix)
 ;; svm_count
     push af
@@ -1442,8 +1447,11 @@ dialog_ent_list:
 ;; svm_attr
     push af
     inc sp
+;; svm_flags
+    xor a
+    push af
+    inc sp
 
-    ld hl,#0
     add hl,sp   ; HL - svmenu address
     push de
     call _gcSimpleVMenu
@@ -1456,8 +1464,9 @@ dialog_ent_list:
     ld (de),a
 
 ;; restore stack
-    pop af
-    pop af
+    ld hl,#9
+    add hl,sp
+    ld sp,hl
 
 ;; restore window parameters
     call restore_window_parms
@@ -2956,8 +2965,7 @@ void gcDrawWindow(u8 id, u8 x, u8 y, u8 width, u8 hight, u8 attr, u8 frame_type,
 ;; select frameset
     ld de,#frame_set0
     ld a,<#_ft (ix)
-    and #0x1F
-    or a
+    and #0x4F
     jr z,9$
     ld de,#frame_set1
     cp #1
@@ -2977,13 +2985,6 @@ void gcDrawWindow(u8 id, u8 x, u8 y, u8 width, u8 hight, u8 attr, u8 frame_type,
     ld e,<#_x (ix)
     ld d,<#_y (ix)
     ld c,<#_fa (ix)
-
-;; check GC_FRM_NOHEADER flag
-    bit 6,<#_ft (ix)
-    push af
-    call nz,print_window_row
-    pop af
-    jr nz,4$
 
     ld b,<#_w (ix)
     dec b
@@ -3847,9 +3848,10 @@ void gcPrintSymbol(u8 x, u8 y, u8 sym, u8 attr) __naked
   __endasm;
 }
 
-void gcProgressBar(u8 x, u8 y, u8 width, u8 percent) __naked
+void gcProgressBar(u8 x, u8 y, WIN_COLORS_t attr, u8 width, u8 percent) __naked
 {
     x, y;           // to avoid SDCC warning
+    attr;           // to avoid SDCC warning
     width, percent; // to avoid SDCC warning
 
   __asm
@@ -3861,9 +3863,67 @@ void gcProgressBar(u8 x, u8 y, u8 width, u8 percent) __naked
     inc hl
     ld c,(hl)
     inc hl
-    ld b,(hl)
-    di
-    halt
+    ld a,(hl)
+    inc hl
+    ld h,(hl)
+    ld l,a
+
+;; E - x
+;; D - y
+;; C - attr
+;; L - width
+;; H - percent
+
+    push hl
+    push de
+    push bc
+
+    ld e,l
+    ld b,h
+    ld hl,#0x0000
+    ld d,h
+    ld a,b
+    or a
+    jr z,0$
+    add hl,de
+    djnz .-1
+
+;; HL/=100
+    ld bc,#0x1064
+    xor a
+    add hl,hl
+    rla
+    cp c
+    jr c,.+2+1+1
+    inc l
+    sub c
+    djnz .-1-1-2-1-1-1
+
+0$: pop bc
+;; width
+    ld b,l
+    pop de
+    pop hl
+
+    ld a,b
+    or a
+    jr z,1$
+
+    push bc
+    push hl
+    ld a,#0xDB
+    call sym_prns
+    pop hl
+    pop bc
+
+1$: ld a,l
+    sub b
+    jr z,2$
+    ld b,a
+    ld a,#0x20
+    call sym_prns
+2$:
+    ret
   __endasm;
 }
 

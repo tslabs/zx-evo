@@ -111,9 +111,10 @@ typedef enum
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 typedef enum
 {
-    GC_WND_NOMENU = ((u8)0x00),
-    GC_WND_SVMENU = ((u8)0x01),
-    GC_WND_DIALOG = ((u8)0x02)
+    GC_WND_NOMENU   = ((u8)0x00),
+    GC_WND_SVMENU   = ((u8)0x01),
+    GC_WND_DIALOG   = ((u8)0x02),
+    GC_WND_INFO     = ((u8)0x03),
 } GC_WND_TYPE_t;
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -121,11 +122,11 @@ typedef enum
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 typedef enum
 {
-    GC_FRM_NONE   = ((u8)0x00),
-    GC_FRM_SINGLE = ((u8)0x01),
-    GC_FRM_DOUBLE = ((u8)0x02),     //cp866 symbols yet
+    GC_FRM_NONE     = ((u8)0x00),
+    GC_FRM_SINGLE   = ((u8)0x01),
+    GC_FRM_DOUBLE   = ((u8)0x02),     //cp866 symbols yet
     GC_FRM_NOGREETZ = ((u8)0x10),
-    GC_FRM_NOLOGO = ((u8)0x20),
+    GC_FRM_NOLOGO   = ((u8)0x20),
     GC_FRM_NOHEADER = ((u8)0x40),
     GC_FRM_NOSHADOW = ((u8)0x80)
 } GC_FRM_TYPE_t;
@@ -522,7 +523,7 @@ void gcSelectWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall;
 void gcScrollUpWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall;
 void gcScrollDownWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall;
 
-void gcProgressBar(u8 x, u8 y, u8 width, u8 percent) __naked;
+void gcProgressBar(u8 x, u8 y, WIN_COLORS_t attr, u8 width, u8 percent) __naked;
 
 void gcScrollUpRect(u8 x, u8 y, u8 width, u8 hight) __naked;
 void gcScrollDownRect(u8 x, u8 y, u8 width, u8 hight) __naked;
