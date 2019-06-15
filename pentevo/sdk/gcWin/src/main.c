@@ -135,13 +135,8 @@ void main(void)
 
     gcPrintWindow(&wndTest2);
 
-    pcx = 0; pcy = 0; pcst = 0;
-    pca = (u8)(WIN_COL_BRIGHT_WHITE<<4) | WIN_COL_RED;
-
-
 // simple vertical menu test
     select = gcExecuteWindow(&wndSVMnu);
-
     gcCloseWindow();
 
     BORDER = 4;

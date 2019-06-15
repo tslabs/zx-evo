@@ -613,7 +613,6 @@ void gcPrintSimpleVMenu(GC_SVMENU_t *svmnu) __naked __z88dk_fastcall
     pop ix
     ret
   __endasm;
-
 }
 
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -637,9 +636,13 @@ svmnu_lp:
     call _gcGetKey
     ld a,l
     cp #KEY_DOWN
-    jr z,svmnu_up
-    cp #KEY_UP
     jr z,svmnu_dn
+    cp #KEY_UP
+    jr z,svmnu_up
+    cp #KEY_LEFT
+    jr z,svmnu_begin
+    cp #KEY_RIGHT
+    jr z,svmnu_end
     cp #KEY_ENTER
     jr z,svmnu_ent
     cp #KEY_EXT
@@ -661,29 +664,38 @@ svmnu_ent:
     pop ix
     ret
 
-svmnu_up:
+svmnu_begin:
     call restore_svm_cursor
-    ld a,<#svm_current (ix)
-    inc a
-    cp <#svm_count (ix)
-    jr nz,0$
     xor a
-0$: ld <#svm_current (ix),a
+svmnu_lp1:
+    ld <#svm_current (ix),a
     call print_svm_cursor
     call svmnu_cb_cursor
     jr svmnu_lp
 
+svmnu_end:
+    call restore_svm_cursor
+    ld a,<#svm_count (ix)
+    dec a
+    jr svmnu_lp1
+
 svmnu_dn:
     call restore_svm_cursor
     ld a,<#svm_current (ix)
+    inc a
+    cp <#svm_count (ix)
+    jr nz,svmnu_lp1
+    xor a
+    jr svmnu_lp1
+
+svmnu_up:
+    call restore_svm_cursor
+    ld a,<#svm_current (ix)
     dec a
-    jp p,0$
+    jp p,svmnu_lp1
     ld a,<#svm_count (ix)
     dec a
-0$: ld <#svm_current (ix),a
-    call print_svm_cursor
-    call svmnu_cb_cursor
-    jr svmnu_lp
+    jr svmnu_lp1
 
 svmnu_cb_cursor:
     ld e,<#svm_cb_cursor (ix)
@@ -691,14 +703,24 @@ svmnu_cb_cursor:
     ld a,e
     or d
     ret z
-
+;;
     push ix
+    push iy
+
+;; store SVM pointer
+    push ix
+
     ld hl,#0$
     push hl
     ex de,hl
     jp (hl)
 
-0$: pop af
+0$:
+;; restore stack
+    pop af
+;;
+    pop iy
+    pop ix
     ret
 
 svmnu_get_mouse:
