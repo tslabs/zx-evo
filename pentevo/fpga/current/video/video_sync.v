@@ -182,8 +182,15 @@ module video_sync (
   always @(posedge clk)
     if (frame_start && c3)
     begin
-      v60hz <= !cfg_60hz;    // re-sync of 60Hz mode selector
       flash_ctr <= flash_ctr + 5'b1;
+      // re-sync 60Hz mode selector
+`ifdef FORCE_60HZ
+      v60hz <= 1'b1;
+`elsif ENABLE_60HZ
+      v60hz <= !cfg_60hz;
+`else
+      v60hz <= 1'b0;
+`endif
     end
 
 // sync strobes
