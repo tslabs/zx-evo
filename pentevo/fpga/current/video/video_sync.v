@@ -104,12 +104,12 @@ module video_sync (
   wire [8:0] vblnk_beg = v60hz ? VBLNK_BEG_60 : VBLNK_BEG_50;
   wire [8:0] vblnk_end = v60hz ? VBLNK_END_60 : VBLNK_END_50;
   wire [8:0] vperiod   = v60hz ? VPERIOD_60   : VPERIOD_50;
-  
+
 `ifdef PENT_312
   assign hcnt = hcount[4:0];
   assign upper8 = vcount < 8;
 `endif
-  
+
 // counters
   reg [8:0] hcount = 0;
   reg [8:0] vcount = 0;
@@ -232,11 +232,9 @@ module video_sync (
   assign ts_start = c3 && ts_start_coarse;
   assign int_start = (hcount == {hint_beg, 1'b0}) && (vcount == vint_beg) && c0;
 
-
   reg vga_vblank;
   always @(posedge clk) if (line_start_s)    // fix me - bydlocode !!!
     vga_vblank <= tv_vblank;
-
 
   always @(posedge clk)
   begin
