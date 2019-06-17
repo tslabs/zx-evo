@@ -297,6 +297,8 @@ void gcWindowsInit(u8 vpage, u8 spage) __naked
     out (c),a
     call clear_page3
 
+    call _ps2_init
+
     xor a
     ld (_window_count),a
     ld (_current_window_id),a
@@ -967,7 +969,7 @@ u8 gcFindHotkey(GC_DIALOG_t *dlg) __naked __z88dk_fastcall
     and #dif_grey_mask
     jr nz,1$
 
-    ld a,(lastkey)
+    ld a,(_lastkey)
     or a
     jr z,1$
     ld c,a
