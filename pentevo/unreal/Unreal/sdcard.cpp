@@ -66,8 +66,7 @@ void TSdCard::Reset()
 void TSdCard::Wr(u8 Val)
 {
     static u32 WrPos = -1;
-    TState NextState = ST_IDLE;
-//    printf(__FUNCTION__" Val = %X\n", Val);
+    // printf(__FUNCTION__" Val = %X\n", Val);
 
     if (!Image)
         return;
@@ -157,7 +156,8 @@ void TSdCard::Wr(u8 Val)
         case ST_RD_CRC:
 //            printf(__FUNCTION__" ST_RD_CRC val=0x%X\n", Val);
             NextState = GetRespondType();
-        break;
+            CurrState = ST_DELAY_1;
+            return;
 
         case ST_RD_DATA_SIG:
             if (Val==0xFE) // Проверка сигнатуры данных
@@ -240,9 +240,30 @@ void TSdCard::Wr(u8 Val)
 
 u8 TSdCard::Rd()
 {
-//    printf(__FUNCTION__" cmd=0x%X, St=0x%X\n", Cmd, CurrState);
+    // printf(__FUNCTION__" cmd=0x%X, St=0x%X\n", Cmd, CurrState);
+
     if (!Image)
         return 0xFF;
+
+    static u32 delay = 0;
+
+    switch (CurrState)
+    {
+        case ST_DELAY_1:
+            delay = 2;
+            CurrState = ST_DELAY_2;
+
+        case ST_DELAY_2:
+            if (delay)
+            {
+                delay--;
+                return 0xFF;
+            }
+            else
+                CurrState = NextState;
+                NextState = ST_IDLE;
+        break;
+    }
 
     switch(Cmd)
     {
@@ -253,7 +274,7 @@ u8 TSdCard::Rd()
             CurrState = ST_IDLE;
             return 1;
         }
-    break;
+
     case CMD_SEND_OP_COND:
         if (CurrState == ST_R1)
         {
@@ -262,6 +283,21 @@ u8 TSdCard::Rd()
             return 0;
         }
     break;
+
+    case CMD_SEND_STATUS:
+        if (CurrState == ST_R2)
+        {
+            switch (R2_Cnt++)
+            {
+             case 0: return 0x00; // R1
+             case 1: return 0x00;
+             default:
+                 CurrState = ST_IDLE;
+                 R2_Cnt = 0;
+            }
+        }
+    break;
+
     case CMD_SET_BLOCKLEN:
         if (CurrState == ST_R1)
         {
@@ -270,6 +306,7 @@ u8 TSdCard::Rd()
             return 0;
         }
     break;
+
     case CMD_SEND_IF_COND:
         if (CurrState == ST_R7)
         {
@@ -280,9 +317,9 @@ u8 TSdCard::Rd()
              case 2: return 0x00;
              case 3: return 0x01;
              default:
-                CurrState = ST_IDLE;
-                R7_Cnt = 0;
-                return ArgArr[0]; // echo-back
+                 CurrState = ST_IDLE;
+                 R7_Cnt = 0;
+                 return ArgArr[0]; // echo-back
             }
         }
     break;
@@ -566,6 +603,7 @@ TSdCard::TState TSdCard::GetRespondType()
         case CMD_APP_CMD:
             AppCmd = true;
             return ST_R1;
+
         case CMD_GO_IDLE_STATE:
         case CMD_SEND_OP_COND:
         case CMD_SET_BLOCKLEN:
@@ -576,8 +614,13 @@ TSdCard::TState TSdCard::GetRespondType()
         case CMD_SEND_CSD:
         case CMD_SEND_CID:
             return ST_R1;
+
+        case CMD_SEND_STATUS:
+            return ST_R2;
+
         case CMD_READ_OCR:
             return ST_R3;
+
         case CMD_SEND_IF_COND:
             return ST_R7;
 

@@ -32,6 +32,7 @@ void TZc::Wr(u32 Port, u8 Val)
       if (!(Cfg & 2))   // SD card selected
       {
         RdBuff = SdCard.Rd();
+        // printf(__FUNCTION__" ret=0x%02X\n", RdBuff);
         SdCard.Wr(Val);
       }
       else if ((Cfg & 4) && (comp.ts.vdac2))   // FT812 selected
@@ -56,6 +57,7 @@ u8 TZc::Rd(u32 Port)
       if (!(Cfg & 2))   // SD card selected
       {
         RdBuff = SdCard.Rd();
+        // printf(__FUNCTION__" ret=0x%02X\n", RdBuff);
         SdCard.Wr(0xff);
       }
       else if ((Cfg & 4) && (comp.ts.vdac2))   // FT812 selected
