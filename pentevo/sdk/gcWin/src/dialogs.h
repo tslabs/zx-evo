@@ -207,14 +207,17 @@ const GC_WINDOW_t wndSVMnu =
 /*frame_attr*/  (WIN_COL_WHITE<<4) | WIN_COL_BRIGHT_WHITE,
 /*header_txt*/  INK_BLACK
                 "SVMenu test",
-/*window_txt*/  "\n"INK_BRIGHT_BLUE MARK_CENTER"Please select item...\n"
+/*window_txt*/  "\n"
+                INK_BRIGHT_BLUE
+                MARK_CENTER
+                "Please select item...\n"
                 "\n\n\n"
                 MARK_CENTER"Item 1\n"
                 MARK_CENTER"Item 2\n"
                 MARK_CENTER"Item 3\n"
                 MARK_CENTER"Item 4\n"
-                MARK_CENTER"Item 50\n"
-                MARK_CENTER"Item 600\n",
+                MARK_CENTER"Item 5\n"
+                MARK_CENTER"Item 6\n",
 /*menu_ptr*/    (u16)&svmTest
 };
 

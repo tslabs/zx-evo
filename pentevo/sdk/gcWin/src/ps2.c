@@ -15,7 +15,7 @@ __sfr __banked __at 0xEFF7 CMOS_CONF;
 u8 lastkey;
 KEY_STAT_t keyboard_stat;
 
-const u8 keymap[] =
+const KEY_t keymap[] =
 {
     0, KEY_F9, 0, KEY_F5, KEY_F3, KEY_F1, KEY_F2, 0,            // 0x00
     0, KEY_F10, KEY_F8, KEY_F6, KEY_F4, KEY_TAB, 0x60, 0,       // 0x08
@@ -35,7 +35,7 @@ const u8 keymap[] =
     KEY_F11, '+', '3', '-', '*', '9', 0, KEY_F7                 // 0x78
 };
 
-const u8 keymap_shift[] =
+const KEY_t keymap_shift[] =
 {
     0, KEY_F9, 0, KEY_F5, KEY_F3, KEY_F1, KEY_F2, 0,            // 0x00
     0, KEY_F10, KEY_F8, KEY_F6, KEY_F4, KEY_TAB, 0x60, 0,       // 0x08
@@ -55,7 +55,7 @@ const u8 keymap_shift[] =
     KEY_F11, '+', '3', '-', '*', '9', 0, KEY_F7                 // 0x78
 };
 
-const u8 keymapE0[] =
+const KEY_t keymapE0[] =
 {
     0, 0, 0, 0, 0, 0, 0, 0,                                     // 0x00
     0, 0, 0, 0, 0, 0, 0, 0,                                     // 0x08
@@ -97,41 +97,42 @@ void ps2_init()
     keyboard_stat.KEYS_ALT = 0;
 }
 
-u8 ps2_read()
+KEY_t ps2_read()
 {
-    u8 scancode = cmos_read();
-    if(scancode == 0x83) scancode = 0x7F;
+    KEY_t scancode = cmos_read();
+    if(scancode == 0x83)
+        scancode = 0x7F;
 
     switch (scancode)
     {
     case 0x00:
         return 0x00;
-    break;
+        break;
 
     case 0xFF:
         cmos_clear();
         return 0x00;
-    break;
+        break;
 
     case PS2_LSHIFT:
         keyboard_stat.KEYS_SHIFT = 1;
         return 0x00;
-    break;
+        break;
 
     case PS2_RSHIFT:
         keyboard_stat.KEYS_SHIFT = 1;
         return 0x00;
-    break;
+        break;
 
     case PS2_CTRL:
         keyboard_stat.KEYS_CTRL = 1;
         return 0x00;
-    break;
+        break;
 
     case PS2_ALT:
         keyboard_stat.KEYS_ALT = 1;
         return 0x00;
-    break;
+        break;
 
     // key unpressed
     case PS2_BREAK_CODE:
@@ -140,24 +141,24 @@ u8 ps2_read()
 
         switch (scancode)
         {
-            case PS2_LSHIFT:
-                keyboard_stat.KEYS_SHIFT = 0;
+        case PS2_LSHIFT:
+            keyboard_stat.KEYS_SHIFT = 0;
             break;
 
-            case PS2_RSHIFT:
-                keyboard_stat.KEYS_SHIFT = 0;
+        case PS2_RSHIFT:
+            keyboard_stat.KEYS_SHIFT = 0;
             break;
 
-            case PS2_CTRL:
-                keyboard_stat.KEYS_CTRL = 0;
+        case PS2_CTRL:
+            keyboard_stat.KEYS_CTRL = 0;
             break;
 
-            case PS2_ALT:
-                keyboard_stat.KEYS_ALT = 0;
+        case PS2_ALT:
+            keyboard_stat.KEYS_ALT = 0;
             break;
         }
         return 0x00;
-    break;
+        break;
 
     // extented key pressed
     case PS2_EXTEND_CODE:
@@ -166,35 +167,35 @@ u8 ps2_read()
 
         switch (scancode)
         {
-            case PS2_CTRL:
-                keyboard_stat.KEYS_CTRL = 1;
+        case PS2_CTRL:
+            keyboard_stat.KEYS_CTRL = 1;
             return 0x00;
             break;
 
-            case PS2_ALT:
-                keyboard_stat.KEYS_ALT = 1;
-                return 0x00;
+        case PS2_ALT:
+            keyboard_stat.KEYS_ALT = 1;
+            return 0x00;
             break;
 
-            // extended key unpressed
-            case PS2_BREAK_CODE:
-                EIHALT
-                scancode = cmos_read();
-                switch (scancode)
-                {
-                    case PS2_CTRL:
-                        keyboard_stat.KEYS_CTRL = 0;
-                    break;
+        // extended key unpressed
+        case PS2_BREAK_CODE:
+            EIHALT
+            scancode = cmos_read();
+            switch (scancode)
+            {
+            case PS2_CTRL:
+                keyboard_stat.KEYS_CTRL = 0;
+                break;
 
-                    case PS2_ALT:
-                        keyboard_stat.KEYS_ALT = 0;
-                    break;
-                }
-                return 0x00;
+            case PS2_ALT:
+                keyboard_stat.KEYS_ALT = 0;
+                break;
+            }
+            return 0x00;
             break;
         }
         return keymapE0[scancode];
-    break;
+        break;
 
     default:
         if(!keyboard_stat.KEYS_SHIFT)
@@ -205,7 +206,7 @@ u8 ps2_read()
         {
             return keymap_shift[scancode];
         }
-    break;
+        break;
     }
 }
 
@@ -218,14 +219,18 @@ u8 gcGetKey()
 
 void gcWaitKey(u8 key)
 {
-    do {
-    EIHALT
-    } while (gcGetKey() != key);
+    do
+    {
+        EIHALT
+    }
+    while (gcGetKey() != key);
 }
 
 void gcWaitNoKey(void)
 {
-    do {
-    EIHALT
-    } while (gcGetKey());
+    do
+    {
+        EIHALT
+    }
+    while (gcGetKey());
 }

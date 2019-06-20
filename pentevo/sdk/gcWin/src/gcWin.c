@@ -100,6 +100,48 @@ void gcVars (void)
     SYM_BTNDN               .equ    #0xF4
     SYM_PRGS                .equ    #0xB0
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    KB_TRU                  .equ    #0x04    // (CS+3)
+    KB_PGUP                 .equ    #0x04
+    KB_INV                  .equ    #0x05    // (CS+4)
+    KB_PGDN                 .equ    #0x05
+    KB_CAPS                 .equ    #0x06    // (CS+2)
+    KB_EDIT                 .equ    #0x07    // (CS+1)
+    KB_ESC                  .equ    #0x07
+    KB_LEFT                 .equ    #0x08    // (CS+5)
+    KB_RIGHT                .equ    #0x09    // (CS+8)
+    KB_DOWN                 .equ    #0x0A    // (CS+6)
+    KB_UP                   .equ    #0x0B    // (CS+7)
+    KB_BACK                 .equ    #0x0C    // (CS+0)
+    KB_ENTER                .equ    #0x0D
+    KB_EXT                  .equ    #0x0E    // (SS+CS)
+    KB_TAB                  .equ    #0x0E
+    KB_GRAPH                .equ    #0x0F    // (CS+9)
+    KB_DEL                  .equ    #0x0F
+    KB_INS                  .equ    #0x10    // (SS+W)
+    KB_HOME                 .equ    #0x11    // (SS+Q)
+    KB_END                  .equ    #0x12    // (SS+E)
+    KB_SSENT                .equ    #0x13    // (SS+ENTER)
+    KB_RALT                 .equ    #0x13
+    KB_SSSP                 .equ    #0x14    // (SS+SPACE)
+    KB_LALT                 .equ    #0x14
+    KB_CSENT                .equ    #0x15    // (CS+ENTER)
+    KB_BREAK                .equ    #0x16    // (CS+SPACE)
+    KB_SPACE                .equ    #0x20
+    KB_F1                   .equ    #0xC0
+    KB_F2                   .equ    #0xC1
+    KB_F3                   .equ    #0xC2
+    KB_F4                   .equ    #0xC3
+    KB_F5                   .equ    #0xC4
+    KB_F6                   .equ    #0xC5
+    KB_F7                   .equ    #0xC6
+    KB_F8                   .equ    #0xC7
+    KB_F9                   .equ    #0xC8
+    KB_F10                  .equ    #0xC9
+    KB_F11                  .equ    #0xCA
+    KB_POWER                .equ    #0xCB
+    KB_SLEEP                .equ    #0xCD
+    KB_WAKE                 .equ    #0xCE
+;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;; macros
     .macro  MAC_LD_IXHL
     push hl
@@ -641,17 +683,17 @@ svmnu_lp:
 
     call _gcGetKey
     ld a,l
-    cp #KEY_DOWN
+    cp #KB_DOWN
     jr z,svmnu_dn
-    cp #KEY_UP
+    cp #KB_UP
     jr z,svmnu_up
-    cp #KEY_LEFT
+    cp #KB_LEFT
     jr z,svmnu_begin
-    cp #KEY_RIGHT
+    cp #KB_RIGHT
     jr z,svmnu_end
-    cp #KEY_ENTER
+    cp #KB_ENTER
     jr z,svmnu_ent
-    cp #KEY_EXT
+    cp #KB_EXT
     jr z,svmnu_exit
     jr svmnu_lp
 
@@ -1061,34 +1103,34 @@ dialog_lp1:
     jr nz,dialog_leftright
 
     ld a,l
-    cp #KEY_PGDN
+    cp #KB_PGDN
     jp z,dialog_pgdn
-    cp #KEY_PGUP
+    cp #KB_PGUP
     jp z,dialog_pgup
-    cp #KEY_DOWN
+    cp #KB_DOWN
     jp z,dialog_dn
-    cp #KEY_RIGHT
+    cp #KB_RIGHT
     jp z,dialog_pgdn
-    cp #KEY_LEFT
+    cp #KB_LEFT
     jp z,dialog_pgup
-    cp #KEY_UP
+    cp #KB_UP
     jp z,dialog_up
-    cp #KEY_ENTER
+    cp #KB_ENTER
     jp z,dialog_ent
-    cp #KEY_SPACE
+    cp #KB_SPACE
     jp z,dialog_sp
     pop hl
     jr dialog_lp1
 
 dialog_leftright:
     ld a,l
-    cp #KEY_LEFT
+    cp #KB_LEFT
     jp z,dialog_up
-    cp #KEY_RIGHT
+    cp #KB_RIGHT
     jp z,dialog_dn
-    cp #KEY_ENTER
+    cp #KB_ENTER
     jp z,dialog_ent
-    cp #KEY_SPACE
+    cp #KB_SPACE
     jp z,dialog_sp
     pop hl
     jr dialog_lp1
@@ -2538,21 +2580,21 @@ edit_string_lp0:
     call edit_string_mouse
     call _gcGetKey
     ld a,l
-    cp #KEY_LEFT
+    cp #KB_LEFT
     jr z,edit_string_left
-    cp #KEY_RIGHT
+    cp #KB_RIGHT
     jr z,edit_string_right
-    cp #KEY_BACK
+    cp #KB_BACK
     jr z,edit_string_delete
-    cp #KEY_INS
+    cp #KB_INS
     jr z,edit_string_ins
-    cp #KEY_DEL
+    cp #KB_DEL
     jr z,edit_string_del
-    cp #KEY_ENTER
+    cp #KB_ENTER
     jp z,edit_string_ent
-    cp #KEY_HOME
+    cp #KB_HOME
     jr z,edit_string_home
-    cp #KEY_END
+    cp #KB_END
     jr z,edit_string_end
     cp #0x20
     jr c,edit_string_lp0
