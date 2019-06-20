@@ -3,7 +3,42 @@
 //::               by dr_max^gc (c)2018-2019                 ::
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
+#pragma once
+
 #include "defs.h"
+
+typedef struct KEY_STAT_t
+{
+    unsigned    KEYS_LATRUS :1;
+    unsigned    bit1        :1;
+    unsigned    bit2        :1;
+    unsigned    bit3        :1;
+    unsigned    bit4        :1;
+    unsigned    KEYS_ALT    :1;
+    unsigned    KEYS_CTRL   :1;
+    unsigned    KEYS_SHIFT  :1;
+} KEY_STAT_t;
+
+#define PS2_BREAK_CODE      0xF0
+#define PS2_EXTEND_CODE     0xE0
+
+#define PS2_F9      0x01
+#define PS2_F5      0x03
+#define PS2_F3      0x04
+#define PS2_F1      0x05
+#define PS2_F2      0x06
+#define PS2_F12     0x07
+#define PS2_F10     0x09
+#define PS2_F8      0x0A
+#define PS2_F6      0x0B
+#define PS2_F4      0x0C
+#define PS2_TAB     0x0D
+#define PS2_GRAVE   0x0E
+#define PS2_ALT     0x11
+#define PS2_LSHIFT  0x12
+#define PS2_CTRL    0x14
+#define PS2_CAPS    0x58
+#define PS2_RSHIFT  0x59
 
 #define KEY_TRU     0x04    // (CS+3)
 #define KEY_PGUP    0x04
@@ -26,7 +61,9 @@
 #define KEY_HOME    0x11    // (SS+Q)
 #define KEY_END     0x12    // (SS+E)
 #define KEY_SSENT   0x13    // (SS+ENTER)
+#define KEY_RALT    0x13
 #define KEY_SSSP    0x14    // (SS+SPACE)
+#define KEY_LALT    0x14
 #define KEY_CSENT   0x15    // (CS+ENTER)
 #define KEY_BREAK   0x16    // (CS+SPACE)
 #define KEY_SPACE   0x20
@@ -41,6 +78,9 @@
 #define KEY_F9      0xC8
 #define KEY_F10     0xC9
 #define KEY_F11     0xCA
+#define KEY_POWER   0xCB
+#define KEY_SLEEP   0xCD
+#define KEY_WAKE    0xCE
 
 void ps2_init();
 u8 gcGetKey();
