@@ -102,13 +102,22 @@ void func_cb4()
     gcPrintDialogShownItems(&dlgTest, DI_LISTBOX);
 }
 
-// SVM callback
+// SVM cursor callback
 void cb_svmcur(GC_SVMENU_t *svm)
 {
     gcSelectWindow(&wndSVMInfo);
     svm_current_item = svm->current;
     gcPrintDialog(&dlgSVMInfo);
     gcSelectWindow(&wndSVMnu);
+}
+
+// SVM keys callback
+u8 cb_svmkeys(GC_SVMENU_t *svm, KEY_t key)
+{
+    gcSelectWindow(&wndSVMInfo);
+    gcPrintf(INK_BRIGHT_WHITE"Key pressed:"INK_BLUE"0x%hx", key);
+    gcSelectWindow(&wndSVMnu);
+    return 0x00;
 }
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::

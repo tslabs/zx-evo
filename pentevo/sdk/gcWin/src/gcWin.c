@@ -683,6 +683,8 @@ svmnu_lp:
 
     call _gcGetKey
     ld a,l
+    or a
+    jr z,svmnu_lp
     cp #KB_DOWN
     jr z,svmnu_dn
     cp #KB_UP
@@ -695,7 +697,13 @@ svmnu_lp:
     jr z,svmnu_ent
     cp #KB_EXT
     jr z,svmnu_exit
-    jr svmnu_lp
+
+    call svmnu_cb_keys
+    ld a,l
+    or a
+    jr z,svmnu_lp
+    ld l,#0xFE
+    ret
 
 svmnu_exit:
     ld a,<#svm_flags (ix)
@@ -743,6 +751,7 @@ svmnu_up:
     dec a
     jr svmnu_lp1
 
+;; cursor moving callback
 svmnu_cb_cursor:
     ld e,<#svm_cb_cursor (ix)
     ld d,<#svm_cb_cursor+1 (ix)
@@ -764,6 +773,42 @@ svmnu_cb_cursor:
 0$:
 ;; restore stack
     pop af
+;;
+    pop iy
+    pop ix
+    ret
+
+;; key pressed callback
+svmnu_cb_keys:
+    ld e,<#svm_cb_keys (ix)
+    ld d,<#svm_cb_keys+1 (ix)
+    ld a,e
+    or d
+    jr z,1$
+;;
+    push ix
+    push iy
+
+;; store key
+    ld a,l
+    push af
+    inc sp
+;; store SVM pointer
+    push ix
+
+    ld hl,#0$
+    push hl
+    ex de,hl
+    jp (hl)
+
+1$: ld l,#0x00
+    ret
+
+0$:
+;; restore stack
+    pop af
+    pop af
+    dec sp
 ;;
     pop iy
     pop ix

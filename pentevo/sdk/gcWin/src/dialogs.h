@@ -229,7 +229,7 @@ GC_SVMENU_t svmTest =
 /*current*/     0,
 /*count*/       6,
 /*cb_cursor*/   cb_svmcur,
-/*cb_keys*/     0
+/*cb_keys*/     cb_svmkeys
 };
 
 const GC_WINDOW_t wndDialog =

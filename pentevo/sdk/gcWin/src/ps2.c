@@ -12,7 +12,7 @@ __sfr __banked __at 0xEFF7 CMOS_CONF;
 
 #define EIHALT __asm__("ei\n halt\n");
 
-u8 lastkey;
+KEY_t lastkey;
 KEY_STAT_t keyboard_stat;
 
 const KEY_t keymap[] =
@@ -210,14 +210,14 @@ KEY_t ps2_read()
     }
 }
 
-u8 gcGetKey()
+KEY_t gcGetKey()
 {
-    u8 scancode = ps2_read();
+    KEY_t scancode = ps2_read();
     lastkey = scancode;
     return scancode;
 }
 
-void gcWaitKey(u8 key)
+void gcWaitKey(KEY_t key)
 {
     do
     {

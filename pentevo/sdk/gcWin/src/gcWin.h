@@ -179,9 +179,10 @@ typedef struct
     void *cb_cursor;        // *svmcb_cursor_t
     void *cb_keys;          // *svmcb_keys_t
 } GC_SVMENU_t;
-
+// cursor moving callback function
 typedef void (*svmcb_cursor_t)(GC_SVMENU_t(*svm));
-typedef void (*svmcb_keys_t)(GC_SVMENU_t(*svm), u8 key);
+// key pressed callback function
+typedef u8 (*svmcb_keys_t)(GC_SVMENU_t(*svm), u8 key);
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 //:: HORIZONTAL MENU
