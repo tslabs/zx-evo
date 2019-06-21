@@ -92,6 +92,7 @@ void gcVars (void)
     DI_LISTBOX              .equ    #10
     DI_LISTVIEW             .equ    #11 ; not yet
     DI_NUMBER               .equ    #12
+    DI_PROGRESSBAR          .equ    #13
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     SYM_TRI                 .equ    #0xD8
     SYM_RADIO               .equ    #0xD0
@@ -2075,6 +2076,8 @@ void gcPrintDialogItem(GC_DITEM_t *ditm) __naked __z88dk_fastcall
     jp z,print_item_listbox
     cp #DI_EDIT
     jp z,print_item_edit
+    cp #DI_PROGRESSBAR
+    jp z,print_item_progress
 
 ;restore ret addr
     pop bc
@@ -2086,6 +2089,8 @@ gc_print_dialog_item_ret$:
     cp #DI_RADIOBUTTON
     jr z,gc_print_dialog_item_ret1$
     cp #DI_EDIT
+    jr z,gc_print_dialog_item_ret1$
+    cp #DI_PROGRESSBAR
     jr z,gc_print_dialog_item_ret1$
 
 ; don`t calc width
@@ -2375,6 +2380,26 @@ print_item_text:
     or h
     ret z
     jp strprnz
+
+;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+;; i:
+;;   HL - string address
+;;   DE - YX coords
+print_item_progress:
+    ld l,<#di_var (ix)
+    ld h,<#di_var+1 (ix)  ; HL - var address
+    ld a,(hl)
+    push af
+    inc sp
+    ld l,<#di_select (ix)
+    ld h,<#di_width (ix)
+    push hl
+    push de
+    call _gcProgressBar
+    ld hl,#5
+    add hl,sp
+    ld sp,hl
+    ret
 
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;; i:

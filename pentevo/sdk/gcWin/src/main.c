@@ -37,6 +37,7 @@ u8 itmVarRB1 = 0;
 u8 itmVarLBX11 = 0;
 // svm_current_item var
 u8 svm_current_item = 0;
+u8 svm_progress_item = 0;
 
 // numbers
 u32 itmNUM1 = (u32)-1;
@@ -107,6 +108,7 @@ void cb_svmcur(GC_SVMENU_t *svm)
 {
     gcSelectWindow(&wndSVMInfo);
     svm_current_item = svm->current;
+    svm_progress_item = svm->current * 20;
     gcPrintDialog(&dlgSVMInfo);
     gcSelectWindow(&wndSVMnu);
 }

@@ -176,12 +176,27 @@ const GC_DITEM_t itmItemSVMInfoTxt =
 /*handler*/     0
 };
 
+const GC_DITEM_t itmItemSVMInfoPgs =
+{
+/*type*/        DI_PROGRESSBAR,
+/*id*/          0,
+/*xy*/          1,2,
+/*wh*/          16,0,
+/*flags*/       {0,0,0,0,0,0,0,0},
+/*vartype*/     {0, 0, 0, 0, 0, 0},
+/*hotkey*/      0,
+/*select*/      WIN_COL_BLUE<<4|WIN_COL_BRIGHT_YELLOW,
+/*var*/         (u8)&svm_progress_item,
+/*name*/        0,
+/*handler*/     0
+};
+
 const GC_DIALOG_t dlgSVMInfo =
 {
 /*flag*/                {0,0,0,0,0,0,0,0},
 /*current*/             0,
-/*all_count*/           1,
-/*act_count*/           1,
+/*all_count*/           2,
+/*act_count*/           2,
 /*cur_attr*/            (WIN_COL_CYAN<<4) | WIN_COL_BRIGHT_YELLOW,
 /*box_attr*/            (WIN_COL_CYAN<<4) | WIN_COL_BLUE,
 /*btn_focus_attr*/      (WIN_COL_BRIGHT_YELLOW<<4) | WIN_COL_BLACK,
@@ -193,7 +208,8 @@ const GC_DIALOG_t dlgSVMInfo =
 
 const GC_DITEM_t *dlgSVMInfoItemsList[] =
 {
-    &itmItemSVMInfoTxt
+    &itmItemSVMInfoTxt,
+    &itmItemSVMInfoPgs
 };
 
 const GC_WINDOW_t wndSVMnu =
