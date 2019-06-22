@@ -6,8 +6,6 @@
 #include "defs.h"
 #include "gcWin.h"
 
-//#define PRINT_DELAY
-
 void gcVars (void)
 {
     __asm
@@ -17,6 +15,7 @@ void gcVars (void)
 ;; !!! must math with structures in gcWin.h !!!
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;; struct GC_SVM_FLAG_t
+    svmf_nowrap_mask         .equ    #0x40
     svmf_exit_mask           .equ    #0x80
 
 ;; struct GC_SVMENU
@@ -740,14 +739,24 @@ svmnu_dn:
     inc a
     cp <#svm_count (ix)
     jr nz,svmnu_lp1
-    xor a
+    ex af,af
+    ld a,<#svm_flags (ix)
+    and #svmf_nowrap_mask
+    jr z,svmnu_lp1
+    ex af,af
+    dec a
     jr svmnu_lp1
 
 svmnu_up:
     call restore_svm_cursor
     ld a,<#svm_current (ix)
+    ld c,a
     dec a
     jp p,svmnu_lp1
+    ld a,<#svm_flags (ix)
+    and #svmf_nowrap_mask
+    ld a,c
+    jr nz,svmnu_lp1
     ld a,<#svm_count (ix)
     dec a
     jr svmnu_lp1
@@ -1085,7 +1094,8 @@ u8 gcFindHotkey(GC_DIALOG_t *dlg) __naked __z88dk_fastcall
 u8 gcDialog(GC_DIALOG_t *dlg) __naked __z88dk_fastcall
 {
     dlg;                    // to avoid SDCC warning
-    __asm
+
+  __asm
 
 ;; save IX
     push ix
@@ -1093,22 +1103,6 @@ u8 gcDialog(GC_DIALOG_t *dlg) __naked __z88dk_fastcall
     ld (_current_dialog_ptr),hl
 
     MAC_LD_IXHL             ; IX - dialog descriptor
-
-;; set var
-    ld a,<#dlg_cur_attr (ix)
-    ld (cfg_cur_attr),a
-    ld a,<#dlg_box_attr (ix)
-    ld (cfg_sbox_attr),a
-
-    ld a,<#dlg_btn_focus_attr (ix)
-    ld (cfg_btn_focus_attr),a
-    ld a,<#dlg_btn_unfocus_attr (ix)
-    ld (cfg_btn_unfocus_attr),a
-
-    ld a,<#dlg_lbox_focus_attr (ix)
-    ld (cfg_listbox_focus_attr),a
-    ld a,<#dlg_lbox_unfocus_attr (ix)
-    ld (cfg_listbox_unfocus_attr),a
 
     call _gcPrintDialog
 
@@ -1444,7 +1438,7 @@ dialog_ent_list:
     push de
 
 ;; build temp window onto stack
-;;gcDrawWindow(u8 id, u8 x, u8 y, u8 width, u8 hight, u8 attr, u8 frame_type, u8 frame_attr) {
+;;void gcDrawWindow(u8 id, u8 x, u8 y, u8 width, u8 hight, WIN_COLORS_t attr, GC_FRM_TYPE_t frame_type, WIN_COLORS_t frame_attr) {
 
 ;;set frame attr
     ld a,(cfg_listbox_unfocus_attr)
@@ -1669,7 +1663,7 @@ dialog_sel_radio:
     ld sp,hl
     jr dialog_sp_exit
 ;;:::::::::::::::::::::::::::::
-    __endasm;
+  __endasm;
 }
 
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -1920,6 +1914,22 @@ void gcPrintDialog(GC_DIALOG_t *dlg) __naked __z88dk_fastcall
     push ix
 
     MAC_LD_IXHL             ; IX - dialog descriptor
+
+;; set vars
+    ld a,<#dlg_cur_attr (ix)
+    ld (cfg_cur_attr),a
+    ld a,<#dlg_box_attr (ix)
+    ld (cfg_sbox_attr),a
+
+    ld a,<#dlg_btn_focus_attr (ix)
+    ld (cfg_btn_focus_attr),a
+    ld a,<#dlg_btn_unfocus_attr (ix)
+    ld (cfg_btn_unfocus_attr),a
+
+    ld a,<#dlg_lbox_focus_attr (ix)
+    ld (cfg_listbox_focus_attr),a
+    ld a,<#dlg_lbox_unfocus_attr (ix)
+    ld (cfg_listbox_unfocus_attr),a
 
     ld b,<#dlg_all_count (ix)
 print_dialog:
@@ -2309,7 +2319,7 @@ print_item_groupbox:
     ld a,(cfg_sbox_attr)
     and #0x0F
     ld c,a
-    ld a,(sym_attr)
+    ld a,(win_attr)
     and #0xF0
     or c
     ld c,a
@@ -3034,7 +3044,7 @@ void gcScrollDownRect(u8 x, u8 y, u8 width, u8 hight) __naked
 }
 
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-void gcDrawWindow(u8 id, u8 x, u8 y, u8 width, u8 hight, u8 attr, u8 frame_type, u8 frame_attr) __naked
+void gcDrawWindow(u8 id, u8 x, u8 y, u8 width, u8 hight, WIN_COLORS_t attr, GC_FRM_TYPE_t frame_type, WIN_COLORS_t frame_attr) __naked
 {
     id,x,y,width,hight,attr;// to avoid SDCC warning
     frame_type, frame_attr; // to avoid SDCC warning
@@ -3507,14 +3517,6 @@ sym_prns::
 ;;   BC`, HL`, AF`
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 sym_prn::
-    #ifdef PRINT_DELAY
-    push bc
-    djnz .-0
-    djnz .-0
-    djnz .-0
-    djnz .-0
-    pop bc
-    #endif // delay
     ld h,d
     ld l,e
     inc e

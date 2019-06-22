@@ -61,19 +61,19 @@
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 //:: WINDOW COLORS
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-typedef enum
+typedef enum WIN_COLORS_t
 {
     WIN_COL_BLACK           = ((u8)0x00),
     WIN_COL_BLUE            = ((u8)0x01),
-    WIN_COL_RED		        = ((u8)0x02),
+    WIN_COL_RED             = ((u8)0x02),
     WIN_COL_MAGENTA         = ((u8)0x03),
-    WIN_COL_GREEN	        = ((u8)0x04),
-    WIN_COL_CYAN	        = ((u8)0x05),
-    WIN_COL_YELLOW	        = ((u8)0x06),
-    WIN_COL_WHITE	        = ((u8)0x07),
-    WIN_COL_BRIGHT_BLUE	    = ((u8)0x09),
+    WIN_COL_GREEN           = ((u8)0x04),
+    WIN_COL_CYAN            = ((u8)0x05),
+    WIN_COL_YELLOW          = ((u8)0x06),
+    WIN_COL_WHITE           = ((u8)0x07),
+    WIN_COL_BRIGHT_BLUE     = ((u8)0x09),
     WIN_COL_BRIGHT_RED      = ((u8)0x0A),
-    WIN_COL_BRIGHT_MAGENTA	= ((u8)0x0B),
+    WIN_COL_BRIGHT_MAGENTA  = ((u8)0x0B),
     WIN_COL_BRIGHT_GREEN    = ((u8)0x0C),
     WIN_COL_BRIGHT_CYAN     = ((u8)0x0D),
     WIN_COL_BRIGHT_YELLOW   = ((u8)0x0E),
@@ -83,7 +83,7 @@ typedef enum
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 //:: MESSAGEBOX TYPES
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-typedef enum
+typedef enum MB_TYPE_t
 {
     MB_OK               = ((u8)0),
     MB_OKCANCEL         = ((u8)1),
@@ -95,7 +95,7 @@ typedef enum
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 //:: DIALOG BUTTONS
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-typedef enum
+typedef enum BTN_TYPE_t
 {
     BUTTON_OK           = ((u8)0xFF),
     BUTTON_CANCEL       = ((u8)0xFE),
@@ -109,7 +109,7 @@ typedef enum
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 //:: WINDOW TYPES
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-typedef enum
+typedef enum GC_WND_TYPE_t
 {
     GC_WND_NOMENU   = ((u8)0x00),
     GC_WND_SVMENU   = ((u8)0x01),
@@ -120,7 +120,7 @@ typedef enum
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 //:: FRAME TYPES
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-typedef enum
+typedef enum GC_FRM_TYPE_t
 {
     GC_FRM_NONE     = ((u8)0x00),
     GC_FRM_SINGLE   = ((u8)0x01),
@@ -134,27 +134,27 @@ typedef enum
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 //:: WINDOW DESCRIPTOR
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-typedef struct
+typedef struct GC_WINDOW_t
 {
-    u8  id;                     // +0
-    GC_WND_TYPE_t   type;       // +1
-    u8  x;                      // +2
-    u8  y;                      // +3
-    u8  width;                  // +4
-    u8  hight;                  // +5
-    WIN_COLORS_t  attr;         // +6
-    GC_FRM_TYPE_t frame_type;   // +7
-    WIN_COLORS_t frame_attr;    // +8
-    u8  *header_txt;            // +9
-    u8  *window_txt;            // +11
-    u16 *menu_ptr;              // +13
-    u16 *int_proc;              // +15
+    u8              id;
+    GC_WND_TYPE_t   type;
+    u8              x;
+    u8              y;
+    u8              width;
+    u8              hight;
+    WIN_COLORS_t    attr;
+    GC_FRM_TYPE_t   frame_type;
+    WIN_COLORS_t    frame_attr;
+    char            *header_txt;
+    char            *window_txt;
+    void            *menu_ptr;
+    void            *int_proc;
 } GC_WINDOW_t;
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 //:: SIMPLE VERTICAL MENU FLAGS
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-typedef struct
+typedef struct GC_SVM_FLAG_t
 {
     unsigned    bit0        :1;
     unsigned    bit1        :1;
@@ -162,22 +162,22 @@ typedef struct
     unsigned    bit3        :1;
     unsigned    bit4        :1;
     unsigned    bit5        :1;
-    unsigned    bit6        :1;
+    unsigned    SVMF_NOWRAP :1;
     unsigned    SVMF_EXIT   :1;
 } GC_SVM_FLAG_t;
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 //:: SIMPLE VERTICAL MENU
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-typedef struct
+typedef struct GC_SVMENU_t
 {
-    GC_SVM_FLAG_t flags;    // флаги
-    u8  attr;               // атрибут цвета
-    u8  margin;             // отступ от верха
-    u8  current;            // текущая позиция
-    u8  count;              // количество пунктов
-    void *cb_cursor;        // *svmcb_cursor_t
-    void *cb_keys;          // *svmcb_keys_t
+    GC_SVM_FLAG_t   flags;      // флаги
+    WIN_COLORS_t    attr;       // атрибут цвета
+    u8              margin;     // отступ от верха
+    u8              current;    // текущая позиция
+    u8              count;      // количество пунктов
+    void            *cb_cursor; // *svmcb_cursor_t
+    void            *cb_keys;   // *svmcb_keys_t
 } GC_SVMENU_t;
 // cursor moving callback function
 typedef void (*svmcb_cursor_t)(GC_SVMENU_t(*svm));
@@ -211,7 +211,7 @@ typedef struct
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 //:: DIALOG ITEMS
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-typedef enum
+typedef enum GC_DITEM_TYPE_t
 {
     DI_TEXT         = ((u8)0),
     DI_HDIV         = ((u8)1),
@@ -229,7 +229,7 @@ typedef enum
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 // ITEM VAR SIZES
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-typedef enum
+typedef enum GCIV_SIZE_t
 {
     GCIVS_BYTE    = 0,
     GCIVS_WORD    = 1,
@@ -240,7 +240,7 @@ typedef enum
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 // ITEM VAR TYPES
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-typedef enum
+typedef enum GCIV_TYPE_t
 {
     GCIVT_DEC     = 0,
     GCIVT_HEX     = 1,
@@ -250,7 +250,7 @@ typedef enum
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 //:: DIALOG ITEM VARIABLE TYPE STRUCTURE
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-typedef struct
+typedef struct GC_DITEM_VAR_t
 {
     GCIV_SIZE_t     DIV_SIZE    :2;
     GCIV_TYPE_t     DIV_TYPE    :2;
@@ -263,7 +263,7 @@ typedef struct
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 //:: DIALOG ITEM FLAGS
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-typedef struct
+typedef struct GC_DITEM_FLAG_t
 {
     unsigned    DIF_GREY    :1;
     unsigned    bit1        :1;
@@ -277,6 +277,7 @@ typedef struct
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
+/*
 typedef struct
 {
     u8  flags;
@@ -286,7 +287,8 @@ typedef struct
     u8  *column_widths;
     u16 **column_titles;
     u16 **column_list;
-} GC_LISTVIEW;
+} GC_LISTVIEW_t;
+*/
 
 // GC_COLUMN_t
 
@@ -404,7 +406,7 @@ column_list - указатель на массив указателей на д�
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 //:: DIALOG ITEM STRUCTURE
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-typedef struct
+typedef struct GC_DITEM_t
 {
     GC_DITEM_TYPE_t type;
     u8              id;
@@ -414,7 +416,7 @@ typedef struct
     u8              hight;
     GC_DITEM_FLAG_t flags;
     GC_DITEM_VAR_t  vartype;
-    u8              hotkey;
+    KEY_t           hotkey;
     u8              select;
     u8              *var;
     u8  const       *name;
@@ -442,7 +444,7 @@ typedef struct
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 //:: DIALOG FLAGS
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-typedef struct
+typedef struct GC_DLG_FLAG_t
 {
     unsigned    bit0        :1;
     unsigned    bit1        :1;
@@ -457,19 +459,19 @@ typedef struct
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 //:: DIALOG STRUCTURE
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-typedef struct
+typedef struct GC_DIALOG_t
 {
-    GC_DLG_FLAG_t flag;     // dialog flags
-    u8  current;            // current item
-    u8  all_count;          // count of all items
-    u8  act_count;          // count of acive items
-    u8  cur_attr;           // cursor attribute
-    u8  box_attr;           // DI_GROUPBOX attribute
-    u8  btn_focus_attr;     // DI_BUTTON focus attribute
-    u8  btn_unfocus_attr;   // DI_BUTTON unfocus attribute
-    u8  lbox_focus_attr;    // DI_LISTBOX (and other) focus attribute
-    u8  lbox_unfocus_attr;  // DI_LISTBOX (and other) unfocus attribute
-    GC_DITEM_t **items;     // pointer to array of items pointers
+    GC_DLG_FLAG_t flag;             // dialog flags
+    u8  current;                    // current item
+    u8  all_count;                  // count of all items
+    u8  act_count;                  // count of acive items
+    WIN_COLORS_t cur_attr;          // cursor attribute
+    WIN_COLORS_t box_attr;          // DI_GROUPBOX attribute
+    WIN_COLORS_t btn_focus_attr;    // DI_BUTTON focus attribute
+    WIN_COLORS_t btn_unfocus_attr;  // DI_BUTTON unfocus attribute
+    WIN_COLORS_t lbox_focus_attr;   // DI_LISTBOX (and other) focus attribute
+    WIN_COLORS_t lbox_unfocus_attr; // DI_LISTBOX (and other) unfocus attribute
+    GC_DITEM_t **items;             // pointer to array of items pointers
 } GC_DIALOG_t;
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
@@ -522,7 +524,7 @@ BTN_TYPE_t gcExecuteWindow(GC_WINDOW_t *wnd);
 void gcCloseWindow(void) __naked;
 void gcPrintChainWindows(void) __naked;
 
-void gcDrawWindow(u8 id, u8 x, u8 y, u8 width, u8 hight, u8 attr, u8 frame_type, u8 frame_attr) __naked;
+void gcDrawWindow(u8 id, u8 x, u8 y, u8 width, u8 hight, WIN_COLORS_t attr, GC_FRM_TYPE_t frame_type, WIN_COLORS_t frame_attr) __naked;
 u8 gcGetMessageLines(u8 *msg) __naked __z88dk_fastcall;
 u8 gcGetMessageMaxLength(u8 *msg) __naked __z88dk_fastcall;
 void gcPrintWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall;

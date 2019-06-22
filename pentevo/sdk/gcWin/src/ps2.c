@@ -92,9 +92,7 @@ void ps2_init()
     CMOS_CONF = 0x80;
     CMOS_ADDR = 0xF0;
     CMOS_DATA = 0x02;
-    keyboard_stat.KEYS_SHIFT = 0;
-    keyboard_stat.KEYS_CTRL = 0;
-    keyboard_stat.KEYS_ALT = 0;
+    *(u8*)keyboard_stat = 0;
 }
 
 KEY_t ps2_read()

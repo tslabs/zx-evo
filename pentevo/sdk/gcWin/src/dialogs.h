@@ -180,7 +180,7 @@ const GC_DITEM_t itmItemSVMInfoPgs =
 {
 /*type*/        DI_PROGRESSBAR,
 /*id*/          0,
-/*xy*/          1,2,
+/*xy*/          1,4,
 /*wh*/          16,0,
 /*flags*/       {0,0,0,0,0,0,0,0},
 /*vartype*/     {0, 0, 0, 0, 0, 0},
@@ -191,14 +191,29 @@ const GC_DITEM_t itmItemSVMInfoPgs =
 /*handler*/     0
 };
 
+const GC_DITEM_t itmItemSVMInfoGrp =
+{
+/*type*/        DI_GROUPBOX,
+/*id*/          0,
+/*xy*/          0,3,
+/*wh*/          18,3,
+/*flags*/       {0,0,0,0,0,0,0,0},
+/*vartype*/     {0, 0, 0, 0, 0, 0},
+/*hotkey*/      0,
+/*select*/      0,
+/*var*/         0,
+/*name*/        0,
+/*handler*/     0
+};
+
 const GC_DIALOG_t dlgSVMInfo =
 {
 /*flag*/                {0,0,0,0,0,0,0,0},
 /*current*/             0,
-/*all_count*/           2,
-/*act_count*/           2,
+/*all_count*/           3,
+/*act_count*/           1,
 /*cur_attr*/            (WIN_COL_CYAN<<4) | WIN_COL_BRIGHT_YELLOW,
-/*box_attr*/            (WIN_COL_CYAN<<4) | WIN_COL_BLUE,
+/*box_attr*/            WIN_COL_BRIGHT_BLUE,
 /*btn_focus_attr*/      (WIN_COL_BRIGHT_YELLOW<<4) | WIN_COL_BLACK,
 /*btn_unfocus_attr*/    (WIN_COL_BRIGHT_WHITE<<4) | WIN_COL_BLACK,
 /*lbox_focus_attr*/     (WIN_COL_BLUE<<4) | WIN_COL_BRIGHT_WHITE,
@@ -208,8 +223,9 @@ const GC_DIALOG_t dlgSVMInfo =
 
 const GC_DITEM_t *dlgSVMInfoItemsList[] =
 {
+    &itmItemSVMInfoPgs,
     &itmItemSVMInfoTxt,
-    &itmItemSVMInfoPgs
+    &itmItemSVMInfoGrp
 };
 
 const GC_WINDOW_t wndSVMnu =
@@ -239,7 +255,7 @@ const GC_WINDOW_t wndSVMnu =
 
 GC_SVMENU_t svmTest =
 {
-/*flags*/       {0,0,0,0,0,0,0,1},
+/*flags*/       {0,0,0,0,0,0,1,1},
 /*attr*/        (WIN_COL_BRIGHT_BLUE<<4) | WIN_COL_BRIGHT_YELLOW,
 /*margin*/      5,
 /*current*/     0,
@@ -691,7 +707,7 @@ const GC_DIALOG_t dlgInfo =
 /*all_count*/           4,
 /*act_count*/           1,
 /*cur_attr*/            (WIN_COL_CYAN<<4) | WIN_COL_BRIGHT_YELLOW,
-/*box_attr*/            (WIN_COL_CYAN<<4) | WIN_COL_BLUE,
+/*box_attr*/            WIN_COL_BLUE,
 /*btn_focus_attr*/      (WIN_COL_BRIGHT_YELLOW<<4) | WIN_COL_BLACK,
 /*btn_unfocus_attr*/    (WIN_COL_BRIGHT_WHITE<<4) | WIN_COL_BLACK,
 /*lbox_focus_attr*/     (WIN_COL_BLUE<<4) | WIN_COL_BRIGHT_WHITE,
@@ -715,7 +731,7 @@ const GC_DIALOG_t dlgTest =
 /*all_count*/           24,
 /*act_count*/           13,
 /*cur_attr*/            (WIN_COL_CYAN<<4) | WIN_COL_BRIGHT_YELLOW,
-/*box_attr*/            (WIN_COL_CYAN<<4) | WIN_COL_BLUE,
+/*box_attr*/            WIN_COL_BLUE,
 /*btn_focus_attr*/      (WIN_COL_BRIGHT_YELLOW<<4) | WIN_COL_BLACK,
 /*btn_unfocus_attr*/    (WIN_COL_BRIGHT_WHITE<<4) | WIN_COL_BLACK,
 /*lbox_focus_attr*/     (WIN_COL_BLUE<<4) | WIN_COL_BRIGHT_WHITE,
