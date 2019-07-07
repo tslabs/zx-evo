@@ -3605,8 +3605,15 @@ putsym_sym:
     ret
 ;;
 putsym_n:
+    ld a,(win_h)
+    ld b,a
+    ld a,(win_y)
+    add a,b
+    ld b,a
     ld a,(cur_y)
     inc a
+    cp b
+    call nc,putsym_scrollup
     ld (cur_y),a
     ld d,a
 putsym_r:
@@ -3657,6 +3664,16 @@ putsym_paper:
     add a,a
     add a,a
     ld (bg_attr),a
+    ret
+;;
+putsym_scrollup:
+    push hl
+    push de
+    ld hl,(_current_window_ptr)
+    call _gcScrollUpWindow
+    pop de
+    pop hl
+    ld a,(cur_y)
     ret
 ;;
 pspfx:
@@ -3763,8 +3780,15 @@ strprnz_invert:
     jr strprnz
 
 strprnz_n:
+    ld a,(win_h)
+    ld b,a
+    ld a,(win_y)
+    add a,b
+    ld b,a
     ld a,(cur_y)
     inc a
+    cp b
+    call nc,strprnz_scrollup
     ld (cur_y),a
     ld d,a
 strprnz_r:
@@ -3828,6 +3852,16 @@ strprnz_link:
     call nz,strprnz
     pop hl
     jp strprnz
+
+strprnz_scrollup:
+    push hl
+    push de
+    ld hl,(_current_window_ptr)
+    call _gcScrollUpWindow
+    pop de
+    pop hl
+    ld a,(cur_y)
+    ret
 
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;; i:

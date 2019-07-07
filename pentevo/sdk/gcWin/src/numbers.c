@@ -523,8 +523,6 @@ gc_printf_loop1$:
     or a
     jp z,gc_printf_exit$
     inc hl
-    cp #0x0A
-    jr z,gc_printf_linefeed$
     cp #'%'
     jr nz,gc_printf_char$
     ld a,(hl)
@@ -571,14 +569,6 @@ gc_printf_char$:
     ld l,a
     call _putsym
     pop hl
-    jr gc_printf_loop1$
-;;
-gc_printf_linefeed$:
-    ld a,(cur_y)
-    inc a
-    ld (cur_y),a
-    ld a,(win_x)
-    ld (cur_x),a
     jr gc_printf_loop1$
 
 ;; %h modificator (short)

@@ -21,4 +21,3 @@ __sfr __banked __at 0x13AF TS_PAGE3;
 
 #define TS_TSU_T0ZEN      0x04#define TS_TSU_T1ZEN      0x08#define TS_TSU_T0EN       0x20#define TS_TSU_T1EN       0x40#define TS_TSU_SEN        0x80
 
-void strprn_xy(u16 *str, u8 x, u8 y, u8 color);

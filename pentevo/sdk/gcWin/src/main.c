@@ -82,6 +82,8 @@ void testMouse()
         gcPrintf(INK_BLUE"32 bit number:"INK_MAGENTA"%012ld\n", a2d32s("-1234567890"));
     }
 
+    gcWaitKey(KEY_SPACE);
+
     gcCloseWindow();
 }
 
@@ -176,6 +178,7 @@ void main(void)
     itmVarCB4 = cb4;
     itmVarLBX11 = lb;
 
+/*
     select = gcExecuteWindow(&wndDialog);
     // if press OK button
     if (select == BUTTON_OK)
@@ -192,11 +195,15 @@ void main(void)
     }
     // close dialog window
     gcCloseWindow();
+*/
 
+/*
     gcExecuteWindow(&wndInfo);
     // close info window
     gcCloseWindow();
+*/
 
+/*
     select = gcMessageBox(MB_RETRYABORTIGNORE, GC_FRM_SINGLE, "MessageBox",
                 INK_BRIGHT_WHITE
                 "Lorem ipsum dolor sit amet, consectetur\n"
@@ -207,6 +214,7 @@ void main(void)
                  );
     // close messagebox
     gcCloseWindow();
+*/
 
     testMouse();
 
@@ -238,7 +246,8 @@ void main(void)
             gcScrollDownWindow(&wndMain);
             break;
         default:
-            if(c >= 0x20) putchar(c);
+            putsym(c);
+            if(c == KEY_ENTER) putsym('\x0A');
         }
         if(pcx == 80) pcx = 0;
     }

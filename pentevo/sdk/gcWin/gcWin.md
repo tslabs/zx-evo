@@ -81,6 +81,17 @@ void gcScrollUpWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall;
 
 
 
+```
+void gcScrollUpRect(u8 x, u8 y, u8 width, u8 hight) __naked;
+```
+
+- **x** - X координата
+- **y** - Y координата
+- **width** - ширина окна
+- **hight** - высота окна
+
+
+
 ### Скроллинг окна вниз
 
 ```
@@ -88,6 +99,17 @@ void gcScrollDownWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall;
 ```
 
 - ***wnd** - указатель на [описатель окна](#GC_WINDOW_t)
+
+
+
+```
+void gcScrollDownRect(u8 x, u8 y, u8 width, u8 hight) __naked;
+```
+
+- **x** - X координата
+- **y** - Y координата
+- **width** - ширина окна
+- **hight** - высота окна
 
 
 
@@ -170,6 +192,150 @@ void gcPrintf(char *string, ...) __naked;
 
 
 
+### Числа
+
+------
+
+
+
+#### Преобразование десятичного беззнакового числа 8-бит в строку
+
+```
+char *dec2asc8(u8 num) __naked __z88dk_fastcall;
+```
+
+
+
+#### Преобразование десятичного знакового числа 8-бит в строку
+
+```
+char *dec2asc8s(s8 num) __naked __z88dk_fastcall;
+```
+
+
+
+#### Преобразование десятичного беззнакового числа 16-бит в строку
+
+```
+char *dec2asc16(u16 num) __naked __z88dk_fastcall;
+```
+
+
+
+#### Преобразование десятичного знакового числа 16-бит в строку
+
+```
+char *dec2asc16s(s16 num) __naked __z88dk_fastcall;
+```
+
+
+
+#### Преобразование десятичного беззнакового числа 32-бит в строку
+
+```
+char *dec2asc32(u32 num) __naked __z88dk_fastcall;
+```
+
+
+
+#### Преобразование десятичного знакового числа 32-бит в строку
+
+```
+char *dec2asc32s(s32 num) __naked __z88dk_fastcall;
+```
+
+
+
+#### Преобразование шестнадцатеричного числа 8-бит в строку
+
+```
+char *hex2asc8(u8 num) __naked __z88dk_fastcall;
+```
+
+
+
+#### Преобразование шестнадцатеричного числа 16-бит в строку
+
+```
+char *hex2asc16(u16 num) __naked __z88dk_fastcall;
+```
+
+
+
+#### Преобразование шестнадцатеричного числа 32-бит в строку
+
+```
+char *hex2asc32(u32 num) __naked __z88dk_fastcall;
+```
+
+
+
+#### Преобразование строки в беззнаковое число 32-бит
+
+```
+u32 a2d32(char *string) __naked __z88dk_fastcall;
+```
+
+
+
+#### Преобразование строки в  знаковое число 32-бит
+
+```
+s32 a2d32s(char *string) __naked __z88dk_fastcall;
+```
+
+
+
+#### Печать десятичного беззнакового числа 8-бит
+
+```
+void gcPrintDec8(u8 num) __z88dk_fastcall;
+```
+
+
+
+#### Печать десятичного знакового числа 8-бит
+
+```
+void gcPrintDec8s(s8 num) __z88dk_fastcall;
+```
+
+
+
+#### Печать десятичного беззнакового числа 16-бит
+
+```
+void gcPrintDec16(u16 num) __z88dk_fastcall;
+```
+
+
+
+#### Печать десятичного знакового числа 16-бит
+
+```
+void gcPrintDec16s(s16 num) __z88dk_fastcall;
+```
+
+
+
+#### Печать десятичного беззнакового числа 32-бит
+
+```
+void gcPrintDec32(u32 num) __z88dk_fastcall;
+```
+
+
+
+#### Печать десятичного знакового числа 32-бит
+
+```
+void gcPrintDec32s(s32 num) __z88dk_fastcall;
+```
+
+
+
+
+
 ### Простое вертикальное меню
 
 ------
@@ -182,7 +348,13 @@ void gcPrintf(char *string, ...) __naked;
 u8 gcSimpleVMenu(GC_SVMENU_t *svmnu) __naked __z88dk_fastcall;
 ```
 
-- ***svmnu** - указатель на описатель меню
+- ***svmnu** - указатель на [описатель меню](#GC_SVMENU_t)
+
+> Возвращает номер выбранного пункта или:
+>
+> 0xFF - выход по клавише KEY_TAB
+>
+> 0xFE - выход по CALLBACK функции обработки клавиш cb_keys
 
 
 
@@ -192,7 +364,7 @@ u8 gcSimpleVMenu(GC_SVMENU_t *svmnu) __naked __z88dk_fastcall;
 void gcPrintSVMCursor(GC_SVMENU_t *svmnu) __naked __z88dk_fastcall;
 ```
 
-- ***svmnu** - указатель на описатель меню
+- ***svmnu** - указатель на [описатель меню](#GC_SVMENU_t)
 
 
 
@@ -202,7 +374,7 @@ void gcPrintSVMCursor(GC_SVMENU_t *svmnu) __naked __z88dk_fastcall;
 void gcRestoreSVMCursor(GC_SVMENU_t *svmnu) __naked __z88dk_fastcall;
 ```
 
-- ***svmnu** - указатель на описатель меню
+- ***svmnu** - указатель на [описатель меню](#GC_SVMENU_t)
 
 
 
@@ -220,7 +392,7 @@ void gcRestoreSVMCursor(GC_SVMENU_t *svmnu) __naked __z88dk_fastcall;
 u8 gcDialog(GC_DIALOG_t *dlg) __naked __z88dk_fastcall;
 ```
 
-- ***dlg** - указатель на описатель диалога
+- ***dlg** - указатель на [описатель диалога](#GC_DIALOG_t)
 
 
 
@@ -230,7 +402,7 @@ u8 gcDialog(GC_DIALOG_t *dlg) __naked __z88dk_fastcall;
 void gcPrintDialog(GC_DIALOG_t *dlg) __naked __z88dk_fastcall;
 ```
 
-- ***dlg** - указатель на описатель диалога
+- ***dlg** - указатель на [описатель диалога](#GC_DIALOG_t)
 
 
 
@@ -240,7 +412,7 @@ void gcPrintDialog(GC_DIALOG_t *dlg) __naked __z88dk_fastcall;
 void gcPrintActiveDialog(GC_DIALOG_t *dlg) __naked __z88dk_fastcall;
 ```
 
-- ***dlg** - указатель на описатель диалога
+- ***dlg** - указатель на [описатель диалога](#GC_DIALOG_t)
 
 
 
@@ -250,8 +422,8 @@ void gcPrintActiveDialog(GC_DIALOG_t *dlg) __naked __z88dk_fastcall;
 void gcPrintDialogShownItems(GC_DIALOG_t *dlg, GC_DITEM_TYPE_t type) __naked;
 ```
 
-- ***dlg** - указатель на описатель диалога
-- **type** - тип элементов диалога
+- ***dlg** - указатель на [описатель диалога](#GC_DIALOG_t)
+- **type** - [тип элементов диалога](#GC_DITEM_TYPE_t)
 
 
 
@@ -261,7 +433,7 @@ void gcPrintDialogShownItems(GC_DIALOG_t *dlg, GC_DITEM_TYPE_t type) __naked;
 void gcPrintDialogItem(GC_DITEM_t *ditm) __naked __z88dk_fastcall;
 ```
 
-- ***ditm** - указатель на элемент диалога
+- ***ditm** - указатель на [элемент диалога](#GC_DITEM_t)
 
 
 
@@ -369,7 +541,11 @@ typedef enum WIN_COLORS_t
 
 
 
-### Описатель Simple Vertical Menu
+
+
+------
+
+### <a name="GC_SVMENU_t">Описатель Simple Vertical Menu</a>
 
 ```
 typedef struct GC_SVMENU_t
@@ -384,7 +560,7 @@ typedef struct GC_SVMENU_t
 } GC_SVMENU_t;
 ```
 
-- **flags** - флаги
+- **flags** - [флаги](#GC_SVM_FLAG_t)
 - **attr** - [атрибут цвета](#WIN_COLORS_t) курсора
 - **margin** - отступ от верха
 - **current** - текущая позиция
@@ -392,7 +568,25 @@ typedef struct GC_SVMENU_t
 - ***cb_cursor** - CALLBACK функция при перемещении курсора
 - ***cb_keys** - CALLBACK функция при нажатии на клавишу
 
-#### Флаги Simple Vertical Menu
+
+
+CALLBACK функция при перемещении курсора
+
+```
+void (*svmcb_cursor_t)(GC_SVMENU_t(*svm));
+```
+
+
+
+CALLBACK функция при нажатии на клавишу
+
+```
+u8 (*svmcb_keys_t)(GC_SVMENU_t(*svm), u8 key);
+```
+
+
+
+#### <a name="GC_SVM_FLAG_t">Флаги Simple Vertical Menu</a>
 
 ```
 typedef struct GC_SVM_FLAG_t
@@ -412,9 +606,14 @@ typedef struct GC_SVM_FLAG_t
 
 - **SVMF_EXIT** - выход из меню по нажатию клавиши **KEY_TAB**
 
-  
 
-### Описатель диалога
+
+
+
+
+------
+
+### <a name="GC_DIALOG_t">Описатель диалога</a>
 
 ```
 typedef struct GC_DIALOG_t
@@ -444,17 +643,13 @@ typedef struct GC_DIALOG_t
 - **box_attr** - [атрибут цвета](#WIN_COLORS_t) элемента **DI_GROUPBOX**
 
 - **btn_focus_attr** - [атрибут цвета](#WIN_COLORS_t) элемента **DI_BUTTON** в фокусе
-
 - **btn_unfocus_attr** - [атрибут цвета](#WIN_COLORS_t) элемента **DI_BUTTON** не в фокусе
-
 - **lbox_focus_attr** - [атрибут цвета](#WIN_COLORS_t) элемента **DI_LISTBOX**[^1] в фокусе
-
 - **lbox_unfocus_attr** - [атрибут цвета](#WIN_COLORS_t) элемента **DI_LISTBOX**[^1]не в фокусе
-
 - ** **items** - указатель на массив указателей [элементов диалога](#GC_DITEM_t)
 
-  (**ВАЖНО!** активные элементы должны перечисляться первыми, в конце списка
-  пассивные элементы, такие как **DI_TEXT**, **DI_GROUPBOX**, **DI_HDIV**)
+  > (**ВАЖНО!** активные элементы должны перечисляться первыми, в конце списка
+  > пассивные элементы, такие как **DI_TEXT**, **DI_GROUPBOX**, **DI_HDIV**)
 
   
 
@@ -479,40 +674,32 @@ typedef struct GC_DITEM_t
 } GC_DITEM_t;
 ```
 
-- **type** - тип элемента диалога
-
+- **type** -  [тип элемента диалога](#GC_DITEM_TYPE_t)
 - **id** - идентификатор элемента (используется для возвращения нажатой кнопки в диалоге)
-
 - **x**, **y** -  координаты элемента
-
 - **width** - ширина элемента (для элемента **DI_CHECKBOX** ширина просчитывается автоматически)
+- **hight** - высота элемента (используется для элемента **DI_GROUPBOX**,
 
-- **hight** - высота элемента; используется для элемента **DI_GROUPBOX**
+  в других элементах значение игнорируется)
 
-  в других элементах значение игнорируется
-
-- **flags** - флаги элемента
+- **flags** - [флаги элемента](#GC_DITEM_FLAG_t)
   **DIF_GREY** - неактивный элемент
   **DIF_TABSTOP** - стоп-флаг для навигации по клавише **KEY_TAB** и **KEY_PGUP**, **KEY_PGDN**
+  
   (**Внимание!** обязательно наличие одного флага)
-  **DIF_RIGHT** - выравнивание вправо по width
-
-- **vartype** - тип переменной
-
+  
+  **DIF_RIGHT** - выравнивание по правому краю
+- **vartype** - [тип переменной](#GC_DITEM_VAR_t)
 - **hotkey** - горячая клавиша
-
 - **select** - используется в зависимости от типа элемента
-
 - ***var** - указатель на переменную
-
 - ***name** - указатель на название элемента
-
 - **exec** - указатель на функцию, вызываемую при выборе элемента.
   (может использоваться для изменения активности/неактивности элемента выставлением флага **DIF_GREY**)
 
 
 
-##### Типы элементов диалога
+##### <a name="GC_DITEM_TYPE_t">Типы элементов диалога</a>
 
 ```
 typedef enum GC_DITEM_TYPE_t
@@ -535,36 +722,43 @@ typedef enum GC_DITEM_TYPE_t
 
 ###### DI_TEXT
 
+_текст_
+
 - **x** - X координата
 - **y** - Y координата
-
 - **name** - название элемента
 
-  
+
 
 ###### DI_HDIV
 
-- **y** - Y координата
+_горизонтальный разделитель_
 
+- **y** - Y координата
 - **name** - название элемента
 
 
 
 ###### DI_GROUPBOX
 
+_рамка_
+
 - **x** - X координата
 - **y** - Y координата
+- **width** - ширина
+- **hight** - высота
 - **name** - название элемента
 
 
 
 ###### DI_EDIT
 
+_редактирование строки_
+
 - **x** - X координата
 - **y** - Y координата
-
- * **width** - ширина поля ввода
- * **name** - указатель на строку
+- **width** - ширина поля ввода
+- **name** - указатель на строку
 
 
 
@@ -572,20 +766,17 @@ typedef enum GC_DITEM_TYPE_t
 
 - **x** - X координата
 - **y** - Y координата
-
 - **width** - рассчитывается автоматически
-
 - **var** - указатель на переменную (u8) 0x00 - OFF  0xFF - ON
-
 - **name** - название элемента
 
-  
+
+
 
 ###### DI_RADIOBUTTON
 
 - **x** - X координата
 - **y** - Y координата
-
 - **width** - рассчитывается автоматически
 - **select** - значение для занесения в переменную при выборе
 - **var** - указатель на переменную (u8)
@@ -595,9 +786,10 @@ typedef enum GC_DITEM_TYPE_t
 
 ###### DI_LISTBOX
 
+_выпадающий список_
+
 - **x** - X координата
 - **y** - Y координата
-
 - **width** - ширина поля выбора подпунктов
 - **select** - количество подпунктов
 - **var** - указатель на переменную (u8) на текущуюю позицию
@@ -607,14 +799,27 @@ typedef enum GC_DITEM_TYPE_t
 
 ###### DI_BUTTON
 
+_кнопка_
+
 - **id** - код элемента, возвращаемый диалогом
+- **x** - X координата
+- **y** - Y координата
+- **width** - ширина элемента
+- **select** - должен быть 0x00 (используется для анимации нажатия)
+- **name** - название элемента
+
+
+
+###### DI_NUMBER
 
 - **x** - X координата
 - **y** - Y координата
 
- * **width** - ширина элемента
- * **select** - должен быть 0x00 (используется для анимации нажатия)
+ * **width** - ширина поля для числа (происходит выравнивание по правому краю)
+ * **var** - указатель на переменную
+ * **vartype** - [тип переменной](#GC_DITEM_VAR_t)
  * **name** - название элемента
+
 
 
 
@@ -622,9 +827,15 @@ typedef enum GC_DITEM_TYPE_t
 
 - **x** - X координата
 - **y** - Y координата
-
 - **width** - ширина элемента
 - **var** - указатель на переменную (u8) (0-100)%
+
+
+
+
+
+------
+
 
 
 
@@ -645,7 +856,7 @@ typedef enum BTN_TYPE_t
 
 
 
-##### Флаги элементов диалога
+##### <a name="GC_DITEM_FLAG_t">Флаги элементов диалога</a>
 
 ```
 typedef struct GC_DITEM_FLAG_t
@@ -667,7 +878,7 @@ typedef struct GC_DITEM_FLAG_t
 
 
 
-##### Переменные диалога
+##### <a name="GC_DITEM_VAR_t">Переменные диалога</a>
 
 ```
 typedef struct GC_DITEM_VAR_t
@@ -681,7 +892,9 @@ typedef struct GC_DITEM_VAR_t
 } GC_DITEM_VAR_t;
 ```
 
-##### Типы переменных диалога
+
+
+##### <a name="GCIV_TYPE_t">Типы переменных диалога</a>
 
 ```
 typedef enum GCIV_TYPE_t
@@ -716,7 +929,7 @@ PAPER_[COLOR]
 
 - **BLACK** - черный
 - **BLUE** - синий
-  **RED** - красный
+- **RED** - красный
 - **MAGENTA** - пурпурный
 - **GREEN** - зеленый
 - **CYAN** - голубой
