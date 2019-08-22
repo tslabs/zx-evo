@@ -58,6 +58,11 @@ constexpr auto w_inputbg = 0x40;
 constexpr auto w_48_k = 0x20;
 constexpr auto w_dos = 0x20;
 
+constexpr auto pc_history_x = 80;
+constexpr auto pc_history_y = 0;
+constexpr auto pc_history_wx = 7;
+constexpr auto pc_history_wy = 28;
+
 constexpr auto w_trace_jinfo_curs_fg = 0x0D;
 constexpr auto w_trace_jinfo_nocurs_fg = 0x02;
 constexpr auto w_trace_jarrow_foregr = 0x0D;
@@ -76,7 +81,10 @@ constexpr auto menu_cursor = 0xE0;
 constexpr auto menu_item = menu_inside;
 constexpr auto menu_item_dis = 0x7A;
 
-constexpr auto debug_text_width = 150;
+constexpr auto tsconf_base_x = 88;
+constexpr auto tsconf_base_y = 0;
+
+constexpr auto debug_text_width = 157;
 constexpr auto debug_text_height = 30;
 constexpr auto debug_text_size = (debug_text_width * debug_text_height);
 constexpr auto DEBUG_WND_WIDTH = (debug_text_width * 8);

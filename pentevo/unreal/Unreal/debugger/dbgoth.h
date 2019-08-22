@@ -18,3 +18,4 @@ void showbanks();
 void showports();
 void showdos();
 void show_time();
+void show_pc_history();

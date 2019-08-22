@@ -224,6 +224,24 @@ int dispatch_banks() {
 	return 0;
 }
 
+void show_pc_history()
+{
+	Z80 &cpu = t_cpu_mgr::get_cpu();
+  
+  char xx[pc_history_wx + 1];
+  for (u32 i = 0; i < pc_history_wy; i++)
+	{
+    int p = cpu.pc_hist_ptr - i;
+    if (p < 0) p += Z80_PC_HISTORY_SIZE;
+    
+    sprintf(xx, "%02X:%04X", cpu.pc_hist[p].page, cpu.pc_hist[p].addr);
+    tprint(pc_history_x, pc_history_y + i + 1, xx, w_other);
+  }
+  
+	tprint(pc_history_x, pc_history_y, "PC hist", w_title);
+ 	frame(pc_history_x, pc_history_y + 1, pc_history_wx, pc_history_wy, FRAME);
+}
+
 void showports()
 {
 	char ln[64];

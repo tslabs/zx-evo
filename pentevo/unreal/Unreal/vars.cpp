@@ -65,6 +65,11 @@ u8 TMainZ80::rd(u32 addr)
 
 u8 TMainZ80::m1_cycle()
 {
+  cpu.pc_hist_ptr++;
+  if (cpu.pc_hist_ptr >= Z80_PC_HISTORY_SIZE) cpu.pc_hist_ptr = 0;
+  cpu.pc_hist[cpu.pc_hist_ptr].addr = cpu.pc;
+  cpu.pc_hist[cpu.pc_hist_ptr].page = comp.ts.page[(cpu.pc >> 14) & 3];
+  
   r_low++;
   u8 tempbyte = MemIf->rm(pc++);
 
@@ -76,6 +81,7 @@ u8 TMainZ80::m1_cycle()
     tt += rate * 4;
 
   cpu.opcode = tempbyte;
+  
   return tempbyte;
 }
 

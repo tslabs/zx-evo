@@ -59,6 +59,7 @@ void debugscr()
 	showbanks();
 	showports();
 	showdos();
+  show_pc_history();
 	show_tsconf();
 
 #if 1
