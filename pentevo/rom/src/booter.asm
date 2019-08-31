@@ -56,11 +56,14 @@ start   push bc
         ex de, hl
 thg     ld b, 1
         call load512
+		ld a,h
+		cp h'40
+		jr c,thg_end
         ld a, (eoc)
         cp h'0f
         jr nz, thg
 
-        ld ix, sysvars
+thg_end ld ix, sysvars
         ld de, sys_var
         call DEHRUST
 
