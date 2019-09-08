@@ -1,7 +1,7 @@
-         SAVEBIN "gifview.wmf";--------         ORG #7E00
+;GIF Viewer;(C) GREY 2013-2017, KOSHI/MGN 2019;-----------------------------------------------         SAVEBIN "gifview.wmf";--------         ORG #7E00
          INCLUDE "WCHEADER.ASM"
 ;-----------------------------------------------         ORG #8000;--------
-codstart EXA         XOR A         LD (ESTA),A         LD (ESCENKEF),A         EXA         OR A:JP NZ,PLUGIN_EXIT ; вызывать плагин можно только по расширению         PUSH HL,DE
+codstart EXA         XOR A         LD (ESTA),A         LD (ESCENKEF),A         LD (wcABT),A         LD (wcENT),A         EXA         OR A:JP NZ,PLUGIN_EXIT ; вызывать плагин можно только по расширению         PUSH HL,DE
          LD BC,%10 ; 14MHz
          CALL TURBO         LD A,1; time refresh disable         CALL INT_PL         LD BC,CYC,A,CACHE:OUT A; Cache ON         POP DE,HL
         ld (ExSp),sp
@@ -54,7 +54,7 @@ codstart EXA         XOR A         LD (ESTA),A         LD (ESCENKEF),A      
         ld (ScrY_Scrl),hl        CALL USPO
 l20_PL  ; цикл загрузки ролика - начинаем с начала файла. 
         ; (только если весь файл в памяти)
-        
+        XOR A        LD (wcABT),A        LD (wcENT),A        
         ld a,(ScrPg)    ; Куда и с какой старнцы распаковывать
         ld e,a
         ld a,(BufPg)    ; A - начиная с какой страницы находится Gif
@@ -84,8 +84,8 @@ EX_ESC  ld hl,0
         ld a,0
         exa
         ld a,64 ;│MNGV_PL
-        call wcIN 
-        XOR     A
+        call wcIN
+        XOR A
         RET;-----------------------------PLUGIN_EXIT LD A,(ESTA)            RET
 EX_ENT  
 WEnter  ld hl,0
@@ -105,18 +105,18 @@ EX_ERR  DI        ld sp,(ExSp)        EI
         ld a,0
         exa
         ld a,64 ;│MNGV_PL
-        call wcIN 
-        LD      A,1
+        call wcIN
+        LD A,1
         RET
 
-exEnter DI:LD SP,(ExSp):EI        LD A,(ESCENKEF):SET 1,A:LD (ESCENKEF),A
+exEnter DI:LD SP,(ExSp):EI        XOR A:LD (wcENT),A        LD A,(ESCENKEF):SET 1,A:LD (ESCENKEF),A
         ld a,(wcPage0)
         ld bc,wcPage0
         out (c),a
         ld a,(wcPage3)
         ld bc,wcPage3
         out (c),a
-        HALT
+;HALT
         JP EX_ENT
 
 WaitBreak
@@ -282,7 +282,7 @@ ShowGif cp 17             ; проверяеm - в каком режиме 4 бит ил 8 бит показывать
         exa
         ld a,64 ;│MNGV_PL
         call wcIN
-        HALT
+;HALT
         ld bc,Page3
         ld a,(sacep3)
         out (c),a
@@ -307,7 +307,7 @@ ShowGif16
         exa
         ld a,64 ;│MNGV_PL
         call wcIN
-        HALT
+;HALT
         ld bc,Page3
         ld a,(sacep3)
         out (c),a
@@ -980,13 +980,13 @@ l17     sla e
        ;ld (xloc4),de   ; Обнуляем   screen position }
         ld (yloc4),de
         xor a
-        ld (done),a
+;ld (done),a
         ld (remct),a  
         ld de,(imagewide)
-        ld (rowcnt),de
+        ld (rowcnt),de;-------
 ui01    ld a,0 ;(reqct)    
 reqct   equ $-1
-;-------callGetCode:        cp 9 ;sub hl,de       ; { If reqct<=8 }
+;-------callGetCode:        cp 9 ;sub hl,de       ; { If reqct<=8 }
         jp nc,Ag01
         call GetBCode   ;{   then return GetBCode(reqct) }
         jp Agex
@@ -1008,12 +1008,11 @@ Apushde equ $-2
         ld a,d
         or h
         ld d,a        
-Agex    ;-------        
-        ld (code),de  
-        ld hl,00        ;(clearcode)
+Agex    ;-------macroend
+          ld (code),de  
+          ld hl,00        ;(clearcode)
 clearcode equ $-2        
-        OR A:SBC hl,de
-        jp nz,ui02
+          OR A:SBC hl,de:jp nz,ui02
         ld de,(clearcode)
         call InitCodeTable
         ld a,(codestart)
@@ -1021,15 +1020,15 @@ clearcode equ $-2
         ld (reqct),a ;  reqct:=codestart+1 
         ld de,#FFFF
         ld (oldcode),de
-        jp ui07 
+;jp ui07        LD A,(wcABT):OR A:JP NZ,exgif        LD A,(wcENT):OR A:JP NZ,exEnter        JP ui01 
 ui02    ld hl,0;(eoi)
 eoi     equ $-2        
         OR A:SBC hl,de
         jp nz,ui03
         call FlushIn    ; Закончилось все
-        ld a,#FF        ; фдаг для выхода
-        ld (done),a
-        jp ui07
+;ld a,#FF ; фдаг для выхода
+;ld (done),a
+;jp ui07        ;LD A,(wcABT):OR A:JP NZ,exgif        ;LD A,(wcENT):OR A:JP NZ,exEnter        EXX        RET
 ui03    ld hl,(code)
         add hl,hl
         ld a,0;(ctlink)
@@ -1059,10 +1058,10 @@ ui06    ld hl,0 ;(code)
 code    equ $-2
         ld (oldcode),hl
 ;/**********************************/
-PutX    ld bc,Page3     ; пишем коды в Стэк пикселей
+PutX    ld bc,Page3    ; пишем коды в Стэк пикселей
         in a,(c)
         ld (PgGif),a
-        ld d,endcode[  ;ld de,0
+        ld d,endcode[  ; ld de,0
         ld e,#FF
         ld b,Page0[
 px01   
@@ -1080,7 +1079,7 @@ ctlink3 equ $-1
         ld a,(hl)
         inc hl
         ld h,(hl)
-        ld l,a          ;В общем тут оптимизировал проверку
+        ld l,a         ; В общем тут оптимизировал проверку
         ld a,h
         inc a
         jp nz,px01
@@ -1089,25 +1088,24 @@ loop    dec de
         ld a,(de)
         push de
         jp DoPixel ; Выводим пиксель
-DoPixelHL equ $-2    ; в режимах 4/8 бит - подставляется разный адрес процедуры
+DoPixelHL equ $-2  ; в режимах 4/8 бит - подставляется разный адрес процедуры
 ExDoPix pop de
         ld a,d
         cp endcode[
         jp nz,loop
-        ;ld bc,Page3   ; Page3 должно остаться из DoPixel
+    ;ld bc,Page3   ; Page3 должно остаться из DoPixel
         ld a,0
 PgGif   equ $-1
-        out (c),a
+        out (c),a        LD A,(wcABT):OR A:JP NZ,exgif        LD A,(wcENT):OR A:JP NZ,exEnter        JP ui01
 ;/********************************/
 
-ui07    EXX:PUSH HL,DE,BC:CALL ESC        POP BC,DE,HL:EXX:JP NZ,exgif        EXX:PUSH HL,DE,BC:CALL ENKE        POP BC,DE,HL:EXX:JP NZ,exEnter
-        ld a,0
-done    equ $-1        
-        or a:jp z,ui01
-        exx
-        ret
+;ui07    LD A,(wcABT):OR A:JP NZ,exgif;        LD A,(wcENT):OR A:JP NZ,exEnter
+;ld a,0
+;done    equ $-1
+;or a:jp z,ui01;exx
+;ret
 
-exgif   LD A,(ESCENKEF):SET 0,A:LD (ESCENKEF),A        exx
+exgif   XOR A:LD (wcABT),A        LD A,(ESCENKEF):SET 0,A:LD (ESCENKEF),A        exx
         pop hl
         jp WaitBreak
 
@@ -1134,32 +1132,32 @@ InsertCode      ; Вставляем в таблица новый код
      
         ld bc,Page0
         ld a,0;(ctlink)
-ctlink2 equ $-1        
+ctlink2 equ $-1
         out (c),a
-        ld (hl),e ; массив сслок  ctlink[nextcode]:=oldcode 
+        ld (hl),e ; массив сслок  ctlink[nextcode]:=oldcode
         inc hl
         ld (hl),d
 
         ld a,0;(ctfirst)
-ctfirst1 equ $-1        
+ctfirst1 equ $-1
         out (c),a
         pop hl
-        ld a,(hl)       ; A = ctfirst[code] 
+        ld a,(hl)       ; A = ctfirst[code]
         ld hl,(nextcode)
 
         ex AF,AF'
         ld a,0;(ctlast)
-ctlast1 equ $-1        
+ctlast1 equ $-1
         out (c),a
         ex AF,AF'
-        ld (hl),a       ; ctlast[nextcode]:=A 
+        ld (hl),a       ; ctlast[nextcode]:=A
 
         ld a,0          ;(ctfirst)
-ctfirst2 equ $-1        
+ctfirst2 equ $-1
         out (c),a
-        ld a,(de)       ;ld a,(hl) 
+        ld a,(de)       ;ld a,(hl)
 
-        ld (hl),a       ; вот и сдвинули старык код в следующий код 
+        ld (hl),a       ; вот и сдвинули старык код в следующий код
         inc hl          ; ctfirst[nextcode]:=ctfirst[oldcode]
         ld de,0         ;(nextlim)
 nextlim equ $-2
@@ -1178,7 +1176,7 @@ nextlim equ $-2
 icEx    ld (nextcode),de
         ret
 
-DoPixel16       ; 4 бита на пиксель 
+DoPixel16       ; 4 бита на пиксель
         ld b,Page3[
         ld e,0  ;(pgloc)
 pgloc4  equ $-1
@@ -1196,7 +1194,7 @@ scrofs4 equ $-2
 j_notr1 equ $-2       ; если не нужно проверять
         cp 0          ; проверям на прозрачный цвето
 trcol1  equ $-1       ; код цвета и адрес перепрыгивания подстаивляются заранее
-        jp z,Xovr16        
+        jp z,Xovr16
 notr1   rlca
         rla
         rla
@@ -1221,7 +1219,7 @@ notr2
         and (hl)
         or e
         ld (hl),a
-hbt4        
+hbt4
 Xovr16
         ld hl,(xloc4)
         inc hl
@@ -1240,7 +1238,7 @@ Xovr16
 
 dp0216  ld hl,(yloc)
         inc hl
-        ld (yloc),hl   
+        ld (yloc),hl
         ;для Y
         ld a,(scrofs4+1)
         inc a
@@ -1248,7 +1246,7 @@ dp0216  ld hl,(yloc)
         ld a,(pgloc4)
         inc a
         cp a,0 ;#1f
-EndScr4 equ $-1        
+EndScr4 equ $-1
         jp nc,ovpg16
         ld (pgloc4),a
 ovpg16  ld a,#C0
@@ -1267,10 +1265,10 @@ scrofs  equ $-2
         add hl,de
         jp c,Xovr
         jp notr        ; перепрыгиваем через проверку прозрачного цвета
-j_notr  equ $-2        
+j_notr  equ $-2
         cp 0
 trcol   equ $-1
-        jp z,Xovr        
+        jp z,Xovr
 notr    ld (hl),a
 Xovr    inc de
         ld (xloc),de
@@ -1287,7 +1285,7 @@ Xovr    inc de
 
 dp02    ld hl,(yloc)
         inc hl
-        ld (yloc),hl   
+        ld (yloc),hl
         ;для Y
         ld a,(scrofs+1)
         inc a
@@ -1297,7 +1295,7 @@ dp02    ld hl,(yloc)
 NdpY    ld a,(pgloc)
         inc a
         cp a,0 ;#1f
-EndScr8 equ $-1        
+EndScr8 equ $-1
         jp nc,overpg
         ld (pgloc),a
 overpg  ld a,#C0
@@ -1346,23 +1344,23 @@ InitCodeTable
         ld (nextlim),hl
         ld hl,0         ; Начиаем с  code =0
 
-A01     ld de,(clearcode) ;  крутимся пока  code < HL do ... 
+A01     ld de,(clearcode) ;  крутимся пока  code < HL do ...
         push hl
         OR A:SBC hl,de
         pop hl
         jp nc,A02
         ld a,0;(ctfirst)
-ctfirst3 equ $-1        
+ctfirst3 equ $-1
         ld bc,Page0
         out (c),a
-        ld (hl),l       ; ctfirst[code]:=code 
+        ld (hl),l       ; ctfirst[code]:=code
         ld a,0;(ctlast)
-ctlast3 equ $-1        
+ctlast3 equ $-1
         out (c),a
         ld (hl),l       ;  ctlast[code]:=code 
         add hl,hl
         ld a,0;(ctlink)
-ctlink4 equ $-1        
+ctlink4 equ $-1
         out (c),a
         ld bc,0-1        ;  ctlink[code]:= -1 - таблица указателй на цепочки кодов
         ld (hl),c
@@ -1376,11 +1374,11 @@ A02     ld de,4096      ; максиально возможный  размер таблицы при 12 битах
         ex de,hl
         OR A:SBC hl,de
         ret c
-        ex de,hl        
+        ex de,hl
         add hl,hl
         ld bc,Page0
         ld a,0;(ctlink)
-ctlink5 equ $-1        
+ctlink5 equ $-1
         out (c),a
         ld bc,#FEFF ;-2
         inc d           ;(+1 что бы цикл сделать по флагу Z )
