@@ -76,8 +76,8 @@ const int SIN_MASK = SIN_LEN - 1;
 const int TL_RES_LEN = 256;	// 8 bits addressing (real chip)
 
 // register number to channel number , slot offset
-const byte SLOT1 = 0;
-const byte SLOT2 = 1;
+const u8 SLOT1 = 0;
+const u8 SLOT2 = 1;
 
 // Envelope Generator phases
 const int EG_ATT = 4;
@@ -155,8 +155,8 @@ const unsigned sl_tab[16] = {
 #undef SC
 
 
-const byte RATE_STEPS = 8;
-const byte eg_inc[15 * RATE_STEPS] =
+const u8 RATE_STEPS = 8;
+const u8 eg_inc[15 * RATE_STEPS] =
 {
 //cycle:0 1  2 3  4 5  6 7
 		0,1, 0,1, 0,1, 0,1, //  0  rates 00..12 0 (increment by 0 or 1)
@@ -182,7 +182,7 @@ const byte eg_inc[15 * RATE_STEPS] =
 
 #define O(a) (a*RATE_STEPS)
 // note that there is no O(13) in this table - it's directly in the code
-const byte eg_rate_select[16 + 64 + 16] =
+const u8 eg_rate_select[16 + 64 + 16] =
 {
 	// Envelope Generator rates (16 + 64 rates + 16 RKS)
 	// 16 infinite time rates
@@ -223,7 +223,7 @@ const byte eg_rate_select[16 + 64 + 16] =
 //shift 12,   11,   10,   9,   8,   7,   6,  5,  4,  3,  2,  1,  0,  0,  0,  0  
 //mask  4095, 2047, 1023, 511, 255, 127, 63, 31, 15, 7,  3,  1,  0,  0,  0,  0  
 #define O(a) (a*1)
-const byte eg_rate_shift[16 + 64 + 16] =
+const u8 eg_rate_shift[16 + 64 + 16] =
 {
 	// Envelope Generator counter shifts (16 + 64 rates + 16 RKS) 
 	// 16 infinite time rates 
@@ -256,8 +256,8 @@ const byte eg_rate_shift[16 + 64 + 16] =
 
 
 // multiple table
-#define ML(x) (byte)(2 * x)
-const byte mul_tab[16] =
+#define ML(x) (u8)(2 * x)
+const u8 mul_tab[16] =
 {
 	// 1/2, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,10,12,12,15,15
 	ML( 0.5),ML( 1.0),ML( 2.0),ML( 3.0),ML( 4.0),ML( 5.0),ML( 6.0),ML( 7.0),
@@ -295,7 +295,7 @@ static unsigned int sin_tab[SIN_LEN * 8];
 // When AM = 0 data is divided by 4 before being used (loosing precision is important)
 
 const unsigned int LFO_AM_TAB_ELEMENTS = 210;
-const byte lfo_am_table[LFO_AM_TAB_ELEMENTS] =
+const u8 lfo_am_table[LFO_AM_TAB_ELEMENTS] =
 {
 	0,0,0,0,0,0,0,
 	1,1,1,1,
@@ -411,13 +411,13 @@ YMF262Channel::YMF262Channel()
 }
 
 
-void YMF262::callback(byte flag)
+void YMF262::callback(u8 flag)
 {
 	setStatus(flag);
 }
 
 // status set and IRQ handling
-void YMF262::setStatus(byte flag)
+void YMF262::setStatus(u8 flag)
 {
 	// set status flag masking out disabled IRQs 
 	status |= flag;
@@ -428,7 +428,7 @@ void YMF262::setStatus(byte flag)
 }
 
 // status reset and IRQ handling 
-void YMF262::resetStatus(byte flag)
+void YMF262::resetStatus(u8 flag)
 {
 	// reset status flag 
 	status &= ~flag;
@@ -439,7 +439,7 @@ void YMF262::resetStatus(byte flag)
 }
 
 // IRQ mask set
-void YMF262::changeStatusMask(byte flag)
+void YMF262::changeStatusMask(u8 flag)
 {
 	statusMask = flag;
 	status &= statusMask;
@@ -463,7 +463,7 @@ void YMF262::advance_lfo()
 		lfo_am_cnt -= (LFO_AM_TAB_ELEMENTS << LFO_SH);
 	}
 
-	byte tmp = lfo_am_table[lfo_am_cnt >> LFO_SH];
+	u8 tmp = lfo_am_table[lfo_am_cnt >> LFO_SH];
 	if (lfo_am_depth) {
 		LFO_AM = tmp;
 	} else {
@@ -554,7 +554,7 @@ void YMF262::advance()
 
 		// Phase Generator 
 		if (op.vib) {
-			byte block;
+			u8 block;
 			unsigned int block_fnum = ch.block_fnum;
 			unsigned int fnum_lfo   = (block_fnum & 0x0380) >> 7;
 			signed int lfo_fn_table_index_offset = lfo_pm_table[LFO_PM + 16 * fnum_lfo];
@@ -624,14 +624,14 @@ signed int op_calc1(unsigned phase, unsigned int env, signed int pm, unsigned in
 	return tl_tab[p];
 }
 
-inline int YMF262Slot::volume_calc(byte LFO_AM)
+inline int YMF262Slot::volume_calc(u8 LFO_AM)
 {
 	return TLL + volume + (LFO_AM & AMmask);
 }
 
 // calculate output of a standard 2 operator channel
 // (or 1st part of a 4-op channel) 
-void YMF262Channel::chan_calc(byte LFO_AM)
+void YMF262Channel::chan_calc(u8 LFO_AM)
 {
     chanOut[PHASE_MOD1] = 0;
     chanOut[PHASE_MOD2] = 0;
@@ -659,7 +659,7 @@ void YMF262Channel::chan_calc(byte LFO_AM)
 }
 
 // calculate output of a 2nd part of 4-op channel 
-void YMF262Channel::chan_calc_ext(byte LFO_AM)
+void YMF262Channel::chan_calc_ext(u8 LFO_AM)
 {
 	chanOut[PHASE_MOD1] = 0;
 
@@ -1009,7 +1009,7 @@ void YMF262::setSampleRate(int sampleRate, int Oversampling)
 	eg_timer_add  = (unsigned)((1 << EG_SH) * freqbase);
 }
 
-void YMF262Slot::FM_KEYON(byte key_set)
+void YMF262Slot::FM_KEYON(u8 key_set)
 {
 	if (!key) {
 		// restart Phase Generator 
@@ -1020,7 +1020,7 @@ void YMF262Slot::FM_KEYON(byte key_set)
 	key |= key_set;
 }
 
-void YMF262Slot::FM_KEYOFF(byte key_clr)
+void YMF262Slot::FM_KEYOFF(u8 key_clr)
 {
 	if (key) {
 		key &= key_clr;
@@ -1063,7 +1063,7 @@ void YMF262Channel::CALC_FCSLOT(YMF262Slot &slot)
 }
 
 // set multi,am,vib,EG-TYP,KSR,mul 
-void YMF262::set_mul(byte sl, byte v)
+void YMF262::set_mul(u8 sl, u8 v)
 {
 	int chan_no = sl / 2;
 	YMF262Channel &ch  = channels[chan_no];
@@ -1120,7 +1120,7 @@ void YMF262::set_mul(byte sl, byte v)
 }
 
 // set ksl & tl 
-void YMF262::set_ksl_tl(byte sl, byte v)
+void YMF262::set_ksl_tl(u8 sl, u8 v)
 {
 	int chan_no = sl/2;
 	YMF262Channel &ch = channels[chan_no];
@@ -1177,7 +1177,7 @@ void YMF262::set_ksl_tl(byte sl, byte v)
 }
 
 // set attack rate & decay rate  
-void YMF262::set_ar_dr(byte sl, byte v)
+void YMF262::set_ar_dr(u8 sl, u8 v)
 {
 	YMF262Channel &ch = channels[sl / 2];
 	YMF262Slot &slot = ch.slots[sl & 1];
@@ -1202,7 +1202,7 @@ void YMF262::set_ar_dr(byte sl, byte v)
 }
 
 // set sustain level & release rate 
-void YMF262::set_sl_rr(byte sl, byte v)
+void YMF262::set_sl_rr(u8 sl, u8 v)
 {
 	YMF262Channel &ch = channels[sl / 2];
 	YMF262Slot &slot = ch.slots[sl & 1];
@@ -1224,17 +1224,17 @@ void YMF262::update_channels(YMF262Channel &ch)
 	}
 }
 
-byte YMF262::peekReg(int r)
+u8 YMF262::peekReg(int r)
 {
 	return reg[r];
 }
 
-byte YMF262::readReg(int r)
+u8 YMF262::readReg(int r)
 {
 	return reg[r];
 }
 
-void YMF262::writeReg(int r, byte v, const EmuTime &time)
+void YMF262::writeReg(int r, u8 v, const EmuTime &time)
 {
 	if (!OPL3_mode && (r != 0x105)) {
 		// in OPL2 mode the only accessible in set #2 is register 0x05 
@@ -1243,11 +1243,11 @@ void YMF262::writeReg(int r, byte v, const EmuTime &time)
 	writeRegForce(r, v, time);
 	checkMute();
 }
-void YMF262::writeRegForce(int r, byte v, const EmuTime &time)
+void YMF262::writeRegForce(int r, u8 v, const EmuTime &time)
 {
 	reg[r] = v;
 
-	byte ch_offset = 0;
+	u8 ch_offset = 0;
 	if (r & 0x100) {
 		switch(r) {
 		case 0x101:	// test register
@@ -1255,7 +1255,7 @@ void YMF262::writeRegForce(int r, byte v, const EmuTime &time)
 		
 		case 0x104: { // 6 channels enable 
 			YMF262Channel &ch0 = channels[0];
-			byte prev = ch0.extended;
+			u8 prev = ch0.extended;
 			ch0.extended = (v >> 0) & 1;
 			if (prev != ch0.extended) {
 				update_channels(ch0);
@@ -1526,7 +1526,7 @@ void YMF262::writeRegForce(int r, byte v, const EmuTime &time)
 		}
 		// update
 		if (ch.block_fnum != block_fnum) {
-			byte block  = block_fnum >> 10;
+			u8 block  = block_fnum >> 10;
 			ch.block_fnum = block_fnum;
 			ch.ksl_base = ksl_tab[block_fnum >> 6];
 			ch.fc       = fn_tab[block_fnum & 0x03FF] >> (7 - block);
@@ -1655,7 +1655,7 @@ void YMF262::writeRegForce(int r, byte v, const EmuTime &time)
 			case 9: case 10: case 11:
 				if (ch.extended) {
 					YMF262Channel &ch3 = channels[chan_no + 3];
-					byte conn = (ch.slots[SLOT1].CON << 1) || (ch3.slots[SLOT1].CON);
+					u8 conn = (ch.slots[SLOT1].CON << 1) || (ch3.slots[SLOT1].CON);
 					switch(conn) {
 					case 0:
 						// 1 -> 2 -> 3 -> 4 - out 
@@ -1704,7 +1704,7 @@ void YMF262::writeRegForce(int r, byte v, const EmuTime &time)
 			case 12: case 13: case 14: {
 				YMF262Channel &ch3 = channels[chan_no - 3];
 				if (ch3.extended) {
-					byte conn = (ch3.slots[SLOT1].CON << 1) || (ch.slots[SLOT1].CON);
+					u8 conn = (ch3.slots[SLOT1].CON << 1) || (ch.slots[SLOT1].CON);
 					switch(conn) {
 					case 0:
 						// 1 -> 2 -> 3 -> 4 - out 
@@ -1844,14 +1844,14 @@ YMF262::~YMF262()
 {
 }
 
-byte YMF262::peekStatus()
+u8 YMF262::peekStatus()
 {
 	return status | status2;
 }
 
-byte YMF262::readStatus()
+u8 YMF262::readStatus()
 {
-	byte result = status | status2;
+	u8 result = status | status2;
 	status2 = 0;
 	return result;
 }

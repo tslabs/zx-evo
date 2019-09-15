@@ -1,6 +1,10 @@
 ﻿cmake_minimum_required (VERSION 3.8)
 
-add_definitions(-DUSE_SND_EXTERNAL_BUFFER)
+add_definitions(
+	-DUSE_SND_EXTERNAL_BUFFER
+	-D_CRT_SECURE_NO_DEPRECATE
+	-D_CRT_NONSTDC_NO_DEPRECATE
+)
 
 file(GLOB HEADERS
     
@@ -22,11 +26,18 @@ link_directories(
 	${CMAKE_CURRENT_SOURCE_DIR}/lib
 )
 
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  string(APPEND CMAKE_CXX_FLAGS " -Wno-missing-braces -Wno-c++11-narrowing")
+endif()
+
+
 add_executable (Unreal
 	${HEADERS}
 	${SOURCES}
 	${CMAKE_CURRENT_SOURCE_DIR}/Unreal.rc
 )
+
+target_compile_features(Unreal PRIVATE cxx_std_17)
 
 target_link_libraries(Unreal 
 	dinput 
