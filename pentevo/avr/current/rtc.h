@@ -75,6 +75,48 @@ u8 rtc_read(u8 addr);
 /** E register index. (non-standard) */
 #define GLUK_REG_E          0x0E
 
+typedef struct
+{
+  union
+  {
+    struct
+    {
+      /** PS/2 keyboard LCTRL key status. */
+      u8 lctrl               : 1;
+      /** PS/2 keyboard RCTRL key status. */
+      u8 rctrl               : 1;
+      /** PS/2 keyboard LALT key status. */
+      u8 lalt                : 1;
+      /** PS/2 keyboard RALT key status. */
+      u8 ralt                : 1;
+      /** PS/2 keyboard LSHIFT key status. */
+      u8 lshift              : 1;
+      /** PS/2 keyboard RSHIFT key status. */
+      u8 rshift              : 1;
+      /** PS/2 keyboard F12 key status. */
+      u8 f12                 : 1;
+    };
+    u8 byte;
+  };
+} KB_CTRL_RTC_0_t;
+
+typedef struct
+{
+  union
+  {
+    struct
+    {
+      /** PS/2 keyboard LWIN key status. */
+      u8 lwin                : 1;
+      /** PS/2 keyboard RWIN key status. */
+      u8 rwin                : 1;
+      /** PS/2 keyboard MENU key status. */
+      u8 menu                : 1;
+    };
+    u8 byte;
+  };
+} KB_CTRL_RTC_1_t;
+
 /** B register 2 bit - data mode (A 1 in DM signifies binary data while a 0 in DM specifies BCD data). */
 #define GLUK_B_DATA_MODE      0x04
 /** B register 1 bit - 24/12 mode (A 1 indicates the 24-hour mode and a 0 indicates the 12-hour mode). */

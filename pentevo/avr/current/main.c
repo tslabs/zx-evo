@@ -19,6 +19,7 @@
 #include "joystick.h"
 #include "tape.h"
 #include "kbmap.h"
+#include "config.h"
 
 //if want Log than comment next string
 #undef LOGENABLE
@@ -44,8 +45,6 @@ volatile u8 ext_type_gluk;
 // Buffer for depacking FPGA configuration.
 // You can USED for other purposed after setup FPGA.
 u8 dbuf[DBSIZE];
-
-u8 egg;
 
 void put_buffer(u16 size)
 {
@@ -104,8 +103,6 @@ void waittask(void)
 
 int main()
 {
-  egg = 0;
-
 start:
 
   hardware_init();
@@ -163,21 +160,20 @@ start:
   DDRF &= ~(1<<nCONFIG);
   while(!(PINF & (1<<nSTATUS))); // wait ready
 
-  // prepare for data fetching
-  if (egg)
+  switch (eeprom_read_byte((const u8*)ADDR_FPGA_CFG))
   {
-    curFpga = GET_FAR_ADDRESS(fpga2);
-    egg = 0;
-  }
-  else
-  switch (eeprom_read_byte((const u8*)0x0fff))
-  {
-    case 0:
+    case FPGA_TS:
       curFpga = GET_FAR_ADDRESS(fpga1);
     break;
 
+    case FPGA_EGG:
+      curFpga = GET_FAR_ADDRESS(fpga2);
+    break;
+
+    case FPGA_BASE:
     default:
       curFpga = GET_FAR_ADDRESS(fpga0);
+    break;
   }
 
 #ifdef LOGENABLE

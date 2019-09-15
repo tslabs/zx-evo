@@ -369,15 +369,27 @@ u8 gluk_get_reg(u8 index)
 		if (index == GLUK_REG_D)
 		{
 			//return keyboard statuses
-			tmp &= ~(KB_LCTRL_MASK|KB_RCTRL_MASK|KB_LALT_MASK|KB_RALT_MASK|KB_LSHIFT_MASK|KB_RSHIFT_MASK|KB_F12_MASK);
-			tmp |= (kb_ctrl_status[0] & (KB_LCTRL_MASK|KB_RCTRL_MASK|KB_LALT_MASK|KB_RALT_MASK|KB_LSHIFT_MASK|KB_RSHIFT_MASK|KB_F12_MASK));
+      KB_CTRL_RTC_0_t t;
+      t.byte = 0;
+      t.lctrl  = kb_ctrl_status.lctrl;
+      t.rctrl  = kb_ctrl_status.rctrl;
+      t.lalt   = kb_ctrl_status.lalt;
+      t.ralt   = kb_ctrl_status.ralt;
+      t.lshift = kb_ctrl_status.lshift;
+      t.rshift = kb_ctrl_status.rshift;
+      t.f12    = kb_ctrl_status.f12;
+			tmp = t.byte;
 		}
 
 		if (index == GLUK_REG_E)
 		{
 			//return keyboard statuses
-			tmp &= ~(KB_LWIN_MASK_1|KB_RWIN_MASK_1|KB_MENU_MASK_1);
-			tmp |= (kb_ctrl_status[1] & (KB_LWIN_MASK_1|KB_RWIN_MASK_1|KB_MENU_MASK_1));
+      KB_CTRL_RTC_1_t t;
+      t.byte = 0;
+      t.lwin = kb_ctrl_status.lwin;
+      t.rwin = kb_ctrl_status.rwin;
+      t.menu = kb_ctrl_status.menu;
+			tmp = t.byte;
 		}
 	}
 	else
