@@ -75,33 +75,61 @@ extern u8 zx_realkbd[11];
 	u8 reset_type;
 };*/
 
-/** PS/2 keyboard LCTRL key status. */
-#define KB_LCTRL_MASK   0x01
-/** PS/2 keyboard LCTRL key status. */
-#define KB_RCTRL_MASK   0x02
-/** PS/2 keyboard LALT key status. */
-#define KB_LALT_MASK    0x04
-/** PS/2 keyboard LALT key status. */
-#define KB_RALT_MASK    0x08
-/** PS/2 keyboard LEFT SHIFT key status. */
-#define KB_LSHIFT_MASK  0x10
-/** PS/2 keyboard RIGHT SHIFT key status. */
-#define KB_RSHIFT_MASK  0x20
-/** PS/2 keyboard F12 key status. */
-#define KB_F12_MASK     0x40
-/** PS/2 keyboard CTRL,ALT,DEL mapped status (set = mapped all keys). */
-#define KB_CTRL_ALT_DEL_MAPPED_MASK 0x80
-/** The _1 suffix in these defines indicate that they are in kb_ctrl_status[1] */
-/** PS/2 keyboard WIN key status. */
-#define KB_LWIN_MASK_1  0x01
-/** PS/2 keyboard WIN key status. */
-#define KB_RWIN_MASK_1  0x02
-/** PS/2 keyboard MENU key status. */
-#define KB_MENU_MASK_1  0x04
+typedef struct
+{
+  union
+  {
+    struct
+    {
+      /** PS/2 keyboard LCTRL key status. */
+      u8 lctrl               : 1;
+      /** PS/2 keyboard RCTRL key status. */
+      u8 rctrl               : 1;
+      /** PS/2 keyboard LALT key status. */
+      u8 lalt                : 1;
+      /** PS/2 keyboard RALT key status. */
+      u8 ralt                : 1;
+      /** PS/2 keyboard LSHIFT key status. */
+      u8 lshift              : 1;
+      /** PS/2 keyboard RSHIFT key status. */
+      u8 rshift              : 1;
+      /** PS/2 keyboard LWIN key status. */
+      u8 lwin                : 1;
+      /** PS/2 keyboard RWIN key status. */
+      u8 rwin                : 1;
+      /** PS/2 keyboard MENU key status. */
+      u8 menu                : 1;
+      /** PS/2 keyboard F12 key status. */
+      u8 f12                 : 1;
+      /** PS/2 keyboard CTRL,ALT,DEL mapped status (set = mapped all keys). */
+      u8 ctrl_alt_del_mapped : 1;
+    };
+    u16 all;
+  };
+} KB_CTRL_STATUS_t;
+
+// callbacks for functional keys
+extern void (*cb_ctrl_alt_del)();
+extern void (*cb_ctrl_alt_f12)();
+extern void (*cb_prt_scr)();
+extern void (*cb_num_lock)();
+extern void (*cb_scr_lock)();
+extern void (*cb_menu_f1)();
+extern void (*cb_menu_f2)();
+extern void (*cb_menu_f3)();
+extern void (*cb_menu_f4)();
+extern void (*cb_menu_f5)();
+extern void (*cb_menu_f6)();
+extern void (*cb_menu_f7)();
+extern void (*cb_menu_f8)();
+extern void (*cb_menu_f9)();
+extern void (*cb_menu_f10)();
+extern void (*cb_menu_f11)();
+
 /** PS/2 keyboard control keys status (for additional functons). */
-extern volatile u8 kb_ctrl_status[2];
+extern volatile KB_CTRL_STATUS_t kb_ctrl_status;
 /** PS/2 keyboard control keys mapped to zx keyboard (mapped keys not used in additional functions). */
-extern volatile u8 kb_ctrl_mapped[2];
+extern volatile KB_CTRL_STATUS_t kb_ctrl_mapped;
 
 
 #define ZX_TASK_INIT 0
