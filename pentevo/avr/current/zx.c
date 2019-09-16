@@ -15,6 +15,7 @@
 #include "rs232.h"
 #include "ps2.h"
 #include "rtc.h"
+#include "config.h"
 
 // comment next string to enable Log
 #undef LOGENABLE
@@ -25,9 +26,11 @@ u8 zx_mouse_x;
 u8 zx_mouse_y;
 
 // PS/2 keyboard control keys status (for additional functons)
-volatile u8 kb_ctrl_status[2];
-// PS/2 keyboard control keys mapped to zx keyboard (mapped keys not used in additional functions)
-volatile u8 kb_ctrl_mapped[2];
+volatile KB_CTRL_STATUS_t kb_ctrl_status;
+// PS/2 keyboard control keys mapped to zx keyboard (unused)
+volatile KB_CTRL_STATUS_t kb_ctrl_mapped;
+
+KBMAP_VALUE t_kbmap;
 
 #define ZX_FIFO_SIZE 256 /* do not change this since it must be exactly byte-wise */
 
@@ -43,7 +46,166 @@ volatile u8 shift_pause;
 
 u8 zx_realkbd[11];
 
-extern u8 egg;
+// callbacks for functional keys
+void (*cb_prt_scr)();
+void (*cb_scr_lock)();
+void (*cb_num_lock)();
+void (*cb_menu_f1)();
+void (*cb_menu_f2)();
+void (*cb_menu_f3)();
+void (*cb_menu_f4)();
+void (*cb_menu_f5)();
+void (*cb_menu_f6)();  // unused
+void (*cb_menu_f7)();  // unused
+void (*cb_menu_f8)();  // unused
+void (*cb_menu_f9)();  // unused
+void (*cb_menu_f10)(); // unused
+void (*cb_menu_f11)();
+void (*cb_menu_f12)();
+void (*cb_ctrl_alt_f11)();
+void (*cb_ctrl_alt_f12)();
+void (*cb_ctrl_alt_del)();
+
+// hard reset
+void func_reset()
+{
+  flags_register |= FLAG_HARD_RESET;
+  t_kbmap.tb.b2 = t_kbmap.tb.b1 = NO_KEY;
+}
+
+void func_service()
+{
+  u8 fpga_cfg;
+
+  switch (eeprom_read_byte((const u8*)ADDR_FPGA_CFG))
+  {
+    case FPGA_BASE:
+      fpga_cfg = FPGA_TS;
+    break;
+
+    case FPGA_TS:
+    default:
+      fpga_cfg = FPGA_BASE;
+    break;
+  }
+
+  eeprom_write_byte((u8*)ADDR_FPGA_CFG, fpga_cfg); // switch config number
+
+  flags_register |= FLAG_HARD_RESET;
+  t_kbmap.tb.b1 = NO_KEY;
+}
+
+void func_egg()
+{
+  eeprom_write_byte((u8*)ADDR_FPGA_CFG, FPGA_EGG); // switch config number
+
+  flags_register |= FLAG_HARD_RESET;
+  t_kbmap.tb.b1 = NO_KEY;
+}
+
+// generate NMI
+void func_nmi()
+{
+  flags_ex_register |= FLAG_EX_NMI; //set flag
+  zx_set_config(); //set NMI to Z80
+  // add a delay ?
+  flags_ex_register &= ~FLAG_EX_NMI; //reset flag
+  zx_set_config(); //reset NMI to Z80
+}
+
+// Floppy swap
+void func_floppy()
+{
+  zx_mode_switcher(MODE_FSWAP);
+}
+
+// Beeper sound - TS-Conf
+//  0 - beeper
+//  1 - tape out
+//  2 - tape in
+void func_tapeout_in()
+{
+  u8 m;
+  switch (modes_register & (MODE_TAPEIN | MODE_TAPEOUT))
+  {
+    case 0:
+      m = MODE_TAPEOUT;
+    break;
+
+    case MODE_TAPEIN:
+      m = MODE_TAPEIN;
+    break;
+
+    default:
+      m = MODE_TAPEOUT | MODE_TAPEIN;
+  }
+  zx_mode_switcher(m);
+}
+
+// Beeper sound - BaseConf
+void func_tapeout()
+{
+  zx_mode_switcher(MODE_TAPEOUT);
+}
+
+// VGA mode - TS-Conf
+void func_vga_tv()
+{
+  zx_mode_switcher(MODE_VGA);
+}
+
+// ULA/VGA mode - BaseConf
+void func_vga_tv_ula()
+{
+  u8 m = modes_register | (~MODE_VIDEO_MASK);
+  m++; // increment bits not ORed with 1
+  m ^= modes_register;
+  m &= MODE_VIDEO_MASK;
+  zx_mode_switcher(m);
+}
+
+// Sync polarity
+void func_pol()
+{
+  // zx_mode_switcher(MODE_POL);
+}
+
+void func_dummy() {}
+
+void load_config()
+{
+  cb_prt_scr      = func_nmi;
+  cb_menu_f3      = func_dummy;
+  cb_menu_f4      = func_dummy;
+  cb_menu_f5      = func_dummy;
+  // cb_menu_f6      = func_dummy;
+  // cb_menu_f7      = func_dummy;
+  // cb_menu_f8      = func_dummy;
+  // cb_menu_f9      = func_dummy;
+  // cb_menu_f10     = func_dummy;
+  cb_menu_f11     = func_dummy;
+  cb_menu_f12     = func_dummy;
+  cb_ctrl_alt_f11 = func_egg;
+  cb_ctrl_alt_f12 = func_service;
+  cb_ctrl_alt_del = func_reset;
+    
+  switch (eeprom_read_byte((const u8*)ADDR_FPGA_CFG))
+  {
+    case FPGA_BASE:
+      cb_num_lock     = func_tapeout;
+      cb_scr_lock     = func_vga_tv_ula;
+      cb_menu_f1      = func_dummy;
+      cb_menu_f2      = func_dummy;
+    break;
+
+    case FPGA_TS:
+      cb_num_lock     = func_dummy;
+      cb_scr_lock     = func_vga_tv;
+      cb_menu_f1      = func_floppy;
+      cb_menu_f2      = func_tapeout_in;
+    break;
+  }
+}
 
 void zx_init(void)
 {
@@ -55,6 +217,8 @@ void zx_init(void)
   //reset Z80
   zx_spi_send(SPI_RST_REG, 1, 0);
   zx_spi_send(SPI_RST_REG, 0, 0);
+
+  load_config();
 }
 
 u8 zx_spi_send(u8 addr, u8 data, u8 mask)
@@ -93,38 +257,19 @@ void zx_task(u8 operation) // zx task, tracks when there is need to send new key
     zx_clr_kb();
 
     //check control keys whoes mapped to zx keyboard
-    //(mapped keys not used in additional functions)
-    kb_ctrl_mapped[0] = 0;
-    kb_ctrl_mapped[1] = 0;
-    if (kbmap_get(0x14,0).tw != (u16)NO_KEY+(((u16)NO_KEY)<<8)) kb_ctrl_mapped[0] |= KB_LCTRL_MASK;
-    if (kbmap_get(0x14,1).tw != (u16)NO_KEY+(((u16)NO_KEY)<<8)) kb_ctrl_mapped[0] |= KB_RCTRL_MASK;
-    if (kbmap_get(0x11,0).tw != (u16)NO_KEY+(((u16)NO_KEY)<<8)) kb_ctrl_mapped[0] |= KB_LALT_MASK;
-    if (kbmap_get(0x11,1).tw != (u16)NO_KEY+(((u16)NO_KEY)<<8)) kb_ctrl_mapped[0] |= KB_RALT_MASK;
-    if (kbmap_get(0x1F,1).tw != (u16)NO_KEY+(((u16)NO_KEY)<<8)) kb_ctrl_mapped[1] |= KB_LWIN_MASK_1;
-    if (kbmap_get(0x27,1).tw != (u16)NO_KEY+(((u16)NO_KEY)<<8)) kb_ctrl_mapped[1] |= KB_RWIN_MASK_1;
-    if (kbmap_get(0x2F,1).tw != (u16)NO_KEY+(((u16)NO_KEY)<<8)) kb_ctrl_mapped[1] |= KB_MENU_MASK_1;
-     /*
-    //detect if CTRL-ALT-DEL keys mapped
-//    if (((kbmap[0x14*2] == NO_KEY) && (kbmap[0x14*2+1] == NO_KEY)) ||
-//       ((kbmap[0x11*2] == NO_KEY) && (kbmap[0x11*2+1] == NO_KEY)) ||
-//       ((kbmap_E0[0x11*2] == NO_KEY) && (kbmap[0x11*2+1] == NO_KEY)))
-    if ((kbmap_get(0x14,0).tw == (u16)NO_KEY+(((u16)NO_KEY)<<8)) ||
-      (kbmap_get(0x11,0).tw == (u16)NO_KEY+(((u16)NO_KEY)<<8)) ||
-      (kbmap_get(0x11,1).tw == (u16)NO_KEY+(((u16)NO_KEY)<<8)))
-    {
-      //not mapped
-      kb_ctrl_status[0] &= ~KB_CTRL_ALT_DEL_MAPPED_MASK;
-    }
-    else
-    {
-      //mapped
-      kb_ctrl_status[0] |= KB_CTRL_ALT_DEL_MAPPED_MASK;
-    }
-    */
+    kb_ctrl_mapped.all = 0;
+    if (kbmap_get(0x14,0).tw != (u16)NO_KEY+(((u16)NO_KEY)<<8)) kb_ctrl_mapped.lctrl = 1;
+    if (kbmap_get(0x14,1).tw != (u16)NO_KEY+(((u16)NO_KEY)<<8)) kb_ctrl_mapped.rctrl = 1;
+    if (kbmap_get(0x11,0).tw != (u16)NO_KEY+(((u16)NO_KEY)<<8)) kb_ctrl_mapped.lalt  = 1;
+    if (kbmap_get(0x11,1).tw != (u16)NO_KEY+(((u16)NO_KEY)<<8)) kb_ctrl_mapped.ralt  = 1;
+    if (kbmap_get(0x1F,1).tw != (u16)NO_KEY+(((u16)NO_KEY)<<8)) kb_ctrl_mapped.lwin  = 1;
+    if (kbmap_get(0x27,1).tw != (u16)NO_KEY+(((u16)NO_KEY)<<8)) kb_ctrl_mapped.rwin  = 1;
+    if (kbmap_get(0x2F,1).tw != (u16)NO_KEY+(((u16)NO_KEY)<<8)) kb_ctrl_mapped.menu  = 1;
   }
+
   else /*if (operation==ZX_TASK_WORK)*/
 
-  // из фифы приходит: нажатия и отжатия ресетов, нажатия и отжатия кнопков, CLRKYS (только нажание).
+  // из фифы приходит: нажатия и отжатия ресетов, нажатия и отжатия кнопков, CLRKYS (только нажатие).
   // задача: упдейтить в соответствии с этим битмап кнопок, посылать его в фпгу, посылать ресеты.
   // кроме того, делать паузу в упдейте битмапа и посылке его в фпга между нажатием CS|SS и последующей не-CS|SS кнопки,
   // равно как и между отжатием не-CS|SS кнопки и последующим отжатием CS|SS.
@@ -176,24 +321,6 @@ void zx_task(u8 operation) // zx task, tracks when there is need to send new key
 
           break; // flush changes immediately to the fpga
         }
-//        else if ((code & KEY_MASK) >= RSTSYS)
-//        {
-//          was_data = 1; // we've got something!
-
-//          zx_fifo_get(); // remove byte from fifo
-
-//          if (code & PRESS_MASK) // reset key pressed
-//          {
-//            reset_type  = 0x30 & ((code+1)<<4);
-//            reset_type += 2;
-
-//            break; // flush immediately
-//          }
-//          else // reset key released
-//          {
-//            reset_type = 0;
-//          }
-//        }
         else /*if ((code & KEY_MASK) < 40)*/
         {
           if (shift_pause) // if we inside pause interval and need checking
@@ -316,19 +443,16 @@ void zx_clr_kb(void)
     zx_counters[i] = 0;
   }
 
-  kb_ctrl_status[0] = 0;
-  kb_ctrl_status[1] = 0;
+  kb_ctrl_status.all = 0;
 }
 
 void to_zx(u8 scancode, u8 was_E0, u8 was_release)
 {
-  KBMAP_VALUE t;
-
   //F7 code (0x83) converted to 0x7F
   if (!was_E0 && (scancode == 0x83)) scancode = 0x7F;
 
   //get zx map values
-  t = kbmap_get(scancode,was_E0);
+  t_kbmap = kbmap_get(scancode,was_E0);
 
   if (was_E0)
   {
@@ -337,61 +461,40 @@ void to_zx(u8 scancode, u8 was_E0, u8 was_release)
     {
       //Right Alt (Alt Gr)
       case  0x11:
-        if (!was_release) kb_ctrl_status[0] |= KB_RALT_MASK;
-        else kb_ctrl_status[0] &= ~KB_RALT_MASK;
+        kb_ctrl_status.ralt = !was_release;
       break;
 
       //Right Ctrl
       case  0x14:
-        if (!was_release) kb_ctrl_status[0] |= KB_RCTRL_MASK;
-        else kb_ctrl_status[0] &= ~KB_RCTRL_MASK;
+        kb_ctrl_status.rctrl = !was_release;
       break;
 
       //Left Win
       case  0x1F:
-        if (!was_release) kb_ctrl_status[1] |= KB_LWIN_MASK_1;
-        else kb_ctrl_status[1] &= ~KB_LWIN_MASK_1;
+        kb_ctrl_status.lwin = !was_release;
       break;
 
       // Right Win
       case  0x27:
-        if (!was_release) kb_ctrl_status[1] |= KB_RWIN_MASK_1;
-        else kb_ctrl_status[1] &= ~KB_RWIN_MASK_1;
+        kb_ctrl_status.rwin = !was_release;
       break;
 
       //Menu
       case  0x2F:
-        if (!was_release) kb_ctrl_status[1] |= KB_MENU_MASK_1;
-        else kb_ctrl_status[1] &= ~KB_MENU_MASK_1;
+        kb_ctrl_status.menu = !was_release;
       break;
 
       //Print Screen
       case 0x7C:
-        //set/reset NMI
-        if (((flags_ex_register & FLAG_EX_NMI)==0) && (was_release==0))
-        {
-          flags_ex_register |= FLAG_EX_NMI; //set flag
-          zx_set_config(); //set NMI to Z80
-        }
-        else if (((flags_ex_register & FLAG_EX_NMI)!=0) && (was_release!=0))
-        {
-          flags_ex_register &= ~FLAG_EX_NMI; //reset flag
-          zx_set_config(); //reset NMI to Z80
-        }
+        if (!was_release)
+          cb_prt_scr();
       break;
 
       //Del
       case 0x71:
-        //Ctrl-Alt-Del pressed
-        if ((!was_release) &&
-           /*(!(kb_status & KB_CTRL_ALT_DEL_MAPPED_MASK)) && */
-           ((kb_ctrl_status[0] & (~kb_ctrl_mapped[0]) & (KB_LCTRL_MASK|KB_RCTRL_MASK)) !=0) &&
-           ((kb_ctrl_status[0] & (~kb_ctrl_mapped[0]) & (KB_LALT_MASK|KB_RALT_MASK)) !=0))
-        {
-          //hard reset
-          flags_register |= FLAG_HARD_RESET;
-          t.tb.b2=t.tb.b1=NO_KEY;
-        }
+        // Ctrl-Alt-Del pressed
+        if (!was_release && (kb_ctrl_status.lctrl || kb_ctrl_status.rctrl) && (kb_ctrl_status.lalt || kb_ctrl_status.ralt))
+          cb_ctrl_alt_del();
       break;
     }
   }
@@ -401,116 +504,92 @@ void to_zx(u8 scancode, u8 was_E0, u8 was_release)
     //additional functionality from ps/2 keyboard
     switch (scancode)
     {
-      //Scroll Lock
-      case 0x7E:
-        // VGA mode
-        if (!was_release)
-          zx_mode_switcher(MODE_VGA);
-      break;
-
-      // F1
-      case 0x05:
-        // Floppy swap
-        if (!was_release && (kb_ctrl_status[1] & ~kb_ctrl_mapped[1] & KB_MENU_MASK_1))
-          zx_mode_switcher(MODE_FSWAP);
-        break;
-
-      // F2
-      case 0x06:
-        // Tape In sound
-        //  0 - beeper
-        //  1 - tape out
-        //  2 - tape in
-        if (!was_release && (kb_ctrl_status[1] & ~kb_ctrl_mapped[1] & KB_MENU_MASK_1))
-        {
-          u8 m;
-          switch (modes_register & (MODE_TAPEIN | MODE_TAPEOUT))
-          {
-            case 0:
-              m = MODE_TAPEOUT;
-            break;
-
-            case MODE_TAPEIN:
-              m = MODE_TAPEIN;
-            break;
-
-            default:
-              m = MODE_TAPEOUT | MODE_TAPEIN;
-          }
-          zx_mode_switcher(m);
-        }
-        break;
-
-      // F3
-      case 0x04:
-        // 50/60 Hz
-        if (!was_release && (kb_ctrl_status[1] & ~kb_ctrl_mapped[1] & KB_MENU_MASK_1))
-          zx_mode_switcher(MODE_60HZ);
-        break;
-
-      // F4
-      // case 0x0C:
-        // if (!was_release && (kb_ctrl_status[1] & ~kb_ctrl_mapped[1] & KB_MENU_MASK_1))
-          // zx_mode_switcher(MODE_POL);
-      // break;
-
       //Left Shift
       case  0x12:
-        if (!was_release) kb_ctrl_status[0] |= KB_LSHIFT_MASK;
-        else kb_ctrl_status[0] &= ~KB_LSHIFT_MASK;
+        kb_ctrl_status.lshift = !was_release;
       break;
 
       //Right Shift
       case  0x59:
-        if (!was_release) kb_ctrl_status[0] |= KB_RSHIFT_MASK;
-        else kb_ctrl_status[0] &= ~KB_RSHIFT_MASK;
+        kb_ctrl_status.rshift = !was_release;
         break;
 
       //Left Ctrl
       case  0x14:
-        if (!was_release) kb_ctrl_status[0] |= KB_LCTRL_MASK;
-        else kb_ctrl_status[0] &= ~KB_LCTRL_MASK;
+        kb_ctrl_status.lctrl = !was_release;
         break;
 
       //Left Alt
       case  0x11:
-        if (!was_release) kb_ctrl_status[0] |= KB_LALT_MASK;
-        else kb_ctrl_status[0] &= ~KB_LALT_MASK;
+        kb_ctrl_status.lalt = !was_release;
       break;
 
-      //F11
-      case  0x78:
-        // easter egg
-        if ((!was_release) &&
-           (!(kb_ctrl_status[0] & KB_CTRL_ALT_DEL_MAPPED_MASK)) &&
-           ((kb_ctrl_status[0] & (KB_LCTRL_MASK|KB_RCTRL_MASK)) &&
-           (kb_ctrl_status[0] & (KB_LALT_MASK|KB_RALT_MASK))))
+      //Scroll Lock
+      case 0x7E:
+        if (!was_release)
+          cb_scr_lock();
+      break;
+
+      //Num Lock
+      case 0x77:
+        if (!was_release)
+          cb_num_lock();
+      break;
+
+      // F1
+      case 0x05:
+        if (!was_release && kb_ctrl_status.menu)
+          cb_menu_f1();
+      break;
+
+      // F2
+      case 0x06:
+        if (!was_release && kb_ctrl_status.menu)
+          cb_menu_f2();
+      break;
+
+      // F3
+      case 0x04:
+        if (!was_release && kb_ctrl_status.menu)
+          cb_menu_f3();
+      break;
+
+      // F4
+      case 0x0C:
+        if (!was_release && kb_ctrl_status.menu)
+          cb_menu_f4();
+      break;
+
+      // F5
+      case 0x03:
+        if (!was_release && kb_ctrl_status.menu)
+          cb_menu_f5();
+      break;
+
+      // F11
+      case 0x78:
+        if (!was_release)
         {
-          egg = 1;
-          //hard reset
-          flags_register |= FLAG_HARD_RESET;
-          t.tb.b1=NO_KEY;
+          // Ctrl-Alt-F11 pressed
+          if ((kb_ctrl_status.lctrl || kb_ctrl_status.rctrl) && (kb_ctrl_status.lalt || kb_ctrl_status.ralt))
+            cb_ctrl_alt_f11();
+          else if (kb_ctrl_status.menu)
+            cb_menu_f11();
         }
       break;
 
       //F12
       case  0x07:
-        // switch config
-        if ((!was_release) &&
-           (!(kb_ctrl_status[0] & KB_CTRL_ALT_DEL_MAPPED_MASK)) &&
-           ((kb_ctrl_status[0] & (KB_LCTRL_MASK|KB_RCTRL_MASK)) &&
-           (kb_ctrl_status[0] & (KB_LALT_MASK|KB_RALT_MASK))))
+        kb_ctrl_status.f12 = !was_release;
+
+        if (!was_release)
         {
-          eeprom_write_byte((u8*)0x0fff, !eeprom_read_byte((const u8*)0x0fff));
-          //hard reset
-          flags_register |= FLAG_HARD_RESET;
-          t.tb.b1=NO_KEY;
-          break;
+          // Ctrl-Alt-F12 pressed
+          if ((kb_ctrl_status.lctrl || kb_ctrl_status.rctrl) && (kb_ctrl_status.lalt || kb_ctrl_status.ralt))
+            cb_ctrl_alt_f12();
+          else if (kb_ctrl_status.menu)
+            cb_menu_f12();
         }
-        else if (!was_release)
-          kb_ctrl_status[0] |= KB_F12_MASK;
-        else
-          kb_ctrl_status[0] &= ~KB_F12_MASK;
       break;
 
       //keypad '+','-','*' - set ps2mouse resolution
@@ -522,11 +601,12 @@ void to_zx(u8 scancode, u8 was_E0, u8 was_release)
     }
   }
 
-  if (t.tb.b1!=NO_KEY)
+  if (t_kbmap.tb.b1 != NO_KEY)
   {
-    update_keys(t.tb.b1,was_release);
+    update_keys(t_kbmap.tb.b1, was_release);
 
-    if (t.tb.b2!=NO_KEY) update_keys(t.tb.b2,was_release);
+    if (t_kbmap.tb.b2 != NO_KEY)
+      update_keys(t_kbmap.tb.b2, was_release);
   }
 }
 
@@ -544,11 +624,6 @@ void update_keys(u8 zxcode, u8 was_release)
             if (!zx_fifo_isfull())
                 zx_fifo_put(CLRKYS);
         }
-        // else if (zxcode>=RSTSYS) // resets - press and release
-        // {
-        //  if (!zx_fifo_isfull())
-        //   zx_fifo_put((was_release ? 0 : PRESS_MASK) | zxcode);
-        // }
         else if (zxcode < 40) // ordinary keys too
         {
             if (was_release)

@@ -144,20 +144,24 @@ extern volatile u8 flags_ex_register;
 
 /** Common modes register. */
 extern volatile u8 modes_register;
-  /** VGA mode (0 - not set/1 - set). */
+/** VGA mode (0 - not set/1 - set). */
 #define MODE_VGA          0x01
-/** Tapeout mode (0 - beeper or pwm mode/1 - tapeout). */
-#define MODE_CAPSLED      0x04
-/** 60Hz mode (0 - 320 lines / 1 - 262 lines). */
-#define MODE_TAPEOUT      0x08
 /** CAPS LED mode (0 - off/1 - on). */
+#define MODE_CAPSLED      0x04
+/** Tapeout mode (0 - beeper or pwm mode/1 - tapeout). */
+#define MODE_TAPEOUT      0x08
+/** 60Hz mode (0 - 320 lines / 1 - 262 lines). */
 #define MODE_60HZ         0x10
-/** VGA sync polarity (0 - positive / 1 - negative). */
+/** Interrupt from wait ports. */
 #define MODE_WTP_INT      0x20
 /** Floppy swap (0 - normal, 1 - A/C swapped with B/D. */
 #define MODE_FSWAP        0x40
 /** Tape In sound (0 - off, 1 - on. */
 #define MODE_TAPEIN       0x80
+
+/** pentagon/60Hz/48k/128k modes - BaseConf */
+#define MODES_RASTER 0x30
+#define MODE_VIDEO_MASK (MODE_VGA | MODES_RASTER)
 
 /** Type extensions of gluk registers. */
 extern volatile u8 ext_type_gluk;
