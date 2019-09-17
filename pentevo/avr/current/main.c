@@ -25,9 +25,9 @@
 #undef LOGENABLE
 
 /** FPGA data pointer [far address] (linker symbol). */
-extern const u32 fpga0 PROGMEM;
-extern const u32 fpga1 PROGMEM;
-extern const u32 fpga2 PROGMEM;
+extern const u32 fpga_base PROGMEM;
+extern const u32 fpga_ts   PROGMEM;
+extern const u32 fpga_egg  PROGMEM;
 
 // FPGA data index..
 volatile u32 curFpga;
@@ -162,17 +162,17 @@ start:
 
   switch (eeprom_read_byte((const u8*)ADDR_FPGA_CFG))
   {
-    case FPGA_TS:
-      curFpga = GET_FAR_ADDRESS(fpga1);
+    case FPGA_BASE:
+      curFpga = GET_FAR_ADDRESS(fpga_base);
     break;
 
     case FPGA_EGG:
-      curFpga = GET_FAR_ADDRESS(fpga2);
+      curFpga = GET_FAR_ADDRESS(fpga_egg);
     break;
 
-    case FPGA_BASE:
+    case FPGA_TS:
     default:
-      curFpga = GET_FAR_ADDRESS(fpga0);
+      curFpga = GET_FAR_ADDRESS(fpga_ts);
     break;
   }
 
@@ -247,7 +247,6 @@ start:
   kbmap_init();
   zx_init();
   rtc_init();
-  zx_mode_switcher(modes_register & MODE_TAPEIN);  // disable Tape-In sound on reset
 
 #ifdef LOGENABLE
   to_log("zx_init OK\r\n");

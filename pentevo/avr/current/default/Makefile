@@ -83,9 +83,9 @@ $(FPGACORE): tsconf.rbf baseconf.rbf egg.rbf
 	@$(MHMT) -maxwin2048 tsconf.rbf tsconf.mlz >$(DEVNULL)
 	@$(MHMT) -maxwin2048 baseconf.rbf baseconf.mlz >$(DEVNULL)
 	@$(MHMT) -maxwin2048 egg.rbf egg.mlz >$(DEVNULL)
-	@avr-objcopy -I binary -O elf32-avr -B avr:51 --rename-section .data=.progmem.data,contents,alloc,load,readonly,data --redefine-sym _binary_tsconf_mlz_start=fpga0 tsconf.mlz tsconf.o
-	@avr-objcopy -I binary -O elf32-avr -B avr:51 --rename-section .data=.progmem.data,contents,alloc,load,readonly,data --redefine-sym _binary_baseconf_mlz_start=fpga1 baseconf.mlz baseconf.o
-	@avr-objcopy -I binary -O elf32-avr -B avr:51 --rename-section .data=.progmem.data,contents,alloc,load,readonly,data --redefine-sym _binary_egg_mlz_start=fpga2 egg.mlz egg.o
+	@avr-objcopy -I binary -O elf32-avr -B avr:51 --rename-section .data=.progmem.data,contents,alloc,load,readonly,data --redefine-sym _binary_baseconf_mlz_start=fpga_base baseconf.mlz baseconf.o
+	@avr-objcopy -I binary -O elf32-avr -B avr:51 --rename-section .data=.progmem.data,contents,alloc,load,readonly,data --redefine-sym _binary_tsconf_mlz_start=fpga_ts tsconf.mlz tsconf.o
+	@avr-objcopy -I binary -O elf32-avr -B avr:51 --rename-section .data=.progmem.data,contents,alloc,load,readonly,data --redefine-sym _binary_egg_mlz_start=fpga_egg egg.mlz egg.o
 
 core: $(TARGET)
 	@avr-objcopy -O ihex $(HEX_FLASH_FLAGS) $< $@.hex

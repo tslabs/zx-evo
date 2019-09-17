@@ -151,17 +151,17 @@ extern volatile u8 modes_register;
 /** Tapeout mode (0 - beeper or pwm mode/1 - tapeout). */
 #define MODE_TAPEOUT      0x08
 /** 60Hz mode (0 - 320 lines / 1 - 262 lines). */
-#define MODE_60HZ         0x10
+#define MODE_TS_60HZ         0x10
 /** Interrupt from wait ports. */
-#define MODE_WTP_INT      0x20
+#define MODE_TS_WTP_INT      0x20
 /** Floppy swap (0 - normal, 1 - A/C swapped with B/D. */
-#define MODE_FSWAP        0x40
+#define MODE_TS_FSWAP        0x40
 /** Tape In sound (0 - off, 1 - on. */
-#define MODE_TAPEIN       0x80
+#define MODE_TS_TAPEIN       0x80
 
 /** pentagon/60Hz/48k/128k modes - BaseConf */
-#define MODES_RASTER 0x30
-#define MODE_VIDEO_MASK (MODE_VGA | MODES_RASTER)
+#define MODES_BASE_RASTER 0x30
+#define MODE_BASE_VIDEO_MASK (MODE_VGA | MODES_BASE_RASTER)
 
 /** Type extensions of gluk registers. */
 extern volatile u8 ext_type_gluk;

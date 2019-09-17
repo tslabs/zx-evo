@@ -66,6 +66,9 @@ void (*cb_ctrl_alt_f11)();
 void (*cb_ctrl_alt_f12)();
 void (*cb_ctrl_alt_del)();
 
+// platform dependent config register setter
+void (*cb_zx_set_config)();
+
 // hard reset
 void func_reset()
 {
@@ -106,44 +109,24 @@ void func_egg()
 // generate NMI
 void func_nmi()
 {
-  flags_ex_register |= FLAG_EX_NMI; //set flag
-  zx_set_config(); //set NMI to Z80
-  // add a delay ?
-  flags_ex_register &= ~FLAG_EX_NMI; //reset flag
-  zx_set_config(); //reset NMI to Z80
+  flags_ex_register |= FLAG_EX_NMI;
+  cb_zx_set_config();
 }
 
 // Floppy swap
 void func_floppy()
 {
-  zx_mode_switcher(MODE_FSWAP);
+  zx_mode_switcher(MODE_TS_FSWAP);
 }
 
-// Beeper sound - TS-Conf
-//  0 - beeper
-//  1 - tape out
-//  2 - tape in
-void func_tapeout_in()
+// Tape In sound
+void func_tapein()
 {
-  u8 m;
-  switch (modes_register & (MODE_TAPEIN | MODE_TAPEOUT))
-  {
-    case 0:
-      m = MODE_TAPEOUT;
-    break;
-
-    case MODE_TAPEIN:
-      m = MODE_TAPEIN;
-    break;
-
-    default:
-      m = MODE_TAPEOUT | MODE_TAPEIN;
-  }
-  zx_mode_switcher(m);
+  zx_mode_switcher(MODE_TS_TAPEIN);
 }
 
-// Beeper sound - BaseConf
-void func_tapeout()
+// Beeper sound
+void func_beeper()
 {
   zx_mode_switcher(MODE_TAPEOUT);
 }
@@ -157,10 +140,10 @@ void func_vga_tv()
 // ULA/VGA mode - BaseConf
 void func_vga_tv_ula()
 {
-  u8 m = modes_register | (~MODE_VIDEO_MASK);
+  u8 m = modes_register | (~MODE_BASE_VIDEO_MASK);
   m++; // increment bits not ORed with 1
   m ^= modes_register;
-  m &= MODE_VIDEO_MASK;
+  m &= MODE_BASE_VIDEO_MASK;
   zx_mode_switcher(m);
 }
 
@@ -174,7 +157,6 @@ void func_dummy() {}
 
 void load_config()
 {
-  cb_prt_scr      = func_nmi;
   cb_menu_f3      = func_dummy;
   cb_menu_f4      = func_dummy;
   cb_menu_f5      = func_dummy;
@@ -188,21 +170,29 @@ void load_config()
   cb_ctrl_alt_f11 = func_egg;
   cb_ctrl_alt_f12 = func_service;
   cb_ctrl_alt_del = func_reset;
-    
+
   switch (eeprom_read_byte((const u8*)ADDR_FPGA_CFG))
   {
     case FPGA_BASE:
-      cb_num_lock     = func_tapeout;
+      cb_prt_scr      = func_nmi;
+      cb_num_lock     = func_beeper;
       cb_scr_lock     = func_vga_tv_ula;
       cb_menu_f1      = func_dummy;
       cb_menu_f2      = func_dummy;
+
+      cb_zx_set_config = zx_set_config_base;
     break;
 
     case FPGA_TS:
+    default:
+      cb_prt_scr      = func_dummy;
       cb_num_lock     = func_dummy;
       cb_scr_lock     = func_vga_tv;
       cb_menu_f1      = func_floppy;
-      cb_menu_f2      = func_tapeout_in;
+      cb_menu_f2      = func_beeper;
+      cb_menu_f3      = func_tapein;
+
+      cb_zx_set_config = zx_set_config_ts;
     break;
   }
 }
@@ -278,25 +268,24 @@ void zx_task(u8 operation) // zx task, tracks when there is need to send new key
 
   {
     //check and set/reset NMI
-    if ((flags_ex_register & FLAG_EX_NMI)==0)
+    if (!(flags_ex_register & FLAG_EX_NMI)) // s/w NMI de-asserted
     {
-      if ((NMI_PIN & (1<<NMI)) == 0)
+      if (!(NMI_PIN & (1<<NMI)))  // h/w NMI pin asserted
       {
         //NMI button pressed
         flags_ex_register |= FLAG_EX_NMI; //set flag
-        zx_set_config(); //set NMI to Z80
+        cb_zx_set_config(); //set NMI to Z80
       }
     }
-    else
+    else // s/w NMI asserted
     {
-      if ((NMI_PIN & (1<<NMI)) != 0)
+      if (NMI_PIN & (1<<NMI))  // h/w NMI pin de-asserted
       {
         //NMI button pressed
         flags_ex_register &= ~FLAG_EX_NMI; //reset flag
-        zx_set_config(); //reset NMI to Z80
+        cb_zx_set_config(); //reset NMI to Z80
       }
     }
-
 
     if (!task_state)
     {
@@ -512,12 +501,12 @@ void to_zx(u8 scancode, u8 was_E0, u8 was_release)
       //Right Shift
       case  0x59:
         kb_ctrl_status.rshift = !was_release;
-        break;
+      break;
 
       //Left Ctrl
       case  0x14:
         kb_ctrl_status.lctrl = !was_release;
-        break;
+      break;
 
       //Left Alt
       case  0x11:
@@ -779,17 +768,70 @@ void zx_mode_switcher(u8 mode)
   modes_register ^= mode;
 
   //send configuration to FPGA
-  zx_set_config();
+  cb_zx_set_config();
 
   //save mode register to RTC NVRAM
-  rtc_write(RTC_COMMON_MODE_REG, modes_register);
+  switch (eeprom_read_byte((const u8*)ADDR_FPGA_CFG))
+  {
+    case FPGA_BASE:
+      rtc_write(RTC_COMMON_MODE_REG_BASE, modes_register);
+    break;
+
+    case FPGA_TS:
+    default:
+      rtc_write(RTC_COMMON_MODE_REG_TS, modes_register);
+    break;
+  }
 
   //set led on keyboard
   ps2keyboard_send_cmd(PS2KEYBOARD_CMD_SETLED);
 }
 
-void zx_set_config()
+// 7..5 - (unused)
+// 4..5 - ULA mode
+//   00 - pentagon raster (71680 clocks)
+//   01 - 60Hz raster
+//   10 - 48k raster (69888 clocks)
+//   11 - 128k raster (70908 clocks)
+// 3 - Beeper Mux
+//   0 - d4
+//   1 - d3
+// 2 - Tape In
+// 1 - NMI
+// 0 - VGA/TV
+//   0 - TV
+//   1 - VGA
+void zx_set_config_base()
 {
-  u8 m = (modes_register & (MODE_TAPEIN | MODE_FSWAP | MODE_WTP_INT | MODE_60HZ | MODE_TAPEOUT | MODE_VGA)) | (flags_register & FLAG_LAST_TAPE_VALUE) | (flags_ex_register & FLAG_EX_NMI);
+  u8 m = modes_register & (MODES_BASE_RASTER | MODE_TAPEOUT | MODE_VGA);
+  zx_set_config(m);
+}
+
+// 7 - Tape/Sound Mux
+//   0 - Beep/Tape Out
+//   1 - Tape In
+// 6 - Floppy Swap
+// 5 - WTP INT
+// 4 - 50/60Hz
+//   0 - 50Hz
+//   1 - 60Hz
+// 3 - Beeper Mux
+//   0 - d4
+//   1 - d3
+// 2 - Tape In
+// 1 - (unused)
+// 0 - VGA/TV
+//   0 - TV
+//   1 - VGA
+void zx_set_config_ts()
+{
+  u8 m = modes_register & (MODE_TS_TAPEIN | MODE_TS_FSWAP | MODE_TS_WTP_INT | MODE_TS_60HZ | MODE_TAPEOUT | MODE_VGA);
+  zx_set_config(m);
+}
+
+void zx_set_config(u8 m)
+{
+  m |= flags_register & FLAG_LAST_TAPE_VALUE;
+  m |= flags_ex_register & FLAG_EX_NMI;
   zx_spi_send(SPI_CONFIG_REG, m, ZXW_MASK);
 }

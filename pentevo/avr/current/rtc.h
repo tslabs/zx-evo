@@ -19,12 +19,14 @@
 /** Address of PCF8583 RTC chip.*/
 #define RTC_ADDRESS  0xA0
 
-/** Register for year additional data. */
-#define RTC_YEAR_ADD_REG     0xFF
-/** Register for common modes. */
-#define RTC_COMMON_MODE_REG  0xFE
+/** Register for common modes - TS. */
+#define RTC_COMMON_MODE_REG_TS   0xFC
 /** Register for ps2mouse resolution. */
-#define RTC_PS2MOUSE_RES_REG 0xFD
+#define RTC_PS2MOUSE_RES_REG     0xFD
+/** Register for common modes - Base. */
+#define RTC_COMMON_MODE_REG_BASE 0xFE
+/** Register for year additional data. */
+#define RTC_YEAR_ADD_REG         0xFF
 
 /** Init RTC.*/
 void rtc_init(void);

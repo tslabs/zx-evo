@@ -656,9 +656,9 @@ void rs232_task(void)
   // generate wait port interrupt
   if (zf_int_src)
   {
-    modes_register |= MODE_WTP_INT;
-    zx_set_config();
-    modes_register &= ~MODE_WTP_INT;
+    modes_register |= MODE_TS_WTP_INT;
+    cb_zx_set_config();
+    modes_register &= ~MODE_TS_WTP_INT;
   }
 
   // Kondratyev

@@ -11,6 +11,7 @@
 #include "ps2.h"
 #include "version.h"
 #include "rs232.h"
+#include "config.h"
 
 //if want Log than comment next string
 #undef LOGENABLE
@@ -200,7 +201,19 @@ void rtc_init(void)
 	if (gluk_regs[GLUK_REG_SEC] == 0) gluk_init();
 
 	//restore mode register from NVRAM (CAPS LED off on init)
-	modes_register = rtc_read(RTC_COMMON_MODE_REG) & ~(MODE_CAPSLED);
+  switch (eeprom_read_byte((const u8*)ADDR_FPGA_CFG))
+  {
+    case FPGA_BASE:
+      modes_register = rtc_read(RTC_COMMON_MODE_REG_BASE) & ~(MODE_CAPSLED);
+      modes_register &= MODES_BASE_RASTER | MODE_TAPEOUT | MODE_VGA;
+    break;
+
+    case FPGA_TS:
+    default:
+      modes_register = rtc_read(RTC_COMMON_MODE_REG_TS) & ~(MODE_CAPSLED);
+      modes_register &= MODE_TS_FSWAP | MODE_TS_WTP_INT | MODE_TS_60HZ | MODE_TAPEOUT | MODE_VGA;  // disable Tape-In sound on Reset
+    break;
+  }
 }
 
 void rtc_write(u8 addr, u8 data)
@@ -470,8 +483,8 @@ void gluk_set_reg(u8 index, u8 data)
 					break;
 				case GLUK_REG_MONTH:
 				case GLUK_REG_DAY_WEEK:
-					if ((gluk_regs[GLUK_REG_DAY_WEEK]-1 <= 6) && 
-						(gluk_regs[GLUK_REG_MONTH] > 0) && 
+					if ((gluk_regs[GLUK_REG_DAY_WEEK]-1 <= 6) &&
+						(gluk_regs[GLUK_REG_MONTH] > 0) &&
 						(gluk_regs[GLUK_REG_MONTH] <= 12))
 					{
 						//DS12788 dayweek 1..7 => PC8583 dayweek 0..6

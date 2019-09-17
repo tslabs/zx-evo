@@ -15,6 +15,6 @@ void tape_task(void)
   {
     flags_register &= ~FLAG_LAST_TAPE_VALUE;
     flags_register |= temp;
-    zx_set_config();
+    cb_zx_set_config();
   }
 }

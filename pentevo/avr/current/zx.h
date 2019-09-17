@@ -126,6 +126,9 @@ extern void (*cb_menu_f9)();
 extern void (*cb_menu_f10)();
 extern void (*cb_menu_f11)();
 
+// platform dependent config register setter
+extern void (*cb_zx_set_config)();
+
 /** PS/2 keyboard control keys status (for additional functons). */
 extern volatile KB_CTRL_STATUS_t kb_ctrl_status;
 /** PS/2 keyboard control keys mapped to zx keyboard (mapped keys not used in additional functions). */
@@ -212,6 +215,8 @@ void zx_mode_switcher(u8 mode);
 /**
  * Set configuration register on zx.
  */
-void zx_set_config();
+void zx_set_config_base();
+void zx_set_config_ts();
+void zx_set_config(u8);
 
 #endif
