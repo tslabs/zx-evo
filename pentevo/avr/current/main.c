@@ -20,6 +20,8 @@
 #include "tape.h"
 #include "kbmap.h"
 #include "config.h"
+#include "spiflash.h"
+#include "tsspiffs.h"
 
 //if want Log than comment next string
 #undef LOGENABLE
@@ -42,18 +44,107 @@ volatile u8 modes_register;
 // Type extensions of gluk registers
 volatile u8 ext_type_gluk;
 
+TSF_CONFIG tsf_cfg;
+TSF_VOLUME tsf_vol;
+TSF_FILE tsf_file;
+
+#define TSF_SIZE (4 * 1024 * 1024L)
+#define TSF_BLK_SIZE 4096
+
+// buffers
+u8 tsf_buf[256];
+
 // Buffer for depacking FPGA configuration.
-// You can USED for other purposed after setup FPGA.
+// You can use it for other purposes after FPGA loaded.
 u8 dbuf[DBSIZE];
 
 void put_buffer(u16 size)
 {
-  // writes specified length of buffer to the output
   u8 *ptr = dbuf;
 
   do
     spi_send(*(ptr++));
       while(--size);
+}
+
+void sfi_raw_loader(u32 size)
+{
+  while (size)
+  {
+    u16 sz = min(DBSIZE, size);
+    tsf_read(&tsf_file, dbuf, sz);
+    put_buffer(sz);
+    size -= sz;
+  }
+}
+
+u8 get_next_byte_pf()
+{
+  return pgm_read_byte_far(curFpga++);
+}
+
+TSF_RESULT spi_read(u32 addr, void *buf, u32 size)
+{
+  // printf("spi_read: %lu, %u, %u\r\n", addr, buf, size);
+  // anykey();
+
+  u8 *d = (u8*)buf;
+  u16 sz = (u16)size;
+
+  sf_addr = addr;
+  sf_command(SPIFL_CMD_READ);
+
+  while (sz--)
+    *d++ = spi_flash_read(SPIFL_REG_DATA);
+
+  sf_command(SPIFL_CMD_END);
+
+  return TSF_RES_OK;
+}
+
+u8 sfi_next_byte_size;
+u8 sfi_next_byte_cnt;
+u8 *sfi_next_byte_buf;
+
+u8 get_next_byte_sfi()
+{
+  static u8 *buf;
+
+  if (!sfi_next_byte_cnt)
+  {
+    tsf_read(&tsf_file, sfi_next_byte_buf, sfi_next_byte_size);
+    buf = sfi_next_byte_buf;
+    sfi_next_byte_cnt = sfi_next_byte_size;
+  }
+
+  sfi_next_byte_cnt--;
+  return *buf++;
+}
+
+void sfi_depacker()
+{
+  u8 buf[128];
+  sfi_next_byte_size = sizeof(buf);
+  sfi_next_byte_cnt = 0;
+  sfi_next_byte_buf = buf;
+
+  cb_next_byte = get_next_byte_sfi;
+  depacker_dirty();
+}
+
+void sfi_init()
+{
+  // init TSF parameters
+  tsf_cfg.hal_read_func  = spi_read;
+  tsf_cfg.buf = tsf_buf;
+  tsf_cfg.buf_size = sizeof(tsf_buf);
+  tsf_cfg.bulk_start = 0;
+  tsf_cfg.bulk_size = TSF_SIZE;
+  tsf_cfg.block_size = TSF_BLK_SIZE;
+
+  // enable SFI
+  sfi_enable();
+  sfi_cs_off();
 }
 
 void hardware_init(void)
@@ -160,44 +251,51 @@ start:
   DDRF &= ~(1<<nCONFIG);
   while(!(PINF & (1<<nSTATUS))); // wait ready
 
-  switch (eeprom_read_byte((const u8*)ADDR_FPGA_CFG))
+  sfi_init();
   {
-    case FPGA_BASE:
-      curFpga = GET_FAR_ADDRESS(fpga_base);
-    break;
+    bool is_sfi = false;
+    TSF_FILE_STAT stat;
+    const char *name;
+    
+    // check the configuration
+    switch (eeprom_read_byte((const u8*)ADDR_FPGA_CFG))
+    {
+      case FPGA_BASE:
+        name = "base_vdac2.mlz";
+        curFpga = GET_FAR_ADDRESS(fpga_base);
+      break;
 
-    case FPGA_EGG:
-      curFpga = GET_FAR_ADDRESS(fpga_egg);
-    break;
+      case FPGA_EGG:
+        name = "tennis_vdac2.mlz";
+        curFpga = GET_FAR_ADDRESS(fpga_egg);
+      break;
 
-    case FPGA_TS:
-    default:
-      curFpga = GET_FAR_ADDRESS(fpga_ts);
-    break;
+      case FPGA_TS:
+      default:
+        name = "ts_vdac2.mlz";
+        curFpga = GET_FAR_ADDRESS(fpga_ts);
+      break;
+    }
+      
+    do
+    {
+      if (tsf_mount(&tsf_cfg, &tsf_vol) != TSF_RES_OK) break;
+      if (tsf_stat(&tsf_vol, &stat, name) != TSF_RES_OK) break;
+      if (tsf_open(&tsf_vol, &tsf_file, name, TSF_MODE_READ) != TSF_RES_OK) break;
+      is_sfi = true;
+    } while (0);
+    
+    if (is_sfi)
+    {
+      sfi_depacker();
+      // sfi_raw_loader(stat.size);
+    }
+    else
+    {
+      cb_next_byte = get_next_byte_pf;
+      depacker_dirty();
+    }
   }
-
-#ifdef LOGENABLE
-  {
-  char log_fpga[]="F........\r\n";
-  u8 b = (u8)((curFpga>>24) & 0xFF);
-  log_fpga[1] = ((b >> 4) <= 9)?'0'+(b >> 4):'A'+(b >> 4)-10;
-  log_fpga[2] = ((b & 0x0F) <= 9)?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
-  b = (u8)((curFpga>>16) & 0xFF);
-  log_fpga[3] = ((b >> 4) <= 9)?'0'+(b >> 4):'A'+(b >> 4)-10;
-  log_fpga[4] = ((b & 0x0F) <= 9)?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
-  b = (u8)((curFpga>>8) & 0xFF);
-  log_fpga[5] = ((b >> 4) <= 9)?'0'+(b >> 4):'A'+(b >> 4)-10;
-  log_fpga[6] = ((b & 0x0F) <= 9)?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
-  b = (u8)(curFpga & 0xFF);
-  log_fpga[7] = ((b >> 4) <= 9)?'0'+(b >> 4):'A'+(b >> 4)-10;
-  log_fpga[8] = ((b & 0x0F) <= 9)?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
-  to_log(log_fpga);
-  }
-#endif
-  depacker_dirty();
-#ifdef LOGENABLE
-  to_log("depacker_dirty OK\r\n");
-#endif
 
   //power led ON
   LED_PORT &= ~_BV(LED);

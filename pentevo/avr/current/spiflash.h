@@ -27,6 +27,8 @@ enum
 #define SFI_BIT_DCLK                  7
 #define SFI_BIT_DATA0                 6
 
+extern u32 sf_addr;
+
 // Register number is masked with 0x0F
 /** SFI registers. */
 enum
@@ -86,6 +88,14 @@ enum
   SF_STAT_WEL   = 0x02
 };
 
+/** SF interface enable. */
+void sfi_enable();
+/** SF CS disable. */
+void sfi_cs_off();
+/** SF CS enable. */
+void sfi_cs_on();
+/** SF command. */
+void sf_command(u8);
 /** SF read. */
 u8 spi_flash_read(u8 index);
 /** SF write. */

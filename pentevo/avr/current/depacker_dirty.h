@@ -15,18 +15,17 @@
 #define DBMASK 2047
 
 /** Get next byte. */
-#define NEXT_BYTE (pgm_read_byte_far(curFpga++))
+extern u8 (*cb_next_byte)();
 
 /** Actual depacker, 8bit-oriented and without any checks. */
-void  depacker_dirty(void);
+void depacker_dirty();
 
 /** */
 u8 get_bits_dirty(u8 numbits);
-s16 get_bigdisp_dirty(void);
+s16 get_bigdisp_dirty();
 
 /** */
 void put_byte(u8);
 void repeat(s16,u8);
 
 #endif
-

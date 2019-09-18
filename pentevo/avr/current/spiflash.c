@@ -10,19 +10,19 @@
 
 u32 sf_addr = 0;
 
-void sfi_cs_off(void)
+void sfi_cs_off()
 {
     PORTF |= _BV(SFI_BIT_NCSO);
 }
 
-void sfi_cs_on(void)
+void sfi_cs_on()
 {
     PORTF |= _BV(SFI_BIT_DCLK);
     PORTF &= ~_BV(SFI_BIT_NCSO);
 }
 
 // Enable SFI, disable JTAG
-void sfi_enable(void)
+void sfi_enable()
 {
     u8 m = MCUCSR | _BV(JTD);
     MCUCSR = m; MCUCSR = m;
@@ -31,7 +31,7 @@ void sfi_enable(void)
 }
 
 // Disable SFI, enable JTAG
-void sfi_disable(void)
+void sfi_disable()
 {
     u8 m = MCUCSR & ~_BV(JTD);
     MCUCSR = m; MCUCSR = m;
@@ -56,7 +56,7 @@ void sfi_send(u8 d)
     sfi_send_bit(1);
 }
 
-u8 sfi_recv(void)
+u8 sfi_recv()
 {
     #define sfi_recv_bit(a) PORTF = c0; PORTF = c1; if (PINF & _BV(SFI_BIT_DATA0)) d |= (a)
 
@@ -109,12 +109,12 @@ void sfi_cmd_w(u8 c, u8 d)
     sfi_cs_off();
 }
 
-void sfi_wren(void)
+void sfi_wren()
 {
     sfi_cmd(SF_CMD_WREN);
 }
 
-u8 sf_status(void)
+u8 sf_status()
 {
     if (sfi_cmd_r(SF_CMD_RDSTAT) & SF_STAT_BUSY)
         return SPIFL_STAT_BUSY;

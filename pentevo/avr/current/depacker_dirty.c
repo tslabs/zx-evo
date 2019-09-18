@@ -5,11 +5,12 @@
 #include "main.h"
 #include "depacker_dirty.h"
 
-
 u16 dbpos; // current position in buffer (wrappable)
 
 u8 bitstream;
 u8 bitcount;
+
+u8 (*cb_next_byte)();
 
 void depacker_dirty(void)
 {
@@ -18,17 +19,14 @@ void depacker_dirty(void)
 	u8 bits;
 	s16 disp;
 
-
 	dbpos=0;
 
 	// get first byte of packed file and write to output
-	put_byte(NEXT_BYTE);
-
+	put_byte(cb_next_byte());
 
 	// second byte goes to bitstream
-	bitstream=NEXT_BYTE;
+	bitstream=cb_next_byte();
 	bitcount=8;
-
 
 	// actual depacking loop!
 	do
@@ -38,7 +36,7 @@ void depacker_dirty(void)
 		// get 1st bit - either OUTBYTE or beginning of LZ code
 		if (get_bits_dirty(1))
 		{ // OUTBYTE
-			put_byte(NEXT_BYTE);
+			put_byte(cb_next_byte());
 		}
 		else
 		{ // LZ code
@@ -48,7 +46,7 @@ void depacker_dirty(void)
 				repeat(0xFFF8|get_bits_dirty(3) ,1);
 				break;
 			case 1: // 001
-				repeat(0xFF00|NEXT_BYTE ,2);
+				repeat(0xFF00|cb_next_byte() ,2);
 				break;
 			case 2: // 010
 				repeat(get_bigdisp_dirty(),3);
@@ -70,16 +68,9 @@ void depacker_dirty(void)
 
 	} while(j<8);
 
-
 	if ((DBMASK & dbpos))
-	{
 		put_buffer(DBMASK & dbpos);
-	}
-
 }
-
-
-
 
 void repeat(s16 disp,u8 len)
 { // repeat len bytes with disp displacement (negative)
@@ -87,14 +78,11 @@ void repeat(s16 disp,u8 len)
 
 	u8 i; // since length is no more than 255
 
-	for(i=0;i<len;i++)
+	for (i=0;i<len;i++)
 	{
 		put_byte(dbuf[DBMASK & (dbpos+disp)]);
 	}
 }
-
-
-
 
 void put_byte(u8 byte)
 {
@@ -107,21 +95,18 @@ void put_byte(u8 byte)
 	}
 }
 
-
 u8 get_bits_dirty(u8 numbits)
 { // gets bits in a byte-wise style, no checks
   // numbits must be >0
 
-	u8 bits;
-
-	bits=0;
+	u8 bits = 0;
 
 	do
 	{
 		if (!(bitcount--))
 		{
 			bitcount=7;
-			bitstream=NEXT_BYTE;
+			bitstream=cb_next_byte();
 		}
 
 		bits = (bits<<1)|(bitstream>>7); // all shifts byte-wise
@@ -141,11 +126,11 @@ s16 get_bigdisp_dirty(void)
 	if (get_bits_dirty(1))
 	{ // longer displacement
 		bits=get_bits_dirty(4);
-		return (((0xF0|bits)-1)<<8)|NEXT_BYTE;
+		return (((0xF0|bits)-1)<<8)|cb_next_byte();
 	}
 	else
 	{ // shorter displacement
-		return 0xFF00|NEXT_BYTE;
+		return 0xFF00|cb_next_byte();
 	}
 }
 

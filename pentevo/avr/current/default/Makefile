@@ -33,7 +33,7 @@ AD = "$(AP)avrdude$(EXE)" -q -q -u -C "$(AP)avrdude.conf" -c $(PROGRAMMER) -p $(
 
 ## Compile options common for all C compilation units.
 CFLAGS = -mmcu=$(MCU)
-CFLAGS += -Os -flto -Wall -Wextra -gdwarf-2 -std=c++11
+CFLAGS += -Os -flto -Wall -Wextra -gdwarf-2 -std=c++17
 CFLAGS += -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums -fdata-sections -ffunction-sections
 CFLAGS += -Wimplicit-fallthrough=0
 CFLAGS += -DF_CPU=11059200UL
@@ -47,8 +47,8 @@ HEX_EEPROM_FLAGS += --set-section-flags=.eeprom="alloc,load"
 HEX_EEPROM_FLAGS += --change-section-lma .eeprom=0 --no-change-warnings
 
 ## Objects that must be built in order to link
-SOURCES = ../main.c ../zx.c ../interrupts.c ../ps2.c ../depacker_dirty.c ../rs232.c ../rtc.c ../atx.c ../joystick.c ../version.c ../tape.c ../kbmap.c ../spiflash.c ../rs232_asm.S
-HEADERS = ../zx.h ../ps2.h ../spi.h ../depacker_dirty.h ../rs232.h ../rtc.h ../atx.h ../joystick.h ../version.h ../tape.h ../kbmap.h ../spiflash.h
+SOURCES = ../main.c ../zx.c ../interrupts.c ../ps2.c ../depacker_dirty.c ../rs232.c ../rtc.c ../atx.c ../joystick.c ../version.c ../tape.c ../kbmap.c ../spiflash.c ../tsspiffs.c ../rs232_asm.S
+HEADERS = ../zx.h ../ps2.h ../spi.h ../depacker_dirty.h ../rs232.h ../rtc.h ../atx.h ../joystick.h ../version.h ../tape.h ../kbmap.h ../spiflash.h ../tsspiffs.h
 
 ## Objects explicitly added by the user
 FPGACORE = tsconf.o baseconf.o egg.o
