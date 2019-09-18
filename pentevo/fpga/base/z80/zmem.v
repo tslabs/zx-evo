@@ -86,6 +86,11 @@ module zmem(
 	input  wire        romrw_en,
 
 
+
+	input  wire        nmi_buf_clr,
+
+
+
 	output reg  [ 4:0] rompg, // output for ROM paging
 	output wire        romoe_n,
 	output wire        romwe_n,
@@ -346,7 +351,8 @@ module zmem(
 	begin
 		if( (zneg && r_mreq_n && (!mreq_n) && rfsh_n && romnram) ||
 		    (zneg && r_mreq_n && memwr                         ) ||
-		    (io && (!io_r) && zpos                             ) )
+		    (io && (!io_r) && zpos                             ) ||
+		    (nmi_buf_clr                                       ) )
 			cached_addr_valid <= 1'b0;
 		else if( cpu_strobe )
 			cached_addr_valid <= 1'b1;

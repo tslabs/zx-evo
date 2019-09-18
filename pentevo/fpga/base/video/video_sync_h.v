@@ -55,6 +55,8 @@ module video_sync_h(
 	input  wire        mode_atm_n_pent,
 	input  wire        mode_a_text,
 
+	input  wire [ 1:0] modes_raster,
+	input  wire        mode_contend_type, 
 
 	output reg         hblank,
 	output reg         hsync,
@@ -67,7 +69,12 @@ module video_sync_h(
 
 	output reg         scanin_start,
 
+	input  wire        vpix,
 	output reg         hpix, // marks gate during which pixels are outting
+
+	output reg         contend, // for 48k/128k CPU contention
+
+	output reg         border_sync, // for 48k/128k 4t border emulation
 
 	                                // these signals turn on and turn off 'go' signal
 	output reg         fetch_start, // 18 cycles earlier than hpix, coincide with cend
@@ -98,14 +105,28 @@ module video_sync_h(
 
 	localparam SCANIN_BEG = 9'd88; // when scan-doubler starts pixel storing
 
-	localparam HINT_BEG = 9'd2;
 
 
-	localparam HPERIOD = 9'd448;
+	localparam HINT_BEG      = 9'd2;
+	localparam HINT_BEG_48K  = 9'd126;
+	localparam HINT_BEG_128K = 9'd130;
+
+
+	localparam HPERIOD_224 = 9'd448;
+	localparam HPERIOD_228 = 9'd456;
+
+
+	localparam CONTEND_START = 9'd127; // fixed for correct contend phase: coincides with positive edge of z80 clock
+	//localparam CONTEND_START_48K  = 9'd132;
+	//localparam CONTEND_START_128K = 9'd132;
+
+
+	localparam BORDER_PHASE = 3'd4;
 
 
 	reg [8:0] hcount;
 
+	reg [8:0] contend_ctr;
 
 	// for simulation only
 	//
@@ -124,7 +145,7 @@ module video_sync_h(
 
 	always @(posedge clk) if( cend )
 	begin
-            if( init || (hcount==(HPERIOD-9'd1)) )
+            if(  init || hcount==( (modes_raster==2'b11) ? (HPERIOD_228-9'd1) : (HPERIOD_224-9'd1) )  )
             	hcount <= 9'd0;
             else
             	hcount <= hcount + 9'd1;
@@ -211,7 +232,7 @@ module video_sync_h(
 
 	always @(posedge clk)
 	begin
-		if( pre_cend && (hcount==HINT_BEG) )
+		if( pre_cend && hcount==( modes_raster[1] ? (modes_raster[0] ? HINT_BEG_128K : HINT_BEG_48K) : HINT_BEG ) )
 			hint_start <= 1'b1;
 		else
 			hint_start <= 1'b0;
@@ -228,6 +249,51 @@ module video_sync_h(
 
 
 
+	// contention generator
+	initial
+		contend_ctr <=9'h100;
+	//
+	always @(posedge clk) if( cend )
+	begin
+		if( hcount == CONTEND_START )
+			contend_ctr <= 9'd0;
+		else if( !contend_ctr[8] )
+			contend_ctr <= contend_ctr + 9'd1;
+	end
+	//
+	//
+	always @(posedge clk) if( cend )
+	begin
+		if( contend_ctr[8] || !vpix )
+			contend <= 1'b0;
+		else if( !mode_contend_type )
+		// 48k type contention
+		case( contend_ctr[3:1] )
+			3'd6,
+			3'd7:    contend <= 1'b0;
+			default: contend <= 1'b1;
+		endcase
+		else
+		// +2a/+3 type contention
+		case( contend_ctr[3:1] )
+			3'd1:    contend <= 1'b0;
+			default: contend <= 1'b1;
+		endcase
+		//
+		// warning! probably +2a/+3 contention pattern is incorrect, it begins with 1 cycle contention but probably should end
+		//  with one extra contention cycle. Anyway this is left as TODO.
+		//
+	end
+
+
+
+	// border sync signal gen
+	always @(posedge clk)
+	if( pre_cend && hcount[2:0]==BORDER_PHASE )
+		border_sync <= 1'b1;
+	else
+		border_sync <= 1'b0;
+		
 
 
 endmodule

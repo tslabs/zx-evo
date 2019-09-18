@@ -1,4 +1,4 @@
-// ZX-Evo Base Configuration (c) NedoPC 2008,2009,2010,2011,2012,2013,2014
+// ZX-Evo Base Configuration (c) NedoPC 2008,2009,2010,2011,2012,2013,2014,2019
 //
 // fpga SPI slave device -- AVR controlled.
 
@@ -56,6 +56,7 @@ module slavespi(
 	output wire        wait_end,
 
 	output wire [ 7:0] config0, // config bits for overall system
+	output wire [ 7:0] config1, //
 
 	output wire        genrst, // positive pulse, causes Z80 reset
 
@@ -109,7 +110,7 @@ module slavespi(
 
 	// register selectors
 	wire sel_kbdreg, sel_kbdstb, sel_musxcr, sel_musycr, sel_musbtn, sel_kj,
-	     sel_rstreg, sel_waitreg, sel_gluadr, sel_comadr, sel_cfg0,
+	     sel_rstreg, sel_waitreg, sel_gluadr, sel_comadr, sel_cfg0, sel_cfg1,
 	     sel_sddata, sel_sdctrl;
 
 	// keyboard register
@@ -124,7 +125,8 @@ module slavespi(
 	reg [7:0] wait_reg;
 
 	//
-	reg [7:0] cfg0_reg_out; // one for shifting, second for storing values
+	reg [7:0] cfg0_reg_out;
+	reg [7:0] cfg1_reg_out;
 
 
 	// SDcard access registers
@@ -198,7 +200,8 @@ module slavespi(
 	assign sel_gluadr  = ( (regnum[7:4]==4'h4) && (regnum[1:0]==2'b01) ); // $41
 	assign sel_comadr  = ( (regnum[7:4]==4'h4) && (regnum[1:0]==2'b10) ); // $42
 	//
-	assign sel_cfg0    = (regnum[7:4]==4'h5); // $50
+	assign sel_cfg0 = (regnum[7:4]==4'h5 && regnum[0]==1'b0); // $50
+	assign sel_cfg1 = (regnum[7:4]==4'h5 && regnum[0]==1'b1); // $51
 	//
 	assign sel_sddata = ( (regnum[7:4]==4'h6) && !regnum[0] ); // $60
 	assign sel_sdctrl = ( (regnum[7:4]==4'h6) &&  regnum[0] ); // $61
@@ -221,12 +224,14 @@ module slavespi(
 			wait_reg[7:0] <= { sdo, wait_reg[7:1] };
 
 		// config shift-in
-		if( !scs_n && sel_cfg0 && sck_01 )
+		if( !scs_n && (sel_cfg0 || sel_cfg1) && sck_01 )
 			common_reg[7:0] <= { sdo, common_reg[7:1] };
 
 		// config output
 		if( scs_n_01 && sel_cfg0 )
 			cfg0_reg_out <= common_reg;
+		if( scs_n_01 && sel_cfg1 )
+			cfg1_reg_out <= common_reg;
 
 		// SD data shift-in
 		if( !scs_n && sel_sddata && sck_01 )
@@ -264,6 +269,7 @@ module slavespi(
 	assign wait_end = sel_waitreg && scs_n_01;
 
 	assign config0 = cfg0_reg_out;
+	assign config1 = cfg1_reg_out;
 
 
 

@@ -73,11 +73,11 @@ module zwait(
 	end
 
 
-
-	assign spiint_n = ~|waits;
 `ifndef SIMULATE
+	assign spiint_n = ~|waits;
 	assign wait_n = spiint_n ? 1'bZ : 1'b0;
 `else
+	assign spiint_n = 1'b1;
 	assign wait_n = 1'bZ;
 `endif
 

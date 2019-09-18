@@ -44,7 +44,7 @@ module video_sync_v(
 	// atm video mode input
 	input  wire        mode_atm_n_pent,
 
-	input  wire 	   mode_60hz,
+	input  wire [ 1:0] modes_raster,
 
 
 	output reg         vblank,
@@ -60,56 +60,117 @@ module video_sync_v(
 
 
 	localparam VBLNK_BEG = 9'd00;
-	localparam VSYNC_BEG = 9'd08;
-	localparam VSYNC_END = 9'd11;
-	localparam VBLNK_END = 9'd32;
 
-	localparam INT_BEG = 9'd0;
 
-	// pentagon (x192)
+
+
+	localparam VSYNC_BEG_50HZ = 9'd08;
+	localparam VSYNC_END_50HZ = 9'd11;
+	localparam VBLNK_END_50HZ = 9'd32;
+	
+	localparam VSYNC_BEG_60HZ = 9'd04;
+	localparam VSYNC_END_60HZ = 9'd07;
+	localparam VBLNK_END_60HZ = 9'd22;
+
+
+/*	// pentagon (x192)
 	localparam VPIX_BEG_PENT = 9'd080;
 	localparam VPIX_END_PENT = 9'd272;
 
 	// ATM (x200)
 	localparam VPIX_BEG_ATM = 9'd076;
 	localparam VPIX_END_ATM = 9'd276;
+*/
 
-	localparam VPERIOD = 9'd320; // pentagono foreva!
 
-	// ntsc
-	localparam VSYNC60_BEG = 9'd04;
-	localparam VSYNC60_END = 9'd07;
-	localparam VBLNK60_END = 9'd22;
+	localparam VPIX_BEG_PENTAGON = 9'd076; // for pentagon raster: actual begin is for x200 s, add 4 for x192 modes
+	localparam VPIX_END_PENTAGON = 9'd272; // actual end is for x192 modes, add 4 for x200 modes.
+
+
+	localparam VPIX_BEG_60HZ     = 9'd042;
+	localparam VPIX_END_60HZ     = 9'd238;
+
+	localparam VPIX_BEG_48K      = 9'd060;
+	localparam VPIX_END_48K      = 9'd256;
+
+	localparam VPIX_BEG_128K     = 9'd059;
+	localparam VPIX_END_128K     = 9'd255;
+
+/*	// ntsc
 	// pentagon (x192)
 	localparam VPIX60_BEG_PENT = 9'd046;
 	localparam VPIX60_END_PENT = 9'd238;
 	// ATM (x200)
 	localparam VPIX60_BEG_ATM = 9'd042;
 	localparam VPIX60_END_ATM = 9'd242;
-	//
-	localparam VPERIOD60 = 9'd262;
+*/	//
 
+
+	localparam VPERIOD_PENTAGON = 9'd320;
+	localparam VPERIOD_60HZ     = 9'd262;
+	localparam VPERIOD_48K      = 9'd312;
+	localparam VPERIOD_128K     = 9'd311;
+
+
+	localparam INT_BEG      = 9'd0;
+	localparam INT_BEG_48K  = 9'd1;
+	localparam INT_BEG_128K = 9'd1;
+	
+	
+	
 	reg [8:0] vcount;
-	reg mode60;
+
+
+	reg [8:0] vperiod;
+	reg [8:0] vpix_beg;
+	reg [8:0] vpix_end;
 
 
 
-
-	initial
+	initial // for simulation only
 	begin
 		vcount = 9'd0;
 		vsync = 1'b0;
 		vblank = 1'b0;
 		vpix = 1'b0;
 		int_start = 1'b0;
+		vperiod = 'd0;
+		vpix_beg = 'd0;
+		vpix_end = 'd0;
 	end
+
+	always @(posedge clk)
+	case( modes_raster )
+		default: vperiod <= VPERIOD_PENTAGON - 9'd1;
+		2'b01:   vperiod <= VPERIOD_60HZ     - 9'd1;
+		2'b10:   vperiod <= VPERIOD_48K      - 9'd1;
+		2'b11:   vperiod <= VPERIOD_128K     - 9'd1;
+	endcase
+
+	always @(posedge clk)
+	case( modes_raster )
+		default: vpix_beg <= VPIX_BEG_PENTAGON;
+		2'b01:   vpix_beg <= VPIX_BEG_60HZ    ;
+		2'b10:   vpix_beg <= VPIX_BEG_48K     ;
+		2'b11:   vpix_beg <= VPIX_BEG_128K    ;
+	endcase
+
+	always @(posedge clk)
+	case( modes_raster )
+		default: vpix_end <= VPIX_END_PENTAGON;
+		2'b01:   vpix_end <= VPIX_END_60HZ    ;
+		2'b10:   vpix_end <= VPIX_END_48K     ;
+		2'b11:   vpix_end <= VPIX_END_128K    ;
+	endcase
+
 
 	always @(posedge clk) if( hsync_start )
 	begin
-		if( vcount==((mode60?VPERIOD60:VPERIOD)-9'd1) )
+
+		if( vcount==vperiod )
 		begin
 			vcount <= 9'd0;
-			mode60 <= mode_60hz;
+
 		end
 		else
 			vcount <= vcount + 9'd1;
@@ -121,23 +182,24 @@ module video_sync_v(
 	begin
 		if( vcount==VBLNK_BEG )
 			vblank <= 1'b1;
-		else if( vcount==(mode60?VBLNK60_END:VBLNK_END) )
+		else if( vcount==( (modes_raster==2'b01) ? VBLNK_END_60HZ : VBLNK_END_50HZ ) )
 			vblank <= 1'b0;
 	end
 
 
 	always @(posedge clk)
 	begin
-		if( (vcount==(mode60?VSYNC60_BEG:VSYNC_BEG)) && hsync_start )
+		if( vcount==( modes_raster==2'b01 ? VSYNC_BEG_60HZ : VSYNC_BEG_50HZ ) && hsync_start )
 			vsync <= 1'b1;
-		else if( (vcount==(mode60?VSYNC60_END:VSYNC_END)) && line_start  )
+		else if( vcount==( modes_raster==2'b01 ? VSYNC_END_60HZ : VSYNC_END_50HZ ) && line_start  )
 			vsync <= 1'b0;
 	end
 
 
 	always @(posedge clk)
 	begin
-		if( (vcount==INT_BEG) && hint_start )
+		//if( hint_start && vcount==( modes_raster[1] ? (modes_raster[0] ? INT_BEG_128K : INT_BEG_48K) : INT_BEG ) )
+		if( hint_start && vcount==( modes_raster[1] ? (modes_raster[0] ? INT_BEG_128K : INT_BEG_48K) : INT_BEG ) )
 			int_start <= 1'b1;
 		else
 			int_start <= 1'b0;
@@ -147,9 +209,11 @@ module video_sync_v(
 
 	always @(posedge clk) if( hsync_start )
 	begin
-		if( vcount==(mode60?(mode_atm_n_pent ? VPIX60_BEG_ATM : VPIX60_BEG_PENT):(mode_atm_n_pent ? VPIX_BEG_ATM : VPIX_BEG_PENT)) )
+
+		if( vcount==(vpix_beg + (9'd4 & {9{~mode_atm_n_pent}})) )
 			vpix <= 1'b1;
-		else if( vcount==(mode60?(mode_atm_n_pent ? VPIX60_END_ATM : VPIX60_END_PENT):(mode_atm_n_pent ? VPIX_END_ATM : VPIX_END_PENT)) )
+
+		else if( vcount==(vpix_end + (9'd4 & {9{mode_atm_n_pent}})) )
 			vpix <= 1'b0;
 	end
 

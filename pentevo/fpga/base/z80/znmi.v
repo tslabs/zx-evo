@@ -47,9 +47,13 @@ module znmi
 	input  wire [15:0] a,
 
 
-	output reg         in_nmi, // when 1, there must be last (#FF) ram page in 0000-3FFF
+	output wire drive_00, // drive nop to Z80 databus
 
-	output wire        gen_nmi // NMI generator: when 1, NMI_N=0, otherwise NMI_N=Z
+
+
+	output reg         in_nmi,  // when 1, there must be last (#FF) ram page in 0000-3FFF
+	output wire        gen_nmi, // NMI generator: when 1, NMI_N=0, otherwise NMI_N=Z
+	output wire        nmi_buf_clr // clear ram read buffer in zmem during nmi entry
 );
 
 	reg  [1:0] set_nmi_r;
@@ -171,6 +175,9 @@ module znmi
 	end
 
 
+	assign drive_00 = in_nmi_2 && (!m1_n) && (!mreq_n) && (a[15:0]==16'h0066); // && last_m1_0066;
+
+	assign nmi_buf_clr = last_m1_0066 && in_nmi_2;
 	always @(posedge fclk, negedge rst_n)
 	if( !rst_n )
 		in_nmi <= 1'b0;

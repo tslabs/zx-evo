@@ -62,7 +62,13 @@ module video_top(
 
 	input  wire        vga_on,     // vga mode ON - scandoubler activated
 
-	input  wire 	   mode_60hz,
+	input  wire [ 1:0] modes_raster, // 2'b00 - pentagon raster (71680 clocks)
+	                                 // 2'b01 - 60Hz raster
+	                                 // 2'b10 - 48k raster (69888 clocks)
+	                                 // 2'b11 - 128k raster (70908 clocks)
+	
+	input  wire        mode_contend_type, // 2'b0 - 48k/128k/+2 contend type (6 5 4 3 2 1 0 0)
+	                                      // 2'b1 - +2a/+3 contend type (1 0 7 6 5 4 3 2)
 
 	// memory synchronization inputs
 	input  wire        cbeg,
@@ -102,7 +108,9 @@ module video_top(
 
 	output wire [ 5:0] palcolor, // for palette readback
 
-	output wire [ 7:0] fontrom_readback
+	output wire [ 7:0] fontrom_readback,
+
+	output wire        contend // for 48k/128k contended memory emulation 
 );
 
 	// these decoded in video_modedecode.v
@@ -165,6 +173,10 @@ module video_top(
 	wire        up_pixel;
 
 
+	// border sync for 48k/128k emulation
+	wire border_sync;
+
+
 	// decode video modes
 	video_modedecode video_modedecode(
 
@@ -198,7 +210,7 @@ module video_top(
 		.clk(clk),
 
 		.mode_atm_n_pent(mode_atm_n_pent),
-		.mode_60hz(mode_60hz),
+		.modes_raster(modes_raster),
 
 		.hsync_start(hsync_start),
 		.line_start(line_start),
@@ -220,6 +232,8 @@ module video_top(
 		.mode_atm_n_pent(mode_atm_n_pent),
 		.mode_a_text    (mode_a_text),
 
+		.modes_raster     (modes_raster     ),
+		.mode_contend_type(mode_contend_type),
 
 		.init(1'b0),
 
@@ -229,6 +243,7 @@ module video_top(
 
 		.hblank(hblank),
 		.hsync(hsync),
+		.vpix(vpix),
 		.hpix(hpix),
 
 		.line_start(line_start),
@@ -239,8 +254,11 @@ module video_top(
 		.scanin_start(scanin_start),
 
 		.fetch_start(fetch_start),
-		.fetch_end  (fetch_end  )
+		.fetch_end  (fetch_end  ),
 
+		.contend(contend),
+
+		.border_sync(border_sync)
 	);
 
 
@@ -354,6 +372,8 @@ module video_top(
 		.pixels(pixels),
 		.border(zxborder),
 
+		.border_sync    (border_sync    ),
+		.border_sync_ena(modes_raster[1]),
 		.atm_palwr  (atm_palwr  ),
 		.atm_paldata(atm_paldata),
 		
@@ -379,6 +399,8 @@ module video_top(
 		.clk(clk),
 
 		.hsync_start(hsync_start),
+		
+		.modes_raster(modes_raster),
 
 		.scanout_start(scanout_start),
 

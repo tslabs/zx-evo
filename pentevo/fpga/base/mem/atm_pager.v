@@ -87,7 +87,7 @@ module atm_pager(
 
 	reg [ 1:0] wrdisables; // for each map
 
-	reg mreq_n_reg, rd_n_reg, m1_n_reg;
+ 	reg mreq_n_reg, rd_n_reg, m1_n_reg;
 
 	wire dos_exec_stb, ram_exec_stb;
 

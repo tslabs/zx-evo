@@ -40,6 +40,8 @@ module video_palframe(
 	input  wire [ 3:0] pixels,
 	input  wire [ 3:0] border,
 
+	input  wire        border_sync,
+	input  wire        border_sync_ena,
 	// ulaplus related
 	input  wire [ 1:0] up_palsel,
 	input  wire [ 2:0] up_paper,
@@ -65,12 +67,17 @@ module video_palframe(
 	wire [ 5:0] up_color;
 	wire [ 8:0] palette_color;
 
+	reg [3:0] synced_border;
 	reg vsync_r;
 	reg [1:0] ctr_14;
 	reg ctr_h;
 	reg ctr_v;
 
-	assign zxcolor = (hpix&vpix) ? pixels : border;
+	always @(posedge clk)
+	if( border_sync )
+		synced_border <= border;
+
+	assign zxcolor = (hpix&vpix) ? pixels : (border_sync_ena ? synced_border : border);
 
 	assign up_color = (hpix&vpix) ? {up_palsel,~up_pixel,up_pixel?up_ink:up_paper} : {3'd0,border[2:0]};
 

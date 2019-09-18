@@ -27,6 +27,7 @@ module video_vga_sync_h(
 
 	input  wire clk,
 
+	input  wire [1:0] modes_raster,
 	output reg  vga_hsync,
 
 	output reg  scanout_start,
@@ -37,7 +38,8 @@ module video_vga_sync_h(
 	localparam HSYNC_END	= 10'd106;
 	localparam SCANOUT_BEG	= 10'd156;
 
-	localparam HPERIOD = 10'd896;
+	localparam HPERIOD_224 = 10'd896;
+	localparam HPERIOD_228 = 10'd912;
 
 
 
@@ -55,7 +57,7 @@ module video_vga_sync_h(
 	begin
 			if( hsync_start )
 				hcount <= 10'd2;
-			else if ( hcount==(HPERIOD-9'd1) )
+			else if ( hcount==( (modes_raster==2'b11) ? (HPERIOD_228-10'd1) : (HPERIOD_224-10'd1) ) )
 				hcount <= 10'd0;
 			else
 				hcount <= hcount + 9'd1;

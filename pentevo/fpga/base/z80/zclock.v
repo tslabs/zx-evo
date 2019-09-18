@@ -47,40 +47,57 @@
 
 module zclock(
 
-	input fclk,
-	input rst_n,
+	input  wire        fclk,
+	input  wire        rst_n,
 
-	input zclk, // Z80 clock, buffered via act04 and returned back to the FPGA
+	input  wire        zclk, // Z80 clock, buffered via act04 and returned back to the FPGA
 
-	input rfsh_n, // switch turbo modes in RFSH part of m1
+	input  wire [15:0] a, // for contention
 
-
-	output reg zclk_out, // generated Z80 clock - passed through inverter externally!
-
-	output reg zpos,
-	output reg zneg,
-
-
-	input  wire zclk_stall,
+	input  wire [ 1:0] modes_raster,
+	input  wire        mode_contend_type,
+	input  wire        mode_contend_ena,
+	input  wire [ 2:0] mode_7ffd_bits,    // low 3 bits of 7FFD for 128k contention
 
 
 
+	input  wire        contend,
 
-	input [1:0] turbo, // 2'b00 -  3.5 MHz
-	                   // 2'b01 -  7.0 MHz
-	                   // 2'b1x - 14.0 MHz
 
-	output reg [1:0] int_turbo, // internal turbo, switched on /RFSH
+	input  wire        mreq_n,
+	input  wire        iorq_n,
+	input  wire        m1_n,
+	input  wire        rfsh_n, // switch turbo modes in RFSH part of m1
+
+
+	output reg         zclk_out, // generated Z80 clock - passed through inverter externally!
+
+	output reg         zpos,
+	output reg         zneg,
+
+
+	input  wire        zclk_stall,
+
+
+
+
+	input  wire [ 1:0] turbo, // 2'b00 -  3.5 MHz
+	                          // 2'b01 -  7.0 MHz
+	                          // 2'b1x - 14.0 MHz
+
+
+
+	output reg  [ 1:0] int_turbo, // internal turbo, switched on /RFSH
 
 
 	// input signals for 14MHz external IORQ waits
-	input  wire external_port,
-	input  wire iorq_n,
-	input  wire m1_n,
+	input  wire        external_port,
 
 
-	input cbeg,
-	input pre_cend // syncing signals, taken from arbiter.v and dram.v
+
+
+	input  wire        cbeg,
+	input  wire        pre_cend // syncing signals, taken from arbiter.v and dram.v
 );
 
 
@@ -113,6 +130,15 @@ module zclock(
 	     pre_zneg_140;
 
 
+	reg  r_mreq_n;
+	wire iorq_n_a;
+	reg  r_iorq_n_a;
+	wire contend_wait;
+	wire contend_mem;
+	wire contend_io;
+	wire contend_addr;
+
+	reg [2:0] p7ffd; // resync to 14MHz
 
 
 `ifdef SIMULATE
@@ -137,8 +163,11 @@ module zclock(
 	end
 
 
+	// resync p7ffd
+	always @(posedge fclk)
+		p7ffd <= mode_7ffd_bits;
 
-
+        
 	// make 14MHz iorq wait
 	reg [3:0] io_wait_cnt;
 	
@@ -177,7 +206,7 @@ module zclock(
 
 
 
-	assign stall = zclk_stall | io_wait;
+	assign stall = zclk_stall | io_wait | contend_wait;
 
 
 
@@ -243,5 +272,29 @@ module zclock(
 	end
 
 
+	// contention emulation -- only 48k by now, TODO 128k pages and +2a/+3!
+	//
+	assign iorq_n_a = iorq_n || (a[0]==1'b1);
+	//
+	always @(posedge fclk)
+	if( zpos )
+	begin
+		r_mreq_n   <= mreq_n;
+		r_iorq_n_a <= iorq_n_a;
+	end
+	//
+	assign contend_addr = (modes_raster[0]==1'b0) ? ( a[15:14]==2'b01                                  ) : // 48k mode
+	                                                ( a[15:14]==2'b01 || (a[15:14]==2'b11 && p7ffd[0]) ) ; // 128k mode (yet only 128/+2)
+	//
+	assign contend_mem = contend_addr && r_mreq_n;
+	assign contend_io  = !iorq_n_a && r_iorq_n_a;
+	//
+	assign contend_wait = contend && (contend_mem || contend_io) && !int_turbo && modes_raster[1] && mode_contend_ena;
+	//
+	// TODO: contend is 28MHz signal, while we'd better have here
+	//       3.5MHz-synced r_contend signal, which should be synced
+	//       to free-running 3.5MHz zpos/zneg sequence (not affected by stall)
+
+    
 endmodule
 
