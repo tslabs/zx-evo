@@ -8,8 +8,9 @@
 #define EEPROM_ADDR_USER_KBMAP    ((u8*)0x0000)   // User map offset in EEPROM
 #define EEPROM_ADDR_USER_KBMAP_E0 ((u8*)0x0100)   // User map (extent E0) offset in EEPROM
 #define EEPROM_ADDR_BOOT_CFG      ((u8*)0x0200)   // Boot config offset in EEPROM
-#define EEPROM_SIZE_BOOT_CFG      0x100           // Boot config size
+#define EEPROM_SIZE_BOOT_CFG      0x100           // Boot config size in EEPROM
 #define EEPROM_ADDR_FPGA_CFG      ((u8*)0x0FFF)   // FPGA bitstream selector offset in EEPROM
+#define BOOT_CFG_SIZE             0x100           // Boot config size
 
 typedef enum
 {
@@ -30,6 +31,7 @@ enum
   CFG_VER         = 1,
 };
 
-u8 cfg_get_field(u8, void*);
+u8 cfg_get_field_eeprom(u8, void*);
+u8 cfg_get_field(u8, void*, void*);
 
 #endif

@@ -3,6 +3,7 @@
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
 #include <avr/eeprom.h>
+#include <string.h>
 
 #include <util/delay.h>
 
@@ -65,17 +66,6 @@ void put_buffer(u16 size)
     spi_send(*ptr++);
 }
 
-void sfi_raw_loader(u32 size)
-{
-  while (size)
-  {
-    u16 sz = min(DBSIZE, size);
-    tsf_read(&tsf_file, dbuf, sz);
-    put_buffer(sz);
-    size -= sz;
-  }
-}
-
 u8 get_next_byte_pf()
 {
   return pgm_read_byte_far(curFpga++);
@@ -128,6 +118,17 @@ void sfi_depacker()
 
   cb_next_byte = get_next_byte_sfi;
   depacker_dirty();
+}
+
+void sfi_raw_loader(u32 size)
+{
+  while (size)
+  {
+    u16 sz = min(DBSIZE, size);
+    tsf_read(&tsf_file, dbuf, sz);
+    put_buffer(sz);
+    size -= sz;
+  }
 }
 
 void hardware_init(void)
@@ -240,52 +241,58 @@ start:
   tsf_cfg.bulk_start = 0;
   tsf_cfg.bulk_size = TSF_SIZE;
   tsf_cfg.block_size = TSF_BLK_SIZE;
-  
+
   // enable SFI
   sfi_enable();
   sfi_cs_off();
-  
-  // check the configuration
-  const char *name;
-  switch (eeprom_read_byte(EEPROM_ADDR_FPGA_CFG))
-  {
-    case FPGA_BASE:
-      name = "base_vdac2.mlz";
-      curFpga = GET_FAR_ADDRESS(fpga_base);
-    break;
-  
-    case FPGA_EGG:
-      name = "tennis_vdac2.mlz";
-      curFpga = GET_FAR_ADDRESS(fpga_egg);
-    break;
-  
-    case FPGA_TS:
-    default:
-      name = "ts_vdac2.mlz";
-      curFpga = GET_FAR_ADDRESS(fpga_ts);
-    break;
-  }
-  
-  bool is_sfi = false;
+
+  bool is_spif = false;
+  char name[32] = {};
   do
   {
-    if (tsf_mount(&tsf_cfg, &tsf_vol) != TSF_RES_OK) break;
-    if (tsf_stat(&tsf_vol, &stat, name) != TSF_RES_OK) break;
-    if (tsf_open(&tsf_vol, &tsf_file, name, TSF_MODE_READ) != TSF_RES_OK) break;
-    is_sfi = true;
+    u32 sig;
+    if (tsf_mount(&tsf_cfg, &tsf_vol) != TSF_RES_OK) break;                             // mount TSF volume
+    if (tsf_open(&tsf_vol, &tsf_file, "boot.cfg", TSF_MODE_READ) != TSF_RES_OK) break;  // search for config
+    if (tsf_read(&tsf_file, dbuf, BOOT_CFG_SIZE) != TSF_RES_OK) break;                  // read config
+    if (!cfg_get_field(CFG_TAG_SIG, dbuf, &sig)) break;                                 // get signature
+    if (sig != CFG_SIG) break;                                                          // check signature validity
+    if (!cfg_get_field(CFG_TAG_BSTREAM, dbuf, name)) break;                             // get bitstream filename
+    if (tsf_open(&tsf_vol, &tsf_file, name, TSF_MODE_READ) != TSF_RES_OK) break;        // open bitstream file
+    is_spif = true;
   } while (0);
-  
-  if (is_sfi)
+
+  if (is_spif)  // load from SPIF
   {
-    sfi_depacker();
-    // sfi_raw_loader(stat.size);
+    if(!strcmp(name + strlen(name) - 3, "mlz"))
+      sfi_depacker();
+    else
+    {
+      tsf_stat(&tsf_vol, &stat, name);  // get bitstream size
+      sfi_raw_loader(stat.size);
+    }
   }
-  else
+  else  // load from PFLASH
   {
+    switch (eeprom_read_byte(EEPROM_ADDR_FPGA_CFG))
+    {
+      case FPGA_BASE:
+        curFpga = GET_FAR_ADDRESS(fpga_base);
+      break;
+  
+      case FPGA_EGG:
+        curFpga = GET_FAR_ADDRESS(fpga_egg);
+      break;
+  
+      case FPGA_TS:
+      default:
+        curFpga = GET_FAR_ADDRESS(fpga_ts);
+      break;
+    }
+  
     cb_next_byte = get_next_byte_pf;
     depacker_dirty();
   }
-  
+
 
   //power led ON
   LED_PORT &= ~_BV(LED);
