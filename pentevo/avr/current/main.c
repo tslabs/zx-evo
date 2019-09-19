@@ -1,3 +1,4 @@
+
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
@@ -51,10 +52,10 @@ TSF_FILE_STAT stat;
 
 #define TSF_SIZE (4 * 1024 * 1024L)
 #define TSF_BLK_SIZE 4096
+#define TSFB_SIZE 256
 
-// buffers
-u8 tsf_buf[256];
-u8 *dbuf;  // Pointer to the buffer for depacking FPGA configuration
+u8 dbuf[DBSIZE];       // 2kB buffer for depacking and UART (4 x 256)
+u8 tsf_buf[TSFB_SIZE]; // SFI FS driver
 
 void put_buffer(u16 size)
 {
@@ -233,18 +234,17 @@ start:
   DDRF &= ~(1<<nCONFIG);
   while(!(PINF & (1<<nSTATUS))); // wait ready
 
-  // init TSF parameters
   tsf_cfg.hal_read_func  = spi_read;
   tsf_cfg.buf = tsf_buf;
-  tsf_cfg.buf_size = sizeof(tsf_buf);
+  tsf_cfg.buf_size = TSFB_SIZE;
   tsf_cfg.bulk_start = 0;
   tsf_cfg.bulk_size = TSF_SIZE;
   tsf_cfg.block_size = TSF_BLK_SIZE;
-
+  
   // enable SFI
   sfi_enable();
   sfi_cs_off();
-
+  
   // check the configuration
   const char *name;
   switch (eeprom_read_byte(EEPROM_ADDR_FPGA_CFG))
@@ -253,19 +253,19 @@ start:
       name = "base_vdac2.mlz";
       curFpga = GET_FAR_ADDRESS(fpga_base);
     break;
-
+  
     case FPGA_EGG:
       name = "tennis_vdac2.mlz";
       curFpga = GET_FAR_ADDRESS(fpga_egg);
     break;
-
+  
     case FPGA_TS:
     default:
       name = "ts_vdac2.mlz";
       curFpga = GET_FAR_ADDRESS(fpga_ts);
     break;
   }
-
+  
   bool is_sfi = false;
   do
   {
@@ -274,22 +274,18 @@ start:
     if (tsf_open(&tsf_vol, &tsf_file, name, TSF_MODE_READ) != TSF_RES_OK) break;
     is_sfi = true;
   } while (0);
-
+  
+  if (is_sfi)
   {
-    u8 db[DBSIZE];  // 2kB buffer for depacking
-    dbuf = db;
-
-    if (is_sfi)
-    {
-      sfi_depacker();
-      // sfi_raw_loader(stat.size);
-    }
-    else
-    {
-      cb_next_byte = get_next_byte_pf;
-      depacker_dirty();
-    }
+    sfi_depacker();
+    // sfi_raw_loader(stat.size);
   }
+  else
+  {
+    cb_next_byte = get_next_byte_pf;
+    depacker_dirty();
+  }
+  
 
   //power led ON
   LED_PORT &= ~_BV(LED);
