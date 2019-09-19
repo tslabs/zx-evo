@@ -47,24 +47,21 @@ volatile u8 ext_type_gluk;
 TSF_CONFIG tsf_cfg;
 TSF_VOLUME tsf_vol;
 TSF_FILE tsf_file;
+TSF_FILE_STAT stat;
 
 #define TSF_SIZE (4 * 1024 * 1024L)
 #define TSF_BLK_SIZE 4096
 
 // buffers
 u8 tsf_buf[256];
-
-// Buffer for depacking FPGA configuration.
-// You can use it for other purposes after FPGA loaded.
-u8 dbuf[DBSIZE];
+u8 *dbuf;  // Pointer to the buffer for depacking FPGA configuration
 
 void put_buffer(u16 size)
 {
   u8 *ptr = dbuf;
 
-  do
-    spi_send(*(ptr++));
-      while(--size);
+  while(size--)
+    spi_send(*ptr++);
 }
 
 void sfi_raw_loader(u32 size)
@@ -130,21 +127,6 @@ void sfi_depacker()
 
   cb_next_byte = get_next_byte_sfi;
   depacker_dirty();
-}
-
-void sfi_init()
-{
-  // init TSF parameters
-  tsf_cfg.hal_read_func  = spi_read;
-  tsf_cfg.buf = tsf_buf;
-  tsf_cfg.buf_size = sizeof(tsf_buf);
-  tsf_cfg.bulk_start = 0;
-  tsf_cfg.bulk_size = TSF_SIZE;
-  tsf_cfg.block_size = TSF_BLK_SIZE;
-
-  // enable SFI
-  sfi_enable();
-  sfi_cs_off();
 }
 
 void hardware_init(void)
@@ -251,40 +233,52 @@ start:
   DDRF &= ~(1<<nCONFIG);
   while(!(PINF & (1<<nSTATUS))); // wait ready
 
-  sfi_init();
+  // init TSF parameters
+  tsf_cfg.hal_read_func  = spi_read;
+  tsf_cfg.buf = tsf_buf;
+  tsf_cfg.buf_size = sizeof(tsf_buf);
+  tsf_cfg.bulk_start = 0;
+  tsf_cfg.bulk_size = TSF_SIZE;
+  tsf_cfg.block_size = TSF_BLK_SIZE;
+
+  // enable SFI
+  sfi_enable();
+  sfi_cs_off();
+
+  // check the configuration
+  const char *name;
+  switch (eeprom_read_byte((const u8*)ADDR_FPGA_CFG))
   {
-    bool is_sfi = false;
-    TSF_FILE_STAT stat;
-    const char *name;
-    
-    // check the configuration
-    switch (eeprom_read_byte((const u8*)ADDR_FPGA_CFG))
-    {
-      case FPGA_BASE:
-        name = "base_vdac2.mlz";
-        curFpga = GET_FAR_ADDRESS(fpga_base);
-      break;
+    case FPGA_BASE:
+      name = "base_vdac2.mlz";
+      curFpga = GET_FAR_ADDRESS(fpga_base);
+    break;
 
-      case FPGA_EGG:
-        name = "tennis_vdac2.mlz";
-        curFpga = GET_FAR_ADDRESS(fpga_egg);
-      break;
+    case FPGA_EGG:
+      name = "tennis_vdac2.mlz";
+      curFpga = GET_FAR_ADDRESS(fpga_egg);
+    break;
 
-      case FPGA_TS:
-      default:
-        name = "ts_vdac2.mlz";
-        curFpga = GET_FAR_ADDRESS(fpga_ts);
-      break;
-    }
-      
-    do
-    {
-      if (tsf_mount(&tsf_cfg, &tsf_vol) != TSF_RES_OK) break;
-      if (tsf_stat(&tsf_vol, &stat, name) != TSF_RES_OK) break;
-      if (tsf_open(&tsf_vol, &tsf_file, name, TSF_MODE_READ) != TSF_RES_OK) break;
-      is_sfi = true;
-    } while (0);
-    
+    case FPGA_TS:
+    default:
+      name = "ts_vdac2.mlz";
+      curFpga = GET_FAR_ADDRESS(fpga_ts);
+    break;
+  }
+
+  bool is_sfi = false;
+  do
+  {
+    if (tsf_mount(&tsf_cfg, &tsf_vol) != TSF_RES_OK) break;
+    if (tsf_stat(&tsf_vol, &stat, name) != TSF_RES_OK) break;
+    if (tsf_open(&tsf_vol, &tsf_file, name, TSF_MODE_READ) != TSF_RES_OK) break;
+    is_sfi = true;
+  } while (0);
+
+  {
+    u8 db[DBSIZE];  // 2kB buffer for depacking
+    dbuf = db;
+
     if (is_sfi)
     {
       sfi_depacker();

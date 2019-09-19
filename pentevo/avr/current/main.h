@@ -177,7 +177,7 @@ extern volatile u8 ext_type_gluk;
 #define EXT_TYPE_SPIFL                0x10
 
 /** Data buffer. */
-extern u8 dbuf[];
+extern u8 *dbuf;
 
 /** FPGA data index. */
 extern volatile u32 curFpga;
