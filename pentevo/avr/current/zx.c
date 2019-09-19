@@ -80,7 +80,7 @@ void func_service()
 {
   u8 fpga_cfg;
 
-  switch (eeprom_read_byte((const u8*)ADDR_FPGA_CFG))
+  switch (eeprom_read_byte(EEPROM_ADDR_FPGA_CFG))
   {
     case FPGA_BASE:
       fpga_cfg = FPGA_TS;
@@ -92,7 +92,7 @@ void func_service()
     break;
   }
 
-  eeprom_write_byte((u8*)ADDR_FPGA_CFG, fpga_cfg); // switch config number
+  eeprom_write_byte(EEPROM_ADDR_FPGA_CFG, fpga_cfg); // switch config number
 
   flags_register |= FLAG_HARD_RESET;
   t_kbmap.tb.b1 = NO_KEY;
@@ -100,7 +100,7 @@ void func_service()
 
 void func_egg()
 {
-  eeprom_write_byte((u8*)ADDR_FPGA_CFG, FPGA_EGG); // switch config number
+  eeprom_write_byte(EEPROM_ADDR_FPGA_CFG, FPGA_EGG); // switch config number
 
   flags_register |= FLAG_HARD_RESET;
   t_kbmap.tb.b1 = NO_KEY;
@@ -171,7 +171,7 @@ void load_config()
   cb_ctrl_alt_f12 = func_service;
   cb_ctrl_alt_del = func_reset;
 
-  switch (eeprom_read_byte((const u8*)ADDR_FPGA_CFG))
+  switch (eeprom_read_byte(EEPROM_ADDR_FPGA_CFG))
   {
     case FPGA_BASE:
       cb_prt_scr      = func_nmi;
@@ -771,7 +771,7 @@ void zx_mode_switcher(u8 mode)
   cb_zx_set_config();
 
   //save mode register to RTC NVRAM
-  switch (eeprom_read_byte((const u8*)ADDR_FPGA_CFG))
+  switch (eeprom_read_byte(EEPROM_ADDR_FPGA_CFG))
   {
     case FPGA_BASE:
       rtc_write(RTC_COMMON_MODE_REG_BASE, modes_register);

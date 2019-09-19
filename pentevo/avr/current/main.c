@@ -247,7 +247,7 @@ start:
 
   // check the configuration
   const char *name;
-  switch (eeprom_read_byte((const u8*)ADDR_FPGA_CFG))
+  switch (eeprom_read_byte(EEPROM_ADDR_FPGA_CFG))
   {
     case FPGA_BASE:
       name = "base_vdac2.mlz";

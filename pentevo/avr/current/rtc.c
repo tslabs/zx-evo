@@ -201,7 +201,7 @@ void rtc_init(void)
 	if (gluk_regs[GLUK_REG_SEC] == 0) gluk_init();
 
 	//restore mode register from NVRAM (CAPS LED off on init)
-  switch (eeprom_read_byte((const u8*)ADDR_FPGA_CFG))
+  switch (eeprom_read_byte(EEPROM_ADDR_FPGA_CFG))
   {
     case FPGA_BASE:
       modes_register = rtc_read(RTC_COMMON_MODE_REG_BASE) & ~(MODE_CAPSLED);
