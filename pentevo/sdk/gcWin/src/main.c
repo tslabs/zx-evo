@@ -82,8 +82,6 @@ void testMouse()
         gcPrintf(INK_BLUE"32 bit number:"INK_MAGENTA"%012ld\n", a2d32s("-1234567890"));
     }
 
-    gcWaitKey(KEY_SPACE);
-
     gcCloseWindow();
 }
 
@@ -112,6 +110,8 @@ void cb_svmcur(GC_SVMENU_t *svm)
     svm_current_item = svm->current;
     svm_progress_item = svm->current * 20;
     gcPrintDialog(&dlgSVMInfo);
+    gcSelectWindow(&wndSVMHelp);
+    gcPrintf("\nItem help "INK_BRIGHT_BLUE"%hd", svm_current_item);
     gcSelectWindow(&wndSVMnu);
 }
 
@@ -121,7 +121,16 @@ u8 cb_svmkeys(GC_SVMENU_t *svm, KEY_t key)
     gcSelectWindow(&wndSVMInfo);
     gcPrintf(INK_BRIGHT_WHITE"Key pressed:"INK_BLUE"0x%hx", key);
     gcSelectWindow(&wndSVMnu);
-    return 0x00;
+    if(svm->current == 5)
+    {
+        if(key == KEY_SPACE)
+        {
+            svm_opt5_var++;
+            if(svm_opt5_var>3) svm_opt5_var=0;
+            return SVM_CBKEY_RC_REDRAW;
+        }
+    }
+    return SVM_CBKEY_RC_NONE;
 }
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -140,6 +149,9 @@ void main(void)
 // set default palette
     gcSetPalette(NULL, 0);
 
+// set border
+    BORDER = 1;
+
 // setup linked messages
     gcSetLinkedMessage(msg_arr);
 
@@ -157,13 +169,13 @@ void main(void)
         gcProgressBar(10, 20, (WIN_COL_GREEN<<4) | WIN_COL_BRIGHT_WHITE, 50, i);
     }
 
-    //while(1);
-
 // simple vertical menu test
     gcExecuteWindow(&wndSVMInfo);
+    gcExecuteWindow(&wndSVMHelp);
     select = gcExecuteWindow(&wndSVMnu);
-    gcCloseWindow();
-    gcCloseWindow();
+    gcCloseWindow();    // close wndSVMnu
+    gcCloseWindow();    // close wndSVMHelp
+    gcCloseWindow();    // close wndSVMInfo
 
     BORDER = 4;
 
@@ -178,7 +190,6 @@ void main(void)
     itmVarCB4 = cb4;
     itmVarLBX11 = lb;
 
-/*
     select = gcExecuteWindow(&wndDialog);
     // if press OK button
     if (select == BUTTON_OK)
@@ -195,15 +206,13 @@ void main(void)
     }
     // close dialog window
     gcCloseWindow();
-*/
 
-/*
+
     gcExecuteWindow(&wndInfo);
     // close info window
     gcCloseWindow();
-*/
 
-/*
+
     select = gcMessageBox(MB_RETRYABORTIGNORE, GC_FRM_SINGLE, "MessageBox",
                 INK_BRIGHT_WHITE
                 "Lorem ipsum dolor sit amet, consectetur\n"
@@ -214,7 +223,6 @@ void main(void)
                  );
     // close messagebox
     gcCloseWindow();
-*/
 
     testMouse();
 

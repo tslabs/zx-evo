@@ -15,8 +15,24 @@ void gcVars (void)
 ;; !!! must math with structures in gcWin.h !!!
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;; struct GC_SVM_FLAG_t
-    svmf_nowrap_mask         .equ    #0x40
-    svmf_exit_mask           .equ    #0x80
+    svmf_nowrap_mask        .equ    #0x40
+    svmf_exit_mask          .equ    #0x80
+
+;; typedef GC_SVM_TAG_t
+    svmt_text               .equ    #00
+    svmt_option             .equ    #01
+    svmt_callback           .equ    #02
+
+;; typedef GC_SVM_OPTION_t
+    svmopt_var              .equ    #00
+    svmopt_text             .equ    #02
+
+    svmrc_key               .equ    #0xFD
+    svmrc_tab               .equ    #0xFE
+    svmrc_exit              .equ    #0xFF
+
+    svm_cbkey_rc_redraw     .equ    #0xFE
+    svm_cbkey_rc_exit       .equ    #0xFF
 
 ;; struct GC_SVMENU
 ;; simple vertical menu offsets
@@ -27,6 +43,8 @@ void gcVars (void)
     svm_count               .equ    #04
     svm_cb_cursor           .equ    #05
     svm_cb_keys             .equ    #07
+    svm_lines               .equ    #09
+    svm_txt_list            .equ    #11
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;; struct GC_DLG_FLAG_t
     dlgf_cursor_mask        .equ    #0x80
@@ -672,6 +690,7 @@ u8 gcSimpleVMenu(GC_SVMENU_t *svmnu) __naked __z88dk_fastcall
   __asm
     MAC_LD_IXHL         ; IX - simple vertical menu descriptor
 
+    call svmnu_scanlist
     call print_svm_cursor
     call svmnu_cb_cursor
 
@@ -696,21 +715,21 @@ svmnu_lp:
     cp #KB_ENTER
     jr z,svmnu_ent
     cp #KB_EXT
-    jr z,svmnu_exit
+    jr z,svmnu_tab
 
     call svmnu_cb_keys
     ld a,l
-    or a
-    jr z,svmnu_lp
-    ld l,#0xFE
+    cp #svm_cbkey_rc_exit
+    jr nz,svmnu_lp
+    ld l,#svmrc_tab
     ret
 
-svmnu_exit:
+svmnu_tab:
     ld a,<#svm_flags (ix)
     and #svmf_exit_mask
     jr z,svmnu_lp
     call restore_svm_cursor
-    ld l,#0xFF
+    ld l,#svmrc_tab
     ret
 
 svmnu_ent:
@@ -771,18 +790,32 @@ svmnu_cb_cursor:
 ;;
     push ix
     push iy
-
+;; store attrs
+    ld a,(win_attr)
+    push af
+    ld a,(sym_attr)
+    push af
+    ld a,(bg_attr)
+    push af
 ;; store SVM pointer
     push ix
-
+;;
     ld hl,#0$
     push hl
     ex de,hl
     jp (hl)
-
 0$:
+;;
 ;; restore stack
     pop af
+;;
+;; restore attrs
+    pop af
+    ld (bg_attr),a
+    pop af
+    ld (sym_attr),a
+    pop af
+    ld (win_attr),a
 ;;
     pop iy
     pop ix
@@ -798,30 +831,144 @@ svmnu_cb_keys:
 ;;
     push ix
     push iy
-
+;; store attrs
+    ld a,(win_attr)
+    push af
+    ld a,(sym_attr)
+    push af
+    ld a,(bg_attr)
+    push af
 ;; store key
     ld a,l
     push af
     inc sp
 ;; store SVM pointer
     push ix
-
+;;
     ld hl,#0$
     push hl
     ex de,hl
     jp (hl)
-
 1$: ld l,#0x00
     ret
-
 0$:
+;;
 ;; restore stack
     pop af
     pop af
     dec sp
+
+;; restore attrs
+    pop af
+    ld (bg_attr),a
+    pop af
+    ld (sym_attr),a
+    pop af
+    ld (win_attr),a
+
+    push hl
+    ld a,l
+    cp #svm_cbkey_rc_redraw
+    jr nz,2$
+    call svmnu_scanlist
+    call print_svm_cursor
+2$: pop hl
 ;;
     pop iy
     pop ix
+    ret
+
+svmnu_scanlist:
+    ld l,<#svm_lines (ix)
+    ld h,<#svm_lines+1 (ix)
+    ld a,l
+    or h
+    ret z
+    xor a
+0$: push af
+    call svmnu_list_item
+    pop af
+    inc a
+    cp <#svm_count (ix)
+    jr nz,0$
+    ret
+
+;;i:    A - svm item number
+svmnu_list_item:
+    push af
+    ld c,a
+
+;; set coordinates
+    ld a,(win_y)
+    add a,<#svm_margin (ix)
+    add a,c
+    ld h,a              ; Y coord
+    ld a,(win_x)
+    ld l,a              ; X coord
+    push hl
+    call _gcGotoXY
+    pop hl
+
+    pop af
+    add a,a
+    ld c,a
+    ld b,#0x00
+    ld l,<#svm_lines (ix)
+    ld h,<#svm_lines+1 (ix)
+    add hl,bc
+    ld a,(hl)
+    inc hl
+    ld h,(hl)
+    ld l,a
+    ld a,(hl)
+    inc hl
+    ld e,(hl)
+    inc hl
+    ld d,(hl)
+    cp #svmt_text
+    jr z,svmnu_text
+    cp #svmt_option
+    jr z,svmnu_option
+    cp #svmt_callback
+    jr z,svmnu_callback
+    ret
+
+svmnu_text:
+    ex de,hl
+    jp _gcPrintString
+
+svmnu_option:
+    ex de,hl
+    push ix
+    push hl
+    pop ix
+    ld l,<#svmopt_var (ix)
+    ld h,<#svmopt_var+1 (ix)
+    ld a,(hl)
+    push af
+    ld l,<#svmopt_text (ix)
+    ld h,<#svmopt_text+1 (ix)
+    call _gcPrintString
+    pop af
+    pop ix
+    ld l,a
+    ld h,#0x00
+    add hl,hl
+    ld e,<#svm_txt_list (ix)
+    ld d,<#svm_txt_list+1 (ix)
+    add hl,de
+    ld e,(hl)
+    inc hl
+    ld d,(hl)
+    jr svmnu_text
+
+svmnu_callback:
+    ex de,hl
+    ld de,#0$
+    push de
+    push ix
+    jp (hl)
+0$: pop ix
     ret
 
 svmnu_get_mouse:
@@ -1507,8 +1654,10 @@ dialog_ent_list:
 ;; build temp vertical menu onto stack
     ld e,<#di_var (ix)
     ld d,<#di_var+1 (ix)
-;; callbacks
+;; list
     ld hl,#0
+    push hl
+;; callbacks
     push hl
     push hl
     ld a,<#di_select (ix)
@@ -1548,7 +1697,7 @@ dialog_ent_list:
     ld (de),a
 
 ;; restore stack
-    ld hl,#9
+    ld hl,#11
     add hl,sp
     ld sp,hl
 
@@ -3690,8 +3839,8 @@ void gcPrintString(char *str) __naked __z88dk_fastcall
     ld e,a
     ld a,(cur_y)
     ld d,a
-    call strprnz
-    ret
+;    call strprnz
+;    ret
 
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;; print zero-terminated string
@@ -3739,6 +3888,8 @@ strprnz::
     ld c,a
     ld a,l
     call sym_prn
+    ld a,e
+    ld (cur_x),a
     pop hl
     jr strprnz
 

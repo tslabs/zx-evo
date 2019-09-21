@@ -42,6 +42,8 @@ void gcMouseInit(u8 gfxpage, u8 palsel) __naked
     inc d
     dec a
     jr nz,0$
+    inc a
+    ld (mouse_init),a
 
     ld bc,#0xFBDF
     in a,(c)
@@ -69,6 +71,8 @@ _mouse_mmb::
     .db 0
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 mouse_palsel:
+    .db 0
+mouse_init:
     .db 0
 
 mouse_img:
@@ -155,8 +159,11 @@ void gcMouseUpdate(u8 spr) __naked __z88dk_fastcall
     spr;        // to avoid SDCC warning
 
   __asm
-    push hl
+    ld a,(mouse_init)
+    or a
+    ret z
 
+    push hl
     ld bc,#0xFADF
     in e,(c)
     ld a,e

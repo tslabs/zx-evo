@@ -152,6 +152,40 @@ typedef struct GC_WINDOW_t
 } GC_WINDOW_t;
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+enum
+{
+    SVM_RC_KEY      = (u8)0xFD,
+    SVM_RC_TAB      = (u8)0xFE,
+    SVM_RC_EXIT     = (u8)0xFF
+};
+
+typedef enum SVM_CBKEY_RC_t
+{
+    SVM_CBKEY_RC_NONE   = (u8)0x00,
+    SVM_CBKEY_RC_REDRAW = (u8)0xFE,
+    SVM_CBKEY_RC_EXIT   = (u8)0xFF
+} SVM_CB_KEY_RC_t;
+
+typedef enum GC_SVM_TAG_t
+{
+    GC_SVMT_TEXT    = (u8)0x00,
+    GC_SVMT_OPTION  = (u8)0x01,
+    GC_SVMT_CALLBACK= (u8)0x02
+} GC_SVM_TAG_t;
+
+typedef struct GC_SVM_OPTION_t
+{
+    u8      *option;
+    char    *text;
+} GC_SVM_OPTION_t;
+
+typedef struct GC_SVM_LINE_t
+{
+    GC_SVM_TAG_t    tag;
+    void            *ptr;
+} GC_SVM_LINE_t;
+
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 //:: SIMPLE VERTICAL MENU FLAGS
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 typedef struct GC_SVM_FLAG_t
@@ -178,6 +212,8 @@ typedef struct GC_SVMENU_t
     u8              count;      // количество пунктов
     void            *cb_cursor; // *svmcb_cursor_t
     void            *cb_keys;   // *svmcb_keys_t
+    GC_SVM_LINE_t   **lines;    //
+    char            **txt_list; //
 } GC_SVMENU_t;
 // cursor moving callback function
 typedef void (*svmcb_cursor_t)(GC_SVMENU_t(*svm));

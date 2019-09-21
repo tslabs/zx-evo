@@ -36,7 +36,7 @@ const GC_WINDOW_t wndMain =
 /*frame_type*/  GC_FRM_SINGLE | GC_FRM_NOSHADOW | GC_FRM_NOLOGO,
 /*frame_attr*/  (WIN_COL_WHITE<<4) | WIN_COL_BRIGHT_WHITE,
 /*header_txt*/  INK_BLACK
-                "Main Window",
+                "gcWin",
 /*window_txt*/  txt_lorem,
 /*menu_ptr*/    0
 };
@@ -161,6 +161,21 @@ const GC_WINDOW_t wndSVMInfo =
 /*menu_ptr*/    (u16)&dlgSVMInfo
 };
 
+const GC_WINDOW_t wndSVMHelp =
+{
+/*id*/          0,
+/*type*/        GC_WND_NOMENU,
+/*xy*/          50,14,
+/*wh*/          20,8,
+/*attr*/        (WIN_COL_WHITE<<4) | WIN_COL_BLACK,
+/*frame_type*/  GC_FRM_SINGLE,
+/*frame_attr*/  (WIN_COL_WHITE<<4) | WIN_COL_BRIGHT_WHITE,
+/*header_txt*/  INK_BLACK
+                "SVM Help",
+/*window_txt*/  0,
+/*menu_ptr*/    0
+};
+
 const GC_DITEM_t itmItemSVMInfoTxt =
 {
 /*type*/        DI_NUMBER,
@@ -232,7 +247,7 @@ const GC_WINDOW_t wndSVMnu =
 {
 /*id*/          0,
 /*type*/        GC_WND_SVMENU,
-/*xy*/          20,8,
+/*xy*/          10,8,
 /*wh*/          28,18,
 /*attr*/        (WIN_COL_WHITE<<4) | WIN_COL_BRIGHT_WHITE,
 /*frame_type*/  GC_FRM_SINGLE,
@@ -243,25 +258,57 @@ const GC_WINDOW_t wndSVMnu =
                 INK_BRIGHT_BLUE
                 MARK_CENTER
                 "Please select item...\n"
-                "\n\n\n"
-                MARK_CENTER"Item 1\n"
-                MARK_CENTER"Item 2\n"
-                MARK_CENTER"Item 3\n"
-                MARK_CENTER"Item 4\n"
-                MARK_CENTER"Item 5\n"
-                MARK_CENTER"Item 6\n",
+//                "\n\n\n"
+//                MARK_CENTER"Item 1\n"
+//                MARK_CENTER"Item 2\n"
+//                MARK_CENTER"Item 3\n"
+//                MARK_CENTER"Item 4\n"
+//                MARK_CENTER"Item 5\n"
+//                MARK_CENTER"Item 6\n",
+,
 /*menu_ptr*/    (u16)&svmTest
+};
+
+u8 svm_opt5_var = 0;
+
+const GC_SVM_OPTION_t svm_opt5 =
+{
+/* *option */   svm_opt5_var,
+/* *text */     MARK_TAB"\x5""Option: ",
+/* **list */    svm_option_list
+};
+
+GC_SVM_LINE_t svm_line0 = {GC_SVMT_TEXT, (char*)MARK_CENTER"svm item 0"};
+GC_SVM_LINE_t svm_line1 = {GC_SVMT_TEXT, (char*)MARK_CENTER"svm item 1"};
+GC_SVM_LINE_t svm_line2 = {GC_SVMT_TEXT, (char*)MARK_CENTER"svm item 2"};
+GC_SVM_LINE_t svm_line3 = {GC_SVMT_TEXT, (char*)MARK_CENTER"svm item 3"};
+GC_SVM_LINE_t svm_line4 = {GC_SVMT_TEXT, (char*)MARK_CENTER"svm item 4"};
+GC_SVM_LINE_t svm_line5 = {GC_SVMT_OPTION, (GC_SVM_OPTION_t*)&svm_opt5};
+
+const GC_SVM_LINE_t *svm_lines[] =
+{
+    &svm_line0, &svm_line1, &svm_line2, &svm_line3, &svm_line4, &svm_line5
+};
+
+const char *svm_option_list[] =
+{
+    "3,5"MARK_LINK"\x09",
+    "7"MARK_LINK"\x09",
+    "14"MARK_LINK"\x09",
+    "28"MARK_LINK"\x09"
 };
 
 GC_SVMENU_t svmTest =
 {
-/*flags*/       {0,0,0,0,0,0,1,1},
+/*flags*/       {0,0,0,0,0,0,1,0},
 /*attr*/        (WIN_COL_BRIGHT_BLUE<<4) | WIN_COL_BRIGHT_YELLOW,
 /*margin*/      5,
 /*current*/     0,
 /*count*/       6,
 /*cb_cursor*/   cb_svmcur,
-/*cb_keys*/     cb_svmkeys
+/*cb_keys*/     cb_svmkeys,
+/*lines*/       svm_lines,
+/*opt_list*/    svm_option_list
 };
 
 const GC_WINDOW_t wndDialog =
@@ -775,5 +822,6 @@ const u8 *msg_arr[] =
 /*5*/    MARK_RIGHT "right align " MARK_LINK "\x3 3",
 /*6*/    "button",
 /*7*/    "item ",
-/*8*/    "test"
+/*8*/    "test",
+/*9*/    " MHz   "
 };
