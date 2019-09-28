@@ -252,8 +252,7 @@ const GC_WINDOW_t wndSVMnu =
 /*attr*/        (WIN_COL_WHITE<<4) | WIN_COL_BRIGHT_WHITE,
 /*frame_type*/  GC_FRM_SINGLE,
 /*frame_attr*/  (WIN_COL_WHITE<<4) | WIN_COL_BRIGHT_WHITE,
-/*header_txt*/  INK_BLACK
-                "SVMenu test",
+/*header_txt*/  INK_BLACK"SVMenu test",
 /*window_txt*/  "\n"
                 INK_BRIGHT_BLUE
                 MARK_CENTER

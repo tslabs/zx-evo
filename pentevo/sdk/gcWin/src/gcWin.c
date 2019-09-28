@@ -31,6 +31,7 @@ void gcVars (void)
     svmrc_tab               .equ    #0xFE
     svmrc_exit              .equ    #0xFF
 
+    svm_cbkey_rc_none       .equ    #0x00
     svm_cbkey_rc_redraw     .equ    #0xFE
     svm_cbkey_rc_exit       .equ    #0xFF
 
@@ -721,7 +722,7 @@ svmnu_lp:
     ld a,l
     cp #svm_cbkey_rc_exit
     jr nz,svmnu_lp
-    ld l,#svmrc_tab
+    ld l,#svmrc_key
     ret
 
 svmnu_tab:
@@ -3400,6 +3401,26 @@ winfrm_prn:
   __endasm;
 }
 
+//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+void gcUpdateWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall
+{
+    wnd;                // to avoid SDCC warning
+
+  __asm
+    push hl
+    push hl
+    push hl
+    call _gcSelectWindow
+    pop hl
+    call _gcClearWindow
+    pop hl
+    call _gcPrintWindowHeader
+    pop hl
+    jp _gcPrintWindowText
+  __endasm;
+}
+
+//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 void gcSelectWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall
 {
     wnd;                // to avoid SDCC warning
@@ -3433,6 +3454,8 @@ void gcSelectWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall
 
     ld a,<#frame_attr (ix)
     ld (frm_attr),a
+    ld a,<#window_attr (ix)
+    ld (win_attr),a
 
     pop ix
     ret
@@ -3440,7 +3463,7 @@ void gcSelectWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall
 }
 
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-void gcPrintWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall
+void gcClearWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall
 {
     wnd;                // to avoid SDCC warning
 
@@ -3454,6 +3477,7 @@ void gcPrintWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall
 ;;gcDrawWindow {
     ld l,<#frame_type (ix)
     ld h,<#frame_attr (ix)
+    set 7,l
     push hl
 
     ld a,<#window_attr (ix)
@@ -3468,10 +3492,7 @@ void gcPrintWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall
     ld h,<#y (ix)
     push hl
 
-    ld a,(_window_count)
-    inc a
-    ld (_window_count),a
-    ld <#id (ix),a
+    ld a,<#id (ix)
     push af
     inc sp
 
@@ -3481,6 +3502,23 @@ void gcPrintWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall
     add hl,sp
     ld sp,hl
 ;;}
+
+    push ix
+    pop hl
+    call _gcPrintWindowHeader
+    pop ix
+    ret
+  __endasm;
+}
+
+void gcPrintWindowHeader(GC_WINDOW_t *wnd) __naked __z88dk_fastcall
+{
+    wnd;                // to avoid SDCC warning
+
+  __asm
+    push ix
+
+    MAC_LD_IXHL         ; IX - window descriptor
 
 ;; check GC_FRM_NOHEADER flag
     bit 6,<#frame_type (ix)
@@ -3533,7 +3571,28 @@ void gcPrintWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall
     ld (sym_attr),a
     ld (bg_attr),a
 
-;; print window text
+    pop ix
+    ret
+
+header_str:
+    .db 0x07, 0x0A, SYM_TRI
+    .db 0x08, 0x0A, 0x07, 0x0E, SYM_TRI
+    .db 0x08, 0x0E, 0x07, 0x0C, SYM_TRI
+    .db 0x08, 0x0C, 0x07, 0x0D, SYM_TRI
+    .db 0x00
+  __endasm;
+}
+
+//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+void gcPrintWindowText(GC_WINDOW_t *wnd) __naked __z88dk_fastcall
+{
+    wnd;                // to avoid SDCC warning
+
+  __asm
+    push ix
+
+    MAC_LD_IXHL         ; IX - window descriptor
+
     ld d,<#y (ix)
     inc d
     ld e,<#x (ix)
@@ -3543,6 +3602,61 @@ void gcPrintWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall
     ld a,l
     or h
     call nz,strprnz
+    pop ix
+    ret
+  __endasm;
+}
+
+//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+void gcPrintWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall
+{
+    wnd;                // to avoid SDCC warning
+
+  __asm
+    call _gcSelectWindow
+
+    push ix
+
+    MAC_LD_IXHL         ; IX - window descriptor
+
+;;gcDrawWindow {
+    ld l,<#frame_type (ix)
+    ld h,<#frame_attr (ix)
+    push hl
+
+    ld a,<#window_attr (ix)
+    push af
+    inc sp
+
+    ld l,<#width (ix)
+    ld h,<#hight (ix)
+    push hl
+
+    ld l,<#x (ix)
+    ld h,<#y (ix)
+    push hl
+
+    ld a,(_window_count)
+    inc a
+    ld (_window_count),a
+    ld <#id (ix),a
+    push af
+    inc sp
+
+    call _gcDrawWindow
+
+    ld hl,#8
+    add hl,sp
+    ld sp,hl
+;;}
+
+    push ix
+    pop hl
+    call _gcPrintWindowHeader
+
+    push ix
+    pop hl
+    call _gcPrintWindowText
 
 ;; store to windows list
     ld a,<#id (ix)
@@ -3569,13 +3683,6 @@ void gcPrintWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall
 
     pop ix
     ret
-
-header_str:
-    .db 0x07, 0x0A, SYM_TRI
-    .db 0x08, 0x0A, 0x07, 0x0E, SYM_TRI
-    .db 0x08, 0x0E, 0x07, 0x0C, SYM_TRI
-    .db 0x08, 0x0C, 0x07, 0x0D, SYM_TRI
-    .db 0x00
 
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;; set attribute line
@@ -3807,12 +3914,17 @@ putsym_ink:
     ret
 ;;
 putsym_paper:
+    ld a,(sym_attr)
+    and #0x0F
+    ld h,a
     ld a,l
     add a,a
     add a,a
     add a,a
     add a,a
     ld (bg_attr),a
+    or h
+    ld (sym_attr),a
     ret
 ;;
 putsym_scrollup:

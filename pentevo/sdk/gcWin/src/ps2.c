@@ -77,19 +77,27 @@ const KEY_t keymapE0[] =
 
 u8 cmos_read()
 {
+    CMOS_CONF = 0x80;
+    CMOS_ADDR = 0x0C;
+    CMOS_DATA = 0x00;
     CMOS_ADDR = 0xF0;
     return CMOS_DATA;
 }
 
 void cmos_clear()
 {
+    CMOS_CONF = 0x80;
     CMOS_ADDR = 0x0C;
     CMOS_DATA = 0x01;
+    CMOS_ADDR = 0xF0;
+    CMOS_DATA = 0x02;
 }
 
 void ps2_init()
 {
     CMOS_CONF = 0x80;
+    CMOS_ADDR = 0x0C;
+    CMOS_DATA = 0x00;
     CMOS_ADDR = 0xF0;
     CMOS_DATA = 0x02;
     *(u8*)keyboard_stat = 0;

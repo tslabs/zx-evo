@@ -152,6 +152,8 @@ typedef struct GC_WINDOW_t
 } GC_WINDOW_t;
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+//:: SIMPLE VERTICAL MENU RETURN CODE
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 enum
 {
     SVM_RC_KEY      = (u8)0xFD,
@@ -159,6 +161,9 @@ enum
     SVM_RC_EXIT     = (u8)0xFF
 };
 
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+//:: SIMPLE VERTICAL MENU KEYS CALLBACK RETURN CODE
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 typedef enum SVM_CBKEY_RC_t
 {
     SVM_CBKEY_RC_NONE   = (u8)0x00,
@@ -563,8 +568,12 @@ void gcPrintChainWindows(void) __naked;
 void gcDrawWindow(u8 id, u8 x, u8 y, u8 width, u8 hight, WIN_COLORS_t attr, GC_FRM_TYPE_t frame_type, WIN_COLORS_t frame_attr) __naked;
 u8 gcGetMessageLines(u8 *msg) __naked __z88dk_fastcall;
 u8 gcGetMessageMaxLength(u8 *msg) __naked __z88dk_fastcall;
+void gcUpdateWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall;
 void gcPrintWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall;
+void gcPrintWindowHeader(GC_WINDOW_t *wnd) __naked __z88dk_fastcall;
+void gcPrintWindowText(GC_WINDOW_t *wnd) __naked __z88dk_fastcall;
 void gcSelectWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall;
+void gcClearWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall;
 
 void gcScrollUpWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall;
 void gcScrollDownWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall;

@@ -8,7 +8,7 @@
 
 ### Инициализация
 
-```
+```c
 void gcWindowsInit(u8 vpage, u8 spage) __naked;
 ```
 
@@ -19,7 +19,7 @@ void gcWindowsInit(u8 vpage, u8 spage) __naked;
 
 ### Вывод окна
 
-```
+```c
 void gcPrintWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall;
 ```
 
@@ -27,7 +27,7 @@ void gcPrintWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall;
 
   
 
-```
+```c
 void gcDrawWindow(u8 id, u8 x, u8 y, u8 width, u8 hight, WIN_COLORS_t attr, GC_FRM_TYPE_t frame_type, WIN_COLORS_t frame_attr) __naked;
 ```
 
@@ -47,7 +47,7 @@ void gcDrawWindow(u8 id, u8 x, u8 y, u8 width, u8 hight, WIN_COLORS_t attr, GC_F
 
 (с вызовом меню)
 
-```
+```c
 BTN_TYPE_t gcExecuteWindow(GC_WINDOW_t *wnd);
 ```
 
@@ -57,7 +57,7 @@ BTN_TYPE_t gcExecuteWindow(GC_WINDOW_t *wnd);
 
 ### Закрытие окна
 
-```
+```c
 void gcCloseWindow(void) __naked;
 ```
 
@@ -65,8 +65,50 @@ void gcCloseWindow(void) __naked;
 
 ### Выбор окна
 
-```
+```c
 void gcSelectWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall;
+```
+
+- ***wnd** - указатель на [описатель окна](#GC_WINDOW_t)
+
+  
+
+### Очистка окна
+
+```c
+void gcClearWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall;
+```
+
+- ***wnd** - указатель на [описатель окна](#GC_WINDOW_t)
+
+
+
+### Печать заголовка окна
+
+```c
+void gcPrintWindowHeader(GC_WINDOW_t *wnd) __naked __z88dk_fastcall;
+```
+
+- ***wnd** - указатель на [описатель окна](#GC_WINDOW_t)
+
+
+
+### Печать текста окна
+
+```c
+void gcPrintWindowText(GC_WINDOW_t *wnd) __naked __z88dk_fastcall;
+```
+
+- ***wnd** - указатель на [описатель окна](#GC_WINDOW_t)
+
+
+
+### Обновление окна
+
+(вызов функций **gcClearWindow()**,  **gcPrintWindowHeader()**, **gcPrintWindowText()**)
+
+```c
+void gcUpdateWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall;
 ```
 
 - ***wnd** - указатель на [описатель окна](#GC_WINDOW_t)
@@ -75,7 +117,7 @@ void gcSelectWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall;
 
 ### Скроллинг окна вверх
 
-```
+```c
 void gcScrollUpWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall;
 ```
 
@@ -83,7 +125,9 @@ void gcScrollUpWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall;
 
 
 
-```
+### Скроллинг прямоугольной области вверх
+
+```c
 void gcScrollUpRect(u8 x, u8 y, u8 width, u8 hight) __naked;
 ```
 
@@ -96,7 +140,7 @@ void gcScrollUpRect(u8 x, u8 y, u8 width, u8 hight) __naked;
 
 ### Скроллинг окна вниз
 
-```
+```c
 void gcScrollDownWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall;
 ```
 
@@ -104,7 +148,9 @@ void gcScrollDownWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall;
 
 
 
-```
+### Скроллинг прямоугольной области вниз
+
+```c
 void gcScrollDownRect(u8 x, u8 y, u8 width, u8 hight) __naked;
 ```
 
@@ -123,7 +169,7 @@ void gcScrollDownRect(u8 x, u8 y, u8 width, u8 hight) __naked;
 
 #### Печать символа по координатам
 
-```
+```c
 void gcPrintSymbol(u8 x, u8 y, u8 sym, u8 attr) __naked;
 ```
 
@@ -136,7 +182,7 @@ void gcPrintSymbol(u8 x, u8 y, u8 sym, u8 attr) __naked;
 
 #### Позиционирование каретки
 
-```
+```c
 void gcGotoXY(u8 x, u8 y) __naked;
 ```
 
@@ -147,7 +193,7 @@ void gcGotoXY(u8 x, u8 y) __naked;
 
 #### Печать символа
 
-```
+```c
 void putsym(char c) __naked __z88dk_fastcall;
 ```
 
@@ -157,7 +203,7 @@ void putsym(char c) __naked __z88dk_fastcall;
 
 #### Печать строки
 
-```
+```c
 void gcPrintString(char *str) __naked __z88dk_fastcall;
 ```
 
@@ -167,7 +213,7 @@ void gcPrintString(char *str) __naked __z88dk_fastcall;
 
 #### Печать строки форматированная
 
-```
+```c
 void gcPrintf(char *string, ...) __naked;
 ```
 
@@ -202,7 +248,7 @@ void gcPrintf(char *string, ...) __naked;
 
 #### Преобразование десятичного беззнакового числа 8-бит в строку
 
-```
+```c
 char *dec2asc8(u8 num) __naked __z88dk_fastcall;
 ```
 
@@ -210,7 +256,7 @@ char *dec2asc8(u8 num) __naked __z88dk_fastcall;
 
 #### Преобразование десятичного знакового числа 8-бит в строку
 
-```
+```c
 char *dec2asc8s(s8 num) __naked __z88dk_fastcall;
 ```
 
@@ -218,7 +264,7 @@ char *dec2asc8s(s8 num) __naked __z88dk_fastcall;
 
 #### Преобразование десятичного беззнакового числа 16-бит в строку
 
-```
+```c
 char *dec2asc16(u16 num) __naked __z88dk_fastcall;
 ```
 
@@ -226,7 +272,7 @@ char *dec2asc16(u16 num) __naked __z88dk_fastcall;
 
 #### Преобразование десятичного знакового числа 16-бит в строку
 
-```
+```c
 char *dec2asc16s(s16 num) __naked __z88dk_fastcall;
 ```
 
@@ -234,7 +280,7 @@ char *dec2asc16s(s16 num) __naked __z88dk_fastcall;
 
 #### Преобразование десятичного беззнакового числа 32-бит в строку
 
-```
+```c
 char *dec2asc32(u32 num) __naked __z88dk_fastcall;
 ```
 
@@ -242,7 +288,7 @@ char *dec2asc32(u32 num) __naked __z88dk_fastcall;
 
 #### Преобразование десятичного знакового числа 32-бит в строку
 
-```
+```c
 char *dec2asc32s(s32 num) __naked __z88dk_fastcall;
 ```
 
@@ -250,7 +296,7 @@ char *dec2asc32s(s32 num) __naked __z88dk_fastcall;
 
 #### Преобразование шестнадцатеричного числа 8-бит в строку
 
-```
+```c
 char *hex2asc8(u8 num) __naked __z88dk_fastcall;
 ```
 
@@ -258,7 +304,7 @@ char *hex2asc8(u8 num) __naked __z88dk_fastcall;
 
 #### Преобразование шестнадцатеричного числа 16-бит в строку
 
-```
+```c
 char *hex2asc16(u16 num) __naked __z88dk_fastcall;
 ```
 
@@ -266,7 +312,7 @@ char *hex2asc16(u16 num) __naked __z88dk_fastcall;
 
 #### Преобразование шестнадцатеричного числа 32-бит в строку
 
-```
+```c
 char *hex2asc32(u32 num) __naked __z88dk_fastcall;
 ```
 
@@ -274,7 +320,7 @@ char *hex2asc32(u32 num) __naked __z88dk_fastcall;
 
 #### Преобразование строки в беззнаковое число 32-бит
 
-```
+```c
 u32 a2d32(char *string) __naked __z88dk_fastcall;
 ```
 
@@ -282,7 +328,7 @@ u32 a2d32(char *string) __naked __z88dk_fastcall;
 
 #### Преобразование строки в  знаковое число 32-бит
 
-```
+```c
 s32 a2d32s(char *string) __naked __z88dk_fastcall;
 ```
 
@@ -290,7 +336,7 @@ s32 a2d32s(char *string) __naked __z88dk_fastcall;
 
 #### Печать десятичного беззнакового числа 8-бит
 
-```
+```c
 void gcPrintDec8(u8 num) __z88dk_fastcall;
 ```
 
@@ -298,7 +344,7 @@ void gcPrintDec8(u8 num) __z88dk_fastcall;
 
 #### Печать десятичного знакового числа 8-бит
 
-```
+```c
 void gcPrintDec8s(s8 num) __z88dk_fastcall;
 ```
 
@@ -306,7 +352,7 @@ void gcPrintDec8s(s8 num) __z88dk_fastcall;
 
 #### Печать десятичного беззнакового числа 16-бит
 
-```
+```c
 void gcPrintDec16(u16 num) __z88dk_fastcall;
 ```
 
@@ -314,7 +360,7 @@ void gcPrintDec16(u16 num) __z88dk_fastcall;
 
 #### Печать десятичного знакового числа 16-бит
 
-```
+```c
 void gcPrintDec16s(s16 num) __z88dk_fastcall;
 ```
 
@@ -322,7 +368,7 @@ void gcPrintDec16s(s16 num) __z88dk_fastcall;
 
 #### Печать десятичного беззнакового числа 32-бит
 
-```
+```c
 void gcPrintDec32(u32 num) __z88dk_fastcall;
 ```
 
@@ -330,7 +376,7 @@ void gcPrintDec32(u32 num) __z88dk_fastcall;
 
 #### Печать десятичного знакового числа 32-бит
 
-```
+```c
 void gcPrintDec32s(s32 num) __z88dk_fastcall;
 ```
 
@@ -346,7 +392,7 @@ void gcPrintDec32s(s32 num) __z88dk_fastcall;
 
 #### Вызов меню
 
-```
+```c
 u8 gcSimpleVMenu(GC_SVMENU_t *svmnu) __naked __z88dk_fastcall;
 ```
 
@@ -362,7 +408,7 @@ u8 gcSimpleVMenu(GC_SVMENU_t *svmnu) __naked __z88dk_fastcall;
 
 #### Печать курсора
 
-```
+```c
 void gcPrintSVMCursor(GC_SVMENU_t *svmnu) __naked __z88dk_fastcall;
 ```
 
@@ -372,7 +418,7 @@ void gcPrintSVMCursor(GC_SVMENU_t *svmnu) __naked __z88dk_fastcall;
 
 #### Восстановление курсора
 
-```
+```c
 void gcRestoreSVMCursor(GC_SVMENU_t *svmnu) __naked __z88dk_fastcall;
 ```
 
@@ -390,7 +436,7 @@ void gcRestoreSVMCursor(GC_SVMENU_t *svmnu) __naked __z88dk_fastcall;
 
 #### Вызов диалога
 
-```
+```c
 u8 gcDialog(GC_DIALOG_t *dlg) __naked __z88dk_fastcall;
 ```
 
@@ -400,7 +446,7 @@ u8 gcDialog(GC_DIALOG_t *dlg) __naked __z88dk_fastcall;
 
 #### Печать диалога
 
-```
+```c
 void gcPrintDialog(GC_DIALOG_t *dlg) __naked __z88dk_fastcall;
 ```
 
@@ -410,7 +456,7 @@ void gcPrintDialog(GC_DIALOG_t *dlg) __naked __z88dk_fastcall;
 
 #### Печать активных элементов диалога
 
-```
+```c
 void gcPrintActiveDialog(GC_DIALOG_t *dlg) __naked __z88dk_fastcall;
 ```
 
@@ -420,7 +466,7 @@ void gcPrintActiveDialog(GC_DIALOG_t *dlg) __naked __z88dk_fastcall;
 
 #### Печать элементов диалога указанного типа
 
-```
+```c
 void gcPrintDialogShownItems(GC_DIALOG_t *dlg, GC_DITEM_TYPE_t type) __naked;
 ```
 
@@ -431,7 +477,7 @@ void gcPrintDialogShownItems(GC_DIALOG_t *dlg, GC_DITEM_TYPE_t type) __naked;
 
 #### Печать элемента диалога
 
-```
+```c
 void gcPrintDialogItem(GC_DITEM_t *ditm) __naked __z88dk_fastcall;
 ```
 
@@ -443,7 +489,7 @@ void gcPrintDialogItem(GC_DITEM_t *ditm) __naked __z88dk_fastcall;
 
 ### <a name="GC_WINDOW_t">Описатель окна</a>
 
-```
+```c
 typedef struct GC_WINDOW_t
 {
     u8              id;
@@ -478,7 +524,7 @@ typedef struct GC_WINDOW_t
 
 #### <a name="GC_WND_TYPE_t">Типы окон</a>
 
-```
+```c
 typedef enum GC_WND_TYPE_t
 {
     GC_WND_NOMENU   = ((u8)0x00),
@@ -497,7 +543,7 @@ typedef enum GC_WND_TYPE_t
 
 #### <a name="GC_FRM_TYPE_t">Типы рамок</a>
 
-```
+```c
 typedef enum GC_FRM_TYPE_t
 {
     GC_FRM_NONE     = ((u8)0x00),
@@ -520,7 +566,7 @@ typedef enum GC_FRM_TYPE_t
 
 #### <a name="WIN_COLORS_t">Атрибуты цвета</a>
 
-```
+```c
 typedef enum WIN_COLORS_t
 {
     WIN_COL_BLACK           = ((u8)0x00),
@@ -549,7 +595,7 @@ typedef enum WIN_COLORS_t
 
 ### <a name="GC_SVMENU_t">Описатель Simple Vertical Menu</a>
 
-```
+```c
 typedef struct GC_SVMENU_t
 {
     GC_SVM_FLAG_t   flags;
@@ -574,7 +620,7 @@ typedef struct GC_SVMENU_t
 
 CALLBACK функция при перемещении курсора
 
-```
+```c
 void (*svmcb_cursor_t)(GC_SVMENU_t(*svm));
 ```
 
@@ -582,7 +628,7 @@ void (*svmcb_cursor_t)(GC_SVMENU_t(*svm));
 
 CALLBACK функция при нажатии на клавишу
 
-```
+```c
 u8 (*svmcb_keys_t)(GC_SVMENU_t(*svm), u8 key);
 ```
 
@@ -590,7 +636,7 @@ u8 (*svmcb_keys_t)(GC_SVMENU_t(*svm), u8 key);
 
 #### <a name="GC_SVM_FLAG_t">Флаги Simple Vertical Menu</a>
 
-```
+```c
 typedef struct GC_SVM_FLAG_t
 {
     unsigned    bit0        :1;
@@ -610,13 +656,24 @@ typedef struct GC_SVM_FLAG_t
 
 
 
+#### Коды возврата Simple Vertical Menu
+
+```c
+enum
+{
+    SVM_RC_KEY      = (u8)0xFD,
+    SVM_RC_TAB      = (u8)0xFE,
+    SVM_RC_EXIT     = (u8)0xFF
+};
+```
+
 
 
 ------
 
 ### <a name="GC_DIALOG_t">Описатель диалога</a>
 
-```
+```c
 typedef struct GC_DIALOG_t
 {
     GC_DLG_FLAG_t flag;             // dialog flags
@@ -656,7 +713,7 @@ typedef struct GC_DIALOG_t
 
 #### <a name="GC_DITEM_t">Элементы диалога</a>
 
-```
+```c
 typedef struct GC_DITEM_t
 {
     GC_DITEM_TYPE_t type;
@@ -702,7 +759,7 @@ typedef struct GC_DITEM_t
 
 ##### <a name="GC_DITEM_TYPE_t">Типы элементов диалога</a>
 
-```
+```c
 typedef enum GC_DITEM_TYPE_t
 {
     DI_TEXT         = ((u8)0),
@@ -842,7 +899,7 @@ _кнопка_
 
 ##### Коды возврата диалога
 
-```
+```c
 typedef enum BTN_TYPE_t
 {
     BUTTON_OK           = ((u8)0xFF),
@@ -859,7 +916,7 @@ typedef enum BTN_TYPE_t
 
 ##### <a name="GC_DITEM_FLAG_t">Флаги элементов диалога</a>
 
-```
+```c
 typedef struct GC_DITEM_FLAG_t
 {
     unsigned    DIF_GREY    :1;
@@ -881,7 +938,7 @@ typedef struct GC_DITEM_FLAG_t
 
 ##### <a name="GC_DITEM_VAR_t">Переменные диалога</a>
 
-```
+```c
 typedef struct GC_DITEM_VAR_t
 {
     GCIV_SIZE_t     DIV_SIZE    :2;
@@ -897,7 +954,7 @@ typedef struct GC_DITEM_VAR_t
 
 ##### <a name="GCIV_TYPE_t">Типы переменных диалога</a>
 
-```
+```c
 typedef enum GCIV_TYPE_t
 {
     GCIVT_DEC     = 0,
@@ -906,7 +963,7 @@ typedef enum GCIV_TYPE_t
 } GCIV_TYPE_t;
 ```
 
-```
+```c
 typedef enum GCIV_SIZE_t
 {
     GCIVS_BYTE    = 0,

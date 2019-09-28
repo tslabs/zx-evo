@@ -106,7 +106,8 @@ void func_cb4()
 // SVM cursor callback
 void cb_svmcur(GC_SVMENU_t *svm)
 {
-    gcSelectWindow(&wndSVMInfo);
+    //gcSelectWindow(&wndSVMInfo);
+    gcClearWindow(&wndSVMInfo);
     svm_current_item = svm->current;
     svm_progress_item = svm->current * 20;
     gcPrintDialog(&dlgSVMInfo);
