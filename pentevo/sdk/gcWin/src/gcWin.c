@@ -796,13 +796,6 @@ svmnu_cb_cursor:
     ld hl,(_current_window_ptr)
     push hl
 
-;; store attrs
-    ld a,(win_attr)
-    push af
-    ld a,(sym_attr)
-    push af
-    ld a,(bg_attr)
-    push af
 ;; store SVM pointer
     push ix
 ;;
@@ -813,14 +806,6 @@ svmnu_cb_cursor:
 0$:
 ;; restore stack
     pop af
-;;
-;; restore attrs
-    pop af
-    ld (bg_attr),a
-    pop af
-    ld (sym_attr),a
-    pop af
-    ld (win_attr),a
 
 ;; restore current window pointer
     pop hl
@@ -846,13 +831,6 @@ svmnu_cb_keys:
     ld bc,(_current_window_ptr)
     push bc
 
-;; store attrs
-    ld a,(win_attr)
-    push af
-    ld a,(sym_attr)
-    push af
-    ld a,(bg_attr)
-    push af
 ;; store key
     ld a,l
     push af
@@ -872,14 +850,6 @@ svmnu_cb_keys:
     pop af
     pop af
     dec sp
-
-;; restore attrs
-    pop af
-    ld (bg_attr),a
-    pop af
-    ld (sym_attr),a
-    pop af
-    ld (win_attr),a
 
 ;; restore current window pointer
     pop de
@@ -3478,6 +3448,8 @@ void gcSelectWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall
     ld (frm_attr),a
     ld a,<#window_attr (ix)
     ld (win_attr),a
+    ld (sym_attr),a
+    ld (bg_attr),a
 
     pop ix
     ret
