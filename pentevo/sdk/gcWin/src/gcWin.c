@@ -791,6 +791,11 @@ svmnu_cb_cursor:
 ;;
     push ix
     push iy
+
+;; store current window pointer
+    ld hl,(_current_window_ptr)
+    push hl
+
 ;; store attrs
     ld a,(win_attr)
     push af
@@ -806,7 +811,6 @@ svmnu_cb_cursor:
     ex de,hl
     jp (hl)
 0$:
-;;
 ;; restore stack
     pop af
 ;;
@@ -817,6 +821,11 @@ svmnu_cb_cursor:
     ld (sym_attr),a
     pop af
     ld (win_attr),a
+
+;; restore current window pointer
+    pop hl
+    ld (_current_window_ptr),hl
+    call _gcSelectWindow
 ;;
     pop iy
     pop ix
@@ -832,6 +841,11 @@ svmnu_cb_keys:
 ;;
     push ix
     push iy
+
+;; store current window pointer
+    ld bc,(_current_window_ptr)
+    push bc
+
 ;; store attrs
     ld a,(win_attr)
     push af
@@ -850,10 +864,10 @@ svmnu_cb_keys:
     push hl
     ex de,hl
     jp (hl)
+;;
 1$: ld l,#0x00
     ret
 0$:
-;;
 ;; restore stack
     pop af
     pop af
@@ -867,15 +881,23 @@ svmnu_cb_keys:
     pop af
     ld (win_attr),a
 
+;; restore current window pointer
+    pop de
+    ld (_current_window_ptr),de
     push hl
+    ex de,hl
+    call _gcSelectWindow
+    pop hl
+
     ld a,l
     cp #svm_cbkey_rc_redraw
     jr nz,2$
+    push hl
     call svmnu_scanlist
     call print_svm_cursor
-2$: pop hl
-;;
-    pop iy
+    pop hl
+
+2$: pop iy
     pop ix
     ret
 

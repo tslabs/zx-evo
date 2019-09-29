@@ -106,14 +106,12 @@ void func_cb4()
 // SVM cursor callback
 void cb_svmcur(GC_SVMENU_t *svm)
 {
-    //gcSelectWindow(&wndSVMInfo);
     gcClearWindow(&wndSVMInfo);
     svm_current_item = svm->current;
     svm_progress_item = svm->current * 20;
     gcPrintDialog(&dlgSVMInfo);
     gcSelectWindow(&wndSVMHelp);
     gcPrintf("\nItem help "INK_BRIGHT_BLUE"%hd", svm_current_item);
-    gcSelectWindow(&wndSVMnu);
 }
 
 // SVM keys callback
@@ -121,7 +119,7 @@ u8 cb_svmkeys(GC_SVMENU_t *svm, KEY_t key)
 {
     gcSelectWindow(&wndSVMInfo);
     gcPrintf(INK_BRIGHT_WHITE"Key pressed:"INK_BLUE"0x%hx", key);
-    gcSelectWindow(&wndSVMnu);
+
     if(svm->current == 5)
     {
         if(key == KEY_SPACE)
