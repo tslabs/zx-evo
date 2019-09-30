@@ -302,10 +302,13 @@ GC_SVMENU_t svmTest =
 /*flags*/       {0,0,0,0,0,0,1,0},
 /*attr*/        (WIN_COL_BRIGHT_BLUE<<4) | WIN_COL_BRIGHT_YELLOW,
 /*margin*/      5,
-/*current*/     0,
-/*count*/       6,
+/*cur_pos*/     0,
+/*win_pos*/     0,
+/*win_cnt*/     6,
+/*all_cnt*/     10,
 /*cb_cursor*/   cb_svmcur,
 /*cb_keys*/     cb_svmkeys,
+/*cb_cross*/    cb_svm_cross,
 /*lines*/       svm_lines,
 /*opt_list*/    svm_option_list
 };

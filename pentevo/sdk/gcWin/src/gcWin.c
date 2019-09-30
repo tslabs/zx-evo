@@ -37,15 +37,18 @@ void gcVars (void)
 
 ;; struct GC_SVMENU
 ;; simple vertical menu offsets
-    svm_flags               .equ    #00
-    svm_attr                .equ    #01
-    svm_margin              .equ    #02
-    svm_current             .equ    #03
-    svm_count               .equ    #04
-    svm_cb_cursor           .equ    #05
-    svm_cb_keys             .equ    #07
-    svm_lines               .equ    #09
-    svm_txt_list            .equ    #11
+    svm_flags               .equ    #00 ; byte
+    svm_attr                .equ    #01 ; byte
+    svm_margin              .equ    #02 ; byte
+    svm_cur_pos             .equ    #03 ; byte
+    svm_win_pos             .equ    #04 ; byte
+    svm_win_cnt             .equ    #05 ; byte
+    svm_all_cnt             .equ    #06 ; byte
+    svm_cb_cursor           .equ    #07 ; word
+    svm_cb_keys             .equ    #09 ; word
+    svm_cb_cross            .equ    #11 ; word
+    svm_lines               .equ    #13 ; word
+    svm_txt_list            .equ    #15 ; word
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;; struct GC_DLG_FLAG_t
     dlgf_cursor_mask        .equ    #0x80
@@ -724,7 +727,7 @@ svmnu_lp:
     jr nz,svmnu_lp
     ld l,#svmrc_key
     ret
-
+;;::::::::::::::::::::::::::::::
 svmnu_tab:
     ld a,<#svm_flags (ix)
     and #svmf_exit_mask
@@ -732,55 +735,169 @@ svmnu_tab:
     call restore_svm_cursor
     ld l,#svmrc_tab
     ret
-
+;;::::::::::::::::::::::::::::::
 svmnu_ent:
     call restore_svm_cursor
-    ld l,<#svm_current (ix)
+    ld l,<#svm_cur_pos (ix)
     ret
-
+;;::::::::::::::::::::::::::::::
 svmnu_begin:
     call restore_svm_cursor
     xor a
 svmnu_lp1:
-    ld <#svm_current (ix),a
+    ld <#svm_cur_pos (ix),a
     call print_svm_cursor
     call svmnu_cb_cursor
     jr svmnu_lp
-
+;;::::::::::::::::::::::::::::::
 svmnu_end:
     call restore_svm_cursor
-    ld a,<#svm_count (ix)
+    ld a,<#svm_win_cnt (ix)
     dec a
     jr svmnu_lp1
-
+;;::::::::::::::::::::::::::::::
 svmnu_dn:
     call restore_svm_cursor
-    ld a,<#svm_current (ix)
+    ld a,<#svm_cur_pos (ix)
     inc a
-    cp <#svm_count (ix)
+    cp <#svm_win_cnt (ix)
     jr nz,svmnu_lp1
-    ex af,af
+    call svmnu_cb_bottom
     ld a,<#svm_flags (ix)
     and #svmf_nowrap_mask
     jr z,svmnu_lp1
-    ex af,af
-    dec a
+    ld a,<#svm_cur_pos (ix)
     jr svmnu_lp1
-
+;;::::::::::::::::::::::::::::::
 svmnu_up:
     call restore_svm_cursor
-    ld a,<#svm_current (ix)
-    ld c,a
+    ld a,<#svm_cur_pos (ix)
     dec a
     jp p,svmnu_lp1
+    call svmnu_cb_top
     ld a,<#svm_flags (ix)
     and #svmf_nowrap_mask
-    ld a,c
+    ld a,<#svm_cur_pos (ix)
     jr nz,svmnu_lp1
-    ld a,<#svm_count (ix)
+    ld a,<#svm_win_cnt (ix)
     dec a
     jr svmnu_lp1
+;;::::::::::::::::::::::::::::::
+;; bottom border callback
+svmnu_cb_bottom:
+    ld e,<#svm_cb_cross (ix)
+    ld d,<#svm_cb_cross+1 (ix)
+    ld a,e
+    or d
+    ret z
+;;
+    push ix
+    push iy
+;;
+;; store current window pointer
+    ld hl,(_current_window_ptr)
+    push hl
 
+    ld a,<#svm_cur_pos (ix)
+    inc a
+    add a,<#svm_win_pos (ix)
+    cp <#svm_all_cnt (ix)
+    jr nc,0$
+    inc <#svm_win_pos (ix)
+    push af
+    push de
+    call _gcScrollUpWindow
+;;
+    ld a,(win_y)
+    add a,<#svm_margin (ix)
+    add a,<#svm_cur_pos (ix)
+    ld (cur_y),a
+    ld a,(win_x)
+    ld (cur_x),a
+;;
+    pop de
+    pop af
+    call svm_callback
+0$:
+;; restore current window pointer
+    pop hl
+    ld (_current_window_ptr),hl
+    call _gcSelectWindow
+;;
+    pop iy
+    pop ix
+    ret
+;;::::::::::::::::::::::::::::::
+;; top border callback
+svmnu_cb_top:
+    ld e,<#svm_cb_cross (ix)
+    ld d,<#svm_cb_cross+1 (ix)
+    ld a,e
+    or d
+    ret z
+;;
+    push ix
+    push iy
+;;
+;; store current window pointer
+    ld hl,(_current_window_ptr)
+    push hl
+
+    ld a,<#svm_cur_pos (ix)
+    add a,<#svm_win_pos (ix)
+    jr z,0$
+    dec a
+    dec <#svm_win_pos (ix)
+    push af
+    push de
+;;
+    ld a,(win_y)
+    add a,<#svm_margin (ix)
+    add a,<#svm_cur_pos (ix)
+    ld (cur_y),a
+    ld a,(win_x)
+    ld (cur_x),a
+;;
+    call _gcScrollDownWindow
+    pop de
+    pop af
+    call svm_callback
+0$:
+;; restore current window pointer
+    pop hl
+    ld (_current_window_ptr),hl
+    call _gcSelectWindow
+;;
+    pop iy
+    pop ix
+    ret
+
+;;::::::::::::::::::::::::::::::
+;; in:  DE - callback addr
+;;      IX - SVM pointer
+;;      A - argument
+;;
+svm_callback:
+    push ix
+;; store arg
+    push af
+    inc sp
+;; store SVM pointer
+    push ix
+;;
+    ld hl,#0$
+    push hl
+    ex de,hl
+    jp (hl)
+0$:
+;; restore stack
+    pop af
+    pop af
+    dec sp
+;;
+    pop ix
+    ret
+;;::::::::::::::::::::::::::::::
 ;; cursor moving callback
 svmnu_cb_cursor:
     ld e,<#svm_cb_cursor (ix)
@@ -796,16 +913,7 @@ svmnu_cb_cursor:
     ld hl,(_current_window_ptr)
     push hl
 
-;; store SVM pointer
-    push ix
-;;
-    ld hl,#0$
-    push hl
-    ex de,hl
-    jp (hl)
-0$:
-;; restore stack
-    pop af
+    call svm_callback
 
 ;; restore current window pointer
     pop hl
@@ -815,7 +923,7 @@ svmnu_cb_cursor:
     pop iy
     pop ix
     ret
-
+;;::::::::::::::::::::::::::::::
 ;; key pressed callback
 svmnu_cb_keys:
     ld e,<#svm_cb_keys (ix)
@@ -824,6 +932,9 @@ svmnu_cb_keys:
     or d
     jr z,1$
 ;;
+    push bc
+    push de
+    push hl
     push ix
     push iy
 
@@ -831,25 +942,8 @@ svmnu_cb_keys:
     ld bc,(_current_window_ptr)
     push bc
 
-;; store key
     ld a,l
-    push af
-    inc sp
-;; store SVM pointer
-    push ix
-;;
-    ld hl,#0$
-    push hl
-    ex de,hl
-    jp (hl)
-;;
-1$: ld l,#0x00
-    ret
-0$:
-;; restore stack
-    pop af
-    pop af
-    dec sp
+    call svm_callback
 
 ;; restore current window pointer
     pop de
@@ -862,15 +956,19 @@ svmnu_cb_keys:
     ld a,l
     cp #svm_cbkey_rc_redraw
     jr nz,2$
-    push hl
     call svmnu_scanlist
     call print_svm_cursor
-    pop hl
 
 2$: pop iy
     pop ix
+    pop hl
+    pop de
+    pop bc
     ret
 
+1$: ld l,#0x00
+    ret
+;;::::::::::::::::::::::::::::::
 svmnu_scanlist:
     ld l,<#svm_lines (ix)
     ld h,<#svm_lines+1 (ix)
@@ -882,7 +980,7 @@ svmnu_scanlist:
     call svmnu_list_item
     pop af
     inc a
-    cp <#svm_count (ix)
+    cp <#svm_win_cnt (ix)
     jr nz,0$
     ret
 
@@ -963,12 +1061,12 @@ svmnu_callback:
     jp (hl)
 0$: pop ix
     ret
-
+;;::::::::::::::::::::::::::::::
 svmnu_get_mouse:
 ;; check bounding box
     call _gcGetMouseYS
     ld c,l
-    ld h,<#svm_count (ix)
+    ld h,<#svm_win_cnt (ix)
     ld a,(win_y)
     add a,<#svm_margin (ix)
     add a,h
@@ -995,7 +1093,7 @@ svmnu_get_mouse:
     ld l,a
     ld a,c
     sub l
-    cp <#svm_count (ix)
+    cp <#svm_win_cnt (ix)
     jr nc,0$
 
     ld c,a
@@ -1009,7 +1107,7 @@ svmnu_get_mouse:
     push af
     call restore_svm_cursor
     pop af
-    ld <#svm_current (ix),a
+    ld <#svm_cur_pos (ix),a
 
     call print_svm_cursor
 
@@ -1017,7 +1115,7 @@ svmnu_get_mouse:
 
 ;; pop ret addr
     pop hl
-    ld l,<#svm_current (ix)
+    ld l,<#svm_cur_pos (ix)
     ret
 
 0$: xor a
@@ -1038,7 +1136,7 @@ void gcRestoreSVMCursor(GC_SVMENU_t *svmnu) __naked __z88dk_fastcall
 restore_svm_cursor:
     ld a,(win_y)
     add a,<#svm_margin (ix)
-    add a,<#svm_current (ix)
+    add a,<#svm_cur_pos (ix)
     ld d,a              ; Y coord
     ld a,(win_x)
     dec a
@@ -1071,7 +1169,7 @@ void gcPrintSVMCursor(GC_SVMENU_t *svmnu) __naked __z88dk_fastcall
 print_svm_cursor:
     ld a,(win_y)
     add a,<#svm_margin (ix)
-    add a,<#svm_current (ix)
+    add a,<#svm_cur_pos (ix)
     ld d,a              ; Y coord
     ld a,(win_x)
     dec a
@@ -1644,27 +1742,33 @@ dialog_ent_list:
     inc a
     djnz 0$
 
-;; build temp vertical menu onto stack
+;; build temp simple vertical menu onto stack
     ld e,<#di_var (ix)
     ld d,<#di_var+1 (ix)
 ;; list
     ld hl,#0
-    push hl
+    push hl     ;txt_list
+    push hl     ;lines
 ;; callbacks
-    push hl
-    push hl
-    ld a,<#di_select (ix)
-;; svm_count
+    push hl     ;cb_cross
+    push hl     ;cb_keys
+    push hl     ;cb_cursor
+    ld c,<#di_select (ix)
+    ld b,c
+    push bc     ; svm_win_cnt&svm_all_cnt
+    xor a
+;; svm_win_pos
     push af
     inc sp
     ld a,(de)
-;; svm_current
+;; svm_cur_pos
     push af
     inc sp
     xor a
 ;; svm_margin
     push af
     inc sp
+
     ld a,(cfg_listbox_focus_attr)
     rlca
     rlca
@@ -1690,7 +1794,7 @@ dialog_ent_list:
     ld (de),a
 
 ;; restore stack
-    ld hl,#11
+    ld hl,#17
     add hl,sp
     ld sp,hl
 
@@ -3462,9 +3566,9 @@ void gcClearWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall
     wnd;                // to avoid SDCC warning
 
   __asm
-    call _gcSelectWindow
-
     push ix
+
+    call _gcSelectWindow
 
     MAC_LD_IXHL         ; IX - window descriptor
 
@@ -3500,6 +3604,11 @@ void gcClearWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall
     push ix
     pop hl
     call _gcPrintWindowHeader
+
+    push ix
+    pop hl
+    call _gcSelectWindow
+
     pop ix
     ret
   __endasm;

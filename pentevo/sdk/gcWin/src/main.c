@@ -107,8 +107,8 @@ void func_cb4()
 void cb_svmcur(GC_SVMENU_t *svm)
 {
     gcClearWindow(&wndSVMInfo);
-    svm_current_item = svm->current;
-    svm_progress_item = svm->current * 20;
+    svm_current_item = svm->cur_pos;
+    svm_progress_item = svm->cur_pos * 20;
     gcPrintDialog(&dlgSVMInfo);
     gcSelectWindow(&wndSVMHelp);
     gcPrintf("\nItem help "INK_BRIGHT_BLUE"%hd", svm_current_item);
@@ -127,7 +127,7 @@ u8 cb_svmkeys(GC_SVMENU_t *svm, KEY_t key)
         gcPrintf("                     ");
     }
 
-    if(svm->current == 5)
+    if(svm->cur_pos == 5)
     {
         if(key == KEY_SPACE)
         {
@@ -137,6 +137,13 @@ u8 cb_svmkeys(GC_SVMENU_t *svm, KEY_t key)
         }
     }
     return SVM_CBKEY_RC_NONE;
+}
+
+// SVM top&bottom crossing the border callback
+void cb_svm_cross(GC_SVMENU_t *svm, u8 cnt)
+{
+    BORDER = 2; EIHALT; BORDER = 1;
+    gcPrintf(INK_BRIGHT_WHITE"Count:"INK_BLUE"0x%hx\n", cnt);
 }
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::

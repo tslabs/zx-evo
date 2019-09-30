@@ -195,14 +195,14 @@ typedef struct GC_SVM_LINE_t
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 typedef struct GC_SVM_FLAG_t
 {
-    unsigned    bit0        :1;
-    unsigned    bit1        :1;
-    unsigned    bit2        :1;
-    unsigned    bit3        :1;
-    unsigned    bit4        :1;
-    unsigned    bit5        :1;
-    unsigned    SVMF_NOWRAP :1;
-    unsigned    SVMF_EXIT   :1;
+    unsigned    SVMF_SCROLLBAR  :1;
+    unsigned    bit1            :1;
+    unsigned    bit2            :1;
+    unsigned    bit3            :1;
+    unsigned    bit4            :1;
+    unsigned    bit5            :1;
+    unsigned    SVMF_NOWRAP     :1;
+    unsigned    SVMF_EXIT       :1;
 } GC_SVM_FLAG_t;
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -213,10 +213,13 @@ typedef struct GC_SVMENU_t
     GC_SVM_FLAG_t   flags;      // флаги
     WIN_COLORS_t    attr;       // атрибут цвета
     u8              margin;     // отступ от верха
-    u8              current;    // текущая позиция
-    u8              count;      // количество пунктов
+    u8              cur_pos;    // текущая позиция (в окне)
+    u8              win_pos;    // позиция(смещение) окна
+    u8              win_cnt;    // кол-во пунктов в окне
+    u8              all_cnt;    // общее кол-во пунктов
     void            *cb_cursor; // *svmcb_cursor_t
     void            *cb_keys;   // *svmcb_keys_t
+    void            *cb_cross;  // top&bottom border crossing callbacks
     GC_SVM_LINE_t   **lines;    //
     char            **txt_list; //
 } GC_SVMENU_t;
@@ -224,6 +227,8 @@ typedef struct GC_SVMENU_t
 typedef void (*svmcb_cursor_t)(GC_SVMENU_t(*svm));
 // key pressed callback function
 typedef u8 (*svmcb_keys_t)(GC_SVMENU_t(*svm), u8 key);
+// top&bottom across the border callbacks
+//typedef void (*svm_cb_top_bot)(GC_SVMENU_t(*svm), u8 cnt);
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 //:: HORIZONTAL MENU
