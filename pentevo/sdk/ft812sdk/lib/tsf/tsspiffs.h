@@ -103,6 +103,7 @@ typedef struct
 typedef struct
 {
   u32 free;
+  u16 chunks_number;
   u16 files_number;
   TSF_CONFIG *cfg;
 } TSF_VOLUME;

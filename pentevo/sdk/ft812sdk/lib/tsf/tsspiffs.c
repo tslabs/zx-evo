@@ -87,6 +87,7 @@ TSF_RESULT tsf_vol_stat(TSF_VOLUME *vol)
 {
   TSF_CONFIG *cfg = vol->cfg;
   vol->free = 0;
+  vol->chunks_number = 0;
   vol->files_number = 0;
 
   for (u32 i = 0; i < cfg->bulk_size; i += cfg->block_size)
@@ -96,6 +97,8 @@ TSF_RESULT tsf_vol_stat(TSF_VOLUME *vol)
 
     if (chunk.magic == TSF_MAGIC)
     {
+      vol->chunks_number++;
+
       if (chunk.type == TSF_CHUNK_FREE)
         vol->free += cfg->block_size - sizeof(TSF_CHUNK);
 
