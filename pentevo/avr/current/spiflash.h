@@ -40,6 +40,7 @@ enum
   SPIFL_REG_A1    = 0x03,     // RW
   SPIFL_REG_A2    = 0x04,     // RW
   SPIFL_REG_DATA  = 0x08,     // RW
+  SPIFL_REG_PRGRS = 0x09,     // R
   SPIFL_REG_VER   = 0x0F      // R
 };
 
@@ -61,8 +62,12 @@ enum
   SPIFL_CMD_ID     = 0x04,
   SPIFL_CMD_READ   = 0x05,
   SPIFL_CMD_WRITE  = 0x06,
-  SPIFL_CMD_ERSBLK = 0x07,
-  SPIFL_CMD_ERSSEC = 0x08
+  SPIFL_CMD_ERSCHP = 0x07,
+  SPIFL_CMD_ERSSEC = 0x08,
+  SPIFL_CMD_BREAK  = 0x09,
+  SPIFL_CMD_FORMAT = 0x0A,
+  SPIFL_CMD_FMTCHK = 0x0B,
+  SPIFL_CMD_FMTFST = 0x0C
 };
 
 /** SPI Flash commands. */
@@ -77,7 +82,7 @@ enum
   SF_CMD_WRSTAT = 0x01,
   SF_CMD_WREN   = 0x06,
   SF_CMD_WRDIS  = 0x04,
-  SF_CMD_ERBULK = 0xC7,
+  SF_CMD_ERCHIP = 0xC7,
   SF_CMD_ERSECT = 0x20
 };
 
@@ -87,6 +92,37 @@ enum
   SF_STAT_BUSY  = 0x01,
   SF_STAT_WEL   = 0x02
 };
+
+typedef enum
+{
+  SFFMT_ST_1,
+  SFFMT_ST_2,
+  SFFMT_ST_3,
+  SFFMT_ST_TEST_55,
+  SFFMT_ST_TEST_AA,
+  SFFMT_ST_WRITE_SIG,
+  SFFMT_ST_WRITE_SIG2,
+  SFFMT_ST_FULL_ERASE,
+  SFFMT_ST_ERASE,
+  SFFMT_ST_ERASE2,
+  SFFMT_ST_WRITE,
+  SFFMT_ST_WRITE2,
+  SFFMT_ST_CHECK,
+  SFFMT_ST_BLOCK_DONE
+} SFFMT_STATE;
+
+typedef enum
+{
+  SFST_IDLE,
+  SFST_FORMAT
+} SPIF_STATE;
+
+typedef enum
+{
+  SFFM_NORM,
+  SFFM_TEST,
+  SFFM_FAST
+} SFFMT_TYPE;
 
 /** SF interface enable. */
 void sfi_enable();
@@ -100,5 +136,7 @@ void sf_command(u8);
 u8 spi_flash_read(u8 index);
 /** SF write. */
 void spi_flash_write(u8 index, u8 data);
+
+void spif_task();
 
 #endif //__SPIFLASH_H__

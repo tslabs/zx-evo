@@ -278,17 +278,17 @@ start:
       case FPGA_BASE:
         curFpga = GET_FAR_ADDRESS(fpga_base);
       break;
-  
+
       case FPGA_EGG:
         curFpga = GET_FAR_ADDRESS(fpga_egg);
       break;
-  
+
       case FPGA_TS:
       default:
         curFpga = GET_FAR_ADDRESS(fpga_ts);
       break;
     }
-  
+
     cb_next_byte = get_next_byte_pf;
     depacker_dirty();
   }
@@ -363,6 +363,7 @@ start:
     joystick_task();       waittask();
     rs232_task();          waittask();
     atx_power_task();      waittask();
+    spif_task();           waittask();
   }
   while((flags_register & FLAG_HARD_RESET) == 0);
 
