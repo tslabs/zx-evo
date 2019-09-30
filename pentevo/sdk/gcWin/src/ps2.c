@@ -91,6 +91,7 @@ void cmos_clear()
     CMOS_DATA = 0x01;
     CMOS_ADDR = 0xF0;
     CMOS_DATA = 0x02;
+    *(u8*)keyboard_stat = 0;
 }
 
 void ps2_init()
@@ -239,4 +240,19 @@ void gcWaitNoKey(void)
         EIHALT
     }
     while (gcGetKey());
+}
+
+bool gcIsShift()
+{
+    return (keyboard_stat.KEYS_SHIFT);
+}
+
+bool gcIsCtrl()
+{
+    return keyboard_stat.KEYS_CTRL;
+}
+
+bool gcIsAlt()
+{
+    return keyboard_stat.KEYS_ALT;
 }

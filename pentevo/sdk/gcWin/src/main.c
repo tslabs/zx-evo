@@ -118,7 +118,14 @@ void cb_svmcur(GC_SVMENU_t *svm)
 u8 cb_svmkeys(GC_SVMENU_t *svm, KEY_t key)
 {
     gcSelectWindow(&wndSVMInfo);
-    gcPrintf(INK_BRIGHT_WHITE"Key pressed:"INK_BLUE"0x%hx", key);
+    gcPrintf(INK_BRIGHT_WHITE"Key pressed:"INK_BLUE"0x%hx\n", key);
+    if(gcIsShift())
+    {
+        gcPrintf(INK_BRIGHT_WHITE"Shift pressed!");
+    } else
+    {
+        gcPrintf("                     ");
+    }
 
     if(svm->current == 5)
     {

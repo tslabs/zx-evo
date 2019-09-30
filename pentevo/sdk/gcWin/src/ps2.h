@@ -89,3 +89,6 @@ void ps2_init();
 KEY_t gcGetKey();
 void gcWaitKey(KEY_t key);
 void gcWaitNoKey();
+bool gcIsShift();
+bool gcIsCtrl();
+bool gcIsAlt();
