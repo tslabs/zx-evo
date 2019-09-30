@@ -119,12 +119,14 @@ const GC_WINDOW_t wndTest2 =
                 PAPER_BRIGHT_YELLOW "  "
                 PAPER_BRIGHT_WHITE "  "
                 "\n"
+                PAPER_RED
                 INK_BRIGHT_RED
                 MARK_LINK"\x3 1\n"
                 INK_BRIGHT_YELLOW
                 MARK_LINK"\x4\n"
                 INK_BRIGHT_MAGENTA
                 MARK_LINK"\x5\n"
+                INK_BRIGHT_WHITE
                 "\xB9\xBA""Folder\n"
                 "\xBB\xBC""Folder\n"
                 "\xBD\xBE""File\n",
@@ -256,7 +258,7 @@ const GC_WINDOW_t wndSVMnu =
 /*window_txt*/  "\n"
                 INK_BRIGHT_BLUE
                 MARK_CENTER
-                "Please select item...\n"
+                "Please select item...\n" INK_BRIGHT_WHITE
 //                "\n\n\n"
 //                MARK_CENTER"Item 1\n"
 //                MARK_CENTER"Item 2\n"

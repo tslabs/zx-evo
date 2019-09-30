@@ -134,6 +134,9 @@ u8 cb_svmkeys(GC_SVMENU_t *svm, KEY_t key)
             svm_opt5_var++;
             if(svm_opt5_var>3) svm_opt5_var=0;
             return SVM_CBKEY_RC_REDRAW;
+        } else
+        {
+            return SVM_CBKEY_RC_EXIT;
         }
     }
     return SVM_CBKEY_RC_NONE;

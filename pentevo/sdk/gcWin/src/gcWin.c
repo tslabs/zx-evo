@@ -908,13 +908,10 @@ svmnu_cb_cursor:
 ;;
     push ix
     push iy
-
 ;; store current window pointer
     ld hl,(_current_window_ptr)
     push hl
-
     call svm_callback
-
 ;; restore current window pointer
     pop hl
     ld (_current_window_ptr),hl
@@ -926,25 +923,20 @@ svmnu_cb_cursor:
 ;;::::::::::::::::::::::::::::::
 ;; key pressed callback
 svmnu_cb_keys:
+    push ix
+    push iy
+;;
     ld e,<#svm_cb_keys (ix)
     ld d,<#svm_cb_keys+1 (ix)
     ld a,e
     or d
-    jr z,1$
+    jr z,0$
 ;;
-    push bc
-    push de
-    push hl
-    push ix
-    push iy
-
 ;; store current window pointer
     ld bc,(_current_window_ptr)
     push bc
-
     ld a,l
     call svm_callback
-
 ;; restore current window pointer
     pop de
     ld (_current_window_ptr),de
@@ -952,22 +944,18 @@ svmnu_cb_keys:
     ex de,hl
     call _gcSelectWindow
     pop hl
-
+;;
     ld a,l
     cp #svm_cbkey_rc_redraw
-    jr nz,2$
+    jr nz,1$
     call svmnu_scanlist
     call print_svm_cursor
-
-2$: pop iy
+;;
+0$: ld l,#0x00
+1$: pop iy
     pop ix
-    pop hl
-    pop de
-    pop bc
     ret
 
-1$: ld l,#0x00
-    ret
 ;;::::::::::::::::::::::::::::::
 svmnu_scanlist:
     ld l,<#svm_lines (ix)
@@ -3979,9 +3967,6 @@ putsym_r:
     ld a,(win_x)
     ld (cur_x),a
     ld e,a
-    ld a,(win_attr)
-    ld (bg_attr),a
-    ld (sym_attr),a
     ret
 ;;
 putsym_tab:
@@ -4161,9 +4146,6 @@ strprnz_r:
     ld a,(win_x)
     ld (cur_x),a
     ld e,a
-    ld a,(win_attr)
-    ld (bg_attr),a
-    ld (sym_attr),a
     jp strprnz
 
 strprnz_tab:
