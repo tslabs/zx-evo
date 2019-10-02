@@ -15,97 +15,97 @@ _tsf_init_chunk
 </MODULE>
 
 <MODULE>
-tsspiffs_c_2 2895
+tsspiffs_c_2 2585
 .__.ABS.
 _tsf_check_blank
 </MODULE>
 
 <MODULE>
-tsspiffs_c_3 5254
+tsspiffs_c_3 4944
 .__.ABS.
 _tsf_take_new_chunk
 </MODULE>
 
 <MODULE>
-tsspiffs_c_4 8951
+tsspiffs_c_4 8641
 .__.ABS.
 _tsf_mount
 </MODULE>
 
 <MODULE>
-tsspiffs_c_5 9801
+tsspiffs_c_5 9491
 .__.ABS.
 _tsf_vol_stat
 </MODULE>
 
 <MODULE>
-tsspiffs_c_6 13021
+tsspiffs_c_6 12711
 .__.ABS.
 _tsf_search
 </MODULE>
 
 <MODULE>
-tsspiffs_c_7 16341
+tsspiffs_c_7 16031
 .__.ABS.
 _tsf_open
 </MODULE>
 
 <MODULE>
-tsspiffs_c_8 17416
+tsspiffs_c_8 17106
 .__.ABS.
 _tsf_open_for_read
 </MODULE>
 
 <MODULE>
-tsspiffs_c_9 19849
+tsspiffs_c_9 19539
 .__.ABS.
 _tsf_create
 </MODULE>
 
 <MODULE>
-tsspiffs_c_10 22424
+tsspiffs_c_10 22114
 .__.ABS.
 _tsf_close
 </MODULE>
 
 <MODULE>
-tsspiffs_c_11 23773
+tsspiffs_c_11 23463
 .__.ABS.
 _tsf_read
 </MODULE>
 
 <MODULE>
-tsspiffs_c_12 24549
+tsspiffs_c_12 24239
 .__.ABS.
 _tsf_seek
 </MODULE>
 
 <MODULE>
-tsspiffs_c_13 25310
+tsspiffs_c_13 25000
 .__.ABS.
 _tsf_read_int
 </MODULE>
 
 <MODULE>
-tsspiffs_c_14 30131
+tsspiffs_c_14 29821
 .__.ABS.
 _tsf_write
 </MODULE>
 
 <MODULE>
-tsspiffs_c_15 35829
+tsspiffs_c_15 35519
 .__.ABS.
 _tsf_delete
 </MODULE>
 
 <MODULE>
-tsspiffs_c_16 38085
+tsspiffs_c_16 37775
 .__.ABS.
 _tsf_stat
 </MODULE>
 
 <MODULE>
-tsspiffs_c_17 39360
+tsspiffs_c_17 39050
 .__.ABS.
 _tsf_list
 </MODULE>
@@ -176,13 +176,12 @@ R 00 00 00 00
 tsspiffs_c_1
 <REL>
 XL2
-H 9 areas 4 global symbols
+H 9 areas 3 global symbols
 M tsspiffs_c_1
 O -mz80
 S .__.ABS. Def0000
 S ___sdcc_call_hl Ref0000
-S _tsf_check_blank Ref0000
-A _CODE size A7 flags 0 addr 0
+A _CODE size 75 flags 0 addr 0
 S _tsf_init_chunk Def0000
 A _DATA size 0 flags 0 addr 0
 A _INITIALIZED size 0 flags 0 addr 0
@@ -200,27 +199,17 @@ T 0E 00 46 05 69 60 11 14 00 19 5E 23 56 C5 DD 6E
 R 00 00 00 00
 T 1C 00 08 DD 66 09 E5 DD 6E 06 DD 66 07 E5 EB CD
 R 00 00 00 00
-T 2A 00 00 00 F1 F1 C1 69 60 11 08 00 19 5E 23 56
+T 2A 00 00 00 F1 F1 C1 DD 36 FC A3 DD 36 FD 5C DD
 R 00 00 00 00 02 02 01 00
-T 38 00 23 23 7E 2B 6E 67 C5 E5 D5 DD 6E 08 DD 66
+T 38 00 36 FE E1 DD 36 FF 78 69 60 11 12 00 19 4E
 R 00 00 00 00
-T 46 00 09 E5 DD 6E 06 DD 66 07 E5 C5 CD 00 00 FD
-R 00 00 00 00 02 0D 02 00
-T 54 00 21 0A 00 FD 39 FD F9 7D C1 6F B7 20 41 DD
+T 46 00 23 46 21 00 00 39 EB 21 00 00 E5 21 04 00
 R 00 00 00 00
-T 62 00 36 FC A3 DD 36 FD 5C DD 36 FE E1 DD 36 FF
+T 54 00 E5 D5 DD 6E 08 DD 66 09 E5 DD 6E 06 DD 66
 R 00 00 00 00
-T 70 00 78 69 60 11 12 00 19 4E 23 46 21 00 00 39
-R 00 00 00 00
-T 7E 00 EB 21 00 00 E5 21 04 00 E5 D5 DD 6E 08 DD
-R 00 00 00 00
-T 8C 00 66 09 E5 DD 6E 06 DD 66 07 E5 69 60 CD
-R 00 00 00 00
-T 99 00 00 00 21 0A 00 39 F9 2E 00
-R 00 00 00 00 02 02 01 00
-T A2 00
-R 00 00 00 00
-T A2 00 DD F9 DD E1 C9
+T 62 00 07 E5 69 60 CD 00 00 21 0A 00 39 F9 2E 00
+R 00 00 00 00 02 07 01 00
+T 70 00 DD F9 DD E1 C9
 R 00 00 00 00
 </REL>
 <ADB>

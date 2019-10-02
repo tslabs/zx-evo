@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-#define TSF_CHECK_BLANK             // to test block after erase
+// #define TSF_CHECK_BLANK             // to test block after erase
 // #define TSF_CHECK_EXIST_ON_CREATE   // to look for existing filename when file is created
 
 typedef unsigned long long u64;
