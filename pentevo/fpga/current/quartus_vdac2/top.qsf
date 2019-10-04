@@ -129,7 +129,7 @@ set_location_assignment PIN_57 -to vg_rclk
 set_location_assignment PIN_58 -to vg_rawr
 set_location_assignment PIN_60 -to vg_tr43
 set_location_assignment PIN_61 -to vg_wd
-set_location_assignment PIN_62 -to vg_wf_de
+set_location_assignment PIN_62 -to sd2cs_n
 set_location_assignment PIN_63 -to vg_drq
 set_location_assignment PIN_64 -to vg_irq
 set_location_assignment PIN_65 -to vg_side

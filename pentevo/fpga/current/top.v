@@ -106,10 +106,14 @@ module top(
   input vg_drq,
   input vg_irq,
   input vg_wd,
-  input vg_wf_de,  // unused
 
   // SPI SD-Card
   output sdcs_n,
+`ifdef SD_CARD2
+  output sd2cs_n,
+`else
+  input sd2cs_n,
+`endif
   output sdclk,
   output sddo,
   input  sddi,
@@ -825,6 +829,9 @@ module top(
     .sd_dataout(spi_dout),
     .sd_datain(cpu_spi_din),
     .sdcs_n(sdcs_n),
+`ifdef SD_CARD2
+    .sd2cs_n(sd2cs_n),
+`endif
 `ifdef IDE_VDAC2
     .ftcs_n(ftcs_n),
 `endif
@@ -1053,7 +1060,7 @@ module top(
     .sck(sdclk),
     .sdo(sddo),
 `ifdef IDE_VDAC2
-    .sdi(!sdcs_n ? sddi : ftdi),
+    .sdi(!ftcs_n ? ftdi : sddi),
 `else
     .sdi(sddi),
 `endif

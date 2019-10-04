@@ -120,6 +120,7 @@ module zports(
 
 // SPI
   output wire        sdcs_n,
+  output wire        sd2cs_n,
 `ifdef IDE_VDAC2
   output wire        ftcs_n,
 `endif
@@ -136,9 +137,8 @@ module zports(
 );
 
   assign sdcs_n = spi_cs_n[0];
-`ifdef IDE_VDAC2
   assign ftcs_n = spi_cs_n[1];
-`endif
+  assign sd2cs_n = spi_cs_n[2];
 
 `ifdef FDR
   localparam FDR_VER = 1'b1;
@@ -564,7 +564,7 @@ module zports(
   wire sdcfg_wr;
   wire sddat_wr;
   wire sddat_rd;
-  reg [1:0] spi_cs_n;
+  reg [2:0] spi_cs_n;
 
   assign sdcfg_wr = (loa==SDCFG) && iowr_s;
   assign sddat_wr = (loa==SDDAT) && iowr_s;
@@ -573,9 +573,9 @@ module zports(
   // SDCFG write - sdcs_n control
   always @(posedge clk)
     if (rst)
-      spi_cs_n <= 2'b11;
+      spi_cs_n <= 3'b111;
     else if (sdcfg_wr)
-      spi_cs_n <= {~din[2], din[1]};
+      spi_cs_n <= {~din[3:2], din[1]};
 
   // start signal for SPI module with resyncing to fclk
   assign sd_start = sddat_wr || sddat_rd;
