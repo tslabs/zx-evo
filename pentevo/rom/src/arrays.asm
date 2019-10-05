@@ -71,7 +71,7 @@ OPT_B1T    defb 5, low(b1to), high(b1to), 'Reset to:', 0
 OPT_B1B    defb 4, low(b1tb), high(b1tb), '  bank:', 0
 OPT_B2T    defb 5, low(b2to), high(b2to), 'CS Reset to:', 0
 OPT_B2B    defb 4, low(b2tb), high(b2tb), '  bank:', 0
-OPT_B1D    defb 6, low(bdev), high(bdev), 'Boot Device:', 0
+OPT_B1D    defb 7, low(bdev), high(bdev), 'Boot Device:', 0
 OPT_ZPL    defb 7, low(zpal), high(zpal), 'ZX Palette:', 0
 OPT_NGR    defb 2, low(nres), high(nres), 'NGS Reset:', 0
 OPT_INT    defb 8, low(into), high(into), 'INT Offset:', 0
@@ -105,6 +105,7 @@ SEL_BDV
         defb '    RS-232', 0
         defb 'IDE Smuc M', 0
         defb 'IDE Smuc S', 0
+		defb 'SD2 Z-cont', 0
 
 SEL_ONF
         defb ' OFF', 0

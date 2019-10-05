@@ -244,6 +244,9 @@ RES_SYS
     xta memconf     ; no mapping
     jp 0
 
+RES_BT_SR       ; sys.rom
+    jr $
+
 RES_BT_BD       ; boot.$c
     xtr
     xt page3, 0
@@ -251,7 +254,7 @@ RES_BT_BD       ; boot.$c
     ld a, (bdev)
     or a    ;0
     ld b, 0
-    jr z, RES_BD_XX     ; SD Card
+    jr z, RES_BD_XX     ; SD1 Card
     inc b
     dec a       ;1
     jr z, RES_BD_XX     ; IDE Nemo Master
@@ -266,12 +269,12 @@ RES_BT_BD       ; boot.$c
     inc b
     dec a       ;5
     jr z, RES_BD_XX     ; IDE Smuc Slave
+	inc b
+	dec a       ;6
+	jr z, RES_BD_XX     ; SD2 Card
     jr $
 
-RES_BT_SR       ; sys.rom
-    jr $
-
-RES_BD_XX       ; SD Card, Nemo Master, Nemo Slave, Smuc Master, Smuc Slave (B = device)
+RES_BD_XX       ; SD1 Card, Nemo Master, Nemo Slave, Smuc Master, Smuc Slave, SD2 Card (B = device)
     push de
 ide_takoj_ide
     call start  ; a = Return code: 1 - no device, 2 - FAT32 not found, 3 - file not found

@@ -1,10 +1,11 @@
 ;---------------------------------------
 ;i: B - Device
-;       0 - SD(ZC)
+;       0 - SD1(ZC)
 ;       1 - IDE Nemo Master
 ;       2 - IDE Nemo Slave
 ;       3 - IDE Smuc Master
 ;       4 - IDE Smuc Slave
+;       5 - SD2(ZC)
 
 start   push bc
         ld hl, nsdc
@@ -675,8 +676,10 @@ reads   push bc
 sel_dev_sd
 ;i:        a - n of dev
         or a
+		jr z, sd1_zc
+		cp 5
         ret nz
-        call sd_init
+sd1_zc  call sd_init
         ld de, 2
         or a
         ret nz
@@ -801,8 +804,13 @@ csh     push bc
 csl     push bc
         push af
         ld bc, sdcnf
-        ld a, %00000001
-        out (c), a
+		ld a,(device)
+		or a
+		jr z,sd1_act
+		ld a, %00001011
+		jr sd2_act
+sd1_act ld a, %00000001
+sd2_act out (c), a
         ld bc, data
         ld a, h'FF
         out (c), a
@@ -957,8 +965,9 @@ wait    push bc
         pop bc
         ret
 ;-------
-sdoff   xor a
+sdoff   ld a,%00000010
         out (sdcnf), a
+		xor a
         out (data), a
         ret
 ;---------------------------------------
@@ -1500,6 +1509,8 @@ ide_ini ld a, (device)
         jp z, ini_smuc
         cp 4
         jp z, ini_smuc
+		cp 5
+		jp z, ini_sd
         ret
 
 xpozi   ld a, (device)
@@ -1513,6 +1524,8 @@ xpozi   ld a, (device)
         jp z, xpozi_smuc
         dec a        ;4
         jp z, xpozi_smuc
+		dec a        ;5
+		jp z, xpozi_sd
         ret
 
 proz    ld a, (device)
@@ -1526,6 +1539,8 @@ proz    ld a, (device)
         jp z, proz_smuc
         dec a        ;4
         jp z, proz_smuc
+		dec a        ;5
+		jp z, proz_sd
         ret
 
 ;-------
@@ -1542,7 +1557,8 @@ rddse   ld c, a
         jr z, to_rddse_smuc
         dec a        ;4
         jr z, to_rddse_smuc
-
+        dec a        ;5
+		jr z, to_rddse_sd
         ld a, c
         ret
 
@@ -1570,6 +1586,8 @@ sel_dev ld a, (device)
         jr z, to_sel_dev_smuc
         dec a        ;4
         jr z, to_sel_dev_smuc
+		dec a        ;5
+		jr z, to_sel_dev_sd
         
         ld c, a
         ret
