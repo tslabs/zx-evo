@@ -690,11 +690,48 @@ ini_sd  call sdoff
         ret
 
 ;---------------------------------------
-sd_init 
-        call csh
+sd_reset_init
+
+		ld hl, cmd00
+		
+        ld bc, sdcnf
+        ld a, %00000011; both CSs LOW
+        out (c), a
+        ld bc, data
+        ld a, h'FF
+        out (c), a
+		
+		ld bc, sdcnf
+        ld a, %00001001; both CSs HI
+        out (c), a
+        ld bc, data
+        ld a, h'FF
+        out (c), a
+
+		ld bc, data
+        outi
+        outi
+        outi
+        outi
+        outi
+        outi
+        ld bc, data
+        ld d, 10
+resz2   in a, (c)
+        bit 7, a
+        jr z, rez2
+        dec d
+        jr nz, resz2
+
+rez2    ld de, 2
+        call cycl
+        ret
+;---------------------------------------
+sd_init call csl
         ld de, 512+10
         call cycl
-
+		
+        call csh
         ld de, 8000
 sdwt    dec de
         ld a, d
@@ -942,7 +979,6 @@ resz    in a, (c)
         jr z, rez
         dec d
         jr nz, resz
-        inc d
 rez     pop bc
         pop de
         ret
@@ -965,10 +1001,7 @@ wait    push bc
         pop bc
         ret
 ;-------
-sdoff   ld a,%00000010
-        out (sdcnf), a
-		xor a
-        out (data), a
+sdoff   xor a
         ret
 ;---------------------------------------
 

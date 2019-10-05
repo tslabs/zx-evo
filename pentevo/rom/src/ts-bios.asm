@@ -64,6 +64,8 @@ tsbios:
     xor a
     out (254), a
 
+    call sd_reset_init
+
     call READ_NVRAM
     call CALC_CRC
     jr z, MN2
