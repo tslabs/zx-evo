@@ -8,14 +8,14 @@ extern "C" {
 // #define TSF_CHECK_BLANK             // to test block after erase
 // #define TSF_CHECK_EXIST_ON_CREATE   // to look for existing filename when file is created
 
-typedef unsigned long long u64;
-typedef unsigned long      u32;
-typedef unsigned short     u16;
-typedef unsigned char      u8;
-typedef signed long long   s64;
-typedef signed long        s32;
-typedef signed short       s16;
-typedef signed char        s8;
+typedef  int64_t s64;
+typedef uint64_t u64;
+typedef  int32_t s32;
+typedef uint32_t u32;
+typedef  int16_t s16;
+typedef uint16_t u16;
+typedef  int8_t s8;
+typedef uint8_t u8;
 
 #ifndef min
 #define min(x,y) ((x) < (y) ? (x) : (y))
@@ -44,8 +44,8 @@ typedef enum
 
 typedef enum
 {
-  TSF_CHUNK_HEAD = 0x01,
-  TSF_CHUNK_BODY = 0x02,
+  TSF_CHUNK_HEAD = 0x00,
+  TSF_CHUNK_BODY = 0x01,
   TSF_CHUNK_FREE = 0xFF
 } TSF_CHUNK_TYPE;
 
@@ -75,7 +75,7 @@ typedef TSF_RESULT (*tsf_erase_t)(u32);
 typedef struct
 {
   u32 magic;
-  u32 next_chunk_addr;
+  u16 next_chunk;
   u8 type;
 } TSF_CHUNK;
 
@@ -90,7 +90,7 @@ typedef struct
   u32 bulk_start;   // start address in flash IC
   u32 bulk_size;    // size of the TSF
   u32 block_size;   // erase block size
-  u32 last_written_chunk;  // for wear levelling
+  u16 last_written_chunk;  // for wear levelling
 
   tsf_read_t  hal_read_func;
   tsf_write_t hal_write_func;
@@ -116,7 +116,7 @@ typedef struct
   u32 chunk_addr;       // current chunk address
   u32 chunk_offset;     // current offset in chunk
   u32 prev_chunk_addr;  // address of the previous chunk
-  u32 next_chunk_addr;  // address of the next chunk
+  u16 next_chunk;       // next chunk
   u8 mode;
   TSF_VOLUME *vol;
 } TSF_FILE;
@@ -154,7 +154,9 @@ TSF_RESULT tsf_open_for_read(TSF_FILE*, const char*);
 TSF_RESULT tsf_create(TSF_FILE*, const char*);
 TSF_RESULT tsf_take_new_chunk(TSF_VOLUME*, u8, u32*);
 TSF_RESULT tsf_vol_stat(TSF_VOLUME*);
-TSF_RESULT tsf_read_int(TSF_FILE*, void*, u32, u8);
+TSF_RESULT tsf_read_int(TSF_FILE*, void*, u32);
+
+#define chunk_addr(chunk) (cfg->bulk_start + ((chunk) * cfg->block_size))
 
 #ifdef __cplusplus
 }
