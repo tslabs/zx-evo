@@ -105,7 +105,7 @@ SEL_BDV
         defb '    RS-232', 0
         defb 'IDE Smuc M', 0
         defb 'IDE Smuc S', 0
-		defb 'SD2 Z-cont', 0
+        defb 'SD2 Z-cont', 0
 
 SEL_ONF
         defb ' OFF', 0

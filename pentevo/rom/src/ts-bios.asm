@@ -64,7 +64,7 @@ tsbios:
     xor a
     out (254), a
 
-    call sd_reset_init
+    ;call sd_reset_init
 
     call READ_NVRAM
     call CALC_CRC
@@ -271,9 +271,9 @@ RES_BT_BD       ; boot.$c
     inc b
     dec a       ;5
     jr z, RES_BD_XX     ; IDE Smuc Slave
-	inc b
-	dec a       ;6
-	jr z, RES_BD_XX     ; SD2 Card
+    inc b
+    dec a       ;6
+    jr z, RES_BD_XX     ; SD2 Card
     jr $
 
 RES_BD_XX       ; SD1 Card, Nemo Master, Nemo Slave, Smuc Master, Smuc Slave, SD2 Card (B = device)

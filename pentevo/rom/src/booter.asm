@@ -57,9 +57,9 @@ start   push bc
         ex de, hl
 thg     ld b, 1
         call load512
-		ld a,h
-		cp h'40
-		jr c,thg_end
+        ld a,h
+        cp h'40
+        jr c,thg_end
         ld a, (eoc)
         cp h'0f
         jr nz, thg
@@ -160,7 +160,7 @@ newcla  ld (nr0), a
 eofc    pop bc
         pop bc
         jp rh
-        
+
 ;------read sector from fat
 curit   ;i:        [de, hl]-cluster number
 ;        o:        secbu(512)
@@ -228,7 +228,7 @@ pom     ld (cuhl), hl
 rdir    ld hl, (brootc)
         ld de, (brootc + 2)
         jr pom
-        
+
 mdc     ld (eoc), a
         or a
         ret
@@ -239,7 +239,7 @@ xspoz   ld bc, (addtop)
         ld bc, (addtop + 2)
         ld (clde), bc
         jp add4bf
-        
+
 ;-----searching entry in active dir by name
 srhdrn  ;i:        lstcat(4) - active dir
 ;          entry - name (11 chars)
@@ -264,7 +264,7 @@ hdr     ld a, (eoc)
         ld a, h
         cp high(lobu) + 2
         jr hdr
-        
+
 ;-------
 vega    ld bc, 32
         add hl, bc
@@ -302,7 +302,7 @@ chee    ld a, (de)
 
 ;---------------------------------------
 ;search partition
-        
+
 hdd     ;i:        none
 ;        o:        nz - fat32 not found
 ;           z - all fat32 vars are
@@ -372,7 +372,7 @@ fhdd    ld a, (zes)
         ld de, (lobu + 446 + 8 + 2)
         call add4bf
         jr ldbpb
-        
+
 okk     inc hl
         inc hl
         inc hl
@@ -445,7 +445,7 @@ ner     or a
         jp nz, fhdd
         ld hl, (lobu + 14)
         ld (brezs), hl
-        
+
         ld a, (lobu + 16)
         ld (bfats), a
         ld hl, (lobu + 36)
@@ -483,14 +483,14 @@ nhdd    ld hl, (duhl)
         xor a
         ld (zes), a
         jp ldbpb
-        
+
 nhdd1   ld a, 1
         or a
         ret
 
 ;---------------------------------------
 ;arithmetics block
-        
+
 del128  ;i:        [de, hl]/128
 ;        o:        [de, hl]
 ;          bc - remainder
@@ -571,7 +571,7 @@ tys     dec b
         jr z, negry
 efro    add hl, de
         djnz efro
-        
+
         ld b, a
 negry   dec c
         jr nz, efro
@@ -604,8 +604,8 @@ tos     xor a
         ld (eoc), a
         ret
 
-        
-        
+
+
 ;---------------------------------------
 ;   SD DRIVER
 ;---------------------------------------
@@ -657,7 +657,7 @@ rd1     ex af, af'
         call cmd12
         call snb
         jp csh
-        
+
 ;---------------------------------------
 reads   push bc
         push de
@@ -676,8 +676,8 @@ reads   push bc
 sel_dev_sd
 ;i:        a - n of dev
         or a
-		jr z, sd1_zc
-		cp 5
+        jr z, sd1_zc
+        cp 5
         ret nz
 sd1_zc  call sd_init
         ld de, 2
@@ -692,46 +692,46 @@ ini_sd  call sdoff
 ;---------------------------------------
 sd_reset_init
 
-		ld hl, cmd00
-		
+        ld hl, cmd00
+
         ld bc, sdcnf
         ld a, %00000011; both CSs LOW
         out (c), a
         ld bc, data
         ld a, h'FF
         out (c), a
-		
-		ld bc, sdcnf
+
+        ld bc, sdcnf
         ld a, %00001001; both CSs HI
         out (c), a
         ld bc, data
         ld a, h'FF
         out (c), a
 
-		ld bc, data
-        outi
-        outi
-        outi
-        outi
-        outi
-        outi
         ld bc, data
-        ld d, 10
-resz2   in a, (c)
-        bit 7, a
-        jr z, rez2
-        dec d
-        jr nz, resz2
+        outi
+        outi
+        outi
+        outi
+        outi
+        outi
 
-rez2    ld de, 2
+        ld de, 2
         call cycl
+
+        ld bc, sdcnf
+        ld a, %00000011; both CSs LOW
+        out (c), a
+        ld bc, data
+        ld a, h'FF
+        out (c), a
         ret
 ;---------------------------------------
 sd_init call csl
+        call csh
         ld de, 512+10
         call cycl
-		
-        call csh
+
         ld de, 8000
 sdwt    dec de
         ld a, d
@@ -837,15 +837,15 @@ csh     push bc
         pop af
         pop bc
         ret
-        
+
 csl     push bc
         push af
         ld bc, sdcnf
-		ld a,(device)
-		or a
-		jr z,sd1_act
-		ld a, %00001011
-		jr sd2_act
+        ld a,(device)
+        or a
+        jr z,sd1_act
+        ld a, %00001011
+        jr sd2_act
 sd1_act ld a, %00000001
 sd2_act out (c), a
         ld bc, data
@@ -949,7 +949,7 @@ cmzz    ld a, cmd_18
         out (c), e
         ld a, h'FF
         out (c), a
-        
+
         pop de
         pop bc
         pop hl
@@ -1029,7 +1029,7 @@ proz_nemo
         ld h, d
         ld d, e
         ld e, a
-        
+
 ;DE,cyl H,head L,sec
 
         ld (blknum), hl
@@ -1557,8 +1557,8 @@ xpozi   ld a, (device)
         jp z, xpozi_smuc
         dec a        ;4
         jp z, xpozi_smuc
-		dec a        ;5
-		jp z, xpozi_sd
+        dec a        ;5
+        jp z, xpozi_sd
         ret
 
 proz    ld a, (device)
@@ -1572,8 +1572,8 @@ proz    ld a, (device)
         jp z, proz_smuc
         dec a        ;4
         jp z, proz_smuc
-		dec a        ;5
-		jp z, proz_sd
+        dec a        ;5
+        jp z, proz_sd
         ret
 
 ;-------
@@ -1591,7 +1591,7 @@ rddse   ld c, a
         dec a        ;4
         jr z, to_rddse_smuc
         dec a        ;5
-		jr z, to_rddse_sd
+        jr z, to_rddse_sd
         ld a, c
         ret
 
@@ -1619,9 +1619,9 @@ sel_dev ld a, (device)
         jr z, to_sel_dev_smuc
         dec a        ;4
         jr z, to_sel_dev_smuc
-		dec a        ;5
-		jr z, to_sel_dev_sd
-        
+        dec a        ;5
+        jr z, to_sel_dev_sd
+
         ld c, a
         ret
 
