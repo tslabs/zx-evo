@@ -64,8 +64,6 @@ tsbios:
     xor a
     out (254), a
 
-    call sd_reset_init; dual SD spi init (only cmd0)
-
     call READ_NVRAM
     call CALC_CRC
     jr z, MN2
@@ -79,6 +77,8 @@ MN2:
     xor a     ; nulling vdos mountings
     ld (fddv), a
     call WRITE_NVRAM
+
+    call sd_reset_init; dual SD spi init (only cmd0)
 
 MN1:
 ; NGS Reset
