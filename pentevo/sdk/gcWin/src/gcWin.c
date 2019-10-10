@@ -8,7 +8,7 @@
 
 void gcVars (void)
 {
-    __asm
+  __asm
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     .globl strlen, strprnz, sym_prn, sym_prns
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -468,6 +468,7 @@ BTN_TYPE_t gcExecuteWindow(GC_WINDOW_t *wnd)
     switch (wnd->type)
     {
     case GC_WND_SVMENU:
+        gcPrintSimpleVMenu((GC_SVMENU_t*)ptr);
         rc = gcSimpleVMenu((GC_SVMENU_t*)ptr);
     break;
 
@@ -680,7 +681,26 @@ void gcPrintSimpleVMenu(GC_SVMENU_t *svmnu) __naked __z88dk_fastcall
     push ix
     MAC_LD_IXHL         ; IX - simple vertical menu descriptor
 
+    push hl
+    call svmnu_cb_initial_list
+    pop hl
     call print_svm_cursor
+;;
+    pop ix
+    ret
+  __endasm;
+}
+
+//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+void gcInitSimpleVMenu(GC_SVMENU_t *svmnu) __naked __z88dk_fastcall
+{
+    svmnu;      // to avoid SDCC warning
+
+  __asm
+    push ix
+    MAC_LD_IXHL         ; IX - simple vertical menu descriptor
+
+    call svmnu_cb_initial_list
     pop ix
     ret
   __endasm;
@@ -746,20 +766,26 @@ svmnu_begin:
     xor a
 svmnu_lp1:
     ld <#svm_cur_pos (ix),a
+svmnu_lp2:
     call print_svm_cursor
     call svmnu_cb_cursor
     jr svmnu_lp
 ;;::::::::::::::::::::::::::::::
 svmnu_end:
     call restore_svm_cursor
+    ld a,<#svm_all_cnt (ix)
+    cp <#svm_win_cnt (ix)
+    jr c,0$
     ld a,<#svm_win_cnt (ix)
-    dec a
+0$: dec a
     jr svmnu_lp1
 ;;::::::::::::::::::::::::::::::
 svmnu_dn:
     call restore_svm_cursor
     ld a,<#svm_cur_pos (ix)
     inc a
+    cp <#svm_all_cnt (ix)
+    jr nc,svmnu_lp2
     cp <#svm_win_cnt (ix)
     jr nz,svmnu_lp1
     call svmnu_cb_bottom
@@ -783,12 +809,52 @@ svmnu_up:
     dec a
     jr svmnu_lp1
 ;;::::::::::::::::::::::::::::::
-;; bottom border callback
-svmnu_cb_bottom:
+svmnu_cb_cross_get_ptr:
     ld e,<#svm_cb_cross (ix)
     ld d,<#svm_cb_cross+1 (ix)
     ld a,e
     or d
+    ret
+;;
+;; in:  C - offset
+svmnu_cb_cross_get_num_list:
+    ld a,<#svm_cur_pos (ix)
+    add a,<#svm_win_pos (ix)
+    add a,c
+    ret
+;;
+;; in:  C - offset
+svmnu_cb_cross_set_coords:
+    ld a,(win_y)
+    add a,<#svm_margin (ix)
+    add a,<#svm_cur_pos (ix)
+    add a,c
+    ld (cur_y),a
+    ld a,(win_x)
+    ld (cur_x),a
+    ret
+;;::::::::::::::::::::::::::::::
+svmnu_cb_initial_list:
+    call svmnu_cb_cross_get_ptr
+    ret z
+    ld c,#0x00
+0$: call svmnu_cb_cross_set_coords
+    call svmnu_cb_cross_get_num_list
+    call svm_callback
+    ld a,<#svm_cur_pos (ix)
+    add a,<#svm_win_pos (ix)
+    inc c
+    add a,c
+    cp <#svm_all_cnt (ix)
+    ret z
+    sub a,<#svm_win_pos (ix)
+    cp <#svm_win_cnt (ix)
+    jr nz,0$
+    ret
+;;::::::::::::::::::::::::::::::
+;; bottom border callback
+svmnu_cb_bottom:
+    call svmnu_cb_cross_get_ptr
     ret z
 ;;
     push ix
@@ -808,12 +874,8 @@ svmnu_cb_bottom:
     push de
     call _gcScrollUpWindow
 ;;
-    ld a,(win_y)
-    add a,<#svm_margin (ix)
-    add a,<#svm_cur_pos (ix)
-    ld (cur_y),a
-    ld a,(win_x)
-    ld (cur_x),a
+    ld c,#0x00
+    call svmnu_cb_cross_set_coords
 ;;
     pop de
     pop af
@@ -830,10 +892,7 @@ svmnu_cb_bottom:
 ;;::::::::::::::::::::::::::::::
 ;; top border callback
 svmnu_cb_top:
-    ld e,<#svm_cb_cross (ix)
-    ld d,<#svm_cb_cross+1 (ix)
-    ld a,e
-    or d
+    call svmnu_cb_cross_get_ptr
     ret z
 ;;
     push ix
@@ -851,12 +910,8 @@ svmnu_cb_top:
     push af
     push de
 ;;
-    ld a,(win_y)
-    add a,<#svm_margin (ix)
-    add a,<#svm_cur_pos (ix)
-    ld (cur_y),a
-    ld a,(win_x)
-    ld (cur_x),a
+    ld c,#0x00
+    call svmnu_cb_cross_set_coords
 ;;
     call _gcScrollDownWindow
     pop de
@@ -879,6 +934,10 @@ svmnu_cb_top:
 ;;
 svm_callback:
     push ix
+    push hl
+    push de
+    push bc
+    push af
 ;; store arg
     push af
     inc sp
@@ -895,6 +954,10 @@ svm_callback:
     pop af
     dec sp
 ;;
+    pop af
+    pop bc
+    pop de
+    pop hl
     pop ix
     ret
 ;;::::::::::::::::::::::::::::::
@@ -911,7 +974,9 @@ svmnu_cb_cursor:
 ;; store current window pointer
     ld hl,(_current_window_ptr)
     push hl
+
     call svm_callback
+
 ;; restore current window pointer
     pop hl
     ld (_current_window_ptr),hl
@@ -935,8 +1000,10 @@ svmnu_cb_keys:
 ;; store current window pointer
     ld bc,(_current_window_ptr)
     push bc
+
     ld a,l
     call svm_callback
+
 ;; restore current window pointer
     pop de
     ld (_current_window_ptr),de

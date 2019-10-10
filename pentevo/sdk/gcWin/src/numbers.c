@@ -189,7 +189,7 @@ decasc16_dig:
     ld 0(ix),a
     inc ix
     ret
-
+;;
 decasc32_dig:
     ld a,#0x30
     or a
@@ -285,39 +285,75 @@ char *hex2asc32(u32 num) __naked __z88dk_fastcall
 ;DEHL - 32bit NUMBER
 ;IX - ASCII BUFFER
 hexasc32::
+    ld c,#0x00
     ld a,d
-    call hexasc8
+    call hexasc8_h
+    ld a,d
+    call hexasc8_l
     ld a,e
-    call hexasc8
+    call hexasc8_h
+    ld a,e
+    call hexasc8_l
+    ld a,h
+    call hexasc8_h
+    ld a,h
+    call hexasc8_l
+    ld a,l
+    jr hexasc8_
 
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;HL - 16bit NUMBER
 ;IX - ASCII BUFFER
 hexasc16::
+    ld c,#0x00
     ld a,h
-    call hexasc8
+    call hexasc8_h
+    ld a,h
+    call hexasc8_l
     ld a,l
+    jr hexasc8_
 
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;A - 8bit NUMBER
 ;IX - ASCII BUFFER
 hexasc8::
+    ld c,#0x00
+hexasc8_:
     push af
-    rra
-    rra
-    rra
-    rra
+    call hexasc8_h
+    pop af
     or #0xF0
     daa
     add #0xA0
     adc #0x40
     ld 0(ix),a
     inc ix
-    pop af
+    ret
+;;
+hexasc8_h:
+    rra
+    rra
+    rra
+    rra
     or #0xF0
     daa
     add #0xA0
     adc #0x40
+    jr hexasc_put
+;;
+hexasc8_l:
+    or #0xF0
+    daa
+    add #0xA0
+    adc #0x40
+;;
+hexasc_put:
+    cp #0x30
+    jr z,0$
+    inc c
+0$: inc c
+    dec c
+    ret z
     ld 0(ix),a
     inc ix
     ret
@@ -548,20 +584,22 @@ gc_printf_loop1$:
     ld a,(hl)
 ;;
 0$: inc hl
-    cp #'h'
-    jr z,gc_printf_short$
     cp #'l'
-    jr z,gc_printf_long$
+    jp z,gc_printf_long$
     cp #'u'
     jp z,gc_printf_udec16$
     cp #'d'
     jp z,gc_printf_sdec16$
     cp #'x'
-    jr z,gc_printf_hex16$
+    jp z,gc_printf_hex16$
+    cp #'X'
+    jp z,gc_printf_hex16$
     cp #'s'
-    jr z,gc_printf_string$
+    jp z,gc_printf_string$
+    cp #'m'
+    jr z,gc_printf_array$
     cp #'c'
-    jr nz,gc_printf_char$
+    jp nz,gc_printf_char$
     ld a,0(ix)
 ;;
 gc_printf_char$:
@@ -571,26 +609,18 @@ gc_printf_char$:
     pop hl
     jr gc_printf_loop1$
 
-;; %h modificator (short)
-gc_printf_short$:
-    ld a,(hl)
-    inc hl
-    cp #'u'
-    jr z,gc_printf_udec8$
-    cp #'d'
-    jr z,gc_printf_dec8$
-    cp #'x'
-    jr z,gc_printf_hex8$
-    jr gc_printf_char$
-
 ;; %l modificator (long)
 gc_printf_long$:
     ld a,(hl)
     inc hl
     cp #'u'
-    jr z,gc_printf_udec32$
+    jp z,gc_printf_udec32$
     cp #'d'
-    jr z,gc_printf_sdec32$
+    jp z,gc_printf_sdec32$
+    cp #'x'
+    jp z,gc_printf_hex32$
+    cp #'X'
+    jp z,gc_printf_hex32$
     jr gc_printf_char$
 
 ;; %s (string)
@@ -602,12 +632,73 @@ gc_printf_string$:
     pop hl
     jp gc_printf_loop$
 
-;; %hx
-gc_printf_hex8$:
+;; %m (array)
+gc_printf_array$:
+    ld a,(hl)
+    inc hl
+    cp #'x'
+    jr z,gc_printf_array_x$
+    jr gc_printf_char$
+
+gc_printf_array_x$:
+    ld a,(hl)
+    inc hl
+    ld (printf_xmod),a
+    cp #'b'
+    jr z,gc_printf_array_xb$
+    cp #'w'
+    jr z,gc_printf_array_xb$
+    cp #'d'
+    jr z,gc_printf_array_xb$
+    jr gc_printf_char$
+
+printf_xmod:
+    .db 0
+
+gc_printf_array_xb$:
     push hl
     ld l,0(ix)
-    call _hex2asc8
-    jp gc_printf_buff$
+    ld h,1(ix)
+    inc ix
+    inc ix
+    ld c,0(ix)
+    ld b,1(ix)
+    push ix
+
+    push hl
+    pop ix
+
+1$: ld a,b
+    or c
+    jr z,0$
+    push bc
+    ld de,#0x0000
+    ld h,e
+    ld l,0(ix)
+    inc ix
+    ld a,(printf_xmod)
+    cp #'b'
+    jr z,2$
+    ld h,0(ix)
+    inc ix
+    cp #'w'
+    jr z,2$
+    ld e,0(ix)
+    inc ix
+    ld d,0(ix)
+    inc ix
+2$: push ix
+    call _hex2asc32
+    call gc_printf_buff$
+    ld l,#0x20
+    call _putsym
+    pop ix
+    pop bc
+    dec bc
+    jr 1$
+0$: pop ix
+    pop hl
+    jp gc_printf_loop$
 
 ;; %x (hex)
 gc_printf_hex16$:
@@ -615,23 +706,23 @@ gc_printf_hex16$:
     ld l,0(ix)
     ld h,1(ix)
     call _hex2asc16
-    jp gc_printf_buff$
+    call gc_printf_buff$
+    pop hl
+    jp gc_printf_loop$
 
-;; %hu
-gc_printf_udec8$:
+;; %lx (hex)
+gc_printf_hex32$:
     push hl
     ld l,0(ix)
-    call _dec2asc8
-    jp gc_printf_buff$
-
-;; %hd
-gc_printf_dec8$:
-    push hl
-    ld l,0(ix)
-    bit 7,l
-    call nz,_neg_hl
-    call _dec2asc8
-    jp gc_printf_buff_s$
+    ld h,1(ix)
+    inc ix
+    inc ix
+    ld e,0(ix)
+    ld d,1(ix)
+    call _hex2asc32
+    call gc_printf_buff$
+    pop hl
+    jp gc_printf_loop$
 
 ;; %u (unsigned decimal)
 gc_printf_udec16$:
@@ -639,7 +730,9 @@ gc_printf_udec16$:
     ld l,0(ix)
     ld h,1(ix)
     call _dec2asc16
-    jp gc_printf_buff$
+    call gc_printf_buff$
+    pop hl
+    jp gc_printf_loop$
 
 ;; %d (signed decimal)
 gc_printf_sdec16$:
@@ -661,7 +754,9 @@ gc_printf_udec32$:
     ld e,0(ix)
     ld d,1(ix)
     call _dec2asc32
-    jr gc_printf_buff$
+    call gc_printf_buff$
+    pop hl
+    jp gc_printf_loop$
 
 ;; %ld
 gc_printf_sdec32$:
@@ -719,9 +814,7 @@ gc_printf_buff$:
     sub b
     call nc,gc_printf_spacer$
     pop hl
-    call _gcPrintString
-    pop hl
-    jp gc_printf_loop$
+    jp _gcPrintString
 ;;
 gc_printf_spacer$:
     ret z
