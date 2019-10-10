@@ -692,14 +692,12 @@ ini_sd  call sdoff
 ;---------------------------------------
 sd_reset_init
 
-        ld hl, cmd00
+        call csh
+        ld de,512+10
+        call cycl
 
-        ld bc, sdcnf
-        ld a, %00000011; both CSs LOW
-        out (c), a
-        ld bc, data
-        ld a, h'FF
-        out (c), a
+
+        call csh
 
         ld bc, sdcnf
         ld a, %00001001; both CSs HI
@@ -708,6 +706,8 @@ sd_reset_init
         ld a, h'FF
         out (c), a
 
+
+        ld hl, cmd00
         ld bc, data
         outi
         outi
@@ -719,12 +719,7 @@ sd_reset_init
         ld de, 2
         call cycl
 
-        ld bc, sdcnf
-        ld a, %00000011; both CSs LOW
-        out (c), a
-        ld bc, data
-        ld a, h'FF
-        out (c), a
+        call csh
         ret
 ;---------------------------------------
 sd_init call csl
