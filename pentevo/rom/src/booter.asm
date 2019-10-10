@@ -974,6 +974,7 @@ resz    in a, (c)
         jr z, rez
         dec d
         jr nz, resz
+		inc d
 rez     pop bc
         pop de
         ret
