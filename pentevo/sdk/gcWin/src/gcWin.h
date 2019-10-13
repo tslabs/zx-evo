@@ -215,8 +215,8 @@ typedef struct GC_SVMENU_t
     u8              margin;     // отступ от верха
     u8              cur_pos;    // текущая позиция (в окне)
     u8              win_pos;    // позиция(смещение) окна
-    u8              win_cnt;    // кол-во пунктов в окне
-    u8              all_cnt;    // общее кол-во пунктов
+    u8              win_num;    // кол-во пунктов в окне
+    u8              all_num;    // общее кол-во пунктов
     void            *cb_cursor; // *svmcb_cursor_t
     void            *cb_keys;   // *svmcb_keys_t
     void            *cb_cross;  // top&bottom border crossing callbacks
@@ -582,11 +582,10 @@ void gcClearWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall;
 
 void gcScrollUpWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall;
 void gcScrollDownWindow(GC_WINDOW_t *wnd) __naked __z88dk_fastcall;
-
-void gcProgressBar(u8 x, u8 y, WIN_COLORS_t attr, u8 width, u8 percent) __naked;
-
 void gcScrollUpRect(u8 x, u8 y, u8 width, u8 hight) __naked;
 void gcScrollDownRect(u8 x, u8 y, u8 width, u8 hight) __naked;
+
+void gcProgressBar(u8 x, u8 y, WIN_COLORS_t attr, u8 width, u8 percent) __naked;
 
 /* DIALOG */
 u8 gcDialog(GC_DIALOG_t *dlg) __naked __z88dk_fastcall;
@@ -605,6 +604,8 @@ u8 gcFindHotkey(GC_DIALOG_t *dlg) __naked __z88dk_fastcall;
 u8 gcFindClickItem(GC_DIALOG_t *dlg) __naked __z88dk_fastcall;
 
 /* Simple Vertical Menu */
+void gcPrintSimpleVMenu(GC_SVMENU_t *svmnu) __naked __z88dk_fastcall;
+void gcInitSimpleVMenu(GC_SVMENU_t *svmnu) __naked __z88dk_fastcall;
 u8 gcSimpleVMenu(GC_SVMENU_t *svmnu) __naked __z88dk_fastcall;
 void gcPrintSVMCursor(GC_SVMENU_t *svmnu) __naked __z88dk_fastcall;
 void gcRestoreSVMCursor(GC_SVMENU_t *svmnu) __naked __z88dk_fastcall;

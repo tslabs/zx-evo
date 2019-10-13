@@ -42,8 +42,8 @@ void gcVars (void)
     svm_margin              .equ    #02 ; byte
     svm_cur_pos             .equ    #03 ; byte
     svm_win_pos             .equ    #04 ; byte
-    svm_win_cnt             .equ    #05 ; byte
-    svm_all_cnt             .equ    #06 ; byte
+    svm_win_num             .equ    #05 ; byte
+    svm_all_num             .equ    #06 ; byte
     svm_cb_cursor           .equ    #07 ; word
     svm_cb_keys             .equ    #09 ; word
     svm_cb_cross            .equ    #11 ; word
@@ -773,10 +773,12 @@ svmnu_lp2:
 ;;::::::::::::::::::::::::::::::
 svmnu_end:
     call restore_svm_cursor
-    ld a,<#svm_all_cnt (ix)
-    cp <#svm_win_cnt (ix)
+    ld a,<#svm_all_num (ix)
+    or a
+    jr z,svmnu_lp1
+    cp <#svm_win_num (ix)
     jr c,0$
-    ld a,<#svm_win_cnt (ix)
+    ld a,<#svm_win_num (ix)
 0$: dec a
     jr svmnu_lp1
 ;;::::::::::::::::::::::::::::::
@@ -784,9 +786,9 @@ svmnu_dn:
     call restore_svm_cursor
     ld a,<#svm_cur_pos (ix)
     inc a
-    cp <#svm_all_cnt (ix)
+    cp <#svm_all_num (ix)
     jr nc,svmnu_lp2
-    cp <#svm_win_cnt (ix)
+    cp <#svm_win_num (ix)
     jr nz,svmnu_lp1
     call svmnu_cb_bottom
     ld a,<#svm_flags (ix)
@@ -805,7 +807,7 @@ svmnu_up:
     and #svmf_nowrap_mask
     ld a,<#svm_cur_pos (ix)
     jr nz,svmnu_lp1
-    ld a,<#svm_win_cnt (ix)
+    ld a,<#svm_win_num (ix)
     dec a
     jr svmnu_lp1
 ;;::::::::::::::::::::::::::::::
@@ -838,6 +840,9 @@ svmnu_cb_initial_list:
     call svmnu_cb_cross_get_ptr
     ret z
     ld c,#0x00
+    ld a,<#svm_all_num (ix)
+    or a
+    ret z
 0$: call svmnu_cb_cross_set_coords
     call svmnu_cb_cross_get_num_list
     call svm_callback
@@ -845,10 +850,10 @@ svmnu_cb_initial_list:
     add a,<#svm_win_pos (ix)
     inc c
     add a,c
-    cp <#svm_all_cnt (ix)
+    cp <#svm_all_num (ix)
     ret z
     sub a,<#svm_win_pos (ix)
-    cp <#svm_win_cnt (ix)
+    cp <#svm_win_num (ix)
     jr nz,0$
     ret
 ;;::::::::::::::::::::::::::::::
@@ -867,7 +872,7 @@ svmnu_cb_bottom:
     ld a,<#svm_cur_pos (ix)
     inc a
     add a,<#svm_win_pos (ix)
-    cp <#svm_all_cnt (ix)
+    cp <#svm_all_num (ix)
     jr nc,0$
     inc <#svm_win_pos (ix)
     push af
@@ -934,7 +939,6 @@ svmnu_cb_top:
 ;;
 svm_callback:
     push ix
-    push hl
     push de
     push bc
     push af
@@ -957,7 +961,6 @@ svm_callback:
     pop af
     pop bc
     pop de
-    pop hl
     pop ix
     ret
 ;;::::::::::::::::::::::::::::::
@@ -1007,6 +1010,7 @@ svmnu_cb_keys:
 ;; restore current window pointer
     pop de
     ld (_current_window_ptr),de
+
     push hl
     ex de,hl
     call _gcSelectWindow
@@ -1035,7 +1039,7 @@ svmnu_scanlist:
     call svmnu_list_item
     pop af
     inc a
-    cp <#svm_win_cnt (ix)
+    cp <#svm_win_num (ix)
     jr nz,0$
     ret
 
@@ -1076,7 +1080,7 @@ svmnu_list_item:
     cp #svmt_option
     jr z,svmnu_option
     cp #svmt_callback
-    jr z,svmnu_callback
+    jp z,svm_callback
     ret
 
 svmnu_text:
@@ -1108,20 +1112,12 @@ svmnu_option:
     ld d,(hl)
     jr svmnu_text
 
-svmnu_callback:
-    ex de,hl
-    ld de,#0$
-    push de
-    push ix
-    jp (hl)
-0$: pop ix
-    ret
 ;;::::::::::::::::::::::::::::::
 svmnu_get_mouse:
 ;; check bounding box
     call _gcGetMouseYS
     ld c,l
-    ld h,<#svm_win_cnt (ix)
+    ld h,<#svm_win_num (ix)
     ld a,(win_y)
     add a,<#svm_margin (ix)
     add a,h
@@ -1148,7 +1144,7 @@ svmnu_get_mouse:
     ld l,a
     ld a,c
     sub l
-    cp <#svm_win_cnt (ix)
+    cp <#svm_win_num (ix)
     jr nc,0$
 
     ld c,a
@@ -1810,7 +1806,7 @@ dialog_ent_list:
     push hl     ;cb_cursor
     ld c,<#di_select (ix)
     ld b,c
-    push bc     ; svm_win_cnt&svm_all_cnt
+    push bc     ; svm_win_num&svm_all_num
     xor a
 ;; svm_win_pos
     push af

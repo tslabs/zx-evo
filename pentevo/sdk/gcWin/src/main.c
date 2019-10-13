@@ -4,6 +4,7 @@
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 #include <stdio.h>
+#include <string.h>
 #include "defs.h"
 #include "tsio.h"
 #include "gcWin.h"
@@ -47,7 +48,13 @@ u8 itmNUM3 = 255;
 char c;
 
 u8 rb, lb, cb11, cb12, cb21, cb22, cb3, cb4;
-u8 pcx, pcx0, pcy, pca, pcst;   //for putchar
+
+
+int putchar(int c)
+{
+    //putsym((char)c);
+    return 0;
+}
 
 BTN_TYPE_t select;
 
@@ -76,11 +83,13 @@ void testMouse()
                  INK_BLUE"\tMouse Y:"INK_MAGENTA"%04d\n\n", gcGetMouseX()-(320/2), gcGetMouseY()-(240/2));
         gcPrintf(INK_BLUE"\tMouse X:"INK_MAGENTA"%04u\n"
                  INK_BLUE"\tMouse Y:"INK_MAGENTA"%04u\n\n", gcGetMouseX(), gcGetMouseY());
-        gcPrintf(INK_BLUE"\tMouse X:"INK_MAGENTA"%4x\n"
-                 INK_BLUE"\tMouse Y:"INK_MAGENTA"%4x\n\n\n", gcGetMouseX(), gcGetMouseY());
+        gcPrintf(INK_BLUE"\tMouse X:"INK_MAGENTA"%04x\n"
+                 INK_BLUE"\tMouse Y:"INK_MAGENTA"%04x\n\n\n", gcGetMouseX(), gcGetMouseY());
         gcPrintf(INK_BLUE"32 bit number:"INK_MAGENTA"%12ld\n", a2d32s("-1234567890"));
         gcPrintf(INK_BLUE"32 bit number:"INK_MAGENTA"%012ld\n", a2d32s("-1234567890"));
+        gcPrintf("%02x", 0x005F);
     }
+
 
     gcCloseWindow();
 }
@@ -111,14 +120,16 @@ void cb_svmcur(GC_SVMENU_t *svm)
     svm_progress_item = svm->cur_pos * 20;
     gcPrintDialog(&dlgSVMInfo);
     gcSelectWindow(&wndSVMHelp);
-    gcPrintf("\nItem help "INK_BRIGHT_BLUE"%hd", svm_current_item);
+    gcPrintf("\nItem help "INK_BRIGHT_BLUE"%d", svm_current_item);
 }
 
 // SVM keys callback
 u8 cb_svmkeys(GC_SVMENU_t *svm, KEY_t key)
 {
+    u8 rc = SVM_CBKEY_RC_NONE;
+
     gcSelectWindow(&wndSVMInfo);
-    gcPrintf(INK_BRIGHT_WHITE"Key pressed:"INK_BLUE"0x%hx\n", key);
+    gcPrintf(INK_BRIGHT_WHITE"Key pressed:"INK_BLUE"0x%02x\n", key);
     if(gcIsShift())
     {
         gcPrintf(INK_BRIGHT_WHITE"Shift pressed!");
@@ -133,20 +144,22 @@ u8 cb_svmkeys(GC_SVMENU_t *svm, KEY_t key)
         {
             svm_opt5_var++;
             if(svm_opt5_var>3) svm_opt5_var=0;
-            return SVM_CBKEY_RC_REDRAW;
+            rc = SVM_CBKEY_RC_REDRAW;
         } else
         {
-            return SVM_CBKEY_RC_EXIT;
+            rc = SVM_CBKEY_RC_EXIT;
         }
     }
-    return SVM_CBKEY_RC_NONE;
+    return rc;
 }
 
 // SVM top&bottom crossing the border callback
 void cb_svm_cross(GC_SVMENU_t *svm, u8 cnt)
 {
+    svm;
+
     BORDER = 2; EIHALT; BORDER = 1;
-    gcPrintf(INK_BRIGHT_WHITE"Count:"INK_BLUE"0x%hx\n", cnt);
+    gcPrintf(INK_BRIGHT_WHITE"Count:"INK_BLUE"%02x\n", cnt);
 }
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -189,6 +202,7 @@ void main(void)
     gcExecuteWindow(&wndSVMInfo);
     gcExecuteWindow(&wndSVMHelp);
     select = gcExecuteWindow(&wndSVMnu);
+    if(select == SVM_RC_EXIT) DIHALT;
     gcCloseWindow();    // close wndSVMnu
     gcCloseWindow();    // close wndSVMHelp
     gcCloseWindow();    // close wndSVMInfo
@@ -251,9 +265,6 @@ void main(void)
     // close test window 1
     gcCloseWindow();
 
-    pcx = 0; pcy = 0; pcst = 0;
-    pca = (u8)(WIN_COL_BRIGHT_WHITE<<4) | WIN_COL_RED;
-
     while(1)
     {
         EIHALT
@@ -270,9 +281,8 @@ void main(void)
             gcScrollDownWindow(&wndMain);
             break;
         default:
-            putsym(c);
-            if(c == KEY_ENTER) putsym('\x0A');
+            putchar(c);
+            if(c == KEY_ENTER) putsym('/n');
         }
-        if(pcx == 80) pcx = 0;
     }
 }
