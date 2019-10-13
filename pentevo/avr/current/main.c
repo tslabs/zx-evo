@@ -40,6 +40,10 @@ volatile u32 curFpga;
 volatile u8 flags_register;
 volatile u8 flags_ex_register;
 
+bool is_baseconf;
+bool is_cold_reset;
+bool is_hot_fpga;
+
 // Common modes register.
 volatile u8 modes_register;
 
@@ -55,8 +59,18 @@ TSF_FILE_STAT stat;
 #define TSF_BLK_SIZE 4096
 #define TSFB_SIZE 256
 
-u8 dbuf[DBSIZE];       // 2kB buffer for depacking and UART (4 x 256)
+// ATTENTION!!! Used for UART (4 x 256) and other functions!!!
+// rs_rxbuff (dbuf+256)
+// rs_txbuff (dbuf+512)
+// zf_rxbuff (dbuf+768)
+// zf_txbuff (dbuf+1024)
+u8 dbuf[DBSIZE];       // 2kB buffer for depacking
+
+
+
 u8 tsf_buf[TSFB_SIZE]; // SFI FS driver
+
+// --------------------------------------------
 
 void put_buffer(u16 size)
 {
@@ -131,14 +145,102 @@ void sfi_raw_loader(u32 size)
   }
 }
 
+void tsf_init()
+{
+  // +++ SPIF size detect
+
+  tsf_cfg.hal_read_func  = spi_read;
+  tsf_cfg.buf = tsf_buf;
+  tsf_cfg.buf_size = TSFB_SIZE;
+  tsf_cfg.bulk_start = 0;
+  tsf_cfg.bulk_size = TSF_SIZE;
+  tsf_cfg.block_size = TSF_BLK_SIZE;
+}
+
+void load_bitstream()
+{
+  bool is_spif = false;
+  char bs_name[32] = {};
+
+  // start FPGA upload
+  DDRF |= (1<<nCONFIG); // pull low for a time
+  _delay_ms(50);
+  DDRF &= ~(1<<nCONFIG);
+  while(!(PINF & (1<<nSTATUS))); // wait ready
+
+
+  sfi_enable();
+  sfi_cs_off();
+
+  do
+  {
+    u32 sig;
+
+    if (tsf_mount(&tsf_cfg, &tsf_vol) != TSF_RES_OK) break;                               // mount TSF volume
+
+    if (!is_hot_fpga)
+    {
+      if (tsf_open(&tsf_vol, &tsf_file, "boot.cfg", TSF_MODE_READ) != TSF_RES_OK) break;  // search for config
+      if (tsf_read(&tsf_file, dbuf, BOOT_CFG_SIZE) != TSF_RES_OK) break;                  // read config
+    }
+
+    if (!cfg_get_field(CFG_TAG_SIG, dbuf, &sig, sizeof(sig))) break;                      // get signature
+    if (sig != CFG_SIG) break;                                                            // check signature validity
+    if (!cfg_get_field(CFG_TAG_BSTREAM, dbuf, bs_name, sizeof(bs_name) - 1)) break;       // get bitstream filename
+    cfg_get_field(CFG_TAG_ISBASE, dbuf, &is_baseconf, sizeof(is_baseconf));               // get config type, if present
+
+    if (tsf_open(&tsf_vol, &tsf_file, bs_name, TSF_MODE_READ) != TSF_RES_OK) break;       // open bitstream file
+    is_spif = true;
+  } while (0);
+
+  // load from SPIF
+  if (is_spif)
+  {
+    const char *s = bs_name + strlen(bs_name) - 3;
+
+    if (!strcmp(s, "mlz"))
+      sfi_depacker();
+
+    else if (!strcmp(s, "rbf"))
+    {
+      tsf_stat(&tsf_vol, &stat, bs_name);  // get bitstream size
+      sfi_raw_loader(stat.size);
+    }
+
+    else
+      goto pf_load;
+  }
+
+  // load from PFLASH
+  else
+  {
+  pf_load:
+    switch (eeprom_read_byte(EEPROM_ADDR_FPGA_CFG))
+    {
+      case FPGA_BASE:
+        is_baseconf = true;
+        curFpga = GET_FAR_ADDRESS(fpga_base);
+      break;
+
+      case FPGA_EGG:
+        curFpga = GET_FAR_ADDRESS(fpga_egg);
+      break;
+
+      case FPGA_TS:
+      default:
+        is_baseconf = false;
+        curFpga = GET_FAR_ADDRESS(fpga_ts);
+      break;
+    }
+
+    cb_next_byte = get_next_byte_pf;
+    depacker_dirty();
+  }
+}
+
 void hardware_init(void)
 {
-  //Initialized AVR pins
-
-  cli(); // disable interrupts
-
   // configure pins
-
   PORTG = 0b11111111;
   DDRG  = 0b00000000; // inputs pulled up
 
@@ -178,7 +280,13 @@ void waittask(void)
 
 int main()
 {
+  is_cold_reset = true;
+  is_hot_fpga = false;
+  is_baseconf = false;
+
 start:
+  cli(); // disable interrupts
+  if (!is_cold_reset) goto hot_reset;
 
   hardware_init();
   rs232_init();
@@ -229,70 +337,10 @@ start:
   wait_for_atx_power();
 
   spi_init();
+  tsf_init();
 
-  DDRF |= (1<<nCONFIG); // pull low for a time
-  _delay_ms(50);
-  DDRF &= ~(1<<nCONFIG);
-  while(!(PINF & (1<<nSTATUS))); // wait ready
-
-  tsf_cfg.hal_read_func  = spi_read;
-  tsf_cfg.buf = tsf_buf;
-  tsf_cfg.buf_size = TSFB_SIZE;
-  tsf_cfg.bulk_start = 0;
-  tsf_cfg.bulk_size = TSF_SIZE;
-  tsf_cfg.block_size = TSF_BLK_SIZE;
-
-  // enable SFI
-  sfi_enable();
-  sfi_cs_off();
-
-  bool is_spif = false;
-  char name[32] = {};
-  do
-  {
-    u32 sig;
-    if (tsf_mount(&tsf_cfg, &tsf_vol) != TSF_RES_OK) break;                             // mount TSF volume
-    if (tsf_open(&tsf_vol, &tsf_file, "boot.cfg", TSF_MODE_READ) != TSF_RES_OK) break;  // search for config
-    if (tsf_read(&tsf_file, dbuf, BOOT_CFG_SIZE) != TSF_RES_OK) break;                  // read config
-    if (!cfg_get_field(CFG_TAG_SIG, dbuf, &sig)) break;                                 // get signature
-    if (sig != CFG_SIG) break;                                                          // check signature validity
-    if (!cfg_get_field(CFG_TAG_BSTREAM, dbuf, name)) break;                             // get bitstream filename
-    if (tsf_open(&tsf_vol, &tsf_file, name, TSF_MODE_READ) != TSF_RES_OK) break;        // open bitstream file
-    is_spif = true;
-  } while (0);
-
-  if (is_spif)  // load from SPIF
-  {
-    if(!strcmp(name + strlen(name) - 3, "mlz"))
-      sfi_depacker();
-    else
-    {
-      tsf_stat(&tsf_vol, &stat, name);  // get bitstream size
-      sfi_raw_loader(stat.size);
-    }
-  }
-  else  // load from PFLASH
-  {
-    switch (eeprom_read_byte(EEPROM_ADDR_FPGA_CFG))
-    {
-      case FPGA_BASE:
-        curFpga = GET_FAR_ADDRESS(fpga_base);
-      break;
-
-      case FPGA_EGG:
-        curFpga = GET_FAR_ADDRESS(fpga_egg);
-      break;
-
-      case FPGA_TS:
-      default:
-        curFpga = GET_FAR_ADDRESS(fpga_ts);
-      break;
-    }
-
-    cb_next_byte = get_next_byte_pf;
-    depacker_dirty();
-  }
-
+hot_reset:
+  load_bitstream();
 
   //power led ON
   LED_PORT &= ~_BV(LED);
@@ -342,6 +390,8 @@ start:
   kbmap_init();
   zx_init();
   rtc_init();
+  spif_init();
+  is_cold_reset = true;
 
 #ifdef LOGENABLE
   to_log("zx_init OK\r\n");

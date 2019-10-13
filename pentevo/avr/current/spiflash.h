@@ -41,7 +41,8 @@ enum
   SPIFL_REG_A2    = 0x04,     // RW
   SPIFL_REG_DATA  = 0x08,     // RW
   SPIFL_REG_PRGRS = 0x09,     // R
-  SPIFL_REG_VER   = 0x0F      // R
+  SPIFL_REG_PARAM = 0x0A,     // W
+  SPIFL_REG_VER   = 0x0F,     // R
 };
 
 /** SFI status bits. */
@@ -49,7 +50,7 @@ enum
 {
   SPIFL_STAT_NULL = 0x00,
   SPIFL_STAT_BUSY = 0x01,
-  SPIFL_STAT_ERR  = 0x02
+  SPIFL_STAT_ERR  = 0x02,
 };
 
 /** SFI commands. */
@@ -67,7 +68,8 @@ enum
   SPIFL_CMD_BREAK  = 0x09,
   SPIFL_CMD_FORMAT = 0x0A,
   SPIFL_CMD_FMTCHK = 0x0B,
-  SPIFL_CMD_FMTFST = 0x0C
+  SPIFL_CMD_FMTFST = 0x0C,
+  SPIFL_CMD_BSLOAD = 0x0D,
 };
 
 /** SPI Flash commands. */
@@ -83,14 +85,14 @@ enum
   SF_CMD_WREN   = 0x06,
   SF_CMD_WRDIS  = 0x04,
   SF_CMD_ERCHIP = 0xC7,
-  SF_CMD_ERSECT = 0x20
+  SF_CMD_ERSECT = 0x20,
 };
 
 /** SPI Flash status. */
 enum
 {
   SF_STAT_BUSY  = 0x01,
-  SF_STAT_WEL   = 0x02
+  SF_STAT_WEL   = 0x02,
 };
 
 typedef enum
@@ -126,6 +128,8 @@ typedef enum
 
 /** SF interface enable. */
 void sfi_enable();
+/** SF interface disable. */
+void sfi_disable();
 /** SF CS disable. */
 void sfi_cs_off();
 /** SF CS enable. */
@@ -137,6 +141,7 @@ u8 spi_flash_read(u8 index);
 /** SF write. */
 void spi_flash_write(u8 index, u8 data);
 
+void spif_init();
 void spif_task();
 
 #endif //__SPIFLASH_H__

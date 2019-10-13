@@ -171,29 +171,26 @@ void load_config()
   cb_ctrl_alt_f12 = func_service;
   cb_ctrl_alt_del = func_reset;
 
-  switch (eeprom_read_byte(EEPROM_ADDR_FPGA_CFG))
+  if (is_baseconf)
   {
-    case FPGA_BASE:
-      cb_prt_scr      = func_nmi;
-      cb_num_lock     = func_beeper;
-      cb_scr_lock     = func_vga_tv_ula;
-      cb_menu_f1      = func_dummy;
-      cb_menu_f2      = func_dummy;
+    cb_prt_scr      = func_nmi;
+    cb_num_lock     = func_beeper;
+    cb_scr_lock     = func_vga_tv_ula;
+    cb_menu_f1      = func_dummy;
+    cb_menu_f2      = func_dummy;
 
-      cb_zx_set_config = zx_set_config_base;
-    break;
+    cb_zx_set_config = zx_set_config_base;
+  }
+  else
+  {
+    cb_prt_scr      = func_dummy;
+    cb_num_lock     = func_dummy;
+    cb_scr_lock     = func_vga_tv;
+    cb_menu_f1      = func_floppy;
+    cb_menu_f2      = func_beeper;
+    cb_menu_f3      = func_tapein;
 
-    case FPGA_TS:
-    default:
-      cb_prt_scr      = func_dummy;
-      cb_num_lock     = func_dummy;
-      cb_scr_lock     = func_vga_tv;
-      cb_menu_f1      = func_floppy;
-      cb_menu_f2      = func_beeper;
-      cb_menu_f3      = func_tapein;
-
-      cb_zx_set_config = zx_set_config_ts;
-    break;
+    cb_zx_set_config = zx_set_config_ts;
   }
 }
 

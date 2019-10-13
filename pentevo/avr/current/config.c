@@ -36,6 +36,11 @@ u8 cfg_get_field_eeprom(u8 tag_req, void *addr)
 
 u8 cfg_get_field(u8 tag_req, void *conf, void *addr)
 {
+  return cfg_get_field(tag_req, conf, addr, 0);
+}
+
+u8 cfg_get_field(u8 tag_req, void *conf, void *addr, u8 maxlen)
+{
   u8 *cfg = (u8*)conf;
   u16 ptr = 0;
   while (ptr < BOOT_CFG_SIZE)
@@ -49,6 +54,9 @@ u8 cfg_get_field(u8 tag_req, void *conf, void *addr)
 
     if (tag == tag_req)
     {
+      if (maxlen)
+        len = min(maxlen, len);
+      
       memcpy(addr, &cfg[ptr], len);
       return len;
     }
