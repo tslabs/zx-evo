@@ -843,11 +843,17 @@ svmnu_cb_initial_list:
     ld a,<#svm_all_num (ix)
     or a
     ret z
+    ld a,<#svm_cur_pos (ix)
+    push af
+    ld <#svm_cur_pos (ix),#0
+    call 0$
+    pop af
+    ld <#svm_cur_pos (ix),a
+    ret
 0$: call svmnu_cb_cross_set_coords
     call svmnu_cb_cross_get_num_list
     call svm_callback
-    ld a,<#svm_cur_pos (ix)
-    add a,<#svm_win_pos (ix)
+    ld a,<#svm_win_pos (ix)
     inc c
     add a,c
     cp <#svm_all_num (ix)
@@ -3162,8 +3168,18 @@ void gcPrintChainWindows(void) __naked
     inc hl
     ld h,(hl)
     ld l,a
+    push hl
     call _gcPrintWindow
-    pop bc
+    pop ix
+    ld a,<#type(ix)
+    cp #1
+    jr nz,1$
+;;
+    ld l,<#menu_ptr(ix)
+    ld h,<#menu_ptr+1(ix)
+    call _gcInitSimpleVMenu
+;;
+1$: pop bc
     pop af
     djnz 0$
     pop af
