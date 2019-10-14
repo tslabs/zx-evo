@@ -28,6 +28,7 @@ enum
 #define SFI_BIT_DATA0                 6
 
 extern u32 sf_addr;
+extern u16 sf_num_blocks;
 
 // Register number is masked with 0x0F
 /** SFI registers. */
@@ -142,6 +143,7 @@ u8 spi_flash_read(u8 index);
 void spi_flash_write(u8 index, u8 data);
 
 void spif_init();
+void spif_detect();
 void spif_task();
 
 #endif //__SPIFLASH_H__

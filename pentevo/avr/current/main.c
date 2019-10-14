@@ -55,9 +55,8 @@ TSF_VOLUME tsf_vol;
 TSF_FILE tsf_file;
 TSF_FILE_STAT stat;
 
-#define TSF_SIZE (4 * 1024 * 1024L)
-#define TSF_BLK_SIZE 4096
-#define TSFB_SIZE 256
+#define TSF_BLK_SIZE 4096   // default
+#define TSF_BUF_SIZE 256
 
 // ATTENTION!!! Used for UART (4 x 256) and other functions!!!
 // rs_rxbuff (dbuf+256)
@@ -66,9 +65,7 @@ TSF_FILE_STAT stat;
 // zf_txbuff (dbuf+1024)
 u8 dbuf[DBSIZE];       // 2kB buffer for depacking
 
-
-
-u8 tsf_buf[TSFB_SIZE]; // SFI FS driver
+u8 tsf_buf[TSF_BUF_SIZE]; // SFI FS driver
 
 // --------------------------------------------
 
@@ -147,13 +144,11 @@ void sfi_raw_loader(u32 size)
 
 void tsf_init()
 {
-  // +++ SPIF size detect
-
   tsf_cfg.hal_read_func  = spi_read;
   tsf_cfg.buf = tsf_buf;
-  tsf_cfg.buf_size = TSFB_SIZE;
+  tsf_cfg.buf_size = TSF_BUF_SIZE;
   tsf_cfg.bulk_start = 0;
-  tsf_cfg.bulk_size = TSF_SIZE;
+  tsf_cfg.bulk_size = (u32)sf_num_blocks * TSF_BLK_SIZE;
   tsf_cfg.block_size = TSF_BLK_SIZE;
 }
 
@@ -168,10 +163,10 @@ void load_bitstream()
   DDRF &= ~(1<<nCONFIG);
   while(!(PINF & (1<<nSTATUS))); // wait ready
 
-
   sfi_enable();
-  sfi_cs_off();
 
+  if (!sf_num_blocks) goto pf_load;
+  
   do
   {
     u32 sig;
@@ -236,6 +231,8 @@ void load_bitstream()
     cb_next_byte = get_next_byte_pf;
     depacker_dirty();
   }
+
+  sfi_disable();
 }
 
 void hardware_init(void)
@@ -337,6 +334,7 @@ start:
   wait_for_atx_power();
 
   spi_init();
+  spif_detect();
   tsf_init();
 
 hot_reset:

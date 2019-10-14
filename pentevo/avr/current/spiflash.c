@@ -14,8 +14,8 @@ u32         sf_addr = 0;
 
 SFFMT_TYPE  sffmt_type;
 
-u16         sf_num_blocks = 1024; // +++
-u16         sf_num_pages  = 16;   // +++
+u16         sf_num_blocks;
+u16         sf_num_pages;
 
 SPIF_STATE  spif_state = SFST_IDLE;
 SFFMT_STATE sffmt_state;
@@ -33,6 +33,22 @@ u16         sffmt_pg_cnt;
 u32         sffmt_addr;
 u8          sffmt_check_value;
 
+void spif_detect()
+{
+  sf_num_blocks = 0;
+  sf_num_pages = 16;  // default value for 4kB block
+
+  sfi_enable();
+  sfi_cs_off();
+  sf_command(SPIFL_CMD_ID);
+  u8 rc = spi_flash_read(SPIFL_REG_DATA);
+  sfi_cs_off();
+  sfi_disable();
+
+  if ((rc >= 0x12) && (rc <= 0x17))   // only 512k..16M allowed
+    sf_num_blocks = (u16)2 << (rc - 11);
+}
+
 void spif_init()
 {
   params     = dbuf;
@@ -41,7 +57,6 @@ void spif_init()
   progress   = 0;
   is_busy    = false;
   is_error   = false;
-  sfi_disable();
 }
 
 void spif_start_format(SFFMT_TYPE type)
@@ -207,6 +222,7 @@ void sf_command(u8 cmd)
 
       case SPIFL_CMD_ID:
         sfi_cmd_ha(SF_CMD_RDID);  // 3 dummy bytes
+        // must be terminated after data transfer
         break;
 
       case SPIFL_CMD_READ:
@@ -248,7 +264,7 @@ void sf_command(u8 cmd)
           is_cold_reset       = false;
           flags_register     |= FLAG_HARD_RESET;
         break;
-        
+
       default:
         is_error = true;
         break;
