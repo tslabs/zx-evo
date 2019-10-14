@@ -260,7 +260,6 @@ void sf_command(u8 cmd)
         break;
 
       case SPIFL_CMD_BSLOAD:
-          is_hot_fpga         = true;
           is_cold_reset       = false;
           flags_register     |= FLAG_HARD_RESET;
         break;

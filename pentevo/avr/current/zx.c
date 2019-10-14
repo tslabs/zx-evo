@@ -72,6 +72,7 @@ void (*cb_zx_set_config)();
 // hard reset
 void func_reset()
 {
+  is_cold_reset = true;
   flags_register |= FLAG_HARD_RESET;
   t_kbmap.tb.b2 = t_kbmap.tb.b1 = NO_KEY;
 }
@@ -94,6 +95,7 @@ void func_service()
 
   eeprom_write_byte(EEPROM_ADDR_FPGA_CFG, fpga_cfg); // switch config number
 
+  // +++ load service conf
   flags_register |= FLAG_HARD_RESET;
   t_kbmap.tb.b1 = NO_KEY;
 }
@@ -102,6 +104,7 @@ void func_egg()
 {
   eeprom_write_byte(EEPROM_ADDR_FPGA_CFG, FPGA_EGG); // switch config number
 
+  // +++ load egg conf
   flags_register |= FLAG_HARD_RESET;
   t_kbmap.tb.b1 = NO_KEY;
 }

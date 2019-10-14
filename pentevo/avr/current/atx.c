@@ -68,6 +68,7 @@ void atx_power_task(void)
     else
     {
       //enable hard reset
+      is_cold_reset = true;
       flags_register |= FLAG_HARD_RESET;
     }
   }
@@ -96,6 +97,7 @@ void atx_power_task(void)
     last_count = 0;
 
     //enable hard reset
+    is_cold_reset = true;
     flags_register |= FLAG_HARD_RESET;
   }
 }

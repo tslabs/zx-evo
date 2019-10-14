@@ -42,7 +42,6 @@ volatile u8 flags_ex_register;
 
 bool is_baseconf;
 bool is_cold_reset;
-bool is_hot_fpga;
 
 // Common modes register.
 volatile u8 modes_register;
@@ -173,7 +172,7 @@ void load_bitstream()
 
     if (tsf_mount(&tsf_cfg, &tsf_vol) != TSF_RES_OK) break;                               // mount TSF volume
 
-    if (!is_hot_fpga)
+    if (is_cold_reset)
     {
       if (tsf_open(&tsf_vol, &tsf_file, "boot.cfg", TSF_MODE_READ) != TSF_RES_OK) break;  // search for config
       if (tsf_read(&tsf_file, dbuf, BOOT_CFG_SIZE) != TSF_RES_OK) break;                  // read config
@@ -193,10 +192,10 @@ void load_bitstream()
   {
     const char *s = bs_name + strlen(bs_name) - 3;
 
-    if (!strcmp(s, "mlz"))
+    if (!strcmp(s, "mlz") || !strcmp(s, "MLZ"))
       sfi_depacker();
 
-    else if (!strcmp(s, "rbf"))
+    else if (!strcmp(s, "rbf") || !strcmp(s, "RBF"))
     {
       tsf_stat(&tsf_vol, &stat, bs_name);  // get bitstream size
       sfi_raw_loader(stat.size);
@@ -278,7 +277,6 @@ void waittask(void)
 int main()
 {
   is_cold_reset = true;
-  is_hot_fpga = false;
   is_baseconf = false;
 
 start:

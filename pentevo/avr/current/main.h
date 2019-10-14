@@ -184,7 +184,6 @@ extern volatile u32 curFpga;
 
 extern bool is_baseconf;
 extern bool is_cold_reset;
-extern bool is_hot_fpga;
 
 /**
  * Writes specified length of buffer to SPI.
