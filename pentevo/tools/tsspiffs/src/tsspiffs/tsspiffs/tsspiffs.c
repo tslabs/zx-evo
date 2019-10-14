@@ -316,6 +316,7 @@ TSF_RESULT tsf_write(TSF_FILE *file, const void *buf, u32 size)
 TSF_RESULT tsf_delete(TSF_VOLUME *vol, const char *name)
 {
   u32 addr;
+  u16 next;
   TSF_CONFIG *cfg = vol->cfg;
 
   TSF_RESULT rc = tsf_search(vol, &addr, name);
@@ -324,12 +325,10 @@ TSF_RESULT tsf_delete(TSF_VOLUME *vol, const char *name)
 
   do
   {
-    u16 next;
     cfg->hal_read_func(addr + offsetof(TSF_CHUNK, next_chunk), &next, sizeof(next));
     if (tsf_init_chunk(cfg, addr) == TSF_RES_OK)
       vol->free += cfg->block_size;
-    addr = chunk_addr(next);
-  } while (addr != 0xFFFFFFFF);
+  } while (next != 0xFFFF);
 
   return TSF_RES_OK;
 }
