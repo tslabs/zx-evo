@@ -1,0 +1,15 @@
+#define     COL_BLACK           (u8)0
+#define     COL_BLUE            (u8)1
+#define     COL_RED	            (u8)2
+#define     COL_MAGENTA         (u8)3
+#define     COL_GREEN           (u8)4
+#define     COL_CYAN            (u8)5
+#define     COL_YELLOW          (u8)6
+#define     COL_WHITE           (u8)7
+#define     COL_BRIGHT_BLUE     (u8)9
+#define     COL_BRIGHT_RED      (u8)10
+#define     COL_BRIGHT_MAGENTA  (u8)11
+#define     COL_BRIGHT_GREEN    (u8)12
+#define     COL_BRIGHT_CYAN     (u8)13
+#define     COL_BRIGHT_YELLOW   (u8)14
+#define     COL_BRIGHT_WHITE    (u8)15
