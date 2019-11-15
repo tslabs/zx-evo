@@ -40,6 +40,7 @@ enum
   SPIFL_REG_A0    = 0x02,     // RW
   SPIFL_REG_A1    = 0x03,     // RW
   SPIFL_REG_A2    = 0x04,     // RW
+  SPIFL_REG_A3    = 0x05,     // RW
   SPIFL_REG_DATA  = 0x08,     // RW
   SPIFL_REG_PRGRS = 0x09,     // R
   SPIFL_REG_PARAM = 0x0A,     // W
@@ -87,6 +88,7 @@ enum
   SF_CMD_WRDIS  = 0x04,
   SF_CMD_ERCHIP = 0xC7,
   SF_CMD_ERSECT = 0x20,
+  SF_CMD_EN4B   = 0xB7,
 };
 
 /** SPI Flash status. */
@@ -141,6 +143,8 @@ void sf_command(u8);
 u8 spi_flash_read(u8 index);
 /** SF write. */
 void spi_flash_write(u8 index, u8 data);
+/** SF command low level. */
+void sfi_cmd(u8);
 
 void spif_init();
 void spif_detect();

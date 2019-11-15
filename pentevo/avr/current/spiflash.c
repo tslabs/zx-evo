@@ -16,6 +16,7 @@ SFFMT_TYPE  sffmt_type;
 
 u16         sf_num_blocks;
 u16         sf_num_pages;
+bool        is_4_byte_addr;
 
 SPIF_STATE  spif_state = SFST_IDLE;
 SFFMT_STATE sffmt_state;
@@ -45,8 +46,17 @@ void spif_detect()
   sfi_cs_off();
   sfi_disable();
 
-  if ((rc >= 0x12) && (rc <= 0x17))   // only 512k..16M allowed
-    sf_num_blocks = (u16)2 << (rc - 11);
+  if ((rc >= 0x12) && (rc <= 0x17))   // 512k..16M
+    is_4_byte_addr = false;
+  else if (rc >= 0x18)  // 32M and more
+  {
+    is_4_byte_addr = true;
+    sfi_cmd(SF_CMD_EN4B);
+  }
+  else
+    return;     // wrong flash
+
+  sf_num_blocks = (u16)2 << (rc - 11);
 }
 
 void spif_init()
@@ -146,6 +156,7 @@ void sfi_cmd_ha(u8 c)
 {
   sfi_cs_on();
   sfi_send(c);
+  if (is_4_byte_addr) sfi_send((u8)(sf_addr >> 24));
   sfi_send((u8)(sf_addr >> 16));
   sfi_send((u8)(sf_addr >> 8));
   sfi_send((u8)(sf_addr));
@@ -297,6 +308,10 @@ u8 spi_flash_read(u8 index)
     case SPIFL_REG_A2:
       return (u8)(sf_addr >> 16);
 
+    // SF ext2 addr
+    case SPIFL_REG_A3:
+      return (u8)(sf_addr >> 24);
+
     // SF operation progress
     case SPIFL_REG_PRGRS:
       return progress;
@@ -345,6 +360,12 @@ void spi_flash_write(u8 index, u8 data)
     case SPIFL_REG_A2:
       sf_addr &= 0xFF00FFFF;
       sf_addr |= (u32)data << 16;
+      break;
+
+    // SF ext addr2
+    case SPIFL_REG_A3:
+      sf_addr &= 0x00FFFFFF;
+      sf_addr |= (u32)data << 24;
       break;
 
     // Command parameter
@@ -402,7 +423,7 @@ void spif_format()
       break;
 
     case SFFMT_ST_WRITE:
-      sf_addr = sffmt_addr + (sffmt_pg_cnt << 8);
+      sf_addr = sffmt_addr + (u32)(sffmt_pg_cnt << 8);
       sfi_wren();
       sfi_cmd_ha(SF_CMD_WR);
       for (u16 i = 0; i < 256; i++)
