@@ -21,16 +21,20 @@ See GluClock manual for the details of GC ports access.
 | ---- | ---- | ---- | ---- |
 | EXTSW| 0xF0 | W | GluClock extension (0x10 for SFI) |
 | CMD  | 0xF1 | W | Execute command |
-| STAT | 0xF1 | R | Read status |
-| A0   | 0xF2 | R/W | Set address LSB to be accessed in SPI Flash |
-| A1   | 0xF3 | R/W | Set address HSB to be accessed in SPI Flash |
-| A2   | 0xF4 | R/W | Set address MSB to be accessed in SPI Flash |
+| STAT | 0xF1 | R | Status |
+| ADDR | 0xF2 | W | Address |
+| PARAM | 0xF3 | W | Parameters data |
+| REPORT | 0xF3 | R | Report data |
 | DATA | 0xF8 | R/W | Read or write data from SPI Flash |
 | VER  | 0xFF | R | Read SFI version |
 
 STAT register returns current SFI state. See below.
 
-Address must be set to A0..A2 registers before any command requiring addressing (READ, WRITE, ERSSEC). A0 stands for the less significant address byte and A2 for the most significant. The internal state of address is preserved between commands and incremented after each transferred byte.
+Address register (ADDR) must be written before any command requiring addressing (READ, WRITE, ERSSEC). Four bytes required, MSB goes first. Example: sequential writes 00 10 80 A0 will set address to 0x1080A0. The internal state of address is preserved between commands and incremented after each transferred byte.
+
+Parameters register (PARAM) must be written before command execution, then command requires such.
+
+Report must be read from REPORT register after the REPORT command.
 
 DATA register is used to send or receive data byte in data transfers.
 
@@ -47,8 +51,14 @@ VER register returns API version (currently 1).
 | ID | 0x04 | Read Flash chip ID |
 | READ | 0x05 | Read Flash |
 | WRITE | 0x06 | Write Flash |
-| ERSBLK | 0x07 | Erase bulk |
+| ERSBLK | 0x07 | Erase chip |
 | ERSSEC | 0x08 | Erase sector |
+| BREAK | 0x09 | Break |
+| F_CHIP | 0x0A | Format. Chip-wide erase, no check |
+| F_BLK | 0x0B | Format. Block-wide erase, no check |
+| F_CHK | 0x0C | Format. Block-wide erase, with check |
+| BSLOAD | 0x0D | Load bitstream |
+| REPORT | 0x0E | Report |
 
 Commands are written to CMD register. It is not allowed to send any command when STAT register is not indicating IDLE.
 
@@ -71,6 +81,38 @@ After the execution of WRITE, ERSBLK and ERSSEC commands (in a case of WRITE - a
 | ERR | 0x02 | Error |
 
 Current SFI status is read from the STAT register.
+
+## Parameter tags
+
+| Name | Code | Description |
+| ---- | ---- | ---- |
+| BSTREAM | 0x01 | Boot bitstream filename |
+| ROM     | 0x02 | Boot ROM filename |
+| ISBASE  | 0x03 | Is Baseconf |
+
+The 'config' format is used for the parameters. See below.
+
+## Report tags
+
+| Name | Code | Description |
+| ---- | ---- | ---- |
+| COMMAND     | 0x80 | Current command |
+| PROGRESS    | 0x81 | Command progress |
+| ADDRESS     | 0x82 | Current processing address |
+| BLOCKS      | 0x83 | Current processed blocks |
+| BLOCKS_GOOD | 0x84 | Current processed good blocks |
+
+The 'config' format is used for the report. See below.
+
+## 'Config' format
+
+| Offset | Bytes | Description |
+| ---- | ---- | ---- |
+| 0 | 1 | Tag |
+| 1 | 1 | Length |
+| 2 | n | Data |
+
+Tag 0x00 means the end of the config.
 
 ## Access scenario
 
