@@ -12,6 +12,7 @@
 #include "util.h"
 #include "depack.h"
 #include "tsconf.h"
+#include "debugger/dbglabls.h"
 #include <ctime>
 
 using namespace Gdiplus;
@@ -161,16 +162,23 @@ int loadsnap(char *filename)
       return ok;
    }
 
-   if (type == snSP) return readSP();
-   if (type == snSNA_48) return readSNA48();
-   if (type == snSNA_128) return readSNA128();
-   if (type == snSPG) return readSPG();
-   if (type == snZ80) return readZ80();
-   if (type == snTAP) return readTAP();
-   if (type == snTZX) return readTZX();
-   if (type == snCSW) return readCSW();
+    int loadStatus = 0;
+    switch (type) {
+        case snSP: loadStatus = readSP(); break;
+	    case snSNA_48: loadStatus = readSNA48(); break;
+        case snSNA_128: loadStatus = readSNA128(); break;
+        case snSPG: loadStatus = readSPG(); break;
+        case snZ80: loadStatus = readZ80(); break;
+        case snTAP: loadStatus = readTAP(); break;
+        case snTZX: loadStatus = readTZX(); break;
+        case snCSW: loadStatus = readCSW(); break;
+        default: break;
+    }
 
-   return 0;
+    // reload labels if success (network/VM shared folders fix)
+    if ((loadStatus == 1) && (trace_labels)) mon_labels.import_file();
+
+    return loadStatus;
 }
 
 int readSPG()

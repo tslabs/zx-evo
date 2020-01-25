@@ -471,7 +471,9 @@ void cdjump()
 
 void cfliplabels()
 {
-	trace_labels = !trace_labels; showtrace();
+	trace_labels = !trace_labels;
+    if (trace_labels) mon_labels.import_file(); // explicit load on labels show
+    showtrace();
 }
 void csave(unsigned n)
 {
