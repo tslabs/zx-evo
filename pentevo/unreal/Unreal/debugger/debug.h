@@ -90,6 +90,9 @@ constexpr auto debug_text_size = (debug_text_width * debug_text_height);
 constexpr auto DEBUG_WND_WIDTH = (debug_text_width * 8);
 constexpr auto DEBUG_WND_HEIGHT = (debug_text_height * 16);
 
+constexpr auto debug_text_width_notsconf = 88;
+constexpr auto DEBUG_WND_WIDTH_NOTSCONF = (debug_text_width_notsconf * 8);
+
 enum dbgwnd
 {
 	wndno = 0,
@@ -155,3 +158,4 @@ void debugscr();
 void debug_events(Z80 *cpu);
 
 void init_debug();
+void set_debug_window_size();

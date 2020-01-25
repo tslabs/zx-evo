@@ -164,6 +164,7 @@ void debug(Z80 *cpu)
 	const unsigned int oldrflags = temp.rflags;
 	temp.rflags = RF_MONITOR;
 	//set_video();
+    set_debug_window_size();
 	ShowWindow(debug_wnd, SW_SHOW);
 
 	t_cpu_mgr::set_current_cpu(cpu->GetIdx());
@@ -388,6 +389,18 @@ static LRESULT APIENTRY DebugWndProc(HWND hwnd, UINT uMessage, WPARAM wparam, LP
 	return DefWindowProc(hwnd, uMessage, wparam, lparam);
 }
 
+void set_debug_window_size() {
+    RECT cl_rect;
+    const DWORD dw_style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
+
+    cl_rect.left = 0;
+    cl_rect.top = 0;
+    cl_rect.right = (conf.mem_model == MM_TSL ? DEBUG_WND_WIDTH : DEBUG_WND_WIDTH_NOTSCONF) - 1;
+    cl_rect.bottom = DEBUG_WND_HEIGHT - 1;
+    AdjustWindowRect(&cl_rect, dw_style, GetMenu(debug_wnd) != nullptr);
+    SetWindowPos(debug_wnd, nullptr, 0, 0, cl_rect.right - cl_rect.left + 1, cl_rect.bottom - cl_rect.top + 1, SWP_NOMOVE);
+}
+
 void init_debug()
 {
 	WNDCLASS  wc{};
@@ -406,12 +419,7 @@ void init_debug()
 	debug_wnd = CreateWindow("DEBUG_WND", "UnrealSpeccy debugger", dw_style,
 		CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, nullptr, debug_menu, hIn, NULL);
 
-	cl_rect.left = 0;
-	cl_rect.top = 0;
-	cl_rect.right = DEBUG_WND_WIDTH - 1;
-	cl_rect.bottom = DEBUG_WND_HEIGHT - 1;
-	AdjustWindowRect(&cl_rect, dw_style, GetMenu(debug_wnd) != nullptr);
-	SetWindowPos(debug_wnd, nullptr, 0, 0, cl_rect.right - cl_rect.left + 1, cl_rect.bottom - cl_rect.top + 1, SWP_NOMOVE);
+    set_debug_window_size();
 
 	for (unsigned i = 0; i < 0x100; i++)
 	{

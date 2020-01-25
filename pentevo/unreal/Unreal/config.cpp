@@ -1085,6 +1085,8 @@ void applyconfig()
 
    setpal(0);
    set_priority();
+   set_debug_window_size();     // TODO: add apply_debug() for changing debug settings
+
 }
 
 void load_arch(const char *fname)
