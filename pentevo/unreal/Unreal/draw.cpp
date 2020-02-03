@@ -776,7 +776,8 @@ void init_raster()
 
 void init_frame()
 {
-   vid.buf ^= 1;
+   // draw on single buffer if noflic is not active
+   if (conf.noflic) vid.buf ^= 1;
    vid.t_next = 0;
    vid.vptr = 0;
    vid.yctr = 0;
