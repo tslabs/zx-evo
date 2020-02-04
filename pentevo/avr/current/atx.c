@@ -28,14 +28,14 @@ void wait_for_atx_power(void)
   to_log(log_ps2keyboard_parse);
 #endif
 
-  //check power
+  //if power is OFF
   if ((nCONFIG_PIN & (1<<nCONFIG)) == 0)
   {
-    //if not external reset
-    //then wait for atx power on button (SOFTRESET)
-    if (!(j & ((1<<JTRF)|(1<<WDRF)|(1<<BORF)|(1<<EXTRF))) ||
-       (j & (1<<PORF)))
-    while(SOFTRES_PIN & (1<<SOFTRES));
+    //if external reset (meaning 'hard reset' pressed), reset the flag and start power
+    if (j & (1<<EXTRF)) MCUCSR |= 1<<EXTRF;
+       
+    //or wait for button (SOFTRESET)
+    else while(SOFTRES_PIN & (1<<SOFTRES));
 
     //switch on ATX power
     ATXPWRON_PORT |= (1<<ATXPWRON);
