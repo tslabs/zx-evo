@@ -31,11 +31,9 @@ void wait_for_atx_power(void)
   //if power is OFF
   if ((nCONFIG_PIN & (1<<nCONFIG)) == 0)
   {
-    //if external reset (meaning 'hard reset' pressed), reset the flag and start power
-    if (j & (1<<EXTRF)) MCUCSR |= 1<<EXTRF;
-       
-    //or wait for button (SOFTRESET)
-    else while(SOFTRES_PIN & (1<<SOFTRES));
+    //if no external reset (meaning 'hard reset' pressed), wait for button (SOFTRESET)
+    if (!(j & (1<<EXTRF)))
+      while(SOFTRES_PIN & (1<<SOFTRES));
 
     //switch on ATX power
     ATXPWRON_PORT |= (1<<ATXPWRON);
