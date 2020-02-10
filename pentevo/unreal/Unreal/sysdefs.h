@@ -1,5 +1,7 @@
 #pragma once
 
+#include <immintrin.h>
+
 //#define inline __inline
 #define forceinline __forceinline
 #define fastcall             // parameters in registers
@@ -39,7 +41,11 @@ extern "C" unsigned char __cdecl _rotl8(unsigned char value, unsigned char shift
 #pragma intrinsic(_rotl8)
 static inline u8 rol8(u8 val, u8 shift) { return _rotl8(val, shift); }
 static inline u8 ror8(u8 val, u8 shift) { return _rotr8(val, shift); }
+#ifdef _M_X64
+static inline void asm_pause() { _mm_pause(); }
+#else
 static inline void asm_pause() { __asm {rep nop} }
+#endif
 #endif
 
 #if defined(_MSC_VER) && _MSC_VER < 1300
