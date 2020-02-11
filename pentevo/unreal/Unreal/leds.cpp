@@ -568,12 +568,12 @@ static u32 *vidbuf;
 	cnt += num;
 }
 
-void show_memcycles(void)
+void show_memcycles(int startLine, int endLine)
 {
 	u32 vbp;
 	u32 bar = 0x555555;
 
-	for (int i = 0; i < 320; i++)
+	for (int i = startLine; i < endLine; i++)
 	{
 		vbp = i * 896;
 		vbuf[vid.buf][vbp+15]  = bar;

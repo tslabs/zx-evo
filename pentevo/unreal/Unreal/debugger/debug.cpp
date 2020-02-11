@@ -13,6 +13,9 @@
 #include "dbgbpx.h"
 #include "dbgcmd.h"
 #include "util.h"
+#include "draw.h"
+#include "leds.h"
+#include "dxrend.h"
 #include "resource.h"
 #include "emulkeys.h"
 #include "dbgrwdlg.h"
@@ -161,8 +164,11 @@ void debug(Z80 *cpu)
 	temp.scale = 1;
 	needclr = 1;
 	dbgbreak = 1;
+
+    update_raypos(true);
+
 	flip();
-	const unsigned int oldrflags = temp.rflags;
+	temp.mon_rflags = temp.rflags;
 	temp.rflags = RF_MONITOR;
 	//set_video();
     set_debug_window_size();
@@ -255,7 +261,7 @@ leave_dbg:
 	cpu->SetLastT();
 	temp.scale = temp.mon_scale;
 	//temp.rflags = RF_GDI; // facepalm.jpg
-	temp.rflags = oldrflags;
+	temp.rflags = temp.mon_rflags;
 	//apply_video();
 	ShowWindow(debug_wnd, SW_HIDE);
 	sound_play();
@@ -312,6 +318,20 @@ void debug_events(Z80 *cpu)
 
 	if (cpu->dbgbreak)
 		debug(cpu);
+}
+
+void flip_from_debug() {
+    temp.scale = temp.mon_scale;
+    temp.rflags = temp.mon_rflags;
+    needclr = 1;
+    dbgbreak = 1;
+
+    flip();
+
+    temp.mon_scale = temp.scale;
+    temp.scale = 1;
+    temp.mon_rflags = temp.rflags;
+    temp.rflags = RF_MONITOR;
 }
 
 #endif // MOD_MONITOR

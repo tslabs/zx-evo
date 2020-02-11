@@ -77,6 +77,8 @@ enum MEM_MODEL
    N_MM_MODELS
 };
 
+enum RAY_PAINT_MODE { RAYDRAW_OVERDRAW = 0, RAYDRAW_CLEAR, RAYDRAW_DIM };
+
 enum ROM_MODE { RM_NOCHANGE=0, RM_SOS, RM_DOS, RM_SYS, RM_128, RM_CACHE };
 
 const int RAM_128 = 128, RAM_256 = 256, RAM_512 = 512, RAM_1024 = 1024, RAM_2048 = 2048, RAM_4096 = 4096;
@@ -279,6 +281,8 @@ struct CONFIG
    unsigned minres;             // min. screen x-resolution
    unsigned scanbright;         // scanlines intensity
 
+   unsigned ray_paint_mode;     // 0 - overdraw prev frame, 1 - clear frame, 2 - mix gray and old frame
+
    struct {
       u8 mix_frames;
       u8 mode; // RSM_MODE
@@ -336,7 +340,7 @@ struct CONFIG
 
 struct TEMP
 {
-   unsigned rflags;    // render_func flags
+   unsigned rflags, mon_rflags;    // render_func flags
    unsigned border_add, border_and;   // for scorpion 4T border update
    u8 *base, *base_2;  // pointers to Spectrum screen memory
    u8 rom_mask, ram_mask;

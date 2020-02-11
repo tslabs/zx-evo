@@ -700,6 +700,13 @@ void update_screen()
   }
 }
 
+void update_raypos(bool showleds) {
+    // update debug state
+    vbuf[vid.buf][vid.vptr] ^= 0xFFFFFF;    // invert raypos
+    if (conf.bordersize == 5)
+        show_memcycles(0, vid.line);
+}
+
 void init_raster()
 {
 	// TSconf
@@ -778,6 +785,28 @@ void init_frame()
 {
    // draw on single buffer if noflic is not active
    if (conf.noflic) vid.buf ^= 1;
+
+   switch (conf.ray_paint_mode) {
+   case RAYDRAW_CLEAR:
+       memset(vbuf[vid.buf], 0xFF000000, sizeof(u32)*sizeof_vbuf);          // alpha fix (doubt if it's really need)
+       break;
+
+   case RAYDRAW_DIM:
+       {
+           // TODO: rewirte with SSE2
+           auto *p = vbuf[vid.buf];
+           for (auto i = 0; i < sizeof_vbuf; i++) {
+               *p = ((*p >> 2) & 0x3F3F3F) + ((0x808080 >> 2) & 0x3F3F3F) | 0xFF000000;
+               p++;
+           }
+       }
+       break;
+
+       default:
+           break;
+   }
+
+
    vid.t_next = 0;
    vid.vptr = 0;
    vid.yctr = 0;

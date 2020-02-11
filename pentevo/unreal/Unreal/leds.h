@@ -9,4 +9,4 @@ void done_leds();
 void showleds( u32 *dst, unsigned pitch );
 
 void init_memcycles();
-void show_memcycles();
+void show_memcycles(int startLine = 0, int endLine = VID_HEIGHT);

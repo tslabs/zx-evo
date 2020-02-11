@@ -235,3 +235,4 @@ void init_frame();
 void flush_frame();
 void load_spec_colors();
 void init_raster();
+void update_raypos(bool showleds = true);

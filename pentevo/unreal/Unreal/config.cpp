@@ -425,6 +425,9 @@ void load_config(const char *fname)
    conf.detect_video = GetPrivateProfileInt(video, "DetectModel", 1, ininame);
    conf.fontsize = 8;
 
+   conf.ray_paint_mode = GetPrivateProfileInt(video, "raypaint_mode", 0, ininame);
+   if (conf.ray_paint_mode > RAYDRAW_DIM) conf.ray_paint_mode = RAYDRAW_DIM;
+
    conf.videoscale = GetPrivateProfileInt(video, "scale", 2, ininame);
 
    conf.rsm.mix_frames = GetPrivateProfileInt(video, "rsm.frames", 8, ininame);
@@ -455,6 +458,7 @@ void load_config(const char *fname)
    if (conf.bordersize > 5)
 	   conf.bordersize = 3;
    conf.minres = GetPrivateProfileInt(video, "MinRes", 0, ininame);
+
 
    GetPrivateProfileString(video, "Hide", nil, line, sizeof line, ininame);
    char *ptr = strchr(line, ';'); if (ptr) *ptr = 0;

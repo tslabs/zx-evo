@@ -11,6 +11,7 @@
 #include "op_system.h"
 #include "util.h"
 #include "draw.h"
+#include "leds.h"
 #include "emulkeys.h"
 
 extern VCTR vid;
@@ -598,6 +599,8 @@ void mon_step()
 		handle_int(&cpu, cpu.IntVec());
 	}
 	update_screen(); // update screen, TSU, DMA
+    update_raypos();
+    flip_from_debug();
 
 	cpu.trace_curs = cpu.pc;
 }

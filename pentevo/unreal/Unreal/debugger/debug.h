@@ -160,5 +160,7 @@ u8 isbrk(const Z80 &cpu); // is there breakpoints active or any other reason to 
 void debugscr();
 void debug_events(Z80 *cpu);
 
+void flip_from_debug();
+
 void init_debug();
 void set_debug_window_size();
