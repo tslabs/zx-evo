@@ -30,7 +30,9 @@ constexpr auto trace_y = 6;
 
 constexpr auto wat_x = 34;
 constexpr auto wat_y = 1;
-constexpr auto wat_sz = 13;
+constexpr auto wat_sz_x = 37;
+constexpr auto wat_sz_y = 13;
+constexpr auto wat_sz = wat_sz_y;
 
 constexpr auto mem_size = 12;
 constexpr auto mem_x = 34;
@@ -142,6 +144,7 @@ extern unsigned mem_max;
 
 extern u8 mem_dump;
 extern unsigned show_scrshot;
+extern unsigned scrshot_page_mask;
 extern u8 editor;
 extern u8 mem_ascii;
 

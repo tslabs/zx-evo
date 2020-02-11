@@ -136,7 +136,15 @@ void mon_scr(char alt)
 	set_video();*/
 }
 
-void mon_scr0() { mon_scr(0); }
+void mon_scr0() {
+    if (show_scrshot != 1) {
+        show_scrshot = 1;
+        scrshot_page_mask = 0;
+    } else
+        scrshot_page_mask ^= 0x08;
+}
+
+//void mon_scr0() { mon_scr(0); }
 void mon_scr1() { mon_scr(1); }
 void mon_scray() { mon_scr(2); }
 
@@ -155,6 +163,7 @@ void editbank()
 	if (x != UINT_MAX)
 	{
 		comp.p7FFD = x;
+        comp.ts.vpage = comp.ts.vpage_d = (x & 8) ? 7 : 5;
 		set_banks();
 	}
 }
@@ -267,7 +276,8 @@ void mon_setup_dlg()
 #endif
 }
 
-void mon_scrshot() { show_scrshot++; if (show_scrshot == 3) show_scrshot = 0; }
+void mon_scrshot() { show_scrshot++; if (show_scrshot == 2) show_scrshot = 0; if (show_scrshot == 1) scrshot_page_mask = 0;}
+void mon_switchscr() { scrshot_page_mask ^= 0x08; }
 
 void mon_switch_cpu()
 {

@@ -115,7 +115,7 @@ action ac_main_xt[] =
    { "mon.qload2", qload2 },                            \
    { "mon.qload3", qload3 },                            \
    { "mon.screen", mon_scr0 },                          \
-   { "mon.altscreen", mon_scr1 },                       \
+   { "mon.altscreen", mon_scr0 },                       \
    { "mon.rayscreen", mon_scray },                      \
    { "mon.step", mon_step },                            \
    { "mon.stepover", mon_stepover },                    \
@@ -130,6 +130,7 @@ action ac_main_xt[] =
    { "mon.osw", mon_watchdialog },                      \
    { "mon.help", mon_help },                            \
    { "mon.scrshot", mon_scrshot },                      \
+   { "mon.scrshot_alt", mon_switchscr },                \
    { "mon.setwatch", mon_setwatch },                    \
    { "mon.switchay", mon_switchay },                    \
    { "mon.memsearch", main_cheat },                     \

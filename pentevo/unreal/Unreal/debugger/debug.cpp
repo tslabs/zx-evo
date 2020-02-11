@@ -25,6 +25,7 @@ static HMENU debug_menu;
 u8 trace_labels;
 
 unsigned show_scrshot;
+unsigned scrshot_page_mask;
 unsigned user_watches[3] = { 0x4000, 0x8000, 0xC000 };
 
 unsigned mem_sz = 8;

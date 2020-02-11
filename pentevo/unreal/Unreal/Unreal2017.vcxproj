@@ -427,7 +427,7 @@ copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)rom"
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <DelayLoadDLLs>gdiplus.dll</DelayLoadDLLs>
-      <AdditionalDependencies>delayimp.lib;dinput8.lib;dxguid.lib;diplus.lib;kernel32.lib;user32.lib;gdi32.lib;shell32.lib;comdlg32.lib;comctl32.lib;winmm.lib;setupapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>delayimp.lib;dinput8.lib;dxguid.lib;gdiplus.lib;kernel32.lib;user32.lib;gdi32.lib;shell32.lib;comdlg32.lib;comctl32.lib;winmm.lib;setupapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <LinkErrorReporting>PromptImmediately</LinkErrorReporting>
       <AdditionalManifestDependencies>type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'</AdditionalManifestDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>

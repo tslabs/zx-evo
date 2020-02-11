@@ -51,8 +51,8 @@ void showwatch()
 {
 	if (show_scrshot)
 	{
-		for (unsigned y = 0; y < wat_sz; y++)
-			for (unsigned x = 0; x < 37; x++)
+		for (unsigned y = 0; y < wat_sz_y; y++)
+			for (unsigned x = 0; x < wat_sz_x; x++)
 				txtscr[debug_text_width * debug_text_height + (wat_y + y) * debug_text_width + (wat_x + x)] = 0xFF;
 	}
 	else
@@ -72,10 +72,16 @@ void showwatch()
 		wtline(nullptr, user_watches[1], 11);
 		wtline(nullptr, user_watches[2], 12);
 	}
+
 	const char *text = "watches";
-	if (show_scrshot == 1) text = "screen memory";
-	if (show_scrshot == 2) text = "ray-painted";
+    if (show_scrshot == 1) {
+        text = scrshot_page_mask ? "screen memory (alt)" : "screen memory";
+    }
+
+	//if (show_scrshot == 2) text = "ray-painted";  // ray-painted is already available in main emu window
+    
 	tprint(wat_x, wat_y - 1, text, w_title);
+
 	if (comp.flags & CF_DOSPORTS)
 		tprint(wat_x + 34, wat_y - 1, "DOS", w_dos);
 	frame(wat_x, wat_y, 37, wat_sz, FRAME);

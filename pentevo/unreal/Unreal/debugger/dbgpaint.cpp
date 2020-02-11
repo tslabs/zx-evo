@@ -20,6 +20,43 @@ unsigned nfr;
 
 void debugflip()
 {
+    // draw screen memory
+    if (show_scrshot) {
+        for (auto y = 0; y < wat_sz_y * 16; y++) {
+            auto *pixelBuf = debug_gdibuf + ((y + wat_y * 16) * DEBUG_WND_WIDTH) + (wat_x * 8);
+
+            // top/bottom border
+            if ((y < (((wat_sz_y * 16) - 192) / 2)) || (y >= (192 + (((wat_sz_y * 16) - 192) / 2)))) {
+                for (auto x = 0; x < 37 * 8; x++) *pixelBuf++ = comp.ts.border & 0x7;
+            } else {
+                // left border
+                for (auto x = 0; x < (((wat_sz_x * 8) - 256) / 2); x++) *pixelBuf++ = comp.ts.border & 0x7;
+                
+                // screen memory
+                auto ys = y - (((wat_sz_y * 16) - 192) / 2);
+                auto g = ((ys & 0x07) << 8) + ((ys & 0x38) << 2) + ((ys & 0xC0) << 5);
+                auto a = ((ys & 0xF8) << 2) + 0x1800;
+                auto page = ((comp.p7FFD ^ scrshot_page_mask) & 0x08) ? 7 : 5;
+                auto *scr = page_ram(page) + g;
+                auto *atr = page_ram(page) + a;
+
+                for (auto x = 0; x < 32; x++) {
+                    auto pixel = *scr++;
+                    for (auto c = 0; c < 8; c++) {
+                        *pixelBuf++ = (pixel & 0x80) ? (*atr & 7) | ((*atr & 0x40) >> 3) : ((*atr & 0x38) >> 3) | ((*atr & 0x40) >> 3);
+                        pixel <<= 1;
+                    }
+                    atr++;
+                }
+                
+                
+                // right border
+                for (auto x = (256 + ((wat_sz_x * 8) - 256) / 2); x < wat_sz_x * 8; x++) *pixelBuf++ = comp.ts.border & 0x7;
+
+            }
+        }
+    }
+
 	// print text
 	for (auto y = 0; y < debug_text_height; y++)
 		for (auto x = 0; x < debug_text_width; x++)
