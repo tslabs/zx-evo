@@ -4,12 +4,13 @@
 /* Starting conditions*/
 typedef enum
 {
-    SC_EXT      = 0x00,
-    SC_ONLOAD   = 0x01,
-    SC_TIMER    = 0x02,
-    SC_MENU     = 0x03,
-    SC_EMENU    = 0x04,
-    SC_EDIT     = 0x14
+    SC_EXT          = 0x00,
+    SC_ONLOAD       = 0x01,
+    SC_TIMER        = 0x02,
+    SC_MENU         = 0x03,
+    SC_EMENU        = 0x04,
+    SC_MENU_EMENU   = 0x05,
+    SC_EDIT         = 0x14
 } SCOND;
 
 typedef struct

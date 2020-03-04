@@ -2,18 +2,31 @@
 #include "defs.h"
 #include "wc_api.h"
 
-bool wc_api__bool(u8 a) __naked
+bool wc_api__bool(u8 a) __naked __z88dk_fastcall
 {
     a;          // to avoid SDCC warning
 
   __asm
-    ld hl,#2
-    add hl,sp
-    ld a,(hl)
+    ld a,l
     call _WCAPI
     ld l,#0
     ret z
     inc l
+    ret
+  __endasm;
+}
+
+void wc_api_u8(u8 a) __naked __z88dk_fastcall
+{
+    a;          // to avoid SDCC warning
+
+  __asm
+    push ix
+    push iy
+    ld a,l
+    call _WCAPI
+    pop iy
+    pop ix
     ret
   __endasm;
 }
@@ -36,8 +49,8 @@ void wc_api_u16(u8 a, u16 b) __naked
     push bc
     pop ix
     call _WCAPI
-    pop ix
     pop iy
+    pop ix
     ret
   __endasm;
 }
@@ -293,11 +306,9 @@ u8 wc_mkfile(WC_FILENAME *filename) __naked __z88dk_fastcall
 
   __asm
     push ix
-    push iy
     ld a,#_MKfilenew
     call _WCAPI
     ld l,a
-    pop iy
     pop ix
     ret
   __endasm;
@@ -316,7 +327,7 @@ u16 wc_get_marked_file(u16 num, char *buff) __naked
     ld h,1 (ix)
     ld e,2 (ix)
     ld d,3 (ix)
-    ld ix,(_actpanel)
+    ld ix,(_wc_actpanel)
     ld a,#_TMRKDFL
     call _WCAPI
     pop ix
@@ -326,7 +337,7 @@ u16 wc_get_marked_file(u16 num, char *buff) __naked
   __endasm;
 }
 
-u32 wc_ffind(WC_FILENAME *filename) __naked __z88dk_fastcall
+u32 wc_ffind(u8 *filename) __naked __z88dk_fastcall
 {
     filename;       // to avoid SDCC warning
 
@@ -334,7 +345,6 @@ u32 wc_ffind(WC_FILENAME *filename) __naked __z88dk_fastcall
     push ix
     ld a,#_FENTRY
     call _WCAPI
-
     pop ix
     ret
   __endasm;
@@ -348,7 +358,7 @@ void wc_exit(u8 rc)
     ld hl,#2
     add hl,sp
     ld a,(hl)
-    ld sp,(_ret_sp)
+    ld sp,(_wc_ret_sp)
     ret
   __endasm;
 }

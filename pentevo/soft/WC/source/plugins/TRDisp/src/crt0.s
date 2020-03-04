@@ -1,11 +1,12 @@
 ;==============================
     .module crt0
 ;==============================
-	.globl  _ret_sp
-    .globl  _call_type
-    .globl  _filesize
-    .globl  _file_ext
-    .globl  _actpanel
+	.globl  _wc_ret_sp
+    .globl  _wc_call_type
+    .globl  _wc_filesize
+    .globl  _wc_file_ext
+    .globl  _wc_filename
+    .globl  _wc_actpanel
 ;==============================
     .globl  _main
     .globl  l__INITIALIZER
@@ -17,25 +18,28 @@
     jp      start
     .area   _CODE
 start:
-    ld      (_ret_sp),sp
-    ld      (_call_type),a
+    ld      (_wc_ret_sp),sp
+    ld      (_wc_call_type),a
     ex      af,af
-    ld      (_file_ext),a
-    ld      (_filesize),hl
-    ld      (_filesize + 2),de
-    ld      (_actpanel),ix
+    ld      (_wc_file_ext),a
+    ld      (_wc_filename),bc
+    ld      (_wc_filesize),hl
+    ld      (_wc_filesize + 2),de
+    ld      (_wc_actpanel),ix
     call    gsinit
     jp      _main
 ;==============================
-_ret_sp:
+_wc_ret_sp:
     .dw     0
-_call_type:
+_wc_call_type:
     .db	    0
-_file_ext:
+_wc_file_ext:
     .db	    0
-_filesize:
+_wc_filename:
+    .dw      0
+_wc_filesize:
     .ds	    4
-_actpanel:
+_wc_actpanel:
     .dw     0
 ;==============================
 gsinit::

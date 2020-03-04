@@ -9,7 +9,7 @@ static const WC_HDR hdr =
   /* +34 Number of pages      */    1,
   /* +35 Page at 0x8000       */    0,
   /* +36 Page definitions     */    {
-  /*  +0 Page, +1 NBlocks     */        {0, 12}
+  /*  +0 Page, +1 NBlocks     */        {0, 18}
   /*                          */    },
   /* +48 -reserved-           */    "",
   /* +64 Extensions           */    {
@@ -20,8 +20,8 @@ static const WC_HDR hdr =
   /*                          */    },
   /* +160 0x00                */    "",
   /* +161 Max file size       */    0xFFFFFFFF,
-  /* +165 Plugin name         */    "TRDisp v0.1b",
-  /* +197 Starting condition  */    SC_EMENU,
+  /* +165 Plugin name         */    "TRDispatcher v0.43b",
+  /* +197 Starting condition  */    SC_MENU_EMENU,
   /* +198 Text for F4 menu    */    "",
   /* +204 Text for viewer menu*/    "Browse TRD"
 };

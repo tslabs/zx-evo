@@ -255,11 +255,15 @@
                         // >как и все режимы и смещения
                         // 0x01 - 1й видео буфер (16 страниц)
                         // 0x02 - 2й видео буфер (16 страниц)
+                        // 0x03 - 3й видео буфер (16 страниц)
+                        // 0x04 - 4й видео буфер (16 страниц)
 
 #define _MNGCVPL 0x41   // включение страницы из видео буферов
                         // i:A' - номер страницы
                         // 0x00-0x0F - страницы из 1го видео буфера
                         // 0x10-0x1F - страницы из 2го видео буфера
+                        // 0x20-0x2F - страницы из 3го видео буфера
+                        // 0x30-0x3F - страницы из 4го видео буфера
 
 #define _GVmod 0x42     // включение видео режима (разрешение+тип)
                         // i:A' - видео режим
@@ -369,7 +373,8 @@ typedef struct
     char name[256];
 } WC_FILENAME;
 
-bool wc_api__bool(u8 a) __naked;
+bool wc_api__bool(u8 a) __naked __z88dk_fastcall;
+void wc_api_u8(u8 a) __naked __z88dk_fastcall;
 void wc_api_u16(u8 a, u16 b) __naked;
 void wc_vmode(u8 vmode) __naked __z88dk_fastcall;
 void wc_page3(u8 pg) __naked __z88dk_fastcall;
@@ -385,6 +390,6 @@ u16 wc_load256(u8 *a, u8 b) __naked;
 u16 wc_load512(u8 *a, u8 b) __naked;
 u16 wc_save512(u8 *a, u8 b) __naked;
 u8 wc_mkfile(WC_FILENAME *filename) __naked __z88dk_fastcall;
-u32 wc_ffind(WC_FILENAME *filename) __naked __z88dk_fastcall;
+u32 wc_ffind(u8 *filename) __naked __z88dk_fastcall;
 u16 wc_get_marked_file(u16 num, char *buff) __naked;
 void wc_exit(u8 rc);
