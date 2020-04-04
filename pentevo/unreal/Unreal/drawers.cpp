@@ -523,16 +523,23 @@ static void draw_nul(int n)
 // Border
 void draw_border(int n)
 {
-	vid.t_next += n;
-	u32 vptr = vid.vptr;
+    vid.t_next += n;
+    u32 vptr = vid.vptr;
+    u32 p;
 
-	for (; n > 0; n--)
-	{
-		u32 p = vid.clut[comp.ts.border];
-		vbuf[vid.buf][vptr] = vbuf[vid.buf][vptr+1] = vbuf[vid.buf][vptr+2] = vbuf[vid.buf][vptr+3] = p;
-		vptr += 4;
-	}
-	vid.vptr = vptr;
+    // ULAplus border mode is active only for Sinclair video mode
+    if ((vid.mode == M_ZX) && (conf.ulaplus != UPLS_NONE) && comp.ulaplus_mode) {
+        u8 idx = comp.ulaplus_cram[(comp.ts.border & 7) + 8];
+        p = cr[(idx & 0x1C) >> 2] | cg[(idx & 0xE0) >> 5] | cb[conf.ulaplus][idx & 0x03];
+    }
+    else p = vid.clut[comp.ts.border];
+
+    for (; n > 0; n--)
+    {
+        vbuf[vid.buf][vptr] = vbuf[vid.buf][vptr + 1] = vbuf[vid.buf][vptr + 2] = vbuf[vid.buf][vptr + 3] = p;
+        vptr += 4;
+    }
+    vid.vptr = vptr;
 }
 
 // TS Line
