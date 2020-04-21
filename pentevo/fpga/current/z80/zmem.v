@@ -226,22 +226,76 @@ module zmem(
   wire [15:0] cache_d;
   wire cache_v;
 
-cache_data cache_data (
-    .clock (clk),
+  altdpram cache_data
+  (
+    .inclock (clk),
+    .outclock (clk),
     .data (cpu_rddata),
     .rdaddress (ch_addr),
     .wraddress (ch_addr),
     .wren (cpu_strobe),
-    .q (cache_d)
-);
+    .q (cache_d),
+    .aclr (1'b0),
+    .byteena (1'b1),
+    .inclocken (1'b1),
+    .outclocken (1'b1),
+    .rdaddressstall (1'b0),
+    .rden (1'b1),
+    .wraddressstall (1'b0)
+  );
 
-cache_addr cache_addr (
-    .clock (clk),
+  altdpram cache_addr
+  (
+    .inclock (clk),
+    .outclock (clk),
     .data ({!cache_inv, cpu_hi_addr}),
     .rdaddress (ch_addr),
     .wraddress (ch_addr),
     .wren (cpu_strobe || cache_inv),
-    .q ({cache_v, cache_a})
-);
+    .q ({cache_v, cache_a}),
+    .aclr (1'b0),
+    .byteena (1'b1),
+    .inclocken (1'b1),
+    .outclocken (1'b1),
+    .rdaddressstall (1'b0),
+    .rden (1'b1),
+    .wraddressstall (1'b0)
+  );
+
+	defparam
+		cache_data.indata_aclr = "OFF",
+		cache_data.indata_reg = "INCLOCK",
+		cache_data.intended_device_family = "ACEX1K",
+		cache_data.lpm_type = "altdpram",
+		cache_data.outdata_aclr = "OFF",
+		cache_data.outdata_reg = "OUTCLOCK",
+		cache_data.rdaddress_aclr = "OFF",
+		cache_data.rdaddress_reg = "UNREGISTERED",
+		cache_data.rdcontrol_aclr = "OFF",
+		cache_data.rdcontrol_reg = "UNREGISTERED",
+		cache_data.width = 16,
+		cache_data.widthad = 8,
+		cache_data.wraddress_aclr = "OFF",
+		cache_data.wraddress_reg = "INCLOCK",
+		cache_data.wrcontrol_aclr = "OFF",
+		cache_data.wrcontrol_reg = "INCLOCK";
+
+	defparam
+		cache_addr.indata_aclr = "OFF",
+		cache_addr.indata_reg = "INCLOCK",
+		cache_addr.intended_device_family = "ACEX1K",
+		cache_addr.lpm_type = "altdpram",
+		cache_addr.outdata_aclr = "OFF",
+		cache_addr.outdata_reg = "OUTCLOCK",
+		cache_addr.rdaddress_aclr = "OFF",
+		cache_addr.rdaddress_reg = "UNREGISTERED",
+		cache_addr.rdcontrol_aclr = "OFF",
+		cache_addr.rdcontrol_reg = "UNREGISTERED",
+		cache_addr.width = 16,
+		cache_addr.widthad = 8,
+		cache_addr.wraddress_aclr = "OFF",
+		cache_addr.wraddress_reg = "INCLOCK",
+		cache_addr.wrcontrol_aclr = "OFF",
+		cache_addr.wrcontrol_reg = "INCLOCK";
 
 endmodule
