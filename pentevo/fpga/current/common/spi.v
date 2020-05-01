@@ -34,33 +34,34 @@
 
 module spi
 (
-// SPI wires
+  // SPI wires
   input  wire       clk,      // system clock
   output wire       sck,      // SCK
   output reg        sdo,      // MOSI
   input  wire       sdi,      // MISO
 
-// DMA interface
+  // DMA interface
   input  wire       dma_req,
   input  wire [7:0] dma_din,
 
-// Z80 interface
+  // Z80 interface
   input  wire       cpu_req,
   input  wire [7:0] cpu_din,
 
-// output
+  // output
   output wire       start,    // start strobe, 1 clock length
   output reg  [7:0] dout
 );
 
+  reg [4:0] counter = 0;
+  reg [7:0] shift = 0;
+  
+  wire rdy = counter[4];  // 0 - transmission in progress
+  wire req = cpu_req || dma_req;
+  
   assign sck = counter[0];
   assign start = req && rdy;
   wire [7:0] din = dma_req ? dma_din : cpu_din;
-  wire rdy = counter[4];  // 0 - transmission in progress
-  wire req = cpu_req || dma_req;
-
-  reg [7:0] shift;
-  reg [4:0] counter;
 
   always @(posedge clk)
   begin

@@ -5,31 +5,31 @@
 // manages ZX-bus IORQ-IORQGE stuff and free bus content
 //
 
-module zbus(
+module zbus
+(
+  input  wire iorq,
+  input  wire iorq_n,
+  input  wire rd,
 
-	input iorq,
-	input iorq_n,
-	input rd,
+  output wire iorq1_n,
+  output wire iorq2_n,
 
-	output iorq1_n,
-	output iorq2_n,
+  input  wire iorqge1,
+  input  wire iorqge2,
 
-	input iorqge1,
-	input iorqge2,
+  input  wire porthit,
 
-	input porthit,
-
-	output drive_ff
+  output wire drive_ff
 );
 
-	assign iorq2_n = iorq1_n || iorqge1;
+  assign iorq2_n = iorq1_n || iorqge1;
 
 `ifdef FREE_IORQ
-	assign iorq1_n = iorq_n;
-	assign drive_ff = !iorq2_n && !iorqge2 && !porthit && rd;
+  assign iorq1_n = iorq_n;
+  assign drive_ff = !iorq2_n && !iorqge2 && !porthit && rd;
 `else
-	assign iorq1_n = !iorq || porthit;	            // iorq is masked my M1_n!
-    assign drive_ff = !iorq2_n && !iorqge2 & rd;
+  assign iorq1_n = !iorq || porthit;              // iorq is masked my M1_n!
+  assign drive_ff = !iorq2_n && !iorqge2 & rd;
 `endif
 
 endmodule

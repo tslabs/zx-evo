@@ -25,49 +25,38 @@
 
 module zclock
 (
-  input clk,
-  output reg zclk_out, // generated Z80 clock - passed through inverter externally!
-  input c0, c2,
+  input             clk,
+  output reg        zclk_out = 0,   // generated Z80 clock, passed through inverter externally
+  input             c0, c2,
 
-  input wire iorq_s,
-  input wire external_port,
+  input wire        iorq_s,
+  input wire        external_port,
 
-  output reg zpos,
-  output reg zneg,
+  output reg        zpos,
+  output reg        zneg,
 
 // stall enables and triggers
-  input wire cpu_stall,
-  input wire ide_stall,
-  input wire dos_on,
-  input wire vdos_off,
+  input  wire       cpu_stall,
+  input  wire       ide_stall,
+  input  wire       dos_on,
+  input  wire       vdos_off,
 
 `ifdef PENT_312
-  input wire boost_start,
-  input wire [4:0] hcnt,
-  input wire upper8,
+  input  wire       boost_start,
+  input  wire [4:0] hcnt,
+  input  wire       upper8,
 `endif
 
-  input [1:0] turbo  // 2'b00 -  3.5 MHz
-                     // 2'b01 -  7.0 MHz
-                     // 2'b1x - 14.0 MHz
+  input [1:0]       turbo   // 2'b00 -  3.5 MHz
+                            // 2'b01 -  7.0 MHz
+                            // 2'b1x - 14.0 MHz
 );
-
-`ifdef SIMULATE
-  initial // simulation...
-  begin
-    c2_cnt = 1'b0;
-    turbo = 2'b00;
-    old_rfsh_n = 1'b1;
-    clk14_src = 1'b0;
-    zclk_out = 1'b0;
-  end
-`endif
 
 `ifdef PENT_312
 // Turbo-boost for Pentagon 71680 tacts emulation with 312 video lines
   wire [1:0] turbo_int = (turbo == 2'b00) ? (t_boost ? 2'b01 : 2'b00) : turbo;
-  reg t_boost;
-  reg [4:0] hcnt_r;
+  reg t_boost = 0;
+  reg [4:0] hcnt_r = 0;
   always @(posedge clk)
     if (boost_start && !t_boost)
     begin
@@ -81,13 +70,14 @@ module zclock
 `endif
 
 // wait generator
-  wire dos_io_stall = stall_start || !stall_count_end;
-  wire stall_start = dos_stall || io_stall;
+  reg [3:0] stall_count = 0;
+
   wire dos_stall = dos_on || vdos_off;
   wire io_stall = iorq_s && external_port && turbo_int[1];
+  wire stall_start = dos_stall || io_stall;
   wire stall_count_end = stall_count[3];
+  wire dos_io_stall = stall_start || !stall_count_end;
 
-  reg [3:0] stall_count;
   always @(posedge clk)
     if (stall_start)
     begin
@@ -100,13 +90,10 @@ module zclock
       stall_count <= stall_count + 3'd1;
 
 // Z80 clocking pre-strobes
-  wire pre_zpos = turbo_int[1] ? pre_zpos_140 : (turbo_int[0] ? pre_zpos_70 : pre_zpos_35);
-  wire pre_zneg = turbo_int[1] ? pre_zneg_140 : (turbo_int[0] ? pre_zneg_70 : pre_zneg_35);
+  reg clk14_src = 0;  // source for 14MHz clock
+  reg c2_cnt = 0;
 
-  reg clk14_src;  // source for 14MHz clock
-  always @(posedge clk)
-  if (!stall)
-    clk14_src <= ~clk14_src;
+  wire stall = cpu_stall || dos_io_stall || ide_stall;
 
   wire pre_zpos_140 = clk14_src;
   wire pre_zneg_140 = ~clk14_src;
@@ -117,14 +104,17 @@ module zclock
   wire pre_zpos_35 = c2_cnt && c2;
   wire pre_zneg_35 = !c2_cnt && c2;
 
-  reg c2_cnt;
+  wire pre_zpos = turbo_int[1] ? pre_zpos_140 : (turbo_int[0] ? pre_zpos_70 : pre_zpos_35);
+  wire pre_zneg = turbo_int[1] ? pre_zneg_140 : (turbo_int[0] ? pre_zneg_70 : pre_zneg_35);
+
+  always @(posedge clk)
+  if (!stall)
+    clk14_src <= ~clk14_src;
+
   always @(posedge clk) if (c2)
     c2_cnt <= ~c2_cnt;
 
-
 // Z80 clocking strobes
-  wire stall = cpu_stall || dos_io_stall || ide_stall;
-
   always @(posedge clk)
   begin
     zpos <= !stall && pre_zpos && zclk_out;

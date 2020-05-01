@@ -8,21 +8,21 @@
 
 module sound
 (
-  input  wire clk, f0,
+  input  wire       clk,
 
   input  wire [7:0] din,
 
-  input  wire beeper_wr,
-  input  wire covox_wr,
+  input  wire       beeper_wr,
+  input  wire       covox_wr,
 
-  input  wire beeper_mux, // output either tape_out or beeper
-  input  wire tape_sound,
-  input  wire tape_in,
+  input  wire       beeper_mux, // output either tape_out or beeper
+  input  wire       tape_sound,
+  input  wire       tape_in,
 
-  output reg  sound_bit
+  output reg        sound_bit
 );
 
-  reg [7:0] val;
+  reg [7:0] val = 0;
 
 // port writes
   always @(posedge clk)
@@ -35,7 +35,7 @@ module sound
 
 `ifdef SDM
 // SD modulator
-  reg [7:0] ctr;
+  reg [7:0] ctr = 0;
 
   wire gte = val >= ctr;
 
@@ -47,7 +47,7 @@ module sound
 
 `else
 // PWM generator
-  reg [8:0] ctr;
+  reg [8:0] ctr = 0;
 
   wire phase = ctr[8];
   wire [7:0] saw = ctr[7:0];

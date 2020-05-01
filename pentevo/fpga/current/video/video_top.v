@@ -2,22 +2,21 @@
 
 // This module is a video top-level
 
-
-module video_top (
-
-// clocks
+module video_top
+(
+  // clocks
   input wire clk,
   input wire f0, f1,
-  input wire h0, h1,
-  input wire c0, c1, c2, c3,
+  input wire h1,
+  input wire c0, c1, c3,
   // input wire t0,  // debug!!!
 
-// video DAC
+  // video DAC
   output wire  [1:0] vred,
   output wire  [1:0] vgrn,
   output wire  [1:0] vblu,
 
-// video raw (for 15 bit DAC)
+  // video raw (for 15 bit DAC)
   output wire  [4:0] vred_raw,
   output wire  [4:0] vgrn_raw,
   output wire  [4:0] vblu_raw,
@@ -26,19 +25,19 @@ module video_top (
   output wire vdac2_msel,
 `endif
 
-// video syncs
+  // video syncs
   output wire hsync,
   output wire vsync,
   output wire csync,
 
-// Z80 controls
+  // Z80 controls
   input wire [ 7:0] d,
   input wire [15:0] zmd,
   input wire [ 7:0] zma,
   input wire cram_we,
   input wire sfile_we,
 
-// port write strobes
+  // port write strobes
   input wire zborder_wr,
   input wire border_wr,
   input wire zvpage_wr,
@@ -66,7 +65,7 @@ module video_top (
   input wire vint_begl_wr,
   input wire vint_begh_wr,
 
-// ZX controls
+  // ZX controls
   input wire  res,
   output wire int_start,
   output wire line_start_s,
@@ -75,15 +74,12 @@ module video_top (
   output wire upper8,
 `endif
 
-// DRAM interface
+  // DRAM interface
   output wire [20:0] video_addr,
   output wire [ 4:0] video_bw,
   output wire        video_go,
-  // input  wire [15:0] dram_rdata_r,     // reg'ed, should be latched by c3 (video_strobe)
-  input  wire [15:0] dram_rdata,      // raw, should be latched by c2 (video_next)
-  input  wire        video_next,
+  input  wire [15:0] dram_rdata,      // raw, should be latched by c2
   input  wire        video_pre_next,
-  input  wire        next_video,
   input  wire        video_strobe,
   output wire [20:0] ts_addr,
   output wire        ts_req,
@@ -93,12 +89,12 @@ module video_top (
   output wire        tm_req,
   input  wire        tm_next,
 
-// video controls
+  // video controls
   input wire cfg_60hz,
   input wire vga_on
 );
 
-// video config
+  // video config
   wire [7:0] vpage;      // re-latched at line_start
   wire [7:0] vconf;      //
   wire [8:0] gx_offs;    //
@@ -137,14 +133,14 @@ module video_top (
 `endif
   wire tv_blank;
 
-// counters
+  // counters
   wire [7:0] cnt_col;
   wire [8:0] cnt_row;
   wire cptr;
   wire [3:0] scnt;
   wire [8:0] lcount;
 
-// synchro
+  // synchro
   wire frame_start;
   wire pix_start;
   wire tv_pix_start;
@@ -162,19 +158,19 @@ module video_top (
   wire flash;
   wire pix_stb;
 
-// fetcher
+  // fetcher
   wire [31:0] fetch_data;
   wire [31:0] fetch_temp;
   wire [3:0] fetch_sel;
   wire [1:0] fetch_bsl;
   wire fetch_stb;
 
-// video data
+  // video data
   wire [7:0] border;
   wire [7:0] vplex;
   wire [7:0] vgaplex;
 
-// TS
+  // TS
   wire tsr_go;
   wire [5:0] tsr_addr;
   wire [8:0] tsr_line;
@@ -185,16 +181,26 @@ module video_top (
   wire [3:0] tsr_pal;
   wire tsr_rdy;
 
-// TS-line
+  // TS-line
   wire [8:0] ts_waddr;
   wire [7:0] ts_wdata;
   wire ts_we;
   wire [8:0] ts_raddr;
 
-// VGA-line
+  // VGA-line
   wire [9:0] vga_cnt_in;
   wire [9:0] vga_cnt_out;
 
+  wire [7:0] ts_rdata0, ts_rdata1;
+  wire tl_act0 = lcount[0];
+  wire tl_act1 = ~lcount[0];
+  wire [8:0] ts_waddr0 = tl_act0 ? ts_raddr : ts_waddr;
+  wire [7:0] ts_wdata0 = tl_act0 ? 8'd0 : ts_wdata;
+  wire       ts_we0    = tl_act0 ? c3 : ts_we;
+  wire [8:0] ts_waddr1 = tl_act1 ? ts_raddr : ts_waddr;
+  wire [7:0] ts_wdata1 = tl_act1 ? 8'd0 : ts_wdata;
+  wire       ts_we1    = tl_act1 ? c3 : ts_we;
+  wire [7:0] ts_rdata  = tl_act0 ? ts_rdata0 : ts_rdata1;
 
   video_ports video_ports
   (
@@ -250,7 +256,7 @@ module video_top (
     .t0gpage      (t0gpage),
     .t1gpage      (t1gpage),
     .sgpage       (sgpage)
-);
+  );
 
   video_mode video_mode
   (
@@ -293,14 +299,13 @@ module video_top (
     .render_mode  (render_mode),
     .video_addr   (video_addr),
     .video_bw     (video_bw)
-);
+  );
 
-
-  video_sync video_sync (
+  video_sync video_sync
+  (
     .clk            (clk),
     .f1             (f1),
     .c0             (c0),
-    .c1             (c1),
     .c3             (c3),
     .hpix_beg       (hpix_beg),
     .hpix_end       (hpix_end),
@@ -355,10 +360,10 @@ module video_top (
     .v60hz          (v60hz),
     .video_go       (video_go),
     .video_pre_next (video_pre_next)
-);
+  );
 
-
-  video_fetch video_fetch (
+  video_fetch video_fetch
+  (
     .clk          (clk),
     .f_sel        (fetch_sel),
     .b_sel        (fetch_bsl),
@@ -366,10 +371,8 @@ module video_top (
     .fetch_data   (fetch_data),
     .fetch_temp   (fetch_temp),
     .video_strobe (video_strobe),
-    // .video_strobe  (video_next),
-    // .video_data    (dram_rdata_r)
     .video_data   (dram_rdata)
-);
+  );
 
   video_ts video_ts
   (
@@ -419,7 +422,6 @@ module video_top (
      .sfile_we      (sfile_we)
   );
 
-
   video_ts_render video_ts_render
   (
     .clk            (clk),
@@ -447,7 +449,6 @@ module video_top (
     .dram_rdata     (dram_rdata)
   );
 
-
   video_render video_render
   (
      .clk        (clk),
@@ -472,15 +473,14 @@ module video_top (
     .vplex_out   (vplex)
   );
 
-  video_out video_out (
+  video_out video_out
+  (
     .clk          (clk),
-    .f0           (f0),
     .c3           (c3),
     .vga_on       (vga_on),
     .tv_blank     (tv_blank),
     .vga_blank    (vga_blank),
     .vga_line     (vga_line),
-    .frame        (frame),
     .palsel       (palsel[3:0]),
     .plex_sel_in  ({h1, f1}),
     .tv_hires     (tv_hires),
@@ -499,52 +499,114 @@ module video_top (
     .vdac_mode    (vdac_mode)
   );
 
-
-// 2 buffers: 512 pixels * 8 bits (9x8) - used as bitmap buffer for TS overlay over graphics
-// (2 altdprams)
-  wire tl_act0 = lcount[0];
-  wire tl_act1 = ~lcount[0];
-  wire [8:0] ts_waddr0 = tl_act0 ? ts_raddr : ts_waddr;
-  wire [7:0] ts_wdata0 = tl_act0 ? 8'd0 : ts_wdata;
-  wire       ts_we0    = tl_act0 ? c3 : ts_we;
-  wire [8:0] ts_waddr1 = tl_act1 ? ts_raddr : ts_waddr;
-  wire [7:0] ts_wdata1 = tl_act1 ? 8'd0 : ts_wdata;
-  wire       ts_we1    = tl_act1 ? c3 : ts_we;
-  wire [7:0] ts_rdata  = tl_act0 ? ts_rdata0 : ts_rdata1;
-  wire [7:0] ts_rdata0, ts_rdata1;
-
-
-  video_tsline0 video_tsline0
+  // 2 buffers: 512 pixels * 8 bits (9x8) - used as bitmap buffer for TS overlay over graphics
+  altdpram video_tsline0
   (
-    .clock      (clk),
-    .wraddress  (ts_waddr0),
-    .data       (ts_wdata0),
-    .wren       (ts_we0),
-    .rdaddress  (ts_raddr),
-    .q          (ts_rdata0)
+    .inclock        (clk),
+    .wren           (ts_we0),
+    .data           (ts_wdata0),
+    .rdaddress      (ts_raddr),
+    .wraddress      (ts_waddr0),
+    .q              (ts_rdata0),
+    .aclr           (1'b0),
+    .byteena        (1'b1),
+    .inclocken      (1'b1),
+    .outclock       (1'b1),
+    .outclocken     (1'b1),
+    .rdaddressstall (1'b0),
+    .rden           (1'b1),
+    .wraddressstall (1'b0)
   );
 
-  video_tsline1 video_tsline1
+  defparam
+    video_tsline0.indata_aclr = "OFF",
+    video_tsline0.indata_reg = "INCLOCK",
+    video_tsline0.intended_device_family = "ACEX1K",
+    video_tsline0.lpm_type = "altdpram",
+    video_tsline0.outdata_aclr = "OFF",
+    video_tsline0.outdata_reg = "UNREGISTERED",
+    video_tsline0.rdaddress_aclr = "OFF",
+    video_tsline0.rdaddress_reg = "INCLOCK",
+    video_tsline0.rdcontrol_aclr = "OFF",
+    video_tsline0.rdcontrol_reg = "UNREGISTERED",
+    video_tsline0.width = 8,
+    video_tsline0.widthad = 9,
+    video_tsline0.wraddress_aclr = "OFF",
+    video_tsline0.wraddress_reg = "INCLOCK",
+    video_tsline0.wrcontrol_aclr = "OFF",
+    video_tsline0.wrcontrol_reg = "INCLOCK";
+
+  altdpram video_tsline1
   (
-    .clock      (clk),
-    .wraddress  (ts_waddr1),
-    .data       (ts_wdata1),
-    .wren       (ts_we1),
-    .rdaddress  (ts_raddr),
-    .q          (ts_rdata1)
+    .inclock        (clk),
+    .wren           (ts_we1),
+    .data           (ts_wdata1),
+    .rdaddress      (ts_raddr),
+    .wraddress      (ts_waddr1),
+    .q              (ts_rdata1),
+    .aclr           (1'b0),
+    .byteena        (1'b1),
+    .inclocken      (1'b1),
+    .outclock       (1'b1),
+    .outclocken     (1'b1),
+    .rdaddressstall (1'b0),
+    .rden           (1'b1),
+    .wraddressstall (1'b0)
   );
 
+  defparam
+    video_tsline1.indata_aclr = "OFF",
+    video_tsline1.indata_reg = "INCLOCK",
+    video_tsline1.intended_device_family = "ACEX1K",
+    video_tsline1.lpm_type = "altdpram",
+    video_tsline1.outdata_aclr = "OFF",
+    video_tsline1.outdata_reg = "UNREGISTERED",
+    video_tsline1.rdaddress_aclr = "OFF",
+    video_tsline1.rdaddress_reg = "INCLOCK",
+    video_tsline1.rdcontrol_aclr = "OFF",
+    video_tsline1.rdcontrol_reg = "UNREGISTERED",
+    video_tsline1.width = 8,
+    video_tsline1.widthad = 9,
+    video_tsline1.wraddress_aclr = "OFF",
+    video_tsline1.wraddress_reg = "INCLOCK",
+    video_tsline1.wrcontrol_aclr = "OFF",
+    video_tsline1.wrcontrol_reg = "INCLOCK";
 
-// 2 lines * 512 pix * 8 bit (10x8) - used for VGA doubler
-// (1 altdpram)
-  video_vmem video_vmem
+  // 2 lines * 512 pix * 8 bit (10x8) - used for VGA doubler
+  altdpram video_vmem
   (
-    .clock      (clk),
-    .wraddress  (vga_cnt_in),
-    .data       (vplex),
-    .wren       (c3),
-    .rdaddress  (vga_cnt_out),
-    .q          (vgaplex)
+    .inclock        (clk),
+    .outclock       (clk),
+    .wren           (c3),
+    .data           (vplex),
+    .rdaddress      (vga_cnt_out),
+    .wraddress      (vga_cnt_in),
+    .q              (vgaplex),
+    .aclr           (1'b0),
+    .byteena        (1'b1),
+    .inclocken      (1'b1),
+    .outclocken     (1'b1),
+    .rdaddressstall (1'b0),
+    .rden           (1'b1),
+    .wraddressstall (1'b0)
   );
+
+  defparam
+    video_vmem.indata_aclr = "OFF",
+    video_vmem.indata_reg = "INCLOCK",
+    video_vmem.intended_device_family = "ACEX1K",
+    video_vmem.lpm_type = "altdpram",
+    video_vmem.outdata_aclr = "OFF",
+    video_vmem.outdata_reg = "OUTCLOCK",
+    video_vmem.rdaddress_aclr = "OFF",
+    video_vmem.rdaddress_reg = "INCLOCK",
+    video_vmem.rdcontrol_aclr = "OFF",
+    video_vmem.rdcontrol_reg = "UNREGISTERED",
+    video_vmem.width = 8,
+    video_vmem.widthad = 10,
+    video_vmem.wraddress_aclr = "OFF",
+    video_vmem.wraddress_reg = "INCLOCK",
+    video_vmem.wrcontrol_aclr = "OFF",
+    video_vmem.wrcontrol_reg = "INCLOCK";
 
 endmodule

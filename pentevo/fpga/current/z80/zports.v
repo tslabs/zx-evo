@@ -3,7 +3,8 @@
 
 `include "tune.v"
 
-module zports(
+module zports
+(
   input  wire        zclk,    // z80 clock
   input  wire        clk,
 
@@ -31,58 +32,58 @@ module zports(
   output wire        porthit,       // when internal port hit occurs, this is 1, else 0; used for iorq1_n iorq2_n on zxbus
   output wire        external_port, // asserts for AY and VG93 accesses
 
-  output wire     zborder_wr  ,
-  output wire     border_wr   ,
-  output wire     zvpage_wr  ,
-  output wire     vpage_wr  ,
-  output wire     vconf_wr  ,
-  output wire     gx_offsl_wr  ,
-  output wire     gx_offsh_wr  ,
-  output wire     gy_offsl_wr  ,
-  output wire     gy_offsh_wr  ,
-  output wire     t0x_offsl_wr,
-  output wire     t0x_offsh_wr,
-  output wire     t0y_offsl_wr,
-  output wire     t0y_offsh_wr,
-  output wire     t1x_offsl_wr,
-  output wire     t1x_offsh_wr,
-  output wire     t1y_offsl_wr,
-  output wire     t1y_offsh_wr,
-  output wire     tsconf_wr  ,
-  output wire     palsel_wr  ,
-  output wire     tmpage_wr  ,
-  output wire     t0gpage_wr  ,
-  output wire     t1gpage_wr  ,
-  output wire     sgpage_wr  ,
-  output wire     hint_beg_wr ,
-  output wire     vint_begl_wr,
-  output wire     vint_begh_wr,
+  output wire        zborder_wr,
+  output wire        border_wr,
+  output wire        zvpage_wr,
+  output wire        vpage_wr,
+  output wire        vconf_wr,
+  output wire        gx_offsl_wr,
+  output wire        gx_offsh_wr,
+  output wire        gy_offsl_wr,
+  output wire        gy_offsh_wr,
+  output wire        t0x_offsl_wr,
+  output wire        t0x_offsh_wr,
+  output wire        t0y_offsl_wr,
+  output wire        t0y_offsh_wr,
+  output wire        t1x_offsl_wr,
+  output wire        t1x_offsh_wr,
+  output wire        t1y_offsl_wr,
+  output wire        t1y_offsh_wr,
+  output wire        tsconf_wr,
+  output wire        palsel_wr,
+  output wire        tmpage_wr,
+  output wire        t0gpage_wr,
+  output wire        t1gpage_wr,
+  output wire        sgpage_wr,
+  output wire        hint_beg_wr,
+  output wire        vint_begl_wr,
+  output wire        vint_begh_wr,
 
   output wire [31:0] xt_page,
 
-  output reg [4:0] fmaddr,
-  input wire regs_we,
+  output reg [4:0]   fmaddr,
+  input  wire        regs_we,
 
-  output reg [7:0] sysconf,
-  output reg [7:0] memconf,
-  output reg [3:0] cacheconf,
-  input wire cfg_floppy_swap,
-  output reg [7:0] fddvirt,
+  output reg [7:0]   sysconf,
+  output reg [7:0]   memconf,
+  output reg [3:0]   cacheconf,
+  input  wire        cfg_floppy_swap,
+  output reg [7:0]   fddvirt,
 
 `ifdef FDR
-  output reg fdr_en,
-  output wire fdr_cnt_lat,
-  input wire [18:0] fdr_cnt,
+  output reg         fdr_en,
+  output wire        fdr_cnt_lat,
+  input wire [18:0]  fdr_cnt,
 
-  output wire [9:0] dmaport_wr,
+  output wire [9:0]  dmaport_wr,
 `else
-  output wire [8:0] dmaport_wr,
+  output wire [8:0]  dmaport_wr,
 `endif
-  input  wire       dma_act,
-  output reg [1:0]  dmawpdev,
+  input  wire        dma_act,
+  output reg [1:0]   dmawpdev,
 
 
-  output reg [7:0]  intmask,
+  output reg [7:0]   intmask,
 
   input  wire        dos,
   input  wire        vdos,
@@ -97,7 +98,7 @@ module zports(
   input  wire        tape_read,
 
 `ifdef IDE_HDD
-// IDE interface
+  // IDE interface
   input  wire [15:0] ide_in,
   output wire [15:0] ide_out,
   output wire        ide_cs0_n,
@@ -118,7 +119,7 @@ module zports(
   output wire        vg_wrFF,
   output wire [1:0]  drive_sel,    // disk drive selection
 
-// SPI
+  // SPI
   output wire        sdcs_n,
   output wire        sd2cs_n,
 `ifdef IDE_VDAC2
@@ -128,7 +129,7 @@ module zports(
   output wire [ 7:0] sd_datain,
   input  wire [ 7:0] sd_dataout,
 
-// WAIT-ports related
+  // WAIT-ports related
   output reg  [ 7:0] wait_addr,
   output wire        wait_start_gluclock, // begin wait from some ports
   output wire        wait_start_comport,  //
@@ -136,9 +137,63 @@ module zports(
   input  wire [ 7:0] wait_read
 );
 
-  assign sdcs_n = spi_cs_n[0];
-  assign ftcs_n = spi_cs_n[1];
-  assign sd2cs_n = spi_cs_n[2];
+  //#nnAF
+  localparam VCONF     = 8'h00;
+  localparam VPAGE     = 8'h01;
+  localparam GXOFFSL   = 8'h02;
+  localparam GXOFFSH   = 8'h03;
+  localparam GYOFFSL   = 8'h04;
+  localparam GYOFFSH   = 8'h05;
+  localparam TSCONF    = 8'h06;
+  localparam PALSEL    = 8'h07;
+  localparam XBORDER   = 8'h0F;
+
+  localparam T0XOFFSL  = 8'h40;
+  localparam T0XOFFSH  = 8'h41;
+  localparam T0YOFFSL  = 8'h42;
+  localparam T0YOFFSH  = 8'h43;
+  localparam T1XOFFSL  = 8'h44;
+  localparam T1XOFFSH  = 8'h45;
+  localparam T1YOFFSL  = 8'h46;
+  localparam T1YOFFSH  = 8'h47;
+
+  localparam RAMPAGE   = 8'h10;  // this covers #10-#13
+  localparam FMADDR    = 8'h15;
+  localparam TMPAGE    = 8'h16;
+  localparam T0GPAGE   = 8'h17;
+  localparam T1GPAGE   = 8'h18;
+  localparam SGPAGE    = 8'h19;
+  localparam DMASADDRL = 8'h1A;
+  localparam DMASADDRH = 8'h1B;
+  localparam DMASADDRX = 8'h1C;
+  localparam DMADADDRL = 8'h1D;
+  localparam DMADADDRH = 8'h1E;
+  localparam DMADADDRX = 8'h1F;
+
+  localparam SYSCONF   = 8'h20;
+  localparam MEMCONF   = 8'h21;
+  localparam HSINT     = 8'h22;
+  localparam VSINTL    = 8'h23;
+  localparam VSINTH    = 8'h24;
+  localparam DMAWPD    = 8'h25;
+  localparam DMALEN    = 8'h26;
+  localparam DMACTRL   = 8'h27;
+  localparam DMANUM    = 8'h28;
+  localparam FDDVIRT   = 8'h29;
+  localparam INTMASK   = 8'h2A;
+  localparam CACHECONF = 8'h2B;
+  localparam DMAWPA    = 8'h2D;
+
+  localparam XSTAT     = 8'h00;
+  localparam DMASTAT   = 8'h27;
+
+`ifdef FDR
+  localparam DMANUMH   = 8'h2C;
+  localparam FRCTRL    = 8'h30;
+  localparam FRCNT0    = 8'h30;
+  localparam FRCNT1    = 8'h31;
+  localparam FRCNT2    = 8'h32;
+`endif
 
 `ifdef FDR
   localparam FDR_VER = 1'b1;
@@ -194,21 +249,28 @@ module zports(
 
   localparam COMPORT = 8'hEF;     // F8EF..FFEF - rs232 ports
 
+  reg [2:0] spi_cs_n;
+  reg pwr_up_reg;
+  reg [7:0] rampage[0:3];
+  wire gluclock_on;
+  wire p7ffd_wr;
 
+  assign sdcs_n = spi_cs_n[0];
+  assign ftcs_n = spi_cs_n[1];
+  assign sd2cs_n = spi_cs_n[2];
+
+  wire open_vg;
   wire [7:0] loa = a[7:0];
   wire [7:0] hoa = regs_we ? a[7:0] : a[15:8];
 
-    assign porthit =
-            ((loa==PORTFE) || (loa==PORTXT) || (loa==PORTFD) || (loa==COVOX))
-     || ((loa==PORTF7) && !dos)
+  wire vg_port = (loa==VGCOM) || (loa==VGTRK) || (loa==VGSEC) || (loa==VGDAT);
+  wire vgsys_port = (loa==VGSYS);
+
+  assign porthit = ((loa==PORTFE) || (loa==PORTXT) || (loa==PORTFD) || (loa==COVOX)) || ((loa==PORTF7) && !dos)
 `ifdef IDE_HDD
-         || ide_all
+  || ide_all
 `endif
-     || ((vg_port || vgsys_port) && (dos || open_vg))
-        || ((loa==KJOY) && !dos && !open_vg)
-     || (loa==KMOUSE)
-         || ((loa==SDCFG) || (loa==SDDAT))
-         || (loa==COMPORT);
+  || ((vg_port || vgsys_port) && (dos || open_vg)) || ((loa==KJOY) && !dos && !open_vg) || (loa==KMOUSE) || ((loa==SDCFG) || (loa==SDDAT)) || (loa==COMPORT);
 
 `ifdef IDE_HDD
   wire ide_all = ide_even || ide_port11;
@@ -218,16 +280,12 @@ module zports(
     wire ide_portc8 = (loa==NIDEC8);                  // C8
 `endif
 
-    wire vg_port = (loa==VGCOM) || (loa==VGTRK) || (loa==VGSEC) || (loa==VGDAT);
-    wire vgsys_port = (loa==VGSYS);
-
   assign external_port = ((loa==PORTFD) && a[15])        // AY
-                        || (((loa==VGCOM) || (loa==VGTRK) || (loa==VGSEC) || (loa==VGDAT)) && (dos || open_vg));
+                      || (((loa==VGCOM) || (loa==VGTRK) || (loa==VGSEC) || (loa==VGDAT)) && (dos || open_vg));
 
   assign dataout = porthit && iord && (~external_port);
 
-
-// zclk-synchronous strobes
+  // zclk-synchronous strobes
   reg iowr_reg;
   reg iord_reg;
   reg port_wr;
@@ -249,10 +307,7 @@ module zports(
       port_rd <= 1'b0;
   end
 
-
-//    wire no_ide = 1'b0;     // this should be compiled conditionally
-
-// reading ports
+  // reading ports
   always @*
   begin
     case (loa)
@@ -266,34 +321,33 @@ module zports(
       dout = iderdodd;
 `endif
 
-        PORTXT:
-            begin
-            case (hoa)
+      PORTXT:
+      begin
+        case (hoa)
+        XSTAT:
+          dout = {1'b0, pwr_up_reg, FDR_VER, 2'b0, VDAC_VER};
 
-            XSTAT:
-                dout = {1'b0, pwr_up_reg, FDR_VER, 2'b0, VDAC_VER};
+        DMASTAT:
+          dout = {dma_act, 7'b0};
 
-            DMASTAT:
-                dout = {dma_act, 7'b0};
-
-            RAMPAGE + 8'd2, RAMPAGE + 8'd3:
-                dout = rampage[hoa[1:0]];
+        RAMPAGE + 8'd2, RAMPAGE + 8'd3:
+          dout = rampage[hoa[1:0]];
 
 `ifdef FDR
-            FRCNT0:
-                dout = fdr_cnt[7:0];
+          FRCNT0:
+            dout = fdr_cnt[7:0];
 
-            FRCNT1:
-                dout = fdr_cnt[15:8];
+          FRCNT1:
+            dout = fdr_cnt[15:8];
 
-            FRCNT2:
-                dout = {5'b0, fdr_cnt[18:16]};
+          FRCNT2:
+            dout = {5'b0, fdr_cnt[18:16]};
 `endif
-            default:
-                dout = 8'hFF;
+          default:
+            dout = 8'hFF;
 
-            endcase
-            end
+        endcase
+      end
 
     VGSYS:
       dout = {vg_intrq, vg_drq, 6'b111111};
@@ -308,9 +362,8 @@ module zports(
     SDDAT:
       dout = sd_dataout;
 
-
     PORTF7:
-        begin
+    begin
       if (!a[14] && (a[8] ^ dos) && gluclock_on) // $BFF7 - data i/o
         dout = wait_read;
         // dout = 8'h55;
@@ -319,7 +372,7 @@ module zports(
     end
 
     COMPORT:
-        begin
+    begin
       dout = wait_read; // $F8EF..$FFEF
     end
 
@@ -328,80 +381,25 @@ module zports(
     endcase
   end
 
+  // power-up
+  // This bit is loaded as 1 while FPGA is configured and automatically reset to 0 after STATUS port reading
+  reg pwr_up = 1'b1;
+  always @(posedge clk)
+    if (iord_s & (loa == PORTXT) & (hoa == XSTAT))
+    begin
+      pwr_up_reg <= pwr_up;
+      pwr_up <= 1'b0;
+    end
 
-// power-up
-// This bit is loaded as 1 while FPGA is configured
-// and automatically reset to 0 after STATUS port reading
+  wire portfe_wr = (loa==PORTFE) && iowr_s;
+  assign beeper_wr = portfe_wr;
+  assign covox_wr = (loa==COVOX) && iowr_s;
+  wire portxt_wr = ((loa==PORTXT) && iowr_s) || regs_we;
+  wire portxt_rd = (loa==PORTXT) && iord_s;
 
-    reg pwr_up_reg;
-    reg pwr_up = 1'b1;
-    always @(posedge clk)
-        if (iord_s & (loa == PORTXT) & (hoa == XSTAT))
-        begin
-            pwr_up_reg <= pwr_up;
-            pwr_up <= 1'b0;
-        end
+  assign xt_page = {rampage[3], rampage[2], rampage[1], rampage[0]};
 
-// writing ports
-
-//#nnAF
-  localparam VCONF    = 8'h00;
-  localparam VPAGE    = 8'h01;
-  localparam GXOFFSL    = 8'h02;
-  localparam GXOFFSH    = 8'h03;
-  localparam GYOFFSL    = 8'h04;
-  localparam GYOFFSH    = 8'h05;
-  localparam TSCONF    = 8'h06;
-  localparam PALSEL     = 8'h07;
-  localparam XBORDER    = 8'h0F;
-
-  localparam T0XOFFSL    = 8'h40;
-  localparam T0XOFFSH    = 8'h41;
-  localparam T0YOFFSL    = 8'h42;
-  localparam T0YOFFSH    = 8'h43;
-  localparam T1XOFFSL    = 8'h44;
-  localparam T1XOFFSH    = 8'h45;
-  localparam T1YOFFSL    = 8'h46;
-  localparam T1YOFFSH    = 8'h47;
-
-  localparam RAMPAGE   = 8'h10;  // this covers #10-#13
-  localparam FMADDR    = 8'h15;
-  localparam TMPAGE    = 8'h16;
-  localparam T0GPAGE   = 8'h17;
-  localparam T1GPAGE   = 8'h18;
-  localparam SGPAGE    = 8'h19;
-  localparam DMASADDRL = 8'h1A;
-  localparam DMASADDRH = 8'h1B;
-  localparam DMASADDRX = 8'h1C;
-  localparam DMADADDRL = 8'h1D;
-  localparam DMADADDRH = 8'h1E;
-  localparam DMADADDRX = 8'h1F;
-
-  localparam SYSCONF   = 8'h20;
-  localparam MEMCONF   = 8'h21;
-  localparam HSINT     = 8'h22;
-  localparam VSINTL    = 8'h23;
-  localparam VSINTH    = 8'h24;
-  localparam DMAWPD    = 8'h25;
-  localparam DMALEN    = 8'h26;
-  localparam DMACTRL   = 8'h27;
-  localparam DMANUM    = 8'h28;
-  localparam FDDVIRT   = 8'h29;
-  localparam INTMASK   = 8'h2A;
-  localparam CACHECONF = 8'h2B;
-  localparam DMAWPA    = 8'h2D;
-
-  localparam XSTAT     = 8'h00;
-  localparam DMASTAT   = 8'h27;
-
-`ifdef FDR
-  localparam DMANUMH   = 8'h2C;
-  localparam FRCTRL    = 8'h30;
-  localparam FRCNT0    = 8'h30;
-  localparam FRCNT1    = 8'h31;
-  localparam FRCNT2    = 8'h32;
-`endif
-
+  // writing ports
   assign dmaport_wr[0] = portxt_wr && (hoa == DMASADDRL);
   assign dmaport_wr[1] = portxt_wr && (hoa == DMASADDRH);
   assign dmaport_wr[2] = portxt_wr && (hoa == DMASADDRX);
@@ -445,23 +443,14 @@ module zports(
   assign fdr_cnt_lat   = (portxt_rd && (hoa == FRCNT0));
 `endif
 
-  assign beeper_wr = portfe_wr;
-  wire portfe_wr = (loa==PORTFE) && iowr_s;
-  assign covox_wr = (loa==COVOX) && iowr_s;
-  wire portxt_wr = ((loa==PORTXT) && iowr_s) || regs_we;
-  wire portxt_rd = (loa==PORTXT) && iord_s;
-
-  reg [7:0] rampage[0:3];
-  assign xt_page = {rampage[3], rampage[2], rampage[1], rampage[0]};
-
-  wire lock128 = lock128_3 ? 1'b0 : (lock128_2 ? m1_lock128 : memconf[6]);
-  wire lock128_2 = memconf[7:6] == 2'b10;    // mode 2
-  wire lock128_3 = memconf[7:6] == 2'b11;     // mode 3
-
   reg m1_lock128;
-    always @(posedge clk)
-    if (opfetch)
-      m1_lock128 <= !(din[7] ^ din[6]);
+
+  wire lock128_2 = memconf[7:6] == 2'b10;     // mode 2
+  wire lock128_3 = memconf[7:6] == 2'b11;     // mode 3
+  wire lock128 = lock128_3 ? 1'b0 : (lock128_2 ? m1_lock128 : memconf[6]);
+
+  always @(posedge clk) if (opfetch)
+    m1_lock128 <= !(din[7] ^ din[6]);
 
   always @(posedge clk)
     if (rst)
@@ -506,7 +495,7 @@ module zports(
 
       if (hoa == DMAWPD)
         dmawpdev <= din[1:0];
-        
+
       if (hoa == CACHECONF)
         cacheconf <= din[3:0];
 
@@ -525,46 +514,47 @@ module zports(
         intmask <= din;
     end
 
-// 7FFD port
-  wire p7ffd_wr = !a[15] && (loa==PORTFD) && iowr_s && !lock48;
-
+  // 7FFD port
   reg lock48;
+
+  assign p7ffd_wr = !a[15] && (loa==PORTFD) && iowr_s && !lock48;
+
   always @(posedge clk)
     if (rst)
       lock48 <= 1'b0;
     else if (p7ffd_wr && !lock128_3)
       lock48 <= din[5];
 
-// AY control
+  // AY control
   wire ay_hit = (loa==PORTFD) & a[15];
-    assign ay_bc1  = ay_hit & a[14] & iordwr;
-    assign ay_bdir = ay_hit & iowr;
+  assign ay_bc1  = ay_hit & a[14] & iordwr;
+  assign ay_bdir = ay_hit & iowr;
 
-// VG93
-    wire [3:0] fddvrt = fddvirt[3:0];
-    wire virt_vg = fddvrt[drive_sel_raw];
-    wire open_vg = fddvirt[7];
-    assign drive_sel = {drive_sel_raw[1], drive_sel_raw[0] ^ cfg_floppy_swap};
+  // VG93
+  reg [1:0] drive_sel_raw;
 
-    wire vg_wen = (dos || open_vg) && !vdos && !virt_vg;
-    assign vg_cs_n = !(iordwr && vg_port && vg_wen);
-    assign vg_wrFF = iowr_s && vgsys_port && vg_wen;
-    wire vg_wrDS = iowr_s && vgsys_port && (dos || open_vg);
+  wire [3:0] fddvrt = fddvirt[3:0];
+  wire virt_vg = fddvrt[drive_sel_raw];
+  assign open_vg = fddvirt[7];
+  assign drive_sel = {drive_sel_raw[1], drive_sel_raw[0] ^ cfg_floppy_swap};
 
-    assign vdos_on  = iordwr_s && (vg_port || vgsys_port) && dos && !vdos && virt_vg;
-    assign vdos_off = iordwr_s && vg_port && vdos;
+  wire vg_wen = (dos || open_vg) && !vdos && !virt_vg;
+  assign vg_cs_n = !(iordwr && vg_port && vg_wen);
+  assign vg_wrFF = iowr_s && vgsys_port && vg_wen;
+  wire vg_wrDS = iowr_s && vgsys_port && (dos || open_vg);
 
-    // write drive number
-    reg [1:0] drive_sel_raw;
-    always @(posedge clk)
-        if (vg_wrDS)
-            drive_sel_raw <= din;
+  assign vdos_on  = iordwr_s && (vg_port || vgsys_port) && dos && !vdos && virt_vg;
+  assign vdos_off = iordwr_s && vg_port && vdos;
 
-// SD card (Z-controller compatible)
+  // write drive number
+  always @(posedge clk)
+    if (vg_wrDS)
+      drive_sel_raw <= din;
+
+  // SD card (Z-controller compatible)
   wire sdcfg_wr;
   wire sddat_wr;
   wire sddat_rd;
-  reg [2:0] spi_cs_n;
 
   assign sdcfg_wr = (loa==SDCFG) && iowr_s;
   assign sddat_wr = (loa==SDDAT) && iowr_s;
@@ -583,27 +573,26 @@ module zports(
   // data for SPI module
   assign sd_datain = wr ? din : 8'hFF;
 
-// xxF7
+  // xxF7
   wire portf7_wr = ((loa==PORTF7) && (a[8]==1'b1) && port_wr && (!dos || vdos));
   wire portf7_rd = ((loa==PORTF7) && (a[8]==1'b1) && port_rd && (!dos || vdos));
 
-// EFF7 port
-    reg [7:0] peff7;
+  // EFF7 port
+  reg [7:0] peff7;
   always @(posedge clk)
     if (rst)
       peff7 <= 8'h00;
     else if (!a[12] && portf7_wr && !dos)   // #EEF7 in dos is not accessible
       peff7 <= din;
 
+  // gluclock ports
+  assign gluclock_on = peff7[7] || dos;        // in dos mode EEF7 is not accessible, gluclock access is ON in dos mode.
 
-// gluclock ports
-  wire gluclock_on = peff7[7] || dos;        // in dos mode EEF7 is not accessible, gluclock access is ON in dos mode.
-
-// comports
+  // comports
   wire comport_wr   = ((loa == COMPORT) && port_wr);
   wire comport_rd   = ((loa == COMPORT) && port_rd);
 
-// write to wait registers
+  // write to wait registers
   always @(posedge zclk)
   begin
     // gluclocks
@@ -611,11 +600,11 @@ module zports(
     begin
       if (!a[14]) // $BFF7 - data reg
         wait_write <= din;
-    
+
       if (!a[13]) // $DFF7 - addr reg
         wait_addr <= din;
     end
-    
+
     // com ports
     if (comport_wr) // $xxEF
       wait_write <= din;
@@ -627,14 +616,14 @@ module zports(
       wait_addr <= din;
   end
 
-// wait from wait registers
+  // wait from wait registers
   // ACHTUNG!!!! here portxx_wr are ON Z80 CLOCK! logic must change when moving to clk strobes
   assign wait_start_gluclock = (gluclock_on && !a[14] && (portf7_rd || portf7_wr)); // $BFF7 - gluclock r/w
   assign wait_start_comport = (comport_rd || comport_wr);
 
 `ifdef IDE_HDD
-// IDE ports
-    // do NOT generate IDE write, if neither of ide_wrhi|lo latches set and writing to NIDE10
+  // IDE ports
+  // do NOT generate IDE write, if neither of ide_wrhi|lo latches set and writing to NIDE10
   wire ide_cs0 = ide_even && !ide_portc8;
   wire ide_cs1 = ide_portc8;
   wire ide_rd = rd && !(ide_rd_latch && ide_port10);
@@ -649,7 +638,6 @@ module zports(
     else if (ide_ready)
       ide_stall <= 1'b0;
 
-
   // control read & write triggers, which allow nemo-divide mod to work.
   // read trigger:
   reg ide_rd_trig;  // nemo-divide read trigger
@@ -661,7 +649,7 @@ module zports(
       ide_rd_trig <= 1'b0;
   end
 
-    // two triggers for write sequence
+  // two triggers for write sequence
   reg ide_wrlo_trig,  ide_wrhi_trig;  // nemo-divide write triggers
   always @(posedge zclk)
   if (ide_all && (port_rd || port_wr))
@@ -683,7 +671,7 @@ module zports(
   // normal write: #11(high), #10(low)
   // divide write: #10(low),  #10(high)
 
-  reg  [15:0] idewrreg; // write register, either low or high part is pre-written here,
+  reg [15:0] idewrreg; // write register, either low or high part is pre-written here,
                         // while other part is out directly from Z80 bus
   always @(posedge zclk)
   begin
@@ -699,16 +687,16 @@ module zports(
   // since 'ide_rd_trig' clears during second Z80 IO read cycle to #10
   reg ide_rd_latch; // to save state of trigger during read cycle
   always @*
-        if (!rd)
-            ide_rd_latch <= ide_rd_trig;
+    if (!rd)
+      ide_rd_latch <= ide_rd_trig;
 
   reg ide_wrlo_latch, ide_wrhi_latch; // save state during write cycles
   always @*
-        if (!wr)
-        begin
-            ide_wrlo_latch <= ide_wrlo_trig; // same for write triggers
-            ide_wrhi_latch <= ide_wrhi_trig;
-        end
+    if (!wr)
+    begin
+      ide_wrlo_latch <= ide_wrlo_trig; // same for write triggers
+      ide_wrhi_latch <= ide_wrhi_trig;
+    end
 
   // data read by Z80 from IDE
   wire idein_lo_rd  = port_rd && ide_port10 && (!ide_rd_trig);                      // while high part is remembered here
@@ -719,14 +707,15 @@ module zports(
   reg [15:0] iderdreg;
   // reg [7:0] idehiin;                  // IDE high part read register: low part is read directly to Z80 bus,
   always @(posedge clk)
-        if (ide_stb)
+    if (ide_stb)
       iderdreg <= ide_in;
-        // if (idein_lo_rd)
+    // if (idein_lo_rd)
       // idehiin <= ide_in[15:8];
 
   // data written to IDE from Z80
   wire [7:0] ideout1 = ide_wrhi_latch ? idewrreg[15:8] : din[ 7:0];
   wire [7:0] ideout0 = ide_wrlo_latch ? idewrreg[ 7:0] : din[ 7:0];
-    assign ide_out = {ideout1, ideout0};
+  assign ide_out = {ideout1, ideout0};
 `endif
+
 endmodule

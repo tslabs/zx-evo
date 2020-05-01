@@ -66,8 +66,56 @@ module slavespi
   output wire [ 7:0] wait_read,
   output wire        wait_end,
 
-  output reg         genrst  // positive pulse causes Z80 reset
+  output reg         genrst = 0  // positive pulse causes Z80 reset
 );
+
+  reg [2:0] spics_n_sync;
+  reg [1:0] spido_sync;
+  reg [2:0] spick_sync;
+
+  reg [7:0] data_in;
+  reg [7:0] regnum = 0;
+  reg [7:0] shift_in = 0;     // register for shifting in
+  reg [7:0] shift_out = 0;
+  reg [7:0] wait_reg = 0;     // wait data out register
+  reg [7:0] cfg0_reg = 0;     // config register
+  reg [5:0] kbd_out_cnt = 0;  // [2:0] - 111 is latching strobe, [5:3] - column selector
+
+  wire sdo;
+  wire kbd_bit_stb;
+
+  // reg number decoding
+  wire sel_kbdreg = (regnum[7:4] == 4'h1) && !regnum[0]; // $10
+  wire sel_kbdstb = (regnum[7:4] == 4'h1) &&  regnum[0]; // $11
+
+  wire sel_musxcr = (regnum[7:4] == 4'h2) && (regnum[1:0] == 2'b00); // $20
+  wire sel_musycr = (regnum[7:4] == 4'h2) && (regnum[1:0] == 2'b01); // $21
+  wire sel_musbtn = (regnum[7:4] == 4'h2) && (regnum[1:0] == 2'b10); // $22
+  wire sel_kj     = (regnum[7:4] == 4'h2) && (regnum[1:0] == 2'b11); // $23
+
+  wire sel_rstreg = ((regnum[7:4] == 4'h3)) ; // $30
+
+  wire sel_waitreg = (regnum[7:4] == 4'h4) && (regnum[1:0] == 2'b00); // $40
+  wire sel_gluadr  = (regnum[7:4] == 4'h4) && (regnum[1:0] == 2'b01); // $41
+  wire sel_comadr  = (regnum[7:4] == 4'h4) && (regnum[1:0] == 2'b10); // $42
+
+  wire sel_cfg0 = (regnum[7:4] == 4'h5); // $50
+
+  // re-sync SPI
+  always @(posedge fclk)
+  begin
+    spics_n_sync[2:0] <= {spics_n_sync[1:0], spics_n};
+    spido_sync[1:0] <= {spido_sync[0], spido};
+    spick_sync[2:0] <= {spick_sync[1:0], spick};
+  end
+
+  wire scs_n = spics_n_sync[1]; // scs_n - synchronized CS_N
+  assign sdo   = spido_sync[1];
+  wire scs_n_01 = !spics_n_sync[2] && spics_n_sync[1];
+  wire scs_n_10 = spics_n_sync[2] && !spics_n_sync[1];
+  wire sck_01 = !spick_sync[2] && spick_sync[1];
+
+  wire int_wtp = scs_n_01 && sel_cfg0 && shift_in[5];
 
   // output data
   assign kbd_out     = {sdo, shift_in[7:1]};
@@ -81,28 +129,6 @@ module slavespi
   assign wait_read   = wait_reg;
   assign wait_end    = sel_waitreg && scs_n_01;
   assign config0     = {cfg0_reg[7:6], int_wtp, cfg0_reg[4:0]};
-
-  // re-sync SPI
-  reg [2:0] spics_n_sync;
-  reg [1:0] spido_sync;
-  reg [2:0] spick_sync;
-
-  always @(posedge fclk)
-  begin
-    spics_n_sync[2:0] <= {spics_n_sync[1:0], spics_n};
-    spido_sync[1:0] <= {spido_sync[0], spido};
-    spick_sync[2:0] <= {spick_sync[1:0], spick};
-  end
-
-  wire scs_n = spics_n_sync[1]; // scs_n - synchronized CS_N
-  wire sdo   = spido_sync[1];
-  wire scs_n_01 = !spics_n_sync[2] && spics_n_sync[1];
-  wire scs_n_10 = spics_n_sync[2] && !spics_n_sync[1];
-  wire sck_01 = !spick_sync[2] && spick_sync[1];
-
-  reg [7:0] regnum;
-  reg [7:0] shift_out;
-  reg [7:0] data_in;
 
   // register number
   always @(posedge fclk)
@@ -133,27 +159,8 @@ module slavespi
 
   assign spidi = shift_out[0];
 
-  // reg number decoding
-  wire sel_kbdreg = (regnum[7:4] == 4'h1) && !regnum[0]; // $10
-  wire sel_kbdstb = (regnum[7:4] == 4'h1) &&  regnum[0]; // $11
-
-  wire sel_musxcr = (regnum[7:4] == 4'h2) && (regnum[1:0] == 2'b00); // $20
-  wire sel_musycr = (regnum[7:4] == 4'h2) && (regnum[1:0] == 2'b01); // $21
-  wire sel_musbtn = (regnum[7:4] == 4'h2) && (regnum[1:0] == 2'b10); // $22
-  wire sel_kj     = (regnum[7:4] == 4'h2) && (regnum[1:0] == 2'b11); // $23
-
-  wire sel_rstreg = ((regnum[7:4] == 4'h3)) ; // $30
-
-  wire sel_waitreg = (regnum[7:4] == 4'h4) && (regnum[1:0] == 2'b00); // $40
-  wire sel_gluadr  = (regnum[7:4] == 4'h4) && (regnum[1:0] == 2'b01); // $41
-  wire sel_comadr  = (regnum[7:4] == 4'h4) && (regnum[1:0] == 2'b10); // $42
-
-  wire sel_cfg0 = (regnum[7:4] == 4'h5); // $50
-
   wire kbd_start = sel_kbdstb && scs_n_01;  // !!! this requires change zx.c for good: kbd_start should be issued BEFORE kbd reg transfer, NOT after
-  wire kbd_bit_stb = !scs_n && sel_kbdreg && sck_01;
-
-  reg [5:0] kbd_out_cnt;  // [2:0] - 111 is latching strobe, [5:3] - column selector
+  assign kbd_bit_stb = !scs_n && sel_kbdreg && sck_01;
 
   always @(posedge fclk)
     if (kbd_start)
@@ -161,13 +168,7 @@ module slavespi
     else if (kbd_bit_stb)
       kbd_out_cnt <= kbd_out_cnt + 6'b1;
 
-  wire int_wtp = scs_n_01 && sel_cfg0 && shift_in[5];
-      
   // registers data-in
-  reg [7:0] shift_in;   // register for shifting in
-  reg [7:0] wait_reg;   // wait data out register
-  reg [7:0] cfg0_reg;   // config register
-
   always @(posedge fclk)
   begin
     if (!scs_n && sck_01)

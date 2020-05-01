@@ -2,9 +2,9 @@
 
 `include "tune.v"
 
-module video_ports (
-
-// clocks
+module video_ports
+(
+  // clocks
   input wire clk,
 
   input wire [ 7:0] d,
@@ -12,7 +12,7 @@ module video_ports (
   input wire int_start,
   input wire line_start_s,
 
-// port write strobes
+  // port write strobes
   input wire zborder_wr,
   input wire border_wr,
   input wire zvpage_wr,
@@ -40,39 +40,39 @@ module video_ports (
   input wire vint_begl_wr,
   input wire vint_begh_wr,
 
-// video parameters
-  output reg [7:0] border,
-  output reg [7:0] vpage,
-  output reg [7:0] vconf,
-  output reg [8:0] gx_offs,
-  output reg [8:0] gy_offs,
-  output reg [8:0] t0x_offs,
-  output reg [8:0] t0y_offs,
-  output reg [8:0] t1x_offs,
-  output reg [8:0] t1y_offs,
-  output reg [7:0] palsel,
-  output reg [7:0] hint_beg,
-  output reg [8:0] vint_beg,
-  output reg [7:0] tsconf,
-  output reg [7:0] tmpage,
-  output reg [7:0] t0gpage,
-  output reg [7:0] t1gpage,
-  output reg [7:0] sgpage
+  // video parameters
+  output reg [7:0] border   = 0,
+  output reg [7:0] vpage    = 0,
+  output reg [7:0] vconf    = 0,
+  output reg [8:0] gx_offs  = 0,
+  output reg [8:0] gy_offs  = 0,
+  output reg [8:0] t0x_offs = 0,
+  output reg [8:0] t0y_offs = 0,
+  output reg [8:0] t1x_offs = 0,
+  output reg [8:0] t1y_offs = 0,
+  output reg [7:0] palsel   = 0,
+  output reg [7:0] hint_beg = 0,
+  output reg [8:0] vint_beg = 0,
+  output reg [7:0] tsconf   = 0,
+  output reg [7:0] tmpage   = 0,
+  output reg [7:0] t0gpage  = 0,
+  output reg [7:0] t1gpage  = 0,
+  output reg [7:0] sgpage   = 0
+);
 
- );
-
-  reg [7:0] vpage_r;
-  reg [7:0] vconf_r;
-  reg [7:0] t0gpage_r;
-  reg [7:0] t1gpage_r;
-  reg [8:0] gx_offs_r;
-  reg [8:0] t0x_offs_r;
-  reg [8:0] t1x_offs_r;
-  reg [7:0] palsel_r;
+  reg [7:0] vpage_r    = 0;
+  reg [7:0] vconf_r    = 0;
+  reg [7:0] t0gpage_r  = 0;
+  reg [7:0] t1gpage_r  = 0;
+  reg [8:0] gx_offs_r  = 0;
+  reg [8:0] t0x_offs_r = 0;
+  reg [8:0] t1x_offs_r = 0;
+  reg [7:0] palsel_r   = 0;
+  reg [3:0] vint_inc   = 0;
 
   wire [8:0] vint_beg_inc = vint_beg + vint_inc;
   wire [8:0] vint_beg_next = {(vint_beg_inc[8:6] == 3'b101) ? 3'b0 : vint_beg_inc[8:6], vint_beg_inc[5:0]};  // if over 319 lines, decrement 320
-  reg [3:0] vint_inc;
+
   always @(posedge clk)
     if (res)
     begin
@@ -118,7 +118,7 @@ module video_ports (
       if (tmpage_wr   )   tmpage          <= d;
       if (sgpage_wr   )   sgpage          <= d;
       if (hint_beg_wr )   hint_beg        <= d;
-    
+
       if (zvpage_wr   )   vpage_r         <= {6'b000001, d[3], 1'b1};
       if (vpage_wr    )   vpage_r         <= d;
       if (vconf_wr    )   vconf_r         <= d;
@@ -133,37 +133,35 @@ module video_ports (
       if (t1gpage_wr  )   t1gpage_r       <= d;
     end
 
-
-// latching regs at line start, delaying hires for 1 line
-    always @(posedge clk)
-    if (res)
-    begin
-      vpage       <= 8'h05;
+  // latching regs at line start, delaying hires for 1 line
+  always @(posedge clk)
+  if (res)
+  begin
+    vpage       <= 8'h05;
 `ifdef FORCE_TEXT_MODE
-      vconf       <= 8'h83;
+    vconf       <= 8'h83;
 `else
-      vconf       <= 8'h00;
+    vconf       <= 8'h00;
 `endif
-      gx_offs     <= 9'b0;
-      palsel      <= 8'h0F;
-    end
+    gx_offs     <= 9'b0;
+    palsel      <= 8'h0F;
+  end
 
-    else if (zvpage_wr)
-      vpage <= {6'b000001, d[3], 1'b1};
+  else if (zvpage_wr)
+    vpage <= {6'b000001, d[3], 1'b1};
 
-    else if (line_start_s)
-    begin
-      vpage   <= vpage_r;
+  else if (line_start_s)
+  begin
+    vpage   <= vpage_r;
 `ifndef FORCE_TEXT_MODE
-      vconf   <= vconf_r;
+    vconf   <= vconf_r;
 `endif
-      gx_offs <= gx_offs_r;
-      palsel  <= palsel_r;
-      t0x_offs <= t0x_offs_r;
-      t1x_offs <= t1x_offs_r;
-      t0gpage <= t0gpage_r;
-      t1gpage <= t1gpage_r;
-    end
-
+    gx_offs <= gx_offs_r;
+    palsel  <= palsel_r;
+    t0x_offs <= t0x_offs_r;
+    t1x_offs <= t1x_offs_r;
+    t0gpage <= t0gpage_r;
+    t1gpage <= t1gpage_r;
+  end
 
  endmodule

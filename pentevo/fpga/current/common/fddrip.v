@@ -6,17 +6,19 @@
 
 module fddrip
 (
-	input wire clk,
-  input wire reset,
-  input wire rdat_n,
-	output reg [7:0] data,
-	output reg [18:0] data_cnt_l,
-	input wire cnt_latch,
-	input wire req,
-	output wire	stop,
-	output wire	stb
+  input  wire        clk,
+  input  wire        reset,
+  input  wire        rdat_n,
+  output reg  [7:0]  data,
+  output reg  [18:0] data_cnt_l,
+  input  wire        cnt_latch,
+  input  wire        req,
+  output wire        stop,
+  output wire        stb
 );
 
+  reg reset_r;
+  reg data_ready;
   reg [18:0] data_cnt;
 
   /* Grabbed data counter */
@@ -36,14 +38,11 @@ module fddrip
   assign stop = reset && !reset_r;
   assign stb = req && data_ready;
 
-  reg reset_r;
-
   always @(posedge clk)
     reset_r <= reset;
 
   /* Pulse counting */
   reg [1:0] rdat;
-  reg data_ready;
   reg [8:0] rle_cnt;
 
   wire pulse = rdat[0] && !rdat[1];   // input signal looks like: __-_________-____-____

@@ -1,19 +1,15 @@
-// counter-based 'fapch', based on pentagon design, with filter and adopted to
-// 28mhz
+
+// counter-based 'fapch', based on pentagon design, with filter and adopted to 28mhz
 
 `include "tune.v"
-
 
 module fapch_counter
 (
 	input  wire fclk,
-
 	input  wire rdat_n,
-
 	output reg  vg_rclk,
 	output reg  vg_rawr
 );
-
 
 	reg [4:0] rdat_sync;
 	reg rdat_edge1, rdat_edge2;
@@ -31,9 +27,7 @@ module fapch_counter
 
 	// digital filter - removing glitches
 	always @(posedge fclk)
-		rdat_sync[4:0] <= { rdat_sync[3:0], (~rdat_n) };
-
-
+		rdat_sync[4:0] <= {rdat_sync[3:0], (~rdat_n)};
 
 	always @(posedge fclk)
 	begin
@@ -45,11 +39,7 @@ module fapch_counter
 		rdat_edge2 <= rdat_edge1;
 	end
 
-
-
 	assign rdat = rdat_edge1 & (~rdat_edge2);
-
-
 
 	always @(posedge fclk)
 		if( rwidth_ena )
@@ -64,9 +54,6 @@ module fapch_counter
 
 	always @(posedge fclk)
 		vg_rawr <= rwidth_cnt[2]; // RAWR has 2 clocks latency from rdat strobe
-
-
-
 
 	assign rclk_strobe = (rclk_cnt==6'd0);
 
@@ -85,4 +72,3 @@ module fapch_counter
 			vg_rclk <= ~vg_rclk; // vg_rclk latency is 2 clocks plus a number loaded into rclk_cnt at rdat strobe
 
 endmodule
-

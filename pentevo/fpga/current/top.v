@@ -4,7 +4,8 @@
 //
 // top-level
 
-module top(
+module top
+(
   // clocks
   input fclk,
   output clkz_out,
@@ -162,7 +163,8 @@ module top(
   wire tape_read;  // tapein data
   wire set_nmi;
   wire cfg_vga_on;
-  wire [7:0] config0 =
+  wire [7:0] config0;
+  assign 
   {
     cfg_tape_sound,   // bit 7
     cfg_floppy_swap,  // bit 6
@@ -172,7 +174,7 @@ module top(
     tape_read,        // bit 2
     set_nmi,          // bit 1
     cfg_vga_on        // bit 0
-  };
+  } = config0;
 
   // nmi signals
   wire gen_nmi;
@@ -189,24 +191,20 @@ module top(
   wire zclk = clkz_in;
 
   // assign nmi_n = gen_nmi ? 1'b0 : 1'bZ;
-  wire go;
+  wire video_go;
   wire beeper_wr, covox_wr;
   wire external_port;
   wire ide_stall;
 
-  assign nmi_n = 1'bZ;
-  assign res= ~rst_n;
-  assign rompg0_n = ~rompg[0];
-  assign dos_n    =  rompg[1];
-  assign rompg2   =  rompg[2];
-  assign rompg3   =  rompg[3];
-  assign rompg4   =  rompg[4];
-
-`ifdef IDE_HDD
-  assign ide_rs_n = rst_n;
-`endif
+  wire rampage_wr;        // ports #10AF-#13AF
+  wire [7:0] memconf;
+  wire [7:0] xt_ramp[0:3];
+  wire [4:0] rompg;
+  wire [7:0] sysconf;
 
 `ifdef FORCE_14MHZ
+  wire [1:0] turbo = 2'b10;
+`elsif SIMULATE
   wire [1:0] turbo = 2'b10;
 `else
   wire [1:0] turbo = sysconf[1:0];
@@ -225,13 +223,7 @@ module top(
   wire drive_ff;
 
   wire [15:0] dram_wd;
-  assign rd = rwe_n ? 16'hZZZZ : dram_wd;
-  assign d = ena_ram ? dout_ram : (ena_ports ? dout_ports : (intack ? im2vect : (drive_ff ? 8'hFF : 8'bZZZZZZZZ)));
 
-  wire rampage_wr;        // ports #10AF-#13AF
-  wire [7:0] memconf;
-  wire [7:0] xt_ramp[0:3];
-  wire [4:0] rompg;
   wire vdos_on, vdos_off;
   wire dos_on, dos_off;
 
@@ -310,7 +302,7 @@ module top(
   wire [4:0] hcnt;
   wire upper8;
 `endif
-  
+
   wire rst;
   wire m1;
   wire rfsh;
@@ -347,66 +339,12 @@ module top(
 `endif
   wire [4:0] fmaddr;
 
-  wire [7:0] sysconf;
   wire [7:0] fddvirt;
 
   wire [4:0] vred_raw;
   wire [4:0] vgrn_raw;
   wire [4:0] vblu_raw;
   wire vdac_mode;
-
-`ifdef IDE_HDD
-  assign ide_d = ide_dir ? 16'hZZZZ : ide_out;
-`elsif IDE_VDAC
-  assign ide_d[ 4: 0] = vred_raw;
-  assign ide_d[ 9: 5] = vgrn_raw;
-  assign ide_d[14:10] = vblu_raw;
-  assign ide_d[15] = vdac_mode;
-  assign ide_dir = 1'b0;      // always output
-  assign ide_a[0] = 1'bZ;
-  assign ide_a[1] = !fclk;
-  assign ide_a[2] = vhsync;
-  assign ide_rd_n = 1'bZ;
-  assign ide_wr_n = 1'bZ;
-  assign ide_cs0_n = 1'bZ;
-  assign ide_cs1_n = vvsync;
-`elsif IDE_VDAC2
-  wire ftcs_n;
-  assign ide_d[ 0] = vdac2_msel ? 1'bZ : vgrn_raw[2];
-  assign ide_d[ 1] = vdac2_msel ? 1'bZ : vred_raw[0];
-  assign ide_d[ 2] = vdac2_msel ? 1'bZ : vred_raw[1];
-  assign ide_d[ 3] = vdac2_msel ? 1'bZ : vred_raw[2];
-  assign ide_d[ 4] = vdac2_msel ? 1'bZ : vred_raw[3];
-  assign ide_d[ 5] = vdac2_msel ? 1'bZ : vred_raw[4];
-  assign ide_d[ 6] = vdac2_msel ? 1'bZ : vgrn_raw[0];
-  assign ide_d[ 7] = vdac2_msel ? 1'bZ : vgrn_raw[1];
-  assign ide_d[ 8] = vdac2_msel ? 1'bZ : vgrn_raw[3];
-  assign ide_d[ 9] = vdac2_msel ? 1'bZ : vgrn_raw[4];
-  assign ide_d[10] = vdac2_msel ? 1'bZ : vblu_raw[0];
-  assign ide_d[11] = vdac2_msel ? 1'bZ : vblu_raw[1];
-  assign ide_d[12] = vdac2_msel ? 1'bZ : vblu_raw[2];
-  assign ide_d[13] = vdac2_msel ? 1'bZ : vblu_raw[3];
-  assign ide_d[14] = vdac2_msel ? 1'bZ : vblu_raw[4];
-  assign ide_d[15] = vdac2_msel ? 1'bZ : vdac_mode;  // PAL_SEL
-  assign ide_rs_n = vgrn_raw[2]; // for lame RevA
-  assign ide_dir = vdac2_msel;   // 0 - output, 1 - input
-  assign ide_a[0] = sdclk;  // FT812 SCK
-  assign ide_a[1] = sddo;   // FT812 MOSI
-  assign ide_a[2] = !fclk;
-  assign ide_rd_n = ftcs_n; // FT812 CS_n
-  assign ide_wr_n = vdac2_msel;
-  assign ide_cs0_n = vhsync;
-  assign ide_cs1_n = vvsync;
-  wire ft_int = ide_d[1];
-
-  wire vdac2_msel;
-  wire ftdi = ide_rdy;      // FT812 MISO
-  wire int_start_ft = ftint_r[1] && !ftint_r[0];
-
-  reg [1:0] ftint_r;
-  always @(posedge fclk)
-    ftint_r <= {ftint_r[0], ft_int}; // FT812 INT_n
-`endif
 
   wire [15:0] z80_ide_out;
   wire z80_ide_cs0_n;
@@ -436,7 +374,7 @@ module top(
   wire [7:0] cpu_spi_din;
   wire [7:0] dma_spi_din;
   wire [7:0] spi_dout;
-  
+
   wire dma_wtp_req;
   wire dma_wtp_stb;
   wire wait_status_wrn;
@@ -444,6 +382,76 @@ module top(
   // wire [1:0] vg_ddrv;
   // assign vg_a[0] = vg_ddrv[0] ? 1'b1 : 1'b0; // possibly open drain?
   // assign vg_a[1] = vg_ddrv[1] ? 1'b1 : 1'b0;
+
+  assign nmi_n = 1'bZ;
+  assign res = ~rst_n;
+  assign rompg0_n = ~rompg[0];
+  assign dos_n    =  rompg[1];
+  assign rompg2   =  rompg[2];
+  assign rompg3   =  rompg[3];
+  assign rompg4   =  rompg[4];
+
+`ifdef IDE_HDD
+  assign ide_rs_n = rst_n;
+`endif
+
+  assign rd = rwe_n ? 16'hZZZZ : dram_wd;
+  assign d = ena_ram ? dout_ram : (ena_ports ? dout_ports : (intack ? im2vect : (drive_ff ? 8'hFF : 8'bZZZZZZZZ)));
+
+`ifdef IDE_HDD
+  assign ide_d = ide_dir ? 16'hZZZZ : ide_out;
+`elsif IDE_VDAC
+  assign ide_d[ 4: 0] = vred_raw;
+  assign ide_d[ 9: 5] = vgrn_raw;
+  assign ide_d[14:10] = vblu_raw;
+  assign ide_d[15] = vdac_mode;
+  assign ide_dir = 1'b0;      // always output
+  assign ide_a[0] = 1'bZ;
+  assign ide_a[1] = !fclk;
+  assign ide_a[2] = vhsync;
+  assign ide_rd_n = 1'bZ;
+  assign ide_wr_n = 1'bZ;
+  assign ide_cs0_n = 1'bZ;
+  assign ide_cs1_n = vvsync;
+
+`elsif IDE_VDAC2
+  reg [1:0] ftint_r;
+
+  wire ftcs_n;
+  wire ft_int = ide_d[1];
+  wire vdac2_msel;
+  wire ftdi = ide_rdy;      // FT812 MISO
+  wire int_start_ft = ftint_r[1] && !ftint_r[0];
+
+  assign ide_d[ 0] = vdac2_msel ? 1'bZ : vgrn_raw[2];
+  assign ide_d[ 1] = vdac2_msel ? 1'bZ : vred_raw[0];
+  assign ide_d[ 2] = vdac2_msel ? 1'bZ : vred_raw[1];
+  assign ide_d[ 3] = vdac2_msel ? 1'bZ : vred_raw[2];
+  assign ide_d[ 4] = vdac2_msel ? 1'bZ : vred_raw[3];
+  assign ide_d[ 5] = vdac2_msel ? 1'bZ : vred_raw[4];
+  assign ide_d[ 6] = vdac2_msel ? 1'bZ : vgrn_raw[0];
+  assign ide_d[ 7] = vdac2_msel ? 1'bZ : vgrn_raw[1];
+  assign ide_d[ 8] = vdac2_msel ? 1'bZ : vgrn_raw[3];
+  assign ide_d[ 9] = vdac2_msel ? 1'bZ : vgrn_raw[4];
+  assign ide_d[10] = vdac2_msel ? 1'bZ : vblu_raw[0];
+  assign ide_d[11] = vdac2_msel ? 1'bZ : vblu_raw[1];
+  assign ide_d[12] = vdac2_msel ? 1'bZ : vblu_raw[2];
+  assign ide_d[13] = vdac2_msel ? 1'bZ : vblu_raw[3];
+  assign ide_d[14] = vdac2_msel ? 1'bZ : vblu_raw[4];
+  assign ide_d[15] = vdac2_msel ? 1'bZ : vdac_mode;  // PAL_SEL
+  assign ide_rs_n = vgrn_raw[2]; // for lame RevA
+  assign ide_dir = vdac2_msel;   // 0 - output, 1 - input
+  assign ide_a[0] = sdclk;  // FT812 SCK
+  assign ide_a[1] = sddo;   // FT812 MOSI
+  assign ide_a[2] = !fclk;
+  assign ide_rd_n = ftcs_n; // FT812 CS_n
+  assign ide_wr_n = vdac2_msel;
+  assign ide_cs0_n = vhsync;
+  assign ide_cs1_n = vvsync;
+
+  always @(posedge fclk)
+    ftint_r <= {ftint_r[0], ft_int}; // FT812 INT_n
+`endif
 
   clock clock
   (
@@ -483,6 +491,8 @@ module top(
     .cpu_stall(cpu_stall),
 `ifdef IDE_HDD
     .ide_stall(ide_stall),
+`else
+    .ide_stall(1'b0),
 `endif
 `ifdef PENT_312
     .boost_start(boost_start),
@@ -505,22 +515,19 @@ module top(
     .drive_ff(drive_ff)
   );
 
-  zmem z80mem
+  zmem zmem
   (
     .clk(fclk),
-    .c0(c0),
     .c1(c1),
     .c2(c2),
     .c3(c3),
     .rst(rst),
-    .zpos(zpos),
     .zneg(zneg),
     .za(a),
     .zd_out(dout_ram),
     .zd_ena(ena_ram),
     .opfetch(opfetch),
     .opfetch_s(opfetch_s),
-    .mreq(mreq),
     .memrd(memrd),
     .memwr(memwr),
     .memwr_s(memwr_s),
@@ -543,7 +550,6 @@ module top(
     .cpu_strobe(cpu_strobe),
     .cpu_latch(cpu_latch),
     .cpu_addr(cpu_addr),
-    // .cpu_rddata(dram_rd_r),    // registered
     .cpu_rddata(rd),           // raw
     .cpu_stall(cpu_stall),
     .cpu_next(cpu_next),
@@ -561,7 +567,6 @@ module top(
     .c1(c1),
     .c2(c2),
     .c3(c3),
-    // .rddata(dram_rd_r),
     .wrdata(dram_wrdata),
     .bsel(dbsel),
     .ra(ra),
@@ -575,13 +580,10 @@ module top(
 
   arbiter arbiter
   (
-    //.dbg(dbg_arb),        // DEBUG!!!
     .clk(fclk),
-    .c0(c0),
     .c1(c1),
     .c2(c2),
     .c3(c3),
-    .int_n(int_n),
     .dram_addr(daddr),
     .dram_req(dreq),
     .dram_rnw(drnw),
@@ -595,7 +597,7 @@ module top(
     .cpu_next(cpu_next),
     .cpu_strobe(cpu_strobe),
     .cpu_latch(cpu_latch),
-    .go(go),
+    .video_go(video_go),
     .video_bw(video_bw),
     .video_addr(video_addr),
     .video_strobe(video_strobe),
@@ -622,11 +624,9 @@ module top(
     .res(res),
     .f0(f0),
     .f1(f1),
-    .h0(h0),
     .h1(h1),
     .c0(c0),
     .c1(c1),
-    .c2(c2),
     .c3(c3),
     .vred(vred),
     .vgrn(vgrn),
@@ -671,13 +671,10 @@ module top(
     .sgpage_wr(sgpage_wr),
     .video_addr(video_addr),
     .video_bw(video_bw),
-    .video_go(go),
-    // .dram_rdata_r(dram_rd_r),      // reg'ed, should be latched by c3
-       .dram_rdata(rd),               // raw, should be latched by c2
+    .video_go(video_go),
+    .dram_rdata(rd),               // raw, should be latched by c2
     .video_strobe(video_strobe),
-    .video_next(video_next),
     .video_pre_next(video_pre_next),
-    .next_video(next_video),
     .ts_req(ts_req),
     .ts_pre_next(ts_pre_next),
     .ts_addr(ts_addr),
@@ -707,7 +704,9 @@ module top(
     .spido(spido),
     .spick(spick),
     .status_in({wait_status_wrn, 5'b0, wait_status[1:0]}),
+`ifndef SIMULATE
     .genrst(genrst),
+`endif
     .kbd_out(kbd_data),
     .kbd_out_sel(kbd_data_sel),
     .kbd_stb(kbd_stb),
@@ -1048,7 +1047,6 @@ module top(
     .vg_sr(vg_sr),
     .vg_tr43(vg_tr43),
     .rdat_n(rdat_b_n),
-    .vg_wf_de(vg_wf_de),
     .vg_drq(vg_drq),
     .vg_irq(vg_irq),
     .vg_wd(vg_wd)
@@ -1101,7 +1099,6 @@ module top(
   sound sound
   (
     .clk(fclk),
-    .f0(f0),
     .din(d),
     .beeper_wr(beeper_wr),
     .covox_wr(covox_wr),

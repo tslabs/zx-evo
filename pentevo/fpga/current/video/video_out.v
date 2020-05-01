@@ -6,29 +6,27 @@
 
 module video_out
 (
+  // clocks
+  input wire clk, c3,
 
-// clocks
-  input wire clk, f0, c3,
-
-// video controls
+  // video controls
   input wire vga_on,
   input wire tv_blank,
   input wire vga_blank,
   input wire vga_line,
-  input wire frame,
   input wire [1:0] plex_sel_in,
 
-// mode controls
+  // mode controls
   input wire tv_hires,
   input wire vga_hires,
   input wire [3:0] palsel,
 
-// Z80 pins
+  // Z80 pins
   input  wire [15:0] cram_data_in,
   input  wire [7:0] cram_addr_in,
   input  wire cram_we,
 
-// video data
+  // video data
   input wire [7:0] vplex_in,
   input wire [7:0] vgaplex,
   output wire [1:0] vred,
@@ -40,27 +38,34 @@ module video_out
   output wire vdac_mode
 );
 
-    assign vred_raw = vpix[14:10];
-    assign vgrn_raw = vpix[9:5];
-    assign vblu_raw = vpix[4:0];
-    assign vdac_mode = vpixel[15];
+  wire [14:0] vpix;
+  wire [15:0] vpixel;
+  wire [1:0] phase;
+  wire [7:0] pwm[0:7];
 
-// TV/VGA mux
+  reg blank1;         // GOVNOKOD!!!!!!!!!!!!!!!!!!!!!
+
+  assign vred_raw = vpix[14:10];
+  assign vgrn_raw = vpix[9:5];
+  assign vblu_raw = vpix[4:0];
+  assign vdac_mode = vpixel[15];
+
+  // TV/VGA mux
   reg [7:0] vplex;
   always @(posedge clk) if (c3)
     vplex <= vplex_in;
 
   wire [7:0] plex = vga_on ? vgaplex : vplex;
+  wire hires = vga_on ? vga_hires : tv_hires;
   wire plex_sel = vga_on ? plex_sel_in[0] : plex_sel_in[1];
   wire [7:0] vdata = hires ? {palsel, plex_sel ? plex[3:0] : plex[7:4]} : plex;
   wire blank = vga_on ? vga_blank : tv_blank;
-  wire hires = vga_on ? vga_hires : tv_hires;
 
-  wire [14:0] vpix = blank1 ? 15'b0 : vpixel[14:0];
-  // wire [14:0] vpix = blank1 ? 15'b0 : (vpixel[14:0] & 15'b111001110011100);    // test for 373 colors
-  // wire [14:0] vpix = blank1 ? 15'b0 : (vpixel[14:0] & 15'b110001100011000);    // test for 64 colors
+  assign vpix = blank1 ? 15'b0 : vpixel[14:0];
+  // assign vpix = blank1 ? 15'b0 : (vpixel[14:0] & 15'b111001110011100);    // test for 373 colors
+  // assign vpix = blank1 ? 15'b0 : (vpixel[14:0] & 15'b110001100011000);    // test for 64 colors
 
-  reg blank1;         // GOVNOKOD!!!!!!!!!!!!!!!!!!!!!
+  // GOVNOKOD!!!!!!!!!!!!!!!!!!!!!
   always @(posedge clk)
   begin
       blank1 <= blank;
@@ -114,10 +119,9 @@ module video_out
   always @(posedge clk)
     ph <= ph + 2'b1;
 
-  wire [1:0] phase = {vga_on ? vga_line : ph[1], ph[0]};
+  assign phase = {vga_on ? vga_line : ph[1], ph[0]};
 
 // PWM
-  wire [7:0] pwm[0:7];
   assign pwm[0] = 8'b00000000;
   assign pwm[1] = 8'b00000001;
   assign pwm[2] = 8'b01000001;
@@ -128,16 +132,41 @@ module video_out
   assign pwm[7] = 8'b11011111;
 
 // CRAM
-  wire [15:0] vpixel;
-
-  video_cram video_cram
+  altdpram video_cram
   (
-    .clock      (clk),
-    .wraddress  (cram_addr_in),
-    .data       (cram_data_in),
-    .wren       (cram_we),
-    .rdaddress  (vdata),
-    .q          (vpixel)
+    .inclock        (clk),
+    .data           (cram_data_in),
+    .rdaddress      (vdata),
+    .wraddress      (cram_addr_in),
+    .wren           (cram_we),
+    .q              (vpixel),
+    .aclr           (1'b0),
+    .byteena        (1'b1),
+    .inclocken      (1'b1),
+    .outclock       (1'b1),
+    .outclocken     (1'b1),
+    .rdaddressstall (1'b0),
+    .rden           (1'b1),
+    .wraddressstall (1'b0)
   );
+
+  defparam
+    video_cram.indata_aclr = "OFF",
+    video_cram.indata_reg = "INCLOCK",
+    video_cram.intended_device_family = "ACEX1K",
+    video_cram.lpm_file = "../video/mem/video_cram.mif",
+    video_cram.lpm_type = "altdpram",
+    video_cram.outdata_aclr = "OFF",
+    video_cram.outdata_reg = "UNREGISTERED",
+    video_cram.rdaddress_aclr = "OFF",
+    video_cram.rdaddress_reg = "INCLOCK",
+    video_cram.rdcontrol_aclr = "OFF",
+    video_cram.rdcontrol_reg = "UNREGISTERED",
+    video_cram.width = 16,
+    video_cram.widthad = 8,
+    video_cram.wraddress_aclr = "OFF",
+    video_cram.wraddress_reg = "INCLOCK",
+    video_cram.wrcontrol_aclr = "OFF",
+    video_cram.wrcontrol_reg = "INCLOCK";
 
 endmodule
