@@ -40,6 +40,8 @@ u16 ps2_encode(u8 data);
 #define PS2KEYBOARD_CMD_ENABLE 0xF4
 /** Command to set leds on PS2 keyboard. */
 #define PS2KEYBOARD_CMD_SETLED 0xED
+/** Command to set auto-repeat rate on PS2 keyboard. */
+#define PS2KEYBOARD_CMD_AUTOREPEAT 0xF3
 
 /** "Caps Lock" led bit in set leds command on PS2 keyboard. */
 #define PS2KEYBOARD_LED_CAPSLOCK 0x04
@@ -73,6 +75,7 @@ u8 ps2keyboard_from_log(void);
  * @param cmd [in] - command.
  */
 void ps2keyboard_send_cmd(u8 cmd);
+void ps2keyboard_send_cmd_blocking(u8 cmd);
 
 /** PS/2 keyboard task. */
 void ps2keyboard_task(void);

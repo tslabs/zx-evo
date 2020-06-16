@@ -210,7 +210,7 @@ void ps2keyboard_task(void)
 		_delay_us(100);
 
 		//if need send command on current stage
-		if (((ps2keyboard_cmd_count == 4) && (ps2keyboard_cmd == PS2KEYBOARD_CMD_SETLED)) ||
+		if (((ps2keyboard_cmd_count == 4) && ((ps2keyboard_cmd == PS2KEYBOARD_CMD_SETLED) || (ps2keyboard_cmd == PS2KEYBOARD_CMD_AUTOREPEAT))) ||
 		     ((ps2keyboard_cmd_count == 3) && (ps2keyboard_cmd == PS2KEYBOARD_CMD_RESET)))
 		{
 			ps2keyboard_send(ps2keyboard_cmd);
@@ -218,12 +218,20 @@ void ps2keyboard_task(void)
 		}
 		else
 		//if need send led data on current stage
-		if (((ps2keyboard_cmd_count == 2) && (ps2keyboard_cmd == PS2KEYBOARD_CMD_SETLED)))
-		{
-			b = (PS2KEYBOARD_LED_SCROLLOCK|PS2KEYBOARD_LED_NUMLOCK|PS2KEYBOARD_LED_CAPSLOCK) & modes_register;
-			ps2keyboard_send(b);
-			ps2keyboard_cmd_count--;
-		}
+		if (ps2keyboard_cmd_count == 2)
+    {
+      if (ps2keyboard_cmd == PS2KEYBOARD_CMD_SETLED)
+      {
+        b = (PS2KEYBOARD_LED_SCROLLOCK|PS2KEYBOARD_LED_NUMLOCK|PS2KEYBOARD_LED_CAPSLOCK) & modes_register;
+        ps2keyboard_send(b);
+        ps2keyboard_cmd_count--;
+      }
+      else if (ps2keyboard_cmd == PS2KEYBOARD_CMD_AUTOREPEAT)
+      {
+        ps2keyboard_send(0);
+        ps2keyboard_cmd_count--;
+      }
+    }
 	}
 
 	if ((ps2keyboard_count<12) &&
@@ -271,7 +279,7 @@ void ps2keyboard_task(void)
 		if (ps2keyboard_cmd)
 		{
 			//wait for 0xFA on current stage
-			if (((ps2keyboard_cmd == PS2KEYBOARD_CMD_SETLED) && (ps2keyboard_cmd_count == 3 || ps2keyboard_cmd_count == 1)) ||
+			if ((((ps2keyboard_cmd == PS2KEYBOARD_CMD_SETLED) || (ps2keyboard_cmd == PS2KEYBOARD_CMD_AUTOREPEAT)) && (ps2keyboard_cmd_count == 3 || ps2keyboard_cmd_count == 1)) ||
 			     ((ps2keyboard_cmd == PS2KEYBOARD_CMD_RESET) && (ps2keyboard_cmd_count == 2)))
 			{
 				if (b != 0xFA)
@@ -307,6 +315,13 @@ void ps2keyboard_task(void)
 	ps2keyboard_release_clk();
 }
 
+void ps2keyboard_send_cmd_blocking(u8 cmd)
+{
+  ps2keyboard_send_cmd(cmd);
+  while (ps2keyboard_cmd_count)
+    ps2keyboard_task();
+}
+
 void ps2keyboard_send_cmd(u8 cmd)
 {
 	if (ps2keyboard_cmd == 0)
@@ -314,15 +329,16 @@ void ps2keyboard_send_cmd(u8 cmd)
 		ps2keyboard_cmd = cmd;
 		switch (cmd)
 		{
-		case PS2KEYBOARD_CMD_RESET:
-			ps2keyboard_cmd_count = 3;
-			break;
-		case PS2KEYBOARD_CMD_SETLED:
-			ps2keyboard_cmd_count = 4;
-			break;
-		default:
-			ps2keyboard_cmd = 0;
-		}
+      case PS2KEYBOARD_CMD_RESET:
+        ps2keyboard_cmd_count = 3;
+        break;
+      case PS2KEYBOARD_CMD_SETLED:
+      case PS2KEYBOARD_CMD_AUTOREPEAT:
+        ps2keyboard_cmd_count = 4;
+        break;
+      default:
+        ps2keyboard_cmd = 0;
+      }
 	}
 }
 
