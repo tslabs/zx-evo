@@ -396,14 +396,61 @@ The graphic mode of the video controller is selected with bits *VM*[1:0] of **VC
 ### Scrolls
 ### TSU
 
+The Tile-Sprite Unit parses graphical objects once for every horizontal line and constructs the display line buffer. The horizontal pixel content in the line buffer is updated if the object is visible at the horizontal line.
+
 #### Features
+
+Main features of the graphics engine are:
+
+- Two layers of tiles
+- Three layers of sprites
+- Tiles are sized 8x8 pixels
+- Sprites are sized 8x8 up to 64x64 pixels, each axe independently, step by 8
+- 15 colors per pixel for tiles and sprites
+- 16 palettes for sprites, sprite can select any of 16
+- 16 palettes for tiles, tile can select any of 4 from a set selected for the tile layer out of 16
+- Pixel transparency using color 0
+- The graphics for the objects is stored in bitmaps sized 512x512 pixels, two for tiles and one for sprites
+- Two sets of scroller registers are available for the tile planes
+
+The order of objects displayed is the following (from bottom to top):
+
+- Sprites layer 0
+
+- Tiles layer 0
+
+- Sprites layer 1
+
+- Tiles layer 1
+
+- Sprites layer 2
+
 #### Bitmap
+
+Bitmap is a 16 color per pixel 128 kilobytes memory. The addressing of the pixels and lines is linear. The bitmap occupies 8 consequent pages, starting from a page with a number multiple of 8 (e.g. 16, 24, 128).
+
+There are three bitmaps: two for tile and one for sprites. Each of tile layers and sprite layer have individual page registers (**T0GPage**, **T1GPage** and **SGPage**) for the bitmap page selection. All three can select the same page, if the graphics used by the user fits into 512x512 plane entirely, for the RAM saving purpose.
+
+The bitmap is split onto 64x64 8x8 pixel elements. Both tiles and sprites address an element in the bitmap by its index. The tiles only contain one element. Sprites can contain up to 64 bitmap elements (up to 8x8) and address the left upper element of the rectangle. See the following figure.
+
+Sprite sized 32x32 pixels, bitmap element selector (left upper corner) is set to 0.
+
+![sprite](.\img\sprite.png)
 
 #### Tiles
 
 ##### Overview
 
+The tile layers allow to display a unified set of 8x8 bitmaps (tiles) using only 16 bits per a tile. The tile arrays are stored in the Tile map. The bitmaps graphics is stored in the Bitmap.
+
 ##### Tile map
+
+Tile map is an array, in which each element selects a piece of a bitmap 8x8 pixels to be displayed. Each tile in the map occupies two bytes. It contains 12 bits of a bitmap index, two bits for palette selector within a globally selected part of the palette for current tile layer and bits for vertical and horizontal flip.
+
+Tile map contains 64x64 elements for each layer, but only a rectangle which is covered by the screen frame is visible. The size of the screen frame is selected in **VConfig** register. The tile map is looped at both its edges. This allows displaying 'endlessly' scrolled maps.
+
+The RAM page containing the tile map is selected in **TMPage** register. Each tile line is 256 bytes size. Tiles of the layer 0 are stored with offset 0..127 of each line and tiles of the layer 1 with offset 128..255.
+
 #### Sprites
 ##### Overview
 
