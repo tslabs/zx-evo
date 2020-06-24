@@ -22,6 +22,8 @@
   extern FILE *f_log_FE_out;
 #endif
 
+  u8 ay_last_reg; // temp!
+
 bool assert_dma_active()
 {
   bool rc = true;
@@ -813,9 +815,9 @@ set1FFD:
            break;
          }
 
-         ayx32.reg = val;
+         ay_last_reg = val;
          if ((conf.sound.ay_scheme == AY_SCHEME_AYX32) && (val >= 16))
-           ayx32.write_addr(val);
+           ayx32.write_addr((SNDAYX32::REG)val);
          else
            ay[comp.active_ay].select(val);
          return;
@@ -837,7 +839,7 @@ set1FFD:
              n_ay = comp.active_ay;
          }
 
-         if ((conf.sound.ay_scheme == AY_SCHEME_AYX32) && (ayx32.reg >= 16))
+         if ((conf.sound.ay_scheme == AY_SCHEME_AYX32) && (ay_last_reg >= 16))
            ayx32.write(temp.sndblock ? 0 : cpu.t, val);
          else
            ay[n_ay].write(temp.sndblock ? 0 : cpu.t, val);
@@ -1381,7 +1383,7 @@ __inline u8 in1(unsigned port)
       }
 
       u8 rc;
-      if ((conf.sound.ay_scheme == AY_SCHEME_AYX32) && (ayx32.reg >= 16))
+      if ((conf.sound.ay_scheme == AY_SCHEME_AYX32) && (ay_last_reg >= 16))
         rc = ayx32.read();
       else
         rc = ay[n_ay].read();
