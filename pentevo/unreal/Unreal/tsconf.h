@@ -1,4 +1,5 @@
 #pragma once
+#include "sysdefs.h"
 
 typedef void (*INITIAL_FUNCTION)();
 typedef u32 (*TASK_FUNCTION)(u32);

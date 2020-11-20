@@ -4,7 +4,6 @@
 #include "vars.h"
 #include "draw.h"
 #include "tsconf.h"
-#include "sdcard.h"
 #include "zc.h"
 #include "resource.h"
 #include "ft812.h"
@@ -862,7 +861,7 @@ void sfile_dump()
 
 void invalidate_ts_cache()
 {
-	for (u16 i = 0; i < TS_CACHE_SIZE; i++)
+	for (u16 i = 0; i < ts_cache_size; i++)
 		cpu.tscache_addr[i] = -1;
 }
 

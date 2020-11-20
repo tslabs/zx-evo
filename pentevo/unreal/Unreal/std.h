@@ -10,17 +10,17 @@
 #define D3D_DEBUG_INFO 1
 #endif
 
-#include <windows.h>
-#include <windowsx.h>
-#include <setupapi.h>
-#include <commctrl.h>
-#include <gdiplus.h>
+#include <Windows.h>
+#include <WindowsX.h>
+#include <SetupAPI.h>
+#include <CommCtrl.h>
+#include <GdiPlus.h>
 #include <d3d9.h>
 #ifdef __GNUC__
 #define D3DVECTOR_DEFINED
 #define COMMPROP_INITIALIZED ((DWORD)0xE73CF52E)
 #else
-#include <initguid.h>
+#include <InitGuid.h>
 #endif
 #include <ddraw.h>
 #include <dinput.h>
@@ -61,7 +61,7 @@
 #include "ddk.h"
 #include "mods.h"
 
-#define CACHE_LINE 64
+constexpr auto CACHE_LINE = 64;
 
 #if _MSC_VER >= 1300
 #define CACHE_ALIGNED __declspec(align(CACHE_LINE))

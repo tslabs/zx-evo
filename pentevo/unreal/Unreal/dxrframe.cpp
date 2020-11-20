@@ -1,9 +1,6 @@
 #include "std.h"
 #include "emul.h"
 #include "vars.h"
-#include "draw.h"
-#include "dxrcopy.h"
-#include "util.h"
 
 #if 0
 void _render_black(u8 *dst, unsigned pitch)

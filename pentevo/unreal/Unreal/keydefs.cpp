@@ -1,6 +1,5 @@
 #include "std.h"
 #include "emul.h"
-#include "vars.h"
 #include "emulkeys.h"
 #include "snapshot.h"
 #include "gui.h"

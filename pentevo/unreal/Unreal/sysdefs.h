@@ -1,7 +1,5 @@
 #pragma once
 
-#include <immintrin.h>
-
 //#define inline __inline
 #define forceinline __forceinline
 #define fastcall             // parameters in registers

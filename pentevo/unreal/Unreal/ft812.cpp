@@ -2,7 +2,6 @@
 // FT812 VideoDAC2 wrapper
 
 #include "std.h"
-#include "emul.h"
 #include "vars.h"
 #include "ft812.h"
 #include "ft8xx/FT_Platform.h"

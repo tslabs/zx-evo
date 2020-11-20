@@ -10,6 +10,6 @@ void render_2xs(u8 *dst, u32 pitch);
 void render_3x(u8 *dst, u32 pitch);
 void render_4x(u8 *dst, u32 pitch);
 
-void FlipGdi(void);
-void FlipBlt(void);
-void FlipD3d(void);
+static void FlipGdi(void);
+static void FlipBlt(void);
+static void FlipD3d(void);

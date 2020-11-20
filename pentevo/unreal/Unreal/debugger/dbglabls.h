@@ -1,4 +1,6 @@
 #pragma once
+#include "sysdefs.h"
+
 struct mon_label final
 {
     u8 *address;

@@ -15,6 +15,8 @@
 #include "util.h"
 #include "config.h"
 
+#include "sound/dev_moonsound.h"
+
 char load_errors;
 const char* SSHOT_EXT[] = { "scr", "bmp", "png", "gif" };
 
@@ -158,7 +160,7 @@ void add_presets(const char *section, const char *prefix0, unsigned *num, char *
    char *p = strchr(defval, ';');
    if (p) *p = 0;
 
-   for (p = defval+strlen(defval)-1; p>=defval && *p == ' '; *p-- = 0);
+   for (p = defval+strlen(defval)-1; p>=defval && *p == ' '; *p-- = 0) {};
 
    char prefix[0x200];
    strcpy(prefix, prefix0);
@@ -979,7 +981,7 @@ void apply_memory()
       }
       else
       {
-         char *romname = 0;
+         char *romname = nullptr;
          switch(conf.mem_model)
          {
          case MM_PENTAGON: romname = conf.pent_rom_path; break;

@@ -1,3 +1,5 @@
+#include "defs.h"
+
 void __declspec(noreturn) exit();
 void correct_exit();
 void wnd_resize(int scale);

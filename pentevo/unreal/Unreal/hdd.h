@@ -1,4 +1,6 @@
 #pragma once
+#include "sysdefs.h"
+
 struct ATA_DEVICE
 {
    unsigned c,h,s,lba;

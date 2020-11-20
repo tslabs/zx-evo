@@ -1,7 +1,5 @@
 #include "std.h"
 #include "sysdefs.h"
-#include "emul.h"
-#include "vars.h"
 #include "memory.h"
 #include "debugger/dbglabls.h"
 #include "util.h"

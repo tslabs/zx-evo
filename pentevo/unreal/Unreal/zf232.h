@@ -1,4 +1,5 @@
 #pragma once
+#include "sysdefs.h"
 
 #define ROVBSIZE        512
 #define WOVBSIZE        1024

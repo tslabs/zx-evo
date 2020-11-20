@@ -4,6 +4,8 @@
 
 struct Z80;
 
+constexpr auto Z80FQ = 3500000;
+
 #define Z80FAST    fastcall
 
 // #define LOG_TAPE_IN
@@ -33,8 +35,8 @@ typedef union
   };
 } RGB32;
 
-#define TS_CACHE_SIZE 512
-#define Z80_PC_HISTORY_SIZE 32
+constexpr auto ts_cache_size = 512;
+constexpr auto z80_pc_history_size = 32;
 
 typedef struct
 {
@@ -211,10 +213,10 @@ struct TZ80State
 
   u8       im;
   bool     nmi_in_progress;
-  u32      tscache_addr[TS_CACHE_SIZE];
-  u8       tscache_data[TS_CACHE_SIZE];
+  u32      tscache_addr[ts_cache_size];
+  u8       tscache_data[ts_cache_size];
 
-  PC_HISTORY_t pc_hist[Z80_PC_HISTORY_SIZE];
+  PC_HISTORY_t pc_hist[z80_pc_history_size];
   u32 pc_hist_ptr;
 };
 
@@ -227,15 +229,17 @@ struct TMemIf
   TWm wm;
 };
 
+constexpr auto MAX_CBP = 16;
+
 struct Z80 : public TZ80State
 {
-  u8       tmp0, tmp1, tmp3;
+  u8       tmp0{}, tmp1{}, tmp3{};
   unsigned rate;
-  bool     vm1;    // halt handling type
-  u8       outc0;
-  u16      last_branch;
+  bool     vm1{};    // halt handling type
+  u8       outc0{};
+  u16      last_branch{};
   unsigned trace_curs, trace_top, trace_mode;
-  unsigned mem_curs, mem_top, mem_second;
+  unsigned mem_curs, mem_top, mem_second{};
   unsigned pc_trflags;
   unsigned nextpc;
   unsigned dbg_stophere;
@@ -245,15 +249,14 @@ struct Z80 : public TZ80State
   u8       dbgchk;   // Признак наличия активных брекпоинтов
   bool     int_pend; // На входе int есть активное прерывание
   bool     int_gate; // Разрешение внешних прерываний (1-разрешены/0 - запрещены)
-  unsigned halt_cycle;
+  unsigned halt_cycle{};
 
-   #define MAX_CBP    16
-  unsigned cbp[MAX_CBP][128]; // Условия для условных брекпоинтов
-  unsigned cbpn;
+  unsigned cbp[MAX_CBP][128]{}; // Условия для условных брекпоинтов
+  unsigned cbpn{};
 
   i64      debug_last_t; // used to find time delta
   u32      tpi;          // Число тактов между прерываниями
-  u32      trpc[40];
+  u32      trpc[40]{};
   //   typedef u8 (* TRmDbg)(u32 addr);
   //   typedef u8 *(* TMemDbg)(u32 addr);
   //   typedef void (* TWmDbg)(u32 addr, u8 val);
@@ -281,8 +284,8 @@ struct Z80 : public TZ80State
   }
 
   Z80(u32 Idx, TBankNames BankNames, TStep Step, TDelta Delta,
-      TSetLastT SetLastT, u8 *membits, const TMemIf *FastMemIf, const TMemIf *DbgMemIf) :
-    Idx(Idx),
+      TSetLastT SetLastT, u8 *membits, const TMemIf *FastMemIf, const TMemIf *DbgMemIf) : TZ80State(),
+	  Idx(Idx),
     BankNames(BankNames),
     Step(Step), Delta(Delta), SetLastT(SetLastT), membits(membits),
     FastMemIf(FastMemIf), DbgMemIf(DbgMemIf)
@@ -303,9 +306,8 @@ struct Z80 : public TZ80State
     int_gate        = true;
     nmi_in_progress = false;
   }
-  virtual ~Z80()
-  {
-  }
+	
+  virtual ~Z80() = default;
 
   u32 GetIdx() const
   {
@@ -366,14 +368,14 @@ struct Z80 : public TZ80State
   virtual void retn()                     = 0; // Вызывается в конце инструкции retn (должна сбрасывать флаг nmi_in_progress и обновлять раскладку памяти)
 };
 
-#define CF    0x01
-#define NF    0x02
-#define PV    0x04
-#define F3    0x08
-#define HF    0x10
-#define F5    0x20
-#define ZF    0x40
-#define SF    0x80
+constexpr auto CF = 0x01;
+constexpr auto NF = 0x02;
+constexpr auto PV = 0x04;
+constexpr auto F3 = 0x08;
+constexpr auto HF = 0x10;
+constexpr auto F5 = 0x20;
+constexpr auto ZF = 0x40;
+constexpr auto SF = 0x80;
 
 #define cputact(a)    cpu->tt += ((a) * cpu->rate)
 // #define cputact(a) cpu->t += (a)

@@ -1,12 +1,7 @@
-#include "std.h"
-#include "emul.h"
-#include "vars.h"
 #include "defs.h"
 #include "tables.h"
-#include "op_system.h"
 #include "op_noprefix.h"
 #include "daa_tabs.h"
-#include <stdio.h>
 
 /*  not prefixed opcodes */
 

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "sysdefs.h"
-#include "defs.h"
 #include "sndrender.h"
 #include "tsconf.h"
 #include "savevid.h"
@@ -9,11 +8,11 @@
 #define EMUL_DEBUG
 #define TRASH_PAGE
 
-#define PAGE 0x4000U
-#define MAX_RAM_PAGES 256       // 4Mb RAM
-#define MAX_CACHE_PAGES 2       // 32K cache
-#define MAX_MISC_PAGES 1        // trash page
-#define MAX_ROM_PAGES 64        // 1Mb
+constexpr unsigned PAGE = 0x4000U;
+constexpr auto MAX_RAM_PAGES = 256;       // 4Mb RAM;
+constexpr auto MAX_CACHE_PAGES = 2;       // 32K cache;
+constexpr auto MAX_MISC_PAGES = 1;        // trash page;
+constexpr auto MAX_ROM_PAGES = 64;        // 1Mb;
 
 #define GS4MB //0.37.0
 #ifdef MOD_GSZ80

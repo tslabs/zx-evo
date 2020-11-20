@@ -5,8 +5,6 @@
 #include "config.h"
 #include "draw.h"
 #include "dx.h"
-#include "dxrend.h"
-#include "fntsrch.h"
 #include "tape.h"
 #include "snapshot.h"
 #include "leds.h"

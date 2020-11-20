@@ -1,6 +1,4 @@
 #include "std.h"
-#include "emul.h"
-#include "vars.h"
 #include "dbgpaint.h"
 #include "dbgwidgets.h"
 #include <algorithm>

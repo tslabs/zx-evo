@@ -1,4 +1,6 @@
 #pragma once
+#include "sysdefs.h"
+
 extern const u8 rl0[];
 extern const u8 rl1[];
 

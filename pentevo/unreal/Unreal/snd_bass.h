@@ -1,4 +1,5 @@
 #pragma once
+#include "std.h"
 
 namespace BASS
 {

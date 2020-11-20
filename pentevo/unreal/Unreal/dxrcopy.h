@@ -1,4 +1,5 @@
 #pragma once
+#include "sysdefs.h"
 
 #define line16 line8d
 #define line16d line32

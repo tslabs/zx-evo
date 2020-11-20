@@ -4,7 +4,9 @@
 #include "gs.h"
 #include "tape.h"
 #include "config.h"
+#include "saa1099.h"
 #include "sndcounter.h"
+#include "sound/dev_moonsound.h"
 
 extern SNDRENDER sound;
 extern SNDCHIP ay[2];

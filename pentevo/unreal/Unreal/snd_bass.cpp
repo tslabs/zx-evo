@@ -1,6 +1,5 @@
 #include "std.h"
 #include "emul.h"
-#include "vars.h"
 #include "util.h"
 
 #if defined(MOD_GSZ80) || defined(MOD_GSBASS)

@@ -1,7 +1,6 @@
 #include "std.h"
 #include "emul.h"
 #include "vars.h"
-#include "util.h"
 
 void FDD::format_isd()
 {

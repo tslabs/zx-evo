@@ -1,4 +1,5 @@
 #pragma once
+#include "sysdefs.h"
 
 namespace z80gs
 {

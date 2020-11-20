@@ -1,4 +1,5 @@
 #pragma once
+#include "sysdefs.h"
 
 void gdi_frame();
 void _render_black(u8 *dst, unsigned pitch);

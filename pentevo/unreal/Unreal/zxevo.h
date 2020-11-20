@@ -1,5 +1,5 @@
 #pragma once
-
+#include "sysdefs.h"
 
 extern u32 zxevo_readfont_pos;
 

@@ -1,6 +1,4 @@
 #include "std.h"
-#include "sysdefs.h"
-#include "resource.h"
 #include "mods.h"
 #include "emul_2203.h"
 #include "sndrender.h"

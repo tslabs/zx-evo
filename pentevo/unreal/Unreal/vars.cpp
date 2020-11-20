@@ -66,7 +66,7 @@ u8 TMainZ80::rd(u32 addr)
 u8 TMainZ80::m1_cycle()
 {
   cpu.pc_hist_ptr++;
-  if (cpu.pc_hist_ptr >= Z80_PC_HISTORY_SIZE) cpu.pc_hist_ptr = 0;
+  if (cpu.pc_hist_ptr >= z80_pc_history_size) cpu.pc_hist_ptr = 0;
   cpu.pc_hist[cpu.pc_hist_ptr].addr = cpu.pc;
   cpu.pc_hist[cpu.pc_hist_ptr].page = comp.ts.page[(cpu.pc >> 14) & 3];
   
@@ -643,8 +643,8 @@ PALETTE_OPTIONS pals[32] = {{"default",0x00,0x80,0xC0,0xE0,0xFF,0xC8,0xFF,0x00,0
 
 #pragma pack()
 
-u8 snbuf[SNDBUFSZ];
-u8 gdibuf[GDIBUFSZ];
+u8 snbuf[snd_buf_sz];
+u8 gdibuf[gdi_buf_sz];
 u8 debug_gdibuf[DBG_GDIBUFSZ];
 
 // on-screen watches block

@@ -3,7 +3,6 @@
 #include "vars.h"
 #include "config.h"
 #include "dx.h"
-#include "draw.h"
 #include "iehelp.h"
 #include "gs.h"
 #include "leds.h"

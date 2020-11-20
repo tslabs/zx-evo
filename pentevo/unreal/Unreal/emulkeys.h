@@ -1,4 +1,5 @@
 #pragma once
+#include "emul.h"
 
 void wnd_resize(int scale);
 void correct_exit();

@@ -1,5 +1,6 @@
 #pragma once
-
+#include "std.h"
+#include "sysdefs.h"
 #include "util.h"
 
 #undef SD_SEND

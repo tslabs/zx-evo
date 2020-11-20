@@ -8,9 +8,9 @@
 
 struct CHEATDLG
 {
-   HWND dlg;
-   HWND resBox;
-   HWND resLabel;
+   HWND dlg{};
+   HWND resBox{};
+   HWND resLabel{};
 
    void ShowResults();
    void SetControls();
@@ -18,11 +18,11 @@ struct CHEATDLG
 
    u8 *lastsnap;
    u8 *bitmask;
-   unsigned searchSize;
+   unsigned searchSize{};
    unsigned nFound;
-   u8 wordmode, hex;
+   u8 wordmode{}, hex{};
 
-   CHEATDLG() { lastsnap = 0; bitmask = 0; nFound = -1; mode = S_NEW; }
+   CHEATDLG() { lastsnap = nullptr; bitmask = nullptr; nFound = -1; mode = S_NEW; }
    ~CHEATDLG() { free(lastsnap); free(bitmask);  }
 
    enum SR_MODE { S_NEW, S_VAL, S_INC, S_DEC } mode;

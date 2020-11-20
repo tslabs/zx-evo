@@ -1,4 +1,5 @@
 #pragma once
+#include <defs.h>
 
 constexpr auto regs_x = 1;
 constexpr auto regs_y = 1;

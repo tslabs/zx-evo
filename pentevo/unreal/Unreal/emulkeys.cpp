@@ -12,13 +12,11 @@
 #include "savesnd.h"
 #include "tape.h"
 #include "gui.h"
-#include "leds.h"
 #include "snapshot.h"
 #include "wd93dat.h"
 #include "init.h"
 #include "z80.h"
 #include "emulkeys.h"
-#include "draw.h"
 #include "util.h"
 
 extern VCTR vid;

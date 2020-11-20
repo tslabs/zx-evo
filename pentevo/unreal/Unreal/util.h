@@ -1,4 +1,5 @@
 #pragma once
+#include "std.h"
 #include "emul.h"
 
 class TCriticalSection

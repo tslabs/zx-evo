@@ -1,16 +1,17 @@
 #pragma once
+#include "sysdefs.h"
 
-#define MAX_WIDTH_P (64*2)
-#define MAX_WIDTH 512
-#define MAX_HEIGHT 320
-#define MAX_BUFFERS 8
+constexpr auto MAX_WIDTH_P = (64*2);
+constexpr auto MAX_WIDTH = 512;
+constexpr auto MAX_HEIGHT = 320;
+constexpr auto MAX_BUFFERS = 8;
 
-#define VID_TACTS 224
-#define VID_LINES 320
-#define VID_WIDTH 448
-#define VID_HEIGHT 320
+constexpr auto VID_TACTS = 224;
+constexpr auto VID_LINES = 320;
+constexpr auto VID_WIDTH = 448;
+constexpr auto VID_HEIGHT = 320;
 
-#define MEM_CYCLES VID_TACTS*2
+constexpr auto MEM_CYCLES = (VID_TACTS * 2);
 
 enum VMODE
 {
@@ -78,8 +79,8 @@ struct VCTR
 	u16		memcyc_lcmd;	// number of memory cycles used in last command
 };
 
-#define MAX_FONT_TABLES 0x62000
-static const int sc2lines_width = MAX_WIDTH*2;
+constexpr auto MAX_FONT_TABLES = 0x62000;
+constexpr auto sc2lines_width = MAX_WIDTH*2;
 
 CACHE_ALIGNED struct T
 {

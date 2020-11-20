@@ -1,4 +1,5 @@
 #pragma once
+#include "sysdefs.h"
 
 u8 *editam(unsigned addr);
 

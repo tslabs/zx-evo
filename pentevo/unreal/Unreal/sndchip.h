@@ -6,6 +6,7 @@
 
 #include "sysdefs.h"
 #include "sndrender.h"
+#include <emul_2203.h>
 
 const unsigned SNDR_DEFAULT_AY_RATE = 1774400; // original ZX-Spectrum soundchip clock fq
 

@@ -1,3 +1,6 @@
+#pragma once
+#include "sysdefs.h"
+
 #pragma pack(1)
 
 struct blkSPG1_0{

@@ -1,4 +1,7 @@
 #pragma once
+#include "std.h"
+#include "sysdefs.h"
+
 const int MAX_PHYS_HD_DRIVES = 8;
 const int MAX_PHYS_CD_DRIVES = 8;
 const int MAX_SENSE_LEN = 0x40;

@@ -13,11 +13,7 @@
 #include "dbgbpx.h"
 #include "dbgcmd.h"
 #include "util.h"
-#include "draw.h"
-#include "leds.h"
-#include "dxrend.h"
 #include "resource.h"
-#include "emulkeys.h"
 #include "dbgrwdlg.h"
 #include "dbgtsconf.h"
 

@@ -1,7 +1,6 @@
 #include "std.h"
 #include "emul.h"
 #include "vars.h"
-#include "util.h"
 
 static const u8 sn0[] = { 1, 2, 3, 4, 9 };
 static const u8 sn[] = { 1, 2, 3, 4, 5 };

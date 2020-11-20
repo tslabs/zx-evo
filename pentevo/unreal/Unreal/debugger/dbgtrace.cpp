@@ -11,7 +11,6 @@
 #include "op_system.h"
 #include "util.h"
 #include "draw.h"
-#include "leds.h"
 #include "emulkeys.h"
 
 extern VCTR vid;

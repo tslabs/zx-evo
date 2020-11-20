@@ -2,7 +2,6 @@
 #include "emul.h"
 #include "vars.h"
 #include "font.h"
-#include "font16.h"
 #include "gs.h"
 #include "tape.h"
 #include "draw.h"
@@ -252,13 +251,13 @@ void load_led()
    } else
 #endif
    if (trdos_format) {
-      diskcolor = (trdos_format < ROMLED_TIME*3/4) ? 0x06 : 0x0E;
+      diskcolor = (trdos_format < romled_time*3/4) ? 0x06 : 0x0E;
       trdos_format--;
    } else if (trdos_save) {
-      diskcolor = (trdos_save < ROMLED_TIME*3/4) ? 0x02 : 0x0A;
+      diskcolor = (trdos_save < romled_time*3/4) ? 0x02 : 0x0A;
       trdos_save--;
    } else if (trdos_load) {
-      diskcolor = (trdos_load < ROMLED_TIME*3/4) ? 0x01 : 0x09;
+      diskcolor = (trdos_load < romled_time*3/4) ? 0x01 : 0x09;
       trdos_load--;
    } else if (trdos_seek) {
       trdos_seek--;

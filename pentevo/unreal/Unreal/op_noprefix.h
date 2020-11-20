@@ -1,4 +1,6 @@
 #pragma once
+#include "defs.h"
+
 #define op_40 op_00     // ld b,b
 #define op_49 op_00     // ld c,c
 #define op_52 op_00     // ld d,d

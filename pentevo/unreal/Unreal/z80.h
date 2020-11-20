@@ -1,4 +1,5 @@
 #pragma once
+#include "sysdefs.h"
 
 #ifdef MOD_FASTCORE
    namespace z80fast

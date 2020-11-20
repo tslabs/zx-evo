@@ -4,8 +4,6 @@
 #include "debug.h"
 #include "dbgpaint.h"
 #include "dx.h"
-#include "draw.h"
-#include "dxrframe.h"
 #include "font16.h"
 #include "util.h"
 

@@ -3,7 +3,6 @@
 #include "emul.h"
 #include "vars.h"
 #include "dx.h"
-#include "memory.h"
 #include "util.h"
 
 u8 wavhdr[]= {

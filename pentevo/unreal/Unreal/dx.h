@@ -1,4 +1,7 @@
 #pragma once
+#include "sysdefs.h"
+#include "ddraw.h"
+#include "dinput.h"
 
 // enum
 // {
@@ -10,7 +13,7 @@
     // DRIVER_BLT,
 // };
 
-#define MAXWQSIZE 32
+constexpr auto MAXWQSIZE = 32;
 
 extern const DRIVER drivers[3];
 extern size_t renders_count;

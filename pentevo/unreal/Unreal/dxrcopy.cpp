@@ -1,7 +1,4 @@
 #include "std.h"
-#include "emul.h"
-#include "vars.h"
-#include "draw.h"
 #include "dxrcopy.h"
 
 // #define QUAD_BUFFER  // tests show that this variant is slower, even in noflic mode

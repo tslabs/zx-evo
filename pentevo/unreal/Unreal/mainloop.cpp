@@ -6,7 +6,6 @@
 #include "dx.h"
 #include "leds.h"
 #include "memory.h"
-#include "snapshot.h"
 #include "emulkeys.h"
 #include "vs1001.h"
 #include "z80.h"

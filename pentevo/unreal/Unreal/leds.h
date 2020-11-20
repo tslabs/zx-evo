@@ -1,4 +1,6 @@
 #pragma once
+#include "sysdefs.h"
+#include "draw.h"
 
 extern HANDLE hndKbdDev;
 extern CACHE_ALIGNED u32 vbuf[2][sizeof_vbuf];

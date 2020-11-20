@@ -1,4 +1,5 @@
 #pragma once
+#include "sysdefs.h"
 
 extern char asmbuf[0x40];
 extern u8 asmresult[24];

@@ -3,7 +3,6 @@
 #include "vars.h"
 #include "dxrend.h"
 #include "draw.h"
-#include "util.h"
 
 // 1x 32bit
 void render_1x(u8 *dst, u32 stride_u8)

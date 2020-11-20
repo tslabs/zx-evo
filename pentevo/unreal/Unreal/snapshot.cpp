@@ -37,7 +37,7 @@ bool GdiplusStartup()
         GetImageEncodersSize(&num, &size);
         if (num)
         {
-            ImageCodecInfo* info = (ImageCodecInfo*)(malloc(size));
+	        const auto info = (ImageCodecInfo*)(malloc(size));
             if (GetImageEncoders(num, size, info) == Ok)
             {
                 for (UINT i = 0; i < num; i++)

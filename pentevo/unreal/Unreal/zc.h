@@ -1,4 +1,7 @@
 #pragma once
+#include "sysdefs.h"
+#include "sdcard.h"
+
 // Z-Controller by KOE
 // Only SD-card
 

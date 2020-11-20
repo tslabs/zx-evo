@@ -7,13 +7,14 @@
 #include "atm.h"
 #include "sound.h"
 #include "gs.h"
-#include "sdcard.h"
+#include "saa1099.h"
 #include "zc.h"
 #include "z80.h"
 #include "tape.h"
 #include "zxevo.h"
 #include "sound/ayx32.h"
 #include "util.h"
+#include "sound/dev_moonsound.h"
 
 #ifdef LOG_FE_OUT
   extern FILE *f_log_FE_in;

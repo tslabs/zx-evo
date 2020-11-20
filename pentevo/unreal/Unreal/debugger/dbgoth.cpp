@@ -238,7 +238,7 @@ void show_pc_history()
   for (u32 i = 0; i < pc_history_wy; i++)
 	{
     int p = cpu.pc_hist_ptr - i;
-    if (p < 0) p += Z80_PC_HISTORY_SIZE;
+    if (p < 0) p += z80_pc_history_size;
     
     sprintf(xx, "%02X:%04X", cpu.pc_hist[p].page, cpu.pc_hist[p].addr);
     tprint(pc_history_x, pc_history_y + i + 1, xx, w_other);

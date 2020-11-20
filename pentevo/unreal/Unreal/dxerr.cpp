@@ -1,9 +1,6 @@
 #include "std.h"
 #include "emul.h"
-#include "vars.h"
 #include "util.h"
-#include <vfwmsgs.h>
-#include <dmerror.h>
 #include <mmsystem.h>
 
 typedef struct {

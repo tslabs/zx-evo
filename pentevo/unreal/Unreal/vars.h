@@ -1,15 +1,13 @@
 #pragma once
-#include "emul_2203.h"
+#include "emul.h"
 #include "sndchip.h"
-#include "saa1099.h"
-#include "sound/dev_moonsound.h"
 #include "sound/ayx32.h"
 #include "debugger/debug.h"
 
-#define ROMLED_TIME 16
+constexpr auto romled_time = 16;
 
-#define SNDBUFSZ (4*1048576) // large temporary buffer (for reading snapshots)
-#define GDIBUFSZ (448*320*4*4*4)	// Quad size, 32 bit, 448x320 max
+constexpr auto snd_buf_sz = (4 * 1048576); // large temporary buffer (for reading snapshots);
+constexpr auto gdi_buf_sz = (448 * 320 * 4 * 4 * 4);	// Quad size, 32 bit, 448x320 max;
 #define DBG_GDIBUFSZ (DEBUG_WND_WIDTH*DEBUG_WND_HEIGHT)	// Quad size, 32 bit, 448x320 max
 
 #pragma pack(8)
@@ -187,8 +185,8 @@ extern u8 trace_ram;
 
 extern TMainZ80 cpu;
 extern u8 dbgbreak;
-extern u8 snbuf[SNDBUFSZ];		// large temporary buffer (for reading snapshots)
-extern u8 gdibuf[GDIBUFSZ];
+extern u8 snbuf[snd_buf_sz];		// large temporary buffer (for reading snapshots)
+extern u8 gdibuf[gdi_buf_sz];
 extern u8 debug_gdibuf[DBG_GDIBUFSZ];
 
 extern SNDCHIP ay[2];

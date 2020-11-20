@@ -1,4 +1,5 @@
 #pragma once
+#include "sysdefs.h"
 
 struct t_reg_layout final
 {

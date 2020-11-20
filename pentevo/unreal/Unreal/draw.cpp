@@ -3,9 +3,7 @@
 #include "vars.h"
 #include "draw.h"
 #include "drawers.h"
-#include "drawnomc.h"
 #include "dx.h"
-#include "memory.h"
 #include "config.h"
 #include "util.h"
 #include "leds.h"
@@ -183,7 +181,7 @@ void make_colortab(char flash_active)
           paper = t;
       }
 
-      u8 color = (paper << 4) | ink;
+      const u8 color = (paper << 4) | ink;
 
       colortab[a] = color;
       colortab_s8[a] = color << 8;

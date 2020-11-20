@@ -2,7 +2,6 @@
 #include "emul.h"
 #include "vars.h"
 #include "draw.h"
-#include "dx.h"
 #include "debug.h"
 #include "dbgpaint.h"
 #include "dbgmem.h"
@@ -11,7 +10,6 @@
 #include "memory.h"
 #include "gui.h"
 #include "util.h"
-#include "leds.h"
 
 void out(unsigned port, u8 val);
 

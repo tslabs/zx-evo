@@ -5,8 +5,6 @@
 #include "memory.h"
 #include "util.h"
 
-#define Z80FQ 3500000
-
 unsigned tape_pulse[0x100];
 unsigned max_pulses = 0;
 unsigned tape_err = 0;

@@ -5,7 +5,6 @@
 #include "snd_bass.h"
 #include "gshle.h"
 #include "gs.h"
-#include "init.h"
 #include "util.h"
 
 #ifdef MOD_GSBASS

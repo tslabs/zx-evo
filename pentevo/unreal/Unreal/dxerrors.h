@@ -1,5 +1,8 @@
 /* Machine generated. Do not edit. */
 
+#include <vfwmsgs.h>
+#include <dmerror.h>
+
 static const WCHAR name1W[] = { 'S','_','O','K',0 };
 static const CHAR description1A[] = "The function completed successfully";
 static const WCHAR description1W[] = { 'T','h','e',' ','f','u','n','c','t','i','o','n',' ','c','o','m','p','l','e','t','e','d',' ','s','u','c','c','e','s','s','f','u','l','l','y',0 };

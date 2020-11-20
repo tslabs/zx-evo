@@ -1,4 +1,5 @@
 #pragma once
+#include "sysdefs.h"
 
 typedef i16 stream_sample_t;
 typedef stream_sample_t FMSAMPLE;

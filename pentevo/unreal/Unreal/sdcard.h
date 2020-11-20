@@ -1,4 +1,5 @@
 #pragma once
+#include "sysdefs.h"
 
 const u8 _SDNCS = 1;
 const u8 _SDDET = 2;

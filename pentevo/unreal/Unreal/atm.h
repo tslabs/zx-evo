@@ -1,4 +1,5 @@
 #pragma once
+#include "sysdefs.h"
 
 void set_turbo(void);
 void set_atm_FF77(unsigned port, u8 val);

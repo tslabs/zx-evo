@@ -185,7 +185,7 @@ void WD1793::process()
 
             if (rwlen)
             {
-               trdos_load = ROMLED_TIME;
+               trdos_load = romled_time;
                if (rqs & DRQ)
                    status |= WDS_LOST;
                data = seldrive->t.trkd[rwptr++];
@@ -241,7 +241,7 @@ void WD1793::process()
          case S_WRITE:
             if (notready()) break;
             if (rqs & DRQ) status |= WDS_LOST, data = 0;
-            trdos_save = ROMLED_TIME;
+            trdos_save = romled_time;
             seldrive->t.write(rwptr++, data, 0); rwlen--;
             if (rwptr == seldrive->t.trklen) rwptr = 0;
             seldrive->t.sf = JUST_SEEK; // invalidate sectors
@@ -282,7 +282,7 @@ void WD1793::process()
          {
             if (notready())
                 break;
-            trdos_format = ROMLED_TIME;
+            trdos_format = romled_time;
             if (rqs & DRQ)
             {
                 status |= WDS_LOST;
@@ -360,7 +360,7 @@ void WD1793::process()
 
          case S_STEP:
          {
-            trdos_seek = ROMLED_TIME;
+            trdos_seek = romled_time;
 
             // TRK00 sampled only in RESTORE command
             if (!seldrive->track && !(cmd & 0xF0)) { track = 0; state = S_VERIFY; break; }
@@ -720,7 +720,7 @@ void WD1793::trdos_traps()
 		{ cpu.a = cpu.c = 1; return; } // no delays
    if (pc == 0x3FEC && bankr[0][0x3FED] == 0xA2 && (state == S_READ || (state2 == S_READ && state == S_WAIT)))
    {
-      trdos_load = ROMLED_TIME;
+      trdos_load = romled_time;
       if (rqs & DRQ) {
          cpu.DbgMemIf->wm(cpu.hl, data); // move byte from controller
          cpu.hl++, cpu.b--;
@@ -739,7 +739,7 @@ void WD1793::trdos_traps()
    }
    if (pc == 0x3FD1 && bankr[0][0x3FD2] == 0xA3 &&
               (rqs & DRQ) && (rwlen>1) && (state == S_WRITE || (state2 == S_WRITE && state == S_WAIT))) {
-      trdos_save = ROMLED_TIME;
+      trdos_save = romled_time;
       while (rwlen > 1) {
          seldrive->t.write(rwptr++, cpu.DbgMemIf->rm(cpu.hl), 0); rwlen--;
          cpu.hl++; cpu.b--;

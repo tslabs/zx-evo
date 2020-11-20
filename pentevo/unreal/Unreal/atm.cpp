@@ -18,17 +18,17 @@ void atm_memswap()
 
 void AtmApplySideEffectsWhenChangeVideomode(u8 val)
 {
-    int NewVideoMode = (val & 7);
-    int OldVideoMode = (comp.pFF77 & 7);
+	const int NewVideoMode = (val & 7);
+	const int OldVideoMode = (comp.pFF77 & 7);
 
     // Константы можно задать жёстко, потому что между моделями АТМ2 они не меняются.
-    const int tScanlineWidth = 224;
-    const int tScreenWidth = 320/2;
-    const int tEachBorderWidth = (tScanlineWidth - tScreenWidth)/2;
-    const int iLinesAboveBorder = 56;
+    const unsigned tScanlineWidth = 224;
+    const unsigned tScreenWidth = 320/2;
+    const unsigned tEachBorderWidth = (tScanlineWidth - tScreenWidth)/2;
+    const unsigned iLinesAboveBorder = 56;
 
-    int iRayLine = cpu.t / tScanlineWidth;
-    int iRayOffset = cpu.t % tScanlineWidth;
+    auto iRayLine = cpu.t / tScanlineWidth;
+    auto iRayOffset = cpu.t % tScanlineWidth;
 /*    
     static int iLastLine = 0;
     if ( iLastLine > iRayLine )
@@ -47,7 +47,7 @@ void AtmApplySideEffectsWhenChangeVideomode(u8 val)
         for (unsigned y = 0; y < 200; y++)
         {
             AtmVideoCtrl.Scanlines[y+56].VideoMode = NewVideoMode;
-            AtmVideoCtrl.Scanlines[y+56].Offset = ((y & ~7) << 3) + 0x01C0;
+            AtmVideoCtrl.Scanlines[y+56].Offset = 0x01C0 + ((y & ~7) << 3);
         }
         return;
     }
@@ -118,8 +118,8 @@ void AtmApplySideEffectsWhenChangeVideomode(u8 val)
         if ( NewVideoMode == 6 )
         {
             // Переключение В текстовый режим.
-            if ( (Offset & 32) //< проверка условия "при адресе A5=1"
-                 && (iRayLine & 7) < 4 //< проверка условия "в строке 0..3"
+            if ( (Offset & 32) // < проверка условия "при адресе A5=1"
+                 && (iRayLine & 7) < 4 // < проверка условия "в строке 0..3"
                )
             {
 //                printf("CASE-1: 0x%.4x Incremented (+64) on line %d\n", Offset, iRayLine);
@@ -145,7 +145,7 @@ void AtmApplySideEffectsWhenChangeVideomode(u8 val)
             }
         } else {
             // Переключение ИЗ текстового режима.
-            if ( 0 == (Offset & 32) ) //< проверка условия "при адресе A5=0"
+            if ( 0 == (Offset & 32) ) // < проверка условия "при адресе A5=0"
             {
 //                printf("CASE-2: 0x%.4x Incremented (+64) on line %d\n", Offset, iRayLine);
                 Offset += 64;
@@ -181,17 +181,17 @@ void AtmApplySideEffectsWhenChangeVideomode(u8 val)
         // Прибавляем к видеоадресу все +8 инкременты, произошедшие при отрисовке растра
         bool bRayInRaster = iRayOffset < (tScreenWidth + tEachBorderWidth);
         
-        int iScanlineRemainder = 0; //< Сколько +8 инкрементов ещё будет сделано до конца сканлинии 
+        int iScanlineRemainder = 0; // < Сколько +8 инкрементов ещё будет сделано до конца сканлинии 
                                     //  (т.е. уже после переключения видеорежима)
         if ( bRayInRaster )
         {
             // Луч рисует растр. 
             // Прибавляем к текущему видеоадресу столько +8, 
             // сколько было полностью отрисованных 64пиксельных блока.
-            int iIncValue = 8 * ((iRayOffset-tEachBorderWidth)/32);
-            iScanlineRemainder = 40 - iIncValue;
+            const auto i_inc_value = 8 * ((iRayOffset-tEachBorderWidth)/32);
+            iScanlineRemainder = 40 - i_inc_value;
 //            printf("CASE-4: 0x%.4x Incremented (+%d) on line %d\n", Offset, iIncValue, iRayLine);
-            Offset += iIncValue;
+            Offset += i_inc_value;
         } else {
             // Отрисовка растра лучом завершена.
             // Т.е. все 5-ять 64-пиксельных блока были пройдены. Прибавляем к адресу +40.
@@ -217,8 +217,8 @@ void AtmApplySideEffectsWhenChangeVideomode(u8 val)
         if ( NewVideoMode == 6 )
         {
             // Переключение В текстовый режим.
-            if ( (Offset & 32) //< проверка условия "при адресе A5=1"
-                && (iRayLine & 7) < 4 //< проверка условия "в строке 0..3"
+            if ( (Offset & 32) // < проверка условия "при адресе A5=1"
+                && (iRayLine & 7) < 4 // < проверка условия "в строке 0..3"
                 )
             {
                 OffsetInc = 64;
@@ -236,7 +236,7 @@ void AtmApplySideEffectsWhenChangeVideomode(u8 val)
             }
         } else {
             // Переключение ИЗ текстового режима.
-            if ( 0 == (Offset & 32) ) //< проверка условия "при адресе A5=0"
+            if ( 0 == (Offset & 32) ) // < проверка условия "при адресе A5=0"
             {
                 OffsetInc = 64;
 //                printf("CASE-7: 0x%.4x Incremented (+64) on line %d\n", Offset, iRayLine);
