@@ -913,8 +913,8 @@ bool CopyScreenshotToClipboard() {
         0x00,0x00,0x00,0x00  // ClrImportant
     };
 
-    *(unsigned*)(dibheader32 + 4) =  temp.ox;
-    *(unsigned*)(dibheader32 + 8) = -temp.oy;  // flip DIB
+    *(unsigned*)(dibheader32 + 4) = temp.ox;
+    *(unsigned*)(dibheader32 + 8) = temp.oy;
 
     // open clipboard
     if (!OpenClipboard(NULL)) return false;
@@ -934,7 +934,15 @@ bool CopyScreenshotToClipboard() {
         return false;
     }
     memcpy(globBuf, dibheader32, sizeof(dibheader32));
-    memcpy(globBuf + sizeof(dibheader32), ds, dibSize);
+
+    // flip image
+    u8* p = globBuf + sizeof(dibheader32);
+    for (int y = temp.oy - 1; y >= 0; y--)
+    {
+        memcpy(p, ds + ((y * temp.ox * 3 + 3) & ~3), temp.ox * 3);
+        p += (temp.ox * 3 + 3) & ~3;
+    }
+
     GlobalUnlock(hbuf);
 
     if (SetClipboardData(CF_DIB, hbuf) == NULL) {
