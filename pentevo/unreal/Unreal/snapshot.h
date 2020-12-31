@@ -141,6 +141,7 @@ int writeSNA(FILE *ff);
 void opensnap(int index);
 void savesnap(int diskindex);
 void main_scrshot();
+void main_scrshot_clipboard();
 //void main_savevideo();
 
 bool GdiplusStartup();

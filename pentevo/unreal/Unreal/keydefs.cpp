@@ -34,6 +34,7 @@ action ac_main[] =
    { "main.pokedialog", main_poke },
    { "main.starttape", main_starttape },
    { "main.screenshot", main_scrshot },
+   { "main.shotclipbrd", main_scrshot_clipboard },
    { "main.savevideo", main_savevideo },
    { "main.reset", main_reset },
    { "main.reset128", main_reset128 },

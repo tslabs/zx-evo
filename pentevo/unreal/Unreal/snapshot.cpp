@@ -887,6 +887,68 @@ void ConvBgr32ToBgr24(u8 *dst, u8 *scrbuf, int dx)
 
 TColorConverter ConvBgr24 = 0;
 
+bool CopyScreenshotToClipboard() {
+    unsigned dx = temp.ox * temp.obpp / 8;
+    u8* scrbuf_unaligned = (u8*)malloc(dx * temp.oy + CACHE_LINE);
+    u8* scrbuf = (u8*)align_by(scrbuf_unaligned, CACHE_LINE);
+    memset(scrbuf, 0, dx * temp.oy);
+    renders[conf.render].func(scrbuf, dx); // render to memory buffer (PAL8, YUY2, RGB15, RGB16, RGB32)
+    u32 dibSize = ((temp.ox * 3 + 3) & ~3) * temp.oy;
+    u8* ds = (u8*)malloc(dibSize);
+    ConvBgr24(ds, scrbuf, dx);
+    free(scrbuf_unaligned);
+
+    static u8 dibheader32[] = {
+        // BITMAPINFOHEADER
+        0x28,0x00,0x00,0x00, // Size
+        0x80,0x02,0x00,0x00, // Width
+        0xe0,0x01,0x00,0x00, // Height
+        0x01,0x00,           // Planes
+        24,0,                // BitCount
+        0x00,0x00,0x00,0x00, // Compression
+        0x00,0x10,0x0e,0x00, // SizeImage
+        0x00,0x00,0x00,0x00, // XPixelsPerMeter
+        0x00,0x00,0x00,0x00, // YPixelsPerMeter
+        0x00,0x00,0x00,0x00, // ClrUsed
+        0x00,0x00,0x00,0x00  // ClrImportant
+    };
+
+    *(unsigned*)(dibheader32 + 4) =  temp.ox;
+    *(unsigned*)(dibheader32 + 8) = -temp.oy;  // flip DIB
+
+    // open clipboard
+    if (!OpenClipboard(NULL)) return false;
+    if (!EmptyClipboard()) return false;
+
+    // alloc global buffer
+    HGLOBAL hbuf = GlobalAlloc(GMEM_MOVEABLE, sizeof(dibheader32) + dibSize);
+    if (hbuf == NULL) {
+        CloseClipboard();
+        return false;
+    }
+
+    u8* globBuf = (u8*)GlobalLock(hbuf);
+    if (globBuf == NULL) {
+        CloseClipboard();
+        GlobalFree(hbuf);
+        return false;
+    }
+    memcpy(globBuf, dibheader32, sizeof(dibheader32));
+    memcpy(globBuf + sizeof(dibheader32), ds, dibSize);
+    GlobalUnlock(hbuf);
+
+    if (SetClipboardData(CF_DIB, hbuf) == NULL) {
+        CloseClipboard();
+        GlobalFree(hbuf);
+        return false;
+    }
+
+    CloseClipboard();
+    GlobalFree(hbuf);
+    return true;
+}
+
+
 char* SaveScreenshot(const char* prefix, unsigned counter)
 {
    if (!(GetFileAttributes(conf.scrshot_path) & FILE_ATTRIBUTE_DIRECTORY))
@@ -978,4 +1040,11 @@ void main_scrshot()
       statcnt = 30;
       counter++;
    }
+}
+
+void main_scrshot_clipboard() {
+    if (CopyScreenshotToClipboard()) {
+        sprintf(statusline, "copied to clipboard");
+        statcnt = 30;
+    }
 }

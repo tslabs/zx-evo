@@ -1,5 +1,9 @@
 #pragma once
 
+#ifdef _M_X64
+#include <emmintrin.h>
+#endif
+
 //#define inline __inline
 #define forceinline __forceinline
 #define fastcall             // parameters in registers
