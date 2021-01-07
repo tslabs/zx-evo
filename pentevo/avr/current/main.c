@@ -159,7 +159,12 @@ start:
 #endif
 
   oled_init();
-  
+  oled_clear();
+  oled_set_xy(0, 0); oled_print("ZX-Evolution");
+  oled_set_xy(0, 1); oled_print("OLED screen test");
+  oled_set_xy(0, 2); oled_print("connected to I2C");
+  oled_set_xy(0, 3); oled_print("0123456789ABCDEFGH");
+
   wait_for_atx_power();
 
   spi_init();
