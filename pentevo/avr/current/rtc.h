@@ -1,5 +1,6 @@
-#ifndef __RTC_H__
-#define __RTC_H__
+
+#pragma once
+
 /**
  * @file
  * @brief RTC support.
@@ -162,6 +163,3 @@ u8 gluk_get_reg(u8 index);
  * @param data [in] - data
  */
 void gluk_set_reg(u8 index, u8 data);
-
-
-#endif //__RTC_H__

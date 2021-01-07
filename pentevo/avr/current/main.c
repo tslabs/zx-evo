@@ -14,6 +14,7 @@
 #include "zx.h"
 #include "spi.h"
 #include "rs232.h"
+#include "oled.h"
 #include "rtc.h"
 #include "atx.h"
 #include "joystick.h"
@@ -58,7 +59,7 @@ void put_buffer(u16 size)
 
 void hardware_init(void)
 {
-  //Initialized AVR pins
+  //Initialize AVR pins
 
   cli(); // disable interrupts
 
@@ -87,6 +88,12 @@ void hardware_init(void)
   DDRA  = 0b00000000; // pulled up
 
   ACSR = 0x80; // DISABLE analog comparator
+
+	// SCL frequency = CPU clk / (16 + 2 * TWBR * 4 ^ TWPS)
+	// 11052000 / (16 + 2 * 48) = 98678,5Hz (100000Hz recommended for PCF8583)
+	TWSR = 0; // TWPS, bits0..1 {1, 4, 16, 64}
+	TWBR = 48;
+	TWAR = 0; //disable address match unit
 }
 
 void waittask(void)
@@ -151,6 +158,8 @@ start:
   }
 #endif
 
+  oled_init();
+  
   wait_for_atx_power();
 
   spi_init();

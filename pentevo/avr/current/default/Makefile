@@ -2,7 +2,6 @@
 # Makefile for the project pentevo
 ###############################################################################
 
-
 ## General Flags
 ifeq ($(OS),Windows_NT)
 EXE = ".exe"
@@ -47,8 +46,8 @@ HEX_EEPROM_FLAGS += --set-section-flags=.eeprom="alloc,load"
 HEX_EEPROM_FLAGS += --change-section-lma .eeprom=0 --no-change-warnings
 
 ## Objects that must be built in order to link
-SOURCES = ../main.c ../zx.c ../interrupts.c ../ps2.c ../depacker_dirty.c ../rs232.c ../rtc.c ../atx.c ../joystick.c ../version.c ../tape.c ../kbmap.c ../spiflash.c ../rs232_asm.S
-HEADERS = ../zx.h ../ps2.h ../spi.h ../depacker_dirty.h ../rs232.h ../rtc.h ../atx.h ../joystick.h ../version.h ../tape.h ../kbmap.h ../spiflash.h
+SOURCES = ../main.c ../zx.c ../interrupts.c ../ps2.c ../depacker_dirty.c ../rs232.c ../i2c.c ../rtc.c ../oled.cpp ../atx.c ../joystick.c ../version.c ../tape.c ../kbmap.c ../spiflash.c ../rs232_asm.S
+HEADERS = ../zx.h ../ps2.h ../spi.h ../depacker_dirty.h ../rs232.h ../i2c.h ../rtc.h ../oled.h ../atx.h ../joystick.h ../version.h ../tape.h ../kbmap.h ../spiflash.h
 
 ## Objects explicitly added by the user
 FPGACORE = tsconf.o baseconf.o egg.o
