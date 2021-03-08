@@ -161,11 +161,16 @@ start:
   oled_init();
   oled_clear();
   oled_set_xy(0, 0); oled_print("ZX-Evolution");
-  oled_set_xy(0, 1); oled_print("OLED screen test");
-  oled_set_xy(0, 2); oled_print("connected to I2C");
-  oled_set_xy(0, 3); oled_print("0123456789ABCDEFGH");
+  oled_set_xy(0, 1); oled_print("LCD Test 128x64");
+  oled_set_xy(0, 2); oled_print("0123456789ABCDEFG");
+  oled_set_xy(0, 4); oled_print("Line 4");
+  oled_set_xy(0, 5); oled_print("Line 5");
+  oled_set_xy(0, 6); oled_print("Line 6");
+  oled_set_xy(0, 7); oled_print("Line 7");
 
   wait_for_atx_power();
+
+  oled_set_xy(0, 3); oled_print("Config: ");
 
   spi_init();
 
@@ -178,15 +183,18 @@ start:
   {
     case FPGA_BASE:
       curFpga = GET_FAR_ADDRESS(fpga_base);
+      oled_print("Base");
     break;
 
     case FPGA_EGG:
       curFpga = GET_FAR_ADDRESS(fpga_egg);
+      oled_print("Egg");
     break;
 
     case FPGA_TS:
     default:
       curFpga = GET_FAR_ADDRESS(fpga_ts);
+      oled_print("TS");
     break;
   }
 
@@ -208,7 +216,9 @@ start:
   to_log(log_fpga);
   }
 #endif
+
   depacker_dirty();
+
 #ifdef LOGENABLE
   to_log("depacker_dirty OK\r\n");
 #endif

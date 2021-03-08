@@ -35,7 +35,8 @@ void oled_init()
 	oled_write_cmd(0x40);       // Set start line address
 	oled_write_cmd(0xA0);       // Set segment re-map off
 	oled_write_cmd(0xC0);       // Set COM Output Scan Direction (0xC0/C8)
-	oled_write_cmd(0xDA, 0x02); // Set COM pins hardware configuration (normal)
+	// oled_write_cmd(0xDA, 0x02); // Set COM pins hardware configuration (for 128x32)
+	oled_write_cmd(0xDA, 0x12); // Set COM pins hardware configuration (for 128x64)
 	oled_write_cmd(0x81, 0xFF); // Set contrast control register
 	oled_write_cmd(0xA4);       // 0xA4 - Output follows RAM content; 0xA5 - Output ignores RAM content
 	oled_write_cmd(0xA6);       // Set normal display
@@ -51,15 +52,22 @@ void oled_clear()
 {
   if (!oled_addr) return;
 
-  oled_write_cmd(0x00);       // Set low column address
-  oled_write_cmd(0x10);       // Set high column address
-  oled_write_cmd(0xB0);       // Set page address
+  for (u8 p = 0; p < 8; p++)
+  {
+    oled_write_cmd(0x00);       // Set low column address
+    oled_write_cmd(0x10);       // Set high column address
+    oled_write_cmd(0xB0 + p);   // Set page address
 
-  if (!oled_i2c_start()) goto stop;
-  if (!(tw_send_data(0x40) == TW_MT_DATA_ACK)) goto stop;
+    if (!oled_i2c_start()) goto stop;
+    if (!(tw_send_data(0x40) == TW_MT_DATA_ACK)) goto stop;
 
-  for (int i = 0; i < 1024; i++)
-    if (!(tw_send_data(0) == TW_MT_DATA_ACK)) goto stop;
+    for (u8 i = 0; i < 128; i++)
+      if (!(tw_send_data(0) == TW_MT_DATA_ACK)) goto stop;
+
+    tw_send_stop();
+  }
+  
+  return;
 
 stop:
   tw_send_stop();
@@ -69,9 +77,8 @@ void oled_set_xy(u8 x, u8 y)
 {
   if (!oled_addr) return;
 
-  x = (x & 15) << 3;
   oled_write_cmd(0x00 | (x & 15));            // Set low column address
-  oled_write_cmd(0x10 | ((x >> 4) & 15));    // Set high column address
+  oled_write_cmd(0x10 | ((x >> 4) & 15));     // Set high column address
   oled_write_cmd(0xB0 | (y & 15));            // Set page address
 }
 
