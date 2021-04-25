@@ -145,7 +145,7 @@ int _tmain(int argc, _TCHAR* argv[])
     }
   }
 
-  HANDLE hPort = CreateFile (cport, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+  HANDLE hPort = CreateFile(cport, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 
   if (hPort == INVALID_HANDLE_VALUE)
   {
@@ -159,7 +159,7 @@ int _tmain(int argc, _TCHAR* argv[])
   times.ReadIntervalTimeout = MAXDWORD;
   times.ReadTotalTimeoutMultiplier = 0;
   times.ReadTotalTimeoutConstant = 1;
-  times.WriteTotalTimeoutMultiplier = 0;
+  times.WriteTotalTimeoutMultiplier = 1;
   times.WriteTotalTimeoutConstant = 1;
   SetCommTimeouts(hPort, &times);
 
@@ -189,7 +189,7 @@ int _tmain(int argc, _TCHAR* argv[])
   U8 *disk_ptr;
   while (1)
   {
-    ReadFile(hPort, uart_in_buf, 1, &dwRead, NULL);
+    ReadFile(hPort, uart_in_buf, sizeof(fifo_in_buf), &dwRead, NULL);
     fifo_put(&fifo_in, uart_in_buf, dwRead);
 
     while (fifo_used(fifo_in))
@@ -240,11 +240,11 @@ int _tmain(int argc, _TCHAR* argv[])
                   
                   while (cnt)
                   {
-                    int sz = min(64, cnt);
+                    int sz = slow ? min(16, cnt) : cnt;
                     WriteFile(hPort, ptr, sz, &dwWrite, NULL);
-                    if (slow) Sleep(1);
-                    ptr += sz;
-                    cnt -= sz;
+                    ptr += dwWrite;
+                    cnt -= dwWrite;
+                    if (slow) Sleep(3);
                   }
                 }
                 state = ST_IDLE;
