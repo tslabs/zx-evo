@@ -703,7 +703,8 @@ module top
     .spidi(spidi),
     .spido(spido),
     .spick(spick),
-    .status_in({wait_status_wrn, 5'b0, wait_status[1:0]}),
+    .status_wrn(wait_status_wrn),
+    .status(wait_status),
 `ifndef SIMULATE
     .genrst(genrst),
 `endif
@@ -1011,7 +1012,7 @@ module top
 
   zwait zwait
   (
-    .fclk(fclk),
+    .clk(fclk),
     .wait_start_gluclock(wait_start_gluclock),
     .wait_start_comport(wait_start_comport),
     .dma_wtp_req(dma_wtp_req),

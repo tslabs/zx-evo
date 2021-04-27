@@ -10,6 +10,15 @@
 //
 // Out:
 //  SCS_n = 1 - status
+//    [7]   0 - write, 1 - read
+//    [6:2] GluClock:
+//      00..0F - 0xF0..0xFF
+//      10..1F - address read required
+//    [6:2] COM Port:
+//      00..0F  - 0xC0..0xCF
+//      10      - 0x00..0xBF
+//      18..1F  - 0xF8..0xFF
+//    [1:0] 0 - no wait request, 1 - glueclock, 2 - comport, 3 - n/a
 //  SCS_n = 0 - data out
 
 // Registers:
@@ -24,9 +33,8 @@
 //
 //  0x30 - ZX reset register
 //
-//  0x40 - ZX all data for wait registers
-//  0x41 - ZX Gluk address register
-//  0x42 - ZX Kondratiev's rs232 address register
+//  0x40 - ZX data for wait registers
+//  0x41 - ZX address of a wait register
 //
 //  0x50 - ZX configuration register
 
@@ -42,7 +50,8 @@ module slavespi
   input  wire spido,   // from AVR
   input  wire spick,
 
-  input  wire [ 7:0] status_in,   // to indicate wait port source
+  input  wire        status_wrn,  // wait port mode
+  input  wire [ 1:0] status,      // wait port source
 
   // ZX Keyboard
   output wire [ 7:0] kbd_out,
@@ -56,12 +65,11 @@ module slavespi
   output wire        mus_btnstb,
   output wire        kj_stb,
 
-    // Glucklock and Comport
-  input  wire [ 7:0] wait_addr,
-
   // Configuration
   output wire [ 7:0] config0,
 
+  // Wait ports
+  input  wire [ 7:0] wait_addr,
   input  wire [ 7:0] wait_write,
   output wire [ 7:0] wait_read,
   output wire        wait_end,
@@ -83,7 +91,13 @@ module slavespi
 
   wire sdo;
   wire kbd_bit_stb;
-
+  
+  wire [4:0] status_addr_glu = {~&wait_addr[7:4], wait_addr[3:0]}; 
+  wire [4:0] status_addr_com = ~&wait_addr[7:6] ? 5'h10 : {&wait_addr[7:4], wait_addr[3:0]};
+  
+  wire [4:0] status_addr = status[0] ? status_addr_glu : status_addr_com;
+  wire [7:0] status_in = {status_wrn, status_addr, status[1:0]};
+  
   // reg number decoding
   wire sel_kbdreg = (regnum[7:4] == 4'h1) && !regnum[0]; // $10
   wire sel_kbdstb = (regnum[7:4] == 4'h1) &&  regnum[0]; // $11
@@ -95,9 +109,8 @@ module slavespi
 
   wire sel_rstreg = ((regnum[7:4] == 4'h3)) ; // $30
 
-  wire sel_waitreg = (regnum[7:4] == 4'h4) && (regnum[1:0] == 2'b00); // $40
-  wire sel_gluadr  = (regnum[7:4] == 4'h4) && (regnum[1:0] == 2'b01); // $41
-  wire sel_comadr  = (regnum[7:4] == 4'h4) && (regnum[1:0] == 2'b10); // $42
+  wire sel_waitreg  = (regnum[7:4] == 4'h4) && (regnum[1:0] == 2'b00); // $40
+  wire sel_waitaddr = (regnum[7:4] == 4'h4) && (regnum[1:0] == 2'b01); // $41
 
   wire sel_cfg0 = (regnum[7:4] == 4'h5); // $50
 
@@ -144,7 +157,7 @@ module slavespi
   begin
     if (sel_waitreg)
       data_in = wait_write;
-    else if (sel_gluadr || sel_comadr)
+    else if (sel_waitaddr)
       data_in = wait_addr;
     else data_in = 8'hFF;
   end
@@ -159,7 +172,7 @@ module slavespi
 
   assign spidi = shift_out[0];
 
-  wire kbd_start = sel_kbdstb && scs_n_01;  // !!! this requires change zx.c for good: kbd_start should be issued BEFORE kbd reg transfer, NOT after
+  wire kbd_start = sel_kbdstb && scs_n_01;  // !!! this requires change zx.c for good: kbd_start should be issued BEFORE kbd reg transfer, NOT after - zx_task()
   assign kbd_bit_stb = !scs_n && sel_kbdreg && sck_01;
 
   always @(posedge fclk)

@@ -617,7 +617,6 @@ module zports
   end
 
   // wait from wait registers
-  // ACHTUNG!!!! here portxx_wr are ON Z80 CLOCK! logic must change when moving to clk strobes
   assign wait_start_gluclock = (gluclock_on && !a[14] && (portf7_rd || portf7_wr)); // $BFF7 - gluclock r/w
   assign wait_start_comport = (comport_rd || comport_wr);
 

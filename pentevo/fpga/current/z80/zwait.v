@@ -6,7 +6,7 @@
 
 module zwait
 (
-  input  wire       fclk,
+  input  wire       clk,
   input  wire       rst_n,
   input  wire       wait_start_gluclock,
   input  wire       wait_start_comport,
@@ -36,25 +36,25 @@ module zwait
   assign wait_status_wrn = wait_status_dma ? 1'b1 : wr_n;
   assign dma_wtp_stb = !wtp_stb && wait_off;
 
-  always @(posedge wait_start_gluclock, posedge wait_off)
+  always @(posedge clk)
   if (wait_off)
     wait_status_glu <= 1'b0;
   else if (wait_start_gluclock)
     wait_status_glu <= 1'b1;
 
-  always @(posedge wait_start_comport, posedge wait_off)
+  always @(posedge clk)
   if (wait_off)
     wait_status_com <= 1'b0;
   else if (wait_start_comport)
     wait_status_com <= 1'b1;
 
-  always @(posedge fclk)
+  always @(posedge clk)
   if (wait_off_dma)
     wait_status_dma <= 1'b0;
   else if (dma_wtp_req)
     wait_status_dma <= 1'b1;
 
-  always @(posedge fclk)
+  always @(posedge clk)
     wtp_stb <= wait_off;
 
 endmodule
