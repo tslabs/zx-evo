@@ -26,7 +26,7 @@ extern volatile u8 rs_tmo_cnt;
 extern volatile u8 zf_tmo_cnt;
 
 void rs232_init(void);
-//void rs232_transmit(u8 data);
+int stdout_putchar(char c, FILE *stream);
 
 //#define LOGENABLE
 #ifdef LOGENABLE

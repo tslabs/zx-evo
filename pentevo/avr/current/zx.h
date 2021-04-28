@@ -47,17 +47,13 @@
 /** ZX configuration register. */
 #define SPI_CONFIG_REG   0x50
 
-
-/** ZX all data for wait registers. */
+/** ZX data for wait registers. */
 #define SPI_WAIT_DATA  0x40
-/** ZX Gluk address register. */
-#define SPI_GLUK_ADDR  0x41
-/** ZX Kondratiev's rs232 address register. */
-#define SPI_RS232_ADDR 0x42
+/** ZX address for wait registers. */
+#define SPI_WAIT_ADDR  0x41
 
 /** Send/recv data for spi registers. */
-u8 zx_spi_send(u8 addr, u8 data, u8 mask);
-
+u8 zx_spi_send(u8 addr, u8 data);
 
 /** Pause between (CS|SS) and not(CS|SS). */
 #define SHIFT_PAUSE 8
@@ -204,7 +200,8 @@ void zx_mouse_task(void);
  * @param status [in] - bit 7 - CPU is 0 -write, 1-read wait port
  *		                bits 6..0 is index of port
  */
-void zx_wait_task(u8 status);
+void zx_wait_task();
+void zx_wait_task_old();
 
 /**
  * Switch mode on ZX.

@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <util/atomic.h>
@@ -102,18 +103,6 @@ void rs232_init(void)
   UCSR0B = _BV(RXCIE0)|_BV(RXEN0)|_BV(TXEN0);  // Enable transmitter, receiver and receiver's interrupt
 }
 
-//#ifdef LOGENABLE
-//void to_log(char* ptr)
-//{
-//  while((*ptr)!=0)
-//  {
-//    rs232_transmit(*ptr);
-//    ptr++;
-//  }
-//}
-//#endif
-
-
 //after DLL or DLM changing
 void rs232_set_baud(void)
 {
@@ -167,6 +156,17 @@ void rs232_set_format(void)
   UCSR1C = format;
 }
 
+int stdout_putchar(char c, FILE *stream)
+{
+  while (!((rs_tx_tl - 1 - rs_tx_hd) & 0xff));
+  
+  rs_txbuff[rs_tx_hd] = c;
+  rs_tx_hd++;
+  UCSR1B |= _BV(UDRIE1);
+
+	return 0;
+}
+
 //------------------------------------------------------------------------------
 
 void rs232_zx_write(u8 index, u8 data)
@@ -180,11 +180,11 @@ void rs232_zx_write(u8 index, u8 data)
     {
       if (zf_api == 1)
       {
-        if ((zf_tx_tl-1-zf_tx_hd)&0xff)
+        if ((zf_tx_tl - 1 - zf_tx_hd) & 0xff)
         {
-          zf_txbuff[zf_tx_hd]=data;
+          zf_txbuff[zf_tx_hd] = data;
           zf_tx_hd++;
-          UCSR0B|=_BV(UDRIE0);
+          UCSR0B |= _BV(UDRIE0);
         }
       }
     }
@@ -192,13 +192,14 @@ void rs232_zx_write(u8 index, u8 data)
     { // enhanced RS-232
       if (zf_api)
       {
-        if ((rs_tx_tl-1-rs_tx_hd)&0xff)
+        if ((rs_tx_tl - 1 - rs_tx_hd) & 0xff)
         {
-          rs_txbuff[rs_tx_hd]=data;
+          rs_txbuff[rs_tx_hd] = data;
           rs_tx_hd++;
-          UCSR1B|=_BV(UDRIE1);
+          UCSR1B |= _BV(UDRIE1);
         }
-        if (((rs_tx_tl-1-rs_tx_hd)&0xff)==0)
+
+        if (((rs_tx_tl - 1 - rs_tx_hd) & 0xff) == 0)
           rs232_LSR &= ~(0x60);
       }
     }
@@ -229,14 +230,14 @@ void rs232_zx_write(u8 index, u8 data)
           {
             if (data & ZF_CLRFIFO_IN)
             {
-              zf_rx_hd=0;
-              zf_rx_tl=0;
+              zf_rx_hd = 0;
+              zf_rx_tl = 0;
             }
 
             if (data & ZF_CLRFIFO_OUT)
             {
-              zf_tx_hd=0;
-              zf_tx_tl=0;
+              zf_tx_hd = 0;
+              zf_tx_tl = 0;
             }
           }
         }
@@ -246,8 +247,8 @@ void rs232_zx_write(u8 index, u8 data)
           {
             ATOMIC_BLOCK(ATOMIC_FORCEON)
             {
-              rs_rx_hd=0;
-              rs_rx_tl=0;
+              rs_rx_hd = 0;
+              rs_rx_tl = 0;
             }
           }
 
@@ -255,8 +256,8 @@ void rs232_zx_write(u8 index, u8 data)
           {
             ATOMIC_BLOCK(ATOMIC_FORCEON)
             {
-              rs_tx_hd=0;
-              rs_tx_tl=0;
+              rs_tx_hd = 0;
+              rs_tx_tl = 0;
             }
           }
         }
@@ -301,13 +302,13 @@ void rs232_zx_write(u8 index, u8 data)
 
           else
           {
-            if ((rs_tx_tl-1-rs_tx_hd)&0xff)
+            if ((rs_tx_tl - 1 - rs_tx_hd) & 0xff)
             {
-              rs_txbuff[rs_tx_hd]=data;
+              rs_txbuff[rs_tx_hd] = data;
               rs_tx_hd++;
-              UCSR1B|=_BV(UDRIE1);
+              UCSR1B |= _BV(UDRIE1);
             }
-            if (((rs_tx_tl-1-rs_tx_hd)&0xff)==0)
+            if (((rs_tx_tl - 1 - rs_tx_hd) & 0xff) == 0)
               rs232_LSR &= ~(0x60);
           }
         break;
@@ -334,16 +335,16 @@ void rs232_zx_write(u8 index, u8 data)
               //receive FIFO reset
               if (data & (1<<1))
               {
-                rs_rx_hd=0;
-                rs_rx_tl=0;
+                rs_rx_hd = 0;
+                rs_rx_tl = 0;
                 rs232_LSR &= ~(0x03);   //set empty FIFO flag and clear overrun flag
               }
 
               //tramsmit FIFO reset
-              if (data & (1<<2))
+              if (data & (1 << 2))
               {
-                rs_tx_hd=0;
-                rs_tx_tl=0;
+                rs_tx_hd = 0;
+                rs_tx_tl = 0;
                 rs232_LSR |= 0x60;      //set fifo is empty flag
               }
             }
@@ -359,7 +360,7 @@ void rs232_zx_write(u8 index, u8 data)
         case UART_MCR_REG:
           //bit 7-5 not used and set to '0'
           rs232_MCR = data & 0x1F;
-          if (data & (1<<1))
+          if (data & (1 << 1))
           {
             //clear RTS
             RS232RTS_PORT &= ~(_BV(RS232RTS));
@@ -419,12 +420,12 @@ u8 rs232_zx_read(u8 index)
 {
   u8 data;
 
-  // ZiFi & enhanced RS-232
+  /* ZiFi & enhanced RS-232 */
   if (index <= ZF_REG_LIM)
   {
     data = 0xFF;
 
-    // Data Register
+    // Data Registers
     if (index <= ZF_DR_REG_LIM)
     {
       if (select_zf)
@@ -436,12 +437,13 @@ u8 rs232_zx_read(u8 index)
           if (zf_rx_tl!=tmp)
           {
             data=zf_rxbuff[zf_rx_tl];
-            zf_rx_tl=(zf_rx_tl+1)&0x01ff;
+            zf_rx_tl=(zf_rx_tl + 1) & 0x01ff;
           }
         }
       }
       else
-      { // enhanced RS-232 data read
+      {
+        // Enhanced RS-232 data read
         if (zf_api)
         {
           u16 tmp;
@@ -453,13 +455,13 @@ u8 rs232_zx_read(u8 index)
           if (rs_rx_tl!=tmp)
           {
             data=rs_rxbuff[rs_rx_tl];
-            rs_rx_tl=(rs_rx_tl+1)&0x01ff;
+            rs_rx_tl=(rs_rx_tl + 1) & 0x01ff;
           }
         }
       }
     }
 
-    // other registers
+    // Other ZiFi registers
     else if (zf_api)
       switch (index)
       {
@@ -542,7 +544,7 @@ u8 rs232_zx_read(u8 index)
     }
   }
 
-  // Kondratyev
+  /* Kondratyev */
   else
   {
     data = 0;

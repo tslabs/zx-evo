@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
 
@@ -12,6 +13,8 @@
 #include "spi.h"
 #include "atx.h"
 #include "rtc.h"
+
+volatile u8 wait_irq_flag;
 
 // PS/2 Timeouts INT
 ISR(TIMER2_OVF_vect)
@@ -213,7 +216,7 @@ ISR(INT5_vect)
  // SPI_INT
 ISR(INT6_vect)
 {
-	flags_register |= FLAG_SPI_INT;
+	wait_irq_flag = 1;
 	EIFR = (1<<INTF6);
 }
 

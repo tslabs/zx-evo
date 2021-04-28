@@ -1,9 +1,9 @@
+#include <stdio.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <avr/eeprom.h>
 #include <avr/pgmspace.h>
 #include <util/delay.h>
-#include <util/atomic.h>
 
 #include "mytypes.h"
 #include "zx.h"
@@ -202,28 +202,23 @@ void zx_init(void)
   zx_fifo_in_ptr = zx_fifo_out_ptr = 0;
 
   zx_task(ZX_TASK_INIT);
+  rs232_init();
 
-  ATOMIC_BLOCK(ATOMIC_FORCEON) { rs232_init(); }
   //reset Z80
-  zx_spi_send(SPI_RST_REG, 1, 0);
-  zx_spi_send(SPI_RST_REG, 0, 0);
+  zx_spi_send(SPI_RST_REG, 1);
+  zx_spi_send(SPI_RST_REG, 0);
 
   load_config();
 }
 
-u8 zx_spi_send(u8 addr, u8 data, u8 mask)
+u8 zx_spi_send(u8 addr, u8 data)
 {
-  u8 status;
-  u8 ret;
   nSPICS_PORT &= ~(1<<nSPICS); // fix for status locking
   nSPICS_PORT |= (1<<nSPICS);  // set address of SPI register
-  status = spi_send(addr);
+  spi_send(addr);
   nSPICS_PORT &= ~(1<<nSPICS); // send data for that register
-  ret = spi_send(data);
+  u8 ret = spi_send(data);
   nSPICS_PORT |= (1<<nSPICS);
-
-  //if CPU waited
-  if (status & mask) zx_wait_task(status);
 
   return ret;
 }
@@ -384,7 +379,9 @@ void zx_task(u8 operation) // zx task, tracks when there is need to send new key
       {
         u8 key_data;
         key_data = zx_map[task_state-1] | ~zx_realkbd[task_state-1];
-        zx_spi_send(SPI_KBD_DAT, key_data, ZXW_MASK);
+
+        zx_spi_send(SPI_KBD_DAT, key_data);
+
 #ifdef LOGENABLE
   char log_zxmap_task_state[] = "TK.. .. ..\r\n";
   log_zxmap_task_state[2] = ((key_data >> 4) <= 9)?'0'+(key_data >> 4):'A'+(key_data >> 4)-10;
@@ -398,19 +395,17 @@ void zx_task(u8 operation) // zx task, tracks when there is need to send new key
       }
       else // task_state==0
       {
-        u8 status;
         nSPICS_PORT |= (1<<nSPICS);
-        status = spi_send(SPI_KBD_STB);    // strobe input kbd data to the Z80 port engine
+        spi_send(SPI_KBD_STB);    // strobe input kbd data to the Z80 port engine
         nSPICS_PORT &= ~(1<<nSPICS);
         nSPICS_PORT |= (1<<nSPICS);
-        if (status & ZXW_MASK) zx_wait_task(status);
+
 #ifdef LOGENABLE
   to_log("STB\r\n");
 #endif
       }
     }
   }
-
 }
 
 void zx_clr_kb(void)
@@ -694,72 +689,140 @@ void zx_mouse_task(void)
   log_zxmouse[10] = ((zx_mouse_y & 0x0F) <= 9)?'0'+(zx_mouse_y & 0x0F):'A'+(zx_mouse_y & 0x0F)-10;
   to_log(log_zxmouse);
 #endif
+
     //TODO: пока сделал скопом, потом сделать по одному байту за заход
-    zx_spi_send(SPI_MOUSE_BTN, zx_mouse_button, ZXW_MASK);
-    zx_spi_send(SPI_MOUSE_X, zx_mouse_x, ZXW_MASK);
-    zx_spi_send(SPI_MOUSE_Y, zx_mouse_y, ZXW_MASK);
+    zx_spi_send(SPI_MOUSE_BTN, zx_mouse_button);
+    zx_spi_send(SPI_MOUSE_X, zx_mouse_x);
+    zx_spi_send(SPI_MOUSE_Y, zx_mouse_y);
 
     //data sended - reset flag
     flags_register &=~(FLAG_PS2MOUSE_ZX_READY);
   }
 }
 
-void zx_wait_task(u8 status)
+const u8 comport_addr_unpack_tab[32] =
 {
-  // LED_PORT |= 1<<LED;  //power led OFF (for debug)
+  0xC0, 0xC1, 0xC2, 0xC3, 0xC4, 0xC5, 0xC6, 0xC7, // ZiFi Control
+  0xC8, 0xC9, 0xCA, 0xCB, 0xCC, 0xCD, 0xCE, 0xCF,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // ZiFi Data
+  0xF8, 0xF9, 0xFA, 0xFB, 0xFC, 0xFD, 0xFE, 0xFF  // Kondratyev
+};
 
+// #define LOG_WAITS
+
+void zx_wait_task()
+{
+  nSPICS_PORT &= ~(1<<nSPICS);  // fetch status
+  nSPICS_PORT |= (1<<nSPICS);
+  u8 status = spi_send(SPI_WAIT_DATA);
+
+#ifdef LOG_WAITS
+  u8 d1;
+#endif
   u8 addr = 0;
-  u8 data = 0xFF;
-
-  //reset flag
-  flags_register &= ~FLAG_SPI_INT;
+  u8 data = 0;
+  u8 host_cpu_read_request = status & ZXW_MODE;
 
   //prepare data
   switch (status & ZXW_MASK)
   {
-    case ZXW_GLUK_CLOCK:
-      addr = zx_spi_send(SPI_GLUK_ADDR, data, 0);
-      if (status & ZXW_MODE) data = gluk_get_reg(addr);
-      break;
-
     case ZXW_KONDR_RS232:
-      addr = zx_spi_send(SPI_RS232_ADDR, data, 0);
-      if (status & ZXW_MODE) data = rs232_zx_read(addr);
-      break;
+    {
+      addr = comport_addr_unpack_tab[(status >> 2) & 0x1F];
+
+      if (host_cpu_read_request)
+        data = rs232_zx_read(addr);
+    }
+    break;
+
+    case ZXW_GLUK_CLOCK:
+      if (!(status & 0x40))   // Short address supplied
+        addr = (status >> 2) | 0xF0;
+      else                    // Full address required
+      {
+        spi_send(SPI_WAIT_ADDR);
+        nSPICS_PORT &= ~(1<<nSPICS);
+        addr = spi_send(data);
+        nSPICS_PORT |= (1<<nSPICS);
+        spi_send(SPI_WAIT_DATA);
+      }
+
+      if (host_cpu_read_request)
+        data = gluk_get_reg(addr);
+    break;
   }
 
-  if (status & ZXW_MODE) zx_spi_send(SPI_WAIT_DATA, data, 0);
-  else data = zx_spi_send(SPI_WAIT_DATA, data, 0);
+#ifdef LOG_WAITS
+  d1 = data;
+#endif
 
-  if (!(status & ZXW_MODE))
+  nSPICS_PORT &= ~(1<<nSPICS);
+  data = spi_send(data);
+  nSPICS_PORT |= (1<<nSPICS);   // Release Z80 from WAIT
+
+  if (!host_cpu_read_request)   // Host CPU write request
   {
-    //save data
+#ifdef LOG_WAITS
+    d1 = data;
+#endif
+
     switch (status & ZXW_MASK)
     {
-    case ZXW_GLUK_CLOCK:
-      {
+      case ZXW_GLUK_CLOCK:
         gluk_set_reg(addr, data);
-        break;
-      }
-    case ZXW_KONDR_RS232:
-      {
+      break;
+
+      case ZXW_KONDR_RS232:
         rs232_zx_write(addr, data);
-        break;
-      }
+      break;
     }
   }
-/*#ifdef LOGENABLE
-  char log_wait[] = "W..A..D..\r\n";
-  log_wait[1] = ((status >> 4) <= 9)?'0'+(status >> 4):'A'+(status >> 4)-10;
-  log_wait[2] = ((status & 0x0F) <= 9)?'0'+(status & 0x0F):'A'+(status & 0x0F)-10;
-  log_wait[4] = ((addr >> 4) <= 9)?'0'+(addr >> 4):'A'+(addr >> 4)-10;
-  log_wait[5] = ((addr & 0x0F) <= 9)?'0'+(addr & 0x0F):'A'+(addr & 0x0F)-10;
-  log_wait[7] = ((data >> 4) <= 9)?'0'+(data >> 4):'A'+(data >> 4)-10;
-  log_wait[8] = ((data & 0x0F) <= 9)?'0'+(data & 0x0F):'A'+(data & 0x0F)-10;
-  to_log(log_wait);
-#endif   */
 
-  // LED_PORT &= ~(1<<LED);   // power led ON (for debug)
+#ifdef LOG_WAITS
+  printf("s:%02X a:%02X d:%02X", status, addr, d1);
+  printf(" (%s-%s-%02X)\r\n", ((status & ZXW_MASK) == ZXW_KONDR_RS232) ? "COM" : "GLU", host_cpu_read_request ? "R" : "W", (status >> 2) & 0x1F);
+#endif
+}
+
+void zx_wait_task_old()
+{
+  nSPICS_PORT &= ~(1<<nSPICS);  // fetch status
+  nSPICS_PORT |= (1<<nSPICS);
+  u8 status = spi_send(0);
+  u8 host_cpu_read_request = status & ZXW_MODE;
+  u8 data = 0;
+
+  u8 addr = zx_spi_send(SPI_WAIT_ADDR, 0);
+
+  if (host_cpu_read_request)
+    switch (status & ZXW_MASK)
+    {
+      case ZXW_GLUK_CLOCK:
+        data = gluk_get_reg(addr);
+      break;
+
+      case ZXW_KONDR_RS232:
+        data = rs232_zx_read(addr);
+      break;
+    }
+
+  data = zx_spi_send(SPI_WAIT_DATA, data);
+
+  // At this point Z80 is released from WAIT.
+
+  if (!host_cpu_read_request)
+  {
+    switch (status & ZXW_MASK)
+    {
+      case ZXW_GLUK_CLOCK:
+        gluk_set_reg(addr, data);
+      break;
+
+      case ZXW_KONDR_RS232:
+        rs232_zx_write(addr, data);
+      break;
+    }
+  }
 }
 
 void zx_mode_switcher(u8 mode)
@@ -833,5 +896,6 @@ void zx_set_config(u8 m)
 {
   m |= flags_register & FLAG_LAST_TAPE_VALUE;
   m |= flags_ex_register & FLAG_EX_NMI;
-  zx_spi_send(SPI_CONFIG_REG, m, ZXW_MASK);
+
+  zx_spi_send(SPI_CONFIG_REG, m);
 }

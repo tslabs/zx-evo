@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <avr/io.h>
 
 #include "pins.h"
@@ -21,7 +22,7 @@ void joystick_task(void)
 		joy_state = temp;
 
 		//send to port
-		zx_spi_send(SPI_KEMPSTON_JOYSTICK, joy_state, ZXW_MASK);
+    zx_spi_send(SPI_KEMPSTON_JOYSTICK, joy_state);
 
 #ifdef LOGENABLE
 	char log_joystick[] = "JS..\r\n";

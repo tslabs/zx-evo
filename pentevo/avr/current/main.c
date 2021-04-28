@@ -1,8 +1,8 @@
+#include <stdio.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
 #include <avr/eeprom.h>
-
 #include <util/delay.h>
 
 #include "mytypes.h"
@@ -25,6 +25,8 @@
 //if want Log than comment next string
 #undef LOGENABLE
 
+FILE uart_stdout;
+
 /** FPGA data pointer [far address] (linker symbol). */
 extern const u32 fpga_base PROGMEM;
 extern const u32 fpga_ts   PROGMEM;
@@ -46,6 +48,9 @@ volatile u8 ext_type_gluk;
 // Buffer for depacking FPGA configuration.
 // You can USED for other purposed after setup FPGA.
 u8 dbuf[DBSIZE];
+
+// Callback for Slave SPI servicing
+void (*zx_task_cb)();
 
 void put_buffer(u16 size)
 {
@@ -98,13 +103,10 @@ void hardware_init(void)
 
 void waittask(void)
 {
-  if (flags_register & FLAG_SPI_INT)
+  if (wait_irq_flag)
   {
-    //get status byte
-    nSPICS_PORT &= ~(1<<nSPICS);
-    nSPICS_PORT |= (1<<nSPICS);
-    u8 status = spi_send(0);
-    zx_wait_task(status);
+    wait_irq_flag = 0;
+    zx_task_cb();
   }
 }
 
@@ -112,6 +114,12 @@ int main()
 {
 start:
 
+  // printf setup
+  uart_stdout.put = stdout_putchar;
+  uart_stdout.flags = _FDEV_SETUP_WRITE;
+  uart_stdout.udata = 0; 
+  stdout = &uart_stdout;
+  
   hardware_init();
   rs232_init();
 
@@ -174,26 +182,29 @@ start:
 
   spi_init();
 
-  DDRF |= (1<<nCONFIG); // pull low for a time
+  DDRF |= (1 << nCONFIG); // pull low for a time
   _delay_ms(50);
-  DDRF &= ~(1<<nCONFIG);
-  while(!(PINF & (1<<nSTATUS))); // wait ready
+  DDRF &= ~(1 << nCONFIG);
+  while(!(PINF & (1 << nSTATUS))); // wait ready
 
   switch (eeprom_read_byte((const u8*)ADDR_FPGA_CFG))
   {
     case FPGA_BASE:
       curFpga = GET_FAR_ADDRESS(fpga_base);
+      zx_task_cb = zx_wait_task_old;
       oled_print("Base");
     break;
 
     case FPGA_EGG:
       curFpga = GET_FAR_ADDRESS(fpga_egg);
+      zx_task_cb = zx_wait_task_old;
       oled_print("Egg");
     break;
 
     case FPGA_TS:
     default:
       curFpga = GET_FAR_ADDRESS(fpga_ts);
+      zx_task_cb = zx_wait_task;
       oled_print("TS");
     break;
   }
@@ -252,6 +263,7 @@ start:
   flags_ex_register = 0;
   modes_register = 0;
   ext_type_gluk = 0;
+  wait_irq_flag = 0;
 
   //reset ps2 keyboard log
   ps2keyboard_reset_log();

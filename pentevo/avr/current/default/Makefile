@@ -32,9 +32,9 @@ AD = "$(AP)avrdude$(EXE)" -q -q -u -C "$(AP)avrdude.conf" -c $(PROGRAMMER) -p $(
 
 ## Compile options common for all C compilation units.
 CFLAGS = -mmcu=$(MCU)
-CFLAGS += -Os -flto -Wall -Wextra -gdwarf-2 -std=c++11
+CFLAGS += -Os -flto -gdwarf-2
 CFLAGS += -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums -fdata-sections -ffunction-sections
-CFLAGS += -Wimplicit-fallthrough=0 -Wno-parentheses -fpermissive
+CFLAGS += -fpermissive
 CFLAGS += -DF_CPU=11059200UL
 CFLAGS += -Wl,--gc-sections,--relax,-Map=$(PROJECT).map
 

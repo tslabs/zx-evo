@@ -114,6 +114,9 @@
  * @author http://www.nedopc.com
  */
 
+/** Wait port interrupt flag register. */
+extern volatile u8 wait_irq_flag;
+
 /** Common flag register. */
 extern volatile u8 flags_register;
 /** Direction for ps2 mouse data (0 - Receive/1 - Send). */
@@ -122,8 +125,6 @@ extern volatile u8 flags_register;
 #define FLAG_PS2MOUSE_TYPE      0x02
 /** Last tape in bit value. */
 #define FLAG_LAST_TAPE_VALUE    0x04
-/** Spi interrupt detected (0 - not received/1 - received). */
-#define FLAG_SPI_INT            0x08
 /** Direction for ps2 keyboard data (0 - Receive/1 - Send). */
 #define FLAG_PS2KEYBOARD_DIRECTION  0x10
 /** SysTick event. */

@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <avr/io.h>
 #include <util/delay.h>
 
@@ -73,8 +74,8 @@ void atx_power_task(void)
   if ((last_count > 0) && (atx_counter == 0))
   {
     //soft reset (reset Z80 only)
-    zx_spi_send(SPI_RST_REG, 1, ZXW_MASK);
-    zx_spi_send(SPI_RST_REG, 0, ZXW_MASK);
+    zx_spi_send(SPI_RST_REG, 1);
+    zx_spi_send(SPI_RST_REG, 0);
   }
   last_count = atx_counter;
 
