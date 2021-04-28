@@ -53,7 +53,7 @@ U8 uart_in_buf[512];
 
 void print_help()
 {
-  printf("RS-232 VDOS Mounter,  (c) 2013 TS-Labs inc.\n\n");
+  printf("RS-232 VDOS Mounter,  (c) 2013-2021 TS-Labs inc.\n\n");
   printf("Command line parameters (any is optional):\n");
   printf("-a|b|c|d <filename.trd>\n\tTRD image to be mounted on drive A-D (up to 4 images)\n");
   printf("-com\n\tSerial port name (default = COM1)\n");
@@ -153,7 +153,7 @@ int _tmain(int argc, _TCHAR* argv[])
     return 3;
   }
   else
-    wprintf(L"%s opened successfully\n\n", cport);
+    wprintf(L"%s opened successfully (%d baud)\n\n", cport, baud);
 
   COMMTIMEOUTS times;
   times.ReadIntervalTimeout = MAXDWORD;
