@@ -615,30 +615,6 @@
     <ClInclude Include="ft812.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="ft8xx\FT_CoPro_Cmds.h">
-      <Filter>Sources\ft8xx</Filter>
-    </ClInclude>
-    <ClInclude Include="ft8xx\FT_DataTypes.h">
-      <Filter>Sources\ft8xx</Filter>
-    </ClInclude>
-    <ClInclude Include="ft8xx\FT_Emulator.h">
-      <Filter>Sources\ft8xx</Filter>
-    </ClInclude>
-    <ClInclude Include="ft8xx\FT_EmulatorMain.h">
-      <Filter>Sources\ft8xx</Filter>
-    </ClInclude>
-    <ClInclude Include="ft8xx\FT_Gpu.h">
-      <Filter>Sources\ft8xx</Filter>
-    </ClInclude>
-    <ClInclude Include="ft8xx\FT_Gpu_Hal.h">
-      <Filter>Sources\ft8xx</Filter>
-    </ClInclude>
-    <ClInclude Include="ft8xx\FT_Hal_Utils.h">
-      <Filter>Sources\ft8xx</Filter>
-    </ClInclude>
-    <ClInclude Include="ft8xx\FT_Platform.h">
-      <Filter>Sources\ft8xx</Filter>
-    </ClInclude>
     <ClInclude Include="sound\ayx32.h">
       <Filter>Headers\sound</Filter>
     </ClInclude>

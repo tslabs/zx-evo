@@ -113,10 +113,22 @@ void init_all(int argc, char **argv)
 
    if (comp.ts.vdac2)
    {
-     if (!vdac2::open_ft8xx())
+     const char *ver = 0;
+     
+     if (vdac2::open_ft8xx(&ver))
+     {
+       if (ver)
+       {
+        color(CONSCLR_HARDITEM);
+        printf("FT library: ", ver);
+        color(CONSCLR_HARDINFO);
+        printf("%s\n", ver);
+       }
+     }
+     else
      {
        color(CONSCLR_WARNING);
-       printf("warning: ft8xx library was not loaded\n");
+       printf("Warning: ft8xx library was not loaded!\n");
        comp.ts.vdac2 = false;
      }
    }
