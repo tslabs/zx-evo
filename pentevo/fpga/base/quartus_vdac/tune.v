@@ -37,3 +37,5 @@
 // `define IDE_HDD         // for IDE HDD
 `define IDE_VDAC        // for VideoDAC instead of IDE
 // `define IDE_VDAC2       // for VideoDAC2 instead of IDE
+
+`define KEMPSTON_8BIT       //8-bit enhanced Kempston Joystick interface

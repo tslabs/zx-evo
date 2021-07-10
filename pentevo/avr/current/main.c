@@ -90,7 +90,7 @@ void hardware_init(void)
   DDRB  = 0b10000111; // LED off, spi outs inactive
 
   PORTA = 0b11111111;
-  DDRA  = 0b00000000; // pulled up
+  DDRA  = 0b00000100; // pulled up, PA2 used as output for SMD gamepad SEL
 
   ACSR = 0x80; // DISABLE analog comparator
 

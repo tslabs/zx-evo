@@ -19,5 +19,6 @@
 
 /** Kempstone joystick task. */
 void joystick_task(void);
+void joystick_poll(void);
 
 #endif //__JOYSTICK_H__

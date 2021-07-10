@@ -64,7 +64,12 @@ module zkbdmus
     end
 
     if (kj_stb)
+`ifdef KEMPSTON_8BIT
+      kj_data <= mus_in;
+`else
       kj_data <= mus_in[4:0];
+`endif
+
   end
 
   // keys

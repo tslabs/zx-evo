@@ -13,6 +13,7 @@
 #include "spi.h"
 #include "atx.h"
 #include "rtc.h"
+#include "joystick.h"
 
 volatile u8 wait_irq_flag;
 
@@ -65,10 +66,13 @@ ISR(TIMER2_OVF_vect)
 		atx_counter = 0;
 	}
 
-	if (scankbd==0)
+    // mask out bits 2 and 5 (keyboard rows Q-T and Y-P) used in SMD gamepad interface
+	u8 kbd_in = PINA | 0x24;
+
+	if ( scankbd==0 )
 	{
 		u8 tmp;
-		tmp = PINA;
+		tmp = kbd_in;
 		zx_realkbd[5] = tmp & cskey;
 		cskey = tmp | 0xfe;
 		DDRC  = 0b00010000;
@@ -76,34 +80,36 @@ ISR(TIMER2_OVF_vect)
 		zx_realkbd[10] = 4;
 		scankbd=4;
 	}
-	else if (scankbd==1)
+	else if ( scankbd==1 )
 	{
-		zx_realkbd[6] = PINA;
+		zx_realkbd[6] = kbd_in;
 		DDRC  = 0b00000001;
 		PORTC = 0b11011110;
 		scankbd=0;
 	}
-	else if (scankbd==2)
+	else if ( scankbd==2 )
 	{
-		zx_realkbd[7] = PINA;
+		zx_realkbd[7] = kbd_in;
 		DDRC  = 0b00000010;
 		PORTC = 0b11011101;
 		scankbd=1;
 	}
-	else if (scankbd==3)
+	else if ( scankbd==3 )
 	{
-		zx_realkbd[8] = PINA;
+		zx_realkbd[8] = kbd_in;
 		DDRC  = 0b00000100;
 		PORTC = 0b11011011;
 		scankbd=2;
 	}
-	else if (scankbd==4)
+	else if ( scankbd==4 )
 	{
-		zx_realkbd[9] = PINA;
+		zx_realkbd[9] = kbd_in;
 		DDRC  = 0b00001000;
 		PORTC = 0b11010111;
 		scankbd=3;
 	}
+
+	joystick_poll();
 }
 
 // receive/send PS/2 keyboard data

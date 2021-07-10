@@ -11,10 +11,12 @@
 //if want Log than comment next string
 #undef LOGENABLE
 
+static volatile u8 cur_state = 0;
+
 void joystick_task(void)
 {
 	static u8 joy_state = 0;
-	u8 temp = (~JOYSTICK_PIN) & JOYSTICK_MASK;
+	u8 temp = cur_state;
 
 	if (joy_state ^ temp)
 	{
@@ -22,7 +24,7 @@ void joystick_task(void)
 		joy_state = temp;
 
 		//send to port
-    zx_spi_send(SPI_KEMPSTON_JOYSTICK, joy_state);
+        zx_spi_send(SPI_KEMPSTON_JOYSTICK, joy_state);
 
 #ifdef LOGENABLE
 	char log_joystick[] = "JS..\r\n";
@@ -31,4 +33,17 @@ void joystick_task(void)
 	to_log(log_joystick);
 #endif
 	}
+}
+
+void joystick_poll(void)
+{
+	u8 ext_port = JOYSTICK_EXT_PORT;
+	cur_state = (ext_port & (1 << JOYSTICK_EXT_SEL))
+		? (cur_state & ~(JOYSTICK_MASK | 0x20))
+			| ((~JOYSTICK_PIN) & JOYSTICK_MASK)
+			| ((~JOYSTICK_EXT_PIN << (5 - JOYSTICK_EXT_START_C)) & 0x20)
+		: (cur_state & (JOYSTICK_MASK | 0x20))
+			| ((~JOYSTICK_PIN << (6 - JOYSTICK_FIRE)) & 0x40)
+			| ((~JOYSTICK_EXT_PIN << (7 - JOYSTICK_EXT_START_C)) & 0x80);
+	JOYSTICK_EXT_PORT = ext_port ^ (1 << JOYSTICK_EXT_SEL);
 }

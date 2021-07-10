@@ -59,7 +59,12 @@ module zports(
 
 	input  wire [ 4:0] keys_in, // keys (port FE)
 	input  wire [ 7:0] mus_in,  // mouse (xxDF)
-	input  wire [ 4:0] kj_in,
+
+`ifdef KEMPSTON_8BIT
+	input  wire [ 7:0] kj_in,
+`else
+    input  wire [ 4:0] kj_in,
+`endif
 
 	output reg  [ 3:0] border,
 
@@ -415,7 +420,12 @@ module zports(
 
 
 		KJOY:
+`ifdef KEMPSTON_8BIT
+			dout = kj_in;
+`else
 			dout = {3'b000, kj_in};
+`endif
+
 		KMOUSE:
 			dout = mus_in;
 
@@ -770,7 +780,7 @@ module zports(
 
 
 
-// SD card (z-control¸r compatible)
+// SD card (z-controlï¿½r compatible)
 
 	wire sdcfg_wr,sddat_wr,sddat_rd;
 

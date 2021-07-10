@@ -158,6 +158,12 @@
 /** JOYSTICK direction register. */
 #define JOYSTICK_DDR   DDRC
 
+/** SMD gamepad extra lines */
+#define JOYSTICK_EXT_PORT       PORTA
+#define JOYSTICK_EXT_PIN        PINA
+#define JOYSTICK_EXT_START_C    PA5     // ZXROW2 / X12.3 on schematic
+#define JOYSTICK_EXT_SEL        PA2     // ZXROW5 / X12.6 on schematic
+
 /** RS232 CTS pin number. */
 #define RS232CTS PB6
 /** RS232 CTS port register. */

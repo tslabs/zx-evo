@@ -145,7 +145,13 @@ module top
   wire [7:0] mus_data;
   wire kbd_stb, mus_xstb, mus_ystb, mus_btnstb, kj_stb;
   wire [4:0] kbd_port_data;
+
+`ifdef KEMPSTON_8BIT
+  wire [7:0] kj_port_data;
+`else
   wire [4:0] kj_port_data;
+`endif
+
   wire [7:0] mus_port_data;
   wire [7:0] wait_read,wait_write;
   wire wait_start_gluclock;
