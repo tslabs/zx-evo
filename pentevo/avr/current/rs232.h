@@ -153,9 +153,9 @@ void rs232_task(void);
 
 #endif //__ASSEMBLER__
 
-#define rs_rxbuff (dbuf+256)
-#define rs_txbuff (dbuf+512)
-#define zf_rxbuff (dbuf+768)
-#define zf_txbuff (dbuf+1024)
+#define rs_rxbuff (dbuf+512)
+#define rs_txbuff (dbuf+768)
+#define zf_rxbuff (dbuf+1024)
+#define zf_txbuff (dbuf+1280)
 
 #endif //RS232_H

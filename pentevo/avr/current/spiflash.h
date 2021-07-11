@@ -34,17 +34,14 @@ extern u16 sf_num_blocks;
 /** SFI registers. */
 enum
 {
-  SPIFL_REG_EXTSW = 0x00,     // W
-  SPIFL_REG_STAT  = 0x01,     // R
-  SPIFL_REG_CMD   = 0x01,     // W
-  SPIFL_REG_A0    = 0x02,     // RW
-  SPIFL_REG_A1    = 0x03,     // RW
-  SPIFL_REG_A2    = 0x04,     // RW
-  SPIFL_REG_A3    = 0x05,     // RW
-  SPIFL_REG_DATA  = 0x08,     // RW
-  SPIFL_REG_PRGRS = 0x09,     // R
-  SPIFL_REG_PARAM = 0x0A,     // W
-  SPIFL_REG_VER   = 0x0F,     // R
+  SPIFL_REG_EXTSW  = 0x00,     // W
+  SPIFL_REG_CMD    = 0x01,     // W
+  SPIFL_REG_STAT   = 0x01,     // R
+  SPIFL_REG_ADDR   = 0x02,     // W
+  SPIFL_REG_PARAM  = 0x03,     // W
+  SPIFL_REG_REPORT = 0x03,     // R
+  SPIFL_REG_DATA   = 0x08,     // RW
+  SPIFL_REG_VER    = 0x0F,     // R
 };
 
 /** SFI status bits. */
@@ -68,10 +65,12 @@ enum
   SPIFL_CMD_ERSCHP = 0x07,
   SPIFL_CMD_ERSSEC = 0x08,
   SPIFL_CMD_BREAK  = 0x09,
-  SPIFL_CMD_FORMAT = 0x0A,
-  SPIFL_CMD_FMTCHK = 0x0B,
-  SPIFL_CMD_FMTFST = 0x0C,
+  SPIFL_CMD_F_CHIP = 0x0A,
+  SPIFL_CMD_F_BLK  = 0x0B,
+  SPIFL_CMD_F_CHK  = 0x0C,
   SPIFL_CMD_BSLOAD = 0x0D,
+  SPIFL_CMD_REPORT = 0x0E,
+  SPIFL_CMD_DETECT = 0x0F,
 };
 
 /** SPI Flash commands. */
@@ -124,9 +123,9 @@ typedef enum
 
 typedef enum
 {
-  SFFM_NORM,
-  SFFM_TEST,
-  SFFM_FAST
+  SFFM_CHIP,
+  SFFM_BLK,
+  SFFM_CHK
 } SFFMT_TYPE;
 
 /** SF interface enable. */

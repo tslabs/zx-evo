@@ -34,6 +34,33 @@ u8 cfg_get_field_eeprom(u8 tag_req, void *addr)
   return 0;
 }
 
+u16 cfg_add_field(u8 tag, void *addr_src, u8 len)
+{
+  static u8 *addr;
+  static u16 size;
+
+  if (tag == CFG_TAG_START)
+  {
+    addr = (u8*)addr_src;
+    size = 0;
+  }
+  else
+  {
+    *addr++ = tag;
+    size++;
+
+    if (tag != CFG_TAG_END)
+    {
+      *addr++ = len;
+      memcpy(addr, addr_src, len);
+      addr += len;
+      size += len + 1;
+    }
+  }
+
+  return size;
+}
+
 u8 cfg_get_field(u8 tag_req, void *conf, void *addr)
 {
   return cfg_get_field(tag_req, conf, addr, 0);
@@ -56,7 +83,7 @@ u8 cfg_get_field(u8 tag_req, void *conf, void *addr, u8 maxlen)
     {
       if (maxlen)
         len = min(maxlen, len);
-      
+
       memcpy(addr, &cfg[ptr], len);
       return len;
     }

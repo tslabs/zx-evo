@@ -23,6 +23,12 @@ typedef enum
   CFG_TAG_BSTREAM = 0x01,   // boot bitstream filename
   CFG_TAG_ROM     = 0x02,   // boot ROM filename
   CFG_TAG_ISBASE  = 0x03,   // is Baseconf
+  
+  CFG_TAG_REP_COMMAND     = 0x80,   // current command
+  CFG_TAG_REP_PROGRESS    = 0x81,   // command progress
+  CFG_TAG_REP_ADDRESS     = 0x82,   // current processing address
+  CFG_TAG_REP_BLOCKS      = 0x83,   // current processed blocks
+  CFG_TAG_REP_BLOCKS_GOOD = 0x84,   // current processed good blocks
 } CFG_TAG;
 
 enum
@@ -35,5 +41,6 @@ enum
 u8 cfg_get_field_eeprom(u8, void*);
 u8 cfg_get_field(u8, void*, void*);
 u8 cfg_get_field(u8, void*, void*, u8);
+u16 cfg_add_field(u8, void*, u8);
 
 #endif

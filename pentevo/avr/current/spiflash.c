@@ -9,6 +9,7 @@
 #include "zx.h"
 #include "spiflash.h"
 #include "tsspiffs.h"
+#include "config.h"
 
 u32         sf_addr = 0;
 
@@ -24,15 +25,34 @@ SFFMT_STATE sffmt_state_next;
 bool        is_busy;
 bool        is_error;
 u8          progress;
+u8          last_cmd;
 
 #define SIZE_OF_PARAMS  256
+#define SIZE_OF_REPORT  256
+
 u8          *params;
 u16         params_len;
+u8          *report;
+u16         report_len;
+u16         report_cnt;
 
 u16         sffmt_blk_cnt;
+u16         sffmt_blk_good;
 u16         sffmt_pg_cnt;
 u32         sffmt_addr;
 u8          sffmt_check_value;
+
+void prepare_report()
+{
+  cfg_add_field(CFG_TAG_START, report, 0);
+  cfg_add_field(CFG_TAG_REP_COMMAND, &last_cmd, sizeof(last_cmd));
+  cfg_add_field(CFG_TAG_REP_PROGRESS, &progress, sizeof(progress));
+  cfg_add_field(CFG_TAG_REP_ADDRESS, &sffmt_addr, sizeof(sffmt_addr));
+  cfg_add_field(CFG_TAG_REP_BLOCKS, &sffmt_blk_cnt, sizeof(sffmt_blk_cnt));
+  cfg_add_field(CFG_TAG_REP_BLOCKS_GOOD, &sffmt_blk_good, sizeof(sffmt_blk_good));
+  report_len = cfg_add_field(CFG_TAG_END, 0, 0);
+  report_cnt = 0;
+}
 
 void spif_detect()
 {
@@ -56,14 +76,18 @@ void spif_detect()
   else
     return;     // wrong flash
 
-  sf_num_blocks = (u16)2 << (rc - 11);
+  sf_num_blocks = (u16)1 << (rc - 11);
 }
 
 void spif_init()
 {
   params     = dbuf;
   params_len = 0;
+  report     = &dbuf[256];
+  report_len = 0;
+  report_cnt = 0;
   spif_state = SFST_IDLE;
+  last_cmd   = 0;
   progress   = 0;
   is_busy    = false;
   is_error   = false;
@@ -73,8 +97,9 @@ void spif_start_format(SFFMT_TYPE type)
 {
   sffmt_type    = type;
   spif_state    = SFST_FORMAT;
-  sffmt_state   = (sffmt_type == SFFM_FAST) ? SFFMT_ST_FULL_ERASE : SFFMT_ST_1;
+  sffmt_state   = (sffmt_type == SFFM_CHIP) ? SFFMT_ST_FULL_ERASE : SFFMT_ST_1;
   sffmt_blk_cnt = 0;
+  sffmt_blk_good = 0;
   sffmt_addr    = 0;
   progress      = 0;
   is_busy       = true;
@@ -208,15 +233,23 @@ void sf_command(u8 cmd)
 {
   is_error = false;
 
-  if (is_busy)
-  {
-    if (cmd == SPIFL_CMD_BREAK)
-      is_busy = false;
-    // +++ terminate command
-    else
-      is_error = true;
-  }
+  if (cmd == SPIFL_CMD_REPORT)
+    prepare_report();
+
+  else if (is_busy)
+    switch (cmd)
+    {
+      case SPIFL_CMD_BREAK:
+        is_busy = false;
+        // +++ terminate command
+        break;
+
+      default:
+        is_error = true;
+    }
+
   else
+  {
     switch (cmd)
     {
       case SPIFL_CMD_ENA:
@@ -229,6 +262,10 @@ void sf_command(u8 cmd)
 
       case SPIFL_CMD_END:
         sfi_cs_off();
+        return;
+
+      case SPIFL_CMD_DETECT:
+        spif_detect();
         return;
 
       case SPIFL_CMD_ID:
@@ -258,16 +295,16 @@ void sf_command(u8 cmd)
         sfi_cs_off();
         break;
 
-      case SPIFL_CMD_FORMAT:
-        spif_start_format(SFFM_NORM);
+      case SPIFL_CMD_F_CHIP:
+        spif_start_format(SFFM_CHIP);
         break;
 
-      case SPIFL_CMD_FMTCHK:
-        spif_start_format(SFFM_TEST);
+      case SPIFL_CMD_F_BLK:
+        spif_start_format(SFFM_BLK);
         break;
 
-      case SPIFL_CMD_FMTFST:
-        spif_start_format(SFFM_FAST);
+      case SPIFL_CMD_F_CHK:
+        spif_start_format(SFFM_CHK);
         break;
 
       case SPIFL_CMD_BSLOAD:
@@ -279,6 +316,9 @@ void sf_command(u8 cmd)
         is_error = true;
         break;
     }
+
+    last_cmd = cmd;
+  }
 
   params_len = 0;
 }
@@ -296,29 +336,18 @@ u8 spi_flash_read(u8 index)
     case SPIFL_REG_STAT:
       return sf_status();
 
-    // SF low addr
-    case SPIFL_REG_A0:
-      return (u8)(sf_addr);
-
-    // SF high addr
-    case SPIFL_REG_A1:
-      return (u8)(sf_addr >> 8);
-
-    // SF ext addr
-    case SPIFL_REG_A2:
-      return (u8)(sf_addr >> 16);
-
-    // SF ext2 addr
-    case SPIFL_REG_A3:
-      return (u8)(sf_addr >> 24);
-
-    // SF operation progress
-    case SPIFL_REG_PRGRS:
-      return progress;
-
     // SF version
     case SPIFL_REG_VER:
       return SPIFL_VER;
+
+    // Report
+    case SPIFL_REG_REPORT:
+    {
+      u8 rc = report[report_cnt];
+      if (report_cnt < (report_len - 1))
+        report_cnt++;
+      return rc;
+    }
   }
 
   return 0xFF;
@@ -344,28 +373,10 @@ void spi_flash_write(u8 index, u8 data)
       ext_type_gluk = data;
       break;
 
-    // SF low addr
-    case SPIFL_REG_A0:
-      sf_addr &= 0xFFFFFF00;
+    // SF addr
+    case SPIFL_REG_ADDR:
+      sf_addr <<= 8;
       sf_addr |= data;
-      break;
-
-    // SF high addr
-    case SPIFL_REG_A1:
-      sf_addr &= 0xFFFF00FF;
-      sf_addr |= (u32)data << 8;
-      break;
-
-    // SF ext addr
-    case SPIFL_REG_A2:
-      sf_addr &= 0xFF00FFFF;
-      sf_addr |= (u32)data << 16;
-      break;
-
-    // SF ext addr2
-    case SPIFL_REG_A3:
-      sf_addr &= 0x00FFFFFF;
-      sf_addr |= (u32)data << 24;
       break;
 
     // Command parameter
@@ -455,6 +466,7 @@ void spif_format()
           sfi_send(s[i]);
       }
       sfi_cs_off();
+      sffmt_blk_good++;
       sffmt_state = SFFMT_ST_WRITE_SIG2;
       break;
 
@@ -480,7 +492,7 @@ void spif_format()
     case SFFMT_ST_ERASE2:
       if (!(sfi_cmd_r(SF_CMD_RDSTAT) & SF_STAT_BUSY))
       {
-        if (sffmt_type == SFFM_TEST)
+        if (sffmt_type == SFFM_CHK)
         {
           sffmt_check_value = 0xFF;
           sffmt_state       = SFFMT_ST_CHECK;
@@ -513,11 +525,13 @@ void spif_format()
 
     case SFFMT_ST_BLOCK_DONE:
       sffmt_blk_cnt++;
-      sffmt_addr += sf_num_pages << 8;
       progress    = ((u32)sffmt_blk_cnt * 255) / sf_num_blocks;
 
       if (sffmt_blk_cnt < sf_num_blocks)
-        sffmt_state = (sffmt_type == SFFM_FAST) ? SFFMT_ST_WRITE_SIG : SFFMT_ST_1;
+      {
+        sffmt_addr += sf_num_pages << 8;
+        sffmt_state = (sffmt_type == SFFM_CHIP) ? SFFMT_ST_WRITE_SIG : SFFMT_ST_1;
+      }
       else
       {
         is_busy    = false;

@@ -58,10 +58,10 @@ TSF_FILE_STAT stat;
 #define TSF_BUF_SIZE 256
 
 // ATTENTION!!! Used for UART (4 x 256) and other functions!!!
-// rs_rxbuff (dbuf+256)
-// rs_txbuff (dbuf+512)
-// zf_rxbuff (dbuf+768)
-// zf_txbuff (dbuf+1024)
+// rs_rxbuff (dbuf+512)
+// rs_txbuff (dbuf+768)
+// zf_rxbuff (dbuf+1024)
+// zf_txbuff (dbuf+1280)
 u8 dbuf[DBSIZE];       // 2kB buffer for depacking
 
 u8 tsf_buf[TSF_BUF_SIZE]; // SFI FS driver
@@ -170,7 +170,8 @@ void load_bitstream()
   {
     u32 sig;
 
-    if (tsf_mount(&tsf_cfg, &tsf_vol) != TSF_RES_OK) break;                               // mount TSF volume
+    // if (tsf_mount(&tsf_cfg, &tsf_vol) != TSF_RES_OK) break;                               // mount TSF volume
+    tsf_vol.cfg = &tsf_cfg;     // to save time for bulk scan
 
     if (is_cold_reset)
     {
