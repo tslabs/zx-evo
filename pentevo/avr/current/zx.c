@@ -787,51 +787,54 @@ void zx_mode_switcher(u8 mode)
   ps2keyboard_send_cmd(PS2KEYBOARD_CMD_SETLED);
 }
 
-// 7..5 - (unused)
-// 4..5 - ULA mode
-//   00 - pentagon raster (71680 clocks)
-//   01 - 60Hz raster
-//   10 - 48k raster (69888 clocks)
-//   11 - 128k raster (70908 clocks)
-// 3 - Beeper Mux
-//   0 - d4
-//   1 - d3
-// 2 - Tape In
-// 1 - NMI
-// 0 - VGA/TV
-//   0 - TV
-//   1 - VGA
+/*
+  FPGA config register:
+    Bit   TS                Base
+    -----------------------------------
+    7     Beeper_Mux[1]     -
+    6     Floppy Swap       -
+    5     WTP INT           ULA_mode[1]
+    4     50/60Hz           ULA_mode[0]
+    3     Beeper_Mux[0]     Beeper Mux
+    2     Tape In           Tape In
+    1     -                 NMI
+    0     VGA/TV            VGA/TV
+  
+  ULA_mode (Base)
+    00 - pentagon raster (71680 clocks)
+    01 - 60Hz raster
+    10 - 48k raster (69888 clocks)
+    11 - 128k raster (70908 clocks)
+  
+  50/60Hz (used only in a specialized version of TS-Config)
+    0 - 50Hz
+    1 - 60Hz
+    
+  Beeper Mux (Base)
+    0 - Beep (D4)
+    1 - Tape Out (D3)
+
+  Beeper Mux (TS)
+    00 - Beep (D4)
+    01 - Tape Out (D3)
+    1x - Tape In
+
+  VGA/TV
+    0 - TV
+    1 - VGA
+*/
+
 void zx_set_config_base()
 {
-  u8 m = modes_register & (MODES_BASE_RASTER | MODE_TAPEOUT | MODE_VGA);
-  zx_set_config(m);
-}
-
-// 7 - Tape/Sound Mux
-//   0 - Beep/Tape Out
-//   1 - Tape In
-// 6 - Floppy Swap
-// 5 - WTP INT
-// 4 - 50/60Hz
-//   0 - 50Hz
-//   1 - 60Hz
-// 3 - Beeper Mux
-//   0 - d4
-//   1 - d3
-// 2 - Tape In
-// 1 - (unused)
-// 0 - VGA/TV
-//   0 - TV
-//   1 - VGA
-void zx_set_config_ts()
-{
-  u8 m = modes_register & (MODE_TS_TAPEIN | MODE_TS_FSWAP | MODE_TS_WTP_INT | MODE_TS_60HZ | MODE_TAPEOUT | MODE_VGA);
-  zx_set_config(m);
-}
-
-void zx_set_config(u8 m)
-{
+  u8 m = modes_register & (MODES_BASE_RASTER | MODE_TAPEOUT | MODE_VGA);  // 00xx x00x
   m |= flags_register & FLAG_LAST_TAPE_VALUE;
   m |= flags_ex_register & FLAG_EX_NMI;
+  zx_spi_send(SPI_CONFIG_REG, m, ZXW_MASK);
+}
+
+void zx_set_config_ts() // xxxx x00x
+{
+  u8 m = modes_register & (MODE_TS_TAPEIN | MODE_TS_FSWAP | MODE_TS_WTP_INT | MODE_TS_60HZ | MODE_TAPEOUT | MODE_VGA);
+  m |= flags_register & FLAG_LAST_TAPE_VALUE;
   zx_spi_send(SPI_CONFIG_REG, m, ZXW_MASK);
 }

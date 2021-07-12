@@ -58,7 +58,7 @@ enum
   SPIFL_CMD_NOP    = 0x00,
   SPIFL_CMD_ENA    = 0x01,
   SPIFL_CMD_DIS    = 0x02,
-  SPIFL_CMD_END    = 0x03,
+  SPIFL_CMD_FINISH = 0x03,
   SPIFL_CMD_ID     = 0x04,
   SPIFL_CMD_READ   = 0x05,
   SPIFL_CMD_WRITE  = 0x06,

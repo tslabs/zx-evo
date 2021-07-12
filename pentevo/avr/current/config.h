@@ -20,10 +20,12 @@ typedef enum
   CFG_TAG_SIG     = 0x78,   // config signature
   CFG_TAG_VER     = 0x79,   // config version
 
+  // Bitstream config
   CFG_TAG_BSTREAM = 0x01,   // boot bitstream filename
   CFG_TAG_ROM     = 0x02,   // boot ROM filename
   CFG_TAG_ISBASE  = 0x03,   // is Baseconf
   
+  // SPI Flash report
   CFG_TAG_REP_COMMAND     = 0x80,   // current command
   CFG_TAG_REP_PROGRESS    = 0x81,   // command progress
   CFG_TAG_REP_ADDRESS     = 0x82,   // current processing address

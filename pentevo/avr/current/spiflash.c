@@ -260,7 +260,7 @@ void sf_command(u8 cmd)
         sfi_disable();
         break;
 
-      case SPIFL_CMD_END:
+      case SPIFL_CMD_FINISH:
         sfi_cs_off();
         return;
 

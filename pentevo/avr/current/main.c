@@ -95,7 +95,7 @@ TSF_RESULT spi_read(u32 addr, void *buf, u32 size)
   while (sz--)
     *d++ = spi_flash_read(SPIFL_REG_DATA);
 
-  sf_command(SPIFL_CMD_END);
+  sf_command(SPIFL_CMD_FINISH);
 
   return TSF_RES_OK;
 }

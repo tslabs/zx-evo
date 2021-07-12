@@ -217,6 +217,5 @@ void zx_mode_switcher(u8 mode);
  */
 void zx_set_config_base();
 void zx_set_config_ts();
-void zx_set_config(u8);
 
 #endif
