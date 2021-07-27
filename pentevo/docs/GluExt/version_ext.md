@@ -398,13 +398,13 @@ The [Binary Tagged Format (BTF)](#btf_link) is used for the parameter tags.
 
 | Byte offset | SEGA  | NES    |
 | ----------- | ----- | ------ |
-| 0           | Up    | Up     |
-| 1           | Down  | Down   |
-| 2           | Left  | Left   |
-| 3           | Right | Right  |
-| 4           | A     | A      |
-| 5           | B     | B      |
-| 6           | C     | Select |
+| 0           | Right | Right  |
+| 1           | Left  | Left   |
+| 2           | Down  | Down   |
+| 3           | Up    | Up     |
+| 4           | B     | B      |
+| 5           | C     | A      |
+| 6           | A     | Select |
 | 7           | Start | Start  |
 | 8           | Mode  | -      |
 | 9           | X     | -      |
