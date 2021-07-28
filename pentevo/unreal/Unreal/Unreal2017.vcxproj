@@ -222,14 +222,6 @@
     <ClInclude Include="fontatm2.h" />
     <ClInclude Include="fontdata.h" />
     <ClInclude Include="ft812.h" />
-    <ClInclude Include="ft8xx\FT_CoPro_Cmds.h" />
-    <ClInclude Include="ft8xx\FT_DataTypes.h" />
-    <ClInclude Include="ft8xx\FT_Emulator.h" />
-    <ClInclude Include="ft8xx\FT_EmulatorMain.h" />
-    <ClInclude Include="ft8xx\FT_Gpu.h" />
-    <ClInclude Include="ft8xx\FT_Gpu_Hal.h" />
-    <ClInclude Include="ft8xx\FT_Hal_Utils.h" />
-    <ClInclude Include="ft8xx\FT_Platform.h" />
     <ClInclude Include="funcs.h" />
     <ClInclude Include="getopt.h" />
     <ClInclude Include="gs.h" />
