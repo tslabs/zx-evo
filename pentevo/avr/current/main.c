@@ -83,7 +83,7 @@ void hardware_init(void)
   DDRD  = 0b00100000; // RTS out
 
 
-  PORTC = 0b11011111;
+  PORTC = 0b11011111; // ZXCOL[4:0] used for 2nd gamepad
   DDRC  = 0b00000000; // PWRGOOD input, other pulled up
 
   PORTB = 0b11000001;

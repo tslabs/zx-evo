@@ -66,6 +66,7 @@ ISR(TIMER2_OVF_vect)
 		atx_counter = 0;
 	}
 
+#ifdef KEYBOARD_40PIN_ENABLE
     // mask out bits 2 and 5 (keyboard rows Q-T and Y-P) used in SMD gamepad interface
 	u8 kbd_in = PINA | 0x24;
 
@@ -108,6 +109,22 @@ ISR(TIMER2_OVF_vect)
 		PORTC = 0b11010111;
 		scankbd=3;
 	}
+#else
+#if 0
+    // forward raw COL[4:0] from keyboard connector (test SMD gamepad pinout)
+    if ( scankbd==0 ) {
+        DDRC    = 0b00000000;
+        zx_realkbd[5]  = PINC | ~0b00011111;
+        zx_realkbd[10] = 4;
+        scankbd = 4;
+    } else if ( scankbd==4 )
+	{
+		DDRC    = 0b00000000;
+        zx_realkbd[9]  = PINC | ~0b00011111;
+		scankbd=0;
+	}
+#endif
+#endif
 
 	joystick_poll();
 }
