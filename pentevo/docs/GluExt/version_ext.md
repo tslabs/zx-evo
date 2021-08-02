@@ -381,14 +381,32 @@ The [Binary Tagged Format (BTF)](#btf_link) is used for the parameter tags.
 
 
 
+##### Alternative proposed mapping:
+
+| Bits | Name        | Description          | Values    |
+| ---- | ----------- | -------------------- | --------- |
+| 7..6 | PAD_MAPPING | Joystick key mapping | see below |
+| 5..3 | PAD1_MODE   | Joystick 2 mode      | see below |
+| 2..0 | PAD0_MODE   | Joystick 1 mode      | see below |
+
+| PADx_MODE | ZX Keyboard | Joystick 1                                            |
+| --------- | ----------- | ----------------------------------------------------- |
+| 000       | on          | Kempston for PAD0, none for PAD1                      |
+| 001       | on          | NES                                                   |
+| 010       | off         | SEGA 3-button                                         |
+| 011       | off         | SEGA 6-button (unsupported, aliased to SEGA 3-button) |
+| 1xx       | (reserved)  |                                                       |
+
+
+
 ##### Mapping
 
-| PAD_MODE[7:6] | Joystick 1          | Joystick 2          |
-| ------------- | ------------------- | ------------------- |
-| 00            | Keys (port #FE)     | Keys (port #FE)     |
-| 01            | Keys (port #FE)     | Kempston (port #1F) |
-| 10            | Kempston (port #1F) | Keys (port #FE)     |
-| 11            | (reserved)          |                     |
+| PAD_MAPPING | Joystick 1          | Joystick 2          |
+| ----------- | ------------------- | ------------------- |
+| 00          | Kempston (port #1F) | Keys (port #FE)     |
+| 01          | Keys (port #FE)     | Kempston (port #1F) |
+| 10          | Keys (port #FE)     | Keys (port #FE)     |
+| 11          | (reserved)          |                     |
 
 
 
@@ -417,14 +435,14 @@ The [Binary Tagged Format (BTF)](#btf_link) is used for the parameter tags.
 
 | Value, HEX | Key   | Value, HEX | Key    | Value, HEX | Key  | Value, HEX | Key  | Value, HEX | Key  |
 | ---------- | ----- | ---------- | ------ | ---------- | ---- | ---------- | ---- | ---------- | ---- |
-| 00         | CAPS  | 08         | Z      | 10         | X    | 18         | C    | 20         | V    |
-| 01         | A     | 09         | S      | 11         | D    | 19         | F    | 21         | G    |
-| 02         | Q     | 0A         | W      | 12         | E    | 1A         | R    | 22         | T    |
-| 03         | 1     | 0B         | 2      | 13         | 3    | 1B         | 4    | 23         | 5    |
-| 04         | 0     | 0C         | 9      | 14         | 8    | 1C         | 7    | 24         | 6    |
-| 05         | P     | 0D         | O      | 15         | I    | 1D         | U    | 25         | Y    |
-| 06         | ENTER | 0E         | L      | 16         | K    | 1E         | J    | 26         | H    |
-| 07         | SPACE | 0F         | SYMBOL | 17         | M    | 1F         | N    | 27         | B    |
+| 00         | SPACE | 08         | SYMBOL | 10         | M    | 18         | N    | 20         | B    |
+| 01         | ENTER | 09         | L      | 11         | K    | 19         | J    | 21         | H    |
+| 02         | P     | 0A         | O      | 12         | I    | 1A         | U    | 22         | Y    |
+| 03         | 0     | 0B         | 9      | 13         | 8    | 1B         | 7    | 23         | 6    |
+| 04         | 1     | 0C         | 2      | 14         | 3    | 1C         | 4    | 24         | 5    |
+| 05         | Q     | 0D         | W      | 15         | E    | 1D         | R    | 25         | T    |
+| 06         | A     | 0E         | S      | 16         | D    | 1E         | F    | 26         | G    |
+| 07         | CAPS  | 0F         | Z      | 17         | X    | 1F         | C    | 27         | V    |
 
 ​	Value 0xFF means no mapping for current key.
 
