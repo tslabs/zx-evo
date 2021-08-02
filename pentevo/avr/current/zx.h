@@ -216,4 +216,10 @@ void zx_set_config_base();
 void zx_set_config_ts();
 void zx_set_config(u8);
 
+/**
+ * Assert reser/reboot form SD card
+ */
+void func_reset();
+void func_flash();
+
 #endif

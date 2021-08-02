@@ -18,6 +18,7 @@
 #include "rtc.h"
 #include "atx.h"
 #include "joystick.h"
+#include "config_interface.h"
 #include "tape.h"
 #include "kbmap.h"
 #include "config.h"
@@ -110,8 +111,16 @@ void waittask(void)
   }
 }
 
+extern void* __vectors;
+#define BOOTLOADER() ((void(*)(void))&__vectors-4096)()
+
 int main()
 {
+    // these flags control reset reason (hard reset/flash from SD card)
+    // be sure to clear them on power-up
+    flags_register = 0;
+    flags_ex_register = 0;
+
 start:
 
   // printf setup
@@ -165,6 +174,16 @@ start:
     to_log("\r\n");
   }
 #endif
+
+  // reflash?
+  if ((flags_ex_register & flags_ex_register) == FLAG_EX_FLASH) {
+      cli(); // disable interrupts
+      // simulate soft reset button press for bootloader
+      SOFTRES_DDR  |= (1<<SOFTRES);
+      SOFTRES_PORT &= ~(1<<SOFTRES);
+      // HACK!!!
+      BOOTLOADER();
+  }
 
   oled_init();
   oled_clear();
@@ -280,6 +299,7 @@ start:
   EIFR = (1<<INTF4)|(1<<INTF5)|(1<<INTF6)|(1<<INTF7); // clear spurious ints there
   EIMSK |= (1<<INT4)|(1<<INT5)|(1<<INT6)|(1<<INT7); // enable
 
+  joystick_init();
   kbmap_init();
   zx_init();
   rtc_init();
