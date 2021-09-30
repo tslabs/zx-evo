@@ -126,6 +126,10 @@ ISR(TIMER2_OVF_vect)
 #endif
 #endif
 
+    // pause for autofire
+    if (joystick_autofire_delay)
+        joystick_autofire_delay--;
+
 	joystick_poll();
 }
 

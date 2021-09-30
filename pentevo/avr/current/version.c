@@ -1,3 +1,4 @@
+#include <stdio.h>
 
 #include <avr/pgmspace.h>
 #include "mytypes.h"
@@ -40,7 +41,8 @@ u8 GetVersionByte(u8 index)
 
         case EXT_TYPE_CFGIF:
             // read from Configuration interface
-            return config_interface_read(index);
+            u8 ret = config_interface_read(index);
+            return ret;
 	}
 	return 0xFF;
 }
@@ -65,6 +67,8 @@ void SetVersionType(u8 index, u8 type)
         break;
 
       default:
+        // alias registers F0..FF to F0 to maintain compatibility with existing software, incl. BaseConf
+        ext_type_gluk = type;
         break;
     }
 }

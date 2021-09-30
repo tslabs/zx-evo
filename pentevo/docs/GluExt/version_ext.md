@@ -24,12 +24,15 @@
 
 ​	To enable access to the Extension register, GC register 0x0C must be written with value 0 to disable EEPROM access and enable other extensions. The extended GC functionality is selected via GC register 0xF0. The SFI has extension number 0x10 which must be first written for any following operations. The SFI then uses GC registers 0xF1..0xFF for its functionality.
 
+**NOTE:** in BaseConf, Extension Select (EXTSW) register is defined as write to any register in 0xF0..FF range. To maintain compatibility with existing software, reset EXTSW by writing 0 to register 0xF0 after finishing extension operations.
+
 | Step | Activity                   | Assembly pseudocode                                          |
 | ---- | -------------------------- | ------------------------------------------------------------ |
 | 1    | Open GluClock ports        | ```OUT #EFF7, 0x80 ```                                       |
 | 2    | Disable EEPROM operations  | ```OUT #DFF7, 0x0C : OUT #BFF7, 0 ```                        |
 | 3    | Select an extension        | ```OUT #DFF7, 0xF0 : OUT #BFF7, <extension_code> ```         |
 | ..   | (Any extension operations) | (See the 'Access scenario' sub-sections for any particular extension.) |
+| n-1  | Reset EXTSW to 0           | ```OUT #DFF7, 0xF0 : OUT #BFF7, 0 ```                        |
 | n    | Close GluClock ports       | ```OUT #EFF7, 0 ```                                          |
 
 
@@ -311,18 +314,20 @@ The [Binary Tagged Format (BTF)](#btf_link) is used for the parameter tags.
 
 ### Registers
 
-| Name        | Address, HEX | Mode | Description                                                  |
-| ----------- | ------------ | ---- | ------------------------------------------------------------ |
-| EXTSW       | F0           | W    | GluClock extension (0x0E for Configuration Interface)        |
-| MODES_VIDEO | F1           | R/W  | Modes video                                                  |
-| MODES_MISC  | F2           | R/W  | Modes miscellaneous                                          |
-| HOTKEYS     | F3           | R/W  | Hotkey mapping                                               |
-| PAD_MODE    | F4           | R/W  | Control pad modes                                            |
-| PAD_KMAP0   | F5           | R/W  | Control pad key mapping for Joystick 1                       |
-| PAD_KMAP1   | F6           | R/W  | Control pad key mapping for Joystick 2                       |
-| PROTECT     | FE           | R/W  | Bit 7: Protection. Written to 1, disables certain functions until Reset. |
-| COMMAND     | FF           | W    | Command                                                      |
-| STATUS      | FF           | R    | Status                                                       |
+| Name          | Address, HEX | Mode | Description                                                  |
+| ------------- | ------------ | ---- | ------------------------------------------------------------ |
+| EXTSW         | F0           | W    | GluClock extension (0x0E for Configuration Interface)        |
+| MODES_VIDEO   | F1           | R/W  | Modes video                                                  |
+| MODES_MISC    | F2           | R/W  | Modes miscellaneous                                          |
+| HOTKEYS       | F3           | R/W  | Hotkey mapping                                               |
+| PAD_MODE      | F4           | R/W  | Control pad modes                                            |
+| PAD_KMAP0     | F5           | R/W  | Control pad key mapping for Joystick 1                       |
+| PAD_KMAP1     | F6           | R/W  | Control pad key mapping for Joystick 2                       |
+| PAD_AUTOFIRE0 | F7           | R/W  | Control pad Autofire mask for Joystick 1                     |
+| PAD_AUTOFIRE1 | F8           | R/W  | Control pad Autofire mask for Joystick 2                     |
+| PROTECT       | FE           | R/W  | Bit 7: Protection. Written to 1, disables certain functions until Reset. |
+| COMMAND       | FF           | W    | Command                                                      |
+| STATUS        | FF           | R    | Status                                                       |
 
 
 
@@ -370,26 +375,13 @@ The [Binary Tagged Format (BTF)](#btf_link) is used for the parameter tags.
 
 ##### Interface selection
 
-| PAD_MODE[2:0] | ZX Keyboard | Joystick 1 | Joystick 2 |
-| ------------- | ----------- | ---------- | ---------- |
-| 00x           | on          | Kempston   | -          |
-| 010           | on          | NES        | -          |
-| 011           | on          | NES        | NES        |
-| 100           | off         | SEGA       | -          |
-| 101           | off         | SEGA       | SEGA       |
-| 11x           | (reserved)  |            |            |
-
-
-
-##### Alternative proposed mapping:
-
 | Bits | Name        | Description          | Values    |
 | ---- | ----------- | -------------------- | --------- |
 | 7..6 | PAD_MAPPING | Joystick key mapping | see below |
 | 5..3 | PAD1_MODE   | Joystick 2 mode      | see below |
 | 2..0 | PAD0_MODE   | Joystick 1 mode      | see below |
 
-| PADx_MODE | ZX Keyboard | Joystick 1                                            |
+| PADx_MODE | ZX Keyboard | Joystick                                              |
 | --------- | ----------- | ----------------------------------------------------- |
 | 000       | on          | Kempston for PAD0, none for PAD1                      |
 | 001       | on          | NES                                                   |
@@ -412,22 +404,22 @@ The [Binary Tagged Format (BTF)](#btf_link) is used for the parameter tags.
 
 #### Control pad key mappings
 
-​	Must be loaded in a batch.
+​	Can be loaded in batch, each read/write to register PAD_KMAP0/PAD_KMAP1 increments current byte offset by 1. Any read/write to other register, including key mapping for other joystick, resets offset to 0.
 
-| Byte offset | SEGA  | NES    |
-| ----------- | ----- | ------ |
-| 0           | Right | Right  |
-| 1           | Left  | Left   |
-| 2           | Down  | Down   |
-| 3           | Up    | Up     |
-| 4           | B     | B      |
-| 5           | C     | A      |
-| 6           | A     | Select |
-| 7           | Start | Start  |
-| 8           | Mode  | -      |
-| 9           | X     | -      |
-| 10          | Y     | -      |
-| 11          | Z     | -      |
+| Byte offset/Button index | SEGA  | NES    |
+| ------------------------ | ----- | ------ |
+| 0                        | Right | Right  |
+| 1                        | Left  | Left   |
+| 2                        | Down  | Down   |
+| 3                        | Up    | Up     |
+| 4                        | B     | B      |
+| 5                        | C     | A      |
+| 6                        | A     | Select |
+| 7                        | Start | Start  |
+| 8                        | Mode  | -      |
+| 9                        | X     | -      |
+| 10                       | Y     | -      |
+| 11                       | Z     | -      |
 
 
 
@@ -449,6 +441,20 @@ The [Binary Tagged Format (BTF)](#btf_link) is used for the parameter tags.
 ​	Bit 6 = 1 in a value means CAPS is pressed together with the key.
 
 ​	Bit 7 = 1 in a value means SYMBOL is pressed together with the key.
+
+
+
+#### Control pad Autofire mappings
+
+Can be loaded in batch, each read/write to register increments current byte offset by 1. Any read/write to other register, including Autofire mapping for other joystick, resets offset to 0.
+
+| Byte offset | Key                                                     |
+| ----------- | ------------------------------------------------------- |
+| 0           | Autofire mask for buttons [7..0], each bit 1 if enabled |
+| 1           | Autofire mask for buttons [15.8], same format           |
+| ...         |                                                         |
+
+The default Autofire frequency is 10 Hz.
 
 
 

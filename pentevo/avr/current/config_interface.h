@@ -4,16 +4,18 @@
 // Configuration Interface registers
 enum
 {
-    CFGIF_REG_EXTSW       = 0x00,     // W
-    CFGIF_REG_MODES_VIDEO = 0x01,     // RW
-    CFGIF_REG_MODES_MISC  = 0x02,     // RW
-    CFGIF_REG_HOTKEYS     = 0x03,     // RW
-    CFGIF_REG_PAD_MODE    = 0x04,     // RW
-    CFGIF_REG_PAD_KEYMAP0 = 0x05,     // RW
-    CFGIF_REG_PAD_KEYMAP1 = 0x06,     // RW
-    CFGIF_REG_PROTECT     = 0x0E,     // RW
-    CFGIF_REG_COMMAND     = 0x0F,     // W
-    CFGIF_REG_STATUS      = 0x0F,     // R
+    CFGIF_REG_EXTSW         = 0x00,     // W
+    CFGIF_REG_MODES_VIDEO   = 0x01,     // RW
+    CFGIF_REG_MODES_MISC    = 0x02,     // RW
+    CFGIF_REG_HOTKEYS       = 0x03,     // RW
+    CFGIF_REG_PAD_MODE      = 0x04,     // RW
+    CFGIF_REG_PAD_KEYMAP0   = 0x05,     // RW
+    CFGIF_REG_PAD_KEYMAP1   = 0x06,     // RW
+    CFGIF_REG_PAD_AUTOFIRE0 = 0x07,     // RW
+    CFGIF_REG_PAD_AUTOFIRE1 = 0x08,     // RW
+    CFGIF_REG_PROTECT       = 0x0E,     // RW
+    CFGIF_REG_COMMAND       = 0x0F,     // W
+    CFGIF_REG_STATUS        = 0x0F,     // R
 };
 
 // CFGIF_REG_MODES_VIDEO flags

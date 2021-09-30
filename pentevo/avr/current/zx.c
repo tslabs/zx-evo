@@ -333,7 +333,7 @@ void zx_task(u8 operation) // zx task, tracks when there is need to send new key
               if (/* prev key was not-CS|SS up */
                 (prev_code<KEY_CS || KEY_SS<prev_code) &&
                 /* curr key is CS|SS up */
-                (KEY_CS<=prev_code && prev_code<=KEY_SS)
+                (KEY_CS<=code && code<=KEY_SS)
             )
                 break;
             }

@@ -58,6 +58,10 @@ u8 config_interface_read(u8 index)
         case CFGIF_REG_PAD_KEYMAP0:
         case CFGIF_REG_PAD_KEYMAP1:
             return joystick_keymap_read(index - CFGIF_REG_PAD_KEYMAP0, joymap_pos++);
+        
+        case CFGIF_REG_PAD_AUTOFIRE0:
+        case CFGIF_REG_PAD_AUTOFIRE1:
+            return joystick_autofire_read(index - CFGIF_REG_PAD_AUTOFIRE0, joymap_pos++);
 
         case CFGIF_REG_PROTECT:
             return cfg_protect;
@@ -82,8 +86,8 @@ void config_interface_write(u8 index, u8 data)
     }
 
     // check for configuration protection enable
-    //if ((cfg_protect & CFGIF_PROTECT_ENABLE) && (index != CFGIF_REG_COMMAND))
-    //    return;
+    if ((cfg_protect & CFGIF_PROTECT_ENABLE) && (index != CFGIF_REG_COMMAND))
+        return;
 
     switch (index)
     {
@@ -94,6 +98,11 @@ void config_interface_write(u8 index, u8 data)
         case CFGIF_REG_PAD_KEYMAP0:
         case CFGIF_REG_PAD_KEYMAP1:
             joystick_keymap_write(index - CFGIF_REG_PAD_KEYMAP0, joymap_pos++, data);
+            break;
+
+        case CFGIF_REG_PAD_AUTOFIRE0:
+        case CFGIF_REG_PAD_AUTOFIRE1:
+            joystick_autofire_write(index - CFGIF_REG_PAD_AUTOFIRE0, joymap_pos++, data);
             break;
 
         case CFGIF_REG_PROTECT:
