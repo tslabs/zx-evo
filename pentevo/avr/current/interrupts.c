@@ -66,65 +66,50 @@ ISR(TIMER2_OVF_vect)
 		atx_counter = 0;
 	}
 
-#ifdef KEYBOARD_40PIN_ENABLE
-    // mask out bits 2 and 5 (keyboard rows Q-T and Y-P) used in SMD gamepad interface
-	u8 kbd_in = PINA | 0x24;
+    // poll 40-pin keyboard if enabled
+    if ((flags_ex_register & FLAG_EX_DISABLE_40PIN_KEYBOARD) == 0) {
+        u8 kbd_in = PINA;
 
-	if ( scankbd==0 )
-	{
-		u8 tmp;
-		tmp = kbd_in;
-		zx_realkbd[5] = tmp & cskey;
-		cskey = tmp | 0xfe;
-		DDRC  = 0b00010000;
-		PORTC = 0b11001111;
-		zx_realkbd[10] = 4;
-		scankbd=4;
-	}
-	else if ( scankbd==1 )
-	{
-		zx_realkbd[6] = kbd_in;
-		DDRC  = 0b00000001;
-		PORTC = 0b11011110;
-		scankbd=0;
-	}
-	else if ( scankbd==2 )
-	{
-		zx_realkbd[7] = kbd_in;
-		DDRC  = 0b00000010;
-		PORTC = 0b11011101;
-		scankbd=1;
-	}
-	else if ( scankbd==3 )
-	{
-		zx_realkbd[8] = kbd_in;
-		DDRC  = 0b00000100;
-		PORTC = 0b11011011;
-		scankbd=2;
-	}
-	else if ( scankbd==4 )
-	{
-		zx_realkbd[9] = kbd_in;
-		DDRC  = 0b00001000;
-		PORTC = 0b11010111;
-		scankbd=3;
-	}
-#else
-#if 0
-    // forward raw COL[4:0] from keyboard connector (test SMD gamepad pinout)
-    if ( scankbd==0 ) {
-        DDRC    = 0b00000000;
-        zx_realkbd[5]  = PINC | ~0b00011111;
-        zx_realkbd[10] = 4;
-        scankbd = 4;
-    } else if ( scankbd==4 )
-	{
-		DDRC    = 0b00000000;
-        zx_realkbd[9]  = PINC | ~0b00011111;
-		scankbd=0;
-	}
-#endif
-#endif
+        if ( scankbd==0 )
+        {
+            u8 tmp;
+            tmp = kbd_in;
+            zx_realkbd[5] = tmp & cskey;
+            cskey = tmp | 0xfe;
+            DDRC  = 0b00010000;
+            PORTC = 0b11001111;
+            zx_realkbd[10] = 4;
+            scankbd=4;
+        }
+        else if ( scankbd==1 )
+        {
+            zx_realkbd[6] = kbd_in;
+            DDRC  = 0b00000001;
+            PORTC = 0b11011110;
+            scankbd=0;
+        }
+        else if ( scankbd==2 )
+        {
+            zx_realkbd[7] = kbd_in;
+            DDRC  = 0b00000010;
+            PORTC = 0b11011101;
+            scankbd=1;
+        }
+        else if ( scankbd==3 )
+        {
+            zx_realkbd[8] = kbd_in;
+            DDRC  = 0b00000100;
+            PORTC = 0b11011011;
+            scankbd=2;
+        }
+        else if ( scankbd==4 )
+        {
+            zx_realkbd[9] = kbd_in;
+            DDRC  = 0b00001000;
+            PORTC = 0b11010111;
+            scankbd=3;
+        }
+    }
 
     // pause for autofire
     if (joystick_autofire_delay)

@@ -41,10 +41,11 @@ const u8 default_joymap[] PROGMEM =
     CFGIF_PAD_MAPPING_NO_KEY,
 };
 
-static u8       joystick_autofire_delay = 0;
-static u8       joystick_flags = 0;
+volatile u8 joystick_autofire_delay = 0;
+static   u8 joystick_flags = 0;
 joystick_mode_t joystick_mode;
 
+// Sega Joystick SELECT line state
 static u8 joystick_sega_select;
 
 void joystick_set_gpio() {
@@ -52,12 +53,18 @@ void joystick_set_gpio() {
         case CFGIF_PAD_MODE_KEMPSTON:
             PORTA = 0b11111111;
             DDRA  = 0b00000000; // pulled up
+
+            // enable 40pin keyboard interface 
+            flags_ex_register &= ~FLAG_EX_DISABLE_40PIN_KEYBOARD;
             break;
         case CFGIF_PAD_MODE_SEGA:
         case CFGIF_PAD_MODE_SEGA6BUTTON:
-            PORTA = 0b11111011;
+            PORTA = 0b11111111;
             DDRA  = 0b00000100; // pulled up, PA2 used as output for SMD gamepad SEL
-            joystick_sega_select = 0;
+            joystick_sega_select = 1;
+
+            // disable 40pin keyboard interface 
+            flags_ex_register |= FLAG_EX_DISABLE_40PIN_KEYBOARD;
             break;
         default:
             break;
@@ -66,9 +73,12 @@ void joystick_set_gpio() {
     switch(joystick_mode.b.pad1) {
         case CFGIF_PAD_MODE_SEGA:
         case CFGIF_PAD_MODE_SEGA6BUTTON:
-            PORTA = 0b11111011;
+            PORTA = 0b11111111;
             DDRA  = 0b00000100; // pulled up, PA2 used as output for SMD gamepad SEL
-            joystick_sega_select = 0;
+            joystick_sega_select = 1;
+
+            // disable 40pin keyboard interface 
+            flags_ex_register |= FLAG_EX_DISABLE_40PIN_KEYBOARD;
             break;
 
         default:
@@ -95,7 +105,7 @@ void joystick_init() {
         // read config from eeprom
         joystick_mode.raw = eeprom_read_byte((u8*)JOYSTICK_EEPROM_MODE);
 
-        // read autoire map
+        // read autofire map
         for (u8 pos = 0; pos < sizeof(joystick_autofire_mask); pos++) {
             joystick_autofire_mask[pos] = eeprom_read_byte((u8*)(JOYSTICK_EEPROM_PAD0_AUTOFIRE + pos));
         }
@@ -124,6 +134,9 @@ void joystick_init_eeprom(u8 mode) {
     // write empty autofire map
     for (u32 ptr = JOYSTICK_EEPROM_PAD0_AUTOFIRE; ptr < JOYSTICK_EEPROM_PAD1_AUTOFIRE + 2; ptr++) 
         eeprom_write_byte((u8*)ptr, 0);
+
+    // reinit joystick
+    joystick_init();
 }
 
 void joystick_set_mode(u8 mode) {
@@ -141,7 +154,7 @@ void joystick_set_mode(u8 mode) {
     eeprom_busy_wait();
 
     // check if eeprom data is used
-    if ((joystick_flags & JOYSTICK_FLAG_EEPROM_MAP) == 0)
+    if (joystick_flags & JOYSTICK_FLAG_EEPROM_MAP)
         joystick_init_eeprom(joystick_mode.raw);
     else
         // write mode only
@@ -196,7 +209,7 @@ void joystick_keymap_write(u8 joystick, u8 index, u8 data) {
     if ((index > 15) || (joystick > 1)) return;
 
     // disable joystick
-    joystick_flags &= ~JOYSTICK_FLAG_ACTIVE;
+    joystick_flags &= ~JOYSTICK_FLAG_ACTIVE ;
 
     // init eeprom map if it's not used
     

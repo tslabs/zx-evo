@@ -49,7 +49,7 @@ enum {
     JOYSTICK_DEFAULT_AUTOFIRE_DELAY = 24,
 };
 
-extern u8 joystick_autofire_delay;
+extern volatile u8 joystick_autofire_delay;
 
 /** Joystick init */
 void joystick_init(void);
