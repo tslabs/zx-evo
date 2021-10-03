@@ -144,6 +144,8 @@ extern volatile u8 flags_ex_register;
 #define FLAG_EX_PS2KEYBOARD_MAP 0x04
 /** Flash from SD card (1 - enable flash) */
 #define FLAG_EX_FLASH           0x08
+/** Disable 40-pin keyboard (1 - disable) */
+#define FLAG_EX_DISABLE_40PIN_KEYBOARD  0x10
 
 /** Common modes register. */
 extern volatile u8 modes_register;
