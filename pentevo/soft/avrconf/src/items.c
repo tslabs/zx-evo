@@ -97,7 +97,7 @@ const GC_DITEM_t itmJoyMapTypeBox = {
 /*hotkey*/      0,
 /*select*/      0,
 /*var*/         0,
-/*name*/        "Joystick mapping type",
+/*name*/        "Joystick 1/2 mapping type",
 /*handler*/     0
 };
 
