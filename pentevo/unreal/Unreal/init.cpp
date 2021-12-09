@@ -18,6 +18,7 @@
 #include "util.h"
 #include "getopt.h"
 #include "debugger/debug.h"
+#include "visuals.h"
 #include "ft812.h"
 
 void cpu_info()
@@ -99,6 +100,7 @@ void init_all(int argc, char **argv)
    init_hdd_cd();
    start_dx();
    init_debug();
+   init_visuals();
    applyconfig();
    main_reset();
    autoload();
@@ -114,8 +116,9 @@ void init_all(int argc, char **argv)
    if (comp.ts.vdac2)
    {
      const char *ver = 0;
+     int rc = vdac2::open_ft8xx(&ver);
      
-     if (vdac2::open_ft8xx(&ver))
+     if (rc == 0)
      {
        if (ver)
        {
@@ -128,7 +131,7 @@ void init_all(int argc, char **argv)
      else
      {
        color(CONSCLR_WARNING);
-       printf("Warning: ft8xx library was not loaded!\n");
+       printf("Warning: FT8xx emulator failed! (error: %d, %lX)\n", rc, GetLastError());
        comp.ts.vdac2 = false;
      }
    }

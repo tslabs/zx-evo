@@ -7,6 +7,7 @@ void correct_exit();
 void main_mouse();
 void main_reset();
 void main_debug();
+void main_visuals();
 void main_fullscr();
 void main_pause();
 void main_selectfix();

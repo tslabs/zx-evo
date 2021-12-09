@@ -18,6 +18,7 @@
 #include "z80.h"
 #include "emulkeys.h"
 #include "util.h"
+#include "visuals.h"
 
 extern VCTR vid;
 extern CACHE_ALIGNED u32 vbuf[2][sizeof_vbuf];
@@ -475,4 +476,9 @@ void savesnap()
    savesnap(-1);
    eat();
    sound_play();
+}
+
+void main_visuals()
+{
+  visuals_on_off();
 }

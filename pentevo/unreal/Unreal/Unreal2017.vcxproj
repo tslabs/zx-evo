@@ -164,6 +164,7 @@
     <ClCompile Include="tsconf.cpp" />
     <ClCompile Include="util.cpp" />
     <ClCompile Include="vars.cpp" />
+    <ClCompile Include="visuals.cpp" />
     <ClCompile Include="vs1001.cpp" />
     <ClCompile Include="wd93cmd.cpp" />
     <ClCompile Include="wd93crc.cpp" />
@@ -268,6 +269,7 @@
     <ClInclude Include="tsconf.h" />
     <ClInclude Include="util.h" />
     <ClInclude Include="vars.h" />
+    <ClInclude Include="visuals.h" />
     <ClInclude Include="vs1001.h" />
     <ClInclude Include="wd93.h" />
     <ClInclude Include="wd93crc.h" />

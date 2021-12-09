@@ -406,7 +406,8 @@ static LRESULT APIENTRY DebugWndProc(HWND hwnd, UINT uMessage, WPARAM wparam, LP
 	return DefWindowProc(hwnd, uMessage, wparam, lparam);
 }
 
-void set_debug_window_size() {
+void set_debug_window_size() 
+{
     RECT cl_rect;
     const DWORD dw_style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
 
@@ -421,7 +422,6 @@ void set_debug_window_size() {
 void init_debug()
 {
 	WNDCLASS  wc{};
-	RECT cl_rect;
 	const DWORD dw_style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
 
 	wc.lpfnWndProc = WNDPROC(DebugWndProc);
@@ -433,10 +433,9 @@ void init_debug()
 
 	debug_menu = LoadMenu(hIn, MAKEINTRESOURCE(IDR_DEBUGMENU));
 
-	debug_wnd = CreateWindow("DEBUG_WND", "UnrealSpeccy debugger", dw_style,
-		CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, nullptr, debug_menu, hIn, NULL);
+	debug_wnd = CreateWindow("DEBUG_WND", "UnrealSpeccy debugger", dw_style, CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, nullptr, debug_menu, hIn, NULL);
 
-    set_debug_window_size();
+  set_debug_window_size();
 
 	for (unsigned i = 0; i < 0x100; i++)
 	{

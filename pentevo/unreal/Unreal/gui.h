@@ -1,5 +1,6 @@
 #pragma once
 #include "sysdefs.h"
+#include "visuals.h"
 
 extern const char *lastpage;
 
