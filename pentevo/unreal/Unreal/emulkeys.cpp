@@ -481,4 +481,5 @@ void savesnap()
 void main_visuals()
 {
   visuals_on_off();
+  SetForegroundWindow(wnd);
 }

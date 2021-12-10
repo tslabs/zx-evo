@@ -7,6 +7,8 @@
 #include "ft812.h"
 #include "ft8xx/EVE_Platform.h"
 #include "ft8xx/FT_Platform.h"
+#include "resource.h"
+#include "dxrend.h"
 
 namespace vdac2
 {
@@ -31,6 +33,13 @@ namespace vdac2
   BT8XXEMU_hasInterrupt_t BT8XXEMU_hasInterrupt;
 
   void *pEmulator;
+
+  HWND hw_wnd;
+  HMENU menu;
+  int wnd_width = 256;
+  int wnd_height = 192;
+  u32 bitmap[2048][2048];
+  GDIBMP gdibmp = {{{sizeof(BITMAPINFOHEADER), 2048, -2048, 1, 32, BI_RGB, 0}}};
 
   // ---
   //  Since shitty FT8xx emulation lib has no interrupt support, we need to make a manual dusk.
@@ -133,19 +142,77 @@ namespace vdac2
     printf("%s\n", message);
   }
 
-  int graphics(BT8XXEMU_Emulator *sender, void *context, int output, const argb8888 *buffer, uint32_t hsize, uint32_t vsize, BT8XXEMU_FrameFlags flags)
+  static LRESULT APIENTRY WndProc(HWND hwnd, UINT uMessage, WPARAM wparam, LPARAM lparam)
   {
+    PAINTSTRUCT ps;
+
+    if (uMessage == WM_CLOSE)
+    {
+      return 0;
+    }
+
+    if (uMessage == WM_PAINT)
+    {
+      const auto bptr = bitmap;
+      const auto hdc = BeginPaint(hwnd, &ps);
+      SetDIBitsToDevice(hdc, 0, 0, wnd_width, wnd_height, 0, 0, 0, wnd_height, bptr, &gdibmp.header, DIB_RGB_COLORS);
+      EndPaint(hwnd, &ps);
+      return 0;
+    }
+
+    if (uMessage == WM_COMMAND)
+    {
+      // switch (wparam)
+      // {
+      // }
+    }
+
+    return DefWindowProc(hwnd, uMessage, wparam, lparam);
+  }
+
+  void set_window_size()
+  {
+    RECT cl_rect;
+    const DWORD dw_style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
+
+    cl_rect.left = 0;
+    cl_rect.top = 0;
+    cl_rect.right = wnd_width - 1;
+    cl_rect.bottom = wnd_height - 1;
+    AdjustWindowRect(&cl_rect, dw_style, GetMenu(hw_wnd) != nullptr);
+    SetWindowPos(hw_wnd, nullptr, 0, 0, cl_rect.right - cl_rect.left + 1, cl_rect.bottom - cl_rect.top + 1, SWP_NOMOVE);
+  }
+
+  // Window rendered callback
+  int show_screen(BT8XXEMU_Emulator *sender, void *context, int output, const argb8888 *buffer, uint32_t hsize, uint32_t vsize, BT8XXEMU_FrameFlags flags)
+  {
+    if ((wnd_width != hsize) || (wnd_height != vsize))
+    {
+      wnd_width = hsize;
+      wnd_height = vsize;
+      set_window_size();
+    }
+    
+    u8 *s = (u8*) buffer;
+    
+    for (int y = 0; y < vsize; y++)
+    {
+      memcpy(bitmap[y], s, hsize * 4);
+      s += 4 * hsize;
+    }
+      
+    InvalidateRect(hw_wnd, nullptr, FALSE);
     return 1;
   }
-  
-  bool open_ft8xx(const char **ver)
+
+  int open_ft8xx(const char **ver)
   {
     if (ft8xxemu_hdl)
-      return true;
+      return 0;
 
     ft8xxemu_hdl = LoadLibrary("bt8xxemu.dll");
     if (!ft8xxemu_hdl)
-      return false;
+      return 1;
 
     BT8XXEMU_version = (BT8XXEMU_version_t)GetProcAddress(ft8xxemu_hdl, "BT8XXEMU_version");
     BT8XXEMU_defaults = (BT8XXEMU_defaults_t)GetProcAddress(ft8xxemu_hdl, "BT8XXEMU_defaults");
@@ -158,23 +225,41 @@ namespace vdac2
 
     BT8XXEMU_EmulatorParameters emulatorParams;
     BT8XXEMU_defaults(BT8XXEMU_VERSION_API, &emulatorParams, BT8XXEMU_EmulatorFT812);
-    
+
+    emulatorParams.Graphics = show_screen;
+    emulatorParams.Log = log;
     emulatorParams.Flags = BT8XXEMU_EmulatorEnableAudio
                          | BT8XXEMU_EmulatorEnableCoprocessor
                          | BT8XXEMU_EmulatorEnableGraphicsMultithread;
-    // emulatorParams.Graphics = graphics;
-    emulatorParams.Log = log;
-    
+
     BT8XXEMU_run(BT8XXEMU_VERSION_API, &pEmulator, &emulatorParams);
+
+    WNDCLASS  wc{};
+    const DWORD dw_style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
+
+    wc.lpfnWndProc = WNDPROC(WndProc);
+    wc.hInstance = hIn;
+    wc.lpszClassName = "FT_WND";
+    wc.hIcon = LoadIcon(hIn, MAKEINTRESOURCE(IDI_MAIN));
+    wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
+    RegisterClass(&wc);
+
+    // visuals_menu = LoadMenu(hIn, MAKEINTRESOURCE(IDR_DEBUGMENU)); // !!!
+
+    hw_wnd = CreateWindow("FT_WND", "VDAC2 Emul", dw_style, CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, nullptr, menu, hIn, NULL);
+
+    set_window_size();
 
     if (!BT8XXEMU_isRunning(pEmulator))
     {
       close_ft8xx();
-      return false;
+      return 2;
     }
+
+    ShowWindow(hw_wnd, SW_SHOW);
 
     *ver = BT8XXEMU_version();
 
-    return true;
+    return 0;
   }
 }

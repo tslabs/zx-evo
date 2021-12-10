@@ -145,7 +145,8 @@ int main(int argc, char **argv)
 	fprintf(f_log_tape_in, "CPU_tact\ttape_bit\r\n");
 #endif
 
-   mainloop(Exit);
+  SetForegroundWindow(wnd);
+  mainloop(Exit);
 
 #ifdef LOG_FE_OUT
    fclose(f_log_FE_out);

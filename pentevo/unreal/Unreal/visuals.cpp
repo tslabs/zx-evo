@@ -23,13 +23,15 @@
       - tmap a tiles with indexes
 
     - Show CRAM
-      - color
+      + color
       - CRAM value
       - RGB value, in current VDAC rendering
 
-    - Show hits when mouse is over an object
+    - Show hints when mouse is over an object
 
     - Editable properties of all objects
+
+    - Analyze tmap to determine exact palette for each tile from tileset
 
     - Lower pane with current selected modes and hotkeys:
       F1 - TSU Pal: grey, F2 - Tiles 0, etc.
@@ -37,22 +39,15 @@
     - Add TSU (right panel) in Debugger
 */
 
-enum
-{
-  VIS_MODE_OFF,
-  VIS_MODE_SPRITES,
-  VIS_MODE_TILES0,
-  VIS_MODE_TILES1,
-  VIS_MODE_MAX
-};
-
 constexpr auto VISUALS_WND_WIDTH = 840;
 constexpr auto VISUALS_WND_HEIGHT = 716;
-#define BOX_BORDER_COLOR 0x606060
+// #define BOX_BORDER_COLOR 0x606060
+#define BOX_BORDER_COLOR 0
 
 HWND visuals_wnd;
 HMENU visuals_menu;
 u32 bitmap[VISUALS_WND_HEIGHT][VISUALS_WND_WIDTH];
+VISUALS_t vis;
 
 int visuals_mode = VIS_MODE_OFF;
 
@@ -64,7 +59,6 @@ static LRESULT APIENTRY VisualsWndProc(HWND hwnd, UINT uMessage, WPARAM wparam, 
 
 	if (uMessage == WM_CLOSE)
 	{
-		// mon_emul();
 		return 0;
 	}
 
@@ -94,7 +88,7 @@ void set_visuals_window_size()
 
   cl_rect.left = 0;
   cl_rect.top = 0;
-  cl_rect.right = VISUALS_WND_WIDTH -1;
+  cl_rect.right = VISUALS_WND_WIDTH - 1;
   cl_rect.bottom = VISUALS_WND_HEIGHT - 1;
   AdjustWindowRect(&cl_rect, dw_style, GetMenu(visuals_wnd) != nullptr);
   SetWindowPos(visuals_wnd, nullptr, 0, 0, cl_rect.right - cl_rect.left + 1, cl_rect.bottom - cl_rect.top + 1, SWP_NOMOVE);
@@ -117,15 +111,17 @@ void init_visuals()
 	visuals_wnd = CreateWindow("VISUALS_WND", "UnrealSpeccy visuals", dw_style, CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, nullptr, visuals_menu, hIn, NULL);
 
   set_visuals_window_size();
+
+  memset(vis.pal_map, 0, sizeof(vis.pal_map));
 }
 
 void visuals_on_off()
 {
   visuals_mode++;
-  
+
   if (visuals_mode >= VIS_MODE_MAX)
     visuals_mode = VIS_MODE_OFF;
-  
+
   if (visuals_mode == VIS_MODE_OFF)
   {
     ShowWindow(visuals_wnd, SW_HIDE);
@@ -186,30 +182,44 @@ void draw_tile_bitmap(int x0, int y0, int n, int pg, int pal, bool flip = false)
   int nx = n & 63;
   int ny = n >> 6;
   bm = &bm[nx * 4 + ny * 2048];
-  
+
   for (int y = 0; y < 8; y++)
     for (int x = 0; x < 4; x++)
     {
       int d = bm[x + y * 256];
-      int p0 = vid.clut[pal * 16 + d >> 4];
-      int p1 = vid.clut[pal * 16 + d & 15];
-      bitmap[y + y0][x * 2 + x0] = p0;
-      bitmap[y + y0][x * 2 + x0 + 1] = p1;
+      int d0 = (d >> 4) & 15;
+      int d1 = d & 15;
+      if (d0) bitmap[y + y0][x * 2 + x0] = vid.clut[pal * 16 + d0];
+      if (d1) bitmap[y + y0][x * 2 + x0 + 1] = vid.clut[pal * 16 + d1];
     }
 }
 
-void draw_tiles(int x0, int y0, int plane)
+void draw_bitmap(int x0, int y0, int plane)
 {
-  int g = plane ? comp.ts.t1gpage[2] : comp.ts.t0gpage[2];
-  int p = (plane ? comp.ts.t1pal : comp.ts.t0pal) << 2;   // !!! add palette selector
+  int g, p;
+
+  if (plane < 2)  // tiles
+  {
+    p = (plane ? comp.ts.t1pal : comp.ts.t0pal) << 2;
+    g = plane ? comp.ts.t1gpage[2] : comp.ts.t0gpage[2];
+  }
+  else  // sprites
+  {
+    g = comp.ts.sgpage;
+    p = 0;
+  }
 
   for (int y = 0; y < 64; y++)
   {
     for (int x = 0; x < 64; x++)
     {
+      int n = x + y * 64;
+
+      if (vis.palette < 0)
+        p = vis.pal_map[plane][n];
 
       box(x * 9 + x0, y * 9 + y0, 9, 9, BOX_BORDER_COLOR);
-      draw_tile_bitmap(x * 9 + x0 + 1, y * 9 + y0 + 1, x + y * 64, g, p);
+      draw_tile_bitmap(x * 9 + x0 + 1, y * 9 + y0 + 1, n, g, p);
     }
   }
 }
@@ -224,6 +234,7 @@ void draw_sprite(int i, int x0, int y0)
   int p = spr[i].pal;
 
   box(x0, y0, 65, 65, BOX_BORDER_COLOR);
+  box(x0, y0, (spr[i].xs + 1) * 8 + 1, (spr[i].ys + 1) * 8 + 1, BOX_BORDER_COLOR);
 
   for (int y = 0; y < h; y++)
     for (int x = 0; x < w; x++)
@@ -248,19 +259,23 @@ void draw_visuals()
 {
   clear();
   draw_palette(599, 0);
-  
+
   switch (visuals_mode)
   {
     case VIS_MODE_SPRITES:
       draw_sprites(0, 0);
     break;
-    
-    case VIS_MODE_TILES0:
-      draw_tiles(0, 0, 0);
+
+    case VIS_MODE_SPRITES_BM:
+      draw_bitmap(0, 0, 2);
     break;
-    
+
+    case VIS_MODE_TILES0:
+      draw_bitmap(0, 0, 0);
+    break;
+
     case VIS_MODE_TILES1:
-      draw_tiles(0, 0, 1);
+      draw_bitmap(0, 0, 1);
     break;
   }
 }
