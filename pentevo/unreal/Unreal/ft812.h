@@ -3,7 +3,6 @@
 
 namespace vdac2
 {
-  void line();
   bool is_interrupt();
   void set_ss(bool);
   u8 transfer(u8);

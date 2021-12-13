@@ -379,6 +379,7 @@
       <ErrorReporting>Prompt</ErrorReporting>
       <PrecompiledHeaderFile>std.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>wtl</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -463,6 +464,7 @@ copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)rom"
       <StringPooling>true</StringPooling>
       <AdditionalIncludeDirectories>wtl</AdditionalIncludeDirectories>
       <EnableParallelCodeGeneration>true</EnableParallelCodeGeneration>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>false</GenerateDebugInformation>

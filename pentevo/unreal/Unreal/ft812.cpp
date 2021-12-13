@@ -4,11 +4,13 @@
 #include "std.h"
 #include "vars.h"
 #include "util.h"
+#include "dxrend.h"
+#include "resource.h"
+#include <chrono>
+#include <mutex>
 #include "ft812.h"
 #include "ft8xx/EVE_Platform.h"
 #include "ft8xx/FT_Platform.h"
-#include "resource.h"
-#include "dxrend.h"
 
 namespace vdac2
 {
@@ -48,7 +50,7 @@ namespace vdac2
   bool ss_int = false;
   bool has_irq = false;
   u32 addr_int = 0;
-  int line_cnt = 0;
+  std::mutex mtx;
 
   u8 xfer_int(u8 r, u8 d)
   {
@@ -66,8 +68,10 @@ namespace vdac2
         {
           if (addr_int == 0x3020A8) // Interrupt events
           {
+            mtx.lock();
             r = has_irq;
             has_irq = false;
+            mtx.unlock();
           }
         }
 
@@ -77,18 +81,6 @@ namespace vdac2
 
     return r;
   }
-
-  void line()
-  {
-    line_cnt++;
-
-    if (line_cnt == 260)  // 60Hz
-      line_cnt = 0;
-
-    if (line_cnt == 0)
-      has_irq = true;
-  }
-  // ---
 
   void set_ss(bool ss)
   {
@@ -101,11 +93,14 @@ namespace vdac2
 
   bool is_interrupt()
   {
-    bool rc = BT8XXEMU_hasInterrupt(pEmulator);
-
     static bool old_irq = false;
+    bool rc;
+    // rc = BT8XXEMU_hasInterrupt(pEmulator); // <- doesn't work потому что автор эмулятора - мудак
+
+    mtx.lock();
     rc = has_irq && !old_irq;
     old_irq = has_irq;
+    mtx.unlock();
 
     return rc;
   }
@@ -186,22 +181,54 @@ namespace vdac2
   // Window rendered callback
   int show_screen(BT8XXEMU_Emulator *sender, void *context, int output, const argb8888 *buffer, uint32_t hsize, uint32_t vsize, BT8XXEMU_FrameFlags flags)
   {
+    static bool is_swap = false;
+
     if ((wnd_width != hsize) || (wnd_height != vsize))
     {
       wnd_width = hsize;
       wnd_height = vsize;
       set_window_size();
     }
-    
-    u8 *s = (u8*) buffer;
-    
-    for (int y = 0; y < vsize; y++)
+
+    //printf("%0X\r\n", flags);
+
+    if (flags & BT8XXEMU_FrameSwap)
+      is_swap = true;
+
+    if (is_swap && BT8XXEMU_FrameBufferComplete)
     {
-      memcpy(bitmap[y], s, hsize * 4);
-      s += 4 * hsize;
+      is_swap = false;
+      mtx.lock();
+      has_irq = true;
+      mtx.unlock();
+
+#if 0
+      {
+        static std::chrono::time_point<std::chrono::high_resolution_clock> old_time;
+        auto new_time = std::chrono::high_resolution_clock::now();
+        auto time = new_time - old_time;
+        old_time = new_time;
+        auto elapsed_us = time / std::chrono::microseconds(1);
+        printf("%d us\r\n", elapsed_us);
+      }
+#endif
+
+      u8 *s = (u8*) buffer;
+
+      for (int y = 0; y < vsize; y++)
+      {
+        memcpy(bitmap[y], s, hsize * 4);
+        s += 4 * hsize;
+      }
+
+      InvalidateRect(hw_wnd, nullptr, FALSE);
+      PAINTSTRUCT ps;
+      const auto hdc = BeginPaint(hw_wnd, &ps);
+      SetDIBitsToDevice(hdc, 0, 0, wnd_width, wnd_height, 0, 0, 0, wnd_height, bitmap, &gdibmp.header, DIB_RGB_COLORS);
+      EndPaint(hw_wnd, &ps);
+      //std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
-      
-    InvalidateRect(hw_wnd, nullptr, FALSE);
+
     return 1;
   }
 

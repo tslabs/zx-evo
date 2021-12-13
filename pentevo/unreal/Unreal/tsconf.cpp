@@ -955,12 +955,8 @@ void ts_line_int(bool vdos)
     pre_pend = true;
 
     if (comp.ts.vdac2)
-    {
-      vdac2::line();
-
       if (comp.ts.ft_en)
         pre_pend = vdac2::is_interrupt();
-    }
 
     if (!vdos)
       comp.ts.intctrl.line_pend = pre_pend && comp.ts.intline; // !!! incorrect behaviour, pending flag must be processed after VDOS
