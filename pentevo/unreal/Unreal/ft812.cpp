@@ -192,7 +192,7 @@ namespace vdac2
 
     //printf("%0X\r\n", flags);
 
-    if (flags & BT8XXEMU_FrameSwap)
+    if (flags & BT8XXEMU_FrameChanged)
       is_swap = true;
 
     if (is_swap && BT8XXEMU_FrameBufferComplete)
