@@ -149,7 +149,6 @@ extern unsigned scrshot_page_mask;
 extern u8 editor;
 extern u8 mem_ascii;
 
-
 extern unsigned ripper; // ripper mode (none/read/write)
 
 extern unsigned user_watches[3];

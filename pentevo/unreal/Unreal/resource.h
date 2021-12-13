@@ -2,6 +2,9 @@
 #define IDC_STATIC (-1)
 #endif
 
+#define IDOK                                    1
+#define VS_VERSION_INFO                         1
+#define IDCANCEL                                2
 #define IDD_MEM                                 101
 #define IDD_ULA                                 105
 #define IDD_LEDS                                106
@@ -315,6 +318,7 @@
 #define IDM_SAVE_DISKB                          40003
 #define IDM_DEBUG_RUNTOCURSOR                   40004
 #define IDM_SAVE_DISKC                          40004
+#define IDM_MON_SCALE2X                         40005
 #define IDM_SAVE_DISKD                          40005
 #define IDM_MON_LOADBLOCK                       40006
 #define IDM_QUICKLOAD_1                         40006

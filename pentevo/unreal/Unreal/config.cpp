@@ -427,6 +427,8 @@ void load_config(const char *fname)
    conf.detect_video = GetPrivateProfileInt(video, "DetectModel", 1, ininame);
    conf.fontsize = 8;
 
+
+
    conf.ray_paint_mode = GetPrivateProfileInt(video, "raypaint_mode", 0, ininame);
    if (conf.ray_paint_mode > RAYDRAW_DIM) conf.ray_paint_mode = RAYDRAW_DIM;
 
