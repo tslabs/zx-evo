@@ -24,8 +24,8 @@ u16 bitmax;
 u32 sd_size;
 
 #include "func.c"
-#include "sdc.c"
 #include "print.c"
+#include "sdc.c"
 #include "menu.c"
 
 void init_runtime()
