@@ -56,7 +56,13 @@ int putchar(u8 b)
       u16 o = (pcy << 8) + pcx;
       a[o] = b;
       a[o + 128] = pca;
+      
       pcx++;
+      if (pcx >= 80)
+      {
+        putchar('\r');
+        putchar('\n');
+      }
     }
   }
   return 0;

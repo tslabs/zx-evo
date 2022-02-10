@@ -5,6 +5,7 @@
   10 (CID) - <R1> <dtok> <16b> <CRC>
   58 (OCR) - <R1> <4b>
 A 51 (SCR) - <R1> <dtok> <8b> <CRC>
+A 13 (SD_STATUS) - <R2> <dtok> <64b> <CRC>
 
   *Registers data is stored in MSB format
 */
@@ -16,6 +17,18 @@ u8 read_cid()
   sd_cs_on();
   rc = sd_cmd(SDC_SEND_CID, 0);
   sd_recv_data(sdbuf, 16);
+  sd_cs_off();
+
+  return rc;
+}
+
+u8 read_sd_status()
+{
+  u8 rc;
+
+  sd_cs_on();
+  rc = sd_acmd(SDC_SD_STATUS, 0);
+  sd_recv_data(sdbuf, 64);
   sd_cs_off();
 
   return rc;
