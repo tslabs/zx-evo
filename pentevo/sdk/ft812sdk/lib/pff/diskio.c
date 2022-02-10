@@ -262,6 +262,9 @@ bool sd_recv_data(u8 *a, u16 s)
 {
   if (!sd_wait_dtoken()) return false;
   sd_recv(a, s);
+  
+  u8 dummy[2];
+  sd_recv(dummy, 2);
   return true;
 }
 
