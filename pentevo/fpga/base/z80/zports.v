@@ -21,7 +21,7 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 
-`include "tune.v"
+`include "../include/tune.v"
 
 module zports(
 
@@ -59,12 +59,7 @@ module zports(
 
 	input  wire [ 4:0] keys_in, // keys (port FE)
 	input  wire [ 7:0] mus_in,  // mouse (xxDF)
-
-`ifdef KEMPSTON_8BIT
 	input  wire [ 7:0] kj_in,
-`else
-    input  wire [ 4:0] kj_in,
-`endif
 
 	output reg  [ 3:0] border,
 
@@ -83,7 +78,16 @@ module zports(
 	output wire        vg_cs_n,
 	input  wire        vg_intrq,
 	input  wire        vg_drq, // from vg93 module - drq + irq read
-	output wire        vg_wrFF,        // write strobe of #FF port
+	output wire        vg_wrFF_fclk, // write strobe of #FF port
+	output reg         vg_rdwr_fclk, // pulses when ANY port of TR-DOS controller was read or written
+	input  wire [ 1:0] vg_a,
+	input  wire        vg_res_n,
+	input  wire        vg_hrdy,
+	input  wire        vg_side,
+
+	// FDD mask
+	output reg  [ 3:0] fdd_mask,
+
 
 	output wire        sd_cs_n_val,
 	output wire        sd_cs_n_stb,
@@ -95,7 +99,7 @@ module zports(
 	//
 	output reg  [ 7:0] gluclock_addr,
 	//
-	output reg  [ 7:0] comport_addr,
+	output reg  [ 2:0] comport_addr,
 	//
 	output wire        wait_start_gluclock, // begin wait from some ports
 	output wire        wait_start_comport,  //
@@ -125,6 +129,8 @@ module zports(
 
 	output wire        atm_palwr,   // palette write strobe
 	output wire [ 5:0] atm_paldata, // palette write data
+	output wire [ 5:0] atm_paldatalow, // palette write data low bits (ATM3)
+	output reg         pal444_ena, // ATM3 palette on
 
 	output wire        covox_wr,
 	output wire        beeper_wr,
@@ -142,20 +148,24 @@ module zports(
 	input  wire [ 5:0] palcolor,
 	input  wire [ 7:0] fontrom_readback,
 
+    input  wire [ 1:0] modes_raster, // 2'b00 - pentagon raster (71680 clocks)
+                                     // 2'b01 - 60Hz raster
+                                     // 2'b10 - 48k raster (69888 clocks)
+                                     // 2'b11 - 128k raster (70908 clocks)
+
 	// ulaplus
 	output reg         up_ena,
 	output reg  [ 5:0] up_paladdr,
 	output wire [ 7:0] up_paldata,
 	output wire        up_palwr,
 
-
-
 	// NMI generation
 	output reg         set_nmi,
 
 	// break enable & address
 	output reg         brk_ena,
-	output reg  [15:0] brk_addr 
+	output reg  [15:0] brk_addr
+
 );
 
 
@@ -188,11 +198,6 @@ module zports(
 	localparam VGDAT  = 8'h7F;
 	localparam VGSYS  = 8'hFF;
 
-	localparam SAVPORT1 = 8'h2F;
-	localparam SAVPORT2 = 8'h4F;
-	localparam SAVPORT3 = 8'h6F;
-	localparam SAVPORT4 = 8'h8F;
-
 	localparam KJOY   = 8'h1F;
 	localparam KMOUSE = 8'hDF;
 
@@ -202,26 +207,54 @@ module zports(
 	localparam ATMF7  = 8'hF7;
 	localparam ATM77  = 8'h77;
 
-	localparam ZXEVBE = 8'hBE; // xxBE config-read and nmi-end port
 	localparam ZXEVBF = 8'hBF; // xxBF config port
-	localparam ZXEVBRK = 8'hBD; // xxBD breakpoint address port	
+	
+	localparam ZXEVBE = 8'hBE; // xxBE config-read and nmi-end port
+	localparam ZXEVBD = 8'hBD; // xxBD config-read and write port
 
 	localparam COMPORT = 8'hEF; // F8EF..FFEF - rs232 ports
 
-
 	localparam COVOX   = 8'hFB;
 
-	
 	localparam ULAPLUS = 8'h3B;
 
 
+
+	// xxBE/xxBD high part addresses
+	localparam BD_PG0      = 5'h00;
+	localparam BD_PG1      = 5'h01;
+	localparam BD_PG2      = 5'h02;
+	localparam BD_PG3      = 5'h03;
+	localparam BD_PG4      = 5'h04;
+	localparam BD_PG5      = 5'h05;
+	localparam BD_PG6      = 5'h06;
+	localparam BD_PG7      = 5'h07;
+	//
+	localparam BD_RAMNROMS = 5'h08;
+	localparam BD_DOS7FFDS = 5'h09;
+	//
+	localparam BD_P7FFD    = 5'h0A;
+	localparam BD_PEFF7    = 5'h0B;
+	//
+	localparam BD_PXX77    = 5'h0C;
+	//
+	localparam BD_COLORRD  = 5'h0D;
+	localparam BD_FNTRD    = 5'h0E;
+	//
+	localparam BD_BORDERRD = 5'h0F;
+	//
+	localparam BD_LOBRK    = 5'h10;
+	localparam BD_HIBRK    = 5'h11;
+	//
+	localparam BD_WRDISRD  = 5'h12;
+	//
+	localparam BD_FDDMASK  = 5'h13;
 
 	reg port_wr;
 	reg port_rd;
 
 	reg iowr_reg;
 	reg iord_reg;
-
 
 	reg port_wr_fclk,
 	    port_rd_fclk,
@@ -232,12 +265,7 @@ module zports(
 
 	reg [1:0] memwr_reg_fclk;
 
-
 	wire [7:0] loa;
-
-	wire portfe_wr;
-
-
 
 	wire ideout_hi_wr;
 	wire idein_lo_rd;
@@ -251,21 +279,15 @@ module zports(
 	reg ide_wrlo_trig,  ide_wrhi_trig;  // nemo-divide write triggers
 	reg ide_wrlo_latch, ide_wrhi_latch; // save state during write cycles
 
-
-
 	reg  [15:0] idewrreg; // write register, either low or high part is pre-written here,
 	                      // while other part is out directly from Z80 bus
 
 	wire [ 7:0] iderdeven; // to control read data from "even" ide ports (all except #11)
 	wire [ 7:0] iderdodd;  // read data from "odd" port (#11)
 
-
-
 	reg pre_bc1,pre_bdir;
 
 	wire gluclock_on;
-
-
 
 	reg  shadow_en_reg; //bit0.xxBF
 	reg   romrw_en_reg; //bit1.xxBF
@@ -273,34 +295,27 @@ module zports(
 
 	wire shadow;
 
+	reg [7:0] portbdmux;
 
-
-	reg [7:0] portbemux;
-
-
-
-	reg [7:0] savport [3:0];
-	reg [5:0] vgFF;
-
+	wire vg_matched_n;
 
 	reg [7:0] up_lastwritten;
 
-
 	assign shadow = dos || shadow_en_reg;
 
-
-
-
-
+	reg [7:0] sd_rd_buffer;
 
 	assign loa=a[7:0];
+
+    // ULAplus ports enable (active only for 128K timings)
+    wire up_en_ports = (modes_raster == 2'b11) ? 1'b1 : 1'b0; 
 
 	always @*
 	begin
 		if( (loa==PORTFE) || (loa==PORTF6) ||
 		    (loa==PORTFD) || (loa==8'hFC)  ||
 
-`ifndef IDE_VDAC
+`ifndef IDE_VIDEO
 		    `IS_PORT_NIDE(loa) ||
 `endif
 //		    (loa==NIDE10) || (loa==NIDE11) || (loa==NIDE30) || (loa==NIDE50) || (loa==NIDE70) ||
@@ -311,17 +326,13 @@ module zports(
 		    ( (loa==VGCOM)&&shadow ) || ( (loa==VGTRK)&&shadow ) || ( (loa==VGSEC)&&shadow ) || ( (loa==VGDAT)&&shadow ) ||
 		    ( (loa==VGSYS)&&shadow ) || ( (loa==KJOY)&&(!shadow) ) ||
 
-    		    ( (loa==SAVPORT1)&&shadow ) || ( (loa==SAVPORT2)&&shadow ) ||
-		    ( (loa==SAVPORT3)&&shadow ) || ( (loa==SAVPORT4)&&shadow ) ||
-
-
 		    ( (loa==PORTF7)&&(!shadow) ) || ( (loa==SDCFG)&&(!shadow) ) || ( (loa==SDDAT) ) ||
 
 		    ( (loa==ATMF7)&&shadow ) || ( (loa==ATM77)&&shadow ) ||
 
-		    ( loa==ZXEVBF ) || ( loa==ZXEVBE) || ( loa==ZXEVBRK) || ( loa==COMPORT ) ||
+		    ( loa==ZXEVBF ) || ( loa==ZXEVBE) || ( loa==ZXEVBD) || ( loa==COMPORT ) ||
 
-		    ( loa==ULAPLUS)
+		    ((loa==ULAPLUS) && up_en_ports)
 		  )
 
 
@@ -403,7 +414,7 @@ module zports(
 			dout = { 1'b1, tape_read, 1'b0, keys_in };
 
 
-`ifndef IDE_VDAC
+`ifndef IDE_VIDEO
 		`NIDE_REGS:
 			dout = iderdeven;
 		NIDE11:
@@ -413,26 +424,17 @@ module zports(
 		//PORTFD:
 
 		VGSYS:
-			dout = { vg_intrq, vg_drq, vgFF }; // 6'b111111 };
-
-		SAVPORT1, SAVPORT2, SAVPORT3, SAVPORT4:
-			dout = savport[ loa[6:5] ];
-
+			dout = { vg_intrq, vg_drq, 1'b1, (~vg_side), vg_hrdy, vg_res_n, vg_a };
 
 		KJOY:
-`ifdef KEMPSTON_8BIT
 			dout = kj_in;
-`else
-			dout = {3'b000, kj_in};
-`endif
-
 		KMOUSE:
 			dout = mus_in;
 
 		SDCFG:
 			dout = 8'h00; // always SD inserted, SD is in R/W mode
 		SDDAT:
-			dout = sd_dataout;
+			dout = sd_rd_buffer;
 
 
 		PORTF7: begin
@@ -447,11 +449,12 @@ module zports(
 		end
 
 		ZXEVBF: begin
-			dout = { 3'b000, brk_ena, set_nmi, fntw_en_reg, romrw_en_reg, shadow_en_reg };
+			dout = { 2'b00, pal444_ena, brk_ena, set_nmi, fntw_en_reg, romrw_en_reg, shadow_en_reg };
 		end
 
-		ZXEVBE: begin
-			dout = portbemux;
+		ZXEVBE,		// TODO: remove read capability from xxBE
+		ZXEVBD: begin
+			dout = portbdmux;
 		end
 
 		ULAPLUS: begin
@@ -476,23 +479,18 @@ module zports(
 	assign portf7_rd    = ( (loa==PORTF7) && (a[8]==1'b1) && port_rd && (!shadow) ) ||
 	                      ( (loa==PORTF7) && (a[8]==1'b0) && port_rd &&   shadow  ) ;
 
-	assign vg_wrFF = ( ( (loa==VGSYS)&&shadow ) && port_wr);
-	always @(posedge zclk) if( vg_wrFF )
-		vgFF <= din[5:0];
+//	assign vg_wrFF = ( ( (loa==VGSYS)&&shadow ) && port_wr);
+//	always @(posedge zclk) if( vg_wrFF )
+//		vgFF <= din[5:0];
 
 	assign comport_wr   = ( (loa==COMPORT) && port_wr);
 	assign comport_rd   = ( (loa==COMPORT) && port_rd);
 
-	
-	assign zxevbrk_wr_fclk = ( (loa==ZXEVBRK) && port_wr_fclk);
-
-
-
-
+	assign zxevbd_wr_fclk = ( (loa==ZXEVBD) && port_wr_fclk);
 
 	// break address write
 	always @(posedge fclk)
-	if( zxevbrk_wr_fclk)
+	if( zxevbd_wr_fclk && a[12:9]==(BD_LOBRK>>1) )
 	begin
 		if( !a[8] )
 			brk_addr[ 7:0] <= din;
@@ -500,8 +498,12 @@ module zports(
 			brk_addr[15:8] <= din;
 	end
 
-
-
+	// fdd mask write
+	always @(posedge fclk, negedge rst_n)
+	if( !rst_n )
+		fdd_mask <= 4'd0;
+	else if( zxevbd_wr_fclk && a[12:8]==BD_FDDMASK )
+		fdd_mask <= din[3:0];
 
 
 	//border port FE
@@ -512,9 +514,6 @@ module zports(
 	always @(posedge fclk)
 	if( portfe_wr_fclk )
 		border <= { ~a[3], din[2:0] };
-
-
-
 
 
 
@@ -732,7 +731,7 @@ module zports(
 	always @(posedge zclk)
 	begin
 		if( comport_wr || comport_rd )
-			comport_addr <= a[15:8 ];
+			comport_addr <= a[10:8 ];
 	end
 
 
@@ -771,7 +770,9 @@ module zports(
 
 
 	// VG93 control
-	assign vg_cs_n =  (~shadow) | iorq_n | (rd_n & wr_n) | ( ~((loa==VGCOM)|(loa==VGTRK)|(loa==VGSEC)|(loa==VGDAT)) );
+	assign vg_matched_n = fdd_mask[vg_a];
+
+	assign vg_cs_n =  vg_matched_n | (~shadow) | iorq_n | (rd_n & wr_n) | ( ~((loa==VGCOM)|(loa==VGTRK)|(loa==VGSEC)|(loa==VGDAT)) );
 
 
 
@@ -805,6 +806,12 @@ module zports(
 	assign sd_datain = sddat_rd ? 8'hFF : din;
 
 
+	// latch SD read data to fix bug with reading SD card in 48k and 128k contention modes
+	always @(posedge fclk)
+	if( sd_start )
+		sd_rd_buffer <= sd_dataout;
+
+
 
 
 
@@ -835,6 +842,7 @@ module zports(
 		fntw_en_reg   <= 1'b0;
 		set_nmi       <= 1'b0;
 		brk_ena       <= 1'b0;
+		pal444_ena    <= 1'b0;
 	end
 	else if( zxevbf_wr_fclk )
 	begin
@@ -843,6 +851,7 @@ module zports(
 		fntw_en_reg   <= din[2];
 		set_nmi       <= din[3];
 		brk_ena       <= din[4];
+		pal444_ena    <= din[5];
 	end
 
 	assign romrw_en = romrw_en_reg;
@@ -873,14 +882,30 @@ module zports(
 
 
 	// atm palette strobe and data
-	wire vg_wrFF_fclk;
+	//wire vg_wrFF_fclk;
 
 	assign vg_wrFF_fclk = ( ( (loa==VGSYS)&&shadow ) && port_wr_fclk);
 
 
 	assign atm_palwr = vg_wrFF_fclk & atm_pen2;
 
-	assign atm_paldata = { ~din[4], ~din[7], ~din[1], ~din[6], ~din[0], ~din[5] };
+	assign atm_paldata = { ~din[4], ~din[7], ~din[1], ~din[6], ~din[0], ~din[5] }; //GgRrBb
+	assign atm_paldatalow = { ~a[4+8], ~a[7+8], ~a[1+8], ~a[6+8], ~a[0+8], ~a[5+8] }; //GgRrBb
+
+
+
+	// TR-DOS any port access strobe -- for switching TR-DOS page to RAM page FE
+	always @(posedge fclk, negedge rst_n)
+	if( !rst_n )
+		vg_rdwr_fclk <= 1'b0;
+	else
+		vg_rdwr_fclk <= ((loa==VGCOM) ||
+		                 (loa==VGTRK) ||
+		                 (loa==VGSEC) ||
+		                 (loa==VGDAT) ||
+		                 (loa==VGSYS)  ) && shadow && (port_wr_fclk || port_rd_fclk);
+	                       
+
 
 
 
@@ -907,65 +932,50 @@ module zports(
 	always @*
 	case( a[12:8] )
 
-	5'h0: portbemux = pages[ 7:0 ];
-	5'h1: portbemux = pages[15:8 ];
-	5'h2: portbemux = pages[23:16];
-	5'h3: portbemux = pages[31:24];
-	5'h4: portbemux = pages[39:32];
-	5'h5: portbemux = pages[47:40];
-	5'h6: portbemux = pages[55:48];
-	5'h7: portbemux = pages[63:56];
+	BD_PG0: portbdmux = pages[ 7:0 ];
+	BD_PG1: portbdmux = pages[15:8 ];
+	BD_PG2: portbdmux = pages[23:16];
+	BD_PG3: portbdmux = pages[31:24];
+	BD_PG4: portbdmux = pages[39:32];
+	BD_PG5: portbdmux = pages[47:40];
+	BD_PG6: portbdmux = pages[55:48];
+	BD_PG7: portbdmux = pages[63:56];
 
-	5'h8: portbemux = ramnroms;
-	5'h9: portbemux = dos7ffds;
+	BD_RAMNROMS: portbdmux = ramnroms;
+	BD_DOS7FFDS: portbdmux = dos7ffds;
 
-	5'hA: portbemux = p7ffd_int;
-	5'hB: portbemux = peff7_int;
+	BD_P7FFD: portbdmux = p7ffd_int;
+	BD_PEFF7: portbdmux = peff7_int;
 
-	5'hC: portbemux = { ~atm_pen2, atm_cpm_n, ~atm_pen, dos, atm_turbo, atm_scr_mode };
+	BD_PXX77: portbdmux = { ~atm_pen2, atm_cpm_n, ~atm_pen, dos, atm_turbo, atm_scr_mode };
 
-	5'hD: portbemux = { ~palcolor[4], ~palcolor[2], ~palcolor[0], ~palcolor[5], 2'b11, ~palcolor[3], ~palcolor[1] };
+	BD_COLORRD: portbdmux = { ~palcolor[4], ~palcolor[2], ~palcolor[0], ~palcolor[5], 2'b11, ~palcolor[3], ~palcolor[1] };
 //	assign atm_paldata = { ~din[4], ~din[7], ~din[1], ~din[6], ~din[0], ~din[5] };
 //  {GgRrBb} -> {grbG11RB}
 // was: 76543210 -> 471605
 // now:             543210 -> 4205xx31
+	BD_FNTRD:    portbdmux = fontrom_readback;
+	BD_BORDERRD: portbdmux = { 4'bXXXX, border };
 
-	5'hE: portbemux = fontrom_readback;
-	5'hF: portbemux = { 4'bXXXX, border };
+	BD_LOBRK: portbdmux = brk_addr[7:0];
+	BD_HIBRK: portbdmux = brk_addr[15:8];
 
-	5'h10: portbemux = brk_addr[7:0];
-	5'h11: portbemux = brk_addr[15:8];
+	BD_WRDISRD: portbdmux = wrdisables;
 
-	5'h12: portbemux = wrdisables;
+	BD_FDDMASK: portbdmux = { 4'bXXXX, fdd_mask };
 
-	default: portbemux = 8'bXXXXXXXX;
+
+	default: portbdmux = 8'bXXXXXXXX;
 
 	endcase
 
 
 
 
-
-	// savelij ports write
-	//
-	always @(posedge fclk)
-	if( port_wr_fclk && shadow )
-	begin
-		if( (loa==SAVPORT1) ||
-		    (loa==SAVPORT2) ||
-		    (loa==SAVPORT3) ||
-		    (loa==SAVPORT4) )
-			savport[ loa[6:5] ] <= din;
-	end
-
-
-
-
 	// ULAPLUS ports
-    
 	reg up_select; // 0 -- ena/dis, 1 -- palette write
 	//
-	wire up_wr = port_wr_fclk && (loa==ULAPLUS);
+	wire up_wr = up_en_ports && port_wr_fclk && (loa==ULAPLUS);
 	//
 	always @(posedge fclk)
 	if( up_wr && !a[14] )

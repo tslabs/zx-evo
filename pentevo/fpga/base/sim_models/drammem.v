@@ -1,4 +1,4 @@
-`include "tune.v"
+`include "../include/tune.v"
 
 module drammem(
 	input	[9:0] ma,

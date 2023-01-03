@@ -56,7 +56,7 @@ module slavespi(
 	output wire        wait_end,
 
 	output wire [ 7:0] config0, // config bits for overall system
-	output wire [ 7:0] config1, //
+//	output wire [ 7:0] config1, //
 
 	output wire        genrst, // positive pulse, causes Z80 reset
 
@@ -126,7 +126,7 @@ module slavespi(
 
 	//
 	reg [7:0] cfg0_reg_out;
-	reg [7:0] cfg1_reg_out;
+//	reg [7:0] cfg1_reg_out;
 
 
 	// SDcard access registers
@@ -200,8 +200,9 @@ module slavespi(
 	assign sel_gluadr  = ( (regnum[7:4]==4'h4) && (regnum[1:0]==2'b01) ); // $41
 	assign sel_comadr  = ( (regnum[7:4]==4'h4) && (regnum[1:0]==2'b10) ); // $42
 	//
-	assign sel_cfg0 = (regnum[7:4]==4'h5 && regnum[0]==1'b0); // $50
-	assign sel_cfg1 = (regnum[7:4]==4'h5 && regnum[0]==1'b1); // $51
+//	assign sel_cfg0 = (regnum[7:4]==4'h5 && regnum[0]==1'b0); // $50
+//	assign sel_cfg1 = (regnum[7:4]==4'h5 && regnum[0]==1'b1); // $51
+	assign sel_cfg0 = (regnum[7:4]==4'h5); // $50
 	//
 	assign sel_sddata = ( (regnum[7:4]==4'h6) && !regnum[0] ); // $60
 	assign sel_sdctrl = ( (regnum[7:4]==4'h6) &&  regnum[0] ); // $61
@@ -224,14 +225,15 @@ module slavespi(
 			wait_reg[7:0] <= { sdo, wait_reg[7:1] };
 
 		// config shift-in
-		if( !scs_n && (sel_cfg0 || sel_cfg1) && sck_01 )
+//		if( !scs_n && (sel_cfg0 || sel_cfg1) && sck_01 )
+		if( !scs_n && sel_cfg0 && sck_01 )
 			common_reg[7:0] <= { sdo, common_reg[7:1] };
 
 		// config output
 		if( scs_n_01 && sel_cfg0 )
 			cfg0_reg_out <= common_reg;
-		if( scs_n_01 && sel_cfg1 )
-			cfg1_reg_out <= common_reg;
+//		if( scs_n_01 && sel_cfg1 )
+//			cfg1_reg_out <= common_reg;
 
 		// SD data shift-in
 		if( !scs_n && sel_sddata && sck_01 )
@@ -269,7 +271,7 @@ module slavespi(
 	assign wait_end = sel_waitreg && scs_n_01;
 
 	assign config0 = cfg0_reg_out;
-	assign config1 = cfg1_reg_out;
+//	assign config1 = cfg1_reg_out;
 
 
 

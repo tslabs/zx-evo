@@ -59,10 +59,7 @@ module zclock(
 	input  wire        mode_contend_ena,
 	input  wire [ 2:0] mode_7ffd_bits,    // low 3 bits of 7FFD for 128k contention
 
-
-
 	input  wire        contend,
-
 
 	input  wire        mreq_n,
 	input  wire        iorq_n,
@@ -85,15 +82,11 @@ module zclock(
 	                          // 2'b01 -  7.0 MHz
 	                          // 2'b1x - 14.0 MHz
 
-
-
 	output reg  [ 1:0] int_turbo, // internal turbo, switched on /RFSH
 
 
 	// input signals for 14MHz external IORQ waits
 	input  wire        external_port,
-
-
 
 
 	input  wire        cbeg,
@@ -107,18 +100,11 @@ module zclock(
 
 	reg [2:0] zcount; // counter for generating 3.5 and 7 MHz z80 clocks
 
-
 	reg old_rfsh_n;
-
 
 	wire stall;
 
-
 	reg clk14_src; // source for 14MHz clock
-
-
-
-
 
 	wire pre_zpos_35,
 	     pre_zneg_35;
@@ -167,7 +153,8 @@ module zclock(
 	always @(posedge fclk)
 		p7ffd <= mode_7ffd_bits;
 
-        
+
+
 	// make 14MHz iorq wait
 	reg [3:0] io_wait_cnt;
 	
@@ -272,6 +259,9 @@ module zclock(
 	end
 
 
+
+
+
 	// contention emulation -- only 48k by now, TODO 128k pages and +2a/+3!
 	//
 	assign iorq_n_a = iorq_n || (a[0]==1'b1);
@@ -295,6 +285,5 @@ module zclock(
 	//       3.5MHz-synced r_contend signal, which should be synced
 	//       to free-running 3.5MHz zpos/zneg sequence (not affected by stall)
 
-    
 endmodule
 

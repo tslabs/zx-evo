@@ -106,7 +106,6 @@ module video_sync_h(
 	localparam SCANIN_BEG = 9'd88; // when scan-doubler starts pixel storing
 
 
-
 	localparam HINT_BEG      = 9'd2;
 	localparam HINT_BEG_48K  = 9'd126;
 	localparam HINT_BEG_128K = 9'd130;

@@ -2,7 +2,7 @@
 //
 `ifdef SPITEST
 
-`include "tune.v"
+`include "../include/tune.v"
 
 
 

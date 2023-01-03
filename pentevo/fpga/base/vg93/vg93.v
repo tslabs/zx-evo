@@ -51,7 +51,7 @@ module vg93(
 
 	input [7:0] din,  // data input from CPU
 	output intrq,drq, // output signals for the read #FF (not here)
-	input vg_wrFF,    // when TRDOS port #FF written - positive strobe
+	input vg_wrFF_fclk, // when TRDOS port #FF written - positive strobe
 
 
 	output reg  vg_hrdy,
@@ -126,7 +126,7 @@ module vg93(
 	assign step_pospulse = ( step_pulse[1] & (~step_pulse[2]) );
 	assign  drq_pospulse = (  drq_pulse[1] & ( ~drq_pulse[2]) );
 
-	always @(posedge fclk,negedge rst_n)
+	always @(posedge fclk, negedge rst_n)
 	begin
 		if( !rst_n )
 			turbo_state <= 1'b0;
@@ -169,11 +169,11 @@ module vg93(
 
 	// input/output for TR-DOS port #FF
 
-	always @(posedge zclk, negedge rst_n) // CHANGE IF GO TO THE positive/negative strobes instead of zclk!
+	always @(posedge fclk, negedge rst_n) // CHANGE IF GO TO THE positive/negative strobes instead of zclk!
 	begin
 		if( !rst_n )
 			vg_res_n <= 1'b0;
-		else if( vg_wrFF )
+		else if( vg_wrFF_fclk )
 			{ vg_side, vg_hrdy, vg_res_n, vg_a } <= { (~din[4]),din[3],din[2],din[1:0] };
 	end
 

@@ -38,11 +38,8 @@ module tb;
 
 	wire [15:0] #((`Z80_DELAY_DOWN+`Z80_DELAY_UP)/2) za;
 	wire [ 7:0] #((`Z80_DELAY_DOWN+`Z80_DELAY_UP)/2) zd;
-//	wire [15:0] za;
-//	wire [ 7:0] zd;
 
 	tri1 [ 7:0] zd_dut_to_z80;
-//	wire [ 7:0] zd_z80_to_dut;
 
 
 	reg [15:0] reset_pc = 16'h0000;
@@ -59,7 +56,7 @@ module tb;
 	wire rwe_n,rucas_n,rlcas_n,rras0_n,rras1_n;
 
 
-	tri0 [15:0] ide_d;
+	tri1 [15:0] ide_d;
 
 
 	wire hsync,vsync;
@@ -203,7 +200,6 @@ module tb;
 	          .WR_n(zwr_n),
 	          .BUSRQ_n(1'b1),
 	          .A(za),
-//	          .D(zd),
 	          .D_I(zd_dut_to_z80),
 	          .D_O(zd),
 		  .ResetPC(reset_pc),
@@ -365,66 +361,6 @@ module tb;
 		@(negedge int_n);
 		tb.DUT.zkbdmus.kbd[36] = 1'b0;
 	end
-/*
-	initial
-	begin : gen_nmi
-
-		reg [21:0] a;
-
-		#1000000000;
-
-		a = 22'h3FC066;
-
-		put_byte(a,8'hF5); a=a+1;
-		put_byte(a,8'hC5); a=a+1;
-		put_byte(a,8'hD5); a=a+1;
-		put_byte(a,8'hE5); a=a+1;
-
-		put_byte(a,8'h10); a=a+1;
-		put_byte(a,8'hFE); a=a+1;
-
-		put_byte(a,8'h14); a=a+1;
-
-		put_byte(a,8'h01); a=a+1;
-		put_byte(a,8'hFE); a=a+1;
-		put_byte(a,8'h7F); a=a+1;
-
-		put_byte(a,8'hED); a=a+1;
-		put_byte(a,8'h51); a=a+1;
-
-		put_byte(a,8'hED); a=a+1;
-		put_byte(a,8'h78); a=a+1;
-
-		put_byte(a,8'h1F); a=a+1;
-
-		put_byte(a,8'hDA); a=a+1;
-		put_byte(a,8'h6A); a=a+1;
-		put_byte(a,8'h00); a=a+1;
-
-		put_byte(a,8'hE1); a=a+1;
-		put_byte(a,8'hD1); a=a+1;
-		put_byte(a,8'hC1); a=a+1;
-		put_byte(a,8'hF1); a=a+1;
-
-		put_byte(a,8'hD3); a=a+1;
-		put_byte(a,8'hBE); a=a+1;
-
-		put_byte(a,8'hED); a=a+1;
-		put_byte(a,8'h45); a=a+1;
-
-
-		@(posedge fclk);
-		tb.DUT.slavespi.cfg0_reg_out[1] = 1'b1;
-		@(posedge fclk);
-		tb.DUT.slavespi.cfg0_reg_out[1] = 1'b0;
-
-		#64000000;
-
-		tb.DUT.zkbdmus.kbd[39] = 1'b1;
-		@(negedge int_n);
-		tb.DUT.zkbdmus.kbd[39] = 1'b0;
-	end
-*/
 
 `endif
 
@@ -648,21 +584,9 @@ module tb;
 		tb.DUT.zports.atm_pen = 1'b0;
 		tb.DUT.zports.atm_cpm_n = 1'b1;
 		tb.DUT.zports.atm_pen2 = 1'b0;
-//		tb.DUT.zports.pent1m_ram0_0 = 1'b0;
-//		tb.DUT.zports.pent1m_1m_on = 1'b0;
-//		tb.DUT.zports.pent1m_page = 'd0;
-//		tb.DUT.zports.pent1m_ROM = 1'b1;
 
 		tb.DUT.zdos.dos = 1'b0;
 
-/*		tb.DUT.page[0] = 'd0;
-		tb.DUT.page[1] = 'd5;
-		tb.DUT.page[2] = 'd2;
-		tb.DUT.page[3] = 'd0;
-		tb.DUT.romnram[0] = 1'b1;
-		tb.DUT.romnram[1] = 1'b0;
-		tb.DUT.romnram[2] = 1'b0;
-		tb.DUT.romnram[3] = 1'b0;*/
 
 		tb.DUT.instantiate_atm_pagers[0].atm_pager.pages[0] = 'd0;
 		tb.DUT.instantiate_atm_pagers[1].atm_pager.pages[0] = 'd5;
@@ -684,13 +608,6 @@ module tb;
 
 		tb.DUT.zports.atm_scr_mode = 3'b011;
 		
-/*		tb.DUT.peff7[5] = 1'b0;
-		tb.DUT.peff7[0] = 1'b0;
-		tb.DUT.p7ffd[3] = 1'b0;*/
-//		tb.DUT.zports.peff7[7] = 1'b0;
-//		tb.DUT.zports.peff7[0] = 1'b0;
-//		tb.DUT.zports.p7ffd[3] = 1'b0;
-
 		tb.DUT.zports.peff7_int = 8'h14;
 		tb.DUT.zports.p7ffd_int = 8'h30;
 
@@ -752,15 +669,6 @@ module tb;
 
 
 
-	// force fetch mode
-//	initial
-//	begin
-//		force tb.DUT.dramarb.bw = 2'b11;
-//
-//		#(64'd2400000000);
-//
-//		release tb.DUT.dramarb.bw;
-//	end
 
 
 
@@ -800,11 +708,53 @@ module tb;
 	initial
 	begin : init_dram
 		integer i;
+		
+		integer page;
+		integer offset;
+		
+		reg [7:0] trd [0:655359];
+
+		integer fd;
+		integer size;
+
+
+
 
 		for(i=0;i<4*1024*1024;i=i+1)
 		begin
 			put_byte(i,(i%257));
 		end
+
+		// load TRD
+		fd = $fopen("boot.trd","rb");
+		size=$fread(trd,fd);
+
+		if( size>655360 || size<=0 )
+		begin
+			$display("Couldn't load or wrong boot.trd!\n");
+			$stop;
+		end
+		$fclose(fd);
+
+
+		// copy TRD to RAM
+		page = 32'h0F4;
+		offset = 0;
+
+		for(i=0;i<size;i=i+1)
+		begin
+			put_byte( .addr(page*16384+offset), .data(trd[i]) );
+
+			offset = offset + 1;
+			if( offset>=16384 )
+			begin
+				offset = 0;
+				page = page - 1;
+			end
+		end
+		
+
+		$display("boot.trd loaded!\n");
 	end
 `endif
 
@@ -872,17 +822,132 @@ module tb;
 
 
 
-//	// set up breakpoint
-//	initial
-//	begin
-//		#(650_000_000); // wait 650ms = 650*1000*1000 ns
-//
-//		@(posedge fclk);
-//
-//		tb.DUT.zports.brk_ena  = 1'b1;
-//		tb.DUT.zports.brk_addr = 16'h0041;
-//	end
+	// set up breakpoint
+/*
+	wire bpt = za===16'h3FEC && zmreq_n===1'b0 && zrd_n===1'b0 && zm1_n===1'b0;
+	initial
+	begin
+		#(1_800_000_000);
+		@(posedge fclk);
+		forever
+		begin
+			@(posedge bpt);
+			$display("Stop at breakpoint");
+			$stop;
+		end
+	end
+*/
 
+	// log INI command
+	wire [15:0] #(0.1) dza;
+	wire [ 7:0] #(0.1) dzw;
+	wire [ 7:0] #(0.1) dzr;
+
+	typedef enum {FETCH,MRD,MWR,IORD,IOWR,IACK} cycle_t;
+
+	cycle_t curr_cycle;
+	cycle_t cycles[0:3];
+	logic [15:0] addrs[0:3];
+	logic [ 7:0] wdata[0:3];
+	logic [ 7:0] rdata[0:3];
+
+	wire is_fetch, is_mrd, is_mwr, is_iord, is_iowr, is_iack;
+
+	wire is_any;
+
+
+
+
+	assign dza = za;
+	assign dzw = zd;
+	assign dzr = zd_dut_to_z80;
+
+	assign is_fetch = zm1_n===1'b0 && zmreq_n===1'b0 &&                   zrd_n===1'b0;
+	assign is_mrd   = zm1_n===1'b1 && zmreq_n===1'b0 &&                   zrd_n===1'b0;
+	assign is_mwr   =                 zmreq_n===1'b0 &&                                   zwr_n===1'b0;
+	assign is_iord  =                                   ziorq_n===1'b0 && zrd_n===1'b0;
+	assign is_iowr  =                                   ziorq_n===1'b0 &&                 zwr_n===1'b0;
+	assign is_iack  = zm1_n===1'b0 &&                   ziorq_n===1'b0;
+
+	assign is_any = is_fetch || is_mrd || is_mwr || is_iord || is_iowr || is_iack;
+
+	
+	always @(negedge is_any)
+	begin : remember
+		int i;
+
+		for(i=1;i<4;i++)
+		begin
+			addrs [i]  <= addrs [i-1];
+			cycles[i]  <= cycles[i-1];
+			
+			wdata [i]  <= wdata [i-1];
+			rdata [i]  <= rdata [i-1];
+		end
+
+		addrs[0] <= dza;
+		cycles[0] <= curr_cycle;
+		
+		wdata[0] <= dzw;
+		rdata[0] <= dzr;
+	end
+
+	always @(posedge is_any)
+	if(      is_fetch ) curr_cycle <= FETCH;
+	else if( is_mrd )   curr_cycle <= MRD;
+	else if( is_mwr )   curr_cycle <= MWR;
+	else if( is_iord )  curr_cycle <= IORD;
+	else if( is_iowr )  curr_cycle <= IOWR;
+	else if( is_iack )  curr_cycle <= IACK;
+	else
+	begin
+		$display("Spurious cycle detect!");
+		$stop;
+	end
+
+
+	// actual break
+	always @(negedge is_any)
+	begin
+		if( cycles[3]==FETCH && addrs[3][15:0 ]==16'h3FEC && rdata[3]==8'hED &&
+		    cycles[2]==FETCH &&                              rdata[2]==8'hA2 &&
+		    cycles[1]==IORD  &&
+		    cycles[0]==MWR   && addrs[0][15:14]== 2'd0
+		)
+		begin
+			$display("trd INI caught! port=%04x, wraddr=%04x, time=%t",addrs[1],addrs[0],$time());
+		end
+	end
+
+
+
+
+
+
+
+
+
+
+	// timestamps
+	always
+	begin
+		$display("Running for %t ms",$time()/1000000000.0);
+		#1000000.0;
+	end
+
+
+
+
+
+	// generate nmi after 2s
+	initial
+	begin
+		#2000000000.0;
+
+		force DUT.set_nmi[0] = 1'b1;
+		#1000000.0;
+		release DUT.set_nmi[0];
+	end
 
 
 

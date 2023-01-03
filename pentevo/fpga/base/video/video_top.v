@@ -33,9 +33,9 @@ module video_top(
 
 
 	// external video outputs
-	output wire [ 2:0] vred,
-	output wire [ 2:0] vgrn,
-	output wire [ 1:0] vblu,
+	output wire [ 4:0] vred,
+	output wire [ 4:0] vgrn,
+	output wire [ 4:0] vblu,
 	output wire        vhsync,
 	output wire        vvsync,
 	output wire        vcsync,
@@ -89,6 +89,8 @@ module video_top(
 	// atm palette write strobe adn data
 	input  wire        atm_palwr,
 	input  wire [ 5:0] atm_paldata,
+	input  wire [ 5:0] atm_paldatalow,
+	input  wire        pal444_ena,
 
 
 	input  wire        up_ena,
@@ -159,8 +161,8 @@ module video_top(
 	wire [3:0] pixels;
 
 
-	wire [7:0] color;
-	wire [7:0] vga_color;
+	wire [11:0] color;
+	wire [11:0] vga_color;
 
 
 	wire [2:0] typos;
@@ -175,6 +177,7 @@ module video_top(
 
 	// border sync for 48k/128k emulation
 	wire border_sync;
+
 
 
 	// decode video modes
@@ -374,9 +377,12 @@ module video_top(
 
 		.border_sync    (border_sync    ),
 		.border_sync_ena(modes_raster[1]),
+
 		.atm_palwr  (atm_palwr  ),
 		.atm_paldata(atm_paldata),
-		
+		.atm_paldatalow(atm_paldatalow), //GgRrBb
+		.pal444_ena(pal444_ena),
+
 		.up_palsel(up_palsel),
 		.up_paper (up_paper ),
 		.up_ink   (up_ink   ),
@@ -388,6 +394,7 @@ module video_top(
 		.up_palwr  (up_palwr  ),
 
 		.color(color),
+        .vga_on(vga_on),
 
 		.palcolor(palcolor) // palette readback
 	);

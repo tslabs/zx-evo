@@ -121,14 +121,6 @@ module zmem(
 
 
 
-	reg [15:0] rd_buf;
-
-	reg [15:1] cached_addr;
-	reg        cached_addr_valid;
-
-	wire cache_hit;
-
-
 	wire dram_beg;
 	wire opfetch, memrd, memwr;
 	wire stall14, stall7_35;
@@ -226,10 +218,24 @@ module zmem(
 	assign zd_ena = (~mreq_n) & (~rd_n) & (~romnram);
 
 
+	wire 	   code_cache_select;
+	reg [15:1] code_cached_addr;
+	reg        code_cached_addr_valid;
+	reg [15:0] code_cached_word;
 
-	assign cache_hit = ( (za[15:1] == cached_addr[15:1]) && cached_addr_valid );
+	wire 	   data_cache_select;
+	reg [15:1] data_cached_addr;
+	reg        data_cached_addr_valid;
+	reg [15:0] data_cached_word;
 
+	wire cache_hit;
+	wire [15:0] selected_cache;
 
+	assign code_cache_select = (za[15:1] == code_cached_addr[15:1]);
+	assign data_cache_select = (za[15:1] == data_cached_addr[15:1]);
+
+	assign cache_hit = (code_cache_select && code_cached_addr_valid) || (data_cache_select && data_cached_addr_valid);
+	assign selected_cache = (data_cache_select && data_cached_addr_valid) ? data_cached_word : code_cached_word; 
 
 	// strobe the beginnings of DRAM cycles
 
@@ -237,7 +243,7 @@ module zmem(
 	if( zneg )
 		r_mreq_n <= mreq_n | (~rfsh_n);
 	//
-	assign dram_beg = ( (!cache_hit) || memwr ) && zneg && r_mreq_n && (!romnram) && (!mreq_n) && rfsh_n;
+	assign dram_beg = ( !cache_hit || memwr ) && zneg && r_mreq_n && (!romnram) && (!mreq_n) && rfsh_n;
 
 	// access type
 	assign opfetch = (~mreq_n) && (~m1_n);
@@ -325,9 +331,13 @@ module zmem(
 	assign cpu_wrdata = zd_in;
 	//
 	always @* if( cpu_strobe ) // WARNING! ACHTUNG! LATCH!!!
-		rd_buf <= cpu_rddata;
+		if (m1_n)
+			data_cached_word <= cpu_rddata;
+		else
+			code_cached_word <= cpu_rddata;
+	
 	//
-	assign zd_out = cpu_wrbsel ? rd_buf[7:0] : rd_buf[15:8];
+	assign zd_out = cpu_wrbsel ? selected_cache[7:0] : selected_cache[15:8];
 
 
 
@@ -345,7 +355,8 @@ module zmem(
 	always @(posedge fclk, negedge rst_n)
 	if( !rst_n )
 	begin
-		cached_addr_valid <= 1'b0;
+		code_cached_addr_valid <= 1'b0;
+		data_cached_addr_valid <= 1'b0;
 	end
 	else
 	begin
@@ -353,19 +364,41 @@ module zmem(
 		    (zneg && r_mreq_n && memwr                         ) ||
 		    (io && (!io_r) && zpos                             ) ||
 		    (nmi_buf_clr                                       ) )
-			cached_addr_valid <= 1'b0;
+			begin
+				if (memwr) 
+				begin
+					if (code_cache_select)
+						code_cached_addr_valid <= 1'b0;
+					if (data_cache_select)
+						data_cached_addr_valid <= 1'b0;
+				end
+				else
+				begin
+					data_cached_addr_valid <= 1'b0;
+					code_cached_addr_valid <= 1'b0;
+				end
+			end
 		else if( cpu_strobe )
-			cached_addr_valid <= 1'b1;
+			begin
+				if (m1_n)
+					data_cached_addr_valid <= 1'b1;
+				else
+					code_cached_addr_valid <= 1'b1;
+			end
 	end
 	//
 	always @(posedge fclk)
 	if( !rst_n )
 	begin
-		cached_addr <= 15'd0;
+		//code_cached_addr <= 15'd0;
+		//data_cached_addr <= 15'd0;
 	end
 	else if( cpu_strobe )
 	begin
-		cached_addr[15:1] <= za[15:1];
+		if (m1_n)
+			data_cached_addr[15:1] <= za[15:1];
+		else
+			code_cached_addr[15:1] <= za[15:1];
 	end
 
 

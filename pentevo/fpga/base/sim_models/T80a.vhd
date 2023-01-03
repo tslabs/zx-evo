@@ -95,7 +95,9 @@ entity T80a is
 		A                       : out std_logic_vector(15 downto 0);
 		D                       : inout std_logic_vector(7 downto 0);
 		D_I		: in std_logic_vector(7 downto 0);
-		D_O		: out std_logic_vector(7 downto 0)
+		D_O		: out std_logic_vector(7 downto 0);
+		ResetPC		: in  std_logic_vector(15 downto 0);
+		ResetSP		: in  std_logic_vector(15 downto 0)
 
 	);
 end T80a;
@@ -169,8 +171,7 @@ begin
 			INT_n => INT_n,
 			NMI_n => NMI_n,
 			RESET_n => Reset_s,
-			BUSRQ_n => BUSRQ_n,
-			BUSAK_n => BUSAK_n_i,
+			BUSRQ_n => BUSRQ_n,			BUSAK_n => BUSAK_n_i,
 			CLK_n => CLK_n,
 			A => A_i,
 			DInst => D_I, -- D -> D_I
@@ -178,7 +179,10 @@ begin
 			DO => DO,
 			MC => MCycle,
 			TS => TState,
-			IntCycle_n => IntCycle_n);
+			IntCycle_n => IntCycle_n,
+			ResetPC    => ResetPC,
+			ResetSP    => ResetSP
+			);
 
 	process (CLK_n)
 	begin

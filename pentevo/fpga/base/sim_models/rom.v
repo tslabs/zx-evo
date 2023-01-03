@@ -1,4 +1,4 @@
-`include "tune.v"
+`include "../include/tune.v"
 
 module rom(
 	input [15:0] addr,

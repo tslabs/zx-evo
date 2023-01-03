@@ -63,7 +63,7 @@ module zkbdmus(
 	begin
 //		force kbd_data = 5'b11111;
 		force mus_data = 8'hFF;
-		force kj_data  = 5'b00000;
+		force kj_data  = 8'd0;
 
 		kbd = 40'd0;
 	end

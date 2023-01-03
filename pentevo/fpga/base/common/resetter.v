@@ -21,7 +21,7 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 
-`include "tune.v"
+`include "../include/tune.v"
 
 module resetter(
 
