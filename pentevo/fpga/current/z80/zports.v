@@ -125,6 +125,7 @@ module zports
 `ifdef IDE_VDAC2
   output wire        ftcs_n,
 `endif
+  output reg         spi_mode,
   output wire        sd_start,
   output wire [ 7:0] sd_datain,
   input  wire [ 7:0] sd_dataout,
@@ -563,9 +564,15 @@ module zports
   // SDCFG write - sdcs_n control
   always @(posedge clk)
     if (rst)
+    begin
       spi_cs_n <= 3'b111;
+      spi_mode <= 1'b0;
+    end
     else if (sdcfg_wr)
+    begin
       spi_cs_n <= {~din[3:2], din[1]};
+      // spi_mode <= din[7];
+    end
 
   // start signal for SPI module with resyncing to fclk
   assign sd_start = sddat_wr || sddat_rd;

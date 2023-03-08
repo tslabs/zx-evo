@@ -131,6 +131,8 @@ module top
   wire rst_n; // global reset
   wire genrst;
 
+  wire spi_mode;
+
   wire [1:0] ay_mod;
   wire dos;
   wire vdos;
@@ -164,7 +166,7 @@ module top
   wire set_nmi;
   wire cfg_vga_on;
   wire [7:0] config0;
-  assign 
+  assign
   {
     cfg_tape_sound,   // bit 7
     cfg_floppy_swap,  // bit 6
@@ -832,6 +834,7 @@ module top
 `ifdef SD_CARD2
     .sd2cs_n(sd2cs_n),
 `endif
+    .spi_mode(spi_mode),
 `ifdef IDE_VDAC2
     .ftcs_n(ftcs_n),
 `endif
@@ -1063,6 +1066,7 @@ module top
 `else
     .sdi(sddi),
 `endif
+    .mode(spi_mode),
     .dma_req(dma_spi_req),
     .dma_din(dma_spi_din),
     .cpu_req(cpu_spi_req),
