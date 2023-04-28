@@ -495,7 +495,7 @@ void HddDlg_show_info(int device)
    if (!*c1.ide[device].image) readonly = 1;
    if (*c1.ide[device].image == '<') {
       unsigned drive = find_hdd_device(c1.ide[device].image);
-      if (drive < MAX_PHYS_HD_DRIVES + MAX_PHYS_CD_DRIVES) {
+      if (drive < max_phys_hd_drives + max_phys_cd_drives) {
          c = ((u16*)phys[drive].idsector)[1];
          h = ((u16*)phys[drive].idsector)[3];
          s = ((u16*)phys[drive].idsector)[6];
@@ -525,13 +525,13 @@ void HddDlg_select_image(int device)
    int max, drive; char textbuf[512];
    for (max = drive = 0; drive < n_phys; drive++) {
 
-      if (phys[drive].type == ATA_NTHDD)
+      if (phys[drive].type == ata_devtype_t::nthdd)
          sprintf(textbuf, "HDD %d: %s, %d Mb", phys[drive].spti_id, phys[drive].viewname, phys[drive].hdd_size / (2*1024));
 
-      else if (phys[drive].type == ATA_SPTI_CD)
+      else if (phys[drive].type == ata_devtype_t::spti_cd)
          sprintf(textbuf, "CD-ROM %d: %s", phys[drive].spti_id, phys[drive].viewname);
 
-      else if (phys[drive].type == ATA_ASPI_CD)
+      else if (phys[drive].type == ata_devtype_t::aspi_cd)
          sprintf(textbuf, "CD-ROM %d.%d: %s", phys[drive].adapterid, phys[drive].targetid, phys[drive].viewname);
 
       else continue;
@@ -835,9 +835,9 @@ INT_PTR CALLBACK VideoDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
       if (!c1.pixelscroll && index == 3) index++;
       SendMessage(box, CB_SETCURSEL, index, 0);
 
-      for (int i = 0; i < sizeof(SSHOT_EXT) / sizeof(SSHOT_EXT[0]); i++)
+      for (int i = 0; i < sizeof(sshot_ext) / sizeof(sshot_ext[0]); i++)
       {
-          SendDlgItemMessage(dlg, IDC_SCRSHOT, CB_ADDSTRING, 0, (LPARAM)SSHOT_EXT[i]);
+          SendDlgItemMessage(dlg, IDC_SCRSHOT, CB_ADDSTRING, 0, (LPARAM)sshot_ext[i]);
       }
       SendDlgItemMessage(dlg, IDC_SCRSHOT, CB_SETCURSEL, conf.scrshot, 0);
 
@@ -1095,7 +1095,7 @@ void FillModemList(HWND box)
    {
       HANDLE hPort;
       if (zf232.rs_open_port == port)
-          hPort = zf232.rs_hPort;
+          hPort = zf232.rs_h_port;
       else
       {
          char portName[11];

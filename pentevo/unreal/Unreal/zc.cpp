@@ -1,75 +1,78 @@
 // Z-Controller by KOE
 // Only SD-card
 #include "std.h"
-#include "emul.h"
-#include "vars.h"
-#include "sdcard.h"
 #include "zc.h"
+#include "emul.h"
 #include "ft812.h"
+#include "sdcard.h"
+#include "vars.h"
 
-void TZc::Reset()
+void zc_t::reset()
 {
-  SdCard.Reset();
-  Cfg = 3;
-  Status = 0;
-  RdBuff = 0xff;
+	sd_card_.Reset();
+	cfg_ = 3;
+	status_ = 0;
+	rd_buff_ = 0xff;
 }
 
-void TZc::Wr(u32 Port, u8 Val)
+void zc_t::wr(const u32 port, u8 val)
 {
-  switch(Port & 0xFF)
-  {
-    case 0x77: // config
-      Val &= 7;
-    
-      if ((comp.ts.vdac2) && ((Cfg & 4) != (Val & 4)))
-        vdac2::set_ss((Val & 4) != 0);
-      
-      Cfg = Val;
-    break;
+	switch (port & 0xFF)
+	{
+	case 0x77: // config
+		val &= 7;
 
-    case 0x57: // data
-      if (!(Cfg & 2))   // SD card selected
-      {
-        RdBuff = SdCard.Rd();
-        // printf(__FUNCTION__" ret=0x%02X\n", RdBuff);
-        SdCard.Wr(Val);
-      }
-      else if ((Cfg & 4) && (comp.ts.vdac2))   // FT812 selected
-        RdBuff = vdac2::transfer(Val);
-      else
-        RdBuff = 255;
-      //printf("\nOUT %02X  in %02X",Val,RdBuff);
-    break;
-  }
+		if ((comp.ts.vdac2) && ((cfg_ & 4) != (val & 4)))
+			vdac2::set_ss((val & 4) != 0);
+
+		cfg_ = val;
+		break;
+
+	case 0x57: // data
+		if (!(cfg_ & 2))   // SD card selected
+		{
+			rd_buff_ = sd_card_.Rd();
+			// printf(__FUNCTION__" ret=0x%02X\n", RdBuff);
+			sd_card_.Wr(val);
+		}
+		else if ((cfg_ & 4) && (comp.ts.vdac2))   // FT812 selected
+			rd_buff_ = vdac2::transfer(val);
+		else
+			rd_buff_ = 255;
+		//printf("\nOUT %02X  in %02X",Val,RdBuff);
+		break;
+	default:;
+	}
 }
 
-u8 TZc::Rd(u32 Port)
+u8 zc_t::rd(const u32 port)
 {
-  switch(Port & 0xFF)
-  {
-    case 0x77: // status
-      return Status;      // always returns 0
+	const u8 tmp = rd_buff_;
 
-    case 0x57: // data
-      u8 tmp = RdBuff;
-      
-      if (!(Cfg & 2))   // SD card selected
-      {
-        RdBuff = SdCard.Rd();
-        // printf(__FUNCTION__" ret=0x%02X\n", RdBuff);
-        SdCard.Wr(0xff);
-      }
-      else if ((Cfg & 4) && (comp.ts.vdac2))   // FT812 selected
-        RdBuff = vdac2::transfer(0xFF);
-      else
-        RdBuff = 255;
-      
-      //printf("\nout FF  IN %02X (next %02X)",tmp,RdBuff);
-      return tmp;
-  }
+	switch (port & 0xFF)
+	{
+	case 0x77: // status
+		return status_;      // always returns 0
 
-  return 0xFF;
+	case 0x57: // data
+
+		if (!(cfg_ & 2))   // SD card selected
+		{
+			rd_buff_ = sd_card_.Rd();
+			// printf(__FUNCTION__" ret=0x%02X\n", RdBuff);
+			sd_card_.Wr(0xff);
+		}
+		else if ((cfg_ & 4) && (comp.ts.vdac2))   // FT812 selected
+			rd_buff_ = vdac2::transfer(0xFF);
+		else
+			rd_buff_ = 255;
+
+		//printf("\nout FF  IN %02X (next %02X)",tmp,RdBuff);
+		return tmp;
+	default: ;
+	}
+
+	return 0xFF;
 }
 
-TZc Zc;
+zc_t zc;

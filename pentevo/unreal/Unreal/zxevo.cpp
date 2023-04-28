@@ -11,12 +11,10 @@ u8 zxevo_readfont(void)
 	// then all first bytes of symbols 16-31, and so on.
 	//
 	// unreal fontrom sequence: all first bytes if all symbols (0-255), then all second bytes and so on
-	
-	u32 idx;
-	
-	idx =  (zxevo_readfont_pos & 0x000F)     |
-	      ((zxevo_readfont_pos & 0x0070)<<4) |
-	      ((zxevo_readfont_pos & 0x0780)>>3) ;
+
+	const u32 idx = (zxevo_readfont_pos & 0x000F) |
+		((zxevo_readfont_pos & 0x0070) << 4) |
+		((zxevo_readfont_pos & 0x0780) >> 3);
 
 	zxevo_readfont_pos++;
 	

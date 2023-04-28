@@ -215,9 +215,9 @@ u8 dbgbreak = 0;
 CONFIG conf;
 COMPUTER comp;
 TEMP temp;
-ATA_PORT hdd;   // not in `comp' - not cleared in reset()
-K_INPUT input;
-ZF232 zf232;
+ata_port hdd;   // not in `comp' - not cleared in reset()
+k_input input;
+zf232_t zf232;
 
 SNDRENDER sound;
 SNDCHIP ay[2];
@@ -291,8 +291,8 @@ char skiparc[0x400]; // ignore this files in archive
 u8 exitflag = 0; // avoid call exit() twice
 
 // beta128 vars
-unsigned trd_toload = 0; // drive to load
-unsigned DefaultDrive = -1; // Дисковод по умолчанию в который грузятся образы дисков при старте
+int trd_toload = 0; // drive to load
+unsigned default_drive = -1; // Дисковод по умолчанию в который грузятся образы дисков при старте
 
 char trd_loaded[4]; // used to get first free drive with no account of autoloaded images
 char ininame[0x200];
@@ -636,10 +636,10 @@ const size_t zxk_maps_count = _countof(zxk_maps);
 
 PALETTEENTRY syspalette[0x100];
 
-GDIBMP gdibmp = { { { sizeof(BITMAPINFOHEADER), 320, -240, 1, 32, BI_RGB, 0 } } };
-GDIBMP debug_gdibmp = { { { sizeof(BITMAPINFOHEADER), DEBUG_WND_WIDTH, -DEBUG_WND_HEIGHT, 1, 8, BI_RGB, 0 } } };
+gdibmp_t gdibmp = { { { sizeof(BITMAPINFOHEADER), 320, -240, 1, 32, BI_RGB, 0 } } };
+gdibmp_t debug_gdibmp = { { { sizeof(BITMAPINFOHEADER), DEBUG_WND_WIDTH, -DEBUG_WND_HEIGHT, 1, 8, BI_RGB, 0 } } };
 
-PALETTE_OPTIONS pals[32] = {{"default",0x00,0x80,0xC0,0xE0,0xFF,0xC8,0xFF,0x00,0x00,0x00,0xFF,0x00,0x00,0x00,0xFF}};
+palette_options pals[32] = {{"default",0x00,0x80,0xC0,0xE0,0xFF,0xC8,0xFF,0x00,0x00,0x00,0xFF,0x00,0x00,0x00,0xFF}};
 
 #pragma pack()
 

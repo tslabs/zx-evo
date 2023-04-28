@@ -106,7 +106,7 @@ void init_all(int argc, char **argv)
    autoload();
    init_bpx(bpx);
    init_labels(labels);
-   temp.Gdiplus = GdiplusStartup();
+   temp.Gdiplus = gdiplus_startup();
    if (!temp.Gdiplus)
    {
        color(CONSCLR_WARNING);
@@ -145,7 +145,7 @@ void init_all(int argc, char **argv)
       char fname[0x200], *temp;
       GetFullPathName(argv[optind], sizeof fname, fname, &temp);
 
-      trd_toload = DefaultDrive; // auto-select
+      trd_toload = default_drive; // auto-select
       if (!loadsnap(fname)) errmsg("error loading <%s>", argv[optind]), load_errors = 1;
    }
 
@@ -180,7 +180,7 @@ void __declspec(noreturn) exit()
    zf232.zf_close();
    done_ie_help();
    done_bpx();
-   GdiplusShutdown();
+   gdiplus_shutdown();
 
 //   timeEndPeriod(1);
    if (ay[1].Chip2203) YM2203Shutdown(ay[1].Chip2203); //Dexus

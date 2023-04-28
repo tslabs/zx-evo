@@ -239,7 +239,7 @@ char dispatch(action *table)
 {
    if (*droppedFile)
    {
-       trd_toload = DefaultDrive;
+       trd_toload = default_drive;
        loadsnap(droppedFile);
        *droppedFile = 0;
    }

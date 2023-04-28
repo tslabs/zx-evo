@@ -2,7 +2,7 @@
 #include "config.h"
 
 extern char load_errors;
-extern const char* SSHOT_EXT[4];
+extern const char* sshot_ext[4];
 
 void addpath(char *dst, const char *fname = 0);
 void load_ula_preset();

@@ -51,7 +51,7 @@ const char *d_dmast[] =
 	"NOP  "
 };
 
-class vconfig_control: public dbg_control
+class vconfig_control final : public dbg_control
 {
 public:
 	explicit vconfig_control() : dbg_control(6) { }
@@ -68,7 +68,7 @@ public:
 	}
 };
 
-class tsconfig_control : public dbg_control
+class tsconfig_control final : public dbg_control
 {
 public:
 	explicit tsconfig_control() : dbg_control(6) { }
@@ -85,7 +85,7 @@ public:
 	}
 };
 
-class sysconfig_control : public dbg_control
+class sysconfig_control final : public dbg_control
 {
 public:
 	explicit sysconfig_control() : dbg_control(2) { }
@@ -98,7 +98,7 @@ public:
 	}
 };
 
-class cache_config_control : public dbg_control
+class cache_config_control final : public dbg_control
 {
 public:
 	explicit cache_config_control() : dbg_control(4) { }
@@ -113,7 +113,7 @@ public:
 	}
 };
 
-class memconfig_control : public dbg_control
+class memconfig_control final : public dbg_control
 {
 public:
 	explicit memconfig_control() : dbg_control(5) { }
@@ -129,7 +129,7 @@ public:
 	}
 };
 
-class bitmap_control : public dbg_control
+class bitmap_control final : public dbg_control
 {
 public:
 	explicit bitmap_control() : dbg_control(3) { }
@@ -158,7 +158,7 @@ public:
 	}
 };
 
-class tiles0_control : public dbg_control
+class tiles0_control final : public dbg_control
 {
 public:
 	explicit tiles0_control() : dbg_control(3) { }
@@ -177,7 +177,7 @@ public:
 	}
 };
 
-class tiles1_control : public dbg_control
+class tiles1_control final : public dbg_control
 {
 public:
 	explicit tiles1_control() : dbg_control(3) { }
@@ -197,7 +197,7 @@ public:
 	}
 };
 
-class palsel_control : public dbg_control
+class palsel_control final : public dbg_control
 {
 public:
 	explicit palsel_control() : dbg_control(3) { }
@@ -211,7 +211,7 @@ public:
 	}
 };
 
-class fmaddr_control : public dbg_control
+class fmaddr_control final : public dbg_control
 {
 public:
 	explicit fmaddr_control() : dbg_control(2) { }
@@ -224,7 +224,7 @@ public:
 	}
 };
 
-class misc_control : public dbg_control
+class misc_control final : public dbg_control
 {
 public:
 	explicit misc_control() : dbg_control(3) { }
@@ -246,7 +246,7 @@ public:
 	}
 };
 
-class mempages_control : public dbg_control
+class mempages_control final : public dbg_control
 {
 public:
 	explicit mempages_control() : dbg_control(4) { }
@@ -261,7 +261,7 @@ public:
 	}
 };
 
-class dma_control : public dbg_control
+class dma_control final : public dbg_control
 {
 public:
 	explicit dma_control() : dbg_control(15) { }
@@ -300,7 +300,7 @@ public:
 	}
 };
 
-class interrupt_control : public dbg_control
+class interrupt_control final : public dbg_control
 {
 public:
 	explicit interrupt_control() : dbg_control(5) { }
@@ -321,7 +321,7 @@ public:
 	}
 };
 
-class intmask_control : public dbg_control
+class intmask_control final : public dbg_control
 {
 public:
 	explicit intmask_control() : dbg_control(3) { }
@@ -366,7 +366,7 @@ void init_tsconf()
 	init_regs_page();
 }
 
-bool on_mouse_tsconf(int mx, int my)
+bool on_mouse_tsconf(const int mx, const int my)
 {
 	if (mx >= tsconf_regs.get_x())
 		return tsconf_regs.handle_mouse(mx - tsconf_regs.get_x(), my);

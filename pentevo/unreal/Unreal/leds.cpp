@@ -328,8 +328,8 @@ void input_led()
 {
    if (input.kbdled != 0xFF) {
       u8 k0 = 0x9, k1 = 0xF, k2 = 0x0;
-      if (input.keymode == K_INPUT::KM_PASTE_HOLD) k0 = 0xA;
-      if (input.keymode == K_INPUT::KM_PASTE_RELEASE) k0 = 0x2;
+      if (input.keymode == k_input::km_paste_hold) k0 = 0xA;
+      if (input.keymode == k_input::km_paste_release) k0 = 0x2;
 
       for (int i = 0; i < 4*2+1; i++)
 	  {
@@ -641,5 +641,5 @@ void showleds( u32 *dst, unsigned bpitch )
 	if (temp.led.memband) memband_led();
 #endif
 	if (conf.led.flash_ay_kbd && hndKbdDev) ay_kbd();
-	if (input.keymode == K_INPUT::KM_KEYSTICK) key_led();
+	if (input.keymode == k_input::km_keystick) key_led();
 }

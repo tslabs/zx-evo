@@ -42,7 +42,7 @@ public:
         {
             if (push != pop)
             {
-                u8 key = buffer[pop++];
+	            const u8 key = buffer[pop++];
                 if (pop == sizeof(buffer)) pop = 0;
                 return key;
             }
@@ -68,7 +68,7 @@ struct ATM_KBD
    void clear();
 };
 
-struct K_INPUT
+struct k_input
 {
 #pragma pack(push, 1)
    union
@@ -86,11 +86,11 @@ struct K_INPUT
 
    unsigned lastkey, nokb, nomouse;
 
-   enum { KM_DEFAULT, KM_KEYSTICK, KM_PASTE_HOLD, KM_PASTE_RELEASE } keymode;
+   enum { km_default, km_keystick, km_paste_hold, km_paste_release } keymode;
 
    int msx, msy, msx_prev, msy_prev, ay_x0, ay_y0;
    unsigned ay_reset_t;
-   u8 mbuttons, ayR14;
+   u8 mbuttons, ay_r14;
 
    volatile u8 kjoy;
    u8 mousejoy;
@@ -122,11 +122,11 @@ struct K_INPUT
    u8 read_quorum(u8 scan);
    void paste();
 
-   K_INPUT()
+   k_input()
    {
       textbuffer = 0;
       // random data on coords -> some programs detects mouse by this
-      ay_x0 = msx = 31,
+      ay_x0 = msx = 31;
       ay_y0 = msy = 85;
 
       nokb = nomouse = 0;

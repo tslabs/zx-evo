@@ -15,7 +15,7 @@
 
 void spectrum_frame()
 {
-   if (!temp.inputblock || input.keymode != K_INPUT::KM_DEFAULT)
+   if (!temp.inputblock || input.keymode != k_input::km_default)
       input.make_matrix();
 
    init_snd_frame();

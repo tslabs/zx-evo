@@ -47,4 +47,4 @@ void scale_normal();
 
 void readdevice(VOID *md, DWORD sz, LPDIRECTINPUTDEVICE dev);
 void readmouse(DIMOUSESTATE *md);
-void ReadKeyboard(PVOID KbdData);
+void read_keyboard(PVOID kbd_data);

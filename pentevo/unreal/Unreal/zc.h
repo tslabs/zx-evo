@@ -5,18 +5,18 @@
 // Z-Controller by KOE
 // Only SD-card
 
-class TZc
+class zc_t
 {
-    TSdCard SdCard;
-    u8 Cfg;
-    u8 Status;
-    u8 RdBuff;
+	TSdCard sd_card_;
+	u8 cfg_ = 0;
+	u8 status_ = 0;
+	u8 rd_buff_ = 0;
 public:
-    void Reset();
-    void Open(const char *Name) { SdCard.Open(Name); }
-    void Close() { SdCard.Close(); }
-    void Wr(u32 Port, u8 Val);
-    u8 Rd(u32 Port);
+	void reset();
+	void open(const char* name) { sd_card_.Open(name); }
+	void close() { sd_card_.Close(); }
+	void wr(u32 port, u8 val);
+	u8 rd(u32 port);
 };
 
-extern TZc Zc;
+extern zc_t zc;

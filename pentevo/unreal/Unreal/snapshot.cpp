@@ -16,36 +16,36 @@
 #include <ctime>
 
 using namespace Gdiplus;
-ULONG_PTR gdiplusToken = 0;
-CLSID clsidPngEncoder = GUID_NULL;
-CLSID clsidGifEncoder = GUID_NULL;
+ULONG_PTR gdiplus_token = 0;
+CLSID clsid_png_encoder = GUID_NULL;
+CLSID clsid_gif_encoder = GUID_NULL;
 
-int readSP();
-int readSNA48();
-int readSNA128();
-int readSPG();
-int readZ80();
-int writeSNA(FILE*);
+int read_sp();
+int read_sna48();
+int read_sna128();
+int read_spg();
+int read_z80();
+int write_sna(FILE*);
 int load_arc(char *fname);
 
-bool GdiplusStartup()
+bool gdiplus_startup()
 {
-    GdiplusStartupInput gdiplusStartupInput;
-    if (GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, 0) == Ok)
+	const GdiplusStartupInput gdiplus_startup_input;
+    if (GdiplusStartup(&gdiplus_token, &gdiplus_startup_input, nullptr) == Ok)
     {
         UINT num, size;
         GetImageEncodersSize(&num, &size);
         if (num)
         {
-	        const auto info = (ImageCodecInfo*)(malloc(size));
+	        const auto info = static_cast<ImageCodecInfo*>(malloc(size));
             if (GetImageEncoders(num, size, info) == Ok)
             {
                 for (UINT i = 0; i < num; i++)
                 {
                     if (info[i].FormatID == ImageFormatPNG)
-                        clsidPngEncoder = info[i].Clsid;
+                        clsid_png_encoder = info[i].Clsid;
                     else if (info[i].FormatID == ImageFormatGIF)
-                        clsidGifEncoder = info[i].Clsid;
+                        clsid_gif_encoder = info[i].Clsid;
                 }
                 free(info);
                 return true;
@@ -56,10 +56,10 @@ bool GdiplusStartup()
     return false;
 }
 
-void GdiplusShutdown()
+void gdiplus_shutdown()
 {
-    clsidPngEncoder = clsidGifEncoder = GUID_NULL;
-    if (gdiplusToken) GdiplusShutdown(gdiplusToken);
+    clsid_png_encoder = clsid_gif_encoder = GUID_NULL;
+    if (gdiplus_token) GdiplusShutdown(gdiplus_token);
 }
 
 u8 what_is(char *filename)
@@ -92,7 +92,7 @@ u8 what_is(char *filename)
 
       if (!memcmp(snbuf, "SINCLAIR", 8))
       {
-          unsigned nfiles = snbuf[8];
+	      const unsigned nfiles = snbuf[8];
           unsigned nsec = 0;
           for (unsigned i = 0; i < nfiles; i++)
           {
@@ -108,7 +108,7 @@ u8 what_is(char *filename)
    }
    if (snapsize > 10 && !memcmp(snbuf, "ZXTape!\x1A", 8)) type = snTZX;
    if (snapsize > 0x22 && !memcmp(snbuf, "Compressed Square Wave\x1A", 23)) type = snCSW;
-   if (*(u16*)snbuf == WORD2('S','P') && *(u16*)(snbuf+2)+0x26 == (int)snapsize) type = snSP;
+   if (*(u16*)snbuf == WORD2('S','P') && *(u16*)(snbuf+2)+0x26 == static_cast<int>(snapsize)) type = snSP;
    return type;
 }
 
@@ -119,7 +119,7 @@ int loadsnap(char *filename)
 
    invalidate_ts_cache();
 
-   u8 type = what_is(filename);
+   const u8 type = what_is(filename);
 
    if (type >= snHOB)
    {
@@ -164,11 +164,11 @@ int loadsnap(char *filename)
 
     int loadStatus = 0;
     switch (type) {
-        case snSP: loadStatus = readSP(); break;
-	    case snSNA_48: loadStatus = readSNA48(); break;
-        case snSNA_128: loadStatus = readSNA128(); break;
-        case snSPG: loadStatus = readSPG(); break;
-        case snZ80: loadStatus = readZ80(); break;
+        case snSP: loadStatus = read_sp(); break;
+	    case snSNA_48: loadStatus = read_sna48(); break;
+        case snSNA_128: loadStatus = read_sna128(); break;
+        case snSPG: loadStatus = read_spg(); break;
+        case snZ80: loadStatus = read_z80(); break;
         case snTAP: loadStatus = readTAP(); break;
         case snTZX: loadStatus = readTZX(); break;
         case snCSW: loadStatus = readCSW(); break;
@@ -181,7 +181,7 @@ int loadsnap(char *filename)
     return loadStatus;
 }
 
-int readSPG()
+int read_spg()
 {
 	hdrSPG1_0 *hdr10 = (hdrSPG1_0*)snbuf;
 	hdrSPG0_2 *hdr02 = (hdrSPG0_2*)snbuf;
@@ -327,7 +327,7 @@ int readSPG()
 	return 1;
 }
 
-int readSNA128()
+int read_sna128()
 {
    // conf.mem_model = MM_PENTAGON; conf.ramsize = 128;
 	reset(RM_NOCHANGE);
@@ -352,7 +352,7 @@ int readSNA128()
    set_banks(); return 1;
 }
 
-int readSNA48()
+int read_sna48()
 {
    //conf.mem_model = MM_PENTAGON; conf.ramsize = 128;  // molodcov_alex
    reset(RM_SOS);
@@ -372,7 +372,7 @@ int readSNA48()
    set_banks(); return 1;
 }
 
-int readSP()
+int read_sp()
 {
    //conf.mem_model = MM_PENTAGON; conf.ramsize = 128;  // molodcov_alex
    reset(RM_SOS);
@@ -393,7 +393,7 @@ int readSP()
    set_banks(); return 1;
 }
 
-int writeSNA(FILE *ff)
+int write_sna(FILE *ff)
 {
 /*   if (conf.ramsize != 128) {
       MessageBox(GetForegroundWindow(), "SNA format can hold only\r\n128kb memory models", "Save", MB_ICONERROR);
@@ -442,7 +442,7 @@ void unpack_page(u8 *dst, int dstlen, u8 *src, int srclen)
    }
 }
 
-int readZ80()
+int read_z80()
 {
    //conf.mem_model = MM_PENTAGON; conf.ramsize = 128;  // molodcov_alex
    hdrZ80 *hdr = (hdrZ80*)snbuf;
@@ -746,7 +746,7 @@ again:
          FDD *saveto = comp.wd.fdd + drvs[ofn.nFilterIndex];
          switch (snaps[ofn.nFilterIndex])
          {
-            case snSNA_128: res = writeSNA(ff); break;
+            case snSNA_128: res = write_sna(ff); break;
             case snTRD: res = saveto->write_trd(ff); break;
             case snUDI: res = saveto->write_udi(ff); break;
             case snFDI: res = saveto->write_fdi(ff); break;
@@ -967,7 +967,7 @@ char* SaveScreenshot(const char* prefix, unsigned counter)
    static char fname[FILENAME_MAX];
    strcpy(fname, conf.scrshot_path);
 
-   sprintf(fname + strlen(fname), "\\%s%06u.%s", prefix, counter, SSHOT_EXT[conf.scrshot]);
+   sprintf(fname + strlen(fname), "\\%s%06u.%s", prefix, counter, sshot_ext[conf.scrshot]);
 
    FILE* fileShot = 0;
    if (conf.scrshot == SS_SCR || conf.scrshot == SS_BMP)
@@ -1027,7 +1027,7 @@ char* SaveScreenshot(const char* prefix, unsigned counter)
          size_t fname_len = strlen(fname);
          wchar_t* fnameW = new wchar_t[fname_len + 1];
          mbstowcs(fnameW, fname, fname_len); fnameW[fname_len] = 0;
-         bmp.Save(fnameW, conf.scrshot == SS_PNG ? &clsidPngEncoder : &clsidGifEncoder, 0);
+         bmp.Save(fnameW, conf.scrshot == SS_PNG ? &clsid_png_encoder : &clsid_gif_encoder, 0);
       }
       free(ds);
    }

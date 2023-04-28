@@ -41,7 +41,7 @@ namespace vdac2
   int wnd_width = 256;
   int wnd_height = 192;
   u32 bitmap[2048][2048];
-  GDIBMP gdibmp = {{{sizeof(BITMAPINFOHEADER), 2048, -2048, 1, 32, BI_RGB, 0}}};
+  gdibmp_t gdibmp = {{{sizeof(BITMAPINFOHEADER), 2048, -2048, 1, 32, BI_RGB, 0}}};
 
   // ---
   //  Since shitty FT8xx emulation lib has no interrupt support, we need to make a manual dusk.

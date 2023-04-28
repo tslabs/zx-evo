@@ -325,7 +325,7 @@ static void qsave(const char *fname) {
    char xx[0x200]; addpath(xx, fname);
    FILE *ff = fopen(xx, "wb");
    if (ff) {
-      if (writeSNA(ff)) sprintf(statusline, "Quick save to %s", fname), statcnt = 30;
+      if (write_sna(ff)) sprintf(statusline, "Quick save to %s", fname), statcnt = 30;
       fclose(ff);
    }
 }
@@ -343,7 +343,7 @@ void qload3() { qload("qsave3.sna"); }
 
 void main_keystick()
 {
-   input.keymode = (input.keymode == K_INPUT::KM_KEYSTICK)? K_INPUT::KM_DEFAULT : K_INPUT::KM_KEYSTICK;
+   input.keymode = (input.keymode == k_input::km_keystick)? k_input::km_default : k_input::km_keystick;
 }
 
 void main_autofire()

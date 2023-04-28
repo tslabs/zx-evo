@@ -2,17 +2,17 @@
 #include "std.h"
 #include "sysdefs.h"
 
-const int MAX_PHYS_HD_DRIVES = 8;
-const int MAX_PHYS_CD_DRIVES = 8;
-const int MAX_SENSE_LEN = 0x40;
+constexpr int max_phys_hd_drives = 8;
+constexpr int max_phys_cd_drives = 8;
+constexpr int max_sense_len = 0x40;
 
-enum DEVTYPE { ATA_NONE, ATA_FILEHDD, ATA_NTHDD, ATA_SPTI_CD, ATA_ASPI_CD, ATA_FILECD };
-enum DEVUSAGE { ATA_OP_ENUM_ONLY, ATA_OP_USE };
+enum class ata_devtype_t { none, filehdd, nthdd, spti_cd, aspi_cd, filecd };
+enum ata_devusage_t { enum_only, use };
 
-struct PHYS_DEVICE
+struct phys_device_t
 {
-   DEVTYPE type;
-   DEVUSAGE usage;
+   ata_devtype_t type;
+   ata_devusage_t usage;
    unsigned hdd_size;
    unsigned spti_id;
    unsigned adapterid, targetid; // ASPI
@@ -21,62 +21,63 @@ struct PHYS_DEVICE
    char viewname[512];
 };
 
-struct ATA_PASSER
+struct ata_passer_t
 {
-   HANDLE hDevice;
-   PHYS_DEVICE *dev;
-   HANDLE Vols[100];
+   HANDLE h_device;
+   phys_device_t *dev;
+   HANDLE vols[100];
 
-   static unsigned identify(PHYS_DEVICE *outlist, int max);
+   static unsigned identify(phys_device_t *outlist, unsigned max);
    static unsigned get_hdd_count();
 
-   DWORD open(PHYS_DEVICE *dev);
+   DWORD open(phys_device_t *phy_dev);
    void close();
-   bool loaded() { return (hDevice != INVALID_HANDLE_VALUE); }
-   BOOL flush() { return FlushFileBuffers(hDevice); }
-   bool seek(unsigned nsector);
-   bool read_sector(u8 *dst);
-   bool write_sector(u8 *src);
+   bool loaded() const { return (h_device != INVALID_HANDLE_VALUE); }
+   BOOL flush() const { return FlushFileBuffers(h_device); }
+   bool seek(unsigned nsector) const;
+   bool read_sector(u8 *dst) const;
+   bool write_sector(const u8 *src) const;
 
-   ATA_PASSER() { hDevice = INVALID_HANDLE_VALUE; }
-   ~ATA_PASSER() { close(); }
+   ata_passer_t(): dev(nullptr), vols{} { h_device = INVALID_HANDLE_VALUE; }
+   ~ata_passer_t() { close(); }
 };
 
-struct ATAPI_PASSER
+struct atapi_passer_t
 {
-   HANDLE hDevice;
-   PHYS_DEVICE *dev;
+   HANDLE h_device;
+   phys_device_t *dev;
 
    CDB cdb;
    unsigned passed_length;
-   u8 sense[MAX_SENSE_LEN]; unsigned senselen;
+   u8 sense[max_sense_len]; unsigned senselen;
 
-   static unsigned identify(PHYS_DEVICE *outlist, int max);
+   static unsigned identify(phys_device_t *outlist, int max);
 
-   DWORD open(PHYS_DEVICE *dev);
+   DWORD open(phys_device_t *phy_dev);
    void close();
-//   bool loaded() { return (hDevice != INVALID_HANDLE_VALUE) || (dev->type == ATA_ASPI_CD); } //SMT (crashes if no master or slave device)
-//   bool loaded() { return ((hDevice == INVALID_HANDLE_VALUE)?0:(dev->type == ATA_ASPI_CD)); } //Alone Coder (CD doesn't work with ==, !=, 1)
-//   bool loaded() { return (hDevice != INVALID_HANDLE_VALUE) || ((dev)?(dev->type == ATA_ASPI_CD):0); } //Alone Coder (CD doesn't work if another device isn't set) (and SPTI won't work?)
-//   bool loaded() { return (hDevice != INVALID_HANDLE_VALUE); } //Alone Coder (CD doesn't work)
-   bool loaded() { return ((hDevice != INVALID_HANDLE_VALUE) || (dev)); } //Alone Coder (CD doesn't initialize (although works) if another device isn't set)
+   bool loaded() const { return ((h_device != INVALID_HANDLE_VALUE) || (dev)); } //Alone Coder (CD doesn't initialize (although works) if another device isn't set)
 
-   int pass_through(void *buf, int bufsize);
+   int pass_through(void *buf, int buf_sz);
    int read_atapi_id(u8 *idsector, char prefix);
 
-   int SEND_ASPI_CMD(void *buf, int buf_sz);
-   int SEND_SPTI_CMD(void *buf, int buf_sz);
+   int send_aspi_cmd(void *buf, int buf_sz);
+   int send_spti_cmd(void *buf, int buf_sz);
 
-   bool seek(unsigned nsector);
-   bool read_sector(u8 *dst);
+   bool seek(unsigned nsector) const;
+   bool read_sector(u8 *dst) const;
 
-   ATAPI_PASSER() { hDevice = INVALID_HANDLE_VALUE; dev = 0; }
-   ~ATAPI_PASSER() { close(); }
+   atapi_passer_t(): cdb(), passed_length(0), sense{}, senselen(0)
+   {
+	   h_device = INVALID_HANDLE_VALUE;
+	   dev = nullptr;
+   }
+
+   ~atapi_passer_t() { close(); }
 };
 
 void make_ata_string(u8 *dst, unsigned n_words, const char *src);
-void swap_bytes(char *dst, BYTE *src, unsigned n_words);
-void print_device_name(char *dst, PHYS_DEVICE *dev);
+void swap_bytes(char *dst, const BYTE *src, unsigned n_words);
+void print_device_name(char *dst, const phys_device_t *dev);
 void init_aspi();
 void done_aspi();
 

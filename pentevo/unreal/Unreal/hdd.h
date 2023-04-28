@@ -1,147 +1,166 @@
 #pragma once
 #include "sysdefs.h"
 
-struct ATA_DEVICE
+struct ata_device
 {
-   unsigned c,h,s,lba;
-   union
-   {
-      u8 regs[12];
-      struct
-      {
-         u8 data;
-         u8 err;             // for write, features
-         union
-         {
-            u8 count;
-            u8 intreason;
-         };
-         u8 sec;
-         union
-         {
-            u16 cyl;
-            u16 atapi_count;
-            struct
-            {
-               u8 cyl_l;
-               u8 cyl_h;
-            };
-         };
-         u8 devhead;
-         u8 status;          // for write, cmd
-         /*                  */
-         u8 control;         // reg8 - control (CS1,DA=6)
-         u8 feat;
-         u8 cmd;
-         u8 reserved;        // reserved
-      } reg;
-   };
-   u8 intrq;
-   u8 readonly;
-   u8 device_id;             // 0x00 - master, 0x10 - slave
-   u8 atapi;                 // flag for CD-ROM device
+	enum class atapi_int_reason : u8
+	{
+		none = 0x00,
+		cod = 0x01,
+		io = 0x02,
+		release = 0x04
+	};
 
-   u8 read(unsigned n_reg);
-   void write(unsigned n_reg, u8 data);
-   unsigned read_data();
-   void write_data(unsigned data);
-   u8 read_intrq();
+	enum class hd_status : u8
+	{
+		bsy = 0x80,
+		drdy = 0x40,
+		df = 0x20,
+		dsc = 0x10,
+		drq = 0x08,
+		corr = 0x04,
+		idx = 0x02,
+		err = 0x01,
+		none = 0x00,
+	};
 
-   char exec_ata_cmd(u8 cmd);
-   char exec_atapi_cmd(u8 cmd);
+	enum class hd_error : u8
+	{
+		bbk = 0x80,
+		unc = 0x40,
+		mc = 0x20,
+		idnf = 0x10,
+		mcr = 0x08,
+		abrt = 0x04,
+		tk0_nf = 0x02,
+		amnf = 0x01,
+		none = 0x00,
+	};
 
-   enum RESET_TYPE { RESET_HARD, RESET_SOFT, RESET_SRST };
-   void reset_signature(RESET_TYPE mode = RESET_SOFT);
+	enum class hd_control : u8
+	{
+		none = 0x00,
+		srst = 0x04,
+		n_ien = 0x02
+	};
 
-   void reset(RESET_TYPE mode);
-   char seek();
-   void recalibrate();
-   void configure(IDE_CONFIG *cfg);
-   void prepare_id();
-   void command_ok();
-   void next_sector();
-   void read_sectors();
-   void verify_sectors();
-   void write_sectors();
-   void format_track();
+	enum class hd_state
+	{
+		idle = 0,
+		read_id,
+		read_sectors,
+		verify_sectors,
+		write_sectors,
+		format_track,
+		recv_packet,
+		read_atapi,
+		mode_select
+	};
 
-   enum ATAPI_INT_REASON
-   {
-      INT_COD       = 0x01,
-      INT_IO        = 0x02,
-      INT_RELEASE   = 0x04
-   };
 
-   enum HD_STATUS
-   {
-      STATUS_BSY   = 0x80,
-      STATUS_DRDY  = 0x40,
-      STATUS_DF    = 0x20,
-      STATUS_DSC   = 0x10,
-      STATUS_DRQ   = 0x08,
-      STATUS_CORR  = 0x04,
-      STATUS_IDX   = 0x02,
-      STATUS_ERR   = 0x01
-   };
+	unsigned c{}, h{}, s{}, lba{};
+	union
+	{
+		u8 regs[12]{};
+		struct
+		{
+			u8 data;
+			hd_error err;             // for write, features
+			union
+			{
+				u8 count;
+				atapi_int_reason intreason;
+			};
+			u8 sec;
+			union
+			{
+				u16 cyl;
+				u16 atapi_count;
+				struct
+				{
+					u8 cyl_l;
+					u8 cyl_h;
+				};
+			};
+			u8 devhead;
+			::ata_device::hd_status status;          // for write, cmd
+			/*                  */
+			hd_control control;         // reg8 - control (CS1,DA=6)
+			u8 feat;
+			u8 cmd;
+			u8 reserved;        // reserved
+		} reg;
+	};
+	u8 intrq{};
+	u8 readonly{};
+	u8 device_id{};             // 0x00 - master, 0x10 - slave
+	u8 atapi{};                 // flag for CD-ROM device
 
-   enum HD_ERROR
-   {
-      ERR_BBK   = 0x80,
-      ERR_UNC   = 0x40,
-      ERR_MC    = 0x20,
-      ERR_IDNF  = 0x10,
-      ERR_MCR   = 0x08,
-      ERR_ABRT  = 0x04,
-      ERR_TK0NF = 0x02,
-      ERR_AMNF  = 0x01
-   };
+	u8 read(unsigned n_reg);
+	void write(unsigned n_reg, u8 data);
+	u16 read_data();
+	void write_data(u16 data);
+	u8 read_intrq();
 
-   enum HD_CONTROL
-   {
-      CONTROL_SRST = 0x04,
-      CONTROL_nIEN = 0x02
-   };
+	char exec_ata_cmd(u8 cmd);
+	char exec_atapi_cmd(u8 cmd);
 
-   enum HD_STATE
-   {
-      S_IDLE = 0, S_READ_ID,
-      S_READ_SECTORS, S_VERIFY_SECTORS, S_WRITE_SECTORS, S_FORMAT_TRACK,
-      S_RECV_PACKET, S_READ_ATAPI,
-      S_MODE_SELECT
-   };
+	enum class reset_type { reset_hard, reset_soft, reset_srst };
+	void reset_signature(reset_type mode = reset_type::reset_soft);
 
-   HD_STATE state;
-   unsigned transptr, transcount;
-   unsigned phys_dev;
-   u8 transbf[0xFFFF]; // ATAPI is able to tranfer 0xFFFF bytes. passing more leads to error
+	void reset(reset_type mode);
+	char seek();
+	void recalibrate();
+	void configure(IDE_CONFIG* cfg);
+	void prepare_id();
+	void command_ok();
+	void next_sector();
+	void read_sectors();
+	void verify_sectors();
+	void write_sectors();
+	void format_track();
 
-   void handle_atapi_packet();
-   void handle_atapi_packet_emulate();
-   void exec_mode_select();
+	
 
-   ATA_PASSER ata_p;
-   ATAPI_PASSER atapi_p;
-   bool loaded() { return ata_p.loaded() || atapi_p.loaded(); } //was crashed at atapi_p.loaded() if no master or slave device!!! see fix in ATAPI_PASSER //Alone Coder
+	
+
+	hd_state state;
+	unsigned transptr{}, transcount{};
+	int phys_dev{};
+	u8 transbf[0xFFFF]{}; // ATAPI is able to tranfer 0xFFFF bytes. passing more leads to error
+
+	void handle_atapi_packet();
+	void handle_atapi_packet_emulate();
+
+	ata_passer_t ata_p;
+	atapi_passer_t atapi_p;
+	bool loaded() const;
+	//was crashed at atapi_p.loaded() if no master or slave device!!! see fix in ATAPI_PASSER //Alone Coder
 };
 
-struct ATA_PORT
+struct ata_port
 {
-   ATA_DEVICE dev[2];
-   u8 read_high, write_high;
+	ata_device dev[2];
+	u8 read_high{}, write_high{};
 
-   ATA_PORT() { dev[0].device_id = 0, dev[1].device_id = 0x10; reset(); }
+	ata_port()
+	{
+		dev[0].device_id = 0;
+		dev[1].device_id = 0x10;
+		reset();
+	}
 
-   u8 read(unsigned n_reg);
-   void write(unsigned n_reg, u8 data);
-   unsigned read_data();
-   void write_data(unsigned data);
-   u8 read_intrq();
+	u8 read(unsigned n_reg);
+	void write(unsigned n_reg, u8 data);
+	u16 read_data();
+	void write_data(u16 data);
+	u8 read_intrq();
 
-   void reset();
+	void reset();
 };
 
-extern PHYS_DEVICE phys[];
-extern int n_phys;
+extern phys_device_t phys[];
+extern unsigned n_phys;
 
-unsigned find_hdd_device(char *name);
+unsigned find_hdd_device(const char* name);
 void init_hdd_cd();

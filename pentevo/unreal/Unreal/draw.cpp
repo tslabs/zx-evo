@@ -117,7 +117,7 @@ void create_palette()
 {
    if ((temp.rflags & RF_8BPCH) && temp.obpp == 8) temp.rflags |= RF_GRAY, conf.flashcolor = 0;
 
-   PALETTE_OPTIONS *pl = &pals[conf.pal];
+   palette_options *pl = &pals[conf.pal];
    u8 brights[4] = { pl->ZZ, pl->ZN, pl->NN, pl->BB };
    u8 brtab[16] =
       //  ZZ      NN      ZZ      BB
