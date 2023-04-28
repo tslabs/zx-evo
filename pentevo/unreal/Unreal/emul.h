@@ -48,11 +48,8 @@ constexpr auto MAX_ROM_PAGES = 64;        // 1Mb;
 enum IDE_SCHEME
 {
     IDE_NONE = 0,
-    IDE_ATM,
-    IDE_NEMO, IDE_NEMO_A8, IDE_NEMO_DIVIDE,
-    IDE_SMUC,
-    IDE_PROFI,
-    IDE_DIVIDE,
+    IDE_NEMO,
+	IDE_NEMO_A8
 };
 
 enum MOUSE_WHEEL_MODE { MOUSE_WHEEL_NONE, MOUSE_WHEEL_KEYBOARD, MOUSE_WHEEL_KEMPSTON }; //0.36.6 from 0.35b2
@@ -61,18 +58,6 @@ enum MEM_MODEL
 {
    MM_PENTAGON = 0,
    MM_TSL,
-   MM_ATM3,
-   MM_ATM710,
-   MM_ATM450,
-   MM_PROFI,
-   MM_PLUS3,
-   MM_SCORP,
-   MM_PROFSCORP,
-   MM_GMX,
-   MM_KAY,
-   MM_QUORUM,
-   MM_LSY256,
-   MM_PHOENIX,
    N_MM_MODELS
 };
 
@@ -269,12 +254,6 @@ struct CONFIG
       unsigned memband;
    } led;
 
-   struct {
-      u8 mem_swap;
-      u8 xt_kbd;
-      u8 reserved1;
-   } atm;
-
    u8 use_comp_pal;
    unsigned pal, num_pals;      // selected palette and total number of pals
    unsigned minres;             // min. screen x-resolution
@@ -292,19 +271,7 @@ struct CONFIG
    char zx128_rom_path[FILENAME_MAX];
    char sys_rom_path[FILENAME_MAX];
    char pent_rom_path[FILENAME_MAX];
-   char atm1_rom_path[FILENAME_MAX];
-   char atm2_rom_path[FILENAME_MAX];
-   char atm3_rom_path[FILENAME_MAX];
-   char scorp_rom_path[FILENAME_MAX];
-   char prof_rom_path[FILENAME_MAX];
-   char gmx_rom_path[FILENAME_MAX];
-   char profi_rom_path[FILENAME_MAX];
-   char kay_rom_path[FILENAME_MAX];
-   char plus3_rom_path[FILENAME_MAX];
-   char quorum_rom_path[FILENAME_MAX];
    char tsl_rom_path[FILENAME_MAX];
-   char lsy_rom_path[FILENAME_MAX];
-   char phoenix_rom_path[FILENAME_MAX];
 
    #ifdef MOD_GSZ80
    unsigned gs_ramsize;
@@ -445,19 +412,6 @@ enum AY_SCHEME
 #define aFE_16          0x00
 #define aFE_MC          0x01
 
-#define FF77_16         0x00
-#define FF77_MC         0x02
-#define FF77_ZX         0x03
-#define FF77_TX         0x06
-#define FF77_TL         0x07
-
-// Биты порта 00 для кворума
-static const u8 Q_F_RAM = 0x01;
-static const u8 Q_RAM_8 = 0x08;
-static const u8 Q_B_ROM = 0x20;
-static const u8 Q_BLK_WR = 0x40;
-static const u8 Q_TR_DOS = 0x80;
-
 enum SNAP
 {
    snNOFILE, snUNKNOWN, snTOOLARGE,
@@ -482,32 +436,13 @@ struct NVRAM
 struct COMPUTER
 {
    u8 p7FFD, pFE, pEFF7, pXXXX;
-   u8 pDFFD, pFDFD, p1FFD, pFF77;
-   u8 p7EFD, p78FD, p7AFD, p7CFD, gmx_config, gmx_magic_shift; // gmx
-   u8 p00, p80FD; // quorum
    TSPORTS_t ts;
-   u8 pLSY256;
    u16 cram[256];
    u16 sfile[256];
    __int64 t_states; // inc with conf.frame by each frame
    unsigned frame_counter; // inc each frame
-   u8 aFE, aFB; // ATM 4.50 system ports
-   unsigned pFFF7[8]; // ATM 7.10 / ATM3(4Mb) memory map
-   // |7ffd|rom|b7b6|b5..b0| b7b6 = 0 for atm2
 
-   u8 wd_shadow[4]; // 2F, 4F, 6F, 8F
-
-   unsigned aFF77;
    unsigned active_ay;
-   // ATM3
-   union {
-	   u16 pBD;
-	   struct {
-			u8 pBDl;
-			u8 pBDh;
-	   };
-   };
-   u8 pBE, pBF;
 
    u8 flags;
    u8 border_attr;
@@ -664,7 +599,6 @@ extern TColorConverter ConvBgr24;
 #define RF_USE32AS16 0x0020000  // c32tab contain hi-color WORDS
 #define RF_USEFONT  0x00040000  // use font_tables
 #define RF_PALB     0x00080000  // palette for bilinear filter
-#define RF_COMPPAL  0x00100000  // use palette from ATM palette registers
 #define RF_GRAY     0x00200000  // grayscale palette
 
 #define RF_MONITOR (RF_MON | RF_GDI | RF_2X)

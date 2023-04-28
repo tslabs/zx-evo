@@ -6,12 +6,10 @@
 #include "debugger/dbglabls.h"
 #include "draw.h"
 #include "dx.h"
-#include "fontatm2.h"
 #include "snapshot.h"
 #include "sound.h"
 #include "sdcard.h"
 #include "zc.h"
-#include "atm.h"
 #include "util.h"
 #include "config.h"
 
@@ -54,22 +52,6 @@ unsigned load_rom(const char* path, u8* bank, const unsigned max_banks = 1)
 
 	fclose(ff);
 	return size / 1024;
-}
-
-void load_atm_font()
-{
-	FILE* ff = fopen("SGEN.ROM", "rb");
-	if (!ff) return;
-	u8 font[0x800];
-	unsigned sz = fread(font, 1, 0x800, ff);
-	if (sz == 0x800) {
-		color(CONSCLR_INFO);
-		printf("using ATM font from external SGEN.ROM\n");
-		for (unsigned chr = 0; chr < 0x100; chr++)
-			for (unsigned l = 0; l < 8; l++)
-				fontatm2[chr + l * 0x100] = font[chr * 8 + l];
-	}
-	fclose(ff);
 }
 
 void load_atariset()
@@ -254,7 +236,6 @@ void load_config(const char* fname)
 	static auto colors = "COLORS";
 	static auto ay = "AY";
 	static auto saa1099 = "SAA1099";
-	static auto atm = "ATM";
 	static auto hdd = "HDD";
 	static auto rom = "ROM";
 	static auto ngs = "NGS";
@@ -285,19 +266,7 @@ void load_config(const char* fname)
 	conf.spg_mem_init = GetPrivateProfileInt(misc, "SPGMemInit", 0, ininame);
 
 	GetPrivateProfileString(rom, "PENTAGON", nil, conf.pent_rom_path, sizeof conf.pent_rom_path, ininame);
-	GetPrivateProfileString(rom, "ATM1", nil, conf.atm1_rom_path, sizeof conf.atm1_rom_path, ininame);
-	GetPrivateProfileString(rom, "ATM2", nil, conf.atm2_rom_path, sizeof conf.atm2_rom_path, ininame);
-	GetPrivateProfileString(rom, "ATM3", nil, conf.atm3_rom_path, sizeof conf.atm3_rom_path, ininame);
-	GetPrivateProfileString(rom, "SCORP", nil, conf.scorp_rom_path, sizeof conf.scorp_rom_path, ininame);
-	GetPrivateProfileString(rom, "PROFROM", nil, conf.prof_rom_path, sizeof conf.prof_rom_path, ininame);
-	GetPrivateProfileString(rom, "GMX", nil, conf.gmx_rom_path, sizeof conf.gmx_rom_path, ininame);
-	GetPrivateProfileString(rom, "PROFI", nil, conf.profi_rom_path, sizeof conf.profi_rom_path, ininame);
-	GetPrivateProfileString(rom, "KAY", nil, conf.kay_rom_path, sizeof conf.kay_rom_path, ininame);
-	GetPrivateProfileString(rom, "PLUS3", nil, conf.plus3_rom_path, sizeof conf.plus3_rom_path, ininame);
-	GetPrivateProfileString(rom, "QUORUM", nil, conf.quorum_rom_path, sizeof conf.quorum_rom_path, ininame);
 	GetPrivateProfileString(rom, "TSL", nil, conf.tsl_rom_path, sizeof conf.tsl_rom_path, ininame);
-	GetPrivateProfileString(rom, "LSY", nil, conf.lsy_rom_path, sizeof conf.lsy_rom_path, ininame);
-	GetPrivateProfileString(rom, "PHOENIX", nil, conf.phoenix_rom_path, sizeof conf.phoenix_rom_path, ininame);
 
 #ifdef MOD_GSZ80
 	GetPrivateProfileString(rom, "GS", nil, conf.gs_rom_path, sizeof conf.gs_rom_path, ininame);
@@ -308,19 +277,7 @@ void load_config(const char* fname)
 	addpath(conf.moonsound_rom_path);
 
 	addpath(conf.pent_rom_path);
-	addpath(conf.atm1_rom_path);
-	addpath(conf.atm2_rom_path);
-	addpath(conf.atm3_rom_path);
-	addpath(conf.scorp_rom_path);
-	addpath(conf.prof_rom_path);
-	addpath(conf.gmx_rom_path);
-	addpath(conf.profi_rom_path);
-	addpath(conf.kay_rom_path);
-	addpath(conf.plus3_rom_path);
-	addpath(conf.quorum_rom_path);
 	addpath(conf.tsl_rom_path);
-	addpath(conf.lsy_rom_path);
-	addpath(conf.phoenix_rom_path);
 	//[vv]   addpath(conf.kay_rom_path);
 
 	GetPrivateProfileString(rom, "ROMSET", "default", line, sizeof line, ininame);
@@ -409,7 +366,6 @@ void load_config(const char* fname)
 	conf.ula_preset = -1;
 	add_presets(ula, "preset", &num_ula, ulapreset, &conf.ula_preset);
 
-	conf.atm.mem_swap = GetPrivateProfileInt(ula, "AtmMemSwap", 0, ininame);
 	conf.use_comp_pal = GetPrivateProfileInt(ula, "UsePalette", 1, ininame);
 	conf.profi_monochrome = GetPrivateProfileInt(ula, "ProfiMonochrome", 0, ininame);
 
@@ -647,7 +603,6 @@ void load_config(const char* fname)
 	conf.input.paste_release = GetPrivateProfileInt(input, "ReleaseDelay", 5, ininame);
 	conf.input.paste_newline = GetPrivateProfileInt(input, "NewlineDelay", 20, ininame);
 	conf.input.keybpcmode = GetPrivateProfileInt(input, "KeybPCMode", 0, ininame);
-	conf.atm.xt_kbd = GetPrivateProfileInt(input, "ATMKBD", 0, ininame);
 	conf.input.JoyId = GetPrivateProfileInt(input, "Joy", 0, ininame);
 
 	GetPrivateProfileString(input, "Fire", "0", line, sizeof line, ininame);
@@ -701,20 +656,10 @@ void load_config(const char* fname)
 
 	GetPrivateProfileString(hdd, "SCHEME", nil, line, sizeof line, ininame);
 	conf.ide_scheme = IDE_NONE;
-	if (!strnicmp(line, "ATM", 3))
-		conf.ide_scheme = IDE_ATM;
-	else if (!strnicmp(line, "NEMO-DIVIDE", 11))
-		conf.ide_scheme = IDE_NEMO_DIVIDE;
-	else if (!strnicmp(line, "NEMO-A8", 7))
+	if (!strnicmp(line, "NEMO-A8", 7))
 		conf.ide_scheme = IDE_NEMO_A8;
 	else if (!strnicmp(line, "NEMO", 4))
 		conf.ide_scheme = IDE_NEMO;
-	else if (!strnicmp(line, "SMUC", 4))
-		conf.ide_scheme = IDE_SMUC;
-	else if (!strnicmp(line, "PROFI", 5))
-		conf.ide_scheme = IDE_PROFI;
-	else if (!strnicmp(line, "DIVIDE", 6))
-		conf.ide_scheme = IDE_DIVIDE;
 
 	conf.ide_skip_real = GetPrivateProfileInt(hdd, "SkipReal", 0, ininame);
 	GetPrivateProfileString(hdd, "CDROM", "SPTI", line, sizeof line, ininame);
@@ -827,11 +772,9 @@ void load_config(const char* fname)
 	else if (!strnicmp(line, "D", 1))
 		default_drive = 3;
 
-	load_atm_font();
 	load_arch(ininame);
 	loadkeys(ac_main);
 #ifdef MOD_MONITOR
-	loadkeys(ac_main_xt);
 	loadkeys(ac_regs);
 	loadkeys(ac_trace);
 	loadkeys(ac_mem);
@@ -887,58 +830,12 @@ void apply_memory()
 
 	switch (conf.mem_model)
 	{
-	case MM_ATM710:
-	case MM_ATM3:
-		base_sos_rom = page_rom(0);
-		base_dos_rom = page_rom(1);
-		base_128_rom = page_rom(2);
-		base_sys_rom = page_rom(3);
-		break;
-
-	case MM_ATM450:
-	case MM_PROFI:
-	case MM_PHOENIX:
-		base_sys_rom = page_rom(0);
-		base_dos_rom = page_rom(1);
-		base_128_rom = page_rom(2);
-		base_sos_rom = page_rom(3);
-		break;
-
-	case MM_PLUS3:
-		base_128_rom = page_rom(0);
-		base_sys_rom = page_rom(1);
-		base_dos_rom = page_rom(2);
-		base_sos_rom = page_rom(3);
-		break;
-
-	case MM_QUORUM:
-		base_sys_rom = page_rom(0);
-		base_dos_rom = page_rom(1);
-		base_128_rom = page_rom(2);
-		base_sos_rom = page_rom(3);
-		break;
-
 	case MM_TSL:
 		base_sys_rom = page_rom(0);
 		base_dos_rom = page_rom(1);
 		base_128_rom = page_rom(2);
 		base_sos_rom = page_rom(3);
 		break;
-
-	case MM_KAY:
-		base_128_rom = page_rom(0);
-		base_sos_rom = page_rom(1);
-		base_dos_rom = page_rom(2);
-		base_sys_rom = page_rom(3);
-		break;
-
-	case MM_LSY256:
-		base_128_rom = page_rom(0);
-		base_sos_rom = page_rom(1);
-		base_dos_rom = page_rom(3);
-		base_sys_rom = page_rom(2);
-		break;
-
 	default:
 		base_sys_rom = page_rom(0);
 		base_dos_rom = page_rom(1);
@@ -961,44 +858,13 @@ void apply_memory()
 	}
 	else
 	{
-		if (conf.mem_model == MM_ATM710 || conf.mem_model == MM_ATM3)
-		{
-			romsize = load_rom(conf.mem_model == MM_ATM710 ? conf.atm2_rom_path : conf.atm3_rom_path, ROM_BASE_M, 64);
-			if (romsize != 64 && romsize != 128 && romsize != 512 && romsize != 1024)
-				errexit("invalid ROM size for ATM bios");
-			u8* lastpage = ROM_BASE_M + (romsize - 64) * 1024;
-			base_sos_rom = lastpage + 0 * PAGE;
-			base_dos_rom = lastpage + 1 * PAGE;
-			base_128_rom = lastpage + 2 * PAGE;
-			base_sys_rom = lastpage + 3 * PAGE;
-		}
-		else if (conf.mem_model == MM_PROFSCORP)
-		{
-			romsize = load_rom(conf.prof_rom_path, ROM_BASE_M, 16);
-			if (romsize != 64 && romsize != 128 && romsize != 256)
-				errexit("invalid PROF-ROM size");
-		}
-		else if (conf.mem_model == MM_GMX)
-		{
-			romsize = load_rom(conf.gmx_rom_path, ROM_BASE_M, 32);
-			if (romsize != 512)
-				errexit("invalid PROF-ROM size");
-		}
-		else
+		
 		{
 			char* romname = nullptr;
 			switch (conf.mem_model)
 			{
 			case MM_PENTAGON: romname = conf.pent_rom_path; break;
-			case MM_PROFI: romname = conf.profi_rom_path; break;
-			case MM_SCORP: romname = conf.scorp_rom_path; break;
-				//[vv]         case MM_KAY: romname = conf.kay_rom_path; break;
-			case MM_ATM450: romname = conf.atm1_rom_path; break;
-			case MM_PLUS3: romname = conf.plus3_rom_path; break;
-			case MM_QUORUM: romname = conf.quorum_rom_path; break;
 			case MM_TSL: romname = conf.tsl_rom_path; break;
-			case MM_LSY256: romname = conf.lsy_rom_path; break;
-			case MM_PHOENIX: romname = conf.phoenix_rom_path; break;
 
 			default:
 				errexit("ROMSET should be defined for this memory model");
@@ -1008,18 +874,6 @@ void apply_memory()
 			//if (romsize != 64)
 			  //  errexit("invalid ROM filesize");
 		}
-	}
-
-	if (conf.mem_model == MM_PROFSCORP)
-	{
-		temp.profrom_mask = 0;
-		if (romsize == 128)
-			temp.profrom_mask = 1;
-		if (romsize == 256)
-			temp.profrom_mask = 3;
-
-		comp.profrom_bank &= temp.profrom_mask;
-		set_scorp_profrom(0);
 	}
 
 #ifdef MOD_MONITOR
@@ -1075,12 +929,9 @@ void applyconfig()
 
 	if (conf.mem_model == MM_PENTAGON)
 		turbo((comp.pEFF7 & EFF7_GIGASCREEN) ? 1 : 2);
-	if (conf.mem_model == MM_ATM3)
-		set_turbo();
 
 	hdd.dev[0].configure(conf.ide + 0);
 	hdd.dev[1].configure(conf.ide + 1);
-	if (conf.atm.xt_kbd) input.atm51.clear();
 
 	if (conf.gs_type == 1)
 	{

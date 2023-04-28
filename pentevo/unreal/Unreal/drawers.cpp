@@ -8,7 +8,6 @@
 
 extern VCTR vid;
 extern CACHE_ALIGNED u32 vbuf[2][sizeof_vbuf];
-extern u8 fontatm2[2048];
 
 // ULA+ color models:
 //
@@ -205,39 +204,6 @@ static void draw_p384(int n)
 	vid.memvidcyc[vid.line] = vcyc;
 }
 
-// Sinclair double screen (debug)
-static void draw_zxw(int n)
-{
-	u32 g = ((vid.ygctr & 0x07) << 8) + ((vid.ygctr & 0x38) << 2) + ((vid.ygctr & 0xC0) << 5) + (vid.xctr & 0x1F);
-	u32 a = ((vid.ygctr & 0xF8) << 2) + (vid.xctr & 0x1F) + 0x1800;
-	u8 *scr = page_ram(comp.ts.vpage & 0xFD);
-	u32 vptr = vid.vptr;
-	u16 vcyc = vid.memvidcyc[vid.line];
-
-	for (; n > 0; n -= 4, vid.t_next += 4, vid.xctr++, g++, a++)
-	{
-		u8 p = scr[g];	// pixels
-		u8 c = scr[a];	// attributes
-		vcyc++;
-		u32 b = (c & 0x40) >> 3;
-		u32 p0 = vid.clut[(comp.ts.gpal << 4) | b | ((c >> 3) & 0x07)];	// color for 'PAPER'
-		u32 p1 = vid.clut[(comp.ts.gpal << 4) | b | (c & 0x07)];			// color for 'INK'
-		hires_draw
-		vptr += 248;
-
-		p = scr[g + PAGE*2];	// pixels
-		c = scr[a + PAGE*2];	// attributes
-		b = (c & 0x40) >> 3;
-		p0 = vid.clut[(comp.ts.gpal << 4) | b | ((c >> 3) & 0x07)];	// color for 'PAPER'
-		p1 = vid.clut[(comp.ts.gpal << 4) | b | (c & 0x07)];			// color for 'INK'
-		hires_draw
-		vptr -= 256;
-	}
-	vid.vptr = vptr;
-	vid.memvidcyc[vid.line] = vcyc;
-	if (vid.xctr & 0x20) vid.vptr += 256;
-}
-
 // Pentagon 16c
 static void draw_p16(int n)
 {
@@ -257,59 +223,6 @@ static void draw_p16(int n)
 		p16c_draw
 		c = scr[g + PAGE/2];		// page5, #2000
 		p16c_draw
-		vcyc += 2;
-	}
-	vid.vptr = vptr;
-	vid.memvidcyc[vid.line] = vcyc;
-}
-
-// ATM 16c
-static void draw_atm16(int n)
-{
-	u32 g = vid.ygctr * 40 + vid.xctr;
-	u8 *scr = page_ram(comp.ts.vpage);
-	u32 vptr = vid.vptr;
-	u16 vcyc = vid.memvidcyc[vid.line];
-	u32 p0, p1;
-
-	for (; n > 0; n -= 4, vid.t_next += 4, vid.xctr++, g++)
-	{
-		u8 c = scr[g - PAGE*4];		// page1, #0000
-		p16c_draw
-		c = scr[g];					// page5, #0000
-		p16c_draw
-		c = scr[g - PAGE*4 + PAGE/2];		// page1, #2000
-		p16c_draw
-		c = scr[g + PAGE/2];		// page5, #2000
-		p16c_draw
-		vcyc += 2;
-	}
-	vid.vptr = vptr;
-	vid.memvidcyc[vid.line] = vcyc;
-}
-
-// ATM HiRes
-static void draw_atmhr(int n)
-{
-	u32 g = vid.ygctr * 40 + vid.xctr;
-	u8 *scr = page_ram(comp.ts.vpage);
-	u32 vptr = vid.vptr;
-	u16 vcyc = vid.memvidcyc[vid.line];
-
-	for (; n > 0; n -= 4, vid.t_next += 4, vid.xctr++, g++)
-	{
-		u8 p = scr[g];				// page5, #0000
-		u8 c = scr[g - PAGE*4];		// page1, #0000
-		u32 p0 = vid.clut[(comp.ts.gpal << 4) | ((c & 0x80) >> 4) | ((c >> 3) & 0x07)];
-		u32 p1 = vid.clut[(comp.ts.gpal << 4) | ((c & 0x40) >> 3) | (c & 0x07)];
-		hires_draw
-
-		p = scr[g + PAGE/2];				// page5, #0000
-		c = scr[g - PAGE*4 + PAGE/2];		// page1, #0000
-		p0 = vid.clut[(comp.ts.gpal << 4) | ((c & 0x80) >> 4) | ((c >> 3) & 0x07)];	// true color for bit=0 (PAPER)
-		p1 = vid.clut[(comp.ts.gpal << 4) | ((c & 0x40) >> 3) | (c & 0x07)];       	// true color for bit=1 (INK)
-		hires_draw
-
 		vcyc += 2;
 	}
 	vid.vptr = vptr;
@@ -338,63 +251,6 @@ static void draw_tstx(int n)
 		vid.xctr = (vid.xctr + 1) & 0x7F;
 		vcyc += 2;
 		vid.memcyc_lcmd += 2;
-	}
-	vid.vptr = vptr;
-	vid.memvidcyc[vid.line] = vcyc;
-}
-
-// ATM2 text
-static void draw_atm2tx(int n)
-{
-	u8 *scrs = page_ram(comp.ts.vpage);		// video memory symbols address
-	u8 *scra = page_ram(comp.ts.vpage-4);	// video memory attrs address
-	u8 *fnt = fontatm2;						// font address
-	u32 vptr = vid.vptr;					// address in videobuffer
-	u16 vcyc = vid.memvidcyc[vid.line];
-	u32 y = vid.ygctr >> 3;					// row
-	u8 line = vid.ygctr & 7;				// line (0-7)
-
-	for (; n > 0; n -= 2, vid.t_next += 2)
-	{
-		u32 ss = (vid.xctr & 1) ? 0x21C0 : 0x01C0;	// left/right symbol offset
-		u32 sa = (vid.xctr & 1) ? 0x01C1 : 0x21C0;	// left/right attr offset
-		u32 x = vid.xctr >> 1;						// pair column
-		u8 sym = scrs[(y * 64) + x + ss];			// symbol code
-		u8 atr = scra[(y * 64) + x + sa];			// symbol attribute
-		u8 p = fnt[(line << 8) + sym];				// pixels
-		u32 p0 = vid.clut[(comp.ts.gpal << 4) | ((atr & 0x80) >> 4) | ((atr >> 3) & 0x07)];	// true color for bit=0 (PAPER)
-		u32 p1 = vid.clut[(comp.ts.gpal << 4) | ((atr & 0x40) >> 3) | (atr & 0x07)];       	// true color for bit=1 (INK)
-		hires_draw
-		vid.xctr = (vid.xctr + 1) & 0x7F;
-		vcyc += 2;
-	}
-	vid.vptr = vptr;
-	vid.memvidcyc[vid.line] = vcyc;
-}
-
-// ATM3 text
-static void draw_atm3tx(int n)
-{
-	u8 *scr = page_ram(comp.ts.vpage & 2 | 8);		// video memory address
-	u8 *fnt = fontatm2;						// font address
-	u32 y = vid.ygctr >> 3;					// row
-	u8 line = vid.ygctr & 7;				// line (0-7)
-	u32 vptr = vid.vptr;					// address in videobuffer
-	u16 vcyc = vid.memvidcyc[vid.line];
-
-	for (; n > 0; n -= 2, vid.t_next += 2)
-	{
-		u32 ss = (vid.xctr & 1) ? 0x11C0 : 0x01C0;	// left/right symbol offset
-		u32 sa = (vid.xctr & 1) ? 0x21C1 : 0x31C0;	// left/right attr offset
-		u32 x = vid.xctr >> 1;						// pair column
-		u8 sym = scr[(y * 64) + x + ss];			// symbol code
-		u8 atr = scr[(y * 64) + x + sa];			// symbol attribute
-		u8 p = fnt[(line << 8) + sym];				// pixels
-		u32 p0 = vid.clut[(comp.ts.gpal << 4) | ((atr & 0x80) >> 4) | ((atr >> 3) & 0x07)];	// true color for bit=0 (PAPER)
-		u32 p1 = vid.clut[(comp.ts.gpal << 4) | ((atr & 0x40) >> 3) | (atr & 0x07)];       	// true color for bit=1 (INK)
-		hires_draw
-		vid.xctr = (vid.xctr + 1) & 0x7F;
-		vcyc += 2;
 	}
 	vid.vptr = vptr;
 	vid.memvidcyc[vid.line] = vcyc;
@@ -554,73 +410,6 @@ void draw_ts(u32 vptr)
   }
 }
 
-// Profi
-static void draw_profi(int n)
-{
-	u32 g = ((vid.ygctr & 0x07) << 8) | ((vid.ygctr & 0x38) << 2) | ((vid.ygctr & 0xC0) << 5) | (vid.xctr & 0x1F);
-	u8 *scr = page_ram(comp.p7FFD & 8 ? 6 : 4);
-	u32 vptr = vid.vptr;
-	u16 vcyc = vid.memvidcyc[vid.line];
-    u8 tsgpal = comp.ts.gpal << 4;
-
-	for (; n > 0; n -= 4, vid.t_next += 4, vid.xctr++, g++)
-	{
-		u32 p0, p1;
-		u8 p, c = (comp.pFE & 7) | ((comp.pFE & 7 ^ 7) << 3);
-		
-		p = scr[g | 0x2000];
-		if ( !conf.profi_monochrome )
-			c = scr[g | 0x2000 | PAGE*0x34];
-		p0 = vid.clut[tsgpal | ((c & 0x80) >> 4) | ((c >> 3) & 0x07)];	// color for 'PAPER'
-		p1 = vid.clut[tsgpal | ((c & 0x40) >> 3) | (c & 0x07)];			// color for 'INK'
-		hires_draw
-
-		p = scr[g];
-		if ( !conf.profi_monochrome )
-			c = scr[g | PAGE*0x34];
-		p0 = vid.clut[tsgpal | ((c & 0x80) >> 4) | ((c >> 3) & 0x07)];	// color for 'PAPER'
-		p1 = vid.clut[tsgpal | ((c & 0x40) >> 3) | (c & 0x07)];			// color for 'INK'
-		hires_draw
-
-		vcyc += 2;
-	}
-	vid.vptr = vptr;
-	vid.memvidcyc[vid.line] = vcyc;
-}
-
-// GMX
-static void draw_gmx(int n)
-{
-	int g = vid.xctr + vid.ygctr * 80 + (((comp.p7CFD << 8) + comp.p7AFD) & 0x3FFF);
-	u8 *scr = page_ram(comp.p7FFD & 8 ? 0x3B : 0x39);
-	u32 vptr = vid.vptr;
-	u16 vcyc = vid.memvidcyc[vid.line];
-    u8 tsgpal = comp.ts.gpal << 4;
-
-	for (; n > 0; n -= 2, vid.t_next += 2, vid.xctr++, g++)
-	{
-		u32 p0, p1;
-		u8 p, c;
-
-		/* loop screen */
-		if ( g >= 16000 )
-			g -= 16000;
-	
-		p = scr[g];
-		c = scr[g + PAGE*0x40];
-		if ((c & 0x80) && (comp.frame_counter & 0x10))
-			p ^= 0xFF; // flash
-		u32 b = (c & 0x40) >> 3;
-		p0 = vid.clut[tsgpal | b | ((c >> 3) & 0x07)];	// color for 'PAPER'
-		p1 = vid.clut[tsgpal | b | (c & 0x07)];			// color for 'INK'
-		hires_draw	
-
-		vcyc ++;
-	}
-	vid.vptr = vptr;
-	vid.memvidcyc[vid.line] = vcyc;
-}
-
 DRAWER drawers[] = {
 	{ draw_border	},	// Border only
 	{ draw_nul		},	// Non-existing mode
@@ -632,10 +421,4 @@ DRAWER drawers[] = {
 	{ draw_ts16		},	// TS 16c
 	{ draw_ts256	},	// TS 256c
 	{ draw_tstx		},	// TS Text
-	{ draw_atm16	},	// ATM 16c
-	{ draw_atmhr	},	// ATM HiRes
-	{ draw_atm2tx	},	// ATM Text
-	{ draw_atm3tx	},	// ATM Text linear
-	{ draw_profi	},	// Profi
-	{ draw_gmx		},	// GMX
 };

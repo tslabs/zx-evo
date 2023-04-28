@@ -445,7 +445,7 @@ void unpack_page(u8 *dst, int dstlen, u8 *src, int srclen)
 int read_z80()
 {
    //conf.mem_model = MM_PENTAGON; conf.ramsize = 128;  // molodcov_alex
-   hdrZ80 *hdr = (hdrZ80*)snbuf;
+   auto*hdr = reinterpret_cast<hdrZ80*>(snbuf);
    u8 *ptr = snbuf + 30;
    u8 model48k = (hdr->model < 3);
    reset((model48k|(hdr->p7FFD & 0x10)) ? RM_SOS : RM_128);
@@ -507,9 +507,6 @@ int read_z80()
    comp.border_attr = comp.pFE;
    cpu.iff1 = hdr->iff1, cpu.iff2 = hdr->iff2; cpu.im = (hdr->im & 3);
    comp.p7FFD = (model48k) ? 0x30 : hdr->p7FFD;
-
-   if (hdr->len == 55) // version 3.0 (with 1ffd)
-       comp.p1FFD = hdr->p1FFD;
 
    if (model48k)
        comp.pEFF7 |= EFF7_LOCKMEM; //Alone Coder

@@ -917,8 +917,6 @@ static void FMCloseTable( void )
 /* CSM Key Controll */
 void CSMKeyControll(FM_CH *CH)
 {
-    /* this is wrong, atm */
-
     /* all key on */
     FM_KEYON(CH,SLOT1);
     FM_KEYON(CH,SLOT2);

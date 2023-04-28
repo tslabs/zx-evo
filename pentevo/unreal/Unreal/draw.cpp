@@ -71,37 +71,6 @@ unsigned colortab_s24[0x100];
 
 PALETTEENTRY pal0[0x100]; // emulator palette
 
-void AtmVideoController::PrepareFrameATM2(int VideoMode)
-{
-    for (int y=0; y<256; y++)
-    {
-        if ( VideoMode == 6 )
-        {
-            // смещения в текстовом видеорежиме
-            Scanlines[y].Offset = 64*(y/8);
-        } else {
-            // смещения в растровом видеорежиме
-            Scanlines[y].Offset = (y<56) ? 0 : 40*(y-56);
-        }
-        Scanlines[y].VideoMode = VideoMode;
-    }
-    CurrentRayLine = 0;
-    IncCounter_InRaster = 0;
-    IncCounter_InBorder = 0;
-}
-
-void AtmVideoController::PrepareFrameATM1(int VideoMode)
-{
-    for (int y=56; y<256; y++)
-    {
-        Scanlines[y].Offset = 40*(y-56);
-        Scanlines[y].VideoMode = VideoMode;
-    }
-}
-
-
-AtmVideoController AtmVideoCtrl;
-
 unsigned getYUY2(unsigned r, unsigned g, unsigned b)
 {
    int y = (int)(0.29*r + 0.59*g + 0.14*b);
@@ -531,25 +500,8 @@ void apply_video()
 
    load_ula_preset();
    temp.rflags = renders[conf.render].flags;
-   if (conf.use_comp_pal && (conf.mem_model == MM_ATM710 || conf.mem_model == MM_ATM3 || conf.mem_model == MM_ATM450 || conf.mem_model == MM_PROFI))
-   {
-      temp.rflags |= RF_COMPPAL | RF_PALB;
-      // disable palette noflic, only if it is really used
-      if (temp.obpp == 8 && (temp.rflags & (RF_DRIVER | RF_USEFONT | RF_8BPCH)) == RF_DRIVER)
-      conf.noflic = 0;
-   }
 
    set_video();
-//   video_timing_tables();
-
-   // Console info about selected video option
-   //printf("\n");
-   //color(CONSCLR_HARDINFO);
-   //printf("Display: %ux%u\n", conf.framexsize, conf.frameysize);
-   //printf("Render: %s\n", renders[conf.render].name);
-   //printf("Driver: %s\n", drivers[conf.driver].name);
-   //printf("Bits per pixel: %u\n", temp.obpp);
-   //printf("Window dimensions: %ux%u\n", temp.ox, temp.oy);
 }
 
 __inline u8 *raypointer()
@@ -570,14 +522,7 @@ __inline void clear_until_ray()
 
 void paint_scr(char alt) // alt=0/1 - main/alt screen, alt=2 - ray-painted
 {
-   /*if (alt == 2) {
-      clear_until_ray();
-   } else {
-	   // !!! here need to handle comp.ts.vpage somehow, now it's unhandled
-      if (alt) comp.p7FFD ^= 8, set_banks();
-		draw_screen();
-      if (alt) comp.p7FFD ^= 8, set_banks();
-   }*/
+   
 }
 
 u32 get_free_memcycles(int dram_t)
@@ -721,36 +666,7 @@ void init_raster()
 
 	u8 m = EFF7_4BPP | EFF7_HWMC;
 
-	// ATM 1
-	if ((conf.mem_model == MM_ATM450) && (((comp.aFE >> 5) & 3) != FF77_ZX))
-	{
-		vid.raster = raster[R_320_200];
-		if (((comp.aFE >> 5) & 3) == aFE_16) { vid.mode = M_ATM16; return; }
-		if (((comp.aFE >> 5) & 3) == aFE_MC) { vid.mode = M_ATMHR; return; }
-		vid.mode = M_NUL; return;
-	}
-
-	// ATM 2 & 3
-	if ((conf.mem_model == MM_ATM710 || conf.mem_model == MM_ATM3) && ((comp.pFF77 & 7) != FF77_ZX))
-	{
-		vid.raster = raster[R_320_200];
-		if (conf.mem_model == MM_ATM3 && (comp.pEFF7 & m)) { vid.mode = M_NUL; return; }	// EFF7 AlCo bits must be 00, or invalid mode
-		if ((comp.pFF77 & 7) == FF77_16) { vid.mode = M_ATM16; return; }
-		if ((comp.pFF77 & 7) == FF77_MC) { vid.mode = M_ATMHR; return; }
-		if ((comp.pFF77 & 7) == FF77_TX) { vid.mode = M_ATMTX; return; }
-		if (conf.mem_model == MM_ATM3 && (comp.pFF77 & 7) == FF77_TL) { vid.mode = M_ATMTL; return; }
-		vid.mode = M_NUL; return;
-	}
-
 	vid.raster = raster[R_256_192];
-
-	// ATM 3 AlCo modes
-	if (conf.mem_model == MM_ATM3 && (comp.pEFF7 & m))
-	{
-		if ((comp.pEFF7 & m) == EFF7_4BPP) { vid.mode = M_P16; return; }
-		if ((comp.pEFF7 & m) == EFF7_HWMC) { vid.mode = M_PMC; return; }
-		vid.mode = M_NUL; return;
-	}
 
 	// Pentagon AlCo modes
 	m = EFF7_4BPP | EFF7_512 | EFF7_384 | EFF7_HWMC;
@@ -761,18 +677,6 @@ void init_raster()
 		if ((comp.pEFF7 & m) == EFF7_512) { vid.mode = M_PHR; return; }
 		if ((comp.pEFF7 & m) == EFF7_384) { vid.raster = raster[R_384_304]; vid.mode = M_P384; return; }
 		vid.mode = M_NUL; return;
-	}
-
-	if (conf.mem_model == MM_PROFI && (comp.pDFFD & 0x80))
-	{
-		vid.raster = raster[R_512_240];
-		vid.mode = M_PROFI; return;
-	}
-
-	if (conf.mem_model == MM_GMX && (comp.p7EFD & 0x08))
-	{
-		vid.raster = raster[R_320_200];
-		vid.mode = M_GMX; return;
 	}
 
 	// Sinclair

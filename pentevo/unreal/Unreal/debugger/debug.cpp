@@ -344,9 +344,6 @@ u8 isbrk(const Z80 &cpu) // is there breakpoints active or any other reason to u
 		return 1;
 #endif
 
-	if (conf.mem_model == MM_PROFSCORP)
-		return 1; // breakpoint on read ROM switches ROM bank
-
 #ifdef MOD_MONITOR
 	if (cpu.cbpn)
 		return 1;

@@ -163,8 +163,6 @@ unsigned process_msgs()
       // bcoz window will be closed on alt-f4
       if (msg.message == WM_KEYDOWN || msg.message == WM_SYSKEYDOWN)
       {
-         if (conf.atm.xt_kbd)
-             input.atm51.setkey(msg.lParam >> 16, 1);
          switch (( msg.lParam>>16)&0x1FF)
          {
             case 0x02a: kbdpcEX[0]=(kbdpcEX[0]^0x01)|0x80; break;
@@ -179,7 +177,6 @@ unsigned process_msgs()
       }
       else if (msg.message == WM_KEYUP || msg.message == WM_SYSKEYUP)
       {
-         if (conf.atm.xt_kbd) input.atm51.setkey(msg.lParam >> 16, 0);
          switch (( msg.lParam>>16)&0x1FF)
          {
             case 0x02a: kbdpcEX[0]&=0x01; kbdpcEX[1]&=0x01; break;

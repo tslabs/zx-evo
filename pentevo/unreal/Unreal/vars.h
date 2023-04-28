@@ -142,7 +142,6 @@ extern HWND debug_wnd;
 extern unsigned nowait;
 
 extern action ac_main[];
-extern action ac_main_xt[];
 extern action ac_mon[];
 extern action ac_regs[];
 extern action ac_trace[];

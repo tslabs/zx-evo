@@ -416,7 +416,6 @@ FONT 8, "MS Sans Serif", 0, 0, 1
     AUTOCHECKBOX    "PC &Layout", IDC_PC_LAYOUT, 7, 81, 49, 10
     AUTOCHECKBOX    "Al&t locks ZX keys", IDC_ALTLOCK, 7, 96, 71, 10
     AUTOCHECKBOX    "Kem&pston on mouse", IDC_JOYMOUSE, 98, 56, 85, 10
-    AUTOCHECKBOX    "ATM keyboard &controller", IDC_ATM_KBD, 98, 69, 93, 10
     LTEXT           "Keys mappin&g:", IDC_STATIC, 63, 83, 48, 8, SS_LEFT
     COMBOBOX        IDC_KLAYOUT, 113, 81, 78, 80, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
     AUTOCHECKBOX    "&Autofire", IDC_AUTOFIRE, 85, 96, 38, 10
@@ -647,9 +646,6 @@ FONT 8, "MS Sans Serif", 0, 0, 0
     EDITTEXT        IDE_INT, 133, 64, 40, 12, ES_AUTOHSCROLL
     RTEXT           "in&t len", IDC_STATIC, 105, 79, 21, 8, SS_RIGHT
     EDITTEXT        IDE_INT_LEN, 133, 77, 40, 12, ES_AUTOHSCROLL
-    AUTOCHECKBOX    "&Swap A5-A7, A8-A10 on ATM RG0", IDC_ATM_SWAP, 7, 115, 127, 10
-    AUTOCHECKBOX    "Use p&alette", IDC_ATMPAL, 7, 102, 52, 10
-    AUTOCHECKBOX    "Profi &monochrome", IDC_PROFI_MONOCHROME, 7, 128, 73, 10
     AUTOCHECKBOX    "Port &FF", IDC_PORT_FF, 7, 89, 39, 10
 }
 

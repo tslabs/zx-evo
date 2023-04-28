@@ -164,10 +164,6 @@ void __cdecl BankNames(int i, char *name)
 		strcpy(name, "TRDOS");
 	if (bankr[i] == base_128_rom)
 		strcpy(name, "B128K");
-	if (bankr[i] == base_sys_rom && (conf.mem_model == MM_PROFSCORP || conf.mem_model == MM_SCORP || conf.mem_model == MM_GMX))
-		strcpy(name, "SVM  ");
-	if ((conf.mem_model == MM_PROFSCORP || conf.mem_model == MM_SCORP || conf.mem_model == MM_GMX) && is_rom && rom_bank > 3)
-		sprintf(name, "ROM%2X", rom_bank);
 
 	if (bankr[i] == CACHE_M)
 		strcpy(name, (conf.cache != 32) ? "CACHE" : "CACH0");
@@ -254,37 +250,10 @@ void showports()
 	sprintf(ln, "  FE:%02X", comp.pFE);
 	tprint(ports_x, ports_y, ln, w_other);
 	sprintf(ln, "7FFD:%02X", comp.p7FFD);
-	tprint(ports_x, ports_y + 1, ln, (comp.p7FFD & 0x20) &&
-		!((conf.mem_model == MM_PENTAGON && conf.ramsize == 1024) ||
-		(conf.mem_model == MM_PROFI && (comp.pDFFD & 0x10))) ? w_48_k : w_other);
+	tprint(ports_x, ports_y + 1, ln, (comp.p7FFD & 0x20) && !((conf.mem_model == MM_PENTAGON && conf.ramsize == 1024)) ? w_48_k : w_other);
 
-	switch (conf.mem_model)
-	{
-	case MM_KAY:
-	case MM_SCORP:
-	case MM_PROFSCORP:
-	case MM_GMX:
-	case MM_PLUS3:
-	case MM_PHOENIX:
-		dbg_extport = 0x1FFD; dgb_extval = comp.p1FFD;
-		break;
-	case MM_PROFI:
-		dbg_extport = 0xDFFD; dgb_extval = comp.pDFFD;
-		break;
-	case MM_ATM450:
-		dbg_extport = 0xFDFD; dgb_extval = comp.pFDFD;
-		break;
-	case MM_ATM710:
-	case MM_ATM3:
-		dbg_extport = (comp.aFF77 & 0xFFFF);
-		dgb_extval = comp.pFF77;
-		break;
-	case MM_QUORUM:
-		dbg_extport = 0x0000; dgb_extval = comp.p00;
-		break;
-	default:
-		dbg_extport = -1;
-	}
+	dbg_extport = -1;
+
 	if (dbg_extport != UINT_MAX)
 		sprintf(ln, "%04X:%02X", dbg_extport, dgb_extval);
 	else

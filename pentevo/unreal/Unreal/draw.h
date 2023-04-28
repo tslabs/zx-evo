@@ -174,31 +174,6 @@ struct videopoint
    unsigned scr_offs;
 };
 
-struct AtmVideoController
-{
-    struct ScanLine
-    {
-        int Offset; // смещение внутри АТМ видеостраницы
-        int VideoMode; // видеорежим для данной сканлинии
-    };
-    void PrepareFrameATM2(int VideoMode);
-    void PrepareFrameATM1(int VideoMode);
-
-    ScanLine Scanlines[256]; // параметры 56 надбордерных сканлиний и 200 растровых сканлиний
-
-    // Если инкременты видеоадреса происходят до фактической отрисовки сканлинии -
-    // то они применяются к её началу и сохраняются в соответствующем поле .offset этой сканлинии.
-    //
-    // Если инкременты видеоадреса происходят в момент отрисовки растра или сразу за ним -
-    // то они применяются к следующей сканлинии.
-    // Чтобы вести учёт накопления инкрементов используются следующие два поля:
-    int CurrentRayLine; // номер текущей сканлинии, на которой происходит накопление инкрементов
-    int IncCounter_InRaster; // счётчик для накопления +64 инкрементов, сделанных на растре
-    int IncCounter_InBorder; // счётчик для накопления +64 инкрементов, сделанных на бордюре
-};
-
-extern AtmVideoController AtmVideoCtrl;
-
 static const int rb2_offs = MAX_HEIGHT*MAX_WIDTH_P;
 static const int sizeof_rbuf = rb2_offs*(MAX_BUFFERS+2);
 static const int sizeof_vbuf = VID_HEIGHT*VID_WIDTH*2;

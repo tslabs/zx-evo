@@ -63,7 +63,6 @@ action ac_main[] =
    { "main.saveram", main_save_ram },
    { "main.saveall", main_save },
    { "main.lockmouse", main_mouse },
-   { "main.xtkbd", main_atmkbd },
    { "main.pastetext", main_pastetext },
    { "main.size1", main_size1 },
    { "main.size2", main_size2 },
@@ -72,13 +71,6 @@ action ac_main[] =
    { "main.help", main_help },
    { "main.tsutoggle", main_tsutoggle },
    { "main.flictoggle", main_flictoggle },
-
-   { 0, 0 },
-};
-
-action ac_main_xt[] =
-{
-   { "main.xtkbd", main_atmkbd },
 
    { 0, 0 },
 };

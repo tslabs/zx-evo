@@ -45,7 +45,6 @@ void main_keystick();
 void main_autofire();
 void main_save_ram();
 void main_save();
-void main_atmkbd();
 void main_pastetext();
 void main_size1();
 void main_size2();

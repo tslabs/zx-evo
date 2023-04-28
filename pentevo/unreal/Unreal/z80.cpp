@@ -5,13 +5,11 @@
 #include "draw.h"
 #include "memory.h"
 #include "sound.h"
-#include "atm.h"
 #include "tsconf.h"
 #include "gs.h"
 #include "emulkeys.h"
 #include "op_system.h"
 #include "op_noprefix.h"
-#include "fontatm2.h"
 #include "z80.h"
 
 #include "saa1099.h"
@@ -93,9 +91,7 @@ void reset(ROM_MODE mode)
         apply_sound();
    } //Alone Coder 0.36.4
    comp.t_states = 0; comp.frame_counter = 0;
-   comp.p7FFD = comp.pDFFD = comp.pFDFD = comp.p1FFD = 0;
-   comp.p7EFD = comp.p78FD = comp.p7AFD = comp.p7CFD = comp.gmx_config = comp.gmx_magic_shift = 0;
-   comp.pLSY256 = 0;
+   comp.p7FFD =  0;
 
    comp.ulaplus_mode=0;
    comp.ulaplus_reg=0;
@@ -106,58 +102,13 @@ void reset(ROM_MODE mode)
 		set_clk();		// turbo 2x (7MHz) for TS-Conf
    else
 		turbo(1);		// turbo 1x (3.5MHz) for all other clones
-        
-   if (conf.mem_model == MM_LSY256)
-        mode = RM_SYS;
-   
+
    switch (mode)
    {
 	case RM_SYS: {comp.ts.memconf = 4; break;}
 	case RM_DOS: {comp.ts.memconf = 0; break;}
 	case RM_128: {comp.ts.memconf = 0; break;}
 	case RM_SOS: {comp.ts.memconf = 0; break;}
-   }
-
-   comp.p00 = comp.p80FD = 0; 	// quorum
-
-   comp.pBF = 0; // ATM3
-   comp.pBE = 0; // ATM3
-
-   if (conf.mem_model == MM_ATM710 || conf.mem_model == MM_ATM3)
-   {
-       switch(mode)
-       {
-       case RM_DOS:
-           // Запрет палитры, запрет cpm, включение диспетчера памяти
-           // Включение механической клавиатуры, разрешение кадровых прерываний
-           set_atm_FF77(0x4000 | 0x200 | 0x100, 0x80 | 0x40 | 0x20 | 3);
-           comp.pFFF7[0] = 0x100 | 1; // trdos
-           comp.pFFF7[1] = 0x200 | 5; // ram 5
-           comp.pFFF7[2] = 0x200 | 2; // ram 2
-           comp.pFFF7[3] = 0x200;     // ram 0
-
-           comp.pFFF7[4] = 0x100 | 1; // trdos
-           comp.pFFF7[5] = 0x200 | 5; // ram 5
-           comp.pFFF7[6] = 0x200 | 2; // ram 2
-           comp.pFFF7[7] = 0x200;     // ram 0
-       break;
-       default:
-           set_atm_FF77(0,0);
-       }
-   }
-
-   if (conf.mem_model == MM_ATM450)
-   {
-       switch(mode)
-       {
-       case RM_DOS:
-           set_atm_aFE(0x80|0x60);
-           comp.aFB = 0;
-       break;
-       default:
-           set_atm_aFE(0x80);
-           comp.aFB = 0x80;
-       }
    }
 
    comp.flags = 0;
@@ -177,7 +128,6 @@ void reset(ROM_MODE mode)
    comp.ide_hi_byte_w = 0;
    comp.ide_hi_byte_w1 = 0;
    hdd.reset();
-   input.atm51.reset();
    input.buffer.Enable(false);
 
    if ((!conf.trdos_present && mode == RM_DOS) ||

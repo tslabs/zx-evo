@@ -37,7 +37,6 @@
     <Library Include="lib\dxerr8.lib" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="atm.cpp" />
     <ClCompile Include="cheat.cpp" />
     <ClCompile Include="config.cpp" />
     <ClCompile Include="daa_tabs.cpp">
@@ -72,11 +71,7 @@
     <ClCompile Include="emul_2203.cpp" />
     <ClCompile Include="fntsrch.cpp" />
     <ClCompile Include="font.cpp" />
-    <ClCompile Include="font14.cpp" />
     <ClCompile Include="font16.cpp" />
-    <ClCompile Include="font8.cpp" />
-    <ClCompile Include="fontatm2.cpp" />
-    <ClCompile Include="fontdata.cpp" />
     <ClCompile Include="ft812.cpp" />
     <ClCompile Include="getopt.cpp" />
     <ClCompile Include="gs.cpp" />
@@ -180,10 +175,8 @@
     <ClCompile Include="z80asm.cpp" />
     <ClCompile Include="zc.cpp" />
     <ClCompile Include="zf232.cpp" />
-    <ClCompile Include="zxevo.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="atm.h" />
     <ClInclude Include="bass.h" />
     <ClInclude Include="cheat.h" />
     <ClInclude Include="config.h" />
@@ -217,11 +210,7 @@
     <ClInclude Include="emul_2203.h" />
     <ClInclude Include="fntsrch.h" />
     <ClInclude Include="font.h" />
-    <ClInclude Include="font14.h" />
     <ClInclude Include="font16.h" />
-    <ClInclude Include="font8.h" />
-    <ClInclude Include="fontatm2.h" />
-    <ClInclude Include="fontdata.h" />
     <ClInclude Include="ft812.h" />
     <ClInclude Include="funcs.h" />
     <ClInclude Include="getopt.h" />
@@ -279,7 +268,6 @@
     <ClInclude Include="z80_main.h" />
     <ClInclude Include="zc.h" />
     <ClInclude Include="zf232.h" />
-    <ClInclude Include="zxevo.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Unreal.rc" />

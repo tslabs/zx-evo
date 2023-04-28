@@ -84,7 +84,6 @@
 #define IDE_DISK_D                              1055
 #define IDB_INS_D                               1056
 #define IDB_REM_D                               1057
-#define IDC_ATM_SWAP                            1059
 #define IDC_LED_AYKBD                           1063
 #define IDC_MOUSESCALE                          1065
 #define IDC_KEYMATRIX                           1066
@@ -216,9 +215,6 @@
 #define IDC_LEFT                                1179
 #define IDC_RIGHT                               1180
 #define IDC_ALTLOCK                             1181
-#define IDC_ATMPAL                              1181
-#define IDC_ATM_KBD                             1182
-#define IDC_PROFI_MONOCHROME                    1182
 #define IDC_R3039                               1183
 #define IDC_R415A                               1184
 #define IDC_R617A                               1185

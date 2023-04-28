@@ -14,7 +14,7 @@ u8 rm(unsigned addr)
 #endif
 
 #ifdef MOD_GSZ80
-	if ((temp.gsdmaon != 0) && ((conf.mem_model == MM_PENTAGON) || (conf.mem_model == MM_ATM3)) && ((addr & 0xc000) == 0) && ((comp.pEFF7 & EFF7_ROCACHE) == 0))
+	if ((temp.gsdmaon != 0) && (conf.mem_model == MM_PENTAGON) && ((addr & 0xc000) == 0) && ((comp.pEFF7 & EFF7_ROCACHE) == 0))
 	{
 		const u8* tmp = GSRAM_M + ((temp.gsdmaaddr - 1) & 0x1FFFFF);
 		temp.gsdmaaddr = (temp.gsdmaaddr + 1) & 0x1FFFFF;
@@ -85,10 +85,9 @@ void wm(unsigned addr, u8 val)
 #endif
 
 #ifdef MOD_GSZ80
-	if ((temp.gsdmaon != 0) && ((conf.mem_model == MM_PENTAGON) || (conf.mem_model == MM_ATM3)) && ((addr & 0xc000) == 0))
+	if ((temp.gsdmaon != 0) && (conf.mem_model == MM_PENTAGON) && ((addr & 0xc000) == 0))
 	{
-		u8* tmp;
-		tmp = GSRAM_M + temp.gsdmaaddr;
+		u8* tmp = GSRAM_M + temp.gsdmaaddr;
 		*tmp = val;
 		temp.gsdmaaddr++;
 		z80gs::flush_gs_z80();
@@ -145,13 +144,6 @@ void wm(unsigned addr, u8 val)
 		u16 cache_pointer = addr & 0x1FE;
 		cpu.tscache_addr[cache_pointer] = cpu.tscache_addr[cache_pointer + 1] = -1;    // invalidate two 8-bit addresses
 		vid.memcpucyc[cpu.t / 224]++;
-	}
-
-	if ((conf.mem_model == MM_ATM3) && (comp.pBF & 4) /*&& ((addr & 0xF800) == 0)*/) // Разрешена загрузка шрифта для ATM3 // lvd: any addr is possible in ZXEVO
-	{
-		unsigned idx = ((addr & 0x07F8) >> 3) | ((addr & 7) << 8);
-		fontatm2[idx] = val;
-		return;
 	}
 
 	u8* a = bankw[(addr >> 14) & 3];
@@ -235,13 +227,6 @@ void Z80FAST step()
 		(normal_opcode[opcode])(&cpu);
 	}
 
-	/* [vv]
-	//todo if (comp.turbo)cpu.t-=tbias[cpu.t-oldt]
-	   if ( ((conf.mem_model == MM_PENTAGON) && ((comp.pEFF7 & EFF7_GIGASCREEN)==0)) ||
-		   ((conf.mem_model == MM_ATM710) && (comp.pFF77 & 8)))
-		   cpu.t -= (cpu.t-oldt) >> 1; //0.37
-	//~todo
-	*/
 #ifdef Z80_DBG
 	if ((comp.flags & CF_PROFROM) && ((membits[0x100] | membits[0x104] | membits[0x108] | membits[0x10C]) & MEMBITS_R))
 	{
@@ -307,44 +292,11 @@ void z80loop_other()
 
 	while (cpu.t < conf.frame)
 	{
-		// Baseconf NMI trap
-		if (conf.mem_model == MM_ATM3 && (comp.pBF & 0x10) && (cpu.pc == comp.pBD))
-			nmi_pending = 1;
-
 		// NMI processing
 		if (nmi_pending)
 		{
-			if (conf.mem_model == MM_ATM3)
-			{
-				nmi_pending = 0;
-				cpu.nmi_in_progress = true;
-				set_banks();
-				m_nmi(RM_NOCHANGE);
-				continue;
-			}
-			else if (conf.mem_model == MM_PROFSCORP || conf.mem_model == MM_SCORP)
-			{
-				nmi_pending--;
-				if (cpu.pc > 0x4000)
-				{
-					m_nmi(RM_DOS);
-					nmi_pending = 0;
-				}
-			}
-			else
-				nmi_pending = 0;
+			nmi_pending = 0;
 		} // end if (nmi_pending)
-
-		// Baseconf NMI
-		if (comp.pBE)
-		{
-			if (conf.mem_model == MM_ATM3 && comp.pBE == 1)
-			{
-				cpu.nmi_in_progress = false;
-				set_banks();
-			}
-			comp.pBE--;
-		}
 
 		// Reset INT
 		if (!int_occurred && cpu.t >= int_start)

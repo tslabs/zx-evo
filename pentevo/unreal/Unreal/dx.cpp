@@ -73,7 +73,6 @@ size_t renders_count = _countof(renders);
 BORDSIZE bordersizes[] =
 {
    { "256x192 (ZX)", 140, 80, 256, 192 },
-   { "320x200 (ATM)", 108, 76, 320, 200 },
    { "320x240 (TS)", 108, 56, 320, 240 },
    { "360x288 (TS full)", 88, 32, 360, 288 },
    { "384x304 (AlCo)", 64, 16, 384, 304 },

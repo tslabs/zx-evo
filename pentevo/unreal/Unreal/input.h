@@ -52,22 +52,6 @@ public:
     }
 };
 
-struct ATM_KBD
-{
-   union {
-      u8 zxkeys[8];
-      unsigned zxdata[2];
-   };
-   u8 mode, R7, lastscan, cmd;
-   u8 kR1, kR2, kR3, kR4, kR5;
-
-   void processzx(unsigned scancode, u8 pressed);
-   u8 read(u8 scan, u8 zxdata);
-   void setkey(unsigned scancode, u8 pressed);
-   void reset();
-   void clear();
-};
-
 struct k_input
 {
 #pragma pack(push, 1)
@@ -97,7 +81,6 @@ struct k_input
    u8 kbdled, mouse_joy_led;
    u8 firedelay, firestate; // autofire vars
 
-   ATM_KBD atm51;
    TKeyboardBuffer buffer;
 
    unsigned stick_delay;

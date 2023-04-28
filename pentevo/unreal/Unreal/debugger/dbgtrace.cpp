@@ -528,43 +528,9 @@ void mon_step()
 	cpu.Step();
 	cpu.CheckNextFrame();
 
-	// Baseconf NMI trap
-	if (conf.mem_model == MM_ATM3 && (comp.pBF & 0x10) && (cpu.pc == comp.pBD))
-		nmi_pending = 1;
-
 	// NMI processing
 	if (nmi_pending)
-	{
-		if (conf.mem_model == MM_ATM3)
-		{
-			nmi_pending = 0;
-			cpu.nmi_in_progress = true;
-			set_banks();
-			m_nmi(RM_NOCHANGE);
-		}
-		else if (conf.mem_model == MM_PROFSCORP || conf.mem_model == MM_SCORP)
-		{
-			nmi_pending--;
-			if (cpu.pc > 0x4000)
-			{
-				m_nmi(RM_DOS);
-				nmi_pending = 0;
-			}
-		}
-		else
-			nmi_pending = 0;
-	} // end if (nmi_pending)
-
-	// Baseconf NMI
-	if (comp.pBE)
-	{
-		if (conf.mem_model == MM_ATM3 && comp.pBE == 1)
-		{
-			cpu.nmi_in_progress = false;
-			set_banks();
-		}
-		comp.pBE--;
-	}
+		nmi_pending = 0;
 
 	// INT processing
 	if (conf.mem_model == MM_TSL)

@@ -292,7 +292,6 @@ void m_nmi(ROM_MODE page)
 {
    set_mode(page);
    sprintf(statusline, "NMI to %s", getrom(page)); statcnt = 50;
-   comp.p00 = 0; // quorum
    cpu.sp -= 2;
    if (cpu.DbgMemIf->rm(cpu.pc) == 0x76) // nmi on halt command
        cpu.pc++;
@@ -304,18 +303,11 @@ void m_nmi(ROM_MODE page)
 void main_nmi()
 {
     nmi_pending  = 1;
-    if (conf.mem_model != MM_ATM3)
-        m_nmi(RM_NOCHANGE);
+    m_nmi(RM_NOCHANGE);
 }
 
 void main_nmidos()
 {
- if ((conf.mem_model == MM_PROFSCORP || conf.mem_model == MM_SCORP) &&
-   !(comp.flags & CF_TRDOS) && cpu.pc < 0x4000)
- {
-     nmi_pending = conf.frame * 50; // 50 * 20ms
-     return;
- }
  m_nmi(RM_DOS);
 }
 
@@ -404,14 +396,6 @@ void main_mouse()
 
 void main_help() { showhelp(); }
 void mon_help() { showhelp("monitor_keys"); }
-
-void main_atmkbd()
-{
-   conf.atm.xt_kbd ^= 1;
-   if (conf.atm.xt_kbd) sprintf(statusline, "ATM mode on. emulator hotkeys disabled");
-   else sprintf(statusline, "ATM mode off");
-   statcnt = 50;
-}
 
 void main_pastetext() { input.paste(); }
 
