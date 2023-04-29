@@ -4,12 +4,12 @@
 #include "vars.h"
 #include "config.h"
 #include "draw.h"
-#include "dx.h"
+#include "dx/dx.h"
 #include "tape.h"
 #include "snapshot.h"
 #include "leds.h"
 #include "util.h"
-#include "tsconf.h"
+#include "hard/tsconf.h"
 
 void setcheck(unsigned ID, u8 state = 1)
 {

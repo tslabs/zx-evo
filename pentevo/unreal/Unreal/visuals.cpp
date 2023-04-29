@@ -2,7 +2,7 @@
 #include "std.h"
 #include "resource.h"
 #include "vars.h"
-#include "dxrend.h"
+#include "dx/dxrend.h"
 #include "visuals.h"
 
 /*

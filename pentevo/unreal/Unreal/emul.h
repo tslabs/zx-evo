@@ -1,8 +1,8 @@
 #pragma once
 
 #include "sysdefs.h"
-#include "sndrender.h"
-#include "tsconf.h"
+#include "sound/sndrender.h"
+#include "hard/tsconf.h"
 #include "savevid.h"
 
 #define EMUL_DEBUG
@@ -384,20 +384,20 @@ enum AY_SCHEME
    AY_SCHEME_MAX
 };
 
-#include "wd93.h"
-#include "hddio.h"
-#include "hdd.h"
+#include "hard/fdd/wd93.h"
+#include "hard/hdd/hddio.h"
+#include "hard/hdd/hdd.h"
 #include "input.h"
-#include "zf232.h"
+#include "hard/zf232.h"
 
 #if defined(MOD_GSZ80) || defined(MOD_GSBASS)
-#include "bass.h"
-#include "snd_bass.h"
+#include "sound/bass.h"
+#include "sound/snd_bass.h"
 #endif
 
 #ifdef MOD_GSBASS
-#include "gshlbass.h"
-#include "gshle.h"
+#include "hard/gs/gshlbass.h"
+#include "hard/gs/gshle.h"
 #endif
 
 #define EFF7_4BPP       0x01

@@ -27,10 +27,10 @@
     <None Include="res\main.ico">
       <Filter>Resources</Filter>
     </None>
-    <None Include="gsz80.inl">
+    <None Include="hard\gs\gsz80.inl">
       <Filter>Sources</Filter>
     </None>
-    <None Include="z80_main.inl">
+    <None Include="hard\cpu\z80_main.inl">
       <Filter>Sources</Filter>
     </None>
     <None Include="res\cur00000.cur">
@@ -76,7 +76,7 @@
     <ClCompile Include="config.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="daa_tabs.cpp">
+    <ClCompile Include="hard\cpu\daa_tabs.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="draw.cpp">
@@ -85,19 +85,19 @@
     <ClCompile Include="drawnomc.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="dx.cpp">
+    <ClCompile Include="dx\dx.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="dxerr.cpp">
+    <ClCompile Include="dx\dxerr.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="dxrend.cpp">
+    <ClCompile Include="dx\dxrend.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="emul.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="emul_2203.cpp">
+    <ClCompile Include="sound\emul_2203.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="emulkeys.cpp">
@@ -115,28 +115,28 @@
     <ClCompile Include="getopt.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="gs.cpp">
+    <ClCompile Include="hard\gs\gs.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="gshlbass.cpp">
+    <ClCompile Include="hard\gs\gshlbass.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="gshle.cpp">
+    <ClCompile Include="hard\gs\gshle.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="gsz80.cpp">
+    <ClCompile Include="hard\gs\gsz80.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="gui.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="hdd.cpp">
+    <ClCompile Include="hard\hdd\hdd.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="hddaspi.cpp">
+    <ClCompile Include="hard\hdd\hddaspi.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="hddio.cpp">
+    <ClCompile Include="hard\hdd\hddio.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="iehelp.cpp">
@@ -163,70 +163,70 @@
     <ClCompile Include="mainloop.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="memory.cpp">
+    <ClCompile Include="hard\memory.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="op_cb.cpp">
+    <ClCompile Include="hard\cpu\op_cb.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="op_dd.cpp">
+    <ClCompile Include="hard\cpu\op_dd.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="op_ddcb.cpp">
+    <ClCompile Include="hard\cpu\op_ddcb.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="op_ed.cpp">
+    <ClCompile Include="hard\cpu\op_ed.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="op_fd.cpp">
+    <ClCompile Include="hard\cpu\op_fd.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="op_noprefix.cpp">
+    <ClCompile Include="hard\cpu\op_noprefix.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="opendlg.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="saa1099.cpp">
+    <ClCompile Include="sound\saa1099.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="savesnd.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="sdcard.cpp">
+    <ClCompile Include="hard\sdcard.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="snapshot.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="snd_bass.cpp">
+    <ClCompile Include="sound\snd_bass.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="sndbuffer.cpp">
+    <ClCompile Include="sound\sndbuffer.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="sndchip.cpp">
+    <ClCompile Include="sound\sndchip.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="sndcounter.cpp">
+    <ClCompile Include="sound\sndcounter.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="sndrender.cpp">
+    <ClCompile Include="sound\sndrender.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="sound.cpp">
+    <ClCompile Include="sound\sound.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="std.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="tables.cpp">
+    <ClCompile Include="hard\cpu\tables.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="tape.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="tsconf.cpp">
+    <ClCompile Include="hard\tsconf.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="util.cpp">
@@ -235,19 +235,19 @@
     <ClCompile Include="vars.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="vs1001.cpp">
+    <ClCompile Include="hard\gs\vs1001.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="wd93cmd.cpp">
+    <ClCompile Include="hard\fdd\wd93cmd.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="wd93crc.cpp">
+    <ClCompile Include="hard\fdd\wd93crc.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="wd93dat.cpp">
+    <ClCompile Include="hard\fdd\wd93dat.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="wd93trk.cpp">
+    <ClCompile Include="hard\fdd\wd93trk.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="wldr_fdi.cpp">
@@ -268,19 +268,19 @@
     <ClCompile Include="wldr_udi.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="z80.cpp">
+    <ClCompile Include="hard\cpu\z80.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="z80asm.cpp">
+    <ClCompile Include="hard\cpu\z80asm.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="zc.cpp">
+    <ClCompile Include="hard\zc.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="dxrframe.cpp">
+    <ClCompile Include="dx\dxrframe.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="dxrcopy.cpp">
+    <ClCompile Include="dx\dxrcopy.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="drawers.cpp">
@@ -301,10 +301,10 @@
     <ClCompile Include="sound\ymf262.cpp">
       <Filter>Sources\sound</Filter>
     </ClCompile>
-    <ClCompile Include="zf232.cpp">
+    <ClCompile Include="hard\zf232.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="ft812.cpp">
+    <ClCompile Include="hard\ft812.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="sound\ayx32.cpp">
@@ -351,7 +351,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="bass.h">
+    <ClInclude Include="sound\bass.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="cheat.h">
@@ -360,7 +360,7 @@
     <ClInclude Include="config.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="daa_tabs.h">
+    <ClInclude Include="hard\cpu\daa_tabs.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="ddk.h">
@@ -375,25 +375,25 @@
     <ClInclude Include="drawnomc.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="dx.h">
+    <ClInclude Include="dx\dx.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="dxerr.h">
+    <ClInclude Include="dx\dxerr.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="dxerr8.h">
+    <ClInclude Include="dx\dxerr8.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="dxrend.h">
+    <ClInclude Include="dx\dxrend.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="dxrframe.h">
+    <ClInclude Include="dx\dxrframe.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="emul.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="emul_2203.h">
+    <ClInclude Include="sound\emul_2203.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="emulkeys.h">
@@ -414,25 +414,25 @@
     <ClInclude Include="getopt.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="gs.h">
+    <ClInclude Include="hard\gs\gs.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="gshlbass.h">
+    <ClInclude Include="hard\gs\gshlbass.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="gshle.h">
+    <ClInclude Include="hard\gs\gshle.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="gsz80.h">
+    <ClInclude Include="hard\gs\gsz80.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="gui.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="hdd.h">
+    <ClInclude Include="hard\hdd\hdd.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="hddio.h">
+    <ClInclude Include="hard\hdd\hddio.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="iehelp.h">
@@ -453,25 +453,25 @@
     <ClInclude Include="mainloop.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="memory.h">
+    <ClInclude Include="hard\memory.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="mods.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="op_dd.h">
+    <ClInclude Include="hard\cpu\op_dd.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="op_ed.h">
+    <ClInclude Include="hard\cpu\op_ed.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="op_fd.h">
+    <ClInclude Include="hard\cpu\op_fd.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="op_noprefix.h">
+    <ClInclude Include="hard\cpu\op_noprefix.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="op_system.h">
+    <ClInclude Include="hard\cpu\op_system.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="opendlg.h">
@@ -480,34 +480,34 @@
     <ClInclude Include="resource.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="saa1099.h">
+    <ClInclude Include="sound\saa1099.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="savesnd.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="sdcard.h">
+    <ClInclude Include="hard\sdcard.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="snapshot.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="snd_bass.h">
+    <ClInclude Include="sound\snd_bass.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="sndbuffer.h">
+    <ClInclude Include="sound\sndbuffer.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="sndchip.h">
+    <ClInclude Include="sound\sndchip.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="sndcounter.h">
+    <ClInclude Include="sound\sndcounter.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="sndrender.h">
+    <ClInclude Include="sound\sndrender.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="sound.h">
+    <ClInclude Include="sound\sound.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="std.h">
@@ -516,13 +516,13 @@
     <ClInclude Include="sysdefs.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="tables.h">
+    <ClInclude Include="hard\cpu\tables.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="tape.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="tsconf.h">
+    <ClInclude Include="hard\tsconf.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="util.h">
@@ -531,31 +531,31 @@
     <ClInclude Include="vars.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="vs1001.h">
+    <ClInclude Include="hard\gs\vs1001.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="wd93.h">
+    <ClInclude Include="hard\fdd\wd93.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="wd93crc.h">
+    <ClInclude Include="hard\fdd\wd93crc.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="wd93dat.h">
+    <ClInclude Include="hard\fdd\wd93dat.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="z80.h">
+    <ClInclude Include="hard\cpu\z80.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="z80_main.h">
+    <ClInclude Include="hard\cpu\z80_main.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="z80asm.h">
+    <ClInclude Include="hard\cpu\z80asm.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="zc.h">
+    <ClInclude Include="hard\zc.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="dxrcopy.h">
+    <ClInclude Include="dx\dxrcopy.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="drawers.h">
@@ -576,10 +576,10 @@
     <ClInclude Include="sound\ymf278.h">
       <Filter>Headers\sound</Filter>
     </ClInclude>
-    <ClInclude Include="zf232.h">
+    <ClInclude Include="hard\zf232.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="ft812.h">
+    <ClInclude Include="hard\ft812.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="sound\ayx32.h">

@@ -4,14 +4,14 @@
 #include "vars.h"
 #include "snapshot.h"
 #include "tape.h"
-#include "memory.h"
+#include "hard/memory.h"
 #include "opendlg.h"
 #include "draw.h"
 #include "config.h"
-#include "z80.h"
+#include "hard/cpu/z80.h"
 #include "util.h"
 #include "depack.h"
-#include "tsconf.h"
+#include "hard/tsconf.h"
 #include "debugger/dbglabls.h"
 #include <ctime>
 

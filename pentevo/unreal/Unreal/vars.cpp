@@ -3,16 +3,16 @@
 #include "defs.h"
 #include "vars.h"
 #include "debugger/debug.h"
-#include "memory.h"
-#include "gsz80.h"
-#include "z80.h"
+#include "hard/memory.h"
+#include "hard/gs/gsz80.h"
+#include "hard/cpu/z80.h"
 #include "util.h"
-#include "sndcounter.h"
+#include "sound/sndcounter.h"
 #include "sound/ayx32.h"
 
 namespace z80fast
 {
-#include "z80_main.h"
+#include "hard/cpu/z80_main.h"
 }
 
 int fmsoundon0=4; //Alone Coder

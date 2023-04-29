@@ -2,12 +2,12 @@
 #include "emul.h"
 #include "vars.h"
 #include "font.h"
-#include "gs.h"
+#include "hard/gs/gs.h"
 #include "tape.h"
 #include "draw.h"
 #include "debugger/debug.h"
 #include "debugger/dbgbpx.h"
-#include "memory.h"
+#include "hard/memory.h"
 #include "util.h"
 
 extern VCTR vid;

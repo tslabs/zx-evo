@@ -5,7 +5,7 @@
 #include "dbgpaint.h"
 #include "dbgcmd.h"
 #include "dbgmem.h"
-#include "wd93crc.h"
+#include "hard/fdd/wd93crc.h"
 #include "util.h"
 
 TRKCACHE edited_track;

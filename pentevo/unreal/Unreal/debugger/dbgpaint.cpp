@@ -3,7 +3,7 @@
 #include "vars.h"
 #include "debug.h"
 #include "dbgpaint.h"
-#include "dx.h"
+#include "dx/dx.h"
 #include "font16.h"
 #include "util.h"
 

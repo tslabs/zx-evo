@@ -7,7 +7,7 @@
 #include "dbgmem.h"
 #include "dbgrwdlg.h"
 #include "dbgoth.h"
-#include "memory.h"
+#include "hard/memory.h"
 #include "gui.h"
 #include "util.h"
 

@@ -1,7 +1,7 @@
 #include "std.h"
 #include "emul.h"
 #include "vars.h"
-#include "wd93crc.h"
+#include "hard/fdd/wd93crc.h"
 #include "util.h"
 
 int FDD::write_td0(FILE *ff)

@@ -2,7 +2,7 @@
 #include "emul.h"
 #include "vars.h"
 #include "tape.h"
-#include "memory.h"
+#include "hard/memory.h"
 #include "util.h"
 
 unsigned tape_pulse[0x100];

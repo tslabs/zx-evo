@@ -2,7 +2,7 @@
 #include "emul.h"
 #include "vars.h"
 #include "draw.h"
-#include "dx.h"
+#include "dx/dx.h"
 #include "debug.h"
 #include "dbgpaint.h"
 #include "dbgreg.h"

@@ -1,6 +1,6 @@
 #pragma once
 #include "emul.h"
-#include "sndchip.h"
+#include "sound/sndchip.h"
 #include "sound/ayx32.h"
 #include "debugger/debug.h"
 

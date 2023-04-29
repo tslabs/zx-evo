@@ -3,7 +3,7 @@
 #include "emul.h"
 #include "vars.h"
 #include "gui.h"
-#include "dx.h"
+#include "dx/dx.h"
 #include "util.h"
 
 struct CHEATDLG

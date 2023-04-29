@@ -5,7 +5,7 @@
 #include "debug.h"
 #include "dbgpaint.h"
 #include "dbglabls.h"
-#include "memory.h"
+#include "hard/memory.h"
 #include "config.h"
 #include "util.h"
 
