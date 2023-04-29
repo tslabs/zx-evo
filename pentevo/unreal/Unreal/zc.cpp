@@ -32,14 +32,12 @@ void zc_t::wr(const u32 port, u8 val)
 		if (!(cfg_ & 2))   // SD card selected
 		{
 			rd_buff_ = sd_card_.Rd();
-			// printf(__FUNCTION__" ret=0x%02X\n", RdBuff);
 			sd_card_.Wr(val);
 		}
 		else if ((cfg_ & 4) && (comp.ts.vdac2))   // FT812 selected
 			rd_buff_ = vdac2::transfer(val);
 		else
 			rd_buff_ = 255;
-		//printf("\nOUT %02X  in %02X",Val,RdBuff);
 		break;
 	default:;
 	}
@@ -59,15 +57,13 @@ u8 zc_t::rd(const u32 port)
 		if (!(cfg_ & 2))   // SD card selected
 		{
 			rd_buff_ = sd_card_.Rd();
-			// printf(__FUNCTION__" ret=0x%02X\n", RdBuff);
 			sd_card_.Wr(0xff);
 		}
-		else if ((cfg_ & 4) && (comp.ts.vdac2))   // FT812 selected
+		else if ((cfg_ & 4) && (comp.ts.vdac2))
 			rd_buff_ = vdac2::transfer(0xFF);
 		else
 			rd_buff_ = 255;
 
-		//printf("\nout FF  IN %02X (next %02X)",tmp,RdBuff);
 		return tmp;
 	default: ;
 	}

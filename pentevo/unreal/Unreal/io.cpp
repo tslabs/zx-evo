@@ -114,33 +114,6 @@ void out(unsigned port, u8 val)
 	if (comp.flags & CF_DOSPORTS)
 	{
 
-
-		if ((port & 0x18A3) == (0xFFFE & 0x18A3))
-		{ // SMUC
-			if (conf.smuc)
-			{
-				if ((port & 0xA044) == (0xDFBA & 0xA044))
-				{ // clock
-					if (comp.pFFBA & 0x80)
-						cmos_write(val);
-					else
-						comp.cmos_addr = val;
-					return;
-				}
-				if ((port & 0xA044) == (0xFFBA & 0xA044))
-				{
-					comp.nvram.write(val);
-					comp.pFFBA = val;
-					return;
-				}
-				if ((port & 0xA044) == (0x7FBA & 0xA044))
-				{
-					comp.p7FBA = val;
-					return;
-				}
-			}
-		}
-
 		if ((p1 & 0x1F) == 0x1F) // 1F, 3F, 5F, 7F, FF
 		{
 			if (conf.mem_model == MM_TSL)
@@ -417,7 +390,7 @@ void out(unsigned port, u8 val)
 		return;
 	}
 
-	if ((port == 0xEFF7) && (conf.mem_model == MM_PENTAGON) || (conf.mem_model == MM_TSL))
+	if ((port == 0xEFF7) && (conf.mem_model == MM_PENTAGON || conf.mem_model == MM_TSL))
 	{
 		const u8 oldp_eff7 = comp.pEFF7;
 		comp.pEFF7 = (comp.pEFF7 & conf.EFF7_mask) | (val & ~conf.EFF7_mask);
@@ -436,7 +409,7 @@ void out(unsigned port, u8 val)
 		(conf.mem_model == MM_TSL && ((comp.pEFF7 & EFF7_CMOS) || (comp.flags & CF_DOSPORTS)))  // check bit 7 port EFF7 or active DOS for TSConf
 		))
 	{
-		unsigned mask = (conf.mem_model == MM_TSL) ? 0xFFFF : mask;
+		unsigned mask = 0xFFFF;
 
 		if (port == (0xDFF7 & mask))
 		{

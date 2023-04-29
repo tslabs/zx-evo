@@ -70,9 +70,6 @@
     </Library>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="atm.cpp">
-      <Filter>Sources</Filter>
-    </ClCompile>
     <ClCompile Include="cheat.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
@@ -112,19 +109,7 @@
     <ClCompile Include="font.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="font8.cpp">
-      <Filter>Sources</Filter>
-    </ClCompile>
-    <ClCompile Include="font14.cpp">
-      <Filter>Sources</Filter>
-    </ClCompile>
     <ClCompile Include="font16.cpp">
-      <Filter>Sources</Filter>
-    </ClCompile>
-    <ClCompile Include="fontatm2.cpp">
-      <Filter>Sources</Filter>
-    </ClCompile>
-    <ClCompile Include="fontdata.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="getopt.cpp">
@@ -292,9 +277,6 @@
     <ClCompile Include="zc.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="zxevo.cpp">
-      <Filter>Sources</Filter>
-    </ClCompile>
     <ClCompile Include="dxrframe.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
@@ -369,9 +351,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="atm.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
     <ClInclude Include="bass.h">
       <Filter>Headers</Filter>
     </ClInclude>
@@ -426,19 +405,7 @@
     <ClInclude Include="font.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="font8.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="font14.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
     <ClInclude Include="font16.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="fontatm2.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="fontdata.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="funcs.h">
@@ -586,9 +553,6 @@
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="zc.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="zxevo.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="dxrcopy.h">

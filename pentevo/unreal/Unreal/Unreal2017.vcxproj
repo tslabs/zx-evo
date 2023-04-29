@@ -387,8 +387,7 @@ md "$(TargetDir)rom"
 copy /y "$(ProjectDir)lib\*.dll" "$(TargetDir)"
 copy /y "$(ProjectDir)cfg\*.*" "$(TargetDir)"
 copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)rom"
-"$(ProjectDir)..\..\tools\robimg\robimg.exe" -p=$(TargetDir)wc.img -s=102400 -C="$(ProjectDir)..\..\soft\wc\exe",""
-</Command>
+"$(ProjectDir)..\..\tools\robimg\robimg.exe" -p=$(TargetDir)wc.img -s=102400 -C="$(ProjectDir)..\..\soft\wc\exe",""</Command>
     </PostBuildEvent>
     <ResourceCompile>
       <AdditionalIncludeDirectories>wtl</AdditionalIncludeDirectories>

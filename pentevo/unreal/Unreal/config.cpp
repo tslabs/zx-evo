@@ -898,17 +898,9 @@ void applyconfig()
 	// set POWER_UP bit for TS-Config
 	comp.ts.pwr_up = TS_PWRUP_ON;
 
-	//[vv] disable turbo
-	//comp.pEFF7 |= EFF7_GIGASCREEN;
-
- //Alone Coder 0.36.4
 	conf.frame = frametime;
 	cpu.SetTpi(conf.frame);
-	/*
-	   if ((conf.mem_model == MM_PENTAGON)&&(comp.pEFF7 & EFF7_GIGASCREEN))
-		   conf.frame = 71680;
-	*/
-	//~Alone Coder
+
 	temp.ticks_frame = static_cast<unsigned>(temp.cpufq / double(conf.intfq) + 1.0);
 	loadzxkeys(&conf);
 	apply_memory();

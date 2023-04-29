@@ -428,7 +428,7 @@ typedef struct {
 } BASS_FILEPROCS;
 
 // BASS_StreamPutFileData options
-#define BASS_FILEDATA_END		0	// end & close the file
+#define BASS_FILEDATA_END		0	// end & CloseImage the file
 
 // BASS_StreamGetFilePosition modes
 #define BASS_FILEPOS_CURRENT	0

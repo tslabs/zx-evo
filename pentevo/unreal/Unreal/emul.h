@@ -300,7 +300,7 @@ struct CONFIG
      char exec[VS_MAX_FFPATH];  // ffmpeg path/name
      char parm[VS_MAX_FFPARM];  // enc. parameters for ffmpeg
      char vout[VS_MAX_FFVOUT];  // output video file name
-     u8 newcons;                // open new console for ffmpeg
+     u8 newcons;                // OpenImage new console for ffmpeg
    } ffmpeg;
 };
 
