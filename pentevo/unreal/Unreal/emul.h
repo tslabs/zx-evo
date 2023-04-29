@@ -449,9 +449,6 @@ struct COMPUTER
    u8 cmos_addr;
    u8 pVD;
 
-   #ifdef MOD_VID_VD
-   u8 *vdbase;
-   #endif
 
    u8 pFFBA, p7FBA; // SMUC
    u8 res1, res2;

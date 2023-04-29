@@ -104,11 +104,6 @@ CACHE_ALIGNED struct T
    struct {   // for AlCo-384
       u8 *s, *a;
    } alco[304][8];
-
-   #ifdef MOD_VID_VD
-   __m64 vdtab[2][4][256];
-   #endif
-
 };
 
 struct videopoint

@@ -118,10 +118,6 @@ void reset(ROM_MODE mode)
    reset_tape();
    reset_sound();
 
-   #ifdef MOD_VID_VD
-   comp.vdbase = 0; comp.pVD = 0;
-   #endif
-
    load_spec_colors();
 
    comp.ide_hi_byte_r = 0;

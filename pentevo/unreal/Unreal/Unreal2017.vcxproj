@@ -367,7 +367,7 @@
       <ErrorReporting>Prompt</ErrorReporting>
       <PrecompiledHeaderFile>std.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>wtl</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
     <Link>
@@ -407,7 +407,7 @@ copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)rom"
       <ErrorReporting>Prompt</ErrorReporting>
       <PrecompiledHeaderFile>std.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>wtl</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
     <Link>
@@ -454,7 +454,7 @@ copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)rom"
       <StringPooling>true</StringPooling>
       <AdditionalIncludeDirectories>wtl</AdditionalIncludeDirectories>
       <EnableParallelCodeGeneration>true</EnableParallelCodeGeneration>
-      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
     <Link>
@@ -510,7 +510,7 @@ if exist "$(TargetDir)..\unreal.7z" del /q "$(TargetDir)..\unreal.7z"
       <StringPooling>true</StringPooling>
       <AdditionalIncludeDirectories>wtl</AdditionalIncludeDirectories>
       <EnableParallelCodeGeneration>true</EnableParallelCodeGeneration>
-      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
     <Link>

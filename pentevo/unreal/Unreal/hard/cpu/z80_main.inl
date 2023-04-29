@@ -59,7 +59,6 @@ u8 rm(unsigned addr)
 ret:
 #ifdef Z80_DBG
 	brk_mem_rd = addr;
-	/* this is sloooow */
 	debug_cond_check(&cpu);
 #endif
 
@@ -91,14 +90,6 @@ void wm(unsigned addr, u8 val)
 		*tmp = val;
 		temp.gsdmaaddr++;
 		z80gs::flush_gs_z80();
-	}
-#endif
-
-#ifdef MOD_VID_VD
-	if (comp.vdbase && (unsigned)((addr & 0xFFFF) - 0x4000) < 0x1800)
-	{
-		comp.vdbase[addr & 0x1FFF] = val;
-		return;
 	}
 #endif
 
@@ -207,8 +198,6 @@ void Z80FAST step()
 	if (comp.tape.play_pointer && !conf.sound.enabled)
 		fast_tape();
 
-	//~todo
-	//[vv]   unsigned oldt=cpu.t; //0.37
 	if (cpu.vm1 && cpu.halted)
 	{
 		cpu.tt += cpu.rate * 1;
@@ -223,7 +212,7 @@ void Z80FAST step()
 		if (cpu.pch & temp.evenM1_C0)
 			cpu.tt += (cpu.tt & cpu.rate);
 
-		u8 opcode = m1_cycle(&cpu);
+		const u8 opcode = m1_cycle(&cpu);
 		(normal_opcode[opcode])(&cpu);
 	}
 
@@ -278,7 +267,7 @@ void z80loop_TSL()
 void z80loop_other()
 {
 	bool int_occurred = false;
-	unsigned int_start = conf.intstart;
+	const unsigned int_start = conf.intstart;
 	unsigned int_end = conf.intstart + conf.intlen;
 
 	cpu.haltpos = 0;

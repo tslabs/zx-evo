@@ -10,11 +10,6 @@
 #include "sound/sndcounter.h"
 #include "sound/ayx32.h"
 
-namespace z80fast
-{
-#include "hard/cpu/z80_main.h"
-}
-
 int fmsoundon0=4; //Alone Coder
 int tfmstatuson0=2; //Alone Coder
 char pressedit = 0; //Alone Coder
@@ -35,15 +30,6 @@ void __cdecl SetLastT();
 void out(unsigned port, u8 val);
 u8 in(unsigned port);
 
-/*
-u8 TMainZ80::rm(unsigned addr) { return z80fast::rm(addr); }
-
-u8 TMainZ80::dbgrm(unsigned addr) { return ::rmdbg(addr); }
-
-void TMainZ80::wm(unsigned addr, u8 val) { z80fast::wm(addr, val); }
-
-void TMainZ80::dbgwm(unsigned addr, u8 val) { ::wmdbg(addr, val); }
-*/
 u8 *TMainZ80::DirectMem(unsigned addr) const
 {
     return am_r(addr);
@@ -234,9 +220,6 @@ __int64 memory__[PAGE*MAX_PAGES/sizeof(__int64)];
 u8 * const memory = (u8*)memory__;
 #endif
 
-#ifdef MOD_VID_VD
-CACHE_ALIGNED u8 vdmem[4][0x2000];
-#endif
 
 u8 membits[0x10000];
 u8 *bankr[4];	// memory pointers to memory (RAM/ROM/cache) mapped in four Z80 windows

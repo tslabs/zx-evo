@@ -186,14 +186,6 @@ void out(unsigned port, u8 val)
 		}
 	}
 
-#ifdef MOD_VID_VD
-	if ((u8)port == 0xDF)
-	{
-		comp.pVD = val;
-		comp.vdbase = (comp.pVD & 4) ? vdmem[comp.pVD & 3] : 0;
-		return;
-	}
-#endif
 
 	// port #FE
 	bool pFE;

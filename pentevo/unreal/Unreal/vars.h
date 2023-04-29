@@ -93,12 +93,7 @@ public:
 		TBankNames BankNames, TStep Step, TDelta Delta,
 		TSetLastT SetLastT, u8* membits, const TMemIf* FastMemIf, const TMemIf* DbgMemIf) :
 		Z80(Idx, BankNames, Step, Delta, SetLastT, membits, FastMemIf, DbgMemIf) { }
-	/*
-	   virtual u8 rm(unsigned addr) override;
-	   virtual u8 dbgrm(unsigned addr) override;
-	   virtual void wm(unsigned addr, u8 val) override;
-	   virtual void dbgwm(unsigned addr, u8 val) override;
-	*/
+
 	virtual u8* DirectMem(unsigned addr) const override; // get direct memory pointer in debuger
 
 	u8 rd(u32 addr) override;
