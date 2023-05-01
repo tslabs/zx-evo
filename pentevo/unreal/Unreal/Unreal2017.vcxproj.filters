@@ -27,12 +27,6 @@
     <None Include="res\main.ico">
       <Filter>Resources</Filter>
     </None>
-    <None Include="hard\gs\gsz80.inl">
-      <Filter>Sources</Filter>
-    </None>
-    <None Include="hard\cpu\z80_main.inl">
-      <Filter>Sources</Filter>
-    </None>
     <None Include="res\cur00000.cur">
       <Filter>Resources</Filter>
     </None>
@@ -360,9 +354,6 @@
     <ClInclude Include="config.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="hard\cpu\daa_tabs.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
     <ClInclude Include="ddk.h">
       <Filter>Headers</Filter>
     </ClInclude>
@@ -417,9 +408,6 @@
     <ClInclude Include="hard\gs\gs.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="hard\gs\gshlbass.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
     <ClInclude Include="hard\gs\gshle.h">
       <Filter>Headers</Filter>
     </ClInclude>
@@ -457,15 +445,6 @@
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="mods.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="hard\cpu\op_dd.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="hard\cpu\op_ed.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="hard\cpu\op_fd.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="hard\cpu\op_noprefix.h">
@@ -546,9 +525,6 @@
     <ClInclude Include="hard\cpu\z80.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="hard\cpu\z80_main.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
     <ClInclude Include="hard\cpu\z80asm.h">
       <Filter>Headers</Filter>
     </ClInclude>
@@ -624,6 +600,8 @@
     <ClInclude Include="visuals.h">
       <Filter>Headers</Filter>
     </ClInclude>
+    <ClInclude Include="hard\cpu\z80_fn.h" />
+    <ClInclude Include="hard\gs\gsz80_fn.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Unreal.rc">

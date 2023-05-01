@@ -899,7 +899,7 @@ void applyconfig()
 	comp.ts.pwr_up = TS_PWRUP_ON;
 
 	conf.frame = frametime;
-	cpu.SetTpi(conf.frame);
+	cpu.set_tpi(conf.frame);
 
 	temp.ticks_frame = static_cast<unsigned>(temp.cpufq / double(conf.intfq) + 1.0);
 	loadzxkeys(&conf);
@@ -920,7 +920,7 @@ void applyconfig()
 	apply_sound();
 
 	if (conf.mem_model == MM_PENTAGON)
-		turbo((comp.pEFF7 & EFF7_GIGASCREEN) ? 1 : 2);
+		TURBO((comp.pEFF7 & EFF7_GIGASCREEN) ? 1 : 2);
 
 	hdd.dev[0].configure(conf.ide + 0);
 	hdd.dev[1].configure(conf.ide + 1);

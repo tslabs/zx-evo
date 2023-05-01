@@ -98,7 +98,7 @@ void mon_fill()
 
 	unsigned pos = 0;
 	for (a1 = addr; a1 <= end; a1++) {
-		cpu.DirectWm(a1, pattern[pos]);
+		cpu.direct_wm(a1, pattern[pos]);
 		if (++pos == fillsize) pos = 0;
 	}
 }
@@ -152,7 +152,7 @@ void mon_exitsub()
 	cpu.dbgchk = 1;
 	cpu.dbgbreak = 0;
 	dbgbreak = 0;
-	cpu.dbg_stophere = cpu.DirectRm(cpu.sp) + 0x100 * cpu.DirectRm(cpu.sp + 1);
+	cpu.dbg_stophere = cpu.direct_rm(cpu.sp) + 0x100 * cpu.direct_rm(cpu.sp + 1);
 }
 
 void editbank()
@@ -236,7 +236,7 @@ void mon_tool()
 		ofn.nFilterIndex = 1;
 		if (GetSaveFileName(&ofn)) {
 			for (unsigned i = 0; i < 0x10000; i++)
-				snbuf[i] = (cpu.membits[i] & ripper) ? cpu.DirectRm(i) : unref;
+				snbuf[i] = (cpu.membits[i] & ripper) ? cpu.direct_rm(i) : unref;
 			const auto ff = fopen(savename, "wb");
 			if (ff) fwrite(snbuf, 1, 0x10000, ff), fclose(ff);
 		}

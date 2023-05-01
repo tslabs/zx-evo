@@ -135,37 +135,7 @@ void set_banks()
          if (bank < MAX_PAGES) used_banks[bank] = 1;
       }
    }
-
-/*
-    if ((unsigned)(bankr[0] - ROM_BASE_M) < PAGE*MAX_ROM_PAGES)
-    {
-        printf("ROM%2X\n", (bankr[0] - ROM_BASE_M)/PAGE);
-        printf("DOS=%p\n",  base_dos_rom);
-        printf("SVM=%p\n",  base_sys_rom);
-        printf("SOS=%p\n",  base_sos_rom);
-        printf("128=%p\n",  base_128_rom);
-    }
-*/
 }
-
-void set_scorp_profrom(unsigned read_address)
-{
-   static u8 switch_table[] =
-   {
-      0,1,2,3,
-      3,3,3,2,
-      2,2,0,1,
-      1,0,1,0
-   };
-   comp.profrom_bank = switch_table[read_address*4 + comp.profrom_bank] & temp.profrom_mask;
-   u8 *base = ROM_BASE_M + (comp.profrom_bank * 64*1024);
-   base_128_rom = base + 0*PAGE;
-   base_sos_rom = base + 1*PAGE;
-   base_sys_rom = base + 2*PAGE;
-   base_dos_rom = base + 3*PAGE;
-   set_banks();
-}
-
 
 void set_mode(ROM_MODE mode)
 {

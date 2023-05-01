@@ -293,10 +293,10 @@ void m_nmi(ROM_MODE page)
    set_mode(page);
    sprintf(statusline, "NMI to %s", getrom(page)); statcnt = 50;
    cpu.sp -= 2;
-   if (cpu.DbgMemIf->rm(cpu.pc) == 0x76) // nmi on halt command
+   if (cpu.dbg_mem_if->rm(cpu.pc) == 0x76) // nmi on halt command
        cpu.pc++;
-   cpu.DbgMemIf->wm(cpu.sp, cpu.pcl);
-   cpu.DbgMemIf->wm(cpu.sp+1, cpu.pch);
+   cpu.dbg_mem_if->wm(cpu.sp, cpu.pcl);
+   cpu.dbg_mem_if->wm(cpu.sp+1, cpu.pch);
    cpu.pc = 0x66; cpu.iff1 = cpu.halted = 0;
 }
 

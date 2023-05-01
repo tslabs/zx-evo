@@ -1,5 +1,4 @@
-#ifndef __SNDBUFFER_H_INCLUDED
-#define __SNDBUFFER_H_INCLUDED
+#pragma once
 
 #ifdef USE_SND_EXTERNAL_BUFFER // enable external buffer
 
@@ -16,4 +15,4 @@ union SNDSAMPLE;
 
 #endif // USE_SND_EXTERNAL_BUFFER
 
-#endif // __SNDBUFFER_H_INCLUDED
+

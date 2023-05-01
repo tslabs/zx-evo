@@ -4,368 +4,363 @@
 
 struct Z80;
 
-constexpr auto Z80FQ = 3500000;
+constexpr auto z80_fq = 3500000;
 
-#define Z80FAST    fastcall
-
-// #define LOG_TAPE_IN
-// #define LOG_FE_IN
-// #define LOG_FE_OUT
+#define Z80FAST fastcall
 
 #ifdef _MSC_VER
-#define Z80INLINE    forceinline // time-critical inlines
+#define Z80INLINE forceinline // time-critical inlines
 #else
-#define Z80INLINE    inline
+#define Z80INLINE inline
 #endif
 
-typedef void (Z80FAST * STEPFUNC)(Z80*);
-#define Z80OPCODE    void Z80FAST
-typedef u8 (Z80FAST * LOGICFUNC)(Z80*, u8 byte);
-#define Z80LOGIC     u8 Z80FAST
+using stepfunc = void(Z80FAST *)(Z80 &);
+#define Z80OPCODE void Z80FAST
+using logicfunc = u8(Z80FAST *)(Z80 &, u8 byte);
+#define Z80LOGIC u8 Z80FAST
 
 typedef union
 {
-  u32 p;
-  struct
-  {
-    u8 b;
-    u8 g;
-    u8 r;
-    u8 a;
-  };
+	u32 p;
+	struct
+	{
+		u8 b;
+		u8 g;
+		u8 r;
+		u8 a;
+	};
 } RGB32;
 
 constexpr auto ts_cache_size = 512;
 constexpr auto z80_pc_history_size = 32;
 
-typedef struct
+struct pc_history_t
 {
-  u8 page;
-  u16 addr;
-} PC_HISTORY_t;
-
-struct TZ80State
-{
-  union
-  {
-    unsigned tt;
-    struct
-    {
-      unsigned t_l : 8;
-      unsigned t : 24;
-    };
-  };
-
-  union
-  {
-    unsigned pc;
-    struct
-    {
-      u8 pcl;
-      u8 pch;
-    };
-  };
-
-  union
-  {
-    unsigned sp;
-    struct
-    {
-      u8 spl;
-      u8 sph;
-    };
-  };
-
-  union
-  {
-    unsigned ir_;
-    struct
-    {
-      u8 r_low;
-      u8 i;
-    };
-  };
-
-  union
-  {
-    unsigned int_flags;
-    struct
-    {
-      u8 r_hi;
-      u8 iff1;
-      u8 iff2;
-      u8 halted;
-    };
-  };
-
-  union
-  {
-    unsigned bc;
-    u16      bc16;
-    struct
-    {
-      u8 c;
-      u8 b;
-    };
-  };
-  union
-  {
-    unsigned de;
-    struct
-    {
-      u8 e;
-      u8 d;
-    };
-  };
-  union
-  {
-    unsigned hl;
-    struct
-    {
-      u8 l;
-      u8 h;
-    };
-  };
-  union
-  {
-    unsigned af;
-    struct
-    {
-      u8 f;
-      u8 a;
-    };
-  };
-
-  union
-  {
-    unsigned ix;
-    struct
-    {
-      u8 xl;
-      u8 xh;
-    };
-  };
-  union
-  {
-    unsigned iy;
-    struct
-    {
-      u8 yl;
-      u8 yh;
-    };
-  };
-
-  struct
-  {
-    union
-    {
-      unsigned bc;
-      struct
-      {
-        u8 c;
-        u8 b;
-      };
-    };
-
-    union
-    {
-      unsigned de;
-      struct
-      {
-        u8 e;
-        u8 d;
-      };
-    };
-
-    union
-    {
-      unsigned hl;
-      struct
-      {
-        u8 l;
-        u8 h;
-      };
-    };
-
-    union
-    {
-      unsigned af;
-      struct
-      {
-        u8 f;
-        u8 a;
-      };
-    };
-  } alt;
-
-  union
-  {
-    unsigned memptr; // undocumented register
-    struct
-    {
-      u8 meml;
-      u8 memh;
-    };
-  };
-
-  u8       opcode;
-  unsigned eipos, haltpos;
-
-  u8       im;
-  bool     nmi_in_progress;
-  u32      tscache_addr[ts_cache_size];
-  u8       tscache_data[ts_cache_size];
-
-  PC_HISTORY_t pc_hist[z80_pc_history_size];
-  u32 pc_hist_ptr;
+	u8 page;
+	u16 addr;
 };
 
-typedef u8 (* TRm)(u32 addr);
-typedef void (* TWm)(u32 addr, u8 val);
-
-struct TMemIf
+struct z80_state_t
 {
-  TRm rm;
-  TWm wm;
+	union
+	{
+		unsigned tt;
+		struct
+		{
+			unsigned t_l : 8;
+			unsigned t : 24;
+		};
+	};
+
+	union
+	{
+		unsigned pc;
+		struct
+		{
+			u8 pcl;
+			u8 pch;
+		};
+	};
+
+	union
+	{
+		unsigned sp;
+		struct
+		{
+			u8 spl;
+			u8 sph;
+		};
+	};
+
+	union
+	{
+		unsigned ir_;
+		struct
+		{
+			u8 r_low;
+			u8 i;
+		};
+	};
+
+	union
+	{
+		unsigned int_flags;
+		struct
+		{
+			u8 r_hi;
+			u8 iff1;
+			u8 iff2;
+			u8 halted;
+		};
+	};
+
+	union
+	{
+		unsigned bc;
+		u16 bc16;
+		struct
+		{
+			u8 c;
+			u8 b;
+		};
+	};
+	union
+	{
+		unsigned de;
+		struct
+		{
+			u8 e;
+			u8 d;
+		};
+	};
+	union
+	{
+		unsigned hl;
+		struct
+		{
+			u8 l;
+			u8 h;
+		};
+	};
+	union
+	{
+		unsigned af;
+		struct
+		{
+			u8 f;
+			u8 a;
+		};
+	};
+
+	union
+	{
+		unsigned ix;
+		struct
+		{
+			u8 xl;
+			u8 xh;
+		};
+	};
+	union
+	{
+		unsigned iy;
+		struct
+		{
+			u8 yl;
+			u8 yh;
+		};
+	};
+
+	struct
+	{
+		union
+		{
+			unsigned bc;
+			struct
+			{
+				u8 c;
+				u8 b;
+			};
+		};
+
+		union
+		{
+			unsigned de;
+			struct
+			{
+				u8 e;
+				u8 d;
+			};
+		};
+
+		union
+		{
+			unsigned hl;
+			struct
+			{
+				u8 l;
+				u8 h;
+			};
+		};
+
+		union
+		{
+			unsigned af;
+			struct
+			{
+				u8 f;
+				u8 a;
+			};
+		};
+	} alt;
+
+	union
+	{
+		unsigned memptr; // undocumented register
+		struct
+		{
+			u8 meml;
+			u8 memh;
+		};
+	};
+
+	u8 opcode;
+	unsigned eipos, haltpos;
+
+	u8 im;
+	bool nmi_in_progress;
+	u32 tscache_addr[ts_cache_size];
+	u8 tscache_data[ts_cache_size];
+
+	pc_history_t pc_hist[z80_pc_history_size];
+	u32 pc_hist_ptr;
 };
 
-constexpr auto MAX_CBP = 16;
-
-struct Z80 : public TZ80State
+struct t_mem_if
 {
-  u8       tmp0{}, tmp1{}, tmp3{};
-  unsigned rate;
-  bool     vm1{};    // halt handling type
-  u8       outc0{};
-  u16      last_branch{};
-  unsigned trace_curs, trace_top, trace_mode;
-  unsigned mem_curs, mem_top, mem_second{};
-  unsigned pc_trflags;
-  unsigned nextpc;
-  unsigned dbg_stophere;
-  unsigned dbg_stopsp;
-  unsigned dbg_loop_r1;
-  unsigned dbg_loop_r2;
-  u8       dbgchk;   // Признак наличия активных брекпоинтов
-  bool     int_pend; // На входе int есть активное прерывание
-  bool     int_gate; // Разрешение внешних прерываний (1-разрешены/0 - запрещены)
-  unsigned halt_cycle{};
+	using t_rm = u8 (*)(u32 addr);
+	using t_wm = void (*)(u32 addr, u8 val);
+	t_rm rm;
+	t_wm wm;
+};
 
-  unsigned cbp[MAX_CBP][128]{}; // Условия для условных брекпоинтов
-  unsigned cbpn{};
+constexpr auto max_cbp = 16;
 
-  i64      debug_last_t; // used to find time delta
-  u32      tpi;          // Число тактов между прерываниями
-  u32      trpc[40]{};
-  //   typedef u8 (* TRmDbg)(u32 addr);
-  //   typedef u8 *(* TMemDbg)(u32 addr);
-  //   typedef void (* TWmDbg)(u32 addr, u8 val);
-  typedef void (__cdecl *TBankNames)(int i, char *Name);
-  typedef void (Z80FAST * TStep)();
-  typedef i64 (__cdecl * TDelta)();
-  typedef void (__cdecl * TSetLastT)();
-  //   TRmDbg DirectRm; // direct read memory in debuger
-  //   TWmDbg DirectWm; // direct write memory in debuger
-  //   TMemDbg DirectMem; // get direct memory pointer in debuger
-  u32          Idx; // Индекс в массиве процессоров
-  TBankNames   BankNames;
-  TStep        Step;
-  TDelta       Delta;
-  TSetLastT    SetLastT;
-  u8           *membits;
-  u8           dbgbreak;
-  const TMemIf *FastMemIf; // Быстрый интерфес памяти
-  const TMemIf *DbgMemIf;  // Интерфейс памяти для поддержки отладчика (брекпоинты на доступ к памяти)
-  const TMemIf *MemIf;     // Текущий активный интерфейс памяти
+struct Z80 : z80_state_t
+{
+	using t_bank_names = void(__cdecl *)(int i, char *name);
+	using step_fn = void(Z80FAST *)();
+	using delta_fn = i64(__cdecl *)();
+	using set_lastt_fn = void(__cdecl *)();
 
-  void reset()
-  {
-    int_flags = ir_ = pc = 0; im = 0; last_branch = 0; int_pend = false; int_gate = true;
-  }
+	unsigned rate;
+	bool vm1{}; // halt handling type
+	u8 outc0{};
+	u16 last_branch{};
+	unsigned trace_curs, trace_top, trace_mode;
+	unsigned mem_curs, mem_top, mem_second{};
+	unsigned pc_trflags;
+	unsigned nextpc;
+	unsigned dbg_stophere;
+	unsigned dbg_stopsp;
+	unsigned dbg_loop_r1;
+	unsigned dbg_loop_r2;
+	u8 dbgchk;	   // РџСЂРёР·РЅР°Рє РЅР°Р»РёС‡РёСЏ Р°РєС‚РёРІРЅС‹С… Р±СЂРµРєРїРѕРёРЅС‚РѕРІ
+	bool int_pend; // РќР° РІС…РѕРґРµ int РµСЃС‚СЊ Р°РєС‚РёРІРЅРѕРµ РїСЂРµСЂС‹РІР°РЅРёРµ
+	bool int_gate; // Р Р°Р·СЂРµС€РµРЅРёРµ РІРЅРµС€РЅРёС… РїСЂРµСЂС‹РІР°РЅРёР№ (1-СЂР°Р·СЂРµС€РµРЅС‹/0 - Р·Р°РїСЂРµС‰РµРЅС‹)
+	unsigned halt_cycle{};
 
-  Z80(u32 Idx, TBankNames BankNames, TStep Step, TDelta Delta,
-      TSetLastT SetLastT, u8 *membits, const TMemIf *FastMemIf, const TMemIf *DbgMemIf) : TZ80State(),
-	  Idx(Idx),
-    BankNames(BankNames),
-    Step(Step), Delta(Delta), SetLastT(SetLastT), membits(membits),
-    FastMemIf(FastMemIf), DbgMemIf(DbgMemIf)
-  {
-    MemIf           = FastMemIf;
-    tpi             = 0;
-    rate            = (1 << 8);
-    dbgbreak        = 0;
-    dbgchk          = 0;
-    debug_last_t    = 0;
-    trace_curs      = trace_top = (unsigned)-1; trace_mode = 0;
-    mem_curs        = mem_top = 0;
-    pc_trflags      = nextpc = 0;
-    dbg_stophere    = dbg_stopsp = (unsigned)-1;
-    dbg_loop_r1     = 0;
-    dbg_loop_r2     = 0xFFFF;
-    int_pend        = false;
-    int_gate        = true;
-    nmi_in_progress = false;
-  }
-	
-  virtual ~Z80() = default;
+	unsigned cbp[max_cbp][128]{}; // РЈСЃР»РѕРІРёСЏ РґР»СЏ СѓСЃР»РѕРІРЅС‹С… Р±СЂРµРєРїРѕРёРЅС‚РѕРІ
+	unsigned cbpn{};
 
-  u32 GetIdx() const
-  {
-    return Idx;
-  }
+	i64 debug_last_t; // used to find time delta
+	u32 tpi;		  // Р§РёСЃР»Рѕ С‚Р°РєС‚РѕРІ РјРµР¶РґСѓ РїСЂРµСЂС‹РІР°РЅРёСЏРјРё
+	u32 trpc[40]{};
 
-  void SetTpi(u32 Tpi)
-  {
-    tpi = Tpi;
-  }
+	u32 idx; // РРЅРґРµРєСЃ РІ РјР°СЃСЃРёРІРµ РїСЂРѕС†РµСЃСЃРѕСЂРѕРІ
+	t_bank_names bank_names;
+	step_fn step;
+	delta_fn delta;
+	set_lastt_fn set_last_t;
+	u8 *membits;
+	u8 dbgbreak;
+	const t_mem_if *fast_mem_if; // Р‘С‹СЃС‚СЂС‹Р№ РёРЅС‚РµСЂС„РµСЃ РїР°РјСЏС‚Рё
+	const t_mem_if *dbg_mem_if;	 // РРЅС‚РµСЂС„РµР№СЃ РїР°РјСЏС‚Рё РґР»СЏ РїРѕРґРґРµСЂР¶РєРё РѕС‚Р»Р°РґС‡РёРєР° (Р±СЂРµРєРїРѕРёРЅС‚С‹ РЅР° РґРѕСЃС‚СѓРї Рє РїР°РјСЏС‚Рё)
+	const t_mem_if *mem_if;		 // РўРµРєСѓС‰РёР№ Р°РєС‚РёРІРЅС‹Р№ РёРЅС‚РµСЂС„РµР№СЃ РїР°РјСЏС‚Рё
 
-  void SetFastMemIf()
-  {
-    MemIf = FastMemIf;
-  }
+	void reset()
+	{
+		int_flags = ir_ = pc = 0;
+		im = 0;
+		last_branch = 0;
+		int_pend = false;
+		int_gate = true;
+	}
 
-  void SetDbgMemIf()
-  {
-    MemIf = DbgMemIf;
-  }
+	Z80(u32 Idx, t_bank_names BankNames, step_fn Step, delta_fn Delta, set_lastt_fn SetLastT, u8 *membits, const t_mem_if *FastMemIf, const t_mem_if *DbgMemIf)
+		: z80_state_t(),
+		idx(Idx),
+		bank_names(BankNames),
+		step(Step), delta(Delta), set_last_t(SetLastT), membits(membits),
+		fast_mem_if(FastMemIf), dbg_mem_if(DbgMemIf)
+	{
+		mem_if = FastMemIf;
+		tpi = 0;
+		rate = (1 << 8);
+		dbgbreak = 0;
+		dbgchk = 0;
+		debug_last_t = 0;
+		trace_curs = trace_top = (unsigned)-1;
+		trace_mode = 0;
+		mem_curs = mem_top = 0;
+		pc_trflags = nextpc = 0;
+		dbg_stophere = dbg_stopsp = (unsigned)-1;
+		dbg_loop_r1 = 0;
+		dbg_loop_r2 = 0xFFFF;
+		int_pend = false;
+		int_gate = true;
+		nmi_in_progress = false;
+	}
 
-  // direct read memory in debuger
-  u8 DirectRm(unsigned addr) const
-  {
-    return *DirectMem(addr);
-  }
+	virtual ~Z80() = default;
 
-  // direct write memory in debuger
-  void DirectWm(unsigned addr, u8 val)
-  {
-    *DirectMem(addr) = val;
-    u16 cache_pointer = addr & 0x1FF;
-    tscache_addr[cache_pointer] = -1; // write invalidates flag
-  }
-  /*
-     virtual u8 rm(unsigned addr) = 0;
-     virtual void wm(unsigned addr, u8 val) = 0;
-   */
-  virtual u8 *DirectMem(unsigned addr) const = 0; // get direct memory pointer in debuger
+	u32 get_idx() const
+	{
+		return idx;
+	}
 
-  virtual u8 rd(u32 addr)
-  {
-    tt += rate * 3;
-    return MemIf->rm(addr);
-  }
+	void set_tpi(u32 Tpi)
+	{
+		tpi = Tpi;
+	}
 
-  virtual void wd(u32 addr, u8 val)
-  {
-    tt += rate * 3;
-    MemIf->wm(addr, val);
-  }
+	void set_fast_mem_if()
+	{
+		mem_if = fast_mem_if;
+	}
 
-  virtual u8 in(unsigned port)            = 0;
-  virtual void out(unsigned port, u8 val) = 0;
-  virtual u8 m1_cycle()                   = 0; // [vv] Не зависит от процессора (вынести в библиотеку)
-  virtual u8 IntVec()                     = 0; // Функция возвращающая значение вектора прерывания для im2
-  virtual void CheckNextFrame()           = 0; // Проверка и обновления счетчика кадров и тактов внутри прерывания
-  virtual void retn()                     = 0; // Вызывается в конце инструкции retn (должна сбрасывать флаг nmi_in_progress и обновлять раскладку памяти)
+	void set_dbg_mem_if()
+	{
+		mem_if = dbg_mem_if;
+	}
+
+	// direct read memory in debuger
+	u8 direct_rm(unsigned addr) const
+	{
+		return *direct_mem(addr);
+	}
+
+	// direct write memory in debuger
+	void direct_wm(unsigned addr, u8 val)
+	{
+		*direct_mem(addr) = val;
+		const u16 cache_pointer = addr & 0x1FF;
+		tscache_addr[cache_pointer] = -1; // write invalidates flag
+	}
+
+	virtual u8 *direct_mem(unsigned addr) const = 0; // get direct memory pointer in debuger
+
+	virtual u8 rd(const u32 addr)
+	{
+		tt += rate * 3;
+		return mem_if->rm(addr);
+	}
+
+	virtual void wd(const u32 addr, const u8 val)
+	{
+		tt += rate * 3;
+		mem_if->wm(addr, val);
+	}
+
+	virtual u8 in(unsigned port) = 0;
+	virtual void out(unsigned port, u8 val) = 0;
+	virtual u8 m1_cycle() = 0;			 // [vv] РќРµ Р·Р°РІРёСЃРёС‚ РѕС‚ РїСЂРѕС†РµСЃСЃРѕСЂР° (РІС‹РЅРµСЃС‚Рё РІ Р±РёР±Р»РёРѕС‚РµРєСѓ)
+	virtual u8 int_vec() = 0;			 // Р¤СѓРЅРєС†РёСЏ РІРѕР·РІСЂР°С‰Р°СЋС‰Р°СЏ Р·РЅР°С‡РµРЅРёРµ РІРµРєС‚РѕСЂР° РїСЂРµСЂС‹РІР°РЅРёСЏ РґР»СЏ im2
+	virtual void check_next_frame() = 0; // РџСЂРѕРІРµСЂРєР° Рё РѕР±РЅРѕРІР»РµРЅРёСЏ СЃС‡РµС‚С‡РёРєР° РєР°РґСЂРѕРІ Рё С‚Р°РєС‚РѕРІ РІРЅСѓС‚СЂРё РїСЂРµСЂС‹РІР°РЅРёСЏ
+	virtual void retn() = 0;			 // Р’С‹Р·С‹РІР°РµС‚СЃСЏ РІ РєРѕРЅС†Рµ РёРЅСЃС‚СЂСѓРєС†РёРё retn (РґРѕР»Р¶РЅР° СЃР±СЂР°СЃС‹РІР°С‚СЊ С„Р»Р°Рі nmi_in_progress Рё РѕР±РЅРѕРІР»СЏС‚СЊ СЂР°СЃРєР»Р°РґРєСѓ РїР°РјСЏС‚Рё)
+
+private:
+
 };
 
 constexpr auto CF = 0x01;
@@ -377,7 +372,5 @@ constexpr auto F5 = 0x20;
 constexpr auto ZF = 0x40;
 constexpr auto SF = 0x80;
 
-#define cputact(a)    cpu->tt += ((a) * cpu->rate)
-// #define cputact(a) cpu->t += (a)
-
-#define turbo(a)      cpu.rate = (256 / (a))
+#define CPUTACT(a) cpu.tt += ((a)*cpu.rate)
+#define TURBO(a) cpu.rate = (256 / (a))

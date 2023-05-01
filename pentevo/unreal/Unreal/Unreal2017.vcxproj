@@ -19,7 +19,6 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <None Include="hard\gs\gsz80.inl" />
     <None Include="res\cur00000.cur" />
     <None Include="res\cur00001.cur" />
     <None Include="res\cur00002.cur" />
@@ -30,7 +29,6 @@
     <None Include="res\cur00007.cur" />
     <None Include="res\cur00008.cur" />
     <None Include="res\main.ico" />
-    <None Include="hard\cpu\z80_main.inl" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="lib\dinput.lib" />
@@ -177,10 +175,11 @@
     <ClCompile Include="hard\zf232.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="hard\cpu\z80_fn.h" />
+    <ClInclude Include="hard\gs\gsz80_fn.h" />
     <ClInclude Include="sound\bass.h" />
     <ClInclude Include="cheat.h" />
     <ClInclude Include="config.h" />
-    <ClInclude Include="hard\cpu\daa_tabs.h" />
     <ClInclude Include="debugger\dbgbpx.h" />
     <ClInclude Include="debugger\dbgcmd.h" />
     <ClInclude Include="debugger\dbglabls.h" />
@@ -215,7 +214,6 @@
     <ClInclude Include="funcs.h" />
     <ClInclude Include="getopt.h" />
     <ClInclude Include="hard\gs\gs.h" />
-    <ClInclude Include="hard\gs\gshlbass.h" />
     <ClInclude Include="hard\gs\gshle.h" />
     <ClInclude Include="hard\gs\gsz80.h" />
     <ClInclude Include="gui.h" />
@@ -230,9 +228,6 @@
     <ClInclude Include="hard\memory.h" />
     <ClInclude Include="mods.h" />
     <ClInclude Include="opendlg.h" />
-    <ClInclude Include="hard\cpu\op_dd.h" />
-    <ClInclude Include="hard\cpu\op_ed.h" />
-    <ClInclude Include="hard\cpu\op_fd.h" />
     <ClInclude Include="hard\cpu\op_noprefix.h" />
     <ClInclude Include="hard\cpu\op_system.h" />
     <ClInclude Include="resource.h" />
@@ -265,7 +260,6 @@
     <ClInclude Include="hard\fdd\wd93dat.h" />
     <ClInclude Include="hard\cpu\z80.h" />
     <ClInclude Include="hard\cpu\z80asm.h" />
-    <ClInclude Include="hard\cpu\z80_main.h" />
     <ClInclude Include="hard\zc.h" />
     <ClInclude Include="hard\zf232.h" />
   </ItemGroup>

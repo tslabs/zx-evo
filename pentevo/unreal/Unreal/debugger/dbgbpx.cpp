@@ -22,13 +22,13 @@ typedef bool(__cdecl *func_t)();
 char BpxFileName[FILENAME_MAX];
 
 unsigned calcerr;
-unsigned calc(const Z80 *cpu, unsigned *script)
+unsigned calc(const Z80& cpu, unsigned *script)
 {
 	unsigned stack[64];
 	unsigned *sp = stack - 1, x;
 	while (*script) {
 		switch (*script++) {
-		case 'M':             *sp = cpu->DirectRm(*sp);   break;
+		case 'M':             *sp = cpu.direct_rm(*sp);   break;
 		case '!':             *sp = !*sp;     break;
 		case '~':             *sp = ~*sp;     break;
 		case '+':             *(sp - 1) += *sp; goto arith;
@@ -39,7 +39,7 @@ unsigned calc(const Z80 *cpu, unsigned *script)
 		case '&':             *(sp - 1) &= *sp; goto arith;
 		case '|':             *(sp - 1) |= *sp; goto arith;
 		case '^':             *(sp - 1) ^= *sp; goto arith;
-		case WORD2('-', '>'):  *(sp - 1) = cpu->DirectRm(*sp + sp[-1]); goto arith;
+		case WORD2('-', '>'):  *(sp - 1) = cpu.direct_rm(*sp + sp[-1]); goto arith;
 		case WORD2('>', '>'):  *(sp - 1) >>= *sp; goto arith;
 		case WORD2('<', '<'):  *(sp - 1) <<= *sp; goto arith;
 		case WORD2('!', '='):  *(sp - 1) = (sp[-1] != *sp); goto arith;
@@ -261,7 +261,7 @@ u8 toscript(char *script, unsigned *dst)
 	*dst = DB_STOP;
 
 	calcerr = 0;
-	calc(&cpu, d1);
+	calc(cpu, d1);
 	return (1 - calcerr);
 }
 
@@ -340,7 +340,7 @@ void SetBpxButtons(HWND dlg)
 
 	if (max && cur >= max) SendDlgItemMessage(dlg, box, LB_SETCURSEL, cur = 0, 0);
 
-	if (focus == 0) { if (len && max < MAX_CBP) add0 = 1; if (cur < max) del0 = 1; }
+	if (focus == 0) { if (len && max < max_cbp) add0 = 1; if (cur < max) del0 = 1; }
 	if (focus == 1) { if (len) add1 = 1; if (cur < max) del1 = 1; }
 	if (focus == 2) {
 		if (IsDlgButtonChecked(dlg, IDC_MEM_R) == BST_UNCHECKED && IsDlgButtonChecked(dlg, IDC_MEM_W) == BST_UNCHECKED) len = 0;

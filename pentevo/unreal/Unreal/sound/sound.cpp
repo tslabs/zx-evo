@@ -6,6 +6,7 @@
 #include "config.h"
 #include "saa1099.h"
 #include "sndcounter.h"
+#include "hard/gs/gsz80.h"
 #include "sound/dev_moonsound.h"
 
 extern SNDRENDER sound;
@@ -20,7 +21,7 @@ void flush_dig_snd()
 //   __debugbreak();
    if (temp.sndblock)
        return;
-   unsigned mono = (spkr_dig+mic_dig+covFB_vol+covDD_vol);
+const unsigned mono = (spkr_dig+mic_dig+covFB_vol+covDD_vol);
 //   printf("mono=%u\n", mono);
 //[vv]   
 sound.update(cpu.t - temp.cpu_t_at_frame_start, mono + sd_l + covProfiL, mono + sd_r + covProfiR);
@@ -44,9 +45,7 @@ void init_snd_frame()
    Saa1099.start_frame();
    zxmmoonsound.start_frame();
 
-   #ifdef MOD_GS
    init_gs_frame();
-   #endif
 }
 
 float y_1[2] = { 0.0 };
@@ -55,14 +54,12 @@ i16 x_1[2] = { 0 };
 void flush_snd_frame()
 {
    tape_bit();
-   #ifdef MOD_GS
    flush_gs_frame();
-   #endif
 
    if (temp.sndblock)
        return;
 
-   unsigned endframe = cpu.t - temp.cpu_t_at_frame_start;
+   const unsigned endframe = cpu.t - temp.cpu_t_at_frame_start;
 
    if (conf.sound.ay_scheme)
    { // sound chip present
@@ -78,9 +75,11 @@ void flush_snd_frame()
 
          if (conf.sound.ay_scheme == AY_SCHEME_PSEUDO)
          {
-            u8 last = ay[0].get_r13_reloaded()? 13 : 12;
-            for (u8 r = 0; r <= last; r++)
-               ay[1].select(r), ay[1].write(0, ay[0].get_reg(r));
+	         const u8 last = ay[0].get_r13_reloaded()? 13 : 12;
+            for (u8 r = 0; r <= last; r++) {
+                ay[1].select(r);
+            	ay[1].write(0, ay[0].get_reg(r));
+            }
          }
       }
 
@@ -133,21 +132,15 @@ void flush_snd_frame()
    sndcounter.count(Saa1099);
    sndcounter.count(zxmmoonsound);
 
-#ifdef MOD_GS
-   #ifdef MOD_GSZ80
+
    if (conf.gs_type==1)
        sndcounter.count(z80gs::sound);
-   #endif
 
-   #ifdef MOD_GSBASS
-   // if (conf.gs_type==2) { gs.mix_fx(); return; }
-   #endif
-#endif // MOD_GS
    sndcounter.end(bufplay, n_samples);
 
   for (unsigned k = 0; k < n_samples; k++, bufplay++)
   {
-      u32 v = sndbuf[bufplay & (SNDBUFSIZE-1)];
+	  const u32 v = sndbuf[bufplay & (SNDBUFSIZE-1)];
       u32 Y;
       if (conf.RejectDC) // DC rejection filter
       {
@@ -161,6 +154,7 @@ void flush_snd_frame()
           x_1[1] = x[1];
           y_1[0] = y[0];
           y_1[1] = y[1];
+
           Y = ((i16(y[1]) & 0xFFFF)<<16) | (i16(y[0]) & 0xFFFF);
       }
       else
@@ -172,41 +166,9 @@ void flush_snd_frame()
       sndbuf[bufplay & (SNDBUFSIZE-1)] = 0;
    } 
 
-#if 0
-//   printf("n_samples=%u\n", n_samples);
-   for (unsigned k = 0; k < n_samples; k++, bufplay++)
-   {
-      sndplaybuf[k] = sndbuf[bufplay & (SNDBUFSIZE-1)];
-/*
-      if (sndplaybuf[k] == 0x20002000)
-          __debugbreak();
-*/
-      sndbuf[bufplay & (SNDBUFSIZE-1)] = 0;
-   }
-#endif
    spbsize = n_samples*4;
-//   assert(spbsize != 0);
 
 return;
-
-/*
-
-   // count available samples and copy to sound buffer
-   unsigned save_ticks = temp.snd_frame_ticks; // sound output limit = 1 frame
-   save_ticks = min(save_ticks, sound.ready_samples());
-   save_ticks = min(save_ticks, comp.ay->sound.ready_samples());
-   save_ticks = min(save_ticks, comp.tape.sound.ready_samples());
-   #ifdef MOD_GSZ80
-   if (conf.gs_type == 1)
-      save_ticks = min(save_ticks, z80gs::sound.ready_samples());
-   #endif
-/* // fx player always gives enough samples
-   #ifdef MOD_GSBASS
-   if (conf.gs_type == 2)
-      for (int i = 0; i < 4; i++)
-         save_ticks = min(save_ticks, gs.chan[i].sound_state.ready_samples());
-   #endif
-*/
 
 }
 

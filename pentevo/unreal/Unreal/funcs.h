@@ -1,3 +1,4 @@
+#pragma once
 #include "defs.h"
 
 void __declspec(noreturn) exit();
@@ -56,8 +57,8 @@ void create_font_tables();
 
 void reset(ROM_MODE mode);
 
-void debug_events(Z80 *cpu);
-void debug_cond_check(Z80 *cpu);
+void debug_events(Z80& cpu);
+void debug_cond_check(Z80& cpu);
 
 void render_small(u8 *dst, unsigned pitch);
 

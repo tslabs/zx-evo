@@ -22,13 +22,13 @@ void spectrum_frame()
 
    if (cpu.dbgchk)
    {
-       cpu.SetDbgMemIf();
-       z80dbg::z80loop();
+       cpu.set_dbg_mem_if();
+       z80loop<true>();
    }
    else
    {
-       cpu.SetFastMemIf();
-       z80fast::z80loop();
+       cpu.set_fast_mem_if();
+       z80loop<false>();
    }
 
    if (zf232.open_port)

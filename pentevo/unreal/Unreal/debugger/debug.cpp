@@ -150,11 +150,11 @@ void handle_mouse()
 void t_cpu_mgr::copy_to_prev()
 {
 	for (unsigned i = 0; i < Count; i++)
-		prev_cpus_[i] = TZ80State(*cpus_[i]);
+		prev_cpus_[i] = z80_state_t(*cpus_[i]);
 }
 
 /* ------------------------------------------------------------- */
-void debug(Z80 *cpu)
+void debug(Z80& cpu)
 {
 	sound_stop();
 	temp.mon_scale = temp.scale;
@@ -171,11 +171,11 @@ void debug(Z80 *cpu)
     set_debug_window_size();
 	ShowWindow(debug_wnd, SW_SHOW);
 
-	t_cpu_mgr::set_current_cpu(cpu->GetIdx());
-	auto prevcpu = &t_cpu_mgr::prev_cpu(cpu->GetIdx());
-	cpu->trace_curs = cpu->pc;
-	cpu->dbg_stopsp = cpu->dbg_stophere = -1;
-	cpu->dbg_loop_r1 = 0, cpu->dbg_loop_r2 = 0xFFFF;
+	t_cpu_mgr::set_current_cpu(cpu.get_idx());
+	auto prevcpu = t_cpu_mgr::prev_cpu(cpu.get_idx());
+	cpu.trace_curs = cpu.pc;
+	cpu.dbg_stopsp = cpu.dbg_stophere = -1;
+	cpu.dbg_loop_r1 = 0, cpu.dbg_loop_r2 = 0xFFFF;
 	mousepos = 0;
 
 	while (dbgbreak) // debugger event loop
@@ -183,16 +183,16 @@ void debug(Z80 *cpu)
 		if (trace_labels)
 			mon_labels.notify_user_labels();
 
-		cpu = &t_cpu_mgr::get_cpu();
-		prevcpu = &t_cpu_mgr::prev_cpu(cpu->GetIdx());
+		cpu = t_cpu_mgr::get_cpu();
+		prevcpu = t_cpu_mgr::prev_cpu(cpu.get_idx());
 	repaint_dbg:
-		cpu->trace_top &= 0xFFFF;
-		cpu->trace_curs &= 0xFFFF;
+		cpu.trace_top &= 0xFFFF;
+		cpu.trace_curs &= 0xFFFF;
 
 		debugscr();
-		if (cpu->trace_curs < cpu->trace_top || cpu->trace_curs >= cpu->trpc[trace_size] || asmii == UINT_MAX)
+		if (cpu.trace_curs < cpu.trace_top || cpu.trace_curs >= cpu.trpc[trace_size] || asmii == UINT_MAX)
 		{
-			cpu->trace_top = cpu->trace_curs;
+			cpu.trace_top = cpu.trace_curs;
 			debugscr();
 		}
 
@@ -253,9 +253,9 @@ void debug(Z80 *cpu)
 	}
 
 leave_dbg:
-	*prevcpu = TZ80State(*cpu);
+	prevcpu = z80_state_t(cpu);
 	//   CpuMgr.CopyToPrev();
-	cpu->SetLastT();
+	cpu.set_last_t();
 	temp.scale = temp.mon_scale;
 	//temp.rflags = RF_GDI; // facepalm.jpg
 	temp.rflags = temp.mon_rflags;
@@ -265,46 +265,46 @@ leave_dbg:
 	input.nokb = 20;
 }
 
-void debug_cond_check(Z80 *cpu)
+void debug_cond_check(Z80& cpu)
 {
-	if (cpu->cbpn)
+	if (cpu.cbpn)
 	{
-		cpu->r_low = (cpu->r_low & 0x7F) + cpu->r_hi;
-		for (unsigned i = 0; i < cpu->cbpn; i++)
+		cpu.r_low = (cpu.r_low & 0x7F) + cpu.r_hi;
+		for (unsigned i = 0; i < cpu.cbpn; i++)
 		{
-			if (calc(cpu, cpu->cbp[i]))
+			if (calc(cpu, cpu.cbp[i]))
 			{
-				cpu->dbgbreak |= 1;
+				cpu.dbgbreak |= 1;
 				dbgbreak |= 1;
 			}
 		}
 	}
 }
 
-void debug_events(Z80 *cpu)
+void debug_events(Z80& cpu)
 {
-	const auto pc = cpu->pc & 0xFFFF;
-	const auto membit = cpu->membits + pc;
+	const auto pc = cpu.pc & 0xFFFF;
+	const auto membit = cpu.membits + pc;
 	*membit |= MEMBITS_X;
-	cpu->dbgbreak |= (*membit & MEMBITS_BPX);
+	cpu.dbgbreak |= (*membit & MEMBITS_BPX);
 	dbgbreak |= (*membit & MEMBITS_BPX);
 
-	if (pc == cpu->dbg_stophere)
+	if (pc == cpu.dbg_stophere)
 	{
-		cpu->dbgbreak = 1;
+		cpu.dbgbreak = 1;
 		dbgbreak = 1;
 	}
 
-	if ((cpu->sp & 0xFFFF) == cpu->dbg_stopsp)
+	if ((cpu.sp & 0xFFFF) == cpu.dbg_stopsp)
 	{
-		if (pc > cpu->dbg_stophere && pc < cpu->dbg_stophere + 0x100)
+		if (pc > cpu.dbg_stophere && pc < cpu.dbg_stophere + 0x100)
 		{
-			cpu->dbgbreak = 1;
+			cpu.dbgbreak = 1;
 			dbgbreak = 1;
 		}
-		if (pc < cpu->dbg_loop_r1 || pc > cpu->dbg_loop_r2)
+		if (pc < cpu.dbg_loop_r1 || pc > cpu.dbg_loop_r2)
 		{
-			cpu->dbgbreak = 1;
+			cpu.dbgbreak = 1;
 			dbgbreak = 1;
 		}
 	}
@@ -313,7 +313,7 @@ void debug_events(Z80 *cpu)
 	brk_port_in = brk_port_out = -1; // reset only when breakpoints active
 	brk_mem_rd = brk_mem_wr = -1;	// reset only when breakpoints active
 
-	if (cpu->dbgbreak)
+	if (cpu.dbgbreak)
 		debug(cpu);
 }
 

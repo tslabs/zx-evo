@@ -1,4 +1,5 @@
 #pragma once
+#include "std.h"
 #include "sysdefs.h"
 
 constexpr auto MAX_WIDTH_P = (64*2);

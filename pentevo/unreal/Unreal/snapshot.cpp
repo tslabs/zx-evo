@@ -368,7 +368,7 @@ int read_sna48()
    memcpy(page_ram(5), hdr->page5, PAGE);
    memcpy(page_ram(2), hdr->page2, PAGE);
    memcpy(page_ram(0), hdr->active_page, PAGE);
-   cpu.pc = cpu.DirectRm(cpu.sp)+0x100*cpu.DirectRm(cpu.sp+1); cpu.sp += 2;
+   cpu.pc = cpu.direct_rm(cpu.sp)+0x100*cpu.direct_rm(cpu.sp+1); cpu.sp += 2;
    set_banks(); return 1;
 }
 
@@ -389,7 +389,7 @@ int read_sp()
    comp.pEFF7 |= EFF7_LOCKMEM; //Alone Coder
    comp.pFE = hdr->pFE; comp.border_attr = comp.pFE & 7;
    for (unsigned i = 0; i < hdr->len; i++)
-      cpu.DirectWm(hdr->start + i, snbuf[i + 0x26]);
+      cpu.direct_wm(hdr->start + i, snbuf[i + 0x26]);
    set_banks(); return 1;
 }
 
@@ -416,8 +416,8 @@ int write_sna(FILE *ff)
       mapped = 0xFF;
       savesize = 0xC01B;
       hdr->sp -= 2;
-      cpu.DirectWm(hdr->sp, cpu.pcl);
-      cpu.DirectWm(hdr->sp+1, cpu.pch);
+      cpu.direct_wm(hdr->sp, cpu.pcl);
+      cpu.direct_wm(hdr->sp+1, cpu.pch);
    }
    memcpy(hdr->page5, memory+PAGE*5, PAGE);
    memcpy(hdr->page2, memory+PAGE*2, PAGE);

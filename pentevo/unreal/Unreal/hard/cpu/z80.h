@@ -1,23 +1,6 @@
 #pragma once
 #include "sysdefs.h"
-
-#ifdef MOD_FASTCORE
-   namespace z80fast
-   {
-   #include "z80_main.h"
-   }
-#else
-   #define z80fast z80dbg
-#endif
-
-#ifdef MOD_DEBUGCORE
-   namespace z80dbg
-   {
-   #include "z80_main.h"
-   }
-#else
-   #define z80dbg z80fast
-#endif
+#include "z80_fn.h"
 
 u8 Rm(u32 addr);
 void Wm(u32 addr, u8 val);

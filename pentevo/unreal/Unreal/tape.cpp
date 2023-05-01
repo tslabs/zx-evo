@@ -194,7 +194,7 @@ int readCSW()
    named_cell("CSW tape image");
    if (snbuf[0x1B] != 1)
        return 0; // unknown compression type
-   unsigned rate = Z80FQ / *(u16*)(snbuf + 0x19); // usually 3.5mhz / 44khz
+   unsigned rate = z80_fq / *(u16*)(snbuf + 0x19); // usually 3.5mhz / 44khz
    if (!rate)
        return 0;
    reserve(snapsize - 0x18);
@@ -210,7 +210,7 @@ int readCSW()
       }
       tape_image[tape_imagesize++] = find_pulse(len);
    }
-   tape_image[tape_imagesize++] = find_pulse(Z80FQ/10);
+   tape_image[tape_imagesize++] = find_pulse(z80_fq/10);
    find_tape_sizes();
    return 1;
 }
@@ -797,7 +797,7 @@ void tape_traps()
        cpu.l |= (pulse > 1240) ? bit : 0;
        comp.tape.play_pointer++;
      }
-     cpu.DbgMemIf->wm(cpu.ix++, cpu.l);
+     cpu.dbg_mem_if->wm(cpu.ix++, cpu.l);
      cpu.de--;
    }while (cpu.de & 0xFFFF);
 

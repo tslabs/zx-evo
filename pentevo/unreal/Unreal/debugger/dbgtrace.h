@@ -47,9 +47,5 @@ void crest8();
 void cfliplabels();
 void c_lbl_import();
 
-namespace z80dbg
-{
-void __cdecl SetLastT();
-}
 void showtrace();
 char dispatch_trace();

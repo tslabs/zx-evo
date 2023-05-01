@@ -1,12 +1,13 @@
 #pragma once
 
+#include <stdio.h>
 #include "sysdefs.h"
+
 #include "sound/sndrender.h"
 #include "hard/tsconf.h"
 #include "savevid.h"
 
 #define EMUL_DEBUG
-#define TRASH_PAGE
 
 constexpr unsigned PAGE = 0x4000U;
 constexpr auto MAX_RAM_PAGES = 256;       // 4Mb RAM;
@@ -390,15 +391,10 @@ enum AY_SCHEME
 #include "input.h"
 #include "hard/zf232.h"
 
-#if defined(MOD_GSZ80) || defined(MOD_GSBASS)
 #include "sound/bass.h"
 #include "sound/snd_bass.h"
-#endif
 
-#ifdef MOD_GSBASS
-#include "hard/gs/gshlbass.h"
 #include "hard/gs/gshle.h"
-#endif
 
 #define EFF7_4BPP       0x01
 #define EFF7_512        0x02
@@ -470,7 +466,6 @@ struct COMPUTER
    u8 ulaplus_mode;
    u8 ulaplus_reg;
    u8 ide_hi_byte_r, ide_hi_byte_w, ide_hi_byte_w1, ide_read, ide_write; // high byte in IDE i/o
-   u8 profrom_bank;
 };
 
 // bits for COMPUTER::flags

@@ -15,12 +15,12 @@
 
 extern VCTR vid;
 
-int disasm_line(unsigned addr, char *line)
+int disasm_line(unsigned addr, char* line)
 {
 	auto& cpu = t_cpu_mgr::get_cpu();
 	u8 dbuf[16 + 129/*Alone Code 0.36.7*/];
 	int i; //Alone Coder 0.36.7
-	for (/*int*/ i = 0; i < 16; i++) dbuf[i] = cpu.DirectRm(addr + i);
+	for (/*int*/ i = 0; i < 16; i++) dbuf[i] = cpu.direct_rm(addr + i);
 	sprintf(line, "%04X ", addr);
 	auto ptr = 5;
 	const int len = disasm(dbuf, addr, trace_labels) - dbuf;
@@ -34,7 +34,7 @@ int disasm_line(unsigned addr, char *line)
 	else
 	{
 		int len1 = len;
-		if (len > 4) len1 = 4, *reinterpret_cast<short*>(line + ptr) = WORD2('.', '.'), ptr += 2;
+		if (len > 4) len1 = 4, * reinterpret_cast<short*>(line + ptr) = WORD2('.', '.'), ptr += 2;
 		for (i = len - len1; i < len; i++)
 			sprintf(line + ptr, "%02X", dbuf[i]), ptr += 2;
 	}
@@ -56,7 +56,7 @@ unsigned tracewndflags()
 	u8 opcode; u8 ed = 0;
 	for (;;)
 	{
-		opcode = cpu.DirectRm(readptr++);
+		opcode = cpu.direct_rm(readptr++);
 		if (opcode == 0xDD)
 			base = cpu.ix;
 		else if (opcode == 0xFD)
@@ -82,14 +82,14 @@ unsigned tracewndflags()
 			return 0; // reti/retn
 
 	ret:
-		return (cpu.DirectRm(cpu.sp) | (cpu.DirectRm(cpu.sp + 1) << 8U)) | TWF_BRANCH | TWF_BRADDR;
+		return (cpu.direct_rm(cpu.sp) | (cpu.direct_rm(cpu.sp + 1) << 8U)) | TWF_BRANCH | TWF_BRADDR;
 	}
 
 	if (opcode == 0xC9) // ret
 		goto ret;
 	if (opcode == 0xC3) // jp
 	{
-	jp: return (cpu.DirectRm(readptr) | (cpu.DirectRm(readptr + 1) << 8U)) | TWF_BRANCH | fl;
+	jp: return (cpu.direct_rm(readptr) | (cpu.direct_rm(readptr + 1) << 8U)) | TWF_BRANCH | fl;
 	}
 	if (opcode == 0xCD) // call
 	{
@@ -131,7 +131,7 @@ unsigned tracewndflags()
 	{
 		if (!opcode || opcode == 0x08)
 			return 0;
-		const int offs = static_cast<char>(cpu.DirectRm(readptr++));
+		const int offs = static_cast<char>(cpu.direct_rm(readptr++));
 		const unsigned addr = (offs + readptr) | TWF_BRANCH;
 		if (opcode == 0x18)
 			return addr; // jr
@@ -177,7 +177,7 @@ void showtrace()
 		while (ptr < line + 32) *ptr++ = ' '; line[32] = 0;
 
 		u8 atr = (pc == cpu.pc) ? w_tracepos : atr0;
-		if (cpu.membits[pc] & MEMBITS_BPX) atr = (atr&~7) | 2;
+		if (cpu.membits[pc] & MEMBITS_BPX) atr = (atr & ~7) | 2;
 		tprint(trace_x, trace_y + ii, line, atr);
 
 		if (pc == cpu.trace_curs)
@@ -212,10 +212,10 @@ void showtrace()
 
 	u8 dbuf[16];
 	int i; //Alone Coder
-	for (/*int*/ i = 0; i < 16; i++) dbuf[i] = cpu.DirectRm(cpu.trace_curs + i);
+	for (/*int*/ i = 0; i < 16; i++) dbuf[i] = cpu.direct_rm(cpu.trace_curs + i);
 	const int len = disasm(dbuf, cpu.trace_curs, 0) - dbuf; strcpy(asmpc, asmbuf);
 	for (/*int*/ i = 0; i < len && i < 5; i++)
-		sprintf(dumppc + i * 2, "%02X", cpu.DirectRm(cpu.trace_curs + i));
+		sprintf(dumppc + i * 2, "%02X", cpu.direct_rm(cpu.trace_curs + i));
 
 	char cpu_num[10];
 	_snprintf(cpu_num, sizeof(cpu_num), "Z80(%d)", t_cpu_mgr::get_current_cpu());
@@ -240,8 +240,8 @@ unsigned stack_pos[32] = { UINT_MAX }, stack_cur[32] = { UINT_MAX };
 void push_pos()
 {
 	auto& cpu = t_cpu_mgr::get_cpu();
-	memmove(&stack_pos[1], &stack_pos[0], sizeof stack_pos - sizeof *stack_pos);
-	memmove(&stack_cur[1], &stack_cur[0], sizeof stack_cur - sizeof *stack_cur);
+	memmove(&stack_pos[1], &stack_pos[0], sizeof stack_pos - sizeof * stack_pos);
+	memmove(&stack_cur[1], &stack_cur[0], sizeof stack_cur - sizeof * stack_cur);
 	stack_pos[0] = cpu.trace_top; stack_cur[0] = cpu.trace_curs;
 }
 
@@ -250,8 +250,8 @@ unsigned cpu_up(unsigned ip)
 	auto& cpu = t_cpu_mgr::get_cpu();
 	u8 buf1[0x10];
 	const auto p1 = (ip > sizeof buf1) ? ip - sizeof buf1 : 0;
-	for (unsigned i = 0; i < sizeof buf1; i++) buf1[i] = cpu.DirectRm(p1 + i);
-	u8 *dispos = buf1, *prev;
+	for (unsigned i = 0; i < sizeof buf1; i++) buf1[i] = cpu.direct_rm(p1 + i);
+	u8* dispos = buf1, * prev;
 	do {
 		prev = dispos;
 		dispos = disasm(dispos, 0, 0);
@@ -304,14 +304,14 @@ void center()
 		}
 		else if (cpu.trace_mode == 1)
 		{
-			char *p; //Alone Coder 0.36.7
+			char* p; //Alone Coder 0.36.7
 			for (/*char * */p = str + strlen(str) - 1; p >= str && *p == ' '; *p-- = 0) {}
 			u8 dump[8]; unsigned i;
 			for (p = str, i = 0; ishex(*p) && ishex(p[1]); p += 2)
 				dump[i++] = hex(p);
 			if (*p) continue;
 			for (unsigned j = 0; j < i; j++)
-				cpu.DirectWm(cpu.trace_curs + j, dump[j]);
+				cpu.direct_wm(cpu.trace_curs + j, dump[j]);
 			break;
 		}
 		else
@@ -320,7 +320,7 @@ void center()
 			if (sz)
 			{
 				for (unsigned i = 0; i < sz; i++)
-					cpu.DirectWm(cpu.trace_curs + i, asmresult[i]);
+					cpu.direct_wm(cpu.trace_curs + i, asmresult[i]);
 				showtrace();
 				cdown();
 				break;
@@ -439,15 +439,15 @@ void pop_pos()
 
 	cpu.trace_curs = stack_cur[0];
 	cpu.trace_top = stack_pos[0];
-	memcpy(&stack_pos[0], &stack_pos[1], sizeof stack_pos - sizeof *stack_pos);
-	memcpy(&stack_cur[0], &stack_cur[1], sizeof stack_cur - sizeof *stack_cur);
-	stack_pos[(sizeof stack_pos / sizeof *stack_pos) - 1] = -1;
+	memcpy(&stack_pos[0], &stack_pos[1], sizeof stack_pos - sizeof * stack_pos);
+	memcpy(&stack_cur[0], &stack_cur[1], sizeof stack_cur - sizeof * stack_cur);
+	stack_pos[(sizeof stack_pos / sizeof * stack_pos) - 1] = -1;
 }
 
 void cjump()
 {
 	auto& cpu = t_cpu_mgr::get_cpu();
-	char *ptr = nullptr;
+	char* ptr = nullptr;
 
 	for (auto p = asmpc; *p; p++)
 		if (ishex(p[0]) & ishex(p[1]) & ishex(p[2]) & ishex(p[3])) ptr = p;
@@ -460,7 +460,7 @@ void cjump()
 
 void cdjump()
 {
-	char *ptr = 0;
+	char* ptr = 0;
 	for (auto p = asmpc; *p; p++)
 		if (ishex(p[0]) & ishex(p[1]) & ishex(p[2]) & ishex(p[3])) ptr = p;
 	if (!ptr) return;
@@ -472,8 +472,8 @@ void cdjump()
 void cfliplabels()
 {
 	trace_labels = !trace_labels;
-    if (trace_labels) mon_labels.import_file(); // explicit load on labels show
-    showtrace();
+	if (trace_labels) mon_labels.import_file(); // explicit load on labels show
+	showtrace();
 }
 void csave(unsigned n)
 {
@@ -507,26 +507,18 @@ void crest6() { crest(5); }
 void crest7() { crest(6); }
 void crest8() { crest(7); }
 
-namespace z80dbg
-{
-	void __cdecl SetLastT()
-	{
-		cpu.debug_last_t = comp.t_states + cpu.t;
-	}
-}
-
 void mon_step()
 {
 	auto& cpu = t_cpu_mgr::get_cpu();
 	auto& prevcpu = t_cpu_mgr::prev_cpu();
 
-	cpu.SetLastT();
-	prevcpu = TZ80State(cpu);
+	cpu.set_last_t();
+	prevcpu = z80_state_t(cpu);
 
 	vid.memcyc_lcmd = 0; // new command, start accumulate number of busy memcycles
 
-	cpu.Step();
-	cpu.CheckNextFrame();
+	cpu.step();
+	cpu.check_next_frame();
 
 	// NMI processing
 	if (nmi_pending)
@@ -561,18 +553,18 @@ void mon_step()
 
 	if (cpu.int_pend && cpu.iff1 && cpu.t != cpu.eipos && cpu.int_gate)
 	{
-		handle_int(&cpu, cpu.IntVec());
+		handle_int(cpu, cpu.int_vec());
 	}
 	update_screen(); // update screen, TSU, DMA
-    update_raypos();
-    flip_from_debug();
+	update_raypos();
+	flip_from_debug();
 
 	cpu.trace_curs = cpu.pc;
 }
 
 void mon_stepover()
 {
-	Z80 &cpu = t_cpu_mgr::get_cpu();
+	Z80& cpu = t_cpu_mgr::get_cpu();
 	u8 trace = 1;
 
 	// call,rst

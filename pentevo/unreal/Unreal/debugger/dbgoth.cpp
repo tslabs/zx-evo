@@ -7,20 +7,13 @@
 #include "util.h"
 #include "hard/memory.h" // for benter()
 
-namespace z80dbg
-{
-	__int64 __cdecl delta()
-	{
-		return comp.t_states + cpu.t - cpu.debug_last_t;
-	}
-}
 
 void show_time()
 {
 	Z80 &cpu = t_cpu_mgr::get_cpu();
 	tprint(time_x, time_y, "time delta:", w_otheroff);
 	char text[32];
-	sprintf(text, "%14I64d", cpu.Delta());
+	sprintf(text, "%14I64d", cpu.delta());
 	tprint(time_x + 11, time_y, text, w_other);
 	tprint(time_x + 25, time_y, "t", w_otheroff);
 	frame(time_x, time_y, 26, 1, FRAME);
@@ -37,7 +30,7 @@ static void wtline(const char *name, unsigned ptr, unsigned y)
 	auto& cpu = t_cpu_mgr::get_cpu();
 	for (unsigned dx = 0; dx < 8; dx++)
 	{
-		const auto c = cpu.DirectRm(ptr++);
+		const auto c = cpu.direct_rm(ptr++);
 		sprintf(line + 5 + 3 * dx, "%02X", c);
 		line[7 + 3 * dx] = ' ';
 		line[29 + dx] = c ? c : '.';
@@ -109,7 +102,7 @@ void showstack()
 		if (!i) *reinterpret_cast<unsigned*>(xx) = WORD2('-', '2');
 		else if (i == 1) *reinterpret_cast<unsigned*>(xx) = WORD2('S', 'P');
 		else sprintf(xx, (i > 8) ? "%X" : "+%X", (i - 1) * 2);
-		sprintf(xx + 2, ":%02X%02X", cpu.DirectRm(cpu.sp + (i - 1) * 2 + 1), cpu.DirectRm(cpu.sp + (i - 1) * 2));
+		sprintf(xx + 2, ":%02X%02X", cpu.direct_rm(cpu.sp + (i - 1) * 2 + 1), cpu.direct_rm(cpu.sp + (i - 1) * 2));
 		tprint(stack_x, stack_y + i, xx, w_other);
 	}
 	tprint(stack_x, stack_y - 1, "stack", w_title);
@@ -181,7 +174,7 @@ void showbanks()
 		char attr = ((selbank == i) && (showbank) ? (w_otheroff & 0xF) | w_curs : w_otheroff | (activedbg == wndbanks ? 0x10 : 0));
 		tprint(banks_x, banks_y + i + 1, ln, attr);
 		strcpy(ln, "?????");
-		cpu.BankNames(i, ln);
+		cpu.bank_names(i, ln);
 		attr = ((selbank == i) && (showbank) ? w_curs : ((bankr[i] != bankw[i] ? w_bankro : w_bank) | (activedbg == wndbanks ? 0x10 : 0)));
 		tprint(banks_x + 2, banks_y + i + 1, ln, attr);
 	}
@@ -195,13 +188,13 @@ void bdown() {
 void bup() {
 	selbank--; selbank &= 3;
 }
-// врезка побырому
+// пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 void benter() {
 	auto& cpu = t_cpu_mgr::get_cpu();
 	debugscr();
 	debugflip();
 
-	char bankstr[64] = { 0 }; cpu.BankNames(selbank, bankstr);
+	char bankstr[64] = { 0 }; cpu.bank_names(selbank, bankstr);
 	unsigned val;
 	sscanf(&bankstr[3], "%x", &val);
 

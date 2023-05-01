@@ -32,7 +32,7 @@ u8 *editam(unsigned addr)
 		return &nvram[addr & (sizeof(nvram) - 1)];
 
 	if (editor == ed_mem)
-		return cpu.DirectMem(addr);
+		return cpu.direct_mem(addr);
 
 	if (!edited_track.trkd)
 		return nullptr;

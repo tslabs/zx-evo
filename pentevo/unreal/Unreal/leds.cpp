@@ -381,7 +381,7 @@ void debug_led()
    }
    for (unsigned w = 0; w < 4; w++) if (watch_enabled[w])
    {
-      char bf[12]; sprintf(bf, "%8X", calc(&cpu, watch_script[w]));
+      char bf[12]; sprintf(bf, "%8X", calc(cpu, watch_script[w]));
       text_i(ptr,bf,0x0F); ptr += pitch*8;
    }
 }

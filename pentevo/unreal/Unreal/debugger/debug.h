@@ -111,13 +111,13 @@ class t_cpu_mgr final
 {
 	static const unsigned Count;
 	static Z80* cpus_[];
-	static TZ80State prev_cpus_[];
+	static z80_state_t prev_cpus_[];
 	static unsigned current_cpu_;
 public:
 	static Z80 &get_cpu() { return *cpus_[current_cpu_]; }
 	static Z80 &get_cpu(const u32 idx) { return *cpus_[idx]; }
-	static TZ80State &prev_cpu(const u32 idx) { return prev_cpus_[idx]; }
-	static TZ80State &prev_cpu() { return prev_cpus_[current_cpu_]; }
+	static z80_state_t &prev_cpu(const u32 idx) { return prev_cpus_[idx]; }
+	static z80_state_t &prev_cpu() { return prev_cpus_[current_cpu_]; }
 	static void switch_cpu();
 	static unsigned get_current_cpu() { return current_cpu_; }
 	static void set_current_cpu(const u32 idx) { current_cpu_ = idx; }
@@ -158,7 +158,7 @@ extern u8 trace_labels;
 
 u8 isbrk(const Z80 &cpu); // is there breakpoints active or any other reason to use debug z80 loop?
 void debugscr();
-void debug_events(Z80 *cpu);
+void debug_events(Z80& cpu);
 
 void flip_from_debug();
 

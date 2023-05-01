@@ -61,7 +61,7 @@ struct TRKCACHE
    {
        drive = 0;
        trkd = 0;
-       ts_byte = Z80FQ/(MAX_TRACK_LEN * FDD_RPS);
+       ts_byte = z80_fq/(MAX_TRACK_LEN * FDD_RPS);
    }
    TRKCACHE() { clear(); }
 };

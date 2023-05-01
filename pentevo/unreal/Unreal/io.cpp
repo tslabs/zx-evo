@@ -389,7 +389,7 @@ void out(unsigned port, u8 val)
 		// comp.pEFF7 |= EFF7_GIGASCREEN; // [vv] disable turbo
 
 		if (conf.mem_model == MM_PENTAGON)
-			turbo((comp.pEFF7 & EFF7_GIGASCREEN) ? 1 : 2);
+			TURBO((comp.pEFF7 & EFF7_GIGASCREEN) ? 1 : 2);
 
 		init_raster();
 

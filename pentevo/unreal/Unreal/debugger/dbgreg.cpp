@@ -7,32 +7,32 @@
 
 const t_reg_layout regs_layout[] =
 {
-   { offsetof(TZ80State, a)     ,  8,  3, 0, 0, 1, 0, 2 }, //  0 a
-   { offsetof(TZ80State, f)     ,  8,  5, 0, 0, 5, 1, 2 }, //  1 f
-   { offsetof(TZ80State, bc)    , 16,  3, 1, 2, 6, 0, 3 }, //  2 bc
-   { offsetof(TZ80State, de)    , 16,  3, 2, 3, 7, 2, 4 }, //  3 de
-   { offsetof(TZ80State, hl)    , 16,  3, 3, 4, 8, 3, 4 }, //  4 hl
-   { offsetof(TZ80State, alt.af), 16, 11, 0, 1, 9, 5, 6 }, //  5 af'
-   { offsetof(TZ80State, alt.bc), 16, 11, 1, 2,10, 5, 7 }, //  6 bc'
-   { offsetof(TZ80State, alt.de), 16, 11, 2, 3,11, 6, 8 }, //  7 de'
-   { offsetof(TZ80State, alt.hl), 16, 11, 3, 4,12, 7, 8 }, //  8 hl'
-   { offsetof(TZ80State, sp)    , 16, 19, 0, 5,13, 9,10 }, //  9 sp
-   { offsetof(TZ80State, pc)    , 16, 19, 1, 6,10, 9,11 }, // 10 pc
-   { offsetof(TZ80State, ix)    , 16, 19, 2, 7,15,10,12 }, // 11 ix
-   { offsetof(TZ80State, iy)    , 16, 19, 3, 8,18,11,12 }, // 12 iy
-   { offsetof(TZ80State, i)     ,  8, 28, 0, 9,14,13,16 }, // 13 i
-   { offsetof(TZ80State, r_low) ,  8, 30, 0,13,14,14,17 }, // 14 r
-   { offsetof(TZ80State, im)    ,  2, 26, 2,11,16,13,20 }, // 15 im
-   { offsetof(TZ80State, iff1)  ,  1, 30, 2,15,17,13,24 }, // 16 iff1
-   { offsetof(TZ80State, iff2)  ,  1, 31, 2,16,17,14,25 }, // 17 iff2
-   { offsetof(TZ80State, f)     , 37, 24, 3,12,19,15,18 }, // 18 SF
-   { offsetof(TZ80State, f)     , 36, 25, 3,18,20,15,19 }, // 19 ZF
-   { offsetof(TZ80State, f)     , 35, 26, 3,19,21,15,20 }, // 20 F5
-   { offsetof(TZ80State, f)     , 34, 27, 3,20,22,15,21 }, // 21 HF
-   { offsetof(TZ80State, f)     , 33, 28, 3,21,23,15,22 }, // 22 F3
-   { offsetof(TZ80State, f)     , 32, 29, 3,22,24,16,23 }, // 23 PV
-   { offsetof(TZ80State, f)     , 31, 30, 3,23,25,16,24 }, // 24 NF
-   { offsetof(TZ80State, f)     , 30, 31, 3,24,25,17,25 }, // 25 CF
+   { offsetof(z80_state_t, a)     ,  8,  3, 0, 0, 1, 0, 2 }, //  0 a
+   { offsetof(z80_state_t, f)     ,  8,  5, 0, 0, 5, 1, 2 }, //  1 f
+   { offsetof(z80_state_t, bc)    , 16,  3, 1, 2, 6, 0, 3 }, //  2 bc
+   { offsetof(z80_state_t, de)    , 16,  3, 2, 3, 7, 2, 4 }, //  3 de
+   { offsetof(z80_state_t, hl)    , 16,  3, 3, 4, 8, 3, 4 }, //  4 hl
+   { offsetof(z80_state_t, alt.af), 16, 11, 0, 1, 9, 5, 6 }, //  5 af'
+   { offsetof(z80_state_t, alt.bc), 16, 11, 1, 2,10, 5, 7 }, //  6 bc'
+   { offsetof(z80_state_t, alt.de), 16, 11, 2, 3,11, 6, 8 }, //  7 de'
+   { offsetof(z80_state_t, alt.hl), 16, 11, 3, 4,12, 7, 8 }, //  8 hl'
+   { offsetof(z80_state_t, sp)    , 16, 19, 0, 5,13, 9,10 }, //  9 sp
+   { offsetof(z80_state_t, pc)    , 16, 19, 1, 6,10, 9,11 }, // 10 pc
+   { offsetof(z80_state_t, ix)    , 16, 19, 2, 7,15,10,12 }, // 11 ix
+   { offsetof(z80_state_t, iy)    , 16, 19, 3, 8,18,11,12 }, // 12 iy
+   { offsetof(z80_state_t, i)     ,  8, 28, 0, 9,14,13,16 }, // 13 i
+   { offsetof(z80_state_t, r_low) ,  8, 30, 0,13,14,14,17 }, // 14 r
+   { offsetof(z80_state_t, im)    ,  2, 26, 2,11,16,13,20 }, // 15 im
+   { offsetof(z80_state_t, iff1)  ,  1, 30, 2,15,17,13,24 }, // 16 iff1
+   { offsetof(z80_state_t, iff2)  ,  1, 31, 2,16,17,14,25 }, // 17 iff2
+   { offsetof(z80_state_t, f)     , 37, 24, 3,12,19,15,18 }, // 18 SF
+   { offsetof(z80_state_t, f)     , 36, 25, 3,18,20,15,19 }, // 19 ZF
+   { offsetof(z80_state_t, f)     , 35, 26, 3,19,21,15,20 }, // 20 F5
+   { offsetof(z80_state_t, f)     , 34, 27, 3,20,22,15,21 }, // 21 HF
+   { offsetof(z80_state_t, f)     , 33, 28, 3,21,23,15,22 }, // 22 F3
+   { offsetof(z80_state_t, f)     , 32, 29, 3,22,24,16,23 }, // 23 PV
+   { offsetof(z80_state_t, f)     , 31, 30, 3,23,25,16,24 }, // 24 NF
+   { offsetof(z80_state_t, f)     , 30, 31, 3,24,25,17,25 }, // 25 CF
 };
 
 const size_t regs_layout_count = _countof(regs_layout);
@@ -63,7 +63,7 @@ void showregs()
 	for (unsigned i = 0; i < regs_layout_count; i++)
 	{
 		const unsigned mask = (1 << regs_layout[i].width) - 1;
-		const unsigned val = mask & *reinterpret_cast<unsigned*>(PCHAR(static_cast<TZ80State*>(&cpu)) + regs_layout[i].offs);
+		const unsigned val = mask & *reinterpret_cast<unsigned*>(PCHAR(static_cast<z80_state_t*>(&cpu)) + regs_layout[i].offs);
 		auto atr1 = atr;
 		if (activedbg == wndregs && i == regs_curs)
 			atr1 = w_curs;
@@ -105,8 +105,8 @@ void renter()
 	debugscr();
 	debugflip();
 	const auto sz = regs_layout[regs_curs].width;
-	auto val = ((1 << sz) - 1) & *reinterpret_cast<unsigned*>(PCHAR(static_cast<TZ80State*>(&cpu)) + regs_layout[regs_curs].offs);
-	const auto ptr = PUCHAR(static_cast<TZ80State*>(&cpu)) + regs_layout[regs_curs].offs;
+	auto val = ((1 << sz) - 1) & *reinterpret_cast<unsigned*>(PCHAR(static_cast<z80_state_t*>(&cpu)) + regs_layout[regs_curs].offs);
+	const auto ptr = PUCHAR(static_cast<z80_state_t*>(&cpu)) + regs_layout[regs_curs].offs;
 	if ((sz == 8 || sz == 16) && ((input.lastkey >= '0' && input.lastkey <= '9') || (input.lastkey >= 'A' && input.lastkey <= 'F')))
 		PostThreadMessage(GetCurrentThreadId(), WM_KEYDOWN, input.lastkey, 1);
 	switch (sz)
@@ -159,7 +159,7 @@ void rcodejump()
 	if (regs_layout[regs_curs].width == 16)
 	{
 		activedbg = wndtrace;
-		cpu.trace_curs = cpu.trace_top = *reinterpret_cast<u16*>(PCHAR(static_cast<TZ80State*>(&cpu)) + regs_layout[regs_curs].offs);
+		cpu.trace_curs = cpu.trace_top = *reinterpret_cast<u16*>(PCHAR(static_cast<z80_state_t*>(&cpu)) + regs_layout[regs_curs].offs);
 	}
 }
 void rdatajump()
@@ -169,7 +169,7 @@ void rdatajump()
 	{
 		activedbg = wndmem;
 		editor = ed_mem;
-		cpu.mem_curs = *reinterpret_cast<u16*>(PCHAR(static_cast<TZ80State*>(&cpu)) + regs_layout[regs_curs].offs);
+		cpu.mem_curs = *reinterpret_cast<u16*>(PCHAR(static_cast<z80_state_t*>(&cpu)) + regs_layout[regs_curs].offs);
 	}
 }
 

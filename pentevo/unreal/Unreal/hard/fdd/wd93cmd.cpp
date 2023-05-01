@@ -26,7 +26,7 @@ void WD1793::process()
       }
 
       // todo: test spinning
-      if (seldrive->rawdata && seldrive->motor && ((time+tshift) % (Z80FQ/FDD_RPS) < (Z80FQ*4/1000)))
+      if (seldrive->rawdata && seldrive->motor && ((time+tshift) % (z80_fq/FDD_RPS) < (z80_fq*4/1000)))
       {
          if (state == S_IDLE)
          {
@@ -71,7 +71,7 @@ void WD1793::process()
          // ----------------------------------------------------
 
          case S_DELAY_BEFORE_CMD:
-            if (!conf.wd93_nodelay && (cmd & CMD_DELAY)) next += (Z80FQ*15/1000); // 15ms delay
+            if (!conf.wd93_nodelay && (cmd & CMD_DELAY)) next += (z80_fq*15/1000); // 15ms delay
             status = (status | WDS_BUSY) & ~(WDS_DRQ | WDS_LOST | WDS_NOTFOUND | WDS_RECORDT | WDS_WRITEP);
             state2 = S_CMD_RW; state = S_WAIT;
             break;
@@ -85,7 +85,7 @@ void WD1793::process()
 
             if ((cmd & 0xC0) == 0x80 || (cmd & 0xF8) == 0xC0) {
                // read/write sectors or read am - find next AM
-               end_waiting_am = next + 5*Z80FQ/FDD_RPS; // max wait disk 5 turns
+               end_waiting_am = next + 5*z80_fq/FDD_RPS; // max wait disk 5 turns
                find_marker();
                break;
             }
@@ -110,7 +110,7 @@ void WD1793::process()
         case S_FOUND_NEXT_ID:
             if (!seldrive->rawdata)
             { // no disk - wait again
-               end_waiting_am = next + 5*Z80FQ/FDD_RPS;
+               end_waiting_am = next + 5*z80_fq/FDD_RPS;
         nextmk:
                find_marker();
                break;
@@ -275,7 +275,7 @@ void WD1793::process()
             state2 = S_WR_TRACK_DATA;
             start_crc = 0;
             getindex();
-            end_waiting_am = next + 5 * Z80FQ /FDD_RPS;
+            end_waiting_am = next + 5 * z80_fq /FDD_RPS;
          break;
 
          case S_WR_TRACK_DATA:
@@ -347,14 +347,14 @@ void WD1793::process()
             rqs = 0;
 
             if (conf.trdos_wp[drive]) status |= WDS_WRITEP;
-            seldrive->motor = next + 2*Z80FQ;
+            seldrive->motor = next + 2*z80_fq;
 
             state2 = S_SEEKSTART; // default is seek/restore
             if (cmd & 0xE0) { // single step
                if (cmd & 0x40) stepdirection = (cmd & CMD_SEEK_DIR) ? -1 : 1;
                state2 = S_STEP;
             }
-            if (!conf.wd93_nodelay) next += 1*Z80FQ/1000;
+            if (!conf.wd93_nodelay) next += 1*z80_fq/1000;
             state = S_WAIT; break;
 
 
@@ -374,7 +374,7 @@ void WD1793::process()
             static const unsigned steps[] = { 6,12,20,30 };
             if (!conf.wd93_nodelay)
 			{
-				next += steps[cmd & CMD_SEEK_RATE]*Z80FQ/1000;
+				next += steps[cmd & CMD_SEEK_RATE]*z80_fq/1000;
 				if ( conf.fdd_noise == 1 )
 					Beep((stepdirection > 0)? 600 : 800, 2);
 				else if ( conf.fdd_noise == 2 )
@@ -407,10 +407,10 @@ void WD1793::process()
                 state2 = S_IDLE;
                 state = S_WAIT;
                 next = time + 1;
-                idx_tmo = next + 15 * Z80FQ/FDD_RPS; // 15 disk turns
+                idx_tmo = next + 15 * z80_fq/FDD_RPS; // 15 disk turns
                 break;
             }
-            end_waiting_am = next + 6*Z80FQ/FDD_RPS; // max wait disk 6 turns
+            end_waiting_am = next + 6*z80_fq/FDD_RPS; // max wait disk 6 turns
             load();
             find_marker();
             break;
@@ -422,7 +422,7 @@ void WD1793::process()
             if (!seldrive->track) state = S_IDLE;
             else seldrive->track--, seldrive->t.clear();
             // if (!seldrive->track) track = 0;
-            next += 6*Z80FQ/1000;
+            next += 6*z80_fq/1000;
             break;
 
 
@@ -460,7 +460,7 @@ void WD1793::find_marker()
       if (foundid != -1)
           wait *= seldrive->t.ts_byte; // Задержка в тактах от текущего такта до такта чтения первого байта заголовка
       else
-          wait = 10*Z80FQ/FDD_RPS;
+          wait = 10*z80_fq/FDD_RPS;
 
       if (conf.wd93_nodelay && foundid != -1)
       {
@@ -554,7 +554,7 @@ void WD1793::out(u8 port, u8 val)
          u8 Cond = (val & 0xF);
          next = comp.t_states + cpu.t;
          idx_cnt = 0;
-         idx_tmo = next + 15 * Z80FQ/FDD_RPS; // 15 disk turns
+         idx_tmo = next + 15 * z80_fq/FDD_RPS; // 15 disk turns
          cmd = val;
 
          if (Cond == 0)
@@ -613,13 +613,13 @@ void WD1793::out(u8 port, u8 val)
          {
              state2 = S_IDLE;
              state = S_WAIT;
-             next = comp.t_states + cpu.t + Z80FQ/FDD_RPS;
+             next = comp.t_states + cpu.t + z80_fq/FDD_RPS;
              rqs = INTRQ;
              return;
          }
 
          // continue disk spinning
-         if (seldrive->motor || conf.wd93_nodelay) seldrive->motor = next + 2*Z80FQ;
+         if (seldrive->motor || conf.wd93_nodelay) seldrive->motor = next + 2*z80_fq;
 
          state = S_DELAY_BEFORE_CMD;
          return;
@@ -701,8 +701,8 @@ void WD1793::trdos_traps()
    // Позиционирование на соседнюю дорожку (пауза)
    if (pc == 0x3DFD && bankr[0][0x3DFD] == 0x3E && bankr[0][0x3DFF] == 0x0E)
    {
-       cpu.pc = cpu.DbgMemIf->rm(cpu.sp++);
-       cpu.pc |= (cpu.DbgMemIf->rm(cpu.sp++) << 8);
+       cpu.pc = cpu.dbg_mem_if->rm(cpu.sp++);
+       cpu.pc |= (cpu.dbg_mem_if->rm(cpu.sp++) << 8);
        cpu.a = 0;
        cpu.c = 0;
    }
@@ -710,8 +710,8 @@ void WD1793::trdos_traps()
    // Позиционирование на произвольную дорожку (пауза)
    if (pc == 0x3EA0 && bankr[0][0x3EA0] == 0x06 && bankr[0][0x3EA2] == 0x3E)
    {
-       cpu.pc = cpu.DbgMemIf->rm(cpu.sp++);
-       cpu.pc |= (cpu.DbgMemIf->rm(cpu.sp++) << 8);
+       cpu.pc = cpu.dbg_mem_if->rm(cpu.sp++);
+       cpu.pc |= (cpu.dbg_mem_if->rm(cpu.sp++) << 8);
        cpu.a = 0;
        cpu.b = 0;
    }
@@ -722,7 +722,7 @@ void WD1793::trdos_traps()
    {
       trdos_load = romled_time;
       if (rqs & DRQ) {
-         cpu.DbgMemIf->wm(cpu.hl, data); // move byte from controller
+         cpu.dbg_mem_if->wm(cpu.hl, data); // move byte from controller
          cpu.hl++, cpu.b--;
          rqs &= ~DRQ; status &= ~WDS_DRQ;
       }
@@ -730,7 +730,7 @@ void WD1793::trdos_traps()
       if (seldrive->t.trkd)
       {
           while (rwlen) { // move others
-             cpu.DbgMemIf->wm(cpu.hl, seldrive->t.trkd[rwptr++]); rwlen--;
+             cpu.dbg_mem_if->wm(cpu.hl, seldrive->t.trkd[rwptr++]); rwlen--;
              cpu.hl++; cpu.b--;
           }
       }
@@ -741,7 +741,7 @@ void WD1793::trdos_traps()
               (rqs & DRQ) && (rwlen>1) && (state == S_WRITE || (state2 == S_WRITE && state == S_WAIT))) {
       trdos_save = romled_time;
       while (rwlen > 1) {
-         seldrive->t.write(rwptr++, cpu.DbgMemIf->rm(cpu.hl), 0); rwlen--;
+         seldrive->t.write(rwptr++, cpu.dbg_mem_if->rm(cpu.hl), 0); rwlen--;
          cpu.hl++; cpu.b--;
       }
       cpu.pc += 2; // skip OUTI

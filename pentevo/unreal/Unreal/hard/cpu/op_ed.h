@@ -1,4 +1,4 @@
 #pragma once
 #include "defs.h"
 
-extern STEPFUNC const ext_opcode[];
+extern stepfunc const ext_opcode[];

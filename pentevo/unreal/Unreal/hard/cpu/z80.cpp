@@ -17,51 +17,27 @@
 
 extern VCTR vid;
 
-namespace z80gs
-{
-void flush_gs_z80();
-}
-
-#ifdef MOD_FASTCORE
-   namespace z80fast
-   {
-      #include "z80_main.inl"
-   }
-#else
-   #define z80fast z80dbg
-#endif
-
-#ifdef MOD_DEBUGCORE
-   namespace z80dbg
-   {
-      #define Z80_DBG
-      #include "z80_main.inl"
-      #undef Z80_DBG
-   }
-#else
-   #define z80dbg z80fast
-#endif
 
 void out(unsigned port, u8 val);
 
 u8 Rm(u32 addr)
 {
-    return z80fast::rm(addr);
+    return rm<false>(addr);
 }
 
 void Wm(u32 addr, u8 val)
 {
-    z80fast::wm(addr, val);
+    wm<false>(addr, val);
 }
 
 u8 DbgRm(u32 addr)
 {
-    return z80dbg::rm(addr);
+    return rm<true>(addr);
 }
 
 void DbgWm(u32 addr, u8 val)
 {
-    z80dbg::wm(addr, val);
+    wm<true>(addr, val);
 }
 
 void reset_sound(void)
@@ -86,7 +62,7 @@ void reset(ROM_MODE mode)
    comp.pEFF7 |= EFF7_GIGASCREEN; // [vv] disable turbo
    {
         conf.frame = frametime;
-        cpu.SetTpi(conf.frame);
+        cpu.set_tpi(conf.frame);
 //                if ((conf.mem_model == MM_PENTAGON)&&(comp.pEFF7 & EFF7_GIGASCREEN))conf.frame = 71680; //removed 0.37
         apply_sound();
    } //Alone Coder 0.36.4
@@ -101,7 +77,7 @@ void reset(ROM_MODE mode)
    if (conf.mem_model == MM_TSL)
 		set_clk();		// turbo 2x (7MHz) for TS-Conf
    else
-		turbo(1);		// turbo 1x (3.5MHz) for all other clones
+		TURBO(1);		// turbo 1x (3.5MHz) for all other clones
 
    switch (mode)
    {
@@ -137,10 +113,10 @@ void set_clk(void)
 {
 	switch(comp.ts.zclk)
 	{
-		case 0: turbo(1); break;
-		case 1: turbo(2); break;
-		case 2: turbo(4); break;
-		case 3: turbo(4); break;
+		case 0: TURBO(1); break;
+		case 1: TURBO(2); break;
+		case 2: TURBO(4); break;
+		case 3: TURBO(4); break;
 	}
 	comp.ts.intctrl.frame_len = (conf.intlen * cpu.rate) >> 8;
 }

@@ -108,7 +108,7 @@ void write_mem()
 	auto& cpu = t_cpu_mgr::get_cpu();
 	auto ptr = memdata;
 	for (auto a1 = addr; a1 <= end; a1++)
-		*cpu.DirectMem(a1) = *ptr++;
+		*cpu.direct_mem(a1) = *ptr++;
 }
 
 void read_mem()
@@ -116,7 +116,7 @@ void read_mem()
 	auto& cpu = t_cpu_mgr::get_cpu();
 	auto ptr = memdata;
 	for (auto a1 = addr; a1 <= end; a1++)
-		*ptr++ = cpu.DirectRm(a1);
+		*ptr++ = cpu.direct_rm(a1);
 }
 
 char rw_select_drive()

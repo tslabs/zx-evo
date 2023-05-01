@@ -90,20 +90,20 @@ class TMainZ80 : public Z80
 {
 public:
 	TMainZ80(u32 Idx,
-		TBankNames BankNames, TStep Step, TDelta Delta,
-		TSetLastT SetLastT, u8* membits, const TMemIf* FastMemIf, const TMemIf* DbgMemIf) :
+		t_bank_names BankNames, step_fn Step, delta_fn Delta,
+		set_lastt_fn SetLastT, u8* membits, const t_mem_if* FastMemIf, const t_mem_if* DbgMemIf) :
 		Z80(Idx, BankNames, Step, Delta, SetLastT, membits, FastMemIf, DbgMemIf) { }
 
-	virtual u8* DirectMem(unsigned addr) const override; // get direct memory pointer in debuger
+	u8* direct_mem(unsigned addr) const override; // get direct memory pointer in debuger
 
 	u8 rd(u32 addr) override;
 
-	virtual u8 m1_cycle() override;
-	virtual u8 in(unsigned port) override;
-	virtual void out(unsigned port, u8 val) override;
-	virtual u8 IntVec() override;
-	virtual void CheckNextFrame() override;
-	virtual void retn() override;
+	u8 m1_cycle() override;
+	u8 in(unsigned port) override;
+	void out(unsigned port, u8 val) override;
+	u8 int_vec() override;
+	void check_next_frame() override;
+	void retn() override;
 };
 
 extern palette_options pals[32];
@@ -194,9 +194,7 @@ extern u8* bankr[4];
 extern u8* bankw[4];
 extern u8 bankm[4];		// bank mode: 0 - ROM / 1 - RAM
 
-#ifdef MOD_GSBASS
 extern GSHLE gs;
-#endif
 
 extern gdibmp_t gdibmp, debug_gdibmp;
 extern u8 needclr; // clear screenbuffer before rendering
@@ -222,16 +220,6 @@ extern unsigned statcnt;
 extern bool normal_exit;
 
 extern const char* const ay_schemes[];
-
-#ifdef MOD_GSZ80
-extern class TGsZ80 gscpu;
-
-namespace z80gs
-{
-	extern SNDRENDER sound;
-	extern u8 membits[];
-}
-#endif
 
 extern ata_port hdd;   // not in `comp' - not cleared in reset()
 extern char arcbuffer[0x2000]; // extensions and command lines for archivers
