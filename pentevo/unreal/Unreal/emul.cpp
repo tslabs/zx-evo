@@ -1,13 +1,7 @@
 #include "std.h"
 #include "mods.h"
-#include "sound/emul_2203.h"
-#include "sound/sndrender.h"
 #include "emul.h"
-#include "sound/sndchip.h"
-#include "sound/sndcounter.h"
 #include "init.h"
-#include "funcs.h"
-#include "debugger/debug.h"
 #include "vars.h"
 #include "dx/dx.h"
 #include "draw.h"
@@ -37,10 +31,8 @@ unsigned frametime = 111111; //Alone Coder (GUI value for conf.frame)
 
 int nmi_pending = 0;
 
-bool ConfirmExit();
-BOOL WINAPI ConsoleHandler(DWORD CtrlType);
 
-void m_nmi(ROM_MODE page);
+void m_nmi(rom_mode page);
 void showhelp(const char *anchor)
 {
    sound_stop(); //Alone Coder 0.36.6

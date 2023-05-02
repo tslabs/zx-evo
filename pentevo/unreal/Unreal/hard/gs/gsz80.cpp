@@ -7,7 +7,7 @@
 #include "gsz80_fn.h"
 #include "vs1001.h"
 #include "hard/sdcard.h"
-#include "hard/cpu/op_noprefix.h"
+#include "core/z80/op_noprefix.h"
 
 namespace z80gs
 {
@@ -89,8 +89,6 @@ namespace z80gs
 	{
 		nmi_in_progress = false;
 	}
-
-#include "hard/cpu/op_system.h"
 
 	constexpr u8 MPAG = 0x00;
 	constexpr u8 MPAGEX = 0x10;

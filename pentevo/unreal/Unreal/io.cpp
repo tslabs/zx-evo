@@ -8,7 +8,7 @@
 #include "hard/gs/gs.h"
 #include "sound/saa1099.h"
 #include "hard/zc.h"
-#include "hard/cpu/z80.h"
+#include "hard/cpu/z80main.h"
 #include "tape.h"
 #include "sound/ayx32.h"
 #include "util.h"
@@ -50,7 +50,7 @@ void out(unsigned port, u8 val)
 	// if (p1 == 0xFD)
 	// printf("out (%04X), %02X\n", port, val);
 
-	if (conf.ulaplus != UPLS_NONE)
+	if (conf.ulaplus != ulaplus::none)
 	{
 		/* ULA+ register select */
 		if (port == 0xBF3B)
@@ -151,15 +151,15 @@ void out(unsigned port, u8 val)
 		if ((conf.mem_model == MM_TSL) && (comp.ts.fddvirt & 0x80) && ((p1 & 0x1F) == 0x1F)) // 1F, 3F, 5F, 7F, FF
 			comp.wd.out(p1, val);
 
-		if ((u8)port == 0x1F && conf.sound.ay_scheme == AY_SCHEME_POS)
+		if ((u8)port == 0x1F && conf.sound.ay_scheme == ay_scheme::pos)
 		{
 			comp.active_ay = val & 1;
 			return;
 		}
 
-		if (!(port & 6) && (conf.ide_scheme == IDE_NEMO || conf.ide_scheme == IDE_NEMO_A8))
+		if (!(port & 6) && (conf.ide_scheme == ide_scheme::nemo || conf.ide_scheme == ide_scheme::nemo_a8))
 		{
-			const unsigned hi_byte = (conf.ide_scheme == IDE_NEMO) ? (port & 1) : (port & 0x100);
+			const unsigned hi_byte = (conf.ide_scheme == ide_scheme::nemo) ? (port & 1) : (port & 0x100);
 			if (hi_byte)
 			{
 				comp.ide_write = val;
@@ -295,7 +295,7 @@ void out(unsigned port, u8 val)
 			// switch active PSG via NedoPC scheme
 			switch (conf.sound.ay_scheme)
 			{
-			case AY_SCHEME_CHRV:
+			case ay_scheme::chrv:
 				if ((val & 0xF8) == 0xF8)
 				{
 					if (conf.sound.ay_chip == (SNDCHIP::CHIP_YM2203))
@@ -307,18 +307,18 @@ void out(unsigned port, u8 val)
 				};
 				break;
 
-			case AY_SCHEME_AYX32:
+			case ay_scheme::ayx32:
 				if ((val & 0xF8) == 0xF8)
 					comp.active_ay = ~val & 1;
 				break;
 
-			case AY_SCHEME_QUADRO:
+			case ay_scheme::quadro:
 				comp.active_ay = (port >> 12) & 1;
 				break;
 			}
 
 			ay_last_reg = val;
-			if ((conf.sound.ay_scheme == AY_SCHEME_AYX32) && (val >= 16))
+			if ((conf.sound.ay_scheme == ay_scheme::ayx32) && (val >= 16))
 				ayx32.write_addr((SNDAYX32::REG)val);
 			else
 				ay[comp.active_ay].select(val);
@@ -326,14 +326,14 @@ void out(unsigned port, u8 val)
 		}
 
 		// BFFD - PSG data
-		if (((port & 0xC000) == 0x8000) && conf.sound.ay_scheme)
+		if (((port & 0xC000) == 0x8000) && conf.sound.ay_scheme != ay_scheme::none)
 		{
 			// printf("Write: %d\n", val);
 
 			u8 n_ay;
 			switch (conf.sound.ay_scheme)
 			{
-			case AY_SCHEME_QUADRO:
+			case ay_scheme::quadro:
 				n_ay = (port >> 12) & 1;
 				break;
 
@@ -341,7 +341,7 @@ void out(unsigned port, u8 val)
 				n_ay = comp.active_ay;
 			}
 
-			if ((conf.sound.ay_scheme == AY_SCHEME_AYX32) && (ay_last_reg >= 16))
+			if ((conf.sound.ay_scheme == ay_scheme::ayx32) && (ay_last_reg >= 16))
 				ayx32.write(temp.sndblock ? 0 : cpu.t, val);
 			else
 				ay[n_ay].write(temp.sndblock ? 0 : cpu.t, val);
@@ -449,7 +449,7 @@ __inline u8 in1(unsigned port)
 
 	u8 tmp;
 
-	if (conf.ulaplus)
+	if (conf.ulaplus != ulaplus::none)
 	{
 		if (port == 0xFF3B)
 		{
@@ -554,9 +554,9 @@ __inline u8 in1(unsigned port)
 		if ((conf.mem_model == MM_TSL) && (comp.ts.fddvirt & 0x80) && ((p1 & 0x1F) == 0x1F)) // 1F, 3F, 5F, 7F, FF
 			return comp.wd.in(p1);
 
-		if (!(port & 6) && (conf.ide_scheme == IDE_NEMO || conf.ide_scheme == IDE_NEMO_A8))
+		if (!(port & 6) && (conf.ide_scheme == ide_scheme::nemo || conf.ide_scheme == ide_scheme::nemo_a8))
 		{
-			const unsigned hi_byte = (conf.ide_scheme == IDE_NEMO) ? (port & 1) : (port & 0x100);
+			const unsigned hi_byte = (conf.ide_scheme == ide_scheme::nemo) ? (port & 1) : (port & 0x100);
 			if (hi_byte)
 				return comp.ide_read;
 			comp.ide_read = 0xFF;
@@ -611,16 +611,16 @@ __inline u8 in1(unsigned port)
 	}
 
 	// xxFD - AY
-	if ((p1 == 0xFD) && conf.sound.ay_scheme)
+	if ((p1 == 0xFD) && conf.sound.ay_scheme != ay_scheme::none)
 	{
-		if ((conf.sound.ay_scheme == AY_SCHEME_CHRV) && (conf.sound.ay_chip == (SNDCHIP::CHIP_YM2203)) && (tfmstatuson0 == 0))
+		if ((conf.sound.ay_scheme == ay_scheme::chrv) && (conf.sound.ay_chip == (SNDCHIP::CHIP_YM2203)) && (tfmstatuson0 == 0))
 			return 0x7F;  // always ready
 
 		if ((p2 & 0xC0) != 0xC0)
 			return 0xFF;
 
 		u8 n_ay;
-		if (conf.sound.ay_scheme == AY_SCHEME_QUADRO)
+		if (conf.sound.ay_scheme == ay_scheme::quadro)
 			n_ay = (port >> 12) & 1;
 		else
 			n_ay = comp.active_ay;
@@ -633,7 +633,7 @@ __inline u8 in1(unsigned port)
 		}
 
 		u8 rc;
-		if ((conf.sound.ay_scheme == AY_SCHEME_AYX32) && (ay_last_reg >= 16))
+		if ((conf.sound.ay_scheme == ay_scheme::ayx32) && (ay_last_reg >= 16))
 			rc = ayx32.read();
 		else
 			rc = ay[n_ay].read();

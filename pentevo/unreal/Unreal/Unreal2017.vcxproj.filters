@@ -70,7 +70,7 @@
     <ClCompile Include="config.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="hard\cpu\daa_tabs.cpp">
+    <ClCompile Include="core\z80\daa_tabs.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="draw.cpp">
@@ -160,22 +160,22 @@
     <ClCompile Include="hard\memory.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="hard\cpu\op_cb.cpp">
+    <ClCompile Include="core\z80\op_cb.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="hard\cpu\op_dd.cpp">
+    <ClCompile Include="core\z80\op_dd.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="hard\cpu\op_ddcb.cpp">
+    <ClCompile Include="core\z80\op_ddcb.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="hard\cpu\op_ed.cpp">
+    <ClCompile Include="core\z80\op_ed.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="hard\cpu\op_fd.cpp">
+    <ClCompile Include="core\z80\op_fd.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="hard\cpu\op_noprefix.cpp">
+    <ClCompile Include="core\z80\op_noprefix.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="opendlg.cpp">
@@ -214,7 +214,7 @@
     <ClCompile Include="std.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="hard\cpu\tables.cpp">
+    <ClCompile Include="core\z80\tables.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="tape.cpp">
@@ -262,10 +262,10 @@
     <ClCompile Include="wldr_udi.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="hard\cpu\z80.cpp">
+    <ClCompile Include="hard\cpu\z80main.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="hard\cpu\z80asm.cpp">
+    <ClCompile Include="core\z80\z80asm.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="hard\zc.cpp">
@@ -447,10 +447,10 @@
     <ClInclude Include="mods.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="hard\cpu\op_noprefix.h">
+    <ClInclude Include="core\z80\op_noprefix.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="hard\cpu\op_system.h">
+    <ClInclude Include="core\z80\op_system.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="opendlg.h">
@@ -495,7 +495,7 @@
     <ClInclude Include="sysdefs.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="hard\cpu\tables.h">
+    <ClInclude Include="core\z80\tables.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="tape.h">
@@ -522,10 +522,10 @@
     <ClInclude Include="hard\fdd\wd93dat.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="hard\cpu\z80.h">
+    <ClInclude Include="hard\cpu\z80main.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="hard\cpu\z80asm.h">
+    <ClInclude Include="core\z80\z80asm.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="hard\zc.h">
@@ -600,8 +600,13 @@
     <ClInclude Include="visuals.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="hard\cpu\z80_fn.h" />
+    <ClInclude Include="hard\cpu\z80main_fn.h" />
     <ClInclude Include="hard\gs\gsz80_fn.h" />
+    <ClInclude Include="core\z80\op_fd.h" />
+    <ClInclude Include="core\z80\op_ed.h" />
+    <ClInclude Include="core\z80\op_dd.h" />
+    <ClInclude Include="core\z80\daa_tabs.h" />
+    <ClInclude Include="core\z80\z80.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Unreal.rc">

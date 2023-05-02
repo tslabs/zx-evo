@@ -106,7 +106,7 @@ static void draw_zx(int n)
 	const u8* scr = page_ram(comp.ts.vpage);
 	u32 vptr = vid.vptr;
 	u16 vcyc = vid.memvidcyc[vid.line];
-	const u8 upmod = conf.ulaplus;
+	const ulaplus upmod = conf.ulaplus;
 	const u8 tsgpal = comp.ts.gpal << 4;
 
 	for (; n > 0; n -= 4, vid.t_next += 4, vid.xctr++, g++, a++)
@@ -117,13 +117,13 @@ static void draw_zx(int n)
 		vcyc++;
 		vid.memcyc_lcmd++;
 
-		if ((upmod != UPLS_NONE) && comp.ulaplus_mode)
+		if ((upmod != ulaplus::none) && comp.ulaplus_mode)
 		{
 			const u32 psel = (c & 0xC0) >> 2;
 			const u32 ink = comp.ulaplus_cram[psel + (c & 7)];
 			const u32 paper = comp.ulaplus_cram[psel + ((c >> 3) & 7) + 8];
-			p0 = cr[(paper & 0x1C) >> 2] | cg[(paper & 0xE0) >> 5] | cb[upmod][paper & 0x03];
-			p1 = cr[(ink & 0x1C) >> 2] | cg[(ink & 0xE0) >> 5] | cb[upmod][ink & 0x03];
+			p0 = cr[(paper & 0x1C) >> 2] | cg[(paper & 0xE0) >> 5] | cb[(int)upmod][paper & 0x03];
+			p1 = cr[(ink & 0x1C) >> 2] | cg[(ink & 0xE0) >> 5] | cb[(int)upmod][ink & 0x03];
 		}
 
 		else
@@ -192,10 +192,10 @@ static void draw_p384(int n)
 		else
 			ogx = 8, oax = 0x0008;
 
-		u8 p = scr[g + ogx + ogy + o];		// pixels
-		u8 c = scr[a + oax + oay + o];		// attributes
+		const u8 p = scr[g + ogx + ogy + o];		// pixels
+		const u8 c = scr[a + oax + oay + o];		// attributes
 		vcyc++;
-		u32 b = (c & 0x40) >> 3;
+		const u32 b = (c & 0x40) >> 3;
 		u32 p0 = vid.clut[(comp.ts.gpal << 4) | b | ((c >> 3) & 0x07)];	// color for 'PAPER'
 		u32 p1 = vid.clut[(comp.ts.gpal << 4) | b | (c & 0x07)];			// color for 'INK'
 		sinc_draw
@@ -384,9 +384,9 @@ void draw_border(int n)
 	u32 p;
 
 	// ULAplus border mode is active only for Sinclair video mode
-	if ((vid.mode == M_ZX) && (conf.ulaplus != UPLS_NONE) && comp.ulaplus_mode) {
+	if ((vid.mode == M_ZX) && (conf.ulaplus != ulaplus::none) && comp.ulaplus_mode) {
 		const u8 idx = comp.ulaplus_cram[(comp.ts.border & 7) + 8];
-		p = cr[(idx & 0x1C) >> 2] | cg[(idx & 0xE0) >> 5] | cb[conf.ulaplus][idx & 0x03];
+		p = cr[(idx & 0x1C) >> 2] | cg[(idx & 0xE0) >> 5] | cb[(int)conf.ulaplus][idx & 0x03];
 	}
 	else p = vid.clut[comp.ts.border];
 

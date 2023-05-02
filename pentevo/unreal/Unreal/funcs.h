@@ -55,7 +55,7 @@ void load_ula_preset();
 void restart_sound();
 void create_font_tables();
 
-void reset(ROM_MODE mode);
+void reset(rom_mode mode);
 
 void debug_events(Z80& cpu);
 void debug_cond_check(Z80& cpu);

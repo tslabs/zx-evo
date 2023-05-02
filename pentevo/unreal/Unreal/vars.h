@@ -1,8 +1,12 @@
 #pragma once
 #include "emul.h"
+#include "input.h"
 #include "sound/sndchip.h"
 #include "sound/ayx32.h"
 #include "debugger/debug.h"
+#include "hard/zf232.h"
+#include "hard/gs/gshle.h"
+#include "hard/hdd/hdd.h"
 
 constexpr auto romled_time = 16;
 
@@ -106,6 +110,12 @@ public:
 	void retn() override;
 };
 
+enum class BANKM
+{
+	BANKM_ROM = 0,
+	BANKM_RAM
+};
+
 extern palette_options pals[32];
 
 extern CONFIG conf;
@@ -147,7 +157,7 @@ extern BORDSIZE bordersizes[];
 extern VOID_FUNC prebuffers[];
 extern TS_VDAC_NAME ts_vdac_names[];
 
-extern const TMemModel mem_model[N_MM_MODELS];
+extern const mem_model_t mem_model[N_MM_MODELS];
 
 extern zxkeymap zxk_maps[];
 extern const size_t zxk_maps_count;
@@ -192,7 +202,7 @@ extern SNDAYX32 ayx32;
 
 extern u8* bankr[4];
 extern u8* bankw[4];
-extern u8 bankm[4];		// bank mode: 0 - ROM / 1 - RAM
+extern BANKM bankm[4];		// bank mode: 0 - ROM / 1 - RAM
 
 extern GSHLE gs;
 
@@ -202,7 +212,7 @@ extern DWORD mousepos;  // left-clicked point in monitor
 extern PALETTEENTRY syspalette[0x100];
 extern u8 exitflag; // avoid call exit() twice
 
-#define PLAYBUFSIZE 16384
+constexpr auto PLAYBUFSIZE = 16384;
 extern unsigned sndplaybuf[PLAYBUFSIZE];
 extern unsigned spbsize;
 extern u8 savesndtype; // 0-none,1-wave,2-vtx

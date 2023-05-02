@@ -5,9 +5,11 @@
 #include "debugger/debug.h"
 #include "hard/memory.h"
 #include "hard/gs/gsz80.h"
-#include "hard/cpu/z80.h"
+#include "hard/cpu/z80main.h"
 
 #include "util.h"
+#include "debugger/dbgoth.h"
+#include "hard/cpu/z80main_fn.h"
 #include "sound/sndcounter.h"
 #include "sound/ayx32.h"
 
@@ -15,14 +17,8 @@ int fmsoundon0 = 4; //Alone Coder
 int tfmstatuson0 = 2; //Alone Coder
 char pressedit = 0; //Alone Coder
 
-void wmdbg(u32 addr, u8 val);
-u8 rmdbg(u32 addr);
-u8* MemDbg(u32 addr);
-void __cdecl BankNames(int i, char* name);
-
 
 #pragma pack(8)
-
 
 u8* TMainZ80::direct_mem(unsigned addr) const
 {
@@ -65,9 +61,15 @@ u8 TMainZ80::m1_cycle()
 	return tempbyte;
 }
 
-u8 TMainZ80::in(unsigned port) { return ::in(port); }
+u8 TMainZ80::in(unsigned port)
+{
+	return ::in(port);
+}
 
-void TMainZ80::out(unsigned port, u8 val) { ::out(port, val); }
+void TMainZ80::out(unsigned port, u8 val)
+{
+	::out(port, val);
+}
 
 u8 TMainZ80::int_vec()
 {
@@ -177,7 +179,7 @@ u8* const memory = (u8*)memory__;
 u8 membits[0x10000];
 u8* bankr[4];	// memory pointers to memory (RAM/ROM/cache) mapped in four Z80 windows
 u8* bankw[4];
-u8 bankm[4];		// bank mode: 0 - ROM / 1 - RAM
+BANKM bankm[4];		// bank mode: 0 - ROM / 1 - RAM
 u8 cmos[0x100];
 u8 nvram[0x800];
 
@@ -196,7 +198,7 @@ HWND debug_wnd;
 
 char droppedFile[512];
 
-const TMemModel mem_model[N_MM_MODELS] =
+const mem_model_t mem_model[N_MM_MODELS] =
 {
 	{ "Pentagon", "PENTAGON",                MM_PENTAGON, 128,  RAM_128 | RAM_256 | RAM_512 | RAM_1024 },
 	{ "TS-Config", "TSL",                    MM_TSL, 4096, RAM_4096 },

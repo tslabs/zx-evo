@@ -52,4 +52,4 @@ void main_sizem();
 void main_help();
 void main_flictoggle();
 void mon_help();
-void m_nmi(ROM_MODE page);
+void m_nmi(rom_mode page);

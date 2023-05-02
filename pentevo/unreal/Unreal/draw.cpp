@@ -344,11 +344,11 @@ void init_frame()
 	if (conf.noflic) vid.buf ^= 1;
 
 	switch (conf.ray_paint_mode) {
-	case RAYDRAW_CLEAR:
+	case ray_paint_mode::clear:
 		memset(vbuf[vid.buf], 0xFF000000, sizeof(u32) * sizeof_vbuf);          // alpha fix (doubt if it's really need)
 		break;
 
-	case RAYDRAW_DIM:
+	case ray_paint_mode::dim:
 	{
 		// TODO: rewirte with SSE2
 		auto* p = vbuf[vid.buf];

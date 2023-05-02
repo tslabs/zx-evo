@@ -3,7 +3,6 @@
 #include "vars.h"
 #include "dx/dx.h"
 #include "tape.h"
-#include "hard/memory.h"
 #include "input.h"
 #include "inputpc.h"
 #include "debugger/debug.h"
@@ -35,8 +34,7 @@ u8 ruspastekeys[64] =
 
 void k_input::clear_zx()
 {
-	int i;
-	for (i = 0; i < _countof(kbd_x4); i++)
+	for (int i = 0; i < _countof(kbd_x4); i++)
 		kbd_x4[i] = -1;
 }
 
@@ -49,8 +47,6 @@ inline void k_input::press_zx(u8 key)
 	if (key & 7)
 		kbd[(key >> 4) & 7] &= ~(1 << ((key & 7) - 1));
 }
-
-// #include "inputpc.cpp"
 
 bool k_input::process_pc_layout()
 {
@@ -85,10 +81,6 @@ void k_input::make_matrix()
 					{
 						*(inports[i].port1) &= inports[i].mask1;
 						*(inports[i].port2) &= inports[i].mask2;
-						/*
-						   if (kbd[6] == 0xFE)
-							   __debugbreak();
-						*/
 					}
 				}
 			}
@@ -163,7 +155,7 @@ void k_input::make_matrix()
 					pressedit++;
 					textoffset--;
 					break;
-				};
+				}
 				case 1:
 				{
 					if (kdata == 0xB8) kdata = '&'; else kdata = ruspastekeys[kdata - 0xC0];
@@ -176,8 +168,9 @@ void k_input::make_matrix()
 				{
 					tdata = 0x39;
 					pressedit = 0;
-				};
-				};
+				}
+				default: ;
+				}
 				if (!tdata)
 					break; // empty key
 			} //Alone Coder
@@ -234,7 +227,7 @@ char k_input::readdevices()
 	{
 		dijoyst->Poll();
 		DIJOYSTATE js;
-		readdevice(&js, sizeof js, (LPDIRECTINPUTDEVICE)dijoyst);
+		readdevice(&js, sizeof js, dijoyst);
 		if ((i16)js.lX < 0) kbdpc[VK_JLEFT] = 0x80;
 		if ((i16)js.lX > 0) kbdpc[VK_JRIGHT] = 0x80;
 		if ((i16)js.lY < 0) kbdpc[VK_JUP] = 0x80;
@@ -303,7 +296,7 @@ char k_input::readdevices()
 		//      if (wheel_delta < 0) kbdpc[VK_MWD] = 0x80;
 		//      if (wheel_delta > 0) kbdpc[VK_MWU] = 0x80;
 		//0.36.6 from 0.35b2
-		if (conf.input.mousewheel == MOUSE_WHEEL_KEYBOARD)
+		if (conf.input.mousewheel == mouse_wheel_mode::keyboard)
 		{
 			if (wheel_delta < 0)
 				kbdpc[VK_MWD] = 0x80;
@@ -311,7 +304,7 @@ char k_input::readdevices()
 				kbdpc[VK_MWU] = 0x80;
 		}
 
-		if (conf.input.mousewheel == MOUSE_WHEEL_KEMPSTON)
+		if (conf.input.mousewheel == mouse_wheel_mode::kempston)
 		{
 			if (wheel_delta < 0)
 				wheel -= 0x10;
@@ -357,7 +350,7 @@ void k_input::aymouse_wr(u8 val)
 	ay_r14 = val;
 }
 
-u8 k_input::aymouse_rd()
+u8 k_input::aymouse_rd() const
 {
 	unsigned coord;
 	if (ay_r14 & 0x40) {
@@ -370,24 +363,19 @@ u8 k_input::aymouse_rd()
 		const unsigned cl2 = abs(msx - msx_prev) * cpu.t / conf.frame;
 		coord = ay_x0 + (cl2 - cl1) * sign_pm(msx - msx_prev);
 	}
-	/*
-	   int coord = (ayR14 & 0x40)?
-		 ay_y0 + 0x100 * (msy - msy_prev) * (int)(cpu.t - ay_reset_t) / (int)conf.frame:
-		 ay_x0 + 0x100 * (msx - msx_prev) * (int)(cpu.t - ay_reset_t) / (int)conf.frame;
-	//   if ((coord & 0x0F)!=8 && !(ayR14 & 0x40)) printf("coord: %X, x0=%4d, frame_dx=%6d, dt=%d\n", (coord & 0x0F), ay_x0, msx-msx_prev, cpu.t-ay_reset_t);
-	*/
+	
 	return 0xC0 | (coord & 0x0F) | (mbuttons << 4);
 }
 
-u8 k_input::kempston_mx()
+u8 k_input::kempston_mx() const
 {
-	int x = (cpu.t * msx + (conf.frame - cpu.t) * msx_prev) / conf.frame;
+	const int x = (cpu.t * msx + (conf.frame - cpu.t) * msx_prev) / conf.frame;
 	return (u8)x;
 }
 
-u8 k_input::kempston_my()
+u8 k_input::kempston_my() const
 {
-	int y = (cpu.t * msy + (conf.frame - cpu.t) * msy_prev) / conf.frame;
+	const int y = (cpu.t * msy + (conf.frame - cpu.t) * msy_prev) / conf.frame;
 	return (u8)y;
 }
 
@@ -426,7 +414,7 @@ void k_input::paste()
 	textsize = textoffset = 0;
 	keymode = km_default;
 	if (!OpenClipboard(wnd)) return;
-	HANDLE hClip = GetClipboardData(CF_TEXT);
+	const HANDLE hClip = GetClipboardData(CF_TEXT);
 	if (hClip) {
 		void* ptr = GlobalLock(hClip);
 		if (ptr) {

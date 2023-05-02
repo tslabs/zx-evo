@@ -90,10 +90,10 @@ struct k_input
    unsigned textoffset, textsize;
    u8 tdelay, tdata, wheel; //0.36.6 from 0.35b2
 
-   u8 kempston_mx();
-   u8 kempston_my();
+   u8 kempston_mx() const;
+   u8 kempston_my() const;
 
-   u8 aymouse_rd();
+   u8 aymouse_rd() const;
    void aymouse_wr(u8 val);
 
    void clear_zx();
@@ -107,7 +107,7 @@ struct k_input
 
    k_input()
    {
-      textbuffer = 0;
+      textbuffer = nullptr;
       // random data on coords -> some programs detects mouse by this
       ay_x0 = msx = 31;
       ay_y0 = msy = 85;

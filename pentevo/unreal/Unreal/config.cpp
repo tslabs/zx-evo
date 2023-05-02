@@ -115,7 +115,7 @@ void save_nv()
 	if (f0) fwrite(cmos, 1, sizeof cmos, f0), fclose(f0);
 
 	addpath(line, "NVRAM");
-	if (f0 = fopen(line, "wb")) fwrite(nvram, 1, sizeof nvram, f0), fclose(f0);
+	if ((f0 = fopen(line, "wb"))) fwrite(nvram, 1, sizeof nvram, f0), fclose(f0);
 }
 
 void load_romset(CONFIG* conf, const char* romset)
@@ -296,9 +296,9 @@ void load_config(const char* fname)
 
 	// ULA+
 	GetPrivateProfileString(misc, "ULAPLUS", nil, line, sizeof line, ininame);
-	conf.ulaplus = UPLS_NONE;
-	if (!strcmp(line, "TYPE1")) conf.ulaplus = UPLS_TYPE1;
-	if (!strcmp(line, "TYPE2")) conf.ulaplus = UPLS_TYPE2;
+	conf.ulaplus = ulaplus::none;
+	if (!strcmp(line, "TYPE1")) conf.ulaplus = ulaplus::type1;
+	if (!strcmp(line, "TYPE2")) conf.ulaplus = ulaplus::type2;
 
 	// TS VDAC
 	GetPrivateProfileString(misc, "TS_VDAC", nil, line, sizeof line, ininame);
@@ -337,11 +337,11 @@ void load_config(const char* fname)
 	strcpy(temp.RomDir, temp.SnapDir);
 	strcpy(temp.HddDir, temp.SnapDir);
 
-	conf.reset_rom = RM_SOS;
+	conf.reset_rom = rom_mode::sos;
 	GetPrivateProfileString(misc, "RESET", nil, line, sizeof line, ininame);
-	if (!strnicmp(line, "DOS", 3)) conf.reset_rom = RM_DOS;
-	if (!strnicmp(line, "MENU", 4)) conf.reset_rom = RM_128;
-	if (!strnicmp(line, "SYS", 3)) conf.reset_rom = RM_SYS;
+	if (!strnicmp(line, "DOS", 3)) conf.reset_rom = rom_mode::dos;
+	if (!strnicmp(line, "MENU", 4)) conf.reset_rom = rom_mode::s128;
+	if (!strnicmp(line, "SYS", 3)) conf.reset_rom = rom_mode::sys;
 
 	GetPrivateProfileString(misc, "Modem", nil, line, sizeof line, ininame);
 	conf.modem_port = 0;
@@ -386,18 +386,18 @@ void load_config(const char* fname)
 
 
 
-	conf.ray_paint_mode = GetPrivateProfileInt(video, "raypaint_mode", 0, ininame);
-	if (conf.ray_paint_mode > RAYDRAW_DIM) conf.ray_paint_mode = RAYDRAW_DIM;
+	conf.ray_paint_mode = static_cast<ray_paint_mode>(GetPrivateProfileInt(video, "raypaint_mode", 0, ininame));
+	if (conf.ray_paint_mode > ray_paint_mode::dim) conf.ray_paint_mode = ray_paint_mode::dim;
 
 	conf.videoscale = GetPrivateProfileInt(video, "scale", 2, ininame);
 
 	conf.rsm.mix_frames = GetPrivateProfileInt(video, "rsm.frames", 8, ininame);
 	GetPrivateProfileString(video, "rsm.mode", nil, line, sizeof line, ininame);
-	conf.rsm.mode = RSM_FIR0;
-	if (!strnicmp(line, "FULL", 4)) conf.rsm.mode = RSM_FIR0;
-	if (!strnicmp(line, "2C", 2)) conf.rsm.mode = RSM_FIR1;
-	if (!strnicmp(line, "3C", 2)) conf.rsm.mode = RSM_FIR2;
-	if (!strnicmp(line, "SIMPLE", 6)) conf.rsm.mode = RSM_SIMPLE;
+	conf.rsm.mode = rsm_mode::fir0;
+	if (!strnicmp(line, "FULL", 4)) conf.rsm.mode = rsm_mode::fir0;
+	if (!strnicmp(line, "2C", 2)) conf.rsm.mode = rsm_mode::fir1;
+	if (!strnicmp(line, "3C", 2)) conf.rsm.mode = rsm_mode::fir2;
+	if (!strnicmp(line, "SIMPLE", 6)) conf.rsm.mode = rsm_mode::simple;
 
 	GetPrivateProfileString(video, "AtariPreset", nil, conf.atariset, sizeof conf.atariset, ininame);
 
@@ -443,12 +443,12 @@ void load_config(const char* fname)
 	GetPrivateProfileString(video, "ScrShotDir", ".", conf.scrshot_path, sizeof conf.scrshot_path, ininame);
 	// addpath(conf.scrshot_path);
 	GetPrivateProfileString(video, "ScrShot", nil, line, sizeof line, ininame);
-	conf.scrshot = SS_SCR;
+	conf.scrshot = sshot_format::scr;
 	for (int i = 0; i < sizeof(sshot_ext) / sizeof(sshot_ext[0]); i++)
 	{
 		if (!strnicmp(line, sshot_ext[i], 3))
 		{
-			conf.scrshot = (SSHOT_FORMAT)i;
+			conf.scrshot = (sshot_format)i;
 			break;
 		}
 	}
@@ -559,13 +559,13 @@ void load_config(const char* fname)
 	conf.sound.ay_samples = GetPrivateProfileInt(ay, "UseSamples", 0, ininame);
 
 	GetPrivateProfileString(ay, "Scheme", nil, line, sizeof line, ininame);
-	conf.sound.ay_scheme = AY_SCHEME_NONE;
-	if (!strnicmp(line, "default", 7)) conf.sound.ay_scheme = AY_SCHEME_SINGLE;
-	else if (!strnicmp(line, "PSEUDO", 6)) conf.sound.ay_scheme = AY_SCHEME_PSEUDO;
-	else if (!strnicmp(line, "QUADRO", 6)) conf.sound.ay_scheme = AY_SCHEME_QUADRO;
-	else if (!strnicmp(line, "AYX32", 5)) conf.sound.ay_scheme = AY_SCHEME_AYX32;
-	else if (!strnicmp(line, "CHRV", 4)) conf.sound.ay_scheme = AY_SCHEME_CHRV;
-	else if (!strnicmp(line, "POS", 3)) conf.sound.ay_scheme = AY_SCHEME_POS;
+	conf.sound.ay_scheme = ay_scheme::none;
+	if (!strnicmp(line, "default", 7)) conf.sound.ay_scheme = ay_scheme::single;
+	else if (!strnicmp(line, "PSEUDO", 6)) conf.sound.ay_scheme = ay_scheme::pseudo;
+	else if (!strnicmp(line, "QUADRO", 6)) conf.sound.ay_scheme = ay_scheme::quadro;
+	else if (!strnicmp(line, "AYX32", 5)) conf.sound.ay_scheme = ay_scheme::ayx32;
+	else if (!strnicmp(line, "CHRV", 4)) conf.sound.ay_scheme = ay_scheme::chrv;
+	else if (!strnicmp(line, "POS", 3)) conf.sound.ay_scheme = ay_scheme::pos;
 
 	GetPrivateProfileString(input, "ZXKeyMap", "default", conf.zxkeymap, sizeof conf.zxkeymap, ininame);
 	conf.input.active_zxk = &zxk_maps[0];
@@ -588,9 +588,9 @@ void load_config(const char* fname)
 	if (!strnicmp(line, "AY", 2)) conf.input.mouse = 2;
 	//0.36.6 from 0.35b2
 	GetPrivateProfileString(input, "Wheel", nil, line, sizeof line, ininame);
-	conf.input.mousewheel = MOUSE_WHEEL_NONE;
-	if (!strnicmp(line, "KEMPSTON", 8)) conf.input.mousewheel = MOUSE_WHEEL_KEMPSTON;
-	if (!strnicmp(line, "KEYBOARD", 8)) conf.input.mousewheel = MOUSE_WHEEL_KEYBOARD;
+	conf.input.mousewheel = mouse_wheel_mode::none;
+	if (!strnicmp(line, "KEMPSTON", 8)) conf.input.mousewheel = mouse_wheel_mode::kempston;
+	if (!strnicmp(line, "KEYBOARD", 8)) conf.input.mousewheel = mouse_wheel_mode::keyboard;
 	//~
 	conf.input.joymouse = GetPrivateProfileInt(input, "JoyMouse", 0, ininame);
 	conf.input.mousescale = GetPrivateProfileInt(input, "MouseScale", 0, ininame);
@@ -655,11 +655,11 @@ void load_config(const char* fname)
 	conf.num_pals = i;
 
 	GetPrivateProfileString(hdd, "SCHEME", nil, line, sizeof line, ininame);
-	conf.ide_scheme = IDE_NONE;
+	conf.ide_scheme = ide_scheme::none;
 	if (!strnicmp(line, "NEMO-A8", 7))
-		conf.ide_scheme = IDE_NEMO_A8;
+		conf.ide_scheme = ide_scheme::nemo_a8;
 	else if (!strnicmp(line, "NEMO", 4))
-		conf.ide_scheme = IDE_NEMO;
+		conf.ide_scheme = ide_scheme::nemo;
 
 	conf.ide_skip_real = GetPrivateProfileInt(hdd, "SkipReal", 0, ininame);
 	GetPrivateProfileString(hdd, "CDROM", "SPTI", line, sizeof line, ininame);
@@ -848,12 +848,12 @@ void apply_memory()
 	{
 		if (!load_rom(conf.sos_rom_path, base_sos_rom))
 			errexit("failed to load BASIC48 ROM");
-		if (!load_rom(conf.zx128_rom_path, base_128_rom) && conf.reset_rom == RM_128)
-			conf.reset_rom = RM_SOS;
+		if (!load_rom(conf.zx128_rom_path, base_128_rom) && conf.reset_rom == rom_mode::s128)
+			conf.reset_rom = rom_mode::sos;
 		if (!load_rom(conf.dos_rom_path, base_dos_rom))
 			conf.trdos_present = 0;
-		if (!load_rom(conf.sys_rom_path, base_sys_rom) && conf.reset_rom == RM_SYS)
-			conf.reset_rom = RM_SOS;
+		if (!load_rom(conf.sys_rom_path, base_sys_rom) && conf.reset_rom == rom_mode::sys)
+			conf.reset_rom = rom_mode::sos;
 		romsize = 64;
 	}
 	else

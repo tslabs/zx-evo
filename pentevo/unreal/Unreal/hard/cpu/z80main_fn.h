@@ -1,7 +1,7 @@
 #pragma once
 #include "draw.h"
-#include "op_noprefix.h"
-#include "op_system.h"
+#include "core/z80/op_noprefix.h"
+#include "core/z80/op_system.h"
 #include "tape.h"
 #include "vars.h"
 #include "dx/dxrend.h"
@@ -32,7 +32,7 @@ u8 rm(unsigned addr)
 		goto ret;
 	}
 
-	if (bankm[window] == BANKM_RAM)    // RAM hit
+	if (bankm[window] == BANKM::BANKM_RAM)    // RAM hit
 	{
 		// TS-conf cache model
 		if (conf.mem_model == MM_TSL)

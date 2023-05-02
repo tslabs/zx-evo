@@ -4,6 +4,7 @@
 #include "gs.h"
 #include "gsz80.h"
 #include "vs1001.h"
+#include "sound/snd_bass.h"
 
 #ifdef MOD_GS
 

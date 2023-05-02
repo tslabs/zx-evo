@@ -1,4 +1,6 @@
 #include "std.h"
+#include "snd_bass.h"
+
 #include "emul.h"
 #include "util.h"
 

@@ -430,7 +430,7 @@ refresh:
 
 void HddDlg_set_active()
 {
-   int enable = (c1.ide_scheme != 0);
+	const int enable = (c1.ide_scheme != ide_scheme::none);
    EnableWindow(GetDlgItem(dlg, IDB_HDD0), enable);
    EnableWindow(GetDlgItem(dlg, IDE_HDD0_CHS), enable);
    EnableWindow(GetDlgItem(dlg, IDE_HDD0_LBA), enable);
@@ -439,7 +439,6 @@ void HddDlg_set_active()
    EnableWindow(GetDlgItem(dlg, IDE_HDD1_CHS), enable);
    EnableWindow(GetDlgItem(dlg, IDE_HDD1_LBA), enable);
    EnableWindow(GetDlgItem(dlg, IDC_HDD1_RO), enable);
-   if (!enable) return;
 }
 
 void HddDlg_show_info(int device)
@@ -578,9 +577,9 @@ INT_PTR CALLBACK HddDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
       ComboBox_AddString(box, "NONE");
       ComboBox_AddString(box, "NEMO");
       ComboBox_AddString(box, "NEMO (A8)");
-      ComboBox_SetItemData(box, 0, (LPARAM)IDE_NONE);
-      ComboBox_SetItemData(box, 1, (LPARAM)IDE_NEMO);
-      ComboBox_SetItemData(box, 2, (LPARAM)IDE_NEMO_A8);
+      ComboBox_SetItemData(box, 0, (LPARAM)ide_scheme::none);
+      ComboBox_SetItemData(box, 1, (LPARAM)ide_scheme::nemo);
+      ComboBox_SetItemData(box, 2, (LPARAM)ide_scheme::nemo_a8);
    }
    if (msg == WM_COMMAND && !block)
    {
@@ -590,7 +589,7 @@ INT_PTR CALLBACK HddDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
       {
 	      const HWND box = GetDlgItem(dlg, IDC_IDESCHEME);
 	      const int Idx = ComboBox_GetCurSel(box);
-         c1.ide_scheme = (IDE_SCHEME)ComboBox_GetItemData(box, Idx);
+         c1.ide_scheme = (ide_scheme)ComboBox_GetItemData(box, Idx);
          HddDlg_set_active();
       }
       if (id == IDB_HDD0) HddDlg_select_image(0);
@@ -633,11 +632,11 @@ INT_PTR CALLBACK HddDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
    {
       block=1;
       const HWND box = GetDlgItem(dlg, IDC_IDESCHEME);
-      int Cnt = ComboBox_GetCount(box);
-      for (int i = 0; i < Cnt; i++)
+      const int cnt = ComboBox_GetCount(box);
+      for (int i = 0; i < cnt; i++)
       {
-          ULONG_PTR Data = (ULONG_PTR)ComboBox_GetItemData(box, i);
-          if (Data == c1.ide_scheme)
+	      auto data = (ULONG_PTR)ComboBox_GetItemData(box, i);
+          if (static_cast<ide_scheme>(data) == c1.ide_scheme)
           {
               ComboBox_SetCurSel(box, i);
               break;
@@ -698,7 +697,7 @@ INT_PTR CALLBACK ChipDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
          SendMessage(aybox, CB_ADDSTRING, 0, (LPARAM)SNDCHIP::get_chipname((SNDCHIP::CHIP_TYPE)i));
 
       aybox = GetDlgItem(dlg, IDC_CHIP_SCHEME);
-      for (i = 0; i < AY_SCHEME_MAX; i++)
+      for (i = 0; i < (int)ay_scheme::max_value; i++)
          SendMessage(aybox, CB_ADDSTRING, 0, (LPARAM)ay_schemes[i]);
 
       aybox = GetDlgItem(dlg, IDC_CHIP_VOL);
@@ -719,7 +718,7 @@ INT_PTR CALLBACK ChipDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
    if (nm->code == PSN_KILLACTIVE) {
       c1.sound.ayfq = getint(IDC_CHIP_CLK);
       c1.sound.ay_chip = (u8)SendDlgItemMessage(dlg, IDC_CHIP_BUS, CB_GETCURSEL, 0, 0);
-      c1.sound.ay_scheme = (u8)SendDlgItemMessage(dlg, IDC_CHIP_SCHEME, CB_GETCURSEL, 0, 0);
+      c1.sound.ay_scheme = (ay_scheme)SendDlgItemMessage(dlg, IDC_CHIP_SCHEME, CB_GETCURSEL, 0, 0);
       c1.sound.ay_vols = (u8)SendDlgItemMessage(dlg, IDC_CHIP_VOL, CB_GETCURSEL, 0, 0);
       c1.sound.ay_stereo = (u8)SendDlgItemMessage(dlg, IDC_CHIP_STEREO, CB_GETCURSEL, 0, 0);
       c1.sound.ay_samples = getcheck(IDC_CHIP_DIGITAL);
@@ -727,7 +726,7 @@ INT_PTR CALLBACK ChipDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
    if (nm->code == PSN_SETACTIVE) {
       setint(IDC_CHIP_CLK, c1.sound.ayfq);
       SendDlgItemMessage(dlg, IDC_CHIP_BUS, CB_SETCURSEL, c1.sound.ay_chip, 0);
-      SendDlgItemMessage(dlg, IDC_CHIP_SCHEME, CB_SETCURSEL, c1.sound.ay_scheme, 0);
+      SendDlgItemMessage(dlg, IDC_CHIP_SCHEME, CB_SETCURSEL, (int)c1.sound.ay_scheme, 0);
       SendDlgItemMessage(dlg, IDC_CHIP_VOL, CB_SETCURSEL, c1.sound.ay_vols, 0);
       SendDlgItemMessage(dlg, IDC_CHIP_STEREO, CB_SETCURSEL, c1.sound.ay_stereo, 0);
       setcheck(IDC_CHIP_DIGITAL, c1.sound.ay_samples);
@@ -784,7 +783,7 @@ INT_PTR CALLBACK VideoDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
       {
           SendDlgItemMessage(dlg, IDC_SCRSHOT, CB_ADDSTRING, 0, (LPARAM)sshot_ext[i]);
       }
-      SendDlgItemMessage(dlg, IDC_SCRSHOT, CB_SETCURSEL, conf.scrshot, 0);
+      SendDlgItemMessage(dlg, IDC_SCRSHOT, CB_SETCURSEL, (int)conf.scrshot, 0);
 
       goto filter_changed;
    }
@@ -804,7 +803,7 @@ INT_PTR CALLBACK VideoDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
    filter_changed:
          unsigned filt_n = SendDlgItemMessage(dlg, IDC_VIDEOFILTER, CB_GETCURSEL, 0, 0);
          DWORD f = renders[filt_n].flags;
-         RENDER_FUNC rend = renders[filt_n].func;
+         render_func rend = renders[filt_n].func;
 
 		 DWORD sh;
          /*sh = (f & (RF_USE32AS16 | RF_USEC32)) ? SW_SHOW : SW_HIDE;
@@ -858,7 +857,7 @@ INT_PTR CALLBACK VideoDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
       c1.frameskipmax = getint(IDE_SKIP2);
       c1.scanbright = getint(IDE_SCBRIGHT);
       //c1.fast_sl = getcheck(IDC_FAST_SL);
-      c1.scrshot = (SSHOT_FORMAT)SendDlgItemMessage(dlg, IDC_SCRSHOT, CB_GETCURSEL, 0, 0);
+      c1.scrshot = (sshot_format)SendDlgItemMessage(dlg, IDC_SCRSHOT, CB_GETCURSEL, 0, 0);
       c1.flip = getcheck(IDC_FLIP);
       //c1.updateb = getcheck(IDC_UPDB);
       c1.pal = SendDlgItemMessage(dlg, IDC_PALETTE, CB_GETCURSEL, 0, 0);
@@ -875,7 +874,7 @@ INT_PTR CALLBACK VideoDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
       setint(IDE_MINX, c1.minres);
       setint(IDE_SCBRIGHT, c1.scanbright);
 
-      SendDlgItemMessage(dlg, IDC_SCRSHOT, CB_SETCURSEL, c1.scrshot, 0);
+      SendDlgItemMessage(dlg, IDC_SCRSHOT, CB_SETCURSEL, (int)c1.scrshot, 0);
 
       setcheck(IDC_FLIP, c1.flip);
       //setcheck(IDC_UPDB, c1.updateb);
@@ -1144,9 +1143,9 @@ INT_PTR CALLBACK InputDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
       if (getcheck(IDC_MOUSE_NONE)) c1.input.mouse = 0;
       if (getcheck(IDC_MOUSE_KEMPSTON)) c1.input.mouse = 1;
       if (getcheck(IDC_MOUSE_AY)) c1.input.mouse = 2;
-      if (getcheck(IDC_WHEEL_NONE)) c1.input.mousewheel = MOUSE_WHEEL_NONE;
-      if (getcheck(IDC_WHEEL_KEYBOARD)) c1.input.mousewheel = MOUSE_WHEEL_KEYBOARD;
-      if (getcheck(IDC_WHEEL_KEMPSTON)) c1.input.mousewheel = MOUSE_WHEEL_KEMPSTON;
+      if (getcheck(IDC_WHEEL_NONE)) c1.input.mousewheel = mouse_wheel_mode::none;
+      if (getcheck(IDC_WHEEL_KEYBOARD)) c1.input.mousewheel = mouse_wheel_mode::keyboard;
+      if (getcheck(IDC_WHEEL_KEMPSTON)) c1.input.mousewheel = mouse_wheel_mode::kempston;
       c1.input.keybpcmode = getcheck(IDC_PC_LAYOUT);
       c1.input.mouseswap = getcheck(IDC_MOUSESWAP);
       c1.input.kjoy = getcheck(IDC_KJOY);
@@ -1174,9 +1173,9 @@ INT_PTR CALLBACK InputDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
       setcheck(IDC_MOUSE_KEMPSTON, c1.input.mouse == 1);
       setcheck(IDC_MOUSE_AY, c1.input.mouse == 2);
       setcheck(IDC_PC_LAYOUT, c1.input.keybpcmode);
-      setcheck(IDC_WHEEL_NONE, c1.input.mousewheel == MOUSE_WHEEL_NONE);
-      setcheck(IDC_WHEEL_KEYBOARD, c1.input.mousewheel == MOUSE_WHEEL_KEYBOARD);
-      setcheck(IDC_WHEEL_KEMPSTON, c1.input.mousewheel == MOUSE_WHEEL_KEMPSTON);
+      setcheck(IDC_WHEEL_NONE, c1.input.mousewheel == mouse_wheel_mode::none);
+      setcheck(IDC_WHEEL_KEYBOARD, c1.input.mousewheel == mouse_wheel_mode::keyboard);
+      setcheck(IDC_WHEEL_KEMPSTON, c1.input.mousewheel == mouse_wheel_mode::kempston);
       setcheck(IDC_MOUSESWAP, c1.input.mouseswap);
       setcheck(IDC_KJOY, c1.input.kjoy);
       setcheck(IDC_KEYMATRIX, c1.input.keymatrix);

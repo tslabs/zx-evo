@@ -1,5 +1,6 @@
 #pragma once
 #include "sysdefs.h"
+#include "sound/bass.h"
 
 struct GSHLE
 {

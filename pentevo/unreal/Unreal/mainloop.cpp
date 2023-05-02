@@ -8,9 +8,9 @@
 #include "hard/memory.h"
 #include "emulkeys.h"
 #include "hard/gs/vs1001.h"
-#include "hard/cpu/z80.h"
 #include "visuals.h"
 #include "util.h"
+#include "hard/cpu/z80main_fn.h"
 
 void spectrum_frame()
 {

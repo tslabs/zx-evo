@@ -111,11 +111,13 @@ void showstack()
 
 void show_ay()
 {
-	if (!conf.sound.ay_scheme) return;
+	if (conf.sound.ay_scheme == ay_scheme::none) 
+		return;
+
 	const char *ayn = comp.active_ay ? "AY1" : "AY0";
-	if (conf.sound.ay_scheme < AY_SCHEME_QUADRO) ayn = "AY:", comp.active_ay = 0;
+	if (conf.sound.ay_scheme < ay_scheme::quadro) ayn = "AY:", comp.active_ay = 0;
 	tprint(ay_x - 3, ay_y, ayn, w_title);
-	auto chip = &ay[comp.active_ay];
+	const auto chip = &ay[comp.active_ay];
 	char line[32];
 	for (auto i = 0; i < 16; i++) {
 		line[0] = "0123456789ABCDEF"[i]; line[1] = 0;
@@ -286,28 +288,6 @@ void showdos()
 	sprintf(ln, "%X-%X %d", comp.wd.state, comp.wd.state2, comp.wd.seldrive->track);
 	tprint(dos_x, dos_y - 1, ln, atr);
 #endif
-	/*
-	//    STAT:00101010
-	//    CMD:80,STA:2A
-	//    DAT:22,SYS:EE
-	//    TRK:31,SEC:01
-	//    DISK:A,SIDE:0
-
-	   char ln[64]; u8 atr = conf.trdos_present ? 0x20 : 0x27;
-	   sprintf(ln, "STAT:00000000"); u8 stat = in_trdos(0x1F);
-	   for (int i = 0; i < 7; i++) ln[i+5] = (stat & (0x80 >> i)) ? '1':'0';
-	   tprint(dos_x, dos_y+1, ln, atr);
-	   sprintf(ln, "CMD:%02X,STA:%02X", comp.trdos.cmd, stat);
-	   tprint(dos_x, dos_y+2, ln, atr);
-	   sprintf(ln, "DAT:%02X,SYS:%02X", comp.trdos.data, in_trdos(0xFF));
-	   tprint(dos_x, dos_y+3, ln, atr);
-	   sprintf(ln, "TRK:%02X,SEC:%02X", comp.trdos.track, comp.trdos.sector);
-	   tprint(dos_x, dos_y+4, ln, atr);
-	   sprintf(ln, "DISK:%c,SIDE:%c", 'A'+(comp.trdos.system & 3), (comp.trdos.system & 0x10) ? '0':'1');
-	   tprint(dos_x, dos_y+5, ln, atr);
-	   frame(dos_x, dos_y+1, 13, 5, FRAME);
-	   tprint(dos_x, dos_y, "beta128", 0x83);
-	*/
 }
 
 #ifdef MOD_GSBASS

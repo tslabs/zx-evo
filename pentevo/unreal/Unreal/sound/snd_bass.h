@@ -1,5 +1,8 @@
 #pragma once
 #include "std.h"
+#include "sysdefs.h"
+#include "bass.h"
+
 
 namespace BASS
 {
