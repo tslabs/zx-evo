@@ -17,15 +17,15 @@ struct debug_context_t
 class TMainZ80 : public Z80
 {
 private:
-	debug_context_t& debug_context_;
+	debug_context_t& dbg_context_;
 
 
 public:
-	u32 tscache_addr[ts_cache_size];
-	u8 tscache_data[ts_cache_size];
+	u32 tscache_addr[ts_cache_size]{};
+	u8 tscache_data[ts_cache_size]{};
 
 	TMainZ80(u32 Idx, t_bank_names BankNames, step_fn Step, delta_fn Delta, set_lastt_fn SetLastT, u8* membits, const t_mem_if* FastMemIf, const t_mem_if* DbgMemIf, debug_context_t &debug_context) :
-		Z80(Idx, BankNames, Step, Delta, SetLastT, membits, FastMemIf, DbgMemIf), debug_context_(debug_context)
+		Z80(Idx, BankNames, Step, Delta, SetLastT, membits, FastMemIf, DbgMemIf), dbg_context_(debug_context)
 	{
 	}
 

@@ -133,12 +133,12 @@ u8 TMainZ80::rd(u32 addr)
 
 u8 TMainZ80::m1_cycle()
 {
-	debug_context_.pc_hist_ptr++;
-	if (debug_context_.pc_hist_ptr >= z80_pc_history_size)
-		debug_context_.pc_hist_ptr = 0;
+	dbg_context_.pc_hist_ptr++;
+	if (dbg_context_.pc_hist_ptr >= z80_pc_history_size)
+		dbg_context_.pc_hist_ptr = 0;
 
-	debug_context_.pc_hist[debug_context_.pc_hist_ptr].addr = pc;
-	debug_context_.pc_hist[debug_context_.pc_hist_ptr].page = comp.ts.page[(cpu.pc >> 14) & 3];
+	dbg_context_.pc_hist[dbg_context_.pc_hist_ptr].addr = pc;
+	dbg_context_.pc_hist[dbg_context_.pc_hist_ptr].page = comp.ts.page[(cpu.pc >> 14) & 3];
 
 	r_low++;
 	const u8 tempbyte = mem_if_->rm(pc++);
