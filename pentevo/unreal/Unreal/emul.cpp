@@ -6,7 +6,7 @@
 #include "dx/dx.h"
 #include "draw.h"
 #include "mainloop.h"
-#include "iehelp.h"
+#include "emulator/ui/iehelp.h"
 #include "util.h"
 #include "hard/memory.h"
 

@@ -76,11 +76,11 @@
     <ClCompile Include="hard\gs\gshlbass.cpp" />
     <ClCompile Include="hard\gs\gshle.cpp" />
     <ClCompile Include="hard\gs\gsz80.cpp" />
-    <ClCompile Include="gui.cpp" />
+    <ClCompile Include="emulator\ui\gui.cpp" />
     <ClCompile Include="hard\hdd\hdd.cpp" />
     <ClCompile Include="hard\hdd\hddaspi.cpp" />
     <ClCompile Include="hard\hdd\hddio.cpp" />
-    <ClCompile Include="iehelp.cpp" />
+    <ClCompile Include="emulator\ui\iehelp.cpp" />
     <ClCompile Include="init.cpp" />
     <ClCompile Include="input.cpp" />
     <ClCompile Include="inputpc.cpp" />
@@ -89,7 +89,7 @@
     <ClCompile Include="leds.cpp" />
     <ClCompile Include="mainloop.cpp" />
     <ClCompile Include="hard\memory.cpp" />
-    <ClCompile Include="opendlg.cpp" />
+    <ClCompile Include="emulator\ui\opendlg.cpp" />
     <ClCompile Include="emulator\z80\op_cb.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
@@ -220,10 +220,10 @@
     <ClInclude Include="hard\gs\gs.h" />
     <ClInclude Include="hard\gs\gshle.h" />
     <ClInclude Include="hard\gs\gsz80.h" />
-    <ClInclude Include="gui.h" />
+    <ClInclude Include="emulator\ui\gui.h" />
     <ClInclude Include="hard\hdd\hdd.h" />
     <ClInclude Include="hard\hdd\hddio.h" />
-    <ClInclude Include="iehelp.h" />
+    <ClInclude Include="emulator\ui\iehelp.h" />
     <ClInclude Include="init.h" />
     <ClInclude Include="input.h" />
     <ClInclude Include="inputpc.h" />
@@ -231,7 +231,7 @@
     <ClInclude Include="mainloop.h" />
     <ClInclude Include="hard\memory.h" />
     <ClInclude Include="mods.h" />
-    <ClInclude Include="opendlg.h" />
+    <ClInclude Include="emulator\ui\opendlg.h" />
     <ClInclude Include="emulator\z80\op_noprefix.h" />
     <ClInclude Include="emulator\z80\op_system.h" />
     <ClInclude Include="resource.h" />

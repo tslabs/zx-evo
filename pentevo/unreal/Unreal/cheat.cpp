@@ -2,7 +2,7 @@
 #include "resource.h"
 #include "emul.h"
 #include "vars.h"
-#include "gui.h"
+#include "emulator/ui/gui.h"
 #include "dx/dx.h"
 #include "util.h"
 

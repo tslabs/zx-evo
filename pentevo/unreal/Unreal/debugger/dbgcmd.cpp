@@ -8,7 +8,7 @@
 #include "dbgrwdlg.h"
 #include "dbgoth.h"
 #include "hard/memory.h"
-#include "gui.h"
+#include "emulator/ui/gui.h"
 #include "util.h"
 
 void out(unsigned port, u8 val);

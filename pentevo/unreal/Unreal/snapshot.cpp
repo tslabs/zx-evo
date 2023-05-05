@@ -5,7 +5,7 @@
 #include "snapshot.h"
 #include "tape.h"
 #include "hard/memory.h"
-#include "opendlg.h"
+#include "emulator/ui/opendlg.h"
 #include "draw.h"
 #include "config.h"
 #include "hard/cpu/z80main.h"

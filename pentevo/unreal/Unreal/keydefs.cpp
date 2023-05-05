@@ -2,7 +2,7 @@
 #include "emul.h"
 #include "emulkeys.h"
 #include "snapshot.h"
-#include "gui.h"
+#include "emulator/ui/gui.h"
 #include "savesnd.h"
 #include "cheat.h"
 #include "debugger/dbgreg.h"

@@ -11,7 +11,7 @@
 #include "sound/sound.h"
 #include "savesnd.h"
 #include "tape.h"
-#include "gui.h"
+#include "emulator/ui/gui.h"
 #include "snapshot.h"
 #include "hard/fdd/wd93dat.h"
 #include "init.h"

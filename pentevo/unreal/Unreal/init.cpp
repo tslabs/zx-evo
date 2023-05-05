@@ -3,7 +3,7 @@
 #include "vars.h"
 #include "config.h"
 #include "dx/dx.h"
-#include "iehelp.h"
+#include "emulator/ui/iehelp.h"
 #include "hard/gs/gs.h"
 #include "leds.h"
 #include "tape.h"
