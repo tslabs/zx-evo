@@ -9,7 +9,7 @@
 // Адрес может превышать 0xFFFF
 // (чтобы в каждой команде работы с регистрами не делать &= 0xFFFF)
 template <bool use_debug>
-u8 rm(unsigned addr)
+u8 rm(u32 addr)
 {
 	addr &= 0xFFFF;
 	const u8 window = (addr >> 14) & 3;
@@ -74,7 +74,7 @@ ret:
 // Адрес может превышать 0xFFFF
 // (чтобы в каждой команде работы с регистрами не делать &= 0xFFFF)
 template <bool use_debug>
-void wm(unsigned addr, u8 val)
+void wm(u32 addr, u8 val)
 {
 	addr &= 0xFFFF;
 

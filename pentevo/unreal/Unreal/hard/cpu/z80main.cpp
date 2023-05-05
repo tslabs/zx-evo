@@ -10,29 +10,16 @@
 
 #include "util.h"
 #include "z80main_fn.h"
+#include "debugger/dbgoth.h"
 #include "sound/saa1099.h"
 #include "sound/dev_moonsound.h"
 
+static constexpr t_mem_if fast_mem_if = { rm<false>, wm<false> };
+static constexpr t_mem_if dbg_mem_if = { rm<true>, wm<true> };
 
-u8 Rm(u32 addr)
-{
-	return rm<false>(addr);
-}
+debug_context_t main_z80_dbg_cntx{};
 
-void Wm(u32 addr, u8 val)
-{
-	wm<false>(addr, val);
-}
-
-u8 DbgRm(u32 addr)
-{
-	return rm<true>(addr);
-}
-
-void DbgWm(u32 addr, u8 val)
-{
-	wm<true>(addr, val);
-}
+TMainZ80 cpu(0, BankNames, step, delta, SetLastT, membits, &fast_mem_if, &dbg_mem_if, main_z80_dbg_cntx);
 
 void reset_sound(void)
 {
@@ -123,6 +110,13 @@ u8* TMainZ80::direct_mem(unsigned addr) const
 	return am_r(addr);
 }
 
+void TMainZ80::direct_wm(unsigned addr, u8 val)
+{
+	*direct_mem(addr) = val;
+	const u16 cache_pointer = addr & 0x1FF;
+	tscache_addr[cache_pointer] = -1; // write invalidates flag
+}
+
 u8 TMainZ80::rd(u32 addr)
 {
 	const u8 tempbyte = mem_if_->rm(addr);
@@ -139,10 +133,12 @@ u8 TMainZ80::rd(u32 addr)
 
 u8 TMainZ80::m1_cycle()
 {
-	cpu.pc_hist_ptr++;
-	if (cpu.pc_hist_ptr >= z80_pc_history_size) cpu.pc_hist_ptr = 0;
-	cpu.pc_hist[cpu.pc_hist_ptr].addr = cpu.pc;
-	cpu.pc_hist[cpu.pc_hist_ptr].page = comp.ts.page[(cpu.pc >> 14) & 3];
+	debug_context_.pc_hist_ptr++;
+	if (debug_context_.pc_hist_ptr >= z80_pc_history_size)
+		debug_context_.pc_hist_ptr = 0;
+
+	debug_context_.pc_hist[debug_context_.pc_hist_ptr].addr = pc;
+	debug_context_.pc_hist[debug_context_.pc_hist_ptr].page = comp.ts.page[(cpu.pc >> 14) & 3];
 
 	r_low++;
 	const u8 tempbyte = mem_if_->rm(pc++);

@@ -1,24 +1,36 @@
 #pragma once
 #include "sysdefs.h"
 
-u8 Rm(u32 addr);
-void Wm(u32 addr, u8 val);
-u8 DbgRm(u32 addr);
-void DbgWm(u32 addr, u8 val);
-
 void reset(rom_mode mode);
 void reset_sound(void);
 void set_clk(void);
 
+constexpr auto ts_cache_size = 512;
+constexpr auto z80_pc_history_size = 32;
+
+struct debug_context_t
+{
+	pc_history_t pc_hist[z80_pc_history_size];
+	u32 pc_hist_ptr;
+};
+
 class TMainZ80 : public Z80
 {
+private:
+	debug_context_t& debug_context_;
+
+
 public:
-	TMainZ80(u32 Idx,
-		t_bank_names BankNames, step_fn Step, delta_fn Delta,
-		set_lastt_fn SetLastT, u8* membits, const t_mem_if* FastMemIf, const t_mem_if* DbgMemIf) :
-		Z80(Idx, BankNames, Step, Delta, SetLastT, membits, FastMemIf, DbgMemIf) { }
+	u32 tscache_addr[ts_cache_size];
+	u8 tscache_data[ts_cache_size];
+
+	TMainZ80(u32 Idx, t_bank_names BankNames, step_fn Step, delta_fn Delta, set_lastt_fn SetLastT, u8* membits, const t_mem_if* FastMemIf, const t_mem_if* DbgMemIf, debug_context_t &debug_context) :
+		Z80(Idx, BankNames, Step, Delta, SetLastT, membits, FastMemIf, DbgMemIf), debug_context_(debug_context)
+	{
+	}
 
 	u8* direct_mem(unsigned addr) const override; // get direct memory pointer in debuger
+	void direct_wm(unsigned addr, u8 val) override;
 
 	u8 rd(u32 addr) override;
 
@@ -30,4 +42,8 @@ public:
 	void retn() override;
 
 	void handle_int(Z80& cpu, u8 vector) override;
+
 };
+
+extern  debug_context_t main_z80_dbg_cntx;
+extern TMainZ80 cpu;

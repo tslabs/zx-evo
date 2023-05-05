@@ -26,11 +26,6 @@ namespace z80gs
 	forceinline u8* am_r(u32 addr);
 	inline void stepi();
 
-	u8 Rm(u32 addr);
-	void Wm(u32 addr, u8 val);
-	u8 DbgRm(u32 addr);
-	void DbgWm(u32 addr, u8 val);
-
 	void flush_gs_z80();
 
 	class TGsZ80 : public Z80
@@ -67,19 +62,11 @@ namespace z80gs
 		
 	};
 
-	u8 dbgrm(u32 addr);
-	void dbgwm(u32 addr, u8 val);
-	u8* MemDbg(u32 addr);
-
 	void fastcall step();
-
 
 	void gs_byte_to_dac(unsigned addr, u8 byte);
 	extern u8 membits[0x10000];
 	extern SNDRENDER sound;
-
-	static constexpr t_mem_if fast_mem_if = {Rm, Wm};
-	static constexpr t_mem_if dbg_mem_if = {DbgRm, DbgWm};
 
 	extern TGsZ80 gscpu;
 	

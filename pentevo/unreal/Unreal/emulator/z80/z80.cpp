@@ -12,11 +12,11 @@ void Z80::reset()
 
 Z80::Z80(u32 idx, t_bank_names BankNames, step_fn Step, delta_fn Delta, set_lastt_fn SetLastT, u8* membits,
          const t_mem_if* FastMemIf, const t_mem_if* DbgMemIf): z80_state_t(),
-                                                               bank_names(BankNames),
-                                                               step(Step),
-                                                               delta(Delta), set_last_t(SetLastT), membits(membits),
-                                                               idx_(idx),
-                                                               fast_mem_if_(FastMemIf), dbg_mem_if_(DbgMemIf)
+	       bank_names(BankNames),
+	       step(Step),
+	       delta(Delta), set_last_t(SetLastT), membits(membits),
+	       idx_(idx),
+	       fast_mem_if_(FastMemIf), dbg_mem_if_(DbgMemIf)
 {
 	mem_if_ = FastMemIf;
 	tpi = 0;
@@ -64,8 +64,6 @@ u8 Z80::direct_rm(unsigned addr) const
 void Z80::direct_wm(unsigned addr, u8 val)
 {
 	*direct_mem(addr) = val;
-	const u16 cache_pointer = addr & 0x1FF;
-	tscache_addr[cache_pointer] = -1; // write invalidates flag
 }
 
 u8 Z80::rd(const u32 addr)

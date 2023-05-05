@@ -14,41 +14,18 @@ namespace z80gs
 	__int64 gs_t_states; // inc'ed with GSCPUINT every gs int
 	__int64 gscpu_t_at_frame_start; // gs_t_states+gscpu.t when spectrum frame begins
 
+	static constexpr t_mem_if fast_mem_if = { gsz80_rm<false>, gsz80_wm<false> };
+	static constexpr t_mem_if dbg_mem_if = { gsz80_rm<true>, gsz80_wm<true> };
+
 	TGsZ80 gscpu(1, BankNames, step, delta, SetLastT, membits, &fast_mem_if, &dbg_mem_if);
+
 	SNDRENDER sound;
 	u8 membits[0x10000];
-
-	forceinline u8 rm(unsigned addr);
-	u8 dbgrm(u32 addr);
-	forceinline void wm(unsigned addr, u8 val);
 
 	forceinline u8 m1_cycle(Z80& cpu);
 
 	u8 in(unsigned port);
 	void out(unsigned port, u8 val);
-
-	
-
-
-	u8 Rm(u32 addr)
-	{
-		return gsz80_rm<false>(addr);
-	}
-
-	void Wm(u32 addr, u8 val)
-	{
-		gsz80_wm<false>(addr, val);
-	}
-
-	u8 DbgRm(u32 addr)
-	{
-		return gsz80_rm<true>(addr);
-	}
-
-	void DbgWm(u32 addr, u8 val)
-	{
-		gsz80_wm<true>(addr, val);
-	}
 
 	void flush_gs_z80()
 	{
@@ -130,7 +107,6 @@ namespace z80gs
 	int GSCPUFQI;
 	const unsigned GSCPUINT = GSCPUFQ / GSINTFQ;
 	constexpr int MULT_GS_SHIFT = 12; // cpu tick -> gscpu tick precision
-	void reset();
 	void nmi();
 
 
@@ -198,6 +174,7 @@ namespace z80gs
 			}
 			return;
 			break;
+		default:;
 		}
 
 		flush_gs_z80();
@@ -211,6 +188,7 @@ namespace z80gs
 			gscmd = val;
 			gsstat |= 0x01;
 			break;
+		default:;
 		}
 	}
 
@@ -229,7 +207,7 @@ namespace z80gs
 	void gs_byte_to_dac(unsigned addr, u8 byte)
 	{
 		flush_gs_sound();
-		unsigned chan = (addr >> 8) & 3;
+		const unsigned chan = (addr >> 8) & 3;
 		gsbyte[chan] = byte;
 		//   gs_v[chan] = (gsbyte[chan] * gs_vfx[gsvol[chan]]) >> 8;
 		gs_v[chan] = ((char)(gsbyte[chan] - 0x80) * (signed)gs_vfx[gsvol[chan]]) / 256 + gs_vfx[33]; //!psb
@@ -240,21 +218,6 @@ namespace z80gs
 	forceinline u8* am_r(u32 addr)
 	{
 		return &gsbankr[(addr >> 14U) & 3][addr & (PAGE - 1)];
-	}
-
-	u8* MemDbg(u32 addr)
-	{
-		return am_r(addr);
-	}
-
-	u8 dbgrm(u32 addr)
-	{
-		return gsz80_rm<true>(addr);
-	}
-
-	void dbgwm(u32 addr, u8 val)
-	{
-		*am_r(addr) = val;
 	}
 
 	void __cdecl BankNames(int i, char* Name)
@@ -273,7 +236,7 @@ namespace z80gs
 		return cpu.rd(cpu.pc++);
 	}
 
-	static inline void UpdateMemMapping()
+	static void UpdateMemMapping()
 	{
 		const bool ram_ro = (ngs_cfg0 & M_RAMRO) != 0;
 		const bool no_rom = (ngs_cfg0 & M_NOROM) != 0;

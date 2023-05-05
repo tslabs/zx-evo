@@ -22,8 +22,6 @@ typedef union
 	};
 } RGB32;
 
-constexpr auto ts_cache_size = 512;
-constexpr auto z80_pc_history_size = 32;
 
 struct pc_history_t
 {
@@ -36,31 +34,19 @@ struct z80_state_t
 	union
 	{
 		unsigned tt;
-		struct
-		{
-			unsigned t_l : 8;
-			unsigned t : 24;
-		};
+		struct { unsigned t_l : 8; unsigned t : 24; };
 	};
 
 	union
 	{
 		unsigned pc;
-		struct
-		{
-			u8 pcl;
-			u8 pch;
-		};
+		struct { u8 pcl; u8 pch; };
 	};
 
 	union
 	{
 		unsigned sp;
-		struct
-		{
-			u8 spl;
-			u8 sph;
-		};
+		struct { u8 spl; u8 sph; };
 	};
 
 	union
@@ -68,8 +54,7 @@ struct z80_state_t
 		unsigned ir_;
 		struct
 		{
-			u8 r_low;
-			u8 i;
+			u8 r_low; u8 i;
 		};
 	};
 
@@ -89,57 +74,33 @@ struct z80_state_t
 	{
 		unsigned bc;
 		u16 bc16;
-		struct
-		{
-			u8 c;
-			u8 b;
-		};
+		struct { u8 c; u8 b; };
 	};
 	union
 	{
 		unsigned de;
-		struct
-		{
-			u8 e;
-			u8 d;
-		};
+		struct { u8 e; u8 d; };
 	};
 	union
 	{
 		unsigned hl;
-		struct
-		{
-			u8 l;
-			u8 h;
-		};
+		struct { u8 l; u8 h; };
 	};
 	union
 	{
 		unsigned af;
-		struct
-		{
-			u8 f;
-			u8 a;
-		};
+		struct { u8 f; u8 a; };
 	};
 
 	union
 	{
 		unsigned ix;
-		struct
-		{
-			u8 xl;
-			u8 xh;
-		};
+		struct { u8 xl; u8 xh; };
 	};
 	union
 	{
 		unsigned iy;
-		struct
-		{
-			u8 yl;
-			u8 yh;
-		};
+		struct { u8 yl; u8 yh; };
 	};
 
 	struct
@@ -147,41 +108,25 @@ struct z80_state_t
 		union
 		{
 			unsigned bc;
-			struct
-			{
-				u8 c;
-				u8 b;
-			};
+			struct { u8 c; u8 b; };
 		};
 
 		union
 		{
 			unsigned de;
-			struct
-			{
-				u8 e;
-				u8 d;
-			};
+			struct { u8 e; u8 d; };
 		};
 
 		union
 		{
 			unsigned hl;
-			struct
-			{
-				u8 l;
-				u8 h;
-			};
+			struct { u8 l; u8 h; };
 		};
 
 		union
 		{
 			unsigned af;
-			struct
-			{
-				u8 f;
-				u8 a;
-			};
+			struct { u8 f; u8 a; };
 		};
 	} alt;
 
@@ -200,11 +145,6 @@ struct z80_state_t
 
 	u8 im;
 	bool nmi_in_progress;
-	u32 tscache_addr[ts_cache_size];
-	u8 tscache_data[ts_cache_size];
-
-	pc_history_t pc_hist[z80_pc_history_size];
-	u32 pc_hist_ptr;
 };
 
 struct t_mem_if
@@ -248,7 +188,7 @@ struct Z80 : z80_state_t
 	u32 tpi;		  // Число тактов между прерываниями
 	u32 trpc[40]{};
 
-	
+
 	t_bank_names bank_names;
 	step_fn step;
 	delta_fn delta;
@@ -267,10 +207,9 @@ struct Z80 : z80_state_t
 	void set_fast_mem_if();
 	void set_dbg_mem_if();
 
-	
-	u8 direct_rm(unsigned addr) const; // direct read memory in debuger
-	void direct_wm(unsigned addr, u8 val); // direct write memory in debuger
 	virtual u8* direct_mem(unsigned addr) const = 0; // get direct memory pointer in debuger
+	virtual u8 direct_rm(unsigned addr) const; // direct read memory in debuger
+	virtual void direct_wm(unsigned addr, u8 val); // direct write memory in debuger
 
 	virtual u8 rd(const u32 addr);
 	virtual void wd(const u32 addr, const u8 val);
@@ -289,6 +228,8 @@ protected:
 	const t_mem_if* fast_mem_if_; // Быстрый интерфес памяти
 	const t_mem_if* dbg_mem_if_;	 // Интерфейс памяти для поддержки отладчика (брекпоинты на доступ к памяти)
 	const t_mem_if* mem_if_;		 // Текущий активный интерфейс памяти
+
+	
 };
 
 constexpr auto CF = 0x01;

@@ -174,7 +174,6 @@ extern u8 used_banks[MAX_PAGES];
 extern u8 trace_rom;
 extern u8 trace_ram;
 
-extern TMainZ80 cpu;
 extern u8 dbgbreak;
 extern u8 snbuf[snd_buf_sz];		// large temporary buffer (for reading snapshots)
 extern u8 gdibuf[gdi_buf_sz];

@@ -21,14 +21,6 @@ char pressedit = 0; //Alone Coder
 #pragma pack(8)
 
 
-
-static constexpr t_mem_if fast_mem_if = { Rm, Wm };
-static constexpr t_mem_if dbg_mem_if = { DbgRm, DbgWm };
-
-
-TMainZ80 cpu(0, BankNames, step, delta, SetLastT, membits, &fast_mem_if, &dbg_mem_if);
-
-
 t_cpu_mgr cpu_mgr;
 
 void t_cpu_mgr::switch_cpu()

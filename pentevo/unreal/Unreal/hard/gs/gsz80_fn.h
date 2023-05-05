@@ -7,7 +7,7 @@ namespace z80gs
 	// Адрес может превышать 0xFFFF
 	// (чтобы в каждой команде работы с регистрами не делать &= 0xFFFF)
 	template <bool use_debug>
-	forceinline u8 gsz80_rm(unsigned addr)
+	forceinline u8 gsz80_rm(u32 addr)
 	{
 		addr &= 0xFFFF;
 		if constexpr (use_debug) {
@@ -26,7 +26,7 @@ namespace z80gs
 	// Адрес может превышать 0xFFFF
 	// (чтобы в каждой команде работы с регистрами не делать &= 0xFFFF)
 	template <bool use_debug>
-	forceinline void gsz80_wm(unsigned addr, u8 val)
+	forceinline void gsz80_wm(u32 addr, u8 val)
 	{
 		addr &= 0xFFFF;
 		if constexpr (use_debug) {
