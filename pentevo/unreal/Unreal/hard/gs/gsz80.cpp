@@ -1,5 +1,5 @@
 #include "std.h"
-#include "core/z80/z80.h"
+#include "emulator/z80/z80.h"
 #include "emul.h"
 #include "vars.h"
 #include "gs.h"
@@ -7,7 +7,7 @@
 #include "gsz80_fn.h"
 #include "vs1001.h"
 #include "hard/sdcard.h"
-#include "core/z80/op_noprefix.h"
+#include "emulator/z80/op_noprefix.h"
 
 namespace z80gs
 {

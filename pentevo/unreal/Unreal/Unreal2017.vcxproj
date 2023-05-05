@@ -37,7 +37,7 @@
   <ItemGroup>
     <ClCompile Include="cheat.cpp" />
     <ClCompile Include="config.cpp" />
-    <ClCompile Include="core\z80\daa_tabs.cpp">
+    <ClCompile Include="emulator\z80\daa_tabs.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
@@ -90,37 +90,37 @@
     <ClCompile Include="mainloop.cpp" />
     <ClCompile Include="hard\memory.cpp" />
     <ClCompile Include="opendlg.cpp" />
-    <ClCompile Include="core\z80\op_cb.cpp">
+    <ClCompile Include="emulator\z80\op_cb.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="core\z80\op_dd.cpp">
+    <ClCompile Include="emulator\z80\op_dd.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="core\z80\op_ddcb.cpp">
+    <ClCompile Include="emulator\z80\op_ddcb.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="core\z80\op_ed.cpp">
+    <ClCompile Include="emulator\z80\op_ed.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="core\z80\op_fd.cpp">
+    <ClCompile Include="emulator\z80\op_fd.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="core\z80\op_noprefix.cpp">
+    <ClCompile Include="emulator\z80\op_noprefix.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
@@ -147,7 +147,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="core\z80\tables.cpp">
+    <ClCompile Include="emulator\z80\tables.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
@@ -170,16 +170,16 @@
     <ClCompile Include="wldr_trd.cpp" />
     <ClCompile Include="wldr_udi.cpp" />
     <ClCompile Include="hard\cpu\z80main.cpp" />
-    <ClCompile Include="core\z80\z80asm.cpp" />
+    <ClCompile Include="emulator\z80\z80asm.cpp" />
     <ClCompile Include="hard\zc.cpp" />
     <ClCompile Include="hard\zf232.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="core\z80\daa_tabs.h" />
-    <ClInclude Include="core\z80\op_dd.h" />
-    <ClInclude Include="core\z80\op_ed.h" />
-    <ClInclude Include="core\z80\op_fd.h" />
-    <ClInclude Include="core\z80\z80.h" />
+    <ClInclude Include="emulator\z80\daa_tabs.h" />
+    <ClInclude Include="emulator\z80\op_dd.h" />
+    <ClInclude Include="emulator\z80\op_ed.h" />
+    <ClInclude Include="emulator\z80\op_fd.h" />
+    <ClInclude Include="emulator\z80\z80.h" />
     <ClInclude Include="hard\cpu\z80main_fn.h" />
     <ClInclude Include="hard\gs\gsz80_fn.h" />
     <ClInclude Include="sound\bass.h" />
@@ -232,8 +232,8 @@
     <ClInclude Include="hard\memory.h" />
     <ClInclude Include="mods.h" />
     <ClInclude Include="opendlg.h" />
-    <ClInclude Include="core\z80\op_noprefix.h" />
-    <ClInclude Include="core\z80\op_system.h" />
+    <ClInclude Include="emulator\z80\op_noprefix.h" />
+    <ClInclude Include="emulator\z80\op_system.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="sound\saa1099.h" />
     <ClInclude Include="savesnd.h" />
@@ -252,7 +252,7 @@
     <ClInclude Include="sound\ymf278.h" />
     <ClInclude Include="std.h" />
     <ClInclude Include="sysdefs.h" />
-    <ClInclude Include="core\z80\tables.h" />
+    <ClInclude Include="emulator\z80\tables.h" />
     <ClInclude Include="tape.h" />
     <ClInclude Include="hard\tsconf.h" />
     <ClInclude Include="util.h" />
@@ -263,7 +263,7 @@
     <ClInclude Include="hard\fdd\wd93crc.h" />
     <ClInclude Include="hard\fdd\wd93dat.h" />
     <ClInclude Include="hard\cpu\z80main.h" />
-    <ClInclude Include="core\z80\z80asm.h" />
+    <ClInclude Include="emulator\z80\z80asm.h" />
     <ClInclude Include="hard\zc.h" />
     <ClInclude Include="hard\zf232.h" />
   </ItemGroup>

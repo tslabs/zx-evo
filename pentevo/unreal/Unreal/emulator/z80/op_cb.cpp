@@ -1,4 +1,4 @@
-#include "core/z80/z80.h"
+#include "z80.h"
 #include "tables.h"
 
 /* CB opcodes */

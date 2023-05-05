@@ -12,7 +12,7 @@
 #include "snapshot.h"
 #include "savesnd.h"
 #include "hard/fdd/wd93dat.h"
-#include "core/z80/tables.h"
+#include "emulator/z80/tables.h"
 #include "debugger/dbgbpx.h"
 #include "debugger/dbglabls.h"
 #include "util.h"

@@ -1,6 +1,6 @@
 #pragma once
 #include "sysdefs.h"
-#include "core/z80/z80.h"
+#include "emulator/z80/z80.h"
 
 void __declspec(noreturn) exit();
 void correct_exit();

@@ -1,4 +1,5 @@
-#include "defs.h"
+#include "std.h"
+#include "z80.h"
 #include "tables.h"
 
 const u8 incf[] =

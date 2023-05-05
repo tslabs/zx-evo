@@ -1,8 +1,9 @@
-#include "defs.h"
+#include "z80.h"
 #include "tables.h"
 #include "op_ed.h"
 #include "op_dd.h"
 #include "op_fd.h"
+
 
 /* DDCB/FDCB opcodes */
 /* note: cpu.t and destination updated in step(), here process 'byte' */

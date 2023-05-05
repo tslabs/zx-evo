@@ -1,6 +1,6 @@
 #pragma once
 #include "sysdefs.h"
-#include "core/z80/z80.h"
+#include "emulator/z80/z80.h"
 
 constexpr auto regs_x = 1;
 constexpr auto regs_y = 1;

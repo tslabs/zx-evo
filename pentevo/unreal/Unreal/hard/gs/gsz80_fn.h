@@ -1,7 +1,7 @@
 #pragma once
 #include "sysdefs.h"
 #include "gsz80.h"
-#include "core/z80/op_system.h"
+#include "emulator/z80/op_system.h"
 
 namespace z80gs
 {

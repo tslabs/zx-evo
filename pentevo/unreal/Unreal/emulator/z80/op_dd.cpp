@@ -1,4 +1,5 @@
-#include "defs.h"
+#include "std.h"
+#include "z80.h"
 #include "tables.h"
 #include "op_noprefix.h"
 #include "op_dd.h"

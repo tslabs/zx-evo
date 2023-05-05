@@ -1,7 +1,7 @@
 #pragma once
 #include "draw.h"
-#include "core/z80/op_noprefix.h"
-#include "core/z80/op_system.h"
+#include "emulator/z80/op_noprefix.h"
+#include "emulator/z80/op_system.h"
 #include "tape.h"
 #include "vars.h"
 #include "dx/dxrend.h"

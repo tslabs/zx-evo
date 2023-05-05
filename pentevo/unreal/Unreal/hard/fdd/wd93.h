@@ -1,5 +1,5 @@
 #pragma once
-#include "core/z80/z80.h"
+#include "emulator/z80/z80.h"
 
 const int FDD_RPS = 5; // rotation speed
 

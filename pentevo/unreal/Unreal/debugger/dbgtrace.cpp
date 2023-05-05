@@ -7,8 +7,8 @@
 #include "dbgpaint.h"
 #include "dbgcmd.h"
 #include "hard/memory.h"
-#include "core/z80/z80asm.h"
-#include "core/z80/op_system.h"
+#include "emulator/z80/z80asm.h"
+#include "emulator/z80/op_system.h"
 #include "util.h"
 #include "draw.h"
 

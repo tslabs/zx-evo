@@ -1,4 +1,4 @@
 #pragma once
-#include "defs.h"
+#include "z80.h"
 
 extern stepfunc const iy_opcode[];
