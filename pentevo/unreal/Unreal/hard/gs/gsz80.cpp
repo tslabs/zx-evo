@@ -7,7 +7,6 @@
 #include "gsz80_fn.h"
 #include "vs1001.h"
 #include "hard/sdcard.h"
-#include "emulator/z80/op_noprefix.h"
 
 namespace z80gs
 {
@@ -19,11 +18,11 @@ namespace z80gs
 	SNDRENDER sound;
 	u8 membits[0x10000];
 
-	Z80INLINE u8 rm(unsigned addr);
+	forceinline u8 rm(unsigned addr);
 	u8 dbgrm(u32 addr);
-	Z80INLINE void wm(unsigned addr, u8 val);
+	forceinline void wm(unsigned addr, u8 val);
 
-	Z80INLINE u8 m1_cycle(Z80& cpu);
+	forceinline u8 m1_cycle(Z80& cpu);
 
 	u8 in(unsigned port);
 	void out(unsigned port, u8 val);
@@ -238,7 +237,7 @@ namespace z80gs
 		led_gscnt[chan]++;
 	}
 
-	Z80INLINE u8* am_r(u32 addr)
+	forceinline u8* am_r(u32 addr)
 	{
 		return &gsbankr[(addr >> 14U) & 3][addr & (PAGE - 1)];
 	}
@@ -267,24 +266,25 @@ namespace z80gs
 	}
 
 
-	Z80INLINE u8 m1_cycle(Z80& cpu)
+	forceinline u8 m1_cycle(Z80& cpu)
 	{
-		cpu.r_low++; CPUTACT(4);
-		return cpu.mem_if->rm(cpu.pc++);
+		cpu.r_low++;
+		CPUTACT(1);
+		return cpu.rd(cpu.pc++);
 	}
 
 	static inline void UpdateMemMapping()
 	{
-		const bool RamRo = (ngs_cfg0 & M_RAMRO) != 0;
-		const bool NoRom = (ngs_cfg0 & M_NOROM) != 0;
-		if (NoRom)
+		const bool ram_ro = (ngs_cfg0 & M_RAMRO) != 0;
+		const bool no_rom = (ngs_cfg0 & M_NOROM) != 0;
+		if (no_rom)
 		{
 			gsbankr[0] = gsbankw[0] = GSRAM_M;
 			gsbankr[1] = gsbankw[1] = GSRAM_M + 3 * PAGE;
 			gsbankr[2] = gsbankw[2] = GSRAM_M + gspage * PAGE;
 			gsbankr[3] = gsbankw[3] = GSRAM_M + ngs_mode_pg1 * PAGE;
 
-			if (RamRo)
+			if (ram_ro)
 			{
 				if (gspage == 0 || gspage == 1) // RAM0 or RAM1 in PG2
 					gsbankw[2] = TRASH_M;
@@ -309,11 +309,11 @@ namespace z80gs
 		{
 		case MPAG:
 		{
-			bool ExtMem = (ngs_cfg0 & M_EXPAG) != 0;
+			const bool ext_mem = (ngs_cfg0 & M_EXPAG) != 0;
 
-			gspage = rol8(val, 1) & temp.gs_ram_mask & (ExtMem ? 0xFF : 0xFE);
+			gspage = rol8(val, 1) & temp.gs_ram_mask & (ext_mem ? 0xFF : 0xFE);
 
-			if (!ExtMem)
+			if (!ext_mem)
 				ngs_mode_pg1 = (rol8(val, 1) & temp.gs_ram_mask) | 1;
 			//         printf(__FUNCTION__"->GSPG, %X, Ro=%d, NoRom=%d, Ext=%d\n", gspage, RamRo, NoRom, ExtMem);
 			UpdateMemMapping();
@@ -325,7 +325,7 @@ namespace z80gs
 		case 0x06: case 0x07: case 0x08: case 0x09:
 		{
 			flush_gs_sound();
-			unsigned chan = (port & 0x0F) - 6; val &= 0x3F;
+			const unsigned chan = (port & 0x0F) - 6; val &= 0x3F;
 			gsvol[chan] = val;
 			//         gs_v[chan] = (gsbyte[chan] * gs_vfx[gsvol[chan]]) >> 8;
 			gs_v[chan] = ((char)(gsbyte[chan] - 0x80) * (signed)gs_vfx[gsvol[chan]]) / 256 + gs_vfx[33]; //!psb
@@ -484,7 +484,7 @@ namespace z80gs
 		(::normal_opcode[opcode])(gscpu);
 	}
 
-	void Z80FAST step()
+	void fastcall step()
 	{
 		stepi();
 	}

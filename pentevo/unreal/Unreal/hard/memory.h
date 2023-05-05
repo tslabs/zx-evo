@@ -10,7 +10,7 @@ void cmos_write(u8 val);
 u8 cmos_read();
 void rand_ram();
 
-Z80INLINE u8 *am_r(const unsigned addr)
+forceinline u8 *am_r(const unsigned addr)
 {
    return bankr[(addr >> 14) & 3] + (addr & (PAGE-1));
 }

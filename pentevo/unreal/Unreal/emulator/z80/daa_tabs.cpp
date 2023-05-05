@@ -1,5 +1,5 @@
-#include "sysdefs.h"
-#include "daa_tabs.h"
+#include "std.h"
+#include "private.h"
 
 // table for daa, contains af
 const u8 daatab[0x1000] =

@@ -8,7 +8,6 @@
 #include "dbgcmd.h"
 #include "hard/memory.h"
 #include "emulator/z80/z80asm.h"
-#include "emulator/z80/op_system.h"
 #include "util.h"
 #include "draw.h"
 
@@ -552,7 +551,7 @@ void mon_step()
 
 	if (cpu.int_pend && cpu.iff1 && cpu.t != cpu.eipos && cpu.int_gate)
 	{
-		handle_int(cpu, cpu.int_vec());
+		cpu.handle_int(cpu, cpu.int_vec());
 	}
 	update_screen(); // update screen, TSU, DMA
 	update_raypos();

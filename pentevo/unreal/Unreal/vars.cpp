@@ -27,7 +27,7 @@ u8* TMainZ80::direct_mem(unsigned addr) const
 
 u8 TMainZ80::rd(u32 addr)
 {
-	const u8 tempbyte = mem_if->rm(addr);
+	const u8 tempbyte = mem_if_->rm(addr);
 
 	// Align 14MHz CPU memory request to 7MHz DRAM cycle
 	// request can be satisfied only in the next DRAM cycle
@@ -47,7 +47,7 @@ u8 TMainZ80::m1_cycle()
 	cpu.pc_hist[cpu.pc_hist_ptr].page = comp.ts.page[(cpu.pc >> 14) & 3];
 
 	r_low++;
-	const u8 tempbyte = mem_if->rm(pc++);
+	const u8 tempbyte = mem_if_->rm(pc++);
 
 	// Align 14MHz CPU memory request to 7MHz DRAM cycle
 	// request can be satisfied only in the next DRAM cycle
@@ -118,6 +118,20 @@ void TMainZ80::retn()
 {
 	nmi_in_progress = false;
 	set_banks();
+}
+
+void TMainZ80::handle_int(Z80& cpu, u8 vector)
+{
+	Z80::handle_int(cpu, vector);
+
+	if (conf.mem_model == MM_TSL)
+	{
+		if (comp.ts.intctrl.frame_pend) comp.ts.intctrl.frame_pend = 0;
+		else
+			if (comp.ts.intctrl.line_pend)  comp.ts.intctrl.line_pend = 0;
+			else
+				if (comp.ts.intctrl.dma_pend)   comp.ts.intctrl.dma_pend = 0;
+	}
 }
 
 static constexpr t_mem_if fast_mem_if = { Rm, Wm };

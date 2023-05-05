@@ -23,7 +23,7 @@ namespace z80gs
 	void __cdecl BankNames(int i, char* Name);
 	__int64 __cdecl delta();
 	void __cdecl SetLastT();
-	Z80INLINE u8* am_r(u32 addr);
+	forceinline u8* am_r(u32 addr);
 	inline void stepi();
 
 	u8 Rm(u32 addr);
@@ -71,7 +71,7 @@ namespace z80gs
 	void dbgwm(u32 addr, u8 val);
 	u8* MemDbg(u32 addr);
 
-	void Z80FAST step();
+	void fastcall step();
 
 
 	void gs_byte_to_dac(unsigned addr, u8 byte);

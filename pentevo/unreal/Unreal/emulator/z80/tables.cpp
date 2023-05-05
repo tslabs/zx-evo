@@ -1,6 +1,5 @@
 #include "std.h"
-#include "z80.h"
-#include "tables.h"
+#include "private.h"
 
 const u8 incf[] =
 {

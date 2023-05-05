@@ -108,6 +108,8 @@ public:
 	u8 int_vec() override;
 	void check_next_frame() override;
 	void retn() override;
+
+	void handle_int(Z80& cpu, u8 vector) override;
 };
 
 enum class BANKM

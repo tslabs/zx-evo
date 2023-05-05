@@ -295,11 +295,14 @@ void m_nmi(rom_mode page)
 	set_mode(page);
 	sprintf(statusline, "NMI to %s", getrom(page)); statcnt = 50;
 	cpu.sp -= 2;
-	if (cpu.dbg_mem_if->rm(cpu.pc) == 0x76) // nmi on halt command
+		
+	if (*cpu.direct_mem(cpu.pc) == 0x76) // nmi on halt command
 		cpu.pc++;
-	cpu.dbg_mem_if->wm(cpu.sp, cpu.pcl);
-	cpu.dbg_mem_if->wm(cpu.sp + 1, cpu.pch);
-	cpu.pc = 0x66; cpu.iff1 = cpu.halted = 0;
+
+	*cpu.direct_mem(cpu.sp) = cpu.pcl;
+	*cpu.direct_mem(cpu.sp + 1) = cpu.pch;
+	cpu.pc = 0x66;
+	cpu.iff1 = cpu.halted = 0;
 }
 
 void main_nmi()

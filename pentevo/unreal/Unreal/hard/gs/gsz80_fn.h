@@ -1,14 +1,13 @@
 #pragma once
 #include "sysdefs.h"
 #include "gsz80.h"
-#include "emulator/z80/op_system.h"
 
 namespace z80gs
 {
 	// Адрес может превышать 0xFFFF
 	// (чтобы в каждой команде работы с регистрами не делать &= 0xFFFF)
 	template <bool use_debug>
-	Z80INLINE u8 gsz80_rm(unsigned addr)
+	forceinline u8 gsz80_rm(unsigned addr)
 	{
 		addr &= 0xFFFF;
 		if constexpr (use_debug) {
@@ -27,7 +26,7 @@ namespace z80gs
 	// Адрес может превышать 0xFFFF
 	// (чтобы в каждой команде работы с регистрами не делать &= 0xFFFF)
 	template <bool use_debug>
-	Z80INLINE void gsz80_wm(unsigned addr, u8 val)
+	forceinline void gsz80_wm(unsigned addr, u8 val)
 	{
 		addr &= 0xFFFF;
 		if constexpr (use_debug) {
@@ -61,7 +60,7 @@ namespace z80gs
 
 			gscpu.int_pend = true;
 			if (gscpu.iff1 && gscpu.t != gscpu.eipos) // interrupt, but not after EI
-				handle_int(gscpu, gscpu.int_vec());
+				gscpu.handle_int(gscpu, gscpu.int_vec());
 
 			gscpu.t -= GSCPUINT;
 			gs_t_states += GSCPUINT;

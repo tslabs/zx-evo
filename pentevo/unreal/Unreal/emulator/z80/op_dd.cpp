@@ -1,13 +1,10 @@
 #include "std.h"
-#include "z80.h"
-#include "tables.h"
-#include "op_noprefix.h"
-#include "op_dd.h"
+#include "private.h"
 
 /* DD prefix opcodes */
 
 //#ifdef Z80_COMMON
-Z80OPCODE opx_09(Z80& cpu) { // add ix,bc
+void fastcall opx_09(Z80& cpu) { // add ix,bc
    cpu.memptr = cpu.ix+1;
    cpu.f = (cpu.f & ~(NF | CF | F5 | F3 | HF));
    cpu.f |= (((cpu.ix & 0x0FFF) + (cpu.bc & 0x0FFF)) >> 8) & 0x10; /* HF */
@@ -16,7 +13,7 @@ Z80OPCODE opx_09(Z80& cpu) { // add ix,bc
    cpu.f |= (cpu.xh & (F5 | F3));
    CPUTACT(7);
 }
-Z80OPCODE opx_19(Z80& cpu) { // add ix,de
+void fastcall opx_19(Z80& cpu) { // add ix,de
    cpu.memptr = cpu.ix+1;
    cpu.f = (cpu.f & ~(NF | CF | F5 | F3 | HF));
    cpu.f |= (((cpu.ix & 0x0FFF) + (cpu.de & 0x0FFF)) >> 8) & 0x10; /* HF */
@@ -27,11 +24,11 @@ Z80OPCODE opx_19(Z80& cpu) { // add ix,de
 }
 //#endif
 //#ifndef Z80_COMMON
-Z80OPCODE opx_21(Z80& cpu) { // ld ix,nnnn
+void fastcall opx_21(Z80& cpu) { // ld ix,nnnn
    cpu.xl = cpu.rd(cpu.pc++);
    cpu.xh = cpu.rd(cpu.pc++);
 }
-Z80OPCODE opx_22(Z80& cpu) { // ld (nnnn),ix
+void fastcall opx_22(Z80& cpu) { // ld (nnnn),ix
    unsigned adr = cpu.rd(cpu.pc++);
    adr += cpu.rd(cpu.pc++)*0x100;
    cpu.memptr = adr+1;
@@ -40,24 +37,24 @@ Z80OPCODE opx_22(Z80& cpu) { // ld (nnnn),ix
 }
 //#endif
 //#ifdef Z80_COMMON
-Z80OPCODE opx_23(Z80& cpu) { // inc ix
+void fastcall opx_23(Z80& cpu) { // inc ix
    cpu.ix++;
    CPUTACT(2);
 }
-Z80OPCODE opx_24(Z80& cpu) { // inc xh
+void fastcall opx_24(Z80& cpu) { // inc xh
    inc8(cpu, cpu.xh);
 }
-Z80OPCODE opx_25(Z80& cpu) { // dec xh
+void fastcall opx_25(Z80& cpu) { // dec xh
    dec8(cpu, cpu.xh);
 }
 //#endif
 //#ifndef Z80_COMMON
-Z80OPCODE opx_26(Z80& cpu) { // ld xh,nn
+void fastcall opx_26(Z80& cpu) { // ld xh,nn
    cpu.xh = cpu.rd(cpu.pc++);
 }
 //#endif
 //#ifdef Z80_COMMON
-Z80OPCODE opx_29(Z80& cpu) { // add ix,ix
+void fastcall opx_29(Z80& cpu) { // add ix,ix
    cpu.memptr = cpu.ix+1;
    cpu.f = (cpu.f & ~(NF | CF | F5 | F3 | HF));
    cpu.f |= ((cpu.ix >> 7) & 0x10); /* HF */
@@ -68,7 +65,7 @@ Z80OPCODE opx_29(Z80& cpu) { // add ix,ix
 }
 //#endif
 //#ifndef Z80_COMMON
-Z80OPCODE opx_2A(Z80& cpu) { // ld ix,(nnnn)
+void fastcall opx_2A(Z80& cpu) { // ld ix,(nnnn)
    unsigned adr = cpu.rd(cpu.pc++);
    adr += cpu.rd(cpu.pc++)*0x100;
    cpu.memptr = adr+1;
@@ -77,22 +74,22 @@ Z80OPCODE opx_2A(Z80& cpu) { // ld ix,(nnnn)
 }
 //#endif
 //#ifdef Z80_COMMON
-Z80OPCODE opx_2B(Z80& cpu) { // dec ix
+void fastcall opx_2B(Z80& cpu) { // dec ix
    cpu.ix--;
    CPUTACT(2);
 }
-Z80OPCODE opx_2C(Z80& cpu) { // inc xl
+void fastcall opx_2C(Z80& cpu) { // inc xl
    inc8(cpu, cpu.xl);
 }
-Z80OPCODE opx_2D(Z80& cpu) { // dec xl
+void fastcall opx_2D(Z80& cpu) { // dec xl
    dec8(cpu, cpu.xl);
 }
 //#endif
 //#ifndef Z80_COMMON
-Z80OPCODE opx_2E(Z80& cpu) { // ld xl,nn
+void fastcall opx_2E(Z80& cpu) { // ld xl,nn
    cpu.xl = cpu.rd(cpu.pc++);
 }
-Z80OPCODE opx_34(Z80& cpu) { // inc (ix+nn)
+void fastcall opx_34(Z80& cpu) { // inc (ix+nn)
    char ofs = cpu.rd(cpu.pc++);
    CPUTACT(5);
    u8 t = cpu.rd(cpu.ix + ofs);
@@ -100,7 +97,7 @@ Z80OPCODE opx_34(Z80& cpu) { // inc (ix+nn)
    CPUTACT(1);
    cpu.wd(cpu.ix + ofs, t);
 }
-Z80OPCODE opx_35(Z80& cpu) { // dec (ix+nn)
+void fastcall opx_35(Z80& cpu) { // dec (ix+nn)
    char ofs = cpu.rd(cpu.pc++);
    CPUTACT(5);
    u8 t = cpu.rd(cpu.ix + ofs);
@@ -108,7 +105,7 @@ Z80OPCODE opx_35(Z80& cpu) { // dec (ix+nn)
    CPUTACT(1);
    cpu.wd(cpu.ix + ofs, t);
 }
-Z80OPCODE opx_36(Z80& cpu) { // ld (ix+nn),nn
+void fastcall opx_36(Z80& cpu) { // ld (ix+nn),nn
    char ofs = cpu.rd(cpu.pc++);
    u8 tempbyte = cpu.rd(cpu.pc++);
    CPUTACT(2);
@@ -116,7 +113,7 @@ Z80OPCODE opx_36(Z80& cpu) { // ld (ix+nn),nn
 }
 //#endif
 //#ifdef Z80_COMMON
-Z80OPCODE opx_39(Z80& cpu) { // add ix,sp
+void fastcall opx_39(Z80& cpu) { // add ix,sp
    cpu.memptr = cpu.ix+1;
    cpu.f = (cpu.f & ~(NF | CF | F5 | F3 | HF));
    cpu.f |= (((cpu.ix & 0x0FFF) + (cpu.sp & 0x0FFF)) >> 8) & 0x10; /* HF */
@@ -125,297 +122,297 @@ Z80OPCODE opx_39(Z80& cpu) { // add ix,sp
    cpu.f |= (cpu.xh & (F5 | F3));
    CPUTACT(7);
 }
-Z80OPCODE opx_44(Z80& cpu) { // ld b,xh
+void fastcall opx_44(Z80& cpu) { // ld b,xh
    cpu.b = cpu.xh;
 }
-Z80OPCODE opx_45(Z80& cpu) { // ld b,xl
+void fastcall opx_45(Z80& cpu) { // ld b,xl
    cpu.b = cpu.xl;
 }
 //#endif
 //#ifndef Z80_COMMON
-Z80OPCODE opx_46(Z80& cpu) { // ld b,(ix+nn)
+void fastcall opx_46(Z80& cpu) { // ld b,(ix+nn)
    char ofs = cpu.rd(cpu.pc++);
    CPUTACT(5);
    cpu.b = cpu.rd(cpu.ix + ofs);
 }
 //#endif
 //#ifdef Z80_COMMON
-Z80OPCODE opx_4C(Z80& cpu) { // ld c,xh
+void fastcall opx_4C(Z80& cpu) { // ld c,xh
    cpu.c = cpu.xh;
 }
-Z80OPCODE opx_4D(Z80& cpu) { // ld c,xl
+void fastcall opx_4D(Z80& cpu) { // ld c,xl
    cpu.c = cpu.xl;
 }
 //#endif
 //#ifndef Z80_COMMON
-Z80OPCODE opx_4E(Z80& cpu) { // ld c,(ix+nn)
+void fastcall opx_4E(Z80& cpu) { // ld c,(ix+nn)
    char ofs = cpu.rd(cpu.pc++);
    CPUTACT(5);
    cpu.c = cpu.rd(cpu.ix + ofs);
 }
 //#endif
 //#ifdef Z80_COMMON
-Z80OPCODE opx_54(Z80& cpu) { // ld d,xh
+void fastcall opx_54(Z80& cpu) { // ld d,xh
    cpu.d = cpu.xh;
 }
-Z80OPCODE opx_55(Z80& cpu) { // ld d,xl
+void fastcall opx_55(Z80& cpu) { // ld d,xl
    cpu.d = cpu.xl;
 }
 //#endif
 //#ifndef Z80_COMMON
-Z80OPCODE opx_56(Z80& cpu) { // ld d,(ix+nn)
+void fastcall opx_56(Z80& cpu) { // ld d,(ix+nn)
    char ofs = cpu.rd(cpu.pc++);
    CPUTACT(5);
    cpu.d = cpu.rd(cpu.ix + ofs);
 }
 //#endif
 //#ifdef Z80_COMMON
-Z80OPCODE opx_5C(Z80& cpu) { // ld e,xh
+void fastcall opx_5C(Z80& cpu) { // ld e,xh
    cpu.e = cpu.xh;
 }
-Z80OPCODE opx_5D(Z80& cpu) { // ld e,xl
+void fastcall opx_5D(Z80& cpu) { // ld e,xl
    cpu.e = cpu.xl;
 }
 //#endif
 //#ifndef Z80_COMMON
-Z80OPCODE opx_5E(Z80& cpu) { // ld e,(ix+nn)
+void fastcall opx_5E(Z80& cpu) { // ld e,(ix+nn)
    char ofs = cpu.rd(cpu.pc++);
    CPUTACT(5);
    cpu.e = cpu.rd(cpu.ix + ofs);
 }
 //#endif
 //#ifdef Z80_COMMON
-Z80OPCODE opx_60(Z80& cpu) { // ld xh,b
+void fastcall opx_60(Z80& cpu) { // ld xh,b
    cpu.xh = cpu.b;
 }
-Z80OPCODE opx_61(Z80& cpu) { // ld xh,c
+void fastcall opx_61(Z80& cpu) { // ld xh,c
    cpu.xh = cpu.c;
 }
-Z80OPCODE opx_62(Z80& cpu) { // ld xh,d
+void fastcall opx_62(Z80& cpu) { // ld xh,d
    cpu.xh = cpu.d;
 }
-Z80OPCODE opx_63(Z80& cpu) { // ld xh,e
+void fastcall opx_63(Z80& cpu) { // ld xh,e
    cpu.xh = cpu.e;
 }
-Z80OPCODE opx_65(Z80& cpu) { // ld xh,xl
+void fastcall opx_65(Z80& cpu) { // ld xh,xl
    cpu.xh = cpu.xl;
 }
 //#endif
 //#ifndef Z80_COMMON
-Z80OPCODE opx_66(Z80& cpu) { // ld h,(ix+nn)
+void fastcall opx_66(Z80& cpu) { // ld h,(ix+nn)
    char ofs = cpu.rd(cpu.pc++);
    CPUTACT(5);
    cpu.h = cpu.rd(cpu.ix + ofs);
 }
 //#endif
 //#ifdef Z80_COMMON
-Z80OPCODE opx_67(Z80& cpu) { // ld xh,a
+void fastcall opx_67(Z80& cpu) { // ld xh,a
    cpu.xh = cpu.a;
 }
-Z80OPCODE opx_68(Z80& cpu) { // ld xl,b
+void fastcall opx_68(Z80& cpu) { // ld xl,b
    cpu.xl = cpu.b;
 }
-Z80OPCODE opx_69(Z80& cpu) { // ld xl,c
+void fastcall opx_69(Z80& cpu) { // ld xl,c
    cpu.xl = cpu.c;
 }
-Z80OPCODE opx_6A(Z80& cpu) { // ld xl,d
+void fastcall opx_6A(Z80& cpu) { // ld xl,d
    cpu.xl = cpu.d;
 }
-Z80OPCODE opx_6B(Z80& cpu) { // ld xl,e
+void fastcall opx_6B(Z80& cpu) { // ld xl,e
    cpu.xl = cpu.e;
 }
-Z80OPCODE opx_6C(Z80& cpu) { // ld xl,xh
+void fastcall opx_6C(Z80& cpu) { // ld xl,xh
    cpu.xl = cpu.xh;
 }
 //#endif
 //#ifndef Z80_COMMON
-Z80OPCODE opx_6E(Z80& cpu) { // ld l,(ix+nn)
+void fastcall opx_6E(Z80& cpu) { // ld l,(ix+nn)
    char ofs = cpu.rd(cpu.pc++);
    CPUTACT(5);
    cpu.l = cpu.rd(cpu.ix + ofs);
 }
 //#endif
 //#ifdef Z80_COMMON
-Z80OPCODE opx_6F(Z80& cpu) { // ld xl,a
+void fastcall opx_6F(Z80& cpu) { // ld xl,a
    cpu.xl = cpu.a;
 }
 //#endif
 //#ifndef Z80_COMMON
-Z80OPCODE opx_70(Z80& cpu) { // ld (ix+nn),b
+void fastcall opx_70(Z80& cpu) { // ld (ix+nn),b
    char ofs = cpu.rd(cpu.pc++);
    CPUTACT(5);
    cpu.wd(cpu.ix + ofs, cpu.b);
 }
-Z80OPCODE opx_71(Z80& cpu) { // ld (ix+nn),c
+void fastcall opx_71(Z80& cpu) { // ld (ix+nn),c
    char ofs = cpu.rd(cpu.pc++);
    CPUTACT(5);
    cpu.wd(cpu.ix + ofs, cpu.c);
 }
-Z80OPCODE opx_72(Z80& cpu) { // ld (ix+nn),d
+void fastcall opx_72(Z80& cpu) { // ld (ix+nn),d
    char ofs = cpu.rd(cpu.pc++);
    CPUTACT(5);
    cpu.wd(cpu.ix + ofs, cpu.d);
 }
-Z80OPCODE opx_73(Z80& cpu) { // ld (ix+nn),e
+void fastcall opx_73(Z80& cpu) { // ld (ix+nn),e
    char ofs = cpu.rd(cpu.pc++);
    CPUTACT(5);
    cpu.wd(cpu.ix + ofs, cpu.e);
 }
-Z80OPCODE opx_74(Z80& cpu) { // ld (ix+nn),h
+void fastcall opx_74(Z80& cpu) { // ld (ix+nn),h
    char ofs = cpu.rd(cpu.pc++);
    CPUTACT(5);
    cpu.wd(cpu.ix + ofs, cpu.h);
 }
-Z80OPCODE opx_75(Z80& cpu) { // ld (ix+nn),l
+void fastcall opx_75(Z80& cpu) { // ld (ix+nn),l
    char ofs = cpu.rd(cpu.pc++);
    CPUTACT(5);
    cpu.wd(cpu.ix + ofs, cpu.l);
 }
-Z80OPCODE opx_77(Z80& cpu) { // ld (ix+nn),a
+void fastcall opx_77(Z80& cpu) { // ld (ix+nn),a
    char ofs = cpu.rd(cpu.pc++);
    CPUTACT(5);
    cpu.wd(cpu.ix + ofs, cpu.a);
 }
 //#endif
 //#ifdef Z80_COMMON
-Z80OPCODE opx_7C(Z80& cpu) { // ld a,xh
+void fastcall opx_7C(Z80& cpu) { // ld a,xh
    cpu.a = cpu.xh;
 }
-Z80OPCODE opx_7D(Z80& cpu) { // ld a,xl
+void fastcall opx_7D(Z80& cpu) { // ld a,xl
    cpu.a = cpu.xl;
 }
 //#endif
 //#ifndef Z80_COMMON
-Z80OPCODE opx_7E(Z80& cpu) { // ld a,(ix+nn)
+void fastcall opx_7E(Z80& cpu) { // ld a,(ix+nn)
    char ofs = cpu.rd(cpu.pc++);
    CPUTACT(5);
    cpu.a = cpu.rd(cpu.ix + ofs);
 }
 //#endif
 //#ifdef Z80_COMMON
-Z80OPCODE opx_84(Z80& cpu) { // add a,xh
+void fastcall opx_84(Z80& cpu) { // add a,xh
    add8(cpu, cpu.xh);
 }
-Z80OPCODE opx_85(Z80& cpu) { // add a,xl
+void fastcall opx_85(Z80& cpu) { // add a,xl
    add8(cpu, cpu.xl);
 }
 //#endif
 //#ifndef Z80_COMMON
-Z80OPCODE opx_86(Z80& cpu) { // add a,(ix+nn)
+void fastcall opx_86(Z80& cpu) { // add a,(ix+nn)
    char ofs = cpu.rd(cpu.pc++);
    CPUTACT(5);
    add8(cpu, cpu.rd(cpu.ix + ofs));
 }
 //#endif
 //#ifdef Z80_COMMON
-Z80OPCODE opx_8C(Z80& cpu) { // adc a,xh
+void fastcall opx_8C(Z80& cpu) { // adc a,xh
    adc8(cpu, cpu.xh);
 }
-Z80OPCODE opx_8D(Z80& cpu) { // adc a,xl
+void fastcall opx_8D(Z80& cpu) { // adc a,xl
    adc8(cpu, cpu.xl);
 }
 //#endif
 //#ifndef Z80_COMMON
-Z80OPCODE opx_8E(Z80& cpu) { // adc a,(ix+nn)
+void fastcall opx_8E(Z80& cpu) { // adc a,(ix+nn)
    char ofs = cpu.rd(cpu.pc++);
    CPUTACT(5);
    adc8(cpu, cpu.rd(cpu.ix + ofs));
 }
 //#endif
 //#ifdef Z80_COMMON
-Z80OPCODE opx_94(Z80& cpu) { // sub xh
+void fastcall opx_94(Z80& cpu) { // sub xh
    sub8(cpu, cpu.xh);
 }
-Z80OPCODE opx_95(Z80& cpu) { // sub xl
+void fastcall opx_95(Z80& cpu) { // sub xl
    sub8(cpu, cpu.xl);
 }
 //#endif
 //#ifndef Z80_COMMON
-Z80OPCODE opx_96(Z80& cpu) { // sub (ix+nn)
+void fastcall opx_96(Z80& cpu) { // sub (ix+nn)
    char ofs = cpu.rd(cpu.pc++);
    CPUTACT(5);
    sub8(cpu, cpu.rd(cpu.ix + ofs));
 }
 //#endif
 //#ifdef Z80_COMMON
-Z80OPCODE opx_9C(Z80& cpu) { // sbc a,xh
+void fastcall opx_9C(Z80& cpu) { // sbc a,xh
    sbc8(cpu, cpu.xh);
 }
-Z80OPCODE opx_9D(Z80& cpu) { // sbc a,xl
+void fastcall opx_9D(Z80& cpu) { // sbc a,xl
    sbc8(cpu, cpu.xl);
 }
 //#endif
 //#ifndef Z80_COMMON
-Z80OPCODE opx_9E(Z80& cpu) { // sbc a,(ix+nn)
+void fastcall opx_9E(Z80& cpu) { // sbc a,(ix+nn)
    char ofs = cpu.rd(cpu.pc++);
    CPUTACT(5);
    sbc8(cpu, cpu.rd(cpu.ix + ofs));
 }
 //#endif
 //#ifdef Z80_COMMON
-Z80OPCODE opx_A4(Z80& cpu) { // and xh
+void fastcall opx_A4(Z80& cpu) { // and xh
    and8(cpu, cpu.xh);
 }
-Z80OPCODE opx_A5(Z80& cpu) { // and xl
+void fastcall opx_A5(Z80& cpu) { // and xl
    and8(cpu, cpu.xl);
 }
 //#endif
 //#ifndef Z80_COMMON
-Z80OPCODE opx_A6(Z80& cpu) { // and (ix+nn)
+void fastcall opx_A6(Z80& cpu) { // and (ix+nn)
    char ofs = cpu.rd(cpu.pc++);
    CPUTACT(5);
    and8(cpu, cpu.rd(cpu.ix + ofs));
 }
 //#endif
 //#ifdef Z80_COMMON
-Z80OPCODE opx_AC(Z80& cpu) { // xor xh
+void fastcall opx_AC(Z80& cpu) { // xor xh
    xor8(cpu, cpu.xh);
 }
-Z80OPCODE opx_AD(Z80& cpu) { // xor xl
+void fastcall opx_AD(Z80& cpu) { // xor xl
    xor8(cpu, cpu.xl);
 }
 //#endif
 //#ifndef Z80_COMMON
-Z80OPCODE opx_AE(Z80& cpu) { // xor (ix+nn)
+void fastcall opx_AE(Z80& cpu) { // xor (ix+nn)
    char ofs = cpu.rd(cpu.pc++);
    CPUTACT(5);
    xor8(cpu, cpu.rd(cpu.ix + ofs));
 }
 //#endif
 //#ifdef Z80_COMMON
-Z80OPCODE opx_B4(Z80& cpu) { // or xh
+void fastcall opx_B4(Z80& cpu) { // or xh
    or8(cpu, cpu.xh);
 }
-Z80OPCODE opx_B5(Z80& cpu) { // or xl
+void fastcall opx_B5(Z80& cpu) { // or xl
    or8(cpu, cpu.xl);
 }
 //#endif
 //#ifndef Z80_COMMON
-Z80OPCODE opx_B6(Z80& cpu) { // or (ix+nn)
+void fastcall opx_B6(Z80& cpu) { // or (ix+nn)
    char ofs = cpu.rd(cpu.pc++);
    CPUTACT(5);
    or8(cpu, cpu.rd(cpu.ix + ofs));
 }
 //#endif
 //#ifdef Z80_COMMON
-Z80OPCODE opx_BC(Z80& cpu) { // cp xh
+void fastcall opx_BC(Z80& cpu) { // cp xh
    cp8(cpu, cpu.xh);
 }
-Z80OPCODE opx_BD(Z80& cpu) { // cp xl
+void fastcall opx_BD(Z80& cpu) { // cp xl
    cp8(cpu, cpu.xl);
 }
 //#endif
 //#ifndef Z80_COMMON
-Z80OPCODE opx_BE(Z80& cpu) { // cp (ix+nn)
+void fastcall opx_BE(Z80& cpu) { // cp (ix+nn)
    char ofs = cpu.rd(cpu.pc++);
    CPUTACT(5);
    cp8(cpu, cpu.rd(cpu.ix + ofs));
 }
-Z80OPCODE opx_E1(Z80& cpu) { // pop ix
+void fastcall opx_E1(Z80& cpu) { // pop ix
    cpu.xl = cpu.rd(cpu.sp++);
    cpu.xh = cpu.rd(cpu.sp++);
 }
-Z80OPCODE opx_E3(Z80& cpu) { // ex (sp),ix
+void fastcall opx_E3(Z80& cpu) { // ex (sp),ix
    unsigned tmp = cpu.rd(cpu.sp) + 0x100*cpu.rd(cpu.sp + 1);
    CPUTACT(1);
    cpu.wd(cpu.sp, cpu.xl);
@@ -424,18 +421,18 @@ Z80OPCODE opx_E3(Z80& cpu) { // ex (sp),ix
    cpu.ix = tmp;
    CPUTACT(2);
 }
-Z80OPCODE opx_E5(Z80& cpu) { // push ix
+void fastcall opx_E5(Z80& cpu) { // push ix
    CPUTACT(1);
    cpu.wd(--cpu.sp, cpu.xh);
    cpu.wd(--cpu.sp, cpu.xl);
 }
 //#endif
 //#ifdef Z80_COMMON
-Z80OPCODE opx_E9(Z80& cpu) { // jp (ix)
+void fastcall opx_E9(Z80& cpu) { // jp (ix)
    cpu.last_branch = cpu.pc-2;
    cpu.pc = cpu.ix;
 }
-Z80OPCODE opx_F9(Z80& cpu) { // ld sp,ix
+void fastcall opx_F9(Z80& cpu) { // ld sp,ix
    cpu.sp = cpu.ix;
    CPUTACT(2);
 }

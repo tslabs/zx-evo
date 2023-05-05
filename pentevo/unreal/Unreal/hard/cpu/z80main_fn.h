@@ -1,7 +1,5 @@
 #pragma once
 #include "draw.h"
-#include "emulator/z80/op_noprefix.h"
-#include "emulator/z80/op_system.h"
 #include "tape.h"
 #include "vars.h"
 #include "dx/dxrend.h"
@@ -150,7 +148,7 @@ void wm(unsigned addr, u8 val)
 	*a = val;
 }
 
-Z80INLINE u8 m1_cycle(Z80& cpu)
+forceinline u8 m1_cycle(Z80& cpu)
 {
 	if ((conf.mem_model == MM_PENTAGON) &&
 		((comp.pEFF7 & (EFF7_CMOS | EFF7_4BPP)) == (EFF7_CMOS | EFF7_4BPP)))
@@ -166,7 +164,7 @@ Z80INLINE u8 m1_cycle(Z80& cpu)
 	return cpu.m1_cycle();
 }
 
-inline void Z80FAST step()
+inline void fastcall step()
 {
 	if (comp.flags & CF_SETDOSROM)
 	{
@@ -248,7 +246,7 @@ void z80loop_TSL()
 
 		if (comp.ts.intctrl.pend && cpu.iff1 && (cpu.t != cpu.eipos) && !vdos) // int disabled in vdos after r/w vg ports
 		{
-			handle_int(cpu, cpu.int_vec());
+			cpu.handle_int(cpu, cpu.int_vec());
 		}
 		step1<use_debug>();
 		update_screen(); // update screen, TSU, DMA
@@ -296,7 +294,7 @@ void z80loop_other()
 			(cpu.t != cpu.eipos) &&         // INT disabled after EI
 			cpu.int_gate)                 // INT enabled by ATM hardware (no INT disabling in PentEvo)
 		{
-			handle_int(cpu, cpu.int_vec());
+			cpu.handle_int(cpu, cpu.int_vec());
 		}
 
 		step1<use_debug>();
