@@ -1,5 +1,5 @@
 #pragma once
-#include "defs.h"
+#include "core/z80/z80.h"
 
 void init_bpx(char* file);
 void done_bpx();

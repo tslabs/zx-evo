@@ -1,6 +1,6 @@
 #include "std.h"
+#include "core/z80/z80.h"
 #include "emul.h"
-#include "defs.h"
 #include "vars.h"
 #include "gs.h"
 #include "gsz80.h"

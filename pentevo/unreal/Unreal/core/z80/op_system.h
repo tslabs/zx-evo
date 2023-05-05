@@ -1,6 +1,5 @@
 #pragma once
 #include "sysdefs.h"
-#include "defs.h"
 
 Z80INLINE void handle_int(Z80& cpu, u8 vector)
 {

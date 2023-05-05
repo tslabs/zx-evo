@@ -198,7 +198,6 @@
     <ClInclude Include="debugger\dbgwidgets.h" />
     <ClInclude Include="ddk.h" />
     <ClInclude Include="debugger\debug.h" />
-    <ClInclude Include="defs.h" />
     <ClInclude Include="depack.h" />
     <ClInclude Include="draw.h" />
     <ClInclude Include="drawers.h" />

@@ -1,5 +1,5 @@
 #pragma once
-#include "defs.h"
+#include "core/z80/z80.h"
 
 #define op_40 op_00     // ld b,b
 #define op_49 op_00     // ld c,c
