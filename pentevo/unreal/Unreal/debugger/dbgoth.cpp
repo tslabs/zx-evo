@@ -10,7 +10,7 @@
 
 void show_time()
 {
-	Z80 &cpu = t_cpu_mgr::get_cpu();
+	const Z80 &cpu = t_cpu_mgr::get_cpu();
 	tprint(time_x, time_y, "time delta:", w_otheroff);
 	char text[32];
 	sprintf(text, "%14I64d", cpu.delta());
