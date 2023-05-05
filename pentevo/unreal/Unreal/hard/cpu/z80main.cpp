@@ -7,6 +7,8 @@
 #include "sound/sound.h"
 #include "hard/tsconf.h"
 #include "z80main.h"
+
+#include "util.h"
 #include "z80main_fn.h"
 #include "sound/saa1099.h"
 #include "sound/dev_moonsound.h"
@@ -113,4 +115,119 @@ void set_clk(void)
 	default: ;
 	}
 	comp.ts.intctrl.frame_len = (conf.intlen * cpu.rate) >> 8;
+}
+
+
+u8* TMainZ80::direct_mem(unsigned addr) const
+{
+	return am_r(addr);
+}
+
+u8 TMainZ80::rd(u32 addr)
+{
+	const u8 tempbyte = mem_if_->rm(addr);
+
+	// Align 14MHz CPU memory request to 7MHz DRAM cycle
+	// request can be satisfied only in the next DRAM cycle
+	if (comp.ts.cache_miss && rate == 0x40)
+		tt += (tt & 0x40) ? 0x40 * 6 : 0x40 * 5;
+	else
+		tt += rate * 3;
+
+	return tempbyte;
+}
+
+u8 TMainZ80::m1_cycle()
+{
+	cpu.pc_hist_ptr++;
+	if (cpu.pc_hist_ptr >= z80_pc_history_size) cpu.pc_hist_ptr = 0;
+	cpu.pc_hist[cpu.pc_hist_ptr].addr = cpu.pc;
+	cpu.pc_hist[cpu.pc_hist_ptr].page = comp.ts.page[(cpu.pc >> 14) & 3];
+
+	r_low++;
+	const u8 tempbyte = mem_if_->rm(pc++);
+
+	// Align 14MHz CPU memory request to 7MHz DRAM cycle
+	// request can be satisfied only in the next DRAM cycle
+	if (comp.ts.cache_miss && rate == 0x40)
+		tt = (tt + 0x40 * 7) & 0xFFFFFF80;
+	else
+		tt += rate * 4;
+
+	cpu.opcode = tempbyte;
+
+	return tempbyte;
+}
+
+u8 TMainZ80::in(unsigned port)
+{
+	return ::in(port);
+}
+
+void TMainZ80::out(unsigned port, u8 val)
+{
+	::out(port, val);
+}
+
+u8 TMainZ80::int_vec()
+{
+
+	tt += rate * 3; // pass 3 tacts before read INT vector
+
+	if (conf.mem_model == MM_TSL)
+	{
+		// check status of frame INT
+		ts_frame_int(comp.ts.vdos || comp.ts.vdos_m1);
+
+		if (comp.ts.intctrl.frame_pend)
+			return comp.ts.im2vect[INT_FRAME];
+
+		if (comp.ts.intctrl.line_pend)
+			return comp.ts.im2vect[INT_LINE];
+
+		if (comp.ts.intctrl.dma_pend)
+			return comp.ts.im2vect[INT_DMA];
+
+
+		return 0xFF;
+	}
+
+	return (comp.flags & CF_Z80FBUS) ? u8(rdtsc() & 0xFF) : 0xFF;
+}
+
+void TMainZ80::check_next_frame()
+{
+	if (t >= conf.frame)
+	{
+		comp.t_states += conf.frame;
+		t -= conf.frame;
+		eipos -= conf.frame;
+		comp.frame_counter++;
+		//int_pend = true;
+		if (conf.mem_model == MM_TSL)
+		{
+			comp.ts.intctrl.line_t = comp.ts.intline ? 0 : conf.t_line;
+			comp.ts.intctrl.last_cput -= conf.frame;
+		}
+	}
+}
+
+void TMainZ80::retn()
+{
+	nmi_in_progress = false;
+	set_banks();
+}
+
+void TMainZ80::handle_int(Z80& cpu, u8 vector)
+{
+	Z80::handle_int(cpu, vector);
+
+	if (conf.mem_model == MM_TSL)
+	{
+		if (comp.ts.intctrl.frame_pend) comp.ts.intctrl.frame_pend = 0;
+		else
+			if (comp.ts.intctrl.line_pend)  comp.ts.intctrl.line_pend = 0;
+			else
+				if (comp.ts.intctrl.dma_pend)   comp.ts.intctrl.dma_pend = 0;
+	}
 }
