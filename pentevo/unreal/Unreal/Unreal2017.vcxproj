@@ -33,13 +33,6 @@
   <ItemGroup>
     <ClCompile Include="cheat.cpp" />
     <ClCompile Include="config.cpp" />
-    <ClCompile Include="emulator\z80\z80.cpp" />
-    <ClCompile Include="emulator\z80\daa_tabs.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-    </ClCompile>
     <ClCompile Include="debugger\dbgbpx.cpp" />
     <ClCompile Include="debugger\dbgcmd.cpp" />
     <ClCompile Include="debugger\dbglabls.cpp" />
@@ -52,6 +45,13 @@
     <ClCompile Include="debugger\dbgtsconf.cpp" />
     <ClCompile Include="debugger\dbgwidgets.cpp" />
     <ClCompile Include="debugger\debug.cpp" />
+    <ClCompile Include="emulator\z80\z80.cpp" />
+    <ClCompile Include="emulator\z80\daa_tabs.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="depack.cpp" />
     <ClCompile Include="draw.cpp" />
     <ClCompile Include="drawers.cpp" />
@@ -63,6 +63,13 @@
     <ClCompile Include="dx\dxrframe.cpp" />
     <ClCompile Include="emul.cpp" />
     <ClCompile Include="emulkeys.cpp" />
+    <ClCompile Include="include\ImGui\imgui.cpp" />
+    <ClCompile Include="include\ImGui\imgui_demo.cpp" />
+    <ClCompile Include="include\ImGui\imgui_draw.cpp" />
+    <ClCompile Include="include\ImGui\imgui_impl_sdl2.cpp" />
+    <ClCompile Include="include\ImGui\imgui_impl_sdlrenderer.cpp" />
+    <ClCompile Include="include\ImGui\imgui_tables.cpp" />
+    <ClCompile Include="include\ImGui\imgui_widgets.cpp" />
     <ClCompile Include="sound\emul_2203.cpp" />
     <ClCompile Include="fntsrch.cpp" />
     <ClCompile Include="font.cpp" />
@@ -172,13 +179,6 @@
     <ClCompile Include="hard\zf232.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="emulator\z80\private.h" />
-    <ClInclude Include="emulator\z80\z80.h" />
-    <ClInclude Include="hard\cpu\z80main_fn.h" />
-    <ClInclude Include="hard\gs\gsz80_fn.h" />
-    <ClInclude Include="sound\bass.h" />
-    <ClInclude Include="cheat.h" />
-    <ClInclude Include="config.h" />
     <ClInclude Include="debugger\dbgbpx.h" />
     <ClInclude Include="debugger\dbgcmd.h" />
     <ClInclude Include="debugger\dbglabls.h" />
@@ -190,8 +190,102 @@
     <ClInclude Include="debugger\dbgtrace.h" />
     <ClInclude Include="debugger\dbgtsconf.h" />
     <ClInclude Include="debugger\dbgwidgets.h" />
-    <ClInclude Include="ddk.h" />
     <ClInclude Include="debugger\debug.h" />
+    <ClInclude Include="emulator\z80\private.h" />
+    <ClInclude Include="emulator\z80\z80.h" />
+    <ClInclude Include="hard\cpu\z80main_fn.h" />
+    <ClInclude Include="hard\gs\gsz80_fn.h" />
+    <ClInclude Include="include\ImGui\imconfig.h" />
+    <ClInclude Include="include\ImGui\imgui.h" />
+    <ClInclude Include="include\ImGui\imgui_impl_sdl2.h" />
+    <ClInclude Include="include\ImGui\imgui_impl_sdlrenderer.h" />
+    <ClInclude Include="include\ImGui\imgui_internal.h" />
+    <ClInclude Include="include\ImGui\imstb_rectpack.h" />
+    <ClInclude Include="include\ImGui\imstb_textedit.h" />
+    <ClInclude Include="include\ImGui\imstb_truetype.h" />
+    <ClInclude Include="include\ImGui\stb_sprintf.h" />
+    <ClInclude Include="include\SDL2\begin_code.h" />
+    <ClInclude Include="include\SDL2\close_code.h" />
+    <ClInclude Include="include\SDL2\SDL.h" />
+    <ClInclude Include="include\SDL2\SDL_assert.h" />
+    <ClInclude Include="include\SDL2\SDL_atomic.h" />
+    <ClInclude Include="include\SDL2\SDL_audio.h" />
+    <ClInclude Include="include\SDL2\SDL_bits.h" />
+    <ClInclude Include="include\SDL2\SDL_blendmode.h" />
+    <ClInclude Include="include\SDL2\SDL_clipboard.h" />
+    <ClInclude Include="include\SDL2\SDL_config.h" />
+    <ClInclude Include="include\SDL2\SDL_cpuinfo.h" />
+    <ClInclude Include="include\SDL2\SDL_egl.h" />
+    <ClInclude Include="include\SDL2\SDL_endian.h" />
+    <ClInclude Include="include\SDL2\SDL_error.h" />
+    <ClInclude Include="include\SDL2\SDL_events.h" />
+    <ClInclude Include="include\SDL2\SDL_filesystem.h" />
+    <ClInclude Include="include\SDL2\SDL_gamecontroller.h" />
+    <ClInclude Include="include\SDL2\SDL_gesture.h" />
+    <ClInclude Include="include\SDL2\SDL_guid.h" />
+    <ClInclude Include="include\SDL2\SDL_haptic.h" />
+    <ClInclude Include="include\SDL2\SDL_hidapi.h" />
+    <ClInclude Include="include\SDL2\SDL_hints.h" />
+    <ClInclude Include="include\SDL2\SDL_joystick.h" />
+    <ClInclude Include="include\SDL2\SDL_keyboard.h" />
+    <ClInclude Include="include\SDL2\SDL_keycode.h" />
+    <ClInclude Include="include\SDL2\SDL_loadso.h" />
+    <ClInclude Include="include\SDL2\SDL_locale.h" />
+    <ClInclude Include="include\SDL2\SDL_log.h" />
+    <ClInclude Include="include\SDL2\SDL_main.h" />
+    <ClInclude Include="include\SDL2\SDL_messagebox.h" />
+    <ClInclude Include="include\SDL2\SDL_metal.h" />
+    <ClInclude Include="include\SDL2\SDL_misc.h" />
+    <ClInclude Include="include\SDL2\SDL_mouse.h" />
+    <ClInclude Include="include\SDL2\SDL_mutex.h" />
+    <ClInclude Include="include\SDL2\SDL_name.h" />
+    <ClInclude Include="include\SDL2\SDL_opengl.h" />
+    <ClInclude Include="include\SDL2\SDL_opengles.h" />
+    <ClInclude Include="include\SDL2\SDL_opengles2.h" />
+    <ClInclude Include="include\SDL2\SDL_opengles2_gl2.h" />
+    <ClInclude Include="include\SDL2\SDL_opengles2_gl2ext.h" />
+    <ClInclude Include="include\SDL2\SDL_opengles2_gl2platform.h" />
+    <ClInclude Include="include\SDL2\SDL_opengles2_khrplatform.h" />
+    <ClInclude Include="include\SDL2\SDL_opengl_glext.h" />
+    <ClInclude Include="include\SDL2\SDL_pixels.h" />
+    <ClInclude Include="include\SDL2\SDL_platform.h" />
+    <ClInclude Include="include\SDL2\SDL_power.h" />
+    <ClInclude Include="include\SDL2\SDL_quit.h" />
+    <ClInclude Include="include\SDL2\SDL_rect.h" />
+    <ClInclude Include="include\SDL2\SDL_render.h" />
+    <ClInclude Include="include\SDL2\SDL_revision.h" />
+    <ClInclude Include="include\SDL2\SDL_rwops.h" />
+    <ClInclude Include="include\SDL2\SDL_scancode.h" />
+    <ClInclude Include="include\SDL2\SDL_sensor.h" />
+    <ClInclude Include="include\SDL2\SDL_shape.h" />
+    <ClInclude Include="include\SDL2\SDL_stdinc.h" />
+    <ClInclude Include="include\SDL2\SDL_surface.h" />
+    <ClInclude Include="include\SDL2\SDL_system.h" />
+    <ClInclude Include="include\SDL2\SDL_syswm.h" />
+    <ClInclude Include="include\SDL2\SDL_test.h" />
+    <ClInclude Include="include\SDL2\SDL_test_assert.h" />
+    <ClInclude Include="include\SDL2\SDL_test_common.h" />
+    <ClInclude Include="include\SDL2\SDL_test_compare.h" />
+    <ClInclude Include="include\SDL2\SDL_test_crc32.h" />
+    <ClInclude Include="include\SDL2\SDL_test_font.h" />
+    <ClInclude Include="include\SDL2\SDL_test_fuzzer.h" />
+    <ClInclude Include="include\SDL2\SDL_test_harness.h" />
+    <ClInclude Include="include\SDL2\SDL_test_images.h" />
+    <ClInclude Include="include\SDL2\SDL_test_log.h" />
+    <ClInclude Include="include\SDL2\SDL_test_md5.h" />
+    <ClInclude Include="include\SDL2\SDL_test_memory.h" />
+    <ClInclude Include="include\SDL2\SDL_test_random.h" />
+    <ClInclude Include="include\SDL2\SDL_thread.h" />
+    <ClInclude Include="include\SDL2\SDL_timer.h" />
+    <ClInclude Include="include\SDL2\SDL_touch.h" />
+    <ClInclude Include="include\SDL2\SDL_types.h" />
+    <ClInclude Include="include\SDL2\SDL_version.h" />
+    <ClInclude Include="include\SDL2\SDL_video.h" />
+    <ClInclude Include="include\SDL2\SDL_vulkan.h" />
+    <ClInclude Include="sound\bass.h" />
+    <ClInclude Include="cheat.h" />
+    <ClInclude Include="config.h" />
+    <ClInclude Include="ddk.h" />
     <ClInclude Include="depack.h" />
     <ClInclude Include="draw.h" />
     <ClInclude Include="drawers.h" />
@@ -261,6 +355,9 @@
   <ItemGroup>
     <ResourceCompile Include="Unreal.rc" />
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="include\ImGui\LICENSE.txt" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{B9C745E9-52E2-48EA-9D6A-7AE42133B56E}</ProjectGuid>
     <RootNamespace>Unreal</RootNamespace>
@@ -322,29 +419,33 @@
     <GenerateManifest>true</GenerateManifest>
     <OutDir>bin\$(Configuration)\</OutDir>
     <IntDir>tmp\$(Configuration)\</IntDir>
-    <IncludePath>$(ProjectDir);$(ProjectDir)include\SDL2;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir);$(ProjectDir)include\;$(IncludePath)</IncludePath>
     <LibraryPath>$(ProjectDir)lib;$(LibraryPath)</LibraryPath>
+    <ExecutablePath>$(ProjectDir);$(ProjectDir)include\SDL2;$(IncludePath);$(ExecutablePath)</ExecutablePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(ProjectDir);$(ProjectDir)include\SDL2;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir);$(ProjectDir)include\;$(IncludePath)</IncludePath>
     <GenerateManifest>true</GenerateManifest>
     <OutDir>bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>tmp\$(Platform)\$(Configuration)\</IntDir>
     <LibraryPath>$(ProjectDir)lib64;$(LibraryPath)</LibraryPath>
+    <ExecutablePath>$(ProjectDir);$(ProjectDir)include\SDL2;$(IncludePath);$(ExecutablePath)</ExecutablePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <GenerateManifest>true</GenerateManifest>
     <OutDir>bin\$(Configuration)\</OutDir>
     <IntDir>tmp\$(Configuration)\</IntDir>
-    <IncludePath>$(ProjectDir);$(ProjectDir)include\SDL2;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir);$(ProjectDir)include\;$(IncludePath)</IncludePath>
     <LibraryPath>$(ProjectDir)lib;$(LibraryPath)</LibraryPath>
+    <ExecutablePath>$(ProjectDir);$(ProjectDir)include\SDL2;$(IncludePath);$(ExecutablePath)</ExecutablePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(ProjectDir);$(ProjectDir)include\SDL2;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir);$(ProjectDir)include\;$(IncludePath)</IncludePath>
     <GenerateManifest>true</GenerateManifest>
     <OutDir>bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>tmp\$(Platform)\$(Configuration)\</IntDir>
     <LibraryPath>$(ProjectDir)lib64;$(LibraryPath)</LibraryPath>
+    <ExecutablePath>$(ProjectDir);$(ProjectDir)include\SDL2;$(IncludePath);$(ExecutablePath)</ExecutablePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
