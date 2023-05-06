@@ -3,7 +3,7 @@
 #include "input.h"
 #include "sound/sndchip.h"
 #include "sound/ayx32.h"
-#include "debugger/debug.h"
+#include "emulator/debugger/debug.h"
 #include "hard/zf232.h"
 #include "hard/cpu/z80main.h"
 #include "hard/gs/gshle.h"

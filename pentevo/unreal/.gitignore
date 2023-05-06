@@ -1,5 +1,5 @@
 .vs*
 build
 *.user
-*/bin
-*/tmp/**
+__bin
+__tmp

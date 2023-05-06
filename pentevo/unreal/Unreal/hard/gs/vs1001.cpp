@@ -2,7 +2,7 @@
 #include "emul.h"
 #include "vars.h"
 #include "vs1001.h"
-#include "sound/bass.h"
+#include "bass.h"
 #include "sound/snd_bass.h"
 
 bool SkipZeroes = true;

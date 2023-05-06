@@ -1,7 +1,7 @@
 #include "std.h"
 #include "emul.h"
 #include "vars.h"
-#include "sound/bass.h"
+#include "bass.h"
 #include "sound/snd_bass.h"
 #include "gshle.h"
 #include "gs.h"

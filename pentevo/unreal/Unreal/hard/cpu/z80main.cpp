@@ -10,7 +10,7 @@
 
 #include "util.h"
 #include "z80main_fn.h"
-#include "debugger/dbgoth.h"
+#include "emulator/debugger/dbgoth.h"
 #include "sound/saa1099.h"
 #include "sound/dev_moonsound.h"
 

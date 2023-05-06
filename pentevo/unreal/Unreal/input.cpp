@@ -5,7 +5,7 @@
 #include "tape.h"
 #include "input.h"
 #include "inputpc.h"
-#include "debugger/debug.h"
+#include "emulator/debugger/debug.h"
 #include "util.h"
 
 u8 pastekeys[0x80 - 0x20] =

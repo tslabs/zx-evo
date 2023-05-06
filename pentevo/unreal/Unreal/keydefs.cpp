@@ -5,14 +5,14 @@
 #include "emulator/ui/gui.h"
 #include "savesnd.h"
 #include "cheat.h"
-#include "debugger/dbgreg.h"
-#include "debugger/dbgcmd.h"
-#include "debugger/dbgoth.h"
-#include "debugger/dbgrwdlg.h"
-#include "debugger/dbgbpx.h"
-#include "debugger/dbgtrace.h"
-#include "debugger/dbglabls.h"
-#include "debugger/dbgmem.h"
+#include "emulator/debugger/dbgreg.h"
+#include "emulator/debugger/dbgcmd.h"
+#include "emulator/debugger/dbgoth.h"
+#include "emulator/debugger/dbgrwdlg.h"
+#include "emulator/debugger/dbgbpx.h"
+#include "emulator/debugger/dbgtrace.h"
+#include "emulator/debugger/dbglabls.h"
+#include "emulator/debugger/dbgmem.h"
 
 action ac_main[] =
 {

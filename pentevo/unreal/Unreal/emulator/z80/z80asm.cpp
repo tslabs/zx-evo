@@ -1,7 +1,7 @@
 #include "std.h"
 #include "sysdefs.h"
 #include "hard/memory.h"
-#include "debugger/dbglabls.h"
+#include "emulator/debugger/dbglabls.h"
 #include "util.h"
 
 char asmbuf[0x40];

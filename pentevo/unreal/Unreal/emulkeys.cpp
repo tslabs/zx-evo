@@ -6,7 +6,7 @@
 #include "config.h"
 #include "draw.h"
 #include "dx/dx.h"
-#include "debugger/debug.h"
+#include "emulator/debugger/debug.h"
 #include "hard/memory.h"
 #include "sound/sound.h"
 #include "savesnd.h"

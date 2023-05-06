@@ -12,7 +12,7 @@
 #include "util.h"
 #include "depack.h"
 #include "hard/tsconf.h"
-#include "debugger/dbglabls.h"
+#include "emulator/debugger/dbglabls.h"
 #include <ctime>
 
 using namespace Gdiplus;

@@ -5,8 +5,8 @@
 #include "hard/gs/gs.h"
 #include "tape.h"
 #include "draw.h"
-#include "debugger/debug.h"
-#include "debugger/dbgbpx.h"
+#include "emulator/debugger/debug.h"
+#include "emulator/debugger/dbgbpx.h"
 #include "hard/memory.h"
 #include "util.h"
 
