@@ -45,6 +45,7 @@ constexpr auto MAX_ROM_PAGES = 64;        // 1Mb;
 
 #define TRASH_M     (MISC_BASE_M+0*PAGE)
 
+extern bool Exit;
 
 enum class ide_scheme
 {

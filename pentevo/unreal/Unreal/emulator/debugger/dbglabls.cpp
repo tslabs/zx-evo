@@ -446,7 +446,7 @@ void mon_show_labels()
 	DialogBox(hIn, MAKEINTRESOURCE(IDD_LABELS), wnd, LabelsDlg);
 }
 
-void init_labels(char* filename)
+void init_labels(const char* filename)
 {
 	if (filename)
 	{

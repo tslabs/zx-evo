@@ -15,7 +15,7 @@ void init_aspi()
 {
    if (_SendASPI32Command) return;
    hAspiDll = LoadLibrary("WNASPI32.DLL");
-   if (!hAspiDll) { errmsg("failed to load WNASPI32.DLL"); err_win32(); exit(); }
+   if (!hAspiDll) { errmsg("failed to load WNASPI32.DLL"); err_win32(); terminate(); }
    _GetASPI32SupportInfo = (GetASPI32SupportInfo_t)GetProcAddress(hAspiDll, "GetASPI32SupportInfo");
    _SendASPI32Command = (SendASPI32Command_t)GetProcAddress(hAspiDll, "SendASPI32Command");
    if (!_GetASPI32SupportInfo || !_SendASPI32Command) errexit("invalid ASPI32 library");

@@ -262,7 +262,7 @@ void NVRAM::write(u8 val)
 				state = SEND_DATA;
 				dataout = nvram[address];
 				address = (address + 1) & 0x7FF;
-				bitsout = 0; goto exit; // out_z==1;
+				bitsout = 0; goto terminate; // out_z==1;
 			}
 
 			if ((1 << state) & ((1 << RCV_ADDR) | (1 << RCV_CMD) | (1 << RCV_DATA))) {
@@ -299,18 +299,18 @@ void NVRAM::write(u8 val)
 				}
 
 				// EEPROM always acknowledges
-				out = SDA_0; out_z = 0; goto exit;
+				out = SDA_0; out_z = 0; goto terminate;
 			}
 
 			if (state == SEND_DATA) {
-				if (bitsout == 8) { state = RD_ACK; out_z = 1; goto exit; }
+				if (bitsout == 8) { state = RD_ACK; out_z = 1; goto terminate; }
 				out = (dataout & 0x80) ? SDA_1 : SDA_0; dataout *= 2;
-				bitsout++; out_z = 0; goto exit;
+				bitsout++; out_z = 0; goto terminate;
 			}
 
 			out_z = 1; // no ACK, reading
 		}
-		goto exit;
+		goto terminate;
 	}
 
 	if ((val & SCL) && ((val ^ prev) & SDA)) // start/stop
@@ -323,7 +323,7 @@ void NVRAM::write(u8 val)
 	// else SDA changed on low SCL
 
 
-exit:
+terminate:
 	if (out_z) out = (val & SDA) ? SDA_1 : SDA_0;
 	prev = val;
 }

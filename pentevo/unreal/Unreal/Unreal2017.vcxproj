@@ -71,6 +71,7 @@
     <ClCompile Include="ImGui\imgui_impl_sdlrenderer.cpp" />
     <ClCompile Include="ImGui\imgui_tables.cpp" />
     <ClCompile Include="ImGui\imgui_widgets.cpp" />
+    <ClCompile Include="input.cpp" />
     <ClCompile Include="sound\emul_2203.cpp" />
     <ClCompile Include="fntsrch.cpp" />
     <ClCompile Include="font.cpp" />
@@ -86,8 +87,6 @@
     <ClCompile Include="hard\hdd\hddaspi.cpp" />
     <ClCompile Include="hard\hdd\hddio.cpp" />
     <ClCompile Include="emulator\ui\iehelp.cpp" />
-    <ClCompile Include="init.cpp" />
-    <ClCompile Include="input.cpp" />
     <ClCompile Include="inputpc.cpp" />
     <ClCompile Include="io.cpp" />
     <ClCompile Include="keydefs.cpp" />
@@ -192,6 +191,7 @@
     <ClInclude Include="emulator\debugger\dbgtsconf.h" />
     <ClInclude Include="emulator\debugger\dbgwidgets.h" />
     <ClInclude Include="emulator\debugger\debug.h" />
+    <ClInclude Include="emulator\emul_config.h" />
     <ClInclude Include="emulator\z80\private.h" />
     <ClInclude Include="emulator\z80\z80.h" />
     <ClInclude Include="hard\cpu\z80main_fn.h" />
@@ -233,7 +233,6 @@
     <ClInclude Include="hard\hdd\hdd.h" />
     <ClInclude Include="hard\hdd\hddio.h" />
     <ClInclude Include="emulator\ui\iehelp.h" />
-    <ClInclude Include="init.h" />
     <ClInclude Include="input.h" />
     <ClInclude Include="inputpc.h" />
     <ClInclude Include="leds.h" />
@@ -385,7 +384,7 @@
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <DelayLoadDLLs>gdiplus.dll</DelayLoadDLLs>
-      <AdditionalDependencies>delayimp.lib;gdiplus.lib;kernel32.lib;user32.lib;gdi32.lib;shell32.lib;comdlg32.lib;comctl32.lib;winmm.lib;setupapi.lib;SDL2.lib;dinput.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>delayimp.lib;iphlpapi.lib;gdiplus.lib;kernel32.lib;user32.lib;gdi32.lib;shell32.lib;comdlg32.lib;comctl32.lib;winmm.lib;setupapi.lib;SDL2.lib;dinput.lib;PocoEncodingsmtd.lib;PocoFoundationmtd.lib;PocoJSONmtd.lib;PocoNetmtd.lib;PocoUtilmtd.lib;PocoXMLmtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <LinkErrorReporting>PromptImmediately</LinkErrorReporting>
       <AdditionalManifestDependencies>type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'</AdditionalManifestDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -426,7 +425,7 @@ copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)rom"
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <DelayLoadDLLs>gdiplus.dll</DelayLoadDLLs>
-      <AdditionalDependencies>delayimp.lib;dinput8.lib;gdiplus.lib;kernel32.lib;user32.lib;gdi32.lib;shell32.lib;comdlg32.lib;comctl32.lib;winmm.lib;setupapi.lib;SDL2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>delayimp.lib;iphlpapi.lib;dinput8.lib;gdiplus.lib;kernel32.lib;user32.lib;gdi32.lib;shell32.lib;comdlg32.lib;comctl32.lib;winmm.lib;setupapi.lib;SDL2.lib;PocoEncodingsmtd.lib;PocoFoundationmtd.lib;PocoJSONmtd.lib;PocoNetmtd.lib;PocoUtilmtd.lib;PocoXMLmtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <LinkErrorReporting>PromptImmediately</LinkErrorReporting>
       <AdditionalManifestDependencies>type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'</AdditionalManifestDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -476,7 +475,7 @@ copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)rom"
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <DelayLoadDLLs>gdiplus.dll</DelayLoadDLLs>
-      <AdditionalDependencies>delayimp.lib;gdiplus.lib;kernel32.lib;user32.lib;gdi32.lib;shell32.lib;comdlg32.lib;comctl32.lib;winmm.lib;setupapi.lib;SDL2.lib;dinput.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>delayimp.lib;iphlpapi.lib;gdiplus.lib;kernel32.lib;user32.lib;gdi32.lib;shell32.lib;comdlg32.lib;comctl32.lib;winmm.lib;setupapi.lib;SDL2.lib;dinput.lib;PocoEncodingsmt.lib;PocoFoundationmt.lib;PocoJSONmt.lib;PocoNetmt.lib;PocoUtilmt.lib;PocoXMLmt.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <LinkErrorReporting>PromptImmediately</LinkErrorReporting>
       <AdditionalManifestDependencies>type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'</AdditionalManifestDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -533,7 +532,7 @@ if exist "$(TargetDir)..\unreal.7z" del /q "$(TargetDir)..\unreal.7z"
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <DelayLoadDLLs>gdiplus.dll</DelayLoadDLLs>
-      <AdditionalDependencies>delayimp.lib;dinput8.lib;gdiplus.lib;kernel32.lib;user32.lib;gdi32.lib;shell32.lib;comdlg32.lib;comctl32.lib;winmm.lib;setupapi.lib;SDL2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>delayimp.lib;iphlpapi.lib;dinput8.lib;gdiplus.lib;kernel32.lib;user32.lib;gdi32.lib;shell32.lib;comdlg32.lib;comctl32.lib;winmm.lib;setupapi.lib;SDL2.lib;PocoEncodingsmt.lib;PocoFoundationmt.lib;PocoJSONmt.lib;PocoNetmt.lib;PocoUtilmt.lib;PocoXMLmt.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <LinkErrorReporting>PromptImmediately</LinkErrorReporting>
       <AdditionalManifestDependencies>type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'</AdditionalManifestDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>

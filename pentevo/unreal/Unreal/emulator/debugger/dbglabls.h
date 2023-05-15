@@ -57,5 +57,5 @@ extern mon_labels_t mon_labels;
 
 void load_labels(char *filename, u8 *base, unsigned size);
 void mon_show_labels();
-void init_labels(char* filename);
+void init_labels(const char* filename);
 

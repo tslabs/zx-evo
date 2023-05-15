@@ -120,12 +120,6 @@
     <ClCompile Include="hard\hdd\hddio.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="init.cpp">
-      <Filter>Sources</Filter>
-    </ClCompile>
-    <ClCompile Include="input.cpp">
-      <Filter>Sources</Filter>
-    </ClCompile>
     <ClCompile Include="inputpc.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
@@ -296,6 +290,7 @@
     <ClCompile Include="ImGui\imgui_impl_sdlrenderer.cpp" />
     <ClCompile Include="ImGui\imgui_tables.cpp" />
     <ClCompile Include="ImGui\imgui_widgets.cpp" />
+    <ClCompile Include="input.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cheat.h">
@@ -362,9 +357,6 @@
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="hard\hdd\hddio.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="init.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="input.h">
@@ -516,6 +508,7 @@
     <ClInclude Include="ImGui\imstb_textedit.h" />
     <ClInclude Include="ImGui\imstb_truetype.h" />
     <ClInclude Include="ImGui\stb_sprintf.h" />
+    <ClInclude Include="emulator\emul_config.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Unreal.rc">

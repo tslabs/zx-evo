@@ -14,7 +14,7 @@ void GSHLE::reportError(const char *err)
    printf("BASS library reports error in %s\n", err);
    color(CONSCLR_ERRCODE);
    printf("error code is 0x%04X\n", BASS::ErrorGetCode());
-   //exit();
+   //terminate();
 }
 
 void GSHLE::runBASS()

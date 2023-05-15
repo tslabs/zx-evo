@@ -1,8 +1,10 @@
 #include "std.h"
 #include "emul.h"
 #include "vars.h"
-#include "init.h"
 #include "hddio.h"
+
+#include <Poco/Util/Application.h>
+
 #include "util.h"
 
 typedef int(__cdecl* get_aspi32_support_info_t)();
@@ -595,7 +597,7 @@ void init_aspi()
 	{
 		errmsg("failed to load WNASPI32.DLL");
 		err_win32();
-		exit();
+		terminate();
 	}
 	get_aspi32_support_info = reinterpret_cast<get_aspi32_support_info_t>(GetProcAddress(h_aspi_dll, "GetASPI32SupportInfo"));
 	send_aspi32_command = reinterpret_cast<send_aspi32_command_t>(GetProcAddress(h_aspi_dll, "SendASPI32Command"));

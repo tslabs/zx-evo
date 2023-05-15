@@ -675,7 +675,7 @@ void mon_watchdialog()
 	DialogBox(hIn, MAKEINTRESOURCE(IDD_OSW), wnd, watchdlg);
 }
 
-void init_bpx(char* file)
+void init_bpx(const char* file)
 {
 	addpath(BpxFileName, file ? file : "bpx.ini");
 	const auto bpx_file = fopen(BpxFileName, "rt");

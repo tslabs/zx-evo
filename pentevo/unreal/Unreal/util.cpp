@@ -2,7 +2,6 @@
 #include "emul.h"
 #include "vars.h"
 #include "snapshot.h"
-#include "init.h"
 #include "util.h"
 
 static void cpuid(unsigned CpuInfo[4], unsigned _eax)
@@ -329,7 +328,7 @@ void __declspec(noreturn) errexit(const char *err, ...)
    va_start(args, err);
    verr(err, args);  
    va_end(args);
-   exit();
+   terminate();
 }
 
 extern "C" void * _ReturnAddress(void);

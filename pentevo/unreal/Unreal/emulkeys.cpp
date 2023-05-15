@@ -14,7 +14,6 @@
 #include "emulator/ui/gui.h"
 #include "snapshot.h"
 #include "hard/fdd/wd93dat.h"
-#include "init.h"
 #include "hard/cpu/z80main.h"
 #include "emulkeys.h"
 #include "util.h"
@@ -448,7 +447,7 @@ void correct_exit()
 
 	nowait = 1;
 	normal_exit = true;
-	exit();
+	Exit = true;
 }
 
 void opensnap()

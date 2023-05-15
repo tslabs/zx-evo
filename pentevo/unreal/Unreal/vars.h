@@ -192,7 +192,7 @@ extern gdibmp_t gdibmp, debug_gdibmp;
 extern u8 needclr; // clear screenbuffer before rendering
 extern DWORD mousepos;  // left-clicked point in monitor
 extern PALETTEENTRY syspalette[0x100];
-extern u8 exitflag; // avoid call exit() twice
+extern u8 exitflag; // avoid call terminate() twice
 
 constexpr auto PLAYBUFSIZE = 16384;
 extern unsigned sndplaybuf[PLAYBUFSIZE];

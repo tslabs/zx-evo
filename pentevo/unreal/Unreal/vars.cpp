@@ -108,7 +108,7 @@ unsigned statcnt;
 char arcbuffer[0x2000]; // extensions and command lines for archivers
 char skiparc[0x400]; // ignore this files in archive
 
-u8 exitflag = 0; // avoid call exit() twice
+u8 exitflag = 0; // avoid call terminate() twice
 
 // beta128 vars
 int trd_toload = 0; // drive to load
@@ -481,7 +481,7 @@ HBITMAP hbm;  // bitmap for repaint background
 DWORD bm_dx, bm_dy;
 DWORD mousepos;  // left-clicked point in monitor
 unsigned nowait; // don't close console window after error if started from GUI
-bool normal_exit = false; // true on correct exit, false on failure exit
+bool normal_exit = false; // true on correct terminate, false on failure terminate
 
 char* ayvols[64]; unsigned num_ayvols;
 char* aystereo[64]; unsigned num_aystereo;

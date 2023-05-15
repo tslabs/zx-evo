@@ -2,7 +2,6 @@
 #include "sysdefs.h"
 #include "emulator/z80/z80.h"
 
-void __declspec(noreturn) exit();
 void correct_exit();
 void wnd_resize(int scale);
 void main_mouse();
