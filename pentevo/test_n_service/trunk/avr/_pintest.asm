@@ -92,8 +92,8 @@ PINTEST_OK13:
         SBIS    PIND,5
         ORI     DATA,$08
         IN      TEMP,PINE
-        ANDI    TEMP,0B00000011
-        CPI     TEMP,0B00000001
+        ANDI    TEMP,0B00000010
+        CPI     TEMP,0B00000000
         BREQ    PINTEST_OK14
         ORI     DATA,$10
 PINTEST_OK14:

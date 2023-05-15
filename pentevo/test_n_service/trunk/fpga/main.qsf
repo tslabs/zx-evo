@@ -28,7 +28,7 @@ set_global_assignment -name FAMILY ACEX1K
 set_global_assignment -name TOP_LEVEL_ENTITY main
 set_global_assignment -name ORIGINAL_QUARTUS_VERSION 6.1
 set_global_assignment -name PROJECT_CREATION_TIME_DATE "11:53:26  OCTOBER 02, 2009"
-set_global_assignment -name LAST_QUARTUS_VERSION "7.2 SP3"
+set_global_assignment -name LAST_QUARTUS_VERSION "9.0 SP2"
 set_global_assignment -name DEVICE_FILTER_PACKAGE "ANY QFP"
 set_global_assignment -name DEVICE_FILTER_PIN_COUNT 208
 set_global_assignment -name DEVICE_FILTER_SPEED_GRADE 3
@@ -225,3 +225,5 @@ set_global_assignment -name VERILOG_FILE test_dram/dram.v
 set_global_assignment -name VERILOG_FILE test_dram/dram_control.v
 set_global_assignment -name VERILOG_FILE test_dram/rnd_vec_gen.v
 set_global_assignment -name VERILOG_FILE test_dram/mem_tester.v
+set_global_assignment -name RTLV_GROUP_COMB_LOGIC_IN_CLOUD ON
+set_global_assignment -name VERILOG_MACRO "IDE_HDD=<None>"
