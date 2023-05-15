@@ -1,5 +1,5 @@
 
-AVRA   Ver. 1.2.3 service.asm Mon May 15 15:34:22 2023
+AVRA   Ver. 1.2.3 service.asm Mon May 15 18:08:39 2023
 
 
           .LIST
@@ -11627,7 +11627,7 @@ C:002b10 cfe9              RJMP    SPITST5
 
 
 Segment usage:
-   Code      :     32294 words (64588 bytes)
+   Code      :     31805 words (63610 bytes)
    Data      :       366 bytes
    EEPROM    :         4 bytes
 
