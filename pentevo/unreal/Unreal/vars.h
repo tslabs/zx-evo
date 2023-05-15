@@ -1,8 +1,13 @@
 #pragma once
 #include "emul.h"
-#include "sndchip.h"
+#include "input.h"
+#include "sound/sndchip.h"
 #include "sound/ayx32.h"
-#include "debugger/debug.h"
+#include "emulator/debugger/debug.h"
+#include "hard/zf232.h"
+#include "hard/cpu/z80main.h"
+#include "hard/gs/gshle.h"
+#include "hard/hdd/hdd.h"
 
 constexpr auto romled_time = 16;
 
@@ -11,103 +16,90 @@ constexpr auto gdi_buf_sz = (448 * 320 * 4 * 4 * 4);	// Quad size, 32 bit, 448x3
 #define DBG_GDIBUFSZ (DEBUG_WND_WIDTH*DEBUG_WND_HEIGHT)	// Quad size, 32 bit, 448x320 max
 
 #pragma pack(8)
-struct PALETTE_OPTIONS
+struct palette_options
 { // custom palettes
-   char name[33];
-   unsigned ZZ,ZN,NN,NB,BB,ZB;
-   unsigned r11,r12,r13,r21,r22,r23,r31,r32,r33;
+	char name[33];
+	unsigned ZZ, ZN, NN, NB, BB, ZB;
+	unsigned r11, r12, r13, r21, r22, r23, r31, r32, r33;
 };
 #pragma pack()
 
 enum
 {
-   VK_LMB = 0x101,
-   VK_RMB,
-   VK_MMB,
-   VK_MWU,
-   VK_MWD,
-   VK_JLEFT,
-   VK_JRIGHT,
-   VK_JUP,
-   VK_JDOWN,
-   VK_JFIRE,
-   VK_JB0 = VK_JFIRE,
-   VK_JB1,
-   VK_JB2,
-   VK_JB3,
-   VK_JB4,
-   VK_JB5,
-   VK_JB6,
-   VK_JB7,
-   VK_JB8,
-   VK_JB9,
-   VK_JB10,
-   VK_JB11,
-   VK_JB12,
-   VK_JB13,
-   VK_JB14,
-   VK_JB15,
-   VK_JB16,
-   VK_JB17,
-   VK_JB18,
-   VK_JB19,
-   VK_JB20,
-   VK_JB21,
-   VK_JB22,
-   VK_JB23,
-   VK_JB24,
-   VK_JB25,
-   VK_JB26,
-   VK_JB27,
-   VK_JB28,
-   VK_JB29,
-   VK_JB30,
-   VK_JB31,
-   DIK_MENU,
-   DIK_CONTROL,
-   DIK_SHIFT, 
-   VK_MAX
+	VK_LMB = 0x101,
+	VK_RMB,
+	VK_MMB,
+	VK_MWU,
+	VK_MWD,
+	VK_JLEFT,
+	VK_JRIGHT,
+	VK_JUP,
+	VK_JDOWN,
+	VK_JFIRE,
+	VK_JB0 = VK_JFIRE,
+	VK_JB1,
+	VK_JB2,
+	VK_JB3,
+	VK_JB4,
+	VK_JB5,
+	VK_JB6,
+	VK_JB7,
+	VK_JB8,
+	VK_JB9,
+	VK_JB10,
+	VK_JB11,
+	VK_JB12,
+	VK_JB13,
+	VK_JB14,
+	VK_JB15,
+	VK_JB16,
+	VK_JB17,
+	VK_JB18,
+	VK_JB19,
+	VK_JB20,
+	VK_JB21,
+	VK_JB22,
+	VK_JB23,
+	VK_JB24,
+	VK_JB25,
+	VK_JB26,
+	VK_JB27,
+	VK_JB28,
+	VK_JB29,
+	VK_JB30,
+	VK_JB31,
+	DIK_MENU,
+	DIK_CONTROL,
+	DIK_SHIFT,
+	VK_MAX
 };
 
 enum
 {
-   MEMBITS_R = 0x01, MEMBITS_W = 0x02, MEMBITS_X = 0x04,
-   MEMBITS_BPR = 0x10, MEMBITS_BPW = 0x20, MEMBITS_BPX = 0x40,
-   MEMBITS_BPC = 0x80
+	MEMBITS_R = 0x01,
+	MEMBITS_W = 0x02,
+	MEMBITS_X = 0x04,
+	MEMBITS_BPR = 0x10,
+	MEMBITS_BPW = 0x20,
+	MEMBITS_BPX = 0x40,
+	MEMBITS_BPC = 0x80
 };
 
-struct GDIBMP
+struct gdibmp_t
 {
-   BITMAPINFO header;
-   RGBQUAD waste[0x100];
+	BITMAPINFO header;
+	RGBQUAD waste[0x100];
 };
 
-class TMainZ80 : public Z80
+
+
+enum class BANKM
 {
-public:
-   TMainZ80(u32 Idx,
-       TBankNames BankNames, TStep Step, TDelta Delta,
-       TSetLastT SetLastT, u8 *membits, const TMemIf *FastMemIf, const TMemIf *DbgMemIf) :
-       Z80(Idx, BankNames, Step, Delta, SetLastT, membits, FastMemIf, DbgMemIf) { }
-/*
-   virtual u8 rm(unsigned addr) override;
-   virtual u8 dbgrm(unsigned addr) override;
-   virtual void wm(unsigned addr, u8 val) override;
-   virtual void dbgwm(unsigned addr, u8 val) override;
-*/
-   virtual u8 *DirectMem(unsigned addr) const override; // get direct memory pointer in debuger
-
-   u8 rd(u32 addr) override;
-
-   virtual u8 m1_cycle() override;
-   virtual u8 in(unsigned port) override;
-   virtual void out(unsigned port, u8 val) override;
-   virtual u8 IntVec() override;
-   virtual void CheckNextFrame() override;
-   virtual void retn() override;
+	BANKM_ROM = 0,
+	BANKM_RAM
 };
 
-extern PALETTE_OPTIONS pals[32];
+extern palette_options pals[32];
 
 extern CONFIG conf;
 extern COMPUTER comp;
@@ -120,11 +112,11 @@ extern char ininame[0x200];
 extern char helpname[0x200];
 
 extern unsigned num_ula;
-extern char *ulapreset[64];
-extern char *setptr;
+extern char* ulapreset[64];
+extern char* setptr;
 
-extern char *aystereo[64];
-extern char *ayvols[64];
+extern char* aystereo[64];
+extern char* ayvols[64];
 extern unsigned num_ayvols;
 extern unsigned num_aystereo;
 
@@ -138,7 +130,6 @@ extern HWND debug_wnd;
 extern unsigned nowait;
 
 extern action ac_main[];
-extern action ac_main_xt[];
 extern action ac_mon[];
 extern action ac_regs[];
 extern action ac_trace[];
@@ -149,7 +140,7 @@ extern BORDSIZE bordersizes[];
 extern VOID_FUNC prebuffers[];
 extern TS_VDAC_NAME ts_vdac_names[];
 
-extern const TMemModel mem_model[N_MM_MODELS];
+extern const mem_model_t mem_model[N_MM_MODELS];
 
 extern zxkeymap zxk_maps[];
 extern const size_t zxk_maps_count;
@@ -159,16 +150,16 @@ extern const size_t pckeys_count;
 
 extern keyports inports[VK_MAX];
 
-extern unsigned trd_toload; // drive to load
-extern unsigned DefaultDrive; // Дисковод по умолчанию в который грузятся образы дисков при старте
+extern int trd_toload; // drive to load
+extern unsigned default_drive; // Дисковод по умолчанию в который грузятся образы дисков при старте
 
-extern u8 *base_sos_rom;
-extern u8 *base_dos_rom;
-extern u8 *base_128_rom;
-extern u8 *base_sys_rom;
+extern u8* base_sos_rom;
+extern u8* base_dos_rom;
+extern u8* base_128_rom;
+extern u8* base_sys_rom;
 
-extern ZF232 zf232;
-extern K_INPUT input;
+extern zf232_t zf232;
+extern k_input input;
 
 extern unsigned brk_port_in;
 extern unsigned brk_port_out;
@@ -183,7 +174,6 @@ extern u8 used_banks[MAX_PAGES];
 extern u8 trace_rom;
 extern u8 trace_ram;
 
-extern TMainZ80 cpu;
 extern u8 dbgbreak;
 extern u8 snbuf[snd_buf_sz];		// large temporary buffer (for reading snapshots)
 extern u8 gdibuf[gdi_buf_sz];
@@ -192,25 +182,23 @@ extern u8 debug_gdibuf[DBG_GDIBUFSZ];
 extern SNDCHIP ay[2];
 extern SNDAYX32 ayx32;
 
-extern u8 *bankr[4];
-extern u8 *bankw[4];
-extern u8 bankm[4];		// bank mode: 0 - ROM / 1 - RAM
+extern u8* bankr[4];
+extern u8* bankw[4];
+extern BANKM bankm[4];		// bank mode: 0 - ROM / 1 - RAM
 
-#ifdef MOD_GSBASS
 extern GSHLE gs;
-#endif
 
-extern GDIBMP gdibmp, debug_gdibmp;
+extern gdibmp_t gdibmp, debug_gdibmp;
 extern u8 needclr; // clear screenbuffer before rendering
 extern DWORD mousepos;  // left-clicked point in monitor
 extern PALETTEENTRY syspalette[0x100];
-extern u8 exitflag; // avoid call exit() twice
+extern u8 exitflag; // avoid call terminate() twice
 
-#define PLAYBUFSIZE 16384
+constexpr auto PLAYBUFSIZE = 16384;
 extern unsigned sndplaybuf[PLAYBUFSIZE];
 extern unsigned spbsize;
 extern u8 savesndtype; // 0-none,1-wave,2-vtx
-extern FILE *savesnd;
+extern FILE* savesnd;
 
 extern HBITMAP hbm;  // bitmap for repaint background
 extern DWORD bm_dx;
@@ -223,19 +211,9 @@ extern unsigned statcnt;
 
 extern bool normal_exit;
 
-extern const char * const ay_schemes[];
+extern const char* const ay_schemes[];
 
-#ifdef MOD_GSZ80
-extern class TGsZ80 gscpu;
-
-namespace z80gs
-{
-    extern SNDRENDER sound;
-    extern u8 membits[];
-}
-#endif
-
-extern ATA_PORT hdd;   // not in `comp' - not cleared in reset()
+extern ata_port hdd;   // not in `comp' - not cleared in reset()
 extern char arcbuffer[0x2000]; // extensions and command lines for archivers
 extern char skiparc[0x400]; // ignore this files in archive
 extern char trd_loaded[4]; // used to get first free drive with no account of autoloaded images
@@ -252,7 +230,7 @@ extern u8 trdos_format;
 extern u8 trdos_seek;
 extern u8 membits[0x10000];
 
-extern u8 *vtxbuf;
+extern u8* vtxbuf;
 extern unsigned vtxbufsize;
 extern unsigned vtxbuffilled;
 

@@ -2,17 +2,17 @@
 #include "emul.h"
 #include "emulkeys.h"
 #include "snapshot.h"
-#include "gui.h"
+#include "emulator/ui/gui.h"
 #include "savesnd.h"
 #include "cheat.h"
-#include "debugger/dbgreg.h"
-#include "debugger/dbgcmd.h"
-#include "debugger/dbgoth.h"
-#include "debugger/dbgrwdlg.h"
-#include "debugger/dbgbpx.h"
-#include "debugger/dbgtrace.h"
-#include "debugger/dbglabls.h"
-#include "debugger/dbgmem.h"
+#include "emulator/debugger/dbgreg.h"
+#include "emulator/debugger/dbgcmd.h"
+#include "emulator/debugger/dbgoth.h"
+#include "emulator/debugger/dbgrwdlg.h"
+#include "emulator/debugger/dbgbpx.h"
+#include "emulator/debugger/dbgtrace.h"
+#include "emulator/debugger/dbglabls.h"
+#include "emulator/debugger/dbgmem.h"
 
 action ac_main[] =
 {
@@ -63,7 +63,6 @@ action ac_main[] =
    { "main.saveram", main_save_ram },
    { "main.saveall", main_save },
    { "main.lockmouse", main_mouse },
-   { "main.xtkbd", main_atmkbd },
    { "main.pastetext", main_pastetext },
    { "main.size1", main_size1 },
    { "main.size2", main_size2 },
@@ -72,13 +71,6 @@ action ac_main[] =
    { "main.help", main_help },
    { "main.tsutoggle", main_tsutoggle },
    { "main.flictoggle", main_flictoggle },
-
-   { 0, 0 },
-};
-
-action ac_main_xt[] =
-{
-   { "main.xtkbd", main_atmkbd },
 
    { 0, 0 },
 };

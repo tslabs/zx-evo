@@ -1,36 +1,34 @@
 #include "std.h"
 #include "emul.h"
 #include "vars.h"
-#include "sound.h"
+#include "sound/sound.h"
 #include "draw.h"
-#include "dx.h"
+#include "dx/dx.h"
 #include "leds.h"
-#include "memory.h"
+#include "hard/memory.h"
 #include "emulkeys.h"
-#include "vs1001.h"
-#include "z80.h"
-#include "zxevo.h"
+#include "hard/gs/vs1001.h"
 #include "visuals.h"
 #include "util.h"
+#include "hard/cpu/z80main_fn.h"
 
 void spectrum_frame()
 {
-   if (!temp.inputblock || input.keymode != K_INPUT::KM_DEFAULT)
+   if (!temp.inputblock || input.keymode != k_input::km_default)
       input.make_matrix();
 
    init_snd_frame();
    init_frame();
 
-   zxevo_set_readfont_pos(); // init readfont position to simulate correct font reading for zxevo -- lvd
    if (cpu.dbgchk)
    {
-       cpu.SetDbgMemIf();
-       z80dbg::z80loop();
+       cpu.set_dbg_mem_if();
+       z80loop<true>();
    }
    else
    {
-       cpu.SetFastMemIf();
-       z80fast::z80loop();
+       cpu.set_fast_mem_if();
+       z80loop<false>();
    }
 
    if (zf232.open_port)
@@ -46,8 +44,8 @@ void spectrum_frame()
    //flush_frame();
    //showleds();
 
-   if (!cpu.iff1 || // int disabled in CPU
-        ((conf.mem_model == MM_ATM710/* || conf.mem_model == MM_ATM3*/) && !(comp.pFF77 & 0x20))) // int disabled by ATM hardware -- lvd removed int disabling in pentevo (atm3)
+   if (!cpu.iff1) // int disabled in CPU
+        
    {
       u8 *mp = am_r(cpu.pc);
       if (cpu.halted)
@@ -79,17 +77,17 @@ void do_idle()
    for (;;)
    {
       asm_pause();
-      volatile u64 cpu = rdtsc();
+      const volatile u64 cpu = rdtsc();
       if ((cpu-last_cpu) >= temp.ticks_frame)
           break;
 
       if (conf.sleepidle)
       {
-          ULONG Delay = ULONG(((temp.ticks_frame - (cpu-last_cpu)) * 1000ULL) / temp.cpufq);
+	      const ULONG delay = ULONG(((temp.ticks_frame - (cpu-last_cpu)) * 1000ULL) / temp.cpufq);
 
-          if (Delay != 0)
+          if (delay != 0)
           {
-              Sleep(Delay);
+              Sleep(delay);
  //             printf("sleep: %lu\n", Delay);
               break;
           }
@@ -121,7 +119,7 @@ void mainloop(const bool &Exit)
 		// message handling before flip (they paint to rbuf)
 		if (!temp.inputblock)
 		{
-			dispatch(conf.atm.xt_kbd ? ac_main_xt : ac_main);
+			dispatch(ac_main);
 		}
 
 		if (!temp.vidblock)

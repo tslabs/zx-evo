@@ -23,7 +23,7 @@ include_directories(
 )
 
 link_directories(
-	${CMAKE_CURRENT_SOURCE_DIR}/lib
+	${CMAKE_CURRENT_SOURCE_DIR}/lib64
 )
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
@@ -40,7 +40,7 @@ add_executable (Unreal
 target_compile_features(Unreal PRIVATE cxx_std_17)
 
 target_link_libraries(Unreal 
-	dinput 
+	dinput8
 	dxerr8
 	
 	delayimp
@@ -62,5 +62,5 @@ add_custom_command(TARGET Unreal POST_BUILD
 
 add_custom_command(TARGET Unreal POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
-        ${CMAKE_CURRENT_SOURCE_DIR}/lib/bass.dll
+        ${CMAKE_CURRENT_SOURCE_DIR}/lib64/bass.dll
         $<TARGET_FILE_DIR:Unreal>)

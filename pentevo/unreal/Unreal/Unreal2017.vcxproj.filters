@@ -27,12 +27,6 @@
     <None Include="res\main.ico">
       <Filter>Resources</Filter>
     </None>
-    <None Include="gsz80.inl">
-      <Filter>Sources</Filter>
-    </None>
-    <None Include="z80_main.inl">
-      <Filter>Sources</Filter>
-    </None>
     <None Include="res\cur00000.cur">
       <Filter>Resources</Filter>
     </None>
@@ -60,26 +54,13 @@
     <None Include="res\cur00007.cur">
       <Filter>Resources</Filter>
     </None>
+    <None Include="ImGui\imgui.ini" />
   </ItemGroup>
   <ItemGroup>
-    <Library Include="lib\dinput.lib">
-      <Filter>Resources</Filter>
-    </Library>
-    <Library Include="lib\dxerr8.lib">
-      <Filter>Resources</Filter>
-    </Library>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="atm.cpp">
-      <Filter>Sources</Filter>
-    </ClCompile>
     <ClCompile Include="cheat.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="config.cpp">
-      <Filter>Sources</Filter>
-    </ClCompile>
-    <ClCompile Include="daa_tabs.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="draw.cpp">
@@ -88,19 +69,19 @@
     <ClCompile Include="drawnomc.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="dx.cpp">
+    <ClCompile Include="dx\dx.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="dxerr.cpp">
+    <ClCompile Include="dx\dxerr.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="dxrend.cpp">
+    <ClCompile Include="dx\dxrend.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="emul.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="emul_2203.cpp">
+    <ClCompile Include="sound\emul_2203.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="emulkeys.cpp">
@@ -112,55 +93,31 @@
     <ClCompile Include="font.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="font8.cpp">
-      <Filter>Sources</Filter>
-    </ClCompile>
-    <ClCompile Include="font14.cpp">
-      <Filter>Sources</Filter>
-    </ClCompile>
     <ClCompile Include="font16.cpp">
-      <Filter>Sources</Filter>
-    </ClCompile>
-    <ClCompile Include="fontatm2.cpp">
-      <Filter>Sources</Filter>
-    </ClCompile>
-    <ClCompile Include="fontdata.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="getopt.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="gs.cpp">
+    <ClCompile Include="hard\gs\gs.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="gshlbass.cpp">
+    <ClCompile Include="hard\gs\gshlbass.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="gshle.cpp">
+    <ClCompile Include="hard\gs\gshle.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="gsz80.cpp">
+    <ClCompile Include="hard\gs\gsz80.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="gui.cpp">
+    <ClCompile Include="hard\hdd\hdd.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="hdd.cpp">
+    <ClCompile Include="hard\hdd\hddaspi.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="hddaspi.cpp">
-      <Filter>Sources</Filter>
-    </ClCompile>
-    <ClCompile Include="hddio.cpp">
-      <Filter>Sources</Filter>
-    </ClCompile>
-    <ClCompile Include="iehelp.cpp">
-      <Filter>Sources</Filter>
-    </ClCompile>
-    <ClCompile Include="init.cpp">
-      <Filter>Sources</Filter>
-    </ClCompile>
-    <ClCompile Include="input.cpp">
+    <ClCompile Include="hard\hdd\hddio.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="inputpc.cpp">
@@ -178,70 +135,46 @@
     <ClCompile Include="mainloop.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="memory.cpp">
+    <ClCompile Include="hard\memory.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="op_cb.cpp">
-      <Filter>Sources</Filter>
-    </ClCompile>
-    <ClCompile Include="op_dd.cpp">
-      <Filter>Sources</Filter>
-    </ClCompile>
-    <ClCompile Include="op_ddcb.cpp">
-      <Filter>Sources</Filter>
-    </ClCompile>
-    <ClCompile Include="op_ed.cpp">
-      <Filter>Sources</Filter>
-    </ClCompile>
-    <ClCompile Include="op_fd.cpp">
-      <Filter>Sources</Filter>
-    </ClCompile>
-    <ClCompile Include="op_noprefix.cpp">
-      <Filter>Sources</Filter>
-    </ClCompile>
-    <ClCompile Include="opendlg.cpp">
-      <Filter>Sources</Filter>
-    </ClCompile>
-    <ClCompile Include="saa1099.cpp">
+    <ClCompile Include="sound\saa1099.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="savesnd.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="sdcard.cpp">
+    <ClCompile Include="hard\sdcard.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="snapshot.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="snd_bass.cpp">
+    <ClCompile Include="sound\snd_bass.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="sndbuffer.cpp">
+    <ClCompile Include="sound\sndbuffer.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="sndchip.cpp">
+    <ClCompile Include="sound\sndchip.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="sndcounter.cpp">
+    <ClCompile Include="sound\sndcounter.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="sndrender.cpp">
+    <ClCompile Include="sound\sndrender.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="sound.cpp">
+    <ClCompile Include="sound\sound.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="std.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="tables.cpp">
-      <Filter>Sources</Filter>
-    </ClCompile>
     <ClCompile Include="tape.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="tsconf.cpp">
+    <ClCompile Include="hard\tsconf.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="util.cpp">
@@ -250,19 +183,19 @@
     <ClCompile Include="vars.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="vs1001.cpp">
+    <ClCompile Include="hard\gs\vs1001.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="wd93cmd.cpp">
+    <ClCompile Include="hard\fdd\wd93cmd.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="wd93crc.cpp">
+    <ClCompile Include="hard\fdd\wd93crc.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="wd93dat.cpp">
+    <ClCompile Include="hard\fdd\wd93dat.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="wd93trk.cpp">
+    <ClCompile Include="hard\fdd\wd93trk.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="wldr_fdi.cpp">
@@ -283,22 +216,16 @@
     <ClCompile Include="wldr_udi.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="z80.cpp">
+    <ClCompile Include="hard\cpu\z80main.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="z80asm.cpp">
+    <ClCompile Include="hard\zc.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="zc.cpp">
+    <ClCompile Include="dx\dxrframe.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="zxevo.cpp">
-      <Filter>Sources</Filter>
-    </ClCompile>
-    <ClCompile Include="dxrframe.cpp">
-      <Filter>Sources</Filter>
-    </ClCompile>
-    <ClCompile Include="dxrcopy.cpp">
+    <ClCompile Include="dx\dxrcopy.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="drawers.cpp">
@@ -319,75 +246,57 @@
     <ClCompile Include="sound\ymf262.cpp">
       <Filter>Sources\sound</Filter>
     </ClCompile>
-    <ClCompile Include="zf232.cpp">
+    <ClCompile Include="hard\zf232.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="ft812.cpp">
+    <ClCompile Include="hard\ft812.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="sound\ayx32.cpp">
       <Filter>Sources\sound</Filter>
     </ClCompile>
-    <ClCompile Include="debugger\dbgbpx.cpp">
-      <Filter>debugger</Filter>
-    </ClCompile>
-    <ClCompile Include="debugger\dbgcmd.cpp">
-      <Filter>debugger</Filter>
-    </ClCompile>
-    <ClCompile Include="debugger\dbglabls.cpp">
-      <Filter>debugger</Filter>
-    </ClCompile>
-    <ClCompile Include="debugger\dbgmem.cpp">
-      <Filter>debugger</Filter>
-    </ClCompile>
-    <ClCompile Include="debugger\dbgoth.cpp">
-      <Filter>debugger</Filter>
-    </ClCompile>
-    <ClCompile Include="debugger\dbgpaint.cpp">
-      <Filter>debugger</Filter>
-    </ClCompile>
-    <ClCompile Include="debugger\dbgreg.cpp">
-      <Filter>debugger</Filter>
-    </ClCompile>
-    <ClCompile Include="debugger\dbgrwdlg.cpp">
-      <Filter>debugger</Filter>
-    </ClCompile>
-    <ClCompile Include="debugger\dbgtrace.cpp">
-      <Filter>debugger</Filter>
-    </ClCompile>
-    <ClCompile Include="debugger\dbgtsconf.cpp">
-      <Filter>debugger</Filter>
-    </ClCompile>
-    <ClCompile Include="debugger\dbgwidgets.cpp">
-      <Filter>debugger</Filter>
-    </ClCompile>
-    <ClCompile Include="debugger\debug.cpp">
-      <Filter>debugger</Filter>
-    </ClCompile>
     <ClCompile Include="visuals.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
+    <ClCompile Include="emulator\z80\z80.cpp" />
+    <ClCompile Include="emulator\z80\daa_tabs.cpp" />
+    <ClCompile Include="emulator\ui\gui.cpp" />
+    <ClCompile Include="emulator\ui\iehelp.cpp" />
+    <ClCompile Include="emulator\ui\opendlg.cpp" />
+    <ClCompile Include="emulator\z80\op_cb.cpp" />
+    <ClCompile Include="emulator\z80\op_dd.cpp" />
+    <ClCompile Include="emulator\z80\op_ddcb.cpp" />
+    <ClCompile Include="emulator\z80\op_ed.cpp" />
+    <ClCompile Include="emulator\z80\op_fd.cpp" />
+    <ClCompile Include="emulator\z80\op_noprefix.cpp" />
+    <ClCompile Include="emulator\z80\tables.cpp" />
+    <ClCompile Include="emulator\z80\z80asm.cpp" />
+    <ClCompile Include="emulator\debugger\dbgbpx.cpp" />
+    <ClCompile Include="emulator\debugger\dbgcmd.cpp" />
+    <ClCompile Include="emulator\debugger\dbglabls.cpp" />
+    <ClCompile Include="emulator\debugger\dbgmem.cpp" />
+    <ClCompile Include="emulator\debugger\dbgoth.cpp" />
+    <ClCompile Include="emulator\debugger\dbgpaint.cpp" />
+    <ClCompile Include="emulator\debugger\dbgreg.cpp" />
+    <ClCompile Include="emulator\debugger\dbgrwdlg.cpp" />
+    <ClCompile Include="emulator\debugger\dbgtrace.cpp" />
+    <ClCompile Include="emulator\debugger\dbgtsconf.cpp" />
+    <ClCompile Include="emulator\debugger\dbgwidgets.cpp" />
+    <ClCompile Include="emulator\debugger\debug.cpp" />
+    <ClCompile Include="ImGui\imgui.cpp" />
+    <ClCompile Include="ImGui\imgui_demo.cpp" />
+    <ClCompile Include="ImGui\imgui_draw.cpp" />
+    <ClCompile Include="ImGui\imgui_impl_sdl2.cpp" />
+    <ClCompile Include="ImGui\imgui_impl_sdlrenderer.cpp" />
+    <ClCompile Include="ImGui\imgui_tables.cpp" />
+    <ClCompile Include="ImGui\imgui_widgets.cpp" />
+    <ClCompile Include="input.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="atm.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="bass.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
     <ClInclude Include="cheat.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="config.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="daa_tabs.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="ddk.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="defs.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="draw.h">
@@ -396,25 +305,25 @@
     <ClInclude Include="drawnomc.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="dx.h">
+    <ClInclude Include="dx\dx.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="dxerr.h">
+    <ClInclude Include="dx\dxerr.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="dxerr8.h">
+    <ClInclude Include="dx\dxerr8.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="dxrend.h">
+    <ClInclude Include="dx\dxrend.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="dxrframe.h">
+    <ClInclude Include="dx\dxrframe.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="emul.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="emul_2203.h">
+    <ClInclude Include="sound\emul_2203.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="emulkeys.h">
@@ -426,19 +335,7 @@
     <ClInclude Include="font.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="font8.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="font14.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
     <ClInclude Include="font16.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="fontatm2.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="fontdata.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="funcs.h">
@@ -447,31 +344,19 @@
     <ClInclude Include="getopt.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="gs.h">
+    <ClInclude Include="hard\gs\gs.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="gshlbass.h">
+    <ClInclude Include="hard\gs\gshle.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="gshle.h">
+    <ClInclude Include="hard\gs\gsz80.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="gsz80.h">
+    <ClInclude Include="hard\hdd\hdd.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="gui.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="hdd.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="hddio.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="iehelp.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="init.h">
+    <ClInclude Include="hard\hdd\hddio.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="input.h">
@@ -486,61 +371,43 @@
     <ClInclude Include="mainloop.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="memory.h">
+    <ClInclude Include="hard\memory.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="mods.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="op_dd.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="op_ed.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="op_fd.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="op_noprefix.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="op_system.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="opendlg.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
     <ClInclude Include="resource.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="saa1099.h">
+    <ClInclude Include="sound\saa1099.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="savesnd.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="sdcard.h">
+    <ClInclude Include="hard\sdcard.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="snapshot.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="snd_bass.h">
+    <ClInclude Include="sound\snd_bass.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="sndbuffer.h">
+    <ClInclude Include="sound\sndbuffer.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="sndchip.h">
+    <ClInclude Include="sound\sndchip.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="sndcounter.h">
+    <ClInclude Include="sound\sndcounter.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="sndrender.h">
+    <ClInclude Include="sound\sndrender.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="sound.h">
+    <ClInclude Include="sound\sound.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="std.h">
@@ -549,13 +416,10 @@
     <ClInclude Include="sysdefs.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="tables.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
     <ClInclude Include="tape.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="tsconf.h">
+    <ClInclude Include="hard\tsconf.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="util.h">
@@ -564,34 +428,25 @@
     <ClInclude Include="vars.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="vs1001.h">
+    <ClInclude Include="hard\gs\vs1001.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="wd93.h">
+    <ClInclude Include="hard\fdd\wd93.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="wd93crc.h">
+    <ClInclude Include="hard\fdd\wd93crc.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="wd93dat.h">
+    <ClInclude Include="hard\fdd\wd93dat.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="z80.h">
+    <ClInclude Include="hard\cpu\z80main.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="z80_main.h">
+    <ClInclude Include="hard\zc.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="z80asm.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="zc.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="zxevo.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="dxrcopy.h">
+    <ClInclude Include="dx\dxrcopy.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="drawers.h">
@@ -612,58 +467,55 @@
     <ClInclude Include="sound\ymf278.h">
       <Filter>Headers\sound</Filter>
     </ClInclude>
-    <ClInclude Include="zf232.h">
+    <ClInclude Include="hard\zf232.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="ft812.h">
+    <ClInclude Include="hard\ft812.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="sound\ayx32.h">
       <Filter>Headers\sound</Filter>
     </ClInclude>
-    <ClInclude Include="debugger\dbgbpx.h">
-      <Filter>debugger</Filter>
-    </ClInclude>
-    <ClInclude Include="debugger\dbgcmd.h">
-      <Filter>debugger</Filter>
-    </ClInclude>
-    <ClInclude Include="debugger\dbglabls.h">
-      <Filter>debugger</Filter>
-    </ClInclude>
-    <ClInclude Include="debugger\dbgmem.h">
-      <Filter>debugger</Filter>
-    </ClInclude>
-    <ClInclude Include="debugger\dbgoth.h">
-      <Filter>debugger</Filter>
-    </ClInclude>
-    <ClInclude Include="debugger\dbgpaint.h">
-      <Filter>debugger</Filter>
-    </ClInclude>
-    <ClInclude Include="debugger\dbgreg.h">
-      <Filter>debugger</Filter>
-    </ClInclude>
-    <ClInclude Include="debugger\dbgrwdlg.h">
-      <Filter>debugger</Filter>
-    </ClInclude>
-    <ClInclude Include="debugger\dbgtrace.h">
-      <Filter>debugger</Filter>
-    </ClInclude>
-    <ClInclude Include="debugger\dbgtsconf.h">
-      <Filter>debugger</Filter>
-    </ClInclude>
-    <ClInclude Include="debugger\dbgwidgets.h">
-      <Filter>debugger</Filter>
-    </ClInclude>
-    <ClInclude Include="debugger\debug.h">
-      <Filter>debugger</Filter>
-    </ClInclude>
     <ClInclude Include="visuals.h">
       <Filter>Headers</Filter>
     </ClInclude>
+    <ClInclude Include="hard\cpu\z80main_fn.h" />
+    <ClInclude Include="hard\gs\gsz80_fn.h" />
+    <ClInclude Include="emulator\z80\private.h" />
+    <ClInclude Include="emulator\z80\z80.h" />
+    <ClInclude Include="emulator\ui\gui.h" />
+    <ClInclude Include="emulator\ui\iehelp.h" />
+    <ClInclude Include="emulator\ui\opendlg.h" />
+    <ClInclude Include="emulator\z80\z80asm.h" />
+    <ClInclude Include="emulator\debugger\debug.h" />
+    <ClInclude Include="emulator\debugger\dbgbpx.h" />
+    <ClInclude Include="emulator\debugger\dbgcmd.h" />
+    <ClInclude Include="emulator\debugger\dbglabls.h" />
+    <ClInclude Include="emulator\debugger\dbgmem.h" />
+    <ClInclude Include="emulator\debugger\dbgoth.h" />
+    <ClInclude Include="emulator\debugger\dbgpaint.h" />
+    <ClInclude Include="emulator\debugger\dbgreg.h" />
+    <ClInclude Include="emulator\debugger\dbgrwdlg.h" />
+    <ClInclude Include="emulator\debugger\dbgtrace.h" />
+    <ClInclude Include="emulator\debugger\dbgtsconf.h" />
+    <ClInclude Include="emulator\debugger\dbgwidgets.h" />
+    <ClInclude Include="ImGui\imconfig.h" />
+    <ClInclude Include="ImGui\imgui.h" />
+    <ClInclude Include="ImGui\imgui_impl_sdl2.h" />
+    <ClInclude Include="ImGui\imgui_impl_sdlrenderer.h" />
+    <ClInclude Include="ImGui\imgui_internal.h" />
+    <ClInclude Include="ImGui\imstb_rectpack.h" />
+    <ClInclude Include="ImGui\imstb_textedit.h" />
+    <ClInclude Include="ImGui\imstb_truetype.h" />
+    <ClInclude Include="ImGui\stb_sprintf.h" />
+    <ClInclude Include="emulator\emul_config.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Unreal.rc">
       <Filter>Resources</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="ImGui\LICENSE.txt" />
   </ItemGroup>
 </Project>

@@ -1,0 +1,8 @@
+*.rpt
+*.done
+*.bak
+*.summary
+*.pin
+*.smsg
+incremental_db
+db

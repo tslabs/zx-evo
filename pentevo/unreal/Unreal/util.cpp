@@ -2,7 +2,6 @@
 #include "emul.h"
 #include "vars.h"
 #include "snapshot.h"
-#include "init.h"
 #include "util.h"
 
 static void cpuid(unsigned CpuInfo[4], unsigned _eax)
@@ -163,8 +162,6 @@ unsigned process_msgs()
       // bcoz window will be closed on alt-f4
       if (msg.message == WM_KEYDOWN || msg.message == WM_SYSKEYDOWN)
       {
-         if (conf.atm.xt_kbd)
-             input.atm51.setkey(msg.lParam >> 16, 1);
          switch (( msg.lParam>>16)&0x1FF)
          {
             case 0x02a: kbdpcEX[0]=(kbdpcEX[0]^0x01)|0x80; break;
@@ -179,7 +176,6 @@ unsigned process_msgs()
       }
       else if (msg.message == WM_KEYUP || msg.message == WM_SYSKEYUP)
       {
-         if (conf.atm.xt_kbd) input.atm51.setkey(msg.lParam >> 16, 0);
          switch (( msg.lParam>>16)&0x1FF)
          {
             case 0x02a: kbdpcEX[0]&=0x01; kbdpcEX[1]&=0x01; break;
@@ -239,7 +235,7 @@ char dispatch(action *table)
 {
    if (*droppedFile)
    {
-       trd_toload = DefaultDrive;
+       trd_toload = default_drive;
        loadsnap(droppedFile);
        *droppedFile = 0;
    }
@@ -332,7 +328,7 @@ void __declspec(noreturn) errexit(const char *err, ...)
    va_start(args, err);
    verr(err, args);  
    va_end(args);
-   exit();
+   terminate();
 }
 
 extern "C" void * _ReturnAddress(void);

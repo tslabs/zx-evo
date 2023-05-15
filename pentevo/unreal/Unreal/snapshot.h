@@ -137,12 +137,12 @@ typedef void (*TVideoSaver)();
 extern TVideoSaver VideoSaver;
 
 int loadsnap(char *filename);
-int writeSNA(FILE *ff);
+int write_sna(FILE *ff);
 void opensnap(int index);
 void savesnap(int diskindex);
 void main_scrshot();
 void main_scrshot_clipboard();
 //void main_savevideo();
 
-bool GdiplusStartup();
-void GdiplusShutdown();
+bool gdiplus_startup();
+void gdiplus_shutdown();

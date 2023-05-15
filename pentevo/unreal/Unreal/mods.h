@@ -8,8 +8,6 @@
 #define MOD_MONITOR   // debugger
 #define MOD_MEMBAND_LED // 'memory band' led
 
-//#define MOD_VID_VD    // Video Drive by SAM style (warning: requires MMX at initialization)
-
 /* ------------------------- console output colors ------------------------- */
 
 const int CONSCLR_DEFAULT   = 0x07;

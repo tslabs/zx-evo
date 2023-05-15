@@ -1,208 +1,43 @@
 ﻿#include "std.h"
+#include "emulator/z80/z80.h"
 #include "emul.h"
-#include "defs.h"
 #include "vars.h"
-#include "debugger/debug.h"
-#include "memory.h"
-#include "gsz80.h"
-#include "z80.h"
+#include "emulator/debugger/debug.h"
+#include "hard/memory.h"
+#include "hard/gs/gsz80.h"
+#include "hard/cpu/z80main.h"
+
 #include "util.h"
-#include "sndcounter.h"
+#include "emulator/debugger/dbgoth.h"
+#include "hard/cpu/z80main_fn.h"
+#include "sound/sndcounter.h"
 #include "sound/ayx32.h"
 
-namespace z80fast
-{
-#include "z80_main.h"
-}
-
-int fmsoundon0=4; //Alone Coder
-int tfmstatuson0=2; //Alone Coder
+int fmsoundon0 = 4; //Alone Coder
+int tfmstatuson0 = 2; //Alone Coder
 char pressedit = 0; //Alone Coder
 
-void wmdbg(u32 addr, u8 val);
-u8 rmdbg(u32 addr);
-u8 *MemDbg(u32 addr);
-void __cdecl BankNames(int i, char *name);
-namespace z80dbg
-{
-void Z80FAST step();
-__int64 __cdecl delta();
-void __cdecl SetLastT();
-}
 
 #pragma pack(8)
 
-void out(unsigned port, u8 val);
-u8 in(unsigned port);
-
-/*
-u8 TMainZ80::rm(unsigned addr) { return z80fast::rm(addr); }
-
-u8 TMainZ80::dbgrm(unsigned addr) { return ::rmdbg(addr); }
-
-void TMainZ80::wm(unsigned addr, u8 val) { z80fast::wm(addr, val); }
-
-void TMainZ80::dbgwm(unsigned addr, u8 val) { ::wmdbg(addr, val); }
-*/
-u8 *TMainZ80::DirectMem(unsigned addr) const
-{
-    return am_r(addr);
-}
-
-u8 TMainZ80::rd(u32 addr)
-{
-  u8 tempbyte = MemIf->rm(addr);
-
-  // Align 14MHz CPU memory request to 7MHz DRAM cycle
-  // request can be satisfied only in the next DRAM cycle
-  if (comp.ts.cache_miss && rate == 0x40)
-    tt += (tt & 0x40) ? 0x40 * 6 : 0x40 * 5;
-  else
-    tt += rate * 3;
-
-  return tempbyte;
-}
-
-u8 TMainZ80::m1_cycle()
-{
-  cpu.pc_hist_ptr++;
-  if (cpu.pc_hist_ptr >= z80_pc_history_size) cpu.pc_hist_ptr = 0;
-  cpu.pc_hist[cpu.pc_hist_ptr].addr = cpu.pc;
-  cpu.pc_hist[cpu.pc_hist_ptr].page = comp.ts.page[(cpu.pc >> 14) & 3];
-  
-  r_low++;
-  u8 tempbyte = MemIf->rm(pc++);
-
-  // Align 14MHz CPU memory request to 7MHz DRAM cycle
-  // request can be satisfied only in the next DRAM cycle
-  if (comp.ts.cache_miss && rate == 0x40)
-    tt = (tt + 0x40 * 7) &0xFFFFFF80;
-  else
-    tt += rate * 4;
-
-  cpu.opcode = tempbyte;
-  
-  return tempbyte;
-}
-
-u8 TMainZ80::in(unsigned port) { return ::in(port); }
-
-void TMainZ80::out(unsigned port, u8 val) { ::out(port, val); }
-
-u8 TMainZ80::IntVec()
-{
-  
-  tt += rate * 3; // pass 3 tacts before read INT vector
-
-    if (conf.mem_model == MM_TSL)
-    {
-      // check status of frame INT
-      ts_frame_int(comp.ts.vdos || comp.ts.vdos_m1);
-
-      if (comp.ts.intctrl.frame_pend)
-        return comp.ts.im2vect[INT_FRAME];
-
-      else if (comp.ts.intctrl.line_pend)
-        return comp.ts.im2vect[INT_LINE];
-
-      else if (comp.ts.intctrl.dma_pend)
-        return comp.ts.im2vect[INT_DMA];
-
-      else
-        return 0xFF;
-    }
-
-	else
-		return (comp.flags & CF_Z80FBUS)? u8(rdtsc() & 0xFF) : 0xFF;
-}
-
-void TMainZ80::CheckNextFrame()
-{
-   if (t >= conf.frame)
-   {
-       comp.t_states += conf.frame;
-       t -= conf.frame;
-       eipos -= conf.frame;
-       comp.frame_counter++;
-       //int_pend = true;
-       if (conf.mem_model == MM_TSL)
-       {
-         comp.ts.intctrl.line_t = comp.ts.intline ? 0 : conf.t_line;
-         comp.ts.intctrl.last_cput -= conf.frame;
-       }
-   }
-}
-
-void TMainZ80::retn()
-{
-    nmi_in_progress = false;
-    set_banks();
-}
-
-static const TMemIf FastMemIf = { Rm, Wm };
-static const TMemIf DbgMemIf = { DbgRm, DbgWm };
-
-
-TMainZ80 cpu(0, BankNames, z80dbg::step, z80dbg::delta, z80dbg::SetLastT, membits, &FastMemIf, &DbgMemIf);
-
-
-#ifdef MOD_GSZ80
-namespace z80gs
-{
-    u8 dbgrm(u32 addr);
-    void dbgwm(u32 addr, u8 val);
-    u8 *MemDbg(u32 addr);
-    void __cdecl BankNames(int i, char *Name);
-    void Z80FAST step();
-    __int64 __cdecl delta();
-    void __cdecl SetLastT();
-    u8 membits[0x10000];
-
-    SNDRENDER sound;
-    static const TMemIf FastMemIf = { z80gs::Rm, z80gs::Wm };
-    static const TMemIf DbgMemIf = { z80gs::DbgRm, z80gs::DbgWm };
-
-}
-
-u8 TGsZ80::IntVec()
-{
-    return 0xFF;
-}
-
-void TGsZ80::CheckNextFrame()
-{
-   if (t >= z80gs::GSCPUINT)
-   {
-      t -= z80gs::GSCPUINT;
-      eipos -= z80gs::GSCPUINT;
-      z80gs::gs_t_states += z80gs::GSCPUINT;
-      int_pend = true;
-   }
-}
-
-TGsZ80 gscpu(1, z80gs::BankNames, z80gs::step, z80gs::delta,
-    z80gs::SetLastT, z80gs::membits, &z80gs::FastMemIf, &z80gs::DbgMemIf);
-#endif
 
 t_cpu_mgr cpu_mgr;
 
 void t_cpu_mgr::switch_cpu()
 {
-    current_cpu_++;
-    current_cpu_ %= Count;
+	current_cpu_++;
+	current_cpu_ %= Count;
 }
 
-Z80 *t_cpu_mgr::cpus_[] =
+Z80* t_cpu_mgr::cpus_[] =
 {
   &cpu,
-#ifdef MOD_GSZ80
-  &gscpu
-#endif
+  &z80gs::gscpu
 };
 
 
 const unsigned t_cpu_mgr::Count = _countof(cpus_);
-TZ80State t_cpu_mgr::prev_cpus_[t_cpu_mgr::Count];
+z80_state_t t_cpu_mgr::prev_cpus_[t_cpu_mgr::Count];
 unsigned t_cpu_mgr::current_cpu_ = 0;
 
 #ifdef MOD_GSBASS
@@ -215,42 +50,39 @@ u8 dbgbreak = 0;
 CONFIG conf;
 COMPUTER comp;
 TEMP temp;
-ATA_PORT hdd;   // not in `comp' - not cleared in reset()
-K_INPUT input;
-ZF232 zf232;
+ata_port hdd;   // not in `comp' - not cleared in reset()
+k_input input;
+zf232_t zf232;
 
 SNDRENDER sound;
 SNDCHIP ay[2];
 SNDAYX32 ayx32;
 SNDCOUNTER sndcounter;
 
-u8 *base_sos_rom, *base_dos_rom, *base_128_rom, *base_sys_rom;
+u8* base_sos_rom, * base_dos_rom, * base_128_rom, * base_sys_rom;
 
 #ifdef CACHE_ALIGNED
 ATTR_ALIGN(4096)
-u8 memory[PAGE*MAX_PAGES];
+u8 memory[PAGE * MAX_PAGES];
 #else // __declspec(align) not available, force u64 align with old method
-__int64 memory__[PAGE*MAX_PAGES/sizeof(__int64)];
-u8 * const memory = (u8*)memory__;
+__int64 memory__[PAGE * MAX_PAGES / sizeof(__int64)];
+u8* const memory = (u8*)memory__;
 #endif
 
-#ifdef MOD_VID_VD
-CACHE_ALIGNED u8 vdmem[4][0x2000];
-#endif
 
 u8 membits[0x10000];
-u8 *bankr[4];	// memory pointers to memory (RAM/ROM/cache) mapped in four Z80 windows
-u8 *bankw[4];
-u8 bankm[4];		// bank mode: 0 - ROM / 1 - RAM
+u8* bankr[4];	// memory pointers to memory (RAM/ROM/cache) mapped in four Z80 windows
+u8* bankw[4];
+BANKM bankm[4];		// bank mode: 0 - ROM / 1 - RAM
 u8 cmos[0x100];
 u8 nvram[0x800];
 
 unsigned sndplaybuf[PLAYBUFSIZE];
 unsigned spbsize;
 
-FILE *savesnd;
+FILE* savesnd;
 u8 savesndtype; // 0-none,1-wave,2-vtx
-u8 *vtxbuf; unsigned vtxbufsize, vtxbuffilled;
+u8* vtxbuf; unsigned vtxbufsize, vtxbuffilled;
 
 u8 trdos_load, trdos_save, trdos_format, trdos_seek; // for leds
 u8 needclr; // clear screenbuffer before rendering
@@ -260,22 +92,10 @@ HWND debug_wnd;
 
 char droppedFile[512];
 
-const TMemModel mem_model[N_MM_MODELS] =
+const mem_model_t mem_model[N_MM_MODELS] =
 {
-    { "Pentagon", "PENTAGON",                MM_PENTAGON, 128,  RAM_128 | RAM_256 | RAM_512 | RAM_1024 },
-    { "TS-Config", "TSL",                    MM_TSL, 4096, RAM_4096 },
-    { "ZX-Evo", "ATM3",                      MM_ATM3, 4096, RAM_4096 },
-    { "ATM-Turbo 2+ v7.10", "ATM710",        MM_ATM710, 1024, RAM_128 | RAM_256 | RAM_512 | RAM_1024 },
-    { "ATM-Turbo v4.50", "ATM450",           MM_ATM450, 512,  RAM_512 | RAM_1024 },
-    { "Profi", "PROFI",                      MM_PROFI, 1024, RAM_1024 },
-    { "ZX-Spectrum +3", "PLUS3",             MM_PLUS3, 128,  RAM_128 },
-    { "ZS Scorpion", "SCORPION",             MM_SCORP, 256,  RAM_256 | RAM_1024 },
-    { "ZS Scorpion + PROF ROM", "PROFSCORP", MM_PROFSCORP, 256,  RAM_256 | RAM_1024 },
-	{ "ZS Scorpion + GMX", "GMX",			 MM_GMX, 2048,  RAM_2048 },
-    { "Nemo's KAY", "KAY",                   MM_KAY, 256,  RAM_256 | RAM_1024 },
-    { "Quorum", "QUORUM",                    MM_QUORUM, 1024, RAM_128 | RAM_1024 },
-    { "Orel' BK-08 (LSY)", "LSY256",         MM_LSY256, 256, RAM_256 },
-	{ "ZXM-Phoenix v1.0", "PHOENIX",         MM_PHOENIX, 1024, RAM_1024 | RAM_2048 },
+	{ "Pentagon", "PENTAGON",                MM_PENTAGON, 128,  RAM_128 | RAM_256 | RAM_512 | RAM_1024 },
+	{ "TS-Config", "TSL",                    MM_TSL, 4096, RAM_4096 },
 };
 
 u8 kbdpc[VK_MAX]; // add cells for mouse & joystick
@@ -288,11 +108,11 @@ unsigned statcnt;
 char arcbuffer[0x2000]; // extensions and command lines for archivers
 char skiparc[0x400]; // ignore this files in archive
 
-u8 exitflag = 0; // avoid call exit() twice
+u8 exitflag = 0; // avoid call terminate() twice
 
 // beta128 vars
-unsigned trd_toload = 0; // drive to load
-unsigned DefaultDrive = -1; // Дисковод по умолчанию в который грузятся образы дисков при старте
+int trd_toload = 0; // drive to load
+unsigned default_drive = -1; // Дисковод по умолчанию в который грузятся образы дисков при старте
 
 char trd_loaded[4]; // used to get first free drive with no account of autoloaded images
 char ininame[0x200];
@@ -396,54 +216,54 @@ static zxkey zxk_default[] =
    { "KUP",    &input.kjoy, ~8 },
    { "KFIRE",  &input.kjoy, ~16},
 
-   { "ENT", input.kbd+6, ~0x01 },
-   { "SPC", input.kbd+7, ~0x01 },
-   { "SYM", input.kbd+7, ~0x02 },
+   { "ENT", input.kbd + 6, ~0x01 },
+   { "SPC", input.kbd + 7, ~0x01 },
+   { "SYM", input.kbd + 7, ~0x02 },
 
-   { "CAP", input.kbd+0, ~0x01 },
-   { "Z",   input.kbd+0, ~0x02 },
-   { "X",   input.kbd+0, ~0x04 },
-   { "C",   input.kbd+0, ~0x08 },
-   { "V",   input.kbd+0, ~0x10 },
+   { "CAP", input.kbd + 0, ~0x01 },
+   { "Z",   input.kbd + 0, ~0x02 },
+   { "X",   input.kbd + 0, ~0x04 },
+   { "C",   input.kbd + 0, ~0x08 },
+   { "V",   input.kbd + 0, ~0x10 },
 
-   { "A",   input.kbd+1, ~0x01 },
-   { "S",   input.kbd+1, ~0x02 },
-   { "D",   input.kbd+1, ~0x04 },
-   { "F",   input.kbd+1, ~0x08 },
-   { "G",   input.kbd+1, ~0x10 },
+   { "A",   input.kbd + 1, ~0x01 },
+   { "S",   input.kbd + 1, ~0x02 },
+   { "D",   input.kbd + 1, ~0x04 },
+   { "F",   input.kbd + 1, ~0x08 },
+   { "G",   input.kbd + 1, ~0x10 },
 
-   { "Q",   input.kbd+2, ~0x01 },
-   { "W",   input.kbd+2, ~0x02 },
-   { "E",   input.kbd+2, ~0x04 },
-   { "R",   input.kbd+2, ~0x08 },
-   { "T",   input.kbd+2, ~0x10 },
+   { "Q",   input.kbd + 2, ~0x01 },
+   { "W",   input.kbd + 2, ~0x02 },
+   { "E",   input.kbd + 2, ~0x04 },
+   { "R",   input.kbd + 2, ~0x08 },
+   { "T",   input.kbd + 2, ~0x10 },
 
-   { "1",   input.kbd+3, ~0x01 },
-   { "2",   input.kbd+3, ~0x02 },
-   { "3",   input.kbd+3, ~0x04 },
-   { "4",   input.kbd+3, ~0x08 },
-   { "5",   input.kbd+3, ~0x10 },
+   { "1",   input.kbd + 3, ~0x01 },
+   { "2",   input.kbd + 3, ~0x02 },
+   { "3",   input.kbd + 3, ~0x04 },
+   { "4",   input.kbd + 3, ~0x08 },
+   { "5",   input.kbd + 3, ~0x10 },
 
-   { "0",   input.kbd+4, ~0x01 },
-   { "9",   input.kbd+4, ~0x02 },
-   { "8",   input.kbd+4, ~0x04 },
-   { "7",   input.kbd+4, ~0x08 },
-   { "6",   input.kbd+4, ~0x10 },
+   { "0",   input.kbd + 4, ~0x01 },
+   { "9",   input.kbd + 4, ~0x02 },
+   { "8",   input.kbd + 4, ~0x04 },
+   { "7",   input.kbd + 4, ~0x08 },
+   { "6",   input.kbd + 4, ~0x10 },
 
-   { "P",   input.kbd+5, ~0x01 },
-   { "O",   input.kbd+5, ~0x02 },
-   { "I",   input.kbd+5, ~0x04 },
-   { "U",   input.kbd+5, ~0x08 },
-   { "Y",   input.kbd+5, ~0x10 },
+   { "P",   input.kbd + 5, ~0x01 },
+   { "O",   input.kbd + 5, ~0x02 },
+   { "I",   input.kbd + 5, ~0x04 },
+   { "U",   input.kbd + 5, ~0x08 },
+   { "Y",   input.kbd + 5, ~0x10 },
 
-   { "L",   input.kbd+6, ~0x02 },
-   { "K",   input.kbd+6, ~0x04 },
-   { "J",   input.kbd+6, ~0x08 },
-   { "H",   input.kbd+6, ~0x10 },
+   { "L",   input.kbd + 6, ~0x02 },
+   { "K",   input.kbd + 6, ~0x04 },
+   { "J",   input.kbd + 6, ~0x08 },
+   { "H",   input.kbd + 6, ~0x10 },
 
-   { "M",   input.kbd+7, ~0x04 },
-   { "N",   input.kbd+7, ~0x08 },
-   { "B",   input.kbd+7, ~0x10 },
+   { "M",   input.kbd + 7, ~0x04 },
+   { "N",   input.kbd + 7, ~0x08 },
+   { "B",   input.kbd + 7, ~0x10 },
 };
 
 static zxkey zxk_bk08[] =
@@ -454,69 +274,69 @@ static zxkey zxk_bk08[] =
    { "KUP",    &input.kjoy, ~8 },
    { "KFIRE",  &input.kjoy, ~16},
 
-   { "ALT", input.kbd+0, ~0x01 },
-   { "Z",   input.kbd+0, ~0x02 },
-   { "X",   input.kbd+0, ~0x04 },
-   { "C",   input.kbd+0, ~0x08 },
-   { "V",   input.kbd+0, ~0x10 },
-   { "RUS", input.kbd+0, ~0x20 },
-   { "SHF", input.kbd+0,  0x7F },
+   { "ALT", input.kbd + 0, ~0x01 },
+   { "Z",   input.kbd + 0, ~0x02 },
+   { "X",   input.kbd + 0, ~0x04 },
+   { "C",   input.kbd + 0, ~0x08 },
+   { "V",   input.kbd + 0, ~0x10 },
+   { "RUS", input.kbd + 0, ~0x20 },
+   { "SHF", input.kbd + 0,  0x7F },
 
-   { "A",   input.kbd+1, ~0x01 },
-   { "S",   input.kbd+1, ~0x02 },
-   { "D",   input.kbd+1, ~0x04 },
-   { "F",   input.kbd+1, ~0x08 },
-   { "G",   input.kbd+1, ~0x10 },
-   { "BSL", input.kbd+1, ~0x20 },
-   { "SL",  input.kbd+1,  0x7F },
+   { "A",   input.kbd + 1, ~0x01 },
+   { "S",   input.kbd + 1, ~0x02 },
+   { "D",   input.kbd + 1, ~0x04 },
+   { "F",   input.kbd + 1, ~0x08 },
+   { "G",   input.kbd + 1, ~0x10 },
+   { "BSL", input.kbd + 1, ~0x20 },
+   { "SL",  input.kbd + 1,  0x7F },
 
-   { "Q",   input.kbd+2, ~0x01 },
-   { "W",   input.kbd+2, ~0x02 },
-   { "E",   input.kbd+2, ~0x04 },
-   { "R",   input.kbd+2, ~0x08 },
-   { "T",   input.kbd+2, ~0x10 },
-   { "CMA", input.kbd+2, ~0x20 },
-   { "PNT", input.kbd+2,  0x7F },
+   { "Q",   input.kbd + 2, ~0x01 },
+   { "W",   input.kbd + 2, ~0x02 },
+   { "E",   input.kbd + 2, ~0x04 },
+   { "R",   input.kbd + 2, ~0x08 },
+   { "T",   input.kbd + 2, ~0x10 },
+   { "CMA", input.kbd + 2, ~0x20 },
+   { "PNT", input.kbd + 2,  0x7F },
 
-   { "1",   input.kbd+3, ~0x01 },
-   { "2",   input.kbd+3, ~0x02 },
-   { "3",   input.kbd+3, ~0x04 },
-   { "4",   input.kbd+3, ~0x08 },
-   { "5",   input.kbd+3, ~0x10 },
-   { "TIL", input.kbd+3, ~0x20 },
-   { "TAB", input.kbd+3,  0x7F },
+   { "1",   input.kbd + 3, ~0x01 },
+   { "2",   input.kbd + 3, ~0x02 },
+   { "3",   input.kbd + 3, ~0x04 },
+   { "4",   input.kbd + 3, ~0x08 },
+   { "5",   input.kbd + 3, ~0x10 },
+   { "TIL", input.kbd + 3, ~0x20 },
+   { "TAB", input.kbd + 3,  0x7F },
 
-   { "0",   input.kbd+4, ~0x01 },
-   { "9",   input.kbd+4, ~0x02 },
-   { "8",   input.kbd+4, ~0x04 },
-   { "7",   input.kbd+4, ~0x08 },
-   { "6",   input.kbd+4, ~0x10 },
-   { "MNS", input.kbd+4, ~0x20 },
-   { "PLS", input.kbd+4,  0x7F },
+   { "0",   input.kbd + 4, ~0x01 },
+   { "9",   input.kbd + 4, ~0x02 },
+   { "8",   input.kbd + 4, ~0x04 },
+   { "7",   input.kbd + 4, ~0x08 },
+   { "6",   input.kbd + 4, ~0x10 },
+   { "MNS", input.kbd + 4, ~0x20 },
+   { "PLS", input.kbd + 4,  0x7F },
 
-   { "P",   input.kbd+5, ~0x01 },
-   { "O",   input.kbd+5, ~0x02 },
-   { "I",   input.kbd+5, ~0x04 },
-   { "U",   input.kbd+5, ~0x08 },
-   { "Y",   input.kbd+5, ~0x10 },
-   { "LB",  input.kbd+5, ~0x20 },
-   { "RB",  input.kbd+5,  0x7F },
+   { "P",   input.kbd + 5, ~0x01 },
+   { "O",   input.kbd + 5, ~0x02 },
+   { "I",   input.kbd + 5, ~0x04 },
+   { "U",   input.kbd + 5, ~0x08 },
+   { "Y",   input.kbd + 5, ~0x10 },
+   { "LB",  input.kbd + 5, ~0x20 },
+   { "RB",  input.kbd + 5,  0x7F },
 
-   { "ENT", input.kbd+6, ~0x01 },
-   { "L",   input.kbd+6, ~0x02 },
-   { "K",   input.kbd+6, ~0x04 },
-   { "J",   input.kbd+6, ~0x08 },
-   { "H",   input.kbd+6, ~0x10 },
-   { "COL", input.kbd+6, ~0x20 },
-   { "QUO", input.kbd+6,  0x7F },
+   { "ENT", input.kbd + 6, ~0x01 },
+   { "L",   input.kbd + 6, ~0x02 },
+   { "K",   input.kbd + 6, ~0x04 },
+   { "J",   input.kbd + 6, ~0x08 },
+   { "H",   input.kbd + 6, ~0x10 },
+   { "COL", input.kbd + 6, ~0x20 },
+   { "QUO", input.kbd + 6,  0x7F },
 
-   { "SPC", input.kbd+7, ~0x01 },
-   { "CTL", input.kbd+7, ~0x02 },
-   { "M",   input.kbd+7, ~0x04 },
-   { "N",   input.kbd+7, ~0x08 },
-   { "B",   input.kbd+7, ~0x10 },
-   { "R/A", input.kbd+7, ~0x20 },
-   { "CPS", input.kbd+7,  0x7F }
+   { "SPC", input.kbd + 7, ~0x01 },
+   { "CTL", input.kbd + 7, ~0x02 },
+   { "M",   input.kbd + 7, ~0x04 },
+   { "N",   input.kbd + 7, ~0x08 },
+   { "B",   input.kbd + 7, ~0x10 },
+   { "R/A", input.kbd + 7, ~0x20 },
+   { "CPS", input.kbd + 7,  0x7F }
 };
 
 static zxkey zxk_quorum[] =
@@ -527,102 +347,102 @@ static zxkey zxk_quorum[] =
    { "KUP",    &input.kjoy, ~8 },
    { "KFIRE",  &input.kjoy, ~16},
 
-   { "ENT", input.kbd+6, ~0x01 },
-   { "SPC", input.kbd+7, ~0x01 },
-   { "SYM", input.kbd+7, ~0x02 },
+   { "ENT", input.kbd + 6, ~0x01 },
+   { "SPC", input.kbd + 7, ~0x01 },
+   { "SYM", input.kbd + 7, ~0x02 },
 
-   { "CAP", input.kbd+0, ~0x01 },
-   { "Z",   input.kbd+0, ~0x02 },
-   { "X",   input.kbd+0, ~0x04 },
-   { "C",   input.kbd+0, ~0x08 },
-   { "V",   input.kbd+0, ~0x10 },
+   { "CAP", input.kbd + 0, ~0x01 },
+   { "Z",   input.kbd + 0, ~0x02 },
+   { "X",   input.kbd + 0, ~0x04 },
+   { "C",   input.kbd + 0, ~0x08 },
+   { "V",   input.kbd + 0, ~0x10 },
 
-   { "A",   input.kbd+1, ~0x01 },
-   { "S",   input.kbd+1, ~0x02 },
-   { "D",   input.kbd+1, ~0x04 },
-   { "F",   input.kbd+1, ~0x08 },
-   { "G",   input.kbd+1, ~0x10 },
+   { "A",   input.kbd + 1, ~0x01 },
+   { "S",   input.kbd + 1, ~0x02 },
+   { "D",   input.kbd + 1, ~0x04 },
+   { "F",   input.kbd + 1, ~0x08 },
+   { "G",   input.kbd + 1, ~0x10 },
 
-   { "Q",   input.kbd+2, ~0x01 },
-   { "W",   input.kbd+2, ~0x02 },
-   { "E",   input.kbd+2, ~0x04 },
-   { "R",   input.kbd+2, ~0x08 },
-   { "T",   input.kbd+2, ~0x10 },
+   { "Q",   input.kbd + 2, ~0x01 },
+   { "W",   input.kbd + 2, ~0x02 },
+   { "E",   input.kbd + 2, ~0x04 },
+   { "R",   input.kbd + 2, ~0x08 },
+   { "T",   input.kbd + 2, ~0x10 },
 
-   { "1",   input.kbd+3, ~0x01 },
-   { "2",   input.kbd+3, ~0x02 },
-   { "3",   input.kbd+3, ~0x04 },
-   { "4",   input.kbd+3, ~0x08 },
-   { "5",   input.kbd+3, ~0x10 },
+   { "1",   input.kbd + 3, ~0x01 },
+   { "2",   input.kbd + 3, ~0x02 },
+   { "3",   input.kbd + 3, ~0x04 },
+   { "4",   input.kbd + 3, ~0x08 },
+   { "5",   input.kbd + 3, ~0x10 },
 
-   { "0",   input.kbd+4, ~0x01 },
-   { "9",   input.kbd+4, ~0x02 },
-   { "8",   input.kbd+4, ~0x04 },
-   { "7",   input.kbd+4, ~0x08 },
-   { "6",   input.kbd+4, ~0x10 },
+   { "0",   input.kbd + 4, ~0x01 },
+   { "9",   input.kbd + 4, ~0x02 },
+   { "8",   input.kbd + 4, ~0x04 },
+   { "7",   input.kbd + 4, ~0x08 },
+   { "6",   input.kbd + 4, ~0x10 },
 
-   { "P",   input.kbd+5, ~0x01 },
-   { "O",   input.kbd+5, ~0x02 },
-   { "I",   input.kbd+5, ~0x04 },
-   { "U",   input.kbd+5, ~0x08 },
-   { "Y",   input.kbd+5, ~0x10 },
+   { "P",   input.kbd + 5, ~0x01 },
+   { "O",   input.kbd + 5, ~0x02 },
+   { "I",   input.kbd + 5, ~0x04 },
+   { "U",   input.kbd + 5, ~0x08 },
+   { "Y",   input.kbd + 5, ~0x10 },
 
-   { "L",   input.kbd+6, ~0x02 },
-   { "K",   input.kbd+6, ~0x04 },
-   { "J",   input.kbd+6, ~0x08 },
-   { "H",   input.kbd+6, ~0x10 },
+   { "L",   input.kbd + 6, ~0x02 },
+   { "K",   input.kbd + 6, ~0x04 },
+   { "J",   input.kbd + 6, ~0x08 },
+   { "H",   input.kbd + 6, ~0x10 },
 
-   { "M",   input.kbd+7, ~0x04 },
-   { "N",   input.kbd+7, ~0x08 },
-   { "B",   input.kbd+7, ~0x10 },
+   { "M",   input.kbd + 7, ~0x04 },
+   { "N",   input.kbd + 7, ~0x08 },
+   { "B",   input.kbd + 7, ~0x10 },
 
    // quorum additional keys
-   { "RUS",    input.kbd+8, ~0x01},
-   { "LAT",    input.kbd+8, ~0x02},
-   { "N1",     input.kbd+8, ~0x08},
-   { "N2",     input.kbd+8, ~0x10},
-   { ".",      input.kbd+8, ~0x20},
+   { "RUS",    input.kbd + 8, ~0x01},
+   { "LAT",    input.kbd + 8, ~0x02},
+   { "N1",     input.kbd + 8, ~0x08},
+   { "N2",     input.kbd + 8, ~0x10},
+   { ".",      input.kbd + 8, ~0x20},
 
-   { "CAPS",   input.kbd+9, ~0x01},
-   { "F2",     input.kbd+9, ~0x02},
-   { "TILDA",  input.kbd+9, ~0x04},
-   { "N4",     input.kbd+9, ~0x08},
-   { "QUOTE",  input.kbd+9, ~0x10},
-   { "N6",     input.kbd+9, ~0x20},
+   { "CAPS",   input.kbd + 9, ~0x01},
+   { "F2",     input.kbd + 9, ~0x02},
+   { "TILDA",  input.kbd + 9, ~0x04},
+   { "N4",     input.kbd + 9, ~0x08},
+   { "QUOTE",  input.kbd + 9, ~0x10},
+   { "N6",     input.kbd + 9, ~0x20},
 
-   { "TAB",    input.kbd+10, ~0x01},
-   { "F4",     input.kbd+10, ~0x02},
-   { "N7",     input.kbd+10, ~0x08},
-   { "N5",     input.kbd+10, ~0x10},
-   { "N9",     input.kbd+10, ~0x20},
+   { "TAB",    input.kbd + 10, ~0x01},
+   { "F4",     input.kbd + 10, ~0x02},
+   { "N7",     input.kbd + 10, ~0x08},
+   { "N5",     input.kbd + 10, ~0x10},
+   { "N9",     input.kbd + 10, ~0x20},
 
-   { "EBOX",   input.kbd+11, ~0x01},
-   { "F5",     input.kbd+11, ~0x02},
-   { "BS",     input.kbd+11, ~0x04},
-   { "NSLASH", input.kbd+11, ~0x08},
-   { "N8",     input.kbd+11, ~0x10},
-   { "NMINUS", input.kbd+11, ~0x20},
+   { "EBOX",   input.kbd + 11, ~0x01},
+   { "F5",     input.kbd + 11, ~0x02},
+   { "BS",     input.kbd + 11, ~0x04},
+   { "NSLASH", input.kbd + 11, ~0x08},
+   { "N8",     input.kbd + 11, ~0x10},
+   { "NMINUS", input.kbd + 11, ~0x20},
 
-   { "-",      input.kbd+12, ~0x01},
-   { "+",      input.kbd+12, ~0x04},
-   { "DEL",    input.kbd+12, ~0x08},
-   { "NSTAR",  input.kbd+12, ~0x10},
-   { "GBOX",   input.kbd+12, ~0x20},
+   { "-",      input.kbd + 12, ~0x01},
+   { "+",      input.kbd + 12, ~0x04},
+   { "DEL",    input.kbd + 12, ~0x08},
+   { "NSTAR",  input.kbd + 12, ~0x10},
+   { "GBOX",   input.kbd + 12, ~0x20},
 
-   { "COLON",  input.kbd+13, ~0x01},
-   { "F3",     input.kbd+13, ~0x02},
-   { "\\",     input.kbd+13, ~0x04},
-   { "]",      input.kbd+13, ~0x10},
-   { "[",      input.kbd+13, ~0x20},
+   { "COLON",  input.kbd + 13, ~0x01},
+   { "F3",     input.kbd + 13, ~0x02},
+   { "\\",     input.kbd + 13, ~0x04},
+   { "]",      input.kbd + 13, ~0x10},
+   { "[",      input.kbd + 13, ~0x20},
 
-   { ",",      input.kbd+14, ~0x01},
-   { "/",      input.kbd+14, ~0x10},
-   { "N3",     input.kbd+14, ~0x20},
+   { ",",      input.kbd + 14, ~0x01},
+   { "/",      input.kbd + 14, ~0x10},
+   { "N3",     input.kbd + 14, ~0x20},
 
-   { "F1",     input.kbd+15, ~0x02},
-   { "N0",     input.kbd+15, ~0x08},
-   { "NPOINT", input.kbd+15, ~0x10},
-   { "NPLUS",  input.kbd+15, ~0x20},
+   { "F1",     input.kbd + 15, ~0x02},
+   { "N0",     input.kbd + 15, ~0x08},
+   { "NPOINT", input.kbd + 15, ~0x10},
+   { "NPLUS",  input.kbd + 15, ~0x20},
 };
 
 zxkeymap zxk_maps[] =
@@ -636,10 +456,10 @@ const size_t zxk_maps_count = _countof(zxk_maps);
 
 PALETTEENTRY syspalette[0x100];
 
-GDIBMP gdibmp = { { { sizeof(BITMAPINFOHEADER), 320, -240, 1, 32, BI_RGB, 0 } } };
-GDIBMP debug_gdibmp = { { { sizeof(BITMAPINFOHEADER), DEBUG_WND_WIDTH, -DEBUG_WND_HEIGHT, 1, 8, BI_RGB, 0 } } };
+gdibmp_t gdibmp = { { { sizeof(BITMAPINFOHEADER), 320, -240, 1, 32, BI_RGB, 0 } } };
+gdibmp_t debug_gdibmp = { { { sizeof(BITMAPINFOHEADER), DEBUG_WND_WIDTH, -DEBUG_WND_HEIGHT, 1, 8, BI_RGB, 0 } } };
 
-PALETTE_OPTIONS pals[32] = {{"default",0x00,0x80,0xC0,0xE0,0xFF,0xC8,0xFF,0x00,0x00,0x00,0xFF,0x00,0x00,0x00,0xFF}};
+palette_options pals[32] = { {"default",0x00,0x80,0xC0,0xE0,0xFF,0xC8,0xFF,0x00,0x00,0x00,0xFF,0x00,0x00,0x00,0xFF} };
 
 #pragma pack()
 
@@ -651,7 +471,7 @@ u8 debug_gdibuf[DBG_GDIBUFSZ];
 unsigned watch_script[4][64];
 u8 watch_enabled[4];
 u8 used_banks[MAX_PAGES];
-u8 trace_rom=1, trace_ram=1;
+u8 trace_rom = 1, trace_ram = 1;
 
 DWORD WinVerMajor;
 DWORD WinVerMinor;
@@ -661,12 +481,12 @@ HBITMAP hbm;  // bitmap for repaint background
 DWORD bm_dx, bm_dy;
 DWORD mousepos;  // left-clicked point in monitor
 unsigned nowait; // don't close console window after error if started from GUI
-bool normal_exit = false; // true on correct exit, false on failure exit
+bool normal_exit = false; // true on correct terminate, false on failure terminate
 
-char *ayvols[64]; unsigned num_ayvols;
-char *aystereo[64]; unsigned num_aystereo;
-char *ulapreset[64]; unsigned num_ula;
-char presetbuf[0x4000], *setptr = presetbuf;
+char* ayvols[64]; unsigned num_ayvols;
+char* aystereo[64]; unsigned num_aystereo;
+char* ulapreset[64]; unsigned num_ula;
+char presetbuf[0x4000], * setptr = presetbuf;
 
 /*
 #include "fontdata.cpp"
@@ -676,4 +496,4 @@ char presetbuf[0x4000], *setptr = presetbuf;
 #include "fontatm2.cpp"
 */
 
-const char * const ay_schemes[] = { "no soundchip", "single chip", "pseudo-turbo", "quadro-AY", "turbo-AY // POS", "turbo-sound // NedoPC", "AYX-32" };
+const char* const ay_schemes[] = { "no soundchip", "single chip", "pseudo-turbo", "quadro-AY", "turbo-AY // POS", "turbo-sound // NedoPC", "AYX-32" };

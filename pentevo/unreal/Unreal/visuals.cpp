@@ -2,7 +2,7 @@
 #include "std.h"
 #include "resource.h"
 #include "vars.h"
-#include "dxrend.h"
+#include "dx/dxrend.h"
 #include "visuals.h"
 
 /*
@@ -51,7 +51,7 @@ VISUALS_t vis;
 
 int visuals_mode = VIS_MODE_OFF;
 
-GDIBMP visuals_gdibmp = {{{sizeof(BITMAPINFOHEADER), VISUALS_WND_WIDTH, -VISUALS_WND_HEIGHT, 1, 32, BI_RGB, 0}}};
+gdibmp_t visuals_gdibmp = {{{sizeof(BITMAPINFOHEADER), VISUALS_WND_WIDTH, -VISUALS_WND_HEIGHT, 1, 32, BI_RGB, 0}}};
 
 static LRESULT APIENTRY VisualsWndProc(HWND hwnd, UINT uMessage, WPARAM wparam, LPARAM lparam)
 {

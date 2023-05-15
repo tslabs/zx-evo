@@ -39,6 +39,10 @@
 #include <assert.h>
 #include <sys/stat.h>
 
+#include <exception>
+
+#include <Poco/Util/Application.h>
+
 #if _MSC_VER >= 1300
 #include <intrin.h>
 #include <emmintrin.h>

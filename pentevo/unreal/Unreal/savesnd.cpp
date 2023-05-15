@@ -2,7 +2,7 @@
 #include "resource.h"
 #include "emul.h"
 #include "vars.h"
-#include "dx.h"
+#include "dx/dx.h"
 #include "util.h"
 
 u8 wavhdr[]= {
@@ -176,7 +176,7 @@ int dopoke(int really)
       if (val > 0xFF) return ptr-snbuf+1;
       while (*ptr == ' ' || *ptr == ':' || *ptr == ';' || *ptr == ',') ptr++;
       if (really)
-          cpu.DirectWm(num, val);
+          cpu.direct_wm(num, val);
    }
    return 0;
 }
