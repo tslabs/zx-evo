@@ -160,7 +160,7 @@ void TSdCard::Wr(u8 Val)
             return;
 
         case ST_RD_DATA_SIG:
-            if (Val==0xFE) // Проверка сигнатуры данных
+            if (Val==0xFE) // РџСЂРѕРІРµСЂРєР° СЃРёРіРЅР°С‚СѓСЂС‹ РґР°РЅРЅС‹С…
             {
                 DataCnt = 0;
                 NextState = ST_RD_DATA;
@@ -172,12 +172,12 @@ void TSdCard::Wr(u8 Val)
         case ST_RD_DATA_SIG_MUL:
             switch(Val)
             {
-            case 0xFC: // Проверка сигнатуры данных
+            case 0xFC: // РџСЂРѕРІРµСЂРєР° СЃРёРіРЅР°С‚СѓСЂС‹ РґР°РЅРЅС‹С…
 //                printf(__FUNCTION__" ST_RD_DATA_SIG_MUL, Start\n");
                 DataCnt = 0;
                 NextState = ST_RD_DATA_MUL;
             break;
-            case 0xFD: // Окончание передачи
+            case 0xFD: // РћРєРѕРЅС‡Р°РЅРёРµ РїРµСЂРµРґР°С‡Рё
 //                printf(__FUNCTION__" ST_RD_DATA_SIG_MUL, Stop\n");
                 DataCnt = 0;
                 NextState = ST_IDLE;
@@ -187,12 +187,12 @@ void TSdCard::Wr(u8 Val)
             }
         break;
 
-        case ST_RD_DATA: // Прием данных в буфер
+        case ST_RD_DATA: // РџСЂРёРµРј РґР°РЅРЅС‹С… РІ Р±СѓС„РµСЂ
         {
 //            printf(__FUNCTION__" ST_RD_DATA, Addr = 0x%X, Idx=%d\n", Arg, DataCnt);
             Buf[DataCnt++] = Val;
             NextState = ST_RD_DATA;
-            if (DataCnt == DataBlockLen) // Запись данных в SD карту
+            if (DataCnt == DataBlockLen) // Р—Р°РїРёСЃСЊ РґР°РЅРЅС‹С… РІ SD РєР°СЂС‚Сѓ
             {
                 DataCnt = 0;
 //                printf(__FUNCTION__" ST_RD_DATA, Addr = 0x%X, write to disk\n", Arg);
@@ -203,12 +203,12 @@ void TSdCard::Wr(u8 Val)
         }
         break;
 
-        case ST_RD_DATA_MUL: // Прием данных в буфер
+        case ST_RD_DATA_MUL: // РџСЂРёРµРј РґР°РЅРЅС‹С… РІ Р±СѓС„РµСЂ
         {
 //            printf(__FUNCTION__" ST_RD_DATA_MUL, Addr = 0x%X, Idx=%d\n", WrPos, DataCnt);
             Buf[DataCnt++] = Val;
             NextState = ST_RD_DATA_MUL;
-            if (DataCnt == DataBlockLen) // Запись данных в SD карту
+            if (DataCnt == DataBlockLen) // Р—Р°РїРёСЃСЊ РґР°РЅРЅС‹С… РІ SD РєР°СЂС‚Сѓ
             {
                 DataCnt = 0;
 //                printf(__FUNCTION__" ST_RD_DATA_MUL, Addr = 0x%X, write to disk\n", WrPos);
@@ -220,11 +220,11 @@ void TSdCard::Wr(u8 Val)
         }
         break;
 
-        case ST_RD_CRC16_1: // Чтение старшего байта CRC16
+        case ST_RD_CRC16_1: // Р§С‚РµРЅРёРµ СЃС‚Р°СЂС€РµРіРѕ Р±Р°Р№С‚Р° CRC16
             NextState = ST_RD_CRC16_2;
         break;
 
-        case ST_RD_CRC16_2: // Чтение младшего байта CRC16
+        case ST_RD_CRC16_2: // Р§С‚РµРЅРёРµ РјР»Р°РґС€РµРіРѕ Р±Р°Р№С‚Р° CRC16
             NextState = ST_WR_DATA_RESP;
         break;
 

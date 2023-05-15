@@ -238,7 +238,7 @@ struct WD1793
 
    WD1793()
    {
-       for (unsigned i = 0; i < 4; i++) // [vv] Äëÿ óäîáñòâà îòëàäêè
+       for (unsigned i = 0; i < 4; i++) // [vv] Ð”Ð»Ñ ÑƒÐ´Ð¾Ð±ÑÑ‚Ð²Ð° Ð¾Ñ‚Ð»Ð°Ð´ÐºÐ¸
            fdd[i].Id = i;
        seldrive = &fdd[0];
        idx_cnt = 0;

@@ -95,7 +95,7 @@ namespace vdac2
   {
     static bool old_irq = false;
     bool rc;
-    // rc = BT8XXEMU_hasInterrupt(pEmulator); // <- doesn't work ïîòîìó ÷òî àâòîð ýìóëÿòîðà - ìóäàê
+    // rc = BT8XXEMU_hasInterrupt(pEmulator); // <- doesn't work Ð¿Ð¾Ñ‚Ð¾Ð¼Ñƒ Ñ‡Ñ‚Ð¾ Ð°Ð²Ñ‚Ð¾Ñ€ ÑÐ¼ÑƒÐ»ÑÑ‚Ð¾Ñ€Ð° - Ð¼ÑƒÐ´Ð°Ðº
 
     mtx.lock();
     rc = has_irq && !old_irq;

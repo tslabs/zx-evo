@@ -75,8 +75,8 @@ void ata_device::configure(IDE_CONFIG* cfg)
 	lba = cfg->lba;
 	readonly = cfg->readonly;
 
-	memset(regs, 0, sizeof(regs)); // Очищаем регистры
-	command_ok(); // Сбрасываем состояние и позицию передачи данных
+	memset(regs, 0, sizeof(regs)); // РћС‡РёС‰Р°РµРј СЂРµРіРёСЃС‚СЂС‹
+	command_ok(); // РЎР±СЂР°СЃС‹РІР°РµРј СЃРѕСЃС‚РѕСЏРЅРёРµ Рё РїРѕР·РёС†РёСЋ РїРµСЂРµРґР°С‡Рё РґР°РЅРЅС‹С…
 
 	phys_dev = -1;
 	if (!*cfg->image)
@@ -332,7 +332,7 @@ char ata_device::exec_ata_cmd(const u8 cmd)
 		return 1;
 	}
 
-	if (cmd == 0x50) // format track (данная реализация - ничего не делает)
+	if (cmd == 0x50) // format track (РґР°РЅРЅР°СЏ СЂРµР°Р»РёР·Р°С†РёСЏ - РЅРёС‡РµРіРѕ РЅРµ РґРµР»Р°РµС‚)
 	{
 		reg.sec = 1;
 		if (seek())
@@ -678,7 +678,7 @@ void ata_device::recalibrate()
 
 constexpr u8 toc_data_track = 0x04;
 
-// [vv] Работа с файлом - образом диска напрямую
+// [vv] Р Р°Р±РѕС‚Р° СЃ С„Р°Р№Р»РѕРј - РѕР±СЂР°Р·РѕРј РґРёСЃРєР° РЅР°РїСЂСЏРјСѓСЋ
 void ata_device::handle_atapi_packet_emulate()
 {
 	//    printf("%s\n", __FUNCTION__);

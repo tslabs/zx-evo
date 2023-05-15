@@ -159,15 +159,15 @@ void WD1793::process()
 			}
 
 			// read sector(s)
-			if (!seldrive->t.hdr[foundid].data) goto nextmk; // Сектор без зоны данных
+			if (!seldrive->t.hdr[foundid].data) goto nextmk; // РЎРµРєС‚РѕСЂ Р±РµР· Р·РѕРЅС‹ РґР°РЅРЅС‹С…
 			if (!conf.wd93_nodelay)
-				next += seldrive->t.ts_byte * (seldrive->t.hdr[foundid].data - seldrive->t.hdr[foundid].id); // Задержка на пропуск заголовка сектора и пробела между заголовком и зоной данных
+				next += seldrive->t.ts_byte * (seldrive->t.hdr[foundid].data - seldrive->t.hdr[foundid].id); // Р—Р°РґРµСЂР¶РєР° РЅР° РїСЂРѕРїСѓСЃРє Р·Р°РіРѕР»РѕРІРєР° СЃРµРєС‚РѕСЂР° Рё РїСЂРѕР±РµР»Р° РјРµР¶РґСѓ Р·Р°РіРѕР»РѕРІРєРѕРј Рё Р·РѕРЅРѕР№ РґР°РЅРЅС‹С…
 			state = S_WAIT; state2 = S_RDSEC;
 			break;
 
 		case S_RDSEC:
 			if (seldrive->t.hdr[foundid].data[-1] == 0xF8) status |= WDS_RECORDT; else status &= ~WDS_RECORDT;
-			rwptr = seldrive->t.hdr[foundid].data - seldrive->t.trkd; // Смещение зоны данных сектора (в байтах) относительно начала трека
+			rwptr = seldrive->t.hdr[foundid].data - seldrive->t.trkd; // РЎРјРµС‰РµРЅРёРµ Р·РѕРЅС‹ РґР°РЅРЅС‹С… СЃРµРєС‚РѕСЂР° (РІ Р±Р°Р№С‚Р°С…) РѕС‚РЅРѕСЃРёС‚РµР»СЊРЅРѕ РЅР°С‡Р°Р»Р° С‚СЂРµРєР°
 			rwlen = 128 << (seldrive->t.hdr[foundid].l & 3); // [vv]
 			goto read_first_byte;
 
@@ -442,15 +442,15 @@ void WD1793::find_marker()
 	foundid = -1;
 	if (seldrive->motor && seldrive->rawdata)
 	{
-		unsigned div = seldrive->t.trklen * seldrive->t.ts_byte; // Длина дорожки в тактах cpu
-		unsigned i = (unsigned)((next + tshift) % div) / seldrive->t.ts_byte; // Позиция байта соответствующего текущему такту на дорожке
+		unsigned div = seldrive->t.trklen * seldrive->t.ts_byte; // Р”Р»РёРЅР° РґРѕСЂРѕР¶РєРё РІ С‚Р°РєС‚Р°С… cpu
+		unsigned i = (unsigned)((next + tshift) % div) / seldrive->t.ts_byte; // РџРѕР·РёС†РёСЏ Р±Р°Р№С‚Р° СЃРѕРѕС‚РІРµС‚СЃС‚РІСѓСЋС‰РµРіРѕ С‚РµРєСѓС‰РµРјСѓ С‚Р°РєС‚Сѓ РЅР° РґРѕСЂРѕР¶РєРµ
 		unsigned wait = -1;
 
-		// Поиск заголовка минимально отстоящего от текущего байта
+		// РџРѕРёСЃРє Р·Р°РіРѕР»РѕРІРєР° РјРёРЅРёРјР°Р»СЊРЅРѕ РѕС‚СЃС‚РѕСЏС‰РµРіРѕ РѕС‚ С‚РµРєСѓС‰РµРіРѕ Р±Р°Р№С‚Р°
 		for (unsigned is = 0; is < seldrive->t.s; is++)
 		{
-			unsigned pos = seldrive->t.hdr[is].id - seldrive->t.trkd; // Смещение (в байтах) заголовка относительно начала дорожки
-			unsigned dist = (pos > i) ? pos - i : seldrive->t.trklen + pos - i; // Расстояние (в байтах) от заголовка до текущего байта
+			unsigned pos = seldrive->t.hdr[is].id - seldrive->t.trkd; // РЎРјРµС‰РµРЅРёРµ (РІ Р±Р°Р№С‚Р°С…) Р·Р°РіРѕР»РѕРІРєР° РѕС‚РЅРѕСЃРёС‚РµР»СЊРЅРѕ РЅР°С‡Р°Р»Р° РґРѕСЂРѕР¶РєРё
+			unsigned dist = (pos > i) ? pos - i : seldrive->t.trklen + pos - i; // Р Р°СЃСЃС‚РѕСЏРЅРёРµ (РІ Р±Р°Р№С‚Р°С…) РѕС‚ Р·Р°РіРѕР»РѕРІРєР° РґРѕ С‚РµРєСѓС‰РµРіРѕ Р±Р°Р№С‚Р°
 			if (dist < wait)
 			{
 				wait = dist;
@@ -459,7 +459,7 @@ void WD1793::find_marker()
 		}
 
 		if (foundid != -1)
-			wait *= seldrive->t.ts_byte; // Задержка в тактах от текущего такта до такта чтения первого байта заголовка
+			wait *= seldrive->t.ts_byte; // Р—Р°РґРµСЂР¶РєР° РІ С‚Р°РєС‚Р°С… РѕС‚ С‚РµРєСѓС‰РµРіРѕ С‚Р°РєС‚Р° РґРѕ С‚Р°РєС‚Р° С‡С‚РµРЅРёСЏ РїРµСЂРІРѕРіРѕ Р±Р°Р№С‚Р° Р·Р°РіРѕР»РѕРІРєР°
 		else
 			wait = 10 * z80_fq / FDD_RPS;
 
@@ -699,7 +699,7 @@ void WD1793::trdos_traps()
 	const unsigned pc = (cpu.pc & 0xFFFF);
 	if (pc < 0x3DFD) return;
 
-	// Позиционирование на соседнюю дорожку (пауза)
+	// РџРѕР·РёС†РёРѕРЅРёСЂРѕРІР°РЅРёРµ РЅР° СЃРѕСЃРµРґРЅСЋСЋ РґРѕСЂРѕР¶РєСѓ (РїР°СѓР·Р°)
 	if (pc == 0x3DFD && bankr[0][0x3DFD] == 0x3E && bankr[0][0x3DFF] == 0x0E)
 	{
 		cpu.pc = *cpu.direct_mem(cpu.sp++);
@@ -708,7 +708,7 @@ void WD1793::trdos_traps()
 		cpu.c = 0;
 	}
 
-	// Позиционирование на произвольную дорожку (пауза)
+	// РџРѕР·РёС†РёРѕРЅРёСЂРѕРІР°РЅРёРµ РЅР° РїСЂРѕРёР·РІРѕР»СЊРЅСѓСЋ РґРѕСЂРѕР¶РєСѓ (РїР°СѓР·Р°)
 	if (pc == 0x3EA0 && bankr[0][0x3EA0] == 0x06 && bankr[0][0x3EA2] == 0x3E)
 	{
 		cpu.pc = *cpu.direct_mem(cpu.sp++);

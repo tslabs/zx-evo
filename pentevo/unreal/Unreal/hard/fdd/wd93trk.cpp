@@ -33,14 +33,14 @@ void TRKCACHE::seek(FDD *d, unsigned cyl, unsigned side, SEEK_MODE fs)
 
    for (unsigned i = 0; i < trklen - 8; i++)
    {
-      if (trkd[i] != 0xA1 || trkd[i+1] != 0xFE || !test_i(i)) // Поиск idam
+      if (trkd[i] != 0xA1 || trkd[i+1] != 0xFE || !test_i(i)) // РџРѕРёСЃРє idam
           continue;
 
       if (s == MAX_SEC)
           errexit("too many sectors");
 
-      SECHDR *h = &hdr[s++]; // Заполнение заголовка
-      h->id = trkd + i + 2; // Указатель на заголовок сектора
+      SECHDR *h = &hdr[s++]; // Р—Р°РїРѕР»РЅРµРЅРёРµ Р·Р°РіРѕР»РѕРІРєР°
+      h->id = trkd + i + 2; // РЈРєР°Р·Р°С‚РµР»СЊ РЅР° Р·Р°РіРѕР»РѕРІРѕРє СЃРµРєС‚РѕСЂР°
       h->c = h->id[0];
       h->s = h->id[1];
       h->n = h->id[2];
@@ -53,13 +53,13 @@ void TRKCACHE::seek(FDD *d, unsigned cyl, unsigned side, SEEK_MODE fs)
 
       unsigned end = min(trklen - 8, i + 8 + 43); // 43-DD, 30-SD
 
-      // Формирование указателя на зону данных сектора
+      // Р¤РѕСЂРјРёСЂРѕРІР°РЅРёРµ СѓРєР°Р·Р°С‚РµР»СЏ РЅР° Р·РѕРЅСѓ РґР°РЅРЅС‹С… СЃРµРєС‚РѕСЂР°
       for (unsigned j = i + 8; j < end; j++)
       {
          if (trkd[j] != 0xA1 || !test_i(j) || test_i(j+1))
              continue;
 
-         if (trkd[j+1] == 0xF8 || trkd[j+1] == 0xFB) // Найден data am
+         if (trkd[j+1] == 0xF8 || trkd[j+1] == 0xFB) // РќР°Р№РґРµРЅ data am
          {
             h->datlen = 128 << (h->l & 3); // [vv] FD1793 use only 2 lsb of sector size code
             h->data = trkd + j + 2;
