@@ -1,7 +1,7 @@
 // simulate fpga top-level with external dram, rom, z80
 // (c) 2010-2016 NedoPC
 
-`include "../include/tune.v"
+`include "tune.v"
 
 
 
