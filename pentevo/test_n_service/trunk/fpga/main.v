@@ -62,16 +62,25 @@ module main(
  output reg beep,
 
  // IDE
- input [2:0] ide_a,
- input [15:0] ide_d,
+ output [2:0] ide_a,
+ 
+`ifdef IDE_HDD
+  inout [15:0] ide_d,
+  output ide_rs_n,
+`elsif IDE_VDAC
+  output [15:0] ide_d,
+  input ide_rs_n,
+`elsif IDE_VDAC2
+  output [15:0] ide_d,
+  output ide_rs_n,
+`endif
+
 
  output ide_dir,
-
  input ide_rdy,
 
  output ide_cs0_n,
  output ide_cs1_n,
- output ide_rs_n,
  output ide_rd_n,
  output ide_wr_n,
 
@@ -124,13 +133,6 @@ module main(
 
  assign vg_cs_n   = 1'b1;
  assign vg_res_n  = 1'b0;
-
- assign ide_dir   = 1'b1;
- assign ide_rs_n  = 1'b0;
- assign ide_cs0_n = 1'b1;
- assign ide_cs1_n = 1'b1;
- assign ide_rd_n  = 1'b1;
- assign ide_wr_n  = 1'b1;
 
  assign a[15:14]  = 2'b00;
 
@@ -971,5 +973,72 @@ module main(
                   .DRAM_LCAS_N(rlcas_n), .DRAM_UCAS_N(rucas_n), .DRAM_WE_N(rwe_n) );
 
 //-----------------------------------------------------------------------------
+
+wire vdac_mode = 1'b1;
+
+wire [4:0] vred_raw = {vred, vred, 1'b0};
+wire [4:0] vgrn_raw = {vgrn, vgrn, 1'b0};
+wire [4:0] vblu_raw = {vblu, vblu, 1'b0};
+
+`ifdef IDE_HDD
+  assign ide_d = 16'hZZZZ;
+  assign ide_a = 3'bZZZ;
+  assign ide_dir   = 1'b1;
+  assign ide_rs_n  = 1'b0;
+  assign ide_cs0_n = 1'b1;
+  assign ide_cs1_n = 1'b1;
+  assign ide_rd_n  = 1'b1;
+  assign ide_wr_n  = 1'b1;
+  
+`elsif IDE_VDAC
+  assign ide_d[ 4: 0] = vred_raw;
+  assign ide_d[ 9: 5] = vgrn_raw;
+  assign ide_d[14:10] = vblu_raw;
+  assign ide_d[15] = vdac_mode;
+  assign ide_dir = 1'b0;      // always output
+  assign ide_a[0] = 1'bZ;
+  assign ide_a[1] = !fclk;
+  assign ide_a[2] = vhsync;
+  assign ide_rd_n = 1'bZ;
+  assign ide_wr_n = 1'bZ;
+  assign ide_cs0_n = 1'bZ;
+  assign ide_cs1_n = vvsync;
+
+`elsif IDE_VDAC2
+
+  wire vdac2_msel = 1'b0;
+  wire ftcs_n = 1'b1;
+  wire ft_int = ide_d[1];
+
+  assign ide_d[ 0] = vdac2_msel ? 1'bZ : vgrn_raw[2];
+  assign ide_d[ 1] = vdac2_msel ? 1'bZ : vred_raw[0];
+  assign ide_d[ 2] = vdac2_msel ? 1'bZ : vred_raw[1];
+  assign ide_d[ 3] = vdac2_msel ? 1'bZ : vred_raw[2];
+  assign ide_d[ 4] = vdac2_msel ? 1'bZ : vred_raw[3];
+  assign ide_d[ 5] = vdac2_msel ? 1'bZ : vred_raw[4];
+  assign ide_d[ 6] = vdac2_msel ? 1'bZ : vgrn_raw[0];
+  assign ide_d[ 7] = vdac2_msel ? 1'bZ : vgrn_raw[1];
+  assign ide_d[ 8] = vdac2_msel ? 1'bZ : vgrn_raw[3];
+  assign ide_d[ 9] = vdac2_msel ? 1'bZ : vgrn_raw[4];
+  assign ide_d[10] = vdac2_msel ? 1'bZ : vblu_raw[0];
+  assign ide_d[11] = vdac2_msel ? 1'bZ : vblu_raw[1];
+  assign ide_d[12] = vdac2_msel ? 1'bZ : vblu_raw[2];
+  assign ide_d[13] = vdac2_msel ? 1'bZ : vblu_raw[3];
+  assign ide_d[14] = vdac2_msel ? 1'bZ : vblu_raw[4];
+  assign ide_d[15] = vdac2_msel ? 1'bZ : vdac_mode;  // PAL_SEL
+  assign ide_rs_n = vgrn_raw[2]; // for lame RevA
+  assign ide_dir = vdac2_msel;   // 0 - output, 1 - input
+  assign ide_a[0] = 1'b1;  // FT812 SCK
+  assign ide_a[1] = 1'b1;   // FT812 MOSI
+  assign ide_a[2] = !fclk;
+  assign ide_rd_n = 1'b1; // FT812 CS_n
+  assign ide_wr_n = vdac2_msel;
+  assign ide_cs0_n = vhsync;
+  assign ide_cs1_n = vvsync;
+`endif
+
+
+
+
 
 endmodule

@@ -86,16 +86,8 @@ PINTEST_OK12:
         IN      TEMP,PINC
         ANDI    TEMP,0B00011111
         CPI     TEMP,0B00010101
-        BREQ    PINTEST_OK13
-        ORI     DATA,$04
-PINTEST_OK13:
-        SBIS    PIND,5
-        ORI     DATA,$08
-        IN      TEMP,PINE
-        ANDI    TEMP,0B00000011
-        CPI     TEMP,0B00000001
         BREQ    PINTEST_OK14
-        ORI     DATA,$10
+        ORI     DATA,$04
 PINTEST_OK14:
         INPORT  TEMP,PING
         ANDI    TEMP,0B00011111
@@ -142,16 +134,8 @@ PINTEST_OK22:
         IN      TEMP,PINC
         ANDI    TEMP,0B00011111
         CPI     TEMP,0B00001010
-        BREQ    PINTEST_OK23
-        ORI     DATA,$04
-PINTEST_OK23:
-        SBIC    PIND,5
-        ORI     DATA,$08
-        IN      TEMP,PINE
-        ANDI    TEMP,0B00000011
-        CPI     TEMP,0B00000010
         BREQ    PINTEST_OK24
-        ORI     DATA,$10
+        ORI     DATA,$04
 PINTEST_OK24:
         INPORT  TEMP,PING
         ANDI    TEMP,0B00011111
