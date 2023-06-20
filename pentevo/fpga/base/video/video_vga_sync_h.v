@@ -28,6 +28,7 @@ module video_vga_sync_h(
 	input  wire clk,
 
 	input  wire [1:0] modes_raster,
+
 	output reg  vga_hsync,
 
 	output reg  scanout_start,

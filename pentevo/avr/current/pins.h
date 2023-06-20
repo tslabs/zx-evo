@@ -158,6 +158,33 @@
 /** JOYSTICK direction register. */
 #define JOYSTICK_DDR   DDRC
 
+/** SMD gamepad extra lines */
+#define JOYSTICK_EXT_PORT       PORTA
+#define JOYSTICK_EXT_PIN        PINA
+#define JOYSTICK_EXT_START_C    PA5     // ZXROW5 / X12.6 on schematic
+#define JOYSTICK_EXT2_START_C   PA1     // ZXROW2 / X12.2 on schematic
+#define JOYSTICK_EXT_SEL        PA2     // ZXROW2 / X12.3 on schematic
+
+/** SMD gamepad #2 extra pins **/
+/** JOYSTICK RIGHT pin number. */
+#define JOYSTICK_EXT2_RIGHT PC0
+/** JOYSTICK LEFT pin number. */
+#define JOYSTICK_EXT2_LEFT  PC1
+/** JOYSTICK DOWN pin number. */
+#define JOYSTICK_EXT2_DOWN  PC2
+/** JOYSTICK UP pin number. */
+#define JOYSTICK_EXT2_UP    PC3
+/** JOYSTICK FIRE pin number. */
+#define JOYSTICK_EXT2_FIRE  PC4
+/** JOYSTICK pins mask. */
+#define JOYSTICK_EXT2_MASK  ((1<<JOYSTICK_EXT2_RIGHT)|(1<<JOYSTICK_EXT2_LEFT)|(1<<JOYSTICK_EXT2_DOWN)|(1<<JOYSTICK_EXT2_UP)|(1<<JOYSTICK_EXT2_FIRE))
+/** JOYSTICK port register. */
+#define JOYSTICK_EXT2_PORT  PORTC
+/** JOYSTICK pins register. */
+#define JOYSTICK_EXT2_PIN   PINC
+/** JOYSTICK direction register. */
+#define JOYSTICK_EXT2_DDR   DDRC
+
 /** RS232 CTS pin number. */
 #define RS232CTS PB6
 /** RS232 CTS port register. */

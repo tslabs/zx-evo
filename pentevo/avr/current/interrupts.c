@@ -13,6 +13,7 @@
 #include "spi.h"
 #include "atx.h"
 #include "rtc.h"
+#include "joystick.h"
 
 volatile u8 wait_irq_flag;
 
@@ -65,45 +66,56 @@ ISR(TIMER2_OVF_vect)
 		atx_counter = 0;
 	}
 
-	if (scankbd==0)
-	{
-		u8 tmp;
-		tmp = PINA;
-		zx_realkbd[5] = tmp & cskey;
-		cskey = tmp | 0xfe;
-		DDRC  = 0b00010000;
-		PORTC = 0b11001111;
-		zx_realkbd[10] = 4;
-		scankbd=4;
-	}
-	else if (scankbd==1)
-	{
-		zx_realkbd[6] = PINA;
-		DDRC  = 0b00000001;
-		PORTC = 0b11011110;
-		scankbd=0;
-	}
-	else if (scankbd==2)
-	{
-		zx_realkbd[7] = PINA;
-		DDRC  = 0b00000010;
-		PORTC = 0b11011101;
-		scankbd=1;
-	}
-	else if (scankbd==3)
-	{
-		zx_realkbd[8] = PINA;
-		DDRC  = 0b00000100;
-		PORTC = 0b11011011;
-		scankbd=2;
-	}
-	else if (scankbd==4)
-	{
-		zx_realkbd[9] = PINA;
-		DDRC  = 0b00001000;
-		PORTC = 0b11010111;
-		scankbd=3;
-	}
+    // poll 40-pin keyboard if enabled
+    if ((flags_ex_register & FLAG_EX_DISABLE_40PIN_KEYBOARD) == 0) {
+        u8 kbd_in = PINA;
+
+        if ( scankbd==0 )
+        {
+            u8 tmp;
+            tmp = kbd_in;
+            zx_realkbd[5] = tmp & cskey;
+            cskey = tmp | 0xfe;
+            DDRC  = 0b00010000;
+            PORTC = 0b11001111;
+            zx_realkbd[10] = 4;
+            scankbd=4;
+        }
+        else if ( scankbd==1 )
+        {
+            zx_realkbd[6] = kbd_in;
+            DDRC  = 0b00000001;
+            PORTC = 0b11011110;
+            scankbd=0;
+        }
+        else if ( scankbd==2 )
+        {
+            zx_realkbd[7] = kbd_in;
+            DDRC  = 0b00000010;
+            PORTC = 0b11011101;
+            scankbd=1;
+        }
+        else if ( scankbd==3 )
+        {
+            zx_realkbd[8] = kbd_in;
+            DDRC  = 0b00000100;
+            PORTC = 0b11011011;
+            scankbd=2;
+        }
+        else if ( scankbd==4 )
+        {
+            zx_realkbd[9] = kbd_in;
+            DDRC  = 0b00001000;
+            PORTC = 0b11010111;
+            scankbd=3;
+        }
+    }
+
+    // pause for autofire
+    if (joystick_autofire_delay)
+        joystick_autofire_delay--;
+
+	joystick_poll();
 }
 
 // receive/send PS/2 keyboard data

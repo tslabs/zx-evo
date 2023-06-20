@@ -42,14 +42,15 @@ module zbus(
 );
 
 
+
+	assign iorq1_n = iorq_n | porthit;
+
 	assign iorq2_n = iorq1_n | iorqge1;
 
-`ifdef FREE_IORQ
-	assign iorq1_n = iorq_n;
-    assign drive_ff = ( (~(iorq2_n|iorqge2)) & (~rd_n)  && !porthit) | (~(m1_n|iorq_n));
-`else
-	assign iorq1_n = iorq_n | porthit;
-    assign drive_ff = ( (~(iorq2_n|iorqge2)) & (~rd_n) ) | (~(m1_n|iorq_n));
-`endif
+	assign drive_ff = ( (~(iorq2_n|iorqge2)) & (~rd_n) ) | (~(m1_n|iorq_n));
+
+
+
+
 
 endmodule

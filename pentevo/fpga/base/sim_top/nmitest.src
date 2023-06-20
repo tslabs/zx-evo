@@ -1,1 +1,85 @@
-        ORG     #8000        DISP    0        JP      INIT        DS      #0038-$INT     EI         RET         DS      #0066-$NMI        NOP         JR      $INIT    XOR     A        LD      BC,#7FFD        OUT     (C),A        LD      A,#3F-#1F ; ROM page #1F        LD      BC,#3FF7        OUT     (C),A        LD      BC,#FD77        LD      A,#FB ;6912 mode, 14MHz turbo, enable memmanager        OUT     (C),A ;shadow on        XOR     A        ;RAM page FF to C000-FFFF        LD      BC,#FFF7        OUT     (C),A        LD      B,#F7        OUT     (C),A        LD      SP,#FFFF ;stack        ;test INT        IM      1        EI         HALT         DI         LD      HL,NMICODE        LD      DE,#C066        LD      BC,ENMICODE-NMICODE        LDIR         LD      A,#08    ;gen NMI        OUT     (#BF),A        XOR     A        OUT     (#BF),A        OR      A    ;wait NMI        JP      Z,$-1        JP      #C066+NMIGENRAM-NMICODENMICODE        NOP         INC     A        OUT     (#BE),A        RETN NMIGENRAM        LD      A,#08    ;gen NMI        OUT     (#BF),A        XOR     A        OUT     (#BF),A        OR      A    ;wait NMI        JR      Z,$-1        JR      NMIGENRAMENMICODEÝ
+        ORG     #8000
+        DISP    0
+
+        JP      INIT
+
+        DS      #0038-$
+
+INT     EI 
+        RET 
+
+        DS      #0066-$
+
+NMI
+        NOP 
+        JR      $
+
+
+
+INIT    XOR     A
+        LD      BC,#7FFD
+        OUT     (C),A
+
+        LD      A,#3F-#1F ; ROM page #1F
+        LD      BC,#3FF7
+        OUT     (C),A
+
+        LD      BC,#FD77
+        LD      A,#FB ;6912 mode, 14MHz turbo, enable memmanager
+        OUT     (C),A ;shadow on
+
+        XOR     A        ;RAM page FF to C000-FFFF
+        LD      BC,#FFF7
+        OUT     (C),A
+        LD      B,#F7
+        OUT     (C),A
+
+        LD      SP,#FFFF ;stack
+
+
+        ;test INT
+        IM      1
+        EI 
+        HALT 
+        DI 
+
+
+        LD      HL,NMICODE
+        LD      DE,#C066
+        LD      BC,ENMICODE-NMICODE
+        LDIR 
+
+
+        LD      A,#08    ;gen NMI
+        OUT     (#BF),A
+        XOR     A
+        OUT     (#BF),A
+
+
+        OR      A    ;wait NMI
+        JP      Z,$-1
+
+
+
+        JP      #C066+NMIGENRAM-NMICODE
+
+NMICODE
+        NOP 
+        INC     A
+        OUT     (#BE),A
+        RETN 
+
+NMIGENRAM
+        LD      A,#08    ;gen NMI
+        OUT     (#BF),A
+        XOR     A
+        OUT     (#BF),A
+
+
+        OR      A    ;wait NMI
+        JR      Z,$-1
+
+        JR      NMIGENRAM
+
+ENMICODE
+?

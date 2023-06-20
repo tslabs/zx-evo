@@ -18,6 +18,7 @@
 #include "rtc.h"
 #include "atx.h"
 #include "joystick.h"
+#include "config_interface.h"
 #include "tape.h"
 #include "kbmap.h"
 #include "config.h"
@@ -83,14 +84,14 @@ void hardware_init(void)
   DDRD  = 0b00100000; // RTS out
 
 
-  PORTC = 0b11011111;
+  PORTC = 0b11011111; // ZXCOL[4:0] used for 2nd gamepad
   DDRC  = 0b00000000; // PWRGOOD input, other pulled up
 
   PORTB = 0b11000001;
   DDRB  = 0b10000111; // LED off, spi outs inactive
 
   PORTA = 0b11111111;
-  DDRA  = 0b00000000; // pulled up
+  DDRA  = 0b00000000; // pulled up, PA2 used as output for SMD gamepad SEL
 
   ACSR = 0x80; // DISABLE analog comparator
 
@@ -110,8 +111,16 @@ void waittask(void)
   }
 }
 
+extern void* __vectors;
+#define BOOTLOADER() ((void(*)(void))(&__vectors-4096))()
+
 int main()
 {
+    // these flags control reset reason (hard reset/flash from SD card)
+    // be sure to clear them on power-up
+    flags_register = 0;
+    flags_ex_register = 0;
+
 start:
 
   // printf setup
@@ -165,6 +174,16 @@ start:
     to_log("\r\n");
   }
 #endif
+
+  // reflash?
+  if (flags_ex_register & FLAG_EX_FLASH) {
+      cli(); // disable interrupts
+      // simulate soft reset button press for bootloader
+      SOFTRES_DDR  |= (1<<SOFTRES);
+      SOFTRES_PORT &= ~(1<<SOFTRES);
+      // HACK!!!
+      BOOTLOADER();
+  }
 
   oled_init();
   oled_clear();
@@ -282,7 +301,8 @@ start:
 
   kbmap_init();
   zx_init();
-  rtc_init();
+  rtc_init(); 
+  joystick_init();
 
 #ifdef LOGENABLE
   to_log("zx_init OK\r\n");

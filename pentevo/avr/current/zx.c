@@ -76,6 +76,13 @@ void func_reset()
   t_kbmap.tb.b2 = t_kbmap.tb.b1 = NO_KEY;
 }
 
+// flash from SD card
+void func_flash() {
+  flags_register    |= FLAG_HARD_RESET;
+  flags_ex_register |= FLAG_EX_FLASH;
+  t_kbmap.tb.b2 = t_kbmap.tb.b1 = NO_KEY;
+}
+
 void func_service()
 {
   u8 fpga_cfg;
@@ -153,13 +160,15 @@ void func_pol()
   // zx_mode_switcher(MODE_POL);
 }
 
-void func_dummy() {}
+void func_dummy() {
+
+}
 
 void load_config()
 {
   cb_menu_f3      = func_dummy;
   cb_menu_f4      = func_dummy;
-  cb_menu_f5      = func_dummy;
+  cb_menu_f5      = func_flash;
   // cb_menu_f6      = func_dummy;
   // cb_menu_f7      = func_dummy;
   // cb_menu_f8      = func_dummy;
@@ -324,7 +333,7 @@ void zx_task(u8 operation) // zx task, tracks when there is need to send new key
               if (/* prev key was not-CS|SS up */
                 (prev_code<KEY_CS || KEY_SS<prev_code) &&
                 /* curr key is CS|SS up */
-                (KEY_CS<=prev_code && prev_code<=KEY_SS)
+                (KEY_CS<=code && code<=KEY_SS)
             )
                 break;
             }

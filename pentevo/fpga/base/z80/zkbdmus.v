@@ -43,7 +43,11 @@ module zkbdmus(
 
 	output wire [ 4:0] kbd_data,
 	output wire [ 7:0] mus_data,
-	output reg  [ 4:0] kj_data
+`ifdef KEMPSTON_8BIT
+	output reg  [ 7:0] kj_data
+`else
+    output reg  [ 4:0] kj_data
+`endif
 );
 
 	reg [39:0] kbd;
@@ -59,7 +63,7 @@ module zkbdmus(
 	begin
 //		force kbd_data = 5'b11111;
 		force mus_data = 8'hFF;
-		force kj_data  = 5'b00000;
+		force kj_data  = 8'd0;
 
 		kbd = 40'd0;
 	end
@@ -83,7 +87,11 @@ module zkbdmus(
 			musbtn <= mus_in;
 
 		if( kj_stb )
+`ifdef KEMPSTON_8BIT
+			kj_data <= mus_in;
+`else
 			kj_data <= mus_in[4:0];
+`endif
     end
 
 

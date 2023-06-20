@@ -61,9 +61,6 @@ module video_sync_v(
 
 	localparam VBLNK_BEG = 9'd00;
 
-
-
-
 	localparam VSYNC_BEG_50HZ = 9'd08;
 	localparam VSYNC_END_50HZ = 9'd11;
 	localparam VBLNK_END_50HZ = 9'd32;
@@ -82,10 +79,8 @@ module video_sync_v(
 	localparam VPIX_END_ATM = 9'd276;
 */
 
-
 	localparam VPIX_BEG_PENTAGON = 9'd076; // for pentagon raster: actual begin is for x200 s, add 4 for x192 modes
 	localparam VPIX_END_PENTAGON = 9'd272; // actual end is for x192 modes, add 4 for x200 modes.
-
 
 	localparam VPIX_BEG_60HZ     = 9'd042;
 	localparam VPIX_END_60HZ     = 9'd238;
@@ -105,7 +100,6 @@ module video_sync_v(
 	localparam VPIX60_END_ATM = 9'd242;
 */	//
 
-
 	localparam VPERIOD_PENTAGON = 9'd320;
 	localparam VPERIOD_60HZ     = 9'd262;
 	localparam VPERIOD_48K      = 9'd312;
@@ -119,7 +113,6 @@ module video_sync_v(
 	
 	
 	reg [8:0] vcount;
-
 
 	reg [8:0] vperiod;
 	reg [8:0] vpix_beg;
@@ -166,11 +159,9 @@ module video_sync_v(
 
 	always @(posedge clk) if( hsync_start )
 	begin
-
 		if( vcount==vperiod )
 		begin
 			vcount <= 9'd0;
-
 		end
 		else
 			vcount <= vcount + 9'd1;
@@ -209,10 +200,8 @@ module video_sync_v(
 
 	always @(posedge clk) if( hsync_start )
 	begin
-
 		if( vcount==(vpix_beg + (9'd4 & {9{~mode_atm_n_pent}})) )
 			vpix <= 1'b1;
-
 		else if( vcount==(vpix_end + (9'd4 & {9{mode_atm_n_pent}})) )
 			vpix <= 1'b0;
 	end

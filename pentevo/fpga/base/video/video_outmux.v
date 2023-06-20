@@ -27,21 +27,18 @@ module video_outmux(
 
 	input  wire        clk,
 
-
 	input  wire        vga_on,
 
-
-	input  wire [ 7:0] tvcolor,
-	input  wire [ 7:0] vgacolor,
+	input  wire [11:0] tvcolor,
+	input  wire [11:0] vgacolor,
 
 	input  wire        vga_hsync,
 	input  wire        hsync,
 	input  wire        vsync,
 
-
-	output reg  [ 2:0] vred,
-	output reg  [ 2:0] vgrn,
-	output reg  [ 1:0] vblu,
+	output reg  [ 5:0] vred,
+	output reg  [ 5:0] vgrn,
+	output reg  [ 5:0] vblu,
 
 	output reg         vhsync,
 	output reg         vvsync,
@@ -51,9 +48,9 @@ module video_outmux(
 
 	always @(posedge clk)
 	begin
-		vgrn[2:0] <= vga_on ? vgacolor[7:5] : tvcolor[7:5];
-		vred[2:0] <= vga_on ? vgacolor[4:2] : tvcolor[4:2];
-		vblu[1:0] <= vga_on ? vgacolor[1:0] : tvcolor[1:0];
+		vgrn <= vga_on ? {vgacolor[11:9], vgacolor[11:10]} : {tvcolor[11:8], tvcolor[11]};
+		vred <= vga_on ? {vgacolor[ 7:5], vgacolor[ 7: 6]} : {tvcolor[ 7:4], tvcolor[ 7]};
+		vblu <= vga_on ? {vgacolor[ 3:1], vgacolor[ 3: 2]} : {tvcolor[ 3:0], tvcolor[ 3]};
 
 		vhsync <= vga_on ? vga_hsync : hsync;
 		vvsync <= vsync;

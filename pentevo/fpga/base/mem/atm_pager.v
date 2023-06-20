@@ -55,6 +55,9 @@ module atm_pager(
 	                           // RAM page. analoguous to pent1m_ram0_0
 				   // but has higher priority
 
+	input  wire        in_trdemu, // like 'in_nmi', page 0xFE
+	input  wire        trdemu_wr_disable, // disable writes to page FE when trdemu is active
+
 	input  wire        atmF7_wr, // write strobe for the xxF7 ATM port
 
 
@@ -105,6 +108,7 @@ module atm_pager(
 	assign rd_wrdisables = wrdisables;
 
 
+
 	// paging function, does not set pages, ramnrom, dos_7ffd
 	//
 	always @(posedge fclk)
@@ -117,14 +121,14 @@ module atm_pager(
 		end
 		else // pager on
 		begin
-			if( (ADDR==2'b00) && (pent1m_ram0_0 || in_nmi) ) // pent ram0 OR nmi
+			if( (ADDR==2'b00) && (pent1m_ram0_0 || in_nmi || in_trdemu) )
 			begin
-				wrdisable <= 1'b0;
-				
-				if( in_nmi )
+				wrdisable <= trdemu_wr_disable;
+
+				if( in_nmi || in_trdemu )
 				begin
 					romnram <= 1'b0;
-					page    <= 8'hFF;
+					page    <= { 7'h7F, in_nmi };
 				end
 				else // if( pent1m_ram0_0 )
 				begin
@@ -135,7 +139,7 @@ module atm_pager(
 			else
 			begin
 				wrdisable <= wrdisables[ pent1m_ROM ];
-				
+
 				romnram <= ~ramnrom[ pent1m_ROM ];
 
 				if( dos_7ffd[ pent1m_ROM ] ) // 7ffd memmap switching
@@ -176,7 +180,7 @@ module atm_pager(
 	end
 	else if( atmF7_wr )
 	begin
-		if( za[15:14]==ADDR )
+ 		if( za[15:14]==ADDR )
 		case( {za[11],za[10]} )
 			2'b10: begin // xxBF7 port -- ROM/RAM readonly bit
 				wrdisables[ pent1m_ROM ] <= zd[0];
@@ -187,7 +191,7 @@ module atm_pager(
 			end
 		endcase
 	end
-	//
+	//	
 	always @(posedge fclk)
 	if( atmF7_wr )
 	begin
@@ -211,19 +215,6 @@ module atm_pager(
 
 		endcase
 	end
-
-/*			if( za[11] ) // xff7 ports - 1 meg
-			begin
-				pages   [ pent1m_ROM ] <= ~{ 2'b11, zd[5:0] };
-				ramnrom [ pent1m_ROM ] <= zd[6];
-				dos_7ffd[ pent1m_ROM ] <= zd[7];
-			end
-			else // x7f7 ports - 4 meg ram
-			begin
-				pages   [ pent1m_ROM ] <= ~zd;
-				ramnrom [ pent1m_ROM ] <= 1'b1; // RAM on
-				// dos_7ffd - UNCHANGED!!! (possibility to use 7ffd 1m and 128k addressing in the whole 4m!)
-			end*/
 
 
 	// DOS turn on/turn off

@@ -111,7 +111,12 @@ module zports
 
   input  wire [ 4:0] keys_in, // keys (port FE)
   input  wire [ 7:0] mus_in,  // mouse (xxDF)
+
+`ifdef KEMPSTON_8BIT
+  input  wire [ 7:0] kj_in,
+`else
   input  wire [ 4:0] kj_in,
+`endif
 
   input  wire        vg_intrq,
   input  wire        vg_drq,  // from vg93 module - drq + irq read
@@ -354,7 +359,12 @@ module zports
       dout = {vg_intrq, vg_drq, 6'b111111};
 
     KJOY:
+`ifdef KEMPSTON_8BIT
+      dout = kj_in;
+`else
       dout = {3'b000, kj_in};
+`endif
+
     KMOUSE:
       dout = mus_in;
 

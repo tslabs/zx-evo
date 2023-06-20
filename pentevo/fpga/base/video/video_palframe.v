@@ -42,6 +42,7 @@ module video_palframe(
 
 	input  wire        border_sync,
 	input  wire        border_sync_ena,
+
 	// ulaplus related
 	input  wire [ 1:0] up_palsel,
 	input  wire [ 2:0] up_paper,
@@ -55,56 +56,79 @@ module video_palframe(
 
 	input  wire        atm_palwr,
 	input  wire [ 5:0] atm_paldata,
+	input  wire [ 5:0] atm_paldatalow,
 
+	input  wire        pal444_ena,
 
 	output wire [ 5:0] palcolor, // just for palette readback
 
-	output wire [ 7:0] color
+	output wire [11:0] color,    // output color (RGB444), noVDAC version uses high 2 bits of each component 
+
+    input  wire        vga_on    // vga mode ON - scandoubler activated (used to dither LSB in VDAC configurations, since FPGA has no room for full RGB444 scandoubler buffer)
+
 );
-	reg [7:0] palette_read;	
+	reg [11:0] palette_read;	
 
 	wire [ 3:0] zxcolor;
 	wire [ 5:0] up_color;
-	wire [ 8:0] palette_color;
+	wire [ 7:0] palette_color;
 
 	reg [3:0] synced_border;
+
 	reg vsync_r;
-	reg [1:0] ctr_14;
+	reg [2:0/*1:0*/] ctr_14;
 	reg ctr_h;
-	reg ctr_v;
+	//reg ctr_v;
+	reg [1:0] phase; //frame number
 
 	always @(posedge clk)
 	if( border_sync )
 		synced_border <= border;
 
-	assign zxcolor = (hpix&vpix) ? pixels : (border_sync_ena ? synced_border : border);
-
+	assign zxcolor  = (hpix&vpix) ? pixels : (border_sync_ena ? synced_border : border);
 	assign up_color = (hpix&vpix) ? {up_palsel,~up_pixel,up_pixel?up_ink:up_paper} : {3'd0,border[2:0]};
 
-	assign palette_color = up_ena ? {3'b100,up_color} : {5'd0,zxcolor};
+`ifdef PALETTE_REGS
+    // palette
+    reg [11:0] zxpal[0:15]; // 192 bits
 
+    always @(posedge clk)
+	begin
+        if (atm_palwr) 
+        begin
+            zxpal[zxcolor] <=   { atm_paldata[3:2],pal444_ena?atm_paldatalow[3:2]:atm_paldata[3:2],
+			                      atm_paldata[5:4],pal444_ena?atm_paldatalow[5:4]:atm_paldata[5:4],
+			                      atm_paldata[1:0],pal444_ena?atm_paldatalow[1:0]:atm_paldata[1:0]
+			                     };
+        end 
+        palette_read <= zxpal[zxcolor];
+    end
 
+`else
+
+	assign palette_color = (up_ena ? {2'b10,up_color} : {4'd0,zxcolor});
 	// palette
-	reg [7:0] palette [0:511]; // let quartus instantiate it as RAM
+	reg [11:0] palette [0:255]; // let quartus instantiate it as RAM
 
 	always @(posedge clk)
 	begin
 		if( atm_palwr || up_palwr )
 		begin : palette_write
 			reg [8:0] pal_addr;
-			pal_addr = atm_palwr ? { 5'd0, zxcolor } : { 3'b100, up_paladdr };
-
-			palette[pal_addr] <= atm_palwr ? {atm_paldata[3:2],1'b0,atm_paldata[5:4],1'b0,atm_paldata[1:0]} : up_paldata;
+			pal_addr = atm_palwr ? { 4'd0, zxcolor } : { 2'b10, up_paladdr };
+			palette[pal_addr] <= atm_palwr ?
+			                     {atm_paldata[3:2],pal444_ena?atm_paldatalow[3:2]:atm_paldata[3:2],
+			                      atm_paldata[5:4],pal444_ena?atm_paldatalow[5:4]:atm_paldata[5:4],
+			                      atm_paldata[1:0],pal444_ena?atm_paldatalow[1:0]:atm_paldata[1:0]
+			                     }
+			                   : {up_paldata[7:5],  up_paldata[7],                      // ULAplus R
+                                  up_paldata[4:2],  up_paldata[4],                      // ULAplus G
+                                  up_paldata[1:0], |up_paldata[1:0], up_paldata[1]};    // ULAplus B
 		end
 
 		palette_read <= palette[palette_color];
 	end
-
-
-	assign palcolor = {palette_read[4:3],palette_read[7:6], palette_read[1:0]};
-
-
-
+`endif
 
 	// make 3bit palette
 	always @(posedge clk)
@@ -112,70 +136,153 @@ module video_palframe(
 	//
 	wire vsync_start = vsync && !vsync_r;
 	//
-	initial ctr_14 = 2'b00;
+	initial ctr_14 = 3'b000;
 	always @(posedge clk)
-		ctr_14 <= ctr_14+2'b01;
+		ctr_14 <= ctr_14+3'b001;
 	//
 	initial ctr_h = 1'b0;
 	always @(posedge clk) if( hsync_start )
 		ctr_h <= ~ctr_h;
 	//
-	initial ctr_v = 1'b0;
+	//initial ctr_v = 1'b0;
+	//always @(posedge clk) if( vsync_start )
+	//	ctr_v <= ~ctr_v;
+	//
+
+	initial phase = 2'b00;
 	always @(posedge clk) if( vsync_start )
-		ctr_v <= ~ctr_v;
+		phase <= phase+2'b01;
 
+	//wire plus1 = ctr_14[1] ^ ctr_h ^ ctr_v;
 
-	wire plus1 = ctr_14[1] ^ ctr_h ^ ctr_v;
+    wire [3:0] red;
+	wire [3:0] grn;
+	wire [3:0] blu;
 
+    assign palcolor = pal444_ena?
+                {palette_read[5:4],palette_read[9:8], palette_read[1:0]} :
+                {palette_read[7:6/*4:3*/],palette_read[11:10/*7:6*/], palette_read[3:2/*1:0*/]};
 
+`ifndef IDE_VIDEO
 
-	wire [1:0] red;
-	wire [1:0] grn;
-	wire [1:0] blu;
+	wire bigpal_ena = up_ena | pal444_ena;
 
 	video_palframe_mk3bit red_color
 	(
-		.plus1    (plus1            ),
-		.color_in (palette_read[7:5]),
-		.color_out(red              )
+		//.plus1    (plus1            ),
+		.phase    (phase),
+		.x        (ctr_14[2:1]      ),
+		.y        (ctr_h            ),
+		.color_in (palette_read[11:8/*7:5*/]),
+		.color_out(red[3:2]         )
 	);
 	//
 	video_palframe_mk3bit grn_color
 	(
-		.plus1    (plus1            ),
-		.color_in (palette_read[4:2]),
-		.color_out(grn              )
+		//.plus1    (plus1            ),
+		.phase    (phase),
+		.x        (ctr_14[2:1]      ),
+		.y        (ctr_h            ),
+		.color_in (palette_read[7:4/*4:2*/]),
+		.color_out(grn[3:2]         )
 	);
 	//
-	assign blu = palette_read[1:0];
+	video_palframe_mk3bit blu_color
+	(
+		//.plus1    (plus1            ),
+		.phase    (phase),
+		.x        (ctr_14[2:1]      ),
+		.y        (ctr_h            ),
+		.color_in (palette_read[3:0/*4:2*/]),
+		.color_out(blu[3:2]           )
+	);
 
-`ifdef IDE_VDAC
-	assign color = (hblank | vblank) ? 8'd0 : {palette_read[4:2], palette_read[7:5], palette_read[1:0]};
-`else
-	assign color = (hblank | vblank) ? 8'd0 : {grn, 1'b0, red, 1'b0, blu};
+`else 
+
+    wire pixel_phase = ctr_14[1] ^ ctr_h ^ phase[0];
+
+    wire [2:0] cred = palette_read[11:9];
+    wire       ired = palette_read[ 8] & pal444_ena;
+    wire [2:0] cgrn = palette_read[ 7:5];
+    wire       igrn = palette_read[ 4] & pal444_ena;
+    wire [2:0] cblu = palette_read[ 3:1];
+    wire       iblu = palette_read[ 0] & pal444_ena;
+
+    assign red = vga_on ? {(pixel_phase & ired & !(|cred) ? (cred + 3'b001) : cred), 1'b0} : palette_read[11:8];
+    assign grn = vga_on ? {(pixel_phase & igrn & !(|cgrn) ? (cgrn + 3'b001) : cgrn), 1'b0} : palette_read[ 7:4];
+    assign blu = vga_on ? {(pixel_phase & iblu & !(|cblu) ? (cblu + 3'b001) : cblu), 1'b0} : palette_read[ 3:0];
+
 `endif
 
+    assign color = (hblank | vblank) ? 12'd0 : {grn,red,blu};
 
 endmodule
 
 module video_palframe_mk3bit
 (
-	input  wire       plus1,
+	//input  wire       plus1,
+	input  wire [1:0] phase,
+	input  wire [1:0] x,
+	input  wire       y,
 
-	input  wire [2:0] color_in,
+
+	input  wire [3:0/*2:0*/] color_in,
 	output reg  [1:0] color_out
 );
 
+	reg [3:0] colorlevel;
+	reg [1:0] gridlevel;
+	reg       gridy;
+	reg [1:0] gridindex;
+
 	always @*
-	case( color_in )
-		3'b000:  color_out <= 2'b00;
+	begin
+//colorlevel_table[3:0] = {0,1,2,2,3, 4,5,6,6,7, 8,9,10,10,11, 12};
+	  case( color_in )
+/*		3'b000:  color_out <= 2'b00;
 		3'b001:  color_out <= plus1 ? 2'b01 : 2'b00;
 		3'b010:  color_out <= 2'b01;
 		3'b011:  color_out <= plus1 ? 2'b10 : 2'b01;
 		3'b100:  color_out <= 2'b10;
 		3'b101:  color_out <= plus1 ? 2'b11 : 2'b10;
+
 		default: color_out <= 2'b11;
-	endcase
+
+		*/
+
+		4'b0000: colorlevel = 4'b0000;
+		4'b0001: colorlevel = 4'b0001;
+		4'b0010,
+		4'b0011: colorlevel = 4'b0010;
+		4'b0100: colorlevel = 4'b0011;
+		4'b0101: colorlevel = 4'b0100;
+		4'b0110: colorlevel = 4'b0101;
+		4'b0111,
+		4'b1000: colorlevel = 4'b0110;
+		4'b1001: colorlevel = 4'b0111;
+		4'b1010: colorlevel = 4'b1000;
+		4'b1011: colorlevel = 4'b1001;
+		4'b1100,
+		4'b1101: colorlevel = 4'b1010;
+		4'b1110: colorlevel = 4'b1011;
+		default: colorlevel = 4'b1100;
+	  endcase
+
+    //поскольку мы на входе скандаблера, то подуровни 1/4 и 3/4 между главными уровнями будут скакать жирными линиями
+    //фиксим это сдвигом фазы y по ксору с x[1] именно для этих подуровней (для 1/2 такой фикс сломает сетку)
+    //colorlevel_grid = {{0,2},{3,1}};
+
+	  gridy = y ^ (x[1] & colorlevel[0]);
+	  gridindex = {gridy+phase[1], x[0]+phase[0]};
+	  case(gridindex[1:0])
+	    2'b00: gridlevel = 2'b00;
+	    2'b01: gridlevel = 2'b10;
+	    2'b10: gridlevel = 2'b11;
+	    2'b11: gridlevel = 2'b01;
+	  endcase
+
+	  color_out = colorlevel[3:2] + ((colorlevel[1:0] > gridlevel[1:0]) ? 2'b01 : 2'b00);
+	end
 
 endmodule
 

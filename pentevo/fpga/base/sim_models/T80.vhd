@@ -118,7 +118,9 @@ entity T80 is
 		TS              : out std_logic_vector(2 downto 0);
 		IntCycle_n      : out std_logic;
 		IntE            : out std_logic;
-		Stop            : out std_logic
+		Stop            : out std_logic;
+		ResetPC         : in  std_logic_vector(15 downto 0);
+		ResetSP         : in  std_logic_vector(15 downto 0)
 	);
 end T80;
 
@@ -356,8 +358,9 @@ begin
 	process (RESET_n, CLK_n)
 	begin
 		if RESET_n = '0' then
-			PC <= (others => '0');  -- Program Counter
-			A <= (others => '0');
+			PC <= unsigned(ResetPC);
+			-- (others => '0')  -- Program Counter
+			A <= ResetPC; -- (others => '0');
 			TmpAddr <= (others => '0');
 			IR <= "00000000";
 			ISet <= "00";
@@ -372,7 +375,8 @@ begin
 			Fp <= (others => '1');
 			I <= (others => '0');
 			R <= (others => '0');
-			SP <= (others => '1');
+			SP <= unsigned(ResetSP);
+			-- (others => '1')
 			Alternate <= '0';
 
 			Read_To_Reg_r <= "00000";

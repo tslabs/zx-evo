@@ -95,8 +95,11 @@ module top(
 `else
 	inout [15:0] ide_d,
 `endif
+
 	output ide_dir,
+
 	input ide_rdy,
+
 	output ide_cs0_n,
 	output ide_cs1_n,
 	output ide_rs_n,
@@ -139,16 +142,15 @@ module top(
 	output spiint_n
 );
 
-    wire [2:0] red;
-    wire [2:0] grn;
-    wire [1:0] blu;
+    wire [4:0] red;
+    wire [4:0] grn;
+    wire [4:0] blu;
 
-    assign vred = red[2:1];
-    assign vgrn = grn[2:1];
-    assign vblu = blu[1:0];
+    assign vred = red[4:3];
+    assign vgrn = grn[4:3];
+    assign vblu = blu[4:3];
 
 	wire dos;
-
 
 	wire zclk; // z80 clock for short
 
@@ -167,16 +169,18 @@ module top(
 
 	wire csrom_int;
 
+
 	wire [39:0] kbd_data;
 	wire [ 7:0] mus_data;
 	wire kbd_stb,mus_xstb,mus_ystb,mus_btnstb,kj_stb;
 
 	wire [ 4:0] kbd_port_data;
-	wire [ 4:0] kj_port_data;
+`ifdef KEMPSTON_8BIT
+	wire [ 7:0] kj_port_data;
+`else
+    wire [ 4:0] kj_port_data;
+`endif
 	wire [ 7:0] mus_port_data;
-
-
-
 
 	wire [7:0] wait_read,wait_write;
 	wire wait_rnw;
@@ -206,6 +210,8 @@ module top(
 	wire gen_nmi;
 	wire clr_nmi;
 	wire in_nmi;
+	wire in_trdemu;
+	wire trdemu_wr_disable;
 	wire [1:0] set_nmi;
 	wire imm_nmi;
 	wire nmi_buf_clr;
@@ -235,7 +241,9 @@ module top(
 
 
 	wire intrq,drq;
-	wire vg_wrFF;
+	wire vg_wrFF_fclk;
+	wire vg_rdwr_fclk;
+	wire [1:0] vg_ddrv;
 
 
 	wire        up_ena;
@@ -264,7 +272,7 @@ module top(
 	assign res= ~rst_n;
 
 
-	assign idein = ide_d;
+    assign idein = ide_d;
 
 `ifdef IDE_HDD
 	assign ide_rs_n = rst_n;
@@ -272,9 +280,9 @@ module top(
 	assign ide_dir = ~idedataout;
 `elsif IDE_VDAC
 	assign ide_rs_n = rst_n;
-  assign ide_d[ 4: 0] = {red, red[2:1]};
-  assign ide_d[ 9: 5] = {grn, grn[2:1]};
-  assign ide_d[14:10] = {blu, blu[0], blu};   // The missing lowest blue bit is set to OR of the other two blue bits (Bb becomes 000 for 00, and Bb1 for anything else).
+  assign ide_d[ 4: 0] = red;
+  assign ide_d[ 9: 5] = grn;
+  assign ide_d[14:10] = blu;
   assign ide_d[15] = 1'b1;    // always 0-31 luma scale
   assign ide_dir = 1'b0;      // always output
   assign ide_a[1] = !fclk;
@@ -284,9 +292,9 @@ module top(
   assign ide_wr_n = 1'b0;
 `elsif IDE_VDAC2
   wire ftcs_n;
-  wire [4:0] vred_raw = {red, red[2:1]};
-  wire [4:0] vgrn_raw = {grn, grn[2:1]};
-  wire [4:0] vblu_raw = {blu, blu[0], blu};   // The missing lowest blue bit is set to OR of the other two blue bits (Bb becomes 000 for 00, and Bb1 for anything else).
+  wire [4:0] vred_raw = red;
+  wire [4:0] vgrn_raw = grn;
+  wire [4:0] vblu_raw = blu;
   assign ide_d[ 0] = vgrn_raw[2];
   assign ide_d[ 1] = vred_raw[0];
   assign ide_d[ 2] = vred_raw[1];
@@ -317,9 +325,12 @@ module top(
 	wire [7:0] peff7;
 	wire [7:0] p7ffd;
 
+
 	wire romrw_en;
 	wire cpm_n;
 	wire fnt_wr;
+
+
 
 	wire cpu_req,cpu_rnw,cpu_wrbsel,cpu_strobe;
 	wire [20:0] cpu_addr;
@@ -437,7 +448,6 @@ module top(
 		.turbo     ( {atm_turbo,~(peff7[4])}   ),
 		.int_turbo (int_turbo                  ),
 		
-
 		.external_port(external_port)
 	);
 
@@ -457,6 +467,8 @@ module top(
 
 	wire       atm_palwr;
 	wire [5:0] atm_paldata;
+	wire [5:0] atm_paldatalow;
+	wire pal444_ena;
 
 	wire [7:0] fontrom_readback;
 
@@ -520,50 +532,53 @@ module top(
 
 		for(i=0;i<4;i=i+1)
 		begin : instantiate_atm_pagers
-
 			atm_pager #( .ADDR(i) ) atm_pager
 			(
 				.rst_n(rst_n),
 				.fclk (fclk),
 				.zpos (zpos),
 				.zneg (zneg),
-
+                                
 				.za(a),
 				.zd(d),
 				.mreq_n(mreq_n),
 				.rd_n  (rd_n),
 				.m1_n  (m1_n),
-
+                                
 				.pager_off(pager_off),
-
+                                
 				.pent1m_ROM   (pent1m_ROM),
 				.pent1m_page  (pent1m_page),
 				.pent1m_ram0_0(pent1m_ram0_0),
 				.pent1m_1m_on (pent1m_1m_on),
-
-
-				.in_nmi(in_nmi),
-
+                                
+                                
+				.in_nmi   (in_nmi   ),
+				.in_trdemu(in_trdemu),
+				
+				.trdemu_wr_disable(trdemu_wr_disable), 
+                                
 				.atmF7_wr(atmF7_wr_fclk),
-
+                                
 				.dos(dos),
-
+                                
 				.dos_turn_on (dos_turn_on[i]),
 				.dos_turn_off(dos_turn_off[i]),
-
+                                
 				.zclk_stall(zclk_stall[i]),
-
+                                
 				.page     (page[i]     ),
 				.romnram  (romnram[i]  ),
                         	.wrdisable(wrdisable[i]),
-
+                                
 				.rd_page0  (rd_pages[i  ]),
 				.rd_page1  (rd_pages[i+4]),
-
+                                
 				.rd_ramnrom   ( {rd_ramnrom   [i+4], rd_ramnrom   [i]} ),
 				.rd_dos7ffd   ( {rd_dos7ffd   [i+4], rd_dos7ffd   [i]} ),
 				.rd_wrdisables( {rd_wrdisables[i+4], rd_wrdisables[i]} )
 			);
+
 		end
 
 	endgenerate
@@ -582,7 +597,20 @@ module top(
 
 	           .cpm_n(cpm_n),
 
-	           .dos(dos)
+	           .dos(dos),
+
+	           .zpos(zpos),
+	           .m1_n(m1_n),
+
+
+	           .trdemu_wr_disable(trdemu_wr_disable),
+
+	           .in_trdemu   (in_trdemu   ),
+	           .clr_nmi     (clr_nmi     ),
+	           .vg_rdwr_fclk(vg_rdwr_fclk),
+	           .fdd_mask    (fdd_mask    ),
+	           .vg_a        (vg_ddrv     ),
+	           .romnram     (romnram[0]  )
 	         );
 
 
@@ -596,7 +624,7 @@ module top(
 	(
 		.fclk (fclk ),
 		.rst_n(rst_n),
-
+		
 		.zpos(zpos),
 		.zneg(zneg),
 
@@ -604,16 +632,16 @@ module top(
 		.post_cbeg(post_cbeg),
 		.pre_cend (pre_cend ),
 		.cend     (cend     ),
-
+		
 		.za    (a       ),
 		.zd_in (d       ),
-		.zd_out(dout_ram),
-		.zd_ena(ena_ram ),
+		.zd_out(dout_ram), 
+		.zd_ena(ena_ram ), 
 		.m1_n  (m1_n    ),
-		.rfsh_n(rfsh_n  ),
-		.iorq_n(iorq_n  ),
+		.rfsh_n(rfsh_n  ), 
+		.iorq_n(iorq_n  ), 
 		.mreq_n(mreq_n  ),
-		.rd_n  (rd_n    ),
+		.rd_n  (rd_n    ), 
 		.wr_n  (wr_n    ),
 
 		.win0_romnram(romnram[0]),
@@ -728,8 +756,8 @@ module top(
 	                 .cpu_rddata(cpu_rddata),
 	                 .cpu_strobe(cpu_strobe) );
 
-	video_top video_top(
-
+	video_top video_top
+	(
 		.clk(fclk),
 
 		.vred(red),
@@ -767,7 +795,9 @@ module top(
 
 		.atm_palwr  (atm_palwr  ),
 		.atm_paldata(atm_paldata),
-
+		.atm_paldatalow(atm_paldatalow),
+		.pal444_ena(pal444_ena),
+		
 		.up_ena    (up_ena    ),
 		.up_paladdr(up_paladdr),
 		.up_paldata(up_paldata),
@@ -802,7 +832,6 @@ module top(
 		.wait_rnw(wait_rnw),
 		.wait_end(wait_end),
 		.config0( {not_used0[7:6], modes_raster, beeper_mux, tape_read, set_nmi[0], cfg_vga_on} ),
-		.config1( {not_used0[7:4], fdd_mask} ),
 
 		.sd_lock_out(avr_lock_claim),
 		.sd_lock_in (avr_lock_grant),
@@ -827,7 +856,19 @@ module top(
 	               .a(a), .iorq_n(iorq_n), .rd_n(rd_n), .wr_n(wr_n), .porthit(porthit),
 	               .ay_bdir(ay_bdir), .ay_bc1(ay_bc1), .border(border),
 	               .p7ffd(p7ffd), .peff7(peff7), .mreq_n(mreq_n), .m1_n(m1_n), .dos(dos),
-	               .vg_intrq(intrq), .vg_drq(drq), .vg_wrFF(vg_wrFF), .vg_cs_n(vg_cs_n),
+
+	               .vg_cs_n     (vg_cs_n     ),
+	               .vg_intrq    (intrq       ),
+	               .vg_drq      (drq         ),
+	               .vg_wrFF_fclk(vg_wrFF_fclk),
+	               .vg_rdwr_fclk(vg_rdwr_fclk),
+	               .vg_a        (vg_ddrv     ),
+	               .vg_res_n    (vg_res_n    ),
+	               .vg_hrdy     (vg_hrdy     ),
+	               .vg_side     (vg_side     ),
+
+			
+
 	               .idein(idein), .ideout(ideout), .idedataout(idedataout),
 `ifdef IDE_HDD
 	               .ide_a(ide_a), .ide_cs0_n(ide_cs0_n), .ide_cs1_n(ide_cs1_n),
@@ -852,11 +893,8 @@ module top(
 	               .wait_start_comport (wait_start_comport ),
 	               .wait_rnw  (wait_rnw  ),
 	               .wait_write(wait_write),
-`ifndef SIMULATE
 	               .wait_read (wait_read ),
-`else
-	               .wait_read(8'hFF),
-`endif
+		
 		.atmF7_wr_fclk(atmF7_wr_fclk),
 
 		.atm_scr_mode(atm_scr_mode),
@@ -874,6 +912,8 @@ module top(
 
 		.atm_palwr  (atm_palwr  ),
 		.atm_paldata(atm_paldata),
+		.atm_paldatalow(atm_paldatalow),
+		.pal444_ena(pal444_ena),
 
 		.beeper_wr(beeper_wr),
 		.covox_wr (covox_wr ),
@@ -893,18 +933,22 @@ module top(
 
 		.palcolor(palcolor),
 		.fontrom_readback(fontrom_readback),
-
+	
 		.up_ena    (up_ena    ),
 		.up_paladdr(up_paladdr),
 		.up_paldata(up_paldata),
 		.up_palwr  (up_palwr  ),
+
+        .modes_raster(modes_raster),
 
 		.external_port(external_port),
 
 		.set_nmi(set_nmi[1]),
 
 		.brk_ena (brk_ena ),
-		.brk_addr(brk_addr)
+		.brk_addr(brk_addr),
+
+		.fdd_mask(fdd_mask)
 	);
 
 
@@ -983,12 +1027,11 @@ module top(
 
 
 
-	wire [1:0] vg_ddrv;
 	assign vg_a[0] = vg_ddrv[0] ? 1'b1 : 1'b0; // possibly open drain?
 	assign vg_a[1] = vg_ddrv[1] ? 1'b1 : 1'b0;
 
 	vg93 vgshka( .zclk(zclk), .rst_n(rst_n), .fclk(fclk), .vg_clk(vg_clk),
-	             .vg_res_n(vg_res_n), .din(d), .intrq(intrq), .drq(drq), .vg_wrFF(vg_wrFF),
+	             .vg_res_n(vg_res_n), .din(d), .intrq(intrq), .drq(drq), .vg_wrFF_fclk(vg_wrFF_fclk),
 	             .vg_hrdy(vg_hrdy), .vg_rclk(vg_rclk), .vg_rawr(vg_rawr), .vg_a(vg_ddrv),
 	             .vg_wrd(vg_wrd), .vg_side(vg_side), .step(step), .vg_sl(vg_sl), .vg_sr(vg_sr),
 	             .vg_tr43(vg_tr43), .rdat_n(rdat_b_n), .vg_wf_de(vg_wf_de), .vg_drq(vg_drq),

@@ -142,6 +142,10 @@ extern volatile u8 flags_ex_register;
 #define FLAG_EX_NMI             0x02
 /** Ps2 keyboard map (0 - default/1 - user). */
 #define FLAG_EX_PS2KEYBOARD_MAP 0x04
+/** Flash from SD card (1 - enable flash) */
+#define FLAG_EX_FLASH           0x08
+/** Disable 40-pin keyboard (1 - disable) */
+#define FLAG_EX_DISABLE_40PIN_KEYBOARD  0x10
 
 /** Common modes register. */
 extern volatile u8 modes_register;
@@ -174,6 +178,8 @@ extern volatile u8 ext_type_gluk;
 #define EXT_TYPE_PS2KEYBOARDS_LOG     0x02
 /** Type is reading some config bytes. */
 #define EXT_TYPE_RDCFG                0x03
+/** Type is Configuration Interface. */
+#define EXT_TYPE_CFGIF                0x0E
 /** Type is SPI Flash Interface. */
 #define EXT_TYPE_SPIFL                0x10
 

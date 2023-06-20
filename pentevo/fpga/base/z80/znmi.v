@@ -1,4 +1,4 @@
-// ZX-Evo Base Configuration (c) NedoPC 2008,2009,2010,2011,2012,2013,2014
+// ZX-Evo Base Configuration (c) NedoPC 2008,2009,2010,2011,2012,2013,2014,2015,2016
 //
 // NMI generation
 
@@ -48,7 +48,6 @@ module znmi
 
 
 	output wire drive_00, // drive nop to Z80 databus
-
 
 
 	output reg         in_nmi,  // when 1, there must be last (#FF) ram page in 0000-3FFF
@@ -178,6 +177,7 @@ module znmi
 	assign drive_00 = in_nmi_2 && (!m1_n) && (!mreq_n) && (a[15:0]==16'h0066); // && last_m1_0066;
 
 	assign nmi_buf_clr = last_m1_0066 && in_nmi_2;
+
 	always @(posedge fclk, negedge rst_n)
 	if( !rst_n )
 		in_nmi <= 1'b0;

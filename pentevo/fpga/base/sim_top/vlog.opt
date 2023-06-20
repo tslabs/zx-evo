@@ -37,6 +37,7 @@ tb_top.v
 ../z80/zbreak.v
 
 ../sim_models/drammem.v
+../sim_models/cmosemu.v
 rom_top.v		
 zxevo_rom.v
 pixer.v

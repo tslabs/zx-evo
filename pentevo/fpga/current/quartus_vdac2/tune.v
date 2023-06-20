@@ -24,3 +24,5 @@
 // `define DISABLE_TSU  // disable TSU
 
 // `define PENT_312    // for Pentagon 71680 tacts emulation with 312 video lines
+
+`define KEMPSTON_8BIT  // 8-bit enhanced Kempston Joystick interface

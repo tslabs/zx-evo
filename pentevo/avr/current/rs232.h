@@ -1,6 +1,8 @@
 #ifndef RS232_H
 #define RS232_H 1
 
+#include <stdio.h>
+
 #ifdef __ASSEMBLER__
 .extern dbuf
 

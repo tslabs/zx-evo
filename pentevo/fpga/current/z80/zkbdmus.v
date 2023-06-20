@@ -23,7 +23,11 @@ module zkbdmus
 
   output wire [4:0] kbd_data,
   output wire [7:0] mus_data,
+`ifdef KEMPSTON_8BIT
+  output reg  [7:0] kj_data
+`else
   output reg  [4:0] kj_data
+`endif
 );
 
   reg [39:0] kbd;
@@ -64,7 +68,12 @@ module zkbdmus
     end
 
     if (kj_stb)
+`ifdef KEMPSTON_8BIT
+      kj_data <= mus_in;
+`else
       kj_data <= mus_in[4:0];
+`endif
+
   end
 
   // keys

@@ -175,7 +175,7 @@ module spi2(
 			begin
 				if( !sck ) // on the rising edge of sck
 				begin
-      	                  shiftin[6:0] <= { shiftin[5:0], sdi };
+					shiftin[6:0] <= { shiftin[5:0], sdi };
 
 					if( (&counter[3:1]) && (!enable_n) )
 						dout <= { shiftin[6:0], sdi }; // update dout at the last sck rising edge
