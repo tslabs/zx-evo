@@ -10,6 +10,7 @@
 #include "vs1001.h"
 #include "z80.h"
 #include "zxevo.h"
+#include "visuals.h"
 #include "util.h"
 
 void spectrum_frame()
@@ -106,6 +107,7 @@ void mainloop(const bool &Exit)
 		temp.inputblock = temp.vidblock && conf.sound.enabled;
 
 		spectrum_frame();
+    flip_visuals();
 		//VideoSaver();
 
 		if (skipped < temp.frameskip)

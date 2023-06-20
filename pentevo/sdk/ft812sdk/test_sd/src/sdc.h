@@ -90,6 +90,7 @@ const MID_TAB mid_tab[] =
   { 0x74, "Transcend"      },
   { 0x76, "Patriot(?)"     },
   { 0x82, "Sony(?)"        },
+  { 0x90, "Hynix(?)"        },
 };
 
 char *const csd_ver_txt[] = { "1.0", "2.0", "(reserved)", "(reserved)" };

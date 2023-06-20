@@ -17,6 +17,7 @@
 action ac_main[] =
 {
    { "main.exit", correct_exit },
+   { "main.visuals", main_visuals },
    { "main.monitor", main_debug },
    { "main.fullscreen", main_fullscr },
    { "main.pause", main_pause },

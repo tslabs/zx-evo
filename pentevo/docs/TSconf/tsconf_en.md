@@ -435,7 +435,7 @@ The bitmap is split onto 64x64 8x8 pixel elements. Both tiles and sprites addres
 
 Sprite sized 32x32 pixels, bitmap element selector (left upper corner) is set to 0.
 
-![sprite](.\img\sprite.png)
+![sprite](./img/sprite.png)
 
 #### Tiles
 

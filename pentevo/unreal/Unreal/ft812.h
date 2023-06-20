@@ -3,10 +3,9 @@
 
 namespace vdac2
 {
-  void line();
   bool is_interrupt();
   void set_ss(bool);
   u8 transfer(u8);
-  bool open_ft8xx(const char **);
+  int open_ft8xx(const char **);
   void close_ft8xx();
 }

@@ -31,19 +31,19 @@ typedef enum {
 enum
 {
   // Command modifiers
-  SDC_X1           = 0x40,    // extra 1 byte
-  SDC_X4           = 0x80,    // extra 4 bytes
+  SDC_X1           = 0x40,    // extra 1 byte (R2)
+  SDC_X4           = 0x80,    // extra 4 bytes (R7, R3)
   SDC_R1B          = 0xC0,
 
   // CMD
   SDC_GO_IDLE_STATE         = 0,
   SDC_SEND_OP_COND_MMC      = 1,
   SDC_SWITCH_FUNC           = 6,            // R1 + data (64 bytes)
-  SDC_SEND_IF_COND          = 8  | SDC_X4,  // R7 + 4 extra bytes
+  SDC_SEND_IF_COND          = 8  | SDC_X4,  // R7
   SDC_SEND_CSD              = 9,            // R1 + data (16 bytes)
   SDC_SEND_CID              = 10,           // R1 + data (16 bytes)
   SDC_STOP_TRANSMISSION     = 12 | SDC_R1B,
-  SDC_SEND_STATUS           = 13 | SDC_X1,  // R2 + 1 extra byte
+  SDC_SEND_STATUS           = 13 | SDC_X1,  // R2
   SDC_SET_BLOCKLEN          = 16,
   SDC_READ_SINGLE_BLOCK     = 17,
   SDC_READ_MULTIPLE_BLOCK   = 18,
@@ -57,10 +57,10 @@ enum
   SDC_SEND_OP_COND_SD       = 41,
   SDC_LOCK_UNLOCK           = 42,
   SDC_APP_CMD               = 55,
-  SDC_READ_OCR              = 58 | SDC_X4,  // R3 + 4 extra bytes
+  SDC_READ_OCR              = 58 | SDC_X4,  // R3
 
   // ACMD
-  SDC_SD_STATUS             = 13 | SDC_X1,  // R2 + 1 extra byte
+  SDC_SD_STATUS             = 13 | SDC_X1,  // R2 + data (64 bytes)
   SDC_SD_SEND_OP_COND       = 41,
   SDC_SEND_SCR              = 51,           // R1 + data (8 bytes)
   

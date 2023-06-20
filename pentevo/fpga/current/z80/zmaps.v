@@ -32,7 +32,7 @@ module zmaps
 
   // addresses of files withing zmaps
   localparam CRAM  = 3'b000;
-  localparam SFYS  = 3'b001;
+  localparam SFIL  = 3'b001;
   localparam REGS  = 4'b0100;
 
   // DMA
@@ -40,20 +40,23 @@ module zmaps
 
   // control signals
   wire hit = (a[15:12] == fmaddr[3:0]) && fmaddr[4] && memwr_s;
+  wire cram_hit = (a[11:9] == CRAM) && hit;
+  wire sfile_hit = (a[11:9] == SFIL) && hit;
 
   // write enables
-  assign cram_we = dma_req ? dma_cram_we : (a[11:9] == CRAM) && a[0] && hit;
-  assign sfile_we = dma_req ? dma_sfile_we : (a[11:9] == SFYS) && a[0] && hit;
+  wire lower_byte_we = (cram_hit || sfile_hit) && !a[0];
+  assign cram_we = dma_req ? dma_cram_we : cram_hit && a[0];
+  assign sfile_we = dma_req ? dma_sfile_we : sfile_hit && a[0];
   assign regs_we = (a[11:8] == REGS) && hit;
 
   // LSB fetching
-  reg [7:0] zmd0;
+  reg [7:0] lower_byte;
 
   assign zma = dma_req ? dma_wraddr : a[8:1];
-  assign zmd = dma_req ? dma_data : {d, zmd0};
+  assign zmd = dma_req ? dma_data : {d, lower_byte};
 
   always @(posedge clk)
-  if (!a[0] && hit)
-  zmd0 <= d;
+    if (lower_byte_we)
+      lower_byte <= d;
 
 endmodule

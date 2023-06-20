@@ -44,11 +44,10 @@ int putchar(u8 b)
   }
   else                                    // character
   {
-    if ((b == '\r') || (b == '\n'))       // CR | LF
-    {
+    if (b == '\r')                        // CR
       pcx = pcx0;
+    else if (b == '\n')                   // LF
       pcy++;
-    }
     else if (b == '\a')                   // ink
       pcst = 1;
     else                                  // draw char
@@ -57,7 +56,13 @@ int putchar(u8 b)
       u16 o = (pcy << 8) + pcx;
       a[o] = b;
       a[o + 128] = pca;
+      
       pcx++;
+      if (pcx >= 80)
+      {
+        putchar('\r');
+        putchar('\n');
+      }
     }
   }
   return 0;

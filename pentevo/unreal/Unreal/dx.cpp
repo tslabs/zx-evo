@@ -1412,8 +1412,9 @@ static void CalcWindowSize()
         temp.rflags |= drivers[conf.driver].flags;
 
     // select resolution
-    temp.ox = temp.scx = 448;
-    temp.oy = temp.scy = 320;
+    temp.ox = temp.scx = bordersizes[conf.bordersize].xsize;
+    temp.oy = temp.scy = bordersizes[conf.bordersize].ysize;
+
 
     if (temp.rflags & RF_2X)
     {
@@ -1456,6 +1457,8 @@ void start_dx()
    cy = Client.bottom - Client.top;
    int winx = rect1.left + (rect1.right - rect1.left - cx) / 2;
    int winy = rect1.top + (rect1.bottom - rect1.top - cy) / 2;
+   winx = winx < 0 ? 0 : winx;
+   winy = winy < 0 ? 0 : winy;
 
    main_menu = LoadMenu(hIn, MAKEINTRESOURCE(IDR_MAINMENU));
    wnd = CreateWindow("EMUL_WND", "UnrealSpeccy", WS_VISIBLE|WS_OVERLAPPEDWINDOW,

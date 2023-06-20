@@ -364,6 +364,9 @@
     <ClCompile Include="debugger\debug.cpp">
       <Filter>debugger</Filter>
     </ClCompile>
+    <ClCompile Include="visuals.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="atm.h">
@@ -653,6 +656,9 @@
     </ClInclude>
     <ClInclude Include="debugger\debug.h">
       <Filter>debugger</Filter>
+    </ClInclude>
+    <ClInclude Include="visuals.h">
+      <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

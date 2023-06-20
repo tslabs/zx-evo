@@ -5,6 +5,7 @@
   10 (CID) - <R1> <dtok> <16b> <CRC>
   58 (OCR) - <R1> <4b>
 A 51 (SCR) - <R1> <dtok> <8b> <CRC>
+A 13 (SD_STATUS) - <R2> <dtok> <64b> <CRC>
 
   *Registers data is stored in MSB format
 */
@@ -16,6 +17,18 @@ u8 read_cid()
   sd_cs_on();
   rc = sd_cmd(SDC_SEND_CID, 0);
   sd_recv_data(sdbuf, 16);
+  sd_cs_off();
+
+  return rc;
+}
+
+u8 read_sd_status()
+{
+  u8 rc;
+
+  sd_cs_on();
+  rc = sd_acmd(SDC_SD_STATUS, 0);
+  sd_recv_data(sdbuf, 64);
   sd_cs_off();
 
   return rc;
@@ -130,13 +143,30 @@ exit:
 
 u8 erase_sec()
 {
-  u8 rc;
+#define ERASE_SECS (2097152UL)  // 1GB
+// #define ERASE_SECS (262144UL)  // 128MB
+
+  u8 rc = 0;
+  u32 sec = 0;
 
   sd_cs_on();
-  if (rc = sd_cmd(SDC_ERASE_START_ADDR, 0)) goto exit;
-  if (rc = sd_cmd(SDC_ERASE_END_ADDR, sd_size - 1)) goto exit;
-  if (rc = sd_cmd(SDC_ERASE, 0)) goto exit;
-  if (!sd_wait_busy_long()) rc = 0xFF;
+  
+  while (sec < sd_size)
+  {
+    printf(C_NORM "Current: " C_DATA "%lu GB\r", sec >> 21);
+    
+    u32 secs = min(ERASE_SECS, sd_size - sec);
+    
+    if (rc = sd_cmd(SDC_ERASE_START_ADDR, sec)) goto exit;
+    if (rc = sd_cmd(SDC_ERASE_END_ADDR, sec + secs - 1)) goto exit;
+    if (rc = sd_cmd(SDC_ERASE, 0)) goto exit;
+
+    // if (!sd_wait_busy_long()) rc = 0xFF;
+    while (sd_rd() != 0xFF);  // unlimited wait
+    
+    sec += secs;
+  }
+
 exit:
   sd_cs_off();
 

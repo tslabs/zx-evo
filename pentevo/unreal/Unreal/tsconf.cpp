@@ -6,6 +6,7 @@
 #include "tsconf.h"
 #include "zc.h"
 #include "resource.h"
+#include "visuals.h"
 #include "ft812.h"
 
 extern VCTR vid;
@@ -524,7 +525,7 @@ void dma(u32 tacts)
   {
     // get new task for dma
     if (comp.ts.dma.state == DMA_ST_INIT)
-    {	  
+    {
       dma_init();
       if (comp.ts.dma.state == DMA_ST_NOP)
         return;
@@ -623,6 +624,9 @@ void init_tile()
       comp.ts.tsu.pos = (comp.ts.tsu.pos + comp.ts.tsu.tm.offset) & 0x1FF; // calculate start position in graphic line buffer for render this tile
       comp.ts.tsu.pos_dir = comp.ts.tsu.tm.pos_dir; // save position direction
       comp.ts.tsu.gsize = 2; // set 2 graphic iteration for render this tile
+      
+      // vis.pal_map[comp.ts.tsu.layer][comp.ts.tsu.tm.data.tnum] = comp.ts.tsu.pal >> 4;
+      
       break;
     }
   }
@@ -655,6 +659,13 @@ void init_sprite()
         comp.ts.tsu.gptr = page_ram(comp.ts.tsu.gpage) + ((comp.ts.tsu.spr.tnum & 0xFC0) << 5) + (comp.ts.tsu.line << 8) + ((comp.ts.tsu.spr.tnum & 0x3F) << 2); // calculate graphic pointer for this sprite
         comp.ts.tsu.pal = comp.ts.tsu.spr.pal << 4; // Set prepared palette
         comp.ts.tsu.gsize = (comp.ts.tsu.spr.xs + 1) << 1;
+
+        // for (int i = 0; i <= comp.ts.tsu.spr.xs; i++)
+        // {
+          // int n = (comp.ts.tsu.tm.data.tnum & 0xFC0) | ((comp.ts.tsu.tm.data.tnum + i) & 63);
+          // vis.pal_map[comp.ts.tsu.layer][n] = comp.ts.tsu.pal >> 4;
+        // }
+
         break;
       }
     }
@@ -944,12 +955,8 @@ void ts_line_int(bool vdos)
     pre_pend = true;
 
     if (comp.ts.vdac2)
-    {
-      vdac2::line();
-
       if (comp.ts.ft_en)
         pre_pend = vdac2::is_interrupt();
-    }
 
     if (!vdos)
       comp.ts.intctrl.line_pend = pre_pend && comp.ts.intline; // !!! incorrect behaviour, pending flag must be processed after VDOS

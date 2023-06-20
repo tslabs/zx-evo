@@ -20,3 +20,4 @@ void mon_scrshot();
 void mon_switchscr();
 void mon_switch_cpu();
 void mon_switch_dump();
+void mon_scale2x();

@@ -16,6 +16,6 @@ for /f %%i in (lib.lst) do (
   echo %%i
   sdcc -I../../sdk -I../../tsconf -mz80 --std-sdcc11 --opt-code-speed -c %%i -o %%i.rel
   if errorlevel 1 pause & exit
-  sdcclib ../zifi.lib %%i.rel
+  sdar -rc ../zifi.lib %%i.rel
   if errorlevel 1 pause & exit
 )

@@ -38,6 +38,7 @@ unsigned dbg_extport;
 u8 dgb_extval; // extended memory port like 1FFD or DFFD
 
 unsigned ripper; // ripper mode (none/read/write)
+unsigned windowScale = 1;	 // window scale (1x/2x)
 
 dbgwnd activedbg = wndtrace;
 
@@ -76,8 +77,8 @@ void debugscr()
 void handle_mouse()
 {
 	auto& cpu = t_cpu_mgr::get_cpu();
-	const unsigned mx = ((mousepos & 0xFFFF) - temp.gx) / 8;
-	const unsigned my = (((mousepos >> 16) & 0x7FFF) - temp.gy) / 16;
+	const unsigned mx = ((mousepos & 0xFFFF) - temp.gx) / (8 * windowScale);
+	const unsigned my = (((mousepos >> 16) & 0x7FFF) - temp.gy) / (16 * windowScale);
 	if (my >= trace_y && my < trace_y + trace_size && mx >= trace_x && mx < trace_x + 32)
 	{
 		needclr++; activedbg = wndtrace;
@@ -375,7 +376,8 @@ static LRESULT APIENTRY DebugWndProc(HWND hwnd, UINT uMessage, WPARAM wparam, LP
 	{
 		const auto bptr = debug_gdibuf;
 		const auto hdc = BeginPaint(hwnd, &ps);
-		SetDIBitsToDevice(hdc, 0, 0, DEBUG_WND_WIDTH, DEBUG_WND_HEIGHT, 0, 0, 0, DEBUG_WND_HEIGHT, bptr, &debug_gdibmp.header, DIB_RGB_COLORS);
+		//SetDIBitsToDevice(hdc, 0, 0, DEBUG_WND_WIDTH, DEBUG_WND_HEIGHT, 0, 0, 0, DEBUG_WND_HEIGHT, bptr, &debug_gdibmp.header, DIB_RGB_COLORS);
+		StretchDIBits(hdc, 0, 0, DEBUG_WND_WIDTH*windowScale, DEBUG_WND_HEIGHT*windowScale, 0, 0, DEBUG_WND_WIDTH, DEBUG_WND_HEIGHT, bptr, &debug_gdibmp.header, DIB_RGB_COLORS, SRCCOPY);
 		EndPaint(hwnd, &ps);
 		return 0L;
 	}
@@ -398,6 +400,9 @@ static LRESULT APIENTRY DebugWndProc(HWND hwnd, UINT uMessage, WPARAM wparam, LP
 		case IDM_MON_FILLBLOCK: mon_fill(); break;
 
 		case IDM_MON_RIPPER: mon_tool(); break;
+
+		case IDM_MON_SCALE2X: mon_scale2x(); break;
+
 		default: ;
 		}
 		needclr = 1;
@@ -412,10 +417,16 @@ void set_debug_window_size() {
 
     cl_rect.left = 0;
     cl_rect.top = 0;
-    cl_rect.right = (conf.mem_model == MM_TSL ? DEBUG_WND_WIDTH : DEBUG_WND_WIDTH_NOTSCONF) - 1;
-    cl_rect.bottom = DEBUG_WND_HEIGHT - 1;
+    cl_rect.right = (conf.mem_model == MM_TSL ? DEBUG_WND_WIDTH : DEBUG_WND_WIDTH_NOTSCONF) * windowScale - 1;
+    cl_rect.bottom = DEBUG_WND_HEIGHT * windowScale - 1;
     AdjustWindowRect(&cl_rect, dw_style, GetMenu(debug_wnd) != nullptr);
     SetWindowPos(debug_wnd, nullptr, 0, 0, cl_rect.right - cl_rect.left + 1, cl_rect.bottom - cl_rect.top + 1, SWP_NOMOVE);
+}
+
+void mon_scale2x() {
+	windowScale = windowScale == 2 ? 1 : 2;
+	CheckMenuItem(debug_menu, IDM_MON_SCALE2X, windowScale == 2 ? MF_CHECKED : MF_UNCHECKED);
+	set_debug_window_size();
 }
 
 void init_debug()
