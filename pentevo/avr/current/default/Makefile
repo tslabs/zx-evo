@@ -2,6 +2,13 @@
 # Makefile for the project pentevo
 ###############################################################################
 
+ifneq ($(OS),Windows_NT) 
+	WSL = $(findstring microsoft,$(shell cat /proc/sys/kernel/osrelease))
+	ifeq ($(WSL), microsoft)
+		OS = Windows_NT
+	endif
+endif
+
 ## General Flags
 ifeq ($(OS),Windows_NT)
 EXE = ".exe"
@@ -37,6 +44,7 @@ CFLAGS += -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums -fdat
 CFLAGS += -fpermissive
 CFLAGS += -DF_CPU=11059200UL
 CFLAGS += -Wl,--gc-sections,--relax,-Map=$(PROJECT).map
+CFLAGS += -std=c++11
 
 ## Intel Hex file production flags
 HEX_FLASH_FLAGS = -R .eeprom
