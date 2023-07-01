@@ -315,7 +315,7 @@ module zports(
 		if( (loa==PORTFE) || (loa==PORTF6) ||
 		    (loa==PORTFD) || (loa==8'hFC)  ||
 
-`ifndef IDE_VIDEO
+`ifdef IDE_HDD
 		    `IS_PORT_NIDE(loa) ||
 `endif
 //		    (loa==NIDE10) || (loa==NIDE11) || (loa==NIDE30) || (loa==NIDE50) || (loa==NIDE70) ||
@@ -414,7 +414,7 @@ module zports(
 			dout = { 1'b1, tape_read, 1'b0, keys_in };
 
 
-`ifndef IDE_VIDEO
+`ifdef IDE_HDD
 		`NIDE_REGS:
 			dout = iderdeven;
 		NIDE11:
