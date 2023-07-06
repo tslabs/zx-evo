@@ -68,12 +68,18 @@ all:
 
 norm: clean quartus $(FPGACORE) compile core size
 	@$(MKFW) $(PROJECT).hex $(PROJECT).eep zxevo_fw.bin version.txt >$(DEVNULL)
+	@cp $(PROJECT).hex zxevo_fw.hex
+	@cp $(PROJECT).eep zxevo_fw.eep
 
 vdac: clean quartus_vdac $(FPGACORE) compile core size
 	@$(MKFW) $(PROJECT).hex $(PROJECT).eep zxevo_fw_vdac.bin version_vdac.txt >$(DEVNULL)
+	@cp $(PROJECT).hex zxevo_fw_vdac.hex
+	@cp $(PROJECT).eep zxevo_fw_vdac.eep
 
 vdac2: clean quartus_vdac2 $(FPGACORE) compile core size
 	@$(MKFW) $(PROJECT).hex $(PROJECT).eep zxevo_fw_vdac2.bin version_vdac2.txt >$(DEVNULL)
+	@cp $(PROJECT).hex zxevo_fw_vdac2.hex
+	@cp $(PROJECT).eep zxevo_fw_vdac2.eep
 
 ## Compile and link
 compile: $(SOURCES) $(HEADERS)
@@ -111,9 +117,17 @@ clean:
 	 @rm -rf $(FPGACORE) core.* tsconf.* baseconf.* egg.*
 
 ## program chip
-flash: $(PROJECT).hex
+flash_norm: $(PROJECT).hex
 	@$(AD) -B 0.5 \
-	-U flash:w:"$(PROJECT).hex":a
+	-U flash:w:"zxevo_fw.hex":a
+
+flash_vdac: $(PROJECT).hex
+	@$(AD) -B 0.5 \
+	-U flash:w:"zxevo_fw_vdac.hex":a
+
+flash_vdac2: $(PROJECT).hex
+	@$(AD) -B 0.5 \
+	-U flash:w:"zxevo_fw_vdac2.hex":a
 
 fuses:
 	@$(AD) -B 20 \
