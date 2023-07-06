@@ -463,7 +463,7 @@ module zports
   always @(posedge clk) if (opfetch)
     m1_lock128 <= !(din[7] ^ din[6]);
 
-  always @(posedge clk)
+  always @(posedge clk or posedge rst)
     if (rst)
     begin
       fmaddr[4] <= 1'b0;
@@ -482,13 +482,14 @@ module zports
       fdr_en <= 1'b0;
 `endif
     end
-
-    else if (p7ffd_wr)
+    else 
+    begin
+    
+    if (p7ffd_wr)
     begin
         memconf[0] <= din[4];
         rampage[3] <= {2'b0, lock128_3 ? {din[5], din[7:6]} : ({1'b0, lock128 ? 2'b0 : din[7:6]}), din[2:0]};
     end
-
     else
     if (portxt_wr)
     begin
@@ -524,13 +525,14 @@ module zports
       if (hoa == INTMASK)
         intmask <= din;
     end
+  end
 
   // 7FFD port
   reg lock48;
 
   assign p7ffd_wr = !a[15] && (loa==PORTFD) && iowr_s && !lock48;
 
-  always @(posedge clk)
+  always @(posedge clk or posedge rst)
     if (rst)
       lock48 <= 1'b0;
     else if (p7ffd_wr && !lock128_3)
@@ -572,7 +574,7 @@ module zports
   assign sddat_rd = (loa==SDDAT) && iord_s;
 
   // SDCFG write - sdcs_n control
-  always @(posedge clk)
+  always @(posedge clk or posedge rst)
     if (rst)
     begin
       spi_cs_n <= 3'b111;
@@ -596,7 +598,7 @@ module zports
 
   // EFF7 port
   reg [7:0] peff7;
-  always @(posedge clk)
+  always @(posedge clk  or posedge rst)
     if (rst)
       peff7 <= 8'h00;
     else if (!a[12] && portf7_wr && !dos)   // #EEF7 in dos is not accessible
