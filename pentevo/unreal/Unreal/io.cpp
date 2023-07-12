@@ -1145,7 +1145,7 @@ __inline u8 in1(unsigned port)
          {
             if ((port & 0xA044) == (0xDFBA & 0xA044)) return cmos_read(); // clock
             if ((port & 0xA044) == (0xFFBA & 0xA044)) return comp.nvram.out; // SMUC system port
-            if ((port & 0xA044) == (0x7FBA & 0xA044)) return comp.p7FBA | 0x3F;
+            if ((port & 0xA044) == (0x7FBA & 0xA044)) return comp.p7FBA | 0x37;
             if ((port & 0xA044) == (0x5FBA & 0xA044)) return 0x3F;
             if ((port & 0xA044) == (0x5FBE & 0xA044)) return 0x57;
             if ((port & 0xA044) == (0x7FBE & 0xA044)) return 0x57;
