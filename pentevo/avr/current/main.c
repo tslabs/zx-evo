@@ -301,7 +301,7 @@ start:
 
   kbmap_init();
   zx_init();
-  rtc_init(); 
+  rtc_init();   
   joystick_init();
 
 #ifdef LOGENABLE

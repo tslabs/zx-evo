@@ -94,6 +94,8 @@ void rtc_init(void)
       modes_register &= MODE_TS_FSWAP | MODE_TS_WTP_INT | MODE_TS_60HZ | MODE_TAPEOUT | MODE_VGA;  // disable Tape-In sound on Reset
     break;
   }
+
+  cb_zx_set_config();
 }
 
 void rtc_write(u8 addr, u8 data)

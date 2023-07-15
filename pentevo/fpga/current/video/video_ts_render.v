@@ -81,7 +81,7 @@ module video_ts_render
 
   assign mem_rdy = cyc[4];
 
-  always @(posedge clk)
+  always @(posedge clk or posedge reset)
     if (reset)
       cyc <= 5'b10000;
     else if (tsr_go)
@@ -98,7 +98,7 @@ module video_ts_render
   wire render_on = !pix_cnt[2];
   assign ts_we = render_on && |pix;   // write signal for TS-line
 
-  always @(posedge clk)
+  always @(posedge clk or posedge reset)
     if (reset)
       pix_cnt <= 3'b100;
     else if (dram_next)
@@ -108,7 +108,7 @@ module video_ts_render
 
   // renderer reload
   reg tsr_rld;
-  always @(posedge clk)
+  always @(posedge clk or posedge reset)
   if (reset)
     tsr_rld <= 1'b0;
     else if (tsr_go)

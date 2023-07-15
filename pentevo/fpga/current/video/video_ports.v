@@ -73,13 +73,12 @@ module video_ports
   wire [8:0] vint_beg_inc = vint_beg + vint_inc;
   wire [8:0] vint_beg_next = {(vint_beg_inc[8:6] == 3'b101) ? 3'b0 : vint_beg_inc[8:6], vint_beg_inc[5:0]};  // if over 319 lines, decrement 320
 
-  always @(posedge clk)
+  always @(posedge clk or posedge res)
     if (res)
     begin
       vint_beg <= 9'd0;
       vint_inc <= 4'b0;
     end
-
     else if (vint_begl_wr)
       vint_beg[7:0] <= d;
 
@@ -92,7 +91,7 @@ module video_ports
     else if (int_start)
       vint_beg <= vint_beg_next;
 
-  always @(posedge clk)
+  always @(posedge clk or posedge res)
     if (res)
     begin
       vpage_r     <= 8'h05;
@@ -134,7 +133,7 @@ module video_ports
     end
 
   // latching regs at line start, delaying hires for 1 line
-  always @(posedge clk)
+  always @(posedge clk or posedge res)
   if (res)
   begin
     vpage       <= 8'h05;
