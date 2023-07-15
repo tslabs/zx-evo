@@ -300,10 +300,8 @@ start:
   EIMSK |= (1<<INT4)|(1<<INT5)|(1<<INT6)|(1<<INT7); // enable
 
   kbmap_init();
-
-  rtc_init(); 
   zx_init();
-  
+  rtc_init();   
   joystick_init();
 
 #ifdef LOGENABLE
