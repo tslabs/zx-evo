@@ -19,7 +19,6 @@ FAT engine errors:
 255 - unknown error
 
 
-
 cat structure in RAM:
 INDEX(4):____________________________________________________________________
  +0(1)|page           |logical page number 0-8
@@ -35,3 +34,103 @@ DATA:_____________________________________________________________________
 +14(x)|name (1-255)   |"file.bin"/"megadir"
 +xx(1)|end token      |#00
 __________________________________________________________________________
+
+
+RAM PAGES USE:
+#00(0)  - MAIN TXT Page (MTXPG)
+#01(1)  - FONT (main txt page) + unpackers hrust'n'megalz (from #FE00)
+#02(2)  - MAIN CODE (#8000-#AFFF)
+#03(3)  - no use
+#04(4)  - no use
+#05(5)  - FAT Engine (#4000) + STACK (#5BFF) + MAIN CODE (#6000-#7FFF)
+#06(6)  - no use
+#07(7)  - no use
+#08(8)  - SECOND TXT Page / BUFFER Page (BUFPG) 16Kb
+#09(9)  - FONT (second txt page)
+#0A(10) - (?)
+#0B(11) - CAT of LEFT panel (CTZPG) 9 pages (CATMX)
+#0C(12) -        /
+#0D(13) -       /
+#0E(14) -      /
+#0F(15) -     /
+#10(16) -    /
+#11(17) -   /
+#12(18) -  /
+#13(19) - /
+#14(20) - CAT of RIGHT panel (CTZPG+CATMX) 9 pages (CATMX)
+#15(21) -        /
+#16(22) -       /
+#17(23) -      /
+#18(24) -     /
+#19(25) -    /
+#1A(26) -   /
+#1B(27) -  /
+#1C(28) - /
+#1D(29) - WOW save buffer (RESB) 16Kb
+#1E(30) - CAT positions in LEFT panel (CPPG1)
+#1F(31) - CAT positions in RIGHT panel (CPPG2)
+#20(32) - MEGABUFFER (1MB) 64 Pages
+ . . .     /
+#5F(95) - /
+#60(96) - PLUGIN HEADERS (PLHPG)
+#61(97) - PLUGINS (PLGPG) (1MB) 64 Pages
+ . . .     /
+#A0(160)- / (PLEPG)
+
+#A1(161)- free
+#A2(162)- free
+#A3(163)- free
+#A4(164)- free
+#A5(165)- free
+#A6(166)- free
+#A7(167)- free
+#A8(168)- free
+#A9(169)- free
+#AA(170)- free
+#AB(171)- free
+#AC(172)- free
+#AD(173)- free
+#AE(174)- free
+#AF(175)- free
+#B0(176)- free
+#B1(177)- free
+#B2(178)- free
+#B3(179)- free
+#B4(180)- free
+#B5(181)- free
+#B6(182)- free
+#B7(183)- free
+#B8(184)- free
+#B9(185)- free
+#BA(186)- free
+#BB(187)- free
+#BC(188)- free
+#BD(189)- free
+#BE(190)- free
+#BF(191)- free
+
+#C0(192)- vDOS RAM DISK (#28(40) pages)
+ . . .     /
+#E7(231)- /
+
+#E8(232)- free
+#E9(233)- free
+#EA(234)- free
+#EB(235)- free
+#EC(236)- free
+#ED(237)- free
+#EE(238)- free
+#EF(239)- free
+
+#F0(240)- LEFT Panel stream
+#F1(241)- RIGHT Panel stream
+#F2(242)- Stream #00 (Plugin system) / INI File load stream (INIPG)
+#F3(243)- Stream #01 (Plugin system)
+#F4(244)- (DBPG) SPG v1.0 loader buffer page
+#F5(245)- (D5PG) SPG loader uses for load page 5
+#F6(246)- (D2PG) SPG loader uses for load page 2
+#F7(247)- (RPPG) paths of LEFT (offset #1000) and RIGHT (offset #2000) panels + active panel flag (offset #2000-4)
+
+#F8(248)- system pages: see memory.txt in Docs section
+ . . .     /
+#FF(255)- /

@@ -23,4 +23,4 @@ FONT32L .CDB - font
 GIG_PAL .CDB - palette for gigascreen
 KOI_WIN .CDB - ALT->KOI, ALT->WIN tables
 
-see also topic: http://tslabs.info/forum/viewtopic.php?f=9&t=143
+see also topic: http://forum.tslabs.info/viewtopic.php?f=9&t=143

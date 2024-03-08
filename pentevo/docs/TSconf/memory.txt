@@ -4,3 +4,5 @@
 #F8-#FB - virtual ROM
     #F7 - ts-bios FAT engine
 #F0-#F6 - buffer
+
+#C0-#E7 - vDOS RAM Disk
