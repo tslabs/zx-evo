@@ -31,7 +31,7 @@ DATA:_____________________________________________________________________
  +8(4)|file size      |
 +12(2)|date           |from FAT entry
 +14(2)|time           |from FAT entry
-+16(1)|flag           |#10 - file/#00 - disr (inverted for sorting)
++16(1)|flag           |#10 - file/#00 - dirs (inverted for sorting)
 +17(x)|name (1-255)   |"file.bin"/"megadir"
 +xx(1)|end token      |#00
 __________________________________________________________________________
