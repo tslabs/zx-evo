@@ -19,7 +19,7 @@ FAT engine errors:
 255 - unknown error
 
 
-cat structure in RAM:
+cat structure in RAM (maximum 4095 entries):
 INDEX(4):____________________________________________________________________
  +0(1)|page           |logical page number 0-8
  +1(2)|address in page|#c000-#fdff
