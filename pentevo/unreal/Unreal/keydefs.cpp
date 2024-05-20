@@ -132,6 +132,7 @@ action ac_main_xt[] =
    { "mon.help", mon_help },                            \
    { "mon.scrshot", mon_scrshot },                      \
    { "mon.scrshot_alt", mon_switchscr },                \
+   { "mon.maxspeed", main_maxspeed },					\
    { "mon.setwatch", mon_setwatch },                    \
    { "mon.switchay", mon_switchay },                    \
    { "mon.memsearch", main_cheat },                     \
