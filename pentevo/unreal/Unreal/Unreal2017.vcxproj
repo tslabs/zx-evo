@@ -180,6 +180,8 @@
     <ClCompile Include="z80asm.cpp" />
     <ClCompile Include="zc.cpp" />
     <ClCompile Include="zf232.cpp" />
+    <ClCompile Include="zifi32\esp32_emul.cpp" />
+    <ClCompile Include="zifi32\zifi32.cpp" />
     <ClCompile Include="zxevo.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -279,6 +281,8 @@
     <ClInclude Include="z80_main.h" />
     <ClInclude Include="zc.h" />
     <ClInclude Include="zf232.h" />
+    <ClInclude Include="zifi32\esp32_emul.h" />
+    <ClInclude Include="zifi32\zifi32.h" />
     <ClInclude Include="zxevo.h" />
   </ItemGroup>
   <ItemGroup>
@@ -303,27 +307,27 @@
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v141_xp</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v141_xp</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v141_xp</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v141_xp</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -397,6 +401,7 @@
 md "$(TargetDir)rom"
 copy /y "$(ProjectDir)lib\*.dll" "$(TargetDir)"
 copy /y "$(ProjectDir)cfg\*.*" "$(TargetDir)"
+del "$(TargetDir)\bt8xxemu_x64.dll"
 copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)rom"
 "$(ProjectDir)..\..\tools\robimg\robimg.exe" -p=$(TargetDir)wc.img -s=102400 -C="$(ProjectDir)..\..\soft\wc\exe",""
 </Command>
@@ -436,6 +441,8 @@ copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)rom"
 md "$(TargetDir)rom"
 copy /y "$(ProjectDir)lib64\*.dll" "$(TargetDir)"
 copy /y "$(ProjectDir)cfg\*.*" "$(TargetDir)"
+del "$(TargetDir)\bt8xxemu.dll"
+ren "$(TargetDir)\bt8xxemu_x64.dll" bt8xxemu.dll
 copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)rom"
 "$(ProjectDir)..\..\tools\robimg\robimg.exe" -p=$(TargetDir)wc.img -s=102400 -C="$(ProjectDir)..\..\soft\wc\exe",""
 </Command>
@@ -486,6 +493,7 @@ md "$(TargetDir)rom"
 md "$(TargetDir)doc"
 copy /y "$(ProjectDir)lib\*.dll" "$(TargetDir)"
 copy /y "$(ProjectDir)cfg\*.*" "$(TargetDir)"
+del "$(TargetDir)\bt8xxemu_x64.dll"
 copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)rom"
 copy /y "$(ProjectDir)doc\*.*" "$(TargetDir)doc"
 if exist "$(TargetDir)..\unreal.7z" del /q "$(TargetDir)..\unreal.7z"
@@ -540,6 +548,8 @@ md "$(TargetDir)rom"
 md "$(TargetDir)doc"
 copy /y "$(ProjectDir)lib64\*.dll" "$(TargetDir)"
 copy /y "$(ProjectDir)cfg\*.*" "$(TargetDir)"
+del "$(TargetDir)\bt8xxemu.dll"
+ren "$(TargetDir)\bt8xxemu_x64.dll" bt8xxemu.dll
 copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)rom"
 copy /y "$(ProjectDir)doc\*.*" "$(TargetDir)doc"
 if exist "$(TargetDir)..\unreal.7z" del /q "$(TargetDir)..\unreal.7z"

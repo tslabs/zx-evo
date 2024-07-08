@@ -132,7 +132,7 @@ void init_all(int argc, char **argv)
      {
        color(CONSCLR_WARNING);
        printf("Warning: FT8xx emulator failed! (error: %d, %lX)\n", rc, GetLastError());
-       comp.ts.vdac2 = false;
+       comp.ts.vdac2 = 0;
      }
    }
    

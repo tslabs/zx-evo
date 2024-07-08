@@ -293,7 +293,7 @@ typedef struct
   u8 vdos_m1;
   u8 pwr_up;
   u8 vdac;
-  bool vdac2;
+  u8 vdac2;
 
 // -- video --
   u8 vpage;

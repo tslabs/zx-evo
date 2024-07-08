@@ -22,6 +22,9 @@
     <Filter Include="debugger">
       <UniqueIdentifier>{6f7218a8-88df-4f06-8d60-2f543989efb0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Sources\zifi32">
+      <UniqueIdentifier>{c2906170-a480-4021-a8b1-d29a9a69e927}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\main.ico">
@@ -322,9 +325,6 @@
     <ClCompile Include="zf232.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="ft812.cpp">
-      <Filter>Sources</Filter>
-    </ClCompile>
     <ClCompile Include="sound\ayx32.cpp">
       <Filter>Sources\sound</Filter>
     </ClCompile>
@@ -366,6 +366,15 @@
     </ClCompile>
     <ClCompile Include="visuals.cpp">
       <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="zifi32\esp32_emul.cpp">
+      <Filter>Sources\zifi32</Filter>
+    </ClCompile>
+    <ClCompile Include="zifi32\zifi32.cpp">
+      <Filter>Sources\zifi32</Filter>
+    </ClCompile>
+    <ClCompile Include="ft812.cpp">
+      <Filter>Sources\ft8xx</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -659,6 +668,12 @@
     </ClInclude>
     <ClInclude Include="visuals.h">
       <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="zifi32\esp32_emul.h">
+      <Filter>Sources\zifi32</Filter>
+    </ClInclude>
+    <ClInclude Include="zifi32\zifi32.h">
+      <Filter>Sources\zifi32</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

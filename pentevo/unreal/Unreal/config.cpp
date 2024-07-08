@@ -353,7 +353,7 @@ void load_config(const char *fname)
      }
 
    // TS VDAC2 (FT812)
-   comp.ts.vdac2 = (GetPrivateProfileInt(misc, "TS_VDAC2", 0, ininame) != 0);
+   comp.ts.vdac2 = GetPrivateProfileInt(misc, "TS_VDAC2", 0, ininame);
 
    // Cache
    conf.cache = GetPrivateProfileInt(misc, "Cache", 0, ininame);

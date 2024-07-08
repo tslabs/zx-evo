@@ -258,6 +258,7 @@ namespace vdac2
     emulatorParams.Flags = BT8XXEMU_EmulatorEnableAudio
                          | BT8XXEMU_EmulatorEnableCoprocessor
                          | BT8XXEMU_EmulatorEnableGraphicsMultithread;
+    emulatorParams.Flags &= (~BT8XXEMU_EmulatorEnableDynamicDegrade & ~BT8XXEMU_EmulatorEnableRegPwmDutyEmulation);
 
     BT8XXEMU_run(BT8XXEMU_VERSION_API, &pEmulator, &emulatorParams);
 
