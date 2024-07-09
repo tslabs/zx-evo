@@ -129,6 +129,9 @@ module zports
   output wire        sd2cs_n,
 `ifdef IDE_VDAC2
   output wire        ftcs_n,
+`ifdef ESP32_SPI
+  output wire        espcs_n,
+`endif
 `endif
   output reg         spi_mode,
   output wire        sd_start,
@@ -255,7 +258,7 @@ module zports
 
   localparam COMPORT = 8'hEF;     // F8EF..FFEF - rs232 ports
 
-  reg [2:0] spi_cs_n;
+  reg [3:0] spi_cs_n;
   reg pwr_up_reg;
   reg [7:0] rampage[0:3];
   wire gluclock_on;
@@ -264,6 +267,9 @@ module zports
   assign sdcs_n = spi_cs_n[0];
   assign ftcs_n = spi_cs_n[1];
   assign sd2cs_n = spi_cs_n[2];
+`ifdef ESP32_SPI
+  assign espcs_n = spi_cs_n[3];
+`endif
 
   wire open_vg;
   wire [7:0] loa = a[7:0];
@@ -482,50 +488,49 @@ module zports
       fdr_en <= 1'b0;
 `endif
     end
-    else 
+    else  // if (rst)
     begin
-    
-    if (p7ffd_wr)
-    begin
-        memconf[0] <= din[4];
-        rampage[3] <= {2'b0, lock128_3 ? {din[5], din[7:6]} : ({1'b0, lock128 ? 2'b0 : din[7:6]}), din[2:0]};
-    end
-    else
-    if (portxt_wr)
-    begin
-      if (hoa[7:2] == RAMPAGE[7:2])
-        rampage[hoa[1:0]] <= din;
-
-      if (hoa == FMADDR)
-        fmaddr <= din[4:0];
-
-      if (hoa == SYSCONF)
+      if (p7ffd_wr)
       begin
-        sysconf <= din;
-          cacheconf <= {4{din[2]}};
+          memconf[0] <= din[4];
+          rampage[3] <= {2'b0, lock128_3 ? {din[5], din[7:6]} : ({1'b0, lock128 ? 2'b0 : din[7:6]}), din[2:0]};
       end
-
-      if (hoa == DMAWPD)
-        dmawpdev <= din[1:0];
-
-      if (hoa == CACHECONF)
-        cacheconf <= din[3:0];
-
-      if (hoa == MEMCONF)
-        memconf <= din;
-
-      if (hoa == FDDVIRT)
-        fddvirt <= din;
-
+      
+      else if (portxt_wr)
+      begin
+        if (hoa[7:2] == RAMPAGE[7:2])
+          rampage[hoa[1:0]] <= din;
+      
+        if (hoa == FMADDR)
+          fmaddr <= din[4:0];
+      
+        if (hoa == SYSCONF)
+        begin
+          sysconf <= din;
+            cacheconf <= {4{din[2]}};
+        end
+      
+        if (hoa == DMAWPD)
+          dmawpdev <= din[1:0];
+      
+        if (hoa == CACHECONF)
+          cacheconf <= din[3:0];
+      
+        if (hoa == MEMCONF)
+          memconf <= din;
+      
+        if (hoa == FDDVIRT)
+          fddvirt <= din;
+      
 `ifdef FDR
-      if (hoa == FRCTRL)
-        fdr_en <= din[0];
+        if (hoa == FRCTRL)
+          fdr_en <= din[0];
 `endif
-
-      if (hoa == INTMASK)
-        intmask <= din;
+      
+        if (hoa == INTMASK)
+          intmask <= din;
+      end
     end
-  end
 
   // 7FFD port
   reg lock48;
@@ -577,12 +582,12 @@ module zports
   always @(posedge clk or posedge rst)
     if (rst)
     begin
-      spi_cs_n <= 3'b111;
+      spi_cs_n <= 4'b1111;
       spi_mode <= 1'b0;
     end
     else if (sdcfg_wr)
     begin
-      spi_cs_n <= {~din[3:2], din[1]};
+      spi_cs_n <= {~din[4:2], din[1]};
       // spi_mode <= din[7];
     end
 

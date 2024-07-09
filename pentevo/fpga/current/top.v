@@ -408,6 +408,7 @@ module top
 
 `ifdef IDE_HDD
   assign ide_d = ide_dir ? 16'hZZZZ : ide_out;
+  
 `elsif IDE_VDAC
   assign ide_d[ 4: 0] = vred_raw;
   assign ide_d[ 9: 5] = vgrn_raw;
@@ -426,6 +427,9 @@ module top
   reg [1:0] ftint_r;
 
   wire ftcs_n;
+`ifdef ESP32_SPI
+  wire espcs_n;
+`endif
   wire ft_int = ide_d[1];
   wire vdac2_msel;
   wire ftdi = ide_rdy;      // FT812 MISO
@@ -447,12 +451,16 @@ module top
   assign ide_d[13] = vdac2_msel ? 1'bZ : vblu_raw[3];
   assign ide_d[14] = vdac2_msel ? 1'bZ : vblu_raw[4];
   assign ide_d[15] = vdac2_msel ? 1'bZ : vdac_mode;  // PAL_SEL
+`ifdef ESP32_SPI
+  assign ide_rs_n = espcs_n;    // ESP32-S3 CS_n
+`else
   assign ide_rs_n = vgrn_raw[2]; // for lame RevA
-  assign ide_dir = vdac2_msel;   // 0 - output, 1 - input
-  assign ide_a[0] = sdclk;  // FT812 SCK
-  assign ide_a[1] = sddo;   // FT812 MOSI
+`endif
+  assign ide_dir = vdac2_msel;  // 0 - output, 1 - input
+  assign ide_a[0] = sdclk;      // FT812 SCK
+  assign ide_a[1] = sddo;       // FT812 MOSI
   assign ide_a[2] = !fclk;
-  assign ide_rd_n = ftcs_n; // FT812 CS_n
+  assign ide_rd_n = ftcs_n;     // FT812 CS_n
   assign ide_wr_n = vdac2_msel;
   assign ide_cs0_n = vhsync;
   assign ide_cs1_n = vvsync;
@@ -843,6 +851,9 @@ module top
     .spi_mode(spi_mode),
 `ifdef IDE_VDAC2
     .ftcs_n(ftcs_n),
+`ifdef ESP32_SPI
+    .espcs_n(espcs_n),
+`endif
 `endif
 `ifdef IDE_HDD
     .ide_in(ide_d),
@@ -1068,7 +1079,11 @@ module top
     .sck(sdclk),
     .sdo(sddo),
 `ifdef IDE_VDAC2
+`ifdef ESP32_SPI
+    .sdi((!ftcs_n || !espcs_n) ? ftdi : sddi),
+`else
     .sdi(!ftcs_n ? ftdi : sddi),
+`endif
 `else
     .sdi(sddi),
 `endif

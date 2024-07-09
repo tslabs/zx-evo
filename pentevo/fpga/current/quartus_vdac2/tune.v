@@ -12,6 +12,7 @@
 // `define IDE_HDD         // for IDE HDD
 // `define IDE_VDAC        // for VideoDAC instead of IDE
 `define IDE_VDAC2       // for VideoDAC2 instead of IDE
+// `define ESP32_SPI       // ESP32-S3 SPI (VDAC3), requires IDE_VDAC2
 
 `define XTR_FEAT        // extra features, in only IDEless version
 
