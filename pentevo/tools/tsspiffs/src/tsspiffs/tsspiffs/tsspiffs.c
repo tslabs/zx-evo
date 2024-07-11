@@ -113,7 +113,7 @@ TSF_RESULT tsf_vol_stat(TSF_VOLUME *vol)
       if (chunk.type == TSF_CHUNK_FREE)
         vol->free += cfg->block_size - sizeof(TSF_CHUNK);
 
-      else if (chunk.type & TSF_CHUNK_HEAD)
+      else if (chunk.type == (u8)TSF_CHUNK_HEAD)
         vol->files_number++;
     }
   }
@@ -132,7 +132,7 @@ TSF_RESULT tsf_search(TSF_VOLUME *vol, u32 *chunk_addr, const char *name)
     TSF_CHUNK chunk;
     cfg->hal_read_func(addr, &chunk, sizeof(TSF_CHUNK));
 
-    if ((chunk.magic != TSF_MAGIC) || (chunk.type != TSF_CHUNK_HEAD))
+    if ((chunk.magic != TSF_MAGIC) || (chunk.type != (u8)TSF_CHUNK_HEAD))
       continue;
 
     cfg->hal_read_func(addr + sizeof(TSF_CHUNK) + offsetof(TSF_HDR, fnlen), cfg->buf, fnlen + 1);
@@ -361,7 +361,7 @@ TSF_RESULT tsf_list(TSF_VOLUME *vol, u8 flag)
     TSF_CHUNK chunk;
     cfg->hal_read_func(addr, &chunk, sizeof(TSF_CHUNK));
 
-    if ((chunk.magic != TSF_MAGIC) || (chunk.type != TSF_CHUNK_HEAD))
+    if ((chunk.magic != TSF_MAGIC) || (chunk.type != (u8)TSF_CHUNK_HEAD))
       continue;
 
     u8 fnlen;
