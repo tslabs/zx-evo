@@ -12,6 +12,7 @@ mhmt.exe -hst sysvars.bin "obj\sysvars.bin.hst" >nul
 
 sjasmplus.exe --inc=obj --lst=obj\%PRJ%.lst %PRJ%.asm
 
+..\..\tools\fsplit\fsplit.exe rom\zxevo.rom 65536
 copy /b "obj\ts-bios.bin" + "rom\trdos504T.rom" + "rom\128.rom" "..\bin\ts-bios.rom" >nul
 copy /b "obj\ts-bios.bin" + "rom\trdos504T.rom" + "rom\128.rom" + "rom\zxevo.rom.1" "..\bin\zxevo.rom" >nul
 copy /b "obj\ts-bios.bin" + "rom\trdos504T.rom" + "rom\glukpen.rom" + "rom\48.rom" "..\bin\ts-bios-gluk.rom" >nul
