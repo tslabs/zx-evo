@@ -48,7 +48,7 @@ start   push bc
         ld de, (lobu + 9)
 
 ;ld a, d
-;cp h'60
+;cp 0x60
 ;jr c, fail
 
         push de
@@ -58,10 +58,10 @@ start   push bc
 thg     ld b, 1
         call load512
         ld a,h
-        cp h'40
+        cp 0x40
         jr c,thg_end
         ld a, (eoc)
-        cp h'0f
+        cp 0x0f
         jr nz, thg
 
 thg_end ld ix, sysvars
@@ -202,7 +202,7 @@ gipag   ;i:        hl(4) - cluster number
         jr z, rdir
         
         ld a, h
-        cp h'0f
+        cp 0x0f
         jr z, mdc
         ex de, hl
 pom     ld (cuhl), hl
@@ -252,7 +252,7 @@ srhdrn  ;i:        lstcat(4) - active dir
         ldir
         call tos
 hdr     ld a, (eoc)
-        cp h'0f
+        cp 0x0f
         ret z
         ld hl, lobu
         ld b, 1
@@ -262,7 +262,7 @@ hdr     ld a, (eoc)
         call vega
         ret nz
         ld a, h
-        cp high(lobu) + 2
+        cp (high lobu) + 2
         jr hdr
 
 ;-------
@@ -326,13 +326,13 @@ hdd     ;i:        none
         ld de, 16
         ld b, 4
 kko     ld a, (hl)
-        cp h'05
+        cp 0x05
         jr z, okk
-        cp h'0b
+        cp 0x0b
         jr z, okk
-        cp h'0c
+        cp 0x0c
         jr z, okk
-        cp h'0f
+        cp 0x0f
         jr z, okk
         add hl, de
         djnz kko
@@ -395,7 +395,7 @@ ldbpb   ld (addtop), hl
 
     ;ld hl, lobu + 3
     ;ld b, 6
-    ;ld a, h'1d
+    ;ld a, 0x1d
     ;five    cp (hl)
     ;inc hl
     ;jp nc, fhdd
@@ -610,8 +610,8 @@ tos     xor a
 ;   SD DRIVER
 ;---------------------------------------
 
-sdcnf   equ h'77; ZC spi configuration port
-data    equ h'57; ZC spi data port
+sdcnf   equ 0x77; ZC spi configuration port
+data    equ 0x57; ZC spi data port
 
 cmd_1   equ %01000000+1; init
 cmd_12  equ %01000000+12;stop transmission
@@ -647,7 +647,7 @@ rddse_sd
         ex af, af'
 rd1     ex af, af'
         call wtdo
-        cp h'FE
+        cp 0xFE
         jr nz,$-5
         call reads
         ex af, af'
@@ -703,7 +703,7 @@ sd_reset_init
         ld a, %00001001; both CSs HI
         out (c), a
         ld bc, data
-        ld a, h'FF
+        ld a, 0xFF
         out (c), a
 
 
@@ -777,7 +777,7 @@ oo      dec de
 ;mmc ver.3 detected
         jr fbs
 ;-------
-sdnew   ld de, h'01AA
+sdnew   ld de, 0x01AA
         or a
         sbc hl, de
         jr nz, nosd
@@ -787,7 +787,7 @@ yy      dec de
         ld a, d
         or e
         jr z, nosd
-        ld h, h'40
+        ld h, 0x40
         call acmd41
         jr nz, yy
         cp 1
@@ -827,7 +827,7 @@ csh     push bc
         ld a, %00000011
         out (c), a
         ld bc, data
-        ld a, h'FF
+        ld a, 0xFF
         out (c), a
         pop af
         pop bc
@@ -844,7 +844,7 @@ csl     push bc
 sd1_act ld a, %00000001
 sd2_act out (c), a
         ld bc, data
-        ld a, h'FF
+        ld a, 0xFF
         out (c), a
         pop af
         pop bc
@@ -861,7 +861,7 @@ snbb    xor a
         ret
 
 cycl    ld bc, data
-cy      ld a, h'FF
+cy      ld a, 0xFF
         out (c), a
         dec de
         ld a, d
@@ -942,7 +942,7 @@ cmzz    ld a, cmd_18
         out (c), l
         out (c), d
         out (c), e
-        ld a, h'FF
+        ld a, 0xFF
         out (c), a
 
         pop de
@@ -982,7 +982,7 @@ rez     pop bc
 wtdo    push bc
         ld bc, data
         in a, (c)
-        cp h'FF
+        cp 0xFF
         jr z, $-4
         pop bc
         ret
@@ -1006,15 +1006,15 @@ sdoff   xor a
 ;---------------------------------------
 ;   IDE NEMO DRIVER
 ;---------------------------------------
-cmd_nemo  equ h'f0  ;command/state
-drv_nemo  equ h'ffd0;drive/head
-cylh_nemo equ h'b0  ;cyl high
-cyll_nemo equ h'90  ;cyl low
-secr_nemo equ h'70  ;sec
-blks_nemo equ h'50  ;counter
-erro_nemo equ h'30  ;error/ext
-dath_nemo equ h'11  ;data high
-datl_nemo equ h'10  ;data low
+cmd_nemo  equ 0xf0  ;command/state
+drv_nemo  equ 0xffd0;drive/head
+cylh_nemo equ 0xb0  ;cyl high
+cyll_nemo equ 0x90  ;cyl low
+secr_nemo equ 0x70  ;sec
+blks_nemo equ 0x50  ;counter
+erro_nemo equ 0x30  ;error/ext
+dath_nemo equ 0x11  ;data high
+datl_nemo equ 0x10  ;data low
 ;---------------------------------------
 
 xpozi_nemo
@@ -1057,7 +1057,7 @@ rereg   push hl
 ;---------------------------------------
 rpoz    ld bc, drv_nemo
         in a, (c)
-        and h'0f
+        and 0x0f
         ld h,a
         ld bc, secr_nemo
         in l, (c)
@@ -1079,7 +1079,7 @@ rddse_nemo
         ex af, af'
         out (c), a
         call rereg
-        ld a, h'20
+        ld a, 0x20
         call comah
         pop bc
 rdh1    push bc
@@ -1092,9 +1092,9 @@ rdh1    push bc
 
 ;---------------------------------------
 reads_nemo
-        ld e, low(datl_nemo)
-        ld d, low(dath_nemo)
-        ld a, h'20
+        ld e, (low datl_nemo)
+        ld d, (low dath_nemo)
+        ld a, 0x20
 re1_nemo
         ld c, e
         ini
@@ -1136,9 +1136,9 @@ re1_nemo
 
 sel_mas_sla_nemo
         jr z, sel_sla
-sel_mas ld a, h'E0 ; %11100000 = 1 + lba + 1 + dev + %0000
+sel_mas ld a, 0xE0 ; %11100000 = 1 + lba + 1 + dev + %0000
         jr sel_ide
-sel_sla ld a, h'F0 ; %11110000 = 1 + lba + 1 + dev + %0000
+sel_sla ld a, 0xF0 ; %11110000 = 1 + lba + 1 + dev + %0000
 sel_ide ld (drvre), a
 
         ld bc, drv_nemo
@@ -1158,7 +1158,7 @@ sel_dev_nemo
         cp 2 ;        2 - IDE Nemo Slave
         call sel_mas_sla_nemo
 
-        ld a, h'08
+        ld a, 0x08
         call comm
 
         ld hl, 49*4
@@ -1170,7 +1170,7 @@ sel_dev_nemo
         call xpozi_nemo
         call rereg
 ;-------
-        ld a, h'ec
+        ld a, 0xec
         call comm
 
         ld hl, 49*4
@@ -1270,17 +1270,17 @@ drqwt   call loll
 ;---------------------------------------
 ;   IDE SMUC DRIVER
 ;---------------------------------------
-cmd_smuc  equ h'ffbe  ;command/state
-drv_smuc  equ h'febe  ;drive/head
-cylh_smuc equ h'fdbe  ;cyl high
-cyll_smuc equ h'fcbe  ;cyl low
-secr_smuc equ h'fbbe  ;sec
-blks_smuc equ h'fabe  ;counter
-erro_smuc equ h'f9be  ;error/ext
-dath_smuc equ h'd8be  ;data high
-datl_smuc equ h'f8be  ;data low
+cmd_smuc  equ 0xffbe  ;command/state
+drv_smuc  equ 0xfebe  ;drive/head
+cylh_smuc equ 0xfdbe  ;cyl high
+cyll_smuc equ 0xfcbe  ;cyl low
+secr_smuc equ 0xfbbe  ;sec
+blks_smuc equ 0xfabe  ;counter
+erro_smuc equ 0xf9be  ;error/ext
+dath_smuc equ 0xd8be  ;data high
+datl_smuc equ 0xf8be  ;data low
 
-conf_smuc equ h'ffba
+conf_smuc equ 0xffba
 ;---------------------------------------
 
 ini_smuc
@@ -1334,7 +1334,7 @@ rereg_smuc
 rpoz_smuc
         ld bc, drv_smuc
         in a, (c)
-        and h'0f
+        and 0x0f
         ld h,a
         ld bc, secr_smuc
         in l, (c)
@@ -1356,7 +1356,7 @@ rddse_smuc
         ex af, af'
         out (c), a
         call rereg_smuc
-        ld a, h'20
+        ld a, 0x20
         call comah_smuc
         pop bc
 rdh1_smuc
@@ -1370,10 +1370,10 @@ rdh1_smuc
 
 ;---------------------------------------
 reads_smuc
-        ld e, high(datl_smuc)
-        ld d, high(dath_smuc)
-        ld c, low(datl_smuc)
-        ld a, h'40
+        ld e, (high datl_smuc)
+        ld d, (high dath_smuc)
+        ld c, (low datl_smuc)
+        ld a, 0x40
 re1_smuc
         ld b, e
         ini
@@ -1399,10 +1399,10 @@ re1_smuc
 sel_mas_sla_smuc
         jr z, sel_sla_smuc
 sel_mas_smuc
-        ld a, h'E0 ; %11100000 = 1 + lba + 1 + dev + %0000
+        ld a, 0xE0 ; %11100000 = 1 + lba + 1 + dev + %0000
         jr sel_ide_smuc
 sel_sla_smuc
-        ld a, h'F0 ; %11110000 = 1 + lba + 1 + dev + %0000
+        ld a, 0xF0 ; %11110000 = 1 + lba + 1 + dev + %0000
 sel_ide_smuc
         ld (drvre), a
 
@@ -1423,7 +1423,7 @@ sel_dev_smuc
         cp 4 ;        4 - IDE Smuc Slave
         call sel_mas_sla_smuc
 
-        ld a, h'08
+        ld a, 0x08
         call comm_smuc
 
         ld hl, 49*4
@@ -1435,7 +1435,7 @@ sel_dev_smuc
         call xpozi_smuc
         call rereg_smuc
 ;-------
-        ld a, h'ec
+        ld a, 0xec
         call comm_smuc
 
         ld hl, 49*4

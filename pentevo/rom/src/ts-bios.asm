@@ -1,34 +1,46 @@
 
-    PUBLIC tsbios
-    PUBLIC tsfat
-    PUBLIC IM1_ISR
+  device ZXSPECTRUM48
 
-    EXTERN DWT
+  include "tsconfig.asm"
+  include "macro.asm"
 
-; -----------------------------------
-; -- external headers
+; ----- 3 entry
 
-#include "conf.asm"
-#include "macro.asm"
+    di
+    ld sp, stackp
+    jp START
 
-; -----------------------------------
-; -- external sources
+; ----- Restarts
 
-    RSEG TSFAT
-tsfat:
-#include "tsfat.inc"
+; RST 8: wait for DMA end
+    orgp 0x0008
 
-    RSEG CODE
+DWT:
+    ld bc, DSTATUS
+DWT1:
+    inf
+    ret p
+    jr DWT1
 
-#include "booter.asm"
-#include "dehst.asm"
-#include "arrays.asm"
+; RST 10: TS-FAT driver entry
+    orgp 0x0010
+    jp tsfat
 
-rslsys:
-#include "rslsys.inc"
+; RST 18: TS-BIOS API entry
+    orgp 0x0018
+    jp biosapi
 
-; -----------------------------------
-; -- INT IM1 Handler
+    orgp 0x0020
+    ret
+
+    orgp 0x0028
+    ret
+
+    orgp 0x0030
+    ret
+
+; RST 38: INT IM1 Handler
+    orgp 0x0038
 
 IM1_ISR:
     push bc
@@ -50,13 +62,15 @@ IM11:
     ei
     ret
 
-; -----------------------------------
-; -- reset procedures
+; NMI Handler
+    orgp 0x0066
+    retn
 
-tsbios:
+; ----- Reset procedures
+
+START:
     di
-    xtr
-    xt page1, 5
+    wrxt PAGE1, 5
 
     im 1
     ld a, 63
@@ -67,44 +81,42 @@ tsbios:
     call READ_NVRAM
     call CALC_CRC
     jr z, MN2
-    call LOAD_DEFAULTS    ; if NVRAM CRC16 error - load defaults and run SETUP
+
+    call LOAD_DEFAULTS  ; If NVRAM CRC16 error - load defaults and run SETUP
     jp SETUP
+
 MN2:
-    inxt xstatus
+    rdxt STATUS
     bit 6, a
-    jr z, MN1     ; check if first boot after conf loading
+    push af
+    call nz, FDV_RES        ; clear virtual FDDs at cold restart
+    pop af
+    call nz, sd_reset_init  ; dual SD spi init (only cmd0)
 
-    xor a     ; nulling vdos mountings
-    ld (fddv), a
-    call WRITE_NVRAM
-
-    call sd_reset_init; dual SD spi init (only cmd0)
-
-MN1:
-; NGS Reset
     ld a, (nres)
     or a
-    jr z, RES_5
-    ld a, h'80
-    out (h'33), a
-RES_5
+    call nz, NGS_RES    ; Reset NGS if enabled
 
-    ld bc, h'7FFE
+    ld a, (fres)
+    or a
+    call nz, FT_RES     ; Reset FTxxx if enableds
+
+    ld bc, 0x7FFE
     in a, (c)
     rrca
     rrca
-    jp nc, SETUP    ; CS pressed
+    jp nc, SETUP        ; Go to setup if CS pressed
 
+  ; --- Regular system start
 RESET
     di
     call CLS_ZX
 
-    xtr
-    xt page1, 5
-    xt page2, 2
-    xt page3, 0
-    xt vpage, 5
-    xt vconf, mode_zx | rres_256x192
+    wrxt PAGE1, 5
+    wrxt PAGE2, 2
+    wrxt PAGE3, 0
+    wrxt VPAGE, 5
+    wrxt VCONFIG, MODE_ZX | RRES_256X192
 
 ; Palette
     ld a, (zpal)
@@ -133,12 +145,11 @@ RES_2
 
 ; FDDVirt
     ld a, (fddv)
-    xtr
-    xta fddvirt
+    wrxta FDDVIRT
 
 ;INT offset
     ld a, (into)
-    xta hsint
+    wrxta HSINT
 
     ld hl, RESET2
     ld de, res_buf
@@ -163,10 +174,9 @@ RESET2:
     ld e, a
     ld a, (cfrq)
     or e
-    xtr
-    xta sysconf
+    wrxta SYSCONFIG
 
-    ld bc, h'FEFE
+    ld bc, 0xFEFE
     in a, (c)
     rrca
     ld a, (b2tb)
@@ -190,19 +200,16 @@ RES_1
     jr $
 
 RES_ROM00
-    xtr
-    xt page0, 0
+    wrxt PAGE0, 0
     jr RES_3
 
 RES_ROM04
-    xtr
-    xt page0, 4
+    wrxt PAGE0, 4
     jr RES_3
 
 RES_VROM
-    xtr
-    xt page0, vrompage
-    ld a, b'1000
+    wrxt PAGE0, vrompage
+    ld a, 8   ; b1000
     or d    ; Lock128 Mode
     ld d, a     ; RAM will be used instead of ROM
 
@@ -221,37 +228,32 @@ RES_3
 RES_TRD
     ld a, d
     or 1    ; ROM 48
-    xtr
-    xta memconf
-    ld sp, h'3D2E
-    jp h'3D2F       ; ret to #0000
+    wrxta MEMCONFIG
+    ld sp, 0x3D2E
+    jp 0x3D2F       ; ret to #0000
 
 RES_48
     ld a, d
     or 1    ; ROM 48
-    xtr
-    xta memconf
+    wrxta MEMCONFIG
     jp 0
 
 RES_128
     ld a, d
-    xtr
-    xta memconf
+    wrxta MEMCONFIG
     jp 0
 
 RES_SYS
     ld a, d
-    or b'0100
-    xtr
-    xta memconf     ; no mapping
+    or 4    ; b0100
+    wrxta MEMCONFIG     ; no mapping
     jp 0
 
 RES_BT_SR       ; sys.rom
     jr $
 
 RES_BT_BD       ; boot.$c
-    xtr
-    xt page3, 0
+    wrxt PAGE3, 0
 
     ld a, (bdev)
     or a    ;0
@@ -278,20 +280,19 @@ RES_BT_BD       ; boot.$c
 
 RES_BD_XX       ; SD1 Card, Nemo Master, Nemo Slave, Smuc Master, Smuc Slave, SD2 Card (B = device)
     push de
-ide_takoj_ide
+ide_takoy_ide
     call start  ; a = Return code: 1 - no device, 2 - FAT32 not found, 3 - file not found
     call c, BT_ERROR
-    jr c, ide_takoj_ide
+    jr c, ide_takoy_ide
     pop af
     push de
 
     or 1
-    xtr
-    xta memconf      ; mapping, Basic 48 ROM
-    xt page0, 0
+    wrxta MEMCONFIG      ; mapping, Basic 48 ROM
+    wrxt PAGE0, 0
 
-    ld iy, h'5C3A
-    ld hl, h'2758
+    ld iy, 0x5C3A
+    ld hl, 0x2758
     exx
     ret
 
@@ -304,10 +305,10 @@ RES_BD_RS       ;RS-232
     jr nc, RES_4
 
     or 1
-    xtr
-    xta memconf      ; mapping, Basic 48 ROM
-    xt page0, 0
+    wrxta MEMCONFIG      ; mapping, Basic 48 ROM
+    wrxt PAGE0, 0
     jp (hl)
+
 RES_4
     halt
 
@@ -319,8 +320,8 @@ BT_ERROR
     push af
     call TX_MODE
 
-    ld hl, h'0308
-    ld bc, h'0940
+    ld hl, 0x0308
+    ld bc, 0x0940
     ld a, err_norm
     call DRAW_BOX
 
@@ -356,17 +357,16 @@ BTE1
 ; ------- BIOS Setup
 
 SETUP:
-    xtr
-    xt vconf, mode_nogfx
+    wrxt VCONFIG, MODE_NOGFX
 
     call S_INIT
     call CLS_ZX
     call TX_MODE
 
-    box 0, h'1E50, h'8F
-    pmsgc M_HEAD1, 1, h'8E
-    pmsgc M_HEAD2, 2, h'8E
-    pmsgc M_HLP, 28, h'87
+    box 0, 0x1E50, 0x8F
+    pmsgc M_HEAD1, 1, 0x8E
+    pmsgc M_HEAD2, 2, 0x8E
+    pmsgc M_HLP, 28, 0x87
     call BOX0
     ld a, (fld0_pos)
     call OPT_HG
@@ -385,7 +385,42 @@ S_MAIN
     ld (evt), a
     jr S_MAIN
 
-; ------- subroutines
+; ------- Periphery
+
+  ; --- Reset NGS
+NGS_RES
+    ld a, 0x80
+    out (0x33), a
+    ret
+
+  ; --- First boot after conf loading, one-time initialization
+FDV_RES
+    xor a     ; Nulling VDOS mountings
+    ld (fddv), a
+    call WRITE_NVRAM
+    ret
+
+  ; --- Reset FT8xx
+SPI_CTRL  equ 0x77
+SPI_DATA  equ 0x57
+SPI_FT_CS_ON  equ 7
+SPI_FT_CS_OFF equ 3
+FT_CMD_RST_PULSE   equ 0x68   ; cc 00 00
+
+FT_RES
+    ld a, SPI_FT_CS_ON
+    out (SPI_CTRL), a
+    ld a, FT_CMD_RST_PULSE
+    out (SPI_DATA), a
+    xor a
+    out (SPI_DATA), a
+    xor a
+    out (SPI_DATA), a
+    ld a, SPI_FT_CS_OFF
+    out (SPI_CTRL), a
+    ret
+
+; ------- Subroutines
 
 ; Setup init
 S_INIT
@@ -653,7 +688,7 @@ KPC3
 ;   E - bit0 = CS, bit1 = SS,
 ;   fc - c = pressed / nc = not pressed (A = 40)
 KBD_POLL
-    ld bc, h'FEFE
+    ld bc, 0xFEFE
     xor a
     ld e, a
 KBP1
@@ -675,7 +710,7 @@ KBP3
     cp 36
     jr z, KBP6      ; SS pressed
         ; some other key pressed
-    ld b, h'7F      ; additional check for SS - it could be not polled yet
+    ld b, 0x7F      ; additional check for SS - it could be not polled yet
     in c, (c)
     bit 1, c
     jr nz, KBP7     ; no SS
@@ -706,7 +741,7 @@ CALC_CRC
     ret
 
 CRC16
-	ld	hl, h'FFFF
+	ld	hl, 0xFFFF
 CRC1
 	ld	a, (de)
     inc	de
@@ -717,10 +752,10 @@ CRC2
 	add	hl, hl
     jr	nc, CRC3
     ld	a, h
-    xor	h'10
+    xor	0x10
     ld	h, a
     ld	a, l
-    xor	h'21
+    xor	0x21
     ld	l, a
 CRC3
     djnz CRC2
@@ -729,16 +764,16 @@ CRC3
     ret
 
 READ_NVRAM
-    outf7 shadow, shadow_on
+    outf7 SHADOW, SHADOW_ON
 
     ld ix, nv_buf
     ld l, nv_1st
     ld a, nv_size
-    ld c, pf7
+    ld c, PF7
 RNV1
-    ld b, nvaddr
+    ld b, NVADDR
     out (c), l
-    ld b, nvdata
+    ld b, NVDATA
     in d, (c)
     ld (ix + 0), d
     inc ix
@@ -746,7 +781,7 @@ RNV1
     dec a
     jr nz, RNV1
 
-    outf7 shadow, shadow_off
+    outf7 SHADOW, SHADOW_OFF
     ret
 
 LOAD_DEFAULTS
@@ -759,16 +794,16 @@ WRITE_NVRAM
     call CALC_CRC
     ld (nvcs), hl
 
-    outf7 shadow, shadow_on
+    outf7 SHADOW, SHADOW_ON
 
     ld ix, nv_buf
     ld l, nv_1st
     ld a, nv_size
-    ld c, pf7
+    ld c, PF7
 WNV1
-    ld b, nvaddr
+    ld b, NVADDR
     out (c), l
-    ld b, nvdata
+    ld b, NVDATA
     ld d, (ix + 0)
     inc ix
     out (c), d
@@ -776,14 +811,13 @@ WNV1
     dec a
     jr nz, WNV1
 
-    outf7 shadow, shadow_off
+    outf7 SHADOW, SHADOW_OFF
     ret
 
 LD_FONT
-    xtr
-    xt page3, txpage ^ 1
+    wrxt PAGE3, txpage ^ 1
     ld ix, font8
-    ld de, win3
+    ld de, WIN3
     jp DEHRUST
 
 TX_MODE
@@ -791,10 +825,9 @@ TX_MODE
     call LD_FONT
     call LD_S_PAL
 
-    xtr
-    xt vconf, rres_320x240 | mode_text
-    xt vpage, txpage
-    xt page3, txpage
+    wrxt VCONFIG, RRES_320X240 | MODE_TEXT
+    wrxt VPAGE, txpage
+    wrxt PAGE3, txpage
     ret
 
 CLS_ZX
@@ -814,17 +847,17 @@ CLT1
 ; D - numbers of 256 byte blocks
 ; A - fill value
 DMAFILL
-    xtbc, page3
+    ld bc, PAGE3
     out (c), e
-    ld b, dmasax
+    ld b, DMASADDRX >> 8
     out (c), e
-    ld b, dmadax
+    ld b, DMADADDRX >> 8
     out (c), e
-    ld b, dmasah
+    ld b, DMASADDRH >> 8
     out (c), h
-    ld b, dmadah
+    ld b, DMADADDRH >> 8
     out (c), h
-    ld b, dmasal
+    ld b, DMASADDRL >> 8
     out (c), l
     set 7, h
     set 6, h
@@ -832,46 +865,41 @@ DMAFILL
     inc l
     ld (hl), a
     inc l
-    ld b, dmadal
+    ld b, DMADADDRL >> 8
     out (c), l
-    ld b, dmanum
+    ld b, DMANUM >> 8
     dec d
     dec d
     out (c), d
-    xtrv
-    xt dmalen, 127
-    xt dmactr, dma_dev_mem    ; Run DMA
+    wrxt DMALEN, 127
+    wrxt DMACTR, DMA_DEV_MEM    ; Run DMA
     call DWT
-    xtrv
-    xt dmanum, 0
-    xt dmalen, 126
-    xt dmactr, dma_dev_mem    ; Run last burst
+    wrxt DMANUM, 0
+    wrxt DMALEN, 126
+    wrxt DMACTR, DMA_DEV_MEM    ; Run last burst
     jp DWT
 
 LD_S_PAL
     ld hl, pal_bb
 LD_PAL
-    xtr
-    xt palsel, pal_sel
-    xt fmaddr,  fm_en | (pal_seg >> 4)
+    wrxt PALSEL, pal_sel
+    wrxt FMADDR,  FM_EN | (pal_seg >> 4)
     ld de, pal_seg << 8 | (pal_sel * 32)
     ld bc, 32
 LDP1
     ldir
-    xtr
-    xt fmaddr, 0
+    wrxt FMADDR, 0
     ret
 
 LD_64_PAL
     ld hl, pal_64c
-    xtr
-    xt palsel, pal_sel
-    xt fmaddr,  fm_en | (pal_seg >> 4)
+    wrxt PALSEL, pal_sel
+    wrxt FMADDR,  FM_EN | (pal_seg >> 4)
     ld de, pal_seg << 8
     ld bc, 128
     jr LDP1
 
-; Calculate length of message
+; Calculate message length
 ; in:
 ;   DE - addr
 ; out:
@@ -931,7 +959,7 @@ DRAW_BOX
 
     push bc
     push hl
-    ld de, 'É' << 8 + 'Í'
+    ld de, 'É' << 8 | 'Í'
     ld b, '»'
     call DB2
     pop hl
@@ -940,7 +968,7 @@ DRAW_BOX
 DB1
     push bc
     push hl
-    ld de, 'º' << 8 + ' '
+    ld de, 'º' << 8 | ' '
     ld b, 'º'
     call DB2
     pop hl
@@ -948,7 +976,7 @@ DB1
     inc h
     djnz DB1
 
-    ld de, 'È' <<8 + 'Í'
+    ld de, 'È' <<8 | 'Í'
     ld b, '¼'
 
 DB2:
@@ -1008,13 +1036,394 @@ SYM
     inc l
     ret
 
-; -----------------------------------
-; Vars
+biosapi:
+    ret
 
-    RSEG UDATA0
+; ----- Source includes
 
-; -----------------------------------
-; -- Setup
+  include "booter.asm"
+  include "dehst.asm"
+
+; ------- Messages
+
+M_HEAD1
+        defb 'TS-BIOS Setup Utility', 0
+M_HEAD2
+        defb 'Build date: ', __DATE__, ' ', __TIME__, 0
+
+M_HLP   defb 'Arrows - move,  Enter - change option,  F12 - exit', 0
+
+
+; ------- Errors
+
+ERR_ME
+        defb 'System Meditation:', 0
+ERR_MEZ
+        defb 'Press SS + Reset to change start-up options', 0
+ERR_ME0
+        defb 'UNKNOWN ERROR!', 0
+ERR_ME1
+        defb 'Boot-Device NOT READY!', 0
+ERR_ME2
+        defb 'FAT32 NOT FOUND!', 0
+ERR_ME3
+        defb 'boot.$c NOT FOUND!', 0
+
+
+; ------- Tabs
+; -- Option table
+
+OPT_X   equ 7   ; X coord of box
+OPT_Y   equ 6   ; Y coord of box
+OPT_SX  equ 32  ; X size of box
+OPT_NUM equ 12  ; Number of options
+
+OPTTAB0   ; Do not edit these values! (settings are above)
+        defb OPT_X, OPT_Y, OPT_SX, OPT_NUM + 5      ; Options box X, Y and size
+        defb OPT_X + 3, OPT_Y + 3                   ; X, Y coord of list top
+        defb OPT_X + 5, OPT_Y + 1                   ; X, Y coord of header text
+        defb 0x8C                                   ; Attrs
+        defb OPT_NUM                                ; Number of options
+        defb 'Select NVRAM options:', 0
+
+        ; address of option desc, address of option choices
+        defw OPT_CFQ, SEL_CFQ   ; CPU frequency
+        defw OPT_CCH, SEL_ONF   ; CPU cache
+        defw OPT_80L, SEL_LCK   ; #7FFD lock
+        defw OPT_B1T, SEL_BOT   ; Boot 1 target
+        defw OPT_B1B, SEL_BTB   ; Boot 1 bank
+        defw OPT_B2T, SEL_BOT   ; Boot 2 target
+        defw OPT_B2B, SEL_BTB   ; Boot 2 bank
+        defw OPT_B1D, SEL_BDV   ; Boot device
+        defw OPT_ZPL, SEL_ZPL   ; ZX palette
+        defw OPT_NGR, SEL_ONF   ; NGS reset
+        defw OPT_FTR, SEL_ONF   ; FT8xx reset
+        defw OPT_INT, SEL_07    ; INT offset
+
+; -- Option text
+; byte - number of choices
+; word - address in NVRAM vars
+; string - option
+OPT_CFQ    defb 3, low cfrq, high cfrq, 'CPU Speed, MHz:', 0
+OPT_CCH    defb 2, low cach, high cach, 'CPU Cache:', 0
+OPT_80L    defb 4, low l128, high l128, '#7FFD span:', 0
+OPT_B1T    defb 5, low b1to, high b1to, 'Reset to:', 0
+OPT_B1B    defb 4, low b1tb, high b1tb, ' ->bank:', 0
+OPT_B2T    defb 5, low b2to, high b2to, 'CS Reset to:', 0
+OPT_B2B    defb 4, low b2tb, high b2tb, ' ->bank:', 0
+OPT_B1D    defb 7, low bdev, high bdev, 'Boot Device:', 0
+OPT_ZPL    defb 7, low zpal, high zpal, 'ZX Palette:', 0
+OPT_NGR    defb 2, low nres, high nres, 'NGS Reset:', 0
+OPT_FTR    defb 2, low fres, high fres, 'FT8xx Reset:', 0
+OPT_INT    defb 8, low into, high into, 'INT Offset:', 0
+
+; -- Options
+; string - choice
+SEL_CFQ
+        defb '       3.5', 0
+        defb '         7', 0
+        defb '        14', 0
+
+SEL_BOT
+        defb '   ROM #00', 0
+        defb '   ROM #04', 0
+        defb '   RAM #'
+        hex8 vrompage
+        defb 0
+        defb 'BD boot.$c', 0
+        defb 'BD sys.rom', 0
+
+SEL_BTB
+        defb '    TR-DOS', 0
+        defb '  Basic 48', 0
+        defb ' Basic 128', 0
+        defb '       SYS', 0
+
+SEL_BDV
+        defb 'SD Z-contr', 0
+        defb 'IDE Nemo M', 0
+        defb 'IDE Nemo S', 0
+        defb '    RS-232', 0
+        defb 'IDE Smuc M', 0
+        defb 'IDE Smuc S', 0
+        defb 'SD2 Z-cont', 0
+
+SEL_ONF
+        defb ' OFF', 0
+        defb '  ON', 0
+        defb 'Auto', 0
+
+SEL_LCK
+        defb '     512k', 0
+        defb '     128k', 0
+        defb '128k Auto', 0
+        defb '    1024k', 0
+
+SEL_ZPL
+        defb 'Default', 0
+        defb 'B.black', 0
+        defb '  Light', 0
+        defb '   Pale', 0
+        defb '   Dark', 0
+        defb 'Grayscl', 0
+        defb ' Custom', 0
+
+SEL_07  defb '0', 0
+        defb '1', 0
+        defb '2', 0
+        defb '3', 0
+        defb '4', 0
+        defb '5', 0
+        defb '6', 0
+        defb '7', 0
+
+; -- palette
+pal_bb               ; bright black
+        defw 0x0000
+        defw 0x0010
+        defw 0x4000
+        defw 0x4010
+        defw 0x0200
+        defw 0x0210
+        defw 0x4200
+        defw 0x4210
+        defw 0x2108
+        defw 0x0018
+        defw 0x6000
+        defw 0x6018
+        defw 0x0300
+        defw 0x0318
+        defw 0x6300
+        defw 0x6318
+
+pal_lgt              ; light
+        defw 0x0000
+        defw 0x0014
+        defw 0x5000
+        defw 0x5014
+        defw 0x0280
+        defw 0x0294
+        defw 0x5280
+        defw 0x5294
+        defw 0x0000
+        defw 0x0018
+        defw 0x6000
+        defw 0x6018
+        defw 0x0300
+        defw 0x0318
+        defw 0x6300
+        defw 0x6318
+
+pal_puls             ; pulsar
+        defw 0x0000
+        defw 0x0010
+        defw 0x4000
+        defw 0x4010
+        defw 0x0200
+        defw 0x0210
+        defw 0x4200
+        defw 0x4210
+        defw 0x0000
+        defw 0x0018
+        defw 0x6000
+        defw 0x6018
+        defw 0x0300
+        defw 0x0318
+        defw 0x6300
+        defw 0x6318
+
+pal_dark              ; dark
+        defw %000000000000000
+        defw %000000000001000
+        defw %010000000000000
+        defw %010000000001000
+        defw %000000100000000
+        defw %000000100001000
+        defw %010000100000000
+        defw %010000100001000
+        defw %000000000000000
+        defw %000000000010000
+        defw %100000000000000
+        defw %100000000010000
+        defw %000001000000000
+        defw %000001000010000
+        defw %100001000000000
+        defw %100001000010000
+
+
+pal_pale              ; pale
+        defw %010000100001000
+        defw %010000100010000
+        defw %100000100001000
+        defw %100000100010000
+        defw %010001000001000
+        defw %010001000010000
+        defw %100001000001000
+        defw %100001000010000
+        defw %010000100001000
+        defw %010000100011000
+        defw %110000100001000
+        defw %110000100011000
+        defw %010001100001000
+        defw %010001100011000
+        defw %110001100001000
+        defw %110001100011000
+
+pal_gsc               ; grayscale
+        defw 0  << 10 | 0  << 5 | 0
+        defw 3  << 10 | 3  << 5 | 3
+        defw 6  << 10 | 6  << 5 | 6
+        defw 9  << 10 | 9  << 5 | 9
+        defw 12 << 10 | 12 << 5 | 12
+        defw 16 << 10 | 16 << 5 | 16
+        defw 19 << 10 | 19 << 5 | 19
+        defw 22 << 10 | 22 << 5 | 22
+        defw 0  << 10 | 0  << 5 | 0
+        defw 4  << 10 | 4  << 5 | 4
+        defw 8  << 10 | 8  << 5 | 8
+        defw 11 << 10 | 11 << 5 | 11
+        defw 14 << 10 | 14 << 5 | 14
+        defw 17 << 10 | 17 << 5 | 17
+        defw 20 << 10 | 20 << 5 | 20
+        defw 24 << 10 | 24 << 5 | 24
+
+pal_64c
+        defw 0x0000
+        defw 0x0008
+        defw 0x0010
+        defw 0x0018
+        defw 0x2000
+        defw 0x2008
+        defw 0x2010
+        defw 0x2018
+        defw 0x4000
+        defw 0x4008
+        defw 0x4010
+        defw 0x4018
+        defw 0x6000
+        defw 0x6008
+        defw 0x6010
+        defw 0x6018
+        defw 0x0100
+        defw 0x0108
+        defw 0x0110
+        defw 0x0118
+        defw 0x2100
+        defw 0x2108
+        defw 0x2110
+        defw 0x2118
+        defw 0x4100
+        defw 0x4108
+        defw 0x4110
+        defw 0x4118
+        defw 0x6100
+        defw 0x6108
+        defw 0x6110
+        defw 0x6118
+        defw 0x0200
+        defw 0x0208
+        defw 0x0210
+        defw 0x0218
+        defw 0x2200
+        defw 0x2208
+        defw 0x2210
+        defw 0x2218
+        defw 0x4200
+        defw 0x4208
+        defw 0x4210
+        defw 0x4218
+        defw 0x6200
+        defw 0x6208
+        defw 0x6210
+        defw 0x6218
+        defw 0x0300
+        defw 0x0308
+        defw 0x0310
+        defw 0x0318
+        defw 0x2300
+        defw 0x2308
+        defw 0x2310
+        defw 0x2318
+        defw 0x4300
+        defw 0x4308
+        defw 0x4310
+        defw 0x4318
+        defw 0x6300
+        defw 0x6308
+        defw 0x6310
+        defw 0x6318
+
+keys_norm
+        defb 0, 'zxcvasdfgqwert1234509876poiuy', 13, 'lkjh ', 14, 'mnb'
+keys_caps
+        defb 0, 'ZXCVASDFGQWERT', 7, 6, 4, 5, 8, 12, 15, 9, 11, 10, 'POIUY', 13, 'LKJH ', 14, 'MNB'
+keys_symb
+        defb 0, ':`?/~|\\{}   <>!@#$%_)(', 39, '&', 34, '; ][', 13, '=+-^ ', 14, '.,*'
+
+; ----- NVRAM default values
+
+nv_def
+        defb 0      ; FDDVirt [OFF]
+        defb 0      ; CPU clock [3.5MHz]
+        defb 0      ; boot device [SD Z-contr]
+        defb 1      ; CPU Cache [ON]
+        defb 0      ; Boot from [ROM #00]
+        defb 0      ; Boot bank [TR-DOS]
+        defb 3      ; CS Boot from [Boot Device boot.$c]
+        defb 0      ; CS Boot bank [TR-DOS]
+        defb 1      ; #7FFD Span [128kB]
+        defb 0      ; ZX palette [Default]
+        defb 0      ; NGS Reset [OFF]
+        defb 0      ; FT8xx Reset [OFF]
+        defb 1      ; INT offset [1]
+
+        defs 9      ; padding (change it if adding options above!)
+
+        ; Custom palette
+        defw 0  << 10 | 0  << 5 | 0
+        defw 2  << 10 | 2  << 5 | 2
+        defw 4  << 10 | 4  << 5 | 4
+        defw 6  << 10 | 6  << 5 | 6
+        defw 8  << 10 | 8  << 5 | 8
+        defw 10 << 10 | 10 << 5 | 10
+        defw 12 << 10 | 12 << 5 | 12
+        defw 14 << 10 | 14 << 5 | 14
+        defw 1  << 10 | 1  << 5 | 1
+        defw 3  << 10 | 3  << 5 | 3
+        defw 5  << 10 | 5  << 5 | 5
+        defw 7  << 10 | 7  << 5 | 7
+        defw 9  << 10 | 9  << 5 | 9
+        defw 11 << 10 | 11 << 5 | 11
+        defw 13 << 10 | 13 << 5 | 13
+        defw 15 << 10 | 15 << 5 | 15
+
+; ----- Binary includes
+
+font8
+    incbin "866_code.fnt.hst"
+
+sysvars
+    incbin "sysvars.bin.hst"
+
+rslsys:
+  incbin "rslsys.bin.hst"
+
+  orgp 0x2000
+tsfat:
+  incbin "tsfat.bin"
+
+; ----- Export binary
+  orgp 0x4000
+bios_size equ $
+  savebin "obj/ts-bios.bin", 0, bios_size
+
+; -----------------------------------------
+
+; ----- Vars
+
+    org 0x5D00
+
+; ----- Setup
 
 kbd_del         defs 1      ; current value of autorepeat counter
 last_key        defs 1      ; last pressed key
@@ -1035,7 +1444,7 @@ opt_nvr         defs 2      ; NVRAM cell in vars for current option
 ; -- NVRAM cells (must be exactly 56 bytes size!)
 ; ATTENTION! When changing NVRAM cells declaration, update defaults in 'nv_def' array!
 
-nv_1st          equ h'B0        ; first NVRAM cell
+nv_1st          equ 0xB0        ; first NVRAM cell
 nv_buf:
 
 fddv            defs 1      ; FDDVirt (#29AF copy)  // non-removable #B0
@@ -1050,6 +1459,7 @@ b2tb            defs 1      ; CS Boot bank
 l128            defs 1      ; #7FFD Span
 zpal            defs 1      ; ZX palette
 nres            defs 1      ; NGS Reset
+fres            defs 1      ; FT8xx Reset
 into            defs 1      ; INT offset
                 defs 10     ; dummy
 cpal            defs 32     ; Custom palette (array)
@@ -1112,11 +1522,9 @@ zes             defs 1
 ; -----------------------------------
 ; -- FAT driver buffers
 
-    RSEG FATBUF
+    org 0x4200
 
 secbu           defs 512
 secbe
 lobu            defs 512
 lobe            defs 32
-
-    end
