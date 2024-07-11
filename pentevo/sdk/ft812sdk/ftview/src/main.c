@@ -10,6 +10,12 @@
 #include <wc_api.h>
 #include <wc_api.c>
 
+__sfr __banked __at 0x01AF _TS_VPAGE;
+__sfr __banked __at 0x10AF _TS_PAGE0;
+__sfr __banked __at 0x11AF _TS_PAGE1;
+__sfr __banked __at 0x12AF _TS_PAGE2;
+__sfr __banked __at 0x13AF _TS_PAGE3;
+
 typedef struct
 {
   u8 sig[3];
@@ -45,7 +51,7 @@ typedef struct
 const bool is_1st_run = true;   // to get rid of vars runtime init - const located in RAM
 
 #define FS_BUF_SIZE 0x1E00
-u8 fs_buf[FS_BUF_SIZE];
+u8 fs_buf[FS_BUF_SIZE]; // at 0xA000 (_PAGE2 to get page)
 u8 cmdl[0x180];
 
 u16 ret_sp;
@@ -60,6 +66,7 @@ enum
   EXT_PNG,
   EXT_DLS,
   EXT_DXP,
+  EXT_AVI,
 };
 
 // --- Windows ------------------------------
@@ -90,7 +97,7 @@ const WC_TX_WINDOW win_about =
   /* separators                    */  0, 0,
   /* header text                   */  "\x0E" " About ",
   /* footer text                   */  "",
-  /* window text                   */  "\x0E\x0C\x01" "FT812 Viewer v1.0, (c)2017 TSL"
+  /* window text                   */  "\x0E\x0C\x01" "FT812 Viewer v1.1, (c)2023 TSL"
 };
 
 // --- FT812 --------------------------------
@@ -99,7 +106,7 @@ bool vdac2_init()
   if ((ts_rreg(TS_STATUS) & 7) != 7)
     return false;
 
-  ft_init(FT_MODE_7);
+  ft_init(FT_MODE_1024_768_59);
   return ft_rreg8(FT_REG_ID) == 0x7C;
 }
 
@@ -287,6 +294,68 @@ void show_dls()
   ft_wreg8(FT_REG_DLSWAP, FT_DLSWAP_FRAME);
 }
 
+void show_avi()
+{
+  u32 sz = filesize;
+
+  wc_vmode(0x87);
+  
+  ft_wreg32(FT_REG_FREQUENCY, 64000000UL);
+
+  ft_ccmd_start(cmdl);
+  ft_Dlstart();
+  ft_ClearColorRGB(128, 128, 160);
+  ft_Clear(1, 1, 1);
+  ft_Display();
+  ft_ccmd(FT_CCMD_SWAP);
+  ft_ccmd_write();
+  ft_cp_wait();
+  // delay(50000);
+  
+#define CHUNK_SIZE 4096
+#define FIFO_ADDR 0x080000
+#define FIFO_SIZE 0x080000
+
+  ft_MediaFifo(FIFO_ADDR, FIFO_SIZE);
+  ft_ccmd_write();
+  ft_cp_wait();
+  
+  u32 waddr = FIFO_ADDR;
+  while (waddr < (FIFO_ADDR + FIFO_SIZE - CHUNK_SIZE))
+  {
+    wc_load512(fs_buf, CHUNK_SIZE >> 9);
+    ft_load_ram_dma(fs_buf, *(u8*)_PAGE2, waddr, CHUNK_SIZE);
+    waddr += CHUNK_SIZE;
+  }
+
+  ft_PlayVideo(OPT_FULLSCREEN | OPT_SOUND | OPT_MEDIAFIFO | OPT_NOTEAR);
+  ft_ccmd_write();
+
+  while (sz)
+  {
+    ft_wreg32(REG_MEDIAFIFO_WRITE, waddr);
+ 
+    wc_load512(fs_buf, CHUNK_SIZE >> 9);
+    
+    while (1)
+    {
+      u32 raddr = ft_rreg32(REG_MEDIAFIFO_READ);
+      u32 free = FIFO_SIZE - ((waddr >= raddr) ? (waddr - raddr) : (FIFO_SIZE - (raddr - waddr)));
+      if (free >= CHUNK_SIZE) break;
+    }
+
+    ft_load_ram_dma(fs_buf, *(u8*)_PAGE2, waddr, CHUNK_SIZE);
+    waddr += CHUNK_SIZE;
+    if (waddr >= (FIFO_ADDR + FIFO_SIZE)) waddr = FIFO_ADDR;
+  }
+    
+    // ft_cp_wait_free(CHUNK_SIZE);
+    // u16 s = min(sz, CHUNK_SIZE);
+    // wc_load512(fs_buf, CHUNK_SIZE >> 9);
+    // ft_load_ram_dma(fs_buf, *(u8*)_PAGE2, s);
+    // sz -= s;
+}
+
 // --- Aux functions ------------------------
 void wait_esc_key()
 {
@@ -345,6 +414,10 @@ void pic_viewer()
 
     case EXT_DLS:
       show_dls();
+    break;
+
+    case EXT_AVI:
+      show_avi();
     break;
   }
 

@@ -7,9 +7,8 @@ del /q /s obj >nul
 
 sdasz80 -o obj/crt0.rel src/crt0.s
 if errorlevel 1 pause & exit
-xcopy /b /y obj\crt0.rel %SDCC%\lib\z80\ >nul
 
-sdcc -Isrc -I../lib/sdk -I../lib/ft812 -I../lib/tsconf -mz80 --std-sdcc11 --opt-code-speed -Wl-b_CODE=0x8003 -Wl-b_DATA=0xA000 src/main.c ../lib/ft812/ft812.lib ../lib/tsconf/ts.lib ../lib/sdk/sdk.lib -o obj/out.hex
+sdcc -Isrc -I../lib/sdk -I../lib/ft812 -I../lib/tsconf -mz80 --std-sdcc11 --opt-code-speed --no-std-crt0 obj/crt0.rel --code-loc 0x8003 --data-loc 0xA000 src/main.c ../lib/ft812/ft812.lib ../lib/tsconf/ts.lib ../lib/sdk/sdk.lib -o obj/out.hex
 if errorlevel 1 pause & exit
 if exist obj/out.hex hex2bin obj/out.hex >nul
 
