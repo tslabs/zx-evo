@@ -18,27 +18,30 @@ typedef struct
 
 enum  // const FT_MODE ft_modes[] in ft812func.c
 {
-  FT_MODE_0,
-  FT_MODE_1,
-  FT_MODE_2,
-  FT_MODE_3,
-  FT_MODE_4,
-  FT_MODE_5,
-  FT_MODE_6,
-  FT_MODE_7,
-  FT_MODE_8,
-  FT_MODE_9,
-  FT_MODE_10,
-  FT_MODE_11,
-  FT_MODE_12,
+  FT_MODE_640_480_57             = 0,  //  0: 640x480@57Hz (48MHz)
+  FT_MODE_640_480_74             = 1,  //  1: 640x480@74Hz (64MHz)
+  FT_MODE_640_480_76             = 2,  //  2: 640x480@76Hz (64MHz)
+  FT_MODE_800_600_60             = 3,  //  3: 800x600@60Hz (40MHz)
+  FT_MODE_800_600_60_80MHZ       = 4,  //  4: 800x600@60Hz (80MHz)
+  FT_MODE_800_600_69             = 5,  //  5: 800x600@69Hz (48MHz)
+  FT_MODE_800_600_85             = 6,  //  6: 800x600@85Hz (56MHz)
+  FT_MODE_1024_768_59            = 7,  //  7: 1024x768@59Hz (64MHz)
+  FT_MODE_1024_768_67            = 8,  //  8: 1024x768@67Hz (72MHz)
+  FT_MODE_1024_768_76            = 9,  //  9: 1024x768@76Hz (80MHz)
+  FT_MODE_1280_1024_60_HALF      = 10, // 10: 1280/2x1024@60Hz (56MHz)
+  FT_MODE_1280_720_58            = 11, // 11: 1280x720@58Hz (72MHz)
+  FT_MODE_1280_720_60            = 12, // 12: 1280x720@60Hz (72MHz)
+  FT_MODE_800_600_48_7           = 13, // 13: 800x600@48.7Hz (40MHz)  - for ZX-Evo sync
+  FT_MODE_1024_768_48_7          = 14, // 14: 1024x768@48.7Hz (64MHz) - for ZX-Evo sync
+  FT_MODE_MAX
 };
 
 // SPI
-#define SPI_CTRL 0x77
-#define SPI_DATA 0x57
+#define _SPI_CTRL 0x77
+#define _SPI_DATA 0x57
 
-#define SPI_FT_CS_ON  7
-#define SPI_FT_CS_OFF 3
+#define _SPI_FT_CS_ON  7
+#define _SPI_FT_CS_OFF 3
 
 // Memory addresses
 #define FT_RAM_G           0x000000   // Main graphics RAM
@@ -48,6 +51,7 @@ enum  // const FT_MODE ft_modes[] in ft812func.c
 #define FT_RAM_DL          0x300000   // Display list RAM
 #define FT_RAM_REG         0x302000   // Registers
 #define FT_RAM_CMD         0x308000   // Coprocessor command buffer
+#define FT_RAM_ERR_REPORT  0x309800   // Error message
 
 // Commands
 #define FT_CMD_ACTIVE      0x00   // cc 00 00
@@ -157,6 +161,13 @@ enum  // const FT_MODE ft_modes[] in ft812func.c
 #define FT_REG_DATESTAMP          0x302564
 #define FT_REG_CMDB_SPACE         0x302574
 #define FT_REG_CMDB_WRITE         0x302578
+#define FT_REG_ADAPTIVE_FRAMERATE 0x30257C
+#define FT_REG_PLAYBACK_PAUSE     0x3025EС
+#define FT_REG_FLASH_STATUS       0x3025F0
+#define REG_MEDIAFIFO_READ        0x309014
+#define REG_MEDIAFIFO_WRITE       0x309018
+#define FT_REG_FLASH_SIZE         0x309024
+
 #define FT_REG_TRACKER            0x309000
 #define FT_REG_TRACKER_1          0x309004
 #define FT_REG_TRACKER_2          0x309008
@@ -179,6 +190,15 @@ enum  // const FT_MODE ft_modes[] in ft812func.c
 #define FT_CCMD_DLSTART           0xFFFFFF00
 #define FT_CCMD_EXECUTE           0xFFFFFF07
 #define FT_CCMD_FGCOLOR           0xFFFFFF0A
+#define FT_CCMD_FLASHATTACH       0xFFFFFF49
+#define FT_CCMD_FLASHDETACH       0xFFFFFF48
+#define FT_CCMD_FLASHERASE        0xFFFFFF44
+#define FT_CCMD_FLASHFAST         0xFFFFFF4A
+#define FT_CCMD_FLASHRX           0xFFFFFF4D
+#define FT_CCMD_FLASHSOURCE       0xFFFFFF4E
+#define FT_CCMD_FLASHSPIDESEL     0xFFFFFF4B
+#define FT_CCMD_FLASHTX           0xFFFFFF4C
+#define FT_CCMD_FLASHUPDATE       0xFFFFFF47
 #define FT_CCMD_GAUGE             0xFFFFFF13
 #define FT_CCMD_GETMATRIX         0xFFFFFF33
 #define FT_CCMD_GETPOINT          0xFFFFFF08
@@ -235,20 +255,24 @@ enum  // const FT_MODE ft_modes[] in ft812func.c
 #define FT_CCMD_VIDEOFRAME        0xFFFFFF41
 #define FT_CCMD_VIDEOSTART        0xFFFFFF40
 
-#define FT_OPT_CENTER           1536UL
-#define FT_OPT_CENTERX          512UL
-#define FT_OPT_CENTERY          1024UL
-#define FT_OPT_FLAT             256UL
-#define FT_OPT_MONO             1UL
-#define FT_OPT_NOBACK           4096UL
-#define FT_OPT_NODL             2UL
-#define FT_OPT_NOHANDS          49152UL
-#define FT_OPT_NOHM             16384UL
-#define FT_OPT_NOPOINTER        16384UL
-#define FT_OPT_NOSECS           32768UL
-#define FT_OPT_NOTICKS          8192UL
-#define FT_OPT_RIGHTX           2048UL
-#define FT_OPT_SIGNED           256UL
+#define FT_OPT_CENTER     1536UL
+#define FT_OPT_CENTERX    512UL
+#define FT_OPT_CENTERY    1024UL
+#define FT_OPT_FLAT       256UL
+#define FT_OPT_MONO       1UL
+#define FT_OPT_NOBACK     4096UL
+#define FT_OPT_NODL       2UL
+#define FT_OPT_NOHANDS    49152UL
+#define FT_OPT_NOHM       16384UL
+#define FT_OPT_NOPOINTER  16384UL
+#define FT_OPT_NOSECS     32768UL
+#define FT_OPT_NOTICKS    8192UL
+#define FT_OPT_RIGHTX     2048UL
+#define FT_OPT_SIGNED     256UL
+#define OPT_NOTEAR        4UL
+#define OPT_FULLSCREEN    8UL
+#define OPT_MEDIAFIFO     16UL
+#define OPT_SOUND         32UL
 
 // Primitives
 #define FT_BITMAPS        1

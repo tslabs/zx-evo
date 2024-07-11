@@ -23,16 +23,16 @@
   
   ; set RAM pages sequentially
   ld b, #0x10
-  xor a
-  out (c), a      ; PAGE0 = 0
+  ld a, #2
+  out (c), a      ; PAGE0 = 2
   jp l0
 l0:
   inc b        
-  inc a
-  out (c), a      ; PAGE1 = 1
+  xor a
+  out (c), a      ; PAGE1 = 0
   inc b           
   inc a
-  out (c), a      ; PAGE2 = 2
+  out (c), a      ; PAGE2 = 1
   
   ld sp, #0xC000
   call init

@@ -453,3 +453,50 @@ void ft_MemCrc(u32 ptr, u32 num, u32 result)
   ft_ccmd(num);
   ft_ccmd(result);
 }
+
+void ft_FlashAttach()
+{
+  ft_ccmd(FT_CCMD_FLASHATTACH);
+}
+
+void ft_FlashDetach()
+{
+  ft_ccmd(FT_CCMD_FLASHDETACH);
+}
+
+void ft_FlashFast(u32 rc)
+{
+  ft_ccmd(FT_CCMD_FLASHFAST);
+  ft_ccmd(rc);
+}
+
+void ft_FlashSpiDesel()
+{
+  ft_ccmd(FT_CCMD_FLASHSPIDESEL);
+}
+
+void ft_FlashTx(u32 num)
+{
+  ft_ccmd(FT_CCMD_FLASHTX);
+  ft_ccmd(num);
+}
+
+void ft_FlashRx(u32 ptr, u32 num)
+{
+  ft_ccmd(FT_CCMD_FLASHRX);
+  ft_ccmd(ptr);
+  ft_ccmd(num);
+}
+
+void ft_FlashErase()
+{
+  ft_ccmd(FT_CCMD_FLASHERASE);
+}
+
+void ft_FlashUpdate(u32 dest, u32 src, u32 num)
+{
+  ft_ccmd(FT_CCMD_FLASHUPDATE);
+  ft_ccmd(dest);
+  ft_ccmd(src);
+  ft_ccmd(num);
+}

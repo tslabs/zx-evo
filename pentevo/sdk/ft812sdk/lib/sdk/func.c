@@ -7,18 +7,41 @@ u8 getkey() __naked
 {
   __asm
     ld bc, #0xFEFE
-    ld l, #0
+    ld l, #40
   k1:
-    in a, (c)
+    in e, (c)
     ld h, #5
   k2:
-    rra
-    ret nc
-    inc l
+    rr e
+    jr c, k3
+    
+    ld a, l
+    and #63
+    cp #KEY_CS_
+    jr z, k3
+    cp #KEY_SS_
+    jr nz, k4
+    
+  k3:
+    dec l
     dec h
     jr nz, k2
     rlc b
     jr c, k1
+    
+  k4:  
+    ld a, #0xFE
+    in a, (#0xFE)
+    rrca
+    jr c, k5
+    set 6, l  // set CS flag
+  k5:
+    ld a, #0x7F
+    in a, (#0xFE)
+    rrca
+    rrca
+    ret c
+    set 7, l  // set SS flag
     ret
   __endasm;
 }
