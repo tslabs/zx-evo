@@ -26,7 +26,7 @@ void print_string(const char *s, u16 x, u16 y)
 void main()
 {
   ts_wreg(TS_VCONFIG, 4);
-  ft_init(FT_MODE_7);
+  ft_init(FT_MODE_1024_768_59);
 
   ft_ccmd_start(cmdl);
   ft_VertexFormat(0);

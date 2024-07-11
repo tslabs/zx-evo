@@ -12,7 +12,7 @@ u8 cmdl[0x0F00];
 
 void main()
 {
-  ft_init(FT_MODE_3);
+  ft_init(FT_MODE_800_600_60);
   ts_wreg(TS_VCONFIG, 4);
 
   ft_ccmd_start(cmdl);

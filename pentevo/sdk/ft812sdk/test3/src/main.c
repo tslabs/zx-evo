@@ -14,7 +14,7 @@ void main()
 {
   u16 i, j;
 
-  ft_init(FT_MODE_3);
+  ft_init(FT_MODE_800_600_60);
   ts_wreg(TS_VCONFIG, 4);
 
   ft_ccmd_start(cmdl);

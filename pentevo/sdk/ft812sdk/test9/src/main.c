@@ -10,7 +10,7 @@
 
 void main()
 {
-  ft_init(FT_MODE_7);
+  ft_init(FT_MODE_1024_768_59);
   ts_wreg(TS_VCONFIG, 4);
 
   ft_ccmd_start((u8*)0x8000);
