@@ -43,8 +43,8 @@ typedef uint64_t u64;
 
 #define DMA_BUF_SIZE  32768
 
-const char TAG[] = "SPI_SLAVE";
-const char cp_string[] = "ESP32-S3 SPI WiFi Module, ver.0.1, (c)2024, TS-Labs";
+const char TAG[] = "ZF32";
+const char cp_string[] = "ESP32-S3 SPI WiFi Module, ver.0.2, (c)2024, TS-Labs";
 
 enum
 {
