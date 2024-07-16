@@ -312,7 +312,7 @@ start:
 
   //set led on keyboard
   ps2keyboard_send_cmd_blocking(PS2KEYBOARD_CMD_AUTOREPEAT);
-  ps2keyboard_send_cmd(PS2KEYBOARD_CMD_SETLED);
+  ps2keyboard_send_cmd_blocking(PS2KEYBOARD_CMD_SETLED);
 
   //main loop
   do
