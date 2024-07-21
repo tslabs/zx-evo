@@ -181,6 +181,7 @@
     <ClCompile Include="zc.cpp" />
     <ClCompile Include="zf232.cpp" />
     <ClCompile Include="zifi32\esp32_emul.cpp" />
+    <ClCompile Include="zifi32\ft232h.cpp" />
     <ClCompile Include="zifi32\zifi32.cpp" />
     <ClCompile Include="zxevo.cpp" />
   </ItemGroup>
@@ -391,7 +392,7 @@
       <AdditionalDependencies>delayimp.lib;gdiplus.lib;kernel32.lib;user32.lib;gdi32.lib;shell32.lib;comdlg32.lib;comctl32.lib;winmm.lib;setupapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <LinkErrorReporting>PromptImmediately</LinkErrorReporting>
       <AdditionalManifestDependencies>type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'</AdditionalManifestDependencies>
-      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>lib;lib\Win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <MinimumRequiredVersion>5.1</MinimumRequiredVersion>
       <SubSystem>Console</SubSystem>
     </Link>
@@ -402,6 +403,7 @@ md "$(TargetDir)rom"
 copy /y "$(ProjectDir)lib\*.dll" "$(TargetDir)"
 copy /y "$(ProjectDir)cfg\*.*" "$(TargetDir)"
 del "$(TargetDir)\bt8xxemu_x64.dll"
+del "$(TargetDir)\libmpsse_x64.dll"
 copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)rom"
 "$(ProjectDir)..\..\tools\robimg\robimg.exe" -p=$(TargetDir)wc.img -s=102400 -C="$(ProjectDir)..\..\soft\wc\exe",""
 </Command>
@@ -431,7 +433,7 @@ copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)rom"
       <AdditionalDependencies>delayimp.lib;dinput8.lib;gdiplus.lib;kernel32.lib;user32.lib;gdi32.lib;shell32.lib;comdlg32.lib;comctl32.lib;winmm.lib;setupapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <LinkErrorReporting>PromptImmediately</LinkErrorReporting>
       <AdditionalManifestDependencies>type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'</AdditionalManifestDependencies>
-      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>lib;lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <MinimumRequiredVersion>5.1</MinimumRequiredVersion>
       <SubSystem>Console</SubSystem>
     </Link>
@@ -443,6 +445,8 @@ copy /y "$(ProjectDir)lib64\*.dll" "$(TargetDir)"
 copy /y "$(ProjectDir)cfg\*.*" "$(TargetDir)"
 del "$(TargetDir)\bt8xxemu.dll"
 ren "$(TargetDir)\bt8xxemu_x64.dll" bt8xxemu.dll
+del "$(TargetDir)\libmpsse.dll"
+ren "$(TargetDir)\libmpsse_x64.dll" libmpsse.dll
 copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)rom"
 "$(ProjectDir)..\..\tools\robimg\robimg.exe" -p=$(TargetDir)wc.img -s=102400 -C="$(ProjectDir)..\..\soft\wc\exe",""
 </Command>
@@ -481,7 +485,7 @@ copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)rom"
       <AdditionalDependencies>delayimp.lib;gdiplus.lib;kernel32.lib;user32.lib;gdi32.lib;shell32.lib;comdlg32.lib;comctl32.lib;winmm.lib;setupapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <LinkErrorReporting>PromptImmediately</LinkErrorReporting>
       <AdditionalManifestDependencies>type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'</AdditionalManifestDependencies>
-      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>lib;lib\Win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>/SAFESEH:NO /LTCG:OFF %(AdditionalOptions)</AdditionalOptions>
       <MinimumRequiredVersion>5.1</MinimumRequiredVersion>
       <SubSystem>Console</SubSystem>
@@ -494,6 +498,7 @@ md "$(TargetDir)doc"
 copy /y "$(ProjectDir)lib\*.dll" "$(TargetDir)"
 copy /y "$(ProjectDir)cfg\*.*" "$(TargetDir)"
 del "$(TargetDir)\bt8xxemu_x64.dll"
+del "$(TargetDir)\libmpsse_x64.dll"
 copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)rom"
 copy /y "$(ProjectDir)doc\*.*" "$(TargetDir)doc"
 if exist "$(TargetDir)..\unreal.7z" del /q "$(TargetDir)..\unreal.7z"
@@ -536,7 +541,7 @@ if exist "$(TargetDir)..\unreal.7z" del /q "$(TargetDir)..\unreal.7z"
       <AdditionalDependencies>delayimp.lib;dinput8.lib;gdiplus.lib;kernel32.lib;user32.lib;gdi32.lib;shell32.lib;comdlg32.lib;comctl32.lib;winmm.lib;setupapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <LinkErrorReporting>PromptImmediately</LinkErrorReporting>
       <AdditionalManifestDependencies>type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'</AdditionalManifestDependencies>
-      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>lib;lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>/SAFESEH:NO /LTCG:OFF %(AdditionalOptions)</AdditionalOptions>
       <MinimumRequiredVersion>5.1</MinimumRequiredVersion>
       <SubSystem>Console</SubSystem>
@@ -550,6 +555,8 @@ copy /y "$(ProjectDir)lib64\*.dll" "$(TargetDir)"
 copy /y "$(ProjectDir)cfg\*.*" "$(TargetDir)"
 del "$(TargetDir)\bt8xxemu.dll"
 ren "$(TargetDir)\bt8xxemu_x64.dll" bt8xxemu.dll
+del "$(TargetDir)\libmpsse.dll"
+ren "$(TargetDir)\libmpsse_x64.dll" libmpsse.dll
 copy /y "$(ProjectDir)cfg\rom\*.*" "$(TargetDir)rom"
 copy /y "$(ProjectDir)doc\*.*" "$(TargetDir)doc"
 if exist "$(TargetDir)..\unreal.7z" del /q "$(TargetDir)..\unreal.7z"

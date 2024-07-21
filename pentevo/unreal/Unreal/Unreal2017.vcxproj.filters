@@ -376,6 +376,9 @@
     <ClCompile Include="ft812.cpp">
       <Filter>Sources\ft8xx</Filter>
     </ClCompile>
+    <ClCompile Include="zifi32\ft232h.cpp">
+      <Filter>Sources\zifi32</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="atm.h">

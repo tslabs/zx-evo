@@ -175,7 +175,7 @@ namespace vdac2
     cl_rect.right = wnd_width - 1;
     cl_rect.bottom = wnd_height - 1;
     AdjustWindowRect(&cl_rect, dw_style, GetMenu(hw_wnd) != nullptr);
-    SetWindowPos(hw_wnd, nullptr, 0, 0, cl_rect.right - cl_rect.left + 1, cl_rect.bottom - cl_rect.top + 1, SWP_NOMOVE);
+    SetWindowPos(hw_wnd, HWND_BOTTOM, 0, 0, cl_rect.right - cl_rect.left + 1, cl_rect.bottom - cl_rect.top + 1, 0);
   }
 
   // Window rendered callback
@@ -275,7 +275,6 @@ namespace vdac2
     // visuals_menu = LoadMenu(hIn, MAKEINTRESOURCE(IDR_DEBUGMENU)); // !!!
 
     hw_wnd = CreateWindow("FT_WND", "VDAC2 Emul", dw_style, CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, nullptr, menu, hIn, NULL);
-
     set_window_size();
 
     if (!BT8XXEMU_isRunning(pEmulator))
@@ -285,6 +284,7 @@ namespace vdac2
     }
 
     ShowWindow(hw_wnd, SW_SHOW);
+    set_window_size();
 
     *ver = BT8XXEMU_version();
 

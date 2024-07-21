@@ -16,6 +16,24 @@ void TZc::Reset()
   RdBuff = 0xff;
 }
 
+void TZc::DmaRdStart(u32 size)
+{
+  if ((Cfg & 16) && comp.ts.zifi32)   // ZiFi32 selected
+    zf32::dma_r_start(size);
+}
+
+void TZc::DmaWrStart()
+{
+  if ((Cfg & 16) && comp.ts.zifi32)   // ZiFi32 selected
+    zf32::dma_w_start();
+}
+
+void TZc::DmaWrEnd()
+{
+  if ((Cfg & 16) && comp.ts.zifi32)   // ZiFi32 selected
+    zf32::dma_w_end();
+}
+
 void TZc::Wr(u32 Port, u8 Val)
 {
   switch(Port & 0xFF)
@@ -29,7 +47,7 @@ void TZc::Wr(u32 Port, u8 Val)
         vdac2::set_ss((Val & 4) != 0);
       
       // bit 4 = ~espcs_n
-      if ((comp.ts.vdac2 >= 2) && ((Cfg & 16) != (Val & 16)))
+      if (comp.ts.zifi32 && ((Cfg & 16) != (Val & 16)))
         zf32::set_ss((Val & 16) != 0);
 
       Cfg = Val;
@@ -42,10 +60,13 @@ void TZc::Wr(u32 Port, u8 Val)
         // printf(__FUNCTION__" ret=0x%02X\n", RdBuff);
         SdCard.Wr(Val);
       }
+
       else if ((Cfg & 4) && (comp.ts.vdac2))   // FT812 selected
         RdBuff = vdac2::transfer(Val);
-      else if ((Cfg & 16) && (comp.ts.vdac2 >= 2))   // ZiFi32 selected
-        RdBuff = zf32::transfer(Val);
+
+      else if ((Cfg & 16) && comp.ts.zifi32)   // ZiFi32 selected
+        RdBuff = (Port & 0x10000) ? zf32::transfer_dma(Val) : zf32::transfer(Val);
+
       else
         RdBuff = 255;
       //printf("\nOUT %02X  in %02X",Val,RdBuff);
@@ -69,10 +90,13 @@ u8 TZc::Rd(u32 Port)
         // printf(__FUNCTION__" ret=0x%02X\n", RdBuff);
         SdCard.Wr(0xff);
       }
+
       else if ((Cfg & 4) && (comp.ts.vdac2))   // FT812 selected
         RdBuff = vdac2::transfer(0xFF);
-      else if ((Cfg & 16) && (comp.ts.vdac2 >= 2))   // ZiFi32 selected
-        RdBuff = zf32::transfer(0xFF);
+
+      else if ((Cfg & 16) && comp.ts.zifi32)   // ZiFi32 selected
+        RdBuff = (Port & 0x10000) ? zf32::transfer_dma(0xFF) : zf32::transfer(0xFF);
+
       else
         RdBuff = 255;
       

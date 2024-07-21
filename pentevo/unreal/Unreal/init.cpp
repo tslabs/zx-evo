@@ -20,6 +20,7 @@
 #include "debugger/debug.h"
 #include "visuals.h"
 #include "ft812.h"
+#include "zifi32/zifi32.h"
 
 void cpu_info()
 {
@@ -115,25 +116,28 @@ void init_all(int argc, char **argv)
 
    if (comp.ts.vdac2)
    {
-     const char *ver = 0;
-     int rc = vdac2::open_ft8xx(&ver);
-     
-     if (rc == 0)
-     {
-       if (ver)
-       {
-        color(CONSCLR_HARDITEM);
-        printf("FT library: ", ver);
-        color(CONSCLR_HARDINFO);
-        printf("%s\n", ver);
-       }
-     }
-     else
-     {
-       color(CONSCLR_WARNING);
-       printf("Warning: FT8xx emulator failed! (error: %d, %lX)\n", rc, GetLastError());
-       comp.ts.vdac2 = 0;
-     }
+      const char *ver = 0;
+      int rc = vdac2::open_ft8xx(&ver);
+      
+      if (rc == 0)
+      {
+        if (ver)
+        {
+         color(CONSCLR_HARDITEM);
+         printf("FT library: ", ver);
+         color(CONSCLR_HARDINFO);
+         printf("%s\n", ver);
+        }
+      }
+      else
+      {
+        color(CONSCLR_WARNING);
+        printf("Warning: FT8xx emulator failed! (error: %d, %lX)\n", rc, GetLastError());
+        comp.ts.vdac2 = 0;
+      }
+
+    if (comp.ts.zifi32)
+      zf32::init();
    }
    
    load_errors = 0;

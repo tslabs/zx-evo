@@ -126,12 +126,12 @@ void dma_init()
   switch (mode)
   {
     case DMA_RAMRAM  : comp.ts.dma.state = DMA_ST_RAM; break;
-    case DMA_SPIRAM  : comp.ts.dma.state = DMA_ST_SPI_R; break;
+    case DMA_SPIRAM  : comp.ts.dma.state = DMA_ST_SPI_R; Zc.DmaRdStart(comp.ts.dma.len * (comp.ts.dma.num + 1) * 2);  break;
     case DMA_IDERAM  : comp.ts.dma.state = DMA_ST_IDE_R; break;
     case DMA_FILLRAM : comp.ts.dma.state = DMA_ST_FILL; break;
     case DMA_BLT2RAM : comp.ts.dma.state = DMA_ST_BLT2; break;
     case DMA_BLT1RAM : comp.ts.dma.state = DMA_ST_BLT1; break;
-    case DMA_RAMSPI  : comp.ts.dma.state = DMA_ST_SPI_W; break;
+    case DMA_RAMSPI  : comp.ts.dma.state = DMA_ST_SPI_W; Zc.DmaWrStart(); break;
     case DMA_RAMIDE  : comp.ts.dma.state = DMA_ST_IDE_W; break;
     case DMA_RAMCRAM : comp.ts.dma.state = DMA_ST_CRAM; break;
     case DMA_RAMSFILE: comp.ts.dma.state = DMA_ST_SFILE; break;
@@ -162,8 +162,11 @@ void dma_next_burst()
     comp.ts.dma.num--;
     comp.ts.dma.len = comp.ts.dmalen + 1;
   }
-  else
+  else  // DMA operation completed
   {
+    if (comp.ts.dma.state == DMA_RAMSPI)
+      Zc.DmaWrEnd();
+
     comp.ts.intctrl.new_dma = true;
     comp.ts.dma.state = DMA_ST_NOP;
   }
@@ -338,8 +341,8 @@ u32 dma_spi_r(u32 n)
     }
 
     u16 *d = (u16*)(dd + RAM_BASE_M);
-    u16 data = Zc.Rd(0x57);
-    data |= Zc.Rd(0x57) << 8;
+    u16 data = Zc.Rd(0x10057);  // bit16 = 1 to indicate DMA transaction
+    data |= Zc.Rd(0x10057) << 8;
     *d = data;
     comp.ts.dma.len--;
     dd_inc();
@@ -363,8 +366,8 @@ u32 dma_spi_w(u32 n)
 
     u16 *s = (u16*)(ss + RAM_BASE_M);
     u16 data = *s;
-    Zc.Wr(0x57, data & 0xFF);
-    Zc.Wr(0x57, data >> 8);
+    Zc.Wr(0x10057, data & 0xFF);  // bit16 = 1 to indicate DMA transaction
+    Zc.Wr(0x10057, data >> 8);
     comp.ts.dma.len--;
     ss_inc();
   }

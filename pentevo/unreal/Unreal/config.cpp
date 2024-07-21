@@ -355,6 +355,12 @@ void load_config(const char *fname)
    // TS VDAC2 (FT812)
    comp.ts.vdac2 = GetPrivateProfileInt(misc, "TS_VDAC2", 0, ininame);
 
+   // ZiFi32 (ESP32)
+   GetPrivateProfileString(misc, "TS_ZIFI32", nil, line, sizeof line, ininame);
+   comp.ts.zifi32 = 0;
+   if (!strnicmp(line, "EMUL", 4)) comp.ts.zifi32 = 1;
+   if (!strnicmp(line, "USB", 3)) comp.ts.zifi32 = 2;
+
    // Cache
    conf.cache = GetPrivateProfileInt(misc, "Cache", 0, ininame);
    if (conf.cache && conf.cache!=16 && conf.cache!=32) conf.cache = 0;

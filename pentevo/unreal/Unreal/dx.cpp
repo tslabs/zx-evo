@@ -1455,15 +1455,15 @@ void start_dx()
    AdjustWindowRect(&Client, WS_VISIBLE | WS_OVERLAPPEDWINDOW, 0);
    cx = Client.right - Client.left;
    cy = Client.bottom - Client.top;
-   int winx = rect1.left + (rect1.right - rect1.left - cx) / 2;
-   int winy = rect1.top + (rect1.bottom - rect1.top - cy) / 2;
+   int winx = rect1.left + (rect1.right - rect1.left - cx);  // /2 to center
+   int winy = rect1.top + (rect1.bottom - rect1.top - cy);   // /2 to center
    winx = winx < 0 ? 0 : winx;
    winy = winy < 0 ? 0 : winy;
 
    main_menu = LoadMenu(hIn, MAKEINTRESOURCE(IDR_MAINMENU));
    wnd = CreateWindow("EMUL_WND", "UnrealSpeccy", WS_VISIBLE|WS_OVERLAPPEDWINDOW,
-                    winx, winy, cx, cy, nullptr, main_menu, hIn, NULL);
-//                    winx, winy, cx, cy, 0, 0, hIn, NULL);
+                    // winx, winy, cx, cy, nullptr, main_menu, hIn, NULL);
+                    winx, 0, cx, cy, nullptr, main_menu, hIn, NULL);
 
    DragAcceptFiles(wnd, 1);
 
