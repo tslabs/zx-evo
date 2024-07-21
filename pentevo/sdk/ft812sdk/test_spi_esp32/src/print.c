@@ -1,9 +1,9 @@
 
-u8 pcx, pcx0, pcy, pca, pcst, pscrl;
+u8 pcx, pcx0, pcy, pca, pcst, pscrl, pcxt;
 
 void init_print()
 {
-  pcy = pcx = pcx0 = pcst = pscrl = 0;
+  pcy = pcx = pcx0 = pcxt = pcst = pscrl = 0;
 
   TS_VCONFIG = 0x83;
   TS_VPAGE = 0xF0;
@@ -47,11 +47,16 @@ int putchar(u8 b)
   else                                    // character
   {
     if (b == '\r')                        // CR
+    {
       pcx = pcx0;
+      pcxt = 0;
+    }
     else if (b == '\n')                   // LF
       crlf();
     else if (b == '\a')                   // ink
       pcst = 1;
+    else if (b == '\t')                   // tab
+      pcx = pcxt = pcxt + 12;
     else                                  // draw char
     {
       u8 *addr = (u8*)(0xC000 | ((u16)(pscrl + pcy) << 8) | (pcx & 127));
