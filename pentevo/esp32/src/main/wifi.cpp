@@ -9,14 +9,13 @@
 #include "esp_wifi.h"
 #include "esp_netif.h"
 #include "esp_event.h"
-
-#define CONNECT_TIMEOUT_MS        (10000)
-#define DEFAULT_SCAN_LIST_SIZE    32
-
-wifi_ap_record_t ap_info[DEFAULT_SCAN_LIST_SIZE];
+#include "wifi.h"
 
 EventGroupHandle_t wifi_event_group;
-const int          CONNECTED_BIT = BIT0;
+const int CONNECTED_BIT = BIT0;
+
+wifi_ap_record_t ap_info[DEFAULT_SCAN_LIST_SIZE];
+esp_netif_ip_info_t ip;
 
 void event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data)
 {
@@ -26,54 +25,74 @@ void event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, voi
     xEventGroupClearBits(wifi_event_group, CONNECTED_BIT);
   }
   else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP)
+  {
+    ip_event_got_ip_t *event = (ip_event_got_ip_t*)event_data;
+    ip = event->ip_info;
     xEventGroupSetBits(wifi_event_group, CONNECTED_BIT);
+
+    // ESP_LOGI(TAG, "got ip:" IPSTR, IP2STR(&event->ip_info.ip));
+  }
 }
+
+void get_ip(u8 *i, u8 *m, u8 *g)
+{
+  i[0] = ((u8*)&ip.ip)[0];
+  i[1] = ((u8*)&ip.ip)[1];
+  i[2] = ((u8*)&ip.ip)[2];
+  i[3] = ((u8*)&ip.ip)[3];
+  m[0] = ((u8*)&ip.netmask)[0];
+  m[1] = ((u8*)&ip.netmask)[1];
+  m[2] = ((u8*)&ip.netmask)[2];
+  m[3] = ((u8*)&ip.netmask)[3];
+  g[0] = ((u8*)&ip.gw)[0];
+  g[1] = ((u8*)&ip.gw)[1];
+  g[2] = ((u8*)&ip.gw)[2];
+  g[3] = ((u8*)&ip.gw)[3];
+};
 
 void initialize_wifi()
 {
   esp_log_level_set("wifi", ESP_LOG_WARN);
+
   static bool initialized = false;
 
-  if (initialized)
-    return;
+  if (initialized) return;
 
   ESP_ERROR_CHECK(esp_netif_init());
   wifi_event_group = xEventGroupCreate();
   ESP_ERROR_CHECK(esp_event_loop_create_default());
-  esp_netif_t        *ap_netif = esp_netif_create_default_wifi_ap();
-  assert(ap_netif);
-  esp_netif_t        *sta_netif = esp_netif_create_default_wifi_sta();
+  // esp_netif_t *ap_netif = esp_netif_create_default_wifi_ap();
+  // assert(ap_netif);
+  esp_netif_t *sta_netif = esp_netif_create_default_wifi_sta();
   assert(sta_netif);
   wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
   ESP_ERROR_CHECK(esp_wifi_init(&cfg));
   ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_STA_DISCONNECTED, &event_handler, NULL));
   ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &event_handler, NULL));
   ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
-  ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_NULL));
+  ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
   ESP_ERROR_CHECK(esp_wifi_start());
+
   initialized = true;
 }
 
 bool wifi_connect(const char *ssid, const char *pass, int timeout_ms)
 {
   initialize_wifi();
+
   wifi_config_t wifi_config = { 0 };
-  strlcpy((char *)wifi_config.sta.ssid, ssid, sizeof(wifi_config.sta.ssid));
-  if (pass)
-  {
-    strlcpy((char *)wifi_config.sta.password, pass, sizeof(wifi_config.sta.password));
-  }
+  strlcpy((char*)wifi_config.sta.ssid, ssid, sizeof(wifi_config.sta.ssid));
+  if (pass) strlcpy((char*)wifi_config.sta.password, pass, sizeof(wifi_config.sta.password));
 
   ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
   ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
   esp_wifi_connect();
 
-  int bits = xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT,
-                                 pdFALSE, pdTRUE, timeout_ms / portTICK_PERIOD_MS);
+  int bits = xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT, pdFALSE, pdTRUE, timeout_ms / portTICK_PERIOD_MS);
+
   return (bits & CONNECTED_BIT) != 0;
 }
 
-/** Arguments used by 'connect' function */
 struct
 {
   struct arg_int *timeout;
@@ -91,18 +110,16 @@ int connect(int argc, char **argv)
     arg_print_errors(stderr, connect_args.end, argv[0]);
     return 1;
   }
-  ESP_LOGI(__func__, "Connecting to '%s'",
-           connect_args.ssid->sval[0]);
+  ESP_LOGI(__func__, "Connecting to '%s'", connect_args.ssid->sval[0]);
 
   /* set default value*/
   if (connect_args.timeout->count == 0)
-  {
     connect_args.timeout->ival[0] = CONNECT_TIMEOUT_MS;
-  }
 
   bool connected = wifi_connect(connect_args.ssid->sval[0],
                                 connect_args.password->sval[0],
                                 connect_args.timeout->ival[0]);
+
   if (!connected)
   {
     ESP_LOGW(__func__, "Connection timed out");
@@ -115,13 +132,11 @@ int connect(int argc, char **argv)
 
 static void print_auth_mode(int authmode)
 {
-  printf("Authmode \t\t");
-
   switch (authmode)
   {
-    case WIFI_AUTH_OPEN:          printf("OPEN"); break;
-    case WIFI_AUTH_OWE:           printf("OWE"); break;
-    case WIFI_AUTH_WEP:           printf("WEP"); break;
+    case WIFI_AUTH_OPEN:          printf("OPEN\t"); break;
+    case WIFI_AUTH_OWE:           printf("OWE\t"); break;
+    case WIFI_AUTH_WEP:           printf("WEP\t"); break;
     case WIFI_AUTH_WPA_PSK:       printf("WPA_PSK"); break;
     case WIFI_AUTH_WPA2_PSK:      printf("WPA2_PSK"); break;
     case WIFI_AUTH_WPA_WPA2_PSK:  printf("WPA_WPA2_PSK"); break;
@@ -133,73 +148,85 @@ static void print_auth_mode(int authmode)
   }
 }
 
-static void print_cipher_type(int pairwise_cipher, int group_cipher)
+static void print_cipher_type(int cipher)
 {
-  printf("Pairwise Cipher \t");
-
-  switch (pairwise_cipher)
+  switch (cipher)
   {
-    case WIFI_CIPHER_TYPE_NONE:         printf("NONE"); break;
-    case WIFI_CIPHER_TYPE_WEP40:        printf("WEP40"); break;
+    case WIFI_CIPHER_TYPE_NONE:         printf("NONE\t"); break;
+    case WIFI_CIPHER_TYPE_WEP40:        printf("WEP40\t"); break;
     case WIFI_CIPHER_TYPE_WEP104:       printf("WEP104"); break;
-    case WIFI_CIPHER_TYPE_TKIP:         printf("TKIP"); break;
-    case WIFI_CIPHER_TYPE_CCMP:         printf("CCMP"); break;
+    case WIFI_CIPHER_TYPE_TKIP:         printf("TKIP\t"); break;
+    case WIFI_CIPHER_TYPE_CCMP:         printf("CCMP\t"); break;
     case WIFI_CIPHER_TYPE_TKIP_CCMP:    printf("TKIP_CCMP"); break;
     case WIFI_CIPHER_TYPE_AES_CMAC128:  printf("AES_CMAC128"); break;
-    case WIFI_CIPHER_TYPE_SMS4:         printf("SMS4"); break;
-    case WIFI_CIPHER_TYPE_GCMP:         printf("GCMP"); break;
+    case WIFI_CIPHER_TYPE_SMS4:         printf("SMS4\t"); break;
+    case WIFI_CIPHER_TYPE_GCMP:         printf("GCMP\t"); break;
     case WIFI_CIPHER_TYPE_GCMP256:      printf("GCMP256"); break;
     default:                            printf("UNKNOWN"); break;
   }
-
-  printf("Group Cipher \t");
-
-  switch (group_cipher)
-  {
-    case WIFI_CIPHER_TYPE_NONE:       printf("NONE"); break;
-    case WIFI_CIPHER_TYPE_WEP40:      printf("WEP40"); break;
-    case WIFI_CIPHER_TYPE_WEP104:     printf("WEP104"); break;
-    case WIFI_CIPHER_TYPE_TKIP:       printf("TKIP"); break;
-    case WIFI_CIPHER_TYPE_CCMP:       printf("CCMP"); break;
-    case WIFI_CIPHER_TYPE_TKIP_CCMP:  printf("TKIP_CCMP"); break;
-    case WIFI_CIPHER_TYPE_SMS4:       printf("SMS4"); break;
-    case WIFI_CIPHER_TYPE_GCMP:       printf("GCMP"); break;
-    case WIFI_CIPHER_TYPE_GCMP256:    printf("GCMP256"); break;
-    default:                          printf("UNKNOWN"); break;
-  }
 }
 
-/* Initialize Wi-Fi as sta and set scan method */
-int wifi_scan(int argc, char **argv)
+int wf_scan()
 {
-  ESP_ERROR_CHECK(esp_netif_init());
-  ESP_ERROR_CHECK(esp_event_loop_create_default());
-  esp_netif_t *sta_netif = esp_netif_create_default_wifi_sta();
-  assert(sta_netif);
+  initialize_wifi();
 
-  wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-  ESP_ERROR_CHECK(esp_wifi_init(&cfg));
+  wifi_scan_config_t cfg = {};
+  cfg.show_hidden = false;
+  // cfg.scan_type = WIFI_SCAN_TYPE_ACTIVE;
+  cfg.scan_type = WIFI_SCAN_TYPE_PASSIVE;
+  cfg.scan_time.active.min = 0;
+  cfg.scan_time.active.max = 300;
+  cfg.scan_time.passive = 300;
 
+  return esp_wifi_scan_start(&cfg, true);
+}
+
+uint16_t wf_get_ap_num()
+{
   uint16_t number = DEFAULT_SCAN_LIST_SIZE;
-  wifi_ap_record_t ap_info[DEFAULT_SCAN_LIST_SIZE];
-  uint16_t         ap_count = 0;
-  memset(ap_info, 0, sizeof(ap_info));
-
-  ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
-  ESP_ERROR_CHECK(esp_wifi_start());
-  esp_wifi_scan_start(NULL, true);
-  printf("Max AP number ap_info can hold = %u", number);
+  uint16_t ap_count = 0;
   ESP_ERROR_CHECK(esp_wifi_scan_get_ap_records(&number, ap_info));
   ESP_ERROR_CHECK(esp_wifi_scan_get_ap_num(&ap_count));
-  printf("Total APs scanned = %u, actual AP number ap_info holds = %u\n", ap_count, number);
-  
-  for (int i = 0; i < number; i++) {
-  printf("SSID \t\t%s", ap_info[i].ssid);
-  printf("RSSI \t\t%d", ap_info[i].rssi);
-  print_auth_mode(ap_info[i].authmode);
-  if (ap_info[i].authmode != WIFI_AUTH_WEP)
-    print_cipher_type(ap_info[i].pairwise_cipher, ap_info[i].group_cipher);
-  printf("Channel \t\t%d\n", ap_info[i].primary);
+
+  return ap_count;
+}
+
+void wf_get_ap(int idx, u8 &auth, i8 &rssi, u8 &chan, u8 *&ssid)
+{
+  auth = ap_info[idx].authmode;
+  rssi = ap_info[idx].rssi;
+  chan = ap_info[idx].primary;
+  ssid = ap_info[idx].ssid;
+}
+
+int wifi_scan(int argc, char **argv)
+{
+  printf("Max AP number ap_info can hold = %u\r\n", DEFAULT_SCAN_LIST_SIZE);
+  memset(ap_info, 0, sizeof(ap_info));
+
+  wf_scan();
+
+  auto ap_count = wf_get_ap_num();
+  printf("Total APs scanned = %u\r\n\r\n", ap_count);
+
+  printf("Index\tAuth mode\tPairwise cypher\tGroup cypher\tRSSI\tChannel\tSSID\r\n");
+
+  for (int i = 0; i < ap_count; i++)
+  {
+    printf("%u\t", i);
+    print_auth_mode(ap_info[i].authmode);
+
+    if (ap_info[i].authmode != WIFI_AUTH_WEP)
+    {
+      printf("\t");
+      print_cipher_type(ap_info[i].pairwise_cipher);
+      printf("\t");
+      print_cipher_type(ap_info[i].group_cipher);
+    }
+    else
+      printf("\t\t\t\t");
+
+    printf("\t%d\t%d\t%s\r\n", ap_info[i].rssi, ap_info[i].primary, ap_info[i].ssid);
   }
 
   return 0;

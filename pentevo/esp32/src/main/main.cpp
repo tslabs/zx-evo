@@ -6,6 +6,7 @@
 #include "esp_err.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "freertos/queue.h"
 #include "driver/spi_slave_hd.h"
 #include "driver/gpio.h"
 #include "soc/rtc_cntl_reg.h"
@@ -15,11 +16,11 @@
 #include "nvs_flash.h"
 #include "console.h"
 
-typedef int8_t s8;
-typedef int16_t s16;
-typedef int32_t s32;
-typedef int64_t s64;
-typedef uint8_t u8;
+typedef int8_t   i8;
+typedef int16_t  i16;
+typedef int32_t  i32;
+typedef int64_t  i64;
+typedef uint8_t  u8;
 typedef uint16_t u16;
 typedef uint32_t u32;
 typedef uint64_t u64;
@@ -48,17 +49,44 @@ const char cp_string[] = "ESP32-S3 SPI WiFi Module, ver.0.2, (c)2024, TS-Labs";
 
 enum
 {
-  REQ_INFO,
-  REQ_RND,
-  REQ_TEST2,
-  REQ_TEST3,
+  DRQ_INFO,
+  DRQ_WSCAN,
+  DRQ_RND,
+  DRQ_TEST2,
+  DRQ_TEST3,
 };
 
-volatile struct
+enum
 {
-  bool is_req;
-  u8 type;
-} data_req;
+  TASK_WSCAN,
+  TASK_CONN,
+};
+
+QueueHandle_t drqueue;
+
+u8 error;
+
+#pragma pack(1)
+struct
+{
+  bool is_init = false;
+  bool is_busy = false;
+  u8 state;
+  QueueHandle_t queue;
+
+  u8 ssid[33];
+  u8 pwd[62];
+
+  struct
+  {
+    u8 ip[4];
+    u8 own_ip[4];
+    u8 mask[4];
+    u8 gate[4];
+  } ip;
+} net;
+#pragma pack()
+
 
 #define DEGS 360
 #define PI 3.14159265358979323846
@@ -88,147 +116,335 @@ void IRAM_ATTR splash(int n)
   }
 }
 
+// ------------- Command helpers
+
+u8 IRAM_ATTR rd_reg8(u8 reg)
+{
+  u8 val;
+  spi_slave_hd_read_buffer(SLAVE_HOST, reg, (u8*)&val, sizeof(val));
+  return val;
+}
+
+u32 IRAM_ATTR rd_reg32(u8 reg)
+{
+  u32 val;
+  spi_slave_hd_read_buffer(SLAVE_HOST, reg, (u8*)&val, sizeof(val));
+  return val;
+}
+
+void IRAM_ATTR rd_regs(u8 reg, const void *data, int size)
+{
+  spi_slave_hd_read_buffer(SLAVE_HOST, reg, (u8*)data, size);
+}
+
+void IRAM_ATTR wr_reg8(u8 reg, u8 val)
+{
+  spi_slave_hd_write_buffer(SLAVE_HOST, reg, (u8*)&val, sizeof(val));
+}
+
+void IRAM_ATTR wr_reg32(u8 reg, u32 val)
+{
+  spi_slave_hd_write_buffer(SLAVE_HOST, reg, (u8*)&val, sizeof(val));
+}
+
+void IRAM_ATTR wr_regs(u8 reg, const void *data, int size)
+{
+  spi_slave_hd_write_buffer(SLAVE_HOST, reg, (u8*)data, size);
+}
+
+void put_drq(int type)
+{
+  xQueueSend(drqueue, &type, 0);
+}
+
+void put_drq_isr(int type)
+{
+  xQueueSendFromISR(drqueue, &type, 0);
+}
+
+// ------------- Interrupt callbacks
+
 // Regs have been read
 bool IRAM_ATTR cb_regs_read(void *arg, spi_slave_hd_event_t *event, BaseType_t *awoken)
 {
-  // splash(3);
   return true;
 }
 
 bool IRAM_ATTR cb_recv_dma_ready(void *arg, spi_slave_hd_event_t *event, BaseType_t *awoken)
 {
-  // splash(4);
   return true;
 }
 
 bool IRAM_ATTR cb_cmd7(void *arg, spi_slave_hd_event_t *event, BaseType_t *awoken)
 {
-  // splash(7);
   return true;
 }
 
 // DMA sending done
 static IRAM_ATTR bool cb_cmd8(void *arg, spi_slave_hd_event_t *event, BaseType_t *awoken)
 {
-  // splash(8);
-
   return true;
 }
 
 bool IRAM_ATTR cb_cmd9(void *arg, spi_slave_hd_event_t *event, BaseType_t *awoken)
 {
-  // splash(9);
   return true;
 }
 
 bool IRAM_ATTR cb_cmdA(void *arg, spi_slave_hd_event_t *event, BaseType_t *awoken)
 {
-  // splash(10);
   return true;
 }
 
-void IRAM_ATTR set_status(u8 status)
-{
-  spi_slave_hd_write_buffer(SLAVE_HOST, ESP_REG_STATUS, (u8*)&status, 1);
-}
-
-void IRAM_ATTR set_error(u8 error)
-{
-  spi_slave_hd_write_buffer(SLAVE_HOST, ESP_REG_EXT_STAT, (u8*)&error, 1);
-}
-
-void IRAM_ATTR set_data_size(u32 size)
-{
-  spi_slave_hd_write_buffer(SLAVE_HOST, ESP_REG_DATA_SIZE, (u8*)&size, 4);
-}
-
-extern "C"
-{
-void spi_slave_hd_intr_segment2();
-}
-
 // Called after Master has finished writing shared regs
+void command();
+
 bool IRAM_ATTR cb_cmd(void *arg, spi_slave_hd_event_t *event, BaseType_t *awoken)
 {
-  u8 cmd;
-  u8 zero = 0;
-  spi_slave_hd_read_buffer(SLAVE_HOST, ESP_REG_COMMAND, &cmd, 1);
-  spi_slave_hd_write_buffer(SLAVE_HOST, ESP_REG_COMMAND, &zero, 1);
-
-  if (cmd)
-  {
-    set_status(ESP_ST_BUSY);
-
-    switch (cmd)
-    {
-      case ESP_CMD_DMA_END:
-        *(u32*)0x60024044 = 1 << 5; // trigger CMD8 intr
-      break;
-
-      case ESP_CMD_GET_INFO:
-        data_req.is_req = true;
-        data_req.type = REQ_INFO;
-      break;
-
-      case ESP_CMD_GET_RND:
-        data_req.is_req = true;
-        data_req.type = REQ_RND;
-      break;
-
-      case ESP_CMD_TEST2:
-        data_req.is_req = true;
-        data_req.type = REQ_TEST2;
-      break;
-
-      case ESP_CMD_TEST3:
-        data_req.is_req = true;
-        data_req.type = REQ_TEST3;
-      break;
-
-      case ESP_CMD_RESET:
-        REG_WRITE(RTC_CNTL_OPTIONS0_REG, RTC_CNTL_SW_SYS_RST);  // SoC reset
-        while (1);
-    }
-  }
-
+  command();
   return true;
 }
 
 // DMA to send is ready (the transaction is pushed by sender task)
 static IRAM_ATTR bool cb_tx_ready(void *arg, spi_slave_hd_event_t *event, BaseType_t *awoken)
 {
-  set_status(ESP_ST_DATA_S2M);
+  wr_reg8(ESP_REG_STATUS, ESP_ST_DATA_S2M);
 
   return true;
 }
 
-u32 prepare_tx_data(u8 *data, u8 type, u32 size)
+// ------------- Net helper task
+
+void net_task(void *arg)
 {
+  _delay_ms(500);
+  initialize_wifi();
+  net.is_init = true;
+
+  while (1)
+  {
+    int task;
+
+    if (xQueueReceive(net.queue, &task, portMAX_DELAY))
+    {
+      switch (task)
+      {
+        case TASK_WSCAN:
+        {
+          wf_scan();
+          net.is_busy = false;
+          put_drq(DRQ_WSCAN);
+        }
+        break;
+        
+        case TASK_CONN:
+        {
+          net.state = NETWORK_OPENING;
+          auto rc = wifi_connect((const char*)net.ssid, (const char*)net.pwd, 10000);
+          net.is_busy = false;
+          net.state = rc ? NETWORK_OPEN : NETWORK_CLOSED;
+          
+          if (rc)
+          {
+            error = ESP_ERR_NONE;
+            wr_reg8(ESP_REG_STATUS, ESP_ST_READY);
+            get_ip(net.ip.own_ip, net.ip.mask, net.ip.gate);
+          }
+          else
+          {
+            error = ESP_ERR_AP_NOT_CONN;
+            wr_reg8(ESP_REG_ERROR, error);
+            wr_reg8(ESP_REG_STATUS, ESP_ST_ERROR);
+          }
+        }
+        break;
+
+        default:
+          net.is_busy = false;
+      }
+    }
+  }
+}
+
+// ------------- SPI device
+
+void command()
+{
+  u8 zero = 0;
+  u8 cmd = rd_reg8(ESP_REG_COMMAND);
+  wr_reg8(ESP_REG_COMMAND, zero);
+
+  if (cmd)
+  {
+    wr_reg8(ESP_REG_STATUS, ESP_ST_BUSY);
+
+    switch (cmd)
+    {
+      case ESP_CMD_DATA_END:
+        *(u32*)0x60024044 = 1 << 5;   // trigger CMD8 interrupt (CMD8 does not trigger it)
+        wr_reg8(ESP_REG_STATUS, ESP_ST_READY);
+      break;
+
+      case ESP_CMD_GET_INFO:
+        wr_regs(ESP_REG_DATA, cp_string, sizeof(cp_string) - 1);
+        wr_reg8(ESP_REG_DATA_SIZE, sizeof(cp_string) - 1);
+        error = ESP_ERR_NONE;
+        wr_reg8(ESP_REG_STATUS, ESP_ST_READY);
+      break;
+
+      case ESP_CMD_GET_ERROR:
+        wr_reg8(ESP_REG_ERROR, error);
+        error = ESP_ERR_NONE;
+        wr_reg8(ESP_REG_STATUS, ESP_ST_READY);
+      break;
+
+      case ESP_CMD_GET_NETSTATE:
+        wr_reg8(ESP_REG_NETSTATE, net.state);
+        error = ESP_ERR_NONE;
+        wr_reg8(ESP_REG_STATUS, ESP_ST_READY);
+      break;
+
+      case ESP_CMD_GET_IP:
+        wr_regs(ESP_REG_IP, &net.ip, sizeof(net.ip));
+        error = ESP_ERR_NONE;
+        wr_reg8(ESP_REG_STATUS, ESP_ST_READY);
+      break;
+      
+      case ESP_CMD_SET_AP_NAME:
+      {
+        int len = rd_reg8(ESP_REG_DATA_SIZE);
+        
+        if (!len || (len > 32))
+        {
+          net.ssid[0] = 0;
+          error = ESP_ERR_WRONG_PARAMETER;
+          wr_reg8(ESP_REG_ERROR, error);
+          wr_reg8(ESP_REG_STATUS, ESP_ST_ERROR);
+        }
+        else
+        {
+          rd_regs(ESP_REG_DATA, net.ssid, len);
+          net.ssid[len] = 0;
+          error = ESP_ERR_NONE;
+          wr_reg8(ESP_REG_STATUS, ESP_ST_READY);
+        }
+      }
+      break;
+      
+      case ESP_CMD_SET_AP_PWD:
+      {
+        int len = rd_reg8(ESP_REG_DATA_SIZE);
+        net.pwd[0] = 0;
+        
+        if (len > 61)
+        {
+          error = ESP_ERR_WRONG_PARAMETER;
+          wr_reg8(ESP_REG_ERROR, error);
+          wr_reg8(ESP_REG_STATUS, ESP_ST_ERROR);
+        }
+        else
+        {
+          rd_regs(ESP_REG_DATA, net.pwd, len);
+          net.pwd[len] = 0;
+          error = ESP_ERR_NONE;
+          wr_reg8(ESP_REG_STATUS, ESP_ST_READY);
+        }
+      }
+      break;
+      
+      case ESP_CMD_AP_CONNECT:
+        if (!net.is_busy)
+        {
+          net.is_busy = true;
+          int task = TASK_CONN;
+          xQueueSendFromISR(net.queue, &task, 0);
+        }
+      break;
+      
+      case ESP_CMD_WSCAN:
+        if (!net.is_busy)
+        {
+          net.is_busy = true;
+          int task = TASK_WSCAN;
+          xQueueSendFromISR(net.queue, &task, 0);
+        }
+      break;
+
+      case ESP_CMD_GET_RND:
+        put_drq_isr(DRQ_RND);
+      break;
+
+      case ESP_CMD_TEST2:
+        put_drq_isr(DRQ_TEST2);
+      break;
+
+      case ESP_CMD_TEST3:
+        put_drq_isr(DRQ_TEST3);
+      break;
+
+      case ESP_CMD_RESET:
+        REG_WRITE(RTC_CNTL_OPTIONS0_REG, RTC_CNTL_SW_SYS_RST);  // SoC reset
+        while (1);
+
+      default:
+        wr_reg8(ESP_REG_STATUS, ESP_ST_ERROR);
+        wr_reg8(ESP_REG_ERROR, ESP_ERR_INVALID_COMMAND);
+    }
+  }
+}
+
+u32 prepare_tx_data(u8 *data, u8 type, u32 max_size)
+{
+  int size = 0;
+
   switch (type)
   {
-    case REQ_INFO:
-      size = snprintf((char*)data, size, cp_string);
+    case DRQ_WSCAN:
+    {
+      auto num = wf_get_ap_num();
+      int ptr = 0;
+      data[ptr++] = num;    // number of APs
+
+      for (int i = 0; i < num; i++)
+      {
+        u8 auth;
+        i8 rssi;
+        u8 chan;
+        u8 *ssid;
+        
+        wf_get_ap(i, auth, rssi, chan, ssid);
+        int len = strlen((char*)ssid);
+
+        data[ptr++] = auth;               // Auth type
+        data[ptr++] = rssi;               // RSSI
+        data[ptr++] = chan;               // Channel
+        data[ptr++] = len;                // SSID length
+        memcpy(&data[ptr], ssid, len);    // SSID
+        ptr += len;
+      }
+
+      size = ptr;
+    }
     break;
 
-    case REQ_RND:
+    case DRQ_RND:
     {
-      bootloader_random_enable();
       u32 *p = (u32*)data;
       size = 6144;
 
       for (int i = 0; i < size / 4; i++)
-      { 
+      {
         u32 a = rand();
         p[i] = a ^ (a << 1);
       }
     }
     break;
 
-    case REQ_TEST2:
+    case DRQ_TEST2:
       size = tunnel(data);
     break;
 
-    case REQ_TEST3:
+    case DRQ_TEST3:
       size = cobra(data);
     break;
   }
@@ -236,9 +452,8 @@ u32 prepare_tx_data(u8 *data, u8 type, u32 size)
   return size;
 }
 
-void sender(void *arg)
+void sender_task(void *arg)
 {
-  esp_err_t err = ESP_OK;
   spi_slave_hd_data_t slave_trans;          //Transaction descriptor
   spi_slave_hd_data_t *ret_trans;           //Pointer to the descriptor of return result
 
@@ -250,28 +465,20 @@ void sender(void *arg)
     abort();
   }
 
-  // printf("Sender task started\r\n");
-  // printf("Send buf: 0x%08X\r\n", send_buf);
-
   while (1)
   {
-    while(!data_req.is_req);
-    data_req.is_req = false;
+    int type;
+    xQueueReceive(drqueue, &type, portMAX_DELAY);
 
     slave_trans.data = send_buf;
-    slave_trans.len = prepare_tx_data(send_buf, data_req.type, DMA_BUF_SIZE);
-    set_data_size(slave_trans.len);
-    err = spi_slave_hd_queue_trans(SLAVE_HOST, SPI_SLAVE_CHAN_TX, &slave_trans, portMAX_DELAY);
-    err = spi_slave_hd_get_trans_res(SLAVE_HOST, SPI_SLAVE_CHAN_TX, &ret_trans, portMAX_DELAY);
-    
-    if (err != ESP_OK)  {}
-
-    u32 cmd;
-    spi_slave_hd_read_buffer(SLAVE_HOST, 0, (u8*)&cmd, 4);
+    slave_trans.len = prepare_tx_data(send_buf, type, DMA_BUF_SIZE);
+    wr_reg32(ESP_REG_DATA_SIZE, slave_trans.len);
+    spi_slave_hd_queue_trans(SLAVE_HOST, SPI_SLAVE_CHAN_TX, &slave_trans, portMAX_DELAY);
+    spi_slave_hd_get_trans_res(SLAVE_HOST, SPI_SLAVE_CHAN_TX, &ret_trans, portMAX_DELAY);
   }
 }
 
-void receiver(void *arg)
+void receiver_task(void *arg)
 {
   spi_slave_hd_data_t *ret_trans;
   u32 recv_buf_size = DMA_BUF_SIZE;
@@ -302,8 +509,6 @@ void receiver(void *arg)
     spi_slave_hd_queue_trans(SLAVE_HOST, SPI_SLAVE_CHAN_RX, &slave_trans[descriptor_id], portMAX_DELAY);
     descriptor_id = (descriptor_id + 1) % QUEUE_SIZE;
   }
-
-  // printf("Receiver task started\r\n");
 
   while (1)
   {
@@ -372,26 +577,32 @@ static void init_slave_hd(void)
   };
 
   spi_slave_hd_init(SLAVE_HOST, &bus_cfg, &slave_hd_cfg);
-
-  // printf("Slave init done\r\n");
 }
 
 extern "C" void app_main()
 {
   // printf("ESP32 SPI\r\n");
-  
+
   calc_sin();
+  bootloader_random_enable();
   initialize_nvs();
 
   // gpio_set_direction(GPIO_TEST, GPIO_MODE_OUTPUT);
-  
-  initialize_console();
-  xTaskCreate(console, "consoleTask", 8192, NULL, 1, NULL);
-  
-  data_req.is_req = false;
+
   init_slave_hd();
-  set_status(ESP_ST_READY);
-  set_error(ESP_ERR_RESET);
-  xTaskCreate(receiver, "recvTask", 4096, NULL, 1, NULL);
-  xTaskCreate(sender, "sendTask", 4096, NULL, 1, NULL);
+  wr_reg8(ESP_REG_STATUS, ESP_ST_READY);
+  error = ESP_ERR_RESET;
+  net.state = NETWORK_CLOSED;
+
+  net.queue = xQueueCreate(2, sizeof(int));
+  xTaskCreate(net_task, "net helper", 8192, NULL, 10, NULL);
+  while (!net.is_init);
+  _delay_ms(500);
+
+  drqueue = xQueueCreate(2, sizeof(int));
+  xTaskCreate(receiver_task, "receiver", 4096, NULL, 1, NULL);
+  xTaskCreate(sender_task, "sender", 4096, NULL, 1, NULL);
+
+  initialize_console();
+  xTaskCreate(console_task, "console", 8192, NULL, 11, NULL);
 }

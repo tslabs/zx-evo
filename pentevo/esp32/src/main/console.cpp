@@ -108,7 +108,7 @@ void initialize_console()
   prompt = LOG_COLOR_I PROMPT_STR "> " LOG_RESET_COLOR;
 }
 
-void console(void *arg)
+void console_task(void *arg)
 {
   _delay_ms(30);
 

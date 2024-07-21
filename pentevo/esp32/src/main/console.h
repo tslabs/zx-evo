@@ -2,4 +2,4 @@
 #pragma once
 
 void initialize_console();
-void console(void *arg);
+void console_task(void *arg);
