@@ -34,6 +34,8 @@ enum
   ESP_CMD_AP_CONNECT    = 0x16,
   ESP_CMD_AP_DISCONNECT = 0x17,  // +++
   ESP_CMD_GET_IP        = 0x19,
+  
+  ESP_CMD_XM_INIT       = 0xA0,
 
   ESP_CMD_DATA_END      = 0xD0,
   ESP_CMD_RESET         = 0xEE,
@@ -83,5 +85,3 @@ enum
   ESP_SPI_CMD_WR_DATA = 0x03,
   ESP_SPI_CMD_RD_DATA = 0x04
 };
-
-#define _delay_ms(a) vTaskDelay(pdMS_TO_TICKS(a));

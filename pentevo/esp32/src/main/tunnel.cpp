@@ -1,4 +1,22 @@
 
+#include <math.h>
+
+#include "types.h"
+#include "ft812.h"
+
+#define DEGS 360
+#define PI 3.14159265358979323846
+float sin_tab[DEGS];
+
+void calc_sin()
+{
+  for (int i = 0; i < DEGS; i++)
+  {
+    float s = sin((float)i * PI / (DEGS / 2));
+    sin_tab[i] = s;
+  }
+}
+
 u32 tunnel(void *data)
 {
   static int phase = 0;

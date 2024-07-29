@@ -4,6 +4,9 @@
 #include <ctype.h>
 #include <inttypes.h>
 #include <unistd.h>
+
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 #include "esp_log.h"
 #include "esp_console.h"
 #include "esp_chip_info.h"
@@ -14,13 +17,18 @@
 #include "driver/rtc_io.h"
 #include "driver/uart.h"
 #include "argtable3/argtable3.h"
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
 #include "sdkconfig.h"
+
+#include "stats.h"
+#include "types.h"
+
+using namespace stats;
 
 #ifdef CONFIG_FREERTOS_USE_STATS_FORMATTING_FUNCTIONS
 #define WITH_TASKS_INFO    1
 #endif
+
+const char TAG[] = "zf32_system";
 
 int get_info(int argc, char **argv)
 {
@@ -77,7 +85,7 @@ int get_info(int argc, char **argv)
   printf("\r\n%s\r\n", cp_string);
   printf("Build: " __DATE__ ", " __TIME__ "\r\n");
   printf("\r\n");
-  
+
   printf("Chip info:\r\n");
   printf("\tModel: %s\r\n", model);
   printf("\tSilicon revision: %d\r\n", info.revision);
@@ -185,7 +193,7 @@ int tasks_info(int argc, char **argv)
     ESP_LOGE(TAG, "failed to allocate buffer for vTaskList output");
     return 1;
   }
-  
+
   fputs("Task Name\tStatus\tPrio\tHWM\tTask#", stdout);
 #ifdef CONFIG_FREERTOS_VTASKLIST_INCLUDE_COREID
   fputs("\tAffinity", stdout);
@@ -194,6 +202,7 @@ int tasks_info(int argc, char **argv)
   vTaskList(task_list_buffer);
   fputs(task_list_buffer, stdout);
   free(task_list_buffer);
+
   return 0;
 }
 
@@ -210,6 +219,60 @@ void register_tasks()
   ESP_ERROR_CHECK(esp_console_cmd_register(&cmd));
 }
 
+int stats_info(int argc, char **argv)
+{
+#if CONFIG_FREERTOS_RUN_TIME_STATS_USING_ESP_TIMER
+  vTaskGetRunTimeStats(_st.runtime_stats_buffer);
+  printf("\r\n");
+  printf("Task runtime statistics:\n%s", _st.runtime_stats_buffer);
+#endif
+
+  printf("\r\n");
+
+  while (1)
+  {
+    printf("drq_data_start_last_us: %d  \r\n", _st.drq_data_start_last_us);
+    printf("drq_data_start_min_us: %d  \r\n", _st.drq_data_start_min_us);
+    printf("drq_data_start_max_us: %d  \r\n", _st.drq_data_start_max_us);
+    printf("\r\n");
+    printf("drq_data_end_last_us: %d  \r\n", _st.drq_data_end_last_us);
+    printf("drq_data_end_min_us: %d  \r\n", _st.drq_data_end_min_us);
+    printf("drq_data_end_max_us: %d  \r\n", _st.drq_data_end_max_us);
+    printf("\r\n");
+    printf("xm_render_last_us: %d  \r\n", _st.xm_render_last_us);
+    printf("xm_render_min_us: %d  \r\n", _st.xm_render_min_us);
+    printf("xm_render_max_us: %d  \r\n", _st.xm_render_max_us);
+    printf("\r\n");
+    printf("xm_render_last_cpu: %d  \r\n", _st.xm_render_last_cpu);
+    printf("xm_render_min_cpu: %d  \r\n", _st.xm_render_min_cpu);
+    printf("xm_render_max_cpu: %d  \r\n", _st.xm_render_max_cpu);
+    printf("\r\n");
+    printf("xm_samp_min: %f   \r\n", _st.xm_samp_min);
+    printf("xm_samp_max: %f   \r\n", _st.xm_samp_max);
+
+    char c; if (uart_read_bytes(UART_NUM_0, &c, 1, 0)) break;
+
+    printf("\033[18A");   // go up
+  }
+
+  printf("\r\n");
+
+  return 0;
+}
+
+void register_stats()
+{
+  const esp_console_cmd_t cmd =
+  {
+    .command = "stats",
+    .help    = "Get CPU usage of running tasks",
+    .hint    = NULL,
+    .func    = &stats_info,
+  };
+
+  ESP_ERROR_CHECK(esp_console_cmd_register(&cmd));
+}
+
 #endif // WITH_TASKS_INFO
 
 void esp_console_register_system_commands()
@@ -220,5 +283,6 @@ void esp_console_register_system_commands()
   register_restart();
 #if WITH_TASKS_INFO
   register_tasks();
+  register_stats();
 #endif
 }

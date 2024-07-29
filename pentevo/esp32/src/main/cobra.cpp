@@ -1,4 +1,10 @@
 
+#include <string.h>
+#include <math.h>
+
+#include "types.h"
+#include "ft812.h"
+
 const int8_t COBRA_vertices[] =
 {
   15,0,37,

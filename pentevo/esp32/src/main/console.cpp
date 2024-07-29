@@ -1,20 +1,27 @@
 
 #include <stdio.h>
 #include <string.h>
+
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+
 #include "esp_system.h"
 #include "esp_console.h"
 #include "esp_log.h"
 #include "esp_vfs_dev.h"
 #include "driver/uart.h"
+#include "argtable3/argtable3.h"
 #include "linenoise/linenoise.h"
-// #include "argtable3/argtable3.h"
-// #include "freertos/FreeRTOS.h"
-// #include "freertos/task.h"
+#include "nvs.h"
+#include "nvs_flash.h"
 
-#define PROMPT_STR    "zifi32"
+#include "types.h"
+#include "console.h"
+
+#define PROMPT_STR "zifi32"
 const char* prompt;
 
-void initialize_nvs(void)
+void initialize_nvs()
 {
   esp_err_t err = nvs_flash_init();
 

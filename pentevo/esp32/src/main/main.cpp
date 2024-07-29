@@ -2,49 +2,44 @@
 #include <stdint.h>
 #include <string.h>
 #include <math.h>
-#include "esp_log.h"
-#include "esp_err.h"
+
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/queue.h"
 #include "driver/spi_slave_hd.h"
 #include "driver/gpio.h"
 #include "soc/rtc_cntl_reg.h"
+#include "esp_log.h"
+#include "esp_err.h"
+#include "esp_timer.h"
 #include "bootloader_random.h"
 #include "esp_random.h"
 #include "nvs.h"
 #include "nvs_flash.h"
-#include "console.h"
 
-typedef int8_t   i8;
-typedef int16_t  i16;
-typedef int32_t  i32;
-typedef int64_t  i64;
-typedef uint8_t  u8;
-typedef uint16_t u16;
-typedef uint32_t u32;
-typedef uint64_t u64;
-
-#define max(x, y) (((x) > (y)) ? (x) : (y))
-#define min(x, y) (((x) < (y)) ? (x) : (y))
-
+#include "types.h"
 #include "spi_slave.h"
+#include "console.h"
 #include "ft812.h"
+#include "wifi.h"
+#include "cobra.h"
+#include "tunnel.h"
+#include "xm_cpp.h"
+#include "stats.h"
 
 // Pin setting
 #define GPIO_MOSI     13
 #define GPIO_MISO     11
 #define GPIO_SCLK     12
 #define GPIO_CS       10
-#define GPIO_TEST     (gpio_num_t)3
 
 #define SLAVE_HOST    SPI2_HOST
 #define DMA_CHAN      SPI_DMA_CH_AUTO
-#define QUEUE_SIZE    4
+#define QUEUE_SIZE    2
 
-#define DMA_BUF_SIZE  32768
+using namespace stats;
 
-const char TAG[] = "ZF32";
+const char TAG[] = "zf32_main";
 const char cp_string[] = "ESP32-S3 SPI WiFi Module, ver.0.2, (c)2024, TS-Labs";
 
 enum
@@ -63,6 +58,7 @@ enum
 };
 
 QueueHandle_t drqueue;
+TaskHandle_t sender_task_h = NULL;
 
 u8 error;
 
@@ -87,32 +83,15 @@ struct
 } net;
 #pragma pack()
 
-
-#define DEGS 360
-#define PI 3.14159265358979323846
-float sin_tab[DEGS];
-
-void calc_sin()
-{
-  for (int i = 0; i < DEGS; i++)
-  {
-    float s = sin((float)i * PI / (DEGS / 2));
-    sin_tab[i] = s;
-  }
-}
-
-#include "cobra.cpp"
-#include "tonnel.cpp"
-#include "system.cpp"
-#include "wifi.cpp"
-#include "console.cpp"
+#define DMA_BUF_SIZE 8192
+u8 *send_buf;
+u8 *recv_buf[QUEUE_SIZE];
 
 void IRAM_ATTR splash(int n)
 {
   while (n--)
   {
-    // gpio_set_level(GPIO_TEST, 1);
-    // gpio_set_level(GPIO_TEST, 0);
+    // gpio_set_level((gpio_num_t)GPIO_TEST1, 1); gpio_set_level((gpio_num_t)GPIO_TEST1, 0); // !!!
   }
 }
 
@@ -152,14 +131,17 @@ void IRAM_ATTR wr_regs(u8 reg, const void *data, int size)
   spi_slave_hd_write_buffer(SLAVE_HOST, reg, (u8*)data, size);
 }
 
-void put_drq(int type)
+void IRAM_ATTR put_drq(int type)
 {
   xQueueSend(drqueue, &type, 0);
 }
 
-void put_drq_isr(int type)
+void IRAM_ATTR put_drq_isr(int type)
 {
+  // gpio_set_level((gpio_num_t)GPIO_TEST1, 1); gpio_set_level((gpio_num_t)GPIO_TEST1, 0); // !!!
+  _st.drq_data_t = esp_timer_get_time();
   xQueueSendFromISR(drqueue, &type, 0);
+  portYIELD_FROM_ISR();
 }
 
 // ------------- Interrupt callbacks
@@ -217,10 +199,6 @@ static IRAM_ATTR bool cb_tx_ready(void *arg, spi_slave_hd_event_t *event, BaseTy
 
 void net_task(void *arg)
 {
-  _delay_ms(500);
-  initialize_wifi();
-  net.is_init = true;
-
   while (1)
   {
     int task;
@@ -236,14 +214,14 @@ void net_task(void *arg)
           put_drq(DRQ_WSCAN);
         }
         break;
-        
+
         case TASK_CONN:
         {
           net.state = NETWORK_OPENING;
           auto rc = wifi_connect((const char*)net.ssid, (const char*)net.pwd, 10000);
           net.is_busy = false;
           net.state = rc ? NETWORK_OPEN : NETWORK_CLOSED;
-          
+
           if (rc)
           {
             error = ESP_ERR_NONE;
@@ -268,7 +246,7 @@ void net_task(void *arg)
 
 // ------------- SPI device
 
-void command()
+void IRAM_ATTR command()
 {
   u8 zero = 0;
   u8 cmd = rd_reg8(ESP_REG_COMMAND);
@@ -309,11 +287,11 @@ void command()
         error = ESP_ERR_NONE;
         wr_reg8(ESP_REG_STATUS, ESP_ST_READY);
       break;
-      
+
       case ESP_CMD_SET_AP_NAME:
       {
         int len = rd_reg8(ESP_REG_DATA_SIZE);
-        
+
         if (!len || (len > 32))
         {
           net.ssid[0] = 0;
@@ -330,12 +308,12 @@ void command()
         }
       }
       break;
-      
+
       case ESP_CMD_SET_AP_PWD:
       {
         int len = rd_reg8(ESP_REG_DATA_SIZE);
         net.pwd[0] = 0;
-        
+
         if (len > 61)
         {
           error = ESP_ERR_WRONG_PARAMETER;
@@ -351,7 +329,7 @@ void command()
         }
       }
       break;
-      
+
       case ESP_CMD_AP_CONNECT:
         if (!net.is_busy)
         {
@@ -360,7 +338,7 @@ void command()
           xQueueSendFromISR(net.queue, &task, 0);
         }
       break;
-      
+
       case ESP_CMD_WSCAN:
         if (!net.is_busy)
         {
@@ -368,6 +346,15 @@ void command()
           int task = TASK_WSCAN;
           xQueueSendFromISR(net.queue, &task, 0);
         }
+      break;
+
+      case ESP_CMD_XM_INIT:
+      {
+        XM_TASK t;
+        t.id = XM_TASK_INIT;
+        // t.arg = (void*)xm_module;
+        xQueueSendFromISR(xm_queue, &t, 0);
+      }
       break;
 
       case ESP_CMD_GET_RND:
@@ -393,7 +380,7 @@ void command()
   }
 }
 
-u32 prepare_tx_data(u8 *data, u8 type, u32 max_size)
+u32 IRAM_ATTR prepare_tx_data(u8 *data, u8 type, u32 max_size)
 {
   int size = 0;
 
@@ -411,7 +398,7 @@ u32 prepare_tx_data(u8 *data, u8 type, u32 max_size)
         i8 rssi;
         u8 chan;
         u8 *ssid;
-        
+
         wf_get_ap(i, auth, rssi, chan, ssid);
         int len = strlen((char*)ssid);
 
@@ -452,49 +439,37 @@ u32 prepare_tx_data(u8 *data, u8 type, u32 max_size)
   return size;
 }
 
-void sender_task(void *arg)
+void IRAM_ATTR sender_task(void *arg)
 {
   spi_slave_hd_data_t slave_trans;          //Transaction descriptor
   spi_slave_hd_data_t *ret_trans;           //Pointer to the descriptor of return result
-
-  u8 *send_buf;
-  send_buf = (u8*)heap_caps_calloc(1, DMA_BUF_SIZE, MALLOC_CAP_DMA);
-  if (!send_buf)
-  {
-    ESP_LOGE(TAG, "Not enough memory!");
-    abort();
-  }
+  int req_data_type;
 
   while (1)
   {
-    int type;
-    xQueueReceive(drqueue, &type, portMAX_DELAY);
+    xQueueReceive(drqueue, &req_data_type, portMAX_DELAY);
+    // gpio_set_level((gpio_num_t)GPIO_TEST2, 1); gpio_set_level((gpio_num_t)GPIO_TEST2, 0); // !!!
+    _st.drq_data_start_last_us = esp_timer_get_time() - _st.drq_data_t;
+    _st.drq_data_start_min_us = min(_st.drq_data_start_min_us, _st.drq_data_start_last_us);
+    _st.drq_data_start_max_us = max(_st.drq_data_start_max_us, _st.drq_data_start_last_us);
 
     slave_trans.data = send_buf;
-    slave_trans.len = prepare_tx_data(send_buf, type, DMA_BUF_SIZE);
+    slave_trans.len = prepare_tx_data(send_buf, req_data_type, DMA_BUF_SIZE);
     wr_reg32(ESP_REG_DATA_SIZE, slave_trans.len);
+    _st.drq_data_end_last_us = esp_timer_get_time() - _st.drq_data_t;
+    _st.drq_data_end_min_us = min(_st.drq_data_end_min_us, _st.drq_data_end_last_us);
+    _st.drq_data_end_max_us = max(_st.drq_data_end_max_us, _st.drq_data_end_last_us);
+    
     spi_slave_hd_queue_trans(SLAVE_HOST, SPI_SLAVE_CHAN_TX, &slave_trans, portMAX_DELAY);
     spi_slave_hd_get_trans_res(SLAVE_HOST, SPI_SLAVE_CHAN_TX, &ret_trans, portMAX_DELAY);
   }
 }
 
-void receiver_task(void *arg)
+void IRAM_ATTR receiver_task(void *arg)
 {
   spi_slave_hd_data_t *ret_trans;
   u32 recv_buf_size = DMA_BUF_SIZE;
-  u8 *recv_buf[QUEUE_SIZE];
   spi_slave_hd_data_t slave_trans[QUEUE_SIZE];
-
-  for (int i = 0; i < QUEUE_SIZE; i++)
-  {
-    recv_buf[i] = (u8*)heap_caps_calloc(1, recv_buf_size, MALLOC_CAP_DMA);
-
-    if (!recv_buf[i])
-    {
-      ESP_LOGE(TAG, "Not enough memory!");
-      abort();
-    }
-  }
 
   /**
    * - For SPI Slave, you can use this way (making use of the internal queue) to pre-load transactions to driver. Thus if
@@ -581,28 +556,61 @@ static void init_slave_hd(void)
 
 extern "C" void app_main()
 {
-  // printf("ESP32 SPI\r\n");
-
+  // ----- Runtime inits
+  stats::init();
   calc_sin();
   bootloader_random_enable();
+
+  // ----- Wi-Fi init
   initialize_nvs();
+  initialize_wifi();
+  net.is_init = true;
+  net.queue = xQueueCreate(2, sizeof(int));
+  xTaskCreatePinnedToCore(net_task, "net helper", 4096, NULL, 5, NULL, 0);
 
-  // gpio_set_direction(GPIO_TEST, GPIO_MODE_OUTPUT);
+  // ----- Test GPIO init
 
+  gpio_set_direction((gpio_num_t)GPIO_TEST1, GPIO_MODE_OUTPUT);
+  gpio_set_direction((gpio_num_t)GPIO_TEST2, GPIO_MODE_OUTPUT);
+  gpio_set_direction((gpio_num_t)GPIO_TEST3, GPIO_MODE_OUTPUT);
+
+  // ----- DMA send/receive init
+  send_buf = (u8*)heap_caps_calloc(1, DMA_BUF_SIZE, MALLOC_CAP_DMA);
+
+  if (!send_buf)
+  {
+    ESP_LOGE(TAG, "Cannot allocate memory for send buf!");
+    abort();
+  }
+
+  for (int i = 0; i < QUEUE_SIZE; i++)
+  {
+    recv_buf[i] = (u8*)heap_caps_calloc(1, DMA_BUF_SIZE, MALLOC_CAP_DMA);
+
+    if (!recv_buf[i])
+    {
+      ESP_LOGE(TAG, "Cannot allocate memory for receive buf!");
+      abort();
+    }
+  }
+
+  drqueue = xQueueCreate(2, sizeof(int));
+  // xTaskCreatePinnedToCore(receiver_task, "receiver", 4096, NULL, -1, NULL, 0);
+  xTaskCreatePinnedToCore(sender_task, "sender", 4096, NULL, 23, &sender_task_h, 0);
+
+  // ----- LibXM init
+  initialize_xm();
+
+  // ----- SPI slave init
   init_slave_hd();
   wr_reg8(ESP_REG_STATUS, ESP_ST_READY);
   error = ESP_ERR_RESET;
   net.state = NETWORK_CLOSED;
 
-  net.queue = xQueueCreate(2, sizeof(int));
-  xTaskCreate(net_task, "net helper", 8192, NULL, 10, NULL);
-  while (!net.is_init);
-  _delay_ms(500);
-
-  drqueue = xQueueCreate(2, sizeof(int));
-  xTaskCreate(receiver_task, "receiver", 4096, NULL, 1, NULL);
-  xTaskCreate(sender_task, "sender", 4096, NULL, 1, NULL);
-
+  // ----- Console init
   initialize_console();
-  xTaskCreate(console_task, "console", 8192, NULL, 11, NULL);
+  xTaskCreatePinnedToCore(console_task, "console", 4096, NULL, 1, NULL, 0);
+  
+  TaskHandle_t wifiHandle = xTaskGetHandle("wifi");
+  vTaskPrioritySet(wifiHandle, 21);
 }
