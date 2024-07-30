@@ -7,8 +7,19 @@ from  binascii import hexlify
 
 def spix(d):
   a = spi.exchange(d, duplex=True)
-  print(' '.join(['{:02x}'.format(b) for b in a]))
+  # print(' '.join(['{:02x}'.format(b) for b in a]))
   return a
+
+def wr_cmd(cmd):
+# wr ESP_SPI_CMD_WR_REGS
+# wr REG_CMD
+# dummy
+# wr <cmd>
+# wr ESP_ST_IDLE
+  buf = b'\x01\x08\x00'
+  buf = buf + cmd.to_bytes(1, 'little')
+  buf = buf + b'\x00'
+  a = spix(buf)
 
 def rd_reg8(reg):
 # wr ESP_SPI_CMD_RD_REGS
@@ -41,17 +52,6 @@ def rd_dma(len):
   a = spi.exchange(buf, len + 3, duplex=True)
   return a[3:]
 
-def wr_cmd(cmd):
-# wr ESP_SPI_CMD_WR_REGS
-# wr REG_CMD
-# dummy
-# wr <cmd>
-# wr ESP_ST_IDLE
-  buf = b'\x01\x08\x00'
-  buf = buf + cmd.to_bytes(1, 'little')
-  buf = buf + b'\x00'
-  a = spix(buf)
-
 def wait_data():
   i = 20
   while (i):
@@ -65,7 +65,6 @@ ft.show_devices()
 
 spi = SpiController()
 spi.configure('ftdi://ftdi:232h:0:1/1')
-
 spi = spi.get_port(cs=0, freq=14000000, mode=0)
 
 wr_cmd(0x01)          # Send GET_INFO command
@@ -73,3 +72,9 @@ wait_data()           # Wait for data
 len = rd_reg32(0x04)  # Read data length
 print(rd_dma(len))    # Read info string
 wr_cmd(0xD0)          # Stop DMA transaction
+
+wr_cmd(0xF2)
+wait_data()
+len = rd_reg32(0x04)
+print(rd_dma(len))
+wr_cmd(0xD0)
