@@ -1,10 +1,12 @@
 
 u8 pcx, pcx0, pcy, pca, pcst, pscrl, pcxt;
 
-void init_print()
+void cls()
 {
   pcy = pcx = pcx0 = pcxt = pcst = pscrl = 0;
 
+  TS_GYOFFSL = 0;
+  TS_GYOFFSH = 0;
   TS_VCONFIG = 0x83;
   TS_VPAGE = 0xF0;
   TS_PAGE3 = 0xF1;
