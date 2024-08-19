@@ -5,16 +5,13 @@
 #include <sdklib.h>
 #include <ft812.h>
 #include <ft812lib.h>
-#include <ts.h>
 #include <tslib.h>
 #include <wc_api.h>
-#include <wc_api.c>
+#include "tsconf.h"
+#include <esp_spi_defs.h>
 
-__sfr __banked __at 0x01AF _TS_VPAGE;
-__sfr __banked __at 0x10AF _TS_PAGE0;
-__sfr __banked __at 0x11AF _TS_PAGE1;
-__sfr __banked __at 0x12AF _TS_PAGE2;
-__sfr __banked __at 0x13AF _TS_PAGE3;
+#include <wc_api.c>
+#include <esp32.c>
 
 typedef struct
 {
@@ -48,10 +45,12 @@ typedef struct
   u32 sig;
 } tRNS;
 
-const bool is_1st_run = true;   // to get rid of vars runtime init - const located in RAM
+// const is to get rid of vars runtime init - const located in RAM anyway
+const u8 state_ft = 0;
+const u8 state_esp = 0;
 
-#define FS_BUF_SIZE 0x1E00
-u8 fs_buf[FS_BUF_SIZE]; // at 0xA000 (_PAGE2 to get page)
+#define FS_BUF_SIZE 0x1000
+u8 fs_buf[FS_BUF_SIZE]; // at 0xAE00 (_PAGE2 to get page)
 u8 cmdl[0x180];
 
 u16 ret_sp;
@@ -67,6 +66,8 @@ enum
   EXT_DLS,
   EXT_DXP,
   EXT_AVI,
+  EXT_XM,
+  EXT_XMZ,
 };
 
 // --- Windows ------------------------------
@@ -85,6 +86,21 @@ const WC_TX_WINDOW err_no_ft =
   /* window text                   */  "\x0E\x0C\x01" "No VDAC2 detected!",
 };
 
+const WC_TX_WINDOW err_no_esp =
+{
+  /* window with header and text   */  WC_WIND_HDR_TXT,
+  /* cursor color mask             */  0,
+  /* X,Y (position)                */  24, 10,
+  /* W,H (size)                    */  32, 5,
+  /* paper/ink (window color)      */  0x2F,
+  /* -reserved-                    */  0,
+  /* window restore buffer address */  0,
+  /* separators                    */  0, 0,
+  /* header text                   */  "\x0E" " Error! ",
+  /* footer text                   */  "",
+  /* window text                   */  "\x0E\x0C\x01" "No ESP32 detected!",
+};
+
 const WC_TX_WINDOW win_about =
 {
   /* window with header and text   */  WC_WIND_HDR_TXT,
@@ -97,7 +113,7 @@ const WC_TX_WINDOW win_about =
   /* separators                    */  0, 0,
   /* header text                   */  "\x0E" " About ",
   /* footer text                   */  "",
-  /* window text                   */  "\x0E\x0C\x01" "FT812 Viewer v1.1, (c)2023 TSL"
+  /* window text                   */  "\x0E\x0C\x01" "FT812 Viewer v1.2, (c)2024 TSL"
 };
 
 // --- FT812 --------------------------------
@@ -110,7 +126,18 @@ bool vdac2_init()
   return ft_rreg8(FT_REG_ID) == 0x7C;
 }
 
-void show_jpg_png(u8 pt)
+bool esp_init()
+{
+  esp_cmd(ESP_CMD_NOP);
+  esp_rd_end();
+  esp_wr_end();
+
+  // +++ detect
+
+  return true;
+}
+
+void show_jpg_png(u8 is_jpg)
 {
   u32 sz = filesize;
   u16 xs = 1024; u16 ys = 768;
@@ -120,7 +147,7 @@ void show_jpg_png(u8 pt)
   wc_vmode(0x87);
   wc_load512(fs_buf, FS_BUF_SIZE >> 9);
 
-  if (pt) // JPEG
+  if (is_jpg) // JPEG
   {
     int i;
     for (i = 0; i < (FS_BUF_SIZE - sizeof(SOF)); i++)
@@ -299,7 +326,7 @@ void show_avi()
   u32 sz = filesize;
 
   wc_vmode(0x87);
-  
+
   ft_wreg32(FT_REG_FREQUENCY, 64000000UL);
 
   ft_ccmd_start(cmdl);
@@ -311,7 +338,7 @@ void show_avi()
   ft_ccmd_write();
   ft_cp_wait();
   // delay(50000);
-  
+
 #define CHUNK_SIZE 4096
 #define FIFO_ADDR 0x080000
 #define FIFO_SIZE 0x080000
@@ -319,7 +346,7 @@ void show_avi()
   ft_MediaFifo(FIFO_ADDR, FIFO_SIZE);
   ft_ccmd_write();
   ft_cp_wait();
-  
+
   u32 waddr = FIFO_ADDR;
   while (waddr < (FIFO_ADDR + FIFO_SIZE - CHUNK_SIZE))
   {
@@ -334,9 +361,9 @@ void show_avi()
   while (sz)
   {
     ft_wreg32(REG_MEDIAFIFO_WRITE, waddr);
- 
+
     wc_load512(fs_buf, CHUNK_SIZE >> 9);
-    
+
     while (1)
     {
       u32 raddr = ft_rreg32(REG_MEDIAFIFO_READ);
@@ -348,12 +375,55 @@ void show_avi()
     waddr += CHUNK_SIZE;
     if (waddr >= (FIFO_ADDR + FIFO_SIZE)) waddr = FIFO_ADDR;
   }
-    
+
     // ft_cp_wait_free(CHUNK_SIZE);
     // u16 s = min(sz, CHUNK_SIZE);
     // wc_load512(fs_buf, CHUNK_SIZE >> 9);
     // ft_load_ram_dma(fs_buf, *(u8*)_PAGE2, s);
     // sz -= s;
+}
+
+void play_xm()
+{
+  esp_cmd(ESP_CMD_XM_STOP);
+  esp_wait_busy(10000);
+  esp_cmd(ESP_CMD_KILL_OBJECTS);
+  esp_wait_busy(10000);
+  
+  u8 h = esp_create_obj(filesize, (file_ext == EXT_XM) ? OBJ_TYPE_XM : OBJ_TYPE_ZIP);
+
+  u32 sz = filesize;
+  u32 offs = 0;
+
+  while (sz)
+  {
+    u32 s = min(sz, FS_BUF_SIZE);
+    u8 sec = (s + 511) >> 9;
+
+    wc_load512(fs_buf, sec);
+
+    esp_wr_reg32(ESP_REG_DATA_SIZE, s);
+    esp_wr_reg32(ESP_REG_DATA_OFFSET, offs);
+    esp_cmd(ESP_CMD_WRITE_OBJECT);
+    esp_wait_status(ESP_ST_DATA_M2S, 2000);
+    esp_send_dma((u16)fs_buf, *(u8*)_PAGE2, 512, sec);
+
+    offs += s;
+    sz -= s;
+  }
+
+  if (file_ext == EXT_XMZ)
+  {
+    esp_wr_reg8(ESP_REG_OBJ_TYPE, OBJ_TYPE_XM);
+    esp_wr_reg32(ESP_REG_DATA_SIZE, filesize);
+    esp_cmd(ESP_CMD_UNZIP);
+    esp_wait_busy(10000);
+  }
+  
+  esp_cmd(ESP_CMD_XM_INIT);
+  esp_wait_busy(10000);
+  esp_cmd(ESP_CMD_XM_PLAY);
+  esp_wait_busy(10000);
 }
 
 // --- Aux functions ------------------------
@@ -378,7 +448,7 @@ void about()
   wc_exit(WC_EXIT);
 }
 
-void error()
+void error_ft()
 {
   wc_api_u16(_PRWOW, (u16)&err_no_ft);
   wait_esc_key();
@@ -386,39 +456,56 @@ void error()
   wc_exit(WC_EXIT);
 }
 
-void pic_viewer()
+void error_esp()
 {
-  // at the first run initialize and detect FT812
-  if (is_1st_run)
+  wc_api_u16(_PRWOW, (u16)&err_no_esp);
+  wait_esc_key();
+  wc_api_u16(_RRESB, (u16)&err_no_esp);
+  wc_exit(WC_EXIT);
+}
+
+void main_start()
+{
+  // Audio player
+  if (file_ext == EXT_XM || file_ext == EXT_XMZ)
   {
-    if (vdac2_init())
-      *(bool*)&is_1st_run = false;
+    if (!state_esp)
+      *(u8*)&state_esp = esp_init() ? 1 : 2;
+
+    if (state_esp != 1)
+      error_esp();
     else
-      error();
+      play_xm();
   }
 
-  // choose which viewer to use
-  switch (file_ext)
+  // Viewer
+  else
   {
-    case EXT_JPG:
-      show_jpg_png(1);
-    break;
+    if (!state_ft)
+      *(u8*)&state_ft = vdac2_init() ? 1 : 2;
 
-    case EXT_PNG:
-      show_jpg_png(0);
-    break;
+    if (state_ft != 1)
+      error_ft();
 
-    case EXT_DXP:
-      show_dxp();
-    break;
+    else switch (file_ext)
+    {
+      case EXT_JPG:
+      case EXT_PNG:
+        show_jpg_png(file_ext == EXT_JPG);
+      break;
 
-    case EXT_DLS:
-      show_dls();
-    break;
+      case EXT_DXP:
+        show_dxp();
+      break;
 
-    case EXT_AVI:
-      show_avi();
-    break;
+      case EXT_DLS:
+        show_dls();
+      break;
+
+      case EXT_AVI:
+        show_avi();
+      break;
+    }
   }
 
   // poll keys
@@ -435,6 +522,9 @@ void pic_viewer()
       wc_exit(WC_PREV_FILE);
 
     if (wc_api__bool(_ESC))   // Esc - exit
+      wc_exit(WC_EXIT);
+
+    if ((file_ext == EXT_XM) || (file_ext == EXT_XMZ))
       wc_exit(WC_EXIT);
   }
 }
@@ -454,7 +544,7 @@ void main()
   switch (call_type)
   {
     case WC_CALL_EXT:
-      pic_viewer();
+      main_start();
     break;
 
     case WC_CALL_MENU:
