@@ -164,7 +164,7 @@ void dma_next_burst()
   }
   else  // DMA operation completed
   {
-    if (comp.ts.dma.state == DMA_RAMSPI)
+    if (comp.ts.dma.state == DMA_ST_SPI_W)
       Zc.DmaWrEnd();
 
     comp.ts.intctrl.new_dma = true;
