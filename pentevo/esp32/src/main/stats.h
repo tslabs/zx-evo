@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "types.h"
+#include "main.h"
 
 typedef struct
 {
@@ -32,4 +32,7 @@ namespace stats
   extern STATS_t _st;
   
   void init();
+  void set_start();
+  void set_end();
+  u32 get_time();
 };

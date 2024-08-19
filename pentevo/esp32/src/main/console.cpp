@@ -15,7 +15,7 @@
 #include "nvs.h"
 #include "nvs_flash.h"
 
-#include "types.h"
+#include "main.h"
 #include "console.h"
 
 #define PROMPT_STR "zifi32"

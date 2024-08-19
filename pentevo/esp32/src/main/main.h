@@ -2,6 +2,7 @@
 #pragma once
 
 #include <stdint.h>
+#include "xm.h"
 
 typedef int8_t   i8;
 typedef int16_t  i16;
@@ -20,5 +21,7 @@ typedef uint64_t u64;
 #define min(x, y) (((x) < (y)) ? (x) : (y))
 
 extern const char cp_string[];
+
+// #define VERBOSE
 
 #define _delay_ms(a) vTaskDelay(pdMS_TO_TICKS(a));

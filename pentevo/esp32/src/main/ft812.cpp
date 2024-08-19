@@ -1,5 +1,6 @@
 
-#include "types.h"
+#include "freertos/FreeRTOS.h"
+#include "main.h"
 #include "ft812.h"
 
 u32 AlphaFunc(u8 func, u8 ref)

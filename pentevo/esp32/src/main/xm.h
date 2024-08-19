@@ -33,26 +33,12 @@ typedef void* (*MFUNC)(size_t);
 /** Create a XM context.
  *
  * @param moddata the contents of the module
- * @param rate play rate in Hz, recommended value of 48000
- *
- * @returns 0 on success
- * @returns 1 if module data is not sane
- * @returns 2 if memory allocation failed
- *
- * @deprecated This function is unsafe!
- * @see xm_create_context_safe()
- */
-int xm_create_context(xm_context_t**, void* moddata, uint32_t rate);
-
-/** Create a XM context.
- *
- * @param moddata the contents of the module
  * @param moddata_length the length of the contents of the module, in bytes
  * @param rate play rate in Hz, recommended value of 48000
  *
- * @returns 0 on success
- * @returns 1 if module data is not sane
- * @returns 2 if memory allocation failed
+ * @returns size on success
+ * @returns -1 if module data is not sane
+ * @returns -2 if memory allocation failed
  */
 
 int xm_create_context_safe(xm_context_t**, void* moddata, size_t moddata_length, uint32_t rate, MFUNC mfunc);

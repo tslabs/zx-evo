@@ -8,7 +8,7 @@
  * http://sam.zoy.org/wtfpl/COPYING for more details. */
 
 #include "xm_internal.h"
-#include "types.h"
+#include "main.h"
 
 /* ----- Static functions ----- */
 

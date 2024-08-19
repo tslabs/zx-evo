@@ -12,11 +12,6 @@
 		(ptr) = (void*)((intptr_t)(ptr) + (intptr_t)(*ctxp));	\
 	} while(0)
 
-int xm_create_context(xm_context_t** ctxp, void* moddata, uint32_t rate)
-{
-	return xm_create_context_safe(ctxp, moddata, SIZE_MAX, rate, malloc);
-}
-
 int xm_create_context_safe(xm_context_t** ctxp, void* moddata, size_t moddata_length, uint32_t rate, MFUNC mfunc)
 {
 	size_t bytes_needed;
@@ -27,7 +22,7 @@ int xm_create_context_safe(xm_context_t** ctxp, void* moddata, size_t moddata_le
 		int ret;
 		if((ret = xm_check_sanity_preload(moddata, moddata_length))) {
 			DEBUG("xm_check_sanity_preload() returned %i, module is not safe to load", ret);
-			return 1;
+			return -1;
 		}
 	}
 
@@ -39,7 +34,7 @@ int xm_create_context_safe(xm_context_t** ctxp, void* moddata, size_t moddata_le
   {
 		/* malloc() failed, trouble ahead */
 		DEBUG("call to malloc() failed, returned %p", (void*)mempool);
-		return 2;
+		return -2;
 	}
 
 	/* Initialize most of the fields to 0, 0.f, NULL or false depending on type */
@@ -86,11 +81,11 @@ int xm_create_context_safe(xm_context_t** ctxp, void* moddata, size_t moddata_le
 		if((ret = xm_check_sanity_postload(ctx))) {
 			DEBUG("xm_check_sanity_postload() returned %i, module is not safe to play", ret);
 			xm_free_context(ctx);
-			return 1;
+			return -1;
 		}
 	}
 
-	return 0;
+	return bytes_needed;
 }
 
 void xm_create_context_from_libxmize(xm_context_t** ctxp, char* libxmized, uint32_t rate) {

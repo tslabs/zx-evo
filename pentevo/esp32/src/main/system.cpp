@@ -14,13 +14,18 @@
 #include "esp_flash.h"
 #include "esp_system.h"
 #include "esp_private/esp_clk.h"
+#include <esp_crc.h>
 #include "driver/rtc_io.h"
 #include "driver/uart.h"
 #include "argtable3/argtable3.h"
 #include "sdkconfig.h"
 
+#include "main.h"
+#include "esp_spi_defs.h"
+#include "mem_obj.h"
+#include "xm.h"
+#include "xm_cpp.h"
 #include "stats.h"
-#include "types.h"
 
 using namespace stats;
 
@@ -141,44 +146,75 @@ void register_restart()
   ESP_ERROR_CHECK(esp_console_cmd_register(&cmd));
 }
 
-int free_mem(int argc, char **argv)
+int mem_info(int argc, char **argv)
 {
-  printf("%" PRIu32 "\n", esp_get_free_heap_size());
+  printf("Heap free/total:\n");
+  printf(" Default:\t%u/%u\n",    heap_caps_get_free_size(MALLOC_CAP_DEFAULT), heap_caps_get_total_size(MALLOC_CAP_DEFAULT));
+  printf(" 32-bit:\t%u/%u\n",     heap_caps_get_free_size(MALLOC_CAP_32BIT), heap_caps_get_total_size(MALLOC_CAP_32BIT));
+  printf(" 8-bit:\t\t%u/%u\n",    heap_caps_get_free_size(MALLOC_CAP_8BIT), heap_caps_get_total_size(MALLOC_CAP_8BIT));
+  printf(" SPI RAM:\t%u/%u\n",    heap_caps_get_free_size(MALLOC_CAP_SPIRAM), heap_caps_get_total_size(MALLOC_CAP_SPIRAM));
+  printf(" SRAM:\t\t%u/%u\n",     heap_caps_get_free_size(MALLOC_CAP_INTERNAL), heap_caps_get_total_size(MALLOC_CAP_INTERNAL));
+  printf(" DMA:\t\t%u/%u\n",      heap_caps_get_free_size(MALLOC_CAP_DMA), heap_caps_get_total_size(MALLOC_CAP_DMA));
+  printf(" RTC fast:\t%u/%u\n",   heap_caps_get_free_size(MALLOC_CAP_RTCRAM), heap_caps_get_total_size(MALLOC_CAP_RTCRAM));
+  printf(" Retention:\t%u/%u\n",  heap_caps_get_free_size(MALLOC_CAP_RETENTION), heap_caps_get_total_size(MALLOC_CAP_RETENTION));
+  printf(" IRAM 8-bit:\t%u/%u\n", heap_caps_get_free_size(MALLOC_CAP_IRAM_8BIT), heap_caps_get_total_size(MALLOC_CAP_IRAM_8BIT));
+  printf(" Exec:\t\t%u/%u\n",     heap_caps_get_free_size(MALLOC_CAP_EXEC), heap_caps_get_total_size(MALLOC_CAP_EXEC));
+
+  printf("\nMin heap:\t%u\n", heap_caps_get_minimum_free_size(MALLOC_CAP_DEFAULT));
+
   return 0;
 }
 
-void register_free()
+void register_mem()
 {
   const esp_console_cmd_t cmd =
   {
-    .command = "free",
-    .help    = "Get the current size of free heap memory",
+    .command = "memory",
+    .help    = "Get the memory info",
     .hint    = NULL,
-    .func    = &free_mem,
+    .func    = &mem_info,
   };
 
   ESP_ERROR_CHECK(esp_console_cmd_register(&cmd));
 }
 
-int heap_size(int argc, char **argv)
+int obj_info(int argc, char **argv)
 {
-  uint32_t heap_size = heap_caps_get_minimum_free_size(MALLOC_CAP_DEFAULT);
+  printf("\r\nMemory objects\r\n");
 
-  printf("min heap size: %" PRIu32 "\n", heap_size);
+  for (int i = 0; i < OBJ_HANDLES_MAX; i++)
+    if (mem_obj[i].addr)
+    {
+      printf("Hdl %02X  Typ %02X  St %02X  Addr %08X  Size %u  ", i, mem_obj[i].type, mem_obj[i].state, (unsigned int)mem_obj[i].addr, mem_obj[i].size);
+
+      switch (mem_obj[i].type)
+      {
+        case OBJ_TYPE_LIB:
+          printf("Ent %08X  TX %08X  DT %08X  RO %08X  BS %08X\r\n", (unsigned int)mem_obj[i].entry, (unsigned int)mem_obj[i].text, (unsigned int)mem_obj[i].data, (unsigned int)mem_obj[i].rodata, (unsigned int)mem_obj[i].bss);
+        break;
+        
+        default:
+          printf("\r\n");
+        break;
+      }
+    }
+
+  printf("\r\n");
+
   return 0;
 }
 
-void register_heap()
+void register_objects()
 {
-  const esp_console_cmd_t heap_cmd =
+  const esp_console_cmd_t cmd =
   {
-    .command = "heap",
-    .help    = "Get minimum size of free heap memory that was available during program execution",
+    .command = "objects",
+    .help    = "Get the memory objects info",
     .hint    = NULL,
-    .func    = &heap_size,
+    .func    = &obj_info,
   };
 
-  ESP_ERROR_CHECK(esp_console_cmd_register(&heap_cmd));
+  ESP_ERROR_CHECK(esp_console_cmd_register(&cmd));
 }
 
 #if WITH_TASKS_INFO
@@ -218,6 +254,8 @@ void register_tasks()
 
   ESP_ERROR_CHECK(esp_console_cmd_register(&cmd));
 }
+
+#endif // WITH_TASKS_INFO
 
 int stats_info(int argc, char **argv)
 {
@@ -273,16 +311,28 @@ void register_stats()
   ESP_ERROR_CHECK(esp_console_cmd_register(&cmd));
 }
 
-#endif // WITH_TASKS_INFO
+void register_x()
+{
+  // const esp_console_cmd_t cmd =
+  // {
+    // .command = "x",
+    // .help    = "Test",
+    // .hint    = NULL,
+    // .func    = &tst_func,
+  // };
+
+  // ESP_ERROR_CHECK(esp_console_cmd_register(&cmd));
+}
 
 void esp_console_register_system_commands()
 {
-  register_free();
-  register_heap();
+  register_mem();
+  register_objects();
   register_info();
   register_restart();
 #if WITH_TASKS_INFO
   register_tasks();
   register_stats();
+  register_x();
 #endif
 }

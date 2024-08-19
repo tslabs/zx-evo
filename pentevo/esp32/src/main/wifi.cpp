@@ -12,7 +12,7 @@
 #include "nvs.h"
 #include "nvs_flash.h"
 
-#include "types.h"
+#include "main.h"
 #include "wifi.h"
 
 const char TAG[] = "zf32_wifi";
@@ -20,7 +20,7 @@ const char TAG[] = "zf32_wifi";
 EventGroupHandle_t wifi_event_group;
 const int CONNECTED_BIT = BIT0;
 
-wifi_ap_record_t ap_info[DEFAULT_SCAN_LIST_SIZE];
+EXT_RAM_BSS_ATTR wifi_ap_record_t ap_info[DEFAULT_SCAN_LIST_SIZE];
 esp_netif_ip_info_t ip;
 
 void event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data)
