@@ -86,8 +86,8 @@ module zmem
 
   assign dos_on = win0 && opfetch_s && (za[13:8]==6'h3D) && rom128 && !w0_map_n;
   assign dos_off = !win0 && opfetch_s && !vdos;
-  assign dos = (dos_on || dos_off) ^^ dos_r;    // to make dos appear 1 clock earlier than dos_r
-
+  assign dos = dos_on ? 1 : (dos_off ? 0 : dos_r);  // to make dos appear 1 clock earlier than dos_r
+  
   always @(posedge clk)
   if (rst)
     dos_r <= 1'b0;
