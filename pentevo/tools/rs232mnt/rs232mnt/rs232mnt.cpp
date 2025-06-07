@@ -262,13 +262,17 @@ int _tmain(int argc, _TCHAR* argv[])
         break;
 
         case ST_RECEIVE_DATA:
-          if (!fifo_get(&fifo_in, (U8*)&sect, sizeof(sect)))
-            goto cont1;
-          else
-          {
-            memcpy(disk_ptr, sect.data, sizeof(sect.data));
-            state = ST_IDLE;
-          }
+            if (fifo_get(&fifo_in, (U8*)&sect.data, sizeof(sect.data)) & fifo_get(&fifo_in, (U8*)&sect.crc, sizeof(sect.crc)))
+            {
+                U8 crc = update_xor(0, sect.data, sizeof(sect.data));
+                if (crc == sect.crc)
+                    memcpy(disk_ptr, sect.data, sizeof(sect.data));
+                else
+                    printf("Wrong CRC!\n");
+                state = ST_IDLE;
+            }
+            else
+                goto cont1;
         break;
       }
     }
