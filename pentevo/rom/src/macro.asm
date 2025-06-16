@@ -57,5 +57,5 @@
 
 ; ORG with pad
   macro orgp addr
-        defs addr - $, 0x55
+        defs addr - $, 0xFF
         endm

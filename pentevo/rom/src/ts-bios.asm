@@ -1408,9 +1408,8 @@ sysvars
 rslsys:
   incbin "rslsys.bin.hst"
 
-  orgp 0x2000
 tsfat:
-  incbin "tsfat.bin"
+  include "tsfat.asm"
 
 ; ----- Export binary
   orgp 0x4000
