@@ -3,6 +3,7 @@
 #include <commctrl.h>
 
 #define TRD_SZ  256*16*255
+#define MAX_DATA_CHUNK 257*255
 #define BAUD    115200
 #define TOKEN1  0xAA
 #define TOKEN2  0x55
@@ -41,15 +42,15 @@ typedef struct
 } SECT;
 #pragma pack (pop)
 
-U8 img[4][TRD_SZ];
+FILE* img[4];
 int baud = BAUD;
 bool log = false;
 bool slow = false;
 _TCHAR* cport = TEXT("COM1");
 _TCHAR* trd[4];
 U8 drvs = 0;
-U8 fifo_in_buf[512];
-U8 uart_in_buf[512];
+U8 fifo_in_buf[MAX_DATA_CHUNK];
+U8 uart_in_buf[MAX_DATA_CHUNK];
 
 void print_help()
 {
@@ -131,7 +132,7 @@ int _tmain(int argc, _TCHAR* argv[])
   {
     if (trd[i])
     {
-      if (!(f = _wfopen(trd[i], L"rb")))
+      if (!(img[i] = _wfopen(trd[i], L"rb+")))
       {
         wprintf(L"Can't open: %s\n", trd[i]);
         return 2;
@@ -139,8 +140,6 @@ int _tmain(int argc, _TCHAR* argv[])
       else
       {
         wprintf(L"%s opened successfully\n", trd[i]);
-        fread(img[i], 1, TRD_SZ, f);
-        fclose(f);
       }
     }
   }
@@ -186,7 +185,7 @@ int _tmain(int argc, _TCHAR* argv[])
 
   fifo_init(&fifo_in, fifo_in_buf, sizeof(fifo_in_buf));
 
-  U8 *disk_ptr;
+  LONG disp;
   while (1)
   {
     ReadFile(hPort, uart_in_buf, sizeof(fifo_in_buf), &dwRead, NULL);
@@ -224,16 +223,36 @@ int _tmain(int argc, _TCHAR* argv[])
             if (req.sec > 15)
               if (log) printf("Wrong sector!\n");
 
-            disk_ptr = img[req.drv] + ((req.trk * 16 + req.sec) * sizeof(sect.data));
+            if (img[req.drv])
+            {
+                disp = (req.trk * 16 + req.sec) * sizeof(sect.data);
+                if (fseek(img[req.drv], disp, SEEK_SET))
+                {
+                    wprintf(L"Error: Access outside file %s\n", trd[req.drv]);
+                    return(2);
+                }
+            }
+            else
+                printf("Wrong drive!\n");
 
             switch (req.op)
             {
               case OP_RD:
                 sect.ack[0] = ANS1;
                 sect.ack[1] = ANS2;
-                memcpy(sect.data, disk_ptr, sizeof(sect.data));
-                sect.crc = update_xor(ANS1 ^ ANS2, disk_ptr, sizeof(sect.data));
                 
+                if (img[req.drv])
+                {
+                    if (fread(sect.data, 1, sizeof(sect.data), img[req.drv]) != sizeof(sect.data))
+                    {
+                        wprintf(L"Error: Unable to read file %s\n", trd[req.drv]);
+                        return(2);
+                    }
+                }
+                else
+                    memset(sect.data, 0, sizeof(sect.data));
+
+                sect.crc = update_xor(ANS1 ^ ANS2, sect.data, sizeof(sect.data));
                 {
                   U8 *ptr = (U8*)&sect;
                   int cnt = sizeof(sect);
@@ -262,13 +281,26 @@ int _tmain(int argc, _TCHAR* argv[])
         break;
 
         case ST_RECEIVE_DATA:
-          if (!fifo_get(&fifo_in, (U8*)&sect, sizeof(sect)))
-            goto cont1;
-          else
-          {
-            memcpy(disk_ptr, sect.data, sizeof(sect.data));
-            state = ST_IDLE;
-          }
+            if (fifo_get(&fifo_in, (U8*)&sect.data, sizeof(sect.data) + sizeof(sect.crc)))
+            {
+                if (img[req.drv])
+                {
+                    U8 crc = update_xor(0, sect.data, sizeof(sect.data));
+                    if (crc == sect.crc)
+                    {
+                        if (fwrite(sect.data, 1, sizeof(sect.data), img[req.drv]) != sizeof(sect.data))
+                        {
+                            wprintf(L"Error: Unable to write file %s\n", trd[req.drv]);
+                            return(2);
+                        }
+                    }
+                    else
+                        printf("Wrong CRC!\n");
+                }
+                state = ST_IDLE;
+            }
+            else
+                goto cont1;
         break;
       }
     }
