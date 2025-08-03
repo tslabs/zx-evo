@@ -78,50 +78,22 @@ RAM PAGES USE:
  . . .     /
 #A0(160)- / (PLEPG)
 
-#A1(161)- free
-#A2(162)- free
-#A3(163)- free
-#A4(164)- free
-#A5(165)- free
-#A6(166)- free
-#A7(167)- free
-#A8(168)- free
-#A9(169)- free
-#AA(170)- free
-#AB(171)- free
-#AC(172)- free
-#AD(173)- free
-#AE(174)- free
-#AF(175)- free
-#B0(176)- free
-#B1(177)- free
-#B2(178)- free
-#B3(179)- free
-#B4(180)- free
-#B5(181)- free
-#B6(182)- free
-#B7(183)- free
-#B8(184)- free
-#B9(185)- free
-#BA(186)- free
-#BB(187)- free
-#BC(188)- free
-#BD(189)- free
-#BE(190)- free
-#BF(191)- free
+#A1(161)- mounted TAP file (#1F(31) pages)
+ . . .     /
+#BF(191)- /
 
 #C0(192)- vDOS RAM DISK (#28(40) pages)
  . . .     /
 #E7(231)- /
 
-#E8(232)- free
-#E9(233)- free
-#EA(234)- free
-#EB(235)- free
-#EC(236)- free
-#ED(237)- free
-#EE(238)- free
-#EF(239)- free
+#E8(232)- free (RAM DISK extra Tracks)
+#E9(233)- free (RAM DISK extra Tracks)
+#EA(234)- free (RAM DISK extra Tracks)
+#EB(235)- free (RAM DISK extra Tracks)
+#EC(236)- free (RAM DISK extra Tracks)
+#ED(237)- free (RAM DISK extra Tracks)
+#EE(238)- free (RAM DISK extra Tracks)
+#EF(239)- free (RAM DISK extra Tracks)
 
 #F0(240)- LEFT Panel stream
 #F1(241)- RIGHT Panel stream
