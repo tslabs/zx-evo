@@ -13,7 +13,7 @@ set BINARY=%WC%\exe
 set TOOLS=..\..\..\..\..\..\tools
 set UNREAL=..\..\..\..\..\..\unreal\Unreal\bin\Debug
 
-%TOOLS%\sjasmplus.exe emu.asm --lst=emu.lst
+%TOOLS%\sjasmplus\sjasmplus.exe emu.asm --lst=emu.lst
 copy MOUNTER_ORIGINAL.WMF MOUNTER.WMF
 %TOOLS%\fsplit\fsplit.exe MOUNTER.WMF 19968 16384
 del MOUNTER.WMF

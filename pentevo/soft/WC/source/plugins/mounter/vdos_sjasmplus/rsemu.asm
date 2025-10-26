@@ -128,6 +128,7 @@ RSSVDATA
         OR      E
         JR      NZ,RSSVDATA
 
+        CALL    RSWFIFO
         EX      AF,AF'
         OUT     (C),A
 
