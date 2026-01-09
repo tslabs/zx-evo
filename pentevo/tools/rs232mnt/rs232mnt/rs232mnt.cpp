@@ -227,10 +227,7 @@ int _tmain(int argc, _TCHAR* argv[])
             {
                 disp = (req.trk * 16 + req.sec) * sizeof(sect.data);
                 if (fseek(img[req.drv], disp, SEEK_SET))
-                {
                     wprintf(L"Error: Access outside file %s\n", trd[req.drv]);
-                    return(2);
-                }
             }
             else
                 printf("Wrong drive!\n");
@@ -244,10 +241,7 @@ int _tmain(int argc, _TCHAR* argv[])
                 if (img[req.drv])
                 {
                     if (fread(sect.data, 1, sizeof(sect.data), img[req.drv]) != sizeof(sect.data))
-                    {
                         wprintf(L"Error: Unable to read file %s\n", trd[req.drv]);
-                        return(2);
-                    }
                 }
                 else
                     memset(sect.data, 0, sizeof(sect.data));
@@ -289,10 +283,7 @@ int _tmain(int argc, _TCHAR* argv[])
                     if (crc == sect.crc)
                     {
                         if (fwrite(sect.data, 1, sizeof(sect.data), img[req.drv]) != sizeof(sect.data))
-                        {
                             wprintf(L"Error: Unable to write file %s\n", trd[req.drv]);
-                            return(2);
-                        }
                     }
                     else
                         printf("Wrong CRC!\n");
