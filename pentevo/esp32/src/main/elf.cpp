@@ -24,8 +24,10 @@ int load_elf(u8 *elf, MEM_OBJ *obj, int opt)
 
   Elf32_Ehdr* elf_header = (Elf32_Ehdr*)elf;
   Elf32_Shdr* section_headers = (Elf32_Shdr*)(elf + elf_header->e_shoff);
+#ifdef VERBOSE
   Elf32_Shdr* shstrtab_header = &section_headers[elf_header->e_shstrndx];
   const char* shstrtab = (const char*)(elf + shstrtab_header->sh_offset);
+#endif
   u32 entry = 0;
   int size = 0;
 
@@ -123,21 +125,33 @@ int load_elf(u8 *elf, MEM_OBJ *obj, int opt)
       break;
 
       case TYPE_BSS:
+#ifdef CONFIG_SPIRAM
         section->sh_info = (u32)heap_caps_aligned_alloc(section->sh_addralign, section->sh_size, (opt & ESP_OPT_BSS_SRAM) ? MALLOC_CAP_INTERNAL : MALLOC_CAP_SPIRAM);
+#else
+        section->sh_info = (u32)heap_caps_aligned_alloc(section->sh_addralign, section->sh_size, MALLOC_CAP_INTERNAL);
+#endif
         if (!section->sh_info) goto cleanup;
         obj->bss = (void*)section->sh_info;
         size += section->sh_size;
       break;
 
       case TYPE_DATA:
+#ifdef CONFIG_SPIRAM
         section->sh_info = (u32)heap_caps_aligned_alloc(section->sh_addralign, section->sh_size, (opt & ESP_OPT_DATA_SRAM) ? MALLOC_CAP_INTERNAL : MALLOC_CAP_SPIRAM);
+#else
+        section->sh_info = (u32)heap_caps_aligned_alloc(section->sh_addralign, section->sh_size, MALLOC_CAP_INTERNAL);
+#endif
         if (!section->sh_info) goto cleanup;
         obj->data = (void*)section->sh_info;
         size += section->sh_size;
       break;
 
       case TYPE_RODATA:
+#ifdef CONFIG_SPIRAM
         section->sh_info = (u32)heap_caps_aligned_alloc(section->sh_addralign, section->sh_size, (opt & ESP_OPT_RODATA_SRAM) ? MALLOC_CAP_INTERNAL : MALLOC_CAP_SPIRAM);
+#else
+        section->sh_info = (u32)heap_caps_aligned_alloc(section->sh_addralign, section->sh_size, MALLOC_CAP_INTERNAL);
+#endif
         if (!section->sh_info) goto cleanup;
         obj->rodata = (void*)section->sh_info;
         size += section->sh_size;
@@ -161,7 +175,9 @@ int load_elf(u8 *elf, MEM_OBJ *obj, int opt)
     u32 *sym_offs = (u32*)&elf[rld_offs];
     u32 sym_val = *sym_offs;
     u32 sym_addr = 0;
+#ifdef VERBOSE
     const char* name = "";
+#endif
 
     for (int j = 0; j < num_sec; j++)
     {
@@ -173,7 +189,9 @@ int load_elf(u8 *elf, MEM_OBJ *obj, int opt)
         {
           sym_addr = sym_val - section->sh_offset + section->sh_info + ((section->sh_type == TYPE_TEXT) ? 0x6F0000 : 0);
           *sym_offs = sym_addr;
+#ifdef VERBOSE
           name = shstrtab + section->sh_name;
+#endif
           break;
         }
       }

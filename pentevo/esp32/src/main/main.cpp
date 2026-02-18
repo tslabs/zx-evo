@@ -12,6 +12,7 @@
 #include "bootloader_random.h"
 #include "esp_random.h"
 #include "nvs.h"
+#include "miniz.h"
 #include "nvs_flash.h"
 #include <esp_crc.h>
 
@@ -20,18 +21,24 @@
 #include "spi_slave.h"
 #include "console.h"
 #include "ft812.h"
+
+#ifdef CONFIG_ESP32_WIFI_ENABLED
 #include "wifi.h"
+#endif
+
 #include "mem_obj.h"
 #include "xm.h"
 #include "xm_cpp.h"
 #include "stats.h"
 #include "elf.cpp.h"
 #include "helper.h"
+#include "http_client.h"
 #include "depack.h"
 
 // #define ISR_PRINTF
 
-const char cp_string[] = "ESP32-S3 SPI WiFi Module, ver.0.3, (c)2024, TS-Labs";
+tinfl_decompressor *decomp = NULL;
+
 const char TAG[] = "main";
 
 // ------------- Debug helpers
@@ -78,6 +85,7 @@ extern "C" void app_main()
   // gpio_set_direction((gpio_num_t)GPIO_TEST1, GPIO_MODE_OUTPUT);
   // gpio_set_direction((gpio_num_t)GPIO_TEST2, GPIO_MODE_OUTPUT);
   // gpio_set_direction((gpio_num_t)GPIO_TEST3, GPIO_MODE_OUTPUT);
+  ESP_LOGI("SRAM", "%u", heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
 
   // ----- Runtime inits
   stats::init();
@@ -86,28 +94,47 @@ extern "C" void app_main()
 #ifdef ISR_PRINTF
   // ----- ISR printf init
   printQueue = xQueueCreate(PRINT_QUEUE_LENGTH, sizeof(char*));
+  ESP_LOGI("SRAM xQueueCreate printQueue", "%u", heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
   xTaskCreatePinnedToCore(print_task, "isr-printf", 2048, NULL, 1, NULL, 0);
+  ESP_LOGI("SRAM xTaskCreatePinnedToCore print_task", "%u", heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
 #endif
 
   // ----- Wi-Fi init
   initialize_nvs();
+  ESP_LOGI("SRAM initialize_nvs", "%u", heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
+#ifdef CONFIG_ESP32_WIFI_ENABLED
   initialize_wifi();
+  ESP_LOGI("SRAM initialize_wifi", "%u", heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
   net.is_init = true;
   net.state = NETWORK_CLOSED;
+#endif
 
+  // ----- Helper init
   helper_queue = xQueueCreate(2, sizeof(int));
-  xTaskCreatePinnedToCore(helper_task, "helper", 6144, NULL, 23, NULL, 0);
+  ESP_LOGI("SRAM xQueueCreate helper_queue", "%u", heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
+  xTaskCreatePinnedToCore(helper_task, "helper", 3072, NULL, 23, NULL, 0);
+  ESP_LOGI("SRAM xTaskCreatePinnedToCore helper_task", "%u", heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
+  decomp = (tinfl_decompressor*)malloc_spiram(sizeof(tinfl_decompressor)); // early init to avoid heap fragmentation at stream inflate
 
   // ----- LibXM init
   initialize_xm();
+  ESP_LOGI("SRAM initialize_xm", "%u", heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
+
+  // ----- HTTP init
+  http_init();
 
   // ----- SPI slave init
   init_slave_hd();
+  ESP_LOGI("SRAM init_slave_hd", "%u", heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
 
   // ----- Console init
   initialize_console();
-  xTaskCreatePinnedToCore(console_task, "console", 4096, NULL, 1, NULL, 0);
+  ESP_LOGI("SRAM initialize_console", "%u", heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
+  xTaskCreatePinnedToCore(console_task, "console", 6144, NULL, 1, NULL, 0);
+  ESP_LOGI("SRAM xTaskCreatePinnedToCore console_task", "%u", heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
 
+#ifdef CONFIG_ESP32_WIFI_ENABLED
   TaskHandle_t wifiHandle = xTaskGetHandle("wifi");
   vTaskPrioritySet(wifiHandle, 21);
+#endif
 }

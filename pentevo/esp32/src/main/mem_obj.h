@@ -30,5 +30,6 @@ extern MEM_OBJ mem_obj[OBJ_HANDLES_MAX];
 
 int find_avail_handle();
 int check_handle(int h);
-int delete_handle(int h);
+int delete_obj(int h);
 int make_obj(int obj_size, int obj_type);
+void write_obj(int handle, const void *from, int size);

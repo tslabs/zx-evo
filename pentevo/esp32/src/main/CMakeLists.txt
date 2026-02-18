@@ -1,6 +1,12 @@
+execute_process(COMMAND ${CMAKE_COMMAND} -E touch "./main.h" -t 0001010101)
 file(GLOB_RECURSE SOURCES "./*.c" "./*.cpp")
 idf_component_register(SRCS ${SOURCES} INCLUDE_DIRS ".")
-target_compile_options(${COMPONENT_LIB} PRIVATE -Wno-error)
-target_compile_options(${COMPONENT_LIB} PRIVATE -Wno-missing-field-initializers)
-target_compile_options(${COMPONENT_LIB} PRIVATE -Wno-unused-but-set-variable)
-target_compile_options(${COMPONENT_LIB} PRIVATE -Wno-unused-function)
+
+idf_build_set_property(COMPILE_OPTIONS "-ggdb;-g3" APPEND)
+idf_build_set_property(COMPILE_OPTIONS "-Wno-missing-field-initializers" APPEND)
+idf_build_set_property(COMPILE_OPTIONS "-Wno-implicit-fallthrough" APPEND)
+
+# target_compile_options(${COMPONENT_LIB} PRIVATE -Wno-error=format)
+# target_compile_options(${COMPONENT_LIB} PRIVATE -Wno-error)
+# target_compile_options(${COMPONENT_LIB} PRIVATE -Wno-unused-but-set-variable)
+# target_compile_options(${COMPONENT_LIB} PRIVATE -Wno-unused-function)

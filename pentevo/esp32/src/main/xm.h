@@ -62,7 +62,7 @@ void xm_create_context_from_libxmize(xm_context_t**, char* libxmizeddata, uint32
 /** Free a XM context created by xm_create_context(). */
 void xm_free_context(xm_context_t*);
 
-void IRAM_ATTR xm_sample(xm_context_t* ctx, float* p_left, float* p_right);
+void xm_sample(xm_context_t* ctx, float* p_left, float* p_right);
 
 /** Set the maximum number of times a module can loop. After the
  * specified number of loops, calls to xm_generate_samples will only

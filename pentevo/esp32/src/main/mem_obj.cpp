@@ -33,7 +33,7 @@ int check_handle(int h)
   return mem_obj[h].type != 0;
 }
 
-int delete_handle(int h)
+int delete_obj(int h)
 {
   switch (mem_obj[h].type)
   {
@@ -48,10 +48,10 @@ int delete_handle(int h)
       return 1;
     }
 
-    case OBJ_TYPE_XM:
+    case OBJ_TYPE_XMC:
       if (mem_obj[h].state == XM_OBJ_ST_PLAYING)
       {
-        ESP_LOGE(TAG, "Cannot delete playing XM object: handle %02X\r\n", h);
+        ESP_LOGE(TAG, "Cannot delete playing XM object: handle %02X", h);
         return 0;
       }
     break;
@@ -61,6 +61,11 @@ int delete_handle(int h)
   memset(&mem_obj[h], 0, sizeof(MEM_OBJ));
 
   return 1;
+}
+
+void write_obj(int handle, const void *from, int size)
+{
+  memcpy(mem_obj[handle].addr, from, max(mem_obj[handle].size, size));
 }
 
 int make_obj(int obj_size, int obj_type)
@@ -76,20 +81,16 @@ int make_obj(int obj_size, int obj_type)
     return -1;
   }
 
-#ifdef VERBOSE
-  printf("Handle: %d\r\n", handle);
-  printf("Type: %d, Size: %d\r\n", obj_type, obj_size);
-#endif
-
   switch (obj_type)
   {
     case OBJ_TYPE_XM:
+    case OBJ_TYPE_XMC:
     case OBJ_TYPE_WAV:
     case OBJ_TYPE_DATA:
     case OBJ_TYPE_ELF:
     case OBJ_TYPE_HST:
     case OBJ_TYPE_ZIP:
-      obj_addr = heap_caps_malloc(obj_size, MALLOC_CAP_SPIRAM);
+      obj_addr = malloc_spiram(obj_size);
       break;
 
     case OBJ_TYPE_DATAF:
@@ -97,8 +98,11 @@ int make_obj(int obj_size, int obj_type)
       break;
 
     default:
+    {
+      ESP_LOGE(TAG, "Cannot create unknown type object!");
       set_status(ESP_ERR_INV_OBJ_TYPE);
       return -1;
+    }
   }
 
   if (!obj_addr)
@@ -107,6 +111,11 @@ int make_obj(int obj_size, int obj_type)
     ESP_LOGE(TAG, "Cannot allocate memory for an object! (%d bytes)", obj_size);
     return -1;
   }
+
+#ifdef VERBOSE
+  else
+    printf("Object created: type %02X, handle %02X, addr %08X, size %u\r\n", obj_type, handle, (unsigned int)obj_addr, obj_size);
+#endif
 
   mem_obj[handle].addr = obj_addr;
   mem_obj[handle].size = obj_size;

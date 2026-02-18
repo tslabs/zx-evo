@@ -5,12 +5,10 @@
 
 enum
 {
-  DREQ_INFO,
   DREQ_WSCAN,
   DREQ_DATA,
+  DREQ_ZIP,
   DREQ_RND,
-  DREQ_TEST2,
-  DREQ_TEST3,
 };
 
 u8 rd_reg8(u8 reg);
@@ -28,5 +26,4 @@ void receiver_task(void *arg);
 void put_rxq(int type);
 void put_txq(int type);
 
-void set_ok_ready();
 void set_status(u8 err);

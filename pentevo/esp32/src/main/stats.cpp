@@ -15,6 +15,8 @@ namespace stats
     _st.drq_data_end_min_us = INT_MAX;
     _st.xm_render_min_us = INT_MAX;
     _st.xm_render_min_cpu = INT_MAX;
+    _st.xm_render_max_us = 0;
+    _st.xm_render_max_cpu = 0;
   }
 
   void set_start()

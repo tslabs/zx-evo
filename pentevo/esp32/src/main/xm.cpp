@@ -26,13 +26,19 @@ QueueHandle_t xm_queue;
 QueueHandle_t i2s_queue;
 QueueHandle_t player_queue;
 
+int master_volume = 50000;
+
 #define MCLK_IO        GPIO_NUM_14      // I2S bit clock io number
 #define BCLK_IO        GPIO_NUM_15      // I2S bit clock io number
 #define WS_IO          GPIO_NUM_16      // I2S word select io number
 #define DOUT_IO        GPIO_NUM_17      // I2S data out io number
 
 #define XM_SAMPLE_RATE        44100
-#define XM_FRAME_MS           100
+#ifdef CONFIG_SPIRAM
+  #define XM_FRAME_MS           100
+#else
+  #define XM_FRAME_MS           10
+#endif
 #define XM_SAMPLES_PER_BUFFER (XM_SAMPLE_RATE * XM_FRAME_MS / 1000)
 #define XM_BUF_SIZE           (XM_SAMPLES_PER_BUFFER * sizeof(i16) * 2)
 #define XM_BUF_NUM            3
@@ -52,14 +58,14 @@ enum
 
 void *xm_malloc(size_t size)
 {
-  void *ctx_mem = heap_caps_malloc(size, MALLOC_CAP_SPIRAM);;
+  void *ctx_mem = malloc_spiram(size);
 
   if (!ctx_mem)
     ESP_LOGE("xm_malloc", "Cannot allocate memory for XM context (%u bytes)!", size);
 
 #ifdef VERBOSE
   else
-    printf("xm_malloc", "Memory for XM allocated: 0x%08X, %u bytes\r\n", (unsigned int)ctx_mem, size);
+    printf("Memory for XM allocated: 0x%08X, %u bytes\r\n", (unsigned int)ctx_mem, size);
 #endif
 
   return ctx_mem;
@@ -71,7 +77,7 @@ void initialize_xm()
 {
   for (int i = 0; i < XM_BUF_NUM; i++)
   {
-    xm_buf[i] = (i16*)heap_caps_malloc(XM_BUF_SIZE, MALLOC_CAP_SPIRAM);
+    xm_buf[i] = (i16*)malloc_spiram(XM_BUF_SIZE);
     assert(xm_buf[i]);
   }
 
@@ -106,9 +112,9 @@ void initialize_xm()
   i2s_queue = xQueueCreate(XM_BUF_NUM - 2, sizeof(int));
   player_queue = xQueueCreate(2, sizeof(PLAYER_TASK));
 
-  xTaskCreatePinnedToCore(xm_task, "xm-helper", 4096, NULL, 20, NULL, 0);     // XM helper tasks
+  xTaskCreatePinnedToCore(xm_task, "xm-helper", 3072, NULL, 20, NULL, 0);     // XM helper tasks
   xTaskCreatePinnedToCore(i2s_task, "i2s-writer", 2048, NULL, 22, NULL, 0);   // I2S DAC writer
-  xTaskCreatePinnedToCore(player_task, "player", 4096, NULL, 24, NULL, 1);    // XM renderer, libxm (should work on a separate core)
+  xTaskCreatePinnedToCore(player_task, "player", 2048, NULL, 24, NULL, 1);    // XM renderer, libxm (should work on a separate core)
 }
 
 void player_task(void *arg)
@@ -137,14 +143,15 @@ void player_task(void *arg)
           _st.xm_samp_max = max(_st.xm_samp_max, left);
           _st.xm_samp_max = max(_st.xm_samp_max, right);
 
-          left = max(left, -1);
-          left = min(left, 1);
-          right = max(right, -1);
-          right = min(right, 1);
+          int l = left * master_volume;
+          l = max(l, -32768);
+          l = min(l, 32767);
+          xm_buf[xm_buf_idx][2 * i] = l;
 
-          int mvol = 32767;
-          xm_buf[xm_buf_idx][2 * i]     = (i16)(left * mvol);
-          xm_buf[xm_buf_idx][2 * i + 1] = (i16)(right * mvol);
+          int r = right * master_volume;
+          r = max(r, -32768);
+          r = min(r, 32767);
+          xm_buf[xm_buf_idx][2 * i + 1] = r;
         }
 
         auto t2  = esp_timer_get_time();
@@ -205,43 +212,73 @@ void IRAM_ATTR xm_task(void *arg)
       case XM_TASK_INIT:
       {
         MEM_OBJ *obj = &mem_obj[task.handle];
-        xm_context_s *ctx = NULL;
-        
-        int rc = xm_create_context_safe(&ctx, obj->addr, obj->size, XM_SAMPLE_RATE, xm_malloc);
 
-        switch (rc)
+        if (obj->type == OBJ_TYPE_XM)
         {
-          case -1:
-            set_status(ESP_ERR_INV_XM);
+          xm_context_s *ctx = NULL;
 
-            ESP_LOGE("xm_task", "XM module is not sane!");
-          break;
+          int rc = xm_create_context_safe(&ctx, obj->addr, obj->size, XM_SAMPLE_RATE, xm_malloc);
 
-          case -2:
-            set_status(ESP_ERR_OUT_OF_MEMORY);
-
-            ESP_LOGE("xm_task", "XM context memory allocation error!");
-          break;
-
-          default:
+          if (rc == -1)
           {
-            free(obj->addr);
+            ESP_LOGE("xm_task", "XM module error!");
+            set_status(ESP_ERR_INV_XM);
+            break;
+          }
 
-            obj->addr = (void*)ctx;
-            obj->size = rc;
-            obj->state = XM_OBJ_ST_STOPPED;
-
-            xm_set_max_loop_count((xm_context_s*)obj->addr, 0);
-
-            set_ok_ready();
+          else if (rc == -2)
+          {
+            ESP_LOGE("xm_task", "XM context memory allocation error!");
+            set_status(ESP_ERR_OUT_OF_MEMORY);
+            break;
+          }
 
 #ifdef VERBOSE
-            printf("xm_task", "XM context created\r\n");
+          printf("XM context created\r\n");
 #endif
-          }
-          break;
 
+          free(obj->addr);
+          obj->type = OBJ_TYPE_XMC;
+          obj->addr = (void*)ctx;
+          obj->size = rc;
         }
+
+        else if (obj->type == OBJ_TYPE_XMC)
+        {
+          u32 ctx_size = *(u32*)obj->addr;
+          u8 *p = (u8*)obj->addr;
+          int rel_sz = *(u16*)&p[ctx_size];
+          u32 *rel = (u32*)&p[ctx_size + sizeof(u16)];
+
+#ifdef VERBOSE
+          printf("XM context relocating entries %d\r\n", rel_sz);
+#endif
+
+          for (int i = 0; i < rel_sz; i++)
+          {
+            u32 *r = (u32*)(rel[i] + (u32)obj->addr);
+
+#ifdef VERBOSE
+            printf("Entry %d: &%08lX %08lX\r\n", i, (u32)rel[i], *r);
+#endif
+
+            *r += (u32)obj->addr;
+          }
+        }
+
+        obj->state = XM_OBJ_ST_STOPPED;
+        xm_set_max_loop_count((xm_context_s*)obj->addr, 0);
+
+        // Clear stats
+        _st.xm_render_min_us = INT_MAX;
+        _st.xm_render_min_cpu = INT_MAX;
+        _st.xm_render_max_us = 0;
+        _st.xm_render_max_cpu = 0;
+
+#ifdef VERBOSE
+        printf("XM init success\r\n");
+#endif
+        set_status(ESP_ST_READY);
       }
       break;
 
@@ -251,9 +288,8 @@ void IRAM_ATTR xm_task(void *arg)
 
         if (!obj->addr || (obj->state != XM_OBJ_ST_STOPPED))
         {
-          set_status(ESP_ERR_INV_STATE);
-
           ESP_LOGE("xm_task", "Attempt to play not initialized module!");
+          set_status(ESP_ERR_INV_STATE);
         }
         else
         {
@@ -264,7 +300,7 @@ void IRAM_ATTR xm_task(void *arg)
 
           curr_xm_handle = task.handle;
           obj->state = XM_OBJ_ST_PLAYING;
-          set_ok_ready();
+          set_status(ESP_ST_READY);
         }
       }
       break;
@@ -277,7 +313,7 @@ void IRAM_ATTR xm_task(void *arg)
 
         MEM_OBJ *obj = &mem_obj[curr_xm_handle];
         if (obj) obj->state = XM_OBJ_ST_STOPPED;
-        set_ok_ready();
+        set_status(ESP_ST_READY);
       }
       break;
     }

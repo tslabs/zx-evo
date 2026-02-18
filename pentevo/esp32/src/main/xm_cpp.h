@@ -22,6 +22,7 @@ typedef struct
 } PLAYER_TASK;
 
 extern QueueHandle_t xm_queue;
+extern int master_volume;
 
 void xm_task(void *arg);
 void initialize_xm();

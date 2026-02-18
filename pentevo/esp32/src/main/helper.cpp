@@ -15,8 +15,13 @@
 #include "mem_obj.h"
 #include "elf.cpp.h"
 #include "depack.h"
+
+#ifdef CONFIG_ESP32_WIFI_ENABLED
 #include "wifi.h"
+#endif
+
 #include "helper.h"
+#include "http_client.h"
 
 const char TAG[] = "helper";
 
@@ -40,8 +45,8 @@ void *f_malloc(size_t x)
 #ifdef VERBOSE
   printf("f_malloc %u\r\n", x);
 #endif
-  
-  return heap_caps_malloc(x, MALLOC_CAP_SPIRAM);
+
+  return malloc_spiram(x);
 }
 
 void f_free(void *p)
@@ -49,7 +54,7 @@ void f_free(void *p)
 #ifdef VERBOSE
   printf("f_free\r\n");
 #endif
-  
+
   free(p);
 }
 
@@ -58,39 +63,12 @@ void *f_realloc(void *p, size_t x)
 #ifdef VERBOSE
   printf("f_realloc %u\r\n", x);
 #endif
-  
-  auto m = heap_caps_malloc(x, MALLOC_CAP_SPIRAM);
+
+  auto m = malloc_spiram(x);
   memcpy(m, p, x);
   free(p);
-  
+
   return m;
-}
-
-int mz_uncomp(u8 *dst, u32 &dst_len, u8 *src, u32 src_len)
-{
-  int rc;
-  mz_stream stream;
-  memset(&stream, 0, sizeof(stream));
-
-  stream.next_in = src;
-  stream.avail_in = src_len;
-  stream.next_out = dst;
-  stream.avail_out = dst_len;
-
-  rc = mz_inflateInit(&stream);
-  if (rc != MZ_OK) return rc;
-
-  rc = mz_inflate(&stream, MZ_FINISH);
-  src_len = src_len - stream.avail_in;
-
-  if (rc != MZ_STREAM_END)
-  {
-    mz_inflateEnd(&stream);
-    return ((rc == MZ_BUF_ERROR) && (!stream.avail_in)) ? MZ_DATA_ERROR : rc;
-  }
-
-  dst_len = stream.total_out;
-  return mz_inflateEnd(&stream);
 }
 
 void helper_task(void *arg)
@@ -129,22 +107,25 @@ void helper_task(void *arg)
             if (!check_handle(arr1h) || ((mem_obj[arr1h].type != OBJ_TYPE_DATA) && (mem_obj[arr1h].type != OBJ_TYPE_DATAF)))
             {
               set_status(ESP_ERR_INV_ARG_HANDLE);
+#ifdef VERBOSE
+              printf("Handle error, arr1h %d, type %d\r\n", arr1h, mem_obj[arr1h].type);
+#endif
               break;
             }
           }
 
-          if (task >= TASK_RUN_FUNC2) 
-          {  
+          if (task >= TASK_RUN_FUNC2)
+          {
             arr2h = rd_reg8(ESP_REG_ARR2_HANDLE);
-            
+
             if (!check_handle(arr2h) || ((mem_obj[arr2h].type != OBJ_TYPE_DATA) && (mem_obj[arr2h].type != OBJ_TYPE_DATAF)))
             {
               set_status(ESP_ERR_INV_ARG_HANDLE);
               break;
             }
           }
-          
-          if (task == TASK_RUN_FUNC3) 
+
+          if (task == TASK_RUN_FUNC3)
           {
             arr3h = rd_reg8(ESP_REG_ARR3_HANDLE);
 
@@ -202,7 +183,7 @@ void helper_task(void *arg)
 
           wr_reg32(ESP_REG_RETVAL, rc);
 
-          set_ok_ready();
+          set_status(ESP_ST_READY);
         }
         break;
 
@@ -233,7 +214,7 @@ void helper_task(void *arg)
             mem_obj[handle].state = LIB_OBJ_ST_READY;
             wr_reg8(ESP_REG_LIB_HANDLE, handle);
 
-            set_ok_ready();
+            set_status(ESP_ST_READY);
           }
         }
         break;
@@ -243,7 +224,7 @@ void helper_task(void *arg)
           size_t obj_size = rd_reg32(ESP_REG_DATA_SIZE);
           int obj_type = rd_reg8(ESP_REG_OBJ_TYPE);
 
-          int obj_hdl = make_obj(obj_size, obj_type);
+          int obj_hdl = make_obj(obj_size, obj_type); // set_status is done there
 
           if (obj_hdl >= 0)
           {
@@ -251,11 +232,7 @@ void helper_task(void *arg)
             wr_reg32(ESP_REG_DATA_OFFSET, 0);
             wr_reg32(ESP_REG_DATA_SIZE, min(obj_size, DMA_BUF_SIZE));
 
-            set_ok_ready();
-
-#ifdef VERBOSE
-            printf("Object created: type %02X, handle %02X, addr %08X, size %u\r\n", obj_type, handle, (unsigned int)obj_addr, obj_size);
-#endif
+            set_status(ESP_ST_READY);
           }
         }
         break;
@@ -271,7 +248,7 @@ void helper_task(void *arg)
             break;
           }
 
-          auto rc = delete_handle(handle);
+          auto rc = delete_obj(handle);
 
           if (!rc)
           {
@@ -280,7 +257,7 @@ void helper_task(void *arg)
           }
           else
           {
-            set_ok_ready();
+            set_status(ESP_ST_READY);
 
 #ifdef VERBOSE
             printf("Object deleted: handle %02X\r\n", handle);
@@ -295,7 +272,7 @@ void helper_task(void *arg)
           {
             if (check_handle(i))
             {
-              auto rc = delete_handle(i);
+              auto rc = delete_obj(i);
 
               if (!rc)
                 ESP_LOGE(TAG, "Object cannot be deleted! (%02X)", i);
@@ -306,7 +283,7 @@ void helper_task(void *arg)
             }
           }
 
-          set_ok_ready();
+          set_status(ESP_ST_READY);
         }
         break;
 
@@ -327,41 +304,41 @@ void helper_task(void *arg)
             set_status(ESP_ERR_INV_OBJ_TYPE);
             break;
           }
-          
+
           // Check source size
           if (!ssize || (ssize > 65536))
           {
             set_status(ESP_ERR_INV_SIZE);
             break;
           }
-   
+
           // Unpack the HST
-          u8 *tmp = (u8*)heap_caps_malloc(65536, MALLOC_CAP_SPIRAM);
-   
+          u8 *tmp = (u8*)malloc_spiram(65536);
+
           if (!tmp)
           {
             set_status(ESP_ERR_OUT_OF_MEMORY);
             break;
           }
-   
+
           u32 dsize = dehrust(tmp, (u8*)mem_obj[hsrc].addr, ssize);
-        
+
           if (!dsize)
           {
             free(tmp);
             set_status(ESP_ERR_INV_HST);
             break;
           }
-   
-          void *dst = heap_caps_malloc(dsize, MALLOC_CAP_SPIRAM);
- 
+
+          void *dst = malloc_spiram(dsize);
+
           if (!dst)
           {
             free(tmp);
             set_status(ESP_ERR_OUT_OF_MEMORY);
             break;
           }
- 
+
           memcpy(dst, tmp, dsize);
           free(tmp);
           free(mem_obj[hsrc].addr);
@@ -373,14 +350,14 @@ void helper_task(void *arg)
           wr_reg32(ESP_REG_DATA_OFFSET, 0);
           wr_reg32(ESP_REG_DATA_SIZE, min(dsize, DMA_BUF_SIZE));
 
-          set_ok_ready();
+          set_status(ESP_ST_READY);
         }
         break;
-        
+
         case TASK_UNZIP:
         {
           int hsrc = rd_reg8(ESP_REG_OBJ_HANDLE);
-          u32 ssize = rd_reg32(ESP_REG_DATA_SIZE);
+          size_t ssize = rd_reg32(ESP_REG_DATA_SIZE);
           int dtype = rd_reg8(ESP_REG_OBJ_TYPE);
 
           if (!check_handle(hsrc))
@@ -396,28 +373,30 @@ void helper_task(void *arg)
           }
 
           auto src = (u8*)mem_obj[hsrc].addr;
-          u32 dsize = *(u32*)src;
-          void *dst = (u8*)heap_caps_malloc(dsize, MALLOC_CAP_SPIRAM);
-  
+          size_t dsize = *(u32*)src;
+          void *dst = (u8*)malloc_spiram(dsize);
+
           if (!dst)
           {
             set_status(ESP_ERR_OUT_OF_MEMORY);
             break;
           }
 
+          tinfl_init(decomp);
+
           ssize -= 4;
-          auto rc = mz_uncomp((u8*)dst, dsize, &src[4], ssize);
-          
-          if (rc != MZ_OK)
+          tinfl_status decomp_status = tinfl_decompress(decomp, &src[4], &ssize, (u8*)dst, (u8*)dst, &dsize, TINFL_FLAG_PARSE_ZLIB_HEADER | TINFL_FLAG_USING_NON_WRAPPING_OUTPUT_BUF);
+
+#ifdef VERBOSE
+          printf("Unzip rc = %d, inbytes = %d, outbytes = %d\r\n", decomp_status, ssize, dsize);
+#endif
+
+          if (decomp_status != TINFL_STATUS_DONE)
           {
-            set_status((rc == MZ_MEM_ERROR) ? ESP_ERR_OUT_OF_MEMORY : ESP_ERR_INV_ZIP);
+            set_status(ESP_ERR_INV_ZIP);
             break;
           }
-          
-#ifdef VERBOSE
-          printf("Unzip rc = %d, i_sz = %ld, o_sz = %ld\r\n", rc, ssize, dsize);
-#endif
-          
+
           mem_obj[hsrc].addr = dst;
           mem_obj[hsrc].size = dsize;
           mem_obj[hsrc].type = dtype;
@@ -425,12 +404,17 @@ void helper_task(void *arg)
           wr_reg32(ESP_REG_DATA_OFFSET, 0);
           wr_reg32(ESP_REG_DATA_SIZE, min(dsize, DMA_BUF_SIZE));
 
-          set_ok_ready();
+          set_status(ESP_ST_READY);
         }
+        break;
+
+        case TASK_RESET_STREAM_UNZIP:
+          process_rx_data(DREQ_ZIP, 0);   // Reset stream depacker
         break;
 
         case TASK_WSCAN:
         {
+#ifdef CONFIG_ESP32_WIFI_ENABLED
           if (net.is_busy)
           {
             set_status(ESP_ERR_NET_BUSY);
@@ -438,14 +422,16 @@ void helper_task(void *arg)
           }
 
           net.is_busy = true;
-          wf_scan();
+          wf_scan(300 /* timeout */);
           net.is_busy = false;
           put_txq(DREQ_WSCAN);
+#endif
         }
         break;
 
         case TASK_CONN:
         {
+#ifdef CONFIG_ESP32_WIFI_ENABLED
           if (net.is_busy)
           {
             set_status(ESP_ERR_NET_BUSY);
@@ -461,11 +447,28 @@ void helper_task(void *arg)
           if (rc)
           {
             get_ip(net.ip.own_ip, net.ip.mask, net.ip.gate);
-            set_ok_ready();
+            set_status(ESP_ST_READY);
           }
           else
+#endif
             set_status(ESP_ERR_AP_NOT_CONNECTED);
         }
+        break;
+
+        case TASK_HTTP_GET:
+          http_do_get();
+        break;
+
+        case TASK_HTTP_STREAM_READ:
+          http_stream_read_task();
+        break;
+
+        case TASK_REBOOT:
+          esp_restart();
+        break;
+
+        case TASK_RESET:
+          esp_restart();
         break;
       }
     }

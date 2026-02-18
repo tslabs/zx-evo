@@ -8,7 +8,10 @@
 #include "esp_system.h"
 #include "esp_console.h"
 #include "esp_log.h"
-#include "esp_vfs_dev.h"
+#include "esp_vfs_dev.h" // Old headers for the aliasing functions
+
+#include "driver/uart_vfs.h"
+
 #include "driver/uart.h"
 #include "argtable3/argtable3.h"
 #include "linenoise/linenoise.h"
@@ -37,7 +40,9 @@ void console_register_commands()
 {
   esp_console_register_help_command();
   esp_console_register_system_commands();
+#ifdef CONFIG_ESP32_WIFI_ENABLED
   esp_console_register_wifi_commands();
+#endif
 }
 
 void initialize_console()
@@ -49,35 +54,17 @@ void initialize_console()
   // Disable buffering on stdin
   setvbuf(stdin, NULL, _IONBF, 0);
 
-  // Minicom, screen, idf_monitor send CR when ENTER key is pressed
-  esp_vfs_dev_uart_port_set_rx_line_endings(CONFIG_ESP_CONSOLE_UART_NUM, ESP_LINE_ENDINGS_CR);
-  // Move the caret to the beginning of the next line on '\n'
-  esp_vfs_dev_uart_port_set_tx_line_endings(CONFIG_ESP_CONSOLE_UART_NUM, ESP_LINE_ENDINGS_CRLF);
+  /* Minicom, screen, idf_monitor send CR when ENTER key is pressed */
+  uart_vfs_dev_port_set_rx_line_endings(CONFIG_ESP_CONSOLE_UART_NUM, ESP_LINE_ENDINGS_CR);
+  
+  /* Move the caret to the beginning of the next line on '\n' */
+  uart_vfs_dev_port_set_tx_line_endings(CONFIG_ESP_CONSOLE_UART_NUM, ESP_LINE_ENDINGS_CRLF);
 
   // Install UART driver for interrupt-driven reads and writes
-  ESP_ERROR_CHECK(uart_driver_install(CONFIG_ESP_CONSOLE_UART_NUM, 256, 0, 0, NULL, 0));
-
-#if 0   // This makes a glitch. UART is already configured anyway
-  // Configure UART. Note that REF_TICK is used so that the baud rate remains
-  // correct while APB frequency is changing in light sleep mode.
-  const uart_config_t uart_config =
-  {
-    .baud_rate = CONFIG_ESP_CONSOLE_UART_BAUDRATE,
-    .data_bits = UART_DATA_8_BITS,
-    .parity    = UART_PARITY_DISABLE,
-    .stop_bits = UART_STOP_BITS_1,
-#if SOC_UART_SUPPORT_REF_TICK
-    .source_clk = UART_SCLK_REF_TICK,
-#elif SOC_UART_SUPPORT_XTAL_CLK
-    .source_clk = UART_SCLK_XTAL,
-#endif
-  };
-
-  ESP_ERROR_CHECK(uart_param_config(CONFIG_ESP_CONSOLE_UART_NUM, &uart_config));
-#endif
+  ESP_ERROR_CHECK(uart_driver_install((uart_port_t)CONFIG_ESP_CONSOLE_UART_NUM, 256, 0, 0, NULL, 0));
 
   // Tell VFS to use UART driver
-  esp_vfs_dev_uart_use_driver(CONFIG_ESP_CONSOLE_UART_NUM);
+  uart_vfs_dev_use_driver(CONFIG_ESP_CONSOLE_UART_NUM);
 
   // Initialize the console
   esp_console_config_t console_config =
@@ -138,7 +125,7 @@ void console_task(void *arg)
       linenoiseHistoryAdd(line);
 
     // Try to run the command
-    int       ret;
+    int ret;
     esp_err_t err = esp_console_run(line, &ret);
 
     if (err == ESP_ERR_NOT_FOUND)
