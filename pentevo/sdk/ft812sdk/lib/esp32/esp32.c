@@ -213,6 +213,13 @@ u32 esp_wait_status(u8 status, u32 timeout)
   return timeout;
 }
 
+u32 esp_wait_not_status(u8 status, u32 timeout)
+{
+  while (--timeout) if (esp_rd_reg8(ESP_REG_STATUS) != status) break;
+
+  return timeout;
+}
+
 u32 esp_wait_busy(u32 timeout)
 {
   while (--timeout) if (esp_rd_reg8(ESP_REG_STATUS) != ESP_ST_BUSY) break;
