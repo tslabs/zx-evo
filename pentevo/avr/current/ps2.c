@@ -388,7 +388,9 @@ volatile u8 ps2mouse_timeout;
 volatile u8 ps2mouse_initstep;
 volatile u8 ps2mouse_resp_count;
 volatile u8 ps2mouse_cmd;
+volatile u8 ps2mouse_online;
 volatile u16 ps2mouse_reinit_delay;
+volatile u16 ps2mouse_probe_delay;
 volatile u16 ps2mouse_reinit_tcnt1;
 volatile u8 ps2mouse_wait_state;
 volatile u16 ps2mouse_wait_tcnt1;
@@ -463,7 +465,9 @@ void ps2mouse_init(void)
   ps2mouse_initstep = 0;
   ps2mouse_resp_count = 0;
   ps2mouse_cmd = PS2MOUSE_CMD_SET_RESOLUTION;
+  ps2mouse_online = 0;
   ps2mouse_reinit_delay = 0;
+  ps2mouse_probe_delay = 0;
   ps2mouse_reinit_tcnt1 = TCNT1;
   ps2mouse_wait_state = PS2MOUSE_WAIT_NONE;
   ps2mouse_wait_tcnt1 = 0;
@@ -481,7 +485,9 @@ void ps2mouse_schedule_reinit(void)
   ps2mouse_initstep = 0;
   ps2mouse_resp_count = 0;
   ps2mouse_cmd = PS2MOUSE_CMD_SET_RESOLUTION;
+  ps2mouse_online = 0;
   ps2mouse_reinit_delay = 500;
+  ps2mouse_probe_delay = 0;
   ps2mouse_wait_state = PS2MOUSE_WAIT_NONE;
   ps2mouse_wait_tcnt1 = 0;
 
@@ -496,7 +502,15 @@ void ps2mouse_enable_if_ready(void)
   if ((ps2mouse_init_sequence[ps2mouse_initstep] == 0) &&
       (ps2mouse_cmd == 0) &&
       ((flags_ex_register & FLAG_EX_PS2MOUSE_CMD) == 0))
-    zx_mouse_reset(1);
+  {
+    if (!ps2mouse_online)
+    {
+      ps2mouse_online = 1;
+      zx_mouse_reset(1);
+    }
+
+    ps2mouse_probe_delay = 500;
+  }
 }
 
 void ps2mouse_task(void)
@@ -509,6 +523,9 @@ void ps2mouse_task(void)
   {
     if (ps2mouse_reinit_delay != 0)
       ps2mouse_reinit_delay--;
+
+    if (ps2mouse_probe_delay != 0)
+      ps2mouse_probe_delay--;
   }
   ps2mouse_reinit_tcnt1 = tcnt1;
 
@@ -542,6 +559,14 @@ void ps2mouse_task(void)
 
   if ((ps2mouse_count == 12) && (ps2mouse_reinit_delay == 0))
   {
+    if ((ps2mouse_online) &&
+        (ps2mouse_init_sequence[ps2mouse_initstep] == 0) &&
+        (ps2mouse_cmd == 0) &&
+        (ps2mouse_probe_delay == 0))
+    {
+      ps2mouse_cmd = PS2MOUSE_CMD_GET_TYPE;
+    }
+
     if (ps2mouse_init_sequence[ps2mouse_initstep] != 0)
     {
        if (ps2mouse_resp_count == 0)
@@ -619,6 +644,7 @@ void ps2mouse_task(void)
             {
               //classical mouse
               ps2mouse_resp_count = 0;
+              ps2mouse_probe_delay = 500;
               flags_register |= FLAG_PS2MOUSE_ZX_READY;
             }
           break;
@@ -626,6 +652,7 @@ void ps2mouse_task(void)
           case 4:
             //byte 4: wheel movement
             zx_mouse_button += ((b << 4) & 0xF0);
+            ps2mouse_probe_delay = 500;
             flags_register |= FLAG_PS2MOUSE_ZX_READY;
             ps2mouse_resp_count = 0;
           break;
