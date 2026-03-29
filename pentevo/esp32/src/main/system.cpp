@@ -9,6 +9,7 @@
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "soc/soc_caps.h"
 #include "esp_log.h"
 #include "esp_console.h"
 #include "esp_chip_info.h"
@@ -22,6 +23,7 @@
 #include "argtable3/argtable3.h"
 #include "sdkconfig.h"
 #include <esp_heap_caps.h>
+#include "esp_timer.h"
 
 #include "main.h"
 #include "esp_spi_defs.h"
@@ -30,6 +32,9 @@
 #include "xm_cpp.h"
 #include "spi_slave.h"
 #include "stats.h"
+#include "ft8xx.h"
+#include "usb_mouse.h"
+#include "ps2_mouse.h"
 
 using namespace stats;
 
@@ -49,10 +54,10 @@ int perf_test(int argc, char **argv)
 #define _END2     gettimeofday(&end, NULL); elapsed_ms = (end.tv_sec - start.tv_sec) * 1000.0 + (end.tv_usec - start.tv_usec) / 1000.0; \
                   printf("%.2f iter/s\n", iters * 1000 / elapsed_ms);
 
-  struct timeval start, end;
-  double elapsed_ms;
-  float sumf = 0;
-  int sum = 0;
+ struct timeval start, end;
+ double elapsed_ms;
+ float sumf = 0;
+ int sum = 0;
 
 #define TEST_BUF_SIZE   2 * 1024 * 1024
 
@@ -143,7 +148,7 @@ int perf_test(int argc, char **argv)
   _END
 
   iters = 1000000;
-  
+
   uint32_t rng_state = 123456789;
   _START("Fast rnd")
   uint32_t x = rng_state;
@@ -156,9 +161,9 @@ int perf_test(int argc, char **argv)
   }
   rng_state = x;
   _END
-  
+
   iters = 100000;
-  
+
   _START("Sqrt FP")
   for (size_t i = 0; i < iters; i++)
     sumf += sqrt((float)i);
@@ -246,6 +251,35 @@ iters = 100;
 #undef _END2
 }
 
+void hexdump(const void *data, size_t len, uint64_t base_off)
+{
+  const uint8_t *p = (const uint8_t *)data;
+
+  for (size_t i = 0; i < len; i += 16)
+  {
+    printf("%08" PRIx64 "  ", (uint64_t)(base_off + i));
+
+    for (size_t j = 0; j < 16; j++)
+    {
+      if (i + j < len) printf("%02X ", p[i + j]);
+      else printf("   ");
+    }
+
+    printf(" ");
+
+    for (size_t j = 0; j < 16; j++)
+    {
+      if (i + j < len)
+      {
+        unsigned char c = p[i + j];
+        printf("%c", isprint(c) ? c : '.');
+      }
+    }
+
+    printf("\r\n");
+  }
+}
+
 const char *esp_status_str(uint8_t st)
 {
   switch (st)
@@ -296,16 +330,16 @@ const char *esp_status_str(uint8_t st)
 int error_list(int argc, char **argv)
 {
   u8 st = rd_reg8(ESP_REG_STATUS);
-  
+
   for (int i = 0; i < 256; i++)
   {
     auto s = esp_status_str(i);
     if (s[0]) printf("%02X - %s\r\n", i, s);
   }
-  
+
   printf("\r\n");
   printf("Current status: %02X (%s)\r\n", st, esp_status_str(st));
-  
+
   return 0;
 }
 
@@ -427,8 +461,8 @@ int obj_info(int argc, char **argv)
     if (mem_obj[i].addr)
     {
       const uint8_t t = mem_obj[i].type;
-      const uint8_t s = mem_obj[i].state;      
-      
+      const uint8_t s = mem_obj[i].state;
+
       switch (mem_obj[i].type)
       {
         case OBJ_TYPE_LIB:
@@ -528,29 +562,36 @@ int stats_info(int argc, char **argv)
   return 0;
 }
 
-struct
-{
-  struct arg_int *volume;
-  struct arg_end *end;
-} mvol_args;
-
 int set_mvol(int argc, char **argv)
 {
-  int nerrors = arg_parse(argc, argv, (void **)&mvol_args);
-  if (nerrors != 0)
+  if (argc < 2)
   {
-    arg_print_errors(stderr, mvol_args.end, argv[0]);
+    printf("Usage: volume <volume>\r\n");
     return 1;
   }
 
-  if (argc > 1)
-    master_volume = mvol_args.volume->ival[0] * 1000;
+  char *endp = NULL;
+  uint64_t vol = strtoull(argv[1], &endp, 0);
+  if (!endp || *endp)
+  {
+    printf("Bad <volume>: %s\r\n", argv[1]);
+    return 1;
+  }
+
+  if (vol > 255)
+  {
+    printf("Bad <volume>: %s (expected 0..255)\r\n", argv[1]);
+    return 1;
+  }
+
+  master_volume = (int)(vol * 1000ULL);
 
   printf("Master volume: %d\r\n", master_volume / 1000);
 
   return 0;
 }
 
+// ---------- Command registration ----------
 void esp_console_register_system_commands()
 {
   {
@@ -652,18 +693,54 @@ void esp_console_register_system_commands()
   }
 
   {
-    mvol_args.volume  = arg_int0(NULL, NULL, "<volume>", "Master volume (0-255)");
-    mvol_args.end = arg_end(1);
-
     const esp_console_cmd_t cmd =
     {
       .command = "volume",
       .help    = "Set master volume",
       .hint    = NULL,
       .func    = &set_mvol,
-      .argtable = &mvol_args
+      .argtable = NULL
     };
 
     ESP_ERROR_CHECK(esp_console_cmd_register(&cmd));
+  }
+
+  {
+    const esp_console_cmd_t cmd =
+    {
+      .command  = "usbmouse",
+      .help     = "Switch USB to host mode, wait for mouse, print movement, reboot on mouse button press",
+      .hint     = NULL,
+      .func     = &usbmouse_cmd,
+      .argtable = NULL
+    };
+
+    ESP_ERROR_CHECK(esp_console_cmd_register(&cmd));
+  }
+
+  {
+    const esp_console_cmd_t cmd =
+    {
+      .command  = "ps2mouse",
+      .help     = "PS/2 mouse emulation on GPIO5(data), GPIO7(clk): start, stop, move <dx> <dy> [buttons]",
+      .hint     = NULL,
+      .func     = &ps2_mouse_cmd,
+      .argtable = NULL
+    };
+
+    ESP_ERROR_CHECK(esp_console_cmd_register(&cmd));
+  }
+
+  {
+    // const esp_console_cmd_t cmd =
+    // {
+      // .command  = "btmouse",
+      // .help     = "Start BLE mouse scan/connect mode, any key stops BT",
+      // .hint     = NULL,
+      // .func     = &bt_mouse_cmd,
+      // .argtable = NULL
+    // };
+
+    // ESP_ERROR_CHECK(esp_console_cmd_register(&cmd));
   }
 }

@@ -20,7 +20,6 @@
 #include "esp_spi_defs.h"
 #include "spi_slave.h"
 #include "console.h"
-#include "ft812.h"
 
 #ifdef CONFIG_ESP32_WIFI_ENABLED
 #include "wifi.h"
@@ -30,6 +29,7 @@
 #include "xm.h"
 #include "xm_cpp.h"
 #include "stats.h"
+#include "ft8xx.h"
 #include "elf.cpp.h"
 #include "helper.h"
 #include "http_client.h"
@@ -122,11 +122,23 @@ extern "C" void app_main()
 
   // ----- HTTP init
   http_init();
+  ESP_LOGI("SRAM http_init", "%u", heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
+  
+  // ----- SDMMC init
+#if defined(CONFIG_IDF_TARGET_ESP32P4)
+  sd_ldo_init();
+#endif
 
   // ----- SPI slave init
+  init_spi_configs();
+  ESP_LOGI("SRAM init_spi_configs", "%u", heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
   init_slave_hd();
   ESP_LOGI("SRAM init_slave_hd", "%u", heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
 
+  // ----- FT812 init
+  init_ft8xx();
+  ESP_LOGI("SRAM init_ft8xx", "%u", heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
+  
   // ----- Console init
   initialize_console();
   ESP_LOGI("SRAM initialize_console", "%u", heap_caps_get_free_size(MALLOC_CAP_INTERNAL));

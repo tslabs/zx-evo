@@ -22,8 +22,6 @@
 #include "wifi.h"
 #include "http_client.h"
 
-#ifdef CONFIG_ESP32_WIFI_ENABLED
-
 const char TAG[] = "wifi.cpp";
 
 EventGroupHandle_t wifi_event_group;
@@ -121,6 +119,7 @@ void initialize_wifi()
   ESP_ERROR_CHECK(esp_event_loop_create_default());
   esp_netif_t *sta_netif = esp_netif_create_default_wifi_sta();
   assert(sta_netif);
+  (void)sta_netif;
 
   wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
   ESP_ERROR_CHECK(esp_wifi_init(&cfg));
@@ -152,78 +151,6 @@ bool wifi_connect(const char *ssid, const char *pass, int timeout_ms)
   int bits = xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT, pdFALSE, pdTRUE, timeout_ms / portTICK_PERIOD_MS);
 
   return (bits & CONNECTED_BIT) != 0;
-}
-
-struct
-{
-  struct arg_int *timeout;
-  struct arg_str *ssid;
-  struct arg_str *password;
-  struct arg_end *end;
-} connect_args;
-
-int connect_ap(int argc, char **argv)
-{
-  int nerrors = arg_parse(argc, argv, (void **)&connect_args);
-
-  if (nerrors != 0)
-  {
-    arg_print_errors(stderr, connect_args.end, argv[0]);
-    return 1;
-  }
-
-  ESP_LOGI(__func__, "Connecting to '%s'", connect_args.ssid->sval[0]);
-
-  /* set default value*/
-  if (connect_args.timeout->count == 0)
-    connect_args.timeout->ival[0] = CONNECT_TIMEOUT_MS;
-
-  bool connected = wifi_connect(connect_args.ssid->sval[0], connect_args.password->sval[0], connect_args.timeout->ival[0]);
-
-  if (!connected)
-  {
-    ESP_LOGW(__func__, "Connection timed out");
-    return 1;
-  }
-
-  ESP_LOGI(__func__, "Connected");
-  return 0;
-}
-
-static void print_auth_mode(int authmode)
-{
-  switch (authmode)
-  {
-    case WIFI_AUTH_OPEN:          printf("OPEN\t"); break;
-    case WIFI_AUTH_OWE:           printf("OWE\t"); break;
-    case WIFI_AUTH_WEP:           printf("WEP\t"); break;
-    case WIFI_AUTH_WPA_PSK:       printf("WPA_PSK"); break;
-    case WIFI_AUTH_WPA2_PSK:      printf("WPA2_PSK"); break;
-    case WIFI_AUTH_WPA_WPA2_PSK:  printf("WPA_WPA2_PSK"); break;
-    case WIFI_AUTH_ENTERPRISE:    printf("ENTERPRISE"); break;
-    case WIFI_AUTH_WPA3_PSK:      printf("WPA3_PSK"); break;
-    case WIFI_AUTH_WPA2_WPA3_PSK: printf("WPA2_WPA3_PSK"); break;
-    case WIFI_AUTH_WPA3_ENT_192:  printf("WPA3_ENT_192"); break;
-    default:                      printf("UNKNOWN"); break;
-  }
-}
-
-static void print_cipher_type(int cipher)
-{
-  switch (cipher)
-  {
-    case WIFI_CIPHER_TYPE_NONE:         printf("NONE\t"); break;
-    case WIFI_CIPHER_TYPE_WEP40:        printf("WEP40\t"); break;
-    case WIFI_CIPHER_TYPE_WEP104:       printf("WEP104"); break;
-    case WIFI_CIPHER_TYPE_TKIP:         printf("TKIP\t"); break;
-    case WIFI_CIPHER_TYPE_CCMP:         printf("CCMP\t"); break;
-    case WIFI_CIPHER_TYPE_TKIP_CCMP:    printf("TKIP_CCMP"); break;
-    case WIFI_CIPHER_TYPE_AES_CMAC128:  printf("AES_CMAC128"); break;
-    case WIFI_CIPHER_TYPE_SMS4:         printf("SMS4\t"); break;
-    case WIFI_CIPHER_TYPE_GCMP:         printf("GCMP\t"); break;
-    case WIFI_CIPHER_TYPE_GCMP256:      printf("GCMP256"); break;
-    default:                            printf("UNKNOWN"); break;
-  }
 }
 
 int wf_scan(int timeout)
@@ -258,6 +185,88 @@ void wf_get_ap(int idx, u8 &auth, i8 &rssi, u8 &chan, u8 *&ssid)
   rssi = ap_info[idx].rssi;
   chan = ap_info[idx].primary;
   ssid = ap_info[idx].ssid;
+}
+
+// ------------- Console ---------------
+
+void print_auth_mode(int authmode)
+{
+  switch (authmode)
+  {
+    case WIFI_AUTH_OPEN:          printf("OPEN\t"); break;
+    case WIFI_AUTH_OWE:           printf("OWE\t"); break;
+    case WIFI_AUTH_WEP:           printf("WEP\t"); break;
+    case WIFI_AUTH_WPA_PSK:       printf("WPA_PSK"); break;
+    case WIFI_AUTH_WPA2_PSK:      printf("WPA2_PSK"); break;
+    case WIFI_AUTH_WPA_WPA2_PSK:  printf("WPA_WPA2_PSK"); break;
+    case WIFI_AUTH_ENTERPRISE:    printf("ENTERPRISE"); break;
+    case WIFI_AUTH_WPA3_PSK:      printf("WPA3_PSK"); break;
+    case WIFI_AUTH_WPA2_WPA3_PSK: printf("WPA2_WPA3_PSK"); break;
+    case WIFI_AUTH_WPA3_ENT_192:  printf("WPA3_ENT_192"); break;
+    default:                      printf("UNKNOWN"); break;
+  }
+}
+
+void print_cipher_type(int cipher)
+{
+  switch (cipher)
+  {
+    case WIFI_CIPHER_TYPE_NONE:         printf("NONE\t"); break;
+    case WIFI_CIPHER_TYPE_WEP40:        printf("WEP40\t"); break;
+    case WIFI_CIPHER_TYPE_WEP104:       printf("WEP104"); break;
+    case WIFI_CIPHER_TYPE_TKIP:         printf("TKIP\t"); break;
+    case WIFI_CIPHER_TYPE_CCMP:         printf("CCMP\t"); break;
+    case WIFI_CIPHER_TYPE_TKIP_CCMP:    printf("TKIP_CCMP"); break;
+    case WIFI_CIPHER_TYPE_AES_CMAC128:  printf("AES_CMAC128"); break;
+    case WIFI_CIPHER_TYPE_SMS4:         printf("SMS4\t"); break;
+    case WIFI_CIPHER_TYPE_GCMP:         printf("GCMP\t"); break;
+    case WIFI_CIPHER_TYPE_GCMP256:      printf("GCMP256"); break;
+    default:                            printf("UNKNOWN"); break;
+  }
+}
+
+int parse_response(char *buffer, size_t length, size_t &content_index)
+{
+  const uint8_t delimiter[] = {0x0D, 0x0A, 0x0D, 0x0A};
+  const char *content_length_field = "content-length: ";
+  size_t content_length = 0;
+  size_t eoh = sizeof(delimiter);
+  size_t i;
+  content_index = 0;
+
+  // Search for the end of headers (double CRLF)
+  for (i = 0; i <= length - eoh; i++)
+    if (memcmp(&buffer[i], delimiter, eoh) == 0)
+      break;
+
+  if (i > length - eoh)
+  {
+    printf("End of headers not found.\n");
+    return -1;
+  }
+
+  // Print the ASCII headers
+  for (size_t j = 0; j < i; j++)
+    putchar(buffer[j]);
+
+  // Convert to lowercase
+  for (size_t j = 0; j < i; j++)
+    buffer[j] = tolower((unsigned char)buffer[j]);
+
+  content_index = i + eoh;
+  printf("\n\nFirst content byte index: %zu\n", content_index);
+
+  // Search for the "Content-Length" field and extract its value
+  for (size_t i = 0; i < content_index - strlen(content_length_field); i++)
+    if (strncmp((const char *)&buffer[i], content_length_field, strlen(content_length_field)) == 0)
+    {
+      // Skip the field and extract the value
+      sscanf((const char *)&buffer[i + strlen(content_length_field)], "%zu", &content_length);
+      printf("Content length: %zu\n", content_length);
+      break;
+    }
+
+  return content_length;
 }
 
 struct
@@ -310,50 +319,40 @@ int wifi_scan(int argc, char **argv)
   return 0;
 }
 
-char buf[16384];
-
-int parse_response(char *buffer, size_t length, size_t &content_index)
+struct
 {
-  const uint8_t delimiter[] = {0x0D, 0x0A, 0x0D, 0x0A};
-  const char *content_length_field = "content-length: ";
-  size_t content_length = 0;
-  size_t eoh = sizeof(delimiter);
-  size_t i;
-  content_index = 0;
+  struct arg_int *timeout;
+  struct arg_str *ssid;
+  struct arg_str *password;
+  struct arg_end *end;
+} connect_args;
 
-  // Search for the end of headers (double CRLF)
-  for (i = 0; i <= length - eoh; i++)
-    if (memcmp(&buffer[i], delimiter, eoh) == 0)
-      break;
+int connect_ap(int argc, char **argv)
+{
+  int nerrors = arg_parse(argc, argv, (void **)&connect_args);
 
-  if (i > length - eoh)
+  if (nerrors != 0)
   {
-    printf("End of headers not found.\n");
-    return -1;
+    arg_print_errors(stderr, connect_args.end, argv[0]);
+    return 1;
   }
 
-  // Print the ASCII headers
-  for (size_t j = 0; j < i; j++)
-    putchar(buffer[j]);
+  ESP_LOGI(__func__, "Connecting to '%s'", connect_args.ssid->sval[0]);
 
-  // Convert to lowercase
-  for (size_t j = 0; j < i; j++)
-    buffer[j] = tolower((unsigned char)buffer[j]);
+  /* set default value*/
+  if (connect_args.timeout->count == 0)
+    connect_args.timeout->ival[0] = CONNECT_TIMEOUT_MS;
 
-  content_index = i + eoh;
-  printf("\n\nFirst content byte index: %zu\n", content_index);
+  bool connected = wifi_connect(connect_args.ssid->sval[0], connect_args.password->sval[0], connect_args.timeout->ival[0]);
 
-  // Search for the "Content-Length" field and extract its value
-  for (size_t i = 0; i < content_index - strlen(content_length_field); i++)
-    if (strncmp((const char *)&buffer[i], content_length_field, strlen(content_length_field)) == 0)
-    {
-      // Skip the field and extract the value
-      sscanf((const char *)&buffer[i + strlen(content_length_field)], "%zu", &content_length);
-      printf("Content length: %zu\n", content_length);
-      break;
-    }
+  if (!connected)
+  {
+    ESP_LOGW(__func__, "Connection timed out");
+    return 1;
+  }
 
-  return content_length;
+  ESP_LOGI(__func__, "Connected");
+  return 0;
 }
 
 struct
@@ -415,6 +414,7 @@ int https_get(int argc, char **argv)
   size_t content_length = 0;
 
   int ret;
+  void *buf;
 
   // ESP_LOGI(__func__, "Downloading '%s'", http_get_args.url->sval[0]);
   ESP_LOGI(__func__, "Downloading '%s'", WEB_URL);
@@ -477,6 +477,8 @@ int https_get(int argc, char **argv)
 
   ESP_LOGI(TAG, "Reading HTTP response");
 
+  buf = malloc_spiram(16384);
+  
   do
   {
     ret = esp_tls_conn_read(tls, (char*)buf, sizeof(buf));
@@ -493,11 +495,11 @@ int https_get(int argc, char **argv)
     if (ret == ESP_TLS_ERR_SSL_WANT_WRITE  || ret == ESP_TLS_ERR_SSL_WANT_READ)
       continue;
 
-    ESP_LOGI(TAG, "Received %u bytes", ret);
+    ESP_LOGD(TAG, "Received %u bytes", ret);
 
     if (!is_resp)
     {
-      content_length = parse_response(buf, ret, content_index);
+      content_length = parse_response((char*)buf, ret, content_index);
 
       if (content_length <= 0)
         break;
@@ -507,8 +509,10 @@ int https_get(int argc, char **argv)
     }
 
     content_length -= ret;
-    ESP_LOGI(TAG, "Left %u bytes", content_length);
+    ESP_LOGD(TAG, "Left %u bytes", content_length);
   } while (content_length);
+  
+  if (buf) free(buf);
 
 cleanup:
     esp_tls_conn_destroy(tls);
@@ -586,5 +590,3 @@ void esp_console_register_wifi_commands()
     ESP_ERROR_CHECK(esp_console_cmd_register(&https_get_cmd));
   }
 }
-
-#endif // CONFIG_ESP32_WIFI_ENABLED

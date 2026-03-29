@@ -19,7 +19,16 @@
 #include "nvs_flash.h"
 
 #include "main.h"
+#include "ft8xx.h"
 #include "console.h"
+
+#ifdef CONFIG_ESP32_WIFI_ENABLED
+#include "wifi.h"
+#endif
+
+#if SOC_SDMMC_HOST_SUPPORTED
+#include "sdmmc.h"
+#endif
 
 #define PROMPT_STR "zifi32"
 const char* prompt;
@@ -43,6 +52,10 @@ void console_register_commands()
 #ifdef CONFIG_ESP32_WIFI_ENABLED
   esp_console_register_wifi_commands();
 #endif
+  ft_console_register_system_commands();
+#if SOC_SDMMC_HOST_SUPPORTED
+  sdmmc_console_register_system_commands();
+#endif
 }
 
 void initialize_console()
@@ -56,7 +69,7 @@ void initialize_console()
 
   /* Minicom, screen, idf_monitor send CR when ENTER key is pressed */
   uart_vfs_dev_port_set_rx_line_endings(CONFIG_ESP_CONSOLE_UART_NUM, ESP_LINE_ENDINGS_CR);
-  
+
   /* Move the caret to the beginning of the next line on '\n' */
   uart_vfs_dev_port_set_tx_line_endings(CONFIG_ESP_CONSOLE_UART_NUM, ESP_LINE_ENDINGS_CRLF);
 

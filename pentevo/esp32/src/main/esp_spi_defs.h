@@ -52,6 +52,7 @@ enum
   ESP_CMD_SET_AP_PWD            = 0x14, // i: ESP_REG_STRING_SIZE, ESP_REG_STRING_DATA
   ESP_CMD_AP_CONNECT            = 0x16, // (no parameters)
   ESP_CMD_AP_DISCONNECT         = 0x17, // +++
+  ESP_CMD_SET_URL               = 0x18, // (no parameters)
   ESP_CMD_GET_IP                = 0x19, // o: ESP_REG_IP
   ESP_CMD_HTTP_GET              = 0x20, // +++
   ESP_CMD_HTTP_ABORT            = 0x22, // +++

@@ -1,6 +1,57 @@
 
 #pragma once
 
+// Types
+typedef struct
+{
+  u8 f_mul;       // PLL multiplier
+  u8 f_div;       // Pixel Clock divisor
+  u16 h_fporch;   // Horizontal front porch size
+  u16 h_sync;     // Horizontal sync size
+  u16 h_bporch;   // Horizontal back porch size
+  u16 h_visible;  // Horizontal visible area size
+  u16 v_fporch;   // Vertical front porch size
+  u16 v_sync;     // Vertical sync size
+  u16 v_bporch;   // Vertical back porch size
+  u16 v_visible;  // Vertical visible area size
+} FT_MODE;
+
+/*
+  |  # | visible  | Fpix MHz | clocks/line | lines/frame | line kHz | frame Hz |
+  | -- | -------- | -------- | ----------- | ----------- | -------- | -------- |
+  |  0 | 640x480  |       24 |         800 |         524 |   30.000 |   57.252 |
+  |  1 | 640x480  |       32 |         832 |         520 |   38.462 |   73.964 |
+  |  2 | 640x480  |       32 |         800 |         524 |   40.000 |   76.336 |
+  |  3 | 800x600  |       40 |        1056 |         628 |   37.879 |   60.317 |
+  |  4 | 800x600  |       40 |        1056 |         628 |   37.879 |   60.317 |
+  |  5 | 800x600  |       48 |        1040 |         666 |   46.154 |   69.300 |
+  |  6 | 800x600  |       56 |        1048 |         631 |   53.435 |   84.683 |
+  |  7 | 1024x768 |       64 |        1344 |         806 |   47.619 |   59.081 |
+  |  8 | 1024x768 |       72 |        1328 |         806 |   54.217 |   67.267 |
+  |  9 | 1024x768 |       80 |        1312 |         800 |   60.976 |   76.220 |
+  | 10 | 640x1024 |       56 |         844 |        1066 |   66.351 |   62.243 |
+  | 11 | 1280x720 |       72 |        1650 |         750 |   43.636 |   58.182 |
+  | 12 | 1280x720 |       72 |        1600 |         750 |   45.000 |   60.000 |
+*/
+
+enum  // const FT_MODE ft_modes[] in ft8xx.c
+{
+  FT_MODE_640_480_57             = 0,  //  0: 640x480@57Hz (48MHz)
+  FT_MODE_640_480_74             = 1,  //  1: 640x480@74Hz (64MHz)
+  FT_MODE_640_480_76             = 2,  //  2: 640x480@76Hz (64MHz)
+  FT_MODE_800_600_60             = 3,  //  3: 800x600@60Hz (40MHz)
+  FT_MODE_800_600_60_80MHZ       = 4,  //  4: 800x600@60Hz (80MHz)
+  FT_MODE_800_600_69             = 5,  //  5: 800x600@69Hz (48MHz)
+  FT_MODE_800_600_85             = 6,  //  6: 800x600@85Hz (56MHz)
+  FT_MODE_1024_768_59            = 7,  //  7: 1024x768@59Hz (64MHz)
+  FT_MODE_1024_768_67            = 8,  //  8: 1024x768@67Hz (72MHz)
+  FT_MODE_1024_768_76            = 9,  //  9: 1024x768@76Hz (80MHz)
+  FT_MODE_1280_1024_60_HALF      = 10, // 10: 1280/2x1024@60Hz (56MHz)
+  FT_MODE_1280_720_58            = 11, // 11: 1280x720@58Hz (72MHz)
+  FT_MODE_1280_720_60            = 12, // 12: 1280x720@60Hz (72MHz)
+  FT_MODE_MAX
+};
+
 // Memory addresses
 #define FT_RAM_G           0x000000   // Main graphics RAM
 #define FT_ROM_CHIPID      0x0C0000   // Chip ID and revision
@@ -9,6 +60,7 @@
 #define FT_RAM_DL          0x300000   // Display list RAM
 #define FT_RAM_REG         0x302000   // Registers
 #define FT_RAM_CMD         0x308000   // Coprocessor command buffer
+#define FT_RAM_ERR_REPORT  0x309800   // Error message
 
 // Commands
 #define FT_CMD_ACTIVE      0x00   // cc 00 00
@@ -113,11 +165,21 @@
 #define FT_REG_TRIM               0x302180
 #define FT_REG_ANA_COMP           0x302184
 #define FT_REG_SPI_WIDTH          0x302188
+#define FT_SPI_WIDTH_SINGLE       0
+#define FT_SPI_WIDTH_DUAL         1
+#define FT_SPI_WIDTH_QUAD         2
 #define FT_REG_TOUCH_DIRECT_XY    0x30218C
 #define FT_REG_TOUCH_DIRECT_Z1Z2  0x302190
 #define FT_REG_DATESTAMP          0x302564
 #define FT_REG_CMDB_SPACE         0x302574
 #define FT_REG_CMDB_WRITE         0x302578
+#define FT_REG_ADAPTIVE_FRAMERATE 0x30257C
+#define FT_REG_PLAYBACK_PAUSE     0x3025EC
+#define FT_REG_FLASH_STATUS       0x3025F0
+#define REG_MEDIAFIFO_READ        0x309014
+#define REG_MEDIAFIFO_WRITE       0x309018
+#define FT_REG_FLASH_SIZE         0x309024
+
 #define FT_REG_TRACKER            0x309000
 #define FT_REG_TRACKER_1          0x309004
 #define FT_REG_TRACKER_2          0x309008
@@ -140,6 +202,15 @@
 #define FT_CCMD_DLSTART           0xFFFFFF00
 #define FT_CCMD_EXECUTE           0xFFFFFF07
 #define FT_CCMD_FGCOLOR           0xFFFFFF0A
+#define FT_CCMD_FLASHATTACH       0xFFFFFF49
+#define FT_CCMD_FLASHDETACH       0xFFFFFF48
+#define FT_CCMD_FLASHERASE        0xFFFFFF44
+#define FT_CCMD_FLASHFAST         0xFFFFFF4A
+#define FT_CCMD_FLASHRX           0xFFFFFF4D
+#define FT_CCMD_FLASHSOURCE       0xFFFFFF4E
+#define FT_CCMD_FLASHSPIDESEL     0xFFFFFF4B
+#define FT_CCMD_FLASHTX           0xFFFFFF4C
+#define FT_CCMD_FLASHUPDATE       0xFFFFFF47
 #define FT_CCMD_GAUGE             0xFFFFFF13
 #define FT_CCMD_GETMATRIX         0xFFFFFF33
 #define FT_CCMD_GETPOINT          0xFFFFFF08
@@ -196,20 +267,24 @@
 #define FT_CCMD_VIDEOFRAME        0xFFFFFF41
 #define FT_CCMD_VIDEOSTART        0xFFFFFF40
 
-#define FT_OPT_CENTER           1536UL
-#define FT_OPT_CENTERX          512UL
-#define FT_OPT_CENTERY          1024UL
-#define FT_OPT_FLAT             256UL
-#define FT_OPT_MONO             1UL
-#define FT_OPT_NOBACK           4096UL
-#define FT_OPT_NODL             2UL
-#define FT_OPT_NOHANDS          49152UL
-#define FT_OPT_NOHM             16384UL
-#define FT_OPT_NOPOINTER        16384UL
-#define FT_OPT_NOSECS           32768UL
-#define FT_OPT_NOTICKS          8192UL
-#define FT_OPT_RIGHTX           2048UL
-#define FT_OPT_SIGNED           256UL
+#define FT_OPT_CENTER     1536UL
+#define FT_OPT_CENTERX    512UL
+#define FT_OPT_CENTERY    1024UL
+#define FT_OPT_FLAT       256UL
+#define FT_OPT_MONO       1UL
+#define FT_OPT_NOBACK     4096UL
+#define FT_OPT_NODL       2UL
+#define FT_OPT_NOHANDS    49152UL
+#define FT_OPT_NOHM       16384UL
+#define FT_OPT_NOPOINTER  16384UL
+#define FT_OPT_NOSECS     32768UL
+#define FT_OPT_NOTICKS    8192UL
+#define FT_OPT_RIGHTX     2048UL
+#define FT_OPT_SIGNED     256UL
+#define OPT_NOTEAR        4UL
+#define OPT_FULLSCREEN    8UL
+#define OPT_MEDIAFIFO     16UL
+#define OPT_SOUND         32UL
 
 // Primitives
 #define FT_BITMAPS        1
@@ -311,47 +386,175 @@
 #define FT_GPU_NUMCHAR_PERFONT  128
 #define FT_GPU_FONT_TABLE_SIZE  148
 
-u32 AlphaFunc(u8 func, u8 ref);
-u32 Begin(u8 prim);
-u32 BitmapHandle(u8 handle);
-u32 BitmapLayout(u8 format, u16 linestride, u16 height);
-u32 BitmapSize(u8 filter, u8 wrapx, u8 wrapy, u16 width, u16 height);
-u32 BitmapSource(u32 addr);
-u32 BitmapTransformA(int32_t a);
-u32 BitmapTransformB(int32_t b);
-u32 BitmapTransformC(int32_t c);
-u32 BitmapTransformD(int32_t d);
-u32 BitmapTransformE(int32_t e);
-u32 BitmapTransformF(int32_t f);
-u32 BlendFunc(u8 src, u8 dst);
-u32 Call(u16 dest);
-u32 Cell(u8 cell);
-u32 ClearColorA(u8 alpha);
-u32 ClearColorRGB(u8 red, u8 green, u8 blue);
-u32 ClearColorRGB(u32 rgb);
-u32 Clear(u8 c, u8 s, u8 t);
-u32 Clear();
-u32 ClearStencil(u8 s);
-u32 ClearTag(u8 s);
-u32 ColorA(u8 alpha);
-u32 ColorMask(u8 r, u8 g, u8 b, u8 a);
-u32 ColorRGB(u8 red, u8 green, u8 blue);
-u32 ColorRGB(u32 rgb);
-u32 Display(void);
-u32 End(void);
-u32 Jump(u16 dest);
-u32 LineWidth(u16 width);
-u32 Macro(u8 m);
-u32 PointSize(u16 size);
-u32 RestoreContext(void);
-u32 Return(void);
-u32 SaveContext(void);
-u32 ScissorSize(u16 width, u16 height);
-u32 ScissorXY(u16 x, u16 y);
-u32 StencilFunc(u8 func, u8 ref, u8 mask);
-u32 StencilMask(u8 mask);
-u32 StencilOp(u8 sfail, u8 spass);
-u32 TagMask(u8 mask);
-u32 Tag(u8 s);
-u32 Vertex2f(int16_t x, int16_t y);
-u32 Vertex2ii(u16 x, u16 y, u8 handle, u8 cell);
+// Co-processor
+void ft_Append(u32 ptr, u32 num);
+void ft_BgColor(u32 c);
+void ft_BitmapTransform(i32 x0, i32 y0, i32 x1, i32 y1, i32 x2, i32 y2, i32 tx0, i32 ty0, i32 tx1, i32 ty1, i32 tx2, i32 ty2, u16 result);
+void ft_Button(i16 x, i16 y, i16 w, i16 h, i16 font, u16 options, const char *s);
+void ft_Calibrate(u32 result);
+void ft_Clock(i16 x, i16 y, i16 r, u16 options, u16 h, u16 m, u16 s, u16 ms);
+void ft_ColdStart();
+void ft_Dial(i16 x, i16 y, i16 r, u16 options, u16 val);
+void ft_Dlstart();
+void ft_FgColor(u32 c);
+void ft_FlashAttach();
+void ft_FlashDetach();
+void ft_FlashErase();
+void ft_FlashFast(u32);
+void ft_FlashRx(u32, u32);
+void ft_FlashSpiDesel();
+void ft_FlashTx(u32);
+void ft_FlashUpdate(u32, u32, u32);
+void ft_Gauge(i16 x, i16 y, i16 r, u16 options, u16 major, u16 minor, u16 val, u16 range);
+void ft_GetMatrix(i32 a, i32 b, i32 c, i32 d, i32 e, i32 f);
+void ft_GetProps(u32 ptr, u32 w, u32 h);
+void ft_GetPtr(u32 result);
+void ft_GradColor(u32 c);
+void ft_Gradient(i16 x0, i16 y0, u32 rgb0, i16 x1, i16 y1, u32 rgb1);
+void ft_Inflate(u32 ptr);
+void ft_Int_RAMShared(u32 ptr);
+void ft_Int_SWLoadImage(u32 ptr, u32 options);
+void ft_Interrupt(u32 ms);
+void ft_Keys(i16 x, i16 y, i16 w, i16 h, i16 font, u16 options, const char *s);
+void ft_LoadIdentity();
+void ft_LoadImage(u32 ptr, u32 options);
+void ft_Logo();
+void ft_MediaFifo(u32 ptr, u32 size);
+void ft_MemCrc(u32 ptr, u32 num, u32 result);
+void ft_MemSet(u32 ptr, u32 value, u32 num);
+void ft_MemWrite(u32 ptr, u32 num);
+void ft_MemZero(u32 ptr, u32 num);
+void ft_Memcpy(u32 dest, u32 src, u32 num);
+void ft_Number(i16 x, i16 y, i16 font, u16 options, i32 n);
+void ft_PlayVideo(u32 options);
+void ft_Progress(i16 x, i16 y, i16 w, i16 h, u16 options, u16 val, u16 range);
+void ft_RegRead(u32 ptr, u32 result);
+void ft_RomFont(u32 font, u32 romslot);
+void ft_Rotate(i32 a);
+void ft_Scale(i32 sx, i32 sy);
+void ft_ScreenSaver();
+void ft_Scrollbar(i16 x, i16 y, i16 w, i16 h, u16 options, u16 val, u16 size, u16 range);
+void ft_SetBase(u32 base);
+void ft_SetBitmap(u32 source, u16 fmt, u16 w, u16 h);
+void ft_SetFont(u32 font, u32 ptr);
+void ft_SetFont2(u32 font, u32 ptr, u32 firstchar);
+void ft_SetMatrix();
+void ft_SetRotate(u32 r);
+void ft_SetScratch(u32 handle);
+void ft_Sketch(i16 x, i16 y, u16 w, u16 h, u32 ptr, u16 format);
+void ft_Slider(i16 x, i16 y, i16 w, i16 h, u16 options, u16 val, u16 range);
+void ft_Snapshot(u32 ptr);
+void ft_Snapshot2(u32 fmt, u32 ptr, i16 x, i16 y, i16 w, i16 h);
+void ft_Spinner(i16 x, i16 y, u16 style, u16 scale);
+void ft_Stop();
+void ft_Swap();
+void ft_Sync();
+void ft_Text(i16 x, i16 y, i16 font, u16 options, const char *s);
+void ft_Toggle(i16 x, i16 y, i16 w, i16 font, u16 options, u16 state, const char *s);
+void ft_TouchTransform(i32 x0, i32 y0, i32 x1, i32 y1, i32 x2, i32 y2, i32 tx0, i32 ty0, i32 tx1, i32 ty1, i32 tx2, i32 ty2, u16 result);
+void ft_Track(i16 x, i16 y, i16 w, i16 h, i16 tag);
+void ft_Translate(i32 tx, i32 ty);
+void ft_VideoFrame(u32 dst, u32 ptr);
+void ft_VideoStart();
+
+// Display list
+void ft_AlphaFunc(u8 func, u8 ref);
+void ft_Begin(u8 prim);
+void ft_BitmapHandle(u8 handle);
+void ft_BitmapLayout(u8 format, u16 linestride, u16 height);
+void ft_BitmapSize(u8 filter, u8 wrapx, u8 wrapy, u16 width, u16 height);
+void ft_BitmapSource(u32 addr);
+void ft_BitmapTransformA(i32 a);
+void ft_BitmapTransformB(i32 b);
+void ft_BitmapTransformC(i32 c);
+void ft_BitmapTransformD(i32 d);
+void ft_BitmapTransformE(i32 e);
+void ft_BitmapTransformF(i32 f);
+void ft_BlendFunc(u8 src, u8 dst);
+void ft_Call(u16 dest);
+void ft_Cell(u8 cell);
+void ft_Clear(u8 c, u8 s, u8 t);
+void ft_ClearAll();
+void ft_ClearColorA(u8 alpha);
+void ft_ClearColorRGB(u8 red, u8 green, u8 blue);
+void ft_ClearColorRGB32(u32 rgb);
+void ft_ClearStencil(u8 s);
+void ft_ClearTag(u8 s);
+void ft_ColorA(u8 alpha);
+void ft_ColorMask(u8 r, u8 g, u8 b, u8 a);
+void ft_ColorRGB(u8 red, u8 green, u8 blue);
+void ft_ColorRGB32(u32 rgb);
+void ft_Display();
+void ft_End();
+void ft_Jump(u16 dest);
+void ft_LineWidth(u16 width);
+void ft_Macro(u8 m);
+void ft_PaletteSource(u32 addr);
+void ft_PointSize(u16 size);
+void ft_RestoreContext();
+void ft_Return();
+void ft_SaveContext();
+void ft_ScissorSize(u16 width, u16 height);
+void ft_ScissorXY(u16 x, u16 y);
+void ft_StencilFunc(u8 func, u8 ref, u8 mask);
+void ft_StencilMask(u8 mask);
+void ft_StencilOp(u8 sfail, u8 spass);
+void ft_Tag(u8 s);
+void ft_TagMask(u8 mask);
+void ft_Vertex2f(i16 x, i16 y);
+void ft_Vertex2ii(u16 x, u16 y, u8 handle, u8 cell);
+void ft_VertexFormat(u8 f);
+void ft_VertexTranslateX(i32 v);
+void ft_VertexTranslateY(i32 v);
+
+// Common
+void init_ft8xx();
+
+// Transport / mode switch
+esp_err_t ft_host_begin();
+esp_err_t ft_host_end();
+
+// Command buffer helpers
+void ft_ccmd_start(void *addr);
+void ft_ccmd(u32 a);
+void ft_cstr(const char *s);
+esp_err_t ft_ccmd_write();
+
+// RAM / register access
+u8 ft_rreg8(u32 a);
+u16 ft_rreg16(u32 a);
+u32 ft_rreg32(u32 a);
+
+void ft_wreg8(u32 a, u8 v);
+void ft_wreg16(u32 a, u16 v);
+void ft_wreg32(u32 a, u32 v);
+
+esp_err_t ft_read(void *addr, u32 ft_addr, u32 size);
+esp_err_t ft_write(const void *addr, u32 ft_addr, u32 size);
+esp_err_t ft_write_dl(const void *addr, u32 size_dwords);
+
+// Host commands
+esp_err_t ft_cmd(u8 a);
+esp_err_t ft_cmdp(u8 a, u8 v);
+
+// Coprocessor helpers
+esp_err_t ft_cp_wait(uint32_t timeout_ms);
+esp_err_t ft_cp_reset();
+
+// Display / init
+esp_err_t ft_set_mode(u8 mode);
+void ft_swap();
+esp_err_t ft_wait_swap(uint32_t timeout_ms);
+
+extern const FT_MODE ft_modes[];
+
+// Math
+i16 rcos(i16 r, u16 th);
+i16 rsin(i16 r, u16 th);
+
+extern const u16 sintab[];
+extern u32 *ft_ccmdb;
+extern u16 ft_ccmdp;
+
+// Console
+void ft_console_register_system_commands();

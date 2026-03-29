@@ -5,8 +5,10 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/queue.h"
+#include "freertos/semphr.h"
 #include "driver/spi_slave_hd.h"
 #include "driver/gpio.h"
+#include "driver/spi_master.h"
 #include "esp_system.h"
 #include "esp_timer.h"
 #include "esp_log.h"
@@ -28,13 +30,41 @@
 #endif
 
 // Pin setting
+#if defined(CONFIG_IDF_TARGET_ESP32P4)
+#define GPIO_MOSI     20
+#define GPIO_MISO     22
+#define GPIO_SCLK     21
+#define GPIO_CS       23
+#else
 #define GPIO_MOSI     13
 #define GPIO_MISO     11
 #define GPIO_SCLK     12
 #define GPIO_CS       10
+#endif
+
+#define FT_CS         1
 
 #define SLAVE_HOST    SPI2_HOST
 #define DMA_CHAN      SPI_DMA_CH_AUTO
+
+enum spi_role_t
+{
+  SPI_ROLE_SLAVE_HD = 0,
+  SPI_ROLE_MASTER   = 1
+};
+
+spi_role_t spi_role = SPI_ROLE_SLAVE_HD;
+
+spi_bus_config_t g_bus_cfg = {};
+spi_slave_hd_slot_config_t g_slave_hd_cfg = {};
+spi_device_interface_config_t g_master_dev_cfg = {};
+
+spi_device_handle_t g_master_dev = NULL;
+u8 g_master_data_lines = 1;
+SemaphoreHandle_t g_spi_mode_mtx = NULL;
+
+TaskHandle_t g_sender_task = NULL;
+TaskHandle_t g_receiver_task = NULL;
 
 using namespace stats;
 
@@ -171,63 +201,317 @@ void IRAM_ATTR set_status(u8 err)
 // ------------- SPI device
 
 
-void init_slave_hd(void)
+void init_spi_configs()
 {
-  spi_bus_config_t bus_cfg = {};
-  // memset(&bus_cfg, 0, sizeof(spi_bus_config_t));
+  memset(&g_bus_cfg, 0, sizeof(g_bus_cfg));
+  g_bus_cfg.sclk_io_num     = GPIO_SCLK;
+  g_bus_cfg.mosi_io_num     = GPIO_MOSI;
+  g_bus_cfg.miso_io_num     = GPIO_MISO;
+  g_bus_cfg.data2_io_num    = -1;
+  g_bus_cfg.data3_io_num    = -1;
+  g_bus_cfg.quadwp_io_num   = -1;
+  g_bus_cfg.quadhd_io_num   = -1;
+  g_bus_cfg.data4_io_num    = -1;
+  g_bus_cfg.data5_io_num    = -1;
+  g_bus_cfg.data6_io_num    = -1;
+  g_bus_cfg.data7_io_num    = -1;
+  g_bus_cfg.max_transfer_sz = DMA_BUF_SIZE;
+  g_bus_cfg.flags           = SPICOMMON_BUSFLAG_DUAL;
+  g_bus_cfg.intr_flags      = 0;
 
-  bus_cfg.sclk_io_num     = GPIO_SCLK;
-  bus_cfg.mosi_io_num     = GPIO_MOSI;  // data 0
-  bus_cfg.miso_io_num     = GPIO_MISO;  // data 1
-  bus_cfg.data2_io_num    = -1;         // data 2
-  bus_cfg.data3_io_num    = -1;         // data 3
-  bus_cfg.max_transfer_sz = DMA_BUF_SIZE;
-  bus_cfg.flags           = 0;
-  bus_cfg.intr_flags      = 0;
-
-  spi_slave_hd_slot_config_t slave_hd_cfg = {};
-  // memset(&slave_hd_cfg, 0, sizeof(spi_slave_hd_slot_config_t));
-
-  slave_hd_cfg.spics_io_num = GPIO_CS;
-  slave_hd_cfg.flags        = 0;
-  slave_hd_cfg.mode         = 0;
-  slave_hd_cfg.command_bits = 8;
-  slave_hd_cfg.address_bits = 8;
-  slave_hd_cfg.dummy_bits   = 8;
-  slave_hd_cfg.queue_size   = 1;
-  slave_hd_cfg.dma_chan     = DMA_CHAN;
-  slave_hd_cfg.cb_config    = (spi_slave_hd_callback_config_t)
+  memset(&g_slave_hd_cfg, 0, sizeof(g_slave_hd_cfg));
+  g_slave_hd_cfg.spics_io_num = GPIO_CS;
+  g_slave_hd_cfg.flags        = 0;
+  g_slave_hd_cfg.mode         = 0;
+  g_slave_hd_cfg.command_bits = 8;
+  g_slave_hd_cfg.address_bits = 8;
+  g_slave_hd_cfg.dummy_bits   = 8;
+  g_slave_hd_cfg.queue_size   = 1;
+  g_slave_hd_cfg.dma_chan     = DMA_CHAN;
+  g_slave_hd_cfg.cb_config    = (spi_slave_hd_callback_config_t)
   {
-    .cb_buffer_tx      = cb_regs_read,        // Callback when master reads from shared buffer (after CMD2)
-    .cb_buffer_rx      = cb_cmd,              // Callback when master writes to shared buffer (after CMD1)
-    .cb_send_dma_ready = cb_tx_ready,         // Callback when TX data buffer is loaded to the hardware (after DMA transaction is pushed by sender task)
-    .cb_sent           = cb_cmd8,             // Callback when data are sent (after CMD8)
-    .cb_recv_dma_ready = cb_rx_ready,         // Callback when RX data buffer is loaded to the hardware
-    .cb_recv           = cb_cmd7,             // Callback when data are received (after CMD7)
-    .cb_cmd9           = cb_cmd9,             // Callback when CMD9 received
-    .cb_cmdA           = cb_cmdA,             // Callback when CMDA received
-    .arg               = NULL                 // Argument indicating this SPI Slave HD peripheral instance
+    .cb_buffer_tx      = cb_regs_read,
+    .cb_buffer_rx      = cb_cmd,
+    .cb_send_dma_ready = cb_tx_ready,
+    .cb_sent           = cb_cmd8,
+    .cb_recv_dma_ready = cb_rx_ready,
+    .cb_recv           = cb_cmd7,
+    .cb_cmd9           = cb_cmd9,
+    .cb_cmdA           = cb_cmdA,
+    .arg               = NULL
   };
 
-  spi_slave_hd_init(SLAVE_HOST, &bus_cfg, &slave_hd_cfg);
+  memset(&g_master_dev_cfg, 0, sizeof(g_master_dev_cfg));
+  g_master_dev_cfg.command_bits     = 0;
+  g_master_dev_cfg.address_bits     = 0;
+  g_master_dev_cfg.dummy_bits       = 0;
+  g_master_dev_cfg.mode             = 0;
+  g_master_dev_cfg.clock_source     = SPI_CLK_SRC_DEFAULT;
+  g_master_dev_cfg.clock_speed_hz   = 30000000U;
+  g_master_dev_cfg.spics_io_num     = FT_CS;
+  g_master_dev_cfg.queue_size       = 1;
+  g_master_dev_cfg.flags            = SPI_DEVICE_NO_DUMMY | SPI_DEVICE_HALFDUPLEX;
+  g_master_dev_cfg.pre_cb           = NULL;
+  g_master_dev_cfg.post_cb          = NULL;
+}
+
+void init_slave_hd()
+{
+  if (!g_spi_mode_mtx)
+    g_spi_mode_mtx = xSemaphoreCreateMutex();
+
+  init_spi_configs();
+
+  ESP_ERROR_CHECK(spi_slave_hd_init(SLAVE_HOST, &g_bus_cfg, &g_slave_hd_cfg));
 
   set_status(ESP_ST_RESET);
 
-  tx_queue = xQueueCreate(2, sizeof(int));
-  rx_queue = xQueueCreate(2, sizeof(int));
+  if (!tx_queue)
+    tx_queue = xQueueCreate(2, sizeof(int));
 
-  dma_buf = (u8*)heap_caps_malloc(DMA_BUF_SIZE, MALLOC_CAP_DMA);
+  if (!rx_queue)
+    rx_queue = xQueueCreate(2, sizeof(int));
 
   if (!dma_buf)
-    ESP_LOGE(TAG, "Cannot allocate memory for SPI DMA buf!");
-  else
+    dma_buf = (u8*)heap_caps_malloc(DMA_BUF_SIZE, MALLOC_CAP_DMA);
+
+  if (!dma_buf)
   {
-    xTaskCreatePinnedToCore(sender_task, "sender", 2048, NULL, 23, NULL, 0);
-    xTaskCreatePinnedToCore(receiver_task, "receiver", 4096, NULL, 23, NULL, 0);
+    ESP_LOGE(TAG, "Cannot allocate memory for SPI DMA buf!");
+    return;
   }
+
+  if (!g_sender_task)
+    xTaskCreatePinnedToCore(sender_task, "sender", 2048, NULL, 23, &g_sender_task, 0);
+
+  if (!g_receiver_task)
+    xTaskCreatePinnedToCore(receiver_task, "receiver", 4096, NULL, 23, &g_receiver_task, 0);
 
   seed = esp_timer_get_time();
   is_busy = false;
+  spi_role = SPI_ROLE_SLAVE_HD;
+}
+
+esp_err_t spi_switch_to_master()
+{
+  if (!g_spi_mode_mtx)
+    return ESP_ERR_INVALID_STATE;
+
+  xSemaphoreTake(g_spi_mode_mtx, portMAX_DELAY);
+
+  if (spi_role == SPI_ROLE_MASTER)
+  {
+    xSemaphoreGive(g_spi_mode_mtx);
+    return ESP_OK;
+  }
+
+  if (is_busy)
+  {
+    xSemaphoreGive(g_spi_mode_mtx);
+    return ESP_ERR_INVALID_STATE;
+  }
+
+  if (uxQueueMessagesWaiting(tx_queue) || uxQueueMessagesWaiting(rx_queue))
+  {
+    xSemaphoreGive(g_spi_mode_mtx);
+    return ESP_ERR_INVALID_STATE;
+  }
+
+  if (g_sender_task)
+    vTaskSuspend(g_sender_task);
+
+  if (g_receiver_task)
+    vTaskSuspend(g_receiver_task);
+
+  esp_err_t err = spi_slave_hd_disable(SLAVE_HOST);
+  if (err != ESP_OK)
+    goto fail_resume;
+
+  err = spi_slave_hd_deinit(SLAVE_HOST);
+  if (err != ESP_OK)
+    goto fail_resume;
+
+  err = spi_bus_initialize(SLAVE_HOST, &g_bus_cfg, DMA_CHAN);
+  if (err != ESP_OK)
+    goto fail_restore_slave;
+
+  err = spi_bus_add_device(SLAVE_HOST, &g_master_dev_cfg, &g_master_dev);
+  if (err != ESP_OK)
+  {
+    spi_bus_free(SLAVE_HOST);
+    goto fail_restore_slave;
+  }
+
+  g_master_data_lines = 1;
+  spi_role = SPI_ROLE_MASTER;
+
+  xSemaphoreGive(g_spi_mode_mtx);
+  return ESP_OK;
+
+fail_restore_slave:
+  spi_slave_hd_init(SLAVE_HOST, &g_bus_cfg, &g_slave_hd_cfg);
+  spi_role = SPI_ROLE_SLAVE_HD;
+
+fail_resume:
+  if (g_sender_task)
+    vTaskResume(g_sender_task);
+
+  if (g_receiver_task)
+    vTaskResume(g_receiver_task);
+
+  xSemaphoreGive(g_spi_mode_mtx);
+  return err;
+}
+
+esp_err_t spi_switch_to_slave()
+{
+  if (!g_spi_mode_mtx)
+    return ESP_ERR_INVALID_STATE;
+
+  xSemaphoreTake(g_spi_mode_mtx, portMAX_DELAY);
+
+  if (spi_role == SPI_ROLE_SLAVE_HD)
+  {
+    xSemaphoreGive(g_spi_mode_mtx);
+    return ESP_OK;
+  }
+
+  esp_err_t err = ESP_OK;
+
+  if (g_master_dev)
+  {
+    err = spi_bus_remove_device(g_master_dev);
+    if (err != ESP_OK)
+    {
+      xSemaphoreGive(g_spi_mode_mtx);
+      return err;
+    }
+    g_master_dev = NULL;
+  }
+
+  err = spi_bus_free(SLAVE_HOST);
+  if (err != ESP_OK)
+  {
+    xSemaphoreGive(g_spi_mode_mtx);
+    return err;
+  }
+
+  err = spi_slave_hd_init(SLAVE_HOST, &g_bus_cfg, &g_slave_hd_cfg);
+  if (err != ESP_OK)
+  {
+    xSemaphoreGive(g_spi_mode_mtx);
+    return err;
+  }
+
+  if (g_sender_task)
+    vTaskResume(g_sender_task);
+
+  if (g_receiver_task)
+    vTaskResume(g_receiver_task);
+
+  g_master_data_lines = 1;
+  spi_role = SPI_ROLE_SLAVE_HD;
+  set_status(ESP_ST_READY);
+
+  xSemaphoreGive(g_spi_mode_mtx);
+  return ESP_OK;
+}
+
+esp_err_t spi_master_set_data_lines(u8 lines)
+{
+  if (spi_role != SPI_ROLE_MASTER || !g_master_dev)
+    return ESP_ERR_INVALID_STATE;
+
+  if (lines != 1 && lines != 2)
+    return ESP_ERR_INVALID_ARG;
+
+  g_master_data_lines = lines;
+  return ESP_OK;
+}
+
+esp_err_t spi_master_xfer(void *tx_data, void *rx_data, size_t size)
+{
+  if (spi_role != SPI_ROLE_MASTER || !g_master_dev) return ESP_ERR_INVALID_STATE;
+  if (!tx_data && size) return ESP_ERR_INVALID_ARG;
+  if (!size) return ESP_OK;
+
+  u8 *tx = (u8*)tx_data;
+
+  if (g_master_data_lines == 1)
+  {
+    if (!rx_data)
+    {
+      spi_transaction_t t = {};
+      t.length = size * 8;
+      t.tx_buffer = tx_data;
+      return spi_device_polling_transmit(g_master_dev, &t);
+    }
+
+    if (size < 4) return ESP_ERR_INVALID_ARG;
+
+    u8 *rx = (u8*)rx_data;
+    spi_transaction_ext_t t = {};
+
+    memset(rx, 0, 4);
+
+    t.base.flags = SPI_TRANS_VARIABLE_CMD
+                 | SPI_TRANS_VARIABLE_ADDR
+                 | SPI_TRANS_VARIABLE_DUMMY;
+    t.command_bits = 8;
+    t.address_bits = 16;
+    t.dummy_bits = 8;
+    t.base.cmd = tx[0];
+    t.base.addr = ((u32)tx[1] << 8) | (u32)tx[2];
+    t.base.rxlength = (size - 4) * 8;
+    t.base.rx_buffer = rx + 4;
+
+    return spi_device_polling_transmit(g_master_dev, &t.base);
+  }
+
+  if (g_master_data_lines != 2) return ESP_ERR_NOT_SUPPORTED;
+
+  if (rx_data)
+  {
+    if (size < 4) return ESP_ERR_INVALID_ARG;
+
+    u8 *rx = (u8*)rx_data;
+    spi_transaction_ext_t t = {};
+
+    memset(rx, 0, 4);
+
+    t.base.flags = SPI_TRANS_MODE_DIO
+                 | SPI_TRANS_MULTILINE_CMD
+                 | SPI_TRANS_MULTILINE_ADDR
+                 | SPI_TRANS_VARIABLE_CMD
+                 | SPI_TRANS_VARIABLE_ADDR
+                 | SPI_TRANS_VARIABLE_DUMMY;
+    t.command_bits = 8;
+    t.address_bits = 16;
+    t.dummy_bits = 4;
+    t.base.cmd = tx[0];
+    t.base.addr = ((u32)tx[1] << 8) | (u32)tx[2];
+    t.base.rxlength = (size - 4) * 8;
+    t.base.rx_buffer = rx + 4;
+
+    return spi_device_polling_transmit(g_master_dev, &t.base);
+  }
+
+  if (size < 3) return ESP_ERR_INVALID_ARG;
+
+  spi_transaction_ext_t t = {};
+  t.base.flags = SPI_TRANS_MODE_DIO
+               | SPI_TRANS_MULTILINE_CMD
+               | SPI_TRANS_MULTILINE_ADDR
+               | SPI_TRANS_VARIABLE_CMD
+               | SPI_TRANS_VARIABLE_ADDR;
+  t.command_bits = 8;
+  t.address_bits = 16;
+  t.base.cmd = tx[0];
+  t.base.addr = ((u32)tx[1] << 8) | (u32)tx[2];
+  t.base.length = (size - 3) * 8;
+  t.base.tx_buffer = tx + 3;
+
+  return spi_device_polling_transmit(g_master_dev, &t.base);
 }
 
 // ------------- Commands
