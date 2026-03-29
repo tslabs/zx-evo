@@ -1,5 +1,7 @@
 
-vlog +incdir+../quartus_vdac2 +define+SIMULATE -work tsconf -sv -stats=none -f files.opt
+# cd y:/Work/Git/zx-evo-dev/pentevo/fpga/current/tb/
+
+vlog +incdir+../../quartus_vdac2_2.0_50k +define+SIMULATE -work tsconf -sv -stats=none -f files.opt
 vsim -gui -novopt tsconf.tb
 
 view wave
