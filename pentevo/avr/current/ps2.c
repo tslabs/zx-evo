@@ -12,49 +12,46 @@
 #include "rs232.h"
 #include "rtc.h"
 
-//if want Log than comment next string
-#undef LOGENABLE
-
 u8 ps2_decode(u8 count, u16 shifter)
 {
-	u8 t,byte;
+  u8 t,byte;
 
-	if (count!=0) return 0x00; // have nothing received
+  if (count!=0) return 0x00; // have nothing received
 
-	// check packet:
-	//shifter.hi - stp.par.7.6.5.4.3.2
-	//shifter.lo - 1.0.strt.x.x.x.x.x
+  // check packet:
+  //shifter.hi - stp.par.7.6.5.4.3.2
+  //shifter.lo - 1.0.strt.x.x.x.x.x
 
-	if (!(shifter & 0x8000)) return 0x00; // stopbit must be 1
-	if (shifter & 0x0020) return 0x00; // startbit must be 0
+  if (!(shifter & 0x8000)) return 0x00; // stopbit must be 1
+  if (shifter & 0x0020) return 0x00; // startbit must be 0
 
 
-	byte = (u8) (0x00FF & (shifter>>6));
+  byte = (u8) (0x00FF & (shifter>>6));
 
-	t = byte ^ (byte>>4);
-	t = t ^ (t>>2);
-	t = t ^ (t>>1); // parity
+  t = byte ^ (byte>>4);
+  t = t ^ (t>>2);
+  t = t ^ (t>>1); // parity
 
-	t = t ^ (u8) (shifter>>14); // compare parities
+  t = t ^ (u8) (shifter>>14); // compare parities
 
-	if (!(t & 1)) return 0x00; // must be different
+  if (!(t & 1)) return 0x00; // must be different
 
-	return byte;
+  return byte;
 }
 
 u16 ps2_encode(u8 byte)
 {
-	u16 t;
-	t = byte ^ (byte>>4);
-	t = t ^ (t>>2);
-	t = ~(1 & (t ^ (t>>1))); // parity
+  u16 t;
+  t = byte ^ (byte>>4);
+  t = t ^ (t>>2);
+  t = ~(1 & (t ^ (t>>1))); // parity
 
-	t = (((t<<8) + byte)<<1) + 0x0400;
+  t = (((t<<8) + byte)<<1) + 0x0400;
 
-	// prepare to shifter:
-	//shifter.hi - x.x.x.x.x.stp.par.7
-	//shifter.lo - 6.5.4.3.2.1.0.strt
-	return t;
+  // prepare to shifter:
+  //shifter.hi - x.x.x.x.x.stp.par.7
+  //shifter.lo - 6.5.4.3.2.1.0.strt
+  return t;
 }
 
 volatile u16 ps2keyboard_shifter;
@@ -69,156 +66,119 @@ volatile u8  ps2keyboard_log_end;
 
 void ps2keyboard_to_log(u8 data)
 {
-	if (ps2keyboard_log_end != 0xFF)
-	{
-		if (ps2keyboard_log_end == 0xFE)
-		{
-			//first byte after reset
-			ps2keyboard_log_end = ps2keyboard_log_start;
-		}
+  if (ps2keyboard_log_end != 0xFF)
+  {
+    if (ps2keyboard_log_end == 0xFE)
+    {
+      //first byte after reset
+      ps2keyboard_log_end = ps2keyboard_log_start;
+    }
 
-#ifdef LOGENABLE
-		{
-			char log_ps2kb_parse[] = "LG<..:..\r\n";
-			u8 b = ps2keyboard_log_end;
-			log_ps2kb_parse[3] = ((b >> 4) <= 9)?'0'+(b >> 4):'A'+(b >> 4)-10;
-			log_ps2kb_parse[4] = ((b & 0x0F) <= 9)?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
-			b = data;
-			log_ps2kb_parse[6] = ((b >> 4) <= 9)?'0'+(b >> 4):'A'+(b >> 4)-10;
-			log_ps2kb_parse[7] = ((b & 0x0F) <= 9)?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
-			to_log(log_ps2kb_parse);
-		}
-#endif
-		ps2keyboard_log[ps2keyboard_log_end] = data;
-		ps2keyboard_log_end++;
-		if (ps2keyboard_log_end >= sizeof(ps2keyboard_log))
-		{
-			ps2keyboard_log_end = 0;
-		}
+    ps2keyboard_log[ps2keyboard_log_end] = data;
+    ps2keyboard_log_end++;
+    if (ps2keyboard_log_end >= sizeof(ps2keyboard_log))
+    {
+      ps2keyboard_log_end = 0;
+    }
 
-		if (ps2keyboard_log_end == ps2keyboard_log_start)
-		{
-			//overload
-			ps2keyboard_log_end = 0xFF;
-		}
-	}
+    if (ps2keyboard_log_end == ps2keyboard_log_start)
+    {
+      //overload
+      ps2keyboard_log_end = 0xFF;
+    }
+  }
 }
 
 u8 ps2keyboard_from_log(void)
 {
-	u8 ret;
-	if (ps2keyboard_log_start == 0xFF)
-	{
-		//reset state
-		return 0;
-	}
-	if (ps2keyboard_log_end<sizeof(ps2keyboard_log))
-	{
-		if (ps2keyboard_log_end != ps2keyboard_log_start)
-		{
-			ret = ps2keyboard_log[ps2keyboard_log_start];
-#ifdef LOGENABLE
-		{
-			char log_ps2kb_parse[] = "LG>..:..\r\n";
-			u8 b = ret;
-			log_ps2kb_parse[3] = ((b >> 4) <= 9)?'0'+(b >> 4):'A'+(b >> 4)-10;
-			log_ps2kb_parse[4] = ((b & 0x0F) <= 9)?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
-			b = ps2keyboard_log_start;
-			log_ps2kb_parse[6] = ((b >> 4) <= 9)?'0'+(b >> 4):'A'+(b >> 4)-10;
-			log_ps2kb_parse[7] = ((b & 0x0F) <= 9)?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
-			to_log(log_ps2kb_parse);
-		}
-#endif
-			ps2keyboard_log_start++;
-			if (ps2keyboard_log_start >= sizeof(ps2keyboard_log))
-			{
-				ps2keyboard_log_start = 0;
-			}
-		}
-		else
-		{
-			ret=0;
-		}
-	}
-	else
-	{
-		ret = ps2keyboard_log_end;
-		if (ret==0xFE)
-		{
-			ret=0;
-		}
-		else
-		{
-			//after reading overload 'FF' - reset log
-			ps2keyboard_reset_log();
-		}
-	}
-	//0 - no data, 0xFF - overload
-	return ret;
+  u8 ret;
+  if (ps2keyboard_log_start == 0xFF)
+  {
+    //reset state
+    return 0;
+  }
+  if (ps2keyboard_log_end<sizeof(ps2keyboard_log))
+  {
+    if (ps2keyboard_log_end != ps2keyboard_log_start)
+    {
+      ret = ps2keyboard_log[ps2keyboard_log_start];
+      ps2keyboard_log_start++;
+      if (ps2keyboard_log_start >= sizeof(ps2keyboard_log))
+      {
+        ps2keyboard_log_start = 0;
+      }
+    }
+    else
+    {
+      ret=0;
+    }
+  }
+  else
+  {
+    ret = ps2keyboard_log_end;
+    if (ret==0xFE)
+    {
+      ret=0;
+    }
+    else
+    {
+      //after reading overload 'FF' - reset log
+      ps2keyboard_reset_log();
+    }
+  }
+  //0 - no data, 0xFF - overload
+  return ret;
 }
 
 void ps2keyboard_reset_log(void)
 {
-#ifdef LOGENABLE
-	if (ps2keyboard_log_start!=0xFF)
-	to_log("LGRESET\r\n");
-#endif
-	ps2keyboard_log_start = 0xFF;
+  ps2keyboard_log_start = 0xFF;
 }
 
 static void ps2keyboard_release_clk(void)
 {
-	ps2keyboard_count = 12; //counter reinit
-	if (flags_register & FLAG_PS2KEYBOARD_DIRECTION)
-	{
-		PS2KBDAT_DDR &= ~(1<<PS2KBDAT); //ps2 keyboard data pin to input mode
-		flags_register &= ~(FLAG_PS2KEYBOARD_DIRECTION); //set to receive mode
-	}
+  ps2keyboard_count = 12; //counter reinit
+  if (flags_register & FLAG_PS2KEYBOARD_DIRECTION)
+  {
+    PS2KBDAT_DDR &= ~(1<<PS2KBDAT); //ps2 keyboard data pin to input mode
+    flags_register &= ~(FLAG_PS2KEYBOARD_DIRECTION); //set to receive mode
+  }
 
-	//release ps2 receiver (disabled by now)
-	EIFR = (1<<INTF4); // clr any spurious int which can happen when we pulldown clock pin
-	PS2KBCLK_DDR &= ~(1<<PS2KBCLK); //ps2 keyboard clk pin to input mode
-	PS2KBCLK_PORT |= (1<<PS2KBCLK);  //release clk pin
+  //release ps2 receiver (disabled by now)
+  EIFR = (1<<INTF4); // clr any spurious int which can happen when we pulldown clock pin
+  PS2KBCLK_DDR &= ~(1<<PS2KBCLK); //ps2 keyboard clk pin to input mode
+  PS2KBCLK_PORT |= (1<<PS2KBCLK);  //release clk pin
 }
 
 void ps2keyboard_send(u8 data)
 {
-#ifdef LOGENABLE
-{
-	char log_ps2kb_parse[] = "KB>..\r\n";
-	u8 b = data;
-	log_ps2kb_parse[3] = ((b >> 4) <= 9)?'0'+(b >> 4):'A'+(b >> 4)-10;
-	log_ps2kb_parse[4] = ((b & 0x0F) <= 9)?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
-	to_log(log_ps2kb_parse);
-}
-#endif
-	ps2keyboard_shifter = ps2_encode(data); //prepare data
-	flags_register |= FLAG_PS2KEYBOARD_DIRECTION; //set send mode
-	PS2KBCLK_PORT &= ~(1<<PS2KBCLK); //bring ps2 keyboard clk pin -
+  ps2keyboard_shifter = ps2_encode(data); //prepare data
+  flags_register |= FLAG_PS2KEYBOARD_DIRECTION; //set send mode
+  PS2KBCLK_PORT &= ~(1<<PS2KBCLK); //bring ps2 keyboard clk pin -
     PS2KBCLK_DDR  |= (1<<PS2KBCLK);  //generate interruption
 }
 
 void ps2keyboard_task(void)
 {
-	u8 b;
+  u8 b;
 
-	if ((ps2keyboard_count == 12) &&
-		 (ps2keyboard_cmd != 0) &&
-		 (ps2keyboard_cmd_count != 0))
-	{
-		//delay need for pause between release and hold clk pin
-		_delay_us(100);
+  if ((ps2keyboard_count == 12) &&
+     (ps2keyboard_cmd != 0) &&
+     (ps2keyboard_cmd_count != 0))
+  {
+    //delay need for pause between release and hold clk pin
+    _delay_us(100);
 
-		//if need send command on current stage
-		if (((ps2keyboard_cmd_count == 4) && ((ps2keyboard_cmd == PS2KEYBOARD_CMD_SETLED) || (ps2keyboard_cmd == PS2KEYBOARD_CMD_AUTOREPEAT))) ||
-		     ((ps2keyboard_cmd_count == 3) && (ps2keyboard_cmd == PS2KEYBOARD_CMD_RESET)))
-		{
-			ps2keyboard_send(ps2keyboard_cmd);
-			ps2keyboard_cmd_count--;
-		}
-		else
-		//if need send led data on current stage
-		if (ps2keyboard_cmd_count == 2)
+    //if need send command on current stage
+    if (((ps2keyboard_cmd_count == 4) && ((ps2keyboard_cmd == PS2KEYBOARD_CMD_SETLED) || (ps2keyboard_cmd == PS2KEYBOARD_CMD_AUTOREPEAT))) ||
+         ((ps2keyboard_cmd_count == 3) && (ps2keyboard_cmd == PS2KEYBOARD_CMD_RESET)))
+    {
+      ps2keyboard_send(ps2keyboard_cmd);
+      ps2keyboard_cmd_count--;
+    }
+    else
+    //if need send led data on current stage
+    if (ps2keyboard_cmd_count == 2)
     {
       if (ps2keyboard_cmd == PS2KEYBOARD_CMD_SETLED)
       {
@@ -232,87 +192,77 @@ void ps2keyboard_task(void)
         ps2keyboard_cmd_count--;
       }
     }
-	}
+  }
 
-	if ((ps2keyboard_count<12) &&
-		 (ps2keyboard_timeout==0))
-	{
-		//error due send/receive
-		ps2keyboard_release_clk();
-#ifdef LOGENABLE
-		to_log("KBerr\r\n");
-#endif
-		//TODO: чета делать
-		if (ps2keyboard_cmd != PS2KEYBOARD_CMD_RESET)
-		{
-			//set cmd  RESET
-			ps2keyboard_cmd = PS2KEYBOARD_CMD_RESET;
-			ps2keyboard_cmd_count = 3;
-		}
-		else
-		{
-			//reset command
-			ps2keyboard_cmd = 0;
-			ps2keyboard_cmd_count = 0;
-		}
+  if ((ps2keyboard_count<12) &&
+     (ps2keyboard_timeout==0))
+  {
+    //error due send/receive
+    ps2keyboard_release_clk();
 
-		//reset buffer
-		zx_clr_kb();
+    if (ps2keyboard_cmd != PS2KEYBOARD_CMD_RESET)
+    {
+      //set cmd  RESET
+      ps2keyboard_cmd = PS2KEYBOARD_CMD_RESET;
+      ps2keyboard_cmd_count = 3;
+    }
+    else
+    {
+      //reset command
+      ps2keyboard_cmd = 0;
+      ps2keyboard_cmd_count = 0;
+    }
 
-		return;
-	}
+    //reset buffer
+    zx_clr_kb();
 
-	if (ps2keyboard_count!=0) return; // not received anything
+    return;
+  }
 
-	if (!(flags_register & FLAG_PS2KEYBOARD_DIRECTION))
-	{
-		//receive complete
-		b = ps2_decode(ps2keyboard_count, ps2keyboard_shifter);
-#ifdef LOGENABLE
-{
-	char log_ps2kb_parse[] = "KB<..\r\n";
-	log_ps2kb_parse[3] = ((b >> 4) <= 9)?'0'+(b >> 4):'A'+(b >> 4)-10;
-	log_ps2kb_parse[4] = ((b & 0x0F) <= 9)?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
-	to_log(log_ps2kb_parse);
-}
-#endif
-		if (ps2keyboard_cmd)
-		{
-			//wait for 0xFA on current stage
-			if ((((ps2keyboard_cmd == PS2KEYBOARD_CMD_SETLED) || (ps2keyboard_cmd == PS2KEYBOARD_CMD_AUTOREPEAT)) && (ps2keyboard_cmd_count == 3 || ps2keyboard_cmd_count == 1)) ||
-			     ((ps2keyboard_cmd == PS2KEYBOARD_CMD_RESET) && (ps2keyboard_cmd_count == 2)))
-			{
-				if (b != 0xFA)
-				{
-				 	ps2keyboard_cmd_count = 0;
-					//if non FA - may be scan code received
-					if (b) ps2keyboard_parse(b);
-				}
-				else ps2keyboard_cmd_count--;
+  if (ps2keyboard_count!=0) return; // not received anything
 
-				if (ps2keyboard_cmd_count == 0) ps2keyboard_cmd = 0;
-			}
-			else
-			//wait for 0xAA on current stage
-			if (((ps2keyboard_cmd == PS2KEYBOARD_CMD_RESET) && (ps2keyboard_cmd_count == 1)))
-			{
-				if (b != 0xAA)
-				{
-					//if non AA - may be scan code received
-					if (b) ps2keyboard_parse(b);
-				}
-				ps2keyboard_cmd_count = 0;
-				ps2keyboard_cmd = 0;
-			}
-		}
-		else
-		if (b) // there is no zero byte in scancode tables so we can ignore and use it as 'nothing received'
-		{
-			ps2keyboard_parse(b);
-		}
-	}
+  if (!(flags_register & FLAG_PS2KEYBOARD_DIRECTION))
+  {
+    //receive complete
+    b = ps2_decode(ps2keyboard_count, ps2keyboard_shifter);
 
-	ps2keyboard_release_clk();
+    if (ps2keyboard_cmd)
+    {
+      //wait for 0xFA on current stage
+      if ((((ps2keyboard_cmd == PS2KEYBOARD_CMD_SETLED) || (ps2keyboard_cmd == PS2KEYBOARD_CMD_AUTOREPEAT)) && (ps2keyboard_cmd_count == 3 || ps2keyboard_cmd_count == 1)) ||
+           ((ps2keyboard_cmd == PS2KEYBOARD_CMD_RESET) && (ps2keyboard_cmd_count == 2)))
+      {
+        if (b != 0xFA)
+        {
+           ps2keyboard_cmd_count = 0;
+          //if non FA - may be scan code received
+          if (b) ps2keyboard_parse(b);
+        }
+        else ps2keyboard_cmd_count--;
+
+        if (ps2keyboard_cmd_count == 0) ps2keyboard_cmd = 0;
+      }
+      else
+      //wait for 0xAA on current stage
+      if (((ps2keyboard_cmd == PS2KEYBOARD_CMD_RESET) && (ps2keyboard_cmd_count == 1)))
+      {
+        if (b != 0xAA)
+        {
+          //if non AA - may be scan code received
+          if (b) ps2keyboard_parse(b);
+        }
+        ps2keyboard_cmd_count = 0;
+        ps2keyboard_cmd = 0;
+      }
+    }
+    else
+    if (b) // there is no zero byte in scancode tables so we can ignore and use it as 'nothing received'
+    {
+      ps2keyboard_parse(b);
+    }
+  }
+
+  ps2keyboard_release_clk();
 }
 
 void ps2keyboard_send_cmd_blocking(u8 cmd)
@@ -324,11 +274,11 @@ void ps2keyboard_send_cmd_blocking(u8 cmd)
 
 void ps2keyboard_send_cmd(u8 cmd)
 {
-	if (ps2keyboard_cmd == 0)
-	{
-		ps2keyboard_cmd = cmd;
-		switch (cmd)
-		{
+  if (ps2keyboard_cmd == 0)
+  {
+    ps2keyboard_cmd = cmd;
+    switch (cmd)
+    {
       case PS2KEYBOARD_CMD_RESET:
         ps2keyboard_cmd_count = 3;
         break;
@@ -339,113 +289,97 @@ void ps2keyboard_send_cmd(u8 cmd)
       default:
         ps2keyboard_cmd = 0;
       }
-	}
+  }
 }
 
 void ps2keyboard_parse(u8 recbyte)
 {
-	static u8 was_release = 0;
-	static u8 was_E0 = 0;
+  static u8 was_release = 0;
+  static u8 was_E0 = 0;
 
-	static u8 last_scancode = 0;
-	static u8 last_scancode_E0 = 1;
+  static u8 last_scancode = 0;
+  static u8 last_scancode_E0 = 1;
 
-	static u8 skipshit = 0;
+  static u8 skipshit = 0;
 
-#ifdef LOGENABLE
-	char log_ps2keyboard_parse[] = "KB..\r\n";
-	if (skipshit) log_ps2keyboard_parse[1] = skipshit + '0';
-	log_ps2keyboard_parse[2] = ((recbyte >> 4) <= 9)?'0'+(recbyte >> 4):'A'+(recbyte >> 4)-10;
-	log_ps2keyboard_parse[3] = ((recbyte & 0x0F) <= 9)?'0'+(recbyte & 0x0F):'A'+(recbyte & 0x0F)-10;
-	to_log(log_ps2keyboard_parse);
-#endif
+  if (recbyte==0xFA) return;
+  if (recbyte==0xFE) return;
+  if (recbyte==0xEE) return;
+  if (recbyte==0xAA) return;
 
-	if (recbyte==0xFA) return;
-	if (recbyte==0xFE) return;
-	if (recbyte==0xEE) return;
-	if (recbyte==0xAA) return;
+  //start write to log only for full key data
+  if ((recbyte!=0xE1) && (skipshit==0)) //PAUSE not logged
+  {
+    if (ps2keyboard_log_start == 0xFF)
+    {
+      //reseting log
+      ps2keyboard_log_end = 0xFE;
+      ps2keyboard_log_start = 0;
+    }
+    if ((ps2keyboard_log_end!=0xFE) || ((was_release==0) && (was_E0==0)/* && (skipshit==0)*/))
+    {
+         ps2keyboard_to_log(recbyte);
+    }
+  }
 
-	//start write to log only for full key data
-	if ((recbyte!=0xE1) && (skipshit==0)) //PAUSE not logged
-	{
-		if (ps2keyboard_log_start == 0xFF)
-		{
-			//reseting log
-			ps2keyboard_log_end = 0xFE;
-			ps2keyboard_log_start = 0;
-		}
-		if ((ps2keyboard_log_end!=0xFE) || ((was_release==0) && (was_E0==0)/* && (skipshit==0)*/))
-		{
-		   	ps2keyboard_to_log(recbyte);
-		}
-	}
+  if (skipshit)
+  {
+    skipshit--;
+    return;
+  }
 
-	if (skipshit)
-	{
-		skipshit--;
-		return;
-	}
-
-	if (recbyte==0xE0)
-	{
-		was_E0 = 1;
-		return;
-	}
+  if (recbyte==0xE0)
+  {
+    was_E0 = 1;
+    return;
+  }
 
 
-	if (recbyte==0xF0)
-	{
-		was_release = 1;
-		return;
-	}
+  if (recbyte==0xF0)
+  {
+    was_release = 1;
+    return;
+  }
 
-	if (recbyte==0xE1) // pause pressed
-	{
-		skipshit=7;
-		return; // skip next 7 bytes
-	}
+  if (recbyte==0xE1) // pause pressed
+  {
+    skipshit=7;
+    return; // skip next 7 bytes
+  }
 
-	if ((recbyte==last_scancode) && (was_E0==last_scancode_E0))
-	{
-		if (was_release)
-		{
-			last_scancode = 0x00;
-			last_scancode_E0 = 1; // impossible scancode: E0 00
-		}
-		else // was depress
-		{
-			was_E0 = 0;
-			return;
-		}
-	}
+  if ((recbyte==last_scancode) && (was_E0==last_scancode_E0))
+  {
+    if (was_release)
+    {
+      last_scancode = 0x00;
+      last_scancode_E0 = 1; // impossible scancode: E0 00
+    }
+    else // was depress
+    {
+      was_E0 = 0;
+      return;
+    }
+  }
 
-	if (!was_release)
-	{
-		last_scancode = recbyte;
-		last_scancode_E0 = was_E0;
-	}
+  if (!was_release)
+  {
+    last_scancode = recbyte;
+    last_scancode_E0 = was_E0;
+  }
 
-	if ((recbyte==0x12) && was_E0) // skip E0 12
-	{
-		was_E0 = 0;
-		was_release = 0;
-		return;
-	}
+  if ((recbyte==0x12) && was_E0) // skip E0 12
+  {
+    was_E0 = 0;
+    was_release = 0;
+    return;
+  }
 
-	to_zx(recbyte, was_E0, was_release); // send valid scancode to zx decoding stage
-#ifdef LOGENABLE
-	char log_ps2keyboard_parse2[] = "KB(..,.,.)\r\n";
-	log_ps2keyboard_parse2[3] = ((recbyte >> 4) <= 9)?'0'+(recbyte >> 4):'A'+(recbyte >> 4)-10;
-	log_ps2keyboard_parse2[4] = ((recbyte & 0x0F) <= 9)?'0'+(recbyte & 0x0F):'A'+(recbyte & 0x0F)-10;
-	log_ps2keyboard_parse2[6] = (was_E0)?'1':'0';
-	log_ps2keyboard_parse2[8] = (was_release)?'1':'0';
-	to_log(log_ps2keyboard_parse2);
-#endif
+  to_zx(recbyte, was_E0, was_release); // send valid scancode to zx decoding stage
 
-	was_E0 = 0;
-	was_release = 0;
+  was_E0 = 0;
+  was_release = 0;
 
-	return;
+  return;
 }
 
 volatile u16 ps2mouse_shifter;
@@ -454,165 +388,219 @@ volatile u8 ps2mouse_timeout;
 volatile u8 ps2mouse_initstep;
 volatile u8 ps2mouse_resp_count;
 volatile u8 ps2mouse_cmd;
+volatile u16 ps2mouse_reinit_delay;
+volatile u16 ps2mouse_reinit_tcnt1;
+volatile u8 ps2mouse_wait_state;
+volatile u16 ps2mouse_wait_tcnt1;
+
+#define PS2MOUSE_WAIT_NONE 0
+#define PS2MOUSE_WAIT_INIT 1
+#define PS2MOUSE_WAIT_CMD  2
+#define PS2MOUSE_WAIT_RES  3
+
+// Timer1 runs 11059+1 ticks per 1 ms, so 200 us ~= 2212 ticks
+#define PS2MOUSE_WAIT_TICKS 2212
 
 const u8 ps2mouse_init_sequence[] =
- 	"\xFF"      //
-	"\xFF"      // reset
-	"\xFF"      //
-	"\xF3\xC8"  // set sample rate 200  | switch to
-	"\xF3\x64"  // set sample rate 100  |     scroll
-	"\xF3\x50"  // set sample rate 80   |         mode
-	"\xF2"      // get device type
-//	"\xE8\x02"  // set resolution to 4 count/mm
-	"\xE6"      // set scaling 1:1
-	"\xF3\x64"  // set sample rate 100
-	"\xF4"      // enable
-	;
+   "\xFF"      //
+  "\xFF"      // reset
+  "\xFF"      //
+  "\xF3\xC8"  // set sample rate 200  | switch to
+  "\xF3\x64"  // set sample rate 100  |     scroll
+  "\xF3\x50"  // set sample rate 80   |         mode
+  "\xF2"      // get device type
+//  "\xE8\x02"  // set resolution to 4 count/mm
+  "\xE6"      // set scaling 1:1
+  "\xF3\x64"  // set sample rate 100
+  "\xF4"      // enable
+  ;
 
 static void ps2mouse_release_clk(void)
 {
-	ps2mouse_count = 12; //counter reinit
-	if (flags_register & FLAG_PS2MOUSE_DIRECTION)
-	{
-		PS2MSDAT_DDR &= ~(1<<PS2MSDAT); //ps2 mouse data pin to input mode
-		flags_register &= ~(FLAG_PS2MOUSE_DIRECTION); //set to receive mode
-	}
+  ps2mouse_count = 12; //counter reinit
+  if (flags_register & FLAG_PS2MOUSE_DIRECTION)
+  {
+    PS2MSDAT_DDR &= ~(1<<PS2MSDAT); //ps2 mouse data pin to input mode
+    flags_register &= ~(FLAG_PS2MOUSE_DIRECTION); //set to receive mode
+  }
 
-	//release ps2 receiver (disabled by now)
-	EIFR = (1<<INTF5); // clr any spurious int which can happen when we pulldown clock pin
-	PS2MSCLK_DDR &= ~(1<<PS2MSCLK); //ps2 mouse clk pin to input mode
-	PS2MSCLK_PORT |= (1<<PS2MSCLK);  //release clk pin
+  //release ps2 receiver (disabled by now)
+  EIFR = (1<<INTF5); // clr any spurious int which can happen when we pulldown clock pin
+  PS2MSCLK_DDR &= ~(1<<PS2MSCLK); //ps2 mouse clk pin to input mode
+  PS2MSCLK_PORT |= (1<<PS2MSCLK);  //release clk pin
 }
 
 void ps2mouse_send(u8 data)
 {
-#ifdef LOGENABLE
-{
-	u8 b=data;
-	char log_ps2mouse_parse[] = "MS>..\r\n";
-	log_ps2mouse_parse[3] = ((b >> 4) <= 9)?'0'+(b >> 4):'A'+(b >> 4)-10;
-	log_ps2mouse_parse[4] = ((b & 0x0F) <= 9)?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
-	to_log(log_ps2mouse_parse);
+  ps2mouse_shifter = ps2_encode(data); //prepare data
+  flags_register |= FLAG_PS2MOUSE_DIRECTION; //set send mode
+  PS2MSCLK_PORT &= ~(1<<PS2MSCLK); //bring ps2 mouse clk pin -
+  PS2MSCLK_DDR  |= (1<<PS2MSCLK);  //generate interruption
 }
-#endif
-	ps2mouse_shifter = ps2_encode(data); //prepare data
-	flags_register |= FLAG_PS2MOUSE_DIRECTION; //set send mode
-	PS2MSCLK_PORT &= ~(1<<PS2MSCLK); //bring ps2 mouse clk pin -
-    PS2MSCLK_DDR  |= (1<<PS2MSCLK);  //generate interruption
+
+void ps2mouse_wait_start(u8 state)
+{
+  ps2mouse_wait_state = state;
+  ps2mouse_wait_tcnt1 = TCNT1;
+}
+
+u8 ps2mouse_wait_ready(u16 tcnt1)
+{
+  u16 elapsed;
+
+  if (tcnt1 >= ps2mouse_wait_tcnt1)
+    elapsed = tcnt1 - ps2mouse_wait_tcnt1;
+  else
+    elapsed = (OCR1A + 1 - ps2mouse_wait_tcnt1) + tcnt1;
+
+  return (elapsed >= PS2MOUSE_WAIT_TICKS);
+}
+
+void ps2mouse_init(void)
+{
+  ps2mouse_count = 12;
+  ps2mouse_timeout = 0;
+  ps2mouse_initstep = 0;
+  ps2mouse_resp_count = 0;
+  ps2mouse_cmd = PS2MOUSE_CMD_SET_RESOLUTION;
+  ps2mouse_reinit_delay = 0;
+  ps2mouse_reinit_tcnt1 = TCNT1;
+  ps2mouse_wait_state = PS2MOUSE_WAIT_NONE;
+  ps2mouse_wait_tcnt1 = 0;
+
+  flags_register &= ~(FLAG_PS2MOUSE_DIRECTION | FLAG_PS2MOUSE_TYPE | FLAG_PS2MOUSE_ZX_READY);
+  flags_ex_register &= ~FLAG_EX_PS2MOUSE_CMD;
+
+  zx_mouse_reset(0);
+}
+
+void ps2mouse_schedule_reinit(void)
+{
+  ps2mouse_release_clk();
+
+  ps2mouse_initstep = 0;
+  ps2mouse_resp_count = 0;
+  ps2mouse_cmd = PS2MOUSE_CMD_SET_RESOLUTION;
+  ps2mouse_reinit_delay = 500;
+  ps2mouse_wait_state = PS2MOUSE_WAIT_NONE;
+  ps2mouse_wait_tcnt1 = 0;
+
+  flags_register &= ~(FLAG_PS2MOUSE_TYPE | FLAG_PS2MOUSE_ZX_READY);
+  flags_ex_register &= ~FLAG_EX_PS2MOUSE_CMD;
+
+  zx_mouse_reset(0);
+}
+
+void ps2mouse_enable_if_ready(void)
+{
+  if ((ps2mouse_init_sequence[ps2mouse_initstep] == 0) &&
+      (ps2mouse_cmd == 0) &&
+      ((flags_ex_register & FLAG_EX_PS2MOUSE_CMD) == 0))
+    zx_mouse_reset(1);
 }
 
 void ps2mouse_task(void)
 {
-	u8 b;
+  u8 b;
+  u16 tcnt1;
 
-	if (ps2mouse_count == 12)
-	{
-		if (ps2mouse_init_sequence[ps2mouse_initstep] != 0)
-		{
-		 	if (ps2mouse_resp_count == 0)
-			{
-				//delay need for pause between release and hold clk pin
-				_delay_us(200);
+  tcnt1 = TCNT1;
+  if (tcnt1 < ps2mouse_reinit_tcnt1)
+  {
+    if (ps2mouse_reinit_delay != 0)
+      ps2mouse_reinit_delay--;
+  }
+  ps2mouse_reinit_tcnt1 = tcnt1;
 
-				//initialization not complete
-				//send next command to mouse
-				ps2mouse_send(ps2mouse_init_sequence[ps2mouse_initstep]);
-				ps2mouse_resp_count++;
-			}
-		}
-		else if (ps2mouse_cmd != 0)
-		{
-		 	if (ps2mouse_resp_count == 0)
-			{
-				//delay need for pause between release and hold clk pin
-				_delay_us(200);
+  if (ps2mouse_wait_state != PS2MOUSE_WAIT_NONE)
+  {
+    if (!ps2mouse_wait_ready(tcnt1))
+      return;
 
-				//start command
-				flags_ex_register |= FLAG_EX_PS2MOUSE_CMD;
-				ps2mouse_send(ps2mouse_cmd);
-				ps2mouse_resp_count++;
-			}
-			else if (flags_ex_register & FLAG_EX_PS2MOUSE_CMD)
-			{
-				switch (ps2mouse_cmd)
-				{
-					case PS2MOUSE_CMD_SET_RESOLUTION:
-						if (ps2mouse_resp_count == 2)
-						{
-							//delay need for pause between release and hold clk pin
-							_delay_us(200);
+    switch (ps2mouse_wait_state)
+    {
+      case PS2MOUSE_WAIT_INIT:
+        ps2mouse_send(ps2mouse_init_sequence[ps2mouse_initstep]);
+        ps2mouse_resp_count++;
+        break;
 
-							//send resolution
-							ps2mouse_send(rtc_read(RTC_PS2MOUSE_RES_REG) & 0x03);
-							ps2mouse_resp_count++;
-						}
-						break;
-				}
-			}
-		}
-	}
+      case PS2MOUSE_WAIT_CMD:
+        flags_ex_register |= FLAG_EX_PS2MOUSE_CMD;
+        ps2mouse_send(ps2mouse_cmd);
+        ps2mouse_resp_count++;
+        break;
 
-	if ((ps2mouse_count<12) &&
-		 (ps2mouse_timeout==0))
-	{
-#ifdef LOGENABLE
-		char log_ps2mouse_err[] = "MS.err.\r\n";
-		if (flags_register & FLAG_PS2MOUSE_DIRECTION) log_ps2mouse_err[2]='S';	else log_ps2mouse_err[2]='R';
-		if (ps2mouse_count<10) log_ps2mouse_err[6]='0'+ps2mouse_count;  else log_ps2mouse_err[6]='A'+ps2mouse_count-10;
-		to_log(log_ps2mouse_err);
-#endif
-		//error due exchange data with PS/2 mouse
+      case PS2MOUSE_WAIT_RES:
+        ps2mouse_send(rtc_read(RTC_PS2MOUSE_RES_REG) & 0x03);
+        ps2mouse_resp_count++;
+        break;
+    }
 
-		//get direction
-		b = flags_register & FLAG_PS2MOUSE_DIRECTION;
+    ps2mouse_wait_state = PS2MOUSE_WAIT_NONE;
+    return;
+  }
 
-		//reset pins and states
-		ps2mouse_release_clk();
+  if ((ps2mouse_count == 12) && (ps2mouse_reinit_delay == 0))
+  {
+    if (ps2mouse_init_sequence[ps2mouse_initstep] != 0)
+    {
+       if (ps2mouse_resp_count == 0)
+      {
+        // start non-blocking 200 us pause before next init byte
+        ps2mouse_wait_start(PS2MOUSE_WAIT_INIT);
+        return;
+      }
+    }
+    else if (ps2mouse_cmd != 0)
+    {
+       if (ps2mouse_resp_count == 0)
+      {
+        // start non-blocking 200 us pause before command byte
+        ps2mouse_wait_start(PS2MOUSE_WAIT_CMD);
+        return;
+      }
+      else if (flags_ex_register & FLAG_EX_PS2MOUSE_CMD)
+      {
+        switch (ps2mouse_cmd)
+        {
+          case PS2MOUSE_CMD_SET_RESOLUTION:
+            if (ps2mouse_resp_count == 2)
+            {
+              // start non-blocking 200 us pause before resolution byte
+              ps2mouse_wait_start(PS2MOUSE_WAIT_RES);
+              return;
+            }
+            break;
+        }
+      }
+    }
+  }
 
-		//analizing error
-		if (b && (ps2mouse_initstep==0))
-		{
-			//error due send first init byte - mouse not connected to PS/2
+  if ((ps2mouse_count<12) &&
+     (ps2mouse_timeout==0))
+  {
+    //error due exchange data with PS/2 mouse
+    ps2mouse_schedule_reinit();
+  }
 
-			//disable mouse
-			zx_mouse_reset(0);
-		}
-		else
-		{
-			//error due receive or send non first byte - mouse connected to PS/2
+  if (ps2mouse_count!=0) return; // not received anything
 
-			//re-init mouse
-			ps2mouse_initstep = 0;
-		}
-	}
+  if (!(flags_register & FLAG_PS2MOUSE_DIRECTION))
+  {
+    //receive complete
+    b = ps2_decode(ps2mouse_count, ps2mouse_shifter);
 
-	if (ps2mouse_count!=0) return; // not received anything
+    //if command proceed than command code
+    //if initialization proceed than current init code
+    //else 0
+    switch ((flags_ex_register & FLAG_EX_PS2MOUSE_CMD) ? ps2mouse_cmd : ps2mouse_init_sequence[ps2mouse_initstep])
+    {
+      //initialization complete - working mode
+      case 0:
+        ps2mouse_resp_count++;
 
-	if (!(flags_register & FLAG_PS2MOUSE_DIRECTION))
-	{
-		//receive complete
-		b = ps2_decode(ps2mouse_count, ps2mouse_shifter);
-
-#ifdef LOGENABLE
-{
-	char log_ps2mouse_parse[] = "MS<..\r\n";
-	log_ps2mouse_parse[3] = ((b >> 4) <= 9)?'0'+(b >> 4):'A'+(b >> 4)-10;
-	log_ps2mouse_parse[4] = ((b & 0x0F) <= 9)?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
-	to_log(log_ps2mouse_parse);
-}
-#endif
-
-		//if command proceed than command code
-		//if initialization proceed than current init code
-		//else 0
-		switch ((flags_ex_register & FLAG_EX_PS2MOUSE_CMD) ? ps2mouse_cmd : ps2mouse_init_sequence[ps2mouse_initstep])
-		{
-			//initialization complete - working mode
-			case 0:
-				ps2mouse_resp_count++;
-
-				switch (ps2mouse_resp_count)
-				{
+        switch (ps2mouse_resp_count)
+        {
           case 1:
             //byte 1: Y overflow | X overflow | Y sign bit | X sign bit | 1 | Middle Btn | Right Btn | Left Btn
             zx_mouse_button = (zx_mouse_button & 0xF0) + ((b ^ 0x07) & 0x0F);
@@ -641,236 +629,174 @@ void ps2mouse_task(void)
             flags_register |= FLAG_PS2MOUSE_ZX_READY;
             ps2mouse_resp_count = 0;
           break;
-				}
+        }
         break;
 
-			//reset command
-			case PS2MOUSE_CMD_RESET:
-				if (ps2mouse_resp_count == 1)
-				{
-					//must be acknowledge
-					if (b != 0xFA)
-					{
-						if (flags_ex_register & FLAG_EX_PS2MOUSE_CMD)
-						{
-							//reset command
-							ps2mouse_cmd = 0;
-							flags_ex_register &= ~FLAG_EX_PS2MOUSE_CMD;
-						}
-						else
-						{
-							//reset initialization
-							ps2mouse_initstep = 0;
-						}
-						ps2mouse_resp_count = 0;
-						break;
-					}
-				}
-				ps2mouse_resp_count++;
-				if (ps2mouse_resp_count >= 4)
-				{
-					ps2mouse_resp_count = 0;
-					if (flags_ex_register & FLAG_EX_PS2MOUSE_CMD)
-					{
-						//reset command
-						ps2mouse_cmd = 0;
-						flags_ex_register &= ~FLAG_EX_PS2MOUSE_CMD;
-					}
-					else
-					{
-						//next initialization stage
-						ps2mouse_initstep++;
-					}
-				}
-				break;
+      //reset command
+      case PS2MOUSE_CMD_RESET:
+        if (ps2mouse_resp_count == 1)
+        {
+          if (b != 0xFA)
+          {
+            ps2mouse_schedule_reinit();
+            break;
+          }
+        }
 
-			//get device type
-			case PS2MOUSE_CMD_GET_TYPE:
-				if (ps2mouse_resp_count==1)
-				{
-					ps2mouse_resp_count++;
-					//must be acknowledge
-					if (b != 0xFA)
-					{
-						if (flags_ex_register & FLAG_EX_PS2MOUSE_CMD)
-						{
-							//reset command
-							ps2mouse_cmd = 0;
-							flags_ex_register &= ~FLAG_EX_PS2MOUSE_CMD;
-						}
-						else
-						{
-							//reset initialization
-							ps2mouse_initstep = 0;
-						}
-						ps2mouse_resp_count = 0;
-					}
-					break;
-				}
-				else
-				{
-					ps2mouse_resp_count = 0;
-					if (flags_ex_register & FLAG_EX_PS2MOUSE_CMD)
-					{
-						//reset command
-						ps2mouse_cmd = 0;
-						flags_ex_register &= ~FLAG_EX_PS2MOUSE_CMD;
-					}
-					else
-					{
-						//next initialization stage
-						ps2mouse_initstep++;
-					}
+        ps2mouse_resp_count++;
 
-					if (b > 0)
-					{
-						flags_register |= FLAG_PS2MOUSE_TYPE;
-					}
-					else
-					{
-						flags_register &= ~(FLAG_PS2MOUSE_TYPE);
-					}
-				}
-				break;
+        if (ps2mouse_resp_count >= 4)
+        {
+          ps2mouse_resp_count = 0;
 
-			//set resolution
-			case PS2MOUSE_CMD_SET_RESOLUTION:
-				//must be acknowledge
-				if (b != 0xFA)
-				{
-					if (flags_ex_register & FLAG_EX_PS2MOUSE_CMD)
-					{
-						//reset command
-						ps2mouse_cmd = 0;
-						flags_ex_register &= ~FLAG_EX_PS2MOUSE_CMD;
-					}
-					else
-					{
-						//reset initialization
-						ps2mouse_initstep = 0;
-					}
-					ps2mouse_resp_count = 0;
-				}
-				else
-				{
-					if (flags_ex_register & FLAG_EX_PS2MOUSE_CMD)
-					{
-						if (ps2mouse_resp_count >= 3)
-						{
-							ps2mouse_resp_count = 0;
-							//reset command
-							//ps2mouse_cmd = 0;
-							flags_ex_register &= ~FLAG_EX_PS2MOUSE_CMD;
+          if (flags_ex_register & FLAG_EX_PS2MOUSE_CMD)
+          {
+            ps2mouse_cmd = 0;
+            flags_ex_register &= ~FLAG_EX_PS2MOUSE_CMD;
+            ps2mouse_enable_if_ready();
+          }
+          else
+          {
+            ps2mouse_initstep++;
+            ps2mouse_enable_if_ready();
+          }
+        }
+        break;
 
-							//WARNING! some mouses need enable command after changing resolution
-							ps2mouse_cmd = PS2MOUSE_CMD_ENABLE;
-						}
-						else
-						{
-							ps2mouse_resp_count ++;
-						}
-					}
-					else
-					{
-						//next initialization stage
-						ps2mouse_resp_count = 0;
-						ps2mouse_initstep++;
-					}
-				}
-				break;
+      //get device type
+      case PS2MOUSE_CMD_GET_TYPE:
+        if (ps2mouse_resp_count == 1)
+        {
+          ps2mouse_resp_count++;
 
-			//other commands
-			default:
-				if (flags_ex_register & FLAG_EX_PS2MOUSE_CMD)
-				{
-					//reset command
-					ps2mouse_cmd = 0;
-					flags_ex_register &= ~FLAG_EX_PS2MOUSE_CMD;
-				}
-				else
-				{
-					//next initialization stage
-					ps2mouse_initstep++;
-					if (ps2mouse_resp_count==1)
-					{
-						//must be acknowledge
-						if (b != 0xFA)
-						{
-							//reset initialization
-							ps2mouse_initstep = 0;
-						}
-					}
-				}
-				ps2mouse_resp_count = 0;
-			  	break;
-		}
-	}
-//#ifdef LOGENABLE
-//	else
-//	{
-//		//send complete
-//		char log_ps2mouse_parse[] = "MS>..\r\n";
-//		b = ps2mouse_init_sequence[ps2mouse_initstep];
-//		log_ps2mouse_parse[3] = ((b >> 4) <= 9)?'0'+(b >> 4):'A'+(b >> 4)-10;
-//		log_ps2mouse_parse[4] = ((b & 0x0F) <= 9)?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
-//		to_log(log_ps2mouse_parse);
-//	}
-//#endif
+          if (b != 0xFA)
+            ps2mouse_schedule_reinit();
+          break;
+        }
+        else
+        {
+          ps2mouse_resp_count = 0;
 
-	ps2mouse_release_clk();
+          if (flags_ex_register & FLAG_EX_PS2MOUSE_CMD)
+          {
+            ps2mouse_cmd = 0;
+            flags_ex_register &= ~FLAG_EX_PS2MOUSE_CMD;
+            ps2mouse_enable_if_ready();
+          }
+          else
+          {
+            ps2mouse_initstep++;
+            ps2mouse_enable_if_ready();
+          }
+
+          if (b > 0)
+            flags_register |= FLAG_PS2MOUSE_TYPE;
+          else
+            flags_register &= ~(FLAG_PS2MOUSE_TYPE);
+        }
+        break;
+
+      //set resolution
+      case PS2MOUSE_CMD_SET_RESOLUTION:
+        if (b != 0xFA)
+        {
+          ps2mouse_schedule_reinit();
+        }
+        else
+        {
+          if (flags_ex_register & FLAG_EX_PS2MOUSE_CMD)
+          {
+            if (ps2mouse_resp_count >= 3)
+            {
+              ps2mouse_resp_count = 0;
+              flags_ex_register &= ~FLAG_EX_PS2MOUSE_CMD;
+
+              //WARNING! some mouses need enable command after changing resolution
+              ps2mouse_cmd = PS2MOUSE_CMD_ENABLE;
+            }
+            else
+            {
+              ps2mouse_resp_count++;
+            }
+          }
+          else
+          {
+            ps2mouse_resp_count = 0;
+            ps2mouse_initstep++;
+            ps2mouse_enable_if_ready();
+          }
+        }
+        break;
+
+      //other commands
+      default:
+        if (flags_ex_register & FLAG_EX_PS2MOUSE_CMD)
+        {
+          if (b != 0xFA)
+            ps2mouse_schedule_reinit();
+          else
+          {
+            ps2mouse_cmd = 0;
+            flags_ex_register &= ~FLAG_EX_PS2MOUSE_CMD;
+            ps2mouse_enable_if_ready();
+          }
+        }
+        else
+        {
+          if ((ps2mouse_resp_count == 1) && (b != 0xFA))
+            ps2mouse_schedule_reinit();
+          else
+          {
+            ps2mouse_initstep++;
+            ps2mouse_enable_if_ready();
+          }
+        }
+        ps2mouse_resp_count = 0;
+        break;
+    }
+  }
+
+  ps2mouse_release_clk();
 }
 
 void ps2mouse_set_resolution(u8 code)
 {
-#ifdef LOGENABLE
-{
-	u8 b = zx_mouse_button;
-	char log_ps2mouse_parse[] = "SS:..-..\r\n";
-	log_ps2mouse_parse[3] = ((b >> 4) <= 9)?'0'+(b >> 4):'A'+(b >> 4)-10;
-	log_ps2mouse_parse[4] = ((b & 0x0F) <= 9)?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
-	b = code;
-	log_ps2mouse_parse[6] = ((b >> 4) <= 9)?'0'+(b >> 4):'A'+(b >> 4)-10;
-	log_ps2mouse_parse[7] = ((b & 0x0F) <= 9)?'0'+(b & 0x0F):'A'+(b & 0x0F)-10;
-	to_log(log_ps2mouse_parse);
-}
-#endif
+  //if pressed left and right buttons on mouse
+  if ((zx_mouse_button & 0x03) == 0)
+  {
+    switch (code)
+    {
+      //keypad '*' - set default resolution
+      case 0x7C:
+        rtc_write(RTC_PS2MOUSE_RES_REG,0x00);
+        ps2mouse_cmd = PS2MOUSE_CMD_SET_RESOLUTION;
+           break;
 
-	//if pressed left and right buttons on mouse
-	if ((zx_mouse_button & 0x03) == 0)
-	{
-		switch (code)
-		{
-			//keypad '*' - set default resolution
-			case 0x7C:
-				rtc_write(RTC_PS2MOUSE_RES_REG,0x00);
-				ps2mouse_cmd = PS2MOUSE_CMD_SET_RESOLUTION;
-			   	break;
+      //keypad '+' - inc resolution
+      case 0x79:
+      {
+        u8 data = rtc_read(RTC_PS2MOUSE_RES_REG) & 0x03;
+        if (data < 0x03)
+        {
+          data++;
+        }
+        rtc_write(RTC_PS2MOUSE_RES_REG,data);
+        ps2mouse_cmd = PS2MOUSE_CMD_SET_RESOLUTION;
+          break;
+      }
 
-			//keypad '+' - inc resolution
-			case 0x79:
-			{
-				u8 data = rtc_read(RTC_PS2MOUSE_RES_REG) & 0x03;
-				if (data < 0x03)
-				{
-					data++;
-				}
-				rtc_write(RTC_PS2MOUSE_RES_REG,data);
-				ps2mouse_cmd = PS2MOUSE_CMD_SET_RESOLUTION;
-			    break;
-			}
-
-			//keypad '-' - dec resolution
-			case 0x7B:
-			{
-				u8 data = rtc_read(RTC_PS2MOUSE_RES_REG) & 0x03;
-				if (data)
-				{
-					data--;
-				}
-				rtc_write(RTC_PS2MOUSE_RES_REG,data);
-				ps2mouse_cmd = PS2MOUSE_CMD_SET_RESOLUTION;
-			    break;
-			}
-		}
-	}
+      //keypad '-' - dec resolution
+      case 0x7B:
+      {
+        u8 data = rtc_read(RTC_PS2MOUSE_RES_REG) & 0x03;
+        if (data)
+        {
+          data--;
+        }
+        rtc_write(RTC_PS2MOUSE_RES_REG,data);
+        ps2mouse_cmd = PS2MOUSE_CMD_SET_RESOLUTION;
+          break;
+      }
+    }
+  }
 }

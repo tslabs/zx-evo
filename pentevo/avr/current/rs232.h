@@ -155,9 +155,9 @@ void rs232_task(void);
 
 #endif //__ASSEMBLER__
 
-#define rs_rxbuff (dbuf+512)
-#define rs_txbuff (dbuf+0)
-#define zf_rxbuff (dbuf+1024)
-#define zf_txbuff (dbuf+256)
+#define rs_rxbuff (dbuf+512)    // RS-232 RX 512 bytes
+#define rs_txbuff (dbuf+0)      // RS-232 TX 256 bytes
+#define zf_rxbuff (dbuf+1024)   // ZiFi RX 512 bytes
+#define zf_txbuff (dbuf+256)    // ZiFi TX 256 bytes
 
 #endif //RS232_H

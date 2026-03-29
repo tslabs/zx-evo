@@ -274,10 +274,6 @@ start:
   ps2keyboard_count = 12;
   ps2keyboard_cmd_count = 0;
   ps2keyboard_cmd = 0;
-  ps2mouse_count = 12;
-  ps2mouse_initstep = 0;
-  ps2mouse_resp_count = 0;
-  ps2mouse_cmd = PS2MOUSE_CMD_SET_RESOLUTION;
   flags_register = 0;
   flags_ex_register = 0;
   modes_register = 0;
@@ -287,8 +283,7 @@ start:
   //reset ps2 keyboard log
   ps2keyboard_reset_log();
 
-  //enable mouse
-  zx_mouse_reset(1);
+  ps2mouse_init();
 
   //set external interrupt
   //INT4 - PS2 Keyboard (falling edge)

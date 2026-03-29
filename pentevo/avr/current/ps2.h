@@ -110,6 +110,9 @@ extern volatile u8 ps2mouse_cmd;
 /** Command enable PS2 mouse. */
 #define PS2MOUSE_CMD_ENABLE         0xF4
 
+/** Initialize PS/2 mouse state machine. */
+void ps2mouse_init(void);
+
 /** PS/2 mouse task. */
 void ps2mouse_task(void);
 
