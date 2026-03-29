@@ -61,6 +61,11 @@ module dma
   // CRAM interface
   output wire cram_we,
 
+`ifdef COPPER
+  // CLIST interface
+  output wire clist_we,
+`endif
+
   // SFILE interface
   output wire sfile_we
 );
@@ -83,18 +88,21 @@ module dma
 `endif
 
   // devices
-  localparam DEV_RAM  = 3'b001;
-  localparam DEV_BLT1 = 4'b1001;
+  localparam DEV_RAM   = 3'b001;
+  localparam DEV_BLT1  = 4'b1001;
 `ifdef XTR_FEAT
-  localparam DEV_BLT2 = 4'b0110;
+  localparam DEV_BLT2  = 4'b0110;
 `endif
-  localparam DEV_FIL = 4'b0100;
-  localparam DEV_SPI = 3'b010;
-  localparam DEV_IDE = 3'b011;
-  localparam DEV_CRM = 4'b1100;
-  localparam DEV_SFL = 4'b1101;
-  localparam DEV_FDD = 4'b0101;
-  localparam DEV_WTP = 4'b0111;
+  localparam DEV_FILL  = 4'b0100;
+  localparam DEV_SPI   = 3'b010;
+  localparam DEV_IDE   = 3'b011;
+  localparam DEV_CRAM  = 4'b1100;
+  localparam DEV_SFILE = 4'b1101;
+  localparam DEV_FDD   = 4'b0101;
+  localparam DEV_WTP   = 4'b0111;
+`ifdef COPPER
+  localparam DEV_CLIST = 4'b1110;
+`endif
 
   wire state_dev;
   wire ide_int_stb;
@@ -117,24 +125,31 @@ module dma
   wire dma_wnr = device[3];           // 0 - device to RAM / 1 - RAM to device
 
 `ifdef XTR_FEAT
-  wire dv_ram = (dev_uni == DEV_RAM) || (dev_uni == DEV_BLT1) || (dev_uni == DEV_BLT2) || (dev_uni == DEV_FIL);
-  wire dv_blt = (dev_uni == DEV_BLT1) || (dev_uni == DEV_BLT2);
+  wire dev_ram = (dev_uni == DEV_RAM) || (dev_uni == DEV_BLT1) || (dev_uni == DEV_BLT2) || (dev_uni == DEV_FILL);
+  wire dev_blt = (dev_uni == DEV_BLT1) || (dev_uni == DEV_BLT2);
 `else
-  wire dv_ram = (dev_uni == DEV_RAM) || (dev_uni == DEV_BLT1) || (dev_uni == DEV_FIL);
-  wire dv_blt = (dev_uni == DEV_BLT1);
+  wire dev_ram = (dev_uni == DEV_RAM) || (dev_uni == DEV_BLT1) || (dev_uni == DEV_FILL);
+  wire dev_blt = (dev_uni == DEV_BLT1);
 `endif
-  wire dv_fil = (dev_uni == DEV_FIL);
-  wire dv_spi = (dev_bid == DEV_SPI);
-  wire dv_ide = (dev_bid == DEV_IDE);
-  wire dv_crm = (dev_uni == DEV_CRM);
-  wire dv_sfl = (dev_uni == DEV_SFL);
-  wire dv_wtp = (dev_uni == DEV_WTP);
+  wire dev_fill = (dev_uni == DEV_FILL);
+  wire dev_spi = (dev_bid == DEV_SPI);
+  wire dev_ide = (dev_bid == DEV_IDE);
+  wire dev_cram = (dev_uni == DEV_CRAM);
+  wire dev_sfile = (dev_uni == DEV_SFILE);
+`ifdef COPPER
+  wire dev_clist = (dev_uni == DEV_CLIST);
+`endif
+  wire dev_wtp = (dev_uni == DEV_WTP);
 `ifdef FDR
-  wire dv_fdd = (dev_uni == DEV_FDD);
+  wire dev_fdd = (dev_uni == DEV_FDD);
 `endif
 
   wire dev_req = dma_act && state_dev;
+`ifdef COPPER
+  wire dev_stb = cram_we || sfile_we || clist_we || ide_int_stb || (byte_sw_stb && bsel && dma_act);
+`else
   wire dev_stb = cram_we || sfile_we || ide_int_stb || (byte_sw_stb && bsel && dma_act);
+`endif
 
 `ifdef FDR
   assign byte_sw_stb = spi_int_stb || wtp_int_stb || fdr_int_stb;
@@ -185,15 +200,15 @@ module dma
   // states
   wire state_rd = ~phase;
   wire state_wr = phase;
-  assign state_dev = !dv_ram && (dma_wnr ^ !phase);
-  wire state_mem = dv_ram || (dma_wnr ^ phase);
+  assign state_dev = !dev_ram && (dma_wnr ^ !phase);
+  wire state_mem = dev_ram || (dma_wnr ^ phase);
 
   // states processing
-  wire blt_hook = dv_blt && !phase_blt && !phase;
+  wire blt_hook = dev_blt && !phase_blt && !phase;
   wire phase_end_ram = state_mem && dram_next && !blt_hook;
   wire phase_end_dev = state_dev && dev_stb;
   wire phase_end = phase_end_ram || phase_end_dev;
-  wire fil_hook = dv_fil && phase;
+  wire fil_hook = dev_fill && phase;
   wire phase_blt_end = state_mem && dram_next && !phase;
 
   // blitter cycles:
@@ -230,7 +245,7 @@ module dma
     if (state_rd)
     begin
       if (dram_next)
-        data <= (dv_blt && phase_blt) ? blt_rddata : dram_rddata;
+        data <= (dev_blt && phase_blt) ? blt_rddata : dram_rddata;
 
       if (ide_int_stb)
         data <= ide_in;
@@ -284,7 +299,7 @@ module dma
 
   always @(posedge clk)
 `ifdef FDR
-    if (!rst_n || (dv_fdd && fdr_stop))
+    if (!rst_n || (dev_fdd && fdr_stop))
       n_ctr[10] <= 1'b1;
 `else
     if (!rst_n)
@@ -334,7 +349,7 @@ module dma
   wire [20:0] s_addr_next = {s_addr_next_h[13:1], s_addr_next_m, s_addr_next_l[6:0]};
 
   always @(posedge clk)
-    if ((dram_next || dev_stb) && state_rd && (!dv_blt || !phase_blt))      // increment RAM source addr
+    if ((dram_next || dev_stb) && state_rd && (!dev_blt || !phase_blt))      // increment RAM source addr
       s_addr <= s_addr_next;
 
     else
@@ -397,33 +412,36 @@ module dma
   assign wraddr = d_addr[7:0];
 
   // DRAM
-  assign dram_addr = state_rd ? ((!dv_blt || !phase_blt) ? s_addr : d_addr) : d_addr;
+  assign dram_addr = state_rd ? ((!dev_blt || !phase_blt) ? s_addr : d_addr) : d_addr;
   assign dram_wrdata = data;
   assign dram_req = dma_act && state_mem;
   assign dram_rnw = state_rd;
 
-  assign cram_we = dev_req && dv_crm && state_wr;
-  assign sfile_we = dev_req && dv_sfl && state_wr;
+  assign cram_we = dev_req && dev_cram && state_wr;
+  assign sfile_we = dev_req && dev_sfile && state_wr;
+`ifdef COPPER
+  assign clist_we = dev_req && dev_clist && state_wr;
+`endif
 
 `ifdef FDR
   // FDD
-  wire fdr_int_stb = dv_fdd && fdr_stb;
-  assign fdr_req = dev_req && dv_fdd;
+  wire fdr_int_stb = dev_fdd && fdr_stb;
+  assign fdr_req = dev_req && dev_fdd;
 `endif
 
   // SPI
-  assign spi_int_stb = dv_spi && spi_stb;
+  assign spi_int_stb = dev_spi && spi_stb;
   assign spi_wrdata = {8{state_rd}} | (bsel ? data[15:8] : data[7:0]);  // send FF on read cycles
-  assign spi_req = dev_req && dv_spi;
+  assign spi_req = dev_req && dev_spi;
 
   // WTPORT
-  assign wtp_int_stb = dv_wtp && wtp_stb;
-  assign wtp_req = dev_req && dv_wtp;
+  assign wtp_int_stb = dev_wtp && wtp_stb;
+  assign wtp_req = dev_req && dev_wtp;
 
   // IDE
-  assign ide_int_stb = dv_ide && ide_stb;
+  assign ide_int_stb = dev_ide && ide_stb;
   assign ide_out = data;
-  assign ide_req = dev_req && dv_ide;
+  assign ide_req = dev_req && dev_ide;
   assign ide_rnw = state_rd;
 
 endmodule

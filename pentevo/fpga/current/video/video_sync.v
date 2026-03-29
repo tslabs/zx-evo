@@ -42,7 +42,7 @@ module video_sync
   output wire       tv_blank,
   output wire       vga_blank,
   output wire       vga_line,
-  output wire       frame_start,
+  output wire       frame_start_s,
   output wire       line_start_s,
   output wire       pix_start,
   output wire       ts_start,
@@ -50,6 +50,8 @@ module video_sync
   output wire       flash,
 
   // video counters
+  output wire [8:0] ray_x,
+  output wire [8:0] ray_y,
   output wire [9:0] vga_cnt_in,
   output wire [9:0] vga_cnt_out,
   output wire [8:0] ts_raddr,
@@ -69,7 +71,7 @@ module video_sync
 
   // ZX controls
   input  wire       y_offs_wr,
-  output wire       int_start
+  output wire       int_start_s
 );
 
   localparam HSYNC_BEG     = 9'd11;
@@ -114,16 +116,20 @@ module video_sync
   reg [8:0] cnt_out = 0;
   reg vga_hblank = 0;
   reg vga_vblank = 0;
+  
+  assign ray_x = hcount;
+  assign ray_y = vcount;
 
   wire line_start = hcount == (HPERIOD - 1);
   wire line_start2 = hcount == (HSYNC_END - 1);
   assign line_start_s = line_start && c3;
-  assign frame_start = line_start && (vcount == (vperiod - 1));
+  wire frame_start = line_start && (vcount == (vperiod - 1));
+  assign frame_start_s = frame_start && c3;
   wire vis_start = line_start && (vcount == (vblnk_end - 1));
   assign pix_start = hcount == (hpix_beg - x_offs - 1);
   wire ts_start_coarse = hcount == (hpix_beg_ts - 1);
   assign ts_start = c3 && ts_start_coarse;
-  assign int_start = (hcount == {hint_beg, 1'b0}) && (vcount == vint_beg) && c0;
+  assign int_start_s = (hcount == {hint_beg, 1'b0}) && (vcount == vint_beg) && c0;
   wire vga_pix_start = ((hcount == (HBLNKV_END)) || (hcount == (HBLNKV_END + HPERIOD/2)));
   wire hs_vga = ((hcount >= HSYNCV_BEG) && (hcount < HSYNCV_END)) || ((hcount >= (HSYNCV_BEG + HPERIOD/2)) && (hcount < (HSYNCV_END + HPERIOD/2)));
   assign vga_line = (hcount >= HPERIOD/2);
@@ -198,7 +204,7 @@ module video_sync
   assign flash = flash_ctr[4];
 
   always @(posedge clk)
-    if (frame_start && c3)
+    if (frame_start_s)
     begin
       flash_ctr <= flash_ctr + 5'b1;
       // re-sync 60Hz mode selector

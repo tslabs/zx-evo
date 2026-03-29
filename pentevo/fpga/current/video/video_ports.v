@@ -8,8 +8,9 @@ module video_ports
   input wire clk,
 
   input wire [ 7:0] d,
+  input wire [ 7:0] xt_wr_data,
   input wire res,
-  input wire int_start,
+  input wire int_start_s,
   input wire line_start_s,
 
   // port write strobes
@@ -80,15 +81,15 @@ module video_ports
       vint_inc <= 4'b0;
     end
     else if (vint_begl_wr)
-      vint_beg[7:0] <= d;
+      vint_beg[7:0] <= xt_wr_data;
 
     else if (vint_begh_wr)
     begin
-      vint_beg[8] <= d[0];
-      vint_inc <= d[7:4];
+      vint_beg[8] <= xt_wr_data[0];
+      vint_inc <= xt_wr_data[7:4];
     end
 
-    else if (int_start)
+    else if (int_start_s)
       vint_beg <= vint_beg_next;
 
   always @(posedge clk or posedge res)
@@ -106,30 +107,30 @@ module video_ports
     else
     begin
       if (zborder_wr  )   border          <= {palsel[3:0], 1'b0, d[2:0]};
-      if (border_wr   )   border          <= d;
-      if (gy_offsl_wr )   gy_offs[7:0]    <= d;
-      if (gy_offsh_wr )   gy_offs[8]      <= d[0];
-      if (t0y_offsl_wr)   t0y_offs[7:0]   <= d;
-      if (t0y_offsh_wr)   t0y_offs[8]     <= d[0];
-      if (t1y_offsl_wr)   t1y_offs[7:0]   <= d;
-      if (t1y_offsh_wr)   t1y_offs[8]     <= d[0];
-      if (tsconf_wr   )   tsconf          <= d;
-      if (tmpage_wr   )   tmpage          <= d;
-      if (sgpage_wr   )   sgpage          <= d;
-      if (hint_beg_wr )   hint_beg        <= d;
+      if (border_wr   )   border          <= xt_wr_data;
+      if (gy_offsl_wr )   gy_offs[7:0]    <= xt_wr_data;
+      if (gy_offsh_wr )   gy_offs[8]      <= xt_wr_data[0];
+      if (t0y_offsl_wr)   t0y_offs[7:0]   <= xt_wr_data;
+      if (t0y_offsh_wr)   t0y_offs[8]     <= xt_wr_data[0];
+      if (t1y_offsl_wr)   t1y_offs[7:0]   <= xt_wr_data;
+      if (t1y_offsh_wr)   t1y_offs[8]     <= xt_wr_data[0];
+      if (tsconf_wr   )   tsconf          <= xt_wr_data;
+      if (tmpage_wr   )   tmpage          <= xt_wr_data;
+      if (sgpage_wr   )   sgpage          <= xt_wr_data;
+      if (hint_beg_wr )   hint_beg        <= xt_wr_data;
 
       if (zvpage_wr   )   vpage_r         <= {6'b000001, d[3], 1'b1};
-      if (vpage_wr    )   vpage_r         <= d;
-      if (vconf_wr    )   vconf_r         <= d;
-      if (gx_offsl_wr )   gx_offs_r[7:0]  <= d;
-      if (gx_offsh_wr )   gx_offs_r[8]    <= d[0];
-      if (palsel_wr   )   palsel_r        <= d;
-      if (t0x_offsl_wr)   t0x_offs_r[7:0] <= d;
-      if (t0x_offsh_wr)   t0x_offs_r[8]   <= d[0];
-      if (t1x_offsl_wr)   t1x_offs_r[7:0] <= d;
-      if (t1x_offsh_wr)   t1x_offs_r[8]   <= d[0];
-      if (t0gpage_wr  )   t0gpage_r       <= d;
-      if (t1gpage_wr  )   t1gpage_r       <= d;
+      if (vpage_wr    )   vpage_r         <= xt_wr_data;
+      if (vconf_wr    )   vconf_r         <= xt_wr_data;
+      if (gx_offsl_wr )   gx_offs_r[7:0]  <= xt_wr_data;
+      if (gx_offsh_wr )   gx_offs_r[8]    <= xt_wr_data[0];
+      if (palsel_wr   )   palsel_r        <= xt_wr_data;
+      if (t0x_offsl_wr)   t0x_offs_r[7:0] <= xt_wr_data;
+      if (t0x_offsh_wr)   t0x_offs_r[8]   <= xt_wr_data[0];
+      if (t1x_offsl_wr)   t1x_offs_r[7:0] <= xt_wr_data;
+      if (t1x_offsh_wr)   t1x_offs_r[8]   <= xt_wr_data[0];
+      if (t0gpage_wr  )   t0gpage_r       <= xt_wr_data;
+      if (t1gpage_wr  )   t1gpage_r       <= xt_wr_data;
     end
 
   // latching regs at line start, delaying hires for 1 line
