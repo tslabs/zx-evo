@@ -42,22 +42,43 @@ def write_bytes(ser: serial.Serial, data: bytes) -> None:
   ser.flush()
 
 
-def wait_receiver_ready(ser: serial.Serial, timeout_s: float, verbose: bool) -> None:
+def format_byte(ch: int) -> str:
+  if 32 <= ch <= 126:
+    return f"0x{ch:02X} ('{chr(ch)}')"
+  return f"0x{ch:02X}"
+
+
+def wait_for_protocol_byte(
+  ser: serial.Serial,
+  timeout_s: float,
+  allowed: tuple[int, ...],
+  verbose: bool,
+  context: str,
+) -> Optional[int]:
   end = time.time() + timeout_s
   while time.time() < end:
-    ch = read_byte(ser, 0.5)
+    ch = read_byte(ser, min(0.2, max(0.01, end - time.time())))
     if ch is None:
       continue
-    if ch == CRCCHR:
-      if verbose:
-        print("Receiver requested CRC (got 'C').", file=sys.stderr)
-      return
-    if ch == NAK:
-      if verbose:
-        print("Receiver sent NAK (checksum mode request). Using CRC anyway.", file=sys.stderr)
-      return
-    if ch == CAN:
-      raise RuntimeError("Receiver cancelled (CAN).")
+    if ch in allowed:
+      return ch
+    if verbose:
+      print(f"Ignoring junk {format_byte(ch)} while waiting for {context}.", file=sys.stderr)
+  return None
+
+
+def wait_receiver_ready(ser: serial.Serial, timeout_s: float, verbose: bool) -> None:
+  ch = wait_for_protocol_byte(ser, timeout_s, (CRCCHR, NAK, CAN), verbose, "receiver ready")
+  if ch == CRCCHR:
+    if verbose:
+      print("Receiver requested CRC (got 'C').", file=sys.stderr)
+    return
+  if ch == NAK:
+    if verbose:
+      print("Receiver sent NAK (checksum mode request). Using CRC anyway.", file=sys.stderr)
+    return
+  if ch == CAN:
+    raise RuntimeError("Receiver cancelled (CAN).")
   raise TimeoutError("Timeout waiting for receiver ('C' or NAK).")
 
 
@@ -115,7 +136,7 @@ def send_file_xmodem_crc(
           else:
             send_block(ser, blkno, chunk)
 
-          resp = read_byte(ser, timeout_s)
+          resp = wait_for_protocol_byte(ser, timeout_s, (ACK, NAK, CAN), verbose, f"response to block {blkno}")
           if resp == ACK:
             blkno = (blkno + 1) & 0xFF
             break
@@ -138,11 +159,13 @@ def send_file_xmodem_crc(
       if verbose:
         print("Sending EOT...", file=sys.stderr)
       write_bytes(ser, bytes([EOT]))
-      resp = read_byte(ser, timeout_s)
+      resp = wait_for_protocol_byte(ser, timeout_s, (ACK, NAK, CAN), verbose, "response to EOT")
       if resp == ACK:
         if verbose:
           print("Done (ACK after EOT).", file=sys.stderr)
         return
+      if resp == CAN:
+        raise RuntimeError("Receiver cancelled (CAN).")
       attempt += 1
       if attempt > retries:
         raise RuntimeError("EOT not acknowledged.")
