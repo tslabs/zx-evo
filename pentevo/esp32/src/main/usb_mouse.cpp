@@ -33,6 +33,8 @@
 
 #include "main.h"
 
+esp_err_t ps2_mouse_send_movement(int dx, int dy, unsigned buttons);
+
 enum usb_mouse_evt_group_t
 {
   USB_MOUSE_EVT_QUIT = 0,
@@ -58,6 +60,7 @@ volatile bool usb_mouse_mode_active = false;
 int usb_mouse_abs_x = 0;
 int usb_mouse_abs_y = 0;
 
+// new
 void usb_mouse_report_callback(const uint8_t *data, int length)
 {
   if (length < (int)sizeof(hid_mouse_input_report_boot_t))
@@ -68,12 +71,9 @@ void usb_mouse_report_callback(const uint8_t *data, int length)
   usb_mouse_abs_x += r->x_displacement;
   usb_mouse_abs_y += r->y_displacement;
 
-  printf("mouse dx=%4d dy=%4d x=%6d y=%6d buttons=%02X\r\n",
-         (int)r->x_displacement,
-         (int)r->y_displacement,
-         usb_mouse_abs_x,
-         usb_mouse_abs_y,
-         (unsigned)r->buttons.val);
+  ps2_mouse_send_movement((int)r->x_displacement,
+                          -(int)r->y_displacement,
+                          (unsigned)r->buttons.val);
 }
 
 void usb_mouse_interface_callback(hid_host_device_handle_t hid_device_handle, hid_host_interface_event_t event, void *arg)

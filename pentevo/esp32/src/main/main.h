@@ -21,7 +21,7 @@ typedef uint64_t u64;
 #define max(x, y) (((x) > (y)) ? (x) : (y))
 #define min(x, y) (((x) < (y)) ? (x) : (y))
 
-#define CP_STRING "ESP32 SPI WiFi Module, ver.0.5.9, (c) TS-Labs"
+#define CP_STRING "ESP32 SPI WiFi Module, ver.0.5.31, (c) TS-Labs"
 
 extern tinfl_decompressor *decomp;
 
