@@ -738,10 +738,10 @@ void esp_console_register_system_commands()
   {
     const esp_console_cmd_t cmd =
     {
-      .command  = "usbmouse",
-      .help     = "Enable USB host mode and search for USB mouse",
+      .command  = "nvs",
+      .help     = "NVS commands: show/set",
       .hint     = NULL,
-      .func     = &usbmouse_cmd,
+      .func     = &nvs_cmd,
       .argtable = NULL
     };
 
@@ -751,10 +751,10 @@ void esp_console_register_system_commands()
   {
     const esp_console_cmd_t cmd =
     {
-      .command  = "nvs",
-      .help     = "NVS commands: show/set",
+      .command  = "usb",
+      .help     = "USB commands: en",
       .hint     = NULL,
-      .func     = &nvs_cmd,
+      .func     = &usb_cmd,
       .argtable = NULL
     };
 

@@ -593,7 +593,6 @@ int wf_cmd(int argc, char **argv)
     printf("  wf conn <ssid> [pass] [timeout_ms]\r\n");
     printf("  wf ap <ssid> [pass]\r\n");
     printf("  wf en <0|1>\r\n");
-    printf("  wf dis\r\n");
     printf("  wf scan [timeout]\r\n");
     printf("  wf info\r\n");
     return 0;
@@ -649,13 +648,6 @@ int wf_cmd(int argc, char **argv)
 
   if (!strcmp(argv[1], "info"))
     return wf_info(argc, argv);
-
-  if (!strcmp(argv[1], "dis"))
-  {
-    wifi_disconnect_now();
-    printf("WiFi stopped\r\n");
-    return 0;
-  }
 
   if (!strcmp(argv[1], "conn"))
   {
@@ -717,7 +709,6 @@ int wf_cmd(int argc, char **argv)
   printf("  wf conn <ssid> [pass] [timeout_ms]\r\n");
   printf("  wf ap <ssid> [pass]\r\n");
   printf("  wf en <0|1>\r\n");
-  printf("  wf dis\r\n");
   printf("  wf scan [timeout]\r\n");
   printf("  wf info\r\n");
   return 1;
@@ -906,7 +897,7 @@ void esp_console_register_wifi_commands()
     const esp_console_cmd_t wf_cmd_desc =
     {
       .command  = "wf",
-      .help     = "WiFi commands: conn/ap/en/dis/scan/info",
+      .help     = "WiFi commands: conn/ap/en/scan/info",
       .hint     = NULL,
       .func     = &wf_cmd,
       .argtable = NULL

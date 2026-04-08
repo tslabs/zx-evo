@@ -1,6 +1,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include <ctype.h>
 #include <inttypes.h>
 #include <unistd.h>
@@ -34,6 +35,7 @@
 #include "main.h"
 #include "usb_mouse.h"
 #include "ps2_mouse.h"
+#include "nvs_params.h"
 
 enum usb_mouse_evt_group_t
 {
@@ -337,26 +339,70 @@ extern "C" esp_err_t usb_mouse_start()
   return ESP_OK;
 }
 
-int usbmouse_cmd(int argc, char **argv)
+
+int usb_cmd(int argc, char **argv)
 {
-  esp_err_t err;
-
-  (void)argc;
-  (void)argv;
-
-  err = usb_mouse_start();
-  if (err == ESP_ERR_INVALID_STATE)
+  if (argc < 2)
   {
-    printf("usb mouse mode already active\r\n");
+    printf("Usage:\r\n");
+    printf("  usb en <0|1>\r\n");
     return 0;
   }
 
-  if (err != ESP_OK)
+  if (strcmp(argv[1], "en"))
   {
-    printf("usb mouse task create failed: %s\r\n", esp_err_to_name(err));
+    printf("Unknown subcommand: %s\r\n", argv[1]);
+    printf("Usage:\r\n");
+    printf("  usb en <0|1>\r\n");
     return 1;
   }
 
-  printf("usb mouse host started\r\n");
+  if (argc < 3)
+  {
+    printf("Usage: usb en <0|1>\r\n");
+    return 1;
+  }
+
+  char *endp = NULL;
+  unsigned long en = strtoul(argv[2], &endp, 0);
+  if (!endp || *endp || en > 1)
+  {
+    printf("Bad <0|1>: %s\r\n", argv[2]);
+    return 1;
+  }
+
+  app_params.usb_mode = (uint8_t)en;
+
+  esp_err_t err = app_params_save();
+  if (err != ESP_OK)
+  {
+    printf("app_params_save failed: %s\r\n", esp_err_to_name(err));
+    return 1;
+  }
+
+  printf("USB enable: %u\r\n", app_params.usb_mode);
+
+  if (app_params.usb_mode)
+  {
+    err = usb_mouse_start();
+    if (err == ESP_ERR_INVALID_STATE)
+    {
+      printf("usb mouse mode already active\r\n");
+      return 0;
+    }
+
+    if (err != ESP_OK)
+    {
+      printf("usb mouse task create failed: %s\r\n", esp_err_to_name(err));
+      return 1;
+    }
+
+    printf("usb mouse host started\r\n");
+    return 0;
+  }
+
+  if (usb_mouse_mode_active)
+    printf("USB disable saved, active host mode will stay until reset\r\n");
+
   return 0;
 }
