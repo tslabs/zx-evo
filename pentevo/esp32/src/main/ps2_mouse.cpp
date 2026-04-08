@@ -7,7 +7,7 @@
 
 #include "driver/gpio.h"
 #include "driver/gptimer.h"
-
+#include "esp_log.h"
 #include "esp_attr.h"
 #include "esp_console.h"
 #include "esp_err.h"
@@ -887,118 +887,36 @@ esp_err_t ps2_mouse_send_movement(int dx, int dy, unsigned buttons)
   return ESP_OK;
 }
 
-int ps2_mouse_parse_i32(const char *s, int *out)
-{
-  char *endp = NULL;
-  long v;
-
-  if (!s || !out)
-    return 0;
-
-  v = strtol(s, &endp, 0);
-  if (!endp || *endp)
-    return 0;
-
-  *out = (int)v;
-  return 1;
-}
-
-int ps2_mouse_cmd(int argc, char **argv)
+esp_err_t ps2_mouse_start()
 {
   esp_err_t err;
 
-  if (argc < 2 || !strcmp(argv[1], "start"))
+  if (ps2_mouse_active)
+    return ESP_OK;
+
+  portENTER_CRITICAL(&ps2_mouse_lock);
+  ps2_mouse_active = true;
+  ps2_mouse_reset_protocol_state_isr();
+  portEXIT_CRITICAL(&ps2_mouse_lock);
+
+  err = ps2_mouse_init();
+  if (err != ESP_OK)
   {
-    if (ps2_mouse_active)
-    {
-      printf("ps/2 mouse already active\r\n");
-      return 0;
-    }
-
-    portENTER_CRITICAL(&ps2_mouse_lock);
-    ps2_mouse_active = true;
-    ps2_mouse_reset_protocol_state_isr();
-    portEXIT_CRITICAL(&ps2_mouse_lock);
-
-    err = ps2_mouse_init();
-    if (err != ESP_OK)
-    {
-      portENTER_CRITICAL(&ps2_mouse_lock);
-      ps2_mouse_active = false;
-      portEXIT_CRITICAL(&ps2_mouse_lock);
-      ps2_mouse_deinit();
-      printf("ps/2 mouse init failed: %s\r\n", esp_err_to_name(err));
-      return 1;
-    }
-
-    portENTER_CRITICAL(&ps2_mouse_lock);
-    ps2_mouse_streaming = true;
-    ps2_mouse_remote_mode = false;
-    ps2_mouse_expect_param = false;
-    ps2_mouse_pending_cmd = 0;
-    portEXIT_CRITICAL(&ps2_mouse_lock);
-
-    printf("ps/2 mouse started on GPIO5=data, GPIO7=clk, streaming enabled\r\n");
-    return 0;
-  }
-
-  if (!strcmp(argv[1], "stop"))
-  {
-    if (!ps2_mouse_active)
-    {
-      printf("ps/2 mouse is not active\r\n");
-      return 0;
-    }
-
     portENTER_CRITICAL(&ps2_mouse_lock);
     ps2_mouse_active = false;
     portEXIT_CRITICAL(&ps2_mouse_lock);
-
     ps2_mouse_deinit();
-
-    printf("ps/2 mouse stopped\r\n");
-    return 0;
+    return err;
   }
 
-  if (!strcmp(argv[1], "move"))
-  {
-    int dx = 0;
-    int dy = 0;
-    int buttons = 0;
+  portENTER_CRITICAL(&ps2_mouse_lock);
+  ps2_mouse_streaming = true;
+  ps2_mouse_remote_mode = false;
+  ps2_mouse_expect_param = false;
+  ps2_mouse_pending_cmd = 0;
+  portEXIT_CRITICAL(&ps2_mouse_lock);
 
-    if (argc < 4)
-    {
-      printf("Usage: ps2mouse move <dx> <dy> [buttons]\r\n");
-      return 1;
-    }
+  ESP_LOGI("ps2_mouse", "ps/2 mouse started on GPIO%u=data, GPIO%u=clk, streaming enabled", PS2_MOUSE_GPIO_DATA, PS2_MOUSE_GPIO_CLK);
 
-    if (!ps2_mouse_parse_i32(argv[2], &dx) || !ps2_mouse_parse_i32(argv[3], &dy))
-    {
-      printf("Invalid dx/dy\r\n");
-      return 1;
-    }
-
-    if (argc >= 5 && !ps2_mouse_parse_i32(argv[4], &buttons))
-    {
-      printf("Invalid buttons\r\n");
-      return 1;
-    }
-
-    err = ps2_mouse_send_movement(dx, dy, (unsigned)buttons);
-    if (err != ESP_OK)
-    {
-      printf("ps/2 mouse streaming is disabled\r\n");
-      return 1;
-    }
-
-    return 0;
-  }
-
-  printf("Usage:\r\n");
-  printf("  ps2mouse start\r\n");
-  printf("  ps2mouse stop\r\n");
-  printf("  ps2mouse move <dx> <dy> [buttons]\r\n");
-  printf("buttons bitmask: 1=left 2=right 4=middle\r\n");
-
-  return 1;
+  return ESP_OK;
 }

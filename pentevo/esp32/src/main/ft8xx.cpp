@@ -1,10 +1,12 @@
 
 #include <string.h>
+#include <stdlib.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_timer.h"
 #include "esp_check.h"
 #include "esp_console.h"
+#include "esp_err.h"
 #include "driver/uart.h"
 
 #include "main.h"
@@ -15,13 +17,21 @@ const char TAG[] = "ft8xx";
 
 void hexdump(const void *data, size_t len, uint64_t base_off);
 
-#define CHUNK_PAYLOAD 1024
+#define CHUNK_PAYLOAD 16384
+
+#define FT_DEMO_BITMAP_W       640UL
+#define FT_DEMO_BITMAP_H       480UL
+#define FT_DEMO_BITMAP_SIZE    (FT_DEMO_BITMAP_W * FT_DEMO_BITMAP_H)
+#define FT_DEMO_BITMAP0_ADDR   FT_RAM_G
+#define FT_DEMO_BITMAP1_ADDR   (FT_RAM_G + FT_DEMO_BITMAP_SIZE)
+#define FT_DEMO_PALETTE_ADDR   (FT_DEMO_BITMAP1_ADDR + FT_DEMO_BITMAP_SIZE)
+#define FT_DEMO_PALETTE_SIZE   (256UL * 4UL)
 
 u32 *ft_ccmdb = nullptr;
 u16 ft_ccmdp = 0;
 u8 *cmdl;
-u8 *tx;
-u8 *rx;
+u8 ft_spi_width = 2;
+u32 ft_spi_freq_hz = 20000000UL;
 
 const FT_MODE ft_modes[] =                         //  |  # | visible  | Fpix MHz | clocks/line | lines/frame | line kHz | frame Hz |
 {                                                  //  | -- | -------- | -------- | ----------- | ----------- | -------- | -------- |
@@ -842,39 +852,50 @@ void init_ft8xx()
     ESP_LOGE(TAG, "Cannot allocate memory for FT8xx cmdl!");
     return;
   }
-
-  tx = (u8*)heap_caps_malloc(CHUNK_PAYLOAD + 4, MALLOC_CAP_DMA);
-  if (!tx)
-  {
-    ESP_LOGE(TAG, "Cannot allocate memory for FT8xx TX!");
-    return;
-  }
-
-  rx = (u8*)heap_caps_malloc(CHUNK_PAYLOAD + 4, MALLOC_CAP_DMA);
-  if (!rx)
-  {
-    ESP_LOGE(TAG, "Cannot allocate memory for FT8xx RX!");
-    return;
-  }
 }
 
 // ------------- Hardware layer ---------------
 
-esp_err_t ft_switch_spi_to_2_bit()
+esp_err_t ft_apply_spi_width(u8 width)
 {
-  ft_wreg8(FT_REG_SPI_WIDTH, FT_SPI_WIDTH_DUAL);
-  return spi_master_set_data_lines(2);
+  switch (width)
+  {
+    case 1:
+      ft_wreg8(FT_REG_SPI_WIDTH, FT_SPI_WIDTH_SINGLE);
+      return spi_master_set_data_lines(1);
+
+    case 2:
+      ft_wreg8(FT_REG_SPI_WIDTH, FT_SPI_WIDTH_DUAL);
+      return spi_master_set_data_lines(2);
+
+    case 4:
+      ft_wreg8(FT_REG_SPI_WIDTH, FT_SPI_WIDTH_QUAD | 4);
+      return spi_master_set_data_lines(4);
+  }
+
+  return ESP_ERR_INVALID_ARG;
 }
 
 esp_err_t ft_switch_spi_to_1_bit()
 {
-  ft_wreg8(FT_REG_SPI_WIDTH, FT_SPI_WIDTH_SINGLE);
-  return spi_master_set_data_lines(1);
+  return ft_apply_spi_width(1);
+}
+
+esp_err_t ft_switch_spi_to_2_bit()
+{
+  return ft_apply_spi_width(2);
+}
+
+esp_err_t ft_switch_spi_to_4_bit()
+{
+  return ft_apply_spi_width(4);
 }
 
 esp_err_t ft_open_session()
 {
   esp_err_t err;
+
+  spi_master_set_clock_hz(ft_spi_freq_hz);
 
   err = spi_switch_to_master();
   if (err != ESP_OK) return err;
@@ -886,7 +907,7 @@ esp_err_t ft_open_session()
     return err;
   }
 
-  err = ft_switch_spi_to_2_bit();
+  err = ft_apply_spi_width(ft_spi_width);
   if (err != ESP_OK)
   {
     spi_switch_to_slave();
@@ -1031,7 +1052,6 @@ esp_err_t ft_write(const void *addr, u32 ft_addr, u32 size)
   if (!size) return ESP_OK;
 
   const u8 *src = (const u8*)addr;
-
   esp_err_t err = ESP_OK;
   u32 a = ft_addr;
   u32 left = size;
@@ -1040,12 +1060,7 @@ esp_err_t ft_write(const void *addr, u32 ft_addr, u32 size)
   {
     u32 n = left > CHUNK_PAYLOAD ? CHUNK_PAYLOAD : left;
 
-    tx[0] = (u8)(((a >> 16) & 0x3F) | 0x80);
-    tx[1] = (u8)((a >> 8) & 0xFF);
-    tx[2] = (u8)(a & 0xFF);
-    memcpy(&tx[3], src, n);
-
-    err = ft_xfer(tx, nullptr, n + 3);
+    err = spi_master_write_buf((u8)(((a >> 16) & 0x3F) | 0x80), (u16)a, src, n);
     if (err != ESP_OK)
       break;
 
@@ -1063,7 +1078,6 @@ esp_err_t ft_read(void *addr, u32 ft_addr, u32 size)
   if (!size) return ESP_OK;
 
   u8 *dst = (u8*)addr;
-
   esp_err_t err = ESP_OK;
   u32 a = ft_addr;
   u32 left = size;
@@ -1072,16 +1086,9 @@ esp_err_t ft_read(void *addr, u32 ft_addr, u32 size)
   {
     u32 n = left > CHUNK_PAYLOAD ? CHUNK_PAYLOAD : left;
 
-    tx[0] = (u8)((a >> 16) & 0x3F);
-    tx[1] = (u8)((a >> 8) & 0xFF);
-    tx[2] = (u8)(a & 0xFF);
-    tx[3] = 0;
-
-    err = ft_xfer(tx, rx, n + 4);
+    err = spi_master_read_buf((u8)((a >> 16) & 0x3F), (u16)a, dst, n);
     if (err != ESP_OK)
       break;
-
-    memcpy(dst, &rx[4], n);
 
     dst += n;
     a += n;
@@ -1224,13 +1231,13 @@ esp_err_t ft_set_mode(u8 m)
   vTaskDelay(pdMS_TO_TICKS(30));
   ft_wreg32(FT_REG_FREQUENCY, mode->f_mul * 8000000UL);
 
-  err = ft_switch_spi_to_2_bit();
+  err = ft_apply_spi_width(ft_spi_width);
   if (err != ESP_OK) return err;
 
   return ESP_OK;
 
 fail:
-  ft_switch_spi_to_2_bit();
+  ft_apply_spi_width(ft_spi_width);
   return err;
 }
 
@@ -1270,13 +1277,15 @@ esp_err_t ft_reset_chip()
   vTaskDelay(pdMS_TO_TICKS(30));
   ft_wreg32(FT_REG_FREQUENCY, 40000000UL);
 
-  err = ft_switch_spi_to_2_bit();
+  err = ft_apply_spi_width(ft_spi_width);
   if (err != ESP_OK) return err;
 
   return ESP_OK;
 }
 
 // ------------- Console ---------------
+
+u32 ft_parse_num_arg(const char *s, const char *name, int *ok);
 
 void ft_print_string(const char *s, u16 x, u16 y)
 {
@@ -1289,6 +1298,137 @@ void ft_print_string(const char *s, u16 x, u16 y)
     ft_Vertex2f((i16)x, (i16)y);
     x += 9;
   }
+}
+
+void ft_print_spi_freq(const char *label, u32 hz)
+{
+  printf("%s: %lu.%03lu MHz (%lu Hz)\r\n",
+         label,
+         (unsigned long)(hz / 1000000UL),
+         (unsigned long)((hz % 1000000UL) / 1000UL),
+         (unsigned long)hz);
+}
+
+u32 ft_parse_freq_arg_hz(const char *s, const char *name, int *ok)
+{
+  char buf[32];
+  size_t n;
+  char *endp = nullptr;
+  double mhz;
+  uint64_t hz;
+
+  *ok = 0;
+
+  if (!s)
+  {
+    printf("Missing <%s>\r\n", name);
+    return 0;
+  }
+
+  n = strlen(s);
+  if (n >= sizeof(buf))
+  {
+    printf("Bad <%s>: %s\r\n", name, s);
+    return 0;
+  }
+
+  memcpy(buf, s, n + 1);
+
+  if (n && buf[n - 1] == ',')
+    buf[n - 1] = 0;
+
+  mhz = strtod(buf, &endp);
+  if (!endp || *endp || mhz <= 0.0)
+  {
+    printf("Bad <%s>: %s\r\n", name, s);
+    return 0;
+  }
+
+  hz = (uint64_t)(mhz * 1000000.0 + 0.5);
+  if (!hz || hz > 0xFFFFFFFFULL)
+  {
+    printf("Bad <%s>: %s\r\n", name, s);
+    return 0;
+  }
+
+  *ok = 1;
+  return (u32)hz;
+}
+
+int ft_spi_cmd(int argc, char **argv)
+{
+  int ok;
+  u32 width;
+
+  if (argc < 3)
+  {
+    printf("Usage:\r\n");
+    printf("  ft spi <1|2|4>\r\n");
+    printf("Current FT SPI width: %u-bit\r\n", (unsigned int)ft_spi_width);
+    return 1;
+  }
+
+  width = ft_parse_num_arg(argv[2], "width", &ok);
+  if (!ok)
+    return 1;
+
+  if (width != 1 && width != 2 && width != 4)
+  {
+    printf("Bad <width>: %lu\r\n", (unsigned long)width);
+    printf("Allowed: 1, 2, 4\r\n");
+    return 1;
+  }
+
+  ft_spi_width = (u8)width;
+
+  printf("FT SPI width set to %u-bit\r\n", (unsigned int)ft_spi_width);
+  return 0;
+}
+
+int ft_freq_cmd(int argc, char **argv)
+{
+  esp_err_t err;
+  esp_err_t err2;
+  int ok;
+  u32 actual_hz;
+
+  if (argc > 3)
+  {
+    printf("Usage:\r\n");
+    printf("  ft freq\r\n");
+    printf("  ft freq <MHz>\r\n");
+    return 1;
+  }
+
+  if (argc == 3)
+  {
+    ft_spi_freq_hz = ft_parse_freq_arg_hz(argv[2], "freq", &ok);
+    if (!ok) return 1;
+
+    ft_print_spi_freq("FT SPI req", ft_spi_freq_hz);
+  }
+
+  err = ft_open_session();
+  if (err != ESP_OK)
+  {
+    printf("FT open failed: %d\r\n", (int)err);
+    return 1;
+  }
+
+  actual_hz = spi_master_get_actual_freq_hz();
+  if (actual_hz)
+    ft_print_spi_freq("FT SPI actual", actual_hz);
+  else
+    printf("FT SPI actual: unavailable\r\n");
+
+  err2 = ft_close_session();
+  if (err2 != ESP_OK)
+  {
+    printf("FT close failed: %d\r\n", (int)err2);
+    return 1;
+  }
+
+  return 0;
 }
 
 u32 ft_parse_num_arg(const char *s, const char *name, int *ok)
@@ -1393,6 +1533,7 @@ esp_err_t ft_print_info()
   u32 clock = ft_rreg32(FT_REG_CLOCK);
   u32 frequency = ft_rreg32(FT_REG_FREQUENCY);
   u8 spi_width = ft_rreg8(FT_REG_SPI_WIDTH);
+  u32 esp_spi_clock = spi_master_get_actual_freq_hz();
 
   u16 hfront = hsync0;
   u16 hsync = hsync1 - hsync0;
@@ -1445,6 +1586,8 @@ esp_err_t ft_print_info()
     default:                  printf("  Bus width        : ? (%u)\r\n", (unsigned)(spi_width & 3)); break;
   }
 
+  printf("  ESP SPI clock    : %lu Hz\r\n", (unsigned long)esp_spi_clock);
+
   printf("  Frame counter    : %lu\r\n", (unsigned long)frames);
   printf("  Clock counter    : %lu\r\n", (unsigned long)clock);
 
@@ -1455,100 +1598,150 @@ esp_err_t ft_print_info()
   return ESP_OK;
 }
 
-esp_err_t ft_demo_draw_mode_1024_768()
+esp_err_t ft_perf_run(void *buf, int is_read, u32 chunk_size, u32 total_size, int64_t *elapsed_us)
 {
-  const char *mode_txt = "1024x768@59Hz (64MHz)";
-  u16 i;
-  u16 j;
+  if (!buf || !elapsed_us) return ESP_ERR_INVALID_ARG;
+  if (!chunk_size || chunk_size > CHUNK_PAYLOAD) return ESP_ERR_INVALID_ARG;
 
-  ft_set_mode(FT_MODE_1024_768_59);
-  ft_cp_reset();
-  ft_ccmd_start(cmdl);
-  ft_Dlstart();
+  u32 left = total_size;
+  int64_t t0 = esp_timer_get_time();
 
-  ft_VertexFormat(0);
-  ft_ClearColorRGB(0, 0, 0);
-  ft_Clear(1, 1, 1);
-
-  ft_ColorRGB(255, 255, 255);
-  ft_LineWidth(24);
-
-  ft_Begin(FT_LINE_STRIP);
-  ft_Vertex2f(0, 0);
-  ft_Vertex2f(1023, 0);
-  ft_Vertex2f(1023, 767);
-  ft_Vertex2f(0, 767);
-  ft_Vertex2f(0, 0);
-
-  ft_Begin(FT_LINE_STRIP);
-  ft_Vertex2f(0, 0);
-  ft_Vertex2f(799, 0);
-  ft_Vertex2f(799, 599);
-  ft_Vertex2f(0, 599);
-  ft_Vertex2f(0, 0);
-
-  ft_Begin(FT_LINE_STRIP);
-  ft_Vertex2f(0, 0);
-  ft_Vertex2f(639, 0);
-  ft_Vertex2f(639, 479);
-  ft_Vertex2f(0, 479);
-  ft_Vertex2f(0, 0);
-
-  ft_Begin(FT_BITMAPS);
-  ft_BitmapHandle(18);
-
-  ft_ColorRGB(100, 220, 200);
-  ft_print_string("Mode:", 10, 8);
-
-  ft_ColorRGB(120, 100, 255);
-  ft_print_string(mode_txt, 66, 8);
-
-  ft_ColorRGB(120, 100, 255);
-  ft_print_string("640x480", 572, 461);
-  ft_print_string("800x600", 732, 581);
-  ft_print_string("1024x768", 947, 749);
-
-  ft_ColorA(255);
-  ft_Begin(FT_POINTS);
-  ft_PointSize(100 << 4);
-  ft_BlendFunc(FT_SRC_ALPHA, FT_ONE);
-
-  ft_ColorRGB(255, 0, 0);
-  ft_Vertex2f(rsin(80, 32768) + 320, rcos(80, 32768) + 240);
-
-  ft_ColorRGB(0, 255, 0);
-  ft_Vertex2f(rsin(80, 21845 + 32768) + 320, rcos(80, 21845 + 32768) + 240);
-
-  ft_ColorRGB(0, 0, 255);
-  ft_Vertex2f(rsin(80, 43690 - 32768) + 320, rcos(80, 43690 - 32768) + 240);
-
-  ft_ClearColorA(32);
-  ft_ColorMask(0, 0, 0, 1);
-  ft_Clear(1, 1, 1);
-
-  ft_BlendFunc(FT_ONE, FT_ONE);
-  ft_Begin(FT_POINTS);
-  ft_ColorA(20);
-
-  for (i = 120, j = 0; j <= 255; i -= 5, j += 20)
+  while (left)
   {
-    ft_PointSize(i << 4);
-    ft_Vertex2f(320, 240);
+    u32 n = left > chunk_size ? chunk_size : left;
+    esp_err_t err;
+
+    if (is_read)
+      err = ft_read(buf, FT_RAM_G, n);
+    else
+      err = ft_write(buf, FT_RAM_G, n);
+
+    if (err != ESP_OK) return err;
+
+    left -= n;
   }
 
-  ft_ColorRGB(0, 0, 0);
-  ft_ColorMask(1, 1, 1, 1);
-  ft_BlendFunc(FT_ONE_MINUS_DST_ALPHA, FT_DST_ALPHA);
-  ft_Begin(FT_RECTS);
-  ft_Vertex2f(100, 50);
-  ft_Vertex2f(539, 429);
-
-  ft_Display();
-  ft_ccmd(FT_CCMD_SWAP);
-
-  ft_ccmd_write();
-  ft_cp_wait(1000);
+  *elapsed_us = esp_timer_get_time() - t0;
   return ESP_OK;
+}
+
+void ft_perf_fill_pattern(u8 *buf, u32 size)
+{
+  for (u32 i = 0; i < size; ++i)
+    buf[i] = (u8)(i ^ (i >> 8) ^ 0x5A);
+}
+
+double ft_perf_mb_per_s(u32 bytes, int64_t elapsed_us)
+{
+  if (elapsed_us <= 0) return 0.0;
+
+  return ((double)bytes * 1000000.0) / ((double)elapsed_us * 1024.0 * 1024.0);
+}
+
+int ft_perf_one(void *buf, const char *name, int is_read, u32 chunk_size, u32 total_size)
+{
+  if (chunk_size > CHUNK_PAYLOAD)
+  {
+    printf("%-20s : skipped, chunk=%lu > CHUNK_PAYLOAD=%u\r\n",
+           name,
+           (unsigned long)chunk_size,
+           (unsigned int)CHUNK_PAYLOAD);
+    return 0;
+  }
+
+  if (is_read)
+  {
+    esp_err_t err = ft_write(buf, FT_RAM_G, chunk_size);
+    if (err != ESP_OK)
+    {
+      printf("%-20s : prep failed: %s (0x%x)\r\n",
+             name,
+             esp_err_to_name(err),
+             (unsigned int)err);
+      return 1;
+    }
+  }
+
+  int64_t elapsed_us = 0;
+  esp_err_t err = ft_perf_run(buf, is_read, chunk_size, total_size, &elapsed_us);
+  if (err != ESP_OK)
+  {
+    printf("%-20s : failed: %s (0x%x)\r\n",
+           name,
+           esp_err_to_name(err),
+           (unsigned int)err);
+    return 1;
+  }
+
+  printf("%-20s : %7.3f MB/s  (%8llu us, chunk=%5lu)\r\n",
+         name,
+         ft_perf_mb_per_s(total_size, elapsed_us),
+         (unsigned long long)elapsed_us,
+         (unsigned long)chunk_size);
+
+  return 0;
+}
+
+int ft_perf_cmd(int argc, char **argv)
+{
+  const u32 total_size = 1024 * 1024;
+  esp_err_t err;
+  esp_err_t err2;
+  int failed = 0;
+  u8 *perf_buf;
+
+  (void)argv;
+
+  if (argc != 2)
+  {
+    printf("Usage:\r\n");
+    printf("  ft perf\r\n");
+    return 1;
+  }
+
+  perf_buf = (u8*)heap_caps_malloc(CHUNK_PAYLOAD, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
+  if (!perf_buf)
+  {
+    printf("FT perf buffer alloc failed, size=%u\r\n", (unsigned int)CHUNK_PAYLOAD);
+    return 1;
+  }
+
+  ft_perf_fill_pattern(perf_buf, CHUNK_PAYLOAD);
+
+  err = ft_open_session();
+  if (err != ESP_OK)
+  {
+    printf("FT open failed: %d\r\n", (int)err);
+    heap_caps_free(perf_buf);
+    return 1;
+  }
+
+  printf("FT perf: total=%lu bytes, addr=0x%06lX, max_chunk=%u, spi=%u-bit, clk=%lu Hz\r\n",
+         (unsigned long)total_size,
+         (unsigned long)FT_RAM_G,
+         (unsigned int)CHUNK_PAYLOAD,
+         (unsigned int)ft_spi_width,
+         (unsigned long)spi_master_get_actual_freq_hz());
+
+  if (ft_perf_one(perf_buf, "write max", 0, CHUNK_PAYLOAD, total_size)) failed = 1;
+  if (ft_perf_one(perf_buf, "write 1024", 0, 1024, total_size)) failed = 1;
+  if (ft_perf_one(perf_buf, "write 128", 0, 128, total_size)) failed = 1;
+  if (ft_perf_one(perf_buf, "write 16", 0, 16, total_size)) failed = 1;
+  if (ft_perf_one(perf_buf, "read max", 1, CHUNK_PAYLOAD, total_size)) failed = 1;
+  if (ft_perf_one(perf_buf, "read 1024", 1, 1024, total_size)) failed = 1;
+  if (ft_perf_one(perf_buf, "read 128", 1, 128, total_size)) failed = 1;
+  if (ft_perf_one(perf_buf, "read 16", 1, 16, total_size)) failed = 1;
+
+  err2 = ft_close_session();
+  heap_caps_free(perf_buf);
+
+  if (err2 != ESP_OK)
+  {
+    printf("FT close failed: %d\r\n", (int)err2);
+    return 1;
+  }
+
+  return failed ? 1 : 0;
 }
 
 int ft_res_cmd(int argc, char **argv)
@@ -1712,7 +1905,125 @@ int ft_dump_cmd(int argc, char **argv)
   return 0;
 }
 
-int ft_demo_cmd(int, char **)
+esp_err_t ft_demo_draw_mode_1024_768()
+{
+  const char *mode_txt = "1024x768@59Hz (64MHz)";
+  esp_err_t err;
+  esp_err_t err2;
+  u16 i;
+  u16 j;
+
+  err = ft_open_session();
+  if (err != ESP_OK)
+    return err;
+
+  err = ft_set_mode(FT_MODE_1024_768_59);
+  if (err == ESP_OK)
+    err = ft_cp_reset();
+
+  if (err == ESP_OK)
+  {
+    ft_rreg8(FT_REG_INT_FLAGS);
+
+    ft_ccmd_start(cmdl);
+    ft_Dlstart();
+
+    ft_VertexFormat(0);
+    ft_ClearColorRGB(0, 0, 0);
+    ft_Clear(1, 1, 1);
+
+    ft_ColorRGB(255, 255, 255);
+    ft_LineWidth(24);
+
+    ft_Begin(FT_LINE_STRIP);
+    ft_Vertex2f(0, 0);
+    ft_Vertex2f(1023, 0);
+    ft_Vertex2f(1023, 767);
+    ft_Vertex2f(0, 767);
+    ft_Vertex2f(0, 0);
+
+    ft_Begin(FT_LINE_STRIP);
+    ft_Vertex2f(0, 0);
+    ft_Vertex2f(799, 0);
+    ft_Vertex2f(799, 599);
+    ft_Vertex2f(0, 599);
+    ft_Vertex2f(0, 0);
+
+    ft_Begin(FT_LINE_STRIP);
+    ft_Vertex2f(0, 0);
+    ft_Vertex2f(639, 0);
+    ft_Vertex2f(639, 479);
+    ft_Vertex2f(0, 479);
+    ft_Vertex2f(0, 0);
+
+    ft_Begin(FT_BITMAPS);
+    ft_BitmapHandle(18);
+
+    ft_ColorRGB(100, 220, 200);
+    ft_print_string("Mode:", 10, 8);
+
+    ft_ColorRGB(120, 100, 255);
+    ft_print_string(mode_txt, 66, 8);
+
+    ft_ColorRGB(120, 100, 255);
+    ft_print_string("640x480", 572, 461);
+    ft_print_string("800x600", 732, 581);
+    ft_print_string("1024x768", 947, 749);
+
+    ft_ColorA(255);
+    ft_Begin(FT_POINTS);
+    ft_PointSize(100 << 4);
+    ft_BlendFunc(FT_SRC_ALPHA, FT_ONE);
+
+    ft_ColorRGB(255, 0, 0);
+    ft_Vertex2f(rsin(80, 32768) + 320, rcos(80, 32768) + 240);
+
+    ft_ColorRGB(0, 255, 0);
+    ft_Vertex2f(rsin(80, 21845 + 32768) + 320, rcos(80, 21845 + 32768) + 240);
+
+    ft_ColorRGB(0, 0, 255);
+    ft_Vertex2f(rsin(80, 43690 - 32768) + 320, rcos(80, 43690 - 32768) + 240);
+
+    ft_ClearColorA(32);
+    ft_ColorMask(0, 0, 0, 1);
+    ft_Clear(1, 1, 1);
+
+    ft_BlendFunc(FT_ONE, FT_ONE);
+    ft_Begin(FT_POINTS);
+    ft_ColorA(20);
+
+    for (i = 120, j = 0; j <= 255; i -= 5, j += 20)
+    {
+      ft_PointSize(i << 4);
+      ft_Vertex2f(320, 240);
+    }
+
+    ft_ColorRGB(0, 0, 0);
+    ft_ColorMask(1, 1, 1, 1);
+    ft_BlendFunc(FT_ONE_MINUS_DST_ALPHA, FT_DST_ALPHA);
+    ft_Begin(FT_RECTS);
+    ft_Vertex2f(100, 50);
+    ft_Vertex2f(539, 429);
+
+    ft_Display();
+    ft_Swap();
+
+    err = ft_ccmd_write();
+    if (err == ESP_OK)
+      err = ft_cp_wait(1000);
+
+    if (err == ESP_OK)
+      err = ft_wait_swap(1000);
+  }
+
+  err2 = ft_close_session();
+  if (err == ESP_OK && err2 != ESP_OK)
+    err = err2;
+
+  return err;
+}
+
+int ft_demo0_cmd()
 {
   esp_err_t err;
 
@@ -1726,7 +2037,7 @@ int ft_demo_cmd(int, char **)
     return 1;
   }
 
-  err = ft_set_mode(FT_MODE_800_600_60);
+  err = ft_set_mode(FT_MODE_800_600_60_80MHZ);
 
   if (err == ESP_OK)
     err = ft_cp_reset();
@@ -1806,13 +2117,28 @@ int ft_demo_cmd(int, char **)
       ft_Swap();
 
       err = ft_ccmd_write();
-      if (err != ESP_OK) break;
+      if (err != ESP_OK)
+      {
+        printf("FT demo0 error: ft_ccmd_write() failed: %s (0x%x)\r\n",
+          esp_err_to_name(err), (unsigned int)err);
+        break;
+      }
 
       err = ft_cp_wait(1000);
-      if (err != ESP_OK) break;
+      if (err != ESP_OK)
+      {
+        printf("FT demo0 error: ft_cp_wait(1000) failed: %s (0x%x)\r\n",
+          esp_err_to_name(err), (unsigned int)err);
+        break;
+      }
 
       err = ft_wait_swap(1000);
-      if (err != ESP_OK) break;
+      if (err != ESP_OK)
+      {
+        printf("FT demo0 error: ft_wait_swap(1000) failed: %s (0x%x)\r\n",
+          esp_err_to_name(err), (unsigned int)err);
+        break;
+      }
 
       char c;
       if (uart_read_bytes(UART_NUM_0, &c, 1, 0) > 0)
@@ -1833,6 +2159,387 @@ int ft_demo_cmd(int, char **)
   return 0;
 }
 
+u32 ft_argb32(u8 a, u8 r, u8 g, u8 b)
+{
+  return ((u32)a << 24) | ((u32)r << 16) | ((u32)g << 8) | (u32)b;
+}
+
+void ft_demo1_palette_heat(u8 v, u8 &r, u8 &g, u8 &b)
+{
+  if (v < 64)
+  {
+    r = 0;
+    g = 0;
+    b = (u8)(v << 2);
+    return;
+  }
+
+  if (v < 128)
+  {
+    u8 t = (u8)((v - 64) << 2);
+    r = 0;
+    g = t;
+    b = 255;
+    return;
+  }
+
+  if (v < 192)
+  {
+    u8 t = (u8)((v - 128) << 2);
+    r = t;
+    g = 255;
+    b = (u8)(255 - t);
+    return;
+  }
+
+  u8 t = (u8)((v - 192) << 2);
+  r = 255;
+  g = (u8)(255 - t);
+  b = 0;
+}
+
+void ft_demo1_make_palette(u32 *pal)
+{
+  if (!pal) return;
+
+  for (u32 i = 0; i < 256; i++)
+  {
+    u8 r;
+    u8 g;
+    u8 b;
+
+    ft_demo1_palette_heat((u8)i, r, g, b);
+    pal[i] = ft_argb32(255, r, g, b);
+  }
+
+  pal[0] = ft_argb32(255, 0, 0, 0);
+}
+
+esp_err_t ft_demo1_upload_palette(const void *src)
+{
+  return ft_write(src, FT_DEMO_PALETTE_ADDR, FT_DEMO_PALETTE_SIZE);
+}
+
+typedef struct
+{
+  float *zr;
+  float *zi;
+  u8 *alive;
+} FT_DEMO1_STATE;
+
+int ft_demo1_state_init(FT_DEMO1_STATE *st, u8 *dst)
+{
+  u32 pixels = FT_DEMO_BITMAP_W * FT_DEMO_BITMAP_H;
+
+  if (!st || !dst)
+    return 0;
+
+  memset(st, 0, sizeof(*st));
+
+  st->zr = (float*)malloc_spiram(pixels * sizeof(float));
+  st->zi = (float*)malloc_spiram(pixels * sizeof(float));
+  st->alive = (u8*)malloc_spiram(pixels);
+
+  if (!st->zr || !st->zi || !st->alive)
+  {
+    if (st->zr) free(st->zr);
+    if (st->zi) free(st->zi);
+    if (st->alive) free(st->alive);
+
+    st->zr = nullptr;
+    st->zi = nullptr;
+    st->alive = nullptr;
+    return 0;
+  }
+
+  memset(st->zr, 0, pixels * sizeof(float));
+  memset(st->zi, 0, pixels * sizeof(float));
+  memset(st->alive, 1, pixels);
+  memset(dst, 0, pixels);
+
+  return 1;
+}
+
+void ft_demo1_state_free(FT_DEMO1_STATE *st)
+{
+  if (!st) return;
+
+  if (st->zr) free(st->zr);
+  if (st->zi) free(st->zi);
+  if (st->alive) free(st->alive);
+
+  st->zr = nullptr;
+  st->zi = nullptr;
+  st->alive = nullptr;
+}
+
+void ft_demo1_render(FT_DEMO1_STATE *st, u8 *dst, u32 frame_no)
+{
+  if (!st || !dst) return;
+  if (!frame_no) return;
+
+  u32 iter_mark = frame_no;
+
+  for (u32 y = 0; y < FT_DEMO_BITMAP_H; y++)
+  {
+    float ci = -1.5f + (float)y * 3.0f / (float)FT_DEMO_BITMAP_H;
+
+    for (u32 x = 0; x < FT_DEMO_BITMAP_W; x++)
+    {
+      u32 idx = y * FT_DEMO_BITMAP_W + x;
+
+      if (!st->alive[idx])
+        continue;
+
+      float cr = -2.0f + (float)x * 3.0f / (float)FT_DEMO_BITMAP_W;
+      float zr = st->zr[idx];
+      float zi = st->zi[idx];
+
+      float zr_new = zr * zr - zi * zi + cr;
+      float zi_new = 2.0f * zr * zi + ci;
+      float mag2 = zr_new * zr_new + zi_new * zi_new;
+
+      if (mag2 > 4.0f)
+      {
+        st->alive[idx] = 0;
+        dst[idx] = (u8)iter_mark;
+      }
+      else
+      {
+        st->zr[idx] = zr_new;
+        st->zi[idx] = zi_new;
+      }
+    }
+  }
+}
+
+esp_err_t ft_demo1_upload_bitmap(const void *src, u32 ft_addr)
+{
+  return ft_write(src, ft_addr, FT_DEMO_BITMAP_SIZE);
+}
+
+esp_err_t ft_demo1_show_bitmap(u32 bmp_addr, u32 frame_no)
+{
+  esp_err_t err;
+  u32 iters = frame_no;
+
+  ft_ccmd_start(cmdl);
+
+  ft_Dlstart();
+  ft_VertexFormat(0);
+
+  ft_ClearColorRGB(0, 0, 0);
+  ft_ClearColorA(255);
+  ft_Clear(1, 1, 1);
+
+  ft_BitmapHandle(0);
+  ft_BitmapSource(bmp_addr);
+  ft_BitmapLayout(FT_PALETTED8, (u16)FT_DEMO_BITMAP_W, (u16)FT_DEMO_BITMAP_H);
+  ft_BitmapSize(FT_NEAREST, FT_BORDER, FT_BORDER, (u16)FT_DEMO_BITMAP_W, (u16)FT_DEMO_BITMAP_H);
+
+  ft_Begin(FT_BITMAPS);
+
+  ft_BlendFunc(FT_ONE, FT_ZERO);
+
+  ft_ColorMask(0, 0, 0, 1);
+  ft_PaletteSource(FT_DEMO_PALETTE_ADDR + 3);
+  ft_Vertex2ii(0, 0, 0, 0);
+
+  ft_BlendFunc(FT_DST_ALPHA, FT_ONE_MINUS_DST_ALPHA);
+
+  ft_ColorMask(1, 0, 0, 0);
+  ft_PaletteSource(FT_DEMO_PALETTE_ADDR + 2);
+  ft_Vertex2ii(0, 0, 0, 0);
+
+  ft_ColorMask(0, 1, 0, 0);
+  ft_PaletteSource(FT_DEMO_PALETTE_ADDR + 1);
+  ft_Vertex2ii(0, 0, 0, 0);
+
+  ft_ColorMask(0, 0, 1, 0);
+  ft_PaletteSource(FT_DEMO_PALETTE_ADDR + 0);
+  ft_Vertex2ii(0, 0, 0, 0);
+
+  ft_ColorMask(1, 1, 1, 1);
+  ft_BlendFunc(FT_SRC_ALPHA, FT_ONE_MINUS_SRC_ALPHA);
+
+  ft_ColorRGB(255, 255, 0);
+  ft_Text(8, 8, 18, 0, "Mandelbrot 640x480x8 + heatmap");
+
+  ft_ColorRGB(0, 255, 255);
+  ft_Text(8, 24, 18, 0, "Frame:");
+  ft_Number(120, 24, 18, 0, (i32)frame_no);
+
+  ft_Text(8, 40, 18, 0, "Iters:");
+  ft_Number(120, 40, 18, 0, (i32)iters);
+
+  ft_Display();
+  ft_Swap();
+
+  err = ft_ccmd_write();
+  if (err != ESP_OK) return err;
+
+  err = ft_cp_wait(1000);
+  if (err != ESP_OK) return err;
+
+  return ESP_OK;
+}
+
+int ft_demo1_cmd()
+{
+  esp_err_t err;
+  esp_err_t err2;
+  FT_DEMO1_STATE st = {};
+  u8 *render_buf = nullptr;
+  u32 palette[256];
+  u32 active_addr = FT_DEMO_BITMAP0_ADDR;
+  u32 inactive_addr = FT_DEMO_BITMAP1_ADDR;
+  u32 shown_frame = 1;
+  u32 next_frame = 2;
+
+  render_buf = (u8*)malloc_spiram(FT_DEMO_BITMAP_SIZE);
+  if (!render_buf)
+  {
+    printf("FT demo1 render buffer alloc failed, size=%lu\r\n", (unsigned long)FT_DEMO_BITMAP_SIZE);
+    return 1;
+  }
+
+  if (!ft_demo1_state_init(&st, render_buf))
+  {
+    printf("FT demo1 state alloc failed\r\n");
+    free(render_buf);
+    return 1;
+  }
+
+  ft_demo1_make_palette(palette);
+  ft_demo1_render(&st, render_buf, shown_frame);
+
+  err = ft_open_session();
+  if (err != ESP_OK)
+  {
+    printf("FT open failed: %d\r\n", (int)err);
+    ft_demo1_state_free(&st);
+    free(render_buf);
+    return 1;
+  }
+
+  err = ft_set_mode(FT_MODE_800_600_60_80MHZ);
+  if (err == ESP_OK)
+    err = ft_cp_reset();
+
+  if (err == ESP_OK)
+    err = ft_demo1_upload_palette(palette);
+
+  if (err == ESP_OK)
+    err = ft_demo1_upload_bitmap(render_buf, active_addr);
+
+  if (err == ESP_OK)
+    ft_demo1_render(&st, render_buf, next_frame);
+
+  if (err == ESP_OK)
+  {
+    ft_rreg8(FT_REG_INT_FLAGS);
+
+    while (1)
+    {
+      err = ft_demo1_show_bitmap(active_addr, shown_frame);
+      if (err != ESP_OK)
+      {
+        printf("FT demo1 error: show failed: %s (0x%x)\r\n", esp_err_to_name(err), (unsigned int)err);
+        break;
+      }
+
+      err = ft_wait_swap(1000);
+      if (err != ESP_OK)
+      {
+        printf("FT demo1 error: ft_wait_swap(1000) failed: %s (0x%x)\r\n", esp_err_to_name(err), (unsigned int)err);
+        break;
+      }
+
+      char c;
+      if (uart_read_bytes(UART_NUM_0, &c, 1, 0) > 0)
+      {
+        printf("FT demo stopped\r\n");
+        break;
+      }
+
+      err = ft_demo1_upload_bitmap(render_buf, inactive_addr);
+      if (err != ESP_OK)
+      {
+        printf("FT demo1 error: bitmap upload failed: %s (0x%x)\r\n", esp_err_to_name(err), (unsigned int)err);
+        break;
+      }
+
+      shown_frame = next_frame;
+      next_frame++;
+
+      ft_demo1_render(&st, render_buf, next_frame);
+
+      u32 tmp = active_addr;
+      active_addr = inactive_addr;
+      inactive_addr = tmp;
+    }
+  }
+
+  err2 = ft_close_session();
+  if (err == ESP_OK)
+    err = err2;
+
+  ft_demo1_state_free(&st);
+  free(render_buf);
+
+  if (err != ESP_OK)
+  {
+    printf("FT demo1 failed: %d\r\n", (int)err);
+    return 1;
+  }
+
+  return 0;
+}
+
+int ft_demo_cmd(int argc, char **argv)
+{
+  u32 num;
+  int ok;
+
+  if (argc != 3)
+  {
+    printf("Usage:\r\n");
+    printf("  ft demo <num>\r\n");
+    printf("Modes:\r\n");
+    printf("  1  Test sequence\r\n");
+    printf("  2  Bitmap render demo\r\n");
+    return 1;
+  }
+
+  num = ft_parse_num_arg(argv[2], "num", &ok);
+  if (!ok)
+    return 1;
+
+  switch (num)
+  {
+    case 0:
+    {
+      esp_err_t err = ft_demo_draw_mode_1024_768();
+      if (err != ESP_OK)
+      {
+        printf("FT demo 0 failed: %s (0x%x)\r\n",
+          esp_err_to_name(err), (unsigned int)err);
+        return 1;
+      }
+      return 0;
+    }
+
+    case 1:
+      return ft_demo0_cmd();
+
+    case 2:
+      return ft_demo1_cmd();
+  }
+
+  printf("Unknown demo number: %lu\r\n", (unsigned long)num);
+  return 1;
+}
+
 int ft_cli_cmd(int argc, char **argv)
 {
   if (argc < 2 || !argv[1])
@@ -1842,8 +2549,11 @@ int ft_cli_cmd(int argc, char **argv)
     printf("  ft info\r\n");
     printf("  ft dump\r\n");
     printf("  ft wreg <addr> <value>\r\n");
-    printf("  ft demo\r\n");
-    return 1;
+    printf("  ft demo <num>\r\n");
+    printf("  ft spi <1|2|4>\r\n");
+    printf("  ft freq [<MHz>]\r\n");
+    printf("  ft perf\r\n");
+    return 0;
   }
 
   const char *op = argv[1];
@@ -1863,6 +2573,15 @@ int ft_cli_cmd(int argc, char **argv)
   if (!strcmp(op, "demo"))
     return ft_demo_cmd(argc, argv);
 
+  if (!strcmp(op, "spi"))
+    return ft_spi_cmd(argc, argv);
+
+  if (!strcmp(op, "freq"))
+    return ft_freq_cmd(argc, argv);
+
+  if (!strcmp(op, "perf"))
+    return ft_perf_cmd(argc, argv);
+
   printf("Unknown subcommand: %s\r\n", op);
   return 1;
 }
@@ -1873,7 +2592,7 @@ void ft_console_register_system_commands()
     const esp_console_cmd_t cmd =
     {
       .command  = "ft",
-      .help     = "FT812 commands: 'ft res', 'ft info', 'ft dump', 'ft demo'",
+      .help     = "FT812 commands: res/info/dump/demo/spi/freq/perf",
       .hint     = NULL,
       .func     = &ft_cli_cmd,
       .argtable = NULL

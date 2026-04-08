@@ -22,7 +22,11 @@ void init_spi_configs();
 void init_slave_hd();
 esp_err_t spi_switch_to_master();
 esp_err_t spi_switch_to_slave();
+void spi_master_set_clock_hz(u32 hz);
+u32 spi_master_get_actual_freq_hz();
 esp_err_t spi_master_set_data_lines(u8 lines);
+esp_err_t spi_master_write_buf(u8 cmd, u16 addr, const void *tx_data, size_t size);
+esp_err_t spi_master_read_buf(u8 cmd, u16 addr, void *rx_data, size_t size);
 esp_err_t spi_master_xfer(void *tx_data, void *rx_data, size_t size);
 
 void command();

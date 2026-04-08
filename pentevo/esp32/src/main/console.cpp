@@ -21,6 +21,7 @@
 #include "main.h"
 #include "ft8xx.h"
 #include "console.h"
+#include "xm_cpp.h"
 
 #ifdef CONFIG_ESP32_WIFI_ENABLED
 #include "wifi.h"
@@ -33,18 +34,6 @@
 #define PROMPT_STR "zifi32"
 const char* prompt;
 
-void initialize_nvs()
-{
-  esp_err_t err = nvs_flash_init();
-
-  if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND)
-  {
-    ESP_ERROR_CHECK(nvs_flash_erase());
-    err = nvs_flash_init();
-  }
-  ESP_ERROR_CHECK(err);
-}
-
 void console_register_commands()
 {
   esp_console_register_help_command();
@@ -56,6 +45,7 @@ void console_register_commands()
 #if SOC_SDMMC_HOST_SUPPORTED
   sdmmc_console_register_system_commands();
 #endif
+  xm_console_register_system_commands();
 }
 
 void initialize_console()

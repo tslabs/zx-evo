@@ -67,6 +67,7 @@ enum
   ESP_CMD_XM_SET_PARAMS         = 0xA9, // +++
   ESP_CMD_GET_XM_STATE          = 0xAE, // +++
   ESP_CMD_GET_XM_STATE_CURRENT  = 0xAF, // +++
+  ESP_CMD_CONFIG_SPI            = 0xC0, // +++
   ESP_CMD_LOAD_ELF              = 0xD0, // i: ESP_REG_OBJ_HANDLE
                                         // o: ESP_REG_LIB_HANDLE
   ESP_CMD_LOAD_ELF_OPT          = 0xD1, // i: ESP_REG_OBJ_HANDLE, ESP_REG_OPT
@@ -107,6 +108,10 @@ enum
   ESP_OPT_DATA_SRAM     = 0x01,
   ESP_OPT_RODATA_SRAM   = 0x02,
   ESP_OPT_BSS_SRAM      = 0x04,
+  
+  ESP_OPT_SPI_1BIT      = 0x00,
+  ESP_OPT_SPI_2BIT      = 0x40,
+  ESP_OPT_SPI_4BIT      = 0x80,
 };
 
 enum

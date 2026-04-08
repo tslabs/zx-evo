@@ -23,6 +23,10 @@ typedef struct
 
 extern QueueHandle_t xm_queue;
 extern int master_volume;
+extern int curr_xm_handle;
 
+int xm_cmd(int argc, char **argv);
 void xm_task(void *arg);
 void initialize_xm();
+void xm_console_register_system_commands();
+

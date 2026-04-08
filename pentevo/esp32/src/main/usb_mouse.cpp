@@ -32,8 +32,8 @@
 #include "usb/hid_usage_mouse.h"
 
 #include "main.h"
-
-esp_err_t ps2_mouse_send_movement(int dx, int dy, unsigned buttons);
+#include "usb_mouse.h"
+#include "ps2_mouse.h"
 
 enum usb_mouse_evt_group_t
 {
@@ -103,6 +103,8 @@ void usb_mouse_interface_callback(hid_host_device_handle_t hid_device_handle, hi
       printf("usb mouse disconnected\r\n");
       if (usb_mouse_dev == hid_device_handle)
         usb_mouse_dev = NULL;
+      usb_mouse_abs_x = 0;
+      usb_mouse_abs_y = 0;
       hid_host_device_close(hid_device_handle);
     break;
 
@@ -243,7 +245,7 @@ void usb_mouse_task(void *arg)
     return;
   }
 
-  if (xTaskCreatePinnedToCore(usb_mouse_lib_task, "usb_mouse_lib", 4096, xTaskGetCurrentTaskHandle(), 5, &usb_mouse_lib_task_handle, 0) != pdTRUE)
+  if (xTaskCreatePinnedToCore(usb_mouse_lib_task, "usb_mouse_lib", 2048, xTaskGetCurrentTaskHandle(), 5, &usb_mouse_lib_task_handle, 0) != pdTRUE)
   {
     printf("usb mouse lib task create failed\r\n");
     vQueueDelete(usb_mouse_evt_queue);
@@ -318,24 +320,40 @@ void usb_mouse_task(void *arg)
   vTaskDelete(NULL);
 }
 
-int usbmouse_cmd(int argc, char **argv)
+extern "C" esp_err_t usb_mouse_start()
 {
-  (void)argc;
-  (void)argv;
-
   if (usb_mouse_mode_active)
-  {
-    printf("usb mouse mode already active\r\n");
-    return 1;
-  }
+    return ESP_ERR_INVALID_STATE;
 
   usb_mouse_mode_active = true;
 
-  if (xTaskCreatePinnedToCore(usb_mouse_task, "usb_mouse", 6144, NULL, 5, &usb_mouse_task_handle, 0) != pdTRUE)
+  if (xTaskCreatePinnedToCore(usb_mouse_task, "usb_mouse", 4096, NULL, 5, &usb_mouse_task_handle, 0) != pdTRUE)
   {
     usb_mouse_mode_active = false;
     usb_mouse_task_handle = NULL;
-    printf("usb mouse task create failed\r\n");
+    return ESP_ERR_NO_MEM;
+  }
+
+  return ESP_OK;
+}
+
+int usbmouse_cmd(int argc, char **argv)
+{
+  esp_err_t err;
+
+  (void)argc;
+  (void)argv;
+
+  err = usb_mouse_start();
+  if (err == ESP_ERR_INVALID_STATE)
+  {
+    printf("usb mouse mode already active\r\n");
+    return 0;
+  }
+
+  if (err != ESP_OK)
+  {
+    printf("usb mouse task create failed: %s\r\n", esp_err_to_name(err));
     return 1;
   }
 

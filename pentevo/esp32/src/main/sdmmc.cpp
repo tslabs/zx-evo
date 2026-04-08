@@ -14,6 +14,7 @@
 #include "esp_vfs_fat.h"
 #include "esp_heap_caps.h"
 #include "esp_console.h"
+#include "esp_log.h"
 
 sdmmc_host_t sd_host;
 sdmmc_slot_config_t sd_slot;
@@ -68,12 +69,17 @@ void sd_setup()
 esp_err_t sd_init()
 {
   esp_err_t err;
+  esp_log_level_t old_sd_host_level;
 
   sd_setup();
+
+  old_sd_host_level = esp_log_level_get("SD_HOST");
+  esp_log_level_set("SD_HOST", ESP_LOG_ERROR);
 
   err = sdmmc_host_init();
   if (err != ESP_OK)
   {
+    esp_log_level_set("SD_HOST", old_sd_host_level);
     printf("E: sdmmc_host_init failed: %s\r\n", esp_err_to_name(err));
     return err;
   }
@@ -81,12 +87,15 @@ esp_err_t sd_init()
   err = sdmmc_host_init_slot(SD_SLOT, &sd_slot);
   if (err != ESP_OK)
   {
+    esp_log_level_set("SD_HOST", old_sd_host_level);
     printf("E: sdmmc_host_init_slot failed: %s\r\n", esp_err_to_name(err));
     sdmmc_host_deinit();
     return err;
   }
 
   err = sdmmc_card_init(&sd_host, &sd_card);
+  esp_log_level_set("SD_HOST", old_sd_host_level);
+
   if (err != ESP_OK)
   {
     printf("E: sdmmc_card_init failed: %s\r\n", esp_err_to_name(err));
@@ -510,7 +519,7 @@ int sd_cmd(int argc, char **argv)
     printf("  sd erase\r\n");
     printf("  sd read <sec> <num>\r\n");
     printf("  sd ls [path]\r\n");
-    return 1;
+    return 0;
   }
 
   const char *op = argv[1];
@@ -537,7 +546,7 @@ void sdmmc_console_register_system_commands()
     const esp_console_cmd_t cmd =
     {
       .command  = "sd",
-      .help = "SD card commands: 'sd info', 'sd erase', 'sd read <sec> <num>', 'sd diag'",
+      .help = "SD card commands: info/erase/read/diag'",
       .hint     = NULL,
       .func     = &sd_cmd,
       .argtable = NULL

@@ -34,7 +34,7 @@
 #include "stats.h"
 #include "ft8xx.h"
 #include "usb_mouse.h"
-#include "ps2_mouse.h"
+#include "nvs_params.h"
 
 using namespace stats;
 
@@ -562,33 +562,76 @@ int stats_info(int argc, char **argv)
   return 0;
 }
 
-int set_mvol(int argc, char **argv)
+int nvs_show()
+{
+  esp_err_t err = app_params_load();
+  if (err != ESP_OK)
+  {
+    printf("app_params_load failed: %s\r\n", esp_err_to_name(err));
+    return 1;
+  }
+
+  printf("NVS params:\r\n");
+  printf("  spi_width: %u\r\n", app_params.spi_width);
+  printf("  spi_freq : %u\r\n", app_params.spi_freq);
+  printf("  usb_mode : %u\r\n", app_params.usb_mode);
+  printf("  wifi_mode: %u\r\n", app_params.wifi_mode);
+  printf("  wifi_ap  : %s\r\n", app_params.wifi_ap[0] ? app_params.wifi_ap : "");
+  printf("  wifi_psw : %s\r\n", app_params.wifi_psw[0] ? app_params.wifi_psw : "");
+
+  return 0;
+}
+
+int nvs_cmd(int argc, char **argv)
 {
   if (argc < 2)
   {
-    printf("Usage: volume <volume>\r\n");
-    return 1;
+    printf("Usage:\r\n");
+    printf("  nvs show\r\n");
+    printf("  nvs set <name> <value>\r\n");
+    return 0;
   }
 
-  char *endp = NULL;
-  uint64_t vol = strtoull(argv[1], &endp, 0);
-  if (!endp || *endp)
+  if (!strcmp(argv[1], "show"))
+    return nvs_show();
+
+  if (!strcmp(argv[1], "set"))
   {
-    printf("Bad <volume>: %s\r\n", argv[1]);
-    return 1;
+    if (argc < 4)
+    {
+      printf("Usage: nvs set <name> <value>\r\n");
+      return 1;
+    }
+
+    esp_err_t err = app_params_load();
+    if (err != ESP_OK)
+    {
+      printf("app_params_load failed: %s\r\n", esp_err_to_name(err));
+      return 1;
+    }
+
+    if (!app_params_set_by_name(argv[2], argv[3]))
+    {
+      printf("Bad name/value: %s = %s\r\n", argv[2], argv[3]);
+      return 1;
+    }
+
+    err = app_params_save();
+    if (err != ESP_OK)
+    {
+      printf("app_params_save failed: %s\r\n", esp_err_to_name(err));
+      return 1;
+    }
+
+    printf("Saved: %s = %s\r\n", argv[2], argv[3]);
+    return 0;
   }
 
-  if (vol > 255)
-  {
-    printf("Bad <volume>: %s (expected 0..255)\r\n", argv[1]);
-    return 1;
-  }
-
-  master_volume = (int)(vol * 1000ULL);
-
-  printf("Master volume: %d\r\n", master_volume / 1000);
-
-  return 0;
+  printf("Unknown subcommand: %s\r\n", argv[1]);
+  printf("Usage:\r\n");
+  printf("  nvs show\r\n");
+  printf("  nvs set <name> <value>\r\n");
+  return 1;
 }
 
 // ---------- Command registration ----------
@@ -695,21 +738,8 @@ void esp_console_register_system_commands()
   {
     const esp_console_cmd_t cmd =
     {
-      .command = "volume",
-      .help    = "Set master volume",
-      .hint    = NULL,
-      .func    = &set_mvol,
-      .argtable = NULL
-    };
-
-    ESP_ERROR_CHECK(esp_console_cmd_register(&cmd));
-  }
-
-  {
-    const esp_console_cmd_t cmd =
-    {
       .command  = "usbmouse",
-      .help     = "Switch USB to host mode, wait for mouse, print movement, reboot on mouse button press",
+      .help     = "Enable USB host mode and search for USB mouse",
       .hint     = NULL,
       .func     = &usbmouse_cmd,
       .argtable = NULL
@@ -721,10 +751,10 @@ void esp_console_register_system_commands()
   {
     const esp_console_cmd_t cmd =
     {
-      .command  = "ps2mouse",
-      .help     = "PS/2 mouse emulation on GPIO5(data), GPIO7(clk): start, stop, move <dx> <dy> [buttons]",
+      .command  = "nvs",
+      .help     = "NVS commands: show/set",
       .hint     = NULL,
-      .func     = &ps2_mouse_cmd,
+      .func     = &nvs_cmd,
       .argtable = NULL
     };
 

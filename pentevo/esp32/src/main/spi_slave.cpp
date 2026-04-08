@@ -13,6 +13,7 @@
 #include "esp_timer.h"
 #include "esp_log.h"
 #include "esp_crc.h"
+#include "esp_memory_utils.h"
 #include "miniz.h"
 
 #include "main.h"
@@ -31,15 +32,17 @@
 
 // Pin setting
 #if defined(CONFIG_IDF_TARGET_ESP32P4)
+#define GPIO_CS       23
+#define GPIO_SCLK     21
 #define GPIO_MOSI     20
 #define GPIO_MISO     22
-#define GPIO_SCLK     21
-#define GPIO_CS       23
 #else
+#define GPIO_CS       10
+#define GPIO_SCLK     12
 #define GPIO_MOSI     13
 #define GPIO_MISO     11
-#define GPIO_SCLK     12
-#define GPIO_CS       10
+#define GPIO_FT_IO2   14
+#define GPIO_FT_IO3   9
 #endif
 
 #define FT_CS         1
@@ -207,16 +210,16 @@ void init_spi_configs()
   g_bus_cfg.sclk_io_num     = GPIO_SCLK;
   g_bus_cfg.mosi_io_num     = GPIO_MOSI;
   g_bus_cfg.miso_io_num     = GPIO_MISO;
-  g_bus_cfg.data2_io_num    = -1;
-  g_bus_cfg.data3_io_num    = -1;
-  g_bus_cfg.quadwp_io_num   = -1;
-  g_bus_cfg.quadhd_io_num   = -1;
+  g_bus_cfg.data2_io_num    = GPIO_FT_IO2;
+  g_bus_cfg.data3_io_num    = GPIO_FT_IO3;
+  g_bus_cfg.quadwp_io_num   = GPIO_FT_IO2;
+  g_bus_cfg.quadhd_io_num   = GPIO_FT_IO3;
   g_bus_cfg.data4_io_num    = -1;
   g_bus_cfg.data5_io_num    = -1;
   g_bus_cfg.data6_io_num    = -1;
   g_bus_cfg.data7_io_num    = -1;
   g_bus_cfg.max_transfer_sz = DMA_BUF_SIZE;
-  g_bus_cfg.flags           = SPICOMMON_BUSFLAG_DUAL;
+  g_bus_cfg.flags           = SPICOMMON_BUSFLAG_DUAL | SPICOMMON_BUSFLAG_QUAD;
   g_bus_cfg.intr_flags      = 0;
 
   memset(&g_slave_hd_cfg, 0, sizeof(g_slave_hd_cfg));
@@ -342,6 +345,9 @@ esp_err_t spi_switch_to_master()
     goto fail_restore_slave;
   }
 
+  gpio_set_pull_mode((gpio_num_t)GPIO_FT_IO2, GPIO_PULLUP_ONLY);
+  gpio_set_pull_mode((gpio_num_t)GPIO_FT_IO3, GPIO_PULLUP_ONLY);
+
   g_master_data_lines = 1;
   spi_role = SPI_ROLE_MASTER;
 
@@ -417,15 +423,142 @@ esp_err_t spi_switch_to_slave()
   return ESP_OK;
 }
 
+void spi_master_set_clock_hz(u32 hz)
+{
+  g_master_dev_cfg.clock_speed_hz = hz;
+}
+
+u32 spi_master_get_actual_freq_hz()
+{
+  int freq_khz = 0;
+
+  if (!g_master_dev)
+    return 0;
+
+  if (spi_device_get_actual_freq(g_master_dev, &freq_khz) != ESP_OK)
+    return 0;
+
+  return (u32)freq_khz * 1000UL;
+}
+
 esp_err_t spi_master_set_data_lines(u8 lines)
 {
   if (spi_role != SPI_ROLE_MASTER || !g_master_dev)
     return ESP_ERR_INVALID_STATE;
 
-  if (lines != 1 && lines != 2)
-    return ESP_ERR_INVALID_ARG;
-
   g_master_data_lines = lines;
+  return ESP_OK;
+}
+
+bool spi_master_buf_is_dma_ok(const void *buf, size_t size)
+{
+  if (!buf) return false;
+  if (!esp_ptr_word_aligned(buf)) return false;
+  if (size & 3) return false;
+  if (esp_ptr_dma_capable(buf)) return true;
+  if (esp_ptr_dma_ext_capable(buf)) return true;
+  return false;
+}
+
+esp_err_t spi_master_write_buf(u8 cmd, u16 addr, const void *tx_data, size_t size)
+{
+  if (spi_role != SPI_ROLE_MASTER || !g_master_dev) return ESP_ERR_INVALID_STATE;
+  if (!tx_data && size) return ESP_ERR_INVALID_ARG;
+  if (!size) return ESP_OK;
+  if (!dma_buf) return ESP_ERR_INVALID_STATE;
+  if (size > DMA_BUF_SIZE) return ESP_ERR_INVALID_ARG;
+
+  const void *data = tx_data;
+
+  if (!spi_master_buf_is_dma_ok(tx_data, size))
+  {
+    memcpy(dma_buf, tx_data, size);
+    data = dma_buf;
+  }
+
+  spi_transaction_ext_t t = {};
+
+  if (g_master_data_lines == 1)
+  {
+    t.base.flags = SPI_TRANS_VARIABLE_CMD
+                 | SPI_TRANS_VARIABLE_ADDR;
+  }
+  else if (g_master_data_lines == 2 || g_master_data_lines == 4)
+  {
+    u32 mode_flag = (g_master_data_lines == 4) ? SPI_TRANS_MODE_QIO : SPI_TRANS_MODE_DIO;
+
+    t.base.flags = mode_flag
+                 | SPI_TRANS_MULTILINE_CMD
+                 | SPI_TRANS_MULTILINE_ADDR
+                 | SPI_TRANS_VARIABLE_CMD
+                 | SPI_TRANS_VARIABLE_ADDR;
+  }
+  else
+    return ESP_ERR_NOT_SUPPORTED;
+
+  t.command_bits = 8;
+  t.address_bits = 16;
+  t.base.cmd = cmd;
+  t.base.addr = addr;
+  t.base.length = size * 8;
+  t.base.tx_buffer = data;
+
+  return spi_device_polling_transmit(g_master_dev, &t.base);
+}
+
+esp_err_t spi_master_read_buf(u8 cmd, u16 addr, void *rx_data, size_t size)
+{
+  if (spi_role != SPI_ROLE_MASTER || !g_master_dev) return ESP_ERR_INVALID_STATE;
+  if (!rx_data && size) return ESP_ERR_INVALID_ARG;
+  if (!size) return ESP_OK;
+  if (!dma_buf) return ESP_ERR_INVALID_STATE;
+  if (size > DMA_BUF_SIZE) return ESP_ERR_INVALID_ARG;
+
+  void *data = rx_data;
+  bool copy_back = false;
+  spi_transaction_ext_t t = {};
+
+  if (!spi_master_buf_is_dma_ok(rx_data, size))
+  {
+    data = dma_buf;
+    copy_back = true;
+  }
+
+  if (g_master_data_lines == 1)
+  {
+    t.base.flags = SPI_TRANS_VARIABLE_CMD
+                 | SPI_TRANS_VARIABLE_ADDR
+                 | SPI_TRANS_VARIABLE_DUMMY;
+    t.dummy_bits = 8;
+  }
+  else if (g_master_data_lines == 2 || g_master_data_lines == 4)
+  {
+    u32 mode_flag = (g_master_data_lines == 4) ? SPI_TRANS_MODE_QIO : SPI_TRANS_MODE_DIO;
+
+    t.base.flags = mode_flag
+                 | SPI_TRANS_MULTILINE_CMD
+                 | SPI_TRANS_MULTILINE_ADDR
+                 | SPI_TRANS_VARIABLE_CMD
+                 | SPI_TRANS_VARIABLE_ADDR
+                 | SPI_TRANS_VARIABLE_DUMMY;
+    t.dummy_bits = 4;
+  }
+  else
+    return ESP_ERR_NOT_SUPPORTED;
+
+  t.command_bits = 8;
+  t.address_bits = 16;
+  t.base.cmd = cmd;
+  t.base.addr = addr;
+  t.base.rxlength = size * 8;
+  t.base.rx_buffer = data;
+
+  esp_err_t err = spi_device_polling_transmit(g_master_dev, &t.base);
+  if (err != ESP_OK) return err;
+
+  if (copy_back)
+    memcpy(rx_data, data, size);
+
   return ESP_OK;
 }
 
@@ -468,7 +601,10 @@ esp_err_t spi_master_xfer(void *tx_data, void *rx_data, size_t size)
     return spi_device_polling_transmit(g_master_dev, &t.base);
   }
 
-  if (g_master_data_lines != 2) return ESP_ERR_NOT_SUPPORTED;
+  if (g_master_data_lines != 2 && g_master_data_lines != 4)
+    return ESP_ERR_NOT_SUPPORTED;
+
+  u32 mode_flag = (g_master_data_lines == 4) ? SPI_TRANS_MODE_QIO : SPI_TRANS_MODE_DIO;
 
   if (rx_data)
   {
@@ -479,7 +615,7 @@ esp_err_t spi_master_xfer(void *tx_data, void *rx_data, size_t size)
 
     memset(rx, 0, 4);
 
-    t.base.flags = SPI_TRANS_MODE_DIO
+    t.base.flags = mode_flag
                  | SPI_TRANS_MULTILINE_CMD
                  | SPI_TRANS_MULTILINE_ADDR
                  | SPI_TRANS_VARIABLE_CMD
@@ -499,7 +635,7 @@ esp_err_t spi_master_xfer(void *tx_data, void *rx_data, size_t size)
   if (size < 3) return ESP_ERR_INVALID_ARG;
 
   spi_transaction_ext_t t = {};
-  t.base.flags = SPI_TRANS_MODE_DIO
+  t.base.flags = mode_flag
                | SPI_TRANS_MULTILINE_CMD
                | SPI_TRANS_MULTILINE_ADDR
                | SPI_TRANS_VARIABLE_CMD

@@ -20,6 +20,7 @@
 #include "esp_spi_defs.h"
 #include "spi_slave.h"
 #include "console.h"
+#include "nvs_params.h"
 
 #ifdef CONFIG_ESP32_WIFI_ENABLED
 #include "wifi.h"
@@ -34,12 +35,15 @@
 #include "helper.h"
 #include "http_client.h"
 #include "depack.h"
+#include "ps2_mouse.h"
+#include "usb_mouse.h"
 
 // #define ISR_PRINTF
 
 tinfl_decompressor *decomp = NULL;
 
 const char TAG[] = "main";
+int usb_mouse_start_on_boot = 0;
 
 // ------------- Debug helpers
 
@@ -81,6 +85,8 @@ void print_isr(const char* msg)
 
 extern "C" void app_main()
 {
+  esp_err_t err;
+
   // ----- Test GPIO init
   // gpio_set_direction((gpio_num_t)GPIO_TEST1, GPIO_MODE_OUTPUT);
   // gpio_set_direction((gpio_num_t)GPIO_TEST2, GPIO_MODE_OUTPUT);
@@ -99,14 +105,30 @@ extern "C" void app_main()
   ESP_LOGI("SRAM xTaskCreatePinnedToCore print_task", "%u", heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
 #endif
 
-  // ----- Wi-Fi init
+
+  // ----- NVS + params init
   initialize_nvs();
+  ESP_ERROR_CHECK(app_params_load());
+
+  usb_mouse_start_on_boot = app_params.usb_mode ? 1 : 0;
+
+  ESP_LOGI("MAIN", "usb_mode=%u, usb_mouse_start_on_boot=%d", app_params.usb_mode, usb_mouse_start_on_boot);
   ESP_LOGI("SRAM initialize_nvs", "%u", heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
+
+  // ----- Wi-Fi init
 #ifdef CONFIG_ESP32_WIFI_ENABLED
-  initialize_wifi();
-  ESP_LOGI("SRAM initialize_wifi", "%u", heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
-  net.is_init = true;
+  net.is_init = false;
   net.state = NETWORK_CLOSED;
+
+  if (wifi_is_enabled())
+  {
+  initialize_wifi();
+  wifi_start_autoconnect();
+  net.is_init = true;
+  ESP_LOGI("SRAM initialize_wifi", "%u", heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
+  }
+  else
+    ESP_LOGI("MAIN", "WiFi disabled by config");
 #endif
 
   // ----- Helper init
@@ -138,7 +160,22 @@ extern "C" void app_main()
   // ----- FT812 init
   init_ft8xx();
   ESP_LOGI("SRAM init_ft8xx", "%u", heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
-  
+
+  // ----- PS/2 mouse init
+  err = ps2_mouse_start();
+  if (err != ESP_OK)
+    ESP_LOGE("PS2", "ps2_mouse_start failed: %s", esp_err_to_name(err));
+  ESP_LOGI("SRAM PS/2 mouse init", "%u", heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
+
+  // ----- USB mouse init
+  if (usb_mouse_start_on_boot)
+  {
+    err = usb_mouse_start();
+    if (err != ESP_OK)
+      ESP_LOGE("USBM", "usb_mouse_start failed: %s", esp_err_to_name(err));
+  }
+  ESP_LOGI("SRAM USB mouse init", "%u", heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
+
   // ----- Console init
   initialize_console();
   ESP_LOGI("SRAM initialize_console", "%u", heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
@@ -146,7 +183,7 @@ extern "C" void app_main()
   ESP_LOGI("SRAM xTaskCreatePinnedToCore console_task", "%u", heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
 
 #ifdef CONFIG_ESP32_WIFI_ENABLED
-  TaskHandle_t wifiHandle = xTaskGetHandle("wifi");
-  vTaskPrioritySet(wifiHandle, 21);
+    TaskHandle_t wifiHandle = xTaskGetHandle("wifi");
+    if (wifiHandle) vTaskPrioritySet(wifiHandle, 21);
 #endif
 }
