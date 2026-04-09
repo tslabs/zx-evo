@@ -4,7 +4,6 @@
 #include <inttypes.h>
 #include <assert.h>
 #include <limits.h>
-#include <sys/stat.h>
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -52,7 +51,7 @@ int curr_xm_handle = -1;
 #define XM_BUF_NUM            3
 #define XM_INFO_PATH_MAX      128
 
-i16 *xm_buf[XM_BUF_NUM];
+EXT_RAM_BSS_ATTR i16 xm_buf[XM_BUF_NUM][XM_BUF_SIZE];
 
 void xm_task(void *arg);
 void i2s_task(void *arg);
@@ -65,202 +64,6 @@ enum
   PLAYER_PLAY,
   PLAYER_STOP
 };
-typedef struct
-{
-  u8 valid;
-  u16 version;
-  u32 header_size;
-  u16 song_length;
-  u16 restart_position;
-  u16 num_channels;
-  u16 num_patterns;
-  u16 num_instruments;
-  u16 flags;
-  u16 tempo;
-  u16 bpm;
-  u32 file_size;
-  char path[XM_INFO_PATH_MAX];
-  char module_name[21];
-  char tracker_name[21];
-} XM_INFO;
-
-XM_INFO xm_info[OBJ_HANDLES_MAX] = {};
-
-u16 xm_rd_le16(const u8 *p)
-{
-  return (u16)p[0] | ((u16)p[1] << 8);
-}
-
-u32 xm_rd_le32(const u8 *p)
-{
-  return (u32)p[0] | ((u32)p[1] << 8) | ((u32)p[2] << 16) | ((u32)p[3] << 24);
-}
-
-void xm_copy_trimmed(char *dst, size_t dst_size, const u8 *src, size_t src_size)
-{
-  if (!dst || !dst_size) return;
-
-  size_t n = src_size;
-  while (n && (src[n - 1] == 0 || src[n - 1] == ' ')) n--;
-  if (n >= dst_size) n = dst_size - 1;
-
-  if (n) memcpy(dst, src, n);
-  dst[n] = 0;
-}
-
-void xm_clear_info(int handle)
-{
-  if (handle < 0 || handle >= OBJ_HANDLES_MAX) return;
-  memset(&xm_info[handle], 0, sizeof(xm_info[handle]));
-}
-
-int xm_parse_info(int handle, const char *path, const u8 *data, size_t size)
-{
-  if (handle < 0 || handle >= OBJ_HANDLES_MAX) return 0;
-  if (!data || size < 80) return 0;
-  if (memcmp(data, "Extended Module: ", 17)) return 0;
-  if (data[37] != 0x1A) return 0;
-
-  XM_INFO *info = &xm_info[handle];
-  memset(info, 0, sizeof(*info));
-
-  info->valid = 1;
-  info->version = xm_rd_le16(data + 58);
-  info->header_size = xm_rd_le32(data + 60);
-  info->song_length = xm_rd_le16(data + 64);
-  info->restart_position = xm_rd_le16(data + 66);
-  info->num_channels = xm_rd_le16(data + 68);
-  info->num_patterns = xm_rd_le16(data + 70);
-  info->num_instruments = xm_rd_le16(data + 72);
-  info->flags = xm_rd_le16(data + 74);
-  info->tempo = xm_rd_le16(data + 76);
-  info->bpm = xm_rd_le16(data + 78);
-  info->file_size = (u32)size;
-
-  xm_copy_trimmed(info->module_name, sizeof(info->module_name), data + 17, 20);
-  xm_copy_trimmed(info->tracker_name, sizeof(info->tracker_name), data + 38, 20);
-
-  if (path)
-  {
-    strncpy(info->path, path, sizeof(info->path) - 1);
-    info->path[sizeof(info->path) - 1] = 0;
-  }
-
-  return 1;
-}
-
-const char *xm_obj_state_str(u8 st)
-{
-  switch (st)
-  {
-    case XM_OBJ_ST_STOPPED: return "Stopped";
-    case XM_OBJ_ST_PLAYING: return "Playing";
-    case OBJ_ST_NONE:       return "None";
-    case OBJ_ST_ERROR:      return "Error";
-    default:                return "Unknown";
-  }
-}
-
-const char *xm_obj_type_str(u8 type)
-{
-  switch (type)
-  {
-    case OBJ_TYPE_XM:  return "XM";
-    case OBJ_TYPE_XMC: return "XMC";
-    default:           return "Other";
-  }
-}
-
-int xm_find_playing_handle()
-{
-  for (int i = 0; i < OBJ_HANDLES_MAX; i++)
-    if (mem_obj[i].addr && mem_obj[i].state == XM_OBJ_ST_PLAYING)
-      return i;
-
-  return -1;
-}
-
-int xm_find_first_handle()
-{
-  for (int i = 0; i < OBJ_HANDLES_MAX; i++)
-    if (mem_obj[i].addr && (mem_obj[i].type == OBJ_TYPE_XM || mem_obj[i].type == OBJ_TYPE_XMC))
-      return i;
-
-  return -1;
-}
-
-int xm_wait_for_state(int handle, u8 state, int timeout_ms)
-{
-  if (handle < 0 || handle >= OBJ_HANDLES_MAX) return 0;
-
-  int waited_ms = 0;
-
-  while (waited_ms < timeout_ms)
-  {
-    if (mem_obj[handle].addr && mem_obj[handle].state == state)
-      return 1;
-
-    u8 st = rd_reg8(ESP_REG_STATUS);
-    if (st >= 0x80) return 0;
-
-    vTaskDelay(pdMS_TO_TICKS(10));
-    waited_ms += 10;
-  }
-
-  return 0;
-}
-
-int xm_wait_for_init(int handle, int timeout_ms)
-{
-  if (handle < 0 || handle >= OBJ_HANDLES_MAX) return 0;
-
-  int waited_ms = 0;
-
-  while (waited_ms < timeout_ms)
-  {
-    if (mem_obj[handle].addr && mem_obj[handle].type == OBJ_TYPE_XMC && mem_obj[handle].state == XM_OBJ_ST_STOPPED)
-      return 1;
-
-    u8 st = rd_reg8(ESP_REG_STATUS);
-    if (st >= 0x80) return 0;
-
-    vTaskDelay(pdMS_TO_TICKS(10));
-    waited_ms += 10;
-  }
-
-  return 0;
-}
-
-int xm_stop_current_playback()
-{
-  int handle = xm_find_playing_handle();
-  if (handle < 0) return 0;
-
-  XM_TASK task = {};
-  task.task = XM_TASK_STOP;
-  task.handle = handle;
-  xQueueSend(xm_queue, &task, portMAX_DELAY);
-
-  if (!xm_wait_for_state(handle, XM_OBJ_ST_STOPPED, 2000))
-  {
-    printf("XM stop timeout, status=%02X\r\n", rd_reg8(ESP_REG_STATUS));
-    return 1;
-  }
-
-  return 0;
-}
-
-int xm_parse_handle_arg(const char *s, int *out_handle)
-{
-  if (!s || !out_handle) return 0;
-
-  char *endp = NULL;
-  unsigned long v = strtoul(s, &endp, 0);
-  if (!endp || *endp || v >= OBJ_HANDLES_MAX) return 0;
-
-  *out_handle = (int)v;
-  return 1;
-}
 
 void *xm_malloc(size_t size)
 {
@@ -281,12 +84,6 @@ i2s_chan_handle_t tx_chan;
 
 void initialize_xm()
 {
-  for (int i = 0; i < XM_BUF_NUM; i++)
-  {
-    xm_buf[i] = (i16*)malloc_spiram(XM_BUF_SIZE);
-    assert(xm_buf[i]);
-  }
-
   i2s_chan_config_t tx_chan_cfg = I2S_CHANNEL_DEFAULT_CONFIG(I2S_NUM_AUTO, I2S_ROLE_MASTER);
   ESP_ERROR_CHECK(i2s_new_channel(&tx_chan_cfg, &tx_chan, NULL));
 
@@ -317,9 +114,9 @@ void initialize_xm()
   i2s_queue = xQueueCreate(XM_BUF_NUM - 2, sizeof(int));
   player_queue = xQueueCreate(2, sizeof(PLAYER_TASK));
 
-  xTaskCreatePinnedToCore(xm_task, "xm-helper", 3072, NULL, 20, NULL, 0);     // XM helper tasks
-  xTaskCreatePinnedToCore(i2s_task, "i2s-writer", 2048, NULL, 22, NULL, 0);   // I2S DAC writer
-  xTaskCreatePinnedToCore(player_task, "player", 2048, NULL, 24, NULL, 1);    // XM renderer, libxm (should work on a separate core)
+  xTaskCreatePinnedToCore(xm_task, "xm-helper", 3072, NULL, XM_HELPER_TASK_PRIO, NULL, 0);     // XM helper tasks
+  xTaskCreatePinnedToCore(i2s_task, "i2s-writer", 2048, NULL, I2S_TASK_PRIO, NULL, 0);         // I2S DAC writer
+  xTaskCreatePinnedToCore(player_task, "player", 2048, NULL, XM_PLAYER_TASK_PRIO, NULL, 1);    // XM renderer, libxm (should work on a separate core)
 }
 
 void player_task(void *arg)
@@ -532,6 +329,205 @@ void IRAM_ATTR xm_task(void *arg)
   }
 }
 
+// ------------- CLI commands ----------------
+
+typedef struct
+{
+  u8 valid;
+  u16 version;
+  u32 header_size;
+  u16 song_length;
+  u16 restart_position;
+  u16 num_channels;
+  u16 num_patterns;
+  u16 num_instruments;
+  u16 flags;
+  u16 tempo;
+  u16 bpm;
+  u32 file_size;
+  char path[XM_INFO_PATH_MAX];
+  char module_name[21];
+  char tracker_name[21];
+} XM_INFO;
+
+EXT_RAM_BSS_ATTR XM_INFO xm_info[OBJ_HANDLES_MAX] = {};
+
+u16 xm_rd_le16(const u8 *p)
+{
+  return (u16)p[0] | ((u16)p[1] << 8);
+}
+
+u32 xm_rd_le32(const u8 *p)
+{
+  return (u32)p[0] | ((u32)p[1] << 8) | ((u32)p[2] << 16) | ((u32)p[3] << 24);
+}
+
+void xm_copy_trimmed(char *dst, size_t dst_size, const u8 *src, size_t src_size)
+{
+  if (!dst || !dst_size) return;
+
+  size_t n = src_size;
+  while (n && (src[n - 1] == 0 || src[n - 1] == ' ')) n--;
+  if (n >= dst_size) n = dst_size - 1;
+
+  if (n) memcpy(dst, src, n);
+  dst[n] = 0;
+}
+
+void xm_clear_info(int handle)
+{
+  if (handle < 0 || handle >= OBJ_HANDLES_MAX) return;
+  memset(&xm_info[handle], 0, sizeof(xm_info[handle]));
+}
+
+int xm_parse_info(int handle, const char *path, const u8 *data, size_t size)
+{
+  if (handle < 0 || handle >= OBJ_HANDLES_MAX) return 0;
+  if (!data || size < 80) return 0;
+  if (memcmp(data, "Extended Module: ", 17)) return 0;
+  if (data[37] != 0x1A) return 0;
+
+  XM_INFO *info = &xm_info[handle];
+  memset(info, 0, sizeof(*info));
+
+  info->valid = 1;
+  info->version = xm_rd_le16(data + 58);
+  info->header_size = xm_rd_le32(data + 60);
+  info->song_length = xm_rd_le16(data + 64);
+  info->restart_position = xm_rd_le16(data + 66);
+  info->num_channels = xm_rd_le16(data + 68);
+  info->num_patterns = xm_rd_le16(data + 70);
+  info->num_instruments = xm_rd_le16(data + 72);
+  info->flags = xm_rd_le16(data + 74);
+  info->tempo = xm_rd_le16(data + 76);
+  info->bpm = xm_rd_le16(data + 78);
+  info->file_size = (u32)size;
+
+  xm_copy_trimmed(info->module_name, sizeof(info->module_name), data + 17, 20);
+  xm_copy_trimmed(info->tracker_name, sizeof(info->tracker_name), data + 38, 20);
+
+  if (path)
+  {
+    strncpy(info->path, path, sizeof(info->path) - 1);
+    info->path[sizeof(info->path) - 1] = 0;
+  }
+
+  return 1;
+}
+
+const char *xm_obj_state_str(u8 st)
+{
+  switch (st)
+  {
+    case XM_OBJ_ST_STOPPED: return "Stopped";
+    case XM_OBJ_ST_PLAYING: return "Playing";
+    case OBJ_ST_NONE:       return "None";
+    case OBJ_ST_ERROR:      return "Error";
+    default:                return "Unknown";
+  }
+}
+
+const char *xm_obj_type_str(u8 type)
+{
+  switch (type)
+  {
+    case OBJ_TYPE_XM:  return "XM";
+    case OBJ_TYPE_XMC: return "XMC";
+    default:           return "Other";
+  }
+}
+
+int xm_find_playing_handle()
+{
+  for (int i = 0; i < OBJ_HANDLES_MAX; i++)
+    if (mem_obj[i].addr && mem_obj[i].state == XM_OBJ_ST_PLAYING)
+      return i;
+
+  return -1;
+}
+
+int xm_find_first_handle()
+{
+  for (int i = 0; i < OBJ_HANDLES_MAX; i++)
+    if (mem_obj[i].addr && (mem_obj[i].type == OBJ_TYPE_XM || mem_obj[i].type == OBJ_TYPE_XMC))
+      return i;
+
+  return -1;
+}
+
+int xm_wait_for_state(int handle, u8 state, int timeout_ms)
+{
+  if (handle < 0 || handle >= OBJ_HANDLES_MAX) return 0;
+
+  int waited_ms = 0;
+
+  while (waited_ms < timeout_ms)
+  {
+    if (mem_obj[handle].addr && mem_obj[handle].state == state)
+      return 1;
+
+    u8 st = rd_reg8(ESP_REG_STATUS);
+    if (st >= 0x80) return 0;
+
+    vTaskDelay(pdMS_TO_TICKS(10));
+    waited_ms += 10;
+  }
+
+  return 0;
+}
+
+int xm_wait_for_init(int handle, int timeout_ms)
+{
+  if (handle < 0 || handle >= OBJ_HANDLES_MAX) return 0;
+
+  int waited_ms = 0;
+
+  while (waited_ms < timeout_ms)
+  {
+    if (mem_obj[handle].addr && mem_obj[handle].type == OBJ_TYPE_XMC && mem_obj[handle].state == XM_OBJ_ST_STOPPED)
+      return 1;
+
+    u8 st = rd_reg8(ESP_REG_STATUS);
+    if (st >= 0x80) return 0;
+
+    vTaskDelay(pdMS_TO_TICKS(10));
+    waited_ms += 10;
+  }
+
+  return 0;
+}
+
+int xm_stop_current_playback()
+{
+  int handle = xm_find_playing_handle();
+  if (handle < 0) return 0;
+
+  XM_TASK task = {};
+  task.task = XM_TASK_STOP;
+  task.handle = handle;
+  xQueueSend(xm_queue, &task, portMAX_DELAY);
+
+  if (!xm_wait_for_state(handle, XM_OBJ_ST_STOPPED, 2000))
+  {
+    printf("XM stop timeout, status=%02X\r\n", rd_reg8(ESP_REG_STATUS));
+    return 1;
+  }
+
+  return 0;
+}
+
+int xm_parse_handle_arg(const char *s, int *out_handle)
+{
+  if (!s || !out_handle) return 0;
+
+  char *endp = NULL;
+  unsigned long v = strtoul(s, &endp, 0);
+  if (!endp || *endp || v >= OBJ_HANDLES_MAX) return 0;
+
+  *out_handle = (int)v;
+  return 1;
+}
+
 int xm_load_file(const char *path)
 {
   if (!path || !path[0])
@@ -540,59 +536,27 @@ int xm_load_file(const char *path)
     return 1;
   }
 
-  char full_path[XM_INFO_PATH_MAX + 8];
-  if (path[0] == '/')
-    snprintf(full_path, sizeof(full_path), "/sd%s", path);
-  else
-    snprintf(full_path, sizeof(full_path), "/sd/%s", path);
-
-  sdmmc_card_t *card = NULL;
-  esp_err_t err = sd_fs_mount("/sd", &card);
+  size_t size = 0;
+  esp_err_t err = sd_fs_read_file("/sd", path, NULL, 0, &size);
   if (err != ESP_OK) return 1;
-
-  struct stat st = {};
-  if (stat(full_path, &st) != 0)
+  if (size > INT_MAX)
   {
-    printf("E: stat('%s') failed\r\n", full_path);
-    sd_fs_unmount("/sd", card);
+    printf("E: XM file too large: %u bytes\r\n", (unsigned)size);
     return 1;
   }
 
-  if (st.st_size <= 0)
-  {
-    printf("Bad XM file size: %ld\r\n", (long)st.st_size);
-    sd_fs_unmount("/sd", card);
-    return 1;
-  }
-
-  FILE *f = fopen(full_path, "rb");
-  if (!f)
-  {
-    printf("E: fopen('%s') failed\r\n", full_path);
-    sd_fs_unmount("/sd", card);
-    return 1;
-  }
-
-  int handle = make_obj((int)st.st_size, OBJ_TYPE_XM);
+  int handle = make_obj((int)size, OBJ_TYPE_XM);
   if (handle < 0)
-  {
-    fclose(f);
-    sd_fs_unmount("/sd", card);
     return 1;
-  }
 
-  size_t rd = fread(mem_obj[handle].addr, 1, (size_t)st.st_size, f);
-  fclose(f);
-  sd_fs_unmount("/sd", card);
-
-  if (rd != (size_t)st.st_size)
+  err = sd_fs_read_file("/sd", path, mem_obj[handle].addr, size, NULL);
+  if (err != ESP_OK)
   {
-    printf("E: fread failed, got %u of %u bytes\r\n", (unsigned)rd, (unsigned)st.st_size);
     delete_obj(handle);
     return 1;
   }
 
-  if (!xm_parse_info(handle, path, (const u8*)mem_obj[handle].addr, (size_t)st.st_size))
+  if (!xm_parse_info(handle, path, (const u8*)mem_obj[handle].addr, size))
   {
     printf("E: invalid XM header\r\n");
     delete_obj(handle);

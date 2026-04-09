@@ -9,6 +9,8 @@ enum
   DREQ_DATA,
   DREQ_ZIP,
   DREQ_RND,
+  DREQ_URL,
+  DREQ_STREAM,
 };
 
 u8 rd_reg8(u8 reg);
@@ -35,5 +37,10 @@ void receiver_task(void *arg);
 
 void put_rxq(int type);
 void put_txq(int type);
-
+u32 prepare_tx_data(u8 type, size_t size);
+void process_rx_data(u8 type, size_t size);
 void set_status(u8 err);
+u8* get_dma_buf(void);
+void spi_slave_dma_send_direct(size_t len);
+void wait_status(u8 status);
+void wait_not_status(u8 status);

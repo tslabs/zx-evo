@@ -14,14 +14,29 @@ typedef uint16_t u16;
 typedef uint32_t u32;
 typedef uint64_t u64;
 
-#define GPIO_TEST1    4
-#define GPIO_TEST2    5
-#define GPIO_TEST3    6
+enum
+{
+  // Core 0
+  CONSOLE_TASK_PRIO           = 2,
+  WIFI_AUTOCONNECT_TASK_PRIO  = 3,
+  TCPIP_TASK_PRIO             = 4,
+  WIFI_TASK_PRIO              = 5,
+  XM_HELPER_TASK_PRIO         = 6,
+  HELPER_TASK_PRIO            = 8,
+  USB_MOUSE_TASK_PRIO         = 10,
+  USB_MOUSE_LIB_TASK_PRIO     = 10,
+  USB_MOUSE_HID_TASK_PRIO     = 11,
+  I2S_TASK_PRIO               = 12,
+  SLAVE_TASK_PRIO             = 14,
+  
+  // Core 1
+  XM_PLAYER_TASK_PRIO         = 10,
+};
 
 #define max(x, y) (((x) > (y)) ? (x) : (y))
 #define min(x, y) (((x) < (y)) ? (x) : (y))
 
-#define CP_STRING "ESP32 SPI WiFi Module, ver.0.5.152, (c) TS-Labs"
+#define CP_STRING "ESP32 SPI WiFi Module, ver.0.5.216, (c) TS-Labs"
 
 extern tinfl_decompressor *decomp;
 

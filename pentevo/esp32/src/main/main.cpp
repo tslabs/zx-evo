@@ -34,13 +34,16 @@
 #include "elf.cpp.h"
 #include "helper.h"
 #include "http_client.h"
+#include "gopher_client.h"
+#include "stream_client.h"
 #include "depack.h"
 #include "ps2_mouse.h"
 #include "usb_mouse.h"
 
 // #define ISR_PRINTF
 
-tinfl_decompressor *decomp = NULL;
+EXT_RAM_BSS_ATTR tinfl_decompressor decomp_buf;
+tinfl_decompressor *decomp = &decomp_buf;
 
 const char TAG[] = "main";
 int usb_mouse_start_on_boot = 0;
@@ -122,10 +125,10 @@ extern "C" void app_main()
 
   if (wifi_is_enabled())
   {
-  initialize_wifi();
-  wifi_start_autoconnect();
-  net.is_init = true;
-  ESP_LOGI("SRAM initialize_wifi", "%u", heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
+    initialize_wifi();
+    wifi_start_autoconnect();
+    net.is_init = true;
+    ESP_LOGI("SRAM initialize_wifi", "%u", heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
   }
   else
     ESP_LOGI("MAIN", "WiFi disabled by config");
@@ -134,9 +137,8 @@ extern "C" void app_main()
   // ----- Helper init
   helper_queue = xQueueCreate(2, sizeof(int));
   ESP_LOGI("SRAM xQueueCreate helper_queue", "%u", heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
-  xTaskCreatePinnedToCore(helper_task, "helper", 3072, NULL, 23, NULL, 0);
+  xTaskCreatePinnedToCore(helper_task, "helper", 6144, NULL, HELPER_TASK_PRIO, NULL, 0);
   ESP_LOGI("SRAM xTaskCreatePinnedToCore helper_task", "%u", heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
-  decomp = (tinfl_decompressor*)malloc_spiram(sizeof(tinfl_decompressor)); // early init to avoid heap fragmentation at stream inflate
 
   // ----- LibXM init
   initialize_xm();
@@ -145,6 +147,14 @@ extern "C" void app_main()
   // ----- HTTP init
   http_init();
   ESP_LOGI("SRAM http_init", "%u", heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
+
+  // ----- Gopher init
+  gopher_init();
+  ESP_LOGI("SRAM gopher_init", "%u", heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
+
+  // ----- Stream init
+  stream_init();
+  ESP_LOGI("SRAM stream_init", "%u", heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
   
   // ----- SDMMC init
 #if defined(CONFIG_IDF_TARGET_ESP32P4)
@@ -179,11 +189,6 @@ extern "C" void app_main()
   // ----- Console init
   initialize_console();
   ESP_LOGI("SRAM initialize_console", "%u", heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
-  xTaskCreatePinnedToCore(console_task, "console", 6144, NULL, 1, NULL, 0);
+  xTaskCreatePinnedToCore(console_task, "console", 6144, NULL, CONSOLE_TASK_PRIO, NULL, 0);
   ESP_LOGI("SRAM xTaskCreatePinnedToCore console_task", "%u", heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
-
-#ifdef CONFIG_ESP32_WIFI_ENABLED
-    TaskHandle_t wifiHandle = xTaskGetHandle("wifi");
-    if (wifiHandle) vTaskPrioritySet(wifiHandle, 21);
-#endif
 }

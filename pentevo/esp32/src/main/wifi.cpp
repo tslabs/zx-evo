@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <inttypes.h>
 #include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 #include "freertos/event_groups.h"
 #include "esp_log.h"
 #include "esp_console.h"
@@ -21,11 +22,16 @@
 #include "mem_obj.h"
 #include "esp_spi_defs.h"
 #include "spi_slave.h"
+#include "helper.h"
+#include "nvs_params.h"
 #include "wifi.h"
 #include "http_client.h"
-#include "nvs_params.h"
+#include "gopher_client.h"
+#include "stream_client.h"
 
 const char TAG[] = "wifi.cpp";
+
+extern NET net;
 
 EventGroupHandle_t wifi_event_group;
 const int CONNECTED_BIT = BIT0;
@@ -36,6 +42,12 @@ esp_netif_t *wifi_sta_netif = NULL;
 bool wifi_initialized = false;
 bool wifi_started = false;
 TaskHandle_t wifi_autoconn_task = NULL;
+TickType_t wifi_next_reconnect_tick = 0;
+
+enum
+{
+  WIFI_RECONNECT_DELAY_MS = 5000,
+};
 
 bool wifi_is_enabled()
 {
@@ -52,19 +64,46 @@ bool wifi_should_autoconnect()
   return wifi_is_enabled() && wifi_has_saved_ap();
 }
 
+void wifi_lower_sys_task_prio()
+{
+  TickType_t t0 = xTaskGetTickCount();
+  TickType_t timeout = pdMS_TO_TICKS(1000);
+  TaskHandle_t h_wifi = NULL;
+  TaskHandle_t h_tcpip = NULL;
+
+  while ((xTaskGetTickCount() - t0) < timeout)
+  {
+    if (!h_wifi) h_wifi = xTaskGetHandle("wifi");
+    if (!h_tcpip) h_tcpip = xTaskGetHandle("tcpip");
+
+    if (h_wifi) vTaskPrioritySet(h_wifi, WIFI_TASK_PRIO);
+    if (h_tcpip) vTaskPrioritySet(h_tcpip, TCPIP_TASK_PRIO);
+
+    if (h_wifi && h_tcpip) return;
+
+    vTaskDelay(pdMS_TO_TICKS(10));
+  }
+
+  if (!h_wifi) ESP_LOGW(TAG, "system task 'wifi' not found");
+  if (!h_tcpip) ESP_LOGW(TAG, "system task 'tcpip' not found");
+}
+
 void event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void *event_data)
 {
   if (event_base == WIFI_EVENT)
   {
     if (event_id == WIFI_EVENT_STA_DISCONNECTED)
     {
-      ESP_LOGI(TAG, "WIFI_EVENT_STA_DISCONNECTED");
-
       bool autoconnect = wifi_started && wifi_should_autoconnect();
       xEventGroupClearBits(wifi_event_group, CONNECTED_BIT);
 
-      if (autoconnect)
+      TickType_t now = xTaskGetTickCount();
+
+      if (autoconnect && (now >= wifi_next_reconnect_tick))
+      {
+        wifi_next_reconnect_tick = now + pdMS_TO_TICKS(WIFI_RECONNECT_DELAY_MS);
         esp_wifi_connect();
+      }
     }
 
     else if (event_id == WIFI_EVENT_WIFI_READY)
@@ -143,12 +182,18 @@ void wifi_start_autoconnect()
 {
   initialize_wifi();
   if (wifi_autoconn_task) return;
-  xTaskCreatePinnedToCore(wifi_autoconnect_task, "wifi", 4096, NULL, 21, &wifi_autoconn_task, 0);
+  xTaskCreatePinnedToCore(wifi_autoconnect_task, "wifi-auto", 4096, NULL, WIFI_AUTOCONNECT_TASK_PRIO, &wifi_autoconn_task, 0);
 }
 
 void initialize_wifi()
 {
-  esp_log_level_set("wifi", ESP_LOG_WARN);
+  esp_log_level_set("wifi", ESP_LOG_ERROR);
+  esp_log_level_set("wifi_init", ESP_LOG_ERROR);
+  esp_log_level_set("pp", ESP_LOG_ERROR);
+  esp_log_level_set("net80211", ESP_LOG_ERROR);
+  esp_log_level_set("phy_init", ESP_LOG_ERROR);
+  esp_log_level_set("esp_netif_handlers", ESP_LOG_ERROR);
+  esp_log_level_set(TAG, ESP_LOG_WARN);
 
   if (!wifi_initialized)
   {
@@ -173,6 +218,7 @@ void initialize_wifi()
 
   ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
   ESP_ERROR_CHECK(esp_wifi_start());
+  wifi_next_reconnect_tick = 0;
   if (wifi_event_group) xEventGroupClearBits(wifi_event_group, CONNECTED_BIT);
   wifi_started = true;
 }
@@ -182,6 +228,7 @@ void wifi_disconnect_now()
   if (!wifi_initialized || !wifi_started) return;
 
   xEventGroupClearBits(wifi_event_group, CONNECTED_BIT);
+  wifi_next_reconnect_tick = 0;
   esp_wifi_disconnect();
   esp_wifi_stop();
   memset(&ip, 0, sizeof(ip));
@@ -191,6 +238,7 @@ void wifi_disconnect_now()
 bool wifi_connect(const char *ssid, const char *pass, int timeout_ms)
 {
   initialize_wifi();
+  wifi_lower_sys_task_prio();
 
   wifi_config_t wifi_config = { 0 };
   strlcpy((char*)wifi_config.sta.ssid, ssid, sizeof(wifi_config.sta.ssid));
@@ -200,6 +248,7 @@ bool wifi_connect(const char *ssid, const char *pass, int timeout_ms)
 
   ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
   ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
+  wifi_next_reconnect_tick = xTaskGetTickCount() + pdMS_TO_TICKS(WIFI_RECONNECT_DELAY_MS);
   esp_wifi_connect();
 
   int bits = xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT, pdFALSE, pdTRUE, timeout_ms / portTICK_PERIOD_MS);
@@ -589,8 +638,9 @@ int wf_cmd(int argc, char **argv)
   if (argc < 2)
   {
     printf("Usage:\r\n");
-    printf("  wf conn\r\n");
-    printf("  wf conn <ssid> [pass] [timeout_ms]\r\n");
+    printf("  wf up\r\n");
+    printf("  wf up <ssid> [pass] [timeout_ms]\r\n");
+    printf("  wf dn\r\n");
     printf("  wf ap <ssid> [pass]\r\n");
     printf("  wf en <0|1>\r\n");
     printf("  wf scan [timeout]\r\n");
@@ -649,17 +699,31 @@ int wf_cmd(int argc, char **argv)
   if (!strcmp(argv[1], "info"))
     return wf_info(argc, argv);
 
-  if (!strcmp(argv[1], "conn"))
+  if (!strcmp(argv[1], "dn"))
+  {
+    wifi_disconnect_now();
+    printf("Disconnected\r\n");
+    return 0;
+  }
+
+  if (!strcmp(argv[1], "up"))
   {
     if (argc == 2)
     {
+      esp_err_t err = app_params_load();
+      if (err != ESP_OK)
+      {
+        printf("app_params_load failed: %s\r\n", esp_err_to_name(err));
+        return 1;
+      }
+
       if (!wifi_has_saved_ap())
       {
         printf("Saved AP is not configured\r\n");
         return 1;
       }
 
-      bool connected = wifi_connect_saved(CONNECT_TIMEOUT_MS);
+      bool connected = wifi_connect(app_params.wifi_ap, app_params.wifi_psw, CONNECT_TIMEOUT_MS);
       if (!connected)
       {
         printf("Connection timed out\r\n");
@@ -672,7 +736,7 @@ int wf_cmd(int argc, char **argv)
 
     if (argc < 3 || argc > 5)
     {
-      printf("Usage: wf conn [<ssid> [<pass> [timeout_ms]]]\r\n");
+      printf("Usage: wf up [<ssid> [<pass> [timeout_ms]]]\r\n");
       return 1;
     }
 
@@ -705,8 +769,9 @@ int wf_cmd(int argc, char **argv)
 
   printf("Unknown subcommand: %s\r\n", argv[1]);
   printf("Usage:\r\n");
-  printf("  wf conn\r\n");
-  printf("  wf conn <ssid> [pass] [timeout_ms]\r\n");
+  printf("  wf up\r\n");
+  printf("  wf up <ssid> [pass] [timeout_ms]\r\n");
+  printf("  wf dn\r\n");
   printf("  wf ap <ssid> [pass]\r\n");
   printf("  wf en <0|1>\r\n");
   printf("  wf scan [timeout]\r\n");
@@ -732,13 +797,15 @@ int http_get(int argc, char **argv)
 
   auto url = http_get_args.url->sval[0];
   ESP_LOGI(__func__, "Downloading '%s'", url);
-  int l = strlen(url) + 1;
-  int h = make_obj(l, OBJ_TYPE_DATA);
-  write_obj(h, url, l);
-  wr_reg8(ESP_REG_OBJ_HANDLE, h);
+  
+  // Copy URL to net.url buffer
+  if (net.url)
+  {
+    strncpy((char*)net.url, url, 1023);
+    net.url[1023] = 0;
+  }
+  
   http_do_get();
-  delete_obj(h);
-  delete_obj(rd_reg8(ESP_REG_OBJ_HANDLE));
   ESP_LOGI(__func__, "Downloading finished");
 
   return 0;
@@ -746,19 +813,6 @@ int http_get(int argc, char **argv)
 
 int https_get(int argc, char **argv)
 {
-  // #define WEB_SERVER "prods.tslabs.info"
-  // #define WEB_URL "https://prods.tslabs.info/files/StreetFighter2_1.1.zip"
-  // #define WEB_SERVER "releases.ubuntu.com"
-  // #define WEB_URL "https://releases.ubuntu.com/24.04.2/ubuntu-24.04.2-desktop-amd64.iso"
-  #define WEB_SERVER "downloads.raspberrypi.com"
-  #define WEB_URL "https://downloads.raspberrypi.com/raspios_armhf/images/raspios_armhf-2024-11-19/2024-11-19-raspios-bookworm-armhf.img.xz"
-  #define WEB_PORT "443"
-
-  static const char REQUEST[] = "GET " WEB_URL " HTTP/1.1\r\n"
-                                "Host: " WEB_SERVER "\r\n"
-                                "User-Agent: esp-idf/1.0 esp32\r\n"
-                                "\r\n";
-
   int nerrors = arg_parse(argc, argv, (void **)&http_get_args);
 
   if (nerrors != 0)
@@ -767,116 +821,127 @@ int https_get(int argc, char **argv)
     return 1;
   }
 
-  size_t written_bytes = 0;
-  bool is_resp = false;
-  size_t content_index = 0;
-  size_t content_length = 0;
-
-  int ret;
-  void *buf;
-
-  // ESP_LOGI(__func__, "Downloading '%s'", http_get_args.url->sval[0]);
-  ESP_LOGI(__func__, "Downloading '%s'", WEB_URL);
-
-  esp_tls_cfg_t cfg =
-  {
-    .crt_bundle_attach = esp_crt_bundle_attach,
-  };
-
-  ESP_LOGI(TAG, "URL: %s", WEB_URL);
-
-  esp_tls_t *tls = esp_tls_init();
-
-  if (!tls)
-  {
-    ESP_LOGE(TAG, "Failed to allocate esp_tls handle!");
-    goto exit;
-  }
-
-  if (esp_tls_conn_http_new_sync(WEB_URL, &cfg, tls) == 1)
-  {
-    ESP_LOGI(TAG, "Connection established");
-  }
-  else
-  {
-    ESP_LOGE(TAG, "Connection failed");
-    int esp_tls_code = 0, esp_tls_flags = 0;
-    esp_tls_error_handle_t tls_e = NULL;
-    esp_tls_get_error_handle(tls, &tls_e);
-
-    /* Try to get TLS stack level error and certificate failure flags, if any */
-    ret = esp_tls_get_and_clear_last_error(tls_e, &esp_tls_code, &esp_tls_flags);
-
-    if (ret == ESP_OK)
-    {
-      ESP_LOGE(TAG, "TLS error = -0x%x, TLS flags = -0x%x", esp_tls_code, esp_tls_flags);
-    }
-
-    goto cleanup;
-  }
-
-  ESP_LOGI(TAG, "Writing HTTP request");
-
-  while (written_bytes < strlen(REQUEST))
-  {
-    ret = esp_tls_conn_write(tls, REQUEST + written_bytes, strlen(REQUEST) - written_bytes);
-
-    if (ret >= 0)
-    {
-      ESP_LOGI(TAG, "%d bytes written", ret);
-      written_bytes += ret;
-    }
-
-    else if (ret != ESP_TLS_ERR_SSL_WANT_READ  && ret != ESP_TLS_ERR_SSL_WANT_WRITE)
-    {
-      ESP_LOGE(TAG, "esp_tls_conn_write returned: [0x%02X](%s)", ret, esp_err_to_name(ret));
-      goto cleanup;
-    }
-  };
-
-  ESP_LOGI(TAG, "Reading HTTP response");
-
-  buf = malloc_spiram(16384);
+  auto url = http_get_args.url->sval[0];
+  ESP_LOGI(__func__, "Downloading '%s'", url);
   
-  do
+  // Copy URL to net.url buffer
+  if (net.url)
   {
-    ret = esp_tls_conn_read(tls, (char*)buf, sizeof(buf));
-
-    if (ret == 0)
-    {
-      ESP_LOGI(TAG, "Connection closed");
-      break;
-    }
-
-    if (ret < 0)
-      ESP_LOGE(TAG, "esp_tls_conn_read returned [-0x%02X](%s)", -ret, esp_err_to_name(ret));
-
-    if (ret == ESP_TLS_ERR_SSL_WANT_WRITE  || ret == ESP_TLS_ERR_SSL_WANT_READ)
-      continue;
-
-    ESP_LOGD(TAG, "Received %u bytes", ret);
-
-    if (!is_resp)
-    {
-      content_length = parse_response((char*)buf, ret, content_index);
-
-      if (content_length <= 0)
-        break;
-
-      content_length += content_index;
-      is_resp = true;
-    }
-
-    content_length -= ret;
-    ESP_LOGD(TAG, "Left %u bytes", content_length);
-  } while (content_length);
+    strncpy((char*)net.url, url, 1023);
+    net.url[1023] = 0;
+  }
   
-  if (buf) free(buf);
+  https_do_get();
+  ESP_LOGI(__func__, "Downloading finished");
 
-cleanup:
-    esp_tls_conn_destroy(tls);
+  return 0;
+}
 
-exit:
+struct
+{
+  struct arg_str *url;
+  struct arg_end *end;
+} gopher_get_args;
+
+int gopher_get(int argc, char **argv)
+{
+  int nerrors = arg_parse(argc, argv, (void **)&gopher_get_args);
+  if (nerrors != 0)
+  {
+    arg_print_errors(stderr, gopher_get_args.end, argv[0]);
+    return 1;
+  }
+
+  auto url = gopher_get_args.url->sval[0];
+  ESP_LOGI(__func__, "Downloading '%s'", url);
+  
+  // Copy URL to net.url buffer
+  if (net.url)
+  {
+    strncpy((char*)net.url, url, 1023);
+    net.url[1023] = 0;
+  }
+  
+  gopher_do_get();
+  ESP_LOGI(__func__, "Downloading finished");
+
+  return 0;
+}
+
+struct
+{
+  struct arg_str *url;
+  struct arg_end *end;
+} stream_args;
+
+int http_stream(int argc, char **argv)
+{
+  int nerrors = arg_parse(argc, argv, (void **)&stream_args);
+  if (nerrors != 0)
+  {
+    arg_print_errors(stderr, stream_args.end, argv[0]);
+    return 1;
+  }
+
+  auto url = stream_args.url->sval[0];
+  ESP_LOGI(__func__, "Streaming '%s'", url);
+  
+  if (net.url)
+  {
+    strncpy((char*)net.url, url, 1023);
+    net.url[1023] = 0;
+  }
+  
+  stream_http_start();
+  ESP_LOGI(__func__, "Stream started");
+
+  return 0;
+}
+
+int https_stream(int argc, char **argv)
+{
+  int nerrors = arg_parse(argc, argv, (void **)&stream_args);
+  if (nerrors != 0)
+  {
+    arg_print_errors(stderr, stream_args.end, argv[0]);
+    return 1;
+  }
+
+  auto url = stream_args.url->sval[0];
+  ESP_LOGI(__func__, "Streaming '%s'", url);
+  
+  if (net.url)
+  {
+    strncpy((char*)net.url, url, 1023);
+    net.url[1023] = 0;
+  }
+  
+  stream_https_start();
+  ESP_LOGI(__func__, "Stream started");
+
+  return 0;
+}
+
+int gopher_stream(int argc, char **argv)
+{
+  int nerrors = arg_parse(argc, argv, (void **)&stream_args);
+  if (nerrors != 0)
+  {
+    arg_print_errors(stderr, stream_args.end, argv[0]);
+    return 1;
+  }
+
+  auto url = stream_args.url->sval[0];
+  ESP_LOGI(__func__, "Streaming '%s'", url);
+  
+  if (net.url)
+  {
+    strncpy((char*)net.url, url, 1023);
+    net.url[1023] = 0;
+  }
+  
+  stream_gopher_start();
+  ESP_LOGI(__func__, "Stream started");
 
   return 0;
 }
@@ -897,7 +962,7 @@ void esp_console_register_wifi_commands()
     const esp_console_cmd_t wf_cmd_desc =
     {
       .command  = "wf",
-      .help     = "WiFi commands: conn/ap/en/scan/info",
+      .help     = "WiFi commands: up/dn/ap/en/scan/info",
       .hint     = NULL,
       .func     = &wf_cmd,
       .argtable = NULL
@@ -936,5 +1001,62 @@ void esp_console_register_wifi_commands()
     };
 
     ESP_ERROR_CHECK(esp_console_cmd_register(&https_get_cmd));
+  }
+  {
+    gopher_get_args.url = arg_str1(NULL, NULL, "<url>", "Gopher URL");
+    gopher_get_args.end = arg_end(1);
+
+    const esp_console_cmd_t gopher_get_cmd =
+    {
+      .command  = "gopher_get",
+      .help     = "Fetch a Gopher URL",
+      .hint     = NULL,
+      .func     = &gopher_get,
+      .argtable = &gopher_get_args
+    };
+
+    ESP_ERROR_CHECK(esp_console_cmd_register(&gopher_get_cmd));
+  }
+
+  {
+    stream_args.url = arg_str1(NULL, NULL, "<url>", "URL");
+    stream_args.end = arg_end(1);
+
+    const esp_console_cmd_t http_stream_cmd =
+    {
+      .command  = "http_stream",
+      .help     = "Stream HTTP URL",
+      .hint     = NULL,
+      .func     = &http_stream,
+      .argtable = &stream_args
+    };
+
+    ESP_ERROR_CHECK(esp_console_cmd_register(&http_stream_cmd));
+  }
+
+  {
+    const esp_console_cmd_t https_stream_cmd =
+    {
+      .command  = "https_stream",
+      .help     = "Stream HTTPS URL",
+      .hint     = NULL,
+      .func     = &https_stream,
+      .argtable = &stream_args
+    };
+
+    ESP_ERROR_CHECK(esp_console_cmd_register(&https_stream_cmd));
+  }
+
+  {
+    const esp_console_cmd_t gopher_stream_cmd =
+    {
+      .command  = "gopher_stream",
+      .help     = "Stream Gopher URL",
+      .hint     = NULL,
+      .func     = &gopher_stream,
+      .argtable = &stream_args
+    };
+
+    ESP_ERROR_CHECK(esp_console_cmd_register(&gopher_stream_cmd));
   }
 }

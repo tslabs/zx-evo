@@ -5,6 +5,7 @@
 
 void http_init(void);
 void http_do_get(void);
+void https_do_get(void);
 
 // Streaming API
 void http_stream_read_task(void);  // Вызывается из helper task

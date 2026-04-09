@@ -62,7 +62,6 @@ volatile bool usb_mouse_mode_active = false;
 int usb_mouse_abs_x = 0;
 int usb_mouse_abs_y = 0;
 
-// new
 void usb_mouse_report_callback(const uint8_t *data, int length)
 {
   if (length < (int)sizeof(hid_mouse_input_report_boot_t))
@@ -247,7 +246,7 @@ void usb_mouse_task(void *arg)
     return;
   }
 
-  if (xTaskCreatePinnedToCore(usb_mouse_lib_task, "usb_mouse_lib", 2048, xTaskGetCurrentTaskHandle(), 5, &usb_mouse_lib_task_handle, 0) != pdTRUE)
+  if (xTaskCreatePinnedToCore(usb_mouse_lib_task, "usb_mouse_lib", 2048, xTaskGetCurrentTaskHandle(), USB_MOUSE_LIB_TASK_PRIO, &usb_mouse_lib_task_handle, 0) != pdTRUE)
   {
     printf("usb mouse lib task create failed\r\n");
     vQueueDelete(usb_mouse_evt_queue);
@@ -263,7 +262,7 @@ void usb_mouse_task(void *arg)
   const hid_host_driver_config_t hid_cfg =
   {
     .create_background_task = true,
-    .task_priority = 5,
+    .task_priority = USB_MOUSE_HID_TASK_PRIO,
     .stack_size = 4096,
     .core_id = 0,
     .callback = usb_mouse_device_callback,
@@ -329,7 +328,7 @@ extern "C" esp_err_t usb_mouse_start()
 
   usb_mouse_mode_active = true;
 
-  if (xTaskCreatePinnedToCore(usb_mouse_task, "usb_mouse", 4096, NULL, 5, &usb_mouse_task_handle, 0) != pdTRUE)
+  if (xTaskCreatePinnedToCore(usb_mouse_task, "usb_mouse", 4096, NULL, USB_MOUSE_TASK_PRIO, &usb_mouse_task_handle, 0) != pdTRUE)
   {
     usb_mouse_mode_active = false;
     usb_mouse_task_handle = NULL;

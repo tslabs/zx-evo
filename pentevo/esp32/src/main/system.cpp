@@ -572,8 +572,6 @@ int nvs_show()
   }
 
   printf("NVS params:\r\n");
-  printf("  spi_width: %u\r\n", app_params.spi_width);
-  printf("  spi_freq : %u\r\n", app_params.spi_freq);
   printf("  usb_mode : %u\r\n", app_params.usb_mode);
   printf("  wifi_mode: %u\r\n", app_params.wifi_mode);
   printf("  wifi_ap  : %s\r\n", app_params.wifi_ap[0] ? app_params.wifi_ap : "");

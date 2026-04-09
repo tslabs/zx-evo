@@ -55,7 +55,20 @@ enum
   ESP_CMD_SET_URL               = 0x18, // (no parameters)
   ESP_CMD_GET_IP                = 0x19, // o: ESP_REG_IP
   ESP_CMD_HTTP_GET              = 0x20, // +++
-  ESP_CMD_HTTP_ABORT            = 0x22, // +++
+  ESP_CMD_HTTPS_GET             = 0x21, // (no parameters)
+                                        // o: ESP_REG_OBJ_HANDLE, ESP_REG_DATA_SIZE
+  ESP_CMD_GOPHER_GET            = 0x22, // (no parameters)
+                                        // o: ESP_REG_OBJ_HANDLE, ESP_REG_DATA_SIZE
+  ESP_CMD_HTTP_STREAM_START     = 0x23, // (no parameters)
+                                        // o: ESP_REG_DATA_SIZE (total size)
+  ESP_CMD_HTTPS_STREAM_START    = 0x24, // (no parameters)
+                                        // o: ESP_REG_DATA_SIZE (total size)
+  ESP_CMD_GOPHER_STREAM_START   = 0x25, // (no parameters)
+                                        // o: ESP_REG_DATA_SIZE (total size)
+  ESP_CMD_STREAM_READ           = 0x26, // (no parameters)
+                                        // o: ESP_REG_DATA_SIZE (chunk size)
+                                        // (DMA read like ESP_CMD_READ_OBJECT)
+  ESP_CMD_STREAM_CLOSE          = 0x27, // (no parameters)
   ESP_CMD_GET_XM_INFO           = 0xA0, // +++
   ESP_CMD_XM_INIT               = 0xA1, // i: ESP_REG_OBJ_HANDLE
   ESP_CMD_XM_SET_POS            = 0xA2, // +++

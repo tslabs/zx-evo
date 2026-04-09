@@ -29,7 +29,7 @@ void hexdump(const void *data, size_t len, uint64_t base_off);
 
 u32 *ft_ccmdb = nullptr;
 u16 ft_ccmdp = 0;
-u8 *cmdl;
+EXT_RAM_BSS_ATTR u8 cmdl[8192];
 u8 ft_spi_width = 2;
 u32 ft_spi_freq_hz = 20000000UL;
 
@@ -846,12 +846,6 @@ void ft_FlashUpdate(u32 dest, u32 src, u32 num)
 
 void init_ft8xx()
 {
-  cmdl = (u8*)malloc_spiram(8192);
-  if (!cmdl)
-  {
-    ESP_LOGE(TAG, "Cannot allocate memory for FT8xx cmdl!");
-    return;
-  }
 }
 
 // ------------- Hardware layer ---------------
@@ -1167,9 +1161,9 @@ esp_err_t ft_wait_swap(uint32_t timeout_ms)
   int64_t t0 = esp_timer_get_time();
   while (1)
   {
-    u8 flags = ft_rreg8(FT_REG_INT_FLAGS);
+    u8 dlswap = ft_rreg8(FT_REG_DLSWAP);
 
-    if (flags & FT_INT_SWAP)
+    if (dlswap == FT_DLSWAP_DONE)
       return ESP_OK;
 
     if (((esp_timer_get_time() - t0) / 1000) >= (int64_t)timeout_ms)
@@ -2496,6 +2490,240 @@ int ft_demo1_cmd()
   return 0;
 }
 
+
+i16 ft_demo3_clip_coord(i32 v, i16 max_v)
+{
+  if (v < 0) return 0;
+  if (v > (i32)max_v) return max_v;
+  return (i16)v;
+}
+
+esp_err_t ft_demo3_show_frame(u32 frame_no)
+{
+  esp_err_t err;
+  const i32 screen_w = 800;
+  const i32 screen_h = 600;
+
+  i32 sway = rsin(84, (u16)(frame_no * 163UL));
+  i32 bob = rsin(18, (u16)(frame_no * 97UL));
+  i32 curve = rsin(180, (u16)(frame_no * 71UL));
+  i32 vp_x = (screen_w / 2) + sway / 3;
+  i32 vp_y = 168 + bob / 6;
+  i32 horizon_y = vp_y + 34;
+  u32 dash_phase = frame_no >> 1;
+
+  ft_ccmd_start(cmdl);
+
+  ft_Dlstart();
+  ft_VertexFormat(0);
+
+  ft_ClearColorRGB(0, 0, 0);
+  ft_ClearColorA(255);
+  ft_Clear(1, 1, 1);
+
+  ft_Gradient(0, 0, 0x081018, 0, horizon_y, 0x203860);
+  ft_Gradient(0, horizon_y, 0x0a0c10, 0, screen_h - 1, 0x020202);
+
+  ft_BlendFunc(FT_SRC_ALPHA, FT_ONE);
+  ft_Begin(FT_POINTS);
+
+  ft_ColorA(48);
+  ft_ColorRGB(0, 180, 255);
+  ft_PointSize(180 << 4);
+  ft_Vertex2f(ft_demo3_clip_coord(vp_x, screen_w - 1), ft_demo3_clip_coord(vp_y + 10, screen_h - 1));
+
+  ft_ColorA(40);
+  ft_ColorRGB(255, 80, 200);
+  ft_PointSize(72 << 4);
+  ft_Vertex2f(ft_demo3_clip_coord(vp_x + curve / 12, screen_w - 1), ft_demo3_clip_coord(vp_y + 12, screen_h - 1));
+  ft_End();
+
+  for (u32 i = 0; i < 18; i++)
+  {
+    float phase = (float)((frame_no * 28UL + i * 57UL) & 1023UL) / 1023.0f;
+    float p = phase * phase;
+
+    i32 cx = vp_x + (i32)((float)curve * p * 0.45f);
+    i32 cy = vp_y + 10 + (i32)(p * 36.0f);
+    i32 hw = 26 + (i32)(p * 430.0f);
+    i32 hh = 16 + (i32)(p * 300.0f);
+    u16 line_w = (u16)((2.0f + p * 7.0f) * 16.0f);
+    u8 alpha = (u8)(32.0f + p * 160.0f);
+
+    i16 x0 = ft_demo3_clip_coord(cx - hw, screen_w - 1);
+    i16 y0 = ft_demo3_clip_coord(cy - hh, screen_h - 1);
+    i16 x1 = ft_demo3_clip_coord(cx + hw, screen_w - 1);
+    i16 y1 = ft_demo3_clip_coord(cy + hh, screen_h - 1);
+
+    ft_BlendFunc(FT_SRC_ALPHA, FT_ONE);
+    ft_ColorA(alpha);
+    ft_LineWidth(line_w);
+
+    if (i & 1)
+      ft_ColorRGB(0, 220, 255);
+    else
+      ft_ColorRGB(255, 60, 180);
+
+    ft_Begin(FT_LINE_STRIP);
+    ft_Vertex2f(x0, y0);
+    ft_Vertex2f(x1, y0);
+    ft_Vertex2f(x1, y1);
+    ft_Vertex2f(x0, y1);
+    ft_Vertex2f(x0, y0);
+    ft_End();
+  }
+
+  ft_BlendFunc(FT_SRC_ALPHA, FT_ONE_MINUS_SRC_ALPHA);
+  ft_ColorA(255);
+  ft_Begin(FT_RECTS);
+
+  for (u32 i = 0; i < 34; i++)
+  {
+    float f0 = (float)i / 34.0f;
+    float f1 = (float)(i + 1) / 34.0f;
+    float p0 = f0 * f0;
+    float p1 = f1 * f1;
+
+    i32 y0 = horizon_y + (i32)(p0 * (float)(screen_h - horizon_y));
+    i32 y1 = horizon_y + (i32)(p1 * (float)(screen_h - horizon_y));
+    i32 cx = vp_x + (i32)((float)curve * p1 * p1 * 0.55f);
+    i32 road_half = 18 + (i32)(p1 * 300.0f);
+    i32 curb_half = road_half + 10 + (i32)(p1 * 84.0f);
+    i32 marker_half = 2 + (i32)(p1 * 7.0f);
+    i32 glow_half = 2 + (i32)(p1 * 4.0f);
+
+    i16 left = ft_demo3_clip_coord(cx - road_half, screen_w - 1);
+    i16 right = ft_demo3_clip_coord(cx + road_half, screen_w - 1);
+    i16 curb_left = ft_demo3_clip_coord(cx - curb_half, screen_w - 1);
+    i16 curb_right = ft_demo3_clip_coord(cx + curb_half, screen_w - 1);
+    i16 yy0 = ft_demo3_clip_coord(y0, screen_h - 1);
+    i16 yy1 = ft_demo3_clip_coord(y1, screen_h - 1);
+
+    ft_ColorRGB((u8)(18 + i * 2), (u8)(10 + i), (u8)(32 + i * 3));
+    ft_Vertex2f(curb_left, yy0);
+    ft_Vertex2f(left, yy1);
+
+    ft_ColorRGB((u8)(18 + i * 2), (u8)(10 + i), (u8)(32 + i * 3));
+    ft_Vertex2f(right, yy0);
+    ft_Vertex2f(curb_right, yy1);
+
+    ft_ColorRGB((u8)(18 + i * 3), (u8)(18 + i * 3), (u8)(24 + i * 4));
+    ft_Vertex2f(left, yy0);
+    ft_Vertex2f(right, yy1);
+
+    if (((i + dash_phase) & 7UL) < 2UL)
+    {
+      i16 marker_left = ft_demo3_clip_coord(cx - marker_half, screen_w - 1);
+      i16 marker_right = ft_demo3_clip_coord(cx + marker_half, screen_w - 1);
+      ft_ColorRGB(255, 240, 96);
+      ft_Vertex2f(marker_left, yy0);
+      ft_Vertex2f(marker_right, yy1);
+    }
+
+    if (((i + dash_phase) & 3UL) == 0)
+    {
+      i16 glow_left0 = ft_demo3_clip_coord(curb_left - glow_half, screen_w - 1);
+      i16 glow_left1 = ft_demo3_clip_coord(curb_left + glow_half, screen_w - 1);
+      i16 glow_right0 = ft_demo3_clip_coord(curb_right - glow_half, screen_w - 1);
+      i16 glow_right1 = ft_demo3_clip_coord(curb_right + glow_half, screen_w - 1);
+
+      ft_ColorRGB(0, 220, 255);
+      ft_Vertex2f(glow_left0, yy0);
+      ft_Vertex2f(glow_left1, yy1);
+
+      ft_ColorRGB(255, 60, 180);
+      ft_Vertex2f(glow_right0, yy0);
+      ft_Vertex2f(glow_right1, yy1);
+    }
+  }
+
+  ft_End();
+
+  ft_ColorA(255);
+  ft_BlendFunc(FT_SRC_ALPHA, FT_ONE_MINUS_SRC_ALPHA);
+  ft_ColorRGB(255, 220, 80);
+  ft_Text(8, 8, 18, 0, "FT demo 3 - pseudo 3D tunnel road");
+
+  ft_ColorRGB(0, 255, 255);
+  ft_Text(8, 28, 18, 0, "Frame:");
+  ft_Number(88, 28, 18, 0, (i32)frame_no);
+
+  ft_ColorRGB(200, 200, 200);
+  ft_Text(8, 48, 18, 0, "Press any key to stop");
+
+  ft_Display();
+  ft_Swap();
+
+  err = ft_ccmd_write();
+  if (err != ESP_OK) return err;
+
+  err = ft_cp_wait(1000);
+  if (err != ESP_OK) return err;
+
+  return ESP_OK;
+}
+
+int ft_demo3_cmd()
+{
+  esp_err_t err;
+  esp_err_t err2;
+  u32 frame_no = 0;
+
+  err = ft_open_session();
+  if (err != ESP_OK)
+  {
+    printf("FT open failed: %d\r\n", (int)err);
+    return 1;
+  }
+
+  err = ft_set_mode(FT_MODE_800_600_60_80MHZ);
+  if (err == ESP_OK)
+    err = ft_cp_reset();
+
+  if (err == ESP_OK)
+  {
+    ft_rreg8(FT_REG_INT_FLAGS);
+
+    while (1)
+    {
+      err = ft_demo3_show_frame(frame_no);
+      if (err != ESP_OK)
+      {
+        printf("FT demo3 error: draw failed: %s (0x%x)\r\n", esp_err_to_name(err), (unsigned int)err);
+        break;
+      }
+
+      err = ft_wait_swap(1000);
+      if (err != ESP_OK)
+      {
+        printf("FT demo3 error: ft_wait_swap(1000) failed: %s (0x%x)\r\n", esp_err_to_name(err), (unsigned int)err);
+        break;
+      }
+
+      char c;
+      if (uart_read_bytes(UART_NUM_0, &c, 1, 0) > 0)
+      {
+        printf("FT demo stopped\r\n");
+        break;
+      }
+
+      frame_no++;
+    }
+  }
+
+  err2 = ft_close_session();
+  if (err == ESP_OK)
+    err = err2;
+
+  if (err != ESP_OK)
+  {
+    printf("FT demo3 failed: %d\r\n", (int)err);
+    return 1;
+  }
+
+  return 0;
+}
+
 int ft_demo_cmd(int argc, char **argv)
 {
   u32 num;
@@ -2508,6 +2736,7 @@ int ft_demo_cmd(int argc, char **argv)
     printf("Modes:\r\n");
     printf("  1  Test sequence\r\n");
     printf("  2  Bitmap render demo\r\n");
+    printf("  3  Pseudo 3D tunnel road\r\n");
     return 1;
   }
 
@@ -2534,6 +2763,9 @@ int ft_demo_cmd(int argc, char **argv)
 
     case 2:
       return ft_demo1_cmd();
+
+    case 3:
+      return ft_demo3_cmd();
   }
 
   printf("Unknown demo number: %lu\r\n", (unsigned long)num);

@@ -6,8 +6,6 @@
 
 struct app_params_t
 {
-  uint8_t spi_width;
-  uint8_t spi_freq;
   uint8_t usb_mode;
   uint8_t wifi_mode;
   char wifi_ap[64];

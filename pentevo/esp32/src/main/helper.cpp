@@ -22,8 +22,12 @@
 
 #include "helper.h"
 #include "http_client.h"
+#include "gopher_client.h"
+#include "stream_client.h"
 
 const char TAG[] = "helper";
+
+EXT_RAM_BSS_ATTR u8 url_buf[1024];
 
 QueueHandle_t helper_queue;
 
@@ -73,6 +77,9 @@ void *f_realloc(void *p, size_t x)
 
 void helper_task(void *arg)
 {
+  net.url = url_buf;
+  memset(net.url, 0, 1024);
+
   while (1)
   {
     int task;
@@ -457,6 +464,34 @@ void helper_task(void *arg)
 
         case TASK_HTTP_GET:
           http_do_get();
+        break;
+
+        case TASK_HTTPS_GET:
+          https_do_get();
+        break;
+
+        case TASK_GOPHER_GET:
+          gopher_do_get();
+        break;
+
+        case TASK_HTTP_STREAM_START:
+          stream_http_start();
+        break;
+
+        case TASK_HTTPS_STREAM_START:
+          stream_https_start();
+        break;
+
+        case TASK_GOPHER_STREAM_START:
+          stream_gopher_start();
+        break;
+
+        case TASK_STREAM_READ:
+          stream_read();
+        break;
+
+        case TASK_STREAM_CLOSE:
+          stream_close();
         break;
 
         case TASK_HTTP_STREAM_READ:

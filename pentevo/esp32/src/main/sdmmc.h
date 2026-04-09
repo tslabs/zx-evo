@@ -1,8 +1,8 @@
-
 #pragma once
 
 #include <stdint.h>
 #include <stddef.h>
+#include <stdbool.h>
 #include "esp_err.h"
 #include "driver/sdmmc_host.h"
 #include "sdmmc_cmd.h"
@@ -42,7 +42,6 @@
 #define SDMMC_CMD7_SELECT_CARD 7U
 #endif
 
-// CMD13 bits (Card Status)
 #define SD_ST_OUT_OF_RANGE        (1U << 31)
 #define SD_ST_ADDRESS_ERROR       (1U << 30)
 #define SD_ST_BLOCK_LEN_ERROR     (1U << 29)
@@ -63,17 +62,27 @@
 extern sdmmc_host_t sd_host;
 extern sdmmc_slot_config_t sd_slot;
 extern sdmmc_card_t sd_card;
+extern sdmmc_card_t *sd_card_ptr;
+extern bool sd_initialized;
+extern bool sd_fs_mounted;
+extern char sd_fs_base_path[32];
+extern sdmmc_card_t *sd_fs_card;
 
 esp_err_t sd_init();
+esp_err_t sd_reinit();
+esp_err_t sd_ensure_ready();
+esp_err_t sd_probe_card();
 void sd_deinit();
-int sd_read_sectors(uint32_t sec, uint32_t num);
+esp_err_t sd_read_sectors(uint32_t sec, uint32_t num);
 esp_err_t sd_card_erase();
 esp_err_t sd_fs_mount(const char *base_path, sdmmc_card_t **out_card);
 void sd_fs_unmount(const char *base_path, sdmmc_card_t *card);
-int sd_fs_list_dir(const char *base_path, const char *path);
+esp_err_t sd_fs_list_dir(const char *base_path, const char *path);
+esp_err_t sd_fs_read_file(const char *base_path, const char *path, void *dst, size_t dst_size, size_t *out_size);
+bool sd_error_needs_reinit(esp_err_t err);
 void sd_log_cid(const sdmmc_cid_t *cid);
 void sd_log_ocr(const sdmmc_card_t *card);
-void sd_log_scr(const sdmmc_card_t *sd_card);
+void sd_log_scr(const sdmmc_card_t *card);
 
 void sdmmc_console_register_system_commands();
 

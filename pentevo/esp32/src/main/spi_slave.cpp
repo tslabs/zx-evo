@@ -201,6 +201,29 @@ void IRAM_ATTR set_status(u8 err)
   wr_reg32(ESP_EXEC_TIME, stats::get_time());
 }
 
+u8* get_dma_buf(void)
+{
+  return dma_buf;
+}
+
+void spi_slave_dma_send_direct(size_t len)
+{
+  wr_reg32(ESP_REG_DATA_SIZE, len);
+  put_txq(DREQ_STREAM);
+}
+
+void IRAM_ATTR wait_status(u8 status)
+{
+  while (rd_reg8(ESP_REG_STATUS) != status)
+    vTaskDelay(1);
+}
+
+void IRAM_ATTR wait_not_status(u8 status)
+{
+  while (rd_reg8(ESP_REG_STATUS) == status)
+    vTaskDelay(1);
+}
+
 // ------------- SPI device
 
 
@@ -285,10 +308,10 @@ void init_slave_hd()
   }
 
   if (!g_sender_task)
-    xTaskCreatePinnedToCore(sender_task, "sender", 2048, NULL, 23, &g_sender_task, 0);
+    xTaskCreatePinnedToCore(sender_task, "sender", 2048, NULL, SLAVE_TASK_PRIO, &g_sender_task, 0);
 
   if (!g_receiver_task)
-    xTaskCreatePinnedToCore(receiver_task, "receiver", 4096, NULL, 23, &g_receiver_task, 0);
+    xTaskCreatePinnedToCore(receiver_task, "receiver", 4096, NULL, SLAVE_TASK_PRIO, &g_receiver_task, 0);
 
   seed = esp_timer_get_time();
   is_busy = false;
@@ -722,6 +745,26 @@ void IRAM_ATTR command()
           wr_regs(ESP_REG_IP, &net.ip, sizeof(net.ip));
           set_status(ESP_ST_READY);
         break;
+		  
+	    case ESP_CMD_SET_URL:
+        {
+          size_t size = rd_reg32(ESP_REG_DATA_SIZE);
+
+          if (!size || (size > DMA_BUF_SIZE))
+          {
+            set_status(ESP_ERR_INV_SIZE);
+            break;
+          }
+
+          if (!net.url)
+          {
+            set_status(ESP_ERR_INV_STATE);
+            break;
+          }
+
+          put_rxq_isr(DREQ_URL);
+        }
+        break;
 
         case ESP_CMD_SET_AP_NAME:
         {
@@ -898,8 +941,32 @@ void IRAM_ATTR command()
           put_helper_isr(TASK_HTTP_GET);
         break;
 
-        case ESP_CMD_HTTP_ABORT:
-          set_status(ESP_ST_READY); // ??? Check for graceful HTTP exit
+        case ESP_CMD_HTTPS_GET:
+          put_helper_isr(TASK_HTTPS_GET);
+        break;
+
+        case ESP_CMD_GOPHER_GET:
+          put_helper_isr(TASK_GOPHER_GET);
+        break;
+
+        case ESP_CMD_HTTP_STREAM_START:
+          put_helper_isr(TASK_HTTP_STREAM_START);
+        break;
+
+        case ESP_CMD_HTTPS_STREAM_START:
+          put_helper_isr(TASK_HTTPS_STREAM_START);
+        break;
+
+        case ESP_CMD_GOPHER_STREAM_START:
+          put_helper_isr(TASK_GOPHER_STREAM_START);
+        break;
+
+        case ESP_CMD_STREAM_READ:
+          put_helper_isr(TASK_STREAM_READ);
+        break;
+
+        case ESP_CMD_STREAM_CLOSE:
+          put_helper_isr(TASK_STREAM_CLOSE);
         break;
 
         case ESP_CMD_GET_RND:
@@ -1060,6 +1127,10 @@ u32 IRAM_ATTR prepare_tx_data(u8 type, size_t size)
       seed = x;
     }
     break;
+
+    case DREQ_STREAM:
+      // Data already in dma_buf, just return size
+    break;
   }
 
   return size;
@@ -1069,6 +1140,21 @@ void IRAM_ATTR process_rx_data(u8 type, size_t size)
 {
   switch (type)
   {
+    case DREQ_URL:
+    {
+      if (!net.url)
+      {
+        set_status(ESP_ERR_INV_STATE);
+        break;
+      }
+      
+      if (size > 1023) size = 1023;
+      memcpy(net.url, dma_buf, size);
+      net.url[size] = 0;  // Ensure null terminator
+      set_status(ESP_ST_READY);
+    }
+    break;
+
     case DREQ_DATA:
     {
       int handle = rd_reg8(ESP_REG_OBJ_HANDLE);

@@ -10,8 +10,6 @@
 app_params_t app_params;
 
 char NVS_PARAMS_NS[] = "appcfg";
-char NVS_KEY_SPI_WIDTH[] = "spi_width";
-char NVS_KEY_SPI_FREQ[]  = "spi_freq";
 char NVS_KEY_USB_MODE[]  = "usb_mode";
 char NVS_KEY_WIFI_MODE[] = "wifi_mode";
 char NVS_KEY_WIFI_AP[]   = "wifi_ap";
@@ -32,7 +30,6 @@ void initialize_nvs()
 void app_params_set_defaults()
 {
   memset(&app_params, 0, sizeof(app_params));
-  app_params.spi_width = 1;
 }
 
 esp_err_t app_params_load_u8(nvs_handle_t h, const char *key, uint8_t *value)
@@ -64,12 +61,6 @@ esp_err_t app_params_load()
   if (err == ESP_ERR_NVS_NOT_FOUND) return ESP_OK;
   if (err != ESP_OK) return err;
 
-  err = app_params_load_u8(h, NVS_KEY_SPI_WIDTH, &app_params.spi_width);
-  if (err != ESP_OK) goto end;
-
-  err = app_params_load_u8(h, NVS_KEY_SPI_FREQ, &app_params.spi_freq);
-  if (err != ESP_OK) goto end;
-
   err = app_params_load_u8(h, NVS_KEY_USB_MODE, &app_params.usb_mode);
   if (err != ESP_OK) goto end;
 
@@ -92,12 +83,6 @@ esp_err_t app_params_save()
   nvs_handle_t h = 0;
   esp_err_t err = nvs_open(NVS_PARAMS_NS, NVS_READWRITE, &h);
   if (err != ESP_OK) return err;
-
-  err = nvs_set_u8(h, NVS_KEY_SPI_WIDTH, app_params.spi_width);
-  if (err != ESP_OK) goto end;
-
-  err = nvs_set_u8(h, NVS_KEY_SPI_FREQ, app_params.spi_freq);
-  if (err != ESP_OK) goto end;
 
   err = nvs_set_u8(h, NVS_KEY_USB_MODE, app_params.usb_mode);
   if (err != ESP_OK) goto end;
@@ -128,22 +113,6 @@ bool app_params_set_by_name(const char *name, const char *value)
 {
   char *endp = NULL;
   unsigned long v = 0;
-
-  if (!strcmp(name, "spi_width"))
-  {
-    v = strtoul(value, &endp, 0);
-    if (!endp || *endp || v > 255) return false;
-    app_params.spi_width = (uint8_t)v;
-    return true;
-  }
-
-  if (!strcmp(name, "spi_freq"))
-  {
-    v = strtoul(value, &endp, 0);
-    if (!endp || *endp || v > 255) return false;
-    app_params.spi_freq = (uint8_t)v;
-    return true;
-  }
 
   if (!strcmp(name, "usb_mode"))
   {
