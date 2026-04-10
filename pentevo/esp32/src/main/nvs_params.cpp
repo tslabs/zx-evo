@@ -18,6 +18,7 @@ char NVS_KEY_WIFI_PSW[]  = "wifi_psw";
 void initialize_nvs()
 {
   esp_err_t err = nvs_flash_init();
+  log_sram_used(__FILE_NAME__ ": nvs_flash_init");
 
   if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND)
   {
@@ -25,6 +26,8 @@ void initialize_nvs()
     err = nvs_flash_init();
   }
   ESP_ERROR_CHECK(err);
+
+  log_sram_used(__FILE_NAME__ ": initialize_nvs end");
 }
 
 void app_params_set_defaults()

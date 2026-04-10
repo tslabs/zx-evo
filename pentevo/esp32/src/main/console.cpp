@@ -22,6 +22,8 @@
 #include "ft8xx.h"
 #include "console.h"
 #include "xm_cpp.h"
+#include "spiffs.h"
+#include "fatfs.h"
 
 #ifdef CONFIG_ESP32_WIFI_ENABLED
 #include "wifi.h"
@@ -46,6 +48,8 @@ void console_register_commands()
   sdmmc_console_register_system_commands();
 #endif
   xm_console_register_system_commands();
+  spiffs_console_register_system_commands();
+  fat_console_register_system_commands();
 }
 
 void initialize_console()
@@ -53,9 +57,10 @@ void initialize_console()
   // Drain stdout before reconfiguring it
   fflush(stdout);
   fsync(fileno(stdout));
-
+  
   // Disable buffering on stdin
   setvbuf(stdin, NULL, _IONBF, 0);
+  log_sram_used(__FILE_NAME__ ": setvbuf");
 
   /* Minicom, screen, idf_monitor send CR when ENTER key is pressed */
   uart_vfs_dev_port_set_rx_line_endings(CONFIG_ESP_CONSOLE_UART_NUM, ESP_LINE_ENDINGS_CR);
@@ -65,6 +70,7 @@ void initialize_console()
 
   // Install UART driver for interrupt-driven reads and writes
   ESP_ERROR_CHECK(uart_driver_install((uart_port_t)CONFIG_ESP_CONSOLE_UART_NUM, 256, 0, 0, NULL, 0));
+  log_sram_used(__FILE_NAME__ ": uart_driver_install");
 
   // Tell VFS to use UART driver
   uart_vfs_dev_use_driver(CONFIG_ESP_CONSOLE_UART_NUM);
@@ -103,6 +109,8 @@ void initialize_console()
   // Prompt to be printed before each line.
   // This can be customized, made dynamic, etc.
   prompt = LOG_COLOR_I PROMPT_STR "> " LOG_RESET_COLOR;
+  
+  log_sram_used(__FILE_NAME__ ": initialize_console end");
 }
 
 void console_task(void *arg)

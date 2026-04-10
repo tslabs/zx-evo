@@ -287,8 +287,10 @@ void init_slave_hd()
     g_spi_mode_mtx = xSemaphoreCreateMutex();
 
   init_spi_configs();
+  log_sram_used(__FILE_NAME__ ": init_spi_configs");
 
   ESP_ERROR_CHECK(spi_slave_hd_init(SLAVE_HOST, &g_bus_cfg, &g_slave_hd_cfg));
+  log_sram_used(__FILE_NAME__ ": spi_slave_hd_init");
 
   set_status(ESP_ST_RESET);
 
@@ -299,7 +301,10 @@ void init_slave_hd()
     rx_queue = xQueueCreate(2, sizeof(int));
 
   if (!dma_buf)
+  {
     dma_buf = (u8*)heap_caps_malloc(DMA_BUF_SIZE, MALLOC_CAP_DMA);
+    log_sram_used(__FILE_NAME__ ": dma_buf");
+  }
 
   if (!dma_buf)
   {
@@ -308,14 +313,22 @@ void init_slave_hd()
   }
 
   if (!g_sender_task)
-    xTaskCreatePinnedToCore(sender_task, "sender", 2048, NULL, SLAVE_TASK_PRIO, &g_sender_task, 0);
+  {
+    xTaskCreatePinnedToCoreWithCaps(sender_task, "sender", 2048, NULL, SLAVE_TASK_PRIO, &g_sender_task, 0, MALLOC_CAP_SPIRAM);
+    log_sram_used(__FILE_NAME__ ": TaskCreate sender");
+  }
 
   if (!g_receiver_task)
-    xTaskCreatePinnedToCore(receiver_task, "receiver", 4096, NULL, SLAVE_TASK_PRIO, &g_receiver_task, 0);
+  {
+    xTaskCreatePinnedToCoreWithCaps(receiver_task, "receiver", 4096, NULL, SLAVE_TASK_PRIO, &g_receiver_task, 0, MALLOC_CAP_SPIRAM);
+    log_sram_used(__FILE_NAME__ ": TaskCreate receiver");
+  }
 
   seed = esp_timer_get_time();
   is_busy = false;
   spi_role = SPI_ROLE_SLAVE_HD;
+  
+  log_sram_used(__FILE_NAME__ ": init_slave_hd end");
 }
 
 esp_err_t spi_switch_to_master()

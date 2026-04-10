@@ -41,7 +41,10 @@ esp_netif_ip_info_t ip;
 esp_netif_t *wifi_sta_netif = NULL;
 bool wifi_initialized = false;
 bool wifi_started = false;
+bool wifi_connecting = false;
 TaskHandle_t wifi_autoconn_task = NULL;
+TaskHandle_t wifi_reconnect_task_handle = NULL;
+bool wifi_reconnect_enabled = false;
 TickType_t wifi_next_reconnect_tick = 0;
 
 enum
@@ -88,22 +91,46 @@ void wifi_lower_sys_task_prio()
   if (!h_tcpip) ESP_LOGW(TAG, "system task 'tcpip' not found");
 }
 
+void wifi_reconnect_task(void *arg)
+{
+  while (1)
+  {
+    bool connected = wifi_event_group && ((xEventGroupGetBits(wifi_event_group) & CONNECTED_BIT) != 0);
+
+    if (wifi_started && wifi_reconnect_enabled && wifi_connecting && !connected)
+    {
+      TickType_t now = xTaskGetTickCount();
+
+      if (now >= wifi_next_reconnect_tick)
+      {
+        wifi_next_reconnect_tick = now + pdMS_TO_TICKS(WIFI_RECONNECT_DELAY_MS);
+        esp_err_t err = esp_wifi_connect();
+
+        if (err != ESP_OK)
+          ESP_LOGW(TAG, "esp_wifi_connect failed: %s", esp_err_to_name(err));
+      }
+    }
+
+    vTaskDelay(pdMS_TO_TICKS(250));
+  }
+}
+
 void event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void *event_data)
 {
   if (event_base == WIFI_EVENT)
   {
     if (event_id == WIFI_EVENT_STA_DISCONNECTED)
     {
-      bool autoconnect = wifi_started && wifi_should_autoconnect();
       xEventGroupClearBits(wifi_event_group, CONNECTED_BIT);
+      memset(&ip, 0, sizeof(ip));
 
-      TickType_t now = xTaskGetTickCount();
-
-      if (autoconnect && (now >= wifi_next_reconnect_tick))
+      if (wifi_started && wifi_reconnect_enabled)
       {
-        wifi_next_reconnect_tick = now + pdMS_TO_TICKS(WIFI_RECONNECT_DELAY_MS);
-        esp_wifi_connect();
+        wifi_connecting = true;
+        wifi_next_reconnect_tick = xTaskGetTickCount() + pdMS_TO_TICKS(WIFI_RECONNECT_DELAY_MS);
       }
+      else
+        wifi_connecting = false;
     }
 
     else if (event_id == WIFI_EVENT_WIFI_READY)
@@ -113,13 +140,23 @@ void event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, voi
       ESP_LOGI(TAG, "WIFI_EVENT_SCAN_DONE");
 
     else if (event_id == WIFI_EVENT_STA_START)
+    {
+      wifi_connecting = wifi_reconnect_enabled;
       ESP_LOGI(TAG, "WIFI_EVENT_STA_START");
+    }
 
     else if (event_id == WIFI_EVENT_STA_STOP)
+    {
+      wifi_connecting = false;
+      memset(&ip, 0, sizeof(ip));
       ESP_LOGI(TAG, "WIFI_EVENT_STA_STOP");
+    }
 
     else if (event_id == WIFI_EVENT_STA_CONNECTED)
+    {
+      wifi_connecting = true;
       ESP_LOGI(TAG, "WIFI_EVENT_STA_CONNECTED");
+    }
 
     else if (event_id == WIFI_EVENT_STA_BSS_RSSI_LOW)
       ESP_LOGI(TAG, "WIFI_EVENT_STA_BSS_RSSI_LOW");
@@ -131,6 +168,7 @@ void event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, voi
     {
       ip_event_got_ip_t *event = (ip_event_got_ip_t*)event_data;
       ip = event->ip_info;
+      wifi_connecting = false;
       xEventGroupSetBits(wifi_event_group, CONNECTED_BIT);
 
       ESP_LOGI(TAG, "IP_EVENT_STA_GOT_IP: " IPSTR, IP2STR(&event->ip_info.ip));
@@ -156,13 +194,17 @@ void get_ip(uint8_t *i, uint8_t *m, uint8_t *g)
 
 bool wifi_is_connected()
 {
-  if (!wifi_event_group) return false;
-  return (xEventGroupGetBits(wifi_event_group) & CONNECTED_BIT) != 0;
+  if (wifi_event_group && ((xEventGroupGetBits(wifi_event_group) & CONNECTED_BIT) != 0)) return true;
+  if (wifi_started && wifi_reconnect_enabled && (wifi_connecting || wifi_autoconn_task)) return true;
+  return false;
 }
 
 void wifi_autoconnect_task(void *arg)
 {
   bool connected = false;
+
+  wifi_reconnect_enabled = wifi_should_autoconnect();
+  wifi_connecting = wifi_reconnect_enabled;
 
   if (!wifi_is_enabled())
     ESP_LOGI(TAG, "WiFi disabled by config");
@@ -174,6 +216,7 @@ void wifi_autoconnect_task(void *arg)
     ESP_LOGI(TAG, "WiFi auto connect: %s", connected ? "OK" : "FAIL");
   }
 
+  if (!connected && !wifi_reconnect_enabled) wifi_connecting = false;
   wifi_autoconn_task = NULL;
   vTaskDelete(NULL);
 }
@@ -181,8 +224,12 @@ void wifi_autoconnect_task(void *arg)
 void wifi_start_autoconnect()
 {
   initialize_wifi();
+
+  if (!wifi_reconnect_task_handle)
+    xTaskCreatePinnedToCoreWithCaps(wifi_reconnect_task, "wifi-reconn", 3072, NULL, WIFI_AUTOCONNECT_TASK_PRIO, &wifi_reconnect_task_handle, 0, MALLOC_CAP_SPIRAM);
+
   if (wifi_autoconn_task) return;
-  xTaskCreatePinnedToCore(wifi_autoconnect_task, "wifi-auto", 4096, NULL, WIFI_AUTOCONNECT_TASK_PRIO, &wifi_autoconn_task, 0);
+  xTaskCreatePinnedToCoreWithCaps(wifi_autoconnect_task, "wifi-auto", 4096, NULL, WIFI_AUTOCONNECT_TASK_PRIO, &wifi_autoconn_task, 0, MALLOC_CAP_SPIRAM);
 }
 
 void initialize_wifi()
@@ -219,6 +266,9 @@ void initialize_wifi()
   ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
   ESP_ERROR_CHECK(esp_wifi_start());
   wifi_next_reconnect_tick = 0;
+  wifi_connecting = false;
+  wifi_reconnect_enabled = false;
+  memset(&ip, 0, sizeof(ip));
   if (wifi_event_group) xEventGroupClearBits(wifi_event_group, CONNECTED_BIT);
   wifi_started = true;
 }
@@ -229,6 +279,8 @@ void wifi_disconnect_now()
 
   xEventGroupClearBits(wifi_event_group, CONNECTED_BIT);
   wifi_next_reconnect_tick = 0;
+  wifi_connecting = false;
+  wifi_reconnect_enabled = false;
   esp_wifi_disconnect();
   esp_wifi_stop();
   memset(&ip, 0, sizeof(ip));
@@ -240,20 +292,28 @@ bool wifi_connect(const char *ssid, const char *pass, int timeout_ms)
   initialize_wifi();
   wifi_lower_sys_task_prio();
 
+  if (!wifi_reconnect_task_handle)
+    xTaskCreatePinnedToCoreWithCaps(wifi_reconnect_task, "wifi-reconn", 3072, NULL, WIFI_AUTOCONNECT_TASK_PRIO, &wifi_reconnect_task_handle, 0, MALLOC_CAP_SPIRAM);
+
   wifi_config_t wifi_config = { 0 };
   strlcpy((char*)wifi_config.sta.ssid, ssid, sizeof(wifi_config.sta.ssid));
   if (pass) strlcpy((char*)wifi_config.sta.password, pass, sizeof(wifi_config.sta.password));
 
   xEventGroupClearBits(wifi_event_group, CONNECTED_BIT);
+  memset(&ip, 0, sizeof(ip));
 
   ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
   ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
+  wifi_reconnect_enabled = true;
+  wifi_connecting = true;
   wifi_next_reconnect_tick = xTaskGetTickCount() + pdMS_TO_TICKS(WIFI_RECONNECT_DELAY_MS);
   esp_wifi_connect();
 
   int bits = xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT, pdFALSE, pdTRUE, timeout_ms / portTICK_PERIOD_MS);
+  bool connected = (bits & CONNECTED_BIT) != 0;
 
-  return (bits & CONNECTED_BIT) != 0;
+  if (!connected && !wifi_reconnect_enabled) wifi_connecting = false;
+  return connected;
 }
 
 bool wifi_connect_saved(int timeout_ms)
@@ -577,6 +637,8 @@ int wf_info(int argc, char **argv)
   printf("  enabled     : %u\r\n", app_params.wifi_mode);
   printf("  initialized : %u\r\n", wifi_initialized ? 1 : 0);
   printf("  started     : %u\r\n", wifi_started ? 1 : 0);
+  printf("  connecting  : %u\r\n", wifi_connecting ? 1 : 0);
+  printf("  reconnect   : %u\r\n", wifi_reconnect_enabled ? 1 : 0);
   printf("  connected   : %u\r\n", connected ? 1 : 0);
   printf("  saved_ap    : %s\r\n", app_params.wifi_ap[0] ? app_params.wifi_ap : "");
   printf("  pass_set    : %u\r\n", app_params.wifi_psw[0] ? 1 : 0);

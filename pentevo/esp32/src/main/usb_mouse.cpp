@@ -246,7 +246,7 @@ void usb_mouse_task(void *arg)
     return;
   }
 
-  if (xTaskCreatePinnedToCore(usb_mouse_lib_task, "usb_mouse_lib", 2048, xTaskGetCurrentTaskHandle(), USB_MOUSE_LIB_TASK_PRIO, &usb_mouse_lib_task_handle, 0) != pdTRUE)
+  if (xTaskCreatePinnedToCoreWithCaps(usb_mouse_lib_task, "usb_mouse_lib", 2048, xTaskGetCurrentTaskHandle(), USB_MOUSE_LIB_TASK_PRIO, &usb_mouse_lib_task_handle, 0, MALLOC_CAP_SPIRAM) != pdTRUE)
   {
     printf("usb mouse lib task create failed\r\n");
     vQueueDelete(usb_mouse_evt_queue);
@@ -328,7 +328,7 @@ extern "C" esp_err_t usb_mouse_start()
 
   usb_mouse_mode_active = true;
 
-  if (xTaskCreatePinnedToCore(usb_mouse_task, "usb_mouse", 4096, NULL, USB_MOUSE_TASK_PRIO, &usb_mouse_task_handle, 0) != pdTRUE)
+  if (xTaskCreatePinnedToCoreWithCaps(usb_mouse_task, "usb_mouse", 4096, NULL, USB_MOUSE_TASK_PRIO, &usb_mouse_task_handle, 0, MALLOC_CAP_SPIRAM) != pdTRUE)
   {
     usb_mouse_mode_active = false;
     usb_mouse_task_handle = NULL;
@@ -345,6 +345,32 @@ int usb_cmd(int argc, char **argv)
   {
     printf("Usage:\r\n");
     printf("  usb en <0|1>\r\n");
+    printf("  usb up\r\n");
+    return 0;
+  }
+
+  if (!strcmp(argv[1], "up"))
+  {
+    if (argc != 2)
+    {
+      printf("Usage: usb up\r\n");
+      return 1;
+    }
+
+    esp_err_t err = usb_mouse_start();
+    if (err == ESP_ERR_INVALID_STATE)
+    {
+      printf("usb mouse mode already active\r\n");
+      return 0;
+    }
+
+    if (err != ESP_OK)
+    {
+      printf("usb mouse task create failed: %s\r\n", esp_err_to_name(err));
+      return 1;
+    }
+
+    printf("usb mouse host started until reset (NVS unchanged)\r\n");
     return 0;
   }
 
@@ -353,6 +379,7 @@ int usb_cmd(int argc, char **argv)
     printf("Unknown subcommand: %s\r\n", argv[1]);
     printf("Usage:\r\n");
     printf("  usb en <0|1>\r\n");
+    printf("  usb up\r\n");
     return 1;
   }
 

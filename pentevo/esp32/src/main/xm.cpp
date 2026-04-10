@@ -86,6 +86,7 @@ void initialize_xm()
 {
   i2s_chan_config_t tx_chan_cfg = I2S_CHANNEL_DEFAULT_CONFIG(I2S_NUM_AUTO, I2S_ROLE_MASTER);
   ESP_ERROR_CHECK(i2s_new_channel(&tx_chan_cfg, &tx_chan, NULL));
+  log_sram_used(__FILE_NAME__ ": i2s_new_channel");
 
   i2s_std_config_t tx_std_cfg =
   {
@@ -104,19 +105,25 @@ void initialize_xm()
       },
     },
   };
+  log_sram_used(__FILE_NAME__ ": tx_std_cfg");
 
   tx_std_cfg.slot_cfg.bit_shift = true;   // Phillips format support
 
   ESP_ERROR_CHECK(i2s_channel_init_std_mode(tx_chan, &tx_std_cfg));
+  log_sram_used(__FILE_NAME__ ": i2s_channel_init_std_mode");
   ESP_ERROR_CHECK(i2s_channel_enable(tx_chan));
+  log_sram_used(__FILE_NAME__ ": i2s_channel_enable");
 
   xm_queue = xQueueCreate(XM_BUF_NUM + 1, sizeof(XM_TASK));
   i2s_queue = xQueueCreate(XM_BUF_NUM - 2, sizeof(int));
   player_queue = xQueueCreate(2, sizeof(PLAYER_TASK));
 
-  xTaskCreatePinnedToCore(xm_task, "xm-helper", 3072, NULL, XM_HELPER_TASK_PRIO, NULL, 0);     // XM helper tasks
-  xTaskCreatePinnedToCore(i2s_task, "i2s-writer", 2048, NULL, I2S_TASK_PRIO, NULL, 0);         // I2S DAC writer
-  xTaskCreatePinnedToCore(player_task, "player", 2048, NULL, XM_PLAYER_TASK_PRIO, NULL, 1);    // XM renderer, libxm (should work on a separate core)
+  xTaskCreatePinnedToCoreWithCaps(xm_task, "xm-helper", 3072, NULL, XM_HELPER_TASK_PRIO, NULL, 0, MALLOC_CAP_SPIRAM);     // XM helper tasks
+  log_sram_used(__FILE_NAME__ ": TaskCreate xm_task");
+  xTaskCreatePinnedToCoreWithCaps(i2s_task, "i2s-writer", 2048, NULL, I2S_TASK_PRIO, NULL, 0, MALLOC_CAP_SPIRAM);         // I2S DAC writer
+  log_sram_used(__FILE_NAME__ ": TaskCreate i2s_task");
+  xTaskCreatePinnedToCoreWithCaps(player_task, "player", 2048, NULL, XM_PLAYER_TASK_PRIO, NULL, 1, MALLOC_CAP_SPIRAM);    // XM renderer, libxm (should work on a separate core)
+  log_sram_used(__FILE_NAME__ ": TaskCreate player_task");
 }
 
 void player_task(void *arg)
