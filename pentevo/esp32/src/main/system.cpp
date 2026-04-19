@@ -15,6 +15,7 @@
 #include "esp_chip_info.h"
 #include "esp_sleep.h"
 #include "esp_flash.h"
+#include "esp_partition.h"
 #include "esp_system.h"
 #include "esp_private/esp_clk.h"
 #include <esp_crc.h>
@@ -397,6 +398,443 @@ int get_info(int argc, char **argv)
   return 0;
 }
 
+
+const char *flash_vendor_str(uint8_t id)
+{
+  switch (id)
+  {
+    case 0x01: return "Spansion / Cypress / Infineon";
+    case 0x1C: return "EON";
+    case 0x20: return "ST / Numonyx / Micron family";
+    case 0x31: return "Catalyst / Onsemi";
+    case 0x62: return "Sanyo";
+    case 0x68: return "Boya";
+    case 0x85: return "Puya";
+    case 0x8C: return "ESMT";
+    case 0x9D: return "ISSI / PMC";
+    case 0xAD: return "Bright / Hyundai";
+    case 0xBF: return "SST / Microchip";
+    case 0xC2: return "Macronix";
+    case 0xC8: return "GigaDevice";
+    case 0xD5: return "ISSI";
+    case 0xEF: return "Winbond";
+    default:   return "Unknown";
+  }
+}
+
+const char *flash_mode_str()
+{
+#if defined(CONFIG_ESPTOOLPY_FLASHMODE_OPI)
+  return "OPI";
+#elif defined(CONFIG_ESPTOOLPY_FLASHMODE_QIO)
+  return "QIO";
+#elif defined(CONFIG_ESPTOOLPY_FLASHMODE_QOUT)
+  return "QOUT";
+#elif defined(CONFIG_ESPTOOLPY_FLASHMODE_DIO)
+  return "DIO";
+#elif defined(CONFIG_ESPTOOLPY_FLASHMODE_DOUT)
+  return "DOUT";
+#elif defined(CONFIG_ESPTOOLPY_FLASHMODE_SLOW_READ)
+  return "SLOW_READ";
+#else
+  return "Unknown";
+#endif
+}
+
+const char *flash_freq_str()
+{
+#if defined(CONFIG_ESPTOOLPY_FLASHFREQ_120M)
+  return "120 MHz";
+#elif defined(CONFIG_ESPTOOLPY_FLASHFREQ_80M)
+  return "80 MHz";
+#elif defined(CONFIG_ESPTOOLPY_FLASHFREQ_40M)
+  return "40 MHz";
+#elif defined(CONFIG_ESPTOOLPY_FLASHFREQ_26M)
+  return "26.7 MHz";
+#elif defined(CONFIG_ESPTOOLPY_FLASHFREQ_20M)
+  return "20 MHz";
+#elif defined(CONFIG_ESPTOOLPY_FLASHFREQ_16M)
+  return "16 MHz";
+#elif defined(CONFIG_ESPTOOLPY_FLASHFREQ_15M)
+  return "15 MHz";
+#elif defined(CONFIG_ESPTOOLPY_FLASHFREQ_12M)
+  return "12 MHz";
+#elif defined(CONFIG_ESPTOOLPY_FLASHFREQ_10M)
+  return "10 MHz";
+#elif defined(CONFIG_ESPTOOLPY_FLASHFREQ_5M)
+  return "5 MHz";
+#elif defined(CONFIG_ESPTOOLPY_FLASHFREQ_2M)
+  return "2 MHz";
+#else
+  return "Unknown";
+#endif
+}
+
+void flash_print_protect_regions(esp_flash_t *chip)
+{
+  const esp_flash_region_t *regions = NULL;
+  uint32_t count = 0;
+  esp_err_t err = esp_flash_get_protectable_regions(chip, &regions, &count);
+
+  if (err != ESP_OK)
+  {
+    printf("Protection map: n/a (%s)\r\n", esp_err_to_name(err));
+    return;
+  }
+
+  printf("Protection map:\r\n");
+
+  for (uint32_t i = 0; i < count; i++)
+  {
+    bool protected_region = false;
+    esp_err_t err2 = esp_flash_get_protected_region(chip, &regions[i], &protected_region);
+
+    printf
+    (
+      "  %2" PRIu32 ": %08" PRIX32 "..%08" PRIX32 "  %8" PRIu32 " KB  ",
+      i,
+      regions[i].offset,
+      regions[i].offset + regions[i].size - 1,
+      regions[i].size / 1024
+    );
+
+    if (err2 == ESP_OK) printf("%s", protected_region ? "protected" : "open");
+    else printf("state n/a (%s)", esp_err_to_name(err2));
+
+    printf("\r\n");
+  }
+}
+
+const char *flash_part_type_str(uint8_t type)
+{
+  switch (type)
+  {
+    case ESP_PARTITION_TYPE_APP:             return "app";
+    case ESP_PARTITION_TYPE_DATA:            return "data";
+    case ESP_PARTITION_TYPE_BOOTLOADER:      return "bootldr";
+    case ESP_PARTITION_TYPE_PARTITION_TABLE: return "ptable";
+    default:                                 return "custom";
+  }
+}
+
+const char *flash_part_subtype_str(uint8_t type, uint8_t subtype)
+{
+  if (type == ESP_PARTITION_TYPE_BOOTLOADER)
+  {
+    switch (subtype)
+    {
+      case ESP_PARTITION_SUBTYPE_BOOTLOADER_PRIMARY:  return "primary";
+      case ESP_PARTITION_SUBTYPE_BOOTLOADER_OTA:      return "ota";
+      case ESP_PARTITION_SUBTYPE_BOOTLOADER_RECOVERY: return "recovery";
+      default:                                        return "unknown";
+    }
+  }
+
+  if (type == ESP_PARTITION_TYPE_PARTITION_TABLE)
+  {
+    switch (subtype)
+    {
+      case ESP_PARTITION_SUBTYPE_PARTITION_TABLE_PRIMARY: return "primary";
+      case ESP_PARTITION_SUBTYPE_PARTITION_TABLE_OTA:     return "ota";
+      default:                                            return "unknown";
+    }
+  }
+
+  if (type == ESP_PARTITION_TYPE_APP)
+  {
+    if (subtype == ESP_PARTITION_SUBTYPE_APP_FACTORY) return "factory";
+    if (subtype >= ESP_PARTITION_SUBTYPE_APP_OTA_MIN && subtype < ESP_PARTITION_SUBTYPE_APP_OTA_MAX) return "ota_x";
+    if (subtype >= ESP_PARTITION_SUBTYPE_APP_TEE_MIN && subtype <= ESP_PARTITION_SUBTYPE_APP_TEE_MAX) return "tee_x";
+
+    switch (subtype)
+    {
+      case ESP_PARTITION_SUBTYPE_APP_TEST: return "test";
+      default:                             return "unknown";
+    }
+  }
+
+  if (type == ESP_PARTITION_TYPE_DATA)
+  {
+    switch (subtype)
+    {
+      case ESP_PARTITION_SUBTYPE_DATA_OTA:       return "ota";
+      case ESP_PARTITION_SUBTYPE_DATA_PHY:       return "phy";
+      case ESP_PARTITION_SUBTYPE_DATA_NVS:       return "nvs";
+      case ESP_PARTITION_SUBTYPE_DATA_COREDUMP:  return "coredump";
+      case ESP_PARTITION_SUBTYPE_DATA_NVS_KEYS:  return "nvs_keys";
+      case ESP_PARTITION_SUBTYPE_DATA_EFUSE_EM:  return "efuse_em";
+      case ESP_PARTITION_SUBTYPE_DATA_UNDEFINED: return "undef";
+      case ESP_PARTITION_SUBTYPE_DATA_ESPHTTPD:  return "esphttpd";
+      case ESP_PARTITION_SUBTYPE_DATA_FAT:       return "fat";
+      case ESP_PARTITION_SUBTYPE_DATA_SPIFFS:    return "spiffs";
+      case ESP_PARTITION_SUBTYPE_DATA_LITTLEFS:  return "littlefs";
+      case ESP_PARTITION_SUBTYPE_DATA_TEE_OTA:   return "tee_ota";
+      default:                                   return "unknown";
+    }
+  }
+
+  return "unknown";
+}
+
+typedef struct
+{
+  uint32_t address;
+  uint32_t size;
+} flash_region_info_t;
+
+void flash_region_insert_sorted(flash_region_info_t *regions, int *count, int max_count, uint32_t address, uint32_t size)
+{
+  if (*count >= max_count) return;
+
+  int pos = *count;
+  while (pos > 0 && regions[pos - 1].address > address)
+  {
+    regions[pos] = regions[pos - 1];
+    pos--;
+  }
+
+  regions[pos].address = address;
+  regions[pos].size = size;
+  (*count)++;
+}
+
+void flash_region_add_system(flash_region_info_t *regions, int *count, int max_count)
+{
+  flash_region_insert_sorted(regions, count, max_count, 0x00000000, CONFIG_PARTITION_TABLE_OFFSET);
+  flash_region_insert_sorted(regions, count, max_count, CONFIG_PARTITION_TABLE_OFFSET, 0x1000);
+}
+
+int flash_collect_regions(flash_region_info_t *regions, int max_count)
+{
+  int count = 0;
+  esp_partition_iterator_t it;
+
+  flash_region_add_system(regions, &count, max_count);
+
+  it = esp_partition_find(ESP_PARTITION_TYPE_ANY, ESP_PARTITION_SUBTYPE_ANY, NULL);
+  while (it)
+  {
+    const esp_partition_t *p = esp_partition_get(it);
+    if (p) flash_region_insert_sorted(regions, &count, max_count, p->address, p->size);
+    it = esp_partition_next(it);
+  }
+
+  esp_partition_iterator_release(it);
+  return count;
+}
+
+void flash_print_partition_line(int idx, uint32_t address, uint32_t size, uint32_t erase_size, const char *flags, const char *type_s, const char *sub_s, const char *label)
+{
+  printf
+  (
+    "%3d  %08" PRIX32 "  %08" PRIX32 "  %7" PRIu32 "  %5" PRIu32 "  %-5s  %-7s/%-8s  %s\r\n",
+    idx,
+    address,
+    address + size - 1,
+    size / 1024,
+    erase_size,
+    flags,
+    type_s,
+    sub_s,
+    label
+  );
+}
+
+void flash_print_partitions(uint32_t flash_size)
+{
+  printf("\r\n");
+  printf("Partitions:\r\n");
+  printf("Idx  Address   End       Size KB  Erase  Flags  Type/SubType      Label\r\n");
+
+  int idx = 0;
+  esp_partition_iterator_t it;
+
+  flash_print_partition_line(idx++, 0x00000000, CONFIG_PARTITION_TABLE_OFFSET, 0x1000, "-", "bootldr", "primary", "bootloader");
+  flash_print_partition_line(idx++, CONFIG_PARTITION_TABLE_OFFSET, 0x1000, 0x1000, "-", "ptable", "primary", "partition_table");
+
+  it = esp_partition_find(ESP_PARTITION_TYPE_ANY, ESP_PARTITION_SUBTYPE_ANY, NULL);
+  while (it)
+  {
+    const esp_partition_t *p = esp_partition_get(it);
+    const char *type_s = flash_part_type_str(p->type);
+    const char *sub_s = flash_part_subtype_str(p->type, p->subtype);
+    char flags[8];
+    int f = 0;
+
+    if (p->encrypted) flags[f++] = 'E';
+    if (p->readonly) flags[f++] = 'R';
+    if (!f) flags[f++] = '-';
+    flags[f] = 0;
+
+    flash_print_partition_line(idx++, p->address, p->size, p->erase_size, flags, type_s, sub_s, p->label[0] ? p->label : "-");
+    it = esp_partition_next(it);
+  }
+
+  esp_partition_iterator_release(it);
+
+  flash_region_info_t regions[128];
+  int region_count = flash_collect_regions(regions, 128);
+  uint32_t used = 0;
+
+  for (int i = 0; i < region_count; i++)
+    used += regions[i].size;
+
+  printf("\r\n");
+  printf("Coverage:\r\n");
+  printf("  Used by regions    : %" PRIu32 " bytes (%" PRIu32 " KB)\r\n", used, used / 1024);
+  if (flash_size >= used) printf("  Free in flash      : %" PRIu32 " bytes (%" PRIu32 " KB)\r\n", flash_size - used, (flash_size - used) / 1024);
+  else printf("  Free in flash      : overflow (%" PRIu32 " bytes over)\r\n", used - flash_size);
+
+  printf("\r\n");
+  printf("Free gaps:\r\n");
+
+  if (region_count <= 0)
+  {
+    printf("  none\r\n");
+    return;
+  }
+
+  uint32_t prev_end = 0;
+  bool found_gap = false;
+
+  for (int i = 0; i < region_count; i++)
+  {
+    uint32_t start = regions[i].address;
+    uint32_t end = regions[i].address + regions[i].size;
+
+    if (start > prev_end)
+    {
+      printf("  %08" PRIX32 "..%08" PRIX32 "  %" PRIu32 " bytes (%" PRIu32 " KB)\r\n", prev_end, start - 1, start - prev_end, (start - prev_end) / 1024);
+      found_gap = true;
+    }
+
+    if (end > prev_end) prev_end = end;
+  }
+
+  if (flash_size > prev_end)
+  {
+    printf("  %08" PRIX32 "..%08" PRIX32 "  %" PRIu32 " bytes (%" PRIu32 " KB)\r\n", prev_end, flash_size - 1, flash_size - prev_end, (flash_size - prev_end) / 1024);
+    found_gap = true;
+  }
+
+  if (!found_gap) printf("  none\r\n");
+}
+
+int flash_info()
+{
+  esp_flash_t *chip = esp_flash_default_chip;
+  esp_err_t err;
+  uint32_t id = 0;
+  uint32_t size_hdr = 0;
+  uint32_t size_phy = 0;
+  uint64_t uid = 0;
+  bool quad = false;
+  bool chip_wp = false;
+  bool unique_id_supported = false;
+
+  if (!chip)
+  {
+    printf("Main flash chip is not initialized\r\n");
+    return 1;
+  }
+
+  printf("Flash info:\r\n");
+
+  err = esp_flash_read_id(chip, &id);
+  if (err == ESP_OK)
+  {
+    const uint8_t mf_id = (id >> 16) & 0xFF;
+    const uint8_t mem_type = (id >> 8) & 0xFF;
+    const uint8_t cap_code = id & 0xFF;
+
+    printf("  JEDEC ID     : %06" PRIX32 "\r\n", id & 0xFFFFFF);
+    printf("  Manufacturer : %02X (%s)\r\n", mf_id, flash_vendor_str(mf_id));
+    printf("  Memory type  : %02X\r\n", mem_type);
+    printf("  Capacity code: %02X\r\n", cap_code);
+  }
+  else
+  {
+    printf("  JEDEC ID     : n/a (%s)\r\n", esp_err_to_name(err));
+  }
+
+  err = esp_flash_get_size(chip, &size_hdr);
+  if (err == ESP_OK) printf("  Header size  : %" PRIu32 " bytes (%" PRIu32 " MB)\r\n", size_hdr, size_hdr / (1024 * 1024));
+  else printf("  Header size  : n/a (%s)\r\n", esp_err_to_name(err));
+
+  err = esp_flash_get_physical_size(chip, &size_phy);
+  if (err == ESP_OK) printf("  Physical size: %" PRIu32 " bytes (%" PRIu32 " MB)\r\n", size_phy, size_phy / (1024 * 1024));
+  else printf("  Physical size: n/a (%s)\r\n", esp_err_to_name(err));
+
+  err = esp_flash_read_unique_chip_id(chip, &uid);
+  if (err == ESP_OK)
+  {
+    unique_id_supported = true;
+    printf("  Unique ID    : %016" PRIX64 "\r\n", uid);
+  }
+  else if (err == ESP_ERR_NOT_SUPPORTED) printf("  Unique ID    : not supported\r\n");
+  else printf("  Unique ID    : n/a (%s)\r\n", esp_err_to_name(err));
+
+  quad = esp_flash_is_quad_mode(chip);
+  printf("  Active quad  : %s\r\n", quad ? "yes" : "no");
+  printf("  Boot mode    : %s\r\n", flash_mode_str());
+  printf("  Boot freq    : %s\r\n", flash_freq_str());
+
+#if defined(CONFIG_SPI_FLASH_AUTO_SUSPEND)
+  printf("  Auto suspend : enabled\r\n");
+#else
+  printf("  Auto suspend : disabled\r\n");
+#endif
+
+  if (size_phy)
+    printf("  32-bit addr  : %s\r\n", size_phy > (16 * 1024 * 1024) ? "required" : "not required");
+
+  err = esp_flash_get_chip_write_protect(chip, &chip_wp);
+  if (err == ESP_OK) printf("  Chip WProtect: %s\r\n", chip_wp ? "enabled" : "disabled");
+  else printf("  Chip WProtect: n/a (%s)\r\n", esp_err_to_name(err));
+
+  printf("\r\n");
+  printf("Capabilities:\r\n");
+  printf("  Read ID           : yes\r\n");
+  printf("  Read/Write/Erase  : yes\r\n");
+  printf("  Unique ID         : %s\r\n", unique_id_supported ? "yes" : "no / unknown");
+  printf("  Quad read mode    : %s\r\n", quad ? "active" : "inactive");
+
+  const esp_flash_region_t *regions = NULL;
+  uint32_t count = 0;
+  esp_err_t reg_err = esp_flash_get_protectable_regions(chip, &regions, &count);
+  if (reg_err == ESP_OK) printf("  Region protect    : yes (%" PRIu32 " regions)\r\n", count);
+  else printf("  Region protect    : unsupported (%s)\r\n", esp_err_to_name(reg_err));
+
+  printf("  Part table offset : %08X\r\n", CONFIG_PARTITION_TABLE_OFFSET);
+#if defined(CONFIG_PARTITION_TABLE_FILENAME)
+  printf("  Part table file   : %s\r\n", CONFIG_PARTITION_TABLE_FILENAME);
+#endif
+
+  printf("\r\n");
+  flash_print_protect_regions(chip);
+  flash_print_partitions(size_phy ? size_phy : size_hdr);
+
+  return 0;
+}
+
+int fl_cmd(int argc, char **argv)
+{
+  if (argc < 2)
+  {
+    printf("Usage:\r\n");
+    printf("  fl info\r\n");
+    return 0;
+  }
+
+  if (!strcmp(argv[1], "info"))
+    return flash_info();
+
+  printf("Unknown subcommand: %s\r\n", argv[1]);
+  printf("Usage:\r\n");
+  printf("  fl info\r\n");
+  return 1;
+}
+
 int restart(int argc, char **argv)
 {
   ESP_LOGI(TAG, "Restarting");
@@ -740,6 +1178,19 @@ void esp_console_register_system_commands()
       .help     = "NVS commands: show/set",
       .hint     = NULL,
       .func     = &nvs_cmd,
+      .argtable = NULL
+    };
+
+    ESP_ERROR_CHECK(esp_console_cmd_register(&cmd));
+  }
+
+  {
+    const esp_console_cmd_t cmd =
+    {
+      .command  = "fl",
+      .help     = "Flash commands: info",
+      .hint     = NULL,
+      .func     = &fl_cmd,
       .argtable = NULL
     };
 

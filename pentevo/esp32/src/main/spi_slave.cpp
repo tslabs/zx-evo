@@ -14,6 +14,7 @@
 #include "esp_log.h"
 #include "esp_crc.h"
 #include "esp_memory_utils.h"
+#include "esp_async_memcpy.h"
 #include "miniz.h"
 
 #include "main.h"
@@ -82,6 +83,32 @@ uint32_t seed = 12345678;
 
 QueueHandle_t tx_queue;
 QueueHandle_t rx_queue;
+
+enum spi_master_bg_op_t
+{
+  SPI_MASTER_BG_OP_NONE = 0,
+  SPI_MASTER_BG_OP_WRITE,
+  SPI_MASTER_BG_OP_READ,
+};
+
+typedef struct
+{
+  spi_master_bg_op_t op;
+  u8 cmd;
+  u16 addr;
+  const u8 *tx_data;
+  u8 *rx_data;
+  size_t size;
+} spi_master_bg_req_t;
+
+QueueHandle_t g_master_bg_queue = NULL;
+SemaphoreHandle_t g_master_bg_done_sem = NULL;
+SemaphoreHandle_t g_master_bg_copy_sem = NULL;
+TaskHandle_t g_master_bg_task = NULL;
+async_memcpy_handle_t g_async_memcpy = NULL;
+volatile bool g_master_bg_busy = false;
+volatile bool g_master_bg_done = true;
+esp_err_t g_master_bg_result = ESP_OK;
 
 // ------------- Command functions
 
@@ -226,6 +253,416 @@ void IRAM_ATTR wait_not_status(u8 status)
 
 // ------------- SPI device
 
+bool spi_master_buf_is_dma_ok(const void *buf, size_t size)
+{
+  if (!buf) return false;
+  if (!esp_ptr_word_aligned(buf)) return false;
+  if (size & 3) return false;
+  if (esp_ptr_dma_capable(buf)) return true;
+  if (esp_ptr_dma_ext_capable(buf)) return true;
+  return false;
+}
+
+esp_err_t spi_master_prep_write_trans(spi_transaction_ext_t *t, u8 cmd, u16 addr, const void *tx_data, size_t size)
+{
+  if (!t) return ESP_ERR_INVALID_ARG;
+
+  memset(t, 0, sizeof(*t));
+
+  if (g_master_data_lines == 1)
+  {
+    t->base.flags = SPI_TRANS_VARIABLE_CMD
+                   | SPI_TRANS_VARIABLE_ADDR;
+  }
+  else if (g_master_data_lines == 2 || g_master_data_lines == 4)
+  {
+    u32 mode_flag = (g_master_data_lines == 4) ? SPI_TRANS_MODE_QIO : SPI_TRANS_MODE_DIO;
+
+    t->base.flags = mode_flag
+                   | SPI_TRANS_MULTILINE_CMD
+                   | SPI_TRANS_MULTILINE_ADDR
+                   | SPI_TRANS_VARIABLE_CMD
+                   | SPI_TRANS_VARIABLE_ADDR;
+  }
+  else
+    return ESP_ERR_NOT_SUPPORTED;
+
+  t->command_bits = 8;
+  t->address_bits = 16;
+  t->base.cmd = cmd;
+  t->base.addr = addr;
+  t->base.length = size * 8;
+  t->base.tx_buffer = tx_data;
+
+  return ESP_OK;
+}
+
+esp_err_t spi_master_prep_read_trans(spi_transaction_ext_t *t, u8 cmd, u16 addr, void *rx_data, size_t size)
+{
+  if (!t) return ESP_ERR_INVALID_ARG;
+
+  memset(t, 0, sizeof(*t));
+
+  if (g_master_data_lines == 1)
+  {
+    t->base.flags = SPI_TRANS_VARIABLE_CMD
+                   | SPI_TRANS_VARIABLE_ADDR
+                   | SPI_TRANS_VARIABLE_DUMMY;
+    t->dummy_bits = 8;
+  }
+  else if (g_master_data_lines == 2 || g_master_data_lines == 4)
+  {
+    u32 mode_flag = (g_master_data_lines == 4) ? SPI_TRANS_MODE_QIO : SPI_TRANS_MODE_DIO;
+
+    t->base.flags = mode_flag
+                   | SPI_TRANS_MULTILINE_CMD
+                   | SPI_TRANS_MULTILINE_ADDR
+                   | SPI_TRANS_VARIABLE_CMD
+                   | SPI_TRANS_VARIABLE_ADDR
+                   | SPI_TRANS_VARIABLE_DUMMY;
+    t->dummy_bits = 4;
+  }
+  else
+    return ESP_ERR_NOT_SUPPORTED;
+
+  t->command_bits = 8;
+  t->address_bits = 16;
+  t->base.cmd = cmd;
+  t->base.addr = addr;
+  t->base.rxlength = size * 8;
+  t->base.rx_buffer = rx_data;
+
+  return ESP_OK;
+}
+
+esp_err_t spi_master_queue_write_buf(u8 cmd, u16 addr, const void *tx_data, size_t size)
+{
+  if (!g_master_dev) return ESP_ERR_INVALID_STATE;
+  if (!tx_data && size) return ESP_ERR_INVALID_ARG;
+  if (!size) return ESP_OK;
+
+  spi_transaction_ext_t t = {};
+  esp_err_t err = spi_master_prep_write_trans(&t, cmd, addr, tx_data, size);
+  if (err != ESP_OK) return err;
+
+  err = spi_device_queue_trans(g_master_dev, &t.base, portMAX_DELAY);
+  if (err != ESP_OK) return err;
+
+  spi_transaction_t *ret = NULL;
+  return spi_device_get_trans_result(g_master_dev, &ret, portMAX_DELAY);
+}
+
+esp_err_t spi_master_queue_read_buf(u8 cmd, u16 addr, void *rx_data, size_t size)
+{
+  if (!g_master_dev) return ESP_ERR_INVALID_STATE;
+  if (!rx_data && size) return ESP_ERR_INVALID_ARG;
+  if (!size) return ESP_OK;
+
+  spi_transaction_ext_t t = {};
+  esp_err_t err = spi_master_prep_read_trans(&t, cmd, addr, rx_data, size);
+  if (err != ESP_OK) return err;
+
+  err = spi_device_queue_trans(g_master_dev, &t.base, portMAX_DELAY);
+  if (err != ESP_OK) return err;
+
+  spi_transaction_t *ret = NULL;
+  return spi_device_get_trans_result(g_master_dev, &ret, portMAX_DELAY);
+}
+
+esp_err_t spi_master_xfer(void *tx_data, void *rx_data, size_t size)
+{
+  if (!g_master_dev) return ESP_ERR_INVALID_STATE;
+  if (spi_master_bg_is_busy()) return ESP_ERR_INVALID_STATE;
+  if (!tx_data && size) return ESP_ERR_INVALID_ARG;
+  if (!size) return ESP_OK;
+
+  u8 *tx = (u8*)tx_data;
+
+  if (g_master_data_lines == 1)
+  {
+    if (!rx_data)
+    {
+      spi_transaction_t t = {};
+      t.length = size * 8;
+      t.tx_buffer = tx_data;
+      return spi_device_polling_transmit(g_master_dev, &t);
+    }
+
+    if (size < 4) return ESP_ERR_INVALID_ARG;
+
+    u8 *rx = (u8*)rx_data;
+    spi_transaction_ext_t t = {};
+    u16 addr = ((u32)tx[1] << 8) | (u32)tx[2];
+
+    memset(rx, 0, 4);
+
+    esp_err_t err = spi_master_prep_read_trans(&t, tx[0], addr, rx + 4, size - 4);
+    if (err != ESP_OK) return err;
+
+    return spi_device_polling_transmit(g_master_dev, &t.base);
+  }
+
+  if (g_master_data_lines != 2 && g_master_data_lines != 4)
+    return ESP_ERR_NOT_SUPPORTED;
+
+
+  if (rx_data)
+  {
+    if (size < 4) return ESP_ERR_INVALID_ARG;
+
+    u8 *rx = (u8*)rx_data;
+    spi_transaction_ext_t t = {};
+    u16 addr = ((u32)tx[1] << 8) | (u32)tx[2];
+
+    memset(rx, 0, 4);
+
+    esp_err_t err = spi_master_prep_read_trans(&t, tx[0], addr, rx + 4, size - 4);
+    if (err != ESP_OK) return err;
+
+    return spi_device_polling_transmit(g_master_dev, &t.base);
+  }
+
+  if (size < 3) return ESP_ERR_INVALID_ARG;
+
+  spi_transaction_ext_t t = {};
+  u16 addr = ((u32)tx[1] << 8) | (u32)tx[2];
+  esp_err_t err = spi_master_prep_write_trans(&t, tx[0], addr, tx + 3, size - 3);
+  if (err != ESP_OK) return err;
+
+  return spi_device_polling_transmit(g_master_dev, &t.base);
+}
+
+bool IRAM_ATTR spi_master_async_memcpy_cb(async_memcpy_handle_t mcp_hdl, async_memcpy_event_t *event, void *cb_args)
+{
+  BaseType_t awoken = pdFALSE;
+  xSemaphoreGiveFromISR((SemaphoreHandle_t)cb_args, &awoken);
+  return awoken == pdTRUE;
+}
+
+esp_err_t spi_master_copy_async(void *dst, const void *src, size_t size)
+{
+  if (!size) return ESP_OK;
+  if (!dst || !src) return ESP_ERR_INVALID_ARG;
+
+  if (g_async_memcpy && g_master_bg_copy_sem)
+  {
+    while (xSemaphoreTake(g_master_bg_copy_sem, 0) == pdTRUE);
+
+    esp_err_t err = esp_async_memcpy(g_async_memcpy, dst, (void*)src, size, spi_master_async_memcpy_cb, g_master_bg_copy_sem);
+    if (err == ESP_OK)
+    {
+      if (xSemaphoreTake(g_master_bg_copy_sem, portMAX_DELAY) == pdTRUE)
+        return ESP_OK;
+
+      return ESP_FAIL;
+    }
+  }
+
+  memcpy(dst, src, size);
+  return ESP_OK;
+}
+
+bool spi_master_bg_is_busy()
+{
+  if (g_master_bg_busy) return true;
+  if (g_master_bg_queue && uxQueueMessagesWaiting(g_master_bg_queue)) return true;
+  return false;
+}
+
+bool spi_master_bg_is_done()
+{
+  return g_master_bg_done;
+}
+
+esp_err_t spi_master_bg_wait_done(TickType_t ticks_to_wait)
+{
+  if (!g_master_bg_done_sem) return ESP_ERR_INVALID_STATE;
+  if (g_master_bg_done) return g_master_bg_result;
+  if (xSemaphoreTake(g_master_bg_done_sem, ticks_to_wait) != pdTRUE) return ESP_ERR_TIMEOUT;
+  xSemaphoreGive(g_master_bg_done_sem);
+  return g_master_bg_result;
+}
+
+esp_err_t spi_master_bg_get_result()
+{
+  return g_master_bg_result;
+}
+
+esp_err_t spi_master_bg_submit(spi_master_bg_op_t op, u8 cmd, u16 addr, const void *tx_data, void *rx_data, size_t size)
+{
+  if (!g_master_dev) return ESP_ERR_INVALID_STATE;
+  if (!g_master_bg_queue || !g_master_bg_done_sem || !dma_buf) return ESP_ERR_INVALID_STATE;
+  if (spi_master_bg_is_busy()) return ESP_ERR_INVALID_STATE;
+  if ((op == SPI_MASTER_BG_OP_WRITE) && !tx_data && size) return ESP_ERR_INVALID_ARG;
+  if ((op == SPI_MASTER_BG_OP_READ) && !rx_data && size) return ESP_ERR_INVALID_ARG;
+
+  spi_master_bg_req_t req = {};
+  req.op = op;
+  req.cmd = cmd;
+  req.addr = addr;
+  req.tx_data = (const u8*)tx_data;
+  req.rx_data = (u8*)rx_data;
+  req.size = size;
+
+  while (xSemaphoreTake(g_master_bg_done_sem, 0) == pdTRUE);
+
+  g_master_bg_done = false;
+  g_master_bg_result = ESP_OK;
+
+  if (!size)
+  {
+    g_master_bg_done = true;
+    xSemaphoreGive(g_master_bg_done_sem);
+    return ESP_OK;
+  }
+
+  if (xQueueSend(g_master_bg_queue, &req, 0) != pdTRUE)
+  {
+    g_master_bg_done = true;
+    return ESP_ERR_TIMEOUT;
+  }
+
+  return ESP_OK;
+}
+
+void spi_master_bg_task(void *arg)
+{
+  spi_master_bg_req_t req;
+
+  while (1)
+  {
+    xQueueReceive(g_master_bg_queue, &req, portMAX_DELAY);
+
+    g_master_bg_busy = true;
+    g_master_bg_done = false;
+    g_master_bg_result = ESP_OK;
+    size_t offs = 0;
+
+    while (offs < req.size)
+    {
+      size_t chunk = min((size_t)DMA_BUF_SIZE, req.size - offs);
+      u32 addr24 = (((u32)req.cmd << 16) | (u32)req.addr) + offs;
+      u8 chunk_cmd = (u8)(addr24 >> 16);
+      u16 chunk_addr = (u16)addr24;
+
+      esp_err_t err = ESP_OK;
+
+      if (req.op == SPI_MASTER_BG_OP_WRITE)
+      {
+        const u8 *tx_ptr = &req.tx_data[offs];
+
+        if (!spi_master_buf_is_dma_ok(tx_ptr, chunk))
+        {
+          err = spi_master_copy_async(dma_buf, tx_ptr, chunk);
+          if (err != ESP_OK)
+          {
+            g_master_bg_result = err;
+            break;
+          }
+
+          tx_ptr = dma_buf;
+        }
+
+        err = spi_master_queue_write_buf(chunk_cmd, chunk_addr, tx_ptr, chunk);
+      }
+      else if (req.op == SPI_MASTER_BG_OP_READ)
+      {
+        u8 *rx_ptr = &req.rx_data[offs];
+        bool copy_back = false;
+
+        if (!spi_master_buf_is_dma_ok(rx_ptr, chunk))
+        {
+          rx_ptr = dma_buf;
+          copy_back = true;
+        }
+
+        err = spi_master_queue_read_buf(chunk_cmd, chunk_addr, rx_ptr, chunk);
+
+        if ((err == ESP_OK) && copy_back)
+          err = spi_master_copy_async(&req.rx_data[offs], dma_buf, chunk);
+      }
+      else
+        err = ESP_ERR_INVALID_STATE;
+
+      if (err != ESP_OK)
+      {
+        g_master_bg_result = err;
+        break;
+      }
+
+      offs += chunk;
+    }
+
+    g_master_bg_busy = false;
+    g_master_bg_done = true;
+    xSemaphoreGive(g_master_bg_done_sem);
+  }
+}
+
+esp_err_t spi_master_write_buf_bg(u8 cmd, u16 addr, const void *tx_data, size_t size)
+{
+  return spi_master_bg_submit(SPI_MASTER_BG_OP_WRITE, cmd, addr, tx_data, NULL, size);
+}
+
+esp_err_t spi_master_read_buf_bg(u8 cmd, u16 addr, void *rx_data, size_t size)
+{
+  return spi_master_bg_submit(SPI_MASTER_BG_OP_READ, cmd, addr, NULL, rx_data, size);
+}
+
+esp_err_t spi_master_write_buf(u8 cmd, u16 addr, const void *tx_data, size_t size)
+{
+  if (!g_master_dev) return ESP_ERR_INVALID_STATE;
+  if (spi_master_bg_is_busy()) return ESP_ERR_INVALID_STATE;
+  if (!tx_data && size) return ESP_ERR_INVALID_ARG;
+  if (!size) return ESP_OK;
+  if (!dma_buf) return ESP_ERR_INVALID_STATE;
+  if (size > DMA_BUF_SIZE) return ESP_ERR_INVALID_ARG;
+
+  const void *data = tx_data;
+
+  if (!spi_master_buf_is_dma_ok(tx_data, size))
+  {
+    memcpy(dma_buf, tx_data, size);
+    data = dma_buf;
+  }
+
+  spi_transaction_ext_t t = {};
+  esp_err_t err = spi_master_prep_write_trans(&t, cmd, addr, data, size);
+  if (err != ESP_OK) return err;
+
+  return spi_device_polling_transmit(g_master_dev, &t.base);
+}
+
+esp_err_t spi_master_read_buf(u8 cmd, u16 addr, void *rx_data, size_t size)
+{
+  if (!g_master_dev) return ESP_ERR_INVALID_STATE;
+  if (spi_master_bg_is_busy()) return ESP_ERR_INVALID_STATE;
+  if (!rx_data && size) return ESP_ERR_INVALID_ARG;
+  if (!size) return ESP_OK;
+  if (!dma_buf) return ESP_ERR_INVALID_STATE;
+  if (size > DMA_BUF_SIZE) return ESP_ERR_INVALID_ARG;
+
+  void *data = rx_data;
+  bool copy_back = false;
+  spi_transaction_ext_t t = {};
+
+  if (!spi_master_buf_is_dma_ok(rx_data, size))
+  {
+    data = dma_buf;
+    copy_back = true;
+  }
+
+  esp_err_t err = spi_master_prep_read_trans(&t, cmd, addr, data, size);
+  if (err != ESP_OK) return err;
+
+  err = spi_device_polling_transmit(g_master_dev, &t.base);
+  if (err != ESP_OK) return err;
+
+  if (copy_back)
+    memcpy(rx_data, data, size);
+
+  return ESP_OK;
+}
 
 void init_spi_configs()
 {
@@ -324,10 +761,39 @@ void init_slave_hd()
     log_sram_used(__FILE_NAME__ ": TaskCreate receiver");
   }
 
+  if (!g_master_bg_queue)
+    g_master_bg_queue = xQueueCreate(1, sizeof(spi_master_bg_req_t));
+
+  if (!g_master_bg_done_sem)
+  {
+    g_master_bg_done_sem = xSemaphoreCreateBinary();
+    if (g_master_bg_done_sem)
+      xSemaphoreGive(g_master_bg_done_sem);
+  }
+
+  if (!g_master_bg_copy_sem)
+    g_master_bg_copy_sem = xSemaphoreCreateBinary();
+
+  if (!g_async_memcpy)
+  {
+    async_memcpy_config_t cfg = ASYNC_MEMCPY_DEFAULT_CONFIG();
+    cfg.backlog = 1;
+    cfg.dma_burst_size = 16;
+    esp_err_t err = esp_async_memcpy_install(&cfg, &g_async_memcpy);
+    if (err != ESP_OK)
+      ESP_LOGW(TAG, "esp_async_memcpy_install failed: %s", esp_err_to_name(err));
+  }
+
+  if (!g_master_bg_task)
+  {
+    xTaskCreatePinnedToCoreWithCaps(spi_master_bg_task, "spi_bg", 4096, NULL, SPI_BG_TASK_PRIO, &g_master_bg_task, 0, MALLOC_CAP_SPIRAM);
+    log_sram_used(__FILE_NAME__ ": TaskCreate spi_bg");
+  }
+
   seed = esp_timer_get_time();
   is_busy = false;
   spi_role = SPI_ROLE_SLAVE_HD;
-  
+
   log_sram_used(__FILE_NAME__ ": init_slave_hd end");
 }
 
@@ -418,6 +884,12 @@ esp_err_t spi_switch_to_slave()
     return ESP_OK;
   }
 
+  if (spi_master_bg_is_busy())
+  {
+    xSemaphoreGive(g_spi_mode_mtx);
+    return ESP_ERR_INVALID_STATE;
+  }
+
   esp_err_t err = ESP_OK;
 
   if (g_master_dev)
@@ -479,212 +951,13 @@ u32 spi_master_get_actual_freq_hz()
 
 esp_err_t spi_master_set_data_lines(u8 lines)
 {
-  if (spi_role != SPI_ROLE_MASTER || !g_master_dev)
+  if (!g_master_dev)
     return ESP_ERR_INVALID_STATE;
 
   g_master_data_lines = lines;
   return ESP_OK;
 }
 
-bool spi_master_buf_is_dma_ok(const void *buf, size_t size)
-{
-  if (!buf) return false;
-  if (!esp_ptr_word_aligned(buf)) return false;
-  if (size & 3) return false;
-  if (esp_ptr_dma_capable(buf)) return true;
-  if (esp_ptr_dma_ext_capable(buf)) return true;
-  return false;
-}
-
-esp_err_t spi_master_write_buf(u8 cmd, u16 addr, const void *tx_data, size_t size)
-{
-  if (spi_role != SPI_ROLE_MASTER || !g_master_dev) return ESP_ERR_INVALID_STATE;
-  if (!tx_data && size) return ESP_ERR_INVALID_ARG;
-  if (!size) return ESP_OK;
-  if (!dma_buf) return ESP_ERR_INVALID_STATE;
-  if (size > DMA_BUF_SIZE) return ESP_ERR_INVALID_ARG;
-
-  const void *data = tx_data;
-
-  if (!spi_master_buf_is_dma_ok(tx_data, size))
-  {
-    memcpy(dma_buf, tx_data, size);
-    data = dma_buf;
-  }
-
-  spi_transaction_ext_t t = {};
-
-  if (g_master_data_lines == 1)
-  {
-    t.base.flags = SPI_TRANS_VARIABLE_CMD
-                 | SPI_TRANS_VARIABLE_ADDR;
-  }
-  else if (g_master_data_lines == 2 || g_master_data_lines == 4)
-  {
-    u32 mode_flag = (g_master_data_lines == 4) ? SPI_TRANS_MODE_QIO : SPI_TRANS_MODE_DIO;
-
-    t.base.flags = mode_flag
-                 | SPI_TRANS_MULTILINE_CMD
-                 | SPI_TRANS_MULTILINE_ADDR
-                 | SPI_TRANS_VARIABLE_CMD
-                 | SPI_TRANS_VARIABLE_ADDR;
-  }
-  else
-    return ESP_ERR_NOT_SUPPORTED;
-
-  t.command_bits = 8;
-  t.address_bits = 16;
-  t.base.cmd = cmd;
-  t.base.addr = addr;
-  t.base.length = size * 8;
-  t.base.tx_buffer = data;
-
-  return spi_device_polling_transmit(g_master_dev, &t.base);
-}
-
-esp_err_t spi_master_read_buf(u8 cmd, u16 addr, void *rx_data, size_t size)
-{
-  if (spi_role != SPI_ROLE_MASTER || !g_master_dev) return ESP_ERR_INVALID_STATE;
-  if (!rx_data && size) return ESP_ERR_INVALID_ARG;
-  if (!size) return ESP_OK;
-  if (!dma_buf) return ESP_ERR_INVALID_STATE;
-  if (size > DMA_BUF_SIZE) return ESP_ERR_INVALID_ARG;
-
-  void *data = rx_data;
-  bool copy_back = false;
-  spi_transaction_ext_t t = {};
-
-  if (!spi_master_buf_is_dma_ok(rx_data, size))
-  {
-    data = dma_buf;
-    copy_back = true;
-  }
-
-  if (g_master_data_lines == 1)
-  {
-    t.base.flags = SPI_TRANS_VARIABLE_CMD
-                 | SPI_TRANS_VARIABLE_ADDR
-                 | SPI_TRANS_VARIABLE_DUMMY;
-    t.dummy_bits = 8;
-  }
-  else if (g_master_data_lines == 2 || g_master_data_lines == 4)
-  {
-    u32 mode_flag = (g_master_data_lines == 4) ? SPI_TRANS_MODE_QIO : SPI_TRANS_MODE_DIO;
-
-    t.base.flags = mode_flag
-                 | SPI_TRANS_MULTILINE_CMD
-                 | SPI_TRANS_MULTILINE_ADDR
-                 | SPI_TRANS_VARIABLE_CMD
-                 | SPI_TRANS_VARIABLE_ADDR
-                 | SPI_TRANS_VARIABLE_DUMMY;
-    t.dummy_bits = 4;
-  }
-  else
-    return ESP_ERR_NOT_SUPPORTED;
-
-  t.command_bits = 8;
-  t.address_bits = 16;
-  t.base.cmd = cmd;
-  t.base.addr = addr;
-  t.base.rxlength = size * 8;
-  t.base.rx_buffer = data;
-
-  esp_err_t err = spi_device_polling_transmit(g_master_dev, &t.base);
-  if (err != ESP_OK) return err;
-
-  if (copy_back)
-    memcpy(rx_data, data, size);
-
-  return ESP_OK;
-}
-
-esp_err_t spi_master_xfer(void *tx_data, void *rx_data, size_t size)
-{
-  if (spi_role != SPI_ROLE_MASTER || !g_master_dev) return ESP_ERR_INVALID_STATE;
-  if (!tx_data && size) return ESP_ERR_INVALID_ARG;
-  if (!size) return ESP_OK;
-
-  u8 *tx = (u8*)tx_data;
-
-  if (g_master_data_lines == 1)
-  {
-    if (!rx_data)
-    {
-      spi_transaction_t t = {};
-      t.length = size * 8;
-      t.tx_buffer = tx_data;
-      return spi_device_polling_transmit(g_master_dev, &t);
-    }
-
-    if (size < 4) return ESP_ERR_INVALID_ARG;
-
-    u8 *rx = (u8*)rx_data;
-    spi_transaction_ext_t t = {};
-
-    memset(rx, 0, 4);
-
-    t.base.flags = SPI_TRANS_VARIABLE_CMD
-                 | SPI_TRANS_VARIABLE_ADDR
-                 | SPI_TRANS_VARIABLE_DUMMY;
-    t.command_bits = 8;
-    t.address_bits = 16;
-    t.dummy_bits = 8;
-    t.base.cmd = tx[0];
-    t.base.addr = ((u32)tx[1] << 8) | (u32)tx[2];
-    t.base.rxlength = (size - 4) * 8;
-    t.base.rx_buffer = rx + 4;
-
-    return spi_device_polling_transmit(g_master_dev, &t.base);
-  }
-
-  if (g_master_data_lines != 2 && g_master_data_lines != 4)
-    return ESP_ERR_NOT_SUPPORTED;
-
-  u32 mode_flag = (g_master_data_lines == 4) ? SPI_TRANS_MODE_QIO : SPI_TRANS_MODE_DIO;
-
-  if (rx_data)
-  {
-    if (size < 4) return ESP_ERR_INVALID_ARG;
-
-    u8 *rx = (u8*)rx_data;
-    spi_transaction_ext_t t = {};
-
-    memset(rx, 0, 4);
-
-    t.base.flags = mode_flag
-                 | SPI_TRANS_MULTILINE_CMD
-                 | SPI_TRANS_MULTILINE_ADDR
-                 | SPI_TRANS_VARIABLE_CMD
-                 | SPI_TRANS_VARIABLE_ADDR
-                 | SPI_TRANS_VARIABLE_DUMMY;
-    t.command_bits = 8;
-    t.address_bits = 16;
-    t.dummy_bits = 4;
-    t.base.cmd = tx[0];
-    t.base.addr = ((u32)tx[1] << 8) | (u32)tx[2];
-    t.base.rxlength = (size - 4) * 8;
-    t.base.rx_buffer = rx + 4;
-
-    return spi_device_polling_transmit(g_master_dev, &t.base);
-  }
-
-  if (size < 3) return ESP_ERR_INVALID_ARG;
-
-  spi_transaction_ext_t t = {};
-  t.base.flags = mode_flag
-               | SPI_TRANS_MULTILINE_CMD
-               | SPI_TRANS_MULTILINE_ADDR
-               | SPI_TRANS_VARIABLE_CMD
-               | SPI_TRANS_VARIABLE_ADDR;
-  t.command_bits = 8;
-  t.address_bits = 16;
-  t.base.cmd = tx[0];
-  t.base.addr = ((u32)tx[1] << 8) | (u32)tx[2];
-  t.base.length = (size - 3) * 8;
-  t.base.tx_buffer = tx + 3;
-
-  return spi_device_polling_transmit(g_master_dev, &t.base);
-}
 
 // ------------- Commands
 
@@ -758,7 +1031,7 @@ void IRAM_ATTR command()
           wr_regs(ESP_REG_IP, &net.ip, sizeof(net.ip));
           set_status(ESP_ST_READY);
         break;
-		  
+
 	    case ESP_CMD_SET_URL:
         {
           size_t size = rd_reg32(ESP_REG_DATA_SIZE);
@@ -816,6 +1089,10 @@ void IRAM_ATTR command()
 
         case ESP_CMD_AP_CONNECT:
           put_helper_isr(TASK_CONN);
+        break;
+
+        case ESP_CMD_AP_DISCONNECT:
+          put_helper_isr(TASK_DISCONN);
         break;
 
         case ESP_CMD_WSCAN:
@@ -1160,7 +1437,7 @@ void IRAM_ATTR process_rx_data(u8 type, size_t size)
         set_status(ESP_ERR_INV_STATE);
         break;
       }
-      
+
       if (size > 1023) size = 1023;
       memcpy(net.url, dma_buf, size);
       net.url[size] = 0;  // Ensure null terminator

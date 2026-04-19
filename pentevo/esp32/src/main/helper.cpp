@@ -462,6 +462,16 @@ void helper_task(void *arg)
         }
         break;
 
+        case TASK_DISCONN:
+        {
+#ifdef CONFIG_ESP32_WIFI_ENABLED
+          wifi_disconnect_now();
+          net.state = NETWORK_CLOSED;
+#endif
+          set_status(ESP_ST_READY);
+        }
+        break;
+
         case TASK_HTTP_GET:
           http_do_get();
         break;

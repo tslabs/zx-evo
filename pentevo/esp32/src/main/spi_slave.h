@@ -1,5 +1,6 @@
-
 #pragma once
+
+#include "freertos/FreeRTOS.h"
 
 #define DMA_BUF_SIZE  16384
 
@@ -30,6 +31,13 @@ esp_err_t spi_master_set_data_lines(u8 lines);
 esp_err_t spi_master_write_buf(u8 cmd, u16 addr, const void *tx_data, size_t size);
 esp_err_t spi_master_read_buf(u8 cmd, u16 addr, void *rx_data, size_t size);
 esp_err_t spi_master_xfer(void *tx_data, void *rx_data, size_t size);
+bool spi_master_bg_is_busy();
+bool spi_master_bg_is_done();
+esp_err_t spi_master_bg_get_result();
+esp_err_t spi_master_bg_wait_done(TickType_t ticks_to_wait);
+esp_err_t spi_master_write_buf_bg(u8 cmd, u16 addr, const void *tx_data, size_t size);
+esp_err_t spi_master_read_buf_bg(u8 cmd, u16 addr, void *rx_data, size_t size);
+void spi_master_bg_task(void *arg);
 
 void command();
 void sender_task(void *arg);

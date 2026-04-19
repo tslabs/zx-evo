@@ -22,8 +22,9 @@ enum
   STREAMER_TASK_PRIO          = 4,
   TCPIP_TASK_PRIO             = 5,
   WIFI_TASK_PRIO              = 6,
-  XM_HELPER_TASK_PRIO         = 7,
-  HELPER_TASK_PRIO            = 8,
+  SPI_BG_TASK_PRIO            = 7,
+  XM_HELPER_TASK_PRIO         = 8,
+  HELPER_TASK_PRIO            = 9,
   USB_MOUSE_TASK_PRIO         = 10,
   USB_MOUSE_LIB_TASK_PRIO     = 10,
   USB_MOUSE_HID_TASK_PRIO     = 11,
@@ -37,7 +38,7 @@ enum
 #define max(x, y) (((x) > (y)) ? (x) : (y))
 #define min(x, y) (((x) < (y)) ? (x) : (y))
 
-#define CP_STRING "ESP32 SPI WiFi Module, ver.0.5.299, (c) TS-Labs"
+#define CP_STRING "ESP32 SPI WiFi Module, ver.0.5.453, (c) TS-Labs"
 
 extern tinfl_decompressor *decomp;
 

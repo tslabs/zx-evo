@@ -3,10 +3,12 @@
 #include <stdlib.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "freertos/queue.h"
 #include "esp_timer.h"
 #include "esp_check.h"
 #include "esp_console.h"
 #include "esp_err.h"
+#include "esp_heap_caps.h"
 #include "driver/uart.h"
 
 #include "main.h"
@@ -17,15 +19,151 @@ const char TAG[] = "ft8xx";
 
 void hexdump(const void *data, size_t len, uint64_t base_off);
 
-#define CHUNK_PAYLOAD 16384
+#define CHUNK_PAYLOAD DMA_BUF_SIZE
 
-#define FT_DEMO_BITMAP_W       640UL
-#define FT_DEMO_BITMAP_H       480UL
+// #define FT_DEMO_BITMAP_W       640
+// #define FT_DEMO_BITMAP_H       480
+#define FT_DEMO_BITMAP_W       320
+#define FT_DEMO_BITMAP_H       240
 #define FT_DEMO_BITMAP_SIZE    (FT_DEMO_BITMAP_W * FT_DEMO_BITMAP_H)
 #define FT_DEMO_BITMAP0_ADDR   FT_RAM_G
 #define FT_DEMO_BITMAP1_ADDR   (FT_RAM_G + FT_DEMO_BITMAP_SIZE)
 #define FT_DEMO_PALETTE_ADDR   (FT_DEMO_BITMAP1_ADDR + FT_DEMO_BITMAP_SIZE)
 #define FT_DEMO_PALETTE_SIZE   (256UL * 4UL)
+
+#define FT_DEMO_TEXTVGA_ADDR             (FT_DEMO_PALETTE_ADDR + FT_DEMO_PALETTE_SIZE)
+#define FT_DEMO_TEXTVGA_BUF_SIZE         (16UL * 1024UL)
+#define FT_DEMO_TEXTVGA_BG_ADDR          (FT_DEMO_TEXTVGA_ADDR + FT_DEMO_TEXTVGA_BUF_SIZE)
+#define FT_DEMO_TEXTVGA_LINE_STRIDE      256
+#define FT_DEMO_TEXTVGA_CELL_SIZE        2
+#define FT_DEMO_TEXTVGA_VISIBLE_COLS     80
+#define FT_DEMO_TEXTVGA_VISIBLE_ROWS     30
+#define FT_DEMO_TEXTVGA_CELL_W           8
+#define FT_DEMO_TEXTVGA_CELL_H           16
+#define FT_DEMO_TEXTVGA_VISIBLE_W        (FT_DEMO_TEXTVGA_VISIBLE_COLS * FT_DEMO_TEXTVGA_CELL_W)
+#define FT_DEMO_TEXTVGA_VISIBLE_H        (FT_DEMO_TEXTVGA_VISIBLE_ROWS * FT_DEMO_TEXTVGA_CELL_H)
+#define FT_DEMO_TEXTVGA_TOTAL_ROWS       (FT_DEMO_TEXTVGA_BUF_SIZE / FT_DEMO_TEXTVGA_LINE_STRIDE)
+#define FT_DEMO_TEXTVGA_SCREEN_X         ((800 - FT_DEMO_TEXTVGA_VISIBLE_W) / 2)
+#define FT_DEMO_TEXTVGA_SCREEN_Y         ((600 - FT_DEMO_TEXTVGA_VISIBLE_H) / 2)
+
+
+// ------------- Profiler -------------
+
+typedef struct
+{
+  uint64_t ts_loop_start;
+  uint64_t ts_show_start;
+  uint64_t ts_show_end;
+  uint64_t ts_wait_swap_start;
+  uint64_t ts_wait_swap_end;
+  uint64_t ts_upload_start;
+  uint64_t ts_upload_end;
+  uint64_t ts_upload_done;
+  uint64_t ts_render_start;
+  uint64_t ts_render_end;
+  uint64_t ts_idle_wait_start;
+  uint64_t ts_idle_wait_end;
+  u32 ft_frames_before_wait;
+  u32 ft_frames_after_wait;
+  int stop;
+} PROFILER_LINE;
+
+QueueHandle_t profiler_queue = nullptr;
+TaskHandle_t profiler_task_handle = nullptr;
+TaskHandle_t profiler_done_task = nullptr;
+
+uint64_t profiler_now()
+{
+  return (uint64_t)esp_timer_get_time();
+}
+
+void profiler_task(void *arg)
+{
+  PROFILER_LINE line;
+  uint64_t prev_loop_start = 0;
+  uint64_t loop_dt;
+  uint64_t dt_upload;
+  uint64_t dt_render;
+
+  (void)arg;
+
+  while (1)
+  {
+    if (xQueueReceive(profiler_queue, &line, portMAX_DELAY) != pdTRUE)
+      continue;
+
+    if (line.stop)
+      break;
+
+    loop_dt = prev_loop_start ? (line.ts_loop_start - prev_loop_start) : 0;
+    prev_loop_start = line.ts_loop_start;
+
+    dt_upload = (line.ts_upload_start && line.ts_upload_done) ? (line.ts_upload_done - line.ts_upload_start) : 0;
+    dt_render = (line.ts_render_start && line.ts_render_end) ? (line.ts_render_end - line.ts_render_start) : 0;
+
+    printf("us, frame=%llu ", (unsigned long long)loop_dt);
+    printf("render=%llu ", (unsigned long long)dt_render);
+    printf("xfer=%llu", (unsigned long long)dt_upload);
+    printf("\r\n");
+  }
+
+  if (profiler_done_task)
+    xTaskNotifyGive(profiler_done_task);
+
+  vTaskDelete(nullptr);
+}
+
+esp_err_t profiler_start()
+{
+  if (profiler_queue)
+    return ESP_OK;
+
+  profiler_queue = xQueueCreate(64, sizeof(PROFILER_LINE));
+  if (!profiler_queue)
+    return ESP_ERR_NO_MEM;
+
+  profiler_done_task = xTaskGetCurrentTaskHandle();
+
+  if (xTaskCreatePinnedToCore(profiler_task, "profiler_log", 4096, nullptr, tskIDLE_PRIORITY + 1, &profiler_task_handle, 1) != pdPASS)
+  {
+    vQueueDelete(profiler_queue);
+    profiler_queue = nullptr;
+    profiler_done_task = nullptr;
+    profiler_task_handle = nullptr;
+    return ESP_FAIL;
+  }
+
+  return ESP_OK;
+}
+
+void profiler_push(const PROFILER_LINE *line)
+{
+  if (!profiler_queue || !line)
+    return;
+
+  xQueueSend(profiler_queue, line, 0);
+}
+
+void profiler_stop()
+{
+  PROFILER_LINE line = {};
+  QueueHandle_t queue = profiler_queue;
+
+  if (!queue)
+    return;
+
+  line.stop = 1;
+  xQueueSend(queue, &line, pdMS_TO_TICKS(1000));
+
+  if (!ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(1000)) && profiler_task_handle)
+    vTaskDelete(profiler_task_handle);
+
+  profiler_queue = nullptr;
+  profiler_task_handle = nullptr;
+  profiler_done_task = nullptr;
+
+  vQueueDelete(queue);
+}
 
 u32 *ft_ccmdb = nullptr;
 u16 ft_ccmdp = 0;
@@ -95,6 +233,11 @@ i16 rsin(i16 r, u16 th)
 i16 rcos(i16 r, u16 th)
 {
   return rsin(r, (u16)(th + 0x4000));
+}
+
+u32 ft_argb32(u8 a, u8 r, u8 g, u8 b)
+{
+  return ((u32)a << 24) | ((u32)r << 16) | ((u32)g << 8) | (u32)b;
 }
 
 // -------- Display list ---------
@@ -1359,7 +1502,7 @@ int ft_spi_cmd(int argc, char **argv)
     printf("Usage:\r\n");
     printf("  ft spi <1|2|4>\r\n");
     printf("Current FT SPI width: %u-bit\r\n", (unsigned int)ft_spi_width);
-    return 1;
+    return 0;
   }
 
   width = ft_parse_num_arg(argv[2], "width", &ok);
@@ -1676,13 +1819,48 @@ int ft_perf_one(void *buf, const char *name, int is_read, u32 chunk_size, u32 to
   return 0;
 }
 
+int ft_perf_suite(void *buf, const char *mem_name, u32 total_size)
+{
+  int failed = 0;
+  char name[32];
+
+  printf("\r\n[%s]\r\n", mem_name);
+
+  snprintf(name, sizeof(name), "%s", "write max");
+  if (ft_perf_one(buf, name, 0, CHUNK_PAYLOAD, total_size)) failed = 1;
+
+  snprintf(name, sizeof(name), "%s", "write 1024");
+  if (ft_perf_one(buf, name, 0, 1024, total_size)) failed = 1;
+
+  snprintf(name, sizeof(name), "%s", "write 128");
+  if (ft_perf_one(buf, name, 0, 128, total_size)) failed = 1;
+
+  snprintf(name, sizeof(name), "%s", "write 16");
+  if (ft_perf_one(buf, name, 0, 16, total_size)) failed = 1;
+
+  snprintf(name, sizeof(name), "%s", "read max");
+  if (ft_perf_one(buf, name, 1, CHUNK_PAYLOAD, total_size)) failed = 1;
+
+  snprintf(name, sizeof(name), "%s", "read 1024");
+  if (ft_perf_one(buf, name, 1, 1024, total_size)) failed = 1;
+
+  snprintf(name, sizeof(name), "%s", "read 128");
+  if (ft_perf_one(buf, name, 1, 128, total_size)) failed = 1;
+
+  snprintf(name, sizeof(name), "%s", "read 16");
+  if (ft_perf_one(buf, name, 1, 16, total_size)) failed = 1;
+
+  return failed;
+}
+
 int ft_perf_cmd(int argc, char **argv)
 {
   const u32 total_size = 1024 * 1024;
   esp_err_t err;
   esp_err_t err2;
   int failed = 0;
-  u8 *perf_buf;
+  u8 *perf_buf_int = nullptr;
+  u8 *perf_buf_spiram = nullptr;
 
   (void)argv;
 
@@ -1693,20 +1871,30 @@ int ft_perf_cmd(int argc, char **argv)
     return 1;
   }
 
-  perf_buf = (u8*)heap_caps_malloc(CHUNK_PAYLOAD, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
-  if (!perf_buf)
+  perf_buf_int = (u8*)heap_caps_malloc(CHUNK_PAYLOAD, MALLOC_CAP_INTERNAL);
+  if (!perf_buf_int)
   {
-    printf("FT perf buffer alloc failed, size=%u\r\n", (unsigned int)CHUNK_PAYLOAD);
+    printf("FT perf internal buffer alloc failed, size=%u\r\n", (unsigned int)CHUNK_PAYLOAD);
     return 1;
   }
 
-  ft_perf_fill_pattern(perf_buf, CHUNK_PAYLOAD);
+  perf_buf_spiram = (u8*)heap_caps_malloc(CHUNK_PAYLOAD, MALLOC_CAP_SPIRAM);
+  if (!perf_buf_spiram)
+  {
+    printf("FT perf SPIRAM buffer alloc failed, size=%u\r\n", (unsigned int)CHUNK_PAYLOAD);
+    heap_caps_free(perf_buf_int);
+    return 1;
+  }
+
+  ft_perf_fill_pattern(perf_buf_int, CHUNK_PAYLOAD);
+  ft_perf_fill_pattern(perf_buf_spiram, CHUNK_PAYLOAD);
 
   err = ft_open_session();
   if (err != ESP_OK)
   {
     printf("FT open failed: %d\r\n", (int)err);
-    heap_caps_free(perf_buf);
+    heap_caps_free(perf_buf_spiram);
+    heap_caps_free(perf_buf_int);
     return 1;
   }
 
@@ -1717,17 +1905,12 @@ int ft_perf_cmd(int argc, char **argv)
          (unsigned int)ft_spi_width,
          (unsigned long)spi_master_get_actual_freq_hz());
 
-  if (ft_perf_one(perf_buf, "write max", 0, CHUNK_PAYLOAD, total_size)) failed = 1;
-  if (ft_perf_one(perf_buf, "write 1024", 0, 1024, total_size)) failed = 1;
-  if (ft_perf_one(perf_buf, "write 128", 0, 128, total_size)) failed = 1;
-  if (ft_perf_one(perf_buf, "write 16", 0, 16, total_size)) failed = 1;
-  if (ft_perf_one(perf_buf, "read max", 1, CHUNK_PAYLOAD, total_size)) failed = 1;
-  if (ft_perf_one(perf_buf, "read 1024", 1, 1024, total_size)) failed = 1;
-  if (ft_perf_one(perf_buf, "read 128", 1, 128, total_size)) failed = 1;
-  if (ft_perf_one(perf_buf, "read 16", 1, 16, total_size)) failed = 1;
+  if (ft_perf_suite(perf_buf_int, "internal", total_size)) failed = 1;
+  if (ft_perf_suite(perf_buf_spiram, "spiram", total_size)) failed = 1;
 
   err2 = ft_close_session();
-  heap_caps_free(perf_buf);
+  heap_caps_free(perf_buf_spiram);
+  heap_caps_free(perf_buf_int);
 
   if (err2 != ESP_OK)
   {
@@ -2017,7 +2200,7 @@ esp_err_t ft_demo_draw_mode_1024_768()
   return err;
 }
 
-int ft_demo0_cmd()
+int ft_demo_bases_cmd()
 {
   esp_err_t err;
 
@@ -2153,65 +2336,51 @@ int ft_demo0_cmd()
   return 0;
 }
 
-u32 ft_argb32(u8 a, u8 r, u8 g, u8 b)
-{
-  return ((u32)a << 24) | ((u32)r << 16) | ((u32)g << 8) | (u32)b;
-}
-
-void ft_demo1_palette_heat(u8 v, u8 &r, u8 &g, u8 &b)
-{
-  if (v < 64)
-  {
-    r = 0;
-    g = 0;
-    b = (u8)(v << 2);
-    return;
-  }
-
-  if (v < 128)
-  {
-    u8 t = (u8)((v - 64) << 2);
-    r = 0;
-    g = t;
-    b = 255;
-    return;
-  }
-
-  if (v < 192)
-  {
-    u8 t = (u8)((v - 128) << 2);
-    r = t;
-    g = 255;
-    b = (u8)(255 - t);
-    return;
-  }
-
-  u8 t = (u8)((v - 192) << 2);
-  r = 255;
-  g = (u8)(255 - t);
-  b = 0;
-}
-
-void ft_demo1_make_palette(u32 *pal)
+void ft_demo_frac_make_palette(u32 *pal)
 {
   if (!pal) return;
 
-  for (u32 i = 0; i < 256; i++)
+  pal[0] = ft_argb32(255, 0, 0, 0);
+
+  for (u32 i = 1; i < 256; i++)
   {
     u8 r;
     u8 g;
     u8 b;
 
-    ft_demo1_palette_heat((u8)i, r, g, b);
+    if (i < 64)
+    {
+      r = 0;
+      g = 0;
+      b = (u8)(i << 2);
+    }
+
+    else if (i < 128)
+    {
+      u8 t = (u8)((i - 64) << 2);
+      r = 0;
+      g = t;
+      b = 255;
+    }
+
+    else if (i < 192)
+    {
+      u8 t = (u8)((i - 128) << 2);
+      r = t;
+      g = 255;
+      b = (u8)(255 - t);
+    }
+
+    else
+    {
+      u8 t = (u8)((i - 192) << 2);
+      r = 255;
+      g = (u8)(255 - t);
+      b = 0;
+    }
+
     pal[i] = ft_argb32(255, r, g, b);
   }
-
-  pal[0] = ft_argb32(255, 0, 0, 0);
-}
-
-esp_err_t ft_demo1_upload_palette(const void *src)
-{
-  return ft_write(src, FT_DEMO_PALETTE_ADDR, FT_DEMO_PALETTE_SIZE);
 }
 
 typedef struct
@@ -2219,9 +2388,9 @@ typedef struct
   float *zr;
   float *zi;
   u8 *alive;
-} FT_DEMO1_STATE;
+} FT_DEMO_FRAC_STATE;
 
-int ft_demo1_state_init(FT_DEMO1_STATE *st, u8 *dst)
+int ft_demo_frac_state_init(FT_DEMO_FRAC_STATE *st, u8 *dst)
 {
   u32 pixels = FT_DEMO_BITMAP_W * FT_DEMO_BITMAP_H;
 
@@ -2254,7 +2423,7 @@ int ft_demo1_state_init(FT_DEMO1_STATE *st, u8 *dst)
   return 1;
 }
 
-void ft_demo1_state_free(FT_DEMO1_STATE *st)
+void ft_demo_frac_state_free(FT_DEMO_FRAC_STATE *st)
 {
   if (!st) return;
 
@@ -2267,7 +2436,23 @@ void ft_demo1_state_free(FT_DEMO1_STATE *st)
   st->alive = nullptr;
 }
 
-void ft_demo1_render(FT_DEMO1_STATE *st, u8 *dst, u32 frame_no)
+void ft_demo_frac_render(FT_DEMO_FRAC_STATE *st, u8 *dst, u32 frame_no)
+{
+  static u8 offs = 0;
+  
+  for (u32 y = 0; y < FT_DEMO_BITMAP_H; y++)
+  {
+    for (u32 x = 0; x < FT_DEMO_BITMAP_W; x++)
+    {
+      u32 idx = y * FT_DEMO_BITMAP_W + x;
+      dst[idx] = x * 256 / FT_DEMO_BITMAP_W + offs;
+    }
+  }
+  
+  offs++;
+}
+
+void ft_demo_frac_render1(FT_DEMO_FRAC_STATE *st, u8 *dst, u32 frame_no)
 {
   if (!st || !dst) return;
   if (!frame_no) return;
@@ -2307,15 +2492,26 @@ void ft_demo1_render(FT_DEMO1_STATE *st, u8 *dst, u32 frame_no)
   }
 }
 
-esp_err_t ft_demo1_upload_bitmap(const void *src, u32 ft_addr)
+esp_err_t ft_demo_frac_upload_bitmap(const void *src, u32 ft_addr)
 {
   return ft_write(src, ft_addr, FT_DEMO_BITMAP_SIZE);
 }
 
-esp_err_t ft_demo1_show_bitmap(u32 bmp_addr, u32 frame_no)
+esp_err_t ft_demo_frac_upload_bitmap_bg(const void *src, u32 ft_addr)
+{
+  return spi_master_write_buf_bg((u8)(((ft_addr >> 16) & 0x3F) | 0x80), (u16)ft_addr, src, FT_DEMO_BITMAP_SIZE);
+}
+
+esp_err_t ft_demo_frac_show_bitmap(u32 bmp_addr, u32 frame_no)
 {
   esp_err_t err;
   u32 iters = frame_no;
+  const u16 screen_w = 800;
+  const u16 screen_h = 600;
+  const i32 scale_x = ((i32)FT_DEMO_BITMAP_W << 8) / screen_w;
+  const i32 scale_y = ((i32)FT_DEMO_BITMAP_H << 8) / screen_h;
+  const u8 bitmap_filter = FT_NEAREST;
+  // const u8 bitmap_filter = FT_BILINEAR;
 
   ft_ccmd_start(cmdl);
 
@@ -2326,10 +2522,18 @@ esp_err_t ft_demo1_show_bitmap(u32 bmp_addr, u32 frame_no)
   ft_ClearColorA(255);
   ft_Clear(1, 1, 1);
 
+  ft_SaveContext();
+
   ft_BitmapHandle(0);
   ft_BitmapSource(bmp_addr);
   ft_BitmapLayout(FT_PALETTED8, (u16)FT_DEMO_BITMAP_W, (u16)FT_DEMO_BITMAP_H);
-  ft_BitmapSize(FT_NEAREST, FT_BORDER, FT_BORDER, (u16)FT_DEMO_BITMAP_W, (u16)FT_DEMO_BITMAP_H);
+  ft_BitmapSize(bitmap_filter, FT_BORDER, FT_BORDER, screen_w, screen_h);
+  ft_BitmapTransformA(scale_x);
+  ft_BitmapTransformB(0);
+  ft_BitmapTransformC(0);
+  ft_BitmapTransformD(0);
+  ft_BitmapTransformE(scale_y);
+  ft_BitmapTransformF(0);
 
   ft_Begin(FT_BITMAPS);
 
@@ -2353,18 +2557,23 @@ esp_err_t ft_demo1_show_bitmap(u32 bmp_addr, u32 frame_no)
   ft_PaletteSource(FT_DEMO_PALETTE_ADDR + 0);
   ft_Vertex2ii(0, 0, 0, 0);
 
+  ft_RestoreContext();
+
   ft_ColorMask(1, 1, 1, 1);
   ft_BlendFunc(FT_SRC_ALPHA, FT_ONE_MINUS_SRC_ALPHA);
 
   ft_ColorRGB(255, 255, 0);
-  ft_Text(8, 8, 18, 0, "Mandelbrot 640x480x8 + heatmap");
+  ft_Text(8, screen_h - 48, 18, 0, "Mode: 800x600x8");
 
   ft_ColorRGB(0, 255, 255);
-  ft_Text(8, 24, 18, 0, "Frame:");
-  ft_Number(120, 24, 18, 0, (i32)frame_no);
+  ft_Text(8, screen_h - 32, 18, 0, "Frame:");
+  ft_Number(120, screen_h - 32, 18, 0, (i32)frame_no);
 
-  ft_Text(8, 40, 18, 0, "Iters:");
-  ft_Number(120, 40, 18, 0, (i32)iters);
+  ft_Text(8, screen_h - 16, 18, 0, "Iters:");
+  ft_Number(120, screen_h - 16, 18, 0, (i32)iters);
+
+  while (((u32)ft_ccmdp << 2) < 2048)
+    ft_ColorA(255);
 
   ft_Display();
   ft_Swap();
@@ -2372,133 +2581,169 @@ esp_err_t ft_demo1_show_bitmap(u32 bmp_addr, u32 frame_no)
   err = ft_ccmd_write();
   if (err != ESP_OK) return err;
 
-  err = ft_cp_wait(1000);
-  if (err != ESP_OK) return err;
-
   return ESP_OK;
 }
 
-int ft_demo1_cmd()
+int ft_demo_frac_cmd()
 {
   esp_err_t err;
   esp_err_t err2;
-  FT_DEMO1_STATE st = {};
-  u8 *render_buf = nullptr;
+  FT_DEMO_FRAC_STATE st = {};
+  u8 *render_bufs[2] =
+  {
+    nullptr,
+    nullptr
+  };
   u32 palette[256];
   u32 active_addr = FT_DEMO_BITMAP0_ADDR;
   u32 inactive_addr = FT_DEMO_BITMAP1_ADDR;
   u32 shown_frame = 1;
-  u32 next_frame = 2;
+  u32 prepared_frame = 2;
+  int upload_buf_idx = 1;
 
-  render_buf = (u8*)malloc_spiram(FT_DEMO_BITMAP_SIZE);
-  if (!render_buf)
+  render_bufs[0] = (u8*)heap_caps_malloc(FT_DEMO_BITMAP_SIZE, MALLOC_CAP_INTERNAL);
+  render_bufs[1] = (u8*)heap_caps_malloc(FT_DEMO_BITMAP_SIZE, MALLOC_CAP_INTERNAL);
+
+  if (!render_bufs[0] || !render_bufs[1])
   {
-    printf("FT demo1 render buffer alloc failed, size=%lu\r\n", (unsigned long)FT_DEMO_BITMAP_SIZE);
+    printf("FT demo render buffer alloc failed, size=%lu\r\n", (unsigned long)FT_DEMO_BITMAP_SIZE);
+    if (render_bufs[0]) free(render_bufs[0]);
+    if (render_bufs[1]) free(render_bufs[1]);
     return 1;
   }
 
-  if (!ft_demo1_state_init(&st, render_buf))
+  if (!ft_demo_frac_state_init(&st, render_bufs[0]))
   {
-    printf("FT demo1 state alloc failed\r\n");
-    free(render_buf);
+    printf("FT demo state alloc failed\r\n");
+    free(render_bufs[0]);
+    free(render_bufs[1]);
     return 1;
   }
 
-  ft_demo1_make_palette(palette);
-  ft_demo1_render(&st, render_buf, shown_frame);
+  memset(render_bufs[1], 0, FT_DEMO_BITMAP_SIZE);
 
   err = ft_open_session();
   if (err != ESP_OK)
   {
     printf("FT open failed: %d\r\n", (int)err);
-    ft_demo1_state_free(&st);
-    free(render_buf);
+    ft_demo_frac_state_free(&st);
+    free(render_bufs[0]);
+    free(render_bufs[1]);
     return 1;
   }
 
   err = ft_set_mode(FT_MODE_800_600_60_80MHZ);
-  if (err == ESP_OK)
-    err = ft_cp_reset();
+
+  ft_demo_frac_make_palette(palette);
+
+  err = ft_write(palette, FT_DEMO_PALETTE_ADDR, FT_DEMO_PALETTE_SIZE);
+
+  ft_demo_frac_render(&st, render_bufs[0], shown_frame);
+  ft_demo_frac_render(&st, render_bufs[1], prepared_frame);
+
+  err = ft_demo_frac_upload_bitmap_bg(render_bufs[0], active_addr);
 
   if (err == ESP_OK)
-    err = ft_demo1_upload_palette(palette);
+    err = spi_master_bg_wait_done(portMAX_DELAY);
 
   if (err == ESP_OK)
-    err = ft_demo1_upload_bitmap(render_buf, active_addr);
-
-  if (err == ESP_OK)
-    ft_demo1_render(&st, render_buf, next_frame);
+    err = ft_demo_frac_show_bitmap(active_addr, shown_frame);
 
   if (err == ESP_OK)
   {
     ft_rreg8(FT_REG_INT_FLAGS);
+    err = profiler_start();
 
-    while (1)
+    if (err == ESP_OK)
     {
-      err = ft_demo1_show_bitmap(active_addr, shown_frame);
-      if (err != ESP_OK)
+      while (1)
       {
-        printf("FT demo1 error: show failed: %s (0x%x)\r\n", esp_err_to_name(err), (unsigned int)err);
-        break;
+        PROFILER_LINE line = {};
+        int render_buf_idx = upload_buf_idx ^ 1;
+        u32 future_frame = prepared_frame + 1;
+        int64_t t0 = esp_timer_get_time();
+
+        while (1)
+        {
+          if (ft_rreg8(FT_REG_INT_FLAGS) & FT_INT_SWAP)
+            break;
+
+          if (((esp_timer_get_time() - t0) / 1000) >= 1000)
+          {
+            err = ESP_ERR_TIMEOUT;
+            break;
+          }
+
+          vTaskDelay(pdMS_TO_TICKS(1));
+        }
+        if (err != ESP_OK) break;
+
+        line.ts_loop_start = profiler_now();
+
+        line.ts_upload_start = profiler_now();
+        err = ft_demo_frac_upload_bitmap_bg(render_bufs[upload_buf_idx], inactive_addr);
+        if (err != ESP_OK) break;
+
+        line.ts_render_start = profiler_now();
+        ft_demo_frac_render(&st, render_bufs[render_buf_idx], future_frame);
+        line.ts_render_end = profiler_now();
+
+        err = spi_master_bg_wait_done(portMAX_DELAY);
+        line.ts_upload_done = profiler_now();
+        if (err != ESP_OK) break;
+
+        err = ft_demo_frac_show_bitmap(inactive_addr, prepared_frame);
+        if (err != ESP_OK) break;
+
+        profiler_push(&line);
+
+        shown_frame = prepared_frame;
+        prepared_frame = future_frame;
+        upload_buf_idx = render_buf_idx;
+
+        u32 tmp = active_addr;
+        active_addr = inactive_addr;
+        inactive_addr = tmp;
+
+        char c;
+        if (uart_read_bytes(UART_NUM_0, &c, 1, 0) > 0)
+        {
+          printf("FT demo stopped\r\n");
+          break;
+        }
       }
 
-      err = ft_wait_swap(1000);
-      if (err != ESP_OK)
-      {
-        printf("FT demo1 error: ft_wait_swap(1000) failed: %s (0x%x)\r\n", esp_err_to_name(err), (unsigned int)err);
-        break;
-      }
-
-      char c;
-      if (uart_read_bytes(UART_NUM_0, &c, 1, 0) > 0)
-      {
-        printf("FT demo stopped\r\n");
-        break;
-      }
-
-      err = ft_demo1_upload_bitmap(render_buf, inactive_addr);
-      if (err != ESP_OK)
-      {
-        printf("FT demo1 error: bitmap upload failed: %s (0x%x)\r\n", esp_err_to_name(err), (unsigned int)err);
-        break;
-      }
-
-      shown_frame = next_frame;
-      next_frame++;
-
-      ft_demo1_render(&st, render_buf, next_frame);
-
-      u32 tmp = active_addr;
-      active_addr = inactive_addr;
-      inactive_addr = tmp;
+      profiler_stop();
     }
+    else
+      printf("Profiler start failed: %s (0x%x)\r\n", esp_err_to_name(err), (unsigned int)err);
   }
 
   err2 = ft_close_session();
   if (err == ESP_OK)
     err = err2;
 
-  ft_demo1_state_free(&st);
-  free(render_buf);
+  ft_demo_frac_state_free(&st);
+  free(render_bufs[0]);
+  free(render_bufs[1]);
 
   if (err != ESP_OK)
   {
-    printf("FT demo1 failed: %d\r\n", (int)err);
+    printf("FT demo_frac failed: %d\r\n", (int)err);
     return 1;
   }
 
   return 0;
 }
 
-
-i16 ft_demo3_clip_coord(i32 v, i16 max_v)
+i16 ft_demo_road_clip_coord(i32 v, i16 max_v)
 {
   if (v < 0) return 0;
   if (v > (i32)max_v) return max_v;
   return (i16)v;
 }
 
-esp_err_t ft_demo3_show_frame(u32 frame_no)
+esp_err_t ft_demo_road_show_frame(u32 frame_no)
 {
   esp_err_t err;
   const i32 screen_w = 800;
@@ -2530,12 +2775,12 @@ esp_err_t ft_demo3_show_frame(u32 frame_no)
   ft_ColorA(48);
   ft_ColorRGB(0, 180, 255);
   ft_PointSize(180 << 4);
-  ft_Vertex2f(ft_demo3_clip_coord(vp_x, screen_w - 1), ft_demo3_clip_coord(vp_y + 10, screen_h - 1));
+  ft_Vertex2f(ft_demo_road_clip_coord(vp_x, screen_w - 1), ft_demo_road_clip_coord(vp_y + 10, screen_h - 1));
 
   ft_ColorA(40);
   ft_ColorRGB(255, 80, 200);
   ft_PointSize(72 << 4);
-  ft_Vertex2f(ft_demo3_clip_coord(vp_x + curve / 12, screen_w - 1), ft_demo3_clip_coord(vp_y + 12, screen_h - 1));
+  ft_Vertex2f(ft_demo_road_clip_coord(vp_x + curve / 12, screen_w - 1), ft_demo_road_clip_coord(vp_y + 12, screen_h - 1));
   ft_End();
 
   for (u32 i = 0; i < 18; i++)
@@ -2550,10 +2795,10 @@ esp_err_t ft_demo3_show_frame(u32 frame_no)
     u16 line_w = (u16)((2.0f + p * 7.0f) * 16.0f);
     u8 alpha = (u8)(32.0f + p * 160.0f);
 
-    i16 x0 = ft_demo3_clip_coord(cx - hw, screen_w - 1);
-    i16 y0 = ft_demo3_clip_coord(cy - hh, screen_h - 1);
-    i16 x1 = ft_demo3_clip_coord(cx + hw, screen_w - 1);
-    i16 y1 = ft_demo3_clip_coord(cy + hh, screen_h - 1);
+    i16 x0 = ft_demo_road_clip_coord(cx - hw, screen_w - 1);
+    i16 y0 = ft_demo_road_clip_coord(cy - hh, screen_h - 1);
+    i16 x1 = ft_demo_road_clip_coord(cx + hw, screen_w - 1);
+    i16 y1 = ft_demo_road_clip_coord(cy + hh, screen_h - 1);
 
     ft_BlendFunc(FT_SRC_ALPHA, FT_ONE);
     ft_ColorA(alpha);
@@ -2592,12 +2837,12 @@ esp_err_t ft_demo3_show_frame(u32 frame_no)
     i32 marker_half = 2 + (i32)(p1 * 7.0f);
     i32 glow_half = 2 + (i32)(p1 * 4.0f);
 
-    i16 left = ft_demo3_clip_coord(cx - road_half, screen_w - 1);
-    i16 right = ft_demo3_clip_coord(cx + road_half, screen_w - 1);
-    i16 curb_left = ft_demo3_clip_coord(cx - curb_half, screen_w - 1);
-    i16 curb_right = ft_demo3_clip_coord(cx + curb_half, screen_w - 1);
-    i16 yy0 = ft_demo3_clip_coord(y0, screen_h - 1);
-    i16 yy1 = ft_demo3_clip_coord(y1, screen_h - 1);
+    i16 left = ft_demo_road_clip_coord(cx - road_half, screen_w - 1);
+    i16 right = ft_demo_road_clip_coord(cx + road_half, screen_w - 1);
+    i16 curb_left = ft_demo_road_clip_coord(cx - curb_half, screen_w - 1);
+    i16 curb_right = ft_demo_road_clip_coord(cx + curb_half, screen_w - 1);
+    i16 yy0 = ft_demo_road_clip_coord(y0, screen_h - 1);
+    i16 yy1 = ft_demo_road_clip_coord(y1, screen_h - 1);
 
     ft_ColorRGB((u8)(18 + i * 2), (u8)(10 + i), (u8)(32 + i * 3));
     ft_Vertex2f(curb_left, yy0);
@@ -2613,8 +2858,8 @@ esp_err_t ft_demo3_show_frame(u32 frame_no)
 
     if (((i + dash_phase) & 7UL) < 2UL)
     {
-      i16 marker_left = ft_demo3_clip_coord(cx - marker_half, screen_w - 1);
-      i16 marker_right = ft_demo3_clip_coord(cx + marker_half, screen_w - 1);
+      i16 marker_left = ft_demo_road_clip_coord(cx - marker_half, screen_w - 1);
+      i16 marker_right = ft_demo_road_clip_coord(cx + marker_half, screen_w - 1);
       ft_ColorRGB(255, 240, 96);
       ft_Vertex2f(marker_left, yy0);
       ft_Vertex2f(marker_right, yy1);
@@ -2622,10 +2867,10 @@ esp_err_t ft_demo3_show_frame(u32 frame_no)
 
     if (((i + dash_phase) & 3UL) == 0)
     {
-      i16 glow_left0 = ft_demo3_clip_coord(curb_left - glow_half, screen_w - 1);
-      i16 glow_left1 = ft_demo3_clip_coord(curb_left + glow_half, screen_w - 1);
-      i16 glow_right0 = ft_demo3_clip_coord(curb_right - glow_half, screen_w - 1);
-      i16 glow_right1 = ft_demo3_clip_coord(curb_right + glow_half, screen_w - 1);
+      i16 glow_left0 = ft_demo_road_clip_coord(curb_left - glow_half, screen_w - 1);
+      i16 glow_left1 = ft_demo_road_clip_coord(curb_left + glow_half, screen_w - 1);
+      i16 glow_right0 = ft_demo_road_clip_coord(curb_right - glow_half, screen_w - 1);
+      i16 glow_right1 = ft_demo_road_clip_coord(curb_right + glow_half, screen_w - 1);
 
       ft_ColorRGB(0, 220, 255);
       ft_Vertex2f(glow_left0, yy0);
@@ -2663,7 +2908,7 @@ esp_err_t ft_demo3_show_frame(u32 frame_no)
   return ESP_OK;
 }
 
-int ft_demo3_cmd()
+int ft_demo_road_cmd()
 {
   esp_err_t err;
   esp_err_t err2;
@@ -2686,17 +2931,17 @@ int ft_demo3_cmd()
 
     while (1)
     {
-      err = ft_demo3_show_frame(frame_no);
+      err = ft_demo_road_show_frame(frame_no);
       if (err != ESP_OK)
       {
-        printf("FT demo3 error: draw failed: %s (0x%x)\r\n", esp_err_to_name(err), (unsigned int)err);
+        printf("FT demo_road error: draw failed: %s (0x%x)\r\n", esp_err_to_name(err), (unsigned int)err);
         break;
       }
 
       err = ft_wait_swap(1000);
       if (err != ESP_OK)
       {
-        printf("FT demo3 error: ft_wait_swap(1000) failed: %s (0x%x)\r\n", esp_err_to_name(err), (unsigned int)err);
+        printf("FT demo_road error: ft_wait_swap(1000) failed: %s (0x%x)\r\n", esp_err_to_name(err), (unsigned int)err);
         break;
       }
 
@@ -2717,12 +2962,326 @@ int ft_demo3_cmd()
 
   if (err != ESP_OK)
   {
-    printf("FT demo3 failed: %d\r\n", (int)err);
+    printf("FT demo_road failed: %d\r\n", (int)err);
     return 1;
   }
 
   return 0;
 }
+
+u8 ft_demo_textvga_cur_ink = 15;
+u8 ft_demo_textvga_cur_paper = 0;
+u8 *ft_demo_textvga_fg_addr = nullptr;
+u8 *ft_demo_textvga_bg_addr = nullptr;
+
+void ft_demo_textvga_set_attr(u8 ink, u8 paper)
+{
+  ft_demo_textvga_cur_ink = (u8)(ink & 15U);
+  ft_demo_textvga_cur_paper = (u8)(paper & 15U);
+}
+
+void ft_demo_textvga_set_addrs(u8 *fg, u8 *bg)
+{
+  ft_demo_textvga_fg_addr = fg;
+  ft_demo_textvga_bg_addr = bg;
+}
+
+void ft_demo_textvga_clear_ex(u8 *buf, u8 ch, u8 attr)
+{
+  if (!buf) return;
+
+  memset(buf, 0, FT_DEMO_TEXTVGA_BUF_SIZE);
+
+  for (u32 y = 0; y < FT_DEMO_TEXTVGA_TOTAL_ROWS; y++)
+  {
+    u8 *row = buf + y * FT_DEMO_TEXTVGA_LINE_STRIDE;
+
+    for (u32 x = 0; x < (FT_DEMO_TEXTVGA_LINE_STRIDE / FT_DEMO_TEXTVGA_CELL_SIZE); x++)
+    {
+      row[x * FT_DEMO_TEXTVGA_CELL_SIZE + 0] = ch;
+      row[x * FT_DEMO_TEXTVGA_CELL_SIZE + 1] = (u8)(attr & 15U);
+    }
+  }
+}
+
+void ft_demo_textvga_clear(u8 *buf, u8 attr)
+{
+  ft_demo_textvga_clear_ex(buf, ' ', attr);
+}
+
+void ft_demo_textvga_put_raw(u8 *buf, int x, int y, u8 ch, u8 attr)
+{
+  u32 off;
+  u8 *row;
+
+  if (!buf) return;
+  if (x < 0 || x >= FT_DEMO_TEXTVGA_VISIBLE_COLS) return;
+  if (y < 0 || y >= FT_DEMO_TEXTVGA_VISIBLE_ROWS) return;
+
+  row = buf + (u32)y * FT_DEMO_TEXTVGA_LINE_STRIDE;
+  off = (u32)x * FT_DEMO_TEXTVGA_CELL_SIZE;
+  row[off + 0] = ch;
+  row[off + 1] = (u8)(attr & 15U);
+}
+
+void ft_demo_textvga_putc(int x, int y, u8 ch)
+{
+  if (!ft_demo_textvga_fg_addr || !ft_demo_textvga_bg_addr) return;
+
+  ft_demo_textvga_put_raw(ft_demo_textvga_bg_addr, x, y, 0xDB, ft_demo_textvga_cur_paper);
+  ft_demo_textvga_put_raw(ft_demo_textvga_fg_addr, x, y, ch, ft_demo_textvga_cur_ink);
+}
+
+void ft_demo_textvga_fill_rect(u8 *buf, int x, int y, int w, int h, u8 ch, u8 attr)
+{
+  if (!buf) return;
+  if (w <= 0 || h <= 0) return;
+
+  for (int yy = 0; yy < h; yy++)
+  {
+    int py = y + yy;
+
+    if (py < 0 || py >= FT_DEMO_TEXTVGA_VISIBLE_ROWS)
+      continue;
+
+    for (int xx = 0; xx < w; xx++)
+      ft_demo_textvga_put_raw(buf, x + xx, py, ch, attr);
+  }
+}
+
+void ft_demo_textvga_fill_paper(u8 *buf, int x, int y, int w, int h, u8 paper)
+{
+  ft_demo_textvga_fill_rect(buf, x, y, w, h, 0xDB, (u8)(paper & 15U));
+}
+
+void ft_demo_textvga_draw_box2(int x, int y, int w, int h)
+{
+  if (!ft_demo_textvga_fg_addr || !ft_demo_textvga_bg_addr) return;
+  if (w < 2 || h < 2) return;
+
+  ft_demo_textvga_putc(x,         y,         0xC9);
+  ft_demo_textvga_putc(x + w - 1, y,         0xBB);
+  ft_demo_textvga_putc(x,         y + h - 1, 0xC8);
+  ft_demo_textvga_putc(x + w - 1, y + h - 1, 0xBC);
+
+  for (int xx = 1; xx < (w - 1); xx++)
+  {
+    ft_demo_textvga_putc(x + xx, y,         0xCD);
+    ft_demo_textvga_putc(x + xx, y + h - 1, 0xCD);
+  }
+
+  for (int yy = 1; yy < (h - 1); yy++)
+  {
+    ft_demo_textvga_putc(x,         y + yy, 0xBA);
+    ft_demo_textvga_putc(x + w - 1, y + yy, 0xBA);
+  }
+}
+
+void ft_demo_textvga_puts(int x, int y, const char *s)
+{
+  if (!ft_demo_textvga_fg_addr || !ft_demo_textvga_bg_addr || !s) return;
+  if (y < 0 || y >= FT_DEMO_TEXTVGA_VISIBLE_ROWS) return;
+
+  while (*s && x < FT_DEMO_TEXTVGA_VISIBLE_COLS)
+  {
+    if (x >= 0)
+      ft_demo_textvga_putc(x, y, (u8)*s);
+
+    x++;
+    s++;
+  }
+}
+
+char ft_demo_hex_digit(u8 v)
+{
+  v &= 15;
+
+  if (v < 10)
+    return (char)('0' + v);
+
+  return (char)('A' + (v - 10));
+}
+
+void ft_demo_textvga_put_hex1(int x, int y, u8 v)
+{
+  ft_demo_textvga_putc(x, y, (u8)ft_demo_hex_digit(v));
+}
+
+void ft_demo_textvga_put_hex2(int x, int y, u8 v)
+{
+  ft_demo_textvga_putc(x + 0, y, (u8)ft_demo_hex_digit((u8)(v >> 4)));
+  ft_demo_textvga_putc(x + 1, y, (u8)ft_demo_hex_digit(v));
+}
+
+void ft_demo_textvga_fill()
+{
+  const int left_x = 2;
+  const int right_x = 42;
+
+  if (!ft_demo_textvga_fg_addr || !ft_demo_textvga_bg_addr) return;
+
+  ft_demo_textvga_clear(ft_demo_textvga_fg_addr, 15);
+  ft_demo_textvga_clear(ft_demo_textvga_bg_addr, 0);
+  ft_demo_textvga_fill_paper(ft_demo_textvga_bg_addr, 0, 0, FT_DEMO_TEXTVGA_VISIBLE_COLS, FT_DEMO_TEXTVGA_VISIBLE_ROWS, 0);
+
+  ft_demo_textvga_set_attr(15, 0);
+  ft_demo_textvga_draw_box2(0, 0, FT_DEMO_TEXTVGA_VISIBLE_COLS, FT_DEMO_TEXTVGA_VISIBLE_ROWS);
+
+  ft_demo_textvga_set_attr(14, 0);
+  ft_demo_textvga_puts(left_x, 1, "TEXTVGA color/code demo");
+
+  ft_demo_textvga_set_attr(11, 0);
+  ft_demo_textvga_puts(left_x, 2, "top=ink chars, bottom=0xDB paper layer");
+
+  {
+    int x0 = left_x;
+    int y0 = 11;
+
+    ft_demo_textvga_set_attr(15, 0);
+    for (int ink = 0; ink < 16; ink++)
+      ft_demo_textvga_put_hex1(x0 + 4 + ink * 2, y0, (u8)ink);
+
+    for (int paper = 0; paper < 16; paper++)
+    {
+      ft_demo_textvga_set_attr(15, (u8)paper);
+      ft_demo_textvga_put_hex1(x0 + 1, y0 + 1 + paper, (u8)paper);
+
+      for (int ink = 0; ink < 16; ink++)
+      {
+        ft_demo_textvga_set_attr((u8)ink, (u8)paper);
+        ft_demo_textvga_putc(x0 + 4 + ink * 2, y0 + 1 + paper, 'A');
+      }
+    }
+  }
+
+  {
+    int x0 = right_x;
+    int y0 = 11;
+
+    ft_demo_textvga_set_attr(15, 0);
+    for (int col = 0; col < 16; col++)
+      ft_demo_textvga_put_hex1(x0 + 3 + col * 2, y0, (u8)col);
+
+    for (int row = 0; row < 16; row++)
+    {
+      ft_demo_textvga_put_hex1(x0 + 1, y0 + 1 + row, (u8)row);
+
+      ft_demo_textvga_set_attr(7, 0);
+      for (int col = 0; col < 16; col++)
+        ft_demo_textvga_putc(x0 + 3 + col * 2, y0 + 1 + row, (u8)(row * 16 + col));
+
+      ft_demo_textvga_set_attr(15, 0);
+    }
+  }
+}
+
+esp_err_t ft_demo_textvga_show()
+{
+  esp_err_t err;
+
+  ft_ccmd_start(cmdl);
+
+  ft_Dlstart();
+  ft_VertexFormat(0);
+
+  ft_ClearColorRGB(0, 0, 32);
+  ft_ClearColorA(255);
+  ft_Clear(1, 1, 1);
+
+  ft_ColorRGB(255, 255, 255);
+  ft_ColorA(255);
+
+  ft_BitmapHandle(0);
+  ft_BitmapSource(FT_DEMO_TEXTVGA_BG_ADDR);
+  ft_BitmapLayout(FT_TEXTVGA, FT_DEMO_TEXTVGA_LINE_STRIDE, FT_DEMO_TEXTVGA_VISIBLE_ROWS);
+  ft_BitmapSize(FT_NEAREST, FT_BORDER, FT_BORDER, FT_DEMO_TEXTVGA_VISIBLE_W, FT_DEMO_TEXTVGA_VISIBLE_H);
+
+  ft_BitmapHandle(1);
+  ft_BitmapSource(FT_DEMO_TEXTVGA_ADDR);
+  ft_BitmapLayout(FT_TEXTVGA, FT_DEMO_TEXTVGA_LINE_STRIDE, FT_DEMO_TEXTVGA_VISIBLE_ROWS);
+  ft_BitmapSize(FT_NEAREST, FT_BORDER, FT_BORDER, FT_DEMO_TEXTVGA_VISIBLE_W, FT_DEMO_TEXTVGA_VISIBLE_H);
+
+  ft_Begin(FT_BITMAPS);
+  ft_Vertex2ii(FT_DEMO_TEXTVGA_SCREEN_X, FT_DEMO_TEXTVGA_SCREEN_Y, 0, 0);
+  ft_Vertex2ii(FT_DEMO_TEXTVGA_SCREEN_X, FT_DEMO_TEXTVGA_SCREEN_Y, 1, 0);
+  ft_End();
+
+  ft_Display();
+  ft_Swap();
+
+  err = ft_ccmd_write();
+  if (err != ESP_OK) return err;
+
+  err = ft_cp_wait(1000);
+  if (err != ESP_OK) return err;
+
+  return ESP_OK;
+}
+
+int ft_demo_textvga_cmd()
+{
+  esp_err_t err;
+  esp_err_t err2;
+  u8 *fg = nullptr;
+  u8 *bg = nullptr;
+
+  fg = (u8*)heap_caps_malloc(FT_DEMO_TEXTVGA_BUF_SIZE, MALLOC_CAP_INTERNAL);
+  bg = (u8*)heap_caps_malloc(FT_DEMO_TEXTVGA_BUF_SIZE, MALLOC_CAP_INTERNAL);
+  if (!fg || !bg)
+  {
+    printf("FT TEXTVGA buffer alloc failed, size=%lu x2\r\n", (unsigned long)FT_DEMO_TEXTVGA_BUF_SIZE);
+    if (fg) free(fg);
+    if (bg) free(bg);
+    return 1;
+  }
+
+  ft_demo_textvga_set_addrs(fg, bg);
+  ft_demo_textvga_fill();
+
+  err = ft_open_session();
+  if (err != ESP_OK)
+  {
+    printf("FT open failed: %d\r\n", (int)err);
+    free(fg);
+    free(bg);
+    return 1;
+  }
+
+  err = ft_set_mode(FT_MODE_800_600_60_80MHZ);
+  if (err == ESP_OK)
+    err = ft_cp_reset();
+
+  if (err == ESP_OK)
+    err = ft_write(bg, FT_DEMO_TEXTVGA_BG_ADDR, FT_DEMO_TEXTVGA_BUF_SIZE);
+
+  if (err == ESP_OK)
+    err = ft_write(fg, FT_DEMO_TEXTVGA_ADDR, FT_DEMO_TEXTVGA_BUF_SIZE);
+
+  if (err == ESP_OK)
+  {
+    ft_rreg8(FT_REG_INT_FLAGS);
+    err = ft_demo_textvga_show();
+  }
+
+  if (err == ESP_OK)
+    err = ft_wait_swap(1000);
+
+  err2 = ft_close_session();
+  if (err == ESP_OK)
+    err = err2;
+
+  free(fg);
+  free(bg);
+
+  if (err != ESP_OK)
+  {
+    printf("FT demo_textvga failed: %d\r\n", (int)err);
+    return 1;
+  }
+
+  return 0;
+}
+
 
 int ft_demo_cmd(int argc, char **argv)
 {
@@ -2737,6 +3296,7 @@ int ft_demo_cmd(int argc, char **argv)
     printf("  1  Test sequence\r\n");
     printf("  2  Bitmap render demo\r\n");
     printf("  3  Pseudo 3D tunnel road\r\n");
+    printf("  4  TEXTVGA 80x30 text screen\r\n");
     return 1;
   }
 
@@ -2759,13 +3319,16 @@ int ft_demo_cmd(int argc, char **argv)
     }
 
     case 1:
-      return ft_demo0_cmd();
+      return ft_demo_bases_cmd();
 
     case 2:
-      return ft_demo1_cmd();
+      return ft_demo_frac_cmd();
 
     case 3:
-      return ft_demo3_cmd();
+      return ft_demo_road_cmd();
+
+    case 4:
+      return ft_demo_textvga_cmd();
   }
 
   printf("Unknown demo number: %lu\r\n", (unsigned long)num);
