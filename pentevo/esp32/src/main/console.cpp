@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 #include <string.h>
 
@@ -34,7 +33,11 @@
 #endif
 
 #define PROMPT_STR "zifi32"
-const char* prompt;
+#define CONSOLE_UART_RX_BUF_SIZE 1024
+#define CONSOLE_PROMPT_MAX_LEN 32
+
+char prompt_buf[CONSOLE_PROMPT_MAX_LEN];
+const char *prompt = prompt_buf;
 
 void console_register_commands()
 {
@@ -52,12 +55,27 @@ void console_register_commands()
   fat_console_register_system_commands();
 }
 
+void console_update_prompt()
+{
+  if (linenoiseIsDumbMode())
+  {
+    snprintf(prompt_buf, sizeof(prompt_buf), PROMPT_STR "> ");
+    return;
+  }
+
+#if CONFIG_LOG_COLORS
+  snprintf(prompt_buf, sizeof(prompt_buf), LOG_COLOR_I PROMPT_STR "> " LOG_RESET_COLOR);
+#else
+  snprintf(prompt_buf, sizeof(prompt_buf), PROMPT_STR "> ");
+#endif
+}
+
 void initialize_console()
 {
   // Drain stdout before reconfiguring it
   fflush(stdout);
   fsync(fileno(stdout));
-  
+
   // Disable buffering on stdin
   setvbuf(stdin, NULL, _IONBF, 0);
   log_sram_used(__FILE_NAME__ ": setvbuf");
@@ -69,7 +87,7 @@ void initialize_console()
   uart_vfs_dev_port_set_tx_line_endings(CONFIG_ESP_CONSOLE_UART_NUM, ESP_LINE_ENDINGS_CRLF);
 
   // Install UART driver for interrupt-driven reads and writes
-  ESP_ERROR_CHECK(uart_driver_install((uart_port_t)CONFIG_ESP_CONSOLE_UART_NUM, 256, 0, 0, NULL, 0));
+  ESP_ERROR_CHECK(uart_driver_install((uart_port_t)CONFIG_ESP_CONSOLE_UART_NUM, CONSOLE_UART_RX_BUF_SIZE, 0, 0, NULL, 0));
   log_sram_used(__FILE_NAME__ ": uart_driver_install");
 
   // Tell VFS to use UART driver
@@ -86,13 +104,20 @@ void initialize_console()
   };
   ESP_ERROR_CHECK(esp_console_init(&console_config));
 
-  // Configure linenoise line completion library
-  // Enable multiline editing. If not set, long commands will scroll within single line.
-  linenoiseSetMultiLine(1);
+  // Configure linenoise line completion library.
+  // Single-line mode sends less data on each key press and is much more stable on UART.
+  linenoiseSetMultiLine(0);
 
-  // Tell linenoise where to get command completions and hints
+  // Detect whether the terminal supports escape sequences.
+  if (linenoiseProbe() != 0)
+    linenoiseSetDumbMode(1);
+
+  // Tell linenoise where to get command completions.
   linenoiseSetCompletionCallback(&esp_console_get_completion);
-  linenoiseSetHintsCallback((linenoiseHintsCallback*)&esp_console_get_hint);
+
+  // Hints trigger additional redraw traffic on every key press.
+  // Disabling them makes repeated backspace handling much more stable.
+  // linenoiseSetHintsCallback((linenoiseHintsCallback*)&esp_console_get_hint);
 
   // Set command history size
   linenoiseHistorySetMaxLen(100);
@@ -103,13 +128,11 @@ void initialize_console()
   // Don't return empty lines
   linenoiseAllowEmpty(false);
 
+  console_update_prompt();
+
   // Register commands
   console_register_commands();
 
-  // Prompt to be printed before each line.
-  // This can be customized, made dynamic, etc.
-  prompt = LOG_COLOR_I PROMPT_STR "> " LOG_RESET_COLOR;
-  
   log_sram_used(__FILE_NAME__ ": initialize_console end");
 }
 
@@ -124,18 +147,14 @@ void console_task(void *arg)
 
   while (true)
   {
-    // Get a line using linenoise.
-    // The line is returned when ENTER is pressed.
     char* line = linenoise(prompt);
 
-    if (line == NULL) // Break on EOF or error
+    if (line == NULL)
       continue;
 
-    // Add the command to the history if not empty
     if (strlen(line) > 0)
       linenoiseHistoryAdd(line);
 
-    // Try to run the command
     int ret;
     esp_err_t err = esp_console_run(line, &ret);
 
@@ -144,13 +163,11 @@ void console_task(void *arg)
     else if (err == ESP_ERR_INVALID_ARG)
     {
     }
-    // command was empty
     else if (err == ESP_OK && ret != ESP_OK)
       printf("Command returned non-zero error code: 0x%x (%s)\n", ret, esp_err_to_name(ret));
     else if (err != ESP_OK)
       printf("Internal error: %s\n", esp_err_to_name(err));
 
-    // linenoise allocates line buffer on the heap, so need to free it
     linenoiseFree(line);
   }
 }
