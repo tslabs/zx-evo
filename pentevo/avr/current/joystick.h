@@ -28,15 +28,6 @@ typedef union {
     u8 raw;
 } joystick_mode_t;
 
-enum {
-    JOYSTICK_EEPROM_POS             =    512,
-    JOYSTICK_EEPROM_MODE            = JOYSTICK_EEPROM_POS + 3,
-    JOYSTICK_EEPROM_PAD0_MAP        = JOYSTICK_EEPROM_MODE + 1,
-    JOYSTICK_EEPROM_PAD1_MAP        = JOYSTICK_EEPROM_PAD0_MAP + 16,
-    JOYSTICK_EEPROM_PAD0_AUTOFIRE   = JOYSTICK_EEPROM_PAD1_MAP + 16,
-    JOYSTICK_EEPROM_PAD1_AUTOFIRE   = JOYSTICK_EEPROM_PAD0_AUTOFIRE + 2,
-};
-
 // flags for joystick_flags
 enum {
     JOYSTICK_FLAG_ACTIVE        = (1 << 0),
@@ -52,7 +43,7 @@ enum {
 extern volatile u8 joystick_autofire_delay;
 
 /** Joystick init */
-void joystick_init(void);
+void joystick_init();
 
 /** Joystick set mode */
 void joystick_set_mode(u8 mode);
@@ -67,7 +58,7 @@ u8 joystick_autofire_read(u8 joystick, u8 index);
 void joystick_autofire_write(u8 joystick, u8 index, u8 data);
 
 /** Kempston joystick task. */
-void joystick_task(void);
-void joystick_poll(void);
+void joystick_task();
+void joystick_poll();
 
 #endif //__JOYSTICK_H__

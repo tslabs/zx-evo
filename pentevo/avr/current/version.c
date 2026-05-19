@@ -5,7 +5,7 @@
 #include "main.h"
 #include "ps2.h"
 #include "spiflash.h"
-#include "config_interface.h"
+#include "config.h"
 
 //base configuration version string pointer [far address of PROGMEM]
 const u32 baseVersionAddr = 0x1DFF0;

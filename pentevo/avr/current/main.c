@@ -18,10 +18,13 @@
 #include "rtc.h"
 #include "atx.h"
 #include "joystick.h"
-#include "config_interface.h"
+#include "config.h"
 #include "tape.h"
 #include "kbmap.h"
 #include "config.h"
+#ifdef SETUP_CONF
+#include "setup.h"
+#endif
 
 //if want Log than comment next string
 #undef LOGENABLE
@@ -29,9 +32,13 @@
 FILE uart_stdout;
 
 /** FPGA data pointer [far address] (linker symbol). */
+#ifdef SETUP_CONF
+extern const u32 fpga_setup PROGMEM;
+#else
 extern const u32 fpga_base PROGMEM;
 extern const u32 fpga_ts   PROGMEM;
 extern const u32 fpga_egg  PROGMEM;
+#endif
 
 // FPGA data index..
 volatile u32 curFpga;
@@ -52,6 +59,38 @@ u8 dbuf[DBSIZE];
 
 // Callback for Slave SPI servicing
 void (*zx_task_cb)();
+
+#ifdef SETUP_CONF
+u8 setup_runtime_mode;
+u8 setup_force_setup;
+
+void setup_prepare_runtime_mode()
+{
+  u8 isbase;
+
+  if (cfg_get_isbase(&isbase))
+  {
+    zx_task_cb = isbase ? zx_wait_task_old : zx_wait_task;
+  }
+  else
+  {
+    switch (eeprom_read_byte((const u8*)ADDR_FPGA_CFG))
+    {
+      case FPGA_BASE:
+      case FPGA_EGG:
+        zx_task_cb = zx_wait_task_old;
+      break;
+
+      case FPGA_TS:
+      default:
+        zx_task_cb = zx_wait_task;
+      break;
+    }
+  }
+
+  spi_set_lsb();
+}
+#endif
 
 void put_buffer(u16 size)
 {
@@ -104,6 +143,10 @@ void hardware_init(void)
 
 void waittask(void)
 {
+#ifdef SETUP_CONF
+  if (setup_runtime_mode == 0) return;
+#endif
+
   if (wait_irq_flag)
   {
     wait_irq_flag = 0;
@@ -111,8 +154,13 @@ void waittask(void)
   }
 }
 
-extern void* __vectors;
-#define BOOTLOADER() ((void(*)(void))(&__vectors-4096))()
+void bootloader_jump()
+{
+  asm volatile("jmp __vectors - 8192");
+  while (1) { }
+}
+
+#define BOOTLOADER() bootloader_jump()
 
 int main()
 {
@@ -201,6 +249,37 @@ start:
 
   spi_init();
 
+#ifdef SETUP_CONF
+  setup_runtime_mode = 0;
+  zx_task_cb = 0;
+
+  if (setup_force_setup)
+  {
+    setup_force_setup = 0;
+  }
+  else
+  {
+    setup_runtime_mode = setup_try_boot_config();
+  }
+
+  if (setup_runtime_mode)
+  {
+    setup_prepare_runtime_mode();
+    oled_print("TSF");
+  }
+  else
+  {
+    DDRF |= (1 << nCONFIG); // pull low for a time
+    _delay_ms(50);
+    DDRF &= ~(1 << nCONFIG);
+    while(!(PINF & (1 << nSTATUS))); // wait ready
+
+    curFpga = GET_FAR_ADDRESS(fpga_setup);
+    spi_set_lsb();
+    depacker_dirty();
+    oled_print("Setup");
+  }
+#else
   DDRF |= (1 << nCONFIG); // pull low for a time
   _delay_ms(50);
   DDRF &= ~(1 << nCONFIG);
@@ -227,6 +306,7 @@ start:
       oled_print("TS");
     break;
   }
+#endif
 
 #ifdef LOGENABLE
   {
@@ -247,7 +327,9 @@ start:
   }
 #endif
 
+#ifndef SETUP_CONF
   depacker_dirty();
+#endif
 
 #ifdef LOGENABLE
   to_log("depacker_dirty OK\r\n");
@@ -296,8 +378,15 @@ start:
 
   kbmap_init();
   zx_init();
-  rtc_init();   
+#ifdef SETUP_CONF
+  if (setup_runtime_mode == 0) setup_init();
+#endif
+  rtc_init();
+#ifndef SETUP_CONF
   joystick_init();
+#else
+  if (setup_runtime_mode) joystick_init();
+#endif
 
 #ifdef LOGENABLE
   to_log("zx_init OK\r\n");
@@ -312,6 +401,26 @@ start:
   //main loop
   do
   {
+#ifdef SETUP_CONF
+    if (setup_runtime_mode == 0)
+    {
+      setup_task();
+      ps2keyboard_task();
+      rs232_task();
+      atx_power_task();
+    }
+    else
+    {
+      tape_task();           waittask();
+      ps2mouse_task();       waittask();
+      ps2keyboard_task();    waittask();
+      zx_task(ZX_TASK_WORK); waittask();
+      zx_mouse_task();       waittask();
+      joystick_task();       waittask();
+      rs232_task();          waittask();
+      atx_power_task();      waittask();
+    }
+#else
     tape_task();           waittask();
     ps2mouse_task();       waittask();
     ps2keyboard_task();    waittask();
@@ -320,6 +429,7 @@ start:
     joystick_task();       waittask();
     rs232_task();          waittask();
     atx_power_task();      waittask();
+#endif
   }
   while((flags_register & FLAG_HARD_RESET) == 0);
 

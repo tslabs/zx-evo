@@ -3,8 +3,9 @@
 #include <util/twi.h>
 #include "mytypes.h"
 #include "i2c.h"
+#include "getfaraddress.h"
 #include "oled.h"
-#include "font.h"
+#include "font_oled.h"
 
 u8 oled_addr;
 
@@ -93,7 +94,7 @@ void oled_print(const char *txt)
   while (c = *txt++)
   {
     c -= 32;
-    u32 p = (u32)&oled_font[c << 3];
+    u32 p = GET_FAR_ADDRESS(oled_font) + ((u32)c << 3);
 
     for (int i = 1; i < 8; i++) // only 7 columns for default font
       if (!(tw_send_data(pgm_read_byte_far(p++)) == TW_MT_DATA_ACK)) goto stop;

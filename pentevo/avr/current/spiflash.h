@@ -60,7 +60,9 @@ enum
   SPIFL_CMD_READ   = 0x05,
   SPIFL_CMD_WRITE  = 0x06,
   SPIFL_CMD_ERSBLK = 0x07,
-  SPIFL_CMD_ERSSEC = 0x08
+  SPIFL_CMD_ERSSEC = 0x08,
+  SPIFL_CMD_ERS32K = 0x09,
+  SPIFL_CMD_ERS64K = 0x0A
 };
 
 /** SPI Flash commands. */
@@ -76,7 +78,9 @@ enum
   SF_CMD_WREN   = 0x06,
   SF_CMD_WRDIS  = 0x04,
   SF_CMD_ERBULK = 0xC7,
-  SF_CMD_ERSECT = 0x20
+  SF_CMD_ERSECT = 0x20,
+  SF_CMD_ER32K  = 0x52,
+  SF_CMD_ER64K  = 0xD8
 };
 
 /** SPI Flash status. */

@@ -17,6 +17,14 @@
 #include "rtc.h"
 #include "config.h"
 
+#ifdef SETUP_CONF
+#include "font_866.h"
+extern u8 setup_runtime_mode;
+extern u8 setup_force_setup;
+u8 setup_sysconf_state;
+void setup_spi_toggle_vga();
+#endif
+
 // comment next string to enable Log
 #undef LOGENABLE
 
@@ -113,6 +121,15 @@ void func_egg()
   t_kbmap.tb.b1 = NO_KEY;
 }
 
+#ifdef SETUP_CONF
+void func_setup()
+{
+  setup_force_setup = 1;
+  flags_register |= FLAG_HARD_RESET;
+  t_kbmap.tb.b1 = NO_KEY;
+}
+#endif
+
 // generate NMI
 void func_nmi()
 {
@@ -177,7 +194,11 @@ void load_config()
   cb_menu_f11     = func_dummy;
   cb_menu_f12     = func_dummy;
   cb_ctrl_alt_f11 = func_egg;
+#ifdef SETUP_CONF
+  cb_ctrl_alt_f12 = func_setup;
+#else
   cb_ctrl_alt_f12 = func_service;
+#endif
   cb_ctrl_alt_del = func_reset;
 
   switch (eeprom_read_byte((const u8*)ADDR_FPGA_CFG))
@@ -206,9 +227,48 @@ void load_config()
   }
 }
 
+#ifdef SETUP_CONF
+void setup_load_config()
+{
+  cb_prt_scr      = func_dummy;
+  cb_scr_lock     = setup_spi_toggle_vga;
+  cb_num_lock     = func_dummy;
+  cb_menu_f1      = func_dummy;
+  cb_menu_f2      = func_dummy;
+  cb_menu_f3      = func_dummy;
+  cb_menu_f4      = func_dummy;
+  cb_menu_f5      = func_dummy;
+  cb_menu_f6      = func_dummy;
+  cb_menu_f7      = func_dummy;
+  cb_menu_f8      = func_dummy;
+  cb_menu_f9      = func_dummy;
+  cb_menu_f10     = func_dummy;
+  cb_menu_f11     = func_dummy;
+  cb_menu_f12     = func_dummy;
+  cb_ctrl_alt_f11 = func_dummy;
+  cb_ctrl_alt_f12 = func_dummy;
+  cb_ctrl_alt_del = func_reset;
+  cb_zx_set_config = setup_spi_init_video;
+}
+#endif
+
 void zx_init(void)
 {
   zx_fifo_in_ptr = zx_fifo_out_ptr = 0;
+
+#ifdef SETUP_CONF
+  if (setup_runtime_mode == 0)
+  {
+    shift_pause = 0;
+    zx_clr_kb();
+    kb_ctrl_status.all = 0;
+    kb_ctrl_mapped.all = 0;
+    setup_load_config();
+    setup_spi_init_video();
+    setup_spi_reset_z80(1);
+    return;
+  }
+#endif
 
   zx_task(ZX_TASK_INIT);
   rs232_init();
@@ -219,6 +279,180 @@ void zx_init(void)
 
   load_config();
 }
+
+#ifdef SETUP_CONF
+#define SETUP_FONT_BYTE_ADDR(ch, row) \
+  (((((u32)(~SETUP_TEXT_DEFAULT_VPAGE) & 1UL) << 13) | (((u32)(ch) & 0xFFUL) << 2) | ((((u32)(row)) >> 1) & 0x03UL)) << 1)
+void setup_spi_start(u8 op, u32 addr)
+{
+  spi_set_msb();
+  nSPICS_PORT &= ~(1 << nSPICS);
+  spi_send(SETUP_SPI_HDR0(op, addr));
+  spi_send(SETUP_SPI_HDR1(addr));
+  spi_send(SETUP_SPI_HDR2(addr));
+}
+
+void setup_spi_end()
+{
+  nSPICS_PORT |= (1 << nSPICS);
+}
+
+void setup_spi_write_byte(u8 data)
+{
+  spi_send(data);
+}
+
+u8 setup_spi_transfer_byte(u8 data)
+{
+  return spi_send(data);
+}
+
+void setup_spi_write_block(const u8 *data, u16 size)
+{
+  while (size--)
+    spi_send(*(data++));
+}
+
+void setup_spi_periph_write(u32 addr, u8 data)
+{
+  setup_spi_start(SETUP_SPI_OP_PERIPH_WR, addr);
+  setup_spi_write_byte(data);
+  setup_spi_end();
+}
+
+void setup_spi_periph_write_block(u32 addr, const u8 *data, u16 size)
+{
+  setup_spi_start(SETUP_SPI_OP_PERIPH_WR, addr);
+  setup_spi_write_block(data, size);
+  setup_spi_end();
+}
+
+u8 setup_spi_periph_read(u32 addr)
+{
+  u8 data;
+
+  setup_spi_start(SETUP_SPI_OP_PERIPH_RD, addr);
+  data = setup_spi_transfer_byte(SETUP_PROXY_DUMMY_BYTE);
+  setup_spi_end();
+  return data;
+}
+
+void setup_spi_periph_read_block(u32 addr, u8 *data, u16 size)
+{
+  setup_spi_start(SETUP_SPI_OP_PERIPH_RD, addr);
+  while (size--)
+  {
+    *data = setup_spi_transfer_byte(SETUP_PROXY_DUMMY_BYTE);
+    data++;
+  }
+  setup_spi_end();
+}
+
+void setup_spi_rom_write(u32 addr, u8 data)
+{
+  setup_spi_periph_write(SETUP_ROM_ADDR(addr), data);
+}
+
+u8 setup_spi_rom_read(u32 addr)
+{
+  u8 data;
+
+  setup_spi_start(SETUP_SPI_OP_PERIPH_RD, SETUP_ROM_ADDR(addr));
+  setup_spi_transfer_byte(SETUP_PROXY_DUMMY_BYTE);
+  data = setup_spi_transfer_byte(SETUP_PROXY_DUMMY_BYTE);
+  setup_spi_end();
+  return data;
+}
+
+void setup_spi_dram_write_block(u32 addr, const u8 *data, u16 size)
+{
+  setup_spi_start(SETUP_SPI_OP_DRAM_WR, addr);
+  setup_spi_write_block(data, size);
+  setup_spi_end();
+}
+
+void setup_spi_dram_read_block(u32 addr, u8 *data, u16 size)
+{
+  setup_spi_start(SETUP_SPI_OP_DRAM_RD, addr);
+  while (size--)
+  {
+    *data = setup_spi_transfer_byte(SETUP_PROXY_DUMMY_BYTE);
+    data++;
+  }
+  setup_spi_end();
+}
+
+void setup_spi_load_font()
+{
+  u32 font_addr;
+  u16 i;
+
+  font_addr = GET_FAR_ADDRESS(code_866_fnt);
+  setup_spi_start(SETUP_SPI_OP_DRAM_WR, SETUP_FONT_BYTE_ADDR(0, 0));
+  for (i = 0; i < sizeof(code_866_fnt); i++)
+    setup_spi_write_byte(pgm_read_byte_far(font_addr + i));
+  setup_spi_end();
+}
+
+void setup_spi_init_video()
+{
+  setup_sysconf_state = SETUP_SYSCONF_60HZ;
+
+  switch (eeprom_read_byte((const u8*)ADDR_FPGA_CFG))
+  {
+    case FPGA_BASE:
+      modes_register = rtc_read(RTC_COMMON_MODE_REG_BASE) & ~(MODE_CAPSLED);
+      modes_register &= MODES_BASE_RASTER | MODE_TAPEOUT | MODE_VGA;
+    break;
+
+    case FPGA_TS:
+    default:
+      modes_register = rtc_read(RTC_COMMON_MODE_REG_TS) & ~(MODE_CAPSLED);
+      modes_register &= MODE_TS_FSWAP | MODE_TS_WTP_INT | MODE_TS_60HZ | MODE_TAPEOUT | MODE_VGA;
+    break;
+  }
+
+  if (modes_register & MODE_VGA) setup_sysconf_state |= SETUP_SYSCONF_VGA_ON;
+  setup_spi_periph_write(SETUP_REG_VPAGE, SETUP_VPAGE_DEFAULT_TEXT);
+  setup_spi_periph_write(SETUP_REG_PALSEL, SETUP_PALSEL_DEFAULT);
+  setup_spi_periph_write(SETUP_REG_XBORDER, SETUP_XBORDER_DEFAULT);
+  setup_spi_periph_write(SETUP_REG_SYSCONF, setup_sysconf_state);
+  setup_spi_load_font();
+  setup_spi_periph_write(SETUP_REG_VCONF, SETUP_VCONF_DEFAULT_TEXT);
+}
+
+void setup_spi_toggle_vga()
+{
+  setup_sysconf_state &= ~SETUP_SYSCONF_VGA_ON;
+  if (modes_register & MODE_VGA) setup_sysconf_state |= SETUP_SYSCONF_VGA_ON;
+  setup_sysconf_state ^= SETUP_SYSCONF_VGA_ON;
+
+  if (setup_sysconf_state & SETUP_SYSCONF_VGA_ON) modes_register |= MODE_VGA;
+  else modes_register &= ~MODE_VGA;
+
+  setup_spi_periph_write(SETUP_REG_SYSCONF, setup_sysconf_state);
+
+  switch (eeprom_read_byte((const u8*)ADDR_FPGA_CFG))
+  {
+    case FPGA_BASE:
+      rtc_write(RTC_COMMON_MODE_REG_BASE, modes_register);
+    break;
+
+    case FPGA_TS:
+    default:
+      rtc_write(RTC_COMMON_MODE_REG_TS, modes_register);
+    break;
+  }
+
+  ps2keyboard_send_cmd(PS2KEYBOARD_CMD_SETLED);
+}
+
+void setup_spi_reset_z80(u8 reset)
+{
+  setup_spi_periph_write(SETUP_REG_Z80_RESET, reset ? SETUP_Z80_RESET_ASSERT : SETUP_Z80_RESET_RELEASE);
+}
+
+#endif
 
 u8 zx_spi_send(u8 addr, u8 data)
 {
@@ -234,6 +468,19 @@ u8 zx_spi_send(u8 addr, u8 data)
 
 void zx_task(u8 operation) // zx task, tracks when there is need to send new keymap to the fpga
 {
+#ifdef SETUP_CONF
+  if (setup_runtime_mode == 0)
+  {
+    if (operation == ZX_TASK_INIT)
+    {
+      shift_pause = 0;
+      zx_clr_kb();
+      kb_ctrl_mapped.all = 0;
+    }
+    return;
+  }
+#endif
+
   static u8 prev_code;
   static u8 task_state;
   //static u8 reset_type;
@@ -686,6 +933,10 @@ void zx_mouse_reset(u8 enable)
 
 void zx_mouse_task(void)
 {
+#ifdef SETUP_CONF
+  if (setup_runtime_mode == 0) return;
+#endif
+
   if (flags_register & FLAG_PS2MOUSE_ZX_READY)
   {
 #ifdef LOGENABLE
@@ -721,6 +972,10 @@ const u8 comport_addr_unpack_tab[32] =
 
 void zx_wait_task()
 {
+#ifdef SETUP_CONF
+  if (setup_runtime_mode == 0) return;
+#endif
+
   nSPICS_PORT &= ~(1<<nSPICS);  // fetch status
   nSPICS_PORT |= (1<<nSPICS);
   u8 status = spi_send(SPI_WAIT_DATA);
@@ -795,6 +1050,10 @@ void zx_wait_task()
 
 void zx_wait_task_old()
 {
+#ifdef SETUP_CONF
+  if (setup_runtime_mode == 0) return;
+#endif
+
   nSPICS_PORT &= ~(1<<nSPICS);  // fetch status
   nSPICS_PORT |= (1<<nSPICS);
   u8 status = spi_send(0);

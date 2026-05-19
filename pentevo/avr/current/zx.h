@@ -47,6 +47,15 @@
 /** ZX configuration register. */
 #define SPI_CONFIG_REG   0x50
 
+#ifdef SETUP_CONF
+#include "setup_avr_spi.h"
+
+/** Placeholder until reset register/bit is added to setup HDL. */
+#define SETUP_REG_Z80_RESET       0x000030UL
+#define SETUP_Z80_RESET_ASSERT    0x01
+#define SETUP_Z80_RESET_RELEASE   0x00
+#endif
+
 /** ZX data for wait registers. */
 #define SPI_WAIT_DATA  0x40
 /** ZX address for wait registers. */
@@ -54,6 +63,25 @@
 
 /** Send/recv data for spi registers. */
 u8 zx_spi_send(u8 addr, u8 data);
+
+#ifdef SETUP_CONF
+void setup_spi_start(u8 op, u32 addr);
+void setup_spi_end();
+void setup_spi_write_byte(u8 data);
+u8 setup_spi_transfer_byte(u8 data);
+void setup_spi_write_block(const u8 *data, u16 size);
+void setup_spi_periph_write(u32 addr, u8 data);
+void setup_spi_periph_write_block(u32 addr, const u8 *data, u16 size);
+u8 setup_spi_periph_read(u32 addr);
+void setup_spi_periph_read_block(u32 addr, u8 *data, u16 size);
+void setup_spi_dram_write_block(u32 addr, const u8 *data, u16 size);
+void setup_spi_dram_read_block(u32 addr, u8 *data, u16 size);
+void setup_spi_rom_write(u32 addr, u8 data);
+u8 setup_spi_rom_read(u32 addr);
+void setup_spi_load_font();
+void setup_spi_init_video();
+void setup_spi_reset_z80(u8 reset);
+#endif
 
 /** Pause between (CS|SS) and not(CS|SS). */
 #define SHIFT_PAUSE 8

@@ -165,6 +165,18 @@ void sf_command(u8 cmd)
             sfi_cs_off();
         break;
 
+        case SPIFL_CMD_ERS32K:
+            sfi_wren();
+            sfi_cmd_ha(SF_CMD_ER32K);
+            sfi_cs_off();
+        break;
+
+        case SPIFL_CMD_ERS64K:
+            sfi_wren();
+            sfi_cmd_ha(SF_CMD_ER64K);
+            sfi_cs_off();
+        break;
+
         default:
         break;
     }

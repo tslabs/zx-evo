@@ -149,6 +149,12 @@ extern volatile u8 flags_ex_register;
 
 /** Common modes register. */
 extern volatile u8 modes_register;
+
+#ifdef SETUP_CONF
+extern u8 setup_runtime_active;
+extern u8 setup_force_start;
+extern u8 setup_runtime_is_base;
+#endif
 /** VGA mode (0 - not set/1 - set). */
 #define MODE_VGA          0x01
 /** CAPS LED mode (0 - off/1 - on). */

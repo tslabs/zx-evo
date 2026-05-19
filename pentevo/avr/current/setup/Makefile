@@ -1,0 +1,133 @@
+###############################################################################
+# Makefile for the project pentevo
+###############################################################################
+
+ifneq ($(OS),Windows_NT) 
+	WSL = $(findstring microsoft,$(shell cat /proc/sys/kernel/osrelease))
+	ifeq ($(WSL), microsoft)
+		OS = Windows_NT
+	endif
+endif
+
+## General Flags
+ifeq ($(OS),Windows_NT)
+EXE = ".exe"
+DEVNULL = "nul"
+else
+EXE = ""
+DEVNULL = "/dev/null"
+endif
+
+PROJECT = core
+TARGET = $(PROJECT).elf
+MCU = atmega128
+CC = avr-c++
+
+MHMT = "../../../tools/mhmt/mhmt$(EXE)"
+MKFW = "../../../tools/make_fw/make_fw$(EXE)"
+
+## Programmator Settings
+TARGET_AD = m128
+# PROGRAMMER = usbtiny
+PROGRAMMER = usbasp
+HFUSE = 0xC1
+LFUSE = 0xDF
+LOCK = 0x3F
+
+AP = ../../../tools/avrdude/
+AD = "$(AP)avrdude$(EXE)" -q -q -u -C "$(AP)avrdude.conf" -c $(PROGRAMMER) -p $(TARGET_AD)
+
+## Compile options common for all C compilation units.
+CFLAGS = -mmcu=$(MCU)
+CFLAGS += -Os -flto -gdwarf-2
+CFLAGS += -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums -fdata-sections -ffunction-sections
+CFLAGS += -fpermissive
+CFLAGS += -DF_CPU=11059200UL
+CFLAGS += -DSETUP_CONF
+CFLAGS += -Wl,--gc-sections,--relax,-Map=$(PROJECT).map
+CFLAGS += -std=c++11
+
+## Intel Hex file production flags
+HEX_FLASH_FLAGS = -R .eeprom
+
+HEX_EEPROM_FLAGS = -j .eeprom
+HEX_EEPROM_FLAGS += --set-section-flags=.eeprom="alloc,load"
+HEX_EEPROM_FLAGS += --change-section-lma .eeprom=0 --no-change-warnings
+
+## Objects that must be built in order to link
+SOURCES = ../main.c ../zx.c ../setup.c ../interrupts.c ../ps2.c ../depacker_dirty.c ../rs232.c ../i2c.c ../rtc.c ../oled.cpp ../atx.c ../joystick.c ../version.c ../tape.c ../kbmap.c ../spiflash.c ../tsspiffs.c ../diskio.c ../ff.c ../config.c ../rs232_asm.S
+HEADERS = ../zx.h ../setup.h ../ps2.h ../spi.h ../depacker_dirty.h ../rs232.h ../i2c.h ../rtc.h ../oled.h ../atx.h ../joystick.h ../version.h ../tape.h ../kbmap.h ../spiflash.h ../tsspiffs.h ../diskio.h ../ff.h ../config.h
+
+## Objects explicitly added by the user
+FPGACORE = setup.o
+
+## Build
+all:
+	make norm
+	make vdac
+	make vdac2
+
+norm: clean quartus $(FPGACORE) compile core size
+	@$(MKFW) $(PROJECT).hex $(PROJECT).eep zxevo_fw_setup.bin version.txt >$(DEVNULL)
+	@cp $(PROJECT).hex zxevo_fw.hex
+	@cp $(PROJECT).eep zxevo_fw.eep
+
+vdac: clean quartus_vdac $(FPGACORE) compile core size
+	@$(MKFW) $(PROJECT).hex $(PROJECT).eep zxevo_fw_setup_vdac.bin version_vdac.txt >$(DEVNULL)
+	@cp $(PROJECT).hex zxevo_fw_vdac.hex
+	@cp $(PROJECT).eep zxevo_fw_vdac.eep
+
+vdac2: clean quartus_vdac2 $(FPGACORE) compile core size
+	@$(MKFW) $(PROJECT).hex $(PROJECT).eep zxevo_fw_setup_vdac2.bin version_vdac2.txt >$(DEVNULL)
+	@cp $(PROJECT).hex zxevo_fw_vdac2.hex
+	@cp $(PROJECT).eep zxevo_fw_vdac2.eep
+
+## Compile and link
+compile: $(SOURCES) $(HEADERS)
+	@$(CC) $(SOURCES) $(FPGACORE) $(CFLAGS) -o $(TARGET)
+
+## Copy FPGA bitstream
+quart%:
+	@cp ../../../fpga/setup/$@/top.rbf setup.rbf
+
+## Prepare FPGA bitstream
+$(FPGACORE): setup.rbf
+	@$(MHMT) -maxwin2048 setup.rbf setup.mlz >$(DEVNULL)
+	@avr-objcopy -I binary -O elf32-avr -B avr:51 --rename-section .data=.progmem.data,contents,alloc,load,readonly,data --redefine-sym _binary_setup_mlz_start=fpga_setup setup.mlz setup.o
+
+core: $(TARGET)
+	@avr-objcopy -O ihex $(HEX_FLASH_FLAGS) $< $@.hex
+	@avr-objcopy $(HEX_EEPROM_FLAGS) -O ihex $< $@.eep || exit 0
+
+size: ${TARGET}
+	@avr-size ${TARGET}
+
+## Clean target
+.PHONY: clean
+clean:
+	 @echo >$(PROJECT).dummy
+	 @echo >setup.dummy
+	 @rm -rf $(FPGACORE) core.* setup.*
+
+## program chip
+flash_norm: $(PROJECT).hex
+	@$(AD) -B 0.5 \
+	-U flash:w:"zxevo_fw.hex":a
+
+flash_vdac: $(PROJECT).hex
+	@$(AD) -B 0.5 \
+	-U flash:w:"zxevo_fw_vdac.hex":a
+
+flash_vdac2: $(PROJECT).hex
+	@$(AD) -B 0.5 \
+	-U flash:w:"zxevo_fw_vdac2.hex":a
+
+fuses:
+	@$(AD) -B 20 \
+	-U hfuse:w:$(HFUSE):m \
+	-U lfuse:w:$(LFUSE):m \
+	-U lock:w:$(LOCK):m
+
+read:
+	@$(AD) -B 1 -U flash:r:"flash.bin":r
+	@$(AD) -B 1 -U eeprom:r:"eeprom.bin":r
