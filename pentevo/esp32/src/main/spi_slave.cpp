@@ -54,10 +54,11 @@
 enum spi_role_t
 {
   SPI_ROLE_SLAVE_HD = 0,
-  SPI_ROLE_MASTER   = 1
+  SPI_ROLE_MASTER   = 1,
+  SPI_ROLE_SWITCHING = 2
 };
 
-spi_role_t spi_role = SPI_ROLE_SLAVE_HD;
+volatile spi_role_t spi_role = SPI_ROLE_SLAVE_HD;
 
 spi_bus_config_t g_bus_cfg = {};
 spi_slave_hd_slot_config_t g_slave_hd_cfg = {};
@@ -110,40 +111,96 @@ volatile bool g_master_bg_busy = false;
 volatile bool g_master_bg_done = true;
 esp_err_t g_master_bg_result = ESP_OK;
 
+#define SPI_SLAVE_REG_SHADOW_SIZE 64
+
+u8 g_slave_reg_shadow[SPI_SLAVE_REG_SHADOW_SIZE] = {};
+
 // ------------- Command functions
+
+int IRAM_ATTR spi_slave_reg_clip_size(u8 reg, int size)
+{
+  if (size <= 0) return 0;
+  if (reg >= SPI_SLAVE_REG_SHADOW_SIZE) return 0;
+
+  int max_size = SPI_SLAVE_REG_SHADOW_SIZE - reg;
+  if (size > max_size) return max_size;
+  return size;
+}
+
+void IRAM_ATTR spi_slave_reg_shadow_read(u8 reg, void *data, int size)
+{
+  size = spi_slave_reg_clip_size(reg, size);
+  if (!size) return;
+
+  memcpy(data, &g_slave_reg_shadow[reg], size);
+}
+
+void IRAM_ATTR spi_slave_reg_shadow_write(u8 reg, const void *data, int size)
+{
+  size = spi_slave_reg_clip_size(reg, size);
+  if (!size) return;
+
+  memcpy(&g_slave_reg_shadow[reg], data, size);
+}
+
+void spi_slave_reg_shadow_load_hw()
+{
+  spi_slave_hd_read_buffer(SLAVE_HOST, 0, g_slave_reg_shadow, SPI_SLAVE_REG_SHADOW_SIZE);
+}
+
+void spi_slave_reg_shadow_flush_hw()
+{
+  spi_slave_hd_write_buffer(SLAVE_HOST, 0, g_slave_reg_shadow, SPI_SLAVE_REG_SHADOW_SIZE);
+}
 
 u8 IRAM_ATTR rd_reg8(u8 reg)
 {
-  u8 val;
-  spi_slave_hd_read_buffer(SLAVE_HOST, reg, (u8*)&val, sizeof(val));
+  u8 val = 0;
+  rd_regs(reg, &val, sizeof(val));
   return val;
 }
 
 u32 IRAM_ATTR rd_reg32(u8 reg)
 {
-  u32 val;
-  spi_slave_hd_read_buffer(SLAVE_HOST, reg, (u8*)&val, sizeof(val));
+  u32 val = 0;
+  rd_regs(reg, &val, sizeof(val));
   return val;
 }
 
 void IRAM_ATTR rd_regs(u8 reg, const void *data, int size)
 {
-  spi_slave_hd_read_buffer(SLAVE_HOST, reg, (u8*)data, size);
+  size = spi_slave_reg_clip_size(reg, size);
+  if (!size) return;
+
+  if (spi_role == SPI_ROLE_SLAVE_HD)
+  {
+    spi_slave_hd_read_buffer(SLAVE_HOST, reg, (u8*)data, size);
+    spi_slave_reg_shadow_write(reg, data, size);
+    return;
+  }
+
+  spi_slave_reg_shadow_read(reg, (void*)data, size);
 }
 
 void IRAM_ATTR wr_reg8(u8 reg, u8 val)
 {
-  spi_slave_hd_write_buffer(SLAVE_HOST, reg, (u8*)&val, sizeof(val));
+  wr_regs(reg, &val, sizeof(val));
 }
 
 void IRAM_ATTR wr_reg32(u8 reg, u32 val)
 {
-  spi_slave_hd_write_buffer(SLAVE_HOST, reg, (u8*)&val, sizeof(val));
+  wr_regs(reg, &val, sizeof(val));
 }
 
 void IRAM_ATTR wr_regs(u8 reg, const void *data, int size)
 {
-  spi_slave_hd_write_buffer(SLAVE_HOST, reg, (u8*)data, size);
+  size = spi_slave_reg_clip_size(reg, size);
+  if (!size) return;
+
+  spi_slave_reg_shadow_write(reg, data, size);
+
+  if (spi_role == SPI_ROLE_SLAVE_HD)
+    spi_slave_hd_write_buffer(SLAVE_HOST, reg, (u8*)data, size);
 }
 
 void IRAM_ATTR put_txq(int type)
@@ -729,6 +786,8 @@ void init_slave_hd()
   ESP_ERROR_CHECK(spi_slave_hd_init(SLAVE_HOST, &g_bus_cfg, &g_slave_hd_cfg));
   log_sram_used(__FILE_NAME__ ": spi_slave_hd_init");
 
+  memset(g_slave_reg_shadow, 0, sizeof(g_slave_reg_shadow));
+  spi_role = SPI_ROLE_SLAVE_HD;
   set_status(ESP_ST_RESET);
 
   if (!tx_queue)
@@ -751,13 +810,13 @@ void init_slave_hd()
 
   if (!g_sender_task)
   {
-    xTaskCreatePinnedToCoreWithCaps(sender_task, "sender", 2048, NULL, SLAVE_TASK_PRIO, &g_sender_task, 0, MALLOC_CAP_SPIRAM);
+    xTaskCreatePinnedToCoreWithCaps(sender_task, "sender", 2048, NULL, SLAVE_TASK_PRIO, &g_sender_task, 0, task_ram_type_critical);
     log_sram_used(__FILE_NAME__ ": TaskCreate sender");
   }
 
   if (!g_receiver_task)
   {
-    xTaskCreatePinnedToCoreWithCaps(receiver_task, "receiver", 4096, NULL, SLAVE_TASK_PRIO, &g_receiver_task, 0, MALLOC_CAP_SPIRAM);
+    xTaskCreatePinnedToCoreWithCaps(receiver_task, "receiver", 4096, NULL, SLAVE_TASK_PRIO, &g_receiver_task, 0, task_ram_type_critical);
     log_sram_used(__FILE_NAME__ ": TaskCreate receiver");
   }
 
@@ -786,7 +845,7 @@ void init_slave_hd()
 
   if (!g_master_bg_task)
   {
-    xTaskCreatePinnedToCoreWithCaps(spi_master_bg_task, "spi_bg", 4096, NULL, SPI_BG_TASK_PRIO, &g_master_bg_task, 0, MALLOC_CAP_SPIRAM);
+    xTaskCreatePinnedToCoreWithCaps(spi_master_bg_task, "spi_bg", 4096, NULL, SPI_BG_TASK_PRIO, &g_master_bg_task, 0, task_ram_type_critical);
     log_sram_used(__FILE_NAME__ ": TaskCreate spi_bg");
   }
 
@@ -828,9 +887,15 @@ esp_err_t spi_switch_to_master()
   if (g_receiver_task)
     vTaskSuspend(g_receiver_task);
 
+  spi_slave_reg_shadow_load_hw();
+  spi_role = SPI_ROLE_SWITCHING;
+
   esp_err_t err = spi_slave_hd_disable(SLAVE_HOST);
   if (err != ESP_OK)
+  {
+    spi_role = SPI_ROLE_SLAVE_HD;
     goto fail_resume;
+  }
 
   err = spi_slave_hd_deinit(SLAVE_HOST);
   if (err != ESP_OK)
@@ -857,8 +922,11 @@ esp_err_t spi_switch_to_master()
   return ESP_OK;
 
 fail_restore_slave:
-  spi_slave_hd_init(SLAVE_HOST, &g_bus_cfg, &g_slave_hd_cfg);
-  spi_role = SPI_ROLE_SLAVE_HD;
+  if (spi_slave_hd_init(SLAVE_HOST, &g_bus_cfg, &g_slave_hd_cfg) == ESP_OK)
+  {
+    spi_slave_reg_shadow_flush_hw();
+    spi_role = SPI_ROLE_SLAVE_HD;
+  }
 
 fail_resume:
   if (g_sender_task)
@@ -917,6 +985,10 @@ esp_err_t spi_switch_to_slave()
     return err;
   }
 
+  spi_slave_reg_shadow_flush_hw();
+
+  spi_role = SPI_ROLE_SLAVE_HD;
+
   if (g_sender_task)
     vTaskResume(g_sender_task);
 
@@ -924,7 +996,6 @@ esp_err_t spi_switch_to_slave()
     vTaskResume(g_receiver_task);
 
   g_master_data_lines = 1;
-  spi_role = SPI_ROLE_SLAVE_HD;
   set_status(ESP_ST_READY);
 
   xSemaphoreGive(g_spi_mode_mtx);
@@ -1097,6 +1168,30 @@ void IRAM_ATTR command()
 
         case ESP_CMD_WSCAN:
           put_helper_isr(TASK_WSCAN);
+        break;
+
+        case ESP_CMD_XM_STREAM_LOAD:
+        {
+          size_t size = rd_reg32(ESP_REG_DATA_SIZE);
+
+          if (!size)
+          {
+            set_status(ESP_ERR_INV_SIZE);
+            break;
+          }
+
+          esp_err_t err = xm_host_stream_start(size);
+          if (err != ESP_OK)
+          {
+            if (err == ESP_ERR_NO_MEM)
+              set_status(ESP_ERR_OUT_OF_MEMORY);
+            else if (err == ESP_ERR_INVALID_SIZE)
+              set_status(ESP_ERR_INV_SIZE);
+            else
+              set_status(ESP_ERR_INV_STATE);
+            break;
+          }
+        }
         break;
 
         case ESP_CMD_XM_INIT:
@@ -1454,6 +1549,10 @@ void IRAM_ATTR process_rx_data(u8 type, size_t size)
       wr_reg32(ESP_REG_DATA_OFFSET, offset + size);
       set_status(ESP_ST_READY);
     }
+    break;
+
+    case DREQ_XM_STREAM:
+      xm_host_stream_process_rx_data(dma_buf, size);
     break;
 
     case DREQ_ZIP:

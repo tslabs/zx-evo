@@ -5,7 +5,7 @@ HDR="$1"
 
 set -- $(sed -nE '/CP_STRING/ s/.*ver\.([0-9]+)\.([0-9]+)\.([0-9]+).*/\1 \2 \3/p' "$HDR" | head -n1)
 
-major="${1:-0}"; 
+major="${1:-0}"
 minor="${2:-0}"
 old="${3:-0}"
 new=$((old + 1))

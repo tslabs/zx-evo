@@ -21,8 +21,9 @@
 #include "ft8xx.h"
 #include "console.h"
 #include "xm_cpp.h"
-#include "spiffs.h"
+#include "tsf.h"
 #include "fatfs.h"
+#include "cmd.h"
 
 #ifdef CONFIG_ESP32_WIFI_ENABLED
 #include "wifi.h"
@@ -51,8 +52,9 @@ void console_register_commands()
   sdmmc_console_register_system_commands();
 #endif
   xm_console_register_system_commands();
-  spiffs_console_register_system_commands();
+  tsf_console_register_system_commands();
   fat_console_register_system_commands();
+  cmd_console_register_system_commands();
 }
 
 void console_update_prompt()

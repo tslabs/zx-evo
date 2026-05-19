@@ -68,6 +68,48 @@ void write_obj(int handle, const void *from, int size)
   memcpy(mem_obj[handle].addr, from, max(mem_obj[handle].size, size));
 }
 
+int attach_obj(void *addr, int obj_size, int obj_type)
+{
+  if (!addr || obj_size <= 0)
+  {
+    set_status(ESP_ERR_INV_PARAM);
+    return -1;
+  }
+
+  int handle = find_avail_handle();
+  if (handle == -1)
+  {
+    set_status(ESP_ERR_OUT_OF_HANDLES);
+    ESP_LOGE(TAG, "Cannot allocate handle for an object!");
+    return -1;
+  }
+
+  switch (obj_type)
+  {
+    case OBJ_TYPE_XM:
+    case OBJ_TYPE_XMC:
+    case OBJ_TYPE_WAV:
+    case OBJ_TYPE_DATA:
+    case OBJ_TYPE_ELF:
+    case OBJ_TYPE_HST:
+    case OBJ_TYPE_ZIP:
+    case OBJ_TYPE_DATAF:
+      break;
+
+    default:
+      ESP_LOGE(TAG, "Cannot attach unknown type object!");
+      set_status(ESP_ERR_INV_OBJ_TYPE);
+      return -1;
+  }
+
+  mem_obj[handle].addr = addr;
+  mem_obj[handle].size = obj_size;
+  mem_obj[handle].type = obj_type;
+  mem_obj[handle].state = OBJ_ST_NONE;
+
+  return handle;
+}
+
 int make_obj(int obj_size, int obj_type)
 {
   void *obj_addr = NULL;

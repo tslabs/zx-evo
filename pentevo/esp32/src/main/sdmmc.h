@@ -4,6 +4,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "esp_err.h"
+#include "esp_log.h"
 #include "driver/sdmmc_host.h"
 #include "sdmmc_cmd.h"
 #include "sdmmc.h"
@@ -72,13 +73,20 @@ esp_err_t sd_init();
 esp_err_t sd_reinit();
 esp_err_t sd_ensure_ready();
 esp_err_t sd_probe_card();
+esp_err_t sd_fs_sense(const char *base_path);
+esp_log_level_t sd_host_log_suppress_begin();
+void sd_host_log_suppress_end(esp_log_level_t old_sd_host_level);
+void sd_fs_unmount_force();
 void sd_deinit();
 esp_err_t sd_read_sectors(uint32_t sec, uint32_t num);
 esp_err_t sd_card_erase();
 esp_err_t sd_fs_mount(const char *base_path, sdmmc_card_t **out_card);
+esp_err_t sd_fs_mount_quiet(const char *base_path, sdmmc_card_t **out_card);
 void sd_fs_unmount(const char *base_path, sdmmc_card_t *card);
 esp_err_t sd_fs_list_dir(const char *base_path, const char *path);
 esp_err_t sd_fs_read_file(const char *base_path, const char *path, void *dst, size_t dst_size, size_t *out_size);
+int sd_fs_build_full_path(const char *base_path, const char *path, char *full, size_t full_size);
+bool sd_has_retryable_errno(int err);
 bool sd_error_needs_reinit(esp_err_t err);
 void sd_log_cid(const sdmmc_cid_t *cid);
 void sd_log_ocr(const sdmmc_card_t *card);

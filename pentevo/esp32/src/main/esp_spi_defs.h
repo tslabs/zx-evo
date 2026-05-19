@@ -71,13 +71,15 @@ enum
   ESP_CMD_STREAM_CLOSE          = 0x27, // (no parameters)
   ESP_CMD_GET_XM_INFO           = 0xA0, // +++
   ESP_CMD_XM_INIT               = 0xA1, // i: ESP_REG_OBJ_HANDLE
-  ESP_CMD_XM_SET_POS            = 0xA2, // +++
+  ESP_CMD_XM_STREAM_LOAD        = 0xA2, // i: ESP_REG_DATA_SIZE
+                                        // o: ESP_REG_OBJ_HANDLE
   ESP_CMD_XM_PLAY               = 0xA3, // i: ESP_REG_OBJ_HANDLE
   ESP_CMD_XM_STOP               = 0xA4, // (no parameters)
   ESP_CMD_XM_GET_STATS          = 0xA6, // +++
   ESP_CMD_XM_SET_VOLUME         = 0xA7, // +++
   ESP_CMD_XM_SET_S_RATE         = 0xA8, // +++
   ESP_CMD_XM_SET_PARAMS         = 0xA9, // +++
+  ESP_CMD_XM_SET_POS            = 0xAA, // +++
   ESP_CMD_GET_XM_STATE          = 0xAE, // +++
   ESP_CMD_GET_XM_STATE_CURRENT  = 0xAF, // +++
   ESP_CMD_CONFIG_SPI            = 0xC0, // +++

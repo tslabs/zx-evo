@@ -48,6 +48,9 @@ tinfl_decompressor *decomp = &decomp_buf;
 const char TAG[] = "main";
 int usb_mouse_start_on_boot = 0;
 
+u32 task_ram_type_critical = MALLOC_CAP_INTERNAL;
+u32 task_ram_type_non_critical = MALLOC_CAP_SPIRAM;
+
 // ------------- Debug helpers
 
 size_t sram_used_prev;
@@ -117,7 +120,7 @@ extern "C" void app_main()
   // ----- ISR printf init
   printQueue = xQueueCreate(PRINT_QUEUE_LENGTH, sizeof(char*));
   log_sram_used("QueueCreate printQueue");
-  xTaskCreatePinnedToCoreWithCaps(print_task, "isr-printf", 2048, NULL, 1, NULL, 0, MALLOC_CAP_SPIRAM);
+  xTaskCreatePinnedToCoreWithCaps(print_task, "isr-printf", 2048, NULL, 1, NULL, 0, task_ram_type_non_critical);
   log_sram_used("TaskCreate print_task");
 #endif
 
@@ -147,9 +150,9 @@ extern "C" void app_main()
 #endif
 
   // ----- Helper init
-  helper_queue = xQueueCreateWithCaps(2, sizeof(int), MALLOC_CAP_SPIRAM);
+  helper_queue = xQueueCreateWithCaps(2, sizeof(int), task_ram_type_non_critical);
   log_sram_used("QueueCreate helper_queue");
-  xTaskCreatePinnedToCoreWithCaps(helper_task, "helper", 6144, NULL, HELPER_TASK_PRIO, NULL, 0, MALLOC_CAP_SPIRAM);
+  xTaskCreatePinnedToCoreWithCaps(helper_task, "helper", 6144, NULL, HELPER_TASK_PRIO, NULL, 0, task_ram_type_critical);
   log_sram_used("TaskCreate helper_task");
 
   // ----- LibXM init
@@ -196,6 +199,6 @@ extern "C" void app_main()
 
   // ----- Console init
   initialize_console();
-  xTaskCreatePinnedToCoreWithCaps(console_task, "console", 6144, NULL, CONSOLE_TASK_PRIO, NULL, 0, MALLOC_CAP_SPIRAM);
+  xTaskCreatePinnedToCoreWithCaps(console_task, "console", 6144, NULL, CONSOLE_TASK_PRIO, NULL, 0, task_ram_type_critical);
   log_sram_used("TaskCreate console_task");
 }

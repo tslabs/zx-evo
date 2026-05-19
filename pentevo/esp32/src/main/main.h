@@ -14,6 +14,9 @@ typedef uint16_t u16;
 typedef uint32_t u32;
 typedef uint64_t u64;
 
+extern u32 task_ram_type_critical;
+extern u32 task_ram_type_non_critical;
+
 enum
 {
   // Core 0
@@ -38,7 +41,7 @@ enum
 #define max(x, y) (((x) > (y)) ? (x) : (y))
 #define min(x, y) (((x) < (y)) ? (x) : (y))
 
-#define CP_STRING "ESP32 SPI WiFi Module, ver.0.5.453, (c) TS-Labs"
+#define CP_STRING "ESP32 SPI WiFi Module, ver.0.6.0, (c) TS-Labs"
 
 extern tinfl_decompressor *decomp;
 

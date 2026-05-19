@@ -11,10 +11,17 @@
 #include "sdmmc_cmd.h"
 #include <dirent.h>
 #include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
 #include "esp_vfs_fat.h"
+#include "diskio_impl.h"
+#include "diskio_sdmmc.h"
+#include "ff.h"
 #include "esp_heap_caps.h"
 #include "esp_console.h"
 #include "esp_log.h"
+#include "esp_timer.h"
+#include "ft8xx.h"
 
 sdmmc_host_t sd_host;
 sdmmc_slot_config_t sd_slot;
@@ -24,6 +31,15 @@ bool sd_initialized = false;
 bool sd_fs_mounted = false;
 char sd_fs_base_path[32] = { 0 };
 sdmmc_card_t *sd_fs_card = NULL;
+FATFS *sd_fs_fatfs = NULL;
+BYTE sd_fs_pdrv = FF_DRV_NOT_USED;
+bool sd_fs_vfs_registered = false;
+bool sd_fs_diskio_registered = false;
+bool sd_fs_fat_mounted = false;
+
+#define SD_SAVE_CHUNK_SIZE (16U * 1024U)
+#define SD_SAVE_PROGRESS_BAR_WIDTH 32U
+#define SD_SAVE_FT_ADDR_LIMIT (4U * 1024U * 1024U)
 
 #if defined(CONFIG_IDF_TARGET_ESP32P4)
 #include "sd_pwr_ctrl.h"
@@ -55,16 +71,46 @@ void sd_ldo_init()
 }
 #endif
 
+esp_log_level_t sd_diskio_old_level = ESP_LOG_NONE;
+esp_log_level_t sd_vfs_fat_old_level = ESP_LOG_NONE;
+esp_log_level_t sd_vfs_fat_sdmmc_old_level = ESP_LOG_NONE;
+esp_log_level_t sd_sdmmc_cmd_old_level = ESP_LOG_NONE;
+int sd_host_log_suppress_depth = 0;
+
 esp_log_level_t sd_host_log_suppress_begin()
 {
   esp_log_level_t old_sd_host_level = esp_log_level_get("SD_HOST");
-  esp_log_level_set("SD_HOST", ESP_LOG_ERROR);
+
+  if (sd_host_log_suppress_depth == 0)
+  {
+    sd_diskio_old_level = esp_log_level_get("diskio_sdmmc");
+    sd_vfs_fat_old_level = esp_log_level_get("vfs_fat");
+    sd_vfs_fat_sdmmc_old_level = esp_log_level_get("vfs_fat_sdmmc");
+    sd_sdmmc_cmd_old_level = esp_log_level_get("sdmmc_cmd");
+
+    esp_log_level_set("SD_HOST", ESP_LOG_NONE);
+    esp_log_level_set("diskio_sdmmc", ESP_LOG_NONE);
+    esp_log_level_set("vfs_fat", ESP_LOG_NONE);
+    esp_log_level_set("vfs_fat_sdmmc", ESP_LOG_NONE);
+    esp_log_level_set("sdmmc_cmd", ESP_LOG_NONE);
+  }
+
+  sd_host_log_suppress_depth++;
   return old_sd_host_level;
 }
 
 void sd_host_log_suppress_end(esp_log_level_t old_sd_host_level)
 {
+  if (sd_host_log_suppress_depth <= 0) return;
+
+  sd_host_log_suppress_depth--;
+  if (sd_host_log_suppress_depth > 0) return;
+
   esp_log_level_set("SD_HOST", old_sd_host_level);
+  esp_log_level_set("diskio_sdmmc", sd_diskio_old_level);
+  esp_log_level_set("vfs_fat", sd_vfs_fat_old_level);
+  esp_log_level_set("vfs_fat_sdmmc", sd_vfs_fat_sdmmc_old_level);
+  esp_log_level_set("sdmmc_cmd", sd_sdmmc_cmd_old_level);
 }
 
 void sd_setup()
@@ -109,27 +155,53 @@ esp_err_t sd_probe_card()
   return sdmmc_get_status(sd_card_ptr);
 }
 
-void sd_deinit()
+void sd_fs_clear_state()
 {
-  bool was_fs_mounted = sd_fs_mounted;
-
-  if (sd_fs_mounted)
-  {
-    esp_vfs_fat_sdcard_unmount(sd_fs_base_path, sd_fs_card);
-    sd_fs_mounted = false;
-    sd_fs_card = NULL;
-    sd_fs_base_path[0] = 0;
-  }
-
-  if (sd_initialized && !was_fs_mounted)
-    sdmmc_host_deinit();
-
   memset(&sd_card, 0, sizeof(sd_card));
   sd_card_ptr = NULL;
   sd_initialized = false;
+  sd_fs_mounted = false;
+  sd_fs_card = NULL;
+  sd_fs_fatfs = NULL;
+  sd_fs_pdrv = FF_DRV_NOT_USED;
+  sd_fs_vfs_registered = false;
+  sd_fs_diskio_registered = false;
+  sd_fs_fat_mounted = false;
+  sd_fs_base_path[0] = 0;
 }
 
-esp_err_t sd_init()
+void sd_fs_unmount_force()
+{
+  char drv[3];
+
+  if (sd_fs_pdrv != FF_DRV_NOT_USED)
+  {
+    drv[0] = (char)('0' + sd_fs_pdrv);
+    drv[1] = ':';
+    drv[2] = 0;
+
+    if (sd_fs_fat_mounted)
+      f_mount(NULL, drv, 0);
+  }
+
+  if (sd_fs_diskio_registered && sd_fs_pdrv != FF_DRV_NOT_USED)
+    ff_diskio_unregister(sd_fs_pdrv);
+
+  if (sd_fs_vfs_registered && sd_fs_base_path[0])
+    esp_vfs_fat_unregister_path(sd_fs_base_path);
+
+  if (sd_initialized)
+    sdmmc_host_deinit();
+
+  sd_fs_clear_state();
+}
+
+void sd_deinit()
+{
+  sd_fs_unmount_force();
+}
+
+esp_err_t sd_init_impl(bool quiet)
 {
   esp_err_t err;
   esp_log_level_t old_sd_host_level;
@@ -144,7 +216,9 @@ esp_err_t sd_init()
   if (err != ESP_OK)
   {
     sd_host_log_suppress_end(old_sd_host_level);
-    printf("E: sdmmc_host_init failed: %s\r\n", esp_err_to_name(err));
+    if (!quiet)
+      printf("E: sdmmc_host_init failed: %s\r\n", esp_err_to_name(err));
+    sd_fs_clear_state();
     return err;
   }
 
@@ -152,8 +226,10 @@ esp_err_t sd_init()
   if (err != ESP_OK)
   {
     sd_host_log_suppress_end(old_sd_host_level);
-    printf("E: sdmmc_host_init_slot failed: %s\r\n", esp_err_to_name(err));
+    if (!quiet)
+      printf("E: sdmmc_host_init_slot failed: %s\r\n", esp_err_to_name(err));
     sdmmc_host_deinit();
+    sd_fs_clear_state();
     return err;
   }
 
@@ -162,8 +238,10 @@ esp_err_t sd_init()
 
   if (err != ESP_OK)
   {
-    printf("E: sdmmc_card_init failed: %s\r\n", esp_err_to_name(err));
+    if (!quiet)
+      printf("E: sdmmc_card_init failed: %s\r\n", esp_err_to_name(err));
     sdmmc_host_deinit();
+    sd_fs_clear_state();
     return err;
   }
 
@@ -175,6 +253,11 @@ esp_err_t sd_init()
 #endif
 
   return ESP_OK;
+}
+
+esp_err_t sd_init()
+{
+  return sd_init_impl(false);
 }
 
 esp_err_t sd_reinit()
@@ -193,6 +276,144 @@ esp_err_t sd_ensure_ready()
 
   printf("W: SD probe failed: %s, reinit\r\n", esp_err_to_name(err));
   return sd_reinit();
+}
+
+esp_err_t sd_fs_register_fat(const char *base_path, const esp_vfs_fat_mount_config_t *mount_cfg)
+{
+  esp_err_t err;
+  FRESULT res;
+  char drv[3];
+
+  err = ff_diskio_get_drive(&sd_fs_pdrv);
+  if (err != ESP_OK || sd_fs_pdrv == FF_DRV_NOT_USED)
+    return ESP_ERR_NO_MEM;
+
+  ff_diskio_register_sdmmc(sd_fs_pdrv, sd_card_ptr);
+  ff_sdmmc_set_disk_status_check(sd_fs_pdrv, mount_cfg->disk_status_check_enable);
+  sd_fs_diskio_registered = true;
+
+  drv[0] = (char)('0' + sd_fs_pdrv);
+  drv[1] = ':';
+  drv[2] = 0;
+
+  err = esp_vfs_fat_register(base_path, drv, (size_t)mount_cfg->max_files, &sd_fs_fatfs);
+  if (err != ESP_OK)
+    return err;
+  sd_fs_vfs_registered = true;
+
+  res = f_mount(sd_fs_fatfs, drv, 1);
+  if (res != FR_OK)
+    return ESP_FAIL;
+
+  sd_fs_fat_mounted = true;
+  return ESP_OK;
+}
+
+esp_err_t sd_fs_mount_new(const char *base_path, sdmmc_card_t **out_card, bool quiet)
+{
+  esp_err_t err;
+
+  if (!base_path || !base_path[0]) return ESP_ERR_INVALID_ARG;
+
+  err = sd_init_impl(quiet);
+  if (err != ESP_OK) return err;
+
+  err = sd_probe_card();
+  if (err != ESP_OK)
+  {
+    sd_deinit();
+    err = sd_init_impl(quiet);
+    if (err != ESP_OK) return err;
+
+    err = sd_probe_card();
+    if (err != ESP_OK)
+    {
+      sd_deinit();
+      return err;
+    }
+  }
+
+  esp_vfs_fat_mount_config_t mount_cfg =
+  {
+    .format_if_mount_failed = false,
+    .max_files = 4,
+    .allocation_unit_size = 16 * 1024,
+    .disk_status_check_enable = true,
+  };
+
+  err = sd_fs_register_fat(base_path, &mount_cfg);
+  if (err != ESP_OK)
+  {
+    if (!quiet)
+      printf("E: SD FAT mount failed: %s\r\n", esp_err_to_name(err));
+    sd_fs_unmount_force();
+    return err;
+  }
+
+  sd_fs_mounted = true;
+  sd_fs_card = sd_card_ptr;
+  snprintf(sd_fs_base_path, sizeof(sd_fs_base_path), "%s", base_path);
+
+  if (out_card)
+    *out_card = sd_fs_card;
+
+  return ESP_OK;
+}
+
+esp_err_t sd_fs_sense_impl(const char *base_path, sdmmc_card_t **out_card, bool quiet)
+{
+  esp_err_t err;
+
+  if (out_card)
+    *out_card = NULL;
+
+  if (!base_path || !base_path[0]) return ESP_ERR_INVALID_ARG;
+
+  if (!sd_fs_mounted)
+    return sd_fs_mount_new(base_path, out_card, quiet);
+
+  if (strcmp(sd_fs_base_path, base_path) != 0)
+    return ESP_ERR_INVALID_ARG;
+
+  if (!sd_fs_card)
+  {
+    sd_fs_unmount_force();
+    return sd_fs_mount_new(base_path, out_card, quiet);
+  }
+
+  if (quiet)
+  {
+    esp_log_level_t old_sd_host_level = sd_host_log_suppress_begin();
+    err = sdmmc_get_status(sd_fs_card);
+    sd_host_log_suppress_end(old_sd_host_level);
+  }
+  else
+  {
+    err = sdmmc_get_status(sd_fs_card);
+  }
+
+  if (err == ESP_OK)
+  {
+    if (out_card)
+      *out_card = sd_fs_card;
+    return ESP_OK;
+  }
+
+  if (!quiet)
+    printf("W: SD card sense failed: %s, remounting %s\r\n", esp_err_to_name(err), sd_fs_base_path);
+
+  sd_fs_unmount_force();
+
+  err = sd_fs_mount_new(base_path, out_card, quiet);
+  if (err != ESP_OK && !quiet)
+    printf("E: SD card is not mounted: %s\r\n", esp_err_to_name(err));
+
+  return err;
+}
+
+esp_err_t sd_fs_sense(const char *base_path)
+{
+  return sd_fs_sense_impl(base_path, NULL, false);
 }
 
 esp_err_t sd_card_erase()
@@ -273,66 +494,214 @@ esp_err_t sd_read_sectors(uint32_t sec, uint32_t num)
   return ESP_OK;
 }
 
-esp_err_t sd_fs_mount(const char *base_path, sdmmc_card_t **out_card)
+bool sd_parse_u32_arg(const char *s, const char *name, uint32_t *out)
 {
-  esp_err_t err;
-  esp_log_level_t old_sd_host_level;
+  char *endp = NULL;
+  uint64_t value;
 
-  if (sd_fs_mounted)
+  if (!s || !s[0] || !out)
   {
-    if (!base_path || strcmp(sd_fs_base_path, base_path) == 0)
-    {
-      if (out_card)
-        *out_card = sd_fs_card;
-      return ESP_OK;
-    }
-
-    sd_deinit();
+    printf("Missing <%s>\r\n", name ? name : "arg");
+    return false;
   }
 
-  if (sd_initialized)
-    sd_deinit();
-
-  sd_setup();
-
-  esp_vfs_fat_mount_config_t mount_cfg =
+  errno = 0;
+  value = strtoull(s, &endp, 0);
+  if (errno || !endp || *endp || value > UINT32_MAX)
   {
-    .format_if_mount_failed = false,
-    .max_files = 4,
-    .allocation_unit_size = 16 * 1024,
-    .disk_status_check_enable = true,
-  };
+    printf("Bad <%s>: %s\r\n", name ? name : "arg", s);
+    return false;
+  }
 
-  old_sd_host_level = sd_host_log_suppress_begin();
-  err = esp_vfs_fat_sdmmc_mount(base_path, &sd_host, &sd_slot, &mount_cfg, &sd_fs_card);
-  sd_host_log_suppress_end(old_sd_host_level);
+  *out = (uint32_t)value;
+  return true;
+}
 
+void sd_save_print_progress(uint32_t done, uint32_t total, int64_t start_us)
+{
+  uint64_t percent = total ? ((uint64_t)done * 100ULL) / (uint64_t)total : 100ULL;
+  uint32_t filled = total ? (uint32_t)(((uint64_t)done * SD_SAVE_PROGRESS_BAR_WIDTH) / (uint64_t)total) : SD_SAVE_PROGRESS_BAR_WIDTH;
+  int64_t elapsed_us = esp_timer_get_time() - start_us;
+  uint32_t kib_s = 0;
+
+  if (percent > 100ULL) percent = 100ULL;
+  if (filled > SD_SAVE_PROGRESS_BAR_WIDTH) filled = SD_SAVE_PROGRESS_BAR_WIDTH;
+
+  if (elapsed_us > 0)
+    kib_s = (uint32_t)(((uint64_t)done * 1000000ULL) / (uint64_t)elapsed_us / 1024ULL);
+
+  printf("\rSD save ft: [");
+  for (uint32_t i = 0; i < SD_SAVE_PROGRESS_BAR_WIDTH; i++)
+    putchar((i < filled) ? '#' : '.');
+  printf("] %3" PRIu64 "%% %" PRIu32 "/%" PRIu32 " KiB %" PRIu32 " KiB/s",
+    percent,
+    done / 1024U,
+    total / 1024U,
+    kib_s);
+  fflush(stdout);
+}
+
+esp_err_t sd_fs_save_ft_dump_once(const char *base_path, uint32_t addr, uint32_t size, const char *path)
+{
+  char full[256];
+  uint8_t *buf = NULL;
+  int fd = -1;
+  bool ft_open = false;
+  bool progress_open = false;
+  uint32_t done = 0;
+  uint64_t last_percent = UINT64_MAX;
+  int64_t start_us = 0;
+  esp_err_t err;
+  esp_err_t err2;
+
+  if (!base_path || !base_path[0]) return ESP_ERR_INVALID_ARG;
+  if (!path || !path[0]) return ESP_ERR_INVALID_ARG;
+  if (size == 0) return ESP_ERR_INVALID_SIZE;
+  if ((uint64_t)addr + (uint64_t)size > SD_SAVE_FT_ADDR_LIMIT) return ESP_ERR_INVALID_SIZE;
+
+  size_t base_len = strlen(base_path);
+  if (!strncmp(path, base_path, base_len) && (path[base_len] == 0 || path[base_len] == '/'))
+  {
+    int n = snprintf(full, sizeof(full), "%s", path);
+    if (n < 0 || (size_t)n >= sizeof(full)) return ESP_ERR_INVALID_ARG;
+  }
+  else if (!sd_fs_build_full_path(base_path, path, full, sizeof(full)))
+    return ESP_ERR_INVALID_ARG;
+
+  err = sd_fs_mount(base_path, NULL);
+  if (err != ESP_OK) return err;
+
+  err = sd_fs_sense(base_path);
+  if (err != ESP_OK) return err;
+
+  buf = (uint8_t*)heap_caps_malloc(SD_SAVE_CHUNK_SIZE, MALLOC_CAP_INTERNAL | MALLOC_CAP_DMA | MALLOC_CAP_8BIT);
+  if (!buf)
+    buf = (uint8_t*)heap_caps_malloc(SD_SAVE_CHUNK_SIZE, MALLOC_CAP_8BIT);
+  if (!buf) return ESP_ERR_NO_MEM;
+
+  fd = open(full, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+  if (fd < 0)
+  {
+    int saved_errno = errno;
+    printf("E: open('%s') failed, errno=%d\r\n", full, saved_errno);
+    free(buf);
+    if (sd_has_retryable_errno(saved_errno)) return ESP_ERR_INVALID_STATE;
+    return ESP_FAIL;
+  }
+
+  err = ft_open_session();
   if (err != ESP_OK)
   {
-    printf("E: esp_vfs_fat_sdmmc_mount failed: %s\r\n", esp_err_to_name(err));
-    sdmmc_host_deinit();
-    sd_fs_card = NULL;
-    sd_card_ptr = NULL;
-    sd_initialized = false;
-    return err;
+    printf("E: FT open failed: %s\r\n", esp_err_to_name(err));
+    goto done;
+  }
+  ft_open = true;
+
+  printf("Saving FT dump: addr=0x%08" PRIX32 " size=%" PRIu32 " -> %s\r\n", addr, size, full);
+  start_us = esp_timer_get_time();
+  sd_save_print_progress(0, size, start_us);
+  progress_open = true;
+
+  while (done < size)
+  {
+    uint32_t n = size - done;
+    uint64_t percent;
+
+    if (n > SD_SAVE_CHUNK_SIZE)
+      n = SD_SAVE_CHUNK_SIZE;
+
+    err = ft_read(buf, addr + done, n);
+    if (err != ESP_OK)
+    {
+      printf("\r\nE: ft_read failed at 0x%08" PRIX32 ", size=%" PRIu32 ": %s\r\n",
+        addr + done, n, esp_err_to_name(err));
+      goto done;
+    }
+
+    size_t wr_done = 0;
+    while (wr_done < n)
+    {
+      ssize_t wr = write(fd, buf + wr_done, n - wr_done);
+      if (wr < 0)
+      {
+        int saved_errno = errno;
+        printf("\r\nE: write('%s') failed, errno=%d\r\n", full, saved_errno);
+        err = sd_has_retryable_errno(saved_errno) ? ESP_ERR_INVALID_STATE : ESP_FAIL;
+        goto done;
+      }
+      if (wr == 0)
+      {
+        printf("\r\nE: write('%s') returned 0\r\n", full);
+        err = ESP_FAIL;
+        goto done;
+      }
+      wr_done += (size_t)wr;
+    }
+
+    done += n;
+    percent = ((uint64_t)done * 100ULL) / (uint64_t)size;
+    if (percent != last_percent || done == size)
+    {
+      sd_save_print_progress(done, size, start_us);
+      last_percent = percent;
+    }
   }
 
-  sd_initialized = true;
-  sd_fs_mounted = true;
-  sd_card_ptr = sd_fs_card;
-  snprintf(sd_fs_base_path, sizeof(sd_fs_base_path), "%s", base_path ? base_path : "");
+  if (close(fd) != 0)
+  {
+    int saved_errno = errno;
+    fd = -1;
+    printf("\r\nE: close('%s') failed, errno=%d\r\n", full, saved_errno);
+    err = sd_has_retryable_errno(saved_errno) ? ESP_ERR_INVALID_STATE : ESP_FAIL;
+    goto done;
+  }
+  fd = -1;
 
-  if (out_card)
-    *out_card = sd_fs_card;
+  printf("\r\nSave done: %s, %" PRIu32 " bytes\r\n", full, size);
+  err = ESP_OK;
 
-  return ESP_OK;
+done:
+  if (fd >= 0)
+  {
+    if (close(fd) != 0 && err == ESP_OK)
+    {
+      int saved_errno = errno;
+      if (progress_open) printf("\r\n");
+      printf("E: close('%s') failed, errno=%d\r\n", full, saved_errno);
+      err = sd_has_retryable_errno(saved_errno) ? ESP_ERR_INVALID_STATE : ESP_FAIL;
+    }
+  }
+
+  if (ft_open)
+  {
+    err2 = ft_close_session();
+    if (err == ESP_OK && err2 != ESP_OK)
+      err = err2;
+  }
+
+  free(buf);
+  return err;
+}
+
+esp_err_t sd_fs_save_ft_dump(const char *base_path, uint32_t addr, uint32_t size, const char *path)
+{
+  return sd_fs_save_ft_dump_once(base_path, addr, size, path);
+}
+
+esp_err_t sd_fs_mount(const char *base_path, sdmmc_card_t **out_card)
+{
+  return sd_fs_sense_impl(base_path, out_card, false);
+}
+
+esp_err_t sd_fs_mount_quiet(const char *base_path, sdmmc_card_t **out_card)
+{
+  return sd_fs_sense_impl(base_path, out_card, true);
 }
 
 void sd_fs_unmount(const char *base_path, sdmmc_card_t *card)
 {
-  (void)base_path;
-  (void)card;
-  sd_deinit();
+  if (base_path && base_path[0] && sd_fs_mounted && strcmp(sd_fs_base_path, base_path) != 0) return;
+  if (card && sd_fs_card && card != sd_fs_card) return;
 }
 
 int sd_fs_build_full_path(const char *base_path, const char *path, char *full, size_t full_size)
@@ -366,6 +735,9 @@ esp_err_t sd_fs_read_file_once(const char *base_path, const char *path, void *ds
     return ESP_ERR_INVALID_ARG;
 
   esp_err_t err = sd_fs_mount(base_path, &card);
+  if (err != ESP_OK) return err;
+
+  err = sd_fs_sense(base_path);
   if (err != ESP_OK) return err;
 
   struct stat st = {};
@@ -434,16 +806,7 @@ esp_err_t sd_fs_read_file_once(const char *base_path, const char *path, void *ds
 
 esp_err_t sd_fs_read_file(const char *base_path, const char *path, void *dst, size_t dst_size, size_t *out_size)
 {
-  esp_err_t err = sd_fs_read_file_once(base_path, path, dst, dst_size, out_size);
-
-  if (err != ESP_OK && sd_error_needs_reinit(err))
-  {
-    printf("W: SD file read failed: %s, retry\r\n", esp_err_to_name(err));
-    sd_deinit();
-    err = sd_fs_read_file_once(base_path, path, dst, dst_size, out_size);
-  }
-
-  return err;
+  return sd_fs_read_file_once(base_path, path, dst, dst_size, out_size);
 }
 
 esp_err_t sd_fs_list_dir(const char *base_path, const char *path)
@@ -462,6 +825,9 @@ esp_err_t sd_fs_list_dir(const char *base_path, const char *path)
   {
     snprintf(full, sizeof(full), "%s/%s", base_path, path);
   }
+
+  esp_err_t err = sd_fs_sense(base_path);
+  if (err != ESP_OK) return err;
 
   errno = 0;
   DIR *d = opendir(full);
@@ -743,24 +1109,47 @@ int sd_ls(int argc, char **argv)
     path = argv[2];
 
   esp_err_t err = sd_fs_mount(base, NULL);
-  if (err != ESP_OK && sd_error_needs_reinit(err))
-  {
-    printf("W: SD mount failed: %s, retry\r\n", esp_err_to_name(err));
-    sd_deinit();
-    err = sd_fs_mount(base, NULL);
-  }
   if (err != ESP_OK) return 1;
 
   err = sd_fs_list_dir(base, path);
-  if (err != ESP_OK && sd_error_needs_reinit(err))
+  return (err == ESP_OK) ? 0 : 1;
+}
+
+int sd_save(int argc, char **argv)
+{
+  uint32_t addr;
+  uint32_t size;
+  esp_err_t err;
+
+  if (argc != 6)
   {
-    printf("W: SD list failed: %s, remount\r\n", esp_err_to_name(err));
-    sd_deinit();
-    err = sd_fs_mount(base, NULL);
-    if (err == ESP_OK)
-      err = sd_fs_list_dir(base, path);
+    printf("Usage: sd save ft <addr> <size> \"path/name\"\r\n");
+    return 1;
   }
 
+  if (strcmp(argv[2], "ft") != 0)
+  {
+    printf("Bad <src>: %s, only 'ft' is supported\r\n", argv[2]);
+    return 1;
+  }
+
+  if (!sd_parse_u32_arg(argv[3], "addr", &addr)) return 1;
+  if (!sd_parse_u32_arg(argv[4], "size", &size)) return 1;
+  if (size == 0)
+  {
+    printf("Bad <size>: must be > 0\r\n");
+    return 1;
+  }
+  if ((uint64_t)addr + (uint64_t)size > SD_SAVE_FT_ADDR_LIMIT)
+  {
+    printf("Bad range: addr=0x%08" PRIX32 " size=%" PRIu32 ", FT address limit is 0x%06X\r\n",
+      addr,
+      size,
+      SD_SAVE_FT_ADDR_LIMIT);
+    return 1;
+  }
+
+  err = sd_fs_save_ft_dump("/sd", addr, size, argv[5]);
   return (err == ESP_OK) ? 0 : 1;
 }
 
@@ -773,6 +1162,7 @@ int sd_cmd(int argc, char **argv)
     printf("  sd erase\r\n");
     printf("  sd read <sec> <num>\r\n");
     printf("  sd ls [path]\r\n");
+    printf("  sd save ft <addr> <size> \"path/name\"\r\n");
     return 0;
   }
 
@@ -790,6 +1180,9 @@ int sd_cmd(int argc, char **argv)
   if (!strcmp(op, "ls"))
     return sd_ls(argc, argv);
 
+  if (!strcmp(op, "save"))
+    return sd_save(argc, argv);
+
   printf("Unknown subcommand: %s\r\n", op);
   return 1;
 }
@@ -799,7 +1192,7 @@ void sdmmc_console_register_system_commands()
   const esp_console_cmd_t cmd =
   {
     .command  = "sd",
-    .help = "SD card commands: info/erase/read/diag'",
+    .help = "SD card commands: info/erase/read/ls/save",
     .hint     = NULL,
     .func     = &sd_cmd,
     .argtable = NULL

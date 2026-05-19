@@ -19,7 +19,7 @@ extern "C" {
 #include <stdint.h>
 #include <stdbool.h>
 
-#define XM_DEFENSIVE 0
+#define XM_DEFENSIVE 1
 #define XM_LIBXMIZE_DELTA_SAMPLES 0
 #define XM_DEBUG 0
 #define XM_LINEAR_INTERPOLATION 1

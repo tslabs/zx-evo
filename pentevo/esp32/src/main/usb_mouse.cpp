@@ -236,7 +236,7 @@ void usb_mouse_task(void *arg)
   usb_mouse_evt_t evt;
   esp_err_t err;
 
-  usb_mouse_evt_queue = xQueueCreate(8, sizeof(usb_mouse_evt_t));
+  usb_mouse_evt_queue = xQueueCreateWithCaps(8, sizeof(usb_mouse_evt_t), task_ram_type_non_critical);
   if (!usb_mouse_evt_queue)
   {
     printf("usb mouse queue create failed\r\n");
@@ -246,10 +246,10 @@ void usb_mouse_task(void *arg)
     return;
   }
 
-  if (xTaskCreatePinnedToCoreWithCaps(usb_mouse_lib_task, "usb_mouse_lib", 2048, xTaskGetCurrentTaskHandle(), USB_MOUSE_LIB_TASK_PRIO, &usb_mouse_lib_task_handle, 0, MALLOC_CAP_SPIRAM) != pdTRUE)
+  if (xTaskCreatePinnedToCoreWithCaps(usb_mouse_lib_task, "usb_mouse_lib", 2048, xTaskGetCurrentTaskHandle(), USB_MOUSE_LIB_TASK_PRIO, &usb_mouse_lib_task_handle, 0, task_ram_type_critical) != pdTRUE)
   {
     printf("usb mouse lib task create failed\r\n");
-    vQueueDelete(usb_mouse_evt_queue);
+    vQueueDeleteWithCaps(usb_mouse_evt_queue);
     usb_mouse_evt_queue = NULL;
     usb_mouse_mode_active = false;
     usb_mouse_task_handle = NULL;
@@ -273,7 +273,7 @@ void usb_mouse_task(void *arg)
   if (err != ESP_OK)
   {
     printf("hid_host_install failed: %s\r\n", esp_err_to_name(err));
-    vQueueDelete(usb_mouse_evt_queue);
+    vQueueDeleteWithCaps(usb_mouse_evt_queue);
     usb_mouse_evt_queue = NULL;
     usb_mouse_mode_active = false;
     usb_mouse_task_handle = NULL;
@@ -313,7 +313,7 @@ void usb_mouse_task(void *arg)
 
   QueueHandle_t q = usb_mouse_evt_queue;
   usb_mouse_evt_queue = NULL;
-  if (q) vQueueDelete(q);
+  if (q) vQueueDeleteWithCaps(q);
 
   usb_mouse_mode_active = false;
   usb_mouse_task_handle = NULL;
@@ -328,7 +328,7 @@ extern "C" esp_err_t usb_mouse_start()
 
   usb_mouse_mode_active = true;
 
-  if (xTaskCreatePinnedToCoreWithCaps(usb_mouse_task, "usb_mouse", 4096, NULL, USB_MOUSE_TASK_PRIO, &usb_mouse_task_handle, 0, MALLOC_CAP_SPIRAM) != pdTRUE)
+  if (xTaskCreatePinnedToCoreWithCaps(usb_mouse_task, "usb_mouse", 4096, NULL, USB_MOUSE_TASK_PRIO, &usb_mouse_task_handle, 0, task_ram_type_non_critical) != pdTRUE)
   {
     usb_mouse_mode_active = false;
     usb_mouse_task_handle = NULL;

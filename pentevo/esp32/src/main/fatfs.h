@@ -16,14 +16,17 @@ extern char fs_part_label[16];
 extern wl_handle_t fs_wl_handle;
 
 esp_err_t fs_mount();
+esp_err_t fs_mount_quiet();
+esp_err_t fs_format();
 esp_err_t fs_init();
 esp_err_t fs_ensure_ready();
+esp_err_t fs_ensure_ready_quiet();
 void fs_deinit();
 esp_err_t fs_list_dir(const char *base_path, const char *path);
 int fs_build_full_path(const char *base_path, const char *path, char *full, size_t full_size);
 
 int fs_info(int argc, char **argv);
-int fs_init_cmd(int argc, char **argv);
+int fs_format_cmd(int argc, char **argv);
 int fs_ls(int argc, char **argv);
 int fs_cmd(int argc, char **argv);
 

@@ -1,6 +1,9 @@
 
 #pragma once
 
+#include <stdint.h>
+#include "main.h"
+
 // Types
 typedef struct
 {
@@ -17,38 +20,38 @@ typedef struct
 } FT_MODE;
 
 /*
-  |  # | visible  | Fpix MHz | clocks/line | lines/frame | line kHz | frame Hz |
-  | -- | -------- | -------- | ----------- | ----------- | -------- | -------- |
-  |  0 | 640x480  |       24 |         800 |         524 |   30.000 |   57.252 |
-  |  1 | 640x480  |       32 |         832 |         520 |   38.462 |   73.964 |
-  |  2 | 640x480  |       32 |         800 |         524 |   40.000 |   76.336 |
-  |  3 | 800x600  |       40 |        1056 |         628 |   37.879 |   60.317 |
-  |  4 | 800x600  |       40 |        1056 |         628 |   37.879 |   60.317 |
-  |  5 | 800x600  |       48 |        1040 |         666 |   46.154 |   69.300 |
-  |  6 | 800x600  |       56 |        1048 |         631 |   53.435 |   84.683 |
-  |  7 | 1024x768 |       64 |        1344 |         806 |   47.619 |   59.081 |
-  |  8 | 1024x768 |       72 |        1328 |         806 |   54.217 |   67.267 |
-  |  9 | 1024x768 |       80 |        1312 |         800 |   60.976 |   76.220 |
-  | 10 | 640x1024 |       56 |         844 |        1066 |   66.351 |   62.243 |
-  | 11 | 1280x720 |       72 |        1650 |         750 |   43.636 |   58.182 |
-  | 12 | 1280x720 |       72 |        1600 |         750 |   45.000 |   60.000 |
+  |  # | visible  | Fpll MHz | Fpix MHz | clocks/line | lines/frame | line kHz | frame Hz |
+  | -- | -------- | -------- | -------- | ----------- | ----------- | -------- | -------- |
+  |  0 | 640x480  |       48 |       24 |         800 |         524 |   30.000 |   57.252 |
+  |  1 | 640x480  |       64 |       32 |         832 |         520 |   38.462 |   73.964 |
+  |  2 | 640x480  |       64 |       32 |         800 |         524 |   40.000 |   76.336 |
+  |  3 | 800x600  |       40 |       40 |        1056 |         628 |   37.879 |   60.317 |
+  |  4 | 800x600  |       80 |       40 |        1056 |         628 |   37.879 |   60.317 |
+  |  5 | 800x600  |       48 |       48 |        1040 |         666 |   46.154 |   69.300 |
+  |  6 | 800x600  |       56 |       56 |        1048 |         631 |   53.435 |   84.683 |
+  |  7 | 1024x768 |       64 |       64 |        1344 |         806 |   47.619 |   59.081 |
+  |  8 | 1024x768 |       72 |       72 |        1328 |         806 |   54.217 |   67.267 |
+  |  9 | 1024x768 |       80 |       80 |        1312 |         800 |   60.976 |   76.220 |
+  | 10 | 640x1024 |       56 |       56 |         844 |        1066 |   66.351 |   62.243 |
+  | 11 | 1280x720 |       72 |       72 |        1650 |         750 |   43.636 |   58.182 |
+  | 12 | 1280x720 |       72 |       72 |        1600 |         750 |   45.000 |   60.000 |
 */
 
 enum  // const FT_MODE ft_modes[] in ft8xx.c
 {
-  FT_MODE_640_480_57             = 0,  //  0: 640x480@57Hz (48MHz)
-  FT_MODE_640_480_74             = 1,  //  1: 640x480@74Hz (64MHz)
-  FT_MODE_640_480_76             = 2,  //  2: 640x480@76Hz (64MHz)
-  FT_MODE_800_600_60             = 3,  //  3: 800x600@60Hz (40MHz)
-  FT_MODE_800_600_60_80MHZ       = 4,  //  4: 800x600@60Hz (80MHz)
-  FT_MODE_800_600_69             = 5,  //  5: 800x600@69Hz (48MHz)
-  FT_MODE_800_600_85             = 6,  //  6: 800x600@85Hz (56MHz)
-  FT_MODE_1024_768_59            = 7,  //  7: 1024x768@59Hz (64MHz)
-  FT_MODE_1024_768_67            = 8,  //  8: 1024x768@67Hz (72MHz)
-  FT_MODE_1024_768_76            = 9,  //  9: 1024x768@76Hz (80MHz)
+  FT_MODE_640_480_57             = 0,  //  0: 640x480@57Hz     (48MHz)
+  FT_MODE_640_480_74             = 1,  //  1: 640x480@74Hz     (64MHz)
+  FT_MODE_640_480_76             = 2,  //  2: 640x480@76Hz     (64MHz)
+  FT_MODE_800_600_60             = 3,  //  3: 800x600@60Hz     (40MHz)
+  FT_MODE_800_600_60_80MHZ       = 4,  //  4: 800x600@60Hz     (80MHz)
+  FT_MODE_800_600_69             = 5,  //  5: 800x600@69Hz     (48MHz)
+  FT_MODE_800_600_85             = 6,  //  6: 800x600@85Hz     (56MHz)
+  FT_MODE_1024_768_59            = 7,  //  7: 1024x768@59Hz    (64MHz)
+  FT_MODE_1024_768_67            = 8,  //  8: 1024x768@67Hz    (72MHz)
+  FT_MODE_1024_768_76            = 9,  //  9: 1024x768@76Hz    (80MHz)
   FT_MODE_1280_1024_60_HALF      = 10, // 10: 1280/2x1024@60Hz (56MHz)
-  FT_MODE_1280_720_58            = 11, // 11: 1280x720@58Hz (72MHz)
-  FT_MODE_1280_720_60            = 12, // 12: 1280x720@60Hz (72MHz)
+  FT_MODE_1280_720_58            = 11, // 11: 1280x720@58Hz    (72MHz)
+  FT_MODE_1280_720_60            = 12, // 12: 1280x720@60Hz    (72MHz)
   FT_MODE_MAX
 };
 
@@ -529,6 +532,8 @@ void ft_wreg8(u32 a, u8 v);
 void ft_wreg16(u32 a, u16 v);
 void ft_wreg32(u32 a, u32 v);
 
+esp_err_t ft_open_session();
+esp_err_t ft_close_session();
 esp_err_t ft_read(void *addr, u32 ft_addr, u32 size);
 esp_err_t ft_write(const void *addr, u32 ft_addr, u32 size);
 esp_err_t ft_write_dl(const void *addr, u32 size_dwords);
@@ -555,6 +560,25 @@ i16 rsin(i16 r, u16 th);
 extern const u16 sintab[];
 extern u32 *ft_ccmdb;
 extern u16 ft_ccmdp;
+
+
+// Text attribute display backend
+void ft_text_attr_mode_get_size(uint16_t *cols, uint16_t *rows);
+esp_err_t ft_text_attr_mode_begin();
+esp_err_t ft_text_attr_mode_show();
+esp_err_t ft_text_attr_mode_clear(u8 ch, u8 attr);
+esp_err_t ft_text_attr_mode_present(const u8 *chars, const u8 *attrs);
+void ft_text_attr_mode_end();
+
+
+// JPEG / RGB888 and DXP viewer helpers
+int ft_jpg_ext_match(const char *name);
+int ft_dxp_ext_match(const char *name);
+esp_err_t ft_jpg_show_file_mode(const char *path, bool stretch, bool quiet = false);
+esp_err_t ft_jpg_show_file(const char *path);
+esp_err_t ft_dxp_show_file_mode(const char *path, bool quiet = false);
+esp_err_t ft_dxp_show_file(const char *path);
+esp_err_t ft_rgb888_640x480_show_current(bool stretch);
 
 // Console
 void ft_console_register_system_commands();

@@ -7,6 +7,7 @@
 #include "esp_console.h"
 #include "esp_partition.h"
 #include "esp_vfs_fat.h"
+#include "ff.h"
 #include "wear_levelling.h"
 #include "fatfs.h"
 
@@ -15,6 +16,8 @@ bool fs_fs_mounted = false;
 char fs_fs_base_path[32] = { 0 };
 char fs_part_label[16] = { 0 };
 wl_handle_t fs_wl_handle = WL_INVALID_HANDLE;
+
+#define FS_VFS_MAX_FILES 4
 
 int fs_build_full_path(const char *base_path, const char *path, char *full, size_t full_size)
 {
@@ -60,13 +63,96 @@ void fs_fill_mount_cfg(esp_vfs_fat_mount_config_t *cfg, bool format_if_mount_fai
 
   memset(cfg, 0, sizeof(*cfg));
   cfg->format_if_mount_failed = format_if_mount_failed;
-  cfg->max_files = 8;
+  cfg->max_files = FS_VFS_MAX_FILES;
   cfg->allocation_unit_size = fs_get_allocation_unit_size(part_size);
   cfg->disk_status_check_enable = false;
-  cfg->use_one_fat = false;
+  cfg->use_one_fat = true;
 }
 
-esp_err_t fs_mount()
+
+const char *fs_fat_type_name(BYTE fs_type)
+{
+  switch (fs_type)
+  {
+    case FS_FAT12: return "FAT12";
+    case FS_FAT16: return "FAT16";
+    case FS_FAT32: return "FAT32";
+#if defined(FF_FS_EXFAT) && FF_FS_EXFAT
+    case FS_EXFAT: return "exFAT";
+#endif
+    default: return "unknown";
+  }
+}
+
+uint32_t fs_fat_sector_size(FATFS *fat)
+{
+  if (!fat) return 0;
+
+#if FF_MAX_SS != FF_MIN_SS
+  return fat->ssize;
+#else
+  return FF_MIN_SS;
+#endif
+}
+
+FRESULT fs_get_mounted_fatfs(FATFS **out_fat, DWORD *out_free_clusters)
+{
+  if (!out_fat || !out_free_clusters) return FR_INVALID_PARAMETER;
+
+  *out_fat = NULL;
+  *out_free_clusters = 0;
+
+  FRESULT res = f_getfree("", out_free_clusters, out_fat);
+  if (res == FR_OK) return res;
+
+  return f_getfree("0:", out_free_clusters, out_fat);
+}
+
+void fs_print_fatfs_details(uint64_t total_bytes, uint64_t free_bytes, esp_err_t usage_err)
+{
+  FATFS *fat = NULL;
+  DWORD free_clusters_fatfs = 0;
+  FRESULT res = fs_get_mounted_fatfs(&fat, &free_clusters_fatfs);
+
+  if (res != FR_OK || !fat)
+  {
+    printf("  fatfs      : unavailable (FRESULT=%u)\r\n", (unsigned)res);
+    return;
+  }
+
+  uint32_t sector_size = fs_fat_sector_size(fat);
+  uint32_t cluster_size = (uint32_t)fat->csize * sector_size;
+  uint32_t total_clusters = fat->n_fatent >= 2 ? fat->n_fatent - 2 : 0;
+  uint32_t free_clusters = (uint32_t)free_clusters_fatfs;
+
+  if (free_clusters > total_clusters)
+    free_clusters = total_clusters;
+
+  uint32_t used_clusters = total_clusters >= free_clusters ? total_clusters - free_clusters : 0;
+  uint64_t data_bytes = (uint64_t)total_clusters * cluster_size;
+  uint64_t fat_bytes = (uint64_t)fat->fsize * sector_size;
+
+  printf("  fat type   : %s (%u)\r\n", fs_fat_type_name(fat->fs_type), (unsigned)fat->fs_type);
+  printf("  fat copies : %u\r\n", (unsigned)fat->n_fats);
+  printf("  sector     : %u bytes\r\n", (unsigned)sector_size);
+  printf("  cluster    : %u sectors, %u bytes\r\n", (unsigned)fat->csize, (unsigned)cluster_size);
+  printf("  clusters   : total=%u used=%u free=%u\r\n", (unsigned)total_clusters, (unsigned)used_clusters, (unsigned)free_clusters);
+  printf("  data area  : %llu bytes\r\n", (unsigned long long)data_bytes);
+  printf("  fat size   : %u sectors, %llu bytes each\r\n", (unsigned)fat->fsize, (unsigned long long)fat_bytes);
+  printf("  root ents  : %u\r\n", (unsigned)fat->n_rootdir);
+  printf("  vol base   : %llu\r\n", (unsigned long long)fat->volbase);
+  printf("  fat base   : %llu\r\n", (unsigned long long)fat->fatbase);
+  printf("  dir base   : %llu\r\n", (unsigned long long)fat->dirbase);
+  printf("  data base  : %llu\r\n", (unsigned long long)fat->database);
+
+  if (usage_err == ESP_OK && total_bytes != data_bytes)
+    printf("  vfs total  : %llu bytes\r\n", (unsigned long long)total_bytes);
+
+  if (usage_err == ESP_OK && cluster_size > 0 && free_bytes != (uint64_t)free_clusters * cluster_size)
+    printf("  vfs free   : %llu bytes\r\n", (unsigned long long)free_bytes);
+}
+
+esp_err_t fs_mount_impl(bool quiet)
 {
   esp_err_t err;
 
@@ -87,7 +173,8 @@ esp_err_t fs_mount()
 
   if (err != ESP_OK)
   {
-    printf("E: esp_vfs_fat_spiflash_mount_rw_wl failed: %s\r\n", esp_err_to_name(err));
+    if (!quiet)
+      printf("E: esp_vfs_fat_spiflash_mount_rw_wl failed: %s\r\n", esp_err_to_name(err));
     return err;
   }
 
@@ -99,7 +186,17 @@ esp_err_t fs_mount()
   return ESP_OK;
 }
 
-esp_err_t fs_init()
+esp_err_t fs_mount()
+{
+  return fs_mount_impl(false);
+}
+
+esp_err_t fs_mount_quiet()
+{
+  return fs_mount_impl(true);
+}
+
+esp_err_t fs_format()
 {
   const esp_partition_t *part = fs_find_partition();
   if (!part) return ESP_ERR_NOT_FOUND;
@@ -138,6 +235,11 @@ void fs_deinit()
 esp_err_t fs_ensure_ready()
 {
   return fs_mount();
+}
+
+esp_err_t fs_ensure_ready_quiet()
+{
+  return fs_mount_quiet();
 }
 
 esp_err_t fs_list_dir(const char *base_path, const char *path)
@@ -211,6 +313,12 @@ int fs_info(int argc, char **argv)
   printf("  label      : %s\r\n", FS_PART_LABEL);
   printf("  base path  : %s\r\n", FS_BASE_PATH);
 
+  esp_vfs_fat_mount_config_t cfg;
+  fs_fill_mount_cfg(&cfg, false);
+  printf("  cfg alloc  : %u bytes\r\n", (unsigned)cfg.allocation_unit_size);
+  printf("  cfg fats   : %u on next format\r\n", cfg.use_one_fat ? 1u : 2u);
+  printf("  max files  : %d\r\n", cfg.max_files);
+
   if (err == ESP_OK)
   {
     printf("  total      : %llu bytes\r\n", (unsigned long long)total);
@@ -221,6 +329,8 @@ int fs_info(int argc, char **argv)
   {
     printf("  usage      : unavailable (%s)\r\n", esp_err_to_name(err));
   }
+
+  fs_print_fatfs_details(total, free, err);
 
   if (part)
   {
@@ -244,7 +354,12 @@ int fs_info(int argc, char **argv)
   return 0;
 }
 
-int fs_init_cmd(int argc, char **argv)
+esp_err_t fs_init()
+{
+  return fs_format();
+}
+
+int fs_format_cmd(int argc, char **argv)
 {
   if (argc < 0 || !argv) return 1;
 
@@ -258,13 +373,14 @@ int fs_init_cmd(int argc, char **argv)
   esp_vfs_fat_mount_config_t format_cfg;
   fs_fill_mount_cfg(&format_cfg, true);
 
-  esp_err_t err = fs_init();
+  esp_err_t err = fs_format();
   if (err != ESP_OK) return 1;
 
   printf("FAT formatted and mounted: %s -> %s\r\n", FS_PART_LABEL, FS_BASE_PATH);
   printf("  address    : 0x%08" PRIX32 "\r\n", part->address);
   printf("  size       : 0x%08lx (%lu bytes)\r\n", (unsigned long)part->size, (unsigned long)part->size);
   printf("  alloc unit : %u bytes\r\n", (unsigned)format_cfg.allocation_unit_size);
+  printf("  fat copies : %u\r\n", format_cfg.use_one_fat ? 1u : 2u);
   return 0;
 }
 
@@ -287,16 +403,16 @@ int fs_cmd(int argc, char **argv)
   if (argc < 2 || !argv[1])
   {
     printf("Usage:\r\n");
-    printf("  fs init\r\n");
-    printf("  fs info\r\n");
-    printf("  fs ls [path]\r\n");
+    printf("  fat format\r\n");
+    printf("  fat info\r\n");
+    printf("  fat ls [path]\r\n");
     return 0;
   }
 
   const char *op = argv[1];
 
-  if (!strcmp(op, "init"))
-    return fs_init_cmd(argc, argv);
+  if (!strcmp(op, "format"))
+    return fs_format_cmd(argc, argv);
 
   if (!strcmp(op, "info"))
     return fs_info(argc, argv);
@@ -312,8 +428,8 @@ void fat_console_register_system_commands()
 {
   const esp_console_cmd_t cmd =
   {
-    .command  = "fs",
-    .help = "FATFS commands: init/info/ls",
+    .command  = "fat",
+    .help = "FATFS commands: format/info/ls",
     .hint     = NULL,
     .func     = &fs_cmd,
     .argtable = NULL

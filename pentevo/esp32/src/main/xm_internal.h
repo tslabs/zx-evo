@@ -282,6 +282,10 @@ struct xm_context_s {
 
 /* ----- Internal API ----- */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** Check the module data for errors/inconsistencies.
  *
  * @returns 0 if everything looks OK. Module should be safe to load.
@@ -316,3 +320,7 @@ size_t xm_get_memory_needed_for_context(const char*, size_t);
  * @returns pointer to the memory pool
  */
 char* xm_load_module(xm_context_t*, const char*, size_t, char*);
+
+#ifdef __cplusplus
+}
+#endif

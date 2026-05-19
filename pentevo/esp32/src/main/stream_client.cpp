@@ -108,7 +108,7 @@ static esp_err_t stream_reader_start(void)
   stream_ring_reset();
   stream_read_size = 0;
 
-  if (xTaskCreatePinnedToCoreWithCaps(reader_task, "stream_reader", 4096, NULL, STREAMER_TASK_PRIO, &reader_task_handle, 0, MALLOC_CAP_INTERNAL) == pdPASS)
+  if (xTaskCreatePinnedToCoreWithCaps(reader_task, "stream_reader", 4096, NULL, STREAMER_TASK_PRIO, &reader_task_handle, 0, task_ram_type_non_critical) == pdPASS)
     return ESP_OK;
 
   stream_ring_free();
@@ -181,7 +181,7 @@ static void reader_task(void *arg)
 void stream_init(void)
 {
   if (!ring_mutex)
-    ring_mutex = xSemaphoreCreateMutex();
+    ring_mutex = xSemaphoreCreateMutexWithCaps(task_ram_type_non_critical);
 
   stream_sock = -1;
   stream_http = NULL;

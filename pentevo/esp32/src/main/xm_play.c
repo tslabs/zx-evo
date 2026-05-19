@@ -308,8 +308,20 @@ static float IRAM_ATTR xm_envelope_lerp(xm_envelope_point_t* a, xm_envelope_poin
 static void IRAM_ATTR xm_post_pattern_change(xm_context_t* ctx)
 {
   /* Loop if necessary */
+  if (ctx->module.length == 0)
+  {
+    ctx->current_table_index = 0;
+    ctx->current_row = 0;
+    return;
+  }
+
   if (ctx->current_table_index >= ctx->module.length)
-    ctx->current_table_index = ctx->module.restart_position;
+  {
+    if (ctx->module.restart_position < ctx->module.length)
+      ctx->current_table_index = ctx->module.restart_position;
+    else
+      ctx->current_table_index = 0;
+  }
 }
 
 static float IRAM_ATTR xm_linear_period(float note)
@@ -888,6 +900,11 @@ static void IRAM_ATTR xm_key_off(xm_channel_context_t* ch)
 
 static void IRAM_ATTR xm_row(xm_context_t* ctx)
 {
+  if (ctx->module.length == 0 || ctx->module.num_channels == 0 ||
+      ctx->module.num_patterns == 0 || ctx->module.patterns == NULL ||
+      ctx->channels == NULL || ctx->row_loop_count == NULL)
+    return;
+
   if (ctx->position_jump)
   {
     ctx->current_table_index = ctx->jump_dest;
@@ -906,8 +923,35 @@ static void IRAM_ATTR xm_row(xm_context_t* ctx)
     xm_post_pattern_change(ctx);
   }
 
-  xm_pattern_t* cur     = ctx->module.patterns + ctx->module.pattern_table[ctx->current_table_index];
-  bool        in_a_loop = false;
+  if (ctx->current_table_index >= ctx->module.length)
+    xm_post_pattern_change(ctx);
+
+  if (ctx->current_table_index >= ctx->module.length)
+    return;
+
+  uint8_t pattern_index = ctx->module.pattern_table[ctx->current_table_index];
+
+  if (pattern_index >= ctx->module.num_patterns)
+  {
+    ctx->current_table_index = 0;
+    ctx->current_row = 0;
+    return;
+  }
+
+  xm_pattern_t* cur = ctx->module.patterns + pattern_index;
+
+  if (cur->slots == NULL || cur->num_rows == 0)
+  {
+    ctx->current_table_index++;
+    ctx->current_row = 0;
+    xm_post_pattern_change(ctx);
+    return;
+  }
+
+  if (ctx->current_row >= cur->num_rows)
+    ctx->current_row = 0;
+
+  bool in_a_loop = false;
 
   /* Read notes… */
   for (uint8_t i = 0; i < ctx->module.num_channels; ++i)

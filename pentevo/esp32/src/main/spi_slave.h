@@ -12,6 +12,7 @@ enum
   DREQ_RND,
   DREQ_URL,
   DREQ_STREAM,
+  DREQ_XM_STREAM,
 };
 
 u8 rd_reg8(u8 reg);
