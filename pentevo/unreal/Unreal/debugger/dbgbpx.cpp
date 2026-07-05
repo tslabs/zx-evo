@@ -580,7 +580,7 @@ INT_PTR CALLBACK conddlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
 		if (cur >= cpu.cbpn)
 			return 0;
 		cpu.cbpn--;
-		memcpy(cpu.cbp[cur], cpu.cbp[cur + 1], sizeof(cpu.cbp[0])*(cpu.cbpn - cur));
+		memmove(cpu.cbp[cur], cpu.cbp[cur + 1], sizeof(cpu.cbp[0])*(cpu.cbpn - cur));
 
 		if (cur && cur == cpu.cbpn)
 			cur--;

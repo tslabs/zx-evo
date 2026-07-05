@@ -439,8 +439,8 @@ void pop_pos()
 
 	cpu.trace_curs = stack_cur[0];
 	cpu.trace_top = stack_pos[0];
-	memcpy(&stack_pos[0], &stack_pos[1], sizeof stack_pos - sizeof *stack_pos);
-	memcpy(&stack_cur[0], &stack_cur[1], sizeof stack_cur - sizeof *stack_cur);
+	memmove(&stack_pos[0], &stack_pos[1], sizeof stack_pos - sizeof *stack_pos);
+	memmove(&stack_cur[0], &stack_cur[1], sizeof stack_cur - sizeof *stack_cur);
 	stack_pos[(sizeof stack_pos / sizeof *stack_pos) - 1] = -1;
 }
 

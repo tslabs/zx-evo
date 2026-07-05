@@ -57,6 +57,7 @@ char avi_frameh_aud[] = "01wb    "; //wave
 //proto
 static int pipewrite(HANDLE hPipe, char *buf, int len);
 static void savevideo_finish();
+static void close_ffmpeg_process();
 
 
 //init:
@@ -94,6 +95,7 @@ color(CONSCLR_INFO); printf("debug: named pipe '%s' created.\n",PIPENAME);
     //start ffmpeg process
     char args[VS_MAX_FFPATH+VS_MAX_FFPARM+VS_MAX_FFVOUT+100];
     _snprintf(args, sizeof(args), "\"%s\" -i %s %s -y %s", ffmpeg_exec, PIPENAME, ffmpeg_param, out_fname);
+    args[sizeof(args)-1] = 0;
 #ifdef DEBUG
 color(CONSCLR_INFO); printf("debug: %s\n", args);
 #endif
@@ -140,6 +142,9 @@ color(CONSCLR_INFO); printf("debug: ffmpeg started.\n");
     {
         color(CONSCLR_ERROR); printf("error: no connection from ffmpeg.\n");
         CloseHandle(hPipe);
+        hPipe = INVALID_HANDLE_VALUE;
+        TerminateProcess(pi.hProcess, 1);
+        close_ffmpeg_process();
         return -1;
     }
     DWORD dwMode=PIPE_READMODE_BYTE | PIPE_WAIT;
@@ -219,20 +224,38 @@ static void savevideo_finish()
 {
     //send video trailer (none)
     //close pipe
-    CloseHandle(hPipe);
+    if (hPipe != INVALID_HANDLE_VALUE)
+    {
+        CloseHandle(hPipe);
+        hPipe = INVALID_HANDLE_VALUE;
+    }
 
     //wait for ffmpeg done
 #ifdef DEBUG
 color(CONSCLR_INFO); printf("debug: waiting for ffmpeg finish.\n");
 #endif
-    WaitForSingleObject(pi.hProcess, INFINITE);
+    if (pi.hProcess)
+        WaitForSingleObject(pi.hProcess, INFINITE);
 #ifdef DEBUG
 color(CONSCLR_INFO); printf("debug: saving video done.\n");
 #endif
 
     //close handles
-    CloseHandle(pi.hProcess);
-    CloseHandle(pi.hThread);
+    close_ffmpeg_process();
+}
+
+static void close_ffmpeg_process()
+{
+    if (pi.hProcess)
+    {
+        CloseHandle(pi.hProcess);
+        pi.hProcess = 0;
+    }
+    if (pi.hThread)
+    {
+        CloseHandle(pi.hThread);
+        pi.hThread = 0;
+    }
 }
 
 

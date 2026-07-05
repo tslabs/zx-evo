@@ -95,7 +95,7 @@ namespace vdac2
   {
     static bool old_irq = false;
     bool rc;
-    // rc = BT8XXEMU_hasInterrupt(pEmulator); // <- doesn't work потому что автор эмулятора - мудак
+    // rc = BT8XXEMU_hasInterrupt(pEmulator); // <- doesn't work coz FT emul's author is a jerk
 
     mtx.lock();
     rc = has_irq && !old_irq;

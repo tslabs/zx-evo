@@ -78,6 +78,36 @@ char select_romfile(char *dstname)
    return 1;
 }
 
+char rom_page_exists(const char *romname)
+{
+   if (!*romname)
+      return 0;
+
+   char filename[FILENAME_MAX];
+   strcpy(filename, romname);
+   char *page_text = strrchr(filename + 2, ':');
+   unsigned page = 0;
+   if (page_text)
+   {
+      *page_text = 0;
+      page = atoi(page_text + 1);
+   }
+
+   FILE *file = fopen(filename, "rb");
+   if (!file)
+      return 0;
+
+   if (fseek(file, 0, SEEK_END))
+   {
+      fclose(file);
+      return 0;
+   }
+
+   long size = ftell(file);
+   fclose(file);
+   return size >= 0 && page < (unsigned)size / PAGE;
+}
+
 char *MemDlg_get_bigrom()
 {
    if (c1.mem_model == MM_PENTAGON) return c1.pent_rom_path;
@@ -361,7 +391,21 @@ INT_PTR CALLBACK MemDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
 
       lastpage = "MEMORY";
    }
-   if (nm->code == PSN_APPLY) dlgok = 1;
+   if (nm->code == PSN_APPLY)
+   {
+      if (c1.use_romset && !rom_page_exists(c1.sos_rom_path))
+      {
+         char message[FILENAME_MAX + 96];
+         _snprintf(message, _countof(message),
+                   "BASIC48 ROM file is missing or does not contain the selected 16K page:\n%s",
+                   c1.sos_rom_path);
+         message[sizeof message - 1] = 0;
+         MessageBox(dlg, message, "ROMSET", MB_ICONERROR | MB_OK);
+         SetWindowLongPtr(dlg, DWLP_MSGRESULT, PSNRET_INVALID_NOCHANGEPAGE);
+         return 1;
+      }
+      dlgok = 1;
+   }
    if (nm->code == PSN_RESET) dlgok = 0;
    return 1;
 }
@@ -1091,54 +1135,94 @@ INT_PTR CALLBACK TapeDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
 void FillModemList(HWND box)
 {
    ComboBox_AddString(box, "NONE");
-   for (unsigned port = 1; port < 256; port++)
+
+   DWORD class_count = 0;
+   SetupDiClassGuidsFromName("Ports", 0, 0, &class_count);
+   if (!class_count)
+      return;
+
+   GUID *classes = (GUID*)malloc(class_count * sizeof *classes);
+   if (!classes)
+      return;
+
+   if (!SetupDiClassGuidsFromName("Ports", classes, class_count, &class_count))
    {
-      HANDLE hPort;
-      if (zf232.rs_open_port == port)
-          hPort = zf232.rs_hPort;
-      else
-      {
-         char portName[11];
-         _snprintf(portName, _countof(portName), "\\\\.\\COM%d", port);
-
-         hPort = CreateFile(portName, 0, 0, 0, OPEN_EXISTING, 0, 0);
-         if (hPort == INVALID_HANDLE_VALUE)
-             continue;
-      }
-
-      struct
-      {
-         COMMPROP comm;
-         char xx[4000];
-      } b;
-
-      b.comm.wPacketLength = sizeof(b);
-      b.comm.dwProvSpec1 = COMMPROP_INITIALIZED;
-      if (GetCommProperties(hPort, &b.comm) && b.comm.dwProvSubType == PST_MODEM)
-      {
-         MODEMDEVCAPS *mc = (MODEMDEVCAPS*)&b.comm.wcProvChar;
-         char vendor[0x100], model[0x100];
-
-         unsigned vsize = mc->dwModemManufacturerSize / sizeof(WCHAR);
-         WideCharToMultiByte(CP_ACP, 0, (WCHAR*)(PCHAR(mc) + mc->dwModemManufacturerOffset), vsize, vendor, sizeof vendor, 0, 0);
-         vendor[vsize] = 0;
-
-         unsigned msize = mc->dwModemModelSize / sizeof(WCHAR);
-         WideCharToMultiByte(CP_ACP, 0, (WCHAR*)(PCHAR(mc) + mc->dwModemModelOffset), msize, model, sizeof model, 0, 0);
-         model[msize] = 0;
-         char line[0x200];
-         _snprintf(line, _countof(line), "COM%d: %s %s", port, vendor, model);
-         ComboBox_AddString(box, line);
-      }
-      else
-      {
-         char portName[11];
-         _snprintf(portName, _countof(portName), "COM%d:", port);
-         ComboBox_AddString(box, portName);
-      }
-      if (zf232.rs_open_port != port)
-          CloseHandle(hPort);
+      free(classes);
+      return;
    }
+
+   for (unsigned class_index = 0; class_index < class_count; class_index++)
+   {
+      HDEVINFO device_info = SetupDiGetClassDevs(&classes[class_index], 0, 0, DIGCF_PRESENT);
+      if (device_info == INVALID_HANDLE_VALUE)
+         continue;
+
+      for (unsigned device_index = 0;; device_index++)
+      {
+         SP_DEVINFO_DATA device_data = { sizeof device_data };
+         if (!SetupDiEnumDeviceInfo(device_info, device_index, &device_data))
+            break;
+
+         HKEY key = SetupDiOpenDevRegKey(device_info, &device_data, DICS_FLAG_GLOBAL, 0, DIREG_DEV, KEY_QUERY_VALUE);
+         if (key == INVALID_HANDLE_VALUE)
+            continue;
+
+         char port_name[16] = { 0 };
+         DWORD type = 0, size = sizeof port_name;
+         LONG status = RegQueryValueEx(key, "PortName", 0, &type, (BYTE*)port_name, &size);
+         RegCloseKey(key);
+         if (status != ERROR_SUCCESS || (type != REG_SZ && type != REG_EXPAND_SZ))
+            continue;
+
+         port_name[sizeof port_name - 1] = 0;
+         int port = 0;
+         char suffix = 0;
+         if (sscanf(port_name, "COM%d%c", &port, &suffix) != 1 || port < 1 || port > 255)
+            continue;
+
+         char device_name[0x200] = { 0 };
+         DWORD device_name_size = sizeof device_name;
+         if (!SetupDiGetDeviceRegistryProperty(device_info, &device_data, SPDRP_FRIENDLYNAME, 0,
+                                               (BYTE*)device_name, sizeof device_name, &device_name_size))
+            SetupDiGetDeviceRegistryProperty(device_info, &device_data, SPDRP_DEVICEDESC, 0,
+                                             (BYTE*)device_name, sizeof device_name, &device_name_size);
+         device_name[sizeof device_name - 1] = 0;
+
+         char line[0x220];
+         if (*device_name)
+            _snprintf(line, _countof(line), "%s: %s", port_name, device_name);
+         else
+            _snprintf(line, _countof(line), "%s:", port_name);
+         line[sizeof line - 1] = 0;
+
+         int insert_at = ComboBox_GetCount(box);
+         for (int i = 1; i < ComboBox_GetCount(box); i++)
+         {
+            char existing[0x200];
+            ComboBox_GetLBText(box, i, existing);
+            int existing_port = 0;
+            char existing_suffix = 0;
+            if (sscanf(existing, "COM%d%c", &existing_port, &existing_suffix) != 1)
+               continue;
+            if (existing_port == port)
+            {
+               insert_at = -1;
+               break;
+            }
+            if (existing_port > port)
+            {
+               insert_at = i;
+               break;
+            }
+         }
+         if (insert_at >= 0)
+            ComboBox_InsertString(box, insert_at, line);
+      }
+
+      SetupDiDestroyDeviceInfoList(device_info);
+   }
+
+   free(classes);
 }
 
 void SelectModem(HWND box)

@@ -234,6 +234,19 @@ void rotate(float *m, float *mi, float angle, float *axis)
   float x = axis[0];
   float y = axis[1];
   float z = axis[2];
+  float axis_length = sqrt(x*x + y*y + z*z);
+
+  if (!axis_length)
+  {
+    m[0] = mi[0] = 1.0f; m[1] = mi[1] = 0.0f; m[2] = mi[2] = 0.0f;
+    m[3] = mi[3] = 0.0f; m[4] = mi[4] = 1.0f; m[5] = mi[5] = 0.0f;
+    m[6] = mi[6] = 0.0f; m[7] = mi[7] = 0.0f; m[8] = mi[8] = 1.0f;
+    return;
+  }
+
+  x /= axis_length;
+  y /= axis_length;
+  z /= axis_length;
 
   float s = sin(angle);
   float c = cos(angle);

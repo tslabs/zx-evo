@@ -470,7 +470,8 @@ dbg_canvas& dbg_canvas::fill_rect(const int w, const int h, u8 attr)
 dbg_canvas& dbg_canvas::draw_text(const char *msg, int color)
 {
 	char line[0x20];
-	sprintf(line, "%s", msg);
+	_snprintf(line, sizeof(line), "%s", msg);
+	line[sizeof(line)-1] = 0;
 	print_dbg(line, color);
 
 	return *this;

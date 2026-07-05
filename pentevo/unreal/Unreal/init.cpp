@@ -135,10 +135,10 @@ void init_all(int argc, char **argv)
         printf("Warning: FT8xx emulator failed! (error: %d, %lX)\n", rc, GetLastError());
         comp.ts.vdac2 = 0;
       }
-
-    if (comp.ts.zifi32)
-      zf32::init();
    }
+
+   if (comp.ts.zifi32)
+      zf32::init();
    
    load_errors = 0;
    trd_toload = 0;

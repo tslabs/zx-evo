@@ -481,7 +481,7 @@ void load_config(const char *fname)
          if (!strnicmp(ptr, renders[i].nick, sl) && !isalnum(ptr[sl]))
          {
             ptr += sl;
-            memcpy(&renders[i], &renders[i+1], (sizeof *renders) * (max-i));
+            memmove(&renders[i], &renders[i+1], (sizeof *renders) * (max-i));
             break;
          }
       }
@@ -1120,7 +1120,7 @@ void load_arch(const char *fname)
       char *y = strchr(x, '=');
       if (!y) {
 ignore_line:
-         memcpy(x, newx, sizeof arcbuffer - (newx-arcbuffer));
+         memmove(x, newx, sizeof arcbuffer - (newx-arcbuffer));
       } else {
          *y = 0; if (!stricmp(x, "SkipFiles")) goto ignore_line;
          x = newx;

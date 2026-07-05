@@ -41,7 +41,7 @@ u8 rm(unsigned addr)
                 cpu.tscache_data[cache_pointer & ~1] = *am_r(addr & ~1);
         cpu.tscache_data[cache_pointer | 1] = *am_r(addr | 1);
         cpu.tscache_addr[cache_pointer & ~1] = cpu.tscache_addr[cache_pointer | 1] = cached_address;     // set cache tags for two subsequent 8-bit addresses
-        vid.memcpucyc[cpu.t / 224]++;
+        vid.memcpucyc[min(cpu.t / VID_TACTS, (u32)VID_LINES - 1)]++;
         vid.memcyc_lcmd++;
       }
 
@@ -50,7 +50,7 @@ u8 rm(unsigned addr)
     }
 
     else
-      vid.memcpucyc[cpu.t / 224]++;
+      vid.memcpucyc[min(cpu.t / VID_TACTS, (u32)VID_LINES - 1)]++;
   }
 
   else
@@ -146,7 +146,8 @@ void wm(unsigned addr, u8 val)
     // pentevo version for 16 bit DRAM/cache
         u16 cache_pointer = addr & 0x1FE;
     cpu.tscache_addr[cache_pointer] = cpu.tscache_addr[cache_pointer + 1] = -1;    // invalidate two 8-bit addresses
-    vid.memcpucyc[cpu.t / 224]++;
+    vid.memcpucyc[min(cpu.t / VID_TACTS, (u32)VID_LINES - 1)]++;
+    vid.memcyc_lcmd++;
   }
 
    if ((conf.mem_model == MM_ATM3) && (comp.pBF & 4) /*&& ((addr & 0xF800) == 0)*/ ) // Разрешена загрузка шрифта для ATM3 // lvd: any addr is possible in ZXEVO

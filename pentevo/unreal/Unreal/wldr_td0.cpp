@@ -80,6 +80,8 @@ int FDD::read_td0()
    if (*(short*)snbuf == WORD2('t','d'))
    { // packed disk
       u8 *tmp = (u8*)malloc(snapsize);
+      if (!tmp)
+         return 0;
       memcpy(tmp, snbuf+12, snapsize-12);
       snapsize = 12+unpack_lzh(tmp, snapsize-12, snbuf+12);
       ::free(tmp);

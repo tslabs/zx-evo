@@ -151,7 +151,7 @@ void desc(u8 *data, unsigned size, char *dst)
       for (i = 0; i < 10; i++) prg[i] = (data[i+2] < ' ' || data[i+2] >= 0x80) ? '?' : data[i+2];
       for (i = 9; i && prg[i] == ' '; prg[i--] = 0);
       sprintf(dst, "%s: \"%s\" %d,%d", data[1] ? "Bytes":"Program", prg,
-         *(u16*)(data+14), *(u16*)(data+12));
+         data[14] | (data[15] << 8), data[12] | (data[13] << 8));
    } else if (*data == 0xFF) sprintf(dst, "data block, %d bytes", size-2);
    else sprintf(dst, "#%02X block, %d bytes", *data, size-2);
    sprintf(dst + strlen(dst), ", crc %s", crc ? "bad":"ok");
@@ -167,17 +167,34 @@ void alloc_infocell()
 void named_cell(const void *nm, unsigned sz = 0)
 {
    alloc_infocell();
-   if (sz) memcpy(tapeinfo[tape_infosize].desc, nm, sz), tapeinfo[tape_infosize].desc[sz] = 0;
-   else strcpy(tapeinfo[tape_infosize].desc, (const char*)nm);
+   if (sz)
+   {
+      if (sz >= sizeof tapeinfo[tape_infosize].desc)
+         sz = sizeof tapeinfo[tape_infosize].desc - 1;
+      memcpy(tapeinfo[tape_infosize].desc, nm, sz);
+      tapeinfo[tape_infosize].desc[sz] = 0;
+   }
+   else
+   {
+      strncpy(tapeinfo[tape_infosize].desc, (const char*)nm, sizeof tapeinfo[tape_infosize].desc - 1);
+      tapeinfo[tape_infosize].desc[sizeof tapeinfo[tape_infosize].desc - 1] = 0;
+   }
    tape_infosize++;
 }
 
 int readTAP()
 {
-   u8 *ptr = snbuf; closetape();
-   while (ptr < snbuf+snapsize) {
-      unsigned size = *(u16*)ptr; ptr += 2;
+   u8 *ptr = snbuf;
+   u8 *file_end = snbuf + snapsize;
+   closetape();
+   while (ptr < file_end) {
+      if ((unsigned)(file_end - ptr) < 2)
+         return 0;
+      unsigned size = ptr[0] | (ptr[1] << 8);
+      ptr += 2;
       if (!size) break;
+      if (size > (unsigned)(file_end - ptr))
+         return 0;
       alloc_infocell();
       desc(ptr, size, tapeinfo[tape_infosize].desc);
       tape_infosize++;
@@ -185,27 +202,36 @@ int readTAP()
       ptr += size;
    }
    find_tape_sizes();
-   return (ptr == snbuf+snapsize);
+   return (ptr == file_end);
 }
 
 int readCSW()
 {
+   if (snapsize < 0x20)
+       return 0;
+
+   u8 *file_end = snbuf + snapsize;
    closetape();
-   named_cell("CSW tape image");
    if (snbuf[0x1B] != 1)
        return 0; // unknown compression type
-   unsigned rate = Z80FQ / *(u16*)(snbuf + 0x19); // usually 3.5mhz / 44khz
+   unsigned sample_rate = snbuf[0x19] | (snbuf[0x1A] << 8);
+   if (!sample_rate)
+       return 0;
+   unsigned rate = Z80FQ / sample_rate; // usually 3.5mhz / 44khz
    if (!rate)
        return 0;
+   named_cell("CSW tape image");
    reserve(snapsize - 0x18);
    if (!(snbuf[0x1C] & 1))
        tape_image[tape_imagesize++] = find_pulse(1);
-   for (u8 *ptr = snbuf + 0x20; ptr < snbuf + snapsize; )
+   for (u8 *ptr = snbuf + 0x20; ptr < file_end; )
    {
       unsigned len = *ptr++ * rate;
       if (!len)
       {
-          len = *(unsigned*)ptr * rate;
+          if ((unsigned)(file_end - ptr) < 4)
+              return 0;
+          len = (ptr[0] | (ptr[1] << 8) | (ptr[2] << 16) | (ptr[3] << 24)) * rate;
           ptr += 4;
       }
       tape_image[tape_imagesize++] = find_pulse(len);
@@ -389,65 +415,108 @@ void parse_hardware(u8 *ptr)
 
 int readTZX()
 {
-   u8 *ptr = snbuf; closetape();
+   u8 *ptr = snbuf;
+   u8 *file_end = snbuf + snapsize;
+   closetape();
+
+   auto has_bytes = [file_end](const u8 *pos, unsigned size)
+   {
+      return pos <= file_end && size <= (unsigned)(file_end - pos);
+   };
+   auto read_u16 = [](const u8 *pos)
+   {
+      return (unsigned)pos[0] | ((unsigned)pos[1] << 8);
+   };
+   auto read_u24 = [](const u8 *pos)
+   {
+      return (unsigned)pos[0] | ((unsigned)pos[1] << 8) | ((unsigned)pos[2] << 16);
+   };
+   auto read_u32 = [](const u8 *pos)
+   {
+      return (unsigned)pos[0] | ((unsigned)pos[1] << 8) | ((unsigned)pos[2] << 16) | ((unsigned)pos[3] << 24);
+   };
+
    unsigned size, pause, i, j, n, t, t0;
-   u8 pl, last, *end; char *p;
+   u8 pl, last, *end;
+   char *p;
    unsigned loop_n = 0, loop_p;
    char nm[512];
-   while (ptr < snbuf+snapsize)
+   while (ptr < file_end)
    {
       switch (*ptr++) {
          case 0x10: // normal block
+         {
+            if (!has_bytes(ptr, 4)) return 0;
+            size = read_u16(ptr+2);
+            pause = read_u16(ptr);
+            if (!size || !has_bytes(ptr + 4, size)) return 0;
             alloc_infocell();
-            size = *(u16*)(ptr+2);
-            pause = *(u16*)ptr;
-            ptr += 4;
-            desc(ptr, size, tapeinfo[tape_infosize].desc);
+            desc(ptr + 4, size, tapeinfo[tape_infosize].desc);
             tape_infosize++;
-            makeblock(ptr, size, 2168, 667, 735, 855, 1710,
-                (*ptr < 4) ? 8064 : 3220, pause);
-            ptr += size;
+            makeblock(ptr + 4, size, 2168, 667, 735, 855, 1710,
+                (ptr[4] < 4) ? 8064 : 3220, pause);
+            ptr += size + 4;
             break;
+         }
          case 0x11: // turbo block
+         {
+            if (!has_bytes(ptr, 0x12)) return 0;
+            size = read_u24(ptr+0x0F);
+            last = ptr[12];
+            if (!size || last < 1 || last > 8 || !has_bytes(ptr + 0x12, size)) return 0;
             alloc_infocell();
-            size = 0xFFFFFF & *(unsigned*)(ptr+0x0F);
             desc(ptr + 0x12, size, tapeinfo[tape_infosize].desc);
             tape_infosize++;
             makeblock(ptr + 0x12, size,
-               *(u16*)ptr, *(u16*)(ptr+2),
-               *(u16*)(ptr+4), *(u16*)(ptr+6),
-               *(u16*)(ptr+8), *(u16*)(ptr+10),
-               *(u16*)(ptr+13), ptr[12]);
-            // todo: test used bits - ptr+12
+               read_u16(ptr), read_u16(ptr+2),
+               read_u16(ptr+4), read_u16(ptr+6),
+               read_u16(ptr+8), read_u16(ptr+10),
+               read_u16(ptr+13), last);
             ptr += size + 0x12;
             break;
+         }
          case 0x12: // pure tone
+         {
+            if (!has_bytes(ptr, 4)) return 0;
             create_appendable_block();
-            pl = find_pulse(*(u16*)ptr);
-            n = *(u16*)(ptr+2);
+            pl = find_pulse(read_u16(ptr));
+            n = read_u16(ptr+2);
             reserve(n);
             for (i = 0; i < n; i++) tape_image[tape_imagesize++] = pl;
             ptr += 4;
             break;
+         }
          case 0x13: // sequence of pulses of different lengths
-            create_appendable_block();
+         {
+            if (!has_bytes(ptr, 1)) return 0;
             n = *ptr++;
+            if (!has_bytes(ptr, 2 * n)) return 0;
+            create_appendable_block();
             reserve(n);
             for (i = 0; i < n; i++, ptr += 2)
-               tape_image[tape_imagesize++] = find_pulse(*(u16*)ptr);
+               tape_image[tape_imagesize++] = find_pulse(read_u16(ptr));
             break;
+         }
          case 0x14: // pure data block
+         {
+            if (!has_bytes(ptr, 0x0A)) return 0;
+            size = read_u24(ptr+7);
+            last = ptr[4];
+            if (!size || last < 1 || last > 8 || !has_bytes(ptr + 0x0A, size)) return 0;
             create_appendable_block();
-            size = 0xFFFFFF & *(unsigned*)(ptr+7);
-            makeblock(ptr + 0x0A, size, 0, 0, 0, *(u16*)ptr,
-                      *(u16*)(ptr+2), -1, *(u16*)(ptr+5), ptr[4]);
+            makeblock(ptr + 0x0A, size, 0, 0, 0, read_u16(ptr),
+                      read_u16(ptr+2), -1, read_u16(ptr+5), last);
             ptr += size + 0x0A;
             break;
+         }
          case 0x15: // direct recording
-            size = 0xFFFFFF & *(unsigned*)(ptr+5);
-            t0 = *(u16*)ptr;
-            pause = *(u16*)(ptr+2);
+         {
+            if (!has_bytes(ptr, 8)) return 0;
+            size = read_u24(ptr+5);
+            t0 = read_u16(ptr);
+            pause = read_u16(ptr+2);
             last = ptr[4];
+            if (!size || last < 1 || last > 8 || !has_bytes(ptr + 8, size)) return 0;
             named_cell("direct recording");
             ptr += 8;
             pl = 0; n = 0;
@@ -476,8 +545,11 @@ int readTZX()
             tape_image[tape_imagesize++] = find_pulse(t); // last pulse ???
             if (pause) tape_image[tape_imagesize++] = find_pulse(pause*3500);
             break;
+         }
          case 0x20: // pause (silence) or 'stop the tape' command
-            pause = *(u16*)ptr;
+         {
+            if (!has_bytes(ptr, 2)) return 0;
+            pause = read_u16(ptr);
             sprintf(nm, pause? "pause %d ms" : "stop the tape", pause);
             named_cell(nm);
             reserve(2); ptr += 2;
@@ -487,68 +559,130 @@ int readTZX()
             } else pause *= 3500;
             tape_image[tape_imagesize++] = find_pulse(pause);
             break;
+         }
          case 0x21: // group start
+         {
+            if (!has_bytes(ptr, 1)) return 0;
             n = *ptr++;
+            if (!has_bytes(ptr, n)) return 0;
             named_cell(ptr, n); ptr += n;
             appendable = 1;
             break;
+         }
          case 0x22: // group end
             break;
          case 0x23: // jump to block
+         {
+            if (!has_bytes(ptr, 2)) return 0;
             named_cell("* jump"); ptr += 2;
             break;
+         }
          case 0x24: // loop start
-            loop_n = *(u16*)ptr; loop_p = tape_imagesize; ptr += 2;
+         {
+            if (!has_bytes(ptr, 2)) return 0;
+            loop_n = read_u16(ptr); loop_p = tape_imagesize; ptr += 2;
             break;
+         }
          case 0x25: // loop end
+         {
             if (!loop_n) break;
             size = tape_imagesize - loop_p;
+            if (size && loop_n - 1 > (UINT_MAX - tape_imagesize) / size) return 0;
             reserve((loop_n-1) * size);
             for (i = 1; i < loop_n; i++)
                memcpy(tape_image + loop_p + i*size, tape_image + loop_p, size);
             tape_imagesize += (loop_n-1) * size;
             loop_n = 0;
             break;
+         }
          case 0x26: // call
-            named_cell("* call"); ptr += 2 + 2 * *(u16*)ptr;
+         {
+            if (!has_bytes(ptr, 2)) return 0;
+            n = read_u16(ptr);
+            if (!has_bytes(ptr + 2, 2 * n)) return 0;
+            named_cell("* call"); ptr += 2 + 2 * n;
             break;
+         }
          case 0x27: // ret
             named_cell("* return");
             break;
          case 0x28: // select block
-            sprintf(nm, "* choice: "); n = ptr[2]; p = (char*)ptr+3;
+         {
+            if (!has_bytes(ptr, 2)) return 0;
+            size = read_u16(ptr);
+            if (size < 1 || !has_bytes(ptr + 2, size)) return 0;
+            end = ptr + 2 + size;
+            sprintf(nm, "* choice: ");
+            n = ptr[2]; p = (char*)ptr+3;
             for (i = 0; i < n; i++) {
-               if (i) strcat(nm, " / ");
-               char *q = nm+strlen(nm); size = *(u8*)(p+2);
-               memcpy(q, p+3, size); q[size] = 0; p += size+3;
+               if ((u8*)p > end || (unsigned)(end - (u8*)p) < 3) return 0;
+               t = *(u8*)(p+2);
+               if ((unsigned)(end - (u8*)p) < 3 + t) return 0;
+
+               unsigned nm_len = strlen(nm);
+               if (i) {
+                  if (nm_len > sizeof nm - 4) return 0;
+                  memcpy(nm + nm_len, " / ", 3);
+                  nm_len += 3;
+                  nm[nm_len] = 0;
+               }
+               if (t >= sizeof nm - nm_len) return 0;
+               memcpy(nm + nm_len, p+3, t);
+               nm[nm_len+t] = 0;
+               p += t+3;
             }
-            named_cell(nm); ptr += 2 + *(u16*)ptr;
+            named_cell(nm); ptr = end;
             break;
+         }
          case 0x2A: // stop if 48k
-            named_cell("* stop if 48K");
-            ptr += 4 + *(unsigned*)ptr;
+         {
+            if (!has_bytes(ptr, 4)) return 0;
+            size = read_u32(ptr);
+            if (!has_bytes(ptr + 4, size)) return 0;
+            named_cell("* stop if 48K"); ptr += 4 + size;
             break;
+         }
          case 0x30: // text description
+         {
+            if (!has_bytes(ptr, 1)) return 0;
             n = *ptr++;
+            if (!has_bytes(ptr, n)) return 0;
             named_cell(ptr, n); ptr += n;
             appendable = 1;
             break;
+         }
          case 0x31: // message block
+         {
+            if (!has_bytes(ptr, 2)) return 0;
+            n = ptr[1];
+            if (!has_bytes(ptr + 2, n)) return 0;
             named_cell("- MESSAGE BLOCK ");
-            end = ptr + 2 + ptr[1]; pl = *end; *end = 0;
-            for (p = (char*)ptr+2; p < (char*)end; p++)
-               if (*p == 0x0D) *p = 0;
-            for (p = (char*)ptr+2; p < (char*)end; p += strlen(p)+1)
-               named_cell(p);
-            *end = pl; ptr = end;
+            end = ptr + 2 + n;
+            p = (char*)ptr+2;
+            while ((u8*)p < end) {
+               char *line_end = p;
+               while ((u8*)line_end < end && *line_end != 0x0D) line_end++;
+               if (line_end == p) named_cell("");
+               else named_cell(p, line_end - p);
+               p = line_end;
+               if ((u8*)p < end) p++;
+            }
+            ptr = end;
             named_cell("-");
             break;
+         }
          case 0x32: // archive info
+         {
+            if (!has_bytes(ptr, 3)) return 0;
+            size = read_u16(ptr);
+            if (size < 1 || !has_bytes(ptr + 2, size)) return 0;
+            end = ptr + 2 + size;
             named_cell("- ARCHIVE INFO ");
             p = (char*)ptr + 3;
             for (i = 0; i < ptr[2]; i++) {
                const char *info;
-               switch (*p++) {
+               if ((u8*)p > end || (unsigned)(end - (u8*)p) < 2) return 0;
+               switch (*(u8*)p) {
                   case 0: info = "Title"; break;
                   case 1: info = "Publisher"; break;
                   case 2: info = "Author"; break;
@@ -558,60 +692,99 @@ int readTZX()
                   case 6: info = "Price"; break;
                   case 7: info = "Protection"; break;
                   case 8: info = "Origin"; break;
-                  case -1:info = "Comment"; break;
+                  case 0xFF: info = "Comment"; break;
                   default:info = "info"; break;
                }
-               unsigned size = *(BYTE*)p+1;
-               char tmp = p[size]; p[size] = 0;
-               sprintf(nm, "%s: %s", info, p+1);
-               p[size] = tmp; p += size;
+               n = *(u8*)(p+1);
+               if ((unsigned)(end - (u8*)p) < 2 + n) return 0;
+               sprintf(nm, "%s: %.*s", info, (int)n, p+2);
+               p += n + 2;
                named_cell(nm);
             }
             named_cell("-");
-            ptr += 2 + *(u16*)ptr;
+            ptr = end;
             break;
+         }
          case 0x33: // hardware type
+         {
+            if (!has_bytes(ptr, 1)) return 0;
+            n = *ptr;
+            if (!has_bytes(ptr + 1, 3 * n)) return 0;
             parse_hardware(ptr);
-            ptr += 1 + 3 * *ptr;
+            ptr += 1 + 3 * n;
             break;
+         }
          case 0x34: // emulation info
+         {
+            if (!has_bytes(ptr, 8)) return 0;
             named_cell("* emulation info"); ptr += 8;
             break;
+         }
          case 0x35: // custom info
+         {
+            if (!has_bytes(ptr, 0x14)) return 0;
+            size = read_u32(ptr+0x10);
+            if (!has_bytes(ptr + 0x14, size)) return 0;
+            end = ptr + 0x14 + size;
             if (!memcmp(ptr, "POKEs           ", 16)) {
+               if ((unsigned)(end - (ptr + 0x14)) < 1) return 0;
                named_cell("- POKEs block ");
-               named_cell(ptr+0x15, ptr[0x14]);
-               p = (char*)ptr + 0x15 + ptr[0x14];
+               n = ptr[0x14];
+               if ((unsigned)(end - (ptr + 0x15)) < n) return 0;
+               named_cell(ptr+0x15, n);
+               p = (char*)ptr + 0x15 + n;
+               if ((u8*)p >= end) return 0;
                n = *(u8*)p++;
                for (i = 0; i < n; i++) {
-                  named_cell(p+1, *(u8*)p);
-                  p += *p+1;
+                  if ((u8*)p >= end) return 0;
+                  t = *(u8*)p;
+                  if ((unsigned)(end - (u8*)p) < t + 1) return 0;
+                  named_cell(p+1, t);
+                  p += t+1;
+                  if ((u8*)p >= end) return 0;
                   t = *(u8*)p++;
                   strcpy(nm, "POKE ");
                   for (j = 0; j < t; j++) {
-                     sprintf(nm+strlen(nm), "%d,", *(u16*)(p+1));
-                     sprintf(nm+strlen(nm), *p & 0x10 ? "nn" : "%d", *(u8*)(p+3));
-                     if (!(*p & 0x08)) sprintf(nm+strlen(nm), "(page %d)", *p & 7);
-                     strcat(nm, "; "); p += 5;
+                     if ((unsigned)(end - (u8*)p) < 5) return 0;
+                     char item[32];
+                     if (*(u8*)p & 0x10)
+                        sprintf(item, "%d,nn", read_u16((u8*)p+1));
+                     else
+                        sprintf(item, "%d,%d", read_u16((u8*)p+1), *(u8*)(p+3));
+                     if (!(*(u8*)p & 0x08)) sprintf(item + strlen(item), "(page %d)", *(u8*)p & 7);
+                     strcat(item, "; ");
+                     if (strlen(nm) + strlen(item) < sizeof nm) strcat(nm, item);
+                     p += 5;
                   }
                   named_cell(nm);
                }
-               *(unsigned*)nm = '-';
-            } else sprintf(nm, "* custom info: %s", ptr), nm[15+16] = 0;
-            named_cell(nm);
-            ptr += 0x14 + *(unsigned*)(ptr+0x10);
+               named_cell("-");
+            } else {
+               sprintf(nm, "* custom info: %.16s", (char*)ptr);
+               named_cell(nm);
+            }
+            ptr = end;
             break;
+         }
          case 0x40: // snapshot
-            named_cell("* snapshot"); ptr += 4 + (0xFFFFFF & *(unsigned*)(ptr + 1));
+         {
+            if (!has_bytes(ptr, 4)) return 0;
+            size = read_u24(ptr+1);
+            if (!has_bytes(ptr + 4, size)) return 0;
+            named_cell("* snapshot"); ptr += 4 + size;
             break;
+         }
          case 0x5A: // 'Z'
-            ptr += 9; break;
+            if (!has_bytes(ptr, 9)) return 0;
+            ptr += 9;
+            break;
          default:
-            ptr += snapsize;
+            return 0;
       }
    }
    for (i = 0; i < tape_infosize; i++) {
-      if (*(short*)tapeinfo[i].desc == WORD2('*', ' '))
+      if (*(short*)tapeinfo[i].desc == WORD2('*', ' ') &&
+          strlen(tapeinfo[i].desc) <= sizeof(tapeinfo[i].desc) - sizeof(" [UNSUPPORTED]"))
          strcat(tapeinfo[i].desc, " [UNSUPPORTED]");
       if (*tapeinfo[i].desc == '-')
          while (strlen(tapeinfo[i].desc) < sizeof(tapeinfo[i].desc)-1)
@@ -620,7 +793,7 @@ int readTZX()
    if (tape_imagesize && tape_pulse[tape_image[tape_imagesize-1]] < 350000)
       reserve(1), tape_image[tape_imagesize++] = find_pulse(350000); // small pause [rqd for 3ddeathchase]
    find_tape_sizes();
-   return (ptr == snbuf+snapsize);
+   return (ptr == file_end);
 }
 
 u8 tape_bit() // used in io.cpp & sound.cpp

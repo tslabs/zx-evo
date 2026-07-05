@@ -98,48 +98,50 @@ void do_idle()
    last_cpu = rdtsc();
 }
 
-void mainloop(const bool &Exit)
+void emulation_frame(bool process_input)
 {
-   u8 skipped = 0;
-   while (!Exit)
+   static u8 skipped = 0;
+
+	temp.sndblock = !conf.sound.enabled;
+	temp.inputblock = temp.vidblock && conf.sound.enabled;
+
+	spectrum_frame();
+   flip_visuals();
+	//VideoSaver();
+
+	if (skipped < temp.frameskip)
 	{
-		temp.sndblock = !conf.sound.enabled;
-		temp.inputblock = temp.vidblock && conf.sound.enabled;
+		skipped++;
+		temp.vidblock = 1;
+	}
+	else
+		skipped = temp.vidblock = 0;
 
-		spectrum_frame();
-    flip_visuals();
-		//VideoSaver();
+	// message handling before flip (they paint to rbuf)
+	if (process_input && !temp.inputblock)
+		dispatch(conf.atm.xt_kbd ? ac_main_xt : ac_main);
 
-		if (skipped < temp.frameskip)
-		{
-			skipped++;
-			temp.vidblock = 1;
-		}
-		else
-			skipped = temp.vidblock = 0;
+	if (!temp.vidblock)
+		flip();
 
-		// message handling before flip (they paint to rbuf)
-		if (!temp.inputblock)
-		{
-			dispatch(conf.atm.xt_kbd ? ac_main_xt : ac_main);
-		}
-
-		if (!temp.vidblock)
-			flip();
-
-		if (!temp.sndblock)
-		{
+	if (!temp.sndblock)
+	{
       if (videosaver_state)
         savevideo_snd();  // flush snd to video saver
-			do_sound();
-			Vs1001.Play();
-		}
-
-		if (!temp.sndblock)
-		{
-			if (conf.sound.do_sound == do_sound_none)
-				do_idle();
-		}
+		do_sound();
+		Vs1001.Play();
 	}
+
+	if (!temp.sndblock)
+	{
+		if (conf.sound.do_sound == do_sound_none)
+			do_idle();
+	}
+}
+
+void mainloop(const bool &Exit)
+{
+   while (!Exit)
+		emulation_frame(true);
    correct_exit();
 }

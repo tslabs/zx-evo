@@ -63,12 +63,12 @@ LONG __stdcall filter(EXCEPTION_POINTERS *pp)
           pp->ContextRecord->Ebp, pp->ContextRecord->Esp);
 #endif
 #if _M_IX64
-   printf("rax=%08X rbx=%08X rcx=%08X rdx=%08X\n"
-          "rsi=%08X rdi=%08X rbp=%08X rsp=%08X\n",
-          pp->ContextRecord->Rax, pp->ContextRecord->Rbx,
-          pp->ContextRecord->Rcx, pp->ContextRecord->Rdx,
-          pp->ContextRecord->Rsi, pp->ContextRecord->Rdi,
-          pp->ContextRecord->Rbp, pp->ContextRecord->Rsp);
+   printf("rax=%p rbx=%p rcx=%p rdx=%p\n"
+          "rsi=%p rdi=%p rbp=%p rsp=%p\n",
+          (void*)pp->ContextRecord->Rax, (void*)pp->ContextRecord->Rbx,
+          (void*)pp->ContextRecord->Rcx, (void*)pp->ContextRecord->Rdx,
+          (void*)pp->ContextRecord->Rsi, (void*)pp->ContextRecord->Rdi,
+          (void*)pp->ContextRecord->Rbp, (void*)pp->ContextRecord->Rsp);
 #endif
    color();
    return EXCEPTION_CONTINUE_SEARCH;
