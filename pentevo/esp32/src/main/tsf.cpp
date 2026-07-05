@@ -833,6 +833,18 @@ esp_err_t tsf_storage_format()
   return tsf_storage_mount();
 }
 
+esp_err_t tsf_storage_delete()
+{
+  esp_err_t err;
+
+  tsf_storage_deinit();
+
+  err = tsf_storage_find_partition();
+  if (err != ESP_OK) return err;
+
+  return esp_partition_erase_range(tsf_storage_part, 0, tsf_storage_part->size);
+}
+
 esp_err_t tsf_storage_init()
 {
   return tsf_storage_mount();
@@ -1025,18 +1037,36 @@ int tsf_storage_info_cmd(int argc, char **argv)
 
   if (argc < 0 || !argv) return 1;
 
-  err = tsf_storage_ensure_ready();
-  if (err != ESP_OK)
-  {
-    printf("E: TSF mount failed: %s\r\n", esp_err_to_name(err));
-    return 1;
-  }
+  err = tsf_storage_ensure_ready_quiet();
 
   printf("TSF info\r\n");
-  printf("  mounted    : %s\r\n", tsf_storage_mounted ? "yes" : "no");
   printf("  label      : %s\r\n", TSF_PART_LABEL);
   printf("  subtype    : %s (0x%02X)\r\n", tsf_storage_subtype_name(), TSF_PART_SUBTYPE_VALUE);
   printf("  base path  : %s\r\n", TSF_BASE_PATH);
+
+  if (err != ESP_OK)
+  {
+    if (err == ESP_ERR_NOT_FOUND)
+    {
+      printf("  state      : partition not found\r\n");
+      return 0;
+    }
+
+    if (err == ESP_ERR_INVALID_STATE && tsf_storage_part)
+    {
+      printf("  state      : not formatted\r\n");
+      printf("  address    : 0x%08" PRIX32 "\r\n", tsf_storage_part->address);
+      printf("  size       : 0x%08" PRIX32 " (%" PRIu32 " bytes)\r\n",
+        tsf_storage_part->size,
+        tsf_storage_part->size);
+      return 0;
+    }
+
+    printf("  state      : unavailable (%s)\r\n", esp_err_to_name(err));
+    return 1;
+  }
+
+  printf("  mounted    : %s\r\n", tsf_storage_mounted ? "yes" : "no");
   printf("  block size : %u bytes\r\n", (unsigned)tsf_storage_cfg.block_size);
   printf("  blocks     : %u\r\n", (unsigned)(tsf_storage_cfg.bulk_size / tsf_storage_cfg.block_size));
   printf("  files      : %u\r\n", (unsigned)tsf_storage_vol.files_number);
@@ -1067,6 +1097,43 @@ int tsf_storage_format_cmd(int argc, char **argv)
   return 0;
 }
 
+int tsf_storage_delete_cmd(int argc, char **argv)
+{
+  const esp_partition_t *part;
+  esp_err_t err;
+
+  if (argc < 0 || !argv) return 1;
+
+  err = tsf_storage_find_partition();
+  if (err != ESP_OK)
+  {
+    printf("E: TSF partition '%s' subtype=%s (0x%02X) not found: %s\r\n",
+      TSF_PART_LABEL,
+      tsf_storage_subtype_name(),
+      TSF_PART_SUBTYPE_VALUE,
+      esp_err_to_name(err));
+    return 1;
+  }
+
+  part = tsf_storage_part;
+  err = tsf_storage_delete();
+  if (err != ESP_OK)
+  {
+    printf("E: TSF erase failed: %s\r\n", esp_err_to_name(err));
+    return 1;
+  }
+
+  printf("TSF erased: %s subtype=%s (0x%02X)\r\n",
+    TSF_PART_LABEL,
+    tsf_storage_subtype_name(),
+    TSF_PART_SUBTYPE_VALUE);
+  printf("  address    : 0x%08" PRIX32 "\r\n", part->address);
+  printf("  size       : 0x%08" PRIX32 " (%" PRIu32 " bytes)\r\n",
+    part->size,
+    part->size);
+  return 0;
+}
+
 int tsf_storage_ls_cmd(int argc, char **argv)
 {
   const char *path = "/";
@@ -1088,6 +1155,7 @@ int tsf_storage_cmd(int argc, char **argv)
     printf("Usage:\r\n");
     printf("  tsf format\r\n");
     printf("  tsf info\r\n");
+    printf("  tsf del\r\n");
     printf("  tsf ls [path]\r\n");
     return 0;
   }
@@ -1099,6 +1167,9 @@ int tsf_storage_cmd(int argc, char **argv)
 
   if (!strcmp(op, "info"))
     return tsf_storage_info_cmd(argc, argv);
+
+  if (!strcmp(op, "del"))
+    return tsf_storage_delete_cmd(argc, argv);
 
   if (!strcmp(op, "ls"))
     return tsf_storage_ls_cmd(argc, argv);
@@ -1114,7 +1185,7 @@ void tsf_console_register_system_commands()
   const esp_console_cmd_t cmd =
   {
     .command  = "tsf",
-    .help = "TSF commands: format/info/ls",
+    .help = "TSF commands: format/info/del/ls",
     .hint     = NULL,
     .func     = &tsf_storage_cmd,
     .argtable = NULL

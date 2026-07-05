@@ -20,12 +20,14 @@
 #include "main.h"
 #include "ft8xx.h"
 #include "console.h"
-#include "xm_cpp.h"
+#include "tracker.h"
+#include "sfx.h"
 #include "tsf.h"
+#include "opl.h"
 #include "fatfs.h"
 #include "cmd.h"
 
-#ifdef CONFIG_ESP32_WIFI_ENABLED
+#if defined(CONFIG_ESP_WIFI_ENABLED) && CONFIG_ESP_WIFI_ENABLED
 #include "wifi.h"
 #endif
 
@@ -44,7 +46,7 @@ void console_register_commands()
 {
   esp_console_register_help_command();
   esp_console_register_system_commands();
-#ifdef CONFIG_ESP32_WIFI_ENABLED
+#if defined(CONFIG_ESP_WIFI_ENABLED) && CONFIG_ESP_WIFI_ENABLED
   esp_console_register_wifi_commands();
 #endif
   ft_console_register_system_commands();
@@ -52,7 +54,9 @@ void console_register_commands()
   sdmmc_console_register_system_commands();
 #endif
   xm_console_register_system_commands();
+  sfx_console_register_system_commands();
   tsf_console_register_system_commands();
+  opl_console_register_system_commands();
   fat_console_register_system_commands();
   cmd_console_register_system_commands();
 }
@@ -99,7 +103,7 @@ void initialize_console()
   esp_console_config_t console_config =
   {
     .max_cmdline_length = 256,
-    .max_cmdline_args   = 8,
+    .max_cmdline_args   = 128,
 #if CONFIG_LOG_COLORS
     .hint_color         = atoi(LOG_COLOR_CYAN)
 #endif

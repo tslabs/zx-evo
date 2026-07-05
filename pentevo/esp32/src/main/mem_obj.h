@@ -33,4 +33,5 @@ int check_handle(int h);
 int delete_obj(int h);
 int make_obj(int obj_size, int obj_type);
 int attach_obj(void *addr, int obj_size, int obj_type);
+int mem_obj_can_flat_rw(int h);
 void write_obj(int handle, const void *from, int size);

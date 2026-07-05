@@ -1,5 +1,20 @@
 #pragma once
 
+#define ZIFI_STR_HELPER(x) #x
+#define ZIFI_STR(x) ZIFI_STR_HELPER(x)
+
+#define PROD_VER0 0
+#define PROD_VER1 6
+#define PROD_VER2 4
+#define PROD_VER_STRING ZIFI_STR(PROD_VER0) "." ZIFI_STR(PROD_VER1) "." ZIFI_STR(PROD_VER2)
+#define CP_STRING "ESP32 SPI WiFi Module, ver." PROD_VER_STRING ", (c) TS-Labs"
+
+#define API_VER 1
+#define FEAT_VER 10
+#define API_VER_STRING ZIFI_STR(API_VER)
+#define FEAT_VER_STRING ZIFI_STR(FEAT_VER)
+#define API_STRING "API version: " API_VER_STRING ", feature version: " FEAT_VER_STRING
+
 // Registers
 enum
 {
@@ -10,6 +25,13 @@ enum
   ESP_REG_STRING_TYPE = 0x02,  // 1 byte
   ESP_REG_STRING_SIZE = 0x02,  // 1 byte
   ESP_REG_STRING_DATA = 0x03,  // byte array
+  
+  // Version commands
+  ESP_REG_API         = 0x02,  // 1 byte
+  ESP_REG_FEAT        = 0x03,  // 2 bytes
+  ESP_REG_VER0        = 0x05,  // 1 byte
+  ESP_REG_VER1        = 0x06,  // 1 byte
+  ESP_REG_VER2        = 0x07,  // 1 byte
 
   // Object commands and data transmission commands
   ESP_REG_OBJ_TYPE    = 0x02,  // 1 byte
@@ -36,6 +58,27 @@ enum
 
   // Stats commands
   ESP_EXEC_TIME       = 0x3C, // 4 bytes
+
+  // SFX commands
+  ESP_REG_SFX_CHANNEL        = 0x02, // 1 byte
+  ESP_REG_SFX_GROUP          = 0x03, // 1 byte
+  ESP_REG_SFX_VOLUME         = 0x04, // 1 byte
+  ESP_REG_SFX_PAN            = 0x05, // 1 byte
+  ESP_REG_SFX_PITCH          = 0x06, // 2 bytes, Q4.8 little-endian
+
+  ESP_REG_SFX_STATE_ACTIVE   = 0x10, // 1 byte
+  ESP_REG_SFX_STATE_HANDLE   = 0x11, // 1 byte
+  ESP_REG_SFX_STATE_GROUP    = 0x12, // 1 byte
+  ESP_REG_SFX_STATE_ORDER    = 0x13, // 1 byte
+  ESP_REG_SFX_STATE_VOLUME   = 0x14, // 1 byte
+  ESP_REG_SFX_STATE_PAN      = 0x15, // 1 byte
+  ESP_REG_SFX_STATE_PITCH    = 0x16, // 2 bytes, Q4.8 little-endian
+  ESP_REG_SFX_STATE_RATE     = 0x18, // 4 bytes
+  ESP_REG_SFX_STATE_FRAMES   = 0x1C, // 4 bytes
+  ESP_REG_SFX_STATE_POSITION = 0x20, // 4 bytes
+  ESP_REG_SFX_STATE_BITS     = 0x24, // 2 bytes
+  ESP_REG_SFX_STATE_CHANNELS = 0x26, // 1 byte
+  ESP_REG_SFX_STATE_SIGNED   = 0x27, // 1 byte
 };
 
 // Commands
@@ -44,8 +87,9 @@ enum
   ESP_CMD_NOP                   = 0x00, // (no parameters)
   ESP_CMD_GET_INFO_STR          = 0x01, // i: ESP_REG_STRING_TYPE
                                         // o: ESP_REG_STRING_SIZE, ESP_REG_STRING_DATA
-  ESP_CMD_GET_API_VER           = 0x02, // +++
+  ESP_CMD_GET_VER               = 0x02, // o: ESP_REG_API, ESP_REG_FEAT, ESP_REG_VER0..2
   ESP_CMD_GET_CHIP_INFO         = 0x03, // +++
+
   ESP_CMD_GET_NETSTATE          = 0x11, // o: ESP_REG_NETSTATE
   ESP_CMD_WSCAN                 = 0x12, // (no parameters)
   ESP_CMD_SET_AP_NAME           = 0x13, // i: ESP_REG_STRING_SIZE, ESP_REG_STRING_DATA
@@ -69,20 +113,36 @@ enum
                                         // o: ESP_REG_DATA_SIZE (chunk size)
                                         // (DMA read like ESP_CMD_READ_OBJECT)
   ESP_CMD_STREAM_CLOSE          = 0x27, // (no parameters)
-  ESP_CMD_GET_XM_INFO           = 0xA0, // +++
-  ESP_CMD_XM_INIT               = 0xA1, // i: ESP_REG_OBJ_HANDLE
-  ESP_CMD_XM_STREAM_LOAD        = 0xA2, // i: ESP_REG_DATA_SIZE
-                                        // o: ESP_REG_OBJ_HANDLE
-  ESP_CMD_XM_PLAY               = 0xA3, // i: ESP_REG_OBJ_HANDLE
-  ESP_CMD_XM_STOP               = 0xA4, // (no parameters)
-  ESP_CMD_XM_GET_STATS          = 0xA6, // +++
-  ESP_CMD_XM_SET_VOLUME         = 0xA7, // +++
-  ESP_CMD_XM_SET_S_RATE         = 0xA8, // +++
-  ESP_CMD_XM_SET_PARAMS         = 0xA9, // +++
-  ESP_CMD_XM_SET_POS            = 0xAA, // +++
-  ESP_CMD_GET_XM_STATE          = 0xAE, // +++
-  ESP_CMD_GET_XM_STATE_CURRENT  = 0xAF, // +++
+
+  ESP_CMD_TRACK_INIT            = 0xA0, // i: ESP_REG_OBJ_HANDLE
+  ESP_CMD_TRACK_PLAY            = 0xA1, // i: ESP_REG_OBJ_HANDLE
+  ESP_CMD_TRACK_STOP            = 0xA2, // (no parameters)
+  ESP_CMD_TRACK_RESET           = 0xA3, // i: ESP_REG_OBJ_HANDLE, stop playback and reset XMC context to start
+  ESP_CMD_TRACK_SET_VOLUME      = 0xA4, // +++
+  ESP_CMD_TRACK_SET_S_RATE      = 0xA5, // +++
+  ESP_CMD_TRACK_SET_PARAMS      = 0xA6, // +++
+  ESP_CMD_TRACK_SET_POS         = 0xA7, // +++
+  ESP_CMD_TRACK_GET_INFO        = 0xA8, // +++
+  ESP_CMD_TRACK_GET_STATE       = 0xA9, // +++
+  ESP_CMD_TRACK_GET_STATS       = 0xAA, // +++
+
+  ESP_CMD_XM_STREAM_LOAD        = 0xAB, // i: ESP_REG_DATA_SIZE (tx chunk, aligned), ESP_REG_DATA_OFFSET (total on first chunk, 0 on next chunks)
+                                        // o: ESP_REG_DATA_OFFSET (chunk offset), ESP_REG_DATA_SIZE (chunk size), ESP_REG_OBJ_HANDLE
+  ESP_CMD_MOD_STREAM_LOAD       = 0xAC, // i: ESP_REG_DATA_SIZE (tx chunk, aligned), ESP_REG_DATA_OFFSET (total on first chunk, 0 on next chunks)
+                                        // o: ESP_REG_DATA_OFFSET (chunk offset), ESP_REG_DATA_SIZE (chunk size), ESP_REG_OBJ_HANDLE
+  ESP_CMD_S3M_STREAM_LOAD       = 0xAD, // i: ESP_REG_DATA_SIZE (tx chunk, aligned), ESP_REG_DATA_OFFSET (total on first chunk, 0 on next chunks)
+                                        // o: ESP_REG_DATA_OFFSET (chunk offset), ESP_REG_DATA_SIZE (chunk size), ESP_REG_OBJ_HANDLE
+
+  ESP_CMD_SFX_PLAY              = 0xB0, // i: ESP_REG_OBJ_HANDLE, ESP_REG_SFX_GROUP; o: ESP_REG_SFX_CHANNEL
+  ESP_CMD_SFX_PLAY_EX           = 0xB1, // i: ESP_REG_OBJ_HANDLE, ESP_REG_SFX_GROUP, ESP_REG_SFX_VOLUME, ESP_REG_SFX_PAN, ESP_REG_SFX_PITCH; o: ESP_REG_SFX_CHANNEL
+  ESP_CMD_SFX_STOP              = 0xB2, // i: ESP_REG_SFX_CHANNEL
+  ESP_CMD_SFX_SET_PARAMS        = 0xB3, // i: ESP_REG_SFX_CHANNEL, ESP_REG_SFX_VOLUME, ESP_REG_SFX_PAN, ESP_REG_SFX_PITCH
+  ESP_CMD_SFX_SET_VOLUME        = 0xB4, // i: ESP_REG_SFX_VOLUME
+  ESP_CMD_SFX_GET_STATE         = 0xB5, // i: ESP_REG_SFX_CHANNEL; o: ESP_REG_SFX_STATE_*
+  ESP_CMD_SFX_STOP_GROUP        = 0xB6, // i: ESP_REG_SFX_GROUP
+
   ESP_CMD_CONFIG_SPI            = 0xC0, // +++
+
   ESP_CMD_LOAD_ELF              = 0xD0, // i: ESP_REG_OBJ_HANDLE
                                         // o: ESP_REG_LIB_HANDLE
   ESP_CMD_LOAD_ELF_OPT          = 0xD1, // i: ESP_REG_OBJ_HANDLE, ESP_REG_OPT
@@ -95,6 +155,7 @@ enum
                                         // o: ESP_REG_RETVAL
   ESP_CMD_RUN_FUNC3             = 0xD5, // i: ESP_REG_LIB_HANDLE, ESP_REG_FUNC, ESP_REG_ARG, ESP_REG_ARR1_HANDLE, ESP_REG_ARR2_HANDLE, ESP_REG_ARR3_HANDLE
                                         // o: ESP_REG_RETVAL
+
   ESP_CMD_MAKE_OBJECT           = 0xE0, // i: ESP_REG_DATA_SIZE, ESP_REG_OBJ_TYPE
                                         // o: ESP_REG_OBJ_HANDLE, ESP_REG_DATA_OFFSET, ESP_REG_DATA_SIZE
   ESP_CMD_WRITE_OBJECT          = 0xE1, // i: ESP_REG_OBJ_HANDLE, ESP_REG_DATA_OFFSET, ESP_REG_DATA_SIZE
@@ -108,7 +169,8 @@ enum
   ESP_CMD_GET_OBJECT_INFO       = 0xE7, // +++
   ESP_CMD_REBOOT                = 0xED, // (no parameters)
   ESP_CMD_RESET                 = 0xEE, // (no parameters)
-  ESP_CMD_BREAK                 = 0xEF, // +++
+  ESP_CMD_BREAK                 = 0xEF, // abort active host tracker stream state, READY if idle
+
   ESP_CMD_GET_RND               = 0xF0, // i: ESP_REG_DATA_SIZE
   ESP_CMD_DEHST                 = 0xF1, // i: ESP_REG_OBJ_HANDLE, ESP_REG_DATA_SIZE, ESP_REG_OBJ_TYPE
                                         // o: ESP_REG_DATA_OFFSET, ESP_REG_DATA_SIZE
@@ -123,7 +185,7 @@ enum
   ESP_OPT_DATA_SRAM     = 0x01,
   ESP_OPT_RODATA_SRAM   = 0x02,
   ESP_OPT_BSS_SRAM      = 0x04,
-  
+
   ESP_OPT_SPI_1BIT      = 0x00,
   ESP_OPT_SPI_2BIT      = 0x40,
   ESP_OPT_SPI_4BIT      = 0x80,
@@ -137,6 +199,7 @@ enum
   ESP_ST_BUSY     = 0x02, // Busy executing command or initializing
   ESP_ST_DATA_M2S = 0x03, // Ready to receive data from Master to Slave
   ESP_ST_DATA_S2M = 0x04, // Ready to send data from Slave to Master
+
   ESP_ST_RESET    = 0x7E, // Reset performed, ready
 
   // Error codes
@@ -156,14 +219,16 @@ enum
   ESP_ERR_INV_ARG_HANDLE   ,
   ESP_ERR_INV_SRC_HANDLE   ,
   ESP_ERR_INV_DST_HANDLE   ,
-
-  ESP_ERR_INV_XM           = 0x90,
+  ESP_ERR_INV_XM           , // 90,
   ESP_ERR_INV_LIB          ,
   ESP_ERR_INV_ELF          ,
   ESP_ERR_INV_HST          ,
-  ESP_ERR_INV_ZIP          ,
-
-  ESP_ERR_OUT_OF_MEMORY    = 0xA0,
+  ESP_ERR_INV_ZIP          , // 94
+  ESP_ERR_INV_MOD          ,
+  ESP_ERR_INV_MOD_HANDLE   ,
+  ESP_ERR_INV_S3M          ,
+  ESP_ERR_INV_S3M_HANDLE   , // 98
+  ESP_ERR_OUT_OF_MEMORY    ,
   ESP_ERR_OUT_OF_HANDLES   ,
   ESP_ERR_OBJ_NOT_DELETED  ,
 
@@ -171,12 +236,13 @@ enum
   ESP_ERR_NET_BUSY         ,
 };
 
-// Info type (ESP_CMD_GET_INFO)
+// Info type (ESP_CMD_GET_INFO_STR)
 enum
 {
   GET_INFO_COPYRIGHT = 0x00,
-  GET_INFO_BUILD     = 0x01,
-  GET_INFO_IDF       = 0x02,
+  GET_INFO_API       = 0x01,
+  GET_INFO_BUILD     = 0x02,
+  GET_INFO_IDF       = 0x03,
 };
 
 // Memory object types (add new types to mem_obj.cpp)
@@ -192,6 +258,11 @@ enum
   OBJ_TYPE_HST   = 7,  // SPIRAM
   OBJ_TYPE_ZIP   = 8,  // SPIRAM
   OBJ_TYPE_XMC   = 9,  // SPIRAM
+  OBJ_TYPE_MOD   = 10, // SPIRAM
+  OBJ_TYPE_MDC   = 11, // SPIRAM
+  OBJ_TYPE_S3M   = 12, // SPIRAM
+  OBJ_TYPE_S3C   = 13, // SPIRAM
+  OBJ_TYPE_MBC   = 14, // SPIRAM
 };
 
 // Network state
@@ -221,8 +292,11 @@ enum
 
   LIB_OBJ_ST_READY  = 0x10,   // Library loaded
 
-  XM_OBJ_ST_STOPPED = 0x20,   // Object context created, idling
-  XM_OBJ_ST_PLAYING = 0x21,   // Object playing
+  TRACK_OBJ_ST_STOPPED = 0x20,   // Tracker object context created, idling
+  TRACK_OBJ_ST_PLAYING = 0x21,   // Tracker object playing
 
+  WAV_OBJ_ST_PLAYING = 0x30,  // WAV object is used by SFX renderer
+
+  OBJ_ST_DELETING   = 0xFE,   // Object is being deleted, new users must not attach
   OBJ_ST_ERROR      = 0xFF    // Reserved
 };

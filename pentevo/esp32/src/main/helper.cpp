@@ -16,18 +16,22 @@
 #include "elf.cpp.h"
 #include "depack.h"
 
-#ifdef CONFIG_ESP32_WIFI_ENABLED
+#if defined(CONFIG_ESP_WIFI_ENABLED) && CONFIG_ESP_WIFI_ENABLED
 #include "wifi.h"
-#endif
-
-#include "helper.h"
 #include "http_client.h"
 #include "gopher_client.h"
 #include "stream_client.h"
+#endif
+
+#include "helper.h"
+#include "tracker.h"
+#include "sfx.h"
 
 const char TAG[] = "helper";
 
+#if defined(CONFIG_ESP_WIFI_ENABLED) && CONFIG_ESP_WIFI_ENABLED
 EXT_RAM_BSS_ATTR u8 url_buf[1024];
+#endif
 
 QueueHandle_t helper_queue;
 
@@ -75,10 +79,41 @@ void *f_realloc(void *p, size_t x)
   return m;
 }
 
+
+u8 sfx_status_from_err(esp_err_t err)
+{
+  switch (err)
+  {
+    case ESP_OK:
+      return ESP_ST_READY;
+
+    case ESP_ERR_INVALID_ARG:
+      return ESP_ERR_INV_PARAM;
+
+    case ESP_ERR_INVALID_SIZE:
+      return ESP_ERR_INV_SIZE;
+
+    case ESP_ERR_NOT_FOUND:
+      return ESP_ERR_INV_STATE;
+
+    case ESP_ERR_NOT_SUPPORTED:
+    case ESP_ERR_INVALID_RESPONSE:
+      return ESP_ERR_INV_PARAM;
+
+    case ESP_ERR_NO_MEM:
+      return ESP_ERR_OUT_OF_HANDLES;
+
+    default:
+      return ESP_ERR_INV_STATE;
+  }
+}
+
 void helper_task(void *arg)
 {
+#if defined(CONFIG_ESP_WIFI_ENABLED) && CONFIG_ESP_WIFI_ENABLED
   net.url = url_buf;
   memset(net.url, 0, 1024);
+#endif
 
   while (1)
   {
@@ -275,6 +310,30 @@ void helper_task(void *arg)
 
         case TASK_KILL_OBJ:
         {
+          while (1)
+          {
+            int playing = -1;
+
+            for (int i = 0; i < OBJ_HANDLES_MAX; i++)
+            {
+              if (mem_obj[i].addr && (mem_obj[i].type == OBJ_TYPE_XMC || mem_obj[i].type == OBJ_TYPE_MDC || mem_obj[i].type == OBJ_TYPE_S3C) && mem_obj[i].state == TRACK_OBJ_ST_PLAYING)
+              {
+                playing = i;
+                break;
+              }
+            }
+
+            if (playing < 0) break;
+
+            TRACK_TASK t = {};
+            t.task = TRACK_TASK_STOP;
+            t.handle = playing;
+            xQueueSend(xm_queue, &t, portMAX_DELAY);
+
+            while (mem_obj[playing].addr && mem_obj[playing].state == TRACK_OBJ_ST_PLAYING)
+              vTaskDelay(1);
+          }
+
           for (int i = 0; i < OBJ_HANDLES_MAX; i++)
           {
             if (check_handle(i))
@@ -419,9 +478,26 @@ void helper_task(void *arg)
           process_rx_data(DREQ_ZIP, 0);   // Reset stream depacker
         break;
 
+        case TASK_XM_STREAM_LOAD:
+          xm_host_stream_prepare_command(rd_reg32(ESP_REG_DATA_OFFSET), rd_reg32(ESP_REG_DATA_SIZE));
+        break;
+
+        case TASK_MOD_STREAM_LOAD:
+          mod_host_stream_prepare_command(rd_reg32(ESP_REG_DATA_OFFSET), rd_reg32(ESP_REG_DATA_SIZE));
+        break;
+
+        case TASK_S3M_STREAM_LOAD:
+          s3m_host_stream_prepare_command(rd_reg32(ESP_REG_DATA_OFFSET), rd_reg32(ESP_REG_DATA_SIZE));
+        break;
+
+        case TASK_TRACK_STREAM_BREAK:
+          xm_host_stream_abort_current();
+          set_status(ESP_ST_READY);
+        break;
+
+#if defined(CONFIG_ESP_WIFI_ENABLED) && CONFIG_ESP_WIFI_ENABLED
         case TASK_WSCAN:
         {
-#ifdef CONFIG_ESP32_WIFI_ENABLED
           if (net.is_busy)
           {
             set_status(ESP_ERR_NET_BUSY);
@@ -432,13 +508,11 @@ void helper_task(void *arg)
           wf_scan(300 /* timeout */);
           net.is_busy = false;
           put_txq(DREQ_WSCAN);
-#endif
         }
         break;
 
         case TASK_CONN:
         {
-#ifdef CONFIG_ESP32_WIFI_ENABLED
           if (net.is_busy)
           {
             set_status(ESP_ERR_NET_BUSY);
@@ -457,17 +531,14 @@ void helper_task(void *arg)
             set_status(ESP_ST_READY);
           }
           else
-#endif
             set_status(ESP_ERR_AP_NOT_CONNECTED);
         }
         break;
 
         case TASK_DISCONN:
         {
-#ifdef CONFIG_ESP32_WIFI_ENABLED
           wifi_disconnect_now();
           net.state = NETWORK_CLOSED;
-#endif
           set_status(ESP_ST_READY);
         }
         break;
@@ -506,6 +577,143 @@ void helper_task(void *arg)
 
         case TASK_HTTP_STREAM_READ:
           http_stream_read_task();
+        break;
+#else
+        case TASK_WSCAN:
+        case TASK_CONN:
+        case TASK_DISCONN:
+        case TASK_HTTP_GET:
+        case TASK_HTTPS_GET:
+        case TASK_GOPHER_GET:
+        case TASK_HTTP_STREAM_START:
+        case TASK_HTTPS_STREAM_START:
+        case TASK_GOPHER_STREAM_START:
+        case TASK_STREAM_READ:
+        case TASK_STREAM_CLOSE:
+        case TASK_HTTP_STREAM_READ:
+          set_status(ESP_ERR_INV_COMMAND);
+        break;
+#endif
+
+        case TASK_SFX_PLAY:
+        {
+          int handle = rd_reg8(ESP_REG_OBJ_HANDLE);
+
+          if (!check_handle(handle) || mem_obj[handle].type != OBJ_TYPE_WAV)
+          {
+            set_status(ESP_ERR_INV_HANDLE);
+            break;
+          }
+
+          int channel = -1;
+          esp_err_t err = sfx_play_sync(handle, rd_reg8(ESP_REG_SFX_GROUP), SFX_VOLUME_MAX, SFX_PAN_CENTER, SFX_PITCH_ONE, &channel);
+
+          if (err != ESP_OK)
+          {
+            set_status(sfx_status_from_err(err));
+            break;
+          }
+
+          wr_reg8(ESP_REG_SFX_CHANNEL, channel);
+          set_status(ESP_ST_READY);
+        }
+        break;
+
+        case TASK_SFX_PLAY_EX:
+        {
+          int handle = rd_reg8(ESP_REG_OBJ_HANDLE);
+
+          if (!check_handle(handle) || mem_obj[handle].type != OBJ_TYPE_WAV)
+          {
+            set_status(ESP_ERR_INV_HANDLE);
+            break;
+          }
+
+          u16 pitch = 0;
+          rd_regs(ESP_REG_SFX_PITCH, &pitch, sizeof(pitch));
+
+          int channel = -1;
+          esp_err_t err = sfx_play_sync(
+            handle,
+            rd_reg8(ESP_REG_SFX_GROUP),
+            rd_reg8(ESP_REG_SFX_VOLUME),
+            rd_reg8(ESP_REG_SFX_PAN),
+            pitch,
+            &channel);
+
+          if (err != ESP_OK)
+          {
+            set_status(sfx_status_from_err(err));
+            break;
+          }
+
+          wr_reg8(ESP_REG_SFX_CHANNEL, channel);
+          set_status(ESP_ST_READY);
+        }
+        break;
+
+        case TASK_SFX_STOP:
+        {
+          esp_err_t err = sfx_stop_sync(rd_reg8(ESP_REG_SFX_CHANNEL));
+          set_status(sfx_status_from_err(err));
+        }
+        break;
+
+        case TASK_SFX_SET_PARAMS:
+        {
+          u16 pitch = 0;
+          rd_regs(ESP_REG_SFX_PITCH, &pitch, sizeof(pitch));
+
+          esp_err_t err = sfx_set_params_sync(
+            rd_reg8(ESP_REG_SFX_CHANNEL),
+            rd_reg8(ESP_REG_SFX_VOLUME),
+            rd_reg8(ESP_REG_SFX_PAN),
+            pitch);
+
+          set_status(sfx_status_from_err(err));
+        }
+        break;
+
+        case TASK_SFX_SET_VOLUME:
+        {
+          esp_err_t err = sfx_set_volume_sync(rd_reg8(ESP_REG_SFX_VOLUME));
+          set_status(sfx_status_from_err(err));
+        }
+        break;
+
+        case TASK_SFX_GET_STATE:
+        {
+          SFX_CHANNEL_STATE state = {};
+          esp_err_t err = sfx_get_state_sync(rd_reg8(ESP_REG_SFX_CHANNEL), &state);
+
+          if (err != ESP_OK)
+          {
+            set_status(sfx_status_from_err(err));
+            break;
+          }
+
+          wr_reg8(ESP_REG_SFX_STATE_ACTIVE, state.active);
+          wr_reg8(ESP_REG_SFX_STATE_HANDLE, state.handle);
+          wr_reg8(ESP_REG_SFX_STATE_GROUP, state.group);
+          wr_reg8(ESP_REG_SFX_STATE_ORDER, state.group_order);
+          wr_reg8(ESP_REG_SFX_STATE_VOLUME, state.volume);
+          wr_reg8(ESP_REG_SFX_STATE_PAN, state.pan);
+          wr_regs(ESP_REG_SFX_STATE_PITCH, &state.pitch, sizeof(state.pitch));
+          wr_reg32(ESP_REG_SFX_STATE_RATE, state.sample_rate);
+          wr_reg32(ESP_REG_SFX_STATE_FRAMES, state.frame_count);
+          wr_reg32(ESP_REG_SFX_STATE_POSITION, state.position);
+          wr_regs(ESP_REG_SFX_STATE_BITS, &state.bits_per_sample, sizeof(state.bits_per_sample));
+          wr_reg8(ESP_REG_SFX_STATE_CHANNELS, state.channels);
+          wr_reg8(ESP_REG_SFX_STATE_SIGNED, state.is_signed);
+          set_status(ESP_ST_READY);
+        }
+        break;
+
+        case TASK_SFX_STOP_GROUP:
+        {
+          esp_err_t err = sfx_stop_group_sync(rd_reg8(ESP_REG_SFX_GROUP));
+          set_status(sfx_status_from_err(err));
+        }
         break;
 
         case TASK_REBOOT:

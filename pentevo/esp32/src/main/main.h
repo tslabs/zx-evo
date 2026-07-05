@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 #include "miniz.h"
-#include "xm.h"
+#include "tracker.h"
 
 typedef int8_t   i8;
 typedef int16_t  i16;
@@ -26,22 +26,20 @@ enum
   TCPIP_TASK_PRIO             = 5,
   WIFI_TASK_PRIO              = 6,
   SPI_BG_TASK_PRIO            = 7,
-  XM_HELPER_TASK_PRIO         = 8,
+  TRACKER_HELPER_TASK_PRIO    = 8,
   HELPER_TASK_PRIO            = 9,
   USB_MOUSE_TASK_PRIO         = 10,
   USB_MOUSE_LIB_TASK_PRIO     = 10,
   USB_MOUSE_HID_TASK_PRIO     = 11,
-  I2S_TASK_PRIO               = 12,
   SLAVE_TASK_PRIO             = 14,
   
   // Core 1
-  XM_PLAYER_TASK_PRIO         = 10,
+  TRACKER_PLAYER_TASK_PRIO    = 10,
+  I2S_TASK_PRIO               = 12,
 };
 
 #define max(x, y) (((x) > (y)) ? (x) : (y))
 #define min(x, y) (((x) < (y)) ? (x) : (y))
-
-#define CP_STRING "ESP32 SPI WiFi Module, ver.0.6.0, (c) TS-Labs"
 
 extern tinfl_decompressor *decomp;
 

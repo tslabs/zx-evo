@@ -18,13 +18,19 @@
 #include "esp_err.h"
 #include "esp_heap_caps.h"
 #include "esp_attr.h"
+#include "esp_private/esp_clk.h"
 #include "esp_vfs_fat.h"
+#include "sdkconfig.h"
 
 #include "cmd.h"
 #include "ft8xx.h"
-#include "xm_cpp.h"
+#include "tracker.h"
+#include "sfx.h"
+#include "mem_obj.h"
+#include "esp_spi_defs.h"
 #include "sdmmc.h"
 #include "fatfs.h"
+#include "stats.h"
 #include "tsf.h"
 
 
@@ -39,7 +45,8 @@
 #define CMD_APP_DEVICE_DIALOG_W       44
 #define CMD_APP_DEVICE_DIALOG_H       9
 #define CMD_APP_HELP_DIALOG_W         70
-#define CMD_APP_HELP_DIALOG_H         20
+#define CMD_APP_HELP_DIALOG_H         25
+#define CMD_APP_HELP_DIALOG_REFRESH_MS 100
 #define CMD_APP_FILEOP_DIALOG_W       58
 #define CMD_APP_FILEOP_DIALOG_H       8
 #define CMD_APP_ERROR_DIALOG_W        60
@@ -54,6 +61,32 @@
 #define CMD_APP_BAUD_SWITCH_DELAY_MS 100
 #define CMD_APP_BAUD_SEQ_MAX        96
 #define CMD_APP_BAUD_DEFAULT        115200
+#define CMD_APP_SFX_PREVIEW_GROUP   255
+#define CMD_APP_MODULE_INFO_INITIAL_CAP 4096
+#define CMD_APP_MODULE_INFO_MAX_TEXT_SIZE (512 * 1024)
+#define CMD_APP_MODULE_INFO_READ_BUFFER_SIZE MOD_HEADER_SIZE
+#define CMD_APP_XM_MAX_ROWS 256
+#define CMD_APP_S3M_FILE_TYPE_OFFSET 29
+#define CMD_APP_S3M_ORDERS_OFFSET 32
+#define CMD_APP_S3M_SAMPLES_OFFSET 34
+#define CMD_APP_S3M_PATTERNS_OFFSET 36
+#define CMD_APP_S3M_FLAGS_OFFSET 38
+#define CMD_APP_S3M_CWTV_OFFSET 40
+#define CMD_APP_S3M_FORMAT_VERSION_OFFSET 42
+#define CMD_APP_S3M_GLOBAL_VOLUME_OFFSET 48
+#define CMD_APP_S3M_SPEED_OFFSET 49
+#define CMD_APP_S3M_TEMPO_OFFSET 50
+#define CMD_APP_S3M_MASTER_VOLUME_OFFSET 51
+#define CMD_APP_S3M_PANNING_TABLE_FLAG_OFFSET 53
+#define CMD_APP_S3M_CHANNEL_SETTINGS_OFFSET 64
+#define CMD_APP_S3M_FILE_TYPE_MODULE 0x10
+#define CMD_APP_S3M_PANNING_TABLE_PRESENT 0xFC
+#define CMD_APP_S3M_SAMPLE_TYPE_NONE 0
+#define CMD_APP_S3M_SAMPLE_TYPE_PCM 1
+#define CMD_APP_S3M_SAMPLE_FLAG_LOOP 0x01
+#define CMD_APP_S3M_SAMPLE_FLAG_STEREO 0x02
+#define CMD_APP_S3M_SAMPLE_FLAG_16BIT 0x04
+#define CMD_APP_S3M_SAMPLE_PACK_NONE 0
 
 #ifndef CONFIG_ESP_CONSOLE_UART_NUM
 #define CONFIG_ESP_CONSOLE_UART_NUM UART_NUM_0
@@ -66,6 +99,12 @@ typedef enum
   CMD_APP_FILEOP_MOVE,
   CMD_APP_FILEOP_DELETE
 } cmd_app_fileop_t;
+
+typedef enum
+{
+  CMD_APP_NAME_DIALOG_MKDIR = 0,
+  CMD_APP_NAME_DIALOG_RENAME
+} cmd_app_name_dialog_op_t;
 
 typedef struct CmdApp
 {
@@ -83,7 +122,11 @@ typedef struct CmdApp
   char device_dialog_items[CMD_DEVICE_MAX][CMD_APP_DEVICE_ITEM_MAX + 1];
   bool help_dialog_open;
   bool mkdir_dialog_open;
+  cmd_app_name_dialog_op_t mkdir_dialog_op;
   char mkdir_name[CMD_FILE_NAME_MAX];
+  char rename_src_path[CMD_PATH_MAX];
+  char rename_dst_path[CMD_PATH_MAX];
+  char rename_remap_path[CMD_PATH_MAX];
   bool fileop_confirm_open;
   cmd_app_fileop_t fileop_confirm_op;
   char fileop_name[CMD_FILE_NAME_MAX];
@@ -141,6 +184,19 @@ typedef struct CmdApp
   size_t hex_viewer_page_rows;
   bool hex_viewer_eof;
   char hex_viewer_lines[CMD_APP_VIEWER_MAX_ROWS][CMD_APP_VIEWER_LINE_SIZE];
+  bool module_info_open;
+  cmd_device_id_t module_info_device;
+  char module_info_path[CMD_PATH_MAX];
+  char module_info_title[CMD_FILE_NAME_MAX];
+  char *module_info_text;
+  size_t module_info_text_len;
+  size_t module_info_text_cap;
+  size_t module_info_top_line;
+  size_t module_info_line_count;
+  uint8_t module_info_read_buffer[CMD_APP_MODULE_INFO_READ_BUFFER_SIZE];
+  char module_info_tmp[CMD_DISPLAY_COLS + 1];
+  char module_info_name[64];
+  char module_info_sample_name[64];
   bool jpg_viewer_open;
   bool jpg_viewer_added_ft812_backend;
   int jpg_viewer_panel;
@@ -148,6 +204,9 @@ typedef struct CmdApp
   bool jpg_viewer_stretch;
   char jpg_viewer_path[CMD_PATH_MAX];
   char jpg_viewer_status[96 + 1];
+  int sfx_preview_handle;
+  int sfx_preview_channel;
+  void *sfx_preview_addr;
   char status[CMD_APP_STATUS_MAX + 1];
 } CmdApp;
 
@@ -803,14 +862,32 @@ void cmd_app_draw_help_dialog(CmdApp *app)
   cmd_display_buffer_write_text(&app->buffer, rect.x + 2, rect.y + 5, "Enter               open directory or file", attr);
   cmd_display_buffer_write_text(&app->buffer, rect.x + 2, rect.y + 6, "Backspace           go to parent directory", attr);
   cmd_display_buffer_write_text(&app->buffer, rect.x + 2, rect.y + 7, "Ins / *             select item / invert selection", attr);
-  cmd_display_buffer_write_text(&app->buffer, rect.x + 2, rect.y + 8, "F3 / Alt+F3         text viewer / hex viewer", attr);
-  cmd_display_buffer_write_text(&app->buffer, rect.x + 2, rect.y + 9, "F5 / F6             copy / move to opposite panel", attr);
-  cmd_display_buffer_write_text(&app->buffer, rect.x + 2, rect.y + 10, "F7 / F8 / Del       mkdir / delete", attr);
-  cmd_display_buffer_write_text(&app->buffer, rect.x + 2, rect.y + 11, "Left / Right        page up / page down", attr);
-  cmd_display_buffer_write_text(&app->buffer, rect.x + 2, rect.y + 12, "Alt+F9              stop XM playback", attr);
-  cmd_display_buffer_write_text(&app->buffer, rect.x + 2, rect.y + 14, info_line, attr);
-  snprintf(info_line, sizeof(info_line), "Memory: SRAM free %s  SPIRAM free %s", sram_text, spiram_text);
+  cmd_display_buffer_write_text(&app->buffer, rect.x + 2, rect.y + 8, "F2                  rename selected entry", attr);
+  cmd_display_buffer_write_text(&app->buffer, rect.x + 2, rect.y + 9, "F3 / Alt+F3         text/module info / hex viewer", attr);
+  cmd_display_buffer_write_text(&app->buffer, rect.x + 2, rect.y + 10, "F5 / F6             copy / move to opposite panel", attr);
+  cmd_display_buffer_write_text(&app->buffer, rect.x + 2, rect.y + 11, "F7 / F8 / Del       mkdir / delete", attr);
+  cmd_display_buffer_write_text(&app->buffer, rect.x + 2, rect.y + 12, "Left / Right        page up / page down", attr);
+  cmd_display_buffer_write_text(&app->buffer, rect.x + 2, rect.y + 13, "Alt+F9              stop XM playback", attr);
+
   cmd_display_buffer_write_text(&app->buffer, rect.x + 2, rect.y + 15, info_line, attr);
+  snprintf(info_line, sizeof(info_line), "Memory: SRAM free %s  SPIRAM free %s", sram_text, spiram_text);
+  cmd_display_buffer_write_text(&app->buffer, rect.x + 2, rect.y + 16, info_line, attr);
+
+  snprintf(info_line, sizeof(info_line), "Firmware: %s  API %u  Feature %u",
+    PROD_VER_STRING,
+    API_VER,
+    FEAT_VER);
+  cmd_display_buffer_write_text(&app->buffer, rect.x + 2, rect.y + 18, info_line, attr);
+  snprintf(info_line, sizeof(info_line), "Chip: %s  CPU: %d MHz",
+    CONFIG_IDF_TARGET,
+    esp_clk_cpu_freq() / 1000000);
+  cmd_display_buffer_write_text(&app->buffer, rect.x + 2, rect.y + 19, info_line, attr);
+  snprintf(info_line, sizeof(info_line), "Audio CPU: %d.%d/%d.%d%% (last/max)",
+    stats::_st.audio_total_last_cpu_x10 / 10,
+    stats::_st.audio_total_last_cpu_x10 % 10,
+    stats::_st.audio_total_max_cpu_x10 / 10,
+    stats::_st.audio_total_max_cpu_x10 % 10);
+  cmd_display_buffer_write_text(&app->buffer, rect.x + 2, rect.y + 20, info_line, attr);
   cmd_display_buffer_write_text(&app->buffer, rect.x + 2, rect.y + rect.h - 2, "Enter/Esc/F1/F10 close", attr);
 }
 
@@ -873,6 +950,7 @@ bool cmd_app_has_modal(CmdApp *app)
   if (app->fileop_progress_open) return true;
   if (app->viewer_open) return true;
   if (app->hex_viewer_open) return true;
+  if (app->module_info_open) return true;
   if (app->jpg_viewer_open) return true;
   if (app->error_dialog_open) return true;
   return false;
@@ -923,6 +1001,17 @@ bool cmd_app_entry_is_xm(const cmd_file_entry_t *entry)
   if (!entry || entry->type != CMD_ENTRY_FILE) return false;
   if (cmd_app_extension_is(entry->name, ".xm")) return true;
   if (cmd_app_extension_is(entry->name, ".xmz")) return true;
+  if (cmd_app_extension_is(entry->name, ".mod")) return true;
+  if (cmd_app_extension_is(entry->name, ".s3m")) return true;
+  return false;
+}
+
+bool cmd_app_entry_is_module_info(const cmd_file_entry_t *entry)
+{
+  if (!entry || entry->type != CMD_ENTRY_FILE) return false;
+  if (cmd_app_extension_is(entry->name, ".xm")) return true;
+  if (cmd_app_extension_is(entry->name, ".mod")) return true;
+  if (cmd_app_extension_is(entry->name, ".s3m")) return true;
   return false;
 }
 
@@ -941,6 +1030,12 @@ bool cmd_app_entry_is_dxp(const cmd_file_entry_t *entry)
 bool cmd_app_entry_is_ft_image(const cmd_file_entry_t *entry)
 {
   return cmd_app_entry_is_jpg(entry) || cmd_app_entry_is_dxp(entry);
+}
+
+bool cmd_app_entry_is_wav(const cmd_file_entry_t *entry)
+{
+  if (!entry || entry->type != CMD_ENTRY_FILE) return false;
+  return cmd_app_extension_is(entry->name, ".wav");
 }
 
 bool cmd_app_has_ft812_backend(CmdApp *app)
@@ -989,17 +1084,17 @@ esp_err_t cmd_app_play_xm_file(CmdApp *app, CmdPanel *panel, const cmd_file_entr
   err = cmd_app_build_entry_abs_path(app, panel, entry, path, sizeof(path));
   if (err != ESP_OK)
   {
-    cmd_show_error(app, "XM path", err);
+    cmd_show_error(app, "Module path", err);
     return ESP_OK;
   }
 
   if (xm_load_play_file(path, true))
   {
-    cmd_show_error(app, "XM play", ESP_FAIL);
+    cmd_show_error(app, "Module play", ESP_FAIL);
     return ESP_OK;
   }
 
-  cmd_set_status(app, "XM playing: %s", entry->name);
+  cmd_set_status(app, "Module playing: %s", entry->name);
   return ESP_OK;
 }
 
@@ -1009,11 +1104,80 @@ esp_err_t cmd_app_stop_xm_playback(CmdApp *app)
 
   if (xm_stop_cmd(true))
   {
-    cmd_show_error(app, "XM stop", ESP_FAIL);
+    cmd_show_error(app, "Module stop", ESP_FAIL);
     return ESP_OK;
   }
 
-  cmd_set_status(app, "XM stopped");
+  cmd_set_status(app, "Module stopped");
+  return ESP_OK;
+}
+
+void cmd_app_delete_sfx_preview(CmdApp *app)
+{
+  if (!app) return;
+
+  int handle = app->sfx_preview_handle;
+  void *addr = app->sfx_preview_addr;
+
+  app->sfx_preview_handle = -1;
+  app->sfx_preview_channel = -1;
+  app->sfx_preview_addr = NULL;
+
+  if (handle < 0 || handle >= OBJ_HANDLES_MAX) return;
+  if (!check_handle(handle)) return;
+  if (mem_obj[handle].type != OBJ_TYPE_WAV) return;
+  if (addr && mem_obj[handle].addr != addr) return;
+
+  delete_obj(handle);
+}
+
+esp_err_t cmd_app_play_wav_file(CmdApp *app, CmdPanel *panel, const cmd_file_entry_t *entry)
+{
+  char path[CMD_PATH_MAX];
+  SFX_WAV_INFO info = {};
+  int handle = -1;
+  int channel = -1;
+  esp_err_t err;
+
+  if (!app || !panel || !entry) return ESP_ERR_INVALID_ARG;
+  if (!cmd_app_entry_is_wav(entry)) return ESP_ERR_INVALID_ARG;
+
+  err = cmd_app_build_entry_abs_path(app, panel, entry, path, sizeof(path));
+  if (err != ESP_OK)
+  {
+    cmd_show_error(app, "WAV path", err);
+    return ESP_OK;
+  }
+
+  cmd_app_delete_sfx_preview(app);
+
+  err = sfx_load_file(path, &handle, &info);
+  if (err != ESP_OK)
+  {
+    cmd_show_error(app, "WAV load", err);
+    return ESP_OK;
+  }
+
+  app->sfx_preview_handle = handle;
+  app->sfx_preview_channel = -1;
+  app->sfx_preview_addr = mem_obj[handle].addr;
+
+  err = sfx_play_sync(handle, CMD_APP_SFX_PREVIEW_GROUP, SFX_VOLUME_MAX, SFX_PAN_CENTER, SFX_PITCH_ONE, &channel);
+  if (err != ESP_OK)
+  {
+    cmd_app_delete_sfx_preview(app);
+    cmd_show_error(app, "WAV play", err);
+    return ESP_OK;
+  }
+
+  app->sfx_preview_channel = channel;
+  cmd_set_status(app, "WAV playing: %s  handle=%02X ch=%u %uHz %u-bit %s",
+    entry->name,
+    (unsigned)handle,
+    (unsigned)channel,
+    (unsigned)info.sample_rate,
+    (unsigned)info.bits_per_sample,
+    info.channels == 1 ? "mono" : "stereo");
   return ESP_OK;
 }
 
@@ -1942,6 +2106,930 @@ void cmd_app_draw_text_viewer(CmdApp *app)
     "Viewer  Up/Down PgUp/PgDn Left/Right Home  Esc Close", bar_attr);
 }
 
+
+uint16_t cmd_app_info_rd_le16(const uint8_t *p)
+{
+  return (uint16_t)p[0] | ((uint16_t)p[1] << 8);
+}
+
+uint32_t cmd_app_info_rd_le24(const uint8_t *p)
+{
+  return (uint32_t)p[0] | ((uint32_t)p[1] << 8) | ((uint32_t)p[2] << 16);
+}
+
+uint32_t cmd_app_info_rd_le32(const uint8_t *p)
+{
+  return (uint32_t)cmd_app_info_rd_le16(p) | ((uint32_t)cmd_app_info_rd_le16(p + 2) << 16);
+}
+
+bool cmd_app_module_info_u64_add(uint64_t *value, uint64_t add)
+{
+  if (!value) return false;
+  if (UINT64_MAX - *value < add) return false;
+  *value += add;
+  return true;
+}
+
+void cmd_app_module_info_copy_text(char *dst, size_t dst_size, const uint8_t *src, size_t src_size)
+{
+  size_t n;
+
+  if (!dst || dst_size == 0) return;
+
+  dst[0] = 0;
+  if (!src) return;
+
+  n = src_size;
+  while (n > 0 && (src[n - 1] == 0 || src[n - 1] == ' ')) n--;
+  if (n >= dst_size) n = dst_size - 1;
+
+  for (size_t i = 0; i < n; i++)
+  {
+    uint8_t ch = src[i];
+    dst[i] = (ch >= 32 && ch <= 126) ? (char)ch : '.';
+  }
+  dst[n] = 0;
+}
+
+void cmd_app_module_info_free_text(CmdApp *app)
+{
+  if (!app) return;
+
+  if (app->module_info_text)
+    heap_caps_free(app->module_info_text);
+
+  app->module_info_text = NULL;
+  app->module_info_text_len = 0;
+  app->module_info_text_cap = 0;
+  app->module_info_top_line = 0;
+  app->module_info_line_count = 0;
+}
+
+esp_err_t cmd_app_module_info_reserve(CmdApp *app, size_t needed)
+{
+  char *new_text;
+  size_t new_cap;
+
+  if (!app) return ESP_ERR_INVALID_ARG;
+  if (needed > CMD_APP_MODULE_INFO_MAX_TEXT_SIZE) return ESP_ERR_NO_MEM;
+  if (needed <= app->module_info_text_cap) return ESP_OK;
+
+  new_cap = app->module_info_text_cap ? app->module_info_text_cap : CMD_APP_MODULE_INFO_INITIAL_CAP;
+  while (new_cap < needed)
+  {
+    if (new_cap > CMD_APP_MODULE_INFO_MAX_TEXT_SIZE / 2)
+    {
+      new_cap = CMD_APP_MODULE_INFO_MAX_TEXT_SIZE;
+      break;
+    }
+    new_cap *= 2;
+  }
+
+  if (new_cap < needed) return ESP_ERR_NO_MEM;
+
+  new_text = (char*)heap_caps_realloc(app->module_info_text, new_cap, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+  if (!new_text) return ESP_ERR_NO_MEM;
+
+  app->module_info_text = new_text;
+  app->module_info_text_cap = new_cap;
+  return ESP_OK;
+}
+
+esp_err_t cmd_app_module_info_append_line(CmdApp *app, const char *fmt, ...)
+{
+  va_list ap;
+  int written;
+  size_t line_len;
+  size_t needed;
+  esp_err_t err;
+
+  if (!app || !fmt) return ESP_ERR_INVALID_ARG;
+
+  va_start(ap, fmt);
+  written = vsnprintf(app->module_info_tmp, sizeof(app->module_info_tmp), fmt, ap);
+  va_end(ap);
+
+  if (written < 0) return ESP_FAIL;
+
+  app->module_info_tmp[sizeof(app->module_info_tmp) - 1] = 0;
+  line_len = strlen(app->module_info_tmp);
+  needed = app->module_info_text_len + line_len + 2;
+
+  err = cmd_app_module_info_reserve(app, needed);
+  if (err != ESP_OK) return err;
+
+  memcpy(app->module_info_text + app->module_info_text_len, app->module_info_tmp, line_len);
+  app->module_info_text_len += line_len;
+  app->module_info_text[app->module_info_text_len++] = '\n';
+  app->module_info_text[app->module_info_text_len] = 0;
+  app->module_info_line_count++;
+  return ESP_OK;
+}
+
+esp_err_t cmd_app_module_info_read_at(CmdApp *app, CmdFsFile *file, uint64_t offset, void *dst, size_t size, size_t *out_got)
+{
+  size_t got = 0;
+  esp_err_t err;
+
+  if (!app || !file || !dst) return ESP_ERR_INVALID_ARG;
+  if (offset > (uint64_t)INT64_MAX) return ESP_ERR_INVALID_ARG;
+
+  memset(dst, 0, size);
+
+  err = cmd_fs_manager_seek(&app->fs, file, (int64_t)offset, SEEK_SET);
+  if (err != ESP_OK) return err;
+
+  err = cmd_fs_manager_read(&app->fs, file, dst, size, &got);
+  if (err != ESP_OK) return err;
+
+  if (out_got) *out_got = got;
+  return ESP_OK;
+}
+
+const char *cmd_app_module_info_mod_magic_text(CmdApp *app, const uint8_t *header, const mod_layout_t *layout)
+{
+  if (!app || !header || !layout) return "?";
+
+  if (layout->sample_count != MOD_SAMPLE_COUNT) return "15-sample";
+
+  cmd_app_module_info_copy_text(app->module_info_name, sizeof(app->module_info_name), header + MOD_MAGIC_OFFSET, 4);
+  return app->module_info_name[0] ? app->module_info_name : "?";
+}
+
+const char *cmd_app_module_info_mod_loop_text(const mod_layout_t *layout, uint16_t index)
+{
+  if (!layout || index >= layout->sample_count) return "no";
+  if (layout->sample_length[index] == 0) return "no";
+  if (layout->sample_loop_start[index] >= layout->sample_length[index]) return "no";
+  if (layout->sample_loop_length[index] <= 2) return "no";
+  return "yes";
+}
+
+esp_err_t cmd_app_module_info_build_mod(CmdApp *app, CmdFsFile *file, const cmd_file_entry_t *entry)
+{
+  mod_layout_t layout;
+  uint8_t *header;
+  size_t want;
+  size_t got = 0;
+  esp_err_t err;
+
+  if (!app || !file || !entry) return ESP_ERR_INVALID_ARG;
+
+  header = app->module_info_read_buffer;
+  want = entry->size < CMD_APP_MODULE_INFO_READ_BUFFER_SIZE ? (size_t)entry->size : CMD_APP_MODULE_INFO_READ_BUFFER_SIZE;
+  err = cmd_app_module_info_read_at(app, file, 0, header, want, &got);
+  if (err != ESP_OK) return err;
+  if (got < MOD_15_HEADER_SIZE) return ESP_FAIL;
+  if (!mod_read_layout_from_header(header, got, (size_t)entry->size, &layout)) return ESP_FAIL;
+
+  cmd_app_module_info_copy_text(app->module_info_name, sizeof(app->module_info_name), header, MOD_TITLE_SIZE);
+
+  err = cmd_app_module_info_append_line(app, "MOD module: %s", app->module_info_name[0] ? app->module_info_name : "<unnamed>");
+  if (err != ESP_OK) return err;
+  err = cmd_app_module_info_append_line(app, "File: %s", entry->name);
+  if (err != ESP_OK) return err;
+  err = cmd_app_module_info_append_line(app, "Format: %s  channels=%u  orders=%u  patterns=%u  restart=%u",
+    cmd_app_module_info_mod_magic_text(app, header, &layout),
+    (unsigned)layout.channels,
+    (unsigned)layout.song_length,
+    (unsigned)layout.patterns,
+    (unsigned)layout.restart_position);
+  if (err != ESP_OK) return err;
+  err = cmd_app_module_info_append_line(app, "Expected size=%u  file size=%llu  sample bytes=%u",
+    (unsigned)layout.expected_size,
+    (unsigned long long)entry->size,
+    (unsigned)layout.sample_bytes);
+  if (err != ESP_OK) return err;
+  err = cmd_app_module_info_append_line(app, "");
+  if (err != ESP_OK) return err;
+  err = cmd_app_module_info_append_line(app, "Samples / instruments:");
+  if (err != ESP_OK) return err;
+  err = cmd_app_module_info_append_line(app, " #  Name                    LenB   LoopSt LoopLen Loop Vol Fine");
+  if (err != ESP_OK) return err;
+
+  for (uint16_t i = 0; i < layout.sample_count; i++)
+  {
+    size_t off = MOD_TITLE_SIZE + (size_t)i * MOD_SAMPLE_HEADER_SIZE;
+    uint8_t volume = header[off + 25];
+    int finetune = header[off + 24] & 0x0f;
+
+    if (finetune >= 8) finetune -= 16;
+    if (volume > 64) volume = 64;
+
+    cmd_app_module_info_copy_text(app->module_info_name, sizeof(app->module_info_name), header + off, 22);
+    err = cmd_app_module_info_append_line(app, "%02u  %-22s %6u %6u %7u %-4s %3u %4d",
+      (unsigned)i + 1,
+      app->module_info_name,
+      (unsigned)layout.sample_length[i],
+      (unsigned)layout.sample_loop_start[i],
+      (unsigned)layout.sample_loop_length[i],
+      cmd_app_module_info_mod_loop_text(&layout, i),
+      (unsigned)volume,
+      finetune);
+    if (err != ESP_OK) return err;
+  }
+
+  return ESP_OK;
+}
+
+const char *cmd_app_module_info_xm_loop_text(uint8_t flags)
+{
+  switch (flags & 0x03)
+  {
+    case 1: return "fwd";
+    case 2: return "ping";
+    default: return "no";
+  }
+}
+
+esp_err_t cmd_app_module_info_skip_xm_patterns(CmdApp *app, CmdFsFile *file, uint64_t *offset, uint16_t num_patterns, uint64_t file_size)
+{
+  uint8_t *buf;
+
+  if (!app || !file || !offset) return ESP_ERR_INVALID_ARG;
+
+  buf = app->module_info_read_buffer;
+
+  for (uint16_t i = 0; i < num_patterns; i++)
+  {
+    size_t got = 0;
+    uint32_t header_size;
+    uint16_t rows;
+    uint16_t packed_size;
+    uint64_t next;
+    esp_err_t err;
+
+    err = cmd_app_module_info_read_at(app, file, *offset, buf, 9, &got);
+    if (err != ESP_OK) return err;
+    if (got < 9) return ESP_FAIL;
+
+    header_size = cmd_app_info_rd_le32(buf);
+    rows = cmd_app_info_rd_le16(buf + 5);
+    packed_size = cmd_app_info_rd_le16(buf + 7);
+    if (header_size < 9 || rows == 0 || rows > CMD_APP_XM_MAX_ROWS) return ESP_FAIL;
+
+    next = *offset;
+    if (!cmd_app_module_info_u64_add(&next, header_size)) return ESP_ERR_INVALID_SIZE;
+    if (!cmd_app_module_info_u64_add(&next, packed_size)) return ESP_ERR_INVALID_SIZE;
+    if (next > file_size) return ESP_FAIL;
+    *offset = next;
+  }
+
+  return ESP_OK;
+}
+
+esp_err_t cmd_app_module_info_build_xm(CmdApp *app, CmdFsFile *file, const cmd_file_entry_t *entry)
+{
+  uint8_t *buf;
+  uint32_t header_size;
+  uint16_t version;
+  uint16_t length;
+  uint16_t restart;
+  uint16_t channels;
+  uint16_t patterns;
+  uint16_t instruments;
+  uint16_t flags;
+  uint16_t tempo;
+  uint16_t bpm;
+  uint64_t offset;
+  uint64_t instruments_offset;
+  size_t got = 0;
+  esp_err_t err;
+
+  if (!app || !file || !entry) return ESP_ERR_INVALID_ARG;
+
+  buf = app->module_info_read_buffer;
+  err = cmd_app_module_info_read_at(app, file, 0, buf, 336, &got);
+  if (err != ESP_OK) return err;
+  if (got < 80) return ESP_FAIL;
+  if (memcmp(buf, "Extended Module: ", 17) != 0) return ESP_FAIL;
+  if (buf[37] != 0x1a) return ESP_FAIL;
+
+  header_size = cmd_app_info_rd_le32(buf + 60);
+  if (header_size < 20) return ESP_FAIL;
+  if ((uint64_t)60 + header_size > entry->size) return ESP_FAIL;
+
+  version = cmd_app_info_rd_le16(buf + 58);
+  length = cmd_app_info_rd_le16(buf + 64);
+  restart = cmd_app_info_rd_le16(buf + 66);
+  channels = cmd_app_info_rd_le16(buf + 68);
+  patterns = cmd_app_info_rd_le16(buf + 70);
+  instruments = cmd_app_info_rd_le16(buf + 72);
+  flags = cmd_app_info_rd_le16(buf + 74);
+  tempo = cmd_app_info_rd_le16(buf + 76);
+  bpm = cmd_app_info_rd_le16(buf + 78);
+
+  cmd_app_module_info_copy_text(app->module_info_name, sizeof(app->module_info_name), buf + 17, 20);
+  cmd_app_module_info_copy_text(app->module_info_sample_name, sizeof(app->module_info_sample_name), buf + 38, 20);
+
+  err = cmd_app_module_info_append_line(app, "XM module: %s", app->module_info_name[0] ? app->module_info_name : "<unnamed>");
+  if (err != ESP_OK) return err;
+  err = cmd_app_module_info_append_line(app, "File: %s", entry->name);
+  if (err != ESP_OK) return err;
+  err = cmd_app_module_info_append_line(app, "Tracker: %s  version=%u.%02u",
+    app->module_info_sample_name[0] ? app->module_info_sample_name : "?",
+    (unsigned)(version >> 8),
+    (unsigned)(version & 0xff));
+  if (err != ESP_OK) return err;
+  err = cmd_app_module_info_append_line(app, "Orders=%u  restart=%u  channels=%u  patterns=%u  instruments=%u",
+    (unsigned)length,
+    (unsigned)restart,
+    (unsigned)channels,
+    (unsigned)patterns,
+    (unsigned)instruments);
+  if (err != ESP_OK) return err;
+  err = cmd_app_module_info_append_line(app, "Tempo=%u  BPM=%u  frequency=%s  file size=%llu",
+    (unsigned)tempo,
+    (unsigned)bpm,
+    (flags & 1) ? "linear" : "amiga",
+    (unsigned long long)entry->size);
+  if (err != ESP_OK) return err;
+  err = cmd_app_module_info_append_line(app, "");
+  if (err != ESP_OK) return err;
+
+  offset = (uint64_t)60 + header_size;
+  err = cmd_app_module_info_skip_xm_patterns(app, file, &offset, patterns, entry->size);
+  if (err != ESP_OK) return err;
+
+  instruments_offset = offset;
+
+  err = cmd_app_module_info_append_line(app, "Instruments:");
+  if (err != ESP_OK) return err;
+  err = cmd_app_module_info_append_line(app, "Idx Samples Name");
+  if (err != ESP_OK) return err;
+
+  for (uint8_t pass = 0; pass < 2; pass++)
+  {
+    offset = instruments_offset;
+
+    if (pass == 1)
+    {
+      err = cmd_app_module_info_append_line(app, "");
+      if (err != ESP_OK) return err;
+      err = cmd_app_module_info_append_line(app, "Samples:");
+      if (err != ESP_OK) return err;
+      err = cmd_app_module_info_append_line(app, "Ins Smp Name                    LenB   LoopSt LoopLen Loop Bit Vol Pan Rel Fine");
+      if (err != ESP_OK) return err;
+    }
+
+    for (uint16_t i = 0; i < instruments; i++)
+    {
+      uint32_t instr_header_size;
+      uint16_t sample_count;
+      uint32_t sample_header_size = 0;
+      uint64_t sample_data_bytes = 0;
+
+      err = cmd_app_module_info_read_at(app, file, offset, buf, 263, &got);
+      if (err != ESP_OK) return err;
+      if (got < 29) return ESP_FAIL;
+
+      instr_header_size = cmd_app_info_rd_le32(buf);
+      if (instr_header_size < 29) return ESP_FAIL;
+
+      sample_count = cmd_app_info_rd_le16(buf + 27);
+      if (sample_count > 0)
+      {
+        if (got < 33) return ESP_FAIL;
+        sample_header_size = cmd_app_info_rd_le32(buf + 29);
+        if (sample_header_size < 18) return ESP_FAIL;
+      }
+
+      if (pass == 0)
+      {
+        cmd_app_module_info_copy_text(app->module_info_name, sizeof(app->module_info_name), buf + 4, 22);
+        err = cmd_app_module_info_append_line(app, "%03u %7u %s",
+          (unsigned)i + 1,
+          (unsigned)sample_count,
+          app->module_info_name);
+        if (err != ESP_OK) return err;
+      }
+
+      if (!cmd_app_module_info_u64_add(&offset, instr_header_size)) return ESP_ERR_INVALID_SIZE;
+      if (offset > entry->size) return ESP_FAIL;
+
+      for (uint16_t j = 0; j < sample_count; j++)
+      {
+        uint32_t sample_len;
+        uint32_t loop_start;
+        uint32_t loop_len;
+        uint8_t volume;
+        uint8_t sample_flags;
+        uint8_t panning;
+        int rel_note;
+        int finetune;
+
+        err = cmd_app_module_info_read_at(app, file, offset, buf, sample_header_size < 40 ? sample_header_size : 40, &got);
+        if (err != ESP_OK) return err;
+        if (got < sample_header_size && got < 18) return ESP_FAIL;
+
+        sample_len = cmd_app_info_rd_le32(buf);
+
+        if (pass == 1)
+        {
+          loop_start = cmd_app_info_rd_le32(buf + 4);
+          loop_len = cmd_app_info_rd_le32(buf + 8);
+          volume = buf[12];
+          finetune = (int8_t)buf[13];
+          sample_flags = buf[14];
+          panning = buf[15];
+          rel_note = (int8_t)buf[16];
+          cmd_app_module_info_copy_text(app->module_info_sample_name, sizeof(app->module_info_sample_name), buf + 18, got >= 40 ? 22 : 0);
+
+          err = cmd_app_module_info_append_line(app, "%03u %03u %-22s %6u %6u %7u %-4s %3u %3u %3u %3d %4d",
+            (unsigned)i + 1,
+            (unsigned)j + 1,
+            app->module_info_sample_name,
+            (unsigned)sample_len,
+            (unsigned)loop_start,
+            (unsigned)loop_len,
+            cmd_app_module_info_xm_loop_text(sample_flags),
+            (sample_flags & 0x10) ? 16u : 8u,
+            (unsigned)volume,
+            (unsigned)panning,
+            rel_note,
+            finetune);
+          if (err != ESP_OK) return err;
+        }
+
+        sample_data_bytes += sample_len;
+        if (!cmd_app_module_info_u64_add(&offset, sample_header_size)) return ESP_ERR_INVALID_SIZE;
+        if (offset > entry->size) return ESP_FAIL;
+      }
+
+      if (!cmd_app_module_info_u64_add(&offset, sample_data_bytes)) return ESP_ERR_INVALID_SIZE;
+      if (offset > entry->size) return ESP_FAIL;
+    }
+  }
+
+  return ESP_OK;
+}
+
+
+esp_err_t cmd_app_module_info_build_s3m(CmdApp *app, CmdFsFile *file, const cmd_file_entry_t *entry)
+{
+  uint8_t *buf;
+  uint16_t order_count;
+  uint16_t sample_count;
+  uint16_t pattern_count;
+  uint16_t flags;
+  uint16_t cwtv;
+  uint16_t format_version;
+  uint16_t playable_orders = 0;
+  uint16_t max_order_pattern = 0;
+  uint16_t channels = 0;
+  uint64_t tables_size;
+  uint64_t sample_ptr_offset;
+  size_t got = 0;
+  esp_err_t err;
+
+  if (!app || !file || !entry) return ESP_ERR_INVALID_ARG;
+
+  buf = app->module_info_read_buffer;
+  err = cmd_app_module_info_read_at(app, file, 0, buf, S3M_HEADER_SIZE, &got);
+  if (err != ESP_OK) return err;
+  if (got < S3M_HEADER_SIZE) return ESP_FAIL;
+  if (memcmp(buf + S3M_MAGIC_OFFSET, "SCRM", 4) != 0) return ESP_FAIL;
+  if (buf[CMD_APP_S3M_FILE_TYPE_OFFSET] != CMD_APP_S3M_FILE_TYPE_MODULE) return ESP_FAIL;
+
+  order_count = cmd_app_info_rd_le16(buf + CMD_APP_S3M_ORDERS_OFFSET);
+  sample_count = cmd_app_info_rd_le16(buf + CMD_APP_S3M_SAMPLES_OFFSET);
+  pattern_count = cmd_app_info_rd_le16(buf + CMD_APP_S3M_PATTERNS_OFFSET);
+  flags = cmd_app_info_rd_le16(buf + CMD_APP_S3M_FLAGS_OFFSET);
+  cwtv = cmd_app_info_rd_le16(buf + CMD_APP_S3M_CWTV_OFFSET);
+  format_version = cmd_app_info_rd_le16(buf + CMD_APP_S3M_FORMAT_VERSION_OFFSET);
+
+  if (!order_count || order_count > S3M_MAX_ORDERS) return ESP_FAIL;
+  if (sample_count > S3M_MAX_SAMPLES) return ESP_FAIL;
+  if (!pattern_count || pattern_count > S3M_MAX_PATTERNS) return ESP_FAIL;
+
+  tables_size = (uint64_t)order_count + (uint64_t)sample_count * 2 + (uint64_t)pattern_count * 2;
+  if ((uint64_t)S3M_HEADER_SIZE + tables_size > entry->size) return ESP_FAIL;
+  if (buf[CMD_APP_S3M_PANNING_TABLE_FLAG_OFFSET] == CMD_APP_S3M_PANNING_TABLE_PRESENT &&
+    (uint64_t)S3M_HEADER_SIZE + tables_size + S3M_MAX_CHANNELS > entry->size) return ESP_FAIL;
+
+  for (uint16_t i = 0; i < S3M_MAX_CHANNELS; i++)
+    if (buf[CMD_APP_S3M_CHANNEL_SETTINGS_OFFSET + i] != 0xFF)
+      channels++;
+
+  if (channels < S3M_MIN_CHANNELS || channels > S3M_MAX_CHANNELS) return ESP_FAIL;
+
+  err = cmd_app_module_info_read_at(app, file, S3M_HEADER_SIZE, buf, order_count, &got);
+  if (err != ESP_OK) return err;
+  if (got < order_count) return ESP_FAIL;
+
+  for (uint16_t i = 0; i < order_count; i++)
+  {
+    uint8_t order = buf[i];
+
+    if (order == 0xFF) break;
+    if (order == 0xFE) continue;
+    if (order >= pattern_count) return ESP_FAIL;
+    playable_orders++;
+    if (order > max_order_pattern) max_order_pattern = order;
+  }
+
+  if (!playable_orders) return ESP_FAIL;
+
+  err = cmd_app_module_info_read_at(app, file, 0, buf, S3M_HEADER_SIZE, &got);
+  if (err != ESP_OK) return err;
+  if (got < S3M_HEADER_SIZE) return ESP_FAIL;
+  cmd_app_module_info_copy_text(app->module_info_name, sizeof(app->module_info_name), buf, 28);
+
+  err = cmd_app_module_info_append_line(app, "S3M module: %s", app->module_info_name[0] ? app->module_info_name : "<unnamed>");
+  if (err != ESP_OK) return err;
+  err = cmd_app_module_info_append_line(app, "File: %s", entry->name);
+  if (err != ESP_OK) return err;
+  err = cmd_app_module_info_append_line(app, "Orders=%u playable=%u channels=%u patterns=%u samples=%u",
+    (unsigned)order_count,
+    (unsigned)playable_orders,
+    (unsigned)channels,
+    (unsigned)pattern_count,
+    (unsigned)sample_count);
+  if (err != ESP_OK) return err;
+  err = cmd_app_module_info_append_line(app, "Speed=%u Tempo=%u GlobalVol=%u MasterVol=%u %s panning=%s",
+    (unsigned)buf[CMD_APP_S3M_SPEED_OFFSET],
+    (unsigned)buf[CMD_APP_S3M_TEMPO_OFFSET],
+    (unsigned)buf[CMD_APP_S3M_GLOBAL_VOLUME_OFFSET],
+    (unsigned)(buf[CMD_APP_S3M_MASTER_VOLUME_OFFSET] & 0x7F),
+    (buf[CMD_APP_S3M_MASTER_VOLUME_OFFSET] & 0x80) ? "stereo" : "mono",
+    buf[CMD_APP_S3M_PANNING_TABLE_FLAG_OFFSET] == CMD_APP_S3M_PANNING_TABLE_PRESENT ? "table" : "default");
+  if (err != ESP_OK) return err;
+  err = cmd_app_module_info_append_line(app, "Flags=0x%04X  CWT/V=0x%04X  sample format=%s  max order pattern=%u  file size=%llu",
+    (unsigned)flags,
+    (unsigned)cwtv,
+    format_version == 1 ? "signed" : (format_version == 2 ? "unsigned" : "unknown"),
+    (unsigned)max_order_pattern,
+    (unsigned long long)entry->size);
+  if (err != ESP_OK) return err;
+  err = cmd_app_module_info_append_line(app, "");
+  if (err != ESP_OK) return err;
+  err = cmd_app_module_info_append_line(app, "Samples / instruments:");
+  if (err != ESP_OK) return err;
+  err = cmd_app_module_info_append_line(app, " #  Name                         LenB     DataOfs LoopSt LoopEnd Loop Bit Vol C4Spd Flags");
+  if (err != ESP_OK) return err;
+
+  sample_ptr_offset = (uint64_t)S3M_HEADER_SIZE + order_count;
+  for (uint16_t i = 0; i < sample_count; i++)
+  {
+    uint16_t para;
+    uint64_t header_offset;
+    uint64_t data_offset = 0;
+    uint64_t length_bytes = 0;
+    uint32_t length = 0;
+    uint32_t loop_start = 0;
+    uint32_t loop_end = 0;
+    uint32_t c4speed = S3M_DEFAULT_C4SPEED;
+    uint8_t type = CMD_APP_S3M_SAMPLE_TYPE_NONE;
+    uint8_t volume = 0;
+    uint8_t pack = CMD_APP_S3M_SAMPLE_PACK_NONE;
+    uint8_t sample_flags = 0;
+    unsigned bits = 8;
+    const char *loop_text = "no";
+
+    err = cmd_app_module_info_read_at(app, file, sample_ptr_offset + (uint64_t)i * 2, buf, 2, &got);
+    if (err != ESP_OK) return err;
+    if (got < 2) return ESP_FAIL;
+
+    para = cmd_app_info_rd_le16(buf);
+    if (!para)
+    {
+      err = cmd_app_module_info_append_line(app, "%02u  %-28s %8u %10u %6u %7u %-4s %3u %3u %5u 0x%02X",
+        (unsigned)i + 1,
+        "<empty>",
+        0u,
+        0u,
+        0u,
+        0u,
+        "no",
+        8u,
+        0u,
+        S3M_DEFAULT_C4SPEED,
+        0u);
+      if (err != ESP_OK) return err;
+      continue;
+    }
+
+    header_offset = (uint64_t)para << 4;
+    if (header_offset > entry->size || entry->size - header_offset < S3M_SAMPLE_HEADER_SIZE) return ESP_FAIL;
+
+    err = cmd_app_module_info_read_at(app, file, header_offset, buf, S3M_SAMPLE_HEADER_SIZE, &got);
+    if (err != ESP_OK) return err;
+    if (got < S3M_SAMPLE_HEADER_SIZE) return ESP_FAIL;
+
+    type = buf[0];
+    data_offset = (((uint64_t)buf[13] << 16) | cmd_app_info_rd_le16(buf + 14)) << 4;
+    length = cmd_app_info_rd_le32(buf + 16);
+    loop_start = cmd_app_info_rd_le32(buf + 20);
+    loop_end = cmd_app_info_rd_le32(buf + 24);
+    volume = buf[28];
+    pack = buf[30];
+    sample_flags = buf[31];
+    c4speed = cmd_app_info_rd_le32(buf + 32);
+    if (!c4speed) c4speed = S3M_DEFAULT_C4SPEED;
+    bits = (sample_flags & CMD_APP_S3M_SAMPLE_FLAG_16BIT) ? 16u : 8u;
+    length_bytes = (uint64_t)length * (bits == 16 ? 2u : 1u);
+    if ((sample_flags & CMD_APP_S3M_SAMPLE_FLAG_LOOP) && loop_end > loop_start)
+    {
+      loop_text = "yes";
+    }
+
+    cmd_app_module_info_copy_text(app->module_info_sample_name, sizeof(app->module_info_sample_name), buf + 48, 28);
+    if (!app->module_info_sample_name[0] && type == CMD_APP_S3M_SAMPLE_TYPE_NONE)
+      cmd_app_copy_string(app->module_info_sample_name, sizeof(app->module_info_sample_name), "<empty>");
+
+    err = cmd_app_module_info_append_line(app, "%02u  %-28s %8llu %10llu %6u %7u %-4s %3u %3u %5u 0x%02X%s%s%s",
+      (unsigned)i + 1,
+      app->module_info_sample_name,
+      (unsigned long long)length_bytes,
+      (unsigned long long)data_offset,
+      (unsigned)loop_start,
+      (unsigned)loop_end,
+      loop_text,
+      bits,
+      (unsigned)volume,
+      (unsigned)c4speed,
+      (unsigned)sample_flags,
+      (type == CMD_APP_S3M_SAMPLE_TYPE_NONE || type == CMD_APP_S3M_SAMPLE_TYPE_PCM) ? "" : " type!",
+      pack == CMD_APP_S3M_SAMPLE_PACK_NONE ? "" : " packed!",
+      (sample_flags & CMD_APP_S3M_SAMPLE_FLAG_STEREO) ? " stereo!" : "");
+    if (err != ESP_OK) return err;
+
+  }
+
+  return ESP_OK;
+}
+
+void cmd_app_close_module_info_viewer(CmdApp *app)
+{
+  if (!app) return;
+
+  cmd_app_module_info_free_text(app);
+  app->module_info_open = false;
+  app->module_info_device = CMD_DEVICE_INVALID;
+  app->module_info_path[0] = 0;
+  app->module_info_title[0] = 0;
+  cmd_app_set_status(app, "ready");
+}
+
+esp_err_t cmd_app_open_module_info_viewer(CmdApp *app, CmdPanel *panel, const cmd_file_entry_t *entry)
+{
+  CmdFsFile file;
+  CmdFsDriver *driver;
+  bool file_open = false;
+  esp_err_t err;
+
+  if (!app || !panel || !entry) return ESP_ERR_INVALID_ARG;
+
+  if (!cmd_app_entry_is_module_info(entry))
+  {
+    cmd_app_set_status(app, "module info supports MOD/XM/S3M files only");
+    return ESP_OK;
+  }
+
+  err = cmd_app_join_selected_path(panel, entry, app->module_info_path, sizeof(app->module_info_path));
+  if (err != ESP_OK)
+  {
+    cmd_show_error(app, "module info", err);
+    return ESP_OK;
+  }
+
+  err = cmd_fs_manager_mount(&app->fs, panel->device_id);
+  if (err != ESP_OK)
+  {
+    cmd_show_error(app, "module info", err);
+    return ESP_OK;
+  }
+
+  driver = cmd_fs_manager_get_driver(&app->fs, panel->device_id);
+  if (!driver || !driver->open_read || !driver->read || !driver->seek || !driver->close)
+  {
+    cmd_show_error(app, "module info", ESP_ERR_NOT_SUPPORTED);
+    return ESP_OK;
+  }
+
+  memset(&file, 0, sizeof(file));
+  err = cmd_fs_manager_open_read(&app->fs, panel->device_id, app->module_info_path, &file);
+  if (err != ESP_OK)
+  {
+    cmd_show_error(app, "module info", err);
+    return ESP_OK;
+  }
+  file_open = true;
+
+  cmd_app_module_info_free_text(app);
+  cmd_app_copy_string(app->module_info_title, sizeof(app->module_info_title), entry->name);
+
+  if (cmd_app_extension_is(entry->name, ".mod"))
+    err = cmd_app_module_info_build_mod(app, &file, entry);
+  else if (cmd_app_extension_is(entry->name, ".s3m"))
+    err = cmd_app_module_info_build_s3m(app, &file, entry);
+  else
+    err = cmd_app_module_info_build_xm(app, &file, entry);
+
+  if (file_open)
+  {
+    esp_err_t close_err = cmd_fs_manager_close(&app->fs, &file);
+    file_open = false;
+    if (err == ESP_OK && close_err != ESP_OK) err = close_err;
+  }
+
+  if (err != ESP_OK)
+  {
+    cmd_app_module_info_free_text(app);
+    cmd_show_error(app, "module info", err);
+    return ESP_OK;
+  }
+
+  app->module_info_open = true;
+  app->module_info_device = panel->device_id;
+  app->module_info_top_line = 0;
+  cmd_set_status(app, "module info: %s  lines=%u", entry->name, (unsigned)app->module_info_line_count);
+  return ESP_OK;
+}
+
+size_t cmd_app_module_info_max_top_line(CmdApp *app)
+{
+  size_t rows;
+
+  if (!app) return 0;
+
+  rows = (size_t)cmd_app_viewer_visible_rows(app);
+  if (app->module_info_line_count <= rows) return 0;
+  return app->module_info_line_count - rows;
+}
+
+void cmd_app_module_info_set_status(CmdApp *app)
+{
+  if (!app) return;
+
+  cmd_set_status(app, "module info: %s  line %u/%u",
+    app->module_info_title[0] ? app->module_info_title : cmd_fs_filename_ptr(app->module_info_path),
+    (unsigned)(app->module_info_top_line + 1),
+    (unsigned)app->module_info_line_count);
+}
+
+void cmd_app_module_info_move_to(CmdApp *app, size_t top_line)
+{
+  size_t max_top;
+
+  if (!app) return;
+
+  max_top = cmd_app_module_info_max_top_line(app);
+  if (top_line > max_top) top_line = max_top;
+  app->module_info_top_line = top_line;
+  cmd_app_module_info_set_status(app);
+}
+
+esp_err_t cmd_app_handle_module_info_viewer_key(CmdApp *app, const cmd_event_t *event)
+{
+  size_t rows;
+
+  if (!app || !event) return ESP_ERR_INVALID_ARG;
+  if (!app->module_info_open) return ESP_ERR_INVALID_STATE;
+  if (event->type != CMD_EVENT_KEY && event->type != CMD_EVENT_QUIT) return ESP_OK;
+
+  if (event->type == CMD_EVENT_QUIT || event->key == CMD_KEY_ESC)
+  {
+    cmd_app_close_module_info_viewer(app);
+    return ESP_OK;
+  }
+
+  rows = (size_t)cmd_app_viewer_visible_rows(app);
+
+  switch (event->key)
+  {
+    case CMD_KEY_UP:
+      if (app->module_info_top_line > 0)
+        cmd_app_module_info_move_to(app, app->module_info_top_line - 1);
+      return ESP_OK;
+
+    case CMD_KEY_DOWN:
+      cmd_app_module_info_move_to(app, app->module_info_top_line + 1);
+      return ESP_OK;
+
+    case CMD_KEY_PAGE_UP:
+    case CMD_KEY_LEFT:
+      if (app->module_info_top_line > rows)
+        cmd_app_module_info_move_to(app, app->module_info_top_line - rows);
+      else
+        cmd_app_module_info_move_to(app, 0);
+      return ESP_OK;
+
+    case CMD_KEY_PAGE_DOWN:
+    case CMD_KEY_RIGHT:
+      cmd_app_module_info_move_to(app, app->module_info_top_line + rows);
+      return ESP_OK;
+
+    case CMD_KEY_HOME:
+      cmd_app_module_info_move_to(app, 0);
+      return ESP_OK;
+
+    case CMD_KEY_END:
+      cmd_app_module_info_move_to(app, cmd_app_module_info_max_top_line(app));
+      return ESP_OK;
+
+    default:
+      return ESP_OK;
+  }
+}
+
+void cmd_app_module_info_copy_line(CmdApp *app, size_t line_index, char *out, size_t out_size)
+{
+  const char *p;
+  size_t current = 0;
+  size_t len = 0;
+
+  if (!out || out_size == 0) return;
+  out[0] = 0;
+  if (!app || !app->module_info_text) return;
+
+  p = app->module_info_text;
+  while (current < line_index && *p)
+  {
+    if (*p == '\n') current++;
+    p++;
+  }
+
+  if (current != line_index) return;
+
+  while (p[len] && p[len] != '\n') len++;
+  if (len >= out_size) len = out_size - 1;
+  memcpy(out, p, len);
+  out[len] = 0;
+}
+
+void cmd_app_make_module_info_title(char *out, size_t out_size, CmdApp *app)
+{
+  if (!out || out_size == 0) return;
+
+  cmd_app_text_clear(out, out_size);
+  if (!app) return;
+
+  cmd_app_append_text(out, out_size, "Module: ");
+  cmd_app_append_text(out, out_size, cmd_device_name(app->module_info_device));
+  cmd_app_append_text(out, out_size, ":");
+  cmd_app_append_text(out, out_size, app->module_info_path);
+  cmd_app_append_text(out, out_size, "  line ");
+  snprintf(app->viewer_num, sizeof(app->viewer_num), "%u", (unsigned)(app->module_info_top_line + 1));
+  cmd_app_append_text(out, out_size, app->viewer_num);
+}
+
+void cmd_app_draw_module_info_viewer(CmdApp *app)
+{
+  cmd_rect_t rect;
+  cmd_rect_t line_rect;
+  cmd_display_attr_t attr;
+  cmd_display_attr_t bar_attr;
+  int rows;
+  int cols;
+  int bottom_y;
+
+  if (!app || !app->module_info_open) return;
+
+  rows = cmd_app_viewer_visible_rows(app);
+  cols = cmd_app_viewer_visible_cols(app);
+  bottom_y = cmd_app_bottom_y(app);
+  attr = cmd_app_normal_attr();
+  bar_attr = cmd_display_make_attr(CMD_DISPLAY_COLOR_BRIGHT_YELLOW, CMD_DISPLAY_COLOR_CYAN,
+    CMD_DISPLAY_ATTR_FLAG_BOLD);
+
+  rect.x = 0;
+  rect.y = 0;
+  rect.w = cmd_app_screen_w(app);
+  rect.h = cmd_app_screen_h(app);
+
+  line_rect.x = 0;
+  line_rect.y = 0;
+  line_rect.w = rect.w;
+  line_rect.h = 1;
+  cmd_display_buffer_fill_rect(&app->buffer, &line_rect, ' ', bar_attr);
+  cmd_app_make_module_info_title(app->viewer_draw_line, sizeof(app->viewer_draw_line), app);
+  cmd_display_buffer_write_text(&app->buffer, 0, 0, app->viewer_draw_line, bar_attr);
+
+  for (int row = 0; row < rows; row++)
+  {
+    line_rect.x = 0;
+    line_rect.y = 1 + row;
+    line_rect.w = cols;
+    line_rect.h = 1;
+    cmd_display_buffer_fill_rect(&app->buffer, &line_rect, ' ', attr);
+
+    cmd_app_module_info_copy_line(app,
+      app->module_info_top_line + (size_t)row,
+      app->viewer_draw_line,
+      sizeof(app->viewer_draw_line));
+    cmd_display_buffer_write_text(&app->buffer, 0, line_rect.y, app->viewer_draw_line, attr);
+  }
+
+  line_rect.x = 0;
+  line_rect.y = bottom_y;
+  line_rect.w = rect.w;
+  line_rect.h = 1;
+  cmd_display_buffer_fill_rect(&app->buffer, &line_rect, ' ', bar_attr);
+  cmd_display_buffer_write_text(&app->buffer, 0, bottom_y,
+    "Module info  Up/Down PgUp/PgDn Left/Right Home/End  Esc Close", bar_attr);
+}
+
 char cmd_app_hex_viewer_ascii(uint8_t ch)
 {
   if (ch >= 32 && ch <= 126) return (char)ch;
@@ -2845,8 +3933,56 @@ esp_err_t cmd_app_open_mkdir_dialog(CmdApp *app)
   if (!app) return ESP_ERR_INVALID_ARG;
 
   app->mkdir_dialog_open = true;
+  app->mkdir_dialog_op = CMD_APP_NAME_DIALOG_MKDIR;
   app->mkdir_name[0] = 0;
+  app->rename_src_path[0] = 0;
+  app->rename_dst_path[0] = 0;
+  app->rename_remap_path[0] = 0;
   cmd_app_set_status(app, "mkdir: type name, Enter OK, Esc cancel");
+  return ESP_OK;
+}
+
+esp_err_t cmd_app_open_rename_dialog(CmdApp *app)
+{
+  CmdPanel *panel;
+  const cmd_file_entry_t *entry;
+  esp_err_t err;
+
+  if (!app) return ESP_ERR_INVALID_ARG;
+
+  panel = cmd_app_active_panel(app);
+  if (!panel) return ESP_ERR_INVALID_STATE;
+
+  entry = cmd_panel_get_selected_entry(panel);
+  if (!entry)
+  {
+    cmd_app_set_status(app, "no selected entry");
+    return ESP_OK;
+  }
+
+  if (entry->type == CMD_ENTRY_PARENT)
+  {
+    cmd_app_set_status(app, "cannot rename ..");
+    return ESP_OK;
+  }
+
+  if (entry->type != CMD_ENTRY_FILE && entry->type != CMD_ENTRY_DIR)
+  {
+    cmd_app_set_status(app, "cannot rename entry");
+    return ESP_OK;
+  }
+
+  err = cmd_fs_join_path(panel->current_path, entry->name, app->rename_src_path, sizeof(app->rename_src_path));
+  if (err != ESP_OK)
+  {
+    cmd_show_error(app, "rename", err);
+    return ESP_OK;
+  }
+
+  cmd_app_copy_string(app->mkdir_name, sizeof(app->mkdir_name), entry->name);
+  app->mkdir_dialog_open = true;
+  app->mkdir_dialog_op = CMD_APP_NAME_DIALOG_RENAME;
+  cmd_app_set_status(app, "rename: edit name, Enter OK, Esc cancel");
   return ESP_OK;
 }
 
@@ -2855,7 +3991,11 @@ void cmd_app_close_mkdir_dialog(CmdApp *app)
   if (!app) return;
 
   app->mkdir_dialog_open = false;
+  app->mkdir_dialog_op = CMD_APP_NAME_DIALOG_MKDIR;
   app->mkdir_name[0] = 0;
+  app->rename_src_path[0] = 0;
+  app->rename_dst_path[0] = 0;
+  app->rename_remap_path[0] = 0;
 }
 
 esp_err_t cmd_app_create_directory(CmdApp *app)
@@ -2911,14 +4051,132 @@ esp_err_t cmd_app_create_directory(CmdApp *app)
   return ESP_OK;
 }
 
+esp_err_t cmd_app_remap_panel_after_rename(CmdPanel *panel,
+  cmd_device_id_t device_id,
+  const char *old_path,
+  const char *new_path,
+  char *work_path,
+  size_t work_path_size)
+{
+  size_t old_len;
+  int len;
+
+  if (!panel || !old_path || !new_path || !work_path || work_path_size == 0) return ESP_ERR_INVALID_ARG;
+  if (panel->device_id != device_id) return ESP_OK;
+  if (!cmd_app_path_is_same_or_child(old_path, panel->current_path)) return ESP_OK;
+
+  if (strcmp(old_path, panel->current_path) == 0)
+    return cmd_panel_set_path(panel, new_path);
+
+  old_len = strlen(old_path);
+  len = snprintf(work_path, work_path_size, "%s%s", new_path, panel->current_path + old_len);
+  if (len < 0 || (size_t)len >= work_path_size) return CMD_ERR_PATH_TOO_LONG;
+
+  return cmd_panel_set_path(panel, work_path);
+}
+
+esp_err_t cmd_app_rename_entry(CmdApp *app)
+{
+  CmdPanel *panel;
+  cmd_file_entry_t entry;
+  esp_err_t err;
+
+  if (!app) return ESP_ERR_INVALID_ARG;
+
+  panel = cmd_app_active_panel(app);
+  if (!panel) return ESP_ERR_INVALID_STATE;
+
+  if (!cmd_app_mkdir_name_is_valid(app->mkdir_name))
+  {
+    cmd_app_set_status(app, "invalid file name");
+    return ESP_OK;
+  }
+
+  err = cmd_fs_join_path(panel->current_path, app->mkdir_name, app->rename_dst_path, sizeof(app->rename_dst_path));
+  if (err != ESP_OK)
+  {
+    cmd_show_error(app, "rename", err);
+    return ESP_OK;
+  }
+
+  if (strcmp(app->rename_src_path, app->rename_dst_path) == 0)
+  {
+    cmd_app_close_mkdir_dialog(app);
+    cmd_app_set_status(app, "rename unchanged");
+    return ESP_OK;
+  }
+
+  err = cmd_fs_manager_mount(panel->fs, panel->device_id);
+  if (err == ESP_OK)
+  {
+    err = cmd_fs_manager_stat(panel->fs, panel->device_id, app->rename_dst_path, &entry);
+    if (err == ESP_OK)
+      err = ESP_ERR_INVALID_STATE;
+    else if (err == ESP_ERR_NOT_FOUND)
+      err = cmd_fs_manager_rename(panel->fs, panel->device_id, app->rename_src_path, app->rename_dst_path);
+  }
+
+  if (err != ESP_OK)
+  {
+    cmd_show_error(app, "rename", err);
+    return ESP_OK;
+  }
+
+  err = cmd_app_remap_panel_after_rename(&app->left_panel,
+    panel->device_id,
+    app->rename_src_path,
+    app->rename_dst_path,
+    app->rename_remap_path,
+    sizeof(app->rename_remap_path));
+  if (err == ESP_OK)
+    err = cmd_app_remap_panel_after_rename(&app->right_panel,
+      panel->device_id,
+      app->rename_src_path,
+      app->rename_dst_path,
+      app->rename_remap_path,
+      sizeof(app->rename_remap_path));
+
+  if (err == ESP_OK)
+    err = cmd_app_reload_both_panels(app);
+  if (err == ESP_OK)
+    cmd_app_focus_panel_entry(panel, cmd_fs_filename_ptr(app->rename_dst_path));
+
+  if (err != ESP_OK)
+  {
+    cmd_app_close_mkdir_dialog(app);
+    cmd_show_error(app, "rename", err);
+    return ESP_OK;
+  }
+
+  cmd_set_status(app, "renamed to: %s", cmd_fs_filename_ptr(app->rename_dst_path));
+  cmd_app_close_mkdir_dialog(app);
+  return ESP_OK;
+}
+
 void cmd_app_draw_mkdir_dialog(CmdApp *app)
 {
   cmd_rect_t rect;
   cmd_display_attr_t attr;
   cmd_display_attr_t frame_attr;
   char line[CMD_DISPLAY_COLS + 1];
+  const char *title;
+  const char *label;
+  const char *footer;
 
   if (!app || !app->mkdir_dialog_open) return;
+
+  if (app->mkdir_dialog_op == CMD_APP_NAME_DIALOG_RENAME)
+  {
+    title = " Rename ";
+    label = "New name:";
+    footer = "Enter/OK rename   Esc/Cancel";
+  }
+  else
+  {
+    title = " MkDir ";
+    label = "Folder name:";
+    footer = "Enter/OK create   Esc/Cancel";
+  }
 
   rect.x = cmd_app_center_x(app, CMD_APP_MKDIR_DIALOG_W);
   rect.y = cmd_app_center_y(app, CMD_APP_MKDIR_DIALOG_H);
@@ -2930,16 +4188,26 @@ void cmd_app_draw_mkdir_dialog(CmdApp *app)
 
   cmd_display_buffer_fill_rect(&app->buffer, &rect, ' ', attr);
   cmd_display_buffer_draw_box(&app->buffer, &rect, frame_attr);
-  cmd_display_buffer_write_text(&app->buffer, rect.x + 2, rect.y, " MkDir ", frame_attr);
+  cmd_display_buffer_write_text(&app->buffer, rect.x + 2, rect.y, title, frame_attr);
 
-  cmd_display_buffer_write_text(&app->buffer, rect.x + 2, rect.y + 2, "Folder name:", attr);
+  cmd_display_buffer_write_text(&app->buffer, rect.x + 2, rect.y + 2, label, attr);
 
   cmd_app_text_clear(line, sizeof(line));
   cmd_app_append_text(line, sizeof(line), app->mkdir_name);
+  cmd_app_append_text(line, sizeof(line), "_");
   cmd_display_buffer_write_text(&app->buffer, rect.x + 2, rect.y + 3, line, attr);
 
-  cmd_display_buffer_write_text(&app->buffer, rect.x + 2, rect.y + rect.h - 2,
-    "Enter/OK create   Esc/Cancel", attr);
+  cmd_display_buffer_write_text(&app->buffer, rect.x + 2, rect.y + rect.h - 2, footer, attr);
+}
+
+esp_err_t cmd_app_submit_mkdir_dialog(CmdApp *app)
+{
+  if (!app) return ESP_ERR_INVALID_ARG;
+
+  if (app->mkdir_dialog_op == CMD_APP_NAME_DIALOG_RENAME)
+    return cmd_app_rename_entry(app);
+
+  return cmd_app_create_directory(app);
 }
 
 esp_err_t cmd_app_handle_mkdir_dialog_key(CmdApp *app, const cmd_event_t *event)
@@ -2952,13 +4220,16 @@ esp_err_t cmd_app_handle_mkdir_dialog_key(CmdApp *app, const cmd_event_t *event)
 
   if (event->type == CMD_EVENT_QUIT || event->key == CMD_KEY_ESC || event->key == CMD_KEY_F10)
   {
+    if (app->mkdir_dialog_op == CMD_APP_NAME_DIALOG_RENAME)
+      cmd_app_set_status(app, "rename cancelled");
+    else
+      cmd_app_set_status(app, "mkdir cancelled");
     cmd_app_close_mkdir_dialog(app);
-    cmd_app_set_status(app, "mkdir cancelled");
     return ESP_OK;
   }
 
   if (event->key == CMD_KEY_ENTER)
-    return cmd_app_create_directory(app);
+    return cmd_app_submit_mkdir_dialog(app);
 
   if (event->key == CMD_KEY_BACKSPACE)
   {
@@ -3186,7 +4457,7 @@ void cmd_app_draw_bottom_bar(CmdApp *app)
 
   cmd_display_buffer_fill_rect(&app->buffer, &rect, ' ', attr);
   cmd_display_buffer_write_text(&app->buffer, 0, y,
-    "F1 Help  Ins Sel  * Inv  F3 View  A+F3 Hex  F5 Copy  F6 Move  F7 MkDir  F8 Del", attr);
+    "F1 Help F2 Rename F3 View A+F3 Hex F5 Copy F6 Move F7 MkDir F8 Del", attr);
 }
 
 void cmd_app_make_panel_info_line(char *out, size_t out_size, const CmdPanel *panel, int width)
@@ -3381,10 +4652,11 @@ esp_err_t cmd_app_render(CmdApp *app)
   cmd_app_draw_progress_dialog(app);
   cmd_app_draw_text_viewer(app);
   cmd_app_draw_hex_viewer(app);
+  cmd_app_draw_module_info_viewer(app);
   cmd_app_draw_error_dialog(app);
 
   console_flags = cmd_display_console_backend.flags;
-  if (app->viewer_open || app->hex_viewer_open)
+  if (app->viewer_open || app->hex_viewer_open || app->module_info_open)
     cmd_display_console_backend.flags = console_flags | CMD_DISPLAY_BACKEND_FLAG_FORCE_PARTIAL;
 
   err = cmd_display_mux_present(&app->mux, &app->buffer);
@@ -3420,10 +4692,11 @@ esp_err_t cmd_app_render_console(CmdApp *app)
   cmd_app_draw_progress_dialog(app);
   cmd_app_draw_text_viewer(app);
   cmd_app_draw_hex_viewer(app);
+  cmd_app_draw_module_info_viewer(app);
   cmd_app_draw_error_dialog(app);
 
   console_flags = cmd_display_console_backend.flags;
-  if (app->viewer_open || app->hex_viewer_open)
+  if (app->viewer_open || app->hex_viewer_open || app->module_info_open)
     cmd_display_console_backend.flags = console_flags | CMD_DISPLAY_BACKEND_FLAG_FORCE_PARTIAL;
 
   err = cmd_display_backend_present(&cmd_display_console_backend, &app->buffer);
@@ -3460,6 +4733,7 @@ esp_err_t cmd_app_enter_selected(CmdApp *app)
   if (entry->type == CMD_ENTRY_FILE)
   {
     if (cmd_app_entry_is_xm(entry)) return cmd_app_play_xm_file(app, panel, entry);
+    if (cmd_app_entry_is_wav(entry)) return cmd_app_play_wav_file(app, panel, entry);
     if (cmd_app_entry_is_ft_image(entry)) return cmd_app_open_jpg_viewer(app, panel, entry);
     cmd_app_set_status(app, "open: unsupported file type");
     return ESP_OK;
@@ -3491,7 +4765,6 @@ bool cmd_app_event_is_exit(const cmd_event_t *event)
   if (!event) return false;
   if (event->type == CMD_EVENT_QUIT) return true;
   if (event->type != CMD_EVENT_KEY) return false;
-  if (event->key == CMD_KEY_ESC) return true;
   if (event->key == CMD_KEY_F10) return true;
   return false;
 }
@@ -3516,6 +4789,9 @@ esp_err_t cmd_app_handle_key(CmdApp *app, const cmd_event_t *event)
 
   if (app->hex_viewer_open)
     return cmd_app_handle_hex_viewer_key(app, event);
+
+  if (app->module_info_open)
+    return cmd_app_handle_module_info_viewer_key(app, event);
 
   if (app->viewer_open)
     return cmd_app_handle_text_viewer_key(app, event);
@@ -3585,10 +4861,19 @@ esp_err_t cmd_app_handle_key(CmdApp *app, const cmd_event_t *event)
         cmd_app_set_status(app, "selection cleared");
       return ESP_OK;
 
+    case CMD_KEY_F2:
+      return cmd_app_open_rename_dialog(app);
+
     case CMD_KEY_F3:
+    {
+      const cmd_file_entry_t *entry = cmd_panel_get_selected_entry(panel);
+
       if (event->mods & CMD_KEY_MOD_ALT)
-        return cmd_app_open_hex_viewer(app, panel, cmd_panel_get_selected_entry(panel));
-      return cmd_app_open_text_viewer(app, panel, cmd_panel_get_selected_entry(panel));
+        return cmd_app_open_hex_viewer(app, panel, entry);
+      if (cmd_app_entry_is_module_info(entry))
+        return cmd_app_open_module_info_viewer(app, panel, entry);
+      return cmd_app_open_text_viewer(app, panel, entry);
+    }
 
     case CMD_KEY_F5:
       return cmd_app_open_fileop_confirm(app, CMD_APP_FILEOP_COPY);
@@ -3881,6 +5166,8 @@ esp_err_t cmd_app_init_runtime(CmdApp *app, CmdDisplayMode display_mode)
   if (!app) return ESP_ERR_INVALID_ARG;
 
   memset(app, 0, sizeof(*app));
+  app->sfx_preview_handle = -1;
+  app->sfx_preview_channel = -1;
 
   cmd_display_buffer_init(&app->buffer);
   cmd_display_mux_init(&app->mux);
@@ -3922,6 +5209,8 @@ void cmd_app_shutdown_runtime(CmdApp *app)
 {
   if (!app) return;
 
+  cmd_app_delete_sfx_preview(app);
+  cmd_app_close_module_info_viewer(app);
   cmd_input_end(app->input);
   cmd_display_mux_deinit_backends(&app->mux);
   cmd_fs_manager_unmount_all(&app->fs);
@@ -3988,8 +5277,15 @@ int cmd_cmd(int argc, char **argv)
   while (true)
   {
     cmd_event_t event;
+    uint32_t input_timeout_ms = app->help_dialog_open ? CMD_APP_HELP_DIALOG_REFRESH_MS : CMD_INPUT_WAIT_FOREVER;
 
-    err = cmd_input_poll_event(app->input, &event, CMD_INPUT_WAIT_FOREVER);
+    err = cmd_input_poll_event(app->input, &event, input_timeout_ms);
+    if (err == ESP_ERR_TIMEOUT)
+    {
+      if (app->help_dialog_open)
+        cmd_app_render(app);
+      continue;
+    }
     if (err != ESP_OK) continue;
 
     if (!cmd_app_has_modal(app) && cmd_app_event_is_exit(&event)) break;
@@ -7800,7 +9096,7 @@ esp_err_t cmd_fs_sd_mount(CmdFsDriver *driver)
   err = cmd_fs_sd_mount_once();
   if (err != ESP_OK) return err;
 
-  return cmd_fs_check_root_path(driver);
+  return ESP_OK;
 }
 
 esp_err_t cmd_fs_fat_mount(CmdFsDriver *driver)
@@ -8097,11 +9393,14 @@ esp_err_t cmd_fs_manager_mount(CmdFsManager *manager, cmd_device_id_t device_id)
   bit = 1u << (uint32_t)device_id;
   if (manager->mounted_mask & bit) return ESP_OK;
 
-  err = cmd_fs_check_root_path(driver);
-  if (err == ESP_OK)
+  if (device_id != CMD_DEVICE_SD)
   {
-    manager->mounted_mask |= bit;
-    return ESP_OK;
+    err = cmd_fs_check_root_path(driver);
+    if (err == ESP_OK)
+    {
+      manager->mounted_mask |= bit;
+      return ESP_OK;
+    }
   }
 
   err = driver->mount(driver);

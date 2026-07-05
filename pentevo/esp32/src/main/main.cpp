@@ -22,20 +22,20 @@
 #include "console.h"
 #include "nvs_params.h"
 
-#ifdef CONFIG_ESP32_WIFI_ENABLED
+#if defined(CONFIG_ESP_WIFI_ENABLED) && CONFIG_ESP_WIFI_ENABLED
 #include "wifi.h"
-#endif
-
-#include "mem_obj.h"
-#include "xm.h"
-#include "xm_cpp.h"
-#include "stats.h"
-#include "ft8xx.h"
-#include "elf.cpp.h"
-#include "helper.h"
 #include "http_client.h"
 #include "gopher_client.h"
 #include "stream_client.h"
+#endif
+
+#include "mem_obj.h"
+#include "tracker.h"
+#include "stats.h"
+#include "ft8xx.h"
+#include "elf.h"
+#include "sdmmc.h"
+#include "helper.h"
 #include "depack.h"
 #include "ps2_mouse.h"
 #include "usb_mouse.h"
@@ -134,7 +134,7 @@ extern "C" void app_main()
   ESP_LOGI("MAIN", "usb_mode=%u, usb_mouse_start_on_boot=%d", app_params.usb_mode, usb_mouse_start_on_boot);
 
   // ----- Wi-Fi init
-#ifdef CONFIG_ESP32_WIFI_ENABLED
+#if defined(CONFIG_ESP_WIFI_ENABLED) && CONFIG_ESP_WIFI_ENABLED
   net.is_init = false;
   net.state = NETWORK_CLOSED;
 
@@ -158,17 +158,17 @@ extern "C" void app_main()
   // ----- LibXM init
   initialize_xm();
 
-  // ----- HTTP init
+  // ----- Network client init
+#if defined(CONFIG_ESP_WIFI_ENABLED) && CONFIG_ESP_WIFI_ENABLED
   http_init();
   log_sram_used("http_init");
 
-  // ----- Gopher init
   gopher_init();
   log_sram_used("gopher_init");
 
-  // ----- Stream init
   stream_init();
   log_sram_used("stream_init");
+#endif
   
   // ----- SDMMC init
 #if defined(CONFIG_IDF_TARGET_ESP32P4)

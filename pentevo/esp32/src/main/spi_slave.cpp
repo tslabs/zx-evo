@@ -21,12 +21,11 @@
 #include "esp_spi_defs.h"
 #include "helper.h"
 #include "mem_obj.h"
-#include "xm.h"
-#include "xm_cpp.h"
+#include "tracker.h"
 #include "stats.h"
 #include "spi_slave.h"
 
-#ifdef CONFIG_ESP32_WIFI_ENABLED
+#if defined(CONFIG_ESP_WIFI_ENABLED) && CONFIG_ESP_WIFI_ENABLED
 #include "wifi.h"
 #include "http_client.h"
 #endif
@@ -37,6 +36,8 @@
 #define GPIO_SCLK     21
 #define GPIO_MOSI     20
 #define GPIO_MISO     22
+#define GPIO_FT_IO2   26
+#define GPIO_FT_IO3   27
 #else
 #define GPIO_CS       10
 #define GPIO_SCLK     12
@@ -424,6 +425,101 @@ esp_err_t spi_master_queue_read_buf(u8 cmd, u16 addr, void *rx_data, size_t size
 
   spi_transaction_t *ret = NULL;
   return spi_device_get_trans_result(g_master_dev, &ret, portMAX_DELAY);
+}
+
+esp_err_t spi_master_prep_host_cmd_trans(spi_transaction_ext_t *t, u8 cmd, u8 param)
+{
+  if (!t) return ESP_ERR_INVALID_ARG;
+
+  memset(t, 0, sizeof(*t));
+
+  if (g_master_data_lines == 1)
+  {
+    t->base.flags = SPI_TRANS_VARIABLE_CMD
+                   | SPI_TRANS_VARIABLE_ADDR;
+  }
+  else if (g_master_data_lines == 2 || g_master_data_lines == 4)
+  {
+    u32 mode_flag = (g_master_data_lines == 4) ? SPI_TRANS_MODE_QIO : SPI_TRANS_MODE_DIO;
+
+    t->base.flags = mode_flag
+                   | SPI_TRANS_MULTILINE_CMD
+                   | SPI_TRANS_MULTILINE_ADDR
+                   | SPI_TRANS_VARIABLE_CMD
+                   | SPI_TRANS_VARIABLE_ADDR;
+  }
+  else
+    return ESP_ERR_NOT_SUPPORTED;
+
+  t->command_bits = 8;
+  t->address_bits = 16;
+  t->base.cmd = cmd;
+  t->base.addr = ((u32)param << 8);
+  t->base.length = 0;
+
+  return ESP_OK;
+}
+
+esp_err_t spi_master_write_inline(u8 cmd, u16 addr, u32 value, size_t size)
+{
+  if (!g_master_dev) return ESP_ERR_INVALID_STATE;
+  if (spi_master_bg_is_busy()) return ESP_ERR_INVALID_STATE;
+  if (size != 1 && size != 2 && size != 4) return ESP_ERR_INVALID_ARG;
+
+  spi_transaction_ext_t t = {};
+  esp_err_t err = spi_master_prep_write_trans(&t, cmd, addr, NULL, size);
+  if (err != ESP_OK) return err;
+
+  t.base.flags |= SPI_TRANS_USE_TXDATA;
+  t.base.tx_buffer = NULL;
+  t.base.tx_data[0] = (u8)(value & 0xFF);
+  t.base.tx_data[1] = (u8)((value >> 8) & 0xFF);
+  t.base.tx_data[2] = (u8)((value >> 16) & 0xFF);
+  t.base.tx_data[3] = (u8)((value >> 24) & 0xFF);
+
+  return spi_device_polling_transmit(g_master_dev, &t.base);
+}
+
+esp_err_t spi_master_read_inline(u8 cmd, u16 addr, u32 *value, size_t size)
+{
+  if (!g_master_dev) return ESP_ERR_INVALID_STATE;
+  if (spi_master_bg_is_busy()) return ESP_ERR_INVALID_STATE;
+  if (!value) return ESP_ERR_INVALID_ARG;
+  if (size != 1 && size != 2 && size != 4) return ESP_ERR_INVALID_ARG;
+
+  spi_transaction_ext_t t = {};
+  esp_err_t err = spi_master_prep_read_trans(&t, cmd, addr, NULL, size);
+  if (err != ESP_OK) return err;
+
+  t.base.flags |= SPI_TRANS_USE_RXDATA;
+  t.base.rx_buffer = NULL;
+
+  err = spi_device_polling_transmit(g_master_dev, &t.base);
+  if (err != ESP_OK) return err;
+
+  u32 out = t.base.rx_data[0];
+  if (size >= 2) out |= ((u32)t.base.rx_data[1] << 8);
+  if (size >= 4)
+  {
+    out |= ((u32)t.base.rx_data[2] << 16);
+    out |= ((u32)t.base.rx_data[3] << 24);
+  }
+
+  *value = out;
+
+  return ESP_OK;
+}
+
+esp_err_t spi_master_host_cmd_inline(u8 cmd, u8 param)
+{
+  if (!g_master_dev) return ESP_ERR_INVALID_STATE;
+  if (spi_master_bg_is_busy()) return ESP_ERR_INVALID_STATE;
+
+  spi_transaction_ext_t t = {};
+  esp_err_t err = spi_master_prep_host_cmd_trans(&t, cmd, param);
+  if (err != ESP_OK) return err;
+
+  return spi_device_polling_transmit(g_master_dev, &t.base);
 }
 
 esp_err_t spi_master_xfer(void *tx_data, void *rx_data, size_t size)
@@ -1070,6 +1166,11 @@ void IRAM_ATTR command()
               size = sizeof(CP_STRING) - 1;
             break;
 
+            case GET_INFO_API:
+              ptr = API_STRING;
+              size = sizeof(API_STRING) - 1;
+            break;
+
             case GET_INFO_BUILD:
               ptr = __DATE__ " " __TIME__;
               size = sizeof(__DATE__ " " __TIME__) - 1;
@@ -1093,6 +1194,19 @@ void IRAM_ATTR command()
         }
         break;
 
+        case ESP_CMD_GET_VER:
+        {
+          wr_reg8(ESP_REG_API, API_VER);
+          wr_reg8(ESP_REG_FEAT, FEAT_VER & 0xff);
+          wr_reg8(ESP_REG_FEAT + 1, (FEAT_VER >> 8) & 0xff);
+          wr_reg8(ESP_REG_VER0, PROD_VER0);
+          wr_reg8(ESP_REG_VER1, PROD_VER1);
+          wr_reg8(ESP_REG_VER2, PROD_VER2);
+          set_status(ESP_ST_READY);
+        }
+        break;
+
+#if defined(CONFIG_ESP_WIFI_ENABLED) && CONFIG_ESP_WIFI_ENABLED
         case ESP_CMD_GET_NETSTATE:
           wr_reg8(ESP_REG_NETSTATE, net.state);
           set_status(ESP_ST_READY);
@@ -1103,7 +1217,7 @@ void IRAM_ATTR command()
           set_status(ESP_ST_READY);
         break;
 
-	    case ESP_CMD_SET_URL:
+        case ESP_CMD_SET_URL:
         {
           size_t size = rd_reg32(ESP_REG_DATA_SIZE);
 
@@ -1169,74 +1283,126 @@ void IRAM_ATTR command()
         case ESP_CMD_WSCAN:
           put_helper_isr(TASK_WSCAN);
         break;
+#else
+        case ESP_CMD_GET_NETSTATE:
+        case ESP_CMD_WSCAN:
+        case ESP_CMD_SET_AP_NAME:
+        case ESP_CMD_SET_AP_PWD:
+        case ESP_CMD_AP_CONNECT:
+        case ESP_CMD_AP_DISCONNECT:
+        case ESP_CMD_SET_URL:
+        case ESP_CMD_GET_IP:
+          set_status(ESP_ERR_INV_COMMAND);
+        break;
+#endif
 
         case ESP_CMD_XM_STREAM_LOAD:
-        {
-          size_t size = rd_reg32(ESP_REG_DATA_SIZE);
-
-          if (!size)
-          {
-            set_status(ESP_ERR_INV_SIZE);
-            break;
-          }
-
-          esp_err_t err = xm_host_stream_start(size);
-          if (err != ESP_OK)
-          {
-            if (err == ESP_ERR_NO_MEM)
-              set_status(ESP_ERR_OUT_OF_MEMORY);
-            else if (err == ESP_ERR_INVALID_SIZE)
-              set_status(ESP_ERR_INV_SIZE);
-            else
-              set_status(ESP_ERR_INV_STATE);
-            break;
-          }
-        }
+          put_helper_isr(TASK_XM_STREAM_LOAD);
         break;
 
-        case ESP_CMD_XM_INIT:
+        case ESP_CMD_MOD_STREAM_LOAD:
+          put_helper_isr(TASK_MOD_STREAM_LOAD);
+        break;
+
+        case ESP_CMD_S3M_STREAM_LOAD:
+          put_helper_isr(TASK_S3M_STREAM_LOAD);
+        break;
+
+        case ESP_CMD_BREAK:
+          put_helper_isr(TASK_TRACK_STREAM_BREAK);
+        break;
+
+        case ESP_CMD_TRACK_INIT:
         {
           int handle = rd_reg8(ESP_REG_OBJ_HANDLE);
 
-          if (!check_handle(handle) || !((mem_obj[handle].type == OBJ_TYPE_XM) || (mem_obj[handle].type == OBJ_TYPE_XMC)))
+          if (!check_handle(handle) || (mem_obj[handle].type != OBJ_TYPE_XM && mem_obj[handle].type != OBJ_TYPE_MOD && mem_obj[handle].type != OBJ_TYPE_S3M))
+          {
+            set_status(ESP_ERR_INV_HANDLE);
+            break;
+          }
+
+          TRACK_TASK t;
+          t.handle = handle;
+          t.task = TRACK_TASK_INIT;
+          xQueueSendFromISR(xm_queue, &t, 0);
+          portYIELD_FROM_ISR();
+        }
+        break;
+
+        case ESP_CMD_TRACK_PLAY:
+        {
+          int handle = rd_reg8(ESP_REG_OBJ_HANDLE);
+          int valid = check_handle(handle);
+
+          if (!valid || (mem_obj[handle].type != OBJ_TYPE_XMC && mem_obj[handle].type != OBJ_TYPE_MDC && mem_obj[handle].type != OBJ_TYPE_S3C))
           {
             set_status(ESP_ERR_INV_XM_HANDLE);
             break;
           }
 
-          XM_TASK t;
+          TRACK_TASK t;
           t.handle = handle;
-          t.task = XM_TASK_INIT;
+          t.task = TRACK_TASK_PLAY;
           xQueueSendFromISR(xm_queue, &t, 0);
           portYIELD_FROM_ISR();
         }
         break;
 
-        case ESP_CMD_XM_PLAY:
+        case ESP_CMD_TRACK_STOP:
+        {
+          TRACK_TASK t = {};
+          t.task = TRACK_TASK_STOP;
+          t.handle = -1;
+          xQueueSendFromISR(xm_queue, &t, 0);
+          portYIELD_FROM_ISR();
+        }
+        break;
+
+        case ESP_CMD_TRACK_RESET:
         {
           int handle = rd_reg8(ESP_REG_OBJ_HANDLE);
 
-          if (!check_handle(handle) || (mem_obj[handle].type != OBJ_TYPE_XMC))
+          if (!check_handle(handle) || (mem_obj[handle].type != OBJ_TYPE_XMC && mem_obj[handle].type != OBJ_TYPE_MDC && mem_obj[handle].type != OBJ_TYPE_S3C))
           {
             set_status(ESP_ERR_INV_XM_HANDLE);
             break;
           }
 
-          XM_TASK t;
+          TRACK_TASK t = {};
           t.handle = handle;
-          t.task = XM_TASK_PLAY;
+          t.task = TRACK_TASK_RESET;
           xQueueSendFromISR(xm_queue, &t, 0);
           portYIELD_FROM_ISR();
         }
         break;
 
-        case ESP_CMD_XM_STOP:
-        {
-          XM_TASK t;
-          t.task = XM_TASK_STOP;
-          xQueueSendFromISR(xm_queue, &t, 0);
-          portYIELD_FROM_ISR();
-        }
+        case ESP_CMD_SFX_PLAY:
+          put_helper_isr(TASK_SFX_PLAY);
+        break;
+
+        case ESP_CMD_SFX_PLAY_EX:
+          put_helper_isr(TASK_SFX_PLAY_EX);
+        break;
+
+        case ESP_CMD_SFX_STOP:
+          put_helper_isr(TASK_SFX_STOP);
+        break;
+
+        case ESP_CMD_SFX_SET_PARAMS:
+          put_helper_isr(TASK_SFX_SET_PARAMS);
+        break;
+
+        case ESP_CMD_SFX_SET_VOLUME:
+          put_helper_isr(TASK_SFX_SET_VOLUME);
+        break;
+
+        case ESP_CMD_SFX_GET_STATE:
+          put_helper_isr(TASK_SFX_GET_STATE);
+        break;
+
+        case ESP_CMD_SFX_STOP_GROUP:
+          put_helper_isr(TASK_SFX_STOP_GROUP);
         break;
 
         case ESP_CMD_LOAD_ELF:
@@ -1275,6 +1441,12 @@ void IRAM_ATTR command()
           if (!check_handle(handle))
           {
             set_status(ESP_ERR_INV_HANDLE);
+            break;
+          }
+
+          if (!mem_obj_can_flat_rw(handle))
+          {
+            set_status(ESP_ERR_INV_OBJ_TYPE);
             break;
           }
 
@@ -1322,6 +1494,7 @@ void IRAM_ATTR command()
           put_helper_isr(TASK_UNZIP);
         break;
 
+#if defined(CONFIG_ESP_WIFI_ENABLED) && CONFIG_ESP_WIFI_ENABLED
         case ESP_CMD_HTTP_GET:
           put_helper_isr(TASK_HTTP_GET);
         break;
@@ -1353,6 +1526,18 @@ void IRAM_ATTR command()
         case ESP_CMD_STREAM_CLOSE:
           put_helper_isr(TASK_STREAM_CLOSE);
         break;
+#else
+        case ESP_CMD_HTTP_GET:
+        case ESP_CMD_HTTPS_GET:
+        case ESP_CMD_GOPHER_GET:
+        case ESP_CMD_HTTP_STREAM_START:
+        case ESP_CMD_HTTPS_STREAM_START:
+        case ESP_CMD_GOPHER_STREAM_START:
+        case ESP_CMD_STREAM_READ:
+        case ESP_CMD_STREAM_CLOSE:
+          set_status(ESP_ERR_INV_COMMAND);
+        break;
+#endif
 
         case ESP_CMD_GET_RND:
           put_txq_isr(DREQ_RND);
@@ -1451,11 +1636,10 @@ u32 IRAM_ATTR prepare_tx_data(u8 type, size_t size)
 
   switch (type)
   {
+#if defined(CONFIG_ESP_WIFI_ENABLED) && CONFIG_ESP_WIFI_ENABLED
     case DREQ_WSCAN:
     {
       int ptr = 0;
-
-#ifdef CONFIG_ESP32_WIFI_ENABLED
       auto num = wf_get_ap_num();
       data[ptr++] = num;    // number of APs
 
@@ -1478,12 +1662,12 @@ u32 IRAM_ATTR prepare_tx_data(u8 type, size_t size)
         memcpy(&data[ptr], ssid, len);    // SSID
         ptr += len;
       }
-#endif
 
       size = ptr;
       // printf("Data size %d\r\n", size);
     }
     break;
+#endif
 
     case DREQ_DATA:
     {
@@ -1525,6 +1709,7 @@ void IRAM_ATTR process_rx_data(u8 type, size_t size)
 {
   switch (type)
   {
+#if defined(CONFIG_ESP_WIFI_ENABLED) && CONFIG_ESP_WIFI_ENABLED
     case DREQ_URL:
     {
       if (!net.url)
@@ -1539,10 +1724,16 @@ void IRAM_ATTR process_rx_data(u8 type, size_t size)
       set_status(ESP_ST_READY);
     }
     break;
+#else
+    case DREQ_URL:
+      set_status(ESP_ERR_INV_COMMAND);
+    break;
+#endif
 
     case DREQ_DATA:
     {
       int handle = rd_reg8(ESP_REG_OBJ_HANDLE);
+
       u32 offset = rd_reg32(ESP_REG_DATA_OFFSET);
       u8 *addr = &((u8*)mem_obj[handle].addr)[offset];
       memcpy(addr, dma_buf, size);
@@ -1551,7 +1742,7 @@ void IRAM_ATTR process_rx_data(u8 type, size_t size)
     }
     break;
 
-    case DREQ_XM_STREAM:
+    case DREQ_TRACK_STREAM:
       xm_host_stream_process_rx_data(dma_buf, size);
     break;
 

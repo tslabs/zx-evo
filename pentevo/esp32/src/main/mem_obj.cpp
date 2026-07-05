@@ -12,8 +12,8 @@
 #include "spi_slave.h"
 #include "helper.h"
 #include "mem_obj.h"
-#include "xm.h"
-#include "xm_cpp.h"
+#include "tracker.h"
+#include "sfx.h"
 
 const char TAG[] = "mem_obj";
 
@@ -33,6 +33,22 @@ int check_handle(int h)
   return mem_obj[h].type != 0;
 }
 
+int mem_obj_can_flat_rw(int h)
+{
+  if (!check_handle(h)) return 0;
+
+  switch (mem_obj[h].type)
+  {
+    case OBJ_TYPE_LIB:
+    case OBJ_TYPE_XMC:
+    case OBJ_TYPE_MDC:
+    case OBJ_TYPE_S3C:
+      return 0;
+  }
+
+  return 1;
+}
+
 int delete_obj(int h)
 {
   switch (mem_obj[h].type)
@@ -49,11 +65,35 @@ int delete_obj(int h)
     }
 
     case OBJ_TYPE_XMC:
-      if (mem_obj[h].state == XM_OBJ_ST_PLAYING)
+    case OBJ_TYPE_MDC:
+    case OBJ_TYPE_S3C:
+      if (mem_obj[h].state == TRACK_OBJ_ST_PLAYING)
       {
-        ESP_LOGE(TAG, "Cannot delete playing XM object: handle %02X", h);
+        ESP_LOGE(TAG, "Cannot delete playing tracker object: handle %02X", h);
         return 0;
       }
+
+      if (mem_obj[h].addr)
+      {
+        xm_free_context((xm_context_t*)mem_obj[h].addr);
+        memset(&mem_obj[h], 0, sizeof(MEM_OBJ));
+        return 1;
+      }
+    break;
+
+    case OBJ_TYPE_WAV:
+    {
+      u8 old_state = mem_obj[h].state;
+      mem_obj[h].state = OBJ_ST_DELETING;
+
+      esp_err_t err = sfx_stop_handle_sync(h);
+      if (err != ESP_OK)
+      {
+        mem_obj[h].state = old_state;
+        ESP_LOGE(TAG, "Cannot stop WAV object users before delete: handle %02X, err %s", h, esp_err_to_name(err));
+        return 0;
+      }
+    }
     break;
   }
 
@@ -88,6 +128,10 @@ int attach_obj(void *addr, int obj_size, int obj_type)
   {
     case OBJ_TYPE_XM:
     case OBJ_TYPE_XMC:
+    case OBJ_TYPE_MOD:
+    case OBJ_TYPE_MDC:
+    case OBJ_TYPE_S3M:
+    case OBJ_TYPE_S3C:
     case OBJ_TYPE_WAV:
     case OBJ_TYPE_DATA:
     case OBJ_TYPE_ELF:
@@ -100,6 +144,24 @@ int attach_obj(void *addr, int obj_size, int obj_type)
       ESP_LOGE(TAG, "Cannot attach unknown type object!");
       set_status(ESP_ERR_INV_OBJ_TYPE);
       return -1;
+  }
+
+  if (obj_type == OBJ_TYPE_XMC || obj_type == OBJ_TYPE_MDC || obj_type == OBJ_TYPE_S3C)
+  {
+    xm_context_t *ctx = (xm_context_t*)addr;
+
+    if (!tracker_context_has_registered_segments(ctx))
+    {
+      size_t context_size = ctx->ctx_size ? ctx->ctx_size : (size_t)obj_size;
+      if (!ctx->ctx_size) ctx->ctx_size = context_size;
+
+      if (!tracker_context_register_segment(ctx, addr, context_size, TRACKER_CONTEXT_SEG_CONTEXT))
+      {
+        set_status(ESP_ERR_INV_STATE);
+        ESP_LOGE(TAG, "Cannot attach tracker object without segment ownership!");
+        return -1;
+      }
+    }
   }
 
   mem_obj[handle].addr = addr;
@@ -126,7 +188,8 @@ int make_obj(int obj_size, int obj_type)
   switch (obj_type)
   {
     case OBJ_TYPE_XM:
-    case OBJ_TYPE_XMC:
+    case OBJ_TYPE_MOD:
+    case OBJ_TYPE_S3M:
     case OBJ_TYPE_WAV:
     case OBJ_TYPE_DATA:
     case OBJ_TYPE_ELF:

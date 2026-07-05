@@ -147,25 +147,34 @@ typedef struct
 u32 *ft_ccmdb = nullptr;
 u16 ft_ccmdp = 0;
 EXT_RAM_BSS_ATTR u8 cmdl[8192];
+
+#define FT_F_DL_MAX_DWORDS      (8192 / 4)
+
+EXT_RAM_BSS_ATTR u32 ft_f_dl[FT_F_DL_MAX_DWORDS];
+EXT_RAM_BSS_ATTR u16 ft_f_dl_words[FT_F_DL_MAX_DWORDS];
+u16 ft_f_dl_count = 0;
+u16 ft_f_dl_items = 0;
+u8 ft_f_dl_ready = 0;
+
 u8 ft_spi_width = 2;
 u32 ft_spi_freq_hz = 20000000UL;
 int ft_current_mode = -1;
 
-const FT_MODE ft_modes[] =                         //  |  # | visible  | Fpll MHz | Fpix MHz | clocks/line | lines/frame | line kHz | frame Hz |
-{                                                  //  | -- | -------- | -------- | -------- | ----------- | ----------- | -------- | -------- |
-  {6,  2,  16,  96,  48,  640, 11, 2, 31,  480},   //  |  0 | 640x480  |       48 |       24 |         800 |         524 |   30.000 |   57.252 |
-  {8,  2,  24,  40, 128,  640,  9, 3, 28,  480},   //  |  1 | 640x480  |       64 |       32 |         832 |         520 |   38.462 |   73.964 |
-  {8,  2,  16,  96,  48,  640, 11, 2, 31,  480},   //  |  2 | 640x480  |       64 |       32 |         800 |         524 |   40.000 |   76.336 |
-  {5,  1,  40, 128,  88,  800,  1, 4, 23,  600},   //  |  3 | 800x600  |       40 |       40 |        1056 |         628 |   37.879 |   60.317 |
-  {10, 2,  40, 128,  88,  800,  1, 4, 23,  600},   //  |  4 | 800x600  |       80 |       40 |        1056 |         628 |   37.879 |   60.317 |
-  {6,  1,  56, 120,  64,  800, 37, 6, 23,  600},   //  |  5 | 800x600  |       48 |       48 |        1040 |         666 |   46.154 |   69.300 |
-  {7,  1,  32,  64, 152,  800,  1, 3, 27,  600},   //  |  6 | 800x600  |       56 |       56 |        1048 |         631 |   53.435 |   84.683 |
-  {8,  1,  24, 136, 160, 1024,  3, 6, 29,  768},   //  |  7 | 1024x768 |       64 |       64 |        1344 |         806 |   47.619 |   59.081 |
-  {9,  1,  24, 136, 144, 1024,  3, 6, 29,  768},   //  |  8 | 1024x768 |       72 |       72 |        1328 |         806 |   54.217 |   67.267 |
-  {10, 1,  16,  96, 176, 1024,  1, 3, 28,  768},   //  |  9 | 1024x768 |       80 |       80 |        1312 |         800 |   60.976 |   76.220 |
-  {7,  1,  24,  56, 124,  640,  1, 3, 38, 1024},   //  | 10 | 640x1024 |       56 |       56 |         844 |        1066 |   66.351 |   62.243 |
-  {9,  1, 110,  40, 220, 1280,  5, 5, 20,  720},   //  | 11 | 1280x720 |       72 |       72 |        1650 |         750 |   43.636 |   58.182 |
-  {9,  1,  93,  40, 187, 1280,  5, 5, 20,  720},   //  | 12 | 1280x720 |       72 |       72 |        1600 |         750 |   45.000 |   60.000 |
+const FT_MODE ft_modes[] =                         //  |  # |  visible | Fpll MHz | Fpix MHz | clocks/dl | clocks/line | lines/frame | line kHz | frame Hz |
+{                                                  //  | -- | -------- | -------- | -------- | --------- | ----------- | ----------- | -------- | -------- |
+  {6,  2,  16,  96,  48,  640, 11, 2, 31,  480},   //  |  0 | 640x480  |       48 |       24 |      1600 |         800 |         524 |   30.000 |   57.252 |
+  {8,  2,  24,  40, 128,  640,  9, 3, 28,  480},   //  |  1 | 640x480  |       64 |       32 |      1664 |         832 |         520 |   38.462 |   73.964 |
+  {8,  2,  16,  96,  48,  640, 11, 2, 31,  480},   //  |  2 | 640x480  |       64 |       32 |      1600 |         800 |         524 |   40.000 |   76.336 |
+  {5,  1,  40, 128,  88,  800,  1, 4, 23,  600},   //  |  3 | 800x600  |       40 |       40 |      1056 |        1056 |         628 |   37.879 |   60.317 |
+  {10, 2,  40, 128,  88,  800,  1, 4, 23,  600},   //  |  4 | 800x600  |       80 |       40 |      2112 |        1056 |         628 |   37.879 |   60.317 |
+  {6,  1,  56, 120,  64,  800, 37, 6, 23,  600},   //  |  5 | 800x600  |       48 |       48 |      1040 |        1040 |         666 |   46.154 |   69.300 |
+  {7,  1,  32,  64, 152,  800,  1, 3, 27,  600},   //  |  6 | 800x600  |       56 |       56 |      1048 |        1048 |         631 |   53.435 |   84.683 |
+  {8,  1,  24, 136, 160, 1024,  3, 6, 29,  768},   //  |  7 | 1024x768 |       64 |       64 |      1344 |        1344 |         806 |   47.619 |   59.081 |
+  {9,  1,  24, 136, 144, 1024,  3, 6, 29,  768},   //  |  8 | 1024x768 |       72 |       72 |      1328 |        1328 |         806 |   54.217 |   67.267 |
+  {10, 1,  16,  96, 176, 1024,  1, 3, 28,  768},   //  |  9 | 1024x768 |       80 |       80 |      1312 |        1312 |         800 |   60.976 |   76.220 |
+  {7,  1,  24,  56, 124,  640,  1, 3, 38, 1024},   //  | 10 | 640x1024 |       56 |       56 |       844 |         844 |        1066 |   66.351 |   62.243 |
+  {9,  1, 110,  40, 220, 1280,  5, 5, 20,  720},   //  | 11 | 1280x720 |       72 |       72 |      1650 |        1650 |         750 |   43.636 |   58.182 |
+  {9,  1,  93,  40, 187, 1280,  5, 5, 20,  720},   //  | 12 | 1280x720 |       72 |       72 |      1600 |        1600 |         750 |   45.000 |   60.000 |
 };
 
 const u16 sintab[257] =
@@ -460,6 +469,11 @@ void ft_ColorRGB32(u32 rgb)
 void ft_Display(void)
 {
   ft_ccmd(0UL << 24);
+}
+
+void ft_Nop()
+{
+  ft_ccmd(0x2DUL << 24);
 }
 
 void ft_End(void)
@@ -1170,8 +1184,7 @@ inline void wr32le(u8 *p, u32 v)
 
 esp_err_t ft_cmdp(u8 a, u8 v)
 {
-  u8 tx[3] = { a, v, 0 };
-  return ft_xfer(tx, nullptr, sizeof(tx));
+  return spi_master_host_cmd_inline(a, v);
 }
 
 esp_err_t ft_cmd(u8 a)
@@ -1181,87 +1194,38 @@ esp_err_t ft_cmd(u8 a)
 
 void ft_wreg8(u32 a, u8 v)
 {
-  u8 tx[4];
-  tx[0] = (u8)((FT_RAM_REG >> 16) | 0x80);
-  tx[1] = (u8)(a >> 8);
-  tx[2] = (u8)(a & 0xFF);
-  tx[3] = v;
-  ft_xfer(tx, nullptr, sizeof(tx));
+  spi_master_write_inline((u8)((FT_RAM_REG >> 16) | 0x80), (u16)a, v, 1);
 }
 
 void ft_wreg16(u32 a, u16 v)
 {
-  u8 tx[5];
-  tx[0] = (u8)((FT_RAM_REG >> 16) | 0x80);
-  tx[1] = (u8)(a >> 8);
-  tx[2] = (u8)(a & 0xFF);
-  wr16le(&tx[3], v);
-  ft_xfer(tx, nullptr, sizeof(tx));
+  spi_master_write_inline((u8)((FT_RAM_REG >> 16) | 0x80), (u16)a, v, 2);
 }
 
 void ft_wreg32(u32 a, u32 v)
 {
-  u8 tx[7];
-  tx[0] = (u8)((FT_RAM_REG >> 16) | 0x80);
-  tx[1] = (u8)(a >> 8);
-  tx[2] = (u8)(a & 0xFF);
-  wr32le(&tx[3], v);
-  ft_xfer(tx, nullptr, sizeof(tx));
+  spi_master_write_inline((u8)((FT_RAM_REG >> 16) | 0x80), (u16)a, v, 4);
 }
 
 u8 ft_rreg8(u32 a)
 {
-  u8 tx[5] =
-  {
-    (u8)(FT_RAM_REG >> 16),
-    (u8)(a >> 8),
-    (u8)(a & 0xFF),
-    0,
-    0
-  };
-  u8 rx[5] = {};
-
-  ft_xfer(tx, rx, sizeof(tx));
-
-  return rx[4];
+  u32 v = 0;
+  spi_master_read_inline((u8)(FT_RAM_REG >> 16), (u16)a, &v, 1);
+  return (u8)v;
 }
 
 u16 ft_rreg16(u32 a)
 {
-  u8 tx[6] =
-  {
-    (u8)(FT_RAM_REG >> 16),
-    (u8)(a >> 8),
-    (u8)(a & 0xFF),
-    0,
-    0,
-    0
-  };
-  u8 rx[6] = {};
-
-  ft_xfer(tx, rx, sizeof(tx));
-
-  return (u16)rx[4] | ((u16)rx[5] << 8);
+  u32 v = 0;
+  spi_master_read_inline((u8)(FT_RAM_REG >> 16), (u16)a, &v, 2);
+  return (u16)v;
 }
 
 u32 ft_rreg32(u32 a)
 {
-  u8 tx[8] =
-  {
-    (u8)(FT_RAM_REG >> 16),
-    (u8)(a >> 8),
-    (u8)(a & 0xFF),
-    0,
-    0,
-    0,
-    0,
-    0
-  };
-  u8 rx[8] = {};
-
-  ft_xfer(tx, rx, sizeof(tx));
-
-  return (u32)rx[4] | ((u32)rx[5] << 8) | ((u32)rx[6] << 16) | ((u32)rx[7] << 24);
+  u32 v = 0;
+  spi_master_read_inline((u8)(FT_RAM_REG >> 16), (u16)a, &v, 4);
+  return v;
 }
 
 esp_err_t ft_write(const void *addr, u32 ft_addr, u32 size)
@@ -5768,6 +5732,10 @@ int ft_dl_print_word(FT_DL_DECODE_CONTEXT *ctx, u32 line, u32 w)
     case 44:
       ft_dl_print_fixed_cmd_1(line, "VERTEX_TRANSLATE_Y", ft_dl_sx(w & 131071UL, 17), 4);
       return 0;
+
+    case 45:
+      printf("%04lX NOP()\r\n", (unsigned long)line);
+      return 0;
   }
 
   printf("%04lX UNKNOWN(0x%08lX)\r\n", (unsigned long)line, (unsigned long)w);
@@ -5981,6 +5949,2247 @@ int ft_dl_cmd(int argc, char **argv)
   return 0;
 }
 
+typedef struct
+{
+  const char *name;
+  u32 value;
+}
+FT_F_VALUE_DEF;
+
+typedef struct
+{
+  const char *name;
+  const char *aliases;
+  u8 id;
+  u8 min_args;
+  u8 max_args;
+}
+FT_F_CMD_DEF;
+
+enum
+{
+  FT_F_ALPHA_FUNC = 0,
+  FT_F_BEGIN,
+  FT_F_BITMAPS_CMD,
+  FT_F_POINTS_CMD,
+  FT_F_LINES_CMD,
+  FT_F_LINE_STRIP_CMD,
+  FT_F_EDGE_STRIP_R_CMD,
+  FT_F_EDGE_STRIP_L_CMD,
+  FT_F_EDGE_STRIP_A_CMD,
+  FT_F_EDGE_STRIP_B_CMD,
+  FT_F_RECTS_CMD,
+  FT_F_BITMAP_HANDLE,
+  FT_F_BITMAP_LAYOUT,
+  FT_F_BITMAP_SIZE,
+  FT_F_BITMAP_SOURCE,
+  FT_F_BITMAP_TRANSFORM_A,
+  FT_F_BITMAP_TRANSFORM_B,
+  FT_F_BITMAP_TRANSFORM_C,
+  FT_F_BITMAP_TRANSFORM_D,
+  FT_F_BITMAP_TRANSFORM_E,
+  FT_F_BITMAP_TRANSFORM_F,
+  FT_F_BLEND_FUNC,
+  FT_F_CALL,
+  FT_F_CELL,
+  FT_F_CLEAR_COLOR_A,
+  FT_F_CLEAR_COLOR_RGB,
+  FT_F_CLEAR,
+  FT_F_CLEAR_ALL,
+  FT_F_CLEAR_STENCIL,
+  FT_F_CLEAR_TAG,
+  FT_F_COLOR_A,
+  FT_F_COLOR_MASK,
+  FT_F_COLOR_RGB,
+  FT_F_NOP,
+  FT_F_DISPLAY,
+  FT_F_END,
+  FT_F_JUMP,
+  FT_F_LINE_WIDTH,
+  FT_F_MACRO,
+  FT_F_PALETTE_SOURCE,
+  FT_F_POINT_SIZE,
+  FT_F_RESTORE_CONTEXT,
+  FT_F_RETURN,
+  FT_F_SAVE_CONTEXT,
+  FT_F_SCISSOR_SIZE,
+  FT_F_SCISSOR_XY,
+  FT_F_STENCIL_FUNC,
+  FT_F_STENCIL_MASK,
+  FT_F_STENCIL_OP,
+  FT_F_TAG_MASK,
+  FT_F_TAG,
+  FT_F_VERTEX_2F,
+  FT_F_VERTEX_2II,
+  FT_F_VERTEX_FORMAT,
+  FT_F_VERTEX_TRANSLATE_X,
+  FT_F_VERTEX_TRANSLATE_Y
+};
+
+const FT_F_VALUE_DEF ft_f_values[] =
+{
+  {"bitmaps", FT_BITMAPS},            {"b", FT_BITMAPS},
+  {"points", FT_POINTS},              {"p", FT_POINTS},
+  {"rects", FT_RECTS},                {"r", FT_RECTS},
+  {"lines", FT_LINES},                {"l", FT_LINES},
+  {"line_strip", FT_LINE_STRIP},      {"ls", FT_LINE_STRIP},
+  {"edge_strip_r", FT_EDGE_STRIP_R},  {"esr", FT_EDGE_STRIP_R},
+  {"edge_strip_l", FT_EDGE_STRIP_L},  {"esl", FT_EDGE_STRIP_L},
+  {"edge_strip_a", FT_EDGE_STRIP_A},  {"esa", FT_EDGE_STRIP_A},
+  {"edge_strip_b", FT_EDGE_STRIP_B},  {"esb", FT_EDGE_STRIP_B},
+  {"l1", FT_L1},
+  {"l2", FT_L2},
+  {"l4", FT_L4},
+  {"l8", FT_L8},
+  {"argb1555", FT_ARGB1555},
+  {"rgb332", FT_RGB332},
+  {"argb2", FT_ARGB2},
+  {"argb4", FT_ARGB4},
+  {"rgb565", FT_RGB565},
+  {"paletted565", FT_PALETTED565},    {"p565", FT_PALETTED565},
+  {"paletted4444", FT_PALETTED4444},  {"p4444", FT_PALETTED4444},
+  {"paletted8", FT_PALETTED8},        {"p8", FT_PALETTED8},
+  {"text8x8", FT_TEXT8X8},            {"t8", FT_TEXT8X8},
+  {"textvga", FT_TEXTVGA},            {"tv", FT_TEXTVGA},
+  {"bargraph", FT_BARGRAPH},
+  {"zero", FT_ZERO},
+  {"one", FT_ONE},
+  {"src_alpha", FT_SRC_ALPHA},
+  {"dst_alpha", FT_DST_ALPHA},
+  {"one_minus_src_alpha", FT_ONE_MINUS_SRC_ALPHA},
+  {"one_minus_dst_alpha", FT_ONE_MINUS_DST_ALPHA},
+  {"never", FT_NEVER},
+  {"less", FT_LESS},
+  {"lequal", FT_LEQUAL},
+  {"greater", FT_GREATER},
+  {"gequal", FT_GEQUAL},
+  {"equal", FT_EQUAL},
+  {"notequal", FT_NOTEQUAL},
+  {"always", FT_ALWAYS},
+  {"keep", FT_KEEP},
+  {"replace", FT_REPLACE},
+  {"incr", FT_INCR},
+  {"decr", FT_DECR},
+  {"invert", FT_INVERT},
+  {"incr_wrap", FT_INCR_WRAP},
+  {"decr_wrap", FT_DECR_WRAP},
+  {"repeat", FT_REPEAT},
+  {"border", FT_BORDER},
+  {"nearest", FT_NEAREST},
+  {"bilinear", FT_BILINEAR}
+};
+
+const FT_F_CMD_DEF ft_f_cmds[] =
+{
+  {"alpha_func", "af", FT_F_ALPHA_FUNC, 2, 2},
+  {"begin", "bg", FT_F_BEGIN, 1, 1},
+  {"bitmap", "b", FT_F_BITMAPS_CMD, 0, 0},
+  {"points", "p", FT_F_POINTS_CMD, 0, 0},
+  {"lines", "l", FT_F_LINES_CMD, 0, 0},
+  {"line_strip", "ls", FT_F_LINE_STRIP_CMD, 0, 0},
+  {"edge_strip_r", "esr", FT_F_EDGE_STRIP_R_CMD, 0, 0},
+  {"edge_strip_l", "esl", FT_F_EDGE_STRIP_L_CMD, 0, 0},
+  {"edge_strip_a", "esa", FT_F_EDGE_STRIP_A_CMD, 0, 0},
+  {"edge_strip_b", "esb", FT_F_EDGE_STRIP_B_CMD, 0, 0},
+  {"rects", "r", FT_F_RECTS_CMD, 0, 0},
+  {"bitmap_handle", "bh", FT_F_BITMAP_HANDLE, 1, 1},
+  {"bitmap_layout", "bl", FT_F_BITMAP_LAYOUT, 3, 3},
+  {"bitmap_size", "bsz", FT_F_BITMAP_SIZE, 5, 5},
+  {"bitmap_source", "bs", FT_F_BITMAP_SOURCE, 1, 1},
+  {"bitmap_transform_a", "bta", FT_F_BITMAP_TRANSFORM_A, 1, 1},
+  {"bitmap_transform_b", "btb", FT_F_BITMAP_TRANSFORM_B, 1, 1},
+  {"bitmap_transform_c", "btc", FT_F_BITMAP_TRANSFORM_C, 1, 1},
+  {"bitmap_transform_d", "btd", FT_F_BITMAP_TRANSFORM_D, 1, 1},
+  {"bitmap_transform_e", "bte", FT_F_BITMAP_TRANSFORM_E, 1, 1},
+  {"bitmap_transform_f", "btf", FT_F_BITMAP_TRANSFORM_F, 1, 1},
+  {"blend_func", "bf", FT_F_BLEND_FUNC, 2, 2},
+  {"call", "cal", FT_F_CALL, 1, 1},
+  {"cell", "c", FT_F_CELL, 1, 1},
+  {"clear_color_a", "cca", FT_F_CLEAR_COLOR_A, 1, 1},
+  {"clear_color_rgb", "ccr", FT_F_CLEAR_COLOR_RGB, 1, 3},
+  {"clear", "cl", FT_F_CLEAR, 3, 3},
+  {"clear_all", "cla", FT_F_CLEAR_ALL, 0, 0},
+  {"clear_stencil", "cls", FT_F_CLEAR_STENCIL, 1, 1},
+  {"clear_tag", "clt", FT_F_CLEAR_TAG, 1, 1},
+  {"color_a", "ca", FT_F_COLOR_A, 1, 1},
+  {"color_mask", "cm", FT_F_COLOR_MASK, 4, 4},
+  {"color_rgb", "cr", FT_F_COLOR_RGB, 1, 3},
+  {"nop", "n", FT_F_NOP, 0, 0},
+  {"display", "d", FT_F_DISPLAY, 0, 0},
+  {"end", "e", FT_F_END, 0, 0},
+  {"jump", "j", FT_F_JUMP, 1, 1},
+  {"line_width", "lw", FT_F_LINE_WIDTH, 1, 1},
+  {"macro", "m", FT_F_MACRO, 1, 1},
+  {"palette_source", "ps", FT_F_PALETTE_SOURCE, 1, 1},
+  {"point_size", "psz", FT_F_POINT_SIZE, 1, 1},
+  {"restore_context", "rc", FT_F_RESTORE_CONTEXT, 0, 0},
+  {"return", "ret", FT_F_RETURN, 0, 0},
+  {"save_context", "sc", FT_F_SAVE_CONTEXT, 0, 0},
+  {"scissor_size", "ssz", FT_F_SCISSOR_SIZE, 2, 2},
+  {"scissor_xy", "sxy", FT_F_SCISSOR_XY, 2, 2},
+  {"stencil_func", "sf", FT_F_STENCIL_FUNC, 3, 3},
+  {"stencil_mask", "sm", FT_F_STENCIL_MASK, 1, 1},
+  {"stencil_op", "so", FT_F_STENCIL_OP, 2, 2},
+  {"tag_mask", "tm", FT_F_TAG_MASK, 1, 1},
+  {"tag", "t", FT_F_TAG, 1, 1},
+  {"vertex_2f", "vf", FT_F_VERTEX_2F, 2, 2},
+  {"vertex_2ii", "vi", FT_F_VERTEX_2II, 4, 4},
+  {"vertex_format", "vfm", FT_F_VERTEX_FORMAT, 1, 1},
+  {"vertex_translate_x", "vtx", FT_F_VERTEX_TRANSLATE_X, 1, 1},
+  {"vertex_translate_y", "vty", FT_F_VERTEX_TRANSLATE_Y, 1, 1}
+};
+
+void ft_f_norm_name(const char *src, char *dst, size_t dst_size)
+{
+  size_t j = 0;
+
+  if (!dst_size) return;
+
+  while (src && *src && j + 1 < dst_size)
+  {
+    unsigned char c = (unsigned char)*src++;
+    if (c == '_' || c == '-' || c == ' ')
+      continue;
+
+    dst[j++] = (char)tolower(c);
+  }
+
+  dst[j] = 0;
+}
+
+int ft_f_name_equals(const char *a, const char *b)
+{
+  char na[48];
+  char nb[48];
+
+  ft_f_norm_name(a, na, sizeof(na));
+  ft_f_norm_name(b, nb, sizeof(nb));
+  return strcmp(na, nb) == 0;
+}
+
+int ft_f_name_starts_with(const char *name, const char *prefix)
+{
+  char n[48];
+  char p[48];
+
+  ft_f_norm_name(name, n, sizeof(n));
+  ft_f_norm_name(prefix, p, sizeof(p));
+  return p[0] && !strncmp(n, p, strlen(p));
+}
+
+int ft_f_alias_matches(const char *aliases, const char *name, int prefix)
+{
+  char item[48];
+  size_t j = 0;
+
+  if (!aliases) return 0;
+
+  while (1)
+  {
+    char c = *aliases++;
+    if (c && c != ' ')
+    {
+      if (j + 1 < sizeof(item))
+        item[j++] = c;
+      continue;
+    }
+
+    if (j)
+    {
+      item[j] = 0;
+      if (prefix)
+      {
+        if (ft_f_name_starts_with(item, name))
+          return 1;
+      }
+      else
+      {
+        if (ft_f_name_equals(item, name))
+          return 1;
+      }
+      j = 0;
+    }
+
+    if (!c) break;
+  }
+
+  return 0;
+}
+
+const FT_F_CMD_DEF *ft_f_find_cmd(const char *name, int *ambiguous)
+{
+  const FT_F_CMD_DEF *match = nullptr;
+  int matches = 0;
+
+  *ambiguous = 0;
+
+  for (size_t i = 0; i < sizeof(ft_f_cmds) / sizeof(ft_f_cmds[0]); ++i)
+  {
+    const FT_F_CMD_DEF *cmd = &ft_f_cmds[i];
+    if (ft_f_name_equals(cmd->name, name) || ft_f_alias_matches(cmd->aliases, name, 0))
+    {
+      match = cmd;
+      matches++;
+    }
+  }
+
+  if (matches == 1) return match;
+  if (matches > 1)
+  {
+    *ambiguous = 1;
+    return nullptr;
+  }
+
+  for (size_t i = 0; i < sizeof(ft_f_cmds) / sizeof(ft_f_cmds[0]); ++i)
+  {
+    const FT_F_CMD_DEF *cmd = &ft_f_cmds[i];
+    if (ft_f_name_starts_with(cmd->name, name) || ft_f_alias_matches(cmd->aliases, name, 1))
+    {
+      match = cmd;
+      matches++;
+    }
+  }
+
+  if (matches == 1) return match;
+  if (matches > 1) *ambiguous = 1;
+  return nullptr;
+}
+
+int ft_f_named_value(const char *name, u32 *out)
+{
+  for (size_t i = 0; i < sizeof(ft_f_values) / sizeof(ft_f_values[0]); ++i)
+  {
+    if (ft_f_name_equals(ft_f_values[i].name, name))
+    {
+      *out = ft_f_values[i].value;
+      return 1;
+    }
+  }
+
+  return 0;
+}
+
+u32 ft_f_parse_arg(const char *s, const char *name, int *ok)
+{
+  char buf[48];
+  size_t n;
+  char *endp = nullptr;
+  u32 named;
+
+  *ok = 0;
+
+  if (!s)
+  {
+    printf("Missing <%s>\r\n", name);
+    return 0;
+  }
+
+  n = strlen(s);
+  if (n >= sizeof(buf))
+  {
+    printf("Bad <%s>: %s\r\n", name, s);
+    return 0;
+  }
+
+  memcpy(buf, s, n + 1);
+
+  if (n && buf[n - 1] == ',')
+    buf[n - 1] = 0;
+
+  if (ft_f_named_value(buf, &named))
+  {
+    *ok = 1;
+    return named;
+  }
+
+  if (buf[0] == '-')
+  {
+    long long v = strtoll(buf, &endp, 0);
+    if (!endp || *endp || v < -2147483647LL - 1LL || v > 2147483647LL)
+    {
+      printf("Bad <%s>: %s\r\n", name, s);
+      return 0;
+    }
+
+    *ok = 1;
+    return (u32)(i32)v;
+  }
+
+  unsigned long long v = strtoull(buf, &endp, 0);
+  if (!endp || *endp || v > 0xFFFFFFFFULL)
+  {
+    printf("Bad <%s>: %s\r\n", name, s);
+    return 0;
+  }
+
+  *ok = 1;
+  return (u32)v;
+}
+
+int ft_f_parse_repeat(const char *s, u32 *repeat_count)
+{
+  char *endp = nullptr;
+  unsigned long long v;
+
+  if (!s || !*s) return 0;
+  if (!isdigit((unsigned char)s[0])) return 0;
+
+  v = strtoull(s, &endp, 0);
+  if (!endp || *endp || !v || v > 0xFFFFULL)
+  {
+    printf("Bad repeat count: %s\r\n", s);
+    return -1;
+  }
+
+  *repeat_count = (u32)v;
+  return 1;
+}
+
+void ft_f_emit(const FT_F_CMD_DEF *cmd, const u32 *a)
+{
+  switch (cmd->id)
+  {
+    case FT_F_ALPHA_FUNC:          ft_AlphaFunc((u8)a[0], (u8)a[1]); break;
+    case FT_F_BEGIN:               ft_Begin((u8)a[0]); break;
+    case FT_F_BITMAPS_CMD:         ft_Begin(FT_BITMAPS); break;
+    case FT_F_POINTS_CMD:          ft_Begin(FT_POINTS); break;
+    case FT_F_LINES_CMD:           ft_Begin(FT_LINES); break;
+    case FT_F_LINE_STRIP_CMD:      ft_Begin(FT_LINE_STRIP); break;
+    case FT_F_EDGE_STRIP_R_CMD:    ft_Begin(FT_EDGE_STRIP_R); break;
+    case FT_F_EDGE_STRIP_L_CMD:    ft_Begin(FT_EDGE_STRIP_L); break;
+    case FT_F_EDGE_STRIP_A_CMD:    ft_Begin(FT_EDGE_STRIP_A); break;
+    case FT_F_EDGE_STRIP_B_CMD:    ft_Begin(FT_EDGE_STRIP_B); break;
+    case FT_F_RECTS_CMD:           ft_Begin(FT_RECTS); break;
+    case FT_F_BITMAP_HANDLE:       ft_BitmapHandle((u8)a[0]); break;
+    case FT_F_BITMAP_LAYOUT:       ft_BitmapLayout((u8)a[0], (u16)a[1], (u16)a[2]); break;
+    case FT_F_BITMAP_SIZE:         ft_BitmapSize((u8)a[0], (u8)a[1], (u8)a[2], (u16)a[3], (u16)a[4]); break;
+    case FT_F_BITMAP_SOURCE:       ft_BitmapSource(a[0]); break;
+    case FT_F_BITMAP_TRANSFORM_A:  ft_BitmapTransformA((i32)a[0]); break;
+    case FT_F_BITMAP_TRANSFORM_B:  ft_BitmapTransformB((i32)a[0]); break;
+    case FT_F_BITMAP_TRANSFORM_C:  ft_BitmapTransformC((i32)a[0]); break;
+    case FT_F_BITMAP_TRANSFORM_D:  ft_BitmapTransformD((i32)a[0]); break;
+    case FT_F_BITMAP_TRANSFORM_E:  ft_BitmapTransformE((i32)a[0]); break;
+    case FT_F_BITMAP_TRANSFORM_F:  ft_BitmapTransformF((i32)a[0]); break;
+    case FT_F_BLEND_FUNC:          ft_BlendFunc((u8)a[0], (u8)a[1]); break;
+    case FT_F_CALL:                ft_Call((u16)a[0]); break;
+    case FT_F_CELL:                ft_Cell((u8)a[0]); break;
+    case FT_F_CLEAR_COLOR_A:       ft_ClearColorA((u8)a[0]); break;
+    case FT_F_CLEAR_COLOR_RGB:     ft_ClearColorRGB((u8)a[0], (u8)a[1], (u8)a[2]); break;
+    case FT_F_CLEAR:               ft_Clear((u8)a[0], (u8)a[1], (u8)a[2]); break;
+    case FT_F_CLEAR_ALL:           ft_ClearAll(); break;
+    case FT_F_CLEAR_STENCIL:       ft_ClearStencil((u8)a[0]); break;
+    case FT_F_CLEAR_TAG:           ft_ClearTag((u8)a[0]); break;
+    case FT_F_COLOR_A:             ft_ColorA((u8)a[0]); break;
+    case FT_F_COLOR_MASK:          ft_ColorMask((u8)a[0], (u8)a[1], (u8)a[2], (u8)a[3]); break;
+    case FT_F_COLOR_RGB:           ft_ColorRGB((u8)a[0], (u8)a[1], (u8)a[2]); break;
+    case FT_F_NOP:                 ft_Nop(); break;
+    case FT_F_DISPLAY:             ft_Display(); break;
+    case FT_F_END:                 ft_End(); break;
+    case FT_F_JUMP:                ft_Jump((u16)a[0]); break;
+    case FT_F_LINE_WIDTH:          ft_LineWidth((u16)a[0]); break;
+    case FT_F_MACRO:               ft_Macro((u8)a[0]); break;
+    case FT_F_PALETTE_SOURCE:      ft_PaletteSource(a[0]); break;
+    case FT_F_POINT_SIZE:          ft_PointSize((u16)a[0]); break;
+    case FT_F_RESTORE_CONTEXT:     ft_RestoreContext(); break;
+    case FT_F_RETURN:              ft_Return(); break;
+    case FT_F_SAVE_CONTEXT:        ft_SaveContext(); break;
+    case FT_F_SCISSOR_SIZE:        ft_ScissorSize((u16)a[0], (u16)a[1]); break;
+    case FT_F_SCISSOR_XY:          ft_ScissorXY((u16)a[0], (u16)a[1]); break;
+    case FT_F_STENCIL_FUNC:        ft_StencilFunc((u8)a[0], (u8)a[1], (u8)a[2]); break;
+    case FT_F_STENCIL_MASK:        ft_StencilMask((u8)a[0]); break;
+    case FT_F_STENCIL_OP:          ft_StencilOp((u8)a[0], (u8)a[1]); break;
+    case FT_F_TAG_MASK:            ft_TagMask((u8)a[0]); break;
+    case FT_F_TAG:                 ft_Tag((u8)a[0]); break;
+    case FT_F_VERTEX_2F:           ft_Vertex2f((i16)a[0], (i16)a[1]); break;
+    case FT_F_VERTEX_2II:          ft_Vertex2ii((u16)a[0], (u16)a[1], (u8)a[2], (u8)a[3]); break;
+    case FT_F_VERTEX_FORMAT:       ft_VertexFormat((u8)a[0]); break;
+    case FT_F_VERTEX_TRANSLATE_X:  ft_VertexTranslateX((i32)a[0]); break;
+    case FT_F_VERTEX_TRANSLATE_Y:  ft_VertexTranslateY((i32)a[0]); break;
+  }
+}
+
+void ft_f_emit_rgb(const FT_F_CMD_DEF *cmd, const u32 *a, u8 arg_count)
+{
+  if (cmd->id == FT_F_CLEAR_COLOR_RGB)
+  {
+    if (arg_count == 1)
+      ft_ClearColorRGB32(a[0]);
+    else
+      ft_ClearColorRGB((u8)a[0], (u8)a[1], (u8)a[2]);
+    return;
+  }
+
+  if (cmd->id == FT_F_COLOR_RGB)
+  {
+    if (arg_count == 1)
+      ft_ColorRGB32(a[0]);
+    else
+      ft_ColorRGB((u8)a[0], (u8)a[1], (u8)a[2]);
+    return;
+  }
+
+  ft_f_emit(cmd, a);
+}
+
+esp_err_t ft_f_apply()
+{
+  esp_err_t err;
+  esp_err_t err2;
+  u32 words = (u32)ft_f_dl_count + 1;
+
+  ft_f_dl[ft_f_dl_count] = 0;
+
+  err = ft_open_session();
+  if (err != ESP_OK)
+  {
+    printf("FT open failed: %d\r\n", (int)err);
+    return err;
+  }
+
+  err = ft_write_dl(ft_f_dl, words);
+  if (err == ESP_OK)
+  {
+    ft_wreg8(FT_REG_DLSWAP, FT_DLSWAP_FRAME);
+    err = ft_wait_swap(1000);
+  }
+
+  err2 = ft_close_session();
+  if (err == ESP_OK && err2 != ESP_OK)
+    err = err2;
+
+  return err;
+}
+
+void ft_f_reset()
+{
+  ft_f_dl_count = 0;
+  ft_f_dl_items = 0;
+  ft_f_dl_ready = 1;
+}
+
+int ft_f_pop()
+{
+  esp_err_t err;
+  u16 words;
+
+  if (!ft_f_dl_ready)
+    ft_f_reset();
+
+  if (!ft_f_dl_items)
+  {
+    printf("fd: no DL elements\r\n");
+    return 1;
+  }
+
+  words = ft_f_dl_words[ft_f_dl_items - 1];
+  if (!words || words > ft_f_dl_count)
+  {
+    ft_f_reset();
+    printf("fd: internal DL stack error, reset\r\n");
+    return 1;
+  }
+
+  ft_f_dl_count -= words;
+  ft_f_dl_items--;
+
+  err = ft_f_apply();
+  if (err != ESP_OK)
+  {
+    printf("fd failed: %s (0x%x)\r\n", esp_err_to_name(err), (unsigned int)err);
+    return 1;
+  }
+
+  printf("fd: removed last, dl_words=%u\r\n", (unsigned int)(ft_f_dl_count + 1));
+  return 0;
+}
+
+const char *ft_f_cmd_args(const FT_F_CMD_DEF *cmd)
+{
+  switch (cmd->id)
+  {
+    case FT_F_ALPHA_FUNC:         return "<func> <ref>";
+    case FT_F_BEGIN:              return "<prim>";
+    case FT_F_BITMAPS_CMD:        return "";
+    case FT_F_POINTS_CMD:         return "";
+    case FT_F_LINES_CMD:          return "";
+    case FT_F_LINE_STRIP_CMD:     return "";
+    case FT_F_EDGE_STRIP_R_CMD:   return "";
+    case FT_F_EDGE_STRIP_L_CMD:   return "";
+    case FT_F_EDGE_STRIP_A_CMD:   return "";
+    case FT_F_EDGE_STRIP_B_CMD:   return "";
+    case FT_F_RECTS_CMD:          return "";
+    case FT_F_BITMAP_HANDLE:      return "<handle>";
+    case FT_F_BITMAP_LAYOUT:      return "<format> <linestride> <height>";
+    case FT_F_BITMAP_SIZE:        return "<filter> <wrapx> <wrapy> <width> <height>";
+    case FT_F_BITMAP_SOURCE:      return "<addr>";
+    case FT_F_BITMAP_TRANSFORM_A: return "<a>";
+    case FT_F_BITMAP_TRANSFORM_B: return "<b>";
+    case FT_F_BITMAP_TRANSFORM_C: return "<c>";
+    case FT_F_BITMAP_TRANSFORM_D: return "<d>";
+    case FT_F_BITMAP_TRANSFORM_E: return "<e>";
+    case FT_F_BITMAP_TRANSFORM_F: return "<f>";
+    case FT_F_BLEND_FUNC:         return "<src> <dst>";
+    case FT_F_CALL:               return "<dest>";
+    case FT_F_CELL:               return "<cell>";
+    case FT_F_CLEAR_COLOR_A:      return "<alpha>";
+    case FT_F_CLEAR_COLOR_RGB:    return "<rgb> | <r> <g> <b>";
+    case FT_F_CLEAR:              return "<color> <stencil> <tag>";
+    case FT_F_CLEAR_ALL:          return "";
+    case FT_F_CLEAR_STENCIL:      return "<stencil>";
+    case FT_F_CLEAR_TAG:          return "<tag>";
+    case FT_F_COLOR_A:            return "<alpha>";
+    case FT_F_COLOR_MASK:         return "<r> <g> <b> <a>";
+    case FT_F_COLOR_RGB:          return "<rgb> | <r> <g> <b>";
+    case FT_F_NOP:                return "";
+    case FT_F_DISPLAY:            return "";
+    case FT_F_END:                return "";
+    case FT_F_JUMP:               return "<dest>";
+    case FT_F_LINE_WIDTH:         return "<width>";
+    case FT_F_MACRO:              return "<m>";
+    case FT_F_PALETTE_SOURCE:     return "<addr>";
+    case FT_F_POINT_SIZE:         return "<size>";
+    case FT_F_RESTORE_CONTEXT:    return "";
+    case FT_F_RETURN:             return "";
+    case FT_F_SAVE_CONTEXT:       return "";
+    case FT_F_SCISSOR_SIZE:       return "<width> <height>";
+    case FT_F_SCISSOR_XY:         return "<x> <y>";
+    case FT_F_STENCIL_FUNC:       return "<func> <ref> <mask>";
+    case FT_F_STENCIL_MASK:       return "<mask>";
+    case FT_F_STENCIL_OP:         return "<sfail> <spass>";
+    case FT_F_TAG_MASK:           return "<mask>";
+    case FT_F_TAG:                return "<tag>";
+    case FT_F_VERTEX_2F:          return "<x> <y>";
+    case FT_F_VERTEX_2II:         return "<x> <y> <handle> <cell>";
+    case FT_F_VERTEX_FORMAT:      return "<frac>";
+    case FT_F_VERTEX_TRANSLATE_X: return "<x>";
+    case FT_F_VERTEX_TRANSLATE_Y: return "<y>";
+  }
+
+  return "";
+}
+
+int ft_f_cmd_help()
+{
+  printf("Usage:\r\n");
+  printf("  fd                         show this help\r\n");
+  printf("  fd ;                       reset display list\r\n");
+  printf("  fd <dl-element> [args...]\r\n");
+  printf("  fd <dl-element>; <dl-element>; ...\r\n");
+  printf("  fd -                       remove last DL element\r\n");
+  printf("Values:\r\n");
+  printf("  primitives: bitmaps/b, points/p, lines/l, line_strip/ls, rects/r\r\n");
+  printf("  formats: l1 l2 l4 l8 rgb565 argb1555 rgb332 paletted565/p565 paletted8/p8\r\n");
+  printf("Commands:\r\n");
+
+  for (size_t i = 0; i < sizeof(ft_f_cmds) / sizeof(ft_f_cmds[0]); ++i)
+  {
+    const FT_F_CMD_DEF *cmd = &ft_f_cmds[i];
+    printf("  %-20s %-10s %s\r\n",
+           cmd->name,
+           cmd->aliases ? cmd->aliases : "",
+           ft_f_cmd_args(cmd));
+  }
+
+  return 0;
+}
+
+int ft_f_reset_cmd()
+{
+  esp_err_t err;
+
+  ft_f_reset();
+  err = ft_f_apply();
+  if (err != ESP_OK)
+  {
+    printf("fd failed: %s (0x%x)\r\n", esp_err_to_name(err), (unsigned int)err);
+    return 1;
+  }
+
+  printf("fd: reset, dl_words=%u\r\n", (unsigned int)(ft_f_dl_count + 1));
+  return 0;
+}
+
+int ft_f_exec(int argc, char **argv)
+{
+  const FT_F_CMD_DEF *cmd;
+  u32 args[8] = {};
+  u32 tmp[4] = {};
+  u32 repeat_count = 1;
+  u32 add_words;
+  u8 arg_count;
+  int ambiguous;
+  int cmd_arg = 1;
+  int repeat_parse;
+  esp_err_t err;
+
+  if (argc == 1 || (argc == 2 && (!strcmp(argv[1], "?") || !strcmp(argv[1], "help"))))
+    return ft_f_cmd_help();
+
+  if (!strcmp(argv[1], "-"))
+  {
+    if (argc != 2)
+    {
+      printf("Usage: fd -\r\n");
+      return 1;
+    }
+
+    return ft_f_pop();
+  }
+
+  repeat_parse = ft_f_parse_repeat(argv[1], &repeat_count);
+  if (repeat_parse < 0) return 1;
+  if (repeat_parse > 0)
+  {
+    if (argc < 3)
+    {
+      printf("Usage: fd [<num>] <dl-element> [<params>]\r\n");
+      return 1;
+    }
+
+    cmd_arg = 2;
+  }
+
+  cmd = ft_f_find_cmd(argv[cmd_arg], &ambiguous);
+  if (!cmd)
+  {
+    if (ambiguous)
+      printf("Ambiguous DL element: %s\r\n", argv[cmd_arg]);
+    else
+      printf("Unknown DL element: %s\r\n", argv[cmd_arg]);
+    return 1;
+  }
+
+  arg_count = (u8)(argc - cmd_arg - 1);
+  if (arg_count < cmd->min_args || arg_count > cmd->max_args ||
+      ((cmd->id == FT_F_CLEAR_COLOR_RGB || cmd->id == FT_F_COLOR_RGB) && arg_count == 2))
+  {
+    printf("Bad argument count for %s: %u, expected ", cmd->name, (unsigned int)arg_count);
+    if (cmd->min_args == cmd->max_args)
+      printf("%u\r\n", (unsigned int)cmd->min_args);
+    else
+      printf("%u..%u\r\n", (unsigned int)cmd->min_args, (unsigned int)cmd->max_args);
+    return 1;
+  }
+
+  for (u8 i = 0; i < arg_count; ++i)
+  {
+    char name[16];
+    int ok;
+
+    snprintf(name, sizeof(name), "arg%u", (unsigned int)i);
+    args[i] = ft_f_parse_arg(argv[cmd_arg + 1 + i], name, &ok);
+    if (!ok) return 1;
+  }
+
+  if (!ft_f_dl_ready)
+    ft_f_reset();
+
+  ft_ccmd_start(tmp);
+  ft_f_emit_rgb(cmd, args, arg_count);
+
+  if (ft_ccmdp > sizeof(tmp) / sizeof(tmp[0]))
+  {
+    printf("Internal fd command overflow: %s\r\n", cmd->name);
+    return 1;
+  }
+
+  add_words = (u32)ft_ccmdp * repeat_count;
+  if ((u32)ft_f_dl_count + add_words + 1 > FT_F_DL_MAX_DWORDS)
+  {
+    printf("DL is full: used=%u add=%u max=%u\r\n",
+           (unsigned int)ft_f_dl_count,
+           (unsigned int)add_words,
+           (unsigned int)FT_F_DL_MAX_DWORDS);
+    return 1;
+  }
+
+  if ((u32)ft_f_dl_items + repeat_count > FT_F_DL_MAX_DWORDS)
+  {
+    printf("DL element stack is full: used=%u add=%u max=%u\r\n",
+           (unsigned int)ft_f_dl_items,
+           (unsigned int)repeat_count,
+           (unsigned int)FT_F_DL_MAX_DWORDS);
+    return 1;
+  }
+
+  for (u32 i = 0; i < repeat_count; ++i)
+  {
+    memcpy(&ft_f_dl[ft_f_dl_count], tmp, (size_t)ft_ccmdp * sizeof(tmp[0]));
+    ft_f_dl_words[ft_f_dl_items++] = ft_ccmdp;
+    ft_f_dl_count += ft_ccmdp;
+  }
+
+  err = ft_f_apply();
+  if (err != ESP_OK)
+  {
+    printf("fd failed: %s (0x%x)\r\n", esp_err_to_name(err), (unsigned int)err);
+    return 1;
+  }
+
+  if (repeat_count == 1)
+    printf("fd: added %s, dl_words=%u\r\n", cmd->name, (unsigned int)(ft_f_dl_count + 1));
+  else
+    printf("fd: added %u x %s, dl_words=%u\r\n",
+           (unsigned int)repeat_count,
+           cmd->name,
+           (unsigned int)(ft_f_dl_count + 1));
+
+  return 0;
+}
+
+int ft_f_has_separator(int argc, char **argv)
+{
+  for (int i = 0; i < argc; ++i)
+  {
+    if (argv[i] && strchr(argv[i], ';')) return 1;
+  }
+
+  return 0;
+}
+
+char *ft_f_skip_spaces(char *s)
+{
+  while (s && (*s == ' ' || *s == '\t' || *s == '\r' || *s == '\n'))
+    s++;
+
+  return s;
+}
+
+int ft_f_split_words(char *s, char **argv, int max_argc)
+{
+  int argc = 0;
+
+  s = ft_f_skip_spaces(s);
+  while (s && *s)
+  {
+    if (argc >= max_argc)
+    {
+      printf("Too many fd command arguments\r\n");
+      return -1;
+    }
+
+    argv[argc++] = s;
+    while (*s && *s != ' ' && *s != '\t' && *s != '\r' && *s != '\n')
+      s++;
+
+    if (!*s) break;
+    *s++ = 0;
+    s = ft_f_skip_spaces(s);
+  }
+
+  return argc;
+}
+
+int ft_f_exec_segment(char *segment)
+{
+  char *args[32];
+  char *argv[33];
+  int argc;
+
+  argc = ft_f_split_words(segment, args, (int)(sizeof(args) / sizeof(args[0])));
+  if (argc < 0) return 1;
+  if (!argc) return 0;
+
+  if (ft_f_name_equals(args[0], "fd"))
+  {
+    if (argc == 1) return ft_f_reset_cmd();
+    return ft_f_exec(argc, args);
+  }
+
+  argv[0] = (char *)"fd";
+  for (int i = 0; i < argc; ++i)
+    argv[i + 1] = args[i];
+
+  return ft_f_exec(argc + 1, argv);
+}
+
+int ft_f_cmd_list(int argc, char **argv)
+{
+  char line[512];
+  size_t pos = 0;
+  char *seg;
+  char *next;
+  int ret = 0;
+
+  line[0] = 0;
+  for (int i = 0; i < argc; ++i)
+  {
+    size_t n;
+
+    if (!argv[i]) continue;
+
+    n = strlen(argv[i]);
+    if (pos + n + (pos ? 1 : 0) + 1 > sizeof(line))
+    {
+      printf("fd command line is too long\r\n");
+      return 1;
+    }
+
+    if (pos)
+      line[pos++] = ' ';
+    memcpy(&line[pos], argv[i], n);
+    pos += n;
+    line[pos] = 0;
+  }
+
+  seg = line;
+  while (seg)
+  {
+    next = strchr(seg, ';');
+    if (next)
+      *next++ = 0;
+
+    ret = ft_f_exec_segment(seg);
+    if (ret) return ret;
+
+    seg = next;
+  }
+
+  return 0;
+}
+
+int ft_f_cmd(int argc, char **argv)
+{
+  if (ft_f_has_separator(argc, argv))
+    return ft_f_cmd_list(argc, argv);
+
+  return ft_f_exec(argc, argv);
+}
+
+
+#define FT_FC_RAM_G_SIZE          (1024UL * 1024UL)
+#define FT_FC_TS_COUNT            256
+#define FT_FC_SCRATCH_SIZE        256
+#define FT_FC_TS_ADDR             (FT_RAM_G + FT_FC_RAM_G_SIZE - (FT_FC_TS_COUNT * 4UL))
+#define FT_FC_SCRATCH_ADDR        (FT_FC_TS_ADDR - FT_FC_SCRATCH_SIZE)
+#define FT_FC_CMD_MAX_BYTES       (FT_CMD_FIFO_SIZE - FT_CMD_SIZE)
+#define FT_FC_LINE_MAX            4096
+#define FT_FC_ARG_MAX             128
+#define FT_FC_RAW_ARG_MAX         64
+#define FT_FC_OUT_REC_MAX         (FT_FC_TS_COUNT + (FT_FC_SCRATCH_SIZE / 4))
+
+#define FT_FC_OUT(n)              (1UL << (n))
+
+typedef struct
+{
+  const char *name;
+  const char *aliases;
+  u32 value;
+}
+FT_FC_VALUE_DEF;
+
+typedef enum
+{
+  FT_FC_FMT_RAW = 0,
+  FT_FC_FMT_MEMWRITE,
+  FT_FC_FMT_TEXT,
+  FT_FC_FMT_BUTTON,
+  FT_FC_FMT_TOGGLE,
+  FT_FC_FMT_NUMBER,
+  FT_FC_FMT_CLOCK,
+  FT_FC_FMT_GAUGE,
+  FT_FC_FMT_SLIDER_PROGRESS,
+  FT_FC_FMT_SCROLLBAR,
+  FT_FC_FMT_DIAL,
+  FT_FC_FMT_GRADIENT,
+  FT_FC_FMT_TRACK,
+  FT_FC_FMT_SNAPSHOT2,
+  FT_FC_FMT_SKETCH,
+  FT_FC_FMT_CSKETCH,
+  FT_FC_FMT_SETBITMAP,
+  FT_FC_FMT_SPINNER
+}
+FT_FC_FMT;
+
+typedef struct
+{
+  const char *name;
+  const char *aliases;
+  u32 code;
+  u8 min_args;
+  u8 max_args;
+  u8 fmt;
+  u32 out_mask;
+}
+FT_FC_CMD_DEF;
+
+typedef enum
+{
+  FT_FC_DST_NONE = 0,
+  FT_FC_DST_SCRATCH,
+  FT_FC_DST_TS
+}
+FT_FC_DST;
+
+typedef struct
+{
+  u8 cmd[FT_CMD_FIFO_SIZE];
+  char line[FT_FC_LINE_MAX];
+  char *argv[FT_FC_ARG_MAX];
+  u32 args[FT_FC_RAW_ARG_MAX];
+  u8 ts[FT_FC_TS_COUNT * 4];
+  u8 scratch[FT_FC_SCRATCH_SIZE];
+  u32 out_dst_off[FT_FC_RAW_ARG_MAX];
+  u32 out_offs[FT_FC_RAW_ARG_MAX];
+  u8 out_dst_type[FT_FC_RAW_ARG_MAX];
+  u8 out_save[FT_FC_RAW_ARG_MAX];
+  u32 save_src_off[FT_FC_OUT_REC_MAX];
+  u32 save_dst_off[FT_FC_OUT_REC_MAX];
+  u8 save_dst_type[FT_FC_OUT_REC_MAX];
+  u32 save_count;
+  u32 pos;
+  u32 ts_pos;
+  u32 sp;
+}
+FT_FC_WORKSPACE;
+
+EXT_RAM_BSS_ATTR FT_FC_WORKSPACE ft_fc_ws;
+
+const FT_FC_VALUE_DEF ft_fc_values[] =
+{
+  {"ram_g", "ramg rg", FT_RAM_G},
+  {"ram_dl", "ramdl rd", FT_RAM_DL},
+  {"ram_cmd", "ramcmd rc", FT_RAM_CMD},
+  {"scratch", "scratchpad", FT_FC_SCRATCH_ADDR},
+  {"timestamps", "timestamp tsbase", FT_FC_TS_ADDR},
+  {"opt_center", "center", FT_OPT_CENTER},
+  {"opt_centerx", "centerx", FT_OPT_CENTERX},
+  {"opt_centery", "centery", FT_OPT_CENTERY},
+  {"opt_flat", "flat", FT_OPT_FLAT},
+  {"opt_mono", "mono", FT_OPT_MONO},
+  {"opt_noback", "noback", FT_OPT_NOBACK},
+  {"opt_nodl", "nodl", FT_OPT_NODL},
+  {"opt_nohands", "nohands", FT_OPT_NOHANDS},
+  {"opt_nohm", "nohm", FT_OPT_NOHM},
+  {"opt_nopointer", "nopointer", FT_OPT_NOPOINTER},
+  {"opt_nosecs", "nosecs", FT_OPT_NOSECS},
+  {"opt_noticks", "noticks", FT_OPT_NOTICKS},
+  {"opt_rightx", "rightx", FT_OPT_RIGHTX},
+  {"opt_signed", "signed", FT_OPT_SIGNED},
+  {"opt_notear", "notear", OPT_NOTEAR},
+  {"opt_fullscreen", "fullscreen", OPT_FULLSCREEN},
+  {"opt_mediafifo", "mediafifo", OPT_MEDIAFIFO},
+  {"opt_sound", "sound", OPT_SOUND},
+  {"reg_id", "id", FT_REG_ID},
+  {"reg_frames", "frames", FT_REG_FRAMES},
+  {"reg_clock", "clock", FT_REG_CLOCK},
+  {"reg_frequency", "frequency freq", FT_REG_FREQUENCY},
+  {"reg_cpureset", "cpureset", FT_REG_CPURESET},
+  {"reg_cmd_read", "cmd_read cmdread", FT_REG_CMD_READ},
+  {"reg_cmd_write", "cmd_write cmdwrite", FT_REG_CMD_WRITE},
+  {"reg_cmd_dl", "cmd_dl cmddl", FT_REG_CMD_DL},
+  {"reg_cmd_wp", "cmd_wp cmdwp", FT_REG_CMD_WRITE},
+  {"reg_cmd_rp", "cmd_rp cmdrp", FT_REG_CMD_READ},
+  {"reg_cmd_space", "cmd_space cmdspace", FT_REG_CMDB_SPACE},
+  {"reg_cmdb_write", "cmdb_write cmdbwrite", FT_REG_CMDB_WRITE},
+  {"reg_dlswap", "dlswap", FT_REG_DLSWAP},
+  {"reg_hcycle", "hcycle", FT_REG_HCYCLE},
+  {"reg_hoffset", "hoffset", FT_REG_HOFFSET},
+  {"reg_hsize", "hsize", FT_REG_HSIZE},
+  {"reg_hsync0", "hsync0", FT_REG_HSYNC0},
+  {"reg_hsync1", "hsync1", FT_REG_HSYNC1},
+  {"reg_vcycle", "vcycle", FT_REG_VCYCLE},
+  {"reg_voffset", "voffset", FT_REG_VOFFSET},
+  {"reg_vsize", "vsize", FT_REG_VSIZE},
+  {"reg_vsync0", "vsync0", FT_REG_VSYNC0},
+  {"reg_vsync1", "vsync1", FT_REG_VSYNC1},
+  {"reg_pclk", "pclk", FT_REG_PCLK},
+  {"reg_pclk_pol", "pclk_pol pclkpol", FT_REG_PCLK_POL},
+  {"reg_swizzle", "swizzle", FT_REG_SWIZZLE},
+  {"reg_cspread", "cspread", FT_REG_CSPREAD},
+  {"reg_pwm_duty", "pwm_duty pwmduty", FT_REG_PWM_DUTY},
+  {"reg_pwm_hz", "pwm_hz pwmhz", FT_REG_PWM_HZ},
+  {"reg_gpio", "gpio", FT_REG_GPIO},
+  {"reg_gpio_dir", "gpio_dir gpiodir", FT_REG_GPIO_DIR},
+  {"reg_int_flags", "int_flags intflags", FT_REG_INT_FLAGS},
+  {"reg_int_en", "int_en inten", FT_REG_INT_EN},
+  {"reg_int_mask", "int_mask intmask", FT_REG_INT_MASK},
+  {"reg_touch_mode", "touch_mode touchmode", FT_REG_TOUCH_MODE},
+  {"reg_touch_adc_mode", "touch_adc_mode touchadcmode", FT_REG_TOUCH_ADC_MODE},
+  {"reg_touch_charge", "touch_charge touchcharge", FT_REG_TOUCH_CHARGE},
+  {"reg_touch_settle", "touch_settle touchsettle", FT_REG_TOUCH_SETTLE},
+  {"reg_touch_oversample", "touch_oversample touchoversample", FT_REG_TOUCH_OVERSAMPLE},
+  {"reg_touch_rzthresh", "touch_rzthresh touchrzthresh", FT_REG_TOUCH_RZTHRESH},
+  {"reg_touch_raw_xy", "touch_raw_xy touchrawxy", FT_REG_TOUCH_RAW_XY},
+  {"reg_touch_rz", "touch_rz touchrz", FT_REG_TOUCH_RZ},
+  {"reg_touch_screen_xy", "touch_screen_xy touchscreenxy", FT_REG_TOUCH_SCREEN_XY},
+  {"reg_touch_tag_xy", "touch_tag_xy touchtagxy", FT_REG_TOUCH_TAG_XY},
+  {"reg_touch_tag", "touch_tag touchtag", FT_REG_TOUCH_TAG},
+  {"reg_tracker", "tracker", FT_REG_TRACKER},
+  {"reg_tracker_1", "tracker1 tracker_1", FT_REG_TRACKER_1},
+  {"reg_tracker_2", "tracker2 tracker_2", FT_REG_TRACKER_2},
+  {"reg_tracker_3", "tracker3 tracker_3", FT_REG_TRACKER_3},
+  {"reg_tracker_4", "tracker4 tracker_4", FT_REG_TRACKER_4},
+  {"reg_mediafifo_read", "mediafifo_read mediafiforead", FT_REG_MEDIAFIFO_READ},
+  {"reg_mediafifo_write", "mediafifo_write mediafifowrite", FT_REG_MEDIAFIFO_WRITE},
+  {"reg_flash_status", "flash_status flashstatus", FT_REG_FLASH_STATUS},
+  {"reg_flash_size", "flash_size flashsize", FT_REG_FLASH_SIZE}
+};
+
+const FT_FC_CMD_DEF ft_fc_cmds[] =
+{
+  {"append", "ap", FT_CCMD_APPEND, 2, 2, FT_FC_FMT_RAW, 0},
+  {"bgcolor", "bgc bc", FT_CCMD_BGCOLOR, 1, 1, FT_FC_FMT_RAW, 0},
+  {"bitmap_transform", "bt", FT_CCMD_BITMAP_TRANSFORM, 13, 13, FT_FC_FMT_RAW, FT_FC_OUT(12)},
+  {"button", "bu", FT_CCMD_BUTTON, 7, 7, FT_FC_FMT_BUTTON, 0},
+  {"calibrate", "cal cb", FT_CCMD_CALIBRATE, 1, 1, FT_FC_FMT_RAW, FT_FC_OUT(0)},
+  {"clock", "clk", FT_CCMD_CLOCK, 8, 8, FT_FC_FMT_CLOCK, 0},
+  {"coldstart", "cold cs", FT_CCMD_COLDSTART, 0, 0, FT_FC_FMT_RAW, 0},
+  {"crc", "crc", FT_CCMD_CRC, 3, 3, FT_FC_FMT_RAW, FT_FC_OUT(2)},
+  {"csketch", "csk", FT_CCMD_CSKETCH, 7, 7, FT_FC_FMT_CSKETCH, 0},
+  {"dial", "di", FT_CCMD_DIAL, 5, 5, FT_FC_FMT_DIAL, 0},
+  {"dlstart", "dl", FT_CCMD_DLSTART, 0, 0, FT_FC_FMT_RAW, 0},
+  {"execute", "ex", FT_CCMD_EXECUTE, 0, FT_FC_RAW_ARG_MAX, FT_FC_FMT_RAW, 0},
+  {"fgcolor", "fgc", FT_CCMD_FGCOLOR, 1, 1, FT_FC_FMT_RAW, 0},
+  {"flashattach", "fla", FT_CCMD_FLASHATTACH, 0, 0, FT_FC_FMT_RAW, 0},
+  {"flashdetach", "fld", FT_CCMD_FLASHDETACH, 0, 0, FT_FC_FMT_RAW, 0},
+  {"flasherase", "fle", FT_CCMD_FLASHERASE, 0, 0, FT_FC_FMT_RAW, 0},
+  {"flashfast", "flf", FT_CCMD_FLASHFAST, 1, 1, FT_FC_FMT_RAW, FT_FC_OUT(0)},
+  {"flashrx", "flr", FT_CCMD_FLASHRX, 2, 2, FT_FC_FMT_RAW, 0},
+  {"flashsource", "fls", FT_CCMD_FLASHSOURCE, 1, 1, FT_FC_FMT_RAW, 0},
+  {"flashspidesel", "fsd", FT_CCMD_FLASHSPIDESEL, 0, 0, FT_FC_FMT_RAW, 0},
+  {"flashtx", "flt", FT_CCMD_FLASHTX, 1, 1, FT_FC_FMT_RAW, 0},
+  {"flashupdate", "flu", FT_CCMD_FLASHUPDATE, 3, 3, FT_FC_FMT_RAW, 0},
+  {"gauge", "ga", FT_CCMD_GAUGE, 8, 8, FT_FC_FMT_GAUGE, 0},
+  {"getmatrix", "gm", FT_CCMD_GETMATRIX, 6, 6, FT_FC_FMT_RAW, FT_FC_OUT(0) | FT_FC_OUT(1) | FT_FC_OUT(2) | FT_FC_OUT(3) | FT_FC_OUT(4) | FT_FC_OUT(5)},
+  {"getpoint", "gp", FT_CCMD_GETPOINT, 0, FT_FC_RAW_ARG_MAX, FT_FC_FMT_RAW, 0},
+  {"getprops", "gpr", FT_CCMD_GETPROPS, 3, 3, FT_FC_FMT_RAW, FT_FC_OUT(1) | FT_FC_OUT(2)},
+  {"getptr", "gpt", FT_CCMD_GETPTR, 1, 1, FT_FC_FMT_RAW, FT_FC_OUT(0)},
+  {"gradcolor", "gc", FT_CCMD_GRADCOLOR, 1, 1, FT_FC_FMT_RAW, 0},
+  {"gradient", "gr", FT_CCMD_GRADIENT, 6, 6, FT_FC_FMT_GRADIENT, 0},
+  {"hammeraux", "ha", FT_CCMD_HAMMERAUX, 0, FT_FC_RAW_ARG_MAX, FT_FC_FMT_RAW, 0},
+  {"idct_deleted", "idct", FT_CCMD_IDCT_DELETED, 0, FT_FC_RAW_ARG_MAX, FT_FC_FMT_RAW, 0},
+  {"inflate", "inf", FT_CCMD_INFLATE, 1, FT_FC_RAW_ARG_MAX, FT_FC_FMT_RAW, 0},
+  {"interrupt", "intr in", FT_CCMD_INTERRUPT, 1, 1, FT_FC_FMT_RAW, 0},
+  {"int_ramshared", "irs", FT_CCMD_INT_RAMSHARED, 1, 1, FT_FC_FMT_RAW, 0},
+  {"int_swloadimage", "isl", FT_CCMD_INT_SWLOADIMAGE, 2, 2, FT_FC_FMT_RAW, 0},
+  {"keys", "ke", FT_CCMD_KEYS, 7, 7, FT_FC_FMT_BUTTON, 0},
+  {"loadidentity", "li", FT_CCMD_LOADIDENTITY, 0, 0, FT_FC_FMT_RAW, 0},
+  {"loadimage", "limg", FT_CCMD_LOADIMAGE, 2, FT_FC_RAW_ARG_MAX, FT_FC_FMT_RAW, 0},
+  {"logo", "lo", FT_CCMD_LOGO, 0, 0, FT_FC_FMT_RAW, 0},
+  {"march", "ma", FT_CCMD_MARCH, 0, FT_FC_RAW_ARG_MAX, FT_FC_FMT_RAW, 0},
+  {"mediafifo", "mf", FT_CCMD_MEDIAFIFO, 2, 2, FT_FC_FMT_RAW, 0},
+  {"memcpy", "mc", FT_CCMD_MEMCPY, 3, 3, FT_FC_FMT_RAW, 0},
+  {"memcrc", "mcrc", FT_CCMD_MEMCRC, 3, 3, FT_FC_FMT_RAW, FT_FC_OUT(2)},
+  {"memset", "ms", FT_CCMD_MEMSET, 3, 3, FT_FC_FMT_RAW, 0},
+  {"memwrite", "mw", FT_CCMD_MEMWRITE, 2, FT_FC_RAW_ARG_MAX, FT_FC_FMT_MEMWRITE, 0},
+  {"memzero", "mz", FT_CCMD_MEMZERO, 2, 2, FT_FC_FMT_RAW, 0},
+  {"number", "num nb", FT_CCMD_NUMBER, 5, 5, FT_FC_FMT_NUMBER, 0},
+  {"playvideo", "pv", FT_CCMD_PLAYVIDEO, 1, FT_FC_RAW_ARG_MAX, FT_FC_FMT_RAW, 0},
+  {"progress", "pr", FT_CCMD_PROGRESS, 7, 7, FT_FC_FMT_SLIDER_PROGRESS, 0},
+  {"regread", "rr", FT_CCMD_REGREAD, 2, 2, FT_FC_FMT_RAW, FT_FC_OUT(1)},
+  {"romfont", "rf", FT_CCMD_ROMFONT, 2, 2, FT_FC_FMT_RAW, 0},
+  {"rotate", "rot", FT_CCMD_ROTATE, 1, 1, FT_FC_FMT_RAW, 0},
+  {"scale", "sca", FT_CCMD_SCALE, 2, 2, FT_FC_FMT_RAW, 0},
+  {"screensaver", "ss", FT_CCMD_SCREENSAVER, 0, 0, FT_FC_FMT_RAW, 0},
+  {"scrollbar", "sb", FT_CCMD_SCROLLBAR, 8, 8, FT_FC_FMT_SCROLLBAR, 0},
+  {"setbase", "sbase", FT_CCMD_SETBASE, 1, 1, FT_FC_FMT_RAW, 0},
+  {"setbitmap", "sbit", FT_CCMD_SETBITMAP, 4, 4, FT_FC_FMT_SETBITMAP, 0},
+  {"setfont", "sfnt", FT_CCMD_SETFONT, 2, 2, FT_FC_FMT_RAW, 0},
+  {"setfont2", "sf2", FT_CCMD_SETFONT2, 3, 3, FT_FC_FMT_RAW, 0},
+  {"setmatrix", "smat", FT_CCMD_SETMATRIX, 0, 0, FT_FC_FMT_RAW, 0},
+  {"setrotate", "sr", FT_CCMD_SETROTATE, 1, 1, FT_FC_FMT_RAW, 0},
+  {"setscratch", "sscr", FT_CCMD_SETSCRATCH, 1, 1, FT_FC_FMT_RAW, 0},
+  {"sketch", "sk", FT_CCMD_SKETCH, 6, 6, FT_FC_FMT_SKETCH, 0},
+  {"slider", "sl", FT_CCMD_SLIDER, 7, 7, FT_FC_FMT_SLIDER_PROGRESS, 0},
+  {"snapshot", "snap", FT_CCMD_SNAPSHOT, 1, 1, FT_FC_FMT_RAW, 0},
+  {"snapshot2", "snap2", FT_CCMD_SNAPSHOT2, 6, 6, FT_FC_FMT_SNAPSHOT2, 0},
+  {"spinner", "spn", FT_CCMD_SPINNER, 4, 4, FT_FC_FMT_SPINNER, 0},
+  {"stop", "st", FT_CCMD_STOP, 0, 0, FT_FC_FMT_RAW, 0},
+  {"swap", "sw", FT_CCMD_SWAP, 0, 0, FT_FC_FMT_RAW, 0},
+  {"sync", "sy", FT_CCMD_SYNC, 0, 0, FT_FC_FMT_RAW, 0},
+  {"text", "tx", FT_CCMD_TEXT, 5, 5, FT_FC_FMT_TEXT, 0},
+  {"toggle", "tg", FT_CCMD_TOGGLE, 7, 7, FT_FC_FMT_TOGGLE, 0},
+  {"touch_transform", "tt", FT_CCMD_TOUCH_TRANSFORM, 13, 13, FT_FC_FMT_RAW, FT_FC_OUT(12)},
+  {"track", "trk", FT_CCMD_TRACK, 5, 5, FT_FC_FMT_TRACK, 0},
+  {"translate", "tr", FT_CCMD_TRANSLATE, 2, 2, FT_FC_FMT_RAW, 0},
+  {"videoframe", "vf", FT_CCMD_VIDEOFRAME, 2, 2, FT_FC_FMT_RAW, 0},
+  {"videostart", "vs", FT_CCMD_VIDEOSTART, 0, 0, FT_FC_FMT_RAW, 0}
+};
+
+int ft_fc_named_value(const char *name, u32 *out)
+{
+  for (size_t i = 0; i < sizeof(ft_fc_values) / sizeof(ft_fc_values[0]); ++i)
+  {
+    if (ft_f_name_equals(ft_fc_values[i].name, name) || ft_f_alias_matches(ft_fc_values[i].aliases, name, 0))
+    {
+      *out = ft_fc_values[i].value;
+      return 1;
+    }
+  }
+
+  return ft_f_named_value(name, out);
+}
+
+const FT_FC_CMD_DEF *ft_fc_find_cmd(const char *name, int *ambiguous)
+{
+  const FT_FC_CMD_DEF *match = nullptr;
+  int matches = 0;
+
+  *ambiguous = 0;
+
+  for (size_t i = 0; i < sizeof(ft_fc_cmds) / sizeof(ft_fc_cmds[0]); ++i)
+  {
+    const FT_FC_CMD_DEF *cmd = &ft_fc_cmds[i];
+    if (ft_f_name_equals(cmd->name, name) || ft_f_alias_matches(cmd->aliases, name, 0))
+    {
+      match = cmd;
+      matches++;
+    }
+  }
+
+  if (matches == 1) return match;
+  if (matches > 1)
+  {
+    *ambiguous = 1;
+    return nullptr;
+  }
+
+  for (size_t i = 0; i < sizeof(ft_fc_cmds) / sizeof(ft_fc_cmds[0]); ++i)
+  {
+    const FT_FC_CMD_DEF *cmd = &ft_fc_cmds[i];
+    if (ft_f_name_starts_with(cmd->name, name) || ft_f_alias_matches(cmd->aliases, name, 1))
+    {
+      match = cmd;
+      matches++;
+    }
+  }
+
+  if (matches == 1) return match;
+  if (matches > 1) *ambiguous = 1;
+  return nullptr;
+}
+
+int ft_fc_parse_base_expr(const char *s, const char *name, u32 base, u32 *out)
+{
+  size_t i = 0;
+  char *endp = nullptr;
+  unsigned long long off;
+
+  if (!s || !name) return 0;
+
+  while (name[i])
+  {
+    if (tolower((unsigned char)s[i]) != tolower((unsigned char)name[i]))
+      return 0;
+    i++;
+  }
+
+  if (!s[i])
+  {
+    *out = base;
+    return 1;
+  }
+
+  if (s[i] != '+') return 0;
+
+  off = strtoull(s + i + 1, &endp, 0);
+  if (!endp || *endp || off > 0xFFFFFFFFULL)
+    return 0;
+
+  *out = base + (u32)off;
+  return 1;
+}
+
+int ft_fc_parse_out_arg(const char *s, u32 *value, u8 *dst_type, u32 *dst_off)
+{
+  u32 off;
+
+  *dst_type = FT_FC_DST_NONE;
+  *dst_off = 0;
+
+  if (ft_f_name_equals(s, "sp"))
+  {
+    if (ft_fc_ws.sp + 4 > FT_FC_SCRATCH_SIZE)
+    {
+      printf("fc scratchpad output overflow\r\n");
+      return 0;
+    }
+
+    *value = 0;
+    *dst_type = FT_FC_DST_SCRATCH;
+    *dst_off = ft_fc_ws.sp;
+    ft_fc_ws.sp += 4;
+    return 1;
+  }
+
+  if (ft_fc_parse_base_expr(s, "scratch", 0, &off) ||
+      ft_fc_parse_base_expr(s, "scratchpad", 0, &off))
+  {
+    if (off + 4 > FT_FC_SCRATCH_SIZE || off > FT_FC_SCRATCH_SIZE)
+    {
+      printf("fc scratchpad output offset out of range: %lu\r\n", (unsigned long)off);
+      return 0;
+    }
+
+    *value = 0;
+    *dst_type = FT_FC_DST_SCRATCH;
+    *dst_off = off;
+    return 1;
+  }
+
+  if (ft_fc_parse_base_expr(s, "ts", 0, &off) ||
+      ft_fc_parse_base_expr(s, "timestamps", 0, &off))
+  {
+    if ((off & 3) || off + 4 > FT_FC_TS_COUNT * 4UL || off > FT_FC_TS_COUNT * 4UL)
+    {
+      printf("fc timestamp output offset out of range: %lu\r\n", (unsigned long)off);
+      return 0;
+    }
+
+    *value = 0;
+    *dst_type = FT_FC_DST_TS;
+    *dst_off = off;
+    return 1;
+  }
+
+  return 0;
+}
+
+u32 ft_fc_parse_arg(const char *s, const char *name, int out_arg, int *ok, u8 *dst_type, u32 *dst_off, int *save)
+{
+  char *endp = nullptr;
+  u32 named;
+  size_t n;
+
+  *ok = 0;
+  if (save) *save = 0;
+  if (dst_type) *dst_type = FT_FC_DST_NONE;
+  if (dst_off) *dst_off = 0;
+
+  if (!s)
+  {
+    printf("Missing <%s>\r\n", name);
+    return 0;
+  }
+
+  n = strlen(s);
+  if (n && s[n - 1] == ',')
+    ((char *)s)[n - 1] = 0;
+
+  if (out_arg && dst_type && dst_off && save && ft_fc_parse_out_arg(s, &named, dst_type, dst_off))
+  {
+    *ok = 1;
+    *save = 1;
+    return named;
+  }
+
+  if (ft_fc_parse_base_expr(s, "sp", FT_FC_SCRATCH_ADDR + ft_fc_ws.sp, &named) ||
+      ft_fc_parse_base_expr(s, "scratch", FT_FC_SCRATCH_ADDR, &named) ||
+      ft_fc_parse_base_expr(s, "scratchpad", FT_FC_SCRATCH_ADDR, &named) ||
+      ft_fc_parse_base_expr(s, "ts", FT_FC_TS_ADDR, &named) ||
+      ft_fc_parse_base_expr(s, "timestamps", FT_FC_TS_ADDR, &named))
+  {
+    *ok = 1;
+    return named;
+  }
+
+  if (ft_fc_named_value(s, &named))
+  {
+    *ok = 1;
+    return named;
+  }
+
+  if (s[0] == '-')
+  {
+    long long v = strtoll(s, &endp, 0);
+    if (!endp || *endp || v < -2147483647LL - 1LL || v > 2147483647LL)
+    {
+      printf("Bad <%s>: %s\r\n", name, s);
+      return 0;
+    }
+
+    *ok = 1;
+    return (u32)(i32)v;
+  }
+
+  unsigned long long v = strtoull(s, &endp, 0);
+  if (!endp || *endp || v > 0xFFFFFFFFULL)
+  {
+    printf("Bad <%s>: %s\r\n", name, s);
+    return 0;
+  }
+
+  *ok = 1;
+  return (u32)v;
+}
+
+
+int ft_fc_emit_u32(u32 v)
+{
+  if (ft_fc_ws.pos + 4 > FT_FC_CMD_MAX_BYTES)
+  {
+    printf("fc command buffer overflow: used=%lu max=%lu\r\n",
+           (unsigned long)ft_fc_ws.pos,
+           (unsigned long)FT_FC_CMD_MAX_BYTES);
+    return 0;
+  }
+
+  wr32le(&ft_fc_ws.cmd[ft_fc_ws.pos], v);
+  ft_fc_ws.pos += 4;
+  return 1;
+}
+
+int ft_fc_emit_str(const char *s)
+{
+  size_t len;
+  size_t padded;
+
+  if (!s) s = "";
+
+  len = strlen(s) + 1;
+  padded = (len + 3) & ~(size_t)3;
+
+  if (ft_fc_ws.pos + padded > FT_FC_CMD_MAX_BYTES)
+  {
+    printf("fc command buffer overflow: used=%lu add=%lu max=%lu\r\n",
+           (unsigned long)ft_fc_ws.pos,
+           (unsigned long)padded,
+           (unsigned long)FT_FC_CMD_MAX_BYTES);
+    return 0;
+  }
+
+  memcpy(&ft_fc_ws.cmd[ft_fc_ws.pos], s, len);
+  memset(&ft_fc_ws.cmd[ft_fc_ws.pos + len], 0, padded - len);
+  ft_fc_ws.pos += (u32)padded;
+  return 1;
+}
+
+u32 ft_fc_pack_16(u32 hi, u32 lo)
+{
+  return ((hi & 0xffffUL) << 16) | (lo & 0xffffUL);
+}
+
+int ft_fc_add_output_save(u32 src_off, u8 dst_type, u32 dst_off)
+{
+  if (ft_fc_ws.save_count >= FT_FC_OUT_REC_MAX)
+  {
+    printf("fc output record overflow\r\n");
+    return 0;
+  }
+
+  if (src_off + 4 > ft_fc_ws.pos)
+  {
+    printf("fc bad output offset: %lu\r\n", (unsigned long)src_off);
+    return 0;
+  }
+
+  ft_fc_ws.save_src_off[ft_fc_ws.save_count] = src_off;
+  ft_fc_ws.save_dst_type[ft_fc_ws.save_count] = dst_type;
+  ft_fc_ws.save_dst_off[ft_fc_ws.save_count] = dst_off;
+  ft_fc_ws.save_count++;
+  return 1;
+}
+
+int ft_fc_emit_raw(const FT_FC_CMD_DEF *cmd, const u32 *a, int argc)
+{
+  if (!ft_fc_emit_u32(cmd->code)) return 0;
+
+  for (int i = 0; i < argc; ++i)
+  {
+    ft_fc_ws.out_offs[i] = ft_fc_ws.pos;
+    if (!ft_fc_emit_u32(a[i])) return 0;
+  }
+
+  for (int i = 0; i < argc; ++i)
+  {
+    if (ft_fc_ws.out_save[i])
+    {
+      if (!ft_fc_add_output_save(ft_fc_ws.out_offs[i], ft_fc_ws.out_dst_type[i], ft_fc_ws.out_dst_off[i]))
+        return 0;
+    }
+  }
+
+  return 1;
+}
+
+
+int ft_fc_emit_memwrite(const FT_FC_CMD_DEF *cmd, const u32 *a, int argc)
+{
+  u32 num;
+
+  if (argc < 2)
+  {
+    printf("Bad argument count for %s: %d, expected 2..%u\r\n",
+           cmd->name, argc, (unsigned int)cmd->max_args);
+    return 0;
+  }
+
+  num = (u32)(argc - 1) * 4UL;
+
+  if (!ft_fc_emit_u32(cmd->code)) return 0;
+  if (!ft_fc_emit_u32(a[0])) return 0;
+  if (!ft_fc_emit_u32(num)) return 0;
+
+  for (int i = 1; i < argc; ++i)
+  {
+    if (!ft_fc_emit_u32(a[i])) return 0;
+  }
+
+  return 1;
+}
+
+int ft_fc_emit_cmd(const FT_FC_CMD_DEF *cmd, const u32 *a, int argc, const char *str)
+{
+  switch ((FT_FC_FMT)cmd->fmt)
+  {
+    case FT_FC_FMT_RAW:
+      return ft_fc_emit_raw(cmd, a, argc);
+
+    case FT_FC_FMT_MEMWRITE:
+      return ft_fc_emit_memwrite(cmd, a, argc);
+
+    case FT_FC_FMT_TEXT:
+      return ft_fc_emit_u32(cmd->code) &&
+             ft_fc_emit_u32(ft_fc_pack_16(a[1], a[0])) &&
+             ft_fc_emit_u32(ft_fc_pack_16(a[3], a[2])) &&
+             ft_fc_emit_str(str);
+
+    case FT_FC_FMT_BUTTON:
+      return ft_fc_emit_u32(cmd->code) &&
+             ft_fc_emit_u32(ft_fc_pack_16(a[1], a[0])) &&
+             ft_fc_emit_u32(ft_fc_pack_16(a[3], a[2])) &&
+             ft_fc_emit_u32(ft_fc_pack_16(a[5], a[4])) &&
+             ft_fc_emit_str(str);
+
+    case FT_FC_FMT_TOGGLE:
+      return ft_fc_emit_u32(cmd->code) &&
+             ft_fc_emit_u32(ft_fc_pack_16(a[1], a[0])) &&
+             ft_fc_emit_u32(ft_fc_pack_16(a[3], a[2])) &&
+             ft_fc_emit_u32(ft_fc_pack_16(a[5], a[4])) &&
+             ft_fc_emit_str(str);
+
+    case FT_FC_FMT_NUMBER:
+      return ft_fc_emit_u32(cmd->code) &&
+             ft_fc_emit_u32(ft_fc_pack_16(a[1], a[0])) &&
+             ft_fc_emit_u32(ft_fc_pack_16(a[3], a[2])) &&
+             ft_fc_emit_u32(a[4]);
+
+    case FT_FC_FMT_CLOCK:
+      return ft_fc_emit_u32(cmd->code) &&
+             ft_fc_emit_u32(ft_fc_pack_16(a[1], a[0])) &&
+             ft_fc_emit_u32(ft_fc_pack_16(a[3], a[2])) &&
+             ft_fc_emit_u32(ft_fc_pack_16(a[5], a[4])) &&
+             ft_fc_emit_u32(ft_fc_pack_16(a[7], a[6]));
+
+    case FT_FC_FMT_GAUGE:
+      return ft_fc_emit_u32(cmd->code) &&
+             ft_fc_emit_u32(ft_fc_pack_16(a[1], a[0])) &&
+             ft_fc_emit_u32(ft_fc_pack_16(a[3], a[2])) &&
+             ft_fc_emit_u32(ft_fc_pack_16(a[5], a[4])) &&
+             ft_fc_emit_u32(ft_fc_pack_16(a[7], a[6]));
+
+    case FT_FC_FMT_SLIDER_PROGRESS:
+      return ft_fc_emit_u32(cmd->code) &&
+             ft_fc_emit_u32(ft_fc_pack_16(a[1], a[0])) &&
+             ft_fc_emit_u32(ft_fc_pack_16(a[3], a[2])) &&
+             ft_fc_emit_u32(ft_fc_pack_16(a[5], a[4])) &&
+             ft_fc_emit_u32(a[6]);
+
+    case FT_FC_FMT_SCROLLBAR:
+      return ft_fc_emit_u32(cmd->code) &&
+             ft_fc_emit_u32(ft_fc_pack_16(a[1], a[0])) &&
+             ft_fc_emit_u32(ft_fc_pack_16(a[3], a[2])) &&
+             ft_fc_emit_u32(ft_fc_pack_16(a[5], a[4])) &&
+             ft_fc_emit_u32(ft_fc_pack_16(a[7], a[6]));
+
+    case FT_FC_FMT_DIAL:
+      return ft_fc_emit_u32(cmd->code) &&
+             ft_fc_emit_u32(ft_fc_pack_16(a[1], a[0])) &&
+             ft_fc_emit_u32(ft_fc_pack_16(a[3], a[2])) &&
+             ft_fc_emit_u32(a[4]);
+
+    case FT_FC_FMT_GRADIENT:
+      return ft_fc_emit_u32(cmd->code) &&
+             ft_fc_emit_u32(ft_fc_pack_16(a[1], a[0])) &&
+             ft_fc_emit_u32(a[2]) &&
+             ft_fc_emit_u32(ft_fc_pack_16(a[4], a[3])) &&
+             ft_fc_emit_u32(a[5]);
+
+    case FT_FC_FMT_TRACK:
+      return ft_fc_emit_u32(cmd->code) &&
+             ft_fc_emit_u32(ft_fc_pack_16(a[1], a[0])) &&
+             ft_fc_emit_u32(ft_fc_pack_16(a[3], a[2])) &&
+             ft_fc_emit_u32(a[4]);
+
+    case FT_FC_FMT_SNAPSHOT2:
+      return ft_fc_emit_u32(cmd->code) &&
+             ft_fc_emit_u32(a[0]) &&
+             ft_fc_emit_u32(a[1]) &&
+             ft_fc_emit_u32(ft_fc_pack_16(a[3], a[2])) &&
+             ft_fc_emit_u32(ft_fc_pack_16(a[5], a[4]));
+
+    case FT_FC_FMT_SKETCH:
+      return ft_fc_emit_u32(cmd->code) &&
+             ft_fc_emit_u32(ft_fc_pack_16(a[1], a[0])) &&
+             ft_fc_emit_u32(ft_fc_pack_16(a[3], a[2])) &&
+             ft_fc_emit_u32(a[4]) &&
+             ft_fc_emit_u32(a[5]);
+
+    case FT_FC_FMT_CSKETCH:
+      return ft_fc_emit_u32(cmd->code) &&
+             ft_fc_emit_u32(ft_fc_pack_16(a[1], a[0])) &&
+             ft_fc_emit_u32(ft_fc_pack_16(a[3], a[2])) &&
+             ft_fc_emit_u32(a[4]) &&
+             ft_fc_emit_u32(ft_fc_pack_16(a[6], a[5]));
+
+    case FT_FC_FMT_SETBITMAP:
+      return ft_fc_emit_u32(cmd->code) &&
+             ft_fc_emit_u32(a[0]) &&
+             ft_fc_emit_u32(ft_fc_pack_16(a[2], a[1])) &&
+             ft_fc_emit_u32(a[3]);
+
+    case FT_FC_FMT_SPINNER:
+      return ft_fc_emit_u32(cmd->code) &&
+             ft_fc_emit_u32(ft_fc_pack_16(a[1], a[0])) &&
+             ft_fc_emit_u32(ft_fc_pack_16(a[3], a[2]));
+  }
+
+  return 0;
+}
+
+int ft_fc_emit_timestamp()
+{
+  u32 out_off;
+
+  if (ft_fc_ws.ts_pos >= FT_FC_TS_COUNT)
+  {
+    printf("fc timestamp stack overflow\r\n");
+    return 0;
+  }
+
+  if (!ft_fc_emit_u32(FT_CCMD_REGREAD)) return 0;
+  if (!ft_fc_emit_u32(FT_REG_CLOCK)) return 0;
+  out_off = ft_fc_ws.pos;
+  if (!ft_fc_emit_u32(0)) return 0;
+
+  if (!ft_fc_add_output_save(out_off, FT_FC_DST_TS, ft_fc_ws.ts_pos * 4UL))
+    return 0;
+
+  ft_fc_ws.ts_pos++;
+  return 1;
+}
+
+
+
+char *ft_fc_unescape_token(char *s, char quote)
+{
+  char *d = s;
+
+  while (*s)
+  {
+    if (*s == quote)
+    {
+      *d = 0;
+      return s + 1;
+    }
+
+    if (*s == '\\' && s[1])
+    {
+      s++;
+      switch (*s)
+      {
+        case 'n': *d++ = '\n'; break;
+        case 'r': *d++ = '\r'; break;
+        case 't': *d++ = '\t'; break;
+        default: *d++ = *s; break;
+      }
+      s++;
+      continue;
+    }
+
+    *d++ = *s++;
+  }
+
+  *d = 0;
+  return nullptr;
+}
+
+int ft_fc_split_words(char *s, char **argv, int max_argc)
+{
+  int argc = 0;
+
+  s = ft_f_skip_spaces(s);
+  while (s && *s)
+  {
+    if (argc >= max_argc)
+    {
+      printf("Too many fc command arguments\r\n");
+      return -1;
+    }
+
+    if (*s == '"' || *s == '\'')
+    {
+      char quote = *s++;
+      argv[argc++] = s;
+      s = ft_fc_unescape_token(s, quote);
+      if (!s)
+      {
+        printf("Unterminated string in fc command\r\n");
+        return -1;
+      }
+
+      s = ft_f_skip_spaces(s);
+      continue;
+    }
+
+    argv[argc++] = s;
+    while (*s && *s != ' ' && *s != '\t' && *s != '\r' && *s != '\n')
+      s++;
+
+    if (!*s) break;
+    *s++ = 0;
+    s = ft_f_skip_spaces(s);
+  }
+
+  return argc;
+}
+
+char *ft_fc_next_segment(char **cursor)
+{
+  char *seg = *cursor;
+  char *s = seg;
+  char quote = 0;
+
+  if (!seg) return nullptr;
+
+  while (*s)
+  {
+    if (quote)
+    {
+      if (*s == '\\' && s[1])
+      {
+        s += 2;
+        continue;
+      }
+
+      if (*s == quote)
+        quote = 0;
+
+      s++;
+      continue;
+    }
+
+    if (*s == '"' || *s == '\'')
+    {
+      quote = *s++;
+      continue;
+    }
+
+    if (*s == ';')
+    {
+      *s++ = 0;
+      *cursor = s;
+      return seg;
+    }
+
+    s++;
+  }
+
+  *cursor = nullptr;
+  return seg;
+}
+
+int ft_fc_exec_segment(char *segment)
+{
+  const FT_FC_CMD_DEF *cmd;
+  const char *str = nullptr;
+  int argc;
+  int cmd_arg = 0;
+  int arg_count;
+  int ambiguous;
+
+  argc = ft_fc_split_words(segment, ft_fc_ws.argv, FT_FC_ARG_MAX);
+  if (argc < 0) return 1;
+  if (!argc) return 0;
+
+  if (ft_f_name_equals(ft_fc_ws.argv[0], "fc"))
+  {
+    if (argc == 1) return 0;
+    cmd_arg = 1;
+  }
+
+  if (ft_f_name_equals(ft_fc_ws.argv[cmd_arg], "ts"))
+  {
+    if (argc != cmd_arg + 1)
+    {
+      printf("Usage: ts\r\n");
+      return 1;
+    }
+
+    return ft_fc_emit_timestamp() ? 0 : 1;
+  }
+
+  cmd = ft_fc_find_cmd(ft_fc_ws.argv[cmd_arg], &ambiguous);
+  if (!cmd)
+  {
+    if (ambiguous)
+      printf("Ambiguous co-processor command: %s\r\n", ft_fc_ws.argv[cmd_arg]);
+    else
+      printf("Unknown co-processor command: %s\r\n", ft_fc_ws.argv[cmd_arg]);
+    return 1;
+  }
+
+  arg_count = argc - cmd_arg - 1;
+  if (arg_count < cmd->min_args || arg_count > cmd->max_args)
+  {
+    printf("Bad argument count for %s: %d, expected ", cmd->name, arg_count);
+    if (cmd->min_args == cmd->max_args)
+      printf("%u\r\n", (unsigned int)cmd->min_args);
+    else
+      printf("%u..%u\r\n", (unsigned int)cmd->min_args, (unsigned int)cmd->max_args);
+    return 1;
+  }
+
+  if (cmd->fmt == FT_FC_FMT_TEXT || cmd->fmt == FT_FC_FMT_BUTTON || cmd->fmt == FT_FC_FMT_TOGGLE)
+  {
+    str = ft_fc_ws.argv[argc - 1];
+    arg_count--;
+  }
+
+  if (arg_count > FT_FC_RAW_ARG_MAX)
+  {
+    printf("Too many fc command arguments\r\n");
+    return 1;
+  }
+
+  memset(ft_fc_ws.out_save, 0, sizeof(ft_fc_ws.out_save));
+  memset(ft_fc_ws.out_dst_type, 0, sizeof(ft_fc_ws.out_dst_type));
+  memset(ft_fc_ws.out_dst_off, 0, sizeof(ft_fc_ws.out_dst_off));
+
+  for (int i = 0; i < arg_count; ++i)
+  {
+    int ok;
+    int save;
+    u8 dst_type;
+    u32 dst_off;
+    int out_arg = (cmd->out_mask & FT_FC_OUT(i)) != 0;
+    ft_fc_ws.args[i] = ft_fc_parse_arg(ft_fc_ws.argv[cmd_arg + 1 + i], "arg", out_arg, &ok, &dst_type, &dst_off, &save);
+    if (!ok) return 1;
+    ft_fc_ws.out_save[i] = (u8)save;
+    ft_fc_ws.out_dst_type[i] = dst_type;
+    ft_fc_ws.out_dst_off[i] = dst_off;
+  }
+
+  if (!ft_fc_emit_cmd(cmd, ft_fc_ws.args, arg_count, str))
+    return 1;
+
+  return 0;
+}
+
+int ft_fc_build(int argc, char **argv)
+{
+  size_t pos = 0;
+  char *seg;
+  char *cursor;
+
+  ft_fc_ws.pos = 0;
+  ft_fc_ws.ts_pos = 0;
+  ft_fc_ws.save_count = 0;
+  ft_fc_ws.sp = 0;
+  ft_fc_ws.line[0] = 0;
+  memset(ft_fc_ws.ts, 0, sizeof(ft_fc_ws.ts));
+  memset(ft_fc_ws.scratch, 0, sizeof(ft_fc_ws.scratch));
+
+  for (int i = 0; i < argc; ++i)
+  {
+    size_t n;
+
+    if (!argv[i]) continue;
+
+    n = strlen(argv[i]);
+    if (pos + n + (pos ? 1 : 0) + 1 > sizeof(ft_fc_ws.line))
+    {
+      printf("fc command line is too long\r\n");
+      return 1;
+    }
+
+    if (pos)
+      ft_fc_ws.line[pos++] = ' ';
+    memcpy(&ft_fc_ws.line[pos], argv[i], n);
+    pos += n;
+    ft_fc_ws.line[pos] = 0;
+  }
+
+  cursor = ft_fc_ws.line;
+  while ((seg = ft_fc_next_segment(&cursor)) != nullptr)
+  {
+    if (ft_fc_exec_segment(seg))
+      return 1;
+  }
+
+  return 0;
+}
+
+esp_err_t ft_fc_wait_idle(uint32_t timeout_ms)
+{
+  int64_t t0 = esp_timer_get_time();
+
+  while (1)
+  {
+    u16 rp = ft_rreg16(FT_REG_CMD_READ) & 0x0FFF;
+    u16 wp = ft_rreg16(FT_REG_CMD_WRITE) & 0x0FFF;
+
+    if (rp == 0x0FFF || wp == 0x0FFF)
+      return ESP_FAIL;
+
+    if (rp == wp)
+      return ESP_OK;
+
+    if (((esp_timer_get_time() - t0) / 1000) >= (int64_t)timeout_ms)
+      return ESP_ERR_TIMEOUT;
+
+    vTaskDelay(pdMS_TO_TICKS(1));
+  }
+}
+
+esp_err_t ft_fc_write_cmd_stream(u32 start, u32 size)
+{
+  u32 first;
+  esp_err_t err;
+
+  if (!size) return ESP_OK;
+
+  if (start + size <= FT_CMD_FIFO_SIZE)
+    return ft_write(ft_fc_ws.cmd, FT_RAM_CMD + start, size);
+
+  first = FT_CMD_FIFO_SIZE - start;
+  err = ft_write(ft_fc_ws.cmd, FT_RAM_CMD + start, first);
+  if (err != ESP_OK) return err;
+
+  return ft_write(ft_fc_ws.cmd + first, FT_RAM_CMD, size - first);
+}
+
+esp_err_t ft_fc_read_cmd_stream(u32 start, u32 size)
+{
+  u32 first;
+  esp_err_t err;
+
+  if (!size) return ESP_OK;
+
+  if (start + size <= FT_CMD_FIFO_SIZE)
+    return ft_read(ft_fc_ws.cmd, FT_RAM_CMD + start, size);
+
+  first = FT_CMD_FIFO_SIZE - start;
+  err = ft_read(ft_fc_ws.cmd, FT_RAM_CMD + start, first);
+  if (err != ESP_OK) return err;
+
+  return ft_read(ft_fc_ws.cmd + first, FT_RAM_CMD, size - first);
+}
+
+void ft_fc_store_output(u8 dst_type, u32 dst_off, u32 value)
+{
+  if (dst_type == FT_FC_DST_SCRATCH)
+  {
+    wr32le(&ft_fc_ws.scratch[dst_off], value);
+    return;
+  }
+
+  if (dst_type == FT_FC_DST_TS)
+    wr32le(&ft_fc_ws.ts[dst_off], value);
+}
+
+int ft_fc_extract_outputs()
+{
+  for (u32 i = 0; i < ft_fc_ws.save_count; ++i)
+  {
+    u32 src_off = ft_fc_ws.save_src_off[i];
+    u32 value;
+
+    if (src_off + 4 > ft_fc_ws.pos)
+    {
+      printf("fc bad output readback offset: %lu\r\n", (unsigned long)src_off);
+      return 0;
+    }
+
+    value = ft_rd32le(&ft_fc_ws.cmd[src_off]);
+    ft_fc_store_output(ft_fc_ws.save_dst_type[i], ft_fc_ws.save_dst_off[i], value);
+  }
+
+  return 1;
+}
+
+esp_err_t ft_fc_reset_fifo()
+{
+  esp_err_t err;
+
+  err = ft_cp_reset();
+  if (err != ESP_OK) return err;
+
+  return ft_fc_wait_idle(1000);
+}
+
+void ft_fc_dump_stream(u32 start, u32 next)
+{
+  printf("\r\nfc command stream before exec (%lu bytes, start=0x%03lX next=0x%03lX):\r\n",
+         (unsigned long)ft_fc_ws.pos,
+         (unsigned long)start,
+         (unsigned long)next);
+  hexdump(ft_fc_ws.cmd, ft_fc_ws.pos, FT_RAM_CMD + start);
+}
+
+void ft_fc_print_timestamps(u32 frequency)
+{
+  u32 base = 0;
+  u32 prev = 0;
+  int have_base = 0;
+  u32 printed = 0;
+
+  printf("\r\nfc timestamps:\r\n");
+
+  if (!frequency)
+    frequency = 60000000UL;
+
+  for (u32 i = 0; i < ft_fc_ws.save_count; ++i)
+  {
+    u32 off;
+    u32 v;
+    u32 total_ticks;
+    u32 delta_ticks;
+    uint64_t total_us;
+    uint64_t delta_us;
+
+    if (ft_fc_ws.save_dst_type[i] != FT_FC_DST_TS)
+      continue;
+
+    off = ft_fc_ws.save_dst_off[i];
+    v = ft_rd32le(&ft_fc_ws.ts[off]);
+
+    if (!have_base)
+    {
+      base = v;
+      prev = v;
+      have_base = 1;
+    }
+
+    total_ticks = v - base;
+    delta_ticks = v - prev;
+    total_us = ((uint64_t)total_ticks * 1000000ULL) / (uint64_t)frequency;
+    delta_us = ((uint64_t)delta_ticks * 1000000ULL) / (uint64_t)frequency;
+
+    printf("  %03lu: total %lu ticks, %llu us; delta %lu ticks, %llu us\r\n",
+           (unsigned long)printed,
+           (unsigned long)total_ticks,
+           (unsigned long long)total_us,
+           (unsigned long)delta_ticks,
+           (unsigned long long)delta_us);
+
+    prev = v;
+    printed++;
+  }
+
+  if (!printed)
+    printf("  none\r\n");
+}
+
+
+const char *ft_fc_cmd_args(const FT_FC_CMD_DEF *cmd)
+{
+  switch (cmd->code)
+  {
+    case FT_CCMD_APPEND:           return "<ptr> <num>";
+    case FT_CCMD_BGCOLOR:          return "<rgb>";
+    case FT_CCMD_BITMAP_TRANSFORM: return "<x0> <y0> <x1> <y1> <x2> <y2> <tx0> <ty0> <tx1> <ty1> <tx2> <ty2> <result:out>";
+    case FT_CCMD_BUTTON:           return "<x> <y> <w> <h> <font> <options> <text>";
+    case FT_CCMD_CALIBRATE:        return "<result:out>";
+    case FT_CCMD_CLOCK:            return "<x> <y> <r> <options> <h> <m> <s> <ms>";
+    case FT_CCMD_COLDSTART:        return "";
+    case FT_CCMD_CRC:              return "<ptr> <num> <result:out>";
+    case FT_CCMD_CSKETCH:          return "<x> <y> <w> <h> <ptr> <format> <freq>";
+    case FT_CCMD_DIAL:             return "<x> <y> <r> <options> <val>";
+    case FT_CCMD_DLSTART:          return "";
+    case FT_CCMD_EXECUTE:          return "[u32...]";
+    case FT_CCMD_FGCOLOR:          return "<rgb>";
+    case FT_CCMD_FLASHATTACH:      return "";
+    case FT_CCMD_FLASHDETACH:      return "";
+    case FT_CCMD_FLASHERASE:       return "";
+    case FT_CCMD_FLASHFAST:        return "<result:out>";
+    case FT_CCMD_FLASHRX:          return "<dst> <num>";
+    case FT_CCMD_FLASHSOURCE:      return "<ptr>";
+    case FT_CCMD_FLASHSPIDESEL:    return "";
+    case FT_CCMD_FLASHTX:          return "<num>";
+    case FT_CCMD_FLASHUPDATE:      return "<dest> <src> <num>";
+    case FT_CCMD_GAUGE:            return "<x> <y> <r> <options> <major> <minor> <val> <range>";
+    case FT_CCMD_GETMATRIX:        return "<a:out> <b:out> <c:out> <d:out> <e:out> <f:out>";
+    case FT_CCMD_GETPOINT:         return "[u32...]";
+    case FT_CCMD_GETPROPS:         return "<ptr> <w:out> <h:out>";
+    case FT_CCMD_GETPTR:           return "<result:out>";
+    case FT_CCMD_GRADCOLOR:        return "<rgb>";
+    case FT_CCMD_GRADIENT:         return "<x0> <y0> <rgb0> <x1> <y1> <rgb1>";
+    case FT_CCMD_HAMMERAUX:        return "[u32...]";
+    case FT_CCMD_IDCT_DELETED:     return "[u32...]";
+    case FT_CCMD_INFLATE:          return "<ptr> [data...]";
+    case FT_CCMD_INTERRUPT:        return "<ms>";
+    case FT_CCMD_INT_RAMSHARED:    return "<ptr>";
+    case FT_CCMD_INT_SWLOADIMAGE:  return "<ptr> <options>";
+    case FT_CCMD_KEYS:             return "<x> <y> <w> <h> <font> <options> <text>";
+    case FT_CCMD_LOADIDENTITY:     return "";
+    case FT_CCMD_LOADIMAGE:        return "<ptr> <options> [image-data...]";
+    case FT_CCMD_LOGO:             return "";
+    case FT_CCMD_MARCH:            return "[u32...]";
+    case FT_CCMD_MEDIAFIFO:        return "<ptr> <size>";
+    case FT_CCMD_MEMCPY:           return "<dst> <src> <num>";
+    case FT_CCMD_MEMCRC:           return "<ptr> <num> <result:out>";
+    case FT_CCMD_MEMSET:           return "<ptr> <value> <num>";
+    case FT_CCMD_MEMWRITE:         return "<ptr> <u32...>";
+    case FT_CCMD_MEMZERO:          return "<ptr> <num>";
+    case FT_CCMD_NUMBER:           return "<x> <y> <font> <options> <num>";
+    case FT_CCMD_PLAYVIDEO:        return "<options> [video-data...]";
+    case FT_CCMD_PROGRESS:         return "<x> <y> <w> <h> <options> <val> <range>";
+    case FT_CCMD_REGREAD:          return "<reg> <dst:out>";
+    case FT_CCMD_ROMFONT:          return "<font> <romslot>";
+    case FT_CCMD_ROTATE:           return "<angle>";
+    case FT_CCMD_SCALE:            return "<sx> <sy>";
+    case FT_CCMD_SCREENSAVER:      return "";
+    case FT_CCMD_SCROLLBAR:        return "<x> <y> <w> <h> <options> <val> <size> <range>";
+    case FT_CCMD_SETBASE:          return "<base>";
+    case FT_CCMD_SETBITMAP:        return "<source> <format> <width> <height>";
+    case FT_CCMD_SETFONT:          return "<font> <ptr>";
+    case FT_CCMD_SETFONT2:         return "<font> <ptr> <firstchar>";
+    case FT_CCMD_SETMATRIX:        return "";
+    case FT_CCMD_SETROTATE:        return "<rotate>";
+    case FT_CCMD_SETSCRATCH:       return "<handle>";
+    case FT_CCMD_SKETCH:           return "<x> <y> <w> <h> <ptr> <format>";
+    case FT_CCMD_SLIDER:           return "<x> <y> <w> <h> <options> <val> <range>";
+    case FT_CCMD_SNAPSHOT:         return "<ptr>";
+    case FT_CCMD_SNAPSHOT2:        return "<format> <ptr> <x> <y> <w> <h>";
+    case FT_CCMD_SPINNER:          return "<x> <y> <style> <scale>";
+    case FT_CCMD_STOP:             return "";
+    case FT_CCMD_SWAP:             return "";
+    case FT_CCMD_SYNC:             return "";
+    case FT_CCMD_TEXT:             return "<x> <y> <font> <options> <text>";
+    case FT_CCMD_TOGGLE:           return "<x> <y> <w> <font> <options> <state> <text>";
+    case FT_CCMD_TOUCH_TRANSFORM:  return "<x0> <y0> <x1> <y1> <x2> <y2> <tx0> <ty0> <tx1> <ty1> <tx2> <ty2> <result:out>";
+    case FT_CCMD_TRACK:            return "<x> <y> <w> <h> <tag>";
+    case FT_CCMD_TRANSLATE:        return "<tx> <ty>";
+    case FT_CCMD_VIDEOFRAME:       return "<dst> <ptr>";
+    case FT_CCMD_VIDEOSTART:       return "";
+  }
+
+  return "[u32...]";
+}
+
+int ft_fc_cmd_list()
+{
+  printf("Usage:\r\n");
+  printf("  fc <cmd> [args]; <cmd> [args]; ...\r\n");
+  printf("Special:\r\n");
+  printf("  ts                 append REG_CLOCK timestamp to timestamp stack\r\n");
+  printf("  sp                 ESP-side scratchpad output pointer, auto +4 for output args\r\n");
+  printf("  scratch[+off]      ESP-side output for output args, FT RAM_G address otherwise\r\n");
+  printf("Examples:\r\n");
+  printf("  fc ts; mw 0 15 25; ts; mc 0 0x100 0x100; ts; rr clock sp; ts\r\n");
+  printf("Commands:\r\n");
+
+  for (size_t i = 0; i < sizeof(ft_fc_cmds) / sizeof(ft_fc_cmds[0]); ++i)
+  {
+    const FT_FC_CMD_DEF *cmd = &ft_fc_cmds[i];
+    printf("  %-20s %-12s %s\r\n",
+           cmd->name,
+           cmd->aliases ? cmd->aliases : "",
+           ft_fc_cmd_args(cmd));
+  }
+
+  return 0;
+}
+
+int ft_fc_cmd(int argc, char **argv)
+{
+  esp_err_t err;
+  esp_err_t err2;
+  u32 start;
+  u32 next;
+  u32 frequency;
+  u16 cmd_read;
+  u16 cmd_write;
+
+  if (argc == 1 || (argc == 2 && (!strcmp(argv[1], "?") || !strcmp(argv[1], "help"))))
+    return ft_fc_cmd_list();
+
+  if (ft_fc_build(argc, argv))
+    return 1;
+
+  if (!ft_fc_ws.pos)
+  {
+    printf("fc: empty command stream\r\n");
+    return 1;
+  }
+
+  err = ft_open_session();
+  if (err != ESP_OK)
+  {
+    printf("FT open failed: %d\r\n", (int)err);
+    return 1;
+  }
+
+  err = ft_fc_wait_idle(1000);
+
+  start = ft_rreg16(FT_REG_CMD_WRITE) & 0x0FFF;
+  next = (start + ft_fc_ws.pos) & 0x0FFF;
+
+  if (err == ESP_OK)
+    ft_fc_dump_stream(start, next);
+
+  if (err == ESP_OK)
+    err = ft_fc_write_cmd_stream(start, ft_fc_ws.pos);
+
+  if (err == ESP_OK)
+    ft_wreg32(FT_REG_CMD_WRITE, next);
+
+  if (err == ESP_OK)
+    err = ft_fc_wait_idle(5000);
+
+  if (err == ESP_OK)
+    err = ft_fc_read_cmd_stream(start, ft_fc_ws.pos);
+
+  if (err == ESP_OK && !ft_fc_extract_outputs())
+    err = ESP_FAIL;
+
+  if (err == ESP_OK)
+  {
+    err = ft_fc_reset_fifo();
+    if (err != ESP_OK)
+      printf("fc: command FIFO reset failed after exec: %s (0x%x)\r\n",
+             esp_err_to_name(err), (unsigned int)err);
+  }
+  else
+  {
+    err2 = ft_fc_reset_fifo();
+    if (err2 != ESP_OK)
+      printf("fc: command FIFO reset after failure failed: %s (0x%x)\r\n",
+             esp_err_to_name(err2), (unsigned int)err2);
+  }
+
+  frequency = ft_rreg32(FT_REG_FREQUENCY);
+  cmd_read = ft_rreg16(FT_REG_CMD_READ) & 0x0FFF;
+  cmd_write = ft_rreg16(FT_REG_CMD_WRITE) & 0x0FFF;
+
+  err2 = ft_close_session();
+  if (err == ESP_OK && err2 != ESP_OK)
+    err = err2;
+
+  if (err != ESP_OK)
+  {
+    printf("fc failed: %s (0x%x), cmd_read=0x%03X cmd_write=0x%03X\r\n",
+           esp_err_to_name(err), (unsigned int)err,
+           (unsigned int)cmd_read, (unsigned int)cmd_write);
+    return 1;
+  }
+
+  printf("fc: cmd_bytes=%lu scratch=esp[%u] timestamps=esp[%u] pll=%lu Hz\r\n",
+         (unsigned long)ft_fc_ws.pos,
+         (unsigned int)FT_FC_SCRATCH_SIZE,
+         (unsigned int)FT_FC_TS_COUNT,
+         (unsigned long)frequency);
+
+  ft_fc_print_timestamps(frequency);
+
+  printf("\r\nfc scratchpad:\r\n");
+  hexdump(ft_fc_ws.scratch, sizeof(ft_fc_ws.scratch), 0);
+
+  return 0;
+}
+
 int ft_demo_logo_cmd()
 {
   esp_err_t err;
@@ -6165,6 +8374,32 @@ void ft_console_register_system_commands()
       .help     = "FT812 commands: res/mode/info/dump/dl/swap/wreg/wr/wr8/wr16/wr32/demo/jpg/dxp/spi/freq/perf",
       .hint     = NULL,
       .func     = &ft_cli_cmd,
+      .argtable = NULL
+    };
+
+    ESP_ERROR_CHECK(esp_console_cmd_register(&cmd));
+  }
+
+  {
+    const esp_console_cmd_t cmd =
+    {
+      .command  = "fd",
+      .help     = "FT812 display-list builder: fd, fd ;, fd <dl-element> [args...]",
+      .hint     = NULL,
+      .func     = &ft_f_cmd,
+      .argtable = NULL
+    };
+
+    ESP_ERROR_CHECK(esp_console_cmd_register(&cmd));
+  }
+
+  {
+    const esp_console_cmd_t cmd =
+    {
+      .command  = "fc",
+      .help     = "FT812 co-processor command builder: fc cmd [args]; ts; ...",
+      .hint     = NULL,
+      .func     = &ft_fc_cmd,
       .argtable = NULL
     };
 

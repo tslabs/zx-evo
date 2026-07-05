@@ -22,6 +22,7 @@ extern char tsf_storage_part_label[16];
 esp_err_t tsf_storage_mount();
 esp_err_t tsf_storage_mount_quiet();
 esp_err_t tsf_storage_format();
+esp_err_t tsf_storage_delete();
 esp_err_t tsf_storage_init();
 esp_err_t tsf_storage_ensure_ready();
 esp_err_t tsf_storage_ensure_ready_quiet();
@@ -42,6 +43,7 @@ esp_err_t tsf_storage_register_vfs();
 
 int tsf_storage_info_cmd(int argc, char **argv);
 int tsf_storage_format_cmd(int argc, char **argv);
+int tsf_storage_delete_cmd(int argc, char **argv);
 int tsf_storage_ls_cmd(int argc, char **argv);
 int tsf_storage_cmd(int argc, char **argv);
 

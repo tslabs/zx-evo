@@ -6,6 +6,7 @@
 #include <inttypes.h>
 #include <unistd.h>
 #include <math.h>
+#include <limits.h>
 #include <sys/time.h>
 
 #include "freertos/FreeRTOS.h"
@@ -39,8 +40,7 @@
 #include "main.h"
 #include "esp_spi_defs.h"
 #include "mem_obj.h"
-#include "xm.h"
-#include "xm_cpp.h"
+#include "tracker.h"
 #include "spi_slave.h"
 #include "stats.h"
 #include "ft8xx.h"
@@ -326,6 +326,8 @@ const char *esp_status_str(uint8_t st)
     case ESP_ERR_INV_ELF:          return "Invalid ELF";
     case ESP_ERR_INV_HST:          return "Invalid HST";
     case ESP_ERR_INV_ZIP:          return "Invalid ZIP";
+    case ESP_ERR_INV_S3M:          return "Invalid S3M";
+    case ESP_ERR_INV_S3M_HANDLE:   return "Invalid S3M handle";
 
     case ESP_ERR_OUT_OF_MEMORY:    return "Out of memory";
     case ESP_ERR_OUT_OF_HANDLES:   return "Out of handles";
@@ -382,6 +384,9 @@ int get_info(int argc, char **argv)
   }
 
   printf("\r\n%s\r\n", CP_STRING);
+  printf("Product version: %u.%u.%u\r\n", PROD_VER0, PROD_VER1, PROD_VER2);
+  printf("API version: %u\r\n", API_VER);
+  printf("Feature version: %u\r\n", FEAT_VER);
   printf("Build: " __DATE__ ", " __TIME__ "\r\n");
   printf("\r\n");
 
@@ -1377,6 +1382,10 @@ const char *obj_type_str(uint8_t t)
     case OBJ_TYPE_HST:   return "HST";
     case OBJ_TYPE_ZIP:   return "ZIP";
     case OBJ_TYPE_XMC:   return "XM ctx";
+    case OBJ_TYPE_MOD:   return "MOD";
+    case OBJ_TYPE_MDC:   return "MOD ctx";
+    case OBJ_TYPE_S3M:   return "S3M";
+    case OBJ_TYPE_S3C:   return "S3M ctx";
     default:             return "Unknown";
   }
 }
@@ -1388,9 +1397,11 @@ const char *obj_state_str(uint8_t st)
     case OBJ_ST_NONE:       return "None";
     case OBJ_ST_ERROR:      return "Error";
     case LIB_OBJ_ST_READY:  return "Ready";
-    case XM_OBJ_ST_STOPPED: return "Stopped";
-    case XM_OBJ_ST_PLAYING: return "Playing";
-    default:                return "Unknown";
+    case TRACK_OBJ_ST_STOPPED:  return "Stopped";
+    case TRACK_OBJ_ST_PLAYING:  return "Playing";
+    case WAV_OBJ_ST_PLAYING: return "Playing";
+    case OBJ_ST_DELETING:    return "Deleting";
+    default:                 return "Unknown";
   }
 }
 
@@ -1404,30 +1415,165 @@ int obj_info(int argc, char **argv)
       const uint8_t t = mem_obj[i].type;
       const uint8_t s = mem_obj[i].state;
 
+      printf
+      (
+        "ID: %02X  Type: %02X (%s)  State: %02X (%s)  Addr: %08X  Size: %u\r\n",
+        (unsigned)i,
+        (unsigned)t, obj_type_str(t),
+        (unsigned)s, obj_state_str(s),
+        (unsigned int)mem_obj[i].addr,
+        (unsigned)mem_obj[i].size
+      );
+
       switch (mem_obj[i].type)
       {
         case OBJ_TYPE_LIB:
-          printf
-          (
-            "ID: %02X  Type: %02X (%s)  State: %02X (%s)  Size: %u  ",
-            (unsigned)i,
-            (unsigned)t, obj_type_str(t),
-            (unsigned)s, obj_state_str(s),
-            (unsigned)mem_obj[i].size
-          );
-          printf("Entry: %08X  text: %08X  data: %08X  ro: %08X  bss: %08X\r\n", (unsigned int)mem_obj[i].entry, (unsigned int)mem_obj[i].text, (unsigned int)mem_obj[i].data, (unsigned int)mem_obj[i].rodata, (unsigned int)mem_obj[i].bss);
+          printf("  Entry: %08X\r\n", (unsigned int)mem_obj[i].entry);
+          printf("  Buffer       Addr      Size\r\n");
+
+          if (mem_obj[i].text)
+            printf("  %-10s  %08X  %u\r\n", "text", (unsigned int)mem_obj[i].text, (unsigned)mem_obj[i].sz_text);
+
+          if (mem_obj[i].rodata)
+            printf("  %-10s  %08X  %u\r\n", "rodata", (unsigned int)mem_obj[i].rodata, (unsigned)mem_obj[i].sz_rodata);
+
+          if (mem_obj[i].data)
+            printf("  %-10s  %08X  %u\r\n", "data", (unsigned int)mem_obj[i].data, (unsigned)mem_obj[i].sz_data);
+
+          if (mem_obj[i].bss)
+            printf("  %-10s  %08X  %u\r\n", "bss", (unsigned int)mem_obj[i].bss, (unsigned)mem_obj[i].sz_bss);
+        break;
+
+        case OBJ_TYPE_XMC:
+        case OBJ_TYPE_MDC:
+        case OBJ_TYPE_S3C:
+        {
+          const xm_context_t *ctx = (const xm_context_t*)mem_obj[i].addr;
+
+          if (!tracker_context_has_registered_segments(ctx))
+          {
+            printf("  No registered tracker segments\r\n");
+            break;
+          }
+
+          typedef struct tracker_segment_summary_s
+          {
+            uint8_t type;
+            uint16_t count;
+            size_t total_size;
+            void *addr;
+            size_t size;
+          } tracker_segment_summary_t;
+
+          tracker_segment_summary_t summary[] =
+          {
+            { TRACKER_CONTEXT_SEG_CONTEXT, 0, 0, NULL, 0 },
+            { TRACKER_CONTEXT_SEG_RUNTIME, 0, 0, NULL, 0 },
+            { TRACKER_CONTEXT_SEG_PATTERNS, 0, 0, NULL, 0 },
+            { TRACKER_CONTEXT_SEG_INSTRUMENTS, 0, 0, NULL, 0 },
+            { TRACKER_CONTEXT_SEG_SAMPLES, 0, 0, NULL, 0 },
+            { TRACKER_CONTEXT_SEG_FORMAT_EXTRA, 0, 0, NULL, 0 }
+          };
+
+          uint16_t unknown_count = 0;
+          size_t unknown_total_size = 0;
+          uint16_t seg_count = tracker_context_get_segment_count(ctx);
+
+          for (uint16_t j = 0; j < seg_count; j++)
+          {
+            tracker_context_segment_t seg;
+            bool found = false;
+
+            if (!tracker_context_get_segment(ctx, j, &seg)) continue;
+
+            for (size_t k = 0; k < sizeof(summary) / sizeof(summary[0]); k++)
+            {
+              if (summary[k].type != seg.type) continue;
+
+              summary[k].count++;
+              summary[k].total_size += seg.size;
+
+              if (summary[k].count == 1)
+              {
+                summary[k].addr = seg.addr;
+                summary[k].size = seg.size;
+              }
+
+              found = true;
+              break;
+            }
+
+            if (!found)
+            {
+              unknown_count++;
+              unknown_total_size += seg.size;
+            }
+          }
+
+          printf("  Buffer              Count  Addr      Size\r\n");
+
+          for (size_t j = 0; j < sizeof(summary) / sizeof(summary[0]); j++)
+          {
+            const char *seg_type = "unknown";
+            char name[32];
+
+            if (!summary[j].count) continue;
+
+            switch (summary[j].type)
+            {
+              case TRACKER_CONTEXT_SEG_CONTEXT:      seg_type = "context"; break;
+              case TRACKER_CONTEXT_SEG_RUNTIME:      seg_type = "runtime"; break;
+              case TRACKER_CONTEXT_SEG_PATTERNS:     seg_type = "patterns"; break;
+              case TRACKER_CONTEXT_SEG_INSTRUMENTS:  seg_type = "instruments"; break;
+              case TRACKER_CONTEXT_SEG_SAMPLES:      seg_type = "samples"; break;
+              case TRACKER_CONTEXT_SEG_FORMAT_EXTRA: seg_type = "format-extra"; break;
+              default: break;
+            }
+
+            if (summary[j].count > 1)
+              snprintf(name, sizeof(name), "%s (%u)", seg_type, (unsigned)summary[j].count);
+            else
+              snprintf(name, sizeof(name), "%s", seg_type);
+
+            if (summary[j].count == 1)
+            {
+              printf
+              (
+                "  %-18s  %5u  %08X  %u\r\n",
+                name,
+                (unsigned)summary[j].count,
+                (unsigned int)summary[j].addr,
+                (unsigned)summary[j].size
+              );
+            }
+            else
+            {
+              printf
+              (
+                "  %-18s  %5u  %-8s  %u\r\n",
+                name,
+                (unsigned)summary[j].count,
+                "multiple",
+                (unsigned)summary[j].total_size
+              );
+            }
+          }
+
+          if (unknown_count)
+          {
+            printf
+            (
+              "  %-18s  %5u  %-8s  %u\r\n",
+              "unknown",
+              (unsigned)unknown_count,
+              "multiple",
+              (unsigned)unknown_total_size
+            );
+          }
+        }
         break;
 
         default:
-          printf
-          (
-            "ID: %02X  Type: %02X (%s)  State: %02X (%s)  Addr: %08X  Size: %u\r\n",
-            (unsigned)i,
-            (unsigned)t, obj_type_str(t),
-            (unsigned)s, obj_state_str(s),
-            (unsigned int)mem_obj[i].addr,
-            (unsigned)mem_obj[i].size
-          );
         break;
       }
     }
@@ -1466,40 +1612,59 @@ int tasks_info(int argc, char **argv)
 
 int stats_info(int argc, char **argv)
 {
-#if CONFIG_FREERTOS_RUN_TIME_STATS_USING_ESP_TIMER
-  vTaskGetRunTimeStats(_st.runtime_stats_buffer);
-  printf("\r\n");
-  printf("Task runtime statistics:\n%s", _st.runtime_stats_buffer);
-#endif
-
-  printf("\r\ndrq_data_start, us\tdrq_data_end, us\txm_render, us   \txm_render, %%cpu\r\n");
-  printf("min\tlast\tmax\tmin\tlast\tmax\tmin\tcurr\tmax\tmin\tcurr\tmax\r\n");
-  // printf("xm_samp_min: %f   \r\n", _st.xm_samp_min);
-  // printf("xm_samp_max: %f   \r\n", _st.xm_samp_max);
+  printf("\r\nAudio render per 10 ms frame. Press any key to stop.\r\n");
+  printf("format: source last/max cpu%%\r\n");
 
   while (1)
   {
-    printf("%d \t%d \t%d \t%d \t%d \t%d \t%d \t%d \t%d \t%d \t%d \t%d \t\r",
-      _st.drq_data_start_min_us == INT_MAX ? 0 : _st.drq_data_start_min_us,
-      _st.drq_data_start_last_us,
-      _st.drq_data_start_max_us,
-      _st.drq_data_end_min_us == INT_MAX ? 0 : _st.drq_data_end_min_us,
-      _st.drq_data_end_last_us,
-      _st.drq_data_end_max_us,
-      _st.xm_render_min_us == INT_MAX ? 0 : _st.xm_render_min_us,
-      _st.xm_render_last_us,
-      _st.xm_render_max_us,
-      _st.xm_render_min_cpu == INT_MAX ? 0 : _st.xm_render_min_cpu,
-      _st.xm_render_last_cpu,
-      _st.xm_render_max_cpu);
+    printf("trk %2d.%d/%2d.%d%% | opl %2d.%d/%2d.%d%% | sfx %2d.%d/%2d.%d%% | total %2d.%d/%2d.%d%%        \r",
+      _st.audio_tracker_last_cpu_x10 / 10,
+      _st.audio_tracker_last_cpu_x10 % 10,
+      _st.audio_tracker_max_cpu_x10 / 10,
+      _st.audio_tracker_max_cpu_x10 % 10,
+
+      _st.audio_opl_last_cpu_x10 / 10,
+      _st.audio_opl_last_cpu_x10 % 10,
+      _st.audio_opl_max_cpu_x10 / 10,
+      _st.audio_opl_max_cpu_x10 % 10,
+
+      _st.audio_sfx_last_cpu_x10 / 10,
+      _st.audio_sfx_last_cpu_x10 % 10,
+      _st.audio_sfx_max_cpu_x10 / 10,
+      _st.audio_sfx_max_cpu_x10 % 10,
+
+      _st.audio_total_last_cpu_x10 / 10,
+      _st.audio_total_last_cpu_x10 % 10,
+      _st.audio_total_max_cpu_x10 / 10,
+      _st.audio_total_max_cpu_x10 % 10);
 
     char c; if (uart_read_bytes(UART_NUM_0, &c, 1, 0)) break;
-
-    // printf("\033[18A");   // go up
   }
 
   printf("\r\n");
 
+  return 0;
+}
+
+
+int vol_cmd(int argc, char **argv)
+{
+  if (argc < 2)
+  {
+    printf("Output volume: %d\r\n", mix_volume);
+    return 0;
+  }
+
+  char *endp = NULL;
+  unsigned long value = strtoul(argv[1], &endp, 0);
+  if (!endp || *endp || value > 255)
+  {
+    printf("Bad <volume>: %s (expected 0..255)\r\n", argv[1]);
+    return 1;
+  }
+
+  mix_volume = (int)value;
+  printf("Output volume: %d\r\n", mix_volume);
   return 0;
 }
 
@@ -1678,9 +1843,21 @@ void esp_console_register_system_commands()
     const esp_console_cmd_t cmd =
     {
       .command = "stats",
-      .help    = "Get CPU usage of running tasks",
+      .help    = "Get audio render timing by source",
       .hint    = NULL,
       .func    = &stats_info,
+    };
+
+    ESP_ERROR_CHECK(esp_console_cmd_register(&cmd));
+  }
+
+  {
+    const esp_console_cmd_t cmd =
+    {
+      .command = "vol",
+      .help    = "Set output volume after mixer",
+      .hint    = NULL,
+      .func    = &vol_cmd,
     };
 
     ESP_ERROR_CHECK(esp_console_cmd_register(&cmd));

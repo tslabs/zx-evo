@@ -12,7 +12,7 @@ enum
   DREQ_RND,
   DREQ_URL,
   DREQ_STREAM,
-  DREQ_XM_STREAM,
+  DREQ_TRACK_STREAM,
 };
 
 u8 rd_reg8(u8 reg);
@@ -32,6 +32,9 @@ esp_err_t spi_master_set_data_lines(u8 lines);
 esp_err_t spi_master_write_buf(u8 cmd, u16 addr, const void *tx_data, size_t size);
 esp_err_t spi_master_read_buf(u8 cmd, u16 addr, void *rx_data, size_t size);
 esp_err_t spi_master_xfer(void *tx_data, void *rx_data, size_t size);
+esp_err_t spi_master_write_inline(u8 cmd, u16 addr, u32 value, size_t size);
+esp_err_t spi_master_read_inline(u8 cmd, u16 addr, u32 *value, size_t size);
+esp_err_t spi_master_host_cmd_inline(u8 cmd, u8 param);
 bool spi_master_bg_is_busy();
 bool spi_master_bg_is_done();
 esp_err_t spi_master_bg_get_result();

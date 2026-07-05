@@ -7,6 +7,8 @@
 #include "esp_console.h"
 #include "esp_partition.h"
 #include "esp_vfs_fat.h"
+#include "diskio_impl.h"
+#include "diskio_wl.h"
 #include "ff.h"
 #include "wear_levelling.h"
 #include "fatfs.h"
@@ -16,6 +18,13 @@ bool fs_fs_mounted = false;
 char fs_fs_base_path[32] = { 0 };
 char fs_part_label[16] = { 0 };
 wl_handle_t fs_wl_handle = WL_INVALID_HANDLE;
+FATFS *fs_fs_fatfs = NULL;
+BYTE fs_fs_pdrv = FF_DRV_NOT_USED;
+bool fs_fs_vfs_registered = false;
+bool fs_fs_diskio_registered = false;
+bool fs_fs_fat_mounted = false;
+bool fs_fs_no_filesystem = false;
+FRESULT fs_fs_last_mount_result = FR_OK;
 
 #define FS_VFS_MAX_FILES 4
 
@@ -47,6 +56,87 @@ const esp_partition_t *fs_find_partition()
     ESP_PARTITION_TYPE_DATA,
     ESP_PARTITION_SUBTYPE_DATA_FAT,
     FS_PART_LABEL);
+}
+
+void fs_clear_mount_state()
+{
+  fs_initialized = false;
+  fs_fs_mounted = false;
+  fs_fs_fatfs = NULL;
+  fs_fs_pdrv = FF_DRV_NOT_USED;
+  fs_fs_vfs_registered = false;
+  fs_fs_diskio_registered = false;
+  fs_fs_fat_mounted = false;
+  fs_fs_base_path[0] = 0;
+  fs_part_label[0] = 0;
+  fs_wl_handle = WL_INVALID_HANDLE;
+}
+
+void fs_unmount_force()
+{
+  char drv[3];
+
+  if (fs_fs_pdrv != FF_DRV_NOT_USED)
+  {
+    drv[0] = (char)('0' + fs_fs_pdrv);
+    drv[1] = ':';
+    drv[2] = 0;
+
+    if (fs_fs_fat_mounted)
+      f_mount(NULL, drv, 0);
+  }
+
+  if (fs_fs_diskio_registered && fs_fs_pdrv != FF_DRV_NOT_USED)
+  {
+    ff_diskio_unregister(fs_fs_pdrv);
+    if (fs_wl_handle != WL_INVALID_HANDLE)
+      ff_diskio_clear_pdrv_wl(fs_wl_handle);
+  }
+
+  if (fs_fs_vfs_registered)
+    esp_vfs_fat_unregister_path(fs_fs_base_path[0] ? fs_fs_base_path : FS_BASE_PATH);
+
+  if (fs_wl_handle != WL_INVALID_HANDLE)
+    wl_unmount(fs_wl_handle);
+
+  fs_clear_mount_state();
+}
+
+esp_err_t fs_register_fat(const esp_partition_t *part, const esp_vfs_fat_mount_config_t *mount_cfg)
+{
+  char drv[3];
+  esp_err_t err;
+
+  if (!part || !mount_cfg) return ESP_ERR_INVALID_ARG;
+
+  err = wl_mount(part, &fs_wl_handle);
+  if (err != ESP_OK) return err;
+
+  err = ff_diskio_get_drive(&fs_fs_pdrv);
+  if (err != ESP_OK || fs_fs_pdrv == FF_DRV_NOT_USED)
+    return ESP_ERR_NO_MEM;
+
+  err = ff_diskio_register_wl_partition(fs_fs_pdrv, fs_wl_handle);
+  if (err != ESP_OK) return err;
+  fs_fs_diskio_registered = true;
+
+  drv[0] = (char)('0' + fs_fs_pdrv);
+  drv[1] = ':';
+  drv[2] = 0;
+
+  err = esp_vfs_fat_register(FS_BASE_PATH, drv, (size_t)mount_cfg->max_files, &fs_fs_fatfs);
+  if (err != ESP_OK) return err;
+  fs_fs_vfs_registered = true;
+
+  fs_fs_last_mount_result = f_mount(fs_fs_fatfs, drv, 1);
+  if (fs_fs_last_mount_result != FR_OK)
+  {
+    fs_fs_no_filesystem = fs_fs_last_mount_result == FR_NO_FILESYSTEM;
+    return ESP_FAIL;
+  }
+
+  fs_fs_fat_mounted = true;
+  return ESP_OK;
 }
 
 size_t fs_get_allocation_unit_size(size_t part_size)
@@ -154,6 +244,7 @@ void fs_print_fatfs_details(uint64_t total_bytes, uint64_t free_bytes, esp_err_t
 
 esp_err_t fs_mount_impl(bool quiet)
 {
+  const esp_partition_t *part;
   esp_err_t err;
 
   if (fs_fs_mounted)
@@ -162,24 +253,36 @@ esp_err_t fs_mount_impl(bool quiet)
     return ESP_OK;
   }
 
+  fs_fs_no_filesystem = false;
+  fs_fs_last_mount_result = FR_OK;
+  part = fs_find_partition();
+  if (!part) return ESP_ERR_NOT_FOUND;
+
   esp_vfs_fat_mount_config_t mount_cfg;
   fs_fill_mount_cfg(&mount_cfg, false);
 
-  err = esp_vfs_fat_spiflash_mount_rw_wl(
-    FS_BASE_PATH,
-    FS_PART_LABEL,
-    &mount_cfg,
-    &fs_wl_handle);
-
+  err = fs_register_fat(part, &mount_cfg);
   if (err != ESP_OK)
   {
+    fs_unmount_force();
+
+    if (fs_fs_no_filesystem)
+      return ESP_ERR_INVALID_STATE;
+
     if (!quiet)
-      printf("E: esp_vfs_fat_spiflash_mount_rw_wl failed: %s\r\n", esp_err_to_name(err));
+    {
+      if (fs_fs_last_mount_result != FR_OK)
+        printf("E: FAT f_mount failed: FRESULT=%u\r\n", (unsigned)fs_fs_last_mount_result);
+      else
+        printf("E: FAT mount failed: %s\r\n", esp_err_to_name(err));
+    }
     return err;
   }
 
   fs_initialized = true;
   fs_fs_mounted = true;
+  fs_fs_no_filesystem = false;
+  fs_fs_last_mount_result = FR_OK;
   snprintf(fs_fs_base_path, sizeof(fs_fs_base_path), "%s", FS_BASE_PATH);
   snprintf(fs_part_label, sizeof(fs_part_label), "%s", FS_PART_LABEL);
 
@@ -220,16 +323,28 @@ esp_err_t fs_format()
   return fs_mount();
 }
 
+esp_err_t fs_delete()
+{
+  const esp_partition_t *part = fs_find_partition();
+
+  if (!part) return ESP_ERR_NOT_FOUND;
+
+  fs_deinit();
+  esp_err_t err = esp_partition_erase_range(part, 0, part->size);
+  if (err == ESP_OK)
+  {
+    fs_fs_no_filesystem = true;
+    fs_fs_last_mount_result = FR_NO_FILESYSTEM;
+  }
+
+  return err;
+}
+
 void fs_deinit()
 {
-  if (fs_fs_mounted && fs_wl_handle != WL_INVALID_HANDLE)
-    esp_vfs_fat_spiflash_unmount_rw_wl(fs_fs_base_path[0] ? fs_fs_base_path : FS_BASE_PATH, fs_wl_handle);
-
-  fs_initialized = false;
-  fs_fs_mounted = false;
-  fs_fs_base_path[0] = 0;
-  fs_part_label[0] = 0;
-  fs_wl_handle = WL_INVALID_HANDLE;
+  fs_unmount_force();
+  fs_fs_no_filesystem = false;
+  fs_fs_last_mount_result = FR_OK;
 }
 
 esp_err_t fs_ensure_ready()
@@ -294,24 +409,52 @@ esp_err_t fs_list_dir(const char *base_path, const char *path)
 
 int fs_info(int argc, char **argv)
 {
-  if (argc < 0 || !argv) return 1;
-
-  esp_err_t err = fs_ensure_ready();
-  if (err != ESP_OK) return 1;
-
-  const esp_partition_t *part = fs_find_partition();
+  const esp_partition_t *part;
   uint64_t total = 0;
   uint64_t free = 0;
   uint64_t used = 0;
+  esp_err_t err;
+
+  if (argc < 0 || !argv) return 1;
+
+  err = fs_ensure_ready_quiet();
+  part = fs_find_partition();
+
+  printf("FAT info\r\n");
+  printf("  label      : %s\r\n", FS_PART_LABEL);
+  printf("  base path  : %s\r\n", FS_BASE_PATH);
+
+  if (err != ESP_OK)
+  {
+    if (err == ESP_ERR_NOT_FOUND)
+    {
+      printf("  state      : partition not found\r\n");
+      return 0;
+    }
+
+    if (fs_fs_no_filesystem)
+    {
+      printf("  state      : no FAT filesystem\r\n");
+      if (part)
+      {
+        printf("  address    : 0x%08" PRIX32 "\r\n", part->address);
+        printf("  size       : 0x%08lx (%lu bytes)\r\n", (unsigned long)part->size, (unsigned long)part->size);
+      }
+      return 0;
+    }
+
+    if (fs_fs_last_mount_result != FR_OK)
+      printf("  state      : unavailable (FRESULT=%u)\r\n", (unsigned)fs_fs_last_mount_result);
+    else
+      printf("  state      : unavailable (%s)\r\n", esp_err_to_name(err));
+    return 1;
+  }
 
   err = esp_vfs_fat_info(FS_BASE_PATH, &total, &free);
   if (err == ESP_OK)
     used = total - free;
 
-  printf("FAT info\r\n");
   printf("  mounted    : %s\r\n", fs_fs_mounted ? "yes" : "no");
-  printf("  label      : %s\r\n", FS_PART_LABEL);
-  printf("  base path  : %s\r\n", FS_BASE_PATH);
 
   esp_vfs_fat_mount_config_t cfg;
   fs_fill_mount_cfg(&cfg, false);
@@ -384,6 +527,33 @@ int fs_format_cmd(int argc, char **argv)
   return 0;
 }
 
+int fs_delete_cmd(int argc, char **argv)
+{
+  const esp_partition_t *part;
+  esp_err_t err;
+
+  if (argc < 0 || !argv) return 1;
+
+  part = fs_find_partition();
+  if (!part)
+  {
+    printf("E: partition '%s' not found\r\n", FS_PART_LABEL);
+    return 1;
+  }
+
+  err = fs_delete();
+  if (err != ESP_OK)
+  {
+    printf("E: FAT erase failed: %s\r\n", esp_err_to_name(err));
+    return 1;
+  }
+
+  printf("FAT erased: %s\r\n", FS_PART_LABEL);
+  printf("  address    : 0x%08" PRIX32 "\r\n", part->address);
+  printf("  size       : 0x%08lx (%lu bytes)\r\n", (unsigned long)part->size, (unsigned long)part->size);
+  return 0;
+}
+
 int fs_ls(int argc, char **argv)
 {
   const char *path = "/";
@@ -405,6 +575,7 @@ int fs_cmd(int argc, char **argv)
     printf("Usage:\r\n");
     printf("  fat format\r\n");
     printf("  fat info\r\n");
+    printf("  fat del\r\n");
     printf("  fat ls [path]\r\n");
     return 0;
   }
@@ -416,6 +587,9 @@ int fs_cmd(int argc, char **argv)
 
   if (!strcmp(op, "info"))
     return fs_info(argc, argv);
+
+  if (!strcmp(op, "del"))
+    return fs_delete_cmd(argc, argv);
 
   if (!strcmp(op, "ls"))
     return fs_ls(argc, argv);
@@ -429,7 +603,7 @@ void fat_console_register_system_commands()
   const esp_console_cmd_t cmd =
   {
     .command  = "fat",
-    .help = "FATFS commands: format/info/ls",
+    .help = "FATFS commands: format/info/del/ls",
     .hint     = NULL,
     .func     = &fs_cmd,
     .argtable = NULL

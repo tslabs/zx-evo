@@ -120,6 +120,7 @@ int load_elf(u8 *elf, MEM_OBJ *obj, int opt)
         if (!section->sh_info) goto cleanup;
         entry = elf_header->e_entry - section->sh_offset + section->sh_info + 0x6F0000;
         obj->text = (void*)section->sh_info;
+        obj->sz_text = section->sh_size;
         obj->entry = (void*)entry;
         size += section->sh_size;
       break;
@@ -132,6 +133,7 @@ int load_elf(u8 *elf, MEM_OBJ *obj, int opt)
 #endif
         if (!section->sh_info) goto cleanup;
         obj->bss = (void*)section->sh_info;
+        obj->sz_bss = section->sh_size;
         size += section->sh_size;
       break;
 
@@ -143,6 +145,7 @@ int load_elf(u8 *elf, MEM_OBJ *obj, int opt)
 #endif
         if (!section->sh_info) goto cleanup;
         obj->data = (void*)section->sh_info;
+        obj->sz_data = section->sh_size;
         size += section->sh_size;
       break;
 
@@ -154,6 +157,7 @@ int load_elf(u8 *elf, MEM_OBJ *obj, int opt)
 #endif
         if (!section->sh_info) goto cleanup;
         obj->rodata = (void*)section->sh_info;
+        obj->sz_rodata = section->sh_size;
         size += section->sh_size;
       break;
     }
