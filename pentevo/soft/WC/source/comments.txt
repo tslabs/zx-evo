@@ -5,6 +5,7 @@
 3 - ide (smuc/master)
 4 - ide (smuc/slave)
 5 - ide (nemo/slave)
+6 - sd2 (zc)
 
 FAT engine errors:
 1 - long name is not valid (mkfile, mkdir)
@@ -13,9 +14,7 @@ FAT engine errors:
 4 - short name already exists (mkfile, mkdir)
 
 8 - not found
-
 16 - no free space
-
 255 - unknown error
 
 
@@ -41,11 +40,11 @@ RAM PAGES USE:
 #00(0)  - MAIN TXT Page (MTXPG)
 #01(1)  - FONT (main txt page) + unpackers hrust'n'megalz (from #FE00)
 #02(2)  - MAIN CODE (#8000-#AFFF)
-#03(3)  - no use
-#04(4)  - no use
-#05(5)  - FAT Engine (#4000) + STACK (#5BFF) + MAIN CODE (#6000-#7FFF)
-#06(6)  - no use
-#07(7)  - no use
+#03(3)  - Device Driver HEADERS (#0000-#0FFF) + FS Driver HEADERS (#1000-#1FFF) + Hybrid Driver HEADERS (#2000-#2FFF)
+#04(4)  - Device Drivers
+#05(5)  - DOS Engine (#4000) + STACK (#5BFF) + MAIN CODE (#6000-#7FFF)
+#06(6)  - FS/Hybrid Drivers 2 pages
+#07(7)  - /
 #08(8)  - SECOND TXT Page / BUFFER Page (BUFPG) 16Kb
 #09(9)  - FONT (second txt page)
 #0A(10) - (?)

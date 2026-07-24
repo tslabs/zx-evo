@@ -1,4 +1,5 @@
-;---------------------------------------;--------                    ;onto tune data
+;Digital Music Maker;PLAYER & LOADER
+;(C) LAVE software 1995;modified by KOSHI/2025;---------------------------------------;--------                    ;onto tune data
 SETPATS  LD A,(PATSIZE)      ;Creates PATTERN
          LD B,A              ;POINTERS TABLE
          LD HL,0,DE,9
