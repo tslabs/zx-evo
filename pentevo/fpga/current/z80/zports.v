@@ -153,7 +153,6 @@ module zports
 
 `endif
 
-  output reg         spi_mode,
   output wire        sd_start,
   output wire [ 7:0] sd_datain,
   input  wire [ 7:0] sd_dataout,
@@ -670,7 +669,6 @@ module zports
     if (rst)
     begin
       spi_cs_n <= 4'b1111;    // {esp, sd2, ft, sd}
-      spi_mode <= 1'b0;
 
 `ifdef ESP32_SPI
       esp_ft_spi_dis_r <= 1'b0;
@@ -689,15 +687,6 @@ module zports
       if (sdcfg_wr)
       begin
         spi_cs_n <= {~din[4:2], din[1]};
-
-        spi_mode <= 1'b0;
-`ifdef SPI_MODE_EN
-`ifdef ESP32_SPI
-        if (din[0]) spi_mode <= din[7];
-`else
-        spi_mode <= din[7];
-`endif
-`endif
 
 `ifdef ESP32_SPI
         if (!din[0])                   // if D0=0, set FT/ESP SPI override by ESP

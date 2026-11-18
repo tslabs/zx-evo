@@ -147,7 +147,8 @@ module zmem
   wire stall14 = stall14_ini || stall14_cyc || stall14_fin;
 
   wire turbo14 = turbo[1];
-  assign cpu_req = turbo14 ? cpureq_14 : cpureq_357;
+  wire request_admit = turbo14 ? (!pre_ramreq_r && zneg) : !ramreq_r;  // Select the admission condition before the late RAM/cache-hit result.
+  assign cpu_req = (ramreq && request_admit) || (turbo14 && pending_cpu_req);  
   assign cpu_stall = turbo14 ? stall14 : stall357;
 
 // 14MHz support

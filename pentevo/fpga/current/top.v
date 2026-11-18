@@ -78,7 +78,7 @@ module top
   
 `elsif IDE_VDAC2
   output [15:0] ide_d,  // pal_sel, b[4:0], g[4:3], g[1:0], r[4:0], g[2]
-  output ide_rs_n,
+  inout ide_rs_n,
 `endif
 
   output [2:0] ide_a,
@@ -134,7 +134,6 @@ module top
   wire rst_n; // global reset
   wire genrst;
 
-  wire spi_mode;
   wire sdcs_i;
   
   assign sdcs_n = sdcs_i;
@@ -932,7 +931,6 @@ module top
 `ifdef SD_CARD2
     .sd2cs_n(sd2cs_n),
 `endif
-    .spi_mode(spi_mode),
 `ifdef IDE_VDAC2
     .ftcs_n(ftcs_n),
 `ifdef ESP32_SPI
@@ -1179,7 +1177,6 @@ module top
 `else
     .sdi(sddi),
 `endif
-    .mode(spi_mode),
     .dma_req(dma_spi_req),
     .dma_din(dma_spi_din),
     .cpu_req(cpu_spi_req),
