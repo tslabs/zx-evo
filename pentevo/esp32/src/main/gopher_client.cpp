@@ -78,7 +78,7 @@ void gopher_do_get()
 
   if (!gopher_buf_alloc())
   {
-    wr_reg8(ESP_REG_STATUS, 0xA0);
+    set_status(0xA0);
     return;
   }
 
@@ -86,7 +86,7 @@ void gopher_do_get()
   {
     ESP_LOGW(TAG, "URL not set");
     gopher_cleanup();
-    wr_reg8(ESP_REG_STATUS, 0x81);
+    set_status(0x81);
     return;
   }
 
@@ -96,7 +96,7 @@ void gopher_do_get()
   {
     ESP_LOGW(TAG, "invalid URL format");
     gopher_cleanup();
-    wr_reg8(ESP_REG_STATUS, 0x81);
+    set_status(0x81);
     return;
   }
 
@@ -158,7 +158,7 @@ void gopher_do_get()
   {
     ESP_LOGW(TAG, "DNS lookup failed");
     gopher_cleanup();
-    wr_reg8(ESP_REG_STATUS, 0xB1);
+    set_status(0xB1);
     return;
   }
 
@@ -167,7 +167,7 @@ void gopher_do_get()
   {
     ESP_LOGW(TAG, "socket creation failed");
     gopher_cleanup();
-    wr_reg8(ESP_REG_STATUS, 0xB2);
+    set_status(0xB2);
     return;
   }
 
@@ -181,7 +181,7 @@ void gopher_do_get()
   {
     ESP_LOGW(TAG, "connection failed");
     gopher_cleanup();
-    wr_reg8(ESP_REG_STATUS, 0xB2);
+    set_status(0xB2);
     return;
   }
 
@@ -196,7 +196,7 @@ void gopher_do_get()
   {
     ESP_LOGW(TAG, "send failed");
     gopher_cleanup();
-    wr_reg8(ESP_REG_STATUS, 0xB2);
+    set_status(0xB2);
     return;
   }
 
@@ -228,7 +228,7 @@ void gopher_do_get()
   {
     ESP_LOGW(TAG, "empty response");
     gopher_buf_free();
-    wr_reg8(ESP_REG_STATUS, 0xB4);
+    set_status(0xB4);
     return;
   }
 
@@ -237,7 +237,7 @@ void gopher_do_get()
   {
     ESP_LOGW(TAG, "make_obj failed");
     gopher_buf_free();
-    wr_reg8(ESP_REG_STATUS, 0xA0);
+    set_status(0xA0);
     return;
   }
 
@@ -246,7 +246,7 @@ void gopher_do_get()
 
   wr_reg8(ESP_REG_OBJ_HANDLE, resp);
   wr_reg32(ESP_REG_DATA_SIZE, total);
-  wr_reg8(ESP_REG_STATUS, ESP_ST_READY);
+  set_status(ESP_ST_READY);
 
   ESP_LOGI(TAG, "done: handle=%d size=%d", resp, total);
 }
