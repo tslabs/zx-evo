@@ -241,8 +241,12 @@ bool IRAM_ATTR cb_rx_ready(void *arg, spi_slave_hd_event_t *event, BaseType_t *a
   return true;
 }
 
+// DMA receiving done (W_END): BUSY at once. M2S stayed until the receiver task
+// had processed the data and set READY, so a host waiting for "not BUSY"
+// after its write saw M2S, then not READY, and dropped the transfer.
 bool IRAM_ATTR cb_cmd7(void *arg, spi_slave_hd_event_t *event, BaseType_t *awoken)
 {
+  wr_reg8(ESP_REG_STATUS, ESP_ST_BUSY);
   return true;
 }
 
