@@ -532,12 +532,14 @@ int wf_scan(int timeout)
 
 uint16_t wf_get_ap_num()
 {
+  // The records kept, not all APs seen: ap_info[] has DEFAULT_SCAN_LIST_SIZE
+  // (64) entries and the callers index it up to the returned count. No abort
+  // when there is no scan result.
   uint16_t number = DEFAULT_SCAN_LIST_SIZE;
-  uint16_t ap_count = 0;
-  ESP_ERROR_CHECK(esp_wifi_scan_get_ap_num(&ap_count));
-  ESP_ERROR_CHECK(esp_wifi_scan_get_ap_records(&number, ap_info));
+  if (esp_wifi_scan_get_ap_records(&number, ap_info) != ESP_OK)
+    return 0;
 
-  return ap_count;
+  return number;
 }
 
 void wf_get_ap(int idx, uint8_t &auth, int8_t &rssi, uint8_t &chan, uint8_t *&ssid)
