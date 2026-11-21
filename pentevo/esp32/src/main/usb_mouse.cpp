@@ -200,7 +200,7 @@ void usb_mouse_lib_task(void *arg)
     printf("usb_host_install failed: %s\r\n", esp_err_to_name(err));
     usb_mouse_lib_task_handle = NULL;
     xTaskNotifyGive((TaskHandle_t)arg);
-    vTaskDelete(NULL);
+    vTaskDeleteWithCaps(NULL);
     return;
   }
 
@@ -226,7 +226,7 @@ void usb_mouse_lib_task(void *arg)
   vTaskDelay(pdMS_TO_TICKS(10));
   usb_host_uninstall();
   usb_mouse_lib_task_handle = NULL;
-  vTaskDelete(NULL);
+  vTaskDeleteWithCaps(NULL);
 }
 
 void usb_mouse_task(void *arg)
@@ -242,7 +242,7 @@ void usb_mouse_task(void *arg)
     printf("usb mouse queue create failed\r\n");
     usb_mouse_mode_active = false;
     usb_mouse_task_handle = NULL;
-    vTaskDelete(NULL);
+    vTaskDeleteWithCaps(NULL);
     return;
   }
 
@@ -253,7 +253,7 @@ void usb_mouse_task(void *arg)
     usb_mouse_evt_queue = NULL;
     usb_mouse_mode_active = false;
     usb_mouse_task_handle = NULL;
-    vTaskDelete(NULL);
+    vTaskDeleteWithCaps(NULL);
     return;
   }
 
@@ -277,7 +277,7 @@ void usb_mouse_task(void *arg)
     usb_mouse_evt_queue = NULL;
     usb_mouse_mode_active = false;
     usb_mouse_task_handle = NULL;
-    vTaskDelete(NULL);
+    vTaskDeleteWithCaps(NULL);
     return;
   }
 
@@ -318,7 +318,7 @@ void usb_mouse_task(void *arg)
   usb_mouse_mode_active = false;
   usb_mouse_task_handle = NULL;
 
-  vTaskDelete(NULL);
+  vTaskDeleteWithCaps(NULL);
 }
 
 extern "C" esp_err_t usb_mouse_start()

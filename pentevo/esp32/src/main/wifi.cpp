@@ -251,7 +251,7 @@ void wifi_autoconnect_task(void *arg)
     net.state = NETWORK_CLOSED;
   }
   wifi_autoconn_task = NULL;
-  vTaskDelete(NULL);
+  vTaskDeleteWithCaps(NULL);
 }
 
 void wifi_start_autoconnect()
@@ -376,7 +376,7 @@ void wifi_release_disabled_stack()
 
   if (wifi_event_group)
   {
-    vEventGroupDelete(wifi_event_group);
+    vEventGroupDeleteWithCaps(wifi_event_group);
     wifi_event_group = NULL;
   }
 
