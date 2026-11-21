@@ -265,6 +265,17 @@ bool IRAM_ATTR cb_cmdA(void *arg, spi_slave_hd_event_t *event, BaseType_t *awoke
 // Called after Master has finished writing shared regs
 void command();
 
+// RESET / REBOOT from the host restart the ESP in any state: a task of the
+// highest priority, woken from the ISR, not the helper task (which may be
+// blocked in a long or hung job).
+static TaskHandle_t rescue_task_handle = NULL;
+
+static void rescue_task(void *arg)
+{
+  ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+  esp_restart();
+}
+
 bool IRAM_ATTR cb_cmd(void *arg, spi_slave_hd_event_t *event, BaseType_t *awoken)
 {
   command();
@@ -892,6 +903,9 @@ void init_slave_hd()
   if (!rx_queue)
     rx_queue = xQueueCreate(2, sizeof(int));
 
+  if (!rescue_task_handle)
+    xTaskCreate(rescue_task, "rescue", 2048, NULL, configMAX_PRIORITIES - 1, &rescue_task_handle);
+
   if (!dma_buf)
   {
     dma_buf = (u8*)heap_caps_malloc(DMA_BUF_SIZE, MALLOC_CAP_DMA);
@@ -1137,7 +1151,19 @@ void IRAM_ATTR command()
     // Clear command register
     wr_reg8(ESP_REG_COMMAND, 0);
 
-    if (is_busy)
+    if ((cmd == ESP_CMD_RESET) || (cmd == ESP_CMD_REBOOT))
+    {
+      // Also while busy: the only way out of a hung command for the host
+      BaseType_t hp = pdFALSE;
+      if (rescue_task_handle)
+      {
+        vTaskNotifyGiveFromISR(rescue_task_handle, &hp);
+        portYIELD_FROM_ISR(hp);
+      }
+      else
+        put_helper_isr(TASK_RESET);
+    }
+    else if (is_busy)
     {
       if (cmd == ESP_CMD_BREAK)
       {} // +++ break ESP_CMD_STREAM_UNZIP
@@ -1541,14 +1567,6 @@ void IRAM_ATTR command()
 
         case ESP_CMD_GET_RND:
           put_txq_isr(DREQ_RND);
-        break;
-
-        case ESP_CMD_REBOOT:
-          put_helper_isr(TASK_REBOOT);
-        break;
-
-        case ESP_CMD_RESET:
-          put_helper_isr(TASK_RESET);
         break;
 
         default:
