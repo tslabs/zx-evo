@@ -105,7 +105,7 @@ int delete_obj(int h)
 
 void write_obj(int handle, const void *from, int size)
 {
-  memcpy(mem_obj[handle].addr, from, max(mem_obj[handle].size, size));
+  memcpy(mem_obj[handle].addr, from, min(mem_obj[handle].size, size));
 }
 
 int attach_obj(void *addr, int obj_size, int obj_type)
