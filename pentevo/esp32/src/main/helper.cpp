@@ -48,6 +48,21 @@ void IRAM_ATTR put_helper_isr(int task)
   portYIELD_FROM_ISR();
 }
 
+// Types an unpacked buffer may get: raw file data in SPIRAM. A context type
+// (XMC, MDC, S3C, MBC, LIB) set by the host made delete_obj() free a pointer
+// that is no context; DATAF is internal RAM.
+static bool is_raw_obj_type(int t)
+{
+  switch (t)
+  {
+    case OBJ_TYPE_DATA: case OBJ_TYPE_ELF: case OBJ_TYPE_XM: case OBJ_TYPE_WAV:
+    case OBJ_TYPE_HST: case OBJ_TYPE_ZIP: case OBJ_TYPE_MOD: case OBJ_TYPE_S3M:
+      return true;
+    default:
+      return false;
+  }
+}
+
 void *f_malloc(size_t x)
 {
 #ifdef VERBOSE
@@ -372,9 +387,15 @@ void helper_task(void *arg)
           }
 
           // Check source size
-          if (!ssize || (ssize > 65536))
+          if (!ssize || (ssize > 65536) || (ssize > (size_t)mem_obj[hsrc].size))
           {
             set_status(ESP_ERR_INV_SIZE);
+            break;
+          }
+
+          if (!is_raw_obj_type(dtype))
+          {
+            set_status(ESP_ERR_INV_OBJ_TYPE);
             break;
           }
 
@@ -438,8 +459,28 @@ void helper_task(void *arg)
             break;
           }
 
+          // u32 unpacked size, then the zlib stream
+          if ((ssize <= 4) || (ssize > (size_t)mem_obj[hsrc].size))
+          {
+            set_status(ESP_ERR_INV_SIZE);
+            break;
+          }
+
+          if (!is_raw_obj_type(dtype))
+          {
+            set_status(ESP_ERR_INV_OBJ_TYPE);
+            break;
+          }
+
           auto src = (u8*)mem_obj[hsrc].addr;
           size_t dsize = *(u32*)src;
+
+          if (!dsize || (dsize > (16 << 20)))
+          {
+            set_status(ESP_ERR_INV_SIZE);
+            break;
+          }
+
           void *dst = (u8*)malloc_spiram(dsize);
 
           if (!dst)
@@ -459,10 +500,12 @@ void helper_task(void *arg)
 
           if (decomp_status != TINFL_STATUS_DONE)
           {
+            free(dst);   // leaked before
             set_status(ESP_ERR_INV_ZIP);
             break;
           }
 
+          free(mem_obj[hsrc].addr);   // the packed data leaked before (DEHST frees it)
           mem_obj[hsrc].addr = dst;
           mem_obj[hsrc].size = dsize;
           mem_obj[hsrc].type = dtype;
