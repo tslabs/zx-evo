@@ -230,16 +230,16 @@ int make_obj(int obj_size, int obj_type)
   return handle;
 }
 
-// Types an unpacked buffer may get: raw data. A context type (XMC, MDC, S3C,
-// MBC, LIB) set by the host made delete_obj() free a pointer that is no
-// context.
+// Types an unpacked buffer may not get: contexts. Set by the host they made
+// delete_obj() free a pointer that is no context (any other value is taken
+// as before).
 bool mem_obj_is_raw_type(int t)
 {
   switch (t)
   {
-    case OBJ_TYPE_DATA: case OBJ_TYPE_DATAF: case OBJ_TYPE_ELF: case OBJ_TYPE_XM: case OBJ_TYPE_WAV:
-    case OBJ_TYPE_HST: case OBJ_TYPE_ZIP: case OBJ_TYPE_MOD: case OBJ_TYPE_S3M:
-      return true;
-    default:
+    case OBJ_TYPE_LIB: case OBJ_TYPE_XMC: case OBJ_TYPE_MDC: case OBJ_TYPE_S3C: case OBJ_TYPE_MBC:
       return false;
+    default:
+      return true;
   }
+}
