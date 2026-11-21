@@ -60,12 +60,17 @@ CONFIG_FREERTOS_ISR_STACKSIZE=2096
 CONFIG_LOG_VERSION_2=y
 CONFIG_LOG_COLORS=y
 CONFIG_LWIP_TCPIP_RECVMBOX_SIZE=1024
-CONFIG_LWIP_TCP_WND_DEFAULT=65535
+# The receive window fits the WiFi RX buffers (16 dynamic x MSS 1436): with
+# 64 KB a slow reader let unread packets hold all the buffers, the driver
+# dropped the rest and TCP backed off for 20-30 s
+CONFIG_LWIP_TCP_WND_DEFAULT=22976
 CONFIG_LWIP_TCP_RECVMBOX_SIZE=1024
 CONFIG_LWIP_TCP_ACCEPTMBOX_SIZE=255
 CONFIG_LWIP_TCP_SACK_OUT=y
-CONFIG_LWIP_WND_SCALE=y
-CONFIG_LWIP_TCP_RCV_SCALE=14
+# No window scaling: the 64 KB window fits in 16 bits. With RCV_SCALE 14 the
+# window was announced in 16 KB units, below 16 KB free it read 0 to the
+# server, which then stalled in zero window probes (seconds to 30 s+ gaps)
+CONFIG_LWIP_WND_SCALE=n
 CONFIG_LWIP_UDP_RECVMBOX_SIZE=16
 CONFIG_LWIP_TCPIP_TASK_AFFINITY_CPU0=y
 CONFIG_MBEDTLS_EXTERNAL_MEM_ALLOC=y
