@@ -17,6 +17,7 @@
 #include "esp_spi_defs.h"
 #include "spi_slave.h"
 #include "helper.h"
+#include "net_util.h"
 #include "stream_client.h"
 
 static const char * TAG = "stream";
@@ -398,6 +399,7 @@ void stream_gopher_start(void)
   if (colon && (!slash || colon < slash))
   {
     int host_len = colon - p;
+    if (host_len > (int)sizeof(host) - 1) host_len = sizeof(host) - 1;
     strncpy(host, p, host_len);
     host[host_len] = 0;
     port = atoi(colon + 1);
@@ -415,6 +417,7 @@ void stream_gopher_start(void)
   else if (slash)
   {
     int host_len = slash - p;
+    if (host_len > (int)sizeof(host) - 1) host_len = sizeof(host) - 1;
     strncpy(host, p, host_len);
     host[host_len] = 0;
     const char * sel_start = slash + 1;
@@ -437,26 +440,15 @@ void stream_gopher_start(void)
     return;
   }
 
-  stream_sock = socket(AF_INET, SOCK_STREAM, 0);
-  
+  uint32_t addr;
+  memcpy(&addr, server->h_addr, sizeof(addr));
+
+  // 10 s to connect, 30 s per read / write (gopher had none: a silent server
+  // blocked the helper task for good)
+  stream_sock = net_connect_timeout(addr, port, 10000, 30000);
   if (stream_sock < 0)
   {
-    ESP_LOGW(TAG, "socket creation failed");
-    set_status(0xB2);
-    return;
-  }
-
-  struct sockaddr_in serv_addr;
-  memset(&serv_addr, 0, sizeof(serv_addr));
-  serv_addr.sin_family = AF_INET;
-  serv_addr.sin_port = htons(port);
-  memcpy(&serv_addr.sin_addr.s_addr, server->h_addr, server->h_length);
-
-  if (connect(stream_sock, (struct sockaddr*)& serv_addr, sizeof(serv_addr)) < 0)
-  {
     ESP_LOGW(TAG, "connection failed");
-    close(stream_sock);
-    stream_sock = -1;
     set_status(0xB2);
     return;
   }
