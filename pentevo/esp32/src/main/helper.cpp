@@ -48,8 +48,6 @@ void IRAM_ATTR put_helper_isr(int task)
   portYIELD_FROM_ISR();
 }
 
-}
-
 void *f_malloc(size_t x)
 {
 #ifdef VERBOSE
