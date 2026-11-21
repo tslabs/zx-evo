@@ -43,6 +43,8 @@ esp_netif_t *wifi_sta_netif = NULL;
 bool wifi_initialized = false;
 bool wifi_started = false;
 bool wifi_connecting = false;
+// Associated with the AP (STA_CONNECTED .. STA_DISCONNECTED), IP or not
+static volatile bool wifi_associated = false;
 TaskHandle_t wifi_autoconn_task = NULL;
 TaskHandle_t wifi_reconnect_task_handle = NULL;
 bool wifi_reconnect_enabled = false;
@@ -118,7 +120,9 @@ void wifi_reconnect_task(void *arg)
   {
     bool connected = wifi_event_group && ((xEventGroupGetBits(wifi_event_group) & CONNECTED_BIT) != 0);
 
-    if (wifi_started && wifi_reconnect_enabled && wifi_connecting && !connected)
+    // Only after a real disconnect: while associated (DHCP running) a connect
+    // is refused ("sta is connected") and only delays the IP
+    if (wifi_started && wifi_reconnect_enabled && wifi_connecting && !connected && !wifi_associated)
     {
       TickType_t now = xTaskGetTickCount();
 
@@ -142,6 +146,7 @@ void event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, voi
   {
     if (event_id == WIFI_EVENT_STA_DISCONNECTED)
     {
+      wifi_associated = false;
       xEventGroupClearBits(wifi_event_group, CONNECTED_BIT);
       memset(&ip, 0, sizeof(ip));
 
@@ -181,6 +186,7 @@ void event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, voi
 
     else if (event_id == WIFI_EVENT_STA_CONNECTED)
     {
+      wifi_associated = true;
       wifi_connecting = true;
       net.state = NETWORK_OPENING;
       ESP_LOGI(TAG, "WIFI_EVENT_STA_CONNECTED");
@@ -414,6 +420,15 @@ bool wifi_connect(const char *ssid, const char *pass, int timeout_ms)
   wifi_config_t wifi_config = { 0 };
   strlcpy((char*)wifi_config.sta.ssid, ssid, sizeof(wifi_config.sta.ssid));
   if (pass) strlcpy((char*)wifi_config.sta.password, pass, sizeof(wifi_config.sta.password));
+
+  // Already associated (a connect again, e.g. after a timeout of the host):
+  // the driver refuses a connect then, and no new IP ever came
+  if (wifi_associated)
+  {
+    wifi_reconnect_enabled = false;
+    esp_wifi_disconnect();
+    for (int i = 0; wifi_associated && (i < 20); i++) vTaskDelay(pdMS_TO_TICKS(50));
+  }
 
   xEventGroupClearBits(wifi_event_group, CONNECTED_BIT);
   memset(&ip, 0, sizeof(ip));

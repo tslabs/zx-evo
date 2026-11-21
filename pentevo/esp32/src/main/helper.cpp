@@ -549,7 +549,7 @@ void helper_task(void *arg)
 
           net.is_busy = true;
           net.state = NETWORK_OPENING;
-          auto rc = wifi_connect((const char*)net.ssid, (const char*)net.pwd, 10000);
+          auto rc = wifi_connect((const char*)net.ssid, (const char*)net.pwd, CONNECT_TIMEOUT_MS);
           net.is_busy = false;
           net.state = rc ? NETWORK_OPEN : NETWORK_CLOSED;
 
