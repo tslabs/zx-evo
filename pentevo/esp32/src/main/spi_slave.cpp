@@ -1142,6 +1142,14 @@ esp_err_t spi_master_set_data_lines(u8 lines)
 
 // ------------- Commands
 
+// offs + size inside the object, without the 32-bit wrap of (offs + size)
+static bool IRAM_ATTR obj_range_ok(int handle, size_t offs, size_t size)
+{
+  if ((handle < 0) || (handle >= OBJ_HANDLES_MAX) || !mem_obj[handle].addr) return false;
+  size_t osize = mem_obj[handle].size;
+  return size && (size <= DMA_BUF_SIZE) && (offs <= osize) && (size <= (osize - offs));
+}
+
 void IRAM_ATTR command()
 {
   u8 cmd = rd_reg8(ESP_REG_COMMAND);
@@ -1479,7 +1487,7 @@ void IRAM_ATTR command()
           size_t offs = rd_reg32(ESP_REG_DATA_OFFSET);
           size_t size = rd_reg32(ESP_REG_DATA_SIZE);
 
-          if (!size || (size > DMA_BUF_SIZE) || ((offs + size) > mem_obj[handle].size))
+          if (!obj_range_ok(handle, offs, size))
           {
             set_status(ESP_ERR_INV_SIZE);
             break;
@@ -1594,6 +1602,7 @@ void IRAM_ATTR sender_task(void *arg)
 
     slave_trans.data = dma_buf;
     size_t max_size = rd_reg32(ESP_REG_DATA_SIZE);
+    if (max_size > DMA_BUF_SIZE) max_size = DMA_BUF_SIZE;   // GET_RND had no check
     slave_trans.len = prepare_tx_data(req_data_type, max_size);
     wr_reg32(ESP_REG_DATA_SIZE, slave_trans.len);
 
@@ -1691,6 +1700,14 @@ u32 IRAM_ATTR prepare_tx_data(u8 type, size_t size)
     {
       int handle = rd_reg8(ESP_REG_OBJ_HANDLE);
       u32 offset = rd_reg32(ESP_REG_DATA_OFFSET);
+
+      // Again here: the host may have written the registers after the check
+      if (!obj_range_ok(handle, offset, size))
+      {
+        memset(dma_buf, 0, size);   // zeros, the transfer the host expects
+        break;
+      }
+
       u8 *addr = &((u8*)mem_obj[handle].addr)[offset];
       memcpy(dma_buf, addr, size);
       wr_reg32(ESP_REG_DATA_OFFSET, offset + size);
@@ -1753,6 +1770,14 @@ void IRAM_ATTR process_rx_data(u8 type, size_t size)
       int handle = rd_reg8(ESP_REG_OBJ_HANDLE);
 
       u32 offset = rd_reg32(ESP_REG_DATA_OFFSET);
+
+      // Again here: the host may have written the registers after the check
+      if (!obj_range_ok(handle, offset, size))
+      {
+        set_status(ESP_ERR_INV_SIZE);
+        break;
+      }
+
       u8 *addr = &((u8*)mem_obj[handle].addr)[offset];
       memcpy(addr, dma_buf, size);
       wr_reg32(ESP_REG_DATA_OFFSET, offset + size);
