@@ -26,6 +26,8 @@ typedef struct
 #pragma pack()
 
 #define OBJ_HANDLES_MAX 256
+
+bool mem_obj_is_raw_type(int t);
 extern MEM_OBJ mem_obj[OBJ_HANDLES_MAX];
 
 int find_avail_handle();

@@ -48,19 +48,6 @@ void IRAM_ATTR put_helper_isr(int task)
   portYIELD_FROM_ISR();
 }
 
-// Types an unpacked buffer may get: raw file data in SPIRAM. A context type
-// (XMC, MDC, S3C, MBC, LIB) set by the host made delete_obj() free a pointer
-// that is no context; DATAF is internal RAM.
-static bool is_raw_obj_type(int t)
-{
-  switch (t)
-  {
-    case OBJ_TYPE_DATA: case OBJ_TYPE_ELF: case OBJ_TYPE_XM: case OBJ_TYPE_WAV:
-    case OBJ_TYPE_HST: case OBJ_TYPE_ZIP: case OBJ_TYPE_MOD: case OBJ_TYPE_S3M:
-      return true;
-    default:
-      return false;
-  }
 }
 
 void *f_malloc(size_t x)
@@ -393,7 +380,7 @@ void helper_task(void *arg)
             break;
           }
 
-          if (!is_raw_obj_type(dtype))
+          if (!mem_obj_is_raw_type(dtype))
           {
             set_status(ESP_ERR_INV_OBJ_TYPE);
             break;
@@ -466,7 +453,7 @@ void helper_task(void *arg)
             break;
           }
 
-          if (!is_raw_obj_type(dtype))
+          if (!mem_obj_is_raw_type(dtype))
           {
             set_status(ESP_ERR_INV_OBJ_TYPE);
             break;
