@@ -1,557 +1,338 @@
-# ESP32 SPI WiFi
+# ESP32 SPI WiFi (ZiFi32)
 
 ## Description
 
-The module is based on ESP32-S2 and provides high-speed WiFi access via SPI bus.
+The module is an ESP32-S3 (8 MB PSRAM, 16 MB flash) on the SPI bus of the host. It is an SPI slave that
+provides Wi-Fi, network clients (HTTP(S), Gopher), memory objects, audio players (XM / MOD / S3M, SFX)
+and the loading of ELF libraries.
 
-The key-features are:
+- 4-wire 1-bit SPI, slave mode (ESP-IDF `spi_slave_hd` driver: shared registers + DMA buffers).
+- Data transfers by DMA, up to 16 KB (`DMA_BUF_SIZE`) per transfer.
 
-- 4-wire 1-bit SPI interface, Slave Mode.
-- Up to 14Mbit/s data transfer speed.
-- DMA capable transfers.
+The command, register, status and object type codes are defined in `src/main/esp_spi_defs.h`; this
+document follows it. The reference host code is `pentevo/sdk/ft812sdk/lib/esp32/esp32.c` (Z80, SDCC)
+and `test/rpi/esp_spi.py` (Python).
 
-## Programming
+## SPI transactions
 
-### Communication protocol
+The host talks to the slave with six SPI commands (the first byte of a transaction):
 
-The SPI Slave communication protocol provides a few types of transactions: ***READ_REGS***, ***WRITE_REGS***, ***READ_DATA***, ***WRITE_DATA***.
+| Name     | Code | Description                                       |
+| -------- | ---- | ------------------------------------------------- |
+| WR_REGS  | 01   | Write the shared registers. Triggers a command.   |
+| RD_REGS  | 02   | Read the shared registers.                        |
+| WR_DATA  | 03   | Write the DMA buffer (DATA_M2S).                  |
+| RD_DATA  | 04   | Read the DMA buffer (DATA_S2M).                   |
+| W_END    | 07   | End of a WR_DATA transfer.                        |
+| R_END    | 08   | End of a RD_DATA transfer.                        |
 
+The examples are for TS-Conf: `SPI_DATA` is port `#57`, `SPI_CTRL` port `#77`; `#13` selects the ESP
+(bit 4), `#03` deselects it. A read of `SPI_DATA` returns the byte of the previous exchange and starts
+the next one, hence the extra dummy reads.
 
+### RD_REGS
 
-#### READ_REGS
-
-This type of transaction allows reading a number of bytes from the register memory. It can be used to read a register value or a status.
-
-##### Scenario
-
-| Step | Action                                   |
-| ---- | ---------------------------------------- |
-| 1    | Assert SPI_CS.                           |
-| 2    | Write SPI_DATA with **0x02**.            |
-| 3    | Write SPI_DATA with register number.     |
-| 4    | Write SPI_DATA with **two** dummy bytes. |
-| 5    | Read one or more bytes from SPI_DATA.    |
-| 6    | De-assert SPI_CS.                        |
-
-
-
-##### Read 1-byte register in C
+| Step | Action                                     |
+| ---- | ------------------------------------------ |
+| 1    | Assert CS.                                 |
+| 2    | Write **0x02**.                            |
+| 3    | Write the register number.                 |
+| 4    | Two dummy reads.                           |
+| 5    | Read one or more bytes (registers in a row). |
+| 6    | De-assert CS.                              |
 
 ```c
-__sfr __at 0x57 SPI_DATA;
-__sfr __at 0x77 SPI_CTRL;
-#define SPI_ESP_CS_ON  0x0B
-#define SPI_ESP_CS_OFF 0x03
-
-u8 esp_rd_reg(u8 reg_num)
+u8 esp_rd_reg8(u8 reg)
 {
-  SPI_CTRL = SPI_ESP_CS_ON;
-  SPI_DATA = 0x02;
-  SPI_DATA = reg_num;
-  SPI_DATA;             // dummy
-  SPI_DATA;
+  SPI_CTRL = SPI_ESP_CS_ON;      // 0x13
+  SPI_DATA = ESP_SPI_CMD_RD_REGS;
+  SPI_DATA = reg;
+  SPI_DATA;                      // dummy
+  SPI_DATA;                      // dummy
   u8 rc = SPI_DATA;
-  SPI_CTRL = SPI_ESP_CS_OFF;
-
+  SPI_CTRL = SPI_ESP_CS_OFF;     // 0x03
   return rc;
 }
 ```
 
+Multi-byte registers are little-endian.
 
-
-#### WRITE_REGS
-
-This type of transaction allows writing a number of bytes in the register memory. Not used except for command issuing.
-Each WRITE_REGS transaction triggers the command execution. Thus, all arguments **must** be transmitted in the same transaction along with the command.
-
-##### Scenario
-
-| Step | Action                                  |
-| ---- | --------------------------------------- |
-| 1    | Assert SPI_CS.                          |
-| 2    | Write SPI_DATA with **0x01**.           |
-| 3    | Write SPI_DATA with register number.    |
-| 4    | Write SPI_DATA with **one** dummy byte. |
-| 5    | Write SPI_DATA with one or more bytes.  |
-| 6    | De-assert SPI_CS.                       |
-
-
-
-##### Write 1-byte register in C
-
-The following code snippet is just an example not to use. Please refer to 'Write command' snippet for more practical case.
-
-```c
-__sfr __at 0x57 SPI_DATA;
-__sfr __at 0x77 SPI_CTRL;
-#define SPI_ESP_CS_ON  0x0B
-#define SPI_ESP_CS_OFF 0x03
-
-void esp_rd_reg(u8 reg_num, u8 reg_value)
-{
-  SPI_CTRL = SPI_ESP_CS_ON;
-  SPI_DATA = 0x01;
-  SPI_DATA = reg_num;
-  SPI_DATA;              // dummy
-  SPI_DATA = reg_value;
-  SPI_CTRL = SPI_ESP_CS_OFF;
-}
-```
-
-
-
-#### WRITE COMMAND
-
-This is a most used WRITE_REGS case, which triggers a command execution.
-
-##### Write command in C
-
-The following code snippet is just an example not to use. Please refer to 'Write command' snippet for more practical case.
-
-```c
-__sfr __at 0x57 SPI_DATA;
-__sfr __at 0x77 SPI_CTRL;
-#define SPI_ESP_CS_ON  0x0B
-#define SPI_ESP_CS_OFF 0x03
-
-void esp_cmd(u8 cmd)
-{
-  SPI_CTRL = SPI_ESP_CS_ON;
-  SPI_DATA = 0x01;
-  SPI_DATA = 0x00;          // ESP_REG_COMMAND
-  SPI_DATA;                 // dummy
-  SPI_DATA = cmd;           // Command
-  SPI_DATA = 0x00;          // Reset status
-  SPI_CTRL = SPI_ESP_CS_OFF;
-}
-```
-
-
-
-#### READ_DATA
-
-The transaction must only be launched when STATUS register contains DATA_S2M status.
-
-The number of bytes to transfer must be read from xx_SIZE register before the transaction.
-
-
-
-##### Scenario
+### WR_REGS
 
 | Step | Action                                     |
 | ---- | ------------------------------------------ |
-| 1    | Assert SPI_CS.                             |
-| 2    | Write SPI_DATA with **0x04**.              |
-| 4    | Write SPI_DATA with **three** dummy bytes. |
-| 5    | Read one or more bytes from SPI_DATA.      |
-| 6    | De-assert SPI_CS.                          |
-| 7    | Execute `esp_cmd(DATA_END);`               |
+| 1    | Assert CS.                                 |
+| 2    | Write **0x01**.                            |
+| 3    | Write the register number.                 |
+| 4    | One dummy read.                            |
+| 5    | Write one or more bytes.                   |
+| 6    | De-assert CS.                              |
 
+**Every WR_REGS transaction makes the slave look at the COMMAND register.** If COMMAND is not 0, the
+command is executed and COMMAND is cleared. Parameters can be written before by separate WR_REGS
+transactions that leave COMMAND at 0 (the registers 02..), or in the same transaction after the
+command.
 
-
-##### Read a data array in C
+A command is issued by writing COMMAND and STATUS = IDLE (0) in one transaction. The host then polls
+STATUS: the slave sets BUSY at once and the final status when done.
 
 ```c
-__sfr __at 0x57 SPI_DATA;
-__sfr __at 0x77 SPI_CTRL;
-#define SPI_ESP_CS_ON  0x0B
-#define SPI_ESP_CS_OFF 0x03
-
-void esp_recv(u8 *addr, u16 num)
+void esp_cmd(u8 cmd)
 {
   SPI_CTRL = SPI_ESP_CS_ON;
-  SPI_DATA = 0x04;
-  SPI_DATA; // dummy read means write with 0xFF
-  SPI_DATA;
-  SPI_DATA;
-  while (num--) *addr++ = SPI_DATA;
+  SPI_DATA = ESP_SPI_CMD_WR_REGS;
+  SPI_DATA = ESP_REG_COMMAND;
+  SPI_DATA;                      // dummy
+  SPI_DATA = cmd;                // COMMAND
+  SPI_DATA = ESP_ST_IDLE;        // STATUS
   SPI_CTRL = SPI_ESP_CS_OFF;
-  esp_cmd(ESP_CMD_DATA_END);
 }
 ```
 
-
-
-#### WRITE_DATA
-
-The transaction must only be launched when STATUS register contains DATA_M2S status.
-
-The number of bytes to transfer must be read or written from/to xx_SIZE register before the transaction.
-
-**ATTENTION!**
-When writing data, all transactions **must** be truncated to 4 bytes. If we need to write 1 byte only, we must write 4 bytes and so on.
-
-*To do: add code example.*
-
-
-
-### Registers
-
-All registers are read/writeable from both SPI Master via SPI and Slave firmware. At a low level, they're a shared memory cells inside ESP32 Slave. The total number of registers is 64.
-
-Common registers are COMMAND and STATUS. Registers with addresses 2-63 are used by the ESP32 firmware for different functions depending on a command.
-
-
-
-#### Register summary
-
-| Name       | Register address, HEX | Size  | Description                                                  |
-| ---------- | ------------ | ----- | ------------------------------------------------------------ |
-| COMMAND    | 00           | 1     | Command. Set by Master.                                      |
-| STATUS     | 01           | 1     | Status of device. Set by Slave while the command is being executed or after its execution. Must be zeroed by Master in the same transaction as the command issued, to ensure the correct synchronization. |
-| PARAM/RESP | 02           | 0..61 | If written, **must** be sent in the same transaction as the command issued.<br />See parameter/response list for individual commands. |
-
-
-
-#### STATUS register
-
-| Name     | Code, HEX | Description                                                  |
-| -------- | --------- | ------------------------------------------------------------ |
-| IDLE     | 00        | No status. Must be set by Master along every command issued. |
-| BUSY     | 01        | Device is busy executing a command.                          |
-| READY    | 02        | Device has completed command execution and is ready for a new command. |
-| ERROR    | 03        | Error happened. Use GET_ERROR command to get the error code. |
-| DATA_M2S | 04        | Device is ready to receive data from host.                   |
-| DATA_S2M | 05        | Device is ready to send data to host.                        |
-
-
-
-#### ERROR register
-
-If a command has been completed with an error, the register 02 automatically indicates error code.
-
-| Name  | Register address, HEX | Size | Description |
-| ----- | ------------ | ---- | ----------- |
-| ERROR | 02           | 1    | Error.      |
-
-
-
-The following table contains error codes.
-
-| Name            | Code, HEX | Description                                  |
-| --------------- | --------- | -------------------------------------------- |
-| NONE            | 00        | No error.                                    |
-| WRONG_PARAMETER | 01        | Wrong parameter.                             |
-| INVALID_COMMAND | 02        | Invalid command.                             |
-| WRONG_STATE     | 03        | Command cannot be executed in current state. |
-| AP_NOT_CONN     | 10        | Cannot connect AP.                           |
-| RESET           | FE        | Is set when reset happened.                  |
-
-
-
-### Commands
-
-#### Command summary
-
-| Name             | Code, HEX | Description                                                  |
-| ---------------- | --------- | ------------------------------------------------------------ |
-| NOP              | 00        | No operation. Issuing this command has no effect.            |
-| GET_ERROR        |           | Get extended error info.                                     |
-| GET_INFO         | 02        | Get device info string.                                      |
-| GET_CHIP_INFO    | 03        | Get chip info.                                               |
-| GET_CAPS         |           | Get device capabilities.                                     |
-| GET_HEAP         |           | Get heap size.                                               |
-| GET_NET_CAPS     |           | Get network capabilities.                                    |
-| GET_NETSTATE     | 11        | Get network connection state.                                |
-| WSCAN            | 12        | Scan Wi-Fi APs.                                              |
-| SET_AP_NAME      | 13        | Set Wi-Fi AP name.                                           |
-| SET_AP_PWD       | 14        | Set Wi-Fi AP password.                                       |
-| GET_AP_NAME      | 15        | Get Wi-Fi AP name.                                           |
-| AP_CONNECT       | 16        | Connect to selected AP.                                      |
-| AP_DISCONNECT    | 17        | Disconnect from AP.                                          |
-| SET_AUTOCONNECT  | 18        | Set AP auto-connect.                                         |
-| GET_IP           | 19        | Get own Wi-Fi IP, net mask, net gateway.                     |
-| RESOLVE_DNS      |           | Resolve DNS name.                                            |
-| OPEN_UDP         |           |                                                              |
-| CLOSE_UDP        |           |                                                              |
-| STATUS_UDP       |           |                                                              |
-| SEND_DATAGR      |           |                                                              |
-| RECV_DATAGR      |           |                                                              |
-| OPEN_TCP         |           |                                                              |
-| CLOSE_TCP        |           |                                                              |
-| STATUS_TCP       |           |                                                              |
-| SEND_TCP         |           |                                                              |
-| RECV_TCP         |           |                                                              |
-|                  |           |                                                              |
-| SET_WSCAN_PARAMS |           | Set parameters for Wi-Fi AP scan.                            |
-|                  |           |                                                              |
-| EXT_STATUS_TCP   |           | ?                                                            |
-| CONF_AUTO_IP     |           | ?                                                            |
-| CONF_IP          |           | ?                                                            |
-|                  |           |                                                              |
-| DATA_END         | D0        | End DATA transaction. (A workaround for S3 CMD8 bug).        |
-| BREAK            | E0        | Break an operation.                                          |
-| RESET            | EE        | Reset device. To be issued in the case of an unpredicted behavior. The reset takes <TBD> milliseconds to complete. The STATUS register after the reset must contain READY value. The EXT_STAT register must contain RESET value. |
-| GET_RND          | F0        | Generate random numbers array.                               |
-| TEST2            | F1        | Generate tunnel DL for FT812.                                |
-| TEST3            | F2        | Generate 3D model DL for FT812.                              |
-
-
-
-#### Miscellaneous commands
-
-
-
-##### GET_INFO
-
-Get device information string. The string is **not** 0-terminated.
-
-**In:** none.
-
-**Out:**
-
-| Name      | Register address, HEX | Size | Description             |
-| --------- | ------------ | ---- | -------------------------------- |
-| INFO_SIZE | 02           | 1    | Info string size.                       |
-
-[DATA] - Info string.
-
-
-
-##### GET_CHIP_INFO
-
-Get ESP module hardware parameters.
-
-**In:** none.
-
-**Out:** See table below.
-
-| Name      | Register address, HEX | Size, bytes | Description                      |
-| --------- | ------------ | ---- | -------------------------------- |
-| CPU_TYPE   | 02 | 1 | ESP chip type, hex:<br />02 - ESP32-S3 |
-| CPU_CORES  | 03 | 1 | Number of CPU cores.                   |
-| CPU_FREQ   | 04 | 2 | CPU frequency, MHz.                    |
-| CPU_SI_REV | 06 | 1 | Silicon revision.                      |
-| WIFI       | 07 | 1 |                                        |
-| BLE        | 08 | 1 |                                        |
-| FLASH_SIZE | 09 | 1 | Flash size, MB.                        |
-| FLASH_TYPE | 0A | 1 |                                        |
-| FLASH_FREQ | 0B | 1 |                                        |
-| PSRAM_SIZE | 0C | 1 | PSRAM size, MB.                        |
-| PSRAM_TYPE | 0D | 1 |                                        |
-| PSRAM_FREQ | 0E | 1 |                                        |
-
-
-
-##### GET_CAPS
-
-Read device capabilities.
-
-**In:** none.
-
-**Out:**
-
-| Name | Bit  | Mask, Hex | Description |
-| ---- | ---- | --------- | ----------- |
-|      |      |           |             |
-
-
-
-##### BREAK
-
-Break execution of current command. If no command is being executed, this has no effect.
-
-**In:** none.
-
-**Out:** none.
-
-
-
-#### Wi-Fi commands
-
-Most Wi-Fi commands require time to complete. While in progress, the STATUS register indicates BUSY state. It changes to READY upon command completion if successful, or to ERROR, if not.
-
-
-
-##### GET_NETSTATE
-
-Get network state.
-
-**In:** none.
-
-**Out:** Network state. See the table below.
-
-| Name     | Register address, HEX | Size | Description    |
-| -------- | ------------ | ---- | -------------- |
-| NETSTATE | 02           | 1    | Network state. |
-
-
-
-**NETSTATE**
-
-| Name            | Code, HEX | Description                        |
-| --------------- | --------- | ---------------------------------- |
-| NETWORK_CLOSED  | 00        | No network connection established. |
-| NETWORK_OPENING | 01        | Network connection in progress.    |
-| NETWORK_OPEN    | 02        | Network connection established.    |
-| NETWORK_CLOSING | 03        | Network disconnection in progress. |
-| NETWORK_UNKNOWN | FF        | Network state undefined.           |
-
-
-
-##### WSCAN
-
-Scan for Wi-Fi APs. Scanned APs are sorted by RSSI, highest first.
-Requires STATUS register polling to check completion.
-
-**In:**
-
-| Name      | Register address, HEX | Size | Description             |
-| --------- | ------------ | ---- | -------------------------------- |
-| AP_MAX | 02           | 1  | Max number of AP to scan. |
-
-**Out:**
-
-| Name      | Register address, HEX | Size | Description             |
-| --------- | ------------ | ---- | -------------------------------- |
-| AP_TABLE_SIZE | 02           | 2    | AP table size.               |
-
-[DATA] - scanned AP table. See the format below.
-
-| Name                           | Size, bytes   | Description            |
-| ------------------------------ | ------------- | ---------------------- |
-| NUM_APS                        | 1             | Number of APs scanned. |
-| AP_AUTH                        | 1             | AP authorization type. |
-| AP_RSSI                        | 1             | AP RSSI, dB.           |
-| AP_CHAN                        | 1             | AP primary channel     |
-| AP_SSID_LEN                    | 1             | AP SSID length.        |
-| AP_SSID                        | <AP_SSID_LEN> | AP SSID.               |
-| ... repeat AP_xx for <NUM_APS> |               |                        |
-
-
-
-**APn_AUTH**
-
-| Name               | Value, HEX | Description |
-| ------------------ | ---------- | ----------- |
-| AP_AUTH_OPEN       | 00         | Open        |
-| AUTH_WEP           | 01         |             |
-| AUTH_WPA_PSK       | 02         |             |
-| AUTH_WPA2_PSK      | 03         |             |
-| AUTH_WPA_WPA2_PSK  | 04         |             |
-| AUTH_EAP           | 05         |             |
-| AUTH_WPA3_PSK      | 06         |             |
-| AUTH_WPA2_WPA3_PSK | 07         |             |
-| AUTH_WAPI_PSK      | 08         |             |
-| AUTH_OWE           | 09         |             |
-| AUTH_WPA3_ENT_192  | 0A         |             |
-| AUTH_MAX           | 0B         |             |
-
-
-
-##### SET_AP_NAME
-
-Set AP name. 32 bytes max.
-
-**In:**
-
-| Name      | Register address, HEX | Size | Description             |
-| --------- | ------------ | ---- | -------------------------------- |
-| AP_NAME_LEN | 02           | 1    | AP name length. |
-| AP_NAME | 03 | <AP_NAME_LEN> | AP name. |
-
-**Out:** none.
-
-
-
-##### SET_AP_PWD
-
-Set AP password. 61 bytes max.
-
-**In:**
-
-| Name      | Register address, HEX | Size | Description             |
-| --------- | ------------ | ---- | -------------------------------- |
-| AP_PWD_LEN | 02           | 1    | AP password length. |
-| AP_PWD | 03 | <AP_PWD_LEN> | AP password. |
-
-**Out:** none.
-
-
-
-##### GET_AP_NAME
-
-Set AP name. 32 bytes max.
-
-**In:** none.
-
-**Out:**
-
-| Name      | Register address, HEX | Size | Description             |
-| --------- | ------------ | ---- | -------------------------------- |
-| AP_NAME_LEN | 02           | 1    | AP name length. |
-| AP_NAME | 03 | <AP_NAME_LEN> | AP name. |
-
-
-
-##### **AP_**CONNECT
-
-Connect to the selected AP.
-Requires STATUS register polling to check completion.
-
-**In:** none.
-
-**Out:** none.
-
-
-
-##### AP_DISCONNECT
-
-Disconnect AP.
-Requires STATUS register polling to check completion.
-
-**In:** none.
-
-**Out:** none.
-
-
-
-##### SET_AUTOCONNECT
-
-Enable or disable auto-connect.
-SET_AP_NAME and SET_AP_PWD must be set before this command.
-
-**In:**
-
-| Name      | Register address, HEX | Size | Description             |
-| --------- | ------------ | ---- | -------------------------------- |
-| AUTOCONNECT | 02           | 1 | Mode:<br />0 - disabled.<br />1 - enabled. |
-
-**Out:** none.
-
-
-
-##### GET_IP
-
-Get network IP addresses.
-
-**In:** none.
-
-**Out:**
-
-| Name      | Register address, HEX | Size | Description             |
-| --------- | ------------ | ---- | -------------------------------- |
-| IP | 02           | 4    | Last DNS resolved IP address. |
-| OWN_IP | 06          | 4    | Own IP address. |
-| MASK   | 0A           | 4    | Net mask. |
-| GATE   | 0E           | 4    | Net gateway. |
-
-
-
-##### RESOLVE_DNS
-
-Resolve IP address from domain name, which length must not be longer than 255 symbols.
-Requires STATUS register polling to check completion.
-
-**In:**
-
-| Name      | Register address, HEX | Size | Description             |
-| --------- | ------------ | ---- | -------------------------------- |
-| DNAME_LEN | 02           | 1    | Domain name length. |
-| DNAME | 03..3F      | 1..61 | Domain name. |
-
-If DNAME_LEN<= 61, then it is sent using registers 03-3F. If it is longer than 61 symbols, send the symbols starting from 62 using DATA transaction (currently not supported).
-
-**Out:**
-
-Same as GET_IP.
+**Polling.** Right after the command STATUS may still read IDLE (the slave has not run the command
+yet). Wait for "not IDLE and not BUSY" (or for a specific status), not only for "not BUSY".
+
+**While a command is running (BUSY), a new command is ignored.** Wait for the end of the previous
+command first.
+
+### WR_DATA (host to slave)
+
+Only when STATUS is DATA_M2S (03). The number of bytes is the one the command expects
+(DATA_SIZE).
+
+| Step | Action                                     |
+| ---- | ------------------------------------------ |
+| 1    | Assert CS.                                 |
+| 2    | Write **0x03**, two dummy reads.           |
+| 3    | Write the data.                            |
+| 4    | De-assert CS.                              |
+| 5    | W_END: assert CS, write **0x07**, one dummy read, de-assert CS. |
+| 6    | Wait for "not DATA_M2S, not BUSY", then check READY.  |
+
+```c
+void esp_send(u8 *addr, u16 num)
+{
+  SPI_CTRL = SPI_ESP_CS_ON;
+  SPI_DATA = ESP_SPI_CMD_WR_DATA;
+  SPI_DATA;                      // dummy
+  SPI_DATA;                      // dummy
+  while (num--) SPI_DATA = *addr++;
+  SPI_CTRL = SPI_ESP_CS_OFF;
+  esp_wr_end();                  // 0x07 + dummy
+  esp_wait_busy(10000);
+}
+```
+
+DMA transfers of the ESP32-S3 work in 4-byte units: keep the sizes a multiple of 4 where the command
+allows it (the stream load commands require it).
+
+### RD_DATA (slave to host)
+
+Only when STATUS is DATA_S2M (04). Read DATA_SIZE first: it is the number of bytes to read.
+
+| Step | Action                                     |
+| ---- | ------------------------------------------ |
+| 1    | Assert CS.                                 |
+| 2    | Write **0x04**, three dummy reads.         |
+| 3    | Read DATA_SIZE bytes.                      |
+| 4    | De-assert CS.                              |
+| 5    | R_END: assert CS, write **0x08**, one dummy read, de-assert CS. |
+| 6    | Wait for "not DATA_S2M" (READY).           |
+
+```c
+void esp_recv(u8 *addr, u16 num)
+{
+  SPI_CTRL = SPI_ESP_CS_ON;
+  SPI_DATA = ESP_SPI_CMD_RD_DATA;
+  SPI_DATA;                      // dummy
+  SPI_DATA;                      // dummy
+  SPI_DATA;                      // dummy
+  while (num--) *addr++ = SPI_DATA;
+  SPI_CTRL = SPI_ESP_CS_OFF;
+  esp_rd_end();                  // 0x08 + dummy
+  esp_wait_busy(10000);
+}
+```
+
+## Registers
+
+64 shared registers, read and written by both sides. 00 and 01 are common, the others depend on the
+command.
+
+| Name           | Address | Size | Description                                          |
+| -------------- | ------- | ---- | ---------------------------------------------------- |
+| COMMAND        | 00      | 1    | Command. Set by the host, cleared by the slave.      |
+| STATUS         | 01      | 1    | Status or error code. Set to IDLE by the host along with each command. |
+| STRING_TYPE    | 02      | 1    | GET_INFO_STR: string type.                           |
+| STRING_SIZE    | 02      | 1    | String commands: length.                             |
+| STRING_DATA    | 03      | ..61 | String commands: the string (not 0-terminated).      |
+| API            | 02      | 1    | GET_VER: API version.                                |
+| FEAT           | 03      | 2    | GET_VER: feature version.                            |
+| VER0..VER2     | 05..07  | 1    | GET_VER: product version.                            |
+| OBJ_TYPE       | 02      | 1    | Object type.                                         |
+| DATA_SIZE      | 03      | 4    | Data size.                                           |
+| DATA_OFFSET    | 07      | 4    | Data offset.                                         |
+| OBJ_HANDLE     | 0B      | 1    | Object handle.                                       |
+| FUNC           | 02      | 1    | RUN_FUNCx: function number.                          |
+| OPT            | 03      | 1    | LOAD_ELF_OPT: options.                               |
+| ARG            | 03      | 4    | RUN_FUNCx: argument.                                 |
+| RETVAL         | 07      | 4    | RUN_FUNCx: return value.                             |
+| ARR1..3_HANDLE | 0C..0E  | 1    | RUN_FUNCx: array object handles.                     |
+| LIB_HANDLE     | 0F      | 1    | Library handle.                                      |
+| NETSTATE       | 02      | 1    | GET_NETSTATE: network state.                         |
+| IP             | 2C      | 4    | GET_IP: last resolved IP.                            |
+| OWN_IP         | 30      | 4    | GET_IP: own IP.                                      |
+| MASK           | 34      | 4    | GET_IP: net mask.                                    |
+| GATE           | 38      | 4    | GET_IP: gateway.                                     |
+| EXEC_TIME      | 3C      | 4    | Execution time of the last command, us.              |
+| SFX_*          | 02..27  |      | SFX commands, see below.                             |
+
+## Status and error codes
+
+| Name            | Code  | Description                                         |
+| --------------- | ----- | --------------------------------------------------- |
+| IDLE            | 00    | Set by the host along with a command.               |
+| READY           | 01    | Command completed.                                  |
+| BUSY            | 02    | Command running (or initializing).                  |
+| DATA_M2S        | 03    | Ready to receive data from the host (WR_DATA).      |
+| DATA_S2M        | 04    | Ready to send data to the host (RD_DATA).           |
+| RESET           | 7E    | After a reset, ready.                               |
+
+Error codes (the command completed with an error):
+
+| Name             | Code | Name              | Code |
+| ---------------- | ---- | ----------------- | ---- |
+| INV_COMMAND      | 80   | INV_ARG_HANDLE    | 8D   |
+| INV_PARAM        | 81   | INV_SRC_HANDLE    | 8E   |
+| INV_STATE        | 82   | INV_DST_HANDLE    | 8F   |
+| INV_STR_LEN      | 83   | INV_XM            | 90   |
+| INV_SIZE         | 84   | INV_LIB           | 91   |
+| INV_OBJ_TYPE     | 85   | INV_ELF           | 92   |
+| INV_ARR_NUM      | 86   | INV_HST           | 93   |
+| INV_HANDLE       | 87   | INV_ZIP           | 94   |
+| INV_XM_HANDLE    | 88   | INV_MOD           | 95   |
+| INV_LIB_HANDLE   | 89   | INV_MOD_HANDLE    | 96   |
+| INV_ELF_HANDLE   | 8A   | INV_S3M           | 97   |
+| INV_HST_HANDLE   | 8B   | INV_S3M_HANDLE    | 98   |
+| INV_BSS_HANDLE   | 8C   | OUT_OF_MEMORY     | 99   |
+|                  |      | OUT_OF_HANDLES    | 9A   |
+|                  |      | OBJ_NOT_DELETED   | 9B   |
+
+Network codes:
+
+| Name / use           | Code | Description                                            |
+| -------------------- | ---- | ------------------------------------------------------ |
+| AP_NOT_CONNECTED     | B0   | AP_CONNECT failed. Stream start: no reader task.       |
+| NET_BUSY             | B1   | WSCAN while busy. GOPHER: DNS lookup failed.           |
+| -                    | B2   | Network clients: socket / connect / HTTP open failed.  |
+| -                    | B3   | HTTP status not 2xx.                                   |
+| -                    | B4   | Empty response.                                        |
+| -                    | A0   | Network clients: no memory for the receive buffer.     |
+
+## Commands
+
+| Name                | Code | In                                           | Out                                       |
+| ------------------- | ---- | -------------------------------------------- | ----------------------------------------- |
+| NOP                 | 00   |                                              |                                           |
+| GET_INFO_STR        | 01   | STRING_TYPE                                  | STRING_SIZE, STRING_DATA                  |
+| GET_VER             | 02   |                                              | API, FEAT, VER0..2                        |
+| GET_NETSTATE        | 11   |                                              | NETSTATE                                  |
+| WSCAN               | 12   |                                              | AP table by RD_DATA                       |
+| SET_AP_NAME         | 13   | STRING_SIZE (1..32), STRING_DATA             |                                           |
+| SET_AP_PWD          | 14   | STRING_SIZE (0..61), STRING_DATA             |                                           |
+| AP_CONNECT          | 16   |                                              |                                           |
+| AP_DISCONNECT       | 17   |                                              |                                           |
+| SET_URL             | 18   | DATA_SIZE (1..1023); the URL by WR_DATA      |                                           |
+| GET_IP              | 19   |                                              | IP, OWN_IP, MASK, GATE                    |
+| HTTP_GET            | 20   | URL (SET_URL)                                | OBJ_HANDLE, DATA_SIZE                     |
+| HTTPS_GET           | 21   | URL                                          | OBJ_HANDLE, DATA_SIZE                     |
+| GOPHER_GET          | 22   | URL                                          | OBJ_HANDLE, DATA_SIZE                     |
+| HTTP_STREAM_START   | 23   | URL                                          | DATA_SIZE (total, FFFFFFFF if unknown)    |
+| HTTPS_STREAM_START  | 24   | URL                                          | DATA_SIZE (total)                         |
+| GOPHER_STREAM_START | 25   | URL                                          | DATA_SIZE (FFFFFFFF)                      |
+| STREAM_READ         | 26   |                                              | DATA_SIZE (chunk, up to 512) by RD_DATA; 0 at the end |
+| STREAM_CLOSE        | 27   |                                              |                                           |
+| TRACK_INIT          | A0   | OBJ_HANDLE (XM / MOD / S3M object)           | the object becomes XMC / MDC / S3C        |
+| TRACK_PLAY          | A1   | OBJ_HANDLE (XMC / MDC / S3C)                 |                                           |
+| TRACK_STOP          | A2   |                                              |                                           |
+| TRACK_RESET         | A3   | OBJ_HANDLE (XMC / MDC / S3C)                 | stop and rewind                           |
+| XM_STREAM_LOAD      | AB   | DATA_SIZE (chunk, aligned), DATA_OFFSET (total on the first chunk, 0 later) | DATA_OFFSET, DATA_SIZE, OBJ_HANDLE |
+| MOD_STREAM_LOAD     | AC   | as XM_STREAM_LOAD                            | as XM_STREAM_LOAD                         |
+| S3M_STREAM_LOAD     | AD   | as XM_STREAM_LOAD                            | as XM_STREAM_LOAD                         |
+| SFX_PLAY            | B0   | OBJ_HANDLE (WAV), SFX_GROUP                  | SFX_CHANNEL                               |
+| SFX_PLAY_EX         | B1   | OBJ_HANDLE, SFX_GROUP, SFX_VOLUME, SFX_PAN, SFX_PITCH | SFX_CHANNEL                      |
+| SFX_STOP            | B2   | SFX_CHANNEL                                  |                                           |
+| SFX_SET_PARAMS      | B3   | SFX_CHANNEL, SFX_VOLUME, SFX_PAN, SFX_PITCH  |                                           |
+| SFX_SET_VOLUME      | B4   | SFX_VOLUME (master)                          |                                           |
+| SFX_GET_STATE       | B5   | SFX_CHANNEL                                  | SFX_STATE_*                               |
+| SFX_STOP_GROUP      | B6   | SFX_GROUP                                    |                                           |
+| LOAD_ELF            | D0   | OBJ_HANDLE (ELF object)                      | LIB_HANDLE                                |
+| LOAD_ELF_OPT        | D1   | OBJ_HANDLE, OPT                              | LIB_HANDLE                                |
+| RUN_FUNC0..3        | D2..D5 | LIB_HANDLE, FUNC, ARG, ARR1..3_HANDLE (by the number) | RETVAL                      |
+| MAKE_OBJECT         | E0   | DATA_SIZE, OBJ_TYPE                          | OBJ_HANDLE, DATA_OFFSET (0), DATA_SIZE (first chunk) |
+| WRITE_OBJECT        | E1   | OBJ_HANDLE, DATA_OFFSET, DATA_SIZE (1..16384); data by WR_DATA | DATA_OFFSET (next)  |
+| READ_OBJECT         | E2   | OBJ_HANDLE, DATA_OFFSET, DATA_SIZE (1..16384); data by RD_DATA | DATA_OFFSET (next)  |
+| DELETE_OBJECT       | E3   | OBJ_HANDLE                                   |                                           |
+| KILL_OBJECTS        | E4   |                                              | all objects deleted                       |
+| REBOOT              | ED   |                                              | restart (STATUS RESET when up)            |
+| RESET               | EE   |                                              | restart (STATUS RESET when up)            |
+| BREAK               | EF   |                                              | abort a tracker stream load               |
+| GET_RND             | F0   | DATA_SIZE (up to 16384)                      | random bytes by RD_DATA                   |
+| DEHST               | F1   | OBJ_HANDLE (HST object), DATA_SIZE (packed, up to 64 KB), OBJ_TYPE (new) | DATA_OFFSET, DATA_SIZE |
+| UNZIP               | F2   | OBJ_HANDLE (ZIP object), DATA_SIZE (packed), OBJ_TYPE (new) | DATA_OFFSET, DATA_SIZE  |
+| STREAM_UNZIP        | F3   | OBJ_TYPE, DATA_SIZE (chunk; 0 = reset); data by WR_DATA | OBJ_HANDLE                  |
+
+Codes not listed (03 GET_CHIP_INFO, A4..AA, C0, E5..E7, ...) are reserved and answer INV_COMMAND.
+
+### Notes on commands
+
+- **GET_INFO_STR**: STRING_TYPE 0 copyright, 1 API string, 2 build, 3 ESP-IDF version.
+- **WSCAN**: when done, the slave sets DATA_S2M; read DATA_SIZE and the table by RD_DATA:
+  `NUM_APS (1)`, then per AP `AUTH (1)`, `RSSI (1, signed)`, `CHAN (1)`, `SSID_LEN (1)`, `SSID`.
+  AUTH is the `wifi_auth_mode_t` of ESP-IDF (0 open, 1 WEP, 2 WPA, 3 WPA2, 4 WPA/WPA2, ...).
+  At most 64 APs.
+- **AP_CONNECT** uses SET_AP_NAME / SET_AP_PWD and can take seconds (association and DHCP); poll
+  STATUS. GET_NETSTATE: 00 closed, 01 opening, 02 open, 03 closing, FF unknown.
+- **SET_URL**: the slave answers DATA_M2S; send the URL (DATA_SIZE bytes) by WR_DATA + W_END.
+- **xx_GET**: the whole response (up to 2 MB) goes into a new DATA object; read it with READ_OBJECT.
+- **Streams**: after xx_STREAM_START, repeat STREAM_READ: wait for DATA_S2M, read DATA_SIZE bytes by
+  RD_DATA, until DATA_SIZE is 0 (the end) with status READY. Then STREAM_CLOSE. One stream at a time.
+- **Objects**: MAKE_OBJECT returns the handle; WRITE_OBJECT / READ_OBJECT move up to 16 KB per call
+  (DATA_OFFSET + DATA_SIZE must stay inside the object). Objects live until DELETE_OBJECT or
+  KILL_OBJECTS (or a reset): a program should delete what it made.
+- **Tracker**: make an object of type XM / MOD / S3M with the module, TRACK_INIT turns it into a
+  context (XMC / MDC / S3C, same handle), TRACK_PLAY plays it. The stream load commands build the
+  context chunk by chunk without the whole module in memory.
+
+### Object types
+
+| Name  | Code | Memory | Description                       |
+| ----- | ---- | ------ | --------------------------------- |
+| NONE  | 00   |        | Free handle.                      |
+| DATA  | 01   | PSRAM  | Data.                             |
+| DATAF | 02   | SRAM   | Data in the internal RAM (fast).  |
+| ELF   | 03   | PSRAM  | ELF file.                         |
+| LIB   | 04   | -      | Loaded library.                   |
+| XM    | 05   | PSRAM  | XM module.                        |
+| WAV   | 06   | PSRAM  | WAV sound (SFX).                  |
+| HST   | 07   | PSRAM  | Hrust packed data.                |
+| ZIP   | 08   | PSRAM  | Zlib packed data (u32 unpacked size + zlib stream). |
+| XMC   | 09   | PSRAM  | XM player context.                |
+| MOD   | 0A   | PSRAM  | MOD module.                       |
+| MDC   | 0B   | PSRAM  | MOD player context.               |
+| S3M   | 0C   | PSRAM  | S3M module.                       |
+| S3C   | 0D   | PSRAM  | S3M player context.               |
+| MBC   | 0E   | PSRAM  | Context.                          |
+
+### LOAD_ELF_OPT options
+
+| Name        | Value | Description                       |
+| ----------- | ----- | --------------------------------- |
+| DATA_SRAM   | 01    | `.data` in the internal RAM.      |
+| RODATA_SRAM | 02    | `.rodata` in the internal RAM.    |
+| BSS_SRAM    | 04    | `.bss` in the internal RAM.       |
+
+## Versioning
+
+GET_VER returns API (incompatible protocol changes), FEAT (a counter of feature additions) and the
+product version. A host should check API and the FEAT it needs.
