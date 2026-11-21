@@ -210,8 +210,6 @@ void gopher_do_get()
       wr_reg32(ESP_REG_DATA_SIZE, total);
       last_progress = total;
     }
-
-    vTaskDelay(1);
   }
 
   gopher_close_socket();
