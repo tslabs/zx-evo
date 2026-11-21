@@ -29,7 +29,15 @@ static volatile uint32_t ring_tail = 0;
 static volatile bool ring_eof = false;
 static SemaphoreHandle_t ring_mutex = NULL;
 
+// The reader task is created once and never deleted: a session is started
+// by a notification and ended by reader_stop (the socket is shut down to wake
+// a blocking read); reader_idle is given when a session has ended. Before, a
+// close deleted the task from outside, possibly while it held ring_mutex or
+// was inside lwIP / mbedTLS, and a new start leaked the previous stream.
 static TaskHandle_t reader_task_handle = NULL;
+static SemaphoreHandle_t reader_idle = NULL;
+static volatile bool reader_active = false;
+static volatile bool reader_stop = false;
 static int stream_sock = -1;
 static esp_http_client_handle_t stream_http = NULL;
 static uint32_t stream_total_size = 0;
@@ -108,11 +116,52 @@ static esp_err_t stream_reader_start(void)
   stream_ring_reset();
   stream_read_size = 0;
 
-  if (xTaskCreatePinnedToCoreWithCaps(reader_task, "stream_reader", 4096, NULL, STREAMER_TASK_PRIO, &reader_task_handle, 0, task_ram_type_non_critical) == pdPASS)
-    return ESP_OK;
+  if (!reader_task_handle)
+  {
+    // 6 KB: TLS reads run on this stack
+    if (xTaskCreatePinnedToCoreWithCaps(reader_task, "stream_reader", 6144, NULL, STREAMER_TASK_PRIO, &reader_task_handle, 0, task_ram_type_non_critical) != pdPASS)
+    {
+      reader_task_handle = NULL;
+      stream_ring_free();
+      return ESP_FAIL;
+    }
+  }
 
+  xSemaphoreTake(reader_idle, 0);
+  reader_stop = false;
+  reader_active = true;
+  xTaskNotifyGive(reader_task_handle);
+  return ESP_OK;
+}
+
+// Ends the reader session; true when the reader is idle
+static bool stream_reader_stop(void)
+{
+  if (!reader_active) return true;
+
+  reader_stop = true;
+
+  int fd = stream_sock;
+  if (stream_http) fd = esp_http_client_get_socket(stream_http);
+  if (fd >= 0) shutdown(fd, SHUT_RDWR);
+
+  if (xSemaphoreTake(reader_idle, pdMS_TO_TICKS(5000)) == pdTRUE)
+    return true;
+
+  ESP_LOGE(TAG, "reader does not stop");
+  return false;
+}
+
+// Closes the stream; false when the reader did not stop (then the transport
+// and the ring stay, as the reader still uses them)
+static bool stream_close_internal(void)
+{
+  if (!stream_reader_stop()) return false;
+
+  stream_transport_close();
+  stream_state_reset();
   stream_ring_free();
-  return ESP_FAIL;
+  return true;
 }
 
 static void stream_state_reset(void)
@@ -127,55 +176,63 @@ static void reader_task(void *arg)
 {
   uint8_t temp_buf[512];
 
-  while (true)
+  for (;;)
   {
-    int len = 0;
+    ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
 
-    if (stream_http)
+    while (!reader_stop)
     {
-      len = esp_http_client_read(stream_http, (char*)temp_buf, sizeof(temp_buf));
-    }
-    else if (stream_sock >= 0)
-    {
-      len = read(stream_sock, temp_buf, sizeof(temp_buf));
-    }
+      int len = 0;
 
-    if (len <= 0)
-    {
+      if (stream_http)
+      {
+        len = esp_http_client_read(stream_http, (char*)temp_buf, sizeof(temp_buf));
+      }
+      else if (stream_sock >= 0)
+      {
+        len = read(stream_sock, temp_buf, sizeof(temp_buf));
+      }
+
+      if (len <= 0)
+      {
+        xSemaphoreTake(ring_mutex, portMAX_DELAY);
+        ring_eof = true;
+        xSemaphoreGive(ring_mutex);
+        ESP_LOGI(TAG, "reader: EOF, total=%u", stream_read_size);
+        break;
+      }
+
+      stream_read_size += len;
+
+      // Wait for space in ring buffer
+      while (true)
+      {
+        xSemaphoreTake(ring_mutex, portMAX_DELAY);
+        uint32_t free = ring_free();
+        xSemaphoreGive(ring_mutex);
+
+        if (free >= (uint32_t) len) break;
+        if (reader_stop) break;
+        vTaskDelay(1);
+      }
+
+      if (reader_stop) break;
+
+      // Write to ring buffer
       xSemaphoreTake(ring_mutex, portMAX_DELAY);
-      ring_eof = true;
+      uint32_t h = ring_head;
+      for(int i = 0; i < len; i++)
+      {
+        ring_buf[h] = temp_buf[i];
+        h = (h + 1) % RING_BUF_SIZE;
+      }
+      ring_head = h;
       xSemaphoreGive(ring_mutex);
-      ESP_LOGI(TAG, "reader: EOF, total=%u", stream_read_size);
-      break;
     }
 
-    stream_read_size += len;
-
-    // Wait for space in ring buffer
-    while (true)
-    {
-      xSemaphoreTake(ring_mutex, portMAX_DELAY);
-      uint32_t free = ring_free();
-      xSemaphoreGive(ring_mutex);
-
-      if (free >= (uint32_t) len) break;
-      vTaskDelay(1);
-    }
-
-    // Write to ring buffer
-    xSemaphoreTake(ring_mutex, portMAX_DELAY);
-    uint32_t h = ring_head;
-    for(int i = 0; i < len; i++)
-    {
-      ring_buf[h] = temp_buf[i];
-      h = (h + 1) % RING_BUF_SIZE;
-    }
-    ring_head = h;
-    xSemaphoreGive(ring_mutex);
+    reader_active = false;
+    xSemaphoreGive(reader_idle);
   }
-
-  reader_task_handle = NULL;
-  vTaskDelete(NULL);
 }
 
 void stream_init(void)
@@ -183,9 +240,11 @@ void stream_init(void)
   if (!ring_mutex)
     ring_mutex = xSemaphoreCreateMutexWithCaps(task_ram_type_non_critical);
 
+  if (!reader_idle)
+    reader_idle = xSemaphoreCreateBinaryWithCaps(task_ram_type_non_critical);
+
   stream_sock = -1;
   stream_http = NULL;
-  reader_task_handle = NULL;
   stream_state_reset();
 
   ESP_LOGI(TAG, "init done");
@@ -195,7 +254,12 @@ static void stream_http_common(bool use_https)
 {
   ESP_LOGI(TAG, "STREAM_%s_START", use_https ? "HTTPS" : "HTTP");
 
-  stream_state_reset();
+  // A program may start a stream without closing the previous one
+  if (!stream_close_internal())
+  {
+    set_status(ESP_ERR_NET_BUSY);
+    return;
+  }
 
   if (!net.url[0])
   {
@@ -292,7 +356,12 @@ void stream_gopher_start(void)
 {
   ESP_LOGI(TAG, "STREAM_GOPHER_START");
 
-  stream_state_reset();
+  // A program may start a stream without closing the previous one
+  if (!stream_close_internal())
+  {
+    set_status(ESP_ERR_NET_BUSY);
+    return;
+  }
   stream_is_gopher = true;
 
   if (!net.url[0])
@@ -429,10 +498,10 @@ void stream_read(void)
     return;
   }
 
-  // Wait for data in ring buffer or EOF
-  int timeout = 0;
-  
-  while (timeout < 30000)
+  // Wait for data in ring buffer or EOF, up to 30 s (it counted ticks)
+  TickType_t t0 = xTaskGetTickCount();
+
+  while ((xTaskGetTickCount() - t0) < pdMS_TO_TICKS(30000))
   {
     xSemaphoreTake(ring_mutex, portMAX_DELAY);
     uint32_t avail = ring_available();
@@ -441,7 +510,6 @@ void stream_read(void)
 
     if (avail > 0 || eof) break;
     vTaskDelay(1);
-    timeout++;
   }
 
   xSemaphoreTake(ring_mutex, portMAX_DELAY);
@@ -485,18 +553,13 @@ void stream_read(void)
 
 void stream_close(void)
 {
-  if (reader_task_handle)
+  ESP_LOGI(TAG, "stream close, total read=%u", stream_read_size);
+
+  if (!stream_close_internal())
   {
-    vTaskDelete(reader_task_handle);
-    reader_task_handle = NULL;
+    set_status(ESP_ERR_NET_BUSY);
+    return;
   }
-
-  stream_transport_close();
-
-  ESP_LOGI(TAG, "stream closed, total read=%u", stream_read_size);
-
-  stream_state_reset();
-  stream_ring_free();
 
   set_status(ESP_ST_READY);
 }
