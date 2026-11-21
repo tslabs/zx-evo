@@ -200,7 +200,7 @@ static void stream_http_common(bool use_https)
   if (!net.url[0])
   {
     ESP_LOGW(TAG, "URL not set");
-    wr_reg8(ESP_REG_STATUS, 0x81);
+    set_status(0x81);
     return;
   }
 
@@ -211,7 +211,7 @@ static void stream_http_common(bool use_https)
   if (strncmp(url, prefix, prefix_len) != 0)
   {
     ESP_LOGW(TAG, "invalid URL format");
-    wr_reg8(ESP_REG_STATUS, 0x81);
+    set_status(0x81);
     return;
   }
 
@@ -231,7 +231,7 @@ static void stream_http_common(bool use_https)
   if (!stream_http)
   {
     ESP_LOGW(TAG, "init fail");
-    wr_reg8(ESP_REG_STATUS, 0xB2);
+    set_status(0xB2);
     return;
   }
 
@@ -242,7 +242,7 @@ static void stream_http_common(bool use_https)
     ESP_LOGW(TAG, "open fail");
     esp_http_client_cleanup(stream_http);
     stream_http = NULL;
-    wr_reg8(ESP_REG_STATUS, 0xB2);
+    set_status(0xB2);
     return;
   }
 
@@ -255,7 +255,7 @@ static void stream_http_common(bool use_https)
     esp_http_client_close(stream_http);
     esp_http_client_cleanup(stream_http);
     stream_http = NULL;
-    wr_reg8(ESP_REG_STATUS, 0xB3);
+    set_status(0xB3);
     return;
   }
 
@@ -270,12 +270,12 @@ static void stream_http_common(bool use_https)
   if (stream_reader_start() != ESP_OK)
   {
     stream_transport_close();
-    wr_reg8(ESP_REG_STATUS, 0xB0);
+    set_status(0xB0);
     return;
   }
 
   wr_reg32(ESP_REG_DATA_SIZE, stream_total_size);
-  wr_reg8(ESP_REG_STATUS, ESP_ST_READY);
+  set_status(ESP_ST_READY);
 }
 
 void stream_http_start(void)
@@ -298,7 +298,7 @@ void stream_gopher_start(void)
   if (!net.url[0])
   {
     ESP_LOGW(TAG, "URL not set");
-    wr_reg8(ESP_REG_STATUS, 0x81);
+    set_status(0x81);
     return;
   }
 
@@ -307,7 +307,7 @@ void stream_gopher_start(void)
   if (strncmp(url, "gopher://", 9) != 0)
   {
     ESP_LOGW(TAG, "invalid URL format");
-    wr_reg8(ESP_REG_STATUS, 0x81);
+    set_status(0x81);
     return;
   }
 
@@ -364,7 +364,7 @@ void stream_gopher_start(void)
   if (!server)
   {
     ESP_LOGW(TAG, "DNS lookup failed");
-    wr_reg8(ESP_REG_STATUS, 0xB1);
+    set_status(0xB1);
     return;
   }
 
@@ -373,7 +373,7 @@ void stream_gopher_start(void)
   if (stream_sock < 0)
   {
     ESP_LOGW(TAG, "socket creation failed");
-    wr_reg8(ESP_REG_STATUS, 0xB2);
+    set_status(0xB2);
     return;
   }
 
@@ -388,7 +388,7 @@ void stream_gopher_start(void)
     ESP_LOGW(TAG, "connection failed");
     close(stream_sock);
     stream_sock = -1;
-    wr_reg8(ESP_REG_STATUS, 0xB2);
+    set_status(0xB2);
     return;
   }
 
@@ -412,12 +412,12 @@ void stream_gopher_start(void)
   if (stream_reader_start() != ESP_OK)
   {
     stream_transport_close();
-    wr_reg8(ESP_REG_STATUS, 0xB0);
+    set_status(0xB0);
     return;
   }
 
   wr_reg32(ESP_REG_DATA_SIZE, stream_total_size);
-  wr_reg8(ESP_REG_STATUS, ESP_ST_READY);
+  set_status(ESP_ST_READY);
 }
 
 void stream_read(void)
@@ -425,7 +425,7 @@ void stream_read(void)
   if (stream_sock < 0 && !stream_http)
   {
     ESP_LOGW(TAG, "stream not opened");
-    wr_reg8(ESP_REG_STATUS, 0x82);
+    set_status(0x82);
     return;
   }
 
@@ -453,7 +453,7 @@ void stream_read(void)
     xSemaphoreGive(ring_mutex);
     ESP_LOGI(TAG, "stream end, total=%u", stream_read_size);
     wr_reg32(ESP_REG_DATA_SIZE, 0);
-    wr_reg8(ESP_REG_STATUS, ESP_ST_READY);
+    set_status(ESP_ST_READY);
     return;
   }
 
@@ -462,7 +462,7 @@ void stream_read(void)
     xSemaphoreGive(ring_mutex);
     ESP_LOGW(TAG, "timeout waiting for data");
     wr_reg32(ESP_REG_DATA_SIZE, 0);
-    wr_reg8(ESP_REG_STATUS, ESP_ST_READY);
+    set_status(ESP_ST_READY);
     return;
   }
 
@@ -498,5 +498,5 @@ void stream_close(void)
   stream_state_reset();
   stream_ring_free();
 
-  wr_reg8(ESP_REG_STATUS, ESP_ST_READY);
+  set_status(ESP_ST_READY);
 }
