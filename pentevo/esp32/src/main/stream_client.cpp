@@ -46,6 +46,7 @@ static uint32_t stream_read_size = 0;
 static bool stream_is_gopher = false;
 
 static void reader_task(void *arg);
+static void stream_state_reset(void);
 
 static uint32_t ring_available(void)
 {
