@@ -1,4 +1,7 @@
 file(GLOB_RECURSE SOURCES "../../src/*.c" "../../src/*.cpp")
+# Not the components the component manager downloads into the project (they
+# were compiled into main without their include dirs on a reconfigure)
+list(FILTER SOURCES EXCLUDE REGEX "/(managed_components|build)/")
 
 idf_component_register(SRCS ${SOURCES} INCLUDE_DIRS ".")
 

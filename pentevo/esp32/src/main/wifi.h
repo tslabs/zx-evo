@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define CONNECT_TIMEOUT_MS        (10000)
+#define CONNECT_TIMEOUT_MS        (20000)   // DHCP of some routers takes 10 s
 #define DEFAULT_SCAN_LIST_SIZE    64
 
 void initialize_wifi();
