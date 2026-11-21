@@ -1827,7 +1827,21 @@ void IRAM_ATTR process_rx_data(u8 type, size_t size)
         // printf("ZIP_ST_INITIAL\r\n");
 #endif
 
+        // The first chunk has the u32 unpacked size, then data (size 1..3
+        // underflowed inbytes); the type must be one of raw data
+        if ((size <= sizeof(u32)) || !mem_obj_is_raw_type(rd_reg8(ESP_REG_OBJ_TYPE)))
+        {
+          set_status(ESP_ERR_INV_PARAM);
+          break;
+        }
+
         uncomp_size = *(u32*)dma_buf;
+
+        if (!uncomp_size || (uncomp_size > (16 << 20)))
+        {
+          set_status(ESP_ERR_INV_SIZE);
+          break;
+        }
 
 #ifdef VERBOSE
         printf("Uncompressed size %ld\r\n", uncomp_size);
