@@ -44,6 +44,7 @@
 #include "esp_spi_defs.h"
 #include "sdmmc.h"
 #include "sfx.h"
+#include "audio_stream.h"
 #include "opl.h"
 
 // ============================================================================
@@ -8276,6 +8277,7 @@ void player_task(void *arg)
 
     auto t_sfx = esp_timer_get_time();
     sfx_render(xm_mix_buf, XM_SAMPLES_PER_BUFFER, XM_SAMPLE_RATE);
+    audio_render(xm_mix_buf, XM_SAMPLES_PER_BUFFER, XM_SAMPLE_RATE);
     sfx_us = (int)(esp_timer_get_time() - t_sfx);
 
     for (int i = 0; i < XM_SAMPLES_PER_BUFFER; i++)

@@ -70,9 +70,10 @@ int aud_sniff(const uint8_t *p, size_t n);
 typedef struct aud_dec aud_dec_t;
 
 // Opens a decoder: reads the headers from io (blocks). resume = after a flush:
-// the stream continues at an offset chosen by the host (MP3 / FLAC find their
-// frames, WAV goes on as raw PCM with prev). NULL: not decodable / aborted.
-aud_dec_t *aud_dec_open(int fmt, aud_io_t *io, int resume, const aud_params_t *prev);
+// the stream continues at the file offset at (MP3 / FLAC find their frames,
+// WAV goes on as raw PCM with prev, from the next frame after at).
+// NULL: not decodable / aborted.
+aud_dec_t *aud_dec_open(int fmt, aud_io_t *io, int resume, const aud_params_t *prev, uint64_t at);
 const aud_params_t *aud_dec_params(const aud_dec_t *d);
 int  aud_dec_seekable(int fmt);   // the host may flush and continue at an offset
 // Decodes up to frames stereo int16 frames (mono doubled, >2 channels: the

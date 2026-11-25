@@ -321,7 +321,7 @@ static size_t ogg_read(aud_dec_t *d, int16_t *out, size_t frames)
 }
 #endif
 
-aud_dec_t *aud_dec_open(int fmt, aud_io_t *io, int resume, const aud_params_t *prev)
+aud_dec_t *aud_dec_open(int fmt, aud_io_t *io, int resume, const aud_params_t *prev, uint64_t at)
 {
   aud_dec_t *d = (aud_dec_t*)calloc(1, sizeof(aud_dec_t));
   if (!d) return NULL;
@@ -336,12 +336,17 @@ aud_dec_t *aud_dec_open(int fmt, aud_io_t *io, int resume, const aud_params_t *p
     case AUD_FMT_WAV:
       if (resume)
       {
-        // the host continues at data_offset + n * block_align
+        // the samples go on at the next frame after at
         if (!prev || !prev->block_align || !prev->channels || prev->channels > DEC_MAXCH) break;
         d->p = *prev;
         d->raw = 1;
         d->rawbuf = (uint8_t*)malloc((size_t)DEC_CHUNK * prev->block_align);
         ok = d->rawbuf != NULL;
+        if (ok && at > prev->data_offset)
+        {
+          uint32_t part = (uint32_t)((at - prev->data_offset) % prev->block_align);
+          if (part && !io_skip(io, (int)(prev->block_align - part))) ok = 0;
+        }
         break;
       }
       if (!drwav_init(&d->wav, cb_read, cb_seek_wav, NULL, io, NULL)) break;

@@ -24,6 +24,7 @@
 #include "tracker.h"
 #include "stats.h"
 #include "spi_slave.h"
+#include "audio_stream.h"
 
 #if defined(CONFIG_ESP_WIFI_ENABLED) && CONFIG_ESP_WIFI_ENABLED
 #include "wifi.h"
@@ -1577,6 +1578,21 @@ void IRAM_ATTR command()
         break;
 #endif
 
+        case ESP_CMD_AUDIO_PUSH:
+          if (audio_push_check(rd_reg32(ESP_REG_DATA_SIZE)))
+            put_rxq_isr(DREQ_AUDIO);
+        break;
+
+        case ESP_CMD_AUDIO_START:
+        case ESP_CMD_AUDIO_END:
+        case ESP_CMD_AUDIO_FLUSH:
+        case ESP_CMD_AUDIO_PAUSE:
+        case ESP_CMD_AUDIO_VOLUME:
+        case ESP_CMD_AUDIO_STOP:
+        case ESP_CMD_AUDIO_GET_STATE:
+          audio_command(cmd);
+        break;
+
         case ESP_CMD_GET_RND:
           put_txq_isr(DREQ_RND);
         break;
@@ -1791,6 +1807,10 @@ void IRAM_ATTR process_rx_data(u8 type, size_t size)
 
     case DREQ_TRACK_STREAM:
       xm_host_stream_process_rx_data(dma_buf, size);
+    break;
+
+    case DREQ_AUDIO:
+      audio_rx(dma_buf, size);
     break;
 
     case DREQ_ZIP:

@@ -163,7 +163,7 @@ static int open_stream(int resume)
 {
   int fmt = sniff_ring();
   if (fmt <= 0) { printf("sniff: unknown format\n"); return 0; }
-  dec = aud_dec_open(fmt, &io, resume, resume ? &params : NULL);
+  dec = aud_dec_open(fmt, &io, resume, resume ? &params : NULL, 0);
   if (!dec) { printf("open (fmt %d, resume %d): failed\n", fmt, resume); return 0; }
   params = *aud_dec_params(dec);
   return fmt;
@@ -260,15 +260,13 @@ static int test_flush(const char *stream, const char *refp, int lossy)
   abort_flag = 0;
   end_flag = 0;   // a short file: the first producer may have got to the end
 
-  // the host goes on at 60 %, a WAV at a frame of the data
-  size_t at = audio0 + alen * 6 / 10;
-  if (fmt == AUD_FMT_WAV)
-    at = (size_t)params.data_offset + (at - (size_t)params.data_offset) / params.block_align * params.block_align;
-  long expected = fmt == AUD_FMT_WAV ? (long)((at - params.data_offset) / params.block_align)
+  // the host goes on at 60 %, at any byte: a WAV continues at the next frame
+  size_t at = audio0 + alen * 6 / 10 + 1;
+  long expected = fmt == AUD_FMT_WAV ? (long)((at - params.data_offset + params.block_align - 1) / params.block_align)
                                      : (long)((double)(at - audio0) / alen * ref_frames);
 
   start_producer(&t, at, file_len);
-  dec = aud_dec_open(fmt, &io, 1, &params);
+  dec = aud_dec_open(fmt, &io, 1, &params, at);
   if (!aud_dec_seekable(fmt))
   {
     printf("resume of fmt %d: %s (not seekable)\n", fmt, dec ? "FAIL, opened" : "refused, ok");
@@ -306,7 +304,7 @@ static int test_junk(const char *stream, int fmt)
   uint8_t head[16];
   while (aud_ring_used(&ring) < sizeof(head) && !end_flag) sleep_us(20);
   int s = aud_sniff(head, aud_ring_peek(&ring, head, sizeof(head)));
-  dec = aud_dec_open(fmt, &io, 0, NULL);
+  dec = aud_dec_open(fmt, &io, 0, NULL, 0);
   size_t frames = 0;
   if (dec)
   {
