@@ -217,13 +217,30 @@ void IRAM_ATTR put_txq_isr(int type)
   portYIELD_FROM_ISR();
 }
 
+
+
+// An RX DMA armed (M2S announced) and not ended by W_END yet. A host that
+// gave up waiting for M2S (it came late) and sends its command again would
+// queue a second request behind a DMA that waits for the data of the first
+// for ever; instead the armed one is announced again and takes the new
+// command's data (type and size are read when it ends).
+static volatile bool rx_armed = false;
+static volatile int rx_type;
+
 void IRAM_ATTR put_rxq(int type)
 {
+  rx_type = type;
   xQueueSend(rx_queue, &type, 0);
 }
 
 void IRAM_ATTR put_rxq_isr(int type)
 {
+  rx_type = type;
+  if (rx_armed)
+  {
+    wr_reg8(ESP_REG_STATUS, ESP_ST_DATA_M2S);
+    return;
+  }
   xQueueSendFromISR(rx_queue, &type, 0);
   portYIELD_FROM_ISR();
 }
@@ -238,6 +255,7 @@ bool IRAM_ATTR cb_regs_read(void *arg, spi_slave_hd_event_t *event, BaseType_t *
 
 bool IRAM_ATTR cb_rx_ready(void *arg, spi_slave_hd_event_t *event, BaseType_t *awoken)
 {
+  rx_armed = true;
   wr_reg8(ESP_REG_STATUS, ESP_ST_DATA_M2S);
   return true;
 }
@@ -247,6 +265,7 @@ bool IRAM_ATTR cb_rx_ready(void *arg, spi_slave_hd_event_t *event, BaseType_t *a
 // after its write saw M2S, then not READY, and dropped the transfer.
 bool IRAM_ATTR cb_cmd7(void *arg, spi_slave_hd_event_t *event, BaseType_t *awoken)
 {
+  rx_armed = false;
   wr_reg8(ESP_REG_STATUS, ESP_ST_BUSY);
   return true;
 }
@@ -1649,10 +1668,13 @@ void IRAM_ATTR receiver_task(void *arg)
 
     slave_trans.data = dma_buf;
     slave_trans.len  = DMA_BUF_SIZE;
-    size_t size = rd_reg32(ESP_REG_DATA_SIZE);
 
     spi_slave_hd_queue_trans(SLAVE_HOST, SPI_SLAVE_CHAN_RX, &slave_trans, portMAX_DELAY);
     spi_slave_hd_get_trans_res(SLAVE_HOST, SPI_SLAVE_CHAN_RX, &ret_trans, portMAX_DELAY);
+
+    // of the command whose data came (put_rxq_isr: may be a later one than the request)
+    req_data_type = rx_type;
+    size_t size = rd_reg32(ESP_REG_DATA_SIZE);
 
 #ifdef VERBOSE
     printf("Received %d, expected %d, CRC %08lX\r\n", ret_trans->trans_len, size, esp_crc32_le(0, dma_buf, size));
