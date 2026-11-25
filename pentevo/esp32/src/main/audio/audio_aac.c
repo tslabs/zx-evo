@@ -11,8 +11,11 @@
 #include "esp_audio_simple_dec.h"
 #include "esp_audio_simple_dec_default.h"
 #include "impl/esp_aac_dec.h"
+#include "impl/esp_m4a_dec.h"
 
 #define AAC_IN  4096          // input bytes handed to the parser at a time
+#define AAC_PCM 8192          // one HE-AAC frame: 2048 stereo int16 frames (grows if asked)
+#define AAC_MAX_ERR 200       // broken frames in a row before the stream is given up
 
 struct aud_aac
 {
@@ -37,11 +40,14 @@ static void aac_register(void)
   registered = 1;
 }
 
-// One more decoded frame into pcm. 0: the end of the stream (or abort)
+// One more decoded frame into pcm. 0: the end of the stream, an abort, or
+// nothing decodable any more
 static int aac_decode(aud_aac_t *a)
 {
+  int errors = 0;
   while (1)
   {
+    if (*a->io->abort) return 0;   // also with a full input buffer
     if (!a->eos && a->in_len < AAC_IN)
     {
       size_t got = aud_io_read_some(a->io, a->in + a->in_len, AAC_IN - a->in_len);
@@ -76,6 +82,7 @@ static int aac_decode(aud_aac_t *a)
     }
     if (ret != ESP_AUDIO_ERR_OK && ret != ESP_AUDIO_ERR_DATA_LACK && ret != ESP_AUDIO_ERR_CONTINUE)
     {
+      if (++errors > AAC_MAX_ERR) return 0;
       // a broken frame: drop a byte so the parser looks for the next one
       if (!used && a->in_len)
       {
@@ -99,13 +106,23 @@ aud_aac_t *aud_aac_open(aud_io_t *io, int m4a, aud_params_t *p)
   aud_aac_t *a = (aud_aac_t*)calloc(1, sizeof(aud_aac_t));
   if (!a) return NULL;
   a->io = io;
+  // a buffer from the start: the library takes NULL as an invalid parameter
+  a->pcm = (uint8_t*)malloc(AAC_PCM);
+  if (!a->pcm)
+  {
+    aud_aac_close(a);
+    return NULL;
+  }
+  a->pcm_cap = AAC_PCM;
 
+  // HE-AAC on: most AAC radio. M4A has a config of its own (the track, AAC+)
   esp_aac_dec_cfg_t aac = ESP_AAC_DEC_CONFIG_DEFAULT();
-  aac.aac_plus_enable = true;   // HE-AAC: most AAC radio
+  aac.aac_plus_enable = true;
+  esp_m4a_dec_cfg_t mp4 = { .track_idx = 0, .aac_plus_enable = true };
   esp_audio_simple_dec_cfg_t cfg = {
     .dec_type = m4a ? ESP_AUDIO_SIMPLE_DEC_TYPE_M4A : ESP_AUDIO_SIMPLE_DEC_TYPE_AAC,
-    .dec_cfg = &aac,
-    .cfg_size = sizeof(aac),
+    .dec_cfg = m4a ? (void*)&mp4 : (void*)&aac,
+    .cfg_size = m4a ? (int)sizeof(mp4) : (int)sizeof(aac),
   };
   if (esp_audio_simple_dec_open(&cfg, &a->dec) != ESP_AUDIO_ERR_OK || !a->dec)
   {

@@ -387,6 +387,7 @@ static void audio_task(void *arg)
     int64_t t0 = esp_timer_get_time();
     size_t n = aud_dec_read(dec, pcm, room < AUD_DEC_FRAMES ? room : AUD_DEC_FRAMES);
     A.dec_us += (u32)(esp_timer_get_time() - t0);
+    A.params.bitrate = aud_dec_params(dec)->bitrate;   // AAC: the average so far
     if (n)
     {
       aud_ring_write(&A.pcm, pcm, n * 4);
