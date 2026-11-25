@@ -170,7 +170,7 @@ enum
   ESP_CMD_AUDIO_STOP            = 0x96, // stops, AUDIO_ST_IDLE
   ESP_CMD_AUDIO_GET_STATE       = 0x97, // o: ESP_REG_AUDIO_STATE..ESP_REG_AUDIO_META_SEQ
   ESP_CMD_AUDIO_URL             = 0x98, // i: ESP_REG_AUDIO_FORMAT (0: from Content-Type); internet radio from the URL of ESP_CMD_SET_URL
-  ESP_CMD_AUDIO_GET_META        = 0x99, // i: ESP_REG_AUDIO_PARAM (0 station, 1 title); o: ESP_REG_STRING_SIZE, ESP_REG_STRING_DATA (UTF-8 as sent, <= 60 bytes)
+  ESP_CMD_AUDIO_GET_META        = 0x99, // i: ESP_REG_AUDIO_PARAM (0 station, 1 title); o: ESP_REG_STRING_SIZE, ESP_REG_STRING_DATA (UTF-8 as sent, <= 56 bytes)
 
   ESP_CMD_CONFIG_SPI            = 0xC0, // +++
 
