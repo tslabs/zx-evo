@@ -14,6 +14,7 @@
 #include "esp_log.h"
 #include "esp_http_client.h"
 #include "esp_crt_bundle.h"
+#include "esp_wifi.h"
 
 #include "audio_stream.h"
 #include "esp_spi_defs.h"
@@ -83,6 +84,10 @@ static void meta_title(const char *m)
 // it ends when the session changes or the connection drops.
 static size_t radio_connect(u32 s)
 {
+  // the modem sleep of the default power save (MIN_MODEM) cut the stream rate
+  // of a 128 kbit/s station to 5..8 KB/s for half a minute: off while radio plays
+  esp_wifi_set_ps(WIFI_PS_NONE);
+
   R.metaint = 0;
   R.name[0] = 0;
   R.ctype[0] = 0;

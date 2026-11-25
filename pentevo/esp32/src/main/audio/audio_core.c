@@ -505,7 +505,15 @@ size_t aud_dec_read(aud_dec_t *d, int16_t *out, size_t frames)
   {
     d->dec_frames += n;
     if (d->dec_frames >= d->p.rate && d->p.rate)
-      d->p.bitrate = (uint32_t)(d->io->pos * 8 * d->p.rate / d->dec_frames);
+    {
+      uint64_t used = d->io->pos;
+#if AUDIO_MP3
+      // dr_mp3 reads ahead up to 16 KB: not taken yet (at the start of a radio
+      // stream that showed 241 kbit/s for 128)
+      if (d->fmt == AUD_FMT_MP3 && used > d->mp3.dataSize) used -= d->mp3.dataSize;
+#endif
+      d->p.bitrate = (uint32_t)(used * 8 * d->p.rate / d->dec_frames);
+    }
   }
 
   if (ch == 1)

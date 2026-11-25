@@ -28,6 +28,7 @@
 #include "esp_spi_defs.h"
 #include "spi_slave.h"
 
+#define RADIO_PREBUF (48 * 1024)   // input bytes before radio plays: ~3 s of 128 kbit/s
 #define TAG "audio"
 
 // at least one tick: pdMS_TO_TICKS(5) is 0 at 100 Hz, and a wait of 0 spun the
@@ -90,6 +91,7 @@ static struct
   u32 dec_us;                 // stats: time in the decoder
   aud_rs_t rs;                // player_task only (reset under lock)
   int starved;                // the last render ran out of samples
+  volatile u8 rebuf;          // radio: silent until RADIO_PREBUF is buffered
   SemaphoreHandle_t lock;     // render <-> rings / resampler reset
   TaskHandle_t task;
 } A;
@@ -337,6 +339,7 @@ static void handle_requests(aud_dec_t **dec)
         A.session = A.sessions;
         A.radio = 1;
         A.connecting = 1;
+        A.rebuf = 1;
         radio_start(A.session, (const char*)net.url);
       }
     }
@@ -473,6 +476,18 @@ void audio_render(float *mix, int samples, int rate)
   if ((st != AUDIO_ST_PLAY && st != AUDIO_ST_DRAIN) || A.paused) return;
   if (xSemaphoreTake(A.lock, 0) != pdTRUE) return;   // a reset is going on
 
+  // radio: the network delivers in bursts and pauses; play only with a few
+  // seconds in hand, and after a gap wait for them again instead of stuttering
+  if (A.radio && A.rebuf)
+  {
+    if (aud_ring_used(&A.in) < RADIO_PREBUF)
+    {
+      xSemaphoreGive(A.lock);
+      return;
+    }
+    A.rebuf = 0;
+  }
+
   u8 at = A.atten;
   if (at != A.gain_atten)
   {
@@ -486,6 +501,7 @@ void audio_render(float *mix, int samples, int rate)
     if (st == AUDIO_ST_DRAIN) A.state = AUDIO_ST_ENDED;
     else if (!A.starved && A.rs.played) A.underruns = A.underruns + 1;   // once per gap, not before the first samples
     A.starved = 1;
+    if (A.radio) A.rebuf = 1;
   }
   else
     A.starved = 0;

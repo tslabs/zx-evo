@@ -120,8 +120,16 @@ static aud_params_t params;
 static void decode_all(void)
 {
   int16_t f[1024 * 2];
-  size_t n;
-  while ((n = aud_dec_read(dec, f, 1 + (size_t)rand() % 1024)) > 0) out_add(f, n);
+  size_t n, frames = 0;
+  uint32_t br = 0;
+  while ((n = aud_dec_read(dec, f, 1 + (size_t)rand() % 1024)) > 0)
+  {
+    out_add(f, n);
+    frames += n;
+    // the average bitrate after 2 s (the read-ahead of the decoder must not count)
+    if (!br && params.rate && frames >= 2 * params.rate) br = aud_dec_params(dec)->bitrate;
+  }
+  if (br) printf("bitrate %u at 2 s\n", (unsigned)br);
 }
 
 // Best alignment of a (n frames) against ref around expected, by the sum of

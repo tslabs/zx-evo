@@ -15,7 +15,7 @@ fi
 [ -f build/streams/garbage.bin ] || ./gen.sh build/streams || exit 1
 cd build/streams
 err=0
-run() { r=$(timeout 120 ../audio_test "$@" 2>&1); rc=$?; if [ $rc != 0 ] || echo "$r" | grep -q -E "FAIL|runtime error|Sanitizer"; then echo "FAIL $*"; echo "$r" | grep -E "FAIL|runtime error|Sanitizer|failed|SUMMARY" | head -5; err=1; else echo "ok   $* | $(echo "$r" | grep -E '^(decode|after|resume)' | tr '\n' ' ' | cut -c1-110)"; fi; }
+run() { r=$(timeout 120 ../audio_test "$@" 2>&1); rc=$?; if [ $rc != 0 ] || echo "$r" | grep -q -E "FAIL|runtime error|Sanitizer"; then echo "FAIL $*"; echo "$r" | grep -E "FAIL|runtime error|Sanitizer|failed|SUMMARY" | head -5; err=1; else echo "ok   $* | $(echo "$r" | grep -E '^(decode|after|resume|bitrate)' | tr '\n' ' ' | cut -c1-110)"; fi; }
 for f in w16.wav w8.wav w24.wav wf32.wav wmono.wav walaw.wav f16.flac f24.flac fmono.flac m44.mp3 m48.mp3 mmono.mp3 mcover.mp3 mraw.mp3 o44.ogg o48.ogg; do
   case $f in *.mp3|*.ogg) k=lossy;; *) k=lossless;; esac
   run dec $f $f.ref 3000 1 $k
