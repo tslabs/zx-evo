@@ -23,6 +23,8 @@
 #include "esp_log.h"
 
 #include "audio/audio_core.h"
+#include "audio_radio.h"
+#include "helper.h"
 #include "esp_spi_defs.h"
 #include "spi_slave.h"
 
@@ -72,6 +74,18 @@ static struct
   int have_params;
   int resume;                 // the next decoder starts after a flush
 
+  // radio (AUDIO_URL): the data comes from audio_radio.cpp
+  volatile u8 req_radio;      // the START request is an AUDIO_URL
+  volatile u8 radio;
+  volatile u8 connecting;
+  volatile u32 session;       // of the radio task; another one ends its writes
+  u32 sessions;
+  char station[AUDIO_META_LEN];
+  char title[AUDIO_META_LEN];
+  volatile u8 meta_seq;
+  portMUX_TYPE meta_mux;
+  SemaphoreHandle_t in_lock;  // radio writes <-> ring reset
+
   volatile u32 rx_bytes;      // stats: host bytes received
   u32 dec_us;                 // stats: time in the decoder
   aud_rs_t rs;                // player_task only (reset under lock)
@@ -89,7 +103,8 @@ static u32 IRAM_ATTR ring_used(const aud_ring_t *r)
 
 static void IRAM_ATTR audio_regs()
 {
-  u8 flags = (A.seekable ? AUDIO_FLAG_SEEKABLE : 0) | (A.paused ? AUDIO_FLAG_PAUSED : 0) | (A.end ? AUDIO_FLAG_END : 0);
+  u8 flags = (A.seekable ? AUDIO_FLAG_SEEKABLE : 0) | (A.paused ? AUDIO_FLAG_PAUSED : 0) | (A.end ? AUDIO_FLAG_END : 0) |
+             (A.radio ? AUDIO_FLAG_RADIO : 0) | (A.connecting ? AUDIO_FLAG_CONNECTING : 0);
   u32 free_bytes = A.in_buf ? A.in.size - ring_used(&A.in) : 0;
   // no PUSH before the task took a START / FLUSH / STOP
   if (A.req) free_bytes = 0;
@@ -108,6 +123,7 @@ static void IRAM_ATTR audio_regs()
   wr_reg8(ESP_REG_AUDIO_ERROR, A.err);
   wr_reg8(ESP_REG_AUDIO_BITS, A.have_params ? A.params.bits : 0);
   wr_reg32(ESP_REG_AUDIO_BITRATE, A.have_params ? A.params.bitrate : 0);
+  wr_reg8(ESP_REG_AUDIO_META_SEQ, A.meta_seq);
 }
 
 static void IRAM_ATTR request(u32 r)
@@ -126,11 +142,33 @@ void IRAM_ATTR audio_command(u8 cmd)
   {
     case ESP_CMD_AUDIO_START:
       A.req_fmt = rd_reg8(ESP_REG_AUDIO_FORMAT);
+      A.req_radio = 0;
       request(REQ_START);   // the task gives READY (or OUT_OF_MEMORY)
       break;
 
+    case ESP_CMD_AUDIO_URL:
+      if (!net.url || !net.url[0]) { set_status(ESP_ERR_INV_STATE); break; }
+      A.req_fmt = rd_reg8(ESP_REG_AUDIO_FORMAT);
+      A.req_radio = 1;
+      request(REQ_START);
+      break;
+
+    case ESP_CMD_AUDIO_GET_META:
+    {
+      // up to 56 bytes: the registers from #3C are written after every command
+      u8 len;
+      portENTER_CRITICAL_ISR(&A.meta_mux);
+      const char *m = rd_reg8(ESP_REG_AUDIO_PARAM) ? A.title : A.station;
+      len = (u8)strnlen(m, 56);
+      wr_regs(ESP_REG_STRING_DATA, m, len);
+      portEXIT_CRITICAL_ISR(&A.meta_mux);
+      wr_reg8(ESP_REG_STRING_SIZE, len);
+      set_status(ESP_ST_READY);
+      break;
+    }
+
     case ESP_CMD_AUDIO_FLUSH:
-      if (A.state == AUDIO_ST_IDLE) { set_status(ESP_ERR_INV_STATE); break; }
+      if (A.state == AUDIO_ST_IDLE || A.radio) { set_status(ESP_ERR_INV_STATE); break; }
       A.flush_at = rd_reg32(ESP_REG_DATA_OFFSET);
       request(REQ_FLUSH);
       break;
@@ -170,7 +208,7 @@ void IRAM_ATTR audio_command(u8 cmd)
 
 bool IRAM_ATTR audio_push_check(size_t size)
 {
-  if (A.req || !A.in_buf || A.end || (A.state != AUDIO_ST_WAIT && A.state != AUDIO_ST_PLAY))
+  if (A.req || !A.in_buf || A.end || A.radio || (A.state != AUDIO_ST_WAIT && A.state != AUDIO_ST_PLAY))
   {
     audio_regs();
     set_status(ESP_ERR_INV_STATE);
@@ -216,12 +254,14 @@ static void set_error(u8 err)
 // Rings and resampler empty; player_task does not render meanwhile
 static void reset_buffers()
 {
+  xSemaphoreTake(A.in_lock, portMAX_DELAY);
   xSemaphoreTake(A.lock, portMAX_DELAY);
   aud_ring_reset(&A.in);
   aud_ring_reset(&A.pcm);
   aud_rs_reset(&A.rs, A.have_params ? A.params.rate : 0);
   A.starved = 0;
   xSemaphoreGive(A.lock);
+  xSemaphoreGive(A.in_lock);
 }
 
 static bool alloc_buffers()
@@ -253,6 +293,19 @@ static void handle_requests(aud_dec_t **dec)
     *dec = NULL;
   }
 
+  // a new stream or a stop ends the radio (its writes check the session)
+  if (r & (REQ_STOP | REQ_START))
+  {
+    radio_stop();
+    A.session = 0;
+    A.radio = 0;
+    A.connecting = 0;
+    portENTER_CRITICAL(&A.meta_mux);
+    A.station[0] = A.title[0] = 0;
+    A.meta_seq = A.meta_seq + 1;
+    portEXIT_CRITICAL(&A.meta_mux);
+  }
+
   // the last one wins: STOP over START over FLUSH
   if (r & REQ_STOP)
   {
@@ -278,6 +331,14 @@ static void handle_requests(aud_dec_t **dec)
     {
       reset_buffers();
       A.state = AUDIO_ST_WAIT;
+      if (A.req_radio)
+      {
+        if (!++A.sessions) A.sessions = 1;
+        A.session = A.sessions;
+        A.radio = 1;
+        A.connecting = 1;
+        radio_start(A.session, (const char*)net.url);
+      }
     }
   }
   else if (r & REQ_FLUSH)
@@ -348,6 +409,7 @@ static void audio_task(void *arg)
           else ulTaskNotifyTake(pdTRUE, WAIT_MS(20));
           continue;
         }
+        if (fmt == 0 && A.radio) fmt = AUDIO_FMT_MP3;   // no Content-Type, in the middle of a frame: most radio is MP3
         if (fmt == 0) { set_error(ESP_ERR_AUDIO_FORMAT); continue; }
       }
 
@@ -438,5 +500,60 @@ void audio_init()
   A.gain_atten = 0;
   A.gain = 1.f;
   A.lock = xSemaphoreCreateMutex();
+  A.in_lock = xSemaphoreCreateMutex();
+  portMUX_INITIALIZE(&A.meta_mux);
+  radio_init();
   xTaskCreatePinnedToCoreWithCaps(audio_task, "audio", AUD_TASK_STACK, NULL, AUD_TASK_PRIO, &A.task, 1, task_ram_type_non_critical);
+}
+
+// ------------- Radio (audio_radio.cpp)
+
+bool audio_radio_write(u32 session, const u8 *data, size_t size)
+{
+  while (size)
+  {
+    if (session != A.session || (A.state != AUDIO_ST_WAIT && A.state != AUDIO_ST_PLAY)) return false;
+    xSemaphoreTake(A.in_lock, portMAX_DELAY);
+    bool same = session == A.session;
+    size_t w = same ? aud_ring_write(&A.in, data, size) : 0;
+    xSemaphoreGive(A.in_lock);
+    if (!same) return false;
+    if (w)
+    {
+      A.rx_bytes = A.rx_bytes + w;
+      A.connecting = 0;
+      if (A.task) xTaskNotifyGive(A.task);
+      data += w;
+      size -= w;
+    }
+    else
+      vTaskDelay(WAIT_MS(20));   // full (or paused): the decoder makes room
+  }
+  return true;
+}
+
+void audio_radio_format(u32 session, u8 fmt)
+{
+  if (session == A.session && fmt != AUDIO_FMT_AUTO && A.fmt == AUDIO_FMT_AUTO && !A.have_params) A.fmt = fmt;
+}
+
+void audio_radio_meta(u32 session, const char *station, const char *title)
+{
+  if (session != A.session) return;
+  portENTER_CRITICAL(&A.meta_mux);
+  if (station) strlcpy(A.station, station, sizeof(A.station));
+  if (title) strlcpy(A.title, title, sizeof(A.title));
+  A.meta_seq = A.meta_seq + 1;
+  portEXIT_CRITICAL(&A.meta_mux);
+  if (title) ESP_LOGI(TAG, "title: %s", title);
+}
+
+void audio_radio_connecting(u32 session, bool on)
+{
+  if (session == A.session) A.connecting = on;
+}
+
+void audio_radio_error(u32 session, u8 err)
+{
+  if (session == A.session) set_error(err);
 }

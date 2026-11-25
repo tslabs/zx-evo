@@ -1609,6 +1609,8 @@ void IRAM_ATTR command()
         case ESP_CMD_AUDIO_VOLUME:
         case ESP_CMD_AUDIO_STOP:
         case ESP_CMD_AUDIO_GET_STATE:
+        case ESP_CMD_AUDIO_URL:
+        case ESP_CMD_AUDIO_GET_META:
           audio_command(cmd);
         break;
 

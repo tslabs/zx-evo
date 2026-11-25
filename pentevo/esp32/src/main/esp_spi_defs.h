@@ -96,7 +96,8 @@ enum
   ESP_REG_AUDIO_UNDERRUNS    = 0x28, // 2 bytes, times the sound ran out while playing
   ESP_REG_AUDIO_ERROR        = 0x2A, // 1 byte, status of the failure in AUDIO_ST_ERROR
   ESP_REG_AUDIO_BITS         = 0x2B, // 1 byte, bits per sample of the source (0: compressed)
-  ESP_REG_AUDIO_BITRATE      = 0x2C, // 4 bytes, bits per second of the stream, 0: not known (AAC, M4A)
+  ESP_REG_AUDIO_BITRATE      = 0x2C, // 4 bytes, bits per second of the stream, 0: not known (AAC, M4A, radio)
+  ESP_REG_AUDIO_META_SEQ     = 0x30, // 1 byte, + 1 at every new station name / title (AUDIO_GET_META)
 };
 
 // Commands
@@ -167,7 +168,9 @@ enum
   ESP_CMD_AUDIO_PAUSE           = 0x94, // i: ESP_REG_AUDIO_PARAM
   ESP_CMD_AUDIO_VOLUME          = 0x95, // i: ESP_REG_AUDIO_PARAM
   ESP_CMD_AUDIO_STOP            = 0x96, // stops, AUDIO_ST_IDLE
-  ESP_CMD_AUDIO_GET_STATE       = 0x97, // o: ESP_REG_AUDIO_STATE..ESP_REG_AUDIO_BITRATE
+  ESP_CMD_AUDIO_GET_STATE       = 0x97, // o: ESP_REG_AUDIO_STATE..ESP_REG_AUDIO_META_SEQ
+  ESP_CMD_AUDIO_URL             = 0x98, // i: ESP_REG_AUDIO_FORMAT (0: from Content-Type); internet radio from the URL of ESP_CMD_SET_URL
+  ESP_CMD_AUDIO_GET_META        = 0x99, // i: ESP_REG_AUDIO_PARAM (0 station, 1 title); o: ESP_REG_STRING_SIZE, ESP_REG_STRING_DATA (UTF-8 as sent, <= 60 bytes)
 
   ESP_CMD_CONFIG_SPI            = 0xC0, // +++
 
@@ -265,6 +268,7 @@ enum
 
   ESP_ERR_AUDIO_FORMAT     = 0xC0, // the stream is no format the player knows
   ESP_ERR_AUDIO_DECODE     = 0xC1, // the decoder refused the headers of the stream
+  ESP_ERR_AUDIO_NET        = 0xC2, // radio: no Wi-Fi, or the URL gave no stream
 };
 
 // Audio stream formats (ESP_REG_AUDIO_FORMAT, ESP_REG_AUDIO_FMT)
@@ -296,6 +300,8 @@ enum
   AUDIO_FLAG_SEEKABLE = 0x01,   // AUDIO_FLUSH + data from another offset continues the stream
   AUDIO_FLAG_PAUSED   = 0x02,
   AUDIO_FLAG_END      = 0x04,   // AUDIO_END received
+  AUDIO_FLAG_RADIO      = 0x08,   // the stream comes from a URL (AUDIO_URL)
+  AUDIO_FLAG_CONNECTING = 0x10,   // radio: (re)connecting
 };
 
 // Info type (ESP_CMD_GET_INFO_STR)

@@ -17,3 +17,12 @@ void audio_rx(const u8 *data, size_t size);
 
 // From player_task: add the stream to the mix (stereo float, int16 scale)
 void audio_render(float *mix, int samples, int rate);
+
+// From the radio task (audio_radio.cpp); session = the one of radio_start(),
+// a call for an older session does nothing
+#define AUDIO_META_LEN 128
+bool audio_radio_write(u32 session, const u8 *data, size_t size);   // blocks for room; false: the session is over
+void audio_radio_format(u32 session, u8 fmt);                       // AUDIO_FMT_* of Content-Type, before the data
+void audio_radio_meta(u32 session, const char *station, const char *title);   // NULL: unchanged
+void audio_radio_connecting(u32 session, bool on);
+void audio_radio_error(u32 session, u8 err);

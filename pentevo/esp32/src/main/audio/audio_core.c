@@ -221,8 +221,8 @@ struct aud_dec
 #endif
 #if AUDIO_AAC
   aud_aac_t *aac;
-  uint64_t aac_frames;           // decoded, for the average bitrate
 #endif
+  uint64_t dec_frames;           // decoded, for the average bitrate
 #if AUDIO_OGG
   stb_vorbis *vorbis;
   uint8_t *obuf;
@@ -493,15 +493,19 @@ size_t aud_dec_read(aud_dec_t *d, int16_t *out, size_t frames)
     case AUD_FMT_AAC:
     case AUD_FMT_M4A:
       n = aud_aac_read(d->aac, dst, frames);
-      // the average bitrate (the first frame alone is far off): the bytes
-      // taken per second of sound, after the first second
-      d->aac_frames += n;
-      if (d->aac_frames >= d->p.rate)
-        d->p.bitrate = (uint32_t)(d->io->pos * 8 * d->p.rate / d->aac_frames);
       break;
 #endif
     default:
       break;
+  }
+
+  // compressed: the average bitrate (AAC: the first frame alone is far off),
+  // the bytes taken per second of sound, after the first second
+  if (d->fmt != AUD_FMT_WAV)
+  {
+    d->dec_frames += n;
+    if (d->dec_frames >= d->p.rate && d->p.rate)
+      d->p.bitrate = (uint32_t)(d->io->pos * 8 * d->p.rate / d->dec_frames);
   }
 
   if (ch == 1)
