@@ -138,6 +138,7 @@ void *xm_group_cursor_alloc(char **cursor, char *end, size_t size, bool clear);
 void *xm_alloc_and_register_group(xm_context_t *ctx, size_t size, uint8_t type, MFUNC mfunc, bool clear);
 int xm_allocate_context_groups(xm_context_t **ctxp, xm_context_group_cursor_t *cursor, const xm_context_group_sizes_t *sizes, MFUNC mfunc);
 int xm_setup_runtime_group(xm_context_t *ctx, xm_context_group_cursor_t *cursor, uint32_t rate);
+size_t xm_sample_storage_size(size_t bytes);
 
 int xm_create_context_safe(xm_context_t** ctxp, void* moddata, size_t moddata_length, uint32_t rate, MFUNC mfunc)
 {
@@ -585,7 +586,7 @@ int xm_measure_group_sizes_from_memory(const char *moddata, size_t moddata_lengt
     {
       uint32_t sample_size = READ_U32(offset);
       if (!tracker_size_add(&sample_size_aggregate, sample_size)) return 0;
-      if (!xm_group_sizes_add(sizes, &sizes->samples_size, sample_size)) return 0;
+      if (!xm_group_sizes_add(sizes, &sizes->samples_size, xm_sample_storage_size(sample_size))) return 0;
       if (!tracker_size_add(&offset, sample_header_size)) return 0;
     }
 
@@ -753,11 +754,58 @@ int xm_check_sanity_preload(const char* module, size_t module_length) {
 	return 0;
 }
 
+/* Sample offsets inside one sample group: a 16-bit sample after an 8-bit one
+ * of odd length started at an odd address (int16_t loads and stores there).
+ * Each sample starts at a multiple of 4. SIZE_MAX (no allocation fits) when
+ * the rounding would wrap around (a 32-bit size_t on the ESP). */
+size_t xm_sample_storage_size(size_t bytes)
+{
+	if(bytes > SIZE_MAX - 3) return SIZE_MAX;
+	return (bytes + 3) & ~(size_t)3;
+}
+
+/* The player indexes points[] with these; points[] has 12 entries. */
+void xm_check_envelope(xm_envelope_t* env)
+{
+	if(env->num_points > NUM_ENVELOPE_POINTS) env->num_points = NUM_ENVELOPE_POINTS;
+	if(env->sustain_point >= env->num_points) env->sustain_enabled = false;
+	if(env->loop_start_point >= env->num_points || env->loop_end_point >= env->num_points) env->loop_enabled = false;
+}
+
+/* The loop within the sample (the renderer reads data[loop_end - 1]); a loop
+ * of length 0 is no loop: the forward loop subtracted 0 for ever. */
+void xm_check_sample_loop(xm_sample_t* sample)
+{
+	if(sample->loop_start >= sample->length) sample->loop_length = 0;
+	else if(sample->loop_length > sample->length - sample->loop_start)
+		sample->loop_length = sample->length - sample->loop_start;
+
+	if(sample->loop_length == 0) {
+		sample->loop_type = XM_NO_LOOP;
+		sample->loop_start = 0;
+	}
+	sample->loop_end = sample->loop_start + sample->loop_length;
+}
+
 int xm_check_sanity_postload(xm_context_t* ctx) {
-	/* @todo: plenty of stuff to do here… */
+	/* The order table has 256 entries; the length is a 16-bit field of the file */
+	if(ctx->module.length > PATTERN_ORDER_TABLE_LENGTH) {
+		DEBUG("song length %u cut to %u", ctx->module.length, PATTERN_ORDER_TABLE_LENGTH);
+		ctx->module.length = PATTERN_ORDER_TABLE_LENGTH;
+	}
+
+	if(ctx->tracker_format == TRACKER_FORMAT_XM) {
+		for(uint16_t i = 0; i < ctx->module.num_instruments; ++i) {
+			xm_instrument_t* instr = ctx->module.instruments + i;
+			xm_check_envelope(&instr->volume_envelope);
+			xm_check_envelope(&instr->panning_envelope);
+			for(uint16_t j = 0; j < instr->num_samples; ++j)
+				xm_check_sample_loop(instr->samples + j);
+		}
+	}
 
 	/* Check the POT */
-	for(uint8_t i = 0; i < ctx->module.length; ++i) {
+	for(uint16_t i = 0; i < ctx->module.length; ++i) {
 		if(ctx->module.pattern_table[i] >= ctx->module.num_patterns) {
 			if(i+1 == ctx->module.length && ctx->module.length > 1) {
 				/* Cheap fix */
@@ -836,11 +884,14 @@ int xm_load_module(xm_context_t* ctx, const char* moddata, size_t moddata_length
 		/* Pattern header length */
 		offset += READ_U32(offset);
 
+		/* More packed data than slots: a damaged file, the rest is not decoded */
+		const size_t slot_count = (size_t)mod->num_channels * pat->num_rows;
+
 		if(packed_patterndata_size == 0) {
 			/* No pattern data is present */
 		} else {
 			/* This isn't your typical for loop */
-			for(uint16_t j = 0, k = 0; j < packed_patterndata_size; ++k) {
+			for(size_t j = 0, k = 0; j < packed_patterndata_size && k < slot_count; ++k) {
 				uint8_t note = READ_U8(offset + j);
 				xm_pattern_slot_t* slot = pat->slots + k;
 
@@ -919,6 +970,9 @@ int xm_load_module(xm_context_t* ctx, const char* moddata, size_t moddata_length
 
 			instr->volume_envelope.num_points = READ_U8(offset + 225);
 			instr->panning_envelope.num_points = READ_U8(offset + 226);
+			/* points[] has 12 entries; the indexes are checked in xm_check_sanity_postload() */
+			if(instr->volume_envelope.num_points > NUM_ENVELOPE_POINTS) instr->volume_envelope.num_points = NUM_ENVELOPE_POINTS;
+			if(instr->panning_envelope.num_points > NUM_ENVELOPE_POINTS) instr->panning_envelope.num_points = NUM_ENVELOPE_POINTS;
 
 			for(uint8_t j = 0; j < instr->volume_envelope.num_points; ++j) {
 				instr->volume_envelope.points[j].frame = READ_U16(offset + 129 + 4 * j);
@@ -967,6 +1021,9 @@ int xm_load_module(xm_context_t* ctx, const char* moddata, size_t moddata_length
 
 		/* Instrument header size */
 		offset += READ_U32(offset);
+		/* The data of a sample takes the byte length of its header, also an odd
+		 * one of a 16-bit sample (the loader went on by 2 x the samples) */
+		const size_t sample_headers = offset;
 
 		for(uint16_t j = 0; j < instr->num_samples; ++j) {
 			/* Read sample header */
@@ -996,7 +1053,7 @@ int xm_load_module(xm_context_t* ctx, const char* moddata, size_t moddata_length
 			READ_MEMCPY(sample->name, offset + 18, SAMPLE_NAME_LENGTH);
 #endif
 			if(sample->length > 0) {
-				sample->data8 = (int8_t*)xm_group_cursor_alloc(&cursor->samples, cursor->samples_end, sample->length, false);
+				sample->data8 = (int8_t*)xm_group_cursor_alloc(&cursor->samples, cursor->samples_end, xm_sample_storage_size(sample->length), false);
 				if(!sample->data8) return 0;
 			} else {
 				sample->data8 = NULL;
@@ -1016,6 +1073,7 @@ int xm_load_module(xm_context_t* ctx, const char* moddata, size_t moddata_length
 			/* Read sample data */
 			xm_sample_t* sample = instr->samples + j;
 			uint32_t length = sample->length;
+			uint32_t bytes = READ_U32(sample_headers + (size_t)j * sample_header_size);
 
 			if(sample->bits == 16) {
 				int16_t v = 0;
@@ -1023,15 +1081,14 @@ int xm_load_module(xm_context_t* ctx, const char* moddata, size_t moddata_length
 					v = v + (int16_t)READ_U16(offset + (k << 1));
 					sample->data16[k] = v;
 				}
-				offset += sample->length << 1;
 			} else {
 				int8_t v = 0;
 				for(uint32_t k = 0; k < length; ++k) {
 					v = v + (int8_t)READ_U8(offset + k);
 					sample->data8[k] = v;
 				}
-				offset += sample->length;
 			}
+			offset += bytes;
 		}
 	}
 
@@ -1542,7 +1599,7 @@ int mod_setup_sample_metadata(xm_context_t *ctx, const uint8_t *header, const mo
   sample->bits = 8;
   sample->length = layout->sample_length[i];
   sample->volume = (float)(volume > 64 ? 64 : volume) / 64.f;
-  sample->finetune = (int8_t)((finetune < 8 ? finetune : finetune - 16) << 4);
+  sample->finetune = (int8_t)((finetune < 8 ? finetune : finetune - 16) * 16);
   sample->panning = .5f;
   sample->relative_note = 0;
   sample->data8 = sample->length ? (int8_t*)xm_alloc_and_register_group(ctx, sample->length, TRACKER_CONTEXT_SEG_SAMPLES, mfunc, false) : NULL;
@@ -4568,7 +4625,7 @@ static void xm_handle_note_and_instrument(xm_context_t* ctx, xm_channel_context_
             }
             else if (NOTE_IS_VALID(ch->current->note))
             {
-              ch->note = ch->current->note + ch->sample->relative_note + (float)(((s->effect_param & 0x0F) - 8) << 4) / 128.f - 1.f;
+              ch->note = ch->current->note + ch->sample->relative_note + (float)(((s->effect_param & 0x0F) - 8) * 16) / 128.f - 1.f;
               ch->period = xm_period(ctx, ch->note);
               xm_update_frequency(ctx, ch);
             }
@@ -8923,7 +8980,11 @@ int xm_host_load_sample_data_stream(xm_sample_t *sample)
 
   if (sample->bits == 16)
   {
-    while (parser->sample_pos < sample->length || parser->sample_16_have_low)
+    // sample->length is the byte length here; an odd one ends with a byte
+    // which is not a sample.
+    const size_t words = sample->length >> 1;
+
+    while (parser->sample_pos < words || parser->sample_16_have_low)
     {
       if (!g_xm_host_stream.chunk_active || g_xm_host_stream.chunk_pos >= g_xm_host_stream.chunk_size)
       {
@@ -8946,7 +9007,7 @@ int xm_host_load_sample_data_stream(xm_sample_t *sample)
         used = 1;
       }
 
-      size_t left_samples = sample->length - parser->sample_pos;
+      size_t left_samples = words - parser->sample_pos;
       size_t pair_count = (avail - used) / 2;
       if (pair_count > left_samples) pair_count = left_samples;
 
@@ -8960,7 +9021,7 @@ int xm_host_load_sample_data_stream(xm_sample_t *sample)
       parser->sample_pos += pair_count;
       used += pair_count * 2;
 
-      if (parser->sample_pos < sample->length && used < avail)
+      if (parser->sample_pos < words && used < avail)
       {
         parser->sample_16_low = src[used];
         parser->sample_16_have_low = 1;
@@ -8969,6 +9030,22 @@ int xm_host_load_sample_data_stream(xm_sample_t *sample)
 
       g_xm_host_stream.chunk_pos += used;
       g_xm_host_stream.pos += used;
+
+      if (g_xm_host_stream.chunk_pos >= g_xm_host_stream.chunk_size)
+        xm_host_stream_release_chunk();
+    }
+
+    // The words are done (also when called again after NEED_MORE here): skip the odd byte
+    if (sample->length & 1)
+    {
+      if (!g_xm_host_stream.chunk_active || g_xm_host_stream.chunk_pos >= g_xm_host_stream.chunk_size)
+      {
+        xm_host_stream_release_chunk();
+        return TRACK_HOST_STEP_NEED_MORE;
+      }
+
+      g_xm_host_stream.chunk_pos++;
+      g_xm_host_stream.pos++;
 
       if (g_xm_host_stream.chunk_pos >= g_xm_host_stream.chunk_size)
         xm_host_stream_release_chunk();
@@ -9451,6 +9528,9 @@ int xm_host_stream_build_context(xm_context_t **out_ctx, size_t *out_used_size)
           memcpy(parser->instr->sample_of_notes, instrument_header + 33, NUM_NOTES);
           parser->instr->volume_envelope.num_points = instrument_header[225];
           parser->instr->panning_envelope.num_points = instrument_header[226];
+          // points[] has 12 entries; the indexes are checked in xm_check_sanity_postload()
+          if (parser->instr->volume_envelope.num_points > NUM_ENVELOPE_POINTS) parser->instr->volume_envelope.num_points = NUM_ENVELOPE_POINTS;
+          if (parser->instr->panning_envelope.num_points > NUM_ENVELOPE_POINTS) parser->instr->panning_envelope.num_points = NUM_ENVELOPE_POINTS;
 
           for (uint8_t j = 0; j < parser->instr->volume_envelope.num_points; j++)
           {
@@ -9546,7 +9626,8 @@ int xm_host_stream_build_context(xm_context_t **out_ctx, size_t *out_used_size)
           for (uint16_t i = 0; i < parser->instr->num_samples; i++)
           {
             xm_sample_t *sample = parser->instr->samples + i;
-            size_t sample_bytes = sample->bits == 16 ? (size_t)sample->length * 2 : (size_t)sample->length;
+            // byte length here (also of a 16-bit sample), each sample at a multiple of 4
+            size_t sample_bytes = xm_sample_storage_size(sample->length);
 
             if (!sample_bytes)
             {
@@ -9591,8 +9672,10 @@ int xm_host_stream_build_context(xm_context_t **out_ctx, size_t *out_used_size)
         {
           uint32_t sample_bytes = xm_rd_le32(sample_header);
 
+          // A 16-bit sample keeps its byte length until its data is read
+          // (TRACK_HOST_PARSE_LOAD_SAMPLE_DATA): it may be odd.
           parser->sample->length = sample_bytes;
-          if (!tracker_size_add(&parser->instrument_sample_bytes, sample_bytes))
+          if (!tracker_size_add(&parser->instrument_sample_bytes, xm_sample_storage_size(sample_bytes)))
           {
             xm_free_context(parser->ctx);
             parser->ctx = NULL;
@@ -9628,7 +9711,6 @@ int xm_host_stream_build_context(xm_context_t **out_ctx, size_t *out_used_size)
           parser->sample->loop_start >>= 1;
           parser->sample->loop_length >>= 1;
           parser->sample->loop_end >>= 1;
-          parser->sample->length >>= 1;
         }
 
         parser->sample_i++;
@@ -9666,6 +9748,9 @@ int xm_host_stream_build_context(xm_context_t **out_ctx, size_t *out_used_size)
           parser->arena = NULL;
           return g_xm_host_stream.err == ESP_ERR_NO_MEM ? -2 : -3;
         }
+
+        // from the byte length to the length in samples
+        if (sample->bits == 16) sample->length >>= 1;
 
         parser->sample_data_i++;
         parser->sample_data_started = 0;
