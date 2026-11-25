@@ -107,6 +107,7 @@ static void IRAM_ATTR audio_regs()
   wr_regs(ESP_REG_AUDIO_UNDERRUNS, &und, 2);
   wr_reg8(ESP_REG_AUDIO_ERROR, A.err);
   wr_reg8(ESP_REG_AUDIO_BITS, A.have_params ? A.params.bits : 0);
+  wr_reg32(ESP_REG_AUDIO_BITRATE, A.have_params ? A.params.bitrate : 0);
 }
 
 static void IRAM_ATTR request(u32 r)

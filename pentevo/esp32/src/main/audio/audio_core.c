@@ -3,6 +3,7 @@
 // (test/audio_host) builds this file as it is.
 
 #include "audio_core.h"
+#include "audio_aac.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -182,6 +183,9 @@ int aud_sniff(const uint8_t *p, size_t n)
   if (!memcmp(p, "OggS", 4)) return AUD_FMT_OGG;
   if (!memcmp(p, "fLaC", 4)) return AUD_FMT_FLAC;
   if (!memcmp(p, "ID3", 3)) return AUD_FMT_MP3;
+  if (!memcmp(p + 4, "ftyp", 4)) return AUD_FMT_M4A;
+  // ADTS: the sync of 12 ones, layer 00
+  if (p[0] == 0xFF && (p[1] & 0xF6) == 0xF0) return AUD_FMT_AAC;
   // MPEG audio frame sync: 11 ones, a layer (not 00)
   if (p[0] == 0xFF && (p[1] & 0xE0) == 0xE0 && (p[1] & 0x06)) return AUD_FMT_MP3;
   return 0;
@@ -189,7 +193,7 @@ int aud_sniff(const uint8_t *p, size_t n)
 
 int aud_dec_seekable(int fmt)
 {
-  return fmt == AUD_FMT_WAV || fmt == AUD_FMT_MP3 || fmt == AUD_FMT_FLAC;
+  return fmt == AUD_FMT_WAV || fmt == AUD_FMT_MP3 || fmt == AUD_FMT_FLAC || (AUDIO_AAC && fmt == AUD_FMT_AAC);
 }
 
 // ------------- Decoders
@@ -214,6 +218,9 @@ struct aud_dec
 #endif
 #if AUDIO_FLAC
   drflac *flac;
+#endif
+#if AUDIO_AAC
+  aud_aac_t *aac;
 #endif
 #if AUDIO_OGG
   stb_vorbis *vorbis;
@@ -388,6 +395,15 @@ aud_dec_t *aud_dec_open(int fmt, aud_io_t *io, int resume, const aud_params_t *p
       ok = ogg_open(d);
       break;
 #endif
+#if AUDIO_AAC
+    case AUD_FMT_AAC:
+    case AUD_FMT_M4A:
+      // ADTS after a flush: the parser finds the next frame; M4A needs its moov
+      if (resume && fmt == AUD_FMT_M4A) break;
+      d->aac = aud_aac_open(io, fmt == AUD_FMT_M4A, &d->p);
+      ok = d->aac != NULL;
+      break;
+#endif
     default:
       break;
   }
@@ -472,6 +488,12 @@ size_t aud_dec_read(aud_dec_t *d, int16_t *out, size_t frames)
       n = ogg_read(d, dst, frames);
       break;
 #endif
+#if AUDIO_AAC
+    case AUD_FMT_AAC:
+    case AUD_FMT_M4A:
+      n = aud_aac_read(d->aac, dst, frames);
+      break;
+#endif
     default:
       break;
   }
@@ -513,6 +535,12 @@ void aud_dec_close(aud_dec_t *d)
     case AUD_FMT_OGG:
       if (d->vorbis) stb_vorbis_close(d->vorbis);
       free(d->obuf);
+      break;
+#endif
+#if AUDIO_AAC
+    case AUD_FMT_AAC:
+    case AUD_FMT_M4A:
+      aud_aac_close(d->aac);
       break;
 #endif
     default:

@@ -17,6 +17,8 @@ enum
   AUD_FMT_MP3  = 2,   // MPEG-1/2/2.5 Layer III (also I/II), ID3v2 skipped
   AUD_FMT_OGG  = 3,   // Ogg Vorbis
   AUD_FMT_FLAC = 4,   // native FLAC
+  AUD_FMT_AAC  = 5,   // AAC in ADTS frames (.aac, AAC radio): LC, HE-AAC, HE-AACv2
+  AUD_FMT_M4A  = 6,   // AAC in MP4 (.m4a), its moov before mdat
 };
 
 // Single producer / single consumer byte ring; size is a power of 2.
@@ -62,6 +64,7 @@ typedef struct
   uint16_t wav_format;      // WAV: 1 PCM, 3 float, 6 A-law, 7 u-law
   uint64_t data_offset;     // WAV: offset of the sample data in the file
   uint64_t total_frames;    // 0: not known
+  uint32_t bitrate;         // bits per second, 0: not known (AAC: from the frames)
 } aud_params_t;
 
 // Format from the first bytes: AUD_FMT_*, -1 = need more bytes, 0 = unknown

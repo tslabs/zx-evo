@@ -96,6 +96,7 @@ enum
   ESP_REG_AUDIO_UNDERRUNS    = 0x28, // 2 bytes, times the sound ran out while playing
   ESP_REG_AUDIO_ERROR        = 0x2A, // 1 byte, status of the failure in AUDIO_ST_ERROR
   ESP_REG_AUDIO_BITS         = 0x2B, // 1 byte, bits per sample of the source (0: compressed)
+  ESP_REG_AUDIO_BITRATE      = 0x2C, // 4 bytes, bits per second of the stream, 0: not known (AAC, M4A)
 };
 
 // Commands
@@ -166,7 +167,7 @@ enum
   ESP_CMD_AUDIO_PAUSE           = 0x94, // i: ESP_REG_AUDIO_PARAM
   ESP_CMD_AUDIO_VOLUME          = 0x95, // i: ESP_REG_AUDIO_PARAM
   ESP_CMD_AUDIO_STOP            = 0x96, // stops, AUDIO_ST_IDLE
-  ESP_CMD_AUDIO_GET_STATE       = 0x97, // o: ESP_REG_AUDIO_STATE..ESP_REG_AUDIO_BITS
+  ESP_CMD_AUDIO_GET_STATE       = 0x97, // o: ESP_REG_AUDIO_STATE..ESP_REG_AUDIO_BITRATE
 
   ESP_CMD_CONFIG_SPI            = 0xC0, // +++
 
@@ -274,6 +275,8 @@ enum
   AUDIO_FMT_MP3  = 2,
   AUDIO_FMT_OGG  = 3,
   AUDIO_FMT_FLAC = 4,
+  AUDIO_FMT_AAC  = 5,   // ADTS frames: AAC-LC, HE-AAC, HE-AACv2
+  AUDIO_FMT_M4A  = 6,   // AAC in MP4, its moov before mdat
 };
 
 // Audio stream states (ESP_REG_AUDIO_STATE)
