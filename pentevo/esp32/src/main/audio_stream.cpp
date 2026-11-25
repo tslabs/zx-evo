@@ -11,6 +11,7 @@
 
 #include "audio_stream.h"
 
+#include <math.h>
 #include <string.h>
 
 #include "freertos/FreeRTOS.h"
@@ -44,7 +45,9 @@ static struct
   volatile u8 state;
   volatile u8 fmt;            // asked by START (AUTO) or found
   volatile u8 err;
-  volatile u8 volume;
+  volatile u8 atten;          // AUDIO_VOLUME: 0.5 dB steps, as VS1053 (#FE: silence)
+  u8 gain_atten;              // player_task: gain is for this attenuation
+  float gain;
   volatile int paused;
   volatile int end;           // AUDIO_END received
   volatile int abort;         // a request: the decoder gives up its blocking reads
@@ -143,7 +146,7 @@ void IRAM_ATTR audio_command(u8 cmd)
       break;
 
     case ESP_CMD_AUDIO_VOLUME:
-      A.volume = rd_reg8(ESP_REG_AUDIO_PARAM);
+      A.atten = rd_reg8(ESP_REG_AUDIO_PARAM);   // the gain: in player_task (no float in the ISR)
       set_status(ESP_ST_READY);
       break;
 
@@ -380,8 +383,13 @@ void audio_render(float *mix, int samples, int rate)
   if ((st != AUDIO_ST_PLAY && st != AUDIO_ST_DRAIN) || A.paused) return;
   if (xSemaphoreTake(A.lock, 0) != pdTRUE) return;   // a reset is going on
 
-  float gain = (float)A.volume / 255.f;
-  size_t got = aud_rs_render(&A.rs, &A.pcm, mix, (size_t)samples, (u32)rate, gain);
+  u8 at = A.atten;
+  if (at != A.gain_atten)
+  {
+    A.gain_atten = at;
+    A.gain = at >= 0xFE ? 0.f : powf(10.f, -(float)at / 40.f);
+  }
+  size_t got = aud_rs_render(&A.rs, &A.pcm, mix, (size_t)samples, (u32)rate, A.gain);
 
   if (got < (size_t)samples)
   {
@@ -398,7 +406,9 @@ void audio_render(float *mix, int samples, int rate)
 void audio_init()
 {
   memset(&A, 0, sizeof(A));
-  A.volume = 255;
+  A.atten = 0;
+  A.gain_atten = 0;
+  A.gain = 1.f;
   A.lock = xSemaphoreCreateMutex();
   xTaskCreatePinnedToCoreWithCaps(audio_task, "audio", AUD_TASK_STACK, NULL, AUD_TASK_PRIO, &A.task, 1, task_ram_type_non_critical);
 }

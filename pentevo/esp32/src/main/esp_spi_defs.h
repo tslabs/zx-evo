@@ -82,7 +82,7 @@ enum
 
   // Audio stream commands
   ESP_REG_AUDIO_FORMAT       = 0x02, // 1 byte, AUDIO_START: AUDIO_FMT_*
-  ESP_REG_AUDIO_PARAM        = 0x02, // 1 byte, AUDIO_PAUSE: 1 pause / 0 go on; AUDIO_VOLUME: 0..255
+  ESP_REG_AUDIO_PARAM        = 0x02, // 1 byte, AUDIO_PAUSE: 1 pause / 0 go on; AUDIO_VOLUME: attenuation, 0.5 dB steps (0 full, #FE silence)
   // State, after AUDIO_GET_STATE and AUDIO_PUSH (not over ESP_REG_DATA_SIZE of PUSH)
   ESP_REG_AUDIO_STATE        = 0x10, // 1 byte, AUDIO_ST_*
   ESP_REG_AUDIO_FMT          = 0x11, // 1 byte, AUDIO_FMT_* found (0 before the decoder opened)
