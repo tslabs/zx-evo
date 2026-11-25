@@ -17,6 +17,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/semphr.h"
+#include "esp_timer.h"
 #include "esp_attr.h"
 #include "esp_heap_caps.h"
 #include "esp_log.h"
@@ -26,6 +27,10 @@
 #include "spi_slave.h"
 
 #define TAG "audio"
+
+// at least one tick: pdMS_TO_TICKS(5) is 0 at 100 Hz, and a wait of 0 spun the
+// task on core 1 (IDLE1 starved, the task watchdog rebooted after 30 s)
+#define WAIT_MS(ms) (pdMS_TO_TICKS(ms) ? pdMS_TO_TICKS(ms) : 1)
 
 #define AUD_IN_SIZE     (512 * 1024)   // host data: ~10 s of MP3 at 320 kbps, ~3 s of FLAC CD
 #define AUD_PCM_SIZE    (64 * 1024)    // decoded: 16384 frames, 0.37 s at 44.1 kHz
@@ -67,6 +72,8 @@ static struct
   int have_params;
   int resume;                 // the next decoder starts after a flush
 
+  volatile u32 rx_bytes;      // stats: host bytes received
+  u32 dec_us;                 // stats: time in the decoder
   aud_rs_t rs;                // player_task only (reset under lock)
   int starved;                // the last render ran out of samples
   SemaphoreHandle_t lock;     // render <-> rings / resampler reset
@@ -183,6 +190,7 @@ void audio_rx(const u8 *data, size_t size)
 {
   // checked by audio_push_check(); a request in between drops the data
   if (!A.req && A.in_buf) aud_ring_write(&A.in, data, size);
+  A.rx_bytes = A.rx_bytes + size;
   if (A.task) xTaskNotifyGive(A.task);
   audio_regs();
   set_status(ESP_ST_READY);
@@ -192,7 +200,7 @@ void audio_rx(const u8 *data, size_t size)
 
 static void wait_data(void *arg)
 {
-  ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(10));
+  ulTaskNotifyTake(pdTRUE, WAIT_MS(10));
   // an abort lost between the two stores of handle_requests(): the request is there
   if (__atomic_load_n(&A.req, __ATOMIC_SEQ_CST)) A.abort = 1;
 }
@@ -298,13 +306,29 @@ static void audio_task(void *arg)
   A.io.wait = wait_data;
   A.io.wait_arg = NULL;
 
+  int64_t stat_t = esp_timer_get_time();
+  u32 stat_rx = 0;
+
   while (1)
   {
     handle_requests(&dec);
 
+    // every 5 s while playing: host rate, decoder load, buffer, gaps
+    int64_t now = esp_timer_get_time();
+    if (now - stat_t >= 5000000)
+    {
+      if (A.state == AUDIO_ST_PLAY || A.state == AUDIO_ST_DRAIN)
+        ESP_LOGI(TAG, "in %lu KB/s, decoder %lu %%, buffer %lu KB, underruns %lu",
+                 (unsigned long)((A.rx_bytes - stat_rx) / 5 / 1024), (unsigned long)(A.dec_us / ((now - stat_t) / 100)),
+                 (unsigned long)(aud_ring_used(&A.in) / 1024), (unsigned long)A.underruns);
+      stat_t = now;
+      stat_rx = A.rx_bytes;
+      A.dec_us = 0;
+    }
+
     if (A.state != AUDIO_ST_WAIT && A.state != AUDIO_ST_PLAY)
     {
-      ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(50));
+      ulTaskNotifyTake(pdTRUE, WAIT_MS(50));
       continue;
     }
 
@@ -320,7 +344,7 @@ static void audio_task(void *arg)
         if (fmt < 0)
         {
           if (A.end && n == aud_ring_used(&A.in)) set_error(ESP_ERR_AUDIO_FORMAT);
-          else ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(20));
+          else ulTaskNotifyTake(pdTRUE, WAIT_MS(20));
           continue;
         }
         if (fmt == 0) { set_error(ESP_ERR_AUDIO_FORMAT); continue; }
@@ -348,18 +372,20 @@ static void audio_task(void *arg)
 
     if (A.paused)
     {
-      ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(20));
+      ulTaskNotifyTake(pdTRUE, WAIT_MS(20));
       continue;
     }
 
     size_t room = aud_ring_free(&A.pcm) / 4;
     if (room < 256)
     {
-      ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(5));
+      ulTaskNotifyTake(pdTRUE, WAIT_MS(5));
       continue;
     }
 
+    int64_t t0 = esp_timer_get_time();
     size_t n = aud_dec_read(dec, pcm, room < AUD_DEC_FRAMES ? room : AUD_DEC_FRAMES);
+    A.dec_us += (u32)(esp_timer_get_time() - t0);
     if (n)
     {
       aud_ring_write(&A.pcm, pcm, n * 4);
