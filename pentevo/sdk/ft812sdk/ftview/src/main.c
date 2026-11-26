@@ -385,7 +385,7 @@ void show_avi()
 
 void play_xm()
 {
-  esp_cmd(ESP_CMD_XM_STOP);
+  esp_cmd(ESP_CMD_TRACK_STOP);
   esp_wait_busy(10000);
   esp_cmd(ESP_CMD_KILL_OBJECTS);
   esp_wait_busy(10000);
@@ -420,9 +420,9 @@ void play_xm()
     esp_wait_busy(10000);
   }
   
-  esp_cmd(ESP_CMD_XM_INIT);
+  esp_cmd(ESP_CMD_TRACK_INIT);
   esp_wait_busy(10000);
-  esp_cmd(ESP_CMD_XM_PLAY);
+  esp_cmd(ESP_CMD_TRACK_PLAY);
   esp_wait_busy(10000);
 }
 
