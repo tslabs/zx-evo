@@ -6,6 +6,7 @@
 
 #include "audio_radio.h"
 
+#include <stdlib.h>
 #include <string.h>
 #include <strings.h>
 
@@ -47,7 +48,16 @@ static esp_err_t on_event(esp_http_client_event_t *e)
 {
   if (e->event_id != HTTP_EVENT_ON_HEADER || !e->header_key || !e->header_value) return ESP_OK;
   if (!strcasecmp(e->header_key, "icy-metaint"))
-    R.metaint = atoi(e->header_value);
+  {
+    // a number of audio bytes, 1 .. 1 GB; anything else (negative, garbage,
+    // too large) is no metadata. A negative value made the length of the
+    // audio piece negative: audio_radio_write read past R.buf
+    char *end;
+    long v = strtol(e->header_value, &end, 10);
+    bool num = end != e->header_value;
+    while (*end == ' ' || *end == '\t') end++;
+    R.metaint = (num && !*end && v > 0 && v <= (1L << 30)) ? (int)v : 0;
+  }
   else if (!strcasecmp(e->header_key, "icy-name"))
     strlcpy(R.name, e->header_value, sizeof(R.name));
   else if (!strcasecmp(e->header_key, "content-type"))
