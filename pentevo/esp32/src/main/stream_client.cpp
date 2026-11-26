@@ -35,6 +35,9 @@ static SemaphoreHandle_t ring_mutex = NULL;
 // a blocking read); reader_idle is given when a session has ended. Before, a
 // close deleted the task from outside, possibly while it held ring_mutex or
 // was inside lwIP / mbedTLS, and a new start leaked the previous stream.
+// One session gives reader_idle once (also when it ends by itself at EOF) and
+// stream_reader_stop takes it once; only that clears reader_active. So a
+// session that ends while a new one starts can not mark the new one stopped.
 static TaskHandle_t reader_task_handle = NULL;
 static SemaphoreHandle_t reader_idle = NULL;
 static volatile bool reader_active = false;
@@ -112,6 +115,9 @@ static void stream_transport_close(void)
 
 static esp_err_t stream_reader_start(void)
 {
+  // the previous session must have been stopped (stream_close_internal)
+  if (reader_active) return ESP_ERR_INVALID_STATE;
+
   esp_err_t err = stream_ring_alloc();
   if (err != ESP_OK) return err;
 
@@ -129,7 +135,6 @@ static esp_err_t stream_reader_start(void)
     }
   }
 
-  xSemaphoreTake(reader_idle, 0);
   reader_stop = false;
   reader_active = true;
   xTaskNotifyGive(reader_task_handle);
@@ -148,7 +153,10 @@ static bool stream_reader_stop(void)
   if (fd >= 0) shutdown(fd, SHUT_RDWR);
 
   if (xSemaphoreTake(reader_idle, pdMS_TO_TICKS(5000)) == pdTRUE)
+  {
+    reader_active = false;
     return true;
+  }
 
   ESP_LOGE(TAG, "reader does not stop");
   return false;
@@ -232,7 +240,6 @@ static void reader_task(void *arg)
       xSemaphoreGive(ring_mutex);
     }
 
-    reader_active = false;
     xSemaphoreGive(reader_idle);
   }
 }
