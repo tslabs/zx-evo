@@ -17,6 +17,7 @@
 #include "esp_spi_defs.h"
 #include "spi_slave.h"
 #include "helper.h"
+#include "net_util.h"
 #include "stream_client.h"
 
 static const char * TAG = "stream";
@@ -29,7 +30,15 @@ static volatile uint32_t ring_tail = 0;
 static volatile bool ring_eof = false;
 static SemaphoreHandle_t ring_mutex = NULL;
 
+// The reader task is created once and never deleted: a session is started
+// by a notification and ended by reader_stop (the socket is shut down to wake
+// a blocking read); reader_idle is given when a session has ended. Before, a
+// close deleted the task from outside, possibly while it held ring_mutex or
+// was inside lwIP / mbedTLS, and a new start leaked the previous stream.
 static TaskHandle_t reader_task_handle = NULL;
+static SemaphoreHandle_t reader_idle = NULL;
+static volatile bool reader_active = false;
+static volatile bool reader_stop = false;
 static int stream_sock = -1;
 static esp_http_client_handle_t stream_http = NULL;
 static uint32_t stream_total_size = 0;
@@ -37,6 +46,7 @@ static uint32_t stream_read_size = 0;
 static bool stream_is_gopher = false;
 
 static void reader_task(void *arg);
+static void stream_state_reset(void);
 
 static uint32_t ring_available(void)
 {
@@ -108,11 +118,52 @@ static esp_err_t stream_reader_start(void)
   stream_ring_reset();
   stream_read_size = 0;
 
-  if (xTaskCreatePinnedToCoreWithCaps(reader_task, "stream_reader", 4096, NULL, STREAMER_TASK_PRIO, &reader_task_handle, 0, task_ram_type_non_critical) == pdPASS)
-    return ESP_OK;
+  if (!reader_task_handle)
+  {
+    // 6 KB: TLS reads run on this stack
+    if (xTaskCreatePinnedToCoreWithCaps(reader_task, "stream_reader", 6144, NULL, STREAMER_TASK_PRIO, &reader_task_handle, 0, task_ram_type_non_critical) != pdPASS)
+    {
+      reader_task_handle = NULL;
+      stream_ring_free();
+      return ESP_FAIL;
+    }
+  }
 
+  xSemaphoreTake(reader_idle, 0);
+  reader_stop = false;
+  reader_active = true;
+  xTaskNotifyGive(reader_task_handle);
+  return ESP_OK;
+}
+
+// Ends the reader session; true when the reader is idle
+static bool stream_reader_stop(void)
+{
+  if (!reader_active) return true;
+
+  reader_stop = true;
+
+  int fd = stream_sock;
+  if (stream_http) fd = esp_http_client_get_socket(stream_http);
+  if (fd >= 0) shutdown(fd, SHUT_RDWR);
+
+  if (xSemaphoreTake(reader_idle, pdMS_TO_TICKS(5000)) == pdTRUE)
+    return true;
+
+  ESP_LOGE(TAG, "reader does not stop");
+  return false;
+}
+
+// Closes the stream; false when the reader did not stop (then the transport
+// and the ring stay, as the reader still uses them)
+static bool stream_close_internal(void)
+{
+  if (!stream_reader_stop()) return false;
+
+  stream_transport_close();
+  stream_state_reset();
   stream_ring_free();
-  return ESP_FAIL;
+  return true;
 }
 
 static void stream_state_reset(void)
@@ -127,55 +178,63 @@ static void reader_task(void *arg)
 {
   uint8_t temp_buf[512];
 
-  while (true)
+  for (;;)
   {
-    int len = 0;
+    ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
 
-    if (stream_http)
+    while (!reader_stop)
     {
-      len = esp_http_client_read(stream_http, (char*)temp_buf, sizeof(temp_buf));
-    }
-    else if (stream_sock >= 0)
-    {
-      len = read(stream_sock, temp_buf, sizeof(temp_buf));
-    }
+      int len = 0;
 
-    if (len <= 0)
-    {
+      if (stream_http)
+      {
+        len = esp_http_client_read(stream_http, (char*)temp_buf, sizeof(temp_buf));
+      }
+      else if (stream_sock >= 0)
+      {
+        len = read(stream_sock, temp_buf, sizeof(temp_buf));
+      }
+
+      if (len <= 0)
+      {
+        xSemaphoreTake(ring_mutex, portMAX_DELAY);
+        ring_eof = true;
+        xSemaphoreGive(ring_mutex);
+        ESP_LOGI(TAG, "reader: EOF, total=%u", stream_read_size);
+        break;
+      }
+
+      stream_read_size += len;
+
+      // Wait for space in ring buffer
+      while (true)
+      {
+        xSemaphoreTake(ring_mutex, portMAX_DELAY);
+        uint32_t free = ring_free();
+        xSemaphoreGive(ring_mutex);
+
+        if (free >= (uint32_t) len) break;
+        if (reader_stop) break;
+        vTaskDelay(1);
+      }
+
+      if (reader_stop) break;
+
+      // Write to ring buffer
       xSemaphoreTake(ring_mutex, portMAX_DELAY);
-      ring_eof = true;
+      uint32_t h = ring_head;
+      for(int i = 0; i < len; i++)
+      {
+        ring_buf[h] = temp_buf[i];
+        h = (h + 1) % RING_BUF_SIZE;
+      }
+      ring_head = h;
       xSemaphoreGive(ring_mutex);
-      ESP_LOGI(TAG, "reader: EOF, total=%u", stream_read_size);
-      break;
     }
 
-    stream_read_size += len;
-
-    // Wait for space in ring buffer
-    while (true)
-    {
-      xSemaphoreTake(ring_mutex, portMAX_DELAY);
-      uint32_t free = ring_free();
-      xSemaphoreGive(ring_mutex);
-
-      if (free >= (uint32_t) len) break;
-      vTaskDelay(1);
-    }
-
-    // Write to ring buffer
-    xSemaphoreTake(ring_mutex, portMAX_DELAY);
-    uint32_t h = ring_head;
-    for(int i = 0; i < len; i++)
-    {
-      ring_buf[h] = temp_buf[i];
-      h = (h + 1) % RING_BUF_SIZE;
-    }
-    ring_head = h;
-    xSemaphoreGive(ring_mutex);
+    reader_active = false;
+    xSemaphoreGive(reader_idle);
   }
-
-  reader_task_handle = NULL;
-  vTaskDelete(NULL);
 }
 
 void stream_init(void)
@@ -183,9 +242,11 @@ void stream_init(void)
   if (!ring_mutex)
     ring_mutex = xSemaphoreCreateMutexWithCaps(task_ram_type_non_critical);
 
+  if (!reader_idle)
+    reader_idle = xSemaphoreCreateBinaryWithCaps(task_ram_type_non_critical);
+
   stream_sock = -1;
   stream_http = NULL;
-  reader_task_handle = NULL;
   stream_state_reset();
 
   ESP_LOGI(TAG, "init done");
@@ -195,12 +256,17 @@ static void stream_http_common(bool use_https)
 {
   ESP_LOGI(TAG, "STREAM_%s_START", use_https ? "HTTPS" : "HTTP");
 
-  stream_state_reset();
+  // A program may start a stream without closing the previous one
+  if (!stream_close_internal())
+  {
+    set_status(ESP_ERR_NET_BUSY);
+    return;
+  }
 
   if (!net.url[0])
   {
     ESP_LOGW(TAG, "URL not set");
-    wr_reg8(ESP_REG_STATUS, 0x81);
+    set_status(0x81);
     return;
   }
 
@@ -211,7 +277,7 @@ static void stream_http_common(bool use_https)
   if (strncmp(url, prefix, prefix_len) != 0)
   {
     ESP_LOGW(TAG, "invalid URL format");
-    wr_reg8(ESP_REG_STATUS, 0x81);
+    set_status(0x81);
     return;
   }
 
@@ -231,7 +297,7 @@ static void stream_http_common(bool use_https)
   if (!stream_http)
   {
     ESP_LOGW(TAG, "init fail");
-    wr_reg8(ESP_REG_STATUS, 0xB2);
+    set_status(0xB2);
     return;
   }
 
@@ -242,7 +308,7 @@ static void stream_http_common(bool use_https)
     ESP_LOGW(TAG, "open fail");
     esp_http_client_cleanup(stream_http);
     stream_http = NULL;
-    wr_reg8(ESP_REG_STATUS, 0xB2);
+    set_status(0xB2);
     return;
   }
 
@@ -255,7 +321,7 @@ static void stream_http_common(bool use_https)
     esp_http_client_close(stream_http);
     esp_http_client_cleanup(stream_http);
     stream_http = NULL;
-    wr_reg8(ESP_REG_STATUS, 0xB3);
+    set_status(0xB3);
     return;
   }
 
@@ -270,12 +336,12 @@ static void stream_http_common(bool use_https)
   if (stream_reader_start() != ESP_OK)
   {
     stream_transport_close();
-    wr_reg8(ESP_REG_STATUS, 0xB0);
+    set_status(0xB0);
     return;
   }
 
   wr_reg32(ESP_REG_DATA_SIZE, stream_total_size);
-  wr_reg8(ESP_REG_STATUS, ESP_ST_READY);
+  set_status(ESP_ST_READY);
 }
 
 void stream_http_start(void)
@@ -292,13 +358,18 @@ void stream_gopher_start(void)
 {
   ESP_LOGI(TAG, "STREAM_GOPHER_START");
 
-  stream_state_reset();
+  // A program may start a stream without closing the previous one
+  if (!stream_close_internal())
+  {
+    set_status(ESP_ERR_NET_BUSY);
+    return;
+  }
   stream_is_gopher = true;
 
   if (!net.url[0])
   {
     ESP_LOGW(TAG, "URL not set");
-    wr_reg8(ESP_REG_STATUS, 0x81);
+    set_status(0x81);
     return;
   }
 
@@ -307,7 +378,7 @@ void stream_gopher_start(void)
   if (strncmp(url, "gopher://", 9) != 0)
   {
     ESP_LOGW(TAG, "invalid URL format");
-    wr_reg8(ESP_REG_STATUS, 0x81);
+    set_status(0x81);
     return;
   }
 
@@ -329,6 +400,7 @@ void stream_gopher_start(void)
   if (colon && (!slash || colon < slash))
   {
     int host_len = colon - p;
+    if (host_len > (int)sizeof(host) - 1) host_len = sizeof(host) - 1;
     strncpy(host, p, host_len);
     host[host_len] = 0;
     port = atoi(colon + 1);
@@ -346,6 +418,7 @@ void stream_gopher_start(void)
   else if (slash)
   {
     int host_len = slash - p;
+    if (host_len > (int)sizeof(host) - 1) host_len = sizeof(host) - 1;
     strncpy(host, p, host_len);
     host[host_len] = 0;
     const char * sel_start = slash + 1;
@@ -364,31 +437,20 @@ void stream_gopher_start(void)
   if (!server)
   {
     ESP_LOGW(TAG, "DNS lookup failed");
-    wr_reg8(ESP_REG_STATUS, 0xB1);
+    set_status(0xB1);
     return;
   }
 
-  stream_sock = socket(AF_INET, SOCK_STREAM, 0);
-  
+  uint32_t addr;
+  memcpy(&addr, server->h_addr, sizeof(addr));
+
+  // 10 s to connect, 30 s per read / write (gopher had none: a silent server
+  // blocked the helper task for good)
+  stream_sock = net_connect_timeout(addr, port, 10000, 30000);
   if (stream_sock < 0)
   {
-    ESP_LOGW(TAG, "socket creation failed");
-    wr_reg8(ESP_REG_STATUS, 0xB2);
-    return;
-  }
-
-  struct sockaddr_in serv_addr;
-  memset(&serv_addr, 0, sizeof(serv_addr));
-  serv_addr.sin_family = AF_INET;
-  serv_addr.sin_port = htons(port);
-  memcpy(&serv_addr.sin_addr.s_addr, server->h_addr, server->h_length);
-
-  if (connect(stream_sock, (struct sockaddr*)& serv_addr, sizeof(serv_addr)) < 0)
-  {
     ESP_LOGW(TAG, "connection failed");
-    close(stream_sock);
-    stream_sock = -1;
-    wr_reg8(ESP_REG_STATUS, 0xB2);
+    set_status(0xB2);
     return;
   }
 
@@ -412,12 +474,12 @@ void stream_gopher_start(void)
   if (stream_reader_start() != ESP_OK)
   {
     stream_transport_close();
-    wr_reg8(ESP_REG_STATUS, 0xB0);
+    set_status(0xB0);
     return;
   }
 
   wr_reg32(ESP_REG_DATA_SIZE, stream_total_size);
-  wr_reg8(ESP_REG_STATUS, ESP_ST_READY);
+  set_status(ESP_ST_READY);
 }
 
 void stream_read(void)
@@ -425,14 +487,14 @@ void stream_read(void)
   if (stream_sock < 0 && !stream_http)
   {
     ESP_LOGW(TAG, "stream not opened");
-    wr_reg8(ESP_REG_STATUS, 0x82);
+    set_status(0x82);
     return;
   }
 
-  // Wait for data in ring buffer or EOF
-  int timeout = 0;
-  
-  while (timeout < 30000)
+  // Wait for data in ring buffer or EOF, up to 30 s (it counted ticks)
+  TickType_t t0 = xTaskGetTickCount();
+
+  while ((xTaskGetTickCount() - t0) < pdMS_TO_TICKS(30000))
   {
     xSemaphoreTake(ring_mutex, portMAX_DELAY);
     uint32_t avail = ring_available();
@@ -441,7 +503,6 @@ void stream_read(void)
 
     if (avail > 0 || eof) break;
     vTaskDelay(1);
-    timeout++;
   }
 
   xSemaphoreTake(ring_mutex, portMAX_DELAY);
@@ -453,7 +514,7 @@ void stream_read(void)
     xSemaphoreGive(ring_mutex);
     ESP_LOGI(TAG, "stream end, total=%u", stream_read_size);
     wr_reg32(ESP_REG_DATA_SIZE, 0);
-    wr_reg8(ESP_REG_STATUS, ESP_ST_READY);
+    set_status(ESP_ST_READY);
     return;
   }
 
@@ -462,7 +523,7 @@ void stream_read(void)
     xSemaphoreGive(ring_mutex);
     ESP_LOGW(TAG, "timeout waiting for data");
     wr_reg32(ESP_REG_DATA_SIZE, 0);
-    wr_reg8(ESP_REG_STATUS, ESP_ST_READY);
+    set_status(ESP_ST_READY);
     return;
   }
 
@@ -485,18 +546,13 @@ void stream_read(void)
 
 void stream_close(void)
 {
-  if (reader_task_handle)
+  ESP_LOGI(TAG, "stream close, total read=%u", stream_read_size);
+
+  if (!stream_close_internal())
   {
-    vTaskDelete(reader_task_handle);
-    reader_task_handle = NULL;
+    set_status(ESP_ERR_NET_BUSY);
+    return;
   }
 
-  stream_transport_close();
-
-  ESP_LOGI(TAG, "stream closed, total read=%u", stream_read_size);
-
-  stream_state_reset();
-  stream_ring_free();
-
-  wr_reg8(ESP_REG_STATUS, ESP_ST_READY);
+  set_status(ESP_ST_READY);
 }

@@ -24,6 +24,7 @@
 #include "tracker.h"
 #include "stats.h"
 #include "spi_slave.h"
+#include "audio_stream.h"
 
 #if defined(CONFIG_ESP_WIFI_ENABLED) && CONFIG_ESP_WIFI_ENABLED
 #include "wifi.h"
@@ -216,13 +217,30 @@ void IRAM_ATTR put_txq_isr(int type)
   portYIELD_FROM_ISR();
 }
 
+
+
+// An RX DMA armed (M2S announced) and not ended by W_END yet. A host that
+// gave up waiting for M2S (it came late) and sends its command again would
+// queue a second request behind a DMA that waits for the data of the first
+// for ever; instead the armed one is announced again and takes the new
+// command's data (type and size are read when it ends).
+static volatile bool rx_armed = false;
+static volatile int rx_type;
+
 void IRAM_ATTR put_rxq(int type)
 {
+  rx_type = type;
   xQueueSend(rx_queue, &type, 0);
 }
 
 void IRAM_ATTR put_rxq_isr(int type)
 {
+  rx_type = type;
+  if (rx_armed)
+  {
+    wr_reg8(ESP_REG_STATUS, ESP_ST_DATA_M2S);
+    return;
+  }
   xQueueSendFromISR(rx_queue, &type, 0);
   portYIELD_FROM_ISR();
 }
@@ -237,12 +255,18 @@ bool IRAM_ATTR cb_regs_read(void *arg, spi_slave_hd_event_t *event, BaseType_t *
 
 bool IRAM_ATTR cb_rx_ready(void *arg, spi_slave_hd_event_t *event, BaseType_t *awoken)
 {
+  rx_armed = true;
   wr_reg8(ESP_REG_STATUS, ESP_ST_DATA_M2S);
   return true;
 }
 
+// DMA receiving done (W_END): BUSY at once. M2S stayed until the receiver task
+// had processed the data and set READY, so a host waiting for "not BUSY"
+// after its write saw M2S, then not READY, and dropped the transfer.
 bool IRAM_ATTR cb_cmd7(void *arg, spi_slave_hd_event_t *event, BaseType_t *awoken)
 {
+  rx_armed = false;
+  wr_reg8(ESP_REG_STATUS, ESP_ST_BUSY);
   return true;
 }
 
@@ -264,6 +288,17 @@ bool IRAM_ATTR cb_cmdA(void *arg, spi_slave_hd_event_t *event, BaseType_t *awoke
 
 // Called after Master has finished writing shared regs
 void command();
+
+// RESET / REBOOT from the host restart the ESP in any state: a task of the
+// highest priority, woken from the ISR, not the helper task (which may be
+// blocked in a long or hung job).
+static TaskHandle_t rescue_task_handle = NULL;
+
+static void rescue_task(void *arg)
+{
+  ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+  esp_restart();
+}
 
 bool IRAM_ATTR cb_cmd(void *arg, spi_slave_hd_event_t *event, BaseType_t *awoken)
 {
@@ -892,6 +927,9 @@ void init_slave_hd()
   if (!rx_queue)
     rx_queue = xQueueCreate(2, sizeof(int));
 
+  if (!rescue_task_handle)
+    xTaskCreate(rescue_task, "rescue", 2048, NULL, configMAX_PRIORITIES - 1, &rescue_task_handle);
+
   if (!dma_buf)
   {
     dma_buf = (u8*)heap_caps_malloc(DMA_BUF_SIZE, MALLOC_CAP_DMA);
@@ -1128,6 +1166,14 @@ esp_err_t spi_master_set_data_lines(u8 lines)
 
 // ------------- Commands
 
+// offs + size inside the object, without the 32-bit wrap of (offs + size)
+static bool IRAM_ATTR obj_range_ok(int handle, size_t offs, size_t size)
+{
+  if ((handle < 0) || (handle >= OBJ_HANDLES_MAX) || !mem_obj[handle].addr) return false;
+  size_t osize = mem_obj[handle].size;
+  return size && (size <= DMA_BUF_SIZE) && (offs <= osize) && (size <= (osize - offs));
+}
+
 void IRAM_ATTR command()
 {
   u8 cmd = rd_reg8(ESP_REG_COMMAND);
@@ -1137,7 +1183,19 @@ void IRAM_ATTR command()
     // Clear command register
     wr_reg8(ESP_REG_COMMAND, 0);
 
-    if (is_busy)
+    if ((cmd == ESP_CMD_RESET) || (cmd == ESP_CMD_REBOOT))
+    {
+      // Also while busy: the only way out of a hung command for the host
+      BaseType_t hp = pdFALSE;
+      if (rescue_task_handle)
+      {
+        vTaskNotifyGiveFromISR(rescue_task_handle, &hp);
+        portYIELD_FROM_ISR(hp);
+      }
+      else
+        put_helper_isr(TASK_RESET);
+    }
+    else if (is_busy)
     {
       if (cmd == ESP_CMD_BREAK)
       {} // +++ break ESP_CMD_STREAM_UNZIP
@@ -1453,7 +1511,7 @@ void IRAM_ATTR command()
           size_t offs = rd_reg32(ESP_REG_DATA_OFFSET);
           size_t size = rd_reg32(ESP_REG_DATA_SIZE);
 
-          if (!size || (size > DMA_BUF_SIZE) || ((offs + size) > mem_obj[handle].size))
+          if (!obj_range_ok(handle, offs, size))
           {
             set_status(ESP_ERR_INV_SIZE);
             break;
@@ -1539,16 +1597,25 @@ void IRAM_ATTR command()
         break;
 #endif
 
+        case ESP_CMD_AUDIO_PUSH:
+          if (audio_push_check(rd_reg32(ESP_REG_DATA_SIZE)))
+            put_rxq_isr(DREQ_AUDIO);
+        break;
+
+        case ESP_CMD_AUDIO_START:
+        case ESP_CMD_AUDIO_END:
+        case ESP_CMD_AUDIO_FLUSH:
+        case ESP_CMD_AUDIO_PAUSE:
+        case ESP_CMD_AUDIO_VOLUME:
+        case ESP_CMD_AUDIO_STOP:
+        case ESP_CMD_AUDIO_GET_STATE:
+        case ESP_CMD_AUDIO_URL:
+        case ESP_CMD_AUDIO_GET_META:
+          audio_command(cmd);
+        break;
+
         case ESP_CMD_GET_RND:
           put_txq_isr(DREQ_RND);
-        break;
-
-        case ESP_CMD_REBOOT:
-          put_helper_isr(TASK_REBOOT);
-        break;
-
-        case ESP_CMD_RESET:
-          put_helper_isr(TASK_RESET);
         break;
 
         default:
@@ -1576,6 +1643,7 @@ void IRAM_ATTR sender_task(void *arg)
 
     slave_trans.data = dma_buf;
     size_t max_size = rd_reg32(ESP_REG_DATA_SIZE);
+    if (max_size > DMA_BUF_SIZE) max_size = DMA_BUF_SIZE;   // GET_RND had no check
     slave_trans.len = prepare_tx_data(req_data_type, max_size);
     wr_reg32(ESP_REG_DATA_SIZE, slave_trans.len);
 
@@ -1602,10 +1670,13 @@ void IRAM_ATTR receiver_task(void *arg)
 
     slave_trans.data = dma_buf;
     slave_trans.len  = DMA_BUF_SIZE;
-    size_t size = rd_reg32(ESP_REG_DATA_SIZE);
 
     spi_slave_hd_queue_trans(SLAVE_HOST, SPI_SLAVE_CHAN_RX, &slave_trans, portMAX_DELAY);
     spi_slave_hd_get_trans_res(SLAVE_HOST, SPI_SLAVE_CHAN_RX, &ret_trans, portMAX_DELAY);
+
+    // of the command whose data came (put_rxq_isr: may be a later one than the request)
+    req_data_type = rx_type;
+    size_t size = rd_reg32(ESP_REG_DATA_SIZE);
 
 #ifdef VERBOSE
     printf("Received %d, expected %d, CRC %08lX\r\n", ret_trans->trans_len, size, esp_crc32_le(0, dma_buf, size));
@@ -1673,6 +1744,14 @@ u32 IRAM_ATTR prepare_tx_data(u8 type, size_t size)
     {
       int handle = rd_reg8(ESP_REG_OBJ_HANDLE);
       u32 offset = rd_reg32(ESP_REG_DATA_OFFSET);
+
+      // Again here: the host may have written the registers after the check
+      if (!obj_range_ok(handle, offset, size))
+      {
+        memset(dma_buf, 0, size);   // zeros, the transfer the host expects
+        break;
+      }
+
       u8 *addr = &((u8*)mem_obj[handle].addr)[offset];
       memcpy(dma_buf, addr, size);
       wr_reg32(ESP_REG_DATA_OFFSET, offset + size);
@@ -1735,6 +1814,14 @@ void IRAM_ATTR process_rx_data(u8 type, size_t size)
       int handle = rd_reg8(ESP_REG_OBJ_HANDLE);
 
       u32 offset = rd_reg32(ESP_REG_DATA_OFFSET);
+
+      // Again here: the host may have written the registers after the check
+      if (!obj_range_ok(handle, offset, size))
+      {
+        set_status(ESP_ERR_INV_SIZE);
+        break;
+      }
+
       u8 *addr = &((u8*)mem_obj[handle].addr)[offset];
       memcpy(addr, dma_buf, size);
       wr_reg32(ESP_REG_DATA_OFFSET, offset + size);
@@ -1744,6 +1831,10 @@ void IRAM_ATTR process_rx_data(u8 type, size_t size)
 
     case DREQ_TRACK_STREAM:
       xm_host_stream_process_rx_data(dma_buf, size);
+    break;
+
+    case DREQ_AUDIO:
+      audio_rx(dma_buf, size);
     break;
 
     case DREQ_ZIP:
@@ -1784,7 +1875,21 @@ void IRAM_ATTR process_rx_data(u8 type, size_t size)
         // printf("ZIP_ST_INITIAL\r\n");
 #endif
 
+        // The first chunk has the u32 unpacked size, then data (size 1..3
+        // underflowed inbytes); the type must be one of raw data
+        if ((size <= sizeof(u32)) || !mem_obj_is_raw_type(rd_reg8(ESP_REG_OBJ_TYPE)))
+        {
+          set_status(ESP_ERR_INV_PARAM);
+          break;
+        }
+
         uncomp_size = *(u32*)dma_buf;
+
+        if (!uncomp_size || (uncomp_size > (16 << 20)))
+        {
+          set_status(ESP_ERR_INV_SIZE);
+          break;
+        }
 
 #ifdef VERBOSE
         printf("Uncompressed size %ld\r\n", uncomp_size);

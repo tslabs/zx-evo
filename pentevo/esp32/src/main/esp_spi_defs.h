@@ -79,6 +79,25 @@ enum
   ESP_REG_SFX_STATE_BITS     = 0x24, // 2 bytes
   ESP_REG_SFX_STATE_CHANNELS = 0x26, // 1 byte
   ESP_REG_SFX_STATE_SIGNED   = 0x27, // 1 byte
+
+  // Audio stream commands
+  ESP_REG_AUDIO_FORMAT       = 0x02, // 1 byte, AUDIO_START: AUDIO_FMT_*
+  ESP_REG_AUDIO_PARAM        = 0x02, // 1 byte, AUDIO_PAUSE: 1 pause / 0 go on; AUDIO_VOLUME: attenuation, 0.5 dB steps (0 full, #FE silence)
+  // State, after AUDIO_GET_STATE and AUDIO_PUSH (not over ESP_REG_DATA_SIZE of PUSH)
+  ESP_REG_AUDIO_STATE        = 0x10, // 1 byte, AUDIO_ST_*
+  ESP_REG_AUDIO_FMT          = 0x11, // 1 byte, AUDIO_FMT_* found (0 before the decoder opened)
+  ESP_REG_AUDIO_CHANNELS     = 0x12, // 1 byte, of the source
+  ESP_REG_AUDIO_FLAGS        = 0x13, // 1 byte, AUDIO_FLAG_*
+  ESP_REG_AUDIO_FREE         = 0x14, // 4 bytes, bytes the next PUSHes may take
+  ESP_REG_AUDIO_RATE         = 0x18, // 4 bytes, sample rate of the source, Hz
+  ESP_REG_AUDIO_PLAYED       = 0x1C, // 4 bytes, source frames played since START / FLUSH
+  ESP_REG_AUDIO_TOTAL        = 0x20, // 4 bytes, frames of the stream from its header, 0: not known
+  ESP_REG_AUDIO_BUFFERED     = 0x24, // 4 bytes, host bytes not decoded yet
+  ESP_REG_AUDIO_UNDERRUNS    = 0x28, // 2 bytes, times the sound ran out while playing
+  ESP_REG_AUDIO_ERROR        = 0x2A, // 1 byte, status of the failure in AUDIO_ST_ERROR
+  ESP_REG_AUDIO_BITS         = 0x2B, // 1 byte, bits per sample of the source (0: compressed)
+  ESP_REG_AUDIO_BITRATE      = 0x2C, // 4 bytes, bits per second of the stream, 0: not known (AAC, M4A, radio)
+  ESP_REG_AUDIO_META_SEQ     = 0x30, // 1 byte, + 1 at every new station name / title (AUDIO_GET_META)
 };
 
 // Commands
@@ -140,6 +159,18 @@ enum
   ESP_CMD_SFX_SET_VOLUME        = 0xB4, // i: ESP_REG_SFX_VOLUME
   ESP_CMD_SFX_GET_STATE         = 0xB5, // i: ESP_REG_SFX_CHANNEL; o: ESP_REG_SFX_STATE_*
   ESP_CMD_SFX_STOP_GROUP        = 0xB6, // i: ESP_REG_SFX_GROUP
+
+  // Audio stream: WAV / MP3 / FLAC / Ogg Vorbis, pushed by the host while it plays
+  ESP_CMD_AUDIO_START           = 0x90, // i: ESP_REG_AUDIO_FORMAT; a new stream (stops the one before)
+  ESP_CMD_AUDIO_PUSH            = 0x91, // i: ESP_REG_DATA_SIZE (1..16384, <= ESP_REG_AUDIO_FREE), DMA M2S of the data; o: the state
+  ESP_CMD_AUDIO_END             = 0x92, // no more data: plays out, then AUDIO_ST_ENDED
+  ESP_CMD_AUDIO_FLUSH           = 0x93, // i: ESP_REG_DATA_OFFSET (file offset of the next PUSH); drops what is buffered (seek)
+  ESP_CMD_AUDIO_PAUSE           = 0x94, // i: ESP_REG_AUDIO_PARAM
+  ESP_CMD_AUDIO_VOLUME          = 0x95, // i: ESP_REG_AUDIO_PARAM
+  ESP_CMD_AUDIO_STOP            = 0x96, // stops, AUDIO_ST_IDLE
+  ESP_CMD_AUDIO_GET_STATE       = 0x97, // o: ESP_REG_AUDIO_STATE..ESP_REG_AUDIO_META_SEQ
+  ESP_CMD_AUDIO_URL             = 0x98, // i: ESP_REG_AUDIO_FORMAT (0: from Content-Type); internet radio from the URL of ESP_CMD_SET_URL
+  ESP_CMD_AUDIO_GET_META        = 0x99, // i: ESP_REG_AUDIO_PARAM (0 station, 1 title); o: ESP_REG_STRING_SIZE, ESP_REG_STRING_DATA (UTF-8 as sent, <= 56 bytes)
 
   ESP_CMD_CONFIG_SPI            = 0xC0, // +++
 
@@ -234,6 +265,43 @@ enum
 
   ESP_ERR_AP_NOT_CONNECTED = 0xB0,
   ESP_ERR_NET_BUSY         ,
+
+  ESP_ERR_AUDIO_FORMAT     = 0xC0, // the stream is no format the player knows
+  ESP_ERR_AUDIO_DECODE     = 0xC1, // the decoder refused the headers of the stream
+  ESP_ERR_AUDIO_NET        = 0xC2, // radio: no Wi-Fi, or the URL gave no stream
+};
+
+// Audio stream formats (ESP_REG_AUDIO_FORMAT, ESP_REG_AUDIO_FMT)
+enum
+{
+  AUDIO_FMT_AUTO = 0,   // from the first bytes
+  AUDIO_FMT_WAV  = 1,
+  AUDIO_FMT_MP3  = 2,
+  AUDIO_FMT_OGG  = 3,
+  AUDIO_FMT_FLAC = 4,
+  AUDIO_FMT_AAC  = 5,   // ADTS frames: AAC-LC, HE-AAC, HE-AACv2
+  AUDIO_FMT_M4A  = 6,   // AAC in MP4, its moov before mdat
+};
+
+// Audio stream states (ESP_REG_AUDIO_STATE)
+enum
+{
+  AUDIO_ST_IDLE  = 0,   // no stream
+  AUDIO_ST_WAIT  = 1,   // started: waiting for the headers
+  AUDIO_ST_PLAY  = 2,   // playing (or paused, AUDIO_FLAG_PAUSED)
+  AUDIO_ST_DRAIN = 3,   // decoded to the end, the last samples are playing
+  AUDIO_ST_ENDED = 4,   // played to the end
+  AUDIO_ST_ERROR = 5,   // ESP_REG_AUDIO_ERROR tells why
+};
+
+// Audio stream flags (ESP_REG_AUDIO_FLAGS)
+enum
+{
+  AUDIO_FLAG_SEEKABLE = 0x01,   // AUDIO_FLUSH + data from another offset continues the stream
+  AUDIO_FLAG_PAUSED   = 0x02,
+  AUDIO_FLAG_END      = 0x04,   // AUDIO_END received
+  AUDIO_FLAG_RADIO      = 0x08,   // the stream comes from a URL (AUDIO_URL)
+  AUDIO_FLAG_CONNECTING = 0x10,   // radio: (re)connecting
 };
 
 // Info type (ESP_CMD_GET_INFO_STR)

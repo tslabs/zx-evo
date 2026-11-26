@@ -13,6 +13,7 @@
 #include "spi_slave.h"
 #include "mem_obj.h"
 #include "helper.h"
+#include "net_util.h"
 #include "gopher_client.h"
 
 static const char *TAG = "gopher";
@@ -78,7 +79,7 @@ void gopher_do_get()
 
   if (!gopher_buf_alloc())
   {
-    wr_reg8(ESP_REG_STATUS, 0xA0);
+    set_status(0xA0);
     return;
   }
 
@@ -86,7 +87,7 @@ void gopher_do_get()
   {
     ESP_LOGW(TAG, "URL not set");
     gopher_cleanup();
-    wr_reg8(ESP_REG_STATUS, 0x81);
+    set_status(0x81);
     return;
   }
 
@@ -96,7 +97,7 @@ void gopher_do_get()
   {
     ESP_LOGW(TAG, "invalid URL format");
     gopher_cleanup();
-    wr_reg8(ESP_REG_STATUS, 0x81);
+    set_status(0x81);
     return;
   }
 
@@ -117,6 +118,7 @@ void gopher_do_get()
   if (colon && (!slash || colon < slash))
   {
     int host_len = colon - p;
+    if (host_len > (int)sizeof(host) - 1) host_len = sizeof(host) - 1;
     strncpy(host, p, host_len);
     host[host_len] = 0;
     port = atoi(colon + 1);
@@ -135,6 +137,7 @@ void gopher_do_get()
   else if (slash)
   {
     int host_len = slash - p;
+    if (host_len > (int)sizeof(host) - 1) host_len = sizeof(host) - 1;
     strncpy(host, p, host_len);
     host[host_len] = 0;
     const char * sel_start = slash + 1;
@@ -158,30 +161,21 @@ void gopher_do_get()
   {
     ESP_LOGW(TAG, "DNS lookup failed");
     gopher_cleanup();
-    wr_reg8(ESP_REG_STATUS, 0xB1);
+    set_status(0xB1);
     return;
   }
 
-  gopher_sock = socket(AF_INET, SOCK_STREAM, 0);
+  uint32_t addr;
+  memcpy(&addr, server->h_addr, sizeof(addr));
+
+  // 10 s to connect, 30 s per read / write (gopher had none: a silent server
+  // blocked the helper task for good)
+  gopher_sock = net_connect_timeout(addr, port, 10000, 30000);
   if (gopher_sock < 0)
-  {
-    ESP_LOGW(TAG, "socket creation failed");
-    gopher_cleanup();
-    wr_reg8(ESP_REG_STATUS, 0xB2);
-    return;
-  }
-
-  struct sockaddr_in serv_addr;
-  memset(&serv_addr, 0, sizeof(serv_addr));
-  serv_addr.sin_family = AF_INET;
-  serv_addr.sin_port = htons(port);
-  memcpy(&serv_addr.sin_addr.s_addr, server->h_addr, server->h_length);
-
-  if (connect(gopher_sock, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0)
   {
     ESP_LOGW(TAG, "connection failed");
     gopher_cleanup();
-    wr_reg8(ESP_REG_STATUS, 0xB2);
+    set_status(0xB2);
     return;
   }
 
@@ -196,7 +190,7 @@ void gopher_do_get()
   {
     ESP_LOGW(TAG, "send failed");
     gopher_cleanup();
-    wr_reg8(ESP_REG_STATUS, 0xB2);
+    set_status(0xB2);
     return;
   }
 
@@ -216,8 +210,6 @@ void gopher_do_get()
       wr_reg32(ESP_REG_DATA_SIZE, total);
       last_progress = total;
     }
-
-    vTaskDelay(1);
   }
 
   gopher_close_socket();
@@ -228,7 +220,7 @@ void gopher_do_get()
   {
     ESP_LOGW(TAG, "empty response");
     gopher_buf_free();
-    wr_reg8(ESP_REG_STATUS, 0xB4);
+    set_status(0xB4);
     return;
   }
 
@@ -237,7 +229,7 @@ void gopher_do_get()
   {
     ESP_LOGW(TAG, "make_obj failed");
     gopher_buf_free();
-    wr_reg8(ESP_REG_STATUS, 0xA0);
+    set_status(0xA0);
     return;
   }
 
@@ -246,7 +238,7 @@ void gopher_do_get()
 
   wr_reg8(ESP_REG_OBJ_HANDLE, resp);
   wr_reg32(ESP_REG_DATA_SIZE, total);
-  wr_reg8(ESP_REG_STATUS, ESP_ST_READY);
+  set_status(ESP_ST_READY);
 
   ESP_LOGI(TAG, "done: handle=%d size=%d", resp, total);
 }
