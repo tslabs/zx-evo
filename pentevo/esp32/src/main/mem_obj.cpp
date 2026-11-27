@@ -105,7 +105,7 @@ int delete_obj(int h)
 
 void write_obj(int handle, const void *from, int size)
 {
-  memcpy(mem_obj[handle].addr, from, max(mem_obj[handle].size, size));
+  memcpy(mem_obj[handle].addr, from, min(mem_obj[handle].size, size));
 }
 
 int attach_obj(void *addr, int obj_size, int obj_type)
@@ -228,4 +228,18 @@ int make_obj(int obj_size, int obj_type)
   mem_obj[handle].state = OBJ_ST_NONE;
 
   return handle;
+}
+
+// Types an unpacked buffer may not get: contexts. Set by the host they made
+// delete_obj() free a pointer that is no context (any other value is taken
+// as before).
+bool mem_obj_is_raw_type(int t)
+{
+  switch (t)
+  {
+    case OBJ_TYPE_LIB: case OBJ_TYPE_XMC: case OBJ_TYPE_MDC: case OBJ_TYPE_S3C: case OBJ_TYPE_MBC:
+      return false;
+    default:
+      return true;
+  }
 }

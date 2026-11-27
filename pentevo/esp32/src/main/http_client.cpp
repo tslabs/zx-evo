@@ -41,15 +41,6 @@ void http_do_get()
 
   ESP_LOGI(TAG, "HTTP_GET handle=%d", url_handle);
 
-  http_buf = (uint8_t*)heap_caps_malloc(HTTP_BUF_SIZE, MALLOC_CAP_SPIRAM);
-
-  if (!http_buf)
-  {
-    set_status(0xA0);
-    ESP_LOGE(TAG, "HTTP buf malloc error");
-    return;
-  }
-
   if (!net.url[0])
   {
     ESP_LOGW(TAG, "URL not set");
@@ -68,6 +59,16 @@ void http_do_get()
 
   ESP_LOGI(TAG, "GET %s", url);
 
+  // The URL checks above return before the 2 MB are taken (they leaked it)
+  http_buf = (uint8_t*)heap_caps_malloc(HTTP_BUF_SIZE, MALLOC_CAP_SPIRAM);
+
+  if (!http_buf)
+  {
+    set_status(0xA0);
+    ESP_LOGE(TAG, "HTTP buf malloc error");
+    return;
+  }
+
   cfg.url = url;
   cfg.timeout_ms = 30000;
   cfg.buffer_size = 4096;
@@ -83,7 +84,7 @@ void http_do_get()
   {
     ESP_LOGW(TAG, "init fail");
     set_status(0xB2);
-    return;
+    goto cleanup;
   }
 
   err = esp_http_client_open(client, 0);

@@ -372,9 +372,15 @@ void helper_task(void *arg)
           }
 
           // Check source size
-          if (!ssize || (ssize > 65536))
+          if (!ssize || (ssize > 65536) || (ssize > (size_t)mem_obj[hsrc].size))
           {
             set_status(ESP_ERR_INV_SIZE);
+            break;
+          }
+
+          if (!mem_obj_is_raw_type(dtype))
+          {
+            set_status(ESP_ERR_INV_OBJ_TYPE);
             break;
           }
 
@@ -438,8 +444,28 @@ void helper_task(void *arg)
             break;
           }
 
+          // u32 unpacked size, then the zlib stream
+          if ((ssize <= 4) || (ssize > (size_t)mem_obj[hsrc].size))
+          {
+            set_status(ESP_ERR_INV_SIZE);
+            break;
+          }
+
+          if (!mem_obj_is_raw_type(dtype))
+          {
+            set_status(ESP_ERR_INV_OBJ_TYPE);
+            break;
+          }
+
           auto src = (u8*)mem_obj[hsrc].addr;
           size_t dsize = *(u32*)src;
+
+          if (!dsize || (dsize > (16 << 20)))
+          {
+            set_status(ESP_ERR_INV_SIZE);
+            break;
+          }
+
           void *dst = (u8*)malloc_spiram(dsize);
 
           if (!dst)
@@ -459,10 +485,12 @@ void helper_task(void *arg)
 
           if (decomp_status != TINFL_STATUS_DONE)
           {
+            free(dst);   // leaked before
             set_status(ESP_ERR_INV_ZIP);
             break;
           }
 
+          free(mem_obj[hsrc].addr);   // the packed data leaked before (DEHST frees it)
           mem_obj[hsrc].addr = dst;
           mem_obj[hsrc].size = dsize;
           mem_obj[hsrc].type = dtype;
@@ -521,7 +549,7 @@ void helper_task(void *arg)
 
           net.is_busy = true;
           net.state = NETWORK_OPENING;
-          auto rc = wifi_connect((const char*)net.ssid, (const char*)net.pwd, 10000);
+          auto rc = wifi_connect((const char*)net.ssid, (const char*)net.pwd, CONNECT_TIMEOUT_MS);
           net.is_busy = false;
           net.state = rc ? NETWORK_OPEN : NETWORK_CLOSED;
 

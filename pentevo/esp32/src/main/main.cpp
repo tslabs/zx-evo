@@ -19,6 +19,7 @@
 #include "main.h"
 #include "esp_spi_defs.h"
 #include "spi_slave.h"
+#include "audio_stream.h"
 #include "console.h"
 #include "nvs_params.h"
 
@@ -157,6 +158,10 @@ extern "C" void app_main()
 
   // ----- LibXM init
   initialize_xm();
+
+  // ----- Audio stream player init
+  audio_init();
+  log_sram_used("audio_init");
 
   // ----- Network client init
 #if defined(CONFIG_ESP_WIFI_ENABLED) && CONFIG_ESP_WIFI_ENABLED
